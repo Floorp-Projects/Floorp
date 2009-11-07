@@ -46,7 +46,7 @@ interface nsISimpleEnumerator;
 interface nsIHttpServer;
 interface nsIHttpServerStoppedCallback;
 interface nsIHttpRequestHandler;
-interface nsIHttpRequestMetadata;
+interface nsIHttpRequest;
 interface nsIHttpResponse;
 interface nsIHttpServerIdentity;
 
@@ -261,8 +261,8 @@ interface nsIHttpServerIdentity : nsISupports
 {
   /**
    * The primary scheme at which the corresponding server is located, defaulting
-   * to 'http'.  This name will be the value of nsIHttpRequestMetadata.scheme
-   * for HTTP/1.0 requests.
+   * to 'http'.  This name will be the value of nsIHttpRequest.scheme for
+   * HTTP/1.0 requests.
    *
    * This value is always set when the corresponding server is running.  If the
    * server is not running, this value is set only if it has been set to a
@@ -273,8 +273,8 @@ interface nsIHttpServerIdentity : nsISupports
 
   /**
    * The primary name by which the corresponding server is known, defaulting to
-   * 'localhost'.  This name will be the value of nsIHttpRequestMetadata.host
-   * for HTTP/1.0 requests.
+   * 'localhost'.  This name will be the value of nsIHttpRequest.host for
+   * HTTP/1.0 requests.
    *
    * This value is always set when the corresponding server is running.  If the
    * server is not running, this value is set only if it has been set to a
@@ -286,7 +286,7 @@ interface nsIHttpServerIdentity : nsISupports
   /**
    * The primary port on which the corresponding server runs, defaulting to the
    * associated server's port.  This name will be the value of
-   * nsIHttpRequestMetadata.port for HTTP/1.0 requests.
+   * nsIHttpRequest.port for HTTP/1.0 requests.
    *
    * This value is always set when the corresponding server is running.  If the
    * server is not running, this value is set only if it has been set to a
@@ -383,7 +383,7 @@ interface nsIHttpRequestHandler : nsISupports
    *   an initially-empty response which must be modified to reflect the data
    *   which should be sent as the response to the request described by metadata
    */
-  void handle(in nsIHttpRequestMetadata metadata, in nsIHttpResponse response);
+  void handle(in nsIHttpRequest metadata, in nsIHttpResponse response);
 };
 
 
@@ -391,7 +391,7 @@ interface nsIHttpRequestHandler : nsISupports
  * A representation of the data included in an HTTP request.
  */
 [scriptable, uuid(80cbca71-dc51-4fa0-9010-1cec262dbd4a)]
-interface nsIHttpRequestMetadata : nsIPropertyBag
+interface nsIHttpRequest : nsIPropertyBag
 {
   /**
    * The request type for this request (see RFC 2616, section 5.1.1).

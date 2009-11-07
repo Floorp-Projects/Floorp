@@ -812,6 +812,136 @@ function ServerIdentity()
 }
 ServerIdentity.prototype =
 {
+  // NSIHTTPSERVERIDENTITY
+
+  //
+  // see nsIHttpServerIdentity.primaryScheme
+  //
+  get primaryScheme()
+  {
+    if (this._primaryPort === -1)
+      throw Cr.NS_ERROR_NOT_INITIALIZED;
+    return this._primaryScheme;
+  },
+
+  //
+  // see nsIHttpServerIdentity.primaryHost
+  //
+  get primaryHost()
+  {
+    if (this._primaryPort === -1)
+      throw Cr.NS_ERROR_NOT_INITIALIZED;
+    return this._primaryHost;
+  },
+
+  //
+  // see nsIHttpServerIdentity.primaryPort
+  //
+  get primaryPort()
+  {
+    if (this._primaryPort === -1)
+      throw Cr.NS_ERROR_NOT_INITIALIZED;
+    return this._primaryPort;
+  },
+
+  //
+  // see nsIHttpServerIdentity.add
+  //
+  add: function(scheme, host, port)
+  {
+    this._validate(scheme, host, port);
+
+    var entry = this._locations["x" + host];
+    if (!entry)
+      this._locations["x" + host] = entry = {};
+
+    entry[port] = scheme;
+  },
+
+  //
+  // see nsIHttpServerIdentity.remove
+  //
+  remove: function(scheme, host, port)
+  {
+    this._validate(scheme, host, port);
+
+    var entry = this._locations["x" + host];
+    if (!entry)
+      return false;
+
+    var present = port in entry;
+    delete entry[port];
+
+    if (this._primaryScheme == scheme &&
+        this._primaryHost == host &&
+        this._primaryPort == port &&
+        this._defaultPort !== -1)
+    {
+      // Always keep at least one identity in existence at any time, unless
+      // we're in the process of shutting down (the last condition above).
+      this._primaryPort = -1;
+      this._initialize(this._defaultPort, false);
+    }
+
+    return present;
+  },
+
+  //
+  // see nsIHttpServerIdentity.has
+  //
+  has: function(scheme, host, port)
+  {
+    this._validate(scheme, host, port);
+
+    return "x" + host in this._locations &&
+           scheme === this._locations["x" + host][port];
+  },
+
+  //
+  // see nsIHttpServerIdentity.has
+  //
+  getScheme: function(host, port)
+  {
+    this._validate("http", host, port);
+
+    var entry = this._locations["x" + host];
+    if (!entry)
+      return "";
+
+    return entry[port] || "";
+  },
+
+  //
+  // see nsIHttpServerIdentity.setPrimary
+  //
+  setPrimary: function(scheme, host, port)
+  {
+    this._validate(scheme, host, port);
+
+    this.add(scheme, host, port);
+
+    this._primaryScheme = scheme;
+    this._primaryHost = host;
+    this._primaryPort = port;
+  },
+
+
+  // NSISUPPORTS
+
+  //
+  // see nsISupports.QueryInterface
+  //
+  QueryInterface: function(iid)
+  {
+    if (iid.equals(Ci.nsIHttpServerIdentity) || iid.equals(Ci.nsISupports))
+      return this;
+
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+
+  // PRIVATE IMPLEMENTATION
+
   /**
    * Initializes the primary name for the corresponding server, based on the
    * provided port number.
@@ -859,117 +989,6 @@ ServerIdentity.prototype =
       // No reason not to remove directly as it's not our primary location
       this.remove("http", "localhost", this._defaultPort);
     }
-  },
-
-  //
-  // see nsIHttpServerIdentity.primaryScheme
-  //
-  get primaryScheme()
-  {
-    if (this._primaryPort === -1)
-      throw Cr.NS_ERROR_NOT_INITIALIZED;
-    return this._primaryScheme;
-  },
-
-  //
-  // see nsIHttpServerIdentity.primaryHost
-  //
-  get primaryHost()
-  {
-    if (this._primaryPort === -1)
-      throw Cr.NS_ERROR_NOT_INITIALIZED;
-    return this._primaryHost;
-  },
-
-  //
-  // see nsIHttpServerIdentity.primaryPort
-  //
-  get primaryPort()
-  {
-    if (this._primaryPort === -1)
-      throw Cr.NS_ERROR_NOT_INITIALIZED;
-    return this._primaryPort;
-  },
-
-  //
-  // see nsIHttpServerIdentity.add
-  //
-  add: function(scheme, host, port)
-  {
-    this._validate(scheme, host, port);
-    
-    var entry = this._locations["x" + host];
-    if (!entry)
-      this._locations["x" + host] = entry = {};
-
-    entry[port] = scheme;
-  },
-
-  //
-  // see nsIHttpServerIdentity.remove
-  //
-  remove: function(scheme, host, port)
-  {
-    this._validate(scheme, host, port);
-
-    var entry = this._locations["x" + host];
-    if (!entry)
-      return false;
-
-    var present = port in entry;
-    delete entry[port];
-
-    if (this._primaryScheme == scheme &&
-        this._primaryHost == host &&
-        this._primaryPort == port &&
-        this._defaultPort !== -1)
-    {
-      // Always keep at least one identity in existence at any time, unless
-      // we're in the process of shutting down (the last condition above).
-      this._primaryPort = -1;
-      this._initialize(this._defaultPort, false);
-    }
-
-    return present;
-  },
-
-  //
-  // see nsIHttpServerIdentity.has
-  //
-  has: function(scheme, host, port)
-  {
-    this._validate(scheme, host, port);
-
-    return "x" + host in this._locations &&
-           scheme === this._locations["x" + host][port];
-  },
-  
-  //
-  // see nsIHttpServerIdentity.has
-  //
-  getScheme: function(host, port)
-  {
-    this._validate("http", host, port);
-
-    var entry = this._locations["x" + host];
-    if (!entry)
-      return "";
-
-    return entry[port] || "";
-  },
-  
-  //
-  // see nsIHttpServerIdentity.setPrimary
-  //
-  setPrimary: function(scheme, host, port)
-  {
-    this._validate(scheme, host, port);
-
-    this.add(scheme, host, port);
-
-    this._primaryScheme = scheme;
-    this._primaryHost = host;
-    this._primaryPort = port;
   },
 
   /**
@@ -3521,6 +3540,20 @@ Response.prototype =
   },
 
 
+  // NSISUPPORTS
+
+  //
+  // see nsISupports.QueryInterface
+  //
+  QueryInterface: function(iid)
+  {
+    if (iid.equals(Ci.nsIHttpResponse) || iid.equals(Ci.nsISupports))
+      return this;
+
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+
   // POST-CONSTRUCTION API (not exposed externally)
 
   /**
@@ -4432,8 +4465,8 @@ function Request(port)
 
   /**
    * For the addition of ad-hoc properties and new functionality without having
-   * to change nsIHttpRequestMetadata every time; currently lazily created,
-   * as its only use is in directory listings.
+   * to change nsIHttpRequest every time; currently lazily created, as its only
+   * use is in directory listings.
    */
   this._bag = null;
 }
@@ -4442,7 +4475,7 @@ Request.prototype =
   // SERVER METADATA
 
   //
-  // see nsIHttpRequestMetadata.scheme
+  // see nsIHttpRequest.scheme
   //
   get scheme()
   {
@@ -4450,7 +4483,7 @@ Request.prototype =
   },
 
   //
-  // see nsIHttpRequestMetadata.host
+  // see nsIHttpRequest.host
   //
   get host()
   {
@@ -4458,7 +4491,7 @@ Request.prototype =
   },
 
   //
-  // see nsIHttpRequestMetadata.port
+  // see nsIHttpRequest.port
   //
   get port()
   {
@@ -4468,7 +4501,7 @@ Request.prototype =
   // REQUEST LINE
 
   //
-  // see nsIHttpRequestMetadata.method
+  // see nsIHttpRequest.method
   //
   get method()
   {
@@ -4476,7 +4509,7 @@ Request.prototype =
   },
 
   //
-  // see nsIHttpRequestMetadata.httpVersion
+  // see nsIHttpRequest.httpVersion
   //
   get httpVersion()
   {
@@ -4484,7 +4517,7 @@ Request.prototype =
   },
 
   //
-  // see nsIHttpRequestMetadata.path
+  // see nsIHttpRequest.path
   //
   get path()
   {
@@ -4492,7 +4525,7 @@ Request.prototype =
   },
 
   //
-  // see nsIHttpRequestMetadata.queryString
+  // see nsIHttpRequest.queryString
   //
   get queryString()
   {
@@ -4502,7 +4535,7 @@ Request.prototype =
   // HEADERS
 
   //
-  // see nsIHttpRequestMetadata.getHeader
+  // see nsIHttpRequest.getHeader
   //
   getHeader: function(name)
   {
@@ -4510,7 +4543,7 @@ Request.prototype =
   },
 
   //
-  // see nsIHttpRequestMetadata.hasHeader
+  // see nsIHttpRequest.hasHeader
   //
   hasHeader: function(name)
   {
@@ -4518,7 +4551,7 @@ Request.prototype =
   },
 
   //
-  // see nsIHttpRequestMetadata.headers
+  // see nsIHttpRequest.headers
   //
   get headers()
   {
@@ -4535,7 +4568,7 @@ Request.prototype =
   },
 
   //
-  // see nsIHttpRequestMetadata.headers
+  // see nsIHttpRequest.headers
   //
   get bodyInputStream()
   {
@@ -4550,6 +4583,23 @@ Request.prototype =
     this._ensurePropertyBag();
     return this._bag.getProperty(name);
   },
+
+
+  // NSISUPPORTS
+
+  //
+  // see nsISupports.QueryInterface
+  //
+  QueryInterface: function(iid)
+  {
+    if (iid.equals(Ci.nsIHttpRequest) || iid.equals(Ci.nsISupports))
+      return this;
+
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+
+  // PRIVATE IMPLEMENTATION
   
   /** Ensures a property bag has been created for ad-hoc behaviors. */
   _ensurePropertyBag: function()
