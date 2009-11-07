@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDirectoryService.h"
+#include "DirectoryProvider.h"
 
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
@@ -56,52 +57,15 @@
 #include "nsStringAPI.h"
 #include "nsXULAppAPI.h"
 
-class nsBrowserDirectoryProvider :
-  public nsIDirectoryServiceProvider2
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDIRECTORYSERVICEPROVIDER
-  NS_DECL_NSIDIRECTORYSERVICEPROVIDER2
+namespace mozilla {
+namespace browser {
 
-  static NS_METHOD Register(nsIComponentManager* aCompMgr,
-                            nsIFile* aPath, const char *aLoaderStr,
-                            const char *aType,
-                            const nsModuleComponentInfo *aInfo);
-
-  static NS_METHOD Unregister(nsIComponentManager* aCompMgr,
-                              nsIFile* aPath, const char *aLoaderStr,
-                              const nsModuleComponentInfo *aInfo);
-
-private:
-  nsresult RestoreBookmarksFromBackup(const nsACString& aLeafName,
-				      nsIFile* aParentDir, nsIFile* aTarget);
-  void EnsureProfileFile(const nsACString& aLeafName,
-			 nsIFile* aParentDir, nsIFile* aTarget);
-
-  class AppendingEnumerator : public nsISimpleEnumerator
-  {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISIMPLEENUMERATOR
-
-    AppendingEnumerator(nsISimpleEnumerator* aBase,
-                        char const *const *aAppendList);
-
-  private:
-    nsCOMPtr<nsISimpleEnumerator> mBase;
-    char const *const *const      mAppendList;
-    nsCOMPtr<nsIFile>             mNext;
-  };
-};
-
-NS_IMPL_ISUPPORTS2(nsBrowserDirectoryProvider,
+NS_IMPL_ISUPPORTS2(DirectoryProvider,
                    nsIDirectoryServiceProvider,
                    nsIDirectoryServiceProvider2)
 
 NS_IMETHODIMP
-nsBrowserDirectoryProvider::GetFile(const char *aKey, PRBool *aPersist,
-                                    nsIFile* *aResult)
+DirectoryProvider::GetFile(const char *aKey, PRBool *aPersist, nsIFile* *aResult)
 {
   nsresult rv;
 
@@ -290,8 +254,7 @@ AppendDistroSearchDirs(nsIProperties* aDirSvc, nsCOMArray<nsIFile> &array)
 }
 
 NS_IMETHODIMP
-nsBrowserDirectoryProvider::GetFiles(const char *aKey,
-                                     nsISimpleEnumerator* *aResult)
+DirectoryProvider::GetFiles(const char *aKey, nsISimpleEnumerator* *aResult)
 {
   nsresult rv;
 
@@ -331,17 +294,10 @@ nsBrowserDirectoryProvider::GetFiles(const char *aKey,
   return NS_ERROR_FAILURE;
 }
 
-static char const kContractID[] = "@mozilla.org/browser/directory-provider;1";
-
-// {6DEB193C-F87D-4078-BC78-5E64655B4D62}
-#define NS_BROWSERDIRECTORYPROVIDER_CID \
-  { 0x6deb193c, 0xf87d, 0x4078, { 0xbc, 0x78, 0x5e, 0x64, 0x65, 0x5b, 0x4d, 0x62 } }
-
 NS_METHOD
-nsBrowserDirectoryProvider::Register(nsIComponentManager* aCompMgr,
-                                     nsIFile* aPath, const char *aLoaderStr,
-                                     const char *aType,
-                                     const nsModuleComponentInfo *aInfo)
+DirectoryProvider::Register(nsIComponentManager* aCompMgr, nsIFile* aPath,
+                            const char *aLoaderStr, const char *aType,
+                            const nsModuleComponentInfo *aInfo)
 {
   nsresult rv;
 
@@ -352,15 +308,16 @@ nsBrowserDirectoryProvider::Register(nsIComponentManager* aCompMgr,
 
   rv = catMan->AddCategoryEntry(XPCOM_DIRECTORY_PROVIDER_CATEGORY,
                                 "browser-directory-provider",
-                                kContractID, PR_TRUE, PR_TRUE, nsnull);
+                                NS_BROWSERDIRECTORYPROVIDER_CONTRACTID,
+                                PR_TRUE, PR_TRUE, nsnull);
   return rv;
 }
 
 
 NS_METHOD
-nsBrowserDirectoryProvider::Unregister(nsIComponentManager* aCompMgr,
-                                       nsIFile* aPath, const char *aLoaderStr,
-                                       const nsModuleComponentInfo *aInfo)
+DirectoryProvider::Unregister(nsIComponentManager* aCompMgr, 
+                              nsIFile* aPath, const char *aLoaderStr,
+                              const nsModuleComponentInfo *aInfo)
 {
   nsresult rv;
 
@@ -374,32 +331,17 @@ nsBrowserDirectoryProvider::Unregister(nsIComponentManager* aCompMgr,
   return rv;
 }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserDirectoryProvider)
-
-static const nsModuleComponentInfo components[] = {
-  {
-    "nsBrowserDirectoryProvider",
-    NS_BROWSERDIRECTORYPROVIDER_CID,
-    kContractID,
-    nsBrowserDirectoryProviderConstructor,
-    nsBrowserDirectoryProvider::Register,
-    nsBrowserDirectoryProvider::Unregister
-  }
-};
-
-NS_IMPL_NSGETMODULE(BrowserDirProvider, components)
-NS_IMPL_ISUPPORTS1(nsBrowserDirectoryProvider::AppendingEnumerator,
-                   nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS1(DirectoryProvider::AppendingEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
-nsBrowserDirectoryProvider::AppendingEnumerator::HasMoreElements(PRBool *aResult)
+DirectoryProvider::AppendingEnumerator::HasMoreElements(PRBool *aResult)
 {
   *aResult = mNext ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserDirectoryProvider::AppendingEnumerator::GetNext(nsISupports* *aResult)
+DirectoryProvider::AppendingEnumerator::GetNext(nsISupports* *aResult)
 {
   if (aResult)
     NS_ADDREF(*aResult = mNext);
@@ -440,7 +382,7 @@ nsBrowserDirectoryProvider::AppendingEnumerator::GetNext(nsISupports* *aResult)
   return NS_OK;
 }
 
-nsBrowserDirectoryProvider::AppendingEnumerator::AppendingEnumerator
+DirectoryProvider::AppendingEnumerator::AppendingEnumerator
     (nsISimpleEnumerator* aBase,
      char const *const *aAppendList) :
   mBase(aBase),
@@ -449,3 +391,6 @@ nsBrowserDirectoryProvider::AppendingEnumerator::AppendingEnumerator
   // Initialize mNext to begin.
   GetNext(nsnull);
 }
+
+} // namespace browser
+} // namespace mozilla
