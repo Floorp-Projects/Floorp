@@ -36,6 +36,15 @@ public:
     : mSeverity(static_cast<PRLogModuleLevel>(severity))
     , mMsg(NULL)
   { }
+
+  ChromiumLogger(const ChromiumLogger& other)
+    : mSeverity(other.mSeverity)
+    , mMsg(other.mMsg)
+  {
+    // sorry
+    const_cast<ChromiumLogger&>(other).mMsg = NULL;
+  }
+
   ~ChromiumLogger();
 
   // not private so that the operator<< overloads can get to it
@@ -48,7 +57,7 @@ private:
   PRLogModuleLevel mSeverity;
   mutable char* mMsg;
 
-  DISALLOW_EVIL_CONSTRUCTORS(ChromiumLogger);
+  ChromiumLogger& operator=(const ChromiumLogger&);
 };
 
 struct Voidifier
