@@ -44,6 +44,7 @@
 
 #ifdef OS_WIN
 #include "nsServiceManagerUtils.h"
+#include "nsStringGlue.h"
 #include "nsIXULAppInfo.h"
 #endif
 
