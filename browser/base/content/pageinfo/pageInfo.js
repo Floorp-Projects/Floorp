@@ -283,6 +283,11 @@ function onLoadPageInfo()
              window.arguments.length >= 1 &&
              window.arguments[0];
 
+  if (!args || !args.doc) {
+    gWindow = window.opener.content;
+    gDocument = gWindow.document;
+  }
+
   // init media view
   var imageTree = document.getElementById("imagetree");
   imageTree.view = gImageView;
@@ -339,6 +344,7 @@ function resetPageInfo(args)
   /* Call registered overlay reset functions */
   onResetRegistry.forEach(function(func) { func(); });
 
+  /* Rebuild the data */
   loadTab(args);
 }
 
@@ -383,18 +389,7 @@ function loadTab(args)
     gDocument = args.doc;
     gWindow = gDocument.defaultView;
   }
-  else {
-    if ("gBrowser" in window.opener)
-      gWindow = window.opener.gBrowser.contentWindow;
-    else
-      gWindow = window.opener.frames[0];
-    gDocument = gWindow.document;
-  }
 
-  if (args && args.imageElement)
-    gImageElement = args.imageElement;
-
-  /* Rebuild the data */
   gImageElement = args && args.imageElement;
 
   /* Load the page info */
