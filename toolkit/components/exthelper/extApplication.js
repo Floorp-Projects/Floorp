@@ -531,7 +531,7 @@ Extensions.prototype = {
   // maxVersion: "2.0"
   find : function exts_find(aOptions) {
     var retVal = [];
-    var items = this._extmgr.getItemList(Ci.nsIUpdateItem.TYPE_EXTENSION, {});
+    var items = this._extmgr.getItemList(Ci.nsIUpdateItem.TYPE_EXTENSION);
 
     for (var i = 0; i < items.length; i++) {
       retVal.push(this._get(items[i].id));
