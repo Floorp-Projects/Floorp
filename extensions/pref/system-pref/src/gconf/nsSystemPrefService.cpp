@@ -365,7 +365,7 @@ NS_IMETHODIMP nsSystemPrefService::DeleteBranch(const char *aStartingAt)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void getChildList (in string aStartingAt, out unsigned long aCount, [array, size_is (aCount), retval] out string aChildArray); */
+/* void getChildList (in string aStartingAt, [optional] out unsigned long aCount, [array, size_is (aCount), retval] out string aChildArray); */
 NS_IMETHODIMP nsSystemPrefService::GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
