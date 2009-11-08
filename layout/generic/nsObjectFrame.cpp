@@ -364,7 +364,7 @@ public:
 
   void SetOwner(nsObjectFrame *aOwner)
   {
-    mOwner = aOwner;
+    mObjectFrame = aOwner;
   }
 
   PRUint32 GetLastEventloopNestingLevel() const {
@@ -410,7 +410,7 @@ private:
 
   nsPluginNativeWindow       *mPluginWindow;
   nsCOMPtr<nsIPluginInstance> mInstance;
-  nsObjectFrame              *mOwner;
+  nsObjectFrame              *mObjectFrame; // owns nsPluginInstanceOwner
   nsCOMPtr<nsIContent>        mContent;
   nsCString                   mDocumentBase;
   char                       *mTagText;
@@ -2331,7 +2331,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   else
     mPluginWindow = nsnull;
 
-  mOwner = nsnull;
+  mObjectFrame = nsnull;
   mTagText = nsnull;
 #ifdef XP_MACOSX
   memset(&mCGPluginPortCopy, 0, sizeof(NP_CGContext));
@@ -2370,7 +2370,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   // shut off the timer.
   CancelTimer();
 
-  mOwner = nsnull;
+  mObjectFrame = nsnull;
 
   for (cnt = 0; cnt < (mNumCachedAttrs + 1 + mNumCachedParams); cnt++) {
     if (mCachedAttrParamNames && mCachedAttrParamNames[cnt]) {
@@ -2519,14 +2519,14 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetInstance(nsIPluginInstance *&aInstance)
 NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarget, void *aPostData, PRUint32 aPostDataLen, void *aHeadersData, 
                                             PRUint32 aHeadersDataLen, PRBool isFile)
 {
-  NS_ENSURE_TRUE(mOwner,NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mObjectFrame, NS_ERROR_NULL_POINTER);
 
   if (mContent->IsEditable()) {
     return NS_OK;
   }
 
   // the container of the pres context will give us the link handler
-  nsCOMPtr<nsISupports> container = mOwner->PresContext()->GetContainer();
+  nsCOMPtr<nsISupports> container = mObjectFrame->PresContext()->GetContainer();
   NS_ENSURE_TRUE(container,NS_ERROR_FAILURE);
   nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(container);
   NS_ENSURE_TRUE(lh, NS_ERROR_FAILURE);
@@ -2590,10 +2590,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const PRUnichar *aStatusMsg)
 {
   nsresult  rv = NS_ERROR_FAILURE;
 
-  if (!mOwner) {
+  if (!mObjectFrame) {
     return rv;
   }
-  nsCOMPtr<nsISupports> cont = mOwner->PresContext()->GetContainer();
+  nsCOMPtr<nsISupports> cont = mObjectFrame->PresContext()->GetContainer();
   if (!cont) {
     return NS_OK;
   }
@@ -2632,7 +2632,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument* *aDocument)
 
 NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
 {
-  if (!mOwner || !invalidRect || !mWidgetVisible)
+  if (!mObjectFrame || !invalidRect || !mWidgetVisible)
     return NS_ERROR_FAILURE;
 
 #ifndef XP_MACOSX
@@ -2647,12 +2647,12 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   }
 #endif
 
-  nsPresContext* presContext = mOwner->PresContext();
+  nsPresContext* presContext = mObjectFrame->PresContext();
   nsRect rect(presContext->DevPixelsToAppUnits(invalidRect->left),
               presContext->DevPixelsToAppUnits(invalidRect->top),
               presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
               presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
-  mOwner->Invalidate(rect + mOwner->GetUsedBorderAndPadding().TopLeft());
+  mObjectFrame->Invalidate(rect + mObjectFrame->GetUsedBorderAndPadding().TopLeft());
   return NS_OK;
 }
 
@@ -2663,8 +2663,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRegion(NPRegion invalidRegion)
 
 NS_IMETHODIMP nsPluginInstanceOwner::ForceRedraw()
 {
-  NS_ENSURE_TRUE(mOwner,NS_ERROR_NULL_POINTER);
-  nsIView* view = mOwner->GetView();
+  NS_ENSURE_TRUE(mObjectFrame, NS_ERROR_NULL_POINTER);
+  nsIView* view = mObjectFrame->GetView();
   if (view) {
     return view->GetViewManager()->Composite();
   }
@@ -2674,14 +2674,14 @@ NS_IMETHODIMP nsPluginInstanceOwner::ForceRedraw()
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
 {
-  if (!mOwner) {
+  if (!mObjectFrame) {
     NS_WARNING("plugin owner has no owner in getting doc's window handle");
     return NS_ERROR_FAILURE;
   }
   
 #if defined(XP_WIN) || defined(XP_OS2)
   void** pvalue = (void**)value;
-  nsIViewManager* vm = mOwner->PresContext()->GetPresShell()->GetViewManager();
+  nsIViewManager* vm = mObjectFrame->PresContext()->GetPresShell()->GetViewManager();
   if (!vm)
     return NS_ERROR_FAILURE;
 #if defined(XP_WIN)
@@ -2713,7 +2713,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
     // fixing both the caret and ability to interact issues for a windowless control in a non document aligned windw
     // does not seem to be possible without a change to the flash plugin
     
-    nsIWidget* win = mOwner->GetWindow();
+    nsIWidget* win = mObjectFrame->GetWindow();
     if (win) {
       nsIView *view = nsIView::GetViewFor(win);
       NS_ASSERTION(view, "No view for widget");
@@ -2741,7 +2741,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
   return rv;
 #elif defined(MOZ_WIDGET_GTK2)
   // X11 window managers want the toplevel window for WM_TRANSIENT_FOR.
-  nsIWidget* win = mOwner->GetWindow();
+  nsIWidget* win = mObjectFrame->GetWindow();
   if (!win)
     return NS_ERROR_FAILURE;
   GdkWindow* gdkWindow = static_cast<GdkWindow*>(win->GetNativeData(NS_NATIVE_WINDOW));
@@ -2892,7 +2892,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
   NS_ENSURE_ARG_POINTER(result);
   nsresult rv = NS_OK;
   if (mDocumentBase.IsEmpty()) {
-    if (!mOwner) {
+    if (!mObjectFrame) {
       *result = nsnull;
       return NS_ERROR_FAILURE;
     }
@@ -3084,7 +3084,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetBorderHorizSpace(PRUint32 *result)
 NS_IMETHODIMP nsPluginInstanceOwner::GetUniqueID(PRUint32 *result)
 {
   NS_ENSURE_ARG_POINTER(result);
-  *result = NS_PTR_TO_INT32(mOwner);
+  *result = NS_PTR_TO_INT32(mObjectFrame);
   return NS_OK;
 }
 
@@ -3103,7 +3103,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
                   !mCachedAttrParamNames,
                   "re-cache of attrs/params not implemented! use the DOM "
                   "node directy instead");
-  NS_ENSURE_TRUE(mOwner, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(mObjectFrame, NS_ERROR_NULL_POINTER);
 
   // first, we need to find out how much we need to allocate for our
   // arrays count up attributes
@@ -3197,7 +3197,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   }
 
   // We're done with DOM method calls now; make sure we still have a frame.
-  NS_ENSURE_TRUE(mOwner, NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mObjectFrame, NS_ERROR_OUT_OF_MEMORY);
 
   PRUint32 cparams = ourParams.Count(); // unsigned 32 bits to unsigned 16 bits conversion
   if (cparams < 0x0000FFFF)
@@ -3695,7 +3695,7 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
 
   // if the plugin is windowless, we need to set focus ourselves
   // otherwise, we might not get key events
-  if (mOwner && mPluginWindow &&
+  if (mObjectFrame && mPluginWindow &&
       mPluginWindow->type == NPWindowTypeDrawable) {
     
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -3863,7 +3863,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEventX11Composited(const nsGUIEvent&
 {
   //printf("nsGUIEvent.message: %d\n", anEvent.message);
   nsEventStatus rv = nsEventStatus_eIgnore;
-  if (!mInstance || !mOwner)   // if mInstance is null, we shouldn't be here
+  if (!mInstance || !mObjectFrame)   // if mInstance is null, we shouldn't be here
     return rv;
 
   // this code supports windowless plugins
@@ -3884,10 +3884,10 @@ nsEventStatus nsPluginInstanceOwner::ProcessEventX11Composited(const nsGUIEvent&
           }
 
         // Get reference point relative to plugin origin.
-        const nsPresContext* presContext = mOwner->PresContext();
+        const nsPresContext* presContext = mObjectFrame->PresContext();
         nsPoint appPoint =
-          nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mOwner) -
-          mOwner->GetUsedBorderAndPadding().TopLeft();
+          nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mObjectFrame) -
+          mObjectFrame->GetUsedBorderAndPadding().TopLeft();
         nsIntPoint pluginPoint(presContext->AppUnitsToDevPixels(appPoint.x),
                                presContext->AppUnitsToDevPixels(appPoint.y));
         mLastPoint = pluginPoint;
@@ -4114,7 +4114,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 
   nsEventStatus rv = nsEventStatus_eIgnore;
 
-  if (!mInstance || !mOwner)   // if mInstance is null, we shouldn't be here
+  if (!mInstance || !mObjectFrame)   // if mInstance is null, we shouldn't be here
     return nsEventStatus_eIgnore;
 
 #ifdef XP_MACOSX
@@ -4136,9 +4136,9 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
       void* event = anEvent.nativeMsg;
 
       if (!event) {
-        nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mOwner)
-          - mOwner->GetUsedBorderAndPadding().TopLeft();
-        nsPresContext* presContext = mOwner->PresContext();
+        nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mObjectFrame)
+          - mObjectFrame->GetUsedBorderAndPadding().TopLeft();
+        nsPresContext* presContext = mObjectFrame->PresContext();
         nsIntPoint ptPx(presContext->AppUnitsToDevPixels(pt.x),
                         presContext->AppUnitsToDevPixels(pt.y));
 
@@ -4299,12 +4299,12 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
                    anEvent.message == NS_MOUSE_MOVE,
                    "Incorrect event type for coordinate translation");
       nsPoint pt =
-        nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mOwner) -
-        mOwner->GetUsedBorderAndPadding().TopLeft();
-      nsPresContext* presContext = mOwner->PresContext();
+        nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mObjectFrame) -
+        mObjectFrame->GetUsedBorderAndPadding().TopLeft();
+      nsPresContext* presContext = mObjectFrame->PresContext();
       nsIntPoint ptPx(presContext->AppUnitsToDevPixels(pt.x),
                       presContext->AppUnitsToDevPixels(pt.y));
-      nsIntPoint widgetPtPx = ptPx + mOwner->GetWindowOriginInPixels(PR_TRUE);
+      nsIntPoint widgetPtPx = ptPx + mObjectFrame->GetWindowOriginInPixels(PR_TRUE);
       pPluginEvent->lParam = MAKELPARAM(widgetPtPx.x, widgetPtPx.y);
     }
   }
@@ -4352,10 +4352,10 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
           }
 
         // Get reference point relative to plugin origin.
-        const nsPresContext* presContext = mOwner->PresContext();
+        const nsPresContext* presContext = mObjectFrame->PresContext();
         nsPoint appPoint =
-          nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mOwner) -
-          mOwner->GetUsedBorderAndPadding().TopLeft();
+          nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mObjectFrame) -
+          mObjectFrame->GetUsedBorderAndPadding().TopLeft();
         nsIntPoint pluginPoint(presContext->AppUnitsToDevPixels(appPoint.x),
                                presContext->AppUnitsToDevPixels(appPoint.y));
         const nsMouseEvent& mouseEvent =
@@ -4612,7 +4612,7 @@ nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
 #endif
 
   // Unregister scroll position listener
-  nsIFrame* parentWithView = mOwner->GetAncestorWithView();
+  nsIFrame* parentWithView = mObjectFrame->GetAncestorWithView();
   nsIView* curView = parentWithView ? parentWithView->GetView() : nsnull;
   while (curView) {
     nsIScrollableView* scrollingView = curView->ToScrollableView();
@@ -4628,7 +4628,7 @@ nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
 #ifdef XP_MACOSX
 void nsPluginInstanceOwner::Paint(const gfxRect& aDirtyRect)
 {
-  if (!mInstance || !mOwner)
+  if (!mInstance || !mObjectFrame)
     return;
  
   nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
@@ -4667,7 +4667,7 @@ void nsPluginInstanceOwner::Paint(const gfxRect& aDirtyRect)
 #ifdef XP_WIN
 void nsPluginInstanceOwner::Paint(const RECT& aDirty, HDC aDC)
 {
-  if (!mInstance || !mOwner)
+  if (!mInstance || !mObjectFrame)
     return;
 
   NPEvent pluginEvent;
@@ -4682,12 +4682,12 @@ void nsPluginInstanceOwner::Paint(const RECT& aDirty, HDC aDC)
 #ifdef XP_OS2
 void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, HPS aHPS)
 {
-  if (!mInstance || !mOwner)
+  if (!mInstance || !mObjectFrame)
     return;
 
   NPWindow *window;
   GetWindow(window);
-  nsIntRect relDirtyRect = aDirtyRect.ToOutsidePixels(mOwner->PresContext()->AppUnitsPerDevPixel());
+  nsIntRect relDirtyRect = aDirtyRect.ToOutsidePixels(mObjectFrame->PresContext()->AppUnitsPerDevPixel());
 
   // we got dirty rectangle in relative window coordinates, but we
   // need it in absolute units and in the (left, top, right, bottom) form
@@ -4711,7 +4711,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
                                   const gfxRect& aFrameRect,
                                   const gfxRect& aDirtyRect)
 {
-  if (!mInstance || !mOwner)
+  if (!mInstance || !mObjectFrame)
     return;
 
   // Align to device pixels where sensible
@@ -5217,7 +5217,7 @@ nsresult nsPluginInstanceOwner::Init(nsPresContext* aPresContext,
          ("nsPluginInstanceOwner::Init() called on %p for frame %p\n", this,
           aFrame));
 
-  mOwner = aFrame;
+  mObjectFrame = aFrame;
   mContent = aContent;
 
   nsWeakFrame weakFrame(aFrame);
@@ -5278,7 +5278,7 @@ nsresult nsPluginInstanceOwner::Init(nsPresContext* aPresContext,
   // Register scroll position listener
   // We need to register a scroll pos listener on every scrollable
   // view up to the top
-  nsIFrame* parentWithView = mOwner->GetAncestorWithView();
+  nsIFrame* parentWithView = mObjectFrame->GetAncestorWithView();
   nsIView* curView = parentWithView ? parentWithView->GetView() : nsnull;
   while (curView) {
     nsIScrollableView* scrollingView = curView->ToScrollableView();
@@ -5329,22 +5329,22 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
   nsIView   *view;
   nsresult  rv = NS_ERROR_FAILURE;
 
-  if (mOwner) {
+  if (mObjectFrame) {
     // Create view if necessary
 
-    view = mOwner->GetView();
+    view = mObjectFrame->GetView();
 
     if (!view || !mWidget) {
       PRBool windowless = PR_FALSE;
       mInstance->IsWindowless(&windowless);
 
       // always create widgets in Twips, not pixels
-      nsPresContext* context = mOwner->PresContext();
-      rv = mOwner->CreateWidget(context->DevPixelsToAppUnits(mPluginWindow->width),
-                                context->DevPixelsToAppUnits(mPluginWindow->height),
-                                windowless);
+      nsPresContext* context = mObjectFrame->PresContext();
+      rv = mObjectFrame->CreateWidget(context->DevPixelsToAppUnits(mPluginWindow->width),
+                                      context->DevPixelsToAppUnits(mPluginWindow->height),
+                                      windowless);
       if (NS_OK == rv) {
-        mWidget = mOwner->GetWidget();
+        mWidget = mObjectFrame->GetWidget();
 
         if (PR_TRUE == windowless) {
           mPluginWindow->type = NPWindowTypeDrawable;
@@ -5356,7 +5356,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           mPluginWindow->window = nsnull;
 #ifdef MOZ_X11
           // Fill in the display field.
-          nsIWidget* win = mOwner->GetWindow();
+          nsIWidget* win = mObjectFrame->GetWindow();
           NPSetWindowCallbackStruct* ws_info = 
             static_cast<NPSetWindowCallbackStruct*>(mPluginWindow->ws_info);
           if (win) {
@@ -5404,12 +5404,12 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
 #ifdef MOZ_PLATFORM_HILDON
 PRBool nsPluginInstanceOwner::UpdateVisibility(PRBool aForce)
 {
-  if (!mPluginWindow || !mInstance || !mOwner)
+  if (!mPluginWindow || !mInstance || !mObjectFrame)
     return PR_FALSE;
 
   // first, check our view for CSS visibility style
   PRBool isVisible =
-    mOwner->GetView()->GetVisibility() == nsViewVisibility_kShow;
+    mObjectFrame->GetView()->GetVisibility() == nsViewVisibility_kShow;
 
   if (aForce || mWidgetVisible != isVisible) {
     PRBool handled;
@@ -5431,7 +5431,7 @@ PRBool nsPluginInstanceOwner::UpdateVisibility(PRBool aForce)
 
 void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 {
-  if (!mWidget || !mPluginWindow || !mInstance || !mOwner)
+  if (!mWidget || !mPluginWindow || !mInstance || !mObjectFrame)
     return nsnull;
 
   NPDrawingModel drawingModel = GetDrawingModel();
