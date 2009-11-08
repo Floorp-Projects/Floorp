@@ -3506,6 +3506,28 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     else
       geckoEvent.delta = (PRInt32)ceilf(scrollDelta);
 
+    NPCocoaEvent cocoaEvent;
+    if (mPluginEventModel == NPEventModelCocoa) {
+      InitNPCocoaEvent(&cocoaEvent);
+      NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+      cocoaEvent.type = NPCocoaEventScrollWheel;
+      cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
+      cocoaEvent.data.mouse.pluginX = point.x;
+      cocoaEvent.data.mouse.pluginY = point.y;
+      cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
+      cocoaEvent.data.mouse.clickCount = 0;
+      if (inAxis & nsMouseScrollEvent::kIsHorizontal)
+        cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
+      else
+        cocoaEvent.data.mouse.deltaX = 0.0;
+      if (inAxis & nsMouseScrollEvent::kIsVertical)
+        cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
+      else
+        cocoaEvent.data.mouse.deltaY = 0.0;
+      cocoaEvent.data.mouse.deltaZ = 0.0;
+      geckoEvent.nativeMsg = &cocoaEvent;
+    }
+
     nsAutoRetainCocoaObject kungFuDeathGrip(self);
     mGeckoChild->DispatchWindowEvent(geckoEvent);
     if (!mGeckoChild)
