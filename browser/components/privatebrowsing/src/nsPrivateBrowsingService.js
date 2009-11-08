@@ -561,7 +561,7 @@ PrivateBrowsingService.prototype = {
               getService(Ci.nsILoginManager)) {
       // Clear all passwords for domain
       try {
-        let logins = lm.getAllLogins({});
+        let logins = lm.getAllLogins();
         for (let i = 0; i < logins.length; i++)
           if (logins[i].hostname.hasRootDomain(aDomain))
             lm.removeLogin(logins[i]);
@@ -571,7 +571,7 @@ PrivateBrowsingService.prototype = {
       catch (ex if ex.message.indexOf("User canceled Master Password entry") != -1) { }
 
       // Clear any "do not save for this site" for this domain
-      let disabledHosts = lm.getAllDisabledHosts({});
+      let disabledHosts = lm.getAllDisabledHosts();
       for (let i = 0; i < disabledHosts.length; i++)
         if (disabledHosts[i].hasRootDomain(aDomain))
           lm.setLoginSavingEnabled(disabledHosts, true);
