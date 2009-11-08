@@ -138,12 +138,12 @@ function commonInit() {
 
 
     // Check that initial state has no logins
-    var logins = pwmgr.getAllLogins({});
+    var logins = pwmgr.getAllLogins();
     if (logins.length) {
         //todo(false, "Warning: wasn't expecting logins to be present.");
         pwmgr.removeAllLogins();
     }
-    var disabledHosts = pwmgr.getAllDisabledHosts({});
+    var disabledHosts = pwmgr.getAllDisabledHosts();
     if (disabledHosts.length) {
         //todo(false, "Warning: wasn't expecting disabled hosts to be present.");
         for each (var host in disabledHosts)
@@ -158,8 +158,8 @@ function commonInit() {
     pwmgr.addLogin(login);
 
     // Last sanity check
-    logins = pwmgr.getAllLogins({});
+    logins = pwmgr.getAllLogins();
     is(logins.length, 1, "Checking for successful init login");
-    disabledHosts = pwmgr.getAllDisabledHosts({});
+    disabledHosts = pwmgr.getAllDisabledHosts();
     is(disabledHosts.length, 0, "Checking for no disabled hosts");
 }

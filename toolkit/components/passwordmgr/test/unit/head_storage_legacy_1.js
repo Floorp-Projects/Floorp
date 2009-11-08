@@ -119,8 +119,8 @@ const LoginTest = {
    * Compare info from component to what we expected.
    */
   checkStorageData : function (storage, ref_disabledHosts, ref_logins) {
-    this.checkLogins(ref_logins, storage.getAllLogins({}));
-    this.checkDisabledHosts(ref_disabledHosts, storage.getAllDisabledHosts({}));
+    this.checkLogins(ref_logins, storage.getAllLogins());
+    this.checkDisabledHosts(ref_disabledHosts, storage.getAllDisabledHosts());
   },
 
   /*
