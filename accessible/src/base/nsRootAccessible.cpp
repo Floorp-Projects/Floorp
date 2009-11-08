@@ -401,11 +401,12 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
   }
 }
 
-PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
-                                                  nsIDOMNode *aNode,
-                                                  nsIDOMEvent *aFocusEvent,
-                                                  PRBool aForceEvent,
-                                                  PRBool aIsAsynch)
+PRBool
+nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
+                                           nsIDOMNode *aNode,
+                                           nsIDOMEvent *aFocusEvent,
+                                           PRBool aForceEvent,
+                                           PRBool aIsAsynch)
 {
   if (mCaretAccessible) {
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aFocusEvent));
@@ -531,10 +532,16 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   if (docAccessible) {
     // Doc is gaining focus, but actual focus may be on an element within document
     nsCOMPtr<nsIDOMNode> realFocusedNode = GetCurrentFocus();
-    if (realFocusedNode != aNode || realFocusedNode == mDOMNode) {
+    if ((realFocusedNode != aNode || realFocusedNode == mDOMNode) &&
+        !(nsAccUtils::ExtendedState(finalFocusAccessible) &
+                    nsIAccessibleStates::EXT_STATE_EDITABLE)) {
       // Suppress document focus, because real DOM focus will be fired next,
-      // and that's what we care about
+      // except in the case of editable documents because we can't rely on a
+      // followup focus event for an element in an editable document.
       // Make sure we never fire focus for the nsRootAccessible (mDOMNode)
+
+      // XXX todo dig deeper on editor focus inconsistency in bug 526313
+
       return PR_FALSE;
     }
   }
