@@ -418,28 +418,6 @@ static const jsbytecode emptyScriptCode[] = {JSOP_STOP, SRC_NULL};
     {0, NULL}, NULL, 0, 0, 0, NULL
 };
 
-static JSScript *
-NewMutableEmptyScript(JSContext *cx)
-{
-    size_t size = sizeof(JSScript) + 1 * sizeof(jsbytecode) + 1 * sizeof(jssrcnote);
-    JSScript *script = (JSScript *) cx->malloc(size);
-    if (!script)
-        return NULL;
-
-    memset(script, 0, sizeof(JSScript));
-    script->length = 1;
-    script->version = JSVERSION_DEFAULT;
-    script->noScriptRval = true;
-    script->code = script->main = (jsbytecode *)(script + 1);
-    script->code[0] = JSOP_STOP;
-    script->code[1] = SRC_NULL;
-
-#ifdef CHECK_SCRIPT_OWNER
-    script->owner = cx->thread;
-#endif
-    return script;
-}
-
 #if JS_HAS_XDR
 
 JSBool
@@ -507,12 +485,18 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
              * the shorthand (0 length word) for us. Make a new mutable empty
              * script here and return it immediately.
              */
-            script = NewMutableEmptyScript(cx);
+            script = js_NewScript(cx, 1, 1, 0, 0, 0, 0, 0);
             if (!script)
                 return JS_FALSE;
+
+            script->version = JSVERSION_DEFAULT;
+            script->noScriptRval = true;
+            script->code[0] = JSOP_STOP;
+            script->code[1] = SRC_NULL;
             *scriptp = script;
             return JS_TRUE;
         }
+
         *scriptp = JSScript::emptyScript();
         return JS_TRUE;
     }
@@ -1566,11 +1550,17 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         }
         if ((cg->flags & TCF_NO_SCRIPT_RVAL) && JSOp(*pc) == JSOP_FALSE)
             ++pc;
-        if (JSOp(*pc) == JSOP_STOP) {
-            if (cx->debugHooks->newScriptHook || (cg->flags & TCF_NEED_MUTABLE_SCRIPT))
-                return NewMutableEmptyScript(cx);
 
+        if (JSOp(*pc) == JSOP_STOP &&
+            !cx->debugHooks->newScriptHook &&
+            !(cg->flags & TCF_NEED_MUTABLE_SCRIPT))
+        {
+            /*
+             * We can probably use the immutable empty script singleton, just
+             * one hard case (nupvars != 0) may stand in our way.
+             */
             JSScript *empty = JSScript::emptyScript();
+
             if (cg->flags & TCF_IN_FUNCTION) {
                 fun = cg->fun;
                 JS_ASSERT(FUN_INTERPRETED(fun) && !FUN_SCRIPT(fun));
