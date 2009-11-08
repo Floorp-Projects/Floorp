@@ -93,9 +93,9 @@ LoginTest.deleteFile(OUTDIR, "signons-unittest-notify.sqlite");
 
 var storage;
 storage = LoginTest.initStorage(INDIR, "signons-empty.txt", OUTDIR, "signons-unittest-notify.sqlite");
-var logins = storage.getAllLogins({});
+var logins = storage.getAllLogins();
 do_check_eq(logins.length, 0);
-var disabledHosts = storage.getAllDisabledHosts({});
+var disabledHosts = storage.getAllDisabledHosts();
 do_check_eq(disabledHosts.length, 0, "Checking for no initial disabled hosts");
 
 /* ========== 2 ========== */

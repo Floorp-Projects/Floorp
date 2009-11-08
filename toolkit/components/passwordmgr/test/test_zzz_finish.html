@@ -35,16 +35,16 @@ ok(pwmgr != null, "pwmgr getService()");
 // Remove all logins, so future test runs start off clean.
 pwmgr.removeAllLogins();
 
-var logins = pwmgr.getAllLogins({});
+var logins = pwmgr.getAllLogins();
 ok(logins != null, "getAllLogins()");
 is(logins.length, 0, "ensure no remaining logins");
 
 // Remove any disabled hosts
-var disabledHosts = pwmgr.getAllDisabledHosts({});
+var disabledHosts = pwmgr.getAllDisabledHosts();
 ok(disabledHosts != null, "getAllDisabledHosts()");
 disabledHosts.forEach(function(host) pwmgr.setLoginSavingEnabled(host, true));
 
-disabledHosts = pwmgr.getAllDisabledHosts({});
+disabledHosts = pwmgr.getAllDisabledHosts();
 ok(disabledHosts != null, "getAllDisabledHosts()");
 is(disabledHosts.length, 0, "ensure no remaining disabled hosts");
 
