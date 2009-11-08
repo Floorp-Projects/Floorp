@@ -835,7 +835,8 @@ nsBidiPresUtils::GetFrameEmbeddingLevel(nsIFrame* aFrame)
 {
   nsIFrame* firstLeaf = aFrame;
   while (!IsBidiLeaf(firstLeaf)) {
-    firstLeaf = firstLeaf->GetFirstChild(nsnull);
+    firstLeaf = 
+      nsPlaceholderFrame::GetRealFrameFor(firstLeaf->GetFirstChild(nsnull));
   }
   return NS_GET_EMBEDDING_LEVEL(firstLeaf);
 }
