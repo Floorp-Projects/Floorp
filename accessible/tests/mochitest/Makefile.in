@@ -102,6 +102,7 @@ _TEST_FILES =\
 		test_events_flush.html \
 		test_events_focus.html \
 		test_events_focus.xul \
+		test_events_focusdoc.html \
 		test_events_mutation.html \
 		test_events_scroll.xul \
 		test_events_tree.xul \
