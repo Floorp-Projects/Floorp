@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US" class="reftest-wait">
+<head>
+	<title>Testcase, bug 174470</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta http-equiv="Content-Style-Type" content="text/css">
+	<style type="text/css">
+
+	table {
+		border-collapse: collapse;
+		margin: 1em;
+		border: thick solid;
+		border-color: #f0f #c0c #909 #606; /* purple */
+	}
+
+	colgroup:first-child + colgroup {
+		border: thick solid;
+		border-color: #f66 #f00 #a00 #600; /* red */
+	}
+
+	colgroup:first-child + colgroup + colgroup > col:first-child + col {
+		border: thick solid;
+		border-color: #ff0 #cc0 #990 #660; /* yellow */
+	}
+
+	colgroup + tbody + tbody {
+		border: thick solid;
+		border-color: #6f6 #0f0 #0a0 #060; /* green */
+	}
+
+	colgroup + tbody > tr:first-child + tr {
+		border: thick solid;
+		border-color: #0ff #0cc #099 #066; /* aqua */
+	}
+
+	colgroup + tbody + tbody + tbody > tr:first-child + tr > td:first-child + td {
+		border: thick solid;
+		border-color: #66f #00f #00a #006; /* blue */
+	}
+
+	</style>
+    <script>
+   function doTest() {
+      var s1 = document.getElementById("screen");
+      s1.parentNode.removeChild(s1); 
+      document.documentElement.removeAttribute('class');
+   }
+   document.addEventListener("MozReftestInvalidate", doTest, false);
+    </script>
+</head>
+<body>
+
+<div id="screen" style="position: fixed; left:50px; height:200px; width: 200px; background-color:white; border:1px solid green;"></div>
+
+<p>The following two tables should be mirrors of each other, except that
+(1) the digits should still be normal left-to-right digits and (2) the
+color changes for each of the 6 colors should, in both, be lightest on top
+clockwise to darkest on the left.</p>
+
+<table dir="ltr" >
+	<colgroup>
+		<col>
+	</colgroup>
+	<colgroup>
+		<col>
+		<col>
+	</colgroup>
+	<colgroup>
+		<col>
+		<col>
+		<col>
+	</colgroup>
+	<tbody>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+	</tbody>
+	<tbody>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+	</tbody>
+	<tbody>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+	</tbody>
+</table>
+
+<table dir="rtl">
+	<colgroup>
+		<col>
+	</colgroup>
+	<colgroup>
+		<col>
+		<col>
+	</colgroup>
+	<colgroup>
+		<col>
+		<col>
+		<col>
+	</colgroup>
+	<tbody>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+	</tbody>
+	<tbody>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+	</tbody>
+	<tbody>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+		<tr><td>1</td><td>22</td><td>333</td><td>4444</td><td>55555</td><td>666666</td></tr>
+	</tbody>
+</table>
+
+</body>
+</html>
