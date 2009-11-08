@@ -401,12 +401,11 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
   }
 }
 
-PRBool
-nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
-                                           nsIDOMNode *aNode,
-                                           nsIDOMEvent *aFocusEvent,
-                                           PRBool aForceEvent,
-                                           PRBool aIsAsynch)
+PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
+                                                  nsIDOMNode *aNode,
+                                                  nsIDOMEvent *aFocusEvent,
+                                                  PRBool aForceEvent,
+                                                  PRBool aIsAsynch)
 {
   if (mCaretAccessible) {
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aFocusEvent));
@@ -536,15 +535,7 @@ nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       // Suppress document focus, because real DOM focus will be fired next,
       // and that's what we care about
       // Make sure we never fire focus for the nsRootAccessible (mDOMNode)
-
-      // XXX todo dig deeper on this in bug 526313
-      // Editor is funky: e.g. for editable iframes the real focus can be on the
-      // nsHTMLHtmlElement and there won't be a follow up dom focus event for
-      // this node. In this case we don't want to bail after all. We can catch
-      // this because the finalFocusNode won't have a frame.
-      if (focusFrame) {
-        return PR_FALSE;
-      }
+      return PR_FALSE;
     }
   }
 
