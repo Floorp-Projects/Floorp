@@ -80,6 +80,43 @@ function uri(spec) {
   return iosvc.newURI(spec, null, null);
 }
 
+/*
+ * Reads the data from the specified nsIFile, and returns an array of bytes.
+ */
+function readFileData(aFile) {
+  var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
+                    createInstance(Ci.nsIFileInputStream);
+  // init the stream as RD_ONLY, -1 == default permissions.
+  inputStream.init(aFile, 0x01, -1, null);
+  var size = inputStream.available();
+
+  // use a binary input stream to grab the bytes.
+  var bis = Cc["@mozilla.org/binaryinputstream;1"].
+            createInstance(Ci.nsIBinaryInputStream);
+  bis.setInputStream(inputStream);
+
+  var bytes = bis.readByteArray(size);
+
+  if (size != bytes.length)
+      throw "Didn't read expected number of bytes";
+
+  return bytes;
+}
+
+/*
+ * Compares two arrays, and returns true if they are equal.
+ */
+function compareArrays(aArray1, aArray2) {
+  if (aArray1.length != aArray2.length)
+    return false;
+
+  for (var i = 0; i < aArray1.length; i++)
+    if (aArray1[i] != aArray2[i])
+      return false;
+
+  return true;
+}
+
 // Delete a previously created sqlite file
 function clearDB() {
   try {
