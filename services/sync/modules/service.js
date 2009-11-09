@@ -190,7 +190,7 @@ WeaveSvc.prototype = {
   set syncInterval(value) Svc.Prefs.set("syncInterval", value),
 
   get syncThreshold() Svc.Prefs.get("syncThreshold", SINGLE_USER_THRESHOLD),
-  set syncThreshold(value) Svc.Prefs.set("nextSync", value),
+  set syncThreshold(value) Svc.Prefs.set("syncThreshold", value),
 
   get globalScore() Svc.Prefs.get("globalScore", 0),
   set globalScore(value) Svc.Prefs.set("globalScore", value),
