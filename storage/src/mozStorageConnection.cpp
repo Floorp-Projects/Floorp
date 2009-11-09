@@ -54,6 +54,7 @@
 #include "nsAutoLock.h"
 
 #include "mozIStorageAggregateFunction.h"
+#include "mozIStorageCompletionCallback.h"
 #include "mozIStorageFunction.h"
 
 #include "mozStorageAsyncStatementExecution.h"
@@ -238,6 +239,38 @@ aggregateFunctionFinalHelper(sqlite3_context *aCtx)
   }
 }
 
+} // anonymous namespace
+
+////////////////////////////////////////////////////////////////////////////////
+//// Local Classes
+
+namespace {
+
+class AsyncCloseConnection : public nsRunnable
+{
+public:
+  AsyncCloseConnection(Connection *aConnection,
+                       nsIEventTarget *aCallingThread,
+                       nsIRunnable *aCallbackEvent)
+  : mConnection(aConnection)
+  , mCallingThread(aCallingThread)
+  , mCallbackEvent(aCallbackEvent)
+  {
+  }
+
+  NS_METHOD Run()
+  {
+    (void)mConnection->internalClose();
+    if (mCallbackEvent)
+      (void)mCallingThread->Dispatch(mCallbackEvent, NS_DISPATCH_NORMAL);
+
+    return NS_OK;
+  }
+private:
+  nsCOMPtr<Connection> mConnection;
+  nsCOMPtr<nsIEventTarget> mCallingThread;
+  nsCOMPtr<nsIRunnable> mCallbackEvent;
+};
 
 } // anonymous namespace
 
@@ -247,8 +280,8 @@ aggregateFunctionFinalHelper(sqlite3_context *aCtx)
 Connection::Connection(Service *aService)
 : sharedAsyncExecutionMutex("Connection::sharedAsyncExecutionMutex")
 , mDBConn(nsnull)
-, mAsyncExecutionMutex(nsAutoLock::NewLock("AsyncExecutionMutex"))
-, mAsyncExecutionThreadShuttingDown(PR_FALSE)
+, mAsyncExecutionMutex("Connection::mAsyncExecutionMutex")
+, mAsyncExecutionThreadShuttingDown(false)
 , mTransactionMutex(nsAutoLock::NewLock("TransactionMutex"))
 , mTransactionInProgress(PR_FALSE)
 , mFunctionsMutex(nsAutoLock::NewLock("FunctionsMutex"))
@@ -262,7 +295,6 @@ Connection::Connection(Service *aService)
 Connection::~Connection()
 {
   (void)Close();
-  nsAutoLock::DestroyLock(mAsyncExecutionMutex);
   nsAutoLock::DestroyLock(mTransactionMutex);
   nsAutoLock::DestroyLock(mFunctionsMutex);
   nsAutoLock::DestroyLock(mProgressHandlerMutex);
@@ -276,7 +308,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(
 already_AddRefed<nsIEventTarget>
 Connection::getAsyncExecutionTarget()
 {
-  nsAutoLock mutex(mAsyncExecutionMutex);
+  MutexAutoLock lockedScope(mAsyncExecutionMutex);
 
   // If we are shutting down the asynchronous thread, don't hand out any more
   // references to the thread.
@@ -300,7 +332,6 @@ nsresult
 Connection::initialize(nsIFile *aDatabaseFile)
 {
   NS_ASSERTION (!mDBConn, "Initialize called on already opened database!");
-  NS_ENSURE_TRUE(mAsyncExecutionMutex, NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(mTransactionMutex, NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(mFunctionsMutex, NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(mProgressHandlerMutex, NS_ERROR_OUT_OF_MEMORY);
@@ -470,14 +501,33 @@ Connection::progressHandler()
   return 0;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//// mozIStorageConnection
-
-NS_IMETHODIMP
-Connection::Close()
+nsresult
+Connection::setClosedState()
 {
-  if (!mDBConn)
-    return NS_ERROR_NOT_INITIALIZED;
+  // Flag that we are shutting down the async thread, so that
+  // getAsyncExecutionTarget knows not to expose/create the async thread.
+  {
+    MutexAutoLock lockedScope(mAsyncExecutionMutex);
+    NS_ENSURE_FALSE(mAsyncExecutionThreadShuttingDown, NS_ERROR_UNEXPECTED);
+    mAsyncExecutionThreadShuttingDown = true;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+Connection::internalClose()
+{
+#ifdef DEBUG
+  // Sanity checks to make sure we are in the proper state before calling this.
+  NS_ASSERTION(mDBConn, "Database connection is already null!");
+
+  { // Make sure we have marked our async thread as shutting down.
+    MutexAutoLock lockedScope(mAsyncExecutionMutex);
+    NS_ASSERTION(mAsyncExecutionThreadShuttingDown,
+                 "Did not call setClosedState!");
+  }
+#endif
 
 #ifdef PR_LOGGING
   nsCAutoString leafName(":memory");
@@ -486,20 +536,6 @@ Connection::Close()
   PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Closing connection to '%s'",
                                       leafName.get()));
 #endif
-
-  // Flag that we are shutting down the async thread, so that
-  // getAsyncExecutionTarget knows not to expose/create the async thread.
-  {
-    nsAutoLock mutex(mAsyncExecutionMutex);
-    mAsyncExecutionThreadShuttingDown = PR_TRUE;
-  }
-  // Shutdown the async thread if it exists.  (Because we just set the flag,
-  // we are the only code that is going to be touching this variable from here
-  // on out.)
-  if (mAsyncExecutionThread) {
-    mAsyncExecutionThread->Shutdown();
-    mAsyncExecutionThread = nsnull;
-  }
 
 #ifdef DEBUG
   // Notify about any non-finalized statements.
@@ -512,18 +548,63 @@ Connection::Close()
   }
 #endif
 
-  {
-    nsAutoLock mutex(mProgressHandlerMutex);
-    if (mProgressHandler)
-      ::sqlite3_progress_handler(mDBConn, 0, NULL, NULL);
-  }
-
   int srv = ::sqlite3_close(mDBConn);
   NS_ASSERTION(srv == SQLITE_OK,
                "sqlite3_close failed. There are probably outstanding statements that are listed above!");
-
   mDBConn = NULL;
+
   return convertResultCode(srv);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// mozIStorageConnection
+
+NS_IMETHODIMP
+Connection::Close()
+{
+  if (!mDBConn)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  { // Make sure we have not executed any asynchronous statements.
+    MutexAutoLock lockedScope(mAsyncExecutionMutex);
+    NS_ENSURE_FALSE(mAsyncExecutionThread, NS_ERROR_UNEXPECTED);
+  }
+
+  nsresult rv = setClosedState();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return internalClose();
+}
+
+NS_IMETHODIMP
+Connection::AsyncClose(mozIStorageCompletionCallback *aCallback)
+{
+  if (!mDBConn)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIEventTarget> asyncThread(getAsyncExecutionTarget());
+  NS_ENSURE_TRUE(asyncThread, NS_ERROR_UNEXPECTED);
+
+  nsresult rv = setClosedState();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create our callback event if we were given a callback.
+  nsCOMPtr<nsIRunnable> completeEvent;
+  if (aCallback) {
+    completeEvent = NS_NEW_RUNNABLE_METHOD(mozIStorageCompletionCallback,
+                                           aCallback, Complete);
+    NS_ENSURE_TRUE(completeEvent, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  // Create and dispatch our close event to the background thread.
+  nsCOMPtr<nsIRunnable> closeEvent =
+    new AsyncCloseConnection(this, NS_GetCurrentThread(), completeEvent);
+  NS_ENSURE_TRUE(closeEvent, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = asyncThread->Dispatch(closeEvent, NS_DISPATCH_NORMAL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
