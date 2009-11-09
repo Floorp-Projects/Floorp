@@ -566,7 +566,7 @@ var gPluginsPage = {
 
     var phs = CoC["@mozilla.org/plugin/host;1"].
                  getService(CoI.nsIPluginHost);
-    var plugins = phs.getPluginTags({});
+    var plugins = phs.getPluginTags();
     var blocklist = CoC["@mozilla.org/extensions/blocklist;1"].
                       getService(CoI.nsIBlocklistService);
 
