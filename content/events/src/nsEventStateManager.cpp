@@ -1983,9 +1983,13 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       // change during the drag.
       dataTransfer->SetReadOnly();
 
-      if (status != nsEventStatus_eConsumeNoDefault)
-        DoDefaultDragStart(aPresContext, event, dataTransfer,
-                           targetContent, isSelection);
+      if (status != nsEventStatus_eConsumeNoDefault) {
+        PRBool dragStarted = DoDefaultDragStart(aPresContext, event, dataTransfer,
+                                                targetContent, isSelection);
+        if (dragStarted) {
+          aEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+        }
+      }
 
       // Note that frame event handling doesn't care about NS_DRAGDROP_GESTURE,
       // which is just as well since we don't really know which frame to
@@ -2106,7 +2110,7 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
   }
 }
 
-void
+PRBool
 nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
                                         nsDragEvent* aDragEvent,
                                         nsDOMDataTransfer* aDataTransfer,
@@ -2116,18 +2120,19 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   nsCOMPtr<nsIDragService> dragService =
     do_GetService("@mozilla.org/widget/dragservice;1");
   if (!dragService)
-    return;
+    return PR_FALSE;
 
   // Default handling for the draggesture/dragstart event.
   //
   // First, check if a drag session already exists. This means that the drag
   // service was called directly within a draggesture handler. In this case,
   // don't do anything more, as it is assumed that the handler is managing
-  // drag and drop manually.
+  // drag and drop manually. Make sure to return true to indicate that a drag
+  // began.
   nsCOMPtr<nsIDragSession> dragSession;
   dragService->GetCurrentSession(getter_AddRefs(dragSession));
   if (dragSession)
-    return; // already a drag in progress
+    return PR_TRUE;
 
   // No drag session is currently active, so check if a handler added
   // any items to be dragged. If not, there isn't anything to drag.
@@ -2135,7 +2140,7 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   if (aDataTransfer)
     aDataTransfer->GetMozItemCount(&count);
   if (!count)
-    return;
+    return PR_FALSE;
 
   // Get the target being dragged, which may not be the same as the
   // target of the mouse event. If one wasn't set in the
@@ -2148,7 +2153,7 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   if (!dragTarget) {
     dragTarget = do_QueryInterface(aDragTarget);
     if (!dragTarget)
-      return;
+      return PR_FALSE;
   }
 
   // check which drag effect should initially be used. If the effect was not
@@ -2183,7 +2188,7 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   nsCOMPtr<nsISupportsArray> transArray;
   aDataTransfer->GetTransferables(getter_AddRefs(transArray));
   if (!transArray)
-    return;
+    return PR_FALSE;
 
   // XXXndeakin don't really want to create a new drag DOM event
   // here, but we need something to pass to the InvokeDragSession
@@ -2231,6 +2236,8 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
                                             imageX, imageY, domDragEvent,
                                             aDataTransfer);
   }
+
+  return PR_TRUE;
 }
 
 nsresult
