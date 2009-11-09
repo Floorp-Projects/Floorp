@@ -591,8 +591,11 @@ Connection::AsyncClose(mozIStorageCompletionCallback *aCallback)
   // Create our callback event if we were given a callback.
   nsCOMPtr<nsIRunnable> completeEvent;
   if (aCallback) {
-    completeEvent = NS_NEW_RUNNABLE_METHOD(mozIStorageCompletionCallback,
-                                           aCallback, Complete);
+    completeEvent =
+      new nsRunnableMethod<mozIStorageCompletionCallback, nsresult>(
+        aCallback,
+        &mozIStorageCompletionCallback::Complete
+      );
     NS_ENSURE_TRUE(completeEvent, NS_ERROR_OUT_OF_MEMORY);
   }
 
