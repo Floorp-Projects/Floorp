@@ -107,12 +107,18 @@ function readFileData(aFile) {
  * Compares two arrays, and returns true if they are equal.
  */
 function compareArrays(aArray1, aArray2) {
-  if (aArray1.length != aArray2.length)
+  if (aArray1.length != aArray2.length) {
+    print("compareArrays: array lengths differ\n");
     return false;
+  }
 
-  for (var i = 0; i < aArray1.length; i++)
-    if (aArray1[i] != aArray2[i])
+  for (var i = 0; i < aArray1.length; i++) {
+    if (aArray1[i] != aArray2[i]) {
+      print("compareArrays: arrays differ at index " + i + ": " +
+            "(" + aArray1[i] + ") != (" + aArray2[i] +")\n");
       return false;
+    }
+  }
 
   return true;
 }
