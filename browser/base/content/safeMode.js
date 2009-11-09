@@ -96,7 +96,7 @@ function disableAddons() {
   // Disable plugins
   var phs = Components.classes["@mozilla.org/plugin/host;1"]
                       .getService(Components.interfaces.nsIPluginHost);
-  var plugins = phs.getPluginTags({ });
+  var plugins = phs.getPluginTags();
   for (i = 0; i < plugins.length; ++i)
     plugins[i].disabled = true;
 }

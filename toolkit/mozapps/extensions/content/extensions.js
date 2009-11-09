@@ -1007,7 +1007,7 @@ function rebuildPluginsDS()
                             .getService(nsIBlocklistService);
   var phs = Components.classes["@mozilla.org/plugin/host;1"]
                       .getService(Components.interfaces.nsIPluginHost);
-  var plugins = phs.getPluginTags({ });
+  var plugins = phs.getPluginTags();
   var rdfCU = Components.classes["@mozilla.org/rdf/container-utils;1"]
                         .getService(Components.interfaces.nsIRDFContainerUtils);
   var rootctr = rdfCU.MakeSeq(gPluginsDS, gRDF.GetResource(RDFURI_ITEM_ROOT));
