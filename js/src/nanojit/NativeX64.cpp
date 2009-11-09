@@ -288,18 +288,19 @@ namespace nanojit
             allow &= ~rmask(rb);
         }
         rr = prepResultReg(ins, allow);
-        Reservation* rA = getresv(a);
         // if this is last use of a in reg, we can re-use result reg
-        if (rA == 0 || (ra = rA->reg) == UnknownReg) {
+        if (a->isUnusedOrHasUnknownReg()) {
             ra = findSpecificRegFor(a, rr);
-        } else if (!(allow & rmask(ra))) {
-            // rA already has a register assigned, but it's not valid.
+        } else if (!(allow & rmask(a->getReg()))) {
+            // 'a' already has a register assigned, but it's not valid.
             // To make sure floating point operations stay in FPU registers
             // as much as possible, make sure that only a few opcodes are
             // reserving GPRs.
             NanoAssert(a->isop(LIR_quad) || a->isop(LIR_ldq) || a->isop(LIR_ldqc)|| a->isop(LIR_u2f) || a->isop(LIR_float));
             allow &= ~rmask(rr);
             ra = findRegFor(a, allow);
+        } else {
+            ra = a->getReg();
         }
         if (a == b) {
             rb = ra;
@@ -786,10 +787,7 @@ namespace nanojit
         LIns *a = cond->oprnd1();
         Register ra, rb;
         if (a != b) {
-            Reservation *resva, *resvb;
-            findRegFor2(GpRegs, a, resva, b, resvb);
-            ra = resva->reg;
-            rb = resvb->reg;
+            findRegFor2b(GpRegs, a, ra, b, rb);
         } else {
             // optimize-me: this will produce a const result!
             ra = rb = findRegFor(a, GpRegs);
@@ -903,27 +901,27 @@ namespace nanojit
     }
 
     void Assembler::fcmp(LIns *a, LIns *b) {
-        Reservation *resva, *resvb;
-        findRegFor2(FpRegs, a, resva, b, resvb);
-        emitprr(X64_ucomisd, resva->reg, resvb->reg);
+        Register ra, rb;
+        findRegFor2b(FpRegs, a, ra, b, rb);
+        emitprr(X64_ucomisd, ra, rb);
     }
 
-    void Assembler::asm_restore(LIns *ins, Reservation *resv, Register r) {
+    void Assembler::asm_restore(LIns *ins, Reservation *unused, Register r) {
         (void) r;
         if (ins->isop(LIR_alloc)) {
-            int d = disp(resv);
+            int d = disp(ins);
             emitrm(X64_leaqrm, r, d, FP);
         }
         else if (ins->isconst()) {
-            if (!resv->arIndex) {
-                ins->resv()->clear();
+            if (!ins->getArIndex()) {
+                ins->markAsClear();
             }
             // unsafe to use xor r,r for zero because it changes cc's
             emit_int(r, ins->imm32());
         }
         else if (ins->isconstq() && IsGpReg(r)) {
-            if (!resv->arIndex) {
-                ins->resv()->clear();
+            if (!ins->getArIndex()) {
+                ins->markAsClear();
             }
             // unsafe to use xor r,r for zero because it changes cc's
             emit_quad(r, ins->imm64());
@@ -1008,13 +1006,13 @@ namespace nanojit
         dr = ins->disp();
         LIns *base = ins->oprnd1();
         rb = getBaseReg(base, dr, BaseRegs);
-        Reservation *resv = getresv(ins);
-        if (resv && (rr = resv->reg) != UnknownReg) {
-            // keep already assigned register
-            freeRsrcOf(ins, false);
-        } else {
+        if (ins->isUnusedOrHasUnknownReg()) {
             // use a gpr in case we're copying a non-double
             rr = prepResultReg(ins, GpRegs & ~rmask(rb));
+        } else {
+            // keep already assigned register
+            rr = ins->getReg();
+            freeRsrcOf(ins, false);
         }
     }
 
@@ -1055,9 +1053,8 @@ namespace nanojit
         Register b = getBaseReg(base, d, BaseRegs);
 
         // if we have to choose a register, use a GPR, but not the base reg
-        Reservation *resv = getresv(value);
         Register r;
-        if (!resv || (r = resv->reg) == UnknownReg) {
+        if (value->isUnusedOrHasUnknownReg()) {
             RegisterMask allow;
             // XXX: isFloat doesn't cover float/fmod!  see bug 520208.
             if (value->isFloat() || value->isop(LIR_float) || value->isop(LIR_fmod)) {
@@ -1066,6 +1063,8 @@ namespace nanojit
                 allow = GpRegs;
             }
             r = findRegFor(value, allow & ~rmask(b));
+        } else {
+            r = value->getReg();
         }
 
         if (IsGpReg(r)) {
@@ -1173,13 +1172,13 @@ namespace nanojit
     void Assembler::regalloc_unary(LIns *ins, RegisterMask allow, Register &rr, Register &ra) {
         LIns *a = ins->oprnd1();
         rr = prepResultReg(ins, allow);
-        Reservation* rA = getresv(a);
         // if this is last use of a in reg, we can re-use result reg
-        if (rA == 0 || (ra = rA->reg) == UnknownReg) {
+        if (a->isUnusedOrHasUnknownReg()) {
             ra = findSpecificRegFor(a, rr);
         } else {
-            // rA already has a register assigned.  caller must emit a copy
+            // 'a' already has a register assigned.  Caller must emit a copy
             // to rr once instr code is generated.  (ie  mov rr,ra ; op rr)
+            ra = a->getReg();
         }
         NanoAssert(allow & rmask(rr));
     }
