@@ -721,10 +721,7 @@ var BrowserUI = {
         let autoClose = false;
 
         if (PlacesUtils.getMostRecentBookmarkForURI(bookmarkURI) == -1) {
-          let bmsvc = PlacesUtils.bookmarks;
-          let bookmarkId = bmsvc.insertBookmark(BookmarkList.mobileRoot, bookmarkURI,
-                                                bmsvc.DEFAULT_INDEX,
-                                                bookmarkTitle);
+          var bookmarkId = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarks.unfiledBookmarksFolder, bookmarkURI, PlacesUtils.bookmarks.DEFAULT_INDEX, bookmarkTitle);
           this.updateStar();
 
           // autoclose the bookmark popup
@@ -932,11 +929,6 @@ var BookmarkList = {
   _panel: null,
   _bookmarks: null,
   _manageButtton: null,
-
-  get mobileRoot() {
-    delete this.mobileRoot;
-    return this.mobileRoot = PlacesUtils.annotations.getItemsWithAnnotation("mobile/bookmarksRoot", {})[0];
-  },
 
   show: function() {
     this._panel = document.getElementById("bookmarklist-container");
