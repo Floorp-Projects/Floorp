@@ -590,8 +590,9 @@ WeaveSvc.prototype = {
       if (!resp.success)
         throw resp;
 
+      // Save the new passphrase to the login manager for it to sync
       this.passphrase = newphrase;
-
+      this.persistLogin();
       return true;
     }))(),
 
