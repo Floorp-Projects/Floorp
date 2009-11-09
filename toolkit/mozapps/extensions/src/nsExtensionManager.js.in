@@ -4483,7 +4483,7 @@ ExtensionManager.prototype = {
       }
       else {
         if (opType == OP_NEEDS_UPGRADE)
-          ds.setItemProperty(id, "newVersion", null);
+          ds.setItemProperty(id, EM_R("newVersion"), null);
         this._setOp(id, OP_NEEDS_UNINSTALL);
         var type = ds.getItemProperty(id, "type");
         var restartRequired = this.installRequiresRestart(id, type);
