@@ -106,10 +106,21 @@ AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
 void
 AsyncChannel::Close()
 {
-    mTransport->Close();
-    // don't lose error-state information
-    if (ChannelError != mChannelState)
-        mChannelState = ChannelClosed;
+    // XXXcjones pretty much stuck with this bad parent/child
+    // dichotomy as long as the child's IO thread is the "main"
+    // thread and we don't have proper shutdown handling implemented.
+    if (mChild)
+        return OnClose();
+
+    AssertWorkerThread();
+
+    MutexAutoLock lock(mMutex);
+
+    mIOLoop->PostTask(
+        FROM_HERE, NewRunnableMethod(this, &AsyncChannel::OnClose));
+
+    while (ChannelConnected == mChannelState)
+        mCvar.Wait();
 
     mTransport = NULL;
 }
@@ -272,6 +283,23 @@ AsyncChannel::OnSend(Message* aMsg)
     AssertIOThread();
     mTransport->Send(aMsg);
     // mTransport deletes aMsg
+}
+
+void
+AsyncChannel::OnClose()
+{
+    AssertIOThread();
+
+    mTransport->Close();
+
+    // don't lose error-state information
+    if (ChannelError != mChannelState)
+        mChannelState = ChannelClosed;
+
+    if (!mChild) {
+        MutexAutoLock lock(mMutex);
+        mCvar.Notify();
+    }
 }
 
 

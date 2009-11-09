@@ -80,17 +80,6 @@ def main(argv):
     }
 '''% (t, t, t, t) for t in unittests ])
 
-    child_cleanup_cases = '\n'.join([
-'''    case %s: {
-        %sChild** child =
-            reinterpret_cast<%sChild**>(&gChildActor);
-        delete *child;
-        *child = 0;
-        return;
-    }
-'''% (t, t, t) for t in unittests ])
-
-
     templatefile = open(template, 'r')
     sys.stdout.write(
         string.Template(templatefile.read()).substitute(
@@ -99,8 +88,7 @@ def main(argv):
             STRING_TO_ENUMS=string_to_enums,
             ENUM_TO_STRINGS=enum_to_strings,
             PARENT_MAIN_CASES=parent_main_cases,
-            CHILD_INIT_CASES=child_init_cases,
-            CHILD_CLEANUP_CASES=child_cleanup_cases))
+            CHILD_INIT_CASES=child_init_cases))
     templatefile.close()
 
 if __name__ == '__main__':

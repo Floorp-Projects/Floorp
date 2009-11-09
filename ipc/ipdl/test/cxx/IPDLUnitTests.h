@@ -102,8 +102,6 @@ void IPDLUnitTestMain(void* aData);
 void IPDLUnitTestChildInit(IPC::Channel* transport,
                            base::ProcessHandle parent,
                            MessageLoop* worker);
-void IPDLUnitTestChildCleanUp();
-
 
 } // namespace _ipdltest
 } // namespace mozilla
