@@ -77,6 +77,7 @@ var gRecommendedAddons = null;
 var gRDF              = null;
 var gPendingInstalls  = {};
 var gNewAddons        = [];
+var gCheckCompatibilityPref;
 
 // The default heavyweight theme for the app.
 var gDefaultTheme     = null;
@@ -137,6 +138,8 @@ const OP_NEEDS_DISABLE                = "needs-disable";
 Components.utils.import("resource://gre/modules/PluralForm.jsm");
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
+
+var gBranchVersion = /^([^\.]+\.[^a-z\.]+[a-z]?).*/gi;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
@@ -1168,8 +1171,11 @@ function Startup()
   gInSafeMode = appInfo.inSafeMode;
   gAppID = appInfo.ID;
 
+  var version = appInfo.version.replace(gBranchVersion, "$1");
+  gCheckCompatibilityPref = PREF_EM_CHECK_COMPATIBILITY + "." + version;
+
   try {
-    gCheckCompat = gPref.getBoolPref(PREF_EM_CHECK_COMPATIBILITY);
+    gCheckCompat = gPref.getBoolPref(gCheckCompatibilityPref);
   } catch(e) { }
 
   try {
@@ -2169,7 +2175,7 @@ const gAddonsMsgObserver = {
       gPref.setBoolPref("xpinstall.enabled", true);
       break;
     case "addons-enable-compatibility":
-      gPref.clearUserPref(PREF_EM_CHECK_COMPATIBILITY);
+      gPref.clearUserPref(gCheckCompatibilityPref);
       gCheckCompat = true;
       break;
     case "addons-enable-updatesecurity":
