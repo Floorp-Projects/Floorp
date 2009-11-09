@@ -466,9 +466,7 @@ typedef PRUint32 nsrefcnt;
 #define XPCOM_GLUE_AVOID_NSPR
 #endif
 
-#if defined(_MSC_VER) && !defined(WINCE)
-#define NS_TLS __declspec(thread)
-#elif defined(HAVE_THREAD_TLS_KEYWORD)
+#if defined(HAVE_THREAD_TLS_KEYWORD)
 #define NS_TLS __thread
 #endif
 
