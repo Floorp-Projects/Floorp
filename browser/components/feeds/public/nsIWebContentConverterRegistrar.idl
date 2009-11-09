@@ -134,7 +134,8 @@ interface nsIWebContentConverterService : nsIWebContentHandlerRegistrar
    *          The content type to get handlers for
    * @returns An array of nsIWebContentHandlerInfo objects
    */
-  void getContentHandlers(in AString contentType, out unsigned long count,
+  void getContentHandlers(in AString contentType,
+                          [optional] out unsigned long count,
                           [retval,array,size_is(count)] out nsIWebContentHandlerInfo handlers);
 
   /**
