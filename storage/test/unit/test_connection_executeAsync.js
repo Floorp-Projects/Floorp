@@ -236,66 +236,6 @@ function test_multiple_bindings_on_statements()
   stmts.forEach(function(stmt) stmt.finalize());
 }
 
-function test_asyncClose_does_not_complete_before_statements()
-{
-  let stmt = createStatement("SELECT * FROM sqlite_master");
-  let executed = false;
-  stmt.executeAsync({
-    handleResult: function(aResultSet)
-    {
-    },
-    handleError: function(aError)
-    {
-      print("Error code " + aError.result + " with message '" +
-            aError.message + "' returned.");
-      do_throw("Unexpected error!");
-    },
-    handleCompletion: function(aReason)
-    {
-      print("handleCompletion(" + aReason +
-            ") for test_asyncClose_does_not_complete_before_statements");
-      do_check_eq(Ci.mozIStorageStatementCallback.REASON_FINISHED, aReason);
-      executed = true;
-    }
-  });
-  stmt.finalize();
-
-  getOpenedDatabase().asyncClose(function() {
-    // Ensure that the statement executed to completion.
-    do_check_true(executed);
-
-    // Reset gDBConn so that later tests will get a new connection object.
-    gDBConn = null;
-    run_next_test();
-  });
-}
-
-function test_asyncClose_does_not_throw_no_callback()
-{
-  getOpenedDatabase().asyncClose();
-
-  // Reset gDBConn so that later tests will get a new connection object.
-  gDBConn = null;
-  run_next_test();
-}
-
-function test_double_asyncClose_throws()
-{
-  let conn = getOpenedDatabase();
-  conn.asyncClose();
-  try {
-    conn.asyncClose();
-    do_throw("should have thrown");
-  }
-  catch (e) {
-    do_check_eq(e.result, Cr.NS_ERROR_UNEXPECTED);
-  }
-
-  // Reset gDBConn so that later tests will get a new connection object.
-  gDBConn = null;
-  run_next_test();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
@@ -304,33 +244,18 @@ let tests =
   test_create_and_add,
   test_transaction_created,
   test_multiple_bindings_on_statements,
-  test_asyncClose_does_not_complete_before_statements,
-  test_asyncClose_does_not_throw_no_callback,
-  test_double_asyncClose_throws,
 ];
 let index = 0;
 
 function run_next_test()
 {
-  function _run_next_test() {
-    if (index < tests.length) {
-      do_test_pending();
-      print("Running the next test: " + tests[index].name);
-
-      // Asynchronous tests means that exceptions don't kill the test.
-      try {
-        tests[index++]();
-      }
-      catch (e) {
-        do_throw(e);
-      }
-    }
-
-    do_test_finished();
+  if (index < tests.length) {
+    do_test_pending();
+    print("Running the next test: " + tests[index].name);
+    tests[index++]();
   }
 
-  // For saner stacks, we execute this code RSN.
-  do_execute_soon(_run_next_test);
+  do_test_finished();
 }
 
 function run_test()
