@@ -51,13 +51,13 @@
 
   <binding id="setting-base">
     <implementation>
-      <constructor>
+      <constructor><![CDATA[
         let prefValue = this.pref.valueFromPreferences;
         if (prefValue != null) {
           this.pref._setValue(prefValue, false);
           this.prefChanged();
         }
-      </constructor>
+      ]]></constructor>
 
       <method name="fireEvent">
         <parameter name="eventName"/>
@@ -98,8 +98,15 @@
       </method>
 
       <property name="value" onget="return this.input.value;" onset="return this.input.value = val;"/>
+      <property name="pref" readonly="true">
+        <getter><![CDATA[
+          // The pref element is only useful if we have a pref attribute
+          return this.hasAttribute("pref") ? this._pref : {};
+        ]]></getter>
+      </property>
+      <field name="_pref">document.getAnonymousElementByAttribute(this, "anonid", "pref");</field>
+
       <field name="type">this.getAttribute("type");</field>
-      <field name="pref">document.getAnonymousElementByAttribute(this, "anonid", "pref");</field>
       <field name="input">document.getAnonymousElementByAttribute(this, "anonid", "input");</field>
     </implementation>
   </binding>
