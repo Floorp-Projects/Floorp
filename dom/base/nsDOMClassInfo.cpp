@@ -455,7 +455,7 @@
 #include "nsDOMWorker.h"
 
 #include "nsDOMFile.h"
-#include "nsDOMFileRequest.h"
+#include "nsDOMFileReader.h"
 #include "nsIDOMFileException.h"
 #include "nsIDOMFileError.h"
 
@@ -1254,7 +1254,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(FileError, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(FileRequest, nsEventTargetSH,
+  NS_DEFINE_CLASSINFO_DATA(FileReader, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(ModalContentWindow, nsWindowSH,
@@ -1376,7 +1376,7 @@ struct nsContractIDMapData
 static const nsContractIDMapData kConstructorMap[] =
 {
   NS_DEFINE_CONSTRUCTOR_DATA(DOMParser, NS_DOMPARSER_CONTRACTID)
-  NS_DEFINE_CONSTRUCTOR_DATA(FileRequest, NS_FILEREQUEST_CONTRACTID)
+  NS_DEFINE_CONSTRUCTOR_DATA(FileReader, NS_FILEREADER_CONTRACTID)
   NS_DEFINE_CONSTRUCTOR_DATA(XMLSerializer, NS_XMLSERIALIZER_CONTRACTID)
   NS_DEFINE_CONSTRUCTOR_DATA(XMLHttpRequest, NS_XMLHTTPREQUEST_CONTRACTID)
   NS_DEFINE_CONSTRUCTOR_DATA(XPathEvaluator, NS_XPATH_EVALUATOR_CONTRACTID)
@@ -3582,8 +3582,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIException)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(FileRequest, nsIDOMFileRequest)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileRequest)
+  DOM_CLASSINFO_MAP_BEGIN(FileReader, nsIDOMFileReader)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileReader)
     DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIInterfaceRequestor)
