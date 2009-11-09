@@ -193,7 +193,7 @@ nsPlacesDBFlush.prototype = {
           // Close the database connection, this was the last sync and we can't
           // ensure database coherence from now on.
           this._self._finalizeInternalStatements();
-          this._self._db.close();
+          this._self._db.asyncClose();
         }
       }, Ci.nsIThread.DISPATCH_NORMAL);
     }
