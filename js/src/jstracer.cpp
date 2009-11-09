@@ -13486,11 +13486,11 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
     JSFunction* fun;
     fun = cx->fp->script->getFunction(getFullIndex());
 
-    LIns* scopeChain_ins = get(&cx->fp->argv[-2]);
-    JS_ASSERT(scopeChain_ins);
+    if (OBJ_GET_PARENT(cx, FUN_OBJECT(fun)) != globalObj)
+        return ARECORD_STOP;
 
     LIns* args[] = {
-        scopeChain_ins,
+        INS_CONSTOBJ(globalObj),
         INS_CONSTFUN(fun),
         cx_ins
     };
