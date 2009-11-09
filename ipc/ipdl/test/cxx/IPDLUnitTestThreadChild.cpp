@@ -65,7 +65,6 @@ void
 IPDLUnitTestThreadChild::CleanUp()
 {
     GeckoThread::CleanUp();
-    IPDLUnitTestChildCleanUp();
 }
 
 } // namespace _ipdltest

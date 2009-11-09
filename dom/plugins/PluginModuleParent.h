@@ -200,7 +200,7 @@ private:
                              char* argv[], NPSavedData* saved,
                              NPError* error);
 private:
-    PluginProcessParent mSubprocess;
+    PluginProcessParent* mSubprocess;
     const NPNetscapeFuncs* mNPNIface;
     nsTHashtable<nsVoidPtrHashKey> mValidIdentifiers;
 };

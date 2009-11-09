@@ -161,6 +161,7 @@ protected:
     // Run on the IO thread
     void OnChannelOpened();
     void OnSend(Message* aMsg);
+    void OnClose();
 
     Transport* mTransport;
     AsyncListener* mListener;

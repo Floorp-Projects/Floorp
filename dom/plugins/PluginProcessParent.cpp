@@ -40,12 +40,18 @@
 #include "mozilla/plugins/PluginProcessParent.h"
 
 #include "base/string_util.h"
+#include "mozilla/ipc/GeckoThread.h"
 
+using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::GeckoChildProcessHost;
+using mozilla::plugins::PluginProcessParent;
 
-namespace mozilla {
-namespace plugins {
-
+template<>
+struct RunnableMethodTraits<PluginProcessParent>
+{
+    static void RetainCallee(PluginProcessParent* obj) { }
+    static void ReleaseCallee(PluginProcessParent* obj) { }
+};
 
 PluginProcessParent::PluginProcessParent(const std::string& aPluginFilePath) :
     GeckoChildProcessHost(GeckoProcessType_Plugin),
@@ -66,6 +72,18 @@ PluginProcessParent::Launch()
     return SyncLaunch(args);
 }
 
+void
+PluginProcessParent::Delete()
+{
+  MessageLoop* currentLoop = MessageLoop::current();
+  MessageLoop* ioLoop = 
+    BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
 
-} // namespace plugins
-} // namespace mozilla
+  if (currentLoop == ioLoop) {
+      delete this;
+      return;
+  }
+
+  ioLoop->PostTask(FROM_HERE,
+                   NewRunnableMethod(this, &PluginProcessParent::Delete));
+}
