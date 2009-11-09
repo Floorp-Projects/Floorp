@@ -42,7 +42,6 @@
 #include "nsISupports.idl"
 
 interface mozIStorageAggregateFunction;
-interface mozIStorageCompletionCallback;
 interface mozIStorageFunction;
 interface mozIStorageProgressHandler;
 interface mozIStorageStatement;
@@ -59,31 +58,17 @@ interface nsIFile;
  *
  * @threadsafe
  */
-[scriptable, uuid(5a06b207-1977-47d4-b140-271cb851bb26)]
+[scriptable, uuid(ac3c486c-69a1-4cbe-8f25-2ad20880eab3)]
 interface mozIStorageConnection : nsISupports {
   /*
    * Initialization and status
    */
 
   /**
-   * Closes a database connection.  Callers must finalize all statements created
-   * for this connection prior to calling this method.  It is illegal to use
-   * call this method if any asynchronous statements have been executed on this
-   * connection.
-   *
-   * @throws NS_ERROR_UNEXPECTED
-   *         If any statement has been executed asynchronously on this object.
+   * Closes a database connection.  C++ callers should simply set the database
+   * variable to NULL.
    */
-  void close();
-
-  /**
-   * Asynchronously closes a database connection, allowing all pending
-   * asynchronous statements to complete first.
-   *
-   * @param aCallback [optional]
-   *        A callback that will be notified when the close is completed.
-   */
-  void asyncClose([optional] in mozIStorageCompletionCallback aCallback);
+   void close();
 
   /**
    * Indicates if the connection is open and ready to use.  This will be false
