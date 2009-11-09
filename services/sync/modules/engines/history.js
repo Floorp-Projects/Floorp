@@ -321,7 +321,7 @@ HistoryTracker.prototype = {
    * Clearing the whole history is worth 50 points (see below)
    */
   _upScore: function BMT__upScore() {
-    this._score += 1;
+    this.score += 1;
   },
 
   onVisit: function HT_onVisit(uri, vid, time, session, referrer, trans) {
@@ -337,6 +337,6 @@ HistoryTracker.prototype = {
   },
   onClearHistory: function HT_onClearHistory() {
     this._log.trace("onClearHistory");
-    this._score += 50;
+    this.score += 500;
   }
 };

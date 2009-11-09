@@ -231,7 +231,7 @@ PrefTracker.prototype = {
       return;
     
     if (this._syncPrefs.indexOf(aData) != -1) {
-      this._score += 25;
+      this.score += 1;
       this.addChangedID(WEAVE_PREFS_GUID);
       this._log.trace("Preference " + aData + " changed");
     }

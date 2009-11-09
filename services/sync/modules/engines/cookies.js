@@ -281,7 +281,7 @@ CookieTracker.prototype = {
 
   _init: function CT__init() {
     this._log = Log4Moz.Service.getLogger("Service." + this._logName);
-    this._score = 0;
+    this.score = 0;
     /* cookieService can't register observers, but what we CAN do is
        register a general observer with the global observerService
        to watch for the 'cookie-changed' message. */
@@ -299,9 +299,9 @@ CookieTracker.prototype = {
     var newCookie = aSubject.QueryInterface( Ci.nsICookie2 );
     if ( newCookie ) {
       if ( !newCookie.isSession ) {
-	/* Any modification to a persistent cookie is worth
-	   10 points out of 100.  Ignore session cookies. */
-	this._score += 10;
+      /* Any modification to a persistent cookie is worth
+         10 points out of 100.  Ignore session cookies. */
+        this.score += 10;
       }
     }
   }
