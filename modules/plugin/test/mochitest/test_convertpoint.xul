@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Basic Plugin Tests"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <title>NPN_ConvertPoint Tests</title>
+  <script type="application/javascript" 
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+<body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
+<embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
+</body>
+<script class="testbody" type="application/javascript">
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  var pluginElement = document.getElementById("plugin1");
+
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var domWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                             .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var devPxPerCSSPx = domWindowUtils.screenPixelsPerCSSPixel;
+
+  var pluginRect = pluginElement.getBoundingClientRect();
+  var pluginX = (pluginRect.left * devPxPerCSSPx) + ((window.mozInnerScreenX * devPxPerCSSPx) - window.screenX);
+  var pluginY = (pluginRect.top * devPxPerCSSPx) + ((window.mozInnerScreenY * devPxPerCSSPx) - window.screenY);
+
+  var windowX = window.screenX;
+  var windowY = window.screenY;
+  var windowHeight = window.outerHeight;
+
+  var screenHeight = window.screen.height;
+
+  // arbitrary coordinates of test point in plugin top-left origin terms
+  var xOffset = 5;
+  var yOffset = 5;
+
+  var NPCoordinateSpacePluginX = 0 + xOffset;
+  var NPCoordinateSpacePluginY = 0 + yOffset;
+
+  var NPCoordinateSpaceWindowX = pluginX + xOffset;
+  var NPCoordinateSpaceWindowY = (windowHeight - pluginY) - yOffset;
+
+  var NPCoordinateSpaceFlippedWindowX = pluginX + xOffset;
+  var NPCoordinateSpaceFlippedWindowY = pluginY + yOffset;
+
+  var NPCoordinateSpaceScreenX = windowX + pluginX + xOffset;
+  var NPCoordinateSpaceScreenY = ((screenHeight - windowY) - pluginY) - yOffset;
+
+  var NPCoordinateSpaceFlippedScreenX = windowX + pluginX + xOffset;
+  var NPCoordinateSpaceFlippedScreenY = windowY + pluginY + yOffset;
+
+  // these are in coordinate space enumeration order
+  var xValues = new Array(NPCoordinateSpacePluginX, NPCoordinateSpaceWindowX, NPCoordinateSpaceFlippedWindowX, NPCoordinateSpaceScreenX, NPCoordinateSpaceFlippedScreenX);
+  var yValues = new Array(NPCoordinateSpacePluginY, NPCoordinateSpaceWindowY, NPCoordinateSpaceFlippedWindowY, NPCoordinateSpaceScreenY, NPCoordinateSpaceFlippedScreenY);
+
+  var i;
+  for (i = 0; i < 5; i = i + 1) {
+    var sourceCoordSpaceValue = i + 1;
+    var j;
+    for (j = 0; j < 5; j = j + 1) {
+      var destCoordSpaceValue = j + 1;
+      xResult = pluginElement.convertPointX(sourceCoordSpaceValue, xValues[i], yValues[i], destCoordSpaceValue);
+      yResult = pluginElement.convertPointY(sourceCoordSpaceValue, xValues[i], yValues[i], destCoordSpaceValue);
+      is(xResult, xValues[j], "convertPointX: space " + sourceCoordSpaceValue + " to space " + destCoordSpaceValue + " mismatch");
+      is(yResult, yValues[j], "convertPointY: space " + sourceCoordSpaceValue + " to space " + destCoordSpaceValue + " mismatch");
+    }
+  }
+
+  SimpleTest.finish();
+}
+]]>
+</script>
+</window>
