@@ -9,19 +9,51 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "base/string_util.h"
+#include "nsXPCOM.h"
 
-#ifdef PR_LOGGING
+namespace mozilla {
 
-ChromiumLogger::~ChromiumLogger()
+Logger::~Logger()
 {
-  if (mMsg) {
-    PR_LOG(GetLog(), mSeverity, ("%s", mMsg));
-    PR_Free(mMsg);
+  PRLogModuleLevel prlevel = PR_LOG_DEBUG;
+  int xpcomlevel = -1;
+
+  switch (mSeverity) {
+  case LOG_INFO:
+    prlevel = PR_LOG_DEBUG;
+    xpcomlevel = -1;
+    break;
+
+  case LOG_WARNING:
+    prlevel = PR_LOG_WARNING;
+    xpcomlevel = NS_DEBUG_WARNING;
+    break;
+
+  case LOG_ERROR:
+    prlevel = PR_LOG_ERROR;
+    xpcomlevel = NS_DEBUG_WARNING;
+    break;
+
+  case LOG_ERROR_REPORT:
+    prlevel = PR_LOG_ERROR;
+    xpcomlevel = NS_DEBUG_ASSERTION;
+    break;
+
+  case LOG_FATAL:
+    prlevel = PR_LOG_ERROR;
+    xpcomlevel = NS_DEBUG_ABORT;
+    break;
   }
+
+  PR_LOG(GetLog(), prlevel, ("%s:%i: %s", mFile, mLine, mMsg ? mMsg : "<no message>"));
+  if (xpcomlevel != -1)
+    NS_DebugBreak(xpcomlevel, mMsg, NULL, mFile, mLine);
+
+  PR_Free(mMsg);
 }
 
 void
-ChromiumLogger::printf(const char* fmt, ...) const
+Logger::printf(const char* fmt, ...)
 {
   va_list args;
   va_start(args, fmt);
@@ -29,51 +61,51 @@ ChromiumLogger::printf(const char* fmt, ...) const
   va_end(args);
 }
 
-PRLogModuleInfo* ChromiumLogger::gChromiumPRLog;
+PRLogModuleInfo* Logger::gChromiumPRLog;
 
-PRLogModuleInfo* ChromiumLogger::GetLog()
+PRLogModuleInfo* Logger::GetLog()
 {
   if (!gChromiumPRLog)
     gChromiumPRLog = PR_NewLogModule("chromium");
   return gChromiumPRLog;
 }
 
-const ChromiumLogger&
-operator<<(const ChromiumLogger& log, const char* s)
+} // namespace mozilla 
+
+mozilla::Logger&
+operator<<(mozilla::Logger& log, const char* s)
 {
   log.printf("%s", s);
   return log;
 }
 
-const ChromiumLogger&
-operator<<(const ChromiumLogger& log, const std::string& s)
+mozilla::Logger&
+operator<<(mozilla::Logger& log, const std::string& s)
 {
   log.printf("%s", s.c_str());
   return log;
 }
 
-const ChromiumLogger&
-operator<<(const ChromiumLogger& log, int i)
+mozilla::Logger&
+operator<<(mozilla::Logger& log, int i)
 {
   log.printf("%i", i);
   return log;
 }
 
-const ChromiumLogger&
-operator<<(const ChromiumLogger& log, const std::wstring& s)
+mozilla::Logger&
+operator<<(mozilla::Logger& log, const std::wstring& s)
 {
   log.printf("%s", WideToASCII(s).c_str());
   return log;
 }
 
-const ChromiumLogger&
-operator<<(const ChromiumLogger& log, void* p)
+mozilla::Logger&
+operator<<(mozilla::Logger& log, void* p)
 {
   log.printf("%p", p);
   return log;
 }
-
-#endif // PR_LOGGING
 
 #else
 
