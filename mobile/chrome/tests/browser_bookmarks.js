@@ -35,7 +35,7 @@ function runNextTest() {
   else {
     // Cleanup. All tests are completed at this point
     try {
-      PlacesUtils.bookmarks.removeFolderChildren(BookmarkList.mobileRoot);
+      PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.unfiledBookmarksFolder);
     }
     finally {
       // We must finialize the tests
