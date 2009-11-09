@@ -11827,6 +11827,9 @@ TraceRecorder::record_JSOP_SETELEM()
     LIns* idx_ins = get(&idx);
     LIns* v_ins = get(&v);
 
+    if (JS_InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
+        RETURN_STOP_A("can't trace setting elements of the |arguments| object");
+
     if (!JSVAL_IS_INT(idx)) {
         if (!JSVAL_IS_PRIMITIVE(idx))
             RETURN_STOP_A("non-primitive index");
