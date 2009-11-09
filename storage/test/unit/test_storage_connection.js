@@ -49,6 +49,7 @@ function test_connectionReady_open()
 
   var msc = getOpenedDatabase();
   do_check_true(msc.connectionReady);
+  run_next_test();
 }
 
 function test_connectionReady_closed()
@@ -59,24 +60,28 @@ function test_connectionReady_closed()
   msc.close();
   do_check_false(msc.connectionReady);
   gDBConn = null; // this is so later tests don't start to fail.
+  run_next_test();
 }
 
 function test_databaseFile()
 {
   var msc = getOpenedDatabase();
   do_check_true(getTestDB().equals(msc.databaseFile));
+  run_next_test();
 }
 
 function test_tableExists_not_created()
 {
   var msc = getOpenedDatabase();
   do_check_false(msc.tableExists("foo"));
+  run_next_test();
 }
 
 function test_indexExists_not_created()
 {
   var msc = getOpenedDatabase();
   do_check_false(msc.indexExists("foo"));
+  run_next_test();
 }
 
 function test_createTable_not_created()
@@ -84,6 +89,7 @@ function test_createTable_not_created()
   var msc = getOpenedDatabase();
   msc.createTable("test", "id INTEGER PRIMARY KEY, name TEXT");
   do_check_true(msc.tableExists("test"));
+  run_next_test();
 }
 
 function test_indexExists_created()
@@ -91,6 +97,7 @@ function test_indexExists_created()
   var msc = getOpenedDatabase();
   msc.executeSimpleSQL("CREATE INDEX name_ind ON test (name)");
   do_check_true(msc.indexExists("name_ind"));
+  run_next_test();
 }
 
 function test_createTable_already_created()
@@ -103,6 +110,7 @@ function test_createTable_already_created()
   } catch (e) {
     do_check_eq(Cr.NS_ERROR_FAILURE, e.result);
   }
+  run_next_test();
 }
 
 function test_lastInsertRowID()
@@ -110,12 +118,14 @@ function test_lastInsertRowID()
   var msc = getOpenedDatabase();
   msc.executeSimpleSQL("INSERT INTO test (name) VALUES ('foo')");
   do_check_eq(1, msc.lastInsertRowID);
+  run_next_test();
 }
 
 function test_transactionInProgress_no()
 {
   var msc = getOpenedDatabase();
   do_check_false(msc.transactionInProgress);
+  run_next_test();
 }
 
 function test_transactionInProgress_yes()
@@ -130,6 +140,7 @@ function test_transactionInProgress_yes()
   do_check_true(msc.transactionInProgress);
   msc.rollbackTransaction();
   do_check_false(msc.transactionInProgress);
+  run_next_test();
 }
 
 function test_commitTransaction_no_transaction()
@@ -142,6 +153,7 @@ function test_commitTransaction_no_transaction()
   } catch (e) {
     do_check_eq(Cr.NS_ERROR_FAILURE, e.result);
   }
+  run_next_test();
 }
 
 function test_rollbackTransaction_no_transaction()
@@ -154,11 +166,13 @@ function test_rollbackTransaction_no_transaction()
   } catch (e) {
     do_check_eq(Cr.NS_ERROR_FAILURE, e.result);
   }
+  run_next_test();
 }
 
 function test_get_schemaVersion_not_set()
 {
   do_check_eq(0, getOpenedDatabase().schemaVersion);
+  run_next_test();
 }
 
 function test_set_schemaVersion()
@@ -167,6 +181,7 @@ function test_set_schemaVersion()
   const version = 1;
   msc.schemaVersion = version;
   do_check_eq(version, msc.schemaVersion);
+  run_next_test();
 }
 
 function test_set_schemaVersion_same()
@@ -175,6 +190,7 @@ function test_set_schemaVersion_same()
   const version = 1;
   msc.schemaVersion = version; // should still work ok
   do_check_eq(version, msc.schemaVersion);
+  run_next_test();
 }
 
 function test_set_schemaVersion_negative()
@@ -183,6 +199,7 @@ function test_set_schemaVersion_negative()
   const version = -1;
   msc.schemaVersion = version;
   do_check_eq(version, msc.schemaVersion);
+  run_next_test();
 }
 
 function test_createTable(){
@@ -198,6 +215,7 @@ function test_createTable(){
     do_check_true(e.result==Cr.NS_ERROR_NOT_INITIALIZED ||
                   e.result==Cr.NS_ERROR_FAILURE);
   }
+  run_next_test();
 }
 
 function test_defaultSynchronousAtNormal()
@@ -212,10 +230,44 @@ function test_defaultSynchronousAtNormal()
     stmt.reset();
     stmt.finalize();
   }
+  run_next_test();
 }
 
-function test_close_succeeds_with_finalized_async_statement()
+function test_close_does_not_spin_event_loop()
 {
+  // We want to make sure that the event loop on the calling thread does not
+  // spin when close is called.
+  let event = {
+    ran: false,
+    run: function()
+    {
+      this.ran = true;
+    },
+  };
+
+  // Post the event before we call close, so it would run if the event loop was
+  // spun during close.
+  let thread = Cc["@mozilla.org/thread-manager;1"].
+               getService(Ci.nsIThreadManager).
+               currentThread;
+  thread.dispatch(event, Ci.nsIThread.DISPATCH_NORMAL);
+
+  // Sanity check, then close the database.  Afterwards, we should not have ran!
+  do_check_false(event.ran);
+  getOpenedDatabase().close();
+  do_check_false(event.ran);
+
+  // Reset gDBConn so that later tests will get a new connection object.
+  gDBConn = null;
+  run_next_test();
+}
+
+function test_asyncClose_succeeds_with_finalized_async_statement()
+{
+  // XXX this test isn't perfect since we can't totally control when events will
+  //     run.  If this paticular function fails randomly, it means we have a
+  //     real bug.
+
   // We want to make sure we create a cached async statement to make sure that
   // when we finalize our statement, we end up finalizing the async one too so
   // close will succeed.
@@ -223,8 +275,35 @@ function test_close_succeeds_with_finalized_async_statement()
   stmt.executeAsync();
   stmt.finalize();
 
-  // Cleanup calls close, as well as removes the database file.
-  cleanup();
+  getOpenedDatabase().asyncClose(function() {
+    // Reset gDBConn so that later tests will get a new connection object.
+    gDBConn = null;
+    run_next_test();
+  });
+}
+
+function test_close_fails_with_async_statement_ran()
+{
+  let stmt = createStatement("SELECT * FROM test");
+  stmt.executeAsync();
+  stmt.finalize();
+
+  let db = getOpenedDatabase();
+  try {
+    db.close();
+    do_throw("should have thrown");
+  }
+  catch (e) {
+    do_check_eq(e.result, Cr.NS_ERROR_UNEXPECTED);
+  }
+  finally {
+    // Clean up after ourselves.
+    db.asyncClose(function() {
+      // Reset gDBConn so that later tests will get a new connection object.
+      gDBConn = null;
+      run_next_test();
+    });
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -250,13 +329,39 @@ var tests = [
   test_set_schemaVersion_negative,
   test_createTable,
   test_defaultSynchronousAtNormal,
-  test_close_succeeds_with_finalized_async_statement,
+  test_close_does_not_spin_event_loop, // must be ran before executeAsync tests
+  test_asyncClose_succeeds_with_finalized_async_statement,
+  test_close_fails_with_async_statement_ran,
 ];
+let index = 0;
+
+function run_next_test()
+{
+  function _run_next_test() {
+    if (index < tests.length) {
+      do_test_pending();
+      print("Running the next test: " + tests[index].name);
+
+      // Asynchronous tests means that exceptions don't kill the test.
+      try {
+        tests[index++]();
+      }
+      catch (e) {
+        do_throw(e);
+      }
+    }
+
+    do_test_finished();
+  }
+
+  // For saner stacks, we execute this code RSN.
+  do_execute_soon(_run_next_test);
+}
 
 function run_test()
 {
-  for (var i = 0; i < tests.length; i++)
-    tests[i]();
-    
   cleanup();
+
+  do_test_pending();
+  run_next_test();
 }

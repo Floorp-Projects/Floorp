@@ -100,8 +100,21 @@ public:
    */
   Mutex sharedAsyncExecutionMutex;
 
+  /**
+   * Closes the SQLite database, and warns about any non-finalized statements.
+   */
+  nsresult internalClose();
+
 private:
   ~Connection();
+
+  /**
+   * Sets the database into a closed state so no further actions can be
+   * performed.
+   *
+   * @note mDBConn is set to NULL in this method.
+   */
+  nsresult setClosedState();
 
   /**
    * Describes a certain primitive type in the database.
@@ -140,9 +153,9 @@ private:
   nsCOMPtr<nsIFile> mDatabaseFile;
 
   /**
-   * Protects access to mAsyncExecutionThread.
+   * Protects access to mAsyncExecutionThread and mPendingStatements.
    */
-  PRLock *mAsyncExecutionMutex;
+  Mutex mAsyncExecutionMutex;
 
   /**
    * Lazily created thread for asynchronous statement execution.  Consumers
@@ -156,7 +169,7 @@ private:
    * references (or to create the thread in the first place).  This variable
    * should be accessed while holding the mAsyncExecutionMutex.
    */
-  PRBool mAsyncExecutionThreadShuttingDown;
+  bool mAsyncExecutionThreadShuttingDown;
 
   PRLock *mTransactionMutex;
   PRBool mTransactionInProgress;
