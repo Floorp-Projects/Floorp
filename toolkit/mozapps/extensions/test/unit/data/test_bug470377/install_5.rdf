@@ -9,7 +9,7 @@
       <Description>
         <em:id>xpcshell@tests.mozilla.org</em:id>
         <em:minVersion>1</em:minVersion>
-        <em:maxVersion>2</em:maxVersion>
+        <em:maxVersion>3</em:maxVersion>
       </Description>
     </em:targetApplication>
     <em:name>Test for Bug 470377</em:name>

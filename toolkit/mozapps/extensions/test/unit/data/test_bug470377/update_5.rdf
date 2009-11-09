@@ -13,7 +13,7 @@
               <RDF:Description>
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
-                <em:maxVersion>2</em:maxVersion>
+                <em:maxVersion>3</em:maxVersion>
                 <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>

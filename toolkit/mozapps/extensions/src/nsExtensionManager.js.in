@@ -179,6 +179,7 @@ var gApp  = null;
 var gPref = null;
 var gRDF  = null;
 var gOS   = null;
+var gCheckCompatibilityPref;
 var gEmSingleton          = null;
 var gBlocklist            = null;
 var gXPCOMABI             = null;
@@ -200,6 +201,8 @@ var gDefaultTheme         = "classic/1.0";
  * Valid GUIDs fit this pattern.
  */
 var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
+
+var gBranchVersion = /^([^\.]+\.[^a-z\.]+[a-z]?).*/gi;
 
 // shared code for suppressing bad cert dialogs
 XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
@@ -2243,7 +2246,7 @@ ExtensionManager.prototype = {
     case "nsPref:changed":
       if (data == PREF_EM_LOGGING_ENABLED)
         this._loggingToggled();
-      else if (data == PREF_EM_CHECK_COMPATIBILITY ||
+      else if (data == gCheckCompatibilityPref ||
                data == PREF_EM_CHECK_UPDATE_SECURITY)
         this._updateAppDisabledState();
       else if ((data == PREF_MATCH_OS_LOCALE) || (data == PREF_SELECTED_LOCALE))
@@ -2282,7 +2285,7 @@ ExtensionManager.prototype = {
    * we must app-enable or app-disable the item based on the new settings.
    */
   _updateAppDisabledState: function EM__updateAppDisabledState() {
-    gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
+    gCheckCompatibility = getPref("getBoolPref", gCheckCompatibilityPref, true);
     gCheckUpdateSecurity = getPref("getBoolPref", PREF_EM_CHECK_UPDATE_SECURITY, true);
     var ds = this.datasource;
 
@@ -2336,8 +2339,11 @@ ExtensionManager.prototype = {
     catch (e) {
     }
 
+    var version = gApp.version.replace(gBranchVersion, "$1");
+    gCheckCompatibilityPref = PREF_EM_CHECK_COMPATIBILITY + "." + version;
+
     gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
-    gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
+    gCheckCompatibility = getPref("getBoolPref", gCheckCompatibilityPref, true);
     gCheckUpdateSecurity = getPref("getBoolPref", PREF_EM_CHECK_UPDATE_SECURITY, true);
 
     if ("nsICrashReporter" in Ci && gApp instanceof Ci.nsICrashReporter) {
