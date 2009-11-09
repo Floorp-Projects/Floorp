@@ -3143,29 +3143,31 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
   // event type.
-#ifndef NP_NO_CARBON
   EventRecord carbonEvent;
-  if (mPluginEventModel == NPEventModelCarbon) {
-    carbonEvent.what = NPEventType_AdjustCursorEvent;
-    carbonEvent.message = 0;
-    carbonEvent.when = ::TickCount();
-    ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = ::GetCurrentKeyModifiers();
-    event.nativeMsg = &carbonEvent;
-  }
-#endif
   NPCocoaEvent cocoaEvent;
-  if (mPluginEventModel == NPEventModelCocoa) {
-    InitNPCocoaEvent(&cocoaEvent);
-    cocoaEvent.type = ((msg == NS_MOUSE_ENTER) ? NPCocoaEventMouseEntered : NPCocoaEventMouseExited);
-    cocoaEvent.data.mouse.modifierFlags = [aEvent modifierFlags];
-    cocoaEvent.data.mouse.pluginX = 5;
-    cocoaEvent.data.mouse.pluginY = 5;
-    cocoaEvent.data.mouse.buttonNumber = [aEvent buttonNumber];
-    cocoaEvent.data.mouse.deltaX = [aEvent deltaX];
-    cocoaEvent.data.mouse.deltaY = [aEvent deltaY];
-    cocoaEvent.data.mouse.deltaZ = [aEvent deltaZ];
-    event.nativeMsg = &cocoaEvent;
+  if (mIsPluginView) {
+#ifndef NP_NO_CARBON  
+    if (mPluginEventModel == NPEventModelCarbon) {
+      carbonEvent.what = NPEventType_AdjustCursorEvent;
+      carbonEvent.message = 0;
+      carbonEvent.when = ::TickCount();
+      ::GetGlobalMouse(&carbonEvent.where);
+      carbonEvent.modifiers = ::GetCurrentKeyModifiers();
+      event.nativeMsg = &carbonEvent;
+    }
+#endif
+    if (mPluginEventModel == NPEventModelCocoa) {
+      InitNPCocoaEvent(&cocoaEvent);
+      cocoaEvent.type = ((msg == NS_MOUSE_ENTER) ? NPCocoaEventMouseEntered : NPCocoaEventMouseExited);
+      cocoaEvent.data.mouse.modifierFlags = [aEvent modifierFlags];
+      cocoaEvent.data.mouse.pluginX = 5;
+      cocoaEvent.data.mouse.pluginY = 5;
+      cocoaEvent.data.mouse.buttonNumber = [aEvent buttonNumber];
+      cocoaEvent.data.mouse.deltaX = [aEvent deltaX];
+      cocoaEvent.data.mouse.deltaY = [aEvent deltaY];
+      cocoaEvent.data.mouse.deltaZ = [aEvent deltaZ];
+      event.nativeMsg = &cocoaEvent;
+    }    
   }
 
   event.exit = aType;
@@ -3192,33 +3194,34 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
   // event type.
-#ifndef NP_NO_CARBON
   EventRecord carbonEvent;
-  if (mPluginEventModel == NPEventModelCarbon) {
-    carbonEvent.what = NPEventType_AdjustCursorEvent;
-    carbonEvent.message = 0;
-    carbonEvent.when = ::TickCount();
-    ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = ::GetCurrentKeyModifiers();
-    geckoEvent.nativeMsg = &carbonEvent;
-  }
-#endif
   NPCocoaEvent cocoaEvent;
-  if (mPluginEventModel == NPEventModelCocoa) {
-    InitNPCocoaEvent(&cocoaEvent);
-    NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-    cocoaEvent.type = NPCocoaEventMouseMoved;
-    cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
-    cocoaEvent.data.mouse.pluginX = point.x;
-    cocoaEvent.data.mouse.pluginY = point.y;
-    cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
-    cocoaEvent.data.mouse.clickCount = [theEvent clickCount];
-    cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
-    cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
-    cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-    geckoEvent.nativeMsg = &cocoaEvent;
+  if (mIsPluginView) {
+#ifndef NP_NO_CARBON
+    if (mPluginEventModel == NPEventModelCarbon) {
+      carbonEvent.what = NPEventType_AdjustCursorEvent;
+      carbonEvent.message = 0;
+      carbonEvent.when = ::TickCount();
+      ::GetGlobalMouse(&carbonEvent.where);
+      carbonEvent.modifiers = ::GetCurrentKeyModifiers();
+      geckoEvent.nativeMsg = &carbonEvent;
+    }
+#endif
+    if (mPluginEventModel == NPEventModelCocoa) {
+      InitNPCocoaEvent(&cocoaEvent);
+      NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+      cocoaEvent.type = NPCocoaEventMouseMoved;
+      cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
+      cocoaEvent.data.mouse.pluginX = point.x;
+      cocoaEvent.data.mouse.pluginY = point.y;
+      cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
+      cocoaEvent.data.mouse.clickCount = [theEvent clickCount];
+      cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
+      cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
+      cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
+      geckoEvent.nativeMsg = &cocoaEvent;
+    }
   }
-
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
