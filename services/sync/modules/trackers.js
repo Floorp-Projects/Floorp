@@ -45,6 +45,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
+Cu.import("resource://weave/ext/Observers.js");
 
 /*
  * Trackers are associated with a single engine and deal with
@@ -86,10 +87,12 @@ Tracker.prototype = {
    * Setting it to other values should (but doesn't currently) throw an exception
    */
   get score() {
-    if (this._score >= 100)
-      return 100;
-    else
-      return this._score;
+    return this._score;
+  },
+
+  set score(value) {
+    this._score = value;
+    Observers.notify("weave:engine:score:updated", this.name);
   },
 
   // Should be called by service everytime a sync has been done for an engine

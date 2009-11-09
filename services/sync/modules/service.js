@@ -189,6 +189,12 @@ WeaveSvc.prototype = {
   },
   set syncInterval(value) Svc.Prefs.set("syncInterval", value),
 
+  get syncThreshold() Svc.Prefs.get("syncThreshold", SINGLE_USER_THRESHOLD),
+  set syncThreshold(value) Svc.Prefs.set("nextSync", value),
+
+  get globalScore() Svc.Prefs.get("globalScore", 0),
+  set globalScore(value) Svc.Prefs.set("globalScore", value),
+
   get numClients() Svc.Prefs.get("numClients", 0),
   set numClients(value) Svc.Prefs.set("numClients", value),
 
@@ -293,6 +299,7 @@ WeaveSvc.prototype = {
     Svc.Observer.addObserver(this, "weave:service:sync:finish", true);
     Svc.Observer.addObserver(this, "weave:service:sync:error", true);
     Svc.Observer.addObserver(this, "weave:service:backoff:interval", true);
+    Svc.Observer.addObserver(this, "weave:engine:score:updated", true);
 
     if (!this.enabled)
       this._log.info("Weave Sync disabled");
@@ -404,6 +411,9 @@ WeaveSvc.prototype = {
         Status.backoffInterval = interval;
         Status.minimumNextSync = Date.now() + data;
         break;
+      case "weave:engine:score:updated":
+        this._handleScoreUpdate();
+        break;
       case "idle":
         this._log.trace("Idle time hit, trying to sync");
         Svc.Idle.removeIdleObserver(this, IDLE_TIME);
@@ -412,7 +422,35 @@ WeaveSvc.prototype = {
     }
   },
 
-  _onQuitApplication: function WeaveSvc__onQuitApplication() {
+  _doGS: function () {
+    this._scoreTimer = null;
+    this._calculateScore();
+  },
+
+  _handleScoreUpdate: function WeaveSvc__handleScoreUpdate() {
+    const SCORE_UPDATE_DELAY = 3000;
+    if (this._scoreTimer) {
+      this._scoreTimer.delay = SCORE_UPDATE_DELAY;
+      return;
+    }
+    else {
+      Utils.delay(function() this._doGS(), SCORE_UPDATE_DELAY, this, "_scoreTimer");
+    }
+  },
+
+  _calculateScore: function WeaveSvc_calculateScoreAndDoStuff() {
+    var engines = Engines.getEnabled();
+    for (let i = 0;i < engines.length;i++) {
+      this.globalScore += engines[i].score;
+      this._log.debug(engines[i].name + ": score: " + engines[i].score);
+    }
+
+    if (this.globalScore > this.syncThreshold) {
+      this._log.debug("Global Score threshold hit, triggering sync.");
+      this.syncOnIdle();
+    }
+    else if (!this._syncTimer) // start the clock if it isn't already
+      this._scheduleNextSync();
   },
 
   // These are global (for all engines)
@@ -1045,6 +1083,7 @@ WeaveSvc.prototype = {
 
     // Clear out any potentially pending syncs now that we're syncing
     this._clearSyncTriggers();
+    this.globalScore = 0;
     this.nextSync = 0;
 
     if (!(this._remoteSetup()))
@@ -1127,6 +1166,7 @@ WeaveSvc.prototype = {
     let tabEngine = Engines.get("tabs");
     if (numClients == 1) {
       this.syncInterval = SINGLE_USER_SYNC;
+      this.syncThreshold = SINGLE_USER_THRESHOLD;
 
       // Disable tabs sync for single client, but store the original value
       Svc.Prefs.set("engine.tabs.backup", tabEngine.enabled);
@@ -1134,6 +1174,7 @@ WeaveSvc.prototype = {
     }
     else {
       this.syncInterval = hasMobile ? MULTI_MOBILE_SYNC : MULTI_DESKTOP_SYNC;
+      this.syncThreshold = hasMobile ? MULTI_MOBILE_THRESHOLD : MULTI_DESKTOP_THRESHOLD;
 
       // Restore the original tab enabled value
       tabEngine.enabled = Svc.Prefs.get("engine.tabs.backup", true);

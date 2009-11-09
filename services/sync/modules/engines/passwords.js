@@ -238,13 +238,13 @@ PasswordTracker.prototype = {
     case 'addLogin':
     case 'removeLogin':
       aSubject.QueryInterface(Ci.nsILoginMetaInfo);
-      this._score += 15;
+      this.score += 15;
       this._log.trace(aData + ": " + aSubject.guid);
       this.addChangedID(aSubject.guid);
       break;
     case 'removeAllLogins':
       this._log.trace(aData);
-      this._score += 50;
+      this.score += 500;
       break;
     }
   }

@@ -295,7 +295,7 @@ FormTracker.prototype = {
 
       this._log.trace("Logging form element: " + name + " :: " + el.value);
       this.addChangedID(Utils.sha1(name + el.value));
-      this._score += 10;
+      this.score += 10;
     }
   }
 };

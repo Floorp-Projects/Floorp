@@ -426,12 +426,12 @@ TabTracker.prototype = {
     this._log.trace("Tab opened.");
     event.target.setAttribute(TAB_TIME_ATTR, event.timeStamp);
     //this._log.debug("Tab timestamp set to " + event.target.getAttribute(TAB_TIME_ATTR) + "\n");
-    this._score += 50;
+    this.score += 1;
   },
 
   onTabClosed: function TabTracker_onTabSelected(event) {
     //this._log.trace("Tab closed.\n");
-    this._score += 10;
+    this.score += 1;
   },
 
   onTabSelected: function TabTracker_onTabSelected(event) {
@@ -440,14 +440,14 @@ TabTracker.prototype = {
     //this._log.trace("Tab selected.\n");
     event.target.setAttribute(TAB_TIME_ATTR, event.timeStamp);
     //this._log.debug("Tab timestamp set to " + event.target.getAttribute(TAB_TIME_ATTR) + "\n");
-    this._score += 10;
+    this.score += 1;
   },
   // TODO: Also listen for tabs loading new content?
 
   get changedIDs() {
     // Only mark the current client as changed if we tracked changes
     let obj = {};
-    if (this._score > 0)
+    if (this.score > 0)
       obj[Clients.clientID] = true;
     return obj;
   }

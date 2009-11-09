@@ -969,7 +969,7 @@ BookmarksTracker.prototype = {
 
   /* Every add/remove/change is worth 10 points */
   _upScore: function BMT__upScore() {
-    this._score += 10;
+    this.score += 10;
   },
 
   /**
