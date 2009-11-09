@@ -34,16 +34,16 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+// Test to ensure the geolocation token is cleared when changing the private
+// browsing mode
+
 const accessToken = '{"location":{"latitude":51.5090332,"longitude":-0.1212726,"accuracy":150.0},"access_token":"2:jVhRZJ-j6PiRchH_:RGMrR0W1BiwdZs12"}'
-function run_test() {
-  if (!("@mozilla.org/privatebrowsing;1" in Components.classes)) {
-    do_check_true(true);
-    return;
-  }
-  var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
-                             .getService(Components.interfaces.nsIPrefBranch2);
-  var pb = Components.classes["@mozilla.org/privatebrowsing;1"]
-                     .getService(Components.interfaces.nsIPrivateBrowsingService);
+function run_test_on_service() {
+  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                   getService(Ci.nsIPrefBranch2);
+  var pb = Cc[PRIVATEBROWSING_CONTRACT_ID].
+           getService(Ci.nsIPrivateBrowsingService);
   prefBranch.setCharPref("geo.wifi.access_token.test", accessToken);
   var token = prefBranch.getCharPref("geo.wifi.access_token.test");
   do_check_eq(token, accessToken);
@@ -66,4 +66,9 @@ function run_test() {
   finally {
     do_check_eq(token, "");
   }
+}
+
+// Support running tests on both the service itself and its wrapper
+function run_test() {
+  run_test_on_all_services();
 }
