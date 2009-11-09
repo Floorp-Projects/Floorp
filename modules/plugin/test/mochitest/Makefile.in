@@ -81,6 +81,12 @@ _MOCHICHROME_FILES = \
 		test_npapi_timers.xul \
 		$(NULL)
 
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+_MOCHICHROME_FILES += \
+		test_convertpoint.xul \
+		$(NULL)
+endif
+
 libs:: $(_MOCHICHROME_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
 
