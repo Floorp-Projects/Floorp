@@ -273,12 +273,12 @@ nsHTMLAreaElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   NS_IMETHODIMP                                              \
   nsHTMLAreaElement::Get##_part(nsAString& a##_part)         \
   {                                                          \
-    return Get##_part##FromHrefURI(a##_part);                \
+    return Link::Get##_part(a##_part);                       \
   }                                                          \
   NS_IMETHODIMP                                              \
   nsHTMLAreaElement::Set##_part(const nsAString& a##_part)   \
   {                                                          \
-    return Set##_part##InHrefURI(a##_part);                  \
+    return Link::Set##_part(a##_part);                       \
   }
 
 IMPL_URI_PART(Protocol)

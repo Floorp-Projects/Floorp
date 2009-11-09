@@ -69,6 +69,24 @@ public:
    */
   already_AddRefed<nsIURI> GetURI() const;
 
+  /**
+   * Helper methods for modifying and obtaining parts of the URI of the Link.
+   */
+  nsresult SetProtocol(const nsAString &aProtocol);
+  nsresult SetHost(const nsAString &aHost);
+  nsresult SetHostname(const nsAString &aHostname);
+  nsresult SetPathname(const nsAString &aPathname);
+  nsresult SetSearch(const nsAString &aSearch);
+  nsresult SetPort(const nsAString &aPort);
+  nsresult SetHash(const nsAString &aHash);
+  nsresult GetProtocol(nsAString &_protocol);
+  nsresult GetHost(nsAString &_host);
+  nsresult GetHostname(nsAString &_hostname);
+  nsresult GetPathname(nsAString &_pathname);
+  nsresult GetSearch(nsAString &_search);
+  nsresult GetPort(nsAString &_port);
+  nsresult GetHash(nsAString &_hash);
+
 protected:
   /**
    * Invalidates any link caching, and resets the state to the default.
@@ -78,6 +96,9 @@ protected:
   nsLinkState mLinkState;
 
 private:
+  already_AddRefed<nsIURI> GetURIToMutate();
+  void SetHrefAttribute(nsIURI *aURI);
+
   mutable nsCOMPtr<nsIURI> mCachedURI;
 };
 
