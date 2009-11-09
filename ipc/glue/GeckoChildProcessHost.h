@@ -61,6 +61,8 @@ public:
   GeckoChildProcessHost(GeckoProcessType aProcessType=GeckoProcessType_Default,
                         base::WaitableEventWatcher::Delegate* aDelegate=nsnull);
 
+  ~GeckoChildProcessHost();
+
   bool SyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>());
   bool AsyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>());
 

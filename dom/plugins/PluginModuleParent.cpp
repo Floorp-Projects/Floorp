@@ -49,6 +49,7 @@ using namespace mozilla::plugins;
 
 PR_STATIC_ASSERT(sizeof(NPIdentifier) == sizeof(void*));
 
+// static
 PluginLibrary*
 PluginModuleParent::LoadModule(const char* aFilePath)
 {
@@ -56,17 +57,19 @@ PluginModuleParent::LoadModule(const char* aFilePath)
 
     // Block on the child process being launched and initialized.
     PluginModuleParent* parent = new PluginModuleParent(aFilePath);
-    parent->mSubprocess.Launch();
-    parent->Open(parent->mSubprocess.GetChannel(),
-                 parent->mSubprocess.GetChildProcessHandle());
+    parent->mSubprocess->Launch();
+    parent->Open(parent->mSubprocess->GetChannel(),
+                 parent->mSubprocess->GetChildProcessHandle());
 
     return parent;
 }
 
 
-PluginModuleParent::PluginModuleParent(const char* aFilePath) :
-    mSubprocess(aFilePath)
+PluginModuleParent::PluginModuleParent(const char* aFilePath)
 {
+    mSubprocess = new PluginProcessParent(aFilePath);
+    NS_ASSERTION(mSubprocess, "Out of memory!");
+
 #ifdef DEBUG
     PRBool ok =
 #endif
@@ -76,6 +79,10 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath) :
 
 PluginModuleParent::~PluginModuleParent()
 {
+    if (mSubprocess) {
+        mSubprocess->Delete();
+        mSubprocess = nsnull;
+    }
 }
 
 PPluginInstanceParent*

@@ -64,6 +64,12 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     mDelegate(aDelegate),
     mChildProcessHandle(0)
 {
+    MOZ_COUNT_CTOR(GeckoChildProcessHost);
+}
+
+GeckoChildProcessHost::~GeckoChildProcessHost()
+{
+    MOZ_COUNT_DTOR(GeckoChildProcessHost);
 }
 
 bool

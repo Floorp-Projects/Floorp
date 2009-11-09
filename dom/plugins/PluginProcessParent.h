@@ -68,6 +68,8 @@ public:
      */
     bool Launch();
 
+    void Delete();
+
     virtual bool CanShutdown()
     {
         return true;

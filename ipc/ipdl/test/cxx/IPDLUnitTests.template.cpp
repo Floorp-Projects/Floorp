@@ -188,22 +188,5 @@ ${CHILD_INIT_CASES}
     }
 }
 
-void IPDLUnitTestChildCleanUp()
-{
-    if (!gChildActor)
-        return;
-
-    switch (IPDLUnitTest()) {
-//-----------------------------------------------------------------------------
-//===== TEMPLATED =====
-${CHILD_CLEANUP_CASES}
-//-----------------------------------------------------------------------------
-
-    default:
-        fail("not reached");
-        return;                 // unreached
-    }
-}
-
 } // namespace _ipdltest
 } // namespace mozilla
