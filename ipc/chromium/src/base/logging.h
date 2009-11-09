@@ -71,13 +71,6 @@ private:
   DISALLOW_EVIL_CONSTRUCTORS(LogWrapper);
 };
 
-struct Voidifier
-{
-  Voidifier() { }
-  // Precedence lower than << but higher than ?:
-  void operator&(const Logger&) { }
-};
-
 struct EmptyLog
 {
 };
@@ -98,9 +91,7 @@ const mozilla::EmptyLog& operator <<(const mozilla::EmptyLog& log, const T&)
 
 #define LOG(info) mozilla::LogWrapper(mozilla::LOG_ ## info, __FILE__, __LINE__)
 #define LOG_IF(info, condition) \
-  !(condition) ? (void) 0 : mozilla::Voidifier() & Logger(mozilla::LOG_ ## info, __FILE__, __LINE__)
-#define CHECK(condition) \
-  !(condition) ? (void) 0 : mozilla::Voidifier() & LOG(FATAL)
+  if (!(condition)) mozilla::LogWrapper(mozilla::LOG_ ## info, __FILE__, __LINE__)
 
 #ifdef DEBUG
 #define DLOG(info) LOG(info)
@@ -117,6 +108,8 @@ const mozilla::EmptyLog& operator <<(const mozilla::EmptyLog& log, const T&)
 
 #define NOTREACHED() LOG(ERROR)
 #define NOTIMPLEMENTED() LOG(ERROR)
+
+#define CHECK(condition) LOG_IF(FATAL, condition)
 
 #define DCHECK_EQ(v1, v2) DCHECK((v1) == (v2))
 #define DCHECK_NE(v1, v2) DCHECK((v1) != (v2))
