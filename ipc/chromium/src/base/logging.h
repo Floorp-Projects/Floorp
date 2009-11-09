@@ -17,88 +17,100 @@
 // Replace the Chromium logging code with NSPR-based logging code and
 // some C++ wrappers to emulate std::ostream
 
-#ifdef PR_LOGGING
-
 #define ERROR 0
 
-typedef int LogSeverity;
-const LogSeverity LOG_INFO = PR_LOG_DEBUG;
-const LogSeverity LOG_WARNING = PR_LOG_WARNING;
-const LogSeverity LOG_ERROR = PR_LOG_ERROR;
-const LogSeverity LOG_ERROR_REPORT = PR_LOG_ERROR;
-const LogSeverity LOG_FATAL = PR_LOG_ERROR;
-const LogSeverity LOG_0 = LOG_ERROR;
+namespace mozilla {
 
-struct ChromiumLogger
+enum LogSeverity {
+  LOG_INFO,
+  LOG_WARNING,
+  LOG_ERROR,
+  LOG_ERROR_REPORT,
+  LOG_FATAL,
+  LOG_0 = LOG_ERROR
+};
+
+class Logger
 {
 public:
-  ChromiumLogger(int severity)
-    : mSeverity(static_cast<PRLogModuleLevel>(severity))
+  Logger(LogSeverity severity, const char* file, int line)
+    : mSeverity(severity)
+    , mFile(file)
+    , mLine(line)
     , mMsg(NULL)
   { }
 
-  ChromiumLogger(const ChromiumLogger& other)
-    : mSeverity(other.mSeverity)
-    , mMsg(other.mMsg)
-  {
-    // sorry
-    const_cast<ChromiumLogger&>(other).mMsg = NULL;
-  }
-
-  ~ChromiumLogger();
+  ~Logger();
 
   // not private so that the operator<< overloads can get to it
-  void printf(const char* fmt, ...) const;
+  void printf(const char* fmt, ...);
 
 private:
   static PRLogModuleInfo* gChromiumPRLog;
   static PRLogModuleInfo* GetLog();
 
-  PRLogModuleLevel mSeverity;
-  mutable char* mMsg;
+  LogSeverity mSeverity;
+  const char* mFile;
+  int mLine;
+  char* mMsg;
 
-  ChromiumLogger& operator=(const ChromiumLogger&);
+  DISALLOW_EVIL_CONSTRUCTORS(Logger);
+};
+
+class LogWrapper
+{
+public:
+  LogWrapper(LogSeverity severity, const char* file, int line) :
+    log(severity, file, line) { }
+
+  operator Logger&() const { return log; }
+
+private:
+  mutable Logger log;
+
+  DISALLOW_EVIL_CONSTRUCTORS(LogWrapper);
 };
 
 struct Voidifier
 {
   Voidifier() { }
   // Precedence lower than << but higher than ?:
-  void operator&(const ChromiumLogger&) { }
+  void operator&(const Logger&) { }
 };
-
-const ChromiumLogger& operator<<(const ChromiumLogger& log, const char* s);
-const ChromiumLogger& operator<<(const ChromiumLogger& log, const std::string& s);
-const ChromiumLogger& operator<<(const ChromiumLogger& log, int i);
-const ChromiumLogger& operator<<(const ChromiumLogger& log, const std::wstring& s);
-const ChromiumLogger& operator<<(const ChromiumLogger& log, void* p);
-
-#define LOG(info) ChromiumLogger(LOG_ ## info) << __FILE__ ":" << __LINE__
-#define LOG_IF(info, condition) \
-  !(condition) ? (void) 0 : Voidifier() & ChromiumLogger(LOG_ ## info) << __FILE__ ":" << __LINE__
-#define CHECK(condition) \
-  !(condition) ? (void) 0 : Voidifier() & LOG(FATAL)
-#define DLOG(info) LOG(info)
-#define DLOG_IF(info) LOG_IF(info)
-#define DCHECK(condition) CHECK(condition)
-
-#else
 
 struct EmptyLog
 {
 };
 
+} // namespace mozilla
+
+mozilla::Logger& operator<<(mozilla::Logger& log, const char* s);
+mozilla::Logger& operator<<(mozilla::Logger& log, const std::string& s);
+mozilla::Logger& operator<<(mozilla::Logger& log, int i);
+mozilla::Logger& operator<<(mozilla::Logger& log, const std::wstring& s);
+mozilla::Logger& operator<<(mozilla::Logger& log, void* p);
+
 template<class T>
-const EmptyLog& operator <<(const EmptyLog& log, const T&) { return log; }
+const mozilla::EmptyLog& operator <<(const mozilla::EmptyLog& log, const T&)
+{
+  return log;
+}
 
-#define LOG(info) EmptyLog()
-#define LOG_IF(info, condition) EmptyLog()
-#define CHECK(condition) while ((condition) && false) EmptyLog()
-#define DLOG(info) EmptyLog()
-#define DLOG_IF(info, condition) EmptyLog()
-#define DCHECK(condition) while (false && (condition)) EmptyLog()
+#define LOG(info) mozilla::LogWrapper(mozilla::LOG_ ## info, __FILE__, __LINE__)
+#define LOG_IF(info, condition) \
+  !(condition) ? (void) 0 : mozilla::Voidifier() & Logger(mozilla::LOG_ ## info, __FILE__, __LINE__)
+#define CHECK(condition) \
+  !(condition) ? (void) 0 : mozilla::Voidifier() & LOG(FATAL)
 
-#endif // PR_LOGGING
+#ifdef DEBUG
+#define DLOG(info) LOG(info)
+#define DLOG_IF(info) LOG_IF(info)
+#define DCHECK(condition) CHECK(condition)
+#else
+#define DLOG(info) mozilla::EmptyLog()
+#define DLOG_IF(info, condition) mozilla::EmptyLog()
+#define DCHECK(condition) while (false && (condition)) mozilla::EmptyLog()
+#endif
 
 #define LOG_ASSERT(cond) CHECK(ERROR)
 #define DLOG_ASSERT(cond) DCHECK(ERROR)
