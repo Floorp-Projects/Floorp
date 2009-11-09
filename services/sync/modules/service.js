@@ -429,21 +429,18 @@ WeaveSvc.prototype = {
 
   _handleScoreUpdate: function WeaveSvc__handleScoreUpdate() {
     const SCORE_UPDATE_DELAY = 3000;
-    if (this._scoreTimer) {
-      this._scoreTimer.delay = SCORE_UPDATE_DELAY;
-      return;
-    }
-    else {
-      Utils.delay(function() this._doGS(), SCORE_UPDATE_DELAY, this, "_scoreTimer");
-    }
+    Utils.delay(function() this._doGS(), SCORE_UPDATE_DELAY, this, "_scoreTimer");
   },
 
   _calculateScore: function WeaveSvc_calculateScoreAndDoStuff() {
     var engines = Engines.getEnabled();
     for (let i = 0;i < engines.length;i++) {
+      this._log.trace(engines[i].name + ": score: " + engines[i].score);
       this.globalScore += engines[i].score;
-      this._log.debug(engines[i].name + ": score: " + engines[i].score);
+      engines[i].resetScore();
     }
+
+    this._log.trace("Global score updated: " + this.globalScore);
 
     if (this.globalScore > this.syncThreshold) {
       this._log.debug("Global Score threshold hit, triggering sync.");
@@ -1083,8 +1080,9 @@ WeaveSvc.prototype = {
 
     // Clear out any potentially pending syncs now that we're syncing
     this._clearSyncTriggers();
-    this.globalScore = 0;
     this.nextSync = 0;
+
+    this.globalScore = 0;
 
     if (!(this._remoteSetup()))
       throw "aborting sync, remote setup failed";
