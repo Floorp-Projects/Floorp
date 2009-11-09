@@ -75,17 +75,47 @@ Link::LinkState() const
   return 0;
 }
 
+already_AddRefed<nsIURI>
+Link::GetURI() const
+{
+  nsCOMPtr<nsIURI> uri(mCachedURI);
+
+  // If we have this URI cached, use it.
+  if (uri) {
+    return uri.forget();
+  }
+
+  // Otherwise obtain it.
+  Link *self = const_cast<Link *>(this);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(self));
+  NS_ASSERTION(content, "Why isn't this an nsIContent node?!");
+  uri = content->GetHrefURI();
+
+  // We want to cache the URI if the node is in the document.
+  if (uri && content->IsInDoc()) {
+    mCachedURI = uri;
+  }
+
+  return uri.forget();
+}
+
 void
 Link::ResetLinkState()
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(this));
   NS_ASSERTION(content, "Why isn't this an nsIContent node?!");
 
+  // Tell the document to forget about this link.
   nsIDocument *doc = content->GetCurrentDoc();
   if (doc) {
     doc->ForgetLink(content);
   }
+
+  // Update our state back to the default.
   mLinkState = defaultState;
+
+  // Get rid of our cached URI.
+  mCachedURI = nsnull;
 }
 
 } // namespace dom
