@@ -190,7 +190,7 @@ AsyncExecuteStatements::execute(StatementDataArray &aStatements,
   nsresult rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Return it as the pending statement object
+  // Return it as the pending statement object and track it.
   NS_ADDREF(*_stmt = event);
   return NS_OK;
 }
