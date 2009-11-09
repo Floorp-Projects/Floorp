@@ -8,10 +8,10 @@ var iconsvc = Cc["@mozilla.org/browser/favicon-service;1"].
 function addBookmark(aURI) {
   var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
               getService(Ci.nsINavBookmarksService);
-  var bmId = bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
-                                  aURI,
-                                  bmsvc.DEFAULT_INDEX,
-                                  aURI.spec);
+  return bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
+                              aURI,
+                              bmsvc.DEFAULT_INDEX,
+                              aURI.spec);
 }
 
 function checkAddSucceeded(pageURI, mimetype, data) {
