@@ -172,18 +172,13 @@ ifndef RELEASE_LIBS_DEST
 RELEASE_LIBS_DEST	= $(RELEASE_LIB_DIR)
 endif
 
+define MAKE_DIR
+	$(MAKE) -C $(dir) $@
+
+endef
+
 ifdef DIRS
-LOOP_OVER_DIRS		=					\
-	@for d in $(DIRS); do					\
-		if test -d $$d; then				\
-			set -e;					\
-			echo "cd $$d; $(MAKE) $@";		\
-			$(MAKE) -C $$d $@;			\
-			set +e;					\
-		else						\
-			echo "Skipping non-directory $$d...";	\
-		fi;						\
-	done
+LOOP_OVER_DIRS = $(foreach dir,$(wildcard $(DIRS)),$(MAKE_DIR))
 endif
 
 ################################################################################
