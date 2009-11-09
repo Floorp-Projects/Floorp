@@ -323,6 +323,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_range_bounds.html \
 		test_bug475156.html \
 		bug475156.sjs \
+		test_copypaste.html \
 		$(NULL)
 
 # Disabled; see bug 492181
