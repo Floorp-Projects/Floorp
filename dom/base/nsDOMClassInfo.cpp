@@ -1984,6 +1984,7 @@ nsDOMClassInfo::WrapNativeParent(JSContext *cx, JSObject *scope,
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)                              \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)                          \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)                                \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)                              \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)                                  \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)                                      \
@@ -1994,6 +1995,7 @@ nsDOMClassInfo::WrapNativeParent(JSContext *cx, JSObject *scope,
 #define DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLElement)                              \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElementCSSInlineStyle)                      \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)                              \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)                                      \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)                                  \
@@ -2053,6 +2055,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
@@ -2118,6 +2121,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(DocumentType, nsIDOMDocumentType)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentType)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
   DOM_CLASSINFO_MAP_END
@@ -2139,12 +2143,14 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentFragment)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Element, nsIDOMElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
@@ -2154,11 +2160,13 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMAttr)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Attr)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Text, nsIDOMText)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMText)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Text)
@@ -2166,12 +2174,14 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Comment, nsIDOMComment)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMComment)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CDATASection, nsIDOMCDATASection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCDATASection)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Text)
@@ -2179,6 +2189,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(ProcessingInstruction, nsIDOMProcessingInstruction)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMProcessingInstruction)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
   DOM_CLASSINFO_MAP_END
@@ -2694,6 +2705,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(XULElement, nsIDOMXULElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)
@@ -2736,6 +2748,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XMLStylesheetProcessingInstruction, nsIDOMProcessingInstruction)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMProcessingInstruction)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLinkStyle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
   DOM_CLASSINFO_MAP_END
@@ -2745,6 +2758,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMChromeWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
@@ -2814,6 +2828,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
 
 #define DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES \
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)      \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)        \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLocatable)       \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTransformable)   \
@@ -3162,6 +3177,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGSVGElement, nsIDOMSVGSVGElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGSVGElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFitToViewBox)
@@ -3177,6 +3193,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(SVGSymbolElement, nsIDOMSVGSymbolElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGSymbolElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGFitToViewBox)
@@ -3193,6 +3210,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGTextPathElement, nsIDOMSVGTextPathElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTextContentElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGURIReference)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGStylable)
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
@@ -3207,6 +3225,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGTSpanElement, nsIDOMSVGTSpanElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTextPositioningElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTextContentElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGStylable)
     DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES
@@ -3523,6 +3542,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIJSXMLHttpRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIInterfaceRequestor)
   DOM_CLASSINFO_MAP_END
@@ -3552,6 +3572,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(OfflineResourceList, nsIDOMOfflineResourceList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMOfflineResourceList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
@@ -3587,6 +3608,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(FileReader, nsIDOMFileReader)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileReader)
     DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIInterfaceRequestor)
   DOM_CLASSINFO_MAP_END
@@ -3595,6 +3617,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
@@ -3663,6 +3686,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(XMLHttpRequestUpload, nsIXMLHttpRequestUpload)
     DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequestUpload)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
@@ -3687,6 +3711,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(MathMLElement, nsIDOMElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
@@ -7392,114 +7417,6 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
   return PR_FALSE;
 }
 
-// static
-JSBool
-nsEventReceiverSH::AddEventListenerHelper(JSContext *cx, JSObject *obj,
-                                          uintN argc, jsval *argv, jsval *rval)
-{
-  if (argc < 3 || argc > 4) {
-    ThrowJSException(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
-
-    return JS_FALSE;
-  }
-
-  OBJ_TO_INNER_OBJECT(cx, obj);
-
-  nsresult rv = sXPConnect->GetJSObjectOfWrapper(cx, obj, &obj);
-  if (NS_FAILED(rv)) {
-    nsDOMClassInfo::ThrowJSException(cx, rv);
-
-    return JS_FALSE;
-  }
-
-  // Check that the caller has permission to call obj's addEventListener.
-  if (NS_FAILED(sSecMan->CheckPropertyAccess(cx, obj,
-                                             JS_GET_CLASS(cx, obj)->name,
-                                             sAddEventListener_id,
-                                             nsIXPCSecurityManager::ACCESS_GET_PROPERTY)) ||
-      NS_FAILED(sSecMan->CheckPropertyAccess(cx, obj,
-                                             JS_GET_CLASS(cx, obj)->name,
-                                             sAddEventListener_id,
-                                             nsIXPCSecurityManager::ACCESS_CALL_METHOD))) {
-    // The caller doesn't have access to get or call the callee
-    // object's addEventListener method. The security manager already
-    // threw an exception for us, so simply return false.
-
-    return JS_FALSE;
-  }
-
-  if (JSVAL_IS_PRIMITIVE(argv[1])) {
-    // The second argument must be a function, or a
-    // nsIDOMEventListener. Throw an error.
-    ThrowJSException(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
-
-    return JS_FALSE;
-  }
-
-  JSString* jsstr = JS_ValueToString(cx, argv[0]);
-  if (!jsstr) {
-    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
-
-    return JS_FALSE;
-  }
-
-  nsDependentJSString type(jsstr);
-
-  nsCOMPtr<nsIDOMEventListener> listener;
-
-  {
-    nsCOMPtr<nsISupports> tmp;
-    sXPConnect->WrapJS(cx, JSVAL_TO_OBJECT(argv[1]),
-                       NS_GET_IID(nsIDOMEventListener), getter_AddRefs(tmp));
-
-    listener = do_QueryInterface(tmp, &rv);
-    if (NS_FAILED(rv)) {
-      ThrowJSException(cx, rv);
-
-      return JS_FALSE;
-    }
-  }
-
-  JSBool useCapture;
-  JS_ValueToBoolean(cx, argv[2], &useCapture);
-
-  if (argc == 4) {
-    JSBool wantsUntrusted;
-    JS_ValueToBoolean(cx, argv[3], &wantsUntrusted);
-
-    nsCOMPtr<nsIDOMNSEventTarget> eventTarget = do_QueryWrapper(cx, obj, &rv);
-    if (NS_FAILED(rv)) {
-      ThrowJSException(cx, rv);
-
-      return JS_FALSE;
-    }
-
-    rv = eventTarget->AddEventListener(type, listener, useCapture,
-                                       wantsUntrusted);
-    if (NS_FAILED(rv)) {
-      ThrowJSException(cx, rv);
-
-      return JS_FALSE;
-    }
-  } else {
-    nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryWrapper(cx, obj, &rv);
-    if (NS_FAILED(rv)) {
-      ThrowJSException(cx, rv);
-
-      return JS_FALSE;
-    }
-
-    rv = eventTarget->AddEventListener(type, listener, useCapture);
-    if (NS_FAILED(rv)) {
-      ThrowJSException(cx, rv);
-
-      return JS_FALSE;
-    }
-  }
-  
-  return JS_TRUE;
-}
-
 nsresult
 nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
                                           JSContext *cx, JSObject *obj,
@@ -7553,21 +7470,6 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
 }
 
-nsresult
-nsEventReceiverSH::DefineAddEventListener(JSContext *cx, JSObject *obj,
-                                          jsval id, JSObject **objp)
-{
-  NS_ASSERTION(id == sAddEventListener_id, "Wrong call?!?");
-  JSString *str = JSVAL_TO_STRING(id);
-  // addEventListener always takes at least 3 arguments.
-  JSFunction *fnc =
-    ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(str),
-                        nsEventReceiverSH::AddEventListenerHelper, 3,
-                        JSPROP_ENUMERATE);
-  *objp = obj;
-  return fnc ? NS_OK : NS_ERROR_UNEXPECTED;
-}
-
 NS_IMETHODIMP
 nsEventReceiverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
                               JSContext *cx, JSObject *obj, jsval id,
@@ -7613,7 +7515,7 @@ nsEventReceiverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
   }
 
   if (id == sAddEventListener_id) {
-    return nsEventReceiverSH::DefineAddEventListener(cx, obj, id, objp);
+    return NS_OK;
   }
 
   PRBool did_define = PR_FALSE;
@@ -7669,21 +7571,6 @@ nsEventTargetSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   *parentObj = native_parent ? native_parent->GetGlobalJSObject() : globalObj;
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEventTargetSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
-                            JSContext *cx, JSObject *obj, jsval id,
-                            PRUint32 flags, JSObject **objp, PRBool *_retval)
-{
-  if ((flags & JSRESOLVE_ASSIGNING) || !JSVAL_IS_STRING(id)) {
-    return NS_OK;
-  }
-  if (id == sAddEventListener_id) {
-    return nsEventReceiverSH::DefineAddEventListener(cx, obj, id, objp);
-  }
-  return nsDOMGenericSH::NewResolve(wrapper, cx, obj, id, flags, objp,
-                                    _retval);
 }
 
 NS_IMETHODIMP
