@@ -496,24 +496,6 @@ public:
    */
   static PRBool InNavQuirksMode(nsIDocument* aDoc);
 
-  // Helper functions for <a> and <area>
-  void SetHrefToURI(nsIURI* aURI);
-  nsresult SetProtocolInHrefURI(const nsAString &aProtocol);
-  nsresult SetHostInHrefURI(const nsAString &aHost);
-  nsresult SetHostnameInHrefURI(const nsAString &aHostname);
-  nsresult SetPathnameInHrefURI(const nsAString &aPathname);
-  nsresult SetSearchInHrefURI(const nsAString &aSearch);
-  nsresult SetPortInHrefURI(const nsAString &aPort);
-  nsresult SetHashInHrefURI(const nsAString &aHash);
-
-  nsresult GetProtocolFromHrefURI(nsAString& aProtocol);
-  nsresult GetHostFromHrefURI(nsAString& aHost);
-  nsresult GetHostnameFromHrefURI(nsAString& aHostname);
-  nsresult GetPathnameFromHrefURI(nsAString& aPathname);
-  nsresult GetSearchFromHrefURI(nsAString& aSearch);
-  nsresult GetPortFromHrefURI(nsAString& aPort);
-  nsresult GetHashFromHrefURI(nsAString& aHash);
-
   /**
    * Locate an nsIEditor rooted at this content node, if there is one.
    */
