@@ -41,8 +41,8 @@ interface nsIDOMEventListener;
 interface nsIDOMFile;
 interface nsIDOMFileError;
 
-[scriptable, uuid(074FEC26-7FAB-4E05-9E60-EC49E148F5EF)]
-interface nsIDOMFileRequest : nsISupports 
+[scriptable, uuid(5db0ce80-de44-40c0-a346-e28aac4aa978)]
+interface nsIDOMFileReader : nsISupports 
 {
   void readAsBinaryString(in nsIDOMFile filedata);
   void readAsText(in nsIDOMFile filedata, [optional] in DOMString encoding);
@@ -55,7 +55,7 @@ interface nsIDOMFileRequest : nsISupports
   const unsigned short DONE = 2;
   readonly attribute unsigned short readyState;
 
-  readonly attribute DOMString response;
+  readonly attribute DOMString result;
   readonly attribute nsIDOMFileError error;
 
   // event handler attributes
@@ -63,9 +63,9 @@ interface nsIDOMFileRequest : nsISupports
 };
 
 %{ C++
-#define NS_FILEREQUEST_CID                            \
+#define NS_FILEREADER_CID                            \
 {0x06aa7c21, 0xfe05, 0x4cf2,                         \
 {0xb1, 0xc4, 0x0c, 0x71, 0x26, 0xa4, 0xf7, 0x13}}
-#define NS_FILEREQUEST_CONTRACTID \
-"@mozilla.org/files/filerequest;1"
+#define NS_FILEREADER_CONTRACTID \
+"@mozilla.org/files/filereader;1"
 %}

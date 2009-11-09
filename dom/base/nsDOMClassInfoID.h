@@ -416,7 +416,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_File_id,
   eDOMClassInfo_FileException_id,
   eDOMClassInfo_FileError_id,
-  eDOMClassInfo_FileRequest_id,
+  eDOMClassInfo_FileReader_id,
 
   // DOM modal content window class, almost identical to Window
   eDOMClassInfo_ModalContentWindow_id,
