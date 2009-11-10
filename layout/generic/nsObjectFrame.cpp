@@ -1861,20 +1861,12 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
   }
 #endif
 
-  switch (anEvent->message) {
-  case NS_DESTROY:
+  if (anEvent->message == NS_DESTROY) {
     mInstanceOwner->CancelTimer();
-    break;
-  case NS_ACTIVATE:
-  case NS_DEACTIVATE:
-    *anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
-    break;
-    
-  default:
-    rv = nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
+    return rv;
   }
 
-  return rv;
+  return nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
 }
 
 nsresult
