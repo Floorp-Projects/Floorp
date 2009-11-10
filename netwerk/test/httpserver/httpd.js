@@ -458,7 +458,7 @@ nsHttpServer.prototype =
           }
         };
       gThreadManager.currentThread
-                    .dispatch(stopEvent, Ci.nsIThreadManager.DISPATCH_NORMAL);
+                    .dispatch(stopEvent, Ci.nsIThread.DISPATCH_NORMAL);
     }
   },
 
@@ -2599,7 +2599,7 @@ ServerHandler.prototype =
           // Seek (or read, if seeking isn't supported) to the correct offset so
           // the data sent to the client matches the requested range.
           if (fis instanceof Ci.nsISeekableStream)
-            fis.seek(Ci.nsISeekableStream.SEEK_SET, offset);
+            fis.seek(Ci.nsISeekableStream.NS_SEEK_SET, offset);
           else
             new ScriptableInputStream(fis).read(offset);
         }
@@ -2613,7 +2613,7 @@ ServerHandler.prototype =
       function writeMore()
       {
         gThreadManager.currentThread
-                      .dispatch(writeData, Ci.nsIThreadManager.DISPATCH_NORMAL);
+                      .dispatch(writeData, Ci.nsIThread.DISPATCH_NORMAL);
       }
 
       var input = new BinaryInputStream(fis);
@@ -3688,7 +3688,7 @@ Response.prototype =
           dumpn("*** canceling copy asynchronously...");
           copier.cancel(Cr.NS_ERROR_UNEXPECTED);
         }
-      }, Ci.nsIThreadManager.DISPATCH_NORMAL);
+      }, Ci.nsIThread.DISPATCH_NORMAL);
     }
     else
     {
@@ -3993,7 +3993,7 @@ WriteThroughCopier.prototype =
         }
       };
     gThreadManager.currentThread
-                  .dispatch(cancelEvent, Ci.nsIThreadManager.DISPATCH_NORMAL);
+                  .dispatch(cancelEvent, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   /**
