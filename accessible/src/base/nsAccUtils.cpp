@@ -902,13 +902,15 @@ nsAccUtils::MustPrune(nsIAccessible *aAccessible)
 { 
   PRUint32 role = nsAccUtils::Role(aAccessible);
 
+  // We don't prune buttons any more however AT don't expect children inside of
+  // button in general, we allow menu buttons to have children to make them
+  // accessible.
   return role == nsIAccessibleRole::ROLE_MENUITEM || 
     role == nsIAccessibleRole::ROLE_COMBOBOX_OPTION ||
     role == nsIAccessibleRole::ROLE_OPTION ||
     role == nsIAccessibleRole::ROLE_ENTRY ||
     role == nsIAccessibleRole::ROLE_FLAT_EQUATION ||
     role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
-    role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
     role == nsIAccessibleRole::ROLE_TOGGLE_BUTTON ||
     role == nsIAccessibleRole::ROLE_GRAPHIC ||
     role == nsIAccessibleRole::ROLE_SLIDER ||

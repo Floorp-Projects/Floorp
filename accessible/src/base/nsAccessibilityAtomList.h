@@ -61,6 +61,9 @@ ACCESSIBILITY_ATOM(col, "col")
 ACCESSIBILITY_ATOM(_empty, "")
 ACCESSIBILITY_ATOM(_false, "false")
 ACCESSIBILITY_ATOM(image, "image")
+ACCESSIBILITY_ATOM(menu, "menu")
+ACCESSIBILITY_ATOM(menuButton, "menu-button")
+ACCESSIBILITY_ATOM(menugenerated, "menugenerated")
 ACCESSIBILITY_ATOM(password, "password")
 ACCESSIBILITY_ATOM(reset, "reset")
 ACCESSIBILITY_ATOM(row, "row")
@@ -125,12 +128,12 @@ ACCESSIBILITY_ATOM(listhead, "listhead") // XUL
 ACCESSIBILITY_ATOM(listheader, "listheader") // XUL
 ACCESSIBILITY_ATOM(map, "map")
 ACCESSIBILITY_ATOM(math, "math")
-ACCESSIBILITY_ATOM(menu, "menu")    // XUL
 ACCESSIBILITY_ATOM(menupopup, "menupopup")     // XUL
 ACCESSIBILITY_ATOM(object, "object")
 ACCESSIBILITY_ATOM(ol, "ol")
 ACCESSIBILITY_ATOM(optgroup, "optgroup")
 ACCESSIBILITY_ATOM(option, "option")
+ACCESSIBILITY_ATOM(panel, "panel") // XUL
 ACCESSIBILITY_ATOM(q, "q")
 ACCESSIBILITY_ATOM(select, "select")
 ACCESSIBILITY_ATOM(select1, "select1") // XForms
@@ -164,6 +167,7 @@ ACCESSIBILITY_ATOM(_class, "class")
 ACCESSIBILITY_ATOM(cycles, "cycles") // used for XUL cycler attribute
 ACCESSIBILITY_ATOM(curpos, "curpos") // XUL
 ACCESSIBILITY_ATOM(data, "data")
+ACCESSIBILITY_ATOM(_default, "default") // XUL button
 ACCESSIBILITY_ATOM(draggable, "draggable")
 ACCESSIBILITY_ATOM(droppable, "droppable")   // XUL combo box
 ACCESSIBILITY_ATOM(editable, "editable")

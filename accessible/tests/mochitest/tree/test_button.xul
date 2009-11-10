@@ -1,0 +1,198 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL button hierarchy tests">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // button1
+
+      var accTree = {
+        role: ROLE_PUSHBUTTON,
+        name: "hello",
+        children: [ ]
+      };
+      testAccessibleTree("button1", accTree);
+
+      //////////////////////////////////////////////////////////////////////////
+      // button2
+
+      accTree = {
+        role: ROLE_PUSHBUTTON,
+        name: "hello",
+        children: [
+          {
+            role: ROLE_MENUPOPUP,
+            children: [
+              {
+                role: ROLE_MENUITEM
+              },
+              {
+                role: ROLE_MENUITEM
+              }
+            ]
+          }
+        ]
+      };
+      testAccessibleTree("button2", accTree);
+
+      //////////////////////////////////////////////////////////////////////////
+      // button3
+
+      accTree = {
+        role: ROLE_PUSHBUTTON,
+        name: "hello",
+        children: [
+          {
+            role: ROLE_MENUPOPUP,
+            children: [
+              {
+                role: ROLE_MENUITEM
+              },
+              {
+                role: ROLE_MENUITEM
+              }
+            ]
+          },
+          {
+            role: ROLE_PUSHBUTTON,
+            children: [
+            ]
+          }
+        ]
+      };
+      testAccessibleTree("button3", accTree);
+
+      //////////////////////////////////////////////////////////////////////////
+      // button4
+
+      var accTree = {
+        role: ROLE_PUSHBUTTON,
+        name: "hello",
+        children: [ ]
+      };
+      testAccessibleTree("button4", accTree);
+
+      //////////////////////////////////////////////////////////////////////////
+      // button5
+
+      accTree = {
+        role: ROLE_PUSHBUTTON,
+        name: "hello",
+        children: [
+          {
+            role: ROLE_MENUPOPUP,
+            children: [
+              {
+                role: ROLE_MENUITEM
+              },
+              {
+                role: ROLE_MENUITEM
+              }
+            ]
+          }
+        ]
+      };
+      testAccessibleTree("button5", accTree);
+
+      //////////////////////////////////////////////////////////////////////////
+      // button6
+
+      accTree = {
+        role: ROLE_PUSHBUTTON,
+        name: "hello",
+        children: [
+          {
+            role: ROLE_MENUPOPUP,
+            children: [
+              {
+                role: ROLE_MENUITEM
+              },
+              {
+                role: ROLE_MENUITEM
+              }
+            ]
+          },
+          {
+            role: ROLE_PUSHBUTTON,
+            children: [
+            ]
+          }
+        ]
+      };
+      testAccessibleTree("button6", accTree);
+
+      SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=249292"
+         title="Ensure accessible children for toolbarbutton types 'menu' and 'menu-button'">
+        Mozilla Bug 249292
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <button id="button1" label="hello"/>
+      <button id="button2" type="menu" label="hello">
+        <menupopup>
+          <menuitem label="menuitem"/>
+          <menuitem label="menuitem"/>
+        </menupopup>
+      </button>
+      <button id="button3" type="menu-button" label="hello">
+        <menupopup>
+          <menuitem label="menuitem"/>
+          <menuitem label="menuitem"/>
+        </menupopup>
+      </button>
+
+      <toolbarbutton id="button4" label="hello"/>
+      <toolbarbutton id="button5" type="menu" label="hello">
+        <menupopup>
+          <menuitem label="menuitem"/>
+          <menuitem label="menuitem"/>
+        </menupopup>
+      </toolbarbutton>
+      <toolbarbutton id="button6" type="menu-button" label="hello">
+        <menupopup>
+          <menuitem label="menuitem"/>
+          <menuitem label="menuitem"/>
+        </menupopup>
+      </toolbarbutton>
+    </vbox>
+  </hbox>
+
+</window>
+
