@@ -1005,7 +1005,7 @@ namespace nanojit
     void Assembler::regalloc_load(LIns *ins, Register &rr, int32_t &dr, Register &rb) {
         dr = ins->disp();
         LIns *base = ins->oprnd1();
-        rb = getBaseReg(base, dr, BaseRegs);
+        rb = getBaseReg(ins->opcode(), base, dr, BaseRegs);
         if (ins->isUnusedOrHasUnknownReg()) {
             // use a gpr in case we're copying a non-double
             rr = prepResultReg(ins, GpRegs & ~rmask(rb));
@@ -1050,7 +1050,7 @@ namespace nanojit
 
     void Assembler::asm_store64(LIns *value, int d, LIns *base) {
         NanoAssert(value->isQuad());
-        Register b = getBaseReg(base, d, BaseRegs);
+        Register b = getBaseReg(LIR_stqi, base, d, BaseRegs);
 
         // if we have to choose a register, use a GPR, but not the base reg
         Register r;
@@ -1079,7 +1079,7 @@ namespace nanojit
 
     void Assembler::asm_store32(LIns *value, int d, LIns *base) {
         NanoAssert(!value->isQuad());
-        Register b = getBaseReg(base, d, BaseRegs);
+        Register b = getBaseReg(LIR_sti, base, d, BaseRegs);
         Register r = findRegFor(value, GpRegs & ~rmask(b));
 
         // store 32bits to 64bit addr.  use rex so we can use all 16 regs

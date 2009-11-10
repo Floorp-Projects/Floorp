@@ -155,7 +155,7 @@ namespace nanojit
 
     static const RegisterMask AllowableFlagRegs = 1<<EAX |1<<ECX | 1<<EDX | 1<<EBX;
 
-    static inline bool isValidDisplacement(int32_t) {
+    static inline bool isValidDisplacement(LOpcode, int32_t) {
         return true;
     }
 

@@ -2003,7 +2003,7 @@ Assembler::asm_cmp(LIns *cond)
             TST(r,r);
             // No 64-bit immediates so fall-back to below
         } else if (!rhs->isQuad()) {
-            Register r = getBaseReg(lhs, c, GpRegs);
+            Register r = getBaseReg(condop, lhs, c, GpRegs);
             asm_cmpi(r, c);
         } else {
             NanoAssert(0);
@@ -2294,7 +2294,7 @@ Assembler::asm_ld(LInsp ins)
     int d = ins->disp();
 
     Register rr = prepResultReg(ins, GpRegs);
-    Register ra = getBaseReg(base, d, GpRegs);
+    Register ra = getBaseReg(op, base, d, GpRegs);
 
     // these will always be 4-byte aligned
     if (op == LIR_ld || op == LIR_ldc) {
