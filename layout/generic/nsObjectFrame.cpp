@@ -300,7 +300,7 @@ public:
 #ifdef XP_WIN
   void Paint(const RECT& aDirty, HDC aDC);
 #elif defined(XP_MACOSX)
-  void Paint(const gfxRect& aDirtyRect);  
+  void Paint(const gfxRect& aDirtyRect, CGContextRef cgContext);  
 #elif defined(MOZ_X11) || defined(MOZ_DFB)
   void Paint(gfxContext* aContext,
              const gfxRect& aFrameRect,
@@ -443,6 +443,10 @@ private:
 
 #ifdef MOZ_COMPOSITED_PLUGINS
   nsIntPoint        mLastPoint;
+#endif
+
+#ifdef XP_MACOSX
+  NPEventModel mEventModel;
 #endif
 
   // pointer to wrapper for nsIDOMContextMenuListener
@@ -713,6 +717,15 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
         break;
       }
     }
+
+#ifdef XP_MACOSX
+    // Now that we have a widget we want to set the event model before
+    // any events are processed.
+    nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
+    if (!pluginWidget)
+      return NS_ERROR_FAILURE;
+    pluginWidget->SetPluginEventModel(mInstanceOwner->GetEventModel());
+#endif
   }
 
   if (!IsHidden()) {
@@ -1534,6 +1547,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
         nativeDrawing.EndNativeDrawing();
         return;
       }
+      // In the Carbon event model...
       // If gfxQuartzNativeDrawing hands out a CGContext different from the
       // one set by SetPluginPortAndDetectChange(), we need to pass it to the
       // plugin via SetWindow().  This will happen in nsPluginInstanceOwner::
@@ -1542,14 +1556,15 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       // already been detected in that method, and will likewise result in a
       // call to SetWindow() from FixUpPluginWindow().)
       NP_CGContext* windowContext = static_cast<NP_CGContext*>(window->window);
-      if (windowContext->context != cgContext) {
+      if (mInstanceOwner->GetEventModel() == NPEventModelCarbon &&
+          windowContext->context != cgContext) {
         windowContext->context = cgContext;
         cgPluginPortCopy->context = cgContext;
         mInstanceOwner->SetPluginPortChanged(PR_TRUE);
       }
 
       mInstanceOwner->BeginCGPaint();
-      mInstanceOwner->Paint(nativeClipRect - offset);
+      mInstanceOwner->Paint(nativeClipRect - offset, cgContext);
       mInstanceOwner->EndCGPaint();
 
       nativeDrawing.EndNativeDrawing();
@@ -1560,7 +1575,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
 
       // this rect is used only in the CoreGraphics drawing model
       gfxRect tmpRect(0, 0, 0, 0);
-      mInstanceOwner->Paint(tmpRect);
+      mInstanceOwner->Paint(tmpRect, NULL);
     }
   }
 #elif defined(MOZ_X11) || defined(MOZ_DFB)
@@ -2356,6 +2371,13 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mImageExposeBuffer = nsnull;
   mImageExposeBufferSize = gfxIntSize(0,0);
 #endif
+#ifdef XP_MACOSX
+#ifndef NP_NO_QUICKDRAW
+  mEventModel = NPEventModelCarbon;
+#else
+  mEventModel = NPEventModelCocoa;
+#endif
+#endif
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("nsPluginInstanceOwner %p created\n", this));
 }
@@ -2751,6 +2773,16 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
 #ifdef MOZ_X11
   *static_cast<Window*>(value) = GDK_WINDOW_XID(gdkWindow);
 #endif
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner::SetEventModel(PRInt32 eventModel)
+{
+#ifdef XP_MACOSX
+  mEventModel = static_cast<NPEventModel>(eventModel);
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -3355,17 +3387,7 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
 
 NPEventModel nsPluginInstanceOwner::GetEventModel()
 {
-#ifndef NP_NO_QUICKDRAW
-  NPEventModel eventModel = NPEventModelCarbon;
-#else
-  NPEventModel eventModel = NPEventModelCocoa;
-#endif
-
-  if (!mInstance)
-    return eventModel;
-
-  mInstance->GetEventModel((PRInt32*)&eventModel);
-  return eventModel;
+  return mEventModel;
 }
 
 void* nsPluginInstanceOwner::GetPluginPortCopy()
@@ -3411,12 +3433,14 @@ void* nsPluginInstanceOwner::SetPluginPortAndDetectChange()
   } else if (drawingModel == NPDrawingModelCoreGraphics)
 #endif
   {
-    NP_CGContext* windowCGPort = static_cast<NP_CGContext*>(mPluginWindow->window);
-    if ((windowCGPort->context != mCGPluginPortCopy.context) ||
-        (windowCGPort->window != mCGPluginPortCopy.window)) {
-      mCGPluginPortCopy.context = windowCGPort->context;
-      mCGPluginPortCopy.window = windowCGPort->window;
-      mPluginPortChanged = PR_TRUE;
+    if (GetEventModel() == NPEventModelCarbon) {
+      NP_CGContext* windowCGPort = static_cast<NP_CGContext*>(mPluginWindow->window);
+      if ((windowCGPort->context != mCGPluginPortCopy.context) ||
+          (windowCGPort->window != mCGPluginPortCopy.window)) {
+        mCGPluginPortCopy.context = windowCGPort->context;
+        mCGPluginPortCopy.window = windowCGPort->window;
+        mPluginPortChanged = PR_TRUE;
+      }
     }
   }
 
@@ -4626,7 +4650,7 @@ nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
 // Paints are handled differently, so we just simulate an update event.
 
 #ifdef XP_MACOSX
-void nsPluginInstanceOwner::Paint(const gfxRect& aDirtyRect)
+void nsPluginInstanceOwner::Paint(const gfxRect& aDirtyRect, CGContextRef cgContext)
 {
   if (!mInstance || !mObjectFrame)
     return;
@@ -4643,14 +4667,14 @@ void nsPluginInstanceOwner::Paint(const gfxRect& aDirtyRect)
 
       PRBool eventHandled = PR_FALSE;
       mInstance->HandleEvent(&updateEvent, &eventHandled);
-    } else
+    } else if (GetEventModel() == NPEventModelCocoa)
 #endif
     {
       // The context given here is only valid during the HandleEvent call.
       NPCocoaEvent updateEvent;
       InitializeNPCocoaEvent(&updateEvent);
       updateEvent.type = NPCocoaEventDrawRect;
-      updateEvent.data.draw.context = mCGPluginPortCopy.context;
+      updateEvent.data.draw.context = cgContext;
       updateEvent.data.draw.x = aDirtyRect.X();
       updateEvent.data.draw.y = aDirtyRect.Y();
       updateEvent.data.draw.width = aDirtyRect.Width();
@@ -5441,8 +5465,6 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
   if (!pluginWidget)
     return nsnull;
 
-  pluginWidget->SetPluginEventModel(eventModel);
-
   // If we've already set up a CGContext in nsObjectFrame::PaintPlugin(), we
   // don't want calls to SetPluginPortAndDetectChange() to step on our work.
   void* pluginPort = nsnull;
@@ -5485,7 +5507,15 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
       NS_NPAPI_CarbonWindowFrame(static_cast<WindowRef>(static_cast<NP_CGContext*>(pluginPort)->window), windowRect);
     else
 #endif
-      NS_NPAPI_CocoaWindowFrame(static_cast<NP_CGContext*>(pluginPort)->window, windowRect);
+    {
+      nsIWidget* widget = mObjectFrame->GetWindow();
+      if (!widget)
+        return nsnull;
+      void* nativeData = widget->GetNativeData(NS_NATIVE_WINDOW);
+      if (!nativeData)
+        return nsnull;
+      NS_NPAPI_CocoaWindowFrame(nativeData, windowRect);
+    }
 
     mPluginWindow->x = geckoScreenCoords.x - windowRect.x;
     mPluginWindow->y = geckoScreenCoords.y - windowRect.y;
