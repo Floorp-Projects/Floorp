@@ -555,6 +555,7 @@ ArgGetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 static JSBool
 ArgSetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 {
+#ifdef JS_TRACER
     // To be able to set a property here on trace, we would have to make
     // sure any updates also get written back to the trace native stack.
     // For simplicity, we just leave trace, since this is presumably not
@@ -563,6 +564,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
         js_DeepBail(cx);
         return false;
     }
+#endif
 
     if (!JS_InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
         return true;
