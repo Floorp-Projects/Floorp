@@ -1958,34 +1958,28 @@ class _FindFriends(ipdl.ast.Visitor):
         self.mytype = None              # ProtocolType
         self.vtype = None               # ProtocolType
         self.friends = set()            # set<ProtocolType>
-        self.visited = set()            # set<ProtocolType>
 
     def findFriends(self, ptype):
         self.mytype = ptype
-        self.walkUpTheProtocolTree(ptype)
-        self.walkDownTheProtocolTree(ptype)
+        toplevel = self.findToplevel(ptype)
+        self.walkDownTheProtocolTree(toplevel)
         return self.friends
 
     # TODO could make this into a _iterProtocolTreeHelper ...
-    def walkUpTheProtocolTree(self, ptype):
-        if not ptype.isManaged():
-            return
-        mtype = ptype.manager
-        self.visit(mtype)
-        self.walkUpTheProtocolTree(mtype)
+    def findToplevel(self, ptype):
+        if ptype.isToplevel():
+            return ptype
+        return self.findToplevel(ptype.manager)
 
     def walkDownTheProtocolTree(self, ptype):
-        if not ptype.isManager():
-            return
+        if ptype != self.mytype:
+            # don't want to |friend| ourself!
+            self.visit(ptype)
         for mtype in ptype.manages:
-            self.visit(mtype)
             self.walkDownTheProtocolTree(mtype)
 
     def visit(self, ptype):
-        if ptype in self.visited:
-            return
-        self.visited.add(ptype)
-
+        # |vtype| is the type currently being visited
         savedptype = self.vtype
         self.vtype = ptype
         ptype._p.accept(self)
