@@ -614,21 +614,22 @@ function runRawTests(testArray, done)
     {
       onOutputStreamReady: function(stream)
       {
-        var data = testArray[testIndex].data[dataIndex];
+        var str = testArray[testIndex].data[dataIndex];
 
         var written = 0;
         try
         {
-          written = stream.write(data, data.length);
-          if (written == data.length)
+          written = stream.write(str, str.length);
+          if (written == str.length)
             dataIndex++;
           else
-            testArray[testIndex].data = data.substring(written);
+            testArray[testIndex].data[dataIndex] = str.substring(written);
         }
         catch (e) { /* stream could have been closed, just ignore */ }
 
-        // Keep reading data until there's no more data to read
-        if (written != 0)
+        // Keep writing data while we can write and 
+        // until there's no more data to read
+        if (written > 0 && dataIndex < testArray[testIndex].data.length)
           waitToWriteOutput(stream);
         else
           stream.close();
