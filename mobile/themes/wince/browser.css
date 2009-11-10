@@ -74,6 +74,7 @@ toolbarbutton.urlbar-cap-button {
   padding: 0;
   min-width: 0 !important;
   min-height: 0 !important;
+  -moz-box-flex: 1;
 }
 
 #urlbar-icons[mode="loading"] > #tool-go,

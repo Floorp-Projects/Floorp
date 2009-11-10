@@ -358,6 +358,7 @@ var Browser = {
     let controlsScrollbox = this.controlsScrollbox = document.getElementById("controls-scrollbox");
     this.controlsScrollboxScroller = controlsScrollbox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     controlsScrollbox.customDragger = {
+      isDraggable: function isDraggable(target, content) { return false; },
       dragStart: function dragStart(cx, cy, target, scroller) {},
       dragStop: function dragStop(dx, dy, scroller) { return false; },
       dragMove: function dragMove(dx, dy, scroller) { return false; }
@@ -1208,6 +1209,8 @@ Browser.MainDragger = function MainDragger(browserView) {
 };
 
 Browser.MainDragger.prototype = {
+
+  isDraggable: function isDraggable(target, scroller) { return true; },
 
   dragStart: function dragStart(clientX, clientY, target, scroller) {
     let [x, y] = Browser.transformClientToBrowser(clientX, clientY);

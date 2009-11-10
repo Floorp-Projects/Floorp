@@ -508,7 +508,7 @@ MouseModule.prototype = {
     if (this._clicker)
       this._clicker.mouseDown(evInfo.event.clientX, evInfo.event.clientY);
 
-    if (targetScrollInterface) {
+    if (targetScrollInterface && this._dragger.isDraggable(targetScrollbox, targetScrollInterface)) {
       this._doDragStart(evInfo.event);
     }
 
@@ -741,6 +741,13 @@ MouseModule.prototype = {
    * regular scrollBy calls on the scroller.
    */
   _defaultDragger: {
+    isDraggable: function isDraggable(target, scroller) {
+      let sX = {}, sY = {};
+      scroller.getScrolledSize(sX, sY);
+      let rect = target.getBoundingClientRect();
+      return sX.value > rect.width || sY.value > rect.height;
+    },
+
     dragStart: function dragStart(cx, cy, target, scroller) {},
 
     dragStop : function dragStop(dx, dy, scroller) {
