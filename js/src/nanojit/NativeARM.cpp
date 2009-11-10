@@ -1088,7 +1088,7 @@ Assembler::asm_store32(LIns *value, int dr, LIns *base)
 }
 
 void
-Assembler::asm_restore(LInsp i, Reservation *resv, Register r)
+Assembler::asm_restore(LInsp i, Reservation *, Register r)
 {
     if (i->isop(LIR_alloc)) {
         asm_add_imm(r, FP, disp(i));
