@@ -103,11 +103,14 @@ gfxCoreTextFont::gfxCoreTextFont(MacOSFontEntry *aFontEntry,
                                  PRBool aNeedsBold)
     : gfxFont(aFontEntry, aFontStyle),
       mFontStyle(aFontStyle),
+      mCTFont(nsnull),
+      mAttributesDict(nsnull),
       mHasMetrics(PR_FALSE),
+      mFontFace(nsnull),
+      mScaledFont(nsnull),
       mAdjustedSize(0.0f)
 {
     mATSFont = aFontEntry->GetFontRef();
-    mCTFont = NULL;
 
     // determine whether synthetic bolding is needed
     PRInt8 baseWeight, weightDistance;
@@ -144,6 +147,18 @@ gfxCoreTextFont::gfxCoreTextFont(MacOSFontEntry *aFontEntry,
     mFontFace = cairo_quartz_font_face_create_for_cgfont(cgFont);
     ::CGFontRelease(cgFont);
 
+    cairo_status_t cairoerr = cairo_font_face_status(mFontFace);
+    if (cairoerr != CAIRO_STATUS_SUCCESS) {
+        mIsValid = PR_FALSE;
+#ifdef DEBUG
+        char warnBuf[1024];
+        sprintf(warnBuf, "Failed to create Cairo font face: %s status: %d",
+                NS_ConvertUTF16toUTF8(GetName()).get(), cairoerr);
+        NS_WARNING(warnBuf);
+#endif
+        return;
+    }
+
     cairo_matrix_t sizeMatrix, ctm;
     cairo_matrix_init_identity(&ctm);
     cairo_matrix_init_scale(&sizeMatrix, mAdjustedSize, mAdjustedSize);
@@ -168,6 +183,8 @@ gfxCoreTextFont::gfxCoreTextFont(MacOSFontEntry *aFontEntry,
     }
 
     cairo_font_options_t *fontOptions = cairo_font_options_create();
+    // if this fails (out of memory), the pointer is still safe to use
+    // although we're almost certainly going to fail below anyway
 
     // turn off font anti-aliasing based on user pref setting
     if (mAdjustedSize <= (float) gfxPlatformMac::GetPlatform()->GetAntiAliasingThreshold()) {
@@ -178,13 +195,13 @@ gfxCoreTextFont::gfxCoreTextFont(MacOSFontEntry *aFontEntry,
     mScaledFont = cairo_scaled_font_create(mFontFace, &sizeMatrix, &ctm, fontOptions);
     cairo_font_options_destroy(fontOptions);
 
-    cairo_status_t cairoerr = cairo_scaled_font_status(mScaledFont);
+    cairoerr = cairo_scaled_font_status(mScaledFont);
     if (cairoerr != CAIRO_STATUS_SUCCESS) {
         mIsValid = PR_FALSE;
-
 #ifdef DEBUG
         char warnBuf[1024];
-        sprintf(warnBuf, "Failed to create scaled font: %s status: %d", NS_ConvertUTF16toUTF8(GetName()).get(), cairoerr);
+        sprintf(warnBuf, "Failed to create scaled font: %s status: %d",
+                NS_ConvertUTF16toUTF8(GetName()).get(), cairoerr);
         NS_WARNING(warnBuf);
 #endif
     }
@@ -253,11 +270,15 @@ gfxCoreTextFont::GetCharHeight(PRUnichar aUniChar)
 
 gfxCoreTextFont::~gfxCoreTextFont()
 {
-    cairo_scaled_font_destroy(mScaledFont);
-    cairo_font_face_destroy(mFontFace);
+    if (mScaledFont)
+        cairo_scaled_font_destroy(mScaledFont);
+    if (mFontFace)
+        cairo_font_face_destroy(mFontFace);
 
-    CFRelease(mAttributesDict);
-    CFRelease(mCTFont);
+    if (mAttributesDict)
+        CFRelease(mAttributesDict);
+    if (mCTFont)
+        CFRelease(mCTFont);
 }
 
 MacOSFontEntry*
