@@ -532,10 +532,8 @@ function runRawTests(testArray, done)
     var transport =
       sts.createTransport(null, 0, rawTest.host, rawTest.port, null);
 
-    var inStream = transport.openInputStream(0, 0, 0)
-                            .QueryInterface(Ci.nsIAsyncInputStream);
-    var outStream  = transport.openOutputStream(0, 0, 0)
-                              .QueryInterface(Ci.nsIAsyncOutputStream);
+    var inStream = transport.openInputStream(0, 0, 0);
+    var outStream  = transport.openOutputStream(0, 0, 0);
 
     // reset
     dataIndex = 0;
@@ -547,11 +545,16 @@ function runRawTests(testArray, done)
 
   function waitForMoreInput(stream)
   {
+    stream = stream.QueryInterface(Ci.nsIAsyncInputStream);
     stream.asyncWait(reader, 0, 0, currentThread);
   }
 
   function waitToWriteOutput(stream)
   {
+    // Do the QueryInterface here, not earlier, because there is no
+    // guarantee that 'stream' passed in here been QIed to nsIAsyncOutputStream
+    // since the last GC.
+    stream = stream.QueryInterface(Ci.nsIAsyncOutputStream);
     stream.asyncWait(writer, 0, testArray[testIndex].data[dataIndex].length,
                      currentThread);
   }
