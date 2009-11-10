@@ -385,11 +385,6 @@ autocompleteresult.noresults > .autocomplete-item-label {
   color: grey;
 }
 
-autocompleteresult.noresults > .autocomplete-item-label > image,
-autocompleteresult.noresults > .autocomplete-item-url {
-  visibility: hidden;
-}
-
 autocompleteresult.allbookmarks {
   -moz-box-pack: center;
   background: #E9E9E9 url("images/arrowright-16.png") no-repeat 98% 50%;
