@@ -273,7 +273,7 @@ nsresult
 nsXULMenuitemAccessible::Init()
 {
   nsresult rv = nsAccessibleWrap::Init();
-  nsXULMenupopupAccessible::GenerateMenu(mDOMNode);
+  nsCoreUtils::GeneratePopupTree(mDOMNode);
   return rv;
 }
 
@@ -642,46 +642,6 @@ nsXULMenupopupAccessible::GetStateInternal(PRUint32 *aState,
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMNode>
-nsXULMenupopupAccessible::FindInNodeList(nsIDOMNodeList *aNodeList, 
-                                         nsIAtom *aAtom, PRUint32 aNameSpaceID)
-{
-  PRUint32 numChildren;
-  if (!aNodeList || NS_FAILED(aNodeList->GetLength(&numChildren))) {
-    return nsnull;
-  }
-  nsCOMPtr<nsIDOMNode> childNode;
-  for (PRUint32 childIndex = 0; childIndex < numChildren; childIndex++) {
-    aNodeList->Item(childIndex, getter_AddRefs(childNode));
-    nsCOMPtr<nsIContent> content = do_QueryInterface(childNode);
-    if (content && content->NodeInfo()->Equals(aAtom, kNameSpaceID_XUL)) {
-      nsIDOMNode *matchNode = childNode;
-      NS_ADDREF(matchNode);
-      return matchNode;
-    }
-  }
-  return nsnull;
-}
-
-void nsXULMenupopupAccessible::GenerateMenu(nsIDOMNode *aNode)
-{
-  // Set menugenerated="true" on the menupopup node to generate the
-  // sub-menu items if they have not been generated
-  nsCOMPtr<nsIDOMNodeList> nodeList;
-  aNode->GetChildNodes(getter_AddRefs(nodeList));
-
-  nsCOMPtr<nsIDOMNode> menuPopup = FindInNodeList(nodeList, nsAccessibilityAtoms::menupopup,
-                                                  kNameSpaceID_XUL);
-  nsCOMPtr<nsIDOMElement> popupElement(do_QueryInterface(menuPopup));
-  if (popupElement) {
-    nsAutoString attr;
-    popupElement->GetAttribute(NS_LITERAL_STRING("menugenerated"), attr);
-    if (!attr.EqualsLiteral("true")) {
-      popupElement->SetAttribute(NS_LITERAL_STRING("menugenerated"), NS_LITERAL_STRING("true"));
-    }
-  }
-}
-
 nsresult
 nsXULMenupopupAccessible::GetNameInternal(nsAString& aName)
 {
@@ -704,15 +664,23 @@ nsXULMenupopupAccessible::GetRoleInternal(PRUint32 *aRole)
   nsCOMPtr<nsIAccessible> parent;
   GetParent(getter_AddRefs(parent));
   if (parent) {
-    // Some widgets like the search bar have several popups, owned by buttons
     PRUint32 role = nsAccUtils::Role(parent);
     if (role == nsIAccessibleRole::ROLE_COMBOBOX ||
-        role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
         role == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
       *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
       return NS_OK;
+
+    } else if (role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
+      // Some widgets like the search bar have several popups, owned by buttons.
+      nsCOMPtr<nsIAccessible> grandParent;
+      parent->GetParent(getter_AddRefs(grandParent));
+      if (role == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
+        *aRole = nsIAccessibleRole::ROLE_COMBOBOX_LIST;
+        return NS_OK;
+      }
     }
   }
+
   *aRole = nsIAccessibleRole::ROLE_MENUPOPUP;
   return NS_OK;
 }
