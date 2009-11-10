@@ -2032,6 +2032,11 @@ nsHyperTextAccessible::ScrollSubstringToPoint(PRInt32 aStartIndex,
                             presContext->DevPixelsToAppUnits(devOffsetY));
 
         nsSize size(parentFrame->GetSize());
+
+        // avoid divide by zero
+        size.width = size.width ? size.width : 1;
+        size.height = size.height ? size.height : 1;
+
         PRInt16 hPercent = offsetPoint.x * 100 / size.width;
         PRInt16 vPercent = offsetPoint.y * 100 / size.height;
 
