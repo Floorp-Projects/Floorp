@@ -49,10 +49,10 @@
 #include "nsCRT.h"
 #include <math.h>
 #include "nsStackWalk.h"
+#include "nsString.h"
 
 #ifdef MOZ_IPC
 #include "nsXULAppAPI.h"
-#include "nsString.h"
 #ifdef XP_WIN
 #include <process.h>
 #define getpid _getpid
