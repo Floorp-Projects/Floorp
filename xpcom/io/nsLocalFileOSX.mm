@@ -1450,31 +1450,7 @@ NS_IMETHODIMP nsLocalFile::AppendRelativeNativePath(const nsACString& relativeFi
 
 NS_IMETHODIMP nsLocalFile::GetPersistentDescriptor(nsACString& aPersistentDescriptor)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  FSRef fsRef;
-  nsresult rv = GetFSRefInternal(fsRef);
-  if (NS_FAILED(rv))
-    return rv;
-    
-  AliasHandle aliasH;
-  OSErr err = ::FSNewAlias(nsnull, &fsRef, &aliasH);
-  if (err != noErr)
-    return MacErrorMapper(err);
-    
-   PRUint32 bytes = ::GetHandleSize((Handle) aliasH);
-   ::HLock((Handle) aliasH);
-   // Passing nsnull for dest makes NULL-term string
-   char* buf = PL_Base64Encode((const char*)*aliasH, bytes, nsnull);
-   ::DisposeHandle((Handle) aliasH);
-   NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
-   
-   aPersistentDescriptor = buf;
-   PR_Free(buf);
-
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  return GetNativePath(aPersistentDescriptor);
 }
 
 NS_IMETHODIMP nsLocalFile::SetPersistentDescriptor(const nsACString& aPersistentDescriptor)
