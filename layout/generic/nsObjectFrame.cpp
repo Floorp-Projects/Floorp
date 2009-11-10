@@ -1547,6 +1547,8 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
         nativeDrawing.EndNativeDrawing();
         return;
       }
+      
+#ifndef NP_NO_CARBON
       // In the Carbon event model...
       // If gfxQuartzNativeDrawing hands out a CGContext different from the
       // one set by SetPluginPortAndDetectChange(), we need to pass it to the
@@ -1562,6 +1564,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
         cgPluginPortCopy->context = cgContext;
         mInstanceOwner->SetPluginPortChanged(PR_TRUE);
       }
+#endif
 
       mInstanceOwner->BeginCGPaint();
       mInstanceOwner->Paint(nativeClipRect - offset, cgContext);
@@ -3433,6 +3436,7 @@ void* nsPluginInstanceOwner::SetPluginPortAndDetectChange()
   } else if (drawingModel == NPDrawingModelCoreGraphics)
 #endif
   {
+#ifndef NP_NO_CARBON
     if (GetEventModel() == NPEventModelCarbon) {
       NP_CGContext* windowCGPort = static_cast<NP_CGContext*>(mPluginWindow->window);
       if ((windowCGPort->context != mCGPluginPortCopy.context) ||
@@ -3442,6 +3446,7 @@ void* nsPluginInstanceOwner::SetPluginPortAndDetectChange()
         mPluginPortChanged = PR_TRUE;
       }
     }
+#endif
   }
 
   return mPluginWindow->window;
@@ -4657,8 +4662,8 @@ void nsPluginInstanceOwner::Paint(const gfxRect& aDirtyRect, CGContextRef cgCont
  
   nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
   if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
-    void* window = FixUpPluginWindow(ePluginPaintEnable);
 #ifndef NP_NO_CARBON
+    void* window = FixUpPluginWindow(ePluginPaintEnable);
     if (GetEventModel() == NPEventModelCarbon && window) {
       EventRecord updateEvent;
       InitializeEventRecord(&updateEvent, nsnull);
@@ -5459,7 +5464,6 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
     return nsnull;
 
   NPDrawingModel drawingModel = GetDrawingModel();
-  NPEventModel eventModel = GetEventModel();
 
   nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
   if (!pluginWidget)
@@ -5503,7 +5507,7 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
 
     nsRect windowRect;
 #ifndef NP_NO_CARBON
-    if (eventModel == NPEventModelCarbon)
+    if (GetEventModel() == NPEventModelCarbon)
       NS_NPAPI_CarbonWindowFrame(static_cast<WindowRef>(static_cast<NP_CGContext*>(pluginPort)->window), windowRect);
     else
 #endif
