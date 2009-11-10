@@ -319,7 +319,7 @@ namespace nanojit
     static const int NumArgRegs = 6;
 #endif
 
-    static inline bool isValidDisplacement(int32_t) {
+    static inline bool isValidDisplacement(LOpcode, int32_t) {
         return true;
     }
     static inline bool IsFpReg(Register r) {

@@ -438,7 +438,7 @@ namespace nanojit
     {
         if (value->isconst())
         {
-            Register rb = getBaseReg(base, dr, GpRegs);
+            Register rb = getBaseReg(LIR_sti, base, dr, GpRegs);
             int c = value->imm32();
             STi(rb, dr, c);
         }
@@ -497,7 +497,7 @@ namespace nanojit
         if (isKnownReg(rr) && rmask(rr) & XmmRegs)
         {
             freeRsrcOf(ins, false);
-            Register rb = getBaseReg(base, db, GpRegs);
+            Register rb = getBaseReg(ins->opcode(), base, db, GpRegs);
             SSE_LDQ(rr, db, rb);
         }
         else
@@ -753,7 +753,7 @@ namespace nanojit
                 Register r = findRegFor(lhs, GpRegs);
                 TEST(r,r);
             } else if (!rhs->isQuad()) {
-                Register r = getBaseReg(lhs, c, GpRegs);
+                Register r = getBaseReg(condop, lhs, c, GpRegs);
                 CMPi(r, c);
             }
         }
@@ -1060,7 +1060,7 @@ namespace nanojit
             return;
         }
 
-        Register ra = getBaseReg(base, d, GpRegs);
+        Register ra = getBaseReg(op, base, d, GpRegs);
         if (op == LIR_ldcb)
             LD8Z(rr, d, ra);
         else if (op == LIR_ldcs)

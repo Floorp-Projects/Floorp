@@ -260,7 +260,7 @@ namespace nanojit
             void        assignSaved(RegAlloc &saved, RegisterMask skip);
             LInsp       findVictim(RegisterMask allow);
 
-            Register    getBaseReg(LIns *i, int &d, RegisterMask allow);
+            Register    getBaseReg(LOpcode op, LIns *i, int &d, RegisterMask allow);
             int         findMemFor(LIns* i);
             Register    findRegFor(LIns* i, RegisterMask allow);
             void        findRegFor2(RegisterMask allow, LIns* ia, Reservation* &resva, LIns *ib, Reservation* &resvb);
