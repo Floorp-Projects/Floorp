@@ -78,6 +78,7 @@
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
+#include "nsRegion.h"
 
 #include <dlfcn.h>
 
@@ -1723,19 +1724,43 @@ void nsChildView::Scroll(const nsIntPoint& aDelta,
   if (!mParentView)
     return;
 
-#ifndef NS_LEOPARD_AND_LATER
   BOOL viewWasDirty = mVisible && [mView needsDisplay];
-#endif // NS_LEOPARD_AND_LATER
   if (mVisible && !aDestRects.IsEmpty()) {
+    // Union of all source and destination rects
+    nsIntRegion destRegion;
+    NSSize scrollVector = {aDelta.x, aDelta.y};
     for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
       NSRect rect;
       GeckoRectToNSRect(aDestRects[i] - aDelta, rect);
-      NSSize scrollVector = {aDelta.x, aDelta.y};
       [mView scrollRect:rect by:scrollVector];
-#ifdef NS_LEOPARD_AND_LATER
-      [mView translateRectsNeedingDisplayInRect:rect by:scrollVector];
-#endif // NS_LEOPARD_AND_LATER
+      destRegion.Or(destRegion, aDestRects[i]);
     }
+#ifdef NS_LEOPARD_AND_LATER
+    if (viewWasDirty) {
+      nsIntRect allRects = destRegion.GetBounds();
+      allRects.UnionRect(allRects, allRects - aDelta);
+      NSRect all;
+      GeckoRectToNSRect(allRects, all);
+      [mView translateRectsNeedingDisplayInRect:all by:scrollVector];
+
+      // Areas that could be affected by the
+      // translateRectsNeedingDisplayInRect but aren't in any destination
+      // may have had their invalidation moved incorrectly. So just
+      // invalidate them now. Unfortunately Apple hasn't given us an API
+      // to do exactly what we need here.
+      nsIntRegion needsInvalidation;
+      needsInvalidation.Sub(allRects, destRegion);
+      nsIntRegionRectIterator iter(needsInvalidation);
+      const nsIntRect* invalidate;
+      for (nsIntRegionRectIterator iter(needsInvalidation);
+           (invalidate = iter.Next()) != nsnull;) {
+        NSRect rect;
+        GeckoRectToNSRect(*invalidate, rect);
+        [mView setNeedsDisplayInRect:rect];
+      }
+    }
+#endif // NS_LEOPARD_AND_LATER
+
     // Leopard, at least, has a nasty bug where calling scrollRect:by: doesn't
     // actually trigger a window update. A window update is only triggered
     // if you actually paint something. In some cases Gecko might optimize
