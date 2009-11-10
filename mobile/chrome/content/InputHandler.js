@@ -63,6 +63,9 @@ const kSpeedSensitivity = .8;
 // How relevant x earlier milliseconds is to determining the speed.
 const kTimeRelevance = .01;
 
+// Same as NS_EVENT_STATE_ACTIVE from nsIEventStateManager.h
+const kStateActive = 0x00000001;
+
 /**
  * InputHandler
  *
@@ -840,6 +843,7 @@ MouseModule.prototype = {
 function DragData(owner, dragRadius) {
   this._owner = owner;
   this._dragRadius = dragRadius;
+  this._domUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
   this.reset();
 };
 
@@ -877,6 +881,12 @@ DragData.prototype = {
     if (!this._isPan) {
       let distanceSquared = (Math.pow(sX - this._originX, 2) + Math.pow(sY - this._originY, 2));
       this._isPan = (distanceSquared > Math.pow(this._dragRadius, 2));
+      if (this._isPan) {
+        // dismiss the active state of the pan element
+        let target = document.documentElement;
+        let state = this._domUtils.getContentState(target);
+        this._domUtils.setContentState(target, state & kStateActive);
+      }
     }
 
     // If now a pan, mark previous position where panning was.
