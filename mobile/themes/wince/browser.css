@@ -376,6 +376,10 @@ autocompleteresult.noresults {
   border-bottom: none;
 }
 
+autocompleteresult.noresults:active {
+  background-color: white;
+}
+
 autocompleteresult.noresults > .autocomplete-item-label {
   text-align: center;
   color: grey;
