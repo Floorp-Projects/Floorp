@@ -339,10 +339,6 @@ SyncEngine.prototype = {
       this._toFetch = o));
   },
 
-  _makeUploadColl: function _makeUploadColl() {
-    return new Collection(this.engineURL);
-  },
-
   // Create a new record by querying the store, and add the engine metadata
   _createRecord: function SyncEngine__createRecord(id) {
     return this._store.createRecord(id, this.cryptoMetaURL);
@@ -598,7 +594,7 @@ SyncEngine.prototype = {
       this._log.debug("Preparing " + outnum + " outgoing records");
 
       // collection we'll upload
-      let up = this._makeUploadColl();
+      let up = new Collection(this.engineURL);
       let count = 0;
 
       // Upload what we've got so far in the collection
