@@ -304,8 +304,8 @@ SyncEngine.prototype = {
     this.loadToFetch();
   },
 
-  get storageURL() Svc.Prefs.get("clusterURL") + "0.5/" +
-    ID.get("WeaveID").username + "/storage/",
+  get storageURL() Svc.Prefs.get("clusterURL") + Svc.Prefs.get("storageAPI") +
+    "/" + ID.get("WeaveID").username + "/storage/",
 
   get engineURL() this.storageURL + this.name,
 
