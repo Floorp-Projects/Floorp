@@ -19,7 +19,14 @@ RemoteCanvas.prototype.load = function(callback) {
   iframe.src = this.url;
   var me = this;
   iframe.addEventListener("load", function() {
-    me.remotePageLoaded(callback);
+    var m = iframe.contentDocument.getElementById("av");
+    m.addEventListener("suspend", function(aEvent) {
+      if (aEvent.loaded == aEvent.total) {
+        m.removeEventListener("suspend", arguments.callee, false);
+        me.remotePageLoaded(callback);
+      }
+    }, false);
+    m.src = m.getAttribute("source");
   }, false);
   window.document.body.appendChild(iframe);
 };
