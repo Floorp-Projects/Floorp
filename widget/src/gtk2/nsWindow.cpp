@@ -994,14 +994,7 @@ nsWindow::Show(PRBool aState)
     // If someone is showing this window and it needs a resize then
     // resize the widget.
     if (aState) {
-        
-        // Sizemode can be set before the window is created.  If it is,
-        // we want to force fullscreen, if needed.
-        if (mSizeMode == nsSizeMode_Fullscreen)
-            MakeFullScreen(PR_TRUE);
-
         if (mNeedsMove) {
-            LOG(("\tresizing\n"));
             NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
                          PR_FALSE);
         } else if (mNeedsResize) {
@@ -4233,7 +4226,6 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
             gtk_window_move(GTK_WINDOW(mShell), aX, aY);
 
         gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
-        gdk_window_resize(mGdkWindow, aWidth, aHeight);
     }
     else if (mContainer) {
         GtkAllocation allocation;
@@ -4971,25 +4963,21 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
     LOG(("nsWindow::MakeFullScreen [%p] aFullScreen %d\n",
          (void *)this, aFullScreen));
 
-#if GTK_CHECK_VERSION(2,2,0)
     if (aFullScreen) {
         if (mSizeMode != nsSizeMode_Fullscreen)
             mLastSizeMode = mSizeMode;
 
         mSizeMode = nsSizeMode_Fullscreen;
-        gdk_window_fullscreen (mShell->window);
+        gtk_window_fullscreen(GTK_WINDOW(mShell));
     }
     else {
         mSizeMode = mLastSizeMode;
-        gdk_window_unfullscreen (mShell->window);
+        gtk_window_unfullscreen(GTK_WINDOW(mShell));
     }
 
     NS_ASSERTION(mLastSizeMode != nsSizeMode_Fullscreen,
                  "mLastSizeMode should never be fullscreen");
     return NS_OK;
-#else
-    return nsBaseWidget::MakeFullScreen(aFullScreen);
-#endif
 }
 
 NS_IMETHODIMP
