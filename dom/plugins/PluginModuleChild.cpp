@@ -192,9 +192,7 @@ PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
 
     // FIXME/cjones: should all instances be dead by now?
 
-    if (mShutdownFunc)
-        *rv = mShutdownFunc();
-
+    *rv = mShutdownFunc ? mShutdownFunc() : NPERR_NO_ERROR;
     return true;
 }
 

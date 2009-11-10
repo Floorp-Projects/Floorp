@@ -1823,5 +1823,6 @@ setColor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* r
   r.bottom = id->window.height;
   NPN_InvalidateRect(npp, &r);
 
+  VOID_TO_NPVARIANT(*result);
   return true;
 }
