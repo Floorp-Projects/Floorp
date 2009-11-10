@@ -879,8 +879,8 @@ nsFastLoadFileReader::Open()
     if (mFileLen < sizeof(nsFastLoadHeader))
         return NS_ERROR_FAILURE;
     
-#if defined(XP_UNIX) && !defined(SOLARIS)
-    madvise(mFileData, mFileLen, MADV_WILLNEED);
+#if defined(XP_UNIX)
+    madvise((char *)mFileData, mFileLen, MADV_WILLNEED);
 #endif
 
     rv = ReadHeader(&mHeader);
