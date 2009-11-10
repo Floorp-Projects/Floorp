@@ -307,9 +307,9 @@ See bugs 411005 406407
   const nsGUIEvent *guiEvent = static_cast<nsGUIEvent*>(aEvent.nativeEvent);
   if (guiEvent &&
      (guiEvent->message == NS_KEY_PRESS || guiEvent->message == NS_KEY_UP || guiEvent->message == NS_KEY_DOWN) &&
-      guiEvent->nativeMsg)
+      guiEvent->pluginEvent)
         gtk_bindings_activate_event(GTK_OBJECT(mNativeTarget),
-                                    static_cast<GdkEventKey*>(guiEvent->nativeMsg));
+                                    static_cast<GdkEventKey*>(guiEvent->pluginEvent));
 */
 
   return PR_FALSE;

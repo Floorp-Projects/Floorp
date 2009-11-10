@@ -3022,7 +3022,7 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode,
     pluginEvent.event = aMsg->message;
     pluginEvent.wParam = aMsg->wParam;
     pluginEvent.lParam = aMsg->lParam;
-    event.nativeMsg = (void *)&pluginEvent;
+    event.pluginEvent = (void *)&pluginEvent;
   }
 
   PRBool result = DispatchWindowEvent(&event);
@@ -3131,7 +3131,7 @@ PRBool nsWindow::DispatchPluginEvent(const MSG &aMsg)
   pluginEvent.event = aMsg.message;
   pluginEvent.wParam = aMsg.wParam;
   pluginEvent.lParam = aMsg.lParam;
-  event.nativeMsg = (void *)&pluginEvent;
+  event.pluginEvent = (void *)&pluginEvent;
   return DispatchWindowEvent(&event);
 }
 
@@ -3308,7 +3308,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
   pluginEvent.wParam = wParam;     // plugins NEED raw OS event flags!
   pluginEvent.lParam = lParam;
 
-  event.nativeMsg = (void *)&pluginEvent;
+  event.pluginEvent = (void *)&pluginEvent;
 
   // call the event callback
   if (nsnull != mEventCallback) {
@@ -3435,7 +3435,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
         break;
     }
 
-    event.nativeMsg = (void *)&pluginEvent;
+    event.pluginEvent = (void *)&pluginEvent;
 
     return DispatchWindowEvent(&event);
   }
