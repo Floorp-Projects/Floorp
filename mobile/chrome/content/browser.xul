@@ -202,7 +202,7 @@
                   <box id="identity-box"
                        onclick="getIdentityHandler().handleIdentityButtonEvent(event);"
                        onkeypress="getIdentityHandler().handleIdentityButtonEvent(event);">
-                    <box id="urlbar-image-box">
+                    <box id="urlbar-image-box" mousethrough="always">
                       <image id="urlbar-throbber"/>
                       <image id="urlbar-favicon" hidden="true"/>
                     </box>
