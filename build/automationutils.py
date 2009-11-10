@@ -200,16 +200,10 @@ def dumpLeakLog(leakLogFile, filter = False):
   # Simply copy the log.
   log.info(leakReport.rstrip("\n"))
 
-def processLeakLog(leakLogFile, leakThreshold = 0):
-  """Process the leak log, parsing it.
-
-  Use this function if you want an additional PASS/FAIL summary.
-  It must be used with the |XPCOM_MEM_BLOAT_LOG| environment variable.
+def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
+  """Process a single leak log, corresponding to the specified
+  process PID and type.
   """
-
-  if not os.path.exists(leakLogFile):
-    log.info("WARNING | automationutils.processLeakLog() | refcount logging is off, so leaks can't be detected!")
-    return
 
   #                  Per-Inst  Leaked      Total  Rem ...
   #   0 TOTAL              17     192  419115886    2 ...
@@ -218,7 +212,10 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
                       r"(?P<size>-?\d+)\s+(?P<bytesLeaked>-?\d+)\s+"
                       r"-?\d+\s+(?P<numLeaked>-?\d+)")
 
-  leaks = open(leakLogFile, "r")
+  processString = ""
+  if PID and processType:
+    processString = "| %s process %s " % (processType, PID)
+  leaks = open(leakLogFileName, "r")
   for line in leaks:
     matches = lineRe.match(line)
     if (matches and
@@ -228,7 +225,7 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
     log.info(line.rstrip())
   leaks.close()
 
-  leaks = open(leakLogFile, "r")
+  leaks = open(leakLogFileName, "r")
   seenTotal = False
   prefix = "TEST-PASS"
   for line in leaks:
@@ -240,7 +237,8 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
     bytesLeaked = int(matches.group("bytesLeaked"))
     numLeaked = int(matches.group("numLeaked"))
     if size < 0 or bytesLeaked < 0 or numLeaked < 0:
-      log.info("TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | negative leaks caught!")
+      log.info("TEST-UNEXPECTED-FAIL %s| automationutils.processLeakLog() | negative leaks caught!" %
+               processString)
       if name == "TOTAL":
         seenTotal = True
     elif name == "TOTAL":
@@ -248,13 +246,14 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
       # Check for leaks.
       if bytesLeaked < 0 or bytesLeaked > leakThreshold:
         prefix = "TEST-UNEXPECTED-FAIL"
-        leakLog = "TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | leaked" \
-                  " %d bytes during test execution" % bytesLeaked
+        leakLog = "TEST-UNEXPECTED-FAIL %s| automationutils.processLeakLog() | leaked" \
+                  " %d bytes during test execution" % (processString, bytesLeaked)
       elif bytesLeaked > 0:
-        leakLog = "TEST-PASS | automationutils.processLeakLog() | WARNING leaked" \
-                  " %d bytes during test execution" % bytesLeaked
+        leakLog = "TEST-PASS %s| automationutils.processLeakLog() | WARNING leaked" \
+                  " %d bytes during test execution" % (processString, bytesLeaked)
       else:
-        leakLog = "TEST-PASS | automationutils.processLeakLog() | no leaks detected!"
+        leakLog = "TEST-PASS %s| automationutils.processLeakLog() | no leaks detected!" \
+                  % processString
       # Remind the threshold if it is not 0, which is the default/goal.
       if leakThreshold != 0:
         leakLog += " (threshold set at %d bytes)" % leakThreshold
@@ -268,14 +267,46 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
         else:
           instance = "instance"
           rest = ""
-        log.info("%(prefix)s | automationutils.processLeakLog() | leaked %(numLeaked)d %(instance)s of %(name)s "
+        log.info("%(prefix)s %(process)s| automationutils.processLeakLog() | leaked %(numLeaked)d %(instance)s of %(name)s "
                  "with size %(size)s bytes%(rest)s" %
                  { "prefix": prefix,
+                   "process": processString,
                    "numLeaked": numLeaked,
                    "instance": instance,
                    "name": name,
                    "size": matches.group("size"),
                    "rest": rest })
   if not seenTotal:
-    log.info("TEST-UNEXPECTED-FAIL | automationutils.processLeakLog() | missing output line for total leaks!")
+    log.info("TEST-UNEXPECTED-FAIL %s| automationutils.processLeakLog() | missing output line for total leaks!" %
+             processString)
   leaks.close()
+
+
+def processLeakLog(leakLogFile, leakThreshold = 0):
+  """Process the leak log, including separate leak logs created
+  by child processes.
+
+  Use this function if you want an additional PASS/FAIL summary.
+  It must be used with the |XPCOM_MEM_BLOAT_LOG| environment variable.
+  """
+
+  if not os.path.exists(leakLogFile):
+    log.info("WARNING | automationutils.processLeakLog() | refcount logging is off, so leaks can't be detected!")
+    return
+
+  (leakLogFileDir, leakFileBase) = os.path.split(leakLogFile)
+  pidRegExp = re.compile(r".*?_([a-z]*)_pid(\d*)$")
+  if leakFileBase[-4:] == ".log":
+    leakFileBase = leakFileBase[:-4]
+    pidRegExp = re.compile(r".*?_([a-z]*)_pid(\d*).log$")
+
+  for fileName in os.listdir(leakLogFileDir):
+    if fileName.find(leakFileBase) != -1:
+      thisFile = os.path.join(leakLogFileDir, fileName)
+      processPID = 0
+      processType = None
+      m = pidRegExp.search(fileName)
+      if m:
+        processType = m.group(1)
+        processPID = m.group(2)
+      processSingleLeakFile(thisFile, processPID, processType, leakThreshold)

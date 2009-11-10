@@ -50,6 +50,17 @@
 #include <math.h>
 #include "nsStackWalk.h"
 
+#ifdef MOZ_IPC
+#include "nsXULAppAPI.h"
+#include "nsString.h"
+#ifdef XP_WIN
+#include <process.h>
+#define getpid _getpid
+#else
+#include <unistd.h>
+#endif
+#endif
+
 #ifdef HAVE_LIBDL
 #include <dlfcn.h>
 #endif
@@ -318,8 +329,12 @@ public:
   }
 
   PRBool PrintDumpHeader(FILE* out, const char* msg, nsTraceRefcntImpl::StatisticsType type) {
+#ifdef MOZ_IPC
+    fprintf(out, "\n== BloatView: %s, %s process %d\n", msg,
+            XRE_ChildProcessTypeToString(XRE_GetProcessType()), getpid());
+#else
     fprintf(out, "\n== BloatView: %s\n", msg);
-
+#endif
     nsTraceRefcntStats& stats =
       (type == nsTraceRefcntImpl::NEW_STATS) ? mNewStats : mAllStats;
     if (gLogLeaksOnly && !HaveLeaks(&stats))
@@ -618,18 +633,33 @@ static PRBool InitLog(const char* envVar, const char* msg, FILE* *result)
       return PR_TRUE;
     }
     else {
-      FILE *stream = ::fopen(value, "w");
+      FILE *stream;
+      nsCAutoString fname(value);
+#ifdef MOZ_IPC
+      if (XRE_GetProcessType() != GeckoProcessType_Default) {
+        bool hasLogExtension = 
+            fname.RFind(".log", PR_TRUE, -1, 4) == kNotFound ? false : true;
+        if (hasLogExtension)
+          fname.Cut(fname.Length() - 4, 4);
+        fname.AppendLiteral("_");
+        fname.Append((char*)XRE_ChildProcessTypeToString(XRE_GetProcessType()));
+        fname.AppendLiteral("_pid");
+        fname.AppendInt(getpid());
+        if (hasLogExtension)
+          fname.AppendLiteral(".log");
+      }
+#endif
+      stream = ::fopen(fname.get(), "w");
       if (stream != NULL) {
         *result = stream;
         fprintf(stdout, "### %s defined -- logging %s to %s\n",
-                envVar, msg, value);
-        return PR_TRUE;
+                envVar, msg, fname.get());
       }
       else {
         fprintf(stdout, "### %s defined -- unable to log %s to %s\n",
-                envVar, msg, value);
-        return PR_FALSE;
+                envVar, msg, fname.get());
       }
+      return stream != NULL;
     }
   }
   return PR_FALSE;
