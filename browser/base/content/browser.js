@@ -1288,7 +1288,7 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   }
 
   let NP = {};
-  Cu.import("resource://gre/modules/NetworkPrioritizer.jsm", NP);
+  Cu.import("resource://app/modules/NetworkPrioritizer.jsm", NP);
   NP.trackBrowserWindow(window);
 
   // initialize the session-restore service (in case it's not already running)

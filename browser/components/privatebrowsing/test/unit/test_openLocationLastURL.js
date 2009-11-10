@@ -41,7 +41,7 @@ function run_test_on_service()
   let Cc = Components.classes;
   let Ci = Components.interfaces;
   let Cu = Components.utils;
-  Cu.import("resource://gre/modules/openLocationLastURL.jsm");
+  Cu.import("resource://app/modules/openLocationLastURL.jsm");
 
   let pb = Cc[PRIVATEBROWSING_CONTRACT_ID].
            getService(Ci.nsIPrivateBrowsingService);

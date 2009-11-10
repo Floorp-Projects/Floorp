@@ -49,7 +49,7 @@ const Cu = Components.utils;
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/distribution.js");
+Cu.import("resource://app/modules/distribution.js");
 
 const PREF_EM_NEW_ADDONS_LIST = "extensions.newAddons";
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
