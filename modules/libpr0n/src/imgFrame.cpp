@@ -464,11 +464,6 @@ void imgFrame::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
   // At this point, we've taken care of mSinglePixel images, images with
   // aPadding, and partially-decoded images.
 
-  if (!AllowedImageSize(fill.size.width + 1, fill.size.height + 1)) {
-    NS_WARNING("Destination area too large, bailing out");
-    return;
-  }
-
   // Compute device-space-to-image-space transform. We need to sanity-
   // check it to work around a pixman bug :-(
   // XXX should we only do this for certain surface types?
