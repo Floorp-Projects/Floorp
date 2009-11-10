@@ -358,7 +358,7 @@ function handleAsyncOrdering(request, response)
     // intended for public use!  If you do this in client code, expect me to
     // knowingly break your code by changing the variable name.  :-P
     gThreadManager.currentThread
-                  .dispatch(writeData, Ci.nsIThreadManager.DISPATCH_NORMAL);
+                  .dispatch(writeData, Ci.nsIThread.DISPATCH_NORMAL);
   }
   step();
   response.processAsync();
