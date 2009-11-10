@@ -408,15 +408,6 @@ namespace nanojit
                     i -= insSizes[((LInsp)i)->opcode()];
                     break;
 
-                case LIR_icall:
-                case LIR_fcall:
-                case LIR_qcall: {
-                    int argc = ((LInsp)i)->argc();
-                    i -= sizeof(LInsC);         // step over the instruction
-                    i -= argc*sizeof(LInsp);    // step over the arguments
-                    break;
-                }
-
                 case LIR_skip:
                     // Ignore the skip, move onto its predecessor.
                     NanoAssert(((LInsp)i)->prevLIns() != (LInsp)i);
@@ -968,27 +959,25 @@ namespace nanojit
         LOpcode op = k_callmap[argt & ARGSIZE_MASK_ANY];
         NanoAssert(op != LIR_skip); // LIR_skip here is just an error condition
 
-        ArgSize sizes[MAXARGS];
-        int32_t argc = ci->get_sizes(sizes);
+        int32_t argc = ci->count_args();
+        NanoAssert(argc <= (int)MAXARGS);
 
         if (!ARM_VFP && (op == LIR_fcall || op == LIR_qcall))
             op = LIR_callh;
 
-        NanoAssert(argc <= (int)MAXARGS);
-
-        // Lay the call parameters out (in reverse order).
+        // Allocate space for and copy the arguments.  We use the same
+        // allocator as the normal LIR buffers so it has the same lifetime.
         // Nb: this must be kept in sync with arg().
-        LInsp* newargs = (LInsp*)_buf->makeRoom(argc*sizeof(LInsp) + sizeof(LInsC)); // args + call
-        for (int32_t i = 0; i < argc; i++)
-            newargs[argc - i - 1] = args[i];
-
-        // Write the call instruction itself.
-        LInsC* insC = (LInsC*)(uintptr_t(newargs) + argc*sizeof(LInsp));
+        LInsp* args2 = (LInsp*)_buf->_allocator.alloc(argc * sizeof(LInsp));
+        memcpy(args2, args, argc * sizeof(LInsp));
+ 
+        // Allocate and write the call instruction.
+        LInsC* insC = (LInsC*)_buf->makeRoom(sizeof(LInsC));
         LIns*  ins  = insC->getLIns();
 #ifndef NANOJIT_64BIT
-        ins->initLInsC(op==LIR_callh ? LIR_icall : op, argc, ci);
+        ins->initLInsC(op==LIR_callh ? LIR_icall : op, args2, ci);
 #else
-        ins->initLInsC(op, argc, ci);
+        ins->initLInsC(op, args2, ci);
 #endif
         return ins;
     }

@@ -285,18 +285,6 @@ namespace nanojit
     //   different class because there are some places where we treat
     //   skips specially and so having it separate seems like a good idea.
     //
-    // - Call instructions (LIR_call, LIR_fcall, LIR_calli, LIR_fcalli) are
-    //   also more complicated.  They are preceded by the arguments to the
-    //   call, which are laid out in reverse order.  For example, a call with
-    //   3 args will look like this:
-    //
-    //      [ arg #2
-    //        arg #1
-    //        arg #0
-    //        argc            <-- LInsC insC == toLInsC(ins)
-    //        ci
-    //        opcode + resv ] <-- LIns* ins
-    //
     // - Various things about the size and layout of LIns and LInsXYZ are
     //   statically checked in staticSanityCheck().  In particular, this is
     //   worthwhile because there's nothing that guarantees that all the
@@ -377,9 +365,9 @@ namespace nanojit
         inline void initLInsLd(LOpcode opcode, LIns* val, int32_t d);
         inline void initLInsSti(LOpcode opcode, LIns* val, LIns* base, int32_t d);
         inline void initLInsSk(LIns* prevLIns);
-        // Nb: initLInsC() does NOT initialise the arguments.  That must be
-        // done separately.
-        inline void initLInsC(LOpcode opcode, int32_t argc, const CallInfo* ci);
+        // Nb: args[] must be allocated and initialised before being passed in;
+        // initLInsC() just copies the pointer into the LInsC.
+        inline void initLInsC(LOpcode opcode, LIns** args, const CallInfo* ci);
         inline void initLInsP(int32_t arg, int32_t kind);
         inline void initLInsI(LOpcode opcode, int32_t imm32);
         inline void initLInsI64(LOpcode opcode, int64_t imm64);
@@ -756,7 +744,10 @@ namespace nanojit
     private:
         friend class LIns;
 
-        uintptr_t   argc:8;
+        // Arguments in reverse order, just like insCall() (ie. args[0] holds
+        // the rightmost arg).  The array should be allocated by the same
+        // allocator as the LIR buffers, because it has the same lifetime.
+        LIns**      args;
 
         const CallInfo* ci;
 
@@ -876,11 +867,10 @@ namespace nanojit
         toLInsSk()->prevLIns = prevLIns;
         NanoAssert(isLInsSk());
     }
-    void LIns::initLInsC(LOpcode opcode, int32_t argc, const CallInfo* ci) {
-        NanoAssert(isU8(argc));
+    void LIns::initLInsC(LOpcode opcode, LIns** args, const CallInfo* ci) {
         lastWord.clear();
         lastWord.opcode = opcode;
-        toLInsC()->argc = argc;
+        toLInsC()->args = args;
         toLInsC()->ci = ci;
         NanoAssert(isLInsC());
     }
@@ -987,20 +977,17 @@ namespace nanojit
         toLInsI()->imm32 = (nbytes+3)>>2; // # of required 32bit words
     }
 
-    // Index args in r-l order.  arg(0) is rightmost arg.
+    // Index args in reverse order, i.e. arg(0) returns the rightmost arg.
     // Nb: this must be kept in sync with insCall().
     LIns* LIns::arg(uint32_t i) const
     {
         NanoAssert(isCall());
-        NanoAssert(i < argc());
-        // Move to the start of the LInsC, then move back one word per argument.
-        LInsp* argSlot = (LInsp*)(uintptr_t(toLInsC()) - (i+1)*sizeof(void*));
-        return *argSlot;
+        NanoAssert(i < callInfo()->count_args());
+        return toLInsC()->args[i];  // args[] is in right-to-left order as well
     }
 
     uint32_t LIns::argc() const {
-        NanoAssert(isCall());
-        return toLInsC()->argc;
+        return callInfo()->count_args();
     }
 
     LIns* LIns::callArgN(uint32_t n) const
@@ -1070,6 +1057,7 @@ namespace nanojit
             base = insDisp(base, d);
             return out->insStorei(value, base, d);
         }
+        // args[] is in reverse order, ie. args[0] holds the rightmost arg.
         virtual LInsp insCall(const CallInfo *call, LInsp args[]) {
             return out->insCall(call, args);
         }
