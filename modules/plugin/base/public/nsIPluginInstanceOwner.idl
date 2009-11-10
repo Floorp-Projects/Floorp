@@ -49,7 +49,7 @@ class nsPluginEvent;
 
 [ref] native nsIPluginInstanceRef(nsIPluginInstance*);
 
-[uuid(0E0E465C-C081-4E43-B2DF-D4DCA6B8E8CF)]
+[uuid(8080E717-7261-4707-B8B4-48250F47055F)]
 interface nsIPluginInstanceOwner : nsISupports
 {
   /**
@@ -135,4 +135,6 @@ interface nsIPluginInstanceOwner : nsISupports
   virtual NPBool  ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
                                double *destX, double *destY, NPCoordinateSpace destSpace) = 0;
 %}
+
+  void setEventModel(in PRInt32 eventModel);
 };

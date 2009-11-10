@@ -904,12 +904,6 @@ void nsChildView::UpdatePluginPort()
       }
     }
 #endif
-    if ([(ChildView*)mView pluginEventModel] == NPEventModelCocoa) {
-      if (cocoaWindow) {
-        mPluginCGContext.context = (CGContextRef)[[cocoaWindow graphicsContext] graphicsPort];
-        mPluginCGContext.window = (NPNSWindow*)cocoaWindow;
-      }
-    }
   }
 #ifndef NP_NO_QUICKDRAW
   else {

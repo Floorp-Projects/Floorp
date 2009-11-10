@@ -874,11 +874,6 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
 #else
     mDrawingModel(NPDrawingModelQuickDraw),
 #endif
-#ifdef NP_NO_CARBON
-    mEventModel(NPEventModelCocoa),
-#else
-    mEventModel(NPEventModelCarbon),
-#endif
 #endif
     mWindowless(PR_FALSE),
     mWindowlessLocal(PR_FALSE),
@@ -1221,18 +1216,6 @@ NS_IMETHODIMP nsNPAPIPluginInstance::SetWindow(NPWindow* window)
       (window->width <= 0 || window->height <= 0)) {
     return NS_OK;
   }
-#elif defined(XP_MACOSX)
-  // Under the Cocoa event model the context and the window in SetWindow calls 
-  // should always be NULL. For now NULL them out here but in the future we can
-  // optimize to not set them in the first place and only make SetWindow calls
-  // when size or position changes.
-  NPEventModel eventModel;
-  GetEventModel((PRInt32*)&eventModel);
-  if (eventModel == NPEventModelCocoa) {
-    NP_CGContext* pluginPort = static_cast<NP_CGContext*>(window->window);
-    pluginPort->context = NULL;
-    pluginPort->window = NULL;
-  }
 #endif
 
   if (mCallbacks->setwindow) {
@@ -1456,7 +1439,15 @@ void nsNPAPIPluginInstance::SetDrawingModel(NPDrawingModel aModel)
 
 void nsNPAPIPluginInstance::SetEventModel(NPEventModel aModel)
 {
-  mEventModel = aModel;
+  // the event model needs to be set for the object frame immediately
+  nsCOMPtr<nsIPluginInstanceOwner> owner;
+  GetOwner(getter_AddRefs(owner));
+  if (!owner) {
+    NS_WARNING("Trying to set event model without a plugin instance owner!");
+    return;
+  }
+
+  owner->SetEventModel(aModel);
 }
 
 #endif
@@ -1465,16 +1456,6 @@ NS_IMETHODIMP nsNPAPIPluginInstance::GetDrawingModel(PRInt32* aModel)
 {
 #ifdef XP_MACOSX
   *aModel = (PRInt32)mDrawingModel;
-  return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif
-}
-
-NS_IMETHODIMP nsNPAPIPluginInstance::GetEventModel(PRInt32* aModel)
-{
-#ifdef XP_MACOSX
-  *aModel = (PRInt32)mEventModel;
   return NS_OK;
 #else
   return NS_ERROR_FAILURE;
