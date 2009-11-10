@@ -822,19 +822,11 @@ box[type="documenttab"]:only-child .documenttab-close {
 }
 
 /* Preferences window   ---------------------------------------------------- */
-/* XXX should be a richlistitem */
-setting {
-  background-color: white;
-  color: black;
-}
-
-settings {
-  background-color: lightgray;
-  color: #000;
-}
-
-settings .settings-title {
+.settings-title {
   font-weight: bold;
+  color: black;
+  background-color: lightgray;
+  margin: 0;
   padding: 0.25mm;
 }
 
@@ -863,7 +855,6 @@ settings .settings-title {
 .prefdesc {
   font-size: 1.8mm !important;
   color: grey;
-  background-color: white;
 }
 
 /* alerts popup ----------------------------------------------------------- */
