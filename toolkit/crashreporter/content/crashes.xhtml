@@ -18,8 +18,11 @@ table {
   padding-bottom: 2em;
 }
 th {
-  text-align: start;
+  text-align: left;
   white-space: nowrap;
+}
+th[chromedir="rtl"] {
+  text-align: right;
 }
 /* name */
 th:first-child {
@@ -44,7 +47,7 @@ td:last-child {
 #clear-reports {
   float: right;
 }
-#clear-reports:-moz-locale-dir(rtl) {
+#clear-reports[chromedir="rtl"] {
   float: left;
 }
 
@@ -60,15 +63,15 @@ td:last-child {
 
 <title>&crashes.title;</title>
 </head><body onload="init()" dir="&locale.dir;">
-<button id="clear-reports"
+<button chromedir="&locale.dir;" id="clear-reports"
         onclick="clearReports()">&clearAllReports.label;</button>
 <h1>&crashes.title;</h1>
 <div id="reportList">
   <table>
     <thead>
       <tr>
-        <th>&id.heading;</th>
-        <th colspan="2">&date.heading;</th>
+        <th chromedir="&locale.dir;">&id.heading;</th>
+        <th chromedir="&locale.dir;" colspan="2">&date.heading;</th>
       </tr>
     </thead>
     <tbody id="tbody">
