@@ -145,7 +145,6 @@ protected:
 
 #ifdef XP_MACOSX
   NPDrawingModel mDrawingModel;
-  NPEventModel   mEventModel;
 #endif
 
   // these are used to store the windowless properties
