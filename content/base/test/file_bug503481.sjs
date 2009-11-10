@@ -1,3 +1,21 @@
+// 'timer' is global to avoid getting GCed which would cancel the timer
+var timer;
+const nsITimer = Components.interfaces.nsITimer;
+
+function attemptUnblock(s) {
+  try {
+    let blockedResponse = null;
+    getObjectState("bug503481_" + s, function(x) {blockedResponse = x.wrappedJSObject.r});
+    blockedResponse.finish();
+    setObjectState("bug503481_" + s, null);
+  } catch(e) {
+    dump("unable to unblock " + s + "retrying in half a second\n");
+    timer = Components.classes["@mozilla.org/timer;1"]
+                      .createInstance(nsITimer);
+    timer.initWithCallback(function () { attemptUnblock(s) }, 500, nsITimer.TYPE_ONE_SHOT);
+  }
+}
+
 function handleRequest(request, response)
 {
   var query = {};
@@ -6,17 +24,10 @@ function handleRequest(request, response)
     query[name] = unescape(value);
   });
 
-  // dump("processing:" + request.queryString + "\n");
+  dump("processing:" + request.queryString + "\n");
 
   if (query.unblock) {
-    let blockedResponse = null;
-    try {
-      getObjectState("bug503481_" + query.unblock, function(x) {blockedResponse = x.wrappedJSObject.r});
-    } catch(e) {
-      throw "unable to unblock '" + query.unblock + "': " + e.message;
-    }
-    setObjectState("bug503481_" + query.unblock, null);
-    blockedResponse.finish();
+    attemptUnblock(query.unblock);
   }
 
   if (query.blockOn) {
