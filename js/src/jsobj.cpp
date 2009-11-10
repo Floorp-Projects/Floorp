@@ -2018,60 +2018,62 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     JS_ASSERT(prop);
 
-    JSBool ok = JS_FALSE;
     uintN attrs;
-    JSAtomState &atomState = cx->runtime->atomState;
-    JSObject *desc;
-    MUST_FLOW_THROUGH("drop_property");
+    if (!pobj->getAttributes(cx, nameidr.id(), prop, &attrs)) {
+        pobj->dropProperty(cx, prop);
+        return JS_FALSE;
+    }
 
-    if (!pobj->getAttributes(cx, nameidr.id(), prop, &attrs))
-        goto drop_property;
+    jsval roots[] = { JSVAL_VOID, JSVAL_VOID };
+    JSAutoTempValueRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
+    if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+        if (OBJ_IS_NATIVE(obj)) {
+            JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
+            if (attrs & JSPROP_GETTER)
+                roots[0] = js_CastAsObjectJSVal(sprop->getter);
+            if (attrs & JSPROP_SETTER)
+                roots[1] = js_CastAsObjectJSVal(sprop->setter);
+        }
+
+        pobj->dropProperty(cx, prop);
+    } else {
+        pobj->dropProperty(cx, prop);
+
+        if (!obj->getProperty(cx, nameidr.id(), &roots[0]))
+            return JS_FALSE;
+    }
+
 
     /* We have our own property, so start creating the descriptor. */
-    desc = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+    JSObject *desc = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
     if (!desc)
-        goto drop_property;
+        return JS_FALSE;
     *vp = OBJECT_TO_JSVAL(desc); /* Root and return. */
 
-    if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
-        JSAutoTempValueRooter tvr(cx);
-        if (!obj->getProperty(cx, nameidr.id(), tvr.addr()) ||
-            !desc->defineProperty(cx, ATOM_TO_JSID(atomState.valueAtom), tvr.value(),
+    const JSAtomState &atomState = cx->runtime->atomState;
+    if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+        if (!desc->defineProperty(cx, ATOM_TO_JSID(atomState.getAtom), roots[0],
+                                  JS_PropertyStub, JS_PropertyStub, JSPROP_ENUMERATE) ||
+            !desc->defineProperty(cx, ATOM_TO_JSID(atomState.setAtom), roots[1],
+                                  JS_PropertyStub, JS_PropertyStub, JSPROP_ENUMERATE)) {
+            return JS_FALSE;
+        }
+    } else {
+        if (!desc->defineProperty(cx, ATOM_TO_JSID(atomState.valueAtom), roots[0],
                                   JS_PropertyStub, JS_PropertyStub, JSPROP_ENUMERATE) ||
             !desc->defineProperty(cx, ATOM_TO_JSID(atomState.writableAtom),
                                   BOOLEAN_TO_JSVAL((attrs & JSPROP_READONLY) == 0),
                                   JS_PropertyStub, JS_PropertyStub, JSPROP_ENUMERATE)) {
-            goto drop_property;
-        }
-    } else {
-        jsval getter = JSVAL_VOID, setter = JSVAL_VOID;
-        if (OBJ_IS_NATIVE(obj)) {
-            JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
-            if (attrs & JSPROP_GETTER)
-                getter = js_CastAsObjectJSVal(sprop->getter);
-            if (attrs & JSPROP_SETTER)
-                setter = js_CastAsObjectJSVal(sprop->setter);
-        }
-        if (!desc->defineProperty(cx, ATOM_TO_JSID(atomState.getAtom),
-                                  getter, JS_PropertyStub, JS_PropertyStub,
-                                  JSPROP_ENUMERATE) ||
-            !desc->defineProperty(cx, ATOM_TO_JSID(atomState.setAtom),
-                                  setter, JS_PropertyStub, JS_PropertyStub,
-                                  JSPROP_ENUMERATE)) {
-            goto drop_property;
+            return JS_FALSE;
         }
     }
 
-    ok = desc->defineProperty(cx, ATOM_TO_JSID(atomState.enumerableAtom),
-                              BOOLEAN_TO_JSVAL((attrs & JSPROP_ENUMERATE) != 0),
-                              JS_PropertyStub, JS_PropertyStub, JSPROP_ENUMERATE) &&
-         desc->defineProperty(cx, ATOM_TO_JSID(atomState.configurableAtom),
-                              BOOLEAN_TO_JSVAL((attrs & JSPROP_PERMANENT) == 0),
-                              JS_PropertyStub, JS_PropertyStub, JSPROP_ENUMERATE);
-
-  drop_property:
-    pobj->dropProperty(cx, prop);
-    return ok;
+    return desc->defineProperty(cx, ATOM_TO_JSID(atomState.enumerableAtom),
+                                BOOLEAN_TO_JSVAL((attrs & JSPROP_ENUMERATE) != 0),
+                                JS_PropertyStub, JS_PropertyStub, JSPROP_ENUMERATE) &&
+           desc->defineProperty(cx, ATOM_TO_JSID(atomState.configurableAtom),
+                                BOOLEAN_TO_JSVAL((attrs & JSPROP_PERMANENT) == 0),
+                                JS_PropertyStub, JS_PropertyStub, JSPROP_ENUMERATE);
 }
 
 static JSBool
