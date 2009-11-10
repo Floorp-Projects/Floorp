@@ -324,6 +324,10 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug475156.html \
 		bug475156.sjs \
 		test_copypaste.html \
+		test_bug503481.html \
+		file_bug503481.sjs \
+		test_bug503481b.html \
+		file_bug503481b_inner.html \
 		$(NULL)
 
 # Disabled; see bug 492181
