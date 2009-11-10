@@ -246,6 +246,7 @@ namespace nanojit
     LInsp LirBufWriter::insStorei(LInsp val, LInsp base, int32_t d)
     {
         LOpcode op = val->isQuad() ? LIR_stqi : LIR_sti;
+        base = insDisp(op, base, d);
         LInsSti* insSti = (LInsSti*)_buf->makeRoom(sizeof(LInsSti));
         LIns*    ins    = insSti->getLIns();
         ins->initLInsSti(op, val, base, d);
@@ -286,6 +287,7 @@ namespace nanojit
 
     LInsp LirBufWriter::insLoad(LOpcode op, LInsp base, int32_t d)
     {
+        base = insDisp(op, base, d);
         LInsLd* insLd = (LInsLd*)_buf->makeRoom(sizeof(LInsLd));
         LIns*   ins   = insLd->getLIns();
         ins->initLInsLd(op, base, d);
