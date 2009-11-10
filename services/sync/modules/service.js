@@ -214,7 +214,7 @@ WeaveSvc.prototype = {
     if (this.clusterURL == "" || this.username == "")
       return;
 
-    let storageAPI = this.clusterURL + "0.5/";
+    let storageAPI = this.clusterURL + Svc.Prefs.get("storageAPI") + "/";
     let userBase = storageAPI + this.username + "/";
     this._log.debug("Caching URLs under storage user base: " + userBase);
 
