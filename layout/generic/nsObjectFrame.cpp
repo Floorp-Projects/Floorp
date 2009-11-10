@@ -3609,7 +3609,7 @@ nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
   if (privateEvent) {
     nsEvent *theEvent = privateEvent->GetInternalNSEvent();
     const nsGUIEvent *guiEvent = (nsGUIEvent*)theEvent;
-    const EventRecord *ev = (EventRecord*)(guiEvent->nativeMsg); 
+    const EventRecord *ev = (EventRecord*)(guiEvent->pluginEvent); 
     if (guiEvent &&
         guiEvent->message == NS_KEY_PRESS &&
         ev &&
@@ -4024,14 +4024,14 @@ nsEventStatus nsPluginInstanceOwner::ProcessEventX11Composited(const nsGUIEvent&
    //XXX case NS_MOUSE_SCROLL_EVENT: not received.
  
    case NS_KEY_EVENT:
-      if (anEvent.nativeMsg)
+      if (anEvent.pluginEvent)
         {
           XKeyEvent &event = pluginEvent.xkey;
 #ifdef MOZ_WIDGET_GTK2
           event.root = GDK_ROOT_WINDOW();
           event.time = anEvent.time;
           const GdkEventKey* gdkEvent =
-            static_cast<const GdkEventKey*>(anEvent.nativeMsg);
+            static_cast<const GdkEventKey*>(anEvent.pluginEvent);
           event.keycode = gdkEvent->hardware_keycode;
           event.state = gdkEvent->state;
           switch (anEvent.message)
@@ -4044,7 +4044,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEventX11Composited(const nsGUIEvent&
               break;
             }
 #endif
-          // Information that could be obtained from nativeMsg but we may not
+          // Information that could be obtained from pluginEvent but we may not
           // want to promise to provide:
           event.subwindow = None;
           event.x = 0;
@@ -4154,7 +4154,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 #endif
       NPCocoaEvent synthCocoaEvent;
 
-      void* event = anEvent.nativeMsg;
+      void* event = anEvent.pluginEvent;
 
       if (!event) {
         nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mObjectFrame)
@@ -4260,9 +4260,9 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 
 #ifdef XP_WIN
   // this code supports windowless plugins
-  NPEvent *pPluginEvent = (NPEvent*)anEvent.nativeMsg;
+  NPEvent *pPluginEvent = (NPEvent*)anEvent.pluginEvent;
   // we can get synthetic events from the nsEventStateManager... these
-  // have no nativeMsg
+  // have no pluginEvent
   NPEvent pluginEvent;
   if (anEvent.eventStructType == NS_MOUSE_EVENT) {
     if (!pPluginEvent) {
@@ -4468,14 +4468,14 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
    //XXX case NS_MOUSE_SCROLL_EVENT: not received.
  
    case NS_KEY_EVENT:
-      if (anEvent.nativeMsg)
+      if (anEvent.pluginEvent)
         {
           XKeyEvent &event = pluginEvent.xkey;
 #ifdef MOZ_WIDGET_GTK2
           event.root = GDK_ROOT_WINDOW();
           event.time = anEvent.time;
           const GdkEventKey* gdkEvent =
-            static_cast<const GdkEventKey*>(anEvent.nativeMsg);
+            static_cast<const GdkEventKey*>(anEvent.pluginEvent);
           event.keycode = gdkEvent->hardware_keycode;
           event.state = gdkEvent->state;
           switch (anEvent.message)
@@ -4488,7 +4488,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
               break;
             }
 #endif
-          // Information that could be obtained from nativeMsg but we may not
+          // Information that could be obtained from pluginEvent but we may not
           // want to promise to provide:
           event.subwindow = None;
           event.x = 0;

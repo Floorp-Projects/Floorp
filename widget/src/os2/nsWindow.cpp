@@ -3170,7 +3170,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
 */
   pluginEvent.lParam = MAKELONG(event.refPoint.x, event.refPoint.y);
 
-  event.nativeMsg = (void *)&pluginEvent;
+  event.pluginEvent = (void *)&pluginEvent;
 
   // call the event callback 
   if (nsnull != mEventCallback) {
@@ -3214,7 +3214,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
         break;
     }
 
-    event.nativeMsg = (void *)&pluginEvent;
+    event.pluginEvent = (void *)&pluginEvent;
     return DispatchWindowEvent(&event);
   }
   return PR_FALSE;
