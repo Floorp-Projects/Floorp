@@ -3068,7 +3068,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
     carbonEvent.modifiers = ::GetCurrentKeyModifiers();
-    geckoEvent.nativeMsg = &carbonEvent;
+    geckoEvent.pluginEvent = &carbonEvent;
   }
 #endif
   NPCocoaEvent cocoaEvent;
@@ -3084,7 +3084,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
     cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
     cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-    geckoEvent.nativeMsg = &cocoaEvent;
+    geckoEvent.pluginEvent = &cocoaEvent;
   }
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -3120,7 +3120,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
     carbonEvent.modifiers = ::GetCurrentKeyModifiers();
-    geckoEvent.nativeMsg = &carbonEvent;
+    geckoEvent.pluginEvent = &carbonEvent;
   }
 #endif
   NPCocoaEvent cocoaEvent;
@@ -3136,7 +3136,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
     cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
     cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-    geckoEvent.nativeMsg = &cocoaEvent;
+    geckoEvent.pluginEvent = &cocoaEvent;
   }
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -3172,7 +3172,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
       carbonEvent.when = ::TickCount();
       ::GetGlobalMouse(&carbonEvent.where);
       carbonEvent.modifiers = ::GetCurrentKeyModifiers();
-      event.nativeMsg = &carbonEvent;
+      event.pluginEvent = &carbonEvent;
     }
 #endif
     if (mPluginEventModel == NPEventModelCocoa) {
@@ -3185,7 +3185,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
       cocoaEvent.data.mouse.deltaX = [aEvent deltaX];
       cocoaEvent.data.mouse.deltaY = [aEvent deltaY];
       cocoaEvent.data.mouse.deltaZ = [aEvent deltaZ];
-      event.nativeMsg = &cocoaEvent;
+      event.pluginEvent = &cocoaEvent;
     }    
   }
 
@@ -3223,7 +3223,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
       carbonEvent.when = ::TickCount();
       ::GetGlobalMouse(&carbonEvent.where);
       carbonEvent.modifiers = ::GetCurrentKeyModifiers();
-      geckoEvent.nativeMsg = &carbonEvent;
+      geckoEvent.pluginEvent = &carbonEvent;
     }
 #endif
     if (mPluginEventModel == NPEventModelCocoa) {
@@ -3238,7 +3238,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
       cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
       cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
       cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-      geckoEvent.nativeMsg = &cocoaEvent;
+      geckoEvent.pluginEvent = &cocoaEvent;
     }
   }
   mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -3267,7 +3267,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
     carbonEvent.modifiers = btnState | ::GetCurrentKeyModifiers();
-    geckoEvent.nativeMsg = &carbonEvent;
+    geckoEvent.pluginEvent = &carbonEvent;
   }
 #endif
   NPCocoaEvent cocoaEvent;
@@ -3283,7 +3283,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
     cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
     cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-    geckoEvent.nativeMsg = &cocoaEvent;
+    geckoEvent.pluginEvent = &cocoaEvent;
   }
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -3322,7 +3322,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
     carbonEvent.modifiers = controlKey;  // fake a context menu click
-    geckoEvent.nativeMsg = &carbonEvent;    
+    geckoEvent.pluginEvent = &carbonEvent;    
   }
 #endif
   NPCocoaEvent cocoaEvent;
@@ -3338,7 +3338,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
     cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
     cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-    geckoEvent.nativeMsg = &cocoaEvent;
+    geckoEvent.pluginEvent = &cocoaEvent;
   }
 
   PRBool handled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -3372,7 +3372,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     carbonEvent.when = ::TickCount();
     ::GetGlobalMouse(&carbonEvent.where);
     carbonEvent.modifiers = controlKey;  // fake a context menu click
-    geckoEvent.nativeMsg = &carbonEvent;
+    geckoEvent.pluginEvent = &carbonEvent;
   }
 #endif
   NPCocoaEvent cocoaEvent;
@@ -3388,7 +3388,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
     cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
     cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
     cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-    geckoEvent.nativeMsg = &cocoaEvent;
+    geckoEvent.pluginEvent = &cocoaEvent;
   }
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
@@ -3547,7 +3547,7 @@ static const PRInt32 sShadowInvalidationInterval = 100;
       else
         cocoaEvent.data.mouse.deltaY = 0.0;
       cocoaEvent.data.mouse.deltaZ = 0.0;
-      geckoEvent.nativeMsg = &cocoaEvent;
+      geckoEvent.pluginEvent = &cocoaEvent;
     }
 
     nsAutoRetainCocoaObject kungFuDeathGrip(self);
@@ -4643,7 +4643,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
       PRUint32 charCode(charCodes.ElementAt(i));
 
       keyDownEvent.time       = PR_IntervalNow();
-      keyDownEvent.nativeMsg  = &eventRec;
+      keyDownEvent.pluginEvent  = &eventRec;
       if (IsSpecialGeckoKey(macKeyCode)) {
         keyDownEvent.keyCode  = keyCode;
       } else {
@@ -4775,11 +4775,11 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 #ifndef NP_NO_CARBON
       if (mPluginEventModel == NPEventModelCarbon) {
         ConvertCocoaKeyEventToCarbonEvent(mCurKeyEvent, carbonEvent);
-        geckoEvent.nativeMsg = &carbonEvent;
+        geckoEvent.pluginEvent = &carbonEvent;
       } else
 #endif
       {
-        geckoEvent.nativeMsg = NULL;
+        geckoEvent.pluginEvent = NULL;
       }
       geckoEvent.isShift   = (nsCocoaUtils::GetCocoaEventModifierFlags(mCurKeyEvent) & NSShiftKeyMask) != 0;
       if (!IsPrintableChar(geckoEvent.charCode)) {
@@ -5190,13 +5190,13 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
       EventRecord carbonEvent;
       if (mPluginEventModel == NPEventModelCarbon) {
         ConvertCocoaKeyEventToCarbonEvent(theEvent, carbonEvent);
-        geckoEvent.nativeMsg = &carbonEvent;
+        geckoEvent.pluginEvent = &carbonEvent;
       }
 #endif
       NPCocoaEvent cocoaEvent;
       if (mPluginEventModel == NPEventModelCocoa) {
         ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent);
-        geckoEvent.nativeMsg = &cocoaEvent;
+        geckoEvent.pluginEvent = &cocoaEvent;
       }
 
       mKeyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5245,11 +5245,11 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
       EventRecord carbonEvent;
       if (mPluginEventModel == NPEventModelCarbon) {
         ConvertCocoaKeyEventToCarbonEvent(theEvent, carbonEvent);
-        geckoEvent.nativeMsg = &carbonEvent;
+        geckoEvent.pluginEvent = &carbonEvent;
       } else
 #endif
       {
-        geckoEvent.nativeMsg = NULL;
+        geckoEvent.pluginEvent = NULL;
       }
 
       mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5290,11 +5290,11 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
       EventRecord carbonEvent;
       if (mPluginEventModel == NPEventModelCarbon) {
         ConvertCocoaKeyEventToCarbonEvent(theEvent, carbonEvent);
-        geckoEvent.nativeMsg = &carbonEvent;
+        geckoEvent.pluginEvent = &carbonEvent;
       } else
 #endif
       {
-        geckoEvent.nativeMsg = NULL;
+        geckoEvent.pluginEvent = NULL;
       }
 
       mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -5432,7 +5432,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
       [self convertCocoaKeyEvent:theEvent toGeckoEvent:&keyUpEvent];
       NPCocoaEvent pluginEvent;
       ConvertCocoaKeyEventToNPCocoaEvent(theEvent, pluginEvent);
-      keyUpEvent.nativeMsg = &pluginEvent;
+      keyUpEvent.pluginEvent = &pluginEvent;
       mGeckoChild->DispatchWindowEvent(keyUpEvent);
     }
 #ifndef NP_NO_CARBON
@@ -5463,7 +5463,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
       [self convertCocoaKeyEvent:theEvent toGeckoEvent:&keyUpEvent];
       EventRecord macKeyUpEvent;
       ConvertCocoaKeyEventToCarbonEvent(theEvent, macKeyUpEvent);
-      keyUpEvent.nativeMsg = &macKeyUpEvent;
+      keyUpEvent.pluginEvent = &macKeyUpEvent;
       mGeckoChild->DispatchWindowEvent(keyUpEvent);      
     }
 #endif
@@ -5489,7 +5489,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
       [self convertCocoaKeyEvent:nativeKeyDownEvent toGeckoEvent:&geckoEvent];
 
       // plugin case returned out early, we don't need a native event here
-      geckoEvent.nativeMsg = NULL;
+      geckoEvent.pluginEvent = NULL;
 
       keyDownHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
       if (!mGeckoChild)
@@ -5515,7 +5515,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
       geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
 
     // plugin case returned out early, we don't need a native event here
-    geckoEvent.nativeMsg = NULL;
+    geckoEvent.pluginEvent = NULL;
 
     mGeckoChild->DispatchWindowEvent(geckoEvent);
     if (!mGeckoChild)
@@ -5526,7 +5526,7 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
 
   // plugin case returned out early, we don't need a native event here
-  geckoEvent.nativeMsg = NULL;
+  geckoEvent.pluginEvent = NULL;
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 
@@ -5725,13 +5725,13 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   EventRecord carbonEvent;
   if (mPluginEventModel == NPEventModelCarbon) {
     ConvertCocoaKeyEventToCarbonEvent(theEvent, carbonEvent, message);
-    geckoEvent.nativeMsg = &carbonEvent;
+    geckoEvent.pluginEvent = &carbonEvent;
   }
 #endif
   NPCocoaEvent cocoaEvent;
   if (mPluginEventModel == NPEventModelCocoa) {
     ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent, message);
-    geckoEvent.nativeMsg = &cocoaEvent;
+    geckoEvent.pluginEvent = &cocoaEvent;
   }
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);

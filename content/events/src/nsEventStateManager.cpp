@@ -3605,7 +3605,7 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
   event.isControl = ((nsMouseEvent*)aEvent)->isControl;
   event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
   event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
-  event.nativeMsg = ((nsMouseEvent*)aEvent)->nativeMsg;
+  event.pluginEvent = ((nsMouseEvent*)aEvent)->pluginEvent;
   event.relatedTarget = aRelatedContent;
 
   mCurrentTargetContent = aTargetContent;
