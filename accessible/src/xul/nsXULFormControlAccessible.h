@@ -46,26 +46,46 @@
 #include "nsXULMenuAccessible.h"
 #include "nsHyperTextAccessibleWrap.h"
 
+/**
+ * Used for XUL button.
+ *
+ * @note  Don't inherit from nsFormControlAccessible - it doesn't allow children
+ *         and a button can have a dropmarker child.
+ */
 class nsXULButtonAccessible : public nsAccessibleWrap
-// Don't inherit from nsFormControlAccessible - it doesn't allow children and a button can have a dropmarker child
 {
 public:
   enum { eAction_Click = 0 };
   nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessible
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
+  // nsAccessNode
+  virtual nsresult Init();
+
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
 protected:
+
+  // nsAccessible
   void CacheChildren();
+
+  // nsXULButtonAccessible
+  PRBool ContainsMenu();
 };
 
+
+/**
+ * Used for XUL checkbox.
+ */
 class nsXULCheckboxAccessible : public nsFormControlAccessible
 {
 public:
