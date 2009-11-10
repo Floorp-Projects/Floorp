@@ -87,6 +87,7 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifneq ($(OS_ARCH), WINCE)
 _TEST_FILES  += taskbar_previews.xul \
+		window_state_windows.xul \
 		taskbar_progress.xul \
 		$(NULL)
 endif

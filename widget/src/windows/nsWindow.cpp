@@ -1649,6 +1649,12 @@ NS_METHOD nsWindow::IsEnabled(PRBool *aState)
 NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 {
   if (mWnd) {
+#ifdef WINSTATE_DEBUG_OUTPUT
+    if (mWnd == GetTopLevelHWND(mWnd))
+      printf("*** SetFocus: [  top] raise=%d\n", aRaise);
+    else
+      printf("*** SetFocus: [child] raise=%d\n", aRaise);
+#endif
     // Uniconify, if necessary
     HWND toplevelWnd = GetTopLevelHWND(mWnd);
     if (aRaise && ::IsIconic(toplevelWnd)) {
@@ -4825,23 +4831,88 @@ BOOL nsWindow::OnInputLangChange(HKL aHKL)
   return PR_FALSE;   // always pass to child window
 }
 
+#if !defined(WINCE)
 void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
 {
   if (wp == nsnull)
     return;
 
-  // We only care about a resize, so filter out things like z-order
-  // changes. Note: there's a WM_MOVE handler above which is why we're
-  // not handling them here...
+#ifdef WINSTATE_DEBUG_OUTPUT
+  if (mWnd == GetTopLevelHWND(mWnd))
+    printf("*** OnWindowPosChanged: [  top] ");
+  else
+    printf("*** OnWindowPosChanged: [child] ");
+  printf("WINDOWPOS flags:");
+  if (wp->flags & SWP_FRAMECHANGED)
+    printf("SWP_FRAMECHANGED ");
+  if (wp->flags & SWP_SHOWWINDOW)
+    printf("SWP_SHOWWINDOW ");
+  if (wp->flags & SWP_NOSIZE)
+    printf("SWP_NOSIZE ");
+  if (wp->flags & SWP_HIDEWINDOW)
+    printf("SWP_HIDEWINDOW ");
+  printf("\n");
+#endif
+
+  // Handle window size mode changes
+  if (wp->flags & SWP_FRAMECHANGED) {
+    nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
+
+    WINDOWPLACEMENT pl;
+    pl.length = sizeof(pl);
+    ::GetWindowPlacement(mWnd, &pl);
+
+    if (pl.showCmd == SW_SHOWMAXIMIZED)
+      event.mSizeMode = nsSizeMode_Maximized;
+    else if (pl.showCmd == SW_SHOWMINIMIZED)
+      event.mSizeMode = nsSizeMode_Minimized;
+    else
+      event.mSizeMode = nsSizeMode_Normal;
+
+    // Windows has just changed the size mode of this window. The following
+    // NS_SIZEMODE event will trigger a call into SetSizeMode where we will
+    // set the min/max window state again or for nsSizeMode_Normal, call
+    // SetWindow with a parameter of SW_RESTORE. There's no need however as
+    // this window's mode has already changed. Updating mSizeMode here
+    // insures the SetSizeMode call is a no-op. Addresses a bug on Win7 related
+    // to window docking. (bug 489258)
+    mSizeMode = event.mSizeMode;
+
+#ifdef WINSTATE_DEBUG_OUTPUT
+    switch (mSizeMode) {
+      case nsSizeMode_Normal:
+          printf("*** mSizeMode: nsSizeMode_Normal\n");
+        break;
+      case nsSizeMode_Minimized:
+          printf("*** mSizeMode: nsSizeMode_Minimized\n");
+        break;
+      case nsSizeMode_Maximized:
+          printf("*** mSizeMode: nsSizeMode_Maximized\n");
+        break;
+      default:
+          printf("*** mSizeMode: ??????\n");
+        break;
+    };
+#endif
+
+    InitEvent(event);
+
+    result = DispatchWindowEvent(&event);
+
+    // Skip window size change events below on minimization.
+    if (mSizeMode == nsSizeMode_Minimized)
+      return;
+  }
+
+  // Handle window size changes
   if (0 == (wp->flags & SWP_NOSIZE)) {
-    // XXX Why are we using the client size area? If the size notification
-    // is for the client area then the origin should be (0,0) and not
-    // the window origin in screen coordinates...
     RECT r;
-    ::GetWindowRect(mWnd, &r);
     PRInt32 newWidth, newHeight;
-    newWidth = PRInt32(r.right - r.left);
-    newHeight = PRInt32(r.bottom - r.top);
+
+    ::GetWindowRect(mWnd, &r);
+
+    newWidth  = r.right - r.left;
+    newHeight = r.bottom - r.top;
     nsIntRect rect(wp->x, wp->y, newWidth, newHeight);
 
 #ifdef MOZ_XUL
@@ -4853,88 +4924,57 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
     {
       RECT drect;
 
-      //getting wider
-      drect.left = wp->x + mLastSize.width;
-      drect.top = wp->y;
-      drect.right = drect.left + (newWidth - mLastSize.width);
+      // getting wider
+      drect.left   = wp->x + mLastSize.width;
+      drect.top    = wp->y;
+      drect.right  = drect.left + (newWidth - mLastSize.width);
       drect.bottom = drect.top + newHeight;
 
       ::RedrawWindow(mWnd, &drect, NULL,
-                     RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
+                     RDW_INVALIDATE |
+                     RDW_NOERASE |
+                     RDW_NOINTERNALPAINT |
+                     RDW_ERASENOW |
+                     RDW_ALLCHILDREN);
     }
     if (newHeight > mLastSize.height)
     {
       RECT drect;
 
-      //getting taller
-      drect.left = wp->x;
-      drect.top = wp->y + mLastSize.height;
-      drect.right = drect.left + newWidth;
+      // getting taller
+      drect.left   = wp->x;
+      drect.top    = wp->y + mLastSize.height;
+      drect.right  = drect.left + newWidth;
       drect.bottom = drect.top + (newHeight - mLastSize.height);
 
       ::RedrawWindow(mWnd, &drect, NULL,
-                     RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
+                     RDW_INVALIDATE |
+                     RDW_NOERASE |
+                     RDW_NOINTERNALPAINT |
+                     RDW_ERASENOW |
+                     RDW_ALLCHILDREN);
     }
 
-    mBounds.width  = newWidth;
-    mBounds.height = newHeight;
-    mLastSize.width = newWidth;
+    mBounds.width    = newWidth;
+    mBounds.height   = newHeight;
+    mLastSize.width  = newWidth;
     mLastSize.height = newHeight;
 
-    // If we're being minimized, don't send the resize event to Gecko because
-    // it will cause the scrollbar in the content area to go away and we'll
-    // forget the scroll position of the page.  Note that we need to check the
-    // toplevel window, because child windows seem to go to 0x0 on minimize.
-    HWND toplevelWnd = GetTopLevelHWND(mWnd);
-    if (mWnd == toplevelWnd && IsIconic(toplevelWnd)) {
-      result = PR_FALSE;
-      return;
-    }
+#ifdef WINSTATE_DEBUG_OUTPUT
+    printf("*** Resize window: %d x %d x %d x %d\n", wp->x, wp->y, newWidth, newHeight);
+#endif
 
-    // recalculate the width and height
-    // this time based on the client area
+    // Recalculate the width and height based on the client area for gecko events.
     if (::GetClientRect(mWnd, &r)) {
-      rect.width  = PRInt32(r.right - r.left);
-      rect.height = PRInt32(r.bottom - r.top);
+      rect.width  = r.right - r.left;
+      rect.height = r.bottom - r.top;
     }
+    
+    // Send a gecko resize event
     result = OnResize(rect);
   }
-
-  // handle size mode changes - (the framechanged message seems a handy
-  // place to hook in, because it happens early enough (WM_SIZE is too
-  // late) and because in testing it seems an accurate harbinger of an
-  // impending min/max/restore change (WM_NCCALCSIZE would also work,
-  // but it's also sent when merely resizing.))
-  if (wp->flags & SWP_FRAMECHANGED && ::IsWindowVisible(mWnd)) {
-    nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
-#ifndef WINCE
-    WINDOWPLACEMENT pl;
-    pl.length = sizeof(pl);
-    ::GetWindowPlacement(mWnd, &pl);
-
-    if (pl.showCmd == SW_SHOWMAXIMIZED)
-      event.mSizeMode = nsSizeMode_Maximized;
-    else if (pl.showCmd == SW_SHOWMINIMIZED)
-      event.mSizeMode = nsSizeMode_Minimized;
-    else
-      event.mSizeMode = nsSizeMode_Normal;
-#else
-    event.mSizeMode = mSizeMode;
-#endif
-    // Windows has just changed the size mode of this window. The following
-    // NS_SIZEMODE event will trigger a call into SetSizeMode where we will
-    // set the min/max window state again or for nsSizeMode_Normal, call
-    // SetWindow with a parameter of SW_RESTORE. There's no need however as
-    // this window's mode has already changed. Updating mSizeMode here
-    // insures the SetSizeMode call is a no-op. Addresses a bug on Win7 related
-    // to window docking. (bug 489258)
-    mSizeMode = event.mSizeMode;
-
-    InitEvent(event);
-
-    result = DispatchWindowEvent(&event);
-  }
 }
+#endif // !defined(WINCE)
 
 #if !defined(WINCE)
 void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)

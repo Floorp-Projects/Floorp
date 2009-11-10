@@ -581,3 +581,93 @@ PRBool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam)
   }
   return PR_FALSE;
 }
+
+void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
+{
+  if (wp == nsnull)
+    return;
+
+  // We only care about a resize, so filter out things like z-order
+  // changes. Note: there's a WM_MOVE handler above which is why we're
+  // not handling them here...
+  if (0 == (wp->flags & SWP_NOSIZE)) {
+    RECT r;
+    PRInt32 newWidth, newHeight;
+
+    ::GetWindowRect(mWnd, &r);
+
+    newWidth  = r.right - r.left;
+    newHeight = r.bottom - r.top;
+    nsIntRect rect(wp->x, wp->y, newWidth, newHeight);
+
+    if (newWidth > mLastSize.width)
+    {
+      RECT drect;
+
+      // getting wider
+      drect.left   = wp->x + mLastSize.width;
+      drect.top    = wp->y;
+      drect.right  = drect.left + (newWidth - mLastSize.width);
+      drect.bottom = drect.top + newHeight;
+
+      ::RedrawWindow(mWnd, &drect, NULL,
+                     RDW_INVALIDATE |
+                     RDW_NOERASE |
+                     RDW_NOINTERNALPAINT |
+                     RDW_ERASENOW |
+                     RDW_ALLCHILDREN);
+    }
+    if (newHeight > mLastSize.height)
+    {
+      RECT drect;
+
+      // getting taller
+      drect.left   = wp->x;
+      drect.top    = wp->y + mLastSize.height;
+      drect.right  = drect.left + newWidth;
+      drect.bottom = drect.top + (newHeight - mLastSize.height);
+
+      ::RedrawWindow(mWnd, &drect, NULL,
+                     RDW_INVALIDATE |
+                     RDW_NOERASE |
+                     RDW_NOINTERNALPAINT |
+                     RDW_ERASENOW |
+                     RDW_ALLCHILDREN);
+    }
+
+    mBounds.width    = newWidth;
+    mBounds.height   = newHeight;
+    mLastSize.width  = newWidth;
+    mLastSize.height = newHeight;
+
+    // If we're being minimized, don't send the resize event to Gecko because
+    // it will cause the scrollbar in the content area to go away and we'll
+    // forget the scroll position of the page.  Note that we need to check the
+    // toplevel window, because child windows seem to go to 0x0 on minimize.
+    HWND toplevelWnd = GetTopLevelHWND(mWnd);
+    if (mWnd == toplevelWnd && IsIconic(toplevelWnd)) {
+      result = PR_FALSE;
+      return;
+    }
+
+    // recalculate the width and height
+    // this time based on the client area
+    if (::GetClientRect(mWnd, &r)) {
+      rect.width  = PRInt32(r.right - r.left);
+      rect.height = PRInt32(r.bottom - r.top);
+    }
+    result = OnResize(rect);
+  }
+
+  // handle size mode changes - (the framechanged message seems a handy
+  // place to hook in, because it happens early enough (WM_SIZE is too
+  // late) and because in testing it seems an accurate harbinger of an
+  // impending min/max/restore change (WM_NCCALCSIZE would also work,
+  // but it's also sent when merely resizing.))
+  if (wp->flags & SWP_FRAMECHANGED && ::IsWindowVisible(mWnd)) {
+    nsSizeModeEvent event(PR_TRUE, NS_SIZEMODE, this);
+    event.mSizeMode = mSizeMode;
+    InitEvent(event);
+    result = DispatchWindowEvent(&event);
+  }
+}

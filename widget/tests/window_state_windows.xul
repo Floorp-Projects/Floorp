@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Native Menus Test code
+   -
+   - The Initial Developer of the Original Code is
+   - Mozilla Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2009
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Jim Mathies <jmathies@mozilla.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window id="NativeWindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="300"
+        height="300"
+        onload="onLoad();"
+        title="Window State Tests">
+
+  <script type="application/javascript"
+   src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript">
+    <![CDATA[
+
+    let Cc = Components.classes;
+    let Ci = Components.interfaces;
+    let Cu = Components.utils;
+    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+    SimpleTest.waitForExplicitFinish();
+
+    function onLoad() {
+      var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+      var win = wm.getMostRecentWindow("navigator:browser");
+
+      /*
+      switch(win.windowState) {
+        case win.STATE_FULLSCREEN:
+        dump("STATE_FULLSCREEN \n");
+        break;
+        case win.STATE_MAXIMIZED:
+        dump("STATE_MAXIMIZED \n");
+        break;
+        case win.STATE_MINIMIZED:
+        dump("STATE_MINIMIZED \n");
+        break;
+        case win.STATE_NORMAL:
+        dump("STATE_NORMAL \n");
+        break;
+      }
+      */
+
+      // Make sure size mode changes are reflected in the widget.
+      win.restore();
+      ok(win.windowState == win.STATE_NORMAL, "window state is restored.");
+      win.minimize();
+      ok(win.windowState == win.STATE_MINIMIZED, "window state is minimized.");
+      
+      // Windows resizes children to 0x0. Code in nsWindow filters these changes out. Without
+      // this all sorts of screwy things can happen in child widgets.
+      ok(document.height > 0, "document height should not be zero for a minimized window!");
+      ok(document.width > 0, "document width should not be zero for a minimized window!");
+      
+      // Make sure size mode changes are reflected in the widget.
+      win.restore();
+      ok(win.windowState == win.STATE_NORMAL, "window state is restored.");
+      win.maximize();
+      ok(win.windowState == win.STATE_MAXIMIZED, "window state is maximized.");
+      win.restore();
+      ok(win.windowState == win.STATE_NORMAL, "window state is restored.");
+
+      /*
+      dump(win.screenX + "\n");
+      win.minimize();
+      dump(win.screenX + "\n");
+      win.restore();
+      dump(win.screenX + "\n");
+      */
+      
+      SimpleTest.finish();
+    }
+
+  ]]>
+  </script>
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+</window>
