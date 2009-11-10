@@ -218,9 +218,9 @@
 
             // Check whether there's an entry to fill
             if (i > matchCount - 1) {
-              // Just clear out the old item
+              // Just clear out the old item's value. CSS takes care of hiding
+              // everything else based on value="" (star, tags, etc.)
               item.setAttribute("value", "");
-              item.removeAttribute("favorite");
               item._empty = true;
 
               continue;
@@ -264,6 +264,10 @@
           else {
             noResultsItem.className = "noresults";
             noResultsItem.setAttribute("value", "]]>&noResults.label;<![CDATA[");
+            noResultsItem.removeAttribute("favorite");
+            noResultsItem.removeAttribute("url");
+            noResultsItem.removeAttribute("src");
+            noResultsItem.removeAttribute("tags");
           }
         ]]></body>
       </method>
