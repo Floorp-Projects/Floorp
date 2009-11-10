@@ -39,13 +39,16 @@
 #define nsRegion_h__
 
 
-// Implementation of region.
-// Region is represented as circular double-linked list of nsRegion::RgnRect structures.
-// Rectangles in this list do not overlap and are sorted by (y, x) coordinates.
-
 #include "nsRect.h"
 #include "nsPoint.h"
 
+/**
+ * Implementation of regions.
+ * A region is represented as circular double-linked list of nsRegion::RgnRect structures.
+ * Rectangles in this list do not overlap and are sorted by (y, x) coordinates.
+ *
+ * nsRegions use nscoord coordinates and nsRects.
+ */
 class NS_GFX nsRegion
 {
   friend class nsRegionRectIterator;
@@ -276,5 +279,220 @@ public:
   }
 };
 
+/**
+ * nsIntRegions use PRInt32 coordinates and nsIntRects.
+ */
+class NS_GFX nsIntRegion
+{
+  friend class nsIntRegionRectIterator;
+
+public:
+  nsIntRegion () {}
+  nsIntRegion (const nsIntRect& aRect) : mImpl (ToRect(aRect)) {}
+  nsIntRegion (const nsIntRegion& aRegion) : mImpl (aRegion.mImpl) {}
+  nsIntRegion& operator = (const nsIntRect& aRect) { mImpl = ToRect (aRect); return *this; }
+  nsIntRegion& operator = (const nsIntRegion& aRegion) { mImpl = aRegion.mImpl; return *this; }
+
+  nsIntRegion& And  (const nsIntRegion& aRgn1,   const nsIntRegion& aRgn2)
+  {
+    mImpl.And (aRgn1.mImpl, aRgn2.mImpl);
+    return *this;
+  }
+  nsIntRegion& And  (const nsIntRegion& aRegion, const nsIntRect& aRect)
+  {
+    mImpl.And (aRegion.mImpl, ToRect (aRect));
+    return *this;
+  }
+  nsIntRegion& And  (const nsIntRect& aRect, const nsIntRegion& aRegion)
+  {
+    return  And  (aRegion, aRect);
+  }
+  nsIntRegion& And  (const nsIntRect& aRect1, const nsIntRect& aRect2)
+  {
+    nsIntRect TmpRect;
+
+    TmpRect.IntersectRect (aRect1, aRect2);
+    mImpl = ToRect (TmpRect);
+    return *this;
+  }
+
+  nsIntRegion& Or   (const nsIntRegion& aRgn1,   const nsIntRegion& aRgn2)
+  {
+    mImpl.Or (aRgn1.mImpl, aRgn2.mImpl);
+    return *this;
+  }
+  nsIntRegion& Or   (const nsIntRegion& aRegion, const nsIntRect& aRect)
+  {
+    mImpl.Or (aRegion.mImpl, ToRect (aRect));
+    return *this;
+  }
+  nsIntRegion& Or   (const nsIntRect& aRect, const nsIntRegion& aRegion)
+  {
+    return  Or   (aRegion, aRect);
+  }
+  nsIntRegion& Or   (const nsIntRect& aRect1, const nsIntRect& aRect2)
+  {
+    mImpl = ToRect (aRect1);
+    return Or (*this, aRect2);
+  }
+
+  nsIntRegion& Xor  (const nsIntRegion& aRgn1,   const nsIntRegion& aRgn2)
+  {
+    mImpl.Xor (aRgn1.mImpl, aRgn2.mImpl);
+    return *this;
+  }
+  nsIntRegion& Xor  (const nsIntRegion& aRegion, const nsIntRect& aRect)
+  {
+    mImpl.Xor (aRegion.mImpl, ToRect (aRect));
+    return *this;
+  }
+  nsIntRegion& Xor  (const nsIntRect& aRect, const nsIntRegion& aRegion)
+  {
+    return  Xor  (aRegion, aRect);
+  }
+  nsIntRegion& Xor  (const nsIntRect& aRect1, const nsIntRect& aRect2)
+  {
+    mImpl = ToRect (aRect1);
+    return Xor (*this, aRect2);
+  }
+
+  nsIntRegion& Sub  (const nsIntRegion& aRgn1,   const nsIntRegion& aRgn2)
+  {
+    mImpl.Sub (aRgn1.mImpl, aRgn2.mImpl);
+    return *this;
+  }
+  nsIntRegion& Sub  (const nsIntRegion& aRegion, const nsIntRect& aRect)
+  {
+    mImpl.Sub (aRegion.mImpl, ToRect (aRect));
+    return *this;
+  }
+  nsIntRegion& Sub  (const nsIntRect& aRect, const nsIntRegion& aRegion)
+  {
+    return Sub (nsIntRegion (aRect), aRegion);
+  }
+  nsIntRegion& Sub  (const nsIntRect& aRect1, const nsIntRect& aRect2)
+  {
+    mImpl = ToRect (aRect1);
+    return Sub (*this, aRect2);
+  }
+
+  PRBool Contains (const nsIntRect& aRect) const
+  {
+    return mImpl.Contains (ToRect (aRect));
+  }
+  PRBool Intersects (const nsIntRect& aRect) const
+  {
+    return mImpl.Intersects (ToRect (aRect));
+  }
+
+  void MoveBy (PRInt32 aXOffset, PRInt32 aYOffset)
+  {
+    MoveBy (nsIntPoint (aXOffset, aYOffset));
+  }
+  void MoveBy (nsIntPoint aPt)
+  {
+    mImpl.MoveBy (aPt.x, aPt.y);
+  }
+  void SetEmpty ()
+  {
+    mImpl.SetEmpty  ();
+  }
+
+  PRBool IsEmpty () const { return mImpl.IsEmpty (); }
+  PRBool IsComplex () const { return mImpl.IsComplex (); }
+  PRBool IsEqual (const nsIntRegion& aRegion) const
+  {
+    return mImpl.IsEqual (aRegion.mImpl);
+  }
+  PRUint32 GetNumRects () const { return mImpl.GetNumRects (); }
+  nsIntRect GetBounds () const { return FromRect (mImpl.GetBounds ()); }
+
+  /**
+   * Make sure the region has at most aMaxRects by adding area to it
+   * if necessary. The simplified region will be a superset of the
+   * original region. The simplified region's bounding box will be
+   * the same as for the current region.
+   */
+  void SimplifyOutward (PRUint32 aMaxRects)
+  {
+    mImpl.SimplifyOutward (aMaxRects);
+  }
+  /**
+   * Make sure the region has at most aMaxRects by removing area from
+   * it if necessary. The simplified region will be a subset of the
+   * original region.
+   */
+  void SimplifyInward (PRUint32 aMaxRects)
+  {
+    mImpl.SimplifyInward (aMaxRects);
+  }
+  /**
+   * Efficiently try to remove a rectangle from this region. The actual
+   * area removed could be some sub-area contained by the rectangle
+   * (even possibly nothing at all).
+   * 
+   * We remove all rectangles that are contained by aRect.
+   */
+  void SimpleSubtract (const nsIntRect& aRect)
+  {
+    mImpl.SimpleSubtract (ToRect (aRect));
+  }
+  /**
+   * Efficiently try to remove a region from this region. The actual
+   * area removed could be some sub-area contained by aRegion
+   * (even possibly nothing at all).
+   * 
+   * We remove all rectangles of this region that are contained by
+   * a rectangle of aRegion.
+   */
+  void SimpleSubtract (const nsIntRegion& aRegion)
+  {
+    mImpl.SimpleSubtract (aRegion.mImpl);
+  }
+
+private:
+  nsRegion mImpl;
+
+  static nsRect ToRect(const nsIntRect& aRect)
+  {
+    return nsRect (aRect.x, aRect.y, aRect.width, aRect.height);
+  }
+  static nsIntRect FromRect(const nsRect& aRect)
+  {
+    return nsIntRect (aRect.x, aRect.y, aRect.width, aRect.height);
+  }
+};
+
+class NS_GFX nsIntRegionRectIterator
+{
+  nsRegionRectIterator mImpl;
+  nsIntRect mTmp;
+
+public:
+  nsIntRegionRectIterator (const nsIntRegion& aRegion) : mImpl (aRegion.mImpl) {}
+
+  const nsIntRect* Next ()
+  {
+    const nsRect* r = mImpl.Next();
+    if (!r)
+      return nsnull;
+    mTmp = nsIntRegion::FromRect (*r);
+    return &mTmp;
+  }
+
+  const nsIntRect* Prev ()
+  {
+    const nsRect* r = mImpl.Prev();
+    if (!r)
+      return nsnull;
+    mTmp = nsIntRegion::FromRect (*r);
+    return &mTmp;
+  }
+
+  void Reset ()
+  {
+    mImpl.Reset ();
+  }
+};
 
 #endif
