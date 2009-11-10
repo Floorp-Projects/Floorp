@@ -51,12 +51,6 @@ pref("browser.ui.cursor", true);
 pref("layout.css.dpi", 265);
 #endif
 
-#ifdef MOZ_PLATFORM_HILDON
-pref("browser.ui.panning.fixup.mousemove", true);
-#else
-pref("browser.ui.panning.fixup.mousemove", false);
-#endif
-
 /* use custom widget for html:select */
 pref("ui.use_native_popup_windows", true);
 
