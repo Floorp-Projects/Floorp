@@ -74,9 +74,6 @@ EXTRA_DSO_LDOPTS += \
 
 LOCAL_INCLUDES += -I$(srcdir)/../../build
 
-EXTRA_PP_COMPONENTS = \
-  $(NULL)
-
 EXTRA_COMPONENTS = \
   nsLivemarkService.js \
   nsTaggingService.js \
