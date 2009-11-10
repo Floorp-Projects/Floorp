@@ -70,8 +70,16 @@ unblock("S");
 <script src="file_bug503481.sjs?blockOn=T&body=runForth();"></script>
 
 <!-- test that preloading an async script works -->
+<script>
+setTimeout(function () { unblock("U"); }, 1000);
+</script>
 <script src="file_bug503481.sjs?blockOn=U&body=runFifth();"></script>
-<script async src="file_bug503481.sjs?unblock=U&body=runSixth();"></script>
+<script async src="file_bug503481.sjs?blockOn=V&body=runSixth();"></script>
+<script>
+parent.is(fifthRan, true, "fifth should have run by now");
+parent.is(sixthRan, false, "sixth should not have run yet");
+unblock("V");
+</script>
 </head>
 
 <body onload="done()">

@@ -6,7 +6,7 @@ function handleRequest(request, response)
     query[name] = unescape(value);
   });
 
-  dump("@@@@@" + request.queryString);
+  // dump("processing:" + request.queryString + "\n");
 
   if (query.unblock) {
     let blockedResponse = null;
