@@ -1102,7 +1102,13 @@ var FormHelper = {
     }
 
     function orderByTabIndex(a, b) {
-      return a.tabIndex - b.tabIndex;
+      // for an explanation on tabbing navigation see 
+      // http://www.w3.org/TR/html401/interact/forms.html#h-17.11.1
+      // In resume tab index navigation order is 1, 2, 3, ..., 32767, 0
+      if (a.tabIndex == 0 || b.tabIndex == 0)
+        return b.tabIndex;
+
+      return a.tabIndex > b.tabIndex;
     }
     return elements.sort(orderByTabIndex);
   },
