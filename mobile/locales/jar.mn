@@ -17,7 +17,7 @@
 
 # Fennec-specific overrides of generic strings
 * locale/@AB_CD@/browser/netError.dtd             (%chrome/overrides/netError.dtd)
-% override chrome://global/locale/netErrorApp.dtd chrome://browser/locale/netError.dtd
+% override chrome://global/locale/netError.dtd    chrome://browser/locale/netError.dtd
 # work around for bug 514817
   locale/@AB_CD@/browser/aboutRights.dtd          (%chrome/overrides/aboutRights.dtd)
 % override chrome://global/locale/aboutRights.dtd chrome://browser/locale/aboutRights.dtd
