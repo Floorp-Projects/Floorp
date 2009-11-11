@@ -757,22 +757,31 @@ nsScriptLoader::ProcessPendingRequestsAsync()
 void
 nsScriptLoader::ProcessPendingRequests()
 {
-  nsRefPtr<nsScriptLoadRequest> request;
-  while (ReadyToExecuteScripts() &&
-         (request = GetFirstPendingRequest()) &&
-         !request->mLoading) {
-    mRequests.RemoveObject(request);
-    ProcessRequest(request);
-  }
-
-  // Async scripts don't wait for scriptblockers
-  for (PRInt32 i = 0; mEnabled && i < mAsyncRequests.Count(); ++i) {
-    if (!mAsyncRequests[i]->mLoading) {
-      request = mAsyncRequests[i];
-      mAsyncRequests.RemoveObjectAt(i);
-      ProcessRequest(request);
-      i = 0;
+  while (1) {
+    nsRefPtr<nsScriptLoadRequest> request;
+    if (ReadyToExecuteScripts()) {
+      request = GetFirstPendingRequest();
+      if (request && !request->mLoading) {
+        mRequests.RemoveObject(request);
+      }
+      else {
+        request = nsnull;
+      }
     }
+
+    for (PRInt32 i = 0;
+         !request && mEnabled && i < mAsyncRequests.Count();
+         ++i) {
+      if (!mAsyncRequests[i]->mLoading) {
+        request = mAsyncRequests[i];
+        mAsyncRequests.RemoveObjectAt(i);
+      }
+    }
+
+    if (!request)
+      break;
+
+    ProcessRequest(request);
   }
 
   while (!mPendingChildLoaders.IsEmpty() && ReadyToExecuteScripts()) {
