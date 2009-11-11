@@ -63,6 +63,7 @@ class ContentProcessParent : private PContentProcessParent,
 {
 private:
     typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
+    typedef mozilla::ipc::TestShellParent TestShellParent;
 
 public:
     static ContentProcessParent* GetSingleton();
@@ -78,7 +79,9 @@ public:
     virtual void OnWaitableEventSignaled(base::WaitableEvent *event);
 
     TabParent* CreateTab();
-    mozilla::ipc::TestShellParent* CreateTestShell();
+
+    TestShellParent* CreateTestShell();
+    bool DestroyTestShell(TestShellParent* aTestShell);
 
 private:
     static ContentProcessParent* gSingleton;

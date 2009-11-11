@@ -103,7 +103,7 @@ public:
 
     virtual ~AsyncChannel()
     {
-        if (mTransport)
+        if (!mChild && mTransport)
             Close();
         // we only hold a weak ref to the transport, which is "owned"
         // by GeckoChildProcess/GeckoThread
