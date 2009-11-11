@@ -422,6 +422,9 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
         }
     }
 
+#elif defined(OS_MACOSX)
+#  warning This is only a stub implementation IMPLEMENT ME
+
 #else
 #  error Implement me for your OS
 #endif

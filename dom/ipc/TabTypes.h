@@ -14,6 +14,11 @@ typedef HWND MagicWindowHandle;
 #include <X11/X.h>
 
 typedef XID MagicWindowHandle;
+
+#elif defined(XP_MACOSX)
+#  warning This is a placeholder
+typedef long MagicWindowHandle;
+
 #else
 #error Not implemented, stooge
 #endif

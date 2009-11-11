@@ -244,7 +244,7 @@ class Message : public Pickle {
   }
 #endif
 
-#if defined(CHROMIUM_MOZILLA_BUILD)
+#if defined(CHROMIUM_MOZILLA_BUILD) && !defined(OS_MACOSX)
  protected:
 #endif
 
