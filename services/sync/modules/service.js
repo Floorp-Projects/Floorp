@@ -422,14 +422,9 @@ WeaveSvc.prototype = {
     }
   },
 
-  _doGS: function () {
-    this._scoreTimer = null;
-    this._calculateScore();
-  },
-
   _handleScoreUpdate: function WeaveSvc__handleScoreUpdate() {
     const SCORE_UPDATE_DELAY = 3000;
-    Utils.delay(function() this._doGS(), SCORE_UPDATE_DELAY, this, "_scoreTimer");
+    Utils.delay(this._calculateScore, SCORE_UPDATE_DELAY, this, "_scoreTimer");
   },
 
   _calculateScore: function WeaveSvc_calculateScoreAndDoStuff() {
@@ -437,7 +432,7 @@ WeaveSvc.prototype = {
     for (let i = 0;i < engines.length;i++) {
       this._log.trace(engines[i].name + ": score: " + engines[i].score);
       this.globalScore += engines[i].score;
-      engines[i].resetScore();
+      engines[i]._tracker.resetScore();
     }
 
     this._log.trace("Global score updated: " + this.globalScore);
