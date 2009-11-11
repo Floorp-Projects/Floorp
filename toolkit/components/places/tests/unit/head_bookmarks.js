@@ -221,6 +221,73 @@ function check_no_bookmarks() {
 }
 
 /**
+ * Function gets current database connection, if the connection has been closed
+ * it will try to reconnect to the places.sqlite database.
+ */
+function DBConn()
+{
+  let db = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsPIPlacesDatabase).
+           DBConnection;
+  if (db.connectionReady)
+    return db;
+
+  // open a new connection if needed
+  let file = dirSvc.get('ProfD', Ci.nsIFile);
+  file.append("places.sqlite");
+  let storageService = Cc["@mozilla.org/storage/service;1"].
+                       getService(Ci.mozIStorageService);
+  try {
+    var dbConn = storageService.openDatabase(file);
+  } catch (ex) {
+    return null;
+  }
+  return dbConn;
+}
+
+/**
+ * Sets title synchronously for a page in moz_places synchronously.
+ * History.SetPageTitle uses LAZY_ADD so we can't rely on it.
+ *
+ * @param aURI
+ *        An nsIURI to set the title for.
+ * @param aTitle
+ *        The title to set the page to.
+ * @throws if the page is not found in the database.
+ *
+ * @note this function only exists because we have no API to do this. It should
+ *       be added in bug 421897.
+ */
+function setPageTitle(aURI, aTitle) {
+  let dbConn = DBConn();
+  // Check that the page exists.
+  let stmt = dbConn.createStatement(
+    "SELECT id FROM moz_places_view WHERE url = :url");
+  stmt.params.url = aURI.spec;
+  try {
+    if (!stmt.executeStep()) {
+      do_throw("Unable to find page " + aURIString);
+      return;
+    }
+  }
+  finally {
+    stmt.finalize();
+  }
+
+  // Update the title
+  stmt = dbConn.createStatement(
+    "UPDATE moz_places_view SET title = :title WHERE url = :url");
+  stmt.params.title = aTitle;
+  stmt.params.url = aURI.spec;
+  try {
+    stmt.execute();
+  }
+  finally {
+    stmt.finalize();
+  }
+}
+
+/**
  * Flushes any events in the event loop of the main thread.
  */
 function flush_main_thread_events()
