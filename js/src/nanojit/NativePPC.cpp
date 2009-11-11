@@ -1304,6 +1304,29 @@ namespace nanojit
     void Assembler::nFragExit(LIns*) {
         TODO(nFragExit);
     }
+
+    void Assembler::asm_jtbl(LIns* ins, NIns** native_table)
+    {
+        // R0 = index*4, R2 = table, CTR = computed address to jump to.
+        // must ensure no page breaks in here because R2 & CTR can get clobbered.
+        Register indexreg = findRegFor(ins->oprnd1(), GpRegs);
+#ifdef NANOJIT_64BIT
+        underrunProtect(9*4);
+        BCTR(0);                                // jump to address in CTR
+        MTCTR(R2);                              // CTR = R2
+        LDX(R2, R2, R0);                        // R2 = [table + index*8]
+        SLDI(R0, indexreg, 3);                  // R0 = index*8
+        asm_li64(R2, uint64_t(native_table));   // R2 = table (5 instr)
+#else // 64bit
+        underrunProtect(6*4);
+        BCTR(0);                                // jump to address in CTR
+        MTCTR(R2);                              // CTR = R2
+        LWZX(R2, R2, R0);                       // R2 = [table + index*4]
+        SLWI(R0, indexreg, 2);                  // R0 = index*4
+        asm_li(R2, int32_t(native_table));      // R2 = table (up to 2 instructions)
+#endif // 64bit
+    }
+
 } // namespace nanojit
 
 #endif // FEATURE_NANOJIT && NANOJIT_PPC

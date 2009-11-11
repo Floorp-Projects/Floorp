@@ -95,12 +95,14 @@ namespace nanojit
     #define TODO(x)
 #endif
 
-    // MODRM and restrictions:
+    // MODRM and SIB restrictions:
     // memory access modes != 11 require SIB if base&7 == 4 (RSP or R12)
-    // mode 00 with base&7 == 5 means RIP+disp32 (RBP or R13), use mode 01 disp8=0 instead
+    // mode 00 with base == x101 means RIP+disp32 (RBP or R13), use mode 01 disp8=0 instead
+    // mode 01 or 11 with base = x101 means disp32 + EBP or R13, not RIP relative
+    // base == x100 means SIB byte is present, so using ESP|R12 as base requires SIB
     // rex prefix required to use RSP-R15 as 8bit registers in mod/rm8 modes.
 
-    // take R12 out of play as a base register because it requires the SIB byte like ESP
+    // take R12 out of play as a base register because using ESP or R12 as base requires the SIB byte
     const RegisterMask BaseRegs = GpRegs & ~rmask(R12);
 
     static inline int oplen(uint64_t op) {
@@ -111,6 +113,13 @@ namespace nanojit
     static inline uint64_t rexrb(uint64_t op, Register r, Register b) {
         int shift = 64 - 8*oplen(op);
         uint64_t rex = ((op >> shift) & 255) | ((r&8)>>1) | ((b&8)>>3);
+        return rex != 0x40 ? op | rex << shift : op - 1;
+    }
+
+    // encode 3-register rex prefix.  dropped if none of its bits are set.
+    static inline uint64_t rexrxb(uint64_t op, Register r, Register x, Register b) {
+        int shift = 64 - 8*oplen(op);
+        uint64_t rex = ((op >> shift) & 255) | ((r&8)>>1) | ((x&8)>>2) | ((b&8)>>3);
         return rex != 0x40 ? op | rex << shift : op - 1;
     }
 
@@ -135,6 +144,11 @@ namespace nanojit
     // [rex][opcode][mod-rr]
     static inline uint64_t mod_rr(uint64_t op, Register r, Register b) {
         return op | uint64_t((r&7)<<3 | (b&7))<<56;
+    }
+
+    // [rex][opcode][modrm=r][sib=xb]
+    static inline uint64_t mod_rxb(uint64_t op, Register r, Register x, Register b) {
+        return op | /*modrm*/uint64_t((r&7)<<3)<<48 | /*sib*/uint64_t((x&7)<<3|(b&7))<<56;
     }
 
     static inline uint64_t mod_disp32(uint64_t op, Register r, Register b, int32_t d) {
@@ -185,6 +199,11 @@ namespace nanojit
     void Assembler::emit32(uint64_t op, int64_t v) {
         NanoAssert(isS32(v));
         emit(op | uint64_t(uint32_t(v))<<32);
+    }
+
+    // 3-register modrm32+sib form
+    void Assembler::emitrxb(uint64_t op, Register r, Register x, Register b) {
+        emit(rexrxb(mod_rxb(op, r, x, b), r, x, b));
     }
 
     // 2-register modrm32 form
@@ -242,6 +261,14 @@ namespace nanojit
         *((int32_t*)(_nIns -= 4)) = imm;
         _nvprof("x86-bytes", 4);
         emitrr(op, r, b);
+    }
+
+    void Assembler::emitrxb_imm(uint64_t op, Register r, Register x, Register b, int32_t imm) {
+        NanoAssert(IsGpReg(r) && IsGpReg(x) && IsGpReg(b));
+        underrunProtect(4+8); // room for imm plus fullsize op
+        *((int32_t*)(_nIns -= 4)) = imm;
+        _nvprof("x86-bytes", 4);
+        emitrxb(op, r, x, b);
     }
 
     // op = [rex][opcode][modrm][imm8]
@@ -1105,6 +1132,12 @@ namespace nanojit
             return;
         }
         underrunProtect(8+8); // imm64 + worst case instr len
+        if (isS32(int64_t(v)-int64_t(_nIns))) {
+            // value is with +/- 2GB from RIP, can use LEA with RIP-relative disp32
+            int32_t d = int32_t(int64_t(v)-int64_t(_nIns));
+            emitrm(X64_learip, r, d, (Register)0);
+            return;
+        }
         ((uint64_t*)_nIns)[-1] = v;
         _nIns -= 8;
         _nvprof("x64-bytes", 8);
@@ -1436,6 +1469,26 @@ namespace nanojit
         // todo: implement this
     }
     )
+
+    void Assembler::asm_jtbl(LIns* ins, NIns** table)
+    {
+        // exclude R12 becuase ESP and R12 cannot be used as an index
+        // (index=100 in SIB means "none")
+        Register indexreg = findRegFor(ins->oprnd1(), GpRegs & ~rmask(R12));
+        if (isS32((intptr_t)table)) {
+            // table is in low 2GB or high 2GB, can use absolute addressing
+            // jmpq [indexreg*8 + table]
+            emitrxb_imm(X64_jmpx, (Register)0, indexreg, (Register)5, (int32_t)(uintptr_t)table);
+        } else {
+            // don't use R13 for base because we want to use mod=00, i.e. [index*8+base + 0]
+            Register tablereg = registerAlloc(GpRegs & ~(rmask(indexreg)|rmask(R13)));
+            _allocator.addFree(tablereg);
+            // jmp [indexreg*8 + tablereg]
+            emitxb(X64_jmpxb, indexreg, tablereg);
+            // tablereg <- #table
+            emit_quad(tablereg, (uint64_t)table);
+        }
+    }
 
 } // namespace nanojit
 

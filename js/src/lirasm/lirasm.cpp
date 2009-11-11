@@ -1043,7 +1043,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_file:
           case LIR_line:
           case LIR_xtbl:
-          case LIR_ji:
+          case LIR_jtbl:
             nyi(op);
             break;
 
@@ -1732,7 +1732,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 }
 
 Lirasm::Lirasm(bool verbose) :
-    mAssm(mCodeAlloc, mAlloc, &mCore, &mLogc)
+    mAssm(mCodeAlloc, mAlloc, mAlloc, &mCore, &mLogc)
 {
     mVerbose = verbose;
     nanojit::AvmCore::config.tree_opt = true;

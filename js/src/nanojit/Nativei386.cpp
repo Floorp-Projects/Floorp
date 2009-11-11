@@ -699,6 +699,12 @@ namespace nanojit
         JMP(exit);
     }
 
+    void Assembler::asm_jtbl(LIns* ins, NIns** table)
+    {
+        Register indexreg = findRegFor(ins->oprnd1(), GpRegs);
+        JMP_indexed(indexreg, 2, table);
+    }
+
     // This generates a 'test' or 'cmp' instruction for a condition, which
     // causes the condition codes to be set appropriately.  It's used with
     // conditional branches, conditional moves, and when generating

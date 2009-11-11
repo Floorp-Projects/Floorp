@@ -214,7 +214,7 @@ namespace nanojit
             avmplus::CodegenLIR *cgen;
             #endif
 
-            Assembler(CodeAlloc& codeAlloc, Allocator& alloc, AvmCore* core, LogControl* logc);
+            Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc);
 
             void        endAssembly(Fragment* frag);
             void        assemble(Fragment* frag, LirFilter* reader);
@@ -286,8 +286,9 @@ namespace nanojit
                 return r->used ? r : 0;
             }
 
-            Allocator&          alloc;
-            CodeAlloc&          _codeAlloc;
+            Allocator&          alloc;              // for items with same lifetime as this Assembler
+            CodeAlloc&          _codeAlloc;         // for code we generate
+            Allocator&          _dataAlloc;         // for data used by generated code
             Fragment*           _thisfrag;
             RegAllocMap         _branchStateMap;
             NInsMap             _patches;
@@ -345,6 +346,7 @@ namespace nanojit
             Register    asm_binop_rhs_reg(LInsp ins);
             NIns*       asm_branch(bool branchOnFalse, LInsp cond, NIns* targ);
             void        asm_switch(LIns* ins, NIns* target);
+            void        asm_jtbl(LIns* ins, NIns** table);
             void        emitJumpTable(SwitchInfo* si, NIns* target);
             void        assignSavedRegs();
             void        reserveSavedRegs();
