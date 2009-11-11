@@ -142,9 +142,9 @@ private:
    */
   nsCOMPtr<nsIURI> mDefaultIcon;
 
-  // Set to true during expiration, addition of new favicons won't be allowed
-  // till expiration has finished.
-  bool mExpirationRunning;
+  // Set to true during favicons expiration, addition of new favicons won't be
+  // allowed till expiration has finished since those should then be expired.
+  bool mFaviconsExpirationRunning;
 
   // The target dimension, in pixels, for favicons we optimize.
   // If we find images that are as large or larger than an uncompressed RGBA
