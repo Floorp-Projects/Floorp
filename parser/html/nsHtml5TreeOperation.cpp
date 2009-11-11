@@ -58,6 +58,34 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDOMDocumentType.h"
 
+/**
+ * Helper class that opens a notification batch if the current doc
+ * is different from the executor doc.
+ */
+class NS_STACK_CLASS nsHtml5OtherDocUpdate {
+  public:
+    nsHtml5OtherDocUpdate(nsIDocument* aCurrentDoc, nsIDocument* aExecutorDoc)
+    {
+      NS_PRECONDITION(aCurrentDoc, "Node has no doc?");
+      NS_PRECONDITION(aExecutorDoc, "Executor has no doc?");
+      if (NS_LIKELY(aCurrentDoc == aExecutorDoc)) {
+        mDocument = nsnull;
+      } else {
+        mDocument = aCurrentDoc;
+        aCurrentDoc->BeginUpdate(UPDATE_CONTENT_MODEL);        
+      }
+    }
+
+    ~nsHtml5OtherDocUpdate()
+    {
+      if (NS_UNLIKELY(mDocument)) {
+        mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
+      }
+    }
+  private:
+    nsIDocument* mDocument;
+};
+
 nsHtml5TreeOperation::nsHtml5TreeOperation()
 #ifdef DEBUG
  : mOpCode(eTreeOpUninitialized)
@@ -102,8 +130,27 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpAppend: {
       nsIContent* node = *(mOne.node);
       nsIContent* parent = *(mTwo.node);
-      aBuilder->PostPendingAppendNotification(parent, node);
+
+      nsIDocument* executorDoc = aBuilder->GetDocument();
+      NS_ASSERTION(executorDoc, "Null doc on executor");
+      nsIDocument* parentDoc = parent->GetOwnerDoc();
+      NS_ASSERTION(parentDoc, "Null owner doc on old node.");
+
+      if (NS_LIKELY(executorDoc == parentDoc)) {
+        // the usual case. the parent is in the parser's doc
+        aBuilder->PostPendingAppendNotification(parent, node);
+        rv = parent->AppendChildTo(node, PR_FALSE);
+        return rv;
+      }
+      
+      // The parent has been moved to another doc
+      parentDoc->BeginUpdate(UPDATE_CONTENT_MODEL);
+
+      PRUint32 childCount = parent->GetChildCount();
       rv = parent->AppendChildTo(node, PR_FALSE);
+      nsNodeUtils::ContentAppended(parent, childCount);
+
+      parentDoc->EndUpdate(UPDATE_CONTENT_MODEL);
       return rv;
     }
     case eTreeOpDetach: {
@@ -111,6 +158,8 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       aBuilder->FlushPendingAppendNotifications();
       nsIContent* parent = node->GetParent();
       if (parent) {
+        nsHtml5OtherDocUpdate update(parent->GetOwnerDoc(),
+                                     aBuilder->GetDocument());
         PRUint32 pos = parent->IndexOf(node);
         NS_ASSERTION((pos >= 0), "Element not found as child of its parent");
         rv = parent->RemoveChildAt(pos, PR_TRUE, PR_FALSE);
@@ -122,6 +171,10 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsIContent* node = *(mOne.node);
       nsIContent* parent = *(mTwo.node);
       aBuilder->FlushPendingAppendNotifications();
+
+      nsHtml5OtherDocUpdate update(parent->GetOwnerDoc(),
+                                   aBuilder->GetDocument());
+
       PRUint32 childCount = parent->GetChildCount();
       PRBool didAppend = PR_FALSE;
       while (node->GetChildCount()) {
@@ -142,16 +195,40 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsIContent* parent = *(mTwo.node);
       nsIContent* table = *(mThree.node);
       nsIContent* foster = table->GetParent();
+
       if (foster && foster->IsNodeOfType(nsINode::eELEMENT)) {
         aBuilder->FlushPendingAppendNotifications();
+
+        nsHtml5OtherDocUpdate update(foster->GetOwnerDoc(),
+                                     aBuilder->GetDocument());
+
         PRUint32 pos = foster->IndexOf(table);
         rv = foster->InsertChildAt(node, pos, PR_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
         nsNodeUtils::ContentInserted(foster, node, pos);
-      } else {
+        return rv;
+      }
+
+      nsIDocument* executorDoc = aBuilder->GetDocument();
+      NS_ASSERTION(executorDoc, "Null doc on executor");
+      nsIDocument* parentDoc = parent->GetOwnerDoc();
+      NS_ASSERTION(parentDoc, "Null owner doc on old node.");
+
+      if (NS_LIKELY(executorDoc == parentDoc)) {
+        // the usual case. the parent is in the parser's doc
         aBuilder->PostPendingAppendNotification(parent, node);
         rv = parent->AppendChildTo(node, PR_FALSE);
+        return rv;
       }
+      
+      // The parent has been moved to another doc
+      parentDoc->BeginUpdate(UPDATE_CONTENT_MODEL);
+
+      PRUint32 childCount = parent->GetChildCount();
+      rv = parent->AppendChildTo(node, PR_FALSE);
+      nsNodeUtils::ContentAppended(parent, childCount);
+
+      parentDoc->EndUpdate(UPDATE_CONTENT_MODEL);
       return rv;
     }
     case eTreeOpAppendToDocument: {
@@ -167,6 +244,9 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpAddAttributes: {
       nsIContent* node = *(mOne.node);
       nsHtml5HtmlAttributes* attributes = mTwo.attributes;
+
+      nsHtml5OtherDocUpdate update(node->GetOwnerDoc(),
+                                   aBuilder->GetDocument());
 
       nsIDocument* document = node->GetCurrentDoc();
 
