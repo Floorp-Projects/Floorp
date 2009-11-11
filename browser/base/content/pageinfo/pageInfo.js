@@ -592,6 +592,8 @@ function addImage(url, type, alt, elem, isBg)
   else {
     var i = gImageHash[url][type][alt];
     gImageView.data[i][COL_IMAGE_COUNT]++;
+    if (elem == gImageElement)
+      gImageView.data[i][COL_IMAGE_NODE] = elem;
   }
 }
 
