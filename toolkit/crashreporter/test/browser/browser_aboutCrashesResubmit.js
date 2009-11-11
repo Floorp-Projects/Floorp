@@ -53,6 +53,7 @@ function check_submit_pending(tab, crashes) {
   let CrashID = null;
   let CrashURL = null;
   function csp_onload() {
+    dump('csp_onload, location = ' + browser.contentWindow.location + '\n');
     if (browser.contentWindow.location != 'about:crashes') {
       browser.removeEventListener("load", csp_onload, true);
       // loaded the crash report page
@@ -106,11 +107,13 @@ function check_submit_pending(tab, crashes) {
   for each(let crash in crashes) {
     if (crash.pending) {
       SubmittedCrash = crash;
+      dump('check_submit_pending: trying to submit crash ' + crash.id + '\n');
       break;
     }
   }
   EventUtils.sendMouseEvent({type:'click'}, SubmittedCrash.id,
                             browser.contentWindow);
+  dump('check_submit_pending: sent mouse event to ' + SubmittedCrash.id + '\n');
 }
 
 function test() {
