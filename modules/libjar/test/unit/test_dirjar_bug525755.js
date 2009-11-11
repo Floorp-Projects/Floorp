@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,11 +16,9 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Taras Glek <tglek@mozilla.com>
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,37 +34,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMEventTarget.idl"
+// Check that we refuse to open weird files
+function run_test() {
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  // open a bogus file
+  var file = do_get_file("/");
 
-interface nsIDOMEventListener;
-interface nsIDOMFile;
-interface nsIDOMFileError;
+  var zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
+                  createInstance(Ci.nsIZipReader);
+  var failed = false;
+  try {
+    zipreader.open(file);
+  } catch (e) {
+    failed = true;
+  }
+  do_check_true(failed);
+  zipreader = null;
+}
 
-[scriptable, uuid(074FEC26-7FAB-4E05-9E60-EC49E148F5EF)]
-interface nsIDOMFileRequest : nsISupports 
-{
-  void readAsBinaryString(in nsIDOMFile filedata);
-  void readAsText(in nsIDOMFile filedata, [optional] in DOMString encoding);
-  void readAsDataURL(in nsIDOMFile file);
-
-  void abort();
-
-  const unsigned short INITIAL = 0;
-  const unsigned short LOADING = 1;
-  const unsigned short DONE = 2;
-  readonly attribute unsigned short readyState;
-
-  readonly attribute DOMString response;
-  readonly attribute nsIDOMFileError error;
-
-  // event handler attributes
-  attribute nsIDOMEventListener onloadend;
-};
-
-%{ C++
-#define NS_FILEREQUEST_CID                            \
-{0x06aa7c21, 0xfe05, 0x4cf2,                         \
-{0xb1, 0xc4, 0x0c, 0x71, 0x26, 0xa4, 0xf7, 0x13}}
-#define NS_FILEREQUEST_CONTRACTID \
-"@mozilla.org/files/filerequest;1"
-%}

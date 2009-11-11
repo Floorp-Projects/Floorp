@@ -133,6 +133,7 @@ XPIDLSRCS = 					\
 	nsIDOMNSHTMLOptionElement.idl		\
 	nsIDOMNSHTMLSelectElement.idl		\
 	nsIDOMNSHTMLTextAreaElement.idl		\
+	nsIDOMNSHTMLScriptElement.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

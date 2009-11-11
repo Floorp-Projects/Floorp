@@ -39,7 +39,7 @@
 // Disables security checking our updates which haven't been signed
 gPrefs.setBoolPref("extensions.checkUpdateSecurity", false);
 // Disables compatibility checking
-gPrefs.setBoolPref("extensions.checkCompatibility", false);
+gPrefs.setBoolPref("extensions.checkCompatibility.2", false);
 
 // This allows the EM to attempt to display errors to the user without failing
 var promptService = {

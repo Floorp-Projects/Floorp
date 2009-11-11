@@ -155,7 +155,7 @@ _TEST_FILES += \
 		small-shot.ogg \
 		sound.ogg \
 		$(NULL)
-		
+
 # Wave sample files
 _TEST_FILES += \
 		big.wav \
@@ -178,7 +178,6 @@ _TEST_FILES += \
 ifdef MOZ_OGG
 _TEST_FILES += \
 		dynamic_redirect.sjs \
-		test_access_control.html \
 		file_access_controls.html \
 		test_bug448534.html \
 		test_bug468190.html \
@@ -225,9 +224,10 @@ _TEST_FILES += \
 # test_autobuffer2.html
 ifneq ($(OS_ARCH),WINNT)
 # These tests are disabled on windows until we
-# figure out the random failures. See bug 475369.
+# figure out the random failures. See bug 475369 and bug 526323
 _TEST_FILES += \
 		test_timeupdate3.html \
+		test_access_control.html \
 		$(NULL)
 endif
 endif

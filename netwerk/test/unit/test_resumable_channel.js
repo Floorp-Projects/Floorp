@@ -320,7 +320,7 @@ function handleAuth(metadata, response) {
 // /auth
 function authHandler(metadata, response) {
   response.setHeader("Content-Type", "text/html", false);
-  body = handleAuth(metadata, response) ? "success" : "failure";
+  var body = handleAuth(metadata, response) ? "success" : "failure";
   response.bodyOutputStream.write(body, body.length);
 }
 

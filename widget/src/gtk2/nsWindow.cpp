@@ -525,7 +525,7 @@ nsWindow::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent)
     // so link to the GdkEvent (which will vanish soon after return from the
     // event callback) to give plugins access to hardware_keycode and state.
     // (An XEvent would be nice but the GdkEvent is good enough.)
-    aEvent.nativeMsg = (void *)aGdkEvent;
+    aEvent.pluginEvent = (void *)aGdkEvent;
 
     aEvent.time      = aGdkEvent->time;
 }
@@ -652,9 +652,7 @@ CheckDestroyInvisibleContainer()
 
 // Change the containing GtkWidget on a sub-hierarchy of GdkWindows belonging
 // to aOldWidget and rooted at aWindow, and reparent any child GtkWidgets of
-// the GdkWindow hierarchy.  If aNewWidget is NULL, the reference to
-// aOldWidget is removed from its GdkWindows, and child GtkWidgets are
-// destroyed.
+// the GdkWindow hierarchy to aNewWidget.
 static void
 SetWidgetForHierarchy(GdkWindow *aWindow,
                       GtkWidget *aOldWidget,
@@ -673,13 +671,7 @@ SetWidgetForHierarchy(GdkWindow *aWindow,
 
         // This window belongs to a child widget, which will no longer be a
         // child of aOldWidget.
-        if (aNewWidget) {
-            gtk_widget_reparent(widget, aNewWidget);
-        } else {
-            // aNewWidget == NULL indicates that the window is about to be
-            // destroyed.
-            gtk_widget_destroy(widget);
-        }
+        gtk_widget_reparent(widget, aNewWidget);
 
         return;
     }
@@ -691,6 +683,34 @@ SetWidgetForHierarchy(GdkWindow *aWindow,
     g_list_free(children);
 
     gdk_window_set_user_data(aWindow, aNewWidget);
+}
+
+// Walk the list of child windows and call destroy on them.
+void
+nsWindow::DestroyChildWindows()
+{
+    if (!mGdkWindow)
+        return;
+
+    GList *children = gdk_window_get_children(mGdkWindow);
+
+    for(GList *list = children; list; list = list->next) {
+        GdkWindow *child = GDK_WINDOW(children->data);
+        nsWindow *kid = get_window_for_gdk_window(child);
+        if (kid) {
+            kid->Destroy();
+        } else {
+            // This child is not an nsWindow.
+            // Destroy the child GtkWidget.
+            gpointer data;
+            gdk_window_get_user_data(child, &data);
+            if (GTK_IS_WIDGET(data)) {
+                gtk_widget_destroy(static_cast<GtkWidget*>(data));
+            }
+        }
+    }
+
+    g_list_free(children);
 }
 
 NS_IMETHODIMP
@@ -729,15 +749,6 @@ nsWindow::Destroy(void)
     }
 
     NativeShow(PR_FALSE);
-
-    // walk the list of children and call destroy on them.  Have to be
-    // careful, though -- calling destroy on a kid may actually remove
-    // it from our child list, losing its sibling links.
-    for (nsIWidget* kid = mFirstChild; kid; ) {
-        nsIWidget* next = kid->GetNextSibling();
-        kid->Destroy();
-        kid = next;
-    }
 
 #ifdef USE_XIM
     IMEDestroyContext();
@@ -790,16 +801,13 @@ nsWindow::Destroy(void)
                           "mGdkWindow should be NULL when mContainer is destroyed");
     }
     else if (mGdkWindow) {
-        // Remove references from GdkWindows back to their container
-        // widget while the GdkWindow hierarchy is still available.
-        // (OnContainerUnrealize does this when the MozContainer widget is
-        // destroyed.)
-        if (owningWidget) {
-            SetWidgetForHierarchy(mGdkWindow, owningWidget, NULL);
-        }
-        NS_ASSERTION(!get_gtk_widget_for_gdk_window(mGdkWindow),
-                     "widget reference not removed");
+        // Destroy child windows to ensure that their mThebesSurfaces are
+        // released and to remove references from GdkWindows back to their
+        // container widget.  (OnContainerUnrealize() does this when the
+        // MozContainer widget is destroyed.)
+        DestroyChildWindows();
 
+        gdk_window_set_user_data(mGdkWindow, NULL);
         g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", NULL);
         gdk_window_destroy(mGdkWindow);
         mGdkWindow = nsnull;
@@ -994,14 +1002,7 @@ nsWindow::Show(PRBool aState)
     // If someone is showing this window and it needs a resize then
     // resize the widget.
     if (aState) {
-        
-        // Sizemode can be set before the window is created.  If it is,
-        // we want to force fullscreen, if needed.
-        if (mSizeMode == nsSizeMode_Fullscreen)
-            MakeFullScreen(PR_TRUE);
-
         if (mNeedsMove) {
-            LOG(("\tresizing\n"));
             NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
                          PR_FALSE);
         } else if (mNeedsResize) {
@@ -2391,7 +2392,7 @@ nsWindow::OnContainerUnrealize(GtkWidget *aWidget)
                  "unexpected \"unrealize\" signal");
 
     if (mGdkWindow) {
-        SetWidgetForHierarchy(mGdkWindow, aWidget, NULL);
+        DestroyChildWindows();
 
         g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", NULL);
         mGdkWindow = NULL;
@@ -4233,7 +4234,6 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
             gtk_window_move(GTK_WINDOW(mShell), aX, aY);
 
         gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
-        gdk_window_resize(mGdkWindow, aWidth, aHeight);
     }
     else if (mContainer) {
         GtkAllocation allocation;
@@ -4971,25 +4971,21 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
     LOG(("nsWindow::MakeFullScreen [%p] aFullScreen %d\n",
          (void *)this, aFullScreen));
 
-#if GTK_CHECK_VERSION(2,2,0)
     if (aFullScreen) {
         if (mSizeMode != nsSizeMode_Fullscreen)
             mLastSizeMode = mSizeMode;
 
         mSizeMode = nsSizeMode_Fullscreen;
-        gdk_window_fullscreen (mShell->window);
+        gtk_window_fullscreen(GTK_WINDOW(mShell));
     }
     else {
         mSizeMode = mLastSizeMode;
-        gdk_window_unfullscreen (mShell->window);
+        gtk_window_unfullscreen(GTK_WINDOW(mShell));
     }
 
     NS_ASSERTION(mLastSizeMode != nsSizeMode_Fullscreen,
                  "mLastSizeMode should never be fullscreen");
     return NS_OK;
-#else
-    return nsBaseWidget::MakeFullScreen(aFullScreen);
-#endif
 }
 
 NS_IMETHODIMP
@@ -7223,6 +7219,9 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
 gfxASurface*
 nsWindow::GetThebesSurface()
 {
+    if (!mGdkWindow)
+        return nsnull;
+
     GdkDrawable* d;
     gint x_offset, y_offset;
     gdk_window_get_internal_paint_info(mGdkWindow, &d, &x_offset, &y_offset);

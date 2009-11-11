@@ -83,7 +83,7 @@ function disableAddons() {
   var em = Components.classes["@mozilla.org/extensions/manager;1"]
                      .getService(Components.interfaces.nsIExtensionManager);
   var type = nsIUpdateItem.TYPE_EXTENSION + nsIUpdateItem.TYPE_LOCALE;
-  var items = em.getItemList(type, { });
+  var items = em.getItemList(type);
   for (var i = 0; i < items.length; ++i)
     em.disableItem(items[i].id);
 
@@ -96,7 +96,7 @@ function disableAddons() {
   // Disable plugins
   var phs = Components.classes["@mozilla.org/plugin/host;1"]
                       .getService(Components.interfaces.nsIPluginHost);
-  var plugins = phs.getPluginTags({ });
+  var plugins = phs.getPluginTags();
   for (i = 0; i < plugins.length; ++i)
     plugins[i].disabled = true;
 }

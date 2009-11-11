@@ -78,12 +78,13 @@ toolbarbutton:focus
   outline-offset: -2px;
 }
 
-toolbarbutton:hover,
+toolbarbutton:hover:not([disabled="true"]),
 toolbarbutton[buttonover="true"] {
   border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
 }
 
-toolbarbutton:hover:active,
+toolbarbutton:hover:active:not([disabled="true"]),
+toolbarbutton[open="true"]:hover,
 toolbarbutton[open="true"] {
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
   padding-top: 4px;
@@ -92,37 +93,19 @@ toolbarbutton[open="true"] {
   -moz-padding-end: 2px;
 }
 
-toolbarbutton[disabled="true"],
-toolbarbutton[disabled="true"]:hover,
-toolbarbutton[disabled="true"]:hover:active,
-toolbarbutton[disabled="true"][open="true"],
-toolbarbutton[disabled="true"][checked="true"] {
-  border-color: transparent;
-  padding: 3px;
+toolbarbutton[disabled="true"] {
   color: GrayText;
-}
-
-toolbarbutton[disabled="true"]:-moz-system-metric(windows-classic),
-toolbarbutton[disabled="true"]:-moz-system-metric(windows-classic):hover,
-toolbarbutton[disabled="true"]:-moz-system-metric(windows-classic):hover:active,
-toolbarbutton[disabled="true"][open="true"]:-moz-system-metric(windows-classic),
-toolbarbutton[disabled="true"][checked="true"]:-moz-system-metric(windows-classic) {
-  color: ThreeDShadow;
-  text-shadow: 1px 1px ThreeDHighlight;
-}
-
-toolbarbutton:-moz-lwtheme {
   text-shadow: none;
 }
 
-toolbarbutton:-moz-lwtheme:not(:hover):not([checked="true"]):not([open="true"]):not([disabled="true"]) {
-  color: inherit;
-  text-shadow: inherit;
+@media all and (-moz-windows-classic) {
+  toolbarbutton[disabled="true"] {
+    color: ThreeDShadow;
+    text-shadow: 1px 1px ThreeDHighlight;
+  }
 }
 
-/* ..... checked state ..... */
-
-toolbarbutton[checked="true"] {
+toolbarbutton[checked="true"]:not([disabled="true"]) {
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
   padding-top: 4px !important;
   padding-bottom: 2px !important;
@@ -130,6 +113,28 @@ toolbarbutton[checked="true"] {
   -moz-padding-end: 2px !important;
   background-image: url("chrome://global/skin/toolbar/Lighten.png");
   color: ButtonText;
+}
+
+@media all and (-moz-windows-default-theme) {
+  toolbarbutton:-moz-lwtheme {
+    text-shadow: none;
+  }
+
+  toolbarbutton:-moz-lwtheme:not(:hover):not([checked="true"]):not([open="true"]):not([disabled="true"]) {
+    color: inherit;
+    text-shadow: inherit;
+  }
+}
+
+@media not all and (-moz-windows-default-theme) {
+  toolbarbutton:-moz-lwtheme {
+    -moz-appearance: none;
+  }
+
+  toolbarbutton:-moz-lwtheme:not([disabled="true"]) {
+    color: inherit;
+    text-shadow: inherit;
+  }
 }
 
 /* ::::: toolbarbutton menu ::::: */

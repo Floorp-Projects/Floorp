@@ -54,16 +54,15 @@ var bh = histsvc.QueryInterface(Ci.nsIBrowserHistory);
  * @returns the place id for aURI.
  */
 function add_visit(aURI, aReferrer) {
-  var placeID = histsvc.addVisit(aURI,
+  var visitId = histsvc.addVisit(aURI,
                                  Date.now() * 1000,
                                  aReferrer,
                                  histsvc.TRANSITION_TYPED, // user typed in URL bar
                                  false, // not redirect
                                  0);
-  dump("### Added visit with id of " + placeID + "\n");
-  do_check_true(placeID > 0);
+  dump("### Added visit with id of " + visitId + "\n");
   do_check_true(gh.isVisited(aURI));
-  return placeID;
+  return visitId;
 }
 
 /**
@@ -189,7 +188,7 @@ function run_test() {
 
   // test getPageTitle
   var title = histsvc.getPageTitle(uri("http://mozilla.com"));
-  do_check_eq(title, "mozilla.com");
+  do_check_eq(title, null);
 
   // query for the visit
   do_check_true(uri_in_db(testURI));

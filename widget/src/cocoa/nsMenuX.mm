@@ -814,6 +814,50 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
 
   nsMenuX* targetMenu = static_cast<nsMenuX*>(userData);
   UInt32 kind = ::GetEventKind(event);
+
+  // On SnowLeopard, our Help menu items often get disabled when the user
+  // enters a password after waking from sleep or the screen saver.  Whether
+  // or not the user is prompted for a password is governed by the "Require
+  // password" setting in the Security pref panel.  For more information see
+  // bug 513048.
+  //
+  // This is surely an OS bug, though it's not clear exactly what triggers it.
+  // The end result is that the Help menu's items are turned off in Carbon,
+  // even though they're turned on in Cocoa.  (On SnowLeopard, system menus
+  // are still implemented in Carbon (at least for for 32-bit apps), using the
+  // undocumented NSCarbonMenuImpl class.)  The workaround for this is to do
+  // the following whenever a menu is opened:  If it's the Help menu, check
+  // Carbon and Cocoa enabled states of all its menu items.  If any of these
+  // states don't match, change the Carbon enabled state to match the Cocoa
+  // enabled state.
+  if (nsToolkit::OnSnowLeopardOrLater() && targetMenu && (kind == kEventMenuOpening)) {
+    nsCOMPtr<nsIContent> content(targetMenu->Content());
+    NSMenu *nativeMenu = static_cast<NSMenu*>(targetMenu->NativeData());
+    if (content && nativeMenu) {
+      nsAutoString id;
+      content->GetAttr(kNameSpaceID_None, nsWidgetAtoms::id, id);
+      if (id.Equals(NS_LITERAL_STRING("helpMenu"))) {
+        MenuRef helpMenuRef = _NSGetCarbonMenu(nativeMenu);
+        if (helpMenuRef) {
+          NSArray *items = [nativeMenu itemArray];
+          NSUInteger count = [items count];
+          for (NSUInteger i = 0; i < count; ++i) {
+            NSMenuItem *anItem = (NSMenuItem *) [items objectAtIndex:i];
+            BOOL cocoaEnabled = [anItem isEnabled];
+            Boolean carbonEnabled = ::IsMenuItemEnabled(helpMenuRef, i+1);
+            if (carbonEnabled != cocoaEnabled) {
+              if (!carbonEnabled) {
+                ::EnableMenuItem(helpMenuRef, i+1);
+              } else {
+                ::DisableMenuItem(helpMenuRef, i+1);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   if (kind == kEventMenuTargetItem) {
     // get the position of the menu item we want
     PRUint16 aPos;

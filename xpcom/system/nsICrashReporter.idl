@@ -47,7 +47,7 @@ interface nsIURL;
  *                    future releases.
  */
 
-[scriptable, uuid(D9A0F5B2-A7DF-4AEB-9775-21B9E01B4C59)]
+[scriptable, uuid(44650737-59f7-4c9b-adbe-2b6d4dfee86a)]
 interface nsICrashReporter : nsISupports
 {
   /**

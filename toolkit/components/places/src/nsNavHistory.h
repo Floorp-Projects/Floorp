@@ -42,49 +42,32 @@
 #ifndef nsNavHistory_h_
 #define nsNavHistory_h_
 
-#include "mozIStorageService.h"
-#include "mozIStorageConnection.h"
-#include "mozIStorageValueArray.h"
-#include "mozIStorageStatement.h"
-#include "nsAutoPtr.h"
-#include "nsCOMArray.h"
-#include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
 #include "nsINavHistoryService.h"
 #include "nsPIPlacesDatabase.h"
 #include "nsPIPlacesHistoryListenersNotifier.h"
 #include "nsIBrowserHistory.h"
-#include "nsICollation.h"
 #include "nsIGlobalHistory.h"
 #include "nsIGlobalHistory3.h"
 #include "nsIDownloadHistory.h"
+
 #include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsServiceManagerUtils.h"
+#include "nsICollation.h"
 #include "nsIStringBundle.h"
-#include "nsITextToSubURI.h"
 #include "nsITimer.h"
-#ifdef MOZ_XUL
-#include "nsITreeSelection.h"
-#include "nsITreeView.h"
-#endif
-#include "nsString.h"
-#include "nsWeakReference.h"
-#include "nsTArray.h"
-#include "nsINavBookmarksService.h"
 #include "nsMaybeWeakPtr.h"
 #include "nsCategoryCache.h"
+#include "nsICharsetResolver.h"
+#include "nsNetCID.h"
+
+#include "nsINavBookmarksService.h"
+#include "nsIPrivateBrowsingService.h"
 
 #include "nsNavHistoryExpire.h"
 #include "nsNavHistoryResult.h"
 #include "nsNavHistoryQuery.h"
 
-#include "nsICharsetResolver.h"
-
-#include "nsIPrivateBrowsingService.h"
-#include "nsNetCID.h"
+#include "mozilla/storage.h"
 
 // define to enable lazy link adding
 #define LAZY_ADD

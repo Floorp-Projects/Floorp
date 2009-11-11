@@ -44,9 +44,10 @@
 #include "nsCOMPtr.h"
 #include "nsIScriptLoaderObserver.h"
 
+// e68ddc48-4055-4ba9-978d-c49d9cf3189a
 #define NS_ISCRIPTELEMENT_IID \
-{ 0x4b916da5, 0x82c4, 0x45ab, \
-  { 0x99, 0x15, 0xcc, 0xcd, 0x9e, 0x2c, 0xb1, 0xe6 } }
+{ 0xe68ddc48, 0x4055, 0x4ba9, \
+  { 0x97, 0x8d, 0xc4, 0x9d, 0x9c, 0xf3, 0x18, 0x9a } }
 
 /**
  * Internal interface implemented by script elements
@@ -86,6 +87,11 @@ public:
    * Is the script deferred. Currently only supported by HTML scripts.
    */
   virtual PRBool GetScriptDeferred() = 0;
+
+  /**
+   * Is the script async. Currently only supported by HTML scripts.
+   */
+  virtual PRBool GetScriptAsync() = 0;
 
   void SetScriptLineNumber(PRUint32 aLineNumber)
   {

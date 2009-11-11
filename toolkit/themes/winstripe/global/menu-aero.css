@@ -1,0 +1,12 @@
+%include menu.css
+
+@media all and (-moz-windows-default-theme) {
+  menubar > menu:-moz-lwtheme {
+    -moz-appearance: menuitem;
+  }
+
+  menubar > menu:-moz-lwtheme[_moz-menuactive="true"]:not([disabled="true"]) {
+    color: inherit !important;
+    text-shadow: inherit;
+  }
+}

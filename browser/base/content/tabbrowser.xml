@@ -1514,9 +1514,9 @@
             var l = this.mTabs.length - this._removingTabs.length;
             var newTab = false;
             if (l == 1) {
-              closeWindow = aCloseWindowWithLastTab != null ?
-                            aCloseWindowWithLastTab :
-                            this.mPrefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
+              closeWindow = aCloseWindowWithLastTab != null ? aCloseWindowWithLastTab :
+                            !window.toolbar.visible ||
+                              this.mPrefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
 
               // Closing the tab and replacing it with a blank one is notably slower
               // than closing the window right away. If the caller opts in, take
