@@ -3722,6 +3722,7 @@ static PRBool ConvertUnicodeToCharCode(PRUnichar inUniChar, unsigned char* outCh
 
 static void ConvertCocoaKeyEventToNPCocoaEvent(NSEvent* cocoaEvent, NPCocoaEvent& pluginEvent, PRUint32 keyType = 0)
 {
+  InitNPCocoaEvent(&pluginEvent);
   NSEventType nativeType = [cocoaEvent type];
   switch (nativeType) {
     case NSKeyDown:
