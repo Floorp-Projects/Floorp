@@ -2453,5 +2453,14 @@ Assembler::asm_promote(LIns *ins)
     NanoAssert(0);
 }
 
+void
+Assembler::asm_jtbl(LIns* ins, NIns** table)
+{
+    Register indexreg = findRegFor(ins->oprnd1(), GpRegs);
+    Register tmp = registerAllocTmp(GpRegs & ~rmask(indexreg));
+    LDR_scaled(PC, tmp, indexreg, 2);      // LDR PC, [tmp + index*4]
+    asm_ld_imm(tmp, (int32_t)table);       // tmp = #table
+}
+
 }
 #endif /* FEATURE_NANOJIT */

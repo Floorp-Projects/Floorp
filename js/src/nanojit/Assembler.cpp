@@ -57,10 +57,11 @@ namespace nanojit
      *
      *    - merging paths ( build a graph? ), possibly use external rep to drive codegen
      */
-    Assembler::Assembler(CodeAlloc& codeAlloc, Allocator& alloc, AvmCore* core, LogControl* logc)
+    Assembler::Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc)
         : codeList(NULL)
         , alloc(alloc)
         , _codeAlloc(codeAlloc)
+        , _dataAlloc(dataAlloc)
         , _thisfrag(NULL)
         , _branchStateMap(alloc)
         , _patches(alloc)
@@ -704,15 +705,31 @@ namespace nanojit
             NInsMap::Iter iter(_patches);
             while (iter.next()) {
                 NIns* where = iter.key();
-                LIns* targ = iter.value();
-                LabelState *label = _labels.get(targ);
-                NIns* ntarg = label->addr;
-                if (ntarg) {
-                    nPatchBranch(where,ntarg);
-                }
-                else {
-                    setError(UnknownBranch);
-                    break;
+                LIns* target = iter.value();
+                if (target->isop(LIR_jtbl)) {
+                    // Need to patch up a whole jump table, 'where' is the table.
+                    LIns *jtbl = target;
+                    NIns** native_table = (NIns**) where;
+                    for (uint32_t i = 0, n = jtbl->getTableSize(); i < n; i++) {
+                        LabelState* lstate = _labels.get(jtbl->getTarget(i));
+                        NIns* ntarget = lstate->addr;
+                        if (ntarget) {
+                            native_table[i] = ntarget;
+                        } else {
+                            setError(UnknownBranch);
+                            break;
+                        }
+                    }
+                } else {
+                    // target is a label for a single-target branch
+                    LabelState *lstate = _labels.get(target);
+                    NIns* ntarget = lstate->addr;
+                    if (ntarget) {
+                        nPatchBranch(where, ntarget);
+                    } else {
+                        setError(UnknownBranch);
+                        break;
+                    }
                 }
             }
         }
@@ -816,6 +833,7 @@ namespace nanojit
 #define countlir_xcc() _nvprof("lir-xcc",1)
 #define countlir_x() _nvprof("lir-x",1)
 #define countlir_call() _nvprof("lir-call",1)
+#define countlir_jtbl() _nvprof("lir-jtbl",1)
 #else
 #define countlir_live()
 #define countlir_ret()
@@ -841,6 +859,7 @@ namespace nanojit
 #define countlir_xcc()
 #define countlir_x()
 #define countlir_call()
+#define countlir_jtbl()
 #endif
 
     void Assembler::gen(LirFilter* reader)
@@ -1184,6 +1203,64 @@ namespace nanojit
                     }
                     break;
                 }
+
+                #if NJ_JTBL_SUPPORTED
+                case LIR_jtbl:
+                {
+                    countlir_jtbl();
+                    // Multiway jump can contain both forward and backward jumps.
+                    // Out of range indices aren't allowed or checked.
+                    // Code after this jtbl instruction is unreachable.
+                    releaseRegisters();
+                    AvmAssert(_allocator.countActive() == 0);
+
+                    uint32_t count = ins->getTableSize();
+                    bool has_back_edges = false;
+
+                    // Merge the register states of labels we have already seen.
+                    for (uint32_t i = count; i-- > 0;) {
+                        LIns* to = ins->getTarget(i);
+                        LabelState *lstate = _labels.get(to);
+                        if (lstate) {
+                            unionRegisterState(lstate->regs);
+                            asm_output("   %u: [&%s]", i, _thisfrag->lirbuf->names->formatRef(to));
+                        } else {
+                            has_back_edges = true;
+                        }
+                    }
+                    asm_output("forward edges");
+
+                    // In a multi-way jump, the register allocator has no ability to deal
+                    // with two existing edges that have conflicting register assignments, unlike
+                    // a conditional branch where code can be inserted on the fall-through path
+                    // to reconcile registers.  So, frontends *must* insert LIR_regfence at labels of
+                    // forward jtbl jumps.  Check here to make sure no registers were picked up from
+                    // any forward edges.
+                    AvmAssert(_allocator.countActive() == 0);
+
+                    if (has_back_edges) {
+                        handleLoopCarriedExprs(pending_lives);
+                        // save merged (empty) register state at target labels we haven't seen yet
+                        for (uint32_t i = count; i-- > 0;) {
+                            LIns* to = ins->getTarget(i);
+                            LabelState *lstate = _labels.get(to);
+                            if (!lstate) {
+                                _labels.add(to, 0, _allocator);
+                                asm_output("   %u: [&%s]", i, _thisfrag->lirbuf->names->formatRef(to));
+                            }
+                        }
+                        asm_output("backward edges");
+                    }
+
+                    // Emit the jump instruction, which allocates 1 register for the jump index.
+                    NIns** native_table = new (_dataAlloc) NIns*[count];
+                    asm_output("[%p]:", native_table);
+                    _patches.put((NIns*)native_table, ins);
+                    asm_jtbl(ins, native_table);
+                    break;
+                }
+                #endif
+
                 case LIR_label:
                 {
                     countlir_label();

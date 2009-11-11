@@ -78,6 +78,7 @@ namespace nanojit
 #define NJ_MAX_STACK_ENTRY              256
 #define NJ_MAX_PARAMETERS               16
 #define NJ_ALIGN_STACK                  8
+#define NJ_JTBL_SUPPORTED               1
 
 #define NJ_CONSTANT_POOLS
 const int NJ_MAX_CPOOL_OFFSET = 4096;
@@ -590,6 +591,15 @@ enum {
 // _d = [_b+off]
 #define LDR(_d,_b,_off)        asm_ldr_chk(_d,_b,_off,1)
 #define LDR_nochk(_d,_b,_off)  asm_ldr_chk(_d,_b,_off,0)
+
+// _d = [_b + _x<<_s]
+#define LDR_scaled(_d, _b, _x, _s) do { \
+        NanoAssert(((_s)&31) == _s);\
+        NanoAssert(IsGpReg(_d) && IsGpReg(_b) && IsGpReg(_x));\
+        underrunProtect(4);\
+        *(--_nIns) = (NIns)(COND_AL | (0x79<<20) | ((_b)<<16) | ((_d)<<12) | ((_s)<<7) | (_x));\
+        asm_output("ldr %s, [%s, +%s, LSL #%d]", gpn(_d), gpn(_b), gpn(_x), (_s));\
+    } while (0)
 
 // _d = #_imm
 #define LDi(_d,_imm) asm_ld_imm(_d,_imm)
