@@ -444,6 +444,8 @@ box[type="documenttab"]:only-child .documenttab-close {
 /* bookmark editor   ------------------------------------------------------- */
 #bookmark-container {
   padding: 1.1mm; /* core spacing */
+  background-image: url("chrome://browser/skin/images/panel-shadow.png");
+  background-repeat: repeat-x;
   -moz-box-shadow: black 0 0.25mm 0.25mm;
 }
 
@@ -457,7 +459,9 @@ box[type="documenttab"]:only-child .documenttab-close {
 
 /* Identity popup   -------------------------------------------------------- */
 #identity-container {
-  border-bottom: 0.1mm solid grey;
+  background-image: url("chrome://browser/skin/images/panel-shadow.png");
+  background-repeat: repeat-x;
+  -moz-box-shadow: black 0 0.25mm 0.25mm;
 }
 
 #identity-popup-container {
@@ -501,7 +505,8 @@ box[type="documenttab"]:only-child .documenttab-close {
 
 /* search popup   ---------------------------------------------------------- */
 #search-container {
-  border-top: 0.1mm solid rgb(207,207,207);
+  border: 0.2mm solid transparent;
+  -moz-border-top-colors: #212429 #52555a;
   padding: 1.1mm; /* core spacing */
   margin-top: 1.1mm; /* core spacing */
 }
