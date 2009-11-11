@@ -54,6 +54,7 @@
 #include "nsPlacesTriggers.h"
 #include "nsPlacesMacros.h"
 #include "SQLFunctions.h"
+#include "Helpers.h"
 
 #include "nsIArray.h"
 #include "nsTArray.h"
@@ -7761,11 +7762,11 @@ nsNavHistory::FixInvalidFrecencies()
 namespace {
 
 // Used to notify a topic to system observers on async execute completion.
-class AutoCompleteStatementCallbackNotifier : public mozIStorageStatementCallback
+class AutoCompleteStatementCallbackNotifier : public AsyncStatementCallback
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+  NS_DECL_ASYNCSTATEMENTCALLBACK
 };
 
 NS_IMPL_ISUPPORTS1(AutoCompleteStatementCallbackNotifier,
@@ -7785,28 +7786,6 @@ AutoCompleteStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
                                         PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC,
                                         nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AutoCompleteStatementCallbackNotifier::HandleError(mozIStorageError *aError)
-{
-#ifdef DEBUG
-  PRInt32 result;
-  nsresult rv = aError->GetResult(&result);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString message;
-  rv = aError->GetMessage(message);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString warnMsg;
-  warnMsg.Append("An error occured while executing an async statement: ");
-  warnMsg.Append(result);
-  warnMsg.Append(" ");
-  warnMsg.Append(message);
-  NS_WARNING(warnMsg.get());
-#endif
 
   return NS_OK;
 }
