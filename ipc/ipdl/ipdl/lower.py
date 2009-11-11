@@ -2061,8 +2061,6 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
                     'include',
                     '"%s%s.h"'% (_protocolHeaderBaseFilename(ip),
                                  self.prettyside)))
-        else:
-            self.file.addthing(_makeForwardDecl(ip.decl.type, self.prettyside))
 
         if ip.decl.fullname is not None:
             self.includedActorTypedefs.append(Typedef(
@@ -2087,15 +2085,6 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             CppDirective('include', '"'+ p.channelHeaderFile() +'"'),
             Whitespace.NL ])
 
-        # construct the namespace into which we'll stick all our decls
-        if 0 == len(p.namespaces):
-            self.ns = self.file
-        else:
-            self.ns = Namespace(p.namespaces[-1].name)
-            outerns = _putInNamespaces(self.ns, p.namespaces[:-1])
-            self.file.addthing(outerns)
-        self.ns.addstmts([ Whitespace.NL, Whitespace.NL ])
-
         inherits = [ Inherit(Type(p.fqListenerName())) ]
         if p.decl.type.isManager():
             inherits.append(Inherit(p.managerCxxType()))
@@ -2115,6 +2104,15 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
                 FriendClassDecl(_actorName(friend.fullname(),
                                            self.prettyside)),
                 Whitespace.NL ])
+
+        # construct the namespace into which we'll stick all our decls
+        if 0 == len(p.namespaces):
+            self.ns = self.file
+        else:
+            self.ns = Namespace(p.namespaces[-1].name)
+            outerns = _putInNamespaces(self.ns, p.namespaces[:-1])
+            self.file.addthing(outerns)
+        self.ns.addstmts([ Whitespace.NL, Whitespace.NL ])
 
         self.cls.addstmt(Label.PROTECTED)
         for typedef in p.cxxTypedefs():
