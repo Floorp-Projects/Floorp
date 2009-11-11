@@ -161,6 +161,8 @@ function startTest()
   
   // Clear the storage
   localStorage.clear();
+  is("testB" in localStorage, false, "Keys are not in the JS scope of the storage");
+  is("testC" in localStorage, false, "Keys are not in the JS scope of the storage");
   is(localStorage.length, 0, "The storage is empty [3]");
   checkException(function() {localStorage.key(0);}, INDEX_SIZE_ERR); // this is unspecified!
   checkException(function() {localStorage.key(-1);}, INDEX_SIZE_ERR);
