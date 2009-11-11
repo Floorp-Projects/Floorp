@@ -66,6 +66,7 @@ __all__ = [
            "log",
            "runApp",
            "Process",
+           "addExtraCommonOptions",
            "initializeProfile",
            "DIST_BIN",
            "DEFAULT_APP",
@@ -350,6 +351,15 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   prefsFile = open(profileDir + "/" + "user.js", "a")
   prefsFile.write("".join(prefs))
   prefsFile.close()
+
+def addExtraCommonOptions(parser):
+  "Adds command-line options which are common to mochitest and reftest."
+
+  parser.add_option("--setpref",
+                    action = "append", type = "string",
+                    default = [],
+                    dest = "extraPrefs", metavar = "PREF=VALUE",
+                    help = "defines an extra user preference")  
 
 def fillCertificateDB(profileDir, certPath, utilityPath, xrePath):
   pwfilePath = os.path.join(profileDir, ".crtdbpw")

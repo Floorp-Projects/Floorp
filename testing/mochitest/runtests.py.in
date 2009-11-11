@@ -99,6 +99,7 @@ class MochitestOptions(optparse.OptionParser):
 
     # we want to pass down everything from automation.__all__
     addCommonOptions(self, defaults=dict(zip(automation.__all__, [getattr(automation, x) for x in automation.__all__])))
+    automation.addExtraCommonOptions(self)
 
     self.add_option("--close-when-done",
                     action = "store_true", dest = "closeWhenDone",
@@ -200,12 +201,6 @@ class MochitestOptions(optparse.OptionParser):
                     help = "sets the given variable in the application's "
                            "environment")
     defaults["environment"] = []
-    
-    self.add_option("--setpref",
-                    action = "append", type = "string",
-                    dest = "extraPrefs", metavar = "PREF=VALUE",
-                    help = "defines an extra user preference")
-    defaults["extraPrefs"] = []    
     
     self.add_option("--browser-arg",
                     action = "append", type = "string",
