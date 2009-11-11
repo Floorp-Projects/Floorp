@@ -37,7 +37,7 @@
  */
 
 function run_test() {
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2.2.3", "2");
 
   // inject the add-ons into the profile
   var dest = gProfD.clone();
@@ -85,7 +85,7 @@ function run_test() {
   do_check_eq(getManifestProperty("bug470377_5@tests.mozilla.org", "isDisabled"), "false");
 
   // Disable compatibility checks
-  gPrefs.setBoolPref("extensions.checkCompatibility", false);
+  gPrefs.setBoolPref("extensions.checkCompatibility.2.2", false);
   restartEM();
 
   do_check_neq(gEM.getItemForID("bug470377_1@tests.mozilla.org"), null);

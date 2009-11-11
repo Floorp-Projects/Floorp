@@ -450,7 +450,6 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   }  
 
   {
-    nsAutoScriptBlocker scriptBlocker;
     SetPainting(PR_TRUE);
 
     nsCOMPtr<nsIRenderingContext> localcx;
@@ -896,6 +895,12 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
     case NS_PAINT:
       {
         nsPaintEvent *event = static_cast<nsPaintEvent*>(aEvent);
+
+        // We don't want script to execute anywhere in here. Since
+        // the widget layer has already set up a DC for painting,
+        // scripted changes to the widget tree (or accidental changes
+        // induced by script) can make painting very confused.
+        nsAutoScriptBlocker scriptBlocker;
 
         if (!aView || !mContext)
           break;
@@ -1546,6 +1551,10 @@ NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility 
 void nsViewManager::UpdateWidgetsForView(nsView* aView)
 {
   NS_PRECONDITION(aView, "Must have view!");
+
+  // No point forcing an update if invalidations have been suppressed.
+  if (!IsRefreshEnabled())
+    return;  
 
   nsWeakView parentWeakView = aView;
   if (aView->HasWidget()) {

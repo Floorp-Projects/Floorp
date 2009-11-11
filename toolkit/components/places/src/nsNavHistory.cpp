@@ -44,36 +44,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <stdio.h>
+
 #include "nsNavHistory.h"
-#include "nsNavBookmarks.h"
-#include "nsAnnotationService.h"
-#include "nsILivemarkService.h"
 
-#include "nsPlacesTables.h"
-#include "nsPlacesIndexes.h"
-#include "nsPlacesTriggers.h"
-#include "nsPlacesMacros.h"
-#include "SQLFunctions.h"
-
-#include "nsIArray.h"
 #include "nsTArray.h"
-#include "nsArrayEnumerator.h"
 #include "nsCollationCID.h"
-#include "nsCOMPtr.h"
-#include "nsCRT.h"
-#include "nsDebug.h"
-#include "nsEnumeratorUtils.h"
-#include "nsFaviconService.h"
-#include "nsIChannelEventSink.h"
-#include "nsIComponentManager.h"
 #include "nsILocaleService.h"
-#include "nsILocalFile.h"
 #include "nsIPrefBranch2.h"
-#include "nsIServiceManager.h"
-#include "nsISimpleEnumerator.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIURI.h"
-#include "nsIURL.h"
+
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsPromiseFlatString.h"
@@ -81,23 +59,29 @@
 #include "nsUnicharUtils.h"
 #include "prsystem.h"
 #include "prtime.h"
-#include "prprf.h"
 #include "nsEscape.h"
-#include "nsIVariant.h"
-#include "nsVariant.h"
 #include "nsIEffectiveTLDService.h"
-#include "nsIIDNService.h"
 #include "nsIClassInfoImpl.h"
 #include "nsThreadUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "mozilla/storage.h"
+#include "nsMathUtils.h"
+
+#include "nsNavBookmarks.h"
+#include "nsAnnotationService.h"
+#include "nsILivemarkService.h"
+#include "nsFaviconService.h"
+
+#include "nsPlacesTables.h"
+#include "nsPlacesIndexes.h"
+#include "nsPlacesTriggers.h"
+#include "nsPlacesMacros.h"
+#include "SQLFunctions.h"
+#include "Helpers.h"
 
 #ifdef MOZ_XUL
 #include "nsIAutoCompleteInput.h"
 #include "nsIAutoCompletePopup.h"
 #endif
-
-#include "nsMathUtils.h" // for NS_ceilf()
 
 using namespace mozilla::places;
 
@@ -244,7 +228,6 @@ NS_IMPL_CI_INTERFACE_GETTER5(
 
 static nsresult GetReversedHostname(nsIURI* aURI, nsAString& host);
 static void GetReversedHostname(const nsString& aForward, nsAString& aReversed);
-static nsresult GenerateTitleFromURI(nsIURI* aURI, nsAString& aTitle);
 static PRInt64 GetSimpleBookmarksQueryFolder(
     const nsCOMArray<nsNavHistoryQuery>& aQueries,
     nsNavHistoryQueryOptions* aOptions);
@@ -1902,12 +1885,9 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI,
 
   // title
   if (aTitle.IsVoid()) {
-    // if no title is specified, make up a title based on the filename
-    nsAutoString title;
-    GenerateTitleFromURI(aURI, title);
-    rv = mDBAddNewPage->BindStringParameter(1,
-        StringHead(title, HISTORY_TITLE_LENGTH_MAX));
-  } else {
+    rv = mDBAddNewPage->BindNullParameter(1);
+  }
+  else {
     rv = mDBAddNewPage->BindStringParameter(1,
         StringHead(aTitle, HISTORY_TITLE_LENGTH_MAX));
   }
@@ -5297,19 +5277,20 @@ nsNavHistory::GetPageTitle(nsIURI* aURI, nsAString& aTitle)
   nsresult rv = BindStatementURI(statement, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-
-  PRBool results;
-  rv = statement->ExecuteStep(&results);
+  PRBool hasResults = PR_FALSE;
+  rv = statement->ExecuteStep(&hasResults);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!results) {
+  if (!hasResults) {
     aTitle.SetIsVoid(PR_TRUE);
     return NS_OK; // not found: return void string
   }
 
-  return statement->GetString(nsNavHistory::kGetInfoIndex_Title, aTitle);
-}
+  rv = statement->GetString(nsNavHistory::kGetInfoIndex_Title, aTitle);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
 
 // nsNavHistory::GetURIGeckoFlags
 //
@@ -7396,34 +7377,6 @@ void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
   }
 }
 
-
-// GenerateTitleFromURI
-//
-//    Given a URL, we try to get a reasonable title for this page. We try
-//    to use a filename out of the URI, then fall back on the path, then fall
-//    back on the whole hostname.
-
-nsresult // static
-GenerateTitleFromURI(nsIURI* aURI, nsAString& aTitle)
-{
-  nsCAutoString name;
-  nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
-  if (url)
-    url->GetFileName(name);
-  if (name.IsEmpty()) {
-    // path
-    nsresult rv = aURI->GetPath(name);
-    if (NS_FAILED(rv) || (name.Length() == 1 && name[0] == '/')) {
-      // empty path name, use hostname
-      rv = aURI->GetHost(name);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-  CopyUTF8toUTF16(name, aTitle);
-  return NS_OK;
-}
-
-
 // BindStatementURI
 //
 //    Binds the specified URI as the parameter 'index' for the statment.
@@ -7761,11 +7714,11 @@ nsNavHistory::FixInvalidFrecencies()
 namespace {
 
 // Used to notify a topic to system observers on async execute completion.
-class AutoCompleteStatementCallbackNotifier : public mozIStorageStatementCallback
+class AutoCompleteStatementCallbackNotifier : public AsyncStatementCallback
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+  NS_DECL_ASYNCSTATEMENTCALLBACK
 };
 
 NS_IMPL_ISUPPORTS1(AutoCompleteStatementCallbackNotifier,
@@ -7785,28 +7738,6 @@ AutoCompleteStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
                                         PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC,
                                         nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AutoCompleteStatementCallbackNotifier::HandleError(mozIStorageError *aError)
-{
-#ifdef DEBUG
-  PRInt32 result;
-  nsresult rv = aError->GetResult(&result);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString message;
-  rv = aError->GetMessage(message);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString warnMsg;
-  warnMsg.Append("An error occured while executing an async statement: ");
-  warnMsg.Append(result);
-  warnMsg.Append(" ");
-  warnMsg.Append(message);
-  NS_WARNING(warnMsg.get());
-#endif
 
   return NS_OK;
 }

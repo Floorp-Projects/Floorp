@@ -115,8 +115,18 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
   // We always require a plaintext version
+  
+  // note that we assign text/unicode as mime type, but in fact nsHTMLCopyEncoder
+  // ignore it and use text/html or text/plain depending where the selection
+  // is. if it is a selection into input/textarea element or in a html content
+  // with pre-wrap style : text/plain. Otherwise text/html.
+  // see nsHTMLCopyEncoder::SetSelection
   mimeType.AssignLiteral(kUnicodeMime);
-  PRUint32 flags = nsIDocumentEncoder::OutputPreformatted;
+  
+  // we want preformatted for the case where the selection is inside input/textarea
+  // and we don't want pretty printing for others cases, to not have additionnal
+  // line breaks which are then converted into spaces by the htmlConverter (see bug #524975)
+  PRUint32 flags = nsIDocumentEncoder::OutputPreformatted | nsIDocumentEncoder::OutputRaw;
 
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDoc);
   NS_ASSERTION(domDoc, "Need a document");

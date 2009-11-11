@@ -149,7 +149,7 @@
       <property name="engines" readonly="true">
         <getter><![CDATA[
           if (!this._engines)
-            this._engines = this.searchService.getVisibleEngines({ });
+            this._engines = this.searchService.getVisibleEngines();
           return this._engines;
         ]]></getter>
       </property>

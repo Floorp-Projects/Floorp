@@ -280,6 +280,19 @@ public:
   }
 
   /**
+   * Return the extended state for the given accessible.
+   */
+  static PRUint32 ExtendedState(nsIAccessible *aAcc)
+  {
+    PRUint32 state = 0;
+    PRUint32 extstate = 0;
+    if (aAcc)
+      aAcc->GetState(&state, &extstate);
+
+    return extstate;
+  }
+
+  /**
    * Get the ARIA attribute characteristics for a given ARIA attribute.
    * 
    * @param aAtom  ARIA attribute

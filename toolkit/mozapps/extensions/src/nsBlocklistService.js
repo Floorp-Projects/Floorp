@@ -780,7 +780,7 @@ Blocklist.prototype = {
 
     var em = Cc["@mozilla.org/extensions/manager;1"].
              getService(Ci.nsIExtensionManager);
-    var addons = em.updateAndGetNewBlocklistedItems({});
+    var addons = em.updateAndGetNewBlocklistedItems();
 
     for (let i = 0; i < addons.length; i++) {
       let oldState = -1;
@@ -804,7 +804,7 @@ Blocklist.prototype = {
 
     var phs = Cc["@mozilla.org/plugin/host;1"].
               getService(Ci.nsIPluginHost);
-    var plugins = phs.getPluginTags({});
+    var plugins = phs.getPluginTags();
 
     for (let i = 0; i < plugins.length; i++) {
       let oldState = -1;

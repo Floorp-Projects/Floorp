@@ -179,6 +179,7 @@ var gApp  = null;
 var gPref = null;
 var gRDF  = null;
 var gOS   = null;
+var gCheckCompatibilityPref;
 var gEmSingleton          = null;
 var gBlocklist            = null;
 var gXPCOMABI             = null;
@@ -200,6 +201,8 @@ var gDefaultTheme         = "classic/1.0";
  * Valid GUIDs fit this pattern.
  */
 var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
+
+var gBranchVersion = /^([^\.]+\.[^a-z\.]+[a-z]?).*/gi;
 
 // shared code for suppressing bad cert dialogs
 XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
@@ -2243,7 +2246,7 @@ ExtensionManager.prototype = {
     case "nsPref:changed":
       if (data == PREF_EM_LOGGING_ENABLED)
         this._loggingToggled();
-      else if (data == PREF_EM_CHECK_COMPATIBILITY ||
+      else if (data == gCheckCompatibilityPref ||
                data == PREF_EM_CHECK_UPDATE_SECURITY)
         this._updateAppDisabledState();
       else if ((data == PREF_MATCH_OS_LOCALE) || (data == PREF_SELECTED_LOCALE))
@@ -2282,7 +2285,7 @@ ExtensionManager.prototype = {
    * we must app-enable or app-disable the item based on the new settings.
    */
   _updateAppDisabledState: function EM__updateAppDisabledState() {
-    gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
+    gCheckCompatibility = getPref("getBoolPref", gCheckCompatibilityPref, true);
     gCheckUpdateSecurity = getPref("getBoolPref", PREF_EM_CHECK_UPDATE_SECURITY, true);
     var ds = this.datasource;
 
@@ -2336,22 +2339,26 @@ ExtensionManager.prototype = {
     catch (e) {
     }
 
-    if ("nsICrashReporter" in Ci && gApp instanceof Ci.nsICrashReporter) {
-      // Annotate the crash report with the list of add-ons
-      try {
-        try {
-          gApp.annotateCrashReport("Add-ons", gPref.getCharPref(PREF_EM_ENABLED_ITEMS));
-        } catch (e) { }
-        gApp.annotateCrashReport("Theme", gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN));
-      }
-      catch (ex) {
-        // This will fail in unnofficial builds, ignorable error
-      }
-    }
+    var version = gApp.version.replace(gBranchVersion, "$1");
+    gCheckCompatibilityPref = PREF_EM_CHECK_COMPATIBILITY + "." + version;
 
     gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
-    gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
+    gCheckCompatibility = getPref("getBoolPref", gCheckCompatibilityPref, true);
     gCheckUpdateSecurity = getPref("getBoolPref", PREF_EM_CHECK_UPDATE_SECURITY, true);
+
+    if ("nsICrashReporter" in Ci && gApp instanceof Ci.nsICrashReporter) {
+      // Annotate the crash report with relevant add-on information.
+      try {
+        gApp.annotateCrashReport("Add-ons", gPref.getCharPref(PREF_EM_ENABLED_ITEMS));
+      } catch (e) { }
+      try {
+        gApp.annotateCrashReport("Theme", gPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN));
+      } catch (e) { }
+      try {
+        gApp.annotateCrashReport("EMCheckCompatibility", gCheckCompatibility);
+      } catch (e) { }
+    }
+
     gPref.addObserver("extensions.", this, false);
     gPref.addObserver(PREF_MATCH_OS_LOCALE, this, false);
     gPref.addObserver(PREF_SELECTED_LOCALE, this, false);
@@ -2524,7 +2531,7 @@ ExtensionManager.prototype = {
     if (!getPref("getBoolPref", PREF_EM_UPDATE_ENABLED, true))
       return;
 
-    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
+    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY);
 
     var updater = new ExtensionItemUpdater(this);
     updater.checkForUpdates(items, items.length,
@@ -3404,7 +3411,7 @@ ExtensionManager.prototype = {
    * @returns An array of active items of the specified type.
    */
   _getActiveItems: function EM__getActiveItems(type) {
-    var allItems = this.getItemList(type, { });
+    var allItems = this.getItemList(type);
     var activeItems = [];
     var ds = this.datasource;
     for (var i = 0; i < allItems.length; ++i) {
@@ -4482,7 +4489,7 @@ ExtensionManager.prototype = {
       }
       else {
         if (opType == OP_NEEDS_UPGRADE)
-          ds.setItemProperty(id, "newVersion", null);
+          ds.setItemProperty(id, EM_R("newVersion"), null);
         this._setOp(id, OP_NEEDS_UNINSTALL);
         var type = ds.getItemProperty(id, "type");
         var restartRequired = this.installRequiresRestart(id, type);
@@ -4862,7 +4869,7 @@ ExtensionManager.prototype = {
    */
   _updateDependentItemsForID: function EM__updateDependentItemsForID(id) {
     var ds = this.datasource;
-    var dependentItems = this.getDependentItemListForID(id, true, { });
+    var dependentItems = this.getDependentItemListForID(id, true);
     for (var i = 0; i < dependentItems.length; ++i) {
       var dependentID = dependentItems[i].id;
       ds.updateProperty(dependentID, "satisfiesDependencies");
@@ -4900,7 +4907,7 @@ ExtensionManager.prototype = {
     }
 
     if (items.length == 0)
-      items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
+      items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY);
 
     var updater = new ExtensionItemUpdater(this);
     updater.checkForUpdates(items, items.length, updateCheckType, listener,
@@ -4917,7 +4924,7 @@ ExtensionManager.prototype = {
 
     var list = [];
     var ds = this.datasource;
-    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY, { });
+    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ANY);
     for (var i = 0; i < items.length; ++i) {
       var id = items[i].id;
 
@@ -4951,7 +4958,8 @@ ExtensionManager.prototype = {
       ds.updateProperty(id, "blocklistedsoft");
     }
 
-    itemCount.value = list.length;
+    if (itemCount)
+      itemCount.value = list.length;
     return list;
   },
 
@@ -5015,7 +5023,8 @@ ExtensionManager.prototype = {
     var items = this.datasource.getIncompatibleItemList(appVersion ? appVersion : undefined,
                                                         platformVersion ? platformVersion : undefined,
                                                         type, includeDisabled);
-    countRef.value = items.length;
+    if (countRef)
+      countRef.value = items.length;
     return items;
   },
 
@@ -6731,7 +6740,8 @@ ExtensionsDataSource.prototype = {
       if (type != -1 && type & desiredType)
         items.push(this.getItemForID(eID));
     }
-    countRef.value = items.length;
+    if (countRef)
+      countRef.value = items.length;
     return items;
   },
 
@@ -6770,7 +6780,8 @@ ExtensionsDataSource.prototype = {
         }
       }
     }
-    countRef.value = items.length;
+    if (countRef)
+      countRef.value = items.length;
     return items;
   },
 

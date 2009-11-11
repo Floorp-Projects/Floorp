@@ -2466,19 +2466,19 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
         (!forceXOW || (aFilenameFlags & JSFILENAME_SYSTEM))))
         return NS_OK;
 
-    if(!wrapper)
-    {
-        SLIM_LOG_WILL_MORPH(aJSContext, aObject);
-        if(!MorphSlimWrapper(aJSContext, aObject))
-            return NS_ERROR_FAILURE;
-
-        wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(aObject));
-    }
-
     JSObject* wrappedObj = nsnull;
 
     if(aFilenameFlags & JSFILENAME_PROTECTED)
     {
+        if(!wrapper)
+        {
+            SLIM_LOG_WILL_MORPH(aJSContext, aObject);
+            if(!MorphSlimWrapper(aJSContext, aObject))
+                return NS_ERROR_FAILURE;
+
+            wrapper = static_cast<XPCWrappedNative*>(xpc_GetJSPrivate(aObject));
+        }
+
         wrappedObj = XPCNativeWrapper::GetNewOrUsed(aJSContext, wrapper,
                                                     aPrincipal);
     }
@@ -2504,7 +2504,7 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
         return NS_ERROR_FAILURE;
 
     *_retval = OBJECT_TO_JSVAL(wrappedObj);
-    if(wrapper->NeedsChromeWrapper() &&
+    if(wrapper && wrapper->NeedsChromeWrapper() &&
        !XPC_SOW_WrapObject(aJSContext, aScope, *_retval, _retval))
         return NS_ERROR_FAILURE;
     return NS_OK;

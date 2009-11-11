@@ -61,48 +61,48 @@ var domFileBinary = file.getAsBinary();
 var domFileBinary2 = utf16File.getAsBinary();
 var domFileBinary3 = utf32File.getAsBinary();
 
-var request1 = new FileRequest();
+var request1 = new FileReader();
 request1.onload = handleTextISO1;
 request1.readAsText(file, "iso-8859-1");
 
-var request2 = new FileRequest();
+var request2 = new FileReader();
 request2.onload = handleTextUTF8;
 request2.readAsText(file);
 
-var request3 = new FileRequest();
+var request3 = new FileReader();
 request3.onload = handleTextUTF8;
 request3.readAsText(file, "");
 
-var request4 = new FileRequest();
+var request4 = new FileReader();
 request4.onload = handleTextUTF8;
 request4.readAsText(file, "UTF-8");
 
 //Test a variety of encodings, and make sure they work properly
 //Also, test a variety of the same calls with different numbers of arguments
-var request5 = new FileRequest();
+var request5 = new FileReader();
 request5.onload = handleTextUTF16;
 request5.readAsText(utf16File, "UTF-16");
 
-var request6 = new FileRequest();
+var request6 = new FileReader();
 request6.onload = handleTextUTF32;
 request6.readAsText(utf32File, "UTF-32");
 
 //Test binary data accessor
-var request7 = new FileRequest();
+var request7 = new FileReader();
 request7.onload = handleDataBinary;
 request7.readAsBinaryString(file);
 
-var request71 = new FileRequest();
+var request71 = new FileReader();
 request71.onload = handleDataBinary16;
 request71.readAsBinaryString(utf16File);
 
-var request72 = new FileRequest();
+var request72 = new FileReader();
 request72.onload = handleDataBinary32;
 request72.readAsBinaryString(utf32File);
 
 //Test data URI encoding on differing file sizes
 //Testing data URI when length % 3 == 0
-var request8 = new FileRequest();
+var request8 = new FileReader();
 request8.onload = handleDataURI;
 request8.readAsDataURL(file);
 
@@ -110,7 +110,7 @@ request8.readAsDataURL(file);
 var file2 = createFileWithData(testData2, "02");
 var domFileData1 = file2.getAsDataURL();
 
-var request9 = new FileRequest();
+var request9 = new FileReader();
 request9.onload = handleDataURI1;
 request9.readAsDataURL(file2);
 
@@ -118,13 +118,13 @@ request9.readAsDataURL(file2);
 var file3 = createFileWithData(testData3, "03");
 var domFileData2 = file3.getAsDataURL();
 
-var request10 = new FileRequest();
+var request10 = new FileReader();
 request10.onload = handleDataURI2;
 request10.readAsDataURL(file3);
 
 //Test asynchronous property of file access
 var globalVar = 0;
-var request105 = new FileRequest();
+var request105 = new FileReader();
 request105.onload = incGlobalVar;
 request105.readAsText(file, "");
 is(globalVar, 0, "testing to make sure getAsText doesn't block subsequent execution");
@@ -142,19 +142,19 @@ var fileList = document.getElementById('fileList');
 fileList.value = testFile4.path;
 var file4 = fileList.files[0];
 
-var request11 = new FileRequest();
+var request11 = new FileReader();
 request11.onabort = handleCancel;
 request11.readAsText(file4);
 request11.abort();
 
 //Test error handling - Note: currently throws exceptions
 /*testFile4.permissions = 0;
-var request12 = new FileRequest();
+var request12 = new FileReader();
 request12.onerror = handleSecurityError;
 request12.readAsText(file4, "");
 
 testFile4.remove(false);
-var request13 = new FileRequest();
+var request13 = new FileReader();
 request13.onerror = handleNotFoundError;
 request13.readAsText(file4, "");*/
 
@@ -164,7 +164,7 @@ function incGlobalVar(fileAsText) {
 }
 
 function handleCancel(event) {
-  var fileAsText = event.target.response;
+  var fileAsText = event.target.result;
   var error = event.target.error;
   is(error.code, FileError.ABORT_ERR, "error code set to CANCELED for canceled reads");
   is(fileAsText, null, "file data should be null on canceled reads");
@@ -172,7 +172,7 @@ function handleCancel(event) {
 }
 
 function handleTextISO1(event) {
-  var fileAsText = event.target.response;
+  var fileAsText = event.target.result;
   var error = event.target.error;
   is(error, null, "error code set to null for successful data accesses");
   is(testData.length, fileAsText.length, "iso-1 async length should match testdata");
@@ -181,7 +181,7 @@ function handleTextISO1(event) {
 }
 
 function handleTextUTF8(event) {
-  var fileAsUTF8 = event.target.response;
+  var fileAsUTF8 = event.target.result;
   var error = event.target.error;
   is(error, null, "error code set to null for successful data accesses");
   is(testData.length, fileAsUTF8.length, "UTF-8 async length should match testdata");
@@ -190,7 +190,7 @@ function handleTextUTF8(event) {
 }
 
 function handleTextUTF16(event) {
-  var fileAsUTF16 = event.target.response;
+  var fileAsUTF16 = event.target.result;
   var error = event.target.error;
   is(error, null, "error code set to SUCCESS for successful data accesses");
   is(testData.length, fileAsUTF16.length, "UTF-16 async length should match testdata");
@@ -199,7 +199,7 @@ function handleTextUTF16(event) {
 }
 
 function handleTextUTF32(event) {
-  var fileAsUTF32 = event.target.response;
+  var fileAsUTF32 = event.target.result;
   var error = event.target.error;
   is(error, null, "error code set to SUCCESS for successful data accesses");
   is(testData.length, fileAsUTF32.length, "UTF-32 async length should match testdata");
@@ -209,7 +209,7 @@ function handleTextUTF32(event) {
 
 //Tests dataURI.length % 3 == 0
 function handleDataURI(event) {
-  var fileAsDataURI = event.target.response;
+  var fileAsDataURI = event.target.result;
   is(domFileData.length, fileAsDataURI.length, "data URI async length should match dom file data");
   is(domFileData, fileAsDataURI, "data URI async string result should match dom file data");
   testHasRun();
@@ -217,7 +217,7 @@ function handleDataURI(event) {
 
 //Tests dataURI.length % 3 == 1
 function handleDataURI1(event) {
-  var fileAsDataURI = event.target.response;
+  var fileAsDataURI = event.target.result;
   is(domFileData1.length, fileAsDataURI.length, "data URI async length should match dom file data1");
   is(domFileData1, fileAsDataURI, "data URI async string result should match dom file data1");
   testHasRun();
@@ -225,35 +225,35 @@ function handleDataURI1(event) {
 
 //Tests dataURI.length % 3 == 2
 function handleDataURI2(event) {
-  var fileAsDataURI = event.target.response;
+  var fileAsDataURI = event.target.result;
   is(domFileData2.length, fileAsDataURI.length, "data URI async length should match dom file data2");
   is(domFileData2, fileAsDataURI, "data URI async string result should match dom file data2");
   testHasRun();
 }
 
 function handleDataBinary(event) {
-  var fileAsBinary = event.target.response;
+  var fileAsBinary = event.target.result;
   is(domFileBinary.length, fileAsBinary.length, "binary data async length should match dom file binary");
   is(domFileBinary, fileAsBinary, "binary data async string result should match dom file binary");
   testHasRun();
 }
 
 function handleDataBinary16(event) {
-  var fileAsBinary = event.target.response;
+  var fileAsBinary = event.target.result;
   is(domFileBinary2.length, fileAsBinary.length, "binary data async length should match dom file binary16");
   is(domFileBinary2, fileAsBinary, "binary data async string result should match dom file binary16");
   testHasRun();
 }
 
 function handleDataBinary32(event) {
-  var fileAsBinary = event.target.response;
+  var fileAsBinary = event.target.result;
   is(domFileBinary3.length, fileAsBinary.length, "binary data async length should match dom file binary32");
   is(domFileBinary3, fileAsBinary, "binary data async string result should match dom file binary32");
   testHasRun();
 }
 
 function handleSecurityError(event) {
-  var fileAsText = event.target.response;
+  var fileAsText = event.target.result;
   var error = event.target.error;
   is(error.code, FileError.SECURITY_ERR, "code for file security error should have value 18");
   is(fileAsText, null, "file content should be null when error is encountered");
@@ -261,7 +261,7 @@ function handleSecurityError(event) {
 }
 
 function handleNotFoundError(event) {
-  var fileAsText = event.target.response;
+  var fileAsText = event.target.result;
   var error = event.target.error;
   is(error.code, FileError.NOT_FOUND_ERR, "code for file not found error should have value 8");
   is(fileAsText, null, "file content should be null when error is encountered");

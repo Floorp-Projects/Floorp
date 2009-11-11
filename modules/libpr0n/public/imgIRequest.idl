@@ -52,7 +52,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(a297d3fa-5e0c-4e59-9f30-a01c9d4f3f8b)]
+[scriptable, uuid(c0c9f606-19d6-4ed1-8486-6cae2fe0a6a4)]
 interface imgIRequest : nsIRequest
 {
   /**

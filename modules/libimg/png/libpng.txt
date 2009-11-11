@@ -1,17 +1,19 @@
-  libpng.txt - A description on how to use and modify libpng
-  
- libpng version 1.2.35 - February 14, 2009
+libpng.txt - A description on how to use and modify libpng
+
+ libpng version 1.2.40 - September 10, 2009
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2009 Glenn Randers-Pehrson
- For conditions of distribution and use, see copyright
- notice in png.h.
-  
+
+ This document is released under the libpng license.
+ For conditions of distribution and use, see the disclaimer
+ and license in png.h
+
  Based on:
-  
- libpng versions 0.97, January 1998, through 1.2.35 - February 14, 2009
+
+ libpng versions 0.97, January 1998, through 1.2.40 - September 10, 2009
  Updated and distributed by Glenn Randers-Pehrson
- Copyright (c) 1998-2008 Glenn Randers-Pehrson
+ Copyright (c) 1998-2009 Glenn Randers-Pehrson
 
  libpng 1.0 beta 6  version 0.96 May 28, 1997
  Updated and distributed by Andreas Dilger
@@ -141,9 +143,10 @@ so if it doesn't work, you don't have much to undo.  Of course, you
 will also want to insure that you are, in fact, dealing with a PNG
 file.  Libpng provides a simple check to see if a file is a PNG file.
 To use it, pass in the first 1 to 8 bytes of the file to the function
-png_sig_cmp(), and it will return 0 if the bytes match the corresponding
-bytes of the PNG signature, or nonzero otherwise.  Of course, the more bytes
-you pass in, the greater the accuracy of the prediction.
+png_sig_cmp(), and it will return 0 (false) if the bytes match the
+corresponding bytes of the PNG signature, or nonzero (true) otherwise.
+Of course, the more bytes you pass in, the greater the accuracy of the
+prediction.
 
 If you are intending to keep the file pointer open for use in libpng,
 you must ensure you don't read more than 8 bytes from the beginning
@@ -320,35 +323,14 @@ To inform libpng about your function, use
 
     png_set_read_status_fn(png_ptr, read_row_callback);
 
-Width and height limits
-
-The PNG specification allows the width and height of an image to be as
-large as 2^31-1 (0x7fffffff), or about 2.147 billion rows and columns.
-Since very few applications really need to process such large images,
-we have imposed an arbitrary 1-million limit on rows and columns.
-Larger images will be rejected immediately with a png_error() call. If
-you wish to override this limit, you can use
-
-   png_set_user_limits(png_ptr, width_max, height_max);
-
-to set your own limits, or use width_max = height_max = 0x7fffffffL
-to allow all valid dimensions (libpng may reject some very large images
-anyway because of potential buffer overflow conditions).
-
-You should put this statement after you create the PNG structure and
-before calling png_read_info(), png_read_png(), or png_process_data().
-If you need to retrieve the limits that are being applied, use
-
-   width_max = png_get_user_width_max(png_ptr);
-   height_max = png_get_user_height_max(png_ptr);
-
 Unknown-chunk handling
 
 Now you get to set the way the library processes unknown chunks in the
 input PNG stream. Both known and unknown chunks will be read.  Normal
 behavior is that known chunks will be parsed into information in
-various info_ptr members while unknown chunks will be discarded. To change
-this, you can call:
+various info_ptr members while unknown chunks will be discarded. This
+behavior can be wasteful if your application will never use some known
+chunk types. To change this, you can call:
 
     png_set_keep_unknown_chunks(png_ptr, keep,
         chunk_list, num_chunks);
@@ -406,6 +388,27 @@ callback function:
          (int)sizeof(unused_chunks)/5);
     #endif
 
+User limits
+
+The PNG specification allows the width and height of an image to be as
+large as 2^31-1 (0x7fffffff), or about 2.147 billion rows and columns.
+Since very few applications really need to process such large images,
+we have imposed an arbitrary 1-million limit on rows and columns.
+Larger images will be rejected immediately with a png_error() call. If
+you wish to override this limit, you can use
+
+   png_set_user_limits(png_ptr, width_max, height_max);
+
+to set your own limits, or use width_max = height_max = 0x7fffffffL
+to allow all valid dimensions (libpng may reject some very large images
+anyway because of potential buffer overflow conditions).
+
+You should put this statement after you create the PNG structure and
+before calling png_read_info(), png_read_png(), or png_process_data().
+If you need to retrieve the limits that are being applied, use
+
+   width_max = png_get_user_width_max(png_ptr);
+   height_max = png_get_user_height_max(png_ptr);
 
 The high-level read interface
 
@@ -849,9 +852,6 @@ things.
 
 As of libpng version 1.2.9, png_set_expand_gray_1_2_4_to_8() was
 added.  It expands the sample depth without changing tRNS to alpha.
-At the same time, png_set_gray_1_2_4_to_8() was deprecated, and it
-will be removed from a future version.
-
 
 PNG can have files with 16 bits per channel.  If you only can handle
 8 bits per channel, this will strip the pixels down to 8 bit.
@@ -1703,7 +1703,7 @@ types.
        PNG_FILTER_NONE  | PNG_FILTER_VALUE_NONE |
        PNG_FILTER_SUB   | PNG_FILTER_VALUE_SUB  |
        PNG_FILTER_UP    | PNG_FILTER_VALUE_UP   |
-       PNG_FILTER_AVE   | PNG_FILTER_VALUE_AVE  |
+       PNG_FILTER_AVG   | PNG_FILTER_VALUE_AVG  |
        PNG_FILTER_PAETH | PNG_FILTER_VALUE_PAETH|
        PNG_ALL_FILTERS);
 
@@ -1793,9 +1793,13 @@ Some of the more important parts of the png_info are:
                      PNG_INTRAPIXEL_DIFFERENCING)
 
 If you call png_set_IHDR(), the call must appear before any of the
-other png_set_*() functions, which might require access to some of
+other png_set_*() functions, because they might require access to some of
 the IHDR settings.  The remaining png_set_*() functions can be called
 in any order.
+
+If you wish, you can reset the compression_type, interlace_type, or
+filter_method later by calling png_set_IHDR() again; if you do this, the
+width, height, bit_depth, and color_type must be the same in each call.
 
     png_set_PLTE(png_ptr, info_ptr, palette,
        num_palette);
@@ -1858,8 +1862,9 @@ in any order.
        trans_values);
     trans          - array of transparent entries for
                      palette (PNG_INFO_tRNS)
-    trans_values   - graylevel or color sample values of
-                     the single transparent color for
+    trans_values   - graylevel or color sample values
+                     (in order red, green, blue) of the
+                     single transparent color for
                      non-paletted images (PNG_INFO_tRNS)
     num_trans      - number of transparent entries
                      (PNG_INFO_tRNS)
@@ -2068,7 +2073,12 @@ transformations are permitted, enabled by the following masks.
     PNG_TRANSFORM_INVERT_ALPHA  Change alpha from opacity
                                 to transparency
     PNG_TRANSFORM_SWAP_ENDIAN   Byte-swap 16-bit samples
-    PNG_TRANSFORM_STRIP_FILLER  Strip out filler bytes.
+    PNG_TRANSFORM_STRIP_FILLER        Strip out filler
+                                      bytes (deprecated).
+    PNG_TRANSFORM_STRIP_FILLER_BEFORE Strip out leading
+                                      filler bytes
+    PNG_TRANSFORM_STRIP_FILLER_AFTER  Strip out trailing
+                                      filler bytes
 
 If you have valid image data in the info structure (you can use
 png_set_rows() to put image data in the info structure), simply do this:
@@ -2475,9 +2485,15 @@ The replacement I/O functions must have prototypes as follows:
         png_bytep data, png_size_t length);
     void user_flush_data(png_structp png_ptr);
 
+The user_read_data() function is responsible for detecting and
+handling end-of-data errors.
+
 Supplying NULL for the read, write, or flush functions sets them back
-to using the default C stream functions.  It is an error to read from
-a write stream, and vice versa.
+to using the default C stream functions, which expect the io_ptr to
+point to a standard *FILE structure.  It is probably a mistake
+to use NULL for one of write_data_fn and output_flush_fn but not both
+of them, unless you have built libpng with PNG_NO_WRITE_FLUSH defined.
+It is an error to read from a write stream, and vice versa.
 
 Error handling in libpng is done through png_error() and png_warning().
 Errors handled through png_error() are fatal, meaning that png_error()
@@ -2582,11 +2598,12 @@ you may also have to change the memory allocators (png_malloc, etc.).
 
 Configuring for compiler xxx:
 
-All includes for libpng are in pngconf.h.  If you need to add/change/delete
-an include, this is the place to do it.  The includes that are not
-needed outside libpng are protected by the PNG_INTERNAL definition,
-which is only defined for those routines inside libpng itself.  The
-files in libpng proper only include png.h, which includes pngconf.h.
+All includes for libpng are in pngconf.h.  If you need to add, change
+or delete an include, this is the place to do it.
+The includes that are not needed outside libpng are protected by the
+PNG_INTERNAL definition, which is only defined for those routines inside
+libpng itself.  The files in libpng proper only include png.h, which
+includes pngconf.h.
 
 Configuring zlib:
 
@@ -2655,7 +2672,7 @@ currently does not allocate the filter buffers until png_write_row()
 is called for the first time.)
 
     filters = PNG_FILTER_NONE | PNG_FILTER_SUB
-              PNG_FILTER_UP | PNG_FILTER_AVE |
+              PNG_FILTER_UP | PNG_FILTER_AVG |
               PNG_FILTER_PAETH | PNG_ALL_FILTERS;
 
     png_set_filter(png_ptr, PNG_FILTER_TYPE_BASE,
@@ -2777,7 +2794,7 @@ When PNG_DEBUG = 1, the macros are defined, but only png_debug statements
 having level = 0 will be printed.  There aren't any such statements in
 this version of libpng, but if you insert some they will be printed.
 
-VII.  MNG support
+VI.  MNG support
 
 The MNG specification (available at http://www.libpng.org/pub/mng) allows
 certain extensions to PNG for PNG images that are embedded in MNG datastreams.
@@ -2802,7 +2819,7 @@ or any other MNG chunks; your application must provide its own support for
 them.  You may wish to consider using libmng (available at
 http://www.libmng.com) instead.
 
-VIII.  Changes to Libpng from version 0.88
+VII.  Changes to Libpng from version 0.88
 
 It should be noted that versions of libpng later than 0.96 are not
 distributed by the original libpng author, Guy Schalnat, nor by
@@ -2851,15 +2868,202 @@ application:
 
    png_uint_32 application_vn = PNG_LIBPNG_VER;
 
-IX. Y2K Compliance in libpng
+VIII.  Changes to Libpng from version 1.0.x to 1.2.x
 
-February 14, 2009
+Support for user memory management was enabled by default.  To
+accomplish this, the functions png_create_read_struct_2(),
+png_create_write_struct_2(), png_set_mem_fn(), png_get_mem_ptr(),
+png_malloc_default(), and png_free_default() were added.
+
+Support for certain MNG features was enabled.
+
+Support for numbered error messages was added.  However, we never got
+around to actually numbering the error messages.  The function
+png_set_strip_error_numbers() was added (Note: the prototype for this
+function was inadvertently removed from png.h in PNG_NO_ASSEMBLER_CODE
+builds of libpng-1.2.15.  It was restored in libpng-1.2.36).
+
+The png_malloc_warn() function was added at libpng-1.2.3.  This issues
+a png_warning and returns NULL instead of aborting when it fails to
+acquire the requested memory allocation.
+
+Support for setting user limits on image width and height was enabled
+by default.  The functions png_set_user_limits(), png_get_user_width_max(),
+and png_get_user_height_max() were added at libpng-1.2.6.
+
+The png_set_add_alpha() function was added at libpng-1.2.7.
+
+The function png_set_expand_gray_1_2_4_to_8() was added at libpng-1.2.9.
+Unlike png_set_gray_1_2_4_to_8(), the new function does not expand the
+tRNS chunk to alpha. The png_set_gray_1_2_4_to_8() function is
+deprecated.
+
+A number of macro definitions in support of runtime selection of
+assembler code features (especially Intel MMX code support) were
+added at libpng-1.2.0:
+
+    PNG_ASM_FLAG_MMX_SUPPORT_COMPILED
+    PNG_ASM_FLAG_MMX_SUPPORT_IN_CPU
+    PNG_ASM_FLAG_MMX_READ_COMBINE_ROW
+    PNG_ASM_FLAG_MMX_READ_INTERLACE
+    PNG_ASM_FLAG_MMX_READ_FILTER_SUB
+    PNG_ASM_FLAG_MMX_READ_FILTER_UP
+    PNG_ASM_FLAG_MMX_READ_FILTER_AVG
+    PNG_ASM_FLAG_MMX_READ_FILTER_PAETH
+    PNG_ASM_FLAGS_INITIALIZED
+    PNG_MMX_READ_FLAGS
+    PNG_MMX_FLAGS
+    PNG_MMX_WRITE_FLAGS
+    PNG_MMX_FLAGS
+
+We added the following functions in support of runtime
+selection of assembler code features:
+
+    png_get_mmx_flagmask()
+    png_set_mmx_thresholds()
+    png_get_asm_flags()
+    png_get_mmx_bitdepth_threshold()
+    png_get_mmx_rowbytes_threshold()
+    png_set_asm_flags()
+
+We replaced all of these functions with simple stubs in libpng-1.2.20,
+when the Intel assembler code was removed due to a licensing issue.
+
+IX.  (Omitted)
+
+X. Detecting libpng
+
+The png_get_io_ptr() function has been present since libpng-0.88, has never
+changed, and is unaffected by conditional compilation macros.  It is the
+best choice for use in configure scripts for detecting the presence of any
+libpng version since 0.88.  In an autoconf "configure.in" you could use
+
+    AC_CHECK_LIB(png, png_get_io_ptr, ...
+
+XI. Source code repository
+
+Since about February 2009, version 1.2.34, libpng has been under "git" source
+control.  The git repository was built from old libpng-x.y.z.tar.gz files
+going back to version 0.70.  You can access the git repository (read only)
+at
+
+    git://libpng.git.sourceforge.net/gitroot/libpng
+
+or you can browse it via "gitweb" at
+
+    http://libpng.git.sourceforge.net/git/gitweb.cgi?p=libpng
+
+Patches can be sent to glennrp at users.sourceforge.net or to
+png-mng-implement at lists.sourceforge.net or you can upload them to
+the libpng bug tracker at
+
+    http://libpng.sourceforge.net
+
+XII. Coding style
+
+Our coding style is similar to the "Allman" style, with curly
+braces on separate lines:
+
+    if (condition)
+    {
+       action;
+    }
+
+    else if (another condition)
+    {
+       another action;
+    }
+
+The braces can be omitted from simple one-line actions:
+
+    if (condition)
+       return (0);
+
+We use 3-space indentation, except for continued statements which
+are usually indented the same as the first line of the statement
+plus four more spaces.
+
+Comments appear with the leading "/*" at the same indentation as
+the statement that follows the comment:
+
+    /* Single-line comment */
+    statement;
+
+    /* Multiple-line
+     * comment
+     */
+    statement;
+
+Very short comments can be placed at the end of the statement
+to which they pertain:
+
+    statement;    /* comment */
+
+We don't use C++ style ("//") comments. We have, however,
+used them in the past in some now-abandoned MMX assembler
+code.
+
+Functions and their curly braces are not indented, and
+exported functions are marked with PNGAPI:
+
+ /* This is a public function that is visible to
+  * application programers. It does thus-and-so.
+  */
+ void PNGAPI
+ png_exported_function(png_ptr, png_info, foo)
+ {
+    body;
+ }
+
+The prototypes for all exported functions appear in png.h,
+above the comment that says
+
+    /* Maintainer: Put new public prototypes here ... */
+
+We mark all non-exported functions with "/* PRIVATE */"":
+
+ void /* PRIVATE */
+ png_non_exported_function(png_ptr, png_info, foo)
+ {
+    body;
+ }
+
+The prototypes for non-exported functions (except for those in
+pngtest) appear in
+the PNG_INTERNAL section of png.h
+above the comment that says
+
+  /* Maintainer: Put new private prototypes here ^ and in libpngpf.3 */
+
+The names of all exported functions and variables begin
+with  "png_", and all publicly visible C preprocessor
+macros begin with "PNG_".
+
+We put a space after each comma and after each semicolon
+in "for" statments, and we put spaces before and after each
+C binary operator and after "for" or "while".  We don't
+put a space between a typecast and the expression being
+cast, nor do we put one between a function name and the
+left parenthesis that follows it:
+
+    for (i = 2; i > 0; --i)
+       x[i] = a(x) + (int)b;
+
+We prefer #ifdef and #ifndef to #if defined() and if !defined()
+when there is only one macro being tested.
+
+Other rules can be inferred by inspecting the libpng
+source.
+
+XIII. Y2K Compliance in libpng
+
+September 10, 2009
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.2.35 are Y2K compliant.  It is my belief that earlier
+upward through 1.2.40 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has three year fields.  One is a 2-byte unsigned integer that

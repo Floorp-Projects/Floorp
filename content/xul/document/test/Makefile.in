@@ -56,5 +56,13 @@ _TEST_FILES	= \
 		test_bug468176.xul \
 		$(NULL)
 
+_CHROME_FILES = \
+		test_bug497875.xul \
+		     bug497875-iframe.xul \
+		$(NULL)
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

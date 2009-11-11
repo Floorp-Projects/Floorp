@@ -527,22 +527,22 @@ class nsGUIEvent : public nsEvent
 protected:
   nsGUIEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w, PRUint8 structType)
     : nsEvent(isTrusted, msg, structType),
-      widget(w), nativeMsg(nsnull)
+      widget(w), pluginEvent(nsnull)
   {
   }
 
 public:
   nsGUIEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsEvent(isTrusted, msg, NS_GUI_EVENT),
-      widget(w), nativeMsg(nsnull)
+      widget(w), pluginEvent(nsnull)
   {
   }
 
   /// Originator of the event
   nsCOMPtr<nsIWidget> widget;
 
-  /// Internal platform specific message.
-  void* nativeMsg;
+  /// Event for NPAPI plugin
+  void* pluginEvent;
 };
 
 /**

@@ -43,7 +43,7 @@ if (!pwmgr)
 
 // Start with a clean slate
 pwmgr.removeAllLogins();
-var hosts = pwmgr.getAllDisabledHosts({});
+var hosts = pwmgr.getAllDisabledHosts();
 hosts.forEach(function(h) pwmgr.setLoginSavingEnabled(h, true));
 
 

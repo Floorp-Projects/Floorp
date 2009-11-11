@@ -1182,7 +1182,7 @@ Fault(const char *msg, PtrInfo *pi)
 static inline bool
 CheckMainThreadIfFast()
 {
-#ifdef NS_TLS
+#if defined(XP_WIN) || defined(NS_TLS)
     return NS_IsMainThread();
 #else
     return true;
