@@ -1,4 +1,4 @@
-<html><head>
+<html class="reftest-wait"><head>
 <title>Bug 375716 - Incremental reflow bug with direction: rtl and bidi-override</title>
 <style>
 
@@ -11,9 +11,10 @@ width:200px;
 function boom() {
   var div = document.getElementById('div');
   div.removeAttribute('style')
+  document.documentElement.removeAttribute("class");
 }
 </script>
-</head><body onload="setTimeout(boom,10)">
+</head><body onload="boom()">
 <div id="div" style="font-size:120%">
 <i style="direction: rtl;">
 text text text text 
