@@ -4355,8 +4355,8 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, bool added,
          * to /dev/null.
          *
          * But we can't short-circuit if there's a scripted getter or setter
-         * since we might need to throw. In that case, we let SPROP_SET
-         * decide whether to throw an exception. See bug 478047.
+         * since we might need to throw. In that case, JSScopeProperty::set
+         * decides whether to throw an exception. See bug 478047.
          */
         if (!(sprop->attrs & JSPROP_GETTER) && SPROP_HAS_STUB_SETTER(sprop)) {
             JS_ASSERT(!(sprop->attrs & JSPROP_SETTER));
@@ -6084,17 +6084,19 @@ js_IsCallable(JSObject *obj, JSContext *cx)
     return callable;
 }
 
-void
+JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                         JSMSG_GETTER_ONLY, NULL);
+    return JS_ReportErrorFlagsAndNumber(cx,
+                                        JSREPORT_WARNING | JSREPORT_STRICT,
+                                        js_GetErrorMessage, NULL,
+                                        JSMSG_GETTER_ONLY);
 }
 
 JS_FRIEND_API(JSBool)
 js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    js_ReportGetterOnlyAssignment(cx);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_GETTER_ONLY);
     return JS_FALSE;
 }
 
