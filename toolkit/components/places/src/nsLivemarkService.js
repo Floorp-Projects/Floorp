@@ -244,7 +244,12 @@ LivemarkService.prototype = {
     this._updateTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let self = this;
     this._updateTimer.initWithCallback({
-      notify: function() self._checkAllLivemarks
+      notify: function LS_T_notify() {
+        self._checkAllLivemarks();
+      },
+      QueryInterface: XPCOMUtils.generateQI([
+        Ci.nsITimerCallback
+      ]),
     }, aTime, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
