@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Tim Rowley <tor@cs.brown.edu>
+ *                 Glenn Randers-Pehrson <glennrp+bmo at gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,6 +52,7 @@
 #define PNG_NO_READ_PACK
 #define PNG_NO_READ_PACKSWAP
 #define PNG_NO_READ_FILLER
+#define PNG_NO_READ_SWAP
 #define PNG_NO_READ_SWAP_ALPHA
 #define PNG_NO_READ_INVERT_ALPHA
 #define PNG_NO_READ_RGB_TO_GRAY
@@ -82,6 +84,7 @@
 #define PNG_NO_WRITE_PACK
 #define PNG_NO_WRITE_PACKSWAP
 #define PNG_NO_WRITE_FILLER
+#define PNG_NO_WRITE_SWAP
 #define PNG_NO_WRITE_SWAP_ALPHA
 #define PNG_NO_WRITE_INVERT_ALPHA
 #define PNG_NO_WRITE_RGB_TO_GRAY
@@ -114,7 +117,6 @@
 #define PNG_NO_FIXED_POINT_SUPPORTED
 #define PNG_NO_MNG_FEATURES
 #define PNG_NO_USER_TRANSFORM_PTR
-#define PNG_NO_HANDLE_AS_UNKNOWN
 #define PNG_NO_CONSOLE_IO
 #define PNG_NO_ZALLOC_ZERO
 #define PNG_NO_ERROR_NUMBERS
@@ -411,7 +413,7 @@
 #define png_set_tRNS                    MOZ_PNG_set_tRNS
 #define png_set_tRNS_to_alpha           MOZ_PNG_set_tRNS_to_alpha
 #define png_set_text                    MOZ_PNG_set_text
-#define png_set_text_2                  MOZ_PNG_set_text-2
+#define png_set_text_2                  MOZ_PNG_set_text_2
 #define png_set_unknown_chunk_location  MOZ_PNG_set_unknown_chunk_loc
 #define png_set_unknown_chunks          MOZ_PNG_set_unknown_chunks
 #define png_set_user_transform_info     MOZ_PNG_set_user_transform_info
