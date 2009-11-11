@@ -246,13 +246,17 @@ TabChild::RecvcreateWidget(const MagicWindowHandle& parentWidget)
     gtk_widget_show(win);
 #elif defined(XP_WIN)
     HWND win = parentWidget;
+#elif defined(XP_MACOSX)
+#  warning IMPLEMENT ME
 #else
 #error You lose!
 #endif
 
+#if !defined(XP_MACOSX)
     baseWindow->InitWindow(win, 0, 0, 0, 0, 0);
     baseWindow->Create();
     baseWindow->SetVisibility(PR_TRUE);
+#endif
 
     return true;
 }

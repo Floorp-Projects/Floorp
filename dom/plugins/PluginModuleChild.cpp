@@ -164,6 +164,9 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     mInitializeFunc =
         (NP_PLUGININIT)PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
     NS_ENSURE_TRUE(mInitializeFunc, false);
+#elif defined(OS_MACOSX)
+#  warning IMPLEMENT ME
+
 #else
 
 #  error Please copy the initialization code from nsNPAPIPlugin.cpp
@@ -1252,6 +1255,10 @@ PluginModuleChild::AnswerNP_Initialize(NPError* _retval)
 
     *_retval = mInitializeFunc(&sBrowserFuncs);
     return true;
+#elif defined(OS_MACOSX)
+#  warning IMPLEMENT ME
+    return false;
+
 #else
 #  error Please implement me for your platform
 #endif

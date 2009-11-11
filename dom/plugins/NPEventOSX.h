@@ -41,13 +41,24 @@
 
 
 #include "npapi.h"
+#include "IPC/IPCMessageUtils.h"
 
 #warning This is only a stub implementation IMPLEMENT ME
 
+namespace mozilla {
+namespace plugins {
+struct NPRemoteEvent {
+    NPEvent event;
+};
+}
+}
+
+namespace IPC {
+
 template <>
-struct ParamTraits<NPEvent>
+struct ParamTraits<mozilla::plugins::NPRemoteEvent>
 {
-    typedef NPEvent paramType;
+    typedef mozilla::plugins::NPRemoteEvent paramType;
 
     static void Write(Message* aMsg, const paramType& aParam)
     {
@@ -63,5 +74,6 @@ struct ParamTraits<NPEvent>
     }
 };
 
+} // namespace IPC
 
 #endif // ifndef mozilla_dom_plugins_NPEventOSX_h

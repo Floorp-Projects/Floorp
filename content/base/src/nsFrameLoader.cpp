@@ -679,6 +679,8 @@ nsFrameLoader::ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view)
   gtk_widget_show(mRemoteSocket);
   GdkNativeWindow id = gtk_socket_get_id(GTK_SOCKET(mRemoteSocket));
   mChildProcess->SendcreateWidget(id);
+#elif defined(XP_MACOSX)
+#  warning IMPLEMENT ME
 
 #else
 #error TODO for this platform
