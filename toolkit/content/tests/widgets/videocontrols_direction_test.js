@@ -23,7 +23,9 @@ RemoteCanvas.prototype.load = function(callback) {
     m.addEventListener("suspend", function(aEvent) {
       if (aEvent.loaded == aEvent.total) {
         m.removeEventListener("suspend", arguments.callee, false);
-        me.remotePageLoaded(callback);
+        setTimeout(function() {
+          me.remotePageLoaded(callback);
+        }, 0);
       }
     }, false);
     m.src = m.getAttribute("source");
