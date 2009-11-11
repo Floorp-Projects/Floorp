@@ -156,7 +156,11 @@
           var text = treeView.getCellText(r, c);
           switch (c.element.getAttribute("anonid")) {
             case "title":
-              is(text, node.title, "Title is correct");
+              // The title can differ, we did not set any title so we would
+              // expect null, but in such a case the view will generate a title
+              // through PlacesUIUtils.getBestTitle.
+              if (node.title)
+                is(text, node.title, "Title is correct");
               break;
             case "url":
               is(text, node.uri, "Uri is correct");
