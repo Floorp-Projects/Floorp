@@ -219,7 +219,7 @@ struct ParamTraits<unsigned long> {
   }
 };
 
-#if !(defined(CHROMIUM_MOZILLA_BUILD) && defined(OS_LINUX) && defined(ARCH_CPU_64_BITS))
+#if !(defined(OS_MACOSX) || (defined(CHROMIUM_MOZILLA_BUILD) && defined(OS_LINUX) && defined(ARCH_CPU_64_BITS)))
 // There size_t is a synonym for |unsigned long| ...
 template <>
 struct ParamTraits<size_t> {
@@ -235,7 +235,7 @@ struct ParamTraits<size_t> {
   }
 };
 
-#else
+#elif !defined(OS_MACOSX)
 // ... so we need to define traits for |unsigned int|.
 // XXX duplicating OS_MACOSX version below so as not to conflict
 template <>
