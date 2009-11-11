@@ -1253,13 +1253,20 @@ namespace nanojit
 
     LInsp LInsHashSet::findImmf(double a, uint32_t &k)
     {
+        // We must pun 'a' as a uint64_t otherwise 0 and -0 will be treated as
+        // equal, which breaks things (see bug 527288).
+        union {
+            double d;
+            uint64_t u64;
+        } u;
+        u.d = a;
         LInsHashKind kind = LInsImmf;
         const uint32_t bitmask = (m_cap[kind] - 1) & ~0x1;
         uint32_t hash = hashImmf(a) & bitmask;
         uint32_t n = 7 << 1;
         LInsp ins;
         while ((ins = m_list[kind][hash]) != NULL &&
-            (ins->imm64f() != a))
+            (ins->imm64() != u.u64))
         {
             NanoAssert(ins->isconstf());
             hash = (hash + (n += 2)) & bitmask;        // quadratic probe
