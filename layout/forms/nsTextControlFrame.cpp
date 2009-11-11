@@ -2680,6 +2680,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
         flags = savedFlags;
         flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
         flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
+        flags |= nsIPlaintextEditor::eEditorUseAsyncUpdatesMask;
         editor->SetFlags(flags);
 
         // Also don't enforce max-length here
