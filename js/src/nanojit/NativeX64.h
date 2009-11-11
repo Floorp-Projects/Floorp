@@ -60,6 +60,7 @@ namespace nanojit
 {
 #define NJ_MAX_STACK_ENTRY              256
 #define NJ_ALIGN_STACK                  16
+#define NJ_JTBL_SUPPORTED               1
 
     enum Register {
         RAX = 0, // 1st int return, # of sse varargs
@@ -229,6 +230,7 @@ namespace nanojit
         X64_jneg8   = 0x0001000000000000LL, // xor with this mask to negate the condition
         X64_leaqrm  = 0x00000000808D4807LL, // 64bit load effective addr reg <- disp32+base
         X64_learm   = 0x00000000808D4007LL, // 32bit load effective addr reg <- disp32+base
+        X64_learip  = 0x00000000058D4807LL, // 64bit RIP-relative lea. reg <- disp32+rip (modrm = 00rrr101 = 05)
         X64_movlr   = 0xC08B400000000003LL, // 32bit mov r <- b
         X64_movlmr  = 0x0000000080894007LL, // 32bit store r -> [b+d32]
         X64_movlrm  = 0x00000000808B4007LL, // 32bit load r <- [b+d32]
@@ -299,6 +301,8 @@ namespace nanojit
         X64_xorps   = 0xC0570F4000000004LL, // 128bit xor xmm (four packed singles), one byte shorter
         X64_xorpsm  = 0x05570F4000000004LL, // 128bit xor xmm, [rip+disp32]
         X64_xorpsa  = 0x2504570F40000005LL, // 128bit xor xmm, [disp32]
+        X64_jmpx    = 0xC524ff4000000004LL, // jmp [d32+x*8]
+        X64_jmpxb   = 0xC024ff4000000004LL, // jmp [b+x*8]
 
         X86_and8r   = 0xC022000000000002LL, // and rl,rh
         X86_sete    = 0xC0940F0000000003LL, // no-rex version of X64_sete
@@ -347,6 +351,8 @@ namespace nanojit
         void emit8(uint64_t op, int64_t val);\
         void emit32(uint64_t op, int64_t val);\
         void emitrr(uint64_t op, Register r, Register b);\
+        void emitrxb(uint64_t op, Register r, Register x, Register b);\
+        void emitxb(uint64_t op, Register x, Register b) { emitrxb(op, (Register)0, x, b); }\
         void emitrr8(uint64_t op, Register r, Register b);\
         void emitr(uint64_t op, Register b) { emitrr(op, (Register)0, b); }\
         void emitr8(uint64_t op, Register b) { emitrr8(op, (Register)0, b); }\
@@ -356,7 +362,8 @@ namespace nanojit
         uint64_t emit_disp32(uint64_t op, int32_t d);\
         void emitprm(uint64_t op, Register r, int32_t d, Register b);\
         void emitrr_imm(uint64_t op, Register r, Register b, int32_t imm);\
-        void emitr_imm(uint64_t op, Register r, int32_t imm) { emitrr_imm(op, (Register)0, r, imm); }\
+        void emitrxb_imm(uint64_t op, Register r, Register x, Register b, int32_t imm);\
+        void emitr_imm(uint64_t op, Register b, int32_t imm) { emitrr_imm(op, (Register)0, b, imm); }\
         void emitr_imm8(uint64_t op, Register b, int32_t imm8);\
         void emit_int(Register r, int32_t v);\
         void emit_quad(Register r, uint64_t v);\

@@ -95,6 +95,7 @@ namespace nanojit
 
     #define NJ_MAX_STACK_ENTRY 256
     #define NJ_MAX_PARAMETERS 1
+    #define NJ_JTBL_SUPPORTED 1
 
         // Preserve a 16-byte stack alignment, to support the use of
         // SSE instructions like MOVDQA (if not by Tamarin itself,
@@ -591,6 +592,15 @@ namespace nanojit
         MODRMm(4, 0, r);     \
         *(--_nIns) = 0xff;   \
         asm_output("jmp   *(%s)", gpn(r)); } while (0)
+
+#define JMP_indexed(x, ss, addr) do { \
+        underrunProtect(7);  \
+        IMM32(addr); \
+        _nIns -= 3;\
+        _nIns[0]   = (NIns) 0xff; /* jmp */ \
+        _nIns[1]   = (NIns) (0<<6 | 4<<3 | 4); /* modrm: base=sib + disp32 */ \
+        _nIns[2]   = (NIns) ((ss)<<6 | (x)<<3 | 5); /* sib: x<<ss + table */ \
+        asm_output("jmp   *(%s*%d+%p)", gpn(x), 1<<(ss), (void*)(addr)); } while (0)
 
 #define JE(t)   JCC(0x04, t, "je")
 #define JNE(t)  JCC(0x05, t, "jne")

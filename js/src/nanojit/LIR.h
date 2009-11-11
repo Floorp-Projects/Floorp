@@ -262,6 +262,7 @@ namespace nanojit
         LRK_P,
         LRK_I,
         LRK_I64,
+        LRK_Jtbl,
         LRK_None    // this one is used for unused opcode numbers
     };
 
@@ -276,6 +277,7 @@ namespace nanojit
     class LInsP;
     class LInsI;
     class LInsI64;
+    class LInsJtbl;
 
     class LIns
     {
@@ -302,6 +304,7 @@ namespace nanojit
         inline LInsP*   toLInsP()   const;
         inline LInsI*   toLInsI()   const;
         inline LInsI64* toLInsI64() const;
+        inline LInsJtbl*toLInsJtbl()const;
 
         void staticSanityCheck();
 
@@ -320,6 +323,7 @@ namespace nanojit
         inline void initLInsP(int32_t arg, int32_t kind);
         inline void initLInsI(LOpcode opcode, int32_t imm32);
         inline void initLInsI64(LOpcode opcode, int64_t imm64);
+        inline void initLInsJtbl(LIns* index, uint32_t size, LIns** table);
 
         LOpcode opcode() const { return lastWord.opcode; }
 
@@ -408,6 +412,11 @@ namespace nanojit
         inline LIns*    callArgN(uint32_t n)    const;
         inline const CallInfo* callInfo()       const;
 
+        // For LIR_jtbl
+        inline uint32_t getTableSize() const;
+        inline LIns* getTarget(uint32_t index) const;
+        inline void setTarget(uint32_t index, LIns* label) const;
+
         // isLInsXYZ() returns true if the instruction has the LInsXYZ form.
         // Note that there is some overlap with other predicates, eg.
         // isStore()==isLInsSti(), isCall()==isLInsC(), but that's ok;  these
@@ -457,6 +466,10 @@ namespace nanojit
         bool isLInsI64() const {
             NanoAssert(LRK_None != repKinds[opcode()]);
             return LRK_I64 == repKinds[opcode()];
+        }
+        bool isLInsJtbl() const {
+            NanoAssert(LRK_None != repKinds[opcode()]);
+            return LRK_Jtbl == repKinds[opcode()];
         }
 
         // LIns predicates.
@@ -537,7 +550,7 @@ namespace nanojit
         }
 
         bool isBranch() const {
-            return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j);
+            return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j) || isop(LIR_jtbl);
         }
 
         bool isPtr() {
@@ -751,6 +764,23 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
+    // Used for LIR_jtbl.  oprnd_1 must be a uint32_t index in
+    // the range 0 <= index < size; no range check is performed.
+    class LInsJtbl
+    {
+    private:
+        friend class LIns;
+
+        uint32_t    size;     // number of entries in table
+        LIns**      table;    // pointer to table[size] with same lifetime as this LInsJtbl
+        LIns*       oprnd_1;  // uint32_t index expression
+
+        LIns        ins;
+
+    public:
+        LIns* getLIns() { return &ins; }
+    };
+
     // Used only as a placeholder for OPDEF macros for unused opcodes in
     // LIRopcode.tbl.
     class LInsNone
@@ -768,6 +798,7 @@ namespace nanojit
     LInsP*   LIns::toLInsP()   const { return (LInsP*  )( uintptr_t(this+1) - sizeof(LInsP  ) ); }
     LInsI*   LIns::toLInsI()   const { return (LInsI*  )( uintptr_t(this+1) - sizeof(LInsI  ) ); }
     LInsI64* LIns::toLInsI64() const { return (LInsI64*)( uintptr_t(this+1) - sizeof(LInsI64) ); }
+    LInsJtbl*LIns::toLInsJtbl()const { return (LInsJtbl*)(uintptr_t(this+1) - sizeof(LInsJtbl)); }
 
     void LIns::initLInsOp0(LOpcode opcode) {
         lastWord.clear();
@@ -844,9 +875,17 @@ namespace nanojit
         toLInsI64()->imm64_1 = int32_t(imm64 >> 32);
         NanoAssert(isLInsI64());
     }
+    void LIns::initLInsJtbl(LIns* index, uint32_t size, LIns** table) {
+        lastWord.clear();
+        lastWord.opcode = LIR_jtbl;
+        toLInsJtbl()->oprnd_1 = index;
+        toLInsJtbl()->table = table;
+        toLInsJtbl()->size = size;
+        NanoAssert(isLInsJtbl());
+    }
 
     LIns* LIns::oprnd1() const {
-        NanoAssert(isLInsOp1() || isLInsOp2() || isLInsOp3() || isLInsLd() || isLInsSti());
+        NanoAssert(isLInsOp1() || isLInsOp2() || isLInsOp3() || isLInsLd() || isLInsSti() || isLInsJtbl());
         return toLInsOp2()->oprnd_1;
     }
     LIns* LIns::oprnd2() const {
@@ -859,14 +898,27 @@ namespace nanojit
     }
 
     LIns* LIns::getTarget() const {
-        NanoAssert(isBranch());
+        NanoAssert(isBranch() && !isop(LIR_jtbl));
         return oprnd2();
     }
 
     void LIns::setTarget(LIns* label) {
         NanoAssert(label && label->isop(LIR_label));
-        NanoAssert(isBranch());
+        NanoAssert(isBranch() && !isop(LIR_jtbl));
         toLInsOp2()->oprnd_2 = label;
+    }
+
+    LIns* LIns::getTarget(uint32_t index) const {
+        NanoAssert(isop(LIR_jtbl));
+        NanoAssert(index < toLInsJtbl()->size);
+        return toLInsJtbl()->table[index];
+    }
+
+    void LIns::setTarget(uint32_t index, LIns* label) const {
+        NanoAssert(label && label->isop(LIR_label));
+        NanoAssert(isop(LIR_jtbl));
+        NanoAssert(index < toLInsJtbl()->size);
+        toLInsJtbl()->table[index] = label;
     }
 
     GuardRecord *LIns::record() const {
@@ -950,6 +1002,12 @@ namespace nanojit
         return toLInsC()->ci;
     }
 
+    uint32_t LIns::getTableSize() const
+    {
+        NanoAssert(isLInsJtbl());
+        return toLInsJtbl()->size;
+    }
+
     class LirWriter
     {
     protected:
@@ -1016,6 +1074,9 @@ namespace nanojit
         virtual LInsp insSkip(size_t size) {
             return out->insSkip(size);
         }
+        virtual LInsp insJtbl(LIns* index, uint32_t size) {
+            return out->insJtbl(index, size);
+        }
 
         // convenience functions
 
@@ -1057,7 +1118,7 @@ namespace nanojit
         };
         TreeMap<const void*, Entry*> names;
         LogControl *logc;
-        char buf[1000], *end;
+        char buf[5000], *end;
         void formatAddr(const void *p, char *buf);
     public:
         LabelMap(Allocator& allocator, LogControl* logc);
@@ -1157,6 +1218,10 @@ namespace nanojit
 
         LIns* insBranch(LOpcode v, LInsp condition, LInsp to) {
             return add_flush(out->insBranch(v, condition, to));
+        }
+
+        LIns* insJtbl(LIns* index, uint32_t size) {
+            return add_flush(out->insJtbl(index, size));
         }
 
         LIns* ins0(LOpcode v) {
@@ -1389,8 +1454,9 @@ namespace nanojit
             LInsp    insCall(const CallInfo *call, LInsp args[]);
             LInsp    insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
             LInsp    insBranch(LOpcode v, LInsp condition, LInsp to);
-            LInsp   insAlloc(int32_t size);
-            LInsp   insSkip(size_t);
+            LInsp    insAlloc(int32_t size);
+            LInsp    insSkip(size_t);
+            LInsp    insJtbl(LIns* index, uint32_t size);
     };
 
     class LirFilter

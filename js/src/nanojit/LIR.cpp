@@ -307,6 +307,16 @@ namespace nanojit
         return ins2(op, condition, toLabel);
     }
 
+    LIns* LirBufWriter::insJtbl(LIns* index, uint32_t size)
+    {
+        LInsJtbl* insJtbl = (LInsJtbl*) _buf->makeRoom(sizeof(LInsJtbl));
+        LIns**    table   = new (_buf->_allocator) LIns*[size];
+        LIns*     ins     = insJtbl->getLIns();
+        VMPI_memset(table, 0, size * sizeof(LIns*));
+        ins->initLInsJtbl(index, size, table);
+        return ins;
+    }
+
     LInsp LirBufWriter::insAlloc(int32_t size)
     {
         size = (size+3)>>2; // # of required 32bit words
@@ -1642,7 +1652,7 @@ namespace nanojit
 
     const char* LirNameMap::formatIns(LIns* i)
     {
-        char sbuf[200];
+        char sbuf[4096];
         char *s = sbuf;
         LOpcode op = i->opcode();
         switch(op)
@@ -1691,6 +1701,23 @@ namespace nanojit
                 }
                 s += VMPI_strlen(s);
                 VMPI_sprintf(s, ")");
+                break;
+            }
+
+            case LIR_jtbl: {
+                VMPI_sprintf(s, "%s %s [ ", lirNames[op], formatRef(i->oprnd1()));
+                for (uint32_t j = 0, n = i->getTableSize(); j < n; j++) {
+                    if (VMPI_strlen(sbuf) + 50 > sizeof(sbuf)) {
+                        s += VMPI_strlen(s);
+                        VMPI_sprintf(s, "... ");
+                        break;
+                    }
+                    LIns* target = i->getTarget(j);
+                    s += VMPI_strlen(s);
+                    VMPI_sprintf(s, "%s ", target ? formatRef(target) : "unpatched");
+                }
+                s += VMPI_strlen(s);
+                VMPI_sprintf(s, "]");
                 break;
             }
 
@@ -1825,6 +1852,7 @@ namespace nanojit
                 VMPI_sprintf(s, "?");
                 break;
         }
+        NanoAssert(VMPI_strlen(sbuf) < sizeof(sbuf)-1);
         return labels->dup(sbuf);
     }
 #endif

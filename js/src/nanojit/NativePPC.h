@@ -56,6 +56,7 @@ namespace nanojit
 {
 #define NJ_MAX_STACK_ENTRY              256
 #define NJ_ALIGN_STACK                  16
+#define NJ_JTBL_SUPPORTED               1
 
     enum ConditionRegister {
         CR0 = 0,
@@ -293,7 +294,7 @@ namespace nanojit
             NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins;          \
         } while (0) /* no semi */
 
-    const int LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
+    const int LARGEST_UNDERRUN_PROT = 9*4;  // largest value passed to underrunProtect
 
     typedef uint32_t NIns;
 
