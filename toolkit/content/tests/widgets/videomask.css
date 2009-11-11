@@ -20,9 +20,9 @@ audio {
 #mask {
   position: absolute;
   z-index: 3;
-  width: 50px;
-  height: 50px;
+  width: 140px;
+  height: 72px;
   background-color: green;
-  top: 11px;
-  right: 45px;
+  top: 0;
+  right: 0;
 }
