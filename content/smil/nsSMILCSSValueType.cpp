@@ -182,9 +182,11 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   NS_ABORT_IF_FALSE(destWrapper && valueToAddWrapper,
                     "these pointers shouldn't be null");
 
+  const nsStyleAnimation::Value* realValueToAdd = &valueToAddWrapper->mCSSValue;
   if (destWrapper->mPropID == eCSSProperty_UNKNOWN) {
-    NS_ABORT_IF_FALSE(destWrapper->mCSSValue.IsNull(),
-                      "If property ID is unset, then the unit should be, too");
+    NS_ABORT_IF_FALSE(destWrapper->mCSSValue.IsNull() &&
+                      !destWrapper->mPresContext,
+                      "Partially-initialized ValueWrapper");
     // We need to update destWrapper, since it's part of an outparam.
     const nsStyleAnimation::Value* zeroVal =
       GetZeroValueForUnit(valueToAddWrapper->mCSSValue.GetUnit());
@@ -195,17 +197,23 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
     destWrapper->mCSSValue = *zeroVal;
     destWrapper->mPropID = valueToAddWrapper->mPropID;
     destWrapper->mPresContext = valueToAddWrapper->mPresContext;
+  } else if (valueToAddWrapper->mPropID == eCSSProperty_UNKNOWN) {
+    NS_ABORT_IF_FALSE(valueToAddWrapper->mCSSValue.IsNull() &&
+                      !valueToAddWrapper->mPresContext,
+                      "Partially-initialized ValueWrapper");
+    realValueToAdd = GetZeroValueForUnit(destWrapper->mCSSValue.GetUnit());
+    if (!realValueToAdd) {
+      // No zero value for this unit --> doesn't support addition.
+      return NS_ERROR_FAILURE;
+    }      
   }
-  NS_ABORT_IF_FALSE(valueToAddWrapper->mPropID != eCSSProperty_UNKNOWN &&
-                    !valueToAddWrapper->mCSSValue.IsNull(),
-                    "Added amount should be a parsed value");
 
   // Special case: font-size-adjust is explicitly non-additive
   if (destWrapper->mPropID == eCSSProperty_font_size_adjust) {
     return NS_ERROR_FAILURE;
   }
   return nsStyleAnimation::Add(destWrapper->mCSSValue,
-                               valueToAddWrapper->mCSSValue, aCount) ?
+                               *realValueToAdd, aCount) ?
     NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -225,8 +233,9 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
 
   const nsStyleAnimation::Value* fromCSSValue;
   if (fromWrapper->mPropID == eCSSProperty_UNKNOWN) {
-    NS_ABORT_IF_FALSE(fromWrapper->mCSSValue.IsNull(),
-                      "If property ID is unset, then the unit should be, too");
+    NS_ABORT_IF_FALSE(fromWrapper->mCSSValue.IsNull() &&
+                      !fromWrapper->mPresContext,
+                      "Partially-initialized ValueWrapper");
     fromCSSValue = GetZeroValueForUnit(toWrapper->mCSSValue.GetUnit());
     if (!fromCSSValue) {
       // No zero value for this unit --> doesn't support distance-computation.
@@ -236,7 +245,7 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
     fromCSSValue = &fromWrapper->mCSSValue;
   }
   NS_ABORT_IF_FALSE(toWrapper->mPropID != eCSSProperty_UNKNOWN &&
-                    !toWrapper->mCSSValue.IsNull(),
+                    !toWrapper->mCSSValue.IsNull() && toWrapper->mPresContext,
                     "ComputeDistance endpoint should be a parsed value");
 
   return nsStyleAnimation::ComputeDistance(*fromCSSValue, toWrapper->mCSSValue,
@@ -267,8 +276,9 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
 
   const nsStyleAnimation::Value* startCSSValue;
   if (startWrapper->mPropID == eCSSProperty_UNKNOWN) {
-    NS_ABORT_IF_FALSE(startWrapper->mCSSValue.IsNull(),
-                      "If property ID is unset, then the unit should be, too");
+    NS_ABORT_IF_FALSE(startWrapper->mCSSValue.IsNull() &&
+                      !startWrapper->mPresContext,
+                      "Partially-initialized ValueWrapper");
     startCSSValue = GetZeroValueForUnit(endWrapper->mCSSValue.GetUnit());
     if (!startCSSValue) {
       // No zero value for this unit --> doesn't support interpolation.
@@ -278,7 +288,7 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
     startCSSValue = &startWrapper->mCSSValue;
   }
   NS_ABORT_IF_FALSE(endWrapper->mPropID != eCSSProperty_UNKNOWN &&
-                    !endWrapper->mCSSValue.IsNull(),
+                    !endWrapper->mCSSValue.IsNull() && endWrapper->mPresContext,
                     "Interpolate endpoint should be a parsed value");
 
   if (nsStyleAnimation::Interpolate(*startCSSValue,
