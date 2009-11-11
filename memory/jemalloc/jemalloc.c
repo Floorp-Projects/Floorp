@@ -666,6 +666,9 @@ struct arena_stats_s {
 	uint64_t	ndecommit;
 	uint64_t	ncommit;
 	uint64_t	decommitted;
+
+	/* Current number of committed pages. */
+	size_t		committed;
 #endif
 
 	/* Per-size-category statistics. */
@@ -1054,6 +1057,9 @@ static extent_node_t	*base_nodes;
 static malloc_mutex_t	base_mtx;
 #ifdef MALLOC_STATS
 static size_t		base_mapped;
+#  ifdef MALLOC_DECOMMIT
+static size_t		base_committed;
+#  endif
 #endif
 
 /********/
@@ -1749,6 +1755,9 @@ base_pages_alloc_mmap(size_t minsize)
 #endif
 #ifdef MALLOC_STATS
 	base_mapped += csize;
+#  ifdef MALLOC_DECOMMIT
+	base_committed += pminsize;
+#  endif
 #endif
 
 	ret = false;
@@ -1799,6 +1808,10 @@ base_alloc(size_t size)
 		pages_commit(base_next_decommitted, (uintptr_t)pbase_next_addr -
 		    (uintptr_t)base_next_decommitted);
 		base_next_decommitted = pbase_next_addr;
+#  ifdef MALLOC_STATS
+		base_committed += (uintptr_t)pbase_next_addr -
+		    (uintptr_t)base_next_decommitted;
+#  endif
 	}
 #endif
 	malloc_mutex_unlock(&base_mtx);
@@ -2980,6 +2993,7 @@ arena_run_split(arena_t *arena, arena_run_t *run, size_t size, bool large,
 			    << pagesize_2pow)), (j << pagesize_2pow));
 #  ifdef MALLOC_STATS
 			arena->stats.ncommit++;
+			arena->stats.committed += j;
 #  endif
 		} else /* No need to zero since commit zeros. */
 #endif
@@ -3081,6 +3095,7 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk)
 #  ifdef MALLOC_STATS
 	arena->stats.ndecommit++;
 	arena->stats.decommitted += (chunk_npages - arena_chunk_header_npages);
+	arena->stats.committed += arena_chunk_header_npages;
 #  endif
 #endif
 
@@ -3098,19 +3113,24 @@ arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk)
 			arena_chunk_tree_dirty_remove(
 			    &chunk->arena->chunks_dirty, arena->spare);
 			arena->ndirty -= arena->spare->ndirty;
+#if (defined(MALLOC_STATS) && defined(MALLOC_DECOMMIT))
+			arena->stats.committed -= arena->spare->ndirty;
+#endif
 		}
 		VALGRIND_FREELIKE_BLOCK(arena->spare, 0);
 		chunk_dealloc((void *)arena->spare, chunksize);
 #ifdef MALLOC_STATS
 		arena->stats.mapped -= chunksize;
+#  ifdef MALLOC_DECOMMIT
+		arena->stats.committed -= arena_chunk_header_npages;
+#  endif
 #endif
 	}
 
 	/*
-	 * Remove run from runs_avail, regardless of whether this chunk
-	 * will be cached, so that the arena does not use it.  Dirty page
-	 * flushing only uses the chunks_dirty tree, so leaving this chunk in
-	 * the chunks_* trees is sufficient for that purpose.
+	 * Remove run from runs_avail, so that the arena does not use it.
+	 * Dirty page flushing only uses the chunks_dirty tree, so leaving this
+	 * chunk in the chunks_* trees is sufficient for that purpose.
 	 */
 	arena_avail_tree_remove(&arena->runs_avail,
 	    &chunk->map[arena_chunk_header_npages]);
@@ -3135,7 +3155,8 @@ arena_run_alloc(arena_t *arena, arena_bin_t *bin, size_t size, bool large,
 		key.bits = size | CHUNK_MAP_KEY;
 		mapelm = arena_avail_tree_nsearch(&arena->runs_avail, &key);
 		if (mapelm != NULL) {
-			arena_chunk_t *run_chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(mapelm);
+			arena_chunk_t *run_chunk =
+			    (arena_chunk_t*)CHUNK_ADDR2BASE(mapelm);
 			size_t pageind = ((uintptr_t)mapelm -
 			    (uintptr_t)run_chunk->map) /
 			    sizeof(arena_chunk_map_t);
@@ -3248,6 +3269,7 @@ arena_purge(arena_t *arena)
 #  ifdef MALLOC_STATS
 				arena->stats.ndecommit++;
 				arena->stats.decommitted += npages;
+				arena->stats.committed -= npages;
 #  endif
 #else
 				madvise((void *)((uintptr_t)chunk + (i <<
@@ -5565,6 +5587,9 @@ MALLOC_OUT:
 	/* Initialize base allocation data structures. */
 #ifdef MALLOC_STATS
 	base_mapped = 0;
+#  ifdef MALLOC_DECOMMIT
+	base_committed = 0;
+#  endif
 #endif
 	base_nodes = NULL;
 	malloc_mutex_init(&base_mtx);
@@ -6085,7 +6110,8 @@ jemalloc_stats(jemalloc_stats_t *stats)
 	malloc_mutex_lock(&base_mtx);
 	stats->mapped += base_mapped;
 #ifdef MALLOC_DECOMMIT
-	stats->committed += base_mapped;
+	assert(base_committed <= base_mapped);
+	stats->committed += base_committed;
 #endif
 	malloc_mutex_unlock(&base_mtx);
 
@@ -6099,17 +6125,8 @@ jemalloc_stats(jemalloc_stats_t *stats)
 			stats->allocated += arena->stats.allocated_small;
 			stats->allocated += arena->stats.allocated_large;
 #ifdef MALLOC_DECOMMIT
-			rb_foreach_begin(arena_chunk_t, link_dirty,
-			    &arena->chunks_dirty, chunk) {
-				size_t j;
-
-				for (j = 0; j < chunk_npages; j++) {
-					if ((chunk->map[j].bits &
-					    CHUNK_MAP_DECOMMITTED) == 0)
-						stats->committed += pagesize;
-				}
-			} rb_foreach_end(arena_chunk_t, link_dirty,
-			    &arena->chunks_dirty, chunk)
+			stats->committed += (arena->stats.committed <<
+			    pagesize_2pow);
 #endif
 			stats->dirty += (arena->ndirty << pagesize_2pow);
 			malloc_spin_unlock(&arena->lock);
@@ -6119,6 +6136,8 @@ jemalloc_stats(jemalloc_stats_t *stats)
 #ifndef MALLOC_DECOMMIT
 	stats->committed = stats->mapped;
 #endif
+	assert(stats->mapped >= stats->committed);
+	assert(stats->committed >= stats->allocated);
 }
 
 #ifdef MOZ_MEMORY_WINDOWS
