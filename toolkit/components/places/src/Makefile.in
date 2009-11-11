@@ -64,6 +64,7 @@ CPPSRCS = \
           nsMorkHistoryImporter.cpp \
           nsPlacesModule.cpp \
           SQLFunctions.cpp \
+          Helpers.cpp \
           $(NULL)
 
 EXTRA_DSO_LDOPTS += \

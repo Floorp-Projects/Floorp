@@ -72,6 +72,7 @@
 #include "mozIStorageError.h"
 #include "nsPlacesTables.h"
 #include "nsIPrefService.h"
+#include "Helpers.h"
 
 // For large favicons optimization.
 #include "imgITools.h"
@@ -96,6 +97,8 @@
  * Currently set to one week from now.
  */
 #define MAX_FAVICON_EXPIRATION ((PRTime)7 * 24 * 60 * 60 * PR_USEC_PER_SEC)
+
+using namespace mozilla::places;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Global Helpers
@@ -134,12 +137,12 @@ private:
 
 // Used to notify a topic to system observers on async execute completion.
 // Will throw on error.
-class ExpireFaviconsStatementCallbackNotifier : public mozIStorageStatementCallback
+class ExpireFaviconsStatementCallbackNotifier : public AsyncStatementCallback
 {
 public:
   ExpireFaviconsStatementCallbackNotifier(bool *aFaviconsExpirationRunning);
   NS_DECL_ISUPPORTS
-  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+  NS_DECL_ASYNCSTATEMENTCALLBACK
 
 private:
   bool *mFaviconsExpirationRunning;
@@ -1308,26 +1311,6 @@ ExpireFaviconsStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
                                            NS_PLACES_FAVICONS_EXPIRED_TOPIC_ID,
                                            nsnull);
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ExpireFaviconsStatementCallbackNotifier::HandleError(mozIStorageError *aError)
-{
-  PRInt32 result;
-  nsresult rv = aError->GetResult(&result);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCAutoString message;
-  rv = aError->GetMessage(message);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString warnMsg;
-  warnMsg.Append("An error occured while executing an async statement: ");
-  warnMsg.Append(result);
-  warnMsg.Append(" ");
-  warnMsg.Append(message);
-  NS_WARNING(warnMsg.get());
 
   return NS_OK;
 }
