@@ -2950,10 +2950,11 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         return decl
 
     def logMessage(self, md, msgptr, pfx):
+        actorname = _actorName(self.protocol.name, self.side)
         return _ifLogging([
             StmtExpr(ExprCall(
                 ExprSelect(msgptr, '->', 'Log'),
-                args=[ ExprLiteral.String('['+ self.protocol.name +'] '+ pfx),
+                args=[ ExprLiteral.String('['+ actorname +'] '+ pfx),
                        ExprVar('stderr') ])) ])
 
 
