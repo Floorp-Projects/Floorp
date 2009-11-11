@@ -3794,14 +3794,10 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
                 spec.get(), NS_ConvertUTF16toUTF8(aURL).get(), chanName.get()));
     }
 #endif
-    // Create an shistory entry for the old load, if we have a channel
-    if (aFailedChannel) {
-        mURIResultedInDocument = PR_TRUE;
-        OnLoadingSite(aFailedChannel, PR_TRUE, PR_FALSE);
-    } else if (aURI) {
-        mURIResultedInDocument = PR_TRUE;
-        OnNewURI(aURI, nsnull, nsnull, mLoadType, PR_TRUE, PR_FALSE);
-    }
+    mFailedChannel = aFailedChannel;
+    mFailedURI = aURI;
+    mFailedLoadType = mLoadType;
+
     // Be sure to have a correct mLSHE, it may have been cleared by
     // EndPageLoad. See bug 302115.
     if (mSessionHistory && !mLSHE) {
@@ -3820,9 +3816,6 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     nsCAutoString charset;
     if (aURI)
     {
-        // Set our current URI
-        SetCurrentURI(aURI);
-
         nsresult rv = aURI->GetSpec(url);
         rv |= aURI->GetOriginCharset(charset);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -3951,10 +3944,15 @@ nsDocShell::Stop(PRUint32 aStopFlags)
     // Revoke any pending event related to content viewer restoration
     mRestorePresentationEvent.Revoke();
 
-    if (mLoadType == LOAD_ERROR_PAGE && mLSHE) {
-        // Since error page loads never unset mLSHE, do so now
-        SetHistoryEntry(&mOSHE, mLSHE);
-        SetHistoryEntry(&mLSHE, nsnull);
+    if (mLoadType == LOAD_ERROR_PAGE) {
+        if (mLSHE) {
+            // Since error page loads never unset mLSHE, do so now
+            SetHistoryEntry(&mOSHE, mLSHE);
+            SetHistoryEntry(&mLSHE, nsnull);
+        }
+
+        mFailedChannel = nsnull;
+        mFailedURI = nsnull;
     }
 
     if (nsIWebNavigation::STOP_CONTENT & aStopFlags) {
@@ -7030,6 +7028,35 @@ nsDocShell::CreateContentViewer(const char *aContentType,
     // OnLoadingSite(), but don't fire OnLocationChange()
     // notifications before we've called Embed(). See bug 284993.
     mURIResultedInDocument = PR_TRUE;
+
+    if (mLoadType == LOAD_ERROR_PAGE) {
+        // We need to set the SH entry and our current URI here and not
+        // at the moment we load the page. We want the same behavior 
+        // of Stop() as for a normal page load. See bug 514232 for details.
+
+        // Revert mLoadType to load type to state the page load failed,
+        // following function calls need it.
+        mLoadType = mFailedLoadType;
+
+        nsCOMPtr<nsIChannel> failedChannel = mFailedChannel;
+        nsCOMPtr<nsIURI> failedURI = mFailedURI;
+        mFailedChannel = nsnull;
+        mFailedURI = nsnull;
+
+        // Create an shistory entry for the old load, if we have a channel
+        if (failedChannel) {
+            mURIResultedInDocument = PR_TRUE;
+            OnLoadingSite(failedChannel, PR_TRUE, PR_FALSE);
+        } else if (failedURI) {
+            mURIResultedInDocument = PR_TRUE;
+            OnNewURI(failedURI, nsnull, nsnull, mLoadType, PR_TRUE, PR_FALSE);
+        }
+
+        // Set our current URI
+        SetCurrentURI(failedURI);
+
+        mLoadType = LOAD_ERROR_PAGE;
+    }
 
     PRBool onLocationChangeNeeded = OnLoadingSite(aOpenedChannel, PR_FALSE);
 

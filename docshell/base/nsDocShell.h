@@ -697,6 +697,13 @@ protected:
     // new URI.
     nsCOMPtr<nsIURI>           mLoadingURI;
 
+    // Set in LoadErrorPage from the method argument and used later
+    // in CreateContentViewer. We have to delay an shistory entry creation
+    // for which these objects are needed.
+    nsCOMPtr<nsIURI>           mFailedURI;
+    nsCOMPtr<nsIChannel>       mFailedChannel;
+    PRUint32                   mFailedLoadType;
+
     // WEAK REFERENCES BELOW HERE.
     // Note these are intentionally not addrefd.  Doing so will create a cycle.
     // For that reasons don't use nsCOMPtr.
