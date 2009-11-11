@@ -113,6 +113,17 @@ public:
                                mozIStorageStatementCallback *aCallback);
 
   /**
+   * Checks to see if a favicon's URI has changed, and notifies callers if it
+   * has.
+   *
+   * @param aPageURI
+   *        The URI of the page aFaviconURI is for.
+   * @param aFaviconURI
+   *        The URI for the favicon we want to test for on aPageURI.
+   */
+  void checkAndNotify(nsIURI *aPageURI, nsIURI *aFaviconURI);
+
+  /**
    * Finalize all internal statements.
    */
   nsresult FinalizeStatements();
