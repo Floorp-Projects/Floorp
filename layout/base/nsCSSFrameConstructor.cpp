@@ -7656,9 +7656,8 @@ InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node)
   // flush out layout here
 
   nsIViewManager::UpdateViewBatch batch(presShell->GetViewManager());
-  ApplyRenderingChangeToTree(presShell->GetPresContext(),
-                             presShell->GetRootFrame(),
-                             nsChangeHint_RepaintFrame);
+  nsIFrame* rootFrame = presShell->GetRootFrame();
+  rootFrame->Invalidate(rootFrame->GetOverflowRect());
   batch.EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
 }
 
