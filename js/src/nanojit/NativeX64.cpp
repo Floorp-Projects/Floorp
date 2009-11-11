@@ -906,7 +906,7 @@ namespace nanojit
         emitprr(X64_ucomisd, ra, rb);
     }
 
-    void Assembler::asm_restore(LIns *ins, Reservation *unused, Register r) {
+    void Assembler::asm_restore(LIns *ins, Reservation *, Register r) {
         (void) r;
         if (ins->isop(LIR_alloc)) {
             int d = disp(ins);
