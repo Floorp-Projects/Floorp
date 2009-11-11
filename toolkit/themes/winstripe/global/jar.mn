@@ -186,7 +186,7 @@ toolkit.jar:
         skin/classic/aero/global/groupbox.css
         skin/classic/aero/global/linkTree.css
         skin/classic/aero/global/listbox.css
-        skin/classic/aero/global/menu.css
+*       skin/classic/aero/global/menu.css                                (menu-aero.css)
 *       skin/classic/aero/global/menulist.css                            (menulist-aero.css)
         skin/classic/aero/global/netError.css
         skin/classic/aero/global/numberbox.css
@@ -208,7 +208,7 @@ toolkit.jar:
         skin/classic/aero/global/tabbox.css
 *       skin/classic/aero/global/textbox.css                             (textbox-aero.css)
 *       skin/classic/aero/global/toolbar.css
-        skin/classic/aero/global/toolbarbutton.css
+*       skin/classic/aero/global/toolbarbutton.css                       (toolbarbutton-aero.css)
 *       skin/classic/aero/global/tree.css                                (tree-aero.css)
         skin/classic/aero/global/wizard.css
         skin/classic/aero/global/alerts/alert.css                        (alerts/alert.css)

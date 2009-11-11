@@ -300,13 +300,13 @@ EngineChangeOp.prototype = {
 function EngineStore() {
   var searchService = Cc["@mozilla.org/browser/search-service;1"].
                       getService(Ci.nsIBrowserSearchService);
-  this._engines = searchService.getVisibleEngines({}).map(this._cloneEngine);
-  this._defaultEngines = searchService.getDefaultEngines({}).map(this._cloneEngine);
+  this._engines = searchService.getVisibleEngines().map(this._cloneEngine);
+  this._defaultEngines = searchService.getDefaultEngines().map(this._cloneEngine);
 
   this._ops = [];
 
   // check if we need to disable the restore defaults button
-  var someHidden = this._defaultEngines.some(function (e) {return e.hidden;});
+  var someHidden = this._defaultEngines.some(function (e) e.hidden);
   gEngineManagerDialog.showRestoreDefaults(someHidden);
 }
 EngineStore.prototype = {

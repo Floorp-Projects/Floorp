@@ -125,6 +125,8 @@ static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 #define HTTP_PREF(_pref) HTTP_PREF_PREFIX _pref
 #define BROWSER_PREF(_pref) BROWSER_PREF_PREFIX _pref
 
+#define NS_HTTP_PROTOCOL_FLAGS (URI_STD | ALLOWS_PROXY | ALLOWS_PROXY_HTTP | URI_LOADABLE_BY_ANYONE)
+
 //-----------------------------------------------------------------------------
 
 static nsresult
@@ -1423,8 +1425,7 @@ nsHttpHandler::GetDefaultPort(PRInt32 *result)
 NS_IMETHODIMP
 nsHttpHandler::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_STD | ALLOWS_PROXY | ALLOWS_PROXY_HTTP |
-        URI_LOADABLE_BY_ANYONE;
+    *result = NS_HTTP_PROTOCOL_FLAGS;
     return NS_OK;
 }
 
@@ -1784,7 +1785,8 @@ nsHttpsHandler::GetDefaultPort(PRInt32 *aPort)
 NS_IMETHODIMP
 nsHttpsHandler::GetProtocolFlags(PRUint32 *aProtocolFlags)
 {
-    return gHttpHandler->GetProtocolFlags(aProtocolFlags);
+    *aProtocolFlags = NS_HTTP_PROTOCOL_FLAGS;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1799,6 +1801,9 @@ nsHttpsHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsHttpsHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
+    NS_ABORT_IF_FALSE(gHttpHandler, "Should have a HTTP handler by now.");
+    if (!gHttpHandler)
+      return NS_ERROR_UNEXPECTED;
     return gHttpHandler->NewChannel(aURI, _retval);
 }
 

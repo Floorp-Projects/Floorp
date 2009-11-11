@@ -36,6 +36,7 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../places/src \
 	-I$(srcdir)/../privatebrowsing/src \
 	-I$(srcdir)/../about \
+	-I$(srcdir)/../dirprovider \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -47,6 +48,7 @@ SHARED_LIBRARY_LIBS = \
 	../places/src/$(LIB_PREFIX)browserplaces_s.$(LIB_SUFFIX) \
 	../privatebrowsing/src/$(LIB_PREFIX)privatebrowsing_s.$(LIB_SUFFIX) \
 	../about/$(LIB_PREFIX)browserabout_s.$(LIB_SUFFIX) \
+	../dirprovider/$(LIB_PREFIX)browserdir_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifneq (,$(filter windows cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))

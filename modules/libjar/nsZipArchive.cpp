@@ -180,6 +180,13 @@ nsresult nsZipHandle::Init(PRFileDesc *fd, nsZipHandle **ret)
   PRFileMap *map = PR_CreateFileMap(fd, size, PR_PROT_READONLY);
   if (!map)
     return NS_ERROR_FAILURE;
+  
+  PRUint8 *buf = (PRUint8*) PR_MemMap(map, 0, (PRUint32) size);
+  // Bug 525755: PR_MemMap fails when fd points at something other than a normal file.
+  if (!buf) {
+    PR_CloseFileMap(map);
+    return NS_ERROR_FAILURE;
+  }
 
   nsZipHandle *handle = new nsZipHandle();
   if (!handle) {
@@ -190,7 +197,7 @@ nsresult nsZipHandle::Init(PRFileDesc *fd, nsZipHandle **ret)
   handle->mFd = fd;
   handle->mMap = map;
   handle->mLen = (PRUint32) size;
-  handle->mFileData = (PRUint8*) PR_MemMap(map, 0, handle->mLen);
+  handle->mFileData = buf;
   handle->AddRef();
   *ret = handle;
   return NS_OK;

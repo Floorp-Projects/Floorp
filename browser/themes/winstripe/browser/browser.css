@@ -103,7 +103,7 @@ toolbarbutton.bookmark-item-microsummarized {
   max-width: 20em;
 }
 
-toolbarbutton.bookmark-item:hover:active,
+toolbarbutton.bookmark-item:hover:active:not([disabled="true"]),
 toolbarbutton.bookmark-item[open="true"] {
   padding-top: 3px;
   padding-bottom: 1px;

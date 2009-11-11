@@ -1041,7 +1041,7 @@ FeedWriter.prototype = {
     // List of web handlers
     var wccr = Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
                getService(Ci.nsIWebContentConverterService);
-    var handlers = wccr.getContentHandlers(this._getMimeTypeForFeedType(feedType), {});
+    var handlers = wccr.getContentHandlers(this._getMimeTypeForFeedType(feedType));
     if (handlers.length != 0) {
       for (var i = 0; i < handlers.length; ++i) {
         menuItem = this._document.createElementNS(XUL_NS, "menuitem");

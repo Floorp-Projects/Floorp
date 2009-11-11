@@ -116,7 +116,7 @@ function run_test() {
   // EXPIRE_NEVER anno should be retained since the uri is bookmarked
   do_check_eq(annosvc.getPageAnnotation(testURI, testAnnoName + "Never"), testAnnoVal);
   // check that moz_places record was not removed for this URI (is bookmarked)
-  do_check_eq(histsvc.getPageTitle(testURI), "mozilla.com");
+  do_check_eq(histsvc.getPageTitle(testURI), null);
 
   //cleanup
   annosvc.removePageAnnotation(testURI, testAnnoName + "Never");
@@ -149,7 +149,12 @@ function run_test() {
   // test that the moz_places record was not removed for place URI
   do_check_neq(histsvc.getPageTitle(placeURI), null);
   // test that the moz_places record was not removed for bookmarked URI
-  do_check_neq(histsvc.getPageTitle(bmURI), null);
+  try {
+    histsvc.getPageTitle(bmURI);
+  }
+  catch(ex) {
+    do_throw("Place record for bookmarked uri was wrongly removed");
+  }
 
   // cleanup
   bmsvc.removeItem(bookmark2);

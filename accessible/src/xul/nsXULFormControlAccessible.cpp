@@ -56,33 +56,35 @@
 #include "nsITextControlFrame.h"
 #include "nsIPresShell.h"
 
-/**
-  * XUL Button: can contain arbitrary HTML content
-  */
+////////////////////////////////////////////////////////////////////////////////
+// nsXULButtonAccessible
+////////////////////////////////////////////////////////////////////////////////
 
-/**
-  * Default Constructor
-  */
-
-// Don't inherit from nsFormControlAccessible - it doesn't allow children and a button can have a dropmarker child
-nsXULButtonAccessible::nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessibleWrap(aNode, aShell)
-{ 
+nsXULButtonAccessible::
+  nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
+  nsAccessibleWrap(aNode, aShell)
+{
 }
 
-/**
-  * Only one actions available
-  */
-NS_IMETHODIMP nsXULButtonAccessible::GetNumActions(PRUint8 *_retval)
+////////////////////////////////////////////////////////////////////////////////
+// nsXULButtonAccessible: nsISupports
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsXULButtonAccessible, nsAccessible)
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULButtonAccessible: nsIAccessible
+
+NS_IMETHODIMP
+nsXULButtonAccessible::GetNumActions(PRUint8 *aCount)
 {
-  *_retval = 1;
+  NS_ENSURE_ARG_POINTER(aCount);
+
+  *aCount = 1;
   return NS_OK;
 }
 
-/**
-  * Return the name of our only action
-  */
-NS_IMETHODIMP nsXULButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+NS_IMETHODIMP
+nsXULButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   if (aIndex == eAction_Click) {
     aName.AssignLiteral("press"); 
@@ -91,20 +93,33 @@ NS_IMETHODIMP nsXULButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aN
   return NS_ERROR_INVALID_ARG;
 }
 
-/**
-  * Tell the button to do its action
-  */
-NS_IMETHODIMP nsXULButtonAccessible::DoAction(PRUint8 index)
+NS_IMETHODIMP
+nsXULButtonAccessible::DoAction(PRUint8 aIndex)
 {
-  if (index == 0) {
+  if (aIndex == 0)
     return DoCommand();
-  }
+
   return NS_ERROR_INVALID_ARG;
 }
 
-/**
-  * We are a pushbutton
-  */
+////////////////////////////////////////////////////////////////////////////////
+// nsXULButtonAccessible: nsAccessNode
+
+nsresult
+nsXULButtonAccessible::Init()
+{
+  nsresult rv = nsAccessibleWrap::Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (ContainsMenu())
+    nsCoreUtils::GeneratePopupTree(mDOMNode);
+
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULButtonAccessible: nsAccessible
+
 nsresult
 nsXULButtonAccessible::GetRoleInternal(PRUint32 *aRole)
 {
@@ -112,12 +127,11 @@ nsXULButtonAccessible::GetRoleInternal(PRUint32 *aRole)
   return NS_OK;
 }
 
-/**
-  * Possible states: focused, focusable, unavailable(disabled)
-  */
 nsresult
 nsXULButtonAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
+  // Possible states: focused, focusable, unavailable(disabled).
+
   // get focus and disable status from base class
   nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
   NS_ENSURE_A11Y_SUCCESS(rv, rv);
@@ -152,63 +166,118 @@ nsXULButtonAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
     }
   }
 
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  if (element) {
-    PRBool isDefault = PR_FALSE;
-    element->HasAttribute(NS_LITERAL_STRING("default"), &isDefault) ;
-    if (isDefault)
-      *aState |= nsIAccessibleStates::STATE_DEFAULT;
+  if (ContainsMenu())
+    *aState |= nsIAccessibleStates::STATE_HASPOPUP;
 
-    nsAutoString type;
-    element->GetAttribute(NS_LITERAL_STRING("type"), type);
-    if (type.EqualsLiteral("menu") || type.EqualsLiteral("menu-button")) {
-      *aState |= nsIAccessibleStates::STATE_HASPOPUP;
-    }
-  }
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::_default))
+    *aState |= nsIAccessibleStates::STATE_DEFAULT;
 
   return NS_OK;
 }
 
-void nsXULButtonAccessible::CacheChildren()
+////////////////////////////////////////////////////////////////////////////////
+// nsXULButtonAccessible: nsAccessible protected
+
+void
+nsXULButtonAccessible::CacheChildren()
 {
-  // An XUL button accessible may have 1 child dropmarker accessible
+  // In general XUL button has not accessible children. Nevertheless menu
+  // buttons can have button (@type="menu-button") and popup accessibles
+  // (@type="menu-button" or @type="menu").
+
   if (!mWeakShell) {
     mAccChildCount = eChildCountUninitialized;
     return;   // This outer doc node has been shut down
   }
   if (mAccChildCount == eChildCountUninitialized) {
     mAccChildCount = 0;  // Avoid reentry
+
     SetFirstChild(nsnull);
-    PRBool allowsAnonChildren = GetAllowsAnonChildAccessibles();
-    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, allowsAnonChildren);
+
+    // XXX: no children until the button is menu button. Probably it's not
+    // totally correct but in general AT wants to have leaf buttons.
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+
+    PRBool isMenu = content->AttrValueIs(kNameSpaceID_None,
+                                         nsAccessibilityAtoms::type,
+                                         nsAccessibilityAtoms::menu,
+                                         eCaseMatters);
+
+    PRBool isMenuButton = isMenu ?
+      PR_FALSE :
+      content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                           nsAccessibilityAtoms::menuButton, eCaseMatters);
+
+    if (!isMenu && !isMenuButton)
+      return;
+
+    nsCOMPtr<nsIAccessible> buttonAccessible;
+    nsCOMPtr<nsIAccessible> menupopupAccessible;
+
+    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
     walker.GetFirstChild();
-    nsCOMPtr<nsIAccessible> dropMarkerAccessible;
+
     while (walker.mState.accessible) {
-      dropMarkerAccessible = walker.mState.accessible;
+      PRUint32 role = nsAccUtils::Role(walker.mState.accessible);
+
+      if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
+        // Get an accessbile for menupopup or panel elements.
+        menupopupAccessible = walker.mState.accessible;
+
+      } else if (isMenuButton && role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
+        // Button type="menu-button" contains a real button. Get an accessible
+        // for it. Ignore dropmarker button what is placed as a last child.
+        buttonAccessible = walker.mState.accessible;
+        break;
+      }
+
       walker.GetNextSibling();
     }
 
-    // If the anonymous tree walker can find accessible children, 
-    // and the last one is a push button, then use it as the only accessible 
-    // child -- because this is the scenario where we have a dropmarker child
+    if (!menupopupAccessible)
+      return;
 
-    if (dropMarkerAccessible) {
-      if (nsAccUtils::RoleInternal(dropMarkerAccessible) ==
-          nsIAccessibleRole::ROLE_PUSHBUTTON) {
-        SetFirstChild(dropMarkerAccessible);
-        nsRefPtr<nsAccessible> childAcc =
-          nsAccUtils::QueryAccessible(dropMarkerAccessible);
-        childAcc->SetNextSibling(nsnull);
-        childAcc->SetParent(this);
-        mAccChildCount = 1;
-      }
+    SetFirstChild(menupopupAccessible);
+
+    nsRefPtr<nsAccessible> menupopupAcc =
+      nsAccUtils::QueryObject<nsAccessible>(menupopupAccessible);
+    menupopupAcc->SetParent(this);
+
+    mAccChildCount++;
+
+    if (buttonAccessible) {
+      if (menupopupAcc)
+        menupopupAcc->SetNextSibling(buttonAccessible);
+      else
+        SetFirstChild(buttonAccessible);
+
+      nsRefPtr<nsAccessible> buttonAcc =
+        nsAccUtils::QueryObject<nsAccessible>(buttonAccessible);
+      buttonAcc->SetParent(this);
+
+      mAccChildCount++;
     }
   }
 }
 
-/**
-  * XUL Dropmarker: can contain arbitrary HTML content
-  */
+////////////////////////////////////////////////////////////////////////////////
+// nsXULButtonAccessible protected
+
+PRBool
+nsXULButtonAccessible::ContainsMenu()
+{
+  static nsIContent::AttrValuesArray strings[] =
+    {&nsAccessibilityAtoms::menu, &nsAccessibilityAtoms::menuButton, nsnull};
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  return content->FindAttrValueIn(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                                  strings, eCaseMatters) >= 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULDropmarkerAccessible
+////////////////////////////////////////////////////////////////////////////////
 
 /**
   * Default Constructor

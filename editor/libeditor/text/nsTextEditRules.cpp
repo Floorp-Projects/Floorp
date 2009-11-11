@@ -110,6 +110,9 @@ nsTextEditRules::nsTextEditRules()
 nsTextEditRules::~nsTextEditRules()
 {
    // do NOT delete mEditor here.  We do not hold a ref count to mEditor.  mEditor owns our lifespan.
+
+  if (mTimer)
+    mTimer->Cancel();
 }
 
 /********************************************************
@@ -194,6 +197,9 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
 NS_IMETHODIMP
 nsTextEditRules::DetachEditor()
 {
+  if (mTimer)
+    mTimer->Cancel();
+
   mEditor = nsnull;
   return NS_OK;
 }

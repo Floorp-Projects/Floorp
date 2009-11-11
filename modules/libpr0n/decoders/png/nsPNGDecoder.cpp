@@ -229,7 +229,7 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgIContainer *aImage,
                                  imgIDecoderObserver *aObserver,
                                  PRUint32 aFlags)
 {
-#if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
+#if defined(PNG_HANDLE_AS_UNKNOWN_SUPPORTED)
   static png_byte color_chunks[]=
        { 99,  72,  82,  77, '\0',   /* cHRM */
         105,  67,  67,  80, '\0'};  /* iCCP */
@@ -281,7 +281,7 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgIContainer *aImage,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-#if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
+#if defined(PNG_HANDLE_AS_UNKNOWN_SUPPORTED)
   /* Ignore unused chunks */
   if (gfxPlatform::GetCMSMode() == eCMSMode_Off) {
     png_set_keep_unknown_chunks(mPNG, 1, color_chunks, 2);

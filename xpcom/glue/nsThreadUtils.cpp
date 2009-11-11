@@ -46,6 +46,10 @@
 # include "nsServiceManagerUtils.h"
 #endif
 
+#ifdef XP_WIN
+#include <windows.h>
+#endif
+
 #ifndef XPCOM_GLUE_AVOID_NSPR
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsRunnable, nsIRunnable)
@@ -125,6 +129,13 @@ bool NS_IsMainThread()
   if (mgr)
     mgr->GetIsMainThread(&result);
   return bool(result);
+}
+#elif defined(XP_WIN)
+extern DWORD gTLSIsMainThreadIndex;
+bool
+NS_IsMainThread()
+{
+  return !!TlsGetValue(gTLSIsMainThreadIndex);
 }
 #elif !defined(NS_TLS)
 bool NS_IsMainThread()

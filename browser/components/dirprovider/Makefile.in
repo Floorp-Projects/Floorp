@@ -42,12 +42,13 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE               = browsercomps
-LIBRARY_NAME         = browserdirprovider
-SHORT_LIBNAME        = brwsrdir
-IS_COMPONENT         = 1
-MODULE_NAME          = BrowserDirProvider
-FORCE_SHARED_LIB     = 1
+MODULE = browserdir
+LIBRARY_NAME = browserdir_s
+
+DIRS = tests
+
+FORCE_STATIC_LIB = 1
+FORCE_USE_PIC = 1
 
 # Because we are an application component, link against the CRT statically
 # (on Windows, but only if we're not building our own CRT for jemalloc)
@@ -55,7 +56,12 @@ ifndef MOZ_MEMORY
 USE_STATIC_LIBS      = 1
 endif
 
-CPPSRCS = nsBrowserDirectoryProvider.cpp
+EXPORTS_NAMESPACES = mozilla/browser
+EXPORTS_mozilla/browser = DirectoryProvider.h
+
+CPPSRCS = DirectoryProvider.cpp
+
+LOCAL_INCLUDES = -I$(srcdir)/../build
 
 EXTRA_DSO_LDOPTS = \
 	$(XPCOM_GLUE_LDOPTS) \

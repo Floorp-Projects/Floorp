@@ -198,11 +198,15 @@ function openUILinkIn( url, where, allowThirdPartyFixup, postData, referrerUrl )
                createInstance(Ci.nsISupportsString);
     wuri.data = url;
 
+    var allowThirdPartyFixupSupports = Cc["@mozilla.org/supports-PRBool;1"].
+                                       createInstance(Ci.nsISupportsPRBool);
+    allowThirdPartyFixupSupports.data = allowThirdPartyFixup;
+
     sa.AppendElement(wuri);
     sa.AppendElement(null);
     sa.AppendElement(referrerUrl);
     sa.AppendElement(postData);
-    sa.AppendElement(allowThirdPartyFixup);
+    sa.AppendElement(allowThirdPartyFixupSupports);
 
     var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
              getService(Ci.nsIWindowWatcher);

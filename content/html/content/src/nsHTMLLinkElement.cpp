@@ -268,15 +268,9 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
 
   nsRefPtr<nsPLDOMEvent> event = new nsPLDOMEvent(this, aEventName, PR_TRUE);
   if (event) {
-    // If we have script blockers on the stack then we want to run as soon as
-    // they are removed. Otherwise punt the runable to the event loop as we
-    // don't know when it will be safe to run script.  In particular, we might
-    // be in the middle of a pagehide right now, and firing this event at that
-    // point is not such a great idea.
-    if (nsContentUtils::IsSafeToRunScript())
-      event->PostDOMEvent();
-    else
-      event->RunDOMEventWhenSafe();
+    // Always run async in order to avoid running script when the content
+    // sink isn't expecting it.
+    event->PostDOMEvent();
   }
 }
 

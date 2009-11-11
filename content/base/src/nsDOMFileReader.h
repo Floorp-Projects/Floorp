@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDOMFileRequest_h__
-#define nsDOMFileRequest_h__
+#ifndef nsDOMFileReader_h__
+#define nsDOMFileReader_h__
 
 #include "nsISupportsUtils.h"      
 #include "nsString.h"              
@@ -53,7 +53,7 @@
 #include "nsICharsetDetectionObserver.h"
 
 #include "nsIDOMFile.h"
-#include "nsIDOMFileRequest.h"
+#include "nsIDOMFileReader.h"
 #include "nsIDOMFileList.h"
 #include "nsIDOMFileError.h"
 #include "nsIInputStream.h"
@@ -63,23 +63,23 @@
 
 #include "nsXMLHttpRequest.h"
 
-class nsDOMFileRequest : public nsXHREventTarget,
-                         public nsIDOMFileRequest,
-                         public nsIStreamListener,
-                         public nsIInterfaceRequestor,
-                         public nsSupportsWeakReference,
-                         public nsIJSNativeInitializer,
-                         public nsITimerCallback,
-                         public nsICharsetDetectionObserver
+class nsDOMFileReader : public nsXHREventTarget,
+                        public nsIDOMFileReader,
+                        public nsIStreamListener,
+                        public nsIInterfaceRequestor,
+                        public nsSupportsWeakReference,
+                        public nsIJSNativeInitializer,
+                        public nsITimerCallback,
+                        public nsICharsetDetectionObserver
 {
 public:
-  nsDOMFileRequest();
-  virtual ~nsDOMFileRequest();
+  nsDOMFileReader();
+  virtual ~nsDOMFileReader();
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_DECL_NSIDOMFILEREQUEST
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMFileRequest, nsXHREventTarget)
+  NS_DECL_NSIDOMFILEREADER
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMFileReader, nsXHREventTarget)
 
   NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(nsXHREventTarget::);
         
@@ -126,7 +126,7 @@ protected:
   PRUint32 mDataLen;
   PRUint32 mDataFormat;
 
-  nsString mResponse;
+  nsString mResult;
   PRUint16 mReadyState;
 
   PRBool mProgressEventWasDelayed;

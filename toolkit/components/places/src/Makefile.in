@@ -64,6 +64,7 @@ CPPSRCS = \
           nsMorkHistoryImporter.cpp \
           nsPlacesModule.cpp \
           SQLFunctions.cpp \
+          Helpers.cpp \
           $(NULL)
 
 EXTRA_DSO_LDOPTS += \
@@ -74,12 +75,9 @@ EXTRA_DSO_LDOPTS += \
 
 LOCAL_INCLUDES += -I$(srcdir)/../../build
 
-EXTRA_PP_COMPONENTS = \
+EXTRA_COMPONENTS = \
   nsLivemarkService.js \
   nsTaggingService.js \
-  $(NULL)
-
-EXTRA_COMPONENTS = \
   nsPlacesDBFlush.js \
   $(NULL)
 
