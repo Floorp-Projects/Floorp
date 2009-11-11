@@ -406,7 +406,10 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
             return rv;
         }
 
-        NS_ASSERTION(actor, "Null actor!");
+        if (!actor) {
+            NS_ERROR("NPPVpluginScriptableNPObject succeeded but null.");
+            return NPERR_GENERIC_ERROR;
+        }
 
         const NPNetscapeFuncs* npn = mParent->GetNetscapeFuncs();
         if (!npn) {
