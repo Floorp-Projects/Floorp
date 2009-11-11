@@ -95,6 +95,12 @@ ContentProcessParent::CreateTestShell()
   return static_cast<TestShellParent*>(SendPTestShellConstructor());
 }
 
+bool
+ContentProcessParent::DestroyTestShell(TestShellParent* aTestShell)
+{
+    return SendPTestShellDestructor(aTestShell);
+}
+
 ContentProcessParent::ContentProcessParent()
     : mMonitor("ContentProcessParent::mMonitor")
 {

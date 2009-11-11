@@ -500,6 +500,14 @@ XRE_SendTestShellCommand(JSContext* aCx,
     return true;
 }
 
+bool
+XRE_ShutdownTestShell()
+{
+  if (!gTestShellParent)
+    return true;
+  return ContentProcessParent::GetSingleton()->DestroyTestShell(gTestShellParent);
+}
+
 #endif // MOZ_IPC
 
 

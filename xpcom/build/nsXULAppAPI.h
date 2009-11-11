@@ -490,5 +490,7 @@ XRE_API(bool,
         XRE_SendTestShellCommand, (JSContext* aCx,
                                    JSString* aCommand,
                                    void* aCallback))
+XRE_API(bool,
+        XRE_ShutdownTestShell, ())
 
 #endif // _nsXULAppAPI_h__

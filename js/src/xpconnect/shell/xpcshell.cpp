@@ -1947,6 +1947,11 @@ main(int argc, char **argv)
         JS_DestroyContext(cx);
     } // this scopes the nsCOMPtrs
 
+#ifdef MOZ_IPC
+    if (!XRE_ShutdownTestShell())
+        NS_ERROR("problem shutting down testshell");
+#endif
+
 #ifdef MOZ_CRASHREPORTER
     // Get the crashreporter service while XPCOM is still active.
     // This is a special exception: it will remain usable after NS_ShutdownXPCOM().
