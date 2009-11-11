@@ -794,7 +794,6 @@ BookmarksStore.prototype = {
       }
     }
 
-    this._log.info("calculating index for: " + record.title + " = " + index);
     return index;
   },
 
