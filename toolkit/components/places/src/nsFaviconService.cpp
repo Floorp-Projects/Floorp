@@ -316,7 +316,7 @@ private:
 NS_IMPL_ISUPPORTS1(
   FaviconExpirationGetter,
   mozIStorageStatementCallback
-);
+)
 
 } // anonymous namespace
 
