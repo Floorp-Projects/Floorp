@@ -25,9 +25,11 @@
     // var gA11yEventDumpID = "eventdump"; // debug stuff
 
     SimpleTest.waitForExplicitFinish();
-    window.openDialog("chrome://mochikit/content/a11y/accessible/name_nsRootAcc_wnd.xul",
-                      "nsRootAcc_name_test", 
-                      "chrome,width=600,height=600");
+    var w = window.openDialog("chrome://mochikit/content/a11y/accessible/name_nsRootAcc_wnd.xul",
+                              "nsRootAcc_name_test", 
+                              "chrome,width=600,height=600");
+    w.focus();
+    
   ]]>
   </script>
 
