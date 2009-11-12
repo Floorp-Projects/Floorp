@@ -478,7 +478,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     free(instanceData);
     return NPERR_GENERIC_ERROR;
   }
-  NPN_RetainObject(scriptableObject);
   scriptableObject->npp = instance;
   scriptableObject->drawMode = DM_DEFAULT;
   scriptableObject->drawColor = 0;
