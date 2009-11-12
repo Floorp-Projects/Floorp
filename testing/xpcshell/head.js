@@ -51,6 +51,14 @@ var _passedChecks = 0, _falsePassedChecks = 0;
 var _cleanupFunctions = [];
 var _pendingCallbacks = [];
 
+function _dump(str) {
+  if (typeof _XPCSHELL_PROCESS == "undefined") {
+    dump(str);
+  } else {
+    dump(_XPCSHELL_PROCESS + ": " + str);
+  }
+}
+
 // Disable automatic network detection, so tests work correctly when
 // not connected to a network.
 let (ios = Components.classes["@mozilla.org/network/io-service;1"]
@@ -101,7 +109,7 @@ function _do_main() {
   if (_quit)
     return;
 
-  dump("TEST-INFO | (xpcshell/head.js) | running event loop\n");
+  _dump("TEST-INFO | (xpcshell/head.js) | running event loop\n");
 
   var thr = Components.classes["@mozilla.org/thread-manager;1"]
                       .getService().currentThread;
@@ -114,7 +122,7 @@ function _do_main() {
 }
 
 function _do_quit() {
-  dump("TEST-INFO | (xpcshell/head.js) | exiting test\n");
+  _dump("TEST-INFO | (xpcshell/head.js) | exiting test\n");
 
   _quit = true;
 }
@@ -135,7 +143,7 @@ function _execute_test() {
     // Print exception, but not do_throw() result.
     // Hopefully, this won't mask other NS_ERROR_ABORTs.
     if (!_quit || e != Components.results.NS_ERROR_ABORT)
-      dump("TEST-UNEXPECTED-FAIL | (xpcshell/head.js) | " + e + "\n");
+      _dump("TEST-UNEXPECTED-FAIL | (xpcshell/head.js) | " + e + "\n");
   }
 
   // _TAIL_FILES is dynamically defined by <runxpcshelltests.py>.
@@ -150,12 +158,13 @@ function _execute_test() {
     return;
 
   var truePassedChecks = _passedChecks - _falsePassedChecks;
-  if (truePassedChecks > 0)
-    dump("TEST-PASS | (xpcshell/head.js) | " + truePassedChecks + " (+ " +
+  if (truePassedChecks > 0) {
+    _dump("TEST-PASS | (xpcshell/head.js) | " + truePassedChecks + " (+ " +
             _falsePassedChecks + ") check(s) passed\n");
-  else
+  } else {
     // ToDo: switch to TEST-UNEXPECTED-FAIL when all tests have been updated. (Bug 496443)
-    dump("TEST-INFO | (xpcshell/head.js) | No (+ " + _falsePassedChecks + ") checks actually run\n");
+    _dump("TEST-INFO | (xpcshell/head.js) | No (+ " + _falsePassedChecks + ") checks actually run\n");
+  }
 }
 
 /**
@@ -197,11 +206,11 @@ function do_throw(text, stack) {
     stack = Components.stack.caller;
 
   _passed = false;
-  dump("TEST-UNEXPECTED-FAIL | " + stack.filename + " | " + text +
+  _dump("TEST-UNEXPECTED-FAIL | " + stack.filename + " | " + text +
          " - See following stack:\n");
   var frame = Components.stack;
   while (frame != null) {
-    dump(frame + "\n");
+    _dump(frame + "\n");
     frame = frame.caller;
   }
 
@@ -214,11 +223,11 @@ function do_check_neq(left, right, stack) {
     stack = Components.stack.caller;
 
   var text = left + " != " + right;
-  if (left == right)
+  if (left == right) {
     do_throw(text, stack);
-  else {
+  } else {
     ++_passedChecks;
-    dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
+    _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
          stack.lineNumber + "] " + text + "\n");
   }
 }
@@ -228,11 +237,11 @@ function do_check_eq(left, right, stack) {
     stack = Components.stack.caller;
 
   var text = left + " == " + right;
-  if (left != right)
+  if (left != right) {
     do_throw(text, stack);
-  else {
+  } else {
     ++_passedChecks;
-    dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
+    _dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
          stack.lineNumber + "] " + text + "\n");
   }
 }
@@ -254,12 +263,12 @@ function do_check_false(condition, stack) {
 function do_test_pending() {
   ++_tests_pending;
 
-  dump("TEST-INFO | (xpcshell/head.js) | test " + _tests_pending +
+  _dump("TEST-INFO | (xpcshell/head.js) | test " + _tests_pending +
          " pending\n");
 }
 
 function do_test_finished() {
-  dump("TEST-INFO | (xpcshell/head.js) | test " + _tests_pending +
+  _dump("TEST-INFO | (xpcshell/head.js) | test " + _tests_pending +
          " finished\n");
 
   if (--_tests_pending == 0)
@@ -286,7 +295,7 @@ function do_get_file(path, allowNonexistent) {
       // Not using do_throw(): caller will continue.
       _passed = false;
       var stack = Components.stack.caller;
-      dump("TEST-UNEXPECTED-FAIL | " + stack.filename + " | [" +
+      _dump("TEST-UNEXPECTED-FAIL | " + stack.filename + " | [" +
              stack.name + " : " + stack.lineNumber + "] " + lf.path +
              " does not exist\n");
     }
@@ -439,11 +448,14 @@ function do_load_child_test_harness()
   var quoted_head_files = _HEAD_FILES.map(addQuotes);
   var quoted_tail_files = _TAIL_FILES.map(addQuotes);
 
+  _XPCSHELL_PROCESS = "parent";
+ 
   sendCommand(
         "const _HEAD_JS_PATH='" + _HEAD_JS_PATH + "'; "
       + "const _HTTPD_JS_PATH='" + _HTTPD_JS_PATH + "'; "
       + "const _HEAD_FILES=[" + quoted_head_files.join() + "];"
       + "const _TAIL_FILES=[" + quoted_tail_files.join() + "];"
+      + "const _XPCSHELL_PROCESS='child';"
       + "load(_HEAD_JS_PATH);");
 }
 
