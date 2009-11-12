@@ -755,6 +755,8 @@ nsGeolocation::Init(nsIDOMWindow* aContentDom)
   mService = nsGeolocationService::GetInstance();
   if (mService)
     mService->AddLocator(this);
+
+  return NS_OK;
 }
 
 void
