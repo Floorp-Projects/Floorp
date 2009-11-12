@@ -64,6 +64,7 @@
 <!ENTITY changePassword.label         "Change Password">
 <!ENTITY recoverPassword.label        "Recover Password">
 <!ENTITY changePassphrase.label       "Change Secret Phrase">
+<!ENTITY resetPassphrase.label        "Reset Secret Phrase">
 <!ENTITY startOver.label              "Start Over">
 
 <!ENTITY syncPrefsCaption.label       "Browser Sync">
