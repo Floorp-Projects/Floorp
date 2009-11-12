@@ -37,6 +37,8 @@
 
 include protocol "PPluginInstance.ipdl";
 
+include "mozilla/plugins/PluginMessageUtils.h";
+
 using mozilla::plugins::Buffer;
 using mozilla::plugins::IPCByteRanges;
 

@@ -1185,10 +1185,6 @@ child actors.'''
     def visitCxxInclude(self, inc):
         self.file.addthing(CppDirective('include', '"'+ inc.file +'"'))
 
-    def visitProtocolInclude(self, inc):
-        self.file.addthing(CppDirective('include', '"%s.h"'% (
-            _protocolHeaderBaseFilename(inc.tu.protocol))))
-
     def visitUnionDecl(self, ud):
         self.file.addthings(
             _generateCxxUnionStuff(ud))
