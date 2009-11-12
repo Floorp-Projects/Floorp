@@ -152,7 +152,8 @@ imgFrame::imgFrame() :
   mBlendMethod(1), /* imgIContainer::kBlendOver */
   mSinglePixel(PR_FALSE),
   mNeverUseDeviceSurface(PR_FALSE),
-  mFormatChanged(PR_FALSE)
+  mFormatChanged(PR_FALSE),
+  mCompositingFailed(PR_FALSE)
 #ifdef USE_WIN_SURFACE
   , mIsDDBSurface(PR_FALSE)
 #endif
@@ -914,4 +915,14 @@ void imgFrame::SetHasNoAlpha()
       mFormat = gfxASurface::ImageFormatRGB24;
       mFormatChanged = PR_TRUE;
   }
+}
+
+PRBool imgFrame::GetCompositingFailed() const
+{
+  return mCompositingFailed;
+}
+
+void imgFrame::SetCompositingFailed(PRBool val)
+{
+  mCompositingFailed = val;
 }
