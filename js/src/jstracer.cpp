@@ -13106,18 +13106,71 @@ TraceRecorder::record_JSOP_POPN()
 }
 
 /*
- * Generate LIR to reach |obj2| from |obj| by traversing the scope chain. The generated code
- * also ensures that any call objects found have not changed shape.
+ * Generate LIR to reach |obj2| from |obj| by traversing the scope chain. The
+ * generated code also ensures that any call objects found have not changed shape.
  *
  *      obj               starting object
  *      obj_ins           LIR instruction representing obj
- *      obj2              end object for traversal
- *      obj2_ins   [out]  LIR instruction representing obj2
+ *      targetObj         end object for traversal
+ *      targetIns [out]   LIR instruction representing obj2
  */
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *obj2, LIns *&obj2_ins)
+TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *targetObj,
+                                  LIns *&targetIns)
 {
     VMSideExit* exit = NULL;
+
+    /*
+     * Scope chains are often left "incomplete", and reified lazily when
+     * necessary, since doing so is expensive. When creating null and flat
+     * closures on trace (the only kinds supported), the global object is
+     * hardcoded as the parent, since reifying the scope chain on trace
+     * would be extremely difficult. This is because block objects need frame
+     * pointers, which do not exist on trace, and thus would require magic
+     * similar to arguments objects or reification of stack frames. Luckily,
+     * for null and flat closures, these blocks are unnecessary.
+     *
+     * The problem, as exposed by bug 523793, is that this means creating a
+     * fixed traversal on trace can be inconsistent with the shorter scope
+     * chain used when executing a trace. To address this, perform an initial
+     * sweep of the scope chain to make sure that if there is a heavyweight
+     * function with a call object, and there is also a block object, the
+     * trace is safely aborted.
+     *
+     * If there is no call object, we must have arrived at the global object,
+     * and can bypass the scope chain traversal completely.
+     */
+    bool foundCallObj = false;
+    bool foundBlockObj = false;
+    JSObject* searchObj = obj;
+
+    for (;;) {
+        if (searchObj != globalObj) {
+            JSClass* cls = STOBJ_GET_CLASS(searchObj);
+            if (cls == &js_BlockClass) {
+                foundBlockObj = true;
+            } else if (cls == &js_CallClass &&
+                       JSFUN_HEAVYWEIGHT_TEST(js_GetCallObjectFunction(searchObj)->flags)) {
+                foundCallObj = true;
+            }
+        }
+
+        if (searchObj == targetObj)
+            break;
+
+        searchObj = STOBJ_GET_PARENT(searchObj);
+    }
+
+    if (!foundCallObj) {
+        JS_ASSERT(targetObj == globalObj);
+        targetIns = INS_CONSTPTR(globalObj);
+        return RECORD_CONTINUE;
+    }
+
+    if (foundBlockObj)
+        RETURN_STOP("cannot traverse this scope chain on trace");
+
+    /* There was a call object, or should be a call object now. */
     for (;;) {
         if (obj != globalObj) {
             if (!js_IsCacheableNonGlobalScope(obj))
@@ -13139,16 +13192,16 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *obj2, 
             }
         }
 
-        if (obj == obj2)
+        JS_ASSERT(STOBJ_GET_CLASS(obj) != &js_BlockClass);
+
+        if (obj == targetObj)
             break;
 
         obj = STOBJ_GET_PARENT(obj);
-        if (!obj)
-            RETURN_STOP("target object not reached on scope chain");
         obj_ins = stobj_get_parent(obj_ins);
     }
 
-    obj2_ins = obj_ins;
+    targetIns = obj_ins;
     return RECORD_CONTINUE;
 }
 
