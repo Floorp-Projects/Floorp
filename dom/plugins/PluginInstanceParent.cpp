@@ -406,6 +406,8 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
             return rv;
         }
 
+        NS_ASSERTION(actor, "Null actor!");
+
         const NPNetscapeFuncs* npn = mParent->GetNetscapeFuncs();
         if (!npn) {
             NS_WARNING("No netscape functions?!");

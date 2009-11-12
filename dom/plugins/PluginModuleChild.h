@@ -148,6 +148,10 @@ public:
 
     PluginScriptableObjectChild* GetActorForNPObject(NPObject* aObject);
 
+#ifdef DEBUG
+    bool NPObjectIsRegistered(NPObject* aObject);
+#endif
+
 private:
     bool InitGraphics();
 

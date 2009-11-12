@@ -653,6 +653,8 @@ PluginScriptableObjectChild::~PluginScriptableObjectChild()
     else {
       PluginModuleChild::sBrowserFuncs.releaseobject(mObject);
     }
+    NS_ASSERTION(!PluginModuleChild::current()->NPObjectIsRegistered(mObject),
+                 "NPObject still registered!");
   }
 }
 
@@ -696,6 +698,7 @@ PluginScriptableObjectChild::AnswerInvalidate()
     if (mObject->_class && mObject->_class->invalidate) {
       mObject->_class->invalidate(mObject);
     }
+    PluginModuleChild::current()->UnregisterNPObject(mObject);
     PluginModuleChild::sBrowserFuncs.releaseobject(mObject);
     mObject = nsnull;
   }
