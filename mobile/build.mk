@@ -67,6 +67,9 @@ install::
 	@echo "Mobile can't be installed directly."
 	@exit 1
 
+upload::
+	@$(MAKE) -C mobile/installer upload
+
 ifeq ($(OS_TARGET),Linux)
 deb: installer
 endif
