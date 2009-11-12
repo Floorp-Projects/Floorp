@@ -85,7 +85,7 @@ function test() {
         // let the first window be focused (see above)
         var fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
         if (window == fm.activeWindow) {
-          ss.setBrowserState(oldState);
+          executeSoon(function () ss.setBrowserState(oldState));
         } else {
           window.addEventListener("activate", function () {
             window.removeEventListener("activate", arguments.callee, false);
