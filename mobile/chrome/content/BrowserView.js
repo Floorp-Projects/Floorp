@@ -487,10 +487,9 @@ BrowserView.prototype = {
       browser.addEventListener("scroll", this.handlePageScroll, false);
       browser.addEventListener("MozScrolledAreaChanged", this.handleMozScrolledAreaChanged, false);
 
-      if (doZoom) {
-        browser.docShell.isOffScreenBrowser = true;
+      browser.docShell.isOffScreenBrowser = true;
+      if (doZoom)
         this.zoomToPage();
-      }
 
       this._viewportChanged(browserChanged, browserChanged);
 
