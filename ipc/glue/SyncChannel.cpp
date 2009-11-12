@@ -41,6 +41,7 @@
 #include "mozilla/ipc/GeckoThread.h"
 
 #include "nsDebug.h"
+#include "nsTraceRefcnt.h"
 
 #ifdef OS_WIN
 #include "nsServiceManagerUtils.h"

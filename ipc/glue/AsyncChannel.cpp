@@ -41,6 +41,7 @@
 #include "mozilla/ipc/GeckoThread.h"
 
 #include "nsDebug.h"
+#include "nsTraceRefcnt.h"
 #include "nsXULAppAPI.h"
 
 using mozilla::MutexAutoLock;
