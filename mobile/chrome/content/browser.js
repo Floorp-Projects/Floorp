@@ -2716,7 +2716,11 @@ var ImagePreloader = {
                   "toggledarkmiddle-active", "toggledarkmiddle-inactive",
                   "toggledarkright-active", "toggledarkright-inactive",
                   "toggledarkboth-active", "toggledarkboth-inactive",
-                  "toolbarbutton-active", "toolbarbutton-default"];
+                  "toolbarbutton-active", "toolbarbutton-default",
+                  "addons-active", "addons-default",
+                  "downloads-active", "downloads-default",
+                  "preferences-active", "preferences-default",
+                  "settings-active", "settings-open"];
 
     let size = screen.width > 400 ? "-64" : "-36";
     for (let i = 0; i < images.length; i++) {
