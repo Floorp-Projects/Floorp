@@ -1424,30 +1424,6 @@ MoveChildrenTo(nsPresContext* aPresContext,
 
 // -----------------------------------------------------------
 
-
-// Structure used to ensure that bindings are properly enqueued in the
-// binding manager's attached queue.
-struct NS_STACK_CLASS nsAutoEnqueueBinding
-{
-  nsAutoEnqueueBinding(nsIDocument* aDocument) :
-    mDocument(aDocument)
-  {}
-
-  ~nsAutoEnqueueBinding();
-
-  nsRefPtr<nsXBLBinding> mBinding;
-private:
-  nsIDocument* mDocument;
-};
-
-nsAutoEnqueueBinding::~nsAutoEnqueueBinding()
-{
-  if (mBinding) {
-    mDocument->BindingManager()->AddToAttachedQueue(mBinding);
-  }
-}
-
-
 // Helper function that determines the child list name that aChildFrame
 // is contained in
 static nsIAtom*
