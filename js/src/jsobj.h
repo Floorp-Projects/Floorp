@@ -980,7 +980,7 @@ js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
 extern JSBool
 js_IsCallable(JSObject *obj, JSContext *cx);
 
-extern JSBool
+void
 js_ReportGetterOnlyAssignment(JSContext *cx);
 
 extern JS_FRIEND_API(JSBool)
