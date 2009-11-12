@@ -1446,8 +1446,9 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
          */
         *rval = *invokevp;
         if (JSVAL_IS_GCTHING(*rval) && *rval != JSVAL_NULL) {
-            if (cx->localRootStack) {
-                if (js_PushLocalRoot(cx, cx->localRootStack, *rval) < 0)
+            JSLocalRootStack *lrs = JS_THREAD_DATA(cx)->localRootStack;
+            if (lrs) {
+                if (js_PushLocalRoot(cx, lrs, *rval) < 0)
                     ok = JS_FALSE;
             } else {
                 cx->weakRoots.lastInternalResult = *rval;
