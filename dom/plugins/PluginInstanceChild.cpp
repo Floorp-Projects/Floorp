@@ -158,6 +158,8 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
             return result;
         }
 
+        NS_ASSERTION(actor, "Null actor!");
+
         NPObject* object =
             static_cast<PluginScriptableObjectChild*>(actor)->GetObject();
         NS_ASSERTION(object, "Null object?!");
@@ -178,6 +180,8 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         if (result != NPERR_NO_ERROR) {
             return result;
         }
+
+        NS_ASSERTION(actor, "Null actor!");
 
         NPObject* object =
             static_cast<PluginScriptableObjectChild*>(actor)->GetObject();
