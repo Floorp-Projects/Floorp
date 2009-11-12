@@ -410,6 +410,10 @@ SyncEngine.prototype = {
     let count = {applied: 0, reconciled: 0};
     let handled = [];
     newitems.recordHandler = Utils.bind2(this, function(item) {
+      // Grab a later last modified if possible
+      if (this.lastModified == null || item.modified > this.lastModified)
+        this.lastModified = item.modified;
+
       // Remember which records were processed
       handled.push(item.id);
 
@@ -432,7 +436,7 @@ SyncEngine.prototype = {
     });
 
     // Only bother getting data from the server if there's new things
-    if (this.lastModified > this.lastSync) {
+    if (this.lastModified == null || this.lastModified > this.lastSync) {
       let resp = newitems.get();
       if (!resp.success) {
         resp.failureCode = ENGINE_DOWNLOAD_FAIL;
