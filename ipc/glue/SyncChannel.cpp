@@ -60,6 +60,24 @@ struct RunnableMethodTraits<mozilla::ipc::SyncChannel>
 namespace mozilla {
 namespace ipc {
 
+SyncChannel::SyncChannel(SyncListener* aListener)
+  : AsyncChannel(aListener),
+    mPendingReply(0),
+    mProcessingSyncMessage(false)
+#ifdef OS_WIN
+  , mUIThreadId(0)
+  , mEventLoopDepth(0)
+#endif
+{
+  MOZ_COUNT_CTOR(SyncChannel);
+}
+
+SyncChannel::~SyncChannel()
+{
+    MOZ_COUNT_DTOR(SyncChannel);
+    // FIXME/cjones: impl
+}
+
 bool
 SyncChannel::Send(Message* msg, Message* reply)
 {

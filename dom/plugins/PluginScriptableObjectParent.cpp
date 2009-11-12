@@ -786,6 +786,7 @@ PluginScriptableObjectParent::Initialize(PluginInstanceParent* aInstance,
     // dies we will send the destructor message to the child.
     NS_ASSERTION(aObject->referenceCount == 1, "Some kind of live object!");
     object->referenceCount = 0;
+    NS_LOG_RELEASE(aObject, 0, "BrowserNPObject");
   }
   else {
     aInstance->GetNPNIface()->retainobject(aObject);
@@ -800,9 +801,6 @@ PluginScriptableObjectParent::AnswerInvalidate()
 {
   if (mObject) {
     NS_ASSERTION(mObject->_class != GetClass(), "Bad object type!");
-    if (mObject->_class && mObject->_class->invalidate) {
-      mObject->_class->invalidate(mObject);
-    }
     const NPNetscapeFuncs* npn = GetNetscapeFuncs(GetInstance());
     if (npn) {
       npn->releaseobject(mObject);

@@ -55,6 +55,28 @@ struct RunnableMethodTraits<mozilla::ipc::AsyncChannel>
 namespace mozilla {
 namespace ipc {
 
+AsyncChannel::AsyncChannel(AsyncListener* aListener)
+  : mTransport(0),
+    mListener(aListener),
+    mChannelState(ChannelClosed),
+    mMutex("mozilla.ipc.AsyncChannel.mMutex"),
+    mCvar(mMutex, "mozilla.ipc.AsyncChannel.mCvar"),
+    mIOLoop(),
+    mWorkerLoop()
+{
+    MOZ_COUNT_CTOR(AsyncChannel);
+}
+
+AsyncChannel::~AsyncChannel()
+{
+    MOZ_COUNT_DTOR(AsyncChannel);
+    if (!mChild && mTransport)
+        Close();
+    // we only hold a weak ref to the transport, which is "owned"
+    // by GeckoChildProcess/GeckoThread
+    mTransport = 0;
+}
+
 bool
 AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
 {
