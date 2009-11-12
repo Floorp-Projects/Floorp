@@ -106,7 +106,6 @@ KEYS_DOWNLOAD_FAIL:                    "error.sync.reason.keys_download_fail",
 NO_KEYS_NO_KEYGEN:                     "error.sync.reason.no_keys_no_keygen",
 KEYS_UPLOAD_FAIL:                      "error.sync.reason.keys_upload_fail",
 SETUP_FAILED_NO_PASSPHRASE:            "error.sync.reason.setup_failed_no_passphrase",
-ABORT_SYNC_COMMAND:                    "aborting sync, process commands said so",
 NO_SYNC_NODE_FOUND:                    "error.sync.reason.no_node_found",
 
 // engine failure status codes
@@ -114,6 +113,10 @@ ENGINE_UPLOAD_FAIL:                    "error.engine.reason.record_upload_fail",
 ENGINE_DOWNLOAD_FAIL:                  "error.engine.reason.record_download_fail",
 ENGINE_UNKNOWN_FAIL:                   "error.engine.reason.unknown_fail",
 ENGINE_METARECORD_UPLOAD_FAIL:         "error.engine.reason.metarecord_upload_fail",
+
+// reasons for changing the sync ID
+SYNCID_WIPE_REMOTE:                    "error.sync.wipe_remote",
+SYNCID_RESET_PASSPHRASE:               "error.sync.reset_passphrase",
 
 // Ways that a sync can be disabled (messages only to be printed in debug log)
 kSyncWeaveDisabled:                    "Weave is disabled",
