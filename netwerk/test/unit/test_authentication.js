@@ -452,8 +452,7 @@ function bytesFromString(str) {
    Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
      .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
  converter.charset = "UTF-8";
- var result = {};
- var data = converter.convertToByteArray(str, result);
+ var data = converter.convertToByteArray(str);
  return data;
 }
 
