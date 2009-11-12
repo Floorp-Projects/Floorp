@@ -1477,16 +1477,27 @@ namespace nanojit
     // concrete
     class LirReader : public LirFilter
     {
-        LInsp _i; // current instruction that this decoder is operating on.
+        LInsp _i; // next instruction to be read;  invariant: is never a skip
 
     public:
-        LirReader(LInsp i) : LirFilter(0), _i(i) {
-            NanoAssert(_i);
+        LirReader(LInsp i) : LirFilter(0), _i(i)
+        {
+            // The last instruction for a fragment shouldn't be a skip.
+            // (Actually, if the last *inserted* instruction exactly fills up
+            // a chunk, a new chunk will be created, and thus the last *written*
+            // instruction will be a skip -- the one needed for the
+            // cross-chunk link.  But the last *inserted* instruction is what
+            // is recorded and used to initialise each LirReader, and that is
+            // what is seen here, and therefore this assertion holds.)
+            NanoAssert(i && !i->isop(LIR_skip));
         }
         virtual ~LirReader() {}
 
-        // LirReader i/f
-        LInsp read(); // advance to the prior instruction
+        // Returns next instruction and advances to the prior instruction.
+        // Invariant: never returns a skip.
+        LInsp read(); 
+
+        // Returns next instruction.  Invariant: never returns a skip.
         LInsp pos() {
             return _i;
         }
