@@ -29,13 +29,31 @@
 <!ENTITY createAccountButton.label      "Create Mozilla Weave Account">
 <!ENTITY createAccountButton.accesskey  "C">
 
-
 <!ENTITY goBack.label                 "Back">
 <!ENTITY continue.label               "Continue">
 
 <!ENTITY passphraseGroupbox.label     "Enter Secret Phrase">
 <!ENTITY passphraseDesc.label         "Please enter your secret phrase.  Remember that this is separate from your account password and is never sent over the Internet.">
 <!ENTITY connecting.label             "Connecting…">
+
+<!ENTITY choice.caption.label         "Choose how you want to start using Weave">
+<!ENTITY choice.merge.main.label      "Merge this computer's data with data on your Weave account">
+<!ENTITY choice.merge.secondary.label "This will combine the data from this computer with the devices already syncing with Weave.">
+<!ENTITY choice.client.main.label     "Replace everything on this computer with the data from my other devices">
+<!ENTITY choice.client.secondary.label  "All of your local data will be deleted and replaced by the data stored in Weave.">
+<!ENTITY choice.server.main.label     "Replace everything on my other devices with the data from this computer">
+<!ENTITY choice.server.secondary.label  "All data stored on the Weave servers and other devices will be replaced with the data on this computer.">
+
+<!ENTITY confirm.caption.label        "Confirm your choice">
+<!ENTITY confirm.merge.label          "You have chosen to merge your data on this computer with the data on your other devices running Weave.">
+<!ENTITY confirm.merge.start.label    "Start Syncing Now">
+<!ENTITY confirm.client.label         "You have chosen to replace the data on this computer with your data from your other devices.">
+<!ENTITY confirm.client.warning.label "WARNING: This will result in all data on this computer being deleted and overwritten!">
+<!ENTITY confirm.client.start.label   "Delete and Replace Local Data">
+<!ENTITY confirm.server.label         "You have chosen to replace your data on your other devices with the data on this computer.">
+<!ENTITY confirm.server.warning.label "WARNING: This will result in all data on your other devices being deleted!">
+<!ENTITY confirm.server.start.label   "Delete and Replace Server Data">
+
 
 <!ENTITY accountGroupboxCaption.label "Mozilla Weave Account">
 
