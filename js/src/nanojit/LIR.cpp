@@ -392,51 +392,37 @@ namespace nanojit
     LInsp LirReader::read()
     {
         NanoAssert(_i);
-        LInsp cur = _i;
-        uintptr_t i = uintptr_t(cur);
-        LOpcode iop = ((LInsp)i)->opcode();
+        LInsp ret = _i;
 
-        // We pass over skip instructions below.  Also, the last instruction
-        // for a fragment shouldn't be a skip(*).  Therefore we shouldn't see
-        // a skip here.
-        //
-        // (*) Actually, if the last *inserted* instruction exactly fills up a
-        // page, a new page will be created, and thus the last *written*
-        // instruction will be a skip -- the one needed for the cross-page
-        // link.  But the last *inserted* instruction is what is recorded and
-        // used to initialise each LirReader, and that is what is seen here,
-        // and therefore this assertion holds.
+        // Check the invariant: _i never points to a skip.
+        LOpcode iop = _i->opcode();
         NanoAssert(iop != LIR_skip);
 
-        do
-        {
-            // Nb: this switch is table-driven (because sizeof_LInsXYZ() is
-            // table-driven) in most cases to avoid branch mispredictions --
-            // if we do a vanilla switch on the iop or LInsRepKind the extra
-            // branch mispredictions cause a small but noticeable slowdown.
-            switch (iop)
-            {
-                default:
-                    i -= insSizes[((LInsp)i)->opcode()];
-                    break;
-
-                case LIR_skip:
-                    // Ignore the skip, move onto its predecessor.
-                    NanoAssert(((LInsp)i)->prevLIns() != (LInsp)i);
-                    i = uintptr_t(((LInsp)i)->prevLIns());
-                    break;
-
-                case LIR_start:
-                    // Once we hit here, this method shouldn't be called again.
-                    // The assertion at the top of this method checks this.
-                    _i = 0;
-                    return cur;
-            }
-            iop = ((LInsp)i)->opcode();
+#ifdef DEBUG
+        if (iop == LIR_start) {
+            // Once we hit here, this method shouldn't be called again.
+            // The assertion at the top of this method checks this.
+            // (In the non-debug case, _i ends up pointing to junk just
+            // prior to the LIR_start, but it should be ok because,
+            // again, this method shouldn't be called again.)
+            _i = 0;
+            return ret;
         }
-        while (LIR_skip == iop);
-        _i = (LInsp)i;
-        return cur;
+        else 
+#endif
+        {
+            // Step back one instruction.  Use a table lookup rather than a
+            // switch to avoid branch mispredictions.
+            _i = (LInsp)(uintptr_t(_i) - insSizes[iop]);
+        }
+
+        // Ensure _i doesn't end up pointing to a skip.
+        while (LIR_skip == _i->opcode()) {
+            NanoAssert(_i->prevLIns() != _i);
+            _i = _i->prevLIns();
+        }
+
+        return ret;
     }
 
     // This is never called, but that's ok because it contains only static
