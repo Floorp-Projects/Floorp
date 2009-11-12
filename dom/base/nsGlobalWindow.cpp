@@ -9388,6 +9388,8 @@ nsNavigator::GetPlatform(nsAString& aPlatform)
     aPlatform.AssignLiteral("MacPPC");
 #elif defined(XP_MACOSX) && defined(__i386__)
     aPlatform.AssignLiteral("MacIntel");
+#elif defined(XP_MACOSX) && defined(__x86_64__)
+    aPlatform.AssignLiteral("MacIntel");
 #elif defined(XP_OS2)
     aPlatform.AssignLiteral("OS/2");
 #else
