@@ -405,6 +405,7 @@ WeaveSvc.prototype = {
       case "weave:service:sync:finish":
         this._scheduleNextSync();
         this._syncErrors = 0;
+        Svc.Prefs.reset("firstSync");
         break;
       case "weave:service:backoff:interval":
         let interval = data + Math.random() * data * 0.25; // required backoff + up to 25%
@@ -1058,7 +1059,20 @@ WeaveSvc.prototype = {
   sync: function sync()
     this._catch(this._lock(this._notify("sync", "", function() {
       Status.resetSync();
-    
+    if (Svc.Prefs.isSet("firstSync")) {
+      switch(Svc.Prefs.get("firstSync")) {
+        case "wipeClient":
+          this.wipeClient();
+          break;
+        case "wipeRemote":
+          this.wipeRemote();
+          break;
+        default:
+          this._scheduleNextSync();
+          return; 
+      }
+    }
+
     // if we don't have a node, get one.  if that fails, retry in 10 minutes
     if (this.clusterURL == "" && !this._setCluster()) {
       this._scheduleNextSync(10 * 60 * 1000);
