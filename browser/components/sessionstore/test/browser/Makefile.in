@@ -46,7 +46,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 # browser_477657.js is disabled, because it's unreliable (bug 482975).
-# browser_480148.js is disabled, because it breaks browser_420786.js (see bug 483382).
 
 _BROWSER_TEST_FILES = \
 	browser_248970_a.js \
@@ -97,6 +96,7 @@ _BROWSER_TEST_FILES = \
 	browser_466937_sample.html \
 	browser_476161.js \
 	browser_476161_sample.html \
+	browser_480148.js \
 	browser_480893.js \
 	browser_483330.js \
 	browser_485482.js \
