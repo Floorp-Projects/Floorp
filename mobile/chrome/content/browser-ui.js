@@ -1051,11 +1051,8 @@ var FormHelper = {
     if (aElement.disabled)
       return false;
 
-    if (aElement instanceof HTMLSelectElement || aElement instanceof HTMLTextAreaElement) {
-      let rect = aElement.getBoundingClientRect();
-      let isVisible = (rect.height != 0 || rect.width != 0);
-      return isVisible;
-    }
+    if (aElement instanceof HTMLSelectElement || aElement instanceof HTMLTextAreaElement)
+      return this._isElementVisible(aElement);
     
     if (aElement instanceof HTMLInputElement) {
       let ignoreInputElements = ["checkbox", "radio", "hidden", "reset", "button"];
@@ -1063,9 +1060,7 @@ var FormHelper = {
       if (!isValidElement)
        return false;
  
-      let rect = aElement.getBoundingClientRect();
-      let isVisible = (rect.height != 0 || rect.width != 0);
-      return isVisible;
+      return this._isElementVisible(aElement);
     }
 
     return false;
@@ -1075,6 +1070,10 @@ var FormHelper = {
     return (aElement instanceof HTMLSelectElement) || (aElement instanceof Ci.nsIDOMXULMenuListElement);
   },
 
+  _isElementVisible: function(aElement) {
+    let rect = aElement.getBoundingClientRect();
+    return (rect.height != 0 || rect.width != 0);
+  },
 
   _nsResolver: function(aPrefix) {
     var ns = {
@@ -1144,7 +1143,7 @@ var FormHelper = {
     if (aElement.parentNode instanceof HTMLLabelElement)
       associatedLabels.push(aElement.parentNode);
 
-    return associatedLabels;
+    return associatedLabels.filter(this._isElementVisible);
   },
 
   _currentElement: null,
