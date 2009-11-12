@@ -79,6 +79,11 @@ TabEngine.prototype = {
     this._store.wipe();
   },
 
+  _syncFinish: function _syncFinish() {
+    SyncEngine.prototype._syncFinish.call(this);
+    this._tracker.resetChanged();
+  },
+
   /* The intent is not to show tabs in the menu if they're already
    * open locally.  There are a couple ways to interpret this: for
    * instance, we could do it by removing a tab from the list when
@@ -349,6 +354,7 @@ TabTracker.prototype = {
 
   _TabTracker_init: function TabTracker__init() {
     this._init();
+    this.resetChanged();
 
     // Make sure "this" pointer is always set correctly for event listeners
     this.onTabOpened = Utils.bind2(this, this.onTabOpened);
@@ -421,34 +427,33 @@ TabTracker.prototype = {
     }
   },
 
+  _upScore: function _upScore(amount) {
+    this.score += amount;
+    this._changedIDs[Clients.clientID] = true;
+  },
+
   onTabOpened: function TabTracker_onTabOpened(event) {
     // Store a timestamp in the tab to track when it was last used
     this._log.trace("Tab opened.");
     event.target.setAttribute(TAB_TIME_ATTR, event.timeStamp);
-    //this._log.debug("Tab timestamp set to " + event.target.getAttribute(TAB_TIME_ATTR) + "\n");
-    this.score += 1;
+    this._upScore(1);
   },
 
   onTabClosed: function TabTracker_onTabSelected(event) {
-    //this._log.trace("Tab closed.\n");
-    this.score += 1;
+    this._log.trace("Tab closed.");
+    this._upScore(1);
   },
 
   onTabSelected: function TabTracker_onTabSelected(event) {
     // Update the tab's timestamp
     this._log.trace("Tab selected.");
-    //this._log.trace("Tab selected.\n");
     event.target.setAttribute(TAB_TIME_ATTR, event.timeStamp);
-    //this._log.debug("Tab timestamp set to " + event.target.getAttribute(TAB_TIME_ATTR) + "\n");
-    this.score += 1;
+    this._upScore(1);
   },
   // TODO: Also listen for tabs loading new content?
 
-  get changedIDs() {
-    // Only mark the current client as changed if we tracked changes
-    let obj = {};
-    if (this.score > 0)
-      obj[Clients.clientID] = true;
-    return obj;
-  }
+  get changedIDs() this._changedIDs,
+
+  // Provide a way to empty out the changed ids
+  resetChanged: function resetChanged() this._changedIDs = {}
 }
