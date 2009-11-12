@@ -315,6 +315,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
         kshape = OBJ_SHAPE(obj);
         vshape = scope->shape;
     }
+    JS_ASSERT(kshape < SHAPE_OVERFLOW_BIT);
 
     khash = PROPERTY_CACHE_HASH_PC(pc, kshape);
     if (obj == pobj) {
@@ -354,6 +355,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
             obj->setDelegate();
         }
     }
+    JS_ASSERT(vshape < SHAPE_OVERFLOW_BIT);
 
     entry = &cache->table[khash];
     PCMETER(PCVAL_IS_NULL(entry->vword) || cache->recycles++);
