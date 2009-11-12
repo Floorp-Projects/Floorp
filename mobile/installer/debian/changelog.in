@@ -1,6 +1,5 @@
-# if the naming changes please modify DEB_PKG_NAME in mobile/installer/Makefile.in as well
 fennec (@MOZ_APP_VERSION@)  unstable; urgency=low
 
   * Mozilla Nightly (Closes: #nnnn)  <nnnn is the bug number of your ITP>
 
- -- Mozilla fennec  <blassey@mozilla.com>  @MOZ_DEB_TIMESTAMP@
+ -- Mozilla Mobile  <mobile@mozilla.com>  @MOZ_DEB_TIMESTAMP@
