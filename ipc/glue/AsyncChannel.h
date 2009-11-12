@@ -90,25 +90,8 @@ public:
     };
 
 public:
-    AsyncChannel(AsyncListener* aListener) :
-        mTransport(0),
-        mListener(aListener),
-        mChannelState(ChannelClosed),
-        mMutex("mozilla.ipc.AsyncChannel.mMutex"),
-        mCvar(mMutex, "mozilla.ipc.AsyncChannel.mCvar"),
-        mIOLoop(),
-        mWorkerLoop()
-    {
-    }
-
-    virtual ~AsyncChannel()
-    {
-        if (!mChild && mTransport)
-            Close();
-        // we only hold a weak ref to the transport, which is "owned"
-        // by GeckoChildProcess/GeckoThread
-        mTransport = 0;
-    }
+    AsyncChannel(AsyncListener* aListener);
+    virtual ~AsyncChannel();
 
     // Open  from the perspective of the transport layer; the underlying
     // socketpair/pipe should already be created.

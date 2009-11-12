@@ -62,21 +62,8 @@ public:
                                          Message*& aReply) = 0;
     };
 
-    SyncChannel(SyncListener* aListener) :
-        AsyncChannel(aListener),
-        mPendingReply(0),
-        mProcessingSyncMessage(false)
-#ifdef OS_WIN
-      , mUIThreadId(0)
-      , mEventLoopDepth(0)
-#endif
-    {
-    }
-
-    virtual ~SyncChannel()
-    {
-        // FIXME/cjones: impl
-    }
+    SyncChannel(SyncListener* aListener);
+    virtual ~SyncChannel();
 
     bool Send(Message* msg) {
         return AsyncChannel::Send(msg);

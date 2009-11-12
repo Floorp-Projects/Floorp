@@ -285,30 +285,33 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(
 
 bool
 PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
-                                           PPluginScriptableObjectChild** value,
-                                           NPError* result)
+                                          PPluginScriptableObjectChild** aValue,
+                                          NPError* aResult)
 {
     AssertPluginThread();
 
     NPObject* object;
-    *result = mPluginIface->getvalue(GetNPP(), NPPVpluginScriptableNPObject,
-                                     &object);
-    if (*result != NPERR_NO_ERROR) {
-        return true;
+    NPError result = mPluginIface->getvalue(GetNPP(),
+                                            NPPVpluginScriptableNPObject,
+                                            &object);
+    if (result == NPERR_NO_ERROR && object) {
+        PluginScriptableObjectChild* actor = GetActorForNPObject(object);
+
+        // If we get an actor then it has retained. Otherwise we don't need it
+        // any longer.
+        PluginModuleChild::sBrowserFuncs.releaseobject(object);
+        if (actor) {
+            *aValue = actor;
+            *aResult = NPERR_NO_ERROR;
+            return true;
+        }
+
+        NS_ERROR("Failed to get actor!");
+        result = NPERR_GENERIC_ERROR;
     }
 
-    PluginScriptableObjectChild* actor = GetActorForNPObject(object);
-
-    // If we get an actor then it has retained. Otherwise we don't need it any
-    // longer.
-    PluginModuleChild::sBrowserFuncs.releaseobject(object);
-
-    if (!actor) {
-        *result = NPERR_GENERIC_ERROR;
-        return true;
-    }
-
-    *value = actor;
+    *aValue = nsnull;
+    *aResult = result;
     return true;
 }
 
