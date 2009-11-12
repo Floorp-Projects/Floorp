@@ -61,6 +61,24 @@ struct RunnableMethodTraits<mozilla::ipc::RPCChannel>
 namespace mozilla {
 namespace ipc {
 
+RPCChannel::RPCChannel(RPCListener* aListener,
+                       RacyRPCPolicy aPolicy)
+  : SyncChannel(aListener),
+    mPending(),
+    mStack(),
+    mDeferred(),
+    mRemoteStackDepthGuess(0),
+    mRacePolicy(aPolicy)
+{
+    MOZ_COUNT_CTOR(RPCChannel);
+}
+
+RPCChannel::~RPCChannel()
+{
+    MOZ_COUNT_DTOR(RPCChannel);
+    // FIXME/cjones: impl
+}
+
 bool
 RPCChannel::Call(Message* msg, Message* reply)
 {

@@ -45,6 +45,7 @@
 
 #include "nsILocalFile.h"
 
+#include "pratom.h"
 #include "nsDebug.h"
 #include "nsCOMPtr.h"
 #include "nsPluginsDir.h"
@@ -238,13 +239,42 @@ PluginModuleChild::GetActorForNPObject(NPObject* aObject)
 }
 
 #ifdef DEBUG
+namespace {
+
+struct SearchInfo {
+  PluginScriptableObjectChild* target;
+  bool found;
+};
+
+PLDHashOperator
+ActorSearch(const void* aKey,
+            PluginScriptableObjectChild* aData,
+            void* aUserData)
+{
+  SearchInfo* info = reinterpret_cast<SearchInfo*>(aUserData);
+  NS_ASSERTION(info->target && ! info->found, "Bad info ptr!");
+
+  if (aData == info->target) {
+    info->found = true;
+    return PL_DHASH_STOP;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+} // anonymous namespace
+
 bool
-PluginModuleChild::NPObjectIsRegistered(NPObject* aObject)
+PluginModuleChild::NPObjectIsRegisteredForActor(
+                                            PluginScriptableObjectChild* aActor)
 {
     AssertPluginThread();
     NS_ASSERTION(mObjectMap.IsInitialized(), "Not initialized!");
-    NS_ASSERTION(aObject, "Null pointer!");
-    return mObjectMap.Get(aObject, nsnull);
+    NS_ASSERTION(aActor, "Null actor!");
+
+    SearchInfo info = { aActor, false };
+    mObjectMap.EnumerateRead(ActorSearch, &info);
+    return info.found;
 }
 #endif
 
@@ -902,6 +932,7 @@ _createobject(NPP aNPP,
     if (newObject) {
         newObject->_class = aClass;
         newObject->referenceCount = 1;
+        NS_LOG_ADDREF(newObject, 1, "ChildNPObject", sizeof(NPObject));
     }
     return newObject;
 }
@@ -915,7 +946,9 @@ _retainobject(NPObject* aNPObj)
     printf("[PluginModuleChild] %s: object %p, refcnt %d\n", __FUNCTION__,
            aNPObj, aNPObj->referenceCount + 1);
 #endif
-    ++aNPObj->referenceCount;
+    int32_t refCnt = PR_AtomicIncrement((PRInt32*)&aNPObj->referenceCount);
+    NS_LOG_ADDREF(aNPObj, refCnt, "ChildNPObject", sizeof(NPObject));
+
     return aNPObj;
 }
 
@@ -928,7 +961,10 @@ _releaseobject(NPObject* aNPObj)
     printf("[PluginModuleChild] %s: object %p, refcnt %d\n", __FUNCTION__,
            aNPObj, aNPObj->referenceCount - 1);
 #endif
-    if (--aNPObj->referenceCount == 0) {
+    int32_t refCnt = PR_AtomicDecrement((PRInt32*)&aNPObj->referenceCount);
+    NS_LOG_RELEASE(aNPObj, refCnt, "ChildNPObject");
+
+    if (refCnt == 0) {
         if (aNPObj->_class && aNPObj->_class->deallocate) {
             aNPObj->_class->deallocate(aNPObj);
         } else {

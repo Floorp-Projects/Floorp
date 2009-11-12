@@ -71,20 +71,9 @@ public:
         RRPParentWins
     };
 
-    RPCChannel(RPCListener* aListener, RacyRPCPolicy aPolicy=RRPChildWins) :
-        SyncChannel(aListener),
-        mPending(),
-        mStack(),
-        mDeferred(),
-        mRemoteStackDepthGuess(0),
-        mRacePolicy(aPolicy)
-    {
-    }
+    RPCChannel(RPCListener* aListener, RacyRPCPolicy aPolicy=RRPChildWins);
 
-    virtual ~RPCChannel()
-    {
-        // FIXME/cjones: impl
-    }
+    virtual ~RPCChannel();
 
     // Make an RPC to the other side of the channel
     bool Call(Message* msg, Message* reply);

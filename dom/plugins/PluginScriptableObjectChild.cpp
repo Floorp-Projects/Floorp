@@ -653,9 +653,10 @@ PluginScriptableObjectChild::~PluginScriptableObjectChild()
     else {
       PluginModuleChild::sBrowserFuncs.releaseobject(mObject);
     }
-    NS_ASSERTION(!PluginModuleChild::current()->NPObjectIsRegistered(mObject),
-                 "NPObject still registered!");
   }
+  NS_ASSERTION(!PluginModuleChild::current()->
+               NPObjectIsRegisteredForActor(this),
+               "NPObjects still registered for this actor!");
 }
 
 void
@@ -677,6 +678,7 @@ PluginScriptableObjectChild::Initialize(PluginInstanceChild* aInstance,
     // dies we will send the destructor message to the parent.
     NS_ASSERTION(aObject->referenceCount == 1, "Some kind of live object!");
     aObject->referenceCount = 0;
+    NS_LOG_RELEASE(aObject, 0, "ChildNPObject");
   }
   else {
     // Plugin-provided object, retain here. This should be the only reference we

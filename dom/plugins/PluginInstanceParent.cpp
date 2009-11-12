@@ -164,34 +164,23 @@ PluginInstanceParent::InternalGetValueForNPObject(
 {
     NPObject* npobject;
     NPError result = mNPNIface->getvalue(mNPP, aVariable, (void*)&npobject);
-    if (result != NPERR_NO_ERROR || !npobject) {
-        *aValue = nsnull;
-        *aResult = result;
-        return true;
-    }
+    if (result == NPERR_NO_ERROR) {
+        NS_ASSERTION(npobject, "Shouldn't return null and NPERR_NO_ERROR!");
 
-    PluginScriptableObjectParent* actor =
-      static_cast<PluginScriptableObjectParent*>(
-        AllocPPluginScriptableObject());
-
-    if (!actor) {
+        PluginScriptableObjectParent* actor = GetActorForNPObject(npobject);
         mNPNIface->releaseobject(npobject);
-        *aValue = nsnull;
-        *aResult = NPERR_OUT_OF_MEMORY_ERROR;
-        return true;
+        if (actor) {
+            *aValue = actor;
+            *aResult = NPERR_NO_ERROR;
+            return true;
+        }
+
+        NS_ERROR("Failed to get actor!");
+        result = NPERR_GENERIC_ERROR;
     }
 
-    if (!CallPPluginScriptableObjectConstructor(actor)) {
-        mNPNIface->releaseobject(npobject);
-        DeallocPPluginScriptableObject(actor);
-        *aValue = nsnull;
-        *aResult = NPERR_GENERIC_ERROR;
-        return true;
-    }
-
-    actor->Initialize(const_cast<PluginInstanceParent*>(this), npobject);
-    *aValue = actor;
-    *aResult = NPERR_NO_ERROR;
+    *aValue = nsnull;
+    *aResult = result;
     return true;
 }
 

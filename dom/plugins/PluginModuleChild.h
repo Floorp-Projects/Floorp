@@ -149,7 +149,7 @@ public:
     PluginScriptableObjectChild* GetActorForNPObject(NPObject* aObject);
 
 #ifdef DEBUG
-    bool NPObjectIsRegistered(NPObject* aObject);
+    bool NPObjectIsRegisteredForActor(PluginScriptableObjectChild* aActor);
 #endif
 
 private:

@@ -1399,6 +1399,7 @@ _createobject(NPP npp, NPClass* aClass)
   if (npobj) {
     npobj->_class = aClass;
     npobj->referenceCount = 1;
+    NS_LOG_ADDREF(npobj, 1, "BrowserNPObject", sizeof(NPObject));
   }
 
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY,
@@ -1414,7 +1415,8 @@ _retainobject(NPObject* npobj)
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_retainobject called from the wrong thread\n"));
   }
   if (npobj) {
-    PR_AtomicIncrement((PRInt32*)&npobj->referenceCount);
+    int32_t refCnt = PR_AtomicIncrement((PRInt32*)&npobj->referenceCount);
+    NS_LOG_ADDREF(npobj, refCnt, "BrowserNPObject", sizeof(NPObject));
   }
 
   return npobj;
@@ -1430,6 +1432,7 @@ _releaseobject(NPObject* npobj)
     return;
 
   int32_t refCnt = PR_AtomicDecrement((PRInt32*)&npobj->referenceCount);
+  NS_LOG_RELEASE(npobj, refCnt, "BrowserNPObject");
 
   if (refCnt == 0) {
     nsNPObjWrapper::OnDestroy(npobj);
