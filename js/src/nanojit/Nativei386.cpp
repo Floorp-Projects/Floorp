@@ -1747,7 +1747,7 @@ namespace nanojit
                 // compare two different numbers
                 int d = findMemFor(rhs);
                 int pop = lhs->isUnusedOrHasUnknownReg();
-                findSpecificRegForUnallocated(lhs, FST0);
+                findSpecificRegFor(lhs, FST0);
                 // lhs is in ST(0) and rhs is on stack
                 FCOM(pop, d, FP);
             }
@@ -1755,7 +1755,7 @@ namespace nanojit
             {
                 // compare n to itself, this is a NaN test.
                 int pop = lhs->isUnusedOrHasUnknownReg();
-                findSpecificRegForUnallocated(lhs, FST0);
+                findSpecificRegFor(lhs, FST0);
                 // value in ST(0)
                 if (pop)
                     FCOMPP();
