@@ -66,6 +66,9 @@ _TEST_FILES =   imgutils.js \
                 test_bug512435.html \
                 damon.jpg \
                 shaver.png \
+                test_bug497665.html \
+                bug497665-iframe.html \
+                bug497665.sjs \
 		$(NULL)
 
 #test_bug435296.html disabled until we re-enable decode-on-draw
