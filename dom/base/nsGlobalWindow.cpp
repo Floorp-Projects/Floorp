@@ -9913,12 +9913,27 @@ nsNavigator::MozIsLocallyAvailable(const nsAString &aURI,
 NS_IMETHODIMP nsNavigator::GetGeolocation(nsIDOMGeoGeolocation **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
 
-  if (!mGeolocation && mDocShell) {
-    nsCOMPtr<nsIDOMWindow> contentDOMWindow(do_GetInterface(mDocShell));
-    mGeolocation = new nsGeolocation(contentDOMWindow);
+  if (mGeolocation) {
+    NS_ADDREF(*_retval = mGeolocation);
+    return NS_OK;
   }
 
-  NS_IF_ADDREF(*_retval = mGeolocation);
-  return NS_OK;
+  if (!mDocShell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMWindow> contentDOMWindow(do_GetInterface(mDocShell));
+  if (!contentDOMWindow)
+    return NS_ERROR_FAILURE;
+    
+  mGeolocation = new nsGeolocation();
+  if (!mGeolocation)
+    return NS_ERROR_FAILURE;
+  
+  if (NS_FAILED(mGeolocation->Init(contentDOMWindow)))
+    return NS_ERROR_FAILURE;
+  
+  NS_ADDREF(*_retval = mGeolocation);    
+  return NS_OK; 
 }
