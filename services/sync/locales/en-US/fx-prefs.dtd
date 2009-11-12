@@ -29,6 +29,8 @@
 <!ENTITY createAccountButton.label      "Create Mozilla Weave Account">
 <!ENTITY createAccountButton.accesskey  "C">
 
+<!ENTITY noScriptWarning.label        "We have detected that you have NoScript installed.  You will may to allow scripts temporarily for the install to proceed.">
+
 <!ENTITY goBack.label                 "Back">
 <!ENTITY continue.label               "Continue">
 
