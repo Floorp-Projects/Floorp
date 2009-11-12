@@ -1,22 +1,9 @@
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-
 const DG_BACKGROUND = "/desktop/gnome/background"
 const DG_IMAGE_KEY = DG_BACKGROUND + "/picture_filename";
 const DG_OPTION_KEY = DG_BACKGROUND + "/picture_options";
 const DG_DRAW_BG_KEY = DG_BACKGROUND + "/draw_background";
 
-var testPage;
-
-function url(spec) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  return ios.newURI(spec, null, null);
-}
-
 function onPageLoad() {
-  testPage.events.removeListener("load", onPageLoad);
-
   var bs = Cc["@mozilla.org/intl/stringbundle;1"].
            getService(Ci.nsIStringBundleService);
   var brandName = bs.createBundle("chrome://branding/locale/brand.properties").
@@ -49,7 +36,7 @@ function onPageLoad() {
   var prevOptionKey = gconf.getString(DG_OPTION_KEY);
   var prevDrawBgKey = gconf.getBool(DG_DRAW_BG_KEY);
 
-  var image = testPage.document.getElementsByTagName("img")[0];
+  var image = content.document.images[0];
 
   function checkWallpaper(position, expectedGConfPosition) {
     shell.setDesktopBackground(image, position);
@@ -72,10 +59,10 @@ function onPageLoad() {
   gconf.setBool(DG_DRAW_BG_KEY, prevDrawBgKey);
 
   wpFile.remove(false);
-  if (wpFileBackup.exists()) {
-   wpFileBackup.moveTo(null, wpFile.leafName);
-  }
-  testPage.close();
+  if (wpFileBackup.exists())
+    wpFileBackup.moveTo(null, wpFile.leafName);
+
+  gBrowser.removeCurrentTab();
   finish();
 }
 
@@ -84,15 +71,12 @@ function test() {
                  getService(Ci.nsIXULRuntime).OS;
 
   // This test is Linux specific for now
-  if (osString != "Linux") {
-    finish();
+  if (osString != "Linux")
     return;
-  }
 
-  testPage = Application.activeWindow.open(url("about:blank"));
-  testPage.events.addListener("load", onPageLoad);
-  testPage.load(url("about:logo"));
-  testPage.focus();
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedBrowser.addEventListener("load", onPageLoad, true);
+  content.location = "about:logo";
 
   waitForExplicitFinish();
 }
