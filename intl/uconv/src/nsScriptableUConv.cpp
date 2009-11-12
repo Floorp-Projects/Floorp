@@ -194,7 +194,7 @@ nsScriptableUnicodeConverter::ConvertFromByteArray(const PRUint8* aData,
 }
 
 /* void convertToByteArray(in AString aString,
-                          out unsigned long aLen,
+                          [optional] out unsigned long aLen,
                           [array, size_is(aLen),retval] out octet aData);
  */
 NS_IMETHODIMP
