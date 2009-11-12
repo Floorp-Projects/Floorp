@@ -443,7 +443,7 @@ WeaveSvc.prototype = {
       this.syncOnIdle();
     }
     else if (!this._syncTimer) // start the clock if it isn't already
-      this._checkSyncStatus();
+      this._scheduleNextSync();
   },
 
   // These are global (for all engines)
@@ -616,13 +616,26 @@ WeaveSvc.prototype = {
 
   resetPassphrase: function WeaveSvc_resetPassphrase(newphrase)
     this._catch(this._notify("resetpph", "", function() {
-      // Save the new passphrase
-      this.passphrase = newphrase;
-      this.persistLogin();
+      /* Make remote commands ready so we have a list of clients beforehand */
+      this.prepCommand("logout", []);
+      let clientsBackup = Clients._store.clients;
 
-      // Start over by wiping the server and reuploading
-      this.login();
-      this._freshStart(SYNCID_RESET_PASSPHRASE);
+      /* Wipe */
+      this.wipeServer();
+      PubKeys.clearCache();
+      PrivKeys.clearCache();
+
+      /* Set remote commands before syncing */
+      Clients._store.clients = clientsBackup;
+      let username = this.username;
+      let password = this.password;
+      this.logout();
+
+      /* Set this so UI is updated on next run */
+      this.passphrase = newphrase;
+
+      /* Login in sync: this also generates new keys */
+      this.login(username, password, newphrase);
       this.sync(true);
       return true;
     }))(),
@@ -793,6 +806,8 @@ WeaveSvc.prototype = {
   // stuff we need to to after login, before we can really do
   // anything (e.g. key setup)
   _remoteSetup: function WeaveSvc__remoteSetup() {
+    let reset = false;
+
     this._log.debug("Fetching global metadata record");
     let meta = Records.import(this.metaURL);
 
@@ -828,6 +843,7 @@ WeaveSvc.prototype = {
         Status.sync = DESKTOP_VERSION_OUT_OF_DATE;
         return false;
       }
+      reset = true;
       this._log.info("Wiping server data");
       this._freshStart();
 
@@ -845,19 +861,13 @@ WeaveSvc.prototype = {
       return false;
 
     } else if (meta.payload.syncID != Clients.syncID) {
-      let reason = meta.payload.reason;
+      this._log.warn("Meta.payload.syncID is " + meta.payload.syncID +
+                     ", Clients.syncID is " + Clients.syncID);
       this.resetClient();
-      this._log.debug("Reset client on syncID mismatch: " + reason);
+      this._log.info("Reset client because of syncID mismatch.");
       Clients.syncID = meta.payload.syncID;
+      this._log.info("Reset the client after a server/client sync ID mismatch");
       this._updateRemoteVersion(meta);
-
-      // For some syncID changes, we might want to wait for the user
-      switch (reason) {
-        case SYNCID_WIPE_REMOTE:
-        case SYNCID_RESET_PASSPHRASE:
-          Status.sync = reason;
-          return false;
-      }
     }
     // We didn't wipe the server and we're not out of date, so update remote
     else
@@ -896,6 +906,12 @@ WeaveSvc.prototype = {
                        "is disabled.  Aborting sync");
         Status.sync = NO_KEYS_NO_KEYGEN;
         return false;
+      }
+
+      if (!reset) {
+        this._log.warn("Calling freshStart from !reset case.");
+        this._freshStart();
+        this._log.info("Server data wiped to ensure consistency due to missing keys");
       }
 
       let passphrase = ID.get("WeaveCryptoID");
@@ -1093,6 +1109,24 @@ WeaveSvc.prototype = {
     this._log.trace("Refreshing client list");
     Clients.sync();
 
+    // Process the incoming commands if we have any
+    if (Clients.getClients()[Clients.clientID].commands) {
+      try {
+        if (!(this.processCommands())) {
+          Status.sync = ABORT_SYNC_COMMAND;
+          throw "aborting sync, process commands said so";
+        }
+
+        // Repeat remoteSetup in-case the commands forced us to reset
+        if (!(this._remoteSetup()))
+          throw "aborting sync, remote setup failed after processing commands";
+      }
+      finally {
+        // Always immediately push back the local client (now without commands)
+        Clients.sync();
+      }
+    }
+
     // Update the client mode now because it might change what we sync
     this._updateClientMode();
 
@@ -1183,17 +1217,18 @@ WeaveSvc.prototype = {
     }
   },
 
-  _freshStart: function WeaveSvc__freshStart(reason) {
+  _freshStart: function WeaveSvc__freshStart() {
     this.resetClient();
-    this._log.info("Resetting client and wiping server: " + reason);
+    this._log.info("Reset client data from freshStart.");
+    this._log.info("Client metadata wiped, deleting server data");
     this.wipeServer();
 
     // XXX Bug 504125 Wait a while after wiping so that the DELETEs replicate
     Sync.sleep(2000);
 
+    this._log.debug("Uploading new metadata record");
     let meta = new WBORecord(this.metaURL);
     meta.payload.syncID = Clients.syncID;
-    meta.payload.reason = reason;
     this._updateRemoteVersion(meta);
   },
 
@@ -1296,7 +1331,16 @@ WeaveSvc.prototype = {
   wipeRemote: function WeaveSvc_wipeRemote(engines)
     this._catch(this._notify("wipe-remote", "", function() {
       // Clear out any server data
-      this._freshStart(SYNCID_WIPE_REMOTE);
+      //this.wipeServer(engines);
+
+      // Only wipe the engines provided
+      if (engines) {
+        engines.forEach(function(e) this.prepCommand("wipeEngine", [e]), this);
+        return;
+      }
+
+      // Tell the remote machines to wipe themselves
+      this.prepCommand("wipeAll", []);
     }))(),
 
   /**
@@ -1350,4 +1394,126 @@ WeaveSvc.prototype = {
         this._log.debug("Could not remove old snapshots: " + Utils.exceptionStr(e));
       }
     }))(),
+
+  /**
+   * A hash of valid commands that the client knows about. The key is a command
+   * and the value is a hash containing information about the command such as
+   * number of arguments and description.
+   */
+  _commands: [
+    ["resetAll", 0, "Clear temporary local data for all engines"],
+    ["resetEngine", 1, "Clear temporary local data for engine"],
+    ["wipeAll", 0, "Delete all client data for all engines"],
+    ["wipeEngine", 1, "Delete all client data for engine"],
+    ["logout", 0, "Log out client"],
+  ].reduce(function WeaveSvc__commands(commands, entry) {
+    commands[entry[0]] = {};
+    for (let [i, attr] in Iterator(["args", "desc"]))
+      commands[entry[0]][attr] = entry[i + 1];
+    return commands;
+  }, {}),
+
+  /**
+   * Check if the local client has any remote commands and perform them.
+   *
+   * @return False to abort sync
+   */
+  processCommands: function WeaveSvc_processCommands()
+    this._notify("process-commands", "", function() {
+      let info = Clients.getInfo(Clients.clientID);
+      let commands = info.commands;
+
+      // Immediately clear out the commands as we've got them locally
+      delete info.commands;
+      Clients.setInfo(Clients.clientID, info);
+
+      // Process each command in order
+      for each ({command: command, args: args} in commands) {
+        this._log.debug("Processing command: " + command + "(" + args + ")");
+
+        let engines = [args[0]];
+        switch (command) {
+          case "resetAll":
+            engines = null;
+            // Fallthrough
+          case "resetEngine":
+            this.resetClient(engines);
+            break;
+          case "wipeAll":
+            engines = null;
+            // Fallthrough
+          case "wipeEngine":
+            this.wipeClient(engines);
+            break;
+          case "logout":
+            this.logout();
+            return false;
+          default:
+            this._log.debug("Received an unknown command: " + command);
+            break;
+        }
+      }
+
+      return true;
+    })(),
+
+  /**
+   * Prepare to send a command to each remote client. Calling this doesn't
+   * actually sync the command data to the server. If the client already has
+   * the command/args pair, it won't get a duplicate action.
+   *
+   * @param command
+   *        Command to invoke on remote clients
+   * @param args
+   *        Array of arguments to give to the command
+   */
+  prepCommand: function WeaveSvc_prepCommand(command, args) {
+    let commandData = this._commands[command];
+    // Don't send commands that we don't know about
+    if (commandData == null) {
+      this._log.error("Unknown command to send: " + command);
+      return;
+    }
+    // Don't send a command with the wrong number of arguments
+    else if (args == null || args.length != commandData.args) {
+      this._log.error("Expected " + commandData.args + " args for '" +
+                      command + "', but got " + args);
+      return;
+    }
+
+    // Package the command/args pair into an object
+    let action = {
+      command: command,
+      args: args,
+    };
+    let actionStr = command + "(" + args + ")";
+
+    // Convert args into a string to simplify array comparisons
+    let jsonArgs = JSON.stringify(args);
+    let notDupe = function(action) action.command != command ||
+      JSON.stringify(action.args) != jsonArgs;
+
+    this._log.info("Sending clients: " + actionStr + "; " + commandData.desc);
+
+    // Add the action to each remote client
+    for (let guid in Clients.getClients()) {
+      // Don't send commands to the local client
+      if (guid == Clients.clientID)
+        continue;
+
+      let info = Clients.getInfo(guid);
+      // Set the action to be a new commands array if none exists
+      if (info.commands == null)
+        info.commands = [action];
+      // Add the new action if there are no duplicates
+      else if (info.commands.every(notDupe))
+        info.commands.push(action);
+      // Must have been a dupe.. skip!
+      else
+        continue;
+
+      Clients.setInfo(guid, info);
+      this._log.trace("Client " + guid + " got a new action: " + actionStr);
+    }
+  },
 };
