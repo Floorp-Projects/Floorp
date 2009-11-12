@@ -189,7 +189,7 @@ HistoryStore.prototype = {
         options = this._hsvc.getNewQueryOptions();
 
     query.minVisits = 1;
-    options.maxResults = 100;
+    options.maxResults = 1000;
     options.sortingMode = options.SORT_BY_DATE_DESCENDING;
     options.queryType = options.QUERY_TYPE_HISTORY;
 
