@@ -439,6 +439,13 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp);
 
 #endif /* JS_GCMETER */
 
+/*
+ * This function is defined in jsdbgapi.cpp but is declared here to avoid
+ * polluting jsdbgapi.h, a public API header, with internal functions.
+ */
+extern void
+js_MarkTraps(JSTracer *trc);
+
 JS_END_EXTERN_C
 
 #endif /* jsgc_h___ */

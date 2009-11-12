@@ -52,6 +52,7 @@ CPPSRCS = \
   testIntString.cpp \
   testLookup.cpp \
   testPropCache.cpp \
+  testTrap.cpp \
   testSameValue.cpp \
   testXDR.cpp \
   $(NULL)
