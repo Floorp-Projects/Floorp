@@ -1198,7 +1198,7 @@ var PlacesUIUtils = {
     }
 
     // Get all items marked as being the left pane folder.
-    let items = as.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO, {});
+    let items = as.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO);
     if (items.length > 1) {
       // Something went wrong, we cannot have more than one left pane folder,
       // remove all left pane folders and continue.  We will create a new one.
@@ -1223,7 +1223,7 @@ var PlacesUIUtils = {
       delete this.leftPaneQueries;
       this.leftPaneQueries = {};
 
-      let items = as.getItemsWithAnnotation(ORGANIZER_QUERY_ANNO, {});
+      let items = as.getItemsWithAnnotation(ORGANIZER_QUERY_ANNO);
       // While looping through queries we will also check for their validity.
       let queriesCount = 0;
       for(let i = 0; i < items.length; i++) {
