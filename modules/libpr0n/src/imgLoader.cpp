@@ -1461,21 +1461,26 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
     // Try to add the new request into the cache.
     PutIntoCache(aURI, entry);
-
-  // If we did get a cache hit, use it.
   } else {
-    // XXX: Should this be executed if an expired cache entry does not have a caching channel??
     LOG_MSG_WITH_PARAM(gImgLog, 
                        "imgLoader::LoadImage |cache hit|", "request", request);
-
-    // Update the request's LoadId
-    request->SetLoadId(aCX);
   }
+
 
   // If we didn't get a proxy when validating the cache entry, we need to create one.
   if (!*_retval) {
-    LOG_MSG(gImgLog, "imgLoader::LoadImage", "creating proxy request.");
+    // ValidateEntry() has three return values: "Is valid," "might be valid --
+    // validating over network", and "not valid." If we don't have a _retval,
+    // we know ValidateEntry is not validating over the network, so it's safe
+    // to SetLoadId here because we know this request is valid for this context.
+    //
+    // Note, however, that this doesn't guarantee the behaviour we want (one
+    // URL maps to the same image on a page) if we load the same image in a
+    // different tab (see bug 528003), because its load id will get re-set, and
+    // that'll cause us to validate over the network.
+    request->SetLoadId(aCX);
 
+    LOG_MSG(gImgLog, "imgLoader::LoadImage", "creating proxy request.");
     rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
                                   requestFlags, aRequest, _retval);
     imgRequestProxy *proxy = static_cast<imgRequestProxy *>(*_retval);
