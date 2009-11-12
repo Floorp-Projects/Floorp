@@ -41,6 +41,7 @@
 #include "mozilla/ipc/GeckoThread.h"
 
 #include "nsDebug.h"
+#include "nsTraceRefcnt.h"
 
 #define RPC_ASSERT(_cond, ...)                                      \
     do {                                                            \
