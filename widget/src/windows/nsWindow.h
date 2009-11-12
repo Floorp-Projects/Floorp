@@ -394,7 +394,9 @@ protected:
                                               PRBool aIntersectWithExisting);
   nsCOMPtr<nsIRegion>     GetRegionToPaint(PRBool aForceFullRepaint, 
                                            PAINTSTRUCT ps, HDC aDC);
-
+#if !defined(WINCE)
+  static void             ActivateOtherWindowHelper(HWND aWnd);
+#endif
 #ifdef ACCESSIBILITY
   static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc);
 #endif // ACCESSIBILITY
