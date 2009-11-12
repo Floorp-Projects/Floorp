@@ -237,6 +237,17 @@ PluginModuleChild::GetActorForNPObject(NPObject* aObject)
     return mObjectMap.Get(aObject, &actor) ? actor : nsnull;
 }
 
+#ifdef DEBUG
+bool
+PluginModuleChild::NPObjectIsRegistered(NPObject* aObject)
+{
+    AssertPluginThread();
+    NS_ASSERTION(mObjectMap.IsInitialized(), "Not initialized!");
+    NS_ASSERTION(aObject, "Null pointer!");
+    return mObjectMap.Get(aObject, nsnull);
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // FIXME/cjones: just getting this out of the way for the moment ...
 
