@@ -40,6 +40,8 @@
 include protocol "PContentProcess.ipdl";
 include protocol "PDocumentRenderer.ipdl";
 
+include "mozilla/TabTypes.h";
+
 using PRUint32;
 using PRInt32;
 using MagicWindowHandle;
