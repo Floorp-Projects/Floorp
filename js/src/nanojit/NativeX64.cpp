@@ -317,7 +317,7 @@ namespace nanojit
         rr = prepResultReg(ins, allow);
         // if this is last use of a in reg, we can re-use result reg
         if (a->isUnusedOrHasUnknownReg()) {
-            ra = findSpecificRegFor(a, rr);
+            ra = findSpecificRegForUnallocated(a, rr);
         } else if (!(allow & rmask(a->getReg()))) {
             // 'a' already has a register assigned, but it's not valid.
             // To make sure floating point operations stay in FPU registers
@@ -471,7 +471,7 @@ namespace nanojit
 
         Register rhsReg = findRegFor(rhs, (GpRegs ^ (rmask(RAX)|rmask(RDX))));
         Register lhsReg = lhs->isUnusedOrHasUnknownReg()
-                          ? findSpecificRegFor(lhs, RAX)
+                          ? findSpecificRegForUnallocated(lhs, RAX)
                           : lhs->getReg();
         emitr(X64_idiv, rhsReg);
         emit8(rexrb(X64_sari | uint64_t(RDX&7)<<48, (Register)0, RDX), 31);
@@ -1207,7 +1207,7 @@ namespace nanojit
         rr = prepResultReg(ins, allow);
         // if this is last use of a in reg, we can re-use result reg
         if (a->isUnusedOrHasUnknownReg()) {
-            ra = findSpecificRegFor(a, rr);
+            ra = findSpecificRegForUnallocated(a, rr);
         } else {
             // 'a' already has a register assigned.  Caller must emit a copy
             // to rr once instr code is generated.  (ie  mov rr,ra ; op rr)
