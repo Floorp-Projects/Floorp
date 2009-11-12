@@ -2651,6 +2651,7 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
         JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_traversal, trc);
     js_TraceAtomState(trc, allAtoms);
     js_TraceRuntimeNumberState(trc);
+    js_MarkTraps(trc);
 
     iter = NULL;
     while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL)
