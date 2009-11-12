@@ -16,10 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Norris Boyd
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,52 +35,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-414098.js';
+var gTestfile = 'regress-478047.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 414098;
-var summary = 'Getter behavior on arrays';
+var BUGNUMBER = 478047;
+var summary = 'Assign to property with getter but no setter should throw ' +
+  'TypeError';
 var actual = '';
 var expect = '';
 
-var a=[1,2,3];
-var foo = 44;
-a.__defineGetter__(1, function() { return foo + 10; });
-actual = String(a);
-reportCompare("1,54,3", actual, "getter 1");
 
-actual = String(a.reverse());
-reportCompare("3,54,1", actual, "reverse");
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
 
-var s = "";
-a.forEach(function(e) { s += e + "|"; });
-actual = s;
-reportCompare("3|54|1|", actual, "forEach");
-
-actual = a.join(' - ');
-reportCompare("3 - 54 - 1", actual, "join");
-
-try
+function test()
 {
-  actual = String(a.sort());
-}
-catch(ex)
-{
-  actual = ex + '';
-}
-reportCompare("TypeError: setting a property that has only a getter", actual, "sort");
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
 
-try
-{
-  a[2]=3;
-}
-catch(ex)
-{
-  actual = ex + '';
-}
-reportCompare("TypeError: setting a property that has only a getter", actual, "setter");
+  expect = 'TypeError: setting a property that has only a getter';
+  try
+  { 
+    var o = { get p() { return "a"; } };
+    o.p = "b";
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary);
 
-actual = a.pop();
-reportCompare(3, actual, "pop");
 
-actual = a.pop();
-reportCompare(54, actual, "pop 2");
+  actual = '';
+  try
+  {
+    o = { get p() { return "a"; } };
+    T = (function () {});
+    T.prototype = o;
+    y = new T();
+    y.p = "b";
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+
+  reportCompare(expect, actual, summary);
+
+  exitFunc ('test');
+}

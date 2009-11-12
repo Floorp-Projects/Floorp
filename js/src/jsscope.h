@@ -691,8 +691,10 @@ JSScopeProperty::set(JSContext* cx, JSObject* obj, jsval* vp)
         return js_InternalGetOrSet(cx, obj, id, fval, JSACC_WRITE, 1, vp, vp);
     }
 
-    if (attrs & JSPROP_GETTER)
-        return !!js_ReportGetterOnlyAssignment(cx);
+    if (attrs & JSPROP_GETTER) {
+        js_ReportGetterOnlyAssignment(cx);
+        return false;
+    }
 
     /* See the comment in JSScopeProperty::get as to why we can check for With. */
     if (STOBJ_GET_CLASS(obj) == &js_WithClass)

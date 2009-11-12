@@ -54,6 +54,8 @@ function test()
 
   jit(true);
 
+  expect = 'TypeError: setting a property that has only a getter';
+
   try
   {
     q getter= function(){}; for (var j = 0; j < 4; ++j) q = 1;
