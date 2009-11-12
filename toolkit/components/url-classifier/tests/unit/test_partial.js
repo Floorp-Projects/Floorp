@@ -49,8 +49,7 @@ getHash: function(fragment)
   var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
   createInstance(Ci.nsIScriptableUnicodeConverter);
   converter.charset = "UTF-8";
-  var result = {};
-  var data = converter.convertToByteArray(fragment, result);
+  var data = converter.convertToByteArray(fragment);
   var ch = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
   ch.init(ch.SHA256);
   ch.update(data, data.length);
