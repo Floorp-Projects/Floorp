@@ -49,10 +49,10 @@ function test() {
 
   function browserWindowsCount() {
     let count = 0;
-    let e = wm.getXULWindowEnumerator("navigator:browser");
+    let e = wm.getEnumerator("navigator:browser");
     while (e.hasMoreElements()) {
-      ++count;
-      e.getNext();
+      if (!e.getNext().closed)
+        ++count;
     }
 
     return count;
