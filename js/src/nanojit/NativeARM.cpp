@@ -543,6 +543,13 @@ Assembler::nFragExit(LInsp guard)
     }
 #endif
 
+    // profiling for the exit
+    verbose_only(
+       if (_logc->lcbits & LC_FragProfile) {
+           asm_inc_m32( &guard->record()->profCount );
+       }
+    )
+
     // Pop the stack frame.
     MOV(SP, FP);
 }
@@ -1397,9 +1404,38 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
 // Increment the 32-bit profiling counter at pCtr, without
 // changing any registers.
 verbose_only(
-void Assembler::asm_inc_m32(uint32_t* /*pCtr*/)
+void Assembler::asm_inc_m32(uint32_t* pCtr)
 {
-    // todo: implement this
+    // We need to temporarily free up two registers to do this, so
+    // just push r0 and r1 on the stack.  This assumes that the area
+    // at r13 - 8 .. r13 - 1 isn't being used for anything else at
+    // this point.  This guaranteed us by the EABI; although the
+    // situation with the legacy ABI I'm not sure of.
+    //
+    // Plan: emit the following bit of code.  It's not efficient, but
+    // this is for profiling debug builds only, and is self contained,
+    // except for above comment re stack use.
+    //
+    // E92D0003                 push    {r0,r1}
+    // E59F0000                 ldr     r0, [r15]   ; pCtr
+    // EA000000                 b       .+8         ; jump over imm
+    // 12345678                 .word   0x12345678  ; pCtr
+    // E5901000                 ldr     r1, [r0]
+    // E2811001                 add     r1, r1, #1
+    // E5801000                 str     r1, [r0]
+    // E8BD0003                 pop     {r0,r1}
+
+    // We need keep the 4 words beginning at "ldr r0, [r15]"
+    // together.  Simplest to underrunProtect the whole thing.
+    underrunProtect(8*4);
+    IMM32(0xE8BD0003);       //  pop     {r0,r1}
+    IMM32(0xE5801000);       //  str     r1, [r0]
+    IMM32(0xE2811001);       //  add     r1, r1, #1
+    IMM32(0xE5901000);       //  ldr     r1, [r0]
+    IMM32((uint32_t)pCtr);   //  .word   pCtr
+    IMM32(0xEA000000);       //  b       .+8
+    IMM32(0xE59F0000);       //  ldr     r0, [r15]
+    IMM32(0xE92D0003);       //  push    {r0,r1}
 }
 )
 
