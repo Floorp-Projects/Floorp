@@ -72,6 +72,10 @@ endif
 
 tier_external_dirs	+= gfx/qcms
 
+ifeq ($(OS_ARCH),WINCE)
+tier_external_dirs += modules/lib7z
+endif
+
 #
 # tier "gecko" - core components
 #
