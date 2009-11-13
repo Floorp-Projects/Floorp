@@ -35,14 +35,21 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= unicharutil uconv locale strres lwbrk build
+PARALLEL_DIRS = \
+  locale \
+  lwbrk \
+  strres \
+  uconv \
+  unicharutil \
+  $(NULL)
+
+DIRS = build
 
 include $(topsrcdir)/config/rules.mk
-
