@@ -276,7 +276,7 @@ TabChild::RecvcreateWidget(const MagicWindowHandle& parentWidget)
 }
 
 bool
-TabChild::RecvdestroyWidget()
+TabChild::destroyWidget()
 {
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
     if (baseWindow)
@@ -287,11 +287,11 @@ TabChild::RecvdestroyWidget()
 
 TabChild::~TabChild()
 {
+    destroyWidget();
     nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(mWebNav);
     if (webBrowser) {
       webBrowser->SetContainerWindow(nsnull);
     }
-    // TODObsmedberg: destroy the window!
 }
 
 bool
