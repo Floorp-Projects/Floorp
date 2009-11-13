@@ -179,8 +179,6 @@ namespace nanojit
 
     int32_t LirBuffer::insCount()
     {
-        // A LIR_skip payload is considered part of the LIR_skip, and LIR_call
-        // arg slots are considered part of the LIR_call.
         return _stats.lir;
     }
 
@@ -210,13 +208,16 @@ namespace nanojit
     {
         // Make sure the size is ok
         NanoAssert(0 == szB % sizeof(void*));
-        NanoAssert(sizeof(LIns) <= szB && szB <= MAX_LINS_SZB);
+        NanoAssert(sizeof(LIns) <= szB && szB <= sizeof(LInsSti));  // LInsSti is the biggest one
         NanoAssert(_unused < _limit);
+
+        debug_only( bool moved = false; )
 
         // If the instruction won't fit on the current chunk, get a new chunk
         if (_unused + szB > _limit) {
             uintptr_t addrOfLastLInsOnChunk = _unused - sizeof(LIns);
             moveToNewChunk(addrOfLastLInsOnChunk);
+            debug_only( moved = true; )
         }
 
         // We now know that we are on a chunk that has the requested amount of
@@ -234,6 +235,7 @@ namespace nanojit
         if (_unused >= _limit) {
             // Check we used exactly the remaining space
             NanoAssert(_unused == _limit);
+            NanoAssert(!moved);     // shouldn't need to moveToNewChunk twice
             uintptr_t addrOfLastLInsOnChunk = _unused - sizeof(LIns);
             moveToNewChunk(addrOfLastLInsOnChunk);
         }
@@ -364,27 +366,6 @@ namespace nanojit
         } u;
         u.d = d;
         ins->initLInsI64(LIR_float, u.q);
-        return ins;
-    }
-
-    LInsp LirBufWriter::insSkip(size_t payload_szB)
-    {
-        // First, round up payload_szB to a multiple of the word size.  To
-        // ensure that the rounding up won't cause it to exceed
-        // NJ_MAX_SKIP_PAYLOAD_SZB, NJ_MAX_SKIP_PAYLOAD_SZB must also be a
-        // multiple of the word size, which we check.
-        payload_szB = alignUp(payload_szB, sizeof(void*));
-        NanoAssert(0 == LirBuffer::MAX_SKIP_PAYLOAD_SZB % sizeof(void*));
-        NanoAssert(sizeof(void*) <= payload_szB && payload_szB <= LirBuffer::MAX_SKIP_PAYLOAD_SZB);
-
-        uintptr_t payload = _buf->makeRoom(payload_szB + sizeof(LInsSk));
-        uintptr_t prevLInsAddr = payload - sizeof(LIns);
-        LInsSk* insSk = (LInsSk*)(payload + payload_szB);
-        LIns*   ins   = insSk->getLIns();
-        // not sure what we want to assert here since chunks aren't pages anymore
-        //NanoAssert(prevLInsAddr >= pageDataStart(prevLInsAddr));
-        //NanoAssert(samepage(prevLInsAddr, insSk));
-        ins->initLInsSk((LInsp)prevLInsAddr);
         return ins;
     }
 

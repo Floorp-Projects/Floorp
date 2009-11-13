@@ -207,29 +207,9 @@ namespace nanojit
     //        oprnd_1
     //        opcode + resv ] <-- LIns* ins
     //
-    // - LIR_skip instructions are more complicated.  They allow an arbitrary
-    //   blob of data (the "payload") to be placed in the LIR stream.  The
-    //   size of the payload is always a multiple of the word size.  A skip
-    //   instruction's operand points to the previous instruction, which lets
-    //   the payload be skipped over when reading backwards.  Here's an
-    //   example of a skip instruction with a 3-word payload preceded by an
-    //   LInsOp1:
-    //
-    //      [ oprnd_1
-    //  +->   opcode + resv           ]
-    //  |   [ data
-    //  |     data
-    //  |     data
-    //  +---- prevLIns                  <-- LInsSk* insSk == toLInsSk(ins)
-    //        opcode==LIR_skip + resv ] <-- LIns* ins
-    //
-    //   Skips are also used to link code pages.  If the first instruction on
-    //   a page isn't a LIR_start, it will be a skip, and the skip's operand
-    //   will point to the last LIns on the previous page.  In this case there
-    //   isn't a payload as such;  in fact, the previous page might be at a
-    //   higher address, ie. the operand might point forward rather than
-    //   backward.
-    //
+    // - LIR_skip instructions are used to link code chunks.  If the first  
+    //   instruction on a chunk isn't a LIR_start, it will be a skip, and the
+    //   skip's operand will point to the last LIns on the preceding chunk.  
     //   LInsSk has the same layout as LInsOp1, but we represent it as a
     //   different class because there are some places where we treat
     //   skips specially and so having it separate seems like a good idea.
@@ -241,7 +221,7 @@ namespace nanojit
     //   practice all sane compilers use a layout that results in this).  We
     //   also check that every LInsXYZ is word-aligned in
     //   LirBuffer::makeRoom();  this seems sensible to avoid potential
-    //   slowdowns due to misalignment.  It relies on pages themselves being
+    //   slowdowns due to misalignment.  It relies on chunks themselves being
     //   word-aligned, which is extremely likely.
     //
     // - There is an enum, LInsRepKind, with one member for each of the
@@ -386,7 +366,6 @@ namespace nanojit
         inline int32_t  disp() const;
 
         // For LInsSk.
-        inline void*    payload()  const;
         inline LIns*    prevLIns() const;
 
         // For LInsP.
@@ -935,13 +914,6 @@ namespace nanojit
         }
     }
 
-    void* LIns::payload() const {
-        NanoAssert(isop(LIR_skip));
-        // Operand 1 points to the previous LIns;  we move past it to get to
-        // the payload.
-        return (void*) (uintptr_t(prevLIns()) + sizeof(LIns));
-    }
-
     LIns* LIns::prevLIns() const {
         NanoAssert(isLInsSk());
         return toLInsSk()->prevLIns;
@@ -1070,9 +1042,6 @@ namespace nanojit
         virtual LInsp insAlloc(int32_t size) {
             NanoAssert(size != 0);
             return out->insAlloc(size);
-        }
-        virtual LInsp insSkip(size_t size) {
-            return out->insSkip(size);
         }
         virtual LInsp insJtbl(LIns* index, uint32_t size) {
             return out->insJtbl(index, size);
@@ -1406,22 +1375,11 @@ namespace nanojit
         protected:
             friend class LirBufWriter;
 
-            /** each chunk is just a raw area of LIns instances, with no header
-                and no more than 8-byte alignment.  The chunk size is somewhat arbitrary
-                as long as it's well larger than 2*sizeof(LInsSk) */
+            /** Each chunk is just a raw area of LIns instances, with no header
+                and no more than 8-byte alignment.  The chunk size is somewhat arbitrary. */
             static const size_t CHUNK_SZB = 8000;
 
-            /** the first instruction on a chunk is always a start instruction, or a
-             *  payload-less skip instruction linking to the previous chunk.  The biggest
-             *  possible instruction would take up the entire rest of the chunk. */
-            static const size_t MAX_LINS_SZB = CHUNK_SZB - sizeof(LInsSk);
-
-            /** the maximum skip payload size is determined by the maximum instruction
-             *  size.  We require that a skip's payload be adjacent to the skip LIns
-             *  itself. */
-            static const size_t MAX_SKIP_PAYLOAD_SZB = MAX_LINS_SZB - sizeof(LInsSk);
-
-            /** get CHUNK_SZB more memory for LIR instructions */
+            /** Get CHUNK_SZB more memory for LIR instructions. */
             void        chunkAlloc();
             void        moveToNewChunk(uintptr_t addrOfLastLInsOnCurrentChunk);
 
@@ -1441,22 +1399,21 @@ namespace nanojit
             }
 
             // LirWriter interface
-            LInsp    insLoad(LOpcode op, LInsp base, int32_t disp);
-            LInsp    insStorei(LInsp o1, LInsp o2, int32_t disp);
-            LInsp    ins0(LOpcode op);
-            LInsp    ins1(LOpcode op, LInsp o1);
-            LInsp    ins2(LOpcode op, LInsp o1, LInsp o2);
-            LInsp    ins3(LOpcode op, LInsp o1, LInsp o2, LInsp o3);
-            LInsp    insParam(int32_t i, int32_t kind);
-            LInsp    insImm(int32_t imm);
-            LInsp    insImmq(uint64_t imm);
-            LInsp    insImmf(double d);
-            LInsp    insCall(const CallInfo *call, LInsp args[]);
-            LInsp    insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
-            LInsp    insBranch(LOpcode v, LInsp condition, LInsp to);
-            LInsp    insAlloc(int32_t size);
-            LInsp    insSkip(size_t);
-            LInsp    insJtbl(LIns* index, uint32_t size);
+            LInsp   insLoad(LOpcode op, LInsp base, int32_t disp);
+            LInsp   insStorei(LInsp o1, LInsp o2, int32_t disp);
+            LInsp   ins0(LOpcode op);
+            LInsp   ins1(LOpcode op, LInsp o1);
+            LInsp   ins2(LOpcode op, LInsp o1, LInsp o2);
+            LInsp   ins3(LOpcode op, LInsp o1, LInsp o2, LInsp o3);
+            LInsp   insParam(int32_t i, int32_t kind);
+            LInsp   insImm(int32_t imm);
+            LInsp   insImmq(uint64_t imm);
+            LInsp   insImmf(double d);
+            LInsp   insCall(const CallInfo *call, LInsp args[]);
+            LInsp   insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
+            LInsp   insBranch(LOpcode v, LInsp condition, LInsp to);
+            LInsp   insAlloc(int32_t size);
+            LInsp   insJtbl(LIns* index, uint32_t size);
     };
 
     class LirFilter
