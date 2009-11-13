@@ -83,18 +83,15 @@ function test() {
         is(browserWindowsCount(), 2, "Two windows should exist at this point");
 
         // let the first window be focused (see above)
-        var fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-        if (window == fm.activeWindow) {
-          info("window is already active");
-          executeSoon(function () ss.setBrowserState(oldState));
-        } else {
-          info("waiting for window activation");
-          window.addEventListener("activate", function () {
-            info("window is now active");
-            window.removeEventListener("activate", arguments.callee, false);
+        function pollMostRecentWindow() {
+          if (wm.getMostRecentWindow("navigator:browser") == window) {
             ss.setBrowserState(oldState);
-          }, false);
+          } else {
+            info("waiting for the current window to become active");
+            setTimeout(pollMostRecentWindow, 0);
+          }
         }
+        pollMostRecentWindow();
       }
       else {
         is(browserWindowsCount(), 1, "Only one window should exist after cleanup");
