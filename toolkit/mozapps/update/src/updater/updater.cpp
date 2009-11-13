@@ -502,12 +502,16 @@ static FILE* ensure_open(const NS_tchar *path, const NS_tchar* flags, unsigned i
   ensure_write_permissions(path);
   FILE* f = NS_tfopen(path, flags);
   if (NS_tchmod(path, options) != 0) {
-    fclose(f);
+    if (f != NULL) {
+      fclose(f);
+    }
     return NULL;
   }
   struct stat ss;
   if (NS_tstat(path, &ss) != 0 || ss.st_mode != options) {
-    fclose(f);
+    if (f != NULL) {
+      fclose(f);
+    }
     return NULL;
   }
   return f;
@@ -599,12 +603,15 @@ static int backup_restore(const NS_tchar *path)
   NS_tsnprintf(backup, sizeof(backup), NS_T("%s" BACKUP_EXT), path);
 
   int rv = copy_file(backup, path);
-  if (rv)
+  if (rv) {
+    ensure_remove(backup);
     return rv;
+  }
 
   rv = ensure_remove(backup);
-  if (rv)
+  if (rv) {
     return WRITE_ERROR;
+  }
 
   return OK;
 }
