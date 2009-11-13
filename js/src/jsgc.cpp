@@ -636,11 +636,11 @@ NewGCArena(JSContext *cx)
     JSGCArenaInfo *a;
 
     JSRuntime *rt = cx->runtime;
-    if (rt->gcBytes >= rt->gcMaxBytes) {
+    if (!JS_THREAD_DATA(cx)->waiveGCQuota && rt->gcBytes >= rt->gcMaxBytes) {
         /*
          * FIXME bug 524051 We cannot run a last-ditch GC on trace for now, so
-         * as a workaround we allow to breach the max bytes limit here and
-         * schedule the GC later.
+         * just pretend we are out of memory which will throw us off trace and
+         * we will re-try this code path from the interpreter.
          */
         if (!JS_ON_TRACE(cx))
             return NULL;
@@ -1555,9 +1555,6 @@ js_NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
      * check for non-null lrs only when we exhaust the free list.
      */
     JSLocalRootStack *lrs = JS_THREAD_DATA(cx)->localRootStack;
-#ifdef JS_TRACER
-    bool fromTraceReserve = false;
-#endif
     for (;;) {
         if (lrs) {
             freeListp = lrs->gcFreeLists.finalizables + thingKind;
@@ -1568,19 +1565,6 @@ js_NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
                 break;
             }
         }
-
-#ifdef JS_TRACER
-        if (JS_TRACE_MONITOR(cx).useReservedObjects) {
-            JS_ASSERT(!JS_ON_TRACE(cx));
-            JS_ASSERT(thingKind == FINALIZE_OBJECT);
-            JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
-            thing = (JSGCThing *) tm->reservedObjects;
-            JS_ASSERT(thing);
-            tm->reservedObjects = JSVAL_TO_OBJECT(tm->reservedObjects->fslots[0]);
-            fromTraceReserve = true;
-            break;
-        }
-#endif
 
         thing = RefillFinalizableFreeList(cx, thingKind);
         if (thing) {
@@ -1607,19 +1591,8 @@ js_NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
          * See JS_EnterLocalRootScope and related APIs.
          */
         if (js_PushLocalRoot(cx, lrs, (jsval) thing) < 0) {
-            /*
-             * When we fail for a thing allocated from a free list, not from
-             * the reserved pool, the thing is not initialized. To prevent GC
-             * running the finalizer on the thing, we add the thing back to
-             * the free list. See bug 337407.
-             */
-#ifdef JS_TRACER
-            if (!fromTraceReserve)
-#endif
-            {
-                JS_ASSERT(thing->link == *freeListp);
-                *freeListp = thing;
-            }
+            JS_ASSERT(thing->link == *freeListp);
+            *freeListp = thing;
             return NULL;
         }
     } else {
@@ -1785,10 +1758,6 @@ js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
                 break;
             }
         }
-#ifdef JS_TRACER
-        if (JS_TRACE_MONITOR(cx).useReservedObjects)
-            return false;
-#endif
         thing = RefillDoubleFreeList(cx);
         if (thing) {
             JS_ASSERT(!*freeListp || *freeListp == thing);
@@ -1823,36 +1792,6 @@ js_NewWeaklyRootedDouble(JSContext *cx, jsdouble d)
     cx->weakRoots.newbornDouble = dp;
     return dp;
 }
-
-#ifdef JS_TRACER
-JSBool
-js_ReserveObjects(JSContext *cx, size_t nobjects)
-{
-   /*
-    * Ensure at least nobjects objects are in the list. fslots[1] of each
-    * object on the reservedObjects list is the length of the list to this
-    * object.
-    */
-   JSObject *&head = JS_TRACE_MONITOR(cx).reservedObjects;
-   size_t i = head ? JSVAL_TO_INT(head->fslots[1]) : 0;
-   while (i < nobjects) {
-       JSObject *obj = js_NewGCObject(cx);
-       if (!obj)
-           return JS_FALSE;
-       memset(obj, 0, sizeof(JSObject));
-
-       /* The class must be set to something for finalization. */
-       obj->classword = (jsuword) &js_ObjectClass;
-       obj->fslots[0] = OBJECT_TO_JSVAL(head);
-       i++;
-       obj->fslots[1] = INT_TO_JSVAL(i);
-       head = obj;
-   }
-
-   return JS_TRUE;
-}
-
-#endif
 
 /*
  * Shallow GC-things can be locked just by setting the GCF_LOCK bit, because
@@ -2598,48 +2537,6 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 #endif
 }
 
-#ifdef JS_TRACER
-
-static void
-MarkReservedGCThings(JSTraceMonitor *tm)
-{
-    /* Keep reserved doubles. */
-    for (jsval *ptr = tm->reservedDoublePool; ptr < tm->reservedDoublePoolPtr; ++ptr) {
-        jsdouble* dp = JSVAL_TO_DOUBLE(*ptr);
-        JS_ASSERT(js_GetGCThingTraceKind(dp) == JSTRACE_DOUBLE);
-
-        JSGCArenaInfo *a = THING_TO_ARENA(dp);
-        JS_ASSERT(!a->list);
-        if (!a->hasMarkedDoubles) {
-            ClearDoubleArenaFlags(a);
-            a->hasMarkedDoubles = JS_TRUE;
-        }
-        jsuint index = DOUBLE_THING_TO_INDEX(dp);
-        JS_SET_BIT(DOUBLE_ARENA_BITMAP(a), index);
-    }
-    /* Keep reserved objects. */
-    for (JSObject *obj = tm->reservedObjects; obj; obj = JSVAL_TO_OBJECT(obj->fslots[0])) {
-        JS_ASSERT(js_GetGCThingTraceKind(obj) == JSTRACE_OBJECT);
-
-        uint8 *flagp = GetGCThingFlags(obj);
-        *flagp |= GCF_MARK;
-    }
-}
-
-#ifdef JS_THREADSAFE
-static JSDHashOperator
-reserved_gcthings_marker(JSDHashTable *table, JSDHashEntryHdr *hdr,
-                         uint32, void *)
-{
-    JSThread *thread = ((JSThreadsHashEntry *) hdr)->thread;
-
-    MarkReservedGCThings(&thread->data.traceMonitor);
-    return JS_DHASH_NEXT;
-}
-#endif
-
-#endif
-
 JS_REQUIRES_STACK void
 js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
 {
@@ -2667,16 +2564,6 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
         if (rt->builtinFunctions[i])
             JS_CALL_OBJECT_TRACER(trc, rt->builtinFunctions[i], "builtin function");
     }
-
-    /* Mark reserved gcthings unless we are shutting down. */
-    if (IS_GC_MARKING_TRACER(trc) && rt->state != JSRTS_LANDING) {
-#ifdef JS_THREADSAFE
-        JS_DHashTableEnumerate(&rt->threads, reserved_gcthings_marker, NULL);
-#else
-        MarkReservedGCThings(&rt->threadData.traceMonitor);
-#endif
-    }
-
 #endif
 }
 

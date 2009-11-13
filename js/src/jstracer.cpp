@@ -315,6 +315,11 @@ nanojit::Allocator::postReset() {
     vma->mSize = 0;
 }
 
+static void OutOfMemoryAbort()
+{
+    JS_NOT_REACHED("out of memory");
+    abort();
+}
 
 #ifdef JS_JIT_SPEW
 static void
@@ -2697,64 +2702,6 @@ ValueToNative(JSContext* cx, jsval v, JSTraceType type, double* slot)
     JS_NOT_REACHED("unexpected type");
 }
 
-/*
- * We maintain an emergency pool of doubles so we can recover safely if a trace
- * runs out of memory (doubles or objects).
- */
-static jsval
-AllocateDoubleFromReservedPool(JSContext* cx)
-{
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    JS_ASSERT(tm->reservedDoublePoolPtr > tm->reservedDoublePool);
-    return *--tm->reservedDoublePoolPtr;
-}
-
-static bool
-ReplenishReservedPool(JSContext* cx, JSTraceMonitor* tm)
-{
-    /* We should not be called with a full pool. */
-    JS_ASSERT((size_t) (tm->reservedDoublePoolPtr - tm->reservedDoublePool) <
-              MAX_NATIVE_STACK_SLOTS);
-
-    /*
-     * When the GC runs in js_NewDoubleInRootedValue, it resets
-     * tm->reservedDoublePoolPtr back to tm->reservedDoublePool.
-     */
-    JSRuntime* rt = cx->runtime;
-    uintN gcNumber = rt->gcNumber;
-    uintN lastgcNumber = gcNumber;
-    jsval* ptr = tm->reservedDoublePoolPtr;
-    while (ptr < tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) {
-        if (!js_NewDoubleInRootedValue(cx, 0.0, ptr))
-            goto oom;
-
-        /* Check if the last call to js_NewDoubleInRootedValue GC'd. */
-        if (rt->gcNumber != lastgcNumber) {
-            lastgcNumber = rt->gcNumber;
-            ptr = tm->reservedDoublePool;
-
-            /*
-             * Have we GC'd more than once? We're probably running really
-             * low on memory, bail now.
-             */
-            if (uintN(rt->gcNumber - gcNumber) > uintN(1))
-                goto oom;
-            continue;
-        }
-        ++ptr;
-    }
-    tm->reservedDoublePoolPtr = ptr;
-    return true;
-
-oom:
-    /*
-     * Already massive GC pressure, no need to hold doubles back.
-     * We won't run any native code anyway.
-     */
-    tm->reservedDoublePoolPtr = tm->reservedDoublePool;
-    return false;
-}
-
 void
 JSTraceMonitor::flush()
 {
@@ -2853,10 +2800,10 @@ JSTraceMonitor::mark(JSTracer* trc)
  * are too large to fit into a jsval are automatically boxed into
  * heap-allocated doubles.
  */
-template <typename E>
-static inline bool
-NativeToValueBase(JSContext* cx, jsval& v, JSTraceType type, double* slot)
+bool
+js_NativeToValue(JSContext* cx, jsval& v, JSTraceType type, double* slot)
 {
+    bool ok;
     jsint i;
     jsdouble d;
     switch (type) {
@@ -2886,7 +2833,12 @@ NativeToValueBase(JSContext* cx, jsval& v, JSTraceType type, double* slot)
         if (JSDOUBLE_IS_INT(d, i))
             goto store_int;
       store_double:
-        return E::NewDoubleInRootedValue(cx, d, v);
+        ok = js_NewDoubleInRootedValue(cx, d, &v);
+        if (!ok) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+        return true;
 
       case TT_JSVAL:
         v = *(jsval*)slot;
@@ -2926,48 +2878,6 @@ NativeToValueBase(JSContext* cx, jsval& v, JSTraceType type, double* slot)
       }
     }
     return true;
-}
-
-struct ReserveDoubleOOMHandler {
-    static bool NewDoubleInRootedValue(JSContext *cx, double d, jsval& v) {
-        JS_ASSERT(!JS_TRACE_MONITOR(cx).useReservedObjects);
-        JS_TRACE_MONITOR(cx).useReservedObjects = true;
-        bool ok = js_NewDoubleInRootedValue(cx, d, &v);
-        JS_TRACE_MONITOR(cx).useReservedObjects = false;
-        if (ok)
-            return true;
-        v = AllocateDoubleFromReservedPool(cx);
-        JS_ASSERT(JSVAL_IS_DOUBLE(v) && *JSVAL_TO_DOUBLE(v) == 0.0);
-        *JSVAL_TO_DOUBLE(v) = d;
-        return true;
-    }
-};
-
-static void
-NativeToValue(JSContext* cx, jsval& v, JSTraceType type, double* slot)
-{
-#ifdef DEBUG
-    bool ok = 
-#endif
-        NativeToValueBase<ReserveDoubleOOMHandler>(cx, v, type, slot);
-    JS_ASSERT(ok);
-}
-
-struct FailDoubleOOMHandler {
-    static bool NewDoubleInRootedValue(JSContext *cx, double d, jsval& v) {
-        bool ok = js_NewDoubleInRootedValue(cx, d, &v);
-        if (!ok) {
-            js_ReportOutOfMemory(cx);
-            return false;
-        }
-        return true;
-    }
-};
-
-bool
-js_NativeToValue(JSContext* cx, jsval& v, JSTraceType type, double* slot)
-{
-    return NativeToValueBase<FailDoubleOOMHandler>(cx, v, type, slot);
 }
 
 class BuildNativeFrameVisitor : public SlotVisitorBase
@@ -3030,7 +2940,9 @@ public:
     JS_REQUIRES_STACK JS_ALWAYS_INLINE void
     visitGlobalSlot(jsval *vp, unsigned n, unsigned slot) {
         debug_only_printf(LC_TMTracer, "global%d=", n);
-        NativeToValue(mCx, *vp, *mTypeMap++, &mGlobal[slot]);
+        JS_ASSERT(JS_THREAD_DATA(mCx)->waiveGCQuota);
+        if (!js_NativeToValue(mCx, *vp, *mTypeMap++, &mGlobal[slot]))
+            OutOfMemoryAbort();
     }
 };
 
@@ -3063,12 +2975,15 @@ public:
 
     JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
     visitStackSlots(jsval *vp, size_t count, JSStackFrame* fp) {
+        JS_ASSERT(JS_THREAD_DATA(mCx)->waiveGCQuota);
         for (size_t i = 0; i < count; ++i) {
             if (vp == mStop)
                 return false;
             debug_only_printf(LC_TMTracer, "%s%u=", stackSlotKind(), unsigned(i));
-            if (unsigned(mTypeMap - mInitTypeMap) >= mIgnoreSlots)
-                NativeToValue(mCx, *vp, *mTypeMap, mStack);
+            if (unsigned(mTypeMap - mInitTypeMap) >= mIgnoreSlots) {
+                if (!js_NativeToValue(mCx, *vp, *mTypeMap, mStack))
+                    OutOfMemoryAbort();
+            }
             vp++;
             mTypeMap++;
             mStack++;
@@ -3409,14 +3324,12 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSTraceType* mp, 
                          */
                         void* hookData = ((JSInlineFrame*)fp)->hookData;
                         ((JSInlineFrame*)fp)->hookData = NULL;
-                        JS_ASSERT(!JS_TRACE_MONITOR(cx).useReservedObjects);
-                        JS_TRACE_MONITOR(cx).useReservedObjects = JS_TRUE;
+                        JS_ASSERT(JS_THREAD_DATA(cx)->waiveGCQuota);
 #ifdef DEBUG
                         JSObject *obj =
 #endif
                             js_GetCallObject(cx, fp);
                         JS_ASSERT(obj);
-                        JS_TRACE_MONITOR(cx).useReservedObjects = JS_FALSE;
                         ((JSInlineFrame*)fp)->hookData = hookData;
                     }
                 }
@@ -5445,10 +5358,8 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
         JS_ASSERT(missing == 0);
     } else {
         JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool, nbytes);
-        if (!newsp) {
-            JS_NOT_REACHED("out of memory");
-            abort();
-        }
+        if (!newsp)
+            OutOfMemoryAbort();
 
         /*
          * Move args if the missing ones overflow arena a, then push
@@ -5563,10 +5474,8 @@ SynthesizeSlowNativeFrame(InterpState& state, JSContext *cx, VMSideExit *exit)
     /* This allocation is infallible: ExecuteTree reserved enough stack. */
     mark = JS_ARENA_MARK(&cx->stackPool);
     JS_ARENA_ALLOCATE_CAST(ifp, JSInlineFrame *, &cx->stackPool, sizeof(JSInlineFrame));
-    if (!ifp) {
-        JS_NOT_REACHED("out of memory");
-        abort();
-    }
+    if (!ifp)
+        OutOfMemoryAbort();
 
     JSStackFrame *fp = &ifp->frame;
     fp->regs = NULL;
@@ -5953,13 +5862,6 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
     TreeFragment* root = r->fragment->root;
     TreeFragment* first = LookupOrAddLoop(tm, cx->fp->regs->pc, root->globalObj,
                                         root->globalShape, cx->fp->argc);
-
-    /* Make sure inner tree call will not run into an out-of-memory condition. */
-    if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
-        !ReplenishReservedPool(cx, tm)) {
-        js_AbortRecording(cx, "Couldn't call inner tree (out of memory)");
-        return false;
-    }
 
     /*
      * Make sure the shape of the global object still matches (this might flush
@@ -6391,13 +6293,6 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
                  OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain)) ==
                  f->globalShape);
 
-    /* Make sure our caller replenished the double pool. */
-    JS_ASSERT(tm->reservedDoublePoolPtr >= tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS);
-
-    /* Reserve objects and stack space now, to make leaving the tree infallible. */
-    if (!js_ReserveObjects(cx, MAX_CALL_STACK_ENTRIES))
-        return NULL;
-
     /*
      * Set up the interpreter state. For the native stacks and global frame,
      * reuse the storage in |tm->storage|. This reuse depends on the invariant
@@ -6507,12 +6402,31 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
     return state.innermost;
 }
 
+class Guardian {
+    bool *flagp;
+public:
+    Guardian(bool *flagp) {
+        this->flagp = flagp;
+        JS_ASSERT(!*flagp);
+        *flagp = true;
+    }
+
+    ~Guardian() {
+        JS_ASSERT(*flagp);
+        *flagp = false;
+    }
+};
+
 static JS_FORCES_STACK void
 LeaveTree(InterpState& state, VMSideExit* lr)
 {
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
     JSContext* cx = state.cx;
+
+    /* Temporary waive the soft GC quota to make sure LeaveTree() doesn't fail. */
+    Guardian waiver(&JS_THREAD_DATA(cx)->waiveGCQuota);
+
     FrameInfo** callstack = state.callstackBase;
     double* stack = state.stackBase;
 
@@ -6649,11 +6563,13 @@ LeaveTree(InterpState& state, VMSideExit* lr)
              */
             JSTraceType* typeMap = innermost->stackTypeMap();
             for (int i = 1; i <= cs.ndefs; i++) {
-                NativeToValue(cx,
-                              regs->sp[-i],
-                              typeMap[innermost->numStackSlots - i],
-                              (jsdouble *) state.deepBailSp
-                                  + innermost->sp_adj / sizeof(jsdouble) - i);
+                if (!js_NativeToValue(cx,
+                                      regs->sp[-i],
+                                      typeMap[innermost->numStackSlots - i],
+                                      (jsdouble *) state.deepBailSp
+                                      + innermost->sp_adj / sizeof(jsdouble) - i)) {
+                    OutOfMemoryAbort();
+                }
             }
         }
         return;
@@ -6825,6 +6741,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
     /* Write back interned globals. */
     JS_ASSERT(state.eos == state.stackBase + MAX_NATIVE_STACK_SLOTS);
     FlushNativeGlobalFrame(cx, state.eos, ngslots, gslots, globalTypeMap);
+
 #ifdef DEBUG
     /* Verify that our state restoration worked. */
     for (JSStackFrame* fp = cx->fp; fp; fp = fp->down) {
@@ -6876,15 +6793,6 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
          }
     }
     JS_ASSERT(!tm->recorder);
-
-    /* Check the pool of reserved doubles (this might trigger a GC). */
-    if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
-        !ReplenishReservedPool(cx, tm)) {
-#ifdef MOZ_TRACEVIS
-        tvso.r = R_DOUBLES;
-#endif
-        return false; /* Out of memory, don't try to record now. */
-    }
 
     /*
      * Make sure the shape of the global object still matches (this might flush
@@ -7559,9 +7467,6 @@ js_InitJIT(JSTraceMonitor *tm)
     tm->flush();
     verbose_only( tm->branches = NULL; )
 
-    JS_ASSERT(!tm->reservedDoublePool);
-    tm->reservedDoublePoolPtr = tm->reservedDoublePool = new jsval[MAX_NATIVE_STACK_SLOTS];
-
 #if !defined XP_WIN
     debug_only(memset(&jitstats, 0, sizeof(jitstats)));
 #endif
@@ -7624,7 +7529,6 @@ js_FinishJIT(JSTraceMonitor *tm)
         debug_only_print0(LC_TMStats, "\n");
     }
 #endif
-    JS_ASSERT(tm->reservedDoublePool);
 
     if (tm->recordAttempts.ops)
         JS_DHashTableFinish(&tm->recordAttempts);
@@ -7659,9 +7563,6 @@ js_FinishJIT(JSTraceMonitor *tm)
 #endif
 
     memset(&tm->vmfragments[0], 0, FRAGMENT_TABLE_SIZE * sizeof(TreeFragment*));
-
-    delete[] tm->reservedDoublePool;
-    tm->reservedDoublePool = tm->reservedDoublePoolPtr = NULL;
 
     if (tm->frameCache) {
         delete tm->frameCache;
@@ -9809,10 +9710,6 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
     } else if (f) {
         /* Make sure inner tree call will not run into an out-of-memory condition. */
         JSTraceMonitor* tm = traceMonitor;
-        if (tm->reservedDoublePoolPtr < (tm->reservedDoublePool + MAX_NATIVE_STACK_SLOTS) &&
-            !ReplenishReservedPool(cx, tm)) {
-            RETURN_STOP_A("Couldn't call inner tree (out of memory)");
-        }
         /*
          * Make sure the shape of the global object still matches (this might
          * flush the JIT cache).

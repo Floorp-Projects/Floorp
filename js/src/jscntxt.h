@@ -164,7 +164,6 @@ struct InterpState
     // Used to communicate the location of the return value in case of a deep bail.
     double*        deepBailSp;
 
-
     // Used when calling natives from trace to root the vp vector.
     uintN          nativeVpLen;
     jsval*         nativeVp;
@@ -247,8 +246,6 @@ struct JSTraceMonitor {
 #endif
 
     TraceRecorder*          recorder;
-    jsval                   *reservedDoublePool;
-    jsval                   *reservedDoublePoolPtr;
 
     struct GlobalState      globalStates[MONITOR_N_GLOBAL_STATES];
     struct TreeFragment*    vmfragments[FRAGMENT_TABLE_SIZE];
@@ -376,6 +373,13 @@ const uint32 JSLRS_NULL_MARK = uint32(-1);
 
 struct JSThreadData {
     JSGCFreeLists       gcFreeLists;
+
+    /*
+     * Flag indicating that we are waiving any soft limits on the GC heap
+     * because we want allocations to be infallible (except when we hit
+     * a hard quota).
+     */
+    bool                waiveGCQuota;
 
     /*
      * The GSN cache is per thread since even multi-cx-per-thread embeddings
