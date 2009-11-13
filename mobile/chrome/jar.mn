@@ -31,7 +31,7 @@ chrome.jar:
 * content/BrowserView.js               (content/BrowserView.js)
   content/TileManager.js               (TileManager.js)
 * content/InputHandler.js              (content/InputHandler.js)
-  content/Util.js                      (content/Util.js)
+* content/Util.js                      (content/Util.js)
   content/preferences.js               (content/preferences.js)
   content/exceptions.js                (content/exceptions.js)
   content/extensions.js                (content/extensions.js)
