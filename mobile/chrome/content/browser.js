@@ -2103,6 +2103,17 @@ function importDialog(parent, src, arguments) {
   if (!xhr.responseXML)
     return null;
   
+  let currentNode;
+  let nodeIterator = xhr.responseXML.createNodeIterator(xhr.responseXML,
+                                                    NodeFilter.SHOW_TEXT,
+                                                    null,
+                                                    false);
+  while (currentNode = nodeIterator.nextNode()) {
+    let trimmed = currentNode.nodeValue.replace(/^\s\s*/, "").replace(/\s\s*$/, "");
+    if (!trimmed.length)
+      currentNode.parentNode.removeChild(currentNode);
+  }
+            
   let doc = xhr.responseXML.documentElement;
  
   var dialog  = null;
