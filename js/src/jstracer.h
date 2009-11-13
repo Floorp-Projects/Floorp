@@ -977,6 +977,9 @@ class TraceRecorder
      */
     VMAllocator::Mark               mark;
 
+    /* Remembers the number of sideExits in treeInfo before recording started. */
+    const unsigned                  numSideExitsBefore;
+
     /*********************************************************** Recording session mutable state */
 
     /* Maps interpreter stack values to the instruction generating that value. */
