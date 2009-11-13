@@ -155,9 +155,6 @@ enum {
   NSMutableArray* mPendingDirtyRects;
   BOOL mPendingFullDisplay;
 
-  // All views are always opaque (non-transparent). The only exception is when we're
-  // the content view in a transparent XUL window.
-  BOOL mIsTransparent;
   PRIntervalTime mLastShadowInvalidation;
   BOOL mNeedsShadowInvalidation;
 
@@ -206,8 +203,6 @@ enum {
 
 // Stop NSView hierarchy being changed during [ChildView drawRect:]
 - (void)delayedTearDown;
-
-- (void)setTransparent:(BOOL)transparent;
 
 - (void)sendFocusEvent:(PRUint32)eventType;
 
