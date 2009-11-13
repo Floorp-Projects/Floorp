@@ -1648,7 +1648,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_TOOLTIP:
-      CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 0.78, 1.0);
+      CGContextSetRGBFillColor(cgContext, 0.996, 1.000, 0.792, 0.950);
       CGContextFillRect(cgContext, macRect);
       break;
 
@@ -2506,7 +2506,8 @@ nsNativeThemeCocoa::ThemeNeedsComboboxDropmarker()
 nsTransparencyMode
 nsNativeThemeCocoa::GetWidgetTransparency(PRUint8 aWidgetType)
 {
-  if (aWidgetType == NS_THEME_MENUPOPUP)
+  if (aWidgetType == NS_THEME_MENUPOPUP ||
+      aWidgetType == NS_THEME_TOOLTIP)
     return eTransparencyTransparent;
 
   return eTransparencyOpaque;
