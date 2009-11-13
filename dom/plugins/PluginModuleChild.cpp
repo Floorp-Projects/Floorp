@@ -736,10 +736,11 @@ _invalidaterect(NPP aNPP,
     AssertPluginThread();
 
     PluginInstanceChild* actor = InstCast(aNPP);
-    actor->SendNPN_InvalidateRect(*aInvalidRect);
+    bool sendToParent = actor->InternalInvalidateRect(aInvalidRect);
 
-    // Some platforms need additional help to redraw in this process.
-    actor->InternalInvalidateRect(aInvalidRect);
+    if (sendToParent) {
+        actor->SendNPN_InvalidateRect(*aInvalidRect);
+    }
 }
 
 void NP_CALLBACK
