@@ -1017,7 +1017,7 @@ var Browser = {
     zoomLevel = Math.min(kBrowserViewZoomLevelMax, zoomLevel);
     let zoomRatio = zoomLevel / bv.getZoomLevel();
     let newVisW = vis.width / zoomRatio, newVisH = vis.height / zoomRatio;
-    let result = new Rect(x - newVisW / 2, y - newVisH / 2, newVisW, newVisH).expandToIntegers();
+    let result = new Rect(x - newVisW / 2, y - newVisH / 2, newVisW, newVisH);
 
     // Make sure rectangle doesn't poke out of viewport
     return result.translateInside(bv._browserViewportState.viewportRect);
@@ -1031,17 +1031,32 @@ var Browser = {
     let scrollX = rect.left * zoomRatio;
     let scrollY = rect.top * zoomRatio;
 
+    // The order of operations below is important for artifacting and for performance. Important
+    // side effects of functions are noted below.
+
+    // Hardware scrolling happens immediately when scrollTo is called.  Hide to prevent artifacts.
     bv.beginOffscreenOperation();
 
+    // We must scroll to the correct area before TileManager is informed of the change
+    // so that only one render is done. Ensures setZoomLevel puts it off.
+    bv.beginBatchOperation();
+
+    // Critical rect changes when controls are hidden. Must hide before tilemanager viewport.
     Browser.hideSidebars();
     Browser.hideTitlebar();
     bv.setZoomLevel(zoomLevel);
-    bv.forceViewportChange();  // ensure container is resized for scrollTo
+
+    // Ensure container is big enough for scroll values.
+    bv.forceContainerResize();
     Browser.forceChromeReflow();
     Browser.contentScrollboxScroller.scrollTo(scrollX, scrollY);
     bv.onAfterVisibleMove();
-    bv.renderNow();  // during loading, make sure new zoom level is rendered
 
+    // Inform tile manager, which happens to render new tiles too. Must call in case a batch
+    // operation was in progress before zoom.
+    bv.forceViewportChange();
+
+    bv.commitBatchOperation();
     bv.commitOffscreenOperation();
   },
 
@@ -1052,12 +1067,16 @@ var Browser = {
     if (!element)
       return false;
 
+    let defaultZoomLevel = this._browserView.getZoomForPage();
+    let oldZoomLevel = this._browserView.getZoomLevel();
     let zoomLevel = this._getZoomLevelForElement(element);
+    let zoomRatio = oldZoomLevel / zoomLevel;
 
-    // Don't zoom in a marginal amount
+    // Don't zoom in a marginal amount, but be more lenient for the first zoom.
     // > 2/3 means operation increases the zoom level by less than 1.5
-    let zoomRatio = this._browserView.getZoomLevel() / zoomLevel;
-    if (zoomRatio >= .6666)
+    // > 9/10 means operation increases the zoom level by less than 1.1
+    let zoomTolerance = (oldZoomLevel == defaultZoomLevel) ? .9 : .6666;
+    if (zoomRatio >= zoomTolerance)
        return false;
 
     let elRect = Browser.getBoundingContentRect(element);
