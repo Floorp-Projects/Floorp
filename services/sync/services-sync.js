@@ -64,3 +64,9 @@ pref("extensions.weave.prefs.sync.extensions.personas.current", true);
 pref("extensions.weave.prefs.sync.layout.spellcheckDefault", true);
 pref("extensions.weave.prefs.sync.signon.rememberSignons", true);
 pref("extensions.weave.prefs.sync.spellchecker.dictionary", true);
+
+// Persona preferences for FF 3.6
+pref("extensions.weave.prefs.sync.lightweightThemes.isThemeSelected", true);
+pref("extensions.weave.prefs.sync.lightweightThemes.persisted.footerURL", true);
+pref("extensions.weave.prefs.sync.lightweightThemes.persisted.headerURL", true);
+pref("extensions.weave.prefs.sync.lightweightThemes.usedThemes", true);
