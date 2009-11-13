@@ -495,11 +495,16 @@ var Browser = {
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
     /* Command line arguments/initial homepage */
-    var whereURI = "about:blank";
-    try {
-      // Check for and use a default homepage
-      whereURI = gPrefService.getCharPref("browser.startup.homepage");
-    } catch (e) {}
+    let whereURI = "about:blank";
+    switch (Util.needHomepageOverride()) {
+      case "new profile":
+        whereURI = "about:firstrun";
+        break;
+      case "new version":
+      case "none":
+        whereURI = "about:blank";
+        break;
+    }
 
     // If this is an intial window launch (was a nsICommandLine passed via window params)
     // we execute some logic to load the initial launch page
@@ -530,6 +535,8 @@ var Browser = {
     }
 
     this.addTab(whereURI, true);
+    if (whereURI == "about:blank")
+      BrowserUI.showAutoComplete();
 
     // JavaScript Error Console
     if (gPrefService.getBoolPref("browser.console.showInPanel")){
