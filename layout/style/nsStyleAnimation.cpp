@@ -130,6 +130,12 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
     case eUnit_Enumerated:
       success = PR_FALSE;
       break;
+    case eUnit_Integer: {
+      PRInt32 startInt = aStartValue.GetIntValue();
+      PRInt32 endInt = aEndValue.GetIntValue();
+      aDistance = PR_ABS(endInt - startInt);
+      break;
+    }
     case eUnit_Coord: {
       nscoord startCoord = aStartValue.GetCoordValue();
       nscoord endCoord = aEndValue.GetCoordValue();
@@ -436,6 +442,15 @@ nsStyleAnimation::AddWeighted(double aCoeff1, const Value& aValue1,
     case eUnit_Enumerated:
       success = PR_FALSE;
       break;
+    case eUnit_Integer: {
+      // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
+      // says we should use floor
+      aResultValue.SetIntValue(NS_floor(
+          aCoeff1 * double(aValue1.GetIntValue()) +
+          aCoeff2 * double(aValue2.GetIntValue())),
+        eUnit_Integer);
+      break;
+    }
     case eUnit_Coord: {
       aResultValue.SetCoordValue(NSToCoordRound(
         aCoeff1 * aValue1.GetCoordValue() +
@@ -762,6 +777,12 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
       static_cast<nsCSSValue*>(aSpecifiedValue)->
         SetIntValue(aComputedValue.GetIntValue(), eCSSUnit_Enumerated);
       break;
+    case eUnit_Integer:
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                        "type mismatch");
+      static_cast<nsCSSValue*>(aSpecifiedValue)->
+        SetIntValue(aComputedValue.GetIntValue(), eCSSUnit_Integer);
+      break;
     case eUnit_Coord: {
       NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
                         "type mismatch");
@@ -914,8 +935,11 @@ StyleCoordToValue(const nsStyleCoord& aCoord, nsStyleAnimation::Value& aValue)
     case eStyleUnit_Enumerated:
       aValue.SetIntValue(aCoord.GetIntValue(),
                          nsStyleAnimation::eUnit_Enumerated);
+      break;
     case eStyleUnit_Integer:
-      return PR_FALSE;
+      aValue.SetIntValue(aCoord.GetIntValue(),
+                         nsStyleAnimation::eUnit_Integer);
+      break;
   }
   return PR_TRUE;
 }
@@ -1195,9 +1219,11 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
   return PR_FALSE;
 }
 
-nsStyleAnimation::Value::Value(PRInt32 aInt, EnumeratedConstructorType)
+nsStyleAnimation::Value::Value(PRInt32 aInt, Unit aUnit,
+                               IntegerConstructorType)
 {
-  mUnit = eUnit_Enumerated;
+  NS_ASSERTION(IsIntUnit(aUnit), "unit must be of integer type");
+  mUnit = aUnit;
   mValue.mInt = aInt;
 }
 
@@ -1238,6 +1264,7 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
     case eUnit_None:
       break;
     case eUnit_Enumerated:
+    case eUnit_Integer:
       mValue.mInt = aOther.mValue.mInt;
       break;
     case eUnit_Coord:
@@ -1300,6 +1327,7 @@ nsStyleAnimation::Value::SetNoneValue()
 void
 nsStyleAnimation::Value::SetIntValue(PRInt32 aInt, Unit aUnit)
 {
+  NS_ASSERTION(IsIntUnit(aUnit), "unit must be of integer type");
   FreeValue();
   mUnit = aUnit;
   mValue.mInt = aInt;
@@ -1384,6 +1412,7 @@ nsStyleAnimation::Value::operator==(const Value& aOther) const
     case eUnit_None:
       return PR_TRUE;
     case eUnit_Enumerated:
+    case eUnit_Integer:
       return mValue.mInt == aOther.mValue.mInt;
     case eUnit_Coord:
       return mValue.mCoord == aOther.mValue.mCoord;

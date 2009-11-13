@@ -114,6 +114,7 @@ var supported_properties = {
     "vertical-align": [ test_length_transition, test_percent_transition ],
     "width": [ test_length_transition, test_percent_transition ],
     "word-spacing": [ test_length_transition ],
+    "z-index": [ test_zindex_transition ],
 };
 
 var div = document.getElementById("display");
@@ -408,6 +409,26 @@ function test_radius_transition(prop) {
   div.style.removeProperty("height");
   div.style.removeProperty("border");
   div.style.removeProperty("padding");
+}
+
+function test_zindex_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "4", "");
+  is(cs.getPropertyValue(prop), "4",
+     "integer-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "-5", "");
+  is(cs.getPropertyValue(prop), "-1",
+     "integer-valued property " + prop + ": interpolation of lengths");
+  div.style.setProperty(prop, "auto", "");
+  is(cs.getPropertyValue(prop), "auto",
+     "integer-valued property " + prop + ": auto not interpolable");
+  div.style.setProperty(prop, "-4", "");
+  is(cs.getPropertyValue(prop), "-4",
+     "integer-valued property " + prop + ": computed value before transition");
+  div.style.setProperty(prop, "8", "");
+  is(cs.getPropertyValue(prop), "2",
+     "integer-valued property " + prop + ": interpolation of lengths");
 }
 
 </script>
