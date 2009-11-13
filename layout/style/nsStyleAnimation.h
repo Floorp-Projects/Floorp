@@ -223,6 +223,7 @@ public:
     eUnit_Auto,
     eUnit_None,
     eUnit_Enumerated,
+    eUnit_Integer,
     eUnit_Coord,
     eUnit_Percent,
     eUnit_Float,
@@ -256,7 +257,7 @@ public:
     }
 
     PRInt32 GetIntValue() const {
-      NS_ASSERTION(mUnit == eUnit_Enumerated, "unit mismatch");
+      NS_ASSERTION(IsIntUnit(mUnit), "unit mismatch");
       return mValue.mInt;
     }
     nscoord GetCoordValue() const {
@@ -290,8 +291,8 @@ public:
                    "must be valueless unit");
     }
     Value(const Value& aOther) : mUnit(eUnit_Null) { *this = aOther; }
-    enum EnumeratedConstructorType { EnumeratedConstructor };
-    Value(PRInt32 aInt, EnumeratedConstructorType);
+    enum IntegerConstructorType { IntegerConstructor };
+    Value(PRInt32 aInt, Unit aUnit, IntegerConstructorType);
     enum CoordConstructorType { CoordConstructor };
     Value(nscoord aLength, CoordConstructorType);
     enum PercentConstructorType { PercentConstructor };
@@ -325,6 +326,9 @@ public:
   private:
     void FreeValue();
 
+    static PRBool IsIntUnit(Unit aUnit) {
+      return aUnit == eUnit_Enumerated || aUnit == eUnit_Integer;
+    }
     static PRBool IsCSSValuePairUnit(Unit aUnit) {
       return aUnit == eUnit_CSSValuePair;
     }

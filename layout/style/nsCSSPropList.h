@@ -2574,9 +2574,8 @@ CSS_PROP_POSITION(
     mZIndex,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-
+    offsetof(nsStylePosition, mZIndex),
+    eStyleAnimType_Coord)
 CSS_PROP_XUL(
     -moz-box-align,
     box_align,
