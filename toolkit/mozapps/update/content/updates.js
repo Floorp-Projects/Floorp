@@ -49,7 +49,7 @@ const CoR = Components.results;
 const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const PREF_UPDATE_MANUAL_URL        = "app.update.url.manual";
-const PREF_APP_UPDATE_LOG_BRANCH    = "app.update.log.";
+const PREF_APP_UPDATE_LOG           = "app.update.log";
 const PREF_UPDATE_TEST_LOOP         = "app.update.test.loop";
 const PREF_UPDATE_NEVER_BRANCH      = "app.update.never.";
 const PREF_AUTO_UPDATE_ENABLED      = "app.update.enabled";
@@ -71,7 +71,7 @@ const SRCEVT_BACKGROUND       = 2;
 
 var gConsole    = null;
 var gPref       = null;
-var gLogEnabled = { };
+var gLogEnabled = false;
 
 /**
  * Logs a string to the error console.
@@ -79,7 +79,7 @@ var gLogEnabled = { };
  *          The string to write to the error console..
  */
 function LOG(module, string) {
-  if (module in gLogEnabled || "all" in gLogEnabled) {
+  if (gLogEnabled) {
     dump("*** AUS:UI " + module + ":" + string + "\n");
     gConsole.logStringMessage("AUS:UI " + module + ":" + string);
   }
@@ -312,7 +312,7 @@ var gUpdates = {
             getService(CoI.nsIPrefBranch2);
     gConsole = CoC["@mozilla.org/consoleservice;1"].
                getService(CoI.nsIConsoleService);
-    this._initLoggingPrefs();
+    gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false)
 
     this.strings = document.getElementById("updateStrings");
     var brandStrings = document.getElementById("brandStrings");
@@ -337,26 +337,6 @@ var gUpdates = {
     var startPage = this.startPage;
     LOG("gUpdates", "onLoad - setting current page to startpage " + startPage.id);
     gUpdates.wiz.currentPage = startPage;
-  },
-
-  /**
-   * Initialize Logging preferences, formatted like so:
-   *  app.update.log.<moduleName> = <true|false>
-   */
-  _initLoggingPrefs: function() {
-    try {
-      var ps = CoC["@mozilla.org/preferences-service;1"].
-               getService(CoI.nsIPrefService);
-      var logBranch = ps.getBranch(PREF_APP_UPDATE_LOG_BRANCH);
-      var modules = logBranch.getChildList("");
-
-      for (var i = 0; i < modules.length; ++i) {
-        if (logBranch.prefHasUserValue(modules[i]))
-          gLogEnabled[modules[i]] = logBranch.getBoolPref(modules[i]);
-      }
-    }
-    catch (e) {
-    }
   },
 
   /**
