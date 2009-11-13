@@ -174,7 +174,7 @@ SOURCES = $(libffi_la_SOURCES) $(nodist_libffi_la_SOURCES) \
 	$(libffi_convenience_la_SOURCES) \
 	$(nodist_libffi_convenience_la_SOURCES)
 DIST_SOURCES = $(libffi_la_SOURCES) $(libffi_convenience_la_SOURCES)
-INFO_DEPS = $(srcdir)/doc/libffi.info
+INFO_DEPS = 
 am__TEXINFO_TEX_DIR = $(srcdir)
 DVIS = doc/libffi.dvi
 PDFS = doc/libffi.pdf
