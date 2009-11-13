@@ -381,6 +381,11 @@ public:
 
     JS_SetContextPrivate(cx, mWorker);
 
+    // Go ahead and trigger the operation callback for this context before we
+    // try to run any JS. That way we'll be sure to cancel or suspend as soon as
+    // possible if the compilation takes too long.
+    JS_TriggerOperationCallback(cx);
+
     PRBool killWorkerWhenDone;
 
     // Tell the worker which context it will be using
@@ -433,8 +438,6 @@ protected:
   }
 
   void RunQueue(JSContext* aCx, PRBool* aCloseRunnableSet) {
-    PRBool operationCallbackTriggered = PR_FALSE;
-
     while (1) {
       nsCOMPtr<nsIRunnable> runnable;
       {
@@ -469,15 +472,6 @@ protected:
         }
       }
 
-      if (!operationCallbackTriggered) {
-        // Make sure that our operation callback is set to run before starting.
-        // That way we are sure to suspend this worker if needed.
-        JS_TriggerOperationCallback(aCx);
-
-        // Only need to do this the first time.
-        operationCallbackTriggered = PR_TRUE;
-      }
-
       // Clear out any old cruft hanging around in the regexp statics.
       JS_ClearRegExpStatics(aCx);
 
@@ -506,6 +500,7 @@ JSBool
 DOMWorkerOperationCallback(JSContext* aCx)
 {
   nsDOMWorker* worker = (nsDOMWorker*)JS_GetContextPrivate(aCx);
+  NS_ASSERTION(worker, "This must never be null!");
 
   PRBool wasSuspended = PR_FALSE;
   PRBool extraThreadAllowed = PR_FALSE;
