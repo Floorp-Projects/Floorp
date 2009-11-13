@@ -964,6 +964,7 @@ ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
 JSObject *
 js_ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
 {
+    JS_ASSERT(argv[-1] != JSVAL_HOLE);  // check for SynthesizeFrame poisoning
     if (JSVAL_IS_NULL(argv[-1]))
         return js_ComputeGlobalThis(cx, lazy, argv);
     return ComputeThis(cx, lazy, argv);
