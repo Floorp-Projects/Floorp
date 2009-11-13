@@ -2663,6 +2663,15 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 #endif
 }
 
+- (void)viewWillDraw
+{
+  if (!mGeckoChild)
+    return;
+
+  nsPaintEvent paintEvent(PR_TRUE, NS_WILL_PAINT, mGeckoChild);
+  mGeckoChild->DispatchWindowEvent(paintEvent);
+}
+
 // Allows us to turn off setting up the clip region
 // before each drawRect. We already clip within gecko.
 - (BOOL)wantsDefaultClipping

@@ -892,6 +892,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
         break;
       }
 
+    case NS_WILL_PAINT:
     case NS_PAINT:
       {
         nsPaintEvent *event = static_cast<nsPaintEvent*>(aEvent);
@@ -910,16 +911,18 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
         // The rect is in device units, and it's in the coordinate space of its
         // associated window.
         nsCOMPtr<nsIRegion> region = event->region;
-        if (!region) {
-          if (NS_FAILED(CreateRegion(getter_AddRefs(region))))
-            break;
+        if (aEvent->message == NS_PAINT) {
+          if (!region) {
+            if (NS_FAILED(CreateRegion(getter_AddRefs(region))))
+              break;
 
-          const nsIntRect& damrect = *event->rect;
-          region->SetTo(damrect.x, damrect.y, damrect.width, damrect.height);
+            const nsIntRect& damrect = *event->rect;
+            region->SetTo(damrect.x, damrect.y, damrect.width, damrect.height);
+          }
+
+          if (region->IsEmpty())
+            break;
         }
-        
-        if (region->IsEmpty())
-          break;
 
         // Refresh the view
         if (IsRefreshEnabled()) {
@@ -988,12 +991,12 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
               rootVM->ProcessPendingUpdates(mRootView, PR_FALSE);
             }
             
-            if (view) {
+            if (view && aEvent->message == NS_PAINT) {
               Refresh(view, event->renderingContext, region,
                       NS_VMREFRESH_DOUBLE_BUFFER);
             }
           }
-        } else {
+        } else if (aEvent->message == NS_PAINT) {
           // since we got an NS_PAINT event, we need to
           // draw something so we don't get blank areas,
           // unless there's no widget or it's transparent.
