@@ -170,7 +170,7 @@ enum { XKeyPress = KeyPress };
 #undef KeyPress
 #endif
 
-#ifdef MOZ_PLATFORM_HILDON
+#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
 #define MOZ_COMPOSITED_PLUGINS 1
 #endif
 
