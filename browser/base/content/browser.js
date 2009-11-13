@@ -7124,9 +7124,11 @@ var LightWeightThemeWebInstaller = {
     this._removePreviousNotifications();
 
     var notificationBox = gBrowser.getNotificationBox();
-    notificationBox.appendNotification(message, "lwtheme-install-request", "",
-                                       notificationBox.PRIORITY_INFO_MEDIUM,
-                                       buttons);
+    var notificationBar =
+      notificationBox.appendNotification(message, "lwtheme-install-request", "",
+                                         notificationBox.PRIORITY_INFO_MEDIUM,
+                                         buttons);
+    notificationBar.persistence = 1;
   },
 
   _install: function (newTheme) {
@@ -7160,10 +7162,13 @@ var LightWeightThemeWebInstaller = {
     this._removePreviousNotifications();
 
     var notificationBox = gBrowser.getNotificationBox();
-    notificationBox.appendNotification(text("message"),
-                                       "lwtheme-install-notification", "",
-                                       notificationBox.PRIORITY_INFO_MEDIUM,
-                                       buttons);
+    var notificationBar =
+      notificationBox.appendNotification(text("message"),
+                                         "lwtheme-install-notification", "",
+                                         notificationBox.PRIORITY_INFO_MEDIUM,
+                                         buttons);
+    notificationBar.persistence = 1;
+    notificationBar.timeout = Date.now() + 20000; // 20 seconds
   },
 
   _removePreviousNotifications: function () {
