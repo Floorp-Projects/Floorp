@@ -753,6 +753,83 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+typedef void (*RenderHIThemeControlFunction)(CGContextRef cgContext, const HIRect& aRenderRect, void* aData);
+
+static void
+RenderTransformedHIThemeControl(CGContextRef aCGContext, const HIRect& aRect,
+                                RenderHIThemeControlFunction aFunc, void* aData,
+                                BOOL mirrorHorizontally = NO)
+{
+  CGAffineTransform savedCTM = CGContextGetCTM(aCGContext);
+  CGContextTranslateCTM(aCGContext, aRect.origin.x, aRect.origin.y);
+
+  PRBool drawDirect;
+  HIRect drawRect = aRect;
+  drawRect.origin = CGPointZero;
+
+  if (!mirrorHorizontally && savedCTM.a == 1.0f && savedCTM.b == 0.0f &&
+      savedCTM.c == 0.0f && (savedCTM.d == 1.0f || savedCTM.d == -1.0f)) {
+    drawDirect = TRUE;
+  } else {
+    drawDirect = FALSE;
+  }
+
+  // Fall back to no bitmap buffer if the area of our control (in pixels^2)
+  // is too large.
+  if (drawDirect || (aRect.size.width * aRect.size.height > BITMAP_MAX_AREA)) {
+    aFunc(aCGContext, drawRect, aData);
+  } else {
+    // Inflate the buffer to capture focus rings.
+    int w = ceil(drawRect.size.width) + 2 * MAX_FOCUS_RING_WIDTH;
+    int h = ceil(drawRect.size.height) + 2 * MAX_FOCUS_RING_WIDTH;
+
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef bitmapctx = CGBitmapContextCreate(NULL, w, h, 8, w * 4,
+                                                   colorSpace,
+                                                   kCGImageAlphaPremultipliedFirst);
+    CGColorSpaceRelease(colorSpace);
+
+    CGContextTranslateCTM(bitmapctx, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH);
+
+    // HITheme always wants to draw into a flipped context, or things
+    // get confused.
+    CGContextTranslateCTM(bitmapctx, 0.0f, aRect.size.height);
+    CGContextScaleCTM(bitmapctx, 1.0f, -1.0f);
+
+    aFunc(bitmapctx, drawRect, aData);
+
+    CGImageRef bitmap = CGBitmapContextCreateImage(bitmapctx);
+
+    CGAffineTransform ctm = CGContextGetCTM(aCGContext);
+
+    // We need to unflip, so that we can do a DrawImage without getting a flipped image.
+    CGContextTranslateCTM(aCGContext, 0.0f, aRect.size.height);
+    CGContextScaleCTM(aCGContext, 1.0f, -1.0f);
+
+    if (mirrorHorizontally) {
+      CGContextTranslateCTM(aCGContext, aRect.size.width, 0);
+      CGContextScaleCTM(aCGContext, -1.0f, 1.0f);
+    }
+
+    HIRect inflatedDrawRect = CGRectMake(-MAX_FOCUS_RING_WIDTH, -MAX_FOCUS_RING_WIDTH, w, h);
+    CGContextDrawImage(aCGContext, inflatedDrawRect, bitmap);
+
+    CGContextSetCTM(aCGContext, ctm);
+
+    CGImageRelease(bitmap);
+    CGContextRelease(bitmapctx);
+  }
+
+  CGContextSetCTM(aCGContext, savedCTM);
+}
+
+static void
+RenderButton(CGContextRef cgContext, const HIRect& aRenderRect, void* aData)
+{
+  HIThemeButtonDrawInfo* bdi = (HIThemeButtonDrawInfo*)aData;
+  HIThemeDrawButton(&aRenderRect, bdi, cgContext, kHIThemeOrientationNormal, NULL);
+}
+
 void
 nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
                                const HIRect& inBoxRect, PRBool inIsDefault, PRBool inDisabled,
@@ -821,7 +898,8 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
       drawFrame.origin.x -= 1;
   }
 
-  HIThemeDrawButton(&drawFrame, &bdi, cgContext, kHIThemeOrientationNormal, NULL);
+  RenderTransformedHIThemeControl(cgContext, drawFrame, RenderButton, &bdi,
+                                  IsFrameRTL(aFrame));
 
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
@@ -1264,77 +1342,8 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-typedef void (*RenderHIThemeControlFunction)(CGContextRef cgContext, void* aData);
-
 static void
-RenderTransformedHIThemeControl(CGContextRef aCGContext, const HIRect& aRect,
-                                RenderHIThemeControlFunction aFunc, void* aData,
-                                BOOL mirrorHorizontally = NO)
-{
-  CGAffineTransform savedCTM = CGContextGetCTM(aCGContext);
-  CGContextTranslateCTM(aCGContext, aRect.origin.x, aRect.origin.y);
-
-  PRBool drawDirect;
-  HIRect drawRect = aRect;
-  drawRect.origin = CGPointZero;
-
-  if (!mirrorHorizontally && savedCTM.a == 1.0f && savedCTM.b == 0.0f &&
-      savedCTM.c == 0.0f && (savedCTM.d == 1.0f || savedCTM.d == -1.0f)) {
-    drawDirect = TRUE;
-  } else {
-    drawDirect = FALSE;
-  }
-
-  // Fall back to no bitmap buffer if the area of our control (in pixels^2)
-  // is too large.
-  if (drawDirect || (aRect.size.width * aRect.size.height > BITMAP_MAX_AREA)) {
-    aFunc(aCGContext, aData);
-  } else {
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef bitmapctx = CGBitmapContextCreate(NULL,
-                                                   (size_t) ceil(drawRect.size.width),
-                                                   (size_t) ceil(drawRect.size.height),
-                                                   8,
-                                                   (size_t) ceil(drawRect.size.width) * 4,
-                                                   colorSpace,
-                                                   kCGImageAlphaPremultipliedFirst);
-    CGColorSpaceRelease(colorSpace);
-
-    // HITheme always wants to draw into a flipped context, or things
-    // get confused.
-    CGContextTranslateCTM(bitmapctx, 0.0f, aRect.size.height);
-    CGContextScaleCTM(bitmapctx, 1.0f, -1.0f);
-    CGContextSetRGBFillColor(bitmapctx, 1.0f, 0, 0, 1.0f);
-    CGContextFillRect(bitmapctx, drawRect);
-
-    aFunc(bitmapctx, aData);
-
-    CGImageRef bitmap = CGBitmapContextCreateImage(bitmapctx);
-
-    CGAffineTransform ctm = CGContextGetCTM(aCGContext);
-
-    // We need to unflip, so that we can do a DrawImage without getting a flipped image.
-    CGContextTranslateCTM(aCGContext, 0.0f, aRect.size.height);
-    CGContextScaleCTM(aCGContext, 1.0f, -1.0f);
-
-    if (mirrorHorizontally) {
-      CGContextTranslateCTM(aCGContext, aRect.size.width, 0);
-      CGContextScaleCTM(aCGContext, -1.0f, 1.0f);
-    }
-
-    CGContextDrawImage(aCGContext, drawRect, bitmap);
-
-    CGContextSetCTM(aCGContext, ctm);
-
-    CGImageRelease(bitmap);
-    CGContextRelease(bitmapctx);
-  }
-
-  CGContextSetCTM(aCGContext, savedCTM);
-}
-
-static void
-RenderScrollbar(CGContextRef cgContext, void* aData)
+RenderScrollbar(CGContextRef cgContext, const HIRect& aRenderRect, void* aData)
 {
   HIThemeTrackDrawInfo* tdi = (HIThemeTrackDrawInfo*)aData;
   HIThemeDrawTrack(tdi, NULL, cgContext, HITHEME_ORIENTATION);
@@ -1489,7 +1498,7 @@ nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRec
 }
 
 static void
-RenderResizer(CGContextRef cgContext, void* aData)
+RenderResizer(CGContextRef cgContext, const HIRect& aRenderRect, void* aData)
 {
   HIThemeGrowBoxDrawInfo* drawInfo = (HIThemeGrowBoxDrawInfo*)aData;
   HIThemeDrawGrowBox(&CGPointZero, drawInfo, cgContext, kHIThemeOrientationNormal);
