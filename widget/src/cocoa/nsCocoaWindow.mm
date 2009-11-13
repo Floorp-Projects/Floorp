@@ -1865,6 +1865,11 @@ static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor"
     // we respond to it just in case.
     if ([self respondsToSelector:@selector(setBottomCornerRounded:)])
       [self setBottomCornerRounded:NO];
+
+#ifdef NS_LEOPARD_AND_LATER
+    [self setAutorecalculatesContentBorderThickness:NO forEdge:NSMaxYEdge];
+    [self setContentBorderThickness:0.0f forEdge:NSMaxYEdge];
+#endif
   }
   return self;
 
@@ -1908,6 +1913,10 @@ static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor"
   if (mUnifiedToolbarHeight == aToolbarHeight)
     return;
   mUnifiedToolbarHeight = aToolbarHeight;
+
+#ifdef NS_LEOPARD_AND_LATER
+  [self setContentBorderThickness:aToolbarHeight forEdge:NSMaxYEdge];
+#endif
 
   // Since this function is only called inside painting, the repaint needs to
   // be synchronous.
