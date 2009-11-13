@@ -203,7 +203,7 @@ struct nsPresArena::State {
 
 struct nsPresArena::State
 {
-  void* Allocate(PRUnit32 /* unused */, size_t aSize)
+  void* Allocate(PRUint32 /* unused */, size_t aSize)
   {
     return PR_Malloc(aSize);
   }
