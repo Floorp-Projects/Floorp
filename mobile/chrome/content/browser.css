@@ -118,6 +118,10 @@ richlistitem[typeName="search"] hbox.addon-type-or-rating[rating] {
   -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-search-rating");
 }
 
+richlistitem[typeName="search"] hbox.addon-type-or-rating[rating="-1"] {
+  -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-search-no-rating");
+}
+
 richlistitem[typeName="message"] {
   -moz-binding: url("chrome://browser/content/bindings/extensions.xml#extension-message");
 }

@@ -213,4 +213,9 @@
     </content>
   </binding>
 
+  <binding id="extension-search-no-rating">
+    <content>
+    </content>
+  </binding>
+
 </bindings>
