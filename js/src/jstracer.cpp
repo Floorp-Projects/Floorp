@@ -6379,7 +6379,7 @@ ExecuteTrace(JSContext* cx, Fragment* f, InterpState& state)
 }
 
 /* Check whether our assumptions about the incoming scope-chain are upheld. */
-static JS_ALWAYS_INLINE bool
+static JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
 ScopeChainCheck(JSContext* cx, TreeInfo* ti, TreeFragment* f)
 {
     JS_ASSERT(ti->globalObj() == f->globalObj);
