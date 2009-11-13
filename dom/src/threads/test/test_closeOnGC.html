@@ -20,11 +20,13 @@
   }
 
   var worker = new Worker("closeOnGC_worker.js");
-  worker = null;
-
-  CC();
+  worker.onmessage = function(event) {
+    is(event.data, "ready");
+    worker = null;
+  }
 
   var interval = setInterval(function() {
+    dump("xxxben interval\n");
     var xhr = new XMLHttpRequest();
     xhr.open("GET", "closeOnGC_server.sjs", false);
     xhr.send();
