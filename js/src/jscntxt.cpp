@@ -131,24 +131,14 @@ JSThreadData::purge(JSContext *cx)
     /* FIXME: bug 506341. */
     js_PurgePropertyCache(cx, &propertyCache);
 
-# ifdef JS_TRACER
+#ifdef JS_TRACER
     /*
      * If we are about to regenerate shapes, we have to flush the JIT cache,
      * which will eventually abort any current recording.
      */
     if (cx->runtime->gcRegenShapes)
         traceMonitor.needFlush = JS_TRUE;
-
-    /*
-     * We want to keep reserved doubles and objects after the GC. So, unless we
-     * are shutting down, we don't purge them here and rather mark them during
-     * the GC, see MarkReservedObjects in jsgc.cpp.
-     */
-    if (cx->runtime->state == JSRTS_LANDING) {
-        traceMonitor.reservedDoublePoolPtr = traceMonitor.reservedDoublePool;
-        traceMonitor.reservedObjects = NULL;
-    }
-# endif
+#endif
 
     /* Destroy eval'ed scripts. */
     js_DestroyScriptsToGC(cx, this);
