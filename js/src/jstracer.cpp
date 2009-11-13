@@ -1373,47 +1373,6 @@ FragmentHash(const void *ip, JSObject* globalObj, uint32 globalShape, uint32 arg
     return size_t(h);
 }
 
-struct LinkableFragment : public VMFragment
-{
-    LinkableFragment(const void* _ip verbose_only(, uint32_t profFragID))
-      : VMFragment(_ip verbose_only(, profFragID))
-    { }
-
-    uint32 branchCount;
-};
-
-/*
- * argc is cx->fp->argc at the trace loop header, i.e., the number of arguments
- * pushed for the innermost JS frame. This is required as part of the fragment
- * key because the fragment will write those arguments back to the interpreter
- * stack when it exits, using its typemap, which implicitly incorporates a
- * given value of argc. Without this feature, a fragment could be called as an
- * inner tree with two different values of argc, and entry type checking or
- * exit frame synthesis could crash.
- */
-struct TreeFragment : public LinkableFragment
-{
-    TreeFragment(const void* _ip, JSObject* _globalObj, uint32 _globalShape, uint32 _argc
-               verbose_only(, uint32_t profFragID)) :
-        LinkableFragment(_ip verbose_only(, profFragID)),
-        treeInfo(NULL),
-        first(NULL),
-        next(NULL),
-        peer(NULL),
-        globalObj(_globalObj),
-        globalShape(_globalShape),
-        argc(_argc)
-    { }
-
-    TreeInfo *treeInfo;
-    TreeFragment* first;
-    TreeFragment* next;
-    TreeFragment* peer;
-    JSObject* globalObj;
-    uint32 globalShape;
-    uint32 argc;
-};
-
 static void
 RawLookupFirstPeer(JSTraceMonitor* tm, const void *ip, JSObject* globalObj,
                    uint32 globalShape, uint32 argc,
@@ -2040,6 +1999,15 @@ VisitGlobalSlots(Visitor &visitor, JSContext *cx, JSObject *globalObj,
     }
 }
 
+template <typename Visitor>
+static JS_REQUIRES_STACK JS_ALWAYS_INLINE void
+VisitGlobalSlots(Visitor &visitor, JSContext *cx, TreeInfo *ti)
+{
+    JSObject* globalObj = ti->globalObj();
+    SlotList& gslots = *ti->globalSlots;
+    VisitGlobalSlots(visitor, cx, globalObj, gslots.length(), gslots.data());
+}
+
 class AdjustCallerTypeVisitor;
 
 template <typename Visitor>
@@ -2305,6 +2273,20 @@ SpecializeTreesToMissingGlobals(JSContext* cx, JSObject* globalObj, TreeInfo* ro
     }
 }
 
+static JS_REQUIRES_STACK void
+ResetJITImpl(JSContext* cx);
+
+#ifdef MOZ_TRACEVIS
+static JS_INLINE JS_REQUIRES_STACK void
+ResetJIT(JSContext* cx, TraceVisFlushReason r)
+{
+    js_LogTraceVisEvent(cx, S_RESET, r);
+    ResetJITImpl(cx);
+}
+#else
+#define ResetJIT(cx, r) ResetJITImpl(cx)
+#endif
+
 static void
 TrashTree(JSContext* cx, TreeFragment* f);
 
@@ -2325,7 +2307,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     fragment(fragment),
     treeInfo(ti),
     recordReason(recordReason),
-    globalObj(ti->rootFragment->globalObj),
+    globalObj(ti->globalObj()),
     outer(outer),
     outerArgc(outerArgc),
     lexicalBlock(cx->fp->blockChain),
@@ -2490,13 +2472,15 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
 
 TraceRecorder::~TraceRecorder()
 {
-     JS_ASSERT(treeInfo && fragment);
+    /* Should already have been adjusted by callers before calling delete. */
+    JS_ASSERT(traceMonitor->recorder != this);
+    JS_ASSERT(fragment->root == treeInfo->rootFragment);
 
-     if (trashSelf)
-         TrashTree(cx, fragment->root);
+    if (trashSelf)
+        TrashTree(cx, fragment->root);
 
-     for (unsigned int i = 0; i < whichTreesToTrash.length(); i++)
-         TrashTree(cx, whichTreesToTrash[i]);
+    for (unsigned int i = 0; i < whichTreesToTrash.length(); i++)
+        TrashTree(cx, whichTreesToTrash[i]);
 
     /* Purge the tempAlloc used during recording. */
     tempAlloc().reset();
@@ -2505,12 +2489,85 @@ TraceRecorder::~TraceRecorder()
     forgetGuardedShapes();
 }
 
-bool
-TraceRecorder::outOfMemory()
+inline bool
+JSTraceMonitor::outOfMemory() const
 {
-    return dataAlloc().outOfMemory() ||
-           traceAlloc().outOfMemory() ||
-           tempAlloc().outOfMemory();
+    return dataAlloc->outOfMemory() ||
+           tempAlloc->outOfMemory() ||
+           traceAlloc->outOfMemory();
+}
+
+/*
+ * This function destroys the recorder after a successful recording, possibly
+ * starting a suspended outer recorder.
+ */
+AbortableRecordingStatus
+TraceRecorder::finishSuccessfully()
+{
+    JS_ASSERT(traceMonitor->recorder == this);
+    JS_ASSERT(fragment->lastIns && fragment->code());
+    JS_ASSERT_IF(fragment == fragment->root, fragment->toTreeFragment()->treeInfo);
+
+    AUDIT(traceCompleted);
+    mark.commit();
+
+    /* Grab local copies of members needed after |delete this|. */
+    JSContext* localcx = cx;
+    JSTraceMonitor* localtm = traceMonitor;
+
+    localtm->recorder = NULL;
+    delete this;
+
+    /* Catch OOM that occurred during recording. */
+    if (localtm->outOfMemory() || js_OverfullJITCache(localtm)) {
+        ResetJIT(localcx, FR_OOM);
+        return ARECORD_ABORTED;
+    }
+    return ARECORD_COMPLETED;
+}
+
+/* This function aborts a recorder and any pending outer recorders. */
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::finishAbort(const char* reason)
+{
+    JS_ASSERT(traceMonitor->recorder == this);
+    JS_ASSERT(!fragment->code());
+    JS_ASSERT_IF(fragment == fragment->root, !fragment->toTreeFragment()->treeInfo);
+
+    AUDIT(recorderAborted);
+#ifdef DEBUG
+    debug_only_printf(LC_TMAbort,
+                      "Abort recording of tree %s:%d@%d at %s:%d@%d: %s.\n",
+                      treeInfo->treeFileName,
+                      treeInfo->treeLineNumber,
+                      treeInfo->treePCOffset,
+                      cx->fp->script->filename,
+                      js_FramePCToLineNumber(cx, cx->fp),
+                      FramePCOffset(cx->fp),
+                      reason);
+#endif
+    Backoff(cx, (jsbytecode*) fragment->root->ip, fragment->root);
+
+    /*
+     * If this is the primary trace and we didn't succeed compiling, trash the
+     * TreeInfo object.
+     */
+    if (fragment->root == fragment)
+        TrashTree(cx, fragment->toTreeFragment());
+
+    /* Grab local copies of members needed after |delete this|. */
+    JSContext* localcx = cx;
+    JSTraceMonitor* localtm = traceMonitor;
+
+    /*
+     * Delete then abort recursively. Only reset from the outermost recorder,
+     * to avoid freeing memory that will be used by other recorders.
+     */
+    localtm->recorder = NULL;
+    delete this;
+    if (localtm->outOfMemory() || js_OverfullJITCache(localtm))
+        ResetJIT(localcx, FR_OOM);
+    return ARECORD_ABORTED;
 }
 
 /* Add debug information to a LIR instruction as we emit it. */
@@ -2608,9 +2665,18 @@ TraceRecorder::nativeStackOffset(jsval* p) const
     }
     return offset;
 }
+/*
+ * Return the offset, from InterpState:sp, for the given jsval. Shorthand for:
+ *  -TreeInfo::nativeStackBase + nativeStackOffset(p).
+ */
+inline JS_REQUIRES_STACK ptrdiff_t
+TraceRecorder::nativespOffset(jsval* p) const
+{
+    return -treeInfo->nativeStackBase + nativeStackOffset(p);
+}
 
 /* Track the maximum number of native frame slots we need during execution. */
-void
+inline void
 TraceRecorder::trackNativeStackUse(unsigned slots)
 {
     if (slots > treeInfo->maxNativeStackSlots)
@@ -2705,6 +2771,8 @@ ValueToNative(JSContext* cx, jsval v, JSTraceType type, double* slot)
 void
 JSTraceMonitor::flush()
 {
+    /* flush should only be called after all recorders have been aborted. */
+    JS_ASSERT(!recorder);
     AUDIT(cacheFlushed);
 
     // recover profiling data from expiring Fragments
@@ -2994,11 +3062,10 @@ public:
 
 /* Box the given native frame into a JS frame. This is infallible. */
 static JS_REQUIRES_STACK void
-FlushNativeGlobalFrame(JSContext *cx, double *global, unsigned ngslots,
+FlushNativeGlobalFrame(JSContext *cx, JSObject *globalObj, double *global, unsigned ngslots,
                        uint16 *gslots, JSTraceType *typemap)
 {
     FlushNativeGlobalFrameVisitor visitor(cx, typemap, global);
-    JSObject *globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
     VisitGlobalSlots(visitor, cx, globalObj, ngslots, gslots);
     debug_only_print0(LC_TMTracer, "\n");
 }
@@ -3299,10 +3366,6 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSTraceType* mp, 
                     JSVAL_TO_OBJECT(fp->argsobj)->setPrivate(fp);
                 }
 
-                /*
-                 * We might return from trace with a different callee object, but it still
-                 * has to be the same JSFunction (FIXME: bug 471425, eliminate fp->callee).
-                 */
                 JS_ASSERT(JSVAL_IS_OBJECT(fp->argv[-1]));
                 JS_ASSERT(HAS_FUNCTION_CLASS(fp->calleeObject()));
                 JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee()) == fp->fun);
@@ -3643,7 +3706,7 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing, bool demote)
         if (isGlobal(p))
             x = writeBack(i, eos_ins, nativeGlobalOffset(p), demote);
         else
-            x = writeBack(i, lirbuf->sp, -treeInfo->nativeStackBase + nativeStackOffset(p), demote);
+            x = writeBack(i, lirbuf->sp, nativespOffset(p), demote);
         nativeFrameTracker.set(p, x);
     } else {
         JS_ASSERT(x->isop(LIR_sti) || x->isop(LIR_stqi));
@@ -3659,9 +3722,9 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing, bool demote)
         disp = x->disp();
 
         JS_ASSERT(base == lirbuf->sp || base == eos_ins);
-        JS_ASSERT(disp == ((base == lirbuf->sp) ?
-                  -treeInfo->nativeStackBase + nativeStackOffset(p) :
-                  nativeGlobalOffset(p)));
+        JS_ASSERT(disp == ((base == lirbuf->sp)
+                            ? nativespOffset(p)
+                            : nativeGlobalOffset(p)));
 
         writeBack(i, base, disp, demote);
     }
@@ -3681,7 +3744,7 @@ TraceRecorder::addr(jsval* p)
     return isGlobal(p)
            ? lir->ins2(LIR_piadd, eos_ins, INS_CONSTWORD(nativeGlobalOffset(p)))
            : lir->ins2(LIR_piadd, lirbuf->sp,
-                       INS_CONSTWORD(-treeInfo->nativeStackBase + nativeStackOffset(p)));
+                       INS_CONSTWORD(nativespOffset(p)));
 }
 
 JS_REQUIRES_STACK bool
@@ -3806,8 +3869,7 @@ public:
             bool isPromote = isPromoteInt(ins);
             if (isPromote && *mTypeMap == TT_DOUBLE) {
                 mLir->insStorei(mRecorder.get(vp), mLirbuf->sp,
-                                -mRecorder.treeInfo->nativeStackBase +
-                                mRecorder.nativeStackOffset(vp));
+                                mRecorder.nativespOffset(vp));
 
                 /*
                  * Aggressively undo speculation so the inner tree will compile
@@ -4192,17 +4254,6 @@ ResetJITImpl(JSContext* cx)
     tm->flush();
 }
 
-#ifdef MOZ_TRACEVIS
-static JS_INLINE JS_REQUIRES_STACK void
-ResetJIT(JSContext* cx, TraceVisFlushReason r)
-{
-    js_LogTraceVisEvent(cx, S_RESET, r);
-    ResetJITImpl(cx);
-}
-#else
-#define ResetJIT(cx, r) ResetJITImpl(cx)
-#endif
-
 JS_REQUIRES_STACK void
 js_ResetJIT(JSContext* cx)
 {
@@ -4211,13 +4262,13 @@ js_ResetJIT(JSContext* cx)
 
 /* Compile the current fragment. */
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::compile(JSTraceMonitor* tm)
+TraceRecorder::compile()
 {
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_COMPILE);
 #endif
 
-    if (tm->needFlush) {
+    if (traceMonitor->needFlush) {
         ResetJIT(cx, FR_DEEP_BAIL);
         return ARECORD_ABORTED;
     }
@@ -4231,16 +4282,19 @@ TraceRecorder::compile(JSTraceMonitor* tm)
     if (outOfMemory())
         return ARECORD_STOP;
 
-    Assembler *assm = tm->assembler;
-    nanojit::compile(assm, fragment, tempAlloc() verbose_only(, tm->labels));
-    if (outOfMemory())
-        return ARECORD_STOP;
+    Assembler *assm = traceMonitor->assembler;
+    JS_ASSERT(assm->error() == nanojit::None);
+    nanojit::compile(assm, fragment, tempAlloc() verbose_only(, traceMonitor->labels));
 
     if (assm->error() != nanojit::None) {
+        assm->setError(nanojit::None);
         debug_only_print0(LC_TMTracer, "Blacklisted: error during compilation\n");
         Blacklist((jsbytecode*) fragment->root->ip);
         return ARECORD_STOP;
     }
+
+    if (outOfMemory())
+        return ARECORD_STOP;
     ResetRecordingAttempts(cx, (jsbytecode*) fragment->ip);
     ResetRecordingAttempts(cx, (jsbytecode*) fragment->root->ip);
     if (anchor) {
@@ -4262,11 +4316,9 @@ TraceRecorder::compile(JSTraceMonitor* tm)
     char* label = (char*)js_malloc((filename ? strlen(filename) : 7) + 16);
     sprintf(label, "%s:%u", filename ? filename : "<stdin>",
             js_FramePCToLineNumber(cx, cx->fp));
-    tm->labels->add(fragment, sizeof(Fragment), 0, label);
+    traceMonitor->labels->add(fragment, sizeof(Fragment), 0, label);
     js_free(label);
 #endif
-    AUDIT(traceCompleted);
-    mark.commit();
     return ARECORD_CONTINUE;
 }
 
@@ -4657,7 +4709,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
         fragment->lastIns = lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
     }
 
-    CHECK_STATUS_A(compile(traceMonitor));
+    CHECK_STATUS_A(compile());
 
     debug_only_printf(LC_TMTreeVis, "TREEVIS CLOSELOOP EXIT=%p PEER=%p\n", (void*)exit, (void*)peer);
 
@@ -4689,8 +4741,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
     debug_only_print0(LC_TMMinimal, "\n");
 #endif
 
-    /* recording complete. */
-    return ARECORD_STOP;
+    return finishSuccessfully();
 }
 
 static void
@@ -4814,7 +4865,7 @@ TraceRecorder::endLoop(VMSideExit* exit)
     fragment->lastIns =
         lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
 
-    CHECK_STATUS_A(compile(traceMonitor));
+    CHECK_STATUS_A(compile());
 
     debug_only_printf(LC_TMTreeVis, "TREEVIS ENDLOOP EXIT=%p\n", (void*)exit);
 
@@ -4849,8 +4900,7 @@ TraceRecorder::endLoop(VMSideExit* exit)
     debug_only_print0(LC_TMTracer, "\n");
 #endif
 
-    /* recording complete */
-    return ARECORD_STOP;
+    return finishSuccessfully();
 }
 
 /* Emit code to adjust the stack to match the inner tree's stack expectations. */
@@ -4983,6 +5033,7 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit, LIns* inner_s
      * we called the inner tree at recording time.
      */
     VMSideExit* nested = snapshot(NESTED_EXIT);
+    JS_ASSERT(exit->exitType == LOOP_EXIT);
     guard(true, lir->ins2(LIR_peq, ret, INS_CONSTPTR(exit)), nested);
     debug_only_printf(LC_TMTreeVis, "TREEVIS TREECALL INNER=%p EXIT=%p GUARD=%p\n", (void*)inner,
                       (void*)nested, (void*)exit);
@@ -5159,26 +5210,6 @@ nanojit::LirNameMap::formatGuard(LIns *i, char *out)
 }
 #endif
 
-static JS_REQUIRES_STACK bool
-DeleteRecorder(JSContext* cx)
-{
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-
-    /* Aborting and completing a trace end up here. */
-    delete tm->recorder;
-    tm->recorder = NULL;
-
-    /* If we ran out of memory, flush the code cache. */
-    if (tm->dataAlloc->outOfMemory() ||
-        tm->traceAlloc->outOfMemory() ||
-        js_OverfullJITCache(tm)) {
-        ResetJIT(cx, FR_OOM);
-        return false;
-    }
-
-    return true;
-}
-
 /*
  * Check whether the shape of the global object has changed. The return value
  * indicates whether the recorder is still active.  If 'false', any active
@@ -5252,33 +5283,40 @@ CheckGlobalObjectShape(JSContext* cx, JSTraceMonitor* tm, JSObject* globalObj,
     return false;
 }
 
-static JS_REQUIRES_STACK bool
-StartRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* f, TreeInfo* ti,
-              unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
-              VMSideExit* expectedInnerExit, jsbytecode* outer, uint32 outerArgc,
-              RecordReason reason)
+/*
+ * Return whether or not the recorder could be started. If 'false', the JIT has
+ * been reset in response to an OOM.
+ */
+bool JS_REQUIRES_STACK
+TraceRecorder::startRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* f,
+                             TreeInfo* ti, unsigned stackSlots, unsigned ngslots,
+                             JSTraceType* typeMap, VMSideExit* expectedInnerExit,
+                             jsbytecode* outer, uint32 outerArgc, RecordReason recordReason)
 {
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    if (JS_TRACE_MONITOR(cx).needFlush) {
-        ResetJIT(cx, FR_DEEP_BAIL);
+    JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    JS_ASSERT(!tm->needFlush);
+    JS_ASSERT_IF(cx->fp->imacpc, f->root != f);
+
+    tm->recorder = new TraceRecorder(cx, anchor, f, ti, stackSlots,
+                                     ngslots, typeMap, expectedInnerExit,
+                                     outer, outerArgc, recordReason);
+
+    if (!tm->recorder || tm->outOfMemory() || js_OverfullJITCache(tm)) {
+        ResetJIT(cx, FR_OOM);
         return false;
     }
 
-    JS_ASSERT(f->root != f || !cx->fp->imacpc);
-
-    /* Start recording if no exception during construction. */
-    tm->recorder = new TraceRecorder(cx, anchor, f, ti,
-                                     stackSlots, ngslots, typeMap,
-                                     expectedInnerExit, outer, outerArgc, reason);
-
-    if (cx->throwing) {
-        js_AbortRecording(cx, "setting up recorder failed");
+    /*
+     * If slurping failed, there's no reason to start recording again. Emit LIR
+     * to capture the rest of the slots, then immediately compile and finish.
+     */
+    if (anchor && anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT) {
+        tm->recorder->slurpDownFrames((jsbytecode*)anchor->recursive_pc - JSOP_CALL_LENGTH);
+        if (tm->recorder)
+            tm->recorder->finishAbort("Failed to slurp down frames");
         return false;
     }
 
-    /* Clear any leftover error state. */
-    Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
-    assm->setError(None);
     return true;
 }
 
@@ -5503,41 +5541,14 @@ SynthesizeSlowNativeFrame(InterpState& state, JSContext *cx, VMSideExit *exit)
     cx->fp = fp;
 }
 
-static JS_REQUIRES_STACK bool
-RecordTree(JSContext* cx, JSTraceMonitor* tm, TreeFragment* peer, jsbytecode* outer,
-           uint32 outerArgc, JSObject* globalObj, uint32 globalShape,
-           SlotList* globalSlots, uint32 argc, RecordReason reason)
+/*
+ * Create a TreeInfo in preparation for starting a recorder. If one cannot be
+ * allocated, reset the JIT and return NULL.
+ */
+static JS_REQUIRES_STACK TreeInfo*
+CreateTreeInfo(JSContext* cx, TreeFragment* f, JSObject* globalObj, SlotList* globalSlots)
 {
-    /* Try to find an unused peer fragment, or allocate a new one. */
-    TreeFragment* f = peer;
-    while (f->code() && f->peer)
-        f = f->peer;
-    if (f->code())
-        f = AddNewPeerToPeerList(tm, f);
-    JS_ASSERT(f->root == f);
-
-    /* save a local copy for use after JIT flush */
-    const void* localRootIP = f->root->ip;
-
-    /* Make sure the global type map didn't change on us. */
-    if (!CheckGlobalObjectShape(cx, tm, globalObj)) {
-        Backoff(cx, (jsbytecode*) localRootIP);
-        return false;
-    }
-
-    AUDIT(recorderStarted);
-
-    if (tm->dataAlloc->outOfMemory() ||
-        tm->traceAlloc->outOfMemory() ||
-        js_OverfullJITCache(tm)) {
-        Backoff(cx, (jsbytecode*) f->root->ip);
-        ResetJIT(cx, FR_OOM);
-        debug_only_print0(LC_TMTracer,
-                          "Out of memory recording new tree, flushing cache.\n");
-        return false;
-    }
-
-    JS_ASSERT(!f->code() && !f->treeInfo);
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
     /* Set up the VM-private treeInfo structure for this fragment. */
     TreeInfo* ti = new (*tm->traceAlloc) TreeInfo(tm->dataAlloc, f, globalSlots);
@@ -5574,11 +5585,53 @@ RecordTree(JSContext* cx, JSTraceMonitor* tm, TreeFragment* peer, jsbytecode* ou
     ti->maxCallDepth = 0;
     ti->script = cx->fp->script;
 
+    return ti;
+}
+
+static JS_REQUIRES_STACK bool
+RecordTree(JSContext* cx, JSTraceMonitor* tm, TreeFragment* peer, jsbytecode* outer,
+           uint32 outerArgc, JSObject* globalObj, uint32 globalShape,
+           SlotList* globalSlots, uint32 argc, RecordReason reason)
+{
+    /* Try to find an unused peer fragment, or allocate a new one. */
+    TreeFragment* f = peer;
+    while (f->code() && f->peer)
+        f = f->peer;
+    if (f->code())
+        f = AddNewPeerToPeerList(tm, f);
+    JS_ASSERT(f->root == f);
+
+    /* save a local copy for use after JIT flush */
+    const void* localRootIP = f->root->ip;
+
+    /* Make sure the global type map didn't change on us. */
+    if (!CheckGlobalObjectShape(cx, tm, globalObj)) {
+        Backoff(cx, (jsbytecode*) localRootIP);
+        return false;
+    }
+
+    AUDIT(recorderStarted);
+
+    if (tm->outOfMemory() || js_OverfullJITCache(tm)) {
+        Backoff(cx, (jsbytecode*) f->root->ip);
+        ResetJIT(cx, FR_OOM);
+        debug_only_print0(LC_TMTracer,
+                          "Out of memory recording new tree, flushing cache.\n");
+        return false;
+    }
+
+    JS_ASSERT(!f->code() && !f->treeInfo);
+
+    TreeInfo* ti = CreateTreeInfo(cx, f, globalObj, globalSlots);
+    if (!ti)
+        return false;
+
     /* Recording primary trace. */
-    return StartRecorder(cx, NULL, f, ti,
-                         ti->nStackTypes,
-                         ti->globalSlots->length(),
-                         ti->typeMap.data(), NULL, outer, outerArgc, reason);
+    return TraceRecorder::startRecorder(cx, NULL, f, ti,
+                                        ti->nStackTypes,
+                                        ti->globalSlots->length(),
+                                        ti->typeMap.data(), NULL,
+                                        outer, outerArgc, reason);
 }
 
 static JS_REQUIRES_STACK TypeConsensus
@@ -5720,6 +5773,31 @@ AttemptToStabilizeTree(JSContext* cx, JSObject* globalObj, VMSideExit* exit, jsb
                       Record_Branch);
 }
 
+static JS_REQUIRES_STACK VMFragment*
+CreateBranchFragment(JSContext* cx, TreeFragment* root, VMSideExit* anchor)
+{
+    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+
+    verbose_only(
+    uint32_t profFragID = (js_LogController.lcbits & LC_FragProfile)
+                          ? (++(tm->lastFragID)) : 0;
+    )
+
+    VMFragment* f = new (*tm->dataAlloc) VMFragment(cx->fp->regs->pc verbose_only(, profFragID));
+
+    debug_only_printf(LC_TMTreeVis, "TREEVIS CREATEBRANCH ROOT=%p FRAG=%p PC=%p FILE=\"%s\""
+                      " LINE=%d ANCHOR=%p OFFS=%d\n",
+                      (void*)root, (void*)f, (void*)cx->fp->regs->pc, cx->fp->script->filename,
+                      js_FramePCToLineNumber(cx, cx->fp), (void*)anchor,
+                      FramePCOffset(cx->fp));
+    verbose_only( tm->branches = new (*tm->dataAlloc) Seq<Fragment*>(f, tm->branches); )
+
+    f->root = root;
+    if (anchor)
+        anchor->target = f;
+    return f;
+}
+
 static JS_REQUIRES_STACK bool
 AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, jsbytecode* outer
 #ifdef MOZ_TRACEVIS
@@ -5728,6 +5806,8 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
     )
 {
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+    JS_ASSERT(!tm->recorder);
+
     if (tm->needFlush) {
         ResetJIT(cx, FR_DEEP_BAIL);
 #ifdef MOZ_TRACEVIS
@@ -5750,35 +5830,19 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
         return false;
     }
 
-    VMFragment* c;
-    if (!anchor->target) {
-        JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
-        Allocator& alloc = *tm->dataAlloc;
-        verbose_only(
-        uint32_t profFragID = (js_LogController.lcbits & LC_FragProfile)
-                              ? (++(tm->lastFragID)) : 0;
-        )
-        c = new (alloc) VMFragment(cx->fp->regs->pc verbose_only(, profFragID));
-        c->root = anchor->root();
-        debug_only_printf(LC_TMTreeVis, "TREEVIS CREATEBRANCH ROOT=%p FRAG=%p PC=%p FILE=\"%s\""
-                          " LINE=%d ANCHOR=%p OFFS=%d\n",
-                          (void*)f, (void*)c, (void*)cx->fp->regs->pc, cx->fp->script->filename,
-                          js_FramePCToLineNumber(cx, cx->fp), (void*)anchor,
-                          FramePCOffset(cx->fp));
-        anchor->target = c;
-        c->root = f;
-        verbose_only( tm->branches = new (alloc) Seq<Fragment*>(c, tm->branches); )
+    VMFragment* c = (VMFragment*)anchor->target;
+    if (!c) {
+        c = CreateBranchFragment(cx, f, anchor);
     } else {
-        c = (VMFragment*)anchor->target;
+        /*
+         * If we are recycling a fragment, it might have a different ip so reset it
+         * here. This can happen when attaching a branch to a NESTED_EXIT, which
+         * might extend along separate paths (i.e. after the loop edge, and after a
+         * return statement).
+         */
+        c->ip = cx->fp->regs->pc;
+        JS_ASSERT(c->root == f);
     }
-
-    /*
-     * If we are recycling a fragment, it might have a different ip so reset it
-     * here. This can happen when attaching a branch to a NESTED_EXIT, which
-     * might extend along separate paths (i.e. after the loop edge, and after a
-     * return statement).
-     */
-    c->ip = cx->fp->regs->pc;
 
     debug_only_printf(LC_TMTracer,
                       "trying to attach another branch to the tree (hits = %d)\n", c->hits());
@@ -5817,17 +5881,13 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
             typeMap = fullMap.data();
         }
         JS_ASSERT(ngslots >= anchor->numGlobalSlots);
-        bool rv = StartRecorder(cx, anchor, c, f->treeInfo, stackSlots,
-                                ngslots, typeMap, exitedFrom, outer, cx->fp->argc,
-                                Record_Branch);
+        bool rv = TraceRecorder::startRecorder(cx, anchor, c, f->treeInfo,
+                                               stackSlots, ngslots, typeMap, exitedFrom,
+                                               outer, cx->fp->argc, Record_Branch);
 #ifdef MOZ_TRACEVIS
         if (!rv && tvso)
             tvso->r = R_FAIL_EXTEND_START;
 #endif
-        if (anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT) {
-            DeleteRecorder(cx);
-            return false;
-        }
         return rv;
     }
 #ifdef MOZ_TRACEVIS
@@ -5886,7 +5946,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
     if (!f || !f->code()) {
         AUDIT(noCompatInnerTrees);
 
-        TreeFragment* outerFragment = tm->recorder->getFragment()->root;
+        TreeFragment* outerFragment = root;
         jsbytecode* outer = (jsbytecode*) outerFragment->ip;
         uint32 outerArgc = outerFragment->argc;
         uint32 argc = cx->fp->argc;
@@ -5986,6 +6046,8 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
           return AttemptToExtendTree(localCx, lr, NULL, outer) ? ARECORD_CONTINUE : ARECORD_ABORTED;
       }
 
+      case NESTED_EXIT:
+          JS_NOT_REACHED("NESTED_EXIT should be replaced by innermost side exit");
       default:
         debug_only_printf(LC_TMTracer, "exit_type=%s\n", getExitName(lr->exitType));
         js_AbortRecording(cx, "Inner tree not suitable for calling");
@@ -6235,18 +6297,93 @@ FindVMCompatiblePeer(JSContext* cx, JSObject* globalObj, TreeFragment* f, uintN&
     return NULL;
 }
 
-static void
-LeaveTree(InterpState&, VMSideExit* lr);
-
-static JS_REQUIRES_STACK VMSideExit*
-ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
-            VMSideExit** innermostNestedGuardp)
-{
-#ifdef MOZ_TRACEVIS
-    TraceVisStateObj tvso(cx, S_EXECUTE);
+/*
+ * For the native stacks and global frame, reuse the storage in |tm->storage|.
+ * This reuse depends on the invariant that only one trace uses |tm->storage| at
+ * a time. This is subtley correct in lieu of deep bail; see comment for
+ * |deepBailSp| in js_DeepBail.
+ */
+JS_ALWAYS_INLINE
+InterpState::InterpState(JSContext* cx, JSTraceMonitor* tm, TreeInfo* ti,
+                         uintN& inlineCallCount, VMSideExit** innermostNestedGuardp)
+  : cx(cx),
+    stackBase(tm->storage.stack()),
+    sp(stackBase + ti->nativeStackBase / sizeof(double)),
+    eos(tm->storage.global()),
+    callstackBase(tm->storage.callstack()),
+    sor(callstackBase),
+    rp(callstackBase),
+    eor(callstackBase + JS_MIN(MAX_CALL_STACK_ENTRIES,
+                               JS_MAX_INLINE_CALL_COUNT - inlineCallCount)),
+    lastTreeExitGuard(NULL),
+    lastTreeCallGuard(NULL),
+    rpAtLastTreeCall(NULL),
+    outermostTree(ti),
+    inlineCallCountp(&inlineCallCount),
+    innermostNestedGuardp(innermostNestedGuardp),
+#ifdef EXECUTE_TREE_TIMER
+    startTime(rdtsc()),
 #endif
+    builtinStatus(0),
+    nativeVp(NULL)
+{
+    JS_ASSERT(!tm->tracecx);
+    tm->tracecx = cx;
+    prev = cx->interpState;
+    cx->interpState = this;
 
-    JS_ASSERT(f->root == f && f->code() && f->treeInfo);
+    JS_ASSERT(eos == stackBase + MAX_NATIVE_STACK_SLOTS);
+    JS_ASSERT(sp < eos);
+
+    /*
+     * inlineCallCount has already been incremented, if being invoked from
+     * EnterFrame. It is okay to have a 0-frame restriction since the JIT
+     * might not need any frames.
+     */
+    JS_ASSERT(inlineCallCount <= JS_MAX_INLINE_CALL_COUNT);
+
+#ifdef DEBUG
+    /*
+     * Cannot 0xCD-fill global frame since it may overwrite a bailed outer
+     * ExecuteTree's 0xdeadbeefdeadbeef marker.
+     */
+    memset(tm->storage.stack(), 0xCD, MAX_NATIVE_STACK_SLOTS * sizeof(double));
+    memset(tm->storage.callstack(), 0xCD, MAX_CALL_STACK_ENTRIES * sizeof(FrameInfo*));
+#endif
+}
+
+JS_ALWAYS_INLINE
+InterpState::~InterpState()
+{
+    JS_ASSERT(!nativeVp);
+
+    cx->interpState = prev;
+    JS_TRACE_MONITOR(cx).tracecx = NULL;
+}
+
+/* Call |f|, return the exit taken. */
+static JS_ALWAYS_INLINE VMSideExit*
+ExecuteTrace(JSContext* cx, Fragment* f, InterpState& state)
+{
+    JS_ASSERT(!cx->bailExit);
+    union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
+    u.code = f->code();
+    GuardRecord* rec;
+#if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
+    SIMULATE_FASTCALL(rec, state, NULL, u.func);
+#else
+    rec = u.func(&state, NULL);
+#endif
+    JS_ASSERT(!cx->bailExit);
+    return (VMSideExit*)rec->exit;
+}
+
+/* Check whether our assumptions about the incoming scope-chain are upheld. */
+static JS_ALWAYS_INLINE bool
+ScopeChainCheck(JSContext* cx, TreeInfo* ti, TreeFragment* f)
+{
+    JS_ASSERT(ti->globalObj() == f->globalObj);
+    JS_ASSERT(ti->globalObj() == JS_GetGlobalForObject(cx, cx->fp->scopeChain));
 
     /*
      * The JIT records and expects to execute with two scope-chain
@@ -6264,88 +6401,60 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
      * class types; once a global is found, it's checked for #1. Failing
      * either check causes an early return from execution.
      */
-    JSObject* parent;
     JSObject* child = cx->fp->scopeChain;
-    while ((parent = OBJ_GET_PARENT(cx, child)) != NULL) {
+    while (JSObject* parent = OBJ_GET_PARENT(cx, child)) {
         if (!js_IsCacheableNonGlobalScope(child)) {
             debug_only_print0(LC_TMTracer,"Blacklist: non-cacheable object on scope chain.\n");
             Blacklist((jsbytecode*) f->root->ip);
-            return NULL;
+            return false;
         }
         child = parent;
     }
-    JSObject* globalObj = child;
-    if (!(OBJ_GET_CLASS(cx, globalObj)->flags & JSCLASS_IS_GLOBAL)) {
+    JS_ASSERT(child == f->globalObj);
+
+    if (!(OBJ_GET_CLASS(cx, f->globalObj)->flags & JSCLASS_IS_GLOBAL)) {
         debug_only_print0(LC_TMTracer, "Blacklist: non-global at root of scope chain.\n");
         Blacklist((jsbytecode*) f->root->ip);
-        return NULL;
+        return false;
     }
 
+    /* Make sure the global object is sane. */
+    JS_ASSERT(STOBJ_NSLOTS(f->globalObj) <= MAX_GLOBAL_SLOTS);
+    JS_ASSERT(ti->nGlobalTypes() == ti->globalSlots->length());
+    JS_ASSERT_IF(ti->globalSlots->length() != 0,
+                 OBJ_SHAPE(f->globalObj) == f->globalShape);
+    return true;
+}
+
+static void
+LeaveTree(InterpState&, VMSideExit* lr);
+
+static JS_REQUIRES_STACK VMSideExit*
+ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
+            VMSideExit** innermostNestedGuardp)
+{
+#ifdef MOZ_TRACEVIS
+    TraceVisStateObj tvso(cx, S_EXECUTE);
+#endif
+    JS_ASSERT(f->root == f && f->code() && f->treeInfo);
     JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
     TreeInfo* ti = f->treeInfo;
+
+    if (!ScopeChainCheck(cx, ti, f))
+        return NULL;
+
+    /* Initialize trace state. */
+    InterpState state(cx, tm, ti, inlineCallCount, innermostNestedGuardp);
+    double* stack = tm->storage.stack();
+    double* global = tm->storage.global();
+    JSObject* globalObj = f->globalObj;
     unsigned ngslots = ti->globalSlots->length();
     uint16* gslots = ti->globalSlots->data();
-    unsigned globalFrameSize = STOBJ_NSLOTS(globalObj);
-    JS_ASSERT(globalFrameSize <= MAX_GLOBAL_SLOTS);
 
-    /* Make sure the global object is sane. */
-    JS_ASSERT_IF(ngslots != 0,
-                 OBJ_SHAPE(JS_GetGlobalForObject(cx, cx->fp->scopeChain)) ==
-                 f->globalShape);
+    BuildNativeFrame(cx, globalObj, 0 /* callDepth */, ngslots, gslots,
+                     ti->typeMap.data(), global, stack);
 
-    /*
-     * Set up the interpreter state. For the native stacks and global frame,
-     * reuse the storage in |tm->storage|. This reuse depends on the invariant
-     * that only one trace uses |tm->storage| at a time. This is subtley correct
-     * in lieu of deep bail; see comment for |deepBailSp| in js_DeepBail.
-     */
-    InterpState state;
-    state.cx = cx;
-    state.inlineCallCountp = &inlineCallCount;
-    state.innermostNestedGuardp = innermostNestedGuardp;
-    state.outermostTree = ti;
-    state.lastTreeExitGuard = NULL;
-    state.lastTreeCallGuard = NULL;
-    state.rpAtLastTreeCall = NULL;
-    state.nativeVp = NULL;
-    state.builtinStatus = 0;
-
-    /* Set up the native global frame. */
-    double* global = tm->storage.global();
-
-    /* Set up the native stack frame. */
-    double* stack = tm->storage.stack();
-    state.stackBase = stack;
-    state.sp = stack + (ti->nativeStackBase/sizeof(double));
-    state.eos = tm->storage.global();
-    JS_ASSERT(state.eos == stack + MAX_NATIVE_STACK_SLOTS);
-    JS_ASSERT(state.sp < state.eos);
-
-    /*
-     * inlineCallCount has already been incremented, if being invoked from
-     * EnterFrame. It is okay to have a 0-frame restriction since the JIT
-     * might not need any frames.
-     */
-    JS_ASSERT(inlineCallCount <= JS_MAX_INLINE_CALL_COUNT);
-
-    /* Set up the native call stack frame. */
-    FrameInfo** callstack = tm->storage.callstack();
-    state.callstackBase = callstack;
-    state.sor = callstack;
-    state.rp = callstack;
-    state.eor = callstack + JS_MIN(MAX_CALL_STACK_ENTRIES,
-                                   JS_MAX_INLINE_CALL_COUNT - inlineCallCount);
-
-#ifdef DEBUG
-    /*
-     * Cannot 0xCD-fill global frame since it may overwrite a bailed outer
-     * ExecuteTree's 0xdeadbeefdeadbeef marker.
-     */
-    memset(stack, 0xCD, MAX_NATIVE_STACK_SLOTS * sizeof(double));
-    memset(callstack, 0xCD, MAX_CALL_STACK_ENTRIES * sizeof(FrameInfo*));
-#endif
-
-    debug_only_stmt(*(uint64*)&global[globalFrameSize] = 0xdeadbeefdeadbeefLL;)
+    AUDIT(traceTriggered);
     debug_only_printf(LC_TMTracer,
                       "entering trace at %s:%u@%u, native stack slots: %u code: %p\n",
                       cx->fp->script->filename,
@@ -6354,50 +6463,20 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
                       ti->maxNativeStackSlots,
                       f->code());
 
-    JS_ASSERT(ti->nGlobalTypes() == ngslots);
-    BuildNativeFrame(cx, globalObj, 0 /* callDepth */, ngslots, gslots,
-                     ti->typeMap.data(), global, stack);
+    debug_only_stmt(uint32 globalSlots = STOBJ_NSLOTS(globalObj);)
+    debug_only_stmt(*(uint64*)&tm->storage.global()[globalSlots] = 0xdeadbeefdeadbeefLL;)
 
-    union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
-    u.code = f->code();
-
-#ifdef EXECUTE_TREE_TIMER
-    state.startTime = rdtsc();
-#endif
-
-    JS_ASSERT(!tm->tracecx);
-    tm->tracecx = cx;
-    state.prev = cx->interpState;
-    cx->interpState = &state;
-
-    debug_only_stmt(fflush(NULL));
-    GuardRecord* rec;
-
-    // Note that the block scoping is crucial here for TraceVis;  the
-    // TraceVisStateObj constructors and destructors must run at the right times.
-    {
+    /* Execute trace. */
 #ifdef MOZ_TRACEVIS
-        TraceVisStateObj tvso_n(cx, S_NATIVE);
-#endif
-#if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
-        SIMULATE_FASTCALL(rec, &state, NULL, u.func);
+    VMSideExit* lr = (TraceVisStateObj(cx, S_NATIVE), ExecuteTrace(cx, f, state));
 #else
-        rec = u.func(&state, NULL);
+    VMSideExit* lr = ExecuteTrace(cx, f, state);
 #endif
-    }
 
-    JS_ASSERT(*(uint64*)&global[globalFrameSize] == 0xdeadbeefdeadbeefLL);
-    JS_ASSERT(!state.nativeVp);
+    JS_ASSERT(*(uint64*)&tm->storage.global()[globalSlots] == 0xdeadbeefdeadbeefLL);
+    JS_ASSERT_IF(lr->exitType == LOOP_EXIT, !lr->calldepth);
 
-    VMSideExit* lr = (VMSideExit*)rec->exit;
-
-    AUDIT(traceTriggered);
-
-    cx->interpState = state.prev;
-
-    JS_ASSERT(!cx->bailExit);
-    JS_ASSERT(lr->exitType != LOOP_EXIT || !lr->calldepth);
-    tm->tracecx = NULL;
+    /* Restore interpreter state. */
     LeaveTree(state, lr);
     return state.innermost;
 }
@@ -6740,8 +6819,8 @@ LeaveTree(InterpState& state, VMSideExit* lr)
 
     /* Write back interned globals. */
     JS_ASSERT(state.eos == state.stackBase + MAX_NATIVE_STACK_SLOTS);
-    FlushNativeGlobalFrame(cx, state.eos, ngslots, gslots, globalTypeMap);
-
+    JSObject* globalObj = outermostTree->globalObj();
+    FlushNativeGlobalFrame(cx, globalObj, state.eos, ngslots, gslots, globalTypeMap);
 #ifdef DEBUG
     /* Verify that our state restoration worked. */
     for (JSStackFrame* fp = cx->fp; fp; fp = fp->down) {
@@ -6954,37 +7033,37 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
+TraceRecorder::monitorRecording(JSOp op)
 {
-    Assembler *assm = JS_TRACE_MONITOR(cx).assembler;
     JSTraceMonitor &localtm = JS_TRACE_MONITOR(cx);
+    JSContext *localcx = cx;
 
     /* Process needFlush requests now. */
     if (localtm.needFlush) {
         ResetJIT(cx, FR_DEEP_BAIL);
         return ARECORD_ABORTED;
     }
-    JS_ASSERT(!tr->fragment->lastIns);
+    JS_ASSERT(!fragment->lastIns);
 
     /*
      * Clear one-shot state used to communicate between record_JSOP_CALL and post-
      * opcode-case-guts record hook (record_NativeCallComplete).
      */
-    tr->pendingSpecializedNative = NULL;
-    tr->newobj_ins = NULL;
+    pendingSpecializedNative = NULL;
+    newobj_ins = NULL;
 
     /* Handle one-shot request from finishGetProp or INSTANCEOF to snapshot post-op state and guard. */
-    if (tr->pendingGuardCondition) {
-        tr->guard(true, tr->pendingGuardCondition, STATUS_EXIT);
-        tr->pendingGuardCondition = NULL;
+    if (pendingGuardCondition) {
+        guard(true, pendingGuardCondition, STATUS_EXIT);
+        pendingGuardCondition = NULL;
     }
 
     /* Handle one-shot request to unbox the result of a property get. */
-    if (tr->pendingUnboxSlot) {
-        LIns* val_ins = tr->get(tr->pendingUnboxSlot);
-        val_ins = tr->unbox_jsval(*tr->pendingUnboxSlot, val_ins, tr->snapshot(BRANCH_EXIT));
-        tr->set(tr->pendingUnboxSlot, val_ins);
-        tr->pendingUnboxSlot = 0;
+    if (pendingUnboxSlot) {
+        LIns* val_ins = get(pendingUnboxSlot);
+        val_ins = unbox_jsval(*pendingUnboxSlot, val_ins, snapshot(BRANCH_EXIT));
+        set(pendingUnboxSlot, val_ins);
+        pendingUnboxSlot = 0;
     }
 
     debug_only_stmt(
@@ -7013,7 +7092,7 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
           goto stop_recording;
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
       case x:                                                                 \
-        status = tr->record_##x();                                            \
+        status = this->record_##x();                                            \
         if (JSOP_IS_IMACOP(x))                                                \
             goto imacro;                                                      \
         break;
@@ -7021,93 +7100,44 @@ TraceRecorder::monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op)
 # undef OPDEF
     }
 
-    /* record_JSOP_* can reenter the interpreter and kill |tr|. */
-    if (!localtm.recorder)
-        return ARECORD_ABORTED;
-
+    /* Careful, |this| may have been deleted. */
     JS_ASSERT(status != ARECORD_IMACRO);
-    JS_ASSERT_IF(!wasInImacro, !cx->fp->imacpc);
+    JS_ASSERT_IF(!wasInImacro, localcx->fp->imacpc == NULL);
 
-    if (assm->error()) {
-        js_AbortRecording(cx, "error during recording");
+  imacro:
+    /* |this| may be killed while recording. */
+    if (status == ARECORD_COMPLETED) {
+        JS_ASSERT(localtm.recorder != this);
+        return localtm.recorder ? ARECORD_CONTINUE : ARECORD_COMPLETED;
+    }
+    if (status == ARECORD_ABORTED) {
+        JS_ASSERT(!localtm.recorder);
         return ARECORD_ABORTED;
     }
 
-    if (tr->outOfMemory() || js_OverfullJITCache(&localtm)) {
-        js_AbortRecording(cx, "no more memory");
+  stop_recording:
+    /* Handle lazy abort / OOM. */
+    if (outOfMemory() || js_OverfullJITCache(&localtm)) {
         ResetJIT(cx, FR_OOM);
         return ARECORD_ABORTED;
     }
-
-  imacro:
-    /* record_JSOP_* can reenter the interpreter and kill |tr|. */
-    if (!localtm.recorder)
-        return ARECORD_ABORTED;
-
-    if (!StatusAbortsRecording(status))
-        return status;
-
-  stop_recording:
-    /* If we recorded the end of the trace, destroy the recorder now. */
-    if (tr->fragment->lastIns) {
-        JS_ASSERT(status == ARECORD_STOP);
-        DeleteRecorder(cx);
+    if (StatusAbortsRecording(status)) {
+        js_AbortRecording(cx, js_CodeName[op]);
         return ARECORD_ABORTED;
     }
 
-    /* We encountered an error, abort recording. */
-    js_AbortRecording(cx, js_CodeName[op]);
-    return ARECORD_ABORTED;
+    return status;
 }
 
 JS_REQUIRES_STACK void
 js_AbortRecording(JSContext* cx, const char* reason)
 {
-    JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
-    JS_ASSERT(tm->recorder != NULL);
-
-    /* Abort the trace and blacklist its starting point. */
-    VMFragment* f = tm->recorder->getFragment();
-
-    /*
-     * If the recorder already had its fragment disposed, or we actually
-     * finished recording and this recorder merely is passing through the deep
-     * abort state to the next recorder on the stack, just destroy the
-     * recorder. There is nothing to abort.
-     */
-    if (!f || f->lastIns) {
-        DeleteRecorder(cx);
-        return;
-    }
-
-    AUDIT(recorderAborted);
-
-    JS_ASSERT_IF(f == f->root, !f->root->treeInfo);
 #ifdef DEBUG
-    TreeInfo* ti = tm->recorder->getTreeInfo();
-    debug_only_printf(LC_TMAbort,
-                      "Abort recording of tree %s:%d@%d at %s:%d@%d: %s.\n",
-                      ti->treeFileName,
-                      ti->treeLineNumber,
-                      ti->treePCOffset,
-                      cx->fp->script->filename,
-                      js_FramePCToLineNumber(cx, cx->fp),
-                      FramePCOffset(cx->fp),
-                      reason);
+    JS_ASSERT(TRACE_RECORDER(cx));
+    TRACE_RECORDER(cx)->finishAbort(reason);
+#else
+    TRACE_RECORDER(cx)->finishAbort("[no reason]");
 #endif
-
-    Backoff(cx, (jsbytecode*) f->root->ip, f->root);
-
-    /* If DeleteRecorder flushed the code cache, we can't rely on f any more. */
-    if (!DeleteRecorder(cx))
-        return;
-
-    /*
-     * If this is the primary trace and we didn't succeed compiling, trash the
-     * TreeInfo object.
-     */
-    if (!f->code() && (f->root == f))
-        TrashTree(cx, f->root);
 }
 
 #if defined NANOJIT_IA32
@@ -7502,6 +7532,8 @@ js_InitJIT(JSTraceMonitor *tm)
 void
 js_FinishJIT(JSTraceMonitor *tm)
 {
+    JS_ASSERT(!tm->recorder);
+
 #ifdef JS_JIT_SPEW
     if (jitstats.recorderStarted) {
         char sep = ':';
@@ -8303,8 +8335,8 @@ TraceRecorder::tableswitch()
     exit->switchInfo = si;
     LIns* guardIns = lir->insGuard(LIR_xtbl, diff, createGuardRecord(exit));
     fragment->lastIns = guardIns;
-    compile(&JS_TRACE_MONITOR(cx));
-    return ARECORD_STOP;
+    CHECK_STATUS_A(compile());
+    return finishSuccessfully();
 }
 #endif
 
@@ -9708,8 +9740,6 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
         }
         return ARECORD_CONTINUE;
     } else if (f) {
-        /* Make sure inner tree call will not run into an out-of-memory condition. */
-        JSTraceMonitor* tm = traceMonitor;
         /*
          * Make sure the shape of the global object still matches (this might
          * flush the JIT cache).
@@ -9717,7 +9747,7 @@ TraceRecorder::record_EnterFrame(uintN& inlineCallCount)
         JSObject* globalObj = JS_GetGlobalForObject(cx, cx->fp->scopeChain);
         uint32 globalShape = -1;
         SlotList* globalSlots = NULL;
-        if (!CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots))
+        if (!CheckGlobalObjectShape(cx, traceMonitor, globalObj, &globalShape, &globalSlots))
             return ARECORD_ABORTED;
         return attemptTreeCall(f, inlineCallCount);
     }
@@ -9853,7 +9883,7 @@ TraceRecorder::newArguments()
     LIns* callee_ins = get(&cx->fp->argv[-2]);
     LIns* argv_ins = cx->fp->argc
         ? lir->ins2(LIR_piadd, lirbuf->sp, 
-                    lir->insImmWord(-treeInfo->nativeStackBase + nativeStackOffset(&cx->fp->argv[0])))
+                    lir->insImmWord(nativespOffset(&cx->fp->argv[0])))
         : INS_CONSTPTR((void *) 2);
     js_ArgsPrivateNative *apn = js_ArgsPrivateNative::create(traceAlloc(), cx->fp->argc);
     for (uintN i = 0; i < cx->fp->argc; ++i) {
@@ -11556,7 +11586,7 @@ TraceRecorder::record_JSOP_GETELEM()
                     // Read the value out of the native stack area.
                     guard(true, lir->ins2(LIR_ult, idx_ins, INS_CONST(afp->argc)),
                           snapshot(BRANCH_EXIT));
-                    size_t stackOffset = -treeInfo->nativeStackBase + nativeStackOffset(&afp->argv[0]);
+                    size_t stackOffset = nativespOffset(&afp->argv[0]);
                     LIns* args_addr_ins = lir->ins2(LIR_piadd, lirbuf->sp, INS_CONSTWORD(stackOffset));
                     LIns* argi_addr_ins = lir->ins2(LIR_piadd,
                                                     args_addr_ins,
@@ -12044,7 +12074,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
     fi->imacpc = fp->imacpc;
     fi->spdist = fp->regs->sp - fp->slots;
     fi->set_argc(argc, constructing);
-    fi->callerHeight = NativeStackSlots(cx, 0) - (2 + argc);
+    fi->callerHeight = stackSlots - (2 + argc);
     fi->callerArgc = fp->argc;
 
     if (callDepth >= treeInfo->maxCallDepth)
