@@ -692,9 +692,7 @@ nsWindow::DestroyChildWindows()
     if (!mGdkWindow)
         return;
 
-    GList *children = gdk_window_get_children(mGdkWindow);
-
-    for(GList *list = children; list; list = list->next) {
+    while (GList *children = gdk_window_peek_children(mGdkWindow)) {
         GdkWindow *child = GDK_WINDOW(children->data);
         nsWindow *kid = get_window_for_gdk_window(child);
         if (kid) {
@@ -709,8 +707,6 @@ nsWindow::DestroyChildWindows()
             }
         }
     }
-
-    g_list_free(children);
 }
 
 NS_IMETHODIMP
