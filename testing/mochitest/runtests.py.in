@@ -77,7 +77,7 @@ BROWSER_CHROME_URL = "chrome://browser/content/browser.xul"
 if automation.IS_DEBUG_BUILD:
     SERVER_STARTUP_TIMEOUT = 180
 else:
-    SERVER_STARTUP_TIMEOUT = 45
+    SERVER_STARTUP_TIMEOUT = 90
 
 oldcwd = os.getcwd()
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
