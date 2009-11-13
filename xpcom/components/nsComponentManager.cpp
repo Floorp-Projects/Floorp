@@ -2931,6 +2931,8 @@ nsComponentManagerImpl::AutoRegisterDirectory(nsIFile *inDirSpec,
                           nsCOMArray<nsILocalFile>    &aLeftovers,
                           nsTArray<DeferredModule>    &aDeferred)
 {
+    nsresult rv;
+
     nsCOMPtr<nsIFile> componentsList;
     inDirSpec->Clone(getter_AddRefs(componentsList));
     if (componentsList) {
@@ -2940,12 +2942,16 @@ nsComponentManagerImpl::AutoRegisterDirectory(nsIFile *inDirSpec,
         PRFileDesc* fd;
         if (NS_SUCCEEDED(lfComponentsList->OpenNSPRFileDesc(PR_RDONLY,
                                                             0400, &fd)))
-            return AutoRegisterComponentsList(inDirSpec, fd,
-                                              aLeftovers, aDeferred);
+        {
+            rv = AutoRegisterComponentsList(inDirSpec, fd,
+                                            aLeftovers, aDeferred);
+            PR_Close(fd);
+            return rv;
+        }
     }
 
     nsCOMPtr<nsISimpleEnumerator> entries;
-    nsresult rv = inDirSpec->GetDirectoryEntries(getter_AddRefs(entries));
+    rv = inDirSpec->GetDirectoryEntries(getter_AddRefs(entries));
     if (NS_FAILED(rv))
         return rv;
 
