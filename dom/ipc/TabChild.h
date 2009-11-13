@@ -72,6 +72,7 @@ class TabChild : public PIFrameEmbeddingChild,
 public:
     TabChild();
     virtual ~TabChild();
+    bool destroyWidget();
     nsresult Init();
 
     NS_DECL_ISUPPORTS
@@ -82,7 +83,6 @@ public:
     NS_DECL_NSIWEBBROWSERCHROMEFOCUS
 
     virtual bool RecvcreateWidget(const MagicWindowHandle& parentWidget);
-    virtual bool RecvdestroyWidget();
     virtual bool RecvloadURL(const nsCString& uri);
     virtual bool Recvmove(const PRUint32& x,
                           const PRUint32& y,
