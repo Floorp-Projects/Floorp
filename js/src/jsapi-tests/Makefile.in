@@ -48,6 +48,7 @@ PROGRAM         = jsapi-tests$(BIN_SUFFIX)
 CPPSRCS = \
   tests.cpp \
   selfTest.cpp \
+  testContexts.cpp \
   testDefineGetterSetterNonEnumerable.cpp \
   testIntString.cpp \
   testLookup.cpp \

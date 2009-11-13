@@ -5140,10 +5140,17 @@ JS_TriggerAllOperationCallbacks(JSRuntime *rt)
 JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx)
 {
-    /* The use of cx->fp below is safe: if we're on trace, it is skipped. */
+    /*
+     * The use of cx->fp below is safe. Rationale: Here we don't care if the
+     * interpreter state is stale. We just want to know if there *is* any
+     * interpreter state.
+     */
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
-    return JS_ON_TRACE(cx) || cx->fp != NULL;
+#ifdef JS_TRACER
+    JS_ASSERT_IF(JS_TRACE_MONITOR(cx).tracecx == cx, cx->fp);
+#endif
+    return cx->fp != NULL;
 }
 
 JS_PUBLIC_API(JSBool)
