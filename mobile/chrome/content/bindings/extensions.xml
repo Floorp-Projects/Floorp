@@ -100,16 +100,16 @@
             if (!xhr.responseXML)
               return;
             
-            function removeTextNode(aDocument) {
-              let currentNode;
-              let nodeIterator = aDocument.createNodeIterator(aDocument,
+            let currentNode;
+            let nodeIterator = xhr.responseXML.createNodeIterator(xhr.responseXML,
                                                               NodeFilter.SHOW_TEXT,
                                                               null,
                                                               false);
-              while (currentNode = nodeIterator.nextNode())
+            while (currentNode = nodeIterator.nextNode()) {
+              let trimmed = currentNode.nodeValue.replace(/^\s\s*/, "").replace(/\s\s*$/, "");
+              if (!trimmed.length)
                 currentNode.parentNode.removeChild(currentNode);
             }
-            removeTextNode(xhr.responseXML);
 
             // Only allow <setting> for now
             let prefs = xhr.responseXML.querySelectorAll(":root > setting");
