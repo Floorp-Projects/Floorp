@@ -1,5 +1,5 @@
 pref("extensions.weave.serverURL", "@server_url@");
-pref("extensions.weave.storageAPI", "0.5");
+pref("extensions.weave.storageAPI", "1.0");
 pref("extensions.weave.userURL", "user/");
 pref("extensions.weave.miscURL", "misc/");
 pref("extensions.weave.pwChangeURL", "https://services.mozilla.com/pw/forgot.php");
