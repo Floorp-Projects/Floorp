@@ -212,8 +212,58 @@ public:
      * If this is anchored off a TreeFragment, this points to that tree fragment.
      * Otherwise, it is |this|.
      */
-    TreeFragment *root;
+    TreeFragment* root;
+
+    TreeFragment* toTreeFragment();
 };
+
+struct LinkableFragment : public VMFragment
+{
+    LinkableFragment(const void* _ip verbose_only(, uint32_t profFragID))
+      : VMFragment(_ip verbose_only(, profFragID))
+    { }
+
+    uint32 branchCount;
+};
+
+/*
+ * argc is cx->fp->argc at the trace loop header, i.e., the number of arguments
+ * pushed for the innermost JS frame. This is required as part of the fragment
+ * key because the fragment will write those arguments back to the interpreter
+ * stack when it exits, using its typemap, which implicitly incorporates a
+ * given value of argc. Without this feature, a fragment could be called as an
+ * inner tree with two different values of argc, and entry type checking or
+ * exit frame synthesis could crash.
+ */
+struct TreeFragment : public LinkableFragment
+{
+    TreeFragment(const void* _ip, JSObject* _globalObj, uint32 _globalShape, uint32 _argc
+               verbose_only(, uint32_t profFragID)) :
+        LinkableFragment(_ip verbose_only(, profFragID)),
+        treeInfo(NULL),
+        first(NULL),
+        next(NULL),
+        peer(NULL),
+        globalObj(_globalObj),
+        globalShape(_globalShape),
+        argc(_argc)
+    { }
+
+    TreeInfo *treeInfo;
+    TreeFragment* first;
+    TreeFragment* next;
+    TreeFragment* peer;
+    JSObject* globalObj;
+    uint32 globalShape;
+    uint32 argc;
+};
+
+inline TreeFragment*
+VMFragment::toTreeFragment()
+{
+    JS_ASSERT(root == this);
+    return static_cast<TreeFragment*>(this);
+}
 
 #if defined(JS_JIT_SPEW) || defined(NJ_NO_VARIADIC_MACROS)
 
@@ -700,6 +750,9 @@ public:
     inline JSTraceType* stackTypeMap() {
         return typeMap.data();
     }
+    inline JSObject* globalObj() {
+        return rootFragment->globalObj;
+    }
 
     UnstableExit* removeUnstableExit(VMSideExit* exit);
 };
@@ -757,17 +810,19 @@ struct AbortableRecordingStatus {
     bool operator!=(AbortableRecordingStatus &s) { return this->code != s.code; };
 };
 enum AbortableRecordingStatusCodes {
-    ARECORD_ERROR_code    = 0,
-    ARECORD_STOP_code     = 1,
-    ARECORD_ABORTED_code  = 2,
-    ARECORD_CONTINUE_code = 3,
-    ARECORD_IMACRO_code   = 4
+    ARECORD_ERROR_code     = 0,
+    ARECORD_STOP_code      = 1,
+    ARECORD_ABORTED_code   = 2,
+    ARECORD_CONTINUE_code  = 3,
+    ARECORD_IMACRO_code    = 4,
+    ARECORD_COMPLETED_code = 5
 };
 AbortableRecordingStatus ARECORD_ERROR    = { ARECORD_ERROR_code };
 AbortableRecordingStatus ARECORD_STOP     = { ARECORD_STOP_code };
 AbortableRecordingStatus ARECORD_CONTINUE = { ARECORD_CONTINUE_code };
 AbortableRecordingStatus ARECORD_IMACRO   = { ARECORD_IMACRO_code };
 AbortableRecordingStatus ARECORD_ABORTED =  { ARECORD_ABORTED_code };
+AbortableRecordingStatus ARECORD_COMPLETED =  { ARECORD_COMPLETED_code };
 
 static inline AbortableRecordingStatus
 InjectStatus(RecordingStatus rs)
@@ -784,7 +839,7 @@ InjectStatus(AbortableRecordingStatus ars)
 static inline bool
 StatusAbortsRecording(AbortableRecordingStatus ars)
 {
-    return ars == ARECORD_ERROR || ars == ARECORD_STOP || ars == ARECORD_ABORTED;
+    return ars == ARECORD_ERROR || ars == ARECORD_STOP;
 }
 #else
 
@@ -817,12 +872,13 @@ enum RecordingStatus {
 };
 
 enum AbortableRecordingStatus {
-    ARECORD_ERROR    = 0,
-    ARECORD_STOP     = 1,
-    ARECORD_ABORTED  = 2,  // Recording has already been aborted; the recorder
-                         // has been deleted.
-    ARECORD_CONTINUE = 3,
-    ARECORD_IMACRO   = 4
+    ARECORD_ERROR     = 0,
+    ARECORD_STOP      = 1,
+    ARECORD_ABORTED   = 2,  // Recording has already been aborted; the recorder
+                            // has been deleted.
+    ARECORD_CONTINUE  = 3,
+    ARECORD_IMACRO    = 4,
+    ARECORD_COMPLETED = 5   // Recording of the current trace recorder completed
 };
 
 static JS_ALWAYS_INLINE AbortableRecordingStatus
@@ -837,10 +893,15 @@ InjectStatus(AbortableRecordingStatus ars)
     return ars;
 }
 
+/*
+ * Return whether the recording status requires the current recording session
+ * to be deleted. ABORTED and COMPLETED indicate the recording session is
+ * already deleted, so they return 'false'.
+ */
 static JS_ALWAYS_INLINE bool
 StatusAbortsRecording(AbortableRecordingStatus ars)
 {
-    return ars <= ARECORD_ABORTED;
+    return ars <= ARECORD_STOP;
 }
 #endif
 
@@ -854,6 +915,12 @@ enum TypeConsensus
     TypeConsensus_Undemotes,    /* Not compatible now, but would be with pending undemotes. */
     TypeConsensus_Bad           /* Typemaps are not compatible */
 };
+
+#ifdef DEBUG
+# define js_AbortRecording(cx, reason) js_AbortRecordingImpl(cx, reason)
+#else
+# define js_AbortRecording(cx, reason) js_AbortRecordingImpl(cx)
+#endif
 
 class TraceRecorder
 {
@@ -995,6 +1062,7 @@ class TraceRecorder
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativeStackOffset(jsval* p) const;
+    JS_REQUIRES_STACK ptrdiff_t nativespOffset(jsval* p) const;
     JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, JSTraceType t,
                                   const char *prefix, uintN index, JSStackFrame *fp);
     JS_REQUIRES_STACK void import(TreeInfo* treeInfo, nanojit::LIns* sp, unsigned stackSlots,
@@ -1259,7 +1327,7 @@ class TraceRecorder
 
     JS_REQUIRES_STACK JSTraceType determineSlotType(jsval* vp);
 
-    JS_REQUIRES_STACK AbortableRecordingStatus compile(JSTraceMonitor* tm);
+    JS_REQUIRES_STACK AbortableRecordingStatus compile();
     JS_REQUIRES_STACK AbortableRecordingStatus closeLoop();
     JS_REQUIRES_STACK AbortableRecordingStatus closeLoop(VMSideExit* exit);
     JS_REQUIRES_STACK AbortableRecordingStatus closeLoop(SlotMap& slotMap, VMSideExit* exit);
@@ -1289,6 +1357,20 @@ class TraceRecorder
 # include "jsopcode.tbl"
 #undef OPDEF
 
+    inline void* operator new(size_t size) { return calloc(1, size); }
+    inline void operator delete(void *p) { free(p); }
+
+    JS_REQUIRES_STACK
+    TraceRecorder(JSContext* cx, VMSideExit*, VMFragment*, TreeInfo*,
+                  unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
+                  VMSideExit* expectedInnerExit, jsbytecode* outerTree,
+                  uint32 outerArgc, RecordReason reason);
+
+    /* The destructor should only be called through finish*, not directly. */
+    ~TraceRecorder();
+    JS_REQUIRES_STACK AbortableRecordingStatus finishSuccessfully();
+    JS_REQUIRES_STACK AbortableRecordingStatus finishAbort(const char* reason);
+
     friend class ImportBoxedStackSlotVisitor;
     friend class ImportUnboxedStackSlotVisitor;
     friend class ImportGlobalSlotVisitor;
@@ -1302,25 +1384,22 @@ class TraceRecorder
     friend class UpRecursiveSlotMap;
     friend jsval* js_ConcatPostImacroStackCleanup(uint32, JSFrameRegs &, TraceRecorder *);
     friend bool js_MonitorLoopEdge(JSContext*, uintN&, RecordReason);
+    friend void js_AbortRecording(JSContext*, const char*);
 
 public:
-    inline void* operator new(size_t size) { return calloc(1, size); }
-    inline void operator delete(void *p) { free(p); }
-
-    JS_REQUIRES_STACK
-    TraceRecorder(JSContext* cx, VMSideExit*, VMFragment*, TreeInfo*,
+    static bool JS_REQUIRES_STACK
+    startRecorder(JSContext*, VMSideExit*, VMFragment*, TreeInfo*,
                   unsigned stackSlots, unsigned ngslots, JSTraceType* typeMap,
                   VMSideExit* expectedInnerExit, jsbytecode* outerTree,
                   uint32 outerArgc, RecordReason reason);
-    ~TraceRecorder();
 
     /* Accessors. */
-    VMFragment*  getFragment() const { return fragment; }
+    VMFragment*         getFragment() const { return fragment; }
     TreeInfo*           getTreeInfo() const { return treeInfo; }
-    bool                outOfMemory();
+    bool                outOfMemory() const { return traceMonitor->outOfMemory(); }
 
     /* Entry points / callbacks from the interpreter. */
-    static JS_REQUIRES_STACK AbortableRecordingStatus monitorRecording(JSContext* cx, TraceRecorder* tr, JSOp op);
+    JS_REQUIRES_STACK AbortableRecordingStatus monitorRecording(JSOp op);
     JS_REQUIRES_STACK AbortableRecordingStatus record_EnterFrame(uintN& inlineCallCount);
     JS_REQUIRES_STACK AbortableRecordingStatus record_LeaveFrame();
     JS_REQUIRES_STACK AbortableRecordingStatus record_SetPropHit(JSPropCacheEntry* entry,
@@ -1365,8 +1444,7 @@ public:
         if (TraceRecorder* tr_ = TRACE_RECORDER(cx)) {                        \
             AbortableRecordingStatus status = tr_->record_##x args;           \
             if (StatusAbortsRecording(status)) {                              \
-                if (TRACE_RECORDER(cx))                                       \
-                    js_AbortRecording(cx, #x);                                \
+                js_AbortRecording(cx, #x);                                    \
                 if (status == ARECORD_ERROR)                                  \
                     goto error;                                               \
             }                                                                 \
@@ -1381,12 +1459,6 @@ public:
 
 extern JS_REQUIRES_STACK bool
 js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason);
-
-#ifdef DEBUG
-# define js_AbortRecording(cx, reason) js_AbortRecordingImpl(cx, reason)
-#else
-# define js_AbortRecording(cx, reason) js_AbortRecordingImpl(cx)
-#endif
 
 extern JS_REQUIRES_STACK void
 js_AbortRecording(JSContext* cx, const char* reason);

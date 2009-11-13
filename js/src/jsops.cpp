@@ -74,9 +74,8 @@
         }
 
 #ifdef JS_TRACER
-        TraceRecorder* tr = TRACE_RECORDER(cx);
-        if (tr) {
-            AbortableRecordingStatus status = TraceRecorder::monitorRecording(cx, tr, op);
+        if (TraceRecorder* tr = TRACE_RECORDER(cx)) {
+            AbortableRecordingStatus status = tr->monitorRecording(op);
             switch (status) {
               case ARECORD_CONTINUE:
                 moreInterrupts = true;
@@ -90,6 +89,7 @@
                 // The code at 'error:' aborts the recording.
                 goto error;
               case ARECORD_ABORTED:
+              case ARECORD_COMPLETED:
                 break;
               case ARECORD_STOP:
                 /* A 'stop' error should have already aborted recording. */

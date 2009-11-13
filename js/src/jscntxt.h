@@ -136,20 +136,20 @@ typedef nanojit::HashMap<uint32, FragPI, nanojit::DefaultHash<uint32> > FragStat
 /* Holds the execution state during trace execution. */
 struct InterpState
 {
-    double*        sp;                  // native stack pointer, stack[0] is spbase[0]
-    FrameInfo**    rp;                  // call stack pointer
     JSContext*     cx;                  // current VM context handle
+    double*        stackBase;           // native stack base
+    double*        sp;                  // native stack pointer, stack[0] is spbase[0]
     double*        eos;                 // first unusable word after the native stack / begin of globals
-    void*          eor;                 // first unusable word after the call stack
+    FrameInfo**    callstackBase;       // call stack base
     void*          sor;                 // start of rp stack
+    FrameInfo**    rp;                  // call stack pointer
+    void*          eor;                 // first unusable word after the call stack
     VMSideExit*    lastTreeExitGuard;   // guard we exited on during a tree call
     VMSideExit*    lastTreeCallGuard;   // guard we want to grow from if the tree
                                         // call exit guard mismatched
     void*          rpAtLastTreeCall;    // value of rp at innermost tree call guard
     VMSideExit*    outermostTreeExitGuard; // the last side exit returned by js_CallTree
     TreeInfo*      outermostTree;       // the outermost tree we initially invoked
-    double*        stackBase;           // native stack base
-    FrameInfo**    callstackBase;       // call stack base
     uintN*         inlineCallCountp;    // inline call count counter
     VMSideExit**   innermostNestedGuardp;
     VMSideExit*    innermost;
@@ -167,6 +167,10 @@ struct InterpState
     // Used when calling natives from trace to root the vp vector.
     uintN          nativeVpLen;
     jsval*         nativeVp;
+
+    InterpState(JSContext *cx, JSTraceMonitor *tm, TreeInfo *ti,
+                uintN &inlineCallCountp, VMSideExit** innermostNestedGuardp);
+    ~InterpState();
 };
 
 /*
@@ -182,7 +186,7 @@ struct TraceNativeStorage
 
     double *stack() { return stack_global_buf; }
     double *global() { return stack_global_buf + MAX_NATIVE_STACK_SLOTS; }
-    FrameInfo **callstack() { return callstack_buf; } 
+    FrameInfo **callstack() { return callstack_buf; }
 };
 
 /* Holds data to track a single globa. */
@@ -298,6 +302,8 @@ struct JSTraceMonitor {
 
     /* Mark all objects baked into native code in the code cache. */
     void mark(JSTracer *trc);
+
+    bool outOfMemory() const;
 };
 
 typedef struct InterpStruct InterpStruct;
