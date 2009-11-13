@@ -839,10 +839,9 @@ PluginInstanceChild::NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
     return NPERR_NO_ERROR;
 }
 
-void
+bool
 PluginInstanceChild::InternalInvalidateRect(NPRect* aInvalidRect)
 {
-    // Should only be called on windowed plugins!
     NS_ASSERTION(aInvalidRect, "Null pointer!");
 
 #ifdef OS_WIN
@@ -851,4 +850,7 @@ PluginInstanceChild::InternalInvalidateRect(NPRect* aInvalidRect)
                   aInvalidRect->right, aInvalidRect->bottom };
     InvalidateRect(mPluginWindowHWND, &rect, FALSE);
 #endif
+
+    // Windowless plugins must return true!
+    return false;
 }

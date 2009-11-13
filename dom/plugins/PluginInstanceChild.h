@@ -165,7 +165,9 @@ public:
     NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
                   NPStream** aStream);
 
-    void
+    // Return true if you want to send the notification to the parent process
+    // also.
+    bool
     InternalInvalidateRect(NPRect* aInvalidRect);
 
 private:
