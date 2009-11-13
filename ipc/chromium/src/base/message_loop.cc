@@ -282,10 +282,14 @@ void MessageLoop::PostTask_Helper(
   {
     AutoLock locked(incoming_queue_lock_);
 
+#ifdef CHROMIUM_MOZILLA_BUILD
+    incoming_queue_.push(pending_task);
+#else
     bool was_empty = incoming_queue_.empty();
     incoming_queue_.push(pending_task);
     if (!was_empty)
       return;  // Someone else should have started the sub-pump.
+#endif
 
     pump = pump_;
   }
