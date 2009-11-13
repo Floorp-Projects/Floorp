@@ -46,12 +46,14 @@ promptService.prototype = {
   classDescription: "Mobile Prompt Service",
   contractID: "@mozilla.org/embedcomp/prompt-service;1",
   classID: Components.ID("{9a61149b-2276-4a0a-b79c-be994ad106cf}"),
+  
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptService, Ci.nsIPromptService2]),
  
   // helper function do get the current document
   getDocument: function() {
     let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
-    return wm.getMostRecentWindow("navigator:browser").document;
+    let win = wm.getMostRecentWindow("navigator:browser");
+    return win ? win.document : null;
   },
  
   // add a width style to prevent a element to grow larger 
@@ -80,15 +82,25 @@ promptService.prototype = {
     elem.parentNode.style.height = height + "px";
   },
   
-  openDialog: function(parent, src, params) {
+  openDialog: function(aParent, aSrc, aParams) {
     let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
     let browser = wm.getMostRecentWindow("navigator:browser");
-    return browser.importDialog(parent, src, params);
+    return browser.importDialog(aParent, aSrc, aParams);
+  },
+  
+  _getFallbackService: function() {
+    return Components.classesByID["{a2112d6a-0e28-421f-b46a-25c0B308cbd0}"]
+                     .getService(Ci.nsIPromptService);
   },
   
   alert: function(aParent, aTitle, aText) {
-    let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/alert.xul", null);
     let doc = this.getDocument();
+    if (!doc) {
+      this._getFallbackService().alert(aParent, aTitle, aText);
+      return;
+    }
+    
+    let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/alert.xul", null);
     doc.getElementById("prompt-alert-title").value = aTitle;
     doc.getElementById("prompt-alert-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-alert-message", 80);
@@ -98,8 +110,13 @@ promptService.prototype = {
   },
   
   alertCheck: function(aParent, aTitle, aText, aCheckMsg, aCheckState) {
-    let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/alert.xul", aCheckState);
     let doc = this.getDocument();
+    if (!doc) {
+      this._getFallbackService().alertCheck(aParent, aTitle, aText, aCheckMsg, aCheckState);
+      return;
+    }
+    
+    let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/alert.xul", aCheckState);
     doc.getElementById("prompt-alert-title").value = aTitle;
     doc.getElementById("prompt-alert-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-alert-message", 80);
@@ -114,9 +131,14 @@ promptService.prototype = {
   },
   
   confirm: function(aParent, aTitle, aText) {
+    let doc = this.getDocument();
+    if (!doc) {
+      return this._getFallbackService().confirm(aParent, aTitle, aText);
+    }
+
     var params = new Object();
     params.result = false;
-    let doc = this.getDocument();
+
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/confirm.xul", params);
     doc.getElementById("prompt-confirm-title").value = aTitle;
     doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
@@ -128,10 +150,15 @@ promptService.prototype = {
   },
   
   confirmCheck: function(aParent, aTitle, aText, aCheckMsg, aCheckState) {
+    let doc = this.getDocument();
+    if (!doc) {
+      return this._getFallbackService().confirmCheck(aParent, aTitle, aText, aCheckMsg, aCheckState);
+    }
+
     var params = new Object();
     params.result = false;
     params.checkbox = aCheckState;
-    let doc = this.getDocument();
+
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/confirm.xul", params);
     doc.getElementById("prompt-confirm-title").value = aTitle;
     doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
@@ -195,14 +222,20 @@ promptService.prototype = {
   },
 
   confirmEx: function(aParent, aTitle, aText, aButtonFlags, aButton0,
-            aButton1, aButton2, aCheckMsg, aCheckState) {
+                      aButton1, aButton2, aCheckMsg, aCheckState) {
+    let doc = this.getDocument();
+    if (!doc) {
+      return this._getFallbackService().confirmEx(aParent, aTitle, aText, aButtonFlags, aButton0,
+            aButton1, aButton2, aCheckMsg, aCheckState);
+    }
+
     let numButtons = 0;
     let titles = [aButton0, aButton1, aButton2];
     
     var params = new Object();
     params.result = false;
     params.checkbox = aCheckState;
-    let doc = this.getDocument();
+
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/confirm.xul", params);
     doc.getElementById("prompt-confirm-title").value = aTitle;
     doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
@@ -267,12 +300,17 @@ promptService.prototype = {
   },
   
   commonPrompt : function(aParent, aTitle, aText, aValue, aCheckMsg, aCheckState, isPassword) {
+    let doc = this.getDocument();
+    if (!doc) {
+      throw "No document !";
+    }
+    
     var params = new Object();
     params.result = false;
     params.checkbox = aCheckState;
     params.value = aValue;
+    
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/prompt.xul", params);
-    let doc = this.getDocument();
     doc.getElementById("prompt-prompt-title").value = aTitle;
     doc.getElementById("prompt-prompt-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-prompt-message", 80);
@@ -294,21 +332,34 @@ promptService.prototype = {
   },
   
   prompt : function(aParent, aTitle, aText, aValue, aCheckMsg, aCheckState) {
-    return this.commonPrompt(aParent, aTitle, aText, aValue, aCheckMsg, aCheckState, false);
+    try {
+      return this.commonPrompt(aParent, aTitle, aText, aValue, aCheckMsg, aCheckState, false);
+    } catch(e) {
+      return this._getFallbackService().prompt(aParent, aTitle, aText, aValue, aCheckMsg, aCheckState);
+    }
   },
   
   promptPassword: function(aParent, aTitle, aText, aPassword, aCheckMsg, aCheckState) {
-    return this.commonPrompt(aParent, aTitle, aText, aPassword, aCheckMsg, aCheckState, true);
+    try {
+      return this.commonPrompt(aParent, aTitle, aText, aPassword, aCheckMsg, aCheckState, true);
+    } catch(e) {
+      return this._getFallbackService().promptPassword(aParent, aTitle, aText, aPassword, aCheckMsg, aCheckState);
+    }
   },
   
   promptUsernameAndPassword: function(aParent, aTitle, aText, aUsername, aPassword, aCheckMsg, aCheckState) {
+    let doc = this.getDocument();
+    if (!doc) {
+      return this._getFallbackService().promptUsernameAndPassword(aParent, aTitle, aText, aUsername, aPassword, aCheckMsg, aCheckState);
+    }
+
     var params = new Object();
     params.result = false;
     params.checkbox = aCheckState;
     params.user = aUsername;
     params.password = aPassword;
+
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/promptPassword.xul", params);
-    let doc = this.getDocument();
     doc.getElementById("prompt-password-title").value = aTitle;
     doc.getElementById("prompt-password-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-password-message", 80);
@@ -425,11 +476,16 @@ promptService.prototype = {
   },
   
   select: function(aParent, aTitle, aText, aCount, aSelectList, aOutSelection) {
+    let doc = this.getDocument();
+    if (!doc) {
+      return this._getFallbackService().select(aParent, aTitle, aText, aCount, aSelectList, aOutSelection);
+    }
+
     var params = new Object();
     params.result = false;
     params.selection = aOutSelection;
+
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/select.xul", params);
-    let doc = this.getDocument();
     doc.getElementById("prompt-select-title").value = aTitle;
     doc.getElementById("prompt-select-message").appendChild(doc.createTextNode(aText));
     this.sizeElement("prompt-select-message", 80);

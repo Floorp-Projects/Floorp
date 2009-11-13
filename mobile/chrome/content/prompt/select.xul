@@ -10,8 +10,8 @@
     <key keycode="VK_ESCAPE" command="cmd_cancel"/>
   </keyset>
   <commandset>
-    <command id="cmd_ok" oncommand="document.getElementById('prompt-alert-dialog').PromptHelper.closeSelect(true)"/>
-    <command id="cmd_cancel" oncommand="document.getElementById('prompt-alert-dialog').PromptHelper.closeSelect(false)"/>
+    <command id="cmd_ok" oncommand="document.getElementById('prompt-select-dialog').PromptHelper.closeSelect(true)"/>
+    <command id="cmd_cancel" oncommand="document.getElementById('prompt-select-dialog').PromptHelper.closeSelect(false)"/>
   </commandset>
   <label id="prompt-select-title"/>
   <scrollbox orient="vertical" class="prompt-message">
@@ -19,7 +19,7 @@
   </scrollbox>
   <menulist id="prompt-select-list" class="button-dark"/>
   <hbox pack="center" id="prompt-prompt-button-box" class="prompt-buttons">
-    <button class="button-dark" label="&ok.label;" command="cmd_ok;"/>
+    <button class="button-dark" label="&ok.label;" command="cmd_ok"/>
     <button class="button-dark" label="&cancel.label;" command="cmd_cancel"/>
   </hbox>
 </dialog>
