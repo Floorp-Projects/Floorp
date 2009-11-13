@@ -3,14 +3,9 @@ html, body {
   padding: 0;
 }
 
-video {
+audio, video {
   width: 140px;
   height: 100px;
-}
-
-audio {
-  width: 140px;
-  height: 28px;
   background-color: black;
 }
 
