@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* -*- Mode: C++; c-basic-offset: 2; tab-width: 8; indent-tabs-mode: nil; -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Fennec Installer for WinCE.
  *
- * The Initial Developer of the Original Code is Google Inc.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Darin Fisher <darin@meer.net>
- *  Alex Pakhotin <alexp@mozilla.com>
+ *   Alex Pakhotin <alexp@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,31 +36,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef READSTRINGS_H__
-#define READSTRINGS_H__
+#include "wtypes.h"
+#include "nsArchiveExtractor.h"
+#include "ns7zipExtractor.h"
+#include "7zLib.h"
 
-#define MAX_TEXT_LEN 200
+static nsExtractorProgress *g_pProgress = NULL;
 
-#ifdef XP_WIN
-# include <windows.h>
-  typedef WCHAR NS_tchar;
-#else
-  typedef char NS_tchar;
-#endif
+static void ExtractProgressCallback(int nPercentComplete)
+{
+  if (g_pProgress)
+  {
+    g_pProgress->Progress(nPercentComplete);
+  }
+}
 
-struct StringTable {
-  char title[MAX_TEXT_LEN];
-  char info[MAX_TEXT_LEN];
-};
+static void ShowError()
+{
+  MessageBoxW(GetForegroundWindow(), GetExtractorError(), L"Extractor", MB_OK|MB_ICONERROR);
+}
 
-/**
- * This function reads in localized strings from updater.ini
- */
-int ReadStrings(const NS_tchar *path, StringTable *results);
+ns7zipExtractor::ns7zipExtractor(const WCHAR *sArchiveName, DWORD dwSfxStubSize, nsExtractorProgress *pProgress) :
+  nsArchiveExtractor(sArchiveName, dwSfxStubSize, pProgress)
+{
+  g_pProgress = pProgress;
+}
 
-/**
- * This function reads in localized strings corresponding to the keys from a given .ini
- */
-int ReadStrings(const NS_tchar *path, const char *keyList, int numStrings, char results[][MAX_TEXT_LEN]);
+ns7zipExtractor::~ns7zipExtractor()
+{
+  g_pProgress = NULL;
+}
 
-#endif  // READSTRINGS_H__
+int ns7zipExtractor::Extract(const WCHAR *sDestinationDir)
+{
+  int res = SzExtractSfx(m_sArchiveName, m_dwSfxStubSize, NULL, sDestinationDir, ExtractProgressCallback);
+  if (res != 0)
+    ShowError();
+  return res;
+}
+
+int ns7zipExtractor::ExtractFile(const WCHAR *sFileName, const WCHAR *sDestinationDir)
+{
+  int res = SzExtractSfx(m_sArchiveName, m_dwSfxStubSize, sFileName, sDestinationDir, NULL);
+  if (res != 0)
+    ShowError();
+  return res;
+}
