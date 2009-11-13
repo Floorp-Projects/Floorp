@@ -23,23 +23,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463039
 
 // there are no watches, so this should always throw
 for (x=-10; x<10; x++) {
-    try {
-        navigator.geolocation.clearWatch(x);
-        ok(0, "clearWatch should throw");
-    } catch (ex) {
-        ok(1, "clearWatch with a bad value did throw");
-    }
+    navigator.geolocation.clearWatch(x);
+    ok(1, "clearWatch should not throw");
 }
 
 // lets try something huge
-try {
-    navigator.geolocation.clearWatch(Number.MAX_VALUE);
-    ok(0, "clearWatch should throw");
-} catch (ex) {
-    ok(1, "clearWatch with a bad value did throw");
-}
-
-
+navigator.geolocation.clearWatch(Number.MAX_VALUE);
+ok(1, "clearWatch should not throw");
     
 </script>
 </pre>
