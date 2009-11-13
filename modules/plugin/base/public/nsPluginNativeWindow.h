@@ -103,7 +103,7 @@ public:
     SetPluginInstance(aPluginInstance);
     return NS_OK;
   }
-#ifdef MOZ_PLATFORM_HILDON
+#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
 #define MOZ_COMPOSITED_PLUGINS
 #endif
 #ifdef MOZ_COMPOSITED_PLUGINS
