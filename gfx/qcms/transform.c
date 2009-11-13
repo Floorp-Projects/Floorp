@@ -64,7 +64,7 @@ void compute_curve_gamma_table_type1(float gamma_table[256], double gamma)
 {
 	unsigned int i;
 	for (i = 0; i < 256; i++) {
-		gamma_table[i] = powf(i/255.f, gamma);
+		gamma_table[i] = pow(i/255., gamma);
 	}
 }
 
@@ -990,7 +990,7 @@ static void compute_precache_pow(uint8_t *output, float gamma)
 	uint32_t v = 0;
 	for (v = 0; v <= 0xffff; v++) {
 		//XXX: don't do integer/float conversion... and round?
-		output[v] = 255.f * powf(v/65535.f, gamma);
+		output[v] = 255. * pow(v/65535., gamma);
 	}
 }
 
@@ -1017,7 +1017,7 @@ qcms_bool compute_precache(struct curveType *trc, uint8_t *output)
 	if (trc->count == 0) {
 		compute_precache_linear(output);
 	} else if (trc->count == 1) {
-		compute_precache_pow(output, 1.f/u8Fixed8Number_to_float(trc->data[0]));
+		compute_precache_pow(output, 1./u8Fixed8Number_to_float(trc->data[0]));
 	} else {
 		uint16_t *inverted;
 		int inverted_size = trc->count;
