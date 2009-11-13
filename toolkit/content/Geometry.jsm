@@ -133,6 +133,34 @@ let Util = {
     }
 
     return {reason: "", result: false};
+  },
+
+  /**
+   * Determines whether a home page override is needed.
+   * Returns:
+   *  "new profile" if this is the first run with a new profile.
+   *  "new version" if this is the first run with a build with a different
+   *                      Gecko milestone (i.e. right after an upgrade).
+   *  "none" otherwise.
+   */
+  needHomepageOverride: function needHomepageOverride() {
+    let savedmstone = null;
+    try {
+      savedmstone = gPrefService.getCharPref("browser.startup.homepage_override.mstone");
+    } catch (e) {}
+
+    if (savedmstone == "ignore")
+      return "none";
+
+#expand    let ourmstone = "__MOZ_APP_VERSION__";
+
+    if (ourmstone != savedmstone) {
+      gPrefService.setCharPref("browser.startup.homepage_override.mstone", ourmstone);
+
+      return (savedmstone ? "new version" : "new profile");
+    }
+
+    return "none";
   }
 };
 
