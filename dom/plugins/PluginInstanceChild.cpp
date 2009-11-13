@@ -553,10 +553,16 @@ void
 PluginInstanceChild::ReparentPluginWindow(HWND hWndParent)
 {
     if (hWndParent != mPluginParentHWND && IsWindow(hWndParent)) {
+        // Fix the child window's style to be a child window.
         LONG style = GetWindowLongPtr(mPluginWindowHWND, GWL_STYLE);
         style |= WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+        style &= ~WS_POPUP;
         SetWindowLongPtr(mPluginWindowHWND, GWL_STYLE, style);
+
+        // Do the reparenting.
         SetParent(mPluginWindowHWND, hWndParent);
+
+        // Make sure we're visible.
         ShowWindow(mPluginWindowHWND, SW_SHOWNA);
     }
     mPluginParentHWND = hWndParent;
@@ -831,4 +837,18 @@ PluginInstanceChild::NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
 
     *aStream = &ps->mStream;
     return NPERR_NO_ERROR;
+}
+
+void
+PluginInstanceChild::InternalInvalidateRect(NPRect* aInvalidRect)
+{
+    // Should only be called on windowed plugins!
+    NS_ASSERTION(aInvalidRect, "Null pointer!");
+
+#ifdef OS_WIN
+    NS_ASSERTION(IsWindow(mPluginWindowHWND), "Bad window?!");
+    RECT rect = { aInvalidRect->left, aInvalidRect->top,
+                  aInvalidRect->right, aInvalidRect->bottom };
+    InvalidateRect(mPluginWindowHWND, &rect, FALSE);
+#endif
 }
