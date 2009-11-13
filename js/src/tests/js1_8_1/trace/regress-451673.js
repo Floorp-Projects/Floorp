@@ -108,7 +108,7 @@ function test()
   var timejit    = doTest(true);
 
   expect = true;
-  actual = timejit < timenonjit/4;
+  actual = timejit < timenonjit;
 
   reportCompare(expect, actual, summary);
 
