@@ -151,7 +151,7 @@ pref("xpinstall.dialog.progress.chrome", "chrome://browser/content/browser.xul")
 pref("xpinstall.dialog.progress.type.skin", "navigator:browser");
 pref("xpinstall.dialog.progress.type.chrome", "navigator:browser");
 pref("xpinstall.whitelist.add", "addons.mozilla.org");
-pref("extensions.update.enabled", true);
+pref("extensions.update.enabled", false);
 pref("extensions.update.interval", 86400);
 pref("extensions.dss.enabled", false);
 pref("extensions.dss.switchPending", false);
