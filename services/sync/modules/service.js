@@ -431,12 +431,12 @@ WeaveSvc.prototype = {
   _calculateScore: function WeaveSvc_calculateScoreAndDoStuff() {
     var engines = Engines.getEnabled();
     for (let i = 0;i < engines.length;i++) {
-      this._log.trace(engines[i].name + ": score: " + engines[i].score);
+      //this._log.trace(engines[i].name + ": score: " + engines[i].score);
       this.globalScore += engines[i].score;
       engines[i]._tracker.resetScore();
     }
 
-    this._log.trace("Global score updated: " + this.globalScore);
+    //this._log.trace("Global score updated: " + this.globalScore);
 
     if (this.globalScore > this.syncThreshold) {
       this._log.debug("Global Score threshold hit, triggering sync.");
