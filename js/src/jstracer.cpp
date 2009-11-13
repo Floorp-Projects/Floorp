@@ -2319,6 +2319,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     loopLabel(NULL),
     lirbuf(traceMonitor->lirbuf),
     mark(*traceMonitor->traceAlloc),
+    numSideExitsBefore(treeInfo->sideExits.length()),
     tracker(),
     nativeFrameTracker(),
     global_dslots(NULL),
@@ -2550,19 +2551,24 @@ TraceRecorder::finishAbort(const char* reason)
 
     /*
      * If this is the primary trace and we didn't succeed compiling, trash the
-     * TreeInfo object.
+     * TreeInfo object. Otherwise, remove the VMSideExits we added while
+     * recording, which are about to be invalid.
+     *
+     * BIG FAT WARNING: resetting the length is only a valid strategy as long as
+     * there may be only one recorder active for a single TreeInfo at a time.
+     * Otherwise, we may be throwing away another recorder's valid side exits.
      */
-    if (fragment->root == fragment)
+    if (fragment->root == fragment) {
         TrashTree(cx, fragment->toTreeFragment());
+    } else {
+        JS_ASSERT(numSideExitsBefore >= fragment->root->treeInfo->sideExits.length());
+        fragment->root->treeInfo->sideExits.setLength(numSideExitsBefore);
+    }
 
     /* Grab local copies of members needed after |delete this|. */
     JSContext* localcx = cx;
     JSTraceMonitor* localtm = traceMonitor;
 
-    /*
-     * Delete then abort recursively. Only reset from the outermost recorder,
-     * to avoid freeing memory that will be used by other recorders.
-     */
     localtm->recorder = NULL;
     delete this;
     if (localtm->outOfMemory() || js_OverfullJITCache(localtm))
@@ -4151,12 +4157,6 @@ TraceRecorder::guard(bool expected, LIns* cond, VMSideExit* exit)
 
     GuardRecord* guardRec = createGuardRecord(exit);
 
-    /*
-     * BIG FAT WARNING: If compilation fails we don't reset the lirbuf, so it's
-     * safe to keep references to the side exits here. If we ever start
-     * clearing those lirbufs, we have to make sure we purge the side exits
-     * that then no longer will be in valid memory.
-     */
     if (exit->exitType == LOOP_EXIT)
         treeInfo->sideExits.add(exit);
 
@@ -4186,12 +4186,6 @@ TraceRecorder::copy(VMSideExit* copy)
     exit->from = fragment;
     exit->target = NULL;
 
-    /*
-     * BIG FAT WARNING: If compilation fails we don't reset the lirbuf, so it's
-     * safe to keep references to the side exits here. If we ever start
-     * clearing those lirbufs, we have to make sure we purge the side exits
-     * that then no longer will be in valid memory.
-     */
     if (exit->exitType == LOOP_EXIT)
         treeInfo->sideExits.add(exit);
 #if defined JS_JIT_SPEW
