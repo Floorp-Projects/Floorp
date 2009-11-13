@@ -85,9 +85,12 @@ function test() {
         // let the first window be focused (see above)
         var fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
         if (window == fm.activeWindow) {
+          info("window is already active");
           executeSoon(function () ss.setBrowserState(oldState));
         } else {
+          info("waiting for window activation");
           window.addEventListener("activate", function () {
+            info("window is now active");
             window.removeEventListener("activate", arguments.callee, false);
             ss.setBrowserState(oldState);
           }, false);
@@ -95,6 +98,7 @@ function test() {
       }
       else {
         is(browserWindowsCount(), 1, "Only one window should exist after cleanup");
+        ok(!window.closed, "Restoring the old state should have left this window open");
         os.removeObserver(this, "sessionstore-browser-state-restored");
         finish();
       }
