@@ -111,13 +111,6 @@ nsDOMGeoPositionError::GetCode(PRInt16 *aCode)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMGeoPositionError::GetMessage(nsAString & aMessage)
-{
-  aMessage.Truncate();
-  return NS_OK;
-}
-
 void
 nsDOMGeoPositionError::NotifyCallback(nsIDOMGeoPositionErrorCallback* aCallback)
 {
