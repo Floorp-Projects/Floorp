@@ -295,7 +295,7 @@ TileManager.prototype = {
   },
 
   beginCriticalMove: function beginCriticalMove(destCriticalRect) {
-    if (destCriticalRect) {
+    if (!destCriticalRect.isEmpty()) {
       let tc = this._tileCache;
 
       BEGIN_FOREACH_IN_RECT(destCriticalRect, tc, tile)
