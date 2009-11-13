@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* -*- Mode: C++; c-basic-offset: 2; tab-width: 8; indent-tabs-mode: nil; -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Fennec Installer for WinCE.
  *
- * The Initial Developer of the Original Code is Google Inc.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Darin Fisher <darin@meer.net>
- *  Alex Pakhotin <alexp@mozilla.com>
+ *   Alex Pakhotin <alexp@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,31 +36,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef READSTRINGS_H__
-#define READSTRINGS_H__
+/**
+ *
+ * Class to work with localizable string resources
+ *
+ */
 
-#define MAX_TEXT_LEN 200
+#pragma once
 
-#ifdef XP_WIN
-# include <windows.h>
-  typedef WCHAR NS_tchar;
-#else
-  typedef char NS_tchar;
-#endif
-
-struct StringTable {
-  char title[MAX_TEXT_LEN];
-  char info[MAX_TEXT_LEN];
+#define STR_KEY(x) StrID_##x,
+enum
+{
+  #include "nsSetupStrings.inc"
+  StrID_NumberOfStrings
 };
+#undef STR_KEY
 
-/**
- * This function reads in localized strings from updater.ini
- */
-int ReadStrings(const NS_tchar *path, StringTable *results);
+class nsSetupStrings
+{
+public:
+  nsSetupStrings();
+  ~nsSetupStrings();
 
-/**
- * This function reads in localized strings corresponding to the keys from a given .ini
- */
-int ReadStrings(const NS_tchar *path, const char *keyList, int numStrings, char results[][MAX_TEXT_LEN]);
+  BOOL LoadStrings(TCHAR *sFileName);
+  const TCHAR* GetString(int nID);
 
-#endif  // READSTRINGS_H__
+private:
+
+  static const int kNumberOfStrings = StrID_NumberOfStrings;
+  TCHAR* m_sBuf;
+  TCHAR* m_arrStrings[kNumberOfStrings];
+};

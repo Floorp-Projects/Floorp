@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* -*- Mode: C++; c-basic-offset: 2; tab-width: 8; indent-tabs-mode: nil; -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Fennec Installer for WinCE.
  *
- * The Initial Developer of the Original Code is Google Inc.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Darin Fisher <darin@meer.net>
- *  Alex Pakhotin <alexp@mozilla.com>
+ *   Alex Pakhotin <alexp@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,31 +36,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef READSTRINGS_H__
-#define READSTRINGS_H__
+#pragma once
 
-#define MAX_TEXT_LEN 200
-
-#ifdef XP_WIN
-# include <windows.h>
-  typedef WCHAR NS_tchar;
-#else
-  typedef char NS_tchar;
-#endif
-
-struct StringTable {
-  char title[MAX_TEXT_LEN];
-  char info[MAX_TEXT_LEN];
+/**
+ *  Class to show the progress
+ */
+class nsExtractorProgress
+{
+public:
+  nsExtractorProgress() {}
+  virtual void Progress(int nPercentComplete) = 0; /* to be overriden to get progress notifications */
 };
 
 /**
- * This function reads in localized strings from updater.ini
+ *  Base archive-extractor class.
+ *  Used to derive a specific archive format implementation.
  */
-int ReadStrings(const NS_tchar *path, StringTable *results);
+class nsArchiveExtractor
+{
+public:
+  enum
+  {
+    OK = 0,
+    ERR_FAIL = -1,
+    ERR_PARAM = -2,
+    ERR_READ = -3,
+    ERR_WRITE = -4,
+    ERR_MEM = -5,
+    ERR_NO_ARCHIVE = -6,
+    ERR_EXTRACTION = -7,
+  };
 
-/**
- * This function reads in localized strings corresponding to the keys from a given .ini
- */
-int ReadStrings(const NS_tchar *path, const char *keyList, int numStrings, char results[][MAX_TEXT_LEN]);
+  nsArchiveExtractor(const WCHAR *sArchiveName, DWORD dwSfxStubSize, nsExtractorProgress *pProgress);
+  virtual ~nsArchiveExtractor();
 
-#endif  // READSTRINGS_H__
+  virtual int Extract(const WCHAR *sDestinationDir);
+  virtual int ExtractFile(const WCHAR *sFileName, const WCHAR *sDestinationDir);
+
+protected:
+  WCHAR *m_sArchiveName;
+  nsExtractorProgress *m_pProgress;
+  DWORD m_dwSfxStubSize;
+};
