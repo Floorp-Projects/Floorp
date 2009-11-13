@@ -1,0 +1,55 @@
+PROG = 7zDec
+CXX = g++
+LIB =
+RM = rm -f
+CFLAGS = -c -O2 -Wall
+
+OBJS = 7zAlloc.o 7zBuf.o 7zBuf2.o 7zCrc.o 7zDec.o 7zIn.o 7zMain.o LzmaDec.o Lzma2Dec.o Bra86.o Bcj2.o 7zFile.o 7zStream.o
+
+all: $(PROG)
+
+$(PROG): $(OBJS)
+	$(CXX) -o $(PROG) $(LDFLAGS) $(OBJS) $(LIB)
+
+7zAlloc.o: 7zAlloc.c
+	$(CXX) $(CFLAGS) 7zAlloc.c
+
+7zBuf.o: ../../7zBuf.c
+	$(CXX) $(CFLAGS) ../../7zBuf.c
+
+7zBuf2.o: ../../7zBuf2.c
+	$(CXX) $(CFLAGS) ../../7zBuf2.c
+
+7zCrc.o: ../../7zCrc.c
+	$(CXX) $(CFLAGS) ../../7zCrc.c
+
+7zDec.o: ../../7zDec.c
+	$(CXX) $(CFLAGS) ../../7zDec.c
+
+7zIn.o: ../../7zIn.c
+	$(CXX) $(CFLAGS) ../../7zIn.c
+
+7zMain.o: 7zMain.c
+	$(CXX) $(CFLAGS) 7zMain.c
+
+LzmaDec.o: ../../LzmaDec.c
+	$(CXX) $(CFLAGS) ../../LzmaDec.c
+
+Lzma2Dec.o: ../../Lzma2Dec.c
+	$(CXX) $(CFLAGS) ../../Lzma2Dec.c
+
+Bra86.o: ../../Bra86.c
+	$(CXX) $(CFLAGS) ../../Bra86.c
+
+Bcj2.o: ../../Bcj2.c
+	$(CXX) $(CFLAGS) ../../Bcj2.c
+
+7zFile.o: ../../7zFile.c
+	$(CXX) $(CFLAGS) ../../7zFile.c
+
+7zStream.o: ../../7zStream.c
+	$(CXX) $(CFLAGS) ../../7zStream.c
+
+clean:
+	-$(RM) $(PROG) $(OBJS)
+

@@ -1,0 +1,84 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Fennec Installer for WinCE.
+#
+# The Initial Developer of the Original Code is The Mozilla Foundation.
+#
+# Portions created by the Initial Developer are Copyright (C) 2009
+# the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
+#
+# Contributor(s): 
+#   Alex Pakhotin <alexp@mozilla.com> (original author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE       = lib7z
+LIBRARY_NAME = 7z
+DIST_INSTALL = 1
+FORCE_STATIC_LIB = 1
+ENABLE_CXX_EXCEPTIONS = 1
+
+export NO_SHUNT = 1
+
+7ZIPSRCDIR = $(srcdir)/LZMASDK
+
+include $(srcdir)/7zobjs.mk
+
+CPPSRCS = \
+	7zLib.cpp \
+	$(7ZIPCPPSRCS) \
+	$(NULL)
+
+CSRCS = \
+	$(7ZIPCSRCS) \
+	$(NULL)
+
+EXPORTS	= 7zLib.h
+
+DEFINES += -D_UNICODE -DNO_REGISTRY -DEXTRACT_ONLY -DNO_READ_FROM_CODER -D_NO_CRYPTO -D_SFX
+
+LOCAL_INCLUDES += -I$(7ZIPSRCDIR)/CPP
+
+include $(topsrcdir)/config/rules.mk
+
+# Having this rule here to compile 7zIn.cpp, but not 7zIn.c
+7zIn.$(OBJ_SUFFIX): %.$(OBJ_SUFFIX): %.cpp $(GLOBAL_DEPS)
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO_CXX)
+ifdef STRICT_CPLUSPLUS_SUFFIX
+	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
+	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
+	rm -f t_$*.cc
+else
+	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
+endif #STRICT_CPLUSPLUS_SUFFIX
