@@ -160,7 +160,8 @@ UNPACKAGE = $(LIBXUL_DIST)/xulrunner*$(PKG_SUFFIX)
 
 installer: stage-package package-xulrunner
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-	cd $(DIST) && $(PYTHON) $(topsrcdir)/build/package/wince/make_wince_cab.py $(CABARGS) "$(VSINSTALLDIR)/SmartDevices/SDK/SDKTools/cabwiz.exe" "$(MOZ_PKG_DIR)" "$(MOZ_APP_DISPLAYNAME)" "$(PKG_PATH)$(PKG_BASENAME).cab" && $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_DIR) && echo "Installer $(PKG_PATH)$(PKG_BASENAME).cab created!"
+	$(NSINSTALL) $(srcdir)/../locales/$(AB_CD)/installer/setup.ini $(DIST)
+	cd $(DIST) && mv $(MOZ_PKG_DIR)/xulrunner/uninstall.exe $(MOZ_PKG_DIR)/ && 7z a $(PKG_PATH)$(PKG_BASENAME).7z $(MOZ_PKG_DIR) setup.ini -x!$(MOZ_PKG_DIR)/xulrunner/xulrunner-stub-installer.sfx && cat $(MOZ_PKG_DIR)/xulrunner/xulrunner-stub-installer.sfx $(PKG_PATH)$(PKG_BASENAME).7z>$(PKG_PATH)$(PKG_BASENAME).exe && rm $(PKG_PATH)$(PKG_BASENAME).7z && rm setup.ini
 
 endif
 
