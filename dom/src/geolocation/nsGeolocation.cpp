@@ -925,7 +925,7 @@ nsGeolocation::ClearWatch(PRInt32 aWatchId)
 {
   PRUint32 count = mWatchingCallbacks.Length();
   if (aWatchId < 0 || count == 0 || aWatchId > count)
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 
   mWatchingCallbacks[aWatchId]->MarkCleared();
   return NS_OK;
