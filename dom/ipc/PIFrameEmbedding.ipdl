@@ -66,7 +66,6 @@ parent:
     sendEvent(RemoteDOMEvent aEvent);
 child:
     createWidget(MagicWindowHandle parentWidget);
-    destroyWidget();
 
     loadURL(nsCString uri);
 

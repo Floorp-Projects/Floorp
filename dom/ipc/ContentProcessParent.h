@@ -57,7 +57,7 @@ namespace dom {
 
 class TabParent;
 
-class ContentProcessParent : private PContentProcessParent,
+class ContentProcessParent : public PContentProcessParent,
                              public base::WaitableEventWatcher::Delegate,
                              public nsIObserver
 {

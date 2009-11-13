@@ -69,6 +69,14 @@
        frameLoader.sendCrossProcessMouseEvent("mousedown", x, y, 0, 1, 0, false);
        frameLoader.sendCrossProcessMouseEvent("mouseup", x, y, 0, 1, 0, false);
      }
+
+    function openWindow() {
+      window.open('chrome://global/content/test-ipc.xul', '_blank', 'chrome,resizable,width=800,height=800');
+    }
+    
+    function closeWindow() {
+      window.close();
+    }
   </script>
 
   <toolbar id="controls">
@@ -77,6 +85,8 @@
     <textbox onchange="loadURL(this.value)" flex="1" id="URL"/>
     <toolbarbutton onclick="restart()" label="Recover"/>
     <toolbarbutton onclick="randomClick()" label="random click"/>
+    <toolbarbutton onclick="openWindow()" label="open new window"/>
+    <toolbarbutton onclick="closeWindow()" label="close this window"/>
   </toolbar>
 
   <browser type="content" src="http://www.google.com/" flex="1" id="page" remote="true"

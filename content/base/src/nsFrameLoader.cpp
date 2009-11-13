@@ -998,6 +998,8 @@ nsFrameLoader::Destroy()
 #ifdef MOZ_IPC
   if (mChildProcess) {
     mChildProcess->SetOwnerElement(nsnull);
+    ContentProcessParent::GetSingleton()->SendPIFrameEmbeddingDestructor(mChildProcess);
+    mChildProcess = nsnull;
   }
 #endif
 
