@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et cindent: */
+/* -*- Mode: C++; c-basic-offset: 2; tab-width: 8; indent-tabs-mode: nil; -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Fennec Installer for WinCE.
  *
- * The Initial Developer of the Original Code is Google Inc.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is The Mozilla Foundation.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Darin Fisher <darin@meer.net>
- *  Alex Pakhotin <alexp@mozilla.com>
+ *   Alex Pakhotin <alexp@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,31 +36,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef READSTRINGS_H__
-#define READSTRINGS_H__
+#pragma once
 
-#define MAX_TEXT_LEN 200
+/**
+ * nsInstallerDlg dialog
+ */
+class nsInstallerDlg : public nsExtractorProgress
+{
+public:
+  static nsInstallerDlg* GetInstance();
+  void Init(HINSTANCE hInst);
+  int DoModal();
+  virtual void Progress(int n); // gets progress notifications
+  INT_PTR DlgMain(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+  const WCHAR* GetExtractPath() { return m_sInstallPath; }
 
-#ifdef XP_WIN
-# include <windows.h>
-  typedef WCHAR NS_tchar;
-#else
-  typedef char NS_tchar;
-#endif
+private:
+  nsInstallerDlg();
+  BOOL OnInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam);
+  void FindMemCards();
+  BOOL OnBtnExtract();
+  LRESULT SendMessageToControl(int nCtlID, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
+  void SetControlWindowText(int nCtlID, const WCHAR *sText);
 
-struct StringTable {
-  char title[MAX_TEXT_LEN];
-  char info[MAX_TEXT_LEN];
+  BOOL PostExtract();
+  BOOL StoreInstallPath();
+  BOOL CreateShortcut();
+  BOOL MoveSetupStrings();
+  BOOL SilentFirstRun();
+
+  void AddErrorMsg(WCHAR* sErr);
+
+  static const int c_nMaxErrorLen = 2048;
+
+  HINSTANCE m_hInst;
+  HWND m_hDlg;
+
+  WCHAR m_sProgramFiles[MAX_PATH];
+  WCHAR m_sExtractPath[MAX_PATH];
+  WCHAR m_sInstallPath[MAX_PATH];
+  WCHAR m_sErrorMsg[c_nMaxErrorLen];
 };
-
-/**
- * This function reads in localized strings from updater.ini
- */
-int ReadStrings(const NS_tchar *path, StringTable *results);
-
-/**
- * This function reads in localized strings corresponding to the keys from a given .ini
- */
-int ReadStrings(const NS_tchar *path, const char *keyList, int numStrings, char results[][MAX_TEXT_LEN]);
-
-#endif  // READSTRINGS_H__

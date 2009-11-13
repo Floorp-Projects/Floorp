@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Darin Fisher <darin@meer.net>
+ *  Alex Pakhotin <alexp@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,7 +42,11 @@
 #include <stdio.h>
 #include "readstrings.h"
 #include "errors.h"
-#include "prtypes.h"
+
+// Defined bool stuff here to reduce external dependencies
+typedef int        PRBool;
+#define PR_TRUE    1
+#define PR_FALSE   0
 
 #ifdef XP_WIN
 # define NS_tfopen _wfopen
@@ -111,9 +116,42 @@ NS_strtok(const char *delims, char **str)
   return ret;
 }
 
-// very basic parser for updater.ini taken mostly from nsINIParser.cpp
+/**
+ * Find a key in a keyList containing zero-delimited keys ending with "\0\0".
+ * Returns a zero-based index of the key in the list, or -1 if the key is not found.
+ */
+static int
+find_key(const char *keyList, char* key)
+{
+  if (!keyList)
+    return -1;
+
+  int index = 0;
+  const char *p = keyList;
+  while (*p)
+  {
+    if (strcmp(key, p) == 0)
+      return index;
+
+    p += strlen(p) + 1;
+    index++;
+  }
+
+  // The key was not found if we came here
+  return -1;
+}
+
+/**
+ * A very basic parser for updater.ini taken mostly from nsINIParser.cpp
+ * that can be used by standalone apps.
+ *
+ * @param path       Path to the .ini file to read
+ * @param keyList    List of zero-delimited keys ending with two zero characters
+ * @param numStrings Number of strings to read into results buffer - must be equal to the number of keys
+ * @param results    Two-dimensional array of strings to be filled in the same order as the keys provided
+ */
 int
-ReadStrings(const NS_tchar *path, StringTable *results)
+ReadStrings(const NS_tchar *path, const char *keyList, int numStrings, char results[][MAX_TEXT_LEN])
 {
   AutoFILE fp = NS_tfopen(path, OPEN_MODE);
 
@@ -144,8 +182,8 @@ ReadStrings(const NS_tchar *path, StringTable *results)
 
   char *buffer = fileContents;
   PRBool inStringsSection = PR_FALSE;
-  const unsigned None = 0, Title = 1, Info = 2, All = 3;
-  unsigned read = None;
+
+  unsigned read = 0;
 
   while (char *token = NS_strtok(kNL, &buffer)) {
     if (token[0] == '#' || token[0] == ';') // it's a comment
@@ -185,17 +223,33 @@ ReadStrings(const NS_tchar *path, StringTable *results)
     if (!e)
       continue;
 
-    if (strcmp(key, "Title") == 0) {
-      strncpy(results->title, token, MAX_TEXT_LEN - 1);
-      results->title[MAX_TEXT_LEN - 1] = 0;
-      read |= Title;
-    }
-    else if (strcmp(key, "Info") == 0) {
-      strncpy(results->info, token, MAX_TEXT_LEN - 1);
-      results->info[MAX_TEXT_LEN - 1] = 0;
-      read |= Info;
+    int keyIndex = find_key(keyList, key);
+    if (keyIndex >= 0 && keyIndex < numStrings)
+    {
+      strncpy(results[keyIndex], token, MAX_TEXT_LEN - 1);
+      results[keyIndex][MAX_TEXT_LEN - 1] = 0;
+      read++;
     }
   }
 
-  return (read == All) ? OK : PARSE_ERROR;
+  return (read == numStrings) ? OK : PARSE_ERROR;
+}
+
+// A wrapper function to read strings for the updater.
+// Added for compatibility with the original code.
+int
+ReadStrings(const NS_tchar *path, StringTable *results)
+{
+  const int kNumStrings = 2;
+  const char *kUpdaterKeys = "Title\0Info\0";
+  char updater_strings[kNumStrings][MAX_TEXT_LEN];
+
+  int result = ReadStrings(path, kUpdaterKeys, kNumStrings, updater_strings);
+
+  strncpy(results->title, updater_strings[0], MAX_TEXT_LEN - 1);
+  results->title[MAX_TEXT_LEN - 1] = 0;
+  strncpy(results->info, updater_strings[1], MAX_TEXT_LEN - 1);
+  results->info[MAX_TEXT_LEN - 1] = 0;
+
+  return result;
 }
