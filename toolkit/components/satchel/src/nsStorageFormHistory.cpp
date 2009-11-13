@@ -479,9 +479,16 @@ nsFormHistory::ExpireOldEntries()
 
   PRInt32 expireDays;
   rv = prefBranch->GetIntPref("browser.formfill.expire_days", &expireDays);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    PRInt32 expireDaysMin = 0;
     rv = prefBranch->GetIntPref("browser.history_expire_days", &expireDays);
-  NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    prefBranch->GetIntPref("browser.history_expire_days_min", &expireDaysMin);
+    // Make expireDays at least expireDaysMin to prevent expiring entries younger than min
+    // NOTE: if history is disabled in preferences, then browser.history_expire_days == 0
+    if (expireDays && expireDays < expireDaysMin)
+      expireDays = expireDaysMin;
+  }
   PRInt64 expireTime = PR_Now() - expireDays * 24 * PR_HOURS;
 
 
