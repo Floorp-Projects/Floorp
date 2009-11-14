@@ -6928,6 +6928,7 @@ void nsWindow::InitTrackPointHack()
   long lResult;
   const WCHAR wstrKeys[][40] = {L"Software\\Lenovo\\TrackPoint",
                                 L"Software\\Lenovo\\UltraNav",
+                                L"Software\\Alps\\Apoint\\TrackPoint",
                                 L"Software\\Synaptics\\SynTPEnh\\UltraNavPS2"};    
   // If anything fails turn the hack off
   sTrackPointHack = false;
