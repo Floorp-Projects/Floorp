@@ -35,7 +35,8 @@
 <!ENTITY continue.label               "Continue">
 
 <!ENTITY passphraseGroupbox.label     "Enter Secret Phrase">
-<!ENTITY passphraseDesc.label         "Please enter your secret phrase.  Remember that this is separate from your account password and is never sent over the Internet.">
+<!ENTITY passphraseDesc.label         "Please enter a secret phrase. This will be used to encrypt all your data so only you can access it.">
+<!ENTITY passphraseDesc2.label        "This must be at least 8 characters long and cannot match your account password.">
 <!ENTITY connecting.label             "Connecting…">
 
 <!ENTITY choice.caption.label         "Choose how you want to start using Weave">
