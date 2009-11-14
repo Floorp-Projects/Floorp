@@ -19,20 +19,6 @@
 #include <stdio.h>		/* needed to define "FILE", "NULL" */
 #include "jpeglib.h"
 
-
-/*
- * This routine writes the given ICC profile data into a JPEG file.
- * It *must* be called AFTER calling jpeg_start_compress() and BEFORE
- * the first call to jpeg_write_scanlines().
- * (This ordering ensures that the APP2 marker(s) will appear after the
- * SOI and JFIF or Adobe markers, but before all else.)
- */
-
-extern void write_icc_profile JPP((j_compress_ptr cinfo,
-				   const JOCTET *icc_data_ptr,
-				   unsigned int icc_data_len));
-
-
 /*
  * Reading a JPEG file that may contain an ICC profile requires two steps:
  *
