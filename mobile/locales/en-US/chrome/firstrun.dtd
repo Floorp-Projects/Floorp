@@ -1,8 +1,8 @@
 <!ENTITY welcome.title                      "Welcome to &brandShortName;">
-<!ENTITY overview.description               "Sync your PC and mobile with Weave. Customize with add-ons. Surf with the Awesome Bar and much, much, much more.">
-<!ENTITY sync.title                         "Get Up and Go">
-<!ENTITY sync.description                   "Get Weave to help break in your &brandShortName;. Share your preferences, bookmarks, browsing history, and more between your PC and mobile.">
-<!ENTITY sync.linkLabel                     "Get the Weave add-on">
+<!ENTITY intro.description                  "Synchronize your PC and mobile with Weave Sync. Customize with add-ons. Surf with the Awesome Bar and much, much, much more.">
+<!ENTITY weave.title                        "Get Up and Go">
+<!ENTITY weave.description                  "Get Weave Sync to help break in your Firefox. Share your browsing history, bookmarks, saved passwords and tabs between your PC and mobile.">
+<!ENTITY weave.linkLabel                    "Get the Weave Sync add-on">
 <!ENTITY getPersonal.title                  "Get Personal">
 <!ENTITY getPersonal.description            "Make &brandShortName; your own. Customize the first ever browser to offer add-ons for mobile.">
 <!ENTITY getPersonal.linkLabel              "Get add-ons for your mobile">
