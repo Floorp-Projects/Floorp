@@ -69,6 +69,7 @@
 
 class nsIFrame;
 class imgIRequest;
+class imgIContainer;
 
 // Includes nsStyleStructID.
 #include "nsStyleStructFwd.h"
@@ -838,6 +839,11 @@ struct nsStyleBorder {
   inline void SetBorderImage(imgIRequest* aImage);
   inline imgIRequest* GetBorderImage() const;
 
+  // These methods are used for the caller to caches the sub images created during
+  // a border-image paint operation
+  inline void SetSubImage(PRUint8 aIndex, imgIContainer* aSubImage) const;
+  inline imgIContainer* GetSubImage(PRUint8 aIndex) const;
+
   void GetCompositeColors(PRInt32 aIndex, nsBorderColors** aColors) const
   {
     if (!mBorderColors)
@@ -896,6 +902,9 @@ protected:
                                   // if -moz-border-colors is specified
 
   nsCOMPtr<imgIRequest> mBorderImage; // [reset]
+
+  // Cache used by callers for border-image painting
+  nsCOMArray<imgIContainer> mSubImages;
 
   nscoord       mTwipsPerPixel;
 };

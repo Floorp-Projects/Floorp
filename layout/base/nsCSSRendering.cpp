@@ -364,7 +364,7 @@ static void DrawBorderImage(nsPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             nsIFrame* aForFrame,
                             const nsRect& aBorderArea,
-                            const nsStyleBorder& aBorderStyle,
+                            const nsStyleBorder& aStyleBorder,
                             const nsRect& aDirtyRect);
 
 static void DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
@@ -375,7 +375,9 @@ static void DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
                                      const nsIntRect& aSrc,
                                      PRUint8 aHFill,
                                      PRUint8 aVFill,
-                                     const nsSize& aUnitSize);
+                                     const nsSize& aUnitSize,
+                                     const nsStyleBorder& aStyleBorder,
+                                     PRUint8 aIndex);
 
 static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                               nscolor aBackgroundColor,
@@ -544,7 +546,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                             nsIFrame* aForFrame,
                             const nsRect& aDirtyRect,
                             const nsRect& aBorderArea,
-                            const nsStyleBorder& aBorderStyle,
+                            const nsStyleBorder& aStyleBorder,
                             nsStyleContext* aStyleContext,
                             PRIntn aSkipSides)
 {
@@ -564,9 +566,9 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
       return; // Let the theme handle it.
   }
 
-  if (aBorderStyle.IsBorderImageLoaded()) {
+  if (aStyleBorder.IsBorderImageLoaded()) {
     DrawBorderImage(aPresContext, aRenderingContext, aForFrame,
-                    aBorderArea, aBorderStyle, aDirtyRect);
+                    aBorderArea, aStyleBorder, aDirtyRect);
     return;
   }
   
@@ -579,14 +581,14 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
     (aStyleContext, compatMode == eCompatibility_NavQuirks ? PR_TRUE : PR_FALSE);
   const nsStyleBackground* bgColor = bgContext->GetStyleBackground();
 
-  border = aBorderStyle.GetComputedBorder();
+  border = aStyleBorder.GetComputedBorder();
   if ((0 == border.left) && (0 == border.right) &&
       (0 == border.top) && (0 == border.bottom)) {
     // Empty border area
     return;
   }
 
-  GetBorderRadiusTwips(aBorderStyle.mBorderRadius, aForFrame->GetSize().width,
+  GetBorderRadiusTwips(aStyleBorder.mBorderRadius, aForFrame->GetSize().width,
                        twipsRadii);
 
   // Turn off rendering for all of the zero sized sides
@@ -626,9 +628,9 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   // pull out styles, colors, composite colors
   NS_FOR_CSS_SIDES (i) {
     PRBool foreground;
-    borderStyles[i] = aBorderStyle.GetBorderStyle(i);
-    aBorderStyle.GetBorderColor(i, borderColors[i], foreground);
-    aBorderStyle.GetCompositeColors(i, &compositeColors[i]);
+    borderStyles[i] = aStyleBorder.GetBorderStyle(i);
+    aStyleBorder.GetBorderColor(i, borderColors[i], foreground);
+    aStyleBorder.GetCompositeColors(i, &compositeColors[i]);
 
     if (foreground)
       borderColors[i] = ourColor->mColor;
@@ -685,7 +687,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                              nsIFrame* aForFrame,
                              const nsRect& aDirtyRect,
                              const nsRect& aBorderArea,
-                             const nsStyleBorder& aBorderStyle,
+                             const nsStyleBorder& aStyleBorder,
                              const nsStyleOutline& aOutlineStyle,
                              nsStyleContext* aStyleContext)
 {
@@ -2484,7 +2486,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
                 nsIRenderingContext& aRenderingContext,
                 nsIFrame*            aForFrame,
                 const nsRect&        aBorderArea,
-                const nsStyleBorder& aBorderStyle,
+                const nsStyleBorder& aStyleBorder,
                 const nsRect&        aDirtyRect)
 {
   if (aDirtyRect.IsEmpty())
@@ -2496,9 +2498,9 @@ DrawBorderImage(nsPresContext*       aPresContext,
   // XXX We shouldn't really... since if anybody is passing in a
   // different style, they'll potentially have the wrong size for the
   // border too.
-  aPresContext->SetupBorderImageLoaders(aForFrame, &aBorderStyle);
+  aPresContext->SetupBorderImageLoaders(aForFrame, &aStyleBorder);
 
-  imgIRequest *req = aBorderStyle.GetBorderImage();
+  imgIRequest *req = aStyleBorder.GetBorderImage();
 
 #ifdef DEBUG
   {
@@ -2525,7 +2527,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
   // Convert percentages and clamp values to the image size.
   nsIntMargin split;
   NS_FOR_CSS_SIDES(s) {
-    nsStyleCoord coord = aBorderStyle.mBorderImageSplit.Get(s);
+    nsStyleCoord coord = aStyleBorder.mBorderImageSplit.Get(s);
     PRInt32 imgDimension = ((s == NS_SIDE_TOP || s == NS_SIDE_BOTTOM)
                             ? imageSize.height
                             : imageSize.width);
@@ -2550,7 +2552,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
     split.side(s) = NS_lround(value);
   }
 
-  nsMargin border(aBorderStyle.GetActualBorder());
+  nsMargin border(aStyleBorder.GetActualBorder());
 
   // These helper tables recharacterize the 'split' and 'border' margins
   // in a more convenient form: they are the x/y/width/height coords
@@ -2642,8 +2644,8 @@ DrawBorderImage(nsPresContext*       aPresContext,
 
         unitSize.width = splitWidth[i]*hFactor;
         unitSize.height = splitHeight[j]*vFactor;
-        fillStyleH = aBorderStyle.mBorderImageHFill;
-        fillStyleV = aBorderStyle.mBorderImageVFill;
+        fillStyleH = aStyleBorder.mBorderImageHFill;
+        fillStyleV = aStyleBorder.mBorderImageVFill;
 
       } else if (i == MIDDLE) { // top, bottom
         // Sides are always stretched to the thickness of their border,
@@ -2656,7 +2658,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
 
         unitSize.width = splitWidth[i]*factor;
         unitSize.height = borderHeight[j];
-        fillStyleH = aBorderStyle.mBorderImageHFill;
+        fillStyleH = aStyleBorder.mBorderImageHFill;
         fillStyleV = NS_STYLE_BORDER_IMAGE_STRETCH;
 
       } else if (j == MIDDLE) { // left, right
@@ -2669,7 +2671,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
         unitSize.width = borderWidth[i];
         unitSize.height = splitHeight[j]*factor;
         fillStyleH = NS_STYLE_BORDER_IMAGE_STRETCH;
-        fillStyleV = aBorderStyle.mBorderImageVFill;
+        fillStyleV = aStyleBorder.mBorderImageVFill;
 
       } else {
         // Corners are always stretched to fit the corner.
@@ -2682,7 +2684,8 @@ DrawBorderImage(nsPresContext*       aPresContext,
       DrawBorderImageComponent(aRenderingContext, aForFrame,
                                imgContainer, aDirtyRect,
                                destArea, subArea,
-                               fillStyleH, fillStyleV, unitSize);
+                               fillStyleH, fillStyleV,
+                               unitSize, aStyleBorder, i * (RIGHT + 1) + j);
     }
   }
 }
@@ -2696,16 +2699,28 @@ DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
                          const nsIntRect&     aSrc,
                          PRUint8              aHFill,
                          PRUint8              aVFill,
-                         const nsSize&        aUnitSize)
+                         const nsSize&        aUnitSize,
+                         const nsStyleBorder& aStyleBorder,
+                         PRUint8              aIndex)
 {
   if (aFill.IsEmpty() || aSrc.IsEmpty())
     return;
 
+  // Don't bother trying to cache sub images if the border image is animated
+  // We can only sucessfully call GetAnimated() if we are fully decoded, so default to PR_TRUE
+  PRBool animated = PR_TRUE;
+  aImage->GetAnimated(&animated);
+
   nsCOMPtr<imgIContainer> subImage;
-  if (NS_FAILED(aImage->ExtractFrame(imgIContainer::FRAME_CURRENT, aSrc,
-                                     imgIContainer::FLAG_SYNC_DECODE,
-                                     getter_AddRefs(subImage))))
-    return;
+  if (animated || (subImage = aStyleBorder.GetSubImage(aIndex)) == 0) {
+    if (NS_FAILED(aImage->ExtractFrame(imgIContainer::FRAME_CURRENT, aSrc,
+                                       imgIContainer::FLAG_SYNC_DECODE,
+                                       getter_AddRefs(subImage))))
+      return;
+
+    if (!animated)
+      aStyleBorder.SetSubImage(aIndex, subImage);
+  }
 
   gfxPattern::GraphicsFilter graphicsFilter =
     nsLayoutUtils::GetGraphicsFilterForFrame(aForFrame);
