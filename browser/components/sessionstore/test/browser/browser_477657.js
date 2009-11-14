@@ -36,7 +36,11 @@
 
 function test() {
   /** Test for Bug 477657 **/
-  
+
+  // Test fails randomly on OS X (bug 482975)
+  if ("nsILocalFileMac" in Ci)
+    return;
+
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   waitForExplicitFinish();
   
