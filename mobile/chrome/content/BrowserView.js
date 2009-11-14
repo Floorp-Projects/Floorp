@@ -253,8 +253,8 @@ BrowserView.prototype = {
         case "Nokia N900":
           cacheSize = 26;
           break;
-        case "Nokia N8XX":
-          // N8XX has half the memory of N900 and crashes with higher numbers
+        case "Nokia N8xx":
+          // N8xx has half the memory of N900 and crashes with higher numbers
           cacheSize = 10;
           break;
 #endif
