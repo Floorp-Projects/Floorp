@@ -35,6 +35,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+function waitForBrowserState(aState, aSetStateCallback) {
+  let os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
+  let observer = {
+    observe: function(aSubject, aTopic, aData) {
+      os.removeObserver(this, "sessionstore-browser-state-restored");
+      executeSoon(aSetStateCallback);
+    }
+  };
+  os.addObserver(observer, "sessionstore-browser-state-restored", false);
+  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
+           getService(Ci.nsISessionStore);
+  ss.setBrowserState(JSON.stringify(aState));
+}
+
 function test() {
   /** Test for Bug 526613 **/
   
@@ -60,8 +75,14 @@ function test() {
 
   is(browserWindowsCount(), 1, "Only one browser window should be open initially");
 
-  // backup old state
-  let oldState = ss.getBrowserState();
+  let blankState = {
+    windows: [{
+      tabs: [{ entries: [{ url: "about:blank" }] }],
+      _closedTabs: []
+    }],
+    _closedWindows: []
+  };
+
   // create a new state for testing
   let testState = {
     windows: [
@@ -73,36 +94,23 @@ function test() {
     selectedWindow: 1
   };
 
-  let observer = {
-    pass: 1,
-    observe: function(aSubject, aTopic, aData) {
-      is(aTopic, "sessionstore-browser-state-restored",
-         "The sessionstore-browser-state-restored notification was observed");
+  waitForBrowserState(testState, function() {
+    is(browserWindowsCount(), 2, "Two windows should exist at this point");
 
-      if (this.pass++ == 1) {  
-        is(browserWindowsCount(), 2, "Two windows should exist at this point");
-
-        // let the first window be focused (see above)
-        function pollMostRecentWindow() {
-          if (wm.getMostRecentWindow("navigator:browser") == window) {
-            ss.setBrowserState(oldState);
-          } else {
-            info("waiting for the current window to become active");
-            setTimeout(pollMostRecentWindow, 0);
-          }
-        }
-        pollMostRecentWindow();
+    // let the first window be focused (see above)
+    function pollMostRecentWindow() {
+      if (wm.getMostRecentWindow("navigator:browser") == window) {
+        waitForBrowserState(blankState, function() {
+          is(browserWindowsCount(), 1, "Only one window should exist after cleanup");
+          ok(!window.closed, "Restoring the old state should have left this window open");
+          finish();
+        });
       }
       else {
-        is(browserWindowsCount(), 1, "Only one window should exist after cleanup");
-        ok(!window.closed, "Restoring the old state should have left this window open");
-        os.removeObserver(this, "sessionstore-browser-state-restored");
-        finish();
+        info("waiting for the current window to become active");
+        setTimeout(pollMostRecentWindow, 0);
       }
     }
-  };
-  os.addObserver(observer, "sessionstore-browser-state-restored", false);
-
-  // set browser to test state
-  ss.setBrowserState(JSON.stringify(testState));
+    pollMostRecentWindow();
+  });
 }
