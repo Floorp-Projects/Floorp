@@ -249,7 +249,7 @@ Statement::initialize(Connection *aDBConnection,
       // or @, all of which are valid characters for binding a parameter.
       // We will warn the consumer that they may not be safely using LIKE.
       NS_WARNING("Unsafe use of LIKE detected!  Please ensure that you "
-                 "are using mozIStorageConnection::escapeStringForLIKE "
+                 "are using mozIStorageStatement::escapeStringForLIKE "
                  "and that you are binding that result to the statement "
                  "to prevent SQL injection attacks.");
     }
