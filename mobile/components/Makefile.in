@@ -46,20 +46,23 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = browsercomps
 XPIDL_MODULE = browsercompsbase
 
-EXTRA_PP_COMPONENTS = AboutRedirector.js
+EXTRA_PP_COMPONENTS = \
+        AboutRedirector.js \
+        DirectoryProvider.js\
+        $(NULL)
 
 EXTRA_COMPONENTS = \
         BrowserStartup.js \
-	geolocationPrompt.js \
-	alertsService.js \
-	xpiDialogService.js \
-	downloadManagerUI.js \
-        helperAppDialog.js \
-        promptService.js \
+        GeolocationPrompt.js \
+        AlertsService.js \
+        XPIDialogService.js \
+        DownloadManagerUI.js \
+        HelperAppDialog.js \
+        PromptService.js \
 	$(NULL)
 
 DIRS = protocols \
-       phone \
-       $(NULL)
+        phone \
+        $(NULL)
 
 include $(topsrcdir)/config/rules.mk
