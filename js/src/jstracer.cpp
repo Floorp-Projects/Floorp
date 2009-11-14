@@ -8421,7 +8421,7 @@ TraceRecorder::switchop()
                       "guard(switch on numeric)"),
               BRANCH_EXIT);
     } else if (JSVAL_IS_STRING(v)) {
-        LIns* args[] = { v_ins, INS_CONSTSTR(JSVAL_TO_STRING(v)) };
+        LIns* args[] = { INS_CONSTSTR(JSVAL_TO_STRING(v)), v_ins };
         guard(true,
               addName(lir->ins_eq0(lir->ins_eq0(lir->insCall(&js_EqualStrings_ci, args))),
                       "guard(switch on string)"),
