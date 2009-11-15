@@ -479,7 +479,8 @@ CSS_PROP_BACKGROUND(
     BackgroundImage,
     CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
-        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
+        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED |
+        CSS_PROPERTY_START_IMAGE_LOADS,
     Color,
     mBackImage,
     eCSSType_ValueList,
@@ -691,7 +692,9 @@ CSS_PROP_BORDER(
     -moz-border-image,
     border_image,
     MozBorderImage,
-    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_START_IMAGE_LOADS |
+        CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0,
     Margin,
     mBorderImage,
     eCSSType_Value,
@@ -1276,7 +1279,7 @@ CSS_PROP_CONTENT(
     content,
     content,
     Content,
-    0,
+    CSS_PROPERTY_START_IMAGE_LOADS,
     Content,
     mContent,
     eCSSType_ValueList,
@@ -1332,7 +1335,9 @@ CSS_PROP_USERINTERFACE(
     cursor,
     cursor,
     Cursor,
-    CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+    CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
+        CSS_PROPERTY_START_IMAGE_LOADS |
+        CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0,
     UserInterface,
     mCursor,
     eCSSType_ValueList,
@@ -1573,7 +1578,7 @@ CSS_PROP_LIST(
     list-style-image,
     list_style_image,
     ListStyleImage,
-    0,
+    CSS_PROPERTY_START_IMAGE_LOADS,
     List,
     mImage,
     eCSSType_Value,
