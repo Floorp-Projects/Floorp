@@ -848,6 +848,7 @@ const PRInt32 nsCSSProps::kFontStretchKTable[] = {
   eCSSKeyword_extra_condensed, NS_STYLE_FONT_STRETCH_EXTRA_CONDENSED,
   eCSSKeyword_condensed, NS_STYLE_FONT_STRETCH_CONDENSED,
   eCSSKeyword_semi_condensed, NS_STYLE_FONT_STRETCH_SEMI_CONDENSED,
+  eCSSKeyword_normal, NS_STYLE_FONT_STRETCH_NORMAL,
   eCSSKeyword_semi_expanded, NS_STYLE_FONT_STRETCH_SEMI_EXPANDED,
   eCSSKeyword_expanded, NS_STYLE_FONT_STRETCH_EXPANDED,
   eCSSKeyword_extra_expanded, NS_STYLE_FONT_STRETCH_EXTRA_EXPANDED,
@@ -869,6 +870,7 @@ const PRInt32 nsCSSProps::kFontVariantKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kFontWeightKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_FONT_WEIGHT_NORMAL,
   eCSSKeyword_bold, NS_STYLE_FONT_WEIGHT_BOLD,
   eCSSKeyword_bolder, NS_STYLE_FONT_WEIGHT_BOLDER,
   eCSSKeyword_lighter, NS_STYLE_FONT_WEIGHT_LIGHTER,

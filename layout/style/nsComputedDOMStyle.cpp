@@ -1225,9 +1225,7 @@ nsComputedDOMStyle::GetFontStretch(nsIDOMCSSValue** aValue)
   PR_STATIC_ASSERT(NS_FONT_STRETCH_NARROWER + NS_FONT_STRETCH_WIDER == 0);
   PR_STATIC_ASSERT(NS_FONT_STRETCH_NARROWER < 0);
   PRInt16 stretch = font->mFont.stretch;
-  if (stretch == NS_FONT_STRETCH_NORMAL) {
-    val->SetIdent(eCSSKeyword_normal);
-  } else if (stretch <= NS_FONT_STRETCH_NARROWER / 2) {
+  if (stretch <= NS_FONT_STRETCH_NARROWER / 2) {
     val->SetIdent(eCSSKeyword_narrower);
   } else if (stretch >= NS_FONT_STRETCH_WIDER / 2) {
     val->SetIdent(eCSSKeyword_wider);
@@ -1263,8 +1261,6 @@ nsComputedDOMStyle::GetFontWeight(nsIDOMCSSValue** aValue)
   const nsCSSKeyword enum_weight =
     nsCSSProps::ValueToKeywordEnum(font->mFont.weight,
                                    nsCSSProps::kFontWeightKTable);
-  // FIXME: Since 'normal' isn't in the keyword table, we serialize 700
-  // to bold but 400 as-is.
   if (enum_weight != eCSSKeyword_UNKNOWN) {
     val->SetIdent(enum_weight);
   } else {

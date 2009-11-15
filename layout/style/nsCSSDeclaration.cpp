@@ -1007,7 +1007,8 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
         // The font-stretch and font-size-adjust
         // properties are reset by this shorthand property to their
         // initial values, but can't be represented in its syntax.
-        if (stretch.GetUnit() != eCSSUnit_Normal ||
+        if (stretch.GetUnit() != eCSSUnit_Enumerated ||
+            stretch.GetIntValue() != NS_STYLE_FONT_STRETCH_NORMAL ||
             sizeAdjust.GetUnit() != eCSSUnit_None) {
           return NS_OK;
         }
@@ -1022,7 +1023,8 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
           AppendCSSValueToString(eCSSProperty_font_variant, variant, aValue);
           aValue.Append(PRUnichar(' '));
         }
-        if (weight.GetUnit() != eCSSUnit_Normal) {
+        if (weight.GetUnit() != eCSSUnit_Enumerated ||
+            weight.GetIntValue() != NS_FONT_WEIGHT_NORMAL) {
           AppendCSSValueToString(eCSSProperty_font_weight, weight, aValue);
           aValue.Append(PRUnichar(' '));
         }
