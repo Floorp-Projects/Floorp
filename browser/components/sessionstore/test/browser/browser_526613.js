@@ -54,8 +54,14 @@ function test() {
       let win = e.getNext();
       if (!win.closed) {
         ++count;
-        if (win != window)
-          info("secondary window content location: " + win.content.location);
+        if (win != window) {
+          try {
+            var tabs = win.gBrowser.mTabs.length;
+          } catch (e) {
+            info(e);
+          }
+          info("secondary window: " + [win.document.readyState, win.content.location, tabs]);
+        }
       }
     }
 
