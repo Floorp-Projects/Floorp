@@ -127,6 +127,7 @@
 #define VARIANT_AHKL (VARIANT_AHK | VARIANT_LENGTH)
 #define VARIANT_HK   (VARIANT_INHERIT | VARIANT_KEYWORD)
 #define VARIANT_HKF  (VARIANT_HK | VARIANT_FREQUENCY)
+#define VARIANT_HKI  (VARIANT_HK | VARIANT_INTEGER)
 #define VARIANT_HKL  (VARIANT_HK | VARIANT_LENGTH)
 #define VARIANT_HKLP (VARIANT_HK | VARIANT_LP)
 #define VARIANT_HKLPO (VARIANT_HKLP | VARIANT_NONE)
@@ -137,7 +138,6 @@
 #define VARIANT_HLPO (VARIANT_HLP | VARIANT_NONE)
 #define VARIANT_HTP  (VARIANT_INHERIT | VARIANT_TIME | VARIANT_PERCENT)
 #define VARIANT_HMK  (VARIANT_HK | VARIANT_NORMAL)
-#define VARIANT_HMKI (VARIANT_HMK | VARIANT_INTEGER)
 #define VARIANT_HC   (VARIANT_INHERIT | VARIANT_COLOR)
 #define VARIANT_HCK  (VARIANT_HK | VARIANT_COLOR)
 #define VARIANT_HUK  (VARIANT_HK | VARIANT_URL)
@@ -5883,7 +5883,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseVariant(aValue, VARIANT_HON | VARIANT_SYSFONT,
                         nsnull);
   case eCSSProperty_font_stretch:
-    return ParseVariant(aValue, VARIANT_HMK | VARIANT_SYSFONT,
+    return ParseVariant(aValue, VARIANT_HK | VARIANT_SYSFONT,
                         nsCSSProps::kFontStretchKTable);
   case eCSSProperty_font_style:
     return ParseVariant(aValue, VARIANT_HK | VARIANT_SYSFONT,
@@ -6135,12 +6135,11 @@ CSSParserImpl::ParseFontDescriptorValue(nsCSSFontDesc aDescID,
               aValue.GetIntValue() != NS_STYLE_FONT_WEIGHT_LIGHTER)));
 
   case eCSSFontDesc_Stretch:
-    // property is VARIANT_HMK|VARIANT_SYSFONT
-    return (ParseVariant(aValue, VARIANT_KEYWORD | VARIANT_NORMAL,
+    // property is VARIANT_HK|VARIANT_SYSFONT
+    return (ParseVariant(aValue, VARIANT_KEYWORD,
                          nsCSSProps::kFontStretchKTable) &&
-            (aValue.GetUnit() != eCSSUnit_Enumerated ||
-             (aValue.GetIntValue() != NS_STYLE_FONT_STRETCH_WIDER &&
-              aValue.GetIntValue() != NS_STYLE_FONT_STRETCH_NARROWER)));
+            (aValue.GetIntValue() != NS_STYLE_FONT_STRETCH_WIDER &&
+             aValue.GetIntValue() != NS_STYLE_FONT_STRETCH_NARROWER));
 
     // These two are unique to @font-face and have their own special grammar.
   case eCSSFontDesc_Src:
@@ -7382,7 +7381,7 @@ CSSParserImpl::ParseFont()
   }
   if ((found & 4) == 0) {
     // Provide default font-weight
-    values[2].SetNormalValue();
+    values[2].SetIntValue(NS_FONT_WEIGHT_NORMAL, eCSSUnit_Enumerated);
   }
 
   // Get mandatory font-size
@@ -7416,7 +7415,8 @@ CSSParserImpl::ParseFont()
       AppendValue(eCSSProperty_font_weight, values[2]);
       AppendValue(eCSSProperty_font_size, size);
       AppendValue(eCSSProperty_line_height, lineHeight);
-      AppendValue(eCSSProperty_font_stretch, nsCSSValue(eCSSUnit_Normal));
+      AppendValue(eCSSProperty_font_stretch,
+                  nsCSSValue(NS_FONT_STRETCH_NORMAL, eCSSUnit_Enumerated));
       AppendValue(eCSSProperty_font_size_adjust, nsCSSValue(eCSSUnit_None));
       return PR_TRUE;
     }
@@ -7427,7 +7427,8 @@ CSSParserImpl::ParseFont()
 PRBool
 CSSParserImpl::ParseFontWeight(nsCSSValue& aValue)
 {
-  if (ParseVariant(aValue, VARIANT_HMKI | VARIANT_SYSFONT, nsCSSProps::kFontWeightKTable)) {
+  if (ParseVariant(aValue, VARIANT_HKI | VARIANT_SYSFONT,
+                   nsCSSProps::kFontWeightKTable)) {
     if (eCSSUnit_Integer == aValue.GetUnit()) { // ensure unit value
       PRInt32 intValue = aValue.GetIntValue();
       if ((100 <= intValue) &&
