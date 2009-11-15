@@ -219,8 +219,8 @@ nsViewManager::~nsViewManager()
     NS_IF_RELEASE(gCleanupContext);
   }
 
+  NS_IF_RELEASE(mContext);
   mObserver = nsnull;
-  mContext = nsnull;
 }
 
 NS_IMPL_ISUPPORTS1(nsViewManager, nsIViewManager)
@@ -260,6 +260,7 @@ NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
     return NS_ERROR_ALREADY_INITIALIZED;
   }
   mContext = aContext;
+  NS_ADDREF(mContext);
 
   mRefreshEnabled = PR_TRUE;
 
