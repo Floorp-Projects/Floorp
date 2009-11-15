@@ -126,8 +126,7 @@ function checkValueAndTrigger(request, data, ctx) {
             triggerNextTest();
         }
     } else {
-        do_test_finished();
-        httpserver.stop();
+        httpserver.stop(do_test_finished);
     }
 }
 
