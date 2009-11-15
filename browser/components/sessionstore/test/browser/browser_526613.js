@@ -51,8 +51,12 @@ function test() {
     let count = 0;
     let e = wm.getEnumerator("navigator:browser");
     while (e.hasMoreElements()) {
-      if (!e.getNext().closed)
+      let win = e.getNext();
+      if (!win.closed) {
         ++count;
+        if (win != window)
+          info("secondary window content location: " + win.content.location);
+      }
     }
 
     return count;
