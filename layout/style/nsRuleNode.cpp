@@ -2825,7 +2825,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
               defaultVariableFont->variant,
               0, 0, 0, systemFont.variant);
 
-  // font-weight: int, enum, normal, inherit, initial, -moz-system-font
+  // font-weight: int, enum, inherit, initial, -moz-system-font
   // special handling for enum
   if (eCSSUnit_Enumerated == aFontData.mWeight.GetUnit()) {
     PRInt32 value = aFontData.mWeight.GetIntValue();
@@ -2842,14 +2842,12 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     }
   } else
     SetDiscrete(aFontData.mWeight, aFont->mFont.weight, aCanStoreInRuleTree,
-                SETDSC_INTEGER | SETDSC_NORMAL | SETDSC_SYSTEM_FONT,
+                SETDSC_INTEGER | SETDSC_SYSTEM_FONT,
                 aParentFont->mFont.weight,
                 defaultVariableFont->weight,
-                0, 0,
-                NS_STYLE_FONT_WEIGHT_NORMAL,
-                systemFont.weight);
+                0, 0, 0, systemFont.weight);
 
-  // font-stretch: enum, normal, inherit
+  // font-stretch: enum, inherit
   if (eCSSUnit_Enumerated == aFontData.mStretch.GetUnit()) {
     PRInt32 value = aFontData.mStretch.GetIntValue();
     switch (value) {
@@ -2864,10 +2862,10 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     }
   } else
     SetDiscrete(aFontData.mStretch, aFont->mFont.stretch, aCanStoreInRuleTree,
-                SETDSC_NORMAL | SETDSC_SYSTEM_FONT,
+                SETDSC_SYSTEM_FONT,
                 aParentFont->mFont.stretch,
                 defaultVariableFont->stretch,
-                0, 0, NS_FONT_STRETCH_NORMAL, systemFont.stretch);
+                0, 0, 0, systemFont.stretch);
 
 #ifdef MOZ_MATHML
   // Compute scriptlevel, scriptminsize and scriptsizemultiplier now so

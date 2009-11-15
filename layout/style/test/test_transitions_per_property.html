@@ -460,9 +460,7 @@ function test_font_weight(prop) {
 
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "normal", "");
-  // FIXME: Why does this give 400 but bold gives bold?
-  // (Yes, it's normal not being in the prop table...)
-  is(cs.getPropertyValue(prop), "400",
+  is(cs.getPropertyValue(prop), "normal",
      "font-weight property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "900", "");
@@ -476,9 +474,7 @@ function test_font_weight(prop) {
   is(cs.getPropertyValue(prop), "bold",
      "font-weight property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "100", "");
-  // FIXME: Why does this give 400 but bold gives bold?
-  // (Yes, it's normal not being in the prop table...)
-  is(cs.getPropertyValue(prop), "400",
+  is(cs.getPropertyValue(prop), "normal",
      "font-weight property " + prop + ": interpolation of font-weights");
 }
 
