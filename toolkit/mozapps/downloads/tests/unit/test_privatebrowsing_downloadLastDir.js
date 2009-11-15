@@ -183,7 +183,7 @@ function run_test()
   function newFileInDirectory(dir) {
     let file = dir.clone();
     file.append("testfile" + Math.floor(Math.random() * 10000));
-    file.createUnique(Ci.nsIFile.DIRECTORY_FILE, 0600);
+    file.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0600);
     return file;
   }
   let dir1 = newDirectory();
