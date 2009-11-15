@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
 <head>
-<body style="white-space:pre">0000
-ABCD
-EFGH
-IJKL
+<body style="white-space:pre"> 00 
+ BC 
+ FG 
+ JK 
 <script>
+document.body.offsetTop;
 var t = document.body.firstChild;
 var sel = window.getSelection();
 sel.collapse(t, 11);
