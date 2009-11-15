@@ -130,6 +130,7 @@ function run_test_pt4() {
 }
 
 function check_test_pt4() {
+  var abi;
   try {
     abi = gAppInfo.XPCOMABI;
   }
