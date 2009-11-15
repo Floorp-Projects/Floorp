@@ -212,7 +212,7 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   if (destWrapper->mPropID == eCSSProperty_font_size_adjust) {
     return NS_ERROR_FAILURE;
   }
-  return nsStyleAnimation::Add(destWrapper->mCSSValue,
+  return nsStyleAnimation::Add(destWrapper->mPropID, destWrapper->mCSSValue,
                                *realValueToAdd, aCount) ?
     NS_OK : NS_ERROR_FAILURE;
 }
@@ -248,7 +248,8 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
                     !toWrapper->mCSSValue.IsNull() && toWrapper->mPresContext,
                     "ComputeDistance endpoint should be a parsed value");
 
-  return nsStyleAnimation::ComputeDistance(*fromCSSValue, toWrapper->mCSSValue,
+  return nsStyleAnimation::ComputeDistance(toWrapper->mPropID,
+                                           *fromCSSValue, toWrapper->mCSSValue,
                                            aDistance) ?
     NS_OK : NS_ERROR_FAILURE;
 }
@@ -291,7 +292,8 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
                     !endWrapper->mCSSValue.IsNull() && endWrapper->mPresContext,
                     "Interpolate endpoint should be a parsed value");
 
-  if (nsStyleAnimation::Interpolate(*startCSSValue,
+  if (nsStyleAnimation::Interpolate(endWrapper->mPropID,
+                                    *startCSSValue,
                                     endWrapper->mCSSValue,
                                     aUnitDistance,
                                     resultWrapper->mCSSValue)) {
