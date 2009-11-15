@@ -74,8 +74,7 @@ function checkValueAndTrigger(request, data, ctx) {
         // new channel to the same url here is no good idea...  post it instead
         do_timeout(1, "triggerNextTest();");
     } else {
-        do_test_finished();
-        httpserver.stop();
+        httpserver.stop(do_test_finished);
     }
 }
 
