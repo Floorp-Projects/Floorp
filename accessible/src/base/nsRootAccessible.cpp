@@ -304,7 +304,7 @@ nsresult nsRootAccessible::AddEventListeners()
                    * const* e_end = docEvents + NS_ARRAY_LENGTH(docEvents);
          e < e_end; ++e) {
       nsresult rv = nstarget->AddEventListener(NS_ConvertASCIItoUTF16(*e),
-                                               this, PR_TRUE, PR_TRUE);
+                                               this, PR_TRUE, PR_TRUE, 1);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
