@@ -2298,7 +2298,7 @@ ExtensionManager.prototype = {
       // App disable or enable items as necessary
       // _appEnableItem and _appDisableItem will do nothing if the item is already
       // in the right state.
-      id = stripPrefix(itemResource.Value, PREFIX_ITEM_URI);
+      var id = stripPrefix(itemResource.Value, PREFIX_ITEM_URI);
       if (this._isUsableItem(id))
         this._appEnableItem(id);
       else
