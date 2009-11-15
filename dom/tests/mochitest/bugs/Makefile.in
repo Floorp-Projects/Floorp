@@ -106,7 +106,6 @@ _TEST_FILES	= \
 		child_bug260264.html \
 		grandchild_bug260264.html \
 		utils_bug260264.js \
-		test_bug456151.html \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)
