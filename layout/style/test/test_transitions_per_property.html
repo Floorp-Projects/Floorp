@@ -460,21 +460,20 @@ function test_font_weight(prop) {
 
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "normal", "");
-  is(cs.getPropertyValue(prop), "normal",
+  is(cs.getPropertyValue(prop), "400",
      "font-weight property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "900", "");
   is(cs.getPropertyValue(prop), "600",
      "font-weight property " + prop + ": interpolation of font-weights");
   div.style.setProperty(prop, "lighter", "");
-  // We currently get 399; mark this as todo.
-  todo_is(cs.getPropertyValue(prop), "lighter",
+  is(cs.getPropertyValue(prop), "lighter",
      "font-weight property " + prop + ": can't interpolate bolder/lighter");
   div.style.setProperty(prop, "700", "");
-  is(cs.getPropertyValue(prop), "bold",
+  is(cs.getPropertyValue(prop), "700",
      "font-weight property " + prop + ": computed value before transition");
   div.style.setProperty(prop, "100", "");
-  is(cs.getPropertyValue(prop), "normal",
+  is(cs.getPropertyValue(prop), "400",
      "font-weight property " + prop + ": interpolation of font-weights");
 }
 
