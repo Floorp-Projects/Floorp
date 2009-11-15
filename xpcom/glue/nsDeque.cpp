@@ -116,7 +116,7 @@ nsDeque::~nsDeque() {
 
   Erase();
   if (mData && (mData!=mBuffer)) {
-    delete [] mData;
+    free(mData);
   }
   mData=0;
   SetDeallocator(0);
@@ -176,7 +176,7 @@ PRBool nsDeque::GrowCapacity() {
   NS_ASSERTION(theNewSize>mCapacity, "Overflow");
   if (theNewSize<=mCapacity)
     return PR_FALSE;
-  void** temp=new void*[theNewSize];
+  void** temp=(void**)malloc(theNewSize * sizeof(void*));
   if (!temp)
     return PR_FALSE;
 
@@ -189,7 +189,7 @@ PRBool nsDeque::GrowCapacity() {
   memcpy(temp + (mCapacity - mOrigin), mData, sizeof(void*) * mOrigin);
 
   if (mData != mBuffer) {
-    delete [] mData;
+    free(mData);
   }
 
   mCapacity=theNewSize;
