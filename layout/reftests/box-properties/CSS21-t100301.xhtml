@@ -10,18 +10,22 @@
 
 		@font-face {
 			src: url(../fonts/Ahem.ttf);
-			font-family: Ahem;
-		}
+ 			font-family: Ahem;
+        }
 
 		html { background: white; }
 
 		body {
 			width: 100px; height: 100px;
 			border: 10px solid lime; background: red;
-			font: 20px/1 Ahem;
+            font: 20px/1 Ahem;
 		}
 
 		span { background: red; color: green; }
+
+        .X, .space { background:green; color:transparent; }
+        .X::before { content:"X"; }
+        .space::before { content:" "; }
 
 		]]></style>
 	</head>
@@ -30,42 +34,42 @@
 	<!-- First row -->
 	<!-- The width property does not apply -->
 	<!-- check padding-left and border-right too -->
-	<span style="width: 1px">X</span
-	><span style="width: 200px">X</span
-	><span style="width: 10px; padding-left: 10px;background:green">X</span
-	><span style="border-right: 10px solid green; width: 40px">X</span>
+	<span style="width: 1px"><span class="X"></span></span
+	><span style="width: 200px"><span class="X"></span></span
+	><span style="width: 10px; padding-left: 10px;background:green"><span class="X"></span></span
+	><span style="border-right: 10px solid green; width: 40px"><span class="X"></span></span>
 
 	<!-- Second row -->
 	<!-- auto values for margin-left and margin-right are zero -->
 	<span style="background:green"
-		><span style="margin-right: auto">X</span
-		><span style="margin-left: 5px">X</span
-		><span style="margin-left:auto;background:green"> </span
-		><span style="margin-right: 15px">X</span
+		><span style="margin-right: auto"><span class="X"></span></span
+		><span style="margin-left: 5px"><span class="X"></span></span
+		><span style="margin-left:auto;background:green"><span class="space"></span></span
+		><span style="margin-right: 15px"><span class="X"></span></span
 	></span>
 
 	<!-- Third row -->
 	<!-- auto values for left and right are 0, and other values don't
 	     do anything either, unless we have position:relative -->
-	<span style="left: auto">X</span
-	><span style="left:8px">X</span
-	><span style="right:73px">X</span
-	><span style="right:auto">X</span
-	><span style="background:transparent;color:red">X<span style="position:relative;right:20px">X</span></span>
+	<span style="left: auto"><span class="X"></span></span
+	><span style="left:8px"><span class="X"></span></span
+	><span style="right:73px"><span class="X"></span></span
+	><span style="right:auto"><span class="X"></span></span
+	><span style="background:transparent;color:red"><span class="X"></span><span style="position:relative;right:20px"><span class="X"></span></span></span>
 
 	<!-- Fourth row -->
 	<!-- toss in some negative and adjacent margins -->
-	<span style="margin-right: -5px;color:red;background:red">X</span
-	><span style="margin-left: -15px">X</span
+	<span style="margin-right: -5px;color:red;background:red"><span class="X"></span></span
+	><span style="margin-left: -15px"><span class="X"></span></span
 	><span style="background:green"
-		><span style="margin-right:25px">X</span
-		><span style="margin-left: 15px">X</span
+		><span style="margin-right:25px"><span class="X"></span></span
+		><span style="margin-left: 15px"><span class="X"></span></span
 	></span>
 
 	<!-- Fifth row -->
 	<!-- border and padding and margin -->
 	<span style="margin-left:15px; margin-right:348px"
-		><span style="background: green; margin-left:-15px; border-left: 15px solid; padding-left: 25px;padding-right: 8px;border-right:32px solid;">X</span
+		><span style="background: green; margin-left:-15px; border-left: 15px solid; padding-left: 25px;padding-right: 8px;border-right:32px solid;"><span class="X"></span></span
 	></span>
 
 	</body>
