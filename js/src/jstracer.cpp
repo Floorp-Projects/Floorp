@@ -2811,7 +2811,7 @@ JSTraceMonitor::flush()
         globalStates[i].globalSlots = new (alloc) SlotList(&alloc);
     }
 
-    assembler = new (alloc) Assembler(*codeAlloc, alloc, core, &js_LogController);
+    assembler = new (alloc) Assembler(*codeAlloc, alloc, alloc, core, &js_LogController);
     lirbuf = new (alloc) LirBuffer(*tempAlloc);
     reLirBuf = new (alloc) LirBuffer(*reTempAlloc);
     verbose_only( branches = NULL; )
