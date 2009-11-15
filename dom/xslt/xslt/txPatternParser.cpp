@@ -9,32 +9,35 @@
 #include "nsError.h"
 #include "txStringUtils.h"
 #include "txXSLTPatterns.h"
-#include "txIXPathContext.h"
+#include "txStylesheetCompiler.h"
 #include "txPatternOptimizer.h"
 
 
-txPattern* txPatternParser::createPattern(const nsAFlatString& aPattern,
-                                          txIParseContext* aContext)
+nsresult txPatternParser::createPattern(const nsAFlatString& aPattern,
+                                        txIParseContext* aContext,
+                                        txPattern** aResult)
 {
     txExprLexer lexer;
     nsresult rv = lexer.parse(aPattern);
     if (NS_FAILED(rv)) {
         // XXX error report parsing error
-        return 0;
+        return rv;
     }
     nsAutoPtr<txPattern> pattern;
     rv = createUnionPattern(lexer, aContext, *getter_Transfers(pattern));
     if (NS_FAILED(rv)) {
         // XXX error report parsing error
-        return 0;
+        return rv;
     }
 
     txPatternOptimizer optimizer;
     txPattern* newPattern = nullptr;
     rv = optimizer.optimize(pattern, &newPattern);
-    NS_ENSURE_SUCCESS(rv, nullptr);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    return newPattern ? newPattern : pattern.forget();
+    *aResult = newPattern ? newPattern : pattern.forget();
+
+    return NS_OK;
 }
 
 nsresult txPatternParser::createUnionPattern(txExprLexer& aLexer,
@@ -245,6 +248,9 @@ nsresult txPatternParser::createKeyPattern(txExprLexer& aLexer,
         aLexer.nextToken()->Value();
     if (aLexer.nextToken()->mType != Token::R_PAREN)
         return NS_ERROR_XPATH_PARSE_FAILURE;
+
+    if (!aContext->allowed(txIParseContext::KEY_FUNCTION))
+        return NS_ERROR_XSLT_CALL_TO_KEY_NOT_ALLOWED;
 
     const char16_t* colon;
     if (!XMLUtils::isValidQName(PromiseFlatString(key), &colon))

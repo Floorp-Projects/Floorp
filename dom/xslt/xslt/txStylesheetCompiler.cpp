@@ -528,6 +528,7 @@ txStylesheetCompilerState::txStylesheetCompilerState(txACompileObserver* aObserv
       mSorter(nullptr),
       mDOE(false),
       mSearchingForFallback(false),
+      mDisAllowed(0),
       mObserver(aObserver),
       mEmbedStatus(eNoEmbed),
       mDoneWithThisStylesheet(false),
@@ -923,6 +924,9 @@ TX_ConstructXSLTFunction(nsIAtom* aName, int32_t aNamespaceID,
             new DocumentFunctionCall(aState->mElementContext->mBaseURI);
     }
     else if (aName == nsGkAtoms::key) {
+        if (!aState->allowed(txIParseContext::KEY_FUNCTION)) {
+            return NS_ERROR_XSLT_CALL_TO_KEY_NOT_ALLOWED;
+        }
         *aFunction =
             new txKeyFunctionCall(aState->mElementContext->mMappings);
     }
