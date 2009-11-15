@@ -46,6 +46,7 @@
 
 class txVariableMap {
 public:
+    txVariableMap();
     ~txVariableMap();
     
     nsresult bindVariable(const txExpandedName& aName, txAExprResult* aValue);
@@ -60,8 +61,16 @@ private:
 
 
 inline
+txVariableMap::txVariableMap()
+{
+    MOZ_COUNT_CTOR(txVariableMap);
+}
+
+inline
 txVariableMap::~txVariableMap()
 {
+    MOZ_COUNT_DTOR(txVariableMap);
+
     txExpandedNameMap<txAExprResult>::iterator iter(mMap);
     while (iter.next()) {
         txAExprResult* res = iter.value();
