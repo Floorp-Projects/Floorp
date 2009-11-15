@@ -117,7 +117,8 @@ lcm(PRUint32 a, PRUint32 b)
 // -------------
 
 PRBool
-nsStyleAnimation::ComputeDistance(const Value& aStartValue,
+nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
+                                  const Value& aStartValue,
                                   const Value& aEndValue,
                                   double& aDistance)
 {
@@ -237,8 +238,10 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
 
       // Call AddWeighted to make us lists of the same length.
       Value normValue1, normValue2;
-      if (!AddWeighted(1.0, aStartValue, 0.0, aEndValue, normValue1) ||
-          !AddWeighted(0.0, aStartValue, 1.0, aEndValue, normValue2)) {
+      if (!AddWeighted(aProperty, 1.0, aStartValue, 0.0, aEndValue,
+                       normValue1) ||
+          !AddWeighted(aProperty, 0.0, aStartValue, 1.0, aEndValue,
+                       normValue2)) {
         success = PR_FALSE;
         break;
       }
@@ -279,8 +282,10 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
     case eUnit_Shadow: {
       // Call AddWeighted to make us lists of the same length.
       Value normValue1, normValue2;
-      if (!AddWeighted(1.0, aStartValue, 0.0, aEndValue, normValue1) ||
-          !AddWeighted(0.0, aStartValue, 1.0, aEndValue, normValue2)) {
+      if (!AddWeighted(aProperty, 1.0, aStartValue, 0.0, aEndValue,
+                       normValue1) ||
+          !AddWeighted(aProperty, 0.0, aStartValue, 1.0, aEndValue,
+                       normValue2)) {
         success = PR_FALSE;
         break;
       }
@@ -325,7 +330,8 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
         #ifdef DEBUG
           PRBool ok =
         #endif
-            nsStyleAnimation::ComputeDistance(color1Value, color2Value,
+            nsStyleAnimation::ComputeDistance(eCSSProperty_color,
+                                              color1Value, color2Value,
                                               colorDistance);
           NS_ABORT_IF_FALSE(ok, "should not fail");
           squareDistance += colorDistance * colorDistance;
@@ -405,8 +411,8 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
   #ifdef DEBUG
     PRBool ok =
   #endif
-      nsStyleAnimation::AddWeighted(aCoeff1, color1Value, aCoeff2, color2Value,
-                                    resultColorValue);
+      nsStyleAnimation::AddWeighted(eCSSProperty_color, aCoeff1, color1Value,
+                                    aCoeff2, color2Value, resultColorValue);
     NS_ABORT_IF_FALSE(ok, "should not fail");
     resultArray->Item(4).SetColorValue(resultColorValue.GetColorValue());
   }
@@ -425,7 +431,8 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
 }
 
 PRBool
-nsStyleAnimation::AddWeighted(double aCoeff1, const Value& aValue1,
+nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
+                              double aCoeff1, const Value& aValue1,
                               double aCoeff2, const Value& aValue2,
                               Value& aResultValue)
 {
