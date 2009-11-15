@@ -290,24 +290,26 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                 } break;
 
                 case eCSSType_ValueList:
-                    if (iProp == eCSSProperty_background_image ||
-                        iProp == eCSSProperty_content) {
-                        for (nsCSSValueList* l = ValueListAtCursor(cursor);
-                             l; l = l->mNext)
-                            TryToStartImageLoad(l->mValue, doc);
-                    } else if (iProp == eCSSProperty_cursor) {
-                        for (nsCSSValueList* l = ValueListAtCursor(cursor);
-                             l; l = l->mNext)
-                            if (l->mValue.GetUnit() == eCSSUnit_Array) {
-                                const nsCSSValue& image =
-                                    l->mValue.GetArrayValue()->Item(0);
-                                TryToStartImageLoad(image, doc);
-                            }
-                    }
-                // fall through
                 case eCSSType_ValuePairList: {
                     void** target = static_cast<void**>(prop);
                     if (!*target) {
+                        if (iProp == eCSSProperty_background_image ||
+                            iProp == eCSSProperty_content) {
+                            for (nsCSSValueList* l = ValueListAtCursor(cursor);
+                                 l; l = l->mNext) {
+                                TryToStartImageLoad(l->mValue, doc);
+                            }
+                        } else if (iProp == eCSSProperty_cursor) {
+                            for (nsCSSValueList* l = ValueListAtCursor(cursor);
+                                 l; l = l->mNext) {
+                                if (l->mValue.GetUnit() == eCSSUnit_Array) {
+                                    const nsCSSValue& image =
+                                        l->mValue.GetArrayValue()->Item(0);
+                                    TryToStartImageLoad(image, doc);
+                                }
+                            }
+                        }
+
                         void* val = PointerAtCursor(cursor);
                         NS_ASSERTION(val, "oops");
                         *target = val;
