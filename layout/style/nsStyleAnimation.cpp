@@ -128,8 +128,21 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
   switch (commonUnit) {
     case eUnit_Null:
     case eUnit_None:
-    case eUnit_Enumerated:
       success = PR_FALSE;
+      break;
+    case eUnit_Enumerated:
+      switch (aProperty) {
+        case eCSSProperty_font_stretch: {
+          // just like eUnit_Integer.
+          PRInt32 startInt = aStartValue.GetIntValue();
+          PRInt32 endInt = aEndValue.GetIntValue();
+          aDistance = PR_ABS(endInt - startInt);
+          break;
+        }
+        default:
+          success = PR_FALSE;
+          break;
+      }
       break;
     case eUnit_Integer: {
       PRInt32 startInt = aStartValue.GetIntValue();
@@ -446,16 +459,32 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
   switch (commonUnit) {
     case eUnit_Null:
     case eUnit_None:
-    case eUnit_Enumerated:
       success = PR_FALSE;
+      break;
+    case eUnit_Enumerated:
+      switch (aProperty) {
+        case eCSSProperty_font_stretch: {
+          // Animate just like eUnit_Integer.
+          PRInt32 result = NS_floor(aCoeff1 * double(aValue1.GetIntValue()) +
+                                    aCoeff2 * double(aValue2.GetIntValue()));
+          aResultValue.SetIntValue(result, eUnit_Enumerated);
+          break;
+        }
+        default:
+          success = PR_FALSE;
+          break;
+      }
       break;
     case eUnit_Integer: {
       // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
       // says we should use floor
-      aResultValue.SetIntValue(NS_floor(
-          aCoeff1 * double(aValue1.GetIntValue()) +
-          aCoeff2 * double(aValue2.GetIntValue())),
-        eUnit_Integer);
+      PRInt32 result = NS_floor(aCoeff1 * double(aValue1.GetIntValue()) +
+                                aCoeff2 * double(aValue2.GetIntValue()));
+      if (aProperty == eCSSProperty_font_weight) {
+        NS_ASSERTION(result > 0, "unexpected value");
+        result -= result % 100;
+      }
+      aResultValue.SetIntValue(result, eUnit_Integer);
       break;
     }
     case eUnit_Coord: {
@@ -1078,6 +1107,29 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
             aComputedValue.SetNoneValue();
           }
           break;
+        }
+
+        case eCSSProperty_font_stretch: {
+          PRInt16 stretch =
+            static_cast<const nsStyleFont*>(styleStruct)->mFont.stretch;
+          PR_STATIC_ASSERT(NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED == -4);
+          PR_STATIC_ASSERT(NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED == 4);
+          if (stretch < NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED ||
+              stretch > NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED) {
+            return PR_FALSE;
+          }
+          aComputedValue.SetIntValue(stretch, eUnit_Enumerated);
+          return PR_TRUE;
+        }
+
+        case eCSSProperty_font_weight: {
+          PRUint16 weight =
+            static_cast<const nsStyleFont*>(styleStruct)->mFont.weight;
+          if (weight % 100 != 0) {
+            return PR_FALSE;
+          }
+          aComputedValue.SetIntValue(weight, eUnit_Integer);
+          return PR_TRUE;
         }
 
         default:

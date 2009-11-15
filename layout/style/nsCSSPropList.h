@@ -1452,8 +1452,8 @@ CSS_PROP_FONT(
     mStretch,
     eCSSType_Value,
     kFontStretchKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleFont, mFont.stretch),
+    eStyleAnimType_Custom)
 CSS_PROP_FONT(
     font-style,
     font_style,
@@ -1485,8 +1485,8 @@ CSS_PROP_FONT(
     mWeight,
     eCSSType_Value,
     kFontWeightKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleFont, mFont.weight),
+    eStyleAnimType_Custom)
 CSS_PROP_UIRESET(
     -moz-force-broken-image-icon,
     force_broken_image_icon,
