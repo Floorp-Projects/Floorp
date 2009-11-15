@@ -56,14 +56,28 @@
 // A property that is a *-ltr-source or *-rtl-source property for one of
 // the directional pseudo-shorthand properties.
 #define CSS_PROPERTY_DIRECTIONAL_SOURCE           (1<<0)
+
 #define CSS_PROPERTY_VALUE_LIST_USES_COMMAS       (1<<1) /* otherwise spaces */
+
 #define CSS_PROPERTY_APPLIES_TO_FIRST_LETTER      (1<<2)
 #define CSS_PROPERTY_APPLIES_TO_FIRST_LINE        (1<<3)
 #define CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE \
   (CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_APPLIES_TO_FIRST_LINE)
+
 // Note that 'background-color' is ignored differently from the other
 // properties that have this set, but that's just special-cased.
 #define CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED (1<<4)
+
+// A property that needs to have image loads started when a URL value
+// for the property is used for an element.  Supported only for
+// eCSSType_Value and eCSSType_ValueList.
+#define CSS_PROPERTY_START_IMAGE_LOADS            (1<<5)
+
+// Should be set only for properties with START_IMAGE_LOADS.  Indicates
+// that the property has an array value with a URL/image value at index
+// 0 in the array, rather than the URL/image being in the value or value
+// list.
+#define CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0          (1<<6)
 
 /**
  * Types of animatable values.

@@ -175,7 +175,7 @@ ShouldIgnoreColors(nsRuleData *aRuleData)
  * Image sources are specified by |url()| or |-moz-image-rect()| function.
  */
 static void
-TryToStartImageLoad(const nsCSSValue& aValue, nsIDocument* aDocument)
+TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument)
 {
   if (aValue.GetUnit() == eCSSUnit_URL) {
     aValue.StartImageLoad(aDocument);
@@ -187,6 +187,19 @@ TryToStartImageLoad(const nsCSSValue& aValue, nsIDocument* aDocument)
     const nsCSSValue& image = arguments->Item(1);
     if (image.GetUnit() == eCSSUnit_URL)
       image.StartImageLoad(aDocument);
+  }
+}
+
+static void
+TryToStartImageLoad(const nsCSSValue& aValue, nsIDocument* aDocument,
+                    nsCSSProperty aProperty)
+{
+  if (nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0)) {
+    if (aValue.GetUnit() == eCSSUnit_Array) {
+      TryToStartImageLoadOnValue(aValue.GetArrayValue()->Item(0), aDocument);
+    }
+  } else {
+    TryToStartImageLoadOnValue(aValue, aDocument);
   }
 }
 
@@ -218,14 +231,9 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                     if (target->GetUnit() == eCSSUnit_Null) {
                         const nsCSSValue *val = ValueAtCursor(cursor);
                         NS_ASSERTION(val->GetUnit() != eCSSUnit_Null, "oops");
-                        if (iProp == eCSSProperty_list_style_image) {
-                            TryToStartImageLoad(*val, doc);
-                        } else if (iProp == eCSSProperty_border_image) {
-                            if (val->GetUnit() == eCSSUnit_Array) {
-                                const nsCSSValue& image
-                                    = val->GetArrayValue()->Item(0);
-                                TryToStartImageLoad(image, doc);
-                            }
+                        if (nsCSSProps::PropHasFlags(iProp,
+                                CSS_PROPERTY_START_IMAGE_LOADS)) {
+                            TryToStartImageLoad(*val, doc, iProp);
                         }
                         *target = *val;
                         if (iProp == eCSSProperty_font_family) {
@@ -293,20 +301,11 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                 case eCSSType_ValuePairList: {
                     void** target = static_cast<void**>(prop);
                     if (!*target) {
-                        if (iProp == eCSSProperty_background_image ||
-                            iProp == eCSSProperty_content) {
+                        if (nsCSSProps::PropHasFlags(iProp,
+                                CSS_PROPERTY_START_IMAGE_LOADS)) {
                             for (nsCSSValueList* l = ValueListAtCursor(cursor);
                                  l; l = l->mNext) {
-                                TryToStartImageLoad(l->mValue, doc);
-                            }
-                        } else if (iProp == eCSSProperty_cursor) {
-                            for (nsCSSValueList* l = ValueListAtCursor(cursor);
-                                 l; l = l->mNext) {
-                                if (l->mValue.GetUnit() == eCSSUnit_Array) {
-                                    const nsCSSValue& image =
-                                        l->mValue.GetArrayValue()->Item(0);
-                                    TryToStartImageLoad(image, doc);
-                                }
+                                TryToStartImageLoad(l->mValue, doc, iProp);
                             }
                         }
 
