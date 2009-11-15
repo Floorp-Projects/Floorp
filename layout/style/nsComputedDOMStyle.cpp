@@ -1263,6 +1263,8 @@ nsComputedDOMStyle::GetFontWeight(nsIDOMCSSValue** aValue)
   const nsCSSKeyword enum_weight =
     nsCSSProps::ValueToKeywordEnum(font->mFont.weight,
                                    nsCSSProps::kFontWeightKTable);
+  // FIXME: Since 'normal' isn't in the keyword table, we serialize 700
+  // to bold but 400 as-is.
   if (enum_weight != eCSSKeyword_UNKNOWN) {
     val->SetIdent(enum_weight);
   } else {
