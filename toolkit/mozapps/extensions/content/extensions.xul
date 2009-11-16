@@ -247,11 +247,6 @@
               accesskey="&cmd.hideUpdateInfo.accesskey;"
               tooltiptext="&cmd.hideUpdateInfo.tooltip;"
               command="cmd_hideUpdateInfo"/>
-      <label id="getMore" class="text-link"
-             onclick="if (event.button == 0) { openURL(this.getAttribute('getMoreURL')); }"
-             valuethemes="&getThemes.label;"
-             valueplugins="&getPlugins.label;"
-             valueextensions="&getExtensions.label;"/>
       <button id="installFileButton" label="&cmd.installLocalFile.label;"
               accesskey="&cmd.installLocalFile.accesskey;"
               tooltiptextaddons="&cmd.installFileAddon.tooltip;"
@@ -263,6 +258,11 @@
               tooltiptextthemes="&cmd.checkUpdatesAllTheme.tooltip;"
               tooltiptextplugins="&cmd.checkUpdatesAllPlugin.tooltip;"
               command="cmd_checkUpdatesAll"/>
+      <label id="getMore" class="text-link"
+             onclick="if (event.button == 0) { openURL(this.getAttribute('getMoreURL')); }"
+             valuethemes="&getThemes.label;"
+             valueplugins="&getPlugins.label;"
+             valueextensions="&getExtensions.label;"/>
       <spacer flex="1"/>
       <button id="skipDialogButton" label="&cmd.skip.label;"
               accesskey="&cmd.skip.accesskey;"
@@ -284,6 +284,11 @@
               tooltiptextthemes="&cmd.installFileTheme.tooltip;"
               command="cmd_installFile"/>
       <spacer flex="1"/>
+      <label id="getMore" class="text-link"
+             onclick="if (event.button == 0) { openURL(this.getAttribute('getMoreURL')); }"
+             valuethemes="&getThemes.label;"
+             valueplugins="&getPlugins.label;"
+             valueextensions="&getExtensions.label;"/>
       <button id="continueDialogButton" label="&cmd.continue.label;"
               accesskey="&cmd.continue.accesskey;"
               tooltiptext="&cmd.continue.tooltip;"
@@ -310,11 +315,6 @@
               accesskey="&cmd.hideUpdateInfo.accesskey;"
               tooltiptext="&cmd.hideUpdateInfo.tooltip;"
               command="cmd_hideUpdateInfo"/>
-      <label id="getMore" class="text-link"
-             onclick="if (event.button == 0) { openURL(this.getAttribute('getMoreURL')); }"
-             valuethemes="&getThemes.label;"
-             valueplugins="&getPlugins.label;"
-             valueextensions="&getExtensions.label;"/>
 #endif
     </hbox>
     <hbox id="resizerBox" style="min-width:1px;">
