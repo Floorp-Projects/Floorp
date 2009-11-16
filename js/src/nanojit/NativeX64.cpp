@@ -1009,6 +1009,7 @@ namespace nanojit
         // the offset.  and the offset, determines the opcode (8bit or 32bit)
         NanoAssert((condop & ~LIR64) >= LIR_ov);
         NanoAssert((condop & ~LIR64) <= LIR_uge);
+        underrunProtect(8); // must do this before checking displacement size
         if (target && isS8(target - _nIns)) {
             if (onFalse) {
                 switch (condop & ~LIR64) {
