@@ -2441,14 +2441,9 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     /* read into registers all values on the stack and all globals we know so far */
     import(treeInfo, lirbuf->sp, stackSlots, ngslots, callDepth, typeMap);
 
-    /*
-     * If slurping failed, there's no reason to start recording again. Emit LIR
-     * to capture the rest of the slots, then immediately compile. 
-     */
-    if (anchor && anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT) {
-        slurpDownFrames((jsbytecode*)anchor->recursive_pc - JSOP_CALL_LENGTH);
+    /* Finish handling RECURSIVE_SLURP_FAIL_EXIT in startRecorder. */
+    if (anchor && anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT)
         return;
-    }
 
     if (fragment == fragment->root) {
         /*
