@@ -231,10 +231,11 @@ nsIFrame*
 nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
   NS_ASSERTION(nsGkAtoms::placeholderFrame == aFrame->GetType(),
                "Must have a placeholder here");
-
-  nsIFrame *outOfFlowFrame =
-    nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
-  if (outOfFlowFrame->GetStyleDisplay()->IsFloating()) {
+  if (aFrame->GetStateBits() & PLACEHOLDER_FOR_FLOAT) {
+    nsIFrame *outOfFlowFrame =
+      nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
+    NS_ASSERTION(outOfFlowFrame->GetStyleDisplay()->IsFloating(),
+                 "How did that happen?");
     return outOfFlowFrame;
   }
 
