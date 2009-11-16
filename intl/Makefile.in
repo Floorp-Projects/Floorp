@@ -46,10 +46,12 @@ PARALLEL_DIRS = \
   locale \
   lwbrk \
   strres \
-  uconv \
   unicharutil \
   $(NULL)
 
-DIRS = build
+DIRS = \
+  uconv \
+  build \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
