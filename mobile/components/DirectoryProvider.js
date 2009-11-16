@@ -79,6 +79,10 @@ DirectoryProvider.prototype = {
           return profile;
       }
     }
+    
+    // We are retuning null to show failure instead for throwing an error. The
+    // interface is called quite a bit and throwing an error is noisy. Returning
+    // null works with the way the interface is called [see bug 529077]
     return null;
   }
 };
