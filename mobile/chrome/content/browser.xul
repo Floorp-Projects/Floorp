@@ -369,7 +369,6 @@
           <notificationbox id="prefs-messages" flex="1">
             <richlistbox id="prefs-list" seltype="single" flex="1" onselect="this.ensureSelectedElementIsVisible()">
               <setting title="&about.title;" type="control">
-                &about.description;
                 <button id="prefs-about-button" label="&about.button;"
 #ifdef MOZ_OFFICIAL_BRANDING
 # these two point to the same page, this just matters for what shows up in the
@@ -380,7 +379,6 @@
 #endif
               </setting>
               <setting id="prefs-uilanguage" title="&language.title;" type="control">
-                &language.description;
                 <menulist id="prefs-languages" oncommand="PreferencesView.updateLocale();">
                   <menupopup>
                     <menuitem id="prefs-languages-auto" label="&language.auto;" value="auto"/>
@@ -389,20 +387,13 @@
                </setting>
               <settings id="prefs-content" label="&content.title;">
                 <setting pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>
-                <setting pref="javascript.enabled" type="bool" title="&enableJavaScript.title;">
-                  &enableJavaScript.description;
-                </setting>
-                <setting pref="plugins.enabled" type="bool" title="&enablePlugins.title;" onsynctopreference="Browser.setPluginState(this.value);">
-                  &enablePlugins.description;
-                </setting>
+                <setting pref="javascript.enabled" type="bool" title="&enableJavaScript.title;"/>
+                <setting pref="plugins.enabled" type="bool" title="&enablePlugins.title;" onsynctopreference="Browser.setPluginState(this.value);"/>
               </settings>
               <settings id="prefs-privacy" label="&privacy.title;">
-                <setting pref="network.cookie.cookieBehavior" title="&allowCookies.title;" type="boolint" on="0" off="2">
-                  &allowCookies.description;
-                </setting>
+                <setting pref="network.cookie.cookieBehavior" title="&allowCookies.title;" type="boolint" on="0" off="2"/>
                 <setting pref="signon.rememberSignons" title="&rememberPasswords.title;" type="bool"/>
                 <setting title="&clearPrivateData.title;" type="control">
-                  &clearPrivateData.description;
                   <button id="prefs-clear-data" label="&clearPrivateData.button;" command="cmd_sanitize"/>
                 </setting>
               </settings>

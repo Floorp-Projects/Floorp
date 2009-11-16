@@ -1,20 +1,14 @@
 <!ENTITY prefsHeader.label                         "Preferences">
 <!ENTITY about.title                               "About &brandShortName;">
 <!ENTITY about.button                              "Go to Page">
-<!ENTITY about.description                         "Get help and product information">
 <!ENTITY content.title                             "Content">
 <!ENTITY showImages.title                          "Show images">
 <!ENTITY enableJavaScript.title                    "Enable JavaScript">
-<!ENTITY enableJavaScript.description              "Most interactive sites use JavaScript">
 <!ENTITY enablePlugins.title                       "Enable Plugins">
-<!ENTITY enablePlugins.description                 "Plugins are used for special content such as video">
 <!ENTITY privacy.title                             "Privacy &amp; Security">
 <!ENTITY allowCookies.title                        "Allow cookies">
-<!ENTITY allowCookies.description                  "Sites use cookies to identify you and remember your settings">
 <!ENTITY clearPrivateData.title                    "Clear recent browsing history">
 <!ENTITY clearPrivateData.button                   "Clear">
-<!ENTITY clearPrivateData.description              "Your history helps &brandShortName; suggest where you want to go">
 <!ENTITY rememberPasswords.title                   "Remember passwords">
 <!ENTITY language.title                            "Language">
-<!ENTITY language.description                      "Choose your preferred language for &brandShortName;">
 <!ENTITY language.auto                             "Auto-detect">
