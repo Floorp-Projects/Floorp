@@ -51,6 +51,8 @@ class nsOuterDocAccessible : public nsAccessibleWrap
   NS_DECL_ISUPPORTS_INHERITED
 
 public:
+  using nsAccessible::GetChildAtPoint;
+
   nsOuterDocAccessible(nsIDOMNode* aNode, 
                        nsIWeakReference* aShell);
 

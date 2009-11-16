@@ -64,6 +64,8 @@ const PRUint32 kDefaultTreeCacheSize = 256;
 class nsXULTreeAccessible : public nsXULSelectableAccessible
 {
 public:
+  using nsAccessible::GetChildAtPoint;
+
   nsXULTreeAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
 
   // nsISupports and cycle collection
