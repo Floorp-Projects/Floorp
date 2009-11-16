@@ -229,9 +229,8 @@ nsLayoutUtils::GetClosestFrameOfType(nsIFrame* aFrame, nsIAtom* aFrameType)
 
 nsIFrame*
 nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
-  if (nsGkAtoms::placeholderFrame != aFrame->GetType()) {
-    return nsnull;
-  }
+  NS_ASSERTION(nsGkAtoms::placeholderFrame == aFrame->GetType(),
+               "Must have a placeholder here");
 
   nsIFrame *outOfFlowFrame =
     nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
