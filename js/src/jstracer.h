@@ -1037,6 +1037,7 @@ class TraceRecorder
 
     /************************************************************* 10 bajillion member functions */
 
+    nanojit::LIns* insImmVal(jsval val);
     nanojit::LIns* insImmObj(JSObject* obj);
     nanojit::LIns* insImmFun(JSFunction* fun);
     nanojit::LIns* insImmStr(JSString* str);
