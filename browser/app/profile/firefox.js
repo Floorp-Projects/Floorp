@@ -165,9 +165,7 @@ pref("extensions.update.url", "https://versioncheck.addons.mozilla.org/update/Ve
 pref("extensions.update.interval", 86400);  // Check for updates to Extensions and 
                                             // Themes every day
 // Non-symmetric (not shared by extensions) extension-specific [update] preferences
-pref("extensions.getMoreExtensionsURL", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/%VERSION%/extensions/");
-pref("extensions.getMoreThemesURL", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/%VERSION%/themes/");
-pref("extensions.getMorePluginsURL", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/%VERSION%/plugins/");
+pref("extensions.getMoreThemesURL", "https://addons.mozilla.org/%LOCALE%/%APP%/getpersonas");
 pref("extensions.dss.enabled", false);          // Dynamic Skin Switching                                               
 pref("extensions.dss.switchPending", false);    // Non-dynamic switch pending after next
                                                 // restart.

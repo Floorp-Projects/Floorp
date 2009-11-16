@@ -28,8 +28,7 @@
   -moz-appearance: dialog;
 }
 
-#commandBarBottom button,
-#getMore {
+#commandBarBottom button {
   margin: 0;
   font: menu;
 }
