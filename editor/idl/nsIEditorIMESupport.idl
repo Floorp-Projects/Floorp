@@ -48,7 +48,7 @@ struct nsTextEventReply;
 [ptr] native nsTextEventReplyPtr(nsTextEventReply);
 
 
-[scriptable, uuid(57032dcb-e8c7-4eb6-8ec6-a0f8e300809d)]
+[scriptable, uuid(52032429-9337-4ecf-b56b-81875a9324bc)]
 
 interface nsIEditorIMESupport : nsISupports
 {
@@ -72,12 +72,6 @@ interface nsIEditorIMESupport : nsISupports
    */
 
   void  endComposition();
-
-  /**
-   * queryComposition()  Get the composition position
-   */
-
-  [noscript] void queryComposition(in nsTextEventReplyPtr aReply);
 
   /**
    * forceCompositionEnd() force the composition end

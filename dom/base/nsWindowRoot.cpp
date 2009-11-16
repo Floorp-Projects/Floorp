@@ -92,7 +92,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsWindowRoot, nsIDOMEventTarget)
 NS_IMETHODIMP
 nsWindowRoot::AddEventListener(const nsAString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)
 {
-  return AddEventListener(aType, aListener, aUseCapture, PR_FALSE, 0);
+  return AddGroupedEventListener(aType, aListener, aUseCapture, nsnull);
 }
 
 NS_IMETHODIMP
@@ -159,14 +159,8 @@ nsWindowRoot::IsRegisteredHere(const nsAString & type, PRBool *_retval)
 NS_IMETHODIMP
 nsWindowRoot::AddEventListener(const nsAString& aType,
                                nsIDOMEventListener *aListener,
-                               PRBool aUseCapture, PRBool aWantsUntrusted,
-                               PRUint8 optional_argc)
+                               PRBool aUseCapture, PRBool aWantsUntrusted)
 {
-  NS_ASSERTION(!aWantsUntrusted || optional_argc > 0,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
   nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
 
