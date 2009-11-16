@@ -147,7 +147,6 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
   NS_IMETHOD HandleStartComposition(nsIDOMEvent* aCompositionEvent);
   NS_IMETHOD HandleEndComposition(nsIDOMEvent* aCompositionEvent);
-  NS_IMETHOD HandleQueryComposition(nsIDOMEvent* aCompositionEvent);
 /*END implementations of textevent handler interface*/
 
 protected:

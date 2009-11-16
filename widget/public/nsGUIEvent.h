@@ -307,7 +307,6 @@ class nsHashKey;
 #define NS_COMPOSITION_EVENT_START    2200
 #define NS_COMPOSITION_START          (NS_COMPOSITION_EVENT_START)
 #define NS_COMPOSITION_END            (NS_COMPOSITION_EVENT_START + 1)
-#define NS_COMPOSITION_QUERY          (NS_COMPOSITION_EVENT_START + 2)
 
 // text events
 #define NS_TEXT_START                 2400
@@ -988,6 +987,8 @@ struct nsTextRange
 
 typedef nsTextRange* nsTextRangeArray;
 
+// XXX We should drop this struct because the results are provided by query
+// content events now, so, this struct finished the role.
 struct nsTextEventReply
 {
   nsTextEventReply()
@@ -1012,7 +1013,7 @@ public:
   }
 
   nsString          theText;
-  nsTextEventReply  theReply;
+  nsTextEventReply  theReply; // OBSOLETE
   PRUint32          rangeCount;
   // Note that the range array may not specify a caret position; in that
   // case there will be no range of type NS_TEXTRANGE_CARETPOSITION in the
@@ -1029,7 +1030,7 @@ public:
   {
   }
 
-  nsTextEventReply theReply;
+  nsTextEventReply theReply; // OBSOLETE
 };
 
 /* Mouse Scroll Events: Line Scrolling, Pixel Scrolling and Common Event Flows
@@ -1382,8 +1383,7 @@ enum nsDragDropEventStatus {
 #define NS_IS_IME_EVENT(evnt) \
        (((evnt)->message == NS_TEXT_TEXT) ||  \
         ((evnt)->message == NS_COMPOSITION_START) ||  \
-        ((evnt)->message == NS_COMPOSITION_END) || \
-        ((evnt)->message == NS_COMPOSITION_QUERY))
+        ((evnt)->message == NS_COMPOSITION_END))
 
 #define NS_IS_ACTIVATION_EVENT(evnt) \
        (((evnt)->message == NS_ACTIVATE) || \
