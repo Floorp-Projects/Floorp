@@ -34,58 +34,55 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= content
-LIBRARY_NAME	= gkconmedia_s
-LIBXUL_LIBRARY 	= 1
+MODULE = content
+LIBRARY_NAME = gkconmedia_s
+LIBXUL_LIBRARY = 1
 
+EXPORTS = \
+  nsMediaDecoder.h \
+  nsMediaStream.h \
+  nsMediaCache.h \
+  $(NULL)
 
-EXPORTS		= \
-		nsMediaDecoder.h \
-		nsMediaStream.h \
-		nsMediaCache.h \
-		$(NULL)
-
-CPPSRCS		= \
-		nsMediaDecoder.cpp \
-		nsMediaCache.cpp \
-		nsMediaStream.cpp \
-		$(NULL)
+CPPSRCS = \
+  nsMediaDecoder.cpp \
+  nsMediaCache.cpp \
+  nsMediaStream.cpp \
+  $(NULL)
 
 ifdef MOZ_SYDNEYAUDIO
-EXPORTS		+= \
-		nsAudioStream.h \
-		$(NULL)
-CPPSRCS		+= \
-		nsAudioStream.cpp \
-		$(NULL)
+EXPORTS += \
+  nsAudioStream.h \
+  $(NULL)
+CPPSRCS += \
+  nsAudioStream.cpp \
+  $(NULL)
 endif
 
-DIRS =
-
 ifdef MOZ_OGG
-DIRS += ogg
+PARALLEL_DIRS += ogg
 endif
 
 ifdef MOZ_WAVE
-DIRS += wave
+PARALLEL_DIRS += wave
 endif
 
 ifdef ENABLE_TESTS
-DIRS += test
+PARALLEL_DIRS += test
 endif
 
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= \
-		-I$(srcdir)/../base/src \
-		-I$(srcdir)/../html/content/src \
-		$(NULL)
+INCLUDES += \
+  -I$(srcdir)/../base/src \
+  -I$(srcdir)/../html/content/src \
+  $(NULL)

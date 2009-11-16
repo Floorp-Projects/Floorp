@@ -1982,7 +1982,7 @@ nsEditor::StopPreservingSelection()
 //
 // The BeingComposition method is called from the Editor Composition event listeners.
 //
-NS_IMETHODIMP
+nsresult
 nsEditor::QueryComposition(nsTextEventReply* aReply)
 {
   nsresult result;
