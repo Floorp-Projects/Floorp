@@ -52,7 +52,7 @@ DirectoryProvider.prototype = {
   contractID: "@mozilla.org/browser/directory-provider;1",
   classID: Components.ID("{ef0f7a87-c1ee-45a8-8d67-26f586e46a4b}"),
   
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider, Ci.nsIDirectoryServiceProvider2]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider]),
 
   _xpcom_categories: [
     { category: "xpcom-directory-providers", entry: "browser-directory-provider" }
@@ -79,11 +79,7 @@ DirectoryProvider.prototype = {
           return profile;
       }
     }
-    return Components.results.NS_ERROR_FAILURE;
-  },
-
-  getFiles: function(prop, persistent) {
-    return Components.results.NS_ERROR_FAILURE;
+    return null;
   }
 };
 
