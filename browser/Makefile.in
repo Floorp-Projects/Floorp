@@ -35,14 +35,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = base components locales themes fuel app
+PARALLEL_DIRS = \
+  base \
+  components \
+  fuel \
+  locales \
+  themes \
+  $(NULL)
+
+DIRS = \
+  app \
+  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 ifdef MOZ_INSTALLER

@@ -1646,7 +1646,9 @@ nsDOMEventRTTearoff::AddEventListener(const nsAString& aType,
                                       nsIDOMEventListener *aListener,
                                       PRBool useCapture)
 {
-  return AddEventListener(aType, aListener, useCapture, PR_FALSE, 0);
+  return
+    AddEventListener(aType, aListener, useCapture,
+                     !nsContentUtils::IsChromeDoc(mNode->GetOwnerDoc()));
 }
 
 NS_IMETHODIMP
@@ -1712,23 +1714,15 @@ NS_IMETHODIMP
 nsDOMEventRTTearoff::AddEventListener(const nsAString& aType,
                                       nsIDOMEventListener *aListener,
                                       PRBool aUseCapture,
-                                      PRBool aWantsUntrusted,
-                                      PRUint8 optional_argc)
+                                      PRBool aWantsUntrusted)
 {
-  NS_ASSERTION(!aWantsUntrusted || optional_argc > 0,
-               "Won't check if this is chrome, you want to set "
-               "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
-               "explicit by making optional_argc non-zero.");
-
   nsIEventListenerManager* listener_manager =
     mNode->GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(listener_manager);
 
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
-  if (aWantsUntrusted ||
-      (optional_argc == 0 &&
-       !nsContentUtils::IsChromeDoc(mNode->GetOwnerDoc()))) {
+  if (aWantsUntrusted) {
     flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
   }
 

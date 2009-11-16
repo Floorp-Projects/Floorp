@@ -36,14 +36,22 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../..
+DEPTH     = ../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
-VPATH   = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = downloads extensions update xpinstall plugins handling shared
+PARALLEL_DIRS = \
+  downloads \
+  extensions \
+  handling \
+  plugins \
+  shared \
+  update \
+  xpinstall \
+  $(NULL)
  
 ifeq ($(OS_ARCH),WINCE)
 ifdef WINCE_WINDOWS_MOBILE
