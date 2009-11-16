@@ -57,6 +57,7 @@ Types = (
     'uintptr_t',
 
     # Mozilla types: "less" standard things we know how serialize/deserialize
+    'nsresult',
     'nsString',
     'nsCString',
 )
