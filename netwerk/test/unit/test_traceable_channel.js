@@ -6,19 +6,43 @@
 do_load_httpd_js();
 
 var httpserver = null;
-var pipe = null;
-var streamSink = null;
-
 var originalBody = "original http response body";
-var gotOnStartRequest = false;
+var replacedBody = "replaced http response body";
 
 function TracingListener() {}
 
 TracingListener.prototype = {
-  onStartRequest: function(request, context) {
-    dump("*** tracing listener onStartRequest\n");
 
-    gotOnStartRequest = true;
+  // Replace received response body.
+  onDataAvailable: function(request, context, inputStream,
+                           offset, count) {
+    dump("*** tracing listener onDataAvailable\n");
+    var binaryInputStream = Cc["@mozilla.org/binaryinputstream;1"].
+      createInstance(Components.interfaces.nsIBinaryInputStream);
+    binaryInputStream.setInputStream(inputStream);
+
+    var data = binaryInputStream.readBytes(count);
+    var origBody = originalBody.substr(offset, count);
+    do_check_eq(origBody, data);
+
+    var storageStream = Cc["@mozilla.org/storagestream;1"].
+      createInstance(Components.interfaces.nsIStorageStream);
+    var binaryOutputStream = Cc["@mozilla.org/binaryoutputstream;1"].
+      createInstance(Components.interfaces.nsIBinaryOutputStream);
+
+    storageStream.init(8192, 100, null);
+    binaryOutputStream.setOutputStream(storageStream.getOutputStream(0));
+
+    var newBody = replacedBody.substr(offset, count);
+    binaryOutputStream.writeBytes(newBody, newBody.length);
+
+    this.listener.onDataAvailable(request, context,
+                                  storageStream.newInputStream(0), 0,
+                                  replacedBody.length);
+  },
+
+  onStartRequest: function(request, context) {
+    this.listener.onStartRequest(request, context);
 
     // Make sure listener can't be replaced after OnStartRequest was called.
     request.QueryInterface(Components.interfaces.nsITraceableChannel);
@@ -32,28 +56,13 @@ TracingListener.prototype = {
   },
 
   onStopRequest: function(request, context, statusCode) {
-    dump("*** tracing listener onStopRequest\n");
-    
-    do_check_eq(gotOnStartRequest, true);
-    
-    var sin = Components.classes["@mozilla.org/scriptableinputstream;1"].
-        createInstance(Ci.nsIScriptableInputStream);
-
-    streamSink.close();
-    var input = pipe.inputStream;
-    sin.init(input);
-    do_check_eq(sin.available(), originalBody.length);
-    
-    var result = sin.read(originalBody.length);
-    do_check_eq(result, originalBody);
-    
-    input.close();
-    
+    this.listener.onStopRequest(request, context, statusCode);
     httpserver.stop(do_test_finished);
   },
 
   QueryInterface: function(iid) {
-    if (iid.equals(Components.interfaces.nsIRequestObserver) ||
+    if (iid.equals(Components.interfaces.nsIStreamListener) ||
+        iid.equals(Components.interfaces.nsIRequestObserver) ||
         iid.equals(Components.interfaces.nsISupports)
         )
       return this;
@@ -77,22 +86,14 @@ HttpResponseExaminer.prototype = {
   observe: function(subject, topic, data) {
     try {
       subject.QueryInterface(Components.interfaces.nsITraceableChannel);
-      
-      var tee = Cc["@mozilla.org/network/stream-listener-tee;1"].
-          createInstance(Ci.nsIStreamListenerTee);
       var newListener = new TracingListener();
-      pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
-      pipe.init(false, false, 0, 0xffffffff, null);
-      streamSink = pipe.outputStream;
-      
-      var originalListener = subject.setNewListener(tee);
-      tee.init(originalListener, streamSink, newListener);
+      newListener.listener = subject.setNewListener(newListener);
     } catch(e) {
-      do_throw("can't replace listener " + e);
+      do_throw("can't replace listener" + e);
     }
   },
 
-  QueryInterface: function(iid) {
+ QueryInterface: function(iid) {
     if (iid.equals(Components.interfaces.nsIObserver) ||
         iid.equals(Components.interfaces.nsISupportsWeakReference) ||
         iid.equals(Components.interfaces.nsISupports))
@@ -115,7 +116,8 @@ function make_channel(url) {
 }
 
 // Check if received body is correctly modified.
-function channel_finished(request, input, ctx) {
+function get_data(request, input, ctx) {
+  do_check_eq(replacedBody, input);
 }
 
 function run_test() {
@@ -127,6 +129,6 @@ function run_test() {
   httpserver.start(4444);
 
   var channel = make_channel("http://localhost:4444/testdir");
-  channel.asyncOpen(new ChannelListener(channel_finished), null);
+  channel.asyncOpen(new ChannelListener(get_data), null);
   do_test_pending();
 }

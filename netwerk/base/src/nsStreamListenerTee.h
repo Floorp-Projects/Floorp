@@ -58,7 +58,6 @@ private:
     nsCOMPtr<nsIInputStreamTee> mInputTee;
     nsCOMPtr<nsIStreamListener> mListener;
     nsCOMPtr<nsIOutputStream>   mSink;
-    nsCOMPtr<nsIRequestObserver> mObserver;
 };
 
 #endif
