@@ -163,26 +163,25 @@ namespace nanojit
         X64_call    = 0x00000000E8000005LL, // near call
         X64_callrax = 0xD0FF000000000002LL, // indirect call to addr in rax (no REX)
         X64_cmovqno = 0xC0410F4800000004LL, // 64bit conditional mov if (no overflow) r = b
-        X64_cmovqb  = 0xC0420F4800000004LL, // 64bit conditional mov if (uint <) r = b
-        X64_cmovqae = 0xC0430F4800000004LL, // 64bit conditional mov if (uint >=) r = b
-        X64_cmovqne = 0xC0450F4800000004LL, // 64bit conditional mov if (c) r = b
-        X64_cmovqbe = 0xC0460F4800000004LL, // 64bit conditional mov if (uint <=) r = b
-        X64_cmovqa  = 0xC0470F4800000004LL, // 64bit conditional mov if (uint >) r = b
-        X64_cmovql  = 0xC04C0F4800000004LL, // 64bit conditional mov if (int <) r = b
-        X64_cmovqge = 0xC04D0F4800000004LL, // 64bit conditional mov if (int >=) r = b
-        X64_cmovqle = 0xC04E0F4800000004LL, // 64bit conditional mov if (int <=) r = b
-        X64_cmovqg  = 0xC04F0F4800000004LL, // 64bit conditional mov if (int >) r = b
+        X64_cmovqnae= 0xC0420F4800000004LL, // 64bit conditional mov if (uint <)  r = b
+        X64_cmovqnb = 0xC0430F4800000004LL, // 64bit conditional mov if (uint >=) r = b
+        X64_cmovqne = 0xC0450F4800000004LL, // 64bit conditional mov if (c)       r = b
+        X64_cmovqna = 0xC0460F4800000004LL, // 64bit conditional mov if (uint <=) r = b
+        X64_cmovqnbe= 0xC0470F4800000004LL, // 64bit conditional mov if (uint >)  r = b
+        X64_cmovqnge= 0xC04C0F4800000004LL, // 64bit conditional mov if (int <)   r = b
+        X64_cmovqnl = 0xC04D0F4800000004LL, // 64bit conditional mov if (int >=)  r = b
+        X64_cmovqng = 0xC04E0F4800000004LL, // 64bit conditional mov if (int <=)  r = b
+        X64_cmovqnle= 0xC04F0F4800000004LL, // 64bit conditional mov if (int >)   r = b
         X64_cmovno  = 0xC0410F4000000004LL, // 32bit conditional mov if (no overflow) r = b
-        X64_cmovb   = 0xC0420F4000000004LL, // 32bit conditional mov if (uint <) r = b
-        X64_cmovae  = 0xC0430F4000000004LL, // 32bit conditional mov if (uint >=) r = b
-        X64_cmovne  = 0xC0450F4000000004LL, // 32bit conditional mov if (c) r = b
-        X64_cmovbe  = 0xC0460F4000000004LL, // 32bit conditional mov if (uint <=) r = b
-        X64_cmova   = 0xC0470F4000000004LL, // 32bit conditional mov if (uint >) r = b
-        X64_cmovl   = 0xC04C0F4000000004LL, // 32bit conditional mov if (int <) r = b
-        X64_cmovge  = 0xC04D0F4000000004LL, // 32bit conditional mov if (int >=) r = b
-        X64_cmovle  = 0xC04E0F4000000004LL, // 32bit conditional mov if (int <=) r = b
-        X64_cmovg   = 0xC04F0F4000000004LL, // 32bit conditional mov if (int >) r = b
-        X64_cmov_64 = 0x0000000800000000LL, // OR with 32-bit cmov to promote to 64-bit
+        X64_cmovnae = 0xC0420F4000000004LL, // 32bit conditional mov if (uint <)  r = b
+        X64_cmovnb  = 0xC0430F4000000004LL, // 32bit conditional mov if (uint >=) r = b
+        X64_cmovne  = 0xC0450F4000000004LL, // 32bit conditional mov if (c)       r = b
+        X64_cmovna  = 0xC0460F4000000004LL, // 32bit conditional mov if (uint <=) r = b
+        X64_cmovnbe = 0xC0470F4000000004LL, // 32bit conditional mov if (uint >)  r = b
+        X64_cmovnge = 0xC04C0F4000000004LL, // 32bit conditional mov if (int <)   r = b
+        X64_cmovnl  = 0xC04D0F4000000004LL, // 32bit conditional mov if (int >=)  r = b
+        X64_cmovng  = 0xC04E0F4000000004LL, // 32bit conditional mov if (int <=)  r = b
+        X64_cmovnle = 0xC04F0F4000000004LL, // 32bit conditional mov if (int >)   r = b
         X64_cmplr   = 0xC03B400000000003LL, // 32bit compare r,b
         X64_cmpqr   = 0xC03B480000000003LL, // 64bit compare r,b
         X64_cmplri  = 0xF881400000000003LL, // 32bit compare r,imm32
@@ -206,13 +205,11 @@ namespace nanojit
         X64_ja      = 0x00000000870F0006LL, // jump near if above (uint >)
         X64_jbe     = 0x00000000860F0006LL, // jump near if below or equal (uint <=)
         X64_je      = 0x00000000840F0006LL, // near jump if equal
-        X64_jne     = 0x00000000850F0006LL, // jump near if not equal
         X64_jl      = 0x000000008C0F0006LL, // jump near if less (int <)
         X64_jge     = 0x000000008D0F0006LL, // jump near if greater or equal (int >=)
         X64_jg      = 0x000000008F0F0006LL, // jump near if greater (int >)
         X64_jle     = 0x000000008E0F0006LL, // jump near if less or equal (int <=)
         X64_jp      = 0x000000008A0F0006LL, // jump near if parity (PF == 1)
-        X64_jnp     = 0x000000008B0F0006LL, // jump near if not parity (PF == 0)
         X64_jneg    = 0x0000000001000000LL, // xor with this mask to negate the condition
         X64_jo8     = 0x0070000000000002LL, // jump near if overflow
         X64_jb8     = 0x0072000000000002LL, // jump near if below (uint <)
@@ -241,7 +238,7 @@ namespace nanojit
         X64_movi    = 0xB840000000000002LL, // 32bit mov r <- imm32
         X64_movqi32 = 0xC0C7480000000003LL, // 64bit mov r <- int64(imm32)
         X64_movapsr = 0xC0280F4000000004LL, // 128bit mov xmm <- xmm
-        X64_movqrx  = 0xC07E0F4866000005LL, // 64bit mov b <- xmm-r
+        X64_movqrx  = 0xC07E0F4866000005LL, // 64bit mov b <- xmm-r (reverses the usual r/b order)
         X64_movqxr  = 0xC06E0F4866000005LL, // 64bit mov b -> xmm-r
         X64_movqrm  = 0x00000000808B4807LL, // 64bit load r <- [b+d32]
         X64_movsdrr = 0xC0100F40F2000005LL, // 64bit mov xmm-r <- xmm-b (upper 64bits unchanged)
@@ -334,6 +331,9 @@ namespace nanojit
     }
 
     verbose_only( extern const char* regNames[]; )
+    verbose_only( extern const char* gpRegNames32[]; )
+    verbose_only( extern const char* gpRegNames8[]; )
+    verbose_only( extern const char* gpRegNames8hi[]; )
 
     #define DECLARE_PLATFORM_STATS()
     #define DECLARE_PLATFORM_REGALLOC()
@@ -349,7 +349,8 @@ namespace nanojit
         void JMPl(NIns*);\
         void emit(uint64_t op);\
         void emit8(uint64_t op, int64_t val);\
-        void emit32(uint64_t op, int64_t val);\
+        void emit_target8(size_t underrun, uint64_t op, NIns* target);\
+        void emit_target32(size_t underrun, uint64_t op, NIns* target);\
         void emitrr(uint64_t op, Register r, Register b);\
         void emitrxb(uint64_t op, Register r, Register x, Register b);\
         void emitxb(uint64_t op, Register x, Register b) { emitrxb(op, (Register)0, x, b); }\
@@ -362,11 +363,13 @@ namespace nanojit
         uint64_t emit_disp32(uint64_t op, int32_t d);\
         void emitprm(uint64_t op, Register r, int32_t d, Register b);\
         void emitrr_imm(uint64_t op, Register r, Register b, int32_t imm);\
+        void emitr_imm64(uint64_t op, Register r, uint64_t imm);\
         void emitrxb_imm(uint64_t op, Register r, Register x, Register b, int32_t imm);\
-        void emitr_imm(uint64_t op, Register b, int32_t imm) { emitrr_imm(op, (Register)0, b, imm); }\
+        void emitr_imm(uint64_t op, Register r, int32_t imm) { emitrr_imm(op, (Register)0, r, imm); }\
         void emitr_imm8(uint64_t op, Register b, int32_t imm8);\
-        void emit_int(Register r, int32_t v);\
-        void emit_quad(Register r, uint64_t v);\
+        void emitxm_abs(uint64_t op, Register r, int32_t addr32);\
+        void emitxm_rel(uint64_t op, Register r, NIns* addr64);\
+        void asm_quad(Register r, uint64_t v);\
         void asm_regarg(ArgSize, LIns*, Register);\
         void asm_stkarg(ArgSize, LIns*, int);\
         void asm_shift(LIns*);\
@@ -381,7 +384,173 @@ namespace nanojit
         void fcmp(LIns*, LIns*);\
         NIns* asm_fbranch(bool, LIns*, NIns*);\
         void asm_div_mod(LIns *i);\
-        int max_stk_used;
+        int max_stk_used;\
+        void PUSHR(Register r);\
+        void POPR(Register r);\
+        void NOT(Register r);\
+        void NEG(Register r);\
+        void IDIV(Register r);\
+        void SHR(Register r);\
+        void SAR(Register r);\
+        void SHL(Register r);\
+        void SHRQ(Register r);\
+        void SARQ(Register r);\
+        void SHLQ(Register r);\
+        void SHRI(Register r, int i);\
+        void SARI(Register r, int i);\
+        void SHLI(Register r, int i);\
+        void SHRQI(Register r, int i);\
+        void SARQI(Register r, int i);\
+        void SHLQI(Register r, int i);\
+        void SETE(Register r);\
+        void SETL(Register r);\
+        void SETLE(Register r);\
+        void SETG(Register r);\
+        void SETGE(Register r);\
+        void SETB(Register r);\
+        void SETBE(Register r);\
+        void SETA(Register r);\
+        void SETAE(Register r);\
+        void SETO(Register r);\
+        void ADDRR(Register l, Register r);\
+        void SUBRR(Register l, Register r);\
+        void ANDRR(Register l, Register r);\
+        void ORLRR(Register l, Register r);\
+        void XORRR(Register l, Register r);\
+        void IMUL(Register l, Register r);\
+        void CMPLR(Register l, Register r);\
+        void MOVLR(Register l, Register r);\
+        void ADDQRR(Register l, Register r);\
+        void SUBQRR(Register l, Register r);\
+        void ANDQRR(Register l, Register r);\
+        void ORQRR(Register l, Register r);\
+        void XORQRR(Register l, Register r);\
+        void CMPQR(Register l, Register r);\
+        void MOVQR(Register l, Register r);\
+        void MOVAPSR(Register l, Register r);\
+        void CMOVNO(Register l, Register r);\
+        void CMOVNE(Register l, Register r);\
+        void CMOVNL(Register l, Register r);\
+        void CMOVNLE(Register l, Register r);\
+        void CMOVNG(Register l, Register r);\
+        void CMOVNGE(Register l, Register r);\
+        void CMOVNB(Register l, Register r);\
+        void CMOVNBE(Register l, Register r);\
+        void CMOVNA(Register l, Register r);\
+        void CMOVNAE(Register l, Register r);\
+        void CMOVQNO(Register l, Register r);\
+        void CMOVQNE(Register l, Register r);\
+        void CMOVQNL(Register l, Register r);\
+        void CMOVQNLE(Register l, Register r);\
+        void CMOVQNG(Register l, Register r);\
+        void CMOVQNGE(Register l, Register r);\
+        void CMOVQNB(Register l, Register r);\
+        void CMOVQNBE(Register l, Register r);\
+        void CMOVQNA(Register l, Register r);\
+        void CMOVQNAE(Register l, Register r);\
+        void MOVSXDR(Register l, Register r);\
+        void MOVZX8(Register l, Register r);\
+        void XORPS(Register r);\
+        void DIVSD(Register l, Register r);\
+        void MULSD(Register l, Register r);\
+        void ADDSD(Register l, Register r);\
+        void SUBSD(Register l, Register r);\
+        void CVTSQ2SD(Register l, Register r);\
+        void CVTSI2SD(Register l, Register r);\
+        void UCOMISD(Register l, Register r);\
+        void MOVQRX(Register l, Register r);\
+        void MOVQXR(Register l, Register r);\
+        void MOVI(Register r, int32_t i32);\
+        void ADDLRI(Register r, int32_t i32);\
+        void SUBLRI(Register r, int32_t i32);\
+        void ANDLRI(Register r, int32_t i32);\
+        void ORLRI(Register r, int32_t i32);\
+        void XORLRI(Register r, int32_t i32);\
+        void CMPLRI(Register r, int32_t i32);\
+        void ADDQRI(Register r, int32_t i32);\
+        void SUBQRI(Register r, int32_t i32);\
+        void ANDQRI(Register r, int32_t i32);\
+        void ORQRI(Register r, int32_t i32);\
+        void XORQRI(Register r, int32_t i32);\
+        void CMPQRI(Register r, int32_t i32);\
+        void MOVQI32(Register r, int32_t i32);\
+        void ADDLR8(Register r, int32_t i8);\
+        void SUBLR8(Register r, int32_t i8);\
+        void ANDLR8(Register r, int32_t i8);\
+        void ORLR8(Register r, int32_t i8);\
+        void XORLR8(Register r, int32_t i8);\
+        void CMPLR8(Register r, int32_t i8);\
+        void ADDQR8(Register r, int32_t i8);\
+        void SUBQR8(Register r, int32_t i8);\
+        void ANDQR8(Register r, int32_t i8);\
+        void ORQR8(Register r, int32_t i8);\
+        void XORQR8(Register r, int32_t i8);\
+        void CMPQR8(Register r, int32_t i8);\
+        void IMULI(Register l, Register r, int32_t i32);\
+        void MOVQI(Register r, uint64_t u64);\
+        void LEARIP(Register r, int32_t d);\
+        void LEAQRM(Register r1, int d, Register r2);\
+        void MOVLRM(Register r1, int d, Register r2);\
+        void MOVQRM(Register r1, int d, Register r2);\
+        void MOVLMR(Register r1, int d, Register r2);\
+        void MOVQMR(Register r1, int d, Register r2);\
+        void MOVZX8M(Register r1, int d, Register r2);\
+        void MOVZX16M(Register r1, int d, Register r2);\
+        void MOVSDRM(Register r1, int d, Register r2);\
+        void MOVSDMR(Register r1, int d, Register r2);\
+        void JMP8(size_t n, NIns* t);\
+        void JMP32(size_t n, NIns* t);\
+        void JO(size_t n, NIns* t);\
+        void JE(size_t n, NIns* t);\
+        void JL(size_t n, NIns* t);\
+        void JLE(size_t n, NIns* t);\
+        void JG(size_t n, NIns* t);\
+        void JGE(size_t n, NIns* t);\
+        void JB(size_t n, NIns* t);\
+        void JBE(size_t n, NIns* t);\
+        void JA(size_t n, NIns* t);\
+        void JAE(size_t n, NIns* t);\
+        void JP(size_t n, NIns* t);\
+        void JNO(size_t n, NIns* t);\
+        void JNE(size_t n, NIns* t);\
+        void JNL(size_t n, NIns* t);\
+        void JNLE(size_t n, NIns* t);\
+        void JNG(size_t n, NIns* t);\
+        void JNGE(size_t n, NIns* t);\
+        void JNB(size_t n, NIns* t);\
+        void JNBE(size_t n, NIns* t);\
+        void JNA(size_t n, NIns* t);\
+        void JNAE(size_t n, NIns* t);\
+        void JO8(size_t n, NIns* t);\
+        void JE8(size_t n, NIns* t);\
+        void JL8(size_t n, NIns* t);\
+        void JLE8(size_t n, NIns* t);\
+        void JG8(size_t n, NIns* t);\
+        void JGE8(size_t n, NIns* t);\
+        void JB8(size_t n, NIns* t);\
+        void JBE8(size_t n, NIns* t);\
+        void JA8(size_t n, NIns* t);\
+        void JAE8(size_t n, NIns* t);\
+        void JP8(size_t n, NIns* t);\
+        void JNO8(size_t n, NIns* t);\
+        void JNE8(size_t n, NIns* t);\
+        void JNL8(size_t n, NIns* t);\
+        void JNLE8(size_t n, NIns* t);\
+        void JNG8(size_t n, NIns* t);\
+        void JNGE8(size_t n, NIns* t);\
+        void JNB8(size_t n, NIns* t);\
+        void JNBE8(size_t n, NIns* t);\
+        void JNA8(size_t n, NIns* t);\
+        void JNAE8(size_t n, NIns* t);\
+        void CALL(size_t n, NIns* t);\
+        void CALLRAX();\
+        void RET();\
+        void MOVQSPR(int d, Register r);\
+        void XORPSA(Register r, int32_t i32);\
+        void XORPSM(Register r, NIns* a64);\
+        void X86_AND8R(Register r);\
+        void X86_SETNP(Register r);\
+        void X86_SETE(Register r);\
 
     #define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
 
