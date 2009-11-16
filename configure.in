@@ -1477,7 +1477,7 @@ if test "$GNU_CXX"; then
     # FIXME: Let us build with strict aliasing. bug 414641.
     CXXFLAGS="$CXXFLAGS -fno-strict-aliasing"
     # Turn on GNU specific features
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
     if test -z "$INTEL_CC"; then
        # Don't use -Wcast-align with ICC
        case "$CPU_ARCH" in
@@ -1507,9 +1507,34 @@ if test "$GNU_CXX"; then
             CXXFLAGS="$_SAVE_CXXFLAGS"
             AC_LANG_RESTORE
         ])
+
     if test "$ac_has_wno_invalid_offsetof" = "yes"; then
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-invalid-offsetof"
     fi
+
+    AC_CACHE_CHECK(whether the compiler supports -Werror=overloaded-virtual,
+                   ac_has_werror_overloaded_virtual,
+        [
+            AC_LANG_SAVE
+            AC_LANG_CPLUSPLUS
+            _SAVE_CXXFLAGS="$CXXFLAGS"
+            CXXFLAGS="$CXXFLAGS -Werror=overloaded-virtual"
+            AC_TRY_COMPILE([],
+                           [return(0);],
+                           ac_has_werror_overloaded_virtual="yes",
+                           ac_has_werror_overloaded_virtual="no")
+            CXXFLAGS="$_SAVE_CXXFLAGS"
+            AC_LANG_RESTORE
+        ])
+
+    if test "$ac_has_werror_overloaded_virtual" = "yes"; then
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=overloaded-virtual"
+    else
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Woverloaded-virtual"
+    fi
+
+ 
+
 else
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -D_MOZILLA_CONFIG_H_ $(ACDEFINES)'
 fi

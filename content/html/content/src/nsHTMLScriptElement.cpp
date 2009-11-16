@@ -309,6 +309,9 @@ class nsHTMLScriptElement : public nsGenericHTMLElement,
                             public nsScriptElement
 {
 public:
+  using nsGenericElement::GetText;
+  using nsGenericElement::SetText;
+
   nsHTMLScriptElement(nsINodeInfo *aNodeInfo, PRBool aFromParser);
   virtual ~nsHTMLScriptElement();
 

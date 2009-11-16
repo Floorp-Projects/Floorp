@@ -57,6 +57,8 @@ class nsIDOMNode;
 class nsLeafAccessible : public nsAccessibleWrap
 {
 public:
+  using nsAccessible::GetChildAtPoint;
+
   nsLeafAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
   // nsISupports
