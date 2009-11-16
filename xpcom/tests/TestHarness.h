@@ -59,10 +59,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#ifdef NS_TRACE_MALLOC
-#  include "nsTraceMalloc.h"
-#endif
-
 static PRUint32 gFailCount = 0;
 
 /**
@@ -250,11 +246,6 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
     {
       mTestName = testName;
       printf("Running %s tests...\n", mTestName);
-
-#ifdef NS_TRACE_MALLOC
-      // nsAppRunner starts tracemalloc before init'ing XPCOM
-      NS_TraceMallocStartup(-1); // -1 == no logging
-#endif
 
       nsresult rv = NS_InitXPCOM2(&mServMgr, NULL, this);
       if (NS_FAILED(rv))
