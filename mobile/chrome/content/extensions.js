@@ -716,7 +716,7 @@ XPInstallDownloadManager.prototype = {
     let strings = document.getElementById("bundle_browser");
     var alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
-                                 strings.getString("alertAddonsStart"), false, "", null);
+                                 strings.getString("alertAddonsInstalling"), false, "", null);
   },
 
   /////////////////////////////////////////////////////////////////////////////
