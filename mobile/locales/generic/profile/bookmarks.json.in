@@ -6,7 +6,7 @@
             {          "title":"@bookmarks_welcome@",  "type":"text/x-moz-place", "uri":"about:firstrun",
              "iconUri":"chrome://branding/content/favicon32.png"
             },
-            {"index":1,"title":"@bookmarks_about@",    "type":"text/x-moz-place", "uri":"about:fennec",
+            {"index":1,"title":"@bookmarks_aboutBrowser@", "type":"text/x-moz-place", "uri":"about:fennec",
              "iconUri":"chrome://branding/content/favicon32.png"
             },
             {"index":2,"title":"@bookmarks_weave@",    "type":"text/x-moz-place", "uri":"https://addons.mozilla.org/@AB_CD@/mobile/addon/10868",
