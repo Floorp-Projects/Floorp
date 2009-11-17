@@ -47,8 +47,8 @@
 #include "nsIParser.h"
 
 #define NS_ISCRIPTELEMENT_IID \
-{ 0xa28c198e, 0x14f0, 0x42b1, \
-{ 0x8f, 0x6b, 0x0e, 0x7f, 0xca, 0xb4, 0xf4, 0xe8 } }
+{ 0xa9d5732a, 0x8c1f, 0x439d, \
+{ 0x83, 0x75, 0x3d, 0xf6, 0xa9, 0xba, 0xa3, 0x7d } }
 
 /**
  * Internal interface implemented by script elements
@@ -62,6 +62,9 @@ public:
       mIsEvaluated(PR_FALSE),
       mMalformed(PR_FALSE),
       mDoneAddingChildren(PR_TRUE),
+      mFrozen(PR_FALSE),
+      mDefer(PR_FALSE),
+      mAsync(PR_FALSE),
       mCreatorParser(nsnull)
   {
   }
@@ -76,7 +79,11 @@ public:
    * Location of script source text. Can return null, in which case
    * this is assumed to be an inline script element.
    */
-  virtual already_AddRefed<nsIURI> GetScriptURI() = 0;
+  nsIURI* GetScriptURI()
+  {
+    NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
+    return mUri;
+  }
   
   /**
    * Script source text for inline script elements.
@@ -86,14 +93,29 @@ public:
   virtual void GetScriptCharset(nsAString& charset) = 0;
 
   /**
+   * Freezes the return values of GetScriptDeferred(), GetScriptAsync() and
+   * GetScriptURI() so that subsequent modifications to the attributes don't
+   * change execution behavior.
+   */
+  virtual void FreezeUriAsyncDefer() = 0;
+
+  /**
    * Is the script deferred. Currently only supported by HTML scripts.
    */
-  virtual PRBool GetScriptDeferred() = 0;
+  PRBool GetScriptDeferred()
+  {
+    NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
+    return mDefer;
+  }
 
   /**
    * Is the script async. Currently only supported by HTML scripts.
    */
-  virtual PRBool GetScriptAsync() = 0;
+  PRBool GetScriptAsync()
+  {
+    NS_PRECONDITION(mFrozen, "Not ready for this call yet!");
+    return mAsync;  
+  }
 
   void SetScriptLineNumber(PRUint32 aLineNumber)
   {
@@ -134,8 +156,6 @@ public:
    */
   void BeginEvaluating()
   {
-    // Once the async attribute is supported, don't do this if this is an
-    // async script.
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
     if (parser) {
       parser->BeginEvaluatingParserInsertedScript();
@@ -147,8 +167,6 @@ public:
    */
   void EndEvaluating()
   {
-    // Once the async attribute is supported, don't do this if this is an
-    // async script.
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
     if (parser) {
       parser->EndEvaluatingParserInsertedScript();
@@ -165,11 +183,50 @@ public:
   }
 
 protected:
+  /**
+   * The start line number of the script.
+   */
   PRUint32 mLineNumber;
+  
+  /**
+   * The "already started" flag per HTML5.
+   */
   PRPackedBool mIsEvaluated;
+  
+  /**
+   * The script didn't have an end tag.
+   */
   PRPackedBool mMalformed;
+  
+  /**
+   * False if parser-inserted but the parser hasn't triggered running yet.
+   */
   PRPackedBool mDoneAddingChildren;
-  nsWeakPtr    mCreatorParser;
+
+  /**
+   * Whether src, defer and async are frozen.
+   */
+  PRPackedBool mFrozen;
+  
+  /**
+   * The effective deferredness.
+   */
+  PRPackedBool mDefer;
+  
+  /**
+   * The effective asyncness.
+   */
+  PRPackedBool mAsync;
+  
+  /**
+   * The effective src (or null if no src).
+   */
+  nsCOMPtr<nsIURI> mUri;
+  
+  /**
+   * The creator parser of a non-defer, non-async parser-inserted script.
+   */
+  nsWeakPtr mCreatorParser;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptElement, NS_ISCRIPTELEMENT_IID)

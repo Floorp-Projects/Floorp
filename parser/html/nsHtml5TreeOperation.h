@@ -78,7 +78,7 @@ enum eHtml5TreeOperation {
   eTreeOpMarkMalformedIfScript,
   eTreeOpStreamEnded,
   eTreeOpSetStyleLineNumber,
-  eTreeOpSetScriptLineNumber,
+  eTreeOpSetScriptLineNumberAndFreeze,
   eTreeOpStartLayout
 };
 

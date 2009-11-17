@@ -180,6 +180,8 @@ nsScriptElement::MaybeProcessScript()
     return NS_OK;
   }
 
+  FreezeUriAsyncDefer();
+
   if (InNonScriptingContainer(cont)) {
     // Make sure to flag ourselves as evaluated
     mIsEvaluated = PR_TRUE;
