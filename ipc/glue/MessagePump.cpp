@@ -56,6 +56,8 @@ using mozilla::ipc::MessagePumpForChildProcess;
 
 namespace {
 
+bool gRunningSetNestableTasksAllowed = false;
+
 void
 TimerCallback(nsITimer* aTimer,
               void* aClosure)
@@ -73,7 +75,17 @@ public:
     MessageLoop* loop = MessageLoop::current();
     NS_ASSERTION(loop, "Shouldn't be null!");
     if (loop) {
+      bool nestableTasksAllowed = loop->NestableTasksAllowed();
+
+      gRunningSetNestableTasksAllowed = true;
+      loop->SetNestableTasksAllowed(true);
+      gRunningSetNestableTasksAllowed = false;
+
       loop->DoWork();
+
+      gRunningSetNestableTasksAllowed = true;
+      loop->SetNestableTasksAllowed(nestableTasksAllowed);
+      gRunningSetNestableTasksAllowed = false;
     }
     return NS_OK;
   }
@@ -164,6 +176,10 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
 void
 MessagePump::ScheduleWork()
 {
+  if (gRunningSetNestableTasksAllowed) {
+    return;
+  }
+
   // Make sure the event loop wakes up.
   if (mThread) {
     mThread->Dispatch(mDummyEvent, NS_DISPATCH_NORMAL);
