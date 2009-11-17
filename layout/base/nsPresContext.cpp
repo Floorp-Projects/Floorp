@@ -1539,7 +1539,8 @@ void
 nsPresContext::MediaFeatureValuesChanged(PRBool aCallerWillRebuildStyleData)
 {
   mPendingMediaFeatureValuesChanged = PR_FALSE;
-  if (mShell->StyleSet()->MediumFeaturesChanged(this) &&
+  if (mShell &&
+      mShell->StyleSet()->MediumFeaturesChanged(this) &&
       !aCallerWillRebuildStyleData) {
     RebuildAllStyleData(nsChangeHint(0));
   }
