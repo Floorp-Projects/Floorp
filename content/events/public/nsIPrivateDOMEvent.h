@@ -41,8 +41,8 @@
 #include "nsISupports.h"
 
 #define NS_IPRIVATEDOMEVENT_IID \
-{ 0x26f5f0e9, 0x2960, 0x4405, \
-  { 0xa1, 0x7e, 0xd8, 0x9f, 0xb0, 0xd9, 0x4c, 0x71 } }
+{ 0x1da4c501, 0xe87e, 0x49b4, \
+  { 0xb0, 0x49, 0xdf, 0x9f, 0xc3, 0x6b, 0x56, 0xd4 } }
 
 class nsIDOMEventTarget;
 class nsIDOMEvent;
@@ -50,9 +50,6 @@ class nsEvent;
 class nsCommandEvent;
 class nsPresContext;
 class nsInvalidateRequestList;
-namespace IPC {
-class Message;
-}
 
 class nsIPrivateDOMEvent : public nsISupports
 {
@@ -64,9 +61,6 @@ public:
   NS_IMETHOD_(PRBool) IsDispatchStopped() = 0;
   NS_IMETHOD_(nsEvent*) GetInternalNSEvent() = 0;
   NS_IMETHOD SetTrusted(PRBool aTrusted) = 0;
-  virtual void Serialize(IPC::Message* aMsg,
-                         PRBool aSerializeInterfaceType) = 0;
-  virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrivateDOMEvent, NS_IPRIVATEDOMEVENT_IID)

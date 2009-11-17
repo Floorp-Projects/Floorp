@@ -1493,16 +1493,3 @@ nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsFrameLoader::ActivateFrameEvent(const nsAString& aType,
-                                  PRBool aCapture)
-{
-#ifdef MOZ_IPC
-  if (mChildProcess) {
-    mChildProcess->SendactivateFrameEvent(nsString(aType), aCapture);
-    return NS_OK;
-  }
-#endif
-  return NS_ERROR_FAILURE;
-}
-
