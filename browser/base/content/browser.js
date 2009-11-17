@@ -48,6 +48,7 @@
 #   Paul O’Shannessy <paul@oshannessy.com>
 #   Nils Maier <maierman@web.de>
 #   Rob Arnold <robarnold@cmu.edu>
+#   Dietrich Ayala <dietrich@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -151,6 +152,12 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
 #endif
   return null;
 });
+
+#ifdef MOZ_CRASHREPORTER
+XPCOMUtils.defineLazyServiceGetter(this, "gCrashReporter",
+                                   "@mozilla.org/xre/app-info;1",
+                                   "nsICrashReporter");
+#endif
 
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
@@ -4318,6 +4325,12 @@ var TabsProgressListener = {
   },
 
   onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+    if (!aRequest.URI)
+      aRequest.QueryInterface(Ci.nsIChannel);
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
+      gCrashReporter.annotateCrashReport("URL", aRequest.URI.spec);
+    }
   },
 
   onLocationChange: function (aBrowser, aWebProgress, aRequest, aLocationURI) {
