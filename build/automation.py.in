@@ -447,6 +447,9 @@ def environment(env = None, xrePath = DIST_BIN, crashreporter = True):
   if crashreporter:
     env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
     env['MOZ_CRASHREPORTER'] = '1'
+  else:
+    env['MOZ_CRASHREPORTER_DISABLE'] = '1'
+
   env['GNOME_DISABLE_CRASH_DIALOG'] = "1"
   return env
 
