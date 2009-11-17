@@ -52,6 +52,8 @@
 #include "nsIDOMWindowUtils.h"
 #include "nsISupportsImpl.h"
 #include "nsIWebBrowserFocus.h"
+#include "nsIDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
 
 #ifdef MOZ_WIDGET_GTK2
 #include <gdk/gdkx.h>
@@ -59,6 +61,18 @@
 #endif
 
 using namespace mozilla::dom;
+
+NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
+
+NS_IMETHODIMP
+ContentListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  RemoteDOMEvent remoteEvent;
+  remoteEvent.mEvent = do_QueryInterface(aEvent);
+  NS_ENSURE_STATE(remoteEvent.mEvent);
+  mTabChild->SendsendEvent(remoteEvent);
+  return NS_OK;
+}
 
 TabChild::TabChild()
 {
@@ -389,4 +403,18 @@ TabChild::RecvPDocumentRendererConstructor(
         return true; // silently ignore
 
     return SendPDocumentRendererDestructor(__a, width, height, data);
+}
+
+bool
+TabChild::RecvactivateFrameEvent(const nsString& aType, const bool& capture)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(mWebNav);
+  NS_ENSURE_TRUE(window, true);
+  nsCOMPtr<nsIDOMEventTarget> chromeHandler =
+    do_QueryInterface(window->GetChromeEventHandler());
+  NS_ENSURE_TRUE(chromeHandler, true);
+  nsRefPtr<ContentListener> listener = new ContentListener(this);
+  NS_ENSURE_TRUE(listener, true);
+  chromeHandler->AddEventListener(aType, listener, capture);
+  return true;
 }
