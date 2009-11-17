@@ -52,8 +52,9 @@ function setScale(win, scale)
 function shown()
 {
   if (screenTest) {
-    is($("popup").boxObject.screenX, screenx, "screen left position");
-    is($("popup").boxObject.screenY, screeny, "screen top position");
+    var box = $("popup").boxObject;
+    is(box.screenX, screenx, "screen left position");
+    is(box.screenY, screeny, "screen top position");
   }
   else {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -78,9 +79,12 @@ function nextTest()
   else {
     screenTest = true;
     setScale(window, 2);
-    screenx = document.documentElement.boxObject.screenX + 120;
-    screeny = document.documentElement.boxObject.screenY + 50;
-    $("popup").openPopupAtScreen(screenx, screeny);
+    var box = document.documentElement.boxObject;
+
+    // the iframe is at 4×, but out here css pixels are only 2× device pixels
+    screenx = (x = box.screenX + 120)/2;
+    screeny = (y = box.screenY + 50)/2;
+    $("popup").openPopupAtScreen(x, y);
   }
 }
 
