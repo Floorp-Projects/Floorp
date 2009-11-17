@@ -37,10 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-#include "base/basictypes.h"
-#include "IPC/IPCMessageUtils.h"
-#endif
 #include "nsCOMPtr.h"
 #include "nsDOMEvent.h"
 #include "nsEventStateManager.h"
@@ -1536,56 +1532,6 @@ nsDOMEvent::GetPreventDefault(PRBool* aReturn)
   *aReturn = mEvent && (mEvent->flags & NS_EVENT_FLAG_NO_DEFAULT);
   return NS_OK;
 }
-
-#ifdef MOZ_IPC
-void
-nsDOMEvent::Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType)
-{
-  if (aSerializeInterfaceType) {
-    IPC::WriteParam(aMsg, NS_LITERAL_STRING("event"));
-  }
-
-  nsString type;
-  GetType(type);
-  IPC::WriteParam(aMsg, type);
-
-  PRBool bubbles = PR_FALSE;
-  GetBubbles(&bubbles);
-  IPC::WriteParam(aMsg, bubbles);
-
-  PRBool cancelable = PR_FALSE;
-  GetCancelable(&cancelable);
-  IPC::WriteParam(aMsg, cancelable);
-
-  PRBool trusted = PR_FALSE;
-  GetIsTrusted(&trusted);
-  IPC::WriteParam(aMsg, trusted);
-
-  // No timestamp serialization for now!
-}
-
-PRBool
-nsDOMEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
-{
-  nsString type;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &type), PR_FALSE);
-
-  PRBool bubbles = PR_FALSE;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &bubbles), PR_FALSE);
-
-  PRBool cancelable = PR_FALSE;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &cancelable), PR_FALSE);
-
-  PRBool trusted = PR_FALSE;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &trusted), PR_FALSE);
-
-  nsresult rv = InitEvent(type, bubbles, cancelable);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-  SetTrusted(trusted);
-
-  return PR_TRUE;
-}
-#endif
 
 nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult,
                         nsPresContext* aPresContext,

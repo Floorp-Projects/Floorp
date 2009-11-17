@@ -100,10 +100,6 @@ interface nsIFrameLoader : nsISupports
                                   in long aModifiers,
                                   [optional] in boolean aIgnoreRootScrollFrame);
 
-  /**
-   * Activate event forwarding from client (remote frame) to parent.
-   */
-  void activateFrameEvent(in AString aType, in boolean capture);
 };
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);

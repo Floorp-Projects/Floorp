@@ -41,12 +41,10 @@ include protocol "PContentProcess.ipdl";
 include protocol "PDocumentRenderer.ipdl";
 
 include "mozilla/TabTypes.h";
-include "TabMessageUtils.h";
 
 using PRUint32;
 using PRInt32;
 using MagicWindowHandle;
-using RemoteDOMEvent;
 
 namespace mozilla {
 namespace dom {
@@ -63,7 +61,6 @@ parent:
      */
     moveFocus(bool forward);
 
-    sendEvent(RemoteDOMEvent aEvent);
 child:
     createWidget(MagicWindowHandle parentWidget);
     destroyWidget();
@@ -90,11 +87,6 @@ child:
                    PRInt32 aClickCount,
                    PRInt32 aModifiers,
                    bool aIgnoreRootScrollFrame);
-
-    /**
-     * Activate event forwarding from client to parent.
-     */
-    activateFrameEvent(nsString aType, bool capture);
 
     PDocumentRenderer(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h, nsString bgcolor, PRUint32 flags, bool flush);
 

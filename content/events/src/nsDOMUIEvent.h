@@ -64,9 +64,7 @@ public:
 
   // nsIPrivateDOMEvent interface
   NS_IMETHOD DuplicatePrivateData();
-  virtual void Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType);
-  virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter);
-
+  
   // nsIPrivateCompositionEvent interface
   NS_IMETHOD GetCompositionReply(nsTextEventReply** aReply);
   
