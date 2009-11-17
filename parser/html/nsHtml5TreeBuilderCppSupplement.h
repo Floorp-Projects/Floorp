@@ -59,6 +59,7 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink)
   , mOpSink(aOpSink)
   , mHandles(new nsIContent*[NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH])
   , mHandlesUsed(0)
+  , mCurrentHtmlScriptIsAsyncOrDefer(PR_FALSE)
 #ifdef DEBUG
   , mActive(PR_FALSE)
 #endif
@@ -174,6 +175,9 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
                                                   *url,
                                                   (charset) ? *charset : EmptyString(),
                                                   (type) ? *type : EmptyString()));
+            mCurrentHtmlScriptIsAsyncOrDefer = 
+              aAttributes->contains(nsHtml5AttributeName::ATTR_ASYNC) ||
+              aAttributes->contains(nsHtml5AttributeName::ATTR_DEFER);
           }
         } else if (nsHtml5Atoms::link == aName) {
           nsString* rel = aAttributes->getValue(nsHtml5AttributeName::ATTR_REL);
@@ -233,7 +237,7 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
         break;
     }
   } else if (aNamespace != kNameSpaceID_MathML) {
-    // No speculative loader--just line numbers
+    // No speculative loader--just line numbers and defer/async check
     if (nsHtml5Atoms::style == aName) {
       nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
       NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -242,6 +246,12 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
       nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
       NS_ASSERTION(treeOp, "Tree op allocation failed.");
       treeOp->Init(eTreeOpSetScriptLineNumberAndFreeze, content, tokenizer->getLineNumber());
+      if (aNamespace == kNameSpaceID_XHTML) {
+        mCurrentHtmlScriptIsAsyncOrDefer = 
+          aAttributes->contains(nsHtml5AttributeName::ATTR_SRC) &&
+          (aAttributes->contains(nsHtml5AttributeName::ATTR_ASYNC) ||
+           aAttributes->contains(nsHtml5AttributeName::ATTR_DEFER));
+      }
     }
   }
 
@@ -399,6 +409,7 @@ nsHtml5TreeBuilder::markMalformedIfScript(nsIContent** aElement)
 void
 nsHtml5TreeBuilder::start(PRBool fragment)
 {
+  mCurrentHtmlScriptIsAsyncOrDefer = PR_FALSE;
 #ifdef DEBUG
   mActive = PR_TRUE;
 #endif
@@ -453,6 +464,15 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   }
   // we now have only SVG and HTML
   if (aName == nsHtml5Atoms::script) {
+    if (mCurrentHtmlScriptIsAsyncOrDefer) {
+      NS_ASSERTION(aNamespace == kNameSpaceID_XHTML, 
+                   "Only HTML scripts may be async/defer.");
+      nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+      NS_ASSERTION(treeOp, "Tree op allocation failed.");
+      treeOp->Init(eTreeOpRunScriptAsyncDefer, aElement);      
+      mCurrentHtmlScriptIsAsyncOrDefer = PR_FALSE;
+      return;
+    }
     requestSuspension();
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     NS_ASSERTION(treeOp, "Tree op allocation failed.");
