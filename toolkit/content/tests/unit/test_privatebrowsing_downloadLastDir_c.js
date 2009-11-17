@@ -93,9 +93,11 @@ function run_test()
 
   loadUtilsScript();
 
-  let prefs = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefService).
-              getBranch("browser.download.");
+  let prefsService = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefService).
+                     QueryInterface(Ci.nsIPrefBranch);
+  prefsService.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+  let prefs = prefsService.getBranch("browser.download.");
   let tmpDir = dirSvc.get("TmpD", Ci.nsILocalFile);
   function newDirectory() {
     let dir = tmpDir.clone();
@@ -182,6 +184,7 @@ function run_test()
   do_check_eq(gDownloadLastDir.file.path, dir3.path);
 
   // cleanup
+  prefsService.clearUserPref("browser.privatebrowsing.keep_current_session");
   [dir1, dir2, dir3].forEach(function(dir) dir.remove(true));
   dirSvc.QueryInterface(Ci.nsIDirectoryService).unregisterProvider(provider);
 }

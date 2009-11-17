@@ -39,10 +39,6 @@
 // when entering and leaving the private browsing mode.
 
 function run_test_on_service() {
-  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch);
-  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
-
   var pb = Cc[PRIVATEBROWSING_CONTRACT_ID].
            getService(Ci.nsIPrivateBrowsingService);
 
@@ -108,8 +104,6 @@ function run_test_on_service() {
     }
   } catch (e) {
     do_throw("Unexpected exception while testing HTTP auth manager: " + e);
-  } finally {
-    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
   }
 }
 
