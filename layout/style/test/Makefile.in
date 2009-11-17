@@ -103,6 +103,8 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_bug470769.html \
 		test_bug499655.html \
 		test_bug499655.xhtml \
+		test_bug517224.html \
+		test_bug524175.html \
 		test_cascade.html \
 		test_compute_data_with_start_struct.html \
 		test_computed_style_no_pseudo.html \
@@ -169,7 +171,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		media_queries_dynamic_xbl_iframe.html \
 		media_queries_dynamic_xbl_style.css \
 		bug453896_iframe.html \
-		test_bug524175.html \
+		bug517224.sjs \
 		$(NULL)
 
 _BROWSER_FILES = \
