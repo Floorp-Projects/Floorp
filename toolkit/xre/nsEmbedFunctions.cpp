@@ -280,10 +280,10 @@ XRE_InitChildProcess(int aArgc,
   char* end = 0;
   base::ProcessId parentPID = strtol(parentPIDString, &end, 10);
   NS_ABORT_IF_FALSE(!*end, "invalid parent PID");
+
   base::ProcessHandle parentHandle;
-  NS_ABORT_IF_FALSE(
-      base::OpenProcessHandle(parentPID, &parentHandle),
-      "can't open handle to parent");
+  bool ok = base::OpenProcessHandle(parentPID, &parentHandle);
+  NS_ABORT_IF_FALSE(ok, "can't open handle to parent");
 
   base::AtExitManager exitManager;
 
