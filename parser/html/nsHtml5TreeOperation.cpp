@@ -57,6 +57,7 @@
 #include "nsIFormControl.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDOMDocumentType.h"
+#include "nsIMutationObserver.h"
 
 /**
  * Helper class that opens a notification batch if the current doc
@@ -105,11 +106,13 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
     case eTreeOpCreateElement:
       delete mThree.attributes;
       break;
-    case eTreeOpCreateDoctype:
+    case eTreeOpAppendDoctypeToDocument:
       delete mTwo.stringPair;
       break;
-    case eTreeOpCreateTextNode:
-    case eTreeOpCreateComment:
+    case eTreeOpFosterParentText:
+    case eTreeOpAppendText:
+    case eTreeOpAppendComment:
+    case eTreeOpAppendCommentToDocument:
       delete[] mTwo.unicharPtr;
       break;
     case eTreeOpSetDocumentCharset:
@@ -122,6 +125,107 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
 }
 
 nsresult
+nsHtml5TreeOperation::AppendTextToTextNode(PRUnichar* aBuffer,
+                                           PRInt32 aLength,
+                                           nsIContent* aTextNode,
+                                           nsHtml5TreeOpExecutor* aBuilder)
+{
+  NS_PRECONDITION(aTextNode, "Got null text node.");
+
+  if (aBuilder->HaveNotified(aTextNode)) {
+    // This text node has already been notified on, so it's necessary to
+    // notify on the append
+    nsresult rv = NS_OK;
+    PRUint32 oldLength = aTextNode->TextLength();
+    CharacterDataChangeInfo info = {
+      PR_TRUE,
+      oldLength,
+      oldLength,
+      aLength
+    };
+    nsNodeUtils::CharacterDataWillChange(aTextNode, &info);
+
+    rv = aTextNode->AppendText(aBuffer, aLength, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsNodeUtils::CharacterDataChanged(aTextNode, &info);
+    return rv;
+  }
+
+  return aTextNode->AppendText(aBuffer, aLength, PR_FALSE);
+}
+
+
+nsresult
+nsHtml5TreeOperation::AppendText(PRUnichar* aBuffer,
+                                 PRInt32 aLength,
+                                 nsIContent* aParent,
+                                 nsHtml5TreeOpExecutor* aBuilder)
+{
+  nsresult rv = NS_OK;
+  nsIContent* lastChild = aParent->GetLastChild();
+  if (lastChild && lastChild->IsNodeOfType(nsINode::eTEXT)) {
+    nsHtml5OtherDocUpdate update(aParent->GetOwnerDoc(),
+                                 aBuilder->GetDocument());
+    return AppendTextToTextNode(aBuffer, 
+                                aLength, 
+                                lastChild, 
+                                aBuilder);
+  }
+
+  nsCOMPtr<nsIContent> text;
+  NS_NewTextNode(getter_AddRefs(text), aBuilder->GetNodeInfoManager());
+  NS_ASSERTION(text, "Infallible malloc failed?");
+  rv = text->SetText(aBuffer, aLength, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return Append(text, aParent, aBuilder);
+}
+
+nsresult
+nsHtml5TreeOperation::Append(nsIContent* aNode,
+                             nsIContent* aParent,
+                             nsHtml5TreeOpExecutor* aBuilder)
+{
+  nsresult rv = NS_OK;
+  nsIDocument* executorDoc = aBuilder->GetDocument();
+  NS_ASSERTION(executorDoc, "Null doc on executor");
+  nsIDocument* parentDoc = aParent->GetOwnerDoc();
+  NS_ASSERTION(parentDoc, "Null owner doc on old node.");
+
+  if (NS_LIKELY(executorDoc == parentDoc)) {
+    // the usual case. the parent is in the parser's doc
+    aBuilder->PostPendingAppendNotification(aParent, aNode);
+    rv = aParent->AppendChildTo(aNode, PR_FALSE);
+    return rv;
+  }
+
+  // The parent has been moved to another doc
+  parentDoc->BeginUpdate(UPDATE_CONTENT_MODEL);
+
+  PRUint32 childCount = aParent->GetChildCount();
+  rv = aParent->AppendChildTo(aNode, PR_FALSE);
+  nsNodeUtils::ContentAppended(aParent, childCount);
+
+  parentDoc->EndUpdate(UPDATE_CONTENT_MODEL);
+  return rv;
+}
+
+nsresult
+nsHtml5TreeOperation::AppendToDocument(nsIContent* aNode,
+                                       nsHtml5TreeOpExecutor* aBuilder)
+{
+  nsresult rv = NS_OK;
+  aBuilder->FlushPendingAppendNotifications();
+  nsIDocument* doc = aBuilder->GetDocument();
+  PRUint32 childCount = doc->GetChildCount();
+  rv = doc->AppendChildTo(aNode, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsNodeUtils::ContentInserted(doc, aNode, childCount);
+  return rv;
+}
+
+nsresult
 nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                               nsIContent** aScriptElement)
 {
@@ -130,28 +234,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpAppend: {
       nsIContent* node = *(mOne.node);
       nsIContent* parent = *(mTwo.node);
-
-      nsIDocument* executorDoc = aBuilder->GetDocument();
-      NS_ASSERTION(executorDoc, "Null doc on executor");
-      nsIDocument* parentDoc = parent->GetOwnerDoc();
-      NS_ASSERTION(parentDoc, "Null owner doc on old node.");
-
-      if (NS_LIKELY(executorDoc == parentDoc)) {
-        // the usual case. the parent is in the parser's doc
-        aBuilder->PostPendingAppendNotification(parent, node);
-        rv = parent->AppendChildTo(node, PR_FALSE);
-        return rv;
-      }
-      
-      // The parent has been moved to another doc
-      parentDoc->BeginUpdate(UPDATE_CONTENT_MODEL);
-
-      PRUint32 childCount = parent->GetChildCount();
-      rv = parent->AppendChildTo(node, PR_FALSE);
-      nsNodeUtils::ContentAppended(parent, childCount);
-
-      parentDoc->EndUpdate(UPDATE_CONTENT_MODEL);
-      return rv;
+      return Append(node, parent, aBuilder);
     }
     case eTreeOpDetach: {
       nsIContent* node = *(mOne.node);
@@ -209,37 +292,11 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
         return rv;
       }
 
-      nsIDocument* executorDoc = aBuilder->GetDocument();
-      NS_ASSERTION(executorDoc, "Null doc on executor");
-      nsIDocument* parentDoc = parent->GetOwnerDoc();
-      NS_ASSERTION(parentDoc, "Null owner doc on old node.");
-
-      if (NS_LIKELY(executorDoc == parentDoc)) {
-        // the usual case. the parent is in the parser's doc
-        aBuilder->PostPendingAppendNotification(parent, node);
-        rv = parent->AppendChildTo(node, PR_FALSE);
-        return rv;
-      }
-      
-      // The parent has been moved to another doc
-      parentDoc->BeginUpdate(UPDATE_CONTENT_MODEL);
-
-      PRUint32 childCount = parent->GetChildCount();
-      rv = parent->AppendChildTo(node, PR_FALSE);
-      nsNodeUtils::ContentAppended(parent, childCount);
-
-      parentDoc->EndUpdate(UPDATE_CONTENT_MODEL);
-      return rv;
+      return Append(node, parent, aBuilder);
     }
     case eTreeOpAppendToDocument: {
       nsIContent* node = *(mOne.node);
-      aBuilder->FlushPendingAppendNotifications();
-      nsIDocument* doc = aBuilder->GetDocument();
-      PRUint32 childCount = doc->GetChildCount();
-      rv = doc->AppendChildTo(node, PR_FALSE);
-      NS_ENSURE_SUCCESS(rv, rv);
-      nsNodeUtils::ContentInserted(doc, node, childCount);
-      return rv;
+      return AppendToDocument(node, aBuilder);
     }
     case eTreeOpAddAttributes: {
       nsIContent* node = *(mOne.node);
@@ -348,41 +405,81 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       }
       return rv;
     }
-    case eTreeOpCreateTextNode: {
-      nsIContent** target = mOne.node;
+    case eTreeOpAppendText: {
+      nsIContent* parent = *mOne.node;
       PRUnichar* buffer = mTwo.unicharPtr;
       PRInt32 length = mInt;
-      
-      nsCOMPtr<nsIContent> text;
-      NS_NewTextNode(getter_AddRefs(text), aBuilder->GetNodeInfoManager());
-      // XXX nsresult and comment null check?
-      text->SetText(buffer, length, PR_FALSE);
-      // XXX nsresult
-      
-      aBuilder->HoldNonElement(*target = text);
-      return rv;
+      return AppendText(buffer, length, parent, aBuilder);
     }
-    case eTreeOpCreateComment: {
-      nsIContent** target = mOne.node;
+    case eTreeOpFosterParentText: {
+      nsIContent* stackParent = *mOne.node;
+      PRUnichar* buffer = mTwo.unicharPtr;
+      PRInt32 length = mInt;
+      nsIContent* table = *mThree.node;
+      
+      nsIContent* foster = table->GetParent();
+
+      if (foster && foster->IsNodeOfType(nsINode::eELEMENT)) {
+        aBuilder->FlushPendingAppendNotifications();
+
+        nsHtml5OtherDocUpdate update(foster->GetOwnerDoc(),
+                                     aBuilder->GetDocument());
+
+        PRUint32 pos = foster->IndexOf(table);
+        
+        nsIContent* previousSibling = foster->GetChildAt(pos - 1);
+        if (previousSibling && previousSibling->IsNodeOfType(nsINode::eTEXT)) {
+          return AppendTextToTextNode(buffer, 
+                                      length, 
+                                      previousSibling, 
+                                      aBuilder);
+        }
+        
+        nsCOMPtr<nsIContent> text;
+        NS_NewTextNode(getter_AddRefs(text), aBuilder->GetNodeInfoManager());
+        NS_ASSERTION(text, "Infallible malloc failed?");
+        rv = text->SetText(buffer, length, PR_FALSE);
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        rv = foster->InsertChildAt(text, pos, PR_FALSE);
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsNodeUtils::ContentInserted(foster, text, pos);
+        return rv;
+      }
+      
+      return AppendText(buffer, length, stackParent, aBuilder);
+    }
+    case eTreeOpAppendComment: {
+      nsIContent* parent = *mOne.node;
       PRUnichar* buffer = mTwo.unicharPtr;
       PRInt32 length = mInt;
       
       nsCOMPtr<nsIContent> comment;
       NS_NewCommentNode(getter_AddRefs(comment), aBuilder->GetNodeInfoManager());
-      // XXX nsresult and comment null check?
-      comment->SetText(buffer, length, PR_FALSE);
-      // XXX nsresult
+      NS_ASSERTION(comment, "Infallible malloc failed?");
+      rv = comment->SetText(buffer, length, PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
       
-      aBuilder->HoldNonElement(*target = comment);
-      return rv;
+      return Append(comment, parent, aBuilder);
     }
-    case eTreeOpCreateDoctype: {
+    case eTreeOpAppendCommentToDocument: {
+      PRUnichar* buffer = mTwo.unicharPtr;
+      PRInt32 length = mInt;
+      
+      nsCOMPtr<nsIContent> comment;
+      NS_NewCommentNode(getter_AddRefs(comment), aBuilder->GetNodeInfoManager());
+      NS_ASSERTION(comment, "Infallible malloc failed?");
+      rv = comment->SetText(buffer, length, PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      return AppendToDocument(comment, aBuilder);
+    }
+    case eTreeOpAppendDoctypeToDocument: {
       nsCOMPtr<nsIAtom> name = Reget(mOne.atom);
       nsHtml5TreeOperationStringPair* pair = mTwo.stringPair;
       nsString publicId;
       nsString systemId;
       pair->Get(publicId, systemId);
-      nsIContent** target = mThree.node;
       
       // Adapted from nsXMLContentSink
       // Create a new doctype node
@@ -400,8 +497,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                             voidString);
       NS_ASSERTION(docType, "Doctype creation failed.");
       nsCOMPtr<nsIContent> asContent = do_QueryInterface(docType);
-      aBuilder->HoldNonElement(*target = asContent);      
-      return rv;
+      return AppendToDocument(asContent, aBuilder);
     }
     case eTreeOpRunScript: {
       nsIContent* node = *(mOne.node);

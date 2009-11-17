@@ -63,6 +63,8 @@
 
     ~nsHtml5TreeBuilder();
     
+    PRBool IsDiscretionaryFlushSafe();
+
     PRBool HasScript();
     
     void SetOpSink(nsAHtml5TreeOpSink* aOpSink) {
@@ -77,9 +79,7 @@
 
     void DropSpeculativeLoader();
 
-    void Flush();
-    
-    void MaybeFlush();
+    PRBool Flush();
     
     void SetDocumentCharset(nsACString& aCharset);
 

@@ -50,7 +50,6 @@
 #include "nsContentSink.h"
 #include "nsNodeInfoManager.h"
 #include "nsHtml5DocumentMode.h"
-#include "nsITimer.h"
 #include "nsIScriptElement.h"
 #include "nsIParser.h"
 #include "nsCOMArray.h"
@@ -95,18 +94,12 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     
     PRBool                               mHasProcessedBase;
     PRBool                               mReadingFromStage;
-    nsCOMPtr<nsITimer>                   mFlushTimer;
     nsTArray<nsHtml5TreeOperation>       mOpQueue;
     nsTArray<nsIContentPtr>              mElementsSeenInThisAppendBatch;
     nsTArray<nsHtml5PendingNotification> mPendingNotifications;
     nsHtml5StreamParser*                 mStreamParser;
     nsCOMArray<nsIContent>               mOwnedElements;
     
-    // This could be optimized away by introducing more tree ops so that 
-    // non-elements wouldn't use the handle setup but the text node / comment
-    // / doctype operand would be remembered by the tree op executor.
-    nsCOMArray<nsIContent>               mOwnedNonElements;
-  
     /**
      * Whether the parser has started
      */
@@ -300,21 +293,21 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       mFlushState = eInDocUpdate;
     }
     
-    inline PRBool HaveNotified(nsIContent* aElement) {
-      NS_PRECONDITION(aElement, "HaveNotified called with null argument.");
+    inline PRBool HaveNotified(nsIContent* aNode) {
+      NS_PRECONDITION(aNode, "HaveNotified called with null argument.");
       const nsHtml5PendingNotification* start = mPendingNotifications.Elements();
       const nsHtml5PendingNotification* end = start + mPendingNotifications.Length();
       for (;;) {
-        nsIContent* parent = aElement->GetParent();
+        nsIContent* parent = aNode->GetParent();
         if (!parent) {
           return PR_TRUE;
         }
         for (nsHtml5PendingNotification* iter = (nsHtml5PendingNotification*)start; iter < end; ++iter) {
           if (iter->Contains(parent)) {
-            return iter->HaveNotifiedIndex(parent->IndexOf(aElement));
+            return iter->HaveNotifiedIndex(parent->IndexOf(aNode));
           }
         }
-        aElement = parent;
+        aNode = parent;
       }
     }
 
@@ -359,22 +352,13 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       mOwnedElements.AppendObject(aContent);
     }
 
-    inline void HoldNonElement(nsIContent* aContent) {
-      mOwnedNonElements.AppendObject(aContent);
-    }
-
     // The following two methods are for the main-thread case
-
-    /**
-     * No-op
-     */    
-    virtual void MaybeFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
 
     /**
      * Flush the operations from the tree operations from the argument
      * queue unconditionally.
      */
-    virtual void ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
+    virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue);
     
     nsAHtml5TreeOpSink* GetStage() {
       return &mStage;
@@ -386,8 +370,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     void StreamEnded();
     
-    void ScheduleTimer();
-
 #ifdef DEBUG
     void AssertStageEmpty() {
       mStage.AssertEmpty();
