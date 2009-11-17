@@ -195,7 +195,6 @@ nsPluginArray::SetDocShell(nsIDocShell* aDocShell)
 NS_IMETHODIMP
 nsPluginArray::Refresh(PRBool aReloadDocuments)
 {
-  PRTime then = PR_Now();
   nsresult res = NS_OK;
   if (!AllowPlugins())
     return NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA;
@@ -204,13 +203,9 @@ nsPluginArray::Refresh(PRBool aReloadDocuments)
     mPluginHost = do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &res);
   }
 
-  printf("1XXXXX  %lld\n\n\n", (PR_Now() - then)/1000);
-
   if(NS_FAILED(res)) {
     return res;
   }
-
-  printf("2XXXXX  %lld\n\n\n", (PR_Now() - then)/1000);
 
   // NS_ERROR_PLUGINS_PLUGINSNOTCHANGED on reloading plugins indicates
   // that plugins did not change and was not reloaded
@@ -218,14 +213,10 @@ nsPluginArray::Refresh(PRBool aReloadDocuments)
   if(mPluginHost)
     pluginsNotChanged = (NS_ERROR_PLUGINS_PLUGINSNOTCHANGED == mPluginHost->ReloadPlugins(aReloadDocuments));
 
-  printf("3XXXXX  %lld\n\n\n", (PR_Now() - then)/1000);
-
   // no need to reload the page if plugins have not been changed
   // in fact, if we do reload we can hit recursive load problem, see bug 93351
   if(pluginsNotChanged)
     return res;
-
-  printf("4XXXXX  %lld\n\n\n", (PR_Now() - then)/1000);
 
   nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mDocShell);
 
@@ -239,15 +230,12 @@ nsPluginArray::Refresh(PRBool aReloadDocuments)
   mPluginCount = 0;
   mPluginArray = nsnull;
 
-  printf("5XXXXX  %lld\n\n\n", (PR_Now() - then)/1000);
-
   if (mNavigator)
     mNavigator->RefreshMIMEArray();
   
   if (aReloadDocuments && webNav)
     webNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
 
-  printf("6XXXXX  %lld\n\n\n", (PR_Now() - then)/1000);
   return res;
 }
 
