@@ -486,11 +486,6 @@ var BrowserUI = {
     gHistSvc.markPageAsTyped(gURIFixup.createFixupURI(aURI, 0));
   },
 
-  search : function() {
-    var queryURI = "http://www.google.com/search?q=" + this._edit.value + "&hl=en&lr=&btnG=Search";
-    getBrowser().loadURI(queryURI, null, null, false);
-  },
-
   showAutoComplete : function() {
     if (this.isAutoCompleteOpen())
       return;
@@ -660,7 +655,6 @@ var BrowserUI = {
       case "cmd_forward":
       case "cmd_reload":
       case "cmd_stop":
-      case "cmd_search":
       case "cmd_go":
       case "cmd_openLocation":
       case "cmd_star":
@@ -702,9 +696,6 @@ var BrowserUI = {
         break;
       case "cmd_stop":
         browser.stop();
-        break;
-      case "cmd_search":
-        this.search();
         break;
       case "cmd_go":
         this.goToURI();
