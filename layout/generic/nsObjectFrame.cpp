@@ -210,7 +210,7 @@ static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 
 #define NORMAL_PLUGIN_DELAY 20
 // must avoid audio skipping/delays
-#define HIDDEN_PLUGIN_DELAY 250
+#define HIDDEN_PLUGIN_DELAY 125
 
 // special class for handeling DOM context menu events because for
 // some reason it starves other mouse events if implemented on the
