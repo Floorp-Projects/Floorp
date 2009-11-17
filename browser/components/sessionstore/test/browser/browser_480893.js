@@ -46,13 +46,13 @@ function test() {
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
   browser.addEventListener("load", function(aEvent) {
-    this.removeEventListener("load", arguments.callee, true);
+    browser.removeEventListener("load", arguments.callee, true);
     let doc = browser.contentDocument;
 
     // click on the "Start New Session" button after about:sessionrestore is loaded
     doc.getElementById("errorCancel").click();
     browser.addEventListener("load", function(aEvent) {
-      this.removeEventListener("load", arguments.callee, true);
+      browser.removeEventListener("load", arguments.callee, true);
       let doc = browser.contentDocument;
 
       is(doc.URL, "about:blank", "loaded page is about:blank");
@@ -64,13 +64,13 @@ function test() {
       gPrefService.setIntPref("browser.startup.page", 1);
       gBrowser.loadURI("about:sessionrestore");
       browser.addEventListener("load", function(aEvent) {
-        this.removeEventListener("load", arguments.callee, true);
+        browser.removeEventListener("load", arguments.callee, true);
         let doc = browser.contentDocument;
 
         // click on the "Start New Session" button after about:sessionrestore is loaded
         doc.getElementById("errorCancel").click();
         browser.addEventListener("load", function(aEvent) {
-          this.removeEventListener("load", arguments.callee, true);
+          browser.removeEventListener("load", arguments.callee, true);
           let doc = browser.contentDocument;
 
           is(doc.URL, homepage, "loaded page is the homepage");
