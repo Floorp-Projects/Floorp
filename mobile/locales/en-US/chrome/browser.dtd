@@ -2,7 +2,6 @@
 <!ENTITY forward.label         "Forward">
 <!ENTITY reload.label          "Reload">
 <!ENTITY stop.label            "Stop">
-<!ENTITY search.label          "Search">
 <!ENTITY go.label              "Go">
 <!ENTITY openLocation.label    "Open location">
 <!ENTITY star.label            "Star">
