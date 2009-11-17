@@ -192,10 +192,6 @@ public:
   NS_IMETHOD_(PRBool)    IsDispatchStopped();
   NS_IMETHOD_(nsEvent*)    GetInternalNSEvent();
   NS_IMETHOD    SetTrusted(PRBool aTrusted);
-#ifdef MOZ_IPC
-  virtual void Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType);
-  virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter);
-#endif
 
   static PopupControlState GetEventPopupControlState(nsEvent *aEvent);
 

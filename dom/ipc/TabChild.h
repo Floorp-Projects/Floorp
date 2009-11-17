@@ -46,23 +46,9 @@
 #include "nsIWebBrowserChrome2.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIWebBrowserChromeFocus.h"
-#include "nsIDOMEventListener.h"
-#include "nsIDOMEventTarget.h"
 
 namespace mozilla {
 namespace dom {
-
-class TabChild;
-
-class ContentListener : public nsIDOMEventListener
-{
-public:
-  ContentListener(TabChild* aTabChild) : mTabChild(aTabChild) {}
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMEVENTLISTENER
-protected:
-  TabChild* mTabChild;
-};
 
 class TabChild : public PIFrameEmbeddingChild,
                  public nsIWebBrowserChrome2,
@@ -96,7 +82,6 @@ public:
                                     const PRInt32&  aClickCount,
                                     const PRInt32&  aModifiers,
                                     const bool&     aIgnoreRootScrollFrame);
-    virtual bool RecvactivateFrameEvent(const nsString& aType, const bool& capture);
     virtual mozilla::ipc::PDocumentRendererChild* AllocPDocumentRenderer(
             const PRInt32& x,
             const PRInt32& y,

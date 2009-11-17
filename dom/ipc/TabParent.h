@@ -57,7 +57,6 @@ public:
     void SetOwnerElement(nsIDOMElement* aElement) { mFrameElement = aElement; }
 
     virtual bool RecvmoveFocus(const bool& aForward);
-    virtual bool RecvsendEvent(const RemoteDOMEvent& aEvent);
 
     void LoadURL(nsIURI* aURI);
     void Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height);

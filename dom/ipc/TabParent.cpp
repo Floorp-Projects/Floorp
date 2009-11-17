@@ -46,10 +46,6 @@
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIDOMElement.h"
-#include "nsEventDispatcher.h"
-#include "nsIDOMEventTarget.h"
-#include "nsIDOMEvent.h"
-#include "nsIPrivateDOMEvent.h"
 
 using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::DocumentRendererParent;
@@ -76,20 +72,6 @@ TabParent::RecvmoveFocus(const bool& aForward)
     fm->MoveFocus(nsnull, mFrameElement, type, nsIFocusManager::FLAG_BYKEY, 
                   getter_AddRefs(dummy));
   }
-  return true;
-}
-
-bool
-TabParent::RecvsendEvent(const RemoteDOMEvent& aEvent)
-{
-  nsCOMPtr<nsIDOMEvent> event = do_QueryInterface(aEvent.mEvent);
-  NS_ENSURE_TRUE(event, true);
-
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mFrameElement);
-  NS_ENSURE_TRUE(target, true);
-
-  PRBool dummy;
-  target->DispatchEvent(event, &dummy);
   return true;
 }
 
