@@ -4355,15 +4355,9 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, bool added,
          * Allow API consumers to create shared properties with stub setters.
          * Such properties lack value storage, so setting them is like writing
          * to /dev/null.
-         *
-         * But we can't short-circuit if there's a scripted getter or setter
-         * since we might need to throw. In that case, we let SPROP_SET
-         * decide whether to throw an exception. See bug 478047.
          */
-        if (!(sprop->attrs & JSPROP_GETTER) && SPROP_HAS_STUB_SETTER(sprop)) {
-            JS_ASSERT(!(sprop->attrs & JSPROP_SETTER));
+        if (SPROP_HAS_STUB_SETTER(sprop))
             return true;
-        }
     }
 
     sample = cx->runtime->propertyRemovals;
