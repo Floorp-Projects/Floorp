@@ -4,6 +4,13 @@
 <!-- Async script that isn't preloaded -->
 <script async src="file_bug503481.sjs?blockOn=R&body=runFirst();"></script>
 <script>
+function enableLogs(b) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+              .getService(Components.interfaces.nsIPrefBranch);
+  prefs.setBoolPref("content.scriptloader.logloads", b);
+}
+enableLogs(true);
 firstRan = false;
 secondRan = false;
 thirdRan = false;
@@ -37,6 +44,7 @@ function done() {
   parent.is(forthRan, true, "forth should have run by onload");
   parent.is(fifthRan, true, "fifth should have run by onload");
   parent.is(sixthRan, true, "sixth should have run by onload");
+  enableLogs(false);
   parent.SimpleTest.finish();
 }
 
