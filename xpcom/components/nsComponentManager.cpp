@@ -3143,7 +3143,7 @@ nsComponentManagerImpl::AutoRegisterComponent(nsILocalFile*  aComponentFile,
         return NS_OK;
     }
 
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && modTime != 0)
         mAutoRegEntries.Put(lfhash, modTime);
 
     return rv;
@@ -3200,7 +3200,7 @@ nsComponentManagerImpl::LoadDeferredModules(nsTArray<DeferredModule> &aDeferred)
                                                  d.file,
                                                  d.location.get(),
                                                  d.type);
-            if (NS_SUCCEEDED(rv)) {
+            if (NS_SUCCEEDED(rv) && d.modTime != 0) {
                 nsCOMPtr<nsIHashable> lfhash(do_QueryInterface(d.file));
                 if (lfhash)
                     mAutoRegEntries.Put(lfhash, d.modTime);
