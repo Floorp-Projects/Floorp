@@ -154,6 +154,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug415860.html \
 		test_bug414190.html \
 		test_bug414796.html \
+		test_bug527896.html \
 		test_bug416317-1.html \
 		test_bug416317-2.html \
 		test_XHRSendData.html \
