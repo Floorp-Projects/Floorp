@@ -116,12 +116,12 @@
       <method name="resize">
         <body>
           <![CDATA[
-            let container = document.getElementById("tabs-container").getBoundingClientRect();
-            let el = this.getBoundingClientRect();
+            let container = this.parentNode.getBoundingClientRect();
+            let element   = this.getBoundingClientRect();
             
-            let height = container.top + (el.top - container.top)
-                                       + ((container.top + container.height) - (el.top + el.height));
-            this.style.height = (window.innerHeight - height) + "px";
+            let height = (element.top - container.top) +
+                         ((container.top + container.height) - (element.top + element.height));
+            this.style.height = height + "px";
 
             this._updateWidth();
           ]]>
