@@ -86,11 +86,11 @@ is(singleFileInput.value, input1File.name, "single-file input .value");
 is(multiFileInput.value, input2Files[0].name, "multi-file input .value");
 is(singleFileInput.files[0].name, input1File.name, "single-file input .files[n].name");
 is(singleFileInput.files[0].size, input1File.body.length, "single-file input .files[n].size");
-is(singleFileInput.files[0].mediaType, input1File.type, "single-file input .files[n].mediaType");
+is(singleFileInput.files[0].type, input1File.type, "single-file input .files[n].type");
 for(i = 0; i < input2Files.length; ++i) {
   is(multiFileInput.files[i].name, input2Files[i].name, "multi-file input .files[n].name");
   is(multiFileInput.files[i].size, input2Files[i].body.length, "multi-file input .files[n].size");
-  is(multiFileInput.files[i].mediaType, input2Files[i].type, "multi-file input .files[n].mediaType");
+  is(multiFileInput.files[i].type, input2Files[i].type, "multi-file input .files[n].type");
 }
 
 document.getElementById('form').submit();
