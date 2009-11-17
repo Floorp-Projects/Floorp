@@ -6853,6 +6853,7 @@ let gPrivateBrowsingUI = {
     this._observerService = Cc["@mozilla.org/observer-service;1"].
                             getService(Ci.nsIObserverService);
     this._observerService.addObserver(this, "private-browsing", false);
+    this._observerService.addObserver(this, "private-browsing-transition-complete", false);
 
     this._privateBrowsingService = Cc["@mozilla.org/privatebrowsing;1"].
                                    getService(Ci.nsIPrivateBrowsingService);
@@ -6863,6 +6864,19 @@ let gPrivateBrowsingUI = {
 
   uninit: function PBUI_unint() {
     this._observerService.removeObserver(this, "private-browsing");
+    this._observerService.removeObserver(this, "private-browsing-transition-complete");
+  },
+
+  get _disableUIOnToggle PBUI__disableUIOnTogle() {
+    if (this._privateBrowsingService.autoStarted)
+      return false;
+
+    try {
+      return !gPrefService.getBoolPref("browser.privatebrowsing.keep_current_session");
+    }
+    catch (e) {
+      return true;
+    }
   },
 
   observe: function PBUI_observe(aSubject, aTopic, aData) {
@@ -6871,6 +6885,15 @@ let gPrivateBrowsingUI = {
         this.onEnterPrivateBrowsing();
       else if (aData == "exit")
         this.onExitPrivateBrowsing();
+    }
+    else if (aTopic == "private-browsing-transition-complete") {
+      if (this._disableUIOnToggle) {
+        // use setTimeout here in order to make the code testable
+        setTimeout(function() {
+          document.getElementById("Tools:PrivateBrowsing")
+                  .removeAttribute("disabled");
+        }, 0);
+      }
     }
   },
 
@@ -6967,6 +6990,10 @@ let gPrivateBrowsingUI = {
     setTimeout(function () {
       DownloadMonitorPanel.updateStatus();
     }, 0);
+
+    if (this._disableUIOnToggle)
+      document.getElementById("Tools:PrivateBrowsing")
+              .setAttribute("disabled", "true");
   },
 
   onExitPrivateBrowsing: function PBUI_onExitPrivateBrowsing() {
@@ -7017,6 +7044,10 @@ let gPrivateBrowsingUI = {
     setTimeout(function () {
       DownloadMonitorPanel.updateStatus();
     }, 0);
+
+    if (this._disableUIOnToggle)
+      document.getElementById("Tools:PrivateBrowsing")
+              .setAttribute("disabled", "true");
   },
 
   _setPBMenuTitle: function PBUI__setPBMenuTitle(aMode) {

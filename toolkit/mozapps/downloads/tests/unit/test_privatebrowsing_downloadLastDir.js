@@ -164,9 +164,11 @@ function run_test()
                      FILE_PICKER_CID,
                      factory);
 
-  let prefs = Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefService).
-              getBranch("browser.download.");
+  let prefsService = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefService).
+                     QueryInterface(Ci.nsIPrefBranch);
+  prefsService.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+  let prefs = prefsService.getBranch("browser.download.");
   let obs = Cc["@mozilla.org/observer-service;1"].
             getService(Ci.nsIObserverService);
   let launcher = Cc["@mozilla.org/helperapplauncherdialog;1"].
@@ -252,6 +254,7 @@ function run_test()
   do_check_eq(gDownloadLastDir.file.path, dir3.path);
 
   // cleanup
+  prefsService.clearUserPref("browser.privatebrowsing.keep_current_session");
   [dir1, dir2, dir3].forEach(function(dir) dir.remove(true));
   dirSvc.QueryInterface(Ci.nsIDirectoryService).unregisterProvider(provider);
   obs.removeObserver(observer, "TEST_FILEPICKER_GETFILE", false);

@@ -42,6 +42,7 @@ const Cu = Components.utils;
 
 const kPrivateBrowsingNotification = "private-browsing";
 const kPrivateBrowsingCancelVoteNotification = "private-browsing-cancel-vote";
+const kPrivateBrowsingTransitionCompleteNotification = "private-browsing-transition-complete";
 const kEnter = "enter";
 const kExit = "exit";
 
@@ -93,6 +94,11 @@ if (!profileDir) {
   };
   dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 }
+
+// Do not attempt to restore any session since we don't have any windows
+Cc["@mozilla.org/preferences-service;1"].
+  getService(Ci.nsIPrefBranch).
+  setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
 /**
  * Removes any files that could make our tests fail.

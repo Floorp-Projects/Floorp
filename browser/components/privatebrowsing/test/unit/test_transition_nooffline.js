@@ -44,9 +44,6 @@ function run_test_on_service() {
            getService(Ci.nsIPrivateBrowsingService);
   var os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
-  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch);
-  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
   var observer = {
     observe: function (aSubject, aTopic, aData) {
@@ -66,7 +63,6 @@ function run_test_on_service() {
   do_check_eq(observer.events.length, 0);
 
   os.removeObserver(observer, "network:offline-status-changed", false);
-  prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
 }
 
 // Support running tests on both the service itself and its wrapper
