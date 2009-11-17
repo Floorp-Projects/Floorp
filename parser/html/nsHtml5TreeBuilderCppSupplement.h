@@ -314,15 +314,9 @@ nsHtml5TreeBuilder::insertFosterParentedCharacters(PRUnichar* aBuffer, PRInt32 a
   PRUnichar* bufferCopy = new PRUnichar[aLength];
   memcpy(bufferCopy, aBuffer, aLength * sizeof(PRUnichar));
   
-  nsIContent** text = AllocateContentHandle();
-
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpCreateTextNode, bufferCopy, aLength, text);
-
-  treeOp = mOpQueue.AppendElement();
-  NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpFosterParent, text, aStackParent, aTable);
+  treeOp->Init(eTreeOpFosterParentText, bufferCopy, aLength, aStackParent, aTable);
 }
 
 void
@@ -346,15 +340,9 @@ nsHtml5TreeBuilder::appendCharacters(nsIContent** aParent, PRUnichar* aBuffer, P
   PRUnichar* bufferCopy = new PRUnichar[aLength];
   memcpy(bufferCopy, aBuffer, aLength * sizeof(PRUnichar));
   
-  nsIContent** text = AllocateContentHandle();
-
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpCreateTextNode, bufferCopy, aLength, text);
-
-  treeOp = mOpQueue.AppendElement();
-  NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpAppend, text, aParent);
+  treeOp->Init(eTreeOpAppendText, bufferCopy, aLength, aParent);
 }
 
 void
@@ -366,15 +354,9 @@ nsHtml5TreeBuilder::appendComment(nsIContent** aParent, PRUnichar* aBuffer, PRIn
   PRUnichar* bufferCopy = new PRUnichar[aLength];
   memcpy(bufferCopy, aBuffer, aLength * sizeof(PRUnichar));
   
-  nsIContent** comment = AllocateContentHandle();
-
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpCreateComment, bufferCopy, aLength, comment);
-
-  treeOp = mOpQueue.AppendElement();
-  NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpAppend, comment, aParent);
+  treeOp->Init(eTreeOpAppendComment, bufferCopy, aLength, aParent);
 }
 
 void
@@ -385,15 +367,9 @@ nsHtml5TreeBuilder::appendCommentToDocument(PRUnichar* aBuffer, PRInt32 aStart, 
   PRUnichar* bufferCopy = new PRUnichar[aLength];
   memcpy(bufferCopy, aBuffer, aLength * sizeof(PRUnichar));
   
-  nsIContent** comment = AllocateContentHandle();
-
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpCreateComment, bufferCopy, aLength, comment);
-
-  treeOp = mOpQueue.AppendElement();
-  NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpAppendToDocument, comment);
+  treeOp->Init(eTreeOpAppendCommentToDocument, bufferCopy, aLength);
 }
 
 void
@@ -442,15 +418,9 @@ nsHtml5TreeBuilder::appendDoctypeToDocument(nsIAtom* aName, nsString* aPublicId,
 {
   NS_PRECONDITION(aName, "Null name");
 
-  nsIContent** content = AllocateContentHandle();
-
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(aName, *aPublicId, *aSystemId, content);
-  
-  treeOp = mOpQueue.AppendElement();
-  NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpAppendToDocument, content);
+  treeOp->Init(aName, *aPublicId, *aSystemId);
   // nsXMLContentSink can flush here, but what's the point?
   // It can also interrupt here, but we can't.
 }
@@ -614,16 +584,14 @@ nsHtml5TreeBuilder::HasScript()
   return mOpQueue.ElementAt(len - 1).IsRunScript();
 }
 
-void
+PRBool
 nsHtml5TreeBuilder::Flush()
 {
-  mOpSink->ForcedFlush(mOpQueue);
-}
-
-void
-nsHtml5TreeBuilder::MaybeFlush()
-{
-  mOpSink->MaybeFlush(mOpQueue);
+  PRBool hasOps = !mOpQueue.IsEmpty();
+  if (hasOps) {
+    mOpSink->MoveOpsFrom(mOpQueue);
+  }
+  return hasOps;
 }
 
 void
@@ -674,6 +642,14 @@ nsHtml5TreeBuilder::SetSpeculativeLoaderWithDocument(nsIDocument* aDocument) {
 void
 nsHtml5TreeBuilder::DropSpeculativeLoader() {
   mSpeculativeLoader = nsnull;
+}
+
+PRBool 
+nsHtml5TreeBuilder::IsDiscretionaryFlushSafe()
+{
+  return !(charBufferLen && 
+           currentPtr >= 0 && 
+           stack[currentPtr]->fosterParenting);
 }
 
 // DocumentModeHandler

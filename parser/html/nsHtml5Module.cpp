@@ -71,6 +71,7 @@ nsHtml5Module::InitializeStatics()
   nsHtml5Tokenizer::initializeStatics();
   nsHtml5TreeBuilder::initializeStatics();
   nsHtml5UTF16Buffer::initializeStatics();
+  nsHtml5StreamParser::InitializeStatics();
 #ifdef DEBUG
   sNsHtml5ModuleInitialized = PR_TRUE;
 #endif

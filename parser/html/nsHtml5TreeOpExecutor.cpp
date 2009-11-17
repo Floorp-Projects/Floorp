@@ -60,7 +60,6 @@
 #define NS_HTML5_TREE_OP_EXECUTOR_MAX_QUEUE_TIME 3000UL // milliseconds
 #define NS_HTML5_TREE_OP_EXECUTOR_DEFAULT_QUEUE_LENGTH 200
 #define NS_HTML5_TREE_OP_EXECUTOR_MIN_QUEUE_LENGTH 100
-#define NS_HTML5_TREE_OP_EXECUTOR_MAX_TIME_WITHOUT_FLUSH 5000 // milliseconds
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsHtml5TreeOpExecutor)
 
@@ -74,39 +73,21 @@ NS_IMPL_ADDREF_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
 NS_IMPL_RELEASE_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFlushTimer)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mOwnedElements)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mOwnedNonElements)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
-  if (tmp->mFlushTimer) {
-    tmp->mFlushTimer->Cancel();
-  }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFlushTimer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mOwnedElements)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mOwnedNonElements)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor()
-  : mFlushTimer(do_CreateInstance("@mozilla.org/timer;1"))
 {
-  // zeroing operator new for everything else
+  // zeroing operator new for everything
 }
 
 nsHtml5TreeOpExecutor::~nsHtml5TreeOpExecutor()
 {
   NS_ASSERTION(mOpQueue.IsEmpty(), "Somehow there's stuff in the op queue.");
-  if (mFlushTimer) {
-    mFlushTimer->Cancel(); // XXX why is this even necessary? it is, though.
-  }
-  mFlushTimer = nsnull;
-}
-
-static void
-TimerCallbackFunc(nsITimer* aTimer, void* aClosure)
-{
-  (static_cast<nsHtml5TreeOpExecutor*> (aClosure))->Flush();
 }
 
 // nsIContentSink
@@ -283,7 +264,6 @@ void
 nsHtml5TreeOpExecutor::Flush()
 {
   if (!mParser) {
-    mFlushTimer->Cancel();
     return;
   }
   if (mFlushState != eNotFlushing) {
@@ -296,7 +276,7 @@ nsHtml5TreeOpExecutor::Flush()
   nsCOMPtr<nsIParser> parserKungFuDeathGrip(mParser);
 
   if (mReadingFromStage) {
-    mStage.RetrieveOperations(mOpQueue);
+    mStage.MoveOpsTo(mOpQueue);
   }
   
   nsIContent* scriptElement = nsnull;
@@ -348,21 +328,9 @@ nsHtml5TreeOpExecutor::Flush()
     return;
   }
 
-  ScheduleTimer();
-  
   if (scriptElement) {
     RunScript(scriptElement); // must be tail call when mFlushState is eNotFlushing
   }
-}
-
-void
-nsHtml5TreeOpExecutor::ScheduleTimer()
-{
-  mFlushTimer->Cancel();
-  mFlushTimer->InitWithFuncCallback(TimerCallbackFunc, 
-                                    static_cast<void*> (this), 
-                                    NS_HTML5_TREE_OP_EXECUTOR_MAX_TIME_WITHOUT_FLUSH, 
-                                    nsITimer::TYPE_ONE_SHOT);
 }
 
 nsresult
@@ -514,7 +482,6 @@ nsHtml5TreeOpExecutor::Start()
 {
   NS_PRECONDITION(!mStarted, "Tried to start when already started.");
   mStarted = PR_TRUE;
-  ScheduleTimer();
 }
 
 void
@@ -572,13 +539,7 @@ nsHtml5TreeOpExecutor::Reset() {
 }
 
 void
-nsHtml5TreeOpExecutor::MaybeFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue)
-{
-  // no-op
-}
-
-void
-nsHtml5TreeOpExecutor::ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue)
+nsHtml5TreeOpExecutor::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 {
   NS_PRECONDITION(mFlushState == eNotFlushing, "mOpQueue modified during tree op execution.");
   if (mOpQueue.IsEmpty()) {

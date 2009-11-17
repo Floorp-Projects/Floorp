@@ -47,16 +47,7 @@ nsHtml5TreeOpStage::~nsHtml5TreeOpStage()
 }
 
 void
-nsHtml5TreeOpStage::MaybeFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue)
-{
-  mozilla::MutexAutoLock autoLock(mMutex);
-  if (mOpQueue.IsEmpty()) {
-    mOpQueue.SwapElements(aOpQueue);
-  }  
-}
-
-void
-nsHtml5TreeOpStage::ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue)
+nsHtml5TreeOpStage::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 {
   mozilla::MutexAutoLock autoLock(mMutex);
   if (mOpQueue.IsEmpty()) {
@@ -67,7 +58,7 @@ nsHtml5TreeOpStage::ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 }
     
 void
-nsHtml5TreeOpStage::RetrieveOperations(nsTArray<nsHtml5TreeOperation>& aOpQueue)
+nsHtml5TreeOpStage::MoveOpsTo(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 {
   mozilla::MutexAutoLock autoLock(mMutex);
   if (aOpQueue.IsEmpty()) {

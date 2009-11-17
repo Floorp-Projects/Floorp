@@ -52,6 +52,7 @@
 #include "mozilla/Mutex.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5Speculation.h"
+#include "nsITimer.h"
 
 class nsHtml5Parser;
 
@@ -106,11 +107,14 @@ class nsHtml5StreamParser : public nsIStreamListener,
   friend class nsHtml5RequestStopper;
   friend class nsHtml5DataAvailable;
   friend class nsHtml5StreamParserContinuation;
+  friend class nsHtml5StreamParserTimerFlusher;
 
   public:
     NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHtml5StreamParser, nsIStreamListener)
+
+    static void InitializeStatics();
 
     nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
                         nsHtml5Parser* aOwner);
@@ -301,6 +305,23 @@ class nsHtml5StreamParser : public nsIStreamListener,
     nsresult SetupDecodingFromBom(const char* aCharsetName,
                                   const char* aDecoderCharsetName);
 
+    /**
+     * Callback for mFlushTimer.
+     */
+    static void TimerCallback(nsITimer* aTimer, void* aClosure);
+
+    /**
+     * Main thread entry point for (maybe) flushing the ops and posting
+     * a flush runnable back on the main thread.
+     */
+    void PostTimerFlush();
+
+    /**
+     * Parser thread entry point for (maybe) flushing the ops and posting
+     * a flush runnable back on the main thread.
+     */
+    void TimerFlush();
+
     nsCOMPtr<nsIRequest>          mRequest;
     nsCOMPtr<nsIRequestObserver>  mObserver;
 
@@ -435,6 +456,31 @@ class nsHtml5StreamParser : public nsIStreamListener,
      * The document wrapped by the speculative loader.
      */
     nsCOMPtr<nsIDocument>         mDocument;
+
+    /**
+     * Timer for flushing tree ops once in a while when not speculating.
+     */
+    nsCOMPtr<nsITimer>            mFlushTimer;
+
+    /**
+     * The pref html5.flushtimer.startdelay: Time in milliseconds between
+     * the start of the network stream and the first time the flush timer
+     * fires.
+     */
+    static PRInt32                sTimerStartDelay;
+
+    /**
+     * The pref html5.flushtimer.continuedelay: Time in milliseconds between
+     * the return to non-speculating more and the first time the flush timer
+     * fires thereafter.
+     */
+    static PRInt32                sTimerContinueDelay;
+
+    /**
+     * The pref html5.flushtimer.interval: Time in milliseconds between
+     * timer firings once the timer has starting firing.
+     */
+    static PRInt32                sTimerInterval;
 };
 
 #endif // nsHtml5StreamParser_h__
