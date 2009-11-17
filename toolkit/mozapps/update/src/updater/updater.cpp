@@ -1445,6 +1445,8 @@ int NS_main(int argc, NS_tchar **argv)
   // argument prior to argOffset is the working directory.
   const int argOffset = 4;
 
+  gSourcePath = argv[1];
+
 #if defined(XP_WIN) && !defined(WINCE)
   // Launch a second instance of the updater with the runas verb on Windows
   // when write access is denied to the installation directory.
@@ -1520,6 +1522,8 @@ int NS_main(int argc, NS_tchar **argv)
       if (result) {
         WaitForSingleObject(sinfo.hProcess, INFINITE);
         CloseHandle(sinfo.hProcess);
+      } else {
+        WriteStatusFile(ELEVATION_CANCELED);
       }
 
       if (argc > argOffset) {
@@ -1531,8 +1535,6 @@ int NS_main(int argc, NS_tchar **argv)
     }
   }
 #endif
-
-  gSourcePath = argv[1];
 
   LogInit();
   LOG(("SOURCE DIRECTORY " LOG_S "\n", gSourcePath));
