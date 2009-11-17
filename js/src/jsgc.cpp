@@ -1441,7 +1441,7 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
     }
 
     METER(JSGCArenaStats *astats = &cx->runtime->gcStats.arenaStats[thingKind]);
-    bool canGC = !JS_ON_TRACE(cx);
+    bool canGC = !JS_ON_TRACE(cx) && !JS_THREAD_DATA(cx)->waiveGCQuota;
     bool doGC = canGC && IsGCThresholdReached(rt);
     JSGCArenaList *arenaList = &rt->gcArenaList[thingKind];
     JSGCArenaInfo *a;
@@ -1678,7 +1678,7 @@ RefillDoubleFreeList(JSContext *cx)
     JS_LOCK_GC(rt);
 
     JSGCArenaInfo *a;
-    bool canGC = !JS_ON_TRACE(cx);
+    bool canGC = !JS_ON_TRACE(cx) && !JS_THREAD_DATA(cx)->waiveGCQuota;
     bool doGC = canGC && IsGCThresholdReached(rt);
     for (;;) {
         if (doGC) {
