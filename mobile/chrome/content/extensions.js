@@ -763,13 +763,20 @@ XPInstallDownloadManager.prototype = {
     if (ExtensionsView.visible)
       return;
 
-    let message = strings.getString("alertAddonsDone");
+    let message = strings.getString("alertAddonsInstalled");
     if (this._succeeded.length == 0 && this._failed.length > 0)
       message = strings.getString("alertAddonsFail");
 
-    var alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+    let observer = {
+      observe: function (aSubject, aTopic, aData) {
+        if (aTopic == "alertclickcallback")
+          BrowserUI.showPanel("addons-container");
+      }
+    };
+
+    let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
-                                 message, false, "", null);
+                                 message, true, "", observer);
   },
 
   onDownloadProgress: function xpidm_onDownloadProgress(aAddon, aValue, aMaxValue) {
