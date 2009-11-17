@@ -57,7 +57,6 @@
 
 #include "nsCOMArray.h"
 #include "nsArrayEnumerator.h"
-#include "nsEnumeratorUtils.h"
 #include "nsAutoPtr.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -921,9 +920,6 @@ nsCookieService::Add(const nsACString &aDomain,
                      PRBool            aIsSession,
                      PRInt64           aExpiry)
 {
-  NS_ENSURE_TRUE(!aDomain.IsEmpty() && !aDomain.EqualsLiteral("."),
-                 NS_ERROR_INVALID_ARG);
-
   PRInt64 currentTimeInUsec = PR_Now();
 
   nsRefPtr<nsCookie> cookie =
@@ -948,9 +944,6 @@ nsCookieService::Remove(const nsACString &aHost,
                         const nsACString &aPath,
                         PRBool           aBlocked)
 {
-  NS_ENSURE_TRUE(!aHost.IsEmpty() && !aHost.EqualsLiteral("."),
-                 NS_ERROR_INVALID_ARG);
-
   nsListIter matchIter;
   if (FindCookie(PromiseFlatCString(aHost),
                  PromiseFlatCString(aName),
@@ -967,7 +960,7 @@ nsCookieService::Remove(const nsACString &aHost,
     nsCAutoString host(NS_LITERAL_CSTRING("http://"));
     
     // strip off the domain dot, if necessary
-    if (aHost.First() == '.')
+    if (!aHost.IsEmpty() && aHost.First() == '.')
       host.Append(Substring(aHost, 1, aHost.Length() - 1));
     else
       host.Append(aHost);
@@ -1254,10 +1247,6 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
   }
   // trim trailing dots
   hostFromURI.Trim(".");
-  if (hostFromURI.IsEmpty()) {
-    COOKIE_LOGFAILURE(GET_COOKIE, aHostURI, nsnull, "empty host");
-    return;
-  }
   // insert a leading dot, so we begin the hash lookup with the
   // equivalent domain cookie host
   hostFromURI.Insert(NS_LITERAL_CSTRING("."), 0);
@@ -1846,8 +1835,6 @@ nsCookieService::IsForeign(nsIURI *aHostURI,
   // trim trailing dots
   currentHost.Trim(".");
   firstHost.Trim(".");
-  if (currentHost.IsEmpty() || firstHost.IsEmpty())
-    return PR_TRUE;
 
   // fast path: check if the two hosts are identical.
   // this also covers two special cases:
@@ -1954,8 +1941,6 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
   }
   // trim trailing dots
   hostFromURI.Trim(".");
-  if (hostFromURI.IsEmpty())
-    return PR_FALSE;
 
   // if a domain is given, check the host has permission
   if (!aCookieAttributes.host.IsEmpty()) {
@@ -2184,9 +2169,8 @@ PRUint32
 nsCookieService::CountCookiesFromHostInternal(const nsACString  &aHost,
                                               nsEnumerationData &aData)
 {
-  NS_ASSERTION(!aHost.IsEmpty() && !aHost.EqualsLiteral("."), "empty host");
-
   PRUint32 countFromHost = 0;
+
   nsCAutoString hostWithDot(NS_LITERAL_CSTRING(".") + aHost);
 
   const char *currentDot = hostWithDot.get();
@@ -2221,13 +2205,9 @@ NS_IMETHODIMP
 nsCookieService::CountCookiesFromHost(const nsACString &aHost,
                                       PRUint32         *aCountFromHost)
 {
-  if (aHost.IsEmpty() || aHost.EqualsLiteral(".")) {
-    *aCountFromHost = 0;
-    return NS_OK;
-  }
-
   // we don't care about finding the oldest cookie here, so disable the search
   nsEnumerationData data(PR_Now() / PR_USEC_PER_SEC, LL_MININT);
+  
   *aCountFromHost = CountCookiesFromHostInternal(aHost, data);
   return NS_OK;
 }
@@ -2238,9 +2218,6 @@ NS_IMETHODIMP
 nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
                                     nsISimpleEnumerator **aEnumerator)
 {
-  if (aHost.IsEmpty() || aHost.EqualsLiteral("."))
-    return NS_NewEmptyEnumerator(aEnumerator);
-
   nsCOMArray<nsICookie> cookieList(mMaxCookiesPerHost);
   nsCAutoString hostWithDot(NS_LITERAL_CSTRING(".") + aHost);
   PRInt64 currentTime = PR_Now() / PR_USEC_PER_SEC;
@@ -2272,8 +2249,6 @@ nsCookieService::FindCookie(const nsAFlatCString &aHost,
                             nsListIter           &aIter,
                             PRInt64               aCurrentTime)
 {
-  NS_ASSERTION(!aHost.IsEmpty() && !aHost.EqualsLiteral("."), "empty host");
-
   nsCookieEntry *entry = mDBState->hostTable.GetEntry(aHost.get());
   for (aIter = nsListIter(entry); aIter.current; ++aIter) {
     if (aIter.current->Expiry() > aCurrentTime &&
