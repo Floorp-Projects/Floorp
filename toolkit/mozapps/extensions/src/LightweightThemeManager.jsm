@@ -38,8 +38,16 @@ var EXPORTED_SYMBOLS = ["LightweightThemeManager"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+
 const MAX_USED_THEMES_COUNT = 8;
+
 const MAX_PREVIEW_SECONDS = 30;
+
+const MANDATORY = ["id", "name", "headerURL"];
+const OPTIONAL = ["footerURL", "textcolor", "accentcolor", "iconURL",
+                  "previewURL", "author", "description", "homepageURL",
+                  "updateURL", "version"];
+
 const PERSIST_ENABLED = true;
 const PERSIST_BYPASS_CACHE = false;
 const PERSIST_FILES = {
@@ -91,7 +99,8 @@ var LightweightThemeManager = {
       for (let key in PERSIST_FILES) {
         try {
           if (data[key] && _prefs.getBoolPref("persisted." + key))
-            data[key] = _getLocalImageURI(PERSIST_FILES[key]).spec;
+            data[key] = _getLocalImageURI(PERSIST_FILES[key]).spec
+                        + "?" + data.id + ";" + _version(data);
         } catch (e) {}
       }
     }
@@ -176,11 +185,92 @@ var LightweightThemeManager = {
       _previewTimer = null;
       _notifyWindows(this.currentThemeForDisplay);
     }
+  },
+
+  parseTheme: function (aString, aBaseURI) {
+    try {
+      var data = JSON.parse(aString);
+    } catch (e) {
+      return null;
+    }
+
+    if (!data || typeof data != "object")
+      return null;
+
+    for (let prop in data) {
+      if (typeof data[prop] == "string" &&
+          (data[prop] = data[prop].trim()) &&
+          (MANDATORY.indexOf(prop) > -1 || OPTIONAL.indexOf(prop) > -1)) {
+        if (!/URL$/.test(prop))
+          continue;
+
+        try {
+          data[prop] = _makeURI(data[prop], _makeURI(aBaseURI)).spec;
+          if (/^https:/.test(data[prop]))
+            continue;
+          if (prop != "updateURL" && /^http:/.test(data[prop]))
+            continue;
+        } catch (e) {}
+      }
+
+      delete data[prop];
+    }
+
+    for (let i = 0; i < MANDATORY.length; i++) {
+      if (!(MANDATORY[i] in data))
+        return null;
+    }
+
+    return data;
+  },
+
+  updateCurrentTheme: function () {
+    try {
+      if (!_prefs.getBoolPref("update.enabled"))
+        return;
+    } catch (e) {
+      return;
+    }
+
+    var theme = this.currentTheme;
+    if (!theme || !theme.updateURL)
+      return;
+
+    var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                .createInstance(Ci.nsIXMLHttpRequest);
+
+    req.mozBackgroundRequest = true;
+    req.overrideMimeType("text/plain");
+    req.open("GET", theme.updateURL, true);
+
+    var self = this;
+    req.onload = function () {
+      if (req.status != 200)
+        return;
+
+      let newData = self.parseTheme(req.responseText, theme.updateURL);
+      if (!newData ||
+          newData.id != theme.id ||
+          _version(newData) == _version(theme))
+        return;
+
+      var currentTheme = self.currentTheme;
+      if (currentTheme && currentTheme.id == theme.id)
+        self.currentTheme = newData;
+    };
+
+    req.send(null);
   }
 };
 
 function _usedThemesExceptId(aId)
   LightweightThemeManager.usedThemes.filter(function (t) t.id != aId);
+
+function _version(aThemeData)
+  aThemeData.version || "";
+
+function _makeURI(aURL, aBaseURI)
+  _ioService.newURI(aURL, null, aBaseURI);
 
 function _updateUsedThemes(aList) {
   if (aList.length > MAX_USED_THEMES_COUNT)
@@ -227,7 +317,7 @@ function _getLocalImageURI(localFileName) {
 
 function _persistImage(sourceURL, localFileName, callback) {
   var targetURI = _getLocalImageURI(localFileName);
-  var sourceURI = _ioService.newURI(sourceURL, null, null);
+  var sourceURI = _makeURI(sourceURL);
 
   var persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
                   .createInstance(Ci.nsIWebBrowserPersist);
