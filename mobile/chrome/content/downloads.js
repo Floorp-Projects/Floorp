@@ -412,8 +412,15 @@ var DownloadsView = {
                                        strings.getFormattedString("alertDownloadsStart", [download.displayName]), false, "", null);
       }
       else {
+        let observer = {
+          observe: function (aSubject, aTopic, aData) {
+            if (aTopic == "alertclickcallback")
+              BrowserUI.showPanel("downloads-container");
+          }
+        };
+
         notifier.showAlertNotification(URI_GENERIC_ICON_DOWNLOAD, strings.getString("alertDownloads"),
-                                       strings.getFormattedString("alertDownloadsDone", [download.displayName]), false, "", null);
+                                       strings.getFormattedString("alertDownloadsDone", [download.displayName]), true, "", observer);
       }
     }
   },
