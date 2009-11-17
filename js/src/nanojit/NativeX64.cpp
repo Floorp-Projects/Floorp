@@ -323,6 +323,25 @@ namespace nanojit
         emitrr(op, r, (Register)0);
     }
 
+    // Succeeds if 'target' is within a signed 8-bit offset from the current
+    // instruction's address.
+    bool Assembler::isTargetWithinS8(NIns* target)
+    {
+        NanoAssert(target);
+        // First call underrunProtect().  Without it, we might compute the
+        // difference just before starting a new code chunk.
+        underrunProtect(8);
+        return isS8(target - _nIns);
+    }
+
+    // Like isTargetWithinS8(), but for signed 32-bit offsets.
+    bool Assembler::isTargetWithinS32(NIns* target)
+    {
+        NanoAssert(target);
+        underrunProtect(8);
+        return isS32(target - _nIns);
+    }
+
 #define RB(r)       gpRegNames8[(r)]
 #define RBhi(r)     gpRegNames8hi[(r)]
 #define RL(r)       gpRegNames32[(r)]
@@ -456,7 +475,7 @@ namespace nanojit
 
     void Assembler::IMULI(R l, R r, I32 i32)    { emitrr_imm(X64_imuli,l,r,i32); asm_output("imuli %s, %s, %d",RL(l),RL(r),i32); }
 
-    void Assembler::MOVQI(R r, U64 u64)         { emitr_imm64(X64_movqi,r,u64); asm_output("movq %s, %lu",RQ(r),u64); }
+    void Assembler::MOVQI(R r, U64 u64)         { emitr_imm64(X64_movqi,r,u64); asm_output("movq %s, %llu",RQ(r),u64); }
 
     void Assembler::LEARIP(R r, I32 d)          { emitrm(X64_learip,r,d,(Register)0); asm_output("lea %s, %d(rip)",RQ(r),d); }
 
@@ -555,7 +574,7 @@ namespace nanojit
     }
 
     void Assembler::JMP(NIns *target) {
-        if (!target || isS32(target - _nIns)) {
+        if (!target || isTargetWithinS32(target)) {
             if (target && isS8(target - _nIns)) {
                 JMP8(8, target);
             } else {
@@ -819,7 +838,7 @@ namespace nanojit
                 outputf("        %p:", _nIns);
             )
             NIns *target = (NIns*)call->_address;
-            if (isS32(target - _nIns)) {
+            if (isTargetWithinS32(target)) {
                 CALL(8, target);
             } else {
                 // can't reach target from here, load imm64 and do an indirect jump
@@ -1010,7 +1029,7 @@ namespace nanojit
         NanoAssert((condop & ~LIR64) >= LIR_ov);
         NanoAssert((condop & ~LIR64) <= LIR_uge);
         underrunProtect(8); // must do this before checking displacement size
-        if (target && isS8(target - _nIns)) {
+        if (target && isTargetWithinS8(target)) {
             if (onFalse) {
                 switch (condop & ~LIR64) {
                 case LIR_ov:  JNO8( 8, target); break;
@@ -1399,7 +1418,7 @@ namespace nanojit
         } else if (isS32(v)) {
             // safe for sign-extension 32->64
             MOVQI32(r, int32_t(v));
-        } else if (isS32(int64_t(v)-int64_t(_nIns))) {
+        } else if (isTargetWithinS32((NIns*)v)) {
             // value is with +/- 2GB from RIP, can use LEA with RIP-relative disp32
             int32_t d = int32_t(int64_t(v)-int64_t(_nIns));
             LEARIP(r, d);
@@ -1484,7 +1503,7 @@ namespace nanojit
 
     void Assembler::asm_fneg(LIns *ins) {
         Register rr, ra;
-        if (isS32((uintptr_t)negateMask) || isS32((NIns*)negateMask - _nIns)) {
+        if (isS32((uintptr_t)negateMask) || isTargetWithinS32((NIns*)negateMask)) {
             regalloc_unary(ins, FpRegs, rr, ra);
             if (isS32((uintptr_t)negateMask)) {
                 // builtin code is in bottom or top 2GB addr space, use absolute addressing

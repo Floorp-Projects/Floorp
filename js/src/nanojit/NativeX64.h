@@ -369,6 +369,8 @@ namespace nanojit
         void emitr_imm8(uint64_t op, Register b, int32_t imm8);\
         void emitxm_abs(uint64_t op, Register r, int32_t addr32);\
         void emitxm_rel(uint64_t op, Register r, NIns* addr64);\
+        bool isTargetWithinS8(NIns* target);\
+        bool isTargetWithinS32(NIns* target);\
         void asm_quad(Register r, uint64_t v);\
         void asm_regarg(ArgSize, LIns*, Register);\
         void asm_stkarg(ArgSize, LIns*, int);\
