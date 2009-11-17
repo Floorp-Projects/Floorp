@@ -419,12 +419,9 @@ nsHtml5TreeOpExecutor::DocumentMode(nsHtml5DocumentMode m)
 void
 nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
 {
-  mReadingFromStage = PR_FALSE;
   NS_ASSERTION(aScriptElement, "No script to run");
-  NS_ASSERTION(mFlushState == eNotFlushing, "Tried to run script when flushing.");
-
   nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aScriptElement);
-
+  
   if (!mParser) {
     NS_ASSERTION(sele->IsMalformed(), "Script wasn't marked as malformed.");
     // We got here not because of an end tag but because the tree builder
@@ -440,16 +437,33 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
     return;
   }
 
+  if (sele->GetScriptDeferred() || sele->GetScriptAsync()) {
+    #ifdef DEBUG
+    nsresult rv = 
+    #endif
+    aScriptElement->DoneAddingChildren(PR_TRUE); // scripts ignore the argument
+    NS_ASSERTION(rv != NS_ERROR_HTMLPARSER_BLOCK, 
+                 "Defer or async script tried to block.");
+    return;
+  }
+  
+  NS_ASSERTION(mFlushState == eNotFlushing, "Tried to run script when flushing.");
+
+  mReadingFromStage = PR_FALSE;
+  
   sele->SetCreatorParser(mParser);
+
   // Notify our document that we're loading this script.
   nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(mDocument);
   NS_ASSERTION(htmlDocument, "Document didn't QI into HTML document.");
   htmlDocument->ScriptLoading(sele);
+
   // Copied from nsXMLContentSink
   // Now tell the script that it's ready to go. This may execute the script
   // or return NS_ERROR_HTMLPARSER_BLOCK. Or neither if the script doesn't
   // need executing.
   nsresult rv = aScriptElement->DoneAddingChildren(PR_TRUE);
+
   // If the act of insertion evaluated the script, we're fine.
   // Else, block the parser till the script has loaded.
   if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
