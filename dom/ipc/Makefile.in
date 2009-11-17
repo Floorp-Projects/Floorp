@@ -47,6 +47,8 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
+EXPORTS = TabMessageUtils.h
+
 EXPORTS_NAMESPACES = mozilla mozilla/dom
 
 EXPORTS_mozilla = \
@@ -65,6 +67,7 @@ CPPSRCS = \
   ContentProcessChild.cpp \
   TabParent.cpp \
   TabChild.cpp \
+  TabMessageUtils.cpp \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -3,11 +3,55 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="800" height="800" orient="vertical">
   <script>
+
+    function dumpClientRect(r) {
+      dump(r.left + "," + r.top + "," + r.right + "," +
+           r.bottom + "," + r.width + "," + r.height + "\n");
+    }
+
+    function handleMozAfterPaint(e) {
+      return;
+      dump(e.type + "\n")
+      var rects = e.clientRects;
+      var i;
+      dump("\tclientRects:\n");
+      for (i = 0; i &lt; rects.length; ++i) {
+        var r = rects.item(i);
+        dump("\t\t");
+        dumpClientRect(rects.item(i));
+      }
+
+      dump("\tboundingClientRect\n\t\t");
+      dumpClientRect(e.boundingClientRect);
+
+      var paintRequests = e.paintRequests;
+      dump("\tpaintRequests\n");
+      for (i = 0; i &lt; paintRequests.length; ++i) {
+        var pr = paintRequests.item(i);
+        dump("\t\t");
+        dumpClientRect(pr.clientRect);
+        if (pr.reason)
+          dump("\t\t" + pr.reason + "\n");
+      }
+    }
+
+    function handleMozScrolledAreaChanged(e) {
+      return;
+      dump(e.type + "\n");
+      dump("\t" + e.x + "," + e.y + "," + e.width + "," + e.height + "\n");
+    }
+
     function restart() {
       var y = document.getElementById('page');
       var p = y.parentNode;
       p.removeChild(y);
       p.appendChild(y);
+
+      var fl = y.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader;
+      fl.activateFrameEvent("MozAfterPaint", true);
+      fl.activateFrameEvent("MozScrolledAreaChanged", true);
+      y.addEventListener("MozAfterPaint", handleMozAfterPaint, true);
+      y.addEventListener("MozScrolledAreaChanged", handleMozScrolledAreaChanged, true);
     }
     
     function loadURL(url) {

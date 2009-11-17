@@ -2,9 +2,9 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -16,11 +16,11 @@
  *
  * The Initial Developer of the Original Code is 
  * Mozilla Corporation
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Robert O'Callahan <robert@ocallahan.org>
+ *  Olli Pettay <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +36,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDOMNotifyPaintEvent_h_
-#define nsDOMNotifyPaintEvent_h_
+#include "TabMessageUtils.h"
+#include "nsCOMPtr.h"
+#include "nsIDOMEvent.h"
+#include "nsEventDispatcher.h"
 
-#include "nsIDOMNotifyPaintEvent.h"
-#include "nsDOMEvent.h"
-#include "nsPresContext.h"
+namespace mozilla {
+namespace dom {
 
-class nsPaintRequestList;
-
-class nsDOMNotifyPaintEvent : public nsDOMEvent,
-                              public nsIDOMNotifyPaintEvent
+bool
+ReadRemoteEvent(const IPC::Message* aMsg, void** aIter,
+                RemoteDOMEvent* aResult)
 {
-public:
-  nsDOMNotifyPaintEvent(nsPresContext*           aPresContext,
-                        nsEvent*                 aEvent,
-                        PRUint32                 aEventType,
-                        nsInvalidateRequestList* aInvalidateRequests);
+  aResult->mEvent = nsnull;
+  nsString type;
+  NS_ENSURE_TRUE(ReadParam(aMsg, aIter, &type), false);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  nsCOMPtr<nsIDOMEvent> event;
+  nsEventDispatcher::CreateEvent(nsnull, nsnull, type, getter_AddRefs(event));
+  aResult->mEvent = do_QueryInterface(event);
+  NS_ENSURE_TRUE(aResult->mEvent, false);
 
-  NS_DECL_NSIDOMNOTIFYPAINTEVENT
+  return aResult->mEvent->Deserialize(aMsg, aIter);
+}
 
-  // Forward to base class
-  NS_FORWARD_TO_NSDOMEVENT
-
-#ifdef MOZ_IPC
-  virtual void Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType);
-  virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter);
-#endif
-private:
-  nsRegion GetRegion();
-
-  nsTArray<nsInvalidateRequestList::Request> mInvalidateRequests;
-};
-
-#endif // nsDOMNotifyPaintEvent_h_
+}
+}
