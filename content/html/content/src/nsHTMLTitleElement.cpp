@@ -51,9 +51,6 @@ class nsHTMLTitleElement : public nsGenericHTMLElement,
                            public nsStubMutationObserver
 {
 public:
-  using nsGenericElement::GetText;
-  using nsGenericElement::SetText;
-
   nsHTMLTitleElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLTitleElement();
 

@@ -81,9 +81,6 @@ class nsHTMLOptionElement : public nsGenericHTMLElement,
                             public nsIOptionElement
 {
 public:
-  using nsGenericElement::GetText;
-  using nsGenericElement::SetText;
-
   nsHTMLOptionElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLOptionElement();
 
