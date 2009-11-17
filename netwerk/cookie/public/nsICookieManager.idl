@@ -66,7 +66,6 @@ interface nsICookieManager : nsISupports
    *
    * @param aDomain The host or domain for which the cookie was set
    * @param aName The name specified in the cookie
-   * @param aPath The path for which the cookie was set
    * @param aBlocked Indicates if cookies from this host should be permanently blocked
    *
    */
