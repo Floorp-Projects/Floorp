@@ -2,9 +2,9 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -16,11 +16,11 @@
  *
  * The Initial Developer of the Original Code is 
  * Mozilla Corporation
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Robert O'Callahan <robert@ocallahan.org>
+ *  Olli Pettay <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +36,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDOMNotifyPaintEvent_h_
-#define nsDOMNotifyPaintEvent_h_
+#ifndef TABMESSAGE_UTILS_H
+#define TABMESSAGE_UTILS_H
 
-#include "nsIDOMNotifyPaintEvent.h"
-#include "nsDOMEvent.h"
-#include "nsPresContext.h"
+#include "IPC/IPCMessageUtils.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsCOMPtr.h"
 
-class nsPaintRequestList;
-
-class nsDOMNotifyPaintEvent : public nsDOMEvent,
-                              public nsIDOMNotifyPaintEvent
+namespace mozilla {
+namespace dom {
+struct RemoteDOMEvent
 {
-public:
-  nsDOMNotifyPaintEvent(nsPresContext*           aPresContext,
-                        nsEvent*                 aEvent,
-                        PRUint32                 aEventType,
-                        nsInvalidateRequestList* aInvalidateRequests);
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  NS_DECL_NSIDOMNOTIFYPAINTEVENT
-
-  // Forward to base class
-  NS_FORWARD_TO_NSDOMEVENT
-
-#ifdef MOZ_IPC
-  virtual void Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType);
-  virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter);
-#endif
-private:
-  nsRegion GetRegion();
-
-  nsTArray<nsInvalidateRequestList::Request> mInvalidateRequests;
+  nsCOMPtr<nsIPrivateDOMEvent> mEvent;
 };
 
-#endif // nsDOMNotifyPaintEvent_h_
+bool ReadRemoteEvent(const IPC::Message* aMsg, void** aIter,
+                     mozilla::dom::RemoteDOMEvent* aResult);
+
+}
+}
+
+namespace IPC {
+
+template<>
+struct ParamTraits<mozilla::dom::RemoteDOMEvent>
+{
+  typedef mozilla::dom::RemoteDOMEvent paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    aParam.mEvent->Serialize(aMsg, PR_TRUE);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return mozilla::dom::ReadRemoteEvent(aMsg, aIter, aResult);
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+  }
+};
+
+
+}
+
+
+#endif
