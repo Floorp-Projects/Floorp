@@ -582,11 +582,12 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       ssle->SetLineNumber(mInt);
       return rv;
     }
-    case eTreeOpSetScriptLineNumber: {
+    case eTreeOpSetScriptLineNumberAndFreeze: {
       nsIContent* node = *(mOne.node);
       nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(node);
       NS_ASSERTION(sele, "Node didn't QI to script.");
       sele->SetScriptLineNumber(mInt);
+      sele->FreezeUriAsyncDefer();
       return rv;
     }
     default: {
