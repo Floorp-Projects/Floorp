@@ -48,7 +48,7 @@ interface nsIDOMFile : nsISupports
 
   readonly attribute DOMString name;
   readonly attribute unsigned long long size;
-  readonly attribute DOMString mediaType;
+  readonly attribute DOMString type;
 
   DOMString getAsText(in DOMString encoding); // raises(FileException) on retrieval
   DOMString getAsDataURL();             // raises(FileException) on retrieval
