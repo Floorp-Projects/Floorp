@@ -1254,7 +1254,7 @@ namespace nanojit
 
                     // Emit the jump instruction, which allocates 1 register for the jump index.
                     NIns** native_table = new (_dataAlloc) NIns*[count];
-                    asm_output("[%p]:", native_table);
+                    asm_output("[%p]:", (void*)native_table);
                     _patches.put((NIns*)native_table, ins);
                     asm_jtbl(ins, native_table);
                     break;
