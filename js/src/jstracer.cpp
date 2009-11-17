@@ -2557,7 +2557,7 @@ TraceRecorder::finishAbort(const char* reason)
     if (fragment->root == fragment) {
         TrashTree(cx, fragment->toTreeFragment());
     } else {
-        JS_ASSERT(numSideExitsBefore >= fragment->root->treeInfo->sideExits.length());
+        JS_ASSERT(numSideExitsBefore <= fragment->root->treeInfo->sideExits.length());
         fragment->root->treeInfo->sideExits.setLength(numSideExitsBefore);
     }
 
