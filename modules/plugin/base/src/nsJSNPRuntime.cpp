@@ -78,6 +78,7 @@ static JSRuntime *sJSRuntime;
 // while executing JS on the context.
 static nsIJSContextStack *sContextStack;
 
+static nsTArray<NPObject*>* sDelayedReleases;
 
 // Helper class that reports any JS exceptions that were thrown while
 // the plugin executed JS.
@@ -198,6 +199,27 @@ static JSClass sNPObjectMemberClass =
   };
 
 static void
+OnWrapperDestroyed();
+
+static JSBool
+DelayedReleaseGCCallback(JSContext* cx, JSGCStatus status)
+{
+  if (JSGC_END == status) {
+    if (sDelayedReleases) {
+      for (PRInt32 i = 0; i < sDelayedReleases->Length(); ++i) {
+        NPObject* obj = (*sDelayedReleases)[i];
+        if (obj)
+          _releaseobject(obj);
+        OnWrapperDestroyed();
+      }
+      delete sDelayedReleases;
+      sDelayedReleases = NULL;
+    }
+  }
+  return JS_TRUE;
+}
+
+static void
 OnWrapperCreated()
 {
   if (sWrapperCount++ == 0) {
@@ -208,6 +230,10 @@ OnWrapperCreated()
 
     rtsvc->GetRuntime(&sJSRuntime);
     NS_ASSERTION(sJSRuntime != nsnull, "no JSRuntime?!");
+
+    // Register our GC callback to perform delayed destruction of finalized
+    // NPObjects. Leave this callback around and don't ever unregister it.
+    rtsvc->RegisterGCCallback(DelayedReleaseGCCallback);
 
     CallGetService("@mozilla.org/js/xpc/ContextStack;1", &sContextStack);
   }
@@ -1628,17 +1654,15 @@ static void
 NPObjWrapper_Finalize(JSContext *cx, JSObject *obj)
 {
   NPObject *npobj = (NPObject *)::JS_GetPrivate(cx, obj);
-
   if (npobj) {
     if (sNPObjWrappers.ops) {
       PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_REMOVE);
     }
-
-    // Let go of our NPObject
-    _releaseobject(npobj);
   }
 
-  OnWrapperDestroyed();
+  if (!sDelayedReleases)
+    sDelayedReleases = new nsTArray<NPObject*>;
+  sDelayedReleases->AppendElement(npobj);
 }
 
 static JSBool

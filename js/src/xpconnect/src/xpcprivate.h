@@ -757,6 +757,9 @@ private:
 public:
 #endif
 
+    void AddGCCallback(JSGCCallback cb);
+    void RemoveGCCallback(JSGCCallback cb);
+
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect);
@@ -794,6 +797,7 @@ private:
     uintN mUnrootedGlobalCount;
     PRCondVar *mWatchdogWakeup;
     PRThread *mWatchdogThread;
+    nsTArray<JSGCCallback> extraGCCallbacks;
 };
 
 /***************************************************************************/
