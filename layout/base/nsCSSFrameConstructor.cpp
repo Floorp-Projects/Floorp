@@ -5894,19 +5894,34 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
         (NS_STYLE_DISPLAY_POPUP == aDisplay) ==
         (NS_STYLE_DISPLAY_POPUP == siblingDisplay);
     }
-    switch (siblingDisplay) {
-    case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
-      return (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == aDisplay);
-    case NS_STYLE_DISPLAY_TABLE_COLUMN:
-      return (NS_STYLE_DISPLAY_TABLE_COLUMN == aDisplay);
-    case NS_STYLE_DISPLAY_TABLE_CAPTION:
-      return (NS_STYLE_DISPLAY_TABLE_CAPTION == aDisplay);
-    default: // all of the row group types
-      return (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == aDisplay) ||
-             (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == aDisplay) ||
-             (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == aDisplay) ||
-             (NS_STYLE_DISPLAY_TABLE_CAPTION      == aDisplay);
+    // To have decent performance we want to return false in cases in which
+    // reordering the two siblings has no effect on display.  To ensure
+    // correctness, we MUST return false in cases where the two siblings have
+    // the same desired parent type and live on different display lists.
+    // Specificaly, columns and column groups should only consider columns and
+    // column groups as valid siblings.  Captions should only consider other
+    // captions.  All other things should consider each other as valid
+    // siblings.  The restriction in the |if| above on siblingDisplay is ok,
+    // because for correctness the only part that really needs to happen is to
+    // not consider captions, column groups, and row/header/footer groups
+    // siblings of each other.  Treating a column or colgroup as a valid
+    // sibling of a non-table-related frame will just mean we end up reframing.
+    if ((siblingDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION) !=
+        (aDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION)) {
+      // One's a caption and the other is not.  Not valid siblings.
+      return PR_FALSE;
     }
+
+    if ((siblingDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP ||
+         siblingDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN) !=
+        (aDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP ||
+         aDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN)) {
+      // One's a column or column group and the other is not.  Not valid
+      // siblings.
+      return PR_FALSE;
+    }
+
+    return PR_TRUE;
   }
   else if (nsGkAtoms::fieldSetFrame == parentType ||
            (nsGkAtoms::fieldSetFrame == grandparentType &&
