@@ -85,9 +85,6 @@ class nsHTMLBodyElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLBodyElement
 {
 public:
-  using nsGenericHTMLElement::GetText;
-  using nsGenericElement::SetText;
-
   nsHTMLBodyElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLBodyElement();
 
