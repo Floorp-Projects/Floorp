@@ -14,12 +14,12 @@
  * The Original Code is Private Browsing Tests.
  *
  * The Initial Developer of the Original Code is
- * Ehsan Akhgari.
+ * Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Ehsan Akhgari <ehsan.akhgari@gmail.com> (Original Author)
+ *   Ehsan Akhgari <ehsan@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,59 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This test makes sure that the private browsing mode is left at application
-// shutdown.
-
-function do_test() {
-  // initialization
-  var os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  var pb = Cc[PRIVATEBROWSING_CONTRACT_ID].
-           getService(Ci.nsIPrivateBrowsingService);
-
-  var expectedQuitting;
-  var called = 0;
-  var observer = {
-    observe: function(aSubject, aTopic, aData) {
-      if (aTopic == kPrivateBrowsingNotification &&
-          aData == kExit) {
-        // increment the call counter
-        ++ called;
-
-        do_check_neq(aSubject, null);
-        try {
-          aSubject.QueryInterface(Ci.nsISupportsPRBool);
-        } catch (ex) {
-          do_throw("aSubject was not null, but wasn't an nsISupportsPRBool");
-        }
-        // check the "quitting" argument
-        do_check_eq(aSubject.data, expectedQuitting);
-
-        // finish up the test
-        if (expectedQuitting) {
-          os.removeObserver(this, kPrivateBrowsingNotification);
-          do_test_finished();
-        }
-      }
-    }
-  };
-
-  // set the observer
-  os.addObserver(observer, kPrivateBrowsingNotification, false);
-
-  // enter the private browsing mode
-  pb.privateBrowsingEnabled = true;
-
-  // exit the private browsing mode
-  expectedQuitting = false;
-  pb.privateBrowsingEnabled = false;
-  do_check_eq(called, 1);
-
-  // enter the private browsing mode
-  pb.privateBrowsingEnabled = true;
-
-  // Simulate an exit
-  expectedQuitting = true;
-  do_test_pending();
-  os.notifyObservers(null, "quit-application-granted", null);
-}
+// Be neat: clear the pref that we have set
+Cc["@mozilla.org/preferences-service;1"].
+  getService(Ci.nsIPrefBranch).
+  clearUserPref("browser.privatebrowsing.keep_current_session");
