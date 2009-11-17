@@ -77,9 +77,9 @@ function nextTest()
   }
   else {
     screenTest = true;
+    setScale(window, 2);
     screenx = document.documentElement.boxObject.screenX + 120;
     screeny = document.documentElement.boxObject.screenY + 50;
-    setScale(window, 2);
     $("popup").openPopupAtScreen(screenx, screeny);
   }
 }
