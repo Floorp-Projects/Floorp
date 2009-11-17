@@ -55,8 +55,6 @@ nsIFrame* NS_NewVideoFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 class nsVideoFrame : public nsContainerFrame, public nsIAnonymousContentCreator
 {
 public:
-  using nsFrame::GetIntrinsicSize;
-
   nsVideoFrame(nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME

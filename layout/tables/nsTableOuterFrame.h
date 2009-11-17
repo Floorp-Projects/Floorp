@@ -88,8 +88,6 @@ protected:
 class nsTableOuterFrame : public nsHTMLContainerFrame, public nsITableLayout
 {
 public:
-  using nsBox::GetMargin;
-
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
