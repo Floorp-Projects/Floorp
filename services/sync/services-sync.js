@@ -28,7 +28,7 @@ pref("extensions.weave.log.appender.dump", "Error");
 pref("extensions.weave.log.appender.debugLog", "Trace");
 
 pref("extensions.weave.log.rootLogger", "Trace");
-pref("extensions.weave.log.logger.service.main", "Trace");
+pref("extensions.weave.log.logger.service.main", "Debug");
 pref("extensions.weave.log.logger.async", "Debug");
 pref("extensions.weave.log.logger.authenticator", "Debug");
 pref("extensions.weave.log.logger.network.resources", "Debug");

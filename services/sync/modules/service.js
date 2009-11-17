@@ -388,12 +388,12 @@ WeaveSvc.prototype = {
     switch (topic) {
       case "network:offline-status-changed":
         // Whether online or offline, we'll reschedule syncs
-        this._log.debug("Network offline status change: " + data);
+        this._log.trace("Network offline status change: " + data);
         this._checkSyncStatus();
         break;
       case "private-browsing":
         // Entering or exiting private browsing? Reschedule syncs
-        this._log.debug("Private browsing change: " + data);
+        this._log.trace("Private browsing change: " + data);
         this._checkSyncStatus();
         break;
       case "quit-application":
@@ -431,12 +431,12 @@ WeaveSvc.prototype = {
   _calculateScore: function WeaveSvc_calculateScoreAndDoStuff() {
     var engines = Engines.getEnabled();
     for (let i = 0;i < engines.length;i++) {
-      //this._log.trace(engines[i].name + ": score: " + engines[i].score);
+      this._log.trace(engines[i].name + ": score: " + engines[i].score);
       this.globalScore += engines[i].score;
       engines[i]._tracker.resetScore();
     }
 
-    //this._log.trace("Global score updated: " + this.globalScore);
+    this._log.trace("Global score updated: " + this.globalScore);
 
     if (this.globalScore > this.syncThreshold) {
       this._log.debug("Global Score threshold hit, triggering sync.");
@@ -810,7 +810,7 @@ WeaveSvc.prototype = {
   _remoteSetup: function WeaveSvc__remoteSetup() {
     let reset = false;
 
-    this._log.debug("Fetching global metadata record");
+    this._log.trace("Fetching global metadata record");
     let meta = Records.import(this.metaURL);
 
     let remoteVersion = (meta && meta.payload.storageVersion)?
@@ -1228,7 +1228,7 @@ WeaveSvc.prototype = {
     // XXX Bug 504125 Wait a while after wiping so that the DELETEs replicate
     Sync.sleep(2000);
 
-    this._log.debug("Uploading new metadata record");
+    this._log.trace("Uploading new metadata record");
     let meta = new WBORecord(this.metaURL);
     meta.payload.syncID = Clients.syncID;
     this._updateRemoteVersion(meta);
