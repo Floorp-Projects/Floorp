@@ -364,7 +364,7 @@ struct JSScope : public JSObjectMap
      * function objects (functions that do not use lexical bindings above their
      * scope, only free variable names) that have a correct JSSLOT_PARENT value
      * thanks to the COMPILE_N_GO optimization are stored as newly added direct
-     * property values.
+     * property values of the scope's object.
      *
      * The de-facto standard JS language requires each evaluation of such a
      * closure to result in a unique (according to === and observable effects)
@@ -374,14 +374,15 @@ struct JSScope : public JSObjectMap
      * implementations that join and do not join.
      *
      * To stay compatible with the de-facto standard, we store the compiler-
-     * created function object as the method value, set the METHOD_BARRIER
-     * flag, and brand the scope with a predictable shape that reflects its
-     * method values, which are cached and traced without being loaded, based
-     * on shape-qualified cache hit logic and equivalent trace guards. See
-     * BRANDED above.
+     * created function object as the method value and set the METHOD_BARRIER
+     * flag.
      *
-     * This means scope->hasMethodBarrier() => scope->branded(), but of course
-     * not the other way around.
+     * The method value is part of the method property tree node's identity, so
+     * it effectively  brands the scope with a predictable shape corresponding
+     * to the method value, but without the overhead of setting the BRANDED
+     * flag, which requires assigning a new shape peculiar to each branded
+     * scope. Instead the shape is shared via the property tree among all the
+     * scopes referencing the method property tree node.
      *
      * Then when reading from a scope for which scope->hasMethodBarrier() is
      * true, we count on the scope's qualified/guarded shape being unique and
@@ -390,10 +391,16 @@ struct JSScope : public JSObjectMap
      *
      * This read barrier is bypassed when evaluating the callee sub-expression
      * of a call expression (see the JOF_CALLOP opcodes in jsopcode.tbl), since
-     * such ops do not present an identity or mutation hazard.
+     * such ops do not present an identity or mutation hazard. The compiler
+     * performs this optimization only for null closures that do not use their
+     * own name or equivalent built-in references (arguments.callee).
+     *
+     * The BRANDED write barrier, JSScope::methodWriteBarrer, must check for
+     * METHOD_BARRIER too, and regenerate this scope's shape if the method's
+     * value is in fact changing.
      */
     bool hasMethodBarrier()     { return flags & METHOD_BARRIER; }
-    void setMethodBarrier()     { flags |= METHOD_BARRIER | BRANDED; }
+    void setMethodBarrier()     { flags |= METHOD_BARRIER; }
 
     bool owned()                { return object != NULL; }
 };
