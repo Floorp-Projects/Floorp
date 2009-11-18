@@ -295,8 +295,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                         return JS_NO_PROP_CACHE_FILL;
                     JSScope *protoscope = OBJ_SCOPE(proto);
                     if (!protoscope->emptyScope ||
-                        !js_ObjectIsSimilarToProto(cx, obj, obj->map->ops, OBJ_GET_CLASS(cx, obj),
-                                                   proto)) {
+                        protoscope->emptyScope->clasp != obj->getClass()) {
                         return JS_NO_PROP_CACHE_FILL;
                     }
                     kshape = protoscope->emptyScope->shape;
