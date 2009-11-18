@@ -811,7 +811,7 @@ void imgFrame::GetPaletteData(PRUint32 **aPalette, PRUint32 *length) const
 nsresult imgFrame::LockImageData()
 {
   if (mPalettedImageData)
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
 
   if ((mOptSurface || mSinglePixel) && !mImageSurface) {
     // Recover the pixels
@@ -843,7 +843,7 @@ nsresult imgFrame::LockImageData()
 nsresult imgFrame::UnlockImageData()
 {
   if (mPalettedImageData)
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
 
 #ifdef XP_MACOSX
   if (mQuartzSurface)
