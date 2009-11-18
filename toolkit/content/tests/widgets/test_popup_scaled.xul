@@ -81,13 +81,19 @@ function nextTest()
     setScale(window, 2);
     var box = document.documentElement.boxObject;
 
-    // the iframe is at 4×, but out here css pixels are only 2× device pixels
-    screenx = (x = box.screenX + 120)/2;
-    screeny = (y = box.screenY + 50)/2;
+    // - the iframe is at 4×, but out here css pixels are only 2× device pixels
+    // - the popup manager rounds off (or truncates) the coordinates to
+    //   integers, so ensure we pass in even numbers to openPopupAtScreen
+    screenx = (x = even(box.screenX + 120))/2;
+    screeny = (y = even(box.screenY + 120))/2;
     $("popup").openPopupAtScreen(x, y);
   }
 }
 
+function even(n)
+{
+  return (n % 2) ? n+1 : n;
+}
 ]]>
 </script>
 
