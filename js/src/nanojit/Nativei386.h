@@ -185,6 +185,7 @@ namespace nanojit
         void asm_arg(ArgSize sz, LInsp p, Register r, int32_t& stkd);\
         void asm_pusharg(LInsp);\
         void asm_fcmp(LIns *cond);\
+        NIns* asm_fbranch(bool, LIns*, NIns*);\
         void asm_cmp(LIns *cond); \
         void asm_div_mod(LIns *cond);
 

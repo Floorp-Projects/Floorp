@@ -204,7 +204,8 @@ namespace nanojit
     void underrunProtect(int bytes); \
     void asm_align_code(); \
     void asm_cmp(LIns *cond); \
-    void asm_fcmp(LIns *cond);
+    void asm_fcmp(LIns *cond); \
+    NIns* asm_fbranch(bool, LIns*, NIns*);
 
 #define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
 
