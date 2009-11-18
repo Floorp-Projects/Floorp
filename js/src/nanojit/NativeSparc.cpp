@@ -457,7 +457,7 @@ namespace nanojit
         NanoAssert(cond->isCond());
         if (condop >= LIR_feq && condop <= LIR_fge)
             {
-                return asm_jmpcc(branchOnFalse, cond, targ);
+                return asm_fbranch(branchOnFalse, cond, targ);
             }
 
         underrunProtect(32);
@@ -566,7 +566,21 @@ namespace nanojit
     {
         // only want certain regs
         Register r = prepResultReg(ins, AllowableFlagRegs);
-        asm_setcc(r, ins);
+        underrunProtect(8);
+        LOpcode condop = cond->opcode();
+        NanoAssert(condop >= LIR_feq && condop <= LIR_fge);
+        if (condop == LIR_feq)
+            MOVFEI(1, 0, 0, 0, r);
+        else if (condop == LIR_fle)
+            MOVFLEI(1, 0, 0, 0, r);
+        else if (condop == LIR_flt)
+            MOVFLI(1, 0, 0, 0, r);
+        else if (condop == LIR_fge)
+            MOVFGEI(1, 0, 0, 0, r);
+        else // if (condop == LIR_fgt)
+            MOVFGI(1, 0, 0, 0, r);
+        ORI(G0, 0, r);
+        asm_fcmp(cond);
     }
 
     void Assembler::asm_cond(LInsp ins)
@@ -913,7 +927,7 @@ namespace nanojit
         FMOVD(s, r);
     }
 
-    NIns * Assembler::asm_jmpcc(bool branchOnFalse, LIns *cond, NIns *targ)
+    NIns * Assembler::asm_fbranch(bool branchOnFalse, LIns *cond, NIns *targ)
     {
         NIns *at = 0;
         LOpcode condop = cond->opcode();
@@ -959,25 +973,6 @@ namespace nanojit
             }
         asm_fcmp(cond);
         return at;
-    }
-
-    void Assembler::asm_setcc(Register r, LIns *cond)
-    {
-        underrunProtect(8);
-        LOpcode condop = cond->opcode();
-        NanoAssert(condop >= LIR_feq && condop <= LIR_fge);
-        if (condop == LIR_feq)
-            MOVFEI(1, 0, 0, 0, r);
-        else if (condop == LIR_fle)
-            MOVFLEI(1, 0, 0, 0, r);
-        else if (condop == LIR_flt)
-            MOVFLI(1, 0, 0, 0, r);
-        else if (condop == LIR_fge)
-            MOVFGEI(1, 0, 0, 0, r);
-        else // if (condop == LIR_fgt)
-            MOVFGI(1, 0, 0, 0, r);
-        ORI(G0, 0, r);
-        asm_fcmp(cond);
     }
 
     void Assembler::asm_fcmp(LIns *cond)
