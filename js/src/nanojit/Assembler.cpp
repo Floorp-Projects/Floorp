@@ -112,35 +112,61 @@ namespace nanojit
 #endif
     }
 
-    Register Assembler::registerAlloc(RegisterMask allow)
+    // Finds a register in 'allow' to store the result of 'ins', evicting one
+    // if necessary.  Doesn't consider the prior state of 'ins' (except that
+    // ins->isUsed() must be true).
+    Register Assembler::registerAlloc(LIns* ins, RegisterMask allow)
     {
-        RegAlloc &regs = _allocator;
-        RegisterMask allowedAndFree = allow & regs.free;
+        RegisterMask allowedAndFree = allow & _allocator.free;
+        Register r;
+        NanoAssert(ins->isUsed());
 
-        if (allowedAndFree)
-        {
+        if (allowedAndFree) {
             // At least one usable register is free -- no need to steal.  
             // Pick a preferred one if possible.
             RegisterMask preferredAndFree = allowedAndFree & SavedRegs;
             RegisterMask set = ( preferredAndFree ? preferredAndFree : allowedAndFree );
-            Register r = nRegisterAllocFromSet(set);
-            return r;
+            r = nRegisterAllocFromSet(set);
+            _allocator.addActive(r, ins);
+            ins->setReg(r);
+        } else {
+            counter_increment(steals);
+
+            // Nothing free, steal one.
+            // LSRA says pick the one with the furthest use.
+            LIns* vicIns = findVictim(allow);
+            NanoAssert(vicIns->isUsed());
+            r = vicIns->getReg();
+
+            _allocator.removeActive(r);
+            vicIns->setReg(UnknownReg);
+
+            // Restore vicIns.
+            asm_restore(vicIns, vicIns->resv(), r);
+
+            // r ends up staying active, but the LIns defining it changes.
+            _allocator.addActive(r, ins);
+            ins->setReg(r);
         }
-        counter_increment(steals);
-
-        // nothing free, steal one
-        // LSRA says pick the one with the furthest use
-        LIns* vic = findVictim(allow);
-        NanoAssert(vic);
-
-        // restore vic
-        Register r = vic->getReg();
-        regs.removeActive(r);
-        vic->setReg(UnknownReg);
-
-        asm_restore(vic, vic->resv(), r);
         return r;
     }
+
+    // Finds a register in 'allow' to store a temporary value (one not
+    // associated with a particular LIns), evicting one if necessary.  The
+    // returned register is marked as being free and so can only be safely
+    // used for code generation purposes until the register state is next
+    // inspected or updated.
+    Register Assembler::registerAllocTmp(RegisterMask allow)
+    {
+        LIns dummyIns;
+        dummyIns.markAsUsed();
+        Register r = registerAlloc(&dummyIns, allow); 
+
+        // Mark r as free, ready for use as a temporary value.
+        _allocator.removeActive(r);
+        _allocator.addFree(r);
+        return r;
+     }
 
     /**
      * these instructions don't have to be saved & reloaded to spill,
@@ -352,17 +378,13 @@ namespace nanojit
             // No reservation.  Create one, and do a fresh allocation.
             ins->markAsUsed();
             RegisterMask prefer = hint(ins, allow);
-            r = registerAlloc(prefer);
-            ins->setReg(r);
-            _allocator.addActive(r, ins);
+            r = registerAlloc(ins, prefer);
 
         } else if (!ins->hasKnownReg()) {
             // Existing reservation with an unknown register.  Do a fresh
             // allocation.
             RegisterMask prefer = hint(ins, allow);
-            r = registerAlloc(prefer);
-            ins->setReg(r);
-            _allocator.addActive(r, ins);
+            r = registerAlloc(ins, prefer);
 
         } else if (rmask(r = ins->getReg()) & allow) {
             // Existing reservation with a known register allocated, and
@@ -380,9 +402,7 @@ namespace nanojit
                 // x87 <-> xmm copy required
                 //_nvprof("fpu-evict",1);
                 evict(r, ins);
-                r = registerAlloc(prefer);
-                ins->setReg(r);
-                _allocator.addActive(r, ins);
+                r = registerAlloc(ins, prefer);
             } else
 #elif defined(NANOJIT_PPC)
             if (((rmask(r)&GpRegs) && !(allow&GpRegs)) ||
@@ -405,9 +425,7 @@ namespace nanojit
                 //
                 _allocator.retire(r);
                 Register s = r;
-                r = registerAlloc(prefer);
-                ins->setReg(r);
-                _allocator.addActive(r, ins);
+                r = registerAlloc(ins, prefer);
                 if ((rmask(s) & GpRegs) && (rmask(r) & GpRegs)) {
 #ifdef NANOJIT_ARM
                     MOV(s, r);  // ie. move 'ins' from its pre-state reg to its post-state reg
