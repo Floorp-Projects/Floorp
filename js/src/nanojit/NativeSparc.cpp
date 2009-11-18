@@ -566,7 +566,7 @@ namespace nanojit
         // only want certain regs
         Register r = prepResultReg(ins, AllowableFlagRegs);
         underrunProtect(8);
-        LOpcode condop = cond->opcode();
+        LOpcode condop = ins->opcode();
         NanoAssert(condop >= LIR_feq && condop <= LIR_fge);
         if (condop == LIR_feq)
             MOVFEI(1, 0, 0, 0, r);
@@ -579,7 +579,7 @@ namespace nanojit
         else // if (condop == LIR_fgt)
             MOVFGI(1, 0, 0, 0, r);
         ORI(G0, 0, r);
-        asm_fcmp(cond);
+        asm_fcmp(ins);
     }
 
     void Assembler::asm_cond(LInsp ins)
