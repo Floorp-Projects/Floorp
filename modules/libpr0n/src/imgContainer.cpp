@@ -1736,7 +1736,9 @@ void imgContainer::ClearFrame(imgFrame *aFrame)
   if (!aFrame)
     return;
 
-  aFrame->LockImageData();
+  nsresult rv = aFrame->LockImageData();
+  if (NS_FAILED(rv))
+    return;
 
   nsRefPtr<gfxASurface> surf;
   aFrame->GetSurface(getter_AddRefs(surf));
@@ -1755,7 +1757,9 @@ void imgContainer::ClearFrame(imgFrame *aFrame, nsIntRect &aRect)
   if (!aFrame || aRect.width <= 0 || aRect.height <= 0)
     return;
 
-  aFrame->LockImageData();
+  nsresult rv = aFrame->LockImageData();
+  if (NS_FAILED(rv))
+    return;
 
   nsRefPtr<gfxASurface> surf;
   aFrame->GetSurface(getter_AddRefs(surf));
