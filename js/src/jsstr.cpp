@@ -1084,8 +1084,27 @@ StringMatch(const jschar *text, jsuint textlen,
     if (textlen < patlen)
         return -1;
 
-    /* XXX tune the BMH threshold (512) */
-    if (textlen >= 512 && patlen <= sBMHPatLenMax) {
+#if __i386__
+    /*
+     * Given enough registers, the unrolled loop below is faster than the
+     * following loop. 32-bit x86 does not have enough registers.
+     */
+    if (patlen == 1) {
+        const jschar p0 = *pat;
+        for (const jschar *c = text, *end = text + textlen; c != end; ++c) {
+            if (*c == p0)
+                return c - text;
+        }
+        return -1;
+    }
+#endif
+
+    /*
+     * XXX tune the BMH threshold (512) and pattern-length threshold (2).
+     * If the text or pattern strings are short, BMH will be more expensive
+     * than the basic linear scan.
+     */
+    if (textlen >= 512 && jsuint(patlen - 2) <= sBMHPatLenMax - 2) {
         jsint index = js_BoyerMooreHorspool(text, textlen, pat, patlen);
         if (index != sBMHBadPattern)
             return index;
@@ -1094,8 +1113,18 @@ StringMatch(const jschar *text, jsuint textlen,
     const jschar *textend = text + textlen - (patlen - 1);
     const jschar *patend = pat + patlen;
     const jschar p0 = *pat;
-    const jschar *t = text;
+    const jschar *patNext = pat + 1;
     uint8 fixup;
+
+#if __APPLE__ && __GNUC__ && __i386__
+    /*
+     * It is critical that |t| is kept in a register. The version of gcc we use
+     * to build on 32-bit Mac does not realize this. See bug 526173.
+     */
+    register const jschar *t asm("esi") = text;
+#else
+    const jschar *t = text;
+#endif
 
     /* Credit: Duff */
     switch ((textend - text) & 7) {
@@ -1112,7 +1141,7 @@ StringMatch(const jschar *text, jsuint textlen,
             do {
                 if (*t++ == p0) {
                   match:
-                    for (const jschar *p1 = pat + 1, *t1 = t;
+                    for (const jschar *p1 = patNext, *t1 = t;
                          p1 != patend;
                          ++p1, ++t1) {
                         if (*p1 != *t1)
@@ -1237,18 +1266,26 @@ str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 
-    j = 0;
-    while (i >= 0) {
-        /* This is always safe because i <= textlen - patlen and j < patlen */
-        if (text[i + j] == pat[j]) {
-            if (++j == patlen)
-                break;
-        } else {
-            i--;
-            j = 0;
+    const jschar *t = text + i;
+    const jschar *textend = text - 1;
+    const jschar p0 = *pat;
+    const jschar *patNext = pat + 1;
+    const jschar *patEnd = pat + patlen;
+
+    for (; t != textend; --t) {
+        if (*t == p0) {
+            const jschar *t1 = t + 1;
+            for (const jschar *p1 = patNext; p1 != patEnd; ++p1, ++t1) {
+                if (*t1 != *p1)
+                    goto break_continue;
+            }
+            *vp = INT_TO_JSVAL(t - text);
+            return JS_TRUE;
         }
+      break_continue:;
     }
-    *vp = INT_TO_JSVAL(i);
+
+    *vp = INT_TO_JSVAL(-1);
     return JS_TRUE;
 }
 
