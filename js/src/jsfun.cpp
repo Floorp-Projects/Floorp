@@ -475,6 +475,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     wscript->noScriptRval = script->noScriptRval;
     wscript->savedCallerFun = script->savedCallerFun;
     wscript->hasSharps = script->hasSharps;
+    wscript->strictModeCode = script->strictModeCode;
     wscript->version = script->version;
     wscript->nfixed = script->nfixed;
     wscript->filename = script->filename;
