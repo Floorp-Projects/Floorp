@@ -50,6 +50,7 @@ _TEST_FILES = \
 	  db_smilCSSPaced.js \
 	  db_smilCSSPropertyList.js \
 	  smilTestUtils.js \
+	  test_smilCSSFontStretchRelative.xhtml \
 	  test_smilCSSFromBy.xhtml \
 	  test_smilCSSFromTo.xhtml \
 	  test_smilCSSInherit.xhtml \
