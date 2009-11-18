@@ -389,6 +389,11 @@
                   </menupopup>
                 </menulist>
                </setting>
+#ifdef WINCE
+              <setting id="prefs-default-browser" type="bool" title="Default Browser" oncommand="BrowserUI.updateDefaultBrowser(this.value);">
+                Make &brandShortName; your default browser
+              </setting>
+#endif
               <settings id="prefs-content" label="&content.title;">
                 <setting pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>
                 <setting pref="javascript.enabled" type="bool" title="&enableJavaScript.title;"/>
