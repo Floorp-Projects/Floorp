@@ -245,8 +245,6 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug505783.html \
 		test_bug457746.html \
 		test_bug518104.html \
-		test_bug503473.html \
-		file_bug503473-frame.sjs \
 		bug457746.sjs \
 		test_CrossSiteXHR.html \
 		file_CrossSiteXHR_inner.html \
@@ -339,6 +337,10 @@ _TEST_FILES = 	test_bug5141.html \
 # Disabled for now. Mochitest isn't reliable enough for these.
 # test_bug444546.html \
 # bug444546.sjs \
+
+# Disabled due to making the harness time out
+#		test_bug503473.html \
+#		file_bug503473-frame.sjs \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
