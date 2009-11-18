@@ -65,10 +65,13 @@ public:
 
   bool SyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>());
   bool AsyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>());
+  bool PerformAsyncLaunch(std::vector<std::string> aExtraOpts=std::vector<std::string>());
 
   virtual void OnChannelConnected(int32 peer_pid);
   virtual void OnMessageReceived(const IPC::Message& aMsg);
   virtual void OnChannelError();
+
+  void InitializeChannel();
 
   virtual bool CanShutdown() { return true; }
 
@@ -90,6 +93,7 @@ protected:
   GeckoProcessType mProcessType;
   Monitor mMonitor;
   bool mLaunched;
+  bool mChannelInitialized;
   FilePath mProcessPath;
 
 #if defined(OS_POSIX)
