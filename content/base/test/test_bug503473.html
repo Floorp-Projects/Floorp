@@ -31,8 +31,6 @@ function done() {
   is(divs, 0, "Div wasn't blown away.")
 
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-            .getService(Components.interfaces.nsIPrefBranch);
   prefs.setBoolPref("html5.enable", gOriginalHtml5Pref);
 
   SimpleTest.finish();
