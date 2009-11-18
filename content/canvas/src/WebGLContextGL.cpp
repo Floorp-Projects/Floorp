@@ -2974,9 +2974,7 @@ WebGLContext::TexSubImage2D()
                                    &argTarget, &argLevel, &argX, &argY,
                                    &argWidth, &argHeight, &argFormat, &argType,
                                    &argPixelsObj) ||
-            !argPixelsObj ||
-            !::JS_IsArrayObject(js.ctx, argPixelsObj) ||
-            !::JS_GetArrayLength(js.ctx, argPixelsObj, &argPixelsLen))
+            !argPixelsObj)
             {
                 return ErrorMessage("texSubImage2D: argument error");
                 return NS_ERROR_DOM_SYNTAX_ERR;
@@ -3057,12 +3055,17 @@ WebGLContext::TexSubImage2D()
             return NS_ERROR_DOM_SYNTAX_ERR;
         }
 
-        SimpleBuffer sbuffer(bufferType, bufferSize, js.ctx, argPixelsObj, argPixelsLen);
-        if (!sbuffer.Valid())
-            return NS_ERROR_FAILURE;
+        nsCOMPtr<nsICanvasArray> arrayObj;
+        nsresult rv;
+        rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, argPixelsObj, NS_GET_IID(nsISupports), getter_AddRefs(arrayObj));
+        arrayObj = do_QueryInterface(arrayObj, &rv);
+
+        if (NS_FAILED(rv) || !arrayObj) {
+            return ErrorMessage("texSubImage2D: pixels arg is not a WebGL array");
+        }
 
         MakeContextCurrent();
-        gl->fTexSubImage2D (argTarget, argLevel, argX, argY, argWidth, argHeight, argFormat, argType, (void *) sbuffer.data);
+        gl->fTexSubImage2D (argTarget, argLevel, argX, argY, argWidth, argHeight, argFormat, argType, arrayObj->NativePointer());
     }
     return NS_OK;
 }
@@ -3129,9 +3132,7 @@ WebGLContext::TexImage2D()
                                    &argTarget, &argLevel, &argInternalFormat, &argWidth,
                                    &argHeight, &argBorder, &argFormat, &argType,
                                    &argPixelsObj) ||
-            !argPixelsObj ||
-            !::JS_IsArrayObject(js.ctx, argPixelsObj) ||
-            !::JS_GetArrayLength(js.ctx, argPixelsObj, &argPixelsLen))
+            !argPixelsObj)
             {
                 return ErrorMessage("texImage2D: argument error");
                 return NS_ERROR_DOM_SYNTAX_ERR;
@@ -3239,12 +3240,17 @@ WebGLContext::TexImage2D()
                 return NS_ERROR_DOM_SYNTAX_ERR;
             }
 
-            SimpleBuffer sbuffer(bufferType, bufferSize, js.ctx, argPixelsObj, argPixelsLen);
-            if (!sbuffer.Valid())
-            return NS_ERROR_FAILURE;
+            nsCOMPtr<nsICanvasArray> arrayObj;
+            nsresult rv;
+            rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, argPixelsObj, NS_GET_IID(nsISupports), getter_AddRefs(arrayObj));
+            arrayObj = do_QueryInterface(arrayObj, &rv);
+
+            if (NS_FAILED(rv) || !arrayObj) {
+                return ErrorMessage("texImage2D: pixels arg is not a WebGL array");
+            }
 
             MakeContextCurrent();
-            gl->fTexImage2D (argTarget, argLevel, argInternalFormat, argWidth, argHeight, argBorder, argFormat, argType, (void *) sbuffer.data);
+            gl->fTexImage2D (argTarget, argLevel, argInternalFormat, argWidth, argHeight, argBorder, argFormat, argType, arrayObj->NativePointer());
         }
     }
     return NS_OK;
