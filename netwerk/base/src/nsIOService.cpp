@@ -73,7 +73,7 @@
 #include "nsIPermissionManager.h"
 #include "nsTArray.h"
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(MOZ_ENABLE_LIBCONIC)
 #include "nsNativeConnectionHelper.h"
 #endif
 
@@ -986,11 +986,10 @@ nsIOService::TrackNetworkLinkStatusForOffline()
         // option is set to always autodial. If so, then we are 
         // always up for the purposes of offline management.
         if (autodialEnabled) {
-#if defined(XP_WIN)
-            // On Windows, need to do some registry checking to see if
-            // autodial is enabled at the OS level. Only if that is
-            // enabled are we always up for the purposes of offline
-            // management.
+#if defined(XP_WIN) || defined(MOZ_ENABLE_LIBCONIC)
+            // On Windows and Maemo (libconic) we should first check with the OS
+            // to see if autodial is enabled.  If it is enabled then we are
+            // allowed to manage the offline state.
             if(nsNativeConnectionHelper::IsAutodialEnabled()) 
                 return SetOffline(PR_FALSE);
 #else
@@ -998,7 +997,7 @@ nsIOService::TrackNetworkLinkStatusForOffline()
 #endif
         }
     }
-  
+
     PRBool isUp;
     nsresult rv = mNetworkLinkService->GetIsLinkUp(&isUp);
     NS_ENSURE_SUCCESS(rv, rv);
