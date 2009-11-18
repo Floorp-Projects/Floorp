@@ -4909,7 +4909,7 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
     jp = js_NewPrinter(cx, name, NULL,
                        indent & ~JS_DONT_PRETTY_PRINT,
                        !(indent & JS_DONT_PRETTY_PRINT),
-                       false);
+                       false, false);
     if (!jp)
         return NULL;
     if (js_DecompileScript(jp, script))
@@ -4927,7 +4927,7 @@ JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent)
     return js_DecompileToString(cx, "JS_DecompileFunction", fun,
                                 indent & ~JS_DONT_PRETTY_PRINT,
                                 !(indent & JS_DONT_PRETTY_PRINT),
-                                false, js_DecompileFunction);
+                                false, false, js_DecompileFunction);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -4937,7 +4937,7 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent)
     return js_DecompileToString(cx, "JS_DecompileFunctionBody", fun,
                                 indent & ~JS_DONT_PRETTY_PRINT,
                                 !(indent & JS_DONT_PRETTY_PRINT),
-                                false, js_DecompileFunctionBody);
+                                false, false, js_DecompileFunctionBody);
 }
 
 JS_PUBLIC_API(JSBool)

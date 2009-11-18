@@ -147,6 +147,9 @@ static JSMemberParser  MemberExpr;
 static JSPrimaryParser PrimaryExpr;
 static JSParenParser   ParenExpr;
 
+static bool RecognizeDirectivePrologue(JSContext *cx, JSTokenStream *ts,
+                                       JSTreeContext *tc, JSParseNode *pn);
+
 /*
  * Insist that the next token be of type tt, or report errno and return null.
  * NB: this macro uses cx and ts from its lexical environment.
@@ -306,7 +309,7 @@ JSCompiler::newFunctionBox(JSObject *obj, JSParseNode *fn, JSTreeContext *tc)
         }
     }
     funbox->level = tc->staticLevel;
-    funbox->tcflags = TCF_IN_FUNCTION | (tc->flags & TCF_COMPILE_N_GO);
+    funbox->tcflags = (TCF_IN_FUNCTION | (tc->flags & (TCF_COMPILE_N_GO | TCF_STRICT_MODE_CODE)));
     return funbox;
 }
 
@@ -797,6 +800,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     JSParseNode *pn;
     uint32 scriptGlobals;
     JSScript *script;
+    bool inDirectivePrologue;
 #ifdef METER_PARSENODES
     void *sbrk(ptrdiff_t), *before = sbrk(0);
 #endif
@@ -883,6 +887,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
         goto out;
     CG_SWITCH_TO_MAIN(&cg);
 
+    inDirectivePrologue = true;
     for (;;) {
         jsc.tokenStream.flags |= TSF_OPERAND;
         tt = js_PeekToken(cx, &jsc.tokenStream);
@@ -898,6 +903,9 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
         if (!pn)
             goto out;
         JS_ASSERT(!cg.blockNode);
+
+        if (inDirectivePrologue)
+            inDirectivePrologue = RecognizeDirectivePrologue(cx, &jsc.tokenStream, &cg, pn);
 
         if (!js_FoldConstants(cx, pn, &cg))
             goto out;
@@ -2865,6 +2873,10 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (!LeaveFunction(pn, &funtc, tc, funAtom, lambda))
         return NULL;
 
+    /* If the surrounding function is not strict code, reset the lexer. */
+    if (!(tc->flags & TCF_STRICT_MODE_CODE))
+        ts->flags &= ~TSF_STRICT_MODE_CODE;
+
     return result;
 }
 
@@ -2881,6 +2893,40 @@ FunctionExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 }
 
 /*
+ * Recognize Directive Prologue members and directives.  Assuming pn
+ * is a candidate for membership in a directive prologue, return
+ * true if it is in fact a member.  Recognize directives and set
+ * tc's flags accordingly.
+ *
+ * Note that the following is a strict mode function:
+ *
+ * function foo() {
+ *   "blah" // inserted semi colon
+ *        "blurgh"
+ *   "use\x20loose"
+ *   "use strict"
+ * }
+ *
+ * That is, a statement can be a Directive Prologue member, even
+ * if it can't possibly be a directive, now or in the future.
+ */
+static bool
+RecognizeDirectivePrologue(JSContext *cx, JSTokenStream *ts,
+                           JSTreeContext *tc, JSParseNode *pn)
+{
+    if (!pn->isDirectivePrologueMember())
+        return false;
+    if (pn->isDirective()) {
+        JSAtom *directive = pn->pn_kid->pn_atom;
+        if (directive == cx->runtime->atomState.useStrictAtom) {
+            tc->flags |= TCF_STRICT_MODE_CODE;
+            ts->flags |= TSF_STRICT_MODE_CODE;
+        }
+    }
+    return true;
+}
+
+/*
  * Parse the statements in a block, creating a TOK_LC node that lists the
  * statements' trees.  If called from block-parsing code, the caller must
  * match { before and } after.
@@ -2890,6 +2936,7 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     JSParseNode *pn, *pn2, *saveBlock;
     JSTokenType tt;
+    bool inDirectivePrologue = tc->atTopLevel();
 
     JS_CHECK_RECURSION(cx, return NULL);
 
@@ -2919,6 +2966,16 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             if (ts->flags & TSF_EOF)
                 ts->flags |= TSF_UNEXPECTED_EOF;
             return NULL;
+        }
+
+        if (inDirectivePrologue) {
+            if (RecognizeDirectivePrologue(cx, ts, tc, pn2)) {
+                /* A Directive Prologue member is dead code.  Omit it from the statement list. */
+                RecycleTree(pn2, tc);
+                continue;
+            } else {
+                inDirectivePrologue = false;
+            }
         }
 
         if (pn2->pn_type == TOK_FUNCTION) {
