@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -61,10 +62,17 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     mProcessType(aProcessType),
     mMonitor("mozilla.ipc.GeckChildProcessHost.mMonitor"),
     mLaunched(false),
+    mChannelInitialized(false),
     mDelegate(aDelegate),
     mChildProcessHandle(0)
 {
     MOZ_COUNT_CTOR(GeckoChildProcessHost);
+    
+    MessageLoop* ioLoop = 
+      BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
+    ioLoop->PostTask(FROM_HERE,
+                     NewRunnableMethod(this,
+                                       &GeckoChildProcessHost::InitializeChannel));
 }
 
 GeckoChildProcessHost::~GeckoChildProcessHost()
@@ -81,7 +89,7 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts)
 
   ioLoop->PostTask(FROM_HERE,
                    NewRunnableMethod(this,
-                                     &GeckoChildProcessHost::AsyncLaunch,
+                                     &GeckoChildProcessHost::PerformAsyncLaunch,
                                      aExtraOpts));
 
   // NB: this uses a different mechanism than the chromium parent
@@ -97,9 +105,41 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts)
 bool
 GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
 {
+  MessageLoop* ioLoop = 
+    BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
+  ioLoop->PostTask(FROM_HERE,
+                   NewRunnableMethod(this,
+                                     &GeckoChildProcessHost::PerformAsyncLaunch,
+                                     aExtraOpts));
+
+  // This may look like the sync launch wait, but we only delay as
+  // long as it takes to create the channel.
+  MonitorAutoEnter mon(mMonitor);
+  while (!mChannelInitialized) {
+    mon.Wait();
+  }
+
+  return true;
+}
+
+void
+GeckoChildProcessHost::InitializeChannel()
+{
+  CreateChannel();
+
+  MonitorAutoEnter mon(mMonitor);
+  mChannelInitialized = true;
+  mon.Notify();
+}
+
+bool
+GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
+{
   // FIXME/cjones: make this work from non-IO threads, too
 
-  if (!CreateChannel()) {
+  // We rely on the fact that InitializeChannel() has already been processed
+  // on the IO thread before this point is reached.
+  if (!GetChannel()) {
     return false;
   }
 
