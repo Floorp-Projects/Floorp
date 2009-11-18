@@ -442,8 +442,7 @@ namespace nanojit
         // value is either a 64bit struct or maybe a float
         // that isn't live in an FPU reg.  Either way, don't
         // put it in an FPU reg just to load & store it.
-        Register t = registerAlloc(GpRegs & ~(rmask(rd)|rmask(rs)));
-        _allocator.addFree(t);
+        Register t = registerAllocTmp(GpRegs & ~(rmask(rd)|rmask(rs)));
         STW32(t, dd+4, rd);
         LDSW32(rs, ds+4, t);
         STW32(t, dd, rd);
@@ -905,8 +904,7 @@ namespace nanojit
         underrunProtect(72);
         // where our result goes
         Register rr = prepResultReg(ins, FpRegs);
-        Register rt = registerAlloc(FpRegs & ~(rmask(rr)));
-        _allocator.addFree(rt);
+        Register rt = registerAllocTmp(FpRegs & ~(rmask(rr)));
         Register gr = findRegFor(ins->oprnd1(), GpRegs);
         int disp = -8;
 

@@ -1758,8 +1758,7 @@ namespace nanojit
             emitrxb_imm(X64_jmpx, (Register)0, indexreg, (Register)5, (int32_t)(uintptr_t)table);
         } else {
             // don't use R13 for base because we want to use mod=00, i.e. [index*8+base + 0]
-            Register tablereg = registerAlloc(GpRegs & ~(rmask(indexreg)|rmask(R13)));
-            _allocator.addFree(tablereg);
+            Register tablereg = registerAllocTmp(GpRegs & ~(rmask(indexreg)|rmask(R13)));
             // jmp [indexreg*8 + tablereg]
             emitxb(X64_jmpxb, indexreg, tablereg);
             // tablereg <- #table
