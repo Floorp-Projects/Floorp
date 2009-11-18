@@ -51,6 +51,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
+#include "nsLayoutStatics.h"
 
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 
