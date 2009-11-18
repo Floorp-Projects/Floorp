@@ -1409,6 +1409,9 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 goto out;
             }
             scopeobj = withObject;
+
+            JS_ASSERT(argc >= 2);
+            argv[1] = OBJECT_TO_JSVAL(scopeobj);
         }
 
         /* We're pretending that we're in global code. */
