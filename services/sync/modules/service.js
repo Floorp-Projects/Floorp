@@ -556,6 +556,10 @@ WeaveSvc.prototype = {
 
   _verifyPassphrase: function _verifyPassphrase()
     this._catch(this._notify("verify-passphrase", "", function() {
+      // Don't allow empty/missing passphrase
+      if (!this.passphrase)
+        return false;
+
       try {
         let pubkey = PubKeys.getDefaultKey();
         let privkey = PrivKeys.get(pubkey.privateKeyUri);
