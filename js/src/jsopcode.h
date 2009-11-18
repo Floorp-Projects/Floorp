@@ -275,17 +275,9 @@ js_QuoteString(JSContext *cx, JSString *str, jschar quote);
  * a GC'ed string.
  */
 
-#ifdef JS_ARENAMETER
-# define JS_NEW_PRINTER(cx, name, fun, indent, pretty, grouped)               \
-    js_NewPrinter(cx, name, fun, indent, pretty, grouped)
-#else
-# define JS_NEW_PRINTER(cx, name, fun, indent, pretty, grouped)               \
-    js_NewPrinter(cx, fun, indent, pretty, grouped)
-#endif
-
 extern JSPrinter *
-JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
-               uintN indent, JSBool pretty, JSBool grouped);
+js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
+              uintN indent, JSBool pretty, JSBool grouped);
 
 extern void
 js_DestroyPrinter(JSPrinter *jp);

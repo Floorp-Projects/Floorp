@@ -813,10 +813,10 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     if (!jsc.init(chars, length, file, filename, lineno))
         return NULL;
 
-    JS_INIT_ARENA_POOL(&codePool, "code", 1024, sizeof(jsbytecode),
-                       &cx->scriptStackQuota);
-    JS_INIT_ARENA_POOL(&notePool, "note", 1024, sizeof(jssrcnote),
-                       &cx->scriptStackQuota);
+    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode),
+                     &cx->scriptStackQuota);
+    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote),
+                     &cx->scriptStackQuota);
 
     JSCodeGenerator cg(&jsc, &codePool, &notePool, jsc.tokenStream.lineno);
 
@@ -1473,10 +1473,10 @@ JSCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *pr
 
     /* No early return from after here until the js_FinishArenaPool calls. */
     JSArenaPool codePool, notePool;
-    JS_INIT_ARENA_POOL(&codePool, "code", 1024, sizeof(jsbytecode),
-                       &cx->scriptStackQuota);
-    JS_INIT_ARENA_POOL(&notePool, "note", 1024, sizeof(jssrcnote),
-                       &cx->scriptStackQuota);
+    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode),
+                     &cx->scriptStackQuota);
+    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote),
+                     &cx->scriptStackQuota);
 
     JSCodeGenerator funcg(&jsc, &codePool, &notePool, jsc.tokenStream.lineno);
     funcg.flags |= TCF_IN_FUNCTION;

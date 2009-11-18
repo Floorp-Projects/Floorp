@@ -4906,10 +4906,10 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
     JSString *str;
 
     CHECK_REQUEST(cx);
-    jp = JS_NEW_PRINTER(cx, name, NULL,
-                        indent & ~JS_DONT_PRETTY_PRINT,
-                        !(indent & JS_DONT_PRETTY_PRINT),
-                        false);
+    jp = js_NewPrinter(cx, name, NULL,
+                       indent & ~JS_DONT_PRETTY_PRINT,
+                       !(indent & JS_DONT_PRETTY_PRINT),
+                       false);
     if (!jp)
         return NULL;
     if (js_DecompileScript(jp, script))
