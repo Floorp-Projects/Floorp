@@ -76,7 +76,12 @@ public:
     NS_OVERRIDE virtual void OnMessageReceived(const Message& msg);
     NS_OVERRIDE virtual void OnChannelError();
 
-    static bool IsPumpingMessages();
+    static bool IsPumpingMessages() {
+        return sIsPumpingMessages;
+    }
+    static void SetIsPumpingMessages(bool aIsPumping) {
+        sIsPumpingMessages = aIsPumping;
+    }
 
 protected:
     // Executed on the worker thread
@@ -86,10 +91,6 @@ protected:
 
     void OnDispatchMessage(const Message& aMsg);
     void WaitForNotify();
-
-#ifdef OS_WIN
-    void RunWindowsEventLoop();
-#endif
 
     // Executed on the IO thread.
     void OnSendReply(Message* msg);
@@ -105,10 +106,7 @@ protected:
     bool mProcessingSyncMessage;
     Message mRecvd;
 
-#ifdef OS_WIN
-    DWORD mUIThreadId;
-    int mEventLoopDepth;
-#endif
+    static bool sIsPumpingMessages;
 };
 
 
