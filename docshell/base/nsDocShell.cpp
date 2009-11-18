@@ -3798,20 +3798,6 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     mFailedURI = aURI;
     mFailedLoadType = mLoadType;
 
-    // Be sure to have a correct mLSHE, it may have been cleared by
-    // EndPageLoad. See bug 302115.
-    if (mSessionHistory && !mLSHE) {
-        PRInt32 idx;
-        mSessionHistory->GetRequestedIndex(&idx);
-        if (idx == -1)
-            mSessionHistory->GetIndex(&idx);
-
-        nsCOMPtr<nsIHistoryEntry> entry;
-        mSessionHistory->GetEntryAtIndex(idx, PR_FALSE,
-                                         getter_AddRefs(entry));
-        mLSHE = do_QueryInterface(entry);
-    }
-
     nsCAutoString url;
     nsCAutoString charset;
     if (aURI)
@@ -7050,6 +7036,20 @@ nsDocShell::CreateContentViewer(const char *aContentType,
         } else if (failedURI) {
             mURIResultedInDocument = PR_TRUE;
             OnNewURI(failedURI, nsnull, nsnull, mLoadType, PR_TRUE, PR_FALSE);
+        }
+
+        // Be sure to have a correct mLSHE, it may have been cleared by
+        // EndPageLoad. See bug 302115.
+        if (mSessionHistory && !mLSHE) {
+            PRInt32 idx;
+            mSessionHistory->GetRequestedIndex(&idx);
+            if (idx == -1)
+                mSessionHistory->GetIndex(&idx);
+
+            nsCOMPtr<nsIHistoryEntry> entry;
+            mSessionHistory->GetEntryAtIndex(idx, PR_FALSE,
+                                             getter_AddRefs(entry));
+            mLSHE = do_QueryInterface(entry);
         }
 
         // Set our current URI
