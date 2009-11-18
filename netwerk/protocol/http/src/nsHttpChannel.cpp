@@ -2675,7 +2675,7 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
         do_CreateInstance(kStreamListenerTeeCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = tee->Init(mListener, out);
+    rv = tee->Init(mListener, out, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     mListener = tee;
@@ -2701,7 +2701,7 @@ nsHttpChannel::InstallOfflineCacheListener()
         do_CreateInstance(kStreamListenerTeeCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = tee->Init(mListener, out);
+    rv = tee->Init(mListener, out, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     mListener = tee;
