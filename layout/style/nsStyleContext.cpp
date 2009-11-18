@@ -405,7 +405,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
                        PeekStyleData(eStyleStruct_##struct_));                \
     if (this##struct_) {                                                      \
       const nsStyle##struct_* other##struct_ = aOther->GetStyle##struct_();   \
-      if (compare &&                                                          \
+      if ((compare || nsStyle##struct_::ForceCompare()) &&                    \
           !NS_IsHintSubset(maxHint, hint) &&                                  \
           this##struct_ != other##struct_) {                                  \
         NS_ASSERTION(NS_IsHintSubset(                                         \
