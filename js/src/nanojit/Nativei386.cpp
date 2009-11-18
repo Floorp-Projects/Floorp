@@ -616,16 +616,14 @@ namespace nanojit
         if (config.sse2)
         {
             // use SSE to load+store 64bits
-            Register t = registerAlloc(XmmRegs);
-            _allocator.addFree(t);
+            Register t = registerAllocTmp(XmmRegs);
             SSE_STQ(dd, rd, t);
             SSE_LDQ(t, ds, rs);
         }
         else
         {
             // get a scratch reg
-            Register t = registerAlloc(GpRegs & ~(rmask(rd)|rmask(rs)));
-            _allocator.addFree(t);
+            Register t = registerAllocTmp(GpRegs & ~(rmask(rd)|rmask(rs)));
             ST(rd, dd+4, t);
             LD(t, ds+4, rs);
             ST(rd, dd, t);
@@ -1187,11 +1185,10 @@ namespace nanojit
                     LDSDm(rr, &k_ONE);
                 } else if (d && d == (int)d) {
                     // can fit in 32bits? then use cvt which is faster
-                    Register gr = registerAlloc(GpRegs);
+                    Register gr = registerAllocTmp(GpRegs);
                     SSE_CVTSI2SD(rr, gr);
                     SSE_XORPDr(rr,rr);  // zero rr to ensure no dependency stalls
                     LDi(gr, (int)d);
-                    _allocator.addFree(gr);
                 } else {
                     findMemFor(ins);
                     const int d = disp(ins);
@@ -1559,7 +1556,7 @@ namespace nanojit
         {
             // don't call findRegFor, we want a reg we can stomp on for a very short time,
             // not a reg that will continue to be associated with the LIns
-            Register gr = registerAlloc(GpRegs);
+            Register gr = registerAllocTmp(GpRegs);
 
             // technique inspired by gcc disassembly
             // Edwin explains it:
@@ -1597,9 +1594,6 @@ namespace nanojit
                 SUBi(gr, 0x80000000);
                 LD(gr, d, FP);
             }
-
-            // ok, we're done with it
-            _allocator.addFree(gr);
         }
         else
         {

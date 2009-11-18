@@ -250,7 +250,8 @@ namespace nanojit
             void        arFree(uint32_t idx);
             void        arReset();
 
-            Register    registerAlloc(RegisterMask allow);
+            Register    registerAlloc(LIns* ins, RegisterMask allow);
+            Register    registerAllocTmp(RegisterMask allow);
             void        registerResetAll();
             void        evictAllActiveRegs();
             void        evictSomeActiveRegs(RegisterMask regs);
