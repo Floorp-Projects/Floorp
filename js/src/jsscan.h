@@ -384,30 +384,9 @@ js_IsIdentifier(JSString *str);
  * for an error. When pn is not null, use it to report error's location.
  * Otherwise use ts, which must not be null.
  */
-bool
+JSBool
 js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
                             uintN flags, uintN errorNumber, ...);
-
-/*
- * Report a condition that should elicit a warning with JSOPTION_STRICT,
- * or an error if ts or tc is handling strict mode code.  This function
- * defers to js_ReportCompileErrorNumber to do the real work.  Either tc
- * or ts may be NULL, if there is no tree context or token stream state
- * whose strictness should affect the report.
- *
- * One could have js_ReportCompileErrorNumber recognize the
- * JSREPORT_STRICT_MODE_ERROR flag instead of having a separate function
- * like this one.  However, the strict mode code flag we need to test is
- * in the JSTreeContext structure for that code; we would have to change
- * the ~120 js_ReportCompileErrorNumber calls to pass the additional
- * argument, even though many of those sites would never use it.  Using
- * ts's TSF_STRICT_MODE_CODE flag instead of tc's would be brittle: at some
- * points ts's flags don't correspond to those of the tc relevant to the
- * error.
- */
-bool
-js_ReportStrictModeError(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
-                         JSParseNode *pn, uintN errorNumber, ...);
 
 /*
  * Steal one JSREPORT_* bit (see jsapi.h) to tell that arguments to the error
