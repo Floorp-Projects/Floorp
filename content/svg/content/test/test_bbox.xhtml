@@ -23,18 +23,27 @@ SimpleTest.waitForExplicitFinish();
 function run()
 {
   var doc = $("svg").contentDocument;
-  
+
+  function getBBox(id) {
+    return doc.getElementById(id).getBBox();
+  }
   function checkBBox(id, x, y, width, height) {
-    var e = doc.getElementById(id);
-    var bbox = e.getBBox();
+    var bbox = getBBox(id);
     is(bbox.x, x, id + ".getBBox().x");
     is(bbox.y, y, id + ".getBBox().y");
     is(bbox.width, width, id + ".getBBox().width");
     is(bbox.height, height, id + ".getBBox().height");
   }
+  function checkBBoxHeight(id1, id2) {
+    var bbox1 = getBBox(id1);
+    var bbox2 = getBBox(id2);
+    is(bbox1.height, bbox2.height, id1 + ".getBBox().height");
+  }
 
   checkBBox("f", 0, 0, 100, 100);
-
+  checkBBoxHeight("a", "b");
+  checkBBoxHeight("a", "y");
+  
   SimpleTest.finish();
 }
 
