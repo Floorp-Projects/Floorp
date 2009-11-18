@@ -55,7 +55,7 @@
 <!ENTITY netOffline.title "Offline mode">
 <!ENTITY netOffline.longDesc "
 <ul>
-  <li>Uncheck &quot;Work Offline&quot; in the File menu, then try again.</li>
+  <li>Try again. &brandShortName; will attempt to open a connection and reload the page.</li>
 </ul>
 ">
 
