@@ -1777,7 +1777,7 @@ extern JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         void *userRef, const uintN errorNumber,
                         char **message, JSErrorReport *reportp,
-                        bool charArgs, va_list ap);
+                        JSBool *warningp, JSBool charArgs, va_list ap);
 #endif
 
 extern void
