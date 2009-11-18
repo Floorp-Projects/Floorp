@@ -734,8 +734,8 @@ struct JSPrinter {
 };
 
 JSPrinter *
-JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
-               uintN indent, JSBool pretty, JSBool grouped)
+js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
+              uintN indent, JSBool pretty, JSBool grouped)
 {
     JSPrinter *jp;
 
@@ -743,7 +743,7 @@ JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
     if (!jp)
         return NULL;
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
-    JS_INIT_ARENA_POOL(&jp->pool, name, 256, 1, &cx->scriptStackQuota);
+    JS_InitArenaPool(&jp->pool, name, 256, 1, &cx->scriptStackQuota);
     jp->indent = indent;
     jp->pretty = pretty;
     jp->grouped = grouped;
@@ -2243,8 +2243,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     fun = jp->script->getFunction(js_GetSrcNoteOffset(sn, 0));
                   do_function:
                     js_puts(jp, "\n");
-                    jp2 = JS_NEW_PRINTER(cx, "nested_function", fun,
-                                         jp->indent, jp->pretty, jp->grouped);
+                    jp2 = js_NewPrinter(cx, "nested_function", fun,
+                                        jp->indent, jp->pretty, jp->grouped);
                     if (!jp2)
                         return NULL;
                     ok = js_DecompileFunction(jp2);
@@ -4908,7 +4908,7 @@ js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
     JSPrinter *jp;
     JSString *str;
 
-    jp = JS_NEW_PRINTER(cx, name, fun, indent, pretty, grouped);
+    jp = js_NewPrinter(cx, name, fun, indent, pretty, grouped);
     if (!jp)
         return NULL;
     if (decompiler(jp))
@@ -5313,8 +5313,8 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     }
 
     name = NULL;
-    jp = JS_NEW_PRINTER(cx, "js_DecompileValueGenerator", fun, 0,
-                        false, false);
+    jp = js_NewPrinter(cx, "js_DecompileValueGenerator", fun, 0,
+                       false, false);
     if (jp) {
         jp->dvgfence = end;
         jp->pcstack = pcstack;
