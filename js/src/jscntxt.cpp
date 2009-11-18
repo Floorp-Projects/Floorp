@@ -1401,6 +1401,37 @@ js_ReportAllocationOverflow(JSContext *cx)
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_ALLOC_OVERFLOW);
 }
 
+/*
+ * Given flags and the state of cx, decide whether we should report an
+ * error, a warning, or just continue execution normally.  Return
+ * true if we should continue normally, without reporting anything;
+ * otherwise, adjust *flags as appropriate and return false.
+ */
+static bool
+checkReportFlags(JSContext *cx, uintN *flags)
+{
+    if (JSREPORT_IS_STRICT_MODE_ERROR(*flags)) {
+        /* Error in strict code; warning with strict option; okay otherwise. */
+        JS_ASSERT(JS_IsRunning(cx));
+        if (cx->fp->script->strictModeCode)
+            *flags &= ~JSREPORT_WARNING;
+        else if (JS_HAS_STRICT_OPTION(cx))
+            *flags |= JSREPORT_WARNING;
+        else
+            return true;
+    } else if (JSREPORT_IS_STRICT(*flags)) {
+        /* Warning/error only when JSOPTION_STRICT is set. */
+        if (!JS_HAS_STRICT_OPTION(cx))
+            return true;
+    }
+
+    /* Warnings become errors when JSOPTION_WERROR is set. */
+    if (JSREPORT_IS_WARNING(*flags) && JS_HAS_WERROR_OPTION(cx))
+        *flags &= ~JSREPORT_WARNING;
+
+    return false;
+}
+
 JSBool
 js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
 {
@@ -1410,7 +1441,7 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
     JSErrorReport report;
     JSBool warning;
 
-    if ((flags & JSREPORT_STRICT) && !JS_HAS_STRICT_OPTION(cx))
+    if (checkReportFlags(cx, &flags))
         return JS_TRUE;
 
     message = JS_vsmprintf(format, ap);
@@ -1425,10 +1456,6 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
     PopulateReportBlame(cx, &report);
 
     warning = JSREPORT_IS_WARNING(report.flags);
-    if (warning && JS_HAS_WERROR_OPTION(cx)) {
-        report.flags &= ~JSREPORT_WARNING;
-        warning = JS_FALSE;
-    }
 
     ReportError(cx, message, &report);
     js_free(message);
@@ -1451,17 +1478,11 @@ JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         void *userRef, const uintN errorNumber,
                         char **messagep, JSErrorReport *reportp,
-                        JSBool *warningp, JSBool charArgs, va_list ap)
+                        bool charArgs, va_list ap)
 {
     const JSErrorFormatString *efs;
     int i;
     int argCount;
-
-    *warningp = JSREPORT_IS_WARNING(reportp->flags);
-    if (*warningp && JS_HAS_WERROR_OPTION(cx)) {
-        reportp->flags &= ~JSREPORT_WARNING;
-        *warningp = JS_FALSE;
-    }
 
     *messagep = NULL;
 
@@ -1616,8 +1637,9 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     char *message;
     JSBool warning;
 
-    if ((flags & JSREPORT_STRICT) && !JS_HAS_STRICT_OPTION(cx))
+    if (checkReportFlags(cx, &flags))
         return JS_TRUE;
+    warning = JSREPORT_IS_WARNING(flags);
 
     memset(&report, 0, sizeof (struct JSErrorReport));
     report.flags = flags;
@@ -1625,7 +1647,7 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     PopulateReportBlame(cx, &report);
 
     if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber,
-                                 &message, &report, &warning, charArgs, ap)) {
+                                 &message, &report, charArgs, ap)) {
         return JS_FALSE;
     }
 
