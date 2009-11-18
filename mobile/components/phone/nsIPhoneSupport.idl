@@ -58,4 +58,20 @@ interface nsIPhoneSupport : nsISupports
    * This method displays a UI to switch to (or launch) a different task
    */
   void switchTask();
+
+  /**
+   * Determines whether or not Fennec is the "Default Browser".
+   * This is simply whether or not Fennec is registered to handle http links.
+   */
+  boolean isDefaultBrowser();
+
+  /**
+   * Registers Fennec as the "Default Browser".
+   */
+  void setDefaultBrowser();
+
+  /**
+   * Restores previous "Default Browser".
+   */
+  void restoreDefaultBrowser();
 };
