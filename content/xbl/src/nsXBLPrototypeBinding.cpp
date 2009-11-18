@@ -342,7 +342,7 @@ nsXBLPrototypeBinding::Init(const nsACString& aID,
 
 PRBool nsXBLPrototypeBinding::CompareBindingURI(nsIURI* aURI) const
 {
-  PRBool equal;
+  PRBool equal = PR_FALSE;
   mBindingURI->Equals(aURI, &equal);
   if (!equal && mAlternateBindingURI) {
     mAlternateBindingURI->Equals(aURI, &equal);

@@ -1510,6 +1510,25 @@ if test "$GNU_CXX"; then
     if test "$ac_has_wno_invalid_offsetof" = "yes"; then
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-invalid-offsetof"
     fi
+
+    AC_CACHE_CHECK(whether the compiler supports -Wno-variadic-macros,
+                   ac_has_wno_variadic_macros,
+        [
+            AC_LANG_SAVE
+            AC_LANG_CPLUSPLUS
+            _SAVE_CXXFLAGS="$CXXFLAGS"
+            CXXFLAGS="$CXXFLAGS ${_COMPILER_PREFIX}-Wno-variadic-macros"
+            AC_TRY_COMPILE([],
+                           [return(0);],
+                           ac_has_wno_variadic_macros="yes",
+                           ac_has_wno_variadic_macros="no")
+            CXXFLAGS="$_SAVE_CXXFLAGS"
+            AC_LANG_RESTORE
+        ])
+    if test "$ac_has_wno_variadic_macros" = "yes"; then
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-variadic-macros"
+    fi
+
 else
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -D_MOZILLA_CONFIG_H_ $(ACDEFINES)'
 fi
@@ -4160,12 +4179,16 @@ if test "$ac_cv_trouble_comparing_to_zero" = yes ; then
   AC_DEFINE(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)
 fi
 
+# try harder, when checking for __thread support, see bug 521750 comment #33 and below
+_SAVE_LDFLAGS=$LDFLAGS
+LDFLAGS="$LDFLAGS $DSO_PIC_CFLAGS $DSO_LDOPTS"
 AC_CACHE_CHECK(for __thread keyword for TLS variables,
                ac_cv_thread_keyword,
                [AC_TRY_LINK([__thread bool tlsIsMainThread = false;],
                             [return tlsIsMainThread;],
                             ac_cv_thread_keyword=yes,
                             ac_cv_thread_keyword=no)])
+LDFLAGS=$_SAVE_LDFLAGS
 if test "$ac_cv_thread_keyword" = yes; then
   AC_DEFINE(HAVE_THREAD_TLS_KEYWORD)
 fi

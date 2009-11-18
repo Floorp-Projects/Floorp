@@ -44,8 +44,11 @@ relativesrcdir  = toolkit/components/alerts/test
 include $(DEPTH)/config/autoconf.mk
 
 # Mochitest tests
+# Synchronous tests like test_alerts.html must come before
+# asynchronous tests like test_alerts_noobserve.html!
 MOCHI_TESTS = \
 		test_alerts.html \
+		test_alerts_noobserve.html \
 		$(NULL)
 
 

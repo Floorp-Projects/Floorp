@@ -48,6 +48,7 @@
 #   Paul O’Shannessy <paul@oshannessy.com>
 #   Nils Maier <maierman@web.de>
 #   Rob Arnold <robarnold@cmu.edu>
+#   Dietrich Ayala <dietrich@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -151,6 +152,12 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
 #endif
   return null;
 });
+
+#ifdef MOZ_CRASHREPORTER
+XPCOMUtils.defineLazyServiceGetter(this, "gCrashReporter",
+                                   "@mozilla.org/xre/app-info;1",
+                                   "nsICrashReporter");
+#endif
 
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
@@ -4318,6 +4325,12 @@ var TabsProgressListener = {
   },
 
   onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+    if (!aRequest.URI)
+      aRequest.QueryInterface(Ci.nsIChannel);
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
+      gCrashReporter.annotateCrashReport("URL", aRequest.URI.spec);
+    }
   },
 
   onLocationChange: function (aBrowser, aWebProgress, aRequest, aLocationURI) {
@@ -6840,6 +6853,7 @@ let gPrivateBrowsingUI = {
     this._observerService = Cc["@mozilla.org/observer-service;1"].
                             getService(Ci.nsIObserverService);
     this._observerService.addObserver(this, "private-browsing", false);
+    this._observerService.addObserver(this, "private-browsing-transition-complete", false);
 
     this._privateBrowsingService = Cc["@mozilla.org/privatebrowsing;1"].
                                    getService(Ci.nsIPrivateBrowsingService);
@@ -6850,6 +6864,19 @@ let gPrivateBrowsingUI = {
 
   uninit: function PBUI_unint() {
     this._observerService.removeObserver(this, "private-browsing");
+    this._observerService.removeObserver(this, "private-browsing-transition-complete");
+  },
+
+  get _disableUIOnToggle PBUI__disableUIOnTogle() {
+    if (this._privateBrowsingService.autoStarted)
+      return false;
+
+    try {
+      return !gPrefService.getBoolPref("browser.privatebrowsing.keep_current_session");
+    }
+    catch (e) {
+      return true;
+    }
   },
 
   observe: function PBUI_observe(aSubject, aTopic, aData) {
@@ -6858,6 +6885,15 @@ let gPrivateBrowsingUI = {
         this.onEnterPrivateBrowsing();
       else if (aData == "exit")
         this.onExitPrivateBrowsing();
+    }
+    else if (aTopic == "private-browsing-transition-complete") {
+      if (this._disableUIOnToggle) {
+        // use setTimeout here in order to make the code testable
+        setTimeout(function() {
+          document.getElementById("Tools:PrivateBrowsing")
+                  .removeAttribute("disabled");
+        }, 0);
+      }
     }
   },
 
@@ -6954,6 +6990,10 @@ let gPrivateBrowsingUI = {
     setTimeout(function () {
       DownloadMonitorPanel.updateStatus();
     }, 0);
+
+    if (this._disableUIOnToggle)
+      document.getElementById("Tools:PrivateBrowsing")
+              .setAttribute("disabled", "true");
   },
 
   onExitPrivateBrowsing: function PBUI_onExitPrivateBrowsing() {
@@ -7004,6 +7044,10 @@ let gPrivateBrowsingUI = {
     setTimeout(function () {
       DownloadMonitorPanel.updateStatus();
     }, 0);
+
+    if (this._disableUIOnToggle)
+      document.getElementById("Tools:PrivateBrowsing")
+              .setAttribute("disabled", "true");
   },
 
   _setPBMenuTitle: function PBUI__setPBMenuTitle(aMode) {
@@ -7237,44 +7281,7 @@ var LightWeightThemeWebInstaller = {
   },
 
   _getThemeFromNode: function (node) {
-    const MANDATORY = ["id", "name", "headerURL"];
-    const OPTIONAL = ["footerURL", "textcolor", "accentcolor", "iconURL",
-                      "previewURL", "author", "description", "homepageURL"];
-
-    try {
-      var data = JSON.parse(node.getAttribute("data-browsertheme"));
-    } catch (e) {
-      return null;
-    }
-
-    if (!data || typeof data != "object")
-      return null;
-
-    for (let prop in data) {
-      if (!data[prop] ||
-          typeof data[prop] != "string" ||
-          MANDATORY.indexOf(prop) == -1 && OPTIONAL.indexOf(prop) == -1) {
-        delete data[prop];
-        continue;
-      }
-
-      if (/URL$/.test(prop)) {
-        try {
-          data[prop] = makeURLAbsolute(node.baseURI, data[prop]);
-
-          if (/^https?:/.test(data[prop]))
-            continue;
-        } catch (e) {}
-
-        delete data[prop];
-      }
-    }
-
-    for (let i = 0; i < MANDATORY.length; i++) {
-      if (!(MANDATORY[i] in data)) 
-        return null;
-    }
-
-    return data;
+    return this._manager.parseTheme(node.getAttribute("data-browsertheme"),
+                                    node.baseURI);
   }
 }

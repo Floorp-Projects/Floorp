@@ -499,6 +499,9 @@ nsIMEStateManager::OnTextStateFocus(nsPresContext* aPresContext,
   nsCOMPtr<nsIWidget> widget;
   nsresult rv = vm->GetRootWidget(getter_AddRefs(widget));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_AVAILABLE);
+  if (!widget) {
+    return NS_OK; // Sometimes, there are no widgets.
+  }
 
   rv = widget->OnIMEFocusChange(PR_TRUE);
   if (rv == NS_ERROR_NOT_IMPLEMENTED)
