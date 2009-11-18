@@ -161,7 +161,7 @@ UNPACKAGE = $(LIBXUL_DIST)/xulrunner*$(PKG_SUFFIX)
 installer: stage-package package-xulrunner
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	$(NSINSTALL) $(srcdir)/../locales/$(AB_CD)/installer/setup.ini $(DIST)
-	cd $(DIST) && mv $(MOZ_PKG_DIR)/xulrunner/uninstall.exe $(MOZ_PKG_DIR)/ && 7z a $(PKG_PATH)$(PKG_BASENAME).7z $(MOZ_PKG_DIR) setup.ini -x!$(MOZ_PKG_DIR)/xulrunner/xulrunner-stub-installer.sfx && cat $(MOZ_PKG_DIR)/xulrunner/xulrunner-stub-installer.sfx $(PKG_PATH)$(PKG_BASENAME).7z>$(PKG_PATH)$(PKG_BASENAME).exe && rm $(PKG_PATH)$(PKG_BASENAME).7z && rm setup.ini
+	cd $(DIST) && mv $(MOZ_PKG_DIR)/xulrunner/uninstall.exe $(MOZ_PKG_DIR)/ && 7z a $(PKG_PATH)$(PKG_BASENAME).7z $(MOZ_PKG_DIR) setup.ini -x!$(MOZ_PKG_DIR)/xulrunner/xulrunner-stub-installer.sfx && cat $(MOZ_PKG_DIR)/xulrunner/xulrunner-stub-installer.sfx $(PKG_PATH)$(PKG_BASENAME).7z>$(PKG_PATH)$(PKG_BASENAME).exe && rm $(PKG_PATH)$(PKG_BASENAME).7z && rm setup.ini && $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_DIR)
 
 endif
 
