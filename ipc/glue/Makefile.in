@@ -49,32 +49,34 @@ EXPORT_LIBRARY = 1
 
 EXPORTS_NAMESPACES = IPC mozilla/ipc
 
-EXPORTS_IPC =					\
-  IPCMessageUtils.h 				\
-  $(NULL)
+EXPORTS_IPC = IPCMessageUtils.h
 
-EXPORTS_mozilla/ipc =				\
-  AsyncChannel.h				\
-  GeckoChildProcessHost.h			\
-  GeckoThread.h 				\
-  ProtocolUtils.h				\
-  RPCChannel.h					\
-  SyncChannel.h					\
-  ScopedXREEmbed.h				\
+EXPORTS_mozilla/ipc = \
+  AsyncChannel.h \
+  GeckoChildProcessHost.h \
+  GeckoThread.h \
+  ProtocolUtils.h \
+  RPCChannel.h \
+  SyncChannel.h \
+  ScopedXREEmbed.h \
   $(NULL)
 
 ENABLE_CXX_EXCEPTIONS = 1
 
-CPPSRCS +=					\
-  AsyncChannel.cpp				\
-  GeckoChildProcessHost.cpp			\
-  GeckoThread.cpp				\
-  MessagePump.cpp				\
-  RPCChannel.cpp				\
-  ScopedXREEmbed.cpp				\
-  StringUtil.cpp				\
-  SyncChannel.cpp				\
+CPPSRCS += \
+  AsyncChannel.cpp \
+  GeckoChildProcessHost.cpp \
+  GeckoThread.cpp \
+  MessagePump.cpp \
+  RPCChannel.cpp \
+  ScopedXREEmbed.cpp \
+  StringUtil.cpp \
+  SyncChannel.cpp \
   $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += WindowsMessageLoop.cpp
+endif
 
 include $(topsrcdir)/ipc/app/defs.mk
 DEFINES += -DMOZ_CHILD_PROCESS_NAME="\"$(MOZ_CHILD_PROCESS_NAME)\""
