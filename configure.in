@@ -6203,6 +6203,28 @@ MOZ_ARG_DISABLE_BOOL(zipwriter,
 AC_SUBST(MOZ_ZIPWRITER)
 
 dnl ========================================================
+dnl = Disable libconic
+dnl ========================================================
+MOZ_ENABLE_LIBCONIC=1
+MOZ_ARG_DISABLE_BOOL(libconic,
+[  --disable-libconic              Disable libconic],
+    MOZ_ENABLE_LIBCONIC=,
+    MOZ_ENABLE_LIBCONIC=1 )
+
+if test -n "$MOZ_ENABLE_LIBCONIC"; then
+    PKG_CHECK_MODULES(LIBCONIC, conic,
+                      MOZ_ENABLE_LIBCONIC=1,
+                      MOZ_ENABLE_LIBCONIC=)
+fi
+if test "$MOZ_ENABLE_LIBCONIC"; then
+    AC_DEFINE(MOZ_ENABLE_LIBCONIC)
+fi
+
+AC_SUBST(MOZ_ENABLE_LIBCONIC)
+AC_SUBST(LIBCONIC_CFLAGS)
+AC_SUBST(LIBCONIC_LIBS)
+ 
+dnl ========================================================
 dnl = Hildon and OSSO checks
 dnl ========================================================
 PKG_CHECK_MODULES(LIBHILDONMIME,libhildonmime,
