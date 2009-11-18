@@ -11,16 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla.
+ * The Original Code is MaemoAutodial.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Nokia Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darin@netscape.com>
- *   Steve Meredith <smeredith@netscape.com>
+ * Jeremias Bosch <jeremias.bosch@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,44 +35,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsNativeConnectionHelper.h"
-
-#if defined(MOZ_ENABLE_LIBCONIC)
 #include "nsAutodialMaemo.h"
-#elif defined(WINCE)
-#include "nsAutodialWinCE.h"
-#else
-#include "nsAutodialWin.h"
-#endif
+#include "nsNetCID.h"
+#include "nsCOMPtr.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsIServiceManager.h"
+#include "nsMaemoNetworkManager.h"
 
-#include "nsIOService.h"
 
-//-----------------------------------------------------------------------------
-// API typically invoked on the socket transport thread
-//-----------------------------------------------------------------------------
-
-PRBool
-nsNativeConnectionHelper::OnConnectionFailed(const PRUnichar* hostName)
+nsAutodial::nsAutodial()
 {
-  // On mobile platforms, instead of relying on the link service, we
-  // should ask the dialer directly.  This allows the dialer to update
-  // link status more forcefully rather than passively watching link
-  // status changes.
-#if !defined(MOZ_ENABLE_LIBCONIC) && !defined(WINCE_WINDOWS_MOBILE)
-    if (gIOService->IsLinkUp())
-        return PR_FALSE;
-#endif
+}
 
-    nsAutodial autodial;
-    if (autodial.ShouldDialOnNetworkError())
-        return NS_SUCCEEDED(autodial.DialDefault(hostName));
+nsAutodial::~nsAutodial()
+{
+}
 
-    return PR_FALSE;
+nsresult
+nsAutodial::Init()
+{
+  return NS_OK;
+}
+
+nsresult
+nsAutodial::DialDefault(const PRUnichar* hostName)
+{
+  if (nsMaemoNetworkManager::OpenConnectionSync())
+    return NS_OK;
+
+  return NS_ERROR_FAILURE;
 }
 
 PRBool
-nsNativeConnectionHelper::IsAutodialEnabled()
+nsAutodial::ShouldDialOnNetworkError()
 {
-    nsAutodial autodial;
-    return autodial.Init() == NS_OK && autodial.ShouldDialOnNetworkError();
+  if (nsMaemoNetworkManager::IsConnected())
+    return PR_FALSE;
+
+  return PR_TRUE;
 }
