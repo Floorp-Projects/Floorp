@@ -514,10 +514,6 @@ function testListing(metadata, response)
                             true);
   dumpn("count: " + count);
   var tests = jsonArrayOfTestFiles(links);
-  var runtests = "Run Tests";
-  if (metadata.queryString.indexOf("autorun=1") != -1) {
-    runtests = "Stop Tests";
-  }
   response.write(
     HTML(
       HEAD(
@@ -540,7 +536,7 @@ function testListing(metadata, response)
       ),
       BODY(
         DIV({class: "container"},
-          H2("--> ", A({href: "#", id: "runtests"}, runtests), " <--"),
+          H2("--> ", A({href: "#", id: "runtests"}, "Run Tests"), " <--"),
             P({style: "float: right;"},
             SMALL(
               "Based on the ",
@@ -550,8 +546,6 @@ function testListing(metadata, response)
           ),
           DIV({class: "status"},
             H1({id: "indicator"}, "Status"),
-            H2({id: "file"}, "File: ",
-               SPAN({id: "progress"}, "0 / " + count + " (0%)")),
             H2({id: "pass"}, "Passed: ", SPAN({id: "pass-count"},"0")),
             H2({id: "fail"}, "Failed: ", SPAN({id: "fail-count"},"0")),
             H2({id: "fail"}, "Todo: ", SPAN({id: "todo-count"},"0"))
