@@ -71,7 +71,6 @@
 #include <pango/pango.h>
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
-#include <pango/pangox.h>
 #endif /* MOZ_X11 */
 #include <pango/pango-fontmap.h>
 #endif /* GTK2 */
