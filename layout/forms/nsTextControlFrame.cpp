@@ -1583,6 +1583,9 @@ nsTextControlFrame::InitEditor()
 
   mEditor->PostCreate();
 
+  if (mTextListener)
+    mEditor->AddEditorObserver(mTextListener);
+
   return NS_OK;
 }
 
@@ -1837,22 +1840,13 @@ nsTextControlFrame::IsLeaf() const
 //IMPLEMENTING NS_IFORMCONTROLFRAME
 void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-  nsCOMPtr<nsIEditor> editor;
-  GetEditor(getter_AddRefs(editor));
-
   if (!aOn) {
-    if (editor)
-      editor->RemoveEditorObserver(mTextListener);
-
     MaybeEndSecureKeyboardInput();
     return;
   }
 
   if (!mSelCon)
     return;
-
-  if (editor)
-    editor->AddEditorObserver(mTextListener);
 
   if (NS_SUCCEEDED(InitFocusedValue()))
     MaybeBeginSecureKeyboardInput();
