@@ -5731,8 +5731,16 @@ AdjustAppendParentForAfterContent(nsPresContext* aPresContext,
     // either the last or next to last special sibling.
     nsIFrame* trailingInline = GetSpecialSibling(aParentFrame);
     if (trailingInline) {
-      aParentFrame = trailingInline->GetLastContinuation();
+      aParentFrame = trailingInline;
     }
+
+    // Always make sure to look at the last continuation of the frame
+    // for the {ib} case, even if that continuation is empty.  We
+    // don't do this for the non-special-frame case, since in the
+    // other cases appending to the last nonempty continuation is fine
+    // and in fact not doing that can confuse code that doesn't know
+    // to pull kids from continuations other than its next one.
+    aParentFrame = aParentFrame->GetLastContinuation();
   }
 
   return aParentFrame;
