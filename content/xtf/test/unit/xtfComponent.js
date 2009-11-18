@@ -209,7 +209,7 @@ const fooContractID = xtfClass + "xtf-tests;foo";
 const Module = {
   // nsIModule
   registerSelf: function registerSelf(compMgr, fileSpec, location, type) {
-    compReg = compMgr.QueryInterface(nsIComponentRegistrar);
+    var compReg = compMgr.QueryInterface(nsIComponentRegistrar);
 
     compReg.registerFactoryLocation(fooClassID,
                                     fooClassDesc,

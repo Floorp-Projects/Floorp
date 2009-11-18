@@ -270,13 +270,21 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("none", "0.4"),
   ]),
   new TestcaseBundle(gPropList.font_stretch, [
-    new AnimTestcaseFromTo("normal", "wider"),
-    new AnimTestcaseFromTo("narrower", "ultra-condensed"),
-    new AnimTestcaseFromTo("extra-condensed", "condensed"),
-    new AnimTestcaseFromTo("semi-condensed", "semi-expanded"),
-    new AnimTestcaseFromTo("expanded", "extra-expanded"),
-    new AnimTestcaseFromTo("ultra-expanded", "inherit", { toComp: "normal" }),
-  ], "need support for all properties that get stored in nsFont"),
+    new AnimTestcaseFromTo("normal", "wider", {},
+                           "need support for animating between " +
+                           "relative 'font-stretch' values"),
+    new AnimTestcaseFromTo("narrower", "ultra-condensed", {},
+                           "need support for animating between " +
+                           "relative 'font-stretch' values"),
+    new AnimTestcaseFromTo("ultra-condensed", "condensed",
+                           { midComp: "extra-condensed" }),
+    new AnimTestcaseFromTo("semi-condensed", "semi-expanded",
+                           { midComp: "normal" }),
+    new AnimTestcaseFromTo("expanded", "ultra-expanded",
+                           { midComp: "extra-expanded" }),
+    new AnimTestcaseFromTo("ultra-expanded", "inherit",
+                           { midComp: "expanded", toComp: "normal" }),
+  ]),
   new TestcaseBundle(gPropList.font_style, [
     new AnimTestcaseFromTo("italic", "inherit", { toComp: "normal" }),
     new AnimTestcaseFromTo("normal", "italic"),
@@ -288,16 +296,16 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("small-caps", "normal"),
   ]),
   new TestcaseBundle(gPropList.font_weight, [
-    new AnimTestcaseFromTo("100", "900"),
-    new AnimTestcaseFromTo("700", "100",
-                           // Note that '700' ends up as "bold" in computed
-                           // style (not the other way around)
-                           { fromComp: "bold" }),
+    new AnimTestcaseFromTo("100", "900", { midComp: "500" }),
+    new AnimTestcaseFromTo("700", "100", { midComp: "400" }),
     new AnimTestcaseFromTo("inherit", "200",
-                           { fromComp: "400" }),
+                           { fromComp: "400", midComp: "300" }),
     new AnimTestcaseFromTo("normal", "bold",
-                           { fromComp: "400" }),
-  ], "need support for all properties that get stored in nsFont"),
+                           { fromComp: "400", midComp: "500", toComp: "700" }),
+    new AnimTestcaseFromTo("lighter", "bolder", {},
+                           "need support for animating between " +
+                           "relative 'font-weight' values"),
+  ]),
   // NOTE: Mozilla doesn't currently support "glyph-orientation-horizontal" or
   // "glyph-orientation-vertical", but I'm testing them here in case we ever
   // add support for them, because they're explicitly not animatable in the SVG

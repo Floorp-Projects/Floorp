@@ -77,7 +77,17 @@
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
 
-nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
+                                 nsStyleContext* aContext,
+                                 nsFrameState aTypeBit);
+
+// Frame state bits that are used to keep track of what this is a
+// placeholder for.
+#define PLACEHOLDER_FOR_FLOAT    0x00100000
+#define PLACEHOLDER_FOR_ABSPOS   0x00200000
+#define PLACEHOLDER_FOR_FIXEDPOS 0x00400000
+#define PLACEHOLDER_FOR_POPUP    0x00800000
+#define PLACEHOLDER_TYPE_MASK    0x00F00000
 
 /**
  * Implementation of a frame that's used as a placeholder for a frame that
@@ -88,10 +98,22 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   /**
-   * Create a new placeholder frame
+   * Create a new placeholder frame.  aTypeBit must be one of the
+   * PLACEHOLDER_FOR_* constants above.
    */
-  friend nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-  nsPlaceholderFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
+  friend nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
+                                          nsStyleContext* aContext,
+                                          nsFrameState aTypeBit);
+  nsPlaceholderFrame(nsStyleContext* aContext, nsFrameState aTypeBit) :
+    nsFrame(aContext)
+  {
+    NS_PRECONDITION(aTypeBit == PLACEHOLDER_FOR_FLOAT ||
+                    aTypeBit == PLACEHOLDER_FOR_ABSPOS ||
+                    aTypeBit == PLACEHOLDER_FOR_FIXEDPOS ||
+                    aTypeBit == PLACEHOLDER_FOR_POPUP,
+                    "Unexpected type bit");
+    AddStateBits(aTypeBit);
+  }
   virtual ~nsPlaceholderFrame();
 
   // Get/Set the associated out of flow frame
