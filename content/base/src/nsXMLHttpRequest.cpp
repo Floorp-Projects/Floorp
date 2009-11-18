@@ -96,6 +96,7 @@
 #include "nsIPromptFactory.h"
 #include "nsIWindowWatcher.h"
 #include "nsCommaSeparatedTokenizer.h"
+#include "nsIConsoleService.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -1757,8 +1758,6 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
                        PRBool async, const nsAString& user,
                        const nsAString& password, PRUint8 optional_argc)
 {
-  nsresult rv = NS_OK;
-
   if (nsContentUtils::GetCurrentJSContext()) {
     // We're (likely) called from JS
 
@@ -2238,6 +2237,27 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
       httpChannel->SetReferrer(codebase);
     }
+
+    // Some extensions override the http protocol handler and provide their own
+    // implementation. The channels returned from that implementation doesn't
+    // seem to always implement the nsIUploadChannel2 interface, presumably
+    // because it's a new interface.
+    // Eventually we should remove this and simply require that http channels
+    // implement the new interface.
+    // See bug 529041
+    nsCOMPtr<nsIUploadChannel2> uploadChannel2 =
+      do_QueryInterface(httpChannel);
+    if (!uploadChannel2) {
+      nsCOMPtr<nsIConsoleService> consoleService =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+      if (consoleService) {
+        consoleService->LogStringMessage(NS_LITERAL_STRING(
+          "Http channel implementation doesn't support nsIUploadChannel2. "
+          "An extension has supplied a non-functional http protocol handler. "
+          "This will break behavior and in future releases not work at all.")
+                                         .get());
+      }
+    }
   }
 
   mUploadTransferred = 0;
@@ -2379,9 +2399,6 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     }
 
     if (postDataStream) {
-      nsCOMPtr<nsIUploadChannel2> uploadChannel(do_QueryInterface(httpChannel));
-      NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
-
       // If no content type header was set by the client, we set it to
       // application/xml.
       nsCAutoString contentType;
@@ -2437,7 +2454,25 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
       // We want to use a newer version of the upload channel that won't
       // ignore the necessary headers for an empty Content-Type.
-      rv = uploadChannel->ExplicitSetUploadStream(postDataStream, contentType, -1, method, PR_FALSE);
+      nsCOMPtr<nsIUploadChannel2> uploadChannel2(do_QueryInterface(httpChannel));
+      // This assertion will fire if buggy extensions are installed
+      NS_ASSERTION(uploadChannel2, "http must support nsIUploadChannel");
+      if (uploadChannel2) {
+          uploadChannel2->ExplicitSetUploadStream(postDataStream, contentType,
+                                                 -1, method, PR_FALSE);
+      }
+      else {
+        // http channel doesn't support the new nsIUploadChannel2. Emulate
+        // as best we can using nsIUploadChannel
+        if (contentType.IsEmpty()) {
+          contentType.AssignLiteral("application/octet-stream");
+        }
+        nsCOMPtr<nsIUploadChannel> uploadChannel =
+          do_QueryInterface(httpChannel);
+        uploadChannel->SetUploadStream(postDataStream, contentType, -1);
+        // Reset the method to its original value
+        httpChannel->SetRequestMethod(method);
+      }
     }
   }
 
