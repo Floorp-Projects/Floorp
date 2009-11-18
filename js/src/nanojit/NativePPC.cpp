@@ -182,9 +182,8 @@ namespace nanojit
     void Assembler::asm_load64(LIns *ins) {
         LIns* base = ins->oprnd1();
     #ifdef NANOJIT_64BIT
-        Reservation *resv = getresv(ins);
-        Register rr;
-        if (resv && (rr = resv->reg) != UnknownReg && (rmask(rr) & FpRegs)) {
+        Register rr = ins->getReg();
+        if (isKnownReg(rr) && (rmask(rr) & FpRegs)) {
             // FPR already assigned, fine, use it
             freeRsrcOf(ins, false);
         } else {
@@ -290,11 +289,9 @@ namespace nanojit
         Register rs = findRegFor(value, FpRegs);
     #else
         // if we have to choose a register, use a GPR
-        Reservation *resv = getresv(value);
-        Register rs;
-        if (!resv || (rs = resv->reg) == UnknownReg) {
-            rs = findRegFor(value, GpRegs & ~rmask(ra));
-        }
+        Register rs = ( value->isUnusedOrHasUnknownReg()
+                      ? findRegFor(value, GpRegs & ~rmask(ra))
+                      : value->getReg() );
 
         if (rmask(rs) & GpRegs) {
         #if !PEDANTIC
@@ -573,15 +570,15 @@ namespace nanojit
         FMR(r, s);
     }
 
-    void Assembler::asm_restore(LIns *i, Reservation *resv, Register r) {
+    void Assembler::asm_restore(LIns *i, Reservation *unused, Register r) {
         int d;
         if (i->isop(LIR_alloc)) {
-            d = disp(resv);
+            d = disp(i);
             ADDI(r, FP, d);
         }
         else if (i->isconst()) {
-            if (!resv->arIndex) {
-                i->resv()->clear();
+            if (!i->getArIndex()) {
+                i->markAsClear();
             }
             asm_li(r, i->imm32());
         }
@@ -717,9 +714,8 @@ namespace nanojit
             if (p->isconst()) {
                 asm_li(r, p->imm32());
             } else {
-                Reservation* rA = getresv(p);
-                if (rA) {
-                    if (rA->reg == UnknownReg) {
+                if (p->isUsed()) {
+                    if (!p->hasKnownReg()) {
                         // load it into the arg reg
                         int d = findMemFor(p);
                         if (p->isop(LIR_alloc)) {
@@ -732,7 +728,7 @@ namespace nanojit
                         }
                     } else {
                         // it must be in a saved reg
-                        MR(r, rA->reg);
+                        MR(r, p->getReg());
                     }
                 }
                 else {
@@ -743,16 +739,16 @@ namespace nanojit
             }
         }
         else if (sz == ARGSIZE_F) {
-            Reservation* rA = getresv(p);
-            if (rA) {
-                if (rA->reg == UnknownReg || !IsFpReg(rA->reg)) {
+            if (p->isUsed()) {
+                Register rp = p->getReg();
+                if (!isKnownReg(rp) || !IsFpReg(rp)) {
                     // load it into the arg reg
                     int d = findMemFor(p);
                     LFD(r, d, FP);
                 } else {
                     // it must be in a saved reg
-                    NanoAssert(IsFpReg(r) && IsFpReg(rA->reg));
-                    FMR(r, rA->reg);
+                    NanoAssert(IsFpReg(r) && IsFpReg(rp));
+                    FMR(r, rp);
                 }
             }
             else {
@@ -897,10 +893,8 @@ namespace nanojit
         LInsp rhs = ins->oprnd2();
         RegisterMask allow = FpRegs;
         Register rr = prepResultReg(ins, allow);
-        Reservation *rA, *rB;
-        findRegFor2(allow, lhs, rA, rhs, rB);
-        Register ra = rA->reg;
-        Register rb = rB->reg;
+        Register ra, rb;
+        findRegFor2b(allow, lhs, ra, rhs, rb);
         switch (op) {
             case LIR_fadd: FADD(rr, ra, rb); break;
             case LIR_fsub: FSUB(rr, ra, rb); break;
@@ -976,9 +970,8 @@ namespace nanojit
 
     void Assembler::asm_quad(LIns *ins) {
     #ifdef NANOJIT_64BIT
-        Reservation *resv = getresv(ins);
-        Register r;
-        if (resv && (r = resv->reg) != UnknownReg && (rmask(r) & FpRegs)) {
+        Register r = ins->getReg();
+        if (isKnownReg(r) && (rmask(r) & FpRegs)) {
             // FPR already assigned, fine, use it
             freeRsrcOf(ins, false);
         } else {
