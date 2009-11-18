@@ -211,12 +211,12 @@ JSScope::create(JSContext *cx, const JSObjectOps *ops, JSClass *clasp,
     return scope;
 }
 
-JSScope *
+JSEmptyScope *
 JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
 {
     JS_ASSERT(!emptyScope);
 
-    JSScope *scope = cx->create<JSScope>(ops);
+    JSEmptyScope *scope = cx->create<JSEmptyScope>(ops, clasp);
     if (!scope)
         return NULL;
 
@@ -1582,13 +1582,13 @@ JSScope::clear(JSContext *cx)
 
     JSClass *clasp = object->getClass();
     JSObject *proto = object->getProto();
-    uint32 newShape = 0;
-    if (proto && clasp == proto->getClass()) {
-#ifdef DEBUG
-        bool ok =
-#endif
-        OBJ_SCOPE(proto)->getEmptyScopeShape(cx, clasp, &newShape);
-        JS_ASSERT(ok);
+    JSEmptyScope *emptyScope;
+    uint32 newShape;
+    if (proto &&
+        OBJ_IS_NATIVE(proto) &&
+        (emptyScope = OBJ_SCOPE(proto)->emptyScope) &&
+        emptyScope->clasp == clasp) {
+        newShape = emptyScope->shape;
     } else {
         newShape = js_GenerateShape(cx, false);
     }

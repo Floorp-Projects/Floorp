@@ -200,6 +200,8 @@ JS_BEGIN_EXTERN_C
  * to find a given id, and save on the space overhead of a hash table.
  */
 
+struct JSEmptyScope;
+
 struct JSScope : public JSObjectMap
 {
 #ifdef JS_THREADSAFE
@@ -208,7 +210,7 @@ struct JSScope : public JSObjectMap
     JSObject        *object;            /* object that owns this scope */
     jsrefcount      nrefs;              /* count of all referencing objects */
     uint32          freeslot;           /* index of next free slot in object */
-    JSScope         *emptyScope;        /* cache for getEmptyScope below */
+    JSEmptyScope    *emptyScope;        /* cache for getEmptyScope below */
     uint8           flags;              /* flags, see below */
     int8            hashShift;          /* multiplicative hash shift */
 
@@ -226,7 +228,7 @@ struct JSScope : public JSObjectMap
     void generateOwnShape(JSContext *cx);
     JSScopeProperty **searchTable(jsid id, bool adding);
     inline JSScopeProperty **search(jsid id, bool adding);
-    JSScope *createEmptyScope(JSContext *cx, JSClass *clasp);
+    JSEmptyScope *createEmptyScope(JSContext *cx, JSClass *clasp);
 
   public:
     explicit JSScope(const JSObjectOps *ops, JSObject *obj = NULL)
@@ -238,6 +240,9 @@ struct JSScope : public JSObjectMap
 
     static void destroy(JSContext *cx, JSScope *scope);
 
+    inline void hold();
+    inline bool drop(JSContext *cx, JSObject *obj);
+
     /*
      * Return an immutable, shareable, empty scope with the same ops as this
      * and the same freeslot as this had when empty.
@@ -245,30 +250,10 @@ struct JSScope : public JSObjectMap
      * If |this| is the scope of an object |proto|, the resulting scope can be
      * used as the scope of a new object whose prototype is |proto|.
      */
-    JSScope *getEmptyScope(JSContext *cx, JSClass *clasp) {
-        if (emptyScope) {
-            emptyScope->hold();
-            return emptyScope;
-        }
-        return createEmptyScope(cx, clasp);
-    }
+    inline JSEmptyScope *getEmptyScope(JSContext *cx, JSClass *clasp);
 
-    bool getEmptyScopeShape(JSContext *cx, JSClass *clasp, uint32 *shapep) {
-        if (emptyScope) {
-            *shapep = emptyScope->shape;
-            return true;
-        }
-        JSScope *e = getEmptyScope(cx, clasp);
-        if (!e)
-            return false;
-        *shapep = e->shape;
-        e->drop(cx, NULL);
-        return true;
-    }
-
-    inline void hold();
-    inline bool drop(JSContext *cx, JSObject *obj);
-
+    inline bool canProvideEmptyScope(JSObjectOps *ops, JSClass *clasp);
+ 
     JSScopeProperty *lookup(jsid id);
     bool has(JSScopeProperty *sprop);
 
@@ -403,6 +388,14 @@ struct JSScope : public JSObjectMap
     void setMethodBarrier()     { flags |= METHOD_BARRIER; }
 
     bool owned()                { return object != NULL; }
+};
+
+struct JSEmptyScope : public JSScope
+{
+    JSClass * const clasp;
+
+    explicit JSEmptyScope(const JSObjectOps *ops, JSClass *clasp)
+      : JSScope(ops), clasp(clasp) {}
 };
 
 inline bool
@@ -630,6 +623,23 @@ JSScope::search(jsid id, bool adding)
 }
 
 #undef METER
+
+inline bool
+JSScope::canProvideEmptyScope(JSObjectOps *ops, JSClass *clasp)
+{
+    return this->ops == ops && (!emptyScope || emptyScope->clasp == clasp);
+}
+
+inline JSEmptyScope *
+JSScope::getEmptyScope(JSContext *cx, JSClass *clasp)
+{
+    if (emptyScope) {
+        JS_ASSERT(clasp == emptyScope->clasp);
+        emptyScope->hold();
+        return emptyScope;
+    }
+    return createEmptyScope(cx, clasp);
+}
 
 inline void
 JSScope::hold()

@@ -145,8 +145,8 @@ const uintptr_t JSSLOT_CLASS_MASK_BITS = 3;
  * records the number of available slots.
  */
 struct JSObject {
-    JSObjectMap *map;                       /* propery map, see jsscope.h */
-    jsuword     classword;                  /* classword, see above */
+    JSObjectMap *map;                       /* property map, see jsscope.h */
+    jsuword     classword;                  /* JSClass ptr | bits, see above */
     jsval       fslots[JS_INITIAL_NSLOTS];  /* small number of fixed slots */
     jsval       *dslots;                    /* dynamically allocated slots */
 
@@ -250,6 +250,13 @@ struct JSObject {
         fslots[JSSLOT_PRIVATE + 2] = JSVAL_VOID;
         dslots = NULL;
     }
+
+    /*
+     * Like init, but also initializes map. The catch: proto must be the result
+     * of a call to js_InitClass(...clasp, ...).
+     */
+    inline void initSharingEmptyScope(JSClass *clasp, JSObject *proto, JSObject *parent,
+                                      jsval privateSlotValue);
 
     JSBool lookupProperty(JSContext *cx, jsid id,
                           JSObject **objp, JSProperty **propp) {
@@ -622,14 +629,17 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
  * Allocate a new native object with the given value of the proto and private
  * slots. The parent slot is set to the value of proto's parent slot.
  *
+ * clasp must be a native class. proto must be the result of a call to
+ * js_InitClass(...clasp, ...).
+ *
  * Note that this is the correct global object for native class instances, but
  * not for user-defined functions called as constructors.  Functions used as
  * constructors must create instances parented by the parent of the function
  * object, not by the parent of its .prototype object value.
  */
 extern JSObject*
-js_NewNativeObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-                   jsval privateSlotValue);
+js_NewObjectWithClassProto(JSContext *cx, JSClass *clasp, JSObject *proto,
+                           jsval privateSlotValue);
 
 /*
  * Fast access to immutable standard objects (constructors and prototypes).
@@ -985,36 +995,6 @@ js_ReportGetterOnlyAssignment(JSContext *cx);
 
 extern JS_FRIEND_API(JSBool)
 js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
-
-/*
- * If an object is "similar" to its prototype, it can share OBJ_SCOPE(proto)->emptyScope.
- * Similar objects have the same JSObjectOps and the same private and reserved slots.
- *
- * We assume that if prototype and object are of the same class, they always
- * have the same number of computed reserved slots (returned via
- * clasp->reserveSlots). This is true for builtin classes (except Block, and
- * for this reason among others Blocks must never be exposed to scripts).
- *
- * Otherwise, prototype and object classes must have the same (null or not)
- * reserveSlots hook.
- *
- * FIXME: This fails to distinguish between objects with different addProperty
- * hooks. See bug 505523.
- */
-static inline bool
-js_ObjectIsSimilarToProto(JSContext *cx, JSObject *obj, const JSObjectOps *ops,
-                          JSClass *clasp, JSObject *proto)
-{
-    JS_ASSERT(proto == OBJ_GET_PROTO(cx, obj));
-
-    JSClass *protoclasp;
-    return (proto->map->ops == ops &&
-            ((protoclasp = OBJ_GET_CLASS(cx, proto)) == clasp ||
-             (!((protoclasp->flags ^ clasp->flags) &
-                (JSCLASS_HAS_PRIVATE |
-                 (JSCLASS_RESERVED_SLOTS_MASK << JSCLASS_RESERVED_SLOTS_SHIFT))) &&
-              protoclasp->reserveSlots == clasp->reserveSlots)));
-}
 
 #ifdef DEBUG
 JS_FRIEND_API(void) js_DumpChars(const jschar *s, size_t n);
