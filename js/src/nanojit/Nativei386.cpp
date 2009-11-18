@@ -1799,7 +1799,7 @@ namespace nanojit
             //   GREATER_THAN  000   0000_0000       011   SETNP fails 
             //   LESS_THAN     001   0000_0001       010   SETNP succeeds
 
-            int mask;
+            int mask = 0;   // init to avoid MSVC compile warnings
             switch (condop) {
             case LIR_feq:   mask = 0x44;    break;
             case LIR_flt:   mask = 0x05;    break;
