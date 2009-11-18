@@ -198,6 +198,22 @@ toolbarbutton.page-button {
   color: red !important;
 }
 
+/* special "no downloads" items */
+#dl-empty-message {
+  margin-top: 12mm; /* 2 times row height */
+  font-style: italic;
+  border-bottom: none;
+}
+
+#dl-empty-message:active {
+  background-color: white;
+}
+
+#dl-empty-message > label {
+  text-align: center;
+  color: grey;
+}
+
 /* console panel UI   ------------------------------------------------------ */
 @media (orientation: landscape) {
   #console-filter-warnings,
