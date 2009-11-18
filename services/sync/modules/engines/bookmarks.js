@@ -519,7 +519,7 @@ BookmarksStore.prototype = {
       break;
     case this._bms.TYPE_FOLDER:
       this._log.debug("  -> removing folder " + record.id);
-      this._bms.removeFolder(itemId);
+      Svc.Bookmark.removeItem(itemId);
       break;
     case this._bms.TYPE_SEPARATOR:
       this._log.debug("  -> removing separator " + record.id);
