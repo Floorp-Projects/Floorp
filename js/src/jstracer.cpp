@@ -9646,6 +9646,8 @@ IsTraceableRecursion(JSContext *cx)
         return false;
     if ((fp->flags & JSFRAME_CONSTRUCTING) || (down->flags & JSFRAME_CONSTRUCTING))
         return false;
+    if (*fp->script->code != JSOP_TRACE)
+        return false;
     return true;
 }
 
