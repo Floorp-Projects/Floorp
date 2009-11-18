@@ -108,6 +108,14 @@ var DownloadsView = {
     this._list.parentNode.replaceChild(empty, this._list);
     this._list = empty;
   },
+  
+  _ifEmptyShowMessage: function dv__ifEmptyShowMessage() {
+    if (this._list.itemCount == 0) {
+      let strings = document.getElementById("bundle_browser");
+      let emptyItem = this._list.appendItem(strings.getString("downloadsEmpty"));
+      emptyItem.id = "dl-empty-message";
+    }
+  },
 
   get visible() {
     let panel = document.getElementById("panel-container");
@@ -185,6 +193,9 @@ var DownloadsView = {
     try {
       // If we're done adding all items, we can quit
       if (!this._stmt.executeStep()) {
+        // Show empty message if needed
+        this._ifEmptyShowMessage();
+        
         // Send a notification that we finished, but wait for clear list to update
         setTimeout(function() {
           let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
@@ -253,6 +264,11 @@ var DownloadsView = {
       maxBytes: aDownload.size
     };
 
+    // Remove the "no downloads" item, if visible
+    let emptyItem = document.getElementById("dl-empty-message");
+    if (emptyItem)
+      this._list.removeChild(emptyItem);
+      
     // Make the item and add it to the beginning
     let item = this._createItem(attrs);
     this._list.insertBefore(item, this._list.firstChild);
@@ -397,6 +413,9 @@ var DownloadsView = {
       let id = aSubject.QueryInterface(Ci.nsISupportsPRUint32);
       let element = this.getElementForDownload(id.data);
       this._removeItem(element);
+
+      // Show empty message if needed
+      this._ifEmptyShowMessage();
     }
     else {
       // We only show alerts if the download view is not visible
