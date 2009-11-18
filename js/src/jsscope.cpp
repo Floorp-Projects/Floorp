@@ -2120,8 +2120,8 @@ js_InitPropertyTree(JSRuntime *rt)
         rt->propertyTreeHash.ops = NULL;
         return false;
     }
-    JS_INIT_ARENA_POOL(&rt->propertyArenaPool, "properties",
-                       256 * sizeof(JSScopeProperty), sizeof(void *), NULL);
+    JS_InitArenaPool(&rt->propertyArenaPool, "properties",
+                     256 * sizeof(JSScopeProperty), sizeof(void *), NULL);
     return true;
 }
 
