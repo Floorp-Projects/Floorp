@@ -1583,7 +1583,10 @@ nsresult imgContainer::DoComposite(imgFrame** aFrameToUse,
     }
     nsresult rv = mAnim->compositingFrame->Init(0, 0, mSize.width, mSize.height,
                                                 gfxASurface::ImageFormatARGB32);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      mAnim->compositingFrame = nsnull;
+      return rv;
+    }
     needToBlankComposite = PR_TRUE;
   } else if (aNextFrameIndex == 1) {
     // When we are looping the compositing frame needs to be cleared.
@@ -1687,7 +1690,10 @@ nsresult imgContainer::DoComposite(imgFrame** aFrameToUse,
       }
       nsresult rv = mAnim->compositingPrevFrame->Init(0, 0, mSize.width, mSize.height,
                                                       gfxASurface::ImageFormatARGB32);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) {
+        mAnim->compositingPrevFrame = nsnull;
+        return rv;
+      }
     }
 
     CopyFrameImage(mAnim->compositingFrame, mAnim->compositingPrevFrame);
