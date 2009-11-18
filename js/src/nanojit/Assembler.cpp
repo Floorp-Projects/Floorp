@@ -409,9 +409,7 @@ namespace nanojit
                 ((rmask(r)&FpRegs) && !(allow&FpRegs)))
             {
                 evict(r, ins);
-                r = registerAlloc(prefer);
-                ins->setReg(r);
-                _allocator.addActive(r, ins);
+                r = registerAlloc(ins, prefer);
             } else
 #endif
             {
