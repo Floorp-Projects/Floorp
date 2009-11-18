@@ -1180,8 +1180,12 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
         // If the clipping frame is moving, then it isn't clipping any
         // non-moving content (see ApplyAbsPosClipping), so we don't need
         // to do anything special, but we should not restrict aClipRect.
+        // If the clipping frame is not moving, but the moving frames
+        // are not in its descendants, then again we don't need to
+        // do anything special.
         nsIFrame* clipFrame = clipItem->GetClippingFrame();
-        if (!aBuilder->IsMovingFrame(clipFrame)) {
+        if (!aBuilder->IsMovingFrame(clipFrame) &&
+            nsLayoutUtils::IsProperAncestorFrame(clipFrame, aBuilder->GetRootMovingFrame())) {
           nscoord appUnitsPerDevPixel = clipFrame->PresContext()->AppUnitsPerDevPixel();
           // We know the nsDisplayClip will snap because we're in a context
           // where pixels can be blitted and we don't traverse down through
