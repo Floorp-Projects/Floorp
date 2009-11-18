@@ -213,8 +213,15 @@ HistoryStore.prototype = {
   },
 
   remove: function HistStore_remove(record) {
-    //this._log.trace("  -> NOT removing history entry: " + record.id);
-    // FIXME: implement!
+    let page = this._findURLByGUID(record.id)
+    if (page == null) {
+      this._log.debug("Page already removed: " + record.id);
+      return;
+    }
+
+    let uri = Utils.makeURI(page.url);
+    Svc.History.removePage(uri);
+    this._log.trace("Removed page: " + [record.id, page.url, page.title]);
   },
 
   update: function HistStore_update(record) {
@@ -281,7 +288,10 @@ HistoryTracker.prototype = {
   _logName: "HistoryTracker",
   file: "history",
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver]),
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsINavHistoryObserver,
+    Ci.nsINavHistoryObserver_MOZILLA_1_9_1_ADDITIONS
+  ]),
 
   get _hsvc() {
     let hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
@@ -315,6 +325,13 @@ HistoryTracker.prototype = {
       this._upScore();
   },
   onPageExpired: function HT_onPageExpired(uri, time, entry) {
+  },
+  onBeforeDeleteURI: function onBeforeDeleteURI(uri) {
+    if (this.ignoreAll)
+      return;
+    this._log.trace("onBeforeDeleteURI: " + uri.spec);
+    if (this.addChangedID(GUIDForUri(uri, true)))
+      this._upScore();
   },
   onDeleteURI: function HT_onDeleteURI(uri) {
   },
