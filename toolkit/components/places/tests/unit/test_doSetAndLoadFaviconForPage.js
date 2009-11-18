@@ -158,6 +158,8 @@ if ("@mozilla.org/privatebrowsing;1" in Cc) {
       // enable PB
       var pb = Cc["@mozilla.org/privatebrowsing;1"].
                getService(Ci.nsIPrivateBrowsingService);
+      var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+      prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
       pb.privateBrowsingEnabled = true;
 
       // Add as bookmark
@@ -166,6 +168,7 @@ if ("@mozilla.org/privatebrowsing;1" in Cc) {
       iconsvc.setAndLoadFaviconForPage(this.pageURI, this.favicon.uri, true);
 
       pb.privateBrowsingEnabled = false;
+      prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
       } catch (ex) {do_throw("ex: " + ex); }
     },
     check: function check6() {

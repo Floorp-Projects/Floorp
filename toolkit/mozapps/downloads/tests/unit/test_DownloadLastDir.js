@@ -41,6 +41,13 @@ function run_test()
   let Cu = Components.utils;
   Cu.import("resource://gre/modules/DownloadLastDir.jsm");
 
+  function clearHistory() {
+    // simulate clearing the private data
+    Cc["@mozilla.org/observer-service;1"].
+    getService(Ci.nsIObserverService).
+    notifyObservers(null, "browser:purge-session-history", "");
+  }
+
   do_check_eq(typeof gDownloadLastDir, "object");
   do_check_eq(gDownloadLastDir.file, null);
 
@@ -60,6 +67,10 @@ function run_test()
   do_check_eq(gDownloadLastDir.file, null);
   gDownloadLastDir.file = tmpDir;
 
+  clearHistory();
+  do_check_eq(gDownloadLastDir.file, null);
+  gDownloadLastDir.file = tmpDir;
+
   let pb;
   try {
     pb = Cc["@mozilla.org/privatebrowsing;1"].
@@ -68,6 +79,10 @@ function run_test()
     print("PB service is not available, bail out");
     return;
   }
+
+  let prefs = Cc["@mozilla.org/preferences-service;1"].
+              getService(Ci.nsIPrefBranch);
+  prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
   pb.privateBrowsingEnabled = true;
   do_check_eq(gDownloadLastDir.file.path, tmpDir.path);
@@ -85,5 +100,14 @@ function run_test()
   do_check_eq(gDownloadLastDir.file.path, tmpDir.path);
   do_check_neq(gDownloadLastDir.file, tmpDir);
 
+  pb.privateBrowsingEnabled = true;
+  do_check_neq(gDownloadLastDir.file, null);
+  clearHistory();
+  do_check_eq(gDownloadLastDir.file, null);
+
+  pb.privateBrowsingEnabled = false;
+  do_check_eq(gDownloadLastDir.file, null);
+
+  prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
   newDir.remove(true);
 }

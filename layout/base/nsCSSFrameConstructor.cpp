@@ -1170,6 +1170,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
   // all apply here, unfortunately.
 
   PRBool needPlaceholder = PR_FALSE;
+  nsFrameState placeholderType;
   nsFrameItems* frameItems = &aFrameItems;
 #ifdef MOZ_XUL
   if (NS_UNLIKELY(aIsOutOfFlowPopup)) {
@@ -1178,6 +1179,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
       NS_ASSERTION(mPopupItems.containingBlock, "Must have a popup set frame!");
       needPlaceholder = PR_TRUE;
       frameItems = &mPopupItems;
+      placeholderType = PLACEHOLDER_FOR_POPUP;
   }
   else
 #endif // MOZ_XUL
@@ -1187,6 +1189,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
                  "Float whose parent is not the float containing block?");
     needPlaceholder = PR_TRUE;
     frameItems = &mFloatedItems;
+    placeholderType = PLACEHOLDER_FOR_FLOAT;
   }
   else if (aCanBePositioned) {
     if (disp->mPosition == NS_STYLE_POSITION_ABSOLUTE &&
@@ -1195,6 +1198,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
                    "Abs pos whose parent is not the abs pos containing block?");
       needPlaceholder = PR_TRUE;
       frameItems = &mAbsoluteItems;
+      placeholderType = PLACEHOLDER_FOR_ABSPOS;
     }
     if (disp->mPosition == NS_STYLE_POSITION_FIXED &&
         GetFixedItems().containingBlock) {
@@ -1202,6 +1206,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
                    "Fixed pos whose parent is not the fixed pos containing block?");
       needPlaceholder = PR_TRUE;
       frameItems = &GetFixedItems();
+      placeholderType = PLACEHOLDER_FOR_FIXEDPOS;
     }
   }
 
@@ -1216,6 +1221,7 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
                                                        aStyleContext,
                                                        aParentFrame,
                                                        nsnull,
+                                                       placeholderType,
                                                        &placeholderFrame);
     if (NS_FAILED(rv)) {
       // Note that aNewFrame could be the top frame for a scrollframe setup,
@@ -3012,6 +3018,7 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
                                                  nsStyleContext*  aStyleContext,
                                                  nsIFrame*        aParentFrame,
                                                  nsIFrame*        aPrevInFlow,
+                                                 nsFrameState     aTypeBit,
                                                  nsIFrame**       aPlaceholderFrame)
 {
   nsRefPtr<nsStyleContext> placeholderStyle = aPresShell->StyleSet()->
@@ -3019,7 +3026,8 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
   
   // The placeholder frame gets a pseudo style context
   nsPlaceholderFrame* placeholderFrame =
-    (nsPlaceholderFrame*)NS_NewPlaceholderFrame(aPresShell, placeholderStyle);
+    (nsPlaceholderFrame*)NS_NewPlaceholderFrame(aPresShell, placeholderStyle,
+                                                aTypeBit);
 
   if (placeholderFrame) {
     placeholderFrame->Init(aContent, aParentFrame, aPrevInFlow);
@@ -5886,19 +5894,34 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
         (NS_STYLE_DISPLAY_POPUP == aDisplay) ==
         (NS_STYLE_DISPLAY_POPUP == siblingDisplay);
     }
-    switch (siblingDisplay) {
-    case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
-      return (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == aDisplay);
-    case NS_STYLE_DISPLAY_TABLE_COLUMN:
-      return (NS_STYLE_DISPLAY_TABLE_COLUMN == aDisplay);
-    case NS_STYLE_DISPLAY_TABLE_CAPTION:
-      return (NS_STYLE_DISPLAY_TABLE_CAPTION == aDisplay);
-    default: // all of the row group types
-      return (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == aDisplay) ||
-             (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == aDisplay) ||
-             (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == aDisplay) ||
-             (NS_STYLE_DISPLAY_TABLE_CAPTION      == aDisplay);
+    // To have decent performance we want to return false in cases in which
+    // reordering the two siblings has no effect on display.  To ensure
+    // correctness, we MUST return false in cases where the two siblings have
+    // the same desired parent type and live on different display lists.
+    // Specificaly, columns and column groups should only consider columns and
+    // column groups as valid siblings.  Captions should only consider other
+    // captions.  All other things should consider each other as valid
+    // siblings.  The restriction in the |if| above on siblingDisplay is ok,
+    // because for correctness the only part that really needs to happen is to
+    // not consider captions, column groups, and row/header/footer groups
+    // siblings of each other.  Treating a column or colgroup as a valid
+    // sibling of a non-table-related frame will just mean we end up reframing.
+    if ((siblingDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION) !=
+        (aDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION)) {
+      // One's a caption and the other is not.  Not valid siblings.
+      return PR_FALSE;
     }
+
+    if ((siblingDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP ||
+         siblingDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN) !=
+        (aDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP ||
+         aDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN)) {
+      // One's a column or column group and the other is not.  Not valid
+      // siblings.
+      return PR_FALSE;
+    }
+
+    return PR_TRUE;
   }
   else if (nsGkAtoms::fieldSetFrame == parentType ||
            (nsGkAtoms::fieldSetFrame == grandparentType &&
@@ -8463,7 +8486,9 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     }
     // create a continuing placeholder frame
     rv = CreatePlaceholderFrameFor(shell, content, oofContFrame, styleContext,
-                                   aParentFrame, aFrame, &newFrame);
+                                   aParentFrame, aFrame,
+                                   aFrame->GetStateBits() & PLACEHOLDER_TYPE_MASK,
+                                   &newFrame);
     if (NS_FAILED(rv)) {
       oofContFrame->Destroy();
       *aContinuingFrame = nsnull;

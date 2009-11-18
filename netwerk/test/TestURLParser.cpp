@@ -113,7 +113,7 @@ main(int argc, char **argv)
             printf("assuming -std\n");
     }
     if (urlParser) {
-        printf("have urlParser @%p\n", urlParser.get());
+        printf("have urlParser @%p\n", static_cast<void*>(urlParser.get()));
 
         char *spec = argv[1];
         PRUint32 schemePos, authPos, pathPos;
