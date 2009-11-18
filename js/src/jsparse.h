@@ -478,6 +478,39 @@ struct JSParseNode {
                (PN_TYPE(this) == TOK_PRIMARY && PN_OP(this) != JSOP_THIS);
     }
 
+    /* 
+     * True if this statement node could be a member of a Directive
+     * Prologue.  Note that the prologue may contain strings that
+     * cannot themselves be directives; that's a stricter test.
+     * If Statement begins to simplify trees into this form, then
+     * we'll need additional flags that we can test here.
+     */
+    bool isDirectivePrologueMember() const {
+        if (PN_TYPE(this) == TOK_SEMI &&
+            pn_arity == PN_UNARY) {
+            JSParseNode *kid = pn_kid;
+            return kid && PN_TYPE(kid) == TOK_STRING && !kid->pn_parens;
+        }
+        return false;
+    }
+
+    /*
+     * True if this node, known to be a Directive Prologue member,
+     * could be a directive itself.
+     */
+    bool isDirective() const {
+        JS_ASSERT(isDirectivePrologueMember());
+        JSParseNode *kid = pn_kid;
+        JSString *str = ATOM_TO_STRING(kid->pn_atom);
+        /* 
+         * Directives must contain no EscapeSequences or LineContinuations.
+         * If the string's length in the source code is its length as a value,
+         * accounting for the quotes, then it qualifies.
+         */
+        return (pn_pos.begin.lineno == pn_pos.end.lineno &&
+                pn_pos.begin.index + str->length() + 2 == pn_pos.end.index);
+    }
+
     /*
      * Compute a pointer to the last element in a singly-linked list. NB: list
      * must be non-empty for correct PN_LAST usage -- this is asserted!
