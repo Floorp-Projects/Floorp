@@ -1194,6 +1194,47 @@ CheckFinalReturn(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
                            JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE);
 }
 
+/*
+ * In strict mode code, all formal parameter names must be distinct. If fun's
+ * formals are legit given fun's strictness level, return true. Otherwise,
+ * report an error and return false. Use pn for error position reporting,
+ * unless we can find something more accurate in tc's decls.
+ * 
+ * In some cases the code to parse the argument list will already have noticed
+ * the duplication; we could try to use that knowledge instead of re-checking
+ * here. But since the strictness of the function's body determines what
+ * constraints to apply to the argument list, we can't report the error until
+ * after we've parsed the body. And as it turns out, the function's local name
+ * list makes it reasonably cheap to find duplicates after the fact.
+ */
+static bool
+CheckStrictFormals(JSContext *cx, JSTreeContext *tc, JSFunction *fun,
+                   JSParseNode *pn)
+{
+    if (!tc->needStrictChecks())
+        return true;
+
+    JSAtom *dup = js_FindDuplicateFormal(fun);
+    if (!dup)
+        return true;
+
+    /*
+     * We have found a duplicate parameter name. If we can find the JSDefinition
+     * for the argument, that will have a more accurate source location.
+     */
+    JSDefinition *dn = ALE_DEFN(tc->decls.lookup(dup));
+    if (dn->pn_op == JSOP_GETARG)
+        pn = dn;
+    const char *name = js_AtomToPrintableString(cx, dup);
+    if (!name ||
+        !js_ReportStrictModeError(cx, TS(tc->compiler), tc, pn,
+                                  JSMSG_DUPLICATE_FORMAL, name)) {
+        return false;
+    }
+
+    return true;
+}
+
 static JSParseNode *
 FunctionBody(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
@@ -1533,7 +1574,9 @@ JSCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *pr
     CURRENT_TOKEN(&jsc.tokenStream).type = TOK_LC;
     JSParseNode *pn = fn ? FunctionBody(cx, &jsc.tokenStream, &funcg) : NULL;
     if (pn) {
-        if (!js_MatchToken(cx, &jsc.tokenStream, TOK_EOF)) {
+        if (!CheckStrictFormals(cx, &funcg, fun, pn)) {
+            pn = NULL;
+        } else if (!js_MatchToken(cx, &jsc.tokenStream, TOK_EOF)) {
             js_ReportCompileErrorNumber(cx, &jsc.tokenStream, NULL,
                                         JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
@@ -2696,7 +2739,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 /*
                  * Check for a duplicate parameter name, a "feature" that
                  * ECMA-262 requires. This is a SpiderMonkey strict warning,
-                 * soon to be an ES3.1 strict error.
+                 * and a strict mode error, as of ECMAScript 5.
                  *
                  * Further, if any argument is a destructuring pattern, forbid
                  * duplicates. We will report the error either now if we have
@@ -2704,23 +2747,13 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                  * the first pattern.
                  */
                 JSAtom *atom = CURRENT_TOKEN(ts).t_atom;
-                if (JS_HAS_STRICT_OPTION(cx) &&
+                if (tc->needStrictChecks() &&
                     js_LookupLocal(cx, fun, atom, NULL) != JSLOCAL_NONE) {
 #if JS_HAS_DESTRUCTURING
                     if (destructuringArg)
                         goto report_dup_and_destructuring;
                     duplicatedArg = true;
 #endif
-                    const char *name = js_AtomToPrintableString(cx, atom);
-                    if (!name ||
-                        !js_ReportCompileErrorNumber(cx, TS(funtc.compiler),
-                                                     NULL,
-                                                     JSREPORT_WARNING |
-                                                     JSREPORT_STRICT,
-                                                     JSMSG_DUPLICATE_FORMAL,
-                                                     name)) {
-                        return NULL;
-                    }
                 }
                 if (!DefineArg(pn, atom, fun->nargs, &funtc))
                     return NULL;
@@ -2763,6 +2796,9 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     body = FunctionBody(cx, ts, &funtc);
     if (!body)
+        return NULL;
+
+    if (!CheckStrictFormals(cx, &funtc, fun, pn))
         return NULL;
 
 #if JS_HAS_EXPR_CLOSURES
