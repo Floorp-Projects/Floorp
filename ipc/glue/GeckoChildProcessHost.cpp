@@ -41,6 +41,7 @@
 #include "base/path_service.h"
 #include "base/string_util.h"
 #include "chrome/common/chrome_switches.h"
+#include "chrome/common/process_watcher.h"
 
 #include "prprf.h"
 
@@ -78,6 +79,8 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
 GeckoChildProcessHost::~GeckoChildProcessHost()
 {
     MOZ_COUNT_DTOR(GeckoChildProcessHost);
+
+    ProcessWatcher::EnsureProcessTerminated(mChildProcessHandle);
 }
 
 bool
