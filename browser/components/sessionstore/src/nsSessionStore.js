@@ -186,6 +186,9 @@ SessionStoreService.prototype = {
   // whether we clearing history on shutdown
   _clearingOnShutdown: false,
 
+  // List of windows that are being closed during setBrowserState.
+  _closingWindows: [],
+
 #ifndef XP_MACOSX
   // whether the last window was closed and should be restored
   _restoreLastWindow: false,
@@ -340,6 +343,14 @@ SessionStoreService.prototype = {
         }, false);
       break;
     case "domwindowclosed": // catch closed windows
+      if (this._closingWindows.length > 0) {
+        let index = this._closingWindows.indexOf(aSubject);
+        if (index != -1) {
+          this._closingWindows.splice(index, 1);
+          if (this._closingWindows.length == 0)
+            this._sendRestoreCompletedNotifications(true);
+        }
+      }
       this.onClose(aSubject);
       break;
     case "quit-application-requested":
@@ -904,18 +915,20 @@ SessionStoreService.prototype = {
       return;
     }
 
-    // close all other browser windows
-    this._forEachBrowserWindow(function(aWindow) {
-      if (aWindow != window) {
-        aWindow.close();
-      }
-    });
-
     // make sure closed window data isn't kept
     this._closedWindows = [];
 
     // determine how many windows are meant to be restored
     this._restoreCount = state.windows ? state.windows.length : 0;
+
+    var self = this;
+    // close all other browser windows
+    this._forEachBrowserWindow(function(aWindow) {
+      if (aWindow != window) {
+        self._closingWindows.push(aWindow);
+        aWindow.close();
+      }
+    });
 
     // restore to the given state
     this.restoreWindow(window, state, true);
@@ -2863,16 +2876,17 @@ SessionStoreService.prototype = {
     return jsonString;
   },
 
-  _sendRestoreCompletedNotifications: function sss_sendRestoreCompletedNotifications() {
-    if (this._restoreCount) {
+  _sendRestoreCompletedNotifications:
+  function sss_sendRestoreCompletedNotifications(aOnWindowClose) {
+    if (this._restoreCount && !aOnWindowClose)
       this._restoreCount--;
-      if (this._restoreCount == 0) {
-        // This was the last window restored at startup, notify observers.
-        this._observerService.notifyObservers(null,
-          this._browserSetState ? NOTIFY_BROWSER_STATE_RESTORED : NOTIFY_WINDOWS_RESTORED,
-          "");
-        this._browserSetState = false;
-      }
+
+    if (this._restoreCount == 0 && this._closingWindows.length == 0) {
+      // This was the last window restored at startup, notify observers.
+      this._observerService.notifyObservers(null,
+        this._browserSetState ? NOTIFY_BROWSER_STATE_RESTORED : NOTIFY_WINDOWS_RESTORED,
+        "");
+      this._browserSetState = false;
     }
   },
 
