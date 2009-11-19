@@ -190,7 +190,7 @@ MSG_DEF(JSMSG_CURLY_AFTER_LIST,       107, 0, JSEXN_SYNTAXERR, "missing } after 
 MSG_DEF(JSMSG_PAREN_IN_PAREN,         108, 0, JSEXN_SYNTAXERR, "missing ) in parenthetical")
 MSG_DEF(JSMSG_SEMI_BEFORE_STMNT,      109, 0, JSEXN_SYNTAXERR, "missing ; before statement")
 MSG_DEF(JSMSG_NO_RETURN_VALUE,        110, 1, JSEXN_TYPEERR, "function {0} does not always return a value")
-MSG_DEF(JSMSG_DUPLICATE_FORMAL,       111, 1, JSEXN_TYPEERR, "duplicate formal argument {0}")
+MSG_DEF(JSMSG_DUPLICATE_FORMAL,       111, 1, JSEXN_SYNTAXERR, "duplicate formal argument {0}")
 MSG_DEF(JSMSG_EQUAL_AS_ASSIGN,        112, 1, JSEXN_SYNTAXERR, "test for equality (==) mistyped as assignment (=)?{0}")
 MSG_DEF(JSMSG_OPTIMIZED_CLOSURE_LEAK, 113, 0, JSEXN_INTERNALERR, "cannot access optimized closure")
 MSG_DEF(JSMSG_TOO_MANY_DEFAULTS,      114, 0, JSEXN_SYNTAXERR, "more than one switch default")
