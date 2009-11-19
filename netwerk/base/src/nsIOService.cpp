@@ -596,10 +596,8 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
                 do_GetService(NS_CONSOLESERVICE_CONTRACTID);
             if (consoleService) {
                 consoleService->LogStringMessage(NS_LITERAL_STRING(
-                    "Http channel implementation doesn't support "
-                    "nsIUploadChannel2. An extension has supplied a "
-                    "non-functional http protocol handler. This will break "
-                    "behavior and in future releases not work at all.").get());
+                    "Http channel implementation doesn't support nsIUploadChannel2. An extension has supplied a non-functional http protocol handler. This will break behavior and in future releases not work at all."
+                                                                   ).get());
             }
             gHasWarnedUploadChannel2 = PR_TRUE;
         }
