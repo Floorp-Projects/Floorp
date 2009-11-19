@@ -76,7 +76,7 @@ public:
 protected:
 
   // nsAccessible
-  virtual void CacheChildren();
+  void CacheChildren();
 
   // nsXULButtonAccessible
   PRBool ContainsMenu();

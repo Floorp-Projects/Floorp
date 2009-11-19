@@ -155,4 +155,5 @@ void
 nsHTMLAreaAccessible::CacheChildren()
 {
   // No children for aria accessible.
+  mAccChildCount = IsDefunct() ? eChildCountUninitialized : 0;
 }
