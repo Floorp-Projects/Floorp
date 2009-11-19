@@ -287,9 +287,13 @@ XRE_InitChildProcess(int aArgc,
 
   base::AtExitManager exitManager;
 
+  NS_LogInit();
+
   int rv = XRE_InitCommandLine(aArgc, aArgv);
-  if (NS_FAILED(rv))
-      return NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) {
+    NS_LogTerm();
+    return NS_ERROR_FAILURE;
+  }
 
   MessageLoopForIO mainMessageLoop;
 
@@ -331,6 +335,7 @@ XRE_InitChildProcess(int aArgc,
     sIOMessageLoop = nsnull;
   }
 
+  NS_LogTerm();
   return NS_OK;
 }
 
