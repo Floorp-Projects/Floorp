@@ -1268,7 +1268,9 @@ tabpanels {
 }
 
 .tabs-closebutton > .toolbarbutton-icon {
-  margin: 0;
+  /* XXX Buttons have padding in widget/ that we don't want here but can't override with good CSS, so we must
+     use evil CSS to give the impression of smaller content */
+  margin: -2px;
 }
 
 /* Tabbrowser arrowscrollbox arrows */

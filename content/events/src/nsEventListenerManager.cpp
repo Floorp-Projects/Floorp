@@ -211,9 +211,7 @@ static const EventDispatchData sCompositionEvents[] = {
   { NS_COMPOSITION_START,
     HANDLER(&nsIDOMCompositionListener::HandleStartComposition)  },
   { NS_COMPOSITION_END,
-    HANDLER(&nsIDOMCompositionListener::HandleEndComposition)    },
-  { NS_COMPOSITION_QUERY,
-    HANDLER(&nsIDOMCompositionListener::HandleQueryComposition)  }
+    HANDLER(&nsIDOMCompositionListener::HandleEndComposition)    }
 };
 
 static const EventDispatchData sTextEvents[] = {

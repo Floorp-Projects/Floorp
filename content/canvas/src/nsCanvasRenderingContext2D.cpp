@@ -955,6 +955,10 @@ nsCanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *docShell, gfxASur
 
     mThebes->NewPath();
 
+    // always force a redraw, because if the surface dimensions were reset
+    // then the surface became cleared, and we need to redraw everything.
+    Redraw();
+
     return NS_OK;
 }
 

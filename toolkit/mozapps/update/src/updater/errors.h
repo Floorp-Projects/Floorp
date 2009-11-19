@@ -48,5 +48,6 @@
 #define READ_ERROR 6
 #define WRITE_ERROR 7
 #define UNEXPECTED_ERROR 8
+#define ELEVATION_CANCELED 9
 
 #endif  // Errors_h__

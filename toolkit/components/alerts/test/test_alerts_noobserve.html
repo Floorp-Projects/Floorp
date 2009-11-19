@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Alerts Service</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script> 
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+Alerts service mochitest without observer<br/>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+try {
+  var notifier = Cc["@mozilla.org/alerts-service;1"].
+                 getService(Ci.nsIAlertsService);
+  notifier.showAlertNotification(null, "Notification test", "This notification has no observer",
+                                 false, "foobarcookie", null);
+  ok(true, "If we don't crash, we're good.");
+} catch (ex) {
+  // Alerts service doesn't exist
+}
+
+</script>
+</pre>
+</body>
+</html>
+

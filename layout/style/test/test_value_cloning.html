@@ -22,6 +22,7 @@ var iframe = document.getElementById("iframe");
 var current_item;
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(3);
 
 for (var prop in gCSSProperties) {
   var info = gCSSProperties[prop];

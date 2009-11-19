@@ -254,10 +254,10 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     // case eCSSProperty_font_family:
     case eCSSProperty_font_size:
     case eCSSProperty_font_size_adjust:
-    // case eCSSProperty_font_stretch:
+    case eCSSProperty_font_stretch:
     case eCSSProperty_font_style:
     case eCSSProperty_font_variant:
-    // case eCSSProperty_font_weight:
+    case eCSSProperty_font_weight:
     case eCSSProperty_image_rendering:
     case eCSSProperty_letter_spacing:
     case eCSSProperty_lighting_color:

@@ -27,6 +27,10 @@ netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
 // Write a test file > 8192 characters
 
+is(FileReader.EMPTY, 0, "correct EMPTY value");
+is(FileReader.LOADING, 1, "correct LOADING value");
+is(FileReader.DONE, 2, "correct DONE value");
+
 var testData = "asdfblahqwer";
 for (var i = 0; i < 10; i++) {
   testData = testData + testData;
@@ -62,8 +66,10 @@ var domFileBinary2 = utf16File.getAsBinary();
 var domFileBinary3 = utf32File.getAsBinary();
 
 var request1 = new FileReader();
+is(request1.readyState, FileReader.EMPTY, "correct initial readyState");
 request1.onload = handleTextISO1;
 request1.readAsText(file, "iso-8859-1");
+is(request1.readyState, FileReader.LOADING, "correct loading readyState");
 
 var request2 = new FileReader();
 request2.onload = handleTextUTF8;
@@ -89,8 +95,10 @@ request6.readAsText(utf32File, "UTF-32");
 
 //Test binary data accessor
 var request7 = new FileReader();
+is(request7.readyState, FileReader.EMPTY, "correct initial readyState");
 request7.onload = handleDataBinary;
 request7.readAsBinaryString(file);
+is(request7.readyState, FileReader.LOADING, "correct loading readyState");
 
 var request71 = new FileReader();
 request71.onload = handleDataBinary16;
@@ -172,6 +180,7 @@ function handleCancel(event) {
 }
 
 function handleTextISO1(event) {
+  is(event.target.readyState, FileReader.DONE, "correct final readyState");
   var fileAsText = event.target.result;
   var error = event.target.error;
   is(error, null, "error code set to null for successful data accesses");
@@ -232,6 +241,7 @@ function handleDataURI2(event) {
 }
 
 function handleDataBinary(event) {
+  is(event.target.readyState, FileReader.DONE, "correct final readyState");
   var fileAsBinary = event.target.result;
   is(domFileBinary.length, fileAsBinary.length, "binary data async length should match dom file binary");
   is(domFileBinary, fileAsBinary, "binary data async string result should match dom file binary");

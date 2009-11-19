@@ -72,6 +72,10 @@ endif
 
 tier_external_dirs	+= gfx/qcms
 
+ifeq ($(OS_ARCH),WINCE)
+tier_external_dirs += modules/lib7z
+endif
+
 #
 # tier "gecko" - core components
 #
@@ -245,8 +249,11 @@ ifdef MOZ_ENABLE_GNOME_COMPONENT
 tier_toolkit_dirs    += toolkit/system/gnome
 endif
 
+ifndef MOZ_ENABLE_LIBCONIC
+# if libconic is present, it will do its own network monitoring
 ifdef MOZ_ENABLE_DBUS
 tier_toolkit_dirs    += toolkit/system/dbus
+endif
 endif
 
 ifdef MOZ_LEAKY

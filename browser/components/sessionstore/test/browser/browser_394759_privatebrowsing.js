@@ -37,8 +37,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+function browserWindowsCount() {
+  let count = 0;
+  let e = Cc["@mozilla.org/appshell/window-mediator;1"]
+            .getService(Ci.nsIWindowMediator)
+            .getEnumerator("navigator:browser");
+  while (e.hasMoreElements()) {
+    if (!e.getNext().closed)
+      ++count;
+  }
+  return count;
+}
+
 function test() {
   /** Private Browsing Test for Bug 394759 **/
+  is(browserWindowsCount(), 1, "Only one browser window should be open initially");
 
   waitForExplicitFinish();
 
@@ -85,8 +98,6 @@ function test() {
 }
 
 function continue_test() {
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
   // Ensure Private Browsing mode is disabled.
@@ -108,21 +119,14 @@ function continue_test() {
       value: "uniq" + (++now) },
   ];
 
-  let loadWasCalled = false;
   function openWindowAndTest(aTestIndex, aRunNextTestInPBMode) {
     info("Opening new window");
-    let windowObserver = {
-      observe: function(aSubject, aTopic, aData) {
-        if (aTopic === "domwindowopened") {
-          info("New window has been opened");
-          let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-          win.addEventListener("load", function onLoad(event) {
+    function onLoad(event) {
             win.removeEventListener("load", onLoad, false);
             info("New window has been loaded");
             win.gBrowser.addEventListener("load", function(aEvent) {
               win.gBrowser.removeEventListener("load", arguments.callee, true);
               info("New window browser has been loaded");
-              loadWasCalled = true;
               executeSoon(function() {
                 // Add a tab.
                 win.gBrowser.addTab();
@@ -172,6 +176,7 @@ function continue_test() {
                   if (aTestIndex == TESTS.length - 1) {
                     if (gPrefService.prefHasUserValue("browser.sessionstore.interval"))
                       gPrefService.clearUserPref("browser.sessionstore.interval");
+                    is(browserWindowsCount(), 1, "Only one browser window should be open eventually");
                     finish();
                   }
                   else {
@@ -181,21 +186,10 @@ function continue_test() {
                 });
               });
             }, true);
-          }, false);
-        }
-        else if (aTopic === "domwindowclosed") {
-          info("Window closed");
-          ww.unregisterNotification(this);
-          if (!loadWasCalled) {
-            ok(false, "Window was closed before load could fire!");
-            finish();
-          }
-        }
-      }
-    };
-    ww.registerNotification(windowObserver);
+    }
     // Open a window.
-    openDialog(location, "_blank", "chrome,all,dialog=no", TESTS[aTestIndex].url);
+    var win = openDialog(location, "", "chrome,all,dialog=no", TESTS[aTestIndex].url);
+    win.addEventListener("load", onLoad, false);
   }
 
   openWindowAndTest(0, true);

@@ -264,6 +264,7 @@ struct JSAtomState {
     JSAtom              *configurableAtom;
     JSAtom              *writableAtom;
     JSAtom              *valueAtom;
+    JSAtom              *useStrictAtom;
 
 #if JS_HAS_XML_SUPPORT
     JSAtom              *etagoAtom;

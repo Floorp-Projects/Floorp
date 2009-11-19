@@ -850,21 +850,6 @@ nsTextEditorCompositionListener::HandleStartComposition(nsIDOMEvent* aCompositio
 
   return mEditor->BeginComposition(eventReply);
 }
-nsresult
-nsTextEditorCompositionListener::HandleQueryComposition(nsIDOMEvent* aCompositionEvent)
-{
-#ifdef DEBUG_IME
-   printf("nsTextEditorCompositionListener::HandleQueryComposition\n");
-#endif
-  nsCOMPtr<nsIPrivateCompositionEvent> pCompositionEvent = do_QueryInterface(aCompositionEvent);
-  if (!pCompositionEvent) return NS_ERROR_FAILURE;
-  
-  nsTextEventReply* eventReply;
-  nsresult rv = pCompositionEvent->GetCompositionReply(&eventReply);
-  if (NS_FAILED(rv)) return rv;
-
-  return mEditor->QueryComposition(eventReply);
-}
 
 nsresult
 nsTextEditorCompositionListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)

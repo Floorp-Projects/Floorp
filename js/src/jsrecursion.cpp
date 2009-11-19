@@ -204,7 +204,7 @@ TraceRecorder::upRecursion()
     if (anchor && (anchor->exitType == RECURSIVE_EMPTY_RP_EXIT ||
         anchor->exitType == RECURSIVE_SLURP_MISMATCH_EXIT ||
         anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT)) {
-        return InjectStatus(slurpDownFrames(cx->fp->down->regs->pc));
+        return slurpDownFrames(cx->fp->down->regs->pc);
     }
 
     jsbytecode* return_pc = cx->fp->down->regs->pc;

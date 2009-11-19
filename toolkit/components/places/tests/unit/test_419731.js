@@ -139,7 +139,7 @@ function run_test() {
   root = result.root;
 
   root.containerOpen = true;
-  cc = root.childCount;
+  var cc = root.childCount;
   do_check_eq(cc, 1);
   node = root.getChild(0);
   do_check_eq(node.title, "new title 2");

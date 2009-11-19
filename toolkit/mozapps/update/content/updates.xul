@@ -105,6 +105,18 @@
     <progressmeter id="incompatibleCheckProgress" mode="undetermined" hidden="true"/>
   </wizardpage>
 
+  <wizardpage id="manualUpdate" pageid="manualUpdate"
+              label="&manualUpdate.title;" object="gManualUpdatePage"
+              onpageshow="gManualUpdatePage.onPageShow();">
+    <description>&manualUpdate.desc;</description>
+    <separator class="thin"/>
+    <label>&manualUpdateGetMsg.label;</label>
+    <hbox>
+      <label class="text-link" id="manualUpdateLinkLabel" value=""
+             onclick="openUpdateURL(event);"/>
+    </hbox>
+  </wizardpage>
+
   <wizardpage id="updatesfound" pageid="updatesfound" next="license"
               object="gUpdatesAvailablePage" label=""
               onpageshow="gUpdatesAvailablePage.onPageShow();"

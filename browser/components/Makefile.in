@@ -35,10 +35,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -46,44 +46,44 @@ MODULE = browsercomps
 XPIDL_MODULE = browsercompsbase
 
 XPIDLSRCS = \
-	nsIBrowserHandler.idl \
-	nsIBrowserGlue.idl \
-	$(NULL)
+  nsIBrowserGlue.idl \
+  nsIBrowserHandler.idl \
+  $(NULL)
 
 EXTRA_PP_COMPONENTS = \
-	nsBrowserContentHandler.js \
-	nsBrowserGlue.js \
-	$(NULL)
+  nsBrowserContentHandler.js \
+  nsBrowserGlue.js \
+  $(NULL)
 
 EXTRA_JS_MODULES = distribution.js
 
-DIRS = \
-	about \
-	certerror \
-	dirprovider \
-	microsummaries \
-	preferences \
-	search \
-	sessionstore \
-	shell \
-	sidebar \
-	feeds \
-	places \
-	privatebrowsing \
-	$(NULL)
+PARALLEL_DIRS = \
+  about \
+  certerror \
+  dirprovider \
+  feeds \
+  microsummaries \
+  places \
+  preferences \
+  privatebrowsing \
+  search \
+  sessionstore \
+  shell \
+  sidebar \
+  $(NULL)
 
 ifndef WINCE
-DIRS += migration
+PARALLEL_DIRS += migration
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows) 
 ifndef WINCE
-DIRS += wintaskbar
+PARALLEL_DIRS += wintaskbar
 endif
 endif
 
 ifdef MOZ_SAFE_BROWSING
-DIRS += safebrowsing
+PARALLEL_DIRS += safebrowsing
 endif
 
 DIRS += build

@@ -44,9 +44,6 @@ function do_test() {
            getService(Ci.nsIObserverService);
   var pb = Cc[PRIVATEBROWSING_CONTRACT_ID].
            getService(Ci.nsIPrivateBrowsingService);
-  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch);
-  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
   var expectedQuitting;
   var called = 0;
@@ -69,7 +66,6 @@ function do_test() {
         // finish up the test
         if (expectedQuitting) {
           os.removeObserver(this, kPrivateBrowsingNotification);
-          prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
           do_test_finished();
         }
       }

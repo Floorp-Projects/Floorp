@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test bug 529119</title>
+<script type="text/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+<script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>        
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var workingURL = "http://localhost:8888/tests/docshell/test/bug529119-window.html";
+var faultyURL = "http://some-non-existent-domain-27489274c892748217cn2384.com/";
+
+var w = null;
+var phase = 0;
+var gotWrongPageOnTryAgainClick = false;
+
+function pollForPage(expected_title, f, w)
+{
+  // Start with polling after a delay, we might mistakenly take the current page
+  // as an expected one.
+  window.setTimeout(function() {
+    var iterationsLeft = 20;
+    var int = window.setInterval(function() {
+      iterationsLeft--;
+      
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      try {
+        var title = w.document.title;
+      }
+      catch (ex) {
+        alert(ex);
+        return;
+      }
+  
+      if (iterationsLeft == 0 || title.match(expected_title)) {
+        window.clearInterval(int);
+        f(iterationsLeft > 0);
+      }
+    }, 100);
+  }, 1000);
+}
+
+function windowLoaded()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  switch (phase)
+  {
+    case 0:
+      /* 2. We have succeededfully loaded a page, now go to a faulty URL */
+      window.setTimeout(function() {
+        w.location.href = faultyURL;
+      }, 0);
+    
+      phase = 1;
+
+      pollForPage("Problem loading page", function(succeeded) {
+        ok(succeeded, "Waiting for error page succeeded");
+        
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+        /* 3. now, while we are on the error page, try to reload it, actually 
+           click the "Try Again" button */
+        w.location.reload();
+
+        pollForPage("Problem loading page", function(succeeded) {
+          ok(succeeded, "Waiting for error page succeeded");
+          
+          netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+          /* 4-finish, check we are still on the error page */
+          is(w.location.href, faultyURL, "Is on an error page");
+          isnot(w.location.href, workingURL, "Is not on the previous page");
+          is(gotWrongPageOnTryAgainClick, false, 
+            "Must not get www.example.com page on reload of an error page");
+          w.close();
+          SimpleTest.finish();
+        }, w);
+      }, w);
+      break;
+      
+    case 1:
+      /* 4-check, we must not get here! */
+      gotWrongPageOnTryAgainClick = true;
+      break;
+  }             
+}
+
+function startTest()
+{
+  /* 1. load a URL that leads to an error page */
+  w = window.open(workingURL);
+}
+
+</script>
+</head>
+<body onload="startTest();">
+</body>
+</html>

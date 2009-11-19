@@ -60,15 +60,15 @@ function test() {
       
       // find the data for the newly added tab and delete it
       let state = eval(aSubject.data);
-      for each (let winData in state.windows) {
-        for each (let tabData in winData.tabs) {
+      state.windows.forEach(function (winData) {
+        winData.tabs.forEach(function (tabData) {
           if (tabData.extData && uniqueName in tabData.extData &&
               tabData.extData[uniqueName] == uniqueValue) {
             delete tabData.extData[uniqueName];
             valueWasCleaned = true;
           }
-        }
-      }
+        });
+      });
       
       ok(valueWasCleaned, "found and removed the specific tab value");
       aSubject.data = uneval(state);

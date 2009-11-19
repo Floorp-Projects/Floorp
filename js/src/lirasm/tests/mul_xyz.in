@@ -1,0 +1,22 @@
+zero = int 0
+one = int 1
+
+; 1073741823 * 2 = 0x7ffffffe, and will nearly (but not quite) overflow.
+big = int 1073741823
+two = int 2
+
+res = mul big two
+check = ov res
+; We can't use the result of 'ov' directly in cmov, so compare it with 1.
+toobig = eq check one
+
+; Ensure that 'big' and 'two' get their own registers and
+; aren't shared with 'res'.
+ptr = alloc 8 
+sti big ptr 0
+sti two ptr 4
+
+; Return either the result (if we didn't overflow) or 0.
+ans = cmov toobig zero res
+ret ans
+

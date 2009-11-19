@@ -234,11 +234,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
     bool ensureSharpSlots();
 };
 
-/*
- * Flags to propagate out of the blocks.
- */
-#define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
-
 #define TCF_COMPILING           0x01 /* JSTreeContext is JSCodeGenerator */
 #define TCF_IN_FUNCTION         0x02 /* parsing inside function body */
 #define TCF_RETURN_EXPR         0x04 /* function has 'return expr;' */
@@ -283,6 +278,19 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_NEED_MUTABLE_SCRIPT 0x20000
 
 /*
+ * This function/global/eval code body contained a Use Strict
+ * Directive.  Treat certain strict warnings as errors, and forbid
+ * the use of 'with'.  See also TSF_STRICT_MODE_CODE,
+ * JSScript::strictModeCode, and JSREPORT_STRICT_ERROR.
+ */
+#define TCF_STRICT_MODE_CODE       0x40000
+
+/*
+ * Flags to propagate out of the blocks.
+ */
+#define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
+
+/*
  * Sticky deoptimization flags to propagate from FunctionBody.
  */
 #define TCF_FUN_FLAGS           (TCF_FUN_SETS_OUTER_NAME |                    \
@@ -291,7 +299,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                  TCF_FUN_HEAVYWEIGHT     |                    \
                                  TCF_FUN_IS_GENERATOR    |                    \
                                  TCF_FUN_USES_OWN_NAME   |                    \
-                                 TCF_HAS_SHARPS)
+                                 TCF_HAS_SHARPS          |                    \
+                                 TCF_STRICT_MODE_CODE)
 
 /*
  * Span-dependent instructions are jumps whose span (from the jump bytecode to

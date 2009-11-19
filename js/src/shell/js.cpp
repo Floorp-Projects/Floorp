@@ -200,8 +200,9 @@ typedef enum JSShellErrNum {
 
 static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
+
 static JSObject *
-split_setup(JSContext *cx);
+split_setup(JSContext *cx, JSBool evalcx);
 
 #ifdef EDITLINE
 JS_BEGIN_EXTERN_C
@@ -821,7 +822,7 @@ extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
             break;
 
         case 'z':
-            obj = split_setup(cx);
+            obj = split_setup(cx, JS_FALSE);
             if (!obj)
                 return gExitCode;
             break;
@@ -2660,8 +2661,7 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 }
 
 static JSBool
-split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
-                JSObject **objp)
+split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **objp)
 {
     ComplexObject *cpx;
 
@@ -2936,7 +2936,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSContext *scx;
     const jschar *src;
     size_t srclen;
-    JSBool lazy, ok;
+    JSBool lazy, split, ok;
     jsval v;
     JSStackFrame *fp;
 
@@ -2956,15 +2956,23 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JS_BeginRequest(scx);
     src = JS_GetStringChars(str);
     srclen = JS_GetStringLength(str);
-    lazy = JS_FALSE;
-    if (srclen == 4 &&
-        src[0] == 'l' && src[1] == 'a' && src[2] == 'z' && src[3] == 'y') {
-        lazy = JS_TRUE;
-        srclen = 0;
+    split = lazy = JS_FALSE;
+    if (srclen == 4) {
+        if (src[0] == 'l' && src[1] == 'a' && src[2] == 'z' && src[3] == 'y') {
+            lazy = JS_TRUE;
+            srclen = 0;
+        }
+    } else if (srclen == 5) {
+        if (src[0] == 's' && src[1] == 'p' && src[2] == 'l' && src[3] == 'i' && src[4] == 't') {
+            split = lazy = JS_TRUE;
+            srclen = 0;
+        }
     }
 
     if (!sobj) {
-        sobj = JS_NewObject(scx, &sandbox_class, NULL, NULL);
+        sobj = split
+               ? split_setup(scx, JS_TRUE)
+               : JS_NewObject(scx, &sandbox_class, NULL, NULL);
         if (!sobj || (!lazy && !JS_InitStandardClasses(scx, sobj))) {
             ok = JS_FALSE;
             goto out;
@@ -2973,6 +2981,8 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         ok = JS_SetProperty(cx, sobj, "lazy", &v);
         if (!ok)
             goto out;
+        if (split)
+            sobj = split_outerObject(cx, sobj);
     }
 
     if (srclen == 0) {
@@ -2982,6 +2992,11 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         fp = JS_GetScriptedCaller(cx, NULL);
         JS_SetGlobalObject(scx, sobj);
         JS_ToggleOptions(scx, JSOPTION_DONT_REPORT_UNCAUGHT);
+        OBJ_TO_INNER_OBJECT(cx, sobj);
+        if (!sobj) {
+            ok = JS_FALSE;
+            goto out;
+        }
         ok = JS_EvaluateUCScript(scx, sobj, src, srclen,
                                  fp->script->filename,
                                  JS_PCToLineNumber(cx, fp->script,
@@ -3821,7 +3836,8 @@ static const char *const shell_help_messages[] = {
 "evalcx(s[, o])\n"
 "  Evaluate s in optional sandbox object o\n"
 "  if (s == '' && !o) return new o with eager standard classes\n"
-"  if (s == 'lazy' && !o) return new o with lazy standard classes",
+"  if (s == 'lazy' && !o) return new o with lazy standard classes\n"
+"  if (s == 'split' && !o) return new split-object o with lazy standard classes",
 "shapeOf(obj)             Get the shape of obj (an implementation detail)",
 #ifdef MOZ_SHARK
 "startShark()             Start a Shark session.\n"
@@ -3938,7 +3954,7 @@ Help(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSObject *
-split_setup(JSContext *cx)
+split_setup(JSContext *cx, JSBool evalcx)
 {
     JSObject *outer, *inner, *arguments;
 
@@ -3951,17 +3967,20 @@ split_setup(JSContext *cx)
     if (!inner)
         return NULL;
 
-    if (!JS_DefineFunctions(cx, inner, shell_functions))
-        return NULL;
-    JS_ClearScope(cx, outer);
+    if (!evalcx) {
+        if (!JS_DefineFunctions(cx, inner, shell_functions))
+            return NULL;
 
-    /* Create a dummy arguments object. */
-    arguments = JS_NewArrayObject(cx, 0, NULL);
-    if (!arguments ||
-        !JS_DefineProperty(cx, inner, "arguments", OBJECT_TO_JSVAL(arguments),
-                           NULL, NULL, 0)) {
-        return NULL;
+        /* Create a dummy arguments object. */
+        arguments = JS_NewArrayObject(cx, 0, NULL);
+        if (!arguments ||
+            !JS_DefineProperty(cx, inner, "arguments", OBJECT_TO_JSVAL(arguments),
+                               NULL, NULL, 0)) {
+            return NULL;
+        }
     }
+
+    JS_ClearScope(cx, outer);
 
 #ifndef LAZY_STANDARD_CLASSES
     if (!JS_InitStandardClasses(cx, inner))

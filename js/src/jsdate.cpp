@@ -1691,7 +1691,7 @@ date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, jsval *vp)
 
     /* see complaint about ECMA in date_MakeTime */
     if (argc == 0) {
-        SetDateToNaN(cx, obj);
+        SetDateToNaN(cx, obj, vp);
         return true;
     }
     if (argc > maxargs)

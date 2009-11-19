@@ -58,6 +58,8 @@ _TEST_FILES	= \
 		test_clearWatch.html \
 		test_clearWatch_invalid.html \
 		test_timeoutWatch.html \
+		test_windowClose.html \
+		windowTest.html \
 		geolocation_common.js  \
 		geolocation.html \
 		test_optional_api_params.html \

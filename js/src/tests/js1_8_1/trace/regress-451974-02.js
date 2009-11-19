@@ -54,8 +54,8 @@ function test()
   printStatus (summary);
 
   var chars = '0123456789abcdef';
-  var size = 1000;
-  var mult = 100;
+  var size = 10000;
+  var mult = 1000;
   var densearray = [];
   var lsize = size;
 
