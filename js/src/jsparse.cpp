@@ -7972,6 +7972,15 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         JSBool afterComma;
         JSParseNode *pnval;
 
+        /*
+         * A map from property names we've seen thus far to bit masks.
+         * (We use ALE_INDEX/ALE_SET_INDEX).  An atom's mask includes
+         * JSPROP_SETTER if we've seen a setter for it, JSPROP_GETTER
+         * if we've seen as getter, and both of those if we've just
+         * seen an ordinary value.
+         */
+        JSAutoAtomList seen(tc->compiler);
+
         pn = NewParseNode(PN_LIST, tc);
         if (!pn)
             return NULL;
@@ -7981,6 +7990,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
         afterComma = JS_FALSE;
         for (;;) {
+            JSAtom *atom;
             ts->flags |= TSF_KEYWORD_IS_NAME;
             tt = js_GetToken(cx, ts);
             ts->flags &= ~TSF_KEYWORD_IS_NAME;
@@ -7990,12 +8000,14 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 if (!pn3)
                     return NULL;
                 pn3->pn_dval = CURRENT_TOKEN(ts).t_dval;
+                if (tc->needStrictChecks())
+                    atom = js_AtomizeDouble(cx, pn3->pn_dval);
+                else
+                    atom = NULL; /* for the compiler */
                 break;
               case TOK_NAME:
 #if JS_HAS_GETTER_SETTER
                 {
-                    JSAtom *atom;
-
                     atom = CURRENT_TOKEN(ts).t_atom;
                     if (atom == cx->runtime->atomState.getAtom)
                         op = JSOP_GETTER;
@@ -8011,7 +8023,8 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                         js_UngetToken(ts);
                         goto property_name;
                     }
-                    pn3 = NewNameNode(cx, CURRENT_TOKEN(ts).t_atom, tc);
+                    atom = CURRENT_TOKEN(ts).t_atom;
+                    pn3 = NewNameNode(cx, atom, tc);
                     if (!pn3)
                         return NULL;
 
@@ -8025,10 +8038,11 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
               property_name:
 #endif
               case TOK_STRING:
+                atom = CURRENT_TOKEN(ts).t_atom;
                 pn3 = NewParseNode(PN_NULLARY, tc);
                 if (!pn3)
                     return NULL;
-                pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
+                pn3->pn_atom = atom;
                 break;
               case TOK_RC:
                 goto end_obj_init;
@@ -8082,6 +8096,43 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             if (!pn2)
                 return NULL;
             pn->append(pn2);
+
+            /*
+             * In strict mode code, check for duplicate property names.  Treat
+             * getters and setters as distinct attributes of each property.  A
+             * plain old value conflicts with a getter or a setter.
+             */ 
+            if (tc->needStrictChecks()) {
+                unsigned attributesMask;
+                if (op == JSOP_NOP)
+                    attributesMask = JSPROP_GETTER | JSPROP_SETTER;
+                else if (op == JSOP_GETTER)
+                    attributesMask = JSPROP_GETTER;
+                else if (op == JSOP_SETTER)
+                    attributesMask = JSPROP_SETTER;
+                else {
+                    JS_NOT_REACHED("bad opcode in object initializer");
+                    attributesMask = 0;
+                }
+
+                JSAtomListElement *ale = seen.lookup(atom);
+                if (ale) {
+                    if (ALE_INDEX(ale) & attributesMask) {
+                        const char *name = js_AtomToPrintableString(cx, atom);
+                        if (!name ||
+                            !js_ReportStrictModeError(cx, ts, tc, NULL,
+                                                      JSMSG_DUPLICATE_PROPERTY, name)) {
+                            return NULL;
+                        }
+                    }
+                    ALE_SET_INDEX(ale, attributesMask | ALE_INDEX(ale));
+                } else {
+                    ale = seen.add(tc->compiler, atom);
+                    if (!ale)
+                        return NULL;
+                    ALE_SET_INDEX(ale, attributesMask);
+                }
+            }                    
 
             tt = js_GetToken(cx, ts);
             if (tt == TOK_RC)
