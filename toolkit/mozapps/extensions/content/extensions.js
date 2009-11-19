@@ -473,7 +473,7 @@ function showView(aView) {
 
   var showGetMore = false;
   var getMore = document.getElementById("getMore");
-  if (prefURL && !gShowGetAddonsPane) {
+  if (prefURL && gPref.getPrefType(prefURL) != nsIPrefBranch2.PREF_INVALID) {
     try {
       getMore.setAttribute("value", getMore.getAttribute("value" + aView));
       var getMoreURL = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]

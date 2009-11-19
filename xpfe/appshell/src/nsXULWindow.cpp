@@ -143,15 +143,15 @@ nsXULWindow::nsXULWindow(PRUint32 aChromeFlags)
     mCenterAfterLoad(PR_FALSE),
     mIsHiddenWindow(PR_FALSE),
     mLockedUntilChromeLoad(PR_FALSE),
+    mIgnoreXULSize(PR_FALSE),
+    mIgnoreXULPosition(PR_FALSE),
     mContextFlags(0),
     mBlurSuppressionLevel(0),
     mPersistentAttributesDirty(0),
     mPersistentAttributesMask(0),
     mChromeFlags(aChromeFlags),
     // best guess till we have a widget
-    mAppPerDev(nsPresContext::AppUnitsPerCSSPixel()),
-    mIgnoreXULSize(PR_FALSE),
-    mIgnoreXULPosition(PR_FALSE)
+    mAppPerDev(nsPresContext::AppUnitsPerCSSPixel())
 {
 }
 

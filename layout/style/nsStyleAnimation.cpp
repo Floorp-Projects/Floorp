@@ -117,7 +117,8 @@ lcm(PRUint32 a, PRUint32 b)
 // -------------
 
 PRBool
-nsStyleAnimation::ComputeDistance(const Value& aStartValue,
+nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
+                                  const Value& aStartValue,
                                   const Value& aEndValue,
                                   double& aDistance)
 {
@@ -127,9 +128,28 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
   switch (commonUnit) {
     case eUnit_Null:
     case eUnit_None:
-    case eUnit_Enumerated:
       success = PR_FALSE;
       break;
+    case eUnit_Enumerated:
+      switch (aProperty) {
+        case eCSSProperty_font_stretch: {
+          // just like eUnit_Integer.
+          PRInt32 startInt = aStartValue.GetIntValue();
+          PRInt32 endInt = aEndValue.GetIntValue();
+          aDistance = PR_ABS(endInt - startInt);
+          break;
+        }
+        default:
+          success = PR_FALSE;
+          break;
+      }
+      break;
+    case eUnit_Integer: {
+      PRInt32 startInt = aStartValue.GetIntValue();
+      PRInt32 endInt = aEndValue.GetIntValue();
+      aDistance = PR_ABS(endInt - startInt);
+      break;
+    }
     case eUnit_Coord: {
       nscoord startCoord = aStartValue.GetCoordValue();
       nscoord endCoord = aEndValue.GetCoordValue();
@@ -231,8 +251,10 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
 
       // Call AddWeighted to make us lists of the same length.
       Value normValue1, normValue2;
-      if (!AddWeighted(1.0, aStartValue, 0.0, aEndValue, normValue1) ||
-          !AddWeighted(0.0, aStartValue, 1.0, aEndValue, normValue2)) {
+      if (!AddWeighted(aProperty, 1.0, aStartValue, 0.0, aEndValue,
+                       normValue1) ||
+          !AddWeighted(aProperty, 0.0, aStartValue, 1.0, aEndValue,
+                       normValue2)) {
         success = PR_FALSE;
         break;
       }
@@ -273,8 +295,10 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
     case eUnit_Shadow: {
       // Call AddWeighted to make us lists of the same length.
       Value normValue1, normValue2;
-      if (!AddWeighted(1.0, aStartValue, 0.0, aEndValue, normValue1) ||
-          !AddWeighted(0.0, aStartValue, 1.0, aEndValue, normValue2)) {
+      if (!AddWeighted(aProperty, 1.0, aStartValue, 0.0, aEndValue,
+                       normValue1) ||
+          !AddWeighted(aProperty, 0.0, aStartValue, 1.0, aEndValue,
+                       normValue2)) {
         success = PR_FALSE;
         break;
       }
@@ -319,7 +343,8 @@ nsStyleAnimation::ComputeDistance(const Value& aStartValue,
         #ifdef DEBUG
           PRBool ok =
         #endif
-            nsStyleAnimation::ComputeDistance(color1Value, color2Value,
+            nsStyleAnimation::ComputeDistance(eCSSProperty_color,
+                                              color1Value, color2Value,
                                               colorDistance);
           NS_ABORT_IF_FALSE(ok, "should not fail");
           squareDistance += colorDistance * colorDistance;
@@ -399,8 +424,8 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
   #ifdef DEBUG
     PRBool ok =
   #endif
-      nsStyleAnimation::AddWeighted(aCoeff1, color1Value, aCoeff2, color2Value,
-                                    resultColorValue);
+      nsStyleAnimation::AddWeighted(eCSSProperty_color, aCoeff1, color1Value,
+                                    aCoeff2, color2Value, resultColorValue);
     NS_ABORT_IF_FALSE(ok, "should not fail");
     resultArray->Item(4).SetColorValue(resultColorValue.GetColorValue());
   }
@@ -419,7 +444,8 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
 }
 
 PRBool
-nsStyleAnimation::AddWeighted(double aCoeff1, const Value& aValue1,
+nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
+                              double aCoeff1, const Value& aValue1,
                               double aCoeff2, const Value& aValue2,
                               Value& aResultValue)
 {
@@ -433,9 +459,34 @@ nsStyleAnimation::AddWeighted(double aCoeff1, const Value& aValue1,
   switch (commonUnit) {
     case eUnit_Null:
     case eUnit_None:
-    case eUnit_Enumerated:
       success = PR_FALSE;
       break;
+    case eUnit_Enumerated:
+      switch (aProperty) {
+        case eCSSProperty_font_stretch: {
+          // Animate just like eUnit_Integer.
+          PRInt32 result = NS_floor(aCoeff1 * double(aValue1.GetIntValue()) +
+                                    aCoeff2 * double(aValue2.GetIntValue()));
+          aResultValue.SetIntValue(result, eUnit_Enumerated);
+          break;
+        }
+        default:
+          success = PR_FALSE;
+          break;
+      }
+      break;
+    case eUnit_Integer: {
+      // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
+      // says we should use floor
+      PRInt32 result = NS_floor(aCoeff1 * double(aValue1.GetIntValue()) +
+                                aCoeff2 * double(aValue2.GetIntValue()));
+      if (aProperty == eCSSProperty_font_weight) {
+        NS_ASSERTION(result > 0, "unexpected value");
+        result -= result % 100;
+      }
+      aResultValue.SetIntValue(result, eUnit_Integer);
+      break;
+    }
     case eUnit_Coord: {
       aResultValue.SetCoordValue(NSToCoordRound(
         aCoeff1 * aValue1.GetCoordValue() +
@@ -762,6 +813,12 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
       static_cast<nsCSSValue*>(aSpecifiedValue)->
         SetIntValue(aComputedValue.GetIntValue(), eCSSUnit_Enumerated);
       break;
+    case eUnit_Integer:
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                        "type mismatch");
+      static_cast<nsCSSValue*>(aSpecifiedValue)->
+        SetIntValue(aComputedValue.GetIntValue(), eCSSUnit_Integer);
+      break;
     case eUnit_Coord: {
       NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
                         "type mismatch");
@@ -914,8 +971,11 @@ StyleCoordToValue(const nsStyleCoord& aCoord, nsStyleAnimation::Value& aValue)
     case eStyleUnit_Enumerated:
       aValue.SetIntValue(aCoord.GetIntValue(),
                          nsStyleAnimation::eUnit_Enumerated);
+      break;
     case eStyleUnit_Integer:
-      return PR_FALSE;
+      aValue.SetIntValue(aCoord.GetIntValue(),
+                         nsStyleAnimation::eUnit_Integer);
+      break;
   }
   return PR_TRUE;
 }
@@ -1047,6 +1107,29 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
             aComputedValue.SetNoneValue();
           }
           break;
+        }
+
+        case eCSSProperty_font_stretch: {
+          PRInt16 stretch =
+            static_cast<const nsStyleFont*>(styleStruct)->mFont.stretch;
+          PR_STATIC_ASSERT(NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED == -4);
+          PR_STATIC_ASSERT(NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED == 4);
+          if (stretch < NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED ||
+              stretch > NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED) {
+            return PR_FALSE;
+          }
+          aComputedValue.SetIntValue(stretch, eUnit_Enumerated);
+          return PR_TRUE;
+        }
+
+        case eCSSProperty_font_weight: {
+          PRUint16 weight =
+            static_cast<const nsStyleFont*>(styleStruct)->mFont.weight;
+          if (weight % 100 != 0) {
+            return PR_FALSE;
+          }
+          aComputedValue.SetIntValue(weight, eUnit_Integer);
+          return PR_TRUE;
         }
 
         default:
@@ -1195,9 +1278,11 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
   return PR_FALSE;
 }
 
-nsStyleAnimation::Value::Value(PRInt32 aInt, EnumeratedConstructorType)
+nsStyleAnimation::Value::Value(PRInt32 aInt, Unit aUnit,
+                               IntegerConstructorType)
 {
-  mUnit = eUnit_Enumerated;
+  NS_ASSERTION(IsIntUnit(aUnit), "unit must be of integer type");
+  mUnit = aUnit;
   mValue.mInt = aInt;
 }
 
@@ -1238,6 +1323,7 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
     case eUnit_None:
       break;
     case eUnit_Enumerated:
+    case eUnit_Integer:
       mValue.mInt = aOther.mValue.mInt;
       break;
     case eUnit_Coord:
@@ -1300,6 +1386,7 @@ nsStyleAnimation::Value::SetNoneValue()
 void
 nsStyleAnimation::Value::SetIntValue(PRInt32 aInt, Unit aUnit)
 {
+  NS_ASSERTION(IsIntUnit(aUnit), "unit must be of integer type");
   FreeValue();
   mUnit = aUnit;
   mValue.mInt = aInt;
@@ -1384,6 +1471,7 @@ nsStyleAnimation::Value::operator==(const Value& aOther) const
     case eUnit_None:
       return PR_TRUE;
     case eUnit_Enumerated:
+    case eUnit_Integer:
       return mValue.mInt == aOther.mValue.mInt;
     case eUnit_Coord:
       return mValue.mCoord == aOther.mValue.mCoord;

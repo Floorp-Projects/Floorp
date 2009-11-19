@@ -92,23 +92,11 @@ function test() {
     // Detect when the password manager window is opened
     let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
              getService(Ci.nsIWindowWatcher);
-    let obs = {
-        observe: function(aSubject, aTopic, aData) {
-            // unregister ourself
-            ww.unregisterNotification(this);
-
-            let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
-            win.addEventListener("load", function() {
-                win.removeEventListener("load", arguments.callee, true);
-                setTimeout(doTest, 0);
-            }, true);
-        }
-    };
-    ww.registerNotification(obs);
 
     // Open the password manager dialog
     const PWMGR_DLG = "chrome://passwordmgr/content/passwordManager.xul";
     let pwmgrdlg = window.openDialog(PWMGR_DLG, "Toolkit:PasswordManager", "");
+    SimpleTest.waitForFocus(doTest, pwmgrdlg);
 
     // the meat of the test
     function doTest() {
@@ -133,12 +121,9 @@ function test() {
                             ww.unregisterNotification(this);
                         else if (aTopic == "domwindowopened") {
                             let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
-                            win.addEventListener("load", function() {
-                                win.removeEventListener("load", arguments.callee, true);
-                                setTimeout(function() {
-                                    EventUtils.synthesizeKey("VK_RETURN", {}, win)
-                                }, 0);
-                            }, true);
+                            SimpleTest.waitForFocus(function() {
+                                EventUtils.synthesizeKey("VK_RETURN", {}, win)
+                            }, win);
                         }
                     }
                 };
@@ -254,9 +239,16 @@ function test() {
                 checkColumnEntries(2, expectedValues);
                 checkSortDirection(passwordCol, true);
                 // cleanup
+                ww.registerNotification({
+                    observe: function(aSubject, aTopic, aData) {
+                        // unregister ourself
+                        ww.unregisterNotification(this);
+    
+                        pwmgr.removeAllLogins();
+                        finish();
+                    }
+                });
                 pwmgrdlg.close();
-                pwmgr.removeAllLogins();
-                finish();
             }
         }
 

@@ -95,4 +95,38 @@ extern void VMPI_setPageProtection(void *address,
                                    bool executableFlag,
                                    bool writeableFlag);
 
+//  Keep this warning-set relatively in sync with platform/win32/win32-platform.h in tamarin.
+
+#ifdef _MSC_VER
+	#pragma warning(disable:4201) // nonstandard extension used : nameless struct/union
+	#pragma warning(disable:4512) // assignment operator could not be generated
+	#pragma warning(disable:4511) // can't generate copy ctor
+	#pragma warning(disable:4127) // conditional expression is constant - appears to be compiler noise primarily
+    #pragma warning(disable:4611) // interaction between _setjmp and destruct
+    #pragma warning(disable:4725) // instruction may be inaccurate on some Pentiums
+    #pragma warning(disable:4611) // interaction between '_setjmp' and C++ object destruction is non-portable
+    #pragma warning(disable:4251) // X needs to have dll-interface to be used by clients of class Y
+
+    // enable some that are off even in /W4 mode, but are still handy
+    #pragma warning(default:4265)   // 'class' : class has virtual functions, but destructor is not virtual
+    #pragma warning(default:4905)   // wide string literal cast to 'LPSTR'
+    #pragma warning(default:4906)   // string literal cast to 'LPWSTR'
+    #pragma warning(default:4263)   // 'function' : member function does not override any base class virtual member function
+    #pragma warning(default:4264)   // 'virtual_function' : no override available for virtual member function from base 'class'; function is hidden
+    #pragma warning(default:4266)   // 'function' : no override available for virtual member function from base 'type'; function is hidden
+    #pragma warning(default:4242)   // 'identifier' : conversion from 'type1' to 'type2', possible loss of data
+    #pragma warning(default:4263)   // member function does not override any base class virtual member function
+    #pragma warning(default:4296)   // expression is always true (false) (Generally, an unsigned variable was used in a comparison operation with zero.)
+#endif
+
+// This part defined in avmshell.h but similarly required for a warning-free nanojit experience.
+#ifdef _MSC_VER
+#pragma warning(disable:4996)       // 'scanf' was declared deprecated
+#endif
+
+// This part is inhibited manually by the CFLAGS in the tamarin configury.
+#ifdef _MSC_VER
+#pragma warning(disable:4291)       // presence of a 'new' operator in nanojit/Allocator.h without matching 'delete'
+#endif
+
 #endif

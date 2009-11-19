@@ -175,3 +175,8 @@ deb: package debian/changelog debian/xulrunner.service debian/xulrunner.links $(
 	dh_shlibdeps; fakeroot dh_fixperms; fakeroot dh_installdeb; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
 endif
 
+DEB_BUILD_ARCH = $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+# package name comes from xulrunner/installer/debian/changelog.in
+DEB_PKG_NAME  = $(MOZ_PKG_APPNAME)_$(GRE_MILESTONE)-$(GRE_BUILDID)_$(DEB_BUILD_ARCH).deb
+# relative to $(DIST)
+UPLOAD_EXTRA_FILES += ../xulrunner/$(DEB_PKG_NAME)

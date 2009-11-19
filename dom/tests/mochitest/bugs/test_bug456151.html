@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=456151
+-->
+<head>
+  <title>Test for Bug 456151</title>
+  <script type="application/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=456151">Mozilla Bug 456151</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 456151 **/
+var intercepted = false;
+
+// Set up our new addEventListener
+var proto = HTMLParagraphElement.prototype;
+proto.oldAdd = proto.addEventListener;
+proto.addEventListener = function(ev, list, capt) {
+  intercepted = true;
+  this.oldAdd(ev, list, capt);
+}
+proto.oldRemove = proto.removeEventListener;
+proto.removeEventListener = function(ev, list, capt) {
+  intercepted = true;
+  this.oldRemove(ev, list, capt);
+}
+
+var called = false;
+
+var func = function() { called = true; };
+$("display").addEventListener("click", func, false);
+is(intercepted, true, "Should have interecepted addEventListener call");
+
+sendMouseEvent({type: "click"}, "display");
+is(called, true, "Should have called event listener");
+
+interecepted = false;
+called = false;
+
+$("display").removeEventListener("click", func, false);
+is(intercepted, true, "Should have interecepted removeEventListener call");
+
+sendMouseEvent({type: "click"}, "display");
+is(called, false, "Should have removed event listener");
+
+// And now some simple sanity tests
+var recursion = false;
+var x = document.createElement("span");
+HTMLSpanElement.prototype.addEventListener =
+  function(a, b, c) {
+    return x.addEventListener(a,b,c);
+  }
+try {
+  x.addEventListener("click", function() { called = true; }, false);
+} catch (e) {
+  recursion = e.message.match(/recursion/);
+}
+SimpleTest.isDeeply(recursion, ["recursion"], "Caught infinite recursion");
+
+</script>
+</pre>
+</body>
+</html>

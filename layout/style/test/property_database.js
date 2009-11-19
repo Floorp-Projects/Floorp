@@ -1252,7 +1252,7 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
-		other_values: [ "crosshair", "default", "pointer", "move", "e-resize", "ne-resize", "nw-resize", "n-resize", "se-resize", "sw-resize", "s-resize", "w-resize", "text", "wait", "help", "progress", "copy", "alias", "context-menu", "cell", "not-allowed", "col-resize", "row-resize", "no-drop", "vertical-text", "all-scroll", "nesw-resize", "nwse-resize", "ns-resize", "ew-resize", "none", "-moz-copy", "-moz-alias", "-moz-context-menu", "-moz-grab", "-moz-grabbing", "-moz-spinning", "-moz-zoom-in", "-moz-zoom-out" ],
+		other_values: [ "crosshair", "default", "pointer", "move", "e-resize", "ne-resize", "nw-resize", "n-resize", "se-resize", "sw-resize", "s-resize", "w-resize", "text", "wait", "help", "progress", "copy", "alias", "context-menu", "cell", "not-allowed", "col-resize", "row-resize", "no-drop", "vertical-text", "all-scroll", "nesw-resize", "nwse-resize", "ns-resize", "ew-resize", "none", "-moz-grab", "-moz-grabbing", "-moz-zoom-in", "-moz-zoom-out" ],
 		invalid_values: []
 	},
 	"direction": {
@@ -1361,7 +1361,7 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal", "400" ],
-		other_values: [ "bold", "100", "200", "300", "500", "600", "700", "800", "900" ],
+		other_values: [ "bold", "100", "200", "300", "500", "600", "700", "800", "900", "bolder", "lighter" ],
 		invalid_values: [ "107", "399", "401", "699", "710" ]
 	},
 	"height": {

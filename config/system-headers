@@ -555,7 +555,6 @@ pango/pango-break.h
 pango/pango-fontmap.h
 pango/pango.h
 pango/pangoxft.h
-pango/pangox.h
 pango/pango-utils.h
 pango-types.h
 pascal.h

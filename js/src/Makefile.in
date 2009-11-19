@@ -194,6 +194,7 @@ INSTALLED_HEADERS = \
 		jsmath.h \
 		jsnum.h \
 		jsobj.h \
+		jsobjinlines.h \
 		json.h \
 		jsopcode.tbl \
 		jsopcode.h \

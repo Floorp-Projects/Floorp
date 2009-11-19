@@ -505,3 +505,8 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/FastStartup.js
 #endif
 #endif
+
+; [OS/2]
+#ifdef XP_OS2
+@BINPATH@/MozSounds.cmd
+#endif

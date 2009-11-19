@@ -70,7 +70,7 @@ function test_normalize_crash_if_media_missing()
 {
   const a="a".charCodeAt(0);
   const z="z".charCodeAt(0);
-  for (i = a; i <= z; ++i)
+  for (var i = a; i <= z; ++i)
   {
     try
     {

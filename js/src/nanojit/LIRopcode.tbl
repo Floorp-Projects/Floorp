@@ -100,7 +100,7 @@ OPDEF(j,        19, 0, Op2)     // jump always
 OPDEF(jt,       20, 1, Op2)     // jump if true
 OPDEF(jf,       21, 1, Op2)     // jump if false
 OPDEF(label,    22, 0, Op0)     // a jump target (no machine code is emitted for this)
-OPDEF(ji,       23,-1, None)    // indirect jump (currently not implemented)
+OPDEF(jtbl,     23, 1, Jtbl)    // jump to address in table
 
 /* operators */
 

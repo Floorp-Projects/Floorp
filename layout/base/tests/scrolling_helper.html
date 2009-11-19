@@ -91,6 +91,13 @@ body > div {
   <div style="margin-top:20px; height:20px; margin-bottom:300px; background-color:blue; overflow:hidden;"></div>
 </div>
 
+<div id="testNonmovingClipArea">
+  <div style="height:300px; background:-moz-linear-gradient(top, red, black);"></div>
+  <div style="position:fixed; left:0; top:150px; width:200px; height:50px; background:yellow; overflow:hidden; opacity:0.5;">
+    <div style="height:50px; background:-moz-linear-gradient(top, green, yellow); opacity:0.3;"></div>
+  </div>
+</div>
+
 <div id="testFixedOverUniform">
   <div style="height:300px; background:blue;"></div>
   <div style="position:fixed; left:0; top:50px; width:100px; height:45px; background:yellow; opacity:0.5;"></div>
@@ -230,6 +237,13 @@ function testMovingClipArea(blitRegion, paintRegion) {
      "Should blit everything that's affected: " + blitRegion.toString());
   ok(paintRegion.isEmpty(),
      "Shouldn't repaint anything: " + paintRegion.toString());
+}
+
+function testNonmovingClipArea(blitRegion, paintRegion) {
+  ok(blitRegion.equalsRegion(new Region([[0,0,200,130]])),
+     "Should only blit necessary strip: " + blitRegion.toString());
+  ok(paintRegion.equalsRegion(new Region([[0,130,200,200]])),
+     "Should only repaint necessary strip: " + paintRegion.toString());
 }
 
 function testFixedOverUniform(blitRegion, paintRegion) {

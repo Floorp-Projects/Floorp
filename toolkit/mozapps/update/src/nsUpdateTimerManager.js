@@ -191,7 +191,7 @@ TimerManager.prototype = {
 
       let interval = getPref("getIntPref", prefInterval, defaultInterval);
       prefLastUpdate = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/,
-                                                                      timerID);
+                                                                  timerID);
       if (gPref.prefHasUserValue(prefLastUpdate)) {
         lastUpdateTime = gPref.getIntPref(prefLastUpdate);
       }

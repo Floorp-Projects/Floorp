@@ -50,12 +50,13 @@
 #include "nsCharsetAlias.h"
 
 //--------------------------------------------------------------
-NS_IMPL_ISUPPORTS1(nsCharsetAlias2, nsICharsetAlias)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsCharsetAlias2, nsICharsetAlias)
 
 //--------------------------------------------------------------
 nsCharsetAlias2::nsCharsetAlias2()
+  : mDelegate(nsnull)
+  , mDelegateMutex("nsCharsetAlias2 mDelegateMutex")
 {
-  mDelegate = nsnull; // delay the load of mDelegate untill we need it.
 }
 //--------------------------------------------------------------
 nsCharsetAlias2::~nsCharsetAlias2()
@@ -78,8 +79,8 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
                                             nsACString& oResult)
 {
    if (aAlias.IsEmpty()) return NS_ERROR_NULL_POINTER;
-   NS_TIMELINE_START_TIMER("nsCharsetAlias2:GetPreferred");
 
+   NS_TIMELINE_START_TIMER("nsCharsetAlias2:GetPreferred");
 
    // Delay loading charsetalias.properties by hardcoding the most
    // frequent aliases.  Note that it's possible to recur in to this
@@ -98,13 +99,13 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
    oResult.Truncate();
 
    if(!mDelegate) {
-     //load charsetalias.properties string bundle with all remaining aliases
-     // we may need to protect the following section with a lock so we won't call the
-     // 'new nsGREResProperties' from two different threads
-     mDelegate = new nsGREResProperties( NS_LITERAL_CSTRING("charsetalias.properties") );
-     NS_ASSERTION(mDelegate, "cannot create nsGREResProperties");
-     if(nsnull == mDelegate)
-       return NS_ERROR_OUT_OF_MEMORY;
+     mozilla::MutexAutoLock autoLock(mDelegateMutex);
+     if (!mDelegate) {
+       mDelegate = new nsGREResProperties( NS_LITERAL_CSTRING("charsetalias.properties") );
+       NS_ASSERTION(mDelegate, "cannot create nsGREResProperties");
+       if(nsnull == mDelegate)
+         return NS_ERROR_OUT_OF_MEMORY;
+     }
    }
 
    NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");

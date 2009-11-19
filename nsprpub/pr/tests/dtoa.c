@@ -47,6 +47,7 @@
  *
  *****************************************************************************/
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
 #include <locale.h>
@@ -61,6 +62,7 @@ int main(int argc, char **argv)
     double num1;
     double zero = 0.0;
     char   cnvt[50];
+    char  *thousands;
     
     num = 1e24;
     num1 = PR_strtod("1e24",NULL);
@@ -195,7 +197,6 @@ int main(int argc, char **argv)
         failed_already = 1;
     }
 
-
     num = -1.0000000001e-21;
     num1 = PR_strtod("-1.0000000001e-21",NULL);
     if(num1 != num){
@@ -214,6 +215,26 @@ int main(int argc, char **argv)
      * build.
      */
     num1 = PR_strtod("4e-356",NULL);
+
+    /*
+     * A very long input with ~384K digits.
+     * Bug 516396: Should not crash.
+     * Bug 521306: Should return 0 without converting the input.
+     */
+#define LENGTH (384 * 1024)
+    thousands = (char *)malloc(LENGTH);
+    thousands[0] = '0';
+    thousands[1] = '.';
+    memset(&thousands[2], '1', LENGTH - 3);
+    thousands[LENGTH - 1] = '\0';
+    num = 0;
+    num1 = PR_strtod(thousands,NULL);
+    free(thousands);
+    if(num1 != num){
+        fprintf(stderr,"Failed to convert numeric value %s\n",
+                "0.1111111111111111...");
+        failed_already = 1;
+    }
 
     if (failed_already) {
         printf("FAILED\n");

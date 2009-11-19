@@ -162,6 +162,7 @@ const char *const js_common_atom_names[] = {
     js_configurable_str,        /* configurableAtom             */
     js_writable_str,            /* writableAtom                 */
     js_value_str,               /* valueAtom                    */
+    "use strict",               /* useStrictAtom                */
 
 #if JS_HAS_XML_SUPPORT
     js_etago_str,               /* etagoAtom                    */

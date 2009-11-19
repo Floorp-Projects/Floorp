@@ -121,11 +121,12 @@ struct REHashFn;
 struct REHashKey;
 struct FrameInfo;
 struct VMSideExit;
-struct VMFragment;
+struct TreeFragment;
 struct InterpState;
 template<typename T> class Queue;
 typedef Queue<uint16> SlotList;
-typedef nanojit::HashMap<REHashKey, nanojit::Fragment*, REHashFn> REHashMap;
+struct REFragment;
+typedef nanojit::HashMap<REHashKey, REFragment*, REHashFn> REHashMap;
 
 #if defined(JS_JIT_SPEW) || defined(DEBUG)
 struct FragPI;
@@ -135,20 +136,20 @@ typedef nanojit::HashMap<uint32, FragPI, nanojit::DefaultHash<uint32> > FragStat
 /* Holds the execution state during trace execution. */
 struct InterpState
 {
-    double*        sp;                  // native stack pointer, stack[0] is spbase[0]
-    FrameInfo**    rp;                  // call stack pointer
     JSContext*     cx;                  // current VM context handle
+    double*        stackBase;           // native stack base
+    double*        sp;                  // native stack pointer, stack[0] is spbase[0]
     double*        eos;                 // first unusable word after the native stack / begin of globals
-    void*          eor;                 // first unusable word after the call stack
+    FrameInfo**    callstackBase;       // call stack base
     void*          sor;                 // start of rp stack
+    FrameInfo**    rp;                  // call stack pointer
+    void*          eor;                 // first unusable word after the call stack
     VMSideExit*    lastTreeExitGuard;   // guard we exited on during a tree call
     VMSideExit*    lastTreeCallGuard;   // guard we want to grow from if the tree
                                         // call exit guard mismatched
     void*          rpAtLastTreeCall;    // value of rp at innermost tree call guard
     VMSideExit*    outermostTreeExitGuard; // the last side exit returned by js_CallTree
     TreeInfo*      outermostTree;       // the outermost tree we initially invoked
-    double*        stackBase;           // native stack base
-    FrameInfo**    callstackBase;       // call stack base
     uintN*         inlineCallCountp;    // inline call count counter
     VMSideExit**   innermostNestedGuardp;
     VMSideExit*    innermost;
@@ -163,10 +164,13 @@ struct InterpState
     // Used to communicate the location of the return value in case of a deep bail.
     double*        deepBailSp;
 
-
     // Used when calling natives from trace to root the vp vector.
     uintN          nativeVpLen;
     jsval*         nativeVp;
+
+    InterpState(JSContext *cx, JSTraceMonitor *tm, TreeInfo *ti,
+                uintN &inlineCallCountp, VMSideExit** innermostNestedGuardp);
+    ~InterpState();
 };
 
 /*
@@ -182,7 +186,7 @@ struct TraceNativeStorage
 
     double *stack() { return stack_global_buf; }
     double *global() { return stack_global_buf + MAX_NATIVE_STACK_SLOTS; }
-    FrameInfo **callstack() { return callstack_buf; } 
+    FrameInfo **callstack() { return callstack_buf; }
 };
 
 /* Holds data to track a single globa. */
@@ -246,11 +250,9 @@ struct JSTraceMonitor {
 #endif
 
     TraceRecorder*          recorder;
-    jsval                   *reservedDoublePool;
-    jsval                   *reservedDoublePoolPtr;
 
     struct GlobalState      globalStates[MONITOR_N_GLOBAL_STATES];
-    struct VMFragment*      vmfragments[FRAGMENT_TABLE_SIZE];
+    struct TreeFragment*    vmfragments[FRAGMENT_TABLE_SIZE];
     JSDHashTable            recordAttempts;
 
     /*
@@ -300,6 +302,8 @@ struct JSTraceMonitor {
 
     /* Mark all objects baked into native code in the code cache. */
     void mark(JSTracer *trc);
+
+    bool outOfMemory() const;
 };
 
 typedef struct InterpStruct InterpStruct;
@@ -343,15 +347,45 @@ struct JSEvalCacheMeter {
                         _(display), _(flat), _(setupvar), _(badfunarg)
 # define identity(x)    x
 
-typedef struct JSFunctionMeter {
+struct JSFunctionMeter {
     int32 FUNCTION_KIND_METER_LIST(identity);
-} JSFunctionMeter;
+};
 
 # undef identity
 #endif
 
+struct JSLocalRootChunk;
+
+#define JSLRS_CHUNK_SHIFT       8
+#define JSLRS_CHUNK_SIZE        JS_BIT(JSLRS_CHUNK_SHIFT)
+#define JSLRS_CHUNK_MASK        JS_BITMASK(JSLRS_CHUNK_SHIFT)
+
+struct JSLocalRootChunk {
+    jsval               roots[JSLRS_CHUNK_SIZE];
+    JSLocalRootChunk    *down;
+};
+
+struct JSLocalRootStack {
+    uint32              scopeMark;
+    uint32              rootCount;
+    JSLocalRootChunk    *topChunk;
+    JSLocalRootChunk    firstChunk;
+
+    /* See comments in js_NewFinalizableGCThing. */
+    JSGCFreeLists       gcFreeLists;
+};
+
+const uint32 JSLRS_NULL_MARK = uint32(-1);
+
 struct JSThreadData {
     JSGCFreeLists       gcFreeLists;
+
+    /*
+     * Flag indicating that we are waiving any soft limits on the GC heap
+     * because we want allocations to be infallible (except when we hit
+     * a hard quota).
+     */
+    bool                waiveGCQuota;
 
     /*
      * The GSN cache is per thread since even multi-cx-per-thread embeddings
@@ -364,6 +398,9 @@ struct JSThreadData {
 
     /* Random number generator state, used by jsmath.cpp. */
     int64               rngSeed;
+
+    /* Optional stack of heap-allocated scoped local GC roots. */
+    JSLocalRootStack    *localRootStack;
 
 #ifdef JS_TRACER
     /* Trace-tree JIT recorder/interpreter state. */
@@ -391,18 +428,11 @@ struct JSThreadData {
 
     jsuword             nativeEnumCache[NATIVE_ENUM_CACHE_SIZE];
 
-#ifdef JS_THREADSAFE
-    /*
-     * Deallocator task for this thread.
-     */
-    JSFreePointerListTask *deallocatorTask;
-#endif
-
-    void mark(JSTracer *trc) {
-#ifdef JS_TRACER
-        traceMonitor.mark(trc);
-#endif
-    }
+    void init();
+    void finish();
+    void mark(JSTracer *trc);
+    void purge(JSContext *cx);
+    void purgeGCFreeLists();
 };
 
 #ifdef JS_THREADSAFE
@@ -426,6 +456,11 @@ struct JSThread {
      * locks on each JS_malloc.
      */
     ptrdiff_t           gcThreadMallocBytes;
+
+    /*
+     * Deallocator task for this thread.
+     */
+    JSFreePointerListTask *deallocatorTask;
 
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
@@ -937,26 +972,6 @@ typedef struct JSResolvingEntry {
 #define JSRESFLAG_LOOKUP        0x1     /* resolving id from lookup */
 #define JSRESFLAG_WATCH         0x2     /* resolving id from watch */
 
-typedef struct JSLocalRootChunk JSLocalRootChunk;
-
-#define JSLRS_CHUNK_SHIFT       8
-#define JSLRS_CHUNK_SIZE        JS_BIT(JSLRS_CHUNK_SHIFT)
-#define JSLRS_CHUNK_MASK        JS_BITMASK(JSLRS_CHUNK_SHIFT)
-
-struct JSLocalRootChunk {
-    jsval               roots[JSLRS_CHUNK_SIZE];
-    JSLocalRootChunk    *down;
-};
-
-typedef struct JSLocalRootStack {
-    uint32              scopeMark;
-    uint32              rootCount;
-    JSLocalRootChunk    *topChunk;
-    JSLocalRootChunk    firstChunk;
-} JSLocalRootStack;
-
-#define JSLRS_NULL_MARK ((uint32) -1)
-
 /*
  * Macros to push/pop JSTempValueRooter instances to context-linked stack of
  * temporary GC roots. If you need to protect a result value that flows out of
@@ -1184,9 +1199,6 @@ struct JSContext {
     /* PDL of stack headers describing stack slots not rooted by argv, etc. */
     JSStackHeader       *stackHeaders;
 
-    /* Optional stack of heap-allocated scoped local GC roots. */
-    JSLocalRootStack    *localRootStack;
-
     /* Stack of thread-stack-allocated temporary GC roots. */
     JSTempValueRooter   *tempValueRooters;
 
@@ -1214,17 +1226,15 @@ struct JSContext {
 
 #ifdef JS_THREADSAFE
     inline void createDeallocatorTask() {
-        JSThreadData* tls = JS_THREAD_DATA(this);
-        JS_ASSERT(!tls->deallocatorTask);
+        JS_ASSERT(!thread->deallocatorTask);
         if (runtime->deallocatorThread && !runtime->deallocatorThread->busy())
-            tls->deallocatorTask = new JSFreePointerListTask();
+            thread->deallocatorTask = new JSFreePointerListTask();
     }
 
     inline void submitDeallocatorTask() {
-        JSThreadData* tls = JS_THREAD_DATA(this);
-        if (tls->deallocatorTask) {
-            runtime->deallocatorThread->schedule(tls->deallocatorTask);
-            tls->deallocatorTask = NULL;
+        if (thread->deallocatorTask) {
+            runtime->deallocatorThread->schedule(thread->deallocatorTask);
+            thread->deallocatorTask = NULL;
         }
     }
 #endif
@@ -1306,7 +1316,7 @@ struct JSContext {
         if (!p)
             return;
         if (thread) {
-            JSFreePointerListTask* task = JS_THREAD_DATA(this)->deallocatorTask;
+            JSFreePointerListTask* task = thread->deallocatorTask;
             if (task) {
                 task->add(p);
                 return;
@@ -1738,9 +1748,6 @@ js_ForgetLocalRoot(JSContext *cx, jsval v);
 
 extern int
 js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v);
-
-extern void
-js_TraceLocalRoots(JSTracer *trc, JSLocalRootStack *lrs);
 
 /*
  * Report an exception, which is currently realized as a printf-style format

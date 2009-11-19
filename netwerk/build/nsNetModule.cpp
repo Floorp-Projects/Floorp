@@ -299,6 +299,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNotifyAddrListener, Init)
 #elif defined(MOZ_WIDGET_COCOA)
 #include "nsNetworkLinkService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNetworkLinkService, Init)
+#elif defined(MOZ_ENABLE_LIBCONIC)
+#include "nsMaemoNetworkLinkService.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMaemoNetworkLinkService, Init)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1163,6 +1166,12 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_NETWORK_LINK_SERVICE_CID,
       NS_NETWORK_LINK_SERVICE_CONTRACTID,
       nsNetworkLinkServiceConstructor
+    },
+#elif defined(MOZ_ENABLE_LIBCONIC)
+    { NS_NETWORK_LINK_SERVICE_CLASSNAME,
+      NS_NETWORK_LINK_SERVICE_CID,
+      NS_NETWORK_LINK_SERVICE_CONTRACTID,
+      nsMaemoNetworkLinkServiceConstructor
     },
 #endif
 };

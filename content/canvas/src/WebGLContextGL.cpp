@@ -298,54 +298,6 @@ WebGLContext::GetCanvas(nsIDOMHTMLCanvasElement **aCanvas)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* readonly attribute nsIWebGLBuffer currentArrayBufferBinding; */
-NS_IMETHODIMP
-WebGLContext::GetCurrentArrayBufferBinding(nsIWebGLBuffer **aCurrentArrayBufferBinding)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute nsIWebGLBuffer currentElementArrayBufferBinding; */
-NS_IMETHODIMP
-WebGLContext::GetCurrentElementArrayBufferBinding(nsIWebGLBuffer **aCurrentElementArrayBufferBinding)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute nsIWebGLFramebuffer currentFramebufferBinding; */
-NS_IMETHODIMP
-WebGLContext::GetCurrentFramebufferBinding(nsIWebGLFramebuffer **aCurrentFramebufferBinding)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute nsIWebGLRenderbuffer currentRenderbufferBinding; */
-NS_IMETHODIMP
-WebGLContext::GetCurrentRenderbufferBinding(nsIWebGLRenderbuffer **aCurrentRenderbufferBinding)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute nsIWebGLTexture currentTextureBinding2D; */
-NS_IMETHODIMP
-WebGLContext::GetCurrentTextureBinding2D(nsIWebGLTexture **aCurrentTextureBinding2D)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute nsIWebGLTexture currentTextureBindingCubeMap; */
-NS_IMETHODIMP
-WebGLContext::GetCurrentTextureBindingCubeMap(nsIWebGLTexture **aCurrentTextureBindingCubeMap)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute nsIWebGLProgram currentProgram; */
-NS_IMETHODIMP
-WebGLContext::GetCurrentProgram(nsIWebGLProgram **aCurrentProgram)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 /* void present (); */
 NS_IMETHODIMP
@@ -1510,6 +1462,34 @@ WebGLContext::GetBufferParameteri(GLenum target, GLenum pname, GLint *retval)
 }
 
 NS_IMETHODIMP
+WebGLContext::GetBufferParameter(GLenum target, GLenum pname)
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    MakeContextCurrent();
+
+    switch (pname) {
+        case LOCAL_GL_BUFFER_SIZE:
+        case LOCAL_GL_BUFFER_USAGE:
+        case LOCAL_GL_BUFFER_ACCESS:
+        case LOCAL_GL_BUFFER_MAPPED:
+        {
+            PRInt32 iv = 0;
+            gl->fGetBufferParameteriv(target, pname, (GLint*) &iv);
+            js.SetRetVal(iv);
+        }
+            break;
+
+        default:
+            return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 WebGLContext::GetFramebufferAttachmentParameteri(GLenum target, GLenum attachment, GLenum pname, GLint *retval)
 {
     NativeJSContext js;
@@ -1547,7 +1527,77 @@ WebGLContext::GetFramebufferAttachmentParameteri(GLenum target, GLenum attachmen
 }
 
 NS_IMETHODIMP
+WebGLContext::GetFramebufferAttachmentParameter(GLenum target, GLenum attachment, GLenum pname)
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    MakeContextCurrent();
+
+    switch (attachment) {
+        case LOCAL_GL_COLOR_ATTACHMENT0:
+        case LOCAL_GL_DEPTH_ATTACHMENT:
+        case LOCAL_GL_STENCIL_ATTACHMENT:
+            break;
+        default:
+            return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    switch (pname) {
+        case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
+        case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
+        case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
+        case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
+        {
+            PRInt32 iv = 0;
+            gl->fGetFramebufferAttachmentParameteriv(target, attachment, pname, (GLint*) &iv);
+            js.SetRetVal(iv);
+        }
+            break;
+
+        default:
+            return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 WebGLContext::GetRenderbufferParameteri(GLenum target, GLenum pname, GLint *retval)
+{
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    MakeContextCurrent();
+
+    switch (pname) {
+        case LOCAL_GL_RENDERBUFFER_WIDTH:
+        case LOCAL_GL_RENDERBUFFER_HEIGHT:
+        case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
+        case LOCAL_GL_RENDERBUFFER_RED_SIZE:
+        case LOCAL_GL_RENDERBUFFER_GREEN_SIZE:
+        case LOCAL_GL_RENDERBUFFER_BLUE_SIZE:
+        case LOCAL_GL_RENDERBUFFER_ALPHA_SIZE:
+        case LOCAL_GL_RENDERBUFFER_DEPTH_SIZE:
+        case LOCAL_GL_RENDERBUFFER_STENCIL_SIZE:
+        {
+            PRInt32 iv = 0;
+            gl->fGetRenderbufferParameteriv(target, pname, (GLint*) &iv);
+            js.SetRetVal(iv);
+        }
+            break;
+
+        default:
+            return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname)
 {
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -1627,6 +1677,45 @@ WebGLContext::GetError(GLenum *_retval)
 
 NS_IMETHODIMP
 WebGLContext::GetProgrami(nsIWebGLProgram *prog, PRUint32 pname, GLint *retval)
+{
+    if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
+        return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
+
+    GLuint program = static_cast<WebGLProgram*>(prog)->GLName();
+
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    MakeContextCurrent();
+
+    switch (pname) {
+        case LOCAL_GL_CURRENT_PROGRAM:
+        case LOCAL_GL_DELETE_STATUS:
+        case LOCAL_GL_LINK_STATUS:
+        case LOCAL_GL_VALIDATE_STATUS:
+        case LOCAL_GL_ATTACHED_SHADERS:
+        case LOCAL_GL_INFO_LOG_LENGTH:
+        case LOCAL_GL_ACTIVE_UNIFORMS:
+        case LOCAL_GL_ACTIVE_UNIFORM_MAX_LENGTH:
+        case LOCAL_GL_ACTIVE_ATTRIBUTES:
+        case LOCAL_GL_ACTIVE_ATTRIBUTE_MAX_LENGTH:
+        {
+            PRInt32 iv = 0;
+            gl->fGetProgramiv(program, pname, (GLint*) &iv);
+            js.SetRetVal(iv);
+        }
+            break;
+
+        default:
+            return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+WebGLContext::GetProgramParameter(nsIWebGLProgram *prog, PRUint32 pname)
 {
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
@@ -1863,35 +1952,6 @@ WebGLContext::GetTexParameterf(GLenum target, GLenum pname, GLfloat *retval)
     return NS_OK;
 }
 
-/* nsICanvasArray getTexParameterfv (in GLenum target, in GLenum pname); */
-NS_IMETHODIMP
-WebGLContext::GetTexParameterfv(GLenum target, GLenum pname, nsICanvasArray **retval)
-{
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
-    MakeContextCurrent();
-
-    switch (pname) {
-        case LOCAL_GL_TEXTURE_MIN_FILTER:
-        case LOCAL_GL_TEXTURE_MAG_FILTER:
-        case LOCAL_GL_TEXTURE_WRAP_S:
-        case LOCAL_GL_TEXTURE_WRAP_T:
-        {
-            float fv = 0;
-            gl->fGetTexParameterfv(target, pname, (GLfloat*) &fv);
-            js.SetRetVal(&fv, 1);
-        }
-            break;
-
-        default:
-            return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 WebGLContext::GetTexParameteri(GLenum target, GLenum pname, GLint *retval)
 {
@@ -1920,9 +1980,8 @@ WebGLContext::GetTexParameteri(GLenum target, GLenum pname, GLint *retval)
     return NS_OK;
 }
 
-/* nsICanvasArray getTexParameteriv (in GLenum target, in GLenum pname); */
 NS_IMETHODIMP
-WebGLContext::GetTexParameteriv(GLenum target, GLenum pname, nsICanvasArray **retval)
+WebGLContext::GetTexParameter(GLenum target, GLenum pname)
 {
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -1936,9 +1995,9 @@ WebGLContext::GetTexParameteriv(GLenum target, GLenum pname, nsICanvasArray **re
         case LOCAL_GL_TEXTURE_WRAP_S:
         case LOCAL_GL_TEXTURE_WRAP_T:
         {
-            PRInt32 iv = 0;
-            gl->fGetTexParameteriv(target, pname, (GLint*) &iv);
-            js.SetRetVal(&iv, 1);
+            float fv = 0;
+            gl->fGetTexParameterfv(target, pname, (GLfloat*) &fv);
+            js.SetRetVal(fv);
         }
             break;
 
@@ -1950,8 +2009,9 @@ WebGLContext::GetTexParameteriv(GLenum target, GLenum pname, nsICanvasArray **re
 }
 
 /* XXX fix */
+/* any getUniform(in WebGLProgram program, in WebGLUniformLocation location) raises(DOMException); */
 NS_IMETHODIMP
-WebGLContext::GetUniformf(nsIWebGLProgram *prog, GLint location, GLfloat *retval)
+WebGLContext::GetUniform(nsIWebGLProgram *prog, GLint location)
 {
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
@@ -1998,25 +2058,6 @@ WebGLContext::GetUniformf(nsIWebGLProgram *prog, GLint location, GLfloat *retval
 
     return NS_OK;
 }
-/* nsICanvasArray getUniformfv (in nsIWebGLProgram program, in GLint location); */
-NS_IMETHODIMP
-WebGLContext::GetUniformfv(nsIWebGLProgram *program, GLint location, nsICanvasArray **retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-/* GLint getUniformi (in nsIWebGLProgram program, in GLint location); */
-NS_IMETHODIMP
-WebGLContext::GetUniformi(nsIWebGLProgram *program, GLint location, GLint *retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* nsICanvasArray getUniformiv (in nsIWebGLProgram program, in GLint location); */
-NS_IMETHODIMP
-WebGLContext::GetUniformiv(nsIWebGLProgram *program, GLint location, nsICanvasArray **retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP
 WebGLContext::GetUniformLocation(nsIWebGLProgram *prog, const nsAString& name, GLint *retval)
@@ -2032,55 +2073,7 @@ WebGLContext::GetUniformLocation(nsIWebGLProgram *prog, const nsAString& name, G
 }
 
 NS_IMETHODIMP
-WebGLContext::GetVertexAttribf(GLuint index, GLenum pname, GLfloat *retval)
-{
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
-    MakeContextCurrent();
-
-    switch (pname) {
-        // int
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE:
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
-        {
-            PRInt32 iv = 0;
-            gl->fGetVertexAttribiv(index, pname, (GLint*) &iv);
-            *retval = (GLfloat) iv;
-        }
-            break;
-
-        case LOCAL_GL_CURRENT_VERTEX_ATTRIB:
-        {
-            GLfloat fv[4] = { 0 };
-            gl->fGetVertexAttribfv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, &fv[0]);
-            js.SetRetVal(fv, 4);
-        }
-            break;
-
-        // not supported; doesn't make sense to return a pointer unless we have some kind of buffer object abstraction
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_POINTER:
-        default:
-            return NS_ERROR_NOT_IMPLEMENTED;
-
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-WebGLContext::GetVertexAttribfv(GLuint index, GLenum pname, nsICanvasArray **retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-WebGLContext::GetVertexAttribi(GLuint index, GLenum pname, GLint *retval)
+WebGLContext::GetVertexAttrib(GLuint index, GLenum pname)
 {
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -2119,12 +2112,6 @@ WebGLContext::GetVertexAttribi(GLuint index, GLenum pname, GLint *retval)
     }
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-WebGLContext::GetVertexAttribiv(GLuint index, GLenum pname, nsICanvasArray **retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* GLuint getVertexAttribOffset (in GLuint index, in GLenum pname); */
@@ -2744,11 +2731,38 @@ WebGLContext::GetShaderi(nsIWebGLShader *shobj, GLenum pname, GLint *_retval)
     return NS_OK;
 }
 
-/* nsICanvasIntArray getShaderiv (in nsIWebGLShader shader, in GLenum pname); */
 NS_IMETHODIMP
-WebGLContext::GetShaderiv(nsIWebGLShader *shader, GLenum pname, nsICanvasIntArray **retval)
+WebGLContext::GetShaderParameter(nsIWebGLShader *shobj, GLenum pname)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (!shobj || static_cast<WebGLShader*>(shobj)->Deleted())
+        return ErrorMessage("%s: shader is null or deleted!", __FUNCTION__);
+
+    GLuint shader = static_cast<WebGLShader*>(shobj)->GLName();
+    
+    NativeJSContext js;
+    if (NS_FAILED(js.error))
+        return js.error;
+
+    MakeContextCurrent();
+
+    switch (pname) {
+        case LOCAL_GL_SHADER_TYPE:
+        case LOCAL_GL_DELETE_STATUS:
+        case LOCAL_GL_COMPILE_STATUS:
+        case LOCAL_GL_INFO_LOG_LENGTH:
+        case LOCAL_GL_SHADER_SOURCE_LENGTH:
+        {
+            PRInt32 iv = 0;
+            gl->fGetShaderiv(shader, pname, (GLint*) &iv);
+            js.SetRetVal(iv);
+        }
+            break;
+
+        default:
+            return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2960,9 +2974,7 @@ WebGLContext::TexSubImage2D()
                                    &argTarget, &argLevel, &argX, &argY,
                                    &argWidth, &argHeight, &argFormat, &argType,
                                    &argPixelsObj) ||
-            !argPixelsObj ||
-            !::JS_IsArrayObject(js.ctx, argPixelsObj) ||
-            !::JS_GetArrayLength(js.ctx, argPixelsObj, &argPixelsLen))
+            !argPixelsObj)
             {
                 return ErrorMessage("texSubImage2D: argument error");
                 return NS_ERROR_DOM_SYNTAX_ERR;
@@ -3043,12 +3055,17 @@ WebGLContext::TexSubImage2D()
             return NS_ERROR_DOM_SYNTAX_ERR;
         }
 
-        SimpleBuffer sbuffer(bufferType, bufferSize, js.ctx, argPixelsObj, argPixelsLen);
-        if (!sbuffer.Valid())
-            return NS_ERROR_FAILURE;
+        nsCOMPtr<nsICanvasArray> arrayObj;
+        nsresult rv;
+        rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, argPixelsObj, NS_GET_IID(nsISupports), getter_AddRefs(arrayObj));
+        arrayObj = do_QueryInterface(arrayObj, &rv);
+
+        if (NS_FAILED(rv) || !arrayObj) {
+            return ErrorMessage("texSubImage2D: pixels arg is not a WebGL array");
+        }
 
         MakeContextCurrent();
-        gl->fTexSubImage2D (argTarget, argLevel, argX, argY, argWidth, argHeight, argFormat, argType, (void *) sbuffer.data);
+        gl->fTexSubImage2D (argTarget, argLevel, argX, argY, argWidth, argHeight, argFormat, argType, arrayObj->NativePointer());
     }
     return NS_OK;
 }
@@ -3115,9 +3132,7 @@ WebGLContext::TexImage2D()
                                    &argTarget, &argLevel, &argInternalFormat, &argWidth,
                                    &argHeight, &argBorder, &argFormat, &argType,
                                    &argPixelsObj) ||
-            !argPixelsObj ||
-            !::JS_IsArrayObject(js.ctx, argPixelsObj) ||
-            !::JS_GetArrayLength(js.ctx, argPixelsObj, &argPixelsLen))
+            !argPixelsObj)
             {
                 return ErrorMessage("texImage2D: argument error");
                 return NS_ERROR_DOM_SYNTAX_ERR;
@@ -3225,12 +3240,17 @@ WebGLContext::TexImage2D()
                 return NS_ERROR_DOM_SYNTAX_ERR;
             }
 
-            SimpleBuffer sbuffer(bufferType, bufferSize, js.ctx, argPixelsObj, argPixelsLen);
-            if (!sbuffer.Valid())
-            return NS_ERROR_FAILURE;
+            nsCOMPtr<nsICanvasArray> arrayObj;
+            nsresult rv;
+            rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, argPixelsObj, NS_GET_IID(nsISupports), getter_AddRefs(arrayObj));
+            arrayObj = do_QueryInterface(arrayObj, &rv);
+
+            if (NS_FAILED(rv) || !arrayObj) {
+                return ErrorMessage("texImage2D: pixels arg is not a WebGL array");
+            }
 
             MakeContextCurrent();
-            gl->fTexImage2D (argTarget, argLevel, argInternalFormat, argWidth, argHeight, argBorder, argFormat, argType, (void *) sbuffer.data);
+            gl->fTexImage2D (argTarget, argLevel, argInternalFormat, argWidth, argHeight, argBorder, argFormat, argType, arrayObj->NativePointer());
         }
     }
     return NS_OK;

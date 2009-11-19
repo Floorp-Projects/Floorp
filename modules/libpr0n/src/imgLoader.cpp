@@ -1113,6 +1113,11 @@ PRBool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
   //
   void *key = (void *)aCX;
   if (request->mLoadId != key) {
+    // If we would need to revalidate this entry, but we're being told to
+    // bypass the cache, we don't allow this entry to be used.
+    if (aLoadFlags & nsIRequest::LOAD_BYPASS_CACHE)
+      return PR_FALSE;
+
     // Determine whether the cache aEntry must be revalidated...
     validateRequest = ShouldRevalidateEntry(aEntry, aLoadFlags, hasExpired);
 
@@ -1325,11 +1330,9 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
   if (!aURI)
     return NS_ERROR_NULL_POINTER;
 
-#if defined(PR_LOGGING)
   nsCAutoString spec;
   aURI->GetSpec(spec);
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::LoadImage", "aURI", spec.get());
-#endif
 
   *_retval = nsnull;
 
@@ -1366,43 +1369,37 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
   nsRefPtr<imgCacheEntry> entry;
 
-  // If we're bypassing the cache, we are guaranteed to want a new cache entry,
-  // since we're going to do a new load.
-  if (requestFlags & nsIRequest::LOAD_BYPASS_CACHE) {
-    RemoveFromCache(aURI);
-  } else {
-    // Look in the cache for our URI, and then validate it.
-    // XXX For now ignore aCacheKey. We will need it in the future
-    // for correctly dealing with image load requests that are a result
-    // of post data.
-    imgCacheTable &cache = GetCache(aURI);
+  // Look in the cache for our URI, and then validate it.
+  // XXX For now ignore aCacheKey. We will need it in the future
+  // for correctly dealing with image load requests that are a result
+  // of post data.
+  imgCacheTable &cache = GetCache(aURI);
 
-    nsCAutoString spec;
-    aURI->GetSpec(spec);
+  if (cache.Get(spec, getter_AddRefs(entry)) && entry) {
+    if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerURI, aLoadGroup, aObserver, aCX,
+                      requestFlags, PR_TRUE, aRequest, _retval)) {
+      request = getter_AddRefs(entry->GetRequest());
 
-    if (cache.Get(spec, getter_AddRefs(entry)) && entry) {
-      if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerURI, aLoadGroup, aObserver, aCX,
-                        requestFlags, PR_TRUE, aRequest, _retval)) {
-        request = getter_AddRefs(entry->GetRequest());
+      // If this entry has no proxies, its request has no reference to the entry.
+      if (entry->HasNoProxies()) {
+        LOG_FUNC_WITH_PARAM(gImgLog, "imgLoader::LoadImage() adding proxyless entry", "uri", spec.get());
+        NS_ABORT_IF_FALSE(!request->HasCacheEntry(), "Proxyless entry's request has cache entry!");
+        request->SetCacheEntry(entry);
 
-        // If this entry has no proxies, its request has no reference to the entry.
-        if (entry->HasNoProxies()) {
-          LOG_FUNC_WITH_PARAM(gImgLog, "imgLoader::LoadImage() adding proxyless entry", "uri", spec.get());
-          NS_ABORT_IF_FALSE(!request->HasCacheEntry(), "Proxyless entry's request has cache entry!");
-          request->SetCacheEntry(entry);
+        if (gCacheTracker)
+          gCacheTracker->MarkUsed(entry);
+      } 
 
-          if (gCacheTracker)
-            gCacheTracker->MarkUsed(entry);
-        } 
-
-        entry->Touch();
+      entry->Touch();
 
 #ifdef DEBUG_joe
-        printf("CACHEGET: %d %s %d\n", time(NULL), spec.get(), entry->GetDataSize());
+      printf("CACHEGET: %d %s %d\n", time(NULL), spec.get(), entry->GetDataSize());
 #endif
-      }
-      else
-        entry = nsnull;
+    }
+    else {
+      // We can't use this entry. We'll try to load it off the network, and if
+      // successful, overwrite the old entry in the cache with a new one.
+      entry = nsnull;
     }
   }
 
@@ -1464,21 +1461,26 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
     // Try to add the new request into the cache.
     PutIntoCache(aURI, entry);
-
-  // If we did get a cache hit, use it.
   } else {
-    // XXX: Should this be executed if an expired cache entry does not have a caching channel??
     LOG_MSG_WITH_PARAM(gImgLog, 
                        "imgLoader::LoadImage |cache hit|", "request", request);
-
-    // Update the request's LoadId
-    request->SetLoadId(aCX);
   }
+
 
   // If we didn't get a proxy when validating the cache entry, we need to create one.
   if (!*_retval) {
-    LOG_MSG(gImgLog, "imgLoader::LoadImage", "creating proxy request.");
+    // ValidateEntry() has three return values: "Is valid," "might be valid --
+    // validating over network", and "not valid." If we don't have a _retval,
+    // we know ValidateEntry is not validating over the network, so it's safe
+    // to SetLoadId here because we know this request is valid for this context.
+    //
+    // Note, however, that this doesn't guarantee the behaviour we want (one
+    // URL maps to the same image on a page) if we load the same image in a
+    // different tab (see bug 528003), because its load id will get re-set, and
+    // that'll cause us to validate over the network.
+    request->SetLoadId(aCX);
 
+    LOG_MSG(gImgLog, "imgLoader::LoadImage", "creating proxy request.");
     rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
                                   requestFlags, aRequest, _retval);
     imgRequestProxy *proxy = static_cast<imgRequestProxy *>(*_retval);

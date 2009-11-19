@@ -475,6 +475,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
     wscript->noScriptRval = script->noScriptRval;
     wscript->savedCallerFun = script->savedCallerFun;
     wscript->hasSharps = script->hasSharps;
+    wscript->strictModeCode = script->strictModeCode;
     wscript->version = script->version;
     wscript->nfixed = script->nfixed;
     wscript->filename = script->filename;
@@ -555,17 +556,23 @@ ArgGetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 static JSBool
 ArgSetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
 {
+#ifdef JS_TRACER
+    // To be able to set a property here on trace, we would have to make
+    // sure any updates also get written back to the trace native stack.
+    // For simplicity, we just leave trace, since this is presumably not
+    // a common operation.
+    if (JS_ON_TRACE(cx)) {
+        js_DeepBail(cx);
+        return false;
+    }
+#endif
+
     if (!JS_InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
         return true;
 
     if (JSVAL_IS_INT(idval)) {
         uintN arg = uintN(JSVAL_TO_INT(idval));
         if (arg < GetArgsLength(obj)) {
-            if (js_GetArgsPrivateNative(obj)) {
-                js_LeaveTrace(cx);
-                return false;
-            }
-
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
                 fp->argv[arg] = *vp;

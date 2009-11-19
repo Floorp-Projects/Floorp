@@ -133,50 +133,31 @@ struct JSString {
      *
      * ATOMIZED is used only with flat, immutable strings.
      */
-    enum
-#if defined(_MSC_VER) && defined(_WIN64)
-    : size_t /* VC++ 64-bit incorrectly defaults this enum's size to int. */
-#endif
-    {
-        DEPENDENT =     JSSTRING_BIT(JS_BITS_PER_WORD - 1),
-        PREFIX =        JSSTRING_BIT(JS_BITS_PER_WORD - 2),
-        MUTABLE =       PREFIX,
-        ATOMIZED =      JSSTRING_BIT(JS_BITS_PER_WORD - 3),
-        DEFLATED =      JSSTRING_BIT(JS_BITS_PER_WORD - 4),
-
+    static const size_t DEPENDENT =     JSSTRING_BIT(JS_BITS_PER_WORD - 1);
+    static const size_t PREFIX =        JSSTRING_BIT(JS_BITS_PER_WORD - 2);
+    static const size_t MUTABLE =       PREFIX;
+    static const size_t ATOMIZED =      JSSTRING_BIT(JS_BITS_PER_WORD - 3);
+    static const size_t DEFLATED =      JSSTRING_BIT(JS_BITS_PER_WORD - 4);
 #if JS_BITS_PER_WORD > 32
-        LENGTH_BITS =   28,
+    static const size_t LENGTH_BITS =   28;
 #else
-        LENGTH_BITS =   JS_BITS_PER_WORD - 4,
+    static const size_t LENGTH_BITS =   JS_BITS_PER_WORD - 4;
 #endif
-        LENGTH_MASK =   JSSTRING_BITMASK(LENGTH_BITS),
-
-        /*
-         * VC++ 64-bit incorrectly produces the compiler error "Conversion to
-         * enumeration type requires an explicit cast" unless we cast to size_t
-         * here.
-         */
-        DEPENDENT_LENGTH_BITS = 8,
-        DEPENDENT_LENGTH_MASK = JSSTRING_BITMASK(DEPENDENT_LENGTH_BITS),
-        DEPENDENT_START_BITS =  LENGTH_BITS - DEPENDENT_LENGTH_BITS,
-        DEPENDENT_START_SHIFT = DEPENDENT_LENGTH_BITS,
-        DEPENDENT_START_MASK =  JSSTRING_BITMASK(DEPENDENT_START_BITS)
-    };
+    static const size_t LENGTH_MASK =   JSSTRING_BITMASK(LENGTH_BITS);
+    static const size_t DEPENDENT_LENGTH_BITS = 8;
+    static const size_t DEPENDENT_LENGTH_MASK = JSSTRING_BITMASK(DEPENDENT_LENGTH_BITS);
+    static const size_t DEPENDENT_START_BITS =  LENGTH_BITS - DEPENDENT_LENGTH_BITS;
+    static const size_t DEPENDENT_START_SHIFT = DEPENDENT_LENGTH_BITS;
+    static const size_t DEPENDENT_START_MASK =  JSSTRING_BITMASK(DEPENDENT_START_BITS);
 
     bool hasFlag(size_t flag) const {
         return (mLength & flag) != 0;
     }
 
   public:
-    enum
-#if defined(_MSC_VER) && defined(_WIN64)
-    : size_t /* VC++ 64-bit incorrectly defaults this enum's size to int. */
-#endif
-    {
-        MAX_LENGTH = LENGTH_MASK,
-        MAX_DEPENDENT_START = DEPENDENT_START_MASK,
-        MAX_DEPENDENT_LENGTH = DEPENDENT_LENGTH_MASK
-    };
+    static const size_t MAX_LENGTH = LENGTH_MASK;
+    static const size_t MAX_DEPENDENT_START = DEPENDENT_START_MASK;
+    static const size_t MAX_DEPENDENT_LENGTH = DEPENDENT_LENGTH_MASK;
 
     bool isDependent() const {
         return hasFlag(DEPENDENT);
@@ -341,7 +322,9 @@ struct JSString {
 
     JS_ALWAYS_INLINE size_t dependentLength() const {
         JS_ASSERT(isDependent());
-        return mLength & (dependentIsPrefix() ? LENGTH_MASK : DEPENDENT_LENGTH_MASK);
+        if (dependentIsPrefix())
+            return mLength & LENGTH_MASK;
+        return mLength & DEPENDENT_LENGTH_MASK;
     }
 
     void initPrefix(JSString *bstr, size_t len) {

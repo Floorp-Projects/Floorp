@@ -42,6 +42,7 @@
 
 #include "jscntxt.h"
 #include "jsfun.h"
+#include "jsinterp.h"
 #include "jsobj.h"
 #include "jsscope.h"
 
@@ -90,7 +91,7 @@ JSScope::methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, jsval *vp)
 inline bool
 JSScope::methodWriteBarrier(JSContext *cx, JSScopeProperty *sprop, jsval v)
 {
-    if (branded()) {
+    if (flags & (BRANDED | METHOD_BARRIER)) {
         jsval prev = LOCKED_OBJ_GET_SLOT(object, sprop->slot);
 
         if (prev != v && VALUE_IS_FUNCTION(cx, prev))
@@ -102,7 +103,7 @@ JSScope::methodWriteBarrier(JSContext *cx, JSScopeProperty *sprop, jsval v)
 inline bool
 JSScope::methodWriteBarrier(JSContext *cx, uint32 slot, jsval v)
 {
-    if (branded()) {
+    if (flags & (BRANDED | METHOD_BARRIER)) {
         jsval prev = LOCKED_OBJ_GET_SLOT(object, slot);
 
         if (prev != v && VALUE_IS_FUNCTION(cx, prev))

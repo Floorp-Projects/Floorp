@@ -807,12 +807,12 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
 
 nsTransparencyMode nsChildView::GetTransparencyMode()
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  return [mView isOpaque] ? eTransparencyOpaque : eTransparencyTransparent;
+  nsCocoaWindow* windowWidget = GetXULWindowWidget();
+  return windowWidget ? windowWidget->GetTransparencyMode() : eTransparencyOpaque;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-  return eTransparencyOpaque;
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(eTransparencyOpaque);
 }
 
 // This is called by nsContainerFrame on the root widget for all window types
@@ -821,14 +821,9 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  BOOL isTransparent = aMode == eTransparencyTransparent;
-  BOOL currentTransparency = ![[mView window] isOpaque];
-  if (isTransparent != currentTransparency) {
-    nsCocoaWindow *widget = GetXULWindowWidget();
-    if (widget) {
-      widget->MakeBackgroundTransparent(aMode);
-      [(ChildView*)mView setTransparent:isTransparent];
-    }
+  nsCocoaWindow* windowWidget = GetXULWindowWidget();
+  if (windowWidget) {
+    windowWidget->SetTransparencyMode(aMode);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -2397,14 +2392,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return YES;
 }
 
-- (void)setTransparent:(BOOL)transparent
-{
-  mIsTransparent = transparent;
-}
-
 - (BOOL)isOpaque
 {
-  return !mIsTransparent;
+  return [[self window] isOpaque];
 }
 
 -(void)setIsPluginView:(BOOL)aIsPlugin
@@ -2671,6 +2661,15 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   CGContextStrokeRect(aContext,
                       CGRectMake(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height));
 #endif
+}
+
+- (void)viewWillDraw
+{
+  if (!mGeckoChild)
+    return;
+
+  nsPaintEvent paintEvent(PR_TRUE, NS_WILL_PAINT, mGeckoChild);
+  mGeckoChild->DispatchWindowEvent(paintEvent);
 }
 
 // Allows us to turn off setting up the clip region
@@ -3722,6 +3721,7 @@ static PRBool ConvertUnicodeToCharCode(PRUnichar inUniChar, unsigned char* outCh
 
 static void ConvertCocoaKeyEventToNPCocoaEvent(NSEvent* cocoaEvent, NPCocoaEvent& pluginEvent, PRUint32 keyType = 0)
 {
+  InitNPCocoaEvent(&pluginEvent);
   NSEventType nativeType = [cocoaEvent type];
   switch (nativeType) {
     case NSKeyDown:

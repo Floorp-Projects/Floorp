@@ -1,6 +1,14 @@
-libtheora 1.1.1 (unreleased snapshot)
+libtheora 1.1.2 (unreleased snapshot)
 
- - No changes have been recorded
+ - no changes recorded
+
+libtheora 1.1.1 (2009 October 1)
+
+ - Fix problems with MSVC inline assembly
+ - Add the missing encoder_disabled.c to the distribution
+ - build updates: autogen.sh should work better after switching systems
+   and the MSVC project now defaults to the dynamic runtime library
+ - Namespace some variables to avoid conflicts on wince.
 
 libtheora 1.1.0 (2009 September 24)
 

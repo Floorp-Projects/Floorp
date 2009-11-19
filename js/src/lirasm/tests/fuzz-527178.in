@@ -1,0 +1,5 @@
+base = alloc 512
+five = int 5
+sti five base 256
+x = ldcs base 256
+ret x

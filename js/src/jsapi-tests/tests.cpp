@@ -45,12 +45,16 @@ using namespace std;
 
 JSAPITest *JSAPITest::list;
 
-int main()
+int main(int argc, char *argv[])
 {
     int failures = 0;
+    const char *filter = (argc == 2) ? argv[1] : NULL;
 
     for (JSAPITest *test = JSAPITest::list; test; test = test->next) {
         string name = test->name();
+        if (filter && filter != name)
+            continue;
+
 
         cout << name << endl;
         if (!test->init()) {
