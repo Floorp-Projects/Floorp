@@ -2026,10 +2026,20 @@ nsFormControlList::AddElementToTable(nsGenericHTMLFormElement* aChild,
 
       NS_ASSERTION(list->Length() > 1,
                    "List should have been converted back to a single element");
-      
+
+      // Fast-path appends; this check is ok even if the child is
+      // already in the list, since if it tests true the child would
+      // have come at the end of the list, and the PositionIsBefore
+      // will test false.
       if(nsContentUtils::PositionIsBefore(list->GetNodeAt(list->Length() - 1), aChild)) {
-          list->AppendElement(aChild);
-          return NS_OK;
+        list->AppendElement(aChild);
+        return NS_OK;
+      }
+
+      // If a control has a name equal to its id, it could be in the
+      // list already.
+      if (list->IndexOf(aChild) != -1) {
+        return NS_OK;
       }
       
       // first is the first possible insertion index, last is the last possible
@@ -2038,15 +2048,15 @@ nsFormControlList::AddElementToTable(nsGenericHTMLFormElement* aChild,
       PRUint32 last = list->Length() - 1;
       PRUint32 mid;
       
-      //Stop when there is only one index in our range
+      // Stop when there is only one index in our range
       while (last != first) {
-          mid = (first + last) / 2;
+        mid = (first + last) / 2;
           
-          if (nsContentUtils::PositionIsBefore(aChild, list->GetNodeAt(mid)))
-            last = mid;
-          else
-            first = mid + 1;
-        }
+        if (nsContentUtils::PositionIsBefore(aChild, list->GetNodeAt(mid)))
+          last = mid;
+        else
+          first = mid + 1;
+      }
 
       list->InsertElementAt(aChild, first);
     }
