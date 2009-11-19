@@ -316,3 +316,4 @@ MSG_DEF(JSMSG_STRICT_CODE_WITH,       233, 0, JSEXN_SYNTAXERR, "strict mode code
 MSG_DEF(JSMSG_DUPLICATE_PROPERTY,     234, 1, JSEXN_SYNTAXERR, "property name {0} appears more than once in object literal")
 MSG_DEF(JSMSG_DEPRECATED_DELETE_OPERAND, 235, 0, JSEXN_SYNTAXERR, "Applying the 'delete' operator to an unqualified name is deprecated")
 MSG_DEF(JSMSG_DEPRECATED_ASSIGN,      236, 1, JSEXN_SYNTAXERR, "assignment to {0} is deprecated")
+MSG_DEF(JSMSG_BAD_BINDING,            237, 1, JSEXN_SYNTAXERR, "redefining {0} is deprecated")

@@ -257,6 +257,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_NO_SCRIPT_RVAL    0x4000 /* API caller does not want result value
                                         from global script */
 #define TCF_HAS_SHARPS        0x8000 /* source contains sharp defs or uses */
+#define TCF_FUN_PARAM_EVAL   0x10000 /* function has parameter named 'eval' */
 
 /*
  * Set when parsing a declaration-like destructuring pattern.  This
