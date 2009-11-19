@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <Windows.h>
+#include <windows.h>
 
 // make sure we only ever spawn one thread
 DWORD tid = -1;
