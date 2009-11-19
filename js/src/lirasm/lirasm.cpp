@@ -90,7 +90,7 @@ struct LasmSideExit : public SideExit {
 /* LIR SPI implementation */
 
 void
-nanojit::StackFilter::getTops(LIns* guard, int& spTop, int& rpTop)
+nanojit::StackFilter::getTops(LIns*, int& spTop, int& rpTop)
 {
     spTop = 0;
     rpTop = 0;
@@ -427,7 +427,7 @@ dep_u32(char *&buf, uint32_t word, uint32_t &cksum)
 }
 
 void
-dump_srecords(ostream &out, Fragment *frag)
+dump_srecords(ostream &, Fragment *)
 {
     // FIXME: Disabled until we work out a sane way to walk through
     // code chunks under the new CodeAlloc regime.
@@ -490,7 +490,6 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
                                                   nanojit::LC_FragProfile) ?
                                                   sProfId++ : 0));
     mFragment->lirbuf = mParent.mLirbuf;
-    mFragment->root = mFragment;
     mParent.mFragments[mFragName].fragptr = mFragment;
 
     mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf);
@@ -526,7 +525,6 @@ void
 FragmentAssembler::bad(const string &msg)
 {
     cerr << "line " << mLineno << ": " << msg << endl;
-    exit(1);
     exit(1);
 }
 
@@ -599,7 +597,7 @@ FragmentAssembler::assemble_load()
 LIns *
 FragmentAssembler::assemble_call(const string &op)
 {
-    CallInfo *ci = new (mParent.mAlloc) CallInfo();
+    CallInfo *ci = new (mParent.mAlloc) CallInfo;
     mCallInfos.push_back(ci);
     LIns *args[MAXARGS];
     memset(&args[0], 0, sizeof(args));
@@ -618,12 +616,8 @@ FragmentAssembler::assemble_call(const string &op)
     string abi = pop_front(mTokens);
 
     AbiKind _abi = ABI_CDECL;
-    if (abi == "fastcall") {
-#ifdef NO_FASTCALL
-        bad("no fastcall support");
-#endif
+    if (abi == "fastcall")
         _abi = ABI_FASTCALL;
-    }
     else if (abi == "stdcall")
         _abi = ABI_STDCALL;
     else if (abi == "thiscall")
@@ -669,6 +663,7 @@ FragmentAssembler::assemble_call(const string &op)
         }
 
         // Select return type from opcode.
+        ty = 0;
         if      (mOpcode == LIR_icall) ty = ARGSIZE_LO;
         else if (mOpcode == LIR_fcall) ty = ARGSIZE_F;
         else if (mOpcode == LIR_qcall) ty = ARGSIZE_Q;
@@ -701,7 +696,7 @@ FragmentAssembler::createSideExit()
 GuardRecord*
 FragmentAssembler::createGuardRecord(LasmSideExit *exit)
 {
-    GuardRecord *rec = new (mParent.mAlloc) GuardRecord();
+    GuardRecord *rec = new (mParent.mAlloc) GuardRecord;
     memset(rec, 0, sizeof(GuardRecord));
     rec->exit = exit;
     exit->addGuard(rec);
@@ -895,8 +890,10 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_add:
           case LIR_sub:
           case LIR_mul:
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
           case LIR_div:
           case LIR_mod:
+#endif
           case LIR_fadd:
           case LIR_fsub:
           case LIR_fmul:
@@ -1046,7 +1043,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_file:
           case LIR_line:
           case LIR_xtbl:
-          case LIR_ji:
+          case LIR_jtbl:
             nyi(op);
             break;
 
@@ -1155,7 +1152,7 @@ static double f_F_F8(double a, double b, double c, double d,
     return a + b + c + d + e + f + g + h;
 }
 
-static void f_N_IQF(int32_t a, uint64_t b, double c)
+static void f_N_IQF(int32_t, uint64_t, double)
 {
     return;     // no need to do anything
 }
@@ -1259,8 +1256,8 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     I_II_ops.push_back(LIR_iaddp);
     I_II_ops.push_back(LIR_sub);
     I_II_ops.push_back(LIR_mul);
-    I_II_ops.push_back(LIR_div);
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
+    I_II_ops.push_back(LIR_div);
     I_II_ops.push_back(LIR_mod);
 #endif
     I_II_ops.push_back(LIR_and);
@@ -1497,7 +1494,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
                         // where k is a random number in the range 2..100 (this ensures we have
                         // some negative divisors).
                         LIns* gt0  = mLir->ins2i(LIR_gt, rhs, 0);
-                        LIns* rhs2 = mLir->ins3(LIR_cmov, gt0, rhs, mLir->insImm(-rnd(99) - 2));
+                        LIns* rhs2 = mLir->ins3(LIR_cmov, gt0, rhs, mLir->insImm(-((int32_t)rnd(99)) - 2));
                         LIns* div  = mLir->ins2(LIR_div, lhs, rhs2);
                         if (op == LIR_div) {
                             ins = div;
@@ -1735,7 +1732,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 }
 
 Lirasm::Lirasm(bool verbose) :
-    mAssm(mCodeAlloc, mAlloc, &mCore, &mLogc)
+    mAssm(mCodeAlloc, mAlloc, mAlloc, &mCore, &mLogc)
 {
     mVerbose = verbose;
     nanojit::AvmCore::config.tree_opt = true;
@@ -2004,7 +2001,7 @@ main(int argc, char **argv)
         switch (i->second.mReturnType) {
           case RT_FLOAT:
           {
-            float res = i->second.rfloat();
+            double res = i->second.rfloat();
             cout << "Output is: " << res << endl;
             break;
           }

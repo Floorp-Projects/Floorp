@@ -1,0 +1,19 @@
+zero = int 0
+one = int 1
+
+; 46341 * 46341 >= 2^31, and will overflow.
+big = int 46341
+
+res = mul big big
+check = ov res
+; We can't use the result of 'ov' directly in cmov, so compare it with 1.
+toobig = eq check one
+
+; Ensure that 'big' gets its own register and isn't shared with 'res'.
+ptr = alloc 4
+sti big ptr 0
+
+; Return either the result (if we didn't overflow) or 0.
+ans = cmov toobig zero res
+ret ans
+

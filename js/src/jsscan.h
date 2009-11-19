@@ -345,6 +345,9 @@ struct JSTokenStream {
 /* Ignore keywords and return TOK_NAME instead to the parser. */
 #define TSF_KEYWORD_IS_NAME 0x4000
 
+/* Tokenize as appropriate for strict mode code.  */
+#define TSF_STRICT_MODE_CODE 0x8000
+
 /* Unicode separators that are treated as line terminators, in addition to \n, \r */
 #define LINE_SEPARATOR  0x2028
 #define PARA_SEPARATOR  0x2029

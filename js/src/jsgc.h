@@ -267,39 +267,39 @@ IsFinalizableStringKind(unsigned thingKind)
  * in the partially initialized thing.
  */
 extern void *
-NewFinalizableGCThing(JSContext *cx, unsigned thingKind);
+js_NewFinalizableGCThing(JSContext *cx, unsigned thingKind);
 
 static inline JSObject *
 js_NewGCObject(JSContext *cx)
 {
-    return (JSObject *) NewFinalizableGCThing(cx, FINALIZE_OBJECT);
+    return (JSObject *) js_NewFinalizableGCThing(cx, FINALIZE_OBJECT);
 }
 
 static inline JSString *
 js_NewGCString(JSContext *cx)
 {
-    return (JSString *) NewFinalizableGCThing(cx, FINALIZE_STRING);
+    return (JSString *) js_NewFinalizableGCThing(cx, FINALIZE_STRING);
 }
 
 static inline JSString *
 js_NewGCExternalString(JSContext *cx, uintN type)
 {
     JS_ASSERT(type < JS_EXTERNAL_STRING_LIMIT);
-    return (JSString *) NewFinalizableGCThing(cx,
-                                              FINALIZE_EXTERNAL_STRING0 + type);
+    type += FINALIZE_EXTERNAL_STRING0;
+    return (JSString *) js_NewFinalizableGCThing(cx, type);
 }
 
 static inline JSFunction*
 js_NewGCFunction(JSContext *cx)
 {
-    return (JSFunction *) NewFinalizableGCThing(cx, FINALIZE_FUNCTION);
+    return (JSFunction *) js_NewFinalizableGCThing(cx, FINALIZE_FUNCTION);
 }
 
 #if JS_HAS_XML_SUPPORT
 static inline JSXML *
 js_NewGCXML(JSContext *cx)
 {
-    return (JSXML *) NewFinalizableGCThing(cx, FINALIZE_XML);
+    return (JSXML *) js_NewFinalizableGCThing(cx, FINALIZE_XML);
 }
 #endif
 
@@ -324,12 +324,17 @@ struct JSGCFreeLists {
     JSGCThing       *finalizables[FINALIZE_LIMIT];
 
     void purge();
+    void moveTo(JSGCFreeLists * another);
 
 #ifdef DEBUG
-    void assertEmpty() const {
-        JS_ASSERT(!doubles);
-        for (size_t i = 0; i != JS_ARRAY_LENGTH(finalizables); ++i)
-            JS_ASSERT(!finalizables[i]);
+    bool isEmpty() const {
+        if (doubles)
+            return false;
+        for (size_t i = 0; i != JS_ARRAY_LENGTH(finalizables); ++i) {
+            if (finalizables[i])
+                return false;
+        }
+        return true;
     }
 #endif
 };
@@ -433,6 +438,13 @@ extern JS_FRIEND_API(void)
 js_DumpGCStats(JSRuntime *rt, FILE *fp);
 
 #endif /* JS_GCMETER */
+
+/*
+ * This function is defined in jsdbgapi.cpp but is declared here to avoid
+ * polluting jsdbgapi.h, a public API header, with internal functions.
+ */
+extern void
+js_MarkTraps(JSTracer *trc);
 
 JS_END_EXTERN_C
 

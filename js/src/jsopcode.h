@@ -273,19 +273,16 @@ js_QuoteString(JSContext *cx, JSString *str, jschar quote);
  * JSPrinter operations, for printf style message formatting.  The return
  * value from js_GetPrinterOutput() is the printer's cumulative output, in
  * a GC'ed string.
+ *
+ * strict is true if the context in which the output will appear has
+ * already been marked as strict, thus indicating that nested
+ * functions need not be re-marked with a strict directive.  It should
+ * be false in the outermost printer.
  */
 
-#ifdef JS_ARENAMETER
-# define JS_NEW_PRINTER(cx, name, fun, indent, pretty)                        \
-    js_NewPrinter(cx, name, fun, indent, pretty)
-#else
-# define JS_NEW_PRINTER(cx, name, fun, indent, pretty)                        \
-    js_NewPrinter(cx, fun, indent, pretty)
-#endif
-
 extern JSPrinter *
-JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
-               uintN indent, JSBool pretty);
+js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
+              uintN indent, JSBool pretty, JSBool grouped, JSBool strict);
 
 extern void
 js_DestroyPrinter(JSPrinter *jp);
@@ -426,6 +423,11 @@ js_DecompileFunctionBody(JSPrinter *jp);
 
 extern JSBool
 js_DecompileFunction(JSPrinter *jp);
+
+extern JSString *
+js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
+                     uintN indent, JSBool pretty, JSBool grouped, JSBool strict,
+                     JSBool (*decompiler)(JSPrinter *jp));
 
 /*
  * Find the source expression that resulted in v, and return a newly allocated

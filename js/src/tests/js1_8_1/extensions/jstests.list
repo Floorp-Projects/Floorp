@@ -10,4 +10,5 @@ script regress-466905-04.js
 script regress-466905-05.js
 script regress-477158.js
 script regress-477187.js
+script regress-520572.js
 script strict-warning.js
