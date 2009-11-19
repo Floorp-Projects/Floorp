@@ -782,7 +782,7 @@ var NewTabPopup = {
   },
 
   _updateLabel: function() {
-    let newtabStrings = document.getElementById("bundle_browser").getString("newtabpopup.opened");
+    let newtabStrings = Elements.browserBundle.getString("newtabpopup.opened");
     let label = PluralForm.get(this._tabs.length, newtabStrings).replace("#1", this._tabs.length);
 
     this.box.firstChild.setAttribute("value", label);

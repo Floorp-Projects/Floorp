@@ -164,6 +164,20 @@ let Util = {
   }
 };
 
+let Elements = {};
+
+[
+  ["browserBundle",      "bundle_browser"],
+].forEach(function (elementGlobal) {
+  let [name, id] = elementGlobal;
+  Elements.__defineGetter__(name, function () {
+    let element = document.getElementById(id);
+    if (!element)
+      return null;
+    delete Elements[name];
+    return Elements[name] = element;
+  });
+});
 
 /**
  * Simple Point class.
