@@ -1195,6 +1195,29 @@ CheckFinalReturn(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
 }
 
 /*
+ * Check that it is permitted to assign to lhs.  Strict mode code may not
+ * assign to 'eval' or 'arguments'.
+ */
+bool
+CheckStrictAssignment(JSContext *cx, JSTreeContext *tc, JSParseNode *lhs)
+{
+    if (tc->needStrictChecks() &&
+        lhs->pn_type == TOK_NAME) {
+        JSAtom *atom = lhs->pn_atom;
+        JSAtomState *atomState = &cx->runtime->atomState;
+        if (atom == atomState->evalAtom || atom == atomState->argumentsAtom) {
+            const char *name = js_AtomToPrintableString(cx, atom);
+            if (!name ||
+                !js_ReportStrictModeError(cx, TS(tc->compiler), tc, lhs,
+                                          JSMSG_DEPRECATED_ASSIGN, name)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+/*
  * In strict mode code, all formal parameter names must be distinct. If fun's
  * formals are legit given fun's strictness level, return true. Otherwise,
  * report an error and return false. Use pn for error position reporting,
@@ -5901,6 +5924,8 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     op = CURRENT_TOKEN(ts).t_op;
     switch (pn->pn_type) {
       case TOK_NAME:
+        if (!CheckStrictAssignment(cx, tc, pn))
+            return NULL;
         pn->pn_op = JSOP_SETNAME;
         NoteLValue(cx, pn, tc);
         break;
@@ -6155,8 +6180,8 @@ MulExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 }
 
 static JSParseNode *
-SetLvalKid(JSContext *cx, JSTokenStream *ts, JSParseNode *pn, JSParseNode *kid,
-           const char *name)
+SetLvalKid(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
+           JSParseNode *pn, JSParseNode *kid, const char *name)
 {
     if (kid->pn_type != TOK_NAME &&
         kid->pn_type != TOK_DOT &&
@@ -6170,6 +6195,8 @@ SetLvalKid(JSContext *cx, JSTokenStream *ts, JSParseNode *pn, JSParseNode *kid,
                                     JSMSG_BAD_OPERAND, name);
         return NULL;
     }
+    if (!CheckStrictAssignment(cx, tc, kid))
+        return NULL;
     pn->pn_kid = kid;
     return kid;
 }
@@ -6183,7 +6210,7 @@ SetIncOpKid(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 {
     JSOp op;
 
-    kid = SetLvalKid(cx, ts, pn, kid, incop_name_str[tt == TOK_DEC]);
+    kid = SetLvalKid(cx, ts, tc, pn, kid, incop_name_str[tt == TOK_DEC]);
     if (!kid)
         return JS_FALSE;
     switch (kid->pn_type) {
