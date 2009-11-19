@@ -86,12 +86,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULTreeGridRowAccessible,
                                            nsAccessible)
 
-  // nsIAccessible
-  NS_IMETHOD GetFirstChild(nsIAccessible **aFirstChild);
-  NS_IMETHOD GetLastChild(nsIAccessible **aLastChild);
-  NS_IMETHOD GetChildCount(PRInt32 *aChildCount);
-  NS_IMETHOD GetChildAt(PRInt32 aChildIndex, nsIAccessible **aChild);
-
   // nsAccessNode
   virtual nsresult Shutdown();
 
@@ -101,11 +95,20 @@ public:
                                    PRBool aDeepestChild,
                                    nsIAccessible **aChild);
 
+  virtual nsIAccessible* GetChildAt(PRUint32 aIndex);
+  virtual PRInt32 GetChildCount();
+  virtual PRInt32 GetIndexOf(nsIAccessible *aChild);
+
   // nsXULTreeItemAccessibleBase
   virtual void GetCellAccessible(nsITreeColumn *aColumn, nsIAccessible **aCell);
   virtual void RowInvalidated(PRInt32 aStartColIdx, PRInt32 aEndColIdx);
 
 protected:
+
+  // nsAccessible
+  virtual void CacheChildren();
+
+  // nsXULTreeItemAccessibleBase
   nsAccessNodeHashtable mAccessNodeCache;
 };
 
@@ -139,10 +142,6 @@ public:
   NS_IMETHOD GetUniqueID(void **aUniqueID);
 
   // nsIAccessible
-  NS_IMETHOD GetParent(nsIAccessible **aParent);
-  NS_IMETHOD GetNextSibling(nsIAccessible **aNextSibling);
-  NS_IMETHOD GetPreviousSibling(nsIAccessible **aPrevSibling);
-
   NS_IMETHOD GetFocusedChild(nsIAccessible **aFocusedChild);
 
   NS_IMETHOD GetName(nsAString& aName);
@@ -165,6 +164,8 @@ public:
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
+  virtual nsIAccessible* GetParent();
+
   // nsXULTreeGridCellAccessible
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_XULTREEGRIDCELLACCESSIBLE_IMPL_CID)
 
@@ -181,6 +182,8 @@ public:
 
 protected:
   // nsAccessible
+  virtual nsIAccessible* GetSiblingAtOffset(PRInt32 aOffset,
+                                            nsresult* aError = nsnull);
   virtual void DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex);
 
   // nsXULTreeGridCellAccessible

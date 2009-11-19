@@ -7,22 +7,20 @@
   <script type="application/javascript" 
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" 
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
-   </script>
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
   <script type="application/javascript" 
-          src="chrome://mochikit/content/a11y/accessible/common.js" ></script>
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
 
   <script type="application/javascript">
     function doTest()
     {
-        var accessible = getAccessible(document);
-        while (accessible && accessible.parent) {
-            accessible = accessible.parent;
-        }
-
+        var accessible = getApplicationAccessible();
         if (!accessible) {
-            SimpleTest.finish();
-            return;
+          SimpleTest.finish();
+          return;
         }
 
         var bundleServ = Components.classes["@mozilla.org/intl/stringbundle;1"]
