@@ -45,7 +45,7 @@ function test() {
     
   let tab = gBrowser.addTab();
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    this.removeEventListener("load", arguments.callee, true);
+    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
     
     let tabState = { entries: [] };
     let max_entries = gPrefService.getIntPref("browser.sessionhistory.max_entries");
@@ -54,7 +54,7 @@ function test() {
     
     ss.setTabState(tab, JSON.stringify(tabState));
     tab.addEventListener("SSTabRestored", function(aEvent) {
-      this.removeEventListener("SSTabRestored", arguments.callee, false);
+      tab.removeEventListener("SSTabRestored", arguments.callee, false);
       tabState = eval("(" + ss.getTabState(tab) + ")");
       is(tabState.entries.length, max_entries, "session history filled to the limit");
       is(tabState.entries[0].url, baseURL + 0, "... but not more");

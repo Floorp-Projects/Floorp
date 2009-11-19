@@ -152,7 +152,8 @@ imgFrame::imgFrame() :
   mBlendMethod(1), /* imgIContainer::kBlendOver */
   mSinglePixel(PR_FALSE),
   mNeverUseDeviceSurface(PR_FALSE),
-  mFormatChanged(PR_FALSE)
+  mFormatChanged(PR_FALSE),
+  mCompositingFailed(PR_FALSE)
 #ifdef USE_WIN_SURFACE
   , mIsDDBSurface(PR_FALSE)
 #endif
@@ -810,7 +811,7 @@ void imgFrame::GetPaletteData(PRUint32 **aPalette, PRUint32 *length) const
 nsresult imgFrame::LockImageData()
 {
   if (mPalettedImageData)
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
 
   if ((mOptSurface || mSinglePixel) && !mImageSurface) {
     // Recover the pixels
@@ -842,7 +843,7 @@ nsresult imgFrame::LockImageData()
 nsresult imgFrame::UnlockImageData()
 {
   if (mPalettedImageData)
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
 
 #ifdef XP_MACOSX
   if (mQuartzSurface)
@@ -914,4 +915,14 @@ void imgFrame::SetHasNoAlpha()
       mFormat = gfxASurface::ImageFormatRGB24;
       mFormatChanged = PR_TRUE;
   }
+}
+
+PRBool imgFrame::GetCompositingFailed() const
+{
+  return mCompositingFailed;
+}
+
+void imgFrame::SetCompositingFailed(PRBool val)
+{
+  mCompositingFailed = val;
 }

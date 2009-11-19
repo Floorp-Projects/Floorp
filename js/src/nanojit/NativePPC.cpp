@@ -144,7 +144,7 @@ namespace nanojit
         LIns* base = ins->oprnd1();
         int d = ins->disp();
         Register rr = prepResultReg(ins, GpRegs);
-        Register ra = getBaseReg(base, d, GpRegs);
+        Register ra = getBaseReg(ins->opcode(), base, d, GpRegs);
 
         #if !PEDANTIC
         if (isS16(d)) {
@@ -165,7 +165,7 @@ namespace nanojit
 
     void Assembler::asm_store32(LIns *value, int32_t dr, LIns *base) {
         Register rs = findRegFor(value, GpRegs);
-        Register ra = value == base ? rs : getBaseReg(base, dr, GpRegs & ~rmask(rs));
+        Register ra = value == base ? rs : getBaseReg(LIR_sti, base, dr, GpRegs & ~rmask(rs));
 
     #if !PEDANTIC
         if (isS16(dr)) {
@@ -197,7 +197,7 @@ namespace nanojit
     #endif
 
         int dr = ins->disp();
-        Register ra = getBaseReg(base, dr, GpRegs);
+        Register ra = getBaseReg(ins->opcode(), base, dr, GpRegs);
 
     #ifdef NANOJIT_64BIT
         if (rmask(rr) & GpRegs) {
@@ -259,7 +259,7 @@ namespace nanojit
 
     void Assembler::asm_store64(LIns *value, int32_t dr, LIns *base) {
         NanoAssert(value->isQuad());
-        Register ra = getBaseReg(base, dr, GpRegs);
+        Register ra = getBaseReg(LIR_stqi, base, dr, GpRegs);
 
     #if !PEDANTIC && !defined NANOJIT_64BIT
         if (value->isop(LIR_quad) && isS16(dr) && isS16(dr+4)) {
@@ -1304,6 +1304,29 @@ namespace nanojit
     void Assembler::nFragExit(LIns*) {
         TODO(nFragExit);
     }
+
+    void Assembler::asm_jtbl(LIns* ins, NIns** native_table)
+    {
+        // R0 = index*4, R2 = table, CTR = computed address to jump to.
+        // must ensure no page breaks in here because R2 & CTR can get clobbered.
+        Register indexreg = findRegFor(ins->oprnd1(), GpRegs);
+#ifdef NANOJIT_64BIT
+        underrunProtect(9*4);
+        BCTR(0);                                // jump to address in CTR
+        MTCTR(R2);                              // CTR = R2
+        LDX(R2, R2, R0);                        // R2 = [table + index*8]
+        SLDI(R0, indexreg, 3);                  // R0 = index*8
+        asm_li64(R2, uint64_t(native_table));   // R2 = table (5 instr)
+#else // 64bit
+        underrunProtect(6*4);
+        BCTR(0);                                // jump to address in CTR
+        MTCTR(R2);                              // CTR = R2
+        LWZX(R2, R2, R0);                       // R2 = [table + index*4]
+        SLWI(R0, indexreg, 2);                  // R0 = index*4
+        asm_li(R2, int32_t(native_table));      // R2 = table (up to 2 instructions)
+#endif // 64bit
+    }
+
 } // namespace nanojit
 
 #endif // FEATURE_NANOJIT && NANOJIT_PPC

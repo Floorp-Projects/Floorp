@@ -51,9 +51,10 @@
 #include "nsDisplayList.h"
 
 nsIFrame*
-NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
+                       nsFrameState aTypeBit)
 {
-  return new (aPresShell) nsPlaceholderFrame(aContext);
+  return new (aPresShell) nsPlaceholderFrame(aContext, aTypeBit);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPlaceholderFrame)

@@ -85,7 +85,7 @@ pageInfoTreeView.prototype = {
   {
     this.rows = this.data.push(row);
     this.rowCountChanged(this.rows - 1, 1);
-    if (this.selection.count == 0 && this.rowCount)
+    if (this.selection.count == 0 && this.rowCount && !gImageElement)
       this.selection.select(0);
   },
 

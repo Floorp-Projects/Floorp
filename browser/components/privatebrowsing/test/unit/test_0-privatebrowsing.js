@@ -45,9 +45,6 @@ function run_test_on_service() {
   // initialization
   var os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
-  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch);
-  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
   // the contract ID should be available
   do_check_true(PRIVATEBROWSING_CONTRACT_ID in Cc);
@@ -220,7 +217,27 @@ function run_test_on_service() {
     ];
   do_check_eq(observer.notifications.join(","), reference_order.join(","));
 
-  prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+  // make sure that the private browsing transition complete notification is
+  // raised correctly.
+  observer = {
+    observe: function(aSubject, aTopic, aData) {
+      this.notifications.push(aTopic + " " + aData);
+    },
+    notifications: []
+  };
+  os.addObserver(observer, kPrivateBrowsingNotification, false);
+  os.addObserver(observer, kPrivateBrowsingTransitionCompleteNotification, false);
+  pb.privateBrowsingEnabled = true;
+  pb.privateBrowsingEnabled = false;
+  os.removeObserver(observer, kPrivateBrowsingNotification);
+  os.removeObserver(observer, kPrivateBrowsingTransitionCompleteNotification);
+  reference_order = [
+    kPrivateBrowsingNotification + " " + kEnter,
+    kPrivateBrowsingTransitionCompleteNotification + " ",
+    kPrivateBrowsingNotification + " " + kExit,
+    kPrivateBrowsingTransitionCompleteNotification + " ",
+  ];
+  do_check_eq(observer.notifications.join(","), reference_order.join(","));
 }
 
 // Support running tests on both the service itself and its wrapper

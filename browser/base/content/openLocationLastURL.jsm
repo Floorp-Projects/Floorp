@@ -53,13 +53,21 @@ let observer = {
     throw Components.results.NS_NOINTERFACE;
   },
   observe: function (aSubject, aTopic, aData) {
-    gOpenLocationLastURLData = "";
+    switch (aTopic) {
+      case "private-browsing":
+        gOpenLocationLastURLData = "";
+        break;
+      case "browser:purge-session-history":
+        gOpenLocationLastURL.reset();
+        break;
+    }
   }
 };
 
-Components.classes["@mozilla.org/observer-service;1"]
-          .getService(Components.interfaces.nsIObserverService)
-          .addObserver(observer, "private-browsing", true);
+let os = Components.classes["@mozilla.org/observer-service;1"]
+                   .getService(Components.interfaces.nsIObserverService);
+os.addObserver(observer, "private-browsing", true);
+os.addObserver(observer, "browser:purge-session-history", true);
 
 let gOpenLocationLastURLData = "";
 let gOpenLocationLastURL = {

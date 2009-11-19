@@ -59,7 +59,7 @@ public:
 };
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsQuitPumpingEvent, nsIRunnable)
 
-static void PumpEvents()
+static inline void PumpEvents()
 {
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
 
@@ -70,7 +70,7 @@ static void PumpEvents()
   NS_ProcessPendingEvents(thread);
 }
 
-static void QuitPumpingEvents()
+static inline void QuitPumpingEvents()
 {
   // Dispatch a task that toggles gKeepPumpingEvents so that we flush all
   // of the pending tasks before exiting from PumpEvents.

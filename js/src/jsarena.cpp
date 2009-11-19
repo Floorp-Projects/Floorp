@@ -61,8 +61,8 @@ static JSArenaStats *arena_stats_list;
 #define JS_ARENA_DEFAULT_ALIGN  sizeof(double)
 
 JS_PUBLIC_API(void)
-JS_INIT_NAMED_ARENA_POOL(JSArenaPool *pool, const char *name, size_t size,
-                         size_t align, size_t *quotap)
+JS_InitArenaPool(JSArenaPool *pool, const char *name, size_t size,
+                 size_t align, size_t *quotap)
 {
     if (align == 0)
         align = JS_ARENA_DEFAULT_ALIGN;

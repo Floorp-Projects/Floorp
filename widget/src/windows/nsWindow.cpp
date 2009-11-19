@@ -1504,28 +1504,17 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
       case nsSizeMode_Maximized :
         mode = SW_MAXIMIZE;
         break;
+
       case nsSizeMode_Minimized :
+        // Using SW_SHOWMINIMIZED prevents the working set from being trimmed but
+        // keeps the window active in the tray. So after the window is minimized,
+        // windows will fire WM_WINDOWPOSCHANGED (OnWindowPosChanged) at which point
+        // we will do some additional processing to get the active window set right.
+        // If sTrimOnMinimize is set, we let windows handle minimization normally
+        // using SW_MINIMIZE.
         mode = sTrimOnMinimize ? SW_MINIMIZE : SW_SHOWMINIMIZED;
-        if (!sTrimOnMinimize) {
-          // Find the next window that is enabled, visible, and not minimized.
-          HWND hwndBelow = ::GetNextWindow(mWnd, GW_HWNDNEXT);
-          while (hwndBelow && (!::IsWindowEnabled(hwndBelow) || !::IsWindowVisible(hwndBelow) ||
-                               ::IsIconic(hwndBelow))) {
-            hwndBelow = ::GetNextWindow(hwndBelow, GW_HWNDNEXT);
-          }
-
-          // Push ourselves to the bottom of the stack, then activate the
-          // next window.
-          ::SetWindowPos(mWnd, HWND_BOTTOM, 0, 0, 0, 0,
-                         SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-          if (hwndBelow)
-            ::SetForegroundWindow(hwndBelow);
-
-          // Play the minimize sound while we're here, since that is also
-          // forgotten when we use SW_SHOWMINIMIZED.
-          ::PlaySoundW(L"Minimize", nsnull, SND_ALIAS | SND_NODEFAULT | SND_ASYNC);
-        }
         break;
+
       default :
         mode = SW_RESTORE;
     }
@@ -4840,7 +4829,7 @@ BOOL nsWindow::OnInputLangChange(HKL aHKL)
   return PR_FALSE;   // always pass to child window
 }
 
-#if !defined(WINCE)
+#if !defined(WINCE) // implemented in nsWindowCE.cpp
 void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
 {
   if (wp == nsnull)
@@ -4886,6 +4875,14 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
     // insures the SetSizeMode call is a no-op. Addresses a bug on Win7 related
     // to window docking. (bug 489258)
     mSizeMode = event.mSizeMode;
+
+    // If !sTrimOnMinimize, we minimize windows using SW_SHOWMINIMIZED (See
+    // SetSizeMode for internal calls, and WM_SYSCOMMAND for external). This
+    // prevents the working set from being trimmed but keeps the window active.
+    // After the window is minimized, we need to do some touch up work on the
+    // active window. (bugs 76831 & 499816)
+    if (!sTrimOnMinimize && nsSizeMode_Minimized == event.mSizeMode)
+      ActivateOtherWindowHelper(mWnd);
 
 #ifdef WINSTATE_DEBUG_OUTPUT
     switch (mSizeMode) {
@@ -4982,6 +4979,28 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, PRBool& result)
     // Send a gecko resize event
     result = OnResize(rect);
   }
+}
+
+// static
+void nsWindow::ActivateOtherWindowHelper(HWND aWnd)
+{
+  // Find the next window that is enabled, visible, and not minimized.
+  HWND hwndBelow = ::GetNextWindow(aWnd, GW_HWNDNEXT);
+  while (hwndBelow && (!::IsWindowEnabled(hwndBelow) || !::IsWindowVisible(hwndBelow) ||
+                       ::IsIconic(hwndBelow))) {
+    hwndBelow = ::GetNextWindow(hwndBelow, GW_HWNDNEXT);
+  }
+
+  // Push ourselves to the bottom of the stack, then activate the
+  // next window.
+  ::SetWindowPos(aWnd, HWND_BOTTOM, 0, 0, 0, 0,
+                 SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+  if (hwndBelow)
+    ::SetForegroundWindow(hwndBelow);
+
+  // Play the minimize sound while we're here, since that is also
+  // forgotten when we use SW_SHOWMINIMIZED.
+  ::PlaySoundW(L"Minimize", nsnull, SND_ALIAS | SND_NODEFAULT | SND_ASYNC);
 }
 #endif // !defined(WINCE)
 
@@ -6918,6 +6937,7 @@ void nsWindow::InitTrackPointHack()
   long lResult;
   const WCHAR wstrKeys[][40] = {L"Software\\Lenovo\\TrackPoint",
                                 L"Software\\Lenovo\\UltraNav",
+                                L"Software\\Alps\\Apoint\\TrackPoint",
                                 L"Software\\Synaptics\\SynTPEnh\\UltraNavPS2"};    
   // If anything fails turn the hack off
   sTrackPointHack = false;

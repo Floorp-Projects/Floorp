@@ -74,9 +74,8 @@
         }
 
 #ifdef JS_TRACER
-        TraceRecorder* tr = TRACE_RECORDER(cx);
-        if (tr) {
-            AbortableRecordingStatus status = TraceRecorder::monitorRecording(cx, tr, op);
+        if (TraceRecorder* tr = TRACE_RECORDER(cx)) {
+            AbortableRecordingStatus status = tr->monitorRecording(op);
             switch (status) {
               case ARECORD_CONTINUE:
                 moreInterrupts = true;
@@ -90,6 +89,7 @@
                 // The code at 'error:' aborts the recording.
                 goto error;
               case ARECORD_ABORTED:
+              case ARECORD_COMPLETED:
                 break;
               case ARECORD_STOP:
                 /* A 'stop' error should have already aborted recording. */
@@ -1522,10 +1522,6 @@ BEGIN_CASE(JSOP_GETXPROP)
                 } else if (PCVAL_IS_SLOT(entry->vword)) {
                     slot = PCVAL_TO_SLOT(entry->vword);
                     JS_ASSERT(slot < OBJ_SCOPE(obj2)->freeslot);
-                    if (!DSLOTS_IS_NOT_NULL(obj2) &&
-                        OBJ_SHAPE(obj2) >= SHAPE_OVERFLOW_BIT) {
-                        DSLOTS_BUMP_2(obj2);
-                    }
                     rval = LOCKED_OBJ_GET_SLOT(obj2, slot);
                 } else {
                     JS_ASSERT(PCVAL_IS_SPROP(entry->vword));
@@ -2862,7 +2858,7 @@ BEGIN_CASE(JSOP_CALLDSLOT)
     JS_ASSERT(fp->argv);
     obj = JSVAL_TO_OBJECT(fp->argv[-2]);
     JS_ASSERT(obj);
-    JS_ASSERT(DSLOTS_IS_NOT_NULL(obj));
+    JS_ASSERT(obj->dslots);
 
     index = GET_UINT16(regs.pc);
     JS_ASSERT(JS_INITIAL_NSLOTS + index < jsatomid(obj->dslots[-1]));
@@ -3261,18 +3257,12 @@ BEGIN_CASE(JSOP_LAMBDA)
         if (FUN_NULL_CLOSURE(fun)) {
             parent = fp->scopeChain;
 
-            if (OBJ_GET_PARENT(cx, obj) == parent) {
+            if (0 && OBJ_GET_PARENT(cx, obj) == parent) {
                 op = JSOp(regs.pc[JSOP_LAMBDA_LENGTH]);
 
                 /*
                  * Optimize ({method: function () { ... }, ...}) and
                  * this.method = function () { ... }; bytecode sequences.
-                 *
-                 * Note that we jump to the entry points for JSOP_SETPROP and
-                 * JSOP_INITPROP without calling the trace recorder, because
-                 * the record hooks for those ops are essentially no-ops (this
-                 * can't change given the predictive shape guarding the
-                 * recorder must do).
                  */
                 if (op == JSOP_SETMETHOD) {
 #ifdef DEBUG
@@ -3589,19 +3579,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
                 JS_ASSERT(sprop2 == sprop);
             } else {
                 JS_ASSERT(scope->owned());
-
-                /* Inline-specialized version of JSScope::extend. */
-                js_LeaveTraceIfGlobalObject(cx, obj);
-                scope->shape = sprop->shape;
-                ++scope->entryCount;
-                scope->lastProp = sprop;
-
-                jsuint index;
-                if (js_IdIsIndex(sprop->id, &index))
-                    scope->setIndexedProperties();
-
-                if (sprop->isMethod())
-                    scope->setMethodBarrier();
+                scope->extend(cx, sprop);
             }
 
             /*

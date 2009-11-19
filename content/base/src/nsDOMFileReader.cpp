@@ -154,7 +154,7 @@ nsDOMFileReader::Notify(const char *aCharset, nsDetectionConfident aConf)
 nsDOMFileReader::nsDOMFileReader()
   : mFileData(nsnull), mReadCount(0),
     mDataLen(0), mDataFormat(0),
-    mReadyState(nsIDOMFileReader::INITIAL),
+    mReadyState(nsIDOMFileReader::EMPTY),
     mProgressEventWasDelayed(PR_FALSE),
     mTimerIsActive(PR_FALSE),
     mReadTotal(0), mReadTransferred(0),
@@ -319,7 +319,7 @@ nsDOMFileReader::Abort()
   DispatchProgressEvent(NS_LITERAL_STRING(ABORT_STR));
   DispatchProgressEvent(NS_LITERAL_STRING(LOADEND_STR));
 
-  mReadyState = nsIDOMFileReader::INITIAL;
+  mReadyState = nsIDOMFileReader::EMPTY;
 
   return NS_OK;
 }

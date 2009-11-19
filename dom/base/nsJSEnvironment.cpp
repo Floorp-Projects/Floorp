@@ -941,26 +941,48 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
           JS_ClearPendingException(cx);
           return JS_FALSE;
         }
-        
-        nsCOMPtr<nsIPrompt> prompt = GetPromptFromContext(ctx);
-        
-        nsXPIDLString title, msg;
-        rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                                "LowMemoryTitle",
-                                                title);
-        
-        rv |= nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                                 "LowMemoryMessage",
-                                                 msg);
-        
-        //GetStringFromName can return NS_OK and still give NULL string
-        if (NS_FAILED(rv) || !title || !msg) {
-          NS_ERROR("Failed to get localized strings.");
-          JS_ClearPendingException(cx);
-          return JS_FALSE;
+
+        nsCOMPtr<nsIScriptError> errorObject =
+          do_CreateInstance("@mozilla.org/scripterror;1");
+
+        if (errorObject) {
+          nsXPIDLString msg;
+          nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                             "LowMemoryMessage",
+                                             msg);
+
+          JSStackFrame *fp, *iterator = nsnull;
+          fp = ::JS_FrameIterator(cx, &iterator);
+          PRUint32 lineno = 0;
+          nsAutoString sourcefile;
+          if (fp) {
+            JSScript* script = ::JS_GetFrameScript(cx, fp);
+            if (script) {
+              const char* filename = ::JS_GetScriptFilename(cx, script);
+              if (filename) {
+                CopyUTF8toUTF16(nsDependentCString(filename), sourcefile);
+              }
+              jsbytecode* pc = ::JS_GetFramePC(cx, fp);
+              if (pc) {
+                lineno = ::JS_PCToLineNumber(cx, script, pc);
+              }
+            }
+          }
+
+          rv = errorObject->Init(msg.get(),
+                                 sourcefile.get(),
+                                 EmptyString().get(),
+                                 lineno, 0, nsIScriptError::errorFlag,
+                                 "content javascript");
+          if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIConsoleService> consoleService =
+              do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+            if (NS_SUCCEEDED(rv)) {
+              consoleService->LogMessage(errorObject);
+            }
+          }
         }
-        
-        prompt->Alert(title, msg);
+
         JS_ClearPendingException(cx);
         return JS_FALSE;
       }

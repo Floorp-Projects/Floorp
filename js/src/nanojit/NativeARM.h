@@ -78,6 +78,7 @@ namespace nanojit
 #define NJ_MAX_STACK_ENTRY              256
 #define NJ_MAX_PARAMETERS               16
 #define NJ_ALIGN_STACK                  8
+#define NJ_JTBL_SUPPORTED               1
 
 #define NJ_CONSTANT_POOLS
 const int NJ_MAX_CPOOL_OFFSET = 4096;
@@ -183,7 +184,9 @@ static const RegisterMask AllowableFlagRegs = 1<<R0 | 1<<R1 | 1<<R2 | 1<<R3 | 1<
 #define isS12(offs) ((-(1<<12)) <= (offs) && (offs) < (1<<12))
 #define isU12(offs) (((offs) & 0xfff) == (offs))
 
-static inline bool isValidDisplacement(int32_t d) {
+static inline bool isValidDisplacement(LOpcode op, int32_t d) {
+    if (op == LIR_ldcs)
+        return (d >= 0) ? isU8(d) : isU8(-d);
     return isS12(d);
 }
 
@@ -477,6 +480,26 @@ enum {
 // Other operations.
 // --------
 
+// [_d_hi,_d] = _l * _r
+#define SMULL_dont_check_op1(_d, _d_hi, _l, _r)  do {                               \
+        underrunProtect(4);                                                         \
+        NanoAssert((ARM_ARCH >= 6) || ((_d) != (_l)));                              \
+        NanoAssert(IsGpReg(_d) && IsGpReg(_d_hi) && IsGpReg(_l) && IsGpReg(_r));    \
+        NanoAssert(((_d) != PC) && ((_d_hi) != PC) && ((_l) != PC) && ((_r) != PC));\
+        *(--_nIns) = (NIns)( COND_AL | 0xc00090 | (_d_hi)<<16 | (_d)<<12 | (_r)<<8 | (_l) );\
+        asm_output("smull %s, %s, %s, %s",gpn(_d),gpn(_d_hi),gpn(_l),gpn(_r));      \
+} while(0)
+
+#if NJ_ARM_ARCH >= NJ_ARM_V6
+#define SMULL(_d, _d_hi, _l, _r) SMULL_dont_check_op1(_d, _d_hi, _l, _r)
+#else
+#define SMULL(_d, _d_hi, _l, _r) do {               \
+        NanoAssert(   (_d)!=(_l));                  \
+        NanoAssert((_d_hi)!=(_l));                  \
+        SMULL_dont_check_op1(_d, _d_hi, _l, _r);    \
+    } while(0)
+#endif
+
 // _d = _l * _r
 #define MUL_dont_check_op1(_d, _l, _r)  do {                                \
         underrunProtect(4);                                                 \
@@ -568,6 +591,15 @@ enum {
 // _d = [_b+off]
 #define LDR(_d,_b,_off)        asm_ldr_chk(_d,_b,_off,1)
 #define LDR_nochk(_d,_b,_off)  asm_ldr_chk(_d,_b,_off,0)
+
+// _d = [_b + _x<<_s]
+#define LDR_scaled(_d, _b, _x, _s) do { \
+        NanoAssert(((_s)&31) == _s);\
+        NanoAssert(IsGpReg(_d) && IsGpReg(_b) && IsGpReg(_x));\
+        underrunProtect(4);\
+        *(--_nIns) = (NIns)(COND_AL | (0x79<<20) | ((_b)<<16) | ((_d)<<12) | ((_s)<<7) | (_x));\
+        asm_output("ldr %s, [%s, +%s, LSL #%d]", gpn(_d), gpn(_b), gpn(_x), (_s));\
+    } while (0)
 
 // _d = #_imm
 #define LDi(_d,_imm) asm_ld_imm(_d,_imm)
@@ -727,6 +759,7 @@ enum {
     } while (0)
 
 #define SETEQ(r)    SET(r,EQ)
+#define SETNE(r)    SET(r,NE)
 #define SETLT(r)    SET(r,LT)
 #define SETLE(r)    SET(r,LE)
 #define SETGT(r)    SET(r,GT)

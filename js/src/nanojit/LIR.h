@@ -51,57 +51,6 @@
  */
 namespace nanojit
 {
-    enum LOpcode
-#if defined(_MSC_VER) && _MSC_VER >= 1400
-#pragma warning(disable:4480) // nonstandard extension used: specifying underlying type for enum
-          : unsigned
-#endif
-    {
-        // flags; upper bits reserved
-        LIR64    = 0x40,            // result is double or quad
-
-#define OPDEF(op, number, args, repkind) \
-        LIR_##op = (number),
-#define OPDEF64(op, number, args, repkind) \
-        LIR_##op = ((number) | LIR64),
-#include "LIRopcode.tbl"
-        LIR_sentinel,
-#undef OPDEF
-#undef OPDEF64
-
-#ifdef NANOJIT_64BIT
-#  define PTR_SIZE(a,b)  b
-#else
-#  define PTR_SIZE(a,b)  a
-#endif
-
-        // pointer op aliases
-        LIR_ldp     = PTR_SIZE(LIR_ld,     LIR_ldq),
-        LIR_ldcp    = PTR_SIZE(LIR_ldc,    LIR_ldqc),
-        LIR_stpi    = PTR_SIZE(LIR_sti,    LIR_stqi),
-        LIR_piadd   = PTR_SIZE(LIR_add,    LIR_qiadd),
-        LIR_piand   = PTR_SIZE(LIR_and,    LIR_qiand),
-        LIR_pilsh   = PTR_SIZE(LIR_lsh,    LIR_qilsh),
-        LIR_pirsh   = PTR_SIZE(LIR_rsh,    LIR_qirsh),
-        LIR_pursh   = PTR_SIZE(LIR_ush,    LIR_qursh),
-        LIR_pcmov   = PTR_SIZE(LIR_cmov,   LIR_qcmov),
-        LIR_pior    = PTR_SIZE(LIR_or,     LIR_qior),
-        LIR_pxor    = PTR_SIZE(LIR_xor,    LIR_qxor),
-        LIR_addp    = PTR_SIZE(LIR_iaddp,  LIR_qaddp),
-        LIR_peq     = PTR_SIZE(LIR_eq,     LIR_qeq),
-        LIR_plt     = PTR_SIZE(LIR_lt,     LIR_qlt),
-        LIR_pgt     = PTR_SIZE(LIR_gt,     LIR_qgt),
-        LIR_ple     = PTR_SIZE(LIR_le,     LIR_qle),
-        LIR_pge     = PTR_SIZE(LIR_ge,     LIR_qge),
-        LIR_pult    = PTR_SIZE(LIR_ult,    LIR_qult),
-        LIR_pugt    = PTR_SIZE(LIR_ugt,    LIR_qugt),
-        LIR_pule    = PTR_SIZE(LIR_ule,    LIR_qule),
-        LIR_puge    = PTR_SIZE(LIR_uge,    LIR_quge),
-        LIR_alloc   = PTR_SIZE(LIR_ialloc, LIR_qalloc),
-        LIR_pcall   = PTR_SIZE(LIR_icall,  LIR_qcall),
-        LIR_param   = PTR_SIZE(LIR_iparam, LIR_qparam)
-    };
-
     struct GuardRecord;
     struct SideExit;
 
@@ -178,9 +127,13 @@ namespace nanojit
         return (op & ~LIR64) == LIR_ret;
     }
 
-    // The opcode is not logically part of the Reservation, but we include it
-    // in this struct to ensure that opcode plus the Reservation fits in a
-    // single word.  Yuk.
+    // This structure is used transiently during assembly to record
+    // information relating to register allocation.  See class RegAlloc for
+    // more details.
+    //
+    // Note: The opcode is not logically part of the Reservation, but we
+    // include it in this struct to ensure that opcode plus the Reservation
+    // fits in a single word.  Yuk.
     struct Reservation
     {
         uint32_t arIndex:16;    // index into stack frame.  displ is -4*arIndex
@@ -254,44 +207,12 @@ namespace nanojit
     //        oprnd_1
     //        opcode + resv ] <-- LIns* ins
     //
-    // - LIR_skip instructions are more complicated.  They allow an arbitrary
-    //   blob of data (the "payload") to be placed in the LIR stream.  The
-    //   size of the payload is always a multiple of the word size.  A skip
-    //   instruction's operand points to the previous instruction, which lets
-    //   the payload be skipped over when reading backwards.  Here's an
-    //   example of a skip instruction with a 3-word payload preceded by an
-    //   LInsOp1:
-    //
-    //      [ oprnd_1
-    //  +->   opcode + resv           ]
-    //  |   [ data
-    //  |     data
-    //  |     data
-    //  +---- prevLIns                  <-- LInsSk* insSk == toLInsSk(ins)
-    //        opcode==LIR_skip + resv ] <-- LIns* ins
-    //
-    //   Skips are also used to link code pages.  If the first instruction on
-    //   a page isn't a LIR_start, it will be a skip, and the skip's operand
-    //   will point to the last LIns on the previous page.  In this case there
-    //   isn't a payload as such;  in fact, the previous page might be at a
-    //   higher address, ie. the operand might point forward rather than
-    //   backward.
-    //
+    // - LIR_skip instructions are used to link code chunks.  If the first  
+    //   instruction on a chunk isn't a LIR_start, it will be a skip, and the
+    //   skip's operand will point to the last LIns on the preceding chunk.  
     //   LInsSk has the same layout as LInsOp1, but we represent it as a
     //   different class because there are some places where we treat
     //   skips specially and so having it separate seems like a good idea.
-    //
-    // - Call instructions (LIR_call, LIR_fcall, LIR_calli, LIR_fcalli) are
-    //   also more complicated.  They are preceded by the arguments to the
-    //   call, which are laid out in reverse order.  For example, a call with
-    //   3 args will look like this:
-    //
-    //      [ arg #2
-    //        arg #1
-    //        arg #0
-    //        argc            <-- LInsC insC == toLInsC(ins)
-    //        ci
-    //        opcode + resv ] <-- LIns* ins
     //
     // - Various things about the size and layout of LIns and LInsXYZ are
     //   statically checked in staticSanityCheck().  In particular, this is
@@ -300,7 +221,7 @@ namespace nanojit
     //   practice all sane compilers use a layout that results in this).  We
     //   also check that every LInsXYZ is word-aligned in
     //   LirBuffer::makeRoom();  this seems sensible to avoid potential
-    //   slowdowns due to misalignment.  It relies on pages themselves being
+    //   slowdowns due to misalignment.  It relies on chunks themselves being
     //   word-aligned, which is extremely likely.
     //
     // - There is an enum, LInsRepKind, with one member for each of the
@@ -321,6 +242,7 @@ namespace nanojit
         LRK_P,
         LRK_I,
         LRK_I64,
+        LRK_Jtbl,
         LRK_None    // this one is used for unused opcode numbers
     };
 
@@ -335,6 +257,7 @@ namespace nanojit
     class LInsP;
     class LInsI;
     class LInsI64;
+    class LInsJtbl;
 
     class LIns
     {
@@ -361,6 +284,7 @@ namespace nanojit
         inline LInsP*   toLInsP()   const;
         inline LInsI*   toLInsI()   const;
         inline LInsI64* toLInsI64() const;
+        inline LInsJtbl*toLInsJtbl()const;
 
         void staticSanityCheck();
 
@@ -373,12 +297,13 @@ namespace nanojit
         inline void initLInsLd(LOpcode opcode, LIns* val, int32_t d);
         inline void initLInsSti(LOpcode opcode, LIns* val, LIns* base, int32_t d);
         inline void initLInsSk(LIns* prevLIns);
-        // Nb: initLInsC() does NOT initialise the arguments.  That must be
-        // done separately.
-        inline void initLInsC(LOpcode opcode, int32_t argc, const CallInfo* ci);
+        // Nb: args[] must be allocated and initialised before being passed in;
+        // initLInsC() just copies the pointer into the LInsC.
+        inline void initLInsC(LOpcode opcode, LIns** args, const CallInfo* ci);
         inline void initLInsP(int32_t arg, int32_t kind);
         inline void initLInsI(LOpcode opcode, int32_t imm32);
         inline void initLInsI64(LOpcode opcode, int64_t imm64);
+        inline void initLInsJtbl(LIns* index, uint32_t size, LIns** table);
 
         LOpcode opcode() const { return lastWord.opcode; }
 
@@ -441,7 +366,6 @@ namespace nanojit
         inline int32_t  disp() const;
 
         // For LInsSk.
-        inline void*    payload()  const;
         inline LIns*    prevLIns() const;
 
         // For LInsP.
@@ -466,6 +390,11 @@ namespace nanojit
         inline uint32_t argc()                  const;
         inline LIns*    callArgN(uint32_t n)    const;
         inline const CallInfo* callInfo()       const;
+
+        // For LIR_jtbl
+        inline uint32_t getTableSize() const;
+        inline LIns* getTarget(uint32_t index) const;
+        inline void setTarget(uint32_t index, LIns* label) const;
 
         // isLInsXYZ() returns true if the instruction has the LInsXYZ form.
         // Note that there is some overlap with other predicates, eg.
@@ -516,6 +445,10 @@ namespace nanojit
         bool isLInsI64() const {
             NanoAssert(LRK_None != repKinds[opcode()]);
             return LRK_I64 == repKinds[opcode()];
+        }
+        bool isLInsJtbl() const {
+            NanoAssert(LRK_None != repKinds[opcode()]);
+            return LRK_Jtbl == repKinds[opcode()];
         }
 
         // LIns predicates.
@@ -596,7 +529,7 @@ namespace nanojit
         }
 
         bool isBranch() const {
-            return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j);
+            return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j) || isop(LIR_jtbl);
         }
 
         bool isPtr() {
@@ -752,7 +685,10 @@ namespace nanojit
     private:
         friend class LIns;
 
-        uintptr_t   argc:8;
+        // Arguments in reverse order, just like insCall() (ie. args[0] holds
+        // the rightmost arg).  The array should be allocated by the same
+        // allocator as the LIR buffers, because it has the same lifetime.
+        LIns**      args;
 
         const CallInfo* ci;
 
@@ -807,6 +743,23 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
+    // Used for LIR_jtbl.  oprnd_1 must be a uint32_t index in
+    // the range 0 <= index < size; no range check is performed.
+    class LInsJtbl
+    {
+    private:
+        friend class LIns;
+
+        uint32_t    size;     // number of entries in table
+        LIns**      table;    // pointer to table[size] with same lifetime as this LInsJtbl
+        LIns*       oprnd_1;  // uint32_t index expression
+
+        LIns        ins;
+
+    public:
+        LIns* getLIns() { return &ins; }
+    };
+
     // Used only as a placeholder for OPDEF macros for unused opcodes in
     // LIRopcode.tbl.
     class LInsNone
@@ -824,6 +777,7 @@ namespace nanojit
     LInsP*   LIns::toLInsP()   const { return (LInsP*  )( uintptr_t(this+1) - sizeof(LInsP  ) ); }
     LInsI*   LIns::toLInsI()   const { return (LInsI*  )( uintptr_t(this+1) - sizeof(LInsI  ) ); }
     LInsI64* LIns::toLInsI64() const { return (LInsI64*)( uintptr_t(this+1) - sizeof(LInsI64) ); }
+    LInsJtbl*LIns::toLInsJtbl()const { return (LInsJtbl*)(uintptr_t(this+1) - sizeof(LInsJtbl)); }
 
     void LIns::initLInsOp0(LOpcode opcode) {
         lastWord.clear();
@@ -872,11 +826,10 @@ namespace nanojit
         toLInsSk()->prevLIns = prevLIns;
         NanoAssert(isLInsSk());
     }
-    void LIns::initLInsC(LOpcode opcode, int32_t argc, const CallInfo* ci) {
-        NanoAssert(isU8(argc));
+    void LIns::initLInsC(LOpcode opcode, LIns** args, const CallInfo* ci) {
         lastWord.clear();
         lastWord.opcode = opcode;
-        toLInsC()->argc = argc;
+        toLInsC()->args = args;
         toLInsC()->ci = ci;
         NanoAssert(isLInsC());
     }
@@ -901,9 +854,17 @@ namespace nanojit
         toLInsI64()->imm64_1 = int32_t(imm64 >> 32);
         NanoAssert(isLInsI64());
     }
+    void LIns::initLInsJtbl(LIns* index, uint32_t size, LIns** table) {
+        lastWord.clear();
+        lastWord.opcode = LIR_jtbl;
+        toLInsJtbl()->oprnd_1 = index;
+        toLInsJtbl()->table = table;
+        toLInsJtbl()->size = size;
+        NanoAssert(isLInsJtbl());
+    }
 
     LIns* LIns::oprnd1() const {
-        NanoAssert(isLInsOp1() || isLInsOp2() || isLInsOp3() || isLInsLd() || isLInsSti());
+        NanoAssert(isLInsOp1() || isLInsOp2() || isLInsOp3() || isLInsLd() || isLInsSti() || isLInsJtbl());
         return toLInsOp2()->oprnd_1;
     }
     LIns* LIns::oprnd2() const {
@@ -916,14 +877,27 @@ namespace nanojit
     }
 
     LIns* LIns::getTarget() const {
-        NanoAssert(isBranch());
+        NanoAssert(isBranch() && !isop(LIR_jtbl));
         return oprnd2();
     }
 
     void LIns::setTarget(LIns* label) {
         NanoAssert(label && label->isop(LIR_label));
-        NanoAssert(isBranch());
+        NanoAssert(isBranch() && !isop(LIR_jtbl));
         toLInsOp2()->oprnd_2 = label;
+    }
+
+    LIns* LIns::getTarget(uint32_t index) const {
+        NanoAssert(isop(LIR_jtbl));
+        NanoAssert(index < toLInsJtbl()->size);
+        return toLInsJtbl()->table[index];
+    }
+
+    void LIns::setTarget(uint32_t index, LIns* label) const {
+        NanoAssert(label && label->isop(LIR_label));
+        NanoAssert(isop(LIR_jtbl));
+        NanoAssert(index < toLInsJtbl()->size);
+        toLInsJtbl()->table[index] = label;
     }
 
     GuardRecord *LIns::record() const {
@@ -938,13 +912,6 @@ namespace nanojit
             NanoAssert(isLInsLd());
             return toLInsLd()->disp;
         }
-    }
-
-    void* LIns::payload() const {
-        NanoAssert(isop(LIR_skip));
-        // Operand 1 points to the previous LIns;  we move past it to get to
-        // the payload.
-        return (void*) (uintptr_t(prevLIns()) + sizeof(LIns));
     }
 
     LIns* LIns::prevLIns() const {
@@ -983,20 +950,17 @@ namespace nanojit
         toLInsI()->imm32 = (nbytes+3)>>2; // # of required 32bit words
     }
 
-    // Index args in r-l order.  arg(0) is rightmost arg.
+    // Index args in reverse order, i.e. arg(0) returns the rightmost arg.
     // Nb: this must be kept in sync with insCall().
     LIns* LIns::arg(uint32_t i) const
     {
         NanoAssert(isCall());
-        NanoAssert(i < argc());
-        // Move to the start of the LInsC, then move back one word per argument.
-        LInsp* argSlot = (LInsp*)(uintptr_t(toLInsC()) - (i+1)*sizeof(void*));
-        return *argSlot;
+        NanoAssert(i < callInfo()->count_args());
+        return toLInsC()->args[i];  // args[] is in right-to-left order as well
     }
 
     uint32_t LIns::argc() const {
-        NanoAssert(isCall());
-        return toLInsC()->argc;
+        return callInfo()->count_args();
     }
 
     LIns* LIns::callArgN(uint32_t n) const
@@ -1010,10 +974,17 @@ namespace nanojit
         return toLInsC()->ci;
     }
 
+    uint32_t LIns::getTableSize() const
+    {
+        NanoAssert(isLInsJtbl());
+        return toLInsJtbl()->size;
+    }
+
     class LirWriter
     {
-        LInsp insDisp(LInsp base, int32_t& d) {
-            if (!isValidDisplacement(d)) {
+    protected:
+        LInsp insDisp(LOpcode op, LInsp base, int32_t& d) {
+            if (!isValidDisplacement(op, d)) {
                 base = ins2i(LIR_piadd, base, d);
                 d = 0;
             }
@@ -1059,13 +1030,12 @@ namespace nanojit
             return out->insImmf(d);
         }
         virtual LInsp insLoad(LOpcode op, LIns* base, int32_t d) {
-            base = insDisp(base, d);
             return out->insLoad(op, base, d);
         }
         virtual LInsp insStorei(LIns* value, LIns* base, int32_t d) {
-            base = insDisp(base, d);
             return out->insStorei(value, base, d);
         }
+        // args[] is in reverse order, ie. args[0] holds the rightmost arg.
         virtual LInsp insCall(const CallInfo *call, LInsp args[]) {
             return out->insCall(call, args);
         }
@@ -1073,8 +1043,8 @@ namespace nanojit
             NanoAssert(size != 0);
             return out->insAlloc(size);
         }
-        virtual LInsp insSkip(size_t size) {
-            return out->insSkip(size);
+        virtual LInsp insJtbl(LIns* index, uint32_t size) {
+            return out->insJtbl(index, size);
         }
 
         // convenience functions
@@ -1117,7 +1087,7 @@ namespace nanojit
         };
         TreeMap<const void*, Entry*> names;
         LogControl *logc;
-        char buf[1000], *end;
+        char buf[5000], *end;
         void formatAddr(const void *p, char *buf);
     public:
         LabelMap(Allocator& allocator, LogControl* logc);
@@ -1219,6 +1189,10 @@ namespace nanojit
             return add_flush(out->insBranch(v, condition, to));
         }
 
+        LIns* insJtbl(LIns* index, uint32_t size) {
+            return add_flush(out->insJtbl(index, size));
+        }
+
         LIns* ins0(LOpcode v) {
             if (v == LIR_label || v == LIR_start) {
                 flush();
@@ -1275,50 +1249,93 @@ namespace nanojit
         LIns* insLoad(LOpcode op, LInsp base, int32_t off);
     };
 
+    enum LInsHashKind {
+        // We divide instruction kinds into groups for the use of LInsHashSet.
+        // LIns0 isn't present because we don't need to record any 0-ary
+        // instructions.
+        LInsImm   = 0,
+        LInsImmq  = 1,
+        LInsImmf  = 2,
+        LIns1     = 3,
+        LIns2     = 4,
+        LIns3     = 5,
+        LInsLoad  = 6,
+        LInsCall  = 7,
+
+        LInsFirst = 0,
+        LInsLast = 7
+    };
+    #define nextKind(kind)  LInsHashKind(kind+1)
+
     // @todo, this could be replaced by a generic HashMap or HashSet, if we had one
     class LInsHashSet
     {
-        // must be a power of 2.
-        // don't start too small, or we'll waste time growing and rehashing.
-        // don't start too large, will waste memory.
-        static const uint32_t kInitialCap = 64;
+        // Must be a power of 2.
+        // Don't start too small, or we'll waste time growing and rehashing.
+        // Don't start too large, will waste memory.
+        static const uint32_t kInitialCap[LInsLast + 1];
 
-        LInsp *m_list;
-        uint32_t m_used, m_cap;
+        // There is one list for each instruction kind.  This lets us size the
+        // lists appropriately (some instructions are more common than others).
+        // It also lets us have kind-specific find/add/grow functions, which
+        // are faster than generic versions.
+        LInsp *m_list[LInsLast + 1];
+        uint32_t m_cap[LInsLast + 1];
+        uint32_t m_used[LInsLast + 1];
+        typedef uint32_t (LInsHashSet::*find_t)(LInsp);
+        find_t m_find[LInsLast + 1];
         Allocator& alloc;
 
-        static uint32_t hashcode(LInsp i);
-        uint32_t find(LInsp name, uint32_t hash, const LInsp *list, uint32_t cap);
-        static bool equals(LInsp a, LInsp b);
-        void grow();
-
-    public:
-
-        LInsHashSet(Allocator&);
-        LInsp find32(int32_t a, uint32_t &i);
-        LInsp find64(LOpcode v, uint64_t a, uint32_t &i);
-        LInsp find1(LOpcode v, LInsp a, uint32_t &i);
-        LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &i);
-        LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &i);
-        LInsp findLoad(LOpcode v, LInsp a, int32_t b, uint32_t &i);
-        LInsp findcall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &i);
-        LInsp add(LInsp i, uint32_t k);
-        void clear();
-
-        static uint32_t hashimm(int32_t);
-        static uint32_t hashimmq(uint64_t);
+        static uint32_t hashImm(int32_t);
+        static uint32_t hashImmq(uint64_t);
+        static uint32_t hashImmf(double);
         static uint32_t hash1(LOpcode v, LInsp);
         static uint32_t hash2(LOpcode v, LInsp, LInsp);
         static uint32_t hash3(LOpcode v, LInsp, LInsp, LInsp);
         static uint32_t hashLoad(LOpcode v, LInsp, int32_t);
-        static uint32_t hashcall(const CallInfo *call, uint32_t argc, LInsp args[]);
+        static uint32_t hashCall(const CallInfo *call, uint32_t argc, LInsp args[]);
+
+        // These private versions are used after an LIns has been created;
+        // they are used for rehashing after growing.
+        uint32_t findImm(LInsp ins);
+        uint32_t findImmq(LInsp ins);
+        uint32_t findImmf(LInsp ins);
+        uint32_t find1(LInsp ins);
+        uint32_t find2(LInsp ins);
+        uint32_t find3(LInsp ins);
+        uint32_t findLoad(LInsp ins);
+        uint32_t findCall(LInsp ins);
+
+        void grow(LInsHashKind kind);
+
+    public:
+        // kInitialCaps[i] holds the initial size for m_list[i].
+        LInsHashSet(Allocator&, uint32_t kInitialCaps[]);
+
+        // These public versions are used before an LIns has been created.
+        LInsp findImm(int32_t a, uint32_t &k);
+        LInsp findImmq(uint64_t a, uint32_t &k);
+        LInsp findImmf(double d, uint32_t &k);
+        LInsp find1(LOpcode v, LInsp a, uint32_t &k);
+        LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &k);
+        LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &k);
+        LInsp findLoad(LOpcode v, LInsp a, int32_t b, uint32_t &k);
+        LInsp findCall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &k);
+
+        // 'k' is the index found by findXYZ().
+        LInsp add(LInsHashKind kind, LInsp ins, uint32_t k);
+
+        void clear();
     };
 
     class CseFilter: public LirWriter
     {
+    private:
+        LInsHashSet* exprs;
+
     public:
-        LInsHashSet exprs;
         CseFilter(LirWriter *out, Allocator&);
+
         LIns* insImm(int32_t imm);
         LIns* insImmq(uint64_t q);
         LIns* insImmf(double d);
@@ -1358,22 +1375,11 @@ namespace nanojit
         protected:
             friend class LirBufWriter;
 
-            /** each chunk is just a raw area of LIns instances, with no header
-                and no more than 8-byte alignment.  The chunk size is somewhat arbitrary
-                as long as it's well larger than 2*sizeof(LInsSk) */
+            /** Each chunk is just a raw area of LIns instances, with no header
+                and no more than 8-byte alignment.  The chunk size is somewhat arbitrary. */
             static const size_t CHUNK_SZB = 8000;
 
-            /** the first instruction on a chunk is always a start instruction, or a
-             *  payload-less skip instruction linking to the previous chunk.  The biggest
-             *  possible instruction would take up the entire rest of the chunk. */
-            static const size_t MAX_LINS_SZB = CHUNK_SZB - sizeof(LInsSk);
-
-            /** the maximum skip payload size is determined by the maximum instruction
-             *  size.  We require that a skip's payload be adjacent to the skip LIns
-             *  itself. */
-            static const size_t MAX_SKIP_PAYLOAD_SZB = MAX_LINS_SZB - sizeof(LInsSk);
-
-            /** get CHUNK_SZB more memory for LIR instructions */
+            /** Get CHUNK_SZB more memory for LIR instructions. */
             void        chunkAlloc();
             void        moveToNewChunk(uintptr_t addrOfLastLInsOnCurrentChunk);
 
@@ -1393,21 +1399,21 @@ namespace nanojit
             }
 
             // LirWriter interface
-            LInsp    insLoad(LOpcode op, LInsp base, int32_t disp);
-            LInsp    insStorei(LInsp o1, LInsp o2, int32_t disp);
-            LInsp    ins0(LOpcode op);
-            LInsp    ins1(LOpcode op, LInsp o1);
-            LInsp    ins2(LOpcode op, LInsp o1, LInsp o2);
-            LInsp    ins3(LOpcode op, LInsp o1, LInsp o2, LInsp o3);
-            LInsp    insParam(int32_t i, int32_t kind);
-            LInsp    insImm(int32_t imm);
-            LInsp    insImmq(uint64_t imm);
-            LInsp    insImmf(double d);
-            LInsp    insCall(const CallInfo *call, LInsp args[]);
-            LInsp    insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
-            LInsp    insBranch(LOpcode v, LInsp condition, LInsp to);
+            LInsp   insLoad(LOpcode op, LInsp base, int32_t disp);
+            LInsp   insStorei(LInsp o1, LInsp o2, int32_t disp);
+            LInsp   ins0(LOpcode op);
+            LInsp   ins1(LOpcode op, LInsp o1);
+            LInsp   ins2(LOpcode op, LInsp o1, LInsp o2);
+            LInsp   ins3(LOpcode op, LInsp o1, LInsp o2, LInsp o3);
+            LInsp   insParam(int32_t i, int32_t kind);
+            LInsp   insImm(int32_t imm);
+            LInsp   insImmq(uint64_t imm);
+            LInsp   insImmf(double d);
+            LInsp   insCall(const CallInfo *call, LInsp args[]);
+            LInsp   insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
+            LInsp   insBranch(LOpcode v, LInsp condition, LInsp to);
             LInsp   insAlloc(int32_t size);
-            LInsp   insSkip(size_t);
+            LInsp   insJtbl(LIns* index, uint32_t size);
     };
 
     class LirFilter
@@ -1428,16 +1434,27 @@ namespace nanojit
     // concrete
     class LirReader : public LirFilter
     {
-        LInsp _i; // current instruction that this decoder is operating on.
+        LInsp _i; // next instruction to be read;  invariant: is never a skip
 
     public:
-        LirReader(LInsp i) : LirFilter(0), _i(i) {
-            NanoAssert(_i);
+        LirReader(LInsp i) : LirFilter(0), _i(i)
+        {
+            // The last instruction for a fragment shouldn't be a skip.
+            // (Actually, if the last *inserted* instruction exactly fills up
+            // a chunk, a new chunk will be created, and thus the last *written*
+            // instruction will be a skip -- the one needed for the
+            // cross-chunk link.  But the last *inserted* instruction is what
+            // is recorded and used to initialise each LirReader, and that is
+            // what is seen here, and therefore this assertion holds.)
+            NanoAssert(i && !i->isop(LIR_skip));
         }
         virtual ~LirReader() {}
 
-        // LirReader i/f
-        LInsp read(); // advance to the prior instruction
+        // Returns next instruction and advances to the prior instruction.
+        // Invariant: never returns a skip.
+        LInsp read(); 
+
+        // Returns next instruction.  Invariant: never returns a skip.
         LInsp pos() {
             return _i;
         }
@@ -1470,13 +1487,25 @@ namespace nanojit
     {
     public:
         LInsp sp, rp;
-        LInsHashSet exprs;
+        LInsHashSet* exprs;
 
         void clear(LInsp p);
+
     public:
         LoadFilter(LirWriter *out, Allocator& alloc)
-            : LirWriter(out), sp(NULL), rp(NULL), exprs(alloc)
-        { }
+            : LirWriter(out), sp(NULL), rp(NULL)
+        { 
+            uint32_t kInitialCaps[LInsLast + 1];
+            kInitialCaps[LInsImm]   = 1;
+            kInitialCaps[LInsImmq]  = 1;
+            kInitialCaps[LInsImmf]  = 1;
+            kInitialCaps[LIns1]     = 1;
+            kInitialCaps[LIns2]     = 1;
+            kInitialCaps[LIns3]     = 1;
+            kInitialCaps[LInsLoad]  = 64;
+            kInitialCaps[LInsCall]  = 1;
+            exprs = new (alloc) LInsHashSet(alloc, kInitialCaps);
+        }
 
         LInsp ins0(LOpcode);
         LInsp insLoad(LOpcode, LInsp base, int32_t disp);

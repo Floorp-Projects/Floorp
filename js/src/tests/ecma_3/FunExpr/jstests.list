@@ -3,3 +3,4 @@ script fe-001-n.js
 script fe-001.js
 script fe-002.js
 script regress-518103.js
+script regress-524826.js

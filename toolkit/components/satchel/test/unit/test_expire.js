@@ -80,6 +80,7 @@ function run_test()
 
   // We're going to clear this at the end, so it better have the default value now.
   do_check_false(prefs.prefHasUserValue("browser.history_expire_days"));
+  do_check_false(prefs.prefHasUserValue("browser.history_expire_days_min"));
   do_check_false(prefs.prefHasUserValue("browser.formfill.expire_days"));
 
 
@@ -150,6 +151,7 @@ function run_test()
     prefs.setIntPref("browser.formfill.expire_days", 30);
   // Set pref to 30 days and expire.
   prefs.setIntPref("browser.history_expire_days", 30);
+  prefs.setIntPref("browser.history_expire_days_min", 30);
   do_check_true(fh.entryExists("179DaysOld", "foo"));
   do_check_true(fh.entryExists("bar", "31days"));
   do_check_true(fh.entryExists("bar", "29days"));
@@ -162,14 +164,26 @@ function run_test()
   do_check_true(fh.entryExists("bar", "29days"));
   do_check_eq(505, countAllEntries());
 
-
   // ===== 5 =====
+  testnum++;
+
+  // Set pref to 20 days and expire.
+  // No change expected as minimum is still 30.
+  prefs.setIntPref("browser.history_expire_days", 20);
+  do_check_eq(505, countAllEntries());
+
+  triggerExpiration();
+
+  do_check_eq(505, countAllEntries());
+
+  // ===== 6 =====
   testnum++;
 
   // Set override pref to 10 days and expire. This expires a large batch of
   // entries, and should trigger a VACCUM to reduce file size.
   prefs.setIntPref("browser.formfill.expire_days", 10);
   prefs.setIntPref("browser.history_expire_days", 1);
+  prefs.setIntPref("browser.history_expire_days_min", 1);
 
   do_check_true(fh.entryExists("bar", "29days"));
   do_check_true(fh.entryExists("9DaysOld", "foo"));
@@ -190,6 +204,28 @@ function run_test()
   dbFile = dbFile.clone();
   do_check_true(dbFile.fileSize < 6000);
 
+  // ===== 7 =====
+  testnum++;
+
+  if (prefs.prefHasUserValue("browser.formfill.expire_days"))
+    prefs.clearUserPref("browser.formfill.expire_days");
+
+  // Disable history (set history_expire_days = 0) and expire.
+  // all entries but one should be deleted as min should be ignored.
+  if ("nsIMsgFolder" in Ci)
+    prefs.setIntPref("browser.formfill.expire_days", 0);
+  prefs.setIntPref("browser.history_expire_days", 0);
+  prefs.setIntPref("browser.history_expire_days_min", 30);
+
+  do_check_true(fh.entryExists("9DaysOld", "foo"));
+  do_check_eq(3, countAllEntries());
+
+  triggerExpiration();
+
+  do_check_false(fh.entryExists("9DaysOld", "foo"));
+  do_check_true(fh.entryExists("name-B", "value-B"));
+  do_check_false(fh.entryExists("name-C", "value-C"));
+  do_check_eq(1, countAllEntries());
 
   } catch (e) {
       throw "FAILED in test #" + testnum + " -- " + e;
@@ -197,6 +233,8 @@ function run_test()
       // Make sure we always reset prefs.
       if (prefs.prefHasUserValue("browser.history_expire_days"))
         prefs.clearUserPref("browser.history_expire_days");
+      if (prefs.prefHasUserValue("browser.history_expire_days_min"))
+        prefs.clearUserPref("browser.history_expire_days_min");
       if (prefs.prefHasUserValue("browser.formfill.expire_days"))
         prefs.clearUserPref("browser.formfill.expire_days");
   }

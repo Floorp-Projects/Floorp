@@ -31,8 +31,8 @@ function test() {
 
   content.location =
     "data:text/html," +
+    "<img src='about:logo?b' height=300 width=350 alt=2>" +
     "<img src='about:logo?a' height=200 width=250>" +
     "<img src='about:logo?b' height=200 width=250 alt=1>" +
-    "<img src='about:logo?b' height=200 width=250 alt=2>" +
     "<img src='about:logo?b' height=100 width=150 alt=2 id='test-image'>";
 }

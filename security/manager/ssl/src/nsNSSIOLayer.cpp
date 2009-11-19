@@ -403,8 +403,9 @@ nsNSSSocketInfo::EnsureDocShellDependentStuffKnown()
                          docshell.get(),
                          NS_PROXY_SYNC,
                          getter_AddRefs(proxiedDocShell));
-    nsISecureBrowserUI* secureUI;
-    proxiedDocShell->GetSecurityUI(&secureUI);
+    nsISecureBrowserUI* secureUI = nsnull;
+    if (proxiedDocShell)
+      proxiedDocShell->GetSecurityUI(&secureUI);
     if (secureUI)
     {
       nsCOMPtr<nsIThread> mainThread(do_GetMainThread());

@@ -50,7 +50,7 @@ interface nsIDOMFileReader : nsISupports
 
   void abort();
 
-  const unsigned short INITIAL = 0;
+  const unsigned short EMPTY = 0;
   const unsigned short LOADING = 1;
   const unsigned short DONE = 2;
   readonly attribute unsigned short readyState;

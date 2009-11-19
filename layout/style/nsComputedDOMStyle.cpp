@@ -1225,9 +1225,7 @@ nsComputedDOMStyle::GetFontStretch(nsIDOMCSSValue** aValue)
   PR_STATIC_ASSERT(NS_FONT_STRETCH_NARROWER + NS_FONT_STRETCH_WIDER == 0);
   PR_STATIC_ASSERT(NS_FONT_STRETCH_NARROWER < 0);
   PRInt16 stretch = font->mFont.stretch;
-  if (stretch == NS_FONT_STRETCH_NORMAL) {
-    val->SetIdent(eCSSKeyword_normal);
-  } else if (stretch <= NS_FONT_STRETCH_NARROWER / 2) {
+  if (stretch <= NS_FONT_STRETCH_NARROWER / 2) {
     val->SetIdent(eCSSKeyword_narrower);
   } else if (stretch >= NS_FONT_STRETCH_WIDER / 2) {
     val->SetIdent(eCSSKeyword_wider);
@@ -1259,14 +1257,17 @@ nsComputedDOMStyle::GetFontWeight(nsIDOMCSSValue** aValue)
 
   const nsStyleFont* font = GetStyleFont();
 
-  // XXX This doesn't deal with bolder/lighter very well.
-  const nsCSSKeyword enum_weight =
-    nsCSSProps::ValueToKeywordEnum(font->mFont.weight,
-                                   nsCSSProps::kFontWeightKTable);
-  if (enum_weight != eCSSKeyword_UNKNOWN) {
-    val->SetIdent(enum_weight);
-  } else {
+  PRUint16 weight = font->mFont.weight;
+  if (weight % 100 == 0) {
     val->SetNumber(font->mFont.weight);
+  } else if (weight % 100 > 50) {
+    // FIXME: This doesn't represent the full range of computed values,
+    // but at least it's legal CSS.
+    val->SetIdent(eCSSKeyword_lighter);
+  } else {
+    // FIXME: This doesn't represent the full range of computed values,
+    // but at least it's legal CSS.
+    val->SetIdent(eCSSKeyword_bolder);
   }
 
   return CallQueryInterface(val, aValue);

@@ -8099,14 +8099,21 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     // If we have a regular interval timer, we re-schedule the
     // timeout, accounting for clock drift.
     if (timeout->mInterval) {
-      // Compute time to next timeout for interval timer. If we're
-      // running pending timeouts because they've been temporarily
-      // disabled (!aTimeout), set the next interval to be relative to
-      // "now", and not to when the timeout that was pending should
-      // have fired.
-      // Also check if the next interval timeout is overdue.  If so,
-      // then restart the interval from now.
+      // Compute time to next timeout for interval timer.
       PRTime nextInterval = (PRTime)timeout->mInterval * PR_USEC_PER_MSEC;
+
+      // Make sure nextInterval is at least DOM_MIN_TIMEOUT_VALUE.
+      // Note: We must cast the rhs expression to PRTime to work
+      // around what looks like a compiler bug on x86_64.
+      if (nextInterval < (PRTime)(DOM_MIN_TIMEOUT_VALUE * PR_USEC_PER_MSEC)) {
+         nextInterval = DOM_MIN_TIMEOUT_VALUE * PR_USEC_PER_MSEC;
+      }
+
+      // If we're running pending timeouts because they've been temporarily
+      // disabled (!aTimeout), set the next interval to be relative to "now",
+      // and not to when the timeout that was pending should have fired.  Also
+      // check if the next interval timeout is overdue.  If so, then restart
+      // the interval from now.
       if (!aTimeout || nextInterval + timeout->mWhen <= now)
         nextInterval += now;
       else
@@ -8114,11 +8121,10 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
       PRTime delay = nextInterval - PR_Now();
 
-      // Make sure the delay is at least DOM_MIN_TIMEOUT_VALUE.
-      // Note: We must cast the rhs expression to PRTime to work
-      // around what looks like a compiler bug on x86_64.
-      if (delay < (PRTime)(DOM_MIN_TIMEOUT_VALUE * PR_USEC_PER_MSEC)) {
-        delay = DOM_MIN_TIMEOUT_VALUE * PR_USEC_PER_MSEC;
+      // And make sure delay is nonnegative; that might happen if the timer
+      // thread is firing our timers somewhat early.
+      if (delay < 0) {
+        delay = 0;
       }
 
       if (timeout->mTimer) {
@@ -9382,6 +9388,8 @@ nsNavigator::GetPlatform(nsAString& aPlatform)
     aPlatform.AssignLiteral("MacPPC");
 #elif defined(XP_MACOSX) && defined(__i386__)
     aPlatform.AssignLiteral("MacIntel");
+#elif defined(XP_MACOSX) && defined(__x86_64__)
+    aPlatform.AssignLiteral("MacIntel");
 #elif defined(XP_OS2)
     aPlatform.AssignLiteral("OS/2");
 #else
@@ -9913,12 +9921,27 @@ nsNavigator::MozIsLocallyAvailable(const nsAString &aURI,
 NS_IMETHODIMP nsNavigator::GetGeolocation(nsIDOMGeoGeolocation **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
 
-  if (!mGeolocation && mDocShell) {
-    nsCOMPtr<nsIDOMWindow> contentDOMWindow(do_GetInterface(mDocShell));
-    mGeolocation = new nsGeolocation(contentDOMWindow);
+  if (mGeolocation) {
+    NS_ADDREF(*_retval = mGeolocation);
+    return NS_OK;
   }
 
-  NS_IF_ADDREF(*_retval = mGeolocation);
-  return NS_OK;
+  if (!mDocShell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMWindow> contentDOMWindow(do_GetInterface(mDocShell));
+  if (!contentDOMWindow)
+    return NS_ERROR_FAILURE;
+    
+  mGeolocation = new nsGeolocation();
+  if (!mGeolocation)
+    return NS_ERROR_FAILURE;
+  
+  if (NS_FAILED(mGeolocation->Init(contentDOMWindow)))
+    return NS_ERROR_FAILURE;
+  
+  NS_ADDREF(*_retval = mGeolocation);    
+  return NS_OK; 
 }
