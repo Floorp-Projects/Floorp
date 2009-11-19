@@ -106,17 +106,19 @@ NS_IMPL_ISUPPORTS1(nsCategoryObserver, nsIObserver)
 void
 nsCategoryObserver::ListenerDied() {
   mListener = nsnull;
+  RemoveObservers();
+}
 
-  nsCOMPtr<nsIObserverService> serv =
+NS_HIDDEN_(void)
+nsCategoryObserver::RemoveObservers() {
+  nsCOMPtr<nsIObserverService> obsSvc =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
-  if (!serv)
-    return;
-
-  serv->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-
-  serv->RemoveObserver(this, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID);
-  serv->RemoveObserver(this, NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID);
-  serv->RemoveObserver(this, NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID);
+  if (obsSvc) {
+    obsSvc->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    obsSvc->RemoveObserver(this, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID);
+    obsSvc->RemoveObserver(this, NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID);
+    obsSvc->RemoveObserver(this, NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID);
+  }
 }
 
 NS_IMETHODIMP
@@ -128,6 +130,8 @@ nsCategoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     mHash.Clear();
     mListener->CategoryCleared();
+    RemoveObservers();
+
     return NS_OK;
   }
 
