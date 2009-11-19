@@ -532,21 +532,27 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
         values.AppendElement(NullableString(argv[i]));
     }
 
-    nsAutoPtr<PluginInstanceParent> parentInstance(
-        new PluginInstanceParent(this, instance, mNPNIface));
+    PluginInstanceParent* parentInstance =
+        new PluginInstanceParent(this, instance, mNPNIface);
 
-    instance->pdata = parentInstance.get();
+    instance->pdata = parentInstance;
 
     if (!CallPPluginInstanceConstructor(parentInstance,
                                         nsDependentCString(pluginType), mode,
-                                        names,values, error))
+                                        names, values, error)) {
+        // |parentInstance| is automatically deleted.
+        instance->pdata = nsnull;
         return NS_ERROR_FAILURE;
+    }
 
     printf ("[PluginModuleParent] %s: got return value %hd\n", __FUNCTION__,
             *error);
 
-    if (*error == NPERR_NO_ERROR)
-        parentInstance.forget();
+    if (*error != NPERR_NO_ERROR) {
+        CallPPluginInstanceDestructor(parentInstance, error);
+        instance->pdata = nsnull;
+        return NS_ERROR_FAILURE;
+    }
 
     return NS_OK;
 }
