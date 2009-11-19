@@ -4525,15 +4525,23 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, jsval *vp)
     return obj->getProperty(cx, id, vp);
 }
 
-JS_FRIEND_API(JSBool)
+JS_FRIEND_API(bool)
 js_CheckUndeclaredVarAssignment(JSContext *cx)
 {
-    JSStackFrame *fp;
-    if (!JS_HAS_STRICT_OPTION(cx) ||
-        !(fp = js_GetTopStackFrame(cx)) ||
-        !fp->regs ||
+    JSStackFrame *fp = js_GetTopStackFrame(cx);
+    if (!fp)
+        return true;
+
+    /* If neither cx nor the code is strict, then no check is needed. */
+    if (!(fp->script && fp->script->strictModeCode) &&
+        !JS_HAS_STRICT_OPTION(cx)) {
+        return true;
+    }
+
+    /* This check is only appropriate when executing JSOP_SETNAME. */
+    if (!fp->regs ||
         js_GetOpcode(cx, fp->script, fp->regs->pc) != JSOP_SETNAME) {
-        return JS_TRUE;
+        return true;
     }
 
     JSAtom *atom;
@@ -4541,7 +4549,9 @@ js_CheckUndeclaredVarAssignment(JSContext *cx)
 
     const char *bytes = js_AtomToPrintableString(cx, atom);
     return bytes &&
-           JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING | JSREPORT_STRICT,
+           JS_ReportErrorFlagsAndNumber(cx,
+                                        (JSREPORT_WARNING | JSREPORT_STRICT
+                                         | JSREPORT_STRICT_MODE_ERROR),
                                         js_GetErrorMessage, NULL,
                                         JSMSG_UNDECLARED_VAR, bytes);
 }

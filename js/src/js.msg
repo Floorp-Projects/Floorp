@@ -235,7 +235,7 @@ MSG_DEF(JSMSG_BAD_ARRAY_LENGTH,       152, 0, JSEXN_RANGEERR, "invalid array len
 MSG_DEF(JSMSG_CANT_DESCRIBE_PROPS,    153, 1, JSEXN_TYPEERR, "can't describe non-native properties of class {0}")
 MSG_DEF(JSMSG_BAD_APPLY_ARGS,         154, 1, JSEXN_TYPEERR, "second argument to Function.prototype.{0} must be an array")
 MSG_DEF(JSMSG_REDECLARED_VAR,         155, 2, JSEXN_TYPEERR, "redeclaration of {0} {1}")
-MSG_DEF(JSMSG_UNDECLARED_VAR,         156, 1, JSEXN_TYPEERR, "assignment to undeclared variable {0}")
+MSG_DEF(JSMSG_UNDECLARED_VAR,         156, 1, JSEXN_REFERENCEERR, "assignment to undeclared variable {0}")
 MSG_DEF(JSMSG_ANON_NO_RETURN_VALUE,   157, 0, JSEXN_TYPEERR, "anonymous function does not always return a value")
 MSG_DEF(JSMSG_DEPRECATED_USAGE,       158, 1, JSEXN_REFERENCEERR, "deprecated {0} usage")
 MSG_DEF(JSMSG_BAD_URI,                159, 0, JSEXN_URIERR, "malformed URI sequence")
