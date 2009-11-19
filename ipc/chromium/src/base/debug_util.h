@@ -67,4 +67,22 @@ class DebugUtil {
 #endif  // defined(OS_MACOSX)
 };
 
+namespace mozilla {
+
+class EnvironmentLog
+{
+public:
+  EnvironmentLog(const char* varname);
+  ~EnvironmentLog();
+
+  void print(const char* format, ...);
+
+private:
+  FILE* fd_;
+
+  DISALLOW_EVIL_CONSTRUCTORS(EnvironmentLog);
+};
+
+} // namespace mozilla
+
 #endif  // BASE_DEBUG_UTIL_H_

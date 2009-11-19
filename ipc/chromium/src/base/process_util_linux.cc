@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include "base/debug_util.h"
 #include "base/eintr_wrapper.h"
 #include "base/file_util.h"
 #include "base/logging.h"
@@ -24,6 +25,8 @@ enum ParsingState {
   KEY_NAME,
   KEY_VALUE
 };
+
+static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 
 }  // namespace
 
@@ -55,17 +58,12 @@ bool LaunchApp(const std::vector<std::string>& argv,
     execvp(argv_cstr[0], argv_cstr.get());
 #if defined(CHROMIUM_MOZILLA_BUILD)
     // if we get here, we're in serious trouble and should complain loudly
-    fprintf(stderr,
-"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n"
-"---->   FAILED TO exec() CHILD PROCESS   <---\n"
-"---->     path: %s\n"
-"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
-            argv_cstr[0]);
+    DLOG(ERROR) << "FAILED TO exec() CHILD PROCESS, path: " << argv_cstr[0];
 #endif
     exit(127);
   } else {
-    printf("==> process %d launched child process %d\n", 
-           GetCurrentProcId(), pid);
+    gProcessLog.print("==> process %d launched child process %d\n",
+                      GetCurrentProcId(), pid);
     if (wait)
       HANDLE_EINTR(waitpid(pid, 0, 0));
 

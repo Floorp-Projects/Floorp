@@ -8,6 +8,7 @@
 #include <winternl.h>
 #include <psapi.h>
 
+#include "base/debug_util.h"
 #include "base/histogram.h"
 #include "base/logging.h"
 #include "base/scoped_handle_win.h"
@@ -20,6 +21,8 @@ const int PAGESIZE_KB = 4;
 
 // HeapSetInformation function pointer.
 typedef BOOL (WINAPI* HeapSetFn)(HANDLE, HEAP_INFORMATION_CLASS, PVOID, SIZE_T);
+
+static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 
 }  // namespace
 
@@ -162,9 +165,9 @@ bool LaunchApp(const std::wstring& cmdline,
                      &startup_info, &process_info))
     return false;
 
-  printf("==> process %d launched child process %d\n",
-         GetCurrentProcId(),
-         process_info.dwProcessId);
+  gProcessLog.print("==> process %d launched child process %d\n",
+                    GetCurrentProcId(),
+                    process_info.dwProcessId);
 
   // Handles must be closed or they will leak
   CloseHandle(process_info.hThread);
