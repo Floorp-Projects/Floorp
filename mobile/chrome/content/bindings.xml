@@ -676,11 +676,15 @@
 
       <property name="items" readonly="true" onget="return this._children.childNodes"/>
 
+      <field name="mobileRoot"><![CDATA[
+        PlacesUtils.annotations.getItemsWithAnnotation("mobile/bookmarksRoot", {})[0];
+      ]]></field>
+
       <property name="isRootFolder" readonly="true">
         <getter>
           <![CDATA[
             let currentFolderId = this._parents.lastChild.getAttribute("itemid");
-            return currentFolderId == PlacesUtils.bookmarks.unfiledBookmarksFolder;
+            return currentFolderId == this.mobileRoot;
           ]]>
         </getter>
       </property>
@@ -769,7 +773,7 @@
         <parameter name="aRootFolder"/>
         <body>
           <![CDATA[
-            aRootFolder = aRootFolder || PlacesUtils.bookmarks.unfiledBookmarksFolder;
+            aRootFolder = aRootFolder || this.mobileRoot;
 
             this._activeItem = null;
 

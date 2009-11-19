@@ -66,7 +66,7 @@ function runNextTest() {
   }
   else {
     // Cleanup. All tests are completed at this point
-    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.unfiledBookmarksFolder);
+    PlacesUtils.bookmarks.removeFolderChildren(BookmarkList.mobileRoot);
     ok(true, "*** ALL TESTS COMPLETED ***");
   }
 }
@@ -187,23 +187,28 @@ gTests.push({
   
   verify: function() {
   
-    // the test bookmarks a page, then creates a folder, and then moves the bookmark into the folder
+    // creates a folder, and then moves the bookmark into the folder
     
     chromeWindow.BrowserUI.doCommand("cmd_star");
     
     chromeWindow.BrowserUI.showBookmarks();
     chromeWindow.BookmarkList.toggleManage();
-    
+
+    // Create new folder
     var bookmarkitems = chromeWindow.document.getElementById("bookmark-items");
     var newfolderbutton = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitems, "class", "bookmark-folder-new");
     EventUtils.synthesizeMouse(newfolderbutton, newfolderbutton.clientWidth / 2, newfolderbutton.clientHeight / 2, {});
+
     var folderitem = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitems, "title", "New folder");
     var nametextbox = chromeWindow.document.getAnonymousElementByAttribute(folderitem, "anonid", "name");
     nametextbox.value = "Test Folder 1";
     var donebutton = chromeWindow.document.getAnonymousElementByAttribute(folderitem, "anonid", "done-button");
     donebutton.click();
-    
+
     var bookmarkitemid = PlacesUtils.getMostRecentBookmarkForURI(uri(testURL_02));
+    is(PlacesUtils.bookmarks.getFolderIdForItem(bookmarkitemid), BookmarkList.mobileRoot, "bookmark starts off in root");
+
+    // Move bookmark
     var bookmarkitem = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitems, "itemid", bookmarkitemid);
     var movebutton = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitem, "anonid", "folder-button");
     movebutton.click();
@@ -211,9 +216,8 @@ gTests.push({
     var folderitems = chromeWindow.document.getElementById("folder-items");
     var destfolder = chromeWindow.document.getAnonymousElementByAttribute(folderitems, "itemid", folderitem.itemId);
     EventUtils.synthesizeMouse(destfolder, destfolder.clientWidth / 2, destfolder.clientHeight / 2, {});
-    
-    isnot(PlacesUtils.bookmarks.getFolderIdForItem(bookmarkitemid), PlacesUtils.bookmarks.unfiledBookmarksFolder, 
-      "Bookmark is no longer in Bookmarks Menu top level folder");
+
+    // Check that it moved
     is(PlacesUtils.bookmarks.getFolderIdForItem(bookmarkitemid), folderitem.itemId, "Bookmark is moved to a folder");
     
     chromeWindow.BookmarkList.close();
@@ -238,7 +242,8 @@ gTests.push({
     chromeWindow.BrowserUI.showBookmarks();
     chromeWindow.BookmarkList.toggleManage();    
     var bookmarkitems = chromeWindow.document.getElementById("bookmark-items");
-    
+
+    // Create the new folder
     var newfolderbutton = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitems, "class", "bookmark-folder-new");
     EventUtils.synthesizeMouse(newfolderbutton, newfolderbutton.clientWidth / 2, newfolderbutton.clientHeight / 2, {});
     var folderitem2 = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitems, "title", "New folder");
@@ -247,18 +252,20 @@ gTests.push({
     var donebutton = chromeWindow.document.getAnonymousElementByAttribute(folderitem2, "anonid", "done-button");
     donebutton.click();
     
+    // Check the old folder
     var folderitem1 = chromeWindow.document.getAnonymousElementByAttribute(bookmarkitems, "title", "Test Folder 1");
-    var foldetitem1id = folderitem1.itemId;
+    var folderitem1id = folderitem1.itemId;
+    is(foldetitem1id, BookmarksList.mobileRoot, "folder starts off in the root");
+
+    // Move new folder into old folder
     var movebutton = chromeWindow.document.getAnonymousElementByAttribute(folderitem1, "anonid", "folder-button");
     movebutton.click();
-    
+
     var folderitems = chromeWindow.document.getElementById("folder-items");
     var destfolder = chromeWindow.document.getAnonymousElementByAttribute(folderitems, "itemid", folderitem2.itemId);
     EventUtils.synthesizeMouse(destfolder, destfolder.clientWidth / 2, destfolder.clientHeight / 2, {});
-    
-    isnot(PlacesUtils.bookmarks.getFolderIdForItem(foldetitem1id), PlacesUtils.bookmarks.unfiledBookmarksFolder, 
-      "Folder created in previous test is no longer in Bookmarks Menu top level folder");
-    is(PlacesUtils.bookmarks.getFolderIdForItem(foldetitem1id), folderitem2.itemId, "Folder is moved to another folder");
+
+    is(PlacesUtils.bookmarks.getFolderIdForItem(folderitem1id), folderitem2.itemId, "Folder is moved to another folder");
     
     chromeWindow.BookmarkList.close();
     
