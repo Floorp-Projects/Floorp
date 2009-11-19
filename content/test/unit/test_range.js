@@ -262,7 +262,7 @@ function run_extract_test() {
   var tests = doc.getElementsByTagName("test");
 
   // Run our deletion, extraction tests.
-  for (i = 0; i < tests.length; i++) {
+  for (var i = 0; i < tests.length; i++) {
     dump("Configuring for test " + i + "\n");
     var currentTest = tests.item(i);
 
@@ -315,10 +315,10 @@ function run_extract_test() {
     do_check_true(baseFrag.isEqualNode(resultFrag));
 
     dump("Ensure the original nodes weren't extracted - test " + i + "\n\n");
-    walker = doc.createTreeWalker(baseFrag,
-                                  C_i.nsIDOMNodeFilter.SHOW_ALL,
-                                  null,
-                                  false);
+    var walker = doc.createTreeWalker(baseFrag,
+				      C_i.nsIDOMNodeFilter.SHOW_ALL,
+				      null,
+				      false);
     var foundStart = false;
     var foundEnd = false;
     do {
@@ -415,13 +415,13 @@ function run_miscellaneous_tests() {
 
   // Let's try some invalid inputs to our DOM range and see what happens.
   var currentTest = tests.item(0);
-  baseSource = currentTest.firstChild;
-  baseResult = baseSource.nextSibling;
-  baseExtract = baseResult.nextSibling;
+  var baseSource = currentTest.firstChild;
+  var baseResult = baseSource.nextSibling;
+  var baseExtract = baseResult.nextSibling;
 
-  baseFrag = getFragment(baseSource);
+  var baseFrag = getFragment(baseSource);
 
-  baseRange = getRange(baseSource, baseFrag);
+  var baseRange = getRange(baseSource, baseFrag);
   var startContainer = baseRange.startContainer;
   var endContainer = baseRange.endContainer;
   var startOffset = baseRange.startOffset;

@@ -93,7 +93,7 @@ XPIDLSRCS	= \
 		nsIContentPolicy.idl        \
 		nsIDocumentEncoder.idl      \
 		nsIDOMFile.idl \
-		nsIDOMFileRequest.idl \
+		nsIDOMFileReader.idl \
 		nsIDOMFileInternal.idl \
 		nsIDOMFileList.idl \
 		nsIDOMFileException.idl \

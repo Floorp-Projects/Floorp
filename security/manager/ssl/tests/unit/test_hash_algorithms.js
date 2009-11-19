@@ -68,7 +68,7 @@ function doHash(algo, value, cmp) {
   var hash = new CryptoHash(algo);
 
   converter.charset = 'utf8';
-  value = converter.convertToByteArray(value, {});
+  value = converter.convertToByteArray(value);
   hash.update(value, value.length);
   var hash1 = hexdigest(hash.finish(false));
   if (cmp != hash1) {

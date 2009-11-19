@@ -91,7 +91,7 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
       encoding.LowerCaseEqualsASCII("utf-32") ||
       encoding.LowerCaseEqualsASCII("utf-32be") ||
       encoding.LowerCaseEqualsASCII("utf-32le")) {
-    mCharset.Assign("utf-8");
+    mCharset.Assign("UTF-8");
     res = convManager->GetUnicodeDecoderRaw(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
     if (NS_FAILED(res)) {
       NS_ERROR("Could not get decoder for UTF-8.");

@@ -75,7 +75,7 @@ function createTestDirectory()
   // populate with test directories, files, etc.
   // Files must be in expected order of display on the index page!
 
-  files = [];
+  var files = [];
 
   makeFile("aa_directory", true, dir, files);
   makeFile("Ba_directory", true, dir, files);
@@ -179,7 +179,7 @@ function hiddenDataCheck(bytes, uri, path)
 
     do_check_eq(link.textContent, f.name + sep);
 
-    var uri = ios.newURI(link.getAttribute("href"), null, top);
+    uri = ios.newURI(link.getAttribute("href"), null, top);
     do_check_eq(decodeURIComponent(uri.path), path + f.name + sep);
   }
 }
@@ -259,7 +259,7 @@ function dataCheck(bytes, uri, path, dirEntries)
 
     do_check_eq(link.textContent, f.name + sep);
 
-    var uri = ios.newURI(link.getAttribute("href"), null, top);
+    uri = ios.newURI(link.getAttribute("href"), null, top);
     do_check_eq(decodeURIComponent(uri.path), path + f.name + sep);
   }
 }

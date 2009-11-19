@@ -262,6 +262,7 @@ _TEST_FILES = 	test_bug5141.html \
 		bug461735-redirect1.sjs \
 		bug461735-redirect2.sjs \
 		bug461735-post-redirect.js \
+		test_bug513194.html \
 		test_bug461735.html \
 		test_bug380418.html \
 		test_bug465767.html \
@@ -323,6 +324,11 @@ _TEST_FILES = 	test_bug5141.html \
 		test_range_bounds.html \
 		test_bug475156.html \
 		bug475156.sjs \
+		test_copypaste.html \
+		test_bug503481.html \
+		file_bug503481.sjs \
+		test_bug503481b.html \
+		file_bug503481b_inner.html \
 		$(NULL)
 
 # Disabled; see bug 492181
@@ -331,6 +337,10 @@ _TEST_FILES = 	test_bug5141.html \
 # Disabled for now. Mochitest isn't reliable enough for these.
 # test_bug444546.html \
 # bug444546.sjs \
+
+# Disabled due to making the harness time out
+#		test_bug503473.html \
+#		file_bug503473-frame.sjs \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

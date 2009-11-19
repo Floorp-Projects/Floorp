@@ -47,7 +47,18 @@ DIRS += \
   chrome \
   $(NULL)
 
+# We can't use CPP_UNIT_TESTS for TestPoisonArea because libxpcom
+# (which it does not need) isn't available at this point in the build.
+
+BARE_UNIT_TESTS = \
+		TestPoisonArea.cpp \
+		$(NULL)
+
+CPPSRCS += $(BARE_UNIT_TESTS)
+SIMPLE_PROGRAMS += $(BARE_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
+
 include $(topsrcdir)/config/rules.mk
+
 
 DEFINES += -D_IMPL_NS_LAYOUT
 
@@ -180,3 +191,9 @@ endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+check::
+	@$(EXIT_ON_ERROR) \
+	  for f in $(subst .cpp,,$(BARE_UNIT_TESTS)); do \
+	    $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
+	  done

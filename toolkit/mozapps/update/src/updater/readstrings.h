@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Darin Fisher <darin@meer.net>
+ *  Alex Pakhotin <alexp@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,5 +58,10 @@ struct StringTable {
  * This function reads in localized strings from updater.ini
  */
 int ReadStrings(const NS_tchar *path, StringTable *results);
+
+/**
+ * This function reads in localized strings corresponding to the keys from a given .ini
+ */
+int ReadStrings(const NS_tchar *path, const char *keyList, int numStrings, char results[][MAX_TEXT_LEN]);
 
 #endif  // READSTRINGS_H__

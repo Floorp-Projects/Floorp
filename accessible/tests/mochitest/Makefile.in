@@ -42,6 +42,8 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = accessible
 
+DIRS	= tree
+
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
@@ -88,13 +90,9 @@ _TEST_FILES =\
 	$(warning	test_childAtPoint.xul temporarily disabled) \
 		test_cssattrs.html \
 		test_descr.html \
-		test_elm_filectrl.html \
 		test_elm_listbox.xul \
 	$(warning   test_elm_media.html temporarily disabled) \
 		test_elm_plugin.html \
-		test_elm_select.html \
-		test_elm_tree.xul \
-		test_elm_txtcntnr.html \
 		test_events_caretmove.html \
 		test_events_coalescence.html \
 		test_events_doc.html \
@@ -102,6 +100,7 @@ _TEST_FILES =\
 		test_events_flush.html \
 		test_events_focus.html \
 		test_events_focus.xul \
+		test_events_focusdoc.html \
 		test_events_mutation.html \
 		test_events_scroll.xul \
 		test_events_tree.xul \

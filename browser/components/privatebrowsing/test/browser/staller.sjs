@@ -37,19 +37,23 @@
 
 // This provides the tests with a download URL which never finishes.
 
+var timer;
+
 function handleRequest(request, response) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.processAsync();
 
+  const nsITimer = Components.interfaces.nsITimer;
+
   function stall() {
+    timer = null;
+    // This write will throw if the connection has been closed by the browser.
     response.write("stalling...\n");
+    timer = Components.classes["@mozilla.org/timer;1"]
+                        .createInstance(nsITimer);
+    timer.initWithCallback(stall, 500, nsITimer.TYPE_ONE_SHOT);
   }
 
   response.setHeader("Content-Type", "text/plain", false);
   stall();
-
-  const nsITimer = Components.interfaces.nsITimer;
-  var timer = Components.classes["@mozilla.org/timer;1"]
-                        .createInstance(nsITimer);
-  timer.initWithCallback(stall, 500, nsITimer.TYPE_REPEATING_SLACK);
 }

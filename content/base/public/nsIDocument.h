@@ -1178,14 +1178,16 @@ public:
   enum DocumentTheme {
     Doc_Theme_Uninitialized, // not determined yet
     Doc_Theme_None,
+    Doc_Theme_Neutral,
     Doc_Theme_Dark,
     Doc_Theme_Bright
   };
 
   /**
-   * Returns Doc_Theme_None if there is no lightweight theme specified, Doc_Theme_Dark
-   * for a dark theme and Doc_Theme_Bright for a light theme. This is used to
-   * determine the state of the pseudoclasses :-moz-lwtheme and :-moz-lwtheme-text.
+   * Returns Doc_Theme_None if there is no lightweight theme specified,
+   * Doc_Theme_Dark for a dark theme, Doc_Theme_Bright for a light theme, and
+   * Doc_Theme_Neutral for any other theme. This is used to determine the state
+   * of the pseudoclasses :-moz-lwtheme and :-moz-lwtheme-text.
    */
   virtual int GetDocumentLWTheme() { return Doc_Theme_None; }
 

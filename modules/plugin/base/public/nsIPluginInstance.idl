@@ -53,7 +53,7 @@ struct JSObject;
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSObjectPtr(JSObject);
 
-[uuid(1BDF057D-1F3F-49F6-986A-8F9593706A25)]
+[uuid(3B091A81-D15A-4645-83B3-AC0C68A776DB)]
 interface nsIPluginInstance : nsISupports
 {
     /**
@@ -220,5 +220,4 @@ interface nsIPluginInstance : nsISupports
     void getValueFromPlugin(in NPPVariable variable, in voidPtr aValue);
 
     PRInt32 getDrawingModel();
-    PRInt32 getEventModel();
 };

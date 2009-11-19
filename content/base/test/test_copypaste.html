@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Test for copy/paste</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=524975">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function testCopyPaste () {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  // selection of the node
+  var node = document.getElementById('draggable');
+  window.getSelection().selectAllChildren(node);
+  
+  // let's copy the selection
+  var webnav = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                     .getInterface(Components.interfaces.nsIWebNavigation)
+
+  var docShell = webnav.QueryInterface(Components.interfaces.nsIDocShell);
+
+  var documentViewer = docShell.contentViewer
+                               .QueryInterface(Components.interfaces.nsIContentViewerEdit);
+  documentViewer.copySelection();
+  
+  //--------- now check the content of the clipboard
+  var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
+                            .getService(Components.interfaces.nsIClipboard);
+  
+  // is the clipboard contain a text/unicode data ?
+  var transferable = Components.classes['@mozilla.org/widget/transferable;1']
+                               .createInstance(Components.interfaces.nsITransferable);
+  transferable.addDataFlavor("text/unicode");
+  clipboard.getData(transferable, 1);
+  var data = {}
+  transferable.getTransferData ("text/unicode", data, {} ) ;
+  is (data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
+      "This is a draggable bit of text.");
+  
+  // is the clipboard contain a text/html data ?
+  transferable = Components.classes['@mozilla.org/widget/transferable;1']
+        .createInstance(Components.interfaces.nsITransferable);
+  transferable.addDataFlavor("text/html");
+  clipboard.getData(transferable, 1); 
+  transferable.getTransferData ("text/html", data, {} ) ;
+  is (data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
+      "<div id=\"draggable\" title=\"title to have a long HTML line\">This is a <em>draggable</em>\n bit of text.</div>");
+  
+  //------ let's paste now in the textarea and verify its content
+  var textarea = document.getElementById('input');
+  textarea.focus();
+  textarea.QueryInterface(Components.interfaces.nsIDOMNSEditableElement)
+          .editor.paste(1);
+  is(textarea.value, "This is a draggable bit of text.");
+
+
+  // test copy/paste from/to textarea
+  var val = "1\n 2\n  3"
+  textarea.value=val;
+  textarea.select();
+  textarea.editor.copy();
+  
+  textarea.value="";
+  textarea.editor.paste(1);
+  is(textarea.value, val);
+
+  SimpleTest.finish();
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(testCopyPaste);
+
+</script>
+</pre>
+<div>
+
+  <div id="draggable" title="title to have a long HTML line">This is a <em>draggable</em> bit of text.</div>
+  <textarea id="input"></textarea>
+
+</div>
+</body>
+</html>

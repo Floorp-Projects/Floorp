@@ -54,6 +54,9 @@
 // Enable heap debug dump message handling
 //#define HEAP_DUMP_EVENT
 
+// Enable window size and state debug output
+//#define WINSTATE_DEBUG_OUTPUT
+
 // nsIWidget defines a set of debug output statements
 // that are called in various places within the code.
 //#define WIDGET_DEBUG_OUTPUT

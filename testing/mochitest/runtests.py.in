@@ -77,7 +77,7 @@ BROWSER_CHROME_URL = "chrome://browser/content/browser.xul"
 if automation.IS_DEBUG_BUILD:
     SERVER_STARTUP_TIMEOUT = 180
 else:
-    SERVER_STARTUP_TIMEOUT = 45
+    SERVER_STARTUP_TIMEOUT = 90
 
 oldcwd = os.getcwd()
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
@@ -99,6 +99,7 @@ class MochitestOptions(optparse.OptionParser):
 
     # we want to pass down everything from automation.__all__
     addCommonOptions(self, defaults=dict(zip(automation.__all__, [getattr(automation, x) for x in automation.__all__])))
+    automation.addExtraCommonOptions(self)
 
     self.add_option("--close-when-done",
                     action = "store_true", dest = "closeWhenDone",
@@ -200,12 +201,6 @@ class MochitestOptions(optparse.OptionParser):
                     help = "sets the given variable in the application's "
                            "environment")
     defaults["environment"] = []
-    
-    self.add_option("--setpref",
-                    action = "append", type = "string",
-                    dest = "extraPrefs", metavar = "PREF=VALUE",
-                    help = "defines an extra user preference")
-    defaults["extraPrefs"] = []    
     
     self.add_option("--browser-arg",
                     action = "append", type = "string",
@@ -459,8 +454,7 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   if options.timeout:
       timeout = options.timeout + 30
   elif options.autorun:
-      #FIXME: need to support None for timeout values on Win32
-      timeout = 1000000
+      timeout = None
   else:
       timeout = 330.0 # default JS harness timeout is 300 seconds
   automation.log.info("INFO | runtests.py | Running tests: start.\n")

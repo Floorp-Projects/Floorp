@@ -2675,7 +2675,7 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
         do_CreateInstance(kStreamListenerTeeCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = tee->Init(mListener, out);
+    rv = tee->Init(mListener, out, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     mListener = tee;
@@ -2701,7 +2701,7 @@ nsHttpChannel::InstallOfflineCacheListener()
         do_CreateInstance(kStreamListenerTeeCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = tee->Init(mListener, out);
+    rv = tee->Init(mListener, out, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     mListener = tee;
@@ -2773,25 +2773,49 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
         return NS_OK; // no other options to set
 
     if (preserveMethod) {
-        nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(httpChannel);
-        if (mUploadStream && uploadChannel) {
+        nsCOMPtr<nsIUploadChannel> uploadChannel =
+            do_QueryInterface(httpChannel);
+        nsCOMPtr<nsIUploadChannel2> uploadChannel2 =
+            do_QueryInterface(httpChannel);
+        if (mUploadStream && (uploadChannel2 || uploadChannel)) {
             // rewind upload stream
             nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
             if (seekable)
                 seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
 
             // replicate original call to SetUploadStream...
-            const char *ctype = mRequestHead.PeekHeader(nsHttp::Content_Type);
-            if (!ctype)
-              ctype = "";
-            const char *clen  = mRequestHead.PeekHeader(nsHttp::Content_Length);
-            if (clen)
-                uploadChannel->ExplicitSetUploadStream(
-                    mUploadStream,
-                    nsDependentCString(ctype),
-                    nsCRT::atoll(clen),
-                    nsDependentCString(mRequestHead.Method()),
-                    mUploadStreamHasHeaders);
+            if (uploadChannel2) {
+                const char *ctype = mRequestHead.PeekHeader(nsHttp::Content_Type);
+                if (!ctype)
+                    ctype = "";
+                const char *clen  = mRequestHead.PeekHeader(nsHttp::Content_Length);
+                if (clen)
+                    uploadChannel2->ExplicitSetUploadStream(
+                        mUploadStream,
+                        nsDependentCString(ctype),
+                        nsCRT::atoll(clen),
+                        nsDependentCString(mRequestHead.Method()),
+                        mUploadStreamHasHeaders);
+            }
+            else {
+                if (mUploadStreamHasHeaders)
+                    uploadChannel->SetUploadStream(mUploadStream, EmptyCString(),
+                                                   -1);
+                else {
+                    const char *ctype =
+                        mRequestHead.PeekHeader(nsHttp::Content_Type);
+                    const char *clen =
+                        mRequestHead.PeekHeader(nsHttp::Content_Length);
+                    if (!ctype) {
+                        ctype = "application/octet-stream";
+                    }
+                    if (clen) {
+                        uploadChannel->SetUploadStream(mUploadStream,
+                                                       nsDependentCString(ctype),
+                                                       atoi(clen));
+                    }
+                }
+            }
         }
         // since preserveMethod is true, we need to ensure that the appropriate 
         // request method gets set on the channel, regardless of whether or not 

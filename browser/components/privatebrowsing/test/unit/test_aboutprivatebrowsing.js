@@ -63,28 +63,21 @@ function run_test_on_service() {
   // initialization
   var pb = Cc[PRIVATEBROWSING_CONTRACT_ID].
            getService(Ci.nsIPrivateBrowsingService);
-  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                   getService(Ci.nsIPrefBranch);
-  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
 
-  try {
-    // about:privatebrowsing should be available before entering the private mode
-    do_check_true(is_about_privatebrowsing_available());
+  // about:privatebrowsing should be available before entering the private mode
+  do_check_true(is_about_privatebrowsing_available());
 
-    // enter the private browsing mode
-    pb.privateBrowsingEnabled = true;
+  // enter the private browsing mode
+  pb.privateBrowsingEnabled = true;
 
-    // about:privatebrowsing should be available inside the private mode
-    do_check_true(is_about_privatebrowsing_available());
+  // about:privatebrowsing should be available inside the private mode
+  do_check_true(is_about_privatebrowsing_available());
 
-    // exit the private browsing mode
-    pb.privateBrowsingEnabled = false;
+  // exit the private browsing mode
+  pb.privateBrowsingEnabled = false;
 
-    // about:privatebrowsing should be available after leaving the private mode
-    do_check_true(is_about_privatebrowsing_available());
-  } finally {
-    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
-  }
+  // about:privatebrowsing should be available after leaving the private mode
+  do_check_true(is_about_privatebrowsing_available());
 }
 
 // Support running tests on both the service itself and its wrapper

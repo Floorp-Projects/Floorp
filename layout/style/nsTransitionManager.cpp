@@ -234,7 +234,8 @@ ElementTransitionsStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 #ifdef DEBUG
       PRBool ok =
 #endif
-        nsStyleAnimation::Interpolate(pt.mStartValue, pt.mEndValue,
+        nsStyleAnimation::Interpolate(pt.mProperty,
+                                      pt.mStartValue, pt.mEndValue,
                                       valuePortion, pt.mCurrentValue);
       NS_ABORT_IF_FALSE(ok, "could not interpolate values");
 
@@ -512,8 +513,8 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
     // Check that we can interpolate between these values
     // (If this is ever a performance problem, we could add a
     // CanInterpolate method, but it seems fine for now.)
-    nsStyleAnimation::Interpolate(pt.mStartValue, pt.mEndValue, 0.5,
-                                  dummyValue);
+    nsStyleAnimation::Interpolate(aProperty, pt.mStartValue, pt.mEndValue,
+                                  0.5, dummyValue);
 
   PRUint32 currentIndex = nsTArray<ElementPropertyTransition>::NoIndex;
   if (aElementTransitions) {
@@ -575,12 +576,12 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 #ifdef DEBUG
     PRBool ok =
 #endif
-      nsStyleAnimation::ComputeDistance(pt.mStartValue, pt.mEndValue,
-                                        fullDistance);
+      nsStyleAnimation::ComputeDistance(aProperty, pt.mStartValue,
+                                        pt.mEndValue, fullDistance);
     NS_ABORT_IF_FALSE(ok, "could not compute distance");
     NS_ABORT_IF_FALSE(fullDistance >= 0.0, "distance must be positive");
 
-    if (nsStyleAnimation::ComputeDistance(endVal, pt.mEndValue,
+    if (nsStyleAnimation::ComputeDistance(aProperty, endVal, pt.mEndValue,
                                           remainingDistance)) {
       NS_ABORT_IF_FALSE(remainingDistance >= 0.0, "distance must be positive");
       durationFraction = fullDistance / remainingDistance;

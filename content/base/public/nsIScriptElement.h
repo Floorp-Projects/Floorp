@@ -43,10 +43,12 @@
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsIScriptLoaderObserver.h"
+#include "nsWeakPtr.h"
+#include "nsIParser.h"
 
 #define NS_ISCRIPTELEMENT_IID \
-{ 0x4b916da5, 0x82c4, 0x45ab, \
-  { 0x99, 0x15, 0xcc, 0xcd, 0x9e, 0x2c, 0xb1, 0xe6 } }
+{ 0xa28c198e, 0x14f0, 0x42b1, \
+{ 0x8f, 0x6b, 0x0e, 0x7f, 0xca, 0xb4, 0xf4, 0xe8 } }
 
 /**
  * Internal interface implemented by script elements
@@ -59,7 +61,8 @@ public:
     : mLineNumber(0),
       mIsEvaluated(PR_FALSE),
       mMalformed(PR_FALSE),
-      mDoneAddingChildren(PR_TRUE)
+      mDoneAddingChildren(PR_TRUE),
+      mCreatorParser(nsnull)
   {
   }
 
@@ -86,6 +89,11 @@ public:
    * Is the script deferred. Currently only supported by HTML scripts.
    */
   virtual PRBool GetScriptDeferred() = 0;
+
+  /**
+   * Is the script async. Currently only supported by HTML scripts.
+   */
+  virtual PRBool GetScriptAsync() = 0;
 
   void SetScriptLineNumber(PRUint32 aLineNumber)
   {
@@ -116,11 +124,52 @@ public:
     mDoneAddingChildren = PR_FALSE;
   }
 
+  void SetCreatorParser(nsIParser* aParser)
+  {
+    mCreatorParser = getter_AddRefs(NS_GetWeakReference(aParser));
+  }
+
+  /**
+   * Informs the creator parser that the evaluation of this script is starting
+   */
+  void BeginEvaluating()
+  {
+    // Once the async attribute is supported, don't do this if this is an
+    // async script.
+    nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
+    if (parser) {
+      parser->BeginEvaluatingParserInsertedScript();
+    }
+  }
+
+  /**
+   * Informs the creator parser that the evaluation of this script is ending
+   */
+  void EndEvaluating()
+  {
+    // Once the async attribute is supported, don't do this if this is an
+    // async script.
+    nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
+    if (parser) {
+      parser->EndEvaluatingParserInsertedScript();
+    }
+  }
+  
+  /**
+   * Retrieves a pointer to the creator parser if this has one or null if not
+   */
+  already_AddRefed<nsIParser> GetCreatorParser()
+  {
+    nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
+    return parser.forget();
+  }
+
 protected:
   PRUint32 mLineNumber;
   PRPackedBool mIsEvaluated;
   PRPackedBool mMalformed;
   PRPackedBool mDoneAddingChildren;
+  nsWeakPtr    mCreatorParser;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptElement, NS_ISCRIPTELEMENT_IID)

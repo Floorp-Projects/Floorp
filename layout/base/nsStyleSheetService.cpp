@@ -51,6 +51,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
+#include "nsLayoutStatics.h"
 
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 
@@ -61,11 +62,13 @@ nsStyleSheetService::nsStyleSheetService()
   PR_STATIC_ASSERT(0 == AGENT_SHEET && 1 == USER_SHEET);
   NS_ASSERTION(!gInstance, "Someone is using CreateInstance instead of GetService");
   gInstance = this;
+  nsLayoutStatics::AddRef();
 }
 
 nsStyleSheetService::~nsStyleSheetService()
 {
   gInstance = nsnull;
+  nsLayoutStatics::Release();
 }
 
 NS_IMPL_ISUPPORTS1(nsStyleSheetService, nsIStyleSheetService)

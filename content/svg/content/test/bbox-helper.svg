@@ -3,4 +3,7 @@
   <g transform="scale(0.5)">
     <foreignObject id="f" width="100" height="100"/>
   </g>
+  <text id="b" x="20" y="20">b</text>
+  <text id="a" x="20" y="30">a</text>
+  <text id="y" x="20" y="40">y</text>
 </svg>

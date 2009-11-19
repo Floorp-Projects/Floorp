@@ -43,11 +43,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: toolbox ::::: */
-
-toolbox {
-}
-
 /* ::::: toolbar & menubar ::::: */
 
 toolbar {
@@ -74,16 +69,15 @@ menubar {
 /* ::::: toolbarseparator ::::: */
 
 toolbarseparator {
-  -moz-appearance       : none;
-  margin: 3px 4px 3px 4px;
+  -moz-appearance: none;
+  margin: 3px 4px;
   background: url("chrome://global/skin/toolbar/toolbar-separator.png") transparent repeat-y;
-  
-  padding: 0px;
+  padding: 0;
   width: 1px !important;
 }
 
 .toolbar-primary {
-	min-height: 24px;
+  min-height: 24px;
 }
 
 .toolbar-primary,
@@ -99,11 +93,11 @@ toolbarpaletteitem {
 }
 
 toolbar[iconsize="small"] toolbarpaletteitem[type="spacer"] {
-	min-width: 24px !important;
+  min-width: 24px !important;
 }
 
 toolbarpaletteitem[type="spacer"] {
-	min-width: 32px !important;
+  min-width: 32px !important;
 }
 
 .toolbarpaletteitem-box[type="spacer"] {
@@ -151,10 +145,10 @@ toolbarpaletteitem[dragover="right"] {
 }
 
 toolbar[iconsize="small"] toolbarspacer {
-	min-width: 24px !important;
+  min-width: 24px !important;
 }
 
 toolbarspacer {
-	min-width: 32px !important;
+  min-width: 32px !important;
 }
 

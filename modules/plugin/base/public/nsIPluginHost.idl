@@ -110,7 +110,7 @@ interface nsIPluginHost : nsISupports
   
   [noscript] void getPlugins(in unsigned long aPluginCount, out /*array*/ nsIDOMPlugin aPluginArray);
 
-  void getPluginTags(out unsigned long aPluginCount,
+  void getPluginTags([optional] out unsigned long aPluginCount,
     [retval, array, size_is(aPluginCount)] out nsIPluginTag aResults);
 
   [noscript] void stopPluginInstance(in nsIPluginInstance aInstance);

@@ -341,9 +341,9 @@ public:
 
   /**
    * If this frame is a placeholder for a float, then return the float,
-   * otherwise return nsnull.
+   * otherwise return nsnull.  aPlaceholder must be a placeholder frame.
    */
-  static nsIFrame* GetFloatFromPlaceholder(nsIFrame* aPossiblePlaceholder);
+  static nsIFrame* GetFloatFromPlaceholder(nsIFrame* aPlaceholder);
 
   // Combine aNewBreakType with aOrigBreakType, but limit the break types
   // to NS_STYLE_CLEAR_LEFT, RIGHT, LEFT_AND_RIGHT.

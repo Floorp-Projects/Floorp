@@ -418,6 +418,7 @@ endif
 ifeq ($(OS_ARCH),SunOS)
 ifneq (86,$(findstring 86,$(OS_TEST)))
 ifdef HAVE_64BIT_OS
+ASFLAGS		+= -xarch=v9
 CPPSRCS		:= xptcinvoke_sparcv9_solaris.cpp xptcstubs_sparcv9_solaris.cpp
 else
 CPPSRCS		:= xptcinvoke_sparc_solaris.cpp xptcstubs_sparc_solaris.cpp
