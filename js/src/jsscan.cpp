@@ -1205,19 +1205,24 @@ retry:
                 if (JS7_ISLET(c))
                     break;
 
-                /*
-                 * We permit 08 and 09 as decimal numbers, which makes our
-                 * behaviour a superset of the ECMA numeric grammar.  We might
-                 * not always be so permissive, so we warn about it.
-                 */
-                if (radix == 8 && c >= '8') {
-                    if (!js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                     JSREPORT_WARNING,
-                                                     JSMSG_BAD_OCTAL,
-                                                     c == '8' ? "08" : "09")) {
+                if (radix == 8) {
+                    /* Octal integer literals are not permitted in strict mode code. */
+                    if (!js_ReportStrictModeError(cx, ts, NULL, NULL, JSMSG_DEPRECATED_OCTAL))
                         goto error;
+
+                    /*
+                     * Outside strict mode, we permit 08 and 09 as decimal numbers, which
+                     * makes our behaviour a superset of the ECMA numeric grammar. We
+                     * might not always be so permissive, so we warn about it.
+                     */
+                    if (c >= '8') {
+                        if (!js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_WARNING,
+                                                         JSMSG_BAD_OCTAL,
+                                                         c == '8' ? "08" : "09")) {
+                            goto error;
+                        }
+                        radix = 10;
                     }
-                    radix = 10;
                 }
             }
             if (!tb.append(c))
@@ -1309,6 +1314,13 @@ retry:
                         int32 val = JS7_UNDEC(c);
 
                         c = PeekChar(ts);
+                        /* Strict mode code allows only \0, then a non-digit. */
+                        if (val != 0 || JS7_ISDEC(c)) {
+                            if (!js_ReportStrictModeError(cx, ts, NULL, NULL, 
+                                                          JSMSG_DEPRECATED_OCTAL)) {
+                                goto error;
+                            }
+                        }
                         if ('0' <= c && c < '8') {
                             val = 8 * val + JS7_UNDEC(c);
                             GetChar(ts);
