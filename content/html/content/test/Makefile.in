@@ -142,6 +142,7 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug523771.html \
 		form_submit_server.sjs \
 		test_bug529819.html \
+		test_bug529859.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
