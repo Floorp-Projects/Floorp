@@ -83,7 +83,7 @@ var PreferencesView = {
     this._restartCount++;
 
     if (this._msg) {
-      let strings = document.getElementById("bundle_browser");
+      let strings = Elements.browserBundle;
       this.showMessage(strings.getString("notificationRestart.label"), "restart-app",
                        strings.getString("notificationRestart.button"), false, "prefs-restart-app");
     }

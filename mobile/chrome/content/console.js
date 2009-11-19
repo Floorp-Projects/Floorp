@@ -50,7 +50,7 @@ let ConsoleView = {
 
     this._list = document.getElementById("console-box");
     this._evalTextbox = document.getElementById("console-eval-textbox");
-    this._bundle = document.getElementById("bundle_browser");
+    this._bundle = Elements.browserBundle;
 
     this._count = 0;
     this.limit = 250;

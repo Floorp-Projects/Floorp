@@ -111,8 +111,8 @@ var DownloadsView = {
   
   _ifEmptyShowMessage: function dv__ifEmptyShowMessage() {
     if (this._list.itemCount == 0) {
-      let strings = document.getElementById("bundle_browser");
-      let emptyItem = this._list.appendItem(strings.getString("downloadsEmpty"));
+      let emptyString = Elements.browserBundle.getString("downloadsEmpty");
+      let emptyItem = this._list.appendItem(emptyString);
       emptyItem.id = "dl-empty-message";
     }
   },
@@ -288,7 +288,7 @@ var DownloadsView = {
   },
 
   _updateStatus: function dv__updateStatus(aItem) {
-    let strings = document.getElementById("bundle_browser");
+    let strings = Elements.browserBundle;
 
     let status = "";
 
@@ -325,7 +325,7 @@ var DownloadsView = {
     // Get the end time to display
     let end = new Date(parseInt(aItem.getAttribute("endTime")));
 
-    let strings = document.getElementById("bundle_browser");
+    let strings = Elements.browserBundle;
 
     // Figure out if the end time is from today, yesterday, this week, etc.
     let dateTime;
@@ -423,7 +423,7 @@ var DownloadsView = {
         return;
 
       let download = aSubject.QueryInterface(Ci.nsIDownload);
-      let strings = document.getElementById("bundle_browser");
+      let strings = Elements.browserBundle;
       var notifier = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
 
       if (aTopic == "dl-start") {

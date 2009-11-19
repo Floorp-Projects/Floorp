@@ -169,7 +169,7 @@ var ExtensionsView = {
     this._restartCount++;
 
     if (this._msg) {
-      let strings = document.getElementById("bundle_browser");
+      let strings = Elements.browserBundle;
       this.showMessage(strings.getString("notificationRestart.label"), "restart-app",
                        strings.getString("notificationRestart.button"), false, "addons-restart-app");
     }
@@ -271,7 +271,7 @@ var ExtensionsView = {
       this._restartCount--; // showRestart() always increments
     }
     
-    let strings = document.getElementById("bundle_browser");
+    let strings = Elements.browserBundle;
     this._strings["addonType.2"] = strings.getString("addonType.2");
     this._strings["addonType.4"] = strings.getString("addonType.4");
     this._strings["addonType.8"] = strings.getString("addonType.8");
@@ -324,7 +324,7 @@ var ExtensionsView = {
     function isDefault(aEngine)
       defaults.indexOf(aEngine.name) != -1
 
-    let strings = document.getElementById("bundle_browser");
+    let strings = Elements.browserBundle;
     let defaultDescription = strings.getString("addonsSearchEngine.description");
 
     let engines = this._search.getEngines({ });
@@ -504,7 +504,7 @@ var ExtensionsView = {
     if (this._repo.isSearching)
       this._repo.cancelSearch();
 
-    let strings = document.getElementById("bundle_browser");
+    let strings = Elements.browserBundle;
     if (aTerms) {
       AddonSearchResults.selectFirstResult = aSelectFirstResult;
       this.displaySectionMessage("repo", strings.getString("addonsSearchStart.label"),
@@ -526,7 +526,7 @@ var ExtensionsView = {
   displaySearchResults: function ev_displaySearchResults(aAddons, aTotalResults, aIsRecommended, aSelectFirstResult) {
     this.clearSection("repo");
 
-    let strings = document.getElementById("bundle_browser");
+    let strings = Elements.browserBundle;
     if (aAddons.length == 0) {
       let msg = aIsRecommended ? strings.getString("addonsSearchNone.recommended") :
                                  strings.getString("addonsSearchNone.search");
@@ -625,6 +625,20 @@ var ExtensionsView = {
   }
 };
 
+
+function searchFailed() {
+  ExtensionsView.clearSection("repo");
+
+  let strings = Elements.browserBundle;
+  let brand = document.getElementById("bundle_brand");
+
+  let failLabel = strings.getFormattedString("addonsSearchFail.label",
+                                             [brand.getString("brandShortName")]);
+  let failButton = strings.getString("addonsSearchFail.button");
+  ExtensionsView.displaySectionMessage("repo", failLabel, failButton, true);
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsIAddonSearchResultsCallback for the recommended search
 var RecommendedSearchResults = {
@@ -635,14 +649,7 @@ var RecommendedSearchResults = {
     ExtensionsView.displaySearchResults(aAddons, aTotalResults, true);
   },
 
-  searchFailed: function() {
-    ExtensionsView.clearSection("repo");
-
-    let strings = document.getElementById("bundle_browser");
-    let brand = document.getElementById("bundle_brand");
-    ExtensionsView.displaySectionMessage("repo", strings.getFormattedString("addonsSearchFail.label", [brand.getString("brandShortName")]),
-                                        strings.getString("addonsSearchFail.button"), true);
-  }
+  searchFailed: searchFailed
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -655,14 +662,7 @@ var AddonSearchResults = {
     ExtensionsView.displaySearchResults(aAddons, aTotalResults, false, this.selectFirstResult);
   },
 
-  searchFailed: function() {
-    ExtensionsView.clearSection("repo");
-
-    let strings = document.getElementById("bundle_browser");
-    let brand = document.getElementById("bundle_brand");
-    ExtensionsView.displaySectionMessage("repo", strings.getFormattedString("addonsSearchFail.label", [brand.getString("brandShortName")]),
-                                        strings.getString("addonsSearchFail.button"), true);
-  }
+  searchFailed: searchFailed
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -715,7 +715,7 @@ XPInstallDownloadManager.prototype = {
     if (ExtensionsView.visible)
       return;
 
-    let strings = document.getElementById("bundle_browser");
+    let strings = Elements.browserBundle;
     var alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
                                  strings.getString("alertAddonsInstalling"), false, "", null);
@@ -749,14 +749,14 @@ XPInstallDownloadManager.prototype = {
     
     // If we are updating an add-on, change the status
     if (element.hasAttribute("updating")) {
-      let strings = document.getElementById("bundle_browser");
+      let strings = Elements.browserBundle;
       element.setAttribute("updateStatus", strings.getFormattedString("addonUpdate.updated", [aAddon.version]));
       element.removeAttribute("updating");
     }
   },
 
   onInstallsCompleted: function() {
-    let strings = document.getElementById("bundle_browser");
+    let strings = Elements.browserBundle;
 
     // If even one add-on succeeded, display the restart notif
     if (this._succeeded.length > 0)
@@ -834,7 +834,7 @@ UpdateCheckListener.prototype = {
     if (!document)
       return;
 
-    let strings = document.getElementById("bundle_browser");
+    let strings = Elements.browserBundle;
     let element = document.getElementById(PREFIX_ITEM_URI + aAddon.id);
     element.setAttribute("updateStatus", strings.getString("addonUpdate.checking"));
   },
@@ -843,7 +843,7 @@ UpdateCheckListener.prototype = {
     if (!document)
       return;
     
-    let strings = document.getElementById("bundle_browser");
+    let strings = Elements.browserBundle;
     let element = document.getElementById(PREFIX_ITEM_URI + aAddon.id);
     let updateable = false;
     const nsIAUCL = Ci.nsIAddonUpdateCheckListener;
