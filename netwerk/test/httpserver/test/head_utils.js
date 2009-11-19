@@ -164,7 +164,7 @@ function expectLines(iter, expectedLines)
 /**
  * Spew a bunch of HTTP metadata from request into the body of response.
  *
- * @param request : nsIHttpRequestMetadata
+ * @param request : nsIHttpRequest
  *   the request whose metadata should be output
  * @param response : nsIHttpResponse
  *   the response to which the metadata is written
@@ -532,10 +532,8 @@ function runRawTests(testArray, done)
     var transport =
       sts.createTransport(null, 0, rawTest.host, rawTest.port, null);
 
-    var inStream = transport.openInputStream(0, 0, 0)
-                            .QueryInterface(Ci.nsIAsyncInputStream);
-    var outStream  = transport.openOutputStream(0, 0, 0)
-                              .QueryInterface(Ci.nsIAsyncOutputStream);
+    var inStream = transport.openInputStream(0, 0, 0);
+    var outStream  = transport.openOutputStream(0, 0, 0);
 
     // reset
     dataIndex = 0;
@@ -547,11 +545,16 @@ function runRawTests(testArray, done)
 
   function waitForMoreInput(stream)
   {
+    stream = stream.QueryInterface(Ci.nsIAsyncInputStream);
     stream.asyncWait(reader, 0, 0, currentThread);
   }
 
   function waitToWriteOutput(stream)
   {
+    // Do the QueryInterface here, not earlier, because there is no
+    // guarantee that 'stream' passed in here been QIed to nsIAsyncOutputStream
+    // since the last GC.
+    stream = stream.QueryInterface(Ci.nsIAsyncOutputStream);
     stream.asyncWait(writer, 0, testArray[testIndex].data[dataIndex].length,
                      currentThread);
   }
@@ -611,21 +614,22 @@ function runRawTests(testArray, done)
     {
       onOutputStreamReady: function(stream)
       {
-        var data = testArray[testIndex].data[dataIndex];
+        var str = testArray[testIndex].data[dataIndex];
 
         var written = 0;
         try
         {
-          written = stream.write(data, data.length);
-          if (written == data.length)
+          written = stream.write(str, str.length);
+          if (written == str.length)
             dataIndex++;
           else
-            testArray[testIndex].data = data.substring(written);
+            testArray[testIndex].data[dataIndex] = str.substring(written);
         }
         catch (e) { /* stream could have been closed, just ignore */ }
 
-        // Keep reading data until there's no more data to read
-        if (written != 0)
+        // Keep writing data while we can write and 
+        // until there's no more data to read
+        if (written > 0 && dataIndex < testArray[testIndex].data.length)
           waitToWriteOutput(stream);
         else
           stream.close();

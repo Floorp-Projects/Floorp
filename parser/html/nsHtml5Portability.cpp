@@ -42,10 +42,11 @@
 #include "nsHtml5Portability.h"
 
 nsIAtom*
-nsHtml5Portability::newLocalNameFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length)
+nsHtml5Portability::newLocalNameFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length, nsHtml5AtomTable* interner)
 {
   NS_ASSERTION(!offset, "The offset should always be zero here.");
-  return NS_NewAtom(nsDependentSubstring(buf, buf + length));
+  NS_ASSERTION(interner, "Didn't get an atom service.");
+  return interner->GetAtom(nsDependentSubstring(buf, buf + length));
 }
 
 nsString*
@@ -95,34 +96,35 @@ nsHtml5Portability::newCharArrayFromString(nsString* string)
   return arr;
 }
 
+nsIAtom*
+nsHtml5Portability::newLocalFromLocal(nsIAtom* local, nsHtml5AtomTable* interner)
+{
+  NS_PRECONDITION(local, "Atom was null.");
+  NS_PRECONDITION(interner, "Atom table was null");
+  if (local->IsStaticAtom()) {
+    nsAutoString str;
+    local->ToString(str);
+    local = interner->GetAtom(str);
+  }
+  return local;
+}
+
 void
 nsHtml5Portability::releaseString(nsString* str)
 {
   delete str;
 }
 
+// XXX useless code
 void
 nsHtml5Portability::retainLocal(nsIAtom* local)
 {
-  NS_IF_ADDREF(local);
 }
 
+// XXX useless code
 void
 nsHtml5Portability::releaseLocal(nsIAtom* local)
 {
-  NS_IF_RELEASE(local);
-}
-
-void
-nsHtml5Portability::retainElement(nsIContent* element)
-{
-  NS_IF_ADDREF(element);
-}
-
-void
-nsHtml5Portability::releaseElement(nsIContent* element)
-{
-  NS_IF_RELEASE(element);
 }
 
 PRBool

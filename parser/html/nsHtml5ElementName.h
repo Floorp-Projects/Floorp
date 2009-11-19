@@ -30,6 +30,7 @@
 
 #include "prtypes.h"
 #include "nsIAtom.h"
+#include "nsHtml5AtomTable.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
@@ -42,8 +43,10 @@
 #include "nsHtml5Atoms.h"
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsAHtml5TreeBuilderState.h"
 
 class nsHtml5StreamParser;
+class nsHtml5SpeculativeLoader;
 
 class nsHtml5Tokenizer;
 class nsHtml5TreeBuilder;
@@ -65,7 +68,7 @@ class nsHtml5ElementName
     PRBool special;
     PRBool scoping;
     PRBool fosterParenting;
-    static nsHtml5ElementName* elementNameByBuffer(jArray<PRUnichar,PRInt32> buf, PRInt32 offset, PRInt32 length);
+    static nsHtml5ElementName* elementNameByBuffer(jArray<PRUnichar,PRInt32> buf, PRInt32 offset, PRInt32 length, nsHtml5AtomTable* interner);
   private:
     static PRInt32 bufToHash(jArray<PRUnichar,PRInt32> buf, PRInt32 len);
     nsHtml5ElementName(nsIAtom* name, nsIAtom* camelCaseName, PRInt32 group, PRBool special, PRBool scoping, PRBool fosterParenting);
@@ -74,6 +77,7 @@ class nsHtml5ElementName
   public:
     virtual void release();
     ~nsHtml5ElementName();
+    virtual nsHtml5ElementName* cloneElementName(nsHtml5AtomTable* interner);
     static nsHtml5ElementName* ELT_A;
     static nsHtml5ElementName* ELT_B;
     static nsHtml5ElementName* ELT_G;

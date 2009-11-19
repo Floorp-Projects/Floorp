@@ -106,7 +106,8 @@ const STATE_DOWNLOAD_FAILED = "download-failed";
 const STATE_FAILED          = "failed";
 
 // From updater/errors.h:
-const WRITE_ERROR = 7;
+const WRITE_ERROR        = 7;
+const ELEVATION_CANCELED = 9;
 
 const DOWNLOAD_CHUNK_SIZE           = 300000; // bytes
 const DOWNLOAD_BACKGROUND_INTERVAL  = 600;    // seconds
@@ -1156,6 +1157,11 @@ UpdateService.prototype = {
         update.errorCode = ary[1];
         if (update.errorCode == WRITE_ERROR) {
           prompter.showUpdateError(update);
+          writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
+          writeVersionFile(getUpdatesDir(), update.extensionVersion);
+          return;
+        }
+        else if (update.errorCode == ELEVATION_CANCELED) {
           writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
           writeVersionFile(getUpdatesDir(), update.extensionVersion);
           return;

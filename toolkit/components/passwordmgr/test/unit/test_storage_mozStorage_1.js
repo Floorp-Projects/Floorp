@@ -35,7 +35,7 @@ var testdesc = "Initial connection to storage module"
 
 var storage;
 storage = LoginTest.initStorage(INDIR, "signons-empty.txt", OUTDIR, "signons-empty.sqlite");
-storage.getAllLogins({});
+storage.getAllLogins();
 
 var testdesc = "[ensuring file exists]"
 var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);

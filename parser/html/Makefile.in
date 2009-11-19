@@ -52,6 +52,8 @@ EXPORTS		= \
 
 CPPSRCS		= \
 		nsHtml5Atoms.cpp \
+		nsHtml5Atom.cpp \
+		nsHtml5AtomTable.cpp \
 		nsHtml5Parser.cpp \
 		nsHtml5AttributeName.cpp \
 		nsHtml5ElementName.cpp \
@@ -67,9 +69,12 @@ CPPSRCS		= \
 		nsHtml5ReleasableElementName.cpp \
 		nsHtml5MetaScanner.cpp \
 		nsHtml5TreeOperation.cpp \
+		nsHtml5TreeOpStage.cpp \
 		nsHtml5StateSnapshot.cpp \
 		nsHtml5TreeOpExecutor.cpp \
 		nsHtml5StreamParser.cpp \
+		nsHtml5Speculation.cpp \
+		nsHtml5SpeculativeLoader.cpp \
 		$(NULL)
 
 FORCE_STATIC_LIB = 1

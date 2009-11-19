@@ -371,7 +371,15 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     if (aData->mTextData->mWhiteSpace.GetUnit() == eCSSUnit_Null) {
       // nowrap: enum
       if (aAttributes->GetAttr(nsGkAtoms::nowrap)) {
-        aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_NOWRAP, eCSSUnit_Enumerated);
+        // See if our width is not a nonzero integer width.
+        const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
+        nsCompatibility mode = aData->mPresContext->CompatibilityMode();
+        if (!value || value->Type() != nsAttrValue::eInteger ||
+            value->GetIntegerValue() == 0 ||
+            eCompatibility_NavQuirks != mode) {
+          aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_NOWRAP, eCSSUnit_Enumerated);
+        }
+        
       }
     }
   }

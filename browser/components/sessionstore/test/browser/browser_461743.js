@@ -46,7 +46,7 @@ function test() {
   info("New tab added");
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
     info("New tab loaded");
-    this.removeEventListener("load", arguments.callee, true);
+    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
     executeSoon(function() {
       let tab2 = gBrowser.duplicateTab(tab);
       info("Duplicated tab");

@@ -661,7 +661,7 @@ FeedHandlerInfo.prototype = {
     }
 
     // Add the registered web handlers.  There can be any number of these.
-    var webHandlers = this._converterSvc.getContentHandlers(this.type, {});
+    var webHandlers = this._converterSvc.getContentHandlers(this.type);
     for each (let webHandler in webHandlers)
       this._possibleApplicationHandlers.appendElement(webHandler, false);
 

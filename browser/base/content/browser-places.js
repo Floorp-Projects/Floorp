@@ -889,12 +889,12 @@ var BookmarksEventHandler = {
       // Add "Open (Feed Name)" menuitem if it's a livemark with a siteURI
       target._endOptOpenSiteURI = document.createElement("menuitem");
       target._endOptOpenSiteURI.className = "openlivemarksite-menuitem";
-      target._endOptOpenSiteURI.setAttribute("siteURI", siteURIString);
+      target._endOptOpenSiteURI.setAttribute("targetURI", siteURIString);
       target._endOptOpenSiteURI.setAttribute("oncommand",
-          "openUILink(this.getAttribute('siteURI'), event);");
+          "openUILink(this.getAttribute('targetURI'), event);");
       // If a user middle-clicks this item we serve the oncommand event
       // We are using checkForMiddleClick because of Bug 246720
-      // Note: stopPropagation is needed to avoid serving middle-click 
+      // Note: stopPropagation is needed to avoid serving middle-click
       // with BT_onClick that would open all items in tabs
       target._endOptOpenSiteURI.setAttribute("onclick",
           "checkForMiddleClick(this, event); event.stopPropagation();");
@@ -922,6 +922,7 @@ var BookmarksEventHandler = {
   fillInBHTooltip: function(aDocument, aEvent) {
     var node;
     var cropped = false;
+    var targetURI;
 
     if (aDocument.tooltipNode.localName == "treechildren") {
       var tree = aDocument.tooltipNode.parentNode;
@@ -933,18 +934,28 @@ var BookmarksEventHandler = {
       node = tree.view.nodeForTreeIndex(row.value);
       cropped = tbo.isCellCropped(row.value, column.value);
     }
-    else
-      node = aDocument.tooltipNode.node;
+    else {
+      // Check whether the tooltipNode is a Places node.
+      // In such a case use it, otherwise check for targetURI attribute.
+      var tooltipNode = aDocument.tooltipNode;
+      if (tooltipNode.node)
+        node = tooltipNode.node;
+      else {
+        // This is a static non-Places node.
+        targetURI = tooltipNode.getAttribute("targetURI");
+      }
+    }
 
-    if (!node)
+    if (!node && !targetURI)
       return false;
 
-    var title = node.title;
-    var url;
+    // Show node.label as tooltip's title for non-Places nodes.
+    var title = node ? node.title : tooltipNode.label;
 
-    // Show URL only for URI-type nodes.
-    if (PlacesUtils.nodeIsURI(node))
-      url = node.uri;
+    // Show URL only for Places URI-nodes or nodes with a targetURI attribute.
+    var url;
+    if (targetURI || PlacesUtils.nodeIsURI(node))
+      url = targetURI || node.uri;
 
     // Show tooltip for containers only if their title is cropped.
     if (!cropped && !url)

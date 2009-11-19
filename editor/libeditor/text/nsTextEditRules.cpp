@@ -110,6 +110,9 @@ nsTextEditRules::nsTextEditRules()
 nsTextEditRules::~nsTextEditRules()
 {
    // do NOT delete mEditor here.  We do not hold a ref count to mEditor.  mEditor owns our lifespan.
+
+  if (mTimer)
+    mTimer->Cancel();
 }
 
 /********************************************************
@@ -120,6 +123,7 @@ NS_IMPL_CYCLE_COLLECTION_2(nsTextEditRules, mBogusNode, mCachedSelectionNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTextEditRules)
   NS_INTERFACE_MAP_ENTRY(nsIEditRules)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditRules)
 NS_INTERFACE_MAP_END
 
@@ -194,6 +198,9 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
 NS_IMETHODIMP
 nsTextEditRules::DetachEditor()
 {
+  if (mTimer)
+    mTimer->Cancel();
+
   mEditor = nsnull;
   return NS_OK;
 }

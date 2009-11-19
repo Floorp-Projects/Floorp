@@ -108,7 +108,7 @@ Area::~Area()
   delete [] mCoords;
 }
 
-void 
+void
 Area::GetHREF(nsAString& aHref) const
 {
   aHref.Truncate();
@@ -116,8 +116,8 @@ Area::GetHREF(nsAString& aHref) const
     mArea->GetAttr(kNameSpaceID_None, nsGkAtoms::href, aHref);
   }
 }
- 
-void 
+
+void
 Area::GetArea(nsIContent** aArea) const
 {
   *aArea = mArea;
@@ -267,7 +267,7 @@ void Area::ParseCoords(const nsAString& aSpec)
      * count the last entry in the list.
      */
     cnt++;
- 
+
     /*
      * Allocate space for the coordinate array.
      */
@@ -315,7 +315,7 @@ void Area::ParseCoords(const nsAString& aSpec)
 
     mNumCoords = cnt;
     mCoords = value_list;
-  
+
     NS_Free(cp);
   }
 }
@@ -401,7 +401,7 @@ void RectArea::ParseCoords(const nsAString& aSpec)
       mCoords[0] = x;
       saneRect = PR_FALSE;
     }
-  
+
     if (mCoords[1] > mCoords[3]) {
       // y-coords in reversed order
       nscoord y = mCoords[3];
@@ -521,13 +521,15 @@ PRBool PolyArea::IsInside(nscoord x, nscoord y) const
     PRInt32 end = totalc;
     PRInt32 pointer = 1;
 
-    if ((yval >= wherey) != (mCoords[pointer] >= wherey))
-      if ((xval >= wherex) == (mCoords[0] >= wherex))
+    if ((yval >= wherey) != (mCoords[pointer] >= wherey)) {
+      if ((xval >= wherex) == (mCoords[0] >= wherex)) {
         intersects += (xval >= wherex) ? 1 : 0;
-      else
+      } else {
         intersects += ((xval - (yval - wherey) *
                         (mCoords[0] - xval) /
                         (mCoords[pointer] - yval)) >= wherex) ? 1 : 0;
+      }
+    }
 
     // XXX I wonder what this is doing; this is a translation of ptinpoly.c
     while (pointer < end)  {
@@ -640,7 +642,7 @@ void CircleArea::ParseCoords(const nsAString& aSpec)
                  nsIScriptError::errorFlag,
                  "ImageMapCircleNegativeRadius");
     }
-  
+
     if (mNumCoords > 3) {
       wrongNumberOfCoords = PR_TRUE;
     }
@@ -731,8 +733,8 @@ NS_IMPL_ISUPPORTS4(nsImageMap,
                    nsIImageMap)
 
 NS_IMETHODIMP
-nsImageMap::GetBoundsForAreaContent(nsIContent *aContent, 
-                                   nsPresContext* aPresContext, 
+nsImageMap::GetBoundsForAreaContent(nsIContent *aContent,
+                                   nsPresContext* aPresContext,
                                    nsRect& aBounds)
 {
   NS_ENSURE_TRUE(aContent && aPresContext, NS_ERROR_INVALID_ARG);
@@ -813,7 +815,7 @@ nsImageMap::SearchForAreas(nsIContent* aParent, PRBool& aFoundArea,
         aFoundArea = PR_TRUE;
         rv = AddArea(child);
         NS_ENSURE_SUCCESS(rv, rv);
-        
+
         // Continue to next child. This stops mContainsBlockContents from
         // getting set. It also makes us ignore children of <area>s which
         // is consistent with how we react to dynamic insertion of such
@@ -828,7 +830,7 @@ nsImageMap::SearchForAreas(nsIContent* aParent, PRBool& aFoundArea,
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
-    
+
     if (child->IsNodeOfType(nsINode::eELEMENT)) {
       mContainsBlockContents = PR_TRUE;
       rv = SearchForAreas(child, aFoundArea, aFoundAnchor);

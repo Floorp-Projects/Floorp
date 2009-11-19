@@ -85,7 +85,7 @@ pageInfoTreeView.prototype = {
   {
     this.rows = this.data.push(row);
     this.rowCountChanged(this.rows - 1, 1);
-    if (this.selection.count == 0 && this.rowCount)
+    if (this.selection.count == 0 && this.rowCount && !gImageElement)
       this.selection.select(0);
   },
 
@@ -592,6 +592,8 @@ function addImage(url, type, alt, elem, isBg)
   else {
     var i = gImageHash[url][type][alt];
     gImageView.data[i][COL_IMAGE_COUNT]++;
+    if (elem == gImageElement)
+      gImageView.data[i][COL_IMAGE_NODE] = elem;
   }
 }
 

@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------
-             The Xiph.org Foundation's libtheora 1.1 beta release
+             The Xiph.org Foundation's libtheora 1.1 
 -------------------------------------------------------------------------
 
 *** What is Theora?
@@ -9,7 +9,7 @@ for use within the Foundation's Ogg multimedia streaming system.
 Theora is derived directly from On2's VP3 codec, adds new features
 while allow it a longer useful lifetime as an competitive codec.
 
-The 1.0 release decoder supports all the new features, but the
+The 1.0 release decoder supported all the new features, but the
 encoder is nearly identical to the VP3 code.
 
 The 1.1 release features a completely rewritten encoder, offering

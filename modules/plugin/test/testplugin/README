@@ -25,6 +25,13 @@ digits, 2 per channel in AARRGGBB format.
 Attempts to set the value of an undefined variable (0x0) via NPN_SetValue,
 returns true if it succeeds and false if it doesn't. It should never succeed.
 
+== NPN_ConvertPoint testing ==
+
+* convertPointX(sourceSpace, sourceX, sourceY, destSpace)
+* convertPointY(sourceSpace, sourceX, sourceY, destSpace)
+The plugin uses NPN_ConvertPoint to convert sourceX and sourceY from the source
+to dest space and returns the X or Y result based on the call.
+
 == NPRuntime testing ==
 
 The test plugin object supports the following scriptable methods:

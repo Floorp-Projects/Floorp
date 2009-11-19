@@ -1,11 +1,16 @@
+const MANDATORY = ["id", "name", "headerURL"];
+const OPTIONAL = ["footerURL", "textcolor", "accentcolor", "iconURL",
+                  "previewURL", "author", "description", "homepageURL",
+                  "updateURL", "version"];
+
 function dummy(id) {
   return {
-    id: id,
-    name: Math.random(),
-    headerURL: "about:blank",
-    footerURL: "about:blank",
-    textcolor: Math.random(),
-    accentcolor: Math.random()
+    id: id || Math.random().toString(),
+    name: Math.random().toString(),
+    headerURL: "http://lwttest.invalid/a.png",
+    footerURL: "http://lwttest.invalid/b.png",
+    textcolor: Math.random().toString(),
+    accentcolor: Math.random().toString()
   };
 }
 
@@ -113,4 +118,133 @@ function run_test() {
   ltm.forgetUsedTheme("x2");
   do_check_eq(ltm.usedThemes.length, 0);
   do_check_eq(ltm.currentTheme, null);
+
+  do_check_eq(ltm.parseTheme("invalid json"), null);
+  do_check_eq(ltm.parseTheme('"json string"'), null);
+
+  function roundtrip(data, secure) {
+    return ltm.parseTheme(JSON.stringify(data),
+                          "http" + (secure ? "s" : "") + "://lwttest.invalid/");
+  }
+
+  var data = dummy();
+  do_check_neq(roundtrip(data), null);
+  data.id = null;
+  do_check_eq(roundtrip(data), null);
+  data.id = 1;
+  do_check_eq(roundtrip(data), null);
+  data.id = 1.5;
+  do_check_eq(roundtrip(data), null);
+  data.id = true;
+  do_check_eq(roundtrip(data), null);
+  data.id = {};
+  do_check_eq(roundtrip(data), null);
+  data.id = [];
+  do_check_eq(roundtrip(data), null);
+
+  data = dummy();
+  data.unknownProperty = "Foo";
+  do_check_eq(typeof roundtrip(data).unknownProperty, "undefined");
+
+  data = dummy();
+  data.unknownURL = "http://lwttest.invalid/";
+  do_check_eq(typeof roundtrip(data).unknownURL, "undefined");
+
+  function roundtripSet(props, modify, test, secure) {
+    props.forEach(function (prop) {
+      var data = dummy();
+      modify(data, prop);
+      test(roundtrip(data, secure), prop, data);
+    });
+  }
+
+  roundtripSet(MANDATORY, function (data, prop) {
+    delete data[prop];
+  }, function (after) {
+    do_check_eq(after, null);
+  });
+
+  roundtripSet(OPTIONAL, function (data, prop) {
+    delete data[prop];
+  }, function (after) {
+    do_check_neq(after, null);
+  });
+
+  roundtripSet(MANDATORY, function (data, prop) {
+    data[prop] = "";
+  }, function (after) {
+    do_check_eq(after, null);
+  });
+
+  roundtripSet(OPTIONAL, function (data, prop) {
+    data[prop] = "";
+  }, function (after, prop) {
+    do_check_eq(typeof after[prop], "undefined");
+  });
+
+  roundtripSet(MANDATORY, function (data, prop) {
+    data[prop] = " ";
+  }, function (after) {
+    do_check_eq(after, null);
+  });
+
+  roundtripSet(OPTIONAL, function (data, prop) {
+    data[prop] = " ";
+  }, function (after, prop) {
+    do_check_neq(after, null);
+    do_check_eq(typeof after[prop], "undefined");
+  });
+
+  function non_urls(props) {
+    return props.filter(function (prop) !/URL$/.test(prop));
+  }
+
+  function urls(props) {
+    return props.filter(function (prop) /URL$/.test(prop));
+  }
+
+  roundtripSet(non_urls(MANDATORY.concat(OPTIONAL)), function (data, prop) {
+    data[prop] = prop;
+  }, function (after, prop, before) {
+    do_check_eq(after[prop], before[prop]);
+  });
+
+  roundtripSet(non_urls(MANDATORY.concat(OPTIONAL)), function (data, prop) {
+    data[prop] = " " + prop + "  ";
+  }, function (after, prop, before) {
+    do_check_eq(after[prop], before[prop].trim());
+  });
+
+  roundtripSet(urls(MANDATORY.concat(OPTIONAL)), function (data, prop) {
+    data[prop] = Math.random().toString();
+  }, function (after, prop, before) {
+    if (prop == "updateURL")
+      do_check_eq(typeof after[prop], "undefined");
+    else
+      do_check_eq(after[prop], "http://lwttest.invalid/" + before[prop]);
+  });
+
+  roundtripSet(urls(MANDATORY.concat(OPTIONAL)), function (data, prop) {
+    data[prop] = Math.random().toString();
+  }, function (after, prop, before) {
+    do_check_eq(after[prop], "https://lwttest.invalid/" + before[prop]);
+  }, true);
+
+  roundtripSet(urls(MANDATORY.concat(OPTIONAL)), function (data, prop) {
+    data[prop] = "https://sub.lwttest.invalid/" + Math.random().toString();
+  }, function (after, prop, before) {
+    do_check_eq(after[prop], before[prop]);
+  });
+
+  roundtripSet(urls(MANDATORY), function (data, prop) {
+    data[prop] = "ftp://lwttest.invalid/" + Math.random().toString();
+  }, function (after) {
+    do_check_eq(after, null);
+  });
+
+  roundtripSet(urls(OPTIONAL), function (data, prop) {
+    data[prop] = "ftp://lwttest.invalid/" + Math.random().toString();
+  }, function (after, prop) {
+    do_check_eq(typeof after[prop], "undefined");
+  });
 }

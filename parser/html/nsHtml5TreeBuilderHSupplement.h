@@ -35,38 +35,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH 512
+
   private:
 
-    nsTArray<nsHtml5TreeOperation>       mOpQueue;
-    nsHtml5TreeOpExecutor*               mExecutor;
+    nsTArray<nsHtml5TreeOperation>         mOpQueue;
+    nsAHtml5TreeOpSink*                    mOpSink;
+    nsAutoArrayPtr<nsIContent*>            mHandles;
+    PRInt32                                mHandlesUsed;
+    nsTArray<nsAutoArrayPtr<nsIContent*> > mOldHandles;
+    nsRefPtr<nsHtml5SpeculativeLoader>     mSpeculativeLoader;
 #ifdef DEBUG
-    PRBool                               mActive;
+    PRBool                                 mActive;
 #endif
-
-  public:
-
-    nsHtml5TreeBuilder(nsHtml5TreeOpExecutor* aExec);
-
-    ~nsHtml5TreeBuilder();
-
-    void DoUnlink();
-
-    void DoTraverse(nsCycleCollectionTraversalCallback &cb);
 
     // DocumentModeHandler
     /**
      * Tree builder uses this to report quirkiness of the document
      */
     void documentMode(nsHtml5DocumentMode m);
+
+    nsIContent** AllocateContentHandle();
     
-    inline PRUint32 GetOpQueueLength() {
-      return mOpQueue.Length();
+  public:
+
+    nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink);
+
+    ~nsHtml5TreeBuilder();
+    
+    PRBool HasScript();
+    
+    void SetOpSink(nsAHtml5TreeOpSink* aOpSink) {
+      mOpSink = aOpSink;
     }
     
-    inline void SwapQueue(nsTArray<nsHtml5TreeOperation>& aOtherQueue) {
-      mOpQueue.SwapElements(aOtherQueue);
-    }
+    void SetSpeculativeLoaderWithDocument(nsIDocument* aDocument);
+
+    void DropSpeculativeLoader();
+
+    void Flush();
     
-    inline void ReqSuspension() {
-      requestSuspension();
+    void MaybeFlush();
+    
+    void SetDocumentCharset(nsACString& aCharset);
+
+    void StreamEnded();
+
+    void NeedsCharsetSwitchTo(const nsACString& aEncoding);
+
+    void AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot);
+
+    inline void Dispatch(nsIRunnable* aEvent) {
+      if (NS_FAILED(NS_DispatchToMainThread(aEvent))) {
+        NS_WARNING("Failed to dispatch speculative load runnable.");
+      }
     }

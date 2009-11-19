@@ -36,19 +36,19 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-	setup \
-	stub \
-	app \
-	examples \
-	$(NULL)
+PARALLEL_DIRS = \
+  app \
+  setup \
+  stub \
+  examples \
+  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 ifdef MOZ_INSTALLER
@@ -57,7 +57,7 @@ endif
 endif
 
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
-DIRS += tools/redit
+PARALLEL_DIRS += tools/redit
 endif
 
 include $(topsrcdir)/config/rules.mk

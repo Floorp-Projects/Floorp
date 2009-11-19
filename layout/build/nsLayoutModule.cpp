@@ -118,7 +118,7 @@
 
 // DOM includes
 #include "nsDOMException.h"
-#include "nsDOMFileRequest.h"
+#include "nsDOMFileReader.h"
 #include "nsGlobalWindowCommands.h"
 #include "nsIControllerCommandTable.h"
 #include "nsJSProtocolHandler.h"
@@ -291,7 +291,7 @@ NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsXPathEvaluator, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(txNodeSetAdaptor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsXMLHttpRequest, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDOMFileRequest, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDOMFileReader, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDOMStorageManager,
                                          nsDOMStorageManager::GetInstance)
@@ -842,6 +842,11 @@ CreateWindowControllerWithSingletonCommandTable(nsISupports *aOuter,
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMScriptObjectFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBaseDOMException)
 
+#define NS_GEOLOCATION_CID \
+  { 0x1E1C3FF, 0x94A, 0xD048, { 0x44, 0xB4, 0x62, 0xD2, 0x9C, 0x7B, 0x4F, 0x39 } }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGeolocation, Init)
+
 #define NS_GEOLOCATION_SERVICE_CID \
   { 0x404d02a, 0x1CA, 0xAAAB, { 0x47, 0x62, 0x94, 0x4b, 0x1b, 0xf2, 0xf7, 0xb5 } }
 
@@ -1376,10 +1381,10 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_XMLSERIALIZER_CONTRACTID,
     nsDOMSerializerConstructor },
 
-  { "FileRequest",
-    NS_FILEREQUEST_CID,
-    NS_FILEREQUEST_CONTRACTID,
-    nsDOMFileRequestConstructor },
+  { "FileReader",
+    NS_FILEREADER_CID,
+    NS_FILEREADER_CONTRACTID,
+    nsDOMFileReaderConstructor },
 
   { "XMLHttpRequest",
     NS_XMLHTTPREQUEST_CID,
@@ -1451,6 +1456,11 @@ static const nsModuleComponentInfo gComponents[] = {
       NS_GEOLOCATION_SERVICE_CID,
       "@mozilla.org/geolocation/service;1",
       nsGeolocationServiceConstructor },
+
+    { "Geolocation",
+      NS_GEOLOCATION_CID,
+      "@mozilla.org/geolocation;1",
+      nsGeolocationConstructor },
 
     { "Focus Manager",
       NS_FOCUSMANAGER_CID,

@@ -57,16 +57,26 @@ let observer = {
     throw Components.results.NS_NOINTERFACE;
   },
   observe: function (aSubject, aTopic, aData) {
-    if (aData == "enter")
-      gDownloadLastDirFile = readLastDirPref();
-    else if (aData == "exit")
-      gDownloadLastDirFile = null;
+    switch (aTopic) {
+      case "private-browsing":
+        if (aData == "enter")
+          gDownloadLastDirFile = readLastDirPref();
+        else if (aData == "exit")
+          gDownloadLastDirFile = null;
+        break;
+      case "browser:purge-session-history":
+        gDownloadLastDirFile = null;
+        if (prefSvc.prefHasUserValue(LAST_DIR_PREF))
+          prefSvc.clearUserPref(LAST_DIR_PREF);
+        break;
+    }
   }
 };
 
-Components.classes["@mozilla.org/observer-service;1"]
-          .getService(Components.interfaces.nsIObserverService)
-          .addObserver(observer, "private-browsing", true);
+let os = Components.classes["@mozilla.org/observer-service;1"]
+                   .getService(Components.interfaces.nsIObserverService);
+os.addObserver(observer, "private-browsing", true);
+os.addObserver(observer, "browser:purge-session-history", true);
 
 function readLastDirPref() {
   try {

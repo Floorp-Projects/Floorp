@@ -84,7 +84,7 @@ CPPSRCS		= \
 		nsDOMAttributeMap.cpp \
 		nsDOMDocumentType.cpp \
 		nsDOMFile.cpp \
-		nsDOMFileRequest.cpp \
+		nsDOMFileReader.cpp \
 		nsDOMLists.cpp \
 		nsDOMParser.cpp \
 		nsDOMSerializer.cpp \

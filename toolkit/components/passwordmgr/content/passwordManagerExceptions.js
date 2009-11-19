@@ -76,7 +76,7 @@ function Reject(number, host) {
 }
 
 function LoadRejects() {
-  var hosts = passwordmanager.getAllDisabledHosts({});
+  var hosts = passwordmanager.getAllDisabledHosts();
   rejects = hosts.map(function(host, i) { return new Reject(i, host); });
   rejectsTreeView.rowCount = rejects.length;
 

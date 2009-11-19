@@ -2470,28 +2470,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
         case WM_QUERYCONVERTPOS:
           {
             PRECTL pCursorRect = (PRECTL)mp1;
-            nsCompositionEvent event(PR_TRUE, NS_COMPOSITION_QUERY, this);
-            nsIntPoint point;
-            point.x = 0;
-            point.y = 0;
-            InitEvent(event,&point);
-            DispatchWindowEvent(&event);
-            if ((event.theReply.mCursorPosition.x) || 
-                (event.theReply.mCursorPosition.y)) 
-            {
-              pCursorRect->xLeft = event.theReply.mCursorPosition.x + 1;
-              pCursorRect->xRight = pCursorRect->xLeft + event.theReply.mCursorPosition.width - 1;
-              pCursorRect->yTop = GetClientHeight() - event.theReply.mCursorPosition.y;
-              pCursorRect->yBottom = pCursorRect->yTop - event.theReply.mCursorPosition.height;
-
-              point.x = 0;
-              point.y = 0;
-
-              rc = (MRESULT)QCP_CONVERT;
-            }
-            else
-              rc = (MRESULT)QCP_NOCONVERT;
-
+            rc = (MRESULT)QCP_NOCONVERT;
             result = PR_TRUE;
             break;
           }
@@ -3170,7 +3149,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
 */
   pluginEvent.lParam = MAKELONG(event.refPoint.x, event.refPoint.y);
 
-  event.nativeMsg = (void *)&pluginEvent;
+  event.pluginEvent = (void *)&pluginEvent;
 
   // call the event callback 
   if (nsnull != mEventCallback) {
@@ -3214,7 +3193,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
         break;
     }
 
-    event.nativeMsg = (void *)&pluginEvent;
+    event.pluginEvent = (void *)&pluginEvent;
     return DispatchWindowEvent(&event);
   }
   return PR_FALSE;

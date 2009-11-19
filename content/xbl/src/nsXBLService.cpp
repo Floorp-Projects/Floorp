@@ -620,23 +620,27 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
     }
   }
 
-  // Set the binding's bound element.
-  newBinding->SetBoundElement(aContent);
+  {
+    nsAutoScriptBlocker scriptBlocker;
 
-  // Tell the binding to build the anonymous content.
-  newBinding->GenerateAnonymousContent();
+    // Set the binding's bound element.
+    newBinding->SetBoundElement(aContent);
 
-  // Tell the binding to install event handlers
-  newBinding->InstallEventHandlers();
+    // Tell the binding to build the anonymous content.
+    newBinding->GenerateAnonymousContent();
 
-  // Set up our properties
-  rv = newBinding->InstallImplementation();
-  NS_ENSURE_SUCCESS(rv, rv);
+    // Tell the binding to install event handlers
+    newBinding->InstallEventHandlers();
 
-  // Figure out if we have any scoped sheets.  If so, we do a second resolve.
-  *aResolveStyle = newBinding->HasStyleSheets();
+    // Set up our properties
+    rv = newBinding->InstallImplementation();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Figure out if we have any scoped sheets.  If so, we do a second resolve.
+    *aResolveStyle = newBinding->HasStyleSheets();
   
-  newBinding.swap(*aBinding);
+    newBinding.swap(*aBinding);
+  }
 
   return NS_OK; 
 }

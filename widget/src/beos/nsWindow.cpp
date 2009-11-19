@@ -173,6 +173,8 @@ void nsIMEBeOS::RunIME(uint32 *args, nsWindow *target, BView *fView)
 		break;
 
 	case B_INPUT_METHOD_LOCATION_REQUEST:
+// XXX NS_COMPOSITION_QUERY was dropped, use content query content events to get the caret rect.
+#if 0
 		if (fView && fView->LockLooper()) 
 		{
 			BPoint caret(imeCaret);
@@ -191,13 +193,16 @@ void nsIMEBeOS::RunIME(uint32 *args, nsWindow *target, BView *fView)
 			imeMessenger.SendMessage(&reply);
 			fView->UnlockLooper();
 		}
+#endif
 		break;
 
 	case B_INPUT_METHOD_STARTED:
 		imeTarget = target;
 		DispatchIME(NS_COMPOSITION_START);
+// XXX NS_COMPOSITION_QUERY was dropped, use content query content events to get the caret rect.
+#if 0
 		DispatchIME(NS_COMPOSITION_QUERY);
-
+#endif
 		msg.FindMessenger("be:reply_to", &imeMessenger);
 		break;
 	
@@ -256,12 +261,15 @@ void nsIMEBeOS::DispatchIME(PRUint32 what)
 	DispatchWindowEvent(&compEvent);
 	imeState = what;
 
+// XXX NS_COMPOSITION_QUERY was dropped, use content query content events to get the caret rect.
+#if 0
 	if (what == NS_COMPOSITION_QUERY) 
 	{
 		imeCaret.Set(compEvent.theReply.mCursorPosition.x,
 		           compEvent.theReply.mCursorPosition.y);
 		imeHeight = compEvent.theReply.mCursorPosition.height+4;
 	}
+#endif
 }
 
 PRBool nsIMEBeOS::DispatchWindowEvent(nsGUIEvent* event)

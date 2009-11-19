@@ -31,32 +31,6 @@ function dumpToFile(aData) {
 }
 
 /*
- * readFileData()
- *
- * Reads the data from the specified nsIFile, and returns an array of bytes.
- */
-function readFileData(aFile) {
-  var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
-                    createInstance(Ci.nsIFileInputStream);
-  // init the stream as RD_ONLY, -1 == default permissions.
-  inputStream.init(aFile, 0x01, -1, null);
-  var size = inputStream.available();
-
-  // use a binary input stream to grab the bytes.
-  var bis = Cc["@mozilla.org/binaryinputstream;1"].
-            createInstance(Ci.nsIBinaryInputStream);
-  bis.setInputStream(inputStream);
-
-  var bytes = bis.readByteArray(size);
-
-  if (size != bytes.length)
-      throw "Didn't read expected number of bytes";
-
-  return bytes;
-}
-
-
-/*
  * setAndGetFaviconData()
  *
  * Calls setFaviconData() with the specified image data,
@@ -79,20 +53,6 @@ function setAndGetFaviconData(aFilename, aData, aMimeType) {
   var outData = iconsvc.getFaviconData(iconURI, mimeTypeOutparam);
 
   return [outData, mimeTypeOutparam.value];
-}
-
-
-/*
- * compareArrays
- *
- * Compares two arrays, and throws if there's a difference.
- */
-function compareArrays(aArray1, aArray2) {
-  do_check_eq(aArray1.length, aArray2.length);
-
-  for (var i = 0; i < aArray1.length; i++)
-      if (aArray1[i] != aArray2[i])
-          throw "arrays differ at index " + i;
 }
 
 
@@ -120,6 +80,9 @@ try {
   do_throw("Could not get history services\n");
 }
 
+function checkArrays(a, b) {
+  do_check_true(compareArrays(a, b));
+}
 
 function run_test() {
 try {
@@ -140,7 +103,7 @@ var [outData, outMimeType] = setAndGetFaviconData(iconName, inData, inMimeType);
 
 // Ensure input and output are identical
 do_check_eq(inMimeType, outMimeType);
-compareArrays(inData, outData);
+checkArrays(inData, outData);
                     
 
 /* ========== 2 ========== */
@@ -159,7 +122,7 @@ do_check_eq(inData.length, 344);
 
 // Ensure input and output are identical
 do_check_eq(inMimeType, outMimeType);
-compareArrays(inData, outData);
+checkArrays(inData, outData);
 
 
 /* ========== 3 ========== */
@@ -183,7 +146,7 @@ var expectedData = readFileData(expectedFile);
 
 // Compare thet expected data to the actual data.
 do_check_eq("image/png", outMimeType);
-compareArrays(expectedData, outData);
+checkArrays(expectedData, outData);
 
 /* ========== 4 ========== */
 testnum++;
@@ -206,7 +169,7 @@ var expectedData = readFileData(expectedFile);
 
 // Compare thet expected data to the actual data.
 do_check_eq("image/png", outMimeType);
-compareArrays(expectedData, outData);
+checkArrays(expectedData, outData);
 
 
 /* ========== 5 ========== */
@@ -232,7 +195,7 @@ var expectedData = readFileData(expectedFile);
 do_check_eq("image/png", outMimeType);
 // Disabled on Windows due to problems with pixels varying slightly.
 if (!isWindows)
-  compareArrays(expectedData, outData);
+  checkArrays(expectedData, outData);
 
 
 /* ========== 6 ========== */
@@ -258,7 +221,7 @@ var expectedData = readFileData(expectedFile);
 
 // Compare thet expected data to the actual data.
 do_check_eq("image/png", outMimeType);
-compareArrays(expectedData, outData);
+checkArrays(expectedData, outData);
 
 /* ========== 7 ========== */
 testnum++;
@@ -281,7 +244,7 @@ var expectedData = readFileData(expectedFile);
 
 // Compare thet expected data to the actual data.
 do_check_eq("image/png", outMimeType);
-compareArrays(expectedData, outData);
+checkArrays(expectedData, outData);
 
 /* ========== 8 ========== */
 testnum++;
@@ -304,7 +267,7 @@ var expectedData = readFileData(expectedFile);
 
 // Compare thet expected data to the actual data.
 do_check_eq("image/png", outMimeType);
-compareArrays(expectedData, outData);
+checkArrays(expectedData, outData);
 
 /* ========== 9 ========== */
 testnum++;
@@ -327,7 +290,7 @@ var expectedData = readFileData(expectedFile);
 
 // Compare thet expected data to the actual data.
 do_check_eq("image/png", outMimeType);
-compareArrays(expectedData, outData);
+checkArrays(expectedData, outData);
 
 
 /* ========== 10 ========== */
@@ -390,55 +353,32 @@ var savedIcon3URI = iconsvc.getFaviconForPage(page3URI);
 var out1MimeType = {};
 var out1Data = iconsvc.getFaviconData(savedIcon1URI, out1MimeType);
 do_check_eq(icon1MimeType, out1MimeType.value);
-compareArrays(icon1Data, out1Data);
+checkArrays(icon1Data, out1Data);
 
 // check second page icon
 var out2MimeType = {};
 var out2Data = iconsvc.getFaviconData(savedIcon2URI, out2MimeType);
 do_check_eq(icon2MimeType, out2MimeType.value);
-compareArrays(icon2Data, out2Data);
+checkArrays(icon2Data, out2Data);
 
 // check third page icon
 var out3MimeType = {};
 var out3Data = iconsvc.getFaviconData(savedIcon3URI, out3MimeType);
 do_check_eq(icon1MimeType, out3MimeType.value);
-compareArrays(icon1Data, out3Data);
+checkArrays(icon1Data, out3Data);
 
 
 /* ========== 11 ========== */
 testnum++;
-testdesc = "test setAndLoadFaviconForPage ";
-
-// 32x32 png, 344 bytes.
-iconName = "favicon-normal32.png";
-inMimeType = "image/png";
-iconFile = do_get_file(iconName);
-inData = readFileData(iconFile);
-do_check_eq(inData.length, 344);
-var pageURI = uri("http://foo.bar/");
-
-var faviconURI = uri("file:///./" + iconName);
-
-iconsvc.setAndLoadFaviconForPage(pageURI, faviconURI, true);
-
-var savedFaviconURI = iconsvc.getFaviconForPage(pageURI);
-outMimeType = {};
-outData = iconsvc.getFaviconData(savedFaviconURI, outMimeType);
-
-// Ensure input and output are identical
-do_check_eq(inMimeType, outMimeType.value);
-compareArrays(inData, outData);
-
-
-/* ========== 12 ========== */
-testnum++;
 testdesc = "test favicon links ";
 
+var pageURI = uri("http://foo.bar/");
+var faviconURI = uri("file:///./favicon-normal32.png");
 do_check_eq(iconsvc.getFaviconImageForPage(pageURI).spec,
             iconsvc.getFaviconLinkForIcon(faviconURI).spec);
 
 
-/* ========== 13 ========== */
+/* ========== 12 ========== */
 testnum++;
 testdesc = "test failed favicon cache ";
 

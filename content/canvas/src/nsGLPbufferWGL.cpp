@@ -143,24 +143,24 @@ nsGLPbufferWGL::Init(WebGLContext *priv)
 
     mPriv = priv;
     
-    WNDCLASS wc;
+    WNDCLASSW wc;
     PIXELFORMATDESCRIPTOR pfd;
 
-    if (!GetClassInfo(GetModuleHandle(NULL), "GLEW", &wc)) {
+    if (!GetClassInfoW(GetModuleHandle(NULL), L"GLEW", &wc)) {
         ZeroMemory(&wc, sizeof(WNDCLASS));
         wc.hInstance = GetModuleHandle(NULL);
         wc.lpfnWndProc = DefWindowProc;
-        wc.lpszClassName = "GLEW";
+        wc.lpszClassName = L"GLEW";
 
-        if (!RegisterClass(&wc)) {
+        if (!RegisterClassW(&wc)) {
             LogMessage("Canvas 3D: RegisterClass failed");
             return PR_FALSE;
         }
     }
 
     // create window
-    mGlewWindow = CreateWindow("GLEW", "GLEW", 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 
-                               CW_USEDEFAULT, NULL, NULL, GetModuleHandle(NULL), NULL);
+    mGlewWindow = CreateWindowW(L"GLEW", L"GLEW", 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 
+                                CW_USEDEFAULT, NULL, NULL, GetModuleHandle(NULL), NULL);
     if (!mGlewWindow) {
         LogMessage("Canvas 3D: CreateWindow failed");
         return PR_FALSE;

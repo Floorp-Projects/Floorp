@@ -4,6 +4,7 @@ const Ci = Components.interfaces;
 var reportURL = null;
 var reportsDir, pendingDir;
 var strings = null;
+var myListener = null;
 
 function parseKeyValuePairs(text) {
   var lines = text.split('\n');
@@ -180,7 +181,7 @@ function submitForm(iframe, dump, extra, link)
   // web progress listener
   const STATE_START = Ci.nsIWebProgressListener.STATE_START;
   const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
-  let myListener = {
+  myListener = {
     QueryInterface: function(aIID) {
       if (aIID.equals(Ci.nsIWebProgressListener) ||
           aIID.equals(Ci.nsISupportsWeakReference) ||
@@ -192,6 +193,7 @@ function submitForm(iframe, dump, extra, link)
     onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {
       if(aFlag & STATE_STOP) {
         iframe.docShell.removeProgressListener(myListener);
+        myListener = null;
         link.className = "";
 
         //XXX: give some indication of failure?

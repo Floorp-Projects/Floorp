@@ -91,6 +91,7 @@ _TEST_FILES = \
 		test_bug508115.xul \
 		$(warning test_bug507902.html temporarily disabled - see bug 510001) \
 		test_bug514732.html \
+		test_bug527306.html \
 		test_movement_by_characters.html \
 		test_movement_by_words.html \
 		test_plugin_clipping.xhtml \
