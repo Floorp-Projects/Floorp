@@ -190,11 +190,11 @@ XPCOMUtils.defineLazyGetter(this, "gOSVersion", function aus_gOSVersion() {
   return osVersion;
 });
 
-XPCOMUtils.defineLazyGetter(this, "gCanUpdate", function aus_gCanUpdate() {
+XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpdates() {
   try {
     const NORMAL_FILE_TYPE = Ci.nsILocalFile.NORMAL_FILE_TYPE;
     var updateTestFile = getUpdateFile([FILE_PERMS_TEST]);
-    LOG("gCanUpdate - testing write access " + updateTestFile.path);
+    LOG("gCanApplyUpdates - testing write access " + updateTestFile.path);
     if (updateTestFile.exists())
       updateTestFile.remove(false);
     updateTestFile.create(NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
@@ -206,7 +206,7 @@ XPCOMUtils.defineLazyGetter(this, "gCanUpdate", function aus_gCanUpdate() {
 
     // Example windowsVersion:  Windows XP == 5.1
     var windowsVersion = sysInfo.getProperty("version");
-    LOG("gCanUpdate - windowsVersion = " + windowsVersion);
+    LOG("gCanApplyUpdates - windowsVersion = " + windowsVersion);
 
   /**
 #    For Vista, updates can be performed to a location requiring admin
@@ -231,13 +231,13 @@ XPCOMUtils.defineLazyGetter(this, "gCanUpdate", function aus_gCanUpdate() {
         // appDir is under Program Files, so check if the user can elevate
         userCanElevate = gApp.QueryInterface(Ci.nsIWinAppHelper).
                          userCanElevate;
-        LOG("gCanUpdate - on Vista, userCanElevate: " + userCanElevate);
+        LOG("gCanApplyUpdates - on Vista, userCanElevate: " + userCanElevate);
       }
       catch (ex) {
         // When the installation directory is not under Program Files,
         // fall through to checking if write access to the 
         // installation directory is available.
-        LOG("gCanUpdate - on Vista, appDir is not under Program Files");
+        LOG("gCanApplyUpdates - on Vista, appDir is not under Program Files");
       }
     }
 
@@ -265,7 +265,7 @@ XPCOMUtils.defineLazyGetter(this, "gCanUpdate", function aus_gCanUpdate() {
     if (!userCanElevate) {
       // if we're unable to create the test file this will throw an exception.
       var appDirTestFile = FileUtils.getFile(KEY_APPDIR, [FILE_PERMS_TEST]);
-      LOG("gCanUpdate - testing write access " + appDirTestFile.path);
+      LOG("gCanApplyUpdates - testing write access " + appDirTestFile.path);
       if (appDirTestFile.exists())
         appDirTestFile.remove(false)
       appDirTestFile.create(NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
@@ -275,33 +275,40 @@ XPCOMUtils.defineLazyGetter(this, "gCanUpdate", function aus_gCanUpdate() {
 #endif //XP_WIN
   }
   catch (e) {
-     LOG("gCanUpdate - unable to update. Exception: " + e);
+     LOG("gCanApplyUpdates - unable to apply updates. Exception: " + e);
     // No write privileges to install directory
     return false;
   }
 
+  LOG("gCanApplyUpdates - able to apply updates");
+  return true;
+});
+
+XPCOMUtils.defineLazyGetter(this, "gCanCheckForUpdates", function aus_gCanCheckForUpdates() {
   // If the administrator has locked the app update functionality
   // OFF - this is not just a user setting, so disable the manual
   // UI too.
   var enabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
   if (!enabled && gPref.prefIsLocked(PREF_APP_UPDATE_ENABLED)) {
-    LOG("gCanUpdate - unable to update, disabled by pref");
+    LOG("gCanCheckForUpdates - unable to automatically check for updates, " +
+        "disabled by pref");
     return false;
   }
 
   // If we don't know the binary platform we're updating, we can't update.
   if (!gABI) {
-    LOG("gCanUpdate - unable tp update, unknown ABI");
+    LOG("gCanCheckForUpdates - unable to check for updates, unknown ABI");
     return false;
   }
 
   // If we don't know the OS version we're updating, we can't update.
   if (!gOSVersion) {
-    LOG("gCanUpdate - unable to update, unknown OS version");
+    LOG("gCanCheckForUpdates - unable to check for updates, unknown OS " +
+        "version");
     return false;
   }
 
-  LOG("gCanUpdate - able to update");
+  LOG("gCanCheckForUpdates - able to check for updates");
   return true;
 });
 
@@ -1079,7 +1086,8 @@ UpdateService.prototype = {
   },
 
   /**
-   * The following needs to happen during the profile-after-change notification:
+   * The following needs to happen during the post-update-processing
+   * notification from nsUpdateServiceStub.js:
    * 1. post update processing
    * 2. resume of a download that was in progress during a previous session
    * 3. start of a complete update download after the failure to apply a partial
@@ -1093,7 +1101,7 @@ UpdateService.prototype = {
    * notify the user of install success.
    */
   _postUpdateProcessing: function AUS__postUpdateProcessing() {
-    if (!gCanUpdate) {
+    if (!this.canUpdate) {
       LOG("UpdateService:_postUpdateProcessing - unable to update");
       return;
     }
@@ -1349,6 +1357,13 @@ UpdateService.prototype = {
       return;
     }
 
+    if (!gCanApplyUpdates) {
+      LOG("Checker:_selectAndInstallUpdate - prompting because the user is " +
+          "unable to apply updates");
+      this._showPrompt(update);
+      return;
+    }
+
     if (!getPref("getBoolPref", PREF_APP_UPDATE_AUTO, true)) {
       LOG("Checker:_selectAndInstallUpdate - prompting because silent " +
           "install is disabled");
@@ -1468,7 +1483,7 @@ UpdateService.prototype = {
    * See nsIExtensionManager.idl
    */
   onUpdateEnded: function AUS_onUpdateEnded() {
-    if (this._incompatAddonsCount > 0) {
+    if (this._incompatAddonsCount > 0 || !gCanApplyUpdates) {
       LOG("Checker:onUpdateEnded - prompting because there are incompatible " +
           "add-ons");
       this._showPrompt(this._update);
@@ -1520,7 +1535,21 @@ UpdateService.prototype = {
    * See nsIUpdateService.idl
    */
   get canUpdate() {
-    return gCanUpdate;
+    return gCanCheckForUpdates && gCanApplyUpdates;
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get canCheckForUpdates() {
+    return gCanCheckForUpdates;
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get canApplyUpdates() {
+    return gCanApplyUpdates;
   },
 
   /**
@@ -1599,7 +1628,9 @@ UpdateService.prototype = {
   implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
   getHelperForLanguage: function(language) null,
   getInterfaces: function AUS_getInterfaces(count) {
-    var interfaces = [Ci.nsIApplicationUpdateService, Ci.nsITimerCallback,
+    var interfaces = [Ci.nsIApplicationUpdateService,
+                      Ci.nsIApplicationUpdateService2,
+                      Ci.nsITimerCallback,
                       Ci.nsIObserver];
     count.value = interfaces.length;
     return interfaces;
@@ -1614,6 +1645,7 @@ UpdateService.prototype = {
                                 PREF_APP_UPDATE_INTERVAL + ",86400" }],
   _xpcom_factory: UpdateServiceFactory,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIApplicationUpdateService,
+                                         Ci.nsIApplicationUpdateService2,
                                          Ci.nsIAddonUpdateCheckListener,
                                          Ci.nsITimerCallback,
                                          Ci.nsIObserver])
@@ -2060,7 +2092,7 @@ Checker.prototype = {
   _enabled: true,
   get enabled() {
     return getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true) &&
-           gCanUpdate && this._enabled;
+           gCanCheckForUpdates && this._enabled;
   },
 
   /**
