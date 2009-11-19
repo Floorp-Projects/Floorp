@@ -570,7 +570,7 @@ namespace nanojit
         FMR(r, s);
     }
 
-    void Assembler::asm_restore(LIns *i, Reservation *unused, Register r) {
+    void Assembler::asm_restore(LIns *i, Reservation *, Register r) {
         int d;
         if (i->isop(LIR_alloc)) {
             d = disp(i);
