@@ -1,2 +1,4 @@
 url-prefix ../../jsreftest.html?test=ecma_5/strict/
 script 10.4.2.js
+script B.1.1.js
+script B.1.2.js
