@@ -137,6 +137,8 @@ public:
 
     void CleanUp();
 
+    const char* GetUserAgent();
+
     static const NPNetscapeFuncs sBrowserFuncs;
 
     static PluginModuleChild* current();
@@ -157,6 +159,7 @@ private:
 
     std::string mPluginFilename;
     PRLibrary* mLibrary;
+    nsCString mUserAgent;
 
     // we get this from the plugin
 #ifdef OS_POSIX
