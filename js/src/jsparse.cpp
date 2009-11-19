@@ -6253,6 +6253,8 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             }
             break;
           case TOK_NAME:
+            if (!js_ReportStrictModeError(cx, ts, tc, pn, JSMSG_DEPRECATED_DELETE_OPERAND))
+                return NULL;
             pn2->pn_op = JSOP_DELNAME;
             break;
           default:;
