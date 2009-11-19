@@ -52,12 +52,17 @@
 <!ENTITY netInterrupt.title "The connection was interrupted">
 <!ENTITY netInterrupt.longDesc "&sharedLongDesc;">
 
-<!ENTITY netOffline.title "Offline mode">
-<!ENTITY netOffline.longDesc "
+<!-- LOCALIZATION NOTE (netOffline2.longDesc) - Workaround to allow the l10n tools
+to pickup this string change. Please update netOffline.longDesc too -->
+
+<!ENTITY netOffline2.longDesc "
 <ul>
   <li>Try again. &brandShortName; will attempt to open a connection and reload the page.</li>
 </ul>
 ">
+
+<!ENTITY netOffline.title "Offline mode">
+<!ENTITY netOffline.longDesc "&netOffline2.longDesc;">
 
 <!ENTITY contentEncodingError.title "Content Encoding Error">
 <!ENTITY contentEncodingError.longDesc "
