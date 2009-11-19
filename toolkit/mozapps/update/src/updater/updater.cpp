@@ -866,7 +866,7 @@ AddFile::Finish(int status)
 class PatchFile : public Action
 {
 public:
-  PatchFile() : mPatchIndex(-1), pfile(NULL), buf(NULL) { }
+  PatchFile() : mPatchIndex(-1), buf(NULL) { }
   virtual ~PatchFile();
 
   virtual int Parse(char *line);
@@ -884,25 +884,20 @@ private:
   const NS_tchar *mDestFile;
   int mPatchIndex;
   MBSPatchHeader header;
-  FILE* pfile;
   unsigned char *buf;
+  NS_tchar spath[MAXPATHLEN];
 };
 
 int PatchFile::sPatchIndex = 0;
 
 PatchFile::~PatchFile()
 {
-  if (pfile)
-    fclose(pfile);
-
   // delete the temporary patch file
-  NS_tchar spath[MAXPATHLEN];
-  NS_tsnprintf(spath, MAXPATHLEN, NS_T("%s/%d.patch"),
-               gSourcePath, mPatchIndex);
+  if (spath[0])
+    NS_tremove(spath);
 
-  NS_tremove(spath);
-
-  free(buf);
+  if (buf)
+    free(buf);
 }
 
 int
@@ -983,7 +978,6 @@ PatchFile::Prepare()
   // extract the patch to a temporary file
   mPatchIndex = sPatchIndex++;
 
-  NS_tchar spath[MAXPATHLEN];
   NS_tsnprintf(spath, MAXPATHLEN, NS_T("%s/%d.patch"),
                gSourcePath, mPatchIndex);
 
@@ -995,28 +989,6 @@ PatchFile::Prepare()
 
   int rv = gArchiveReader.ExtractFileToStream(mPatchFile, fp);
   fclose(fp);
-  if (rv)
-    return rv;
-
-  // XXXdarin from here down should be moved into the Execute command.
-  //          no need to open all of the patch files and read all of 
-  //          the source files before applying any patches.
-
-  pfile = NS_tfopen(spath, NS_T("rb"));
-  if (pfile == NULL)
-    return READ_ERROR;
-
-  rv = MBS_ReadHeader(pfile, &header);
-  if (rv)
-    return rv;
-
-  AutoFile ofile = NS_tfopen(mDestFile, NS_T("rb"));
-  if (ofile == NULL)
-    return READ_ERROR;
-
-  rv = LoadSourceFile(ofile);
-  if (rv)
-    LOG(("LoadSourceFile failed\n"));
   return rv;
 }
 
@@ -1025,13 +997,32 @@ PatchFile::Execute()
 {
   LOG(("EXECUTE PATCH %s\n", mFile));
 
+  AutoFile pfile = NS_tfopen(spath, NS_T("rb"));
+  if (pfile == NULL)
+    return READ_ERROR;
+
+  int rv = MBS_ReadHeader(pfile, &header);
+  if (rv)
+    return rv;
+
+  FILE *origfile = NS_tfopen(mDestFile, NS_T("rb"));
+  if (!origfile)
+    return READ_ERROR;
+
+  rv = LoadSourceFile(origfile);
+  fclose(origfile);
+  if (rv) {
+    LOG(("LoadSourceFile failed\n"));
+    return rv;
+  }
+
   // Create backup copy of the destination file before proceeding.
 
   struct stat ss;
   if (NS_tstat(mDestFile, &ss))
     return READ_ERROR;
 
-  int rv = backup_create(mDestFile);
+  rv = backup_create(mDestFile);
   if (rv)
     return rv;
 
@@ -1043,7 +1034,15 @@ PatchFile::Execute()
   if (ofile == NULL)
     return WRITE_ERROR;
 
-  return MBS_ApplyPatch(&header, pfile, buf, ofile);
+  rv = MBS_ApplyPatch(&header, pfile, buf, ofile);
+
+  // Go ahead and do a bit of cleanup now to minimize runtime overhead.
+  NS_tremove(spath);
+  spath[0] = '\0';
+  free(buf);
+  buf = NULL;
+
+  return rv;
 }
 
 void
