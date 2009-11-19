@@ -61,8 +61,6 @@ using namespace mozilla::plugins;
 
 namespace {
 PluginModuleChild* gInstance = nsnull;
-// NPN_UserAgent returns a |const char*| that must outlive its stack frame
-nsCString gUserAgent;
 }
 
 
@@ -203,6 +201,15 @@ PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
 void
 PluginModuleChild::CleanUp()
 {
+}
+
+const char*
+PluginModuleChild::GetUserAgent()
+{
+    if (!CallNPN_UserAgent(&mUserAgent))
+        return NULL;
+
+    return NullableStringGet(mUserAgent);
 }
 
 bool
@@ -765,8 +772,7 @@ _useragent(NPP aNPP)
     _MOZ_LOG(__FUNCTION__);
     AssertPluginThread();
 
-    PluginModuleChild::current()->CallNPN_UserAgent(&gUserAgent);
-    return NullableStringGet(gUserAgent);
+    return PluginModuleChild::current()->GetUserAgent();
 }
 
 void* NP_CALLBACK
