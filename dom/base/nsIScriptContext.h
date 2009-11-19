@@ -56,10 +56,10 @@ class nsScriptObjectHolder;
 
 typedef void (*nsScriptTerminationFunc)(nsISupports* aRef);
 
-// 87482b5e-e019-4df5-9bc2-b2a51b1f2d28
+// A4FE2B52-62B5-40C3-BF9C-5E0A27B10F90
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x87482b5e, 0xe019, 0x4df5, \
-  { 0x9b, 0xc2, 0xb2, 0xa5, 0x1b, 0x1f, 0x2d, 0x28 } }
+{ 0xA4FE2B52, 0x62B5, 0x40C3, \
+  { 0xBF, 0x9C, 0x5E, 0x0A, 0x27, 0xB1, 0x0F, 0x90 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -401,6 +401,11 @@ public:
    */
   virtual PRBool GetProcessingScriptTag() = 0;
   virtual void SetProcessingScriptTag(PRBool aResult) = 0;
+
+  /**
+   * Called to find out if this script context might be executing script.
+   */
+  virtual PRBool GetExecutingScript() = 0;
 
   /**
    * Tell the context whether or not to GC when destroyed.  An optimization
