@@ -6,7 +6,7 @@ pref("extensions.weave.pwChangeURL", "https://services.mozilla.com/pw/forgot.php
 pref("extensions.weave.termsURL", "https://mozillalabs.com/weave/tos/");
 
 pref("extensions.weave.encryption", "aes-256-cbc");
-
+pref("extensions.weave.client.name", "Firefox");
 pref("extensions.weave.lastversion", "firstrun");
 
 pref("extensions.weave.rememberpassword", true);
