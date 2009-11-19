@@ -1325,6 +1325,21 @@ UpdateService.prototype = {
     // Encode version since it could be a non-ascii string (bug 359093)
     var neverPrefName = PREF_UPDATE_NEVER_BRANCH +
                         encodeURIComponent(update.version);
+
+    if (!gCanApplyUpdates) {
+      if (getPref("getBoolPref", neverPrefName, false)) {
+        LOG("Checker:_selectAndInstallUpdate - the user is unable to apply " +
+            "updates. Not prompting because the preference " + neverPrefName + 
+            " is true");
+      }
+      else {
+        LOG("Checker:_selectAndInstallUpdate - the user is unable to apply " +
+            "updates... prompting");
+        this._showPrompt(update);
+      }
+      return;
+    }
+
     if (update.type == "major" &&
         getPref("getBoolPref", neverPrefName, false)) {
       LOG("Checker:_selectAndInstallUpdate - not prompting because this is a " +
@@ -1353,13 +1368,6 @@ UpdateService.prototype = {
     if (update.type == "major") {
       LOG("Checker:_selectAndInstallUpdate - prompting because it is a major " +
           "update");
-      this._showPrompt(update);
-      return;
-    }
-
-    if (!gCanApplyUpdates) {
-      LOG("Checker:_selectAndInstallUpdate - prompting because the user is " +
-          "unable to apply updates");
       this._showPrompt(update);
       return;
     }
