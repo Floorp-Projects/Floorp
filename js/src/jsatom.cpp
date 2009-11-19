@@ -1176,6 +1176,20 @@ JSAtomList::rawRemove(JSCompiler *jsc, JSAtomListElement *ale, JSHashEntry **hep
     --count;
 }
 
+JSAutoAtomList::~JSAutoAtomList()
+{
+    if (table) {
+        JS_HashTableDestroy(table);
+    } else {
+        JSHashEntry *hep = list; 
+        while (hep) {
+            JSHashEntry *next = hep->next;
+            js_free_temp_entry(compiler, hep, HT_FREE_ENTRY);
+            hep = next;
+        }
+    }
+}
+
 JSAtomListElement *
 JSAtomListIterator::operator ()()
 {
