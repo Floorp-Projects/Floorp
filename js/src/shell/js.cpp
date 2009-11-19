@@ -2956,7 +2956,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JS_BeginRequest(scx);
     src = JS_GetStringChars(str);
     srclen = JS_GetStringLength(str);
-    lazy = JS_FALSE;
+    split = lazy = JS_FALSE;
     if (srclen == 4) {
         if (src[0] == 'l' && src[1] == 'a' && src[2] == 'z' && src[3] == 'y') {
             lazy = JS_TRUE;
