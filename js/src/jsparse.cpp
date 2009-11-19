@@ -1218,6 +1218,30 @@ CheckStrictAssignment(JSContext *cx, JSTreeContext *tc, JSParseNode *lhs)
 }
 
 /*
+ * Check that it is permitted to introduce a binding for atom.  Strict
+ * mode forbids introducing new definitions for 'eval' or 'arguments'.
+ * Use pn for reporting error locations, or use tc's token stream if
+ * pn is NULL.
+ */
+bool
+CheckStrictBinding(JSContext *cx, JSTreeContext *tc, JSAtom *atom, 
+                   JSParseNode *pn)
+{
+    if (!tc->needStrictChecks())
+        return true;
+
+    JSAtomState *atomState = &cx->runtime->atomState;
+    if (atom == atomState->evalAtom || atom == atomState->argumentsAtom) {
+        const char *name = js_AtomToPrintableString(cx, atom);
+        if (name)
+            js_ReportStrictModeError(cx, TS(tc->compiler), tc, pn,
+                                     JSMSG_BAD_BINDING, name);
+        return false;
+    }
+    return true;
+}
+
+/*
  * In strict mode code, all formal parameter names must be distinct. If fun's
  * formals are legit given fun's strictness level, return true. Otherwise,
  * report an error and return false. Use pn for error position reporting,
@@ -1234,25 +1258,42 @@ static bool
 CheckStrictFormals(JSContext *cx, JSTreeContext *tc, JSFunction *fun,
                    JSParseNode *pn)
 {
+    JSAtom *atom;
+
     if (!tc->needStrictChecks())
         return true;
 
-    JSAtom *dup = js_FindDuplicateFormal(fun);
-    if (!dup)
-        return true;
+    atom = js_FindDuplicateFormal(fun);
+    if (atom) {
+        /*
+         * We have found a duplicate parameter name. If we can find the
+         * JSDefinition for the argument, that will have a more accurate source
+         * location.
+         */
+        JSDefinition *dn = ALE_DEFN(tc->decls.lookup(atom));
+        if (dn->pn_op == JSOP_GETARG)
+            pn = dn;
+        const char *name = js_AtomToPrintableString(cx, atom);
+        if (!name ||
+            !js_ReportStrictModeError(cx, TS(tc->compiler), tc, pn,
+                                      JSMSG_DUPLICATE_FORMAL, name)) {
+            return false;
+        }
+    }
 
-    /*
-     * We have found a duplicate parameter name. If we can find the JSDefinition
-     * for the argument, that will have a more accurate source location.
-     */
-    JSDefinition *dn = ALE_DEFN(tc->decls.lookup(dup));
-    if (dn->pn_op == JSOP_GETARG)
-        pn = dn;
-    const char *name = js_AtomToPrintableString(cx, dup);
-    if (!name ||
-        !js_ReportStrictModeError(cx, TS(tc->compiler), tc, pn,
-                                  JSMSG_DUPLICATE_FORMAL, name)) {
-        return false;
+    if (tc->flags & (TCF_FUN_PARAM_ARGUMENTS | TCF_FUN_PARAM_EVAL)) {
+        JSAtomState *atoms = &cx->runtime->atomState;
+        atom = (tc->flags & TCF_FUN_PARAM_ARGUMENTS
+                ? atoms->argumentsAtom : atoms->evalAtom);
+        /* The definition's source position will be more precise. */
+        JSDefinition *dn = ALE_DEFN(tc->decls.lookup(atom));
+        JS_ASSERT(dn->pn_atom == atom);
+        const char *name = js_AtomToPrintableString(cx, atom);
+        if (!name ||
+            !js_ReportStrictModeError(cx, TS(tc->compiler), tc, dn,
+                                      JSMSG_BAD_BINDING, name)) {
+            return false;
+        }
     }
 
     return true;
@@ -1503,6 +1544,8 @@ DefineArg(JSParseNode *pn, JSAtom *atom, uintN i, JSTreeContext *tc)
     /* Flag tc so we don't have to lookup arguments on every use. */
     if (atom == tc->compiler->context->runtime->atomState.argumentsAtom)
         tc->flags |= TCF_FUN_PARAM_ARGUMENTS;
+    if (atom == tc->compiler->context->runtime->atomState.evalAtom)
+        tc->flags |= TCF_FUN_PARAM_EVAL;
 
     /*
      * Make an argument definition node, distinguished by being in tc->decls
@@ -1691,6 +1734,8 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
     /* Flag tc so we don't have to lookup arguments on every use. */
     if (atom == tc->compiler->context->runtime->atomState.argumentsAtom)
         tc->flags |= TCF_FUN_PARAM_ARGUMENTS;
+    if (atom == tc->compiler->context->runtime->atomState.evalAtom)
+        tc->flags |= TCF_FUN_PARAM_EVAL;
 
     JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
     ale = tc->decls.lookup(atom);
@@ -2821,6 +2866,9 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     if (!body)
         return NULL;
 
+    if (!CheckStrictBinding(cx, &funtc, funAtom, pn))
+        return NULL;
+
     if (!CheckStrictFormals(cx, &funtc, fun, pn))
         return NULL;
 
@@ -3134,6 +3182,9 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     JS_ASSERT(!tc->atTopLevel());
 
     pn = data->pn;
+    if (!CheckStrictBinding(cx, tc, atom, pn))
+        return false;
+
     blockObj = tc->blockChain;
     ale = tc->decls.lookup(atom);
     if (ale && ALE_DEFN(ale)->pn_blockid == tc->blockid()) {
@@ -3241,8 +3292,12 @@ OuterLet(JSTreeContext *tc, JSStmtInfo *stmt, JSAtom *atom)
 static JSBool
 BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 {
-    JSStmtInfo *stmt = js_LexicalLookup(tc, atom, NULL);
     JSParseNode *pn = data->pn;
+
+    if (!CheckStrictBinding(cx, tc, atom, pn))
+        return false;
+
+    JSStmtInfo *stmt = js_LexicalLookup(tc, atom, NULL);
 
     if (stmt && stmt->type == STMT_WITH) {
         pn->pn_op = JSOP_NAME;
