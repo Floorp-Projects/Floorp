@@ -7,7 +7,6 @@
   locale/@AB_CD@/browser/browser.dtd              (%chrome/browser.dtd)
   locale/@AB_CD@/browser/browser.properties       (%chrome/browser.properties)
   locale/@AB_CD@/browser/firstrun.dtd             (%chrome/firstrun.dtd)
-  locale/@AB_CD@/browser/search.properties        (%chrome/search.properties)
   locale/@AB_CD@/browser/region.properties        (%chrome/region.properties)
   locale/@AB_CD@/browser/preferences.dtd          (%chrome/preferences.dtd)
   locale/@AB_CD@/browser/checkbox.dtd             (%chrome/checkbox.dtd)
