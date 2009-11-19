@@ -99,25 +99,11 @@ nsOuterDocAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   return NS_OK;
 }
 
-void nsOuterDocAccessible::CacheChildren()
-{  
-  // An outer doc accessible usually has 1 nsDocAccessible child,
-  // but could have none if we can't get to the inner documnet
-  if (!mWeakShell) {
-    mAccChildCount = eChildCountUninitialized;
-    return;   // This outer doc node has been shut down
-  }
-  if (mAccChildCount != eChildCountUninitialized) {
-    return;
-  }
-
-  InvalidateChildren();
-  mAccChildCount = 0;
-
-  // In these variable names, "outer" relates to the nsOuterDocAccessible
-  // as opposed to the nsDocAccessibleWrap which is "inner".
-  // The outer node is a something like a <browser>, <frame>, <iframe>, <page> or
-  // <editor> tag, whereas the inner node corresponds to the inner document root.
+void
+nsOuterDocAccessible::CacheChildren()
+{
+  // An outer doc accessible usually has 1 nsDocAccessible child, but could have
+  // none if we can't get to the inner documnet.
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   NS_ASSERTION(content, "No nsIContent for <browser>/<iframe>/<editor> dom node");
@@ -134,18 +120,15 @@ void nsOuterDocAccessible::CacheChildren()
   }
 
   nsCOMPtr<nsIAccessible> innerAccessible;
-  nsCOMPtr<nsIAccessibilityService> accService = 
-    do_GetService("@mozilla.org/accessibilityService;1");
+  nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
   accService->GetAccessibleFor(innerNode, getter_AddRefs(innerAccessible));
   nsRefPtr<nsAccessible> innerAcc(nsAccUtils::QueryAccessible(innerAccessible));
   if (!innerAcc)
     return;
 
   // Success getting inner document as first child -- now we cache it.
-  mAccChildCount = 1;
-  SetFirstChild(innerAccessible); // weak ref
+  mChildren.AppendObject(innerAccessible);
   innerAcc->SetParent(this);
-  innerAcc->SetNextSibling(nsnull);
 }
 
 nsresult

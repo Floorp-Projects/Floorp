@@ -50,10 +50,18 @@ _TEST_FILES =\
 		test_colorpicker.xul \
 		test_combobox.xul \
 		test_filectrl.html \
+		test_formctrl.html \
+		test_formctrl.xul \
+		test_groupbox.xul \
+		test_iframe.html \
+		test_img.html \
+		test_list.html \
+		test_list_invalidate.html \
 		test_media.html \
 		test_menu.xul \
 		test_select.html \
 		test_tree.xul \
+		test_txtcntr.html \
 		test_txtctrl.html \
 		$(NULL)
 

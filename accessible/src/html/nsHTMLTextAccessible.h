@@ -106,7 +106,6 @@ public:
 
   // nsIAccessible
   NS_IMETHOD GetName(nsAString& aName);
-  NS_IMETHOD GetParent(nsIAccessible **aParent);
 
   // nsAccessNode
   virtual nsresult Shutdown();
@@ -116,6 +115,8 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
   virtual nsresult AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
                                 PRUint32 aLength);
+
+  virtual nsIAccessible* GetParent();
 
 protected:
   // XXX: Ideally we'd get the bullet text directly from the bullet frame via
@@ -161,8 +162,10 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
 protected:
-  void CacheChildren();  // Include bullet accessible
+  // nsAccessible
+  virtual void CacheChildren();
 
+private:
   nsRefPtr<nsHTMLListBulletAccessible> mBulletAccessible;
 };
 

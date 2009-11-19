@@ -103,11 +103,11 @@ private:
 
 
 #define NS_ACCESSIBLE_IMPL_CID                          \
-{  /* 53cfa871-be42-47fc-b416-0033653b3151 */           \
-  0x53cfa871,                                           \
-  0xbe42,                                               \
-  0x47fc,                                               \
-  { 0xb4, 0x16, 0x00, 0x33, 0x65, 0x3b, 0x31, 0x51 }    \
+{  /* 07c5a6d6-4e87-4b57-8613-4c39e1b5150a */           \
+  0x07c5a6d6,                                           \
+  0x4e87,                                               \
+  0x4b57,                                               \
+  { 0x86, 0x13, 0x4c, 0x39, 0xe1, 0xb5, 0x15, 0x0a }    \
 }
 
 class nsAccessible : public nsAccessNodeWrap, 
@@ -199,22 +199,7 @@ public:
                                    nsIAccessible **aChild);
 
   //////////////////////////////////////////////////////////////////////////////
-  // Initializing and cache methods
-
-  /**
-   * Set accessible parent.
-   */
-  void SetParent(nsIAccessible *aParent);
-
-  /**
-   * Set first accessible child.
-   */
-  void SetFirstChild(nsIAccessible *aFirstChild);
-
-  /**
-   * Set next sibling accessible.
-   */
-  void SetNextSibling(nsIAccessible *aNextSibling);
+  // Initializing methods
 
   /**
    * Set the ARIA role map entry for a new accessible.
@@ -226,9 +211,44 @@ public:
   virtual void SetRoleMapEntry(nsRoleMapEntry *aRoleMapEntry);
 
   /**
-   * Set the child count to -1 (unknown) and null out cached child pointers
+   * Set accessible parent.
+   */
+  void SetParent(nsIAccessible *aParent);
+
+  /**
+   * Set the child count to -1 (unknown) and null out cached child pointers.
+   * Should be called when accessible tree is changed because document has
+   * transformed.
    */
   virtual void InvalidateChildren();
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Accessible tree traverse methods
+
+  /**
+   * Return parent accessible.
+   */
+  virtual nsIAccessible* GetParent();
+
+  /**
+   * Return child accessible at the given index.
+   */
+  virtual nsIAccessible* GetChildAt(PRUint32 aIndex);
+
+  /**
+   * Return child accessible count.
+   */
+  virtual PRInt32 GetChildCount();
+
+  /**
+   * Return index of the given child accessible.
+   */
+  virtual PRInt32 GetIndexOf(nsIAccessible *aChild);
+
+  /**
+   * Return index in parent accessible.
+   */
+  PRInt32 GetIndexInParent();
 
   /**
    * Return parent accessible only if cached.
@@ -240,13 +260,8 @@ public:
    */
   already_AddRefed<nsIAccessible> GetCachedFirstChild();
 
-  /**
-   * Assert if child not in parent's cache.
-   */
-  void TestChildCache(nsIAccessible *aCachedChild);
-
   //////////////////////////////////////////////////////////////////////////////
-  // Miscellaneous methods.
+  // Miscellaneous methods
 
   /**
    * Fire accessible event.
@@ -269,22 +284,41 @@ public:
   virtual nsresult AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
                                 PRUint32 aLength);
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Helper methods
-  
-  already_AddRefed<nsIAccessible> GetParent() {
-    nsIAccessible *parent = nsnull;
-    GetParent(&parent);
-    return parent;
-  }
-
 protected:
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Initializing, cache and tree traverse methods
+
+  /**
+   * Cache accessible children.
+   */
+  virtual void CacheChildren();
+
+  /**
+   * Assert if child not in parent's cache.
+   */
+  void TestChildCache(nsIAccessible *aCachedChild);
+
+  /**
+   * Cache children if necessary. Return true if the accessible is defunct.
+   */
+  PRBool EnsureChildren();
+
+  /**
+   * Return sibling accessible at the given offset.
+   */
+  virtual nsIAccessible* GetSiblingAtOffset(PRInt32 aOffset,
+                                            nsresult* aError = nsnull);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Miscellaneous helpers
+
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
   PRBool IsVisible(PRBool *aIsOffscreen); 
 
   //////////////////////////////////////////////////////////////////////////////
-  // Name helpers.
+  // Name helpers
 
   /**
    * Compute the name of HTML node.
@@ -300,25 +334,6 @@ protected:
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);
   static nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
 
-  /**
-   * Walk into subtree and calculate the string which is used as the accessible
-   * name or description.
-   *
-   * @param aContent      [in] traversed content
-   * @param aFlatString   [in, out] result string
-   * @param aIsRootHidden [in] specifies whether root content (we started to
-   *                      traverse from) is hidden, in this case the result
-   *                      string is calculated from hidden children
-   *                      (this is used when hidden root content is explicitly
-   *                      specified as label or description by author)
-   */
-  nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent,
-                                              nsAString *aFlatString,
-                                              PRBool aIsRootHidden);
-
-  // Helpers for dealing with children
-  virtual void CacheChildren();
-  
   // nsCOMPtr<>& is useful here, because getter_AddRefs() nulls the comptr's value, and NextChild
   // depends on the passed-in comptr being null or already set to a child (finding the next sibling).
   nsIAccessible *NextChild(nsCOMPtr<nsIAccessible>& aAccessible);
@@ -436,11 +451,10 @@ protected:
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;
-  nsCOMPtr<nsIAccessible> mFirstChild;
-  nsCOMPtr<nsIAccessible> mNextSibling;
+  nsCOMArray<nsIAccessible> mChildren;
+  PRBool mAreChildrenInitialized;
 
   nsRoleMapEntry *mRoleMapEntry; // Non-null indicates author-supplied role; possibly state & value as well
-  PRInt32 mAccChildCount;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAccessible,
