@@ -162,6 +162,8 @@ ident:
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(GECKO_PLATFORM_INI_PATH) Build SourceStamp
 	@printf "fennec_revision "
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App SourceStamp
+	@printf "buildid "
+	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App BuildID
 
 # special targets just to do the debian single locale packages
 wget-deb:
