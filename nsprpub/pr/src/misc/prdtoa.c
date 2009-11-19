@@ -1728,6 +1728,8 @@ PR_strtod
 			}
 		}
  dig_done:
+	if (nd > 64 * 1024)
+		goto ret0;
 	e = 0;
 	if (c == 'e' || c == 'E') {
 		if (!nd && !nz && !nz0) {

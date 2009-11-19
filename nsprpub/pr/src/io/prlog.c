@@ -456,7 +456,7 @@ PR_IMPLEMENT(void) PR_LogPrint(const char *fmt, ...)
         PR_ExplodeTime(PR_Now(), PR_GMTParameters, &now);
         nb_tid = PR_snprintf(line, sizeof(line)-1,
                              "%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - ",
-                             now.tm_year, now.tm_month, now.tm_mday,
+                             now.tm_year, now.tm_month + 1, now.tm_mday,
                              now.tm_hour, now.tm_min, now.tm_sec,
                              now.tm_usec);
     }
