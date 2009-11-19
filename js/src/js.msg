@@ -313,3 +313,4 @@ MSG_DEF(JSMSG_XDR_CLOSURE_WRAPPER,    230, 1, JSEXN_INTERNALERR, "can't XDR clos
 MSG_DEF(JSMSG_NOT_NONNULL_OBJECT,     231, 0, JSEXN_TYPEERR, "value is not a non-null object")
 MSG_DEF(JSMSG_DEPRECATED_OCTAL,       232, 0, JSEXN_SYNTAXERR, "octal literals and octal escape sequences are deprecated")
 MSG_DEF(JSMSG_STRICT_CODE_WITH,       233, 0, JSEXN_SYNTAXERR, "strict mode code may not contain 'with' statements")
+MSG_DEF(JSMSG_DUPLICATE_PROPERTY,     234, 1, JSEXN_SYNTAXERR, "property name {0} appears more than once in object literal")

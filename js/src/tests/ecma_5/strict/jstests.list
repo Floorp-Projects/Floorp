@@ -1,6 +1,7 @@
 url-prefix ../../jsreftest.html?test=ecma_5/strict/
 script 8.7.2.js
 script 10.4.2.js
+script 11.1.5.js
 script 12.10.1.js
 script B.1.1.js
 script B.1.2.js
