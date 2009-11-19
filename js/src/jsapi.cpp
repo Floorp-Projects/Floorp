@@ -4278,7 +4278,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
      * but looking up the property by name instead of frame slot.
      */
     if (FUN_FLAT_CLOSURE(fun)) {
-        JS_ASSERT(DSLOTS_IS_NOT_NULL(funobj));
+        JS_ASSERT(funobj->dslots);
         if (!js_EnsureReservedSlots(cx, clone,
                                     fun->countInterpretedReservedSlots())) {
             return NULL;
@@ -4906,9 +4906,10 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
     JSString *str;
 
     CHECK_REQUEST(cx);
-    jp = JS_NEW_PRINTER(cx, name, NULL,
-                        indent & ~JS_DONT_PRETTY_PRINT,
-                        !(indent & JS_DONT_PRETTY_PRINT));
+    jp = js_NewPrinter(cx, name, NULL,
+                       indent & ~JS_DONT_PRETTY_PRINT,
+                       !(indent & JS_DONT_PRETTY_PRINT),
+                       false, false);
     if (!jp)
         return NULL;
     if (js_DecompileScript(jp, script))
@@ -4922,41 +4923,21 @@ JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
 JS_PUBLIC_API(JSString *)
 JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent)
 {
-    JSPrinter *jp;
-    JSString *str;
-
     CHECK_REQUEST(cx);
-    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunction", fun,
-                        indent & ~JS_DONT_PRETTY_PRINT,
-                        !(indent & JS_DONT_PRETTY_PRINT));
-    if (!jp)
-        return NULL;
-    if (js_DecompileFunction(jp))
-        str = js_GetPrinterOutput(jp);
-    else
-        str = NULL;
-    js_DestroyPrinter(jp);
-    return str;
+    return js_DecompileToString(cx, "JS_DecompileFunction", fun,
+                                indent & ~JS_DONT_PRETTY_PRINT,
+                                !(indent & JS_DONT_PRETTY_PRINT),
+                                false, false, js_DecompileFunction);
 }
 
 JS_PUBLIC_API(JSString *)
 JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent)
 {
-    JSPrinter *jp;
-    JSString *str;
-
     CHECK_REQUEST(cx);
-    jp = JS_NEW_PRINTER(cx, "JS_DecompileFunctionBody", fun,
-                        indent & ~JS_DONT_PRETTY_PRINT,
-                        !(indent & JS_DONT_PRETTY_PRINT));
-    if (!jp)
-        return NULL;
-    if (js_DecompileFunctionBody(jp))
-        str = js_GetPrinterOutput(jp);
-    else
-        str = NULL;
-    js_DestroyPrinter(jp);
-    return str;
+    return js_DecompileToString(cx, "JS_DecompileFunctionBody", fun,
+                                indent & ~JS_DONT_PRETTY_PRINT,
+                                !(indent & JS_DONT_PRETTY_PRINT),
+                                false, false, js_DecompileFunctionBody);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5159,10 +5140,17 @@ JS_TriggerAllOperationCallbacks(JSRuntime *rt)
 JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx)
 {
-    /* The use of cx->fp below is safe: if we're on trace, it is skipped. */
+    /*
+     * The use of cx->fp below is safe. Rationale: Here we don't care if the
+     * interpreter state is stale. We just want to know if there *is* any
+     * interpreter state.
+     */
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
-    return JS_ON_TRACE(cx) || cx->fp != NULL;
+#ifdef JS_TRACER
+    JS_ASSERT_IF(JS_TRACE_MONITOR(cx).tracecx == cx, cx->fp);
+#endif
+    return cx->fp != NULL;
 }
 
 JS_PUBLIC_API(JSBool)

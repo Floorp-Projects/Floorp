@@ -2003,6 +2003,13 @@ CompileRegExpToAST(JSContext* cx, JSTokenStream* ts,
 #ifdef JS_TRACER
 typedef js::Vector<LIns *, 4, js::ContextAllocPolicy> LInsList;
 
+struct REFragment : public nanojit::Fragment
+{
+    REFragment(const void* _ip verbose_only(, uint32_t profFragID))
+      : nanojit::Fragment(ip verbose_only(, profFragID))
+    {}
+};
+
 /* Return the cached fragment for the given regexp, or create one. */
 static Fragment*
 LookupNativeRegExp(JSContext* cx, uint16 re_flags,
@@ -2013,16 +2020,15 @@ LookupNativeRegExp(JSContext* cx, uint16 re_flags,
     REHashMap &table = *tm->reFragments;
 
     REHashKey k(re_length, re_flags, re_chars);
-    Fragment *frag = table.get(k);
+    REFragment *frag = table.get(k);
 
     if (!frag) {
         verbose_only(
         uint32_t profFragID = (js_LogController.lcbits & LC_FragProfile)
                               ? (++(tm->lastFragID)) : 0;
         )
-        frag = new (alloc) Fragment(0 verbose_only(, profFragID));
+        frag = new (alloc) REFragment(0 verbose_only(, profFragID));
         frag->lirbuf = tm->reLirBuf;
-        frag->root = frag;
         /*
          * Copy the re_chars portion of the hash key into the Allocator, so
          * its lifecycle is disconnected from the lifecycle of the
@@ -5180,9 +5186,9 @@ js_InitRegExpStatics(JSContext *cx)
      *   + (sizeof(REProgState) * INITIAL_STATESTACK)
      *   + (offsetof(REMatchState, parens) + avgParanSize * sizeof(RECapture))
      */
-    JS_INIT_ARENA_POOL(&cx->regexpPool, "regexp",
-                       12 * 1024 - 40,  /* FIXME: bug 421435 */
-                       sizeof(void *), &cx->scriptStackQuota);
+    JS_InitArenaPool(&cx->regexpPool, "regexp",
+                     12 * 1024 - 40,  /* FIXME: bug 421435 */
+                     sizeof(void *), &cx->scriptStackQuota);
 
     JS_ClearRegExpStatics(cx);
 }

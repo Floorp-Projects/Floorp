@@ -72,9 +72,10 @@ void NanoAssertFail()
         exit(3);
     #elif defined(XP_OS2) || (defined(__GNUC__) && defined(__i386))
         asm("int $3");
+        abort();
+    #else
+        abort();
     #endif
-
-    abort();
 }
 #endif
 
@@ -112,7 +113,7 @@ nanojit::CodeAlloc::allocCodeChunk(size_t nbytes) {
 }
 
 void
-nanojit::CodeAlloc::freeCodeChunk(void *p, size_t nbytes) {
+nanojit::CodeAlloc::freeCodeChunk(void *p, size_t) {
     VirtualFree(p, 0, MEM_RELEASE);
 }
 
