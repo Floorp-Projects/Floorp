@@ -87,8 +87,17 @@ BrowserStartup.prototype = {
     let importBookmarks = databaseStatus == histsvc.DATABASE_STATUS_CREATE ||
                           databaseStatus == histsvc.DATABASE_STATUS_CORRUPT;
 
-    if (!importBookmarks)
-      return;
+    if (!importBookmarks) {
+      // Check to see whether "mobile" root already exists. This is to handle
+      // existing profiles created with pre-1.0 builds (which won't have mobile
+      // bookmarks root). We can remove this eventually when we stop
+      // caring about users migrating to current builds with pre-1.0 profiles.
+      let annos = Cc["@mozilla.org/browser/annotation-service;1"].
+                  getService(Ci.nsIAnnotationService);
+      let mobileRootItems = annos.getItemsWithAnnotation("mobile/bookmarksRoot", {});
+      if (mobileRootItems.length > 0)
+        return; // no need to do initial import
+    }
 
     Cu.import("resource://gre/modules/utils.js");
 
@@ -102,7 +111,10 @@ BrowserStartup.prototype = {
             converter.charset = "UTF-8";
             jsonStr = converter.convertFromByteArray(aResult, aResult.length);
 
-            PlacesUtils.restoreBookmarksFromJSONString(jsonStr, true);
+            // aReplace=false since this may be called when there are existing
+            // bookmarks that we don't want to overwrite ("no mobile root"
+            // case from above)
+            PlacesUtils.restoreBookmarksFromJSONString(jsonStr, false);
           } catch (err) {
             Cu.reportError("Failed to parse default bookmarks from bookmarks.json: " + err);
           }
