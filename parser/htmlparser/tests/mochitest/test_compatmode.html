@@ -77,12 +77,12 @@ function finishTest() {
 function test(mode,i){
   is(mode,doctypes[i],doctypes[i+1]);
   if (i == doctypes.length - 2) {
-    if (typeof(gOriginalHtml5Pref) == "undefined") {
-      // doTestHtml5(); Disabled due to bug 529544
-    }
-    else {
+//    if (typeof(gOriginalHtml5Pref) == "undefined") {
+//      doTestHtml5(); Disabled due to bug 529544
+//    }
+//    else {
       finishTest();
-    }
+//    }
   }
 }
 
