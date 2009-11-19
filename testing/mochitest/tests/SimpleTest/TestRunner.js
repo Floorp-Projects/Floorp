@@ -20,11 +20,12 @@ TestRunner.maxTimeouts = 4; // halt testing after too many timeouts
 **/
 TestRunner._numTimeouts = 0;
 TestRunner._currentTestStartTime = new Date().valueOf();
+TestRunner._timeoutFactor = 1;
 
 TestRunner._checkForHangs = function() {
   if (TestRunner._currentTest < TestRunner._urls.length) {
     var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
-    if (runtime >= TestRunner.timeout) {
+    if (runtime >= TestRunner.timeout * TestRunner._timeoutFactor) {
       var frameWindow = $('testframe').contentWindow.wrappedJSObject ||
                           $('testframe').contentWindow;
       frameWindow.SimpleTest.ok(false, "Test timed out.");
@@ -48,6 +49,10 @@ TestRunner._checkForHangs = function() {
 
     TestRunner.deferred = callLater(30, TestRunner._checkForHangs);
   }
+}
+
+TestRunner.requestLongerTimeout = function(factor) {
+    TestRunner._timeoutFactor = factor;
 }
 
 /**
@@ -134,6 +139,7 @@ TestRunner.runNextTest = function() {
         $("current-test-path").innerHTML = url;
 
         TestRunner._currentTestStartTime = new Date().valueOf();
+        TestRunner._timeoutFactor = 1;
 
         if (TestRunner.logEnabled)
             TestRunner.logger.log("Running " + url + "...");

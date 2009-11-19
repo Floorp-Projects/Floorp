@@ -217,6 +217,20 @@ SimpleTest.waitForExplicitFinish = function () {
     SimpleTest._stopOnLoad = false;
 };
 
+/**
+ * Multiply the timeout the parent runner uses for this test by the
+ * given factor.
+ *
+ * For example, in a test that may take a long time to complete, using
+ * "SimpleTest.requestLongerTimeout(5)" will give it 5 times as long to
+ * finish.
+ */
+SimpleTest.requestLongerTimeout = function (factor) {
+    if (parentRunner) {
+        parentRunner.requestLongerTimeout(factor);
+    }
+}
+
 SimpleTest.waitForFocus_started = false;
 SimpleTest.waitForFocus_loaded = false;
 SimpleTest.waitForFocus_focused = false;
