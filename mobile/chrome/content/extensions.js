@@ -324,6 +324,9 @@ var ExtensionsView = {
     function isDefault(aEngine)
       defaults.indexOf(aEngine.name) != -1
 
+    let strings = document.getElementById("bundle_browser");
+    let defaultDescription = strings.getString("addonsSearchEngine.description");
+
     let engines = this._search.getEngines({ });
     for (let e = 0; e < engines.length; e++) {
       let engine = engines[e];
@@ -339,7 +342,7 @@ var ExtensionsView = {
       listitem.setAttribute("isDisabled", engine.hidden ? "true" : "false");
       listitem.setAttribute("appDisabled", "false");
       listitem.setAttribute("appManaged", isDefault(engine));
-      listitem.setAttribute("description", engine.description);
+      listitem.setAttribute("description", engine.description || defaultDescription);
       listitem.setAttribute("optionsURL", "");
       listitem.setAttribute("opType", engine.hidden ? "needs-disable" : "");
       listitem.setAttribute("updateable", "false");
@@ -347,7 +350,6 @@ var ExtensionsView = {
     }
 
     if (engines.length + items.length == 0) {
-      let strings = document.getElementById("bundle_browser");
       this.displaySectionMessage("local", strings.getString("addonsLocalNone.label"), null, true);
       document.getElementById("addons-update-all").disabled = true;
     }
