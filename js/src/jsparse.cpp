@@ -5281,6 +5281,20 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         break;
 
       case TOK_WITH:
+        /*
+         * In most cases, we want the constructs forbidden in strict mode
+         * code to be a subset of those that JSOPTION_STRICT warns about, and
+         * we should use js_ReportStrictModeError.  However, 'with' is the sole
+         * instance of a construct that is forbidden in strict mode code, but
+         * doesn't even merit a warning under JSOPTION_STRICT.  See
+         * https://bugzilla.mozilla.org/show_bug.cgi?id=514576#c1.
+         */
+        if (tc->flags & TCF_STRICT_MODE_CODE) {
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                                        JSMSG_STRICT_CODE_WITH);
+            return NULL;
+        }
+
         pn = NewParseNode(PN_BINARY, tc);
         if (!pn)
             return NULL;
