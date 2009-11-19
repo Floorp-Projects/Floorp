@@ -149,6 +149,8 @@ public:
   virtual PRBool GetProcessingScriptTag();
   virtual void SetProcessingScriptTag(PRBool aResult);
 
+  virtual PRBool GetExecutingScript();
+
   virtual void SetGCOnDestruction(PRBool aGCOnDestruction);
 
   virtual nsresult InitClasses(void *aGlobalObj);
@@ -292,6 +294,7 @@ private:
   PRPackedBool mGCOnDestruction;
   PRPackedBool mProcessingScriptTag;
 
+  PRUint32 mExecuteDepth;
   PRUint32 mDefaultJSOptions;
   PRTime mOperationCallbackTime;
 
