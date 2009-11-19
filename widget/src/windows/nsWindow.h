@@ -304,7 +304,9 @@ protected:
   static void             PostSleepWakeNotification(const char* aNotification);
   PRBool                  HandleScrollingPlugins(UINT aMsg, WPARAM aWParam, 
                                                  LPARAM aLParam,
-                                                 PRBool& aResult);
+                                                 PRBool& aResult,
+                                                 LRESULT* aRetValue,
+                                                 PRBool& aQuitProcessing);
 
   /**
    * Event handlers
