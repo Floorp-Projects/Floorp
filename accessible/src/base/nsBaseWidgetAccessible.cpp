@@ -65,9 +65,7 @@ nsAccessibleWrap(aNode, aShell)
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsLeafAccessible, nsAccessible)
 
-////////////////////////////////////////////////////////////////////////////////
-// nsLeafAccessible: nsAccessible public
-
+// nsAccessible::GetChildAtPoint()
 nsresult
 nsLeafAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
                                   PRBool aDeepestChild,
@@ -78,13 +76,12 @@ nsLeafAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsLeafAccessible: nsAccessible private
-
+// nsAccessible::CacheChildren()
 void
 nsLeafAccessible::CacheChildren()
 {
   // No children for leaf accessible.
+  mAccChildCount = IsDefunct() ? eChildCountUninitialized : 0;
 }
 
 

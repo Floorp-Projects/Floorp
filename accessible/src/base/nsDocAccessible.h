@@ -87,6 +87,7 @@ public:
   NS_IMETHOD GetDescription(nsAString& aDescription);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
   NS_IMETHOD GetFocusedChild(nsIAccessible **aFocusedChild);
+  NS_IMETHOD GetParent(nsIAccessible **aParent);
   NS_IMETHOD TakeFocus(void);
 
   // nsIScrollPositionListener
@@ -110,9 +111,7 @@ public:
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
   virtual nsresult GetARIAState(PRUint32 *aState, PRUint32 *aExtraState);
-
   virtual void SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry);
-  virtual nsIAccessible* GetParent();
 
   // nsIAccessibleText
   NS_IMETHOD GetAssociatedEditor(nsIEditor **aEditor);

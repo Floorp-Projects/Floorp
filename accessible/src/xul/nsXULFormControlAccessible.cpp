@@ -186,61 +186,78 @@ nsXULButtonAccessible::CacheChildren()
   // buttons can have button (@type="menu-button") and popup accessibles
   // (@type="menu-button" or @type="menu").
 
-  // XXX: no children until the button is menu button. Probably it's not
-  // totally correct but in general AT wants to have leaf buttons.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!mWeakShell) {
+    mAccChildCount = eChildCountUninitialized;
+    return;   // This outer doc node has been shut down
+  }
+  if (mAccChildCount == eChildCountUninitialized) {
+    mAccChildCount = 0;  // Avoid reentry
 
-  PRBool isMenu = content->AttrValueIs(kNameSpaceID_None,
-                                       nsAccessibilityAtoms::type,
-                                       nsAccessibilityAtoms::menu,
-                                       eCaseMatters);
+    SetFirstChild(nsnull);
 
-  PRBool isMenuButton = isMenu ?
-    PR_FALSE :
-    content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                         nsAccessibilityAtoms::menuButton, eCaseMatters);
+    // XXX: no children until the button is menu button. Probably it's not
+    // totally correct but in general AT wants to have leaf buttons.
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
 
-  if (!isMenu && !isMenuButton)
-    return;
+    PRBool isMenu = content->AttrValueIs(kNameSpaceID_None,
+                                         nsAccessibilityAtoms::type,
+                                         nsAccessibilityAtoms::menu,
+                                         eCaseMatters);
 
-  nsCOMPtr<nsIAccessible> buttonAccessible;
-  nsCOMPtr<nsIAccessible> menupopupAccessible;
+    PRBool isMenuButton = isMenu ?
+      PR_FALSE :
+      content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                           nsAccessibilityAtoms::menuButton, eCaseMatters);
 
-  nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
-  walker.GetFirstChild();
+    if (!isMenu && !isMenuButton)
+      return;
 
-  while (walker.mState.accessible) {
-    PRUint32 role = nsAccUtils::Role(walker.mState.accessible);
+    nsCOMPtr<nsIAccessible> buttonAccessible;
+    nsCOMPtr<nsIAccessible> menupopupAccessible;
 
-    if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
-      // Get an accessbile for menupopup or panel elements.
-      menupopupAccessible = walker.mState.accessible;
+    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
+    walker.GetFirstChild();
 
-    } else if (isMenuButton && role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
-      // Button type="menu-button" contains a real button. Get an accessible
-      // for it. Ignore dropmarker button what is placed as a last child.
-      buttonAccessible = walker.mState.accessible;
-      break;
+    while (walker.mState.accessible) {
+      PRUint32 role = nsAccUtils::Role(walker.mState.accessible);
+
+      if (role == nsIAccessibleRole::ROLE_MENUPOPUP) {
+        // Get an accessbile for menupopup or panel elements.
+        menupopupAccessible = walker.mState.accessible;
+
+      } else if (isMenuButton && role == nsIAccessibleRole::ROLE_PUSHBUTTON) {
+        // Button type="menu-button" contains a real button. Get an accessible
+        // for it. Ignore dropmarker button what is placed as a last child.
+        buttonAccessible = walker.mState.accessible;
+        break;
+      }
+
+      walker.GetNextSibling();
     }
 
-    walker.GetNextSibling();
-  }
+    if (!menupopupAccessible)
+      return;
 
-  if (!menupopupAccessible)
-    return;
+    SetFirstChild(menupopupAccessible);
 
-  mChildren.AppendObject(menupopupAccessible);
+    nsRefPtr<nsAccessible> menupopupAcc =
+      nsAccUtils::QueryObject<nsAccessible>(menupopupAccessible);
+    menupopupAcc->SetParent(this);
 
-  nsRefPtr<nsAccessible> menupopupAcc =
-    nsAccUtils::QueryObject<nsAccessible>(menupopupAccessible);
-  menupopupAcc->SetParent(this);
+    mAccChildCount++;
 
-  if (buttonAccessible) {
-    mChildren.AppendObject(buttonAccessible);
+    if (buttonAccessible) {
+      if (menupopupAcc)
+        menupopupAcc->SetNextSibling(buttonAccessible);
+      else
+        SetFirstChild(buttonAccessible);
 
-    nsRefPtr<nsAccessible> buttonAcc =
-      nsAccUtils::QueryObject<nsAccessible>(buttonAccessible);
-    buttonAcc->SetParent(this);
+      nsRefPtr<nsAccessible> buttonAcc =
+        nsAccUtils::QueryObject<nsAccessible>(buttonAccessible);
+      buttonAcc->SetParent(this);
+
+      mAccChildCount++;
+    }
   }
 }
 

@@ -23,6 +23,47 @@
     ////////////////////////////////////////////////////////////////////////////
     // Helpers
 
+    function testDefunctAccessible(aAcc, aNodeOrId)
+    {
+      if (aNodeOrId)
+        ok(!isAccessible(aNodeOrId),
+           "Accessible for " + aNodeOrId + " wasn't properly shut down!");
+
+      ok(!aAcc.firstChild, "There is first child for shut down accessible!");
+      ok(!aAcc.lastChild, "There is last child for shut down accessible!");
+      ok(!aAcc.children.length, "There are children for shut down accessible!");
+
+      // nextSibling
+      var success = false;
+      try {
+        aAcc.nextSibling;
+      } catch (e) {
+        success = (e.result == Components.results.NS_ERROR_FAILURE);
+      }
+
+      ok(success, "There is next sibling for shut down accessible!");
+
+      // previousSibling
+      var success = false;
+      try {
+        aAcc.previousSibling;
+      } catch (e) {
+        success = (e.result == Components.results.NS_ERROR_FAILURE);
+      }
+
+      ok(success, "There is previous sibling for shut down accessible!");
+
+      // parent
+      var success = false;
+      try {
+        aAcc.parent;
+      } catch (e) {
+        success = (e.result == Components.results.NS_ERROR_FAILURE);
+      }
+
+      ok(success, "There is parent for shut down accessible!");
+    }
+
     function testLiAccessibleTree()
     {
       // Test accessible tree.
@@ -60,14 +101,12 @@
       this.onProcessed = function hideProcessor_onProcessed()
       {
         window.setTimeout(
-          function(aLiAcc, aLiNode, aBulletAcc)
+          function(aArg1, aArg2)
           {
-            testDefunctAccessible(aLiAcc, aLiNode);
-            testDefunctAccessible(aBulletAcc);
-
+            testDefunctAccessible(aArg1, aArg2);
             gSequence.processNext();
           },
-          0, this.li, this.liNode, this.bullet
+          0, this.li, this.liNode
         );
       }
     };

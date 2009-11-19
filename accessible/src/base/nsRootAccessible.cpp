@@ -84,9 +84,6 @@
 #include "nsIXULWindow.h"
 #endif
 
-////////////////////////////////////////////////////////////////////////////////
-// nsISupports
-
 // Expanded version of NS_IMPL_ISUPPORTS_INHERITED2 
 // so we can QI directly to concrete nsRootAccessible
 NS_IMPL_QUERY_HEAD(nsRootAccessible)
@@ -99,20 +96,20 @@ NS_IMPL_QUERY_TAIL_INHERITING(nsDocAccessible)
 NS_IMPL_ADDREF_INHERITED(nsRootAccessible, nsDocAccessible) 
 NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsDocAccessible)
 
-////////////////////////////////////////////////////////////////////////////////
-// Constructor/desctructor
-
+//-----------------------------------------------------
+// construction 
+//-----------------------------------------------------
 nsRootAccessible::nsRootAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
   nsDocAccessibleWrap(aDOMNode, aShell)
 {
 }
 
+//-----------------------------------------------------
+// destruction
+//-----------------------------------------------------
 nsRootAccessible::~nsRootAccessible()
 {
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIAccessible
 
 /* readonly attribute AString name; */
 NS_IMETHODIMP
@@ -133,6 +130,21 @@ nsRootAccessible::GetName(nsAString& aName)
 
   nsCOMPtr<nsIDOMNSDocument> document(do_QueryInterface(mDocument));
   return document->GetTitle(aName);
+}
+
+/* readonly attribute nsIAccessible accParent; */
+NS_IMETHODIMP nsRootAccessible::GetParent(nsIAccessible * *aParent) 
+{
+  NS_ENSURE_ARG_POINTER(aParent);
+  *aParent = nsnull;
+
+  if (!mParent) {
+    nsRefPtr<nsApplicationAccessibleWrap> root = GetApplicationAccessible();
+    mParent = root;
+  }
+
+  NS_IF_ADDREF(*aParent = mParent);
+  return NS_OK;
 }
 
 /* readonly attribute unsigned long accRole; */
@@ -160,7 +172,6 @@ nsRootAccessible::GetRoleInternal(PRUint32 *aRole)
   return nsDocAccessibleWrap::GetRoleInternal(aRole);
 }
 
-// nsRootAccessible protected member
 #ifdef MOZ_XUL
 PRUint32 nsRootAccessible::GetChromeFlags()
 {
@@ -570,8 +581,7 @@ void nsRootAccessible::FireCurrentFocusEvent()
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsIDOMEventListener
+// --------------- nsIDOMEventListener Methods (3) ------------------------
 
 NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 {
@@ -585,8 +595,6 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   return HandleEventWithTarget(aEvent, targetNode);
 }
 
-
-// nsRootAccessible protected member
 nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
                                                  nsIDOMNode* aTargetNode)
 {
@@ -938,9 +946,6 @@ void nsRootAccessible::FireFocusCallback(nsITimer *aTimer, void *aClosure)
   rootAccessible->FireCurrentFocusEvent();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsAccessNode
-
 nsresult
 nsRootAccessible::Init()
 {
@@ -975,7 +980,6 @@ nsRootAccessible::Shutdown()
   return nsDocAccessibleWrap::Shutdown();
 }
 
-// nsRootAccessible protected member
 already_AddRefed<nsIDocShellTreeItem>
 nsRootAccessible::GetContentDocShell(nsIDocShellTreeItem *aStart)
 {
@@ -1032,7 +1036,6 @@ nsRootAccessible::GetContentDocShell(nsIDocShellTreeItem *aStart)
   return nsnull;
 }
 
-// nsIAccessible method
 NS_IMETHODIMP
 nsRootAccessible::GetRelationByType(PRUint32 aRelationType,
                                     nsIAccessibleRelation **aRelation)
@@ -1059,20 +1062,6 @@ nsRootAccessible::GetRelationByType(PRUint32 aRelationType,
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsAccessible
-
-nsIAccessible*
-nsRootAccessible::GetParent()
-{
-  // Parent has been setted in nsApplicationAccesible::AddRootAccessible()
-  // when root accessible was intialized.
-  return mParent;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsDocAccessible
-
 void
 nsRootAccessible::FireDocLoadEvents(PRUint32 aEventType)
 {
@@ -1094,9 +1083,6 @@ nsRootAccessible::FireDocLoadEvents(PRUint32 aEventType)
   mIsContentLoaded = (aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE ||
                       aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// Protected members
 
 nsresult
 nsRootAccessible::HandlePopupShownEvent(nsIAccessible *aAccessible)

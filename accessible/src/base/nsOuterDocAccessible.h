@@ -42,14 +42,8 @@
 #include "nsAccessibleWrap.h"
 #include "nsIAccessible.h"
 
-/**
- * Used for <browser>, <frame>, <iframe>, <page> or editor> elements.
- * 
- * In these variable names, "outer" relates to the nsOuterDocAccessible as
- * opposed to the nsDocAccessibleWrap which is "inner". The outer node is
- * a something like tags listed above, whereas the inner node corresponds to
- * the inner document root.
- */
+class nsIWeakReference;
+
 class nsOuterDocAccessible : public nsAccessibleWrap
 {
   // XXX: why is it private?
@@ -76,7 +70,7 @@ public:
 
 protected:
   // nsAccessible
-  virtual void CacheChildren();
+  void CacheChildren();
 };
 
 #endif  

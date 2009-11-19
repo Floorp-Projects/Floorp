@@ -98,8 +98,7 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
 protected:
-  // nsAccessible
-  virtual void CacheChildren();
+  void CacheChildren();
 };
 
 #endif
