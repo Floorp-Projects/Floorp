@@ -9,7 +9,7 @@ script regress-257751.js
 script regress-273931.js
 script regress-315147.js
 script regress-332472.js
-fails script regress-333728.js
+script regress-333728.js
 script regress-342359.js
 script regress-347674.js
 script regress-350650-n.js

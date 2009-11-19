@@ -310,7 +310,7 @@ namespace nanojit
         underrunProtect(20);
         if (value->isconst())
             {
-                Register rb = getBaseReg(base, dr, GpRegs);
+                Register rb = getBaseReg(LIR_sti, base, dr, GpRegs);
                 int c = value->imm32();
                 STW32(L2, dr, rb);
                 SET32(c, L2);
@@ -549,7 +549,7 @@ namespace nanojit
                     ANDCC(r, r, G0);
                 }
                 else if (!rhs->isQuad()) {
-                    Register r = getBaseReg(lhs, c, GpRegs);
+                    Register r = getBaseReg(condop, lhs, c, GpRegs);
                     SUBCC(r, L2, G0);
                     SET32(c, L2);
                 }
@@ -716,7 +716,7 @@ namespace nanojit
         LIns* base = ins->oprnd1();
         int d = ins->disp();
         Register rr = prepResultReg(ins, GpRegs);
-        Register ra = getBaseReg(base, d, GpRegs);
+        Register ra = getBaseReg(ins->opcode(), base, d, GpRegs);
         if (op == LIR_ldcb) {
             LDUB32(ra, d, rr);
         } else if (op == LIR_ldcs) {

@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is JavaScript Engine testing utilities.
+ * The Original Code is Mozilla code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2008
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Norris Boyd
+ * Contributor(s):
+ *   Jeff Walden <jwalden+code@mit.edu> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,53 +35,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-478047.js';
-//-----------------------------------------------------------------------------
-var BUGNUMBER = 478047;
-var summary = 'Assign to property with getter but no setter should throw ' +
-  'TypeError';
-var actual = '';
-var expect = '';
-
-
-//-----------------------------------------------------------------------------
-test();
-//-----------------------------------------------------------------------------
-
-function test()
+function keys(o)
 {
-  enterFunc ('test');
-  printBugNumber(BUGNUMBER);
-  printStatus (summary);
+  for (var p in o);
+}
 
-  expect = 'TypeError: setting a property that has only a getter';
-  try
-  { 
-    var o = { get p() { return "a"; } };
-    o.p = "b";
-  }
-  catch(ex)
-  {
-    actual = ex + '';
-  }
-  reportCompare(expect, actual, summary);
+function run_test()
+{
+  var o1 = { 1: 1, 2: 2, 3: 3, 4: 4 };
+  var o2 = new XPCSafeJSObjectWrapper({ a: 'a', b: 'b', c: 'c' });
+  var o3 = { 5: 5, 6: 6, 7: 7, 8: 8 };
 
+  keys(o1);
+  keys(o2);
+  keys(o3);
 
-  actual = '';
-  try
-  {
-    o = { get p() { return "a"; } };
-    T = (function () {});
-    T.prototype = o;
-    y = new T();
-    y.p = "b";
-  }
-  catch(ex)
-  {
-    actual = ex + '';
-  }
-
-  reportCompare(expect, actual, summary);
-
-  exitFunc ('test');
+  do_check_true(true);
 }

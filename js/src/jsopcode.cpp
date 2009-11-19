@@ -724,8 +724,9 @@ struct JSPrinter {
     Sprinter        sprinter;       /* base class state */
     JSArenaPool     pool;           /* string allocation pool */
     uintN           indent;         /* indentation in spaces */
-    JSPackedBool    pretty;         /* pretty-print: indent, use newlines */
-    JSPackedBool    grouped;        /* in parenthesized expression context */
+    bool            pretty;         /* pretty-print: indent, use newlines */
+    bool            grouped;        /* in parenthesized expression context */
+    bool            strict;         /* in code marked strict */
     JSScript        *script;        /* script being printed */
     jsbytecode      *dvgfence;      /* DecompileExpression fencepost */
     jsbytecode      **pcstack;      /* DecompileExpression modeled stack */
@@ -733,17 +734,9 @@ struct JSPrinter {
     jsuword         *localNames;    /* argument and variable names */
 };
 
-/*
- * Hack another flag, a la JS_DONT_PRETTY_PRINT, into uintN indent parameters
- * to functions such as js_DecompileFunction and js_NewPrinter.  This time, as
- * opposed to JS_DONT_PRETTY_PRINT back in the dark ages, we can assume that a
- * uintN is at least 32 bits.
- */
-#define JS_IN_GROUP_CONTEXT 0x10000
-
 JSPrinter *
-JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
-               uintN indent, JSBool pretty)
+js_NewPrinter(JSContext *cx, const char *name, JSFunction *fun,
+              uintN indent, JSBool pretty, JSBool grouped, JSBool strict)
 {
     JSPrinter *jp;
 
@@ -751,10 +744,11 @@ JS_NEW_PRINTER(JSContext *cx, const char *name, JSFunction *fun,
     if (!jp)
         return NULL;
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
-    JS_INIT_ARENA_POOL(&jp->pool, name, 256, 1, &cx->scriptStackQuota);
-    jp->indent = indent & ~JS_IN_GROUP_CONTEXT;
+    JS_InitArenaPool(&jp->pool, name, 256, 1, &cx->scriptStackQuota);
+    jp->indent = indent;
     jp->pretty = pretty;
-    jp->grouped = (indent & JS_IN_GROUP_CONTEXT) != 0;
+    jp->grouped = grouped;
+    jp->strict = strict;
     jp->script = NULL;
     jp->dvgfence = NULL;
     jp->pcstack = NULL;
@@ -2251,8 +2245,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     fun = jp->script->getFunction(js_GetSrcNoteOffset(sn, 0));
                   do_function:
                     js_puts(jp, "\n");
-                    jp2 = JS_NEW_PRINTER(cx, "nested_function", fun,
-                                         jp->indent, jp->pretty);
+                    jp2 = js_NewPrinter(cx, "nested_function", fun,
+                                        jp->indent, jp->pretty, jp->grouped,
+                                        jp->strict);
                     if (!jp2)
                         return NULL;
                     ok = js_DecompileFunction(jp2);
@@ -4145,17 +4140,17 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
                 LOAD_FUNCTION(0);
                 {
-                    uintN indent = JS_DONT_PRETTY_PRINT;
-
                     /*
                      * Always parenthesize expression closures. We can't force
                      * saveop to a low-precedence op to arrange for auto-magic
                      * parenthesization without confusing getter/setter code
                      * that checks for JSOP_LAMBDA.
                      */
-                    if (!(fun->flags & JSFUN_EXPR_CLOSURE))
-                        indent |= JS_IN_GROUP_CONTEXT;
-                    str = JS_DecompileFunction(cx, fun, indent);
+                    bool grouped = !(fun->flags & JSFUN_EXPR_CLOSURE);
+                    bool strict = jp->script->strictModeCode;
+                    str = js_DecompileToString(cx, "lambda", fun, 0, 
+                                               false, grouped, strict,
+                                               js_DecompileFunction);
                     if (!str)
                         return NULL;
                 }
@@ -4909,6 +4904,25 @@ js_DecompileScript(JSPrinter *jp, JSScript *script)
     return DecompileCode(jp, script, script->code, (uintN)script->length, 0);
 }
 
+JSString *
+js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
+                     uintN indent, JSBool pretty, JSBool grouped, JSBool strict,
+                     JSBool (*decompiler)(JSPrinter *jp))
+{
+    JSPrinter *jp;
+    JSString *str;
+
+    jp = js_NewPrinter(cx, name, fun, indent, pretty, grouped, strict);
+    if (!jp)
+        return NULL;
+    if (decompiler(jp))
+        str = js_GetPrinterOutput(jp);
+    else
+        str = NULL;
+    js_DestroyPrinter(jp);
+    return str;
+}
+
 static const char native_code_str[] = "\t[native code]\n";
 
 JSBool
@@ -5054,9 +5068,22 @@ js_DecompileFunction(JSPrinter *jp)
             return JS_FALSE;
         if (fun->flags & JSFUN_EXPR_CLOSURE) {
             js_printf(jp, ") ");
+            if (fun->u.i.script->strictModeCode && !jp->strict) {
+                /*
+                 * We have no syntax for strict function expressions;
+                 * at least give a hint.
+                 */
+                js_printf(jp, "\t/* use strict */ \n");
+                jp->strict = true;
+            }
+            
         } else {
             js_printf(jp, ") {\n");
             jp->indent += 4;
+            if (fun->u.i.script->strictModeCode && !jp->strict) {
+                js_printf(jp, "\t'use strict';\n");
+                jp->strict = true;
+            }
         }
 
         len = script->code + script->length - pc;
@@ -5303,7 +5330,8 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     }
 
     name = NULL;
-    jp = JS_NEW_PRINTER(cx, "js_DecompileValueGenerator", fun, 0, JS_FALSE);
+    jp = js_NewPrinter(cx, "js_DecompileValueGenerator", fun, 0,
+                       false, false, false);
     if (jp) {
         jp->dvgfence = end;
         jp->pcstack = pcstack;

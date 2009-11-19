@@ -58,7 +58,7 @@ public:
 
     ~jsvalRoot() { JS_RemoveRoot(cx, &v); }
 
-    operator jsval() const { return v; }
+    operator jsval() const { return value(); }
 
     jsvalRoot & operator=(jsval value) {
         v = value;
@@ -66,6 +66,7 @@ public:
     }
 
     jsval * addr() { return &v; }
+    jsval value() const { return v; }
 
 private:
     JSContext *cx;

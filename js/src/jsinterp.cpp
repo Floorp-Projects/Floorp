@@ -295,8 +295,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                         return JS_NO_PROP_CACHE_FILL;
                     JSScope *protoscope = OBJ_SCOPE(proto);
                     if (!protoscope->emptyScope ||
-                        !js_ObjectIsSimilarToProto(cx, obj, obj->map->ops, OBJ_GET_CLASS(cx, obj),
-                                                   proto)) {
+                        protoscope->emptyScope->clasp != obj->getClass()) {
                         return JS_NO_PROP_CACHE_FILL;
                     }
                     kshape = protoscope->emptyScope->shape;
@@ -315,6 +314,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
         kshape = OBJ_SHAPE(obj);
         vshape = scope->shape;
     }
+    JS_ASSERT(kshape < SHAPE_OVERFLOW_BIT);
 
     khash = PROPERTY_CACHE_HASH_PC(pc, kshape);
     if (obj == pobj) {
@@ -354,6 +354,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
             obj->setDelegate();
         }
     }
+    JS_ASSERT(vshape < SHAPE_OVERFLOW_BIT);
 
     entry = &cache->table[khash];
     PCMETER(PCVAL_IS_NULL(entry->vword) || cache->recycles++);
@@ -1446,8 +1447,9 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
          */
         *rval = *invokevp;
         if (JSVAL_IS_GCTHING(*rval) && *rval != JSVAL_NULL) {
-            if (cx->localRootStack) {
-                if (js_PushLocalRoot(cx, cx->localRootStack, *rval) < 0)
+            JSLocalRootStack *lrs = JS_THREAD_DATA(cx)->localRootStack;
+            if (lrs) {
+                if (js_PushLocalRoot(cx, lrs, *rval) < 0)
                     ok = JS_FALSE;
             } else {
                 cx->weakRoots.lastInternalResult = *rval;
