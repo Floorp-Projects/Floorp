@@ -8,6 +8,7 @@ const ROLE_AUTOCOMPLETE = nsIAccessibleRole.ROLE_AUTOCOMPLETE;
 const ROLE_BUTTONDROPDOWNGRID = nsIAccessibleRole.ROLE_BUTTONDROPDOWNGRID;
 const ROLE_CAPTION = nsIAccessibleRole.ROLE_CAPTION;
 const ROLE_CELL = nsIAccessibleRole.ROLE_CELL;
+const ROLE_CHECKBUTTON = nsIAccessibleRole.ROLE_CHECKBUTTON;
 const ROLE_CHROME_WINDOW = nsIAccessibleRole.ROLE_CHROME_WINDOW;
 const ROLE_COMBOBOX = nsIAccessibleRole.ROLE_COMBOBOX;
 const ROLE_COMBOBOX_LIST = nsIAccessibleRole.ROLE_COMBOBOX_LIST;
@@ -40,9 +41,11 @@ const ROLE_PARENT_MENUITEM = nsIAccessibleRole.ROLE_PARENT_MENUITEM;
 const ROLE_PASSWORD_TEXT = nsIAccessibleRole.ROLE_PASSWORD_TEXT;
 const ROLE_PROGRESSBAR = nsIAccessibleRole.ROLE_PROGRESSBAR;
 const ROLE_PUSHBUTTON = nsIAccessibleRole.ROLE_PUSHBUTTON;
+const ROLE_RADIOBUTTON = nsIAccessibleRole.ROLE_RADIOBUTTON;
 const ROLE_ROW = nsIAccessibleRole.ROLE_ROW;
 const ROLE_ROWHEADER = nsIAccessibleRole.ROLE_ROWHEADER;
 const ROLE_SECTION = nsIAccessibleRole.ROLE_SECTION;
+const ROLE_SEPARATOR = nsIAccessibleRole.ROLE_SEPARATOR;
 const ROLE_SLIDER = nsIAccessibleRole.ROLE_SLIDER;
 const ROLE_STATICTEXT = nsIAccessibleRole.ROLE_STATICTEXT;
 const ROLE_TABLE = nsIAccessibleRole.ROLE_TABLE;
@@ -50,6 +53,7 @@ const ROLE_TEXT_CONTAINER = nsIAccessibleRole.ROLE_TEXT_CONTAINER;
 const ROLE_TEXT_LEAF = nsIAccessibleRole.ROLE_TEXT_LEAF;
 const ROLE_TOGGLE_BUTTON = nsIAccessibleRole.ROLE_TOGGLE_BUTTON;
 const ROLE_TREE_TABLE = nsIAccessibleRole.ROLE_TREE_TABLE;
+const ROLE_WHITESPACE = nsIAccessibleRole.ROLE_WHITESPACE;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Public methods
