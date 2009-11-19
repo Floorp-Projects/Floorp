@@ -263,19 +263,20 @@ NS_IMETHODIMP nsHTMLLIAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *wid
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// nsHTMLLIAccessible: nsAccessible protected
-
-void
-nsHTMLLIAccessible::CacheChildren()
+void nsHTMLLIAccessible::CacheChildren()
 {
-  if (mBulletAccessible) {
-    mChildren.AppendObject(mBulletAccessible);
-    mBulletAccessible->SetParent(this);
+  if (!mWeakShell || mAccChildCount != eChildCountUninitialized) {
+    return;
   }
 
-  // Cache children from subtree.
   nsAccessibleWrap::CacheChildren();
+
+  if (mBulletAccessible) {
+    mBulletAccessible->SetNextSibling(mFirstChild);
+    mBulletAccessible->SetParent(this);
+    SetFirstChild(mBulletAccessible);
+    ++ mAccChildCount;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -331,6 +332,15 @@ nsHTMLListBulletAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraS
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLListBulletAccessible::GetParent(nsIAccessible **aParent)
+{
+  NS_ENSURE_ARG_POINTER(aParent);
+
+  NS_IF_ADDREF(*aParent = mParent);
+  return NS_OK;
+}
+
 nsresult
 nsHTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
                                          PRUint32 aLength)
@@ -341,12 +351,6 @@ nsHTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset
   }
   aText += nsDependentSubstring(mBulletText, aStartOffset, aLength);
   return NS_OK;
-}
-
-nsIAccessible*
-nsHTMLListBulletAccessible::GetParent()
-{
-  return mParent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

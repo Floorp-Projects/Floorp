@@ -236,6 +236,15 @@ nsXULTabBoxAccessible::GetRoleInternal(PRUint32 *aRole)
   return NS_OK;
 }
 
+#ifdef NEVER
+/** 2 children, tabs, tabpanels */
+NS_IMETHODIMP nsXULTabBoxAccessible::GetChildCount(PRInt32 *_retval)
+{
+  *_retval = 2;
+  return NS_OK;
+}
+#endif
+
 /**
   * XUL Tabs - the s really stands for strip. this is a collection of tab objects
   */

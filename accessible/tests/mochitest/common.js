@@ -271,35 +271,6 @@ function getRootAccessible(aAccOrElmOrID)
 }
 
 /**
- * Return application accessible.
- */
-function getApplicationAccessible()
-{
-  var acc = getAccessible(document), parent = null;
-  while (acc) {
-
-    try {
-      parent = acc.parent;
-    } catch (e) {
-      ok(false, "Can't get a parent for " + prettyName(acc));
-      return null;
-    }
-
-    if (!parent) {
-      if (acc.role == ROLE_APP_ROOT)
-        return acc;
-
-      ok(false, "No application accessible!");
-      return null;
-    }
-
-    acc = parent;
-  }
-
-  return null;
-}
-
-/**
  * Run through accessible tree of the given identifier so that we ensure
  * accessible tree is created.
  */
@@ -385,12 +356,6 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree)
         try { parent = child.parent; } catch (e) {}
         is(parent, acc, "Wrong parent of " + prettyName(child));
 
-        // nsIAccessible::indexInParent
-        var indexInParent = -1;
-        try { indexInParent = child.indexInParent; } catch(e) {}
-        is(indexInParent, i,
-           "Wrong index in parent of " + prettyName(child));
-
         // nsIAccessible::nextSibling
         var expectedNextSibling = (i < childCount - 1) ?
           children.queryElementAt(i + 1, nsIAccessible) : null;
@@ -412,84 +377,6 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree)
       }
     }
   }
-}
-
-/**
- * Test accessible tree for defunct accessible.
- *
- * @param  aAcc       [in] the defunct accessible
- * @param  aNodeOrId  [in] the DOM node identifier for the defunct accessible
- */
-function testDefunctAccessible(aAcc, aNodeOrId)
-{
-  if (aNodeOrId)
-    ok(!isAccessible(aNodeOrId),
-       "Accessible for " + aNodeOrId + " wasn't properly shut down!");
-
-  var msg = " doesn't fail for shut down accessible " + prettyName(aNodeOrId) + "!";
-
-  // firstChild
-  var success = false;
-  try {
-    aAcc.firstChild;
-  } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE)
-  }
-  ok(success, "firstChild" + msg);
-
-  // lastChild
-  success = false;
-  try {
-    aAcc.lastChild;
-  } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE)
-  }
-  ok(success, "lastChild" + msg);
-
-  // childCount
-  success = false;
-  try {
-    aAcc.childCount;
-  } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE)
-  }
-  ok(success, "childCount" + msg);
-
-  // children
-  success = false;
-  try {
-    aAcc.children;
-  } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE)
-  }
-  ok(success, "children" + msg);
-
-  // nextSibling
-  success = false;
-  try {
-    aAcc.nextSibling;
-  } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE);
-  }
-  ok(success, "nextSibling" + msg);
-
-  // previousSibling
-  success = false;
-  try {
-    aAcc.previousSibling;
-  } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE);
-  }
-  ok(success, "previousSibling" + msg);
-
-  // parent
-  success = false;
-  try {
-    aAcc.parent;
-  } catch (e) {
-    success = (e.result == Components.results.NS_ERROR_FAILURE);
-  }
-  ok(success, "parent" + msg);
 }
 
 

@@ -166,6 +166,16 @@ nsXULColorPickerAccessible::GetRoleInternal(PRUint32 *aRole)
 void
 nsXULColorPickerAccessible::CacheChildren()
 {
+  if (IsDefunct()) {
+    mAccChildCount = eChildCountUninitialized;
+    return;   // This outer doc node has been shut down
+  }
+
+  if (mAccChildCount != eChildCountUninitialized)
+    return;
+
+  mAccChildCount = 0;  // Avoid reentry
+
   nsCOMPtr<nsIAccessible> menupopupAccessible;
   nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
   walker.GetFirstChild();
@@ -173,17 +183,23 @@ nsXULColorPickerAccessible::CacheChildren()
   while (walker.mState.accessible) {
     PRUint32 role = nsAccUtils::Role(walker.mState.accessible);
 
-    // Get an accessbile for menupopup or panel elements.
     if (role == nsIAccessibleRole::ROLE_ALERT) {
-      mChildren.AppendObject(walker.mState.accessible);
-      
-      nsRefPtr<nsAccessible> menupopupAcc =
-        nsAccUtils::QueryObject<nsAccessible>(walker.mState.accessible);
-      menupopupAcc->SetParent(this);
-
-      return;
+      // Get an accessbile for menupopup or panel elements.
+      menupopupAccessible = walker.mState.accessible;
+      break;
     }
 
     walker.GetNextSibling();
   }
+
+  if (!menupopupAccessible)
+    return;
+
+  SetFirstChild(menupopupAccessible);
+
+  nsRefPtr<nsAccessible> menupopupAcc =
+    nsAccUtils::QueryObject<nsAccessible>(menupopupAccessible);
+  menupopupAcc->SetParent(this);
+
+  mAccChildCount++;
 }
