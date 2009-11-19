@@ -1432,7 +1432,15 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     str = JSVAL_TO_STRING(argv[0]);
     script = NULL;
 
-    /* Cache local eval scripts indexed by source qualified by scope. */
+    /*
+     * Cache local eval scripts indexed by source qualified by scope.
+     *
+     * An eval cache entry should never be considered a hit unless its
+     * strictness matches that of the new eval code. The existing code takes
+     * care of this, because hits are qualified by the function from which
+     * eval was called, whose strictness doesn't change. Scripts produced by
+     * calls to eval from global code are not cached.
+     */
     bucket = EvalCacheHash(cx, str);
     if (!indirectCall && caller->fun) {
         uintN count = 0;

@@ -834,6 +834,14 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     if (!SetStaticLevel(&cg, staticLevel))
         goto out;
 
+    /* If this is a direct call to eval, inherit the caller's strictness.  */
+    if (callerFrame &&
+        callerFrame->script &&
+        callerFrame->script->strictModeCode) {
+        cg.flags |= TCF_STRICT_MODE_CODE;
+        jsc.tokenStream.flags |= TSF_STRICT_MODE_CODE;
+    }
+
     /*
      * If funbox is non-null after we create the new script, callerFrame->fun
      * was saved in the 0th object table entry.
