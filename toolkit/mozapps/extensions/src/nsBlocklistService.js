@@ -804,7 +804,7 @@ Blocklist.prototype = {
 
     var phs = Cc["@mozilla.org/plugin/host;1"].
               getService(Ci.nsIPluginHost);
-    var plugins = phs.getPluginTags({});
+    var plugins = phs.getPluginTags();
 
     for (let i = 0; i < plugins.length; i++) {
       let oldState = -1;

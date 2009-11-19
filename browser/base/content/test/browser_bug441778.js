@@ -40,65 +40,38 @@
  * modified by sub-document loads of content from a different domain.
  */
 
-let testPage = 'data:text/html,<body><iframe id="a" src=""></iframe></body>';
-
 function test() {
   waitForExplicitFinish();
 
-  // The zoom level before the sub-document load.  We set this in continueTest
-  // and then compare it to the current zoom level in finishTest to make sure
-  // it hasn't changed.
-  let zoomLevel;
+  const TEST_PAGE_URL = 'data:text/html,<body><iframe src=""></iframe></body>';
+  const TEST_IFRAME_URL = "http://test2.example.org/";
 
   // Prepare the test tab
   gBrowser.selectedTab = gBrowser.addTab();
   let testBrowser = gBrowser.selectedBrowser;
 
-  let finishTest = function() {
-    testBrowser.removeProgressListener(progressListener);
-    is(ZoomManager.zoom, zoomLevel, "zoom is retained after sub-document load");
-    gBrowser.removeCurrentTab();
-    finish();
-  };
+  testBrowser.addEventListener("load", function () {
+    testBrowser.removeEventListener("load", arguments.callee, true);
 
-  let progressListener = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                           Ci.nsISupportsWeakReference]),
-    onStateChange: function() {},
-    onProgressChange: function() {},
-    onLocationChange: function() {
-      window.setTimeout(finishTest, 0);
-    },
-    onStatusChange: function() {},
-    onSecurityChange: function() {}
-  };
-
-  let continueTest = function() {
     // Change the zoom level and then save it so we can compare it to the level
     // after loading the sub-document.
     FullZoom.enlarge();
-    zoomLevel = ZoomManager.zoom;
-
-    // Finish the test in a timeout after the sub-document location change
-    // to give the zoom controller time to respond to it.
-    testBrowser.addProgressListener(progressListener);
+    var zoomLevel = ZoomManager.zoom;
 
     // Start the sub-document load.
-    content.document.getElementById("a").src = "http://test2.example.org/";
-  };
+    executeSoon(function () {
+      testBrowser.addEventListener("load", function (e) {
+        testBrowser.removeEventListener("load", arguments.callee, true);
 
-  // Continue the test after the test page has loaded.
-  // Note: in order for the sub-document load to trigger a location change
-  // the way it does under real world usage scenarios, we have to continue
-  // the test in a timeout for some unknown reason.
-  let continueListener = function() {
-    window.setTimeout(continueTest, 0);
-    
-    // Remove the load listener so it doesn't get called for the sub-document.
-    testBrowser.removeEventListener("load", continueListener, true);
-  };
-  testBrowser.addEventListener("load", continueListener, true);
+        is(e.target.defaultView.location, TEST_IFRAME_URL, "got the load event for the iframe");
+        is(ZoomManager.zoom, zoomLevel, "zoom is retained after sub-document load");
 
-  // Start the test by loading the test page.
-  testBrowser.contentWindow.location = testPage;
+        gBrowser.removeCurrentTab();
+        finish();
+      }, true);
+      content.document.querySelector("iframe").src = TEST_IFRAME_URL;
+    });
+  }, true);
+
+  content.location = TEST_PAGE_URL;
 }

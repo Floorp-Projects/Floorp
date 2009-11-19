@@ -86,7 +86,7 @@ function callASAPLater(fun)
     {
       fun();
     }
-  }, Ci.nsIThreadManager.DISPATCH_NORMAL);
+  }, Ci.nsIThread.DISPATCH_NORMAL);
 }
 
 
@@ -274,11 +274,11 @@ tests.push(test);
 
 data = "GET /thrown-exception?writeBeforeEmpty HTTP/1.0\r\n" +
        "\r\n";
-function checkThrownExceptionWriteBefore(data)
+function checkThrownExceptionWriteBeforeEmpty(data)
 {
   do_check_eq(data, "preparing to throw...");
 }
-test = new RawTest("localhost", PORT, data, checkThrownExceptionWriteBefore),
+test = new RawTest("localhost", PORT, data, checkThrownExceptionWriteBeforeEmpty),
 tests.push(test);
 
 data = "GET /thrown-exception HTTP/1.0\r\n" +

@@ -55,7 +55,7 @@ textbox {
   color: black;
 }
 
-textbox[empty="true"] {
+textbox[isempty="true"] {
   color: #999999;
 }
 

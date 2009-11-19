@@ -80,6 +80,49 @@ function uri(spec) {
   return iosvc.newURI(spec, null, null);
 }
 
+/*
+ * Reads the data from the specified nsIFile, and returns an array of bytes.
+ */
+function readFileData(aFile) {
+  var inputStream = Cc["@mozilla.org/network/file-input-stream;1"].
+                    createInstance(Ci.nsIFileInputStream);
+  // init the stream as RD_ONLY, -1 == default permissions.
+  inputStream.init(aFile, 0x01, -1, null);
+  var size = inputStream.available();
+
+  // use a binary input stream to grab the bytes.
+  var bis = Cc["@mozilla.org/binaryinputstream;1"].
+            createInstance(Ci.nsIBinaryInputStream);
+  bis.setInputStream(inputStream);
+
+  var bytes = bis.readByteArray(size);
+
+  if (size != bytes.length)
+      throw "Didn't read expected number of bytes";
+
+  return bytes;
+}
+
+/*
+ * Compares two arrays, and returns true if they are equal.
+ */
+function compareArrays(aArray1, aArray2) {
+  if (aArray1.length != aArray2.length) {
+    print("compareArrays: array lengths differ\n");
+    return false;
+  }
+
+  for (var i = 0; i < aArray1.length; i++) {
+    if (aArray1[i] != aArray2[i]) {
+      print("compareArrays: arrays differ at index " + i + ": " +
+            "(" + aArray1[i] + ") != (" + aArray2[i] +")\n");
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Delete a previously created sqlite file
 function clearDB() {
   try {
@@ -175,6 +218,73 @@ function check_no_bookmarks() {
   root.containerOpen = true;
   do_check_eq(root.childCount, 0);
   root.containerOpen = false;
+}
+
+/**
+ * Function gets current database connection, if the connection has been closed
+ * it will try to reconnect to the places.sqlite database.
+ */
+function DBConn()
+{
+  let db = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsPIPlacesDatabase).
+           DBConnection;
+  if (db.connectionReady)
+    return db;
+
+  // open a new connection if needed
+  let file = dirSvc.get('ProfD', Ci.nsIFile);
+  file.append("places.sqlite");
+  let storageService = Cc["@mozilla.org/storage/service;1"].
+                       getService(Ci.mozIStorageService);
+  try {
+    var dbConn = storageService.openDatabase(file);
+  } catch (ex) {
+    return null;
+  }
+  return dbConn;
+}
+
+/**
+ * Sets title synchronously for a page in moz_places synchronously.
+ * History.SetPageTitle uses LAZY_ADD so we can't rely on it.
+ *
+ * @param aURI
+ *        An nsIURI to set the title for.
+ * @param aTitle
+ *        The title to set the page to.
+ * @throws if the page is not found in the database.
+ *
+ * @note this function only exists because we have no API to do this. It should
+ *       be added in bug 421897.
+ */
+function setPageTitle(aURI, aTitle) {
+  let dbConn = DBConn();
+  // Check that the page exists.
+  let stmt = dbConn.createStatement(
+    "SELECT id FROM moz_places_view WHERE url = :url");
+  stmt.params.url = aURI.spec;
+  try {
+    if (!stmt.executeStep()) {
+      do_throw("Unable to find page " + aURIString);
+      return;
+    }
+  }
+  finally {
+    stmt.finalize();
+  }
+
+  // Update the title
+  stmt = dbConn.createStatement(
+    "UPDATE moz_places_view SET title = :title WHERE url = :url");
+  stmt.params.title = aTitle;
+  stmt.params.url = aURI.spec;
+  try {
+    stmt.execute();
+  }
+  finally {
+    stmt.finalize();
+  }
 }
 
 /**

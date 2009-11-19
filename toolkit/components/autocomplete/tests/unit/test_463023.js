@@ -41,7 +41,7 @@ const Ci = Components.interfaces;
 
 // main
 function run_test() {
-  var result = Cc["@mozilla.org/autocomplete/simple-result;1"].
-               createInstance(Ci.nsIAutoCompleteSimpleResult);
-  do_check_eq(result.searchStatus, Ci.nsIAutoCompleteSimpleResult.STATUS_NONE);
+  var result = Cc["@mozilla.org/autocomplete/controller;1"].
+               createInstance(Ci.nsIAutoCompleteController);
+  do_check_eq(result.searchStatus, Ci.nsIAutoCompleteController.STATUS_NONE);
 }

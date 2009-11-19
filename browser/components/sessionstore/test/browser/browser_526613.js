@@ -49,10 +49,20 @@ function test() {
 
   function browserWindowsCount() {
     let count = 0;
-    let e = wm.getXULWindowEnumerator("navigator:browser");
+    let e = wm.getEnumerator("navigator:browser");
     while (e.hasMoreElements()) {
-      ++count;
-      e.getNext();
+      let win = e.getNext();
+      if (!win.closed) {
+        ++count;
+        if (win != window) {
+          try {
+            var tabs = win.gBrowser.mTabs.length;
+          } catch (e) {
+            info(e);
+          }
+          info("secondary window: " + [win.document.readyState, win.content.location, tabs]);
+        }
+      }
     }
 
     return count;
@@ -82,14 +92,21 @@ function test() {
       if (this.pass++ == 1) {  
         is(browserWindowsCount(), 2, "Two windows should exist at this point");
 
-        // executeSoon is needed here in order to let the first window be focused
-        // (see above)
-        executeSoon(function() {
-          ss.setBrowserState(oldState);
-        });
+        // let the first window be focused (see above)
+        function pollMostRecentWindow() {
+          if (wm.getMostRecentWindow("navigator:browser") == window) {
+            ss.setBrowserState(oldState);
+          } else {
+            info("waiting for the current window to become active");
+            setTimeout(pollMostRecentWindow, 0);
+          }
+        }
+        window.focus(); //XXX Why is this needed?
+        pollMostRecentWindow();
       }
       else {
         is(browserWindowsCount(), 1, "Only one window should exist after cleanup");
+        ok(!window.closed, "Restoring the old state should have left this window open");
         os.removeObserver(this, "sessionstore-browser-state-restored");
         finish();
       }

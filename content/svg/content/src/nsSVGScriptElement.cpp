@@ -80,6 +80,7 @@ public:
   virtual void GetScriptText(nsAString& text);
   virtual void GetScriptCharset(nsAString& charset);
   virtual PRBool GetScriptDeferred();
+  virtual PRBool GetScriptAsync();
 
   // nsScriptElement
   virtual PRBool HasScriptContent();
@@ -228,6 +229,12 @@ nsSVGScriptElement::GetScriptCharset(nsAString& charset)
 
 PRBool
 nsSVGScriptElement::GetScriptDeferred()
+{
+  return PR_FALSE;
+}
+
+PRBool
+nsSVGScriptElement::GetScriptAsync()
 {
   return PR_FALSE;
 }

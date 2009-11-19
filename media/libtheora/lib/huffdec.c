@@ -11,7 +11,7 @@
  ********************************************************************
 
   function:
-    last mod: $Id: huffdec.c 16503 2009-08-22 18:14:02Z giles $
+    last mod: $Id: huffdec.c 16702 2009-11-15 00:40:55Z tterribe $
 
  ********************************************************************/
 
@@ -413,7 +413,7 @@ static oc_huff_node *oc_huff_tree_collapse(oc_huff_node *_binode,
   }
   while(occupancy>loccupancy&&occupancy>=1<<OC_MAXI(depth-OC_HUFF_SLUSH,0));
   depth--;
-  if(depth<=1)return oc_huff_tree_copy(_binode,_storage);
+  if(depth<=0)return oc_huff_tree_copy(_binode,_storage);
   size=oc_huff_node_size(depth);
   root=oc_huff_node_init(_storage,size,depth);
   root->depth=_binode->depth;

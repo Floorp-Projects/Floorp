@@ -41,18 +41,17 @@
 # Build in docshell/build to relink.
 #
 
-DEPTH		= ..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= \
-		base \
-		exthandler \
-		prefetch \
-		$(NULL)
+PARALLEL_DIRS = \
+  base \
+  exthandler \
+  prefetch \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-

@@ -143,15 +143,15 @@ nsXULWindow::nsXULWindow(PRUint32 aChromeFlags)
     mCenterAfterLoad(PR_FALSE),
     mIsHiddenWindow(PR_FALSE),
     mLockedUntilChromeLoad(PR_FALSE),
+    mIgnoreXULSize(PR_FALSE),
+    mIgnoreXULPosition(PR_FALSE),
     mContextFlags(0),
     mBlurSuppressionLevel(0),
     mPersistentAttributesDirty(0),
     mPersistentAttributesMask(0),
     mChromeFlags(aChromeFlags),
     // best guess till we have a widget
-    mAppPerDev(nsPresContext::AppUnitsPerCSSPixel()),
-    mIgnoreXULSize(PR_FALSE),
-    mIgnoreXULPosition(PR_FALSE)
+    mAppPerDev(nsPresContext::AppUnitsPerCSSPixel())
 {
 }
 
@@ -805,7 +805,12 @@ NS_IMETHODIMP nsXULWindow::SetVisibility(PRBool aVisibility)
   // the window good enough?
   nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mDocShell));
   shellAsWin->SetVisibility(aVisibility);
-  mWindow->Show(aVisibility);
+  // Store locally so it doesn't die on us. 'Show' can result in the window
+  // being closed with nsXULWindow::Destroy being called. That would set
+  // mWindow to null and posibly destroy the nsIWidget while its Show method
+  // is on the stack. We need to keep it alive until Show finishes.
+  nsCOMPtr<nsIWidget> window = mWindow;
+  window->Show(aVisibility);
 
   nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
   if (windowMediator)
@@ -1023,8 +1028,11 @@ void nsXULWindow::OnChromeLoaded()
     if (mCenterAfterLoad && !positionSet)
       Center(parentWindow, parentWindow ? PR_FALSE : PR_TRUE, PR_FALSE);
 
-    if (mShowAfterLoad)
+    if (mShowAfterLoad) {
       SetVisibility(PR_TRUE);
+      // At this point the window may have been closed during Show(), so
+      // nsXULWindow::Destroy may already have been called. Take care!
+    }
   }
   mPersistentAttributesMask |= PAD_POSITION | PAD_SIZE | PAD_MISC;
 }

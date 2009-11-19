@@ -110,6 +110,10 @@ const CAPABILITIES = [
   "DNSPrefetch", "Auth"
 ];
 
+#ifndef XP_WIN
+#define BROKEN_WM_Z_ORDER
+#endif
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function debug(aMsg) {
@@ -1191,15 +1195,16 @@ SessionStoreService.prototype = {
       tabData.entries[0] = { url: browser.currentURI.spec };
       tabData.index = 1;
     }
-    else if (browser.currentURI.spec == "about:blank" &&
-             browser.userTypedValue) {
-      // This can happen if the user opens a lot of tabs simultaneously and we
-      // try to save state before all of them are properly loaded. If we crash
-      // then we get a bunch of about:blank tabs which isn't what we want.
-      tabData.entries[0] = { url: browser.userTypedValue };
-      tabData.index = 1;
+
+    // If there is a userTypedValue set, then either the user has typed something
+    // in the URL bar, or a new tab was opened with a URI to load. userTypedClear
+    // is used to indicate whether the tab was in some sort of loading state with
+    // userTypedValue.
+    if (browser.userTypedValue) {
+      tabData.userTypedValue = browser.userTypedValue;
+      tabData.userTypedClear = browser.userTypedClear;
     }
-    
+
     var disallow = [];
     for (var i = 0; i < CAPABILITIES.length; i++)
       if (!browser.docShell["allow" + CAPABILITIES[i]])
@@ -2122,7 +2127,15 @@ SessionStoreService.prototype = {
       browser.__SS_restore = this.restoreDocument_proxy;
       browser.addEventListener("load", browser.__SS_restore, true);
     }
-    
+
+    // Handle userTypedValue. Setting userTypedValue seems to update gURLbar
+    // as needed. Calling loadURI will cancel form filling in restoreDocument_proxy
+    if (tabData.userTypedValue) {
+      browser.userTypedValue = tabData.userTypedValue;
+      if (tabData.userTypedClear)
+        browser.loadURI(tabData.userTypedValue, null, null, true);
+    }
+
     aWindow.setTimeout(function(){ _this.restoreHistory(aWindow, aTabs, aTabData, aIdMap); }, 0);
   },
 
@@ -2598,7 +2611,7 @@ SessionStoreService.prototype = {
     
     while (windowsEnum.hasMoreElements()) {
       var window = windowsEnum.getNext();
-      if (window.__SSi) {
+      if (window.__SSi && !window.closed) {
         aFunc.call(this, window);
       }
     }
@@ -2609,9 +2622,34 @@ SessionStoreService.prototype = {
    * @returns Window reference
    */
   _getMostRecentBrowserWindow: function sss_getMostRecentBrowserWindow() {
-    var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
-                         getService(Ci.nsIWindowMediator);
-    return windowMediator.getMostRecentWindow("navigator:browser");
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+             getService(Ci.nsIWindowMediator);
+
+    var win = wm.getMostRecentWindow("navigator:browser");
+    if (!win)
+      return null;
+    if (!win.closed)
+      return win;
+
+#ifdef BROKEN_WM_Z_ORDER
+    win = null;
+    var windowsEnum = wm.getEnumerator("navigator:browser");
+    // this is oldest to newest, so this gets a bit ugly
+    while (windowsEnum.hasMoreElements()) {
+      let nextWin = windowsEnum.getNext();
+      if (!nextWin.closed)
+        win = nextWin;
+    }
+    return win;
+#else
+    var windowsEnum = wm.getZOrderDOMWindowEnumerator("navigator:browser", true);
+    while (windowsEnum.hasMoreElements()) {
+      win = windowsEnum.getNext();
+      if (!win.closed)
+        return win;
+    }
+    return null;
+#endif
   },
 
   /**

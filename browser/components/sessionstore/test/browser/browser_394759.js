@@ -35,6 +35,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+function browserWindowsCount() {
+  let count = 0;
+  let e = Cc["@mozilla.org/appshell/window-mediator;1"]
+            .getService(Ci.nsIWindowMediator)
+            .getEnumerator("navigator:browser");
+  while (e.hasMoreElements()) {
+    if (!e.getNext().closed)
+      ++count;
+  }
+  return count;
+}
+
 function test() {
   /** Test for Bug 394759 **/
   
@@ -288,9 +300,13 @@ function test() {
     executeSoon(callback);
   }
   
+  is(browserWindowsCount(), 1, "Only one browser window should be open initially");
   test_basic(function() {
+    is(browserWindowsCount(), 1, "number of browser windows after test_basic");
     test_behavior(function() {
+      is(browserWindowsCount(), 1, "number of browser windows after test_behavior");
       test_purge(function() {
+        is(browserWindowsCount(), 1, "number of browser windows after test_purge");
         finish();
       });
     });

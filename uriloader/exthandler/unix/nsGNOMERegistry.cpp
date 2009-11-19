@@ -51,10 +51,10 @@
 #ifdef MOZ_WIDGET_GTK2
 #include <glib.h>
 #include <glib-object.h>
+#endif
 
 #ifdef MOZ_PLATFORM_HILDON
 #include <libintl.h>
-#endif
 #endif
 
 /* static */ PRBool

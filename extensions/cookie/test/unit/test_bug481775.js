@@ -2,18 +2,18 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 function run_test() {
-  var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   var pb = null;
   try {
     pb = Cc["@mozilla.org/privatebrowsing;1"].getService(Ci.nsIPrivateBrowsingService);
   } catch (e) {}
 
+  prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+
   // accept all cookies and clear the table
   prefs.setIntPref("network.cookie.lifetimePolicy", 0);
-  cs.removeAll();
+  cm.removeAll();
 
   // saturate the cookie table
   addCookies(0, 5000);
@@ -37,7 +37,7 @@ function run_test() {
     do_check_eq(getCookieCount(), count);
 
     // remove them all
-    cs.removeAll();
+    cm.removeAll();
     do_check_eq(getCookieCount(), 0);
 
     // leave private browsing mode
@@ -55,8 +55,10 @@ function run_test() {
   do_check_eq(getCookieCount(), count);
 
   // remove them all
-  cs.removeAll();
+  cm.removeAll();
   do_check_eq(getCookieCount(), 0);
+
+  prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
 }
 
 function getCookieCount() {

@@ -6,7 +6,7 @@ function getHMAC(data, key, alg)
 {
   var converter = new ScriptableUnicodeConverter(); 
   converter.charset = 'utf8'; 
-  var dataarray = converter.convertToByteArray(data, {});
+  var dataarray = converter.convertToByteArray(data);
   
   var keyObject = Components.classes["@mozilla.org/security/keyobjectfactory;1"]
     .getService(Components.interfaces.nsIKeyObjectFactory)

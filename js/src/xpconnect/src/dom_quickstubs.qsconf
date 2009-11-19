@@ -516,6 +516,12 @@ nsIDOMHTMLDocument_Write_customMethodCallCode = """
     rv = self->%s(arg0);
 """
 
+nsIDOMStorage_Clear_customMethodCallCode = """
+    nsresult rv = self->Clear();
+    if (NS_SUCCEEDED(rv))
+        JS_ClearScope(cx, obj);
+"""
+
 CSS2Properties_ = {
     'thisType': 'nsICSSDeclaration',
     'additionalArguments': 'const nsCSSProperty prop',
@@ -568,6 +574,9 @@ customMethodCalls = {
         'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Writeln',
         'canFail': True
         },
+    'nsIDOMStorage_Clear': {
+        'code': nsIDOMStorage_Clear_customMethodCallCode
+       }, 
     'nsIDOMCSS2Properties_': CSS2Properties_,
     'nsIDOMNSCSS2Properties_': CSS2Properties_
     }

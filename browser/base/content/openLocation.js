@@ -49,7 +49,7 @@ try {
   // not critical, remain silent
 }
 
-Components.utils.import("resource://gre/modules/openLocationLastURL.jsm");
+Components.utils.import("resource:///modules/openLocationLastURL.jsm");
 
 function onLoad()
 {

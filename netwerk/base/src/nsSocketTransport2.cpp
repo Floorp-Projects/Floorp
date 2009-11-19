@@ -71,7 +71,7 @@
 #include "nsIProgrammingLanguage.h"
 #include "nsIClassInfoImpl.h"
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(MOZ_ENABLE_LIBCONIC)
 #include "nsNativeConnectionHelper.h"
 #endif
 
@@ -1265,7 +1265,7 @@ nsSocketTransport::RecoverFromError()
         }
     }
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(MOZ_ENABLE_LIBCONIC)
     // If not trying next address, try to make a connection using dialup. 
     // Retry if that connection is made.
     if (!tryAgain) {

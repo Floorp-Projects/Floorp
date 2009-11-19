@@ -250,13 +250,15 @@ nsAlertsIconListener::StartRequest(const nsAString & aImageUrl)
 void
 nsAlertsIconListener::SendCallback()
 {
-  mAlertListener->Observe(NULL, "alertclickcallback", mAlertCookie.get());
+  if (mAlertListener)
+    mAlertListener->Observe(NULL, "alertclickcallback", mAlertCookie.get());
 }
 
 void
 nsAlertsIconListener::SendClosed()
 {
-  mAlertListener->Observe(NULL, "alertfinished", mAlertCookie.get());
+  if (mAlertListener)
+    mAlertListener->Observe(NULL, "alertfinished", mAlertCookie.get());
 }
 
 nsresult

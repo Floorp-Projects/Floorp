@@ -66,6 +66,7 @@ __all__ = [
            "log",
            "runApp",
            "Process",
+           "addExtraCommonOptions",
            "initializeProfile",
            "DIST_BIN",
            "DEFAULT_APP",
@@ -351,6 +352,15 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
   prefsFile.write("".join(prefs))
   prefsFile.close()
 
+def addExtraCommonOptions(parser):
+  "Adds command-line options which are common to mochitest and reftest."
+
+  parser.add_option("--setpref",
+                    action = "append", type = "string",
+                    default = [],
+                    dest = "extraPrefs", metavar = "PREF=VALUE",
+                    help = "defines an extra user preference")  
+
 def fillCertificateDB(profileDir, certPath, utilityPath, xrePath):
   pwfilePath = os.path.join(profileDir, ".crtdbpw")
   
@@ -437,15 +447,13 @@ def environment(env = None, xrePath = DIST_BIN, crashreporter = True):
   if crashreporter:
     env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
     env['MOZ_CRASHREPORTER'] = '1'
+  else:
+    env['MOZ_CRASHREPORTER_DISABLE'] = '1'
+
   env['GNOME_DISABLE_CRASH_DIALOG'] = "1"
   return env
 
 if IS_WIN32:
-  #XXX: disabled on windows for now, see bug 525370 
-  def readWithTimeout(f, timeout):
-    return (f.readline(), False)
-elif False:
-  #XXX: figure out what's going wrong with this code!
   import ctypes, time, msvcrt
   PeekNamedPipe = ctypes.windll.kernel32.PeekNamedPipe
   GetLastError = ctypes.windll.kernel32.GetLastError
@@ -456,18 +464,24 @@ elif False:
     is received within |timeout| seconds, return a blank line.
     Returns a tuple (line, did_timeout), where |did_timeout| is True
     if the read timed out, and False otherwise."""
+    if timeout is None:
+      # shortcut to allow callers to pass in "None" for no timeout.
+      return (f.readline(), False)
     x = msvcrt.get_osfhandle(f.fileno())
     l = ctypes.c_long()
-    buf = ctypes.create_string_buffer('', 1024)
     done = time.time() + timeout
     while time.time() < done:
-        if PeekNamedPipe(x, buf, len(buf), None, ctypes.byref(l), None) == 0:
-            err = GetLastError()
-            if err == 38 or err == 109: # ERROR_HANDLE_EOF || ERROR_BROKEN_PIPE
-                return ('', False)
-        if (l > 0 and '\n' in buf.value):
-            return (f.readline(), False)
-        time.sleep(0.1)
+      if PeekNamedPipe(x, None, 0, None, ctypes.byref(l), None) == 0:
+        err = GetLastError()
+        if err == 38 or err == 109: # ERROR_HANDLE_EOF || ERROR_BROKEN_PIPE
+          return ('', False)
+        else:
+          log.error("readWithTimeout got error: %d", err)
+      if l > 0:
+        # we're assuming that the output is line-buffered,
+        # which is not unreasonable
+        return (f.readline(), False)
+      time.sleep(0.01)
     return ('', True)
 else:
   def readWithTimeout(f, timeout):
@@ -493,7 +507,7 @@ def triggerBreakpad(proc, utilityPath):
       crashinject = os.path.normpath(os.path.join(utilityPath, "crashinject.exe"))
       if os.path.exists(crashinject) and subprocess.Popen([crashinject, str(proc.pid)]).wait() == 0:
         return
-  #TODO: kill the process such that it triggers Breakpad on OS X
+  #TODO: kill the process such that it triggers Breakpad on OS X (bug 525296)
   log.info("Can't trigger Breakpad, just killing process")
   proc.kill()
 

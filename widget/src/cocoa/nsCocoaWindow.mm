@@ -804,19 +804,6 @@ nsCocoaWindow::Scroll(const nsIntPoint& aDelta,
   }
 }
 
-void nsCocoaWindow::MakeBackgroundTransparent(PRBool aTransparent)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  BOOL currentTransparency = ![mWindow isOpaque];
-  if (aTransparent != currentTransparency) {
-    [mWindow setOpaque:!aTransparent];
-    [mWindow setBackgroundColor:(aTransparent ? [NSColor clearColor] : [NSColor whiteColor])];
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
 nsTransparencyMode nsCocoaWindow::GetTransparencyMode()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
@@ -833,18 +820,10 @@ void nsCocoaWindow::SetTransparencyMode(nsTransparencyMode aMode)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   BOOL isTransparent = aMode == eTransparencyTransparent;
-
   BOOL currentTransparency = ![mWindow isOpaque];
   if (isTransparent != currentTransparency) {
-    // Take care of window transparency
-    MakeBackgroundTransparent(isTransparent);
-    // Make sure our content view is also transparent
-    if (mPopupContentView) {
-      ChildView *childView = (ChildView*)mPopupContentView->GetNativeData(NS_NATIVE_WIDGET);
-      if (childView) {
-        [childView setTransparent:isTransparent];
-      }
-    }
+    [mWindow setOpaque:!isTransparent];
+    [mWindow setBackgroundColor:(isTransparent ? [NSColor clearColor] : [NSColor whiteColor])];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -1886,6 +1865,11 @@ static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor"
     // we respond to it just in case.
     if ([self respondsToSelector:@selector(setBottomCornerRounded:)])
       [self setBottomCornerRounded:NO];
+
+#ifdef NS_LEOPARD_AND_LATER
+    [self setAutorecalculatesContentBorderThickness:NO forEdge:NSMaxYEdge];
+    [self setContentBorderThickness:0.0f forEdge:NSMaxYEdge];
+#endif
   }
   return self;
 
@@ -1929,6 +1913,10 @@ static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor"
   if (mUnifiedToolbarHeight == aToolbarHeight)
     return;
   mUnifiedToolbarHeight = aToolbarHeight;
+
+#ifdef NS_LEOPARD_AND_LATER
+  [self setContentBorderThickness:aToolbarHeight forEdge:NSMaxYEdge];
+#endif
 
   // Since this function is only called inside painting, the repaint needs to
   // be synchronous.

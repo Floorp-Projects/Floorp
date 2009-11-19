@@ -109,16 +109,15 @@ interface nsILoginManager : nsISupports {
      *
      * @param count
      *        The number of elements in the array. JS callers can simply use
-     *        the array's .length property, and supply an dummy object for
-     *        this out param. For example: |getAllLogins({})|
+     *        the array's .length property and omit this param.
      * @param logins
      *        An array of nsILoginInfo objects. 
      *
      * NOTE: This can be called from JS as:
-     *       var logins = pwmgr.getAllLogins({});
+     *       var logins = pwmgr.getAllLogins();
      *       (|logins| is an array).
      */
-    void getAllLogins(out unsigned long count,
+    void getAllLogins([optional] out unsigned long count,
                       [retval, array, size_is(count)] out nsILoginInfo logins);
 
     
@@ -127,16 +126,15 @@ interface nsILoginManager : nsISupports {
      *
      * @param count
      *        The number of elements in the array. JS callers can simply use
-     *        the array's .length property, and supply an dummy object for
-     *        this out param. For example: |getAllDisabledHosts({})|
+     *        the array's .length property and omit this param.
      * @param hostnames
      *        An array of hostname strings, in origin URL format without a
      *        pathname. For example: "https://www.site.com".
      *
      * NOTE: This can be called from JS as:
-     *       var logins = pwmgr.getDisabledAllLogins({});
+     *       var logins = pwmgr.getDisabledAllLogins();
      */
-    void getAllDisabledHosts(out unsigned long count,
+    void getAllDisabledHosts([optional] out unsigned long count,
                       [retval, array, size_is(count)] out wstring hostnames);
 
 

@@ -150,7 +150,7 @@ InitKeyEvent(nsKeyEvent &aEvent, QKeyEvent *aQEvent)
     // so link to the GdkEvent (which will vanish soon after return from the
     // event callback) to give plugins access to hardware_keycode and state.
     // (An XEvent would be nice but the GdkEvent is good enough.)
-    aEvent.nativeMsg = (void *)aQEvent;
+    aEvent.pluginEvent = (void *)aQEvent;
 }
 
 nsWindow::nsWindow()

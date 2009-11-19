@@ -670,13 +670,6 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   //  ATTRIBUTES
   //
   readonly attribute nsIDOMHTMLCanvasElement canvas;
-  readonly attribute nsIWebGLBuffer currentArrayBufferBinding;
-  readonly attribute nsIWebGLBuffer currentElementArrayBufferBinding;
-  readonly attribute nsIWebGLFramebuffer currentFramebufferBinding;
-  readonly attribute nsIWebGLRenderbuffer currentRenderbufferBinding;
-  readonly attribute nsIWebGLTexture currentTextureBinding2D;
-  readonly attribute nsIWebGLTexture currentTextureBindingCubeMap;
-  readonly attribute nsIWebGLProgram currentProgram;
 
   //
   //  METHODS
@@ -780,33 +773,32 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   //GLint getInteger(in GLenum pname);
   //nsIWebGLIntArray getIntegerv(in GLenum pname);
   // js only
-  void getParameter(in GLenum pname);
+  void getParameter (in GLenum pname);
 
   // Modified: void glGetBufferParameteriv (GLenum target, GLenum pname, GLint* params);
-  GLint getBufferParameteri (in GLenum target, in GLenum pname);
-  //nsIWebGLIntArray glGetBufferParameteriv (in GLenum target, in GLenum pname);
+  GLint getBufferParameteri (in GLenum target, in GLenum pname); // XXX remove
+  void getBufferParameter (in GLenum target, in GLenum pname);
 
   GLenum getError ();
 
   // Modified: void glGetFramebufferAttachmentParameteriv (GLenum target, GLenum attachment, GLenum pname, GLint* params);
-  GLint getFramebufferAttachmentParameteri (in GLenum target, in GLenum attachment, in GLenum pname);
-  //nsIWebGLIntArray glGetFramebufferAttachmentParameteriv (in GLenum target, in GLenum attachment, in GLenum pname);
+  GLint getFramebufferAttachmentParameteri (in GLenum target, in GLenum attachment, in GLenum pname); // XXX remove
+  void getFramebufferAttachmentParameter (in GLenum target, in GLenum attachment, in GLenum pname);
 
   // Modified: void glGetProgramiv (nsIWebGLProgram program, GLenum pname, GLint* params);
-  GLint getProgrami (in nsIWebGLProgram program, in GLenum pname);
-  //nsIWebGLIntArray getProgramiv (in nsIWebGLProgram program, in GLenum pname);
-  //void getProgramParameter (in nsIWebGLProgram program, in GLenum pname);
+  GLint getProgrami (in nsIWebGLProgram program, in GLenum pname); // XXX remove
+  void getProgramParameter (in nsIWebGLProgram program, in GLenum pname);
 
   // Modified: void glGetProgramInfoLog (GLuint program, GLsizei bufsize, GLsizei* length, char* infolog);
   DOMString getProgramInfoLog (in nsIWebGLProgram program);
 
   // Modified: void glGetRenderbufferParameteriv (GLenum target, GLenum pname, GLint* params);
   //nsIWebGLIntArray getRenderbufferParameteriv (in GLenum target, in GLenum pname);
-  GLint getRenderbufferParameteri (in GLenum target, in GLenum pname);
+  GLint getRenderbufferParameteri (in GLenum target, in GLenum pname); // XXX remove
+  void getRenderbufferParameter (in GLenum target, in GLenum pname);
 
-  GLint getShaderi (in nsIWebGLShader shader, in GLenum pname);
-  nsICanvasIntArray getShaderiv (in nsIWebGLShader shader, in GLenum pname);
-  // GONE void getShaderParameter (in nsIWebGLShader shader, in GLenum pname);
+  GLint getShaderi (in nsIWebGLShader shader, in GLenum pname); // XXX remove
+  void getShaderParameter (in nsIWebGLShader shader, in GLenum pname);
 
   // Modified: void glGetShaderInfoLog (GLuint shader, GLsizei bufsize, GLsizei* length, char* infolog);
   DOMString getShaderInfoLog (in nsIWebGLShader shader);
@@ -817,27 +809,20 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   DOMString getShaderSource (in nsIWebGLShader shader);
   DOMString getString (in GLenum name);
 
-  GLfloat getTexParameterf (in GLenum target, in GLenum pname);
-  nsICanvasArray getTexParameterfv (in GLenum target, in GLenum pname);
-  GLint getTexParameteri (in GLenum target, in GLenum pname);
-  nsICanvasArray getTexParameteriv (in GLenum target, in GLenum pname);
+  GLfloat getTexParameterf (in GLenum target, in GLenum pname);         // XXX remove
+  GLint getTexParameteri (in GLenum target, in GLenum pname);           // XXX remove
+  void getTexParameter (in GLenum target, in GLenum pname);
 
   // FIXME: This is problematic. We don't implicitly know how big the returned data buffer
   // needs to be like in the other glGet* calls. The only way to find out is to iterate 
   // through all the active uniforms with glGetActiveUniform() looking for the corresponding
   // 'location'. This will give us the type and size of the data. Since this is a get call
   // maybe that's ok?
-  GLfloat getUniformf (in nsIWebGLProgram program, in GLint location);
-  nsICanvasArray getUniformfv (in nsIWebGLProgram program, in GLint location);
-  GLint getUniformi (in nsIWebGLProgram program, in GLint location);
-  nsICanvasArray getUniformiv (in nsIWebGLProgram program, in GLint location);
+  void getUniform (in nsIWebGLProgram program, in GLint location);
 
   GLint getUniformLocation (in nsIWebGLProgram program, in DOMString name);
 
-  GLfloat getVertexAttribf (in GLuint index, in GLenum pname);
-  nsICanvasArray getVertexAttribfv (in GLuint index, in GLenum pname);
-  GLint getVertexAttribi (in GLuint index, in GLenum pname);
-  nsICanvasArray getVertexAttribiv (in GLuint index, in GLenum pname);
+  void getVertexAttrib (in GLuint index, in GLenum pname);
 
   // TBD
   // void glGetVertexAttribPointerv (GLuint index, GLenum pname, void** pointer);

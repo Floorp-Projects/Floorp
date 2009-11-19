@@ -585,6 +585,8 @@ res/viewsource.css
 res/mathml.css
 res/loading-image.png
 res/broken-image.png
+res/loading-image.gif
+res/broken-image.gif
 res/html/gopher-audio.gif
 res/html/gopher-binary.gif
 res/html/gopher-find.gif
@@ -638,8 +640,6 @@ init.d/README
 redo-prebinding.sh
 res/viewer.properties
 res/bloatcycle.html
-res/broken-image.gif
-res/loading-image.gif
 components/browsersearch.xpt
 components/nsResetPref.js
 plugins/Default Plugin.plugin/Contents/Info.plist
@@ -653,6 +653,7 @@ plugins/Default Plugin.plugin/Contents/Resources/English.lproj/InfoPlist.strings
 ../Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/classes.nib
 ../Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/info.nib
 ../Plug-Ins/PrintPDE.plugin/Contents/Resources/English.lproj/PrintPDE.nib/objects.xib
+../Resources/firefox-bin.rsrc
 res/cursors/CVS/Entries
 res/cursors/CVS/Repository
 res/cursors/CVS/Root
@@ -748,6 +749,7 @@ components/necko_socket.xpt
 components/necko_strconv.xpt
 components/necko_viewsource.xpt
 components/necko_wifi.xpt
+components/oji.xpt
 components/parentalcontrols.xpt
 components/pipboot.xpt
 components/pipnss.xpt
@@ -804,6 +806,7 @@ run-mozilla.sh
 firefox
 dependentlibs.list
 components/nsProgressDialog.js
+libwidget.rsrc
 #endif
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
@@ -812,6 +815,8 @@ chrome/icons/default/default.xpm
 dictionaries/PL.dic
 dictionaries/PL.aff
 libjemalloc.so
+icons/mozicon16.xpm
+icons/mozicon50.xpm
 #endif
 #endif
 #ifdef XP_WIN
@@ -838,3 +843,4 @@ components/brwsrcmp.dll
 components/nsUpdateService.js
 components/nsUpdateServiceStub.js
 #endif
+old-homepage-default.properties

@@ -47,12 +47,14 @@ int errno = 0;
 
 int chmod(const char* path, unsigned int mode) 
 {
-  return 0;
+  WCHAR wpath[MAX_PATH];
+  MultiByteToWideChar(CP_ACP, 0, path, -1, wpath, MAX_PATH);
+  return _wchmod(wpath, mode);
 }
 
 int _wchmod(const WCHAR* path, unsigned int mode) 
 {
-  return 0;
+  return SetFileAttributesW(path, FILE_ATTRIBUTE_NORMAL) ? 0 : 1;
 }
 
 int fstat(FILE* handle, struct stat* buff)
