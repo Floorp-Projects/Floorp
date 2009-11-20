@@ -595,7 +595,7 @@ function jit(on)
   if (on)
   {
     jitoptions.setBoolPref('content', true);
-    jitoptions.setBoolPref('chrome', false);
+    jitoptions.setBoolPref('chrome', true);
   }
   else
   {
