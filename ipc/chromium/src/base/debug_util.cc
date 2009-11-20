@@ -6,10 +6,14 @@
 
 #include "base/platform_thread.h"
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #ifdef OS_WIN
 #include <io.h>
+#else
+#include <unistd.h>
 #endif
 
 #ifndef STDOUT_FILENO
