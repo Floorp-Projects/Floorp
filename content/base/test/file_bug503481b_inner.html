@@ -8,8 +8,6 @@ firstRan = false;
 secondRan = false;
 thirdRan = false;
 forthRan = false;
-fifthRan = false;
-sixthRan = false;
 function runFirst() {
   firstRan = true;
 }
@@ -21,22 +19,12 @@ function runThird() {
 function runForth() {
   forthRan = true;
 }
-function runFifth() {
-  parent.is(sixthRan, false, "sixth should be not run before non-async fifth");
-  fifthRan = true;
-}
-function runSixth() {
-  parent.is(fifthRan, true, "fifth should run before async sixth");
-  sixthRan = true;
-}
 
 function done() {
   parent.is(firstRan, true, "first should have run by onload");
   parent.is(secondRan, true, "second should have run by onload");
   parent.is(thirdRan, true, "third should have run by onload");
   parent.is(forthRan, true, "forth should have run by onload");
-  parent.is(fifthRan, true, "fifth should have run by onload");
-  parent.is(sixthRan, true, "sixth should have run by onload");
   parent.SimpleTest.finish();
 }
 
@@ -57,7 +45,7 @@ unblock("R");
 <script async>
 secondRan = true;
 </script>
-<script async>
+<script>
 parent.is(secondRan, true, "Second script shouldn't be async");
 </script>
 
@@ -69,17 +57,6 @@ unblock("S");
 </script>
 <script src="file_bug503481.sjs?blockOn=T&body=runForth();"></script>
 
-<!-- test that preloading an async script works -->
-<script>
-setTimeout(function () { unblock("U"); }, 1000);
-</script>
-<script src="file_bug503481.sjs?blockOn=U&body=runFifth();"></script>
-<script async src="file_bug503481.sjs?blockOn=V&body=runSixth();"></script>
-<script>
-parent.is(fifthRan, true, "fifth should have run by now");
-parent.is(sixthRan, false, "sixth should not have run yet");
-unblock("V");
-</script>
 </head>
 
 <body onload="done()">
