@@ -738,8 +738,20 @@ NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
 
   if (instanceData->streamMode == NP_ASFILE &&
       instanceData->functionToFail == FUNCTION_NONE) {
+    if (!instanceData->streamBuf) {
+      instanceData->err <<
+        "Error: no data written with NPP_Write";
+      return NPERR_GENERIC_ERROR;
+    }
+
+    if (!instanceData->fileBuf) {
+      instanceData->err <<
+        "Error: no data written with NPP_StreamAsFile";
+      return NPERR_GENERIC_ERROR;
+    }
+
     if (strcmp(reinterpret_cast<char *>(instanceData->fileBuf), 
-      reinterpret_cast<char *>(instanceData->streamBuf)) != 0) {
+               reinterpret_cast<char *>(instanceData->streamBuf))) {
       instanceData->err <<
         "Error: data passed to NPP_Write and NPP_StreamAsFile differed";
     }
