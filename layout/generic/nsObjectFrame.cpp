@@ -118,6 +118,7 @@
 #include "nsLayoutUtils.h"
 #include "nsFrameManager.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIObserverService.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -602,7 +603,12 @@ nsObjectFrame::Init(nsIContent*      aContent,
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("Initializing nsObjectFrame %p for content %p\n", this, aContent));
 
-  return nsObjectFrameSuper::Init(aContent, aParent, aPrevInFlow);
+  nsresult rv = nsObjectFrameSuper::Init(aContent, aParent, aPrevInFlow);
+
+  if (NS_SUCCEEDED(rv)) {
+    NotifyPluginEventObservers(NS_LITERAL_STRING("init").get());
+  }
+  return rv;
 }
 
 void
@@ -611,6 +617,8 @@ nsObjectFrame::Destroy()
   NS_ASSERTION(!mPreventInstantiation ||
                (mContent && mContent->GetCurrentDoc()->GetDisplayDocument()),
                "about to crash due to bug 136927");
+
+  NotifyPluginEventObservers(NS_LITERAL_STRING("destroy").get());
 
   PresContext()->RootPresContext()->UnregisterPluginForGeometryUpdates(this);
 
@@ -989,6 +997,7 @@ nsObjectFrame::FixupWindow(const nsSize& aSize)
   window->clipRect.bottom = presContext->AppUnitsToDevPixels(aSize.height);
   window->clipRect.right = presContext->AppUnitsToDevPixels(aSize.width);
 #endif
+  NotifyPluginEventObservers(NS_LITERAL_STRING("reflow").get());
 }
 
 void
@@ -1224,6 +1233,16 @@ nsObjectFrame::SetAbsoluteScreenPosition(nsIDOMElement* element,
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
+}
+
+void
+nsObjectFrame::NotifyPluginEventObservers(const PRUnichar *eventType)
+{
+  nsCOMPtr<nsIDOMElement> e = do_QueryInterface(mContent);
+  if (!e)
+    return;
+  nsCOMPtr<nsIObserverService> obsSvc = do_GetService("@mozilla.org/observer-service;1");
+  obsSvc->NotifyObservers(e, "plugin-changed-event", eventType);
 }
 
 void
