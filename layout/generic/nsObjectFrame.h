@@ -58,6 +58,7 @@ class nsIPluginHost;
 class nsIPluginInstance;
 class nsPresContext;
 class nsDisplayPlugin;
+class nsIDOMElement;
 
 #define nsObjectFrameSuper nsFrame
 
@@ -219,6 +220,10 @@ protected:
                              nsTArray<nsIWidget::Configuration>* aConfigurations);
 
   nsIWidget* GetWidget() { return mWidget; }
+
+  nsresult SetAbsoluteScreenPosition(nsIDOMElement* element,
+                                     nsIDOMClientRect* position,
+                                     nsIDOMClientRect* clip);
 
   friend class nsPluginInstanceOwner;
   friend class nsDisplayPlugin;
