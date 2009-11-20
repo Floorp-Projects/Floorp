@@ -509,15 +509,6 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
         !aElement->GetScriptAsync();
       mPreloads.RemoveElementAt(i);
 
-      if (nsContentUtils::GetBoolPref("content.scriptloader.logloads")) {
-        nsCString spec;
-        request->mURI->GetSpec(spec);
-        printf("Grabbing existing speculative load for %s (%p). async:%d defer:%d\n",
-               spec.get(), request.get(), aElement->GetScriptAsync(),
-               request->mDefer);
-      }
-
-
       rv = CheckContentPolicy(mDocument, aElement, request->mURI, type);
       if (NS_FAILED(rv)) {
         // Note, we're dropping our last ref to request here.
@@ -567,14 +558,6 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     request->mIsInline = PR_FALSE;
     request->mLoading = PR_TRUE;
 
-    if (nsContentUtils::GetBoolPref("content.scriptloader.logloads")) {
-      nsCString spec;
-      request->mURI->GetSpec(spec);
-      printf("Starting normal load for %s (%p). async:%d defer:%d\n",
-             spec.get(), request.get(), aElement->GetScriptAsync(),
-             request->mDefer);
-    }
-
     rv = StartLoad(request, type);
     if (NS_FAILED(rv)) {
       return rv;
@@ -586,10 +569,6 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     request->mURI = mDocument->GetDocumentURI();
 
     request->mLineNo = aElement->GetScriptLineNumber();
-
-    if (nsContentUtils::GetBoolPref("content.scriptloader.logloads")) {
-      printf("Creating inline request (%p).\n", request.get());
-    }
 
     // If we've got existing pending requests, add ourselves
     // to this list.
@@ -629,10 +608,6 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
   NS_ENSURE_ARG(aRequest);
   nsAFlatString* script;
   nsAutoString textData;
-
-  if (nsContentUtils::GetBoolPref("content.scriptloader.logloads")) {
-    printf("Running request (%p).\n", aRequest);
-  }
 
   // If there's no script text, we try to get it from the element
   if (aRequest->mIsInline) {
@@ -984,13 +959,6 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   NS_ASSERTION(request, "null request in stream complete handler");
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
-  if (nsContentUtils::GetBoolPref("content.scriptloader.logloads")) {
-    nsCString spec;
-    request->mURI->GetSpec(spec);
-    printf("Finished loading %s (%p). status:%d\n", spec.get(), request,
-           aStatus);
-  }
-
   nsresult rv = PrepareLoadedRequest(request, aLoader, aStatus, aStringLen,
                                      aString);
   if (NS_FAILED(rv)) {
@@ -1144,14 +1112,6 @@ nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
   request->mLoading = PR_TRUE;
   request->mDefer = PR_FALSE; // This is computed later when we go to execute the
                               // script.
-
-  if (nsContentUtils::GetBoolPref("content.scriptloader.logloads")) {
-    nsCString spec;
-    request->mURI->GetSpec(spec);
-    printf("Starting speculative load for %s (%p).\n", spec.get(),
-           request.get());
-  }
-
   nsresult rv = StartLoad(request, aType);
   if (NS_FAILED(rv)) {
     return;
