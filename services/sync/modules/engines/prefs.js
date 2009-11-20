@@ -88,20 +88,20 @@ PrefStore.prototype = {
       getService(Ci.nsIPrefService);
     let syncPrefs = service.getBranch(WEAVE_SYNC_PREFS).getChildList("", {}).
       map(function(elem) { return elem.substr(1); });
-    
+
     this.__defineGetter__("_syncPrefs", function() syncPrefs);
     return syncPrefs;
   },
-  
+
   _getAllPrefs: function PrefStore__getAllPrefs() {
     let values = [];
     let toSync = this._syncPrefs;
-    
+
     let pref;
     for (let i = 0; i < toSync.length; i++) {
       if (!this._prefs.getBoolPref(WEAVE_SYNC_PREFS + "." + toSync[i]))
         continue;
-        
+
       pref = {};
       pref["name"] = toSync[i];
 
@@ -124,10 +124,10 @@ PrefStore.prototype = {
       if ("value" in pref)
         values[values.length] = pref;
     }
-    
+
     return values;
   },
-  
+
   _setAllPrefs: function PrefStore__setAllPrefs(values) {
     for (let i = 0; i < values.length; i++) {
       switch (values[i]["type"]) {
@@ -145,36 +145,36 @@ PrefStore.prototype = {
       }
     }
   },
-  
+
   getAllIDs: function PrefStore_getAllIDs() {
     /* We store all prefs in just one WBO, with just one GUID */
     let allprefs = {};
     allprefs[WEAVE_PREFS_GUID] = this._getAllPrefs();
     return allprefs;
   },
-  
+
   changeItemID: function PrefStore_changeItemID(oldID, newID) {
     this._log.trace("PrefStore GUID is constant!");
   },
-  
+
   itemExists: function FormStore_itemExists(id) {
     return (id === WEAVE_PREFS_GUID);
   },
-  
+
   createRecord: function FormStore_createRecord(guid, cryptoMetaURL) {
     let record = new PrefRec();
     record.id = guid;
-    
+
     if (guid == WEAVE_PREFS_GUID) {
       record.encryption = cryptoMetaURL;
       record.value = this._getAllPrefs();
     } else {
       record.deleted = true;
     }
-    
+
     return record;
   },
-  
+
   create: function PrefStore_create(record) {
     this._log.trace("Ignoring create request");
   },
@@ -187,7 +187,7 @@ PrefStore.prototype = {
     this._log.trace("Received pref updates, applying...");
     this._setAllPrefs(record.value);
   },
-  
+
   wipe: function PrefStore_wipe() {
     this._log.trace("Ignoring wipe request");
   }
@@ -201,7 +201,7 @@ PrefTracker.prototype = {
   name: "prefs",
   _logName: "PrefTracker",
   file: "prefs",
-  
+
   get _prefs() {
     let prefs = Cc["@mozilla.org/preferences-service;1"].
       getService(Ci.nsIPrefBranch2);
@@ -215,21 +215,21 @@ PrefTracker.prototype = {
       getService(Ci.nsIPrefService);
     let syncPrefs = service.getBranch(WEAVE_SYNC_PREFS).getChildList("", {}).
       map(function(elem) { return elem.substr(1); });
-    
+
     this.__defineGetter__("_syncPrefs", function() syncPrefs);
     return syncPrefs;
   },
-  
+
   _init: function PrefTracker__init() {
     this.__proto__.__proto__._init.call(this);
-    this._prefs.addObserver("", this, false);   
+    this._prefs.addObserver("", this, false);
   },
-  
+
   /* 25 points per pref change */
   observe: function(aSubject, aTopic, aData) {
     if (aTopic != "nsPref:changed")
       return;
-    
+
     if (this._syncPrefs.indexOf(aData) != -1) {
       this.score += 1;
       this.addChangedID(WEAVE_PREFS_GUID);

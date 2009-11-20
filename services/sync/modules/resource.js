@@ -146,12 +146,12 @@ Resource.prototype = {
     // Always validate the cache:
     channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
-    
+
     // Setup a callback to handle bad HTTPS certificates.
     channel.notificationCallbacks = new badCertListener();
-    
+
     // Avoid calling the authorizer more than once
-    let headers = this.headers; 
+    let headers = this.headers;
     for (let key in headers) {
       if (key == 'Authorization')
         this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
@@ -167,7 +167,7 @@ Resource.prototype = {
   // ** {{{ Resource._request }}} **
   //
   // Perform a particular HTTP request on the resource. This method
-  // is never called directly, but is used by the high-level 
+  // is never called directly, but is used by the high-level
   // {{{get}}}, {{{put}}}, {{{post}}} and {{delete}} methods.
   _request: function Res__request(action, data) {
     let iter = 0;
@@ -176,7 +176,7 @@ Resource.prototype = {
     if ("undefined" != typeof(data))
       this._data = data;
 
-    // PUT and POST are trreated differently because 
+    // PUT and POST are trreated differently because
     // they have payload data.
     if ("PUT" == action || "POST" == action) {
       // Convert non-string bodies into JSON
@@ -304,7 +304,7 @@ Resource.prototype = {
 };
 
 // = ChannelListener =
-// 
+//
 // This object implements the {{{nsIStreamListener}}} interface
 // and is called as the network operation proceeds.
 function ChannelListener(onComplete, onProgress, logger) {

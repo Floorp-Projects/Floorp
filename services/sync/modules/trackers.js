@@ -50,7 +50,7 @@ Cu.import("resource://weave/ext/Observers.js");
 /*
  * Trackers are associated with a single engine and deal with
  * listening for changes to their particular data type.
- * 
+ *
  * There are two things they keep track of:
  * 1) A score, indicating how urgently the engine wants to sync
  * 2) A list of IDs for all the changed items that need to be synced
@@ -83,7 +83,7 @@ Tracker.prototype = {
    * -1: Do not sync unless the user specifically requests it (almost disabled)
    * 0: Nothing has changed
    * 100: Please sync me ASAP!
-   * 
+   *
    * Setting it to other values should (but doesn't currently) throw an exception
    */
   get score() {

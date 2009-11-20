@@ -728,7 +728,7 @@ let Utils = {
     try {
       return Str.errors.get(error, args || null);
     } catch (e) {}
-    
+
     // basically returns "Unknown Error"
     return Str.errors.get("error.reason.unknown");
   },

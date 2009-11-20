@@ -100,7 +100,7 @@ FormStore.prototype = {
     let stor = Cc["@mozilla.org/storage/service;1"].
       getService(Ci.mozIStorageService);
     let formDB = stor.openDatabase(file);
-      
+
     this.__defineGetter__("_formDB", function() formDB);
     return formDB;
   },
@@ -111,7 +111,7 @@ FormStore.prototype = {
     this.__defineGetter__("_formHistory", function() formHistory);
     return formHistory;
   },
-  
+
   get _formStatement() {
     // This is essentially:
     // SELECT * FROM moz_formhistory ORDER BY 1.0 * (lastUsed - minLast) /
@@ -124,21 +124,21 @@ FormStore.prototype = {
         timesUsed / (SELECT timesUsed FROM moz_formhistory ORDER BY timesUsed DESC LIMIT 1) \
         DESC LIMIT 200"
     );
-    
+
     this.__defineGetter__("_formStatement", function() stmnt);
     return stmnt;
   },
-  
+
   cacheFormItems: function FormStore_cacheFormItems() {
     this._log.trace("Caching all form items");
     this._formItems = this.getAllIDs();
   },
-  
+
   clearFormCache: function FormStore_clearFormCache() {
     this._log.trace("Clearing form cache");
     this._formItems = null;
   },
-  
+
   getAllIDs: function FormStore_getAllIDs() {
     let items = {};
     let stmnt = this._formStatement;
@@ -154,19 +154,19 @@ FormStore.prototype = {
 
     return items;
   },
-  
+
   changeItemID: function FormStore_changeItemID(oldID, newID) {
     this._log.warn("FormStore IDs are data-dependent, cannot change!");
   },
-  
+
   itemExists: function FormStore_itemExists(id) {
     return (id in this._formItems);
   },
-  
+
   createRecord: function FormStore_createRecord(guid, cryptoMetaURL) {
     let record = new FormRec();
     record.id = guid;
-    
+
     if (guid in this._formItems) {
       let item = this._formItems[guid];
       record.encryption = cryptoMetaURL;
@@ -175,10 +175,10 @@ FormStore.prototype = {
     } else {
       record.deleted = true;
     }
-    
+
     return record;
   },
-  
+
   create: function FormStore_create(record) {
     this._log.debug("Adding form record for " + record.name);
     this._formHistory.addEntry(record.name, record.value);
@@ -186,20 +186,20 @@ FormStore.prototype = {
 
   remove: function FormStore_remove(record) {
     this._log.trace("Removing form record: " + record.id);
-    
+
     if (record.id in this._formItems) {
       let item = this._formItems[record.id];
       this._formHistory.removeEntry(item.name, item.value);
       return;
     }
-    
+
     this._log.trace("Invalid GUID found, ignoring remove request.");
   },
 
   update: function FormStore_update(record) {
     this._log.warn("Ignoring form record update request!");
   },
-  
+
   wipe: function FormStore_wipe() {
     this._formHistory.removeAllEntries();
   }
@@ -213,9 +213,9 @@ FormTracker.prototype = {
   name: "forms",
   _logName: "FormTracker",
   file: "form",
-  
+
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver]),
-  
+
   __observerService: null,
   get _observerService() {
     if (!this.__observerService)
@@ -223,13 +223,13 @@ FormTracker.prototype = {
                                 getService(Ci.nsIObserverService);
       return this.__observerService;
   },
-  
+
   _init: function FormTracker__init() {
     this.__proto__.__proto__._init.call(this);
     this._log.trace("FormTracker initializing!");
     this._observerService.addObserver(this, "earlyformsubmit", false);
   },
-  
+
   /* 10 points per form element */
   notify: function FormTracker_notify(formElement, aWindow, actionURI) {
     if (this.ignoreAll)
