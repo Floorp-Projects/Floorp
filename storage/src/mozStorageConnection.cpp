@@ -289,6 +289,7 @@ private:
 
 Connection::Connection(Service *aService)
 : sharedAsyncExecutionMutex("Connection::sharedAsyncExecutionMutex")
+, threadOpenedOn(do_GetCurrentThread())
 , mDBConn(nsnull)
 , mAsyncExecutionMutex("Connection::mAsyncExecutionMutex")
 , mAsyncExecutionThreadShuttingDown(false)
@@ -297,7 +298,6 @@ Connection::Connection(Service *aService)
 , mFunctionsMutex(nsAutoLock::NewLock("FunctionsMutex"))
 , mProgressHandlerMutex(nsAutoLock::NewLock("ProgressHandlerMutex"))
 , mProgressHandler(nsnull)
-, mOpenedThread(do_GetCurrentThread())
 , mStorageService(aService)
 {
   mFunctions.Init();
@@ -517,7 +517,7 @@ Connection::setClosedState()
 {
   // Ensure that we are on the correct thread to close the database.
   PRBool onOpenedThread;
-  nsresult rv = mOpenedThread->IsOnCurrentThread(&onOpenedThread);
+  nsresult rv = threadOpenedOn->IsOnCurrentThread(&onOpenedThread);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!onOpenedThread) {
     NS_ERROR("Must close the database on the thread that you opened it with!");
@@ -550,7 +550,7 @@ Connection::internalClose()
 
   { // Ensure that we are being called on the thread we were opened with.
     PRBool onOpenedThread = PR_FALSE;
-    (void)mOpenedThread->IsOnCurrentThread(&onOpenedThread);
+    (void)threadOpenedOn->IsOnCurrentThread(&onOpenedThread);
     NS_ASSERTION(onOpenedThread,
                  "Not called on the thread the database was opened on!");
   }
