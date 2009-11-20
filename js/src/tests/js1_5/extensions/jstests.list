@@ -144,7 +144,7 @@ script regress-369404.js
 script regress-369696-01.js
 script regress-369696-02.js
 script regress-369696-03.js
-random-if(xulRuntime.OS=="WINNT"&&isDebugBuild) script regress-371636.js # bug 528284
+random-if(xulRuntime.OS=="WINNT") script regress-371636.js # bug 528284
 script regress-372309.js
 script regress-374589.js
 script regress-375183.js
