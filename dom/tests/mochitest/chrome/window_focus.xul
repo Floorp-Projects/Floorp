@@ -940,6 +940,33 @@ function testMoveFocus()
 
   prefs.setBoolPref("accessibility.browsewithcaret", false);
 
+  // cases where focus in on a content node with no frame
+
+  if (!gPartialTabbing) {
+    getById("t24").blur();
+    gEvents = "";
+    gLastFocus = null;
+    gLastFocusWindow = gChildWindow;
+    gLastFocusMethod = fm.FLAG_BYKEY;
+
+    selection.selectAllChildren(getById("hiddenspan"));
+    expectFocusShift(function () synthesizeKey("VK_TAB", { }),
+                     gChildWindow, getById("t26"), true, "tab with selection on hidden content");
+
+    setFocusTo($("o15"), window);
+    $("o15").hidden = true;
+    document.documentElement.getBoundingClientRect(); // flush after hiding
+    expectFocusShift(function () synthesizeKey("VK_TAB", { }),
+                     window, $("o17"), true, "tab with focus on hidden content");
+
+    $("o17").hidden = true;
+    document.documentElement.getBoundingClientRect();
+    expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+                     window, $("o13"), true, "shift+tab with focus on hidden content");
+  }
+
+  // cases with selection in an <input>
+
   var t19 = getById("t19");
   t19.setSelectionRange(0, 0);
   setFocusTo("t18", gChildWindow);
