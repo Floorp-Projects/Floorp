@@ -49,6 +49,7 @@ import signal
 import subprocess
 import sys
 import threading
+import tempfile
 
 from automationutils import checkForCrashes
 
@@ -457,6 +458,7 @@ if IS_WIN32:
   import ctypes, time, msvcrt
   PeekNamedPipe = ctypes.windll.kernel32.PeekNamedPipe
   GetLastError = ctypes.windll.kernel32.GetLastError
+
   def readWithTimeout(f, timeout):
     """Try to read a line of output from the file object |f|.
     |f| must be a  pipe, like the |stdout| member of a subprocess.Popen
@@ -483,7 +485,32 @@ if IS_WIN32:
         return (f.readline(), False)
       time.sleep(0.01)
     return ('', True)
+
+  def isPidAlive(pid):
+    STILL_ACTIVE = 259
+    PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+    pHandle = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid)
+    if not pHandle:
+      return False
+    pExitCode = ctypes.wintypes.DWORD()
+    ctypes.windll.kernel32.GetExitCodeProcess(pHandle, ctypes.byref(pExitCode))
+    ctypes.windll.kernel32.CloseHandle(pHandle)
+    if (pExitCode.value == STILL_ACTIVE):
+      return True
+    else:
+      return False
+
+  def killPid(pid):
+    PROCESS_TERMINATE = 0x0001
+    pHandle = ctypes.windll.kernel32.OpenProcess(PROCESS_TERMINATE, 0, pid)
+    if not pHandle:
+      return
+    success = ctypes.windll.kernel32.TerminateProcess(pHandle, 1)
+    ctypes.windll.kernel32.CloseHandle(pHandle)
+
 else:
+  import errno
+
   def readWithTimeout(f, timeout):
     """Try to read a line of output from the file object |f|. If no output
     is received within |timeout| seconds, return a blank line.
@@ -493,6 +520,27 @@ else:
     if len(r) == 0:
       return ('', True)
     return (f.readline(), False)
+
+  def isPidAlive(pid):
+    try:
+      # kill(pid, 0) checks for a valid PID without actually sending a signal
+      # The method throws OSError if the PID is invalid, which we catch below.
+      os.kill(pid, 0)
+
+      # wait on it to see if it's a zombie
+      wpid, wstatus = os.waitpid(pid, os.WNOHANG)
+      if wpid == 0:
+        return True
+
+      return False
+    except OSError, err:
+      # Catch the one error we expect from os.kill, and re-raise any others
+      if err.errno == errno.ESRCH:
+        return False
+      raise
+
+  def killPid(pid):
+    os.kill(pid, signal.SIGKILL)
 
 def triggerBreakpad(proc, utilityPath):
   """Attempt to kill this process in a way that triggers Breakpad crash
@@ -525,6 +573,9 @@ def runApp(testURL, env, app, profileDir, extraArgs,
   # copy env so we don't munge the caller's environment
   env = dict(env);
   env["NO_EM_RESTART"] = "1"
+  tmpfd, processLog = tempfile.mkstemp(suffix='pidlog')
+  os.close(tmpfd)
+  env["MOZ_PROCESS_LOG"] = processLog
 
   if IS_TEST_BUILD and runSSLTunnel:
     # create certificate database for the profile
@@ -614,6 +665,28 @@ def runApp(testURL, env, app, profileDir, extraArgs,
     if status != 0 and not didTimeout:
       log.info("TEST-UNEXPECTED-FAIL | automation.py | Stack fixer process exited with code %d during test run", status)
   log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
+
+  # Do a final check for zombie child processes.
+  if not os.path.exists(processLog):
+    log.info('INFO | automation.py | PID log not found: %s', processLog)
+  else:
+    log.info('INFO | automation.py | Reading PID log: %s', processLog)
+    processList = []
+    pidRE = re.compile(r'launched child process (\d+)$')
+    processLogFD = open(processLog)
+    for line in processLogFD:
+      log.info(line.rstrip())
+      m = pidRE.search(line)
+      if m:
+        processList.append(int(m.group(1)))
+    processLogFD.close()
+    os.unlink(processLog)
+
+    for processPID in processList:
+      log.info("INFO | automation.py | Checking for orphan process with PID: %d", processPID)
+      if isPidAlive(processPID):
+        log.info("TEST-UNEXPECTED-FAIL | automation.py | child process %d still alive after shutdown", processPID)
+        killPid(processPID)
 
   if checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath):
     status = -1
