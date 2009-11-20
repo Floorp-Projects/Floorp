@@ -273,7 +273,7 @@ AsyncChannel::OnChannelError()
     }
     else {
         // Child process, initiate quit sequence.
-#ifdef DEBUG
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
         // XXXbent this is totally out of place, but works for now.
         XRE_ShutdownChildProcess(mWorkerLoop);
 
