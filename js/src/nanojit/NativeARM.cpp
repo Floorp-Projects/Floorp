@@ -964,6 +964,103 @@ branch_is_LDR_PC(NIns* branch)
     return (*branch & 0x0F7FF000) == 0x051FF000;
 }
 
+// Is this an instruction of the form  ldr/str reg, [fp, #-imm] ?
+static inline bool
+is_ldstr_reg_fp_minus_imm(/*OUT*/uint32_t* isLoad, /*OUT*/uint32_t* rX,
+                          /*OUT*/uint32_t* immX, NIns i1)
+{
+    if ((i1 & 0xFFEF0000) != 0xE50B0000)
+        return false;
+    *isLoad = (i1 >> 20) & 1;
+    *rX     = (i1 >> 12) & 0xF;
+    *immX   = i1 & 0xFFF;
+    return true;
+}
+
+// Is this an instruction of the form  ldmdb/stmdb fp, regset ?
+static inline bool
+is_ldstmdb_fp(/*OUT*/uint32_t* isLoad, /*OUT*/uint32_t* regSet, NIns i1)
+{
+    if ((i1 & 0xFFEF0000) != 0xE90B0000)
+        return false;
+    *isLoad = (i1 >> 20) & 1;
+    *regSet = i1 & 0xFFFF;
+    return true;
+}
+
+// Make an instruction of the form ldmdb/stmdb fp, regset
+static inline NIns
+mk_ldstmdb_fp(uint32_t isLoad, uint32_t regSet)
+{
+    return 0xE90B0000 | (regSet & 0xFFFF) | ((isLoad & 1) << 20);
+}
+
+// Compute the number of 1 bits in the lowest 16 bits of regSet
+static inline uint32_t
+size_of_regSet(uint32_t regSet)
+{
+   uint32_t x = regSet;
+   x = (x & 0x5555) + ((x >> 1) & 0x5555);
+   x = (x & 0x3333) + ((x >> 2) & 0x3333);
+   x = (x & 0x0F0F) + ((x >> 4) & 0x0F0F);
+   x = (x & 0x00FF) + ((x >> 8) & 0x00FF);
+   return x;
+}
+
+// See if two ARM instructions, i1 and i2, can be combined into one
+static bool
+do_peep_2_1(/*OUT*/NIns* merged, NIns i1, NIns i2)
+{
+    uint32_t rX, rY, immX, immY, isLoadX, isLoadY, regSet;
+    /*   ld/str rX, [fp, #-8]
+         ld/str rY, [fp, #-4]
+         ==>
+         ld/stmdb fp, {rX, rY}
+         when 
+         X < Y and X != fp and Y != fp and X != 15 and Y != 15
+    */
+    if (is_ldstr_reg_fp_minus_imm(&isLoadX, &rX, &immX, i1) &&
+        is_ldstr_reg_fp_minus_imm(&isLoadY, &rY, &immY, i2) &&
+        immX == 8 && immY == 4 && rX < rY &&
+        isLoadX == isLoadY &&
+        rX != FP && rY != FP &&
+         rX != 15 && rY != 15) {
+        *merged = mk_ldstmdb_fp(isLoadX, (1 << rX) | (1<<rY));
+        return true;
+    }
+    /*   ld/str   rX, [fp, #-N]
+         ld/stmdb fp, regset
+         ==>
+         ld/stmdb fp, union(regset,{rX})
+         when
+         regset is nonempty
+         X < all elements of regset
+         N == 4 * (1 + card(regset))
+         X != fp and X != 15
+    */
+    if (is_ldstr_reg_fp_minus_imm(&isLoadX, &rX, &immX, i1) &&
+        is_ldstmdb_fp(&isLoadY, &regSet, i2) &&
+        regSet != 0 &&
+        (regSet & ((1 << (rX + 1)) - 1)) == 0 &&
+        immX == 4 * (1 + size_of_regSet(regSet)) &&
+        isLoadX == isLoadY &&
+        rX != FP && rX != 15) {
+        *merged = mk_ldstmdb_fp(isLoadX, regSet | (1 << rX));
+        return true;
+    }
+    return false;
+}
+
+// Determine whether or not it's safe to look at _nIns[1].
+// Necessary condition for safe peepholing with do_peep_2_1.
+static inline bool
+does_next_instruction_exist(NIns* _nIns, NIns* codeStart, NIns* codeEnd,
+                            NIns* exitStart, NIns* exitEnd)
+{
+    return (exitStart <= _nIns && _nIns+1 < exitEnd) ||
+           (codeStart <= _nIns && _nIns+1 < codeEnd);
+}
+
 void
 Assembler::nPatchBranch(NIns* branch, NIns* target)
 {
@@ -1118,7 +1215,19 @@ Assembler::asm_restore(LInsp i, Reservation *, Register r)
                 asm_add_imm(IP, FP, d);
             }
         } else {
+            NIns merged;
             LDR(r, FP, d);
+            // See if we can merge this load into an immediately following
+            // one, by creating or extending an LDM instruction.
+            if (/* is it safe to poke _nIns[1] ? */
+                does_next_instruction_exist(_nIns, codeStart, codeEnd, 
+                                                   exitStart, exitEnd)
+                && /* can we merge _nIns[0] into _nIns[1] ? */
+                   do_peep_2_1(&merged, _nIns[0], _nIns[1])) {
+                _nIns[1] = merged;
+                _nIns++;
+                verbose_only( asm_output("merge next into LDMDB"); )
+            }
         }
     }
     verbose_only(
@@ -1140,7 +1249,19 @@ Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
                 asm_add_imm(IP, FP, d);
             }
         } else {
+            NIns merged;
             STR(rr, FP, d);
+            // See if we can merge this store into an immediately following one,
+            // one, by creating or extending a STM instruction.
+            if (/* is it safe to poke _nIns[1] ? */
+                does_next_instruction_exist(_nIns, codeStart, codeEnd, 
+                                                   exitStart, exitEnd)
+                && /* can we merge _nIns[0] into _nIns[1] ? */
+                   do_peep_2_1(&merged, _nIns[0], _nIns[1])) {
+                _nIns[1] = merged;
+                _nIns++;
+                verbose_only( asm_output("merge next into STMDB"); )
+            }
         }
     }
 }

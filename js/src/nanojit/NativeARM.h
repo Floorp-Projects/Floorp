@@ -195,7 +195,6 @@ static inline bool isValidDisplacement(LOpcode op, int32_t d) {
 #define FpRegNum(_fpr)  ((_fpr) - FirstFloatReg)
 
 #define firstreg()      R0
-#define nextreg(r)      ((Register)((int)(r)+1))
 // only good for normal regs
 #define imm2register(c) (Register)(c-1)
 

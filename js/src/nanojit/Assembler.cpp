@@ -1769,7 +1769,15 @@ namespace nanojit
         // evictions and pops first
         RegisterMask skip = 0;
         verbose_only(bool shouldMention=false; )
-        for (Register r=FirstReg; r <= LastReg; r = nextreg(r))
+        // The obvious thing to do here is to iterate from FirstReg to LastReg.
+        // viz: for (Register r=FirstReg; r <= LastReg; r = nextreg(r)) ...
+        // However, on ARM that causes lower-numbered integer registers
+        // to be be saved at higher addresses, which inhibits the formation
+        // of load/store multiple instructions.  Hence iterate the loop the
+        // other way.  The "r <= LastReg" guards against wraparound in
+        // the case where Register is treated as unsigned and FirstReg is zero.
+        for (Register r=LastReg; r >= FirstReg && r <= LastReg;
+                                 r = prevreg(r))
         {
             LIns * curins = _allocator.getActive(r);
             LIns * savedins = saved.getActive(r);
