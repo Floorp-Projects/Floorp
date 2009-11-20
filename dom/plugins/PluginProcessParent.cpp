@@ -62,10 +62,6 @@ PluginProcessParent::PluginProcessParent(const std::string& aPluginFilePath) :
 
 PluginProcessParent::~PluginProcessParent()
 {
-
-
-    printf("TEST-UNEXPECTED-FAIL | about to reap child\n");
-
 }
 
 bool
