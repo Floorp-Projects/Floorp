@@ -2404,6 +2404,14 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mSharedXImage = nsnull;
   mSharedSegmentInfo.shmaddr = nsnull;
 #endif
+
+#ifdef XP_MACOSX
+#ifndef NP_NO_QUICKDRAW
+  mEventModel = NPEventModelCarbon;
+#else
+  mEventModel = NPEventModelCocoa;
+#endif
+#endif
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("nsPluginInstanceOwner %p created\n", this));
 }
