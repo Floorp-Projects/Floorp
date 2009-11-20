@@ -446,7 +446,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
     mNPNIface = bFuncs;
 
     if (!CallNP_Initialize(error)) {
-        return NPERR_GENERIC_ERROR;
+        return NS_ERROR_FAILURE;
     }
     else if (*error != NPERR_NO_ERROR) {
         return NS_OK;
@@ -464,7 +464,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
     mNPNIface = bFuncs;
 
     if (!CallNP_Initialize(error))
-        return NPERR_GENERIC_ERROR;
+        return NS_ERROR_FAILURE;
 
     return NS_OK;
 }

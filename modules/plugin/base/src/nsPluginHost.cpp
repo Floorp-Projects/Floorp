@@ -4013,15 +4013,16 @@ NS_IMETHODIMP nsPluginHost::GetPlugin(const char *aMimeType, nsIPlugin** aPlugin
     if (!plugin) {
       // Now lets try to get the entry point from an NPAPI plugin
       rv = CreateNPAPIPlugin(pluginTag, &plugin);
-      if (NS_SUCCEEDED(rv))
-        pluginTag->mEntryPoint = plugin;
+      if (NS_FAILED(rv))
+        return rv;
+
+      NS_ASSERTION(plugin, "CreateNPAPIPlugin succeeded without setting 'plugin'");
+      pluginTag->mEntryPoint = plugin;
     }
 
-    if (plugin) {
-      *aPlugin = plugin;
-      plugin->AddRef();
-      return NS_OK;
-    }
+    *aPlugin = plugin;
+    plugin->AddRef();
+    return NS_OK;
   }
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,

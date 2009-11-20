@@ -447,8 +447,10 @@ nsNPAPIPlugin::CreatePlugin(const char* aFilePath, PRLibrary* aLibrary,
 
   NPError initError;
   nsresult initResult = pluginLib->NP_Initialize(&(nsNPAPIPlugin::CALLBACKS),&callbacks, &initError);
-  if (initResult != NS_OK || initError != NPERR_NO_ERROR)
+  if (initResult != NS_OK || initError != NPERR_NO_ERROR) {
+    NS_RELEASE(*aResult);
     return NS_ERROR_UNEXPECTED;
+  }
 
   // now copy function table back to nsNPAPIPlugin instance
   memcpy((void*) &(plptr->fCallbacks), (void*)&callbacks, sizeof(callbacks));
