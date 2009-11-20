@@ -41,8 +41,10 @@
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body>
-          if (aEvent.type == "unload")
+        <![CDATA[
+          if (aEvent.originalTarget == document && aEvent.type == "unload")
             this._closed = true;
+            ]]>
         </body>
       </method>
       
