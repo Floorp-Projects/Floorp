@@ -96,7 +96,7 @@ InputStore.prototype = {
     }
     return this.__histDB;
   },
-  
+
   _getIDfromURI: function InputStore__getIDfromURI(uri) {
     let pidStmnt = this._placeDB.createStatement("SELECT id FROM moz_places WHERE url = ?1");
     pidStmnt.bindUTF8StringParameter(0, uri);
@@ -105,31 +105,31 @@ InputStore.prototype = {
     else
       return null;
   },
-  
+
   _getInputHistory: function InputStore__getInputHistory(id) {
     let ipStmnt = this._placeDB.createStatement("SELECT input, use_count FROM moz_inputhistory WHERE place_id = ?1");
     ipStmnt.bindInt32Parameter(0, id);
-    
+
     let input = [];
     while (ipStmnt.executeStep()) {
       let ip = ipStmnt.getUTF8String(0);
       let cnt = ipStmnt.getInt32(1);
       input[input.length] = {'input': ip, 'count': cnt};
     }
-    
+
     return input;
   },
 
   _createCommand: function InputStore__createCommand(command) {
     this._log.info("InputStore got createCommand: " + command);
-    
+
     let placeID = this._getIDfromURI(command.GUID);
     if (placeID) {
       let createStmnt = this._placeDB.createStatement("INSERT INTO moz_inputhistory (?1, ?2, ?3)");
       createStmnt.bindInt32Parameter(0, placeID);
       createStmnt.bindUTF8StringParameter(1, command.data.input);
       createStmnt.bindInt32Parameter(2, command.data.count);
-      
+
       createStmnt.execute();
     }
   },
@@ -144,17 +144,17 @@ InputStore.prototype = {
 
     let placeID = this._getIDfromURI(command.GUID);
     let remStmnt = this._placeDB.createStatement("DELETE FROM moz_inputhistory WHERE place_id = ?1 AND input = ?2");
-    
+
     remStmnt.bindInt32Parameter(0, placeID);
     remStmnt.bindUTF8StringParameter(1, command.data.input);
     remStmnt.execute();
-    
+
     delete this._lookup[command.GUID];
   },
 
   _editCommand: function InputStore__editCommand(command) {
     this._log.info("InputStore got editCommand: " + command);
-    
+
     if (!(command.GUID in this._lookup)) {
       this._log.warn("Invalid GUID found, ignoring remove request.");
       return;
@@ -162,19 +162,19 @@ InputStore.prototype = {
 
     let placeID = this._getIDfromURI(command.GUID);
     let editStmnt = this._placeDB.createStatement("UPDATE moz_inputhistory SET input = ?1, use_count = ?2 WHERE place_id = ?3");
-    
+
     if ('input' in command.data) {
       editStmnt.bindUTF8StringParameter(0, command.data.input);
     } else {
       editStmnt.bindUTF8StringParameter(0, this._lookup[command.GUID].input);
     }
-    
+
     if ('count' in command.data) {
       editStmnt.bindInt32Parameter(1, command.data.count);
     } else {
       editStmnt.bindInt32Parameter(1, this._lookup[command.GUID].count);
     }
-    
+
     editStmnt.bindInt32Parameter(2, placeID);
     editStmnt.execute();
   },
@@ -182,7 +182,7 @@ InputStore.prototype = {
   wrap: function InputStore_wrap() {
     this._lookup = {};
     let stmnt = this._placeDB.createStatement("SELECT * FROM moz_inputhistory");
-    
+
     while (stmnt.executeStep()) {
       let pid = stmnt.getInt32(0);
       let inp = stmnt.getUTF8String(1);
@@ -232,7 +232,7 @@ InputTracker.prototype = {
     return this.__histDB;
   },
 
-  /* 
+  /*
    * To calculate scores, we just count the changes in
    * the database since the last time we were asked.
    *

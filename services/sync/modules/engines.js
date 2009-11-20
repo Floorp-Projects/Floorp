@@ -161,12 +161,12 @@ Engine.prototype = {
       this.__tracker = new this._trackerObj();
     return this.__tracker;
   },
-  
+
   get displayName() {
     try {
       return Str.engines.get(this.name);
     } catch (e) {}
-    
+
     return this._displayName;
   },
 

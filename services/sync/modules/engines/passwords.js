@@ -109,7 +109,7 @@ PasswordStore.prototype = {
     let prop = Cc["@mozilla.org/hash-property-bag;1"].
       createInstance(Ci.nsIWritablePropertyBag2);
     prop.setPropertyAsAUTF8String("guid", id);
-    
+
     let logins = Svc.Login.searchLogins({}, prop);
     if (logins.length > 0) {
       this._log.trace(logins.length + " items matching " + id + " found.");
@@ -119,7 +119,7 @@ PasswordStore.prototype = {
     }
     return false;
   },
-  
+
   getAllIDs: function PasswordStore__getAllIDs() {
     let items = {};
     let logins = Svc.Login.getAllLogins({});
@@ -162,7 +162,7 @@ PasswordStore.prototype = {
     let record = new LoginRec();
     let login = this._getLoginFromGUID(guid);
 
-    record.id = guid;    
+    record.id = guid;
     if (login) {
       record.encryption = cryptoMetaURL;
       record.hostname = login.hostname;
@@ -185,7 +185,7 @@ PasswordStore.prototype = {
 
   remove: function PasswordStore__remove(record) {
     this._log.trace("Removing login " + record.id);
-    
+
     let loginItem = this._getLoginFromGUID(record.id);
     if (!loginItem) {
       this._log.trace("Asked to remove record that doesn't exist, ignoring");

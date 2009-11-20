@@ -141,7 +141,7 @@ WeaveSvc.prototype = {
     // Only do work if it's actually changing
     if (value == this.serverURL)
       return;
-    
+
     // A new server most likely uses a different cluster, so clear that
     Svc.Prefs.set("serverURL", value);
     Svc.Prefs.reset("clusterURL");
@@ -507,7 +507,7 @@ WeaveSvc.prototype = {
   _verifyLogin: function _verifyLogin()
     this._notify("verify-login", "", function() {
       // Make sure we have a cluster to verify against
-      // this is a little weird, if we don't get a node we pretend 
+      // this is a little weird, if we don't get a node we pretend
       // to succeed, since that probably means we just don't have storage
       if (this.clusterURL == "" && !this._setCluster()) {
         Status.sync = NO_SYNC_NODE_FOUND;
@@ -1017,7 +1017,7 @@ WeaveSvc.prototype = {
       if (this.nextSync != 0)
         interval = this.nextSync - Date.now();
       // Use the bigger of default sync interval and backoff
-      else 
+      else
         interval = Math.max(this.syncInterval, Status.backoffInterval);
     }
 
@@ -1075,7 +1075,7 @@ WeaveSvc.prototype = {
           break;
         default:
           this._scheduleNextSync();
-          return; 
+          return;
       }
     }
 

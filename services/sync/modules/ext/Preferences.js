@@ -265,7 +265,7 @@ Preferences.prototype = {
     else
       this._reset(prefName);
   },
-  
+
   _reset: function(prefName) {
     try {
       this._prefSvc.clearUserPref(prefName);
