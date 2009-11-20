@@ -16,25 +16,24 @@ var faultyURL = "http://some-non-existent-domain-27489274c892748217cn2384.com/";
 var w = null;
 var phase = 0;
 
-function pollForPage(expected_title, f, w)
+function pollForPage(expectErrorPage, f, w)
 {
   // Start with polling after a delay, we might mistakenly take the current page
   // as an expected one.
   window.setTimeout(function() {
-    var iterationsLeft = 20;
+    var iterationsLeft = 200;
     var int = window.setInterval(function() {
       iterationsLeft--;
       
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      var haveErrorPage = false;
       try {
         var title = w.document.title;
       }
       catch (ex) {
-        alert(ex);
-        return;
+        haveErrorPage = true;
       }
   
-      if (iterationsLeft == 0 || title.match(expected_title)) {
+      if (iterationsLeft == 0 || expectErrorPage == haveErrorPage) {
         window.clearInterval(int);
         f(iterationsLeft > 0);
       }
@@ -52,7 +51,7 @@ function windowLoaded()
     w.location.href = faultyURL;
   }, 0);
 
-  pollForPage("Problem loading page", function(succeeded) {
+  pollForPage(true, function(succeeded) {
     ok(succeeded, "Waiting for error page succeeded");
     
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -64,7 +63,7 @@ function windowLoaded()
       ok(false, "w.back() threw " + ex);
     }
 
-    pollForPage("Test bug 529119, sub-window", function(succeeded) {
+    pollForPage(false, function(succeeded) {
       ok(succeeded, "Waiting for original page succeeded");
       
       netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
