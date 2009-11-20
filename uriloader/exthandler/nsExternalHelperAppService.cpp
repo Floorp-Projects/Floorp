@@ -517,7 +517,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { "application/x-arj", "arj", "ARJ file" },
   { APPLICATION_XPINSTALL, "xpi", "XPInstall Install" },
   { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File" },
-  { APPLICATION_JAVASCRIPT, "js", "Javascript Source File" },
+  { APPLICATION_XJAVASCRIPT, "js", "Javascript Source File" },
   { IMAGE_ART, "art", "ART Image" },
   { IMAGE_BMP, "bmp", "BMP Image" },
   { IMAGE_GIF, "gif", "GIF Image" },

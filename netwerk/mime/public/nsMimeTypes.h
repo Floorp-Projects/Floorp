@@ -63,7 +63,9 @@
 #define APPLICATION_GZIP3                   "application/x-gunzip"
 #define APPLICATION_ZIP                     "application/zip"
 #define APPLICATION_HTTP_INDEX_FORMAT       "application/http-index-format"
-#define APPLICATION_JAVASCRIPT              "application/x-javascript"
+#define APPLICATION_ECMASCRIPT              "application/ecmascript"
+#define APPLICATION_JAVASCRIPT              "application/javascript"
+#define APPLICATION_XJAVASCRIPT             "application/x-javascript"
 #define APPLICATION_NETSCAPE_REVOCATION     "application/x-netscape-revocation"
 #define APPLICATION_NS_PROXY_AUTOCONFIG     "application/x-ns-proxy-autoconfig"
 #define APPLICATION_NS_JAVASCRIPT_AUTOCONFIG        "application/x-javascript-config"
@@ -94,6 +96,9 @@
 #define APPLICATION_MARIMBA                 "application/marimba"
 #define APPLICATION_XMARIMBA                "application/x-marimba"
 #define APPLICATION_XPINSTALL               "application/x-xpinstall"
+#define APPLICATION_XML                     "application/xml"
+#define APPLICATION_XHTML_XML               "application/xhtml+xml"
+#define APPLICATION_RDF_XML                 "application/rdf+xml"
 
 #define AUDIO_BASIC                         "audio/basic"
 #define AUDIO_OGG                           "audio/ogg"
@@ -113,6 +118,7 @@
 #define IMAGE_ICO                           "image/x-icon"
 #define IMAGE_MNG                           "video/x-mng"
 #define IMAGE_JNG                           "image/x-jng"
+#define IMAGE_SVG_XML                       "image/svg+xml"
 
 #define MESSAGE_EXTERNAL_BODY               "message/external-body"
 #define MESSAGE_NEWS                        "message/news"
@@ -143,6 +149,9 @@
 #define TEXT_XML                            "text/xml"
 #define TEXT_RDF                            "text/rdf"
 #define TEXT_XUL                            "application/vnd.mozilla.xul+xml"
+#define TEXT_ECMASCRIPT                     "text/ecmascript"
+#define TEXT_JAVASCRIPT                     "text/javascript"
+#define TEXT_XSL                            "text/xsl"
 
 #define VIDEO_MPEG                          "video/mpeg"
 #define VIDEO_OGG                           "video/ogg"
@@ -198,5 +207,6 @@
 #define VIEWSOURCE_CONTENT_TYPE             "application/x-view-source"
 
 #define APPLICATION_DIRECTORY				        "application/directory" /* text/x-vcard is synonym */
+#define APPLICATION_CACHED_XUL              "mozilla.application/cached-xul"
 
 #endif /* nsMimeTypes_h_ */
