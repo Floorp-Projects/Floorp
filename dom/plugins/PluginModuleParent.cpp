@@ -141,6 +141,9 @@ PluginModuleParent::NPP_Destroy(NPP instance,
     PluginInstanceParent* parentInstance =
         static_cast<PluginInstanceParent*>(instance->pdata);
 
+    if (!parentInstance)
+        return NPERR_NO_ERROR;
+
     parentInstance->Destroy();
 
     NPError prv;
@@ -150,8 +153,7 @@ PluginModuleParent::NPP_Destroy(NPP instance,
     instance->pdata = nsnull;
 
     return prv;
-
- }
+}
 
 bool
 PluginModuleParent::EnsureValidNPIdentifier(NPIdentifier aIdentifier)
@@ -542,6 +544,11 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
                                         names, values, error)) {
         // |parentInstance| is automatically deleted.
         instance->pdata = nsnull;
+        // if IPC is down, we'll get an immediate "failed" return, but
+        // without *error being set.  So make sure that the error
+        // condition is signaled to nsNPAPIPluginInstance
+        if (NPERR_NO_ERROR == *error)
+            *error = NPERR_GENERIC_ERROR;
         return NS_ERROR_FAILURE;
     }
 
