@@ -600,6 +600,8 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
                                  nsLoadFlags aLoadFlags)
 {
   if (!mLoadingEnabled) {
+    // XXX Why fire an error here? seems like the callers to SetLoadingEnabled
+    // don't want/need it.
     FireEvent(NS_LITERAL_STRING("error"));
     return NS_OK;
   }
