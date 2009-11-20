@@ -93,7 +93,7 @@ PlacesItem.prototype = {
   },
 };
 
-Utils.deferGetSet(PlacesItem, "cleartext", ["predecessorid", "type"]);
+Utils.deferGetSet(PlacesItem, "cleartext", ["parentName", "predecessorid", "type"]);
 
 function Bookmark(uri) {
   this._Bookmark_init(uri);
