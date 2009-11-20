@@ -166,8 +166,6 @@ namespace nanojit
     #define _is_fp_reg_(r)  ((_rmask_(r)&FpRegs)!=0)
     #define _is_gp_reg_(r)  ((_rmask_(r)&GpRegs)!=0)
 
-    #define nextreg(r)      Register(r+1)
-
     verbose_only( extern const char* regNames[]; )
 
     #define DECLARE_PLATFORM_STATS()

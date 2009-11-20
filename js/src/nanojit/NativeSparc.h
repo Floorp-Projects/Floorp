@@ -188,8 +188,6 @@ namespace nanojit
         return true;
     }
 
-#define nextreg(r)        Register(r+1)
-
     verbose_only( extern const char* regNames[]; )
 
 #define DECLARE_PLATFORM_STATS()
