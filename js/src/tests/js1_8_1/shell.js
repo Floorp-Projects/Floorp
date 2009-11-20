@@ -40,8 +40,9 @@
 gTestsuite = 'js1_8_1';
 
 // explicitly turn on js181
+// XXX: The browser currently only supports up to version 1.8
 if (typeof version != 'undefined')
 {
-  version(180);
+  version(181);
 }
 
