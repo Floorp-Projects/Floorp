@@ -80,6 +80,8 @@
 #include "nsFrameSelection.h"
 #include "nsXULPopupManager.h"
 #include "nsImageMapUtils.h"
+#include "nsTreeWalker.h"
+#include "nsIDOMNodeFilter.h"
 
 #ifdef MOZ_XUL
 #include "nsIDOMXULTextboxElement.h"
@@ -2115,6 +2117,8 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
       startContent->IsFocusable(&tabIndex);
     else if (frame)
       frame->IsFocusable(&tabIndex, 0);
+    else
+      startContent->IsFocusable(&tabIndex);
 
     // if the current element isn't tabbable, ignore the tabindex and just
     // look for the next element. The root content won't have a tabindex
@@ -2185,7 +2189,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
                                 endSelectionContent, aNextContent);
             return NS_OK;
           }
-          
+
           // when starting from a selection, we always want to find the next or
           // previous element in the document. So the tabindex on elements
           // should be ignored.
@@ -2356,7 +2360,8 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
 {
   *aResultContent = nsnull;
 
-  if (!aStartContent)
+  nsCOMPtr<nsIContent> startContent = aStartContent;
+  if (!startContent)
     return NS_OK;
 
 #ifdef DEBUG_FOCUS_NAVIGATION
@@ -2366,19 +2371,38 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
 
   nsPresContext* presContext = aPresShell->GetPresContext();
 
+  PRBool getNextFrame = PR_TRUE;
+  nsCOMPtr<nsIContent> iterStartContent = aStartContent;
   while (1) {
-    nsIFrame* aStartFrame = aPresShell->GetPrimaryFrameFor(aStartContent);
-    if (!aStartFrame) {
-      // if there is no frame, just get the root frame
-      aStartFrame = aPresShell->GetPrimaryFrameFor(aRootContent);
-      if (!aStartFrame)
+    nsIFrame* startFrame = aPresShell->GetPrimaryFrameFor(iterStartContent);
+    // if there is no frame, look for another content node that has a frame
+    if (!startFrame) {
+      // if the root content doesn't have a frame, just return
+      if (iterStartContent == aRootContent)
         return NS_OK;
-      aStartContent = aRootContent;
+
+      // look for the next or previous content node in tree order
+      nsTreeWalker walker(aRootContent, nsIDOMNodeFilter::SHOW_ALL, nsnull, PR_TRUE);
+      nsCOMPtr<nsIDOMNode> nextNode = do_QueryInterface(iterStartContent);
+      walker.SetCurrentNode(nextNode);
+      if (NS_SUCCEEDED(aForward ? walker.NextNode(getter_AddRefs(nextNode)) :
+                                  walker.PreviousNode(getter_AddRefs(nextNode)))) {
+        iterStartContent = do_QueryInterface(nextNode);
+        // we've already skipped over the initial focused content, so we
+        // don't want to traverse frames.
+        getNextFrame = PR_FALSE;
+        if (iterStartContent)
+          continue;
+      }
+
+      // otherwise, as a last attempt, just look at the root content
+      iterStartContent = aRootContent;
+      continue;
     }
 
     nsCOMPtr<nsIFrameEnumerator> frameTraversal;
     nsresult rv = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
-                                       presContext, aStartFrame,
+                                       presContext, startFrame,
                                        ePreOrder,
                                        PR_FALSE, // aVisual
                                        PR_FALSE, // aLockInScrollView
@@ -2386,12 +2410,13 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
                                        );
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (aStartContent == aRootContent) {
+    if (iterStartContent == aRootContent) {
       if (!aForward)
         frameTraversal->Last();
     }
-    else if (!aStartContent || aStartContent->Tag() != nsGkAtoms::area ||
-             !aStartContent->IsHTML()) {
+    else if (getNextFrame &&
+             (!iterStartContent || iterStartContent->Tag() != nsGkAtoms::area ||
+              !iterStartContent->IsHTML())) {
       // Need to do special check in case we're in an imagemap which has multiple
       // content nodes per frame, so don't skip over the starting frame.
       if (aForward)
@@ -2430,7 +2455,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
           // nsIFrameTraversal so look for the next or previous area element.
           nsIContent *areaContent =
             GetNextTabbableMapArea(aForward, aCurrentTabIndex,
-                                   currentContent, aStartContent);
+                                   currentContent, iterStartContent);
           if (areaContent) {
             NS_ADDREF(*aResultContent = areaContent);
             return NS_OK;
@@ -2487,7 +2512,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
           // a textbox is focused, the enclosing textbox would be found and
           // the same inner input would be returned again.
           else if (currentContent == aRootContent ||
-                   (currentContent != aStartContent &&
+                   (currentContent != startContent &&
                     (aForward || !GetRedirectedFocus(currentContent)))) {
             NS_ADDREF(*aResultContent = currentContent);
             return NS_OK;
@@ -2535,7 +2560,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
 
     // continue looking for next highest priority tabindex
     aCurrentTabIndex = GetNextTabIndex(aRootContent, aCurrentTabIndex, aForward);
-    aStartContent = aRootContent;
+    startContent = iterStartContent = aRootContent;
   }
 
   return NS_OK;
