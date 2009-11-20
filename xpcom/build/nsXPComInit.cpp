@@ -679,6 +679,10 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 
         if (observerService)
         {
+            (void) observerService->
+                NotifyObservers(nsnull, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID,
+                                nsnull);
+
             nsCOMPtr<nsIServiceManager> mgr;
             rv = NS_GetServiceManager(getter_AddRefs(mgr));
             if (NS_SUCCEEDED(rv))
