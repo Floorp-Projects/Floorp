@@ -148,12 +148,8 @@ public:
   static PRBool
   IsMutableOperator(const nsString& aOperator);
 
-  // Helper functions for stretchy operators. These are used by the
-  // nsMathMLChar class.
-  static PRInt32 CountStretchyOperator();
-  static PRInt32 FindStretchyOperator(PRUnichar aOperator);
-  static nsStretchDirection GetStretchyDirectionAt(PRInt32 aIndex);
-  static void DisableStretchyOperatorAt(PRInt32 aIndex);
+  // Helper function used by the nsMathMLChar class.
+  static nsStretchDirection GetStretchyDirection(const nsString& aOperator);
 
   // Return the variant type of one Unicode Mathematical Alphanumeric Symbol
   // character (which may be represented by a surrogate pair), or return
@@ -168,7 +164,6 @@ public:
   static const nsDependentSubstring
   TransformVariantChar(const PRUnichar& aChar, eMATHVARIANT aVariant);
 };
-
 
 ////////////////////////////////////////////////////////////////////////////
 // Macros that retrieve the bits used to handle operators

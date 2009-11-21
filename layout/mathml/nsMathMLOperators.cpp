@@ -67,11 +67,10 @@ struct OperatorData {
 };
 
 static PRInt32         gTableRefCount = 0;
-static PRInt32         gOperatorCount = 0;
+static PRUint32        gOperatorCount = 0;
 static OperatorData*   gOperatorArray = nsnull;
 static nsHashtable*    gOperatorTable = nsnull;
 static PRBool          gInitialized   = PR_FALSE;
-static nsTArray<OperatorData*>* gStretchyOperatorArray = nsnull;
 static nsTArray<nsString>*      gInvariantCharArray    = nsnull;
 
 static const PRUnichar kNullCh  = PRUnichar('\0');
@@ -102,13 +101,9 @@ SetBooleanProperty(OperatorData* aOperatorData,
   if (aName.IsEmpty())
     return;
 
-  if (aName.EqualsLiteral("stretchy") && (1 == aOperatorData->mStr.Length())) {
+  if (aName.EqualsLiteral("stretchy") && (1 == aOperatorData->mStr.Length()))
     aOperatorData->mFlags |= NS_MATHML_OPERATOR_STRETCHY;
-    if (kNotFound ==
-        nsMathMLOperators::FindStretchyOperator(aOperatorData->mStr[0])) {
-      gStretchyOperatorArray->AppendElement(aOperatorData);
-    }
-  } else if (aName.EqualsLiteral("fence"))
+  else if (aName.EqualsLiteral("fence"))
     aOperatorData->mFlags |= NS_MATHML_OPERATOR_FENCE;
   else if (aName.EqualsLiteral("accent"))
     aOperatorData->mFlags |= NS_MATHML_OPERATOR_ACCENT;
@@ -299,7 +294,7 @@ InitOperators(void)
     nsCOMPtr<nsISimpleEnumerator> iterator;
     if (NS_SUCCEEDED(mathfontProp->Enumerate(getter_AddRefs(iterator)))) {
       PRBool more;
-      PRInt32 index = 0;
+      PRUint32 index = 0;
       nsCAutoString name;
       nsAutoString attributes;
       while ((NS_SUCCEEDED(iterator->HasMoreElements(&more))) && more) {
@@ -357,8 +352,7 @@ InitGlobals()
   gInitialized = PR_TRUE;
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   gInvariantCharArray = new nsTArray<nsString>();
-  gStretchyOperatorArray = new nsTArray<OperatorData*>();
-  if (gInvariantCharArray && gStretchyOperatorArray) {
+  if (gInvariantCharArray) {
     gOperatorTable = new nsHashtable();
     if (gOperatorTable) {
       rv = InitOperators();
@@ -379,10 +373,6 @@ nsMathMLOperators::CleanUp()
   if (gOperatorArray) {
     delete[] gOperatorArray;
     gOperatorArray = nsnull;
-  }
-  if (gStretchyOperatorArray) {
-    delete gStretchyOperatorArray;
-    gStretchyOperatorArray = nsnull;
   }
   if (gOperatorTable) {
     delete gOperatorTable;
@@ -523,59 +513,24 @@ nsMathMLOperators::IsMutableOperator(const nsString& aOperator)
          NS_MATHML_OPERATOR_IS_LARGEOP(allFlags);
 }
 
-PRInt32
-nsMathMLOperators::CountStretchyOperator()
+/* static */ nsStretchDirection
+nsMathMLOperators::GetStretchyDirection(const nsString& aOperator)
 {
-  if (!gInitialized) {
-    InitGlobals();
-  }
-  return (gStretchyOperatorArray) ? gStretchyOperatorArray->Length() : 0;
-}
+  // LookupOperator will search infix, postfix and prefix forms of aOperator and
+  // return the first form found. It is assumed that all these forms have same
+  // direction.
+  nsOperatorFlags flags = 0;
+  float dummy;
+  nsMathMLOperators::LookupOperator(aOperator,
+                                    NS_MATHML_OPERATOR_FORM_INFIX,
+                                    &flags, &dummy, &dummy);
 
-PRInt32
-nsMathMLOperators::FindStretchyOperator(PRUnichar aOperator)
-{
-  if (!gInitialized) {
-    InitGlobals();
-  }
-  if (gStretchyOperatorArray) {
-    for (PRUint32 k = 0; k < gStretchyOperatorArray->Length(); k++) {
-      OperatorData* data = gStretchyOperatorArray->ElementAt(k);
-      if (data && (aOperator == data->mStr[0])) {
-        return k;
-      }
-    }
-  }
-  return kNotFound;
-}
-
-nsStretchDirection
-nsMathMLOperators::GetStretchyDirectionAt(PRInt32 aIndex)
-{
-  NS_ASSERTION(gStretchyOperatorArray, "invalid call");
-  if (gStretchyOperatorArray) {
-    NS_ASSERTION(aIndex < PRInt32(gStretchyOperatorArray->Length()),
-                 "invalid call");
-    OperatorData* data = gStretchyOperatorArray->ElementAt(aIndex);
-    if (data) {
-      if (NS_MATHML_OPERATOR_IS_DIRECTION_VERTICAL(data->mFlags))
-        return NS_STRETCH_DIRECTION_VERTICAL;
-      else if (NS_MATHML_OPERATOR_IS_DIRECTION_HORIZONTAL(data->mFlags))
-        return NS_STRETCH_DIRECTION_HORIZONTAL;
-      NS_ASSERTION(PR_FALSE, "*** bad setup ***");
-    }
-  }
-  return NS_STRETCH_DIRECTION_UNSUPPORTED;
-}
-
-void
-nsMathMLOperators::DisableStretchyOperatorAt(PRInt32 aIndex)
-{
-  NS_ASSERTION(gStretchyOperatorArray, "invalid call");
-  if (gStretchyOperatorArray) {
-    NS_ASSERTION(aIndex < PRInt32(gStretchyOperatorArray->Length()),
-                 "invalid call");
-    (*gStretchyOperatorArray)[aIndex] = nsnull;
+  if (NS_MATHML_OPERATOR_IS_DIRECTION_VERTICAL(flags)) {
+      return NS_STRETCH_DIRECTION_VERTICAL;
+  } else if (NS_MATHML_OPERATOR_IS_DIRECTION_HORIZONTAL(flags)) {
+    return NS_STRETCH_DIRECTION_HORIZONTAL;
+  } else {
+    return NS_STRETCH_DIRECTION_UNSUPPORTED;
   }
 }
 

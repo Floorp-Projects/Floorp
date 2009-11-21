@@ -23,6 +23,7 @@
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
+ *   Frederic Wang <fred.wang@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -755,11 +756,6 @@ InitGlobals(nsPresContext* aPresContext)
 {
   NS_ASSERTION(!gInitialized, "Error -- already initialized");
   gInitialized = PR_TRUE;
-  PRUint32 count = nsMathMLOperators::CountStretchyOperator();
-  if (!count) {
-    // nothing to stretch, so why bother...
-    return NS_OK;
-  }
 
   // Allocate the placeholders for the preferred parts and variants
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
@@ -867,25 +863,19 @@ nsMathMLChar::SetData(nsPresContext* aPresContext,
   mData = aData;
   // some assumptions until proven otherwise
   // note that mGlyph is not initialized
-  mOperator = -1;
   mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
   mBoundingMetrics.Clear();
   mGlyphTable = nsnull;
   // check if stretching is applicable ...
   if (gGlyphTableList && (1 == mData.Length())) {
-    mOperator = nsMathMLOperators::FindStretchyOperator(mData[0]);
-    if (mOperator >= 0) {
-      mDirection = nsMathMLOperators::GetStretchyDirectionAt(mOperator);
-      // default tentative table (not the one that is necessarily going to be used)
-      mGlyphTable = gGlyphTableList->GetGlyphTableFor(aPresContext, this);
-      // commom case: we won't bother with the stretching if there is
-      // no glyph table for us...
-      if (!mGlyphTable) { // TODO: consider scaling the base char
-        // never try to stretch this operator again
-        nsMathMLOperators::DisableStretchyOperatorAt(mOperator);
-        mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
-        mOperator = -1;
-      }
+    mDirection = nsMathMLOperators::GetStretchyDirection(mData);
+    // default tentative table (not the one that is necessarily going
+    // to be used)
+    mGlyphTable = gGlyphTableList->GetGlyphTableFor(aPresContext, this);
+    // commom case: we won't bother with the stretching if there is
+    // no glyph table for us...
+    if (!mGlyphTable) { // TODO: consider scaling the base char
+      mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
     }
   }
 }
@@ -1547,11 +1537,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   // if we have been called before, and we didn't actually stretch, our
   // direction may have been set to NS_STRETCH_DIRECTION_UNSUPPORTED.
   // So first set our direction back to its instrinsic value
-  nsStretchDirection direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-  if (mOperator >= 0) {
-    // mOperator is initialized in SetData() and remains unchanged
-    direction = nsMathMLOperators::GetStretchyDirectionAt(mOperator);
-  }
+  nsStretchDirection direction = nsMathMLOperators::GetStretchyDirection(mData);
 
   // Set default font and get the default bounding metrics
   // mStyleContext is a leaf context used only when stretching happens.
@@ -1829,7 +1815,6 @@ nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
   for (i = 0, child = mSibling; child; child = child->mSibling, i++) {
     // child chars should just inherit our values - which may change between calls...
     child->mData = mData;
-    child->mOperator = mOperator;
     child->mDirection = mDirection;
     child->mStyleContext = mStyleContext;
     child->mGlyphTable = aGlyphTable; // the child is associated to this table
