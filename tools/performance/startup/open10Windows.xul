@@ -1,11 +1,11 @@
-<?xml version="1.0"?> <!-- -*- Mode: HTML -*- --> 
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- -->
 
 <!DOCTYPE window>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="open10Windows"
         onload="onload();">
-    <script type="application/x-javascript">
+    <script type="application/javascript">
         <![CDATA[
             const n = 11;
             var sub = [];

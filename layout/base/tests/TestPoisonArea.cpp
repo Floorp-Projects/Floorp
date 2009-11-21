@@ -159,6 +159,7 @@ typedef unsigned int uint32_t;
  */
 
 #if defined __i386__ || defined __x86_64__ ||   \
+  defined __i386 || defined __x86_64 ||         \
   defined _M_IX86 || defined _M_AMD64
 #define RETURN_INSTR 0xC3C3C3C3  /* ret; ret; ret; ret */
 
@@ -169,6 +170,9 @@ typedef unsigned int uint32_t;
 // PPC as far as I know, so no _M_ variant.
 #elif defined _ARCH_PPC || defined _ARCH_PWR || defined _ARCH_PWR2
 #define RETURN_INSTR 0x4E800020 /* blr */
+
+#elif defined __sparc || defined __sparcv9
+#define RETURN_INSTR 0x81c3e008 /* retl */
 
 #else
 #error "Need return instruction for this architecture"
@@ -257,7 +261,7 @@ static unsigned long _pagesize;
 static void *
 ReserveRegion(uintptr_t request, bool accessible)
 {
-  return mmap((void *)request, PAGESIZE,
+  return mmap((caddr_t)request, PAGESIZE,
               accessible ? PROT_READ|PROT_WRITE : PROT_NONE,
               MAP_PRIVATE|MAP_ANON, -1, 0);
 }
@@ -265,13 +269,13 @@ ReserveRegion(uintptr_t request, bool accessible)
 static void
 ReleaseRegion(void *page)
 {
-  munmap(page, PAGESIZE);
+  munmap((caddr_t)page, PAGESIZE);
 }
 
 static bool
 ProbeRegion(uintptr_t page)
 {
-  if (madvise((void *)page, PAGESIZE, MADV_NORMAL)) {
+  if (madvise((caddr_t)page, PAGESIZE, MADV_NORMAL)) {
     return true;
   } else {
     return false;
@@ -281,7 +285,7 @@ ProbeRegion(uintptr_t page)
 static int
 MakeRegionExecutable(void *page)
 {
-  return mprotect(page, PAGESIZE, PROT_READ|PROT_WRITE|PROT_EXEC);
+  return mprotect((caddr_t)page, PAGESIZE, PROT_READ|PROT_WRITE|PROT_EXEC);
 }
 
 #endif
@@ -437,7 +441,7 @@ TestPage(const char *pagelabel, uintptr_t pageaddr, int should_succeed)
              LastErrMsg());
       exit(2);
     } else if (pid == 0) {
-      unsigned char scratch;
+      volatile unsigned char scratch;
       switch (test) {
       case 0: scratch = *(volatile unsigned char *)opaddr; break;
       case 1: ((void (*)())opaddr)(); break;

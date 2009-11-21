@@ -316,6 +316,9 @@ protected:
    * node, in the case of recursive or looping calls.
    *
    * aStartContent is the starting point for this call of this method.
+   * If aStartContent doesn't have visual representation, the next content
+   * object, which does have a primary frame, will be used as a start.
+   * If that content object is focusable, the method may return it.
    *
    * aForward should be true for forward navigation or false for backward
    * navigation.

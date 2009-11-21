@@ -73,6 +73,8 @@ class NS_COM_GLUE nsCategoryObserver : public nsIObserver {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
   private:
+    NS_HIDDEN_(void) RemoveObservers();
+
     nsDataHashtable<nsCStringHashKey, nsCString> mHash;
     nsCategoryListener*                          mListener;
     nsCString                                    mCategory;

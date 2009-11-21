@@ -223,7 +223,7 @@ var gUpdates = {
     //
     // Encode version since it could be a non-ascii string (bug 359093)
     var neverPrefName = PREF_UPDATE_NEVER_BRANCH +
-                       encodeURIComponent(gUpdates.update.version);
+                        encodeURIComponent(gUpdates.update.version);
     gPref.setBoolPref(neverPrefName, true);
     this.wiz.cancel();
   },
@@ -761,6 +761,13 @@ var gManualUpdatePage = {
     var manualUpdateLinkLabel = document.getElementById("manualUpdateLinkLabel");
     manualUpdateLinkLabel.value = manualURL;
     manualUpdateLinkLabel.setAttribute("url", manualURL);
+
+    // Prevent multiple notifications for the same update when the user is
+    // unable to apply updates.
+    // Encode version since it could be a non-ascii string (bug 359093)
+    var neverPrefName = PREF_UPDATE_NEVER_BRANCH +
+                        encodeURIComponent(gUpdates.update.version);
+    gPref.setBoolPref(neverPrefName, true);
 
     gUpdates.setButtons(null, null, "okButton", true);
     gUpdates.wiz.getButton("finish").focus();

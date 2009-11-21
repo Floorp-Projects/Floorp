@@ -48,7 +48,7 @@ if [ $# = 0 ]; then
   exit 1
 fi
 
-requested_forced_updates=''
+requested_forced_updates='components/components.list Contents/MacOS/components/components.list'
 
 while getopts "hf:" flag
 do
@@ -109,6 +109,15 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
 
   # If this file exists in the new directory as well, then check if it differs.
   if [ -f "$newdir/$f" ]; then
+
+    if check_for_forced_update "$requested_forced_updates" "$f"; then
+      echo 1>&2 "  FORCING UPDATE for file '$f'..."
+      $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
+      make_add_instruction "$f" >> $manifest
+      archivefiles="$archivefiles \"$f\""
+      continue 1
+    fi
+
     if ! diff "$olddir/$f" "$newdir/$f" > /dev/null; then
       # Compute both the compressed binary diff and the compressed file, and
       # compare the sizes.  Then choose the smaller of the two to package.
@@ -121,14 +130,6 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       patchfile="$workdir/$f.patch.bz2"
       patchsize=$(get_file_size "$patchfile")
       fullsize=$(get_file_size "$workdir/$f")
-
-      if check_for_forced_update "$requested_forced_updates" "$f"; then
-        echo 1>&2 "  FORCING UPDATE for file '$f'..."
-        make_add_instruction "$f" >> $manifest
-        rm -f "$patchfile"
-        archivefiles="$archivefiles \"$f\""
-        continue 1
-      fi
 
       if [ $patchsize -lt $fullsize -a "$f" != "removed-files" ]; then
         make_patch_instruction "$f" >> $manifest
