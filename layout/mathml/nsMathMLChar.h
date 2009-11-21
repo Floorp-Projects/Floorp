@@ -23,6 +23,7 @@
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  *   Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
+ *   Frederic Wang <fred.wang@free.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -236,7 +237,6 @@ protected:
 
 private:
   nsRect             mRect;
-  PRInt32            mOperator;
   nsStretchDirection mDirection;
   nsBoundingMetrics  mBoundingMetrics;
   nsStyleContext*    mStyleContext;
