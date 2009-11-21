@@ -378,8 +378,6 @@ ReadFuncBinaryString(nsIInputStream* in,
     ++source;
   }
   *writeCount = count;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
