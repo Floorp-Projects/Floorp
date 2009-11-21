@@ -116,6 +116,20 @@ r.readAsText(createFileWithData(convertToUTF32(testTextData)), "UTF-32");
 expectedTestCount++;
 
 
+// Test reusing a FileReader to read multiple times
+r = new FileReader();
+r.onload = getLoadHandler(testASCIIData, "to-be-reused reading")
+var makeAnotherReadListener = function(event) {
+  r = event.target;
+  r.removeEventListener("load", makeAnotherReadListener, false);
+  r.onload = getLoadHandler(testBinaryData, "reused reading");
+  r.readAsBinaryString(binaryFile);
+};
+r.addEventListener("load", makeAnotherReadListener, false);
+r.readAsText(asciiFile, "");
+expectedTestCount += 2;
+
+
 //Test data-URI encoding on differing file sizes
 dataurldata = testBinaryData.substr(0, testBinaryData.length -
                                        testBinaryData.length % 3);
