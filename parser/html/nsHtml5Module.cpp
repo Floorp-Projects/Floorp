@@ -59,8 +59,6 @@ nsHtml5Module::InitializeStatics()
 {
   nsContentUtils::AddBoolPrefVarCache("html5.enable", &sEnabled);
   nsContentUtils::AddBoolPrefVarCache("html5.offmainthread", &sOffMainThread);
-  NS_NewThread(&sStreamParserThread);
-  NS_GetMainThread(&sMainThread);
   nsHtml5Atoms::AddRefAtoms();
   nsHtml5AttributeName::initializeStatics();
   nsHtml5ElementName::initializeStatics();
@@ -92,7 +90,9 @@ nsHtml5Module::ReleaseStatics()
   nsHtml5Tokenizer::releaseStatics();
   nsHtml5TreeBuilder::releaseStatics();
   nsHtml5UTF16Buffer::releaseStatics();
-  sStreamParserThread->Shutdown();
+  if (sStreamParserThread) {
+    sStreamParserThread->Shutdown();
+  }
   NS_IF_RELEASE(sStreamParserThread);
   NS_IF_RELEASE(sMainThread);
 }
@@ -120,7 +120,18 @@ nsHtml5Module::Initialize(nsIParser* aParser, nsIDocument* aDoc, nsIURI* aURI, n
 nsIThread*
 nsHtml5Module::GetStreamParserThread()
 {
-  return sOffMainThread ? sStreamParserThread : sMainThread;
+  if (sOffMainThread) {
+    if (!sStreamParserThread) {
+      NS_NewThread(&sStreamParserThread);
+      NS_ASSERTION(sStreamParserThread, "Thread creation failed!");
+    }
+    return sStreamParserThread;
+  }
+  if (!sMainThread) {
+    NS_GetMainThread(&sMainThread);
+    NS_ASSERTION(sMainThread, "Main thread getter failed");
+  }
+  return sMainThread;
 }
 
 #ifdef DEBUG

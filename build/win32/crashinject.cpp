@@ -43,7 +43,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <Windows.h>
+#include <windows.h>
 
 int main(int argc, char** argv)
 {
@@ -51,7 +51,7 @@ int main(int argc, char** argv)
     fprintf(stderr, "Usage: crashinject <PID>\n");
     return 1;
   }
-  
+
   int pid = atoi(argv[1]);
   if (pid <= 0) {
     fprintf(stderr, "Usage: crashinject <PID>\n");
@@ -123,6 +123,6 @@ int main(int argc, char** argv)
   CloseHandle(hThread);
   VirtualFreeEx(targetProc, pLibRemote, sizeof(filename), MEM_RELEASE);
   CloseHandle(targetProc);
-  
+
   return 0;
 }

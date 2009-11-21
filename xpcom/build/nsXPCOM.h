@@ -521,6 +521,13 @@ NS_CycleCollectorForget2(nsPurpleBufferEntry *e);
 #define NS_XPCOM_STARTUP_OBSERVER_ID "xpcom-startup"
 
 /**
+ * At XPCOM shutdown, this topic is notified just before "xpcom-shutdown".
+ * Components should only use this to mark themselves as 'being destroyed'.
+ * Nothing should be dispatched to any event loop.
+ */
+#define NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID "xpcom-will-shutdown"
+
+/**
  * At XPCOM shutdown, this topic is notified. All components must
  * release any interface references to objects in other modules when
  * this topic is notified.

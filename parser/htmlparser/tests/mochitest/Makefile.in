@@ -57,7 +57,6 @@ _TEST_FILES =	parser_datreader.js \
 		test_bug396568.html \
 		test_bug418464.html \
 		test_bug460437.xhtml \
-		test_bug502091.html \
 		bug_502091_iframe.html \
 		test_compatmode.html \
 		regressions.txt \
@@ -66,3 +65,6 @@ _TEST_FILES =	parser_datreader.js \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+# Disabled due to bug 529544
+#		test_bug502091.html \

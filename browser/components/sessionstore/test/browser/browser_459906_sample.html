@@ -8,8 +8,14 @@
 <iframe></iframe>
 
 <script type="application/javascript">
-  frames[0].addEventListener("DOMContentLoaded", function() {
-    frames[0].removeEventListener("DOMContentLoaded", arguments.callee, false);
+  var loadCount = 0;
+  frames[0].addEventListener("DOMContentLoaded", handleLoad, false);
+  frames[1].addEventListener("DOMContentLoaded", handleLoad, false);
+  function handleLoad() {
+    if (++loadCount < 2)
+      return;
+    frames[0].removeEventListener("DOMContentLoaded", handleLoad, false);
+    frames[1].removeEventListener("DOMContentLoaded", handleLoad, false);
     frames[0].document.designMode = "on";
     frames[0].document.__defineGetter__("designMode", function() {
       // inject a cross domain file ...
@@ -26,11 +32,11 @@
         r.overrideMimeType("text/plain");
         r.send(null);
       }
-      
+
       return "on";
     });
-    
+
     frames[1].document.designMode = "on";
-  }, false);
+  };
 </script>
 </body>

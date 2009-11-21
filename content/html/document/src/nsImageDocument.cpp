@@ -73,6 +73,7 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsThreadUtils.h"
 
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
 #define CLICK_IMAGE_RESIZING_PREF "browser.enable_click_image_resizing"
@@ -127,6 +128,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsImageDocument, nsMediaDocument)
 
   friend class ImageListener;
+
+  void DefaultCheckOverflowing() { CheckOverflowing(mResizeImageByDefault); }
+
 protected:
   virtual nsresult CreateSyntheticDocument();
 
@@ -572,7 +576,9 @@ nsImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
 {
   aImage->GetWidth(&mImageWidth);
   aImage->GetHeight(&mImageHeight);
-  CheckOverflowing(mResizeImageByDefault);
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NEW_RUNNABLE_METHOD(nsImageDocument, this, DefaultCheckOverflowing);
+  nsContentUtils::AddScriptRunner(runnable);
   UpdateTitleAndCharset();
 
   return NS_OK;
