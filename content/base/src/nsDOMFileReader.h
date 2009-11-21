@@ -122,7 +122,6 @@ protected:
   char *mFileData;
   nsCOMPtr<nsIFile> mFile;
   nsString mCharset;
-  PRUint32 mReadCount;
   PRUint32 mDataLen;
   PRUint32 mDataFormat;
 
@@ -137,9 +136,8 @@ protected:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
 
-  PRUint64 mReadTotal;
+  PRInt64 mReadTotal;
   PRUint64 mReadTransferred;
-  PRPackedBool mReadComplete;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnLoadEndListener;
 };
