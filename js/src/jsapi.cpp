@@ -1618,15 +1618,11 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
 static JSBool
 AlreadyHasOwnProperty(JSContext *cx, JSObject *obj, JSAtom *atom)
 {
-    JSScopeProperty *sprop;
-    JSScope *scope;
-
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
     JS_LOCK_OBJ(cx, obj);
-    scope = OBJ_SCOPE(obj);
-    sprop = scope->lookup(ATOM_TO_JSID(atom));
+    JSScope *scope = OBJ_SCOPE(obj);
+    bool found = scope->hasProperty(ATOM_TO_JSID(atom));
     JS_UNLOCK_SCOPE(cx, scope);
-    return sprop != NULL;
+    return found;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3402,7 +3398,7 @@ AlreadyHasOwnPropertyHelper(JSContext *cx, JSObject *obj, jsid id,
 
     JS_LOCK_OBJ(cx, obj);
     scope = OBJ_SCOPE(obj);
-    *foundp = (scope->lookup(id) != NULL);
+    *foundp = scope->hasProperty(id);
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
 }
@@ -4086,7 +4082,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
     if (OBJ_IS_NATIVE(obj)) {
         /* Native case: start with the last property in obj's own scope. */
         scope = OBJ_SCOPE(obj);
-        pdata = scope->lastProp;
+        pdata = scope->lastProperty();
         index = -1;
     } else {
         /*
@@ -4129,15 +4125,12 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
 
         /*
          * If the next property mapped by scope in the property tree ancestor
-         * line is not enumerable, or it's an alias, or one or more properties
-         * were deleted from the "middle" of the scope-mapped ancestor line
-         * and the next property was among those deleted, skip it and keep on
-         * trying to find an enumerable property that is still in scope.
+         * line is not enumerable, or it's an alias, skip it and keep on trying
+         * to find an enumerable property that is still in scope.
          */
         while (sprop &&
                (!(sprop->attrs & JSPROP_ENUMERATE) ||
-                (sprop->flags & SPROP_IS_ALIAS) ||
-                (scope->hadMiddleDelete() && !scope->has(sprop)))) {
+                (sprop->flags & SPROP_IS_ALIAS))) {
             sprop = sprop->parent;
         }
 

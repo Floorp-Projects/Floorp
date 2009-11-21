@@ -3261,7 +3261,7 @@ PopStatement(JSTreeContext *tc)
         JSScope *scope = OBJ_SCOPE(obj);
         JS_ASSERT(!OBJ_IS_CLONED_BLOCK(obj));
 
-        for (JSScopeProperty *sprop = scope->lastProp; sprop; sprop = sprop->parent) {
+        for (JSScopeProperty *sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
             JSAtom *atom = JSID_TO_ATOM(sprop->id);
 
             /* Beware the empty destructuring dummy. */
