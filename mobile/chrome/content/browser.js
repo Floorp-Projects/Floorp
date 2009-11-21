@@ -1477,7 +1477,7 @@ const BrowserSearch = {
       container.removeChild(buttons[i]);
 
     if (newEngines.length == 0) {
-      container.hidden = true;
+      container.collapsed = true;
       return;
     }
 
@@ -1485,7 +1485,7 @@ const BrowserSearch = {
     for (let i = 0; i<1; i++) {
       let button = document.createElement("button");
       button.className = "search-engine-button button-dark";
-      button.setAttribute("oncommand", "BrowserSearch.addPermanentSearchEngine(this.engine);this.parentNode.hidden=true;");
+      button.setAttribute("oncommand", "BrowserSearch.addPermanentSearchEngine(this.engine);this.parentNode.collapsed=true;");
       
       let engine = newEngines[i];
       button.engine = engine.engine;
@@ -1495,7 +1495,7 @@ const BrowserSearch = {
       container.appendChild(button);
     }
 
-    container.hidden = false;
+    container.collapsed = false;
   },
 
   addPermanentSearchEngine: function (aEngine) {
