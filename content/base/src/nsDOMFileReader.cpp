@@ -360,6 +360,26 @@ nsDOMFileReader::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   return NS_OK;
 }
 
+static
+NS_METHOD
+ReadFuncBinaryString(nsIInputStream* in,
+                     void* closure,
+                     const char* fromRawSegment,
+                     PRUint32 toOffset,
+                     PRUint32 count,
+                     PRUint32 *writeCount)
+{
+  PRUnichar* dest = static_cast<PRUnichar*>(closure) + toOffset;
+  PRUnichar* end = dest + count;
+  const unsigned char* source = (const unsigned char*)fromRawSegment;
+  while (dest != end) {
+    *dest = *source;
+    ++dest;
+    ++source;
+  }
+  *writeCount = count;
+}
+
 NS_IMETHODIMP
 nsDOMFileReader::OnDataAvailable(nsIRequest *aRequest,
                                  nsISupports *aContext,
@@ -367,6 +387,21 @@ nsDOMFileReader::OnDataAvailable(nsIRequest *aRequest,
                                  PRUint32 aOffset,
                                  PRUint32 aCount)
 {
+  //Continuously update our binary string as data comes in
+  if (mDataFormat == FILE_AS_BINARY) {
+    PRUint32 oldLen = mResult.Length();
+    PRUnichar *buf = nsnull;
+    mResult.GetMutableData(&buf, oldLen + aCount);
+    NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
+
+    PRUint32 bytesRead;
+    aInputStream->ReadSegments(ReadFuncBinaryString, buf + oldLen, aCount,
+                               &bytesRead);
+    NS_ASSERTION(bytesRead == aCount, "failed to read data");
+
+    return NS_OK;
+  }
+
   //Update memory buffer to reflect the contents of the file
   mFileData = (char *)PR_Realloc(mFileData, aOffset + aCount);
   NS_ENSURE_TRUE(mFileData, NS_ERROR_OUT_OF_MEMORY);
@@ -374,27 +409,6 @@ nsDOMFileReader::OnDataAvailable(nsIRequest *aRequest,
   aInputStream->Read(mFileData + aOffset, aCount, &mReadCount);
   mDataLen += aCount;
   mReadTransferred = mDataLen;
-
-  //Continuously update our binary string as data comes in
-  if (mDataFormat == FILE_AS_BINARY) {
-    PRUint32 oldLen = mResult.Length();
-    PRUint32 newLen = oldLen + aCount;
-    PRUnichar *buf; 
-
-    if (mResult.GetMutableData(&buf, newLen) != newLen) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    PRUnichar *bufEnd = buf + newLen;
-    buf += oldLen;
-
-    char *source = mFileData + aOffset;
-    while (buf < bufEnd) {
-      *buf = *source;
-      ++buf;
-      ++source;
-    }
-  }
 
   //Notify the timer is the appropriate timeframe has passed
   if (mTimerIsActive) {
