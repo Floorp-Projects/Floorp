@@ -159,7 +159,7 @@ var gSanitizePromptDialog = {
     // which does not include date and time.  See bug 480169 comment 48.
 
     var warningStringID;
-    if (this.hasCustomizedItemSelection()) {
+    if (this.hasNonSelectedItems()) {
       warningStringID = "sanitizeSelectedWarning";
       if (!aDontShowItemList)
         this.showItemList();
@@ -231,11 +231,11 @@ var gSanitizePromptDialog = {
   /**
    * Check if all of the history items have been selected like the default status.
    */
-  hasCustomizedItemSelection: function () {
+  hasNonSelectedItems: function () {
     let checkboxes = document.querySelectorAll("#itemList > [preference]");
     for (let i = 0; i < checkboxes.length; ++i) {
       let pref = document.getElementById(checkboxes[i].getAttribute("preference"));
-      if (pref.value != pref.defaultValue)
+      if (!pref.value)
         return true;
     }
     return false;

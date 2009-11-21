@@ -21,8 +21,13 @@ ifdef GNU_CC
 	SSE1_FLAGS=-msse
 	SSE2_FLAGS=-msse2
 else
+ifeq ($(SOLARIS_SUNPRO_CC),1)
+	SSE1_FLAGS=-xarch=sse
+	SSE2_FLAGS=-xarch=sse2
+else
 	SSE1_FLAGS=
 	SSE2_FLAGS=
+endif
 endif
 endif
 
