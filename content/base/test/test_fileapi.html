@@ -20,272 +20,236 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=414796
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-
-var testCounter = 0;
+const minFileSize = 20000;
+var fileNum = 1;
+var testRanCounter = 0;
+var expectedTestCount = 0;
 SimpleTest.waitForExplicitFinish();
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-// Write a test file > 8192 characters
 
 is(FileReader.EMPTY, 0, "correct EMPTY value");
 is(FileReader.LOADING, 1, "correct LOADING value");
 is(FileReader.DONE, 2, "correct DONE value");
 
-var testData = "asdfblahqwer";
-for (var i = 0; i < 10; i++) {
-  testData = testData + testData;
+// Create strings containing data we'll test with. We'll want long
+// strings to ensure they span multiple buffers while loading
+var testTextData = "asd b\tlah\u1234w\u00a0r";
+while (testTextData.length < minFileSize) {
+  testTextData = testTextData + testTextData;
 }
-var testData2 = testData + "a";
-var testData3 = testData + "as";
 
-//Ensure we have different sizes of data for thoroughly testing data URI retrieval
-is(testData.length % 3, 0, "Need to have data length % 3 == 0");
-is(testData2.length % 3, 1, "Need to have data length % 3 == 1");
-is(testData3.length % 3, 2, "Need to have data lenght % 3 == 2");
-
-//Create UTF data that should be the same for UTF-16
-var utf16Data = "\0a\0s\0d\0f\0b\0l\0a\0h\0q\0w\0e\0r";
-for (var i = 0; i < 10; i++) {
-  utf16Data = utf16Data + utf16Data;
+var testASCIIData = "abcdef 123456\n";
+while (testASCIIData.length < minFileSize) {
+  testASCIIData = testASCIIData + testASCIIData;
 }
-var utf16File = createFileWithData(utf16Data, "01");
 
-//Create UTF data that should be the same for UTF-32
-var utf32Data = "\0\0\0a\0\0\0s\0\0\0d\0\0\0f\0\0\0b\0\0\0l\0\0\0a\0\0\0h\0\0\0q\0\0\0w\0\0\0e\0\0\0r";
-for (var i = 0; i < 10; i++) {
-  utf32Data = utf32Data + utf32Data;
+var testBinaryData = "";
+for (var i = 0; i < 256; i++) {
+  testBinaryData += String.fromCharCode(i);
 }
-var utf32File = createFileWithData(utf32Data, "001");
+while (testBinaryData.length < minFileSize) {
+  testBinaryData = testBinaryData + testBinaryData;
+}
 
-//Obtain a variety of encodings so we can test async return values
-var file = createFileWithData(testData, "00");
-var domFileData = file.getAsDataURL();
-var domFileBinary = file.getAsBinary();
 
-var domFileBinary2 = utf16File.getAsBinary();
-var domFileBinary3 = utf32File.getAsBinary();
-
-var request1 = new FileReader();
-is(request1.readyState, FileReader.EMPTY, "correct initial readyState");
-request1.onload = handleTextISO1;
-request1.readAsText(file, "iso-8859-1");
-is(request1.readyState, FileReader.LOADING, "correct loading readyState");
-
-var request2 = new FileReader();
-request2.onload = handleTextUTF8;
-request2.readAsText(file);
-
-var request3 = new FileReader();
-request3.onload = handleTextUTF8;
-request3.readAsText(file, "");
-
-var request4 = new FileReader();
-request4.onload = handleTextUTF8;
-request4.readAsText(file, "UTF-8");
-
-//Test a variety of encodings, and make sure they work properly
-//Also, test a variety of the same calls with different numbers of arguments
-var request5 = new FileReader();
-request5.onload = handleTextUTF16;
-request5.readAsText(utf16File, "UTF-16");
-
-var request6 = new FileReader();
-request6.onload = handleTextUTF32;
-request6.readAsText(utf32File, "UTF-32");
-
-//Test binary data accessor
-var request7 = new FileReader();
-is(request7.readyState, FileReader.EMPTY, "correct initial readyState");
-request7.onload = handleDataBinary;
-request7.readAsBinaryString(file);
-is(request7.readyState, FileReader.LOADING, "correct loading readyState");
-
-var request71 = new FileReader();
-request71.onload = handleDataBinary16;
-request71.readAsBinaryString(utf16File);
-
-var request72 = new FileReader();
-request72.onload = handleDataBinary32;
-request72.readAsBinaryString(utf32File);
-
-//Test data URI encoding on differing file sizes
-//Testing data URI when length % 3 == 0
-var request8 = new FileReader();
-request8.onload = handleDataURI;
-request8.readAsDataURL(file);
-
-//Testing data URI when length % 3 == 1
-var file2 = createFileWithData(testData2, "02");
-var domFileData1 = file2.getAsDataURL();
-
-var request9 = new FileReader();
-request9.onload = handleDataURI1;
-request9.readAsDataURL(file2);
-
-//Testing data URI when length % 3 == 2
-var file3 = createFileWithData(testData3, "03");
-var domFileData2 = file3.getAsDataURL();
-
-var request10 = new FileReader();
-request10.onload = handleDataURI2;
-request10.readAsDataURL(file3);
-
-//Test asynchronous property of file access
-var globalVar = 0;
-var request105 = new FileReader();
-request105.onload = incGlobalVar;
-request105.readAsText(file, "");
-is(globalVar, 0, "testing to make sure getAsText doesn't block subsequent execution");
-
-//Create second file for testing cancelReads()
-var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-var testFile4 = dirSvc.get("ProfD", Components.interfaces.nsIFile);
-testFile4.append("testfile04");
-var outStream4 = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
-outStream4.init(testFile4, 0x02 | 0x08 | 0x20, 0666, 0);
-outStream4.write(testData, testData.length);
-outStream4.close();
+//Set up files for testing
+var asciiFile = createFileWithData(testASCIIData);
+var binaryFile = createFileWithData(testBinaryData);
 
 var fileList = document.getElementById('fileList');
-fileList.value = testFile4.path;
-var file4 = fileList.files[0];
+fileList.value = "/none/existing/path/fileAPI/testing";
+var nonExistingFile = fileList.files[0];
 
-var request11 = new FileReader();
-request11.onabort = handleCancel;
-request11.readAsText(file4);
-request11.abort();
+// Test that plain reading works and fires events as expected, both
+// for text and binary reading
+var onloadHasRunText = false;
+var onloadStartHasRunText = false;
+r = new FileReader();
+is(r.readyState, FileReader.EMPTY, "correct initial text readyState");
+r.onload = getLoadHandler(testASCIIData, testASCIIData.length, "plain reading");
+r.addEventListener("load", function() { onloadHasRunText = true }, false);
+r.addEventListener("loadstart", function() { onloadStartHasRunText = true }, false);
+r.readAsText(asciiFile);
+is(r.readyState, FileReader.LOADING, "correct loading text readyState");
+is(onloadHasRunText, false, "text loading must be async");
+is(onloadStartHasRunText, true, "text loadstart should fire sync");
+expectedTestCount++;
 
-//Test error handling - Note: currently throws exceptions
-/*testFile4.permissions = 0;
-var request12 = new FileReader();
-request12.onerror = handleSecurityError;
-request12.readAsText(file4, "");
+var onloadHasRunBinary = false;
+var onloadStartHasRunBinary = false;
+r = new FileReader();
+is(r.readyState, FileReader.EMPTY, "correct initial binary readyState");
+r.addEventListener("load", function() { onloadHasRunBinary = true }, false);
+r.addEventListener("loadstart", function() { onloadStartHasRunBinary = true }, false);
+r.readAsBinaryString(binaryFile);
+r.onload = getLoadHandler(testBinaryData, testBinaryData.length, "binary reading");
+is(r.readyState, FileReader.LOADING, "correct loading binary readyState");
+is(onloadHasRunBinary, false, "binary loading must be async");
+is(onloadStartHasRunBinary, true, "binary loadstart should fire sync");
+expectedTestCount++;
 
-testFile4.remove(false);
-var request13 = new FileReader();
-request13.onerror = handleNotFoundError;
-request13.readAsText(file4, "");*/
 
-//Corresponding callback functions
-function incGlobalVar(fileAsText) {
-  globalVar++;
+// Test a variety of encodings, and make sure they work properly
+r = new FileReader();
+r.onload = getLoadHandler(testASCIIData, testASCIIData.length, "no encoding reading");
+r.readAsText(asciiFile, "");
+expectedTestCount++;
+
+r = new FileReader();
+r.onload = getLoadHandler(testASCIIData, testASCIIData.length, "iso8859 reading");
+r.readAsText(asciiFile, "iso-8859-1");
+expectedTestCount++;
+
+r = new FileReader();
+r.onload = getLoadHandler(testTextData,
+                          convertToUTF8(testTextData).length,
+                          "utf8 reading");
+r.readAsText(createFileWithData(convertToUTF8(testTextData)), "utf8");
+expectedTestCount++;
+
+r = new FileReader();
+r.readAsText(createFileWithData(convertToUTF16(testTextData)), "utf-16");
+r.onload = getLoadHandler(testTextData,
+                          convertToUTF16(testTextData).length,
+                          "utf16 reading");
+expectedTestCount++;
+
+r = new FileReader();
+r.onload = getLoadHandler(testTextData,
+                          convertToUTF32(testTextData).length,
+                          "utf32 reading");
+r.readAsText(createFileWithData(convertToUTF32(testTextData)), "UTF-32");
+expectedTestCount++;
+
+
+//Test data-URI encoding on differing file sizes
+dataurldata = testBinaryData.substr(0, testBinaryData.length -
+                                       testBinaryData.length % 3);
+is(dataurldata.length % 3, 0, "Want to test data with length % 3 == 0");
+r = new FileReader();
+r.onload = getLoadHandler(convertToDataURL(dataurldata),
+                          dataurldata.length,
+                          "dataurl reading, %3 = 0");
+r.readAsDataURL(createFileWithData(dataurldata));
+expectedTestCount++;
+
+dataurldata = testBinaryData.substr(0, testBinaryData.length - 2 -
+                                       testBinaryData.length % 3);
+is(dataurldata.length % 3, 1, "Want to test data with length % 3 == 1");
+r = new FileReader();
+r.onload = getLoadHandler(convertToDataURL(dataurldata),
+                          dataurldata.length,
+                          "dataurl reading, %3 = 1");
+r.readAsDataURL(createFileWithData(dataurldata));
+expectedTestCount++;
+
+dataurldata = testBinaryData.substr(0, testBinaryData.length - 1 -
+                                       testBinaryData.length % 3);
+is(dataurldata.length % 3, 2, "Want to test data with length % 3 == 2");
+r = new FileReader();
+r.onload = getLoadHandler(convertToDataURL(dataurldata),
+                          dataurldata.length,
+                          "dataurl reading, %3 = 2");
+r.readAsDataURL(createFileWithData(dataurldata));
+expectedTestCount++;
+
+
+// Test abort()
+var abortHasRun = false;
+var loadEndHasRun = false;
+r = new FileReader();
+r.onabort = function (event) {
+  is(abortHasRun, false, "abort should only fire once");
+  is(loadEndHasRun, false, "loadend shouldn't have fired yet");
+  abortHasRun = true;
+  is(event.target.readyState, FileReader.DONE, "should be DONE while firing onabort");
+  is(event.target.error.code, FileError.ABORT_ERR, "error code set to ABORT for aborted reads");
+  is(event.target.result, null, "file data should be null on aborted reads");
 }
-
-function handleCancel(event) {
-  var fileAsText = event.target.result;
-  var error = event.target.error;
-  is(error.code, FileError.ABORT_ERR, "error code set to CANCELED for canceled reads");
-  is(fileAsText, null, "file data should be null on canceled reads");
-  testHasRun();
+r.onloadend = function (event) {
+  is(abortHasRun, true, "abort should fire before loadend");
+  is(loadEndHasRun, false, "loadend should only fire once");
+  loadEndHasRun = true;
+  is(event.target.readyState, FileReader.DONE, "should be DONE while firing onabort");
+  is(event.target.error.code, FileError.ABORT_ERR, "error code set to ABORT for aborted reads");
+  is(event.target.result, null, "file data should be null on aborted reads");
 }
+r.onload = function() { ok(false, "load should not fire for aborted reads") };
+r.onerror = function() { ok(false, "error should not fire for aborted reads") };
+r.onprogress = function() { ok(false, "progress should not fire for aborted reads") };
+r.abort();
+is(abortHasRun, false, "abort() is a no-op unless loading");
+r.readAsText(asciiFile);
+r.abort();
+is(abortHasRun, true, "abort should fire sync");
+is(loadEndHasRun, true, "loadend should fire sync");
 
-function handleTextISO1(event) {
-  is(event.target.readyState, FileReader.DONE, "correct final readyState");
-  var fileAsText = event.target.result;
-  var error = event.target.error;
-  is(error, null, "error code set to null for successful data accesses");
-  is(testData.length, fileAsText.length, "iso-1 async length should match testdata");
-  is(testData, fileAsText, "iso-1 async string result should match testdata");
-  testHasRun();
+// Test calling readAsX to cause abort()
+var reuseAbortHasRun = false;
+r = new FileReader();
+r.onabort = function (event) {
+  is(reuseAbortHasRun, false, "abort should only fire once");
+  reuseAbortHasRun = true;
+  is(event.target.readyState, FileReader.DONE, "should be DONE while firing onabort");
+  is(event.target.error.code, FileError.ABORT_ERR, "error code set to ABORT for aborted reads");
+  is(event.target.result, null, "file data should be null on aborted reads");
 }
+r.onload = function() { ok(false, "load should not fire for aborted reads") };
+r.abort();
+is(reuseAbortHasRun, false, "abort() is a no-op unless loading");
+r.readAsText(asciiFile);
+r.readAsText(asciiFile);
+is(reuseAbortHasRun, true, "abort should fire sync");
+r.onload = getLoadHandler(testASCIIData, testASCIIData.length, "reuse-as-abort reading");
+expectedTestCount++;
 
-function handleTextUTF8(event) {
-  var fileAsUTF8 = event.target.result;
-  var error = event.target.error;
-  is(error, null, "error code set to null for successful data accesses");
-  is(testData.length, fileAsUTF8.length, "UTF-8 async length should match testdata");
-  is(testData, fileAsUTF8, "UTF-8 async string result should match testdata");
-  testHasRun();
+
+// Test reading from non-existing files
+r = new FileReader();
+var didThrow = false;
+try {
+  r.readAsDataURL(nonExistingFile);
+} catch(ex) {
+  didThrow = true;
 }
+// Once this test passes, we shoud test that onerror gets called and
+// that the FileReader object is in the right state during that call.
+todo(!didThrow, "shouldn't throw when opening non-existing file, should fire error instead");
 
-function handleTextUTF16(event) {
-  var fileAsUTF16 = event.target.result;
-  var error = event.target.error;
-  is(error, null, "error code set to SUCCESS for successful data accesses");
-  is(testData.length, fileAsUTF16.length, "UTF-16 async length should match testdata");
-  is(testData, fileAsUTF16, "UTF-16 async string result should match testdata");
-  testHasRun();
-}
 
-function handleTextUTF32(event) {
-  var fileAsUTF32 = event.target.result;
-  var error = event.target.error;
-  is(error, null, "error code set to SUCCESS for successful data accesses");
-  is(testData.length, fileAsUTF32.length, "UTF-32 async length should match testdata");
-  is(testData, fileAsUTF32, "UTF-32 async string result should match testdata");
-  testHasRun();
-}
-
-//Tests dataURI.length % 3 == 0
-function handleDataURI(event) {
-  var fileAsDataURI = event.target.result;
-  is(domFileData.length, fileAsDataURI.length, "data URI async length should match dom file data");
-  is(domFileData, fileAsDataURI, "data URI async string result should match dom file data");
-  testHasRun();
-}
-
-//Tests dataURI.length % 3 == 1
-function handleDataURI1(event) {
-  var fileAsDataURI = event.target.result;
-  is(domFileData1.length, fileAsDataURI.length, "data URI async length should match dom file data1");
-  is(domFileData1, fileAsDataURI, "data URI async string result should match dom file data1");
-  testHasRun();
-}
-
-//Tests dataURI.length % 3 == 2
-function handleDataURI2(event) {
-  var fileAsDataURI = event.target.result;
-  is(domFileData2.length, fileAsDataURI.length, "data URI async length should match dom file data2");
-  is(domFileData2, fileAsDataURI, "data URI async string result should match dom file data2");
-  testHasRun();
-}
-
-function handleDataBinary(event) {
-  is(event.target.readyState, FileReader.DONE, "correct final readyState");
-  var fileAsBinary = event.target.result;
-  is(domFileBinary.length, fileAsBinary.length, "binary data async length should match dom file binary");
-  is(domFileBinary, fileAsBinary, "binary data async string result should match dom file binary");
-  testHasRun();
-}
-
-function handleDataBinary16(event) {
-  var fileAsBinary = event.target.result;
-  is(domFileBinary2.length, fileAsBinary.length, "binary data async length should match dom file binary16");
-  is(domFileBinary2, fileAsBinary, "binary data async string result should match dom file binary16");
-  testHasRun();
-}
-
-function handleDataBinary32(event) {
-  var fileAsBinary = event.target.result;
-  is(domFileBinary3.length, fileAsBinary.length, "binary data async length should match dom file binary32");
-  is(domFileBinary3, fileAsBinary, "binary data async string result should match dom file binary32");
-  testHasRun();
-}
-
-function handleSecurityError(event) {
-  var fileAsText = event.target.result;
-  var error = event.target.error;
-  is(error.code, FileError.SECURITY_ERR, "code for file security error should have value 18");
-  is(fileAsText, null, "file content should be null when error is encountered");
-  testHasRun();
-}
-
-function handleNotFoundError(event) {
-  var fileAsText = event.target.result;
-  var error = event.target.error;
-  is(error.code, FileError.NOT_FOUND_ERR, "code for file not found error should have value 8");
-  is(fileAsText, null, "file content should be null when error is encountered");
-  testHasRun();
+function getLoadHandler(expectedResult, expectedLength, testName) {
+  return function (event) {
+    is(event.target.readyState, FileReader.DONE,
+       "readyState in test " + testName);
+    is(event.target.error, null,
+       "no error in test " + testName);
+    is(event.target.result, expectedResult,
+       "result in test " + testName);
+    is(event.lengthComputable, true,
+       "lengthComputable in test " + testName);
+    is(event.loaded, expectedLength,
+       "lengthComputable in test " + testName);
+    is(event.total, expectedLength,
+       "lengthComputable in test " + testName);
+    testHasRun();
+  }
 }
 
 function testHasRun() {
-  if (++testCounter == 13) SimpleTest.finish();
+ //alert(testRanCounter);
+ ++testRanCounter;
+ if (testRanCounter == expectedTestCount) {
+    is(onloadHasRunText, true, "onload text should have fired by now"); 
+    is(onloadHasRunBinary, true, "onload binary should have fired by now"); 
+    SimpleTest.finish();
+  }
 }
 
-function createFileWithData(fileData, fileNum) {
+function createFileWithData(fileData) {
   var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
   var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
-  testFile.append("testfile" + fileNum);
+  testFile.append("fileAPItestfile" + fileNum);
+  fileNum++;
   var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"].createInstance(Components.interfaces.nsIFileOutputStream);
   outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
                  0666, 0);
@@ -296,6 +260,32 @@ function createFileWithData(fileData, fileNum) {
   fileList.value = testFile.path;
 
   return fileList.files[0];
+}
+
+function convertToUTF16(s) {
+  res = "";
+  for (var i = 0; i < s.length; ++i) {
+    c = s.charCodeAt(i);
+    res += String.fromCharCode(c >>> 8, c & 255);
+  }
+  return res;
+}
+
+function convertToUTF32(s) {
+  res = "";
+  for (var i = 0; i < s.length; ++i) {
+    c = s.charCodeAt(i);
+    res += "\0\0" + String.fromCharCode(c >>> 8, c & 255);
+  }
+  return res;
+}
+
+function convertToUTF8(s) {
+  return unescape(encodeURIComponent(s));
+}
+
+function convertToDataURL(s) {
+  return "data:application/octet-stream;base64," + btoa(s);
 }
 
 </script>
