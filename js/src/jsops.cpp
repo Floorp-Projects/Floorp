@@ -1756,7 +1756,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                         /* The cache entry doesn't apply. vshape mismatch. */
                         checkForAdd = false;
                     } else if (scope->owned()) {
-                        if (sprop == scope->lastProp || scope->has(sprop)) {
+                        if (sprop == scope->lastProperty() || scope->hasProperty(sprop)) {
                           fast_set_propcache_hit:
                             PCMETER(cache->pchits++);
                             PCMETER(cache->setpchits++);
@@ -1766,8 +1766,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                         }
                         checkForAdd =
                             !(sprop->attrs & JSPROP_SHARED) &&
-                            sprop->parent == scope->lastProp &&
-                            !scope->hadMiddleDelete();
+                            sprop->parent == scope->lastProperty();
                     } else {
                         scope = js_GetMutableScope(cx, obj);
                         if (!scope) {
@@ -1814,7 +1813,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                         /*
                          * If this obj's number of reserved slots differed, or
                          * if something created a hash table for scope, we must
-                         * pay the price of JSScope::add.
+                         * pay the price of JSScope::putProperty.
                          *
                          * If slot does not match the cached sprop's slot,
                          * update the cache entry in the hope that obj and
@@ -1823,10 +1822,10 @@ BEGIN_CASE(JSOP_SETMETHOD)
                          */
                         if (slot != sprop->slot || scope->table) {
                             JSScopeProperty *sprop2 =
-                                scope->add(cx, sprop->id,
-                                           sprop->getter, sprop->setter,
-                                           slot, sprop->attrs,
-                                           sprop->flags, sprop->shortid);
+                                scope->putProperty(cx, sprop->id,
+                                                   sprop->getter, sprop->setter,
+                                                   slot, sprop->attrs,
+                                                   sprop->flags, sprop->shortid);
                             if (!sprop2) {
                                 js_FreeSlot(cx, obj, slot);
                                 JS_UNLOCK_SCOPE(cx, scope);
@@ -3537,10 +3536,10 @@ BEGIN_CASE(JSOP_INITMETHOD)
 
             /*
              * Detect a repeated property name and force a miss to share the
-             * strict warning code and cope with complexity managed by
-             * JSScope::add.
+             * strict warning code and consolidate all the complexity managed
+             * by JSScope::addProperty.
              */
-            if (sprop->parent != scope->lastProp)
+            if (sprop->parent != scope->lastProperty())
                 goto do_initprop_miss;
 
             /*
@@ -3548,8 +3547,8 @@ BEGIN_CASE(JSOP_INITMETHOD)
              * proto-property, and there cannot have been any deletions of
              * prior properties.
              */
-            JS_ASSERT(!scope->hadMiddleDelete());
-            JS_ASSERT_IF(scope->table, !scope->has(sprop));
+            JS_ASSERT(!scope->inDictionaryMode());
+            JS_ASSERT_IF(scope->table, !scope->hasProperty(sprop));
 
             slot = sprop->slot;
             JS_ASSERT(slot == scope->freeslot);
@@ -3563,14 +3562,11 @@ BEGIN_CASE(JSOP_INITMETHOD)
                 JS_ASSERT(slot == sprop->slot);
             }
 
-            JS_ASSERT(!scope->lastProp ||
-                      scope->shape == scope->lastProp->shape);
+            JS_ASSERT(!scope->lastProperty() ||
+                      scope->shape == scope->lastProperty()->shape);
             if (scope->table) {
                 JSScopeProperty *sprop2 =
-                    scope->add(cx, sprop->id,
-                               sprop->getter, sprop->setter,
-                               slot, sprop->attrs,
-                               sprop->flags, sprop->shortid);
+                    scope->addDataProperty(cx, sprop->id, slot, sprop->attrs);
                 if (!sprop2) {
                     js_FreeSlot(cx, obj, slot);
                     JS_UNLOCK_SCOPE(cx, scope);
