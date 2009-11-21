@@ -330,8 +330,7 @@ protected:
     /*
      * Evaluates the given Expression and converts its result to a number.
      */
-    static nsresult evaluateToNumber(Expr* aExpr, txIEvalContext* aContext,
-                                     double* aResult);
+    static double evaluateToNumber(Expr* aExpr, txIEvalContext* aContext);
 
     /*
      * Evaluates the given Expression and converts its result to a NodeSet.

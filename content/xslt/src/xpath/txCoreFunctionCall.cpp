@@ -387,9 +387,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = mParams[0]->evaluateToString(aContext, src);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            double start;
-            rv = evaluateToNumber(mParams[1], aContext, &start);
-            NS_ENSURE_SUCCESS(rv, rv);
+            double start = evaluateToNumber(mParams[1], aContext);
 
             // check for NaN or +/-Inf
             if (Double::isNaN(start) ||
@@ -404,10 +402,8 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
             double end;
             if (mParams.Length() == 3) {
-                rv = evaluateToNumber(mParams[2], aContext, &end);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                end += start;
+                end = start + evaluateToNumber(mParams[2],
+                                               aContext);
                 if (Double::isNaN(end) || end < 0) {
                     aContext->recycler()->getEmptyStringResult(aResult);
 
@@ -535,8 +531,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         {
             double res;
             if (!mParams.IsEmpty()) {
-                rv = evaluateToNumber(mParams[0], aContext, &res);
-                NS_ENSURE_SUCCESS(rv, rv);
+                res = evaluateToNumber(mParams[0], aContext);
             }
             else {
                 nsAutoString resultStr;
@@ -548,10 +543,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         }
         case ROUND:
         {
-            double dbl;
-            rv = evaluateToNumber(mParams[0], aContext, &dbl);
-            NS_ENSURE_SUCCESS(rv, rv);
-
+            double dbl = evaluateToNumber(mParams[0], aContext);
             if (!Double::isNaN(dbl) && !Double::isInfinite(dbl)) {
                 if (Double::isNeg(dbl) && dbl >= -0.5) {
                     dbl *= 0;
@@ -565,10 +557,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         }
         case FLOOR:
         {
-            double dbl;
-            rv = evaluateToNumber(mParams[0], aContext, &dbl);
-            NS_ENSURE_SUCCESS(rv, rv);
-
+            double dbl = evaluateToNumber(mParams[0], aContext);
             if (!Double::isNaN(dbl) &&
                 !Double::isInfinite(dbl) &&
                 !(dbl == 0 && Double::isNeg(dbl))) {
@@ -579,10 +568,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         }
         case CEILING:
         {
-            double dbl;
-            rv = evaluateToNumber(mParams[0], aContext, &dbl);
-            NS_ENSURE_SUCCESS(rv, rv);
-
+            double dbl = evaluateToNumber(mParams[0], aContext);
             if (!Double::isNaN(dbl) && !Double::isInfinite(dbl)) {
                 if (Double::isNeg(dbl) && dbl > -1) {
                     dbl *= 0;
