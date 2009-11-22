@@ -35,17 +35,14 @@
           }
         }
         window.addEventListener("unload", this, true);
-        ]]>
-      </constructor>
+      ]]></constructor>
 
       <method name="handleEvent">
         <parameter name="aEvent"/>
-        <body>
-        <![CDATA[
+        <body><![CDATA[
           if (aEvent.originalTarget == document && aEvent.type == "unload")
             this._closed = true;
-            ]]>
-        </body>
+        ]]></body>
       </method>
       
       <method name="close">
