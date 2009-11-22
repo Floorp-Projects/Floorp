@@ -489,6 +489,7 @@ nsDOMFileReader::ReadFileContent(nsIDOMFile* aFile,
   mCharset = aCharset;
   mError = nsnull;
   SetDOMStringToNull(mResult);
+  mReadTransferred = 0;
 
   //Obtain the nsDOMFile's underlying nsIFile
   nsresult rv;
