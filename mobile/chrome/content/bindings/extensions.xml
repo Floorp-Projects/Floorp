@@ -115,6 +115,12 @@
             let prefs = xhr.responseXML.querySelectorAll(":root > setting");
             for (let i = 0; i < prefs.length; i++)
               box.appendChild(prefs.item(i));
+            
+            // Send an event so add-ons can prepopulate any non-preference based
+            // settings
+            let event = document.createEvent("Events");
+            event.initEvent("AddonOptionsLoad", true, false);
+            this.dispatchEvent(event);
           ]]>
         </body>
       </method>
