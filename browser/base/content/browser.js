@@ -4326,9 +4326,8 @@ var TabsProgressListener = {
 
   onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
 #ifdef MOZ_CRASHREPORTER
-    if (!aRequest.URI)
-      aRequest.QueryInterface(Ci.nsIChannel);
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
+    if (aRequest instanceof Ci.nsIChannel &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
       gCrashReporter.annotateCrashReport("URL", aRequest.URI.spec);
     }
