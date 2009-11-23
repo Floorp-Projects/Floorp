@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -   Daniel Brooks <db48x@yahoo.com>
+   -   Mark Finkle <mfinkle@mozilla.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,17 +48,45 @@
       <xul:label class="settings-title" xbl:inherits="value=label" crop="end" flex="1"/>
       <children />
     </content>
+
+    <implementation>
+      <field name="prefs">
+        Components.classes["@mozilla.org/preferences-service;1"]
+                  .getService(Components.interfaces.nsIPrefBranch2);
+      </field>
+    </implementation>
   </binding>
 
   <binding id="setting-base">
-    <implementation>
+    <implementation implements="nsIObserver">
       <constructor><![CDATA[
-        let prefValue = this.pref.valueFromPreferences;
-        if (prefValue != null) {
-          this.pref._setValue(prefValue, false);
-          this.prefChanged();
-        }
+        this.preferenceChanged();
+        
+        if (this.usePref)
+          this._prefs.addObserver(this.pref, this._observer, true);
       ]]></constructor>
+
+      <field name="_observer"><![CDATA[({
+        _self: this,
+
+        QueryInterface: function(aIID) {
+          if (aIID.equals(Components.interfaces.nsIObserver) ||
+              aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+              aIID.equals(Components.interfaces.nsISupports))
+            return this;
+
+          throw Components.results.NS_ERROR_NO_INTERFACE;
+        },
+
+        observe: function(aSubject, aTopic, aPrefName) {
+          if (aTopic != "nsPref:changed")
+            return;
+
+          if (this._self.pref == aPrefName)
+            this._self.preferenceChanged();
+        }
+      })]]>
+      </field>
 
       <method name="fireEvent">
         <parameter name="eventName"/>
@@ -68,46 +97,79 @@
             if (!body)
               return;
 
-            try
-            {
+            try {
               let event = document.createEvent("Events");
               event.initEvent(eventName, true, true);
               let f = new Function("event", body);
               f.call(this, event);
             }
-            catch (e)
-            {
+            catch (e) {
               Components.utils.reportError(e);
             }
           ]]>
         </body>
       </method>
 
+      <method name="valueFromPreference">
+        <body>
+        <![CDATA[
+          // Should be code to set the from the preference input.value
+          throw "No valueFromPreference implementation";
+        ]]>
+        </body>
+      </method>
+
+      <method name="valueToPreference">
+        <body>
+        <![CDATA[
+          // Should be code to set the input.value from the preference
+          throw "No valueToPreference implementation";
+        ]]>
+        </body>
+      </method>
+
       <method name="inputChanged">
         <body>
-          this.pref.value = this.value;
-          this.fireEvent("onsynctopreference");
+        <![CDATA[
+          if (this.usePref && !this._updatingInput) {
+            this.valueToPreference();
+            this.fireEvent("oninputchanged");
+          }
+        ]]>
         </body>
       </method>
 
-      <method name="prefChanged">
+      <method name="preferenceChanged">
         <body>
-          this.value = this.pref.value;
-          this.fireEvent("onsyncfrompreference");
+        <![CDATA[
+          if (this.usePref) {
+            this._updatingInput = true;
+            try {
+              this.valueFromPreference();
+              this.fireEvent("onpreferencechanged");
+            } catch (e) {}
+            this._updatingInput = false;
+          }
+        ]]>
         </body>
       </method>
 
+      <property name="usePref" readonly="true" onget="return this.hasAttribute('pref');"/>
+      <property name="pref" readonly="true" onget="return this.getAttribute('pref');"/>
+      <property name="type" readonly="true" onget="return this.getAttribute('type');"/>
       <property name="value" onget="return this.input.value;" onset="return this.input.value = val;"/>
-      <property name="pref" readonly="true">
-        <getter><![CDATA[
-          // The pref element is only useful if we have a pref attribute
-          return this.hasAttribute("pref") ? this._pref : {};
-        ]]></getter>
-      </property>
-      <field name="_pref">document.getAnonymousElementByAttribute(this, "anonid", "pref");</field>
 
-      <field name="type">this.getAttribute("type");</field>
+      <field name="_prefs">
+        Components.classes["@mozilla.org/preferences-service;1"]
+                  .getService(Components.interfaces.nsIPrefBranch2);
+      </field>
+
+      <field name="_updatingInput">false</field>
       <field name="input">document.getAnonymousElementByAttribute(this, "anonid", "input");</field>
+
+      <field name="settings">
+        this.parentNode.localName == "settings" ? this.parentNode : null;
+      </field>
     </implementation>
   </binding>
 
@@ -124,13 +186,29 @@
           <xul:checkbox anonid="input" xbl:inherits="disabled" oncommand="inputChanged();"/>
         </xul:hbox>
       </xul:box>
-      <xul:preferences>
-        <xul:preference anonid="pref" xbl:inherits="name=pref,type,inverted" instantApply="true" onchange="prefChanged();"/>
-      </xul:preferences>
     </content>
 
     <implementation>
+      <method name="valueFromPreference">
+        <body>
+        <![CDATA[
+          let val = this._prefs.getBoolPref(this.pref);
+          this.value = this.inverted ? !val : val;
+         ]]>
+        </body>
+      </method>
+
+      <method name="valueToPreference">
+        <body>
+        <![CDATA[
+          let val = this.value;
+          this._prefs.setBoolPref(this.pref, this.inverted ? !val : val);
+        ]]>
+        </body>
+      </method>
+
       <property name="value" onget="return this.input.checked;" onset="return this.input.setChecked(val);"/>
+      <property name="inverted" readonly="true" onget="return this.getAttribute('inverted');"/>
     </implementation>
   </binding>
 
@@ -147,27 +225,28 @@
           <xul:checkbox anonid="input" xbl:inherits="disabled" oncommand="inputChanged();"/>
         </xul:hbox>
       </xul:box>
-      <xul:preferences>
-        <xul:preference anonid="pref" xbl:inherits="name=pref,inverted" type="int" instantApply="true" onchange="prefChanged();"/>
-      </xul:preferences>
     </content>
 
     <implementation>
-      <method name="inputChanged">
+      <method name="valueFromPreference">
         <body>
-          this.pref.value = this.getAttribute(this.value ? "on" : "off");
-          this.fireEvent("onsynctopreference");
+        <![CDATA[
+          let val = this._prefs.getIntPref(this.pref);
+          this.value = (val == this.getAttribute("on"));
+         ]]>
         </body>
       </method>
 
-      <method name="prefChanged">
+      <method name="valueToPreference">
         <body>
-          this.value = this.pref.value == this.getAttribute("on");
-          this.fireEvent("onsyncfrompreference");
+        <![CDATA[
+          this._prefs.setIntPref(this.pref, this.getAttribute(this.value ? "on" : "off"));
+        ]]>
         </body>
       </method>
 
       <property name="value" onget="return this.input.checked;" onset="return this.input.setChecked(val);"/>
+      <property name="inverted" readonly="true" onget="return this.getAttribute('inverted');"/>
     </implementation>
   </binding>
 
@@ -184,10 +263,6 @@
           <children includes="button|menulist"/>
         </xul:hbox>
       </xul:box>
-      <xul:preferences>
-        <xul:preference anonid="pref" xbl:inherits="name=pref,inverted" type="bool"
-                        instantApply="true" onchange="prefChanged();"/>
-      </xul:preferences>
     </content>
   </binding>
   
@@ -204,13 +279,32 @@
           <xul:textbox xbl:inherits="disabled,emptytext,type=inputtype,min,max,increment,hidespinbuttons,wraparound,decimalplaces" anonid="input" oninput="inputChanged();"/>
         </xul:hbox>
       </xul:box>
-      <xul:preferences>
-        <xul:preference anonid="pref" xbl:inherits="name=pref,type,inverted"
-                        instantApply="true" onchange="prefChanged();"/>
-      </xul:preferences>
     </content>
 
     <implementation>
+      <method name="valueFromPreference">
+        <body>
+        <![CDATA[
+          this.value = this._prefs
+                           .getComplexValue(this.pref, Components.interfaces.nsISupportsString)
+                           .data;
+         ]]>
+        </body>
+      </method>
+
+      <method name="valueToPreference">
+        <body>
+        <![CDATA[
+          let iss = Components.classes["@mozilla.org/supports-string;1"]
+                              .createInstance(Components.interfaces.nsISupportsString);
+          iss.data = this.value;
+          Components.reportError(this.value)
+          this._prefs
+              .setComplexValue(this.pref, Components.interfaces.nsISupportsString, iss);
+        ]]>
+        </body>
+      </method>
+
       <property name="value" onget="return this.input.value;" onset="return this.input.value=val;"/>
     </implementation>
   </binding>
