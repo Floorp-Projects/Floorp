@@ -204,6 +204,8 @@ nsHTMLAreaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers)
 {
+  Link::ResetLinkState();
+
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
@@ -219,11 +221,12 @@ nsHTMLAreaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsHTMLAreaElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
+  // If this link is ever reinserted into a document, it might
+  // be under a different xml:base, so forget the cached state now.
+  Link::ResetLinkState();
+
   if (IsInDoc()) {
     RegUnRegAccessKey(PR_FALSE);
-    // If this link is ever reinserted into a document, it might
-    // be under a different xml:base, so forget the cached state now
-    Link::ResetLinkState();
   }
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
