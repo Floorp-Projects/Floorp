@@ -700,7 +700,8 @@ box[type="documenttab"] {
 
 box[type="documenttab"] .documenttab-canvas {
   /* keep the unselected thumbnails aligned with the selected one */
-  border: 0.8mm solid transparent;
+  border: 0.8mm solid #36373b;
+  background-color: white;
 }
 
 box[type="documenttab"][selected="true"] .documenttab-canvas {
