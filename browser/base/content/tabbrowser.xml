@@ -154,6 +154,10 @@
         Components.classes["@mozilla.org/browser/favicon-service;1"]
                   .getService(Components.interfaces.nsIFaviconService);
       </field>
+      <field name="mBrowserHistory">
+        Components.classes["@mozilla.org/browser/nav-history-service;1"]
+                  .getService(Components.interfaces.nsIBrowserHistory);
+      </field>
       <field name="mTabBox" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "tabbox");
       </field>
@@ -527,15 +531,30 @@
               // changing location, clear out the missing plugins list
               this.mBrowser.missingPlugins = null;
 
-              if (this.mBlank)
-                return;
+              var browserHistory = this.mTabBrowser.mBrowserHistory;
+              if ("lastURI" in this.mBrowser && this.mBrowser.lastURI)
+                browserHistory.unregisterOpenPage(this.mBrowser.lastURI);
+              browserHistory.registerOpenPage(aLocation);
 
-              if (this.mTabBrowser.mCurrentTab == this.mTab) {
-                for (let i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
-                  let p = this.mTabBrowser.mProgressListeners[i];
+              if (!this.mBlank) {
+                if (this.mTabBrowser.mCurrentTab == this.mTab) {
+                  for (let i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
+                    let p = this.mTabBrowser.mProgressListeners[i];
+                    if (p)
+                      try {
+                        p.onLocationChange(aWebProgress, aRequest, aLocation);
+                      } catch (e) {
+                        // don't inhibit other listeners
+                        Components.utils.reportError(e);
+                      }
+                  }
+                }
+
+                for (let i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
+                  let p = this.mTabBrowser.mTabsProgressListeners[i];
                   if (p)
                     try {
-                      p.onLocationChange(aWebProgress, aRequest, aLocation);
+                      p.onLocationChange(this.mBrowser, aWebProgress, aRequest, aLocation);
                     } catch (e) {
                       // don't inhibit other listeners
                       Components.utils.reportError(e);
@@ -543,16 +562,8 @@
                 }
               }
 
-              for (let i = 0; i < this.mTabBrowser.mTabsProgressListeners.length; i++) {
-                let p = this.mTabBrowser.mTabsProgressListeners[i];
-                if (p)
-                  try {
-                    p.onLocationChange(this.mBrowser, aWebProgress, aRequest, aLocation);
-                  } catch (e) {
-                    // don't inhibit other listeners
-                    Components.utils.reportError(e);
-                  }
-              }
+              this.mBrowser.lastURI = aLocation;
+
             },
 
             onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
@@ -1564,6 +1575,10 @@
             browser.webProgress.removeProgressListener(filter);
             filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
             this.mTabListeners[aTab._tPos].destroy();
+
+            let closedBrowser = this.getBrowserForTab(aTab);
+            if (closedBrowser.currentURI)
+              this.mBrowserHistory.unregisterOpenPage(closedBrowser.currentURI);
 
             // We are no longer the primary content area.
             browser.setAttribute("type", "content-targetable");
@@ -2819,6 +2834,8 @@
             this.mTabFilters[i] = null;
             this.mTabListeners[i].destroy();
             this.mTabListeners[i] = null;
+            let browser = this.getBrowserAtIndex(i);
+            this.mBrowserHistory.unregisterOpenPage(browser.currentURI);
           }
           document.removeEventListener("keypress", this, false);
         ]]>

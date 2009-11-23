@@ -76,6 +76,41 @@
         this.inputField.removeEventListener("underflow", this, false);
       ]]></destructor>
 
+      <field name="_value"></field>
+
+      <!--
+        onBeforeValueGet is called by the base-binding's .value getter.
+        It can return an object with a "value" property, to override the
+        return value of the getter.
+      -->
+      <method name="onBeforeValueGet">
+        <body><![CDATA[
+          if (this.hasAttribute("actiontype"))
+            return {value: this._value};
+          return null;
+        ]]></body>
+      </method>
+
+      <!--
+        onBeforeValueSet is called by the base-binding's .value setter.
+        It should return the value that the setter should use.
+      -->
+      <method name="onBeforeValueSet">
+        <parameter name="aValue"/>
+        <body><![CDATA[
+          this._value = aValue;
+          var returnValue = aValue;
+          var action = this._parseActionUrl(aValue);
+          if (action) {
+            returnValue = action.param;
+            this.setAttribute("actiontype", action.type);
+          } else {
+            this.removeAttribute("actiontype");
+          }
+          return returnValue;
+        ]]></body>
+      </method>
+
       <method name="handleRevert">
         <body><![CDATA[
           var isScrolling = this.popupOpen;
@@ -107,6 +142,13 @@
           var [url, postData] = this._canonizeURL(aTriggeringEvent);
           if (!url)
             return;
+
+          var action = this._parseActionUrl(url);
+          if (action) {
+            if (action.type == "switchtab")
+              switchToTabHavingURI(action.param);
+            return;
+          }
 
           this.value = url;
           gBrowser.userTypedValue = url;
@@ -442,6 +484,21 @@
           this.placeholder = this.getAttribute(type + "placeholder");
         ]]></body>
       </method>
+
+      <method name="_parseActionUrl">
+        <parameter name="aUrl"/>
+        <body>
+          <![CDATA[
+            if (!/^moz-action:/.test(aUrl))
+              return null;
+
+            // url is in the format moz-action:ACTION,PARAM
+            let [, action, param] = aUrl.match(/^moz-action:([^,]+),(.*)$/);
+            return {type: action, param: param};
+          ]]>
+        </body>
+      </method>
+
     </implementation>
 
     <handlers>
@@ -613,6 +670,15 @@
             this.closePopup();
             controller.handleEscape();
 
+            // Check if this is meant to be an action
+            let action = this.mInput._parseActionUrl(url);
+            if (action) {
+              if (action.type == "switchtab")
+                url = action.param;
+              else
+                return;
+            }
+
             // respect the usual clicking subtleties
             openUILink(url, aEvent);
           }
@@ -640,4 +706,5 @@
 
     </implementation>
   </binding>
+
 </bindings>
