@@ -126,17 +126,49 @@ expectedTestCount++;
 r = new FileReader();
 r.onload = getLoadHandler(testASCIIData,
                           testASCIIData.length,
-                          "to-be-reused reading")
+                          "to-be-reused reading text")
 var makeAnotherReadListener = function(event) {
   r = event.target;
   r.removeEventListener("load", makeAnotherReadListener, false);
-  r.onload = getLoadHandler(testBinaryData,
-                            testBinaryData.length,
-                            "reused reading");
-  r.readAsBinaryString(binaryFile);
+  r.onload = getLoadHandler(testASCIIData,
+                            testASCIIData.length,
+                            "reused reading text");
+  r.readAsText(asciiFile);
 };
 r.addEventListener("load", makeAnotherReadListener, false);
-r.readAsText(asciiFile, "");
+r.readAsText(asciiFile);
+expectedTestCount += 2;
+
+r = new FileReader();
+r.onload = getLoadHandler(testBinaryData,
+                          testBinaryData.length,
+                          "to-be-reused reading binary")
+var makeAnotherReadListener2 = function(event) {
+  r = event.target;
+  r.removeEventListener("load", makeAnotherReadListener2, false);
+  r.onload = getLoadHandler(testBinaryData,
+                            testBinaryData.length,
+                            "reused reading binary");
+  r.readAsBinaryString(binaryFile);
+};
+r.addEventListener("load", makeAnotherReadListener2, false);
+r.readAsBinaryString(binaryFile);
+expectedTestCount += 2;
+
+r = new FileReader();
+r.onload = getLoadHandler(convertToDataURL(testBinaryData),
+                          testBinaryData.length,
+                          "to-be-reused reading data url")
+var makeAnotherReadListener3 = function(event) {
+  r = event.target;
+  r.removeEventListener("load", makeAnotherReadListener3, false);
+  r.onload = getLoadHandler(convertToDataURL(testBinaryData),
+                            testBinaryData.length,
+                            "reused reading data url");
+  r.readAsDataURL(binaryFile);
+};
+r.addEventListener("load", makeAnotherReadListener3, false);
+r.readAsDataURL(binaryFile);
 expectedTestCount += 2;
 
 
