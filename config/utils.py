@@ -67,7 +67,10 @@ def lockFile(lockfile, max_wait = 600):
       # we created the lockfile, so we're the owner
       break
     except OSError, e:
-      if e.errno != errno.EEXIST:
+      if e.errno == errno.EEXIST or \
+         (sys.platform == "win32" and e.errno == errno.EACCES):
+        pass
+      else:
         # should not occur
         raise
   
