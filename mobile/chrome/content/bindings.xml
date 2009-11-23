@@ -347,15 +347,6 @@
   <binding id="place-base">
     <content/>
     <implementation>
-      <constructor>
-        <![CDATA[
-          let itemId = this.getAttribute("itemid");
-          if (itemId)
-            this.init(itemId);
-        ]]>
-      </constructor>
-
-      <field name="_itemId">null</field>
       <field name="_uri">null</field>
       <field name="_control">null</field>
       <field name="_isEditing">false</field>
@@ -363,10 +354,6 @@
       <field name="_ioService" readonly="true">
         Components.classes["@mozilla.org/network/io-service;1"]
                   .getService(Components.interfaces.nsIIOService);
-      </field>
-      <field name="_faviconService" readonly="true">
-        Components.classes["@mozilla.org/browser/favicon-service;1"]
-                  .getService(Components.interfaces.nsIFaviconService);
       </field>
 
       <field name="_nameField">
@@ -378,8 +365,17 @@
       <field name="_tagsField">
         document.getAnonymousElementByAttribute(this, "anonid", "tags");
       </field>
-      <property name="itemId" onget="return this._itemId"/>
+      <property name="itemId" onget="return this.getAttribute('itemid');"/>
       <property name="type" onget="return this.getAttribute('type');"/>
+
+      <property name="uri">
+        <getter><![CDATA[
+          if (!this._uri && this.getAttribute("uri"))
+            this._uri = this._ioService.newURI(this.getAttribute("uri"), null, null);
+
+          return this._uri;
+        ]]></getter>
+      </property>
 
       <property name="name" onget="return this._nameField.value"
                             onset="this._nameField.value = val; return val;"/>
@@ -427,26 +423,11 @@
         </getter>
       </property>
 
-      <method name="init">
-        <parameter name="aItemId"/>
-        <body>
-          <![CDATA[
-            this._itemId = aItemId;
-            if (!this._itemId)
-              return;
-
-            if (this.hasAttribute("uri") && this.type != "folder") {
-              this._uri = this._ioService.newURI(this.getAttribute("uri"), null, null);
-              this.setAttribute("src", this._faviconService.getFaviconImageForPage(this._uri).spec);
-            }
-          ]]>
-        </body>
-      </method>
       <method name="startEditing">
         <parameter name="autoSelect"/>
         <body>
           <![CDATA[
-            if (!this._itemId)
+            if (!this.itemId)
               return;
 
             this._isEditing = true;
@@ -493,8 +474,8 @@
         <body>
           <![CDATA[
             // Update the tags
-            if (this._uri && this.type != "folder") {
-              let currentTags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
+            if (this.uri && this.type != "folder") {
+              let currentTags = PlacesUtils.tagging.getTagsForURI(this.uri, {});
               let tags = this.tagsAsArray;
               if (tags.length > 0 || currentTags.length > 0) {
                 let tagsToRemove = [];
@@ -509,46 +490,46 @@
                 }
 
                 if (tagsToAdd.length > 0)
-                  PlacesUtils.tagging.tagURI(this._uri, tagsToAdd);
+                  PlacesUtils.tagging.tagURI(this.uri, tagsToAdd);
                 if (tagsToRemove.length > 0)
-                  PlacesUtils.tagging.untagURI(this._uri, tagsToRemove);
+                  PlacesUtils.tagging.untagURI(this.uri, tagsToRemove);
               }
               this.setAttribute('tags', this.tags);
 
               // If the URI was updated change it in the bookmark, but don't
               // allow a blank URI. Revert to previous URI if blank.
               let spec = this.spec;
-              if (spec && this._uri.spec != spec) {
+              if (spec && this.uri.spec != spec) {
                 try {
                   this._uri = this._ioService.newURI(spec, null, null);
-                  PlacesUtils.bookmarks.changeBookmarkURI(this._itemId, this._uri);
+                  PlacesUtils.bookmarks.changeBookmarkURI(this.itemId, this.uri);
                   this.setAttribute('uri', this.spec);
                 }
                 catch (e) { }
               }
-              if (spec != this._uri.spec)
-                spec = this.spec = this._uri.spec;
+              if (spec != this.uri.spec)
+                spec = this.spec = this.uri.spec;
             }
 
             // Update the name and use the URI if name is blank
             this.name = this.name || spec;
             this.setAttribute('title', this.name);
-            PlacesUtils.bookmarks.setItemTitle(this._itemId, this.name);
+            PlacesUtils.bookmarks.setItemTitle(this.itemId, this.name);
           ]]>
         </body>
       </method>
       <method name="remove">
         <body>
           <![CDATA[
-            PlacesUtils.bookmarks.removeItem(this._itemId);
+            PlacesUtils.bookmarks.removeItem(this.itemId);
 
             // If this was the last bookmark (excluding tag-items and livemark
             // children, see getMostRecentBookmarkForURI) for the bookmark's url,
             // remove the url from tag containers as well.
-            if (this._uri && this.type != "folder") {
-              if (PlacesUtils.getMostRecentBookmarkForURI(this._uri) == -1) {
-                var tags = PlacesUtils.tagging.getTagsForURI(this._uri, {});
-                PlacesUtils.tagging.untagURI(this._uri, tags);
+            if (this.uri && this.type != "folder") {
+              if (PlacesUtils.getMostRecentBookmarkForURI(this.uri) == -1) {
+                var tags = PlacesUtils.tagging.getTagsForURI(this.uri, {});
+                PlacesUtils.tagging.untagURI(this.uri, tags);
               }
             }
 
@@ -807,11 +788,12 @@
 
             children.scrollBoxObject.scrollTo(0, 0);
 
+            let fragment = document.createDocumentFragment();
             let childItems = this._getChildren(aRootFolder);
-            for (let i=0; i<childItems.length; i++) {
-              let node = childItems[i];
-              children.appendChild(this.createItem(node));
-            }
+            let count = childItems.length;
+            for (let i=0; i<count; i++)
+              fragment.appendChild(this.createItem(childItems[i]));
+            children.appendChild(fragment);
           ]]>
         </body>
       </method>
@@ -830,9 +812,11 @@
             child.setAttribute("tags", aItem.tags);
             if (aItem.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER)
               child.setAttribute("type", "folder");
+            else
+              child.setAttribute("src", aItem.icon);
 
             // XXX make a <handler>
-            var self = this;
+            let self = this;
             child.addEventListener("click", function(e) { self._fireOpen(e, child); }, false);
 
             return child;

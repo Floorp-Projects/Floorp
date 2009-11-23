@@ -884,13 +884,15 @@ var BookmarkHelper = {
     let title = PlacesUtils.bookmarks.getItemTitle(itemId);
     let tags = PlacesUtils.tagging.getTagsForURI(aURI, {});
 
-    this._editor = document.createElement("placeitem");
+    const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    this._editor = document.createElementNS(XULNS, "placeitem");
     this._editor.setAttribute("id", "bookmark-item");
     this._editor.setAttribute("flex", "1");
     this._editor.setAttribute("type", "bookmark");
     this._editor.setAttribute("ui", "manage");
     this._editor.setAttribute("title", title);
     this._editor.setAttribute("uri", aURI.spec);
+    this._editor.setAttribute("itemid", itemId);
     this._editor.setAttribute("tags", tags.join(", "));
     this._editor.setAttribute("onclose", "BookmarkHelper.hide()");
     document.getElementById("bookmark-form").appendChild(this._editor);
@@ -904,10 +906,7 @@ var BookmarkHelper = {
     BrowserUI.pushPopup(this, this._panel);
 
     let self = this;
-    setTimeout(function() {
-      self._editor.init(itemId);
-      self._editor.startEditing();
-    }, 0);
+    Util.executeSoon(function() { self._editor.startEditing(); });
   },
 
   save: function BH_save() {
