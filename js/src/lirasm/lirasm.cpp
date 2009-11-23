@@ -873,6 +873,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_flive:
           case LIR_neg:
           case LIR_fneg:
+          case LIR_not:
           case LIR_qlo:
           case LIR_qhi:
           case LIR_ov:
@@ -906,7 +907,6 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_qiand:
           case LIR_qior:
           case LIR_qxor:
-          case LIR_not:
           case LIR_lsh:
           case LIR_rsh:
           case LIR_ush:
