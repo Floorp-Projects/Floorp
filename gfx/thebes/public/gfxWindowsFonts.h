@@ -116,7 +116,7 @@ public:
         gfxFontEntry(aFaceName), mFontType(aFontType),
         mForceGDI(PR_FALSE), mUnknownCMAP(PR_FALSE),
         mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE),
-        mCharset(0), mUnicodeRanges(0)
+        mCharset(), mUnicodeRanges()
     {
         mUserFontData = aUserFontData;
         mItalic = aItalic;
