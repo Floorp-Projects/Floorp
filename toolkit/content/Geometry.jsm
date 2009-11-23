@@ -122,13 +122,18 @@ let Util = {
       return {reason: "handheld", result: true};
 
     let viewportScale = parseFloat(windowUtils.getDocumentMetadata("viewport-initial-scale"));
-    if (viewportScale > 0) {
+    let viewportWidthStr = windowUtils.getDocumentMetadata("viewport-width");
+    let viewportHeightStr = windowUtils.getDocumentMetadata("viewport-height");
+    let viewportWidth = viewportWidthStr == "device-width" ? window.innerWidth : parseInt(viewportWidthStr);
+    let viewportHeight = viewportHeightStr == "device-height" ? window.innerHeight : parseInt(viewportHeightStr);
+    
+    if (viewportScale > 0 || viewportWidth > 0 || viewportHeight > 0) {
       return {
         reason: "viewport",
         result: true,
         scale: viewportScale,
-        width: parseInt(windowUtils.getDocumentMetadata("viewport-width")),
-        height: parseInt(windowUtils.getDocumentMetadata("viewport-height"))
+        width: viewportWidth,
+        height: viewportHeight
       }
     }
 
