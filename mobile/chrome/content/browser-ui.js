@@ -268,6 +268,7 @@ var BrowserUI = {
       this.lockToolbar();
       this._dialogs.push(aDialog);
       document.getElementById("toolbar-main").setAttribute("dialog", "true");
+      Elements.contentShowing.setAttribute("disabled", "true");
     }
   },
 
@@ -279,8 +280,10 @@ var BrowserUI = {
     }
 
     // If no more dialogs are being displayed, remove the attr for CSS
-    if (!this._dialogs.length)
+    if (!this._dialogs.length) {
       document.getElementById("toolbar-main").removeAttribute("dialog");
+      Elements.contentShowing.removeAttribute("disabled");
+    }
   },
 
   pushPopup: function pushPopup(aPanel, aElements) {
@@ -586,6 +589,8 @@ var BrowserUI = {
     panelUI.width = window.innerWidth;
     panelUI.height = window.innerHeight;
 
+    Elements.contentShowing.setAttribute("disabled", "true");
+
     if (aPage != undefined)
       this.switchPane(aPage);
   },
@@ -593,6 +598,8 @@ var BrowserUI = {
   hidePanel: function hidePanel() {
     let panelUI = document.getElementById("panel-container");
     panelUI.hidden = true;
+
+    Elements.contentShowing.removeAttribute("disabled");
   },
   
   switchTask: function switchTask() {

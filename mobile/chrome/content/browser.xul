@@ -89,6 +89,10 @@
     <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
   </stringbundleset>
 
+  <broadcasterset id="broadcasterset">
+    <broadcaster id="bcast_contentShowing"/>
+  </broadcasterset>
+
   <commandset id="mainCommandSet">
     <!-- basic navigation -->
     <command id="cmd_back" label="&back.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -113,8 +117,8 @@
     <command id="cmd_actions" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_panel" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_sanitize" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_zoomin" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_zoomout" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_zoomin" observes="bcast_contentShowing" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_zoomout" observes="bcast_contentShowing" oncommand="CommandUpdater.doCommand(this.id);"/>
 
     <!-- scrolling -->
     <command id="cmd_scrollPageUp" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -170,9 +174,6 @@
     <key id="key_newTab" key="t" modifiers="accel" command="cmd_newTab"/>
     <key id="key_closeTab" key="w" modifiers="accel" command="cmd_closeTab"/>
   </keyset>
-
-  <popupset id="mainPopupSet">
-  </popupset>
 
   <stack flex="1" id="stack">
     <scrollbox id="controls-scrollbox" style="overflow: hidden; -moz-box-orient: horizontal; position: relative;" flex="1">
