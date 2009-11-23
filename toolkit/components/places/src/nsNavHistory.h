@@ -402,6 +402,8 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBGetTags; // used by GetTags
   nsCOMPtr<mozIStorageStatement> mDBGetItemsWithAnno; // used by AutoComplete::StartSearch and FilterResultSet
   nsCOMPtr<mozIStorageStatement> mDBSetPlaceTitle; // used by SetPageTitleInternal
+  nsCOMPtr<mozIStorageStatement> mDBRegisterOpenPage; // used by RegisterOpenPage
+  nsCOMPtr<mozIStorageStatement> mDBUnregisterOpenPage; // used by UnregisterOpenPage
 
   // these are used by VisitIdToResultNode for making new result nodes from IDs
   // Consumers need to use the getters since these statements are lazily created
