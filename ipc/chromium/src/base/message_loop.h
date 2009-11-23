@@ -27,7 +27,13 @@
 #endif
 
 #ifdef CHROMIUM_MOZILLA_BUILD
+namespace mozilla {
+namespace ipc {
+
 class DoWorkRunnable;
+
+} /* namespace ipc */
+} /* namespace mozilla */
 #endif
 
 // A MessageLoop is used to process events for a particular thread.  There is
@@ -63,7 +69,7 @@ class DoWorkRunnable;
 class MessageLoop : public base::MessagePump::Delegate {
 
 #ifdef CHROMIUM_MOZILLA_BUILD
-  friend class DoWorkRunnable;
+  friend class mozilla::ipc::DoWorkRunnable;
 #endif
 
 public:
