@@ -169,16 +169,27 @@ var BrowserUI = {
   },
 
   _updateButtons : function(aBrowser) {
-    var back = document.getElementById("cmd_back");
-    var forward = document.getElementById("cmd_forward");
+    let back = document.getElementById("cmd_back");
+    let forward = document.getElementById("cmd_forward");
 
     back.setAttribute("disabled", !aBrowser.canGoBack);
     forward.setAttribute("disabled", !aBrowser.canGoForward);
   },
 
+  _updateToolbarButton: function() {
+    let icons = document.getElementById("urlbar-icons");
+    if (Browser.selectedTab.isLoading() && icons.getAttribute("mode") != "loading") {
+      icons.setAttribute("mode", "loading");
+    }
+    else if (icons.getAttribute("mode") != "view") {
+      icons.setAttribute("mode", "view");
+    }
+  },
+
   _tabSelect : function(aEvent) {
-    var browser = Browser.selectedBrowser;
+    let browser = Browser.selectedBrowser;
     this._titleChanged(browser.contentDocument);
+    this._updateToolbarButton();
     this._updateButtons(browser);
     this._updateIcon(browser.mIconURL);
     this.updateStar();
@@ -230,11 +241,8 @@ var BrowserUI = {
       this._edit.blur();
       gFocusManager.setFocus(this._edit, Ci.nsIFocusManager.FLAG_NOSCROLL);
     }
-    else if (!aEdit && Browser.selectedTab.isLoading() && icons.getAttribute("mode") != "loading") {
-      icons.setAttribute("mode", "loading");
-    }
-    else if (!aEdit && icons.getAttribute("mode") != "view") {
-      icons.setAttribute("mode", "view");
+    else if (!aEdit) {
+      this._updateToolbarButton();
     }
   },
 
