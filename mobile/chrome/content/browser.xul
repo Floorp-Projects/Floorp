@@ -338,7 +338,7 @@
             <label value="&addonsHeader.label;"/>
           </hbox>
           <notificationbox id="addons-messages" flex="1">
-            <richlistbox id="addons-list" flex="1" onselect="ExtensionsView.hideOptions()">
+            <richlistbox id="addons-list" flex="1" onselect="ExtensionsView.hideOnSelect(event)">
               <richlistitem id="addons-local" class="section-header" align="center">
                 <label value="&addonsLocal.label;" flex="1"/>
                 <spacer flex="1"/>
