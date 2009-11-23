@@ -36,11 +36,7 @@
 
 #include "MessagePump.h"
 
-#include "nsIThread.h"
-#include "nsITimer.h"
-
 #include "nsComponentManagerUtils.h"
-#include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringGlue.h"
 #include "nsThreadUtils.h"
@@ -51,78 +47,73 @@
 #include "base/logging.h"
 #include "base/scoped_nsautorelease_pool.h"
 
+using mozilla::ipc::DoWorkRunnable;
 using mozilla::ipc::MessagePump;
 using mozilla::ipc::MessagePumpForChildProcess;
+using base::Time;
 
 namespace {
 
 bool gRunningSetNestableTasksAllowed = false;
 
-void
-TimerCallback(nsITimer* aTimer,
-              void* aClosure)
-{
-  MessagePump* messagePump = reinterpret_cast<MessagePump*>(aClosure);
-  messagePump->ScheduleWork();
-}
-
 } /* anonymous namespace */
 
-class DoWorkRunnable : public nsRunnable
+NS_IMPL_THREADSAFE_ISUPPORTS2(DoWorkRunnable, nsIRunnable, nsITimerCallback)
+
+NS_IMETHODIMP
+DoWorkRunnable::Run()
 {
-public:
-  NS_IMETHOD Run() {
-    MessageLoop* loop = MessageLoop::current();
-    NS_ASSERTION(loop, "Shouldn't be null!");
-    if (loop) {
-      bool nestableTasksAllowed = loop->NestableTasksAllowed();
+  MessageLoop* loop = MessageLoop::current();
+  NS_ASSERTION(loop, "Shouldn't be null!");
+  if (loop) {
+    bool nestableTasksAllowed = loop->NestableTasksAllowed();
 
-      gRunningSetNestableTasksAllowed = true;
-      loop->SetNestableTasksAllowed(true);
-      gRunningSetNestableTasksAllowed = false;
+    gRunningSetNestableTasksAllowed = true;
+    loop->SetNestableTasksAllowed(true);
+    gRunningSetNestableTasksAllowed = false;
 
-      loop->DoWork();
+    loop->DoWork();
 
-      gRunningSetNestableTasksAllowed = true;
-      loop->SetNestableTasksAllowed(nestableTasksAllowed);
-      gRunningSetNestableTasksAllowed = false;
-    }
-    return NS_OK;
+    gRunningSetNestableTasksAllowed = true;
+    loop->SetNestableTasksAllowed(nestableTasksAllowed);
+    gRunningSetNestableTasksAllowed = false;
   }
-};
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DoWorkRunnable::Notify(nsITimer* aTimer)
+{
+  MessageLoop* loop = MessageLoop::current();
+  NS_ASSERTION(loop, "Shouldn't be null!");
+  if (loop) {
+    mPump->DoDelayedWork(loop);
+  }
+  return NS_OK;
+}
 
 MessagePump::MessagePump()
 : mThread(nsnull)
 {
-  mDummyEvent = new DoWorkRunnable();
-  // I'm tired of adding OOM checks.
-  NS_ADDREF(mDummyEvent);
-}
-
-MessagePump::~MessagePump()
-{
-  NS_RELEASE(mDummyEvent);
+  mDoWorkEvent = new DoWorkRunnable(this);
 }
 
 void
 MessagePump::Run(MessagePump::Delegate* aDelegate)
 {
   NS_ASSERTION(keep_running_, "Quit must have been called outside of Run!");
-
-  NS_ASSERTION(NS_IsMainThread(),
-               "This should only ever happen on Gecko's main thread!");
+  NS_ASSERTION(NS_IsMainThread(), "Called Run on the wrong thread!");
 
   mThread = NS_GetCurrentThread();
   NS_ASSERTION(mThread, "This should never be null!");
 
-  nsCOMPtr<nsITimer> timer(do_CreateInstance(NS_TIMER_CONTRACTID));
-  NS_ASSERTION(timer, "Failed to create timer!");
+  mDelayedWorkTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  NS_ASSERTION(mDelayedWorkTimer, "Failed to create timer!");
 
   base::ScopedNSAutoreleasePool autoReleasePool;
 
   for (;;) {
     autoReleasePool.Recycle();
-    timer->Cancel();
 
     bool did_work = NS_ProcessNextEvent(mThread, PR_FALSE) ? true : false;
     if (!keep_running_)
@@ -133,6 +124,10 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
       break;
 
     did_work |= aDelegate->DoDelayedWork(&delayed_work_time_);
+
+    if (did_work && delayed_work_time_.is_null())
+      mDelayedWorkTimer->Cancel();
+
     if (!keep_running_)
       break;
 
@@ -143,32 +138,11 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
     if (!keep_running_)
       break;
 
-    if (did_work)
-      continue;
-
-    if (delayed_work_time_.is_null()) {
-      // This will sleep or process native events.
-      NS_ProcessNextEvent(mThread, PR_TRUE);
-      continue;
-    }
-
-    base::TimeDelta delay = delayed_work_time_ - base::Time::Now();
-    if (delay > base::TimeDelta()) {
-      PRUint32 delayMS = PRUint32(delay.InMilliseconds());
-      timer->InitWithFuncCallback(TimerCallback, this, delayMS,
-                                  nsITimer::TYPE_ONE_SHOT);
-      // This will sleep or process native events. The timer should wake us up
-      // if nothing else does.
-      NS_ProcessNextEvent(mThread, PR_TRUE);
-      continue;
-    }
-
-    // It looks like delayed_work_time_ indicates a time in the past, so we
-    // need to call DoDelayedWork now.
-    delayed_work_time_ = base::Time();
+    // This will either sleep or process an event.
+    NS_ProcessNextEvent(mThread, PR_TRUE);
   }
 
-  timer->Cancel();
+  mDelayedWorkTimer->Cancel();
 
   keep_running_ = true;
 }
@@ -182,14 +156,48 @@ MessagePump::ScheduleWork()
 
   // Make sure the event loop wakes up.
   if (mThread) {
-    mThread->Dispatch(mDummyEvent, NS_DISPATCH_NORMAL);
+    mThread->Dispatch(mDoWorkEvent, NS_DISPATCH_NORMAL);
   }
   else {
     // Some things (like xpcshell) don't use the app shell and so Run hasn't
     // been called. We still need to wake up the main thread.
-    NS_DispatchToMainThread(mDummyEvent, NS_DISPATCH_NORMAL);
+    NS_DispatchToMainThread(mDoWorkEvent, NS_DISPATCH_NORMAL);
   }
   event_.Signal();
+}
+
+void
+MessagePump::ScheduleDelayedWork(const base::Time& aDelayedTime)
+{
+  if (!mDelayedWorkTimer) {
+    mDelayedWorkTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    if (!mDelayedWorkTimer) {
+        // Called before XPCOM has started up? We can't do this correctly.
+        NS_WARNING("Delayed task might not run!");
+        delayed_work_time_ = aDelayedTime;
+        return;
+    }
+  }
+
+  if (!delayed_work_time_.is_null()) {
+    mDelayedWorkTimer->Cancel();
+  }
+
+  delayed_work_time_ = aDelayedTime;
+
+  base::TimeDelta delay = aDelayedTime - base::Time::Now();
+  PRUint32 delayMS = PRUint32(delay.InMilliseconds());
+  mDelayedWorkTimer->InitWithCallback(mDoWorkEvent, delayMS,
+                                      nsITimer::TYPE_ONE_SHOT);
+}
+
+void
+MessagePump::DoDelayedWork(base::MessagePump::Delegate* aDelegate)
+{
+  aDelegate->DoDelayedWork(&delayed_work_time_);
+  if (!delayed_work_time_.is_null()) {
+    ScheduleDelayedWork(delayed_work_time_);
+  }
 }
 
 #ifdef DEBUG
