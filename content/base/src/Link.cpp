@@ -42,33 +42,79 @@
 #include "nsIEventStateManager.h"
 #include "nsIURL.h"
 
+#include "nsContentUtils.h"
 #include "nsEscape.h"
 #include "nsGkAtoms.h"
 #include "nsString.h"
+
+#include "mozilla/IHistory.h"
 
 namespace mozilla {
 namespace dom {
 
 Link::Link()
   : mLinkState(defaultState)
+  , mRegistered(false)
 {
 }
 
 nsLinkState
 Link::GetLinkState() const
 {
+  NS_ASSERTION(mRegistered,
+               "Getting the link state of an unregistered Link!");
+  NS_ASSERTION(mLinkState != eLinkState_Unknown,
+               "Getting the link state with an unknown value!");
   return mLinkState;
 }
 
 void
 Link::SetLinkState(nsLinkState aState)
 {
+  NS_ASSERTION(mRegistered,
+               "Setting the link state of an unregistered Link!");
   mLinkState = aState;
+
+  // Per IHistory interface documentation, we are no longer registered.
+  mRegistered = false;
 }
 
 PRInt32
 Link::LinkState() const
 {
+  // We are a constant method, but we are just lazily doing things and have to
+  // track that state.  Cast away that constness!
+  Link *self = const_cast<Link *>(this);
+
+  // If we are not in the document, default to not visited.
+  nsCOMPtr<nsIContent> content(do_QueryInterface(self));
+  NS_ASSERTION(content, "Why isn't this an nsIContent node?!");
+  if (!content->IsInDoc()) {
+    self->mLinkState = eLinkState_Unvisited;
+  }
+
+  // If we have not yet registered for notifications and are in an unknown
+  // state, register now!
+  if (!mRegistered && mLinkState == eLinkState_Unknown) {
+    // First, make sure the href attribute has a valid link (bug 23209).
+    nsCOMPtr<nsIURI> hrefURI(GetURI());
+    if (!hrefURI) {
+      self->mLinkState = eLinkState_NotLink;
+      return 0;
+    }
+
+    // We have a good href, so register with History.
+    IHistory *history = nsContentUtils::GetHistory();
+    nsresult rv = history->RegisterVisitedCallback(hrefURI, self);
+    if (NS_SUCCEEDED(rv)) {
+      self->mRegistered = true;
+
+      // Assume that we are not visited until we are told otherwise.
+      self->mLinkState = eLinkState_Unvisited;
+    }
+  }
+
+  // Otherwise, return our known state.
   if (mLinkState == eLinkState_Visited) {
     return NS_EVENT_STATE_VISITED;
   }
@@ -398,11 +444,34 @@ Link::ResetLinkState()
     doc->ForgetLink(content);
   }
 
+  UnregisterFromHistory();
+
   // Update our state back to the default.
   mLinkState = defaultState;
 
   // Get rid of our cached URI.
   mCachedURI = nsnull;
+}
+
+void
+Link::UnregisterFromHistory()
+{
+  // If we are not registered, we have nothing to do.
+  if (!mRegistered) {
+    return;
+  }
+
+  // Obtain the URI that we registered with.
+  nsCOMPtr<nsIURI> hrefURI(GetURI());
+  NS_ASSERTION(hrefURI, "mRegistered is true, but we have no URI?!");
+
+  // And tell History to stop tracking us.
+  IHistory *history = nsContentUtils::GetHistory();
+  nsresult rv = history->UnregisterVisitedCallback(hrefURI, this);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "This should only fail if we misuse the API!");
+  if (NS_SUCCEEDED(rv)) {
+    mRegistered = false;
+  }
 }
 
 already_AddRefed<nsIURI>
