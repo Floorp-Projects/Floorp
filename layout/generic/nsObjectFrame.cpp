@@ -517,19 +517,15 @@ private:
   // used to keep track of how big our buffer is.
   nsIntSize mPluginSize;
 
-  // the scale between the actual instance plugin window and what
-  // we want to scale it to.
-  float mPluginScale;
-
   // the element that was passed into SetAbsoluteScreenPosition().
   // This will be the element we use to determine which Window we draw into.
   nsCOMPtr<nsIDOMElement> mBlitParentElement;
 
   // The absolute position on the screen to draw to.
-  nsIntRect mAbsolutePosition;
+  gfxRect mAbsolutePosition;
 
   // The clip region that we should draw into.
-  nsIntRect mAbsolutePositionClip;
+  gfxRect mAbsolutePositionClip;
 
   GC mXlibSurfGC;
   Window mBlitWindow;
@@ -1229,7 +1225,8 @@ nsObjectFrame::SetAbsoluteScreenPosition(nsIDOMElement* element,
                                          nsIDOMClientRect* clip)
 {
 #ifdef MOZ_PLATFORM_HILDON
-  NS_ASSERTION(mInstanceOwner, "failed to get mInstanceOwner");
+  if (!mInstanceOwner)
+    return NS_ERROR_NOT_AVAILABLE;
   return mInstanceOwner->SetAbsoluteScreenPosition(element, position, clip);
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -2420,7 +2417,6 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 
 #ifdef MOZ_PLATFORM_HILDON
   mPluginSize = nsIntSize(0,0);
-  mPluginScale = 1.0;
   mXlibSurfGC = None;
   mSharedXImage = nsnull;
   mSharedSegmentInfo.shmaddr = nsnull;
@@ -5016,15 +5012,20 @@ nsPluginInstanceOwner::NativeImageDraw()
     return NS_OK;
 
   // if the clip rect is zero, we have nothing to do.
-  if (mAbsolutePositionClip.width == 0 || mAbsolutePositionClip.height == 0)
+  if (NSToIntCeil(mAbsolutePositionClip.Width()) == 0 ||
+      NSToIntCeil(mAbsolutePositionClip.Height()) == 0)
     return NS_OK;
+  
+  // The flash plugin on Maemo n900 requires the width/height to be
+  // even.
+  PRInt32 absPosWidth  = NSToIntCeil(mAbsolutePosition.Width()) / 2 * 2;
+  PRInt32 absPosHeight = NSToIntCeil(mAbsolutePosition.Height()) / 2 * 2;
 
-  // if we haven't been setup before, or if the size of the plugin increased.
   if (!mSharedXImage ||
-      mPluginSize.width != mAbsolutePosition.width ||
-      mPluginSize.height != mAbsolutePosition.height) {
-
-    mPluginSize = nsIntSize(mAbsolutePosition.width, mAbsolutePosition.height);
+      mPluginSize.width != absPosWidth ||
+      mPluginSize.height != absPosHeight) {
+    
+    mPluginSize = nsIntSize(absPosWidth, absPosHeight);
 
     if (NS_FAILED(SetupXShm()))
       return NS_ERROR_FAILURE;
@@ -5086,8 +5087,13 @@ nsPluginInstanceOwner::NativeImageDraw()
   imageExpose.translateX = 0;
   imageExpose.translateY = 0;
 
-  imageExpose.scaleX = mPluginScale;
-  imageExpose.scaleY = mPluginScale;
+  if (window->width == 0)
+    return NS_OK;
+  
+  float scale = mAbsolutePosition.Width() / (float) window->width;
+  
+  imageExpose.scaleX = scale;
+  imageExpose.scaleY = scale;
 
   imageExpose.stride          = mPluginSize.width * 2;
   imageExpose.data            = mSharedXImage->data;
@@ -5106,15 +5112,18 @@ nsPluginInstanceOwner::NativeImageDraw()
 
   // Setup the clip rectangle
   XRectangle rect;
-  rect.x = mAbsolutePositionClip.x;
-  rect.y = mAbsolutePositionClip.y;
-  rect.width = mAbsolutePositionClip.width;
-  rect.height = mAbsolutePositionClip.height;
-
+  rect.x = NSToIntFloor(mAbsolutePositionClip.X());
+  rect.y = NSToIntFloor(mAbsolutePositionClip.Y());
+  rect.width = NSToIntCeil(mAbsolutePositionClip.Width());
+  rect.height = NSToIntCeil(mAbsolutePositionClip.Height());
+  
+  PRInt32 absPosX = NSToIntFloor(mAbsolutePosition.X());
+  PRInt32 absPosY = NSToIntFloor(mAbsolutePosition.Y());
+  
   XSetClipRectangles(gdk_x11_get_default_xdisplay(),
                      mXlibSurfGC,
-                     mAbsolutePosition.x,
-                     mAbsolutePosition.y, 
+                     absPosX,
+                     absPosY, 
                      &rect, 1,
                      Unsorted);
 
@@ -5124,8 +5133,8 @@ nsPluginInstanceOwner::NativeImageDraw()
                mSharedXImage,
                0,
                0,
-               mAbsolutePosition.x,
-               mAbsolutePosition.y,
+               absPosX,
+               absPosY,
                mPluginSize.width,
                mPluginSize.height,
                PR_FALSE);
@@ -5566,8 +5575,9 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
 #ifdef MOZ_PLATFORM_HILDON
 PRBool nsPluginInstanceOwner::UpdateVisibility()
 {
-  NS_ASSERTION(mInstance, "mInstance should never be null");
-  
+  if (!mInstance)
+    return PR_TRUE;
+
   PRBool handled;
   NPEvent pluginEvent;
   XVisibilityEvent& visibilityEvent = pluginEvent.xvisibility;
@@ -5729,37 +5739,23 @@ nsPluginInstanceOwner::SetAbsoluteScreenPosition(nsIDOMElement* element,
       !position || !clip)
     return NS_ERROR_FAILURE;
   
-  // convert to a int rect.
   float left, top, width, height;
   position->GetLeft(&left);
   position->GetTop(&top);
   position->GetWidth(&width);
   position->GetHeight(&height);
+
+  mAbsolutePosition = gfxRect(left, top, width, height);
   
-  NPWindow  *window;
-  GetWindow(window);
-  NS_ASSERTION(window, "Must have a window here");
-  
-  mPluginScale = width / window->width;
-  
-  // The flash plugin on Maemo n900 requires the width/height to be
-  // even.
-  mAbsolutePosition = nsIntRect(NSToIntFloor(left),
-                                NSToIntFloor(top),
-                                NSToIntCeil(width) / 2 * 2,
-                                NSToIntCeil(height) / 2 * 2);
   clip->GetLeft(&left);
   clip->GetTop(&top);
   clip->GetWidth(&width);
   clip->GetHeight(&height);
-  
-  mAbsolutePositionClip = nsIntRect(NSToIntFloor(left),
-                                    NSToIntFloor(top),
-                                    NSToIntCeil(width),
-                                    NSToIntCeil(height));
+
+  mAbsolutePositionClip = gfxRect(left,top, width, height);
+
   mBlitParentElement = element;
     
-  // The hildon plugin needs to have it visibility poked
   UpdateVisibility();
   return NS_OK;
 }
