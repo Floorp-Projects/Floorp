@@ -270,7 +270,7 @@ var ExtensionsView = {
       this.showRestart();
       this._restartCount--; // showRestart() always increments
     }
-    
+
     let strings = Elements.browserBundle;
     this._strings["addonType.2"] = strings.getString("addonType.2");
     this._strings["addonType.4"] = strings.getString("addonType.4");
@@ -289,6 +289,12 @@ var ExtensionsView = {
     os.removeObserver(this._dloadmgr, "xpinstall-download-started");
 
     this._extmgr.removeInstallListenerAt(this._observerIndex);
+  },
+  
+  hideOnSelect: function ev_handleEvent(aEvent) {
+    // When list selection changes, be sure to close up any open options sections
+    if (aEvent.target == this._list)
+      this.hideOptions();
   },
 
   getAddonsFromLocal: function ev_getAddonsFromLocal() {
