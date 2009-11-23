@@ -58,7 +58,7 @@
   </binding>
 
   <binding id="setting-base">
-    <implementation implements="nsIObserver">
+    <implementation>
       <constructor><![CDATA[
         this.preferenceChanged();
         
@@ -160,8 +160,10 @@
       <property name="value" onget="return this.input.value;" onset="return this.input.value = val;"/>
 
       <field name="_prefs">
-        Components.classes["@mozilla.org/preferences-service;1"]
-                  .getService(Components.interfaces.nsIPrefBranch2);
+        this.settings ?
+          this.settings.prefs :
+          Components.classes["@mozilla.org/preferences-service;1"]
+                    .getService(Components.interfaces.nsIPrefBranch2);
       </field>
 
       <field name="_updatingInput">false</field>
