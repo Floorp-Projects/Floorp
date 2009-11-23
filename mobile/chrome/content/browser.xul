@@ -387,7 +387,7 @@
               <settings id="prefs-content" label="&content.title;">
                 <setting pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>
                 <setting pref="javascript.enabled" type="bool" title="&enableJavaScript.title;"/>
-                <setting pref="plugins.enabled" type="bool" title="&enablePlugins.title;" onsynctopreference="Browser.setPluginState(this.value);"/>
+                <setting pref="plugins.enabled" type="bool" title="&enablePlugins.title;" oninputchanged="Browser.setPluginState(this.value);"/>
               </settings>
               <settings id="prefs-privacy" label="&privacy.title;">
                 <setting pref="network.cookie.cookieBehavior" title="&allowCookies.title;" type="boolint" on="0" off="2"/>
