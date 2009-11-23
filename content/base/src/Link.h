@@ -93,13 +93,21 @@ protected:
    */
   virtual void ResetLinkState();
 
-  nsLinkState mLinkState;
-
 private:
+  /**
+   * Unregisters from History so this node no longer gets notifications about
+   * changes to visitedness.
+   */
+  void UnregisterFromHistory();
+
   already_AddRefed<nsIURI> GetURIToMutate();
   void SetHrefAttribute(nsIURI *aURI);
 
+  nsLinkState mLinkState;
+
   mutable nsCOMPtr<nsIURI> mCachedURI;
+
+  bool mRegistered;
 };
 
 } // namespace dom
