@@ -594,7 +594,7 @@ OPDEF(JSOP_LAMBDA_DBGFC,     233,"lambda_dbgfc",     NULL,  3,  0,  1, 19,  JOF_
  * Concatenate N values, coercing to string if necessary, where N is concatn's
  * immediate.  See record_JSOP_CONCATN for recording behavior.
  */
-OPDEF(JSOP_CONCATN,       234,"concatn",       NULL,  3, -1,  1,  0,  JOF_UINT16|JOF_TMPSLOT2)
+OPDEF(JSOP_CONCATN,       234,"concatn",       NULL,  3, -1,  1, 13,  JOF_UINT16|JOF_TMPSLOT2)
 
 /*
  * Joined function object as method optimization support.
