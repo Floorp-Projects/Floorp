@@ -1541,10 +1541,6 @@ namespace nanojit
 
     Register Assembler::asm_prep_fcall(Reservation* /*unused*/, LInsp ins)
     {
-        Register rr;
-        if (ins->isUsed() && (rr = ins->getReg(), isKnownReg(rr)) && (rmask(rr) & XmmRegs)) {
-            evict(rr, ins);
-        }
         return prepResultReg(ins, rmask(FST0));
     }
 

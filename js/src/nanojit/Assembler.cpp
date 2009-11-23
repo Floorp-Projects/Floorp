@@ -476,7 +476,16 @@ namespace nanojit
 
     Register Assembler::prepResultReg(LIns *ins, RegisterMask allow)
     {
-        const bool pop = ins->isUnusedOrHasUnknownReg();
+        // 'pop' is only relevant on i386 and if 'allow' includes FST0, in
+        // which case we have to pop if 'ins' isn't in FST0 in the post-state.
+        // This could be because 'ins' is unused, is in a spill slot, or is in
+        // an XMM register.
+#ifdef NANOJIT_IA32
+        const bool pop = (allow & rmask(FST0)) &&
+                         (ins->isUnusedOrHasUnknownReg() || ins->getReg() != FST0);
+#else
+        const bool pop = false;
+#endif
         Register r = findRegFor(ins, allow);
         freeRsrcOf(ins, pop);
         return r;
