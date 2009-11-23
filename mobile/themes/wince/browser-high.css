@@ -274,6 +274,10 @@ placeitem > .bookmark-manage > image {
   max-height: 32px;
 }
 
+placeitem[src=""] .bookmark-item-label > image {
+  list-style-image: url(chrome://mozapps/skin/places/defaultFavicon.png);
+}
+
 .autocomplete-item-url,
 .bookmark-item-url {
   margin-left: 34px;

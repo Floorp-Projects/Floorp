@@ -599,6 +599,10 @@ placeitem > .bookmark-manage > image {
   margin: 0mm 2.5mm 0mm 1mm;
 }
 
+placeitem[src=""] .bookmark-item-label > image {
+  list-style-image: url(chrome://mozapps/skin/places/defaultFavicon.png);
+}
+
 .autocomplete-item-label > label,
 .bookmark-item-label > label {
   -moz-margin-start: 1px;

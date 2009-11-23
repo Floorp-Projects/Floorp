@@ -218,7 +218,7 @@ gTests.push({
   onBookmarksReady: function() {
     var bookmarkitems = document.getElementById("bookmark-items");
     gCurrentTest.bookmarkitem = document.getAnonymousElementByAttribute(bookmarkitems, "uri", testURL_02);
-    EventUtils.synthesizeMouse(gCurrentTest.bookmarkitem, gCurrentTest.bookmarkitem.clientWidth / 2, gCurrentTest.bookmarkitem.clientHeight / 2, {});
+    gCurrentTest.bookmarkitem.click();
 
     waitFor(gCurrentTest.onEditorReady, function() { return gCurrentTest.bookmarkitem.isEditing == true; });
   },
