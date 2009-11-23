@@ -203,6 +203,8 @@ nsHTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers)
 {
+  Link::ResetLinkState();
+
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
@@ -214,7 +216,7 @@ nsHTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMLinkAdded"));
 
-  return rv;  
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -234,6 +236,8 @@ nsHTMLLinkElement::LinkRemoved()
 void
 nsHTMLLinkElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
+  // If this link is ever reinserted into a document, it might
+  // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState();
 
   // Once we have XPCOMGC we shouldn't need to call UnbindFromTree during Unlink
