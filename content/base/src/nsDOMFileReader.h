@@ -60,6 +60,7 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamLoader.h"
 #include "nsIChannel.h"
+#include "prmem.h"
 
 #include "nsXMLHttpRequest.h"
 
@@ -118,6 +119,12 @@ protected:
   nsresult ConvertStream(const char *aFileData, PRUint32 aDataLen, const char *aCharset, nsAString &aResult); 
   void DispatchError(nsresult rv);
   void StartProgressEventTimer();
+
+  void FreeFileData() {
+    PR_Free(mFileData);
+    mFileData = nsnull;
+    mDataLen = 0;
+  }
 
   char *mFileData;
   nsCOMPtr<nsIFile> mFile;
