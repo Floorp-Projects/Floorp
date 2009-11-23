@@ -230,7 +230,7 @@ toolbar[mode="icons"] #back-button {
 toolbar[iconsize="large"][mode="icons"] #back-button {
   -moz-image-region: rect(0px 396px 34px 360px);
 }
-toolbar[iconsize="large"][mode="icons"] #back-button:not([disabled="true"]):hover {
+toolbar[iconsize="large"][mode="icons"] #back-button:hover {
   -moz-image-region: rect(34px 396px 68px 360px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-button[disabled="true"] {
@@ -251,7 +251,7 @@ toolbar[mode="icons"] #forward-button {
 toolbar[iconsize="large"][mode="icons"] #forward-button {
   -moz-image-region: rect(3px 422px 31px 396px);
 }
-toolbar[iconsize="large"][mode="icons"] #forward-button:not([disabled="true"]):hover {
+toolbar[iconsize="large"][mode="icons"] #forward-button:hover {
   -moz-image-region: rect(37px 422px 65px 396px);
 }
 toolbar[iconsize="large"][mode="icons"] #forward-button[disabled="true"] {
@@ -283,7 +283,7 @@ toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
   -moz-image-region: rect(3px 438px 31px 422px);
 }
-toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker:not([disabled="true"]):hover {
+toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker:hover {
   -moz-image-region: rect(37px 438px 65px 422px);
 }
 toolbar[iconsize="large"][mode="icons"] #back-forward-dropmarker[disabled="true"] {
@@ -305,7 +305,7 @@ toolbar[iconsize="small"][mode="icons"] #forward-button > .toolbarbutton-icon {
 toolbar[iconsize="small"][mode="icons"] #back-button {
   -moz-image-region: rect(0px 264px 24px 240px);
 }
-toolbar[iconsize="small"][mode="icons"] #back-button:not([disabled="true"]):hover {
+toolbar[iconsize="small"][mode="icons"] #back-button:hover {
   -moz-image-region: rect(24px 264px 48px 240px);
 }
 toolbar[iconsize="small"][mode="icons"] #back-button[disabled="true"] {
@@ -320,7 +320,7 @@ toolbar[iconsize="small"][mode="icons"] #back-button:not([disabled="true"]):hove
 toolbar[iconsize="small"][mode="icons"] #forward-button {
   -moz-image-region: rect(0px 288px 24px 264px);
 }
-toolbar[iconsize="small"][mode="icons"] #forward-button:not([disabled="true"]):hover {
+toolbar[iconsize="small"][mode="icons"] #forward-button:hover {
   -moz-image-region: rect(24px 288px 48px 264px);
 }
 toolbar[iconsize="small"][mode="icons"] #forward-button[disabled="true"] {
@@ -336,7 +336,7 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
   -moz-image-region: rect(0px 301px 24px 288px);
 }
-toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="true"]):hover {
+toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:hover {
   -moz-image-region: rect(24px 301px 48px 288px);
 }
 toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker[disabled="true"] {
@@ -353,15 +353,11 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #back-button {
   -moz-image-region: rect(0px 24px 24px 0px); 
 }
-#back-button:not([disabled="true"]):hover,
-#back-button[buttonover="true"] {
+#back-button:hover {
   -moz-image-region: rect(24px 24px 48px 0px);
 }
 #back-button[disabled="true"] {
   -moz-image-region: rect(48px 24px 72px 0px);
-}
-#back-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 24px 120px 0px);
 }
 
 /* forward button */
@@ -369,15 +365,11 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #forward-button {
   -moz-image-region: rect(0px 48px 24px 24px);
 }
-#forward-button:not([disabled="true"]):hover,
-#forward-button[buttonover="true"] {
+#forward-button:hover {
   -moz-image-region: rect(24px 48px 48px 24px);
 }
 #forward-button[disabled="true"] {
   -moz-image-region: rect(48px 48px 72px 24px);
-}
-#forward-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 48px 120px 24px);
 }
 
 /* stop button */
@@ -385,14 +377,11 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #stop-button {
   -moz-image-region: rect(0px 72px 24px 48px);
 }
-#stop-button:not([disabled="true"]):hover {
+#stop-button:hover {
   -moz-image-region: rect(24px 72px 48px 48px);
 }
 #stop-button[disabled="true"] {
   -moz-image-region: rect(48px 72px 72px 48px);
-}
-#stop-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 72px 120px 48px);
 }
 
 /* reload button */
@@ -400,14 +389,11 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #reload-button {
   -moz-image-region: rect(0px 96px 24px 72px);
 }
-#reload-button:not([disabled="true"]):hover {
+#reload-button:hover {
   -moz-image-region: rect(24px 96px 48px 72px);
 }
 #reload-button[disabled="true"] {
   -moz-image-region: rect(48px 96px 72px 72px);
-}
-#reload-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 96px 120px 72px);
 }
 
 /* home button */
@@ -418,9 +404,6 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #home-button:hover {
   -moz-image-region: rect(24px 120px 48px 96px);
 }
-#home-button:hover:active {
-  -moz-image-region: rect(96px 120px 120px 96px);
-}
 
 /* download manager button */
 
@@ -430,23 +413,15 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #downloads-button:hover {
   -moz-image-region: rect(24px 144px 48px 120px);
 }
-#downloads-button:hover:active {
-  -moz-image-region: rect(96px 144px 120px 120px);
-}
 
 /* history sidebar button */
 
 #history-button {
   -moz-image-region: rect(0px 168px 24px 144px);
 }
-#history-button:not([checked="true"]):hover {
-  -moz-image-region: rect(24px 168px 48px 144px);
-}
+#history-button:hover,
 #history-button[checked="true"] {
-  -moz-image-region: rect(72px 168px 96px 144px);
-}
-#history-button:not([checked="true"]):hover:active {
-  -moz-image-region: rect(96px 168px 120px 144px);
+  -moz-image-region: rect(24px 168px 48px 144px);
 }
 
 /* bookmark sidebar button */
@@ -454,14 +429,9 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #bookmarks-button {
   -moz-image-region: rect(0px 192px 24px 168px);
 }
-#bookmarks-button:not([checked="true"]):hover {
-  -moz-image-region: rect(24px 192px 48px 168px);
-}
+#bookmarks-button:hover,
 #bookmarks-button[checked="true"] {
-  -moz-image-region: rect(72px 192px 96px 168px);
-}
-#bookmarks-button:not([checked="true"]):hover:active {
-  -moz-image-region: rect(96px 192px 120px 168px);
+  -moz-image-region: rect(24px 192px 48px 168px);
 }
 
 /* print button */
@@ -469,14 +439,11 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #print-button {
   -moz-image-region: rect(0px 216px 24px 192px);
 }
-#print-button:not([disabled="true"]):hover {
+#print-button:hover {
   -moz-image-region: rect(24px 216px 48px 192px);
 }
 #print-button[disabled="true"] {
   -moz-image-region: rect(48px 216px 72px 192px);
-}
-#print-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 216px 120px 192px);
 }
 
 /* toolbar new tab button */
@@ -487,9 +454,6 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #new-tab-button:hover {
   -moz-image-region: rect(24px 240px 48px 216px);
 }
-#new-tab-button:hover:active {
-  -moz-image-region: rect(96px 240px 120px 216px);
-}
 
 /* new window button */
 
@@ -499,23 +463,17 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #new-window-button:hover {
   -moz-image-region: rect(24px 264px 48px 240px);
 }
-#new-window-button:hover:active {
-  -moz-image-region: rect(96px 264px 120px 240px);
-}
 
 /* cut button */
 
 #cut-button {
   -moz-image-region: rect(0px 288px 24px 264px);
 }
-#cut-button:not([disabled="true"]):hover {
+#cut-button:hover {
   -moz-image-region: rect(24px 288px 48px 264px);
 }
 #cut-button[disabled="true"] {
   -moz-image-region: rect(48px 288px 72px 264px);
-}
-#cut-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 288px 120px 264px);
 }
 
 /* copy button */
@@ -523,14 +481,11 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #copy-button {
   -moz-image-region: rect(0px 312px 24px 288px);
 }
-#copy-button:not([disabled="true"]):hover {
+#copy-button:hover {
   -moz-image-region: rect(24px 312px 48px 288px);
 }
 #copy-button[disabled="true"] {
   -moz-image-region: rect(48px 312px 72px 288px);
-}
-#copy-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 312px 120px 288px);
 }
 
 /* paste button */
@@ -538,14 +493,11 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #paste-button {
   -moz-image-region: rect(0px 336px 24px 312px);
 }
-#paste-button:not([disabled="true"]):hover {
+#paste-button:hover {
   -moz-image-region: rect(24px 336px 48px 312px);
 }
 #paste-button[disabled="true"] {
   -moz-image-region: rect(48px 336px 72px 312px);
-}
-#paste-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(96px 336px 120px 312px);
 }
 
 /* fullscreen button */
@@ -553,11 +505,9 @@ toolbar[iconsize="small"][mode="icons"] #back-forward-dropmarker:not([disabled="
 #fullscreen-button {
   -moz-image-region: rect(0px 360px 24px 336px);
 }
-#fullscreen-button:hover {
+#fullscreen-button:hover,
+#fullscreen-button[checked="true"] {
   -moz-image-region: rect(24px 360px 48px 336px);
-}
-#fullscreen-button:hover:active {
-  -moz-image-region: rect(96px 360px 120px 336px);
 }
 
 /* ::::: 16px primary toolbar buttons ::::: */
@@ -580,15 +530,11 @@ toolbar[iconsize="small"] #back-button > .toolbarbutton-icon {
 toolbar[iconsize="small"] #back-button {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
-toolbar[iconsize="small"] #back-button:not([disabled="true"]):hover,
-toolbar[iconsize="small"] #back-button[buttonover="true"] {
+toolbar[iconsize="small"] #back-button:hover {
   -moz-image-region: rect(16px 16px 32px 0px);
 }
 toolbar[iconsize="small"] #back-button[disabled="true"] {
   -moz-image-region: rect(32px 16px 48px 0px);
-}
-toolbar[iconsize="small"] #back-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 16px 80px 0px);
 }
 
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
@@ -604,15 +550,11 @@ toolbar[iconsize="small"] #forward-button > .toolbarbutton-icon {
 toolbar[iconsize="small"] #forward-button {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
-toolbar[iconsize="small"] #forward-button:not([disabled="true"]):hover,
-toolbar[iconsize="small"] #forward-button[buttonover="true"] {
+toolbar[iconsize="small"] #forward-button:hover {
   -moz-image-region: rect(16px 32px 32px 16px);
 }
 toolbar[iconsize="small"] #forward-button[disabled="true"] {
   -moz-image-region: rect(32px 32px 48px 16px);
-}
-toolbar[iconsize="small"] #forward-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 32px 80px 16px);
 }
 
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(ltr),
@@ -625,14 +567,11 @@ toolbar[iconsize="small"] #forward-button:not([disabled="true"]):hover:active {
 toolbar[iconsize="small"] #stop-button {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
-toolbar[iconsize="small"] #stop-button:not([disabled="true"]):hover {
+toolbar[iconsize="small"] #stop-button:hover {
   -moz-image-region: rect(16px 48px 32px 32px);
 }
 toolbar[iconsize="small"] #stop-button[disabled="true"] {
   -moz-image-region: rect(32px 48px 48px 32px);
-}
-toolbar[iconsize="small"] #stop-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 48px 80px 32px);
 }
 
 /* reload button */
@@ -640,14 +579,11 @@ toolbar[iconsize="small"] #stop-button:not([disabled="true"]):hover:active {
 toolbar[iconsize="small"] #reload-button {
   -moz-image-region: rect(0px 64px 16px 48px);
 }
-toolbar[iconsize="small"] #reload-button:not([disabled="true"]):hover {
+toolbar[iconsize="small"] #reload-button:hover {
   -moz-image-region: rect(16px 64px 32px 48px);
 }
 toolbar[iconsize="small"] #reload-button[disabled="true"] {
   -moz-image-region: rect(32px 64px 48px 48px);
-}
-toolbar[iconsize="small"] #reload-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 64px 80px 48px);
 }
 
 /* home button */
@@ -655,17 +591,13 @@ toolbar[iconsize="small"] #reload-button:not([disabled="true"]):hover:active {
 #home-button.bookmark-item {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
 }
-toolbar[iconsize="small"] #home-button ,
+toolbar[iconsize="small"] #home-button,
 #home-button.bookmark-item {
   -moz-image-region: rect(0px 80px 16px 64px);
 }
-toolbar[iconsize="small"] #home-button:hover ,
+toolbar[iconsize="small"] #home-button:hover,
 #home-button.bookmark-item:hover {
   -moz-image-region: rect(16px 80px 32px 64px);
-}
-toolbar[iconsize="small"] #home-button:hover:active ,
-#home-button.bookmark-item:hover:active {
-  -moz-image-region: rect(64px 80px 80px 64px);
 }
 
 /* download manager button */
@@ -676,23 +608,15 @@ toolbar[iconsize="small"] #downloads-button {
 toolbar[iconsize="small"] #downloads-button:hover {
   -moz-image-region: rect(16px 96px 32px 80px);
 }
-toolbar[iconsize="small"] #downloads-button:hover:active {
-  -moz-image-region: rect(64px 96px 80px 80px);
-}
 
 /* history sidebar button */
 
 toolbar[iconsize="small"] #history-button {
   -moz-image-region: rect(0px 112px 16px 96px);
 }
-toolbar[iconsize="small"] #history-button:not([checked="true"]):hover {
-  -moz-image-region: rect(16px 112px 32px 96px);
-}
+toolbar[iconsize="small"] #history-button:hover,
 toolbar[iconsize="small"] #history-button[checked="true"] {
-  -moz-image-region: rect(48px 112px 64px 96px);
-}
-toolbar[iconsize="small"] #history-button:not([checked="true"]):hover:active {
-  -moz-image-region: rect(64px 112px 80px 96px);
+  -moz-image-region: rect(16px 112px 32px 96px);
 }
 
 /* bookmark sidebar button */
@@ -700,14 +624,9 @@ toolbar[iconsize="small"] #history-button:not([checked="true"]):hover:active {
 toolbar[iconsize="small"] #bookmarks-button {
   -moz-image-region: rect(0px 128px 16px 112px);
 }
-toolbar[iconsize="small"] #bookmarks-button:not([checked="true"]):hover {
-  -moz-image-region: rect(16px 128px 32px 112px);
-}
+toolbar[iconsize="small"] #bookmarks-button:hover,
 toolbar[iconsize="small"] #bookmarks-button[checked="true"] {
-  -moz-image-region: rect(48px 128px 64px 112px);
-}
-toolbar[iconsize="small"] #bookmarks-button:not([checked="true"]):hover:active {
-  -moz-image-region: rect(64px 128px 80px 112px);
+  -moz-image-region: rect(16px 128px 32px 112px);
 }
 
 /* print button */
@@ -715,14 +634,11 @@ toolbar[iconsize="small"] #bookmarks-button:not([checked="true"]):hover:active {
 toolbar[iconsize="small"] #print-button {
   -moz-image-region: rect(0px 144px 16px 128px);
 }
-toolbar[iconsize="small"] #print-button:not([disabled="true"]):hover {
+toolbar[iconsize="small"] #print-button:hover {
   -moz-image-region: rect(16px 144px 32px 128px);
 }
 toolbar[iconsize="small"] #print-button[disabled="true"] {
   -moz-image-region: rect(32px 144px 48px 128px);
-}
-toolbar[iconsize="small"] #print-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 144px 80px 128px);
 }
 
 /* toolbar new tab button */
@@ -733,9 +649,6 @@ toolbar[iconsize="small"] #new-tab-button {
 toolbar[iconsize="small"] #new-tab-button:hover {
   -moz-image-region: rect(16px 160px 32px 144px);
 }
-toolbar[iconsize="small"] #new-tab-button:hover:active {
-  -moz-image-region: rect(64px 160px 80px 144px);
-}
 
 /* new window button */
 
@@ -744,9 +657,6 @@ toolbar[iconsize="small"] #new-window-button {
 }
 toolbar[iconsize="small"] #new-window-button:hover {
   -moz-image-region: rect(16px 176px 32px 160px);
-}
-toolbar[iconsize="small"] #new-window-button:hover:active {
-  -moz-image-region: rect(64px 176px 80px 160px);
 }
 
 /* cut button */
@@ -757,14 +667,11 @@ toolbar[iconsize="small"] #cut-button > .toolbarbutton-icon {
 toolbar[iconsize="small"] #cut-button {
   -moz-image-region: rect(0px 192px 16px 176px);
 }
-toolbar[iconsize="small"] #cut-button:not([disabled="true"]):hover {
+toolbar[iconsize="small"] #cut-button:hover {
   -moz-image-region: rect(16px 192px 32px 176px);
 }
 toolbar[iconsize="small"] #cut-button[disabled="true"] {
   -moz-image-region: rect(32px 192px 48px 176px);
-}
-toolbar[iconsize="small"] #cut-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 192px 80px 176px);
 }
 
 /* copy button */
@@ -772,14 +679,11 @@ toolbar[iconsize="small"] #cut-button:not([disabled="true"]):hover:active {
 toolbar[iconsize="small"] #copy-button {
   -moz-image-region: rect(0px 208px 16px 192px);
 }
-toolbar[iconsize="small"] #copy-button:not([disabled="true"]):hover {
+toolbar[iconsize="small"] #copy-button:hover {
   -moz-image-region: rect(16px 208px 32px 192px);
 }
 toolbar[iconsize="small"] #copy-button[disabled="true"] {
   -moz-image-region: rect(32px 208px 48px 192px);
-}
-toolbar[iconsize="small"] #copy-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 208px 80px 192px);
 }
 
 /* paste button */
@@ -787,14 +691,11 @@ toolbar[iconsize="small"] #copy-button:not([disabled="true"]):hover:active {
 toolbar[iconsize="small"] #paste-button {
   -moz-image-region: rect(0px 224px 16px 208px);
 }
-toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover {
+toolbar[iconsize="small"] #paste-button:hover {
   -moz-image-region: rect(16px 224px 32px 208px);
 }
 toolbar[iconsize="small"] #paste-button[disabled="true"] {
   -moz-image-region: rect(32px 224px 48px 208px);
-}
-toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(64px 224px 80px 208px);
 }
 
 /* fullscreen button */
@@ -802,11 +703,9 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
 toolbar[iconsize="small"] #fullscreen-button {
   -moz-image-region: rect(0px 240px 16px 224px);
 }
-toolbar[iconsize="small"] #fullscreen-button:hover {
+toolbar[iconsize="small"] #fullscreen-button:hover,
+toolbar[iconsize="small"] #fullscreen-button[checked="true"] {
   -moz-image-region: rect(16px 240px 32px 224px);
-}
-toolbar[iconsize="small"] #fullscreen-button:hover:active {
-  -moz-image-region: rect(64px 240px 80px 224px);
 }
 
 /* ::::: fullscreen window controls ::::: */
