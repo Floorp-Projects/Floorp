@@ -63,10 +63,6 @@
 #include "nsNativeUConvService.h"
 #endif
 
-// Pattern of cached, commonly used, single byte decoder
-#define NS_1BYTE_CODER_PATTERN "ISO-8859"
-#define NS_1BYTE_CODER_PATTERN_LEN 8
-
 // Class nsCharsetConverterManager [implementation]
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCharsetConverterManager,
@@ -75,7 +71,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsCharsetConverterManager,
 nsCharsetConverterManager::nsCharsetConverterManager() 
   : mDataBundle(NULL)
   , mTitleBundle(NULL)
-  , mDecoderHashMutex("nsCharsetConverterManager mDecoderHashMutex")
 {
 #ifdef MOZ_USE_NATIVE_UCONV
   mNativeUC = do_GetService(NS_NATIVE_UCONV_SERVICE_CONTRACT_ID);
@@ -86,13 +81,6 @@ nsCharsetConverterManager::~nsCharsetConverterManager()
 {
   NS_IF_RELEASE(mDataBundle);
   NS_IF_RELEASE(mTitleBundle);
-}
-
-nsresult nsCharsetConverterManager::Init()
-{
-  if (!mDecoderHash.Init())
-    return NS_ERROR_OUT_OF_MEMORY;
-  return NS_OK;
 }
 
 nsresult nsCharsetConverterManager::RegisterConverterManagerData()
@@ -265,23 +253,8 @@ nsCharsetConverterManager::GetUnicodeDecoderRaw(const char * aSrc,
   NS_NAMED_LITERAL_CSTRING(contractbase, NS_UNICODEDECODER_CONTRACTID_BASE);
   nsDependentCString src(aSrc);
   
-  if (!strncmp(aSrc, NS_1BYTE_CODER_PATTERN, NS_1BYTE_CODER_PATTERN_LEN))
-  {
-    mozilla::MutexAutoLock autoLock(mDecoderHashMutex);
-    // Single byte decoders don't hold state. Optimize by using a service, and
-    // cache it in our hash to avoid repeated trips through the service manager.
-    if (!mDecoderHash.Get(aSrc, getter_AddRefs(decoder))) {
-      decoder = do_GetService(PromiseFlatCString(contractbase + src).get(),
+  decoder = do_CreateInstance(PromiseFlatCString(contractbase + src).get(),
                               &rv);
-      if (NS_SUCCEEDED(rv))
-        mDecoderHash.Put(aSrc, decoder);
-    }
-  }
-  else
-  {
-    decoder = do_CreateInstance(PromiseFlatCString(contractbase + src).get(),
-                                &rv);
-  }
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UCONV_NOCONV);
 
   decoder.forget(aResult);
