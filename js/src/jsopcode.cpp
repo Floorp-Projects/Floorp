@@ -3550,6 +3550,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                         goto out;
                 }
 
+                /*
+                 * The only way that our next op could be a JSOP_ADD is
+                 * if we are about to concatenate at least one non-string
+                 * literal. Deal with that here in order to avoid extra
+                 * parentheses (because JSOP_ADD is left-associative).
+                 */
+                if (pc[len] == JSOP_ADD)
+                    saveop = JSOP_NOP;
+
                 ok = JS_TRUE;
 
               out:
