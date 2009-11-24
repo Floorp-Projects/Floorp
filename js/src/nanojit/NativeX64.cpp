@@ -575,7 +575,7 @@ namespace nanojit
 
     void Assembler::JMP(NIns *target) {
         if (!target || isTargetWithinS32(target)) {
-            if (target && isS8(target - _nIns)) {
+            if (target && isTargetWithinS8(target)) {
                 JMP8(8, target);
             } else {
                 JMP32(8, target);
@@ -1028,7 +1028,6 @@ namespace nanojit
         // the offset.  and the offset, determines the opcode (8bit or 32bit)
         NanoAssert((condop & ~LIR64) >= LIR_ov);
         NanoAssert((condop & ~LIR64) <= LIR_uge);
-        underrunProtect(8); // must do this before checking displacement size
         if (target && isTargetWithinS8(target)) {
             if (onFalse) {
                 switch (condop & ~LIR64) {
@@ -1171,10 +1170,11 @@ namespace nanojit
                 // jp skip (2byte)
                 // jeq target
                 // skip: ...
+                underrunProtect(16); // underrun of 7 needed but we write 2 instr --> 16
                 NIns *skip = _nIns;
-                JE(16, target);     // underrun of 7 needed but we write 2 instr --> 16
+                JE(0, target);      // no underrun needed, previous was enough
                 patch = _nIns;
-                JP8(0, skip);       // no underrun needed, previous was enough
+                JP8(0, skip);       // ditto
             }
         }
         else {
