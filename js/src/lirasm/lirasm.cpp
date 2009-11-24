@@ -1890,7 +1890,11 @@ usageAndQuit(const string& progname)
         "  -v --verbose     print LIR and assembly code\n"
         "  --execute        execute LIR\n"
         "  --random [N]     generate a random LIR block of size N (default=100)\n"
-        "  --sse            use SSE2 instructions (x86 only)\n"
+        " i386-specific options:\n"
+        "  --sse            use SSE2 instructions\n"
+        " ARM-specific options:\n"
+        "  --arch N         generate code for ARM architecture version N (default=7)\n"
+        "  --[no]vfp        enable or disable the generation of ARM VFP code (default=on)\n"
         ;
     exit(0);
 }
@@ -1917,11 +1921,19 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
     opts.verbose  = false;
     opts.execute  = false;
     opts.random   = 0;
-    bool sse      = false;
+
+    // Architecture-specific options.
+#if defined NANOJIT_IA32
+    bool            i386_sse = false;
+#elif defined NANOJIT_ARM
+    unsigned int    arm_arch = 7;
+    bool            arm_vfp = true;
+#endif
 
     for (int i = 1; i < argc; i++) {
         string arg = argv[i];
 
+        // Common flags for every architecture.
         if (arg == "-h" || arg == "--help")
             usageAndQuit(opts.progname);
         else if (arg == "-v" || arg == "--verbose")
@@ -1946,15 +1958,38 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
                 }
             }
         }
+        // Architecture-specific flags.
+#if defined NANOJIT_IA32
         else if (arg == "--sse") {
-            sse = true;
+            i386_sse = true;
         }
+#elif defined NANOJIT_ARM
+        else if ((arg == "--arch") && (i < argc-1)) {
+            char* endptr;
+            arm_arch = strtoul(argv[i+1], &endptr, 10);
+            // Check that the argument was a number.
+            if ('\0' == *endptr) {
+                if ((arm_arch < 5) || (arm_arch > 7)) {
+                    errMsgAndQuit(opts.progname, "Unsupported argument to --arm-arch.\n");
+                }
+            } else {
+                errMsgAndQuit(opts.progname, "Unrecognized argument to --arm-arch.\n");
+            }
+            i++;
+        } else if (arg == "--vfp") {
+            arm_vfp = true;
+        } else if (arg == "--novfp") {
+            arm_vfp = false;
+        }
+#endif
+        // Input file names.
         else if (arg[0] != '-') {
             if (opts.filename.empty())
                 opts.filename = arg;
             else
                 errMsgAndQuit(opts.progname, "you can only specify one filename");
         }
+        // No matching flag found, so report the error.
         else
             errMsgAndQuit(opts.progname, "bad option: " + arg);
     }
@@ -1963,17 +1998,18 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
         errMsgAndQuit(opts.progname,
                       "you must specify either a filename or --random (but not both)");
 
-#if defined NANOJIT_ARM
-    avmplus::AvmCore::config.arch = 7;
-    avmplus::AvmCore::config.vfp = true;
-#endif
-
+    // Handle the architecture-specific options.
 #if defined NANOJIT_IA32
-    avmplus::AvmCore::config.use_cmov = avmplus::AvmCore::config.sse2 = sse;
+    avmplus::AvmCore::config.use_cmov = avmplus::AvmCore::config.sse2 = i386_sse;
     avmplus::AvmCore::config.fixed_esp = true;
-#else
-    if (sse)
-        errMsgAndQuit(opts.progname, "--sse is only allowed on x86");
+#elif defined NANOJIT_ARM
+    // Note that we don't check for sensible configurations here!
+    avmplus::AvmCore::config.arch = arm_arch;
+    avmplus::AvmCore::config.vfp = arm_vfp;
+    avmplus::AvmCore::config.soft_float = !arm_vfp;
+    // This doesn't allow us to test ARMv6T2 (which also supports Thumb2), but this shouldn't
+    // really matter here.
+    avmplus::AvmCore::config.thumb2 = (arm_arch >= 7);
 #endif
 }
 
