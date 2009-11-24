@@ -5035,9 +5035,10 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit, LIns* inner_s
     lir->insStorei(lr, lirbuf->state, offsetof(InterpState, lastTreeCallGuard));
     lir->insStorei(lir->ins2(LIR_piadd,
                              lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, rp)),
-                             lir->ins2i(LIR_lsh,
-                                        lir->insLoad(LIR_ld, lr, offsetof(VMSideExit, calldepth)),
-                                        sizeof(void*) == 4 ? 2 : 3)),
+                             lir->ins1(LIR_i2q,
+                                       lir->ins2i(LIR_lsh,
+                                                  lir->insLoad(LIR_ld, lr, offsetof(VMSideExit, calldepth)),
+                                                  sizeof(void*) == 4 ? 2 : 3))),
                    lirbuf->state,
                    offsetof(InterpState, rpAtLastTreeCall));
     LIns* label = lir->ins0(LIR_label);
