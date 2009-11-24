@@ -831,15 +831,14 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
         name = gdk_atom_name(atom);
         PR_LOG(sDragLm, PR_LOG_DEBUG,
                ("checking %s against %s\n", name, aDataFlavor));
-        if (name && (strcmp(name, aDataFlavor) == 0)) {
+        if (g_strcmp0(name, aDataFlavor) == 0) {
             PR_LOG(sDragLm, PR_LOG_DEBUG, ("good!\n"));
             *_retval = PR_TRUE;
         }
         // check for automatic text/uri-list -> text/x-moz-url mapping
         if (*_retval == PR_FALSE && 
-            name &&
-            (strcmp(name, gTextUriListType) == 0) &&
-            (strcmp(aDataFlavor, kURLMime) == 0)) {
+            (g_strcmp0(name, gTextUriListType) == 0) &&
+            (g_strcmp0(aDataFlavor, kURLMime) == 0)) {
             PR_LOG(sDragLm, PR_LOG_DEBUG,
                    ("good! ( it's text/uri-list and \
                    we're checking against text/x-moz-url )\n"));
@@ -847,9 +846,8 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
         }
         // check for automatic _NETSCAPE_URL -> text/x-moz-url mapping
         if (*_retval == PR_FALSE && 
-            name &&
-            (strcmp(name, gMozUrlType) == 0) &&
-            (strcmp(aDataFlavor, kURLMime) == 0)) {
+            (g_strcmp0(name, gMozUrlType) == 0) &&
+            (g_strcmp0(aDataFlavor, kURLMime) == 0)) {
             PR_LOG(sDragLm, PR_LOG_DEBUG,
                    ("good! ( it's _NETSCAPE_URL and \
                    we're checking against text/x-moz-url )\n"));
@@ -857,10 +855,9 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
         }
         // check for auto text/plain -> text/unicode mapping
         if (*_retval == PR_FALSE && 
-            name &&
-            (strcmp(name, kTextMime) == 0) &&
-            ((strcmp(aDataFlavor, kUnicodeMime) == 0) ||
-             (strcmp(aDataFlavor, kFileMime) == 0))) {
+            (g_strcmp0(name, kTextMime) == 0) &&
+            ((g_strcmp0(aDataFlavor, kUnicodeMime) == 0) ||
+             (g_strcmp0(aDataFlavor, kFileMime) == 0))) {
             PR_LOG(sDragLm, PR_LOG_DEBUG,
                    ("good! ( it's text plain and we're checking \
                    against text/unicode or application/x-moz-file)\n"));
@@ -981,7 +978,7 @@ nsDragService::IsTargetContextList(void)
         GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
         gchar *name = NULL;
         name = gdk_atom_name(atom);
-        if (strcmp(name, gMimeListType) == 0)
+        if (g_strcmp0(name, gMimeListType) == 0)
             retval = PR_TRUE;
         g_free(name);
         if (retval)
