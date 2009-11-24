@@ -135,6 +135,7 @@ button {
   padding: 0.2mm 0.5mm;
   border-width: 8px !important;
   -moz-border-image: url("chrome://browser/skin/images/button-default-64.png") 8 repeat repeat;
+  background-color: transparent;
   -moz-appearance: none !important;
 }
 
