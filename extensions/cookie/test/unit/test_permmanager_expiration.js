@@ -32,15 +32,15 @@ function run_test() {
 
   // ... and the first one has
   do_test_pending();
-  do_timeout(10, "verifyFirstExpiration();");
+  do_timeout(10, verifyFirstExpiration);
 
   // ... and that the short-term one will
   do_test_pending();
-  do_timeout(200, "verifyExpiration();");
+  do_timeout(200, verifyExpiration);
 
   // clean up
   do_test_pending();
-  do_timeout(300, "end_test();");
+  do_timeout(300, end_test);
 }
 
 function verifyFirstExpiration() { 

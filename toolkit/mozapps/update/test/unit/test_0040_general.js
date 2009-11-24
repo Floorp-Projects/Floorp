@@ -57,7 +57,7 @@ function run_test() {
   gAppInfo = AUS_Cc["@mozilla.org/xre/app-info;1"].
              getService(AUS_Ci.nsIXULAppInfo).
              QueryInterface(AUS_Ci.nsIXULRuntime);
-  do_timeout(0, "run_test_pt1()");
+  do_timeout(0, run_test_pt1);
 }
 
 function end_test() {

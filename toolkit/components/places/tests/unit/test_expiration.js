@@ -527,7 +527,7 @@ function startExpireNeither() {
   // Changing expiration preferences triggers partial expiration.
 
   // Check results.
-  do_timeout(600, "checkExpireNeither();");
+  do_timeout(600, checkExpireNeither);
 }
 
 function checkExpireNeither() {
@@ -588,7 +588,7 @@ function startExpireDaysOnly() {
   // Changing expiration preferences triggers partial expiration.
 
   // Check results.
-  do_timeout(600, "checkExpireDaysOnly();");
+  do_timeout(600, checkExpireDaysOnly);
 }
 
 function checkExpireDaysOnly() {
@@ -658,7 +658,7 @@ function startExpireBoth() {
   // Changing expiration preferences triggers partial expiration.
 
   // Check results.
-  do_timeout(600, "checkExpireBoth();"); // incremental expiration timer is 3500
+  do_timeout(600, checkExpireBoth); // incremental expiration timer is 3500
 }
 
 function checkExpireBoth() {
@@ -716,7 +716,7 @@ function startExpireNeitherOver() {
   // Changing expiration preferences triggers partial expiration.
 
   // Check results.
-  do_timeout(600, "checkExpireNeitherOver();");
+  do_timeout(600, checkExpireNeitherOver);
 }
 
 function checkExpireNeitherOver() {
@@ -765,7 +765,7 @@ function startExpireHistoryDisabled() {
   // Changing expiration preferences triggers partial expiration.
 
   // Check results.
-  do_timeout(600, "checkExpireHistoryDisabled();");
+  do_timeout(600, checkExpireHistoryDisabled);
 }
 
 function checkExpireHistoryDisabled() {
@@ -817,7 +817,7 @@ function startExpireBadPrefs() {
   // Changing expiration preferences triggers partial expiration.
 
   // Check results.
-  do_timeout(600, "checkExpireBadPrefs();");
+  do_timeout(600, checkExpireBadPrefs);
 }
 
 function checkExpireBadPrefs() {
