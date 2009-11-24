@@ -45,7 +45,6 @@ let Ci = Components.interfaces;
 //
 
 let Util = {
-
   bind: function bind(f, thisObj) {
     return function() {
       return f.apply(thisObj, arguments);

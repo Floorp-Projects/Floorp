@@ -581,11 +581,15 @@ var Browser = {
 
     // Force commonly used border-images into the image cache
     ImagePreloader.cache();
+
+    this._pluginObserver = new PluginObserver(bv);
+    new PreferenceToggle("plugins.enabled", this._pluginObserver);
   },
 
   shutdown: function() {
     this._browserView.uninit();
     BrowserUI.uninit();
+    this._pluginObserver.stop();
 
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
@@ -730,7 +734,8 @@ var Browser = {
       this._selectedTab.scrollOffset = this.getScrollboxPosition(this.contentScrollboxScroller);
     }
 
-    let firstTab = this._selectedTab == null;
+    let isFirstTab = this._selectedTab == null;
+    let lastTab = this._selectedTab;
     this._selectedTab = tab;
 
     tab.ensureBrowserExists();
@@ -742,13 +747,14 @@ var Browser = {
 
     document.getElementById("tabs").selectedTab = tab.chromeTab;
 
-    if (!firstTab) {
+    if (!isFirstTab) {
       // Update all of our UI to reflect the new tab's location
       BrowserUI.updateURI();
       getIdentityHandler().checkIdentity();
 
       let event = document.createEvent("Events");
       event.initEvent("TabSelect", true, false);
+      event.lastTab = lastTab;
       tab.chromeTab.dispatchEvent(event);
     }
 
@@ -1105,8 +1111,10 @@ var Browser = {
   },
 
   getBoundingContentRect: function getBoundingContentRect(contentElem) {
-    let browser = Browser._browserView.getBrowser();
-
+    let tab = Browser.getTabForDocument(contentElem.ownerDocument);
+    if (!tab)
+      return null;
+    let browser = tab.browser;
     if (!browser)
       return null;
 
@@ -1149,6 +1157,12 @@ var Browser = {
       y0 = Math.round(-containerBCR.top);
 
     return (arguments.length > 1) ? [x - x0, y - y0] : (x - x0);
+  },
+
+  browserViewToClientRect: function browserViewToClientRect(rect) {
+    let container = document.getElementById("tile-container");
+    let containerBCR = container.getBoundingClientRect();
+    return rect.clone().translate(Math.round(containerBCR.left), Math.round(containerBCR.top));
   },
 
   /**
@@ -2761,3 +2775,181 @@ var ImagePreloader = {
     }
   }
 }
+
+/** Call obj.start() or stop() based on boolean pref. */
+function PreferenceToggle(pref, obj) {
+  // Make weak reference just to be sure there are no cycles
+  gPrefService.addObserver(pref, this, true);
+  this._obj = obj;
+  this._pref = pref;
+  this._check();
+}
+
+PreferenceToggle.prototype = {
+  QueryInterface: function QueryInterface(iid) {
+   if (iid.equals(Ci.nsIObserver) ||
+       iid.equals(Ci.nsISupportsWeakReference) ||
+       iid.equals(Ci.nsISupports))
+     return this;
+   throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  observe: function observe(subject, topic, data) {
+    if (topic == "nsPref:changed" && data == this._pref)
+      this._check();
+  },
+
+  _check: function _check() {
+    try {
+      let value = gPrefService.getBoolPref(this._pref);
+      value ? this._obj.start() : this._obj.stop();
+    } catch(e) {
+      this._obj.stop();
+    }
+  }
+};
+
+const nsIObjectLoadingContent = Ci.nsIObjectLoadingContent_MOZILLA_1_9_2_BRANCH || Ci.nsIObjectLoadingContent;
+
+/**
+ * Allows fast-path embed rendering by letting objects know where to absolutely
+ * render on the screen.
+ */
+function PluginObserver(bv) {
+  this._emptyRect = new Rect(0, 0, 0, 0);
+  this._contentShowing = document.getElementById("observe_contentShowing");
+  this._bv = bv;
+  this._started = false;
+}
+
+PluginObserver.prototype = {
+  /** Starts flash objects fast path. */
+  start: function() {
+    if (this._started)
+      return;
+    this._started = true;
+
+    document.getElementById("tabs-container").addEventListener("TabSelect", this, false);
+    this._contentShowing.addEventListener("broadcast", this, false);
+    let browsers = document.getElementById("browsers");
+    browsers.addEventListener("RenderStateChanged", this, false);
+    gObserverService.addObserver(this, "plugin-changed-event", false);
+
+    let browser = Browser.selectedBrowser;
+    if (browser) {
+      browser.addEventListener("ZoomChanged", this, false);
+      browser.addEventListener("MozAfterPaint", this, false);
+    }
+  },
+
+  /** Stops listening for events. */
+  stop: function() {
+    if (!this._started)
+      return;
+    this._started = false;
+
+    document.getElementById("tabs-container").removeEventListener("TabSelect", this, false);
+    this._contentShowing.removeEventListener("broadcast", this, false);
+    let browsers = document.getElementById("browsers");
+    browsers.removeEventListener("RenderStateChanged", this, false);
+    gObserverService.removeObserver(this, "plugin-changed-event");
+
+    let browser = Browser.selectedBrowser;
+    if (browser) {
+      browser.removeEventListener("ZoomChanged", this, false);
+      browser.removeEventListener("MozAfterPaint", this, false);
+    }
+  },
+
+  /** Observe listens for plugin change events and maintains an embed cache. */
+  observe: function observe(subject, topic, data) {
+    let doc = subject.ownerDocument;
+    if (data == "init") {
+      if (doc.pluginCache === undefined)
+        doc.pluginCache = [];
+      doc.pluginCache.push(subject);
+    } else if (data == "reflow") {
+      this.updateCurrentBrowser();
+    } else if (data == "destroy") {
+      if (doc.pluginCache) {
+        let index = doc.pluginCache.indexOf(subject);
+        if (index != -1)
+          doc.pluginCache.splice(index, 1);
+      }
+    }
+  },
+
+  /** Update flash objects */
+  handleEvent: function handleEvent(ev) {
+    if (ev.type == "TabSelect") {
+      if (ev.lastTab) {
+        let browser = ev.lastTab.browser;
+        let oldDoc = browser.contentDocument;
+        browser.removeEventListener("ZoomChanged", this, false);
+        browser.removeEventListener("MozAfterPaint", this, false);
+        if (oldDoc.pluginCache)
+          this.updateEmbedRegions(oldDoc.pluginCache, this._emptyRect);
+      }
+
+      let browser = Browser.selectedBrowser;
+      browser.addEventListener("ZoomChanged", this, false);
+      browser.addEventListener("MozAfterPaint", this, false);
+    }
+
+    this.updateCurrentBrowser();
+  },
+
+  /** Update the current browser's flash objects. */
+  updateCurrentBrowser: function updateCurrentBrowser() {
+    let doc = Browser.selectedTab.browser.contentDocument;
+    if (!doc.pluginCache)
+      return;
+
+    let rect = this.getCriticalRect();
+    if (rect == this._emptyRect) {
+      // Always stop rendering immediately.
+      this.updateEmbedRegions(doc.pluginCache, rect);
+    } else {
+      // Wait a moment so that any chrome redraws occur first.
+      let self = this;
+      setTimeout(function() {
+        // Recalculate critical rect so we don't render when we ought not to.
+        self.updateEmbedRegions(doc.pluginCache, self.getCriticalRect());
+      }, 0);
+    }
+  },
+
+  /** More accurate version of finding the current visible region. */
+  // XXX should visible rect call take some of these things into account?
+  getCriticalRect: function getCriticalRect() {
+    let bv = this._bv;
+    if (!bv.isRendering())
+      return this._emptyRect;
+    if (Elements.contentShowing.hasAttribute("disabled"))
+      return this._emptyRect;
+
+    let vs = bv._browserViewportState;
+    let vr = bv.getVisibleRect();
+    let crit = BrowserView.Util.visibleRectToCriticalRect(vr, vs);
+
+    if (BrowserUI.isToolbarLocked()) {
+      let urlbar = document.getElementById("toolbar-moveable-container");
+      let height = urlbar.getBoundingClientRect().height;
+      crit.top += height;
+    }
+    return crit;
+  },
+
+  /** Tell embedded objects where to absolutely render, using crit for clipping. */
+  updateEmbedRegions: function updateEmbedRegions(objects, crit) {
+    let bv = this._bv;
+    let oprivate, r, dest, clip;
+    for (let i = objects.length - 1; i >= 0; i--) {
+      r = bv.browserToViewportRect(Browser.getBoundingContentRect(objects[i]));
+      dest = Browser.browserViewToClientRect(r);
+      clip = Browser.browserViewToClientRect(r.intersect(crit)).translate(-dest.left, -dest.top);
+      oprivate = objects[i].QueryInterface(nsIObjectLoadingContent);
+      oprivate.setAbsoluteScreenPosition(Browser.contentScrollbox, dest, clip);
+    }
+  },
+};

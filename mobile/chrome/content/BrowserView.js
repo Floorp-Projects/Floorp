@@ -332,6 +332,12 @@ BrowserView.prototype = {
                                  this.browserToViewport(browserH),
                                  true);
       bvs.zoomChanged = true;
+
+      if (this._browser) {
+        let event = document.createEvent("Events");
+        event.initEvent("ZoomChanged", true, false);
+        this._browser.dispatchEvent(event);
+      }
     }
   },
 
@@ -401,6 +407,12 @@ BrowserView.prototype = {
    */
   pauseRendering: function pauseRendering() {
     this._renderMode++;
+    if (this._renderMode == 1 && this._browser) {
+      let event = document.createEvent("Events");
+      event.initEvent("RenderStateChanged", true, false);
+      event.isRendering = false;
+      this._browser.dispatchEvent(event);
+    }
   },
 
   /**
@@ -414,8 +426,16 @@ BrowserView.prototype = {
     if (renderNow || this._renderMode == 0)
       this.renderNow();
 
-    if (this._renderMode == 0)
+    if (this._renderMode == 0) {
       this._idleServiceObserver.resumeCrawls();
+
+      if (this._browser) {
+        let event = document.createEvent("Events");
+        event.initEvent("RenderStateChanged", true, false);
+        event.isRendering = true;
+        this._browser.dispatchEvent(event);
+      }
+    }
   },
 
   /**

@@ -93,6 +93,10 @@
     <broadcaster id="bcast_contentShowing"/>
   </broadcasterset>
 
+  <observerset id="observerset">
+    <observes id="observe_contentShowing" element="bcast_contentShowing" attribute="disabled"/>
+  </observerset>
+
   <commandset id="mainCommandSet">
     <!-- basic navigation -->
     <command id="cmd_back" label="&back.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
