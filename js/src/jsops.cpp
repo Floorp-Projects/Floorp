@@ -3256,7 +3256,7 @@ BEGIN_CASE(JSOP_LAMBDA)
         if (FUN_NULL_CLOSURE(fun)) {
             parent = fp->scopeChain;
 
-            if (0 && OBJ_GET_PARENT(cx, obj) == parent) {
+            if (OBJ_GET_PARENT(cx, obj) == parent) {
                 op = JSOp(regs.pc[JSOP_LAMBDA_LENGTH]);
 
                 /*
