@@ -508,11 +508,11 @@
                 catch (e) { }
               }
               if (spec != this.uri.spec)
-                spec = this.spec = this.uri.spec;
+                this.spec = this.uri.spec;
             }
 
             // Update the name and use the URI if name is blank
-            this.name = this.name || spec;
+            this.name = this.name || this.spec;
             this.setAttribute('title', this.name);
             PlacesUtils.bookmarks.setItemTitle(this.itemId, this.name);
           ]]>
