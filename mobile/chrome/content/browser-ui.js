@@ -72,6 +72,11 @@ const TOOLBARSTATE_LOADED   = 2;
     "gFocusManager",
     "@mozilla.org/focus-manager;1",
     [Ci.nsIFocusManager]
+  ],
+  [
+    "gObserverService",
+    "@mozilla.org/observer-service;1",
+    [Ci.nsIObserverService]
   ]
 ].forEach(function (service) {
   let [name, contract, ifaces] = service;
@@ -201,6 +206,11 @@ var BrowserUI = {
   },
 
   _toolbarLocked: 0,
+
+  isToolbarLocked: function isToolbarLocked() {
+    return this._toolbarLocked;
+  },
+
   lockToolbar: function lockToolbar() {
     this._toolbarLocked++;
     document.getElementById("toolbar-moveable-container").top = "0";
