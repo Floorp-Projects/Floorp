@@ -4961,7 +4961,7 @@ TraceRecorder::prepareTreeCall(TreeFragment* inner, LIns*& inner_sp_ins)
 
     /*
      * The inner tree will probably access stack slots. So tell nanojit not to
-     * discard or defer stack writes before calling js_CallTree.
+     * discard or defer stack writes before emitting the call tree code.
      *
      * (The ExitType of this snapshot is nugatory. The exit can't be taken.)
      */
@@ -4993,11 +4993,62 @@ BuildGlobalTypeMapFromInnerTree(Queue<JSTraceType>& typeMap, VMSideExit* inner)
 JS_REQUIRES_STACK void
 TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit, LIns* inner_sp_ins)
 {
-    TreeInfo* ti = inner->treeInfo;
-
     /* Invoke the inner tree. */
-    LIns* args[] = { INS_CONSTPTR(inner), lirbuf->state }; /* reverse order */
-    LIns* ret = lir->insCall(&js_CallTree_ci, args);
+    LIns* args[] = { lirbuf->state }; /* reverse order */
+    /* Construct a call info structure for the target tree. */
+    CallInfo* ci = new (traceAlloc()) CallInfo();
+    ci->_address = uintptr_t(inner->code());
+    JS_ASSERT(ci->_address);
+    ci->_argtypes = ARGSIZE_P | ARGSIZE_P << ARGSIZE_SHIFT;
+    ci->_cse = ci->_fold = 0;
+    ci->_abi = ABI_FASTCALL;
+#ifdef DEBUG
+    ci->_name = "fragment";
+#endif
+    LIns* rec = lir->insCall(ci, args);
+    LIns* lr = lir->insLoad(LIR_ldp, rec, offsetof(GuardRecord, exit));
+    LIns* nested = lir->insBranch(LIR_jt,
+                                  lir->ins2i(LIR_eq,
+                                             lir->insLoad(LIR_ld, lr, offsetof(VMSideExit, exitType)),
+                                             NESTED_EXIT),
+                                  NULL);
+
+    /*
+     * If the tree exits on a regular (non-nested) guard, keep updating lastTreeExitGuard
+     * with that guard. If we mismatch on a tree call guard, this will contain the last
+     * non-nested guard we encountered, which is the innermost loop or branch guard.
+     */
+    lir->insStorei(lr, lirbuf->state, offsetof(InterpState, lastTreeExitGuard));
+    LIns* done1 = lir->insBranch(LIR_j, NULL, NULL);
+
+    /*
+     * The tree exited on a nested guard. This only occurs once a tree call guard mismatches
+     * and we unwind the tree call stack. We store the first (innermost) tree call guard in state
+     * and we will try to grow the outer tree the failing call was in starting at that guard.
+     */
+    nested->setTarget(lir->ins0(LIR_label));
+    LIns* done2 = lir->insBranch(LIR_jf,
+                                 lir->ins_peq0(lir->insLoad(LIR_ldp,
+                                                            lirbuf->state,
+                                                            offsetof(InterpState, lastTreeCallGuard))),
+                                 NULL);
+    lir->insStorei(lr, lirbuf->state, offsetof(InterpState, lastTreeCallGuard));
+    lir->insStorei(lir->ins2(LIR_piadd,
+                             lir->insLoad(LIR_ldp, lirbuf->state, offsetof(InterpState, rp)),
+                             lir->ins2i(LIR_lsh,
+                                        lir->insLoad(LIR_ld, lr, offsetof(VMSideExit, calldepth)),
+                                        sizeof(void*) == 4 ? 2 : 3)),
+                   lirbuf->state,
+                   offsetof(InterpState, rpAtLastTreeCall));
+    LIns* label = lir->ins0(LIR_label);
+    done1->setTarget(label);
+    done2->setTarget(label);
+
+    /*
+     * Keep updating outermostTreeExit so that InterpState always contains the most recent
+     * side exit.
+     */
+    lir->insStorei(lr, lirbuf->state, offsetof(InterpState, outermostTreeExitGuard));
 
     /* Read back all registers, in case the called tree changed any of them. */
 #ifdef DEBUG
@@ -5010,6 +5061,7 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit, LIns* inner_s
     for (i = 0; i < exit->numStackSlots; i++)
         JS_ASSERT(map[i] != TT_JSVAL);
 #endif
+
     /*
      * Bug 502604 - It is illegal to extend from the outer typemap without
      * first extending from the inner. Make a new typemap here.
@@ -5017,6 +5069,8 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit, LIns* inner_s
     TypeMap fullMap(NULL);
     fullMap.add(exit->stackTypeMap(), exit->numStackSlots);
     BuildGlobalTypeMapFromInnerTree(fullMap, exit);
+
+    TreeInfo* ti = inner->treeInfo;
     import(ti, inner_sp_ins, exit->numStackSlots, fullMap.length() - exit->numStackSlots,
            exit->calldepth, fullMap.data());
 
@@ -5030,11 +5084,11 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit, LIns* inner_s
      * Guard that we come out of the inner tree along the same side exit we came out when
      * we called the inner tree at recording time.
      */
-    VMSideExit* nested = snapshot(NESTED_EXIT);
+    VMSideExit* nestedExit = snapshot(NESTED_EXIT);
     JS_ASSERT(exit->exitType == LOOP_EXIT);
-    guard(true, lir->ins2(LIR_peq, ret, INS_CONSTPTR(exit)), nested);
+    guard(true, lir->ins2(LIR_peq, lr, INS_CONSTPTR(exit)), nestedExit);
     debug_only_printf(LC_TMTreeVis, "TREEVIS TREECALL INNER=%p EXIT=%p GUARD=%p\n", (void*)inner,
-                      (void*)nested, (void*)exit);
+                      (void*)nestedExit, (void*)exit);
 
     /* Register us as a dependent tree of the inner tree. */
     inner->treeInfo->dependentTrees.addUnique(fragment->root);
@@ -6535,7 +6589,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
              * outermost nested guard, and hence we set nested to lr. The
              * calldepth of the innermost guard is not added to state.rp, so we
              * do it here manually. For a nesting depth greater than 1 the
-             * CallTree builtin already added the innermost guard's calldepth
+             * call tree code already added the innermost guard's calldepth
              * to state.rpAtLastTreeCall.
              */
             nested = lr;

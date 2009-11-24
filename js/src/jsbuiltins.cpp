@@ -228,46 +228,6 @@ js_StringToInt32(JSContext* cx, JSString* str)
 }
 JS_DEFINE_CALLINFO_2(extern, INT32, js_StringToInt32, CONTEXT, STRING, 1, 1)
 
-SideExit* FASTCALL
-js_CallTree(InterpState* state, Fragment* f)
-{
-    union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*); } u;
-
-    u.code = f->code();
-    JS_ASSERT(u.code);
-
-    GuardRecord* rec;
-#if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
-    SIMULATE_FASTCALL(rec, state, NULL, u.func);
-#else
-    rec = u.func(state);
-#endif
-    VMSideExit* lr = (VMSideExit*)rec->exit;
-
-    if (lr->exitType == NESTED_EXIT) {
-        /* This only occurs once a tree call guard mismatches and we unwind the tree call stack.
-           We store the first (innermost) tree call guard in state and we will try to grow
-           the outer tree the failing call was in starting at that guard. */
-        if (!state->lastTreeCallGuard) {
-            state->lastTreeCallGuard = lr;
-            FrameInfo** rp = (FrameInfo**)state->rp;
-            state->rpAtLastTreeCall = rp + lr->calldepth;
-        }
-    } else {
-        /* If the tree exits on a regular (non-nested) guard, keep updating lastTreeExitGuard
-           with that guard. If we mismatch on a tree call guard, this will contain the last
-           non-nested guard we encountered, which is the innermost loop or branch guard. */
-        state->lastTreeExitGuard = lr;
-    }
-
-    /* Keep updating outermostTreeExit so that InterpState always contains the most recent
-       return value of js_CallTree. */
-    state->outermostTreeExitGuard = lr;
-
-    return lr;
-}
-JS_DEFINE_CALLINFO_2(extern, SIDEEXIT, js_CallTree, INTERPSTATE, FRAGMENT, 0, 0)
-
 JSBool FASTCALL
 js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
 {
