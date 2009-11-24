@@ -10333,17 +10333,16 @@ TraceRecorder::newArray(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
     CHECK_STATUS(getClassPrototype(ctor, proto_ins));
 
     LIns *arr_ins;
-    if (argc == 0 || (argc == 1 && JSVAL_IS_NUMBER(argv[0]))) {
+    if (argc == 0) {
         // arr_ins = js_NewEmptyArray(cx, Array.prototype)
         LIns *args[] = { proto_ins, cx_ins };
         arr_ins = lir->insCall(&js_NewEmptyArray_ci, args);
         guard(false, lir->ins_peq0(arr_ins), OOM_EXIT);
-        if (argc == 1) {
-            // array_ins.fslots[JSSLOT_ARRAY_LENGTH] = length
-            lir->insStorei(f2i(get(argv)), // FIXME: is this 64-bit safe?
-                           arr_ins,
-                           offsetof(JSObject, fslots) + JSSLOT_ARRAY_LENGTH * sizeof(jsval));
-        }
+    } else if (argc == 1 && JSVAL_IS_NUMBER(argv[0])) {
+        // arr_ins = js_NewEmptyArray(cx, Array.prototype, length)
+        LIns *args[] = { f2i(get(argv)), proto_ins, cx_ins }; // FIXME: is this 64-bit safe?
+        arr_ins = lir->insCall(&js_NewEmptyArrayWithLength_ci, args);
+        guard(false, lir->ins_peq0(arr_ins), OOM_EXIT);
     } else {
         // arr_ins = js_NewArrayWithSlots(cx, Array.prototype, argc)
         LIns *args[] = { INS_CONST(argc), proto_ins, cx_ins };
