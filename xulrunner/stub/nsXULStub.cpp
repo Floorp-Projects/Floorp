@@ -418,7 +418,16 @@ main(int argc, char **argv)
              range.lower, range.upper);
       return 1;
     }
+#ifdef XP_UNIX
+    // Using a symlinked greDir will fail during startup. Not sure why, but if
+    // we resolve the symlink, everything works as expected.
+    char resolved_greDir[MAXPATHLEN] = "";  
+    if (realpath(greDir, resolved_greDir) && *resolved_greDir) {
+      strncpy(greDir, resolved_greDir, MAXPATHLEN);
+    }
+#endif
   }
+
 #ifdef XP_OS2
   // On OS/2 we need to set BEGINLIBPATH to be able to find XULRunner DLLs
   strcpy(tmpPath, greDir);

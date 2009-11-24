@@ -42,6 +42,11 @@
 
 #define ALL_VERSIONS   ((unsigned long long)-1LL)
 
+// Convert the 4 (decimal) components of a DLL version number into a
+// single unsigned long long, as needed by the blocklist
+#define MAKE_VERSION(a,b,c,d)\
+  ((a##ULL << 48) + (b##ULL << 32) + (c##ULL << 16) + d##ULL)
+
 struct DllBlockInfo {
   // The name of the DLL -- in LOWERCASE!  It will be compared to
   // a lowercase version of the DLL name only.
@@ -63,6 +68,12 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   // { "uxtheme.dll", ALL_VERSIONS },
   // { "uxtheme.dll", 0x0000123400000000ULL },
   // The DLL name must be in lowercase!
+  
+  // NPFFAddon - Known malware
+  { "npffaddon.dll", ALL_VERSIONS},
+
+  // AVG 8 - Antivirus vendor AVG, old version, plugin already blocklisted
+  {"avgrsstx.dll", MAKE_VERSION(8,5,0,401)},
 
   // leave these two in always for tests
   { "mozdllblockingtest.dll", ALL_VERSIONS },

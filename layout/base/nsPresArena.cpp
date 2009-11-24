@@ -129,19 +129,19 @@ GetDesiredRegionSize()
 static void *
 ReserveRegion(PRUword region, PRUword size)
 {
-  return mmap((void *)region, size, PROT_NONE, MAP_PRIVATE|MAP_ANON, -1, 0);
+  return mmap((caddr_t)region, size, PROT_NONE, MAP_PRIVATE|MAP_ANON, -1, 0);
 }
 
 static void
 ReleaseRegion(void *region, PRUword size)
 {
-  munmap(region, size);
+  munmap((caddr_t)region, size);
 }
 
 static bool
 ProbeRegion(PRUword region, PRUword size)
 {
-  if (madvise((void *)region, size, MADV_NORMAL)) {
+  if (madvise((caddr_t)region, size, MADV_NORMAL)) {
     return true;
   } else {
     return false;

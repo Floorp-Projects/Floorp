@@ -105,6 +105,7 @@ public:
     NS_IMETHOD AddMixedInts3(PRInt64 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
                              PRInt32 p5, PRInt32 p6, PRInt64 p7, PRInt64 p8,
                              PRInt32 p9, PRInt64 p10, PRInt64* retval) = 0;
+    NS_IMETHOD ShouldFail(PRInt32 p) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(InvokeTestTargetInterface, INVOKETESTTARGET_IID)
@@ -159,6 +160,7 @@ public:
     NS_IMETHOD AddMixedInts3(PRInt64 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
                              PRInt32 p5, PRInt32 p6, PRInt64 p7, PRInt64 p8,
                              PRInt32 p9, PRInt64 p10, PRInt64* retval);
+    NS_IMETHOD ShouldFail(PRInt32 p);
 };
 
 NS_IMPL_ISUPPORTS1(InvokeTestTarget, InvokeTestTargetInterface)
@@ -168,6 +170,10 @@ InvokeTestTarget::InvokeTestTarget()
     NS_ADDREF_THIS();
 }
 
+NS_IMETHODIMP
+InvokeTestTarget::ShouldFail(PRInt32 p) {
+    return NS_ERROR_NULL_POINTER;
+}
 NS_IMETHODIMP
 InvokeTestTarget::AddTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {
@@ -339,6 +345,7 @@ int main()
 
     PRInt32 out, tmp32 = 0;
     PRInt64 out64;
+    nsresult failed_rv;
     printf("calling direct:\n");
     if(NS_SUCCEEDED(test->AddTwoInts(1,1,&out)))
         printf("\t1 + 1 = %d\n", out);
@@ -431,6 +438,9 @@ int main()
       } else
         printf("\tFAILED");
 
+     failed_rv = test->ShouldFail(5);
+     printf("should fail %s, returned %x\n", failed_rv == NS_ERROR_NULL_POINTER ? "failed" :"passed", failed_rv);
+    
     printf("calling via invoke:\n");
 
     nsXPTCVariant var[21];
@@ -939,6 +949,13 @@ int main()
         printf(" = %s\n", var[2].val.p);
     else
         printf("\tFAILED");
+
+    var[0].val.i32 = 5;
+    var[0].type = nsXPTType::T_I32;
+    var[0].flags = 0;
+
+    failed_rv = NS_InvokeByIndex(test, 17, 1, var);
+    printf("should fail %s, returned %x\n", failed_rv == NS_ERROR_NULL_POINTER ? "failed" :"passed", failed_rv);
 
     var[0].val.i64 = 3;
     var[0].type = nsXPTType::T_I64;

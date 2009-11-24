@@ -802,7 +802,6 @@ nsNTLMAuthModule::Init(const char      *serviceName,
                        const PRUnichar *username,
                        const PRUnichar *password)
 {
-  NS_ASSERTION(serviceName == nsnull, "unexpected service name");
   NS_ASSERTION(serviceFlags == nsIAuthModule::REQ_DEFAULT, "unexpected service flags");
 
   mDomain = domain;

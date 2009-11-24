@@ -39,12 +39,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Spidermonkey shell now defaults to 1.8, so set the basic version to
-// 1.5 for backwards compatibility.
-
+// Explicitly set the default version.
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=522760#c11
 if (typeof version != 'undefined')
 {
-  version(150);
+  version(0);
 }
 
 var STATUS = "STATUS: ";
@@ -108,38 +107,6 @@ function startTest() {
 
   if ( BUGNUMBER ) {
     print ("BUGNUMBER: " + BUGNUMBER );
-  }
-  if ( typeof version != 'function') {
-    return;
-  }
-
-  // JavaScript 1.3 is supposed to be compliant ecma version 1.0
-  if ( VERSION == "ECMA_1" ) {
-    version ( "130" );
-  }
-  else if ( VERSION == "JS_1.8"  || gTestsuite == 'js1_8') {
-    version ( "180" );
-  }
-  else if ( VERSION == "JS_1.7"  || gTestsuite == 'js1_7') {
-    version ( "170" );
-  }
-  else if ( VERSION == "JS_1.6"  || gTestsuite == 'js1_6') {
-    version ( "160" );
-  }
-  else if ( VERSION == "JS_1.5"  || gTestsuite == 'js1_5') {
-    version ( "150" );
-  }
-  else if ( VERSION == "JS_1.4"  || gTestsuite == 'js1_4') {
-    version ( "140" );
-  }
-  else if ( VERSION == "JS_1.3"  || gTestsuite == 'js1_3') {
-    version ( "130" );
-  }
-  else if ( VERSION == "JS_1.2"  || gTestsuite == 'js1_2') {
-    version ( "120" );
-  }
-  else if ( VERSION  == "JS_1.1" || gTestsuite == 'js1_1') {
-    version ( "110" );
   }
 }
 

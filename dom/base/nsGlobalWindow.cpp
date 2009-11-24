@@ -930,6 +930,55 @@ nsGlobalWindow::ClearControllers()
   }
 }
 
+class ClearScopeEvent : public nsRunnable
+{
+public:
+  ClearScopeEvent(nsGlobalWindow *innerWindow)
+    : mInnerWindow(innerWindow) {
+  }
+
+  NS_IMETHOD Run()
+  {
+    mInnerWindow->ReallyClearScope(this);
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsGlobalWindow> mInnerWindow;
+};
+
+void
+nsGlobalWindow::ReallyClearScope(nsRunnable *aRunnable)
+{
+  NS_ASSERTION(IsInnerWindow(), "Must be an inner window");
+
+  nsIScriptContext *jsscx = GetContextInternal();
+  if (jsscx && jsscx->GetExecutingScript()) {
+    if (!aRunnable) {
+      aRunnable = new ClearScopeEvent(this);
+      if (!aRunnable) {
+        // The only reason that we clear scope here is to try to prevent
+        // leaks. Failing to clear scope might mean that we'll leak more
+        // but if we don't have enough memory to allocate a ClearScopeEvent
+        // we probably don't have to worry about this anyway.
+        return;
+      }
+    }
+
+    NS_DispatchToMainThread(aRunnable);
+    return;
+  }
+
+  PRUint32 lang_id;
+  NS_STID_FOR_ID(lang_id) {
+    // Note that scx comes from the outer window.  If this is an inner
+    // window, it may not be the current inner for its outer.
+    nsIScriptContext *scx = GetScriptContextInternal(lang_id);
+    if (scx)
+      scx->ClearScope(mScriptGlobals[NS_STID_INDEX(lang_id)], PR_TRUE);
+  }
+}
+
 void
 nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
 {
@@ -983,14 +1032,9 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
   }
 
   if (aClearScope) {
-    PRUint32 lang_id;
-    NS_STID_FOR_ID(lang_id) {
-      // Note that scx comes from the outer window.  If this is an inner
-      // window, it may not be the current inner for its outer.
-      nsIScriptContext *scx = GetScriptContextInternal(lang_id);
-      if (scx)
-        scx->ClearScope(mScriptGlobals[NS_STID_INDEX(lang_id)], PR_TRUE);
-    }
+    // NB: This might not clear our scope, but fire an event to do so
+    // instead.
+    ReallyClearScope(nsnull);
   }
 
   if (mDummyJavaPluginOwner) {
