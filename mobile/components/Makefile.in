@@ -49,6 +49,7 @@ XPIDL_MODULE = browsercompsbase
 EXTRA_PP_COMPONENTS = \
         AboutRedirector.js \
         DirectoryProvider.js\
+        Sidebar.js \
         $(NULL)
 
 EXTRA_COMPONENTS = \
