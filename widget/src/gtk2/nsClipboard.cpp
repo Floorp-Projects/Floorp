@@ -431,11 +431,11 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
 
         for (PRInt32 j = 0; j < n_targets; j++) {
             gchar *atom_name = gdk_atom_name(targets[j]);
-            if (!g_strcmp0(atom_name, aFlavorList[i]))
+            if (!strcmp(atom_name, aFlavorList[i]))
                 *_retval = PR_TRUE;
 
             // X clipboard wants image/jpeg, not image/jpg
-            if (!g_strcmp0(aFlavorList[i], kJPEGImageMime) && !g_strcmp0(atom_name, "image/jpeg"))
+            if (!strcmp(aFlavorList[i], kJPEGImageMime) && !strcmp(atom_name, "image/jpeg"))
                 *_retval = PR_TRUE;
 
             g_free(atom_name);
