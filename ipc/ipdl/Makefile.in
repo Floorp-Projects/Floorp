@@ -40,6 +40,10 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
+GARBAGE_DIRS += _ipdlheaders
+GARBAGE += ipdl_lextab.py ipdl_yacctab.py
+
 include $(topsrcdir)/config/rules.mk
 
 IPDLDIRS =  \
