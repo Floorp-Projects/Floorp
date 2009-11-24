@@ -573,6 +573,7 @@ public:
                                      PrefChangedFunc aCallback,
                                      void * aClosure);
   static void AddBoolPrefVarCache(const char* aPref, PRBool* aVariable);
+  static void AddIntPrefVarCache(const char* aPref, PRInt32* aVariable);
   static nsIPrefBranch *GetPrefBranch()
   {
     return sPrefBranch;
