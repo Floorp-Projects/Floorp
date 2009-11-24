@@ -165,6 +165,14 @@ let Util = {
     }
 
     return "none";
+  },
+
+  // Put the Mozilla networking code into a state that will kick the auto-connection
+  // process.
+  forceOnline: function forceOnline() {
+#ifdef MOZ_PLATFORM_HILDON
+    gIOService.offline = false;
+#endif
   }
 };
 

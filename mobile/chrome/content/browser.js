@@ -475,11 +475,11 @@ var Browser = {
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
     let browsers = document.getElementById("browsers");
-    browsers.addEventListener("command", this._handleContentCommand, false);
+    browsers.addEventListener("command", this._handleContentCommand, true);
     browsers.addEventListener("MozApplicationManifest", OfflineApps, false);
     browsers.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
 
-    /* Initialize Spatial Navigation */
+    // Initialize Spatial Navigation
     function panCallback(aElement) {
       if (!aElement)
         return;
@@ -491,10 +491,13 @@ var Browser = {
     // for all of our <browser>s
     SpatialNavigation.init(browsers, panCallback);
 
-    /* Login Manager */
+    // Login Manager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
-    /* Command line arguments/initial homepage */
+    // Make sure we're online before attempting to load
+    Util.forceOnline();
+
+    // Command line arguments/initial homepage
     let whereURI = "about:blank";
     switch (Util.needHomepageOverride()) {
       case "new profile":
@@ -893,6 +896,12 @@ var Browser = {
         } catch (e) { /* Fall back on about blank */ }
 
         Browser.selectedBrowser.loadURI(url, null, null, false);
+      }
+    } 
+    else if (/^about:neterror\?e=netOffline/.test(errorDoc.documentURI)) {
+      if (ot == errorDoc.getElementById("errorTryAgain") {
+        // Make sure we're online before attempting to load
+        Util.forceOnline();
       }
     }
   },

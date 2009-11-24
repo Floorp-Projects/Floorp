@@ -507,6 +507,9 @@ var ExtensionsView = {
   getAddonsFromRepo: function ev_getAddonsFromRepo(aTerms, aSelectFirstResult) {
     this.clearSection("repo");
 
+    // Make sure we're online before attempting to load
+    Util.forceOnline();
+
     if (this._repo.isSearching)
       this._repo.cancelSearch();
 
@@ -607,7 +610,10 @@ var ExtensionsView = {
   updateAll: function ev_updateAll() {
     if (!this._isXPInstallEnabled())
       return;
-  
+
+    // Make sure we're online before attempting to load
+    Util.forceOnline();
+
     // To support custom views we check the add-ons displayed in the list
     let items = [];
     let start = this._localItem.nextSibling;

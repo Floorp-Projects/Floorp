@@ -100,6 +100,9 @@ pref("network.http.max-connections", 6);
 pref("network.http.max-connections-per-server", 4);
 pref("network.http.max-persistent-connections-per-server", 4);
 pref("network.http.max-persistent-connections-per-proxy", 4);
+#ifdef MOZ_PLATFORM_HILDON
+pref("network.autodial-helper.enabled", true);
+#endif
 
 /* session history */
 pref("browser.sessionhistory.max_total_viewers", 1);

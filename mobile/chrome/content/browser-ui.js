@@ -495,6 +495,9 @@ var BrowserUI = {
     if (!aURI)
       return;
 
+    // Make sure we're online before attempting to load
+    Util.forceOnline();
+
     // Give the new page lots of room
     Browser.hideSidebars();
 
@@ -529,6 +532,9 @@ var BrowserUI = {
     Browser.hideSidebars();
     
     this._edit.popup.closePopup();
+
+    // Make sure we're online before attempting to load
+    Util.forceOnline();
 
     var submission = button.engine.getSubmission(this._edit.value, null);
     getBrowser().loadURI(submission.uri.spec, null, submission.postData, false);
