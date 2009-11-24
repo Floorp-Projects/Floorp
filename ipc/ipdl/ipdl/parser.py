@@ -40,10 +40,6 @@ def _getcallerpath():
 **CALLED** this function.'''
     return os.path.abspath(sys._getframe(1).f_code.co_filename)
 
-# we want PLY to generate its output in the module directory, not wherever
-# the user chooses to run ipdlc from
-_thisdir, _ = os.path.split(_getcallerpath())
-
 ##-----------------------------------------------------------------------------
 
 class ParseError(Exception):
@@ -92,12 +88,10 @@ class Parser:
 
         self.lexer = lex.lex(debug=self.debug,
                              optimize=not self.debug,
-                             lextab="ipdl_lextab",
-                             outputdir=_thisdir)
+                             lextab="ipdl_lextab")
         self.parser = yacc.yacc(debug=self.debug,
                                 optimize=not self.debug,
-                                tabmodule="ipdl_yacctab",
-                                outputdir=_thisdir)
+                                tabmodule="ipdl_yacctab")
         self.filename = filename
         self.includedirs = includedirs
         self.tu.filename = filename
