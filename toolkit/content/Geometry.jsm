@@ -324,7 +324,8 @@ Rect.prototype = {
   },
 
   equals: function equals(other) {
-    return (other != null &&
+    return other != null &&
+            (this.isEmpty() && other.isEmpty() ||
             this.top == other.top &&
             this.left == other.left &&
             this.bottom == other.bottom &&
