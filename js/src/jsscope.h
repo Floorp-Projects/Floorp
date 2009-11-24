@@ -387,6 +387,15 @@ struct JSScope : public JSObjectMap
     bool hasMethodBarrier()     { return flags & METHOD_BARRIER; }
     void setMethodBarrier()     { flags |= METHOD_BARRIER; }
 
+    /*
+     * Test whether this scope may be branded due to method calls, which means
+     * any assignment to a function-valued property must regenerate shape; else
+     * test whether this scope has method properties, which require a method
+     * write barrier.
+     */
+    bool
+    brandedOrHasMethodBarrier() { return flags & (BRANDED | METHOD_BARRIER); }
+
     bool owned()                { return object != NULL; }
 };
 

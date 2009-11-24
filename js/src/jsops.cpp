@@ -629,7 +629,7 @@ END_CASE(JSOP_PICK)
         TRACE_2(SetPropHit, entry, sprop);                                    \
         if (SPROP_HAS_STUB_SETTER(sprop) &&                                   \
             (sprop)->slot != SPROP_INVALID_SLOT &&                            \
-            !OBJ_SCOPE(obj)->branded()) {                                     \
+            !OBJ_SCOPE(obj)->brandedOrHasMethodBarrier()) {                   \
             /* Fast path for, e.g., plain Object instance properties. */      \
             LOCKED_OBJ_SET_SLOT(obj, (sprop)->slot, *vp);                     \
         } else {                                                              \
