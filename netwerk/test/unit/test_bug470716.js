@@ -59,7 +59,7 @@ var copyObserver =
       do_check_true(test_source_closed);
     }
 
-    do_timeout(0, "do_test();");
+    do_timeout(0, do_test);
   },
 
   QueryInterface: function(aIID)
@@ -119,8 +119,9 @@ function do_test() {
     pipe1.outputStream.write(test_content, test_content.length);
     pipe1.outputStream.flush();
     do_timeout(20,
-               "copier.cancel(test_result);" +
-               "pipe1.outputStream.write(\"a\", 1);");
+		function(){
+               copier.cancel(test_result);
+               pipe1.outputStream.write("a", 1);});
     break;
   case 5:
   case 6: // close sink
@@ -156,10 +157,12 @@ function do_test() {
     // we will close the sink
     test_sink_closed = true;
     do_timeout(20,
-               "pipe2.outputStream" +
-               "     .QueryInterface(Ci.nsIAsyncOutputStream)" +
-               "     .closeWithStatus(test_result);" +
-               "pipe1.outputStream.write(\"a\", 1);");
+		function()
+		{
+               pipe2.outputStream
+                    .QueryInterface(Ci.nsIAsyncOutputStream)
+                    .closeWithStatus(test_result);
+               pipe1.outputStream.write("a", 1);});
     break;
   case 13:
     do_test_finished();
@@ -169,6 +172,6 @@ function do_test() {
 
 function run_test() {
   test_nr = 0;
-  do_timeout(0, "do_test();");
+  do_timeout(0, do_test);
   do_test_pending();
 }

@@ -75,13 +75,11 @@ if ("@mozilla.org/toolkit/crash-reporter;1" in Components.classes) {
 
 
 function _TimerCallback(expr, timer) {
-  this._expr = expr;
+  this._func = expr;
   // Keep timer alive until it fires
   _pendingCallbacks.push(timer);
 }
 _TimerCallback.prototype = {
-  _expr: "",
-
   QueryInterface: function(iid) {
     if (iid.Equals(Components.interfaces.nsITimerCallback) ||
         iid.Equals(Components.interfaces.nsISupports))
@@ -92,7 +90,7 @@ _TimerCallback.prototype = {
 
   notify: function(timer) {
     _pendingCallbacks.splice(_pendingCallbacks.indexOf(timer), 1);
-    eval(this._expr);
+    this._func.call(null);
   }
 };
 

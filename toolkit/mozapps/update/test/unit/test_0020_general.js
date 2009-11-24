@@ -52,7 +52,7 @@ function run_test() {
   overrideXHR(callHandleEvent);
   startAUS();
   startUpdateChecker();
-  do_timeout(0, "run_test_pt1()");
+  do_timeout(0, run_test_pt1);
 }
 
 function end_test() {
