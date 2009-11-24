@@ -255,14 +255,6 @@ verbose_only( extern const char* shiftNames[]; )
     bool        blx_lr_bug;                                                     \
     int         max_out_args; /* bytes */                                      
 
-#define swapptrs()  {                                                   \
-        NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins;          \
-        int* _nslot = _nSlot;                                           \
-        _nSlot = _nExitSlot;                                            \
-        _nExitSlot = _nslot;                                            \
-    }
-
-
 #define IMM32(imm)  *(--_nIns) = (NIns)((imm));
 
 #define OP_IMM  (1<<25)

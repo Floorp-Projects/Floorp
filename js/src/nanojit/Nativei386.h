@@ -187,8 +187,6 @@ namespace nanojit
         void asm_cmp(LIns *cond); \
         void asm_div_mod(LIns *cond);
 
-    #define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
-
 #define IMM32(i)    \
     _nIns -= 4;     \
     *((int32_t*)_nIns) = (int32_t)(i)

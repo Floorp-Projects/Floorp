@@ -554,8 +554,6 @@ namespace nanojit
         void X86_SETNP(Register r);\
         void X86_SETE(Register r);\
 
-    #define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
-
     const int LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
 
     typedef uint8_t NIns;

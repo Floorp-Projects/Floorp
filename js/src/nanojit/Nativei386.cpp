@@ -1835,6 +1835,7 @@ namespace nanojit
 
     void Assembler::nativePageSetup()
     {
+        NanoAssert(!_inExit);
         if (!_nIns)
             codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
         if (!_nExitIns)
@@ -1846,11 +1847,9 @@ namespace nanojit
     {
         NIns *eip = _nIns;
         NanoAssertMsg(n<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small");
-        if (eip - n < (_inExit ? exitStart : codeStart)) {
-            if (_inExit)
-                codeAlloc(exitStart, exitEnd, _nIns verbose_only(, exitBytes));
-            else
-                codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
+        // This may be in a normal code chunk or an exit code chunk.
+        if (eip - n < codeStart) {
+            codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
             JMP(eip);
         }
     }
@@ -1875,6 +1874,13 @@ namespace nanojit
     void Assembler::asm_promote(LIns *) {
         // i2q or u2q
         TODO(asm_promote);
+    }
+
+    void Assembler::swapCodeChunks() {
+        SWAP(NIns*, _nIns, _nExitIns);
+        SWAP(NIns*, codeStart, exitStart);
+        SWAP(NIns*, codeEnd, exitEnd);
+        verbose_only( SWAP(size_t, codeBytes, exitBytes); )
     }
 
     #endif /* FEATURE_NANOJIT */
