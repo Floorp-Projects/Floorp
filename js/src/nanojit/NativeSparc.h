@@ -205,8 +205,6 @@ namespace nanojit
     void asm_fcmp(LIns *cond); \
     NIns* asm_fbranch(bool, LIns*, NIns*);
 
-#define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
-
 #define IMM32(i)    \
     --_nIns;        \
     *((int32_t*)_nIns) = (int32_t)(i)
