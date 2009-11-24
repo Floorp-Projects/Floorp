@@ -2678,6 +2678,23 @@ nsContentUtils::AddBoolPrefVarCache(const char *aPref,
   RegisterPrefCallback(aPref, BoolVarChanged, aCache);
 }
 
+static int
+IntVarChanged(const char *aPref, void *aClosure)
+{
+  PRInt32* cache = static_cast<PRInt32*>(aClosure);
+  *cache = nsContentUtils::GetIntPref(aPref, 0);
+  
+  return 0;
+}
+
+void
+nsContentUtils::AddIntPrefVarCache(const char *aPref,
+                                   PRInt32* aCache)
+{
+  *aCache = GetIntPref(aPref, PR_FALSE);
+  RegisterPrefCallback(aPref, IntVarChanged, aCache);
+}
+
 static const char *gEventNames[] = {"event"};
 static const char *gSVGEventNames[] = {"evt"};
 // for b/w compat, the first name to onerror is still 'event', even though it
