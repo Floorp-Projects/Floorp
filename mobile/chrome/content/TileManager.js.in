@@ -108,8 +108,6 @@ const kTileCrawlComeAgain = 0;    // millis
  * @param removeTile The function the tile manager should call in order to
  * "undisplay" a tile (e.g. remove it from the DOM).  The argument to this
  * function is a TileManager.Tile object.
- * @param fakeWidth The width of the widest possible visible rectangle, e.g.
- * the width of the screen.  This is used in setting the zoomLevel.
  */
 function TileManager(appendTile, removeTile, browserView, cacheSize) {
   /* backref to the BrowserView object that owns us */
@@ -161,12 +159,9 @@ TileManager.prototype = {
       this.endCriticalMove(criticalRect, !(dirtyAll || boundsSizeChanged));
     }
 
-
     if (dirtyAll) {
       this.dirtyRects([viewportRect.clone()], true);
     } else if (boundsSizeChanged) {
-
-      //
       // This is a special case.  The bounds size changed, but we are
       // told that not everything is dirty (so mayhap content grew or
       // shrank vertically or horizontally).  We might have old tiles
@@ -239,7 +234,6 @@ TileManager.prototype = {
 
       this.dirtyRects(rects, true);
     }
-
   },
 
   dirtyRects: function dirtyRects(rects, doCriticalRender) {
