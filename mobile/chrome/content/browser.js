@@ -2499,7 +2499,7 @@ Tab.prototype = {
   },
 
   /**
-   * Throttles redraws to once every second while loading the page, zooming to fit page if
+   * Throttles redraws to once every 2 seconds while loading the page, zooming to fit page if
    * user hasn't started zooming.
    */
   _resizeAndPaint: function() {

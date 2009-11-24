@@ -271,6 +271,9 @@ BrowserView.prototype = {
     this._idleServiceObserver = new BrowserView.IdleServiceObserver(this);
     this._idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
     this._idleService.addIdleObserver(this._idleServiceObserver, kBrowserViewPrefetchBeginIdleWait);
+
+    let browsers = document.getElementById("browsers");
+    browsers.addEventListener("MozScrolledAreaChanged", this.handleMozScrolledAreaChanged, false);
   },
   
   uninit: function uninit() {
@@ -280,31 +283,6 @@ BrowserView.prototype = {
 
   getVisibleRect: function getVisibleRect() {
     return this._visibleRectFactory();
-  },
-
-  setViewportDimensions: function setViewportDimensions(width, height, causedByZoom) {
-    let bvs = this._browserViewportState;
-    if (!bvs)
-      return;
-
-    if (!causedByZoom)
-      this._suppressZoomToPage = false;
-
-    let oldwidth  = bvs.viewportRect.right;
-    let oldheight = bvs.viewportRect.bottom;
-    bvs.viewportRect.right  = width;
-    bvs.viewportRect.bottom = height;
-
-    let sizeChanged = (oldwidth != width || oldheight != height);
-
-    // XXX we might not want the user's page to disappear from under them
-    // at this point, which could happen if the container gets resized such
-    // that visible rect becomes entirely outside of viewport rect.  might
-    // be wise to define what UX should be in this case, like a move occurs.
-    // then again, we could also argue this is the responsibility of the
-    // caller who would do such a thing...
-
-    this._viewportChanged(sizeChanged, sizeChanged && !!causedByZoom);
   },
 
   /**
@@ -328,9 +306,9 @@ BrowserView.prototype = {
       let browserW = this.viewportToBrowser(bvs.viewportRect.right);
       let browserH = this.viewportToBrowser(bvs.viewportRect.bottom);
       bvs.zoomLevel = newZoomLevel; // side-effect: now scale factor in transformations is newZoomLevel
-      this.setViewportDimensions(this.browserToViewport(browserW),
-                                 this.browserToViewport(browserH),
-                                 true);
+      bvs.viewportRect.right  = this.browserToViewport(browserW);
+      bvs.viewportRect.bottom = this.browserToViewport(browserH);
+      this._viewportChanged(true, true);
 
       if (this._browser) {
         let event = document.createEvent("Events");
@@ -487,8 +465,6 @@ BrowserView.prototype = {
     if (oldBrowser) {
       oldBrowser.removeEventListener("MozAfterPaint", this.handleMozAfterPaint, false);
       oldBrowser.removeEventListener("scroll", this.handlePageScroll, false);
-      oldBrowser.removeEventListener("MozScrolledAreaChanged", this.handleMozScrolledAreaChanged, false);
-
       oldBrowser.setAttribute("type", "content");
       oldBrowser.docShell.isOffScreenBrowser = false;
     }
@@ -504,13 +480,13 @@ BrowserView.prototype = {
 
       browser.addEventListener("MozAfterPaint", this.handleMozAfterPaint, false);
       browser.addEventListener("scroll", this.handlePageScroll, false);
-      browser.addEventListener("MozScrolledAreaChanged", this.handleMozScrolledAreaChanged, false);
 
       browser.docShell.isOffScreenBrowser = true;
       if (doZoom)
         this.zoomToPage();
 
-      this._viewportChanged(browserChanged, browserChanged);
+      if (browserChanged)
+        this._viewportChanged(true, true);
 
       this.commitBatchOperation();
     }
@@ -562,11 +538,13 @@ BrowserView.prototype = {
   },
 
   handleMozScrolledAreaChanged: function handleMozScrolledAreaChanged(ev) {
-    if (ev.target != this._browser.contentDocument)
+    let tab = Browser.getTabForDocument(ev.originalTarget);
+    if (!tab)
       return;
 
-    let { x: scrollX, y: scrollY } = BrowserView.Util.getContentScrollOffset(this._browser);
-
+    let browser = tab.browser;
+    let bvs = tab.browserViewportState;
+    let { x: scrollX, y: scrollY } = BrowserView.Util.getContentScrollOffset(browser);
     let x = ev.x + scrollX;
     let y = ev.y + scrollY;
     let w = ev.width;
@@ -578,8 +556,18 @@ BrowserView.prototype = {
     if (x < 0) w += x;
     if (y < 0) h += y;
 
-    this.setViewportDimensions(this.browserToViewport(w),
-                               this.browserToViewport(h));
+    let viewport = bvs.viewportRect;
+    let oldRight = viewport.right;
+    let oldBottom = viewport.bottom;
+    viewport.right  = bvs.zoomLevel * w;
+    viewport.bottom = bvs.zoomLevel * h;
+
+    if (browser == this._browser) {
+      // Page has now loaded enough to allow zooming.
+      let sizeChanged = oldRight != viewport.right || oldBottom != viewport.bottom;
+      this._suppressZoomToPage = false;
+      this._viewportChanged(sizeChanged, false);
+    }
   },
 
   zoomToPage: function zoomToPage() {
@@ -651,10 +639,8 @@ BrowserView.prototype = {
   // Since calling this method means "everything is wrong and the
   // <browser> is about to start giving you new data via MozAfterPaint
   // and MozScrolledAreaChanged", we also supress any zoomToPage()
-  // that might be called until the next time setViewportDimensions()
-  // is called (which will probably be caused by an incoming
-  // MozScrolledAreaChanged event, or via someone very eagerly setting
-  // it manually so that they can zoom to that manual "page" width).
+  // that might be called until the next time a MozScrolledAreaChanged
+  // event.
   //
   /**
    * Invalidates the entire page by throwing away any cached graphical
@@ -666,7 +652,7 @@ BrowserView.prototype = {
    */
   invalidateEntireView: function invalidateEntireView() {
     if (this._browserViewportState) {
-      this._viewportChanged(false, true, true);
+      this._viewportChanged(false, true);
       this._suppressZoomToPage = true;
     }
   },
@@ -764,7 +750,6 @@ BrowserView.prototype = {
 
       if (viewportSizeChanged)
         opState.viewportSizeChanged = viewportSizeChanged;
-
       if (dirtyAll)
         opState.dirtyAll = dirtyAll;
 
