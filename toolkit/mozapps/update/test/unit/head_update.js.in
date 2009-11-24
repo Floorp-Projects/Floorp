@@ -603,7 +603,7 @@ xhr.prototype = {
   responseXML: null,
   responseText: null,
   send: function(body) {
-    do_timeout(0, "gXHRCallback()"); // Use a timeout so the XHR completes
+    do_timeout(0, gXHRCallback); // Use a timeout so the XHR completes
   },
   _onprogress: null,
   set onprogress(val) { gXHR._onprogress = val; },
@@ -656,7 +656,7 @@ const updateCheckListener = {
          "update.statusText = " + request.statusText + ", " +
          "updateCount = " + updateCount + "\n");
     // Use a timeout to allow the XHR to complete
-    do_timeout(0, "gCheckFunc()");
+    do_timeout(0, gCheckFunc);
   },
 
   onError: function(request, update) {
@@ -667,7 +667,7 @@ const updateCheckListener = {
          "request.status = " + gStatusCode + ", " +
          "update.statusText = " + gStatusText + "\n");
     // Use a timeout to allow the XHR to complete
-    do_timeout(0, "gCheckFunc()");
+    do_timeout(0, gCheckFunc);
   },
 
   QueryInterface: function(aIID) {
