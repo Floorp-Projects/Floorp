@@ -206,8 +206,6 @@ namespace nanojit
             // Log controller object.  Contains what-stuff-should-we-print
             // bits, and a sink function for debug printing
             LogControl* _logc;
-            size_t codeBytes;
-            size_t exitBytes;
             #endif // NJ_VERBOSE
 
             #ifdef VTUNE
@@ -295,10 +293,30 @@ namespace nanojit
             NInsMap             _patches;
             LabelStateMap       _labels;
 
-            NIns        *codeStart, *codeEnd;       // current block we're adding code to
-            NIns        *exitStart, *exitEnd;       // current block for exit stubs
-            NIns*       _nIns;          // current native instruction
-            NIns*       _nExitIns;      // current instruction in exit fragment page
+            // We generate code into two places:  normal code chunks, and exit
+            // code chunks (for exit stubs).  We use a hack to avoid having to
+            // parameterise the code that does the generating -- we let that
+            // code assume that it's always generating into a normal code
+            // chunk (most of the time it is), and when we instead need to
+            // generate into an exit code chunk, we set _inExit to true and
+            // temporarily swap all the code/exit variables below (using
+            // swapCodeChunks()).  Afterwards we swap them all back and set
+            // _inExit to false again.
+            bool        _inExit, vpad2[3];
+            NIns        *codeStart, *codeEnd;   // current normal code chunk
+            NIns        *exitStart, *exitEnd;   // current exit code chunk
+            NIns*       _nIns;                  // current instruction in current normal code chunk
+            NIns*       _nExitIns;              // current instruction in current exit code chunk
+        #ifdef NJ_VERBOSE
+        public:
+            size_t      codeBytes;              // bytes allocated in normal code chunks
+            size_t      exitBytes;              // bytes allocated in exit code chunks
+        #endif
+
+        private:
+            #define     SWAP(t, a, b)   do { t tmp = a; a = b; b = tmp; } while (0)
+            void        swapCodeChunks();
+
             NIns*       _epilogue;
             AssmError   _err;           // 0 = means assemble() appears ok, otherwise it failed
         #if PEDANTIC
@@ -307,8 +325,6 @@ namespace nanojit
 
             AR          _activation;
             RegAlloc    _allocator;
-
-            bool        _inExit, vpad2[3];
 
             verbose_only( void asm_inc_m32(uint32_t*); )
             void        asm_mmq(Register rd, int dd, Register rs, int ds);

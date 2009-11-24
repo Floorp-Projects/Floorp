@@ -290,10 +290,6 @@ namespace nanojit
         int  max_param_size; /* bytes */                                    \
         DECL_PPC64()
 
-    #define swapptrs()  do {                                                \
-            NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins;          \
-        } while (0) /* no semi */
-
     const int LARGEST_UNDERRUN_PROT = 9*4;  // largest value passed to underrunProtect
 
     typedef uint32_t NIns;

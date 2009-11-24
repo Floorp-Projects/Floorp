@@ -1570,6 +1570,7 @@ Assembler::nativePageReset()
 void
 Assembler::nativePageSetup()
 {
+    NanoAssert(!_inExit);
     if (!_nIns)
         codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
     if (!_nExitIns)
@@ -1595,12 +1596,10 @@ Assembler::underrunProtect(int bytes)
     {
         verbose_only(verbose_outputf("        %p:", _nIns);)
         NIns* target = _nIns;
-        if (_inExit)
-            codeAlloc(exitStart, exitEnd, _nIns verbose_only(, exitBytes));
-        else
-            codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
+        // This may be in a normal code chunk or an exit code chunk.
+        codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
 
-        _nSlot = _inExit ? exitStart : codeStart;
+        _nSlot = codeStart;
 
         // _nSlot points to the first empty position in the new code block
         // _nIns points just past the last empty position.
@@ -2617,6 +2616,14 @@ Assembler::asm_jtbl(LIns* ins, NIns** table)
     Register tmp = registerAllocTmp(GpRegs & ~rmask(indexreg));
     LDR_scaled(PC, tmp, indexreg, 2);      // LDR PC, [tmp + index*4]
     asm_ld_imm(tmp, (int32_t)table);       // tmp = #table
+}
+
+void Assembler::swapCodeChunks() {
+    SWAP(NIns*, _nIns, _nExitIns);
+    SWAP(NIns*, _nSlot, _nExitSlot);        // this one is ARM-specific
+    SWAP(NIns*, codeStart, exitStart);
+    SWAP(NIns*, codeEnd, exitEnd);
+    verbose_only( SWAP(size_t, codeBytes, exitBytes); )
 }
 
 }

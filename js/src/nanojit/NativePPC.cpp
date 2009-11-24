@@ -1060,8 +1060,8 @@ namespace nanojit
     void Assembler::underrunProtect(int bytes) {
         NanoAssertMsg(bytes<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small");
         int instr = (bytes + sizeof(NIns) - 1) / sizeof(NIns);
-        NIns *top = _inExit ? this->exitStart : this->codeStart;
         NIns *pc = _nIns;
+        NIns *top = codeStart;  // this may be in a normal code chunk or an exit code chunk
 
     #if PEDANTIC
         // pedanticTop is based on the last call to underrunProtect; any time we call
@@ -1091,12 +1091,9 @@ namespace nanojit
     #else
         if (pc - instr < top) {
             verbose_only(if (_logc->lcbits & LC_Assembly) outputf("newpage %p:", pc);)
-            if (_inExit)
-                codeAlloc(exitStart, exitEnd, _nIns verbose_only(, exitBytes));
-            else
-                codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
-
-            // this jump will call underrunProtect again, but since we're on a new
+            // This may be in a normal code chunk or an exit code chunk.
+            codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
+            // This jump will call underrunProtect again, but since we're on a new
             // page, nothing will happen.
             br(pc, 0);
         }
@@ -1171,6 +1168,7 @@ namespace nanojit
     }
 
     void Assembler::nativePageSetup() {
+        NanoAssert(!_inExit);
         if (!_nIns) {
             codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
             IF_PEDANTIC( pedanticTop = _nIns; )
@@ -1318,6 +1316,13 @@ namespace nanojit
         SLWI(R0, indexreg, 2);                  // R0 = index*4
         asm_li(R2, int32_t(native_table));      // R2 = table (up to 2 instructions)
 #endif // 64bit
+    }
+
+    void Assembler::swapCodeChunks() {
+        SWAP(NIns*, _nIns, _nExitIns);
+        SWAP(NIns*, codeStart, exitStart);
+        SWAP(NIns*, codeEnd, exitEnd);
+        verbose_only( SWAP(size_t, codeBytes, exitBytes); )
     }
 
 } // namespace nanojit

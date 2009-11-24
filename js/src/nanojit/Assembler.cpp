@@ -216,8 +216,8 @@ namespace nanojit
     void Assembler::pageValidate()
     {
         if (error()) return;
-        // _nIns needs to be at least on one of these pages
-        NanoAssertMsg(_inExit ? containsPtr(exitStart, exitEnd, _nIns) : containsPtr(codeStart, codeEnd, _nIns),
+        // This may be a normal code chunk or an exit code chunk.
+        NanoAssertMsg(containsPtr(codeStart, codeEnd, _nIns),
                      "Native instruction pointer overstep paging bounds; check overrideProtect for last instruction");
     }
     #endif
@@ -621,7 +621,7 @@ namespace nanojit
         // otherwise we free it entirely.  intersectRegisterState will restore.
         releaseRegisters();
 
-        swapptrs();
+        swapCodeChunks();
         _inExit = true;
 
 #ifdef NANOJIT_IA32
@@ -644,10 +644,10 @@ namespace nanojit
         NIns* jmpTarget = _nIns;     // target in exit path for our mainline conditional jump
 
         // swap back pointers, effectively storing the last location used in the exit path
-        swapptrs();
+        swapCodeChunks();
         _inExit = false;
 
-        //verbose_only( verbose_outputf("         LIR_xt/xf swapptrs, _nIns is now %08X(%08X), _nExitIns is now %08X(%08X)",_nIns, *_nIns,_nExitIns,*_nExitIns) );
+        //verbose_only( verbose_outputf("         LIR_xt/xf swapCodeChunks, _nIns is now %08X(%08X), _nExitIns is now %08X(%08X)",_nIns, *_nIns,_nExitIns,*_nExitIns) );
         verbose_only( verbose_outputf("%010lx:", (unsigned long)jmpTarget);)
         verbose_only( verbose_outputf("----------------------------------- ## BEGIN exit block (LIR_xt|LIR_xf)") );
 
@@ -783,6 +783,7 @@ namespace nanojit
             }
         )
 
+        NanoAssert(!_inExit);
         // save used parts of current block on fragment's code list, free the rest
 #ifdef NANOJIT_ARM
         // [codeStart, _nSlot) ... gap ... [_nIns, codeEnd)
