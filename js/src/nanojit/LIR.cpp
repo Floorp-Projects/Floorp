@@ -66,17 +66,6 @@ namespace nanojit
         0
     };
 
-    extern const uint8_t insSizes[] = {
-#define OPDEF(op, number, operands, repkind) \
-            sizeof(LIns##repkind),
-#define OPDEF64(op, number, operands, repkind) \
-            OPDEF(op, number, operands, repkind)
-#include "LIRopcode.tbl"
-#undef OPDEF
-#undef OPDEF64
-            0
-    };
-
     // LIR verbose specific
     #ifdef NJ_VERBOSE
 
@@ -372,33 +361,30 @@ namespace nanojit
     // Reads the next non-skip instruction.
     LInsp LirReader::read()
     {
-        NanoAssert(_i);
-        LInsp ret = _i;
+        static const uint8_t insSizes[] = {
+        // LIR_start is treated specially -- see below.
+#define OPDEF(op, number, operands, repkind) \
+            ((number) == LIR_start ? 0 : sizeof(LIns##repkind)),
+#define OPDEF64(op, number, operands, repkind) \
+            OPDEF(op, number, operands, repkind)
+#include "LIRopcode.tbl"
+#undef OPDEF
+#undef OPDEF64
+            0
+        };
 
         // Check the invariant: _i never points to a skip.
-        LOpcode iop = _i->opcode();
-        NanoAssert(iop != LIR_skip);
+        NanoAssert(_i && !_i->isop(LIR_skip));
 
-#ifdef DEBUG
-        if (iop == LIR_start) {
-            // Once we hit here, this method shouldn't be called again.
-            // The assertion at the top of this method checks this.
-            // (In the non-debug case, _i ends up pointing to junk just
-            // prior to the LIR_start, but it should be ok because,
-            // again, this method shouldn't be called again.)
-            _i = 0;
-            return ret;
-        }
-        else 
-#endif
-        {
-            // Step back one instruction.  Use a table lookup rather than a
-            // switch to avoid branch mispredictions.
-            _i = (LInsp)(uintptr_t(_i) - insSizes[iop]);
-        }
+        // Step back one instruction.  Use a table lookup rather than a switch
+        // to avoid branch mispredictions.  LIR_start is given a special size
+        // of zero so that we don't step back past the start of the block.
+        // (Callers of this function should stop once they see a LIR_start.)
+        LInsp ret = _i;
+        _i = (LInsp)(uintptr_t(_i) - insSizes[_i->opcode()]);
 
         // Ensure _i doesn't end up pointing to a skip.
-        while (LIR_skip == _i->opcode()) {
+        while (_i->isop(LIR_skip)) {
             NanoAssert(_i->prevLIns() != _i);
             _i = _i->prevLIns();
         }
