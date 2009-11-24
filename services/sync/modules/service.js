@@ -235,9 +235,6 @@ WeaveSvc.prototype = {
     return ok;
   },
 
-  onWindowOpened: function WeaveSvc__onWindowOpened() {
-  },
-
   /**
    * Prepare to initialize the rest of Weave after waiting a little bit
    */
