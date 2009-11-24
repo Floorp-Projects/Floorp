@@ -794,10 +794,10 @@ var BrowserUI = {
         break;
       }
       case "cmd_zoomin":
-        Browser._browserView.zoom(-1);
+        Browser.zoom(-1);
         break;
       case "cmd_zoomout":
-        Browser._browserView.zoom(1);
+        Browser.zoom(1);
         break;
     }
   }

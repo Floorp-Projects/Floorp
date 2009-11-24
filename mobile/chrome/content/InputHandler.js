@@ -1161,9 +1161,10 @@ ScrollwheelModule.prototype = {
       evInfo.event.preventDefault();
     }
   },
+
   handleEventImpl: function handleEventImpl(zoomlevel) {
-	this.pendingEvent = 0;
-	Browser.zoom(zoomlevel);
+    this.pendingEvent = 0;
+    Browser.zoom(zoomlevel);
   },
 
   /* We don't have much state to reset if we lose event focus */
