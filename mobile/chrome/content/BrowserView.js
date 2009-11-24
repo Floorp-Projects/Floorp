@@ -331,7 +331,6 @@ BrowserView.prototype = {
       this.setViewportDimensions(this.browserToViewport(browserW),
                                  this.browserToViewport(browserH),
                                  true);
-      bvs.zoomChanged = true;
 
       if (this._browser) {
         let event = document.createEvent("Events");
@@ -585,8 +584,10 @@ BrowserView.prototype = {
 
   zoomToPage: function zoomToPage() {
     // See invalidateEntireView() for why we might be suppressing this zoom.
-    if (!this._suppressZoomToPage)
+    if (!this._suppressZoomToPage) {
+      this._browserViewportState.defaultZoomLevel = this.getZoomForPage();
       this.setZoomLevel(this.getZoomForPage());
+    }
   },
 
   getZoomForPage: function getZoomForPage() {
@@ -831,11 +832,7 @@ BrowserView.prototype = {
  * does keep the top and left coordinates (cf visibleX, visibleY)), since those are not
  * characteristic of the current browser in view.
  */
-BrowserView.BrowserViewportState = function(viewportRect,
-                                            visibleX,
-                                            visibleY,
-                                            zoomLevel) {
-
+BrowserView.BrowserViewportState = function(viewportRect, visibleX, visibleY, zoomLevel) {
   this.init(viewportRect, visibleX, visibleY, zoomLevel);
 };
 
@@ -846,23 +843,16 @@ BrowserView.BrowserViewportState.prototype = {
     this.visibleX     = visibleX;
     this.visibleY     = visibleY;
     this.zoomLevel    = zoomLevel;
-    this.zoomChanged  = false;
-  },
-
-  clone: function clone() {
-    return new BrowserView.BrowserViewportState(this.viewportRect,
-                                                this.visibleX,
-                                                this.visibleY,
-                                                                                    this.zoomLevel);
+    this.defaultZoomLevel = 1;
   },
 
   toString: function toString() {
-    let props = ['\tviewportRect=' + this.viewportRect.toString(),
-                 '\tvisibleX='     + this.visibleX,
-                 '\tvisibleY='     + this.visibleY,
-                 '\tzoomLevel='    + this.zoomLevel];
+    let props = ["\tviewportRect=" + this.viewportRect.toString(),
+                 "\tvisibleX="     + this.visibleX,
+                 "\tvisibleY="     + this.visibleY,
+                 "\tzoomLevel="    + this.zoomLevel];
 
-    return '[BrowserViewportState] {\n' + props.join(',\n') + '\n}';
+    return "[BrowserViewportState] {\n" + props.join(",\n") + "\n}";
   }
 
 };
