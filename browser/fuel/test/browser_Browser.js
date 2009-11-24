@@ -10,14 +10,7 @@ var gTabMoveCount = 0;
 var gPageLoadCount = 0;
 
 function test() {
-  waitForExplicitFinish();      
-
-  if (Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager).activeWindow !=
-      window) {
-    setTimeout(test, 0);
-    window.focus();
-    return;
-  }
+  waitForExplicitFinish();
 
   var windows = Application.windows;
   ok(windows, "Check access to browser windows");

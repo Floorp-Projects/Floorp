@@ -303,8 +303,8 @@ var gAllTests = [
   function () {
     let wh = new WindowHelper();
     wh.onload = function () {
-      // Reset the check boxes and select "Everything"
-      this.resetCheckboxes();
+      // Check all items and select "Everything"
+      this.checkAllCheckboxes();
       this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
 
       // Hide details
@@ -317,11 +317,10 @@ var gAllTests = [
   function () {
     let wh = new WindowHelper();
     wh.onload = function () {
-      // Details should remain closed because the items selection is the same
-      // as the default state.
+      // Details should remain closed because all items are checked.
       this.checkDetails(false);
 
-      // Modify the default items state
+      // Uncheck history.
       this.checkPrefCheckbox("history", false);
       this.acceptDialog();
     };
@@ -330,8 +329,20 @@ var gAllTests = [
   function () {
     let wh = new WindowHelper();
     wh.onload = function () {
-      // Details should be open because the items selection is not the same
-      // as the default state.
+      // Details should be open because not all items are checked.
+      this.checkDetails(true);
+
+      // Modify the Site Preferences item state (bug 527820)
+      this.checkAllCheckboxes();
+      this.checkPrefCheckbox("siteSettings", false);
+      this.acceptDialog();
+    };
+    wh.open();
+  },
+  function () {
+    let wh = new WindowHelper();
+    wh.onload = function () {
+      // Details should be open because not all items are checked.
       this.checkDetails(true);
 
       // Hide details
@@ -344,8 +355,7 @@ var gAllTests = [
   function () {
     let wh = new WindowHelper();
     wh.onload = function () {
-      // Details should be open because the items selection is not the same
-      // as the default state.
+      // Details should be open because not all items are checked.
       this.checkDetails(true);
 
       // Select another duration
@@ -469,14 +479,14 @@ WindowHelper.prototype = {
   },
 
   /**
-   * Resets the checkboxes to their default state.
+   * Makes sure all the checkboxes are checked.
    */
-  resetCheckboxes: function () {
+  checkAllCheckboxes: function () {
     var cb = this.win.document.querySelectorAll("#itemList > [preference]");
     ok(cb.length > 1, "found checkboxes for preferences");
     for (var i = 0; i < cb.length; ++i) {
       var pref = this.win.document.getElementById(cb[i].getAttribute("preference"));
-      if (pref.value != pref.defaultValue)
+      if (!pref.value)
         cb[i].click();
     }
   },

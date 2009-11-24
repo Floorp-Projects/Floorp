@@ -403,12 +403,12 @@ var gAdvancedPane = {
   {
     var aus = 
         Components.classes["@mozilla.org/updates/update-service;1"].
-        getService(Components.interfaces.nsIApplicationUpdateService);
+        getService(Components.interfaces.nsIApplicationUpdateService2);
 
     var enabledPref = document.getElementById("app.update.enabled");
     var enableAppUpdate = document.getElementById("enableAppUpdate");
 
-    enableAppUpdate.disabled = !aus.canUpdate || enabledPref.locked;
+    enableAppUpdate.disabled = !aus.canCheckForUpdates || enabledPref.locked;
   },
 
   /**

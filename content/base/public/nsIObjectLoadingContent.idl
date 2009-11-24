@@ -39,11 +39,13 @@
 
 interface nsIObjectFrame;
 interface nsIPluginInstance;
+interface nsIDOMElement;
+interface nsIDOMClientRect;
 
 /**
  * This interface represents a content node that loads objects.
  */
-[scriptable, uuid(90ab443e-3e99-405e-88c9-9c42adaa3217)]
+[scriptable, uuid(8afe3b08-293c-48bd-a997-321745478611)]
 interface nsIObjectLoadingContent : nsISupports
 {
   const unsigned long TYPE_LOADING  = 0;
@@ -105,4 +107,12 @@ interface nsIObjectLoadingContent : nsISupports
    * because nsIObjectFrame is unscriptable.
    */
   [noscript] void hasNewFrame(in nsIObjectFrame aFrame);
+
+  /**
+   * Tells the object to paint directly in this location ignoring any
+   * positioning information that may have been provided otherwise
+   */
+  void setAbsoluteScreenPosition(in nsIDOMElement element,
+                                 in nsIDOMClientRect position,
+                                 in nsIDOMClientRect clip);
 };

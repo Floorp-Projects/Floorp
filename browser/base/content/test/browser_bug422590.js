@@ -65,14 +65,11 @@ function testCustomize(aWindow, aCallback) {
 }
 
 function closeToolbarCustomization(aWindow, aCTWindow) {
-  var osString = Components.classes["@mozilla.org/xre/app-info;1"].
-                 getService(Components.interfaces.nsIXULRuntime).OS;
-
-  // Force the cleanup code to be run now instead of onunload
-  // This also hides the sheet on Mac
+  // Force the cleanup code to be run now instead of onunload.
+  // This also hides the sheet on Mac.
   aCTWindow.finishToolbarCustomization();
 
-  // On windows and linux, need to explicitly close the window
-  if (osString != "Darwin")
+  // On windows and linux, need to explicitly close the window.
+  if (!gCustomizeSheet)
     aCTWindow.close();
 }

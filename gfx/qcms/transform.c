@@ -25,10 +25,10 @@
 #include <assert.h>
 #include "qcmsint.h"
 
-/* for MSVC, GCC, and Intel compilers */
-#if defined(_M_IX86) || defined(__i386__) || defined(_M_AMD64) || defined(__x86_64__)
+/* for MSVC, GCC, Intel, and Sun compilers */
+#if defined(_M_IX86) || defined(__i386__) || defined(__i386) || defined(_M_AMD64) || defined(__x86_64__) || defined(__x86_64)
 #define X86
-#endif /* _M_IX86 || __i386__ || _M_AMD64 || __x86_64__ */
+#endif /* _M_IX86 || __i386__ || __i386 || _M_AMD64 || __x86_64__ || __x86_64 */
 
 //XXX: could use a bettername
 typedef uint16_t uint16_fract_t;
@@ -1062,7 +1062,7 @@ static void cpuid(uint32_t fxn, uint32_t *a, uint32_t *b, uint32_t *c, uint32_t 
        *c = c_;
        *d = d_;
 }
-#elif defined(__GNUC__) && defined(__i386__)
+#elif (defined(__GNUC__) || defined(__SUNPRO_C)) && (defined(__i386__) || defined(__i386))
 #define HAS_CPUID
 /* Get us a CPUID function. We can't use ebx because it's the PIC register on
    some platforms, so we use ESI instead and save ebx to avoid clobbering it. */
@@ -1088,7 +1088,7 @@ static void cpuid(uint32_t fxn, uint32_t *a, uint32_t *b, uint32_t *c, uint32_t 
 
 static int sse_version_available(void)
 {
-#if defined(__x86_64__) || defined(_M_AMD64)
+#if defined(__x86_64__) || defined(__x86_64) || defined(_M_AMD64)
 	/* we know at build time that 64-bit CPUs always have SSE2
 	 * this tells the compiler that non-SSE2 branches will never be
 	 * taken (i.e. OK to optimze away the SSE1 and non-SIMD code */

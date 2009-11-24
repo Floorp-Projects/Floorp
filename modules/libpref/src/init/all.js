@@ -822,6 +822,15 @@ pref("network.auth.use-sspi", true);
 
 #endif
 
+// Controls which NTLM authentication implementation we default to. True forces
+// the use of our generic (internal) NTLM authentication implementation vs. any
+// native implementation provided by the os. This pref is for diagnosing issues
+// with native NTLM. (See bug 520607 for details.) Using generic NTLM authentication
+// can expose the user to reflection attack vulnerabilities. Do not change this
+// unless you know what you're doing!
+// This pref should be removed 6 months after the release of firefox 3.6. 
+pref("network.auth.force-generic-ntlm", false);
+
 // The following prefs are used to enable automatic use of the operating
 // system's NTLM implementation to silently authenticate the user with their
 // Window's domain logon.  The trusted-uris pref follows the format of the
