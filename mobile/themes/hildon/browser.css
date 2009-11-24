@@ -371,14 +371,6 @@ toolbarbutton.page-button {
   }
 }
 
-#addons-update-all {
-  color: #000 !important;
-}
-
-#addons-update-all[disabled="true"] {
-  color: #aaa !important;
-}
-
 .addon-rating[rating] {
   width: 78px;
   height: 18px;
