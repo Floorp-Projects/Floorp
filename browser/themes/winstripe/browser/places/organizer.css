@@ -98,19 +98,38 @@
   background-position: left center;
 }
 
+/* organize, view and maintenance buttons icons */
+#organizeButton, 
+#viewMenu, 
+#maintenanceButton {
+  list-style-image: url("chrome://browser/skin/places/libraryToolbar.png");
+}
+
 /* organize button */
 #organizeButton {
-  list-style-image: url("chrome://browser/skin/places/organize.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+#organizeButton:hover,
+#organizeButton[open="true"] {
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
 
 /* view button */
 #viewMenu {
-  list-style-image: url("chrome://browser/skin/places/view.png");
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+#viewMenu:hover,
+#viewMenu[open="true"] {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
 /* maintenance button */
 #maintenanceButton {
-  list-style-image: url("chrome://browser/skin/places/importAndBackup.png");
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+#maintenanceButton:hover,
+#maintenanceButton[open="true"] {
+  -moz-image-region: rect(16px, 48px, 32px, 32px);
 }
 
 /* Root View */

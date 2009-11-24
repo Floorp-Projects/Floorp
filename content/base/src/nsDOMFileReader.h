@@ -60,6 +60,7 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamLoader.h"
 #include "nsIChannel.h"
+#include "prmem.h"
 
 #include "nsXMLHttpRequest.h"
 
@@ -119,10 +120,15 @@ protected:
   void DispatchError(nsresult rv);
   void StartProgressEventTimer();
 
+  void FreeFileData() {
+    PR_Free(mFileData);
+    mFileData = nsnull;
+    mDataLen = 0;
+  }
+
   char *mFileData;
   nsCOMPtr<nsIFile> mFile;
   nsString mCharset;
-  PRUint32 mReadCount;
   PRUint32 mDataLen;
   PRUint32 mDataFormat;
 
@@ -137,9 +143,8 @@ protected:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
 
-  PRUint64 mReadTotal;
+  PRInt64 mReadTotal;
   PRUint64 mReadTransferred;
-  PRPackedBool mReadComplete;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnLoadEndListener;
 };

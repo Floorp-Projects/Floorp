@@ -225,7 +225,7 @@ function (aDescriptionURL)
 // However, it is currently stubbed out due to security/privacy concerns
 // stemming from difficulties in determining what domain issued the request.
 // See bug 340604 and
-// http://msdn.microsoft.com/workshop/author/dhtml/reference/methods/issearchproviderinstalled.asp .
+// http://msdn.microsoft.com/en-us/library/aa342526%28VS.85%29.aspx .
 // XXX Implement this!
 nsSidebar.prototype.IsSearchProviderInstalled =
 function (aSearchURL)

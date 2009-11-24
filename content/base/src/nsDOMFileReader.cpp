@@ -152,13 +152,12 @@ nsDOMFileReader::Notify(const char *aCharset, nsDetectionConfident aConf)
 //nsDOMFileReader constructors/initializers
 
 nsDOMFileReader::nsDOMFileReader()
-  : mFileData(nsnull), mReadCount(0),
+  : mFileData(nsnull),
     mDataLen(0), mDataFormat(0),
     mReadyState(nsIDOMFileReader::EMPTY),
     mProgressEventWasDelayed(PR_FALSE),
     mTimerIsActive(PR_FALSE),
-    mReadTotal(0), mReadTransferred(0),
-    mReadComplete(PR_TRUE)
+    mReadTotal(0), mReadTransferred(0)
 {
   nsLayoutStatics::AddRef();
 }
@@ -167,6 +166,8 @@ nsDOMFileReader::~nsDOMFileReader()
 {
   if (mListenerManager) 
     mListenerManager->Disconnect();
+
+  FreeFileData();
 
   nsLayoutStatics::Release();
 }
@@ -295,8 +296,6 @@ nsDOMFileReader::Abort()
   if (mProgressNotifier) {
     mProgressNotifier->Cancel();
   }
-  mReadCount = 0;
-  mDataLen = 0;
 
   //Revert status, result and readystate attributes
   SetDOMStringToNull(mResult);
@@ -312,8 +311,7 @@ nsDOMFileReader::Abort()
   mFile = nsnull;
 
   //Clean up memory buffer
-  PR_Free(mFileData);
-  mFileData = nsnull;
+  FreeFileData();
 
   //Dispatch the abort event
   DispatchProgressEvent(NS_LITERAL_STRING(ABORT_STR));
@@ -360,6 +358,28 @@ nsDOMFileReader::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   return NS_OK;
 }
 
+static
+NS_METHOD
+ReadFuncBinaryString(nsIInputStream* in,
+                     void* closure,
+                     const char* fromRawSegment,
+                     PRUint32 toOffset,
+                     PRUint32 count,
+                     PRUint32 *writeCount)
+{
+  PRUnichar* dest = static_cast<PRUnichar*>(closure) + toOffset;
+  PRUnichar* end = dest + count;
+  const unsigned char* source = (const unsigned char*)fromRawSegment;
+  while (dest != end) {
+    *dest = *source;
+    ++dest;
+    ++source;
+  }
+  *writeCount = count;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDOMFileReader::OnDataAvailable(nsIRequest *aRequest,
                                  nsISupports *aContext,
@@ -367,34 +387,33 @@ nsDOMFileReader::OnDataAvailable(nsIRequest *aRequest,
                                  PRUint32 aOffset,
                                  PRUint32 aCount)
 {
-  //Update memory buffer to reflect the contents of the file
-  mFileData = (char *)PR_Realloc(mFileData, aOffset + aCount);
-  NS_ENSURE_TRUE(mFileData, NS_ERROR_OUT_OF_MEMORY);
-
-  aInputStream->Read(mFileData + aOffset, aCount, &mReadCount);
-  mDataLen += aCount;
-  mReadTransferred = mDataLen;
-
-  //Continuously update our binary string as data comes in
   if (mDataFormat == FILE_AS_BINARY) {
+    //Continuously update our binary string as data comes in
+    NS_ASSERTION(mResult.Length() == aOffset,
+                 "unexpected mResult length");
     PRUint32 oldLen = mResult.Length();
-    PRUint32 newLen = oldLen + aCount;
-    PRUnichar *buf; 
+    PRUnichar *buf = nsnull;
+    mResult.GetMutableData(&buf, oldLen + aCount);
+    NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
 
-    if (mResult.GetMutableData(&buf, newLen) != newLen) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    PRUnichar *bufEnd = buf + newLen;
-    buf += oldLen;
-
-    char *source = mFileData + aOffset;
-    while (buf < bufEnd) {
-      *buf = *source;
-      ++buf;
-      ++source;
-    }
+    PRUint32 bytesRead = 0;
+    aInputStream->ReadSegments(ReadFuncBinaryString, buf + oldLen, aCount,
+                               &bytesRead);
+    NS_ASSERTION(bytesRead == aCount, "failed to read data");
   }
+  else {
+    //Update memory buffer to reflect the contents of the file
+    mFileData = (char *)PR_Realloc(mFileData, aOffset + aCount);
+    NS_ENSURE_TRUE(mFileData, NS_ERROR_OUT_OF_MEMORY);
+
+    PRUint32 bytesRead = 0;
+    aInputStream->Read(mFileData + aOffset, aCount, &bytesRead);
+    NS_ASSERTION(bytesRead == aCount, "failed to read data");
+
+    mDataLen += aCount;
+  }
+
+  mReadTransferred += aCount;
 
   //Notify the timer is the appropriate timeframe has passed
   if (mTimerIsActive) {
@@ -430,6 +449,7 @@ nsDOMFileReader::OnStopRequest(nsIRequest *aRequest,
 
   //Set the status field as appropriate
   if (NS_FAILED(aStatus)) {
+    FreeFileData();
     DispatchError(aStatus);
     return NS_OK;
   }
@@ -447,6 +467,8 @@ nsDOMFileReader::OnStopRequest(nsIRequest *aRequest,
     default:
      return NS_ERROR_FAILURE;
   }
+
+  FreeFileData();
 
   //Dispatch load event to signify end of a successful load
   DispatchProgressEvent(NS_LITERAL_STRING(LOAD_STR));
@@ -466,9 +488,15 @@ nsDOMFileReader::ReadFileContent(nsIDOMFile* aFile,
 
   //Implicit abort to clear any other activity going on
   Abort();
+  mError = nsnull;
+  SetDOMStringToNull(mResult);
+  mReadTransferred = 0;
+  mReadTotal = 0;
+  mReadyState = nsIDOMFileReader::EMPTY;
+  FreeFileData();
+
   mDataFormat = aDataFormat;
   mCharset = aCharset;
-  mError = nsnull;
 
   //Obtain the nsDOMFile's underlying nsIFile
   nsresult rv;
@@ -485,7 +513,8 @@ nsDOMFileReader::ReadFileContent(nsIDOMFile* aFile,
   NS_ENSURE_SUCCESS(rv, rv);
 
   //Obtain the total size of the file before reading
-  aFile->GetSize(&mReadTotal);
+  mReadTotal = -1;
+  mFile->GetFileSize(&mReadTotal);
 
   rv = mChannel->AsyncOpen(this, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -540,8 +569,8 @@ nsDOMFileReader::DispatchProgressEvent(const nsAString& aType)
   if (!progress)
     return;
 
-  progress->InitProgressEvent(aType, PR_FALSE, PR_FALSE, mReadComplete,
-                              mReadTransferred, (mReadTotal == LL_MAXUINT) ? 0 : mReadTotal);
+  progress->InitProgressEvent(aType, PR_FALSE, PR_FALSE, mReadTotal >= 0,
+                              mReadTransferred, PR_MAX(mReadTotal, 0));
 
   this->DispatchDOMEvent(nsnull, event, nsnull, nsnull);
 }

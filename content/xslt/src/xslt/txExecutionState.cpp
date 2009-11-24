@@ -99,10 +99,13 @@ txExecutionState::txExecutionState(txStylesheet* aStylesheet,
       mKeyHash(aStylesheet->getKeyMap()),
       mDisableLoads(aDisableLoads)
 {
+    MOZ_COUNT_CTOR(txExecutionState);
 }
 
 txExecutionState::~txExecutionState()
 {
+    MOZ_COUNT_DTOR(txExecutionState);
+
     delete mResultHandler;
     delete mLocalVariables;
     delete mEvalContext;
@@ -271,9 +274,9 @@ txExecutionState::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
         txVariableMap* oldVars = mLocalVariables;
         mLocalVariables = nsnull;
         rv = var->mExpr->evaluate(getEvalContext(), &aResult);
-        NS_ENSURE_SUCCESS(rv, rv);
-
         mLocalVariables = oldVars;
+
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
         nsAutoPtr<txRtfHandler> rtfHandler(new txRtfHandler);

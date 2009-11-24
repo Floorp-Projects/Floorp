@@ -56,9 +56,6 @@ var TITLE   = "Logical NOT operator (!)";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
-//    version("130")
-
-
 new TestCase( SECTION,   "!(null)",                true,   !(null) );
 new TestCase( SECTION,   "!(var x)",               true,   !(eval("var x")) );
 new TestCase( SECTION,   "!(void 0)",              true,   !(void 0) );

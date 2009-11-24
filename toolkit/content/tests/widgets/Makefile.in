@@ -127,8 +127,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		videocontrols_direction-2e.html \
 		videocontrols_direction_test.js \
 		use_large_cache.js \
-		audio.oga \
-		black.ogv \
+		audio.wav \
 		video.ogg \
 		videomask.css \
 		$(NULL)

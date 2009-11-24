@@ -610,7 +610,7 @@ nsConverterManagerDataRegister(nsIComponentManager* aCompMgr,
   return nsCharsetConverterManager::RegisterConverterManagerData();
 }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCharsetConverterManager, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetConverterManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextToSubURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF8ConverterService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetAlias2)

@@ -449,7 +449,12 @@ ScriptablePluginObject::Invoke(NPIdentifier name, const NPVariant *args,
 
     NPN_ReleaseVariantValue(&docv);
 
-    STRINGZ_TO_NPVARIANT(strdup("foo return val"), *result);
+    const char* outString = "foo return val";
+    char* npOutString = (char *)NPN_MemAlloc(strlen(outString) + 1);
+    if (!npOutString)
+      return false;
+    strcpy(npOutString, outString);
+    STRINGZ_TO_NPVARIANT(npOutString, *result);
 
     return true;
   }
@@ -463,7 +468,12 @@ ScriptablePluginObject::InvokeDefault(const NPVariant *args, uint32_t argCount,
 {
   printf ("ScriptablePluginObject default method called!\n");
 
-  STRINGZ_TO_NPVARIANT(strdup("default method return val"), *result);
+  const char* outString = "default method return val";
+  char* npOutString = (char *)NPN_MemAlloc(strlen(outString) + 1);
+  if (!npOutString)
+    return false;
+  strcpy(npOutString, outString);
+  STRINGZ_TO_NPVARIANT(npOutString, *result);
 
   return true;
 }

@@ -580,8 +580,10 @@ nsXULElement::IsFocusable(PRInt32 *aTabIndex)
       }
       else {
         // otherwise, if there is no tabindex attribute, just use the value of
-        // *aTabIndex to indicate focusability
+        // *aTabIndex to indicate focusability. Reset any supplied tabindex to 0.
         shouldFocus = *aTabIndex >= 0;
+        if (shouldFocus)
+          *aTabIndex = 0;
       }
 
       if (shouldFocus && sTabFocusModelAppliesToXUL &&
