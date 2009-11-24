@@ -6364,13 +6364,13 @@ static JS_ALWAYS_INLINE VMSideExit*
 ExecuteTrace(JSContext* cx, Fragment* f, InterpState& state)
 {
     JS_ASSERT(!cx->bailExit);
-    union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*, Fragment*); } u;
+    union { NIns *code; GuardRecord* (FASTCALL *func)(InterpState*); } u;
     u.code = f->code();
     GuardRecord* rec;
 #if defined(JS_NO_FASTCALL) && defined(NANOJIT_IA32)
     SIMULATE_FASTCALL(rec, state, NULL, u.func);
 #else
-    rec = u.func(&state, NULL);
+    rec = u.func(&state);
 #endif
     JS_ASSERT(!cx->bailExit);
     return (VMSideExit*)rec->exit;
