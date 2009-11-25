@@ -1118,7 +1118,7 @@ var FormHelper = {
   _getAll: function() {
     let doc = getBrowser().contentDocument;
     let prefix = doc.documentElement.wrappedJSObject.namespaceURI ? "xhtml" : "";
-    let expression = "//input|//select|//button".replace("//", "//" + prefix + ":");
+    let expression = "//input|//select|//button|//textarea".replace("//", "//" + prefix + ":");
     let nodes = doc.evaluate(expression,
                              doc,
                              this._nsResolver,
@@ -1150,7 +1150,7 @@ var FormHelper = {
     for (let i = elements.length; i>0; --i) {
       if (elements[i] == this._currentElement)
         return elements[--i];
-   }
+    }
    return null;
   },
 
@@ -1211,6 +1211,7 @@ var FormHelper = {
 
   open: function formHelperOpen(aElement) {
     this._open = true;
+    window.addEventListener("keypress", this, true);
 
     this._container.hidden = false;
     this._helperSpacer.hidden = false;
@@ -1232,9 +1233,45 @@ var FormHelper = {
     Browser.contentScrollboxScroller.scrollBy(0, 0);
     bv.onAfterVisibleMove();
 
+    window.removeEventListener("keypress", this, true);
     this._container.hidden = true;
     this._currentElement = null;
     this._open = false;
+  },
+
+  handleEvent: function formHelperHandleEvent(aEvent) {
+    let currentElement = this.getCurrentElement();
+    if (aEvent.type != "keypress")
+      return;
+
+    let keyCode = aEvent.keyCode || aEvent.charCode;
+    switch (keyCode) {
+      case aEvent.DOM_VK_DOWN:
+        if (currentElement instanceof HTMLTextAreaElement) {
+          let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
+          let isEnd = (currentElement.textLength == currentElement.selectionEnd);
+          if (!isEnd || existSelection)
+            return;
+        }
+
+        this.goToNext();
+        aEvent.preventDefault();
+        aEvent.stopPropagation();
+        break;
+
+      case aEvent.DOM_VK_UP:
+        if (currentElement instanceof HTMLTextAreaElement) {
+          let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
+          let isStart = (currentElement.selectionEnd == 0);
+          if (!isStart || existSelection)
+            return;
+        }
+
+        this.goToPrevious();
+        aEvent.preventDefault();
+        aEvent.stopPropagation();
+        break;
+    }
   },
 
   zoom: function formHelperZoom(aElement) {
