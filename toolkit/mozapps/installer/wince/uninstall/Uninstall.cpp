@@ -50,7 +50,17 @@ nsSetupStrings Strings;
 
 WCHAR g_sUninstallPath[MAX_PATH];
 
+const DWORD c_nTempBufSize = MAX_PATH * 2;
 const WCHAR c_sRemoveParam[] = L"remove";
+
+enum {
+  ErrOK = 0,
+  ErrCancel = 1,
+  ErrNoStrings = -1,
+  ErrInstallationNotFound = -2,
+  ErrShutdownFailed = -3,
+};
+
 
 // Forward declarations
 BOOL GetModulePath(WCHAR *sPath);
@@ -60,6 +70,7 @@ BOOL DeleteShortcut(HWND hwndParent);
 BOOL DeleteDirectory(const WCHAR* sPathToDelete);
 BOOL DeleteRegistryKey();
 BOOL CopyAndLaunch();
+BOOL ShutdownFastStartService(const WCHAR *sInstallPath);
 
 // Main
 int WINAPI WinMain(HINSTANCE hInstance,
@@ -82,7 +93,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     // Just copy this EXE and launch it from a temp location with a special parameter
     // to delete itself in the installation directory
     if (CopyAndLaunch())
-      return 0;
+      return ErrOK;
   }
   // Perform uninstallation when executed with a special parameter
   // (or in case when CopyAndLaunch failed - just execute in place)
@@ -90,19 +101,28 @@ int WINAPI WinMain(HINSTANCE hInstance,
   if (!LoadStrings())
   {
     MessageBoxW(hWnd, L"Cannot find the strings file.", L"Uninstall", MB_OK|MB_ICONWARNING);
-    return -1;
+    return ErrNoStrings;
   }
 
   WCHAR sInstallPath[MAX_PATH];
   if (GetInstallPath(sInstallPath))
   {
-    WCHAR sMsg[MAX_PATH+256];
-    _snwprintf(sMsg, MAX_PATH+256, L"%s %s\n%s", Strings.GetString(StrID_FilesWillBeRemoved),
+    if (!ShutdownFastStartService(sInstallPath))
+    {
+      //TODO: May need to handle this situation
+
+      //MessageBoxW(hWnd, L"Unable to shut down Fennec. Try to reset your device.",
+      //            Strings.GetString(StrID_UninstallCaption), MB_OK|MB_ICONWARNING);
+      //return ErrShutdownFailed;
+    }
+
+    WCHAR sMsg[c_nTempBufSize];
+    _snwprintf(sMsg, c_nTempBufSize, L"%s %s\n%s", Strings.GetString(StrID_FilesWillBeRemoved),
       sInstallPath, Strings.GetString(StrID_AreYouSure));
     if (MessageBoxW(hWnd, sMsg, Strings.GetString(StrID_UninstallCaption),
                     MB_YESNO|MB_ICONWARNING) == IDNO)
     {
-      return -2;
+      return ErrCancel;
     }
 
     // Remove all installed files
@@ -119,10 +139,10 @@ int WINAPI WinMain(HINSTANCE hInstance,
   {
     MessageBoxW(hWnd, Strings.GetString(StrID_InstallationNotFound),
                 Strings.GetString(StrID_UninstallCaption), MB_OK|MB_ICONINFORMATION);
-    return -1;
+    return ErrInstallationNotFound;
   }
 
-  return 0;
+  return ErrOK;
 }
 
 BOOL LoadStrings()
@@ -266,12 +286,63 @@ BOOL CopyAndLaunch()
   if (CopyFile(sModule, sNewName, FALSE))
   {
     PROCESS_INFORMATION pi;
-    WCHAR sParam[MAX_PATH+20];
-    _snwprintf(sParam, MAX_PATH+20, L"%s %s", c_sRemoveParam, g_sUninstallPath);
+    WCHAR sParam[c_nTempBufSize];
+    _snwprintf(sParam, c_nTempBufSize, L"%s %s", c_sRemoveParam, g_sUninstallPath);
 
     // Launch "\Temp\uninstall.exe remove \Program Files\Fennec\"
     return CreateProcess(sNewName, sParam, NULL, NULL, FALSE, 0, NULL, NULL, NULL, &pi);
   }
   else
     return FALSE;
+}
+
+BOOL ConvertToChar(const WCHAR *wstr, char *str, DWORD bufSize)
+{
+  return 0 != WideCharToMultiByte(CP_ACP, 0, wstr, -1, str, bufSize, NULL, NULL);
+}
+
+BOOL ShutdownFastStartService(const WCHAR *wsInstallPath)
+{
+  BOOL result = TRUE;
+
+  // Class name: appName + "MessageWindow"
+  WCHAR sClassName[c_nTempBufSize];
+  _snwprintf(sClassName, c_nTempBufSize, L"%s%s", Strings.GetString(StrID_AppShortName), L"MessageWindow");
+
+  HWND handle = ::FindWindowW(sClassName, NULL);
+  if (handle)
+  {
+    char sPath[MAX_PATH];
+    ConvertToChar(wsInstallPath, sPath, MAX_PATH);
+    size_t pathLen = strlen(sPath);
+    if (pathLen > 0 && sPath[pathLen-1] != '\\')
+    {
+      strcat(sPath, "\\");
+      pathLen++;
+    }
+
+    char sCopyData[MAX_PATH * 3];
+    _snprintf(sCopyData, MAX_PATH * 2, "\"%s%S.exe\" -shutdown-faststart", sPath, Strings.GetString(StrID_AppShortName));
+    size_t cmdLineLen = strlen(sCopyData);
+
+    char *sRest = sCopyData + cmdLineLen + 1;
+    strcpy(sRest, sPath);
+
+    COPYDATASTRUCT cds = {
+      1,
+      pathLen + 1 + cmdLineLen,
+      (void*) sCopyData
+    };
+    ::SendMessage(handle, WM_COPYDATA, 0, (LPARAM)&cds);
+
+    // Wait 10 seconds or until it's shut down
+    for (int i = 0; i < 20 && handle; i++)
+    {
+      Sleep(500);
+      handle = ::FindWindowW(sClassName, NULL);
+    }
+    // The window must not exist if the service shut down properly
+    result = (handle == NULL);
+  }
+  return result;
 }

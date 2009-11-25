@@ -55,6 +55,7 @@
 
 const WCHAR c_sInstallPathTemplate[] = L"%s\\%s";
 const WCHAR c_sExtractCardPathTemplate[] = L"\\%s%s\\%s";
+const WCHAR c_sAppRegKeyTemplate[] = L"Software\\%s";
 
 // Message handler for the dialog
 INT_PTR CALLBACK DlgMain(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -168,6 +169,8 @@ BOOL nsInstallerDlg::OnInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam)
   FindMemCards();
 
   SendMessageToControl(IDC_CMB_PATH, CB_SETCURSEL, 0, 0 );
+
+  RunUninstall();
 
   return (INT_PTR)TRUE;
 }
@@ -293,7 +296,7 @@ BOOL nsInstallerDlg::StoreInstallPath()
 {
   HKEY hKey;
   WCHAR sRegFennecKey[MAX_PATH];
-  _snwprintf(sRegFennecKey, MAX_PATH, L"Software\\%s", Strings.GetString(StrID_AppShortName));
+  _snwprintf(sRegFennecKey, MAX_PATH, c_sAppRegKeyTemplate, Strings.GetString(StrID_AppShortName));
 
   // Store the installation path - to be used by the uninstaller
   LONG result = RegCreateKeyEx(HKEY_LOCAL_MACHINE, sRegFennecKey, 0, REG_NONE,
@@ -359,4 +362,53 @@ void nsInstallerDlg::AddErrorMsg(WCHAR* sErr)
   WCHAR sMsg[c_nMaxErrorLen];
   _snwprintf(sMsg, c_nMaxErrorLen, L"%s. LastError = %d\n", sErr, GetLastError());
   wcsncat(m_sErrorMsg, sMsg, c_nMaxErrorLen - wcslen(m_sErrorMsg));
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Uninstall previous installation
+//
+//////////////////////////////////////////////////////////////////////////
+
+BOOL nsInstallerDlg::GetInstallPath(WCHAR *sPath)
+{
+  HKEY hKey;
+  WCHAR sRegFennecKey[MAX_PATH];
+  _snwprintf(sRegFennecKey, MAX_PATH, c_sAppRegKeyTemplate, Strings.GetString(StrID_AppShortName));
+
+  LONG result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, sRegFennecKey, 0, KEY_ALL_ACCESS, &hKey);
+  if (result == ERROR_SUCCESS)
+  {
+    DWORD dwType = NULL;
+    DWORD dwCount = MAX_PATH * sizeof(WCHAR);
+    result = RegQueryValueEx(hKey, L"Path", NULL, &dwType, (LPBYTE)sPath, &dwCount);
+
+    RegCloseKey(hKey);
+  }
+
+  return (result == ERROR_SUCCESS);
+}
+
+void nsInstallerDlg::RunUninstall()
+{
+  WCHAR sUninstallPath[MAX_PATH];
+  if (GetInstallPath(sUninstallPath))
+  {
+    if (wcslen(sUninstallPath) > 0 && sUninstallPath[wcslen(sUninstallPath)-1] != '\\')
+      wcscat(sUninstallPath, L"\\");
+
+    WCHAR sParam[MAX_PATH+10];
+    _snwprintf(sParam, MAX_PATH+9, L"remove %s", sUninstallPath);
+
+    wcscat(sUninstallPath, L"uninstall.exe");
+
+    PROCESS_INFORMATION pi;
+    BOOL bResult = CreateProcess(sUninstallPath, sParam,
+                                 NULL, NULL, FALSE, 0, NULL, NULL, NULL, &pi);
+    if (bResult)
+    {
+      // Wait for it to finish
+      WaitForSingleObject(pi.hProcess, INFINITE);
+    }
+  }
 }
