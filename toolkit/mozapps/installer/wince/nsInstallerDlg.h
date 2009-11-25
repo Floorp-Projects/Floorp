@@ -65,6 +65,9 @@ private:
   BOOL MoveSetupStrings();
   BOOL SilentFirstRun();
 
+  BOOL GetInstallPath(WCHAR *sPath);
+  void RunUninstall();
+
   void AddErrorMsg(WCHAR* sErr);
 
   static const int c_nMaxErrorLen = 2048;
