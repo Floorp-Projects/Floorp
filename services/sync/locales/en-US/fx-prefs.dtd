@@ -1,4 +1,4 @@
-<!ENTITY weavePrefPane.label        "Services">
+<!ENTITY weavePrefPane.label        "Sync">
 <!ENTITY accountSetupTitle.label    "Account Setup">
 
 <!ENTITY connectTo.label            "Connect to">
@@ -75,12 +75,12 @@
 
 <!ENTITY syncPrefsCaption.label       "Browser Sync">
 
-<!ENTITY syncModeSwitchDesc.label     "Weave will: ">
+<!ENTITY syncModeSwitchDesc.label     "&brandShortName; will: ">
 
 <!ENTITY syncEverything.label         "Sync Everything">
 <!ENTITY customSync.label             "Use my custom settings">
 
-<!ENTITY syncEverythingDescription.label  "Weave will sync all of your personal data and history using your Weave account.">
+<!ENTITY syncEverythingDescription.label  "Your bookmarks, history, passwords, preferences, and tabs will be synced using your Weave account.">
 
 <!ENTITY syncItem.bookmarks.label     "Sync Bookmarks">
 <!ENTITY syncItem.tabs.label          "Sync Tabs">
