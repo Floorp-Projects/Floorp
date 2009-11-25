@@ -164,7 +164,8 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
 
   nsRuleNode* ruleNode = nsnull;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  GetRuleNodeForContent(content, &ruleNode);
+  nsRefPtr<nsStyleContext> styleContext;
+  GetRuleNodeForContent(content, getter_AddRefs(styleContext), &ruleNode);
   if (!ruleNode) {
     // This can fail for content nodes that are not in the document or
     // if the document they're in doesn't have a presshell.  Bail out.
@@ -271,9 +272,12 @@ inDOMUtils::GetContentState(nsIDOMElement *aElement, PRInt32* aState)
 }
 
 /* static */ nsresult
-inDOMUtils::GetRuleNodeForContent(nsIContent* aContent, nsRuleNode** aRuleNode)
+inDOMUtils::GetRuleNodeForContent(nsIContent* aContent,
+                                  nsStyleContext** aStyleContext,
+                                  nsRuleNode** aRuleNode)
 {
   *aRuleNode = nsnull;
+  *aStyleContext = nsnull;
 
   nsIDocument* doc = aContent->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
@@ -284,5 +288,6 @@ inDOMUtils::GetRuleNodeForContent(nsIContent* aContent, nsRuleNode** aRuleNode)
   nsRefPtr<nsStyleContext> sContext =
     nsComputedDOMStyle::GetStyleContextForContent(aContent, nsnull, presShell);
   *aRuleNode = sContext->GetRuleNode();
+  sContext.forget(aStyleContext);
   return NS_OK;
 }

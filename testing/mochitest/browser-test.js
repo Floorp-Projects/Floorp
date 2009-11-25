@@ -109,6 +109,21 @@ Tester.prototype = {
       return;
     }
 
+    // Make sure the window is raised before each test.
+    let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+    if (fm.activeWindow != window) {
+      this.dumper.dump("Waiting for window activation...\n");
+      let self = this;
+      window.addEventListener("activate", function () {
+        window.removeEventListener("activate", arguments.callee, false);
+        setTimeout(function () {
+          self.execTest();
+        }, 0);
+      }, false);
+      window.focus();
+      return;
+    }
+
     // Move to the next test (or first test).
     this.step();
 

@@ -60,6 +60,7 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamLoader.h"
 #include "nsIChannel.h"
+#include "prmem.h"
 
 #include "nsXMLHttpRequest.h"
 
@@ -110,7 +111,13 @@ public:
   nsresult Init();
 
 protected:
-  nsresult ReadFileContent(nsIDOMFile *aFile, const nsAString &aCharset, PRUint32 aDataFormat); 
+  enum eDataFormat {
+    FILE_AS_BINARY,
+    FILE_AS_TEXT,
+    FILE_AS_DATAURL
+  };
+
+  nsresult ReadFileContent(nsIDOMFile *aFile, const nsAString &aCharset, eDataFormat aDataFormat); 
   nsresult GetAsText(const nsAString &aCharset,
                      const char *aFileData, PRUint32 aDataLen, nsAString &aResult);
   nsresult GetAsDataURL(nsIFile *aFile, const char *aFileData, PRUint32 aDataLen, nsAString &aResult); 
@@ -119,12 +126,18 @@ protected:
   void DispatchError(nsresult rv);
   void StartProgressEventTimer();
 
+  void FreeFileData() {
+    PR_Free(mFileData);
+    mFileData = nsnull;
+    mDataLen = 0;
+  }
+
   char *mFileData;
   nsCOMPtr<nsIFile> mFile;
   nsString mCharset;
-  PRUint32 mReadCount;
   PRUint32 mDataLen;
-  PRUint32 mDataFormat;
+
+  eDataFormat mDataFormat;
 
   nsString mResult;
   PRUint16 mReadyState;
@@ -137,9 +150,8 @@ protected:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
 
-  PRUint64 mReadTotal;
+  PRInt64 mReadTotal;
   PRUint64 mReadTransferred;
-  PRPackedBool mReadComplete;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnLoadEndListener;
 };

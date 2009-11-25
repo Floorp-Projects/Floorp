@@ -52,15 +52,19 @@
 /*
  * Evaluates the given Expression and converts its result to a number.
  */
-double FunctionCall::evaluateToNumber(Expr* aExpr, txIEvalContext* aContext)
+// static
+nsresult
+FunctionCall::evaluateToNumber(Expr* aExpr, txIEvalContext* aContext,
+                               double* aResult)
 {
     NS_ASSERTION(aExpr, "missing expression");
     nsRefPtr<txAExprResult> exprResult;
     nsresult rv = aExpr->evaluate(aContext, getter_AddRefs(exprResult));
-    if (NS_FAILED(rv))
-        return Double::NaN;
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    return exprResult->numberValue();
+    *aResult = exprResult->numberValue();
+
+    return NS_OK;
 }
 
 /*

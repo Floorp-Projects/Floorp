@@ -64,7 +64,7 @@
           <![CDATA[
             var notifications = this.allNotifications;
             for (var n = notifications.length - 1; n >= 0; n--) {
-              if (aValue == notifications[n].value)
+              if (aValue == notifications[n].getAttribute("value"))
                 return notifications[n];
             }
             return null;
@@ -220,6 +220,7 @@
             }
 
             var height = aNotification.boxObject.height;
+            var skipAnimation = (height == 0);
             var change = height / this.slideSteps;
             var margin;
             if (aSlideIn) {
@@ -230,6 +231,12 @@
               this.currentNotification = aNotification;
               aNotification.style.removeProperty("position");
               aNotification.style.removeProperty("top");
+
+              if (skipAnimation) {
+                this._setBlockingState(this.currentNotification);
+                return;
+              }
+
               aNotification.style.marginTop = -height + "px";
               aNotification.style.opacity = 0;
               margin = -height;
@@ -239,10 +246,15 @@
               this._closedNotification = aNotification;
               var notifications = this.allNotifications;
               var idx = notifications.length - 1;
-              if (idx >= 0)
-                this.currentNotification = notifications[idx];
-              else
-                this.currentNotification = null;
+              this.currentNotification = (idx >= 0) ? notifications[idx] : null;
+
+              if (skipAnimation) {
+                this.removeChild(this._closedNotification);
+                this._closedNotification = null;
+                this._setBlockingState(this.currentNotification);
+                return;
+              }
+
               var style = window.getComputedStyle(aNotification, null);
               margin = style.getPropertyCSSValue("margin-top").
                          getFloatValue(CSSPrimitiveValue.CSS_PX);

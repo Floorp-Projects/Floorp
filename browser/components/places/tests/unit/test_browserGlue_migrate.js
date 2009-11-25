@@ -90,7 +90,7 @@ function run_test() {
   // Import could take some time, usually less than 1s, but to be sure we will
   // check after 3s.
   do_test_pending();
-  do_timeout(3000, "continue_test();");
+  do_timeout(3000, continue_test);
 }
 
 function continue_test() {

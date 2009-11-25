@@ -114,7 +114,7 @@ function run_test() {
   do_test_pending(); // for 'cleared' notification
   pm.removeAll();
 
-  do_timeout(100, "cleanup();");
+  do_timeout(100, cleanup);
 }
 
 function cleanup() {

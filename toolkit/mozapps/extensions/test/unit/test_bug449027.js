@@ -437,7 +437,7 @@ var WindowWatcher = {
       gNewBlocks.push(list[i].name + " " + list[i].version);
 
     // Call the callback after the blocklist has finished up
-    do_timeout(0, "gCallback()");
+    do_timeout(0, gCallback);
   },
 
   QueryInterface: function(iid) {

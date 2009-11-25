@@ -85,7 +85,7 @@ function run_test() {
   ghist.addURI(testURI, false, true, null);
   ghist.addURI(testURI, false, true, testURI);
   // lazy message timer is 3000, see LAZY_MESSAGE_TIMEOUT
-  do_timeout(3500, "confirm_results();");
+  do_timeout(3500, confirm_results);
 }
 
 function confirm_results() {

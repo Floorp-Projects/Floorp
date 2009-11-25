@@ -44,7 +44,7 @@ interface nsIDOMFileError : nsISupports
   const unsigned short NOT_FOUND_ERR = 8;
   const unsigned short NOT_READABLE_ERR = 24;
   const unsigned short SECURITY_ERR = 18;
-  const unsigned short ABORT_ERR = 25;
+  const unsigned short ABORT_ERR = 20;
   const unsigned short ENCODING_ERR = 26;
 
   readonly attribute unsigned short code;
