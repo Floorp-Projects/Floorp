@@ -1180,7 +1180,7 @@ Assembler::asm_store32(LIns *value, int dr, LIns *base)
         dr += findMemFor(base);
         ra = findRegFor(value, GpRegs);
     } else {
-        findRegFor2b(GpRegs, value, ra, base, rb);
+        findRegFor2(GpRegs, value, ra, base, rb);
     }
 
     if (!isS12(dr)) {
@@ -1192,7 +1192,7 @@ Assembler::asm_store32(LIns *value, int dr, LIns *base)
 }
 
 void
-Assembler::asm_restore(LInsp i, Reservation *, Register r)
+Assembler::asm_restore(LInsp i, Register r)
 {
     if (i->isop(LIR_alloc)) {
         asm_add_imm(r, FP, disp(i));
@@ -2019,7 +2019,7 @@ Assembler::asm_fcmp(LInsp ins)
     NanoAssert(op >= LIR_feq && op <= LIR_fge);
 
     Register ra, rb;
-    findRegFor2b(FpRegs, lhs, ra, rhs, rb);
+    findRegFor2(FpRegs, lhs, ra, rhs, rb);
 
     int e_bit = (op != LIR_feq);
 
@@ -2029,7 +2029,7 @@ Assembler::asm_fcmp(LInsp ins)
 }
 
 Register
-Assembler::asm_prep_fcall(Reservation*, LInsp)
+Assembler::asm_prep_fcall(LInsp)
 {
     /* Because ARM actually returns the result in (R0,R1), and not in a
      * floating point register, the code to move the result into a correct
@@ -2163,7 +2163,7 @@ Assembler::asm_cmp(LIns *cond)
         }
     } else {
         Register ra, rb;
-        findRegFor2b(GpRegs, lhs, ra, rhs, rb);
+        findRegFor2(GpRegs, lhs, ra, rhs, rb);
         CMP(ra, rb);
     }
 }

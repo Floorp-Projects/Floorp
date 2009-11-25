@@ -145,7 +145,7 @@ namespace nanojit
         // - 'managed' is exactly this list of initially free registers,
         //   ie. the registers managed by the register allocator.
         //
-        // - Each LIns has a Reservation which includes a register value,
+        // - Each LIns has a "reservation" which includes a register value,
         //   'reg'.  Combined with 'active', this provides a two-way
         //   mapping between registers and LIR instructions.
         //
@@ -166,12 +166,12 @@ namespace nanojit
         //   * An LIns can appear at most once in 'active'.
         //
         //   * An LIns named by 'active[R]' must have an in-use
-        //     Reservation that names R.  
+        //     reservation that names R.  
         //
-        //   * And vice versa:  an LIns with an in-use Reservation that
+        //   * And vice versa:  an LIns with an in-use reservation that
         //     names R must be named by 'active[R]'.  
         //
-        //   * If an LIns's Reservation names 'UnknownReg' then LIns
+        //   * If an LIns's reservation names 'UnknownReg' then LIns
         //     should not be in 'active'.
         //
         LIns*           active[LastReg + 1];    // active[r] = LIns that defines r
