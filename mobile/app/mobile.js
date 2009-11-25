@@ -228,6 +228,13 @@ pref("browser.search.updateinterval", 6);
 // enable search suggestions by default
 pref("browser.search.suggest.enabled", true);
 
+// Tell the search service to load search plugins from the locale JAR
+pref("browser.search.loadFromJars", true);
+pref("browser.search.jarURIs", "chrome://browser/locale/searchplugins/");
+
+// tell the search service that we don't really expose the "current engine"
+pref("browser.search.noCurrentEngine", true);
+
 // enable xul error pages
 pref("browser.xul.error_pages.enabled", true);
 
@@ -401,6 +408,3 @@ pref("ui.window", "#efebe7");
 pref("ui.windowtext", "#101010");
 pref("ui.windowframe", "#efebe7");
 
-// Tell the search service to load search plugins from the locale JAR
-pref("browser.search.loadFromJars", true);
-pref("browser.search.jarURIs", "chrome://browser/locale/searchplugins/");
