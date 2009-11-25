@@ -7877,15 +7877,17 @@ JS_DEFINE_CALLINFO_4(extern, UINT32, GetClosureArg, CONTEXT, OBJECT, CVIPTR, DOU
  *     NameResult   describes how to look up name; see comment for NameResult in jstracer.h
  */
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult& nr)
+TraceRecorder::scopeChainProp(JSObject* chainHead, jsval*& vp, LIns*& ins, NameResult& nr)
 {
-    JS_ASSERT(obj != globalObj);
+    JS_ASSERT(chainHead == cx->fp->scopeChain);
+    JS_ASSERT(chainHead != globalObj);
 
     JSTraceMonitor &localtm = *traceMonitor;
 
     JSAtom* atom = atoms[GET_INDEX(cx->fp->regs->pc)];
     JSObject* obj2;
     JSProperty* prop;
+    JSObject *obj = chainHead;
     bool ok = js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop);
 
     /* js_FindProperty can reenter the interpreter and kill |this|. */
@@ -7901,13 +7903,19 @@ TraceRecorder::scopeChainProp(JSObject* obj, jsval*& vp, LIns*& ins, NameResult&
     if (obj == globalObj) {
         // Even if the property is on the global object, we must guard against
         // the creation of properties that shadow the property in the middle
-        // of the scope chain if we are in a function.
+        // of the scope chain.
+        LIns *head_ins;
         if (cx->fp->argv) {
-            LIns* obj_ins;
-            JSObject* parent = STOBJ_GET_PARENT(cx->fp->calleeObject());
-            LIns* parent_ins = stobj_get_parent(get(&cx->fp->argv[-2]));
-            CHECK_STATUS_A(traverseScopeChain(parent, parent_ins, obj, obj_ins));
+            // Skip any Call object when inside a function. Any reference to a
+            // Call name the compiler resolves statically and we do not need
+            // to match shapes of the Call objects.
+            chainHead = cx->fp->calleeObject()->getParent();
+            head_ins = stobj_get_parent(get(&cx->fp->argv[-2]));
+        } else {
+            head_ins = scopeChain();
         }
+        LIns *obj_ins;
+        CHECK_STATUS_A(traverseScopeChain(chainHead, head_ins, obj, obj_ins));
 
         JSScopeProperty* sprop = (JSScopeProperty*) prop;
 
