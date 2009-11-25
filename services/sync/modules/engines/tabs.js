@@ -41,8 +41,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const TAB_TIME_ATTR = "weave.tabEngine.lastUsed.timeStamp";
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
@@ -215,7 +213,7 @@ TabStore.prototype = {
 	  continue;
 
         // Get the time the tab was last used
-        let lastUsedTimestamp = tab.getAttribute(TAB_TIME_ATTR);
+        let lastUsedTimestamp = tab.lastUsed;
 
         // Get title of current page
 	let currentPage = tabState.entries[tabState.entries.length - 1];
@@ -357,100 +355,47 @@ TabTracker.prototype = {
     this.resetChanged();
 
     // Make sure "this" pointer is always set correctly for event listeners
-    this.onTabOpened = Utils.bind2(this, this.onTabOpened);
-    this.onTabClosed = Utils.bind2(this, this.onTabClosed);
-    this.onTabSelected = Utils.bind2(this, this.onTabSelected);
-
-    // TODO Figure out how this will work on Fennec.
+    this.onTab = Utils.bind2(this, this.onTab);
 
     // Register as an observer so we can catch windows opening and closing:
-    var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
-	       .getService(Ci.nsIWindowWatcher);
-    ww.registerNotification(this);
+    Svc.WinWatcher.registerNotification(this);
 
-    /* Also directly register the listeners for any browser window alread
-     * open: */
-    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                   .getService(Components.interfaces.nsIWindowMediator);
-    let enumerator = wm.getEnumerator("navigator:browser");
-    while (enumerator.hasMoreElements()) {
-      this._registerListenersForWindow(enumerator.getNext());
-    }
-  },
-
-  _getBrowser: function TabTracker__getBrowser(window) {
-    // Make sure the window is browser-like
-    if (typeof window.getBrowser != "function")
-      return null;
-
-    // Make sure it's a tabbrowser-like window
-    let browser = window.getBrowser();
-    if (browser == null || typeof browser.tabContainer != "object")
-      return null;
-
-    return browser;
+    // Also register listeners on already open windows
+    let wins = Svc.WinMediator.getEnumerator("navigator:browser");
+    while (wins.hasMoreElements())
+      this._registerListenersForWindow(wins.getNext());
   },
 
   _registerListenersForWindow: function TabTracker__registerListen(window) {
-    let browser = this._getBrowser(window);
-    if (browser == null)
-      return;
+    this._log.trace("Registering tab listeners in new window");
 
-    //this._log.trace("Registering tab listeners in new window.\n");
-    //dump("Tab listeners registered!\n");
-    let container = browser.tabContainer;
-    container.addEventListener("TabOpen", this.onTabOpened, false);
-    container.addEventListener("TabClose", this.onTabClosed, false);
-    container.addEventListener("TabSelect", this.onTabSelected, false);
-  },
+    // For each topic, add or remove onTab as the listener
+    let topics = ["TabOpen", "TabClose", "TabSelect"];
+    let onTab = this.onTab;
+    let addRem = function(add) topics.forEach(function(topic) {
+      window[(add ? "add" : "remove") + "EventListener"](topic, onTab, false);
+    });
 
-  _unRegisterListenersForWindow: function TabTracker__unregister(window) {
-    let browser = this._getBrowser(window);
-    if (browser == null)
-      return;
-
-    let container = browser.tabContainer;
-    container.removeEventListener("TabOpen", this.onTabOpened, false);
-    container.removeEventListener("TabClose", this.onTabClosed, false);
-    container.removeEventListener("TabSelect", this.onTabSelected, false);
+    // Add the listeners now and remove them on unload
+    addRem(true);
+    window.addEventListener("unload", function() addRem(false), false);
   },
 
   observe: function TabTracker_observe(aSubject, aTopic, aData) {
-    /* Called when a window opens or closes.  Make sure that every
-     * window has the appropriate listeners registered. */
+    // Add tab listeners now that a window has opened
     let window = aSubject.QueryInterface(Ci.nsIDOMWindow);
-    // TODO figure out how this will work in Fennec.
-    if (aTopic == "domwindowopened") {
+    if (aTopic == "domwindowopened")
       this._registerListenersForWindow(window);
-    } else if (aTopic == "domwindowclosed") {
-      this._unRegisterListenersForWindow(window);
-    }
   },
 
-  _upScore: function _upScore(amount) {
-    this.score += amount;
+  onTab: function onTab(event) {
+    this._log.trace(event.type);
+    this.score += 1;
     this._changedIDs[Clients.clientID] = true;
-  },
 
-  onTabOpened: function TabTracker_onTabOpened(event) {
     // Store a timestamp in the tab to track when it was last used
-    this._log.trace("Tab opened.");
-    event.target.setAttribute(TAB_TIME_ATTR, event.timeStamp);
-    this._upScore(1);
+    event.originalTarget.lastUsed = Math.floor(Date.now() / 1000);
   },
-
-  onTabClosed: function TabTracker_onTabSelected(event) {
-    this._log.trace("Tab closed.");
-    this._upScore(1);
-  },
-
-  onTabSelected: function TabTracker_onTabSelected(event) {
-    // Update the tab's timestamp
-    this._log.trace("Tab selected.");
-    event.target.setAttribute(TAB_TIME_ATTR, event.timeStamp);
-    this._upScore(1);
-  },
-  // TODO: Also listen for tabs loading new content?
 
   get changedIDs() this._changedIDs,
 
