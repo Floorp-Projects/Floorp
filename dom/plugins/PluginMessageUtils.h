@@ -170,16 +170,9 @@ inline void AssertPluginThread()
 void DeferNPObjectLastRelease(const NPNetscapeFuncs* f, NPObject* o);
 void DeferNPVariantLastRelease(const NPNetscapeFuncs* f, NPVariant* v);
 
-} /* namespace plugins */
-
-} /* namespace mozilla */
-
-
-namespace {
-
 // in NPAPI, char* == NULL is sometimes meaningful.  the following is
 // helper code for dealing with nullable nsCString's
-nsCString
+inline nsCString
 NullableString(const char* aString)
 {
     if (!aString) {
@@ -190,12 +183,18 @@ NullableString(const char* aString)
     return nsCString(aString);
 }
 
-} // namespace <anon>
+inline const char*
+NullableStringGet(const nsCString& str)
+{
+  if (str.IsVoid())
+    return NULL;
 
-// TODO is there any safe way for this to be a function?
-#define NullableStringGet(__string)                     \
-    ( __string.IsVoid() ? NULL : __string.get())
+  return str.get();
+}
 
+} /* namespace plugins */
+
+} /* namespace mozilla */
 
 namespace IPC {
 
