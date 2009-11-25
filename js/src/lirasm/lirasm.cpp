@@ -1748,13 +1748,13 @@ Lirasm::Lirasm(bool verbose) :
 #endif
 
     // Populate the mOpMap table.
-#define OPDEF(op, number, args, repkind) \
+#define OPDEF(op, number, repkind) \
     mOpMap[#op] = LIR_##op;
-#define OPDEF64(op, number, args, repkind) \
+#define OPD64(op, number, repkind) \
     mOpMap[#op] = LIR_##op;
 #include "nanojit/LIRopcode.tbl"
 #undef OPDEF
-#undef OPDEF64
+#undef OPD64
 
     // TODO - These should alias to the appropriate platform-specific LIR opcode.
     mOpMap["alloc"] = mOpMap["ialloc"];
