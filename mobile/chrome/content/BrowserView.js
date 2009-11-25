@@ -266,7 +266,6 @@ BrowserView.prototype = {
     
     this._tileManager = new TileManager(this._appendTile, this._removeTile, this, cacheSize);
     this._visibleRectFactory = visibleRectFactory;
-    this._suppressZoomToPage = false;
 
     this._idleServiceObserver = new BrowserView.IdleServiceObserver(this);
     this._idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
@@ -277,7 +276,7 @@ BrowserView.prototype = {
   },
   
   uninit: function uninit() {
-    this.setBrowser(null, null, false);
+    this.setBrowser(null, null);
     this._idleService.removeIdleObserver(this._idleServiceObserver, kBrowserViewPrefetchBeginIdleWait);
   },
 
@@ -454,7 +453,7 @@ BrowserView.prototype = {
   /**
    * Swap out the current browser and browser viewport state with a new pair.
    */
-  setBrowser: function setBrowser(browser, browserViewportState, doZoom) {
+  setBrowser: function setBrowser(browser, browserViewportState) {
     if (browser && !browserViewportState) {
       throw "Cannot set non-null browser with null BrowserViewportState";
     }
@@ -482,8 +481,6 @@ BrowserView.prototype = {
       browser.addEventListener("scroll", this.handlePageScroll, false);
 
       browser.docShell.isOffScreenBrowser = true;
-      if (doZoom)
-        this.zoomToPage();
 
       if (browserChanged)
         this._viewportChanged(true, true);
@@ -565,16 +562,36 @@ BrowserView.prototype = {
     if (browser == this._browser) {
       // Page has now loaded enough to allow zooming.
       let sizeChanged = oldRight != viewport.right || oldBottom != viewport.bottom;
-      this._suppressZoomToPage = false;
       this._viewportChanged(sizeChanged, false);
+      this.updateDefaultZoom();
     }
   },
 
+  /** Call when default zoomToPage value may change. */
+  updateDefaultZoom: function updateDefaultZoom() {
+    let bvs = this._browserViewportState;
+    if (!bvs)
+      return false;
+
+    let isDefault = (bvs.zoomLevel == bvs.defaultZoomLevel);
+    bvs.defaultZoomLevel = this.getZoomForPage();
+    if (isDefault)
+      this.setZoomLevel(bvs.defaultZoomLevel);
+    return isDefault;
+  },
+
+  isDefaultZoom: function isDefaultZoom() {
+    let bvs = this._browserViewportState;
+    if (!bvs)
+      return true;
+    return bvs.zoomLevel == bvs.defaultZoomLevel;
+  },
+
   zoomToPage: function zoomToPage() {
-    // See invalidateEntireView() for why we might be suppressing this zoom.
-    if (!this._suppressZoomToPage) {
-      this._browserViewportState.defaultZoomLevel = this.getZoomForPage();
+    let bvs = this._browserViewportState;
+    if (bvs) {
       this.setZoomLevel(this.getZoomForPage());
+      bvs.defaultZoomLevel = bvs.zoomLevel;  // make sure default zl is up to date
     }
   },
 
@@ -635,13 +652,6 @@ BrowserView.prototype = {
   //   (2) MozAfterPaint does indeed inform us of dirtyRects covering
   //       the entire page (everything that could possibly become
   //       visible).
-  //
-  // Since calling this method means "everything is wrong and the
-  // <browser> is about to start giving you new data via MozAfterPaint
-  // and MozScrolledAreaChanged", we also supress any zoomToPage()
-  // that might be called until the next time a MozScrolledAreaChanged
-  // event.
-  //
   /**
    * Invalidates the entire page by throwing away any cached graphical
    * portions of the view and refusing to allow a zoomToPage() until
@@ -653,7 +663,6 @@ BrowserView.prototype = {
   invalidateEntireView: function invalidateEntireView() {
     if (this._browserViewportState) {
       this._viewportChanged(false, true);
-      this._suppressZoomToPage = true;
     }
   },
 
