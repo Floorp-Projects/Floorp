@@ -771,15 +771,23 @@ PluginInstanceChild::AllocPStreamNotify(const nsCString& url,
 }
 
 bool
-PluginInstanceChild::DeallocPStreamNotify(PStreamNotifyChild* notifyData,
-                                          const NPReason& reason)
+PluginInstanceChild::AnswerPStreamNotifyDestructor(PStreamNotifyChild* notifyData,
+                                                   const NPReason& reason)
 {
     AssertPluginThread();
 
     StreamNotifyChild* sn = static_cast<StreamNotifyChild*>(notifyData);
-    mPluginIface->urlnotify(&mData, sn->mURL.get(), reason, sn->mClosure);
-    delete sn;
+    if (sn->mClosure)
+        mPluginIface->urlnotify(&mData, sn->mURL.get(), reason, sn->mClosure);
 
+    return true;
+}
+
+bool
+PluginInstanceChild::DeallocPStreamNotify(PStreamNotifyChild* notifyData,
+                                          const NPReason& reason)
+{
+    delete notifyData;
     return true;
 }
 

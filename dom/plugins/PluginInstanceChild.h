@@ -135,7 +135,11 @@ protected:
                        const bool& file,
                        NPError* result);
 
-    virtual bool
+    NS_OVERRIDE virtual bool
+    AnswerPStreamNotifyDestructor(PStreamNotifyChild* notifyData,
+                                  const NPReason& reason);
+
+    NS_OVERRIDE virtual bool
     DeallocPStreamNotify(PStreamNotifyChild* notifyData,
                          const NPReason& reason);
 

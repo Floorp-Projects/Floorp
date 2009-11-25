@@ -264,23 +264,37 @@ PluginInstanceParent::AllocPStreamNotify(const nsCString& url,
                                          const bool& file,
                                          NPError* result)
 {
-    StreamNotifyParent* notifyData = new StreamNotifyParent();
+    return new StreamNotifyParent();
+}
 
+bool
+PluginInstanceParent::AnswerPStreamNotifyConstructor(PStreamNotifyParent* actor,
+                                                     const nsCString& url,
+                                                     const nsCString& target,
+                                                     const bool& post,
+                                                     const nsCString& buffer,
+                                                     const bool& file,
+                                                     NPError* result)
+{
     if (!post) {
         *result = mNPNIface->geturlnotify(mNPP,
                                           NullableStringGet(url),
                                           NullableStringGet(target),
-                                          notifyData);
+                                          actor);
     }
     else {
         *result = mNPNIface->posturlnotify(mNPP,
                                            NullableStringGet(url),
                                            NullableStringGet(target),
-                                           buffer.Length(), buffer.get(),
-                                           file, notifyData);
+                                           buffer.Length(),
+                                           NullableStringGet(buffer),
+                                           file, actor);
     }
-    // TODO: what if this method fails?
-    return notifyData;
+
+    if (*result != NPERR_NO_ERROR)
+        CallPStreamNotifyDestructor(actor, NPERR_GENERIC_ERROR);
+
+    return true;
 }
 
 bool

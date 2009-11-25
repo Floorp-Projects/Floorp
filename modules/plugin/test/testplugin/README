@@ -271,6 +271,15 @@ The attributes which control stream tests are:
 "failurecode": one of the NPError constants.  Used to specify the error
   that will be returned by the "functiontofail".
 
+The .streamTest(url, doPost, postData, callback) function will test how
+NPN_GetURLNotify and NPN_PostURLNotify behave when they are called with
+arbitrary (malformed) URLs. The function will return `true` if NPN_GetURLNotify
+succeeds, and `false` if it fails.
+@param doPost whether to call NPN_PostURLNotify
+@param postData null, or a string to send a postdata
+@callback which will be called when the urlnotify is received with the notify
+result
+
 == Internal consistency ==
 
 * doInternalConsistencyCheck()
