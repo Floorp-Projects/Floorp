@@ -592,9 +592,6 @@ namespace nanojit
             } else {
                 LWZ(r, d, FP);
             }
-            verbose_only( if (_logc->lcbits & LC_RegAlloc) {
-                            outputForEOL("  <= restore %s",
-                            _thisfrag->lirbuf->names->formatRef(i)); } )
         }
     }
 

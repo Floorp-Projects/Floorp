@@ -189,25 +189,41 @@ namespace nanojit
         friend class VerboseBlockReader;
         public:
             #ifdef NJ_VERBOSE
-            static char  outline[8192];
-            static char  outlineEOL[512];  // string to be added to the end of the line
-            static char* outputAlign(char* s, int col);
-
-            void outputForEOL(const char* format, ...);
-            void output(const char* s);
-            void outputf(const char* format, ...);
-            void output_asm(const char* s);
-
-            bool outputAddr, vpad[3];  // if outputAddr=true then next asm instr. will include address in output
-            void printActivationState(const char* what);
-
+            // Log controller object.  Contains what-stuff-should-we-print
+            // bits, and a sink function for debug printing.
+            LogControl* _logc;
+            // Buffer for holding text as we generate it in reverse order.
             StringList* _outputCache;
 
-            // Log controller object.  Contains what-stuff-should-we-print
-            // bits, and a sink function for debug printing
-            LogControl* _logc;
+            // Outputs the format string and 'outlineEOL', and resets
+            // 'outline' and 'outlineEOL'.
+            void outputf(const char* format, ...);
+
+        private:
+            // Buffer used in most of the output function.  It must big enough
+            // to hold both the output line and the 'outlineEOL' buffer, which
+            // is concatenated onto 'outline' just before it is printed.
+            static char  outline[8192];
+            // Buffer used to hold extra text to be printed at the end of some
+            // lines.
+            static char  outlineEOL[512];
+            // If outputAddr=true the next asm instruction output will
+            // be prepended with its address.
+            bool outputAddr, vpad[3];
+
+            // Outputs 'outline' and 'outlineEOL', and resets them both.
+            // Output goes to '_outputCache' if it's non-NULL, or is printed
+            // directly via '_logc'.
+            void output();
+
+            // Sets 'outlineEOL'.
+            void setOutputForEOL(const char* format, ...);
+
+            void printRegState();
+            void printActivationState();
             #endif // NJ_VERBOSE
 
+        public:
             #ifdef VTUNE
             avmplus::CodegenLIR *cgen;
             #endif
@@ -388,10 +404,10 @@ namespace nanojit
 
             // since we generate backwards the depth is negative
             inline void fpu_push() {
-                debug_only( ++_fpuStkDepth; /*char foo[8]= "FPUSTK0"; foo[6]-=_fpuStkDepth; output_asm(foo);*/ NanoAssert(_fpuStkDepth<=0); )
+                debug_only( ++_fpuStkDepth; NanoAssert(_fpuStkDepth<=0); )
             }
             inline void fpu_pop() {
-                debug_only( --_fpuStkDepth; /*char foo[8]= "FPUSTK0"; foo[6]-=_fpuStkDepth; output_asm(foo);*/ NanoAssert(_fpuStkDepth<=0); )
+                debug_only( --_fpuStkDepth; NanoAssert(_fpuStkDepth<=0); )
             }
 #endif
             avmplus::Config &config;
