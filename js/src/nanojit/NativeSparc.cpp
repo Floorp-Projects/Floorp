@@ -61,7 +61,7 @@ namespace nanojit
 
     const Register Assembler::argRegs[] = { I0, I1, I2, I3, I4, I5 };
     const Register Assembler::retRegs[] = { O0 };
-    const Register Assembler::savedRegs[] = { I0, I1, I2, I3, I4, I5 };
+    const Register Assembler::savedRegs[] = { L1 };
 
     static const int kLinkageAreaSize = 68;
     static const int kcalleeAreaSize = 80; // The max size.
@@ -784,12 +784,7 @@ namespace nanojit
     {
         uint32_t a = ins->paramArg();
         uint32_t kind = ins->paramKind();
-        //        prepResultReg(ins, rmask(argRegs[a]));
-        if (kind == 0) {
-            prepResultReg(ins, rmask(argRegs[a]));
-        } else {
-            prepResultReg(ins, rmask(savedRegs[a]));
-        }
+        prepResultReg(ins, rmask(argRegs[a]));
     }
 
     void Assembler::asm_int(LInsp ins)
