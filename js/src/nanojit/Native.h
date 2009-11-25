@@ -64,14 +64,14 @@ namespace nanojit {
         // flags; upper bits reserved
         LIR64    = 0x40,            // result is double or quad
 
-#define OPDEF(op, number, args, repkind) \
+#define OPDEF(op, number, repkind) \
         LIR_##op = (number),
-#define OPDEF64(op, number, args, repkind) \
+#define OPD64(op, number, repkind) \
         LIR_##op = ((number) | LIR64),
 #include "LIRopcode.tbl"
         LIR_sentinel,
 #undef OPDEF
-#undef OPDEF64
+#undef OPD64
 
 #ifdef NANOJIT_64BIT
 #  define PTR_SIZE(a,b)  b

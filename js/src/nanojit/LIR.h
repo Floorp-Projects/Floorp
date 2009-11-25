@@ -152,9 +152,6 @@ namespace nanojit
         }
     };
 
-    // Array holding the 'operands' field from LIRopcode.tbl.
-    extern const int8_t operandCount[];
-
     // Array holding the 'repkind' field from LIRopcode.tbl.
     extern const uint8_t repKinds[];
 
