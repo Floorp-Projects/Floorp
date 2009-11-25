@@ -136,6 +136,7 @@ _TEST_FILES = 	test_bug589.html \
 		347174transformable.xml \
 		347174transform.xsl \
 		test_bug481335.xhtml \
+		test_bug500885.html \
 		test_bug514856.html \
 		bug514856_iframe.html \
 		test_bug519987.html \
