@@ -502,6 +502,8 @@ namespace nanojit
         void MOVSDMR(Register r1, int d, Register r2);\
         void JMP8(size_t n, NIns* t);\
         void JMP32(size_t n, NIns* t);\
+        void JMPX(Register indexreg, NIns** table);\
+        void JMPXB(Register indexreg, Register tablereg);\
         void JO(size_t n, NIns* t);\
         void JE(size_t n, NIns* t);\
         void JL(size_t n, NIns* t);\

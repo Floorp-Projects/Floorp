@@ -1230,9 +1230,6 @@ Assembler::asm_restore(LInsp i, Reservation *, Register r)
             }
         }
     }
-    verbose_only(
-        asm_output("        restore %s",_thisfrag->lirbuf->names->formatRef(i));
-        )
 }
 
 void
@@ -1283,7 +1280,7 @@ Assembler::asm_load64(LInsp ins)
     NanoAssert(IsGpReg(rb));
     freeRsrcOf(ins, false);
 
-    //output("--- load64: Finished register allocation.");
+    //outputf("--- load64: Finished register allocation.");
 
     if (ARM_VFP && isKnownReg(rr)) {
         // VFP is enabled and the result will go into a register.

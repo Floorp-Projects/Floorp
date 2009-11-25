@@ -98,7 +98,7 @@ namespace nanojit
         verbose_only(
         if (_logc->lcbits & LC_Assembly) {
             outputf("        %p:",_nIns);
-            output("        patch entry:");
+            outputf("        patch entry:");
         })
         NIns *patchEntry = _nIns;
 
@@ -282,9 +282,6 @@ namespace nanojit
             ADD(FP, L2, r);
             int32_t d = disp(i);
             SET32(d, L2);
-            verbose_only(if (_logc->lcbits & LC_RegAlloc) {
-                outputf("        remat %s size %d", _thisfrag->lirbuf->names->formatRef(i), i->size());
-            })
         }
         else if (i->isconst()) {
             if (!i->getArIndex()) {
@@ -299,9 +296,6 @@ namespace nanojit
             } else {
                 LDSW32(FP, d, r);
             }
-            verbose_only(if (_logc->lcbits & LC_RegAlloc) {
-                outputf("        restore %s", _thisfrag->lirbuf->names->formatRef(i));
-            })
         }
     }
 

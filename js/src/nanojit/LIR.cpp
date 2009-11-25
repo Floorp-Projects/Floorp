@@ -1868,7 +1868,7 @@ namespace nanojit
 
             case LIR_qjoin:
                 VMPI_sprintf(s, "%s (%s), %s", lirNames[op],
-                    formatIns(i->oprnd1()),
+                     formatRef(i->oprnd1()),
                      formatRef(i->oprnd2()));
                  break;
 
