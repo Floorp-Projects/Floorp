@@ -69,8 +69,6 @@ child:
     returns (NPError rv);
 
 parent:
-  // XXX does NPN_UserAgent need to be RPC? certainly hope not, but to
-  // XXX be safe ...
   rpc NPN_UserAgent()
     returns (nsCString userAgent);
 

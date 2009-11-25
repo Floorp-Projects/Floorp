@@ -57,7 +57,6 @@ PluginProcessParent::PluginProcessParent(const std::string& aPluginFilePath) :
     GeckoChildProcessHost(GeckoProcessType_Plugin),
     mPluginFilePath(aPluginFilePath)
 {
-  // XXXbent Need to catch crashing plugins by watching the process event!
 }
 
 PluginProcessParent::~PluginProcessParent()
