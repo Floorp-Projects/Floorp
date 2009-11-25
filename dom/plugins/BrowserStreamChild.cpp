@@ -142,7 +142,6 @@ BrowserStreamChild::NPN_RequestRead(NPByteRange* aRangeList)
 
   NPError result;
   CallNPN_RequestRead(ranges, &result);
-  // TODO: does failure in NPN_RequestRead affect stream state at all?
   return result;
 }
 

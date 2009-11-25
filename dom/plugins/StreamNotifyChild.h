@@ -50,10 +50,14 @@ class StreamNotifyChild : public PStreamNotifyChild
   friend class BrowserStreamChild;
 
 public:
-  StreamNotifyChild(const nsCString& aURL, void* aClosure)
+  StreamNotifyChild(const nsCString& aURL)
     : mURL(aURL)
-    , mClosure(aClosure)
+    , mClosure(NULL)
   { }
+
+  void SetValid(void* aClosure) {
+    mClosure = aClosure;
+  }
 
 private:
   nsCString mURL;
