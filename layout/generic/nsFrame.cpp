@@ -2218,11 +2218,18 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
                                     getter_AddRefs(parentContent),
                                     &contentOffset, &target);      
 
+  nsWeakFrame weakThis = this;
   if (NS_SUCCEEDED(result) && parentContent) {
     frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
   } else {
     nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
     frameselection->HandleDrag(this, pt);
+  }
+
+  // The frameselection object notifies selection listeners synchronously above
+  // which might have killed us.
+  if (!weakThis.IsAlive()) {
+    return NS_OK;
   }
 
   // get the nearest scrollframe

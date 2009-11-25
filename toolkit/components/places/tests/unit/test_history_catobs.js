@@ -77,5 +77,5 @@ function run_test() {
               hs.TRANSITION_TYPED, false, 0);
 
   do_test_pending();
-  do_timeout(1000, "verify();");
+  do_timeout(1000, verify);
 }

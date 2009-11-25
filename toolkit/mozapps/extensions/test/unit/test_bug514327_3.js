@@ -107,7 +107,7 @@ var WindowWatcher = {
     do_check_neq(item.name, "test_bug514327_outdated");
 
     // Call the next test after the blocklist has finished up
-    do_timeout(0, "gNextTestPart()");
+    do_timeout(0, gNextTestPart);
   },
 
   QueryInterface: function(iid) {

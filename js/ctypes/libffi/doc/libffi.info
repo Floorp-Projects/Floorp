@@ -1,7 +1,5 @@
-This is
-/home/db48x/moz/mozilla-central/js/ctypes/libffi/doc/libffi.info,
-produced by makeinfo version 4.13 from
-/home/db48x/moz/mozilla-central/js/ctypes/libffi/doc/libffi.texi.
+This is doc/libffi.info, produced by makeinfo version 4.12 from
+./doc/libffi.texi.
 
 This manual is for Libffi, a portable foreign-function interface
 library.
@@ -518,18 +516,18 @@ Index
 
 
 Tag Table:
-Node: Top766
-Node: Introduction1502
-Node: Using libffi3138
-Node: The Basics3573
-Node: Simple Example6180
-Node: Types7207
-Node: Primitive Types7490
-Node: Structures9310
-Node: Type Example10170
-Node: Multiple ABIs11393
-Node: The Closure API11764
-Node: Missing Features14684
-Node: Index15177
+Node: Top670
+Node: Introduction1406
+Node: Using libffi3042
+Node: The Basics3477
+Node: Simple Example6084
+Node: Types7111
+Node: Primitive Types7394
+Node: Structures9214
+Node: Type Example10074
+Node: Multiple ABIs11297
+Node: The Closure API11668
+Node: Missing Features14588
+Node: Index15081
 
 End Tag Table

@@ -145,171 +145,6 @@ $FuncName PROC
 	MEND
 
 
-; USE THIS FUNCTION POINTER INSIDE THE ROUTING XPTC_InvokeByIndex
-	IMPORT PrepareAndDispatch
-
-
-	MY_NESTED_ARMENTRY asmXPTC_InvokeByIndex
-
-; Function compile flags: /Ods
-; Was In File c:\builds\wince\mozilla\xpcom\reflect\xptcall\src\md\win32\xptcinvokece.cpp
-
-;|asmXPTC_InvokeByIndex| PROC
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;	mov       r12, sp
-;;	stmdb     sp!, {r0 - r3}
-;;	stmdb     sp!, {r12, lr}
-;;	sub       sp, sp, #4
-;;
-;;	mov       r0, #0	; return NS_OK;
-;;	str       r0, [sp]
-;;	ldr       r0, [sp]
-;;
-;;	add       sp, sp, #4
-;;	ldmia     sp, {sp, pc}
-;;
-;;	ENTRY_END
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; 144  : {
-
-	; BKPT
-
-	mov       r12, sp
-	stmdb     sp!, {r0 - r3}
-	stmdb     sp!, {r4, r5, r12, lr}
-	sub       sp, sp, #0x2C
-
-; 145  : 	PRUint32 result;
-; 146  : 	struct my_params_struct my_params;
-; 147  : 	my_params.that = that;
-
-	add       r5, sp, #8    ; r5 = pointer to my_params (also THIS)
-
-	;;ldr       r0, [sp, #0x34]
-	;;str       r0, [sp, #8]
-	;str       r0, [sp, #8]
-	str       r0, [r5, #0x00]
-
-; 148  : 	my_params.Index = methodIndex;   // R5 + 0x4
-
-	;;ldr       r1, [sp, #0x38]
-	;;str       r1, [sp, #0xC]
-	;str       r1, [sp, #0x0C]
-	str       r1, [r5, #0x04]
-
-; 149  : 	my_params.Count = paramCount;	// R5 + 0x8
-
-	;ldr       r0, [sp, #0x3C]
-	;str       r0, [sp, #0x10]
-	;str       r2, [sp, #0x10]
-	str       r2, [r5, #0x08]
-
-; 150  : 	my_params.params = params;	// R5 + 0xC
-
-	;;ldr       r1, [sp, #0x40]
-	;;str       r1, [sp, #0x14]
-	;str       r3, [sp, #0x14]
-	str       r3, [r5, #0x0C]
-
-; 152  : 	my_params.fn_count = (PRUint32) &invoke_count_words;
-;						// R5 + 0x10
-
-	;;ldr       r1, [pc, #0x4C]
-	;;str       r1, [sp, #0x18]
-	ldr       r4, [r12, #0x4]
-	;str       r4, [sp, #0x18]
-	str       r4, [r5, #0x10]
-
-; 151  : 	my_params.fn_copy = (PRUint32) &invoke_copy_to_stack;
-;						// R5 + 0x14
-
-	;;ldr       r0, [pc, #0x58]
-	;;str       r0, [sp, #0x1C]
-	ldr       r4, [r12]
-	;str       r4, [sp, #0x1C]
-	str       r4, [r5, #0x14]
-
-                          ; Prepare to call invoke_count_words
-	;ldr     r0, [sp, #0x3C]   ; r0 = paramCount
-	;ldr     r1, [sp, #0x40]   ; r1 = params
-	;ldr     ip, [pc, #0x4C]   ; ip = pointer to invoke_count_words
-	;mov	lr, pc		  ; call it...
-	;mov	pc, ip		  ;
-	ldr     r0, [r5, #0x08]   ; r0 = paramCount (r5 + 0x08 = this + 0x08)
-	ldr     r1, [r5, #0x0C]   ; r1 = params (r5 + 0x0C = this + 0x0C)
-	ldr     ip, [r5, #0x10]   ; ip = pointer to invoke_count_words (r5 + 0x10 = this + 0x10)
-	mov	lr, pc		  ; call it...
-	mov	pc, ip		  ;
-
-
-	mov	r4, r0, lsl #2	  ; This is the amount of bytes needed.
-
-	sub	sp, sp, r4	  ; use stack space for the args...
-	mov	r0, sp		  ; prepare a pointer an the stack
-
-;;	ldr	r1, [sp, #0x3C]   ; =paramCount
-;;	ldr	r2, [sp, #0x40]   ; =params
-;;	ldr	ip, [pc, #0x4C]   ; =invoke_copy_to_stack
-	ldr     r1, [r5, #0x08]   ; r1 = paramCount (r5 + 0x08 = this + 0x08)
-	ldr     r2, [r5, #0x0C]   ; r2 = params (r5 + 0x0C = this + 0x0C)
-	ldr     ip, [r5, #0x14]   ; ip = pointer to invoke_copy_to_stack (r5 + 0x14 = this + 0x14)
-	mov	lr, pc		  ; copy args to the stack like the
-	mov	pc, ip		  ; compiler would.
-
-
-	ldr	r0, [r5, #0]	  ; get (self) that
-
-	ldr	r1, [r0]	  ; get that->vtable offset
-	ldr	r2, [r5, #4]	  ; = that->methodIndex
-	mov	r2, r2, lsl #2	  ; a vtable_entry(x)=0 + (4 bytes * x)
-
-	ldr     ip, [r1, r2]      ; get method adress from vtable
-
-	cmp	r4, #12		  ; more than 3 arguments???
-	ldmgtia	sp!, {r1, r2, r3} ; yes: load arguments for r1-r3
-	subgt	r4, r4, #12	  ;      and correct the stack pointer
-	ldmleia	sp, {r1, r2, r3}  ; no:  load r1-r3 from stack
-	addle	sp, sp, r4	  ;      and restore stack pointer
-	movle	r4, #0		  ;	a mark for restoring sp
-
-	ldr	r0, [r5, #0]	  ; get (self) that
-
-	; NOTE: At this point, all of the arguments are on the stack, from SP on up, 
-	;   with the first argument at SP, the second argument at SP+4, the third 
-	;   argument at SP+8, and so on...
-
-	mov	lr, pc		  ; call mathod
-	mov	pc, ip		  ;
-
-	add	sp, sp, r4	  ; restore stack pointer
-				  ; the result is in r0
-
-
-	str       r0, [sp]        ; Start unwinding the stack
-	str       r0, [sp, #0x20] 
-
-; 225  : }    
-
-	add       sp, sp, #0x2C
-	ldmia     sp, {r4, r5, sp, pc}
-
-	ENTRY_END
-
-	ENDP  ; |asmXPTC_InvokeByIndex|
-
-
-
-
-SharedStub
-	stmfd	sp!, {r1, r2, r3}
-	mov	r2, sp
-	str	lr, [sp, #-4]!
-	mov	r1, ip
-	bl	PrepareAndDispatch
-	ldr	pc, [sp], #16
-	ENDP
 
 
 
@@ -565,6 +400,17 @@ SharedStub
 	MY_STUB_NESTED_ARMENTRY 247
 	MY_STUB_NESTED_ARMENTRY 248
 	MY_STUB_NESTED_ARMENTRY 249
+
+	IMPORT PrepareAndDispatch
+	
+SharedStub
+	stmfd	sp!, {r1, r2, r3}
+	mov	r2, sp
+	str	lr, [sp, #-4]!
+	mov	r1, ip
+	bl	PrepareAndDispatch
+	ldr	pc, [sp], #16
+	ENDP
 
 
 	END

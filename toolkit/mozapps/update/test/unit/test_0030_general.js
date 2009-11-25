@@ -52,7 +52,7 @@ function run_test() {
   startUpdateChecker();
   // The HTTP server is only used for the mar file downloads which is slow
   start_httpserver(DIR_DATA);
-  do_timeout(0, "run_test_pt1()");
+  do_timeout(0, run_test_pt1);
 }
 
 function end_test() {
@@ -218,7 +218,7 @@ const downloadListener = {
   onStopRequest: function(request, context, status) {
     gStatusResult = status;
     // Use a timeout to allow the request to complete
-    do_timeout(0, "gCheckFunc()");
+    do_timeout(0, gCheckFunc);
   },
 
   QueryInterface: function(iid) {

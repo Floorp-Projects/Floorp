@@ -112,6 +112,8 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
 
     if check_for_forced_update "$requested_forced_updates" "$f"; then
       echo 1>&2 "  FORCING UPDATE for file '$f'..."
+      # The full workdir may not exist yet, so create it if necessary. 
+      mkdir -p `dirname "$workdir/$f"`
       $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
       make_add_instruction "$f" >> $manifest
       archivefiles="$archivefiles \"$f\""

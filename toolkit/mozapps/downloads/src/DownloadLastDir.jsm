@@ -34,6 +34,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * The behavior implemented by gDownloadLastDir is documented here.
+ *
+ * In normal browsing sessions, gDownloadLastDir uses the browser.download.lastDir
+ * preference to store the last used download directory. The first time the user
+ * switches into the private browsing mode, the last download directory is
+ * preserved to the pref value, but if the user switches to another directory
+ * during the private browsing mode, that directory is not stored in the pref,
+ * and will be merely kept in memory.  When leaving the private browsing mode,
+ * this in-memory value will be discarded, and the last download directory
+ * will be reverted to the pref value.
+ *
+ * Both the pref and the in-memory value will be cleared when clearing the
+ * browsing history.  This effectively changes the last download directory
+ * to the default download directory on each platform.
+ */
+
 const LAST_DIR_PREF = "browser.download.lastDir";
 const PBSVC_CID = "@mozilla.org/privatebrowsing;1";
 const nsILocalFile = Components.interfaces.nsILocalFile;

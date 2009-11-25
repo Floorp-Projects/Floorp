@@ -174,7 +174,7 @@ var WindowWatcher = {
     }
 
     // Call the next test after the blocklist has finished up
-    do_timeout(0, "gTestCheck()");
+    do_timeout(0, gTestCheck);
   },
 
   QueryInterface: function(iid) {
