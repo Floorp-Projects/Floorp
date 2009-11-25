@@ -141,10 +141,6 @@ TabStore.prototype = {
     this._readFromFile();
   },
 
-  get _localClientGUID() {
-    return Clients.clientID;
-  },
-
   get _localClientName() {
     return Clients.clientName;
   },
@@ -266,43 +262,20 @@ TabStore.prototype = {
   },
 
   itemExists: function TabStore_itemExists(id) {
-    if (id == this._localClientGUID) {
-      return true;
-    } else if (this._remoteClients[id]) {
-      return true;
-    } else {
-      return false;
-    }
+    return id == Clients.clientID;
   },
 
   createRecord: function TabStore_createRecord(id, cryptoMetaURL) {
-    let record;
-    if (id == this._localClientGUID) {
-      record = this._createLocalClientTabSetRecord();
-    } else {
-      record = this._remoteClients[id];
-    }
+    let record = this._createLocalClientTabSetRecord();
     record.id = id;
     record.encryption = cryptoMetaURL;
     return record;
   },
 
-  changeItemID: function TabStore_changeItemId(oldId, newId) {
-    if (this._remoteClients[oldId]) {
-      let record = this._remoteClients[oldId];
-      record.id = newId;
-      delete this._remoteClients[oldId];
-      this._remoteClients[newId] = record;
-    }
-  },
-
   getAllIDs: function TabStore_getAllIds() {
-    let items = {};
-    items[ this._localClientGUID ] = true;
-    for (let id in this._remoteClients) {
-      items[id] = true;
-    }
-    return items;
+    let ids = {};
+    ids[Clients.clientID] = true;
+    return ids;
   },
 
   wipe: function TabStore_wipe() {
@@ -310,32 +283,13 @@ TabStore.prototype = {
   },
 
   create: function TabStore_create(record) {
-    if (record.id == this._localClientGUID)
-      return; // can't happen?
     this._log.debug("Adding remote tabs from " + record.getClientName());
     this._remoteClients[record.id] = record;
     this._writeToFile();
     // TODO writing to file after every change is inefficient.  How do we
     // make sure to do it (or at least flush it) only after sync is done?
     // override syncFinished
-  },
-
-  update: function TabStore_update(record) {
-    if (record.id == this._localClientGUID)
-      return; // can't happen?
-    this._log.debug("Updating remote client: " + record.getClientName());
-    this._remoteClients[record.id] = record;
-    this._writeToFile();
-  },
-
-  remove: function TabStore_remove(record) {
-    if (record.id == this._localClientGUID)
-      return; // can't happen?
-    this._log.trace("Remove called.  Deleting record with id " + record.id);
-    delete this._remoteClients[record.id];
-    this._writeToFile();
   }
-
 };
 
 
