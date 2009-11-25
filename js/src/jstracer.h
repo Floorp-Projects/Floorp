@@ -59,7 +59,6 @@
 
 template <typename T>
 class Queue {
-    T internal[16];
     T* _data;
     unsigned _len;
     unsigned _max;
@@ -67,21 +66,16 @@ class Queue {
 
 public:
     void ensure(unsigned size) {
-        JS_ASSERT(_max >= 16);
-        if (_max > size)
-            return;
-        _max = JS_MAX(_max * 2, size);
+        if (!_max)
+            _max = 16;
+        while (_max < size)
+            _max <<= 1;
         if (alloc) {
             T* tmp = new (*alloc) T[_max];
             memcpy(tmp, _data, _len * sizeof(T));
             _data = tmp;
         } else {
-            if (_data == internal) {
-                _data = (T*)malloc(_max * sizeof(T));
-                memcpy(_data, internal, _len * sizeof(T));
-            } else {
-                _data = (T*)realloc(_data, _max * sizeof(T));
-            }
+            _data = (T*)realloc(_data, _max * sizeof(T));
         }
 #if defined(DEBUG)
         memset(&_data[_len], 0xcd, _max - _len);
@@ -91,13 +85,13 @@ public:
     Queue(nanojit::Allocator* alloc)
         : alloc(alloc)
     {
-        this->_max = sizeof(internal) / sizeof(T);
+        this->_max =
         this->_len = 0;
-        this->_data = internal;
+        this->_data = NULL;
     }
 
     ~Queue() {
-        if (!alloc && _data != internal)
+        if (!alloc)
             free(_data);
     }
 
