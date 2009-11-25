@@ -67,12 +67,12 @@ class XULInfoTester:
         """Test a XUL predicate condition against this local info."""
         ans = self.cache.get(cond, None)
         if ans is None:
-            cmd = [ self.js_bin, '-e', self.js_prolog, '-e', 'print(%s)'%cond ]
+            cmd = [ self.js_bin, '-e', self.js_prolog, '-e', 'print(!!(%s))'%cond ]
             p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             out, err = p.communicate()
             if out == 'true\n':
                 ans = True
-            elif out in ('false\n', 'null\n'):
+            elif out == 'false\n':
                 ans = False
             else:
                 raise Exception("Failed to test XUL condition '%s'"%cond)
