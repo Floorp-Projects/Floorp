@@ -146,6 +146,14 @@ public:
                        const bool& file,
                        NPError* result);
 
+    NS_OVERRIDE virtual bool
+    AnswerPStreamNotifyConstructor(PStreamNotifyParent* actor,
+                                   const nsCString& url,
+                                   const nsCString& target,
+                                   const bool& post, const nsCString& buffer,
+                                   const bool& file,
+                                   NPError* result);
+
     virtual bool
     DeallocPStreamNotify(PStreamNotifyParent* notifyData,
                          const NPReason& reason);

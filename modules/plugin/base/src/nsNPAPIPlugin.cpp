@@ -824,6 +824,9 @@ _posturlnotify(NPP npp, const char *relativeURL, const char *target,
     NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_posturlnotify called from the wrong thread\n"));
     return NPERR_INVALID_PARAM;
   }
+  if (!buf)
+    return NPERR_INVALID_PARAM;
+
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
                  ("NPN_PostURLNotify: npp=%p, target=%s, len=%d, file=%d, "
                   "notify=%p, url=%s, buf=%s\n",
