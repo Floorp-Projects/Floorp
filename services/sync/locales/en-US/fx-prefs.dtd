@@ -63,7 +63,7 @@
 
 <!ENTITY accountGroupboxCaption.label "Mozilla Weave Account">
 
-<!ENTITY connectedAs.label            "Connected as:">
+<!ENTITY currentUser.label            "Current User:">
 
 <!ENTITY manageAccount.label          "Manage Account">
 
