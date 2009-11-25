@@ -275,7 +275,7 @@ namespace nanojit
     }
 
 
-    void Assembler::asm_restore(LInsp i, Reservation *unused, Register r)
+    void Assembler::asm_restore(LInsp i, Register r)
     {
         underrunProtect(24);
         if (i->isop(LIR_alloc)) {
@@ -323,7 +323,7 @@ namespace nanojit
                     ra = findRegFor(value, GpRegs);
                     rb = G0;
                 } else {
-                    findRegFor2b(GpRegs, value, ra, base, rb);
+                    findRegFor2(GpRegs, value, ra, base, rb);
                 }
                 STW32(ra, dr, rb);
             }
@@ -550,7 +550,7 @@ namespace nanojit
         else
             {
                 Register ra, rb;
-                findRegFor2b(GpRegs, lhs, ra, rhs, rb);
+                findRegFor2(GpRegs, lhs, ra, rhs, rb);
                 SUBCC(ra, rb, G0);
             }
     }
@@ -884,7 +884,7 @@ namespace nanojit
         LDDF32(FP, d, rr);
     }
 
-    Register Assembler::asm_prep_fcall(Reservation *unused, LInsp ins)
+    Register Assembler::asm_prep_fcall(LInsp ins)
     {
         return prepResultReg(ins, rmask(F0));
     }

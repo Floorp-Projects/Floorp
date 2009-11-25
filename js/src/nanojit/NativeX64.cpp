@@ -1110,7 +1110,7 @@ namespace nanojit
         LIns *a = cond->oprnd1();
         Register ra, rb;
         if (a != b) {
-            findRegFor2b(GpRegs, a, ra, b, rb);
+            findRegFor2(GpRegs, a, ra, b, rb);
         } else {
             // optimize-me: this will produce a const result!
             ra = rb = findRegFor(a, GpRegs);
@@ -1238,11 +1238,11 @@ namespace nanojit
 
     void Assembler::fcmp(LIns *a, LIns *b) {
         Register ra, rb;
-        findRegFor2b(FpRegs, a, ra, b, rb);
+        findRegFor2(FpRegs, a, ra, b, rb);
         UCOMISD(ra, rb);
     }
 
-    void Assembler::asm_restore(LIns *ins, Reservation *, Register r) {
+    void Assembler::asm_restore(LIns *ins, Register r) {
         if (ins->isop(LIR_alloc)) {
             int d = disp(ins);
             LEAQRM(r, d, FP);
@@ -1459,7 +1459,7 @@ namespace nanojit
         TODO(asm_qjoin);
     }
 
-    Register Assembler::asm_prep_fcall(Reservation*, LIns *ins) {
+    Register Assembler::asm_prep_fcall(LIns *ins) {
         return prepResultReg(ins, rmask(XMM0));
     }
 
