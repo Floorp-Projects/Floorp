@@ -61,19 +61,17 @@ BrowserStreamChild::BrowserStreamChild(PluginInstanceChild* instance,
 
   memset(&mStream, 0, sizeof(mStream));
   mStream.ndata = static_cast<AStream*>(this);
-  if (!mURL.IsEmpty())
-    mStream.url = mURL.get();
+  mStream.url = NullableStringGet(mURL);
   mStream.end = length;
   mStream.lastmodified = lastmodified;
   if (notifyData)
     mStream.notifyData =
       static_cast<const StreamNotifyChild*>(notifyData)->mClosure;
-  if (!mHeaders.IsEmpty())
-    mStream.headers = mHeaders.get();
+  mStream.headers = NullableStringGet(mHeaders);
 
-  *rv = mInstance->mPluginIface->newstream(&mInstance->mData,
-                                           const_cast<char*>(mimeType.get()),
-                                           &mStream, seekable, stype);
+  *rv = mInstance->mPluginIface->newstream(
+    &mInstance->mData, const_cast<char*>(NullableStringGet(mimeType)),
+    &mStream, seekable, stype);
   if (*rv != NPERR_NO_ERROR)
     mClosed = true;
 }
