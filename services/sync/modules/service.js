@@ -79,17 +79,11 @@ Cu.import("resource://weave/engines.js", Weave);
 
 Cu.import("resource://weave/engines/bookmarks.js", Weave);
 Cu.import("resource://weave/engines/clientData.js", Weave);
-Cu.import("resource://weave/engines/cookies.js", Weave);
-Cu.import("resource://weave/engines/extensions.js", Weave);
 Cu.import("resource://weave/engines/forms.js", Weave);
 Cu.import("resource://weave/engines/history.js", Weave);
-Cu.import("resource://weave/engines/input.js", Weave);
 Cu.import("resource://weave/engines/prefs.js", Weave);
-Cu.import("resource://weave/engines/microformats.js", Weave);
 Cu.import("resource://weave/engines/passwords.js", Weave);
-Cu.import("resource://weave/engines/plugins.js", Weave);
 Cu.import("resource://weave/engines/tabs.js", Weave);
-Cu.import("resource://weave/engines/themes.js", Weave);
 
 Utils.lazy(Weave, 'Service', WeaveSvc);
 
@@ -371,7 +365,7 @@ WeaveSvc.prototype = {
         break;
 
       case THUNDERBIRD_ID:
-        engines = ["Cookie", "Password"];
+        engines = ["Password"];
         break;
     }
 

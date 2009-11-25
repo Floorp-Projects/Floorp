@@ -15,10 +15,8 @@ pref("extensions.weave.autoconnect", true);
 pref("extensions.weave.syncOnQuit.enabled", true);
 
 pref("extensions.weave.engine.bookmarks", true);
-//pref("extensions.weave.engine.cookies", false);
 pref("extensions.weave.engine.forms", true);
 pref("extensions.weave.engine.history", true);
-//pref("extensions.weave.engine.input", false);
 pref("extensions.weave.engine.passwords", true);
 pref("extensions.weave.engine.prefs", true);
 pref("extensions.weave.engine.tabs", true);
