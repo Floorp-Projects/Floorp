@@ -401,9 +401,6 @@ namespace nanojit
         uint32_t arg;
         uint32_t abi_regcount;
         if (i->isop(LIR_alloc)) {
-            verbose_only( if (_logc->lcbits & LC_RegAlloc) {
-                            outputForEOL("  <= remat %s size %d",
-                            _thisfrag->lirbuf->names->formatRef(i), i->size()); } )
             LEA(r, disp(i), FP);
         }
         else if (i->isconst()) {
@@ -429,9 +426,6 @@ namespace nanojit
         }
         else {
             int d = findMemFor(i);
-            verbose_only( if (_logc->lcbits & LC_RegAlloc) {
-                            outputForEOL("  <= restore %s",
-                            _thisfrag->lirbuf->names->formatRef(i)); } )
             asm_load(d,r);
         }
     }
