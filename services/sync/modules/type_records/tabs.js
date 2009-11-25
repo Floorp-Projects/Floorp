@@ -59,41 +59,6 @@ TabSetRecord.prototype = {
     this.cleartext = {
     };
   },
-
-  addTab: function TabSetRecord_addTab(title, urlHistory, lastUsed) {
-    if (!this.cleartext.tabs)
-      this.cleartext.tabs = [];
-    if (!title) {
-      title = "";
-    }
-    if (!lastUsed) {
-      lastUsed = 0;
-    }
-    if (!urlHistory || urlHistory.length == 0) {
-      return;
-    }
-    this.cleartext.tabs.push( {title: title,
-                               urlHistory: urlHistory,
-                               lastUsed: lastUsed});
-  },
-
-  getAllTabs: function TabSetRecord_getAllTabs() {
-    return this.cleartext.tabs;
-  },
-
-  setClientName: function TabSetRecord_setClientName(value) {
-    this.cleartext.clientName = value;
-  },
-
-  getClientName: function TabSetRecord_getClientName() {
-    return this.cleartext.clientName;
-  },
-
-  toJson: function TabSetRecord_toJson() {
-    return this.cleartext;
-  },
-
-  fromJson: function TabSetRecord_fromJson(json) {
-    this.cleartext = json;
-  }
 };
+
+Utils.deferGetSet(TabSetRecord, "cleartext", ["clientName", "tabs"]);

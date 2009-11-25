@@ -141,25 +141,13 @@ TabStore.prototype = {
     this._readFromFile();
   },
 
-  get _localClientName() {
-    return Clients.clientName;
-  },
-
   _writeToFile: function TabStore_writeToFile() {
-    let json = {};
-    for (let [id, val] in Iterator(this._remoteClients))
-      json[id] = val.toJson();
-
-    Utils.jsonSave(this._filePath, this, json);
+    Utils.jsonSave(this._filePath, this, this._remoteClients);
   },
 
   _readFromFile: function TabStore_readFromFile() {
     Utils.jsonLoad(this._filePath, this, function(json) {
-      for (let [id, val] in Iterator(json)) {
-	this._remoteClients[id] = new TabSetRecord();
-	this._remoteClients[id].fromJson(val);
-	this._remoteClients[id].id = id;
-      }
+      this._remoteClients = json;
     });
   },
 
@@ -170,103 +158,44 @@ TabStore.prototype = {
     return this._sessionStore;
   },
 
-  get _windowMediator() {
-    let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-                 .getService(Ci.nsIWindowMediator);
-    this.__defineGetter__("_windowMediator", function() { return wm;});
-    return this._windowMediator;
-  },
-
-  _createLocalClientTabSetRecord: function TabStore__createLocalTabSet() {
-    // Test for existence of sessionStore.  If it doesn't exist, then
-    // use get _fennecTabs instead.
-    let record = new TabSetRecord();
-    record.setClientName( this._localClientName );
-
-    if (Cc["@mozilla.org/browser/sessionstore;1"])  {
-      this._addFirefoxTabsToRecord(record);
-    } else {
-      this._addFennecTabsToRecord(record);
-    }
-    return record;
-  },
-
-  _addFirefoxTabsToRecord: function TabStore__addFirefoxTabs(record) {
-    // Iterate through each tab of each window
-    let enumerator = this._windowMediator.getEnumerator("navigator:browser");
-    while (enumerator.hasMoreElements()) {
-      let window = enumerator.getNext();
-      let tabContainer = window.getBrowser().tabContainer;
-
-      // Grab each tab child from the array-like child NodeList
-      for each (let tab in Array.slice(tabContainer.childNodes)) {
-        if (!(tab instanceof Ci.nsIDOMNode))
-          continue;
-
-        let tabState = JSON.parse(this._sessionStore.getTabState(tab));
-	// Skip empty (i.e. just-opened, no history yet) tabs:
-	if (tabState.entries.length == 0)
-	  continue;
-
-        // Get the time the tab was last used
-        let lastUsedTimestamp = tab.lastUsed;
-
-        // Get title of current page
-	let currentPage = tabState.entries[tabState.entries.length - 1];
-	/* TODO not always accurate -- if you've hit Back in this tab,
-         * then the current page might not be the last entry. Deal
-         * with this later. */
-
-        // Get url history
-        let urlHistory = [];
-	// Include URLs in reverse order; max out at 10, and skip nulls.
-	for (let i = tabState.entries.length -1; i >= 0; i--) {
-          let entry = tabState.entries[i];
-	  if (entry && entry.url)
-	    urlHistory.push(entry.url);
-	  if (urlHistory.length >= 10)
-	    break;
-	}
-
-        // add tab to record
-        this._log.debug("Wrapping a tab with title " + currentPage.title);
-        this._log.trace("And timestamp " + lastUsedTimestamp);
-        record.addTab(currentPage.title, urlHistory, lastUsedTimestamp);
-      }
-    }
-  },
-
-  _addFennecTabsToRecord: function TabStore__addFennecTabs(record) {
-    let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-	       .getService(Ci.nsIWindowMediator);
-    let browserWindow = wm.getMostRecentWindow("navigator:browser");
-    for each (let tab in browserWindow.Browser._tabs ) {
-      let title = tab.browser.contentDocument.title;
-      let url = tab.browser.contentWindow.location.toString();
-      let urlHistory = [url];
-
-      // TODO how to get older entries in urlHistory? without session store?
-      // can we use BrowserUI._getHistory somehow?
-
-      // Get the time the tab was last used
-      /* let lastUsedTimestamp = tab.getAttribute(TAB_TIME_ATTR);
-      if (!lastUsedTimestamp) */
-      // TODO that doesn't work: tab.getAttribute is not a function on Fennec.
-      let lastUsedTimestamp = "0";
-
-      this._log.debug("Wrapping a tab with title " + title);
-      this._log.trace("And timestamp " + lastUsedTimestamp);
-      record.addTab(title, urlHistory, lastUsedTimestamp);
-      // TODO add last-visited date for this tab... but how?
-    }
-  },
-
   itemExists: function TabStore_itemExists(id) {
     return id == Clients.clientID;
   },
 
   createRecord: function TabStore_createRecord(id, cryptoMetaURL) {
-    let record = this._createLocalClientTabSetRecord();
+    let record = new TabSetRecord();
+    record.clientName = Clients.clientName;
+
+    // Iterate through each tab of each window
+    let allTabs = [];
+    let wins = Svc.WinMediator.getEnumerator("navigator:browser");
+    while (wins.hasMoreElements()) {
+      // Get the tabs for both Firefox and Fennec
+      let window = wins.getNext();
+      let tabs = window.gBrowser && window.gBrowser.tabContainer.childNodes;
+      tabs = tabs || window.Browser._tabs;
+      Array.forEach(tabs, function(tab) {
+        allTabs.push(tab);
+      });
+    }
+
+    // Extract various pieces of tab data and sort them in descending used
+    let tabData = allTabs.map(function(tab) {
+      let browser = tab.linkedBrowser || tab.browser;
+      return {
+        title: browser.contentTitle || "",
+        urlHistory: [browser.currentURI.spec],
+        icon: browser.mIconURL || "",
+        lastUsed: tab.lastUsed || 0
+      };
+    }).sort(function(a, b) b.lastUsed - a.lastUsed);
+
+    // Only grab the most recently used tabs to sync
+    record.tabs = tabData.slice(0, 25);
+    record.tabs.forEach(function(tab) {
+      this._log.debug("Wrapping tab: " + JSON.stringify(tab));
+    }, this);
+
     record.id = id;
     record.encryption = cryptoMetaURL;
     return record;
@@ -283,8 +212,8 @@ TabStore.prototype = {
   },
 
   create: function TabStore_create(record) {
-    this._log.debug("Adding remote tabs from " + record.getClientName());
-    this._remoteClients[record.id] = record;
+    this._log.debug("Adding remote tabs from " + record.clientName);
+    this._remoteClients[record.id] = record.cleartext;
     this._writeToFile();
     // TODO writing to file after every change is inefficient.  How do we
     // make sure to do it (or at least flush it) only after sync is done?
