@@ -391,13 +391,13 @@ InitJITLogController()
             "  treevis      spew that tracevis/tree.py can parse\n"
             "  ------ options for Nanojit ------\n"
             "  fragprofile  count entries and exits for each fragment\n"
-            "  activation   show activation info\n"
             "  liveness     show LIR liveness at start of rdr pipeline\n"
             "  readlir      show LIR as it enters the reader pipeline\n"
             "  aftersf      show LIR after StackFilter\n"
-            "  regalloc     show regalloc details\n"
             "  assembly     show final aggregated assembly code\n"
-            "  nocodeaddrs  don't show code addresses in assembly listings\n"
+            "  regalloc     show regalloc state in 'assembly' output\n"
+            "  activation   show activation state in 'assembly' output\n"
+            "  nocodeaddrs  omit code addresses in 'assembly' output\n"
             "\n"
         );
         exit(0);
