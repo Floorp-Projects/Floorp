@@ -4759,7 +4759,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             }
         }
 
-        sprop = scope->addProperty(cx, id, getter, setter, SPROP_INVALID_SLOT,
+        sprop = scope->putProperty(cx, id, getter, setter, SPROP_INVALID_SLOT,
                                    attrs, flags, shortid);
         if (!sprop) {
             JS_UNLOCK_SCOPE(cx, scope);
