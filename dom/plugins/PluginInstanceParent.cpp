@@ -472,18 +472,18 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
                                     NPBool seekable, uint16_t* stype)
 {
     _MOZ_LOG(__FUNCTION__);
-        
+
     BrowserStreamParent* bs = new BrowserStreamParent(this, stream);
 
     NPError err;
-    // TODO are any of these strings nullable?
     if (!CallPBrowserStreamConstructor(bs,
-                                       nsCString(stream->url),
+                                       NullableString(stream->url),
                                        stream->end,
                                        stream->lastmodified,
                                        static_cast<PStreamNotifyParent*>(stream->notifyData),
-                                       nsCString(stream->headers),
-                                       nsCString(type), seekable, &err, stype))
+                                       NullableString(stream->headers),
+                                       NullableString(type), seekable,
+                                       &err, stype))
         return NPERR_GENERIC_ERROR;
 
     if (NPERR_NO_ERROR != err)
