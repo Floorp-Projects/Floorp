@@ -50,11 +50,9 @@ BrowserStreamParent::WriteReady()
   _MOZ_LOG(__FUNCTION__);
 
   int32_t result;
-  if (!CallNPP_WriteReady(mStream->end, &result)) {
-    mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, NPRES_NETWORK_ERR);
-    // XXX is this right?
+  if (!CallNPP_WriteReady(mStream->end, &result))
     return -1;
-  }
+
   return result;
 }
 
