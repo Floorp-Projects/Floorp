@@ -520,6 +520,38 @@ nsTextEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
   return res;
 }
 
+static inline already_AddRefed<nsIDOMNode>
+GetTextNode(nsISelection *selection, nsEditor *editor) {
+  PRInt32 selOffset;
+  nsCOMPtr<nsIDOMNode> selNode;
+  nsresult res = editor->GetStartNodeAndOffset(selection, address_of(selNode), &selOffset);
+  if (NS_FAILED(res)) return nsnull;
+  if (!editor->IsTextNode(selNode)) {
+    // Get an nsINode from the nsIDOMNode
+    nsCOMPtr<nsINode> node = do_QueryInterface(selNode);
+    // if node is null, return it to indicate there's no text
+    if (!node) return nsnull;
+    // This should be the root node, walk the tree looking for text nodes
+    nsNodeIterator iter(node, nsIDOMNodeFilter::SHOW_TEXT, nsnull, PR_TRUE);
+    while (!editor->IsTextNode(selNode)) {
+      if (NS_FAILED(res = iter.NextNode(getter_AddRefs(selNode))) || !selNode) {
+        return nsnull;
+      }
+    }
+  }
+  return selNode.forget();
+}
+#ifdef DEBUG
+#define ASSERT_PASSWORD_LENGTHS_EQUAL()                                \
+  if (mFlags & nsIPlaintextEditor::eEditorPasswordMask) {              \
+    PRInt32 txtLen;                                                    \
+    mEditor->GetTextLength(&txtLen);                                   \
+    NS_ASSERTION(mPasswordText.Length() == txtLen,                     \
+                 "password length not equal to number of asterisks");  \
+  }
+#else
+#define ASSERT_PASSWORD_LENGTHS_EQUAL()
+#endif
 
 nsresult
 nsTextEditRules::WillInsertText(PRInt32          aAction,
@@ -672,10 +704,9 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     mPasswordText.Insert(*outString, start);
 
     nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
-    if (lookAndFeel->GetEchoPassword()) {
-      if (mPasswordText.Length() > outString->Length()) {
-        HideLastPWInput();
-      }
+    if (lookAndFeel->GetEchoPassword() && 
+        !(mFlags & nsIPlaintextEditor::eEditorDontEchoPassword)) {
+      HideLastPWInput();
       mLastStart = start;
       mLastLength = outString->Length();
       if (mTimer)
@@ -862,6 +893,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
       selPrivate->SetInterlinePosition(endsWithLF);
     }
   }
+  ASSERT_PASSWORD_LENGTHS_EQUAL()
   return res;
 }
 
@@ -942,6 +974,18 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
     PRUint32 start, end;
     mEditor->GetTextSelectionOffsets(aSelection, start, end);
     NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
+
+    if (lookAndFeel->GetEchoPassword()) {
+      HideLastPWInput();
+      mLastStart = start;
+      mLastLength = 0;
+      if (mTimer)
+      {
+        mTimer->Cancel();
+      }
+    }
+
     if (end == start)
     { // collapsed selection
       if (nsIEditor::ePrevious==aCollapsedAction && 0<start) { // del back
@@ -983,6 +1027,7 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
   NS_ENSURE_SUCCESS(res, res);
 
   *aHandled = PR_TRUE;
+  ASSERT_PASSWORD_LENGTHS_EQUAL()
   return NS_OK;
 }
 
@@ -1401,38 +1446,36 @@ nsTextEditRules::RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString)
 }
 
 NS_IMETHODIMP nsTextEditRules::Notify(class nsITimer *) {
-  return HideLastPWInput();
+  nsresult res = HideLastPWInput();
+  ASSERT_PASSWORD_LENGTHS_EQUAL();
+  mLastLength = 0;
+  return res;
 }
 
 nsresult nsTextEditRules::HideLastPWInput() {
-  nsCOMPtr<nsIDOMNode> selNode;
+  if (!mLastLength) {
+    // Special case, we're trying to replace a range that no longer exists
+    return NS_OK;
+  }
+
+  nsAutoString hiddenText;
+  FillBufWithPWChars(&hiddenText, mLastLength);
+
   nsCOMPtr<nsISelection> selection;
-  PRInt32 selOffset;
   PRUint32 start, end;
   nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   res = mEditor->GetTextSelectionOffsets(selection, start, end);
   if (NS_FAILED(res)) return res;
-  res = mEditor->GetStartNodeAndOffset(selection, address_of(selNode), &selOffset);
-  if (NS_FAILED(res)) return res;
-  if (!mEditor->IsTextNode(selNode)) {
-    // Get an nsINode from the nsIDOMNode
-    nsCOMPtr<nsINode> node = do_QueryInterface(selNode);
-    // if node is null, return NS_OK because there's no text to hide
-    if (!node) return NS_OK;
-    // This should be the root node, walk the tree looking for text nodes
-    nsNodeIterator iter(node, nsIDOMNodeFilter::SHOW_TEXT, nsnull, PR_TRUE);
-    while (!mEditor->IsTextNode(selNode)) {
-      if (NS_FAILED(res = iter.NextNode(getter_AddRefs(selNode))) || 
-          selNode == nsnull) {
-        return NS_SUCCEEDED(res) ? NS_ERROR_NULL_POINTER : res;
-      }
-    }
-  }
+
+  nsCOMPtr<nsIDOMNode> selNode = GetTextNode(selection, mEditor);
+  if (!selNode)
+    return NS_OK;
+  
   nsCOMPtr<nsIDOMCharacterData> nodeAsText(do_QueryInterface(selNode));
-  if (!nodeAsText) return NS_ERROR_FAILURE;
-  nsAutoString hiddenText;
-  FillBufWithPWChars(&hiddenText, mLastLength);
+  if (!nodeAsText)
+    return NS_OK;
+  
   nodeAsText->ReplaceData(mLastStart, mLastLength, hiddenText);
   selection->Collapse(selNode, start);
   if (start != end)
