@@ -75,7 +75,9 @@ if ("@mozilla.org/toolkit/crash-reporter;1" in Components.classes) {
 
 
 function _TimerCallback(expr, timer) {
-  this._func = expr;
+  this._func = typeof expr === "function"
+             ? expr
+             : function() { eval(expr); };
   // Keep timer alive until it fires
   _pendingCallbacks.push(timer);
 }
