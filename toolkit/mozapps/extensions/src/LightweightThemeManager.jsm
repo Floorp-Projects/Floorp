@@ -133,6 +133,7 @@ var LightweightThemeManager = {
 
     _prefs.setBoolPref("isThemeSelected", aData != null);
     _notifyWindows(aData);
+    _observerService.notifyObservers(null, "lightweight-theme-changed", null);
 
     if (PERSIST_ENABLED && aData)
       _persistImages(aData);
@@ -282,7 +283,7 @@ function _updateUsedThemes(aList) {
 }
 
 function _notifyWindows(aThemeData) {
-  _observerService.notifyObservers(null, "lightweight-theme-changed",
+  _observerService.notifyObservers(null, "lightweight-theme-styling-update",
                                    JSON.stringify(aThemeData));
 }
 

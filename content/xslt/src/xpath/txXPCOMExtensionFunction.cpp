@@ -479,7 +479,11 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
             }
             case eNUMBER:
             {
-                invokeParam.val.d = evaluateToNumber(expr, aContext);
+                double dbl;
+                rv = evaluateToNumber(mParams[0], aContext, &dbl);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                invokeParam.val.d = dbl;
                 break;
             }
             case eSTRING:

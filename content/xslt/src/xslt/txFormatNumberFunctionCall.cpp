@@ -84,10 +84,11 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
     double value;
     txExpandedName formatName;
 
-    value = evaluateToNumber(mParams[0], aContext);
+    nsresult rv = evaluateToNumber(mParams[0], aContext, &value);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString formatStr;
-    nsresult rv = mParams[1]->evaluateToString(aContext, formatStr);
+    rv = mParams[1]->evaluateToString(aContext, formatStr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (mParams.Length() == 3) {

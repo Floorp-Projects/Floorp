@@ -93,7 +93,7 @@ endif
 ifeq ($(OS_ARCH),WINCE)
 ifeq ($(TARGET_CPU),arm)
 CPPSRCS 	= xptcinvokece.cpp xptcstubsce.cpp 
-ASFILES		= xptc_arm_ceppc.asm
+ASFILES		= xptcstubs_asm_ce.asm xptcinvoke_asm_ce.asm
 ASFLAGS		+= -I ../../../public
 AS_DASH_C_FLAG = 
 endif

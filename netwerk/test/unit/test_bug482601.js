@@ -35,7 +35,7 @@ var listener = {
     do_check_eq(buffer, "0123456789");
     do_check_eq(observers_called, results[test_nr]);
     test_nr++;
-    do_timeout(0, "do_test();");
+    do_timeout(0, do_test);
   }
 };
 
@@ -53,7 +53,7 @@ function run_test() {
   obs.addObserver(observer, "http-on-examine-merged-response", false);
   obs.addObserver(observer, "http-on-examine-cached-response", false);
 
-  do_timeout(0, "do_test();");
+  do_timeout(0, do_test);
   do_test_pending();
 }
 

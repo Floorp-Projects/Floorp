@@ -72,7 +72,7 @@ function run_test() {
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1.0", "2.0");
   setDefaultPrefs();
-  do_timeout(0, "run_test_pt1()");
+  do_timeout(0, run_test_pt1);
 }
 
 function end_test() {
@@ -111,7 +111,7 @@ function run_test_pt1() {
   do_check_true(privBrowsing.autoStarted);
 
   // Use a timeout to give private browsing time to reset necko.
-  do_timeout(0, "run_test_pt2()");
+  do_timeout(0, run_test_pt2);
 }
 function run_test_pt2() {
   dump("Testing: update count should equal 1\n");

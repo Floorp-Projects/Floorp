@@ -77,5 +77,5 @@ function run_test() {
                     bs.DEFAULT_INDEX, "bookmark");
 
   do_test_pending();
-  do_timeout(1000, "verify();");
+  do_timeout(1000, verify);
 }
