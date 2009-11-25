@@ -672,7 +672,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     mPasswordText.Insert(*outString, start);
 
     nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
-    if (lookAndFeel->GetEchoPassword()) {
+    if (lookAndFeel->GetEchoPassword() && 
+        !(mFlags & nsIPlaintextEditor::eEditorDontEchoPassword)) {
       if (mPasswordText.Length() > outString->Length()) {
         HideLastPWInput();
       }
