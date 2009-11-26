@@ -396,7 +396,6 @@ WeaveSvc.prototype = {
       case "weave:service:sync:finish":
         this._scheduleNextSync();
         this._syncErrors = 0;
-        Svc.Prefs.reset("firstSync");
         break;
       case "weave:service:backoff:interval":
         let interval = data + Math.random() * data * 0.25; // required backoff + up to 25%
@@ -1145,6 +1144,7 @@ WeaveSvc.prototype = {
       }
     } finally {
       this._syncError = false;
+      Svc.Prefs.reset("firstSync");
     }
   })))(),
 

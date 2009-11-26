@@ -42,13 +42,14 @@
 <!ENTITY connecting.label             "Connecting…">
 <!ENTITY verifying.label              "Verifying…">
 
-<!ENTITY choice.caption.label         "Choose how you want to start using Weave">
-<!ENTITY choice.merge.main.label      "Merge this computer's data with data on your Weave account">
+<!ENTITY choice.caption.label         "Choose what you want to happen to this computer">
+<!ENTITY choice.merge.main.label      "Merge this computer's data with your Weave data">
 <!ENTITY choice.merge.secondary.label "This will combine the data from this computer with the devices already syncing with Weave.">
-<!ENTITY choice.client.main.label     "Replace everything on this computer with the data from my other devices">
-<!ENTITY choice.client.secondary.label  "All of your local data will be deleted and replaced by the data stored in Weave.">
-<!ENTITY choice.server.main.label     "Replace everything on my other devices with the data from this computer">
-<!ENTITY choice.server.secondary.label  "All data stored on the Weave servers and other devices will be replaced with the data on this computer.">
+<!ENTITY choice.merge.recommend.label "This option is strongly recommended by Mozilla for all users.">
+<!ENTITY choice.client.main.label     "Replace everything on this computer your Weave data">
+<!ENTITY choice.client.secondary.label  "All of your local data will be deleted and replaced by your Weave data.">
+<!ENTITY choice.server.main.label     "Replace all other devices with your local data">
+<!ENTITY choice.server.secondary.label  "Your Weave data and your devices will be replaced with your local data.">
 
 <!ENTITY confirm.caption.label        "Confirm your choice">
 <!ENTITY confirm.merge.label          "You have chosen to merge your data on this computer with the data on your other devices running Weave.">
