@@ -102,6 +102,8 @@ UNIXISH = not IS_WIN32 and not IS_MAC
 #expand IS_DEBUG_BUILD = __IS_DEBUG_BUILD__
 #expand CRASHREPORTER = __CRASHREPORTER__ == 1
 
+DEFAULT_WEB_SERVER = "localhost:8888"
+
 ###########
 # LOGGING #
 ###########
@@ -172,7 +174,7 @@ class Location:
     self.options = options
 
 
-def readLocations(locationsPath = "server-locations.txt"):
+def readLocations(locationsPath = "server-locations.txt", remoteServer = DEFAULT_WEB_SERVER):
   """
   Reads the locations at which the Mochitest HTTP server is available from
   server-locations.txt.
@@ -209,18 +211,22 @@ def readLocations(locationsPath = "server-locations.txt"):
     if not match:
       raise SyntaxError(lineno)
 
+    host = match.group("host")
+    port = match.group("port")
     options = match.group("options")
     if options:
       options = options.split(",")
       if "primary" in options:
         if seenPrimary:
           raise SyntaxError(lineno, "multiple primary locations")
+
+        #we can have only 1 primary, make it the remoteServer
+        host, port = remoteServer.split(':')
         seenPrimary = True
     else:
       options = []
 
-    locations.append(Location(match.group("scheme"), match.group("host"),
-                              match.group("port"), options))
+    locations.append(Location(match.group("scheme"), host, port, options))
 
   if not seenPrimary:
     raise SyntaxError(lineno + 1, "missing primary location")
@@ -228,13 +234,14 @@ def readLocations(locationsPath = "server-locations.txt"):
   return locations
 
 
-def initializeProfile(profileDir, extraPrefs = []):
+def initializeProfile(profileDir, extraPrefs = [], webServer = DEFAULT_WEB_SERVER):
   "Sets up the standard testing profile."
 
   # Start with a clean slate.
   shutil.rmtree(profileDir, True)
   os.mkdir(profileDir)
 
+  remoteIP = webServer.split(':')[0]
   prefs = []
 
   part = """\
@@ -263,7 +270,7 @@ user_pref("svg.smil.enabled", true); // Needed for SMIL mochitests until bug 482
 user_pref("media.cache_size", 100);
 user_pref("security.warn_viewing_mixed", false);
 
-user_pref("geo.wifi.uri", "http://localhost:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
+user_pref("geo.wifi.uri", "http://example.com/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 user_pref("geo.wifi.testing", true);
 
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
@@ -271,15 +278,15 @@ user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others
 // Make url-classifier updates so rare that they won't affect tests
 user_pref("urlclassifier.updateinterval", 172800);
 // Point the url-classifier to the local testing server for fast failures
-user_pref("browser.safebrowsing.provider.0.gethashURL", "http://localhost:8888/safebrowsing-dummy/gethash");
-user_pref("browser.safebrowsing.provider.0.keyURL", "http://localhost:8888/safebrowsing-dummy/newkey");
-user_pref("browser.safebrowsing.provider.0.lookupURL", "http://localhost:8888/safebrowsing-dummy/lookup");
-user_pref("browser.safebrowsing.provider.0.updateURL", "http://localhost:8888/safebrowsing-dummy/update");
+user_pref("browser.safebrowsing.provider.0.gethashURL", "http://example.com/safebrowsing-dummy/gethash");
+user_pref("browser.safebrowsing.provider.0.keyURL", "http://example.com/safebrowsing-dummy/newkey");
+user_pref("browser.safebrowsing.provider.0.lookupURL", "http://example.com/safebrowsing-dummy/lookup");
+user_pref("browser.safebrowsing.provider.0.updateURL", "http://example.com/safebrowsing-dummy/update");
 """
   
   prefs.append(part)
 
-  locations = readLocations()
+  locations = readLocations(remoteServer=webServer)
 
   # Grant God-power to all the privileged servers on which tests run.
   privileged = filter(lambda loc: "privileged" in loc.options, locations)
@@ -303,7 +310,7 @@ user_pref("capability.principal.codebase.p%(i)d.subjectName", "");
   pacURL = """data:text/plain,
 function FindProxyForURL(url, host)
 {
-  var origins = [%(origins)s];
+  var origins = ['http://%(remote)s:8888', %(origins)s];
   var regex = new RegExp('^([a-z][-a-z0-9+.]*)' +
                          '://' +
                          '(?:[^/@]*@)?' +
@@ -324,11 +331,11 @@ function FindProxyForURL(url, host)
   if (origins.indexOf(origin) < 0)
     return 'DIRECT';
   if (isHttp)
-    return 'PROXY 127.0.0.1:8888';
+    return 'PROXY %(remote)s:8888';
   if (isHttps)
-    return 'PROXY 127.0.0.1:4443';
+    return 'PROXY %(remote)s:4443';
   return 'DIRECT';
-}""" % { "origins": origins }
+}""" % { "origins": origins, "remote":remoteIP }
   pacURL = "".join(pacURL.splitlines())
 
   part = """
