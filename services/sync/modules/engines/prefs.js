@@ -43,9 +43,6 @@ const Cu = Components.utils;
 const WEAVE_SYNC_PREFS = "extensions.weave.prefs.sync";
 const WEAVE_PREFS_GUID = "preferences";
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");

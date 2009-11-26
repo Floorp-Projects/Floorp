@@ -41,7 +41,6 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://weave/ext/Sync.js");
 Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/log4moz.js");

@@ -43,12 +43,10 @@ const Cu = Components.utils;
 const GUID_ANNO = "weave/guid";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://weave/log4moz.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
-Cu.import("resource://weave/base_records/collection.js");
 Cu.import("resource://weave/type_records/history.js");
 
 // Create some helper functions to handle GUIDs
