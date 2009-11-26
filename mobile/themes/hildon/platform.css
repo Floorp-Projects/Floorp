@@ -41,13 +41,13 @@
 /* general stuff ------------------------------------------------------------ */
 :root {
   font-family: "Nokia Sans", Tahoma, sans-serif !important;
-  font-size: 2.4mm !important;
+  font-size: 24px !important;
 }
 
 menu,
 menuitem {
-  padding: 0px !important;
-  margin: 0px !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 description,
@@ -66,9 +66,9 @@ textbox {
 
 /* textboxes --------------------------------------------------------------- */
 textbox {
-  min-height: 5mm;
-  border: 0.3mm solid #262629;
-  -moz-border-radius: 0.75mm;
+  min-height: 48px;
+  border: 3px solid #262629;
+  -moz-border-radius: 8px;
   -moz-border-top-colors: -moz-initial;
   -moz-border-right-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
@@ -94,45 +94,45 @@ textbox[isempty="true"] {
 .dialog-dark {
   color: #fff;
   background-color: #36373b;
-  border: 0.3mm solid #262629;
-  -moz-border-radius: 1mm 1mm 1mm 1mm;
-  padding: 1mm;
-  -moz-box-shadow: black 0 0.25mm 0.25mm;
+  border: 3px solid #262629;
+  -moz-border-radius: 8px 8px 8px 8px;
+  padding: 8px;
+  -moz-box-shadow: black 0 2px 2px;
 }
 
 /* prompt dialogs ---------------------------------------------------------- */
 dialog {
-  font-size: 2.4mm !important;
+  font-size: 24px !important;
 }
 
 dialog .prompt-message {
-  font-size: 1.8mm !important;
+  font-size: 18px !important;
 }
 
 dialog > scrollbox.prompt-message {
-  margin: 1mm 0 1mm 0;
+  margin: 8px 0 8px 0;
 }
 
 dialog > hbox.prompt-message {
-  margin-top: 1mm;
+  margin-top: 8px;
 }
 
 dialog > hbox.prompt-buttons {
-  margin-top: 1mm;
+  margin-top: 8px;
 }
 
 /* buttons ----------------------------------------------------------------- */
 .button-text,
 .toolbarbutton-text {
   font-weight: normal;
-  font-size: 2.4mm !important;
+  font-size: 24px !important;
 }
 
 button {
-  min-width: 4mm !important; /* button size */
-  min-height: 4mm !important; /* button size */
+  min-width: 48px !important; /* button size */
+  min-height: 48px !important; /* button size */
   color: #000;
-  padding: 0.2mm 0.5mm;
+  padding: 2px 4px;
   border-width: 8px !important;
   -moz-border-image: url("chrome://browser/skin/images/button-default-64.png") 8 repeat repeat;
   background-color: transparent;
@@ -173,16 +173,16 @@ notification button:not([disabled="true"]):active:hover {
 }
 
 button.button-dark[disabled="true"] {
-  color: #ddd !important;
+  color: #7e7e7e !important;
 }
 
 /* toolbar buttons --------------------------------------------------------- */
 toolbarbutton {
-  min-width: 5mm !important; /* primary button size */
-  min-height: 5mm !important; /* primary button size */
+  min-width: 64px !important; /* primary button size */
+  min-height: 64px !important; /* primary button size */
   -moz-appearance: none !important;
   margin: 0;
-  padding: 0.25mm;
+  padding: 2px;
 }
 
 toolbarbutton:not(.show-text) .toolbarbutton-text {
@@ -204,7 +204,7 @@ toolbarbutton[open="true"] {
 /* dark buttons ------------------------------------------------------------ */
 toolbarbutton.button-dark {
   color: #fff;
-  padding: 0.25mm 0.5mm;
+  padding: 2px 4px;
   border-width: 10px;
   -moz-border-image: url("chrome://browser/skin/images/toolbarbutton-default-64.png") 10 repeat repeat;
 }
@@ -215,7 +215,7 @@ toolbarbutton.button-dark:not([disabled="true"]):active:hover {
 }
 
 toolbarbutton.button-dark[disabled="true"] {
-  color: #ddd;
+  color: #7e7e7e;
 }
 
 toolbarbutton.button-dark[type="checkbox"][checked="true"] {
@@ -223,7 +223,7 @@ toolbarbutton.button-dark[type="checkbox"][checked="true"] {
   border: 10px solid transparent !important;
   color: #fff !important;
   background: none !important;
-  padding: 0.25mm 0.5mm !important;
+  padding: 2px 4px !important;
 }
 
 /* image buttons ----------------------------------------------------------- */
@@ -242,14 +242,14 @@ radiogroup {
 
 .radio-label {
   font-weight: normal;
-  font-size: 2.4mm !important;
+  font-size: 24px !important;
 }
 
 radio {
   color: #36373b;
-  min-width: 4mm !important; /* button size */
-  min-height: 4mm !important;
-  padding: 0.2mm !important;
+  min-width: 48px !important; /* button size */
+  min-height: 48px !important;
+  padding: 2px !important;
   margin: 0;
   border-width: 8px;
   -moz-box-align: center;
@@ -365,27 +365,27 @@ richlistbox {
 }
 
 richlistitem {
-  min-height: 6mm; /* row size */
+  min-height: 70px; /* row size */
   padding: 5px;
   border-bottom: 1px solid rgb(207,207,207);
 }
 
 richlistitem label.title,
 richlistitem description.title {
-  font-size: 2.4mm !important;
+  font-size: 24px !important;
 }
 
 richlistitem label.normal,
 richlistitem description.normal {
   color: gray;
-  font-size: 1.8mm !important;
+  font-size: 18px !important;
   white-space: pre-wrap;
 }
 
 richlistitem label.normal-bold,
 richlistitem description.normal-bold {
   font-weight: bold;
-  font-size: 1.8mm !important;
+  font-size: 18px !important;
   white-space: pre-wrap;
 }
 
@@ -422,7 +422,7 @@ richlistitem[selected="true"] .hide-on-select {
 }
 
 richlistitem[typeName="message"] {
-  border-bottom: 0px;
+  border-bottom: 0;
 }
 
 /* colorpicker ------------------------------------------------------------- */
@@ -447,14 +447,14 @@ colorpicker > vbox {
 .menulist-label {
   font-family: "Nokia Sans", Tahoma, sans-serif !important;
   font-weight: normal;
-  font-size: 2.4mm !important;
+  font-size: 24px !important;
 }
 
 menulist {
-  min-width: 4mm !important; /* button size */
-  min-height: 4mm !important; /* button size */
+  min-width: 48px !important; /* button size */
+  min-height: 48px !important; /* button size */
   color: #000;
-  padding: 0.2mm;
+  padding: 2px;
   border-width: 8px !important;
   -moz-border-image: url("chrome://browser/skin/images/button-default-64.png") 8 repeat repeat;
   -moz-appearance: none !important;
@@ -479,7 +479,7 @@ menulist.button-dark:not([disabled="true"]):active:hover {
 }
 
 menulist.button-dark[disabled="true"] {
-  color: #ddd !important;
+  color: #7e7e7e !important;
 }
 
 menulist > dropmarker {
@@ -503,14 +503,14 @@ menulist > dropmarker[disabled="true"] {
 /* progressmeter ----------------------------------------------------------- */
 progressmeter {
   background-color: #fff;
-  padding: 0.45mm;
-  height: 3mm;
-  border: 0.35mm solid #aaa;
+  padding: 4px;
+  height: 32px;
+  border: 3px solid #aaa;
   -moz-border-top-colors: -moz-initial;
   -moz-border-right-colors: -moz-initial;
   -moz-border-bottom-colors: -moz-initial;
   -moz-border-left-colors: -moz-initial;
-  -moz-border-radius: 0.75mm;
+  -moz-border-radius: 8px;
 }
 
 .progress-bar 
