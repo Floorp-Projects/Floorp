@@ -17,5 +17,5 @@ notification .outset {
 }
 
 notification .buttons {
-  padding: 1mm; /* core spacing */
+  padding: 8px; /* core spacing */
 }

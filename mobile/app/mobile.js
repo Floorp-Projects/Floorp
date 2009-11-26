@@ -48,7 +48,6 @@ pref("browser.ui.cursor", false);
 pref("browser.ui.cursor", false);
 #else // DESKTOP
 pref("browser.ui.cursor", true);
-pref("layout.css.dpi", 265);
 #endif
 
 /* use custom widget for html:select */
@@ -338,8 +337,6 @@ pref("geo.wifi.uri", "https://www.google.com/loc/json");
 
 // enable geo
 pref("geo.enabled", true);
-
-pref("layout.css.devPixelsPerPx", "1");
 
 // content sink control -- controls responsiveness during page load
 pref("content.max.deflected.tokens", 10);

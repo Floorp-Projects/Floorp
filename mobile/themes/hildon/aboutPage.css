@@ -49,14 +49,14 @@
   background-color: white;
   padding: 5px;
   border: 2px solid #e6e5e3;
-  font-size: 2.4mm;
+  font-size: 24px;
 }
 
 #aboutLinks > li {
   clear: both;
   border-bottom: 2px solid #e6e5e3;
   list-style: none;
-  -moz-padding-end: 2mm;
+  -moz-padding-end: 16px;
 }
 
 #aboutLinks > li:last-child {
@@ -64,7 +64,7 @@
 }
 
 #aboutLinks > li > a {
-  padding: 2mm;
+  padding: 16px;
   display: block;
   color: #3a3834;
   background: url("images/arrowright-16.png") right center no-repeat;
@@ -72,5 +72,5 @@
 
 #aboutDetails {
   margin-top: 15px;
-  font-size: 1.8mm;
+  font-size: 18px;
 }

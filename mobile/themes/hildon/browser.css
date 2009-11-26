@@ -44,7 +44,7 @@
 #toolbar-main {
   -moz-appearance: none;
   -moz-box-align: center;
-  padding: 0.5mm 1mm; /* half core spacing & core spacing */
+  padding: 4px 8px; /* half core spacing & core spacing */
   border: none;
 }
 
@@ -58,12 +58,13 @@
 /* main toolbar buttons */
 toolbarbutton.urlbar-button {
   /* space out the buttons a bit horizontally */
-  margin-left: 1mm; /* core spacing */
+  margin-left: 8px; /* core spacing */
 }
 
 #tool-app-switch {
+  min-width: 64px !important;
   visibility: collapse;
-  margin-right: 1mm; /* core spacing */
+  margin-right: 8px; /* core spacing */
   list-style-image: url("chrome://browser/skin/images/task-switch-40.png");
 }
 
@@ -72,6 +73,7 @@ toolbarbutton.urlbar-button {
 }
 
 #tool-app-close {
+  min-width: 64px !important;
   visibility: hidden;
   list-style-image: url("chrome://browser/skin/images/task-close-40.png");
 }
@@ -178,8 +180,8 @@ toolbarbutton.urlbar-cap-button {
   min-height: 64px;
   -moz-box-align: center;
   padding: 0;
-  border-top: 1px solid #262629; /* keep pixels */
-  border-bottom: 3px solid #262629; /* keep pixels */
+  border-top: 1px solid #262629;
+  border-bottom: 3px solid #262629;
   background: #fff;
 }
 
@@ -206,15 +208,15 @@ toolbarbutton.urlbar-cap-button {
 /* right toolbar (browser controls) ---------------------------------------- */
 #browser-controls {
   -moz-box-align: start;
-  padding: 0 1mm; /* core spacing + tiny bit for a rounding issue? */
-  border-left: 3px solid #262629; /* keep pixels */
+  padding: 0 8px; /* core spacing + tiny bit for a rounding issue? */
+  border-left: 3px solid #262629;
 }
 
 toolbarbutton.browser-control-button,
 toolbarbutton.panel-button,
 toolbarbutton.page-button {
   /* space out the buttons a bit vertically */
-  margin-bottom: 1mm; /* core spacing */
+  margin-bottom: 8px; /* core spacing */
 }
 
 #tool-star {
@@ -301,7 +303,7 @@ toolbarbutton.page-button {
     -moz-box-orient: horizontal;
     -moz-box-ordinal-group: 1000;
     -moz-box-pack: start;
-    padding-top: 1mm; /* core spacing */
+    padding-top: 8px; /* core spacing */
   }
   
   #tool-panel-close {
@@ -311,13 +313,13 @@ toolbarbutton.page-button {
 
 #panel-controls {
   /* match #browser-controls end padding */
-  padding-left: 1mm; /* core spacing */
-  padding-right: 1mm; /* core spacing */
+  padding-left: 8px; /* core spacing */
+  padding-right: 8px; /* core spacing */
   -moz-box-align: end;
 }
 
 .panel-header {
-  padding: 1mm; /* core spacing */
+  padding: 8px; /* core spacing */
 }
 
 #tool-addons {
@@ -408,7 +410,7 @@ toolbarbutton.page-button {
 
 /* special "no downloads" items */
 #dl-empty-message {
-  margin-top: 12mm; /* 2 times row height */
+  margin-top: 140px; /* 2 times row height */
   font-style: italic;
   border-bottom: none;
 }
@@ -440,6 +442,7 @@ toolbarbutton.page-button {
 
 /* bookmarks navigation popup ------------------------------ */
 #tool-bookmarks-close {
+  min-width: 64px !important;
   list-style-image: url("chrome://browser/skin/images/task-back-40.png");
 }
 
@@ -449,7 +452,7 @@ toolbarbutton.page-button {
 
 #bookmarklist-header {
   -moz-box-align: center;
-  padding: 0.5mm 1mm; /* half core spacing & core spacing */
+  padding: 4px 8px; /* half core spacing & core spacing */
 }
 
 #bookmark-items {
@@ -469,16 +472,16 @@ toolbarbutton.page-button {
 /* be consistent with the size of placeitem */
 placelabel {
   -moz-box-align: center;
-  padding-right: 8mm;
+  padding-right: 80px;
   background: rgb(207,207,207) url(images/arrowup-16.png) no-repeat 98% 50%;
   color: #000;
-  min-height: 6mm; /* row size */
+  min-height: 70px; /* row size */
 }
   
 /* folder bookmarks row */
 placeitem[type="folder"] {
   -moz-box-pack: center;
-  padding-right: 4mm;
+  padding-right: 40px;
   background: url(images/arrowright-16.png) no-repeat 98% 50%;
 }
 
@@ -497,7 +500,7 @@ placeitem[type="folder"] .bookmark-item-url {
 
 /* bookmark manage controls */
 placeitem > .bookmark-manage .bookmark-controls {
-  padding-top: 1.1mm;
+  padding-top: 8px;
 }
 
 /* bookmark popup for star button */
@@ -519,24 +522,23 @@ placeitem[ui="manage"] > .bookmark-manage > image {
 
 .tool-search {
   list-style-image: url("chrome://browser/skin/images/navigation-magnifier-30.png");
-  margin-right: 1mm;
+  margin-right: 8px;
 }
 
 .searchengine {
   -moz-box-orient: horizontal;
-  min-width: 8mm;
+  min-width: 140px !important;
 }
 
 .searchengine .radio-icon {
   display: block;
   width: 32px;
   height: 32px;
-  -moz-margin-end: 1mm;
+  -moz-margin-end: 8px;
 }
 
 #autocomplete_navbuttons {
-  padding: 0.5mm 0; /* half core spacing & none (autorepeat arrows compensate) */
-  min-height: 6mm; /* row size */
+  padding: 4px 0; /* half core spacing & none (autorepeat arrows compensate) */
   -moz-user-focus: ignore;
 }
 
@@ -562,9 +564,9 @@ autocompleteresult,
 placeitem {
   color: black;
   background-color: white;
-  padding: 0.2mm 0.5mm;
-  border-bottom: 0.1mm solid rgb(207,207,207);
-  min-height: 6mm; /* row size */
+  padding: 2px 4px;
+  border-bottom: 1px solid rgb(207,207,207);
+  min-height: 70px; /* row size */
 }
 
 autocompleteresult:active,
@@ -577,9 +579,9 @@ placelist placeitem:active,
 .bookmark-item-label {
   margin: 0;
   padding: 0;
-  font-size: 2.4mm !important;
+  font-size: 24px !important;
   font-weight: normal;
-  margin-right: 1mm;
+  margin-right: 8px;
 }
 
 .autocomplete-item-label > image,
@@ -588,7 +590,7 @@ placeitem > .bookmark-manage > image {
   width: 32px;
   height: 32px;
   max-height: 32px;
-  margin: 0mm 2.5mm 0mm 1mm;
+  margin: 0 16px 0 8px;
 }
 
 placeitem[src=""] .bookmark-item-label > image {
@@ -609,19 +611,19 @@ placeitem[src=""] .bookmark-item-label > image {
 .bookmark-item-label:not([tags=""]):after {
   float: right;
   content: attr(tags);
-  font-size: 1.8mm !important;
+  font-size: 18px !important;
   font-weight: lighter;
-  padding-top: 0.5mm;
-  margin-left: 1mm;
+  padding-top: 4px;
+  margin-left: 8px;
 }
 
 .autocomplete-item-url,
 .bookmark-item-url {
   color: blue;
-  font-size: 1.8mm !important;
-  margin-left: 34px;
-  margin-right: 2mm;
-  padding-left: 3.5mm;
+  font-size: 18px !important;
+  margin-left: 24px;
+  margin-right: 24px;
+  padding-left: 34px;
 }
 
 /* special "no results" and "all bookmarks" items */
@@ -650,13 +652,13 @@ autocompleteresult.allbookmarks.autocompleteresult-selected {
 }
 
 autocompleteresult.allbookmarks > .autocomplete-item-label {
-  font-size: 2.4mm !important;
+  font-size: 24px !important;
 }
 
 autocompleteresult.allbookmarks > .autocomplete-item-label > image {
   width: 44px;
   height: 30px;
-  margin: 0 1.5mm;
+  margin: 0 12px 0 0;
   list-style-image: url(images/bookmarks-30.png);
 }
 
@@ -666,10 +668,10 @@ autocompleteresult.allbookmarks > .autocomplete-item-url {
 
 /* Left sidebar (tabs)  ---------------------------------------------------- */
 #tabs-container {
-  -moz-padding-start: 0.5mm; /* allow the thumbnails to get close to the edge */
-  -moz-padding-end: 1mm; /* core spacing */
-  padding-bottom: 1mm; /* core spacing */
-  border-right: 3px solid #262629; /* keep pixels */
+  -moz-padding-start: 4px; /* allow the thumbnails to get close to the edge */
+  -moz-padding-end: 8px; /* core spacing */
+  padding-bottom: 8px; /* core spacing */
+  border-right: 3px solid #262629;
 }
 
 #tabs {
@@ -683,7 +685,7 @@ autocompleteresult.allbookmarks > .autocomplete-item-url {
 }
 
 #tabs-controls {
-  margin-top: 1mm; /* core spacing */
+  margin-top: 8px; /* core spacing */
   -moz-box-pack: start;
 }
 
@@ -696,12 +698,12 @@ box[type="documenttab"] {
 
 box[type="documenttab"] .documenttab-canvas {
   /* keep the unselected thumbnails aligned with the selected one */
-  border: 0.8mm solid #36373b;
+  border: 8px solid #36373b;
   background-color: white;
 }
 
 box[type="documenttab"][selected="true"] .documenttab-canvas {
-  border: 0.8mm solid #262629;
+  border: 8px solid #262629;
   -moz-border-radius: 3px;
 }
 
@@ -725,14 +727,14 @@ box[type="documenttab"]:only-child .documenttab-close {
 
 /* bookmark editor   ------------------------------------------------------- */
 #bookmark-container {
-  padding: 1mm; /* core spacing */
+  padding: 8px; /* core spacing */
   background-image: url("chrome://browser/skin/images/panel-shadow.png");
   background-repeat: repeat-x;
-  -moz-box-shadow: black 0 0.25mm 0.25mm;
+  -moz-box-shadow: black 0 2px 2px;
 }
 
 #bookmark-form {
-  padding: 1mm; /* core spacing */
+  padding: 8px; /* core spacing */
 }
 
 #bookmark-form .bookmark-controls {
@@ -747,11 +749,11 @@ box[type="documenttab"]:only-child .documenttab-close {
 #identity-container {
   background-image: url("chrome://browser/skin/images/panel-shadow.png");
   background-repeat: repeat-x;
-  -moz-box-shadow: black 0 0.25mm 0.25mm;
+  -moz-box-shadow: black 0 2px 2px;
 }
 
 #identity-popup-container {
-  padding: 1mm; /* core spacing */
+  padding: 8px; /* core spacing */
 }
 
 /* Popup Icons */
@@ -770,7 +772,7 @@ box[type="documenttab"]:only-child .documenttab-close {
 
 /* Popup Body Text */
 #identity-popup-content-box {
-  -moz-padding-start: 1mm; /* core spacing */
+  -moz-padding-start: 8px; /* core spacing */
 }
 
 /* let the text flow into a second row, if needed */
@@ -789,13 +791,13 @@ box[type="documenttab"]:only-child .documenttab-close {
 
 #identity-popup-content-box > hbox > description,
 #identity-popup-content-box > hbox > label {
-  font-size: 1.8mm !important;
+  font-size: 18px !important;
   white-space: pre-wrap;
 }
 
 #identity-popup-encryption-label,
 #identity-popup-content-verifier {
-  font-size: 1.2mm !important;
+  font-size: 14px !important;
 }
 
 #identity-popup-content-host,
@@ -814,14 +816,14 @@ box[type="documenttab"]:only-child .documenttab-close {
 
 /* search popup   ---------------------------------------------------------- */
 #search-container {
-  border: 0.2mm solid transparent;
+  border: 2px solid transparent;
   -moz-border-top-colors: #212429 #52555a;
-  padding: 1mm; /* core spacing */
-  margin-top: 1mm;
+  padding: 8px; /* core spacing */
+  margin-top: 8px;
 }
 
 #search-engine-label-add {
-  font-size: 1.8mm;
+  font-size: 18px;
 }
 
 #search-buttons,
@@ -832,7 +834,7 @@ box[type="documenttab"]:only-child .documenttab-close {
 .search-engine-button .button-icon {
   width: 32px;
   height: 32px;
-  -moz-margin-end: 1mm;
+  -moz-margin-end: 8px;
 }
 
 /* Preferences window   ---------------------------------------------------- */
@@ -841,14 +843,14 @@ box[type="documenttab"]:only-child .documenttab-close {
   color: black;
   background-color: lightgray;
   margin: 0;
-  padding: 0.25mm;
+  padding: 2px;
 }
 
 /* XXX should be a richlistitem */
 .prefbox {
-  padding: 0.2mm 0.25mm;
-  border-bottom: 0.1mm solid rgb(207,207,207);
-  min-height: 6mm; /* row size */
+  padding: 2px;
+  border-bottom: 1px solid rgb(207,207,207);
+  min-height: 70px; /* row size */
   -moz-box-align: center;
 }
 
@@ -862,12 +864,12 @@ box[type="documenttab"]:only-child .documenttab-close {
 
 /* XXX should be a richlistitem description.title */
 .preftitle {
-  font-size: 2.4mm !important;
+  font-size: 24px !important;
 }
 
 /* XXX should be a richlistitem description.normal */
 .prefdesc {
-  font-size: 1.8mm !important;
+  font-size: 18px !important;
   color: grey;
 }
 
@@ -885,33 +887,33 @@ box[type="documenttab"]:only-child .documenttab-close {
 }
 
 #alerts-text {
-  font-size: 1.8mm !important;
+  font-size: 18px !important;
   white-space: pre-wrap;
 }
 
 /* helperapp (save-as) popup ----------------------------------------------- */
 #helperapp-target {
-  font-size: 1.8mm !important;
+  font-size: 18px !important;
 }
 
 /* form popup -------------------------------------------------------------- */
 #form-helper-container > #select-container > #select-container-inner {
-  -moz-border-radius-topleft: 1mm;
-  -moz-border-radius-topright: 1mm;
+  -moz-border-radius-topleft: 8px;
+  -moz-border-radius-topright: 8px;
   -moz-border-radius-bottomright: 0;
   -moz-border-radius-bottomleft: 0;
-  padding: 1mm 0.5mm 1mm 0.5mm;
+  padding: 8px 4px 8px 4px;
 }
 
 #form-helper-container > #select-container > #select-container-inner,
 #form-buttons {
-  border: 0.1mm solid gray;
+  border: 1px solid gray;
   border-bottom: 0;
 }
 
 #form-buttons,
 #select-buttons {
-  padding: 0.5mm 1mm; /* row size & core spacing */
+  padding: 4px 8px; /* row size & core spacing */
 }
 
 #form-buttons > button,
@@ -930,11 +932,11 @@ box[type="documenttab"]:only-child .documenttab-close {
 
 /* select popup ------------------------------------------------------------ */
 #stack > #select-container {
-  padding: 3mm;
+  padding: 32px;
 }
 
 #select-list {
-  border: 0.1mm solid gray;
+  border: 1px solid gray;
 }
 
 #select-list > option {
@@ -942,7 +944,7 @@ box[type="documenttab"]:only-child .documenttab-close {
   background-color: #fff;
   padding: 5px;
   border-bottom: 1px solid rgb(207,207,207);
-  min-height: 6mm; /* row size */
+  min-height: 70px; /* row size */
   -moz-box-align: center;
 }
 
@@ -960,7 +962,7 @@ box[type="documenttab"]:only-child .documenttab-close {
 }
 
 #select-list > option.in-optgroup {
-  -moz-padding-start: 2.2mm;
+  -moz-padding-start: 24px;
 }
 
 #select-list > option > image {
