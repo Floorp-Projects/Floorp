@@ -380,7 +380,7 @@ imm(const string &s)
 }
 
 uint64_t
-quad(const string &s)
+lquad(const string &s)
 {
     stringstream tmp(s);
     uint64_t ret;
@@ -571,7 +571,11 @@ FragmentAssembler::assemble_jump(bool isCond)
         return mLir->insBranch(mOpcode, condition, target);
     } else {
         LIns *ins = mLir->insBranch(mOpcode, condition, NULL);
+#ifdef __SUNPRO_CC
+        mFwdJumps.insert(make_pair<const string, LIns *>(name, ins));
+#else
         mFwdJumps.insert(make_pair(name, ins));
+#endif
         return ins;
     }
 }
@@ -842,7 +846,11 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
         if (!lab.empty()) {
             ins = mLir->ins0(LIR_label);
             typedef multimap<string, LIns *> mulmap;
+#ifdef __SUNPRO_CC
+            typedef mulmap::iterator ci;
+#else
             typedef mulmap::const_iterator ci;
+#endif
             pair<ci, ci> range = mFwdJumps.equal_range(lab);
             for (ci i = range.first; i != range.second; ++i) {
                 i->second->setTarget(ins);
@@ -968,7 +976,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
 
           case LIR_quad:
             need(1);
-            ins = mLir->insImmq(quad(mTokens[0]));
+            ins = mLir->insImmq(lquad(mTokens[0]));
             break;
 
           case LIR_float:
