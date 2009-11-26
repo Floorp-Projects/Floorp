@@ -2700,7 +2700,7 @@ HashLocalName(JSContext *cx, JSLocalNameMap *map, JSAtom *name,
     }
     if (entry->name) {
         JS_ASSERT(entry->name == name);
-        JS_ASSERT(entry->localKind == JSLOCAL_ARG);
+        JS_ASSERT(entry->localKind == JSLOCAL_ARG && localKind == JSLOCAL_ARG);
         dup = (JSNameIndexPair *) cx->malloc(sizeof *dup);
         if (!dup)
             return JS_FALSE;
