@@ -54,16 +54,13 @@ import urllib2
 import commands
 import automation
 from automationutils import *
+import tempfile
 
 # Path to the test script on the server
-TEST_SERVER_HOST = "localhost:8888"
 TEST_PATH = "/tests/"
 CHROME_PATH = "/redirect.html";
 A11Y_PATH = "/redirect-a11y.html"
-TESTS_URL = "http://" + TEST_SERVER_HOST + TEST_PATH
-CHROMETESTS_URL = "http://" + TEST_SERVER_HOST + CHROME_PATH
-A11YTESTS_URL = "http://" + TEST_SERVER_HOST + A11Y_PATH
-SERVER_SHUTDOWN_URL = "http://" + TEST_SERVER_HOST + "/server/shutdown"
+
 # main browser chrome URL, same as browser.chromeURL pref
 #ifdef MOZ_SUITE
 BROWSER_CHROME_URL = "chrome://navigator/content/navigator.xul"
@@ -83,9 +80,6 @@ oldcwd = os.getcwd()
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
 os.chdir(SCRIPT_DIRECTORY)
 
-PROFILE_DIRECTORY = os.path.abspath("./mochitesttestingprofile")
-
-LEAK_REPORT_FILE = os.path.join(PROFILE_DIRECTORY, "runtests_leaks.log")
 
 #######################
 # COMMANDLINE OPTIONS #
@@ -228,6 +222,20 @@ class MochitestOptions(optparse.OptionParser):
                     help = "copy specified files/dirs to testing profile")
     defaults["extraProfileFiles"] = []
 
+    self.add_option("--remote-webserver", action = "store",
+                    type = "string", dest = "remoteWebServer",
+                    help = "ip address where the remote web server is hosted at")
+    defaults["remoteWebServer"] = None
+
+    self.add_option("--profile-path", action = "store",
+                    type = "string", dest = "profilePath",
+                    help = "directory where the profile will be stored")
+    defaults["profilePath"] = tempfile.mkdtemp()
+
+    self.add_option("--setup-only", action = "store_true",
+                    dest = "setupOnly", help = "only setup the profile, do not run tests")
+    defaults["setupOnly"] = False
+
     # -h, --help are automatically handled by OptionParser
 
     self.set_defaults(**defaults)
@@ -253,6 +261,8 @@ class MochitestServer:
     self._closeWhenDone = options.closeWhenDone
     self._utilityPath = options.utilityPath
     self._xrePath = options.xrePath
+    self._shutdownPath = "http://" + options.webServer + "/server/shutdown"
+    self._profilePath = options.profilePath
 
   def start(self):
     "Run the Mochitest server, returning the process ID of the server."
@@ -265,6 +275,7 @@ class MochitestServer:
     args = ["-g", self._xrePath,
             "-v", "170",
             "-f", "./" + "httpd.js",
+            "-e", "const _PROFILE_PATH = '" + self._profilePath + "'",
             "-f", "./" + "server.js"]
 
     xpcshell = os.path.join(self._utilityPath,
@@ -280,7 +291,7 @@ class MochitestServer:
   def ensureReady(self, timeout):
     assert timeout >= 0
 
-    aliveFile = os.path.join(PROFILE_DIRECTORY, "server_alive.txt")
+    aliveFile = os.path.join(self._profilePath, "server_alive.txt")
     i = 0
     while i < timeout:
       if os.path.exists(aliveFile):
@@ -294,7 +305,7 @@ class MochitestServer:
 
   def stop(self):
     try:
-      c = urllib2.urlopen(SERVER_SHUTDOWN_URL)
+      c = urllib2.urlopen(self._shutdownPath)
       c.read()
       c.close()
       self._process.wait()
@@ -332,6 +343,8 @@ def main():
   # allow relative paths
   options.xrePath = getFullPath(options.xrePath)
 
+  options.profilePath = getFullPath(options.profilePath)
+
   options.app = getFullPath(options.app)
   if not os.path.exists(options.app):
     msg = """\
@@ -344,6 +357,13 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   options.certPath = getFullPath(options.certPath)
   if options.symbolsPath:
     options.symbolsPath = getFullPath(options.symbolsPath)
+
+  if (options.remoteWebServer):
+    if (len(options.remoteWebServer.split(':')) == 1):
+      options.remoteWebServer += ":8888"
+    options.webServer = options.remoteWebServer
+  else:
+    options.webServer = "localhost:8888"
 
   debuggerInfo = getDebuggerInfo(oldcwd, options.debugger, options.debuggerArgs,
     options.debuggerInteractive);
@@ -362,17 +382,21 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
       sys.exit(1)
     browserEnv[v[:ix]] = v[ix + 1:]
 
-  automation.initializeProfile(PROFILE_DIRECTORY, options.extraPrefs)
+  automation.initializeProfile(options.profilePath, options.extraPrefs, options.webServer)
   manifest = addChromeToProfile(options)
   copyExtraFilesToProfile(options)
-  server = MochitestServer(options)
-  server.start()
+  if (options.setupOnly):
+    return
 
-  # If we're lucky, the server has fully started by now, and all paths are
-  # ready, etc.  However, xpcshell cold start times suck, at least for debug
-  # builds.  We'll try to connect to the server for awhile, and if we fail,
-  # we'll try to kill the server and exit with an error.
-  server.ensureReady(SERVER_STARTUP_TIMEOUT)
+  if (not options.remoteWebServer):
+    server = MochitestServer(options)
+    server.start()
+
+    # If we're lucky, the server has fully started by now, and all paths are
+    # ready, etc.  However, xpcshell cold start times suck, at least for debug
+    # builds.  We'll try to connect to the server for awhile, and if we fail,
+    # we'll try to kill the server and exit with an error.
+    server.ensureReady(SERVER_STARTUP_TIMEOUT)
 
   # URL parameters to test URL:
   #
@@ -388,14 +412,14 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   # file logs, if activated.
   # <http://mochikit.com/doc/html/MochiKit/Logging.html>
 
-  testURL = TESTS_URL + options.testPath
+  testURL = "http://" + options.webServer + "/tests/" + options.testPath
   urlOpts = []
   if options.chrome:
-    testURL = CHROMETESTS_URL
+    testURL = "http://" + options.webServer + CHROME_PATH
     if options.testPath:
       urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
   elif options.a11y:
-    testURL = A11YTESTS_URL
+    testURL = "http://" + options.webServer + A11Y_PATH
     if options.testPath:
       urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
   elif options.browserChrome:
@@ -428,55 +452,61 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
     if len(urlOpts) > 0:
       testURL += "?" + "&".join(urlOpts)
 
-  browserEnv["XPCOM_MEM_BLOAT_LOG"] = LEAK_REPORT_FILE
+  leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
+  browserEnv["XPCOM_MEM_BLOAT_LOG"] = leak_report_file
 
   if options.fatalAssertions:
     browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
 
-  # run once with -silent to let the extension manager do its thing
-  # and then exit the app
-  automation.log.info("INFO | runtests.py | Performing extension manager registration: start.\n")
-  # Don't care about this |status|: |runApp()| reporting it should be enough.
-  status = automation.runApp(None, browserEnv, options.app,
-                             PROFILE_DIRECTORY, ["-silent"],
-                             utilityPath = options.utilityPath,
-                             xrePath = options.xrePath,
-                             symbolsPath=options.symbolsPath)
-  # We don't care to call |processLeakLog()| for this step.
-  automation.log.info("\nINFO | runtests.py | Performing extension manager registration: end.")
+  try:
+    # run once with -silent to let the extension manager do its thing
+    # and then exit the app
+    automation.log.info("INFO | runtests.py | Performing extension manager registration: start.\n")
+    # Don't care about this |status|: |runApp()| reporting it should be enough.
+    status = automation.runApp(None, browserEnv, options.app,
+                               options.profilePath, ["-silent"],
+                               utilityPath = options.utilityPath,
+                               xrePath = options.xrePath,
+                               symbolsPath=options.symbolsPath)
+    # We don't care to call |processLeakLog()| for this step.
+    automation.log.info("\nINFO | runtests.py | Performing extension manager registration: end.")
 
-  # Remove the leak detection file so it can't "leak" to the tests run.
-  # The file is not there if leak logging was not enabled in the application build.
-  if os.path.exists(LEAK_REPORT_FILE):
-    os.remove(LEAK_REPORT_FILE)
+    # Remove the leak detection file so it can't "leak" to the tests run.
+    # The file is not there if leak logging was not enabled in the application build.
+    if os.path.exists(leak_report_file):
+      os.remove(leak_report_file)
 
-  # then again to actually run mochitest
-  if options.timeout:
-      timeout = options.timeout + 30
-  elif options.autorun:
-      timeout = None
-  else:
-      timeout = 330.0 # default JS harness timeout is 300 seconds
-  automation.log.info("INFO | runtests.py | Running tests: start.\n")
-  status = automation.runApp(testURL, browserEnv, options.app,
-                             PROFILE_DIRECTORY, options.browserArgs,
-                             runSSLTunnel = True,
-                             utilityPath = options.utilityPath,
-                             xrePath = options.xrePath,
-                             certPath=options.certPath,
-                             debuggerInfo=debuggerInfo,
-                             symbolsPath=options.symbolsPath,
-                             timeout = timeout)
+    # then again to actually run mochitest
+    if options.timeout:
+        timeout = options.timeout + 30
+    elif options.autorun:
+        timeout = None
+    else:
+        timeout = 330.0 # default JS harness timeout is 300 seconds
+    automation.log.info("INFO | runtests.py | Running tests: start.\n")
+    status = automation.runApp(testURL, browserEnv, options.app,
+                               options.profilePath, options.browserArgs,
+                               runSSLTunnel = True,
+                               utilityPath = options.utilityPath,
+                               xrePath = options.xrePath,
+                               certPath=options.certPath,
+                               debuggerInfo=debuggerInfo,
+                               symbolsPath=options.symbolsPath,
+                               timeout = timeout)
 
-  # Server's no longer needed, and perhaps more importantly, anything it might
-  # spew to console shouldn't disrupt the leak information table we print next.
-  server.stop()
+    if (not options.remoteWebServer):
+      # Server's no longer needed, and perhaps more importantly, anything it might
+      # spew to console shouldn't disrupt the leak information table we print next.
+      server.stop()
 
-  processLeakLog(LEAK_REPORT_FILE, options.leakThreshold)
-  automation.log.info("\nINFO | runtests.py | Running tests: end.")
+    processLeakLog(leak_report_file, options.leakThreshold)
+    automation.log.info("\nINFO | runtests.py | Running tests: end.")
 
-  # delete the profile and manifest
-  os.remove(manifest)
+  finally:
+    # delete the profile and manifest
+    if (options.profilePath):
+      shutil.rmtree(options.profilePath)
+    os.remove(manifest)
 
   # hanging due to non-halting threads is no fun; assume we hit the errors we
   # were going to hit already and exit.
@@ -508,7 +538,7 @@ def makeTestConfig(options):
          "logPath": logFile,
          "testPath": testPath}
 
-  config = open(os.path.join(PROFILE_DIRECTORY, "testConfig.js"), "w")
+  config = open(os.path.join(options.profilePath, "testConfig.js"), "w")
   config.write(content)
   config.close() 
 
@@ -516,7 +546,7 @@ def makeTestConfig(options):
 def addChromeToProfile(options):
   "Adds MochiKit chrome tests to the profile."
 
-  chromedir = os.path.join(PROFILE_DIRECTORY, "chrome")
+  chromedir = os.path.join(options.profilePath, "chrome")
   os.mkdir(chromedir)
 
   chrome = []
@@ -536,7 +566,7 @@ toolbar#nav-bar {
 
 
   # write userChrome.css
-  chromeFile = open(os.path.join(PROFILE_DIRECTORY, "userChrome.css"), "a")
+  chromeFile = open(os.path.join(options.profilePath, "userChrome.css"), "a")
   chromeFile.write("".join(chrome))
   chromeFile.close()
 
@@ -563,7 +593,7 @@ def copyExtraFilesToProfile(options):
   "Copy extra files or dirs specified on the command line to the testing profile."
   for f in options.extraProfileFiles:
     abspath = getFullPath(f)
-    dest = os.path.join(PROFILE_DIRECTORY, os.path.basename(abspath))
+    dest = os.path.join(options.profilePath, os.path.basename(abspath))
     if os.path.isdir(abspath):
       shutil.copytree(abspath, dest)
     else:
