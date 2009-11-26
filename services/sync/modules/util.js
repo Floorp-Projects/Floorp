@@ -724,6 +724,17 @@ let Utils = {
     this.openDialog("ChangeSomething", "generic-change.xul");
   },
 
+  getIcon: function(iconUri, defaultIcon) {
+    try {
+      let iconURI = Utils.makeURI(iconUri);
+      return Svc.Favicon.getFaviconLinkForIcon(iconURI).spec;
+    }
+    catch(ex) {}
+
+    // Just give the provided default icon or the system's default
+    return defaultIcon || Svc.Favicon.defaultFavicon.spec;
+  },
+
   getErrorString: function Utils_getErrorString(error, args) {
     try {
       return Str.errors.get(error, args || null);
@@ -777,6 +788,7 @@ Svc.Prefs = new Preferences(PREFS_BRANCH);
  ["Crypto", "@labs.mozilla.com/Weave/Crypto;1", "IWeaveCrypto"],
  ["Directory", "@mozilla.org/file/directory_service;1", "nsIProperties"],
  ["Env", "@mozilla.org/process/environment;1", "nsIEnvironment"],
+ ["Favicon", "@mozilla.org/browser/favicon-service;1", "nsIFaviconService"],
  ["History", "@mozilla.org/browser/nav-history-service;1", "nsPIPlacesDatabase"],
  ["Idle", "@mozilla.org/widget/idleservice;1", "nsIIdleService"],
  ["IO", "@mozilla.org/network/io-service;1", "nsIIOService"],
