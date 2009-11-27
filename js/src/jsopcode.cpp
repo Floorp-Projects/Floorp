@@ -4921,7 +4921,7 @@ js_DecompileScript(JSPrinter *jp, JSScript *script)
 JSString *
 js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
                      uintN indent, JSBool pretty, JSBool grouped, JSBool strict,
-                     JSBool (*decompiler)(JSPrinter *jp))
+                     JSDecompilerPtr decompiler)
 {
     JSPrinter *jp;
     JSString *str;
