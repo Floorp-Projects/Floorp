@@ -23,6 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=504220
 /** Test for Bug 504220 **/
 
 function run_test() {
+  SimpleTest.waitForExplicitFinish();
+
   ok("onhashchange" in document.body,
      "document.body should contain 'onhashchange'.");
 
@@ -35,30 +37,20 @@ function run_test() {
 
   // Likewise, document.body.hashchange should mirror window.onhashchange
   numEvents = 0;
-  var func2 = function() { numEvents++; gGen.next() };
+  var func2 = function() { numEvents++; };
   window.onhashchange = func2;
   is(document.body.onhashchange, func2);
 
-  SimpleTest.waitForExplicitFinish();
+  // Change the document's hash.  If we've been running this test manually,
+  // the hash might already be "#foo", so we need to check in order to be
+  // sure we trigger a hashchange.
+  if (location.hash != "#foo")
+    location.hash = "#foo";
+  else
+    location.hash = "#bar";
 
-  function waitForHashchange() {
-    // Change the document's hash.  If we've been running this test manually,
-    // the hash might already be "#foo", so we need to check in order to be
-    // sure we trigger a hashchange.
-    if (location.hash != "#foo")
-      location.hash = "#foo";
-    else
-      location.hash = "#bar";
-
-    yield;
-
-    is(numEvents, 1, "Exactly one hashchange should have been fired.");
-    SimpleTest.finish();
-    yield;
-  }
-
-  var gGen = waitForHashchange();
-  gGen.next();
+  is(numEvents, 1, "Exactly one hashchange should have been fired.");
+  SimpleTest.finish();
 }
 
 </script>
