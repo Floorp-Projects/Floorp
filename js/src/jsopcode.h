@@ -424,10 +424,12 @@ js_DecompileFunctionBody(JSPrinter *jp);
 extern JSBool
 js_DecompileFunction(JSPrinter *jp);
 
+typedef JSBool (* JSDecompilerPtr)(JSPrinter *);
+
 extern JSString *
 js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
                      uintN indent, JSBool pretty, JSBool grouped, JSBool strict,
-                     JSBool (*decompiler)(JSPrinter *jp));
+                     JSDecompilerPtr decompiler);
 
 /*
  * Find the source expression that resulted in v, and return a newly allocated
