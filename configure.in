@@ -4794,6 +4794,7 @@ cairo-gtk2|cairo-gtk2-x11)
 
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
+    USE_FC_FREETYPE=1
 
     TK_CFLAGS='$(MOZ_GTK2_CFLAGS)'
     TK_LIBS='$(MOZ_GTK2_LIBS)'
@@ -4826,6 +4827,7 @@ cairo-qt)
 
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
+    USE_FC_FREETYPE=1
 
     TK_CFLAGS='$(MOZ_QT_CFLAGS)'
     TK_LIBS='$(MOZ_QT_LIBS)'
@@ -4834,12 +4836,14 @@ cairo-qt)
 
 cairo-beos)
     MOZ_WIDGET_TOOLKIT=beos
+    USE_FC_FREETYPE=1
     TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
     ;;
 
 cairo-os2)
     MOZ_WIDGET_TOOLKIT=os2
+    USE_FC_FREETYPE=1
     TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
     ;;
@@ -7488,7 +7492,6 @@ if test "$MOZ_TREE_CAIRO"; then
         PS_SURFACE_FEATURE="#define CAIRO_HAS_PS_SURFACE 1"
         PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
-        FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="$FT2_CFLAGS"
     fi
@@ -7538,7 +7541,6 @@ if test "$MOZ_TREE_CAIRO"; then
     if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then
         OS2_SURFACE_FEATURE="#define CAIRO_HAS_OS2_SURFACE 1"
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
-        FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
         PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="-I${MZFTCFGFT2}/include"
@@ -7548,8 +7550,10 @@ if test "$MOZ_TREE_CAIRO"; then
         PKG_CHECK_MODULES(CAIRO_FT, fontconfig freetype2)
         BEOS_SURFACE_FEATURE="#define CAIRO_HAS_BEOS_SURFACE 1"
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
-        FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
         MOZ_ENABLE_CAIRO_FT=1
+    fi
+    if test "$USE_FC_FREETYPE"; then
+        FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
     fi
     AC_SUBST(MOZ_ENABLE_CAIRO_FT)
     AC_SUBST(CAIRO_FT_CFLAGS)
@@ -8105,6 +8109,18 @@ if test -n "$MOZ_WEBGL"; then
     fi
 fi # MOZ_WEBGL
 fi # COMPILE_ENVIRONMENT
+
+if test "$USE_FC_FREETYPE"; then
+    if test "$COMPILE_ENVIRONMENT"; then
+    	_SAVE_CPPFLAGS="$CPPFLAGS"
+    	CPPFLAGS="$CPPFLAGS $FT2_CFLAGS"
+        AC_CHECK_HEADERS(fontconfig/fcfreetype.h, , 
+            [AC_MSG_ERROR(Can't find header fontconfig/fcfreetype.h.)])
+    	CPPFLAGS="$_SAVE_CPPFLAGS"
+    else
+        AC_DEFINE(HAVE_FONTCONFIG_FCFREETYPE_H)
+    fi
+fi
 
 dnl Set various defines and substitutions
 dnl ========================================================
