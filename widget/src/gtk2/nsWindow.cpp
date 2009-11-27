@@ -1717,18 +1717,62 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
         }
     }
 
-    // gdk_window_move_region, up to GDK 2.16 at least, has a ghastly bug
-    // where it doesn't restrict blitting to the given region, and blits
-    // its full bounding box. So we have to work around that by
-    // blitting one rectangle at a time.
+    // The parts of source regions not covered by their destination get marked
+    // invalid (by GDK).  This is necessary (until covered by another blit)
+    // because GDK translates any pending expose events to the destination,
+    // and so doesn't know whether an expose event might have been due on the
+    // source.
+    //
+    // However, GDK 2.18 does not subtract the invalid regions at the
+    // destinations from the update_area, so the seams between different moves
+    // remain invalid.  GDK 2.18 also delays and queues move operations.  If
+    // gdk_window_process_updates is called before the moves are flushed, GDK
+    // 2.18 removes the invalid seams from the move regions, so the seams are
+    // left with their old content until they get redrawn.  Therefore, the
+    // subtraction of destination invalid regions is performed here.
+    GdkRegion* updateArea = gdk_window_get_update_area(mGdkWindow);
+    if (!updateArea) {
+        updateArea = gdk_region_new(); // Aborts on OOM.
+    }
+
+    // gdk_window_move_region, up to GDK 2.16, has a ghastly bug where it
+    // doesn't restrict blitting to the given region, and blits its full
+    // bounding box. So we have to work around that by blitting one rectangle
+    // at a time.
     for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
         const nsIntRect& r = aDestRects[i];
         GdkRectangle gdkSource =
             { r.x - aDelta.x, r.y - aDelta.y, r.width, r.height };
-        GdkRegion* region = gdk_region_rectangle(&gdkSource);
-        gdk_window_move_region(GDK_WINDOW(mGdkWindow), region, aDelta.x, aDelta.y);
-        gdk_region_destroy(region);
+        GdkRegion* rectRegion = gdk_region_rectangle(&gdkSource);
+        gdk_window_move_region(GDK_WINDOW(mGdkWindow), rectRegion,
+                               aDelta.x, aDelta.y);
+
+        // The part of the old invalid region that is moving.
+        GdkRegion* updateChanges = gdk_region_copy(rectRegion);
+        gdk_region_intersect(updateChanges, updateArea);
+        gdk_region_offset(updateChanges, aDelta.x, aDelta.y);
+
+        // Make |rectRegion| the destination
+        gdk_region_offset(rectRegion, aDelta.x, aDelta.y);
+        // Remove any old invalid areas covered at the destination.
+        gdk_region_subtract(updateArea, rectRegion);
+        gdk_region_destroy(rectRegion);
+
+        // The update_area from the move_region contains:
+        // 1. The part of the source region not covered by the destination.
+        // 2. Any destination regions for which the source was obscured by
+        //    parent window clips or child windows.
+        GdkRegion* newUpdates = gdk_window_get_update_area(mGdkWindow);
+        if (newUpdates) {
+            gdk_region_union(updateChanges, newUpdates);
+            gdk_region_destroy(newUpdates);
+        }
+        gdk_region_union(updateArea, updateChanges);
+        gdk_region_destroy(updateChanges);
     }
+
+    gdk_window_invalidate_region(mGdkWindow, updateArea, FALSE);
+    gdk_region_destroy(updateArea);
 
     ConfigureChildren(aConfigurations);
 
