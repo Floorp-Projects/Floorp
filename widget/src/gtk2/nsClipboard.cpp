@@ -452,6 +452,9 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
 
         for (PRInt32 j = 0; j < n_targets; j++) {
             gchar *atom_name = gdk_atom_name(targets[j]);
+            if (!atom_name)
+                continue;
+
             if (!strcmp(atom_name, aFlavorList[i]))
                 *_retval = PR_TRUE;
 
