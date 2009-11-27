@@ -6932,20 +6932,11 @@ nsGlobalWindow::PageHidden()
 }
 
 nsresult
-nsGlobalWindow::DispatchAsyncHashchange()
+nsGlobalWindow::DispatchSyncHashchange()
 {
-  FORWARD_TO_INNER(DispatchAsyncHashchange, (), NS_OK);
-
-  nsCOMPtr<nsIRunnable> event =
-    NS_NEW_RUNNABLE_METHOD(nsGlobalWindow, this, FireHashchange);
-   
-  return NS_DispatchToCurrentThread(event);
-}
-
-nsresult
-nsGlobalWindow::FireHashchange()
-{
-  NS_ENSURE_TRUE(IsInnerWindow(), NS_ERROR_FAILURE);
+  FORWARD_TO_INNER(DispatchSyncHashchange, (), NS_OK);
+  NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
+               "Must be safe to run script here.");
 
   // Don't do anything if the window is frozen.
   if (IsFrozen())
