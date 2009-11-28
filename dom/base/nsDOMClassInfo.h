@@ -102,16 +102,10 @@ typedef PRUptrdiff PtrBits;
 #define IS_EXTERNAL(_ptr) (PtrBits(_ptr) & 0x1)
 
 
-#define NS_DOMCLASSINFO_IID   \
-{ 0x7da6858c, 0x5c12, 0x4588, \
- { 0x82, 0xbe, 0x01, 0xa2, 0x45, 0xc5, 0xc0, 0xb0 } }
-
 class nsDOMClassInfo : public nsIXPCScriptable,
                        public nsIClassInfo
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOMCLASSINFO_IID)
-
   nsDOMClassInfo(nsDOMClassInfoData* aData);
   virtual ~nsDOMClassInfo();
 
@@ -222,10 +216,6 @@ protected:
   friend nsIClassInfo* NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
 
   const nsDOMClassInfoData* mData;
-
-  virtual void PreserveWrapper(nsISupports *aNative)
-  {
-  }
 
   static nsresult Init();
   static nsresult RegisterClassName(PRInt32 aDOMClassInfoID);
@@ -485,8 +475,6 @@ public:
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 
-  virtual void PreserveWrapper(nsISupports *aNative);
-
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsEventTargetSH(aData);
@@ -669,8 +657,6 @@ public:
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
-
-  virtual void PreserveWrapper(nsISupports *aNative);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
