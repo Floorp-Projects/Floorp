@@ -186,9 +186,6 @@ SessionStoreService.prototype = {
   // whether we clearing history on shutdown
   _clearingOnShutdown: false,
 
-  // List of windows that are being closed during setBrowserState.
-  _closingWindows: [],
-
 #ifndef XP_MACOSX
   // whether the last window was closed and should be restored
   _restoreLastWindow: false,
@@ -340,17 +337,9 @@ SessionStoreService.prototype = {
       aSubject.addEventListener("load", function(aEvent) {
         aEvent.currentTarget.removeEventListener("load", arguments.callee, false);
         _this.onLoad(aEvent.currentTarget);
-        }, false);
+      }, false);
       break;
     case "domwindowclosed": // catch closed windows
-      if (this._closingWindows.length > 0) {
-        let index = this._closingWindows.indexOf(aSubject);
-        if (index != -1) {
-          this._closingWindows.splice(index, 1);
-          if (this._closingWindows.length == 0)
-            this._sendRestoreCompletedNotifications(true);
-        }
-      }
       this.onClose(aSubject);
       break;
     case "quit-application-requested":
@@ -901,6 +890,8 @@ SessionStoreService.prototype = {
   },
 
   setBrowserState: function sss_setBrowserState(aState) {
+    this._handleClosedWindows();
+
     try {
       var state = this._safeEval("(" + aState + ")");
     }
@@ -917,20 +908,19 @@ SessionStoreService.prototype = {
       return;
     }
 
+    // close all other browser windows
+    this._forEachBrowserWindow(function(aWindow) {
+      if (aWindow != window) {
+        aWindow.close();
+        this.onClose(aWindow);
+      }
+    });
+
     // make sure closed window data isn't kept
     this._closedWindows = [];
 
     // determine how many windows are meant to be restored
     this._restoreCount = state.windows ? state.windows.length : 0;
-
-    var self = this;
-    // close all other browser windows
-    this._forEachBrowserWindow(function(aWindow) {
-      if (aWindow != window) {
-        self._closingWindows.push(aWindow);
-        aWindow.close();
-      }
-    });
 
     // restore to the given state
     this.restoreWindow(window, state, true);
@@ -1722,6 +1712,8 @@ SessionStoreService.prototype = {
    * @returns string
    */
   _getCurrentState: function sss_getCurrentState(aUpdateAll) {
+    this._handleClosedWindows();
+
     var activeWindow = this._getMostRecentBrowserWindow();
     
     if (this._loadState == STATE_RUNNING) {
@@ -1735,7 +1727,7 @@ SessionStoreService.prototype = {
         else { // always update the window features (whose change alone never triggers a save operation)
           this._updateWindowFeatures(aWindow);
         }
-      }, this);
+      });
       this._dirtyWindows = [];
     }
     
@@ -2671,6 +2663,24 @@ SessionStoreService.prototype = {
   },
 
   /**
+   * Calls onClose for windows that are determined to be closed but aren't
+   * destroyed yet, which would otherwise cause getBrowserState and
+   * setBrowserState to treat them as open windows.
+   */
+  _handleClosedWindows: function sss_handleClosedWindows() {
+    var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
+                         getService(Ci.nsIWindowMediator);
+    var windowsEnum = windowMediator.getEnumerator("navigator:browser");
+
+    while (windowsEnum.hasMoreElements()) {
+      var window = windowsEnum.getNext();
+      if (window.closed) {
+        this.onClose(window);
+      }
+    }
+  },
+
+  /**
    * open a new browser window for a given session state
    * called when restoring a multi-window session
    * @param aState
@@ -2881,17 +2891,16 @@ SessionStoreService.prototype = {
     return jsonString;
   },
 
-  _sendRestoreCompletedNotifications:
-  function sss_sendRestoreCompletedNotifications(aOnWindowClose) {
-    if (this._restoreCount && !aOnWindowClose)
+  _sendRestoreCompletedNotifications: function sss_sendRestoreCompletedNotifications() {
+    if (this._restoreCount) {
       this._restoreCount--;
-
-    if (this._restoreCount == 0 && this._closingWindows.length == 0) {
-      // This was the last window restored at startup, notify observers.
-      this._observerService.notifyObservers(null,
-        this._browserSetState ? NOTIFY_BROWSER_STATE_RESTORED : NOTIFY_WINDOWS_RESTORED,
-        "");
-      this._browserSetState = false;
+      if (this._restoreCount == 0) {
+        // This was the last window restored at startup, notify observers.
+        this._observerService.notifyObservers(null,
+          this._browserSetState ? NOTIFY_BROWSER_STATE_RESTORED : NOTIFY_WINDOWS_RESTORED,
+          "");
+        this._browserSetState = false;
+      }
     }
   },
 
