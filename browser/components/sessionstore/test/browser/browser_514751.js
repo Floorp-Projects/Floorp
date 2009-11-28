@@ -52,6 +52,8 @@ function test() {
 
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
+  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+           getService(Ci.nsIWindowWatcher);
 
   waitForExplicitFinish();
 
@@ -66,21 +68,44 @@ function test() {
     }]
   };
 
-  var theWin = openDialog(location, "", "chrome,all,dialog=no");
-  theWin.addEventListener("load", function () {
-    executeSoon(function () {
-      var gotError = false;
-      try {
-        ss.setWindowState(theWin, JSON.stringify(state), true);
-      } catch (e) {
-        if (/NS_ERROR_MALFORMED_URI/.test(e))
-          gotError = true;
+  let windowObserver = {
+    observe: function(aSubject, aTopic, aData) {
+      let theWin = aSubject.QueryInterface(Ci.nsIDOMWindow);
+
+      switch(aTopic) {
+        case "domwindowopened":
+          theWin.addEventListener("load", function () {
+            theWin.removeEventListener("load", arguments.callee, false);
+            executeSoon(function() {
+              var gotError = false;
+              try {
+                ss.setWindowState(theWin, JSON.stringify(state), true);
+              } catch (e) {
+                if (/NS_ERROR_MALFORMED_URI/.test(e))
+                  gotError = true;
+              }
+              ok(!gotError, "Didn't get a malformed URI error.");
+              executeSoon(function() {
+                theWin.close();
+              });
+            });
+          }, false);
+          break;
+
+        case "domwindowclosed":
+          ww.unregisterNotification(this);
+          is(browserWindowsCount(), 1, "Only one browser window should be open eventually");
+          finish();
+          break;
       }
-      ok(!gotError, "Didn't get a malformed URI error.");
-      theWin.close();
-      is(browserWindowsCount(), 1, "Only one browser window should be open eventually");
-      finish();
-    });
-  }, false);
+    }
+  }
+  ww.registerNotification(windowObserver);
+  ww.openWindow(null,
+                location,
+                "_blank",
+                "chrome,all,dialog=no",
+                null);
+
 }
 
