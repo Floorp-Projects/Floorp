@@ -1734,8 +1734,6 @@ SessionStoreService.prototype = {
     var nonPopupCount = 0;
     var ix;
     for (ix in this._windows) {
-      if (this._windows[ix].tabs.length == 0)
-        continue;
       total.push(this._windows[ix]);
       windows.push(ix);
       if (!this._windows[ix].isPopup)
