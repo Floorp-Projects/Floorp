@@ -393,7 +393,6 @@ var BrowserUI = {
 
     let browsers = document.getElementById("browsers");
     browsers.addEventListener("DOMWindowClose", this, true);
-    browsers.addEventListener("UIShowForm", this, false, true);
 
     // XXX these really want to listen to only the current browser
     browsers.addEventListener("DOMTitleChanged", this, true);
@@ -639,9 +638,6 @@ var BrowserUI = {
         break;
       case "DOMWindowClose":
         this._domWindowClose(aEvent);
-        break;
-      case "UIShowForm":
-        FormHelper.open(aEvent.target);
         break;
       case "TabSelect":
         this._tabSelect(aEvent);
@@ -1282,6 +1278,11 @@ var FormHelper = {
     let zoomRect = Browser._getZoomRectForPoint(elRect.center().x, elRect.y, zoomLevel);
 
     Browser.setVisibleRect(zoomRect);
+  },
+
+  canShowUIFor: function(aElement) {
+    return (this._isValidElement(aElement) && 
+            !(aElement instanceof HTMLInputElement && aElement.type == "submit"));
   }
 };
 
@@ -1299,12 +1300,12 @@ SelectWrapper.prototype = {
   isOption: function(aChild) { return aChild instanceof HTMLOptionElement; },
   isGroup: function(aChild) { return aChild instanceof HTMLOptGroupElement; },
   select: function(aIndex, aSelected, aClearAll) {
-    let selectElement = this._control.wrappedJSObject.selectElement;
+    let selectElement = this._control.QueryInterface(Ci.nsISelectElement);
     selectElement.setOptionsSelectedByIndex(aIndex, aIndex, aSelected, aClearAll, false, true);
   },
   focus: function() { this._control.focus(); },
   fireOnChange: function() {
-    let control = this._control.wrappedJSObject;
+    let control = this._control;
     let evt = document.createEvent("Events");
     evt.initEvent("change", true, true, window, 0,
                   false, false,
@@ -1476,14 +1477,13 @@ var SelectHelper = {
   },
 
   reset: function() {
+    this._updateControl();
     let empty = this._list.cloneNode(false);
     this._list.parentNode.replaceChild(empty, this._list);
     this._list = empty;
   },
 
   close: function() {
-    this._updateControl();
-
     this._list.removeEventListener("click", this, false);
     this._panel.hidden = true;
     
