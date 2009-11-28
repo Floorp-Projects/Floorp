@@ -66,12 +66,16 @@ function test() {
     gPrefService.setIntPref("browser.sessionstore.max_windows_undo",
                             curClosedWindowCount + 1);
 
+    var origWin;
     let windowObserver = {
       observe: function(aSubject, aTopic, aData) {
         let theWin = aSubject.QueryInterface(Ci.nsIDOMWindow);
+        if (origWin && theWin != origWin)
+          return;
 
-        switch(aTopic) {
+        switch (aTopic) {
           case "domwindowopened":
+            origWin = theWin;
             theWin.addEventListener("load", function () {
               theWin.removeEventListener("load", arguments.callee, false);
               executeSoon(function() {
