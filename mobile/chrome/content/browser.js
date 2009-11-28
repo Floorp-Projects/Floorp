@@ -1575,13 +1575,21 @@ ContentCustomClicker.prototype = {
     },
 
     singleClick: function singleClick(cX, cY, modifiers) {
+      let [elementX, elementY] = Browser.transformClientToBrowser(cX, cY);
+      let element = Browser.elementFromPoint(elementX, elementY);
       if (modifiers == 0) {
+        if (element instanceof HTMLOptionElement)
+          element = element.parentNode;
+
+        if (FormHelper.canShowUIFor(element)) {
+          FormHelper.open(element);
+          return;
+        }
+
         this._dispatchMouseEvent("mousedown", cX, cY);
         this._dispatchMouseEvent("mouseup", cX, cY);
       }
       else if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
-        let [elementX, elementY] = Browser.transformClientToBrowser(cX, cY);
-        let element = Browser.elementFromPoint(elementX, elementY);
         let uri = Util.getHrefForElement(element);
         if (uri)
           Browser.addTab(uri, false);
