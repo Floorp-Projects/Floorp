@@ -2365,12 +2365,6 @@ ProgressController.prototype = {
   _documentStop: function() {
     // translate any phone numbers
     Browser.translatePhoneNumbers();
-
-    if (this._tab == Browser.selectedTab && !BrowserUI.isAutoCompleteOpen()) {
-      // focus the dom window
-      if (this.browser.currentURI.spec != "about:blank")
-        this.browser.contentWindow.focus();
-    }
   }
 };
 
