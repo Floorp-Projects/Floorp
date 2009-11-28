@@ -4461,7 +4461,7 @@ nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoData* aData)
 void
 nsDOMClassInfo::PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper)
 {
-  nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(aWrapper);
+  nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(aWrapper->Native());
   if (ci) {
     nsDOMClassInfo* domci = nsnull;
     CallQueryInterface(ci, &domci);
