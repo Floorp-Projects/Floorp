@@ -37,7 +37,7 @@
 
 body {
   color: #4b4742;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .intro {
@@ -51,7 +51,7 @@ p {
 }
 
 p.title {
-  font-size: 24px;
+  font-size: 20px;
 }
 
 p.rightalign {
@@ -60,7 +60,7 @@ p.rightalign {
 }
 
 input[type="button"] {
-  font-size: 24px;
+  font-size: 20px;
   margin-bottom: 20px;
 }
 
