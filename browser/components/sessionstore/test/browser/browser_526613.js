@@ -47,22 +47,28 @@ function test() {
            getService(Ci.nsIWindowMediator);
   waitForExplicitFinish();
 
-  function browserWindowsCount(expected) {
+  function browserWindowsCount() {
     let count = 0;
     let e = wm.getEnumerator("navigator:browser");
     while (e.hasMoreElements()) {
-      if (!e.getNext().closed)
+      let win = e.getNext();
+      if (!win.closed) {
         ++count;
+        if (win != window) {
+          try {
+            var tabs = win.gBrowser.mTabs.length;
+          } catch (e) {
+            info(e);
+          }
+          info("secondary window: " + [win.document.readyState, win.content.location, tabs]);
+        }
+      }
     }
-    is(count, expected,
-       "number of open browser windows according to nsIWindowMediator");
-    let state = ss.getBrowserState();
-    info(state);
-    is(JSON.parse(state).windows.length, expected,
-       "number of open browser windows according to getBrowserState");
+
+    return count;
   }
 
-  browserWindowsCount(1);
+  is(browserWindowsCount(), 1, "Only one browser window should be open initially");
 
   // backup old state
   let oldState = ss.getBrowserState();
@@ -83,8 +89,8 @@ function test() {
       is(aTopic, "sessionstore-browser-state-restored",
          "The sessionstore-browser-state-restored notification was observed");
 
-      if (this.pass++ == 1) {
-        browserWindowsCount(2);
+      if (this.pass++ == 1) {  
+        is(browserWindowsCount(), 2, "Two windows should exist at this point");
 
         // let the first window be focused (see above)
         function pollMostRecentWindow() {
@@ -99,7 +105,7 @@ function test() {
         pollMostRecentWindow();
       }
       else {
-        browserWindowsCount(1);
+        is(browserWindowsCount(), 1, "Only one window should exist after cleanup");
         ok(!window.closed, "Restoring the old state should have left this window open");
         os.removeObserver(this, "sessionstore-browser-state-restored");
         finish();
