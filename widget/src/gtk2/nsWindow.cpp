@@ -5790,16 +5790,16 @@ hierarchy_changed_cb (GtkWidget *widget,
         g_signal_handlers_disconnect_by_func(previous_toplevel,
                                              FuncToGpointer(window_state_event_cb),
                                              widget);
-        if (widget->window) {
-            old_window_state = gdk_window_get_state(widget->window);
+        if (previous_toplevel->window) {
+            old_window_state = gdk_window_get_state(previous_toplevel->window);
         }
     }
 
     if (GTK_IS_WINDOW(toplevel)) {
         g_signal_connect_swapped(toplevel, "window-state-event",
                                  G_CALLBACK(window_state_event_cb), widget);
-        if (widget->window) {
-            event.new_window_state = gdk_window_get_state(widget->window);
+        if (toplevel->window) {
+            event.new_window_state = gdk_window_get_state(toplevel->window);
         }
     }
 
