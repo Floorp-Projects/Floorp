@@ -83,7 +83,7 @@
 #ifdef XP_MACOSX
                   key="key_openHelpMac"/>
 #else
-                  key="key_openHelp"/>
+                  />
 #endif
 # Show IE Users menu item on Windows only
 #ifdef XP_WIN
@@ -132,10 +132,6 @@
         <key id="key_hideOtherAppsCmdMac"
              key="&hideOtherAppsCmdMac.commandkey;"
              modifiers="accel,alt"/>
-#else
-        <key id="key_openHelp"
-            oncommand="openHelpLink('firefox-f1');"
-            keycode="&openHelp.commandkey;"/>
 #endif
     </keyset>
 

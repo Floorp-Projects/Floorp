@@ -305,6 +305,8 @@ let randomFailingSyncTests = [
   "test_removeVisitsByTimeframe.js",
   "test_tagging.js",
   "test_utils_getURLsForContainerNode.js",
+  "test_exclude_livemarks.js",
+  "test_402799.js",
 ];
 let currentTestFilename = do_get_file(_TEST_FILE[0], true).leafName;
 if (randomFailingSyncTests.indexOf(currentTestFilename) != -1) {

@@ -981,7 +981,7 @@ nsDragService::IsTargetContextList(void)
         GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
         gchar *name = NULL;
         name = gdk_atom_name(atom);
-        if (strcmp(name, gMimeListType) == 0)
+        if (name && strcmp(name, gMimeListType) == 0)
             retval = PR_TRUE;
         g_free(name);
         if (retval)
