@@ -321,15 +321,29 @@ let Utils = {
   lazySvc: function Weave_lazySvc(dest, prop, cid, iface) {
     let getter = function() {
       delete dest[prop];
+      let svc = null;
+
+      // Try creating a fake service if we can handle that
       if (!Cc[cid]) {
+        switch (cid) {
+          case "@mozilla.org/privatebrowsing;1":
+            svc = {
+              autoStarted: false,
+              privateBrowsingEnabled: false
+            };
+            break;
+        }
+
         let log = Log4Moz.repository.getLogger("Service.Util");
-        log.warn("Component " + cid + " requested, but doesn't exist on "
-                 + "this platform.");
-	return null;
-      } else{
-        dest[prop] = Cc[cid].getService(iface);
-        return dest[prop];
+        if (svc == null)
+          log.warn("Component " + cid + " doesn't exist on this platform.");
+        else
+          log.debug("Using a fake svc object for " + cid);
       }
+      else
+        svc = Cc[cid].getService(iface);
+      
+      return dest[prop] = svc;
     };
     dest.__defineGetter__(prop, getter);
   },
