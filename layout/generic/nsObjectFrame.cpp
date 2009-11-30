@@ -2108,6 +2108,12 @@ GetMIMEType(nsIPluginInstance *aPluginInstance)
 static PRBool
 DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
 {
+#ifdef MOZ_PLATFORM_HILDON
+  // Don't delay stop on Maemo/Hildon (bug 530739).
+  if (aDelayedStop && aInstanceOwner->MatchPluginName("Shockwave Flash"))
+    return PR_FALSE;
+#endif
+
   // Don't delay stopping QuickTime (bug 425157), Flip4Mac (bug 426524),
   // XStandard (bug 430219), CMISS Zinc (bug 429604).
   if (aDelayedStop
@@ -5788,7 +5794,7 @@ nsPluginInstanceOwner::SetAbsoluteScreenPosition(nsIDOMElement* element,
   PRBool simpleImageRender = PR_FALSE;
   mInstance->GetValueFromPlugin(NPPVpluginWindowlessLocalBool,
                                 &simpleImageRender);
-  if (mInstance)
+  if (simpleImageRender)
     NativeImageDraw();
   return NS_OK;
 }

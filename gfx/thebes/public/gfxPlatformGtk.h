@@ -129,33 +129,10 @@ public:
                         GdkDrawable *drawable);
     GdkDrawable *GetGdkDrawable(gfxASurface *target);
 
-    static PRInt32 GetPlatformDPI() {
-        if (sPlatformDPI < 0) {
-            gfxPlatformGtk::GetPlatform()->InitDisplayCaps();
-        }
-        NS_ASSERTION(sPlatformDPI > 0, "Something is wrong");
-        return sPlatformDPI;
-    }
-
-#ifdef MOZ_PLATFORM_HILDON
-    static PRInt32 GetMaemoClassic() {
-        if (sMaemoClassic < 0) {
-            gfxPlatformGtk::GetPlatform()->InitDisplayCaps();
-        }
-        NS_ASSERTION(sMaemoClassic > 0, "Something is wrong");
-        return sMaemoClassic == 1;
-    }
-#endif
-
 protected:
     void InitDisplayCaps();
 
-    static PRInt32 sPlatformDPI;
     static gfxFontconfigUtils *sFontconfigUtils;
-
-#ifdef MOZ_PLATFORM_HILDON
-    static PRInt32 sMaemoClassic;
-#endif
 
 private:
     virtual qcms_profile *GetPlatformCMSOutputProfile();

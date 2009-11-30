@@ -303,35 +303,42 @@ ReservePoisonArea()
     printf("INFO | poison area assumed at 0x%.*"PRIxPTR"\n", SIZxPTR, result);
     return result;
   } else {
-    // Probe 1024 pages (four megabytes, typically) in both directions from
-    // the baseline address before giving up.
-    uintptr_t candidate = (0xF0DEAFFF & ~(uintptr_t)(PAGESIZE-1));
-    uintptr_t step = PAGESIZE;
-    intptr_t direction = +1;
-    uintptr_t limit = candidate + 1024*PAGESIZE;
-    while (candidate < limit) {
-      void *result = ReserveRegion(candidate, false);
-      if (result == (void *)candidate) {
-        // success - inaccessible page allocated
-        printf("INFO | poison area allocated at 0x%.*"PRIxPTR"\n",
-               SIZxPTR, (uintptr_t)result);
-        return candidate;
+    // First see if we can allocate the preferred poison address from the OS.
+    uintptr_t candidate = (0xF0DEAFFF & ~(PAGESIZE-1));
+    void *result = ReserveRegion(candidate, false);
+    if (result == (void *)candidate) {
+      // success - inaccessible page allocated
+      printf("INFO | poison area allocated at 0x%.*"PRIxPTR
+             " (preferred addr)\n", SIZxPTR, (uintptr_t)result);
+      return candidate;
+    }
 
-      } else {
-        if (result != MAP_FAILED)
-          ReleaseRegion(result);
+    // That didn't work, so see if the preferred address is within a range
+    // of permanently inacessible memory.
+    if (ProbeRegion(candidate)) {
+      // success - selected page cannot be usable memory
+      if (result != MAP_FAILED)
+        ReleaseRegion(result);
+      printf("INFO | poison area assumed at 0x%.*"PRIxPTR
+             " (preferred addr)\n", SIZxPTR, candidate);
+      return candidate;
+    }
 
-        if (ProbeRegion(candidate)) {
-          // success - selected page cannot be usable memory
-          printf("INFO | poison area probed at 0x%.*"PRIxPTR" | %s\n",
-                 SIZxPTR, candidate, LastErrMsg());
-          return candidate;
-        }
-      }
+    // The preferred address is already in use.  Did the OS give us a
+    // consolation prize?
+    if (result != MAP_FAILED) {
+      printf("INFO | poison area allocated at 0x%.*"PRIxPTR
+             " (consolation prize)\n", SIZxPTR, (uintptr_t)result);
+      return (uintptr_t)result;
+    }
 
-      candidate += step*direction;
-      step = step + PAGESIZE;
-      direction = -direction;
+    // It didn't, so try to allocate again, without any constraint on
+    // the address.
+    result = ReserveRegion(0, false);
+    if (result != MAP_FAILED) {
+      printf("INFO | poison area allocated at 0x%.*"PRIxPTR
+             " (fallback)\n", SIZxPTR, (uintptr_t)result);
+      return (uintptr_t)result;
     }
 
     printf("ERROR | no usable poison area found\n");

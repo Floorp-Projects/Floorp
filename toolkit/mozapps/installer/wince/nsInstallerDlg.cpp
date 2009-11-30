@@ -345,8 +345,10 @@ BOOL nsInstallerDlg::SilentFirstRun()
                                NULL, NULL, FALSE, 0, NULL, NULL, NULL, &pi);
   if (bResult)
   {
-    // Wait for it to finish
-    WaitForSingleObject(pi.hProcess, INFINITE);
+    // Wait for it to finish (since the system is likely to be busy
+    // while it launches anyways). The process may never terminate
+    // if FastStart is enabled, so don't wait longer than 10 seconds.
+    WaitForSingleObject(pi.hProcess, 10000);
   }
   SetWindowText(GetDlgItem(m_hDlg, IDC_STATUS_TEXT), L"");
   return bResult;

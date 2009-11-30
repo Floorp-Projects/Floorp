@@ -85,10 +85,6 @@ public:
 
     FT_Library GetFTLibrary();
 
-    static PRInt32 GetPlatformDPI() {
-        return 96;
-    }
-
 protected:
     static gfxFontconfigUtils *sFontconfigUtils;
 

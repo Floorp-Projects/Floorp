@@ -57,7 +57,7 @@ Test.prototype = {
     do_check_eq(this._isFromCache, this.readFromCache);
     do_check_eq(gHitServer, this.hitServer);
 
-    do_timeout(0, "run_next_test();");
+    do_timeout(0, run_next_test);
   },
 
   run: function() {

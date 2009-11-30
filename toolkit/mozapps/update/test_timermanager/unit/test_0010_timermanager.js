@@ -161,7 +161,7 @@ function end_test() {
 }
 
 function run_test1thru6() {
-  gNextFunc = "check_test1thru6()";
+  gNextFunc = check_test1thru6;
   // bogus default interval
   gCompReg.registerFactory(TESTS[0].classID, TESTS[0].desc,
                            TESTS[0].contractID, gTest1Factory);
@@ -271,11 +271,11 @@ function check_test1thru6() {
        "registered\n");
   do_check_eq(count, 0);
 
-  do_timeout(0, "run_test7()");
+  do_timeout(0, run_test7());
 }
 
 function run_test7() {
-  gNextFunc = "check_test7()";
+  gNextFunc = check_test7;
   gPref.setIntPref(PREF_BRANCH_LAST_UPDATE_TIME + TESTS[6].timerID, 1);
   gCompReg.registerFactory(TESTS[6].classID, TESTS[6].desc,
                            TESTS[6].contractID, gTest7Factory);
@@ -386,7 +386,7 @@ var gTest6Factory = {
 var gTest7TimerCallback = {
   notify: function T7CB_notify(aTimer) {
     TESTS[6].notified = true;
-    do_timeout(0, "check_test7()");
+    do_timeout(0, check_test7);
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
 };

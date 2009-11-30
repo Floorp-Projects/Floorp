@@ -58,7 +58,7 @@ function checkResult() {
 
   // Need to poll RecentDocs value because the SHAddToRecentDocs call
   // doesn't update the registry immediately.
-  do_timeout(POLL_REGISTRY_TIMEOUT, "pollRecentDocs();");
+  do_timeout(POLL_REGISTRY_TIMEOUT, pollRecentDocs);
 }
 
 var gPollsCount = 0;
@@ -74,7 +74,7 @@ function pollRecentDocs() {
     do_test_finished();
   }
   else
-    do_timeout(POLL_REGISTRY_TIMEOUT, "pollRecentDocs();");
+    do_timeout(POLL_REGISTRY_TIMEOUT, pollRecentDocs);
 }
 
 function checkRecentDocsFor(aFileName) {

@@ -661,9 +661,9 @@ def runApp(testURL, env, app, profileDir, extraArgs,
   if status != 0 and not didTimeout:
     log.info("TEST-UNEXPECTED-FAIL | automation.py | Exited with code %d during test run", status)
   if stackFixerProcess is not None:
-    status = stackFixerProcess.wait()
-    if status != 0 and not didTimeout:
-      log.info("TEST-UNEXPECTED-FAIL | automation.py | Stack fixer process exited with code %d during test run", status)
+    fixerStatus = stackFixerProcess.wait()
+    if fixerStatus != 0 and not didTimeout:
+      log.info("TEST-UNEXPECTED-FAIL | automation.py | Stack fixer process exited with code %d during test run", fixerStatus)
   log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
 
   # Do a final check for zombie child processes.
