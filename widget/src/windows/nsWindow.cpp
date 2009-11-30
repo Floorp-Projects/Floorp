@@ -3113,6 +3113,12 @@ BOOL CALLBACK nsWindow::DispatchStarvedPaints(HWND aWnd, LPARAM aMsg)
 // nsIWidget managed windows.
 void nsWindow::DispatchPendingEvents()
 {
+  if (mPainting) {
+    NS_WARNING("We were asked to dispatch pending events during painting, "
+               "denying since that's unsafe.");
+    return;
+  }
+
   UpdateLastInputEventTime();
 
   // We need to ensure that reflow events do not get starved.
