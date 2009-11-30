@@ -110,11 +110,11 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
   public:
     void endTag(nsHtml5ElementName* elementName);
   private:
-    void endSelect();
     PRInt32 findLastInTableScopeOrRootTbodyTheadTfoot();
     PRInt32 findLast(nsIAtom* name);
     PRInt32 findLastInTableScope(nsIAtom* name);
     PRInt32 findLastInScope(nsIAtom* name);
+    PRInt32 findLastInListScope(nsIAtom* name);
     PRInt32 findLastInScopeHn();
     PRBool hasForeignInScope();
     void generateImpliedEndTagsExceptFor(nsIAtom* name);
@@ -177,6 +177,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void appendVoidElementToCurrentMayFoster(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
     void appendVoidElementToCurrentMayFosterCamelCase(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
     void appendVoidElementToCurrent(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form);
+    void appendVoidElementToCurrent(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes);
   protected:
     void accumulateCharacters(PRUnichar* buf, PRInt32 start, PRInt32 length);
     void accumulateCharacter(PRUnichar c);
@@ -289,10 +290,10 @@ jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #define NS_HTML5TREE_BUILDER_EMBED_OR_IMG 48
 #define NS_HTML5TREE_BUILDER_AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR 49
 #define NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU 50
-#define NS_HTML5TREE_BUILDER_ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_DIALOG_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION 51
+#define NS_HTML5TREE_BUILDER_ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_HGROUP_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION 51
 #define NS_HTML5TREE_BUILDER_RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR 52
 #define NS_HTML5TREE_BUILDER_RT_OR_RP 53
-#define NS_HTML5TREE_BUILDER_COMMAND_OR_EVENT_SOURCE 54
+#define NS_HTML5TREE_BUILDER_COMMAND 54
 #define NS_HTML5TREE_BUILDER_PARAM_OR_SOURCE 55
 #define NS_HTML5TREE_BUILDER_MGLYPH_OR_MALIGNMARK 56
 #define NS_HTML5TREE_BUILDER_MI_MO_MN_MS_MTEXT 57
@@ -324,7 +325,7 @@ jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #define NS_HTML5TREE_BUILDER_AFTER_FRAMESET 17
 #define NS_HTML5TREE_BUILDER_AFTER_AFTER_BODY 18
 #define NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET 19
-#define NS_HTML5TREE_BUILDER_IN_CDATA_RCDATA 20
+#define NS_HTML5TREE_BUILDER_TEXT 20
 #define NS_HTML5TREE_BUILDER_FRAMESET_OK 21
 #define NS_HTML5TREE_BUILDER_CHARSET_INITIAL 0
 #define NS_HTML5TREE_BUILDER_CHARSET_C 1
