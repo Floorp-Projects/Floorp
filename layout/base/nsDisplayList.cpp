@@ -815,13 +815,53 @@ nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
                               mFrame->GetSkipSides());
 }
 
+// Given a region, compute a conservative approximation to it as a list
+// of rectangles that aren't vertically adjacent (i.e., vertically
+// adjacent or overlapping rectangles are combined).
+// Right now this is only approximate, some vertically overlapping rectangles
+// aren't guaranteed to be combined.
+static void
+ComputeDisjointRectangles(const nsRegion& aRegion,
+                          nsTArray<nsRect>* aRects) {
+  nscoord accumulationMargin = nsPresContext::CSSPixelsToAppUnits(25);
+  nsRect accumulated;
+  nsRegionRectIterator iter(aRegion);
+  while (PR_TRUE) {
+    const nsRect* r = iter.Next();
+    if (r && !accumulated.IsEmpty() &&
+        accumulated.YMost() >= r->y - accumulationMargin) {
+      accumulated.UnionRect(accumulated, *r);
+      continue;
+    }
+
+    if (!accumulated.IsEmpty()) {
+      aRects->AppendElement(accumulated);
+      accumulated.Empty();
+    }
+
+    if (!r)
+      break;
+
+    accumulated = *r;
+  }
+}
+
 void
 nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
                                nsIRenderingContext* aCtx) {
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
-  nsCSSRendering::PaintBoxShadowOuter(mFrame->PresContext(), *aCtx, mFrame,
-                                      nsRect(offset, mFrame->GetSize()),
-                                      mVisibleRect);
+  nsRect borderRect = nsRect(offset, mFrame->GetSize());
+  nsPresContext* presContext = mFrame->PresContext();
+  nsAutoTArray<nsRect,10> rects;
+  ComputeDisjointRectangles(mVisibleRegion, &rects);
+
+  for (PRUint32 i = 0; i < rects.Length(); ++i) {
+    aCtx->PushState();
+    aCtx->SetClipRect(rects[i], nsClipCombine_kIntersect);
+    nsCSSRendering::PaintBoxShadowOuter(presContext, *aCtx, mFrame,
+                                        borderRect, rects[i]);
+    aCtx->PopState();
+  }
 }
 
 nsRect
@@ -839,6 +879,9 @@ nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
                                         aVisibleRegionBeforeMove))
     return PR_FALSE;
+
+  // Store the actual visible region
+  mVisibleRegion.And(*aVisibleRegion, mVisibleRect);
 
   nsPoint origin = aBuilder->ToReferenceFrame(mFrame);
   nsRect visibleBounds = aVisibleRegion->GetBounds();
@@ -866,9 +909,34 @@ void
 nsDisplayBoxShadowInner::Paint(nsDisplayListBuilder* aBuilder,
                                nsIRenderingContext* aCtx) {
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
-  nsCSSRendering::PaintBoxShadowInner(mFrame->PresContext(), *aCtx, mFrame,
-                                      nsRect(offset, mFrame->GetSize()),
-                                      mVisibleRect);
+  nsRect borderRect = nsRect(offset, mFrame->GetSize());
+  nsPresContext* presContext = mFrame->PresContext();
+  nsAutoTArray<nsRect,10> rects;
+  ComputeDisjointRectangles(mVisibleRegion, &rects);
+
+  for (PRUint32 i = 0; i < rects.Length(); ++i) {
+    aCtx->PushState();
+    aCtx->SetClipRect(rects[i], nsClipCombine_kIntersect);
+    nsCSSRendering::PaintBoxShadowInner(presContext, *aCtx, mFrame,
+                                        borderRect, rects[i]);
+    aCtx->PopState();
+  }
+}
+
+PRBool
+nsDisplayBoxShadowInner::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                           nsRegion* aVisibleRegion,
+                                           nsRegion* aVisibleRegionBeforeMove) {
+  NS_ASSERTION((aVisibleRegionBeforeMove != nsnull) == aBuilder->HasMovingFrames(),
+               "Should have aVisibleRegionBeforeMove when there are moving frames");
+
+  if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
+                                        aVisibleRegionBeforeMove))
+    return PR_FALSE;
+
+  // Store the actual visible region
+  mVisibleRegion.And(*aVisibleRegion, mVisibleRect);
+  return PR_TRUE;
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsIFrame* aFrame, nsDisplayList* aList)
