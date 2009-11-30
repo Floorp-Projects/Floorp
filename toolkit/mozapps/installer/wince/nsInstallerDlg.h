@@ -69,12 +69,13 @@ private:
   void RunUninstall();
 
   void AddErrorMsg(WCHAR* sErr);
+  BOOL FastStartFileExists();
 
   static const int c_nMaxErrorLen = 2048;
 
   HINSTANCE m_hInst;
   HWND m_hDlg;
-
+  BOOL m_bFastStart;
   WCHAR m_sProgramFiles[MAX_PATH];
   WCHAR m_sExtractPath[MAX_PATH];
   WCHAR m_sInstallPath[MAX_PATH];

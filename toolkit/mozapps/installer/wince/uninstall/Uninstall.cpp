@@ -252,20 +252,36 @@ BOOL DeleteDirectory(const WCHAR* sPathToDelete)
   return TRUE;
 }
 
+// Deletes shortcuts for Fennec and FastStart service created by the installer.
+// Note: The shortcut names have to be in sync with CreateShortcut in nsInstallerDlg.cpp
 BOOL DeleteShortcut(HWND hwndParent)
 {
+  BOOL result = FALSE;
+
   WCHAR sProgramsPath[MAX_PATH];
-  if (!SHGetSpecialFolderPath(hwndParent, sProgramsPath, CSIDL_PROGRAMS, FALSE))
-    wcscpy(sProgramsPath, L"\\Windows\\Start Menu\\Programs");
+  if (SHGetSpecialFolderPath(hwndParent, sProgramsPath, CSIDL_PROGRAMS, FALSE))
+  {
+    WCHAR sShortcutPath[MAX_PATH];
+    _snwprintf(sShortcutPath, MAX_PATH, L"%s\\%s.lnk", sProgramsPath, Strings.GetString(StrID_AppShortName));
 
-  WCHAR sShortcutPath[MAX_PATH];
-  _snwprintf(sShortcutPath, MAX_PATH, L"%s\\%s.lnk", sProgramsPath, Strings.GetString(StrID_AppShortName));
 
+    if(SetFileAttributes(sShortcutPath, FILE_ATTRIBUTE_NORMAL))
+      result = DeleteFile(sShortcutPath);
+  }
 
-  if(SetFileAttributes(sShortcutPath, FILE_ATTRIBUTE_NORMAL))
-    return DeleteFile(sShortcutPath);
+  // Handle faststart shortcut
+  WCHAR sStartupPath[MAX_PATH];
+  if (SHGetSpecialFolderPath(hwndParent, sStartupPath, CSIDL_STARTUP, FALSE))
+  {
+    WCHAR sStartupShortcutPath[MAX_PATH];
+    _snwprintf(sStartupShortcutPath, MAX_PATH, L"%s\\%sFastStart.lnk", sStartupPath, Strings.GetString(StrID_AppShortName));
 
-  return FALSE;
+    // It may not exist - just ignore that
+    if(SetFileAttributes(sStartupShortcutPath, FILE_ATTRIBUTE_NORMAL))
+      DeleteFile(sStartupShortcutPath);
+  }
+
+  return result;
 }
 
 BOOL DeleteRegistryKey()
