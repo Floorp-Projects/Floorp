@@ -144,8 +144,9 @@ Engine.prototype = {
   _storeObj: Store,
   _trackerObj: Tracker,
 
-  get enabled() Svc.Prefs.get("engine." + this.name, null),
-  set enabled(val) Svc.Prefs.set("engine." + this.name, !!val),
+  get prefName() this.name,
+  get enabled() Svc.Prefs.get("engine." + this.prefName, null),
+  set enabled(val) Svc.Prefs.set("engine." + this.prefName, !!val),
 
   get score() this._tracker.score,
 

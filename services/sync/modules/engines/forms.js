@@ -59,6 +59,7 @@ FormEngine.prototype = {
   _storeObj: FormStore,
   _trackerObj: FormTracker,
   _recordObj: FormRec,
+  get prefName() "history",
 
   _syncStartup: function FormEngine__syncStartup() {
     this._store.cacheFormItems();

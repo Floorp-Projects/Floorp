@@ -10,7 +10,6 @@ pref("extensions.weave.lastversion", "firstrun");
 pref("extensions.weave.autoconnect", true);
 
 pref("extensions.weave.engine.bookmarks", true);
-pref("extensions.weave.engine.forms", true);
 pref("extensions.weave.engine.history", true);
 pref("extensions.weave.engine.passwords", true);
 pref("extensions.weave.engine.prefs", true);
