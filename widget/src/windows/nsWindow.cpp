@@ -2255,14 +2255,26 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
     w->SetWindowClipRegion(configuration.mClipRegion, PR_TRUE);
   }
 
+  // Create temporary regions
+  HRGN updateRgn = ::CreateRectRgn(0, 0, 0, 0);
+  if (!updateRgn) {
+    // OOM?
+    return;
+  }
+  HRGN destRgn = ::CreateRectRgn(0, 0, 0, 0);
+  if (!destRgn) {
+    // OOM?
+    ::DeleteObject((HGDIOBJ)updateRgn);
+    return;
+  }
+
   DWORD ourThreadID = GetWindowThreadProcessId(mWnd, NULL);
 
   for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
+    const nsIntRect& destRect = aDestRects[i];
     nsIntRect affectedRect;
-    affectedRect.UnionRect(aDestRects[i], aDestRects[i] - aDelta);
-    // We pass SW_INVALIDATE because areas that get scrolled into view
-    // from offscreen (but inside the scroll area) need to be repainted.
-    UINT flags = SW_SCROLLCHILDREN | SW_INVALIDATE;
+    affectedRect.UnionRect(destRect, destRect - aDelta);
+    UINT flags = SW_SCROLLCHILDREN;
     // Now check if any of our children would be affected by
     // SW_SCROLLCHILDREN but not supposed to scroll.
     for (nsWindow* w = static_cast<nsWindow*>(GetFirstChild()); w;
@@ -2335,8 +2347,30 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
     }
 
     RECT clip = { affectedRect.x, affectedRect.y, affectedRect.XMost(), affectedRect.YMost() };
-    ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, NULL, NULL, flags);
+    ::ScrollWindowEx(mWnd, aDelta.x, aDelta.y, &clip, &clip, updateRgn, NULL, flags);
+
+    // Areas that get scrolled into view from offscreen or under another
+    // window (but inside the scroll area) need to be repainted.
+    // ScrollWindowEx returns those areas in updateRgn, but also includes
+    // the area of the source that isn't covered by the destination.
+    // ScrollWindowEx will refuse to blit into an area that's already
+    // invalid. When we're blitting multiple adjacent rectangles, we have
+    // a problem where the source area of rectangle A overlaps the
+    // destination area of a subsequent rectangle B; the first ScrollWindowEx
+    // invalidates the source area of A that's outside of the destination
+    // area of A, and then the ScrollWindowEx for B will refuse to fully
+    // blit into B's destination. This produces nasty temporary glitches.
+    // We combat this by having ScrollWindowEx not invalidate directly,
+    // but give us back the region that needs to be invalidated,
+    // and restricting that region to the destination before invalidating
+    // it.
+    ::SetRectRgn(destRgn, destRect.x, destRect.y, destRect.XMost(), destRect.YMost());
+    ::CombineRgn(updateRgn, updateRgn, destRgn, RGN_AND);
+    ::InvalidateRgn(mWnd, updateRgn, FALSE);
   }
+
+  ::DeleteObject((HGDIOBJ)updateRgn);
+  ::DeleteObject((HGDIOBJ)destRgn);
 
   // Now make sure all children actually get positioned, sized and clipped
   // correctly. If SW_SCROLLCHILDREN already moved widgets to their correct

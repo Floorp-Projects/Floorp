@@ -2585,7 +2585,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
         jsval v;
         JS_ASSERT(PCVAL_IS_OBJECT(entry->vword));
         JS_ASSERT(entry->vword != PCVAL_NULL);
-        JS_ASSERT(OBJ_SCOPE(pobj)->branded() || OBJ_SCOPE(pobj)->hasMethodBarrier());
+        JS_ASSERT(OBJ_SCOPE(pobj)->brandedOrHasMethodBarrier());
         JS_ASSERT(SPROP_HAS_STUB_GETTER_OR_IS_METHOD(sprop));
         JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)));
         v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);

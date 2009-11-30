@@ -221,7 +221,7 @@ nsSystemFontsGTK2::GetSystemFontInfo(GtkWidget *aWidget, nsString *aFontName,
 
     if (!MOZ_pango_font_description_get_size_is_absolute(desc)) {
         // |size| is in pango-points, so convert to pixels.
-        size *= float(gfxPlatformGtk::GetPlatformDPI()) / POINTS_PER_INCH_FLOAT;
+        size *= float(gfxPlatform::GetDPI()) / POINTS_PER_INCH_FLOAT;
     }
 
     // |size| is now pixels

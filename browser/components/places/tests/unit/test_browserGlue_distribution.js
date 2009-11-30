@@ -56,7 +56,7 @@ let observer = {
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == TOPIC_CUSTOMIZATION_COMPLETE) {
       os.removeObserver(this, TOPIC_CUSTOMIZATION_COMPLETE);
-      do_timeout(0, "continue_test();");
+      do_timeout(0, continue_test);
     }
   }
 }

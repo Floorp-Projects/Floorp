@@ -145,6 +145,14 @@ nsCategoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
     strWrapper->GetData(str);
 
   if (strcmp(aTopic, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID) == 0) {
+    // We may get an add notification even when we already have an entry. This
+    // is due to the notification happening asynchronously, so if the entry gets
+    // added and an nsCategoryObserver gets instantiated before events get
+    // processed, we'd get the notification for an existing entry.
+    // Do nothing in that case.
+    if (mHash.Get(str, nsnull))
+      return NS_OK;
+
     nsCOMPtr<nsICategoryManager> catMan =
       do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
     if (!catMan)

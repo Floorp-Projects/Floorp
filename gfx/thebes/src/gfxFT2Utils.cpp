@@ -45,7 +45,7 @@
 #include FT_TRUETYPE_TAGS_H
 #include FT_TRUETYPE_TABLES_H
 
-#ifdef CAIRO_HAS_FC_FONT
+#ifdef HAVE_FONTCONFIG_FCFREETYPE_H
 #include <fontconfig/fcfreetype.h>
 #endif
 
@@ -305,7 +305,7 @@ gfxFT2LockedFace::GetGlyph(PRUint32 aCharCode)
     if (NS_UNLIKELY(!mFace))
         return 0;
 
-#ifdef CAIRO_HAS_FC_FONT
+#ifdef HAVE_FONTCONFIG_FCFREETYPE_H
     // FcFreeTypeCharIndex will search starting from the most recently
     // selected charmap.  This can cause non-determistic behavior when more
     // than one charmap supports a character but with different glyphs, as

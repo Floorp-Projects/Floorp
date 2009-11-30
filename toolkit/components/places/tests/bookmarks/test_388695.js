@@ -63,7 +63,7 @@ function run_test() {
   do_test_pending();
 
   gItemId1 = bmsvc.insertBookmark(gTestRoot, gURI, bmsvc.DEFAULT_INDEX, "");
-  do_timeout(100, "phase2();");
+  do_timeout(100, phase2);
 }
 
 function phase2() {
@@ -71,7 +71,7 @@ function phase2() {
   var b = bmsvc.getBookmarkIdsForURI(gURI);
   do_check_eq(b[0], gItemId2);
   do_check_eq(b[1], gItemId1);
-  do_timeout(100, "phase3();");
+  do_timeout(100, phase3);
 }
 
 function phase3() {

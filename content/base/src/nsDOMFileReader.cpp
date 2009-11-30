@@ -123,10 +123,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 NS_IMPL_ADDREF_INHERITED(nsDOMFileReader, nsXHREventTarget)
 NS_IMPL_RELEASE_INHERITED(nsDOMFileReader, nsXHREventTarget)
 
-static const PRUint32 FILE_AS_BINARY   = 1;
-static const PRUint32 FILE_AS_TEXT     = 2;
-static const PRUint32 FILE_AS_DATAURL  = 3;
-
 NS_IMETHODIMP
 nsDOMFileReader::GetOnloadend(nsIDOMEventListener** aOnloadend)
 {
@@ -153,7 +149,7 @@ nsDOMFileReader::Notify(const char *aCharset, nsDetectionConfident aConf)
 
 nsDOMFileReader::nsDOMFileReader()
   : mFileData(nsnull),
-    mDataLen(0), mDataFormat(0),
+    mDataLen(0), mDataFormat(FILE_AS_BINARY),
     mReadyState(nsIDOMFileReader::EMPTY),
     mProgressEventWasDelayed(PR_FALSE),
     mTimerIsActive(PR_FALSE),
@@ -454,7 +450,7 @@ nsDOMFileReader::OnStopRequest(nsIRequest *aRequest,
     return NS_OK;
   }
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   switch (mDataFormat) {
     case FILE_AS_BINARY:
       break; //Already accumulated mResult
@@ -464,17 +460,20 @@ nsDOMFileReader::OnStopRequest(nsIRequest *aRequest,
     case FILE_AS_DATAURL:
       rv = GetAsDataURL(mFile, mFileData, mDataLen, mResult);
       break;
-    default:
-     return NS_ERROR_FAILURE;
   }
 
   FreeFileData();
+
+  if (NS_FAILED(rv)) {
+    DispatchError(rv);
+    return NS_OK;
+  }
 
   //Dispatch load event to signify end of a successful load
   DispatchProgressEvent(NS_LITERAL_STRING(LOAD_STR));
   DispatchProgressEvent(NS_LITERAL_STRING(LOADEND_STR));
 
-  return rv;
+  return NS_OK;
 }
 
 // Helper methods
@@ -482,8 +481,8 @@ nsDOMFileReader::OnStopRequest(nsIRequest *aRequest,
 nsresult
 nsDOMFileReader::ReadFileContent(nsIDOMFile* aFile,
                                  const nsAString &aCharset,
-                                 PRUint32 aDataFormat)
-{ 
+                                 eDataFormat aDataFormat)
+{
   NS_ENSURE_TRUE(aFile, NS_ERROR_NULL_POINTER);
 
   //Implicit abort to clear any other activity going on

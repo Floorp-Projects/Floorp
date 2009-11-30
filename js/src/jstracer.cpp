@@ -11182,7 +11182,7 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
      * this, because functions have distinct trace-type from other values and
      * branded-ness is implied by the shape, which we've already guarded on.
      */
-    if (scope->branded() && VALUE_IS_FUNCTION(cx, v) && entry->directHit()) {
+    if (scope->brandedOrHasMethodBarrier() && VALUE_IS_FUNCTION(cx, v) && entry->directHit()) {
         if (obj == globalObj)
             RETURN_STOP("can't trace function-valued property set in branded global scope");
 

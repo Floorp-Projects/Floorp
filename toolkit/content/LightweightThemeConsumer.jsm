@@ -42,7 +42,7 @@ function LightweightThemeConsumer(aDocument) {
 
   Components.classes["@mozilla.org/observer-service;1"]
             .getService(Components.interfaces.nsIObserverService)
-            .addObserver(this, "lightweight-theme-changed", false);
+            .addObserver(this, "lightweight-theme-styling-update", false);
 
   var temp = {};
   Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
@@ -51,7 +51,7 @@ function LightweightThemeConsumer(aDocument) {
 
 LightweightThemeConsumer.prototype = {
   observe: function (aSubject, aTopic, aData) {
-    if (aTopic != "lightweight-theme-changed")
+    if (aTopic != "lightweight-theme-styling-update")
       return;
 
     this._update(JSON.parse(aData));
@@ -60,7 +60,7 @@ LightweightThemeConsumer.prototype = {
   destroy: function () {
     Components.classes["@mozilla.org/observer-service;1"]
               .getService(Components.interfaces.nsIObserverService)
-              .removeObserver(this, "lightweight-theme-changed");
+              .removeObserver(this, "lightweight-theme-styling-update");
 
     this._doc = null;
   },
