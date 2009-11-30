@@ -124,7 +124,7 @@ function run_test() {
 
   do_test_pending();
   // lazy timeout is 3s and favicons are lazy added
-  do_timeout(3500, "end_test();");
+  do_timeout(3500, end_test);
 }
 
 function end_test() {

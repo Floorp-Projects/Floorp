@@ -230,7 +230,9 @@ static nsresult GenerateFlatTextContent(nsIRange* aRange,
   NS_ASSERTION(aString.IsEmpty(), "aString must be empty string");
 
   nsINode* startNode = aRange->GetStartParent();
+  NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
   nsINode* endNode = aRange->GetEndParent();
+  NS_ENSURE_TRUE(endNode, NS_ERROR_FAILURE);
 
   if (startNode == endNode && startNode->IsNodeOfType(nsINode::eTEXT)) {
     nsIContent* content = static_cast<nsIContent*>(startNode);

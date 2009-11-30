@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for bug 509732
+  -->
+<window title="Bug 509732" width="500" height="600"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+
+    <notificationbox id="nb" hidden="true"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"
+        onload="test()"/>
+
+  <!-- test code goes here -->
+<script type="application/javascript">
+<![CDATA[
+var gNotificationBox;
+
+// Tests that a notification that is added in an hidden box didn't throw the animation
+function test() {
+  SimpleTest.waitForExplicitFinish();
+  gNotificationBox = document.getElementById("nb");
+
+  is(gNotificationBox.allNotifications.length, 0, "There should be no initial notifications");
+
+  gNotificationBox.appendNotification("Test notification",
+                                      "notification1", null,
+                                      gNotificationBox.PRIORITY_INFO_LOW,
+                                      null);
+
+  is(gNotificationBox.allNotifications.length, 1, "Notification exists");
+  is(gNotificationBox._timer, null, "Notification timer should be null");
+
+  test1();
+}
+
+// Tests that a notification that is removed from an hidden box didn't throw the animation
+function test1() {
+  let notification = gNotificationBox.getNotificationWithValue("notification1");
+  gNotificationBox.removeNotification(notification);
+  ok(!gNotificationBox.currentNotification, "Test 1 should show no current animation");
+  is(gNotificationBox._timer, null, "Notification timer should be null");
+  is(gNotificationBox.allNotifications.length, 0, "Test 1 should show no notifications present");
+
+  SimpleTest.finish();
+}
+]]>
+</script>
+
+</window>

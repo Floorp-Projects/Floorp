@@ -171,9 +171,9 @@
 
               // Hide the emptytext for a bit, in case the textbox will be focused subsequently
               this.inputField.setAttribute("emptytextdelay", "true");
-              setTimeout(function (textbox) {
-                textbox.inputField.removeAttribute("emptytextdelay");
-              }, 100, this);
+              setTimeout(function (input) {
+                input.removeAttribute("emptytextdelay");
+              }, 100, this.inputField);
 
               try {
                 this.editor.transactionManager.beginBatch();

@@ -58,7 +58,7 @@ function checkFile() {
     }
     else {
       // Wait a bit longer then try again
-      do_timeout(1000, "checkFile()");
+      do_timeout(1000, checkFile);
     }
   }
 
@@ -155,5 +155,5 @@ function run_test() {
   localHandler.launchWithURI(uri);
 
   do_test_pending();
-  do_timeout(1000, "checkFile()");
+  do_timeout(1000, checkFile);
 }

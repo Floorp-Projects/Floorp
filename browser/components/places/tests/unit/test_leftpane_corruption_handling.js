@@ -143,7 +143,7 @@ function run_test() {
 
   // Kick-off tests.
   do_test_pending();
-  do_timeout(0, "run_next_test();");
+  do_timeout(0, run_next_test);
 }
 
 function run_next_test() {
@@ -160,7 +160,7 @@ function run_next_test() {
     do_check_true(compareJSON(gReferenceJSON, leftPaneJSON));
     do_check_eq(PlacesUtils.bookmarks.getItemTitle(gFolderId), "test");
     // Go to next test.
-    do_timeout(0, "run_next_test();");
+    do_timeout(0, run_next_test);
   }
   else {
     // All tests finished.

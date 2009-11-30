@@ -44,7 +44,8 @@
 #include "nsAutoPtr.h"
 #include <gtk/gtk.h>
 
-class nsClipboard : public nsIClipboard
+class nsClipboard : public nsIClipboard,
+                    public nsIObserver
 {
 public:
     nsClipboard();
@@ -53,33 +54,29 @@ public:
     NS_DECL_ISUPPORTS
     
     NS_DECL_NSICLIPBOARD
+    NS_DECL_NSIOBSERVER
 
     // Make sure we are initialized, called from the factory
     // constructor
-    nsresult  Init                (void);
-    // Someone requested the selection from the hidden widget
-    void      SelectionGetEvent   (GtkWidget         *aWidget,
-                                   GtkSelectionData  *aSelectionData,
-                                   guint              aTime);
-    void      SelectionClearEvent (GtkWidget         *aWidget,
-                                   GdkEventSelection *aEvent);
+    nsresult  Init              (void);
 
+    // Someone requested the selection
+    void   SelectionGetEvent    (GtkClipboard     *aGtkClipboard,
+                                 GtkSelectionData *aSelectionData);
+    void   SelectionClearEvent  (GtkClipboard     *aGtkClipboard);
 
 private:
     // Utility methods
     static GdkAtom               GetSelectionAtom (PRInt32 aWhichClipboard);
     static GtkSelectionData     *GetTargets       (GdkAtom aWhichClipboard);
 
+    // Save global clipboard content to gtk
+    nsresult                     Store            (void);
+
     // Get our hands on the correct transferable, given a specific
     // clipboard
     nsITransferable             *GetTransferable  (PRInt32 aWhichClipboard);
 
-    // Add a target type to the hidden widget
-    void                         AddTarget        (GdkAtom aName,
-                                                   GdkAtom aClipboard);
-
-    // The hidden widget where we do all of our operations
-    GtkWidget                   *mWidget;
     // Hang on to our owners and transferables so we can transfer data
     // when asked.
     nsCOMPtr<nsIClipboardOwner>  mSelectionOwner;

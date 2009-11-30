@@ -97,7 +97,7 @@ var observer = {
 
       // The database connection will be closed after this sync, but we can't
       // know how much time it will take, so we use a polling strategy.
-      do_timeout(POLLING_TIMEOUT_MS, "check_results();");
+      do_timeout(POLLING_TIMEOUT_MS, check_results);
     }
   }
 }
@@ -111,7 +111,7 @@ function check_results() {
     }
 
     if (hs.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection.connectionReady) {
-      do_timeout(POLLING_TIMEOUT_MS, "check_results();");
+      do_timeout(POLLING_TIMEOUT_MS, check_results);
       return;
     }
 

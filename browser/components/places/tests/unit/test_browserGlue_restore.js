@@ -71,7 +71,7 @@ function run_test() {
   // Restore could take some time, usually less than 1s.
   // We will poll later in continue_test() to be sure restore has finished.
   do_test_pending();
-  do_timeout(1000, "continue_test();");
+  do_timeout(1000, continue_test);
 }
 
 function continue_test() {
@@ -80,7 +80,7 @@ function continue_test() {
 
   if (bs.getIdForItemAt(bs.toolbarFolder, 0) == -1) {
     // Not enough time to complete restore, poll again later.
-    do_timeout(1000, "continue_test();");
+    do_timeout(1000, continue_test);
     return;
   }
 

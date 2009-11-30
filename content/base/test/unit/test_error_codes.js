@@ -58,7 +58,7 @@ var asyncXHR = {
 
 function run_test() {
   do_test_pending();
-  do_timeout(0, "run_test_pt1()");
+  do_timeout(0, run_test_pt1);
 }
 
 // network offline
