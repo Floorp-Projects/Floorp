@@ -795,11 +795,26 @@ var Browser = {
     }
   },
 
-  getNotificationBox: function() {
+  getNotificationBox: function getNotificationBox() {
     return document.getElementById("notifications");
   },
 
-  translatePhoneNumbers: function() {
+  removeTransientNotificationsForTab: function removeTransientNotificationsForTab(aTab) {
+    let notificationBox = this.getNotificationBox();
+    let notifications = notificationBox.allNotifications;
+    for (let n = notifications.length - 1; n >= 0; n--) {
+      let notification = notifications[n];
+      if (notification._chromeTab != aTab.chromeTab)
+        continue;
+
+      if (notification.persistence)
+        notification.persistence--;
+      else if (Date.now() > notification.timeout)
+        notificationBox.removeNotification(notification);
+    }
+  },
+
+  translatePhoneNumbers: function translatePhoneNumbers() {
     let doc = getBrowser().contentDocument;
     // jonas black magic (only match text nodes that contain a sequence of 4 numbers)
     let textnodes = doc.evaluate('//text()[contains(translate(., "0123456789", "^^^^^^^^^^"), "^^^^")]',
@@ -1247,7 +1262,6 @@ var Browser = {
   forceChromeReflow: function forceChromeReflow() {
     let dummy = getComputedStyle(document.documentElement, "").width;
   }
-
 };
 
 Browser.MainDragger = function MainDragger(browserView) {
@@ -1257,7 +1271,6 @@ Browser.MainDragger = function MainDragger(browserView) {
 };
 
 Browser.MainDragger.prototype = {
-
   isDraggable: function isDraggable(target, scroller) { return true; },
 
   dragStart: function dragStart(clientX, clientY, target, scroller) {
@@ -1473,7 +1486,6 @@ Browser.MainDragger.prototype = {
 
     doffset.subtract(newX.value - origX.value, newY.value - origY.value);
   }
-  
 };
 
 function nsBrowserAccess()
@@ -2416,16 +2428,19 @@ ProgressController.prototype = {
   /** This method is called to indicate a change to the current location. */
   onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
     let location = aLocationURI ? aLocationURI.spec : "";
-    let selectedBrowser = Browser.selectedBrowser;
 
-    this._hostChanged = true;
+    this._hostChanged = (location != this.browser.lastSpec);
+    if (this._hostChanged) {
+      this.browser.lastSpec = this.browser.currentURI.spec;
+      Browser.removeTransientNotificationsForTab(this._tab);
 
-    if (this._tab == Browser.selectedTab) {
-      BrowserUI.updateURI();
+      if (this._tab == Browser.selectedTab) {
+        BrowserUI.updateURI();
 
-      // We're about to have new page content, to scroll the content area
-      // to the top so the new paints will draw correctly.
-      Browser.scrollContentToTop();
+        // We're about to have new page content, to scroll the content area
+        // to the top so the new paints will draw correctly.
+        Browser.scrollContentToTop();
+      }
     }
   },
 
