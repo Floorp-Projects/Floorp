@@ -2429,8 +2429,9 @@ ProgressController.prototype = {
   onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
     let location = aLocationURI ? aLocationURI.spec : "";
 
-    this._hostChanged = (location != this.browser.lastSpec);
-    if (this._hostChanged) {
+    this._hostChanged = true;
+    
+    if (location != this.browser.lastSpec) {
       this.browser.lastSpec = this.browser.currentURI.spec;
       Browser.removeTransientNotificationsForTab(this._tab);
 
