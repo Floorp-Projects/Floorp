@@ -105,15 +105,15 @@ HelperAppLauncherDialog.prototype = {
     }
     else {
       try {
-        picker.defaultExtension = this.mLauncher.MIMEInfo.primaryExtension;
+        picker.defaultExtension = aLauncher.MIMEInfo.primaryExtension;
       }
       catch (e) { }
     }
 
-    var wildCardExt = "*";
+    var wildCardExtension = "*";
     if (aSuggestedFileExt) {
       wildCardExtension += aSuggestedFileExt;
-      picker.appendFilter(this.mLauncher.MIMEInfo.description, wildCardExtension);
+      picker.appendFilter(aLauncher.MIMEInfo.description, wildCardExtension);
     }
 
     picker.appendFilters(Ci.nsIFilePicker.filterAll);
