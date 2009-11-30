@@ -1080,7 +1080,7 @@ var FormHelper = {
     if (aElement.disabled)
       return false;
 
-    if (aElement instanceof HTMLSelectElement || aElement instanceof HTMLTextAreaElement)
+    if (this._isValidSelectElement(aElement) || aElement instanceof HTMLTextAreaElement)
       return this._isElementVisible(aElement);
     
     if (aElement instanceof HTMLInputElement) {
@@ -1287,7 +1287,7 @@ var FormHelper = {
 };
 
 function SelectWrapper(aControl) {
-  this._control = aControl;
+  this._control = aControl.wrappedJSObject || aControl;
 }
 
 SelectWrapper.prototype = {
@@ -1315,7 +1315,7 @@ SelectWrapper.prototype = {
 };
 
 function MenulistWrapper(aControl) {
-  this._control = aControl;
+  this._control = aControl.wrappedJSObject || aControl;
 }
 
 MenulistWrapper.prototype = {
