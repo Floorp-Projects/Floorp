@@ -544,7 +544,7 @@ nsXULTreeAccessible::GetTreeItemAccessible(PRInt32 aRow,
 {
   *aAccessible = nsnull;
 
-  if (aRow < 0)
+  if (aRow < 0 || IsDefunct())
     return;
 
   PRInt32 rowCount = 0;

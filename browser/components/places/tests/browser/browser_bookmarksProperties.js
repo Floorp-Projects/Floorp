@@ -67,6 +67,9 @@ const TYPE_BOOKMARK = 1;
 
 const TEST_URL = "http://www.mozilla.org/";
 
+const DIALOG_URL = "chrome://browser/content/places/bookmarkProperties.xul";
+const DIALOG_URL_MINIMAL_UI = "chrome://browser/content/places/bookmarkProperties2.xul";
+
 var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
          getService(Ci.nsIWindowMediator);
 var win = wm.getMostRecentWindow("navigator:browser");
@@ -224,7 +227,8 @@ gTests.push({
 
     var windowObserver = {
       observe: function(aSubject, aTopic, aData) {
-        if (aTopic === "domwindowclosed") {
+        if (aTopic === "domwindowclosed" &&
+            aSubject.QueryInterface(Ci.nsIDOMWindow).location == DIALOG_URL) {
           ww.unregisterNotification(this);
           tagsField.popup.removeEventListener("popuphidden", popupListener, true);
           ok(false, "Dialog window should not be closed by pressing Enter on the autocomplete popup");
@@ -382,7 +386,8 @@ gTests.push({
 
     var windowObserver = {
       observe: function(aSubject, aTopic, aData) {
-        if (aTopic === "domwindowclosed") {
+        if (aTopic === "domwindowclosed" &&
+            aSubject.QueryInterface(Ci.nsIDOMWindow).location == DIALOG_URL) {
           ww.unregisterNotification(this);
           tagsField.popup.removeEventListener("popuphidden", popupListener, true);
           ok(false, "Dialog window should not be closed by pressing Escape on the autocomplete popup");
@@ -483,7 +488,8 @@ gTests.push({
 
     var windowObserver = {
       observe: function(aSubject, aTopic, aData) {
-        if (aTopic === "domwindowclosed") {
+        if (aTopic === "domwindowclosed" &&
+            aSubject.QueryInterface(Ci.nsIDOMWindow).location == DIALOG_URL_MINIMAL_UI) {
           ww.unregisterNotification(this);
           ok(self._cleanShutdown,
              "Dialog window should not be closed by pressing ESC in folder name textbox");
@@ -543,6 +549,9 @@ function runNextTest() {
   if (gCurrentTest) {
     gCurrentTest.cleanup();
     info("End of test: " + gCurrentTest.desc);
+    gCurrentTest = null;
+    executeSoon(runNextTest);
+    return;
   }
 
   if (gTests.length > 0) {

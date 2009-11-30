@@ -43,43 +43,26 @@ function test() {
   // initialization
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
-  let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-           getService(Ci.nsIWindowWatcher);
 
   const EXCEPTIONS_DLG_URL = 'chrome://pippki/content/exceptionDialog.xul';
-  const EXCEPTIONS_DLG_FEATURES = 'chrome,centerscreen,modal';
+  const EXCEPTIONS_DLG_FEATURES = 'chrome,centerscreen';
   const INVALID_CERT_LOCATION = 'https://nocert.example.com/';
   waitForExplicitFinish();
 
   // enter private browsing mode
   pb.privateBrowsingEnabled = true;
 
-  let testCheckbox;
-  let obs = {
-      observe: function(aSubject, aTopic, aData) {
-          // unregister ourself
-          ww.unregisterNotification(this);
-
-          let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
-          win.addEventListener("load", function() {
-              win.removeEventListener("load", arguments.callee, false);
-              testCheckbox(win.document.defaultView);
-          }, false);
-      }
-  };
-
   step1();
 
   // Test the certificate exceptions dialog as it is invoked from about:certerror
   function step1() {
-    ww.registerNotification(obs);
     let params = {
       exceptionAdded : false,
       location: INVALID_CERT_LOCATION,
       handlePrivateBrowsing : true,
       prefetchCert: true,
     };
-    testCheckbox = function(win) {
+    function testCheckbox() {
       let obsSvc = Cc["@mozilla.org/observer-service;1"].
                    getService(Ci.nsIObserverService);
       obsSvc.addObserver({
@@ -96,19 +79,19 @@ function test() {
           step2();
         }
       }, "cert-exception-ui-ready", false);
-    };
-    window.openDialog(EXCEPTIONS_DLG_URL, '', EXCEPTIONS_DLG_FEATURES, params);
+    }
+    var win = openDialog(EXCEPTIONS_DLG_URL, "", EXCEPTIONS_DLG_FEATURES, params);
+    win.addEventListener("load", testCheckbox, false);
   }
 
   // Test the certificate excetions dialog as it is invoked from the Preferences dialog
   function step2() {
-    ww.registerNotification(obs);
     let params = {
       exceptionAdded : false,
       location: INVALID_CERT_LOCATION,
       prefetchCert: true,
     };
-    testCheckbox = function(win) {
+    function testCheckbox() {
       let obsSvc = Cc["@mozilla.org/observer-service;1"].
                    getService(Ci.nsIObserverService);
       obsSvc.addObserver({
@@ -125,8 +108,9 @@ function test() {
           cleanup();
         }
       }, "cert-exception-ui-ready", false);
-    };
-    window.openDialog(EXCEPTIONS_DLG_URL, '', EXCEPTIONS_DLG_FEATURES, params);
+    }
+    var win = openDialog(EXCEPTIONS_DLG_URL, "", EXCEPTIONS_DLG_FEATURES, params);
+    win.addEventListener("load", testCheckbox, false);
   }
 
   function cleanup() {

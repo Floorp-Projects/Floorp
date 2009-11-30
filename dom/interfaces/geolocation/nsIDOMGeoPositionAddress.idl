@@ -37,16 +37,16 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(98808DEB-C8E4-422C-BA97-08BF2031464C)]
+[scriptable, uuid(0DF49C5C-9845-42F9-A76C-62E09C110986)]
 interface nsIDOMGeoPositionAddress : nsISupports
 {
-  readonly attribute string streetNumber;
-  readonly attribute string street;
-  readonly attribute string premises;
-  readonly attribute string city;
-  readonly attribute string county;
-  readonly attribute string region;
-  readonly attribute string country;
-  readonly attribute string countryCode;
-  readonly attribute string postalCode;
+  readonly attribute DOMString streetNumber;
+  readonly attribute DOMString street;
+  readonly attribute DOMString premises;
+  readonly attribute DOMString city;
+  readonly attribute DOMString county;
+  readonly attribute DOMString region;
+  readonly attribute DOMString country;
+  readonly attribute DOMString countryCode;
+  readonly attribute DOMString postalCode;
 };

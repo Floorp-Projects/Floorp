@@ -2065,9 +2065,17 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
     return NPERR_GENERIC_ERROR;
   }
+#else
+  case NPNVDOMElement:
+    // fall through
+  case NPNVDOMWindow:
+    // fall through
 #endif /* WINCE */
-
-  case NPNVserviceManager: // old XPCOM object, no longer supported
+  case NPNVserviceManager:
+    // old XPCOM objects, no longer supported, but null out the out
+    // param to avoid crashing plugins that still try to use this.
+    *(nsISupports**)result = nsnull;
+    // fall through
   default:
     return NPERR_GENERIC_ERROR;
   }
