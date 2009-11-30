@@ -486,15 +486,6 @@ public:
   {
     return mInner->SetTrusted(aTrusted);
   }
-  virtual void Serialize(IPC::Message* aMsg,
-                         PRBool aSerializeInterfaceType)
-  {
-    mInner->Serialize(aMsg, aSerializeInterfaceType);
-  }
-  virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter)
-  {
-    return mInner->Deserialize(aMsg, aIter);
-  }
 
 protected:
   // Use nsDOMProgressEvent so that we can forward
