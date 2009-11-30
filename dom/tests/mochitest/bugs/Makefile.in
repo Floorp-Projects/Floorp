@@ -108,6 +108,7 @@ _TEST_FILES	= \
 		utils_bug260264.js \
 		test_bug534362.html \
 		iframe_bug534362.html \
+		test_bug531542.html \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)
