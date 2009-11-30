@@ -5794,7 +5794,7 @@ nsPluginInstanceOwner::SetAbsoluteScreenPosition(nsIDOMElement* element,
   PRBool simpleImageRender = PR_FALSE;
   mInstance->GetValueFromPlugin(NPPVpluginWindowlessLocalBool,
                                 &simpleImageRender);
-  if (mInstance)
+  if (simpleImageRender)
     NativeImageDraw();
   return NS_OK;
 }
