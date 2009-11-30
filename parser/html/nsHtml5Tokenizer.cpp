@@ -447,11 +447,18 @@ nsHtml5Tokenizer::tokenizeBuffer(nsHtml5UTF16Buffer* buffer)
     case NS_HTML5TOKENIZER_PLAINTEXT:
     case NS_HTML5TOKENIZER_RAWTEXT:
     case NS_HTML5TOKENIZER_CDATA_SECTION:
-    case NS_HTML5TOKENIZER_ESCAPE:
-    case NS_HTML5TOKENIZER_ESCAPE_EXCLAMATION:
-    case NS_HTML5TOKENIZER_ESCAPE_EXCLAMATION_HYPHEN:
-    case NS_HTML5TOKENIZER_ESCAPE_HYPHEN:
-    case NS_HTML5TOKENIZER_ESCAPE_HYPHEN_HYPHEN: {
+    case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED:
+    case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPE_START:
+    case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPE_START_DASH:
+    case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_DASH:
+    case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_DASH_DASH:
+    case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_LESS_THAN:
+    case NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPE_START:
+    case NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED:
+    case NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN:
+    case NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH:
+    case NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH:
+    case NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPE_END: {
       cstart = start;
       break;
     }
@@ -2699,7 +2706,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             case '!': {
               tokenHandler->characters(nsHtml5Tokenizer::LT_GT, 0, 1);
               cstart = pos;
-              state = NS_HTML5TOKENIZER_ESCAPE_EXCLAMATION;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPE_START;
               goto scriptdatalessthansignloop_end;
             }
             default: {
@@ -2713,7 +2720,7 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
         }
         scriptdatalessthansignloop_end: ;
       }
-      case NS_HTML5TOKENIZER_ESCAPE_EXCLAMATION: {
+      case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPE_START: {
         for (; ; ) {
           if (++pos == endPos) {
             goto stateloop_end;
@@ -2721,19 +2728,19 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
           c = checkChar(buf, pos);
           switch(c) {
             case '-': {
-              state = NS_HTML5TOKENIZER_ESCAPE_EXCLAMATION_HYPHEN;
-              goto escapeexclamationloop_end;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPE_START_DASH;
+              goto scriptdataescapestartloop_end;
             }
             default: {
-              state = returnState;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA;
               reconsume = PR_TRUE;
               goto stateloop;
             }
           }
         }
-        escapeexclamationloop_end: ;
+        scriptdataescapestartloop_end: ;
       }
-      case NS_HTML5TOKENIZER_ESCAPE_EXCLAMATION_HYPHEN: {
+      case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPE_START_DASH: {
         for (; ; ) {
           if (++pos == endPos) {
             goto stateloop_end;
@@ -2741,19 +2748,19 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
           c = checkChar(buf, pos);
           switch(c) {
             case '-': {
-              state = NS_HTML5TOKENIZER_ESCAPE_HYPHEN_HYPHEN;
-              goto escapeexclamationhyphenloop_end;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_DASH_DASH;
+              goto scriptdataescapestartdashloop_end;
             }
             default: {
-              state = returnState;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA;
               reconsume = PR_TRUE;
               goto stateloop;
             }
           }
         }
-        escapeexclamationhyphenloop_end: ;
+        scriptdataescapestartdashloop_end: ;
       }
-      case NS_HTML5TOKENIZER_ESCAPE_HYPHEN_HYPHEN: {
+      case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_DASH_DASH: {
         for (; ; ) {
           if (++pos == endPos) {
             goto stateloop_end;
@@ -2762,42 +2769,56 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
           switch(c) {
             case '-': {
               continue;
+            }
+            case '<': {
+              flushChars(buf, pos);
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_LESS_THAN;
+              goto stateloop;
             }
             case '>': {
-              state = returnState;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA;
               goto stateloop;
             }
             case '\0': {
               emitReplacementCharacter(buf, pos);
-              state = NS_HTML5TOKENIZER_ESCAPE;
-              goto escapehyphenhyphenloop_end;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED;
+              goto scriptdataescapeddashdashloop_end;
             }
             case '\r': {
               emitCarriageReturn(buf, pos);
-              state = NS_HTML5TOKENIZER_ESCAPE;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED;
               goto stateloop_end;
             }
             case '\n': {
               silentLineFeed();
             }
             default: {
-              state = NS_HTML5TOKENIZER_ESCAPE;
-              goto escapehyphenhyphenloop_end;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED;
+              goto scriptdataescapeddashdashloop_end;
             }
           }
         }
-        escapehyphenhyphenloop_end: ;
+        scriptdataescapeddashdashloop_end: ;
       }
-      case NS_HTML5TOKENIZER_ESCAPE: {
+      case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED: {
         for (; ; ) {
-          if (++pos == endPos) {
-            goto stateloop_end;
+          if (reconsume) {
+            reconsume = PR_FALSE;
+          } else {
+            if (++pos == endPos) {
+              goto stateloop_end;
+            }
+            c = checkChar(buf, pos);
           }
-          c = checkChar(buf, pos);
           switch(c) {
             case '-': {
-              state = NS_HTML5TOKENIZER_ESCAPE_HYPHEN;
-              goto escapeloop_end;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_DASH;
+              goto scriptdataescapedloop_end;
+            }
+            case '<': {
+              flushChars(buf, pos);
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_LESS_THAN;
+              goto stateloop;
             }
             case '\0': {
               emitReplacementCharacter(buf, pos);
@@ -2815,9 +2836,9 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
             }
           }
         }
-        escapeloop_end: ;
+        scriptdataescapedloop_end: ;
       }
-      case NS_HTML5TOKENIZER_ESCAPE_HYPHEN: {
+      case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_DASH: {
         for (; ; ) {
           if (++pos == endPos) {
             goto stateloop_end;
@@ -2825,24 +2846,288 @@ nsHtml5Tokenizer::stateLoop(PRInt32 state, PRUnichar c, PRInt32 pos, PRUnichar* 
           c = checkChar(buf, pos);
           switch(c) {
             case '-': {
-              state = NS_HTML5TOKENIZER_ESCAPE_HYPHEN_HYPHEN;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_DASH_DASH;
               goto stateloop;
+            }
+            case '<': {
+              flushChars(buf, pos);
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_LESS_THAN;
+              goto scriptdataescapeddashloop_end;
             }
             case '\0': {
               emitReplacementCharacter(buf, pos);
-              state = NS_HTML5TOKENIZER_ESCAPE;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED;
               goto stateloop;
             }
             case '\r': {
               emitCarriageReturn(buf, pos);
-              state = NS_HTML5TOKENIZER_ESCAPE;
-              goto stateloop;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED;
+              goto stateloop_end;
             }
             case '\n': {
               silentLineFeed();
             }
             default: {
-              state = NS_HTML5TOKENIZER_ESCAPE;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED;
+              goto stateloop;
+            }
+          }
+        }
+        scriptdataescapeddashloop_end: ;
+      }
+      case NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED_LESS_THAN: {
+        for (; ; ) {
+          if (++pos == endPos) {
+            goto stateloop_end;
+          }
+          c = checkChar(buf, pos);
+          switch(c) {
+            case '/': {
+              index = 0;
+              clearStrBufForNextState();
+              returnState = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED;
+              state = NS_HTML5TOKENIZER_NON_DATA_END_TAG_NAME;
+              goto stateloop;
+            }
+            case 'S':
+            case 's': {
+              tokenHandler->characters(nsHtml5Tokenizer::LT_GT, 0, 1);
+              cstart = pos;
+              index = 1;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPE_START;
+              goto scriptdataescapedlessthanloop_end;
+            }
+            default: {
+              tokenHandler->characters(nsHtml5Tokenizer::LT_GT, 0, 1);
+              cstart = pos;
+              reconsume = PR_TRUE;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED;
+              goto stateloop;
+            }
+          }
+        }
+        scriptdataescapedlessthanloop_end: ;
+      }
+      case NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPE_START: {
+        for (; ; ) {
+          if (++pos == endPos) {
+            goto stateloop_end;
+          }
+          c = checkChar(buf, pos);
+
+          if (index < 6) {
+            PRUnichar folded = c;
+            if (c >= 'A' && c <= 'Z') {
+              folded += 0x20;
+            }
+            if (folded != nsHtml5Tokenizer::SCRIPT_ARR[index]) {
+              reconsume = PR_TRUE;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED;
+              goto stateloop;
+            }
+            index++;
+            continue;
+          }
+          switch(c) {
+            case '\r': {
+              emitCarriageReturn(buf, pos);
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED;
+              goto stateloop_end;
+            }
+            case '\n': {
+              silentLineFeed();
+            }
+            case ' ':
+            case '\t':
+            case '\f':
+            case '/':
+            case '>': {
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED;
+              goto scriptdatadoubleescapestartloop_end;
+            }
+            default: {
+              reconsume = PR_TRUE;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED;
+              goto stateloop;
+            }
+          }
+        }
+        scriptdatadoubleescapestartloop_end: ;
+      }
+      case NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED: {
+        for (; ; ) {
+          if (reconsume) {
+            reconsume = PR_FALSE;
+          } else {
+            if (++pos == endPos) {
+              goto stateloop_end;
+            }
+            c = checkChar(buf, pos);
+          }
+          switch(c) {
+            case '-': {
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH;
+              goto scriptdatadoubleescapedloop_end;
+            }
+            case '<': {
+              flushChars(buf, pos);
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN;
+              goto stateloop;
+            }
+            case '\0': {
+              emitReplacementCharacter(buf, pos);
+              continue;
+            }
+            case '\r': {
+              emitCarriageReturn(buf, pos);
+              goto stateloop_end;
+            }
+            case '\n': {
+              silentLineFeed();
+            }
+            default: {
+              continue;
+            }
+          }
+        }
+        scriptdatadoubleescapedloop_end: ;
+      }
+      case NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH: {
+        for (; ; ) {
+          if (++pos == endPos) {
+            goto stateloop_end;
+          }
+          c = checkChar(buf, pos);
+          switch(c) {
+            case '-': {
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH;
+              goto scriptdatadoubleescapeddashloop_end;
+            }
+            case '<': {
+              flushChars(buf, pos);
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN;
+              goto stateloop;
+            }
+            case '\0': {
+              emitReplacementCharacter(buf, pos);
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED;
+              goto stateloop;
+            }
+            case '\r': {
+              emitCarriageReturn(buf, pos);
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED;
+              goto stateloop_end;
+            }
+            case '\n': {
+              silentLineFeed();
+            }
+            default: {
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED;
+              goto stateloop;
+            }
+          }
+        }
+        scriptdatadoubleescapeddashloop_end: ;
+      }
+      case NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH: {
+        for (; ; ) {
+          if (++pos == endPos) {
+            goto stateloop_end;
+          }
+          c = checkChar(buf, pos);
+          switch(c) {
+            case '-': {
+              continue;
+            }
+            case '<': {
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN;
+              goto scriptdatadoubleescapeddashdashloop_end;
+            }
+            case '>': {
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA;
+              goto stateloop;
+            }
+            case '\0': {
+              emitReplacementCharacter(buf, pos);
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED;
+              goto stateloop;
+            }
+            case '\r': {
+              emitCarriageReturn(buf, pos);
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED;
+              goto stateloop_end;
+            }
+            case '\n': {
+              silentLineFeed();
+            }
+            default: {
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED;
+              goto stateloop;
+            }
+          }
+        }
+        scriptdatadoubleescapeddashdashloop_end: ;
+      }
+      case NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN: {
+        for (; ; ) {
+          if (++pos == endPos) {
+            goto stateloop_end;
+          }
+          c = checkChar(buf, pos);
+          switch(c) {
+            case '/': {
+              index = 0;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPE_END;
+              goto scriptdatadoubleescapedlessthanloop_end;
+            }
+            default: {
+              reconsume = PR_TRUE;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED;
+              goto stateloop;
+            }
+          }
+        }
+        scriptdatadoubleescapedlessthanloop_end: ;
+      }
+      case NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPE_END: {
+        for (; ; ) {
+          if (++pos == endPos) {
+            goto stateloop_end;
+          }
+          c = checkChar(buf, pos);
+          if (index < 6) {
+            PRUnichar folded = c;
+            if (c >= 'A' && c <= 'Z') {
+              folded += 0x20;
+            }
+            if (folded != nsHtml5Tokenizer::SCRIPT_ARR[index]) {
+              reconsume = PR_TRUE;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED;
+              goto stateloop;
+            }
+            index++;
+            continue;
+          }
+          switch(c) {
+            case '\r': {
+              emitCarriageReturn(buf, pos);
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED;
+              goto stateloop_end;
+            }
+            case '\n': {
+              silentLineFeed();
+            }
+            case ' ':
+            case '\t':
+            case '\f':
+            case '/':
+            case '>': {
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_ESCAPED;
+              goto stateloop;
+            }
+            default: {
+              reconsume = PR_TRUE;
+              state = NS_HTML5TOKENIZER_SCRIPT_DATA_DOUBLE_ESCAPED;
               goto stateloop;
             }
           }
