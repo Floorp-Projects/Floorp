@@ -139,6 +139,10 @@ pref("signon.SignonFileName", "signons.txt");
 /* autocomplete */
 pref("browser.formfill.enable", true);
 
+#ifdef WINCE
+pref("layout.css.devPixelsPerPx", "1");
+#endif
+
 /* spellcheck */
 pref("layout.spellcheckDefault", 1);
 
