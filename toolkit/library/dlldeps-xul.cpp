@@ -57,6 +57,5 @@ void xxxNeverCalledXUL()
   XRE_InitParentProcess(0, nsnull, nsnull, nsnull);
   XRE_RunAppShell();
   XRE_ShutdownChildProcess(nsnull);
-  XRE_SendTestShellCommand(nsnull, nsnull, nsnull);
 #endif
 }
