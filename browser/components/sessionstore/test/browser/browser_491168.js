@@ -56,8 +56,8 @@ function test() {
 
   waitForExplicitFinish();
 
-  const REFERRER1 = "http://www.example.net/?" + Date.now();
-  const REFERRER2 = "http://www.example.net/?" + Math.random();
+  const REFERRER1 = "http://example.org/?" + Date.now();
+  const REFERRER2 = "http://example.org/?" + Math.random();
 
   let tab = gBrowser.addTab();
   gBrowser.selectedTab = tab;
@@ -92,5 +92,5 @@ function test() {
   },true);
 
   let referrerURI = ioService.newURI(REFERRER1, null, null);
-  browser.loadURI("http://www.example.net", referrerURI, null);
+  browser.loadURI("http://example.org", referrerURI, null);
 }
