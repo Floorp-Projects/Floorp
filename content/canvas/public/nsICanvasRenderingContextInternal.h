@@ -87,9 +87,6 @@ public:
   // dst alpha is always 1.0.  If this is never called, the context
   // defaults to false (not opaque).
   NS_IMETHOD SetIsOpaque(PRBool isOpaque) = 0;
-
-  // Redraw the dirty rectangle of this canvas.
-  NS_IMETHOD Redraw(const gfxRect &dirty) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,
