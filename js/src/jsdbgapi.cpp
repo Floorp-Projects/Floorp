@@ -1218,7 +1218,7 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
         afp = NULL;
     }
 
-    if (JSVAL_IS_NULL(fp->thisv) && fp->argv)
+    if (fp->argv)
         fp->thisv = OBJECT_TO_JSVAL(js_ComputeThis(cx, JS_TRUE, fp->argv));
 
     if (afp) {
