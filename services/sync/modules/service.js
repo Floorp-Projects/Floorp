@@ -408,6 +408,7 @@ WeaveSvc.prototype = {
       case "idle":
         this._log.trace("Idle time hit, trying to sync");
         Svc.Idle.removeIdleObserver(this, IDLE_TIME);
+        this._hasIdleObserver = false;
         Utils.delay(function() this.sync(false), 0, this);
         break;
     }
@@ -966,6 +967,7 @@ WeaveSvc.prototype = {
     // Clear out a sync that's just waiting for idle if we happen to have one
     try {
       Svc.Idle.removeIdleObserver(this, IDLE_TIME);
+      this._hasIdleObserver = false;
     }
     catch(ex) {}
   },
@@ -992,6 +994,11 @@ WeaveSvc.prototype = {
    *
    */
   syncOnIdle: function WeaveSvc_syncOnIdle() {
+    // No need to add a duplicate idle observer
+    if (this._hasIdleObserver)
+      return;
+
+    this._hasIdleObserver = true;
     this._log.debug("Idle timer created for sync, will sync after " +
                     IDLE_TIME + " seconds of inactivity.");
     Svc.Idle.addIdleObserver(this, IDLE_TIME);
