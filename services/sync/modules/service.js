@@ -428,16 +428,8 @@ WeaveSvc.prototype = {
     }
 
     this._log.trace("Global score updated: " + this.globalScore);
-
-    if (this.globalScore > this.syncThreshold) {
-      this._log.debug("Global Score threshold hit, triggering sync.");
-      this.syncOnIdle();
-    }
-    else if (!this._syncTimer) // start the clock if it isn't already
-      this._scheduleNextSync();
+    this._checkSyncStatus();
   },
-
-  // These are global (for all engines)
 
   // gets cluster from central LDAP server and returns it, or null on error
   _findCluster: function _findCluster() {
@@ -985,8 +977,13 @@ WeaveSvc.prototype = {
       return;
     }
 
-    // otherwise, schedule the sync
-    this._scheduleNextSync();
+    // Only set the wait time to 0 if we need to sync right away
+    let wait;
+    if (this.globalScore > this.syncThreshold) {
+      this._log.debug("Global Score threshold hit, triggering sync.");
+      wait = 0;
+    }
+    this._scheduleNextSync(wait);
   },
 
   /**
