@@ -65,8 +65,6 @@ public:
    * The frameloader informs us what kind of widget to create during Show()
    */
   virtual nsIView* CreateViewAndWidget(nsContentType aContentType) = 0;
-
-  virtual nsIFrame* GetFrame() = 0;
 };
 
 #endif
