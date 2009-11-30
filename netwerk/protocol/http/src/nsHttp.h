@@ -44,10 +44,6 @@
 #define FORCE_PR_LOG
 #endif
 
-#ifdef MOZ_IPC
-#include "mozilla/net/NeckoChild.h"
-#endif 
-
 #include "plstr.h"
 #include "prlog.h"
 #include "prtime.h"
@@ -71,7 +67,6 @@
 extern PRLogModuleInfo *gHttpLog;
 #endif
 
-#undef LOG
 // http logging
 #define LOG1(args) PR_LOG(gHttpLog, 1, args)
 #define LOG2(args) PR_LOG(gHttpLog, 2, args)

@@ -41,9 +41,8 @@
 
 interface nsIDocShell;
 interface nsIURI;
-interface nsIFrame;
 
-[scriptable, uuid(8f94788d-ec69-4220-971c-0fd68d47b80f)]
+[scriptable, uuid(d675c531-6bdc-417c-b176-635060105f07)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -75,35 +74,6 @@ interface nsIFrameLoader : nsISupports
    * or may not be allowed on the loader's docshell.
    */
   readonly attribute boolean depthTooGreat;
-
-  /**
-   * Updates the position and size of the subdocument loaded by this frameloader.
-   *
-   *  @param aIFrame The nsIFrame for the content node that owns this frameloader
-   */
-  [noscript] void updatePositionAndSize(in nsIFrame aIFrame);
-
-  /**
-   * Activate remote frame.
-   * Throws an exception with non-remote frames.
-   */
-  void activateRemoteFrame();
-
-  /**
-   * @see nsIDOMWindowUtils sendMouseEvent.
-   */
-  void sendCrossProcessMouseEvent(in AString aType,
-                                  in float aX,
-                                  in float aY,
-                                  in long aButton,
-                                  in long aClickCount,
-                                  in long aModifiers,
-                                  [optional] in boolean aIgnoreRootScrollFrame);
-
-  /**
-   * Activate event forwarding from client (remote frame) to parent.
-   */
-  void activateFrameEvent(in AString aType, in boolean capture);
 };
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
