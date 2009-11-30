@@ -35,11 +35,6 @@
 #include "nanojit.h"
 
 #ifdef SOLARIS
-	#include <ucontext.h>
-	#include <dlfcn.h>
-	#include <procfs.h>
-	#include <sys/stat.h>
-    extern "C" caddr_t _getfp(void);
     typedef caddr_t maddr_ptr;
 #else
     typedef void *maddr_ptr;
