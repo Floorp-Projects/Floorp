@@ -188,6 +188,74 @@ button.button-dark[disabled="true"] {
   }
 }
 
+/* spinbuttons ------------------------------------------------------------- */
+textbox hbox.numberbox-input-box {
+  max-width: 96px;
+  border: 0.35mm solid #262629;
+  border-right: 0px solid transparent;
+  -moz-border-radius-topleft: 1mm;
+  -moz-border-radius-bottomleft: 1mm;
+  -moz-border-top-colors: -moz-initial;
+  -moz-border-bottom-colors: -moz-initial;
+  -moz-border-left-colors: -moz-initial;
+}
+
+spinbuttons .spinbuttons-box {
+  -moz-box-orient: horizontal !important;
+  -moz-box-direction: reverse !important;
+}
+
+spinbuttons .spinbuttons-up .button-icon,
+spinbuttons .spinbuttons-down .button-icon {
+  display: block;
+}
+
+/* high-res screens */
+@media all and (min-device-width: 401px) {
+  spinbuttons .spinbuttons-up {
+    border-width: 8px;
+    -moz-border-image: url("chrome://browser/skin/images/toggleoff-inactive-64.png") 8 repeat repeat !important;
+    list-style-image: url("chrome://browser/skin/images/arrowup-16.png");
+  }
+
+  spinbuttons .spinbuttons-up:hover:active:not([disabled=true]) {
+    -moz-border-image: url("chrome://browser/skin/images/toggleoff-active-64.png") 8 repeat repeat !important;
+  }
+
+  spinbuttons .spinbuttons-down {
+    border-width: 8px;
+    -moz-border-image: url("chrome://browser/skin/images/togglemiddle-inactive-64.png") 8 repeat repeat !important;
+    list-style-image: url("chrome://browser/skin/images/arrowdown-16.png");
+  }
+
+  spinbuttons .spinbuttons-down:hover:active:not([disabled=true]) {
+    -moz-border-image: url("chrome://browser/skin/images/togglemiddle-active-64.png") 8 repeat repeat !important;
+  }
+}
+
+/* low-res screens */
+@media all and (max-device-width: 400px) {
+  spinbuttons .spinbuttons-up {
+    border-width: 4px;
+    -moz-border-image: url("chrome://browser/skin/images/toggleoff-inactive-36.png") 4 repeat repeat !important;
+    list-style-image: url("chrome://browser/skin/images/arrowup-16.png");
+  }
+
+  spinbuttons .spinbuttons-up:hover:active:not([disabled=true]) {
+    -moz-border-image: url("chrome://browser/skin/images/toggleoff-active-36.png") 4 repeat repeat !important;
+  }
+
+  spinbuttons .spinbuttons-down {
+    border-width: 4px;
+    -moz-border-image: url("chrome://browser/skin/images/togglemiddle-inactive-36.png") 4 repeat repeat !important;
+    list-style-image: url("chrome://browser/skin/images/arrowdown-16.png");
+  }
+
+  spinbuttons .spinbuttons-down:hover:active:not([disabled=true]) {
+    -moz-border-image: url("chrome://browser/skin/images/togglemiddle-active-36.png") 4 repeat repeat !important;
+  }
+}
+
 /* toolbar buttons --------------------------------------------------------- */
 toolbarbutton {
   -moz-appearance: none !important;

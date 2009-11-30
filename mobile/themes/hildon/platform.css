@@ -65,7 +65,7 @@ textbox {
 }
 
 /* textboxes --------------------------------------------------------------- */
-textbox {
+textbox:not([type="number"]) {
   min-height: 48px;
   border: 3px solid #262629;
   -moz-border-radius: 8px;
@@ -174,6 +174,48 @@ notification button:not([disabled="true"]):active:hover {
 
 button.button-dark[disabled="true"] {
   color: #7e7e7e !important;
+}
+
+/* spinbuttons ------------------------------------------------------------- */
+textbox hbox.numberbox-input-box {
+  max-width: 128px;
+  border: 3px solid #262629;
+  border-right: 0px solid transparent;
+  -moz-border-radius-topleft: 8px;
+  -moz-border-radius-bottomleft: 8px;
+  -moz-border-top-colors: -moz-initial;
+  -moz-border-bottom-colors: -moz-initial;
+  -moz-border-left-colors: -moz-initial;
+}
+
+spinbuttons .spinbuttons-box {
+  -moz-box-orient: horizontal !important;
+  -moz-box-direction: reverse !important;
+}
+
+spinbuttons .spinbuttons-up .button-icon,
+spinbuttons .spinbuttons-down .button-icon {
+  display: block;
+}
+
+spinbuttons .spinbuttons-up {
+  border-width: 8px;
+  -moz-border-image: url("chrome://browser/skin/images/toggleoff-inactive-64.png") 8 repeat repeat !important;
+  list-style-image: url("chrome://browser/skin/images/arrowup-16.png");
+}
+
+spinbuttons .spinbuttons-up:hover:active:not([disabled=true]) {
+  -moz-border-image: url("chrome://browser/skin/images/toggleoff-active-64.png") 8 repeat repeat !important;
+}
+
+spinbuttons .spinbuttons-down {
+  border-width: 8px;
+  -moz-border-image: url("chrome://browser/skin/images/togglemiddle-inactive-64.png") 8 repeat repeat !important;
+  list-style-image: url("chrome://browser/skin/images/arrowdown-16.png");
+}
+
+spinbuttons .spinbuttons-down:hover:active:not([disabled=true]) {
+  -moz-border-image: url("chrome://browser/skin/images/togglemiddle-active-64.png") 8 repeat repeat !important;
 }
 
 /* toolbar buttons --------------------------------------------------------- */

@@ -22,6 +22,10 @@ setting[type="boolint"] {
   -moz-binding: url("chrome://browser/content/bindings/setting.xml#setting-boolint");
 }
 
+setting[type="integer"] {
+  -moz-binding: url("chrome://browser/content/bindings/setting.xml#setting-integer");
+}
+
 setting[type="control"] {
   -moz-binding: url("chrome://browser/content/bindings/setting.xml#setting-control");
 }
