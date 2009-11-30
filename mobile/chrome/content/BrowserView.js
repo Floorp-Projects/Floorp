@@ -684,9 +684,8 @@ BrowserView.prototype = {
 
     if (!srcRect) {
       let vr = this.getVisibleRect();
-      let cr = BrowserView.Util.visibleRectToCriticalRect(vr, bvs);
-      vr.x = cr.left;
-      vr.y = cr.top;
+      vr.x = bvs.viewportRect.left;
+      vr.y = bvs.viewportRect.top;
       srcRect = vr;
     }
 
