@@ -2,13 +2,16 @@
 <html>
 <head>
 <style>
-body > div {
+.testcase {
   height:200px;
   width:200px;
-  overflow:hidden;
   position:absolute;
+  overflow:hidden;
   left:0;
   top:0;
+}
+iframe {
+  border:none;
 }
 </style>
 <script src="region_lib.js"></script>
@@ -19,21 +22,21 @@ body > div {
      are blank or filled with a solid color, it's fragile to use those in
      tests which expect to observe scrolling happening. -->
 
-<!-- Each of the DIV children of the BODY is one test. We scroll that DIV's
-     scrollTop (or scrollLeft, if the DIV's class is 'horizontal')
-     from 0 to 20 and then call the function given by the DIV's id,
+<!-- Each of the "testcase" elements is one test. We scroll that element's
+     scrollTop (or scrollLeft, if the element's class is 'horizontal')
+     from 0 to 20 and then call the function given by the element's id,
      passing the blit region and the paint region as a parameters. -->
 
-<div id="testSimpleScroll">
+<div id="testSimpleScroll" class="testcase">
   <div style="height:300px; background:-moz-linear-gradient(top, red, black);"></div>
 </div>
 
-<div id="testFixedBackground">
+<div id="testFixedBackground" class="testcase">
   <div style="height:300px; margin-bottom:-300px; background:-moz-linear-gradient(left, red, black) fixed;"></div>
   <div style="height:300px; background:-moz-linear-gradient(top, rgba(0,0,0,0.7), rgba(255,0,0,0.7));"></div>
 </div>
 
-<div id="testFixedPosOverlay">
+<div id="testFixedPosOverlay" class="testcase">
   <div style="position:fixed; left:0; top:50px; width:100px; height:45px; background:yellow;"></div>
   <p>Hello
   <p>Hello
@@ -59,59 +62,70 @@ body > div {
   <p>Hello
 </div>
 
-<div style="border:1px solid black;" id="testBorder">
+<div style="border:1px solid black;" id="testBorder" class="testcase">
   <div style="height:300px; background:-moz-linear-gradient(top, red, black);"></div>
 </div>
 
-<div id="testScrollOutOfView">
+<div id="testScrollOutOfView" class="testcase">
   <div style="height:10px; margin-bottom:210px; background:-moz-linear-gradient(top, rgba(0,0,0,0.7), rgba(255,0,0,0.7));"></div>
 </div>
 
-<div id="testScrollIntoView">
+<div id="testScrollIntoView" class="testcase">
   <div style="height:10px; margin-top:210px; background:-moz-linear-gradient(top, rgba(0,0,0,0.7), rgba(255,0,0,0.7));"></div>
 </div>
 
-<div id="testSimpleScrollWithSubpixelOffset1" style="top:0.2px">
+<div id="testSimpleScrollWithSubpixelOffset1" style="top:0.2px" class="testcase">
   <div style="height:300px; background:-moz-linear-gradient(top, red, black);"></div>
 </div>
 
-<div id="testSimpleScrollWithSubpixelOffset2" style="top:0.8px">
+<div id="testSimpleScrollWithSubpixelOffset2" style="top:0.8px" class="testcase">
   <div style="height:300px; background:-moz-linear-gradient(top, red, black);"></div>
 </div>
 
-<div id="testSimpleScrollWithSubpixelOffset3" style="left:0.2px" class="horizontal">
+<div id="testSimpleScrollWithSubpixelOffset3" style="left:0.2px" class="horizontal testcase">
   <div style="width:300px; height:200px; background:-moz-linear-gradient(left, red, black);"></div>
 </div>
 
-<div id="testSimpleScrollWithSubpixelOffset4" style="left:0.8px" class="horizontal">
+<div id="testSimpleScrollWithSubpixelOffset4" style="left:0.8px" class="horizontal testcase">
   <div style="width:300px; height:200px; background:-moz-linear-gradient(left, red, black);"></div>
 </div>
 
-<div id="testMovingClipArea">
+<div id="testMovingClipArea" class="testcase">
   <div style="margin-top:20px; height:20px; margin-bottom:300px; background-color:blue; overflow:hidden;"></div>
 </div>
 
-<div id="testNonmovingClipArea">
+<div id="testNonmovingClipArea" class="testcase">
   <div style="height:300px; background:-moz-linear-gradient(top, red, black);"></div>
   <div style="position:fixed; left:0; top:150px; width:200px; height:50px; background:yellow; overflow:hidden; opacity:0.5;">
     <div style="height:50px; background:-moz-linear-gradient(top, green, yellow); opacity:0.3;"></div>
   </div>
 </div>
 
-<div id="testFixedOverUniform">
+<div id="testFixedOverUniform" class="testcase">
   <div style="height:300px; background:blue;"></div>
   <div style="position:fixed; left:0; top:50px; width:100px; height:45px; background:yellow; opacity:0.5;"></div>
 </div>
 
+<iframe class="testcase" id="testClipIFRAME"
+        src="data:text/html,<body class='testcase' style='margin:0; height:300px; background:-moz-linear-gradient(top, red, black);'>">
+</iframe>
+
+<iframe class="testcase" id="testClipIFRAME2" style="top:-50px"
+        src="data:text/html,<body class='testcase' style='margin:0; height:300px; background:-moz-linear-gradient(top, red, black);'>">
+</iframe>
+
 <script>
-var tests = document.querySelectorAll("body>div");
+var testcases = document.querySelectorAll("div.testcase");
+var tests = [];
+var iframes = document.querySelectorAll("iframe.testcase");
+
 var currentTest = -1;
 
 function ok(a, msg) {
-  window.opener.ok(a, tests[currentTest].id + ": " + msg);
+  window.opener.ok(a, tests[currentTest].container.id + ": " + msg);
 };
 function todo(a, msg) {
-  window.opener.todo(a, tests[currentTest].id + ": " + msg);
+  window.opener.todo(a, tests[currentTest].container.id + ": " + msg);
 };
 function finish() {
   window.opener.SimpleTest.finish();
@@ -253,6 +267,20 @@ function testFixedOverUniform(blitRegion, paintRegion) {
      "Shouldn't repaint anything: " + paintRegion.toString());
 }
 
+function testClipIFRAME(blitRegion, paintRegion) {
+  ok(blitRegion.equalsRegion(new Region([[0,0,200,180]])),
+     "Should blit everything that was already visible: " + blitRegion.toString());
+  ok(paintRegion.equalsRegion(new Region([[0,180,200,200]])),
+     "Should repaint area that was scrolled into view: " + paintRegion.toString());
+}
+
+function testClipIFRAME2(blitRegion, paintRegion) {
+  ok(blitRegion.equalsRegion(new Region([[0,50,200,180]])),
+     "Should blit everything that was already visible: " + blitRegion.toString());
+//  ok(paintRegion.equalsRegion(new Region([[0,180,200,200]])),
+//     "Should repaint area that was scrolled into view: " + paintRegion.toString());
+}
+
 function clientRectToRect(cr)
 {
   return [cr.left, cr.top, cr.right, cr.bottom];
@@ -285,23 +313,15 @@ function afterPaint(event) {
   if (blitRegion.isEmpty() && paintRegion.isEmpty())
     return;
 
-  var testFunc = window[tests[currentTest].id];
+  var testFunc = window[tests[currentTest].container.id];
   if (!testFunc) {
-    ok(false, "Cannot find test function for " + tests[currentTest].id);
+    ok(false, "Cannot find test function for " + tests[currentTest].container.id);
   } else {
     testFunc(blitRegion, paintRegion);
   }
-  tests[currentTest].style.display = 'none';
+  tests[currentTest].container.style.display = 'none';
 
   nextTest();
-}
-
-for (var i = 0; i < tests.length; ++i) {
-  var e = tests[i];
-  e.style.display = "none";
-  // Make sure we don't remember a scroll position from history
-  e.scrollTop = 0;
-  e.scrollLeft = 0;
 }
 
 function nextTest() {
@@ -311,19 +331,37 @@ function nextTest() {
     return;
   }
 
-  var e = tests[currentTest];
-  e.style.display = "";
+  var t = tests[currentTest];
+  t.container.style.display = "";
   setTimeout(function() {
-    if (e.getAttribute("class") == "horizontal") {
-      e.scrollLeft = 20;
+    if (t.scrollable.getAttribute("class").match(/horizontal/)) {
+      t.scrollable.scrollLeft = 20;
     } else {
-      e.scrollTop = 20;
+      t.scrollable.scrollTop = 20;
     }
   }, 0);
 }
 
 function runTests() {
+  for (var i = 0; i < testcases.length; ++i) {
+    tests.push({ scrollable:testcases[i], container:testcases[i] });
+  }
+  for (var i = 0; i < iframes.length; ++i) {
+    tests.push({ scrollable:iframes[i].contentDocument.body, container:iframes[i] });
+  }
+
+  for (var i = 0; i < tests.length; ++i) {
+    var t = tests[i];
+    t.container.style.display = "none";
+    // Make sure we don't remember a scroll position from history
+    t.scrollable.scrollTop = 0;
+    t.scrollable.scrollLeft = 0;
+  }
+
   window.addEventListener("MozAfterPaint", afterPaint, false);
+  for (var i = 0; i < iframes.length; ++i) {
+    iframes[i].contentWindow.addEventListener("MozAfterPaint", afterPaint, false);
+  }
   nextTest();
 }
 window.onload = function() { setTimeout(runTests, 0); };
