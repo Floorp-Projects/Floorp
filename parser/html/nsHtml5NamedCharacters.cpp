@@ -10,7 +10,7 @@ jArray<PRUnichar,PRInt32>* nsHtml5NamedCharacters::VALUES;
 PRUnichar** nsHtml5NamedCharacters::WINDOWS_1252;
 static PRUnichar const WINDOWS_1252_DATA[] = {
   0x20AC,
-  0xFFFD,
+  0x0081,
   0x201A,
   0x0192,
   0x201E,
@@ -22,10 +22,10 @@ static PRUnichar const WINDOWS_1252_DATA[] = {
   0x0160,
   0x2039,
   0x0152,
-  0xFFFD,
+  0x008D,
   0x017D,
-  0xFFFD,
-  0xFFFD,
+  0x008F,
+  0x0090,
   0x2018,
   0x2019,
   0x201C,
@@ -38,7 +38,7 @@ static PRUnichar const WINDOWS_1252_DATA[] = {
   0x0161,
   0x203A,
   0x0153,
-  0xFFFD,
+  0x009D,
   0x017E,
   0x0178
 };
@@ -61,14 +61,14 @@ static PRUnichar const VALUE_##N[] = { VALUE };
 void
 nsHtml5NamedCharacters::initializeStatics()
 {
-  NAMES = jArray<jArray<PRUnichar,PRInt32>,PRInt32>(2137);
+  NAMES = jArray<jArray<PRUnichar,PRInt32>,PRInt32>(2138);
 
 #define NAMED_CHARACTER_REFERENCE(N, CHARS, LEN, VALUE, SIZE) \
   NAMES[N] = jArray<PRUnichar,PRInt32>((PRUnichar*)NAME_##N, LEN);
 #include "nsHtml5NamedCharactersInclude.h"
 #undef NAMED_CHARACTER_REFERENCE
 
-  VALUES = new jArray<PRUnichar,PRInt32>[2137];
+  VALUES = new jArray<PRUnichar,PRInt32>[2138];
 
 #define NAMED_CHARACTER_REFERENCE(N, CHARS, LEN, VALUE, SIZE) \
   VALUES[N] = jArray<PRUnichar,PRInt32>((PRUnichar*)VALUE_##N, SIZE);
