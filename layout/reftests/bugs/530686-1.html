@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<style type="text/css"> 
+#rear {
+	width: 500px;
+	height: 1500px;
+	-moz-box-shadow: 0 0 100px #667;
+	display: block;
+}
+.cover {
+    position: absolute;
+    width: 520px;
+    height: 100px;
+    background: yellow;
+}
+</style>
+<script>
+function doTest() {
+  var es = document.getElementsByClassName("cover");
+  for (var i = 0; i < es.length; ++i) {
+    es[i].style.display = 'none';
+  }
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</head>
+<body>
+<div id="rear"></div>
+<div class="cover" style="top:100px"></div>
+<div class="cover" style="top:300px"></div>
+</body>
+</html>
