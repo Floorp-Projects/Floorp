@@ -113,13 +113,19 @@ nsHtml5TreeOpExecutor::DidBuildModel(PRBool aTerminated)
     return NS_OK;
   }
   
+  static_cast<nsHtml5Parser*> (mParser.get())->DropStreamParser();
+
   // This is comes from nsXMLContentSink
   DidBuildModelImpl(aTerminated);
   mDocument->ScriptLoader()->RemoveObserver(this);
   ScrollToRef();
   mDocument->RemoveObserver(this);
+  if (!mParser) {
+    // DidBuildModelImpl may cause mParser to be nulled out
+    // Return early to avoid unblocking the onload event too many times.
+    return NS_OK;
+  }
   mDocument->EndLoad();
-  static_cast<nsHtml5Parser*> (mParser.get())->DropStreamParser();
   DropParserAndPerfHint();
 #ifdef GATHER_DOCWRITE_STATISTICS
   printf("UNSAFE SCRIPTS: %d\n", sUnsafeDocWrites);
