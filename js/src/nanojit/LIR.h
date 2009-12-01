@@ -1289,7 +1289,7 @@ namespace nanojit
         // These public versions are used before an LIns has been created.
         LInsp findImm(int32_t a, uint32_t &k);
         LInsp findImmq(uint64_t a, uint32_t &k);
-        LInsp findImmf(uint64_t d, uint32_t &k);
+        LInsp findImmf(double d, uint32_t &k);
         LInsp find1(LOpcode v, LInsp a, uint32_t &k);
         LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &k);
         LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &k);
