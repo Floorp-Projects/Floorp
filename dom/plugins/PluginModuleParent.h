@@ -141,6 +141,7 @@ public:
 
     bool EnsureValidNPIdentifier(NPIdentifier aIdentifier);
 
+    base::ProcessHandle ChildProcessHandle() { return mSubprocess->GetChildProcessHandle(); }
 private:
     void SetPluginFuncs(NPPluginFuncs* aFuncs);
 

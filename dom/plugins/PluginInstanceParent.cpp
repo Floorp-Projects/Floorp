@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,6 +47,10 @@
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
 
+#if defined(OS_WIN)
+#define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
+#endif
+
 using namespace mozilla::plugins;
 
 PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
@@ -53,8 +58,17 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
                                            const NPNetscapeFuncs* npniface)
   : mParent(parent),
     mNPP(npp),
-    mNPNIface(npniface)
+    mNPNIface(npniface),
+    mWindowType(NPWindowTypeWindow)
 {
+#if defined(OS_WIN)
+    // Event sent from nsObjectFrame indicating double pass rendering for
+    // windowless plugins. RegisterWindowMessage makes it easy sync event
+    // values, and insures we never conflict with windowing events we allow
+    // for windowless plugins.
+    mDoublePassEvent = ::RegisterWindowMessage(NS_OOPP_DOUBLEPASS_MSGID);
+    mLocalCopyRender = false;
+#endif
 }
 
 PluginInstanceParent::~PluginInstanceParent()
@@ -78,6 +92,10 @@ PluginInstanceParent::Destroy()
           PluginScriptableObjectParent::ScriptableInvalidate(object);
         }
     }
+
+#if defined(OS_WIN)
+    SharedSurfaceRelease();
+#endif
 }
 
 PBrowserStreamParent*
@@ -319,13 +337,34 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
     NS_ENSURE_TRUE(aWindow, NPERR_GENERIC_ERROR);
 
     NPRemoteWindow window;
+    mWindowType = aWindow->type;
+
+#if defined(OS_WIN)
+    // On windowless controls, reset the shared memory surface as needed.
+    if (mWindowType == NPWindowTypeDrawable) {
+        // SharedSurfaceSetWindow will take care of NPRemoteWindow.
+        if (!SharedSurfaceSetWindow(aWindow, window)) {
+          return NPERR_OUT_OF_MEMORY_ERROR;
+        }
+    }
+    else {
+        window.window = reinterpret_cast<unsigned long>(aWindow->window);
+        window.x = aWindow->x;
+        window.y = aWindow->y;
+        window.width = aWindow->width;
+        window.height = aWindow->height;
+        window.type = aWindow->type;
+    }
+#else
     window.window = reinterpret_cast<unsigned long>(aWindow->window);
     window.x = aWindow->x;
     window.y = aWindow->y;
     window.width = aWindow->width;
     window.height = aWindow->height;
-    window.clipRect = aWindow->clipRect;
+    window.clipRect = aWindow->clipRect; // MacOS specific
     window.type = aWindow->type;
+#endif
+
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     const NPSetWindowCallbackStruct* ws_info =
       static_cast<NPSetWindowCallbackStruct*>(aWindow->ws_info);
@@ -443,6 +482,21 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
     NPRemoteEvent npremoteevent;
     npremoteevent.event = *npevent;
 
+#if defined(OS_WIN)
+    RECT rect;
+    if (mWindowType == NPWindowTypeDrawable) {
+        if (mDoublePassEvent && mDoublePassEvent == npevent->event) {
+            // Sent from nsObjectFrame to let us know a double pass render is in progress.
+            mLocalCopyRender = PR_TRUE;
+            return true;
+        } else if (WM_PAINT == npevent->event) {
+            // Don't forward on the second pass, otherwise, fall through.
+            if (!SharedSurfaceBeforePaint(rect, npremoteevent))
+                return true;
+        }
+    }
+#endif
+
 #if defined(MOZ_X11)
     if (GraphicsExpose == npevent->type) {
         printf("  schlepping drawable 0x%lx across the pipe\n",
@@ -464,6 +518,12 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
     if (!CallNPP_HandleEvent(npremoteevent, &handled)) {
         return 0;               // no good way to handle errors here...
     }
+
+#if defined(OS_WIN)
+    if (handled && mWindowType == NPWindowTypeDrawable && WM_PAINT == npevent->event)
+        SharedSurfaceAfterPaint(npevent);
+#endif
+
     return handled;
 }
 
@@ -632,3 +692,126 @@ PluginInstanceParent::AnswerNPN_PopPopupsEnabledState(bool* aSuccess)
     *aSuccess = mNPNIface->poppopupsenabledstate(mNPP);
     return true;
 }
+
+#if defined(OS_WIN)
+
+/* windowless drawing helpers */
+
+void
+PluginInstanceParent::SharedSurfaceRelease()
+{
+    mSharedSurfaceDib.Close();
+}
+
+bool
+PluginInstanceParent::SharedSurfaceSetWindow(const NPWindow* aWindow,
+                                             NPRemoteWindow& aRemoteWindow)
+{
+    aRemoteWindow.window = nsnull;
+    aRemoteWindow.x      = 0;
+    aRemoteWindow.y      = 0;
+    aRemoteWindow.width  = aWindow->width;
+    aRemoteWindow.height = aWindow->height;
+    aRemoteWindow.type   = aWindow->type;
+
+    nsIntRect newPort(aWindow->x, aWindow->y, aWindow->width, aWindow->height);
+
+    // save the the rect location within the browser window.
+    mPluginPort = newPort;
+
+    // move the port to our shared surface origin
+    newPort.MoveTo(0,0);
+
+    // check to see if we have the room in shared surface
+    if (mSharedSurfaceDib.IsValid() && mSharedSize.Contains(newPort)) {
+      // ok to paint
+      aRemoteWindow.surfaceHandle = 0;
+      return true;
+    }
+    
+    // allocate a new shared surface
+    SharedSurfaceRelease();
+    if (NS_FAILED(mSharedSurfaceDib.Create(reinterpret_cast<HDC>(aWindow->window),
+                                           newPort.width, newPort.height, 32)))
+      return false;
+
+    // save the new shared surface size we just allocated
+    mSharedSize = newPort;
+    
+    base::SharedMemoryHandle handle;
+    if (NS_FAILED(mSharedSurfaceDib.ShareToProcess(mParent->ChildProcessHandle(), &handle)))
+      return false;
+
+    aRemoteWindow.surfaceHandle = handle;
+    
+    return true;
+}
+
+bool
+PluginInstanceParent::SharedSurfaceBeforePaint(RECT& rect,
+                                               NPRemoteEvent& npremoteevent)
+{
+    RECT* dr = (RECT*)npremoteevent.event.lParam;
+    HDC parentHdc = (HDC)npremoteevent.event.wParam;
+
+    // We render twice per frame for windowless plugins that sit in transparent
+    // frames. (See nsObjectFrame and gfxWindowsNativeDrawing for details.) IPC
+    // message delays in OOP plugin painting can result in two passes yeilding
+    // different animation frames. The second rendering doesn't need to go over
+    // the wire (we already have a copy of the frame in mSharedSurfaceDib) so we
+    // skip off requesting the second. This also gives us a nice perf boost.
+    if (mLocalCopyRender) {
+      mLocalCopyRender = false;
+      // Reuse the old render.
+      SharedSurfaceAfterPaint(&npremoteevent.event);
+      return false;
+    }
+
+    nsIntRect dirtyRect(dr->left, dr->top, dr->right-dr->left, dr->bottom-dr->top);
+    dirtyRect.MoveBy(-mPluginPort.x, -mPluginPort.y); // should always be smaller than dirtyRect
+
+    ::BitBlt(mSharedSurfaceDib.GetHDC(),
+             dirtyRect.x,
+             dirtyRect.y,
+             dirtyRect.width,
+             dirtyRect.height,
+             parentHdc,
+             dr->left,
+             dr->top,
+             SRCCOPY);
+
+    // setup the translated dirty rect we'll send to the child
+    rect.left   = dirtyRect.x;
+    rect.top    = dirtyRect.y;
+    rect.right  = dirtyRect.width;
+    rect.bottom = dirtyRect.height;
+
+    npremoteevent.event.wParam = WPARAM(0);
+    npremoteevent.event.lParam = LPARAM(&rect);
+
+    // Send the event to the plugin
+    return true;
+}
+
+void
+PluginInstanceParent::SharedSurfaceAfterPaint(NPEvent* npevent)
+{
+    RECT* dr = (RECT*)npevent->lParam;
+    HDC parentHdc = (HDC)npevent->wParam;
+
+    nsIntRect dirtyRect(dr->left, dr->top, dr->right-dr->left, dr->bottom-dr->top);
+    dirtyRect.MoveBy(-mPluginPort.x, -mPluginPort.y);
+
+    // src copy the shared dib into the parent surface we are handed.
+    ::BitBlt(parentHdc,
+             dr->left,
+             dr->top,
+             dirtyRect.width,
+             dirtyRect.height,
+             mSharedSurfaceDib.GetHDC(),
+             dirtyRect.x,
+             dirtyRect.y,
+             SRCCOPY);
+}
+
+#endif // defined(OS_WIN)
