@@ -35,29 +35,39 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH       = ../..
+topsrcdir   = @top_srcdir@
+srcdir      = @srcdir@
+VPATH       = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= gfx
-
-ifdef MOZ_TREE_CAIRO
-DIRS		= cairo
-endif
-
-DIRS		+= thebes public idl src qcms
-
 ifdef MOZ_IPC
-DIRS		+= ipc
+
+MODULE             = gfxipc
+LIBRARY_NAME       = gfxipc_s
+FORCE_STATIC_LIB   = 1
+LIBXUL_LIBRARY     = 1
+EXPORT_LIBRARY     = 1
+
+EXPORTS_NAMESPACES = mozilla/gfx
+
+EXPORTS_mozilla/gfx = \
+        SharedDIB.h   \
+        $(NULL)
+
+CPPSRCS = SharedDIB.cpp
+
+ENABLE_CXX_EXCEPTIONS	= 1
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS += SharedDIBWin.cpp
+EXPORTS_mozilla/gfx += SharedDIBWin.h
 endif
 
-ifdef ENABLE_TESTS
-ifndef MOZ_ENABLE_LIBXUL
-TOOL_DIRS	+= tests
-endif
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+
 endif
 
 include $(topsrcdir)/config/rules.mk

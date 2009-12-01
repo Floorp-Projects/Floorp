@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,6 +46,7 @@
 #include "mozilla/ipc/SyncChannel.h"
 
 using namespace mozilla::plugins;
+using namespace mozilla::gfx;
 
 #ifdef MOZ_WIDGET_GTK2
 
@@ -328,8 +330,15 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
                event.event.xgraphicsexpose.drawable);
 #endif
 
-    // plugins might be fooling with these, make a copy
+    // Make a copy since we may modify values.
     NPEvent evcopy = event.event;
+
+#ifdef OS_WIN
+    // Setup the shared dib for painting and update evcopy.
+    if (NPWindowTypeDrawable == mWindow.type && WM_PAINT == evcopy.event)
+        SharedSurfaceBeforePaint(evcopy);
+#endif
+
     *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
 
 #ifdef MOZ_X11
@@ -408,25 +417,43 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
     *rv = mPluginIface->setwindow(&mData, &mWindow);
 
 #elif defined(OS_WIN)
-    ReparentPluginWindow((HWND)aWindow.window);
-    SizePluginWindow(aWindow.width, aWindow.height);
+    switch (aWindow.type) {
+      case NPWindowTypeWindow:
+      {
+          if (!CreatePluginWindow())
+              return false;
 
-    mWindow.window = (void*)mPluginWindowHWND;
-    mWindow.x = aWindow.x;
-    mWindow.y = aWindow.y;
-    mWindow.width = aWindow.width;
-    mWindow.height = aWindow.height;
-    mWindow.type = aWindow.type;
+          ReparentPluginWindow((HWND)aWindow.window);
+          SizePluginWindow(aWindow.width, aWindow.height);
 
-    *rv = mPluginIface->setwindow(&mData, &mWindow);
-    if (*rv == NPERR_NO_ERROR) {
-        WNDPROC wndProc = reinterpret_cast<WNDPROC>(
-            GetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC));
-        if (wndProc != PluginWindowProc) {
-            mPluginWndProc = reinterpret_cast<WNDPROC>(
-                SetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC,
-                                 reinterpret_cast<LONG>(PluginWindowProc)));
-        }
+          mWindow.window = (void*)mPluginWindowHWND;
+          mWindow.x = aWindow.x;
+          mWindow.y = aWindow.y;
+          mWindow.width = aWindow.width;
+          mWindow.height = aWindow.height;
+          mWindow.type = aWindow.type;
+
+          *rv = mPluginIface->setwindow(&mData, &mWindow);
+          if (*rv == NPERR_NO_ERROR) {
+              WNDPROC wndProc = reinterpret_cast<WNDPROC>(
+                  GetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC));
+              if (wndProc != PluginWindowProc) {
+                  mPluginWndProc = reinterpret_cast<WNDPROC>(
+                      SetWindowLongPtr(mPluginWindowHWND, GWLP_WNDPROC,
+                                       reinterpret_cast<LONG>(PluginWindowProc)));
+              }
+          }
+      }
+      break;
+
+      case NPWindowTypeDrawable:
+          return SharedSurfaceSetWindow(aWindow, rv);
+      break;
+
+      default:
+          NS_NOTREACHED("Bad plugin window type.");
+          return false;
+      break;
     }
 
 #elif defined(OS_MACOSX)
@@ -442,11 +469,6 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
 bool
 PluginInstanceChild::Initialize()
 {
-#if defined(OS_WIN)
-    if (!CreatePluginWindow())
-        return false;
-#endif
-
     return true;
 }
 
@@ -468,6 +490,10 @@ PluginInstanceChild::Destroy()
           PluginScriptableObjectChild::ScriptableInvalidate(object);
         }
     }
+
+#if defined(OS_WIN)
+    SharedSurfaceRelease();
+#endif
 }
 
 #if defined(OS_WIN)
@@ -505,26 +531,28 @@ PluginInstanceChild::RegisterWindowClass()
 bool
 PluginInstanceChild::CreatePluginWindow()
 {
+    // already initialized
+    if (mPluginWindowHWND)
+        return true;
+        
     if (!RegisterWindowClass())
         return false;
 
-    if (!mPluginWindowHWND) {
-        mPluginWindowHWND =
-            CreateWindowEx(WS_EX_LEFT | WS_EX_LTRREADING |
-                           WS_EX_NOPARENTNOTIFY | // XXXbent Get rid of this!
-                           WS_EX_RIGHTSCROLLBAR,
-                           kWindowClassName, 0,
-                           WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0,
-                           0, 0, NULL, 0, GetModuleHandle(NULL), 0);
-        if (!mPluginWindowHWND)
-            return false;
-        if (!SetProp(mPluginWindowHWND, kPluginInstanceChildProperty, this))
-            return false;
+    mPluginWindowHWND =
+        CreateWindowEx(WS_EX_LEFT | WS_EX_LTRREADING |
+                       WS_EX_NOPARENTNOTIFY | // XXXbent Get rid of this!
+                       WS_EX_RIGHTSCROLLBAR,
+                       kWindowClassName, 0,
+                       WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0,
+                       0, 0, NULL, 0, GetModuleHandle(NULL), 0);
+    if (!mPluginWindowHWND)
+        return false;
+    if (!SetProp(mPluginWindowHWND, kPluginInstanceChildProperty, this))
+        return false;
 
-        // Apparently some plugins require an ASCII WndProc.
-        SetWindowLongPtrA(mPluginWindowHWND, GWLP_WNDPROC,
-                          reinterpret_cast<LONG>(DefWindowProcA));
-    }
+    // Apparently some plugins require an ASCII WndProc.
+    SetWindowLongPtrA(mPluginWindowHWND, GWLP_WNDPROC,
+                      reinterpret_cast<LONG>(DefWindowProcA));
 
     return true;
 }
@@ -618,6 +646,60 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
         RemoveProp(hWnd, kPluginInstanceChildProperty);
 
     return res;
+}
+
+/* windowless drawing helpers */
+
+bool
+PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow,
+                                            NPError* rv)
+{
+    // If the surfaceHandle is empty, parent is telling us we can reuse our cached
+    // memory surface and hdc. Otherwise, we need to reset, usually due to a
+    // expanding plugin port size.
+    if (!aWindow.surfaceHandle) {
+        if (!mSharedSurfaceDib.IsValid()) {
+            return false;
+        }
+    }
+    else {
+        // Attach to the new shared surface parent handed us.
+        if (NS_FAILED(mSharedSurfaceDib.Attach((SharedDIB::Handle)aWindow.surfaceHandle,
+                                               aWindow.width, aWindow.height, 32)))
+          return false;
+    }
+      
+    // NPRemoteWindow's origin is the origin of our shared dib.
+    mWindow.x      = 0;
+    mWindow.y      = 0;
+    mWindow.width  = aWindow.width;
+    mWindow.height = aWindow.height;
+    mWindow.type   = aWindow.type;
+
+    mWindow.window = reinterpret_cast<void*>(mSharedSurfaceDib.GetHDC());
+    *rv = mPluginIface->setwindow(&mData, &mWindow);
+
+    return true;
+}
+
+void
+PluginInstanceChild::SharedSurfaceRelease()
+{
+    mSharedSurfaceDib.Close();
+}
+
+void
+PluginInstanceChild::SharedSurfaceBeforePaint(NPEvent& evcopy)
+{
+    // Update the clip rect on our internal hdc
+    RECT* pRect = reinterpret_cast<RECT*>(evcopy.lParam);
+    if (pRect) {
+      HRGN clip = ::CreateRectRgnIndirect(pRect);
+      ::SelectClipRgn(mSharedSurfaceDib.GetHDC(), clip);
+      ::DeleteObject(clip);
+    }
+    // pass the internal hdc to the plugin
+    evcopy.wParam = WPARAM(mSharedSurfaceDib.GetHDC());
 }
 
 #endif // OS_WIN
@@ -853,10 +935,17 @@ PluginInstanceChild::InternalInvalidateRect(NPRect* aInvalidRect)
     NS_ASSERTION(aInvalidRect, "Null pointer!");
 
 #ifdef OS_WIN
-    NS_ASSERTION(IsWindow(mPluginWindowHWND), "Bad window?!");
-    RECT rect = { aInvalidRect->left, aInvalidRect->top,
-                  aInvalidRect->right, aInvalidRect->bottom };
-    InvalidateRect(mPluginWindowHWND, &rect, FALSE);
+    // Invalidate and draw locally for windowed plugins.
+    if (mWindow.type == NPWindowTypeWindow) {
+      NS_ASSERTION(IsWindow(mPluginWindowHWND), "Bad window?!");
+      RECT rect = { aInvalidRect->left, aInvalidRect->top,
+                    aInvalidRect->right, aInvalidRect->bottom };
+      InvalidateRect(mPluginWindowHWND, &rect, FALSE);
+      return false;
+    }
+    // Windowless need the invalidation to propegate to parent
+    // triggering wm_paint handle event calls.
+    return true;
 #endif
 
     // Windowless plugins must return true!
