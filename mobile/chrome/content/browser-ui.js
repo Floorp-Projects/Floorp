@@ -360,16 +360,6 @@ var BrowserUI = {
     popup.height = windowH - this.toolbarH;
     popup.width = windowW;
 
-    // bookmark popup
-    let bookmarkPopup = document.getElementById("bookmark-popup");
-    let bookmarkPopupW = windowW / 4;
-    bookmarkPopup.height = windowH / 4;
-    bookmarkPopup.width = bookmarkPopupW;
-    let starRect = this.starButton.getBoundingClientRect();
-    const popupMargin = 10;
-    bookmarkPopup.top = Math.round(starRect.top) + popupMargin;
-    bookmarkPopup.left = windowW - this.sidebarW - bookmarkPopupW - popupMargin;
-
     // form helper
     let formHelper = document.getElementById("form-helper-container");
     formHelper.top = windowH - formHelper.getBoundingClientRect().height;
@@ -865,7 +855,7 @@ var BookmarkPopup = {
 
   _bookmarkPopupTimeout: -1,
 
-  hide : function () {
+  hide : function hide() {
     if (this._bookmarkPopupTimeout != -1) {
       clearTimeout(this._bookmarkPopupTimeout);
       this._bookmarkPopupTimeout = -1;
@@ -874,8 +864,16 @@ var BookmarkPopup = {
     BrowserUI.popPopup();
   },
   
-  show : function (aAutoClose) {
+  show : function show(aAutoClose) {
+    const margin = 10;
+
     this.box.hidden = false;
+
+    let [,,,controlsW] = Browser.computeSidebarVisibility();
+    Components.reportError("bar: " + controlsW);
+    Components.reportError("box: " + this.box.getBoundingClientRect().width)
+    this.box.left = window.innerWidth - (this.box.getBoundingClientRect().width + controlsW + margin);
+    this.box.top  = BrowserUI.starButton.getBoundingClientRect().top + margin;
 
     if (aAutoClose) {
       this._bookmarkPopupTimeout = setTimeout(function (self) {
@@ -888,7 +886,7 @@ var BookmarkPopup = {
     BrowserUI.pushPopup(this, [this.box, BrowserUI.starButton]);
   },
   
-  toggle : function (aAutoClose) {
+  toggle : function toggle(aAutoClose) {
     if (this.box.hidden)
       this.show(aAutoClose);
     else
