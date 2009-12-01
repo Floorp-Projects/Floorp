@@ -101,12 +101,6 @@ public:
   Mutex sharedAsyncExecutionMutex;
 
   /**
-   * References the thread this database was opened on.  This MUST be thread it
-   * is closed on.
-   */
-  const nsCOMPtr<nsIThread> threadOpenedOn;
-
-  /**
    * Closes the SQLite database, and warns about any non-finalized statements.
    */
   nsresult internalClose();
@@ -185,6 +179,12 @@ private:
 
   PRLock *mProgressHandlerMutex;
   nsCOMPtr<mozIStorageProgressHandler> mProgressHandler;
+
+  /**
+   * References the thread this database was opened on.  This MUST be thread it
+   * is closed on.
+   */
+  nsCOMPtr<nsIThread> mOpenedThread;
 
   // This is here for two reasons: 1) It's used to make sure that the
   // connections do not outlive the service.  2) Our custom collating functions
