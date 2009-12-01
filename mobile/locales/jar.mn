@@ -13,6 +13,7 @@
   locale/@AB_CD@/browser/notification.dtd         (%chrome/notification.dtd)
   locale/@AB_CD@/browser/prompt.dtd               (%chrome/prompt.dtd)
   locale/@AB_CD@/browser/bookmarks.json           (bookmarks.json)
+  locale/@AB_CD@/browser/searchplugins/list.txt   (%searchplugins/list.txt)
 
 # Fennec-specific overrides of generic strings
 * locale/@AB_CD@/browser/netError.dtd             (%chrome/overrides/netError.dtd)

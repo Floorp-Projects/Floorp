@@ -76,7 +76,6 @@ searchplugins::
 	@for line in $(foreach plugin,$(SEARCH_PLUGINS),"locale/$(AB_CD)/browser/searchplugins/$(notdir $(plugin)).xml ($(plugin).xml)"); do \
 	    echo " $$line" >> tmp-search.jar.mn; \
 	done
-	@echo " locale/$(AB_CD)/browser/searchplugins/list.txt (list.txt)" >> tmp-search.jar.mn;
 	$(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
           $(QUIET) -j $(FINAL_TARGET)/chrome \
           -s $(topsrcdir)/$(relativesrcdir)/en-US/searchplugins \
