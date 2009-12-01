@@ -60,6 +60,7 @@ EXTRA_COMPONENTS = \
         DownloadManagerUI.js \
         HelperAppDialog.js \
         PromptService.js \
+        BrowserCLH.js \
 	$(NULL)
 
 DIRS = protocols \
