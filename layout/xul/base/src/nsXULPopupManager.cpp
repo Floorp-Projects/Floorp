@@ -1218,6 +1218,12 @@ nsXULPopupManager::GetVisiblePopups()
 PRBool
 nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
 {
+  // Don't show popups that we already have in our popup chain
+  if (IsPopupOpen(aPopup->GetContent())) {
+    NS_WARNING("Refusing to show duplicate popup");
+    return PR_FALSE;
+  }
+
   // if a popup's IsOpen method returns true, then the popup must always be in
   // the popup chain scanned in IsPopupOpen.
   NS_ASSERTION(!aPopup->IsOpen() || IsPopupOpen(aPopup->GetContent()),
