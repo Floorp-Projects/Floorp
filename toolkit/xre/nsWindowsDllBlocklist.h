@@ -74,6 +74,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
 
   // AVG 8 - Antivirus vendor AVG, old version, plugin already blocklisted
   {"avgrsstx.dll", MAKE_VERSION(8,5,0,401)},
+  
+  // calc.dll - Suspected malware
+  {"calc.dll", MAKE_VERSION(1,0,0,1)},
 
   // leave these two in always for tests
   { "mozdllblockingtest.dll", ALL_VERSIONS },
