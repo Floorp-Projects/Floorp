@@ -227,6 +227,19 @@ nsLayoutUtils::GetClosestFrameOfType(nsIFrame* aFrame, nsIAtom* aFrameType)
   return nsnull;
 }
 
+// static
+nsIFrame*
+nsLayoutUtils::GetStyleFrame(nsIFrame* aFrame)
+{
+  if (aFrame->GetType() == nsGkAtoms::tableOuterFrame) {
+    nsIFrame* inner = aFrame->GetFirstChild(nsnull);
+    NS_ASSERTION(inner, "Outer table must have an inner");
+    return inner;
+  }
+
+  return aFrame;
+}
+
 nsIFrame*
 nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
   NS_ASSERTION(nsGkAtoms::placeholderFrame == aFrame->GetType(),
@@ -2790,7 +2803,7 @@ nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
 {
 #ifdef MOZ_SVG
   nsIFrame *frame = nsCSSRendering::IsCanvasFrame(aForFrame) ?
-    nsCSSRendering::FindRootFrame(aForFrame) : aForFrame;
+    nsCSSRendering::FindBackgroundStyleFrame(aForFrame) : aForFrame;
 
   switch (frame->GetStyleSVG()->mImageRendering) {
   case NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED:
