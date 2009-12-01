@@ -54,12 +54,12 @@
 <!ENTITY confirm.caption.label        "Confirm your choice">
 <!ENTITY confirm.merge.label          "You have chosen to merge your data on this computer with the data on your other devices running Weave.">
 <!ENTITY confirm.merge.start.label    "Start Syncing Now">
-<!ENTITY confirm.client.label         "You have chosen to replace the data on this computer with your data from your other devices.">
-<!ENTITY confirm.client.warning.label "WARNING: This will result in all data on this computer being deleted and overwritten!">
+<!ENTITY confirm.client.label         "The local data on your computer will be deleted and replaced with your Weave data, including the following:">
+<!ENTITY confirm.client.warning.label "WARNING: This will result in all &brandShortName; data on this computer being replaced!">
 <!ENTITY confirm.client.start.label   "Delete and Replace Local Data">
-<!ENTITY confirm.server.label         "You have chosen to replace your data on your other devices with the data on this computer.">
-<!ENTITY confirm.server.warning.label "WARNING: This will result in all data on your other devices being deleted!">
-<!ENTITY confirm.server.start.label   "Delete and Replace Server Data">
+<!ENTITY confirm.server.label         "The following devices will be overwritten with your local data:">
+<!ENTITY confirm.server.warning.label "WARNING: Your local data will replace all &brandShortName; data on these devices!">
+<!ENTITY confirm.server.start.label   "Replace Everything on These Devices">
 
 
 <!ENTITY accountGroupboxCaption.label "Mozilla Weave Account">
