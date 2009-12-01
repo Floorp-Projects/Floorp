@@ -499,8 +499,8 @@ var BrowserUI = {
 
     // Give the new page lots of room
     Browser.hideSidebars();
+    this.closeAutoComplete(true);
 
-    this._edit.popup.close();
     this._edit.value = aURI;
 
     var flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
@@ -514,6 +514,13 @@ var BrowserUI = {
       return;
     BrowserSearch.updateSearchButtons();
     this._edit.showHistoryPopup();
+  },
+  
+  closeAutoComplete: function closeAutoComplete(aResetInput) {
+    if (aResetInput)
+      this._edit.popup.close();
+    else
+      this._edit.popup.closePopup();
   },
 
   isAutoCompleteOpen: function isAutoCompleteOpen() {
@@ -529,8 +536,7 @@ var BrowserUI = {
 
     // Give the new page lots of room
     Browser.hideSidebars();
-    
-    this._edit.popup.closePopup();
+    this.closeAutoComplete(false);
 
     // Make sure we're online before attempting to load
     Util.forceOnline();
@@ -553,12 +559,14 @@ var BrowserUI = {
     this.hidePanel();
     
     if (aURI == "about:blank") {
+      // Display awesomebar UI
       this.showToolbar(true);
       this.showAutoComplete();
     }
     else {
       // Give the new page lots of room
       Browser.hideSidebars();
+      this.closeAutoComplete(true);
     }
 
     return tab;
