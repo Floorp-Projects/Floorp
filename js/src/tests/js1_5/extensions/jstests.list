@@ -46,12 +46,12 @@ script regress-325269.js
 script regress-327608.js
 script regress-328443.js
 script regress-328556.js
-skip script regress-330569.js # slow
+script regress-330569.js
 script regress-333541.js
 skip script regress-335700.js # bug xxx - reftest hang, BigO
-skip script regress-336409-1.js # no results reported.
+skip-if(!xulRuntime.shell) script regress-336409-1.js # no results reported.
 script regress-336409-2.js
-skip script regress-336410-1.js # slow
+skip-if(!xulRuntime.shell) script regress-336410-1.js # slow
 script regress-336410-2.js
 script regress-338804-01.js
 script regress-338804-02.js
@@ -116,10 +116,10 @@ script regress-361552.js
 script regress-361558.js
 script regress-361571.js
 script regress-361856.js
-skip script regress-361964.js # slow
+skip-if(!xulRuntime.shell) script regress-361964.js # alert is not dismissed.
 random-if(xulRuntime.OS=="WINNT") script regress-363258.js # bug 524788
 script regress-363988.js
-skip-if(isDebugBuild) script regress-365527.js # slow
+script regress-365527.js
 script regress-365692.js
 script regress-365869.js
 script regress-366288.js
@@ -170,7 +170,7 @@ script regress-396326.js
 script regress-406572.js
 script regress-407019.js
 script regress-407501.js
-skip script regress-407720.js # slow
+skip-if(!xulRuntime.shell) script regress-407720.js # slow
 script regress-412926.js
 script regress-414755.js
 script regress-416354.js
@@ -202,7 +202,7 @@ script regress-44009.js
 script regress-443569.js
 script regress-446386.js
 script regress-449657.js
-skip-if(isDebugBuild) script regress-452168.js
+script regress-452168.js
 script regress-452178.js
 script regress-452329.js
 script regress-452338.js

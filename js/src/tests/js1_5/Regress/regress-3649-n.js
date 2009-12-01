@@ -51,6 +51,7 @@ printBugNumber(BUGNUMBER);
 printStatus (summary);
  
 expectExitCode(0);
+expectExitCode(3);
 expectExitCode(5);
 
 var s = "";

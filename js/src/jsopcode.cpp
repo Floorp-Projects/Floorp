@@ -819,16 +819,20 @@ js_printf(JSPrinter *jp, const char *format, ...)
     /* If pretty-printing, expand magic tab into a run of jp->indent spaces. */
     if (*format == '\t') {
         format++;
-        if (jp->pretty && Sprint(&jp->sprinter, "%*s", jp->indent, "") < 0)
+        if (jp->pretty && Sprint(&jp->sprinter, "%*s", jp->indent, "") < 0) {
+            va_end(ap);
             return -1;
+        }
     }
 
     /* Suppress newlines (must be once per format, at the end) if not pretty. */
     fp = NULL;
     if (!jp->pretty && format[cc = strlen(format) - 1] == '\n') {
         fp = JS_strdup(jp->sprinter.context, format);
-        if (!fp)
+        if (!fp) {
+            va_end(ap);
             return -1;
+        }
         fp[cc] = '\0';
         format = fp;
     }
@@ -841,6 +845,7 @@ js_printf(JSPrinter *jp, const char *format, ...)
     }
     if (!bp) {
         JS_ReportOutOfMemory(jp->sprinter.context);
+        va_end(ap);
         return -1;
     }
 
@@ -3550,6 +3555,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                         goto out;
                 }
 
+                /*
+                 * The only way that our next op could be a JSOP_ADD is
+                 * if we are about to concatenate at least one non-string
+                 * literal. Deal with that here in order to avoid extra
+                 * parentheses (because JSOP_ADD is left-associative).
+                 */
+                if (pc[len] == JSOP_ADD)
+                    saveop = JSOP_NOP;
+
                 ok = JS_TRUE;
 
               out:
@@ -4907,7 +4921,7 @@ js_DecompileScript(JSPrinter *jp, JSScript *script)
 JSString *
 js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
                      uintN indent, JSBool pretty, JSBool grouped, JSBool strict,
-                     JSBool (*decompiler)(JSPrinter *jp))
+                     JSDecompilerPtr decompiler)
 {
     JSPrinter *jp;
     JSString *str;

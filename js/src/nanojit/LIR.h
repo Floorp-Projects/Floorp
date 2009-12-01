@@ -127,34 +127,6 @@ namespace nanojit
         return (op & ~LIR64) == LIR_ret;
     }
 
-    // This structure is used transiently during assembly to record
-    // information relating to register allocation.  See class RegAlloc for
-    // more details.
-    //
-    // Note: The opcode is not logically part of the Reservation, but we
-    // include it in this struct to ensure that opcode plus the Reservation
-    // fits in a single word.  Yuk.
-    struct Reservation
-    {
-        uint32_t arIndex:16;    // index into stack frame.  displ is -4*arIndex
-        Register reg:7;         // register UnknownReg implies not in register
-        uint32_t used:1;        // when set, the reservation is active
-        LOpcode  opcode:8;
-
-        inline void init() {
-            reg = UnknownReg;
-            arIndex = 0;
-            used = 1;
-        }
-
-        inline void clear() {
-            used = 0;
-        }
-    };
-
-    // Array holding the 'operands' field from LIRopcode.tbl.
-    extern const int8_t operandCount[];
-
     // Array holding the 'repkind' field from LIRopcode.tbl.
     extern const uint8_t repKinds[];
 
@@ -262,12 +234,22 @@ namespace nanojit
     class LIns
     {
     private:
-        // Last word: fields shared by all LIns kinds.  The reservation fields
-        // are read/written during assembly.
+        // LastWord: fields shared by all LIns kinds.  The .arIndex, .reg and
+        // .used fields form a "reservation" that is used temporarily during
+        // assembly to record information relating to register allocation.
+        // See class RegAlloc for more details.
+        struct LastWord {
+            uint32_t arIndex:16;    // index into stack frame.  displ is -4*arIndex
+            Register reg:7;         // register UnknownReg implies not in register
+            uint32_t used:1;        // when set, the reservation is active
+
+            LOpcode  opcode:8;      // instruction's opcode
+        };
+
         union {
-            Reservation lastWord;
-            // force sizeof(LIns)==8 and 8-byte alignment on 64-bit machines.
-            // this is necessary because sizeof(Reservation)==4 and we want all
+            LastWord lastWord;
+            // Force sizeof(LIns)==8 and 8-byte alignment on 64-bit machines.
+            // This is necessary because sizeof(LastWord)==4 and we want all
             // instances of LIns to be pointer-aligned.
             void* dummy;
         };
@@ -307,21 +289,13 @@ namespace nanojit
 
         LOpcode opcode() const { return lastWord.opcode; }
 
-        // Reservation functions.
-        Reservation* resv() {
-            return &lastWord;
-        }
-        // Like resv(), but asserts that the Reservation is used.
-        Reservation* resvUsed() {
-            Reservation* r = resv();
-            NanoAssert(r->used);
-            return r;
-        }
         void markAsUsed() {
-            lastWord.init();
+            lastWord.reg = UnknownReg;
+            lastWord.arIndex = 0;
+            lastWord.used = 1;
         }
         void markAsClear() {
-            lastWord.clear();
+            lastWord.used = 0;
         }
         bool isUsed() {
             return lastWord.used;
@@ -780,25 +754,25 @@ namespace nanojit
     LInsJtbl*LIns::toLInsJtbl()const { return (LInsJtbl*)(uintptr_t(this+1) - sizeof(LInsJtbl)); }
 
     void LIns::initLInsOp0(LOpcode opcode) {
-        lastWord.clear();
+        markAsClear();
         lastWord.opcode = opcode;
         NanoAssert(isLInsOp0());
     }
     void LIns::initLInsOp1(LOpcode opcode, LIns* oprnd1) {
-        lastWord.clear();
+        markAsClear();
         lastWord.opcode = opcode;
         toLInsOp1()->oprnd_1 = oprnd1;
         NanoAssert(isLInsOp1());
     }
     void LIns::initLInsOp2(LOpcode opcode, LIns* oprnd1, LIns* oprnd2) {
-        lastWord.clear();
+        markAsClear();
         lastWord.opcode = opcode;
         toLInsOp2()->oprnd_1 = oprnd1;
         toLInsOp2()->oprnd_2 = oprnd2;
         NanoAssert(isLInsOp2());
     }
     void LIns::initLInsOp3(LOpcode opcode, LIns* oprnd1, LIns* oprnd2, LIns* oprnd3) {
-        lastWord.clear();
+        markAsClear();
         lastWord.opcode = opcode;
         toLInsOp3()->oprnd_1 = oprnd1;
         toLInsOp3()->oprnd_2 = oprnd2;
@@ -806,14 +780,14 @@ namespace nanojit
         NanoAssert(isLInsOp3());
     }
     void LIns::initLInsLd(LOpcode opcode, LIns* val, int32_t d) {
-        lastWord.clear();
+        markAsClear();
         lastWord.opcode = opcode;
         toLInsLd()->oprnd_1 = val;
         toLInsLd()->disp = d;
         NanoAssert(isLInsLd());
     }
     void LIns::initLInsSti(LOpcode opcode, LIns* val, LIns* base, int32_t d) {
-        lastWord.clear();
+        markAsClear();
         lastWord.opcode = opcode;
         toLInsSti()->oprnd_1 = val;
         toLInsSti()->oprnd_2 = base;
@@ -821,20 +795,20 @@ namespace nanojit
         NanoAssert(isLInsSti());
     }
     void LIns::initLInsSk(LIns* prevLIns) {
-        lastWord.clear();
+        markAsClear();
         lastWord.opcode = LIR_skip;
         toLInsSk()->prevLIns = prevLIns;
         NanoAssert(isLInsSk());
     }
     void LIns::initLInsC(LOpcode opcode, LIns** args, const CallInfo* ci) {
-        lastWord.clear();
+        markAsClear();
         lastWord.opcode = opcode;
         toLInsC()->args = args;
         toLInsC()->ci = ci;
         NanoAssert(isLInsC());
     }
     void LIns::initLInsP(int32_t arg, int32_t kind) {
-        lastWord.clear();
+        markAsClear();
         lastWord.opcode = LIR_param;
         NanoAssert(isU8(arg) && isU8(kind));
         toLInsP()->arg = arg;
@@ -842,20 +816,20 @@ namespace nanojit
         NanoAssert(isLInsP());
     }
     void LIns::initLInsI(LOpcode opcode, int32_t imm32) {
-        lastWord.clear();
+        markAsClear();
         lastWord.opcode = opcode;
         toLInsI()->imm32 = imm32;
         NanoAssert(isLInsI());
     }
     void LIns::initLInsI64(LOpcode opcode, int64_t imm64) {
-        lastWord.clear();
+        markAsClear();
         lastWord.opcode = opcode;
         toLInsI64()->imm64_0 = int32_t(imm64);
         toLInsI64()->imm64_1 = int32_t(imm64 >> 32);
         NanoAssert(isLInsI64());
     }
     void LIns::initLInsJtbl(LIns* index, uint32_t size, LIns** table) {
-        lastWord.clear();
+        markAsClear();
         lastWord.opcode = LIR_jtbl;
         toLInsJtbl()->oprnd_1 = index;
         toLInsJtbl()->table = table;

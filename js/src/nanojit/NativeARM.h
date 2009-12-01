@@ -195,7 +195,6 @@ static inline bool isValidDisplacement(LOpcode op, int32_t d) {
 #define FpRegNum(_fpr)  ((_fpr) - FirstFloatReg)
 
 #define firstreg()      R0
-#define nextreg(r)      ((Register)((int)(r)+1))
 // only good for normal regs
 #define imm2register(c) (Register)(c-1)
 
@@ -255,14 +254,6 @@ verbose_only( extern const char* shiftNames[]; )
     int *       _nExitSlot;                                                     \
     bool        blx_lr_bug;                                                     \
     int         max_out_args; /* bytes */                                      
-
-#define swapptrs()  {                                                   \
-        NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins;          \
-        int* _nslot = _nSlot;                                           \
-        _nSlot = _nExitSlot;                                            \
-        _nExitSlot = _nslot;                                            \
-    }
-
 
 #define IMM32(imm)  *(--_nIns) = (NIns)((imm));
 

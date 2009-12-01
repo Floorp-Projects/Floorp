@@ -4,7 +4,17 @@ import datetime, os, re, sys, traceback
 import subprocess
 from subprocess import *
 
-JS = None
+DEBUGGER_INFO = {
+  "gdb": {
+    "interactive": True,
+    "args": "-q --args"
+  },
+
+  "valgrind": {
+    "interactive": False,
+    "args": "--leak-check=full"
+  }
+}
 
 # Backported from Python 3.1 posixpath.py
 def _relpath(path, start=None):

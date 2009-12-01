@@ -173,7 +173,12 @@ namespace nanojit
     typedef int RegisterMask;
 #define _rmask_(r)        (1<<(r))
 
-    static const int NumSavedRegs = 6;
+    // Assembler::savedRegs[] is not needed for sparc because the
+    // registers are already saved automatically by "save" instruction.
+    // But NumSavedRegs is used as the length of savedRegs in LIR.h and Assembler.h.
+    // NumSavedRegs to be zero will cause a zero length array.
+    // So dummy L1 is added and NumSavedRegs is set to 1.
+    static const int NumSavedRegs = 1;
     static const RegisterMask SavedRegs = 1<<L1 | 1<<L3 | 1<<L5 | 1<<L7 |
     1<<I0 | 1<<I1 | 1<<I2 | 1<<I3 |
     1<<I4 | 1<<I5;
@@ -187,8 +192,6 @@ namespace nanojit
     static inline bool isValidDisplacement(LOpcode, int32_t) {
         return true;
     }
-
-#define nextreg(r)        Register(r+1)
 
     verbose_only( extern const char* regNames[]; )
 
@@ -204,9 +207,8 @@ namespace nanojit
     void underrunProtect(int bytes); \
     void asm_align_code(); \
     void asm_cmp(LIns *cond); \
-    void asm_fcmp(LIns *cond);
-
-#define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
+    void asm_fcmp(LIns *cond); \
+    NIns* asm_fbranch(bool, LIns*, NIns*);
 
 #define IMM32(i)    \
     --_nIns;        \
