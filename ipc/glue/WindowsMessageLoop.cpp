@@ -173,6 +173,7 @@ ProcessOrDeferMessage(HWND hwnd,
     // their wParam or lParam arguments!
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
+    case WM_CAPTURECHANGED:
     case WM_CHILDACTIVATE:
     case WM_DESTROY:
     case WM_IME_NOTIFY:
