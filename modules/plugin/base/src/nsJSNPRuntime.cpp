@@ -53,6 +53,8 @@
 // FIXME(bug 332648): Give me a real API please!
 #include "jscntxt.h"
 
+using namespace mozilla::plugins::parent;
+
 // Hash of JSObject wrappers that wraps JSObjects as NPObjects. There
 // will be one wrapper per JSObject per plugin instance, i.e. if two
 // plugins access the JSObject x, two wrappers for x will be

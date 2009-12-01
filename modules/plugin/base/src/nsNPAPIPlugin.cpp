@@ -120,77 +120,7 @@ enum eNPPStreamTypeInternal {
 
 static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
 
-// Static stub functions that are exported to the plugin as entry
-// points via the CALLBACKS variable.
-PR_BEGIN_EXTERN_C
-
-  static NPError NP_CALLBACK
-  _requestread(NPStream *pstream, NPByteRange *rangeList);
-
-  static NPError NP_CALLBACK
-  _geturlnotify(NPP npp, const char* relativeURL, const char* target,
-                void* notifyData);
-
-  static NPError NP_CALLBACK
-  _getvalue(NPP npp, NPNVariable variable, void *r_value);
-
-  static NPError NP_CALLBACK
-  _setvalue(NPP npp, NPPVariable variable, void *r_value);
-
-  static NPError NP_CALLBACK
-  _geturl(NPP npp, const char* relativeURL, const char* target);
-
-  static NPError NP_CALLBACK
-  _posturlnotify(NPP npp, const char* relativeURL, const char *target,
-                 uint32_t len, const char *buf, NPBool file, void* notifyData);
-
-  static NPError NP_CALLBACK
-  _posturl(NPP npp, const char* relativeURL, const char *target, uint32_t len,
-              const char *buf, NPBool file);
-
-  static NPError NP_CALLBACK
-  _newstream(NPP npp, NPMIMEType type, const char* window, NPStream** pstream);
-
-  static int32_t NP_CALLBACK
-  _write(NPP npp, NPStream *pstream, int32_t len, void *buffer);
-
-  static NPError NP_CALLBACK
-  _destroystream(NPP npp, NPStream *pstream, NPError reason);
-
-  static void NP_CALLBACK
-  _status(NPP npp, const char *message);
-
-  static void NP_CALLBACK
-  _memfree (void *ptr);
-
-  static uint32_t NP_CALLBACK
-  _memflush(uint32_t size);
-
-  static void NP_CALLBACK
-  _reloadplugins(NPBool reloadPages);
-
-  static void NP_CALLBACK
-  _invalidaterect(NPP npp, NPRect *invalidRect);
-
-  static void NP_CALLBACK
-  _invalidateregion(NPP npp, NPRegion invalidRegion);
-
-  static void NP_CALLBACK
-  _forceredraw(NPP npp);
-
-  static const char* NP_CALLBACK
-  _useragent(NPP npp);
-
-  static void* NP_CALLBACK
-  _memalloc (uint32_t size);
-
-  // Deprecated entry points for the old Java plugin.
-  static void* NP_CALLBACK /* OJI type: JRIEnv* */
-  _getJavaEnv(void);
-  static void* NP_CALLBACK /* OJI type: jref */
-  _getJavaPeer(NPP npp);
-
-PR_END_EXTERN_C
+using namespace mozilla::plugins::parent;
 
 // This function sends a notification using the observer service to any object
 // registered to listen to the "experimental-notify-plugin-call" subject.
@@ -759,9 +689,316 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
   return NPERR_NO_ERROR;
 }
 
+#if defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_WINCE)
+extern "C" size_t malloc_usable_size(const void *ptr);
+#endif
+
+namespace {
+
+static char *gNPPException;
+
+// A little helper class used to wrap up plugin manager streams (that is,
+// streams from the plugin to the browser).
+class nsNPAPIStreamWrapper : nsISupports
+{
+public:
+  NS_DECL_ISUPPORTS
+
+protected:
+  nsIOutputStream *fStream;
+  NPStream        fNPStream;
+
+public:
+  nsNPAPIStreamWrapper(nsIOutputStream* stream);
+  ~nsNPAPIStreamWrapper();
+
+  void GetStream(nsIOutputStream* &result);
+  NPStream* GetNPStream(void) { return &fNPStream; }
+};
+
+class nsPluginThreadRunnable : public nsRunnable,
+                               public PRCList
+{
+public:
+  nsPluginThreadRunnable(NPP instance, PluginThreadCallback func,
+                         void *userData);
+  virtual ~nsPluginThreadRunnable();
+
+  NS_IMETHOD Run();
+
+  PRBool IsForInstance(NPP instance)
+  {
+    return (mInstance == instance);
+  }
+
+  void Invalidate()
+  {
+    mFunc = nsnull;
+  }
+
+  PRBool IsValid()
+  {
+    return (mFunc != nsnull);
+  }
+
+private:  
+  NPP mInstance;
+  PluginThreadCallback mFunc;
+  void *mUserData;
+};
+
+static nsIDocument *
+GetDocumentFromNPP(NPP npp)
+{
+  NS_ENSURE_TRUE(npp, nsnull);
+
+  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
+  NS_ENSURE_TRUE(inst, nsnull);
+
+  PluginDestructionGuard guard(inst);
+
+  nsCOMPtr<nsIPluginInstanceOwner> owner;
+  inst->GetOwner(getter_AddRefs(owner));
+  NS_ENSURE_TRUE(owner, nsnull);
+
+  nsCOMPtr<nsIDocument> doc;
+  owner->GetDocument(getter_AddRefs(doc));
+
+  return doc;
+}
+
+static JSContext *
+GetJSContextFromDoc(nsIDocument *doc)
+{
+  nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
+  NS_ENSURE_TRUE(sgo, nsnull);
+
+  nsIScriptContext *scx = sgo->GetContext();
+  NS_ENSURE_TRUE(scx, nsnull);
+
+  return (JSContext *)scx->GetNativeContext();
+}
+
+static JSContext *
+GetJSContextFromNPP(NPP npp)
+{
+  nsIDocument *doc = GetDocumentFromNPP(npp);
+  NS_ENSURE_TRUE(doc, nsnull);
+
+  return GetJSContextFromDoc(doc);
+}
+
+static NPIdentifier
+doGetIdentifier(JSContext *cx, const NPUTF8* name)
+{
+  NS_ConvertUTF8toUTF16 utf16name(name);
+
+  JSString *str = ::JS_InternUCStringN(cx, (jschar *)utf16name.get(),
+                                       utf16name.Length());
+
+  if (!str)
+    return NULL;
+
+  return (NPIdentifier)STRING_TO_JSVAL(str);
+}
+
+#if defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_WINCE)
+BOOL
+InHeap(HANDLE hHeap, LPVOID lpMem)
+{
+  BOOL success = FALSE;
+  PROCESS_HEAP_ENTRY he;
+  he.lpData = NULL;
+  while (HeapWalk(hHeap, &he) != 0) {
+    if (he.lpData == lpMem) {
+      success = TRUE;
+      break;
+    }
+  }
+  HeapUnlock(hHeap);
+  return success;
+}
+#endif
+
+} /* anonymous namespace */
+
+NS_IMPL_ISUPPORTS1(nsNPAPIStreamWrapper, nsISupports)
+
+nsNPAPIStreamWrapper::nsNPAPIStreamWrapper(nsIOutputStream* stream)
+: fStream(stream)
+{
+  NS_ASSERTION(stream, "bad stream");
+
+  fStream = stream;
+  NS_ADDREF(fStream);
+
+  memset(&fNPStream, 0, sizeof(fNPStream));
+  fNPStream.ndata = (void*) this;
+}
+
+nsNPAPIStreamWrapper::~nsNPAPIStreamWrapper(void)
+{
+  fStream->Close();
+  NS_IF_RELEASE(fStream);
+}
+
+void
+nsNPAPIStreamWrapper::GetStream(nsIOutputStream* &result)
+{
+  result = fStream;
+  NS_IF_ADDREF(fStream);
+}
+
+NPPExceptionAutoHolder::NPPExceptionAutoHolder()
+  : mOldException(gNPPException)
+{
+  gNPPException = nsnull;
+}
+
+NPPExceptionAutoHolder::~NPPExceptionAutoHolder()
+{
+  NS_ASSERTION(!gNPPException, "NPP exception not properly cleared!");
+
+  gNPPException = mOldException;
+}
+
+nsPluginThreadRunnable::nsPluginThreadRunnable(NPP instance,
+                                               PluginThreadCallback func,
+                                               void *userData)
+  : mInstance(instance), mFunc(func), mUserData(userData)
+{
+  if (!sPluginThreadAsyncCallLock) {
+    // Failed to create lock, not much we can do here then...
+    mFunc = nsnull;
+
+    return;
+  }
+
+  PR_INIT_CLIST(this);
+
+  {
+    nsAutoLock lock(sPluginThreadAsyncCallLock);
+
+    nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
+    if (!inst || !inst->IsStarted()) {
+      // The plugin was stopped, ignore this async call.
+      mFunc = nsnull;
+
+      return;
+    }
+
+    PR_APPEND_LINK(this, &sPendingAsyncCalls);
+  }
+}
+
+nsPluginThreadRunnable::~nsPluginThreadRunnable()
+{
+  if (!sPluginThreadAsyncCallLock) {
+    return;
+  }
+
+  {
+    nsAutoLock lock(sPluginThreadAsyncCallLock);
+
+    PR_REMOVE_LINK(this);
+  }
+}
+
+NS_IMETHODIMP
+nsPluginThreadRunnable::Run()
+{
+  if (mFunc) {
+    PluginDestructionGuard guard(mInstance);
+
+    NS_TRY_SAFE_CALL_VOID(mFunc(mUserData), nsnull, nsnull);
+  }
+
+  return NS_OK;
+}
+
+void
+OnPluginDestroy(NPP instance)
+{
+  if (!sPluginThreadAsyncCallLock) {
+    return;
+  }
+
+  {
+    nsAutoLock lock(sPluginThreadAsyncCallLock);
+
+    if (PR_CLIST_IS_EMPTY(&sPendingAsyncCalls)) {
+      return;
+    }
+
+    nsPluginThreadRunnable *r =
+      (nsPluginThreadRunnable *)PR_LIST_HEAD(&sPendingAsyncCalls);
+
+    do {
+      if (r->IsForInstance(instance)) {
+        r->Invalidate();
+      }
+
+      r = (nsPluginThreadRunnable *)PR_NEXT_LINK(r);
+    } while (r != &sPendingAsyncCalls);
+  }
+}
+
+void
+OnShutdown()
+{
+  NS_ASSERTION(PR_CLIST_IS_EMPTY(&sPendingAsyncCalls),
+               "Pending async plugin call list not cleaned up!");
+
+  if (sPluginThreadAsyncCallLock) {
+    nsAutoLock::DestroyLock(sPluginThreadAsyncCallLock);
+
+    sPluginThreadAsyncCallLock = nsnull;
+  }
+}
+
+void
+EnterAsyncPluginThreadCallLock()
+{
+  if (sPluginThreadAsyncCallLock) {
+    PR_Lock(sPluginThreadAsyncCallLock);
+  }
+}
+
+void
+ExitAsyncPluginThreadCallLock()
+{
+  if (sPluginThreadAsyncCallLock) {
+    PR_Unlock(sPluginThreadAsyncCallLock);
+  }
+}
+
+NPP NPPStack::sCurrentNPP = nsnull;
+
+const char *
+PeekException()
+{
+  return gNPPException;
+}
+
+void
+PopException()
+{
+  NS_ASSERTION(gNPPException, "Uh, no NPP exception to pop!");
+
+  if (gNPPException) {
+    free(gNPPException);
+
+    gNPPException = nsnull;
+  }
+}
+
 //
 // Static callbacks that get routed back through the new C++ API
 //
+
+namespace mozilla {
+namespace plugins {
+namespace parent {
 
 NPError NP_CALLBACK
 _geturl(NPP npp, const char* relativeURL, const char* target)
@@ -858,52 +1095,6 @@ _posturl(NPP npp, const char *relativeURL, const char *target,
   return MakeNewNPAPIStreamInternal(npp, relativeURL, target,
                                     eNPPStreamTypeInternal_Post, PR_FALSE, nsnull,
                                     len, buf, file);
-}
-
-// A little helper class used to wrap up plugin manager streams (that is,
-// streams from the plugin to the browser).
-class nsNPAPIStreamWrapper : nsISupports
-{
-public:
-  NS_DECL_ISUPPORTS
-
-protected:
-  nsIOutputStream *fStream;
-  NPStream        fNPStream;
-
-public:
-  nsNPAPIStreamWrapper(nsIOutputStream* stream);
-  ~nsNPAPIStreamWrapper();
-
-  void GetStream(nsIOutputStream* &result);
-  NPStream* GetNPStream(void) { return &fNPStream; }
-};
-
-NS_IMPL_ISUPPORTS1(nsNPAPIStreamWrapper, nsISupports)
-
-nsNPAPIStreamWrapper::nsNPAPIStreamWrapper(nsIOutputStream* stream)
-: fStream(stream)
-{
-  NS_ASSERTION(stream, "bad stream");
-
-  fStream = stream;
-  NS_ADDREF(fStream);
-
-  memset(&fNPStream, 0, sizeof(fNPStream));
-  fNPStream.ndata = (void*) this;
-}
-
-nsNPAPIStreamWrapper::~nsNPAPIStreamWrapper(void)
-{
-  fStream->Close();
-  NS_IF_RELEASE(fStream);
-}
-
-void
-nsNPAPIStreamWrapper::GetStream(nsIOutputStream* &result)
-{
-  result = fStream;
-  NS_IF_ADDREF(fStream);
 }
 
 NPError NP_CALLBACK
@@ -1151,47 +1342,6 @@ _forceredraw(NPP npp)
   inst->ForceRedraw();
 }
 
-static nsIDocument *
-GetDocumentFromNPP(NPP npp)
-{
-  NS_ENSURE_TRUE(npp, nsnull);
-
-  nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
-  NS_ENSURE_TRUE(inst, nsnull);
-
-  PluginDestructionGuard guard(inst);
-
-  nsCOMPtr<nsIPluginInstanceOwner> owner;
-  inst->GetOwner(getter_AddRefs(owner));
-  NS_ENSURE_TRUE(owner, nsnull);
-
-  nsCOMPtr<nsIDocument> doc;
-  owner->GetDocument(getter_AddRefs(doc));
-
-  return doc;
-}
-
-static JSContext *
-GetJSContextFromDoc(nsIDocument *doc)
-{
-  nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
-  NS_ENSURE_TRUE(sgo, nsnull);
-
-  nsIScriptContext *scx = sgo->GetContext();
-  NS_ENSURE_TRUE(scx, nsnull);
-
-  return (JSContext *)scx->GetNativeContext();
-}
-
-static JSContext *
-GetJSContextFromNPP(NPP npp)
-{
-  nsIDocument *doc = GetDocumentFromNPP(npp);
-  NS_ENSURE_TRUE(doc, nsnull);
-
-  return GetJSContextFromDoc(doc);
-}
-
 NPObject* NP_CALLBACK
 _getwindowobject(NPP npp)
 {
@@ -1243,20 +1393,6 @@ _getpluginelement(NPP npp)
   NS_ENSURE_TRUE(obj, nsnull);
 
   return nsJSObjWrapper::GetNewOrUsed(npp, cx, obj);
-}
-
-static NPIdentifier
-doGetIdentifier(JSContext *cx, const NPUTF8* name)
-{
-  NS_ConvertUTF8toUTF16 utf16name(name);
-
-  JSString *str = ::JS_InternUCStringN(cx, (jschar *)utf16name.get(),
-                                       utf16name.Length());
-
-  if (!str)
-    return NULL;
-
-  return (NPIdentifier)STRING_TO_JSVAL(str);
 }
 
 NPIdentifier NP_CALLBACK
@@ -1735,26 +1871,6 @@ _construct(NPP npp, NPObject* npobj, const NPVariant *args,
   return npobj->_class->construct(npobj, args, argCount, result);
 }
 
-#if defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_WINCE)
-extern "C" size_t malloc_usable_size(const void *ptr);
-
-BOOL
-InHeap(HANDLE hHeap, LPVOID lpMem)
-{
-  BOOL success = FALSE;
-  PROCESS_HEAP_ENTRY he;
-  he.lpData = NULL;
-  while (HeapWalk(hHeap, &he) != 0) {
-    if (he.lpData == lpMem) {
-      success = TRUE;
-      break;
-    }
-  }
-  HeapUnlock(hHeap);
-  return success;
-}
-#endif
-
 void NP_CALLBACK
 _releasevariantvalue(NPVariant* variant)
 {
@@ -1825,8 +1941,6 @@ _tostring(NPObject* npobj, NPVariant *result)
   return false;
 }
 
-static char *gNPPException;
-
 void NP_CALLBACK
 _setexception(NPObject* npobj, const NPUTF8 *message)
 {
@@ -1844,37 +1958,6 @@ _setexception(NPObject* npobj, const NPUTF8 *message)
   }
 
   gNPPException = strdup(message);
-}
-
-const char *
-PeekException()
-{
-  return gNPPException;
-}
-
-void
-PopException()
-{
-  NS_ASSERTION(gNPPException, "Uh, no NPP exception to pop!");
-
-  if (gNPPException) {
-    free(gNPPException);
-
-    gNPPException = nsnull;
-  }
-}
-
-NPPExceptionAutoHolder::NPPExceptionAutoHolder()
-  : mOldException(gNPPException)
-{
-  gNPPException = nsnull;
-}
-
-NPPExceptionAutoHolder::~NPPExceptionAutoHolder()
-{
-  NS_ASSERTION(!gNPPException, "NPP exception not properly cleared!");
-
-  gNPPException = mOldException;
 }
 
 NPError NP_CALLBACK
@@ -2343,91 +2426,6 @@ _poppopupsenabledstate(NPP npp)
   inst->PopPopupsEnabledState();
 }
 
-class nsPluginThreadRunnable : public nsRunnable,
-                               public PRCList
-{
-public:
-  nsPluginThreadRunnable(NPP instance, PluginThreadCallback func,
-                         void *userData);
-  virtual ~nsPluginThreadRunnable();
-
-  NS_IMETHOD Run();
-
-  PRBool IsForInstance(NPP instance)
-  {
-    return (mInstance == instance);
-  }
-
-  void Invalidate()
-  {
-    mFunc = nsnull;
-  }
-
-  PRBool IsValid()
-  {
-    return (mFunc != nsnull);
-  }
-
-private:  
-  NPP mInstance;
-  PluginThreadCallback mFunc;
-  void *mUserData;
-};
-
-nsPluginThreadRunnable::nsPluginThreadRunnable(NPP instance,
-                                               PluginThreadCallback func,
-                                               void *userData)
-  : mInstance(instance), mFunc(func), mUserData(userData)
-{
-  if (!sPluginThreadAsyncCallLock) {
-    // Failed to create lock, not much we can do here then...
-    mFunc = nsnull;
-
-    return;
-  }
-
-  PR_INIT_CLIST(this);
-
-  {
-    nsAutoLock lock(sPluginThreadAsyncCallLock);
-
-    nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
-    if (!inst || !inst->IsStarted()) {
-      // The plugin was stopped, ignore this async call.
-      mFunc = nsnull;
-
-      return;
-    }
-
-    PR_APPEND_LINK(this, &sPendingAsyncCalls);
-  }
-}
-
-nsPluginThreadRunnable::~nsPluginThreadRunnable()
-{
-  if (!sPluginThreadAsyncCallLock) {
-    return;
-  }
-
-  {
-    nsAutoLock lock(sPluginThreadAsyncCallLock);
-
-    PR_REMOVE_LINK(this);
-  }
-}
-
-NS_IMETHODIMP
-nsPluginThreadRunnable::Run()
-{
-  if (mFunc) {
-    PluginDestructionGuard guard(mInstance);
-
-    NS_TRY_SAFE_CALL_VOID(mFunc(mUserData), nsnull, nsnull);
-  }
-
-  return NS_OK;
-}
-
 void NP_CALLBACK
 _pluginthreadasynccall(NPP instance, PluginThreadCallback func, void *userData)
 {
@@ -2614,7 +2612,7 @@ _getauthenticationinfo(NPP instance, const char *protocol, const char *host,
 // See Bug 501889.
 PR_BEGIN_EXTERN_C
 uint32_t NP_CALLBACK
-_scheduletimer(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID))
+_scheduletimer(NPP instance, uint32_t interval, NPBool repeat, PluginTimerFunc timerFunc)
 {
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
   if (!inst)
@@ -2654,61 +2652,6 @@ _convertpoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace so
   return inst->ConvertPoint(sourceX, sourceY, sourceSpace, destX, destY, destSpace);
 }
 
-void
-OnPluginDestroy(NPP instance)
-{
-  if (!sPluginThreadAsyncCallLock) {
-    return;
-  }
-
-  {
-    nsAutoLock lock(sPluginThreadAsyncCallLock);
-
-    if (PR_CLIST_IS_EMPTY(&sPendingAsyncCalls)) {
-      return;
-    }
-
-    nsPluginThreadRunnable *r =
-      (nsPluginThreadRunnable *)PR_LIST_HEAD(&sPendingAsyncCalls);
-
-    do {
-      if (r->IsForInstance(instance)) {
-        r->Invalidate();
-      }
-
-      r = (nsPluginThreadRunnable *)PR_NEXT_LINK(r);
-    } while (r != &sPendingAsyncCalls);
-  }
-}
-
-void
-OnShutdown()
-{
-  NS_ASSERTION(PR_CLIST_IS_EMPTY(&sPendingAsyncCalls),
-               "Pending async plugin call list not cleaned up!");
-
-  if (sPluginThreadAsyncCallLock) {
-    nsAutoLock::DestroyLock(sPluginThreadAsyncCallLock);
-
-    sPluginThreadAsyncCallLock = nsnull;
-  }
-}
-
-void
-EnterAsyncPluginThreadCallLock()
-{
-  if (sPluginThreadAsyncCallLock) {
-    PR_Lock(sPluginThreadAsyncCallLock);
-  }
-}
-
-void
-ExitAsyncPluginThreadCallLock()
-{
-  if (sPluginThreadAsyncCallLock) {
-    PR_Unlock(sPluginThreadAsyncCallLock);
-  }
-}
-
-NPP NPPStack::sCurrentNPP = nsnull;
-
+} /* namespace parent */
+} /* namespace plugins */
+} /* namespace mozilla */

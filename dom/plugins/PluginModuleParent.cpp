@@ -263,8 +263,7 @@ PluginModuleParent::NPP_SetValue(NPP instance, NPNVariable variable,
 bool
 PluginModuleParent::AnswerNPN_UserAgent(nsCString* userAgent)
 {
-    NPP_t dummy = { 0, 0 };
-    *userAgent = NullableString(mNPNIface->uagent(&dummy));
+    *userAgent = NullableString(mNPNIface->uagent(nsnull));
     return true;
 }
 
@@ -277,7 +276,8 @@ PluginModuleParent::RecvNPN_GetStringIdentifier(const nsCString& aString,
         return false;
     }
 
-    NPIdentifier ident = _getstringidentifier(aString.BeginReading());
+    NPIdentifier ident =
+        mozilla::plugins::parent::_getstringidentifier(aString.BeginReading());
     if (!ident) {
         *aId = 0;
         return true;
@@ -296,7 +296,7 @@ bool
 PluginModuleParent::RecvNPN_GetIntIdentifier(const int32_t& aInt,
                                              NPRemoteIdentifier* aId)
 {
-    NPIdentifier ident = _getintidentifier(aInt);
+    NPIdentifier ident = mozilla::plugins::parent::_getintidentifier(aInt);
     if (!ident) {
         *aId = 0;
         return true;
@@ -322,7 +322,7 @@ PluginModuleParent::RecvNPN_UTF8FromIdentifier(const NPRemoteIdentifier& aId,
         return true;
     }
 
-    NPUTF8* val = _utf8fromidentifier(ident);
+    NPUTF8* val = mozilla::plugins::parent::_utf8fromidentifier(ident);
     if (!val) {
         *err = NPERR_INVALID_PARAM;
         return true;
@@ -344,7 +344,7 @@ PluginModuleParent::RecvNPN_IntFromIdentifier(const NPRemoteIdentifier& aId,
         return true;
     }
 
-    *aInt = _intfromidentifier(ident);
+    *aInt = mozilla::plugins::parent::_intfromidentifier(ident);
     *err = NPERR_NO_ERROR;
     return true;
 }
@@ -359,7 +359,7 @@ PluginModuleParent::RecvNPN_IdentifierIsString(const NPRemoteIdentifier& aId,
         return true;
     }
 
-    *aIsString = _identifierisstring(ident);
+    *aIsString = mozilla::plugins::parent::_identifierisstring(ident);
     return true;
 }
 
@@ -390,8 +390,8 @@ PluginModuleParent::RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNam
         NS_ASSERTION(buffers[index], "Null pointer should be impossible!");
     }
 
-    _getstringidentifiers(const_cast<const NPUTF8**>(buffers.Elements()),
-                          count, ids.Elements());
+    mozilla::plugins::parent::_getstringidentifiers(
+        const_cast<const NPUTF8**>(buffers.Elements()), count, ids.Elements());
 
     for (PRUint32 index = 0; index < count; index++) {
         NPIdentifier& id = ids[index];
@@ -564,3 +564,13 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
     return NS_OK;
 }
 
+bool
+PluginModuleParent::AnswerNPN_GetValue_WithBoolReturn(const NPNVariable& aVariable,
+                                                      NPError* aError,
+                                                      bool* aBoolVal)
+{
+    NPBool boolVal = false;
+    *aError = mozilla::plugins::parent::_getvalue(nsnull, aVariable, &boolVal);
+    *aBoolVal = boolVal ? true : false;
+    return true;
+}

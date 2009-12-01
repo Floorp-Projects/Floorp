@@ -565,6 +565,26 @@ struct ParamTraits<mozilla::plugins::IPCByteRange>
   }
 };
 
+template <>
+struct ParamTraits<NPNVariable>
+{
+  typedef NPNVariable paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, int(aParam));
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    int intval;
+    if (ReadParam(aMsg, aIter, &intval)) {
+      *aResult = paramType(intval);
+      return true;
+    }
+    return false;
+  }
+};
 
 } /* namespace IPC */
 
