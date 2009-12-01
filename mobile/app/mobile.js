@@ -409,3 +409,7 @@ pref("ui.window", "#efebe7");
 pref("ui.windowtext", "#101010");
 pref("ui.windowframe", "#efebe7");
 
+#ifdef MOZ_OFFICIAL_BRANDING
+pref("browser.search.param.yahoo-fr", "moz35");
+pref("browser.search.param.yahoo-fr-cjkt", "moz35");
+#endif
