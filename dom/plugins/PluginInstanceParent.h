@@ -41,10 +41,14 @@
 
 #include "mozilla/plugins/PPluginInstanceParent.h"
 #include "mozilla/plugins/PluginScriptableObjectParent.h"
+#if defined(OS_WIN)
+#include "mozilla/gfx/SharedDIBWin.h"
+#endif
 
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
+#include "nsRect.h"
 
 #undef _MOZ_LOG
 #define _MOZ_LOG(s) printf("[PluginInstanceParent] %s\n", s)
@@ -218,8 +222,25 @@ private:
     PluginModuleParent* mParent;
     NPP mNPP;
     const NPNetscapeFuncs* mNPNIface;
+    NPWindowType mWindowType;
 
     nsTArray<nsAutoPtr<PluginScriptableObjectParent> > mScriptableObjects;
+
+#if defined(OS_WIN)
+private:
+    // Used in rendering windowless plugins in other processes.
+    bool SharedSurfaceSetWindow(const NPWindow* aWindow, NPRemoteWindow& aRemoteWindow);
+    bool SharedSurfaceBeforePaint(RECT &rect, NPRemoteEvent& npremoteevent);
+    void SharedSurfaceAfterPaint(NPEvent* npevent);
+    void SharedSurfaceRelease();
+
+private:
+    gfx::SharedDIBWin  mSharedSurfaceDib;
+    nsIntRect          mPluginPort;
+    nsIntRect          mSharedSize;
+    PRUint32           mDoublePassEvent;
+    bool               mLocalCopyRender;
+#endif // defined(XP_WIN)
 };
 
 

@@ -41,6 +41,9 @@
 
 #include "mozilla/plugins/PPluginInstanceChild.h"
 #include "mozilla/plugins/PluginScriptableObjectChild.h"
+#if defined(OS_WIN)
+#include "mozilla/gfx/SharedDIBWin.h"
+#endif
 
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
@@ -204,6 +207,17 @@ private:
 #endif
 
     nsTArray<nsAutoPtr<PluginScriptableObjectChild> > mScriptableObjects;
+
+#if defined(OS_WIN)
+private:
+    // Shared dib rendering management for windowless plugins.
+    bool SharedSurfaceSetWindow(const NPRemoteWindow& aWindow, NPError* rv);
+    void SharedSurfaceBeforePaint(NPEvent& evcopy);
+    void SharedSurfaceRelease();
+
+private:
+    gfx::SharedDIBWin mSharedSurfaceDib;
+#endif // defined(OS_WIN)
 };
 
 } // namespace plugins
