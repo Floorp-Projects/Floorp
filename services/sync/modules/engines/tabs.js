@@ -91,36 +91,9 @@ TabEngine.prototype = {
    * reappear in the menu.
    */
   locallyOpenTabMatchesURL: function TabEngine_localTabMatches(url) {
-    // url should be string, not object
-    /* Some code duplication from _addFirefoxTabsToRecord and
-     * _addFennecTabsToRecord.  Unify? */
-    if (Cc["@mozilla.org/browser/sessionstore;1"])  {
-      let state = this._store._sessionStore.getBrowserState();
-      let session = JSON.parse(state);
-      for (let i = 0; i < session.windows.length; i++) {
-        let window = session.windows[i];
-        for (let j = 0; j < window.tabs.length; j++) {
-          let tab = window.tabs[j];
-          if (tab.entries.length > 0) {
-            let tabUrl = tab.entries[tab.entries.length-1].url;
-            if (tabUrl == url) {
-              return true;
-            }
-          }
-        }
-      }
-    } else {
-      let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-	.getService(Ci.nsIWindowMediator);
-      let browserWindow = wm.getMostRecentWindow("navigator:browser");
-      for each (let tab in browserWindow.Browser._tabs ) {
-        let tabUrl = tab.browser.contentWindow.location.toString();
-        if (tabUrl == url) {
-          return true;
-        }
-      }
-    }
-    return false;
+    return this._store.getAllTabs().some(function(tab) {
+      return tab.urlHistory[0] == url;
+    });
   }
 };
 
@@ -161,10 +134,7 @@ TabStore.prototype = {
     return id == Clients.clientID;
   },
 
-  createRecord: function TabStore_createRecord(id, cryptoMetaURL) {
-    let record = new TabSetRecord();
-    record.clientName = Clients.clientName;
-
+  getAllTabs: function getAllTabs() {
     // Iterate through each tab of each window
     let allTabs = [];
     let wins = Svc.WinMediator.getEnumerator("navigator:browser");
@@ -173,24 +143,30 @@ TabStore.prototype = {
       let window = wins.getNext();
       let tabs = window.gBrowser && window.gBrowser.tabContainer.childNodes;
       tabs = tabs || window.Browser._tabs;
+  
+      // Extract various pieces of tab data
       Array.forEach(tabs, function(tab) {
-        allTabs.push(tab);
+        let browser = tab.linkedBrowser || tab.browser;
+        allTabs.push({
+          title: browser.contentTitle || "",
+          urlHistory: [browser.currentURI.spec],
+          icon: browser.mIconURL || "",
+          lastUsed: tab.lastUsed || 0
+        });
       });
     }
+  
+    return allTabs;
+  },
 
-    // Extract various pieces of tab data and sort them in descending used
-    let tabData = allTabs.map(function(tab) {
-      let browser = tab.linkedBrowser || tab.browser;
-      return {
-        title: browser.contentTitle || "",
-        urlHistory: [browser.currentURI.spec],
-        icon: browser.mIconURL || "",
-        lastUsed: tab.lastUsed || 0
-      };
-    }).sort(function(a, b) b.lastUsed - a.lastUsed);
+  createRecord: function TabStore_createRecord(id, cryptoMetaURL) {
+    let record = new TabSetRecord();
+    record.clientName = Clients.clientName;
 
-    // Only grab the most recently used tabs to sync
-    record.tabs = tabData.slice(0, 25);
+    // Sort tabs in descending-used order to grab the most recently used
+    record.tabs = this.getAllTabs().sort(function(a, b) {
+      return b.lastUsed - a.lastUsed;
+    }).slice(0, 25);
     record.tabs.forEach(function(tab) {
       this._log.debug("Wrapping tab: " + JSON.stringify(tab));
     }, this);
