@@ -9002,7 +9002,7 @@ DumpShape(JSObject* obj, const char* prefix)
     }
 
     fprintf(shapefp, "\n%s: shape %u flags %x\n", prefix, scope->shape, scope->flags);
-    for (JSScopeProperty* sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
+    for (JSScopeProperty* sprop = scope->lastProp; sprop; sprop = sprop->parent) {
         if (JSID_IS_ATOM(sprop->id)) {
             fprintf(shapefp, " %s", JS_GetStringBytes(JSVAL_TO_STRING(ID_TO_VALUE(sprop->id))));
         } else {
@@ -11215,7 +11215,7 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
     LIns* obj_ins = get(&l);
     JSScope* scope = OBJ_SCOPE(obj);
 
-    JS_ASSERT_IF(entry->vcap == PCVCAP_MAKE(entry->kshape, 0, 0), scope->hasProperty(sprop));
+    JS_ASSERT_IF(entry->vcap == PCVCAP_MAKE(entry->kshape, 0, 0), scope->has(sprop));
 
     // Fast path for CallClass. This is about 20% faster than the general case.
     v_ins = get(&v);
@@ -11237,7 +11237,7 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
     jsuword pcval;
     CHECK_STATUS(guardPropertyCacheHit(obj_ins, map_ins, obj, obj2, entry, pcval));
     JS_ASSERT(scope->object == obj2);
-    JS_ASSERT(scope->hasProperty(sprop));
+    JS_ASSERT(scope->has(sprop));
     JS_ASSERT_IF(obj2 != obj, sprop->attrs & JSPROP_SHARED);
 
     /*
@@ -12543,7 +12543,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
 
     if (PCVAL_IS_SPROP(pcval)) {
         sprop = PCVAL_TO_SPROP(pcval);
-        JS_ASSERT(OBJ_SCOPE(obj2)->hasProperty(sprop));
+        JS_ASSERT(OBJ_SCOPE(obj2)->has(sprop));
 
         if (setflags && !SPROP_HAS_STUB_SETTER(sprop))
             RETURN_STOP_A("non-stub setter");
