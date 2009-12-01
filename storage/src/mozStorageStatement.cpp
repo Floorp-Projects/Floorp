@@ -43,7 +43,6 @@
 
 #include "nsError.h"
 #include "nsMemory.h"
-#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIProgrammingLanguage.h"
@@ -78,33 +77,18 @@ namespace {
 class AsyncStatementFinalizer : public nsRunnable
 {
 public:
-  /**
-   * Constructor for the event.
-   *
-   * @param aStatement
-   *        The sqlite3_stmt to finalize on the background thread.
-   * @param aConnection
-   *        The Connection that aStatement was created on.  We hold a reference
-   *        to this to ensure that if we are the last reference to the
-   *        Connection, that we release it on the proper thread.  The release
-   *        call is proxied to the appropriate thread.
-   */
-  AsyncStatementFinalizer(sqlite3_stmt *aStatement,
-                          Connection *aConnection)
+  AsyncStatementFinalizer(sqlite3_stmt *aStatement)
   : mStatement(aStatement)
-  , mConnection(aConnection)
   {
   }
 
   NS_IMETHOD Run()
   {
     (void)::sqlite3_finalize(mStatement);
-    (void)::NS_ProxyRelease(mConnection->threadOpenedOn, mConnection);
     return NS_OK;
   }
 private:
   sqlite3_stmt *mStatement;
-  nsCOMPtr<Connection> mConnection;
 };
 
 } // anonymous namespace
@@ -417,7 +401,7 @@ Statement::Finalize()
     }
     else {
       nsCOMPtr<nsIRunnable> event =
-        new AsyncStatementFinalizer(mCachedAsyncStatement, mDBConnection);
+        new AsyncStatementFinalizer(mCachedAsyncStatement);
       NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
       nsresult rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
