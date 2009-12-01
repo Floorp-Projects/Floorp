@@ -1205,22 +1205,15 @@ namespace nanojit
         return k;
     }
 
-    LInsp LInsHashSet::findImmf(double a, uint32_t &k)
+    LInsp LInsHashSet::findImmf(uint64_t a, uint32_t &k)
     {
-        // We must pun 'a' as a uint64_t otherwise 0 and -0 will be treated as
-        // equal, which breaks things (see bug 527288).
-        union {
-            double d;
-            uint64_t u64;
-        } u;
-        u.d = a;
         LInsHashKind kind = LInsImmf;
         const uint32_t bitmask = (m_cap[kind] - 1) & ~0x1;
         uint32_t hash = hashImmf(a) & bitmask;
         uint32_t n = 7 << 1;
         LInsp ins;
         while ((ins = m_list[kind][hash]) != NULL &&
-            (ins->imm64() != u.u64))
+            (ins->imm64() != a))
         {
             NanoAssert(ins->isconstf());
             hash = (hash + (n += 2)) & bitmask;        // quadratic probe
@@ -1232,7 +1225,7 @@ namespace nanojit
     uint32_t LInsHashSet::findImmf(LInsp ins)
     {
         uint32_t k;
-        findImmf(ins->imm64f(), k);
+        findImmf(ins->imm64(), k);
         return k;
     }
 
@@ -1930,7 +1923,11 @@ namespace nanojit
         LInsp ins = exprs->findImm(imm, k);
         if (ins)
             return ins;
-        return exprs->add(LInsImm, out->insImm(imm), k);
+        ins = out->insImm(imm);
+        // We assume that downstream stages do not modify the instruction, so
+        // that we can insert 'ins' into slot 'k'.  Check this.
+        NanoAssert(ins->opcode() == LIR_int && ins->imm32() == imm);
+        return exprs->add(LInsImm, ins, k);
     }
 
     LIns* CseFilter::insImmq(uint64_t q)
@@ -1939,16 +1936,27 @@ namespace nanojit
         LInsp ins = exprs->findImmq(q, k);
         if (ins)
             return ins;
-        return exprs->add(LInsImmq, out->insImmq(q), k);
+        ins = out->insImmq(q);
+        NanoAssert(ins->opcode() == LIR_quad && ins->imm64() == q);
+        return exprs->add(LInsImmq, ins, k);
     }
 
     LIns* CseFilter::insImmf(double d)
     {
         uint32_t k;
-        LInsp ins = exprs->findImmf(d, k);
+        // We must pun 'd' as a uint64_t otherwise 0 and -0 will be treated as
+        // equal, which breaks things (see bug 527288).
+        union {
+            double d;
+            uint64_t u64;
+        } u;
+        u.d = d;
+        LInsp ins = exprs->findImmf(u.u64, k);
         if (ins)
             return ins;
-        return exprs->add(LInsImmf, out->insImmf(d), k);
+        ins = out->insImmf(d);
+        NanoAssert(ins->opcode() == LIR_float && ins->imm64() == u.u64);
+        return exprs->add(LInsImmf, ins, k);
     }
 
     LIns* CseFilter::ins0(LOpcode v)
@@ -1965,7 +1973,9 @@ namespace nanojit
             LInsp ins = exprs->find1(v, a, k);
             if (ins)
                 return ins;
-            return exprs->add(LIns1, out->ins1(v,a), k);
+            ins = out->ins1(v, a);
+            NanoAssert(ins->opcode() == v && ins->oprnd1() == a);
+            return exprs->add(LIns1, ins, k);
         }
         return out->ins1(v,a);
     }
@@ -1977,7 +1987,9 @@ namespace nanojit
             LInsp ins = exprs->find2(v, a, b, k);
             if (ins)
                 return ins;
-            return exprs->add(LIns2, out->ins2(v,a,b), k);
+            ins = out->ins2(v, a, b);
+            NanoAssert(ins->opcode() == v && ins->oprnd1() == a && ins->oprnd2() == b);
+            return exprs->add(LIns2, ins, k);
         }
         return out->ins2(v,a,b);
     }
@@ -1989,7 +2001,10 @@ namespace nanojit
         LInsp ins = exprs->find3(v, a, b, c, k);
         if (ins)
             return ins;
-        return exprs->add(LIns3, out->ins3(v,a,b,c), k);
+        ins = out->ins3(v, a, b, c);
+        NanoAssert(ins->opcode() == v && ins->oprnd1() == a && ins->oprnd2() == b &&
+                                                               ins->oprnd3() == c);
+        return exprs->add(LIns3, ins, k);
     }
 
     LIns* CseFilter::insLoad(LOpcode v, LInsp base, int32_t disp)
@@ -1999,9 +2014,11 @@ namespace nanojit
             LInsp ins = exprs->findLoad(v, base, disp, k);
             if (ins)
                 return ins;
-            return exprs->add(LInsLoad, out->insLoad(v,base,disp), k);
+            ins = out->insLoad(v, base, disp);
+            NanoAssert(ins->opcode() == v && ins->oprnd1() == base && ins->disp() == disp);
+            return exprs->add(LInsLoad, ins, k);
         }
-        return out->insLoad(v,base,disp);
+        return out->insLoad(v, base, disp);
     }
 
     LInsp CseFilter::insGuard(LOpcode v, LInsp c, GuardRecord *gr)
@@ -2029,7 +2046,9 @@ namespace nanojit
             LInsp ins = exprs->find1(v, c, k);
             if (ins)
                 return 0;
-            return exprs->add(LIns1, out->insGuard(v,c,gr), k);
+            ins = out->insGuard(v, c, gr);
+            NanoAssert(ins->opcode() == v && ins->oprnd1() == c);
+            return exprs->add(LIns1, ins, k);
         }
         return out->insGuard(v, c, gr);
     }
@@ -2042,7 +2061,9 @@ namespace nanojit
             LInsp ins = exprs->findCall(ci, argc, args, k);
             if (ins)
                 return ins;
-            return exprs->add(LInsCall, out->insCall(ci, args), k);
+            ins = out->insCall(ci, args);
+            NanoAssert(ins->isCall() && ins->callInfo() == ci && argsmatch(ins, argc, args));
+            return exprs->add(LInsCall, ins, k);
         }
         return out->insCall(ci, args);
     }
@@ -2192,7 +2213,8 @@ namespace nanojit
             LInsp ins = exprs->findLoad(v, base, disp, k);
             if (ins)
                 return ins;
-            return exprs->add(LInsLoad, out->insLoad(v,base,disp), k);
+            ins = out->insLoad(v, base, disp);
+            return exprs->add(LInsLoad, ins, k);
         }
         return out->insLoad(v, base, disp);
     }
