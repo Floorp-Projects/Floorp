@@ -580,7 +580,12 @@ struct MessageWindow {
         _wgetcwd(cwd, MAX_PATH);
 
         // Construct a narrow UTF8 buffer <commandline>\0<workingdir>\0
+#ifdef WINCE
+        NS_ConvertUTF16toUTF8 utf8buffer(L"dummy ");
+        AppendUTF16toUTF8(cmd, utf8buffer);
+#else
         NS_ConvertUTF16toUTF8 utf8buffer(cmd);
+#endif
         utf8buffer.Append('\0');
         AppendUTF16toUTF8(cwd, utf8buffer);
         utf8buffer.Append('\0');
