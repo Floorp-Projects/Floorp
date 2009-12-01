@@ -43,6 +43,7 @@ include "npapi.h";
 include "mozilla/plugins/PluginMessageUtils.h";
 
 using NPError;
+using NPNVariable;
 using mozilla::ipc::NPRemoteIdentifier;
 
 namespace mozilla {
@@ -91,6 +92,10 @@ parent:
 
   sync NPN_GetStringIdentifiers(nsCString[] aNames)
     returns (NPRemoteIdentifier[] aIds);
+
+  rpc NPN_GetValue_WithBoolReturn(NPNVariable aVariable)
+    returns (NPError aError,
+             bool aBoolVal);
 };
 
 } // namespace plugins
