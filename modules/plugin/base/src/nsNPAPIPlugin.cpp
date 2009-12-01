@@ -2080,7 +2080,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   case NPNVWindowNPObject: {
     *(NPObject **)result = _getwindowobject(npp);
 
-    return NPERR_NO_ERROR;
+    return *(NPObject **)result ? NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
   }
 
   case NPNVPluginElementNPObject: {
