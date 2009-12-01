@@ -166,8 +166,6 @@ namespace nanojit
     #define _is_fp_reg_(r)  ((_rmask_(r)&FpRegs)!=0)
     #define _is_gp_reg_(r)  ((_rmask_(r)&GpRegs)!=0)
 
-    #define nextreg(r)      Register(r+1)
-
     verbose_only( extern const char* regNames[]; )
 
     #define DECLARE_PLATFORM_STATS()
@@ -185,10 +183,9 @@ namespace nanojit
         void asm_arg(ArgSize sz, LInsp p, Register r, int32_t& stkd);\
         void asm_pusharg(LInsp);\
         void asm_fcmp(LIns *cond);\
+        NIns* asm_fbranch(bool, LIns*, NIns*);\
         void asm_cmp(LIns *cond); \
         void asm_div_mod(LIns *cond);
-
-    #define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
 
 #define IMM32(i)    \
     _nIns -= 4;     \

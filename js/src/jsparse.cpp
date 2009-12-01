@@ -834,6 +834,14 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     if (!SetStaticLevel(&cg, staticLevel))
         goto out;
 
+    /* If this is a direct call to eval, inherit the caller's strictness.  */
+    if (callerFrame &&
+        callerFrame->script &&
+        callerFrame->script->strictModeCode) {
+        cg.flags |= TCF_STRICT_MODE_CODE;
+        jsc.tokenStream.flags |= TSF_STRICT_MODE_CODE;
+    }
+
     /*
      * If funbox is non-null after we create the new script, callerFrame->fun
      * was saved in the 0th object table entry.
@@ -1186,6 +1194,111 @@ CheckFinalReturn(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
                            JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE);
 }
 
+/*
+ * Check that it is permitted to assign to lhs.  Strict mode code may not
+ * assign to 'eval' or 'arguments'.
+ */
+bool
+CheckStrictAssignment(JSContext *cx, JSTreeContext *tc, JSParseNode *lhs)
+{
+    if (tc->needStrictChecks() &&
+        lhs->pn_type == TOK_NAME) {
+        JSAtom *atom = lhs->pn_atom;
+        JSAtomState *atomState = &cx->runtime->atomState;
+        if (atom == atomState->evalAtom || atom == atomState->argumentsAtom) {
+            const char *name = js_AtomToPrintableString(cx, atom);
+            if (!name ||
+                !js_ReportStrictModeError(cx, TS(tc->compiler), tc, lhs,
+                                          JSMSG_DEPRECATED_ASSIGN, name)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+/*
+ * Check that it is permitted to introduce a binding for atom.  Strict
+ * mode forbids introducing new definitions for 'eval' or 'arguments'.
+ * Use pn for reporting error locations, or use tc's token stream if
+ * pn is NULL.
+ */
+bool
+CheckStrictBinding(JSContext *cx, JSTreeContext *tc, JSAtom *atom, 
+                   JSParseNode *pn)
+{
+    if (!tc->needStrictChecks())
+        return true;
+
+    JSAtomState *atomState = &cx->runtime->atomState;
+    if (atom == atomState->evalAtom || atom == atomState->argumentsAtom) {
+        const char *name = js_AtomToPrintableString(cx, atom);
+        if (name)
+            js_ReportStrictModeError(cx, TS(tc->compiler), tc, pn,
+                                     JSMSG_BAD_BINDING, name);
+        return false;
+    }
+    return true;
+}
+
+/*
+ * In strict mode code, all formal parameter names must be distinct. If fun's
+ * formals are legit given fun's strictness level, return true. Otherwise,
+ * report an error and return false. Use pn for error position reporting,
+ * unless we can find something more accurate in tc's decls.
+ * 
+ * In some cases the code to parse the argument list will already have noticed
+ * the duplication; we could try to use that knowledge instead of re-checking
+ * here. But since the strictness of the function's body determines what
+ * constraints to apply to the argument list, we can't report the error until
+ * after we've parsed the body. And as it turns out, the function's local name
+ * list makes it reasonably cheap to find duplicates after the fact.
+ */
+static bool
+CheckStrictFormals(JSContext *cx, JSTreeContext *tc, JSFunction *fun,
+                   JSParseNode *pn)
+{
+    JSAtom *atom;
+
+    if (!tc->needStrictChecks())
+        return true;
+
+    atom = js_FindDuplicateFormal(fun);
+    if (atom) {
+        /*
+         * We have found a duplicate parameter name. If we can find the
+         * JSDefinition for the argument, that will have a more accurate source
+         * location.
+         */
+        JSDefinition *dn = ALE_DEFN(tc->decls.lookup(atom));
+        if (dn->pn_op == JSOP_GETARG)
+            pn = dn;
+        const char *name = js_AtomToPrintableString(cx, atom);
+        if (!name ||
+            !js_ReportStrictModeError(cx, TS(tc->compiler), tc, pn,
+                                      JSMSG_DUPLICATE_FORMAL, name)) {
+            return false;
+        }
+    }
+
+    if (tc->flags & (TCF_FUN_PARAM_ARGUMENTS | TCF_FUN_PARAM_EVAL)) {
+        JSAtomState *atoms = &cx->runtime->atomState;
+        atom = (tc->flags & TCF_FUN_PARAM_ARGUMENTS
+                ? atoms->argumentsAtom : atoms->evalAtom);
+        /* The definition's source position will be more precise. */
+        JSDefinition *dn = ALE_DEFN(tc->decls.lookup(atom));
+        JS_ASSERT(dn->pn_atom == atom);
+        const char *name = js_AtomToPrintableString(cx, atom);
+        if (!name ||
+            !js_ReportStrictModeError(cx, TS(tc->compiler), tc, dn,
+                                      JSMSG_BAD_BINDING, name)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 static JSParseNode *
 FunctionBody(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
@@ -1431,6 +1544,8 @@ DefineArg(JSParseNode *pn, JSAtom *atom, uintN i, JSTreeContext *tc)
     /* Flag tc so we don't have to lookup arguments on every use. */
     if (atom == tc->compiler->context->runtime->atomState.argumentsAtom)
         tc->flags |= TCF_FUN_PARAM_ARGUMENTS;
+    if (atom == tc->compiler->context->runtime->atomState.evalAtom)
+        tc->flags |= TCF_FUN_PARAM_EVAL;
 
     /*
      * Make an argument definition node, distinguished by being in tc->decls
@@ -1525,7 +1640,9 @@ JSCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *pr
     CURRENT_TOKEN(&jsc.tokenStream).type = TOK_LC;
     JSParseNode *pn = fn ? FunctionBody(cx, &jsc.tokenStream, &funcg) : NULL;
     if (pn) {
-        if (!js_MatchToken(cx, &jsc.tokenStream, TOK_EOF)) {
+        if (!CheckStrictFormals(cx, &funcg, fun, pn)) {
+            pn = NULL;
+        } else if (!js_MatchToken(cx, &jsc.tokenStream, TOK_EOF)) {
             js_ReportCompileErrorNumber(cx, &jsc.tokenStream, NULL,
                                         JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
@@ -1583,7 +1700,7 @@ struct BindData {
 
 static JSBool
 BindLocalVariable(JSContext *cx, JSFunction *fun, JSAtom *atom,
-                  JSLocalKind localKind)
+                  JSLocalKind localKind, bool isArg)
 {
     JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
 
@@ -1592,8 +1709,11 @@ BindLocalVariable(JSContext *cx, JSFunction *fun, JSAtom *atom,
      * Instead 'var arguments' always restates the predefined property of the
      * activation objects whose name is 'arguments'. Assignment to such a
      * variable must be handled specially.
+     *
+     * Special case: an argument named 'arguments' *does* shadow the predefined
+     * arguments property.
      */
-    if (atom == cx->runtime->atomState.argumentsAtom)
+    if (atom == cx->runtime->atomState.argumentsAtom && !isArg)
         return JS_TRUE;
 
     return js_AddLocal(cx, fun, atom, localKind);
@@ -1611,18 +1731,15 @@ static JSBool
 BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
                      JSTreeContext *tc)
 {
-    JSAtomListElement *ale;
     JSParseNode *pn;
 
     /* Flag tc so we don't have to lookup arguments on every use. */
     if (atom == tc->compiler->context->runtime->atomState.argumentsAtom)
         tc->flags |= TCF_FUN_PARAM_ARGUMENTS;
+    if (atom == tc->compiler->context->runtime->atomState.evalAtom)
+        tc->flags |= TCF_FUN_PARAM_EVAL;
 
     JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
-    ale = tc->decls.lookup(atom);
-    pn = data->pn;
-    if (!ale && !Define(pn, atom, tc))
-        return JS_FALSE;
 
     JSLocalKind localKind = js_LookupLocal(cx, tc->fun, atom, NULL);
     if (localKind != JSLOCAL_NONE) {
@@ -1630,9 +1747,14 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
                                     JSREPORT_ERROR, JSMSG_DESTRUCT_DUP_ARG);
         return JS_FALSE;
     }
+    JS_ASSERT(!tc->decls.lookup(atom));
+
+    pn = data->pn;
+    if (!Define(pn, atom, tc))
+        return JS_FALSE;
 
     uintN index = tc->fun->u.i.nvars;
-    if (!BindLocalVariable(cx, tc->fun, atom, JSLOCAL_VAR))
+    if (!BindLocalVariable(cx, tc->fun, atom, JSLOCAL_VAR, true))
         return JS_FALSE;
     pn->pn_op = JSOP_SETLOCAL;
     pn->pn_cookie = MAKE_UPVAR_COOKIE(tc->staticLevel, index);
@@ -2456,7 +2578,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JSAtomListElement *ale;
 #if JS_HAS_DESTRUCTURING
     JSParseNode *item, *list = NULL;
-    bool destructuringArg = false, duplicatedArg = false;
+    bool destructuringArg = false;
+    JSAtom *duplicatedArg = NULL;
 #endif
 
     /* Make a TOK_FUNCTION node. */
@@ -2685,37 +2808,26 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
               case TOK_NAME:
               {
-                /*
-                 * Check for a duplicate parameter name, a "feature" that
-                 * ECMA-262 requires. This is a SpiderMonkey strict warning,
-                 * soon to be an ES3.1 strict error.
-                 *
-                 * Further, if any argument is a destructuring pattern, forbid
-                 * duplicates. We will report the error either now if we have
-                 * seen a destructuring pattern already, or later when we find
-                 * the first pattern.
-                 */
                 JSAtom *atom = CURRENT_TOKEN(ts).t_atom;
-                if (JS_HAS_STRICT_OPTION(cx) &&
-                    js_LookupLocal(cx, fun, atom, NULL) != JSLOCAL_NONE) {
-#if JS_HAS_DESTRUCTURING
-                    if (destructuringArg)
-                        goto report_dup_and_destructuring;
-                    duplicatedArg = true;
-#endif
-                    const char *name = js_AtomToPrintableString(cx, atom);
-                    if (!name ||
-                        !js_ReportCompileErrorNumber(cx, TS(funtc.compiler),
-                                                     NULL,
-                                                     JSREPORT_WARNING |
-                                                     JSREPORT_STRICT,
-                                                     JSMSG_DUPLICATE_FORMAL,
-                                                     name)) {
-                        return NULL;
-                    }
-                }
                 if (!DefineArg(pn, atom, fun->nargs, &funtc))
                     return NULL;
+#ifdef JS_HAS_DESTRUCTURING
+                /* 
+                 * ECMA-262 requires us to support duplicate parameter names, but if the
+                 * parameter list includes destructuring, we consider the code to have
+                 * opted in to higher standards, and forbid duplicates. We may see a
+                 * destructuring parameter later, so always note duplicates now.
+                 *
+                 * Duplicates are warned about (strict option) or cause errors (strict
+                 * mode code), but we do those tests in one place below, after having
+                 * parsed the body.
+                 */
+                if (js_LookupLocal(cx, fun, atom, NULL) != JSLOCAL_NONE) {
+                    duplicatedArg = atom;
+                    if (destructuringArg)
+                        goto report_dup_and_destructuring;
+                }
+#endif
                 if (!js_AddLocal(cx, fun, atom, JSLOCAL_ARG))
                     return NULL;
                 break;
@@ -2730,7 +2842,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
 #if JS_HAS_DESTRUCTURING
               report_dup_and_destructuring:
-                js_ReportCompileErrorNumber(cx, TS(tc->compiler), NULL,
+                JSDefinition *dn = ALE_DEFN(funtc.decls.lookup(duplicatedArg));
+                js_ReportCompileErrorNumber(cx, TS(tc->compiler), dn,
                                             JSREPORT_ERROR,
                                             JSMSG_DESTRUCT_DUP_ARG);
                 return NULL;
@@ -2755,6 +2868,12 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     body = FunctionBody(cx, ts, &funtc);
     if (!body)
+        return NULL;
+
+    if (!CheckStrictBinding(cx, &funtc, funAtom, pn))
+        return NULL;
+
+    if (!CheckStrictFormals(cx, &funtc, fun, pn))
         return NULL;
 
 #if JS_HAS_EXPR_CLOSURES
@@ -3067,6 +3186,9 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     JS_ASSERT(!tc->atTopLevel());
 
     pn = data->pn;
+    if (!CheckStrictBinding(cx, tc, atom, pn))
+        return false;
+
     blockObj = tc->blockChain;
     ale = tc->decls.lookup(atom);
     if (ale && ALE_DEFN(ale)->pn_blockid == tc->blockid()) {
@@ -3174,8 +3296,12 @@ OuterLet(JSTreeContext *tc, JSStmtInfo *stmt, JSAtom *atom)
 static JSBool
 BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 {
-    JSStmtInfo *stmt = js_LexicalLookup(tc, atom, NULL);
     JSParseNode *pn = data->pn;
+
+    if (!CheckStrictBinding(cx, tc, atom, pn))
+        return false;
+
+    JSStmtInfo *stmt = js_LexicalLookup(tc, atom, NULL);
 
     if (stmt && stmt->type == STMT_WITH) {
         pn->pn_op = JSOP_NAME;
@@ -3372,7 +3498,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         localKind = (data->op == JSOP_DEFCONST) ? JSLOCAL_CONST : JSLOCAL_VAR;
 
         uintN index = tc->fun->u.i.nvars;
-        if (!BindLocalVariable(cx, tc->fun, atom, localKind))
+        if (!BindLocalVariable(cx, tc->fun, atom, localKind, false))
             return JS_FALSE;
         pn->pn_op = JSOP_GETLOCAL;
         pn->pn_cookie = MAKE_UPVAR_COOKIE(tc->staticLevel, index);
@@ -5273,6 +5399,20 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         break;
 
       case TOK_WITH:
+        /*
+         * In most cases, we want the constructs forbidden in strict mode
+         * code to be a subset of those that JSOPTION_STRICT warns about, and
+         * we should use js_ReportStrictModeError.  However, 'with' is the sole
+         * instance of a construct that is forbidden in strict mode code, but
+         * doesn't even merit a warning under JSOPTION_STRICT.  See
+         * https://bugzilla.mozilla.org/show_bug.cgi?id=514576#c1.
+         */
+        if (tc->flags & TCF_STRICT_MODE_CODE) {
+            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                                        JSMSG_STRICT_CODE_WITH);
+            return NULL;
+        }
+
         pn = NewParseNode(PN_BINARY, tc);
         if (!pn)
             return NULL;
@@ -5843,6 +5983,8 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     op = CURRENT_TOKEN(ts).t_op;
     switch (pn->pn_type) {
       case TOK_NAME:
+        if (!CheckStrictAssignment(cx, tc, pn))
+            return NULL;
         pn->pn_op = JSOP_SETNAME;
         NoteLValue(cx, pn, tc);
         break;
@@ -6097,8 +6239,8 @@ MulExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 }
 
 static JSParseNode *
-SetLvalKid(JSContext *cx, JSTokenStream *ts, JSParseNode *pn, JSParseNode *kid,
-           const char *name)
+SetLvalKid(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
+           JSParseNode *pn, JSParseNode *kid, const char *name)
 {
     if (kid->pn_type != TOK_NAME &&
         kid->pn_type != TOK_DOT &&
@@ -6112,6 +6254,8 @@ SetLvalKid(JSContext *cx, JSTokenStream *ts, JSParseNode *pn, JSParseNode *kid,
                                     JSMSG_BAD_OPERAND, name);
         return NULL;
     }
+    if (!CheckStrictAssignment(cx, tc, kid))
+        return NULL;
     pn->pn_kid = kid;
     return kid;
 }
@@ -6125,7 +6269,7 @@ SetIncOpKid(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 {
     JSOp op;
 
-    kid = SetLvalKid(cx, ts, pn, kid, incop_name_str[tt == TOK_DEC]);
+    kid = SetLvalKid(cx, ts, tc, pn, kid, incop_name_str[tt == TOK_DEC]);
     if (!kid)
         return JS_FALSE;
     switch (kid->pn_type) {
@@ -6231,6 +6375,8 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             }
             break;
           case TOK_NAME:
+            if (!js_ReportStrictModeError(cx, ts, tc, pn, JSMSG_DEPRECATED_DELETE_OPERAND))
+                return NULL;
             pn2->pn_op = JSOP_DELNAME;
             break;
           default:;
@@ -7950,6 +8096,15 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         JSBool afterComma;
         JSParseNode *pnval;
 
+        /*
+         * A map from property names we've seen thus far to bit masks.
+         * (We use ALE_INDEX/ALE_SET_INDEX).  An atom's mask includes
+         * JSPROP_SETTER if we've seen a setter for it, JSPROP_GETTER
+         * if we've seen as getter, and both of those if we've just
+         * seen an ordinary value.
+         */
+        JSAutoAtomList seen(tc->compiler);
+
         pn = NewParseNode(PN_LIST, tc);
         if (!pn)
             return NULL;
@@ -7959,6 +8114,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
         afterComma = JS_FALSE;
         for (;;) {
+            JSAtom *atom;
             ts->flags |= TSF_KEYWORD_IS_NAME;
             tt = js_GetToken(cx, ts);
             ts->flags &= ~TSF_KEYWORD_IS_NAME;
@@ -7968,12 +8124,14 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 if (!pn3)
                     return NULL;
                 pn3->pn_dval = CURRENT_TOKEN(ts).t_dval;
+                if (tc->needStrictChecks())
+                    atom = js_AtomizeDouble(cx, pn3->pn_dval);
+                else
+                    atom = NULL; /* for the compiler */
                 break;
               case TOK_NAME:
 #if JS_HAS_GETTER_SETTER
                 {
-                    JSAtom *atom;
-
                     atom = CURRENT_TOKEN(ts).t_atom;
                     if (atom == cx->runtime->atomState.getAtom)
                         op = JSOP_GETTER;
@@ -7989,7 +8147,8 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                         js_UngetToken(ts);
                         goto property_name;
                     }
-                    pn3 = NewNameNode(cx, CURRENT_TOKEN(ts).t_atom, tc);
+                    atom = CURRENT_TOKEN(ts).t_atom;
+                    pn3 = NewNameNode(cx, atom, tc);
                     if (!pn3)
                         return NULL;
 
@@ -8003,10 +8162,11 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
               property_name:
 #endif
               case TOK_STRING:
+                atom = CURRENT_TOKEN(ts).t_atom;
                 pn3 = NewParseNode(PN_NULLARY, tc);
                 if (!pn3)
                     return NULL;
-                pn3->pn_atom = CURRENT_TOKEN(ts).t_atom;
+                pn3->pn_atom = atom;
                 break;
               case TOK_RC:
                 goto end_obj_init;
@@ -8060,6 +8220,43 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             if (!pn2)
                 return NULL;
             pn->append(pn2);
+
+            /*
+             * In strict mode code, check for duplicate property names.  Treat
+             * getters and setters as distinct attributes of each property.  A
+             * plain old value conflicts with a getter or a setter.
+             */ 
+            if (tc->needStrictChecks()) {
+                unsigned attributesMask;
+                if (op == JSOP_NOP)
+                    attributesMask = JSPROP_GETTER | JSPROP_SETTER;
+                else if (op == JSOP_GETTER)
+                    attributesMask = JSPROP_GETTER;
+                else if (op == JSOP_SETTER)
+                    attributesMask = JSPROP_SETTER;
+                else {
+                    JS_NOT_REACHED("bad opcode in object initializer");
+                    attributesMask = 0;
+                }
+
+                JSAtomListElement *ale = seen.lookup(atom);
+                if (ale) {
+                    if (ALE_INDEX(ale) & attributesMask) {
+                        const char *name = js_AtomToPrintableString(cx, atom);
+                        if (!name ||
+                            !js_ReportStrictModeError(cx, ts, tc, NULL,
+                                                      JSMSG_DUPLICATE_PROPERTY, name)) {
+                            return NULL;
+                        }
+                    }
+                    ALE_SET_INDEX(ale, attributesMask | ALE_INDEX(ale));
+                } else {
+                    ale = seen.add(tc->compiler, atom);
+                    if (!ale)
+                        return NULL;
+                    ALE_SET_INDEX(ale, attributesMask);
+                }
+            }                    
 
             tt = js_GetToken(cx, ts);
             if (tt == TOK_RC)

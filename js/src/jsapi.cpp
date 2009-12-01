@@ -1179,18 +1179,24 @@ JS_GetOptions(JSContext *cx)
 JS_PUBLIC_API(uint32)
 JS_SetOptions(JSContext *cx, uint32 options)
 {
+    JS_LOCK_GC(cx->runtime);
     uint32 oldopts = cx->options;
     cx->options = options;
     js_SyncOptionsToVersion(cx);
+    cx->updateJITEnabled();
+    JS_UNLOCK_GC(cx->runtime);
     return oldopts;
 }
 
 JS_PUBLIC_API(uint32)
 JS_ToggleOptions(JSContext *cx, uint32 options)
 {
+    JS_LOCK_GC(cx->runtime);
     uint32 oldopts = cx->options;
     cx->options ^= options;
     js_SyncOptionsToVersion(cx);
+    cx->updateJITEnabled();
+    JS_UNLOCK_GC(cx->runtime);
     return oldopts;
 }
 
@@ -4956,7 +4962,6 @@ JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
                      JSExecPart part, jsval *rval)
 {
     JSScript tmp;
-    JSDebugHooks *hooks;
     JSBool ok;
 
     /* Make a temporary copy of the JSScript structure and farble it a bit. */
@@ -4969,7 +4974,7 @@ JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
     }
 
     /* Tell the debugger about our temporary copy of the script structure. */
-    hooks = cx->debugHooks;
+    const JSDebugHooks *hooks = cx->debugHooks;
     if (hooks->newScriptHook) {
         hooks->newScriptHook(cx, tmp.filename, tmp.lineno, &tmp, NULL,
                              hooks->newScriptHookData);
