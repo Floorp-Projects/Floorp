@@ -317,22 +317,6 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
   return rv;
 }
 
-static nsStyleContext*
-GetStyleContextForFrame(nsIFrame* aFrame)
-{
-  nsStyleContext* styleContext = aFrame->GetStyleContext();
-
-  /* For tables the primary frame is the "outer frame" but the style
-   * rules are applied to the "inner frame".  Luckily, the "outer
-   * frame" actually inherits style from the "inner frame" so we can
-   * just move one level up in the style context hierarchy....
-   */
-  if (aFrame->GetType() == nsGkAtoms::tableOuterFrame)
-    return styleContext->GetParent();
-
-  return styleContext;
-}    
-
 /* static */
 already_AddRefed<nsStyleContext>
 nsComputedDOMStyle::GetStyleContextForContent(nsIContent* aContent,
@@ -373,7 +357,8 @@ nsComputedDOMStyle::GetStyleContextForContentNoFlush(nsIContent* aContent,
   if (!aPseudo) {
     nsIFrame* frame = aPresShell->GetPrimaryFrameFor(aContent);
     if (frame) {
-      nsStyleContext* result = GetStyleContextForFrame(frame);
+      nsStyleContext* result =
+        nsLayoutUtils::GetStyleFrame(frame)->GetStyleContext();
       // Don't use the style context if it was influenced by
       // pseudo-elements, since then it's not the primary style
       // for this element.
