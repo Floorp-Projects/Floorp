@@ -442,7 +442,7 @@ box[type="documenttab"] .documenttab-canvas {
 }
 
 box[type="documenttab"][selected="true"] .documenttab-canvas {
-  border: 0.8mm solid #262629;
+  border: 0.8mm solid #0c0d10; /* very dark border */
   -moz-border-radius: 4px;
 }
 
