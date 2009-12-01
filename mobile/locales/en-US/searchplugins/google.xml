@@ -10,7 +10,6 @@
   <Param name="aq" value="t"/>
   <!-- Dynamic parameters -->
   <Param name="rls" value="{moz:distributionID}:{moz:locale}:{moz:official}"/>
-  <MozParam name="client" condition="defaultEngine" trueValue="firefox-a" falseValue="firefox"/>
 </Url>
 <SearchForm>http://www.google.com/firefox</SearchForm>
 </SearchPlugin>
