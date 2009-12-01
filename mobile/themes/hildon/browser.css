@@ -703,7 +703,7 @@ box[type="documenttab"] .documenttab-canvas {
 }
 
 box[type="documenttab"][selected="true"] .documenttab-canvas {
-  border: 8px solid #262629;
+  border: 8px solid #0c0d10; /* very dark border */
   -moz-border-radius: 3px;
 }
 
