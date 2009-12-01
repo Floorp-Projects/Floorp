@@ -46,7 +46,6 @@
 #include "mozilla/ipc/SyncChannel.h"
 
 using namespace mozilla::plugins;
-using namespace mozilla::gfx;
 
 #ifdef MOZ_WIDGET_GTK2
 
@@ -56,6 +55,7 @@ using namespace mozilla::gfx;
 #include "gtk2xtbin.h"
 
 #elif defined(OS_WIN)
+using mozilla::gfx::SharedDIB;
 
 #include <windows.h>
 
