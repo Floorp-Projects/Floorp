@@ -377,25 +377,7 @@ const char nsNavHistory::kAnnotationPreviousEncoding[] = "history/encoding";
 // USECS_PER_DAY == PR_USEC_PER_SEC * 60 * 60 * 24;
 static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 
-nsNavHistory *nsNavHistory::gHistoryService = nsnull;
-
-nsNavHistory *
-nsNavHistory::GetSingleton()
-{
-  if (gHistoryService) {
-    NS_ADDREF(gHistoryService);
-    return gHistoryService;
-  }
-
-  gHistoryService = new nsNavHistory();
-  if (gHistoryService) {
-    NS_ADDREF(gHistoryService);
-    if (NS_FAILED(gHistoryService->Init()))
-      NS_RELEASE(gHistoryService);
-  }
-
-  return gHistoryService;
-}
+PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavHistory, gHistoryService)
 
 // nsNavHistory::nsNavHistory
 
@@ -417,7 +399,8 @@ nsNavHistory::nsNavHistory() : mBatchLevel(0),
   mLazyTimerSet = PR_TRUE;
   mLazyTimerDeferments = 0;
 #endif
-  NS_ASSERTION(! gHistoryService, "YOU ARE CREATING 2 COPIES OF THE HISTORY SERVICE. Everything will break.");
+  NS_ASSERTION(!gHistoryService,
+               "Attempting to create two instances of the service!");
   gHistoryService = this;
 }
 
@@ -427,8 +410,10 @@ nsNavHistory::~nsNavHistory()
 {
   // remove the static reference to the service. Check to make sure its us
   // in case somebody creates an extra instance of the service.
-  NS_ASSERTION(gHistoryService == this, "YOU CREATED 2 COPIES OF THE HISTORY SERVICE.");
-  gHistoryService = nsnull;
+  NS_ASSERTION(gHistoryService == this,
+               "Deleting a non-singleton instance of the service");
+  if (gHistoryService == this)
+    gHistoryService = nsnull;
 }
 
 
@@ -2769,6 +2754,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   // Swallow errors here, since if we've gotten this far, it's more
   // important to notify the observers below.
   nsNavBookmarks *bs = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bs, NS_ERROR_OUT_OF_MEMORY);
   (void)UpdateFrecency(pageID, bs->IsRealBookmark(pageID));
 
   // Notify observers: The hidden detection code must match that in
@@ -3150,6 +3136,7 @@ nsresult
 PlacesSQLQueryBuilder::SelectAsURI()
 {
   nsNavHistory *history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
   nsCAutoString tagsSqlFragment;
 
   switch (mQueryType) {
@@ -3304,6 +3291,7 @@ nsresult
 PlacesSQLQueryBuilder::SelectAsVisit()
 {
   nsNavHistory *history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
   nsCAutoString tagsSqlFragment;
   GetTagsSqlFragment(history->GetTagsFolder(),
                      NS_LITERAL_CSTRING("h.id"),
@@ -4212,7 +4200,7 @@ nsNavHistory::BeginUpdateBatch()
       mDBConn->BeginTransaction();
 
     ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
-                        OnBeginUpdateBatch())
+                        OnBeginUpdateBatch());
   }
   return NS_OK;
 }
@@ -4226,7 +4214,7 @@ nsNavHistory::EndUpdateBatch()
       mDBConn->CommitTransaction();
     mBatchHasTransaction = PR_FALSE;
     ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
-                        OnEndUpdateBatch())
+                        OnEndUpdateBatch());
   }
   return NS_OK;
 }
@@ -4544,7 +4532,7 @@ nsNavHistory::RemovePage(nsIURI *aURI)
 
   // Before we remove, we have to notify our observers!
   ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                      nsINavHistoryObserver, OnBeforeDeleteURI(aURI))
+                      nsINavHistoryObserver, OnBeforeDeleteURI(aURI));
 
   nsIURI** URIs = &aURI;
   nsresult rv = RemovePages(URIs, 1, PR_FALSE);
@@ -4552,7 +4540,7 @@ nsNavHistory::RemovePage(nsIURI *aURI)
 
   // Notify our observers that the URI has been removed.
   ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                      nsINavHistoryObserver, OnDeleteURI(aURI))
+                      nsINavHistoryObserver, OnDeleteURI(aURI));
   return NS_OK;
 }
 
@@ -5460,7 +5448,7 @@ nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
   if (aWholeEntry) {
     // Notify our observers that the URI has been removed.
     ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                        nsINavHistoryObserver, OnDeleteURI(aURI))
+                        nsINavHistoryObserver, OnDeleteURI(aURI));
   }
 
   return NS_OK;
@@ -7017,7 +7005,7 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
 
   // observers (have to check first if it's bookmarked)
   ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
-                      OnTitleChanged(aURI, aTitle))
+                      OnTitleChanged(aURI, aTitle));
 
   return NS_OK;
 }
@@ -7653,6 +7641,7 @@ nsNavHistory::CalculateFrecency(PRInt64 aPlaceId,
   // place: queries from showing up in the URL bar autocomplete results
   if (!IsQueryURI(aURL) && aPlaceId != -1) {
     nsNavBookmarks *bs = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_TRUE(bs, NS_ERROR_OUT_OF_MEMORY);
     isBookmark = bs->IsRealBookmark(aPlaceId);
   }
 
@@ -7698,8 +7687,11 @@ nsNavHistory::FixInvalidFrecencies()
     invalidFrecencies->GetUTF8String(4, url);
 
     PRBool isBook = PR_FALSE;
-    if (!IsQueryURI(url))
-      isBook = nsNavBookmarks::GetBookmarksService()-> IsRealBookmark(placeId);
+    if (!IsQueryURI(url)) {
+      nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
+      NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+      isBook = bookmarks->IsRealBookmark(placeId);
+    }
 
     rv = UpdateFrecencyInternal(placeId, typed, hidden, oldFrecency, isBook);
     NS_ENSURE_SUCCESS(rv, rv);
