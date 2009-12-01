@@ -494,16 +494,15 @@ MatchChar(JSTokenStream *ts, int32 expect)
     return JS_FALSE;
 }
 
-JSBool
-js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
-                            uintN flags, uintN errorNumber, ...)
+static bool
+ReportCompileErrorNumberVA(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
+                           uintN flags, uintN errorNumber, va_list ap)
 {
     JSErrorReport report;
     char *message;
     size_t linelength;
     jschar *linechars;
     char *linebytes;
-    va_list ap;
     JSBool warning, ok;
     JSTokenPos *tp;
     uintN index, i;
@@ -511,8 +510,14 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
 
     JS_ASSERT(ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
 
-    if ((flags & JSREPORT_STRICT) && !JS_HAS_STRICT_OPTION(cx))
+    if (JSREPORT_IS_STRICT(flags) && !JS_HAS_STRICT_OPTION(cx))
         return JS_TRUE;
+
+    warning = JSREPORT_IS_WARNING(flags);
+    if (warning && JS_HAS_WERROR_OPTION(cx)) {
+        flags &= ~JSREPORT_WARNING;
+        warning = false;
+    }
 
     memset(&report, 0, sizeof report);
     report.flags = flags;
@@ -522,11 +527,9 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
     linebytes = NULL;
 
     MUST_FLOW_THROUGH("out");
-    va_start(ap, errorNumber);
     ok = js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL,
-                                 errorNumber, &message, &report, &warning,
+                                 errorNumber, &message, &report,
                                  !(flags & JSREPORT_UC), ap);
-    va_end(ap);
     if (!ok) {
         warning = JS_FALSE;
         goto out;
@@ -657,6 +660,54 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
     }
 
     return warning;
+}
+
+bool
+js_ReportStrictModeError(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
+                         JSParseNode *pn, uintN errorNumber, ...)
+{
+    bool result;
+    va_list ap;
+    uintN flags;
+
+    JS_ASSERT(ts || tc);
+
+    /* In strict mode code, this is an error, not just a warning. */
+    if ((tc && tc->flags & TCF_STRICT_MODE_CODE) ||
+        (ts && ts->flags & TSF_STRICT_MODE_CODE)) {
+        flags = JSREPORT_ERROR;
+    } else if (JS_HAS_STRICT_OPTION(cx)) {
+        flags = JSREPORT_WARNING;
+    } else {
+        return true;
+    }
+    
+    va_start(ap, errorNumber);
+    result = ReportCompileErrorNumberVA(cx, ts, pn, flags, errorNumber, ap);
+    va_end(ap);
+
+    return result;
+}
+
+bool
+js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
+                            uintN flags, uintN errorNumber, ...)
+{
+    bool result;
+    va_list ap;
+
+    /* 
+     * We don't accept a JSTreeContext argument, so we can't implement
+     * JSREPORT_STRICT_MODE_ERROR here.  Use js_ReportStrictModeError instead,
+     * or do the checks in the caller and pass plain old JSREPORT_ERROR.
+     */
+    JS_ASSERT(!(flags & JSREPORT_STRICT_MODE_ERROR));
+
+    va_start(ap, errorNumber);
+    result = ReportCompileErrorNumberVA(cx, ts, pn, flags, errorNumber, ap);
+    va_end(ap);
+
+    return result;
 }
 
 #if JS_HAS_XML_SUPPORT
@@ -1154,19 +1205,24 @@ retry:
                 if (JS7_ISLET(c))
                     break;
 
-                /*
-                 * We permit 08 and 09 as decimal numbers, which makes our
-                 * behaviour a superset of the ECMA numeric grammar.  We might
-                 * not always be so permissive, so we warn about it.
-                 */
-                if (radix == 8 && c >= '8') {
-                    if (!js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                     JSREPORT_WARNING,
-                                                     JSMSG_BAD_OCTAL,
-                                                     c == '8' ? "08" : "09")) {
+                if (radix == 8) {
+                    /* Octal integer literals are not permitted in strict mode code. */
+                    if (!js_ReportStrictModeError(cx, ts, NULL, NULL, JSMSG_DEPRECATED_OCTAL))
                         goto error;
+
+                    /*
+                     * Outside strict mode, we permit 08 and 09 as decimal numbers, which
+                     * makes our behaviour a superset of the ECMA numeric grammar. We
+                     * might not always be so permissive, so we warn about it.
+                     */
+                    if (c >= '8') {
+                        if (!js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_WARNING,
+                                                         JSMSG_BAD_OCTAL,
+                                                         c == '8' ? "08" : "09")) {
+                            goto error;
+                        }
+                        radix = 10;
                     }
-                    radix = 10;
                 }
             }
             if (!tb.append(c))
@@ -1258,6 +1314,13 @@ retry:
                         int32 val = JS7_UNDEC(c);
 
                         c = PeekChar(ts);
+                        /* Strict mode code allows only \0, then a non-digit. */
+                        if (val != 0 || JS7_ISDEC(c)) {
+                            if (!js_ReportStrictModeError(cx, ts, NULL, NULL, 
+                                                          JSMSG_DEPRECATED_OCTAL)) {
+                                goto error;
+                            }
+                        }
                         if ('0' <= c && c < '8') {
                             val = 8 * val + JS7_UNDEC(c);
                             GetChar(ts);

@@ -668,6 +668,15 @@ struct JSRuntime {
     /* Per runtime debug hooks -- see jsprvtd.h and jsdbgapi.h. */
     JSDebugHooks        globalDebugHooks;
 
+#ifdef JS_TRACER
+    /* True if any debug hooks not supported by the JIT are enabled. */
+    bool debuggerInhibitsJIT() const {
+        return (globalDebugHooks.interruptHandler ||
+                globalDebugHooks.callHook ||
+                globalDebugHooks.objectHook);
+    }
+#endif
+
     /* More debugging state, see jsdbgapi.c. */
     JSCList             trapList;
     JSCList             watchPointList;
@@ -1203,7 +1212,7 @@ struct JSContext {
     JSTempValueRooter   *tempValueRooters;
 
     /* Debug hooks associated with the current context. */
-    JSDebugHooks        *debugHooks;
+    const JSDebugHooks  *debugHooks;
 
     /* Security callbacks that override any defined on the runtime. */
     JSSecurityCallbacks *securityCallbacks;
@@ -1222,7 +1231,28 @@ struct JSContext {
      */
     InterpState         *interpState;
     VMSideExit          *bailExit;
+
+    /*
+     * True if traces may be executed. Invariant: The value of jitEnabled is
+     * always equal to the expression in updateJITEnabled below.
+     *
+     * This flag and the fields accessed by updateJITEnabled are written only
+     * in runtime->gcLock, to avoid race conditions that would leave the wrong
+     * value in jitEnabled. (But the interpreter reads this without
+     * locking. That can race against another thread setting debug hooks, but
+     * we always read cx->debugHooks without locking anyway.)
+     */
+    bool                 jitEnabled;
 #endif
+
+    /* Caller must be holding runtime->gcLock. */
+    void updateJITEnabled() {
+#ifdef JS_TRACER
+        jitEnabled = ((options & JSOPTION_JIT) &&
+                      !runtime->debuggerInhibitsJIT() &&
+                      debugHooks == &runtime->globalDebugHooks);
+#endif
+    }
 
 #ifdef JS_THREADSAFE
     inline void createDeallocatorTask() {
@@ -1777,7 +1807,7 @@ extern JSBool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         void *userRef, const uintN errorNumber,
                         char **message, JSErrorReport *reportp,
-                        JSBool *warningp, JSBool charArgs, va_list ap);
+                        bool charArgs, va_list ap);
 #endif
 
 extern void

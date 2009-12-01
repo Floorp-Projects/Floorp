@@ -1,5 +1,5 @@
 url-prefix ../../jsreftest.html?test=js1_3/Script/
-skip script delete-001.js # obsolete test
+script delete-001.js
 skip script function-001-n.js # obsolete test
 script function-002.js
 script in-001.js

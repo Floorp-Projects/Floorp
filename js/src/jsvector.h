@@ -144,8 +144,8 @@ struct VectorImpl<T, N, AP, true>
     }
 
     static inline void copyConstructN(T *dst, size_t n, const T &t) {
-        for (T *end = dst + n; dst != end; ++dst)
-            *dst = t;
+        for (T *p = dst, *end = dst + n; p != end; ++p)
+            *p = t;
     }
 
     static inline bool growTo(Vector<T,N,AP> &v, size_t newcap) {
@@ -251,7 +251,7 @@ class Vector : AllocPolicy
 
     T *inlineEnd() const {
         JS_ASSERT(usingInlineStorage());
-        return ((T *)u.mBuf) + mLengthOrCapacity;
+        return (T *)u.mBuf + mLengthOrCapacity;
     }
 
     /* Only valid when !usingInlineStorage() */

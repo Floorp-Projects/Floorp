@@ -44,50 +44,28 @@ namespace nanojit
     using namespace avmplus;
     #ifdef FEATURE_NANOJIT
 
-    const int8_t operandCount[] = {
-#define OPDEF(op, number, operands, repkind) \
-        operands,
-#define OPDEF64(op, number, operands, repkind) \
-        operands,
-#include "LIRopcode.tbl"
-#undef OPDEF
-#undef OPDEF64
-        0
-    };
-
     const uint8_t repKinds[] = {
-#define OPDEF(op, number, operands, repkind) \
+#define OPDEF(op, number, repkind) \
         LRK_##repkind,
-#define OPDEF64(op, number, operands, repkind) \
-        OPDEF(op, number, operands, repkind)
+#define OPD64(op, number, repkind) \
+        LRK_##repkind,
 #include "LIRopcode.tbl"
 #undef OPDEF
-#undef OPDEF64
+#undef OPD64
         0
-    };
-
-    extern const uint8_t insSizes[] = {
-#define OPDEF(op, number, operands, repkind) \
-            sizeof(LIns##repkind),
-#define OPDEF64(op, number, operands, repkind) \
-            OPDEF(op, number, operands, repkind)
-#include "LIRopcode.tbl"
-#undef OPDEF
-#undef OPDEF64
-            0
     };
 
     // LIR verbose specific
     #ifdef NJ_VERBOSE
 
     const char* lirNames[] = {
-#define OPDEF(op, number, operands, repkind) \
+#define OPDEF(op, number, repkind) \
         #op,
-#define OPDEF64(op, number, operands, repkind) \
+#define OPD64(op, number, repkind) \
         #op,
 #include "LIRopcode.tbl"
 #undef OPDEF
-#undef OPDEF64
+#undef OPD64
         NULL
     };
 
@@ -372,33 +350,30 @@ namespace nanojit
     // Reads the next non-skip instruction.
     LInsp LirReader::read()
     {
-        NanoAssert(_i);
-        LInsp ret = _i;
+        static const uint8_t insSizes[] = {
+        // LIR_start is treated specially -- see below.
+#define OPDEF(op, number, repkind) \
+            ((number) == LIR_start ? 0 : sizeof(LIns##repkind)),
+#define OPD64(op, number, repkind) \
+            OPDEF(op, number, repkind)
+#include "LIRopcode.tbl"
+#undef OPDEF
+#undef OPD64
+            0
+        };
 
         // Check the invariant: _i never points to a skip.
-        LOpcode iop = _i->opcode();
-        NanoAssert(iop != LIR_skip);
+        NanoAssert(_i && !_i->isop(LIR_skip));
 
-#ifdef DEBUG
-        if (iop == LIR_start) {
-            // Once we hit here, this method shouldn't be called again.
-            // The assertion at the top of this method checks this.
-            // (In the non-debug case, _i ends up pointing to junk just
-            // prior to the LIR_start, but it should be ok because,
-            // again, this method shouldn't be called again.)
-            _i = 0;
-            return ret;
-        }
-        else 
-#endif
-        {
-            // Step back one instruction.  Use a table lookup rather than a
-            // switch to avoid branch mispredictions.
-            _i = (LInsp)(uintptr_t(_i) - insSizes[iop]);
-        }
+        // Step back one instruction.  Use a table lookup rather than a switch
+        // to avoid branch mispredictions.  LIR_start is given a special size
+        // of zero so that we don't step back past the start of the block.
+        // (Callers of this function should stop once they see a LIR_start.)
+        LInsp ret = _i;
+        _i = (LInsp)(uintptr_t(_i) - insSizes[_i->opcode()]);
 
         // Ensure _i doesn't end up pointing to a skip.
-        while (LIR_skip == _i->opcode()) {
+        while (_i->isop(LIR_skip)) {
             NanoAssert(_i->prevLIns() != _i);
             _i = _i->prevLIns();
         }
@@ -1466,42 +1441,151 @@ namespace nanojit
         int total = 0;
         if (frag->lirbuf->state)
             live.add(frag->lirbuf->state, sf.pos());
-        for (LInsp i = sf.read(); !i->isop(LIR_start); i = sf.read())
+        for (LInsp ins = sf.read(); !ins->isop(LIR_start); ins = sf.read())
         {
             total++;
 
             // first handle side-effect instructions
-            if (i->isStmt())
+            if (ins->isStmt())
             {
-                live.add(i,0);
-                if (i->isGuard())
+                live.add(ins, 0);
+                if (ins->isGuard())
                     exits++;
             }
 
             // now propagate liveness
-            if (live.contains(i))
+            if (live.contains(ins))
             {
-                live.retire(i);
-                NanoAssert(size_t(i->opcode()) < sizeof(operandCount) / sizeof(operandCount[0]));
-                if (i->isStore()) {
-                    live.add(i->oprnd2(),i); // base
-                    live.add(i->oprnd1(),i); // val
-                }
-                else if (i->isop(LIR_cmov) || i->isop(LIR_qcmov)) {
-                    live.add(i->oprnd1(),i);
-                    live.add(i->oprnd2(),i);
-                    live.add(i->oprnd3(),i);
-                }
-                else if (operandCount[i->opcode()] == 1) {
-                    live.add(i->oprnd1(),i);
-                }
-                else if (operandCount[i->opcode()] == 2) {
-                    live.add(i->oprnd1(),i);
-                    live.add(i->oprnd2(),i);
-                }
-                else if (i->isCall()) {
-                    for (int j=0, c=i->argc(); j < c; j++)
-                        live.add(i->arg(j),i);
+                live.retire(ins);
+
+                switch (ins->opcode()) {
+                case LIR_skip:
+                    NanoAssertMsg(0, "Shouldn't see LIR_skip");
+                    break;
+
+                case LIR_start:
+                case LIR_regfence:
+                case LIR_iparam:
+                case LIR_qparam:
+                case LIR_ialloc:
+                case LIR_qalloc:
+                case LIR_x:
+                case LIR_xbarrier:
+                case LIR_j:
+                case LIR_label:
+                case LIR_int:
+                case LIR_quad:
+                case LIR_float:
+                    // No operands, do nothing.
+                    break;
+
+                case LIR_ld:
+                case LIR_ldc:
+                case LIR_ldq:
+                case LIR_ldqc:
+                case LIR_ldcb:
+                case LIR_ldcs:
+                case LIR_ret:
+                case LIR_fret:
+                case LIR_live:
+                case LIR_flive:
+                case LIR_xt:
+                case LIR_xf:
+                case LIR_xtbl:
+                case LIR_jt:
+                case LIR_jf:
+                case LIR_jtbl:
+                case LIR_neg:
+                case LIR_fneg:
+                case LIR_not:
+                case LIR_qlo:
+                case LIR_qhi:
+                case LIR_ov:
+                case LIR_i2q:
+                case LIR_u2q:
+                case LIR_i2f:
+                case LIR_u2f:
+                    live.add(ins->oprnd1(), ins);
+                    break;
+
+                case LIR_sti:
+                case LIR_stqi:
+                case LIR_eq:
+                case LIR_lt:
+                case LIR_gt:
+                case LIR_le:
+                case LIR_ge:
+                case LIR_ult:
+                case LIR_ugt:
+                case LIR_ule:
+                case LIR_uge:
+                case LIR_feq:
+                case LIR_flt:
+                case LIR_fgt:
+                case LIR_fle:
+                case LIR_fge:
+                case LIR_qeq:
+                case LIR_qlt:
+                case LIR_qgt:
+                case LIR_qle:
+                case LIR_qge:
+                case LIR_qult:
+                case LIR_qugt:
+                case LIR_qule:
+                case LIR_quge:
+                case LIR_lsh:
+                case LIR_rsh:
+                case LIR_ush:
+                case LIR_qilsh:
+                case LIR_qirsh:
+                case LIR_qursh:
+                case LIR_iaddp:
+                case LIR_qaddp:
+                case LIR_add:
+                case LIR_sub:
+                case LIR_mul:
+                case LIR_div:
+                case LIR_mod:
+                case LIR_fadd:
+                case LIR_fsub:
+                case LIR_fmul:
+                case LIR_fdiv:
+                case LIR_fmod:
+                case LIR_qiadd:
+                case LIR_and:
+                case LIR_or:
+                case LIR_xor:
+                case LIR_qiand:
+                case LIR_qior:
+                case LIR_qxor:
+                case LIR_qjoin:
+                case LIR_file:
+                case LIR_line:
+                    live.add(ins->oprnd1(), ins);
+                    live.add(ins->oprnd2(), ins);
+                    break;
+
+                case LIR_cmov:
+                case LIR_qcmov:
+                    live.add(ins->oprnd1(), ins);
+                    live.add(ins->oprnd2(), ins);
+                    live.add(ins->oprnd3(), ins);
+                    break;
+
+                case LIR_icall:
+                case LIR_fcall:
+                case LIR_qcall:
+                    for (int i = 0, argc = ins->argc(); i < argc; i++)
+                        live.add(ins->arg(i), ins);
+                    break;
+
+                case LIR_callh:
+                    live.add(ins->oprnd1(), ins);
+                    break;
+
+                default:
+                    NanoAssertMsgf(0, "unhandled opcode: %d", ins->opcode());
+                    break;
                 }
             }
         }
@@ -1784,7 +1868,7 @@ namespace nanojit
 
             case LIR_qjoin:
                 VMPI_sprintf(s, "%s (%s), %s", lirNames[op],
-                    formatIns(i->oprnd1()),
+                     formatRef(i->oprnd1()),
                      formatRef(i->oprnd2()));
                  break;
 
@@ -1877,7 +1961,6 @@ namespace nanojit
     LIns* CseFilter::ins1(LOpcode v, LInsp a)
     {
         if (isCseOpcode(v)) {
-            NanoAssert(operandCount[v]==1);
             uint32_t k;
             LInsp ins = exprs->find1(v, a, k);
             if (ins)
@@ -1890,7 +1973,6 @@ namespace nanojit
     LIns* CseFilter::ins2(LOpcode v, LInsp a, LInsp b)
     {
         if (isCseOpcode(v)) {
-            NanoAssert(operandCount[v]==2);
             uint32_t k;
             LInsp ins = exprs->find2(v, a, b, k);
             if (ins)
@@ -1903,7 +1985,6 @@ namespace nanojit
     LIns* CseFilter::ins3(LOpcode v, LInsp a, LInsp b, LInsp c)
     {
         NanoAssert(isCseOpcode(v));
-        NanoAssert(operandCount[v]==3);
         uint32_t k;
         LInsp ins = exprs->find3(v, a, b, c, k);
         if (ins)
@@ -1914,7 +1995,6 @@ namespace nanojit
     LIns* CseFilter::insLoad(LOpcode v, LInsp base, int32_t disp)
     {
         if (isCseOpcode(v)) {
-            NanoAssert(operandCount[v]==1);
             uint32_t k;
             LInsp ins = exprs->findLoad(v, base, disp, k);
             if (ins)
@@ -1945,7 +2025,6 @@ namespace nanojit
         //
         if (isCseOpcode(v)) {
             // conditional guard
-            NanoAssert(operandCount[v]==1);
             uint32_t k;
             LInsp ins = exprs->find1(v, c, k);
             if (ins)

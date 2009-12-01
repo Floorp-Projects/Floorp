@@ -1434,7 +1434,7 @@ public:
 #endif
 };
 
-#define TRACING_ENABLED(cx)       JS_HAS_OPTION(cx, JSOPTION_JIT)
+#define TRACING_ENABLED(cx)       ((cx)->jitEnabled)
 #define TRACE_RECORDER(cx)        (JS_TRACE_MONITOR(cx).recorder)
 #define SET_TRACE_RECORDER(cx,tr) (JS_TRACE_MONITOR(cx).recorder = (tr))
 

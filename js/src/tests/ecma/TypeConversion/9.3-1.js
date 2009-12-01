@@ -98,3 +98,4 @@ new TestCase( SECTION, "typeof Number(new Boolean(false))", "number", typeof Num
 new TestCase( SECTION, "Number(new Array(2,4,8,16,32))", Number.NaN, Number(new Array(2,4,8,16,32)) );
 new TestCase( SECTION, "typeof Number(new Array(2,4,8,16,32))", "number", typeof Number(new Array(2,4,8,16,32)) );
 
+test();

@@ -226,6 +226,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
     /* Test whether we're in a statement of given type. */
     bool inStatement(JSStmtType type);
 
+    inline bool needStrictChecks();
+
     /* 
      * sharpSlotBase is -1 or first slot of pair for [sharpArray, sharpDepth].
      * The parser calls ensureSharpSlots to allocate these two stack locals.
@@ -255,6 +257,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_NO_SCRIPT_RVAL    0x4000 /* API caller does not want result value
                                         from global script */
 #define TCF_HAS_SHARPS        0x8000 /* source contains sharp defs or uses */
+#define TCF_FUN_PARAM_EVAL   0x10000 /* function has parameter named 'eval' */
 
 /*
  * Set when parsing a declaration-like destructuring pattern.  This
@@ -301,6 +304,15 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                  TCF_FUN_USES_OWN_NAME   |                    \
                                  TCF_HAS_SHARPS          |                    \
                                  TCF_STRICT_MODE_CODE)
+
+/*
+ * Return true if we need to check for conditions that elicit
+ * JSOPTION_STRICT warnings or strict mode errors.
+ */
+inline bool JSTreeContext::needStrictChecks() {
+    return JS_HAS_STRICT_OPTION(compiler->context) ||
+           (flags & TCF_STRICT_MODE_CODE);
+}
 
 /*
  * Span-dependent instructions are jumps whose span (from the jump bytecode to

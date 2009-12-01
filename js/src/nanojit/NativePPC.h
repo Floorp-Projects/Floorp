@@ -290,20 +290,12 @@ namespace nanojit
         int  max_param_size; /* bytes */                                    \
         DECL_PPC64()
 
-    #define swapptrs()  do {                                                \
-            NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins;          \
-        } while (0) /* no semi */
-
     const int LARGEST_UNDERRUN_PROT = 9*4;  // largest value passed to underrunProtect
 
     typedef uint32_t NIns;
 
     // Bytes of icache to flush after Assembler::patch
     const size_t LARGEST_BRANCH_PATCH = 4 * sizeof(NIns);
-
-    inline Register nextreg(Register r) {
-        return Register(r+1);
-    }
 
     #define EMIT1(ins, fmt, ...) do {\
         underrunProtect(4);\
