@@ -1327,8 +1327,8 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
             continue;
         }
 
-        sprop = scope->addDataProperty(cx, id, JS_INITIAL_NSLOTS + i,
-                                       JSPROP_ENUMERATE);
+        sprop = scope->add(cx, id, NULL, NULL, i + JS_INITIAL_NSLOTS,
+                           JSPROP_ENUMERATE, 0, 0);
         if (!sprop)
             goto out_bad;
     }
