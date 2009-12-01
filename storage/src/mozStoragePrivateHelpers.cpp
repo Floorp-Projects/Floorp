@@ -46,11 +46,9 @@
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsError.h"
-#include "nsThreadUtils.h"
 
 #include "mozStoragePrivateHelpers.h"
 #include "mozIStorageStatement.h"
-#include "mozIStorageCompletionCallback.h"
 
 namespace mozilla {
 namespace storage {
@@ -165,43 +163,17 @@ bindJSValue(JSContext *aCtx,
     // some special things
     if (!::js_DateIsValid(aCtx, obj))
       return false;
-
+    
     double msecd = ::js_DateGetMsecSinceEpoch(aCtx, obj);
     msecd *= 1000.0;
     PRInt64 msec;
     LL_D2L(msec, msecd);
-
+    
     (void)aStatement->BindInt64Parameter(aIdx, msec);
     return true;
   }
 
   return false;
-}
-
-namespace {
-class CallbackEvent : public nsRunnable
-{
-public:
-  CallbackEvent(mozIStorageCompletionCallback *aCallback)
-  : mCallback(aCallback)
-  {
-  }
-
-  NS_IMETHOD Run()
-  {
-    (void)mCallback->Complete();
-    return NS_OK;
-  }
-private:
-  nsCOMPtr<mozIStorageCompletionCallback> mCallback;
-};
-} // anonymous namespace
-already_AddRefed<nsIRunnable>
-newCompletionEvent(mozIStorageCompletionCallback *aCallback)
-{
-  NS_ASSERTION(aCallback, "Passing a null callback is a no-no!");
-  nsCOMPtr<nsIRunnable> event = new CallbackEvent(aCallback);
-  return event.forget();
 }
 
 } // namespace storage
