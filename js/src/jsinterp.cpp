@@ -122,7 +122,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
      * from pobj's scope (via unwatch or delete, e.g.).
      */
     scope = OBJ_SCOPE(pobj);
-    if (!scope->hasProperty(sprop)) {
+    if (!scope->has(sprop)) {
         PCMETER(cache->oddfills++);
         return JS_NO_PROP_CACHE_FILL;
     }
@@ -132,8 +132,8 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
      * and setter hooks can change the prototype chain using JS_SetPrototype
      * after js_LookupPropertyWithFlags has returned the nominal protoIndex,
      * we have to validate protoIndex if it is non-zero. If it is zero, then
-     * we know thanks to the scope->hasProperty test above, combined with the
-     * fact that obj == pobj, that protoIndex is invariant.
+     * we know thanks to the scope->has test above, combined with the fact that
+     * obj == pobj, that protoIndex is invariant.
      *
      * The scopeIndex can't be wrong. We require JS_SetParent calls to happen
      * before any running script might consult a parent-linked scope chain. If
@@ -251,7 +251,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
             /* Best we can do is to cache sprop (still a nice speedup). */
             vword = SPROP_TO_PCVAL(sprop);
             if (adding &&
-                sprop == scope->lastProperty() &&
+                sprop == scope->lastProp &&
                 scope->shape == sprop->shape) {
                 /*
                  * Our caller added a new property. We also know that a setter
