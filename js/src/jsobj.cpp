@@ -2957,7 +2957,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
             /* Find a property to XDR. */
             do {
                 /* If sprop is NULL, this is the first property. */
-                sprop = sprop ? sprop->parent : OBJ_SCOPE(obj)->lastProp;
+                sprop = sprop ? sprop->parent : OBJ_SCOPE(obj)->lastProperty();
             } while (!(sprop->flags & SPROP_HAS_SHORTID));
 
             JS_ASSERT(sprop->getter == block_getProperty);
@@ -3725,7 +3725,7 @@ js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
     } else {
         /* Convert string indices to integers if appropriate. */
         id = js_CheckForStringIndex(id);
-        sprop = scope->add(cx, id, getter, setter, slot, attrs, flags, shortid);
+        sprop = scope->putProperty(cx, id, getter, setter, slot, attrs, flags, shortid);
     }
     JS_UNLOCK_OBJ(cx, obj);
     return sprop;
@@ -3743,7 +3743,7 @@ js_ChangeNativePropertyAttrs(JSContext *cx, JSObject *obj,
     if (!scope) {
         sprop = NULL;
     } else {
-        sprop = scope->change(cx, sprop, attrs, mask, getter, setter);
+        sprop = scope->changeProperty(cx, sprop, attrs, mask, getter, setter);
     }
     JS_UNLOCK_OBJ(cx, obj);
     return sprop;
@@ -3822,14 +3822,14 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         if (sprop &&
             pobj == obj &&
             (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
-            sprop = OBJ_SCOPE(obj)->change(cx, sprop, attrs,
-                                           JSPROP_GETTER | JSPROP_SETTER,
-                                           (attrs & JSPROP_GETTER)
-                                           ? getter
-                                           : sprop->getter,
-                                           (attrs & JSPROP_SETTER)
-                                           ? setter
-                                           : sprop->setter);
+            sprop = OBJ_SCOPE(obj)->changeProperty(cx, sprop, attrs,
+                                                   JSPROP_GETTER | JSPROP_SETTER,
+                                                   (attrs & JSPROP_GETTER)
+                                                   ? getter
+                                                   : sprop->getter,
+                                                   (attrs & JSPROP_SETTER)
+                                                   ? setter
+                                                   : sprop->setter);
 
             /* NB: obj == pobj, so we can share unlock code at the bottom. */
             if (!sprop)
@@ -3895,9 +3895,9 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
             }
         }
 
-        added = !scope->lookup(id);
-        sprop = scope->add(cx, id, getter, setter, SPROP_INVALID_SLOT, attrs,
-                           flags, shortid);
+        added = !scope->hasProperty(id);
+        sprop = scope->putProperty(cx, id, getter, setter, SPROP_INVALID_SLOT,
+                                   attrs, flags, shortid);
         if (!sprop)
             goto error;
     }
@@ -3908,7 +3908,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
 
     /* XXXbe called with lock held */
     if (!AddPropertyHelper(cx, clasp, obj, scope, sprop, &value)) {
-        scope->remove(cx, id);
+        scope->removeProperty(cx, id);
         goto error;
     }
 
@@ -4329,7 +4329,7 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
     JS_LOCK_SCOPE(cx, scope);
     if (SLOT_IN_SCOPE(slot, scope) &&
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
-         scope->has(sprop))) {
+         scope->hasProperty(sprop))) {
         jsval v = *vp;
         if (!scope->methodWriteBarrier(cx, sprop, v)) {
             JS_UNLOCK_SCOPE(cx, scope);
@@ -4391,7 +4391,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, bool added,
     JS_LOCK_SCOPE(cx, scope);
     if (SLOT_IN_SCOPE(slot, scope) &&
         (JS_LIKELY(cx->runtime->propertyRemovals == sample) ||
-         scope->has(sprop))) {
+         scope->hasProperty(sprop))) {
         jsval v = *vp;
         if (!added && !scope->methodWriteBarrier(cx, sprop, v)) {
             JS_UNLOCK_SCOPE(cx, scope);
@@ -4759,8 +4759,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             }
         }
 
-        sprop = scope->add(cx, id, getter, setter, SPROP_INVALID_SLOT, attrs,
-                           flags, shortid);
+        sprop = scope->addProperty(cx, id, getter, setter, SPROP_INVALID_SLOT,
+                                   attrs, flags, shortid);
         if (!sprop) {
             JS_UNLOCK_SCOPE(cx, scope);
             return JS_FALSE;
@@ -4776,7 +4776,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
 
         /* XXXbe called with obj locked */
         if (!AddPropertyHelper(cx, clasp, obj, scope, sprop, vp)) {
-            scope->remove(cx, id);
+            scope->removeProperty(cx, id);
             JS_UNLOCK_SCOPE(cx, scope);
             return JS_FALSE;
         }
@@ -4923,7 +4923,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     if (SPROP_HAS_VALID_SLOT(sprop, scope))
         GC_POKE(cx, LOCKED_OBJ_GET_SLOT(obj, sprop->slot));
 
-    ok = scope->remove(cx, id);
+    ok = scope->removeProperty(cx, id);
     obj->dropProperty(cx, prop);
     return ok;
 }
@@ -5158,12 +5158,9 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             /* Count all enumerable properties in object's scope. */
             JSScope *scope = OBJ_SCOPE(obj);
             length = 0;
-            for (JSScopeProperty *sprop = SCOPE_LAST_PROP(scope);
-                 sprop;
-                 sprop = sprop->parent) {
+            for (JSScopeProperty *sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
                 if ((sprop->attrs & JSPROP_ENUMERATE) &&
-                    !(sprop->flags & SPROP_IS_ALIAS) &&
-                    (!scope->hadMiddleDelete() || scope->has(sprop))) {
+                    !(sprop->flags & SPROP_IS_ALIAS)) {
                     length++;
                 }
             }
@@ -5194,12 +5191,9 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             ne->shape = shape;
 
             jsid *ids = ne->ids;
-            for (JSScopeProperty *sprop = SCOPE_LAST_PROP(scope);
-                 sprop;
-                 sprop = sprop->parent) {
+            for (JSScopeProperty *sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
                 if ((sprop->attrs & JSPROP_ENUMERATE) &&
-                    !(sprop->flags & SPROP_IS_ALIAS) &&
-                    (!scope->hadMiddleDelete() || scope->has(sprop))) {
+                    !(sprop->flags & SPROP_IS_ALIAS)) {
                     JS_ASSERT(ids < ne->ids + length);
                     *ids++ = sprop->id;
                 }
@@ -5868,7 +5862,7 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
     JSScopeProperty *sprop;
     if (OBJ_IS_NATIVE(obj)) {
         JSScope *scope = OBJ_SCOPE(obj);
-        sprop = SCOPE_LAST_PROP(scope);
+        sprop = scope->lastProperty();
         while (sprop && sprop->slot != slot)
             sprop = sprop->parent;
     } else {
@@ -6299,10 +6293,9 @@ js_DumpObject(JSObject *obj)
             fprintf(stderr, "sealed\n");
 
         fprintf(stderr, "properties:\n");
-        for (JSScopeProperty *sprop = SCOPE_LAST_PROP(scope); sprop;
+        for (JSScopeProperty *sprop = scope->lastProperty(); sprop;
              sprop = sprop->parent) {
-            if (!scope->hadMiddleDelete() || scope->has(sprop))
-                dumpScopeProp(sprop);
+            dumpScopeProp(sprop);
         }
     } else {
         if (!OBJ_IS_NATIVE(obj))
