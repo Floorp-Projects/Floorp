@@ -122,6 +122,14 @@ public:
   }
 
   /**
+   * Given a frame which is the primary frame for an element,
+   * return the frame that has the non-psuedoelement style context for
+   * the content.
+   * This is aPrimaryFrame itself except for tableOuter frames.
+   */
+  static nsIFrame* GetStyleFrame(nsIFrame* aPrimaryFrame);
+
+  /**
    * IsGeneratedContentFor returns PR_TRUE if aFrame is the outermost
    * frame for generated content of type aPseudoElement for aContent.
    * aFrame *might not* have the aPseudoElement pseudo-style! For example
