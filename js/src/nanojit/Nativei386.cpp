@@ -70,11 +70,45 @@ namespace nanojit
         0  /* ABI_CDECL */
     };
 
+    static bool CheckForSSE2()
+    {
+        int features = 0;
+    #if defined _MSC_VER
+        __asm
+        {
+            pushad
+            mov eax, 1
+            cpuid
+            mov features, edx
+            popad
+        }
+    #elif defined __GNUC__
+        asm("xchg %%esi, %%ebx\n" /* we can't clobber ebx on gcc (PIC register) */
+            "mov $0x01, %%eax\n"
+            "cpuid\n"
+            "mov %%edx, %0\n"
+            "xchg %%esi, %%ebx\n"
+            : "=m" (features)
+            : /* We have no inputs */
+            : "%eax", "%esi", "%ecx", "%edx"
+           );
+    #elif defined __SUNPRO_C || defined __SUNPRO_CC
+        asm("push %%ebx\n"
+            "mov $0x01, %%eax\n"
+            "cpuid\n"
+            "pop %%ebx\n"
+            : "=d" (features)
+            : /* We have no inputs */
+            : "%eax", "%ecx"
+           );
+    #endif
+        return (features & (1<<26)) != 0;
+    }
 
     void Assembler::nInit(AvmCore* core)
     {
         (void) core;
-        VMPI_getDate();
+        config.sse2 = config.sse2 && CheckForSSE2();
     }
 
     void Assembler::nBeginAssembly() {
@@ -1880,6 +1914,6 @@ namespace nanojit
         SWAP(NIns*, codeEnd, exitEnd);
         verbose_only( SWAP(size_t, codeBytes, exitBytes); )
     }
-
+    
     #endif /* FEATURE_NANOJIT */
 }
