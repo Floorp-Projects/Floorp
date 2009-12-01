@@ -132,6 +132,11 @@ public:
     RecvNPN_GetStringIdentifiers(const nsTArray<nsCString>& aNames,
                                  nsTArray<NPRemoteIdentifier>* aIds);
 
+    virtual bool
+    AnswerNPN_GetValue_WithBoolReturn(const NPNVariable& aVariable,
+                                      NPError* aError,
+                                      bool* aBoolVal);
+
     const NPNetscapeFuncs* GetNetscapeFuncs() {
         return mNPNIface;
     }

@@ -55,6 +55,8 @@
 #include "mozilla/plugins/BrowserStreamChild.h"
 #include "mozilla/plugins/PluginStreamChild.h"
 
+#include "nsNPAPIPlugin.h"
+
 using mozilla::ipc::NPRemoteIdentifier;
 
 using namespace mozilla::plugins;
@@ -288,10 +290,12 @@ PluginModuleChild::NPObjectIsRegisteredForActor(
 //-----------------------------------------------------------------------------
 // FIXME/cjones: just getting this out of the way for the moment ...
 
+namespace mozilla {
+namespace plugins {
+namespace child {
+
 // FIXME
 typedef void (*PluginThreadCallback)(void*);
-
-PR_BEGIN_EXTERN_C
 
 static NPError NP_CALLBACK
 _requestread(NPStream *pstream, NPByteRange *rangeList);
@@ -471,63 +475,65 @@ _convertpoint(NPP instance,
               double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
               double *destX, double *destY, NPCoordinateSpace destSpace);
 
-PR_END_EXTERN_C
+} /* namespace child */
+} /* namespace plugins */
+} /* namespace mozilla */
 
 const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
     sizeof(sBrowserFuncs),
     (NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR,
-    _geturl,
-    _posturl,
-    _requestread,
-    _newstream,
-    _write,
-    _destroystream,
-    _status,
-    _useragent,
-    _memalloc,
-    _memfree,
-    _memflush,
-    _reloadplugins,
-    _getjavaenv,
-    _getjavapeer,
-    _geturlnotify,
-    _posturlnotify,
-    _getvalue,
-    _setvalue,
-    _invalidaterect,
-    _invalidateregion,
-    _forceredraw,
-    _getstringidentifier,
-    _getstringidentifiers,
-    _getintidentifier,
-    _identifierisstring,
-    _utf8fromidentifier,
-    _intfromidentifier,
-    _createobject,
-    _retainobject,
-    _releaseobject,
-    _invoke,
-    _invokedefault,
-    _evaluate,
-    _getproperty,
-    _setproperty,
-    _removeproperty,
-    _hasproperty,
-    _hasmethod,
-    _releasevariantvalue,
-    _setexception,
-    _pushpopupsenabledstate,
-    _poppopupsenabledstate,
-    _enumerate,
-    _pluginthreadasynccall,
-    _construct,
-    _getvalueforurl,
-    _setvalueforurl,
-    _getauthenticationinfo,
-    _scheduletimer,
-    _unscheduletimer,
-    _popupcontextmenu,
-    _convertpoint
+    mozilla::plugins::child::_geturl,
+    mozilla::plugins::child::_posturl,
+    mozilla::plugins::child::_requestread,
+    mozilla::plugins::child::_newstream,
+    mozilla::plugins::child::_write,
+    mozilla::plugins::child::_destroystream,
+    mozilla::plugins::child::_status,
+    mozilla::plugins::child::_useragent,
+    mozilla::plugins::child::_memalloc,
+    mozilla::plugins::child::_memfree,
+    mozilla::plugins::child::_memflush,
+    mozilla::plugins::child::_reloadplugins,
+    mozilla::plugins::child::_getjavaenv,
+    mozilla::plugins::child::_getjavapeer,
+    mozilla::plugins::child::_geturlnotify,
+    mozilla::plugins::child::_posturlnotify,
+    mozilla::plugins::child::_getvalue,
+    mozilla::plugins::child::_setvalue,
+    mozilla::plugins::child::_invalidaterect,
+    mozilla::plugins::child::_invalidateregion,
+    mozilla::plugins::child::_forceredraw,
+    mozilla::plugins::child::_getstringidentifier,
+    mozilla::plugins::child::_getstringidentifiers,
+    mozilla::plugins::child::_getintidentifier,
+    mozilla::plugins::child::_identifierisstring,
+    mozilla::plugins::child::_utf8fromidentifier,
+    mozilla::plugins::child::_intfromidentifier,
+    mozilla::plugins::child::_createobject,
+    mozilla::plugins::child::_retainobject,
+    mozilla::plugins::child::_releaseobject,
+    mozilla::plugins::child::_invoke,
+    mozilla::plugins::child::_invokedefault,
+    mozilla::plugins::child::_evaluate,
+    mozilla::plugins::child::_getproperty,
+    mozilla::plugins::child::_setproperty,
+    mozilla::plugins::child::_removeproperty,
+    mozilla::plugins::child::_hasproperty,
+    mozilla::plugins::child::_hasmethod,
+    mozilla::plugins::child::_releasevariantvalue,
+    mozilla::plugins::child::_setexception,
+    mozilla::plugins::child::_pushpopupsenabledstate,
+    mozilla::plugins::child::_poppopupsenabledstate,
+    mozilla::plugins::child::_enumerate,
+    mozilla::plugins::child::_pluginthreadasynccall,
+    mozilla::plugins::child::_construct,
+    mozilla::plugins::child::_getvalueforurl,
+    mozilla::plugins::child::_setvalueforurl,
+    mozilla::plugins::child::_getauthenticationinfo,
+    mozilla::plugins::child::_scheduletimer,
+    mozilla::plugins::child::_unscheduletimer,
+    mozilla::plugins::child::_popupcontextmenu,
+    mozilla::plugins::child::_convertpoint
 };
 
 PluginInstanceChild*
@@ -536,6 +542,10 @@ InstCast(NPP aNPP)
     NS_ABORT_IF_FALSE(!!(aNPP->ndata), "nil instance");
     return static_cast<PluginInstanceChild*>(aNPP->ndata);
 }
+
+namespace mozilla {
+namespace plugins {
+namespace child {
 
 NPError NP_CALLBACK
 _requestread(NPStream* aStream,
@@ -582,9 +592,35 @@ _getvalue(NPP aNPP,
 {
     _MOZ_LOG(__FUNCTION__);
     AssertPluginThread();
-    return InstCast(aNPP)->NPN_GetValue(aVariable, aValue);
-}
 
+    switch (aVariable) {
+        case NPNVjavascriptEnabledBool: // Intentional fall-through
+        case NPNVasdEnabledBool: // Intentional fall-through
+        case NPNVisOfflineBool: // Intentional fall-through
+        case NPNVSupportsXEmbedBool: // Intentional fall-through
+        case NPNVSupportsWindowless: // Intentional fall-through
+        case NPNVprivateModeBool: {
+            NPError result;
+            bool value;
+            PluginModuleChild::current()->
+                CallNPN_GetValue_WithBoolReturn(aVariable, &result, &value);
+            *(NPBool*)aValue = value ? true : false;
+            return result;
+        }
+
+        default: {
+            if (aNPP) {
+                return InstCast(aNPP)->NPN_GetValue(aVariable, aValue);
+            }
+
+            NS_WARNING("Null NPP!");
+            return NPERR_INVALID_INSTANCE_ERROR;
+        }
+    }
+
+    NS_NOTREACHED("Shouldn't get here!");
+    return NPERR_GENERIC_ERROR;
+}
 
 NPError NP_CALLBACK
 _setvalue(NPP aNPP,
@@ -1298,6 +1334,10 @@ _convertpoint(NPP instance,
     NS_NOTYETIMPLEMENTED("Implement me!");
     return 0;
 }
+
+} /* namespace child */
+} /* namespace plugins */
+} /* namespace mozilla */
 
 //-----------------------------------------------------------------------------
 
