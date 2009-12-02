@@ -61,6 +61,7 @@ namespace nanojit
 #define NJ_MAX_STACK_ENTRY              256
 #define NJ_ALIGN_STACK                  16
 #define NJ_JTBL_SUPPORTED               1
+#define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
 
     enum Register {
         RAX = 0, // 1st int return, # of sse varargs

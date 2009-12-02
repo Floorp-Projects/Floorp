@@ -1347,6 +1347,21 @@ namespace nanojit
     }
 
     void Assembler::asm_load64(LIns *ins) {
+
+        switch (ins->opcode()) {
+            case LIR_ldq:
+            case LIR_ldqc:
+                // handled by mainline code below for now
+                break;
+            case LIR_ld32f:
+            case LIR_ldc32f:
+                NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+                return;
+            default:
+                NanoAssertMsg(0, "asm_load64 should never receive this LIR opcode");
+                return;
+        }
+
         Register rr, rb;
         int32_t dr;
         regalloc_load(ins, rr, dr, rb);
@@ -1359,21 +1374,52 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_ld(LIns *ins) {
+    void Assembler::asm_load32(LIns *ins) {
         NanoAssert(!ins->isQuad());
         Register r, b;
         int32_t d;
         regalloc_load(ins, r, d, b);
         LOpcode op = ins->opcode();
-        switch (op) {
-        case LIR_ldcb: MOVZX8M( r, d, b);   break;
-        case LIR_ldcs: MOVZX16M(r, d, b);   break;
-        default:       MOVLRM(  r, d, b);   break;
+        switch(op) {
+            case LIR_ldzb:
+            case LIR_ldcb:
+                MOVZX8M( r, d, b);
+                break;
+            case LIR_ldzs:
+            case LIR_ldcs:
+                MOVZX16M(r, d, b);
+                break;
+            case LIR_ld:
+            case LIR_ldc:
+                MOVLRM(  r, d, b);
+                break;
+            case LIR_ldsb:
+            case LIR_ldss:
+            case LIR_ldcsb:
+            case LIR_ldcss:
+                NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+                return;
+            default:
+                NanoAssertMsg(0, "asm_load32 should never receive this LIR opcode");
+                return;
         }
     }
 
-    void Assembler::asm_store64(LIns *value, int d, LIns *base) {
+    void Assembler::asm_store64(LOpcode op, LIns *value, int d, LIns *base) {
         NanoAssert(value->isQuad());
+
+        switch (op) {
+            case LIR_stqi:
+                // handled by mainline code below for now
+                break;
+            case LIR_st32f:
+                NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+                return;
+            default:
+                NanoAssertMsg(0, "asm_store64 should never receive this LIR opcode");
+                return;
+        }
+
         Register b = getBaseReg(LIR_stqi, base, d, BaseRegs);
 
         // if we have to choose a register, use a GPR, but not the base reg
@@ -1401,7 +1447,21 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_store32(LIns *value, int d, LIns *base) {
+    void Assembler::asm_store32(LOpcode op, LIns *value, int d, LIns *base) {
+
+        switch (op) {
+            case LIR_sti:
+                // handled by mainline code below for now
+                break;
+            case LIR_stb:
+            case LIR_sts:
+                NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+                return;
+            default:
+                NanoAssertMsg(0, "asm_store32 should never receive this LIR opcode");
+                return;
+        }
+
         NanoAssert(!value->isQuad());
         Register b = getBaseReg(LIR_sti, base, d, BaseRegs);
         Register r = findRegFor(value, GpRegs & ~rmask(b));
