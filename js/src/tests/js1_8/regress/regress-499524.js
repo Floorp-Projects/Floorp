@@ -45,4 +45,6 @@ assertEq(isSyntaxError("function f(a,b,c,d,e,f,g,h,b,[y]){}"),  true);
 assertEq(isSyntaxError("function f([y],a,b,c,d,e,f,g,h,a){}"),  true);
 assertEq(isSyntaxError("function f([a],b,c,d,e,f,g,h,i,a){}"),  true);
 assertEq(isSyntaxError("function f(a,b,c,d,e,f,g,h,i,[a]){}"),  true);
-reportCompare(isSyntaxError("function f(a,b,c,d,e,f,g,h,i,[a]){}"),  true);
+assertEq(isSyntaxError("function f(a,b,c,d,e,f,g,h,i,[a]){}"),  true);
+
+reportCompare(true, true);
