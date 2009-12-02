@@ -49,6 +49,8 @@ Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/type_records/tabs.js");
 Cu.import("resource://weave/engines/clientData.js");
 
+const filteredUrls = /^(about:blank|chrome:\/\/weave\/.*)$/i;
+
 function TabEngine() {
   this._init();
 }
@@ -128,7 +130,8 @@ TabStore.prototype = {
     return id == Clients.clientID;
   },
 
-  getAllTabs: function getAllTabs() {
+
+  getAllTabs: function getAllTabs(filter) {
     // Iterate through each tab of each window
     let allTabs = [];
     let wins = Svc.WinMediator.getEnumerator("navigator:browser");
@@ -141,9 +144,15 @@ TabStore.prototype = {
       // Extract various pieces of tab data
       Array.forEach(tabs, function(tab) {
         let browser = tab.linkedBrowser || tab.browser;
+        let url = browser.currentURI.spec;
+
+        // Filter out some urls if necessary
+        if (filter && filteredUrls.test(url))
+          return;
+
         allTabs.push({
           title: browser.contentTitle || "",
-          urlHistory: [browser.currentURI.spec],
+          urlHistory: [url],
           icon: browser.mIconURL || "",
           lastUsed: tab.lastUsed || 0
         });
@@ -158,7 +167,7 @@ TabStore.prototype = {
     record.clientName = Clients.clientName;
 
     // Sort tabs in descending-used order to grab the most recently used
-    record.tabs = this.getAllTabs().sort(function(a, b) {
+    record.tabs = this.getAllTabs(true).sort(function(a, b) {
       return b.lastUsed - a.lastUsed;
     }).slice(0, 25);
     record.tabs.forEach(function(tab) {
