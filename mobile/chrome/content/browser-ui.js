@@ -653,10 +653,18 @@ var BrowserUI = {
         this._tabSelect(aEvent);
         break;
       case "TabOpen":
-        if (!this.isTabsVisible() && 
-            Browser.selectedTab.chromeTab != aEvent.target)
+      {
+        if (!this.isTabsVisible() && Browser.selectedTab.chromeTab != aEvent.target)
           NewTabPopup.show(aEvent.target);
+
+          // Workaround to hide the tabstrip if it is partially visible
+          // See bug 524469
+          let [tabstripV,,,] = Browser.computeSidebarVisibility();
+          if (tabstripV > 0 && tabstripV < 1)
+            Browser.hideSidebars();
+
         break;
+      }
       // URL textbox events
       case "click":
         this.doCommand("cmd_openLocation");
@@ -837,6 +845,8 @@ var NewTabPopup = {
   },
   
   show: function(aTab) {
+    BrowserUI.pushPopup(this, this.box);
+
     this._tabs.push(aTab);
     this._updateLabel();
 
@@ -849,8 +859,6 @@ var NewTabPopup = {
     this._timeout = setTimeout(function(self) {
       self.hide();
     }, 2000, this);
-
-    BrowserUI.pushPopup(this, this.box);
   },
 
   selectTab: function() {
@@ -882,8 +890,6 @@ var BookmarkPopup = {
     this.box.hidden = false;
 
     let [,,,controlsW] = Browser.computeSidebarVisibility();
-    Components.reportError("bar: " + controlsW);
-    Components.reportError("box: " + this.box.getBoundingClientRect().width)
     this.box.left = window.innerWidth - (this.box.getBoundingClientRect().width + controlsW + margin);
     this.box.top  = BrowserUI.starButton.getBoundingClientRect().top + margin;
 
