@@ -1186,8 +1186,8 @@ namespace nanojit
                     if (value->isop(LIR_qjoin) && op != LIR_st32f)
                     {
                         // this is correct for little-endian only
-                        asm_store32(op, value->oprnd1(), dr, base);
-                        asm_store32(op, value->oprnd2(), dr+4, base);
+                        asm_store32(LIR_sti, value->oprnd1(), dr, base);
+                        asm_store32(LIR_sti, value->oprnd2(), dr+4, base);
                     }
                     else
                     {
