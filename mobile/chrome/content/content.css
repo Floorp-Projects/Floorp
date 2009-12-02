@@ -43,8 +43,7 @@ html *:not(embed):focus, *:focus > font {
 }
 
 html *|*:link:focus, *|*:visited:focus {
-  outline: 1px solid;
-  -moz-mac-focusring !important;
+  outline: 1px solid -moz-mac-focusring !important;
   -moz-outline-radius: 3px;
   outline-offset: 1px;
 }
