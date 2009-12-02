@@ -62,6 +62,12 @@ TabEngine.prototype = {
   _trackerObj: TabTracker,
   _recordObj: TabSetRecord,
 
+  _init: function _init() {
+    // Reset the client on every startup so that we fetch recent tabs
+    SyncEngine.prototype._init.call(this);
+    this._resetClient();
+  },
+
   // API for use by Weave UI code to give user choices of tabs to open:
   getAllClients: function TabEngine_getAllClients() {
     return this._store._remoteClients;
@@ -72,7 +78,7 @@ TabEngine.prototype = {
   },
 
   _resetClient: function TabEngine__resetClient() {
-    this.resetLastSync();
+    SyncEngine.prototype._resetClient.call(this);
     this._store.wipe();
   },
 
@@ -105,22 +111,10 @@ TabStore.prototype = {
   __proto__: Store.prototype,
   name: "tabs",
   _logName: "Tabs.Store",
-  _filePath: "meta/tabSets",
   _remoteClients: {},
 
   _TabStore_init: function TabStore__init() {
     this._init();
-    this._readFromFile();
-  },
-
-  _writeToFile: function TabStore_writeToFile() {
-    Utils.jsonSave(this._filePath, this, this._remoteClients);
-  },
-
-  _readFromFile: function TabStore_readFromFile() {
-    Utils.jsonLoad(this._filePath, this, function(json) {
-      this._remoteClients = json;
-    });
   },
 
   get _sessionStore() {
@@ -189,10 +183,6 @@ TabStore.prototype = {
   create: function TabStore_create(record) {
     this._log.debug("Adding remote tabs from " + record.clientName);
     this._remoteClients[record.id] = record.cleartext;
-    this._writeToFile();
-    // TODO writing to file after every change is inefficient.  How do we
-    // make sure to do it (or at least flush it) only after sync is done?
-    // override syncFinished
   }
 };
 

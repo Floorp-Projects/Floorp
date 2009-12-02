@@ -49,7 +49,7 @@ Cu.import("resource://weave/type_records/clientData.js");
 Utils.lazy(this, 'Clients', ClientEngine);
 
 function ClientEngine() {
-  this._ClientEngine_init();
+  this._init();
 }
 ClientEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -61,8 +61,10 @@ ClientEngine.prototype = {
   _trackerObj: ClientTracker,
   _recordObj: ClientRecord,
 
-  _ClientEngine_init: function ClientEngine__init() {
-    this._init();
+  _init: function _init() {
+    // Reset the client on every startup so that we fetch recent clients
+    SyncEngine.prototype._init.call(this);
+    this._resetClient();
     Utils.prefs.addObserver("", this, false);
   },
 
@@ -160,8 +162,11 @@ ClientEngine.prototype = {
   },
 
   _resetClient: function ClientEngine__resetClient() {
-    this.resetLastSync();
+    SyncEngine.prototype._resetClient.call(this);
     this._store.wipe();
+
+    // Make sure the local client exists after wiping
+    this.setInfo(this.clientID, this.updateLocalInfo({}));
   }
 };
 
@@ -176,8 +181,6 @@ ClientStore.prototype = {
 
   __proto__: Store.prototype,
 
-  _snapshot: "meta/clients",
-
   //////////////////////////////////////////////////////////////////////////////
   // ClientStore Methods
 
@@ -191,42 +194,14 @@ ClientStore.prototype = {
    */
   init: function ClientStore_init() {
     this._init.call(this);
-    this.loadSnapshot();
-
-    // Get fresh local client info in case prefs were changed when closed
-    let id = Clients.clientID;
-    this.setInfo(id, Clients.updateLocalInfo(this.clients[id] || {}));
-  },
-
-  /**
-   * Load client data from json disk
-   */
-  loadSnapshot: function ClientStore_loadSnapshot() {
-    Utils.jsonLoad(this._snapshot, this, function(json) this.clients = json);
-  },
-
-  /**
-   * Log that we're about to change the client store then save to disk
-   */
-  modify: function ClientStore_modify(message, action) {
-    this._log.debug(message);
-    action.call(this);
-    this.saveSnapshot();
-  },
-
-  /**
-   * Save client data to json disk
-   */
-  saveSnapshot: function ClientStore_saveSnapshot() {
-    Utils.jsonSave(this._snapshot, this, this.clients);
   },
 
   /**
    * Set the client data for a guid. Use Engine.setInfo to update tracker.
    */
   setInfo: function ClientStore_setInfo(id, info) {
-    this.modify("Setting client " + id + ": " + JSON.stringify(info),
-      function() this.clients[id] = info);
+    this._log.debug("Setting client " + id + ": " + JSON.stringify(info));
+    this.clients[id] = info;
   },
 
   //////////////////////////////////////////////////////////////////////////////
@@ -239,10 +214,9 @@ ClientStore.prototype = {
   // Store.prototype Methods
 
   changeItemID: function ClientStore_changeItemID(oldID, newID) {
-    this.modify("Changing id from " + oldId + " to " + newID, function() {
-      this.clients[newID] = this.clients[oldID];
-      delete this.clients[oldID];
-    });
+    this._log.debug("Changing id from " + oldId + " to " + newID);
+    this.clients[newID] = this.clients[oldID];
+    delete this.clients[oldID];
   },
 
   create: function ClientStore_create(record) {
@@ -253,7 +227,6 @@ ClientStore.prototype = {
     let record = new ClientRecord();
     record.id = id;
     record.payload = this.clients[id];
-
     return record;
   },
 
@@ -262,22 +235,18 @@ ClientStore.prototype = {
   itemExists: function ClientStore_itemExists(id) id in this.clients,
 
   remove: function ClientStore_remove(record) {
-    this.modify("Removing client " + record.id, function()
-      delete this.clients[record.id]);
+    this._log.debug("Removing client " + record.id);
+    delete this.clients[record.id];
   },
 
   update: function ClientStore_update(record) {
-    this.modify("Updating client " + record.id, function()
-      this.clients[record.id] = record.payload);
+    this._log.debug("Updating client " + record.id);
+    this.clients[record.id] = record.payload;
   },
 
   wipe: function ClientStore_wipe() {
-    this.modify("Wiping local clients store", function() {
-      this.clients = {};
-
-      // Make sure the local client is still here
-      this.clients[Clients.clientID] = Clients.updateLocalInfo({});
-    });
+    this._log.debug("Wiping local clients store")
+    this.clients = {};
   },
 };
 
