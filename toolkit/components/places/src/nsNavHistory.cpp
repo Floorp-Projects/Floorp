@@ -5260,21 +5260,20 @@ nsNavHistory::GetPageTitle(nsIURI* aURI, nsAString& aTitle)
 
   aTitle.Truncate(0);
 
-  mozIStorageStatement *statement = DBGetURLPageInfo();
-  mozStorageStatementScoper scope(statement);
-  nsresult rv = BindStatementURI(statement, 0, aURI);
+  mozStorageStatementScoper scope(mDBGetURLPageInfo);
+  nsresult rv = BindStatementURI(mDBGetURLPageInfo, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasResults = PR_FALSE;
-  rv = statement->ExecuteStep(&hasResults);
+  rv = mDBGetURLPageInfo->ExecuteStep(&hasResults);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!hasResults) {
     aTitle.SetIsVoid(PR_TRUE);
-    return NS_OK; // not found: return void string
+    return NS_OK; // Not found, return a void string.
   }
 
-  rv = statement->GetString(nsNavHistory::kGetInfoIndex_Title, aTitle);
+  rv = mDBGetURLPageInfo->GetString(nsNavHistory::kGetInfoIndex_Title, aTitle);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -5466,6 +5465,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     nsCOMPtr<nsIObserverService> os =
       do_GetService("@mozilla.org/observer-service;1");
     if (os) {
+      os->RemoveObserver(this, gAutoCompleteFeedback);
       os->RemoveObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC);
       os->RemoveObserver(this, gIdleDaily);
       os->RemoveObserver(this, gXpcomShutdown);
@@ -6829,7 +6829,7 @@ nsNavHistory::VisitIdToResultNode(PRInt64 visitId,
       // by registering their own observers when they are expanded.
       return NS_OK;
   }
-  NS_ENSURE_TRUE(statement, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_STATE(statement);
 
   mozStorageStatementScoper scoper(statement);
   nsresult rv = statement->BindInt64Parameter(0, visitId);
@@ -6851,7 +6851,7 @@ nsNavHistory::BookmarkIdToResultNode(PRInt64 aBookmarkId, nsNavHistoryQueryOptio
                                      nsNavHistoryResultNode** aResult)
 {
   mozIStorageStatement *stmt = GetDBBookmarkToUrlResult();
-  NS_ENSURE_TRUE(stmt, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
   nsresult rv = stmt->BindInt64Parameter(0, aBookmarkId);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -7752,6 +7752,7 @@ nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
     return NS_OK;
 
   mozIStorageStatement *stmt = GetDBFeedbackIncrease();
+  NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scope(stmt);
 
   nsAutoString input;
@@ -7776,7 +7777,7 @@ nsNavHistory::AutoCompleteFeedback(PRInt32 aIndex,
   return NS_OK;
 }
 
-mozIStorageStatement*
+mozIStorageStatement *
 nsNavHistory::GetDBFeedbackIncrease()
 {
   if (mDBFeedbackIncrease)
