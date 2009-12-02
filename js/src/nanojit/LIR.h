@@ -462,13 +462,10 @@ namespace nanojit
             return (op & ~LIR64) == LIR_icall || op == LIR_qcall;
         }
         bool isStore() const {
-            LOpcode op = LOpcode(opcode() & ~LIR64);
-            return op == LIR_sti;
+            return isLInsSti();
         }
         bool isLoad() const {
-            LOpcode op = opcode();
-            return op == LIR_ldq  || op == LIR_ld || op == LIR_ldc ||
-                   op == LIR_ldqc || op == LIR_ldcs || op == LIR_ldcb;
+            return isLInsLd();
         }
         bool isGuard() const {
             LOpcode op = opcode();
@@ -1006,8 +1003,8 @@ namespace nanojit
         virtual LInsp insLoad(LOpcode op, LIns* base, int32_t d) {
             return out->insLoad(op, base, d);
         }
-        virtual LInsp insStorei(LIns* value, LIns* base, int32_t d) {
-            return out->insStorei(value, base, d);
+        virtual LInsp insStore(LOpcode op, LIns* value, LIns* base, int32_t d) {
+            return out->insStore(op, value, base, d);
         }
         // args[] is in reverse order, ie. args[0] holds the rightmost arg.
         virtual LInsp insCall(const CallInfo *call, LInsp args[]) {
@@ -1039,6 +1036,8 @@ namespace nanojit
         // Sign or zero extend integers to native integers. On 32-bit this is a no-op.
         LIns*        ins_i2p(LIns* intIns);
         LIns*        ins_u2p(LIns* uintIns);
+        // choose LIR_sti or LIR_stqi based on size of value
+        LIns*        insStorei(LIns* value, LIns* base, int32_t d);
     };
 
 
@@ -1192,8 +1191,8 @@ namespace nanojit
         LIns* insLoad(LOpcode v, LInsp base, int32_t disp) {
             return add(out->insLoad(v, base, disp));
         }
-        LIns* insStorei(LInsp v, LInsp b, int32_t d) {
-            return add(out->insStorei(v, b, d));
+        LIns* insStore(LOpcode op, LInsp v, LInsp b, int32_t d) {
+            return add(out->insStore(op, v, b, d));
         }
         LIns* insAlloc(int32_t size) {
             return add(out->insAlloc(size));
@@ -1374,7 +1373,7 @@ namespace nanojit
 
             // LirWriter interface
             LInsp   insLoad(LOpcode op, LInsp base, int32_t disp);
-            LInsp   insStorei(LInsp o1, LInsp o2, int32_t disp);
+            LInsp   insStore(LOpcode op, LInsp o1, LInsp o2, int32_t disp);
             LInsp   ins0(LOpcode op);
             LInsp   ins1(LOpcode op, LInsp o1);
             LInsp   ins2(LOpcode op, LInsp o1, LInsp o2);
@@ -1483,7 +1482,7 @@ namespace nanojit
 
         LInsp ins0(LOpcode);
         LInsp insLoad(LOpcode, LInsp base, int32_t disp);
-        LInsp insStorei(LInsp v, LInsp b, int32_t d);
+        LInsp insStore(LOpcode op, LInsp v, LInsp b, int32_t d);
         LInsp insCall(const CallInfo *call, LInsp args[]);
     };
 

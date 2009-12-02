@@ -464,31 +464,62 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_store32(LIns *value, int dr, LIns *base)
+    void Assembler::asm_store32(LOpcode op, LIns* value, int dr, LIns* base)
     {
         if (value->isconst())
         {
             Register rb = getBaseReg(LIR_sti, base, dr, GpRegs);
             int c = value->imm32();
-            STi(rb, dr, c);
+            switch(op) {
+                case LIR_stb:
+                    ST8i(rb, dr, c);
+                    break;
+                case LIR_sts:
+                    ST16i(rb, dr, c);
+                    break;
+                case LIR_sti:
+                    STi(rb, dr, c);
+                    break;
+                default:
+                    NanoAssertMsg(0, "asm_store32 should never receive this LIR opcode");
+                    break;
+            }
         }
         else
         {
+            // quirk of x86-32: reg must be a/b/c/d for single-byte stores
+            const RegisterMask SrcRegs = (op == LIR_stb) ?
+                            (1<<EAX | 1<<ECX | 1<<EDX | 1<<EBX) :
+                            GpRegs;
+
             // make sure what is in a register
             Register ra, rb;
             if (base->isop(LIR_alloc)) {
                 rb = FP;
                 dr += findMemFor(base);
-                ra = findRegFor(value, GpRegs);
+                ra = findRegFor(value, SrcRegs);
             } else if (base->isconst()) {
                 // absolute address
                 dr += base->imm32();
-                ra = findRegFor(value, GpRegs);
+                ra = findRegFor(value, SrcRegs);
                 rb = UnknownReg;
             } else {
-                findRegFor2(GpRegs, value, ra, base, rb);
+                findRegFor2(SrcRegs, value, ra, base, rb);
             }
-            ST(rb, dr, ra);
+            switch(op) {
+                case LIR_stb:
+                    ST8(rb, dr, ra);
+                    break;
+                case LIR_sts:
+                    ST16(rb, dr, ra);
+                    break;
+                case LIR_sti:
+                    ST(rb, dr, ra);
+                    break;
+                default:
+                    NanoAssertMsg(0, "asm_store32 should never receive this LIR opcode");
+                    break;
+            }
         }
     }
 
@@ -528,10 +559,25 @@ namespace nanojit
         {
             freeRsrcOf(ins, false);
             Register rb = getBaseReg(ins->opcode(), base, db, GpRegs);
-            SSE_LDQ(rr, db, rb);
+            switch (ins->opcode()) {
+                case LIR_ldq:
+                case LIR_ldqc:
+                    SSE_LDQ(rr, db, rb);
+                    break;
+                case LIR_ld32f:
+                case LIR_ldc32f:
+                    SSE_CVTSS2SD(rr, rr);
+                    SSE_LDSS(rr, db, rb);
+                    SSE_XORPDr(rr,rr);  
+                    break;
+                default:
+                    NanoAssertMsg(0, "asm_load64 should never receive this LIR opcode");
+                    break;
+            }
         }
         else
         {
+            
             int dr = disp(ins);
             Register rb;
             if (base->isop(LIR_alloc)) {
@@ -542,23 +588,79 @@ namespace nanojit
             }
             ins->setReg(UnknownReg);
 
-            // don't use an fpu reg to simply load & store the value.
-            if (dr)
-                asm_mmq(FP, dr, rb, db);
-
-            freeRsrcOf(ins, false);
-
-            if (isKnownReg(rr))
-            {
-                NanoAssert(rmask(rr)&FpRegs);
-                _allocator.retire(rr);
-                FLDQ(db, rb);
+            switch (ins->opcode()) {
+                case LIR_ldq:
+                case LIR_ldqc:
+                    // don't use an fpu reg to simply load & store the value.
+                    if (dr)
+                        asm_mmq(FP, dr, rb, db);
+                    freeRsrcOf(ins, false);
+                    if (isKnownReg(rr))
+                    {
+                        NanoAssert(rmask(rr)&x87Regs);
+                        _allocator.retire(rr);
+                        FLDQ(db, rb);
+                    }
+                    break;
+                case LIR_ld32f:
+                case LIR_ldc32f:
+                    freeRsrcOf(ins, false);
+                    if (isKnownReg(rr))
+                    {
+                        NanoAssert(rmask(rr)&x87Regs);
+                        _allocator.retire(rr);
+                        FLD32(db, rb);
+                    }
+                    else
+                    {
+                        // need to use fpu to expand 32->64
+                        NanoAssert(dr != 0);
+                        FSTPQ(dr, FP);
+                        FLD32(db, rb);
+                    }
+                    break;
+                default:
+                    NanoAssertMsg(0, "asm_load64 should never receive this LIR opcode");
+                    break;
             }
         }
     }
 
-    void Assembler::asm_store64(LInsp value, int dr, LInsp base)
+    void Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
     {
+        if (op == LIR_st32f)
+        {
+            Register rb;
+            if (base->isop(LIR_alloc)) {
+                rb = FP;
+                dr += findMemFor(base);
+            } else {
+                rb = findRegFor(base, GpRegs);
+            }
+
+            // if value already in a reg, use that, otherwise
+            // try to get it into XMM regs before FPU regs.
+            bool pop = value->isUnusedOrHasUnknownReg();
+            Register rv = findRegFor(value, config.sse2 ? XmmRegs : FpRegs);
+            if (rmask(rv) & XmmRegs) 
+            {
+                // need a scratch reg
+                Register t = registerAllocTmp(XmmRegs);
+
+                // cvt to single-precision and store
+                SSE_STSS(dr, rb, t);
+                SSE_CVTSD2SS(t, rv);
+                SSE_XORPDr(t,t);  // zero dest to ensure no dependency stalls
+            } 
+            else 
+            {
+                FST32(pop?1:0, dr, rb);
+            }
+            return;
+        }
+        
+        NanoAssertMsg(op == LIR_stqi, "asm_store64 should never receive this LIR opcode");
+
         if (value->isconstq())
         {
             // if a constant 64-bit value just store it now rather than
@@ -626,9 +728,12 @@ namespace nanojit
                       ? findRegFor(value, config.sse2 ? XmmRegs : FpRegs)
                       : value->getReg() );
 
-        if (rmask(rv) & XmmRegs) {
+        if (rmask(rv) & XmmRegs) 
+        {
             SSE_STQ(dr, rb, rv);
-        } else {
+        } 
+        else 
+        {
             FSTQ(pop?1:0, dr, rb);
         }
     }
@@ -1044,7 +1149,7 @@ namespace nanojit
             MR(rr,ra);
     }
 
-    void Assembler::asm_ld(LInsp ins)
+    void Assembler::asm_load32(LInsp ins)
     {
         LOpcode op = ins->opcode();
         LIns* base = ins->oprnd1();
@@ -1054,13 +1159,31 @@ namespace nanojit
         if (base->isconst()) {
             intptr_t addr = base->imm32();
             addr += d;
-            if (op == LIR_ldcb)
-                LD8Zdm(rr, addr);
-            else if (op == LIR_ldcs)
-                LD16Zdm(rr, addr);
-            else
-                LDdm(rr, addr);
-            return;
+            switch(op) {
+                case LIR_ldzb:
+                case LIR_ldcb:
+                    LD8Zdm(rr, addr);
+                    return;
+                case LIR_ldsb:
+                case LIR_ldcsb:
+                    LD8Sdm(rr, addr);
+                    return;
+                case LIR_ldzs:
+                case LIR_ldcs:
+                    LD16Zdm(rr, addr);
+                    return;
+                case LIR_ldss:
+                case LIR_ldcss:
+                    LD16Sdm(rr, addr);
+                    return;
+                case LIR_ld:
+                case LIR_ldc:
+                    LDdm(rr, addr);
+                    return;
+                default:
+                    NanoAssertMsg(0, "asm_load32 should never receive this LIR opcode");
+                    return;
+            }
         }
 
         /* Search for add(X,Y) */
@@ -1092,23 +1215,59 @@ namespace nanojit
                               ? findSpecificRegForUnallocated(rhs, rr)
                               : findRegFor(rhs, GpRegs & ~(rmask(rleft))) );
 
-            if (op == LIR_ldcb)
-                LD8Zsib(rr, d, rleft, rright, scale);
-            else if (op == LIR_ldcs)
-                LD16Zsib(rr, d, rleft, rright, scale);
-            else
-                LDsib(rr, d, rleft, rright, scale);
-
-            return;
+            switch(op) {
+                case LIR_ldzb:
+                case LIR_ldcb:
+                    LD8Zsib(rr, d, rleft, rright, scale);
+                    return;
+                case LIR_ldsb:
+                case LIR_ldcsb:
+                    LD8Ssib(rr, d, rleft, rright, scale);
+                    return;
+                case LIR_ldzs:
+                case LIR_ldcs:
+                    LD16Zsib(rr, d, rleft, rright, scale);
+                    return;
+                case LIR_ldss:
+                case LIR_ldcss:
+                    LD16Ssib(rr, d, rleft, rright, scale);
+                    return;
+                case LIR_ld:
+                case LIR_ldc:
+                    LDsib(rr, d, rleft, rright, scale);
+                    return;
+                default:
+                    NanoAssertMsg(0, "asm_load32 should never receive this LIR opcode");
+                    return;
+            }
         }
 
         Register ra = getBaseReg(op, base, d, GpRegs);
-        if (op == LIR_ldcb)
-            LD8Z(rr, d, ra);
-        else if (op == LIR_ldcs)
-            LD16Z(rr, d, ra);
-        else
-            LD(rr, d, ra);
+        switch(op) {
+            case LIR_ldzb:
+            case LIR_ldcb:
+                LD8Z(rr, d, ra);
+                return;
+            case LIR_ldsb:
+            case LIR_ldcsb:
+                LD8S(rr, d, ra);
+                return;
+            case LIR_ldzs:
+            case LIR_ldcs:
+                LD16Z(rr, d, ra);
+                return;
+            case LIR_ldss:
+            case LIR_ldcss:
+                LD16S(rr, d, ra);
+                return;
+            case LIR_ld:
+            case LIR_ldc:
+                LD(rr, d, ra);
+                return;
+            default:
+                NanoAssertMsg(0, "asm_load32 should never receive this LIR opcode");
+                return;
+        }
     }
 
     void Assembler::asm_cmov(LInsp ins)

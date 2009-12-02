@@ -984,14 +984,29 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             ins = mLir->insImmf(immf(mTokens[0]));
             break;
 
+#if NJ_EXPANDED_LOADSTORE_SUPPORTED 
+          case LIR_stb:
+          case LIR_sts:
+          case LIR_st32f:
+#endif
           case LIR_sti:
           case LIR_stqi:
             need(3);
-            ins = mLir->insStorei(ref(mTokens[0]),
+            ins = mLir->insStore(mOpcode, ref(mTokens[0]),
                                   ref(mTokens[1]),
                                   imm(mTokens[2]));
             break;
 
+#if NJ_EXPANDED_LOADSTORE_SUPPORTED 
+          case LIR_ldzb:
+          case LIR_ldzs:
+          case LIR_ldsb:
+          case LIR_ldss:
+          case LIR_ldcsb:
+          case LIR_ldcss:
+          case LIR_ld32f:
+          case LIR_ldc32f:
+#endif
           case LIR_ld:
           case LIR_ldc:
           case LIR_ldq:
@@ -1348,11 +1363,24 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     I_loads.push_back(LIR_ldc);
     I_loads.push_back(LIR_ldcb);
     I_loads.push_back(LIR_ldcs);
+#if NJ_EXPANDED_LOADSTORE_SUPPORTED 
+    I_loads.push_back(LIR_ldzb);
+    I_loads.push_back(LIR_ldzs);
+    I_loads.push_back(LIR_ldsb);
+    I_loads.push_back(LIR_ldss);
+    I_loads.push_back(LIR_ldcsb);
+    I_loads.push_back(LIR_ldcss);
+#endif
 
     vector<LOpcode> QorF_loads;
     QorF_loads.push_back(LIR_ldq);      // weight LIR_ldq the heaviest
     QorF_loads.push_back(LIR_ldq);
     QorF_loads.push_back(LIR_ldqc);
+#if NJ_EXPANDED_LOADSTORE_SUPPORTED
+    // this loads a 32-bit float and expands to 64-bit float
+    QorF_loads.push_back(LIR_ld32f); 
+    QorF_loads.push_back(LIR_ldc32f);
+#endif
 
     enum LInsClass {
 #define CLASS(name, only64bit, relFreq)     name,

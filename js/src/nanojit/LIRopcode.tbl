@@ -66,23 +66,23 @@
 OPDEF(start,     0, Op0)    // start of a fragment
 OPDEF(regfence,  1, Op0)    // register fence, no register allocation is allowed across this meta instruction
 OPDEF(skip,      2, Sk)     // holds blobs ("payloads") of data;  also links pages
-OPDEF(__3,       3, None)
-OPDEF(__4,       4, None)
-OPDEF(__5,       5, None)
-OPDEF(__6,       6, None)
 
 /* non-pure operations */
-OPDEF(iaddp,     7, Op2)    // integer addition for temporary pointer calculations (32bit only)
-OPDEF(iparam,    8, P)      // load a parameter (32bit register or stk location)
-OPDEF(__9,       9, None)
-OPDEF(ld,       10, Ld)     // 32-bit load
-OPDEF(ialloc,   11, I)      // alloc some stack space (value is 32bit address)
-OPDEF(sti,      12, Sti)    // 32-bit store
-OPDEF(ret,      13, Op1)    // return a word-sized value
-OPDEF(live,     14, Op1)    // extend live range of reference
-OPDEF(flive,    15, Op1)    // extend live range of a floating point value reference
-OPDEF(icall,    16, C)      // subroutine call returning a 32-bit value
-OPDEF(__17,     17, None)
+OPDEF(ldsb,      3, Ld)      // 8-bit integer load, sign-extend to 32-bit
+OPDEF(ldss,      4, Ld)      // 16-bit integer load, sign-extend to 32-bit
+OPDEF(ldzb,      5, Ld)      // 8-bit integer load, zero extend to 32-bit
+OPDEF(ldzs,      6, Ld)      // 16-bit integer load, zero extend to 32-bit
+OPDEF(iaddp,     7, Op2)     // integer addition for temporary pointer calculations (32bit only)
+OPDEF(iparam,    8, P)       // load a parameter (32bit register or stk location)
+OPDEF(stb,       9, Sti)     // 8-bit integer store
+OPDEF(ld,       10, Ld)      // 32-bit integer load 
+OPDEF(ialloc,   11, I)       // alloc some stack space (value is 32bit address)
+OPDEF(sti,      12, Sti)     // 32-bit integer store
+OPDEF(ret,      13, Op1)     // return a word-sized value
+OPDEF(live,     14, Op1)     // extend live range of reference
+OPDEF(flive,    15, Op1)     // extend live range of a floating point value reference
+OPDEF(icall,    16, C)       // subroutine call returning a 32-bit value
+OPDEF(sts,      17, Sti)     // 16-bit integer store
 
 /* guards */
 OPDEF(x,        18, Op2)    // exit always
@@ -120,9 +120,9 @@ OPDEF(fgt,      29, Op2)    // floating-point greater-than
 OPDEF(fle,      30, Op2)    // floating-point less-than-or-equal
 OPDEF(fge,      31, Op2)    // floating-point greater-than-or-equal
 
-OPDEF(ldcb,     32, Ld)     // non-volatile  8-bit load
-OPDEF(ldcs,     33, Ld)     // non-volatile 16-bit load
-OPDEF(ldc,      34, Ld)     // non-volatile 32-bit load
+OPDEF(ldcb,     32, Ld)      // non-volatile  8-bit integer load, zero-extend to 32-bit 
+OPDEF(ldcs,     33, Ld)      // non-volatile 16-bit integer load, zero-extend to 32-bit 
+OPDEF(ldc,      34, Ld)      // non-volatile 32-bit integer load 
 
 OPDEF(neg,      35, Op1)    // integer negation
 OPDEF(add,      36, Op2)    // integer addition
@@ -147,8 +147,8 @@ OPDEF(xf,       49, Op2)    // exit if false  (0x31 0011 0001)
 OPDEF(qlo,      50, Op1)    // get the low  32 bits of a 64-bit value
 OPDEF(qhi,      51, Op1)    // get the high 32 bits of a 64-bit value
 
-OPDEF(__52,     52, None)
-OPDEF(__53,     53, None)
+OPDEF(ldcsb,    52, Ld)      // non-volatile  8-bit integer load (sign-extend to 32-bit)
+OPDEF(ldcss,    53, Ld)      // non-volatile 16-bit integer load (sign-extend to 32-bit)
 
 // This must be right before LIR_eq, so (op&~LIR64 - LIR_ov) can be indexed
 // into a convenient table.
@@ -191,8 +191,8 @@ OPD64(qalloc, LIR_ialloc, I)    // allocate some stack space (value is 64bit add
 OPD64(stqi, LIR_sti, Sti)   // 64-bit (quad) store
 OPD64(fret, LIR_ret, Op1)
 
-OPD64(__14_64,  14, None)
-OPD64(__15_64,  15, None)
+OPD64(st32f,  14, Sti)        // store 64-bit float as a 32-bit float (dropping precision)
+OPD64(ld32f,  15, Ld)         // load 32-bit float and widen to 64-bit float
 
 OPD64(fcall, LIR_icall, C)  // subroutine call returning 64-bit (quad) double value
 OPD64(qcall,    17, C)      // subroutine call returning 64-bit (quad) integer value
@@ -239,7 +239,7 @@ OPD64(qirsh,    46, Op2)    // 64-bit signed right shift
 OPD64(qursh,    47, Op2)    // 64-bit unsigned right shift
 OPD64(qiadd,    48, Op2)    // 64-bit bitwise ADD
 
-OPD64(__49_64,  49, None)
+OPD64(ldc32f,   49, Ld)     // non-volatile load 32-bit float and widen to 64-bit float
 OPD64(qjoin,    50, Op2)    // join two 32-bit values (1st arg is low bits, 2nd is high)
 OPD64(__51_64,  51, None)
 OPD64(__52_64,  52, None)

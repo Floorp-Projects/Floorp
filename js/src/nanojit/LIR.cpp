@@ -223,9 +223,8 @@ namespace nanojit
         return startOfRoom;
     }
 
-    LInsp LirBufWriter::insStorei(LInsp val, LInsp base, int32_t d)
+    LInsp LirBufWriter::insStore(LOpcode op, LInsp val, LInsp base, int32_t d)
     {
-        LOpcode op = val->isQuad() ? LIR_stqi : LIR_sti;
         base = insDisp(op, base, d);
         LInsSti* insSti = (LInsSti*)_buf->makeRoom(sizeof(LInsSti));
         LIns*    ins    = insSti->getLIns();
@@ -857,6 +856,12 @@ namespace nanojit
 #else
         return uintIns;
 #endif
+    }
+
+    LIns* LirWriter::insStorei(LIns* value, LIns* base, int32_t d)
+    {
+        LOpcode op = value->isQuad() ? LIR_stqi : LIR_sti;
+        return insStore(op, value, base, d);
     }
 
     LIns* LirWriter::qjoin(LInsp lo, LInsp hi)
@@ -1884,8 +1889,16 @@ namespace nanojit
             case LIR_ldc:
             case LIR_ldq:
             case LIR_ldqc:
+            case LIR_ldzb:
+            case LIR_ldzs:
             case LIR_ldcb:
             case LIR_ldcs:
+            case LIR_ldsb:
+            case LIR_ldss:
+            case LIR_ldcsb:
+            case LIR_ldcss:
+            case LIR_ld32f:
+            case LIR_ldc32f:
                 VMPI_sprintf(s, "%s = %s %s[%d]", formatRef(i), lirNames[op],
                     formatRef(i->oprnd1()),
                     i->disp());
@@ -1893,6 +1906,9 @@ namespace nanojit
 
             case LIR_sti:
             case LIR_stqi:
+            case LIR_stb:
+            case LIR_sts:
+            case LIR_st32f:
                 VMPI_sprintf(s, "%s %s[%d] = %s", lirNames[op],
                     formatRef(i->oprnd2()),
                     i->disp(),
@@ -2203,10 +2219,10 @@ namespace nanojit
             exprs->clear();
     }
 
-    LInsp LoadFilter::insStorei(LInsp v, LInsp b, int32_t d)
+    LInsp LoadFilter::insStore(LOpcode op, LInsp v, LInsp b, int32_t d)
     {
         clear(b);
-        return out->insStorei(v, b, d);
+        return out->insStore(op, v, b, d);
     }
 
     LInsp LoadFilter::insCall(const CallInfo *ci, LInsp args[])
