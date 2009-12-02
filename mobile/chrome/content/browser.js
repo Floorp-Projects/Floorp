@@ -1279,32 +1279,34 @@ Browser.MainDragger.prototype = {
 
     this.draggedFrame = null;
     this.contentScrollbox = null;
-    
+
     // Check if we are in a scrollable HTML element
-    if (element && element instanceof HTMLElement) {
-      let win = element.ownerDocument.defaultView; 
-      for (; element; element = element.parentNode) {
+    let htmlElement = element;
+    if (htmlElement && htmlElement instanceof HTMLElement) {
+      let win = htmlElement.ownerDocument.defaultView; 
+      for (; htmlElement; htmlElement = htmlElement.parentNode) {
         try {
-          let cs = win.getComputedStyle(element, null);
+          let cs = win.getComputedStyle(htmlElement, null);
           let overflow = cs.getPropertyValue("overflow");
-          let cbr = element.getBoundingClientRect();
+          let cbr = htmlElement.getBoundingClientRect();
           if ((overflow == "scroll") ||
               (overflow == "auto" && (cbr.height < target.scrollHeight || cbr.width < target.scrollWidth))) {
-            this.contentScrollbox = this._createDivScrollBox(element);
+            this.contentScrollbox = this._createDivScrollBox(htmlElement);
             return;
           }
         } catch(e) {}
       }
     }
-    
+
     // Check if we are in XUL land
-    if (element && element instanceof XULElement) {
-      for (; element; element = element.parentNode) {
-        if (element.localName == "treechildren") {
-          this.contentScrollbox = this._createTreeScrollBox(element.parentNode);
+    let xulElement = element;
+    if (xulElement && xulElement instanceof XULElement) {
+      for (; xulElement; xulElement = xulElement.parentNode) {
+        if (xulElement.localName == "treechildren") {
+          this.contentScrollbox = this._createTreeScrollBox(xulElement.parentNode);
           return;
         }
-        let wrapper = element.wrappedJSObject;
+        let wrapper = xulElement.wrappedJSObject;
         let scrollable = false;
         try {
           scrollable = (wrapper.scrollBoxObject != null) || (wrapper.boxObject.QueryInterface(Ci.nsIScrollBoxObject));
@@ -1315,7 +1317,7 @@ Browser.MainDragger.prototype = {
         }
       }
     }
-    
+
     if (element)
       this.draggedFrame = element.ownerDocument.defaultView;
 
@@ -1342,10 +1344,9 @@ Browser.MainDragger.prototype = {
     let panOffset = this._panControlsAwayOffset(doffset);
 
     // do HTML overflow or XUL panning
-    if (this.contentScrollbox && !doffset.isZero()) {
-        this._panScrollbox(this.contentScrollbox, doffset);
-    }
-    
+    if (this.contentScrollbox && !doffset.isZero())
+      this._panScrollbox(this.contentScrollbox, doffset);
+
     // Do all iframe panning
     if (elem) {
       while (elem.frameElement && !doffset.isZero()) {
@@ -1372,7 +1373,7 @@ Browser.MainDragger.prototype = {
 
     return !doffset.equals(dx, dy);
   },
-  
+
   /**
   * builds a minimal implementation of scrollBoxObject for div
   */
