@@ -129,7 +129,7 @@ public:
   /**
    * Obtains the nsNavHistory object.
    */
-  static nsNavHistory * GetSingleton();
+  static nsNavHistory *GetSingleton();
 
   /**
    * Initializes the nsNavHistory object.  This should only be called once.
@@ -141,7 +141,7 @@ public:
    * service to get a reference to this history object. Returns a pointer to
    * the service if it exists. Otherwise creates one. Returns NULL on error.
    */
-  static nsNavHistory * GetHistoryService()
+  static nsNavHistory *GetHistoryService()
   {
     if (!gHistoryService) {
       nsCOMPtr<nsINavHistoryService> serv =
@@ -215,9 +215,6 @@ public:
   // returns true if history has been disabled
   PRBool IsHistoryDisabled() { return mExpireDaysMax == 0 || InPrivateBrowsingMode(); }
 
-  // get the statement for selecting a history row by URL
-  mozIStorageStatement* DBGetURLPageInfo() { return mDBGetURLPageInfo; }
-
   // Constants for the columns returned by the above statement.
   static const PRInt32 kGetInfoIndex_PageID;
   static const PRInt32 kGetInfoIndex_URL;
@@ -231,9 +228,9 @@ public:
   static const PRInt32 kGetInfoIndex_ItemParentId;
 
   // select a history row by id
-  mozIStorageStatement* DBGetIdPageInfo() { return mDBGetIdPageInfo; }
+  mozIStorageStatement *DBGetIdPageInfo() { return mDBGetIdPageInfo; }
 
-  mozIStorageStatement* DBGetTags() { return mDBGetTags; }
+  mozIStorageStatement *DBGetTags() { return mDBGetTags; }
   PRInt64 GetTagsFolder();
 
   // Constants for the columns returned by the above statement
@@ -644,7 +641,7 @@ protected:
 
 #ifdef MOZ_XUL
   // AutoComplete stuff
-  mozIStorageStatement* GetDBFeedbackIncrease();
+  mozIStorageStatement *GetDBFeedbackIncrease();
   nsCOMPtr<mozIStorageStatement> mDBFeedbackIncrease;
 
   nsresult AutoCompleteFeedback(PRInt32 aIndex,
