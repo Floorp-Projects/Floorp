@@ -62,7 +62,7 @@ namespace mozilla {
 
 // XXX refactor buffer stuff
 class WebGLArrayBuffer :
-    public nsICanvasArrayBuffer,
+    public nsIWebGLArrayBuffer,
     public nsIJSNativeInitializer,
     public SimpleBuffer
 {
@@ -72,7 +72,7 @@ public:
     WebGLArrayBuffer(PRUint32 length);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICANVASARRAYBUFFER
+    NS_DECL_NSIWEBGLARRAYBUFFER
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
                           JSContext* aCx,
@@ -88,7 +88,7 @@ class WebGLArray
 
 class WebGLFloatArray :
     public nsIXPCScriptable,
-    public nsICanvasFloatArray,
+    public nsIWebGLFloatArray,
     public nsIJSNativeInitializer
 {
 public:
@@ -100,8 +100,8 @@ public:
     WebGLFloatArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICANVASARRAY
-    NS_DECL_NSICANVASFLOATARRAY
+    NS_DECL_NSIWEBGLARRAY
+    NS_DECL_NSIWEBGLFLOATARRAY
     NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
@@ -124,7 +124,7 @@ protected:
 
 class WebGLByteArray :
     public nsIXPCScriptable,
-    public nsICanvasByteArray,
+    public nsIWebGLByteArray,
     public nsIJSNativeInitializer
 {
 public:
@@ -136,8 +136,8 @@ public:
     WebGLByteArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICANVASARRAY
-    NS_DECL_NSICANVASBYTEARRAY
+    NS_DECL_NSIWEBGLARRAY
+    NS_DECL_NSIWEBGLBYTEARRAY
     NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
@@ -160,7 +160,7 @@ protected:
 
 class WebGLUnsignedByteArray :
     public nsIXPCScriptable,
-    public nsICanvasUnsignedByteArray,
+    public nsIWebGLUnsignedByteArray,
     public nsIJSNativeInitializer
 {
 public:
@@ -172,8 +172,8 @@ public:
     WebGLUnsignedByteArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICANVASARRAY
-    NS_DECL_NSICANVASUNSIGNEDBYTEARRAY
+    NS_DECL_NSIWEBGLARRAY
+    NS_DECL_NSIWEBGLUNSIGNEDBYTEARRAY
     NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
@@ -196,7 +196,7 @@ protected:
 
 class WebGLShortArray :
     public nsIXPCScriptable,
-    public nsICanvasShortArray,
+    public nsIWebGLShortArray,
     public nsIJSNativeInitializer
 {
 public:
@@ -208,8 +208,8 @@ public:
     WebGLShortArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICANVASARRAY
-    NS_DECL_NSICANVASSHORTARRAY
+    NS_DECL_NSIWEBGLARRAY
+    NS_DECL_NSIWEBGLSHORTARRAY
     NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
@@ -232,7 +232,7 @@ protected:
 
 class WebGLUnsignedShortArray :
     public nsIXPCScriptable,
-    public nsICanvasUnsignedShortArray,
+    public nsIWebGLUnsignedShortArray,
     public nsIJSNativeInitializer
 {
 public:
@@ -244,8 +244,8 @@ public:
     WebGLUnsignedShortArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICANVASARRAY
-    NS_DECL_NSICANVASUNSIGNEDSHORTARRAY
+    NS_DECL_NSIWEBGLARRAY
+    NS_DECL_NSIWEBGLUNSIGNEDSHORTARRAY
     NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
@@ -268,7 +268,7 @@ protected:
 
 class WebGLIntArray :
     public nsIXPCScriptable,
-    public nsICanvasIntArray,
+    public nsIWebGLIntArray,
     public nsIJSNativeInitializer
 {
 public:
@@ -280,8 +280,8 @@ public:
     WebGLIntArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICANVASARRAY
-    NS_DECL_NSICANVASINTARRAY
+    NS_DECL_NSIWEBGLARRAY
+    NS_DECL_NSIWEBGLINTARRAY
     NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
@@ -304,7 +304,7 @@ protected:
 
 class WebGLUnsignedIntArray :
     public nsIXPCScriptable,
-    public nsICanvasUnsignedIntArray,
+    public nsIWebGLUnsignedIntArray,
     public nsIJSNativeInitializer
 {
 public:
@@ -316,8 +316,8 @@ public:
     WebGLUnsignedIntArray(JSContext *cx, JSObject *arrayObj, jsuint arrayLen);
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICANVASARRAY
-    NS_DECL_NSICANVASUNSIGNEDINTARRAY
+    NS_DECL_NSIWEBGLARRAY
+    NS_DECL_NSIWEBGLUNSIGNEDINTARRAY
     NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
