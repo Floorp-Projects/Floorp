@@ -56,12 +56,20 @@ static void notify_action_cb(NotifyNotification *notification,
   alert->SendCallback();
 }
 
-static void notify_closed_cb(NotifyNotification *notification,
-                             gpointer user_data)
+static void notify_closed_marshal(GClosure* closure,
+                                  GValue* return_value,
+                                  guint n_param_values,
+                                  const GValue* param_values,
+                                  gpointer invocation_hint,
+                                  gpointer marshal_data)
 {
+  NS_ABORT_IF_FALSE(n_param_values >= 1, "No object in params");
+
+  gpointer notification = g_value_peek_pointer(param_values);
   g_object_unref(notification);
 
-  nsAlertsIconListener* alert = static_cast<nsAlertsIconListener*> (user_data);
+  nsAlertsIconListener* alert =
+    static_cast<nsAlertsIconListener*>(closure->data);
   alert->SendClosed();
   NS_RELEASE(alert);
 }
@@ -218,7 +226,13 @@ nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf)
                                    notify_action_cb, this, NULL);
   }
 
-  g_signal_connect(notify, "closed", G_CALLBACK(notify_closed_cb), this);
+  // Fedora 10 calls NotifyNotification "closed" signal handlers with a
+  // different signature, so a marshaller is used instead of a C callback to
+  // get the user_data (this) in a parseable format.  |closure| is created
+  // with a floating reference, which gets sunk by g_signal_connect_closure().
+  GClosure* closure = g_closure_new_simple(sizeof(GClosure), this);
+  g_closure_set_marshal(closure, notify_closed_marshal);
+  g_signal_connect_closure(notify, "closed", closure, FALSE);
   gboolean result = notify_notification_show(notify, NULL);
 
   return result ? NS_OK : NS_ERROR_FAILURE;
