@@ -1404,7 +1404,9 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          * with object to maintain invariants in the engine (see bug 520164).
          */
         if (scopeobj->getParent()) {
-            withObject = js_NewWithObject(cx, scopeobj, scopeobj->getParent(), 0);
+            withObject = js_NewWithObject(cx, scopeobj,
+                                          JS_GetGlobalForObject(cx, scopeobj),
+                                          0);
             if (!withObject) {
                 ok = JS_FALSE;
                 goto out;
