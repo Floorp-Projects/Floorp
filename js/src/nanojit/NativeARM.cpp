@@ -1172,8 +1172,21 @@ Assembler::asm_qjoin(LIns *ins)
 }
 
 void
-Assembler::asm_store32(LIns *value, int dr, LIns *base)
+Assembler::asm_store32(LOpcode op, LIns *value, int dr, LIns *base)
 {
+    switch (op) {
+        case LIR_sti:
+            // handled by mainline code below for now
+            break;
+        case LIR_stb:
+        case LIR_sts:
+            NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+            return;
+        default:
+            NanoAssertMsg(0, "asm_store32 should never receive this LIR opcode");
+            return;
+    }
+
     Register ra, rb;
     if (base->isop(LIR_alloc)) {
         rb = FP;
@@ -1268,6 +1281,20 @@ Assembler::asm_load64(LInsp ins)
 {
     //asm_output("<<< load64");
 
+    switch (ins->opcode()) {
+        case LIR_ldq:
+        case LIR_ldqc:
+            // handled by mainline code below for now
+            break;
+        case LIR_ld32f:
+        case LIR_ldc32f:
+            NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+            return;
+        default:
+            NanoAssertMsg(0, "asm_load64 should never receive this LIR opcode");
+            return;
+    }
+
     NanoAssert(ins->isQuad());
 
     LIns* base = ins->oprnd1();
@@ -1310,9 +1337,21 @@ Assembler::asm_load64(LInsp ins)
 }
 
 void
-Assembler::asm_store64(LInsp value, int dr, LInsp base)
+Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
 {
     //asm_output("<<< store64 (dr: %d)", dr);
+
+    switch (op) {
+        case LIR_stqi:
+            // handled by mainline code below for now
+            break;
+        case LIR_st32f:
+            NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+            return;
+        default:
+            NanoAssertMsg(0, "asm_store64 should never receive this LIR opcode");
+            return;
+    }
 
     if (ARM_VFP) {
         Register rb = findRegFor(base, GpRegs);
@@ -2440,7 +2479,7 @@ Assembler::asm_neg_not(LInsp ins)
 }
 
 void
-Assembler::asm_ld(LInsp ins)
+Assembler::asm_load32(LInsp ins)
 {
     LOpcode op = ins->opcode();
     LIns* base = ins->oprnd1();
@@ -2449,25 +2488,31 @@ Assembler::asm_ld(LInsp ins)
     Register rr = prepResultReg(ins, GpRegs);
     Register ra = getBaseReg(op, base, d, GpRegs);
 
-    // these will always be 4-byte aligned
-    if (op == LIR_ld || op == LIR_ldc) {
-        LDR(rr, ra, d);
-        return;
+    switch(op) {
+        case LIR_ldzb:
+        case LIR_ldcb:
+            LDRB(rr, ra, d);
+            return;
+        case LIR_ldzs:
+        case LIR_ldcs:
+            // these are expected to be 2 or 4-byte aligned
+            LDRH(rr, ra, d);
+            return;
+        case LIR_ld:
+        case LIR_ldc:
+            // these are expected to be 4-byte aligned
+            LDR(rr, ra, d);
+            return;
+        case LIR_ldsb:
+        case LIR_ldss:
+        case LIR_ldcsb:
+        case LIR_ldcss:
+            NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+            return;
+        default:
+            NanoAssertMsg(0, "asm_load32 should never receive this LIR opcode");
+            return;
     }
-
-    // these will be 2 or 4-byte aligned
-    if (op == LIR_ldcs) {
-        LDRH(rr, ra, d);
-        return;
-    }
-
-    // aaand this is just any byte.
-    if (op == LIR_ldcb) {
-        LDRB(rr, ra, d);
-        return;
-    }
-
-    NanoAssertMsg(0, "Unsupported instruction in asm_ld");
 }
 
 void
