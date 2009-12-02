@@ -107,9 +107,9 @@ NS_IMETHODIMP WebGLContext::name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6) { \
 //  WebGL API
 //
 
-/* nsICanvasFloatArray createFloatArray (); */
+/* nsIWebGLFloatArray createFloatArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateFloatArray(nsICanvasFloatArray **retval)
+WebGLContext::CreateFloatArray(nsIWebGLFloatArray **retval)
 {
     NativeJSContext js;
 
@@ -134,9 +134,9 @@ WebGLContext::CreateFloatArray(nsICanvasFloatArray **retval)
     return NS_OK;
 }
 
-/* nsICanvasByteArray createByteArray (); */
+/* nsIWebGLByteArray createByteArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateByteArray(nsICanvasByteArray **retval)
+WebGLContext::CreateByteArray(nsIWebGLByteArray **retval)
 {
     NativeJSContext js;
 
@@ -160,9 +160,9 @@ WebGLContext::CreateByteArray(nsICanvasByteArray **retval)
     return NS_OK;
 }
 
-/* nsICanvasUnsignedByteArray createUnsignedByteArray (); */
+/* nsIWebGLUnsignedByteArray createUnsignedByteArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateUnsignedByteArray(nsICanvasUnsignedByteArray **retval)
+WebGLContext::CreateUnsignedByteArray(nsIWebGLUnsignedByteArray **retval)
 {
     NativeJSContext js;
 
@@ -186,9 +186,9 @@ WebGLContext::CreateUnsignedByteArray(nsICanvasUnsignedByteArray **retval)
     return NS_OK;
 }
 
-/* nsICanvasShortArray createShortArray (); */
+/* nsIWebGLShortArray createShortArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateShortArray(nsICanvasShortArray **retval)
+WebGLContext::CreateShortArray(nsIWebGLShortArray **retval)
 {
     NativeJSContext js;
 
@@ -212,9 +212,9 @@ WebGLContext::CreateShortArray(nsICanvasShortArray **retval)
     return NS_OK;
 }
 
-/* nsICanvasUnsignedShortArray createUnsignedShortArray (); */
+/* nsIWebGLUnsignedShortArray createUnsignedShortArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateUnsignedShortArray(nsICanvasUnsignedShortArray **retval)
+WebGLContext::CreateUnsignedShortArray(nsIWebGLUnsignedShortArray **retval)
 {
     NativeJSContext js;
 
@@ -239,9 +239,9 @@ WebGLContext::CreateUnsignedShortArray(nsICanvasUnsignedShortArray **retval)
 }
 
 
-/* nsICanvasUnsignedIntArray createUnsignedIntArray (); */
+/* nsIWebGLUnsignedIntArray createUnsignedIntArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateIntArray(nsICanvasIntArray **retval)
+WebGLContext::CreateIntArray(nsIWebGLIntArray **retval)
 {
     NativeJSContext js;
 
@@ -265,9 +265,9 @@ WebGLContext::CreateIntArray(nsICanvasIntArray **retval)
     return NS_OK;
 }
 
-/* nsICanvasUnsignedIntArray createUnsignedIntArray (); */
+/* nsIWebGLUnsignedIntArray createUnsignedIntArray (); */
 NS_IMETHODIMP
-WebGLContext::CreateUnsignedIntArray(nsICanvasUnsignedIntArray **retval)
+WebGLContext::CreateUnsignedIntArray(nsIWebGLUnsignedIntArray **retval)
 {
     NativeJSContext js;
 
@@ -479,8 +479,8 @@ WebGLContext::BufferData(GLenum target)
 {
     // overloaded:
     // void bufferData (in GLenum target, in GLsizei size, in GLenum usage);
-    // void bufferData (in GLenum target, in nsICanvasArray data, in GLenum usage);
-    // void bufferData (in GLenum target, in nsICanvasArrayBuffer data, in GLenum usage)
+    // void bufferData (in GLenum target, in nsIWebGLArray data, in GLenum usage);
+    // void bufferData (in GLenum target, in nsIWebGLArrayBuffer data, in GLenum usage)
 
     NativeJSContext js;
     if (NS_FAILED(js.error))
@@ -524,15 +524,15 @@ WebGLContext::BufferData(GLenum target)
         boundBuffer->SetCount(size);
         gl->fBufferData(target, size, 0, usage);
     } else if (JSVAL_IS_OBJECT(js.argv[1])) {
-        nsCOMPtr<nsICanvasArray> canvasArrayObj;
+        nsCOMPtr<nsIWebGLArray> canvasArrayObj;
         nsresult rv;
 
         rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, JSVAL_TO_OBJECT(js.argv[1]),
-                                                 NS_GET_IID(nsICanvasArray), getter_AddRefs(canvasArrayObj));
+                                                 NS_GET_IID(nsIWebGLArray), getter_AddRefs(canvasArrayObj));
         if (NS_FAILED(rv) || !canvasArrayObj) {
-            nsCOMPtr<nsICanvasArrayBuffer> arrayBuf;
+            nsCOMPtr<nsIWebGLArrayBuffer> arrayBuf;
             rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, JSVAL_TO_OBJECT(js.argv[1]),
-                                                     NS_GET_IID(nsICanvasArrayBuffer), getter_AddRefs(arrayBuf));
+                                                     NS_GET_IID(nsIWebGLArrayBuffer), getter_AddRefs(arrayBuf));
             if (NS_FAILED(rv) || !arrayBuf)
                 return ErrorMessage("bufferData: need CanvasArray or CanvasArrayBuffer");
 
@@ -586,15 +586,15 @@ WebGLContext::BufferSubData(GLenum target, GLsizeiptr offset)
     */
 
     if (JSVAL_IS_OBJECT(js.argv[2])) {
-        nsCOMPtr<nsICanvasArray> canvasArrayObj;
+        nsCOMPtr<nsIWebGLArray> canvasArrayObj;
         nsresult rv;
 
         rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, JSVAL_TO_OBJECT(js.argv[2]),
-                                                 NS_GET_IID(nsICanvasArray), getter_AddRefs(canvasArrayObj));
+                                                 NS_GET_IID(nsIWebGLArray), getter_AddRefs(canvasArrayObj));
         if (NS_FAILED(rv) || !canvasArrayObj) {
-            nsCOMPtr<nsICanvasArrayBuffer> arrayBuf;
+            nsCOMPtr<nsIWebGLArrayBuffer> arrayBuf;
             rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, JSVAL_TO_OBJECT(js.argv[2]),
-                                                     NS_GET_IID(nsICanvasArrayBuffer), getter_AddRefs(arrayBuf));
+                                                     NS_GET_IID(nsIWebGLArrayBuffer), getter_AddRefs(arrayBuf));
             if (NS_FAILED(rv) || !arrayBuf)
                 return ErrorMessage("bufferData: need CanvasArray or CanvasArrayBuffer");
 
@@ -2458,7 +2458,7 @@ GL_SAME_METHOD_5(Uniform4f, Uniform4f, GLint, GLfloat, GLfloat, GLfloat, GLfloat
 // one uint arg followed by an array of c elements of glTypeConst.
 #define GL_SIMPLE_ARRAY_METHOD(glname, name, c, glTypeConst, ptrType)             \
 NS_IMETHODIMP                                                                     \
-WebGLContext::name(GLint idx, nsICanvasArray *v)                                  \
+WebGLContext::name(GLint idx, nsIWebGLArray *v)                                  \
 {                                                                                 \
     NativeJSContext js;                                                           \
     if (NS_FAILED(js.error))                                                      \
@@ -2504,7 +2504,7 @@ WebGLContext::name(GLint idx, nsICanvasArray *v)                                
 
 #define GL_SIMPLE_ARRAY_METHOD_NO_COUNT(glname, name, c, glTypeConst, ptrType)    \
 NS_IMETHODIMP                                                                     \
-WebGLContext::name(GLuint idx, nsICanvasArray *v)                                 \
+WebGLContext::name(GLuint idx, nsIWebGLArray *v)                                 \
 {                                                                                 \
     NativeJSContext js;                                                           \
     if (NS_FAILED(js.error))                                                      \
@@ -2550,7 +2550,7 @@ WebGLContext::name(GLuint idx, nsICanvasArray *v)                               
 
 #define GL_SIMPLE_MATRIX_METHOD(glname, name, c, glTypeConst, ptrType)            \
 NS_IMETHODIMP                                                                     \
-WebGLContext::name(GLint location, GLboolean transpose, nsICanvasArray *value)    \
+WebGLContext::name(GLint location, GLboolean transpose, nsIWebGLArray *value)    \
 {                                                                                 \
     NativeJSContext js;                                                           \
     if (NS_FAILED(js.error))                                                      \
@@ -3055,7 +3055,7 @@ WebGLContext::TexSubImage2D()
             return NS_ERROR_DOM_SYNTAX_ERR;
         }
 
-        nsCOMPtr<nsICanvasArray> arrayObj;
+        nsCOMPtr<nsIWebGLArray> arrayObj;
         nsresult rv;
         rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, argPixelsObj, NS_GET_IID(nsISupports), getter_AddRefs(arrayObj));
         arrayObj = do_QueryInterface(arrayObj, &rv);
@@ -3240,7 +3240,7 @@ WebGLContext::TexImage2D()
                 return NS_ERROR_DOM_SYNTAX_ERR;
             }
 
-            nsCOMPtr<nsICanvasArray> arrayObj;
+            nsCOMPtr<nsIWebGLArray> arrayObj;
             nsresult rv;
             rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, argPixelsObj, NS_GET_IID(nsISupports), getter_AddRefs(arrayObj));
             arrayObj = do_QueryInterface(arrayObj, &rv);

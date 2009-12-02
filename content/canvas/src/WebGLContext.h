@@ -353,7 +353,7 @@ public:
     PRBool Deleted() { return mDeleted; }
     GLuint GLName() { return mName; }
 
-    void Set(nsICanvasArray *na) {
+    void Set(nsIWebGLArray *na) {
         mGLType = na->NativeType();
         mElementSize = na->NativeElementSize();
         mCount = na->NativeCount();
