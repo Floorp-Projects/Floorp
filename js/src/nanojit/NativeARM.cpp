@@ -824,6 +824,37 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
 void
 Assembler::asm_call(LInsp ins)
 {
+    if (ARM_VFP && ins->isop(LIR_fcall)) {
+        /* Because ARM actually returns the result in (R0,R1), and not in a
+         * floating point register, the code to move the result into a correct
+         * register is below.  We do nothing here.
+         *
+         * The reason being that if we did something here, the final code
+         * sequence we'd get would be something like:
+         *     MOV {R0-R3},params        [from below]
+         *     BL function               [from below]
+         *     MOV {R0-R3},spilled data  [from evictScratchRegs()]
+         *     MOV Dx,{R0,R1}            [from here]
+         * which is clearly broken.
+         *
+         * This is not a problem for non-floating point calls, because the
+         * restoring of spilled data into R0 is done via a call to
+         * prepResultReg(R0) in the other branch of this if-then-else,
+         * meaning that evictScratchRegs() will not modify R0. However,
+         * prepResultReg is not aware of the concept of using a register pair
+         * (R0,R1) for the result of a single operation, so it can only be
+         * used here with the ultimate VFP register, and not R0/R1, which
+         * potentially allows for R0/R1 to get corrupted as described.
+         */
+    } else {
+        prepResultReg(ins, rmask(retRegs[0]));
+    }
+
+    // Do this after we've handled the call result, so we don't
+    // force the call result to be spilled unnecessarily.
+
+    evictScratchRegs();
+
     const CallInfo* call = ins->callInfo();
     ArgSize sizes[MAXARGS];
     uint32_t argc = call->get_sizes(sizes);
@@ -835,8 +866,8 @@ Assembler::asm_call(LInsp ins)
 
     // If we're using VFP, and the return type is a double, it'll come back in
     // R0/R1. We need to either place it in the result fp reg, or store it.
-    // See comments in asm_prep_fcall() for more details as to why this is
-    // necessary here for floating point calls, but not for integer calls.
+    // See comments above for more details as to why this is necessary here
+    // for floating point calls, but not for integer calls.
     if (ARM_VFP && ins->isUsed()) {
         // Determine the size (and type) of the instruction result.
         ArgSize rsize = (ArgSize)(call->_argtypes & ARGSIZE_MASK_ANY);
@@ -2065,33 +2096,6 @@ Assembler::asm_fcmp(LInsp ins)
     // do the comparison and get results loaded in ARM status register
     FMSTAT();
     FCMPD(ra, rb, e_bit);
-}
-
-Register
-Assembler::asm_prep_fcall(LInsp)
-{
-    /* Because ARM actually returns the result in (R0,R1), and not in a
-     * floating point register, the code to move the result into a correct
-     * register is at the beginning of asm_call(). This function does
-     * nothing.
-     *
-     * The reason being that if this function did something, the final code
-     * sequence we'd get would be something like:
-     *     MOV {R0-R3},params        [from asm_call()]
-     *     BL function               [from asm_call()]
-     *     MOV {R0-R3},spilled data  [from evictScratchRegs()]
-     *     MOV Dx,{R0,R1}            [from this function]
-     * which is clearly broken.
-     *
-     * This is not a problem for non-floating point calls, because the
-     * restoring of spilled data into R0 is done via a call to prepResultReg(R0)
-     * at the same point in the sequence as this function is called, meaning that
-     * evictScratchRegs() will not modify R0. However, prepResultReg is not aware
-     * of the concept of using a register pair (R0,R1) for the result of a single
-     * operation, so it can only be used here with the ultimate VFP register, and
-     * not R0/R1, which potentially allows for R0/R1 to get corrupted as described.
-     */
-    return UnknownReg;
 }
 
 /* Call this with targ set to 0 if the target is not yet known and the branch
