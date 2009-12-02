@@ -153,6 +153,14 @@ namespace nanojit
 
     void Assembler::asm_call(LInsp ins)
     {
+        Register retReg = ( ins->isop(LIR_fcall) ? F0 : retRegs[0] );
+        prepResultReg(ins, rmask(retReg));
+
+        // Do this after we've handled the call result, so we don't
+        // force the call result to be spilled unnecessarily.
+
+        evictScratchRegs();
+
         const CallInfo* call = ins->callInfo();
 
         underrunProtect(8);
@@ -932,11 +940,6 @@ namespace nanojit
         int d = findMemFor(ins->oprnd1());
         FITOD(rr, rr);
         LDDF32(FP, d, rr);
-    }
-
-    Register Assembler::asm_prep_fcall(LInsp ins)
-    {
-        return prepResultReg(ins, rmask(F0));
     }
 
     void Assembler::asm_u2f(LInsp ins)
