@@ -66,3 +66,5 @@ function test()
 
   exitFunc ('test');
 }
+
+reportCompare(true, true);

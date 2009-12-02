@@ -70,3 +70,5 @@ assertEq(testLenientAndStrict('for (let {x:arguments} in [])break;',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
+
+reportCompare(true, true);
