@@ -35,8 +35,10 @@
 <!ENTITY continue.label               "Continue">
 
 <!ENTITY passphraseGroupbox.label     "Enter Secret Phrase">
-<!ENTITY passphraseDesc.label         "Please enter a secret phrase. This will be used to encrypt all your data so only you can access it.">
-<!ENTITY passphraseDesc2.label        "This must be at least 8 characters long and cannot match your account password.">
+<!ENTITY passphraseEntry.label        "Secret Phrase">
+<!ENTITY passphraseConfirm.label      "Confirm">
+<!ENTITY passphraseDesc.label         "Please enter a secret phrase. This will be used to encrypt all your data so only you can access it. It is never stored on the server, so don't lose this!">
+<!ENTITY passphraseDesc2.label        "This must be at least 12 characters long and cannot match your account password.">
 <!ENTITY passphraseDesc3.label        "Please enter your secret phrase. This must be the same secret phrase that you used to encrypt yout data.">
 <!ENTITY passphraseHelp.label         "Your secret phrase is at least 8 characters long and is not your password. You can find your saved secret phrase by going to your other computer and checking the Saved Passwords under Security. If you still cannot get the correct secret phrase, you can choose to reset it, but you will need to enter this new secret phrase on your other computer.">
 <!ENTITY connecting.label             "Connecting…">
@@ -60,7 +62,6 @@
 <!ENTITY confirm.server.label         "The following devices will be overwritten with your local data:">
 <!ENTITY confirm.server.warning.label "WARNING: Your local data will replace all &brandShortName; data on these devices!">
 <!ENTITY confirm.server.start.label   "Replace Everything on These Devices">
-
 
 <!ENTITY accountGroupboxCaption.label "Mozilla Weave Account">
 
