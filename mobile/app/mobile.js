@@ -182,13 +182,6 @@ pref("extensions.blocklist.detailsURL", "http://%LOCALE%.www.mozilla.com/%LOCALE
 /* dictionary download preference */
 pref("browser.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/firefox/%VERSION%/dictionaries/");
 
-/* make clicking on links stand out a bit */
-pref("browser.display.use_focus_colors", true);
-pref("browser.display.focus_background_color", "#ffffa0");
-pref("browser.display.focus_text_color", "#00000");
-pref("browser.display.focus_ring_on_anything", true);
-pref("browser.display.focus_ring_style", 0);
-
 /* block popups by default, and notify the user about blocked popups */
 pref("dom.disable_open_during_load", true);
 pref("privacy.popups.showBrowserMessage", true);
