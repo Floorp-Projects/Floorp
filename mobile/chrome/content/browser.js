@@ -1288,9 +1288,14 @@ Browser.MainDragger.prototype = {
         try {
           let cs = win.getComputedStyle(htmlElement, null);
           let overflow = cs.getPropertyValue("overflow");
+          let overflowX = cs.getPropertyValue("overflow-x");
+          let overflowY = cs.getPropertyValue("overflow-y");
           let cbr = htmlElement.getBoundingClientRect();
-          if ((overflow == "scroll") ||
-              (overflow == "auto" && (cbr.height < target.scrollHeight || cbr.width < target.scrollWidth))) {
+          let oScroll = (overflow == "scroll") || (overflowX == "scroll") || (overflowY == "scroll");
+          let oAuto = (overflow == "auto") || (overflowX == "auto") || (overflowY == "auto");
+          
+          if (oScroll ||
+              (oAuto && (cbr.height < target.scrollHeight || cbr.width < target.scrollWidth))) {
             this.contentScrollbox = this._createDivScrollBox(htmlElement);
             return;
           }
