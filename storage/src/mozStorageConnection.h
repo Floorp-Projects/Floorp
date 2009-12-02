@@ -100,6 +100,11 @@ public:
    */
   Mutex sharedAsyncExecutionMutex;
 
+  /**
+   * References the thread this database was opened on.
+   */
+  const nsCOMPtr<nsIThread> threadOpenedOn;
+
 private:
   ~Connection();
 
