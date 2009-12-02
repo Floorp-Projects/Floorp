@@ -283,7 +283,7 @@ placeitem[src=""] .bookmark-item-label > image {
   margin-left: 34px;
 }
 
-autocompleteresult.allbookmarks > .autocomplete-item-image {
+autocompleteresult.allbookmarks > .autocomplete-item-label > image {
   width: 44px;
   height: 30px;
   list-style-image: url(images/bookmarks-30.png);
