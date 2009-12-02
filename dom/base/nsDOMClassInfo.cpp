@@ -1339,19 +1339,26 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CanvasArrayBuffer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CanvasFloatArray, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |
+                           nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
   NS_DEFINE_CLASSINFO_DATA(CanvasByteArray, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |
+                           nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
   NS_DEFINE_CLASSINFO_DATA(CanvasUnsignedByteArray, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |
+                           nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
   NS_DEFINE_CLASSINFO_DATA(CanvasShortArray, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |
+                           nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
   NS_DEFINE_CLASSINFO_DATA(CanvasUnsignedShortArray, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |
+                           nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
   NS_DEFINE_CLASSINFO_DATA(CanvasIntArray, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |
+                           nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
   NS_DEFINE_CLASSINFO_DATA(CanvasUnsignedIntArray, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |
+                           nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
 
   NS_DEFINE_CLASSINFO_DATA(PaintRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
