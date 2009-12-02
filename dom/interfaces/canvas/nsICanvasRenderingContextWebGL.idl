@@ -357,6 +357,10 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   const unsigned long SAMPLE_COVERAGE                = 0x80A0;
 
   /* ErrorCode */
+%{C++
+/* Avoid conflict with WinAPI */
+#undef NO_ERROR
+%}
   const unsigned long NO_ERROR                       = 0;
   const unsigned long INVALID_ENUM                   = 0x0500;
   const unsigned long INVALID_VALUE                  = 0x0501;
