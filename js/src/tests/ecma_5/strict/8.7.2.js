@@ -35,3 +35,5 @@ assertEq(testLenientAndStrict('undeclared_at_compiletime=1',
                               parsesSuccessfully,
                               parsesSuccessfully),
          true);
+
+reportCompare(true, true);

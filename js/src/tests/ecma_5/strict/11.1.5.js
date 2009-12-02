@@ -138,3 +138,5 @@ assertEq(testLenientAndStrict('({x getter: function() {}, x getter: function() {
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
+
+reportCompare(true, true);
