@@ -341,6 +341,99 @@ NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeCount()
     return mBuffer->length;
 }
 
+// nsIXPCScriptable
+#define XPC_MAP_CLASSNAME WebGLFloatArray
+#define XPC_MAP_QUOTED_CLASSNAME "WebGLFloatArray"
+#define XPC_MAP_WANT_SETPROPERTY
+#define XPC_MAP_WANT_GETPROPERTY
+#define XPC_MAP_WANT_NEWRESOLVE
+#define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
+#include "xpc_map_end.h"
+
+PRBool WebGLFloatArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+    PRBool ok = PR_FALSE;
+    PRUint32 index;
+
+    if (JSVAL_IS_INT(id)) {
+        index = JSVAL_TO_INT(id);
+        ok = PR_TRUE;
+    } else {
+        ok = JS_ValueToECMAUint32(cx, id, &index);
+    }
+
+    if (!ok || index >= mLength)
+        return PR_FALSE;
+
+    *retval = index;
+    return PR_TRUE;
+}
+
+NS_IMETHODIMP WebGLFloatArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                           JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    float val;
+    Get(index, &val);
+    *_retval = JS_NewNumberValue(cx, val, vp);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLFloatArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                       JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    float val;
+
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRBool ok = PR_FALSE;
+
+    if (JSVAL_IS_INT(*vp)) {
+        val = JSVAL_TO_INT(*vp);
+        ok = PR_TRUE;
+    } else {
+        jsdouble dval;
+        ok = JS_ValueToNumber(cx, *vp, &dval);
+        val = dval;
+    }
+
+    if (!ok) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    Set(index, val);
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLFloatArray::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                      JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
+                      PRBool *_retval)
+{
+    PRUint32 index;
+    PRBool ok = JSValToIndex(cx, id, &index);
+
+    if (ok) {
+        *_retval = PR_TRUE;
+        *objp = obj;
+    } else {
+        *_retval = PR_FALSE;
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
 /*
  * CanvasByteArray
  */
@@ -560,6 +653,96 @@ NS_IMETHODIMP_(PRUint32) WebGLByteArray::NativeCount()
     return mBuffer->length;
 }
 
+// nsIXPCScriptable
+#define XPC_MAP_CLASSNAME WebGLByteArray
+#define XPC_MAP_QUOTED_CLASSNAME "WebGLByteArray"
+#define XPC_MAP_WANT_SETPROPERTY
+#define XPC_MAP_WANT_GETPROPERTY
+#define XPC_MAP_WANT_NEWRESOLVE
+#define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
+#include "xpc_map_end.h"
+
+PRBool WebGLByteArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+    PRBool ok = PR_FALSE;
+    PRUint32 index;
+
+    if (JSVAL_IS_INT(id)) {
+        index = JSVAL_TO_INT(id);
+        ok = PR_TRUE;
+    } else {
+        ok = JS_ValueToECMAUint32(cx, id, &index);
+    }
+
+    if (!ok || index >= mLength)
+        return PR_FALSE;
+
+    *retval = index;
+    return PR_TRUE;
+}
+
+NS_IMETHODIMP WebGLByteArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                          JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRInt32 val;
+    Get(index, &val);
+    *_retval = JS_NewNumberValue(cx, val, vp);
+
+    return NS_SUCCESS_I_DID_SOMETHING;
+}
+
+NS_IMETHODIMP WebGLByteArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                          JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    PRInt32 val;
+
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRBool ok = PR_FALSE;
+
+    if (JSVAL_IS_INT(*vp)) {
+        val = JSVAL_TO_INT(*vp);
+        ok = PR_TRUE;
+    } else {
+        ok = JS_ValueToECMAInt32(cx, *vp, &val);
+    }
+
+    if (!ok) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    Set(index, val);
+    return NS_SUCCESS_I_DID_SOMETHING;
+}
+
+NS_IMETHODIMP WebGLByteArray::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                         JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
+                                         PRBool *_retval)
+{
+    PRUint32 index;
+    PRBool ok = JSValToIndex(cx, id, &index);
+
+    if (ok) {
+        *_retval = PR_TRUE;
+        *objp = obj;
+    } else {
+        *_retval = PR_FALSE;
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
 
 /*
  * CanvasUnsignedByteArray
@@ -778,6 +961,97 @@ NS_IMETHODIMP_(PRUint32) WebGLUnsignedByteArray::NativeElementSize()
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedByteArray::NativeCount()
 {
     return mBuffer->length;
+}
+
+// nsIXPCScriptable
+#define XPC_MAP_CLASSNAME WebGLUnsignedByteArray
+#define XPC_MAP_QUOTED_CLASSNAME "WebGLUnsignedByteArray"
+#define XPC_MAP_WANT_SETPROPERTY
+#define XPC_MAP_WANT_GETPROPERTY
+#define XPC_MAP_WANT_NEWRESOLVE
+#define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
+#include "xpc_map_end.h"
+
+PRBool WebGLUnsignedByteArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+    PRBool ok = PR_FALSE;
+    PRUint32 index;
+
+    if (JSVAL_IS_INT(id)) {
+        index = JSVAL_TO_INT(id);
+        ok = PR_TRUE;
+    } else {
+        ok = JS_ValueToECMAUint32(cx, id, &index);
+    }
+
+    if (!ok || index >= mLength)
+        return PR_FALSE;
+
+    *retval = index;
+    return PR_TRUE;
+}
+
+NS_IMETHODIMP WebGLUnsignedByteArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                                  JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRUint32 val;
+    Get(index, &val);
+    *_retval = JS_NewNumberValue(cx, val, vp);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLUnsignedByteArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                                  JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    PRUint32 val;
+
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRBool ok = PR_FALSE;
+
+    if (JSVAL_IS_INT(*vp)) {
+        val = JSVAL_TO_INT(*vp);
+        ok = PR_TRUE;
+    } else {
+        ok = JS_ValueToECMAUint32(cx, *vp, &val);
+    }
+
+    if (!ok) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    Set(index, val);
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLUnsignedByteArray::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                                 JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
+                                                 PRBool *_retval)
+{
+    PRUint32 index;
+    PRBool ok = JSValToIndex(cx, id, &index);
+
+    if (ok) {
+        *_retval = PR_TRUE;
+        *objp = obj;
+    } else {
+        *_retval = PR_FALSE;
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
 }
 
 /*
@@ -1006,6 +1280,97 @@ NS_IMETHODIMP_(PRUint32) WebGLShortArray::NativeCount()
     return mBuffer->length;
 }
 
+// nsIXPCScriptable
+#define XPC_MAP_CLASSNAME WebGLShortArray
+#define XPC_MAP_QUOTED_CLASSNAME "WebGLShortArray"
+#define XPC_MAP_WANT_SETPROPERTY
+#define XPC_MAP_WANT_GETPROPERTY
+#define XPC_MAP_WANT_NEWRESOLVE
+#define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
+#include "xpc_map_end.h"
+
+PRBool WebGLShortArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+    PRBool ok = PR_FALSE;
+    PRUint32 index;
+
+    if (JSVAL_IS_INT(id)) {
+        index = JSVAL_TO_INT(id);
+        ok = PR_TRUE;
+    } else {
+        ok = JS_ValueToECMAUint32(cx, id, &index);
+    }
+
+    if (!ok || index >= mLength)
+        return PR_FALSE;
+
+    *retval = index;
+    return PR_TRUE;
+}
+
+NS_IMETHODIMP WebGLShortArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                           JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRInt32 val;
+    Get(index, &val);
+    *_retval = JS_NewNumberValue(cx, val, vp);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLShortArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                           JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    PRInt32 val;
+
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRBool ok = PR_FALSE;
+
+    if (JSVAL_IS_INT(*vp)) {
+        val = JSVAL_TO_INT(*vp);
+        ok = PR_TRUE;
+    } else {
+        ok = JS_ValueToECMAInt32(cx, *vp, &val);
+    }
+
+    if (!ok) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    Set(index, val);
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLShortArray::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                          JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
+                                          PRBool *_retval)
+{
+    PRUint32 index;
+    PRBool ok = JSValToIndex(cx, id, &index);
+
+    if (ok) {
+        *_retval = PR_TRUE;
+        *objp = obj;
+    } else {
+        *_retval = PR_FALSE;
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
 /*
  * CanvasUnsignedShortArray
  */
@@ -1230,6 +1595,97 @@ NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeElementSize()
 NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeCount()
 {
     return mBuffer->length;
+}
+
+// nsIXPCScriptable
+#define XPC_MAP_CLASSNAME WebGLUnsignedShortArray
+#define XPC_MAP_QUOTED_CLASSNAME "WebGLUnsignedShortArray"
+#define XPC_MAP_WANT_SETPROPERTY
+#define XPC_MAP_WANT_GETPROPERTY
+#define XPC_MAP_WANT_NEWRESOLVE
+#define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
+#include "xpc_map_end.h"
+
+PRBool WebGLUnsignedShortArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+    PRBool ok = PR_FALSE;
+    PRUint32 index;
+
+    if (JSVAL_IS_INT(id)) {
+        index = JSVAL_TO_INT(id);
+        ok = PR_TRUE;
+    } else {
+        ok = JS_ValueToECMAUint32(cx, id, &index);
+    }
+
+    if (!ok || index >= mLength)
+        return PR_FALSE;
+
+    *retval = index;
+    return PR_TRUE;
+}
+
+NS_IMETHODIMP WebGLUnsignedShortArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                                   JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRUint32 val;
+    Get(index, &val);
+    *_retval = JS_NewNumberValue(cx, val, vp);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLUnsignedShortArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                                   JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    PRUint32 val;
+
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRBool ok = PR_FALSE;
+
+    if (JSVAL_IS_INT(*vp)) {
+        val = JSVAL_TO_INT(*vp);
+        ok = PR_TRUE;
+    } else {
+        ok = JS_ValueToECMAUint32(cx, *vp, &val);
+    }
+
+    if (!ok) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    Set(index, val);
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLUnsignedShortArray::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                                  JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
+                                                  PRBool *_retval)
+{
+    PRUint32 index;
+    PRBool ok = JSValToIndex(cx, id, &index);
+
+    if (ok) {
+        *_retval = PR_TRUE;
+        *objp = obj;
+    } else {
+        *_retval = PR_FALSE;
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
 }
 
 /*
@@ -1458,6 +1914,97 @@ NS_IMETHODIMP_(PRUint32) WebGLIntArray::NativeCount()
     return mBuffer->length;
 }
 
+// nsIXPCScriptable
+#define XPC_MAP_CLASSNAME WebGLIntArray
+#define XPC_MAP_QUOTED_CLASSNAME "WebGLIntArray"
+#define XPC_MAP_WANT_SETPROPERTY
+#define XPC_MAP_WANT_GETPROPERTY
+#define XPC_MAP_WANT_NEWRESOLVE
+#define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
+#include "xpc_map_end.h"
+
+PRBool WebGLIntArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+    PRBool ok = PR_FALSE;
+    PRUint32 index;
+
+    if (JSVAL_IS_INT(id)) {
+        index = JSVAL_TO_INT(id);
+        ok = PR_TRUE;
+    } else {
+        ok = JS_ValueToECMAUint32(cx, id, &index);
+    }
+
+    if (!ok || index >= mLength)
+        return PR_FALSE;
+
+    *retval = index;
+    return PR_TRUE;
+}
+
+NS_IMETHODIMP WebGLIntArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                         JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRInt32 val;
+    Get(index, &val);
+    *_retval = JS_NewNumberValue(cx, val, vp);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLIntArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                         JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    PRInt32 val;
+
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRBool ok = PR_FALSE;
+
+    if (JSVAL_IS_INT(*vp)) {
+        val = JSVAL_TO_INT(*vp);
+        ok = PR_TRUE;
+    } else {
+        ok = JS_ValueToECMAInt32(cx, *vp, &val);
+    }
+
+    if (!ok) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    Set(index, val);
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLIntArray::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                        JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
+                                        PRBool *_retval)
+{
+    PRUint32 index;
+    PRBool ok = JSValToIndex(cx, id, &index);
+
+    if (ok) {
+        *_retval = PR_TRUE;
+        *objp = obj;
+    } else {
+        *_retval = PR_FALSE;
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
 /*
  * CanvasUnsignedIntArray
  */
@@ -1684,6 +2231,96 @@ NS_IMETHODIMP_(PRUint32) WebGLUnsignedIntArray::NativeCount()
     return mBuffer->length;
 }
 
+// nsIXPCScriptable
+#define XPC_MAP_CLASSNAME WebGLUnsignedIntArray
+#define XPC_MAP_QUOTED_CLASSNAME "WebGLUnsignedIntArray"
+#define XPC_MAP_WANT_SETPROPERTY
+#define XPC_MAP_WANT_GETPROPERTY
+#define XPC_MAP_WANT_NEWRESOLVE
+#define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
+#include "xpc_map_end.h"
+
+PRBool WebGLUnsignedIntArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+    PRBool ok = PR_FALSE;
+    PRUint32 index;
+
+    if (JSVAL_IS_INT(id)) {
+        index = JSVAL_TO_INT(id);
+        ok = PR_TRUE;
+    } else {
+        ok = JS_ValueToECMAUint32(cx, id, &index);
+    }
+
+    if (!ok || index >= mLength)
+        return PR_FALSE;
+
+    *retval = index;
+    return PR_TRUE;
+}
+
+NS_IMETHODIMP WebGLUnsignedIntArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                                 JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRUint32 val;
+    Get(index, &val);
+    *_retval = JS_NewNumberValue(cx, val, vp);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLUnsignedIntArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                                 JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
+{
+    PRUint32 index;
+    PRUint32 val;
+
+    if (!JSValToIndex(cx, id, &index)) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PRBool ok = PR_FALSE;
+
+    if (JSVAL_IS_INT(*vp)) {
+        val = JSVAL_TO_INT(*vp);
+        ok = PR_TRUE;
+    } else {
+        ok = JS_ValueToECMAUint32(cx, *vp, &val);
+    }
+
+    if (!ok) {
+        *_retval = PR_FALSE;
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    Set(index, val);
+    return NS_OK;
+}
+
+NS_IMETHODIMP WebGLUnsignedIntArray::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                                                JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
+                                                PRBool *_retval)
+{
+    PRUint32 index;
+    PRBool ok = JSValToIndex(cx, id, &index);
+
+    if (ok) {
+        *_retval = PR_TRUE;
+        *objp = obj;
+    } else {
+        *_retval = PR_FALSE;
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
 
 
 /*
@@ -1707,6 +2344,7 @@ NS_INTERFACE_MAP_BEGIN(WebGLFloatArray)
   NS_INTERFACE_MAP_ENTRY(nsICanvasFloatArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasFloatArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasFloatArray)
 NS_INTERFACE_MAP_END
 
@@ -1718,6 +2356,7 @@ NS_INTERFACE_MAP_BEGIN(WebGLByteArray)
   NS_INTERFACE_MAP_ENTRY(nsICanvasByteArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasByteArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasByteArray)
 NS_INTERFACE_MAP_END
 
@@ -1729,6 +2368,7 @@ NS_INTERFACE_MAP_BEGIN(WebGLUnsignedByteArray)
   NS_INTERFACE_MAP_ENTRY(nsICanvasUnsignedByteArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasUnsignedByteArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasUnsignedByteArray)
 NS_INTERFACE_MAP_END
 
@@ -1740,6 +2380,7 @@ NS_INTERFACE_MAP_BEGIN(WebGLShortArray)
   NS_INTERFACE_MAP_ENTRY(nsICanvasShortArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasShortArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasShortArray)
 NS_INTERFACE_MAP_END
 
@@ -1751,6 +2392,7 @@ NS_INTERFACE_MAP_BEGIN(WebGLUnsignedShortArray)
   NS_INTERFACE_MAP_ENTRY(nsICanvasUnsignedShortArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasUnsignedShortArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasUnsignedShortArray)
 NS_INTERFACE_MAP_END
 
@@ -1762,6 +2404,7 @@ NS_INTERFACE_MAP_BEGIN(WebGLIntArray)
   NS_INTERFACE_MAP_ENTRY(nsICanvasIntArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasIntArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasIntArray)
 NS_INTERFACE_MAP_END
 
@@ -1773,5 +2416,6 @@ NS_INTERFACE_MAP_BEGIN(WebGLUnsignedIntArray)
   NS_INTERFACE_MAP_ENTRY(nsICanvasUnsignedIntArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICanvasUnsignedIntArray)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CanvasUnsignedIntArray)
 NS_INTERFACE_MAP_END
