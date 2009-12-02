@@ -364,7 +364,6 @@ namespace nanojit
             void        asm_i2f(LInsp ins);
             void        asm_u2f(LInsp ins);
             void        asm_promote(LIns *ins);
-            Register    asm_prep_fcall(LInsp ins);
             void        asm_nongp_copy(Register r, Register s);
             void        asm_call(LInsp);
             Register    asm_binop_rhs_reg(LInsp ins);

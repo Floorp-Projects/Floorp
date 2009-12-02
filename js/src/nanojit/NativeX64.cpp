@@ -832,6 +832,14 @@ namespace nanojit
     }
 
     void Assembler::asm_call(LIns *ins) {
+        Register retReg = ( ins->isop(LIR_fcall) ? XMM0 : retRegs[0] );
+        prepResultReg(ins, rmask(retReg));
+
+        // Do this after we've handled the call result, so we don't
+        // force the call result to be spilled unnecessarily.
+
+        evictScratchRegs();
+
         const CallInfo *call = ins->callInfo();
         ArgSize sizes[MAXARGS];
         int argc = call->get_sizes(sizes);
@@ -1517,10 +1525,6 @@ namespace nanojit
 
     void Assembler::asm_qjoin(LIns*) {
         TODO(asm_qjoin);
-    }
-
-    Register Assembler::asm_prep_fcall(LIns *ins) {
-        return prepResultReg(ins, rmask(XMM0));
     }
 
     void Assembler::asm_param(LIns *ins) {
