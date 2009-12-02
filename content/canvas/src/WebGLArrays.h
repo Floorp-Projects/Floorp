@@ -50,6 +50,7 @@
 #include "nsICanvasRenderingContextWebGL.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsIJSNativeInitializer.h"
+#include "nsIXPCScriptable.h"
 
 #include "SimpleBuffer.h"
 
@@ -80,7 +81,13 @@ public:
                           jsval* aArgv);
 };
 
+class WebGLArray
+{
+    
+};
+
 class WebGLFloatArray :
+    public nsIXPCScriptable,
     public nsICanvasFloatArray,
     public nsIJSNativeInitializer
 {
@@ -95,6 +102,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICANVASARRAY
     NS_DECL_NSICANVASFLOATARRAY
+    NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
                           JSContext* aCx,
@@ -103,6 +111,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, float value);
+    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;
@@ -114,6 +123,7 @@ protected:
 };
 
 class WebGLByteArray :
+    public nsIXPCScriptable,
     public nsICanvasByteArray,
     public nsIJSNativeInitializer
 {
@@ -128,6 +138,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICANVASARRAY
     NS_DECL_NSICANVASBYTEARRAY
+    NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
                           JSContext* aCx,
@@ -136,6 +147,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, char value);
+    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;
@@ -147,6 +159,7 @@ protected:
 };
 
 class WebGLUnsignedByteArray :
+    public nsIXPCScriptable,
     public nsICanvasUnsignedByteArray,
     public nsIJSNativeInitializer
 {
@@ -161,6 +174,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICANVASARRAY
     NS_DECL_NSICANVASUNSIGNEDBYTEARRAY
+    NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
                           JSContext* aCx,
@@ -169,6 +183,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, unsigned char value);
+    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;
@@ -180,6 +195,7 @@ protected:
 };
 
 class WebGLShortArray :
+    public nsIXPCScriptable,
     public nsICanvasShortArray,
     public nsIJSNativeInitializer
 {
@@ -194,6 +210,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICANVASARRAY
     NS_DECL_NSICANVASSHORTARRAY
+    NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
                           JSContext* aCx,
@@ -202,6 +219,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, short value);
+    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;
@@ -213,6 +231,7 @@ protected:
 };
 
 class WebGLUnsignedShortArray :
+    public nsIXPCScriptable,
     public nsICanvasUnsignedShortArray,
     public nsIJSNativeInitializer
 {
@@ -227,6 +246,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICANVASARRAY
     NS_DECL_NSICANVASUNSIGNEDSHORTARRAY
+    NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
                           JSContext* aCx,
@@ -235,6 +255,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, unsigned short value);
+    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;
@@ -246,6 +267,7 @@ protected:
 };
 
 class WebGLIntArray :
+    public nsIXPCScriptable,
     public nsICanvasIntArray,
     public nsIJSNativeInitializer
 {
@@ -260,6 +282,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICANVASARRAY
     NS_DECL_NSICANVASINTARRAY
+    NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
                           JSContext* aCx,
@@ -268,6 +291,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, int value);
+    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;
@@ -279,6 +303,7 @@ protected:
 };
 
 class WebGLUnsignedIntArray :
+    public nsIXPCScriptable,
     public nsICanvasUnsignedIntArray,
     public nsIJSNativeInitializer
 {
@@ -293,6 +318,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICANVASARRAY
     NS_DECL_NSICANVASUNSIGNEDINTARRAY
+    NS_DECL_NSIXPCSCRIPTABLE
 
     NS_IMETHOD Initialize(nsISupports* aOwner,
                           JSContext* aCx,
@@ -301,6 +327,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, unsigned int value);
+    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;
