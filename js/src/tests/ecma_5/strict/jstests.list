@@ -15,4 +15,5 @@ script 12.14.1.js
 script 13.1.js
 script B.1.1.js
 script B.1.2.js
+script regress-532254.js
 script regress-532041.js
