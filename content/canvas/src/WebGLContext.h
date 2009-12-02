@@ -266,7 +266,7 @@ protected:
 
     nsresult TexImageElementBase(nsIDOMHTMLElement *imageOrCanvas,
                                  gfxImageSurface **imageOut,
-                                 bool flipY, bool premultiplyAlpha);
+                                 PRBool flipY, PRBool premultiplyAlpha);
 
     GLuint mActiveTexture;
 

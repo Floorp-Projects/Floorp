@@ -350,9 +350,9 @@ NS_IMETHODIMP_(PRUint32) WebGLFloatArray::NativeCount()
 #define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
 #include "xpc_map_end.h"
 
-PRBool WebGLFloatArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+PRBool WebGLFloatArray::JSValToIndex(JSContext *cx, jsval id, uint32 *retval) {
     PRBool ok = PR_FALSE;
-    PRUint32 index;
+    uint32 index;
 
     if (JSVAL_IS_INT(id)) {
         index = JSVAL_TO_INT(id);
@@ -371,7 +371,7 @@ PRBool WebGLFloatArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) 
 NS_IMETHODIMP WebGLFloatArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                            JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     
     if (!JSValToIndex(cx, id, &index)) {
         *_retval = PR_FALSE;
@@ -388,7 +388,7 @@ NS_IMETHODIMP WebGLFloatArray::GetProperty(nsIXPConnectWrappedNative *wrapper, J
 NS_IMETHODIMP WebGLFloatArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                        JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     float val;
 
     if (!JSValToIndex(cx, id, &index)) {
@@ -399,12 +399,12 @@ NS_IMETHODIMP WebGLFloatArray::SetProperty(nsIXPConnectWrappedNative *wrapper, J
     PRBool ok = PR_FALSE;
 
     if (JSVAL_IS_INT(*vp)) {
-        val = JSVAL_TO_INT(*vp);
+        val = (float) JSVAL_TO_INT(*vp);
         ok = PR_TRUE;
     } else {
         jsdouble dval;
         ok = JS_ValueToNumber(cx, *vp, &dval);
-        val = dval;
+        val = (float) dval;
     }
 
     if (!ok) {
@@ -420,7 +420,7 @@ NS_IMETHODIMP WebGLFloatArray::NewResolve(nsIXPConnectWrappedNative *wrapper, JS
                       JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
                       PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     PRBool ok = JSValToIndex(cx, id, &index);
 
     if (ok) {
@@ -662,9 +662,9 @@ NS_IMETHODIMP_(PRUint32) WebGLByteArray::NativeCount()
 #define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
 #include "xpc_map_end.h"
 
-PRBool WebGLByteArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+PRBool WebGLByteArray::JSValToIndex(JSContext *cx, jsval id, uint32 *retval) {
     PRBool ok = PR_FALSE;
-    PRUint32 index;
+    uint32 index;
 
     if (JSVAL_IS_INT(id)) {
         index = JSVAL_TO_INT(id);
@@ -683,7 +683,7 @@ PRBool WebGLByteArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
 NS_IMETHODIMP WebGLByteArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                           JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     
     if (!JSValToIndex(cx, id, &index)) {
         *_retval = PR_FALSE;
@@ -700,8 +700,8 @@ NS_IMETHODIMP WebGLByteArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JS
 NS_IMETHODIMP WebGLByteArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                           JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
-    PRInt32 val;
+    uint32 index;
+    int32 val;
 
     if (!JSValToIndex(cx, id, &index)) {
         *_retval = PR_FALSE;
@@ -722,7 +722,7 @@ NS_IMETHODIMP WebGLByteArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JS
         return NS_ERROR_INVALID_ARG;
     }
 
-    Set(index, val);
+    Set(index, (char) val);
     return NS_SUCCESS_I_DID_SOMETHING;
 }
 
@@ -730,7 +730,7 @@ NS_IMETHODIMP WebGLByteArray::NewResolve(nsIXPConnectWrappedNative *wrapper, JSC
                                          JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
                                          PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     PRBool ok = JSValToIndex(cx, id, &index);
 
     if (ok) {
@@ -972,9 +972,9 @@ NS_IMETHODIMP_(PRUint32) WebGLUnsignedByteArray::NativeCount()
 #define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
 #include "xpc_map_end.h"
 
-PRBool WebGLUnsignedByteArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+PRBool WebGLUnsignedByteArray::JSValToIndex(JSContext *cx, jsval id, uint32 *retval) {
     PRBool ok = PR_FALSE;
-    PRUint32 index;
+    uint32 index;
 
     if (JSVAL_IS_INT(id)) {
         index = JSVAL_TO_INT(id);
@@ -993,7 +993,7 @@ PRBool WebGLUnsignedByteArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *r
 NS_IMETHODIMP WebGLUnsignedByteArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                                   JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     
     if (!JSValToIndex(cx, id, &index)) {
         *_retval = PR_FALSE;
@@ -1010,8 +1010,8 @@ NS_IMETHODIMP WebGLUnsignedByteArray::GetProperty(nsIXPConnectWrappedNative *wra
 NS_IMETHODIMP WebGLUnsignedByteArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                                   JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
-    PRUint32 val;
+    uint32 index;
+    uint32 val;
 
     if (!JSValToIndex(cx, id, &index)) {
         *_retval = PR_FALSE;
@@ -1032,7 +1032,7 @@ NS_IMETHODIMP WebGLUnsignedByteArray::SetProperty(nsIXPConnectWrappedNative *wra
         return NS_ERROR_INVALID_ARG;
     }
 
-    Set(index, val);
+    Set(index, (unsigned char) val);
     return NS_OK;
 }
 
@@ -1040,7 +1040,7 @@ NS_IMETHODIMP WebGLUnsignedByteArray::NewResolve(nsIXPConnectWrappedNative *wrap
                                                  JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
                                                  PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     PRBool ok = JSValToIndex(cx, id, &index);
 
     if (ok) {
@@ -1289,9 +1289,9 @@ NS_IMETHODIMP_(PRUint32) WebGLShortArray::NativeCount()
 #define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
 #include "xpc_map_end.h"
 
-PRBool WebGLShortArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+PRBool WebGLShortArray::JSValToIndex(JSContext *cx, jsval id, uint32 *retval) {
     PRBool ok = PR_FALSE;
-    PRUint32 index;
+    uint32 index;
 
     if (JSVAL_IS_INT(id)) {
         index = JSVAL_TO_INT(id);
@@ -1310,7 +1310,7 @@ PRBool WebGLShortArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) 
 NS_IMETHODIMP WebGLShortArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                            JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     
     if (!JSValToIndex(cx, id, &index)) {
         *_retval = PR_FALSE;
@@ -1327,8 +1327,8 @@ NS_IMETHODIMP WebGLShortArray::GetProperty(nsIXPConnectWrappedNative *wrapper, J
 NS_IMETHODIMP WebGLShortArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                            JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
-    PRInt32 val;
+    uint32 index;
+    int32 val;
 
     if (!JSValToIndex(cx, id, &index)) {
         *_retval = PR_FALSE;
@@ -1349,7 +1349,7 @@ NS_IMETHODIMP WebGLShortArray::SetProperty(nsIXPConnectWrappedNative *wrapper, J
         return NS_ERROR_INVALID_ARG;
     }
 
-    Set(index, val);
+    Set(index, (short) val);
     return NS_OK;
 }
 
@@ -1357,7 +1357,7 @@ NS_IMETHODIMP WebGLShortArray::NewResolve(nsIXPConnectWrappedNative *wrapper, JS
                                           JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
                                           PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     PRBool ok = JSValToIndex(cx, id, &index);
 
     if (ok) {
@@ -1606,9 +1606,9 @@ NS_IMETHODIMP_(PRUint32) WebGLUnsignedShortArray::NativeCount()
 #define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
 #include "xpc_map_end.h"
 
-PRBool WebGLUnsignedShortArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+PRBool WebGLUnsignedShortArray::JSValToIndex(JSContext *cx, jsval id, uint32 *retval) {
     PRBool ok = PR_FALSE;
-    PRUint32 index;
+    uint32 index;
 
     if (JSVAL_IS_INT(id)) {
         index = JSVAL_TO_INT(id);
@@ -1627,7 +1627,7 @@ PRBool WebGLUnsignedShortArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *
 NS_IMETHODIMP WebGLUnsignedShortArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                                    JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     
     if (!JSValToIndex(cx, id, &index)) {
         *_retval = PR_FALSE;
@@ -1644,8 +1644,8 @@ NS_IMETHODIMP WebGLUnsignedShortArray::GetProperty(nsIXPConnectWrappedNative *wr
 NS_IMETHODIMP WebGLUnsignedShortArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                                    JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
-    PRUint32 val;
+    uint32 index;
+    uint32 val;
 
     if (!JSValToIndex(cx, id, &index)) {
         *_retval = PR_FALSE;
@@ -1666,7 +1666,7 @@ NS_IMETHODIMP WebGLUnsignedShortArray::SetProperty(nsIXPConnectWrappedNative *wr
         return NS_ERROR_INVALID_ARG;
     }
 
-    Set(index, val);
+    Set(index, (unsigned short) val);
     return NS_OK;
 }
 
@@ -1674,7 +1674,7 @@ NS_IMETHODIMP WebGLUnsignedShortArray::NewResolve(nsIXPConnectWrappedNative *wra
                                                   JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
                                                   PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     PRBool ok = JSValToIndex(cx, id, &index);
 
     if (ok) {
@@ -1923,9 +1923,9 @@ NS_IMETHODIMP_(PRUint32) WebGLIntArray::NativeCount()
 #define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
 #include "xpc_map_end.h"
 
-PRBool WebGLIntArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+PRBool WebGLIntArray::JSValToIndex(JSContext *cx, jsval id, uint32 *retval) {
     PRBool ok = PR_FALSE;
-    PRUint32 index;
+    uint32 index;
 
     if (JSVAL_IS_INT(id)) {
         index = JSVAL_TO_INT(id);
@@ -1944,7 +1944,7 @@ PRBool WebGLIntArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
 NS_IMETHODIMP WebGLIntArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                          JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     
     if (!JSValToIndex(cx, id, &index)) {
         *_retval = PR_FALSE;
@@ -1961,8 +1961,8 @@ NS_IMETHODIMP WebGLIntArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSC
 NS_IMETHODIMP WebGLIntArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                          JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
-    PRInt32 val;
+    uint32 index;
+    int32 val;
 
     if (!JSValToIndex(cx, id, &index)) {
         *_retval = PR_FALSE;
@@ -1991,7 +1991,7 @@ NS_IMETHODIMP WebGLIntArray::NewResolve(nsIXPConnectWrappedNative *wrapper, JSCo
                                         JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
                                         PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     PRBool ok = JSValToIndex(cx, id, &index);
 
     if (ok) {
@@ -2240,9 +2240,9 @@ NS_IMETHODIMP_(PRUint32) WebGLUnsignedIntArray::NativeCount()
 #define XPC_MAP_FLAGS nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
 #include "xpc_map_end.h"
 
-PRBool WebGLUnsignedIntArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval) {
+PRBool WebGLUnsignedIntArray::JSValToIndex(JSContext *cx, jsval id, uint32 *retval) {
     PRBool ok = PR_FALSE;
-    PRUint32 index;
+    uint32 index;
 
     if (JSVAL_IS_INT(id)) {
         index = JSVAL_TO_INT(id);
@@ -2261,7 +2261,7 @@ PRBool WebGLUnsignedIntArray::JSValToIndex(JSContext *cx, jsval id, PRUint32 *re
 NS_IMETHODIMP WebGLUnsignedIntArray::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                                  JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     
     if (!JSValToIndex(cx, id, &index)) {
         *_retval = PR_FALSE;
@@ -2278,8 +2278,8 @@ NS_IMETHODIMP WebGLUnsignedIntArray::GetProperty(nsIXPConnectWrappedNative *wrap
 NS_IMETHODIMP WebGLUnsignedIntArray::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                                                  JSObject * obj, jsval id, jsval * vp, PRBool *_retval)
 {
-    PRUint32 index;
-    PRUint32 val;
+    uint32 index;
+    uint32 val;
 
     if (!JSValToIndex(cx, id, &index)) {
         *_retval = PR_FALSE;
@@ -2308,7 +2308,7 @@ NS_IMETHODIMP WebGLUnsignedIntArray::NewResolve(nsIXPConnectWrappedNative *wrapp
                                                 JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp,
                                                 PRBool *_retval)
 {
-    PRUint32 index;
+    uint32 index;
     PRBool ok = JSValToIndex(cx, id, &index);
 
     if (ok) {
