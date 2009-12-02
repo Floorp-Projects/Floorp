@@ -2364,6 +2364,7 @@ var AlertsHelper = {
 
 var HelperAppDialog = {
   _launcher: null,
+  _container: null,
 
   show: function had_show(aLauncher) {
     this._launcher = aLauncher;
@@ -2372,28 +2373,31 @@ var HelperAppDialog = {
     if (!this._launcher.MIMEInfo.hasDefaultHandler)
       document.getElementById("helperapp-open").disabled = true;
 
-    let container = document.getElementById("helperapp-container");
-    container.hidden = false;
+    this._container = document.getElementById("helperapp-container");
+    this._container.hidden = false;
 
-    let rect = container.getBoundingClientRect();
-    container.top = (window.innerHeight - rect.height) / 2;
-    container.left = (window.innerWidth - rect.width) / 2;
+    let rect = this._container.getBoundingClientRect();
+    this._container.top = (window.innerHeight - rect.height) / 2;
+    this._container.left = (window.innerWidth - rect.width) / 2;
+
+    BrowserUI.pushPopup(this, this._container);
   },
 
   save: function had_save() {
     this._launcher.saveToDisk(null, false);
-    this.close();
+    this.hide();
   },
 
   open: function had_open() {
     this._launcher.launchWithApplication(null, false);
-    this.close();
+    this.hide();
   },
 
-  close: function had_close() {
+  hide: function had_hide() {
     document.getElementById("helperapp-target").value = "";
-    let container = document.getElementById("helperapp-container");
-    container.hidden = true;
+    this._container.hidden = true;
+
+    BrowserUI.popPopup();
   }
 };
 
