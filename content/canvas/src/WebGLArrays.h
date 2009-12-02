@@ -111,7 +111,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, float value);
-    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
+    PRBool JSValToIndex(JSContext *cx, jsval id, uint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;
@@ -147,7 +147,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, char value);
-    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
+    PRBool JSValToIndex(JSContext *cx, jsval id, uint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;
@@ -183,7 +183,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, unsigned char value);
-    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
+    PRBool JSValToIndex(JSContext *cx, jsval id, uint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;
@@ -219,7 +219,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, short value);
-    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
+    PRBool JSValToIndex(JSContext *cx, jsval id, uint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;
@@ -255,7 +255,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, unsigned short value);
-    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
+    PRBool JSValToIndex(JSContext *cx, jsval id, uint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;
@@ -291,7 +291,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, int value);
-    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
+    PRBool JSValToIndex(JSContext *cx, jsval id, uint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;
@@ -327,7 +327,7 @@ public:
                           jsval* aArgv);
 
     void Set(PRUint32 index, unsigned int value);
-    PRBool JSValToIndex(JSContext *cx, jsval id, PRUint32 *retval);
+    PRBool JSValToIndex(JSContext *cx, jsval id, uint32 *retval);
 
 protected:
     nsRefPtr<WebGLArrayBuffer> mBuffer;

@@ -2322,7 +2322,7 @@ GL_SAME_METHOD_4(StencilOpSeparate, StencilOpSeparate, GLenum, GLenum, GLenum, G
 nsresult
 WebGLContext::TexImageElementBase(nsIDOMHTMLElement *imageOrCanvas,
                                   gfxImageSurface **imageOut,
-                                  bool flipY, bool premultiplyAlpha)
+                                  PRBool flipY, PRBool premultiplyAlpha)
 {
     gfxImageSurface *surf = nsnull;
 
@@ -2969,7 +2969,6 @@ WebGLContext::TexSubImage2D()
     } else {
         jsuint argTarget, argLevel, argX, argY, argWidth, argHeight, argFormat, argType;
         JSObject *argPixelsObj;
-        jsuint argPixelsLen;
         if (!::JS_ConvertArguments(js.ctx, js.argc, js.argv, "uuuuuuuuo",
                                    &argTarget, &argLevel, &argX, &argY,
                                    &argWidth, &argHeight, &argFormat, &argType,
@@ -3050,11 +3049,6 @@ WebGLContext::TexSubImage2D()
             return NS_ERROR_DOM_SYNTAX_ERR;
         }
 
-        if ((PRUint32) tmp > argPixelsLen) {
-            return ErrorMessage("texSubImage2D: array dimensions too small for width, height and pixel format");
-            return NS_ERROR_DOM_SYNTAX_ERR;
-        }
-
         nsCOMPtr<nsIWebGLArray> arrayObj;
         nsresult rv;
         rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, argPixelsObj, NS_GET_IID(nsISupports), getter_AddRefs(arrayObj));
@@ -3062,6 +3056,11 @@ WebGLContext::TexSubImage2D()
 
         if (NS_FAILED(rv) || !arrayObj) {
             return ErrorMessage("texSubImage2D: pixels arg is not a WebGL array");
+        }
+
+        if ((PRUint32) tmp > arrayObj->NativeSize()) {
+            return ErrorMessage("texSubImage2D: array dimensions too small for width, height and pixel format");
+            return NS_ERROR_DOM_SYNTAX_ERR;
         }
 
         MakeContextCurrent();
@@ -3127,7 +3126,6 @@ WebGLContext::TexImage2D()
 
     } else if (js.argc == 9) {
         JSObject *argPixelsObj;
-        jsuint argPixelsLen;
         if (!::JS_ConvertArguments(js.ctx, js.argc, js.argv, "uuuuuuuuo",
                                    &argTarget, &argLevel, &argInternalFormat, &argWidth,
                                    &argHeight, &argBorder, &argFormat, &argType,
@@ -3235,11 +3233,6 @@ WebGLContext::TexImage2D()
             MakeContextCurrent();
             gl->fTexImage2D (argTarget, argLevel, argInternalFormat, argWidth, argHeight, argBorder, argFormat, argType, NULL);
         } else {
-            if ((PRUint32) tmp > argPixelsLen) {
-                return ErrorMessage("texImage2D: array dimensions too small for width, height and pixel format");
-                return NS_ERROR_DOM_SYNTAX_ERR;
-            }
-
             nsCOMPtr<nsIWebGLArray> arrayObj;
             nsresult rv;
             rv = nsContentUtils::XPConnect()->WrapJS(js.ctx, argPixelsObj, NS_GET_IID(nsISupports), getter_AddRefs(arrayObj));
@@ -3247,6 +3240,11 @@ WebGLContext::TexImage2D()
 
             if (NS_FAILED(rv) || !arrayObj) {
                 return ErrorMessage("texImage2D: pixels arg is not a WebGL array");
+            }
+
+            if ((PRUint32) tmp > arrayObj->NativeSize()) {
+                return ErrorMessage("texImage2D: array dimensions too small for width, height and pixel format");
+                return NS_ERROR_DOM_SYNTAX_ERR;
             }
 
             MakeContextCurrent();
