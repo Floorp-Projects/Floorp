@@ -49,6 +49,7 @@
 #include "nsIPluginInstanceOwner.h"
 #include "nsITimer.h"
 
+#include "nsNPAPIPlugin.h"
 #include "npfunctions.h"
 #include "mozilla/PluginLibrary.h"
 
@@ -105,7 +106,7 @@ public:
                            PRBool aCallNotify,
                            const char * aURL);
 
-  nsNPAPIPluginInstance(NPPluginFuncs* callbacks, PluginLibrary* aLibrary);
+  nsNPAPIPluginInstance(nsNPAPIPlugin* plugin);
 
   // Use Release() to destroy this
   virtual ~nsNPAPIPluginInstance();
@@ -127,7 +128,10 @@ public:
   void          UnscheduleTimer(uint32_t timerID);
   NPError       PopUpContextMenu(NPMenu* menu);
   NPBool        ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace);
-protected:
+
+private:
+  friend class nsNPAPIPluginStreamListener;
+
   nsresult InitializePlugin();
 
   nsresult GetTagType(nsPluginTagType *result);
@@ -137,10 +141,7 @@ protected:
                          const char*const*& values);
   nsresult GetMode(PRInt32 *result);
 
-  // A pointer to the plugin's callback functions. This information
-  // is actually stored in the plugin class (<b>nsPluginClass</b>),
-  // and is common for all plugins of the class.
-  NPPluginFuncs* mCallbacks;
+  nsRefPtr<nsNPAPIPlugin> mPlugin;
 
   // The structure used to communicate between the plugin instance and
   // the browser.
@@ -159,13 +160,10 @@ protected:
   PRPackedBool mCached;
   PRPackedBool mWantsAllNetworkStreams;
 
-public:
   // True while creating the plugin, or calling NPP_SetWindow() on it.
   PRPackedBool mInPluginInitCall;
-  PluginLibrary* mLibrary;
   nsInstanceStream *mStreams;
 
-private:
   nsTArray<PopupControlState> mPopupStates;
 
   char* mMIMEType;
