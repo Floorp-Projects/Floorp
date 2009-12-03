@@ -95,6 +95,9 @@ public:
 #endif
 
 protected:
+  friend class nsNPAPIPluginInstance;
+  friend class nsNPAPIPluginStreamListener;
+
   // Ensures that the static CALLBACKS is properly initialized
   static void CheckClassInitialized(void);
 

@@ -585,7 +585,7 @@ nsNPAPIPlugin::CreatePluginInstance(nsIPluginInstance **aResult)
   *aResult = NULL;
 
   nsRefPtr<nsNPAPIPluginInstance> inst =
-    new nsNPAPIPluginInstance(&fCallbacks, fLibrary);
+    new nsNPAPIPluginInstance(this);
   if (!inst)
     return NS_ERROR_OUT_OF_MEMORY;
 
