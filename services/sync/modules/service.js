@@ -108,11 +108,14 @@ WeaveSvc.prototype = {
   _keyPair: {},
 
   get username() {
-    return Svc.Prefs.get("username", "");
+    return Svc.Prefs.get("username", "").toLowerCase();
   },
   set username(value) {
-    if (value)
+    if (value) {
+      // Make sure all uses of this new username is lowercase
+      value = value.toLowerCase();
       Svc.Prefs.set("username", value);
+    }
     else
       Svc.Prefs.reset("username");
 
