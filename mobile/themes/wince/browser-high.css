@@ -289,6 +289,21 @@ autocompleteresult.allbookmarks > .autocomplete-item-label > image {
   list-style-image: url(images/bookmarks-30.png);
 }
 
+/* Left sidebar (tabs)  ---------------------------------------------------- */
+box[type="documenttab"] .documenttab-canvas {
+  /* keep the unselected thumbnails aligned with the selected one */
+  border: 8px solid #36373b;
+}
+
+box[type="documenttab"][selected="true"] .documenttab-canvas {
+  border: 8px solid;
+  -moz-border-radius: 3px;
+  -moz-border-top-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
+  -moz-border-right-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
+  -moz-border-bottom-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
+  -moz-border-left-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
+}
+
 box[type="documenttab"] .documenttab-close {
   width: 40px;
   height: 40px;

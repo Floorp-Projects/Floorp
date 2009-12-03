@@ -703,8 +703,12 @@ box[type="documenttab"] .documenttab-canvas {
 }
 
 box[type="documenttab"][selected="true"] .documenttab-canvas {
-  border: 8px solid #0c0d10; /* very dark border */
+  border: 8px solid;
   -moz-border-radius: 3px;
+  -moz-border-top-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
+  -moz-border-right-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
+  -moz-border-bottom-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
+  -moz-border-left-colors: #8db8d8 #8db8d8 #8db8d8 #8db8d8 #36373b;
 }
 
 box[type="documenttab"] .documenttab-close {
