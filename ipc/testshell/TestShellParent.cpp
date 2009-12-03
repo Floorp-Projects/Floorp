@@ -49,21 +49,18 @@ TestShellParent::AllocPTestShellCommand(const nsString& aCommand)
 }
 
 bool
-TestShellParent::DeallocPTestShellCommand(PTestShellCommandParent* aActor,
-                                          const nsString& aResponse)
+TestShellParent::DeallocPTestShellCommand(PTestShellCommandParent* aActor)
 {
   delete aActor;
   return true;
 }
 
 bool
-TestShellParent::RecvPTestShellCommandDestructor(PTestShellCommandParent* aActor,
-                                                 const nsString& aResponse)
+TestShellParent::CommandDone(TestShellCommandParent* command,
+                             const nsString& aResponse)
 {
-  TestShellCommandParent* command =
-    reinterpret_cast<TestShellCommandParent*>(aActor);
-
-  JSBool ok = command->RunCallback(aResponse);
+  // XXX what should happen if the callback fails?
+  /*JSBool ok = */command->RunCallback(aResponse);
   command->ReleaseCallback();
 
   return true;

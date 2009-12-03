@@ -361,13 +361,9 @@ TabChild::AllocPDocumentRenderer(
 }
 
 bool
-TabChild::DeallocPDocumentRenderer(
-        mozilla::ipc::PDocumentRendererChild* __a,
-        const PRUint32& w,
-        const PRUint32& h,
-        const nsCString& data)
+TabChild::DeallocPDocumentRenderer(PDocumentRendererChild* actor)
 {
-    delete __a;
+    delete actor;
     return true;
 }
 
@@ -402,7 +398,7 @@ TabChild::RecvPDocumentRendererConstructor(
     if (!ret)
         return true; // silently ignore
 
-    return SendPDocumentRendererDestructor(__a, width, height, data);
+    return PDocumentRendererChild::Send__delete__(__a, width, height, data);
 }
 
 bool

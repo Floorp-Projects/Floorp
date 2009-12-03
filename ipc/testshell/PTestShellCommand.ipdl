@@ -43,6 +43,9 @@ namespace ipc {
 protocol PTestShellCommand
 {
   manager PTestShell;
+
+parent:
+  __delete__(nsString aResponse);
 };
 
 } // namespace ipc

@@ -114,20 +114,7 @@ PluginInstanceParent::AllocPBrowserStream(const nsCString& url,
 }
 
 bool
-PluginInstanceParent::AnswerPBrowserStreamDestructor(PBrowserStreamParent* stream,
-                                                     const NPError& reason,
-                                                     const bool& artificial)
-{
-    if (!artificial) {
-        static_cast<BrowserStreamParent*>(stream)->NPN_DestroyStream(reason);
-    }
-    return true;
-}
-
-bool
-PluginInstanceParent::DeallocPBrowserStream(PBrowserStreamParent* stream,
-                                            const NPError& reason,
-                                            const bool& artificial)
+PluginInstanceParent::DeallocPBrowserStream(PBrowserStreamParent* stream)
 {
     delete stream;
     return true;
@@ -142,13 +129,8 @@ PluginInstanceParent::AllocPPluginStream(const nsCString& mimeType,
 }
 
 bool
-PluginInstanceParent::DeallocPPluginStream(PPluginStreamParent* stream,
-                                           const NPError& reason,
-                                           const bool& artificial)
+PluginInstanceParent::DeallocPPluginStream(PPluginStreamParent* stream)
 {
-    if (!artificial) {
-        static_cast<PluginStreamParent*>(stream)->NPN_DestroyStream(reason);
-    }
     delete stream;
     return true;
 }
@@ -310,14 +292,13 @@ PluginInstanceParent::AnswerPStreamNotifyConstructor(PStreamNotifyParent* actor,
     }
 
     if (*result != NPERR_NO_ERROR)
-        CallPStreamNotifyDestructor(actor, NPERR_GENERIC_ERROR);
+        PStreamNotifyParent::Call__delete__(actor, NPERR_GENERIC_ERROR);
 
     return true;
 }
 
 bool
-PluginInstanceParent::DeallocPStreamNotify(PStreamNotifyParent* notifyData,
-                                           const NPReason& reason)
+PluginInstanceParent::DeallocPStreamNotify(PStreamNotifyParent* notifyData)
 {
     delete notifyData;
     return true;
@@ -547,7 +528,7 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
         return NPERR_GENERIC_ERROR;
 
     if (NPERR_NO_ERROR != err)
-        CallPBrowserStreamDestructor(bs, NPERR_GENERIC_ERROR, true);
+        PBrowserStreamParent::Call__delete__(bs, NPERR_GENERIC_ERROR, true);
 
     return err;
 }
@@ -564,7 +545,7 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
         if (sp->mNPP != this)
             NS_RUNTIMEABORT("Mismatched plugin data");
 
-        CallPBrowserStreamDestructor(sp, reason, false);
+        PBrowserStreamParent::Call__delete__(sp, reason, false);
         return NPERR_NO_ERROR;
     }
     else {
@@ -573,7 +554,7 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
         if (sp->mInstance != this)
             NS_RUNTIMEABORT("Mismatched plugin data");
 
-        CallPPluginStreamDestructor(sp, reason, false);
+        PPluginStreamParent::Call__delete__(sp, reason, false);
         return NPERR_NO_ERROR;
     }
 }
@@ -645,7 +626,7 @@ PluginInstanceParent::NPP_URLNotify(const char* url, NPReason reason,
 
     PStreamNotifyParent* streamNotify =
         static_cast<PStreamNotifyParent*>(notifyData);
-    CallPStreamNotifyDestructor(streamNotify, reason);
+    PStreamNotifyParent::Call__delete__(streamNotify, reason);
 }
 
 PluginScriptableObjectParent*

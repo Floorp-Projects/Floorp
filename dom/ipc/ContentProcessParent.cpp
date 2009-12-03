@@ -98,7 +98,7 @@ ContentProcessParent::CreateTestShell()
 bool
 ContentProcessParent::DestroyTestShell(TestShellParent* aTestShell)
 {
-    return SendPTestShellDestructor(aTestShell);
+    return PTestShellParent::Send__delete__(aTestShell);
 }
 
 ContentProcessParent::ContentProcessParent()

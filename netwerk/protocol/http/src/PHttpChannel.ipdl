@@ -50,6 +50,8 @@ protocol PHttpChannel
   manager PNecko;
 
 parent:
+  __delete__();
+
   asyncOpen(nsCString uri);
 };
 

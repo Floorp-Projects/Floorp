@@ -5,7 +5,9 @@ namespace _ipdltest {
 
 protocol PTestArraysSub {
     manager PTestArrays;
-    // empty
+
+parent:
+    __delete__();
 };
 
 } // namespace _ipdltest

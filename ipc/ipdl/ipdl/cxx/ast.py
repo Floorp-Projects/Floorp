@@ -468,12 +468,12 @@ class MethodDecl(Node):
         self.typeop = typeop            # Type or None
 
     def __deepcopy__(self, memo):
-        return MethodDecl(self.name,
-                          copy.deepcopy(self.params, memo),
-                          copy.deepcopy(self.ret, memo),
-                          self.virtual,
-                          self.const,
-                          self.pure)
+        return MethodDecl(
+            self.name,
+            copy.deepcopy(self.params, memo),
+            copy.deepcopy(self.ret, memo),
+            self.virtual, self.const, self.pure, self.static,
+            copy.deepcopy(self.typeop, memo))
 
 class MethodDefn(Block):
     def __init__(self, decl):

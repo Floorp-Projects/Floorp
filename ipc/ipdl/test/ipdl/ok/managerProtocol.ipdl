@@ -7,6 +7,5 @@ protocol managerProtocol {
 
 parent:
     managedProtocol(int i);
-    ~managedProtocol(int i);
 
 };

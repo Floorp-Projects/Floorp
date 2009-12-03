@@ -57,7 +57,6 @@ namespace mozilla {
 namespace plugins {
 
 class PBrowserStreamParent;
-class BrowserStreamParent;
 class PluginModuleParent;
 
 class PluginInstanceParent : public PPluginInstanceParent
@@ -93,26 +92,15 @@ public:
                         const bool& seekable,
                         NPError* rv,
                         uint16_t *stype);
-
     virtual bool
-    AnswerPBrowserStreamDestructor(PBrowserStreamParent* stream,
-                                   const NPError& reason,
-                                   const bool& artificial);
-
-    virtual bool
-    DeallocPBrowserStream(PBrowserStreamParent* stream,
-                          const NPError& reason,
-                          const bool& artificial);
+    DeallocPBrowserStream(PBrowserStreamParent* stream);
 
     virtual PPluginStreamParent*
     AllocPPluginStream(const nsCString& mimeType,
                        const nsCString& target,
                        NPError* result);
-
     virtual bool
-    DeallocPPluginStream(PPluginStreamParent* stream,
-                         const NPError& reason,
-                         const bool& artificial);
+    DeallocPPluginStream(PPluginStreamParent* stream);
 
     virtual bool
     AnswerNPN_GetValue_NPNVjavascriptEnabledBool(bool* value, NPError* result);
@@ -159,8 +147,7 @@ public:
                                    NPError* result);
 
     virtual bool
-    DeallocPStreamNotify(PStreamNotifyParent* notifyData,
-                         const NPReason& reason);
+    DeallocPStreamNotify(PStreamNotifyParent* notifyData);
 
     virtual bool
     RecvNPN_InvalidateRect(const NPRect& rect);

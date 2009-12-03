@@ -64,8 +64,7 @@ public:
                                    const nsString& aCommand);
 
   bool
-  DeallocPTestShellCommand(PTestShellCommandChild* aCommand,
-                           const nsString& aResponse);
+  DeallocPTestShellCommand(PTestShellCommandChild* aCommand);
 
   void SetXPCShell(XPCShellEnvironment* aXPCShell) {
     mXPCShell = aXPCShell;

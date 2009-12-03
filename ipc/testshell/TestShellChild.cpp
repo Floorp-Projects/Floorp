@@ -63,8 +63,7 @@ TestShellChild::AllocPTestShellCommand(const nsString& aCommand)
 }
 
 bool
-TestShellChild::DeallocPTestShellCommand(PTestShellCommandChild* aCommand,
-                                         const nsString& aResponse)
+TestShellChild::DeallocPTestShellCommand(PTestShellCommandChild* aCommand)
 {
   delete aCommand;
   return true;
@@ -84,5 +83,5 @@ TestShellChild::RecvPTestShellCommandConstructor(PTestShellCommandChild* aActor,
     return false;
   }
 
-  return SendPTestShellCommandDestructor(aActor, response);
+  return PTestShellCommandChild::Send__delete__(aActor, response);
 }
