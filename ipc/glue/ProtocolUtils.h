@@ -41,6 +41,7 @@
 #define mozilla_ipc_ProtocolUtils_h 1
 
 #include "base/process.h"
+#include "base/process_util.h"
 #include "chrome/common/ipc_message_utils.h"
 
 #include "prenv.h"
@@ -70,7 +71,7 @@ public:
     virtual ListenerT* Lookup(int32) = 0;
     virtual void Unregister(int32) = 0;
     // XXX odd duck, acknowledged
-    virtual ProcessHandle OtherProcess() = 0;
+    virtual ProcessHandle OtherProcess() const = 0;
 };
 
 
