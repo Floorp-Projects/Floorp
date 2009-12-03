@@ -69,6 +69,10 @@ class LowerToCxx:
 ##-----------------------------------------------------------------------------
 ## Helper code
 ##
+
+_NULL_ACTOR_ID = ExprLiteral.ZERO
+_FREED_ACTOR_ID = ExprLiteral.ONE
+
 class _struct: pass
 
 def _protocolHeaderBaseFilename(p):
@@ -97,9 +101,6 @@ def _actorName(pname, side):
 def _actorIdType():
     return Type('int32')
 
-def _safeActorId(actor):
-    return ExprConditional(actor, _actorId(actor), ExprLiteral.ZERO)
-
 def _actorId(actor):
     return ExprSelect(actor, '->', 'mId')
 
@@ -112,62 +113,75 @@ def _actorChannel(actor):
 def _actorManager(actor):
     return ExprSelect(actor, '->', 'mManager')
 
-def _getActorId(actorexpr, outid, actortype, errcode):
+def _getActorId(actorexpr, outid, actortype, errfn):
     # if (!actorexpr)
     #   #ifdef NULLABLE
-    #      return errcode;
+    #     abort()
     #   #else
-    #      outid = 0;
+    #     outid = 0;
     #   #endif
+    # else if (id == FREED)
+    #     abort()
     # else
     #     outid = _actorId(actorexpr)
     ifnull = StmtIf(ExprNot(actorexpr))
     if not actortype.nullable:
-        ifnull.addifstmt(StmtReturn(errcode))
+        ifnull.addifstmts(
+            errfn("NULL actor value passed to non-nullable param"))
     else:
         ifnull.addifstmt(StmtExpr(ExprAssn(outid, ExprLiteral.ZERO)))
 
-    ifnull.addelsestmt(StmtExpr(ExprAssn(outid, _actorId(actorexpr))))
+    iffreed = StmtIf(ExprBinary(_FREED_ACTOR_ID, '==', _actorId(actorexpr)))
+    ifnull.addelsestmt(iffreed)
+
+    # this is always a hard-abort, because it means that some C++ code
+    # has a live pointer to a freed actor, so we're playing Russian
+    # roulette with invalid memory
+    iffreed.addifstmt(_runtimeAbort("actor has been delete'd"))
+    iffreed.addelsestmt(StmtExpr(ExprAssn(outid, _actorId(actorexpr))))
 
     return ifnull
 
 
-def _lookupActor(idexpr, outactor, actortype, cxxactortype, errcode):
-    # if (0 == idexpr)
+def _lookupActor(idexpr, outactor, actortype, cxxactortype, errfn):
+    # if (NULLID == idexpr)
     #   #ifndef NULLABLE
-    #      return errcode;
+    #     abort()
     #   #else
-    #      actor = 0;
+    #     actor = 0;
     #   #endif
+    # else if (FREEDID == idexpr)
+    #     abort()
     # else {
     #     actor = (cxxactortype*)_lookupListener(idexpr);
     #     // bad actor ID.  always an error
-    #     if (!actor)  return errcode;
+    #     if (!actor) abort();
     # }
-    ifzero = StmtIf(ExprBinary(ExprLiteral.ZERO, '==', idexpr))
+    ifzero = StmtIf(ExprBinary(_NULL_ACTOR_ID, '==', idexpr))
     if not actortype.nullable:
-        ifzero.addifstmt(StmtReturn(errcode))
+        ifzero.addifstmts(errfn("NULL actor ID for non-nullable param"))
     else:
         ifzero.addifstmt(StmtExpr(ExprAssn(outactor, ExprLiteral.NULL)))
 
-    ifnotactor = StmtIf(ExprNot(outactor))
-    ifnotactor.addifstmts([
-        _printErrorMessage('invalid actor ID!'),
-        StmtReturn(errcode) ])
+    iffreed = StmtIf(ExprBinary(_FREED_ACTOR_ID, '==', idexpr))
+    ifzero.addelsestmt(iffreed)
 
-    ifzero.addelsestmts([
+    iffreed.addifstmts(errfn("received FREED actor ID, evidence that the other side is malfunctioning"))
+    iffreed.addelsestmt(
         StmtExpr(ExprAssn(
             outactor,
-            ExprCast(_lookupListener(idexpr), cxxactortype, static=1))),
-        ifnotactor
-    ])
+            ExprCast(_lookupListener(idexpr), cxxactortype, static=1))))
+
+    ifnotactor = StmtIf(ExprNot(outactor))
+    ifnotactor.addifstmts(errfn("invalid actor ID, evidence that the other side is malfunctioning"))
+    iffreed.addelsestmt(ifnotactor)
 
     return ifzero
 
 
-def _lookupActorHandle(handle, outactor, actortype, cxxactortype, errcode):
+def _lookupActorHandle(handle, outactor, actortype, cxxactortype, errfn):
     return _lookupActor(_actorHId(handle), outactor, actortype, cxxactortype,
-                        errcode)
+                        errfn)
 
 def _lookupListener(idexpr):
     return ExprCall(ExprVar('Lookup'), args=[ idexpr ])
@@ -322,8 +336,55 @@ def _ifLogging(stmts):
 
 # XXX we need to remove these and install proper error handling
 def _printErrorMessage(msg):
+    if isinstance(msg, str):
+        msg = ExprLiteral.String(msg)
     return StmtExpr(
-        ExprCall(ExprVar('NS_ERROR'), args=[ ExprLiteral.String(msg) ]))
+        ExprCall(ExprVar('NS_ERROR'), args=[ msg ]))
+
+def _fatalError(msg):
+    return StmtExpr(
+        ExprCall(ExprVar('FatalError'), args=[ ExprLiteral.String(msg) ]))
+
+def _killProcess(pid):
+    return ExprCall(
+        ExprVar('base::KillProcess'),
+        args=[ pid,
+               # XXX this is meaningless on POSIX
+               ExprVar('base::PROCESS_END_KILLED_BY_USER'),
+               ExprLiteral.FALSE ])
+
+# Results that IPDL-generated code returns back to *Channel code.
+# Users never see these
+class _Result:
+    Type = Type('Result')
+
+    Processed = ExprVar('MsgProcessed')
+    NotKnown = ExprVar('MsgNotKnown')
+    NotAllowed = ExprVar('MsgNotAllowed')
+    PayloadError = ExprVar('MsgPayloadError')
+    RouteError = ExprVar('MsgRouteError')
+    ValuError = ExprVar('MsgValueError') # [sic]
+
+# these |errfn*| are functions that generate code to be executed on an
+# error, such as "bad actor ID".  each is given a Python string
+# containing a description of the error
+
+# used in user-facing Send*() methods
+def errfnSend(msg, errcode=ExprLiteral.FALSE):
+    return [
+        _fatalError(msg),
+        StmtReturn(errcode)
+    ]
+
+def errfnSendCtor(msg):  return errfnSend(msg, errcode=ExprLiteral.NULL)
+
+# used in |OnMessage*()| handlers that hand in-messages off to Recv*()
+# interface methods
+def errfnRecv(msg, errcode=_Result.ValuError):
+    return [
+        _fatalError(msg),
+        StmtReturn(errcode)
+    ]
 
 ##-----------------------------------------------------------------------------
 ## Intermediate representation (IR) nodes used during lowering
@@ -485,45 +546,45 @@ necessarily a C++ reference."""
 
     # the biggies: serialization/deserialization
 
-    def serialize(self, expr, side, errcode):
+    def serialize(self, expr, side, errfn):
         if not self.speciallySerialized(self.ipdltype):
             return expr, [ ]
         # XXX could use TypeVisitor, but it doesn't feel right here
-        _, sexpr, stmts = self._serialize(self.ipdltype, expr, side, errcode)
+        _, sexpr, stmts = self._serialize(self.ipdltype, expr, side, errfn)
         return sexpr, stmts
 
-    def _serialize(self, etype, expr, side, errcode):
+    def _serialize(self, etype, expr, side, errfn):
         '''Serialize |expr| of type |etype|, which has some actor type
 buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         assert etype.isIPDL()           # only IPDL types may contain actors
 
         if etype.isActor():
-            return self._serializeActor(etype, expr, errcode)
+            return self._serializeActor(etype, expr, errfn)
         elif etype.isArray():
-            return self._serializeArray(etype, expr, side, errcode)
+            return self._serializeArray(etype, expr, side, errfn)
         elif etype.isUnion():
-            return self._serializeUnion(etype, expr, side, errcode)
+            return self._serializeUnion(etype, expr, side, errfn)
         elif etype.isShmem() or etype.isChmod():
-            return self._serializeShmem(etype, expr, side, errcode)
+            return self._serializeShmem(etype, expr, side, errfn)
         else: assert 0
 
     def speciallySerialized(self, type):
         return ipdl.type.hasactor(type) or ipdl.type.hasshmem(type)
 
-    def _serializeActor(self, actortype, expr, errcode):
+    def _serializeActor(self, actortype, expr, errfn):
         actorhandlevar = ExprVar(self._nextuid('handle'))
         pipetype = Type('ActorHandle')
 
         stmts = [
             Whitespace('// serializing actor type\n', indent=1),
             StmtDecl(Decl(pipetype, actorhandlevar.name)),
-            _getActorId(expr, _actorHId(actorhandlevar), actortype, errcode),
+            _getActorId(expr, _actorHId(actorhandlevar), actortype, errfn),
             Whitespace.NL
         ]
         return pipetype, actorhandlevar, stmts
 
 
-    def _serializeArray(self, arraytype, expr, side, errcode):
+    def _serializeArray(self, arraytype, expr, side, errfn):
         newarrayvar = ExprVar(self._nextuid('serArray'))
         lenvar = ExprVar(self._nextuid('length'))
         ivar = ExprVar(self._nextuid('i'))
@@ -538,7 +599,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         ithOldElt = ExprIndex(expr, ivar)
 
         eltType, serializedExpr, forbodystmts = self._serialize(
-            arraytype.basetype, ithOldElt, side, errcode)
+            arraytype.basetype, ithOldElt, side, errfn)
 
         forloop.addstmts(forbodystmts)
         forloop.addstmt(StmtExpr(ExprAssn(ithNewElt, serializedExpr)))
@@ -556,12 +617,12 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         return pipetype, newarrayvar, stmts
 
 
-    def _serializeUnion(self, uniontype, expr, side, errcode):
+    def _serializeUnion(self, uniontype, expr, side, errfn):
         def insaneActorCast(actor, actortype, cxxactortype):
             idvar = ExprVar(self._nextuid('actorid'))
             return (
                 [ StmtDecl(Decl(_actorIdType(), idvar.name)),
-                  _getActorId(actor, idvar, actortype, errcode),
+                  _getActorId(actor, idvar, actortype, errfn),
                 ],
                 ExprCast(ExprCast(idvar, Type.INTPTR, static=1),
                          cxxactortype,
@@ -632,7 +693,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
                 # NB: here we rely on the serialized expression
                 # coming back with the same type
                 _, newexpr, sstmts = self._serialize(ct, getvalue, side,
-                                                     errcode)
+                                                     errfn)
                 case.addstmts(sstmts
                               + [ Whitespace.NL,
                                   StmtExpr(ExprAssn(serunionvar, newexpr)) ])
@@ -654,7 +715,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         return pipetype, serunionvar, stmts
 
 
-    def _serializeShmem(self, shmemtype, expr, side, errcode):
+    def _serializeShmem(self, shmemtype, expr, side, errfn):
         pipetype = _shmemType()
         pipevar = ExprVar(self._nextuid('serShmem'))
         stmts = [
@@ -682,7 +743,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
     def speciallyDeserialized(self, type):
         return ipdl.type.hasactor(type) or ipdl.type.hasshmem(type)
 
-    def deserialize(self, expr, side, sems, errcode):
+    def deserialize(self, expr, side, sems, errfn):
         """|expr| is a pointer the return type."""
         if not self.speciallyDeserialized(self.ipdltype):
             return [ ]
@@ -692,39 +753,39 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
             toexpr = ExprDeref(self.var())
         else: assert 0
         _, stmts = self._deserialize(
-            expr, self.ipdltype, toexpr, side, errcode)
+            expr, self.ipdltype, toexpr, side, errfn)
         return stmts
 
-    def _deserialize(self, pipeExpr, targetType, targetExpr, side, errcode):
+    def _deserialize(self, pipeExpr, targetType, targetExpr, side, errfn):
         if not self.speciallyDeserialized(targetType):
             return targetType, [ ]
         elif targetType.isActor():
             return self._deserializeActor(
-                pipeExpr, targetType, targetExpr, side, errcode)
+                pipeExpr, targetType, targetExpr, side, errfn)
         elif targetType.isArray():
             return self._deserializeArray(
-                pipeExpr, targetType, targetExpr, side, errcode)
+                pipeExpr, targetType, targetExpr, side, errfn)
         elif targetType.isUnion():
             return self._deserializeUnion(
-                pipeExpr, targetType, targetExpr, side, errcode)
+                pipeExpr, targetType, targetExpr, side, errfn)
         elif targetType.isShmem():
             return self._deserializeShmem(
-                pipeExpr, targetType, targetExpr, side, errcode)
+                pipeExpr, targetType, targetExpr, side, errfn)
         else: assert 0
 
     def _deserializeActor(self, actorhandle, actortype, outactor, side,
-                          errcode):
+                          errfn):
         cxxtype = actortype.accept(_ConvertToCxxType(side))
         return (
             cxxtype,
             [ Whitespace('// deserializing actor type\n', indent=1),
               _lookupActorHandle(actorhandle, outactor, actortype, cxxtype,
-                                 errcode)
+                                 errfn)
             ])
 
 
     def _deserializeArray(self, pipearray, arraytype, outarray, side,
-                          errcode):
+                          errfn):
         cxxArrayType = arraytype.accept(_ConvertToCxxType(side))
         lenvar = ExprVar(self._nextuid('length'))
 
@@ -745,7 +806,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         ithOldElt = ExprIndex(pipearray, ivar)
 
         outelttype, forstmts = self._deserialize(
-            ithOldElt, arraytype.basetype, ithNewElt, side, errcode)
+            ithOldElt, arraytype.basetype, ithNewElt, side, errfn)
         forloop.addstmts(forstmts)
 
         stmts.append(forloop)
@@ -754,7 +815,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
 
 
     def _deserializeUnion(self, pipeunion, uniontype, outunion, side,
-                          errcode):
+                          errfn):
         def actorIdCast(expr):
             return ExprCast(
                 ExprCast(expr, Type.INTPTR, reinterpret=1),
@@ -791,7 +852,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
                                  actorIdCast(getvalue)),
                         StmtDecl(Decl(actorcxxtype, outactorvar.name)),
                         _lookupActor(idvar, outactorvar, ct, actorcxxtype,
-                                     errcode),
+                                     errfn),
                         StmtExpr(ExprAssn(outunion, outactorvar))
                     ])
             elif ct.isArray() and ct.basetype.isActor():
@@ -815,7 +876,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
                         StmtDecl(Decl(_actorIdType(), idvar.name),
                                  actorIdCast(ithElt)),
                         _lookupActor(idvar, ithElt, actortype, actorcxxtype,
-                                     errcode),
+                                     errfn),
                     ])
                 
                     case.addstmts([
@@ -827,7 +888,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
             else:
                 tempvar = ExprVar('tempUnionElt')
                 elttype, dstmts = self._deserialize(
-                    getvalue, ct, tempvar, side, errcode)
+                    getvalue, ct, tempvar, side, errfn)
                 case.addstmts(
                     [ StmtDecl(Decl(elttype, tempvar.name)),
                       Whitespace.NL ]
@@ -852,7 +913,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
 
 
     def _deserializeShmem(self, pipeshmem, shmemtype, outshmem, side,
-                          errcode):
+                          errfn):
         # Shmem::id_t id = inshmem.mId
         # Shmem::shmem_t* raw = Lookup(id)
         # if (raw)
@@ -1216,7 +1277,16 @@ class Protocol(ipdl.ast.Protocol):
         assert self.decl.type.isToplevel()
         if side is 'parent':   op = '++'
         elif side is 'child':  op = '--'
+        else: assert 0
         return ExprPrefixUnop(self.lastActorIdVar(), op)
+
+    def actorIdInit(self, side):
+        assert self.decl.type.isToplevel()
+
+        # parents go up from FREED, children go down from NULL
+        if side is 'parent':  return _FREED_ACTOR_ID
+        elif side is 'child': return _NULL_ACTOR_ID
+        else: assert 0
 
     # an actor's C++ private variables
     def lastActorIdVar(self):
@@ -2168,16 +2238,10 @@ class _FindFriends(ipdl.ast.Visitor):
 
     def findFriends(self, ptype):
         self.mytype = ptype
-        toplevel = self.findToplevel(ptype)
-        self.walkDownTheProtocolTree(toplevel)
+        self.walkDownTheProtocolTree(ptype.toplevel())
         return self.friends
 
     # TODO could make this into a _iterProtocolTreeHelper ...
-    def findToplevel(self, ptype):
-        if ptype.isToplevel():
-            return ptype
-        return self.findToplevel(ptype.manager)
-
     def walkDownTheProtocolTree(self, ptype):
         if ptype != self.mytype:
             # don't want to |friend| ourself!
@@ -2205,16 +2269,6 @@ class _FindFriends(ipdl.ast.Visitor):
             for actor in ipdl.type.iteractortypes(ret.type):
                 yield actor
 
-
-class _Result:
-    Type = Type('Result')
-
-    Processed = ExprVar('MsgProcessed')
-    NotKnown = ExprVar('MsgNotKnown')
-    NotAllowed = ExprVar('MsgNotAllowed')
-    PayloadError = ExprVar('MsgPayloadError')
-    RouteError = ExprVar('MsgRouteError')
-    ValuError = ExprVar('MsgValueError') # [sic]
 
 class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
     def __init__(self, myside):
@@ -2383,7 +2437,8 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
                 ExprMemberInit(p.channelVar(), [
                     ExprCall(ExprVar('ALLOW_THIS_IN_INITIALIZER_LIST'),
                              [ ExprVar.THIS ]) ]),
-                ExprMemberInit(p.lastActorIdVar(), [ ExprLiteral.ZERO ])
+                ExprMemberInit(p.lastActorIdVar(),
+                               [ p.actorIdInit(self.side) ])
             ]
         else:
             ctor.memberinits = [
@@ -2536,9 +2591,44 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         if p.usesShmem():
             self.cls.addstmts(self.makeShmemIface())
 
-        # private: members and methods
-        self.cls.addstmts([ Label.PRIVATE,
-                            StmtDecl(Decl(p.channelType(), 'mChannel')) ])
+        ## private methods
+        self.cls.addstmt(Label.PRIVATE)
+
+        ## FatalError()       
+        msgvar = ExprVar('msg')
+        fatalerror = MethodDefn(MethodDecl(
+            'FatalError',
+            params=[ Decl(Type('char', const=1, ptrconst=1), msgvar.name) ],
+            const=1))
+        fatalerror.addstmts([
+            _printErrorMessage('IPDL error:'),
+            _printErrorMessage(msgvar),
+            Whitespace.NL
+        ])
+        actorname = _actorName(p.name, self.side)
+        if self.side is 'parent':
+            # if the error happens on the parent side, the parent
+            # kills off the child
+            fatalerror.addstmts([
+                _printErrorMessage(
+                    '['+ actorname +'] killing child side as a result'),
+                Whitespace.NL
+            ])
+
+            ifkill = StmtIf(ExprNot(
+                _killProcess(ExprCall(p.otherProcessMethod()))))
+            ifkill.addifstmt(
+                _printErrorMessage("  may have failed to kill child!"))
+            fatalerror.addstmt(ifkill)
+        else:
+            # and if it happens on the child side, the child commits
+            # seppuko
+            fatalerror.addstmt(
+                _runtimeAbort('['+ actorname +'] abort()ing as a result'))
+        self.cls.addstmts([ fatalerror, Whitespace.NL ])
+        
+        ## private members
+        self.cls.addstmt(StmtDecl(Decl(p.channelType(), 'mChannel')))
         if p.decl.type.isToplevel():
             self.cls.addstmts([
                 StmtDecl(Decl(Type('IDMap', T=Type('ChannelListener')),
@@ -2598,6 +2688,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         otherprocess = MethodDefn(MethodDecl(
             p.otherProcessMethod().name,
             ret=Type('ProcessHandle'),
+            const=1,
             virtual=1))
 
         if p.decl.type.isToplevel():
@@ -2877,7 +2968,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         method = MethodDefn(self.makeSendMethodDecl(md))
         method.addstmts(self.ctorPrologue(md) + [ Whitespace.NL ])
 
-        msgvar, stmts = self.makeMessage(md)
+        msgvar, stmts = self.makeMessage(md, errfnSendCtor)
         sendok, sendstmts = self.sendAsync(md, msgvar)
         method.addstmts(
             stmts
@@ -2899,7 +2990,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         method = MethodDefn(self.makeSendMethodDecl(md))
         method.addstmts(self.ctorPrologue(md) + [ Whitespace.NL ])
 
-        msgvar, stmts = self.makeMessage(md)
+        msgvar, stmts = self.makeMessage(md, errfnSendCtor)
 
         replyvar = self.replyvar
         sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar)
@@ -2911,7 +3002,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             + self.failCtorIf(md, ExprNot(sendok)))
 
         readok, stmts = self.deserializeReply(
-            md, ExprAddrOf(replyvar), self.side)
+            md, ExprAddrOf(replyvar), self.side, errfnSendCtor)
         method.addstmts(
             stmts
             + self.failCtorIf(md, ExprNot(readok))
@@ -2920,7 +3011,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         return method
 
 
-    def ctorPrologue(self, md, errcode=ExprLiteral.NULL, idexpr=None):
+    def ctorPrologue(self, md, errfn=ExprLiteral.NULL, idexpr=None):
         actorvar = md.actorDecl().var()
 
         if idexpr is None:
@@ -2931,7 +3022,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
                               args=[ actorvar, idexpr ])
 
         return [
-            self.failIfNullActor(actorvar, errcode),
+            self.failIfNullActor(actorvar, errfn),
             StmtExpr(ExprAssn(_actorId(actorvar), idexpr)),
             StmtExpr(ExprAssn(_actorManager(actorvar), ExprVar.THIS)),
             StmtExpr(ExprAssn(_actorChannel(actorvar),
@@ -2963,7 +3054,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
 
         method.addstmts(self.dtorPrologue(actor.var()))
 
-        msgvar, stmts = self.makeMessage(md)
+        msgvar, stmts = self.makeMessage(md, errfnSend)
         sendok, sendstmts = self.sendAsync(md, msgvar)
         method.addstmts(
             stmts
@@ -2987,7 +3078,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
 
         method.addstmts(self.dtorPrologue(actor.var()))
 
-        msgvar, stmts = self.makeMessage(md)
+        msgvar, stmts = self.makeMessage(md, errfnSend)
 
         replyvar = self.replyvar
         sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar)
@@ -2998,7 +3089,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             + sendstmts)
 
         readok, destmts = self.deserializeReply(
-            md, ExprAddrOf(replyvar), self.side)
+            md, ExprAddrOf(replyvar), self.side, errfnSend)
         ifsendok = StmtIf(sendok)
         ifsendok.addifstmts(destmts)
         ifsendok.addifstmts([ Whitespace.NL,
@@ -3020,7 +3111,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
 
     def genAsyncSendMethod(self, md):
         method = MethodDefn(self.makeSendMethodDecl(md))
-        msgvar, stmts = self.makeMessage(md)
+        msgvar, stmts = self.makeMessage(md, errfnSend)
         sendok, sendstmts = self.sendAsync(md, msgvar)
         method.addstmts(stmts
                         +[ Whitespace.NL ]
@@ -3032,7 +3123,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
     def genBlockingSendMethod(self, md):
         method = MethodDefn(self.makeSendMethodDecl(md))
 
-        msgvar, serstmts = self.makeMessage(md)
+        msgvar, serstmts = self.makeMessage(md, errfnSend)
         replyvar = self.replyvar
 
         sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar)
@@ -3040,7 +3131,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
 
         readok, desstmts = self.deserializeReply(
-            md, ExprAddrOf(replyvar), self.side)
+            md, ExprAddrOf(replyvar), self.side, errfnSend)
 
         method.addstmts(
             serstmts
@@ -3060,7 +3151,8 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         case = StmtBlock()
         actorvar = md.actorDecl().var()
 
-        actorhandle, readok, stmts = self.deserializeMessage(md, self.side)
+        actorhandle, readok, stmts = self.deserializeMessage(md, self.side,
+                                                             errfnRecv)
         failif = StmtIf(ExprNot(readok))
         failif.addifstmt(StmtReturn(_Result.PayloadError))
 
@@ -3073,11 +3165,11 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             + [ StmtExpr(ExprAssn(
                 actorvar,
                 self.callAllocActor(md, retsems='in'))) ]
-            + self.ctorPrologue(md, errcode=_Result.ValuError,
+            + self.ctorPrologue(md, errfn=_Result.ValuError,
                                 idexpr=_actorHId(actorhandle))
             + [ Whitespace.NL ]
             + self.invokeRecvHandler(md)
-            + self.makeReply(md)
+            + self.makeReply(md, errfnRecv)
             + [ Whitespace.NL,
                 StmtReturn(_Result.Processed) ])
 
@@ -3088,7 +3180,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         lbl = CaseLabel(md.pqMsgId())
         case = StmtBlock()
 
-        readok, stmts = self.deserializeMessage(md, self.side)
+        readok, stmts = self.deserializeMessage(md, self.side, errfnRecv)
         failif = StmtIf(ExprNot(readok))
         failif.addifstmt(StmtReturn(_Result.PayloadError))
 
@@ -3100,7 +3192,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             + self.invokeRecvHandler(md)
             + [ Whitespace.NL ]
             + self.dtorEpilogue(md, md.actorDecl().var(), retsems='in')
-            + self.makeReply(md)
+            + self.makeReply(md, errfnRecv)
             + [ Whitespace.NL,
                 StmtReturn(_Result.Processed) ])
         
@@ -3111,7 +3203,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         lbl = CaseLabel(md.pqMsgId())
         case = StmtBlock()
 
-        readok, stmts = self.deserializeMessage(md, self.side)
+        readok, stmts = self.deserializeMessage(md, self.side, errfn=errfnRecv)
         failif = StmtIf(ExprNot(readok))
         failif.addifstmt(StmtReturn(_Result.PayloadError))
 
@@ -3122,7 +3214,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
                 for r in md.returns ]
             + self.invokeRecvHandler(md)
             + [ Whitespace.NL ]
-            + self.makeReply(md)
+            + self.makeReply(md, errfnRecv)
             + [ StmtReturn(_Result.Processed) ])
 
         return lbl, case
@@ -3137,18 +3229,17 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
 
     def unregisterActor(self, actorexpr):
         return [ StmtExpr(ExprCall(self.protocol.unregisterMethod(),
-                                   args=[ _actorId(actorexpr) ])) ]
+                                   args=[ _actorId(actorexpr) ])),
+                 StmtExpr(ExprAssn(_actorId(actorexpr), _FREED_ACTOR_ID)) ]
 
-
-    def makeMessage(self, md):
+    def makeMessage(self, md, errfn):
         msgvar = self.msgvar
         stmts = [ StmtDecl(Decl(Type(md.pqMsgClass(), ptr=1), msgvar.name)),
                   Whitespace.NL ]
         msgCtorArgs = [ ]
 
         for param in md.params:
-            arg, sstmts = param.serialize(param.var(), self.side,
-                                          ExprLiteral.FALSE)
+            arg, sstmts = param.serialize(param.var(), self.side, errfn)
             msgCtorArgs.append(arg)
             stmts.extend(sstmts)
 
@@ -3161,7 +3252,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         return msgvar, stmts
 
 
-    def makeReply(self, md):
+    def makeReply(self, md, errfn):
         # TODO special cases for async ctor/dtor replies
         if md.decl.type.isAsync():
             return [ ]
@@ -3170,8 +3261,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         stmts = [ ]
         replyCtorArgs = [ ]
         for ret in md.returns:
-            arg, sstmts = ret.serialize(ret.var(), self.side,
-                                        _Result.ValuError)
+            arg, sstmts = ret.serialize(ret.var(), self.side, errfn)
             replyCtorArgs.append(arg)
             stmts.extend(sstmts)
 
@@ -3204,7 +3294,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         return stmts + [ Whitespace.NL ]
 
 
-    def deserializeMessage(self, md, side):
+    def deserializeMessage(self, md, side, errfn):
         msgvar = self.msgvar
         isctor = md.decl.type.isCtor()
         vars = [ ]
@@ -3236,7 +3326,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             # in-messages; the actor doesn't exist yet
             if isctor and i is 0: continue
             ifok.addifstmts(param.deserialize(readvars[i], side, sems='in',
-                                              errcode=_Result.ValuError))
+                                              errfn=errfn))
         if len(ifok.ifb.stmts):
             stmts.extend([ Whitespace.NL, ifok ])
 
@@ -3247,7 +3337,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         return okvar, stmts
 
 
-    def deserializeReply(self, md, replyexpr, side):
+    def deserializeReply(self, md, replyexpr, side, errfn):
         readexprs = [ ]
         stmts = [ Whitespace.NL,
                   self.logMessage(md, md.replyCast(replyexpr),
@@ -3272,7 +3362,7 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         for i, ret in enumerate(md.returns):
             ifok.addifstmts(ret.deserialize(
                 ExprDeref(readexprs[i]), side, sems='out',
-                errcode=ExprLiteral.FALSE))
+                errfn=errfn))
         if len(ifok.ifb.stmts):
             stmts.extend([ Whitespace.NL, ifok ])
 
