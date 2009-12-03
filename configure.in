@@ -8113,7 +8113,7 @@ fi # COMPILE_ENVIRONMENT
 if test "$USE_FC_FREETYPE"; then
     if test "$COMPILE_ENVIRONMENT"; then
     	_SAVE_CPPFLAGS="$CPPFLAGS"
-    	CPPFLAGS="$CPPFLAGS $FT2_CFLAGS"
+    	CPPFLAGS="$CPPFLAGS $FT2_CFLAGS $XCFLAGS"
         AC_CHECK_HEADERS(fontconfig/fcfreetype.h, , 
             [AC_MSG_ERROR(Can't find header fontconfig/fcfreetype.h.)])
     	CPPFLAGS="$_SAVE_CPPFLAGS"
