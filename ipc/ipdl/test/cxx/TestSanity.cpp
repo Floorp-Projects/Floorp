@@ -1,11 +1,5 @@
 #include "TestSanity.h"
 
-#include "nsIAppShell.h"
-
-#include "nsCOMPtr.h"
-#include "nsServiceManagerUtils.h" // do_GetService()
-#include "nsWidgetsCID.h"       // NS_APPSHELL_CID
-
 #include "IPDLUnitTests.h"      // fail etc.
 
 namespace mozilla {
@@ -41,20 +35,9 @@ TestSanityParent::RecvPong(const int& one, const float& zeroPtTwoFive)
     if (0.25f != zeroPtTwoFive)
         fail("invalid argument `%g', should have been `0.25'", zeroPtTwoFive);
 
-    passed("sent ping/received pong");
-
-    static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-    nsCOMPtr<nsIAppShell> appShell (do_GetService(kAppShellCID));
-    appShell->Exit();
+    Close();
 
     return true;
-}
-
-bool
-TestSanityParent::RecvUNREACHED()
-{
-    fail("unreached");
-    return false;               // not reached
 }
 
 
@@ -83,13 +66,6 @@ TestSanityChild::RecvPing(const int& zero, const float& zeroPtFive)
     if (!SendPong(1, 0.25f))
         fail("sending Pong");
     return true;
-}
-
-bool
-TestSanityChild::RecvUNREACHED()
-{
-    fail("unreached");
-    return false;               // not reached
 }
 
 

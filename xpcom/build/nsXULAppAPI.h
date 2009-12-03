@@ -478,7 +478,7 @@ XRE_API(nsresult,
 class MessageLoop;
 
 XRE_API(void,
-        XRE_ShutdownChildProcess, (MessageLoop* aUILoop))
+        XRE_ShutdownChildProcess, ())
 
 XRE_API(MessageLoop*,
         XRE_GetIOMessageLoop, ())

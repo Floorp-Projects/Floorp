@@ -46,7 +46,14 @@
 
 #include "prenv.h"
 
-#include "mozilla/ipc/RPCChannel.h"
+
+// WARNING: this takes into account the private, special-message-type
+// enum in ipc_channel.h.  They need to be kept in sync.
+namespace {
+enum {
+    GOODBYE_MESSAGE_TYPE       = kuint16max - 1,
+};
+}
 
 namespace mozilla {
 namespace ipc {
@@ -64,6 +71,13 @@ template<class ListenerT>
 class /*NS_INTERFACE_CLASS*/ IProtocolManager
 {
 public:
+    enum ActorDestroyReason {
+        Deletion,
+        AncestorDeletion,
+        NormalShutdown,
+        AbnormalShutdown
+    };
+
     typedef base::ProcessHandle ProcessHandle;
 
     virtual int32 Register(ListenerT*) = 0;

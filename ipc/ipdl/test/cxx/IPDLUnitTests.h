@@ -43,7 +43,15 @@
 #include "base/process.h"
 #include "chrome/common/ipc_channel.h"
 
+#include "mozilla/ipc/GeckoThread.h"
+
+#include "nsIAppShell.h"
+
+#include "nsCOMPtr.h"
 #include "nsDebug.h"
+#include "nsServiceManagerUtils.h" // do_GetService()
+#include "nsWidgetsCID.h"       // NS_APPSHELL_CID
+
 
 #define MOZ_IPDL_TESTFAIL_LABEL "TEST-UNEXPECTED-FAIL"
 #define MOZ_IPDL_TESTPASS_LABEL "TEST-PASS"
@@ -93,8 +101,13 @@ inline void passed(const char* fmt, ...)
 
 void IPDLUnitTestMain(void* aData);
 
-// TODO: could clean up parent actor/subprocess
-
+inline void
+QuitParent()
+{
+  static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+  nsCOMPtr<nsIAppShell> appShell (do_GetService(kAppShellCID));
+  appShell->Exit();
+}
 
 //-----------------------------------------------------------------------------
 // child process only
@@ -102,6 +115,16 @@ void IPDLUnitTestMain(void* aData);
 void IPDLUnitTestChildInit(IPC::Channel* transport,
                            base::ProcessHandle parent,
                            MessageLoop* worker);
+
+inline void
+QuitChild()
+{
+  mozilla::ipc::BrowserProcessSubThread::
+    GetMessageLoop(mozilla::ipc::BrowserProcessSubThread::IO)->
+      PostTask(FROM_HERE, new MessageLoop::QuitTask());
+
+  MessageLoopForUI::current()->Quit();
+}
 
 } // namespace _ipdltest
 } // namespace mozilla

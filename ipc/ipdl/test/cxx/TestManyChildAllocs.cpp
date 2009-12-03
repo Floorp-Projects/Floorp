@@ -1,11 +1,5 @@
 #include "TestManyChildAllocs.h"
 
-#include "nsIAppShell.h"
-
-#include "nsCOMPtr.h"
-#include "nsServiceManagerUtils.h" // do_GetService()
-#include "nsWidgetsCID.h"       // NS_APPSHELL_CID
-
 #include "IPDLUnitTests.h"      // fail etc.
 
 
@@ -36,13 +30,9 @@ TestManyChildAllocsParent::Main()
 bool
 TestManyChildAllocsParent::RecvDone()
 {
-    // should clean up ...
-
-    passed("allocs were successfuly");
-    
-    static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-    nsCOMPtr<nsIAppShell> appShell (do_GetService(kAppShellCID));
-    appShell->Exit();
+    // explicitly *not* cleaning up, so we can sanity-check IPDL's
+    // auto-shutdown/cleanup handling
+    Close();
 
     return true;
 }

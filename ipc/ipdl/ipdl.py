@@ -50,12 +50,12 @@ op.add_option('-v', '--verbose', dest='verbosity', default=1, action='count',
 op.add_option('-q', '--quiet', dest='verbosity', action='store_const', const=0,
               help="Suppress logging output")
 op.add_option('-d', '--outheaders-dir', dest='headersdir', default='.',
-              help="""Director into which C++ headers will be generated.
+              help="""Directory into which C++ headers will be generated.
 A protocol Foo in the namespace bar will cause the headers
   dir/bar/Foo.h, dir/bar/FooParent.h, and dir/bar/FooParent.h
 to be generated""")
 op.add_option('-o', '--outcpp-dir', dest='cppdir', default='.',
-              help="""Director into which C++ sources will be generated
+              help="""Directory into which C++ sources will be generated
 A protocol Foo in the namespace bar will cause the sources
   cppdir/FooParent.cpp, cppdir/FooChild.cpp
 to be generated""")
@@ -71,7 +71,7 @@ if not len(files):
     op.error("No IPDL files specified")
 
 log(1, 'Generated C++ headers will be generated relative to "%s"', headersdir)
-log(1, 'Generated C++ sources will be generated relative to "%s"', cppdir)
+log(1, 'Generated C++ sources will be generated in "%s"', cppdir)
 
 allprotocols = []
 
