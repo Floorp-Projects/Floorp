@@ -1104,7 +1104,7 @@ WeaveSvc.prototype = {
       throw "aborting sync, failed to get collections";
 
     // Convert the response to an object and read out the modified times
-    for each (let engine in [Clients].concat(Engines.getEnabled()))
+    for each (let engine in [Clients].concat(Engines.getAll()))
       engine.lastModified = info.obj[engine.name] || 0;
 
     this._log.trace("Refreshing client list");
