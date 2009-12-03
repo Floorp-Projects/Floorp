@@ -19,6 +19,8 @@
 
 <!ENTITY setup.generalTitle.label     "Create your Weave Account">
 
+<!ENTITY weaveDesc.label            "&brandShortName; can use a Mozilla Weave account to sync your bookmarks, history, passwords, preferences, and tabs across multiple computers.">
+
 <!ENTITY setup.page1Title.label     "&setup.generalTitle.label; - Page 1 of 4">
 <!ENTITY setup.page2Title.label     "&setup.generalTitle.label; - Page 2 of 4">
 <!ENTITY setup.page3Title.label     "&setup.generalTitle.label; - Page 3 of 4">
