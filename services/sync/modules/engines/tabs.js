@@ -49,8 +49,6 @@ Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/type_records/tabs.js");
 Cu.import("resource://weave/engines/clientData.js");
 
-const filteredUrls = /^(about:blank|chrome:\/\/weave\/.*)$/i;
-
 function TabEngine() {
   this._init();
 }
@@ -132,6 +130,8 @@ TabStore.prototype = {
 
 
   getAllTabs: function getAllTabs(filter) {
+    let filteredUrls = new RegExp(Svc.Prefs.get("engine.tabs.filteredUrls"), "i");
+
     // Iterate through each tab of each window
     let allTabs = [];
     let wins = Svc.WinMediator.getEnumerator("navigator:browser");
