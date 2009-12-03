@@ -72,6 +72,8 @@ used as the exception message.  Example:
 Returns a string consisting of the plugin name, concatenated with any 
 arguments passed to the method.
 
+* .crash() - Crashes the plugin
+
 == Private browsing ==
 
 The test plugin object supports the following scriptable methods:
