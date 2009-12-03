@@ -581,6 +581,8 @@ struct MessageWindow {
 
         // Construct a narrow UTF8 buffer <commandline>\0<workingdir>\0
 #ifdef WINCE
+        // For WinCE, we're stuck with providing our own argv[0] for the remote
+        // command-line.
         NS_ConvertUTF16toUTF8 utf8buffer(L"dummy ");
         AppendUTF16toUTF8(cmd, utf8buffer);
 #else

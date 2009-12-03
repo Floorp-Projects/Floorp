@@ -207,11 +207,11 @@ ForwardToWindow(HWND wnd) {
   _wgetcwd(wCwd, MAX_PATH);
 
   // Construct a narrow UTF8 buffer <path> <commandline>\0<workingdir>\0
-  size_t len = wcslen(wPath) + wcslen(wCmd) + wcslen(wCwd) + 3;
+  size_t len = wcslen(wPath) + wcslen(wCmd) + wcslen(wCwd) + 2;
   WCHAR *wMsg = (WCHAR *)malloc(len * sizeof(*wMsg));
   wcscpy(wMsg, wPath);
   wcscpy(wMsg + wcslen(wPath), wCmd);                // The command line
-  wcscpy(wMsg + wcslen(wPath) + wcslen(wCmd) + 2, wCwd); // Working dir
+  wcscpy(wMsg + wcslen(wPath) + wcslen(wCmd) + 1, wCwd); // Working dir
 
   // Then convert to UTF-8, assuming worst-case explosion of characters
   char *msg = (char *)malloc(len * 4);
@@ -437,7 +437,7 @@ main(int argc, char **argv)
     }
 
     // Lookup the hidden message window created by nsNativeAppSupport
-    strncat(windowName, "MessageWindow", sizeof(windowName));
+    strncat(windowName, "MessageWindow", sizeof(windowName) - strlen(windowName));
     WCHAR wWindowName[512];
     MultiByteToWideChar(CP_UTF8, 0, windowName, -1, wWindowName, sizeof(wWindowName));
     HWND wnd = ::FindWindowW(wWindowName, NULL);
