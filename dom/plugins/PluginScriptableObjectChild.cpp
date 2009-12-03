@@ -651,7 +651,11 @@ PluginScriptableObjectChild::~PluginScriptableObjectChild()
       }
     }
     else {
-      PluginModuleChild::sBrowserFuncs.releaseobject(mObject);
+      // Make sure we've invalidated our NPObject so that the plugin doesn't
+      // hold an object with a dangling pointer.
+
+      // Calling a virtual in the destructor, make sure we call the right one.
+      PluginScriptableObjectChild::AnswerInvalidate();
     }
   }
   NS_ASSERTION(!PluginModuleChild::current()->
