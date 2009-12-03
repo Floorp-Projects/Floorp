@@ -42,28 +42,42 @@ from ipdl.type import TypeCheck
 
 from ipdl.cxx.cgen import CxxCodeGen
 
+
 def parse(specstring, filename='/stdin', includedirs=[ ], errout=sys.stderr):
     '''Return an IPDL AST if parsing was successful.  Print errors to |errout|
     if it is not.'''
     return Parser().parse(specstring, os.path.abspath(filename), includedirs, errout)
+
 
 def typecheck(ast, errout=sys.stderr):
     '''Return True iff |ast| is well typed.  Print errors to |errout| if
     it is not.'''
     return TypeCheck().check(ast, errout)
 
-def gencxx(ast, outdir):
-    for hdr in LowerToCxx().lower(ast):
-        file = os.path.join(
-            outdir,
-            *([ns.name for ns in ast.protocol.namespaces] + [hdr.name]))
 
+def gencxx(ipdlfilename, ast, outheadersdir, outcppdir):
+    headers, cpps = LowerToCxx().lower(ast)
+
+    def resolveHeader(hdr):
+        return [
+            hdr, 
+            os.path.join(
+                outheadersdir,
+                *([ns.name for ns in ast.protocol.namespaces] + [hdr.name]))
+        ]
+    def resolveCpp(cpp):
+        return [ cpp, os.path.join(outcppdir, cpp.name) ]
+
+    for ast, filename in ([ resolveHeader(hdr) for hdr in headers ]
+                          + [ resolveCpp(cpp) for cpp in cpps ]):
         tempfile = StringIO()
-        CxxCodeGen(tempfile).cgen(hdr)
-        writeifmodified(tempfile.getvalue(), file)
+        CxxCodeGen(tempfile).cgen(ast)
+        writeifmodified(tempfile.getvalue(), filename)
+
 
 def genipdl(ast, outdir):
     return IPDLCodeGen().cgen(ast)
+
 
 def writeifmodified(contents, file):
     dir = os.path.dirname(file)

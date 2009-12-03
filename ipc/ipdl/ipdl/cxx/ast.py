@@ -77,6 +77,11 @@ class Visitor:
     def visitDecl(self, decl):
         decl.type.accept(self)
 
+    def visitParam(self, param):
+        self.visitDecl(param)
+        if param.default is not None:
+            param.default.accept(self)
+
     def visitClass(self, cls):
         for inherit in cls.inherits:
             inherit.accept(self)
@@ -398,6 +403,14 @@ class Decl(Node):
     def __deepcopy__(self, memo):
         return Decl(copy.deepcopy(self.type, memo), self.name)
 
+class Param(Decl):
+    def __init__(self, type, name, default=None):
+        Decl.__init__(self, type, name)
+        self.default = default
+    def __deepcopy__(self, memo):
+        return Param(copy.deepcopy(self.type, memo), self.name,
+                     copy.deepcopy(self.default, memo))
+
 ##------------------------------
 # class stuff
 class Class(Block):
@@ -486,6 +499,11 @@ class DestructorDecl(MethodDecl):
     def __init__(self, name, virtual=0):
         MethodDecl.__init__(self, name, params=[ ], ret=None,
                             virtual=virtual)
+
+    def __deepcopy__(self, memo):
+        return DestructorDecl(self.name, self.virtual)
+
+        
 class DestructorDefn(MethodDefn):
     def __init__(self, decl):  MethodDefn.__init__(self, decl)
 
