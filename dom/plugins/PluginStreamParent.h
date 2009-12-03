@@ -60,9 +60,11 @@ public:
 
   virtual bool AnswerNPN_Write(const Buffer& data, int32_t* written);
 
-  void NPN_DestroyStream(NPReason reason);
+  virtual bool Answer__delete__(const NPError& reason, const bool& artificial);
 
 private:
+  void NPN_DestroyStream(NPReason reason);
+
   PluginInstanceParent* mInstance;
   NPStream* mStream;
   bool mClosed;

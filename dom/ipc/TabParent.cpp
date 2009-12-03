@@ -123,22 +123,9 @@ TabParent::AllocPDocumentRenderer(const PRInt32& x,
 }
 
 bool
-TabParent::DeallocPDocumentRenderer(mozilla::ipc::PDocumentRendererParent* __a,
-        const PRUint32& w, const PRUint32& h, const nsCString& data)
+TabParent::DeallocPDocumentRenderer(PDocumentRendererParent* actor)
 {
-    NS_ENSURE_ARG_POINTER(__a);
-    delete __a;
-    return true;
-}
-
-bool
-TabParent::RecvPDocumentRendererDestructor(PDocumentRendererParent* __a,
-        const PRUint32& w, const PRUint32& h, const nsCString& data)
-{
-    NS_ENSURE_ARG_POINTER(__a);
-    DocumentRendererParent *renderer = static_cast<DocumentRendererParent *>(__a);
-    renderer->DrawToCanvas(w, h, data);
-
+    delete actor;
     return true;
 }
 

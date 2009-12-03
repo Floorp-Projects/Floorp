@@ -46,14 +46,7 @@ protected:
         return actor;
     }
 
-    virtual bool DeallocPTestArraysSub(PTestArraysSubParent* actor)
-    {
-        delete actor;
-        return true;
-    }
-
-    virtual bool
-    RecvPTestArraysSubDestructor(PTestArraysSubParent* actor);
+    virtual bool DeallocPTestArraysSub(PTestArraysSubParent* actor);
 
     virtual bool RecvTest1(
             const nsTArray<int>& i1,

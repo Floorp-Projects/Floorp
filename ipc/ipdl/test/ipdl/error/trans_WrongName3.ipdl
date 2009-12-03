@@ -2,8 +2,9 @@ sync protocol trans_WrongName3 {
 
 parent:
     sync Msg();
+    delete();
 
 state S1:
     answer Msg goto S1;
-
+    recv delete();
 };

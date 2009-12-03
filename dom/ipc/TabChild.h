@@ -105,11 +105,7 @@ public:
             const nsString& bgcolor,
             const PRUint32& flags,
             const bool& flush);
-    virtual bool DeallocPDocumentRenderer(
-            mozilla::ipc::PDocumentRendererChild* __a,
-            const PRUint32& w,
-            const PRUint32& h,
-            const nsCString& data);
+    virtual bool DeallocPDocumentRenderer(PDocumentRendererChild* actor);
     virtual bool RecvPDocumentRendererConstructor(
             mozilla::ipc::PDocumentRendererChild *__a,
             const PRInt32& x,

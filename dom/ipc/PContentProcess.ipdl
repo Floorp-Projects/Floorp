@@ -53,16 +53,13 @@ sync protocol PContentProcess
 
 child:
     PIFrameEmbedding();
-    ~PIFrameEmbedding();
 
     PTestShell();
-    ~PTestShell();
 
     Quit();
 
 parent:
     PNecko();
-    ~PNecko();
 };
 
 }

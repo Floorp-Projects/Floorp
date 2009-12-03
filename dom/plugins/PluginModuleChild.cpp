@@ -738,12 +738,12 @@ _destroystream(NPP aNPP,
     if (s->IsBrowserStream()) {
         BrowserStreamChild* bs = static_cast<BrowserStreamChild*>(s);
         bs->EnsureCorrectInstance(p);
-        p->CallPBrowserStreamDestructor(bs, aReason, false);
+        PBrowserStreamChild::Call__delete__(bs, aReason, false);
     }
     else {
         PluginStreamChild* ps = static_cast<PluginStreamChild*>(s);
         ps->EnsureCorrectInstance(p);
-        p->CallPPluginStreamDestructor(ps, aReason, false);
+        PPluginStreamChild::Call__delete__(ps, aReason, false);
     }
     return NPERR_NO_ERROR;
 }
@@ -1442,8 +1442,7 @@ PluginModuleChild::AnswerPPluginInstanceConstructor(PPluginInstanceChild* aActor
 }
 
 bool
-PluginModuleChild::DeallocPPluginInstance(PPluginInstanceChild* aActor,
-                                          NPError* rv)
+PluginModuleChild::DeallocPPluginInstance(PPluginInstanceChild* aActor)
 {
     _MOZ_LOG(__FUNCTION__);
     AssertPluginThread();
@@ -1454,16 +1453,15 @@ PluginModuleChild::DeallocPPluginInstance(PPluginInstanceChild* aActor,
 }
 
 bool
-PluginModuleChild::AnswerPPluginInstanceDestructor(PPluginInstanceChild* aActor,
-                                                   NPError* rv)
+PluginModuleChild::PluginInstanceDestroyed(PluginInstanceChild* aActor,
+                                           NPError* rv)
 {
     _MOZ_LOG(__FUNCTION__);
     AssertPluginThread();
 
-    PluginInstanceChild* inst = static_cast<PluginInstanceChild*>(aActor);
-    *rv = mFunctions.destroy(inst->GetNPP(), 0);
-    inst->Destroy();
-    inst->GetNPP()->ndata = 0;
+    *rv = mFunctions.destroy(aActor->GetNPP(), 0);
+    aActor->Destroy();
+    aActor->GetNPP()->ndata = 0;
 
     return true;
 }

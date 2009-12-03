@@ -97,12 +97,10 @@ PluginModuleParent::AllocPPluginInstance(const nsCString& aMimeType,
 }
 
 bool
-PluginModuleParent::DeallocPPluginInstance(PPluginInstanceParent* aActor,
-                                           NPError* _retval)
+PluginModuleParent::DeallocPPluginInstance(PPluginInstanceParent* aActor)
 {
     _MOZ_LOG(__FUNCTION__);
     delete aActor;
-    *_retval = NPERR_NO_ERROR;
     return true;
 }
 
@@ -147,7 +145,7 @@ PluginModuleParent::NPP_Destroy(NPP instance,
     parentInstance->Destroy();
 
     NPError prv;
-    if (!parentInstance->Module()->CallPPluginInstanceDestructor(parentInstance, &prv)) {
+    if (!PPluginInstanceParent::Call__delete__(parentInstance, &prv)) {
         prv = NPERR_GENERIC_ERROR;
     }
     instance->pdata = nsnull;
@@ -556,7 +554,7 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
             *error);
 
     if (*error != NPERR_NO_ERROR) {
-        CallPPluginInstanceDestructor(parentInstance, error);
+        PPluginInstanceParent::Call__delete__(parentInstance, error);
         instance->pdata = nsnull;
         return NS_ERROR_FAILURE;
     }

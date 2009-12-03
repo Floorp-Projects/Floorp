@@ -75,3 +75,11 @@ void DocumentRendererParent::DrawToCanvas(PRUint32 aWidth, PRUint32 aHeight,
     gfxRect damageRect = mCanvasContext->UserToDevice(gfxRect(0, 0, aWidth, aHeight));
     mCanvas->Redraw(damageRect);
 }
+
+bool
+DocumentRendererParent::Recv__delete__(const PRUint32& w, const PRUint32& h,
+                                       const nsCString& data)
+{
+    DrawToCanvas(w, h, data);
+    return true;
+}

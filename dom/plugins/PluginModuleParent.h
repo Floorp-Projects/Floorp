@@ -66,6 +66,8 @@ namespace mozilla {
 namespace plugins {
 //-----------------------------------------------------------------------------
 
+class BrowserStreamParent;
+
 /**
  * PluginModuleParent
  *
@@ -91,8 +93,7 @@ protected:
                          NPError* rv);
 
     virtual bool
-    DeallocPPluginInstance(PPluginInstanceParent* aActor,
-                           NPError* _retval);
+    DeallocPPluginInstance(PPluginInstanceParent* aActor);
 
 public:
     PluginModuleParent(const char* aFilePath);

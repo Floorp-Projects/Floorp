@@ -57,6 +57,9 @@ public:
     void DrawToCanvas(PRUint32 aWidth, PRUint32 aHeight,
 		      const nsCString& aData);
 
+    virtual bool Recv__delete__(const PRUint32& w, const PRUint32& h,
+                                const nsCString& data);
+
 private:
     nsCOMPtr<nsICanvasRenderingContextInternal> mCanvas;
     nsRefPtr<gfxContext> mCanvasContext;
