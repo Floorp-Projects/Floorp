@@ -633,7 +633,7 @@ richlistitem[selected="true"] {
   background-color: white;
 }
 
-richlistitem:active {
+richlistitem:active:not([selected="true"]) {
   background-color: #8db8d8;
 }
 
