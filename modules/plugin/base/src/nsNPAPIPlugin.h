@@ -116,8 +116,6 @@ namespace mozilla {
 namespace plugins {
 namespace parent {
 
-PR_BEGIN_EXTERN_C
-
 NPObject* NP_CALLBACK
 _getwindowobject(NPP npp);
 
@@ -300,8 +298,6 @@ _getJavaEnv(void);
 
 void* NP_CALLBACK /* OJI type: jref */
 _getJavaPeer(NPP npp);
-
-PR_END_EXTERN_C
 
 } /* namespace parent */
 } /* namespace plugins */
