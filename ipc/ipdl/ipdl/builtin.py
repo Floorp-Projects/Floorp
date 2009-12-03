@@ -67,6 +67,7 @@ Includes = (
     'base/basictypes.h',
     'prtime.h',
     'nscore.h',
+    'IPCMessageStart.h',
     'IPC/IPCMessageUtils.h',
     'nsStringGlue.h',
     'nsTArray.h',

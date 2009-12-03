@@ -44,5 +44,5 @@ endif
 tier_xpcom_dirs += xpcom
 
 ifdef MOZ_IPC
-tier_xpcom_dirs += ipc/ipdl ipc/chromium ipc/glue
+tier_xpcom_dirs += ipc/chromium ipc/glue
 endif
