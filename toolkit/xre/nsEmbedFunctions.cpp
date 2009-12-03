@@ -459,16 +459,25 @@ struct RunnableMethodTraits<ContentProcessChild>
 };
 
 void
-XRE_ShutdownChildProcess(MessageLoop* aUILoop)
+XRE_ShutdownChildProcess()
 {
-    NS_ASSERTION(aUILoop, "Shouldn't be null!");
-    if (aUILoop) {
-        NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-        if (GeckoProcessType_Content == XRE_GetProcessType())
-            aUILoop->PostTask(
-                FROM_HERE,
-                NewRunnableMethod(ContentProcessChild::GetSingleton(),
-                                  &ContentProcessChild::Quit));
+    NS_ABORT_IF_FALSE(NS_IsMainThread(), "Wrong thread!");
+
+    MessageLoop* uiLoop = MessageLoop::current();
+    MessageLoop* ioLoop = XRE_GetIOMessageLoop();
+
+    NS_ABORT_IF_FALSE(!!ioLoop, "Bad shutdown order");
+    ioLoop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
+
+    NS_ABORT_IF_FALSE(!!uiLoop, "Bad shutdown order");
+    if (GeckoProcessType_Content == XRE_GetProcessType()) {
+        uiLoop->PostTask(
+            FROM_HERE,
+            NewRunnableMethod(ContentProcessChild::GetSingleton(),
+                              &ContentProcessChild::Quit));
+    }
+    else {
+        uiLoop->Quit();
     }
 }
 

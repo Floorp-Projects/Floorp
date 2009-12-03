@@ -49,6 +49,7 @@
 #include "nsDebug.h"
 #include "nsCOMPtr.h"
 #include "nsPluginsDir.h"
+#include "nsXULAppAPI.h"
 
 #include "mozilla/plugins/PluginInstanceChild.h"
 #include "mozilla/plugins/StreamNotifyChild.h"
@@ -194,10 +195,23 @@ PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
 {
     AssertPluginThread();
 
-    // FIXME/cjones: should all instances be dead by now?
+    // the PluginModuleParent shuts down this process after this RPC
+    // call pops off its stack
 
     *rv = mShutdownFunc ? mShutdownFunc() : NPERR_NO_ERROR;
+
+    // weakly guard against re-entry after NP_Shutdown
+    memset(&mFunctions, 0, sizeof(mFunctions));
+
     return true;
+}
+
+void
+PluginModuleChild::ActorDestroy(ActorDestroyReason why)
+{
+    // doesn't matter why we're being destroyed; it's up to us to
+    // initiate (clean) shutdown
+    XRE_ShutdownChildProcess();
 }
 
 void

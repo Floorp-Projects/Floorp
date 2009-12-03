@@ -339,6 +339,9 @@ def _callCxxArrayRemoveSorted(arr, elt):
     return ExprCall(ExprSelect(arr, '.', 'RemoveElementSorted'),
                     args=[ elt ])
 
+def _callCxxArrayClear(arr):
+    return ExprCall(ExprSelect(arr, '.', 'Clear'))
+
 def _otherSide(side):
     if side == 'child':  return 'parent'
     if side == 'parent':  return 'child'
@@ -409,6 +412,18 @@ def errfnRecv(msg, errcode=_Result.ValuError):
         _fatalError(msg),
         StmtReturn(errcode)
     ]
+
+def _destroyMethod():
+    return ExprVar('ActorDestroy')
+
+class _DestroyReason:
+    @staticmethod
+    def Type():  return Type('ActorDestroyReason')
+
+    Deletion = ExprVar('Deletion')
+    AncestorDeletion = ExprVar('AncestorDeletion')
+    NormalShutdown = ExprVar('NormalShutdown')
+    AbnormalShutdown = ExprVar('AbnormalShutdown')
 
 ##-----------------------------------------------------------------------------
 ## Intermediate representation (IR) nodes used during lowering
@@ -1368,6 +1383,11 @@ class Protocol(ipdl.ast.Protocol):
     def managedVar(self, actortype, side):
         assert self.decl.type.isManagerOf(actortype)
         return ExprVar('mManaged'+ _actorName(actortype.name(), side))
+
+    def managedVarType(self, actortype, side, const=0, ref=0):
+        assert self.decl.type.isManagerOf(actortype)
+        return _cxxArrayType(self.managedCxxType(actortype, side),
+                             const=const, ref=ref)
 
     def managerArrayExpr(self, thisvar, side):
         """The member var my manager keeps of actors of my type."""
@@ -2481,10 +2501,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             CppDirective('include', '"'+ p.channelHeaderFile() +'"'),
             Whitespace.NL ])
 
-        inherits = [ Inherit(Type(p.fqListenerName())) ]
-        if p.decl.type.isManager():
-            inherits.append(Inherit(p.managerInterfaceType()))
-        self.cls = Class(self.clsname, inherits=inherits, abstract=True)
+        self.cls = Class(
+            self.clsname,
+            inherits=[ Inherit(Type(p.fqListenerName()), viz='protected'),
+                       Inherit(p.managerInterfaceType(), viz='protected') ],
+            abstract=True)
 
         friends = _FindFriends().findFriends(p.decl.type)
         if p.decl.type.isManaged():
@@ -2552,6 +2573,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ret=Type.BOOL,
                 virtual=1, pure=1)))
 
+        # optional Shutdown() method; default is no-op
+        self.cls.addstmts([
+            Whitespace.NL,
+            MethodDefn(MethodDecl(
+                _destroyMethod().name,
+                params=[ Decl(_DestroyReason.Type(), 'why') ],
+                virtual=1))
+        ])
 
         self.cls.addstmt(Whitespace.NL)
 
@@ -2633,9 +2662,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             arrvar = ExprVar('aArr')
             meth = MethodDefn(MethodDecl(
                 p.managedMethod(managed, self.side).name,
-                params=[ Decl(
-                    _cxxArrayType(p.managedCxxType(managed, self.side), ref=1),
-                    arrvar.name) ],
+                params=[ Decl(p.managedVarType(managed, self.side, ref=1),
+                              arrvar.name) ],
                 const=1))
             meth.addstmt(StmtExpr(ExprAssn(
                 arrvar, p.managedVar(managed, self.side))))
@@ -2737,6 +2765,23 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     Whitespace.NL
                 ])
 
+        destroysubtreevar = ExprVar('DestroySubtree')
+        deallocsubtreevar = ExprVar('DeallocSubtree')
+
+        # OnChannelClose()
+        onclose = MethodDefn(MethodDecl('OnChannelClose'))
+        onclose.addstmt(StmtExpr(ExprCall(
+            destroysubtreevar,
+            args=[ _DestroyReason.NormalShutdown ])))
+        self.cls.addstmts([ onclose, Whitespace.NL ])
+
+        # OnChannelClose()
+        onerror = MethodDefn(MethodDecl('OnChannelError'))
+        onerror.addstmt(StmtExpr(ExprCall(
+            destroysubtreevar,
+            args=[ _DestroyReason.AbnormalShutdown ])))
+        self.cls.addstmts([ onerror, Whitespace.NL ])
+
         # FIXME: only manager protocols and non-manager protocols with
         # union types need Lookup().  we'll give it to all for the
         # time being (simpler)
@@ -2781,6 +2826,102 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             fatalerror.addstmt(
                 _runtimeAbort('['+ actorname +'] abort()ing as a result'))
         self.cls.addstmts([ fatalerror, Whitespace.NL ])
+
+        ## DestroySubtree(bool normal)
+        whyvar = ExprVar('why')
+        subtreewhyvar = ExprVar('subtreewhy')
+        kidsvar = ExprVar('kids')
+        ivar = ExprVar('i')
+        ithkid = ExprIndex(kidsvar, ivar)
+
+        destroysubtree = MethodDefn(MethodDecl(
+            destroysubtreevar.name,
+            params=[ Decl(_DestroyReason.Type(), whyvar.name) ]))
+
+        if p.decl.type.isManager():
+            # only declare this for managers to avoid unused var warnings
+            destroysubtree.addstmts([
+                StmtDecl(
+                    Decl(_DestroyReason.Type(), subtreewhyvar.name),
+                    init=ExprConditional(
+                        ExprBinary(_DestroyReason.Deletion, '==', whyvar),
+                        _DestroyReason.AncestorDeletion, whyvar)),
+                Whitespace.NL
+            ])
+
+        for managed in p.decl.type.manages:
+            foreachdestroy = StmtFor(
+                init=Param(Type.UINT32, ivar.name, ExprLiteral.ZERO),
+                cond=ExprBinary(ivar, '<', _callCxxArrayLength(kidsvar)),
+                update=ExprPrefixUnop(ivar, '++'))
+            foreachdestroy.addstmt(StmtExpr(ExprCall(
+                ExprSelect(ithkid, '->', destroysubtreevar.name),
+                args=[ subtreewhyvar ])))
+
+            block = StmtBlock()
+            block.addstmts([
+                Whitespace(
+                    '// Recursively shutting down %s kids\n'% (managed.name()),
+                    indent=1),
+                StmtDecl(
+                    Decl(p.managedVarType(managed, self.side), kidsvar.name),
+                    init=p.managedVar(managed, self.side)),
+                foreachdestroy,
+            ])
+            destroysubtree.addstmt(block)
+        # finally, destroy "us"
+        destroysubtree.addstmt(StmtExpr(
+            ExprCall(_destroyMethod(), args=[ whyvar ])))
+
+        # XXX kick off DeallocSubtree() here rather than in a new
+        # event because that may be tricky on shutdown.  revisit if
+        # need be
+        if p.decl.type.isToplevel():
+            destroysubtree.addstmt(StmtExpr(ExprCall(deallocsubtreevar)))
+        
+        self.cls.addstmts([ destroysubtree, Whitespace.NL ])
+
+        ## DeallocSubtree()
+        deallocsubtree = MethodDefn(MethodDecl(deallocsubtreevar.name))
+        for managed in p.decl.type.manages:
+            foreachrecurse = StmtFor(
+                init=Param(Type.UINT32, ivar.name, ExprLiteral.ZERO),
+                cond=ExprBinary(ivar, '<', _callCxxArrayLength(kidsvar)),
+                update=ExprPrefixUnop(ivar, '++'))
+            foreachrecurse.addstmt(StmtExpr(ExprCall(
+                ExprSelect(ithkid, '->', deallocsubtreevar.name))))
+
+            foreachdealloc = StmtFor(
+                init=Param(Type.UINT32, ivar.name, ExprLiteral.ZERO),
+                cond=ExprBinary(ivar, '<', _callCxxArrayLength(kidsvar)),
+                update=ExprPrefixUnop(ivar, '++'))
+            foreachdealloc.addstmts([
+                StmtExpr(ExprCall(_deallocMethod(managed),
+                                  args=[ ithkid ]))
+            ])
+
+            block = StmtBlock()
+            block.addstmts([
+                Whitespace(
+                    '// Recursively deleting %s kids\n'% (managed.name()),
+                    indent=1),
+                StmtDecl(
+                    Decl(p.managedVarType(managed, self.side, ref=1),
+                         kidsvar.name),
+                    init=p.managedVar(managed, self.side)),
+                foreachrecurse,
+                Whitespace.NL,
+                # no need to copy |kids| here; we're the ones deleting
+                # stragglers, no outside C++ is being invoked (except
+                # Dealloc(subactor))
+                foreachdealloc,
+                StmtExpr(_callCxxArrayClear(p.managedVar(managed, self.side))),
+
+            ])
+            deallocsubtree.addstmt(block)
+        # don't delete outselves: either the manager will do it, or
+        # we're toplevel
+        self.cls.addstmts([ deallocsubtree, Whitespace.NL ])
         
         ## private members
         self.cls.addstmt(StmtDecl(Decl(p.channelType(), 'mChannel')))
@@ -2809,9 +2950,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmts([
                 Whitespace('// Sorted by pointer value\n', indent=1),
                 StmtDecl(Decl(
-                    _cxxArrayType(p.managedCxxType(managed, self.side)),
+                    p.managedVarType(managed, self.side),
                     p.managedVar(managed, self.side).name)) ])
-
 
     def implementManagerIface(self):
         p = self.protocol
@@ -3282,8 +3422,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def dtorEpilogue(self, md, actorexpr):
         return (self.unregisterActor(actorexpr)
-                + [ StmtExpr(self.callRemoveActor(md, actorexpr)),
-                    StmtExpr(self.callDeallocActor(md, actorexpr))
+                + [ StmtExpr(self.callActorDestroy(actorexpr)) ]
+                + [ StmtExpr(self.callRemoveActor(actorexpr)) ]
+                + [ StmtExpr(self.callDeallocActor(md, actorexpr))
                 ])
 
     def genAsyncSendMethod(self, md):
@@ -3581,14 +3722,17 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             args=md.makeCxxArgs(params=1, retsems=retsems, retcallsems='out',
                                 implicit=0))
 
-    def callRemoveActor(self, md, actorexpr):
-        actortype = md.decl.type.constructedType()
-        if not actortype.isManaged():
-            return Whitespace('// unmanaged protocol\n')     
+    def callActorDestroy(self, actorexpr, why=_DestroyReason.Deletion):
+        return ExprCall(ExprSelect(actorexpr, '->', 'DestroySubtree'),
+                        args=[ why ])
 
-        return _callCxxArrayRemoveSorted(
-            self.protocol.managerArrayExpr(actorexpr, self.side),
-            actorexpr)
+    def callRemoveActor(self, actorexpr, actorarray=None):
+        if not self.protocol.decl.type.isManaged():
+            return Whitespace('// unmanaged protocol')
+        
+        if actorarray is None:
+            actorarray = self.protocol.managerArrayExpr(actorexpr, self.side)
+        return _callCxxArrayRemoveSorted(actorarray, actorexpr)
 
     def callDeallocActor(self, md, actorexpr):
         actor = md.decl.type.constructedType()

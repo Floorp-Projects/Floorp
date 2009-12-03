@@ -1,6 +1,7 @@
 #ifndef mozilla__ipdltest_TestSanity_h
 #define mozilla__ipdltest_TestSanity_h 1
 
+#include "mozilla/_ipdltest/IPDLUnitTests.h"
 
 #include "mozilla/_ipdltest/PTestSanityParent.h"
 #include "mozilla/_ipdltest/PTestSanityChild.h"
@@ -19,8 +20,17 @@ public:
     void Main();
 
 protected:    
+    NS_OVERRIDE
     virtual bool RecvPong(const int& one, const float& zeroPtTwoFive);
-    virtual bool RecvUNREACHED();
+
+    NS_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why)
+    {
+        if (NormalShutdown != why)
+            fail("unexpected destruction!");  
+        passed("ok");
+        QuitParent();
+    }
 };
 
 
@@ -32,8 +42,16 @@ public:
     virtual ~TestSanityChild();
 
 protected:
+    NS_OVERRIDE
     virtual bool RecvPing(const int& zero, const float& zeroPtFive);
-    virtual bool RecvUNREACHED();
+
+    NS_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why)
+    {
+        if (NormalShutdown != why)
+            fail("unexpected destruction!");
+        QuitChild();
+    }
 };
 
 

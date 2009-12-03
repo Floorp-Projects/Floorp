@@ -854,6 +854,9 @@ class GatherDecls(TcheckVisitor):
         self.seentriggers.add(mname)
         
         mdecl = self.symtab.lookup(mname)
+        if mdecl.type.isIPDL() and mdecl.type.isProtocol():
+            mdecl = self.symtab.lookup(mname +'Constructor')
+        
         if mdecl is None:
             self.error(loc, "message `%s' has not been declared", mname)
         elif not mdecl.type.isMessage():

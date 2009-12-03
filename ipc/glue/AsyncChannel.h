@@ -75,6 +75,7 @@ protected:
         ChannelClosed,
         ChannelOpening,
         ChannelConnected,
+        ChannelClosing,
         ChannelError
     };
 
@@ -86,10 +87,16 @@ public:
     {
     public:
         virtual ~AsyncListener() { }
+
+        virtual void OnChannelClose() = 0;
+        virtual void OnChannelError() = 0;
         virtual Result OnMessageReceived(const Message& aMessage) = 0;
     };
 
 public:
+    //
+    // These methods are called on the "worker" thread
+    //
     AsyncChannel(AsyncListener* aListener);
     virtual ~AsyncChannel();
 
@@ -105,6 +112,10 @@ public:
 
     // Asynchronously send a message to the other side of the channel
     bool Send(Message* msg);
+
+    //
+    // These methods are called on the "IO" thread
+    //
 
     // Implement the IPC::Channel::Listener interface
     NS_OVERRIDE virtual void OnMessageReceived(const Message& msg);
@@ -141,10 +152,21 @@ protected:
                 mChild ? "Child" : "Parent", channelName, msg);
     }
 
+    // Run on the worker thread
+
+    void SendGoodbye();
+    bool MaybeInterceptGoodbye(const Message& msg);
+
+    void NotifyChannelClosed();
+    void NotifyMaybeChannelError();
+
+    void Clear();
+
     // Run on the IO thread
+
     void OnChannelOpened();
     void OnSend(Message* aMsg);
-    void OnClose();
+    void OnCloseChannel();
 
     Transport* mTransport;
     AsyncListener* mListener;
