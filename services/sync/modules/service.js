@@ -268,12 +268,6 @@ WeaveSvc.prototype = {
 
     this._registerEngines();
 
-    // Reset our sync id if we're upgrading, so sync knows to reset local data
-    if (WEAVE_VERSION != Svc.Prefs.get("lastversion")) {
-      this._log.info("Resetting client syncID from _onStartup.");
-      Clients.resetSyncID();
-    }
-
     let ua = Cc["@mozilla.org/network/protocol;1?name=http"].
       getService(Ci.nsIHttpProtocolHandler).userAgent;
     this._log.info(ua);
@@ -857,6 +851,10 @@ WeaveSvc.prototype = {
       Clients.syncID = meta.payload.syncID;
       this._log.info("Reset the client after a server/client sync ID mismatch");
       this._updateRemoteVersion(meta);
+
+      // XXX Bug 531005 Wait long enough to allow potentially another concurrent
+      // sync to finish generating the keypair and uploading them
+      Sync.sleep(15000);
     }
     // We didn't wipe the server and we're not out of date, so update remote
     else
@@ -1220,17 +1218,17 @@ WeaveSvc.prototype = {
 
   _freshStart: function WeaveSvc__freshStart() {
     this.resetClient();
-    this._log.info("Reset client data from freshStart.");
-    this._log.info("Client metadata wiped, deleting server data");
-    this.wipeServer();
 
-    // XXX Bug 504125 Wait a while after wiping so that the DELETEs replicate
-    Sync.sleep(2000);
-
-    this._log.trace("Uploading new metadata record");
+    this._log.debug("Uploading new metadata record from freshStart");
     let meta = new WBORecord(this.metaURL);
     meta.payload.syncID = Clients.syncID;
     this._updateRemoteVersion(meta);
+
+    // Wipe everything we know about except meta because we just uploaded it
+    let collections = [Clients].concat(Engines.getAll()).map(function(engine) {
+      return engine.name;
+    });
+    this.wipeServer(["crypto", "keys"].concat(collections));
   },
 
   _updateRemoteVersion: function WeaveSvc__updateRemoteVersion(meta) {
