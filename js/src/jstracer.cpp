@@ -8637,6 +8637,11 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
 
     if (GetPromotedType(l) == GetPromotedType(r)) {
         if (JSVAL_TAG(l) == JSVAL_OBJECT || JSVAL_IS_SPECIAL(l)) {
+            if (JSVAL_TAG(l) == JSVAL_OBJECT && l) {
+                JSClass *clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(l));
+                if ((clasp->flags & JSCLASS_IS_EXTENDED) && ((JSExtendedClass*) clasp)->equality)
+                    RETURN_STOP_A("Can't trace extended class equality operator");
+            }
             if (JSVAL_TAG(l) == JSVAL_OBJECT)
                 op = LIR_peq;
             cond = (l == r);
