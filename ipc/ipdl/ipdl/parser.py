@@ -150,6 +150,7 @@ reserved = set((
         'manager',
         'manages',
         'namespace',
+        'nullable',
         'or',
         'parent',
         'protocol',
@@ -511,8 +512,14 @@ def p_Param(p):
     p[0] = Param(locFromTok(p, 1), p[1], p[2])
 
 def p_Type(p):
-    """Type : ScalarType
-            | ScalarType '[' ']'"""
+    """Type : MaybeNullable BasicType"""
+    # only actor types are nullable; we check this in the type checker
+    p[2].nullable = p[1]
+    p[0] = p[2]
+
+def p_BasicType(p):
+    """BasicType : ScalarType
+                 | ScalarType '[' ']'"""
     if 4 == len(p):
         p[1].array = 1
     p[0] = p[1]
@@ -531,6 +538,11 @@ def p_ActorType(p):
     """ActorType : ID ':' State"""
     loc = locFromTok(p, 1)
     p[0] = TypeSpec(loc, QualifiedId(loc, p[1]), state=p[3])
+ 
+def p_MaybeNullable(p):
+    """MaybeNullable : NULLABLE
+                     | """
+    p[0] = (2 == len(p))
 
 ##--------------------
 ## C++ stuff

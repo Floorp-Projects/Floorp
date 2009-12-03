@@ -112,23 +112,62 @@ def _actorChannel(actor):
 def _actorManager(actor):
     return ExprSelect(actor, '->', 'mManager')
 
-def _safeLookupActor(idexpr, actortype):
-    return ExprCast(
-        ExprConditional(
-            ExprBinary(idexpr, '==', ExprLiteral.ZERO),
-            ExprLiteral.NULL,
-            _lookupListener(idexpr)),
-        actortype,
-        reinterpret=1)
+def _getActorId(actorexpr, outid, actortype, errcode):
+    # if (!actorexpr)
+    #   #ifdef NULLABLE
+    #      return errcode;
+    #   #else
+    #      outid = 0;
+    #   #endif
+    # else
+    #     outid = _actorId(actorexpr)
+    ifnull = StmtIf(ExprNot(actorexpr))
+    if not actortype.nullable:
+        ifnull.addifstmt(StmtReturn(errcode))
+    else:
+        ifnull.addifstmt(StmtExpr(ExprAssn(outid, ExprLiteral.ZERO)))
 
-def _safeLookupActorHandle(handle, actortype):
-    return _safeLookupActor(_actorHId(handle), actortype)
+    ifnull.addelsestmt(StmtExpr(ExprAssn(outid, _actorId(actorexpr))))
 
-def _lookupActor(idexpr, actortype):
-    return ExprCast(idexpr, actortype, reinterpret=1)
+    return ifnull
 
-def _lookupActorHandle(handle, actortype):
-    return _lookupActor(_actorHId(handle), actortype)
+
+def _lookupActor(idexpr, outactor, actortype, cxxactortype, errcode):
+    # if (0 == idexpr)
+    #   #ifndef NULLABLE
+    #      return errcode;
+    #   #else
+    #      actor = 0;
+    #   #endif
+    # else {
+    #     actor = (cxxactortype*)_lookupListener(idexpr);
+    #     // bad actor ID.  always an error
+    #     if (!actor)  return errcode;
+    # }
+    ifzero = StmtIf(ExprBinary(ExprLiteral.ZERO, '==', idexpr))
+    if not actortype.nullable:
+        ifzero.addifstmt(StmtReturn(errcode))
+    else:
+        ifzero.addifstmt(StmtExpr(ExprAssn(outactor, ExprLiteral.NULL)))
+
+    ifnotactor = StmtIf(ExprNot(outactor))
+    ifnotactor.addifstmts([
+        _printErrorMessage('invalid actor ID!'),
+        StmtReturn(errcode) ])
+
+    ifzero.addelsestmts([
+        StmtExpr(ExprAssn(
+            outactor,
+            ExprCast(_lookupListener(idexpr), cxxactortype, static=1))),
+        ifnotactor
+    ])
+
+    return ifzero
+
+
+def _lookupActorHandle(handle, outactor, actortype, cxxactortype, errcode):
+    return _lookupActor(_actorHId(handle), outactor, actortype, cxxactortype,
+                        errcode)
 
 def _lookupListener(idexpr):
     return ExprCall(ExprVar('Lookup'), args=[ idexpr ])
@@ -280,6 +319,11 @@ def _ifLogging(stmts):
     iflogging = StmtIf(ExprCall(ExprVar('mozilla::ipc::LoggingEnabled')))
     iflogging.addifstmts(stmts)
     return iflogging
+
+# XXX we need to remove these and install proper error handling
+def _printErrorMessage(msg):
+    return StmtExpr(
+        ExprCall(ExprVar('NS_ERROR'), args=[ ExprLiteral.String(msg) ]))
 
 ##-----------------------------------------------------------------------------
 ## Intermediate representation (IR) nodes used during lowering
@@ -441,48 +485,45 @@ necessarily a C++ reference."""
 
     # the biggies: serialization/deserialization
 
-    def serialize(self, expr, side):
+    def serialize(self, expr, side, errcode):
         if not self.speciallySerialized(self.ipdltype):
             return expr, [ ]
         # XXX could use TypeVisitor, but it doesn't feel right here
-        _, sexpr, stmts = self._serialize(self.ipdltype, expr, side)
+        _, sexpr, stmts = self._serialize(self.ipdltype, expr, side, errcode)
         return sexpr, stmts
 
-    def _serialize(self, etype, expr, side):
+    def _serialize(self, etype, expr, side, errcode):
         '''Serialize |expr| of type |etype|, which has some actor type
 buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         assert etype.isIPDL()           # only IPDL types may contain actors
 
         if etype.isActor():
-            return self._serializeActor(etype, expr)
+            return self._serializeActor(etype, expr, errcode)
         elif etype.isArray():
-            return self._serializeArray(etype, expr, side)
+            return self._serializeArray(etype, expr, side, errcode)
         elif etype.isUnion():
-            return self._serializeUnion(etype, expr, side)
+            return self._serializeUnion(etype, expr, side, errcode)
         elif etype.isShmem() or etype.isChmod():
-            return self._serializeShmem(etype, expr, side)
+            return self._serializeShmem(etype, expr, side, errcode)
         else: assert 0
 
     def speciallySerialized(self, type):
         return ipdl.type.hasactor(type) or ipdl.type.hasshmem(type)
 
-    def _serializeActor(self, actortype, expr):
+    def _serializeActor(self, actortype, expr, errcode):
         actorhandlevar = ExprVar(self._nextuid('handle'))
         pipetype = Type('ActorHandle')
-        # TODO nullability
+
         stmts = [
             Whitespace('// serializing actor type\n', indent=1),
             StmtDecl(Decl(pipetype, actorhandlevar.name)),
-            StmtExpr(ExprAssn(
-                _actorHId(actorhandlevar),
-                ExprConditional(ExprNot(expr),
-                                ExprLiteral.NULL, _actorId(expr)))),
+            _getActorId(expr, _actorHId(actorhandlevar), actortype, errcode),
             Whitespace.NL
         ]
         return pipetype, actorhandlevar, stmts
 
 
-    def _serializeArray(self, arraytype, expr, side):
+    def _serializeArray(self, arraytype, expr, side, errcode):
         newarrayvar = ExprVar(self._nextuid('serArray'))
         lenvar = ExprVar(self._nextuid('length'))
         ivar = ExprVar(self._nextuid('i'))
@@ -497,7 +538,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         ithOldElt = ExprIndex(expr, ivar)
 
         eltType, serializedExpr, forbodystmts = self._serialize(
-            arraytype.basetype, ithOldElt, side)
+            arraytype.basetype, ithOldElt, side, errcode)
 
         forloop.addstmts(forbodystmts)
         forloop.addstmt(StmtExpr(ExprAssn(ithNewElt, serializedExpr)))
@@ -515,12 +556,17 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         return pipetype, newarrayvar, stmts
 
 
-    def _serializeUnion(self, uniontype, expr, side):
-        def insaneActorCast(actor, actortype):
-            return ExprCast(
-                ExprCast(_safeActorId(actor), Type.INTPTR, static=1),
-                actortype,
-                reinterpret=1)
+    def _serializeUnion(self, uniontype, expr, side, errcode):
+        def insaneActorCast(actor, actortype, cxxactortype):
+            idvar = ExprVar(self._nextuid('actorid'))
+            return (
+                [ StmtDecl(Decl(_actorIdType(), idvar.name)),
+                  _getActorId(actor, idvar, actortype, errcode),
+                ],
+                ExprCast(ExprCast(idvar, Type.INTPTR, static=1),
+                         cxxactortype,
+                         reinterpret=1)
+                )
 
         pipetype = Type(uniontype.name())
         serunionvar = ExprVar(self._nextuid('serUnion'))
@@ -543,15 +589,19 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
                     case.addstmt(_runtimeAbort('wrong side!'))
                 else:
                     # may god have mercy on our souls
-                    case.addstmt(StmtExpr(ExprAssn(
-                        serunionvar,
-                        insaneActorCast(getvalue, c.bareType()))))
+                    getidstmts, castexpr = insaneActorCast(
+                        getvalue, ct, c.bareType())
+                    case.addstmts(
+                        getidstmts
+                        + [ StmtExpr(ExprAssn(serunionvar, castexpr)) ])
+
             elif ct.isArray() and ct.basetype.isActor():
                 if c.side != side:
                     case.addstmt(_runtimeAbort('wrong side!'))
                 else:
                     # no more apologies
-                    actortype = ct.basetype.accept(_ConvertToCxxType(c.side))
+                    cxxactortype = ct.basetype.accept(
+                        _ConvertToCxxType(c.side))
                     lenvar = ExprVar(self._nextuid('len'))
                     newarrvar = ExprVar(self._nextuid('idarray'))
 
@@ -562,9 +612,12 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
                                           ExprLiteral.ZERO),
                                    cond=ExprBinary(ivar, '<', lenvar),
                                    update=ExprPrefixUnop(ivar, '++'))
-                    loop.addstmt(StmtExpr(ExprAssn(
-                        ithNewElt,
-                        insaneActorCast(ithOldElt, actortype))))
+                    # loop body
+                    getidstmts, castexpr = insaneActorCast(
+                        ithOldElt, ct.basetype, cxxactortype)
+                    loop.addstmts(
+                        getidstmts
+                        + [ StmtExpr(ExprAssn(ithNewElt, castexpr)) ])
 
                     case.addstmts([
                         StmtDecl(Decl(Type.UINT32, lenvar.name),
@@ -578,7 +631,8 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
             else:
                 # NB: here we rely on the serialized expression
                 # coming back with the same type
-                _, newexpr, sstmts = self._serialize(ct, getvalue, side)
+                _, newexpr, sstmts = self._serialize(ct, getvalue, side,
+                                                     errcode)
                 case.addstmts(sstmts
                               + [ Whitespace.NL,
                                   StmtExpr(ExprAssn(serunionvar, newexpr)) ])
@@ -600,7 +654,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         return pipetype, serunionvar, stmts
 
 
-    def _serializeShmem(self, shmemtype, expr, side):
+    def _serializeShmem(self, shmemtype, expr, side, errcode):
         pipetype = _shmemType()
         pipevar = ExprVar(self._nextuid('serShmem'))
         stmts = [
@@ -628,7 +682,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
     def speciallyDeserialized(self, type):
         return ipdl.type.hasactor(type) or ipdl.type.hasshmem(type)
 
-    def deserialize(self, expr, side, sems):
+    def deserialize(self, expr, side, sems, errcode):
         """|expr| is a pointer the return type."""
         if not self.speciallyDeserialized(self.ipdltype):
             return [ ]
@@ -637,39 +691,40 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         elif sems == 'out':
             toexpr = ExprDeref(self.var())
         else: assert 0
-        _, stmts = self._deserialize(expr, self.ipdltype, toexpr, side)
+        _, stmts = self._deserialize(
+            expr, self.ipdltype, toexpr, side, errcode)
         return stmts
 
-    def _deserialize(self, pipeExpr, targetType, targetExpr, side):
+    def _deserialize(self, pipeExpr, targetType, targetExpr, side, errcode):
         if not self.speciallyDeserialized(targetType):
             return targetType, [ ]
         elif targetType.isActor():
             return self._deserializeActor(
-                pipeExpr, targetType, targetExpr, side)
+                pipeExpr, targetType, targetExpr, side, errcode)
         elif targetType.isArray():
             return self._deserializeArray(
-                pipeExpr, targetType, targetExpr, side)
+                pipeExpr, targetType, targetExpr, side, errcode)
         elif targetType.isUnion():
             return self._deserializeUnion(
-                pipeExpr, targetType, targetExpr, side)
+                pipeExpr, targetType, targetExpr, side, errcode)
         elif targetType.isShmem():
             return self._deserializeShmem(
-                pipeExpr, targetType, targetExpr, side)
+                pipeExpr, targetType, targetExpr, side, errcode)
         else: assert 0
 
-    def _deserializeActor(self, actorhandle, actortype, outactor, side):
+    def _deserializeActor(self, actorhandle, actortype, outactor, side,
+                          errcode):
         cxxtype = actortype.accept(_ConvertToCxxType(side))
         return (
             cxxtype,
-            [
-                Whitespace('// deserializing actor type\n', indent=1),
-                StmtExpr(ExprAssn(
-                    outactor,
-                    _safeLookupActorHandle(actorhandle, cxxtype)))
+            [ Whitespace('// deserializing actor type\n', indent=1),
+              _lookupActorHandle(actorhandle, outactor, actortype, cxxtype,
+                                 errcode)
             ])
 
 
-    def _deserializeArray(self, pipearray, arraytype, outarray, side):
+    def _deserializeArray(self, pipearray, arraytype, outarray, side,
+                          errcode):
         cxxArrayType = arraytype.accept(_ConvertToCxxType(side))
         lenvar = ExprVar(self._nextuid('length'))
 
@@ -690,7 +745,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         ithOldElt = ExprIndex(pipearray, ivar)
 
         outelttype, forstmts = self._deserialize(
-            ithOldElt, arraytype.basetype, ithNewElt, side)
+            ithOldElt, arraytype.basetype, ithNewElt, side, errcode)
         forloop.addstmts(forstmts)
 
         stmts.append(forloop)
@@ -698,7 +753,8 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         return cxxArrayType, stmts
 
 
-    def _deserializeUnion(self, pipeunion, uniontype, outunion, side):
+    def _deserializeUnion(self, pipeunion, uniontype, outunion, side,
+                          errcode):
         def actorIdCast(expr):
             return ExprCast(
                 ExprCast(expr, Type.INTPTR, reinterpret=1),
@@ -728,12 +784,15 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
                     case.addstmt(_runtimeAbort('wrong side!'))
                 else:
                     idvar = ExprVar(self._nextuid('id'))
+                    outactorvar = ExprVar(self._nextuid('actor'))
+                    actorcxxtype = c.bareType()
                     case.addstmts([
                         StmtDecl(Decl(_actorIdType(), idvar.name),
                                  actorIdCast(getvalue)),
-                        StmtExpr(ExprAssn(
-                            outunion,
-                            _safeLookupActor(idvar, c.bareType())))
+                        StmtDecl(Decl(actorcxxtype, outactorvar.name)),
+                        _lookupActor(idvar, outactorvar, ct, actorcxxtype,
+                                     errcode),
+                        StmtExpr(ExprAssn(outunion, outactorvar))
                     ])
             elif ct.isArray() and ct.basetype.isActor():
                 if c.side != side:
@@ -743,6 +802,8 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
                     arrvar = ExprVar(self._nextuid('arr'))
                     ivar = ExprVar(self._nextuid('i'))
                     ithElt = ExprIndex(arrvar, ivar)
+                    actortype = ct.basetype
+                    actorcxxtype = ct.basetype.accept(_ConvertToCxxType(side))
 
                     loop = StmtFor(
                         init=ExprAssn(Decl(Type.UINT32, ivar.name),
@@ -753,11 +814,8 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
                     loop.addstmts([
                         StmtDecl(Decl(_actorIdType(), idvar.name),
                                  actorIdCast(ithElt)),
-                        StmtExpr(ExprAssn(
-                            ithElt,
-                            _safeLookupActor(
-                                idvar,
-                                ct.basetype.accept(_ConvertToCxxType(side)))))
+                        _lookupActor(idvar, ithElt, actortype, actorcxxtype,
+                                     errcode),
                     ])
                 
                     case.addstmts([
@@ -769,7 +827,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
             else:
                 tempvar = ExprVar('tempUnionElt')
                 elttype, dstmts = self._deserialize(
-                    getvalue, ct, tempvar, side)
+                    getvalue, ct, tempvar, side, errcode)
                 case.addstmts(
                     [ StmtDecl(Decl(elttype, tempvar.name)),
                       Whitespace.NL ]
@@ -793,7 +851,8 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         return cxxUnionType, stmts
 
 
-    def _deserializeShmem(self, pipeshmem, shmemtype, outshmem, side):
+    def _deserializeShmem(self, pipeshmem, shmemtype, outshmem, side,
+                          errcode):
         # Shmem::id_t id = inshmem.mId
         # Shmem::shmem_t* raw = Lookup(id)
         # if (raw)
@@ -3085,10 +3144,11 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         msgvar = self.msgvar
         stmts = [ StmtDecl(Decl(Type(md.pqMsgClass(), ptr=1), msgvar.name)),
                   Whitespace.NL ]
-        msgCtorArgs = [ ]        
+        msgCtorArgs = [ ]
 
         for param in md.params:
-            arg, sstmts = param.serialize(param.var(), self.side)
+            arg, sstmts = param.serialize(param.var(), self.side,
+                                          ExprLiteral.FALSE)
             msgCtorArgs.append(arg)
             stmts.extend(sstmts)
 
@@ -3110,7 +3170,8 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         stmts = [ ]
         replyCtorArgs = [ ]
         for ret in md.returns:
-            arg, sstmts = ret.serialize(ret.var(), self.side)
+            arg, sstmts = ret.serialize(ret.var(), self.side,
+                                        _Result.ValuError)
             replyCtorArgs.append(arg)
             stmts.extend(sstmts)
 
@@ -3174,7 +3235,8 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             # skip deserializing the "implicit" actor for ctor
             # in-messages; the actor doesn't exist yet
             if isctor and i is 0: continue
-            ifok.addifstmts(param.deserialize(readvars[i], side, sems='in'))
+            ifok.addifstmts(param.deserialize(readvars[i], side, sems='in',
+                                              errcode=_Result.ValuError))
         if len(ifok.ifb.stmts):
             stmts.extend([ Whitespace.NL, ifok ])
 
@@ -3209,7 +3271,8 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         ifok = StmtIf(okvar)
         for i, ret in enumerate(md.returns):
             ifok.addifstmts(ret.deserialize(
-                ExprDeref(readexprs[i]), side, sems='out'))
+                ExprDeref(readexprs[i]), side, sems='out',
+                errcode=ExprLiteral.FALSE))
         if len(ifok.ifb.stmts):
             stmts.extend([ Whitespace.NL, ifok ])
 

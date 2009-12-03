@@ -263,9 +263,10 @@ class ProtocolType(IPDLType):
         return not self.isManaged()
 
 class ActorType(IPDLType):
-    def __init__(self, protocol, state=None):
+    def __init__(self, protocol, state=None, nullable=0):
         self.protocol = protocol
         self.state = state
+        self.nullable = nullable
     def isActor(self): return True
 
     def name(self):
@@ -559,12 +560,7 @@ class GatherDecls(TcheckVisitor):
                 self.error(c.loc, "unknown component type `%s' of union `%s'",
                            str(c), ud.name)
                 continue
-            ctype = cdecl.type
-            if ctype.isIPDL() and ctype.isProtocol():
-                ctype = ActorType(ctype)
-            if c.array:
-                ctype = ArrayType(ctype)
-            components.append(ctype)
+            components.append(self._canonicalType(cdecl.type, c))
 
         ud.decl = self.declare(
             loc=ud.loc,
@@ -802,15 +798,8 @@ class GatherDecls(TcheckVisitor):
                     ptname, msgname)
                 return None
             else:
-                if ptdecl.type.isIPDL() and ptdecl.type.isProtocol():
-                    ptype = ActorType(ptdecl.type,
-                                      param.typespec.state)
-                else:
-                    ptype = ptdecl.type
-
-                if param.typespec.array:
-                    ptype = ArrayType(ptype)
-                
+                ptype = self._canonicalType(ptdecl.type, param.typespec,
+                                            chmodallowed=1)
                 return self.declare(
                     loc=ploc,
                     type=ptype,
@@ -885,6 +874,43 @@ class GatherDecls(TcheckVisitor):
                 toState.start = sdecl.type.start
 
         t.toStates = set(t.toStates)
+
+
+    def _canonicalType(self, itype, typespec, chmodallowed=0):
+        loc = typespec.loc
+        
+        if itype.isIPDL():
+            if itype.isProtocol():
+                itype = ActorType(itype,
+                                  state=typespec.state,
+                                  nullable=typespec.nullable)
+            if chmodallowed and itype.isShmem():
+                itype = ShmemChmodType(
+                    itype,
+                    myChmod=typespec.myChmod,
+                    otherChmod=typespec.otherChmod)
+
+        if ((typespec.myChmod or typespec.otherChmod)
+            and not (itype.isIPDL() and (itype.isShmem() or itype.isChmod()))):
+            self.error(
+                loc,
+                "fine-grained access controls make no sense for type `%s'",
+                itype.name())
+
+        if not chmodallowed and (typespec.myChmod or typespec.otherChmod):
+            self.error(loc, "fine-grained access controls not allowed here")
+
+        if typespec.nullable and not (itype.isIPDL() and itype.isActor()):
+            self.error(
+                loc,
+                "`nullable' qualifier for type `%s' makes no sense",
+                itype.name())
+
+        if typespec.array:
+            itype = ArrayType(itype)
+
+        return itype
+
 
 ##-----------------------------------------------------------------------------
 
