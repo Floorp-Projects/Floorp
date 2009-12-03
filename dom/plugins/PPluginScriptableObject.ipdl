@@ -57,7 +57,7 @@ union Variant {
   int;
   double;
   nsCString;
-  PPluginScriptableObject;
+  nullable PPluginScriptableObject;
 };
 
 rpc protocol PPluginScriptableObject
