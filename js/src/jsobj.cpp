@@ -1444,13 +1444,14 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * calls to eval from global code are not cached.
      */
     bucket = EvalCacheHash(cx, str);
-    if (!indirectCall && argc == 1 && caller->fun) {
+    if (!indirectCall && caller->fun) {
         uintN count = 0;
         JSScript **scriptp = bucket;
 
         EVAL_CACHE_METER(probe);
         while ((script = *scriptp) != NULL) {
             if (script->savedCallerFun &&
+                script->staticLevel == staticLevel &&
                 script->version == cx->version &&
                 (script->principals == principals ||
                  (principals->subsume(principals, script->principals) &&
