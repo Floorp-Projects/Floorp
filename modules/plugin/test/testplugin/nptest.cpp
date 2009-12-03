@@ -95,6 +95,7 @@ static bool throwExceptionNextInvoke(NPObject* npobj, const NPVariant* args, uin
 static bool convertPointX(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool crash(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -123,6 +124,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "convertPointX",
   "convertPointY",
   "streamTest",
+  "crash",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
@@ -152,6 +154,7 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   convertPointX,
   convertPointY,
   streamTest,
+  crash,
 };
 
 struct URLNotifyData
@@ -2012,6 +2015,14 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
     BOOLEAN_TO_NPVARIANT(false, *result);
   }
 
+  return true;
+}
+
+static bool
+crash(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  void (*funcptr)() = NULL;
+  funcptr(); // Crash calling null function pointer
   return true;
 }
 
