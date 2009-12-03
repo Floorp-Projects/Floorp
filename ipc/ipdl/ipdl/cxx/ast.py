@@ -320,6 +320,7 @@ Any type, naked or pointer, can be const (const T) or ref (T&).
 """
         assert isinstance(name, str)
         assert not isinstance(const, str)
+        assert not isinstance(T, str)
 
         Node.__init__(self)
         self.name = name

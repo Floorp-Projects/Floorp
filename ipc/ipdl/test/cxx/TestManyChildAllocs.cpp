@@ -75,7 +75,7 @@ TestManyChildAllocsChild::~TestManyChildAllocsChild()
 
 bool TestManyChildAllocsChild::RecvGo()
 {
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < NALLOCS; ++i) {
         PTestManyChildAllocsSubChild* child =
             SendPTestManyChildAllocsSubConstructor();
 
@@ -85,6 +85,12 @@ bool TestManyChildAllocsChild::RecvGo()
         if (!child->SendHello())
             fail("can't send Hello()");
     }
+
+    nsTArray<PTestManyChildAllocsSubChild*> kids;
+    ManagedPTestManyChildAllocsSubChild(kids);
+
+    if (NALLOCS != kids.Length())
+        fail("expected %lu kids, got %lu", NALLOCS, kids.Length());
 
     if (!SendDone())
         fail("can't send Done()");

@@ -321,8 +321,8 @@ def _autoptr(T):
 def _autoptrForget(expr):
     return ExprCall(ExprSelect(expr, '.', 'forget'))
 
-def _cxxArrayType(basetype):
-    return Type('nsTArray', T=basetype)
+def _cxxArrayType(basetype, const=0, ref=0):
+    return Type('nsTArray', T=basetype, const=const, ref=ref)
 
 def _callCxxArrayLength(arr):
     return ExprCall(ExprSelect(arr, '.', 'Length'))
@@ -330,6 +330,14 @@ def _callCxxArrayLength(arr):
 def _callCxxArraySetLength(arr, lenexpr):
     return ExprCall(ExprSelect(arr, '.', 'SetLength'),
                     args=[ lenexpr ])
+
+def _callCxxArrayInsertSorted(arr, elt):
+    return ExprCall(ExprSelect(arr, '.', 'InsertElementSorted'),
+                    args=[ elt ])
+
+def _callCxxArrayRemoveSorted(arr, elt):
+    return ExprCall(ExprSelect(arr, '.', 'RemoveElementSorted'),
+                    args=[ elt ])
 
 def _otherSide(side):
     if side == 'child':  return 'parent'
@@ -1348,6 +1356,25 @@ class Protocol(ipdl.ast.Protocol):
     def otherProcessVar(self):
         assert self.decl.type.isToplevel()
         return ExprVar('mOtherProcess')
+
+    def managedCxxType(self, actortype, side):
+        assert self.decl.type.isManagerOf(actortype)
+        return Type(_actorName(actortype.name(), side), ptr=1)
+
+    def managedMethod(self, actortype, side):
+        assert self.decl.type.isManagerOf(actortype)
+        return ExprVar('Managed'+  _actorName(actortype.name(), side))
+
+    def managedVar(self, actortype, side):
+        assert self.decl.type.isManagerOf(actortype)
+        return ExprVar('mManaged'+ _actorName(actortype.name(), side))
+
+    def managerArrayExpr(self, thisvar, side):
+        """The member var my manager keeps of actors of my type."""
+        assert self.decl.type.isManaged()
+        return ExprSelect(
+            ExprCall(self.managerMethod(thisvar)),
+            '->', 'mManaged'+ _actorName(self.decl.type.name(), side))
 
     # shmem stuff
     def shmemMapVar(self):
@@ -2601,6 +2628,19 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
             self.cls.addstmts([ managermeth, Whitespace.NL ])
 
+        ## managed[T]()
+        for managed in p.decl.type.manages:
+            arrvar = ExprVar('aArr')
+            meth = MethodDefn(MethodDecl(
+                p.managedMethod(managed, self.side).name,
+                params=[ Decl(
+                    _cxxArrayType(p.managedCxxType(managed, self.side), ref=1),
+                    arrvar.name) ],
+                const=1))
+            meth.addstmt(StmtExpr(ExprAssn(
+                arrvar, p.managedVar(managed, self.side))))
+            self.cls.addstmts([ meth, Whitespace.NL ])
+
         ## OnMessageReceived()/OnCallReceived()
 
         # save these away for use in message handler case stmts
@@ -2764,6 +2804,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                               p.shmemMapVar().name)),
                 StmtDecl(Decl(_shmemIdType(), p.lastShmemIdVar().name))
             ])
+
+        for managed in p.decl.type.manages:
+            self.cls.addstmts([
+                Whitespace('// Sorted by pointer value\n', indent=1),
+                StmtDecl(Decl(
+                    _cxxArrayType(p.managedCxxType(managed, self.side)),
+                    p.managedVar(managed, self.side).name)) ])
 
 
     def implementManagerIface(self):
@@ -3142,14 +3189,24 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             StmtExpr(ExprAssn(_actorManager(actorvar), ExprVar.THIS)),
             StmtExpr(ExprAssn(_actorChannel(actorvar),
                               self.protocol.channelForSubactor())),
+            StmtExpr(_callCxxArrayInsertSorted(
+                self.protocol.managedVar(md.decl.type.constructedType(),
+                                         self.side),
+                actorvar))
         ]
 
     def failCtorIf(self, md, cond):
         actorvar = md.actorDecl().var()
         failif = StmtIf(cond)
-        failif.addifstmts(self.unregisterActor(actorvar)
-                          + [ StmtExpr(ExprDelete(actorvar)),
-                              StmtReturn(ExprLiteral.NULL) ])
+        failif.addifstmts(
+            self.unregisterActor(actorvar)
+            + [ StmtExpr(ExprDelete(actorvar)),
+                StmtReturn(ExprLiteral.NULL),
+                StmtExpr(_callCxxArrayRemoveSorted(
+                    self.protocol.managedVar(
+                        md.decl.type.constructedType(), self.side),
+                    actorvar))
+            ])
         return [ failif ]
 
     def genHelperCtor(self, md):
@@ -3225,7 +3282,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def dtorEpilogue(self, md, actorexpr):
         return (self.unregisterActor(actorexpr)
-                + [ StmtExpr(self.callDeallocActor(md, actorexpr)) ])
+                + [ StmtExpr(self.callRemoveActor(md, actorexpr)),
+                    StmtExpr(self.callDeallocActor(md, actorexpr))
+                ])
 
     def genAsyncSendMethod(self, md):
         method = MethodDefn(self.makeSendMethodDecl(md))
@@ -3521,6 +3580,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             _allocMethod(md.decl.type.constructedType()),
             args=md.makeCxxArgs(params=1, retsems=retsems, retcallsems='out',
                                 implicit=0))
+
+    def callRemoveActor(self, md, actorexpr):
+        actortype = md.decl.type.constructedType()
+        if not actortype.isManaged():
+            return Whitespace('// unmanaged protocol\n')     
+
+        return _callCxxArrayRemoveSorted(
+            self.protocol.managerArrayExpr(actorexpr, self.side),
+            actorexpr)
 
     def callDeallocActor(self, md, actorexpr):
         actor = md.decl.type.constructedType()
