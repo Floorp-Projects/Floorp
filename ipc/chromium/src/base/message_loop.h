@@ -507,6 +507,15 @@ class MessageLoopForIO : public MessageLoop {
                            Mode mode,
                            FileDescriptorWatcher *controller,
                            Watcher *delegate);
+
+#if defined(CHROMIUM_MOZILLA_BUILD)
+  typedef base::MessagePumpLibevent::SignalEvent SignalEvent;
+  typedef base::MessagePumpLibevent::SignalWatcher SignalWatcher;
+  bool CatchSignal(int sig,
+                   SignalEvent* sigevent,
+                   SignalWatcher* delegate);
+#endif  // defined(CHROMIUM_MOZILLA_BUILD)
+
 #endif  // defined(OS_POSIX)
 };
 
