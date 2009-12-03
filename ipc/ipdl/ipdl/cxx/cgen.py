@@ -196,7 +196,8 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.write('virtual ')
         if md.ret:
             md.ret.accept(self)
-            self.write(' ')
+            self.println()
+            self.printdent()
         if md.typeop is not None:
             self.write('operator ')
             md.typeop.accept(self)

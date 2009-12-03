@@ -133,6 +133,56 @@ def _lookupActorHandle(handle, actortype):
 def _lookupListener(idexpr):
     return ExprCall(ExprVar('Lookup'), args=[ idexpr ])
 
+def _shmemType(ptr=0):
+    return Type('Shmem', ptr=ptr)
+
+def _rawShmemType(ptr=0):
+    return Type('Shmem::SharedMemory', ptr=ptr)
+
+def _shmemIdType():
+    return Type('Shmem::id_t')
+
+def _shmemHandleType():
+    return Type('Shmem::SharedMemoryHandle')
+
+def _shmemBackstagePass():
+    return ExprCall(ExprVar(
+        'Shmem::IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead'))
+
+def _shmemCtor(rawmem, idexpr):
+    return ExprCall(ExprVar('Shmem'),
+                    args=[ _shmemBackstagePass(), rawmem, idexpr ])
+
+def _shmemId(shmemexpr):
+    return ExprCall(ExprSelect(shmemexpr, '.', 'Id'),
+                    args=[ _shmemBackstagePass() ])
+
+def _shmemAlloc(size):
+    # starts out UNprotected
+    return ExprCall(ExprVar('Shmem::Alloc'),
+                    args=[ _shmemBackstagePass(), size ])
+
+def _shmemOpenExisting(size, handle):
+    # starts out protected
+    return ExprCall(ExprVar('Shmem::OpenExisting'),
+                    args=[ _shmemBackstagePass(),
+                           # true => protect
+                           handle, size, ExprLiteral.TRUE ])
+
+def _shmemForget(shmemexpr):
+    return ExprCall(ExprSelect(shmemexpr, '.', 'forget'),
+                    args=[ _shmemBackstagePass() ])
+
+def _shmemRevokeRights(shmemexpr):
+    return ExprCall(ExprSelect(shmemexpr, '.', 'RevokeRights'),
+                    args=[ _shmemBackstagePass() ])
+
+def _shmemCreatedMsgVar():
+    return ExprVar('mozilla::ipc::__internal__ipdl__ShmemCreated')
+
+def _lookupShmem(idexpr):
+    return ExprCall(ExprVar('LookupShmem'), args=[ idexpr ])
+
 def _makeForwardDecl(ptype, side):
     clsname = _actorName(ptype.qname.baseid, side)
 
@@ -205,6 +255,12 @@ def _runtimeAbort(msg):
     return StmtExpr(ExprCall(ExprVar('NS_RUNTIMEABORT'),
                                      [ ExprLiteral.String(msg) ]))
 
+def _autoptr(T):
+    return Type('nsAutoPtr', T=T)
+
+def _autoptrForget(expr):
+    return ExprCall(ExprSelect(expr, '.', 'forget'))
+
 def _cxxArrayType(basetype):
     return Type('nsTArray', T=basetype)
 
@@ -247,6 +303,9 @@ class _ConvertToCxxType(TypeVisitor):
         basecxxtype = a.basetype.accept(self)
         return _cxxArrayType(basecxxtype)
 
+    def visitShmemType(self, s):
+        return Type(s.name())
+
     def visitProtocolType(self, p): assert 0
     def visitMessageType(self, m): assert 0
     def visitVoidType(self, v): assert 0
@@ -269,6 +328,9 @@ class _ConvertToSerializableCxxType(TypeVisitor):
     def visitArrayType(self, a):
         basecxxtype = a.basetype.accept(self)
         return _cxxArrayType(basecxxtype)
+
+    def visitShmemType(self, s):
+        return Type(s.name())
 
     def visitProtocolType(self, p): assert 0
     def visitMessageType(self, m): assert 0
@@ -317,6 +379,9 @@ necessarily a C++ reference."""
         t = self.bareType(side)
         if self.ipdltype.isIPDL() and self.ipdltype.isActor():
             t.const = 1                 # const Actor*
+            return t
+        if self.ipdltype.isIPDL() and self.ipdltype.isShmem():
+            t.ref = 1
             return t
         t.const = 1
         t.ref = 1
@@ -377,7 +442,7 @@ necessarily a C++ reference."""
     # the biggies: serialization/deserialization
 
     def serialize(self, expr, side):
-        if not ipdl.type.hasactor(self.ipdltype):
+        if not self.speciallySerialized(self.ipdltype):
             return expr, [ ]
         # XXX could use TypeVisitor, but it doesn't feel right here
         _, sexpr, stmts = self._serialize(self.ipdltype, expr, side)
@@ -394,8 +459,12 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
             return self._serializeArray(etype, expr, side)
         elif etype.isUnion():
             return self._serializeUnion(etype, expr, side)
+        elif etype.isShmem() or etype.isChmod():
+            return self._serializeShmem(etype, expr, side)
         else: assert 0
 
+    def speciallySerialized(self, type):
+        return ipdl.type.hasactor(type) or ipdl.type.hasshmem(type)
 
     def _serializeActor(self, actortype, expr):
         actorhandlevar = ExprVar(self._nextuid('handle'))
@@ -531,6 +600,19 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         return pipetype, serunionvar, stmts
 
 
+    def _serializeShmem(self, shmemtype, expr, side):
+        pipetype = _shmemType()
+        pipevar = ExprVar(self._nextuid('serShmem'))
+        stmts = [
+            Whitespace('// serializing shmem type\n', indent=1),
+            StmtDecl(Decl(_shmemType(), pipevar.name),
+                     init=ExprCall(pipetype, args=[ expr ])),
+            StmtExpr(_shmemRevokeRights(expr)),
+            StmtExpr(_shmemForget(expr)),
+        ]
+        return pipetype, pipevar, stmts
+
+
     def makePipeDecls(self, toExpr):
         if not ipdl.type.hasactor(self.ipdltype):
             return 0, toExpr, [ ]
@@ -543,9 +625,12 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         return self.var(), [ StmtDecl(Decl(self.bareType(side),
                                            self.var().name)) ]
 
+    def speciallyDeserialized(self, type):
+        return ipdl.type.hasactor(type) or ipdl.type.hasshmem(type)
+
     def deserialize(self, expr, side, sems):
         """|expr| is a pointer the return type."""
-        if not ipdl.type.hasactor(self.ipdltype):
+        if not self.speciallyDeserialized(self.ipdltype):
             return [ ]
         if sems == 'in':
             toexpr = self.var()
@@ -556,7 +641,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         return stmts
 
     def _deserialize(self, pipeExpr, targetType, targetExpr, side):
-        if not ipdl.type.hasactor(targetType):
+        if not self.speciallyDeserialized(targetType):
             return targetType, [ ]
         elif targetType.isActor():
             return self._deserializeActor(
@@ -566,6 +651,9 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
                 pipeExpr, targetType, targetExpr, side)
         elif targetType.isUnion():
             return self._deserializeUnion(
+                pipeExpr, targetType, targetExpr, side)
+        elif targetType.isShmem():
+            return self._deserializeShmem(
                 pipeExpr, targetType, targetExpr, side)
         else: assert 0
 
@@ -623,7 +711,7 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         switch = StmtSwitch(ud.callType(pipeunion))
         for c in ud.components:
             ct = c.ipdltype
-            if not ipdl.type.hasactor(ct):
+            if not self.speciallyDeserialized(ct):
                 continue
             assert ct.isIPDL()
 
@@ -703,6 +791,29 @@ buried in it.  Return |pipetype, serializedExpr, serializationStmts|.'''
         ]
 
         return cxxUnionType, stmts
+
+
+    def _deserializeShmem(self, pipeshmem, shmemtype, outshmem, side):
+        # Shmem::id_t id = inshmem.mId
+        # Shmem::shmem_t* raw = Lookup(id)
+        # if (raw)
+        #   outshmem = Shmem(raw, id)
+        idvar = ExprVar(self._nextuid('shmemid'))
+        rawvar = ExprVar(self._nextuid('rawshmem'))
+        iffound = StmtIf(rawvar)
+        iffound.addifstmt(StmtExpr(ExprAssn(
+            outshmem, _shmemCtor(rawvar, idvar))))
+
+        cxxShmemType = _shmemType()
+        stmts = [
+            Whitespace('// deserializing shmem type\n', indent=1),
+            StmtDecl(Decl(_shmemIdType(), idvar.name),
+                     init=_shmemId(pipeshmem)),
+            StmtDecl(Decl(_rawShmemType(ptr=1), rawvar.name),
+                     init=_lookupShmem(idvar)),
+            iffound
+        ]
+        return cxxShmemType, stmts
 
 
     def _nextuid(self, descr):
@@ -1082,6 +1193,47 @@ class Protocol(ipdl.ast.Protocol):
         assert self.decl.type.isToplevel()
         return ExprVar('mOtherProcess')
 
+    # shmem stuff
+    def shmemMapVar(self):
+        assert self.usesShmem()
+        return ExprVar('mShmemMap')
+
+    def lastShmemIdVar(self):
+        assert self.usesShmem()
+        return ExprVar('mLastShmemId')
+
+    def nextShmemIdExpr(self, side):
+        assert self.usesShmem()
+        if side is 'parent':   op = '++'
+        elif side is 'child':  op = '--'
+        return ExprPrefixUnop(self.lastShmemIdVar(), op)
+
+    def lookupShmemVar(self):
+        assert self.usesShmem()
+        return ExprVar('LookupShmem')
+
+    def registerShmemVar(self):
+        assert self.usesShmem()
+        return ExprVar('RegisterShmem')
+
+    def registerShmemIdVar(self):
+        assert self.usesShmem()
+        return ExprVar('RegisterShmemId')
+
+    def unregisterShmemVar(self):
+        assert self.usesShmem()
+        return ExprVar('UnregisterShmem')
+
+    def usesShmem(self):
+        for md in self.messageDecls:
+            for param in md.inParams:
+                if ipdl.type.hasshmem(param.type):
+                    return True
+            for ret in md.outParams:
+                if ipdl.type.hasshmem(ret.type):
+                    return True
+        return False
+
     @staticmethod
     def upgrade(protocol):
         assert isinstance(protocol, ipdl.ast.Protocol)
@@ -1292,7 +1444,7 @@ def _generateMessageClass(clsname, msgid, inparams, outparams, typedefs):
     itervar = ExprVar('iter')
     if len(outparams):
         reader.addstmts([
-            StmtDecl(Decl(Type('void', ptr=True), itervar.name),
+            StmtDecl(Decl(Type.VOIDPTR, itervar.name),
                      ExprLiteral.ZERO),
             Whitespace.NL ])
 
@@ -1557,7 +1709,7 @@ def _generateCxxUnionStuff(ud):
     # add helper methods that ensure the discunion has a
     # valid type
     sanity = MethodDefn(MethodDecl(
-        assertsanityvar.name, ret=Type('void'), const=1))
+        assertsanityvar.name, ret=Type.VOID, const=1))
     sanity.addstmts([
         _abortIfFalse(ExprBinary(tfirstvar, '<=', mtypevar),
                       'invalid type tag'),
@@ -1569,7 +1721,7 @@ def _generateCxxUnionStuff(ud):
     sanity2 = MethodDefn(
         MethodDecl(assertsanityvar.name,
                        params=[ Decl(typetype, atypevar.name) ],
-                       ret=Type('void'),
+                       ret=Type.VOID,
                        const=1))
     sanity2.addstmts([
         StmtExpr(ExprCall(assertsanityvar)),
@@ -2240,6 +2392,13 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         for md in p.messageDecls:
             self.visitMessageDecl(md)
 
+        # "hidden" message that passes shmem mappings from one process
+        # to the other
+        if p.usesShmem():
+            self.asyncSwitch.addcase(
+                CaseLabel('SHMEM_CREATED_MESSAGE_TYPE'),
+                self.genShmemCreatedHandler())
+
         # add default cases
         default = StmtBlock()
         default.addstmt(StmtReturn(_Result.NotKnown))
@@ -2315,6 +2474,9 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
         if 1 or p.decl.type.isManager():
             self.cls.addstmts(self.implementManagerIface())
 
+        if p.usesShmem():
+            self.cls.addstmts(self.makeShmemIface())
+
         # private: members and methods
         self.cls.addstmts([ Label.PRIVATE,
                             StmtDecl(Decl(p.channelType(), 'mChannel')) ])
@@ -2330,6 +2492,12 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
             self.cls.addstmts([
                 StmtDecl(Decl(_actorIdType(), p.idVar().name)),
                 StmtDecl(Decl(p.managerCxxType(ptr=1), p.managerVar().name))
+            ])
+        if p.usesShmem():
+            self.cls.addstmts([
+                StmtDecl(Decl(Type('IDMap', T=_rawShmemType()),
+                              p.shmemMapVar().name)),
+                StmtDecl(Decl(_shmemIdType(), p.lastShmemIdVar().name))
             ])
 
         self.ns.addstmts([ self.cls, Whitespace.NL, Whitespace.NL ])
@@ -2421,6 +2589,171 @@ class _GenerateProtocolActorHeader(ipdl.ast.Visitor):
                  otherprocess,
                  Whitespace.NL ]
 
+
+    def makeShmemIface(self):
+        p = self.protocol
+        idvar = ExprVar('aId')
+
+        # bool AllocShmem(size_t size, Shmem* outmem):
+        #   nsAutoPtr<shmem_t> shmem(Shmem::Alloc(size));
+        #   if (!shmem)
+        #     return false
+        #   shmemhandle_t handle;
+        #   if (!shmem->ShareToProcess(subprocess, &handle))
+        #     return false;
+        #   Shmem::id_t id = RegisterShmem(shmem);
+        #   Message* msg = new __internal__ipdl__ShmemCreated(
+        #      mRoutingId, handle, id, size);
+        #   if (!Send(msg))
+        #     return false;
+        #   *aMem = Shmem(shmem, id);
+        #   return true;
+        sizevar = ExprVar('aSize')
+        memvar = ExprVar('aMem')
+        allocShmem = MethodDefn(MethodDecl(
+            'AllocShmem',
+            params=[ Decl(Type.SIZE, sizevar.name),
+                     Decl(_shmemType(ptr=1), memvar.name) ],
+            ret=Type.BOOL))
+
+        rawvar = ExprVar('rawmem')
+        allocShmem.addstmt(StmtDecl(
+            Decl(_autoptr(_rawShmemType()), rawvar.name),
+            initargs=[ _shmemAlloc(sizevar) ]))
+        failif = StmtIf(ExprNot(rawvar))
+        failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
+        allocShmem.addstmt(failif)
+
+        handlevar = ExprVar('handle')
+        allocShmem.addstmt(StmtDecl(
+            Decl(_shmemHandleType(), handlevar.name)))
+        failif = StmtIf(ExprNot(ExprCall(
+            ExprSelect(rawvar, '->', 'ShareToProcess'),
+            args=[ ExprCall(p.otherProcessMethod()),
+                   ExprAddrOf(handlevar) ])))
+        failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
+        allocShmem.addstmt(failif)
+
+        allocShmem.addstmt(StmtDecl(
+            Decl(_shmemIdType(), idvar.name),
+            ExprCall(p.registerShmemVar(), args=[ rawvar ])))
+
+        msgvar = ExprVar('msg')
+        allocShmem.addstmt(StmtDecl(
+            Decl(Type('Message', ptr=1), msgvar.name),
+            ExprNew(Type(_shmemCreatedMsgVar().name),
+                    args=[ p.routingId(), handlevar, idvar, sizevar ])))
+
+        failif = StmtIf(ExprNot(ExprCall(
+            ExprSelect(p.channelVar(), p.channelSel(), 'Send'),
+            args=[ msgvar ])))
+        failif.addifstmts([
+            StmtExpr(ExprCall(p.unregisterShmemVar(), args=[ idvar ])),
+            StmtReturn(ExprLiteral.FALSE)
+        ])
+        allocShmem.addstmt(failif)
+
+        allocShmem.addstmts([
+            StmtExpr(ExprAssn(
+                ExprDeref(memvar), _shmemCtor(_autoptrForget(rawvar), idvar))),
+            StmtReturn(ExprLiteral.TRUE)
+        ])
+
+        # TODO: DeallocShmem().  not needed until actors outlast their
+        # shmem mappings.
+        
+        # This code is pretty similar to |implementManagerIface()|
+        lookupShmem = MethodDefn(MethodDecl(
+            p.lookupShmemVar().name,
+            params=[ Decl(_shmemIdType(), idvar.name) ],
+            ret=_rawShmemType(ptr=1)))
+        lookupShmem.addstmt(StmtReturn(ExprCall(
+            ExprSelect(p.shmemMapVar(), '.', 'Lookup'),
+            args=[ idvar ])))
+
+        mapvar = ExprVar('aMap')
+        tmpvar = ExprVar('tmp')
+        registerShmem = MethodDefn(MethodDecl(
+            p.registerShmemVar().name,
+            params=[ Decl(_rawShmemType(ptr=1), mapvar.name) ],
+            ret=_shmemIdType()))
+        registerShmem.addstmts([
+            StmtDecl(Decl(_shmemIdType(), tmpvar.name),
+                     p.nextShmemIdExpr(self.side)),
+            StmtExpr(ExprCall(ExprSelect(p.shmemMapVar(), '.', 'AddWithID'),
+                              [ mapvar, tmpvar ])),
+            StmtReturn(tmpvar)
+        ])
+
+        registerShmemById = MethodDefn(MethodDecl(
+            p.registerShmemIdVar().name,
+            params=[ Decl(_rawShmemType(ptr=1), mapvar.name),
+                     Decl(_shmemIdType(), idvar.name) ],
+            ret=_shmemIdType()))
+        registerShmemById.addstmts([
+            StmtExpr(ExprCall(ExprSelect(p.shmemMapVar(), '.', 'AddWithID'),
+                              [ mapvar, idvar ])),
+            StmtReturn(idvar)
+        ])
+
+        unregisterShmem = MethodDefn(MethodDecl(
+            p.unregisterShmemVar().name,
+            params=[ Decl(_shmemIdType(), idvar.name) ]))
+        unregisterShmem.addstmts([
+            StmtExpr(ExprCall(ExprSelect(p.shmemMapVar(), '.', 'Remove'),
+                              args=[ idvar ]))
+        ])
+
+        return [
+            Whitespace('// Methods for managing shmem\n', indent=1),
+            allocShmem,
+            Whitespace.NL,
+            Label.PRIVATE,
+            lookupShmem,
+            registerShmem,
+            registerShmemById,
+            unregisterShmem,
+            Whitespace.NL
+        ]
+
+    def genShmemCreatedHandler(self):
+        case = StmtBlock()                                          
+
+        handlevar = ExprVar('handle')
+        idvar = ExprVar('id')
+        sizevar = ExprVar('size')
+        rawvar = ExprVar('rawmem')
+        failif = StmtIf(ExprNot(ExprCall(
+            ExprVar(_shmemCreatedMsgVar().name +'::Read'),
+            args=[ ExprAddrOf(self.msgvar),
+                   ExprAddrOf(handlevar),
+                   ExprAddrOf(idvar),
+                   ExprAddrOf(sizevar) ])))
+        failif.addifstmt(StmtReturn(_Result.PayloadError))
+
+        case.addstmts([
+            StmtDecl(Decl(_shmemHandleType(), handlevar.name)),
+            StmtDecl(Decl(_shmemIdType(), idvar.name)),
+            StmtDecl(Decl(Type.SIZE, sizevar.name)),
+            Whitespace.NL,
+            failif,
+            Whitespace.NL,
+            StmtDecl(Decl(_autoptr(_rawShmemType()), rawvar.name),
+                     initargs=[ _shmemOpenExisting(sizevar, handlevar) ])
+        ])
+
+        failif = StmtIf(ExprNot(rawvar))
+        failif.addifstmt(StmtReturn(_Result.ValuError))
+
+        case.addstmts([
+            failif,
+            StmtExpr(ExprCall(self.protocol.registerShmemIdVar(),
+                              args=[ _autoptrForget(rawvar), idvar ])),
+            Whitespace.NL,
+            StmtReturn(_Result.Processed)
+        ])
+
+        return case
 
 
     ##-------------------------------------------------------------------------
