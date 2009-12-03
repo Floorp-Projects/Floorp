@@ -75,7 +75,7 @@ child:
   rpc NPP_GetValue_NPPVpluginNeedsXEmbed()
     returns (bool value, NPError result);
   rpc NPP_GetValue_NPPVpluginScriptableNPObject()
-    returns (PPluginScriptableObject value, NPError result);
+    returns (nullable PPluginScriptableObject value, NPError result);
 
   rpc NPP_HandleEvent(NPRemoteEvent event)
     returns (int16_t handled);
@@ -86,9 +86,9 @@ parent:
   rpc NPN_GetValue_NPNVisOfflineBool()
     returns (bool value, NPError result);
   rpc NPN_GetValue_NPNVWindowNPObject()
-    returns (PPluginScriptableObject value, NPError result);
+    returns (nullable PPluginScriptableObject value, NPError result);
   rpc NPN_GetValue_NPNVPluginElementNPObject()
-    returns (PPluginScriptableObject value, NPError result);
+    returns (nullable PPluginScriptableObject value, NPError result);
   rpc NPN_GetValue_NPNVprivateModeBool()
     returns (bool value, NPError result);
 
@@ -134,7 +134,7 @@ child:
   rpc PBrowserStream(nsCString url,
                      uint32_t length,
                      uint32_t lastmodified,
-                     PStreamNotify notifyData,
+                     nullable PStreamNotify notifyData,
                      nsCString headers,
                      nsCString mimeType,
                      bool seekable)

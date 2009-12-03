@@ -1,0 +1,4 @@
+protocol Nullable {
+child:
+    Msg(nullable int i);
+};
