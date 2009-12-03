@@ -632,4 +632,14 @@ bool MessageLoopForIO::WatchFileDescriptor(int fd,
       delegate);
 }
 
+#if defined(CHROMIUM_MOZILLA_BUILD)
+bool
+MessageLoopForIO::CatchSignal(int sig,
+                              SignalEvent* sigevent,
+                              SignalWatcher* delegate)
+{
+  return pump_libevent()->CatchSignal(sig, sigevent, delegate);
+}
+#endif  // defined(CHROMIUM_MOZILLA_BUILD)
+
 #endif
