@@ -585,6 +585,11 @@ var Browser = {
 
     this._pluginObserver = new PluginObserver(bv);
     new PreferenceToggle("plugins.enabled", this._pluginObserver);
+
+    // broadcast a UIReady message so add-ons know we are finished with startup
+    let event = document.createEvent("Events");
+    event.initEvent("UIReady", true, false);
+    window.dispatchEvent(event);
   },
 
   shutdown: function() {
