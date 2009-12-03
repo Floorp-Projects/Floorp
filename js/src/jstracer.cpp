@@ -11825,11 +11825,11 @@ TraceRecorder::initOrSetPropertyByIndex(LIns* obj_ins, LIns* index_ins, jsval* r
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_SETELEM()
+TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
 {
-    jsval& v = stackval(-1);
-    jsval& idx = stackval(-2);
-    jsval& lval = stackval(-3);
+    jsval& v = stackval(v_spindex);
+    jsval& idx = stackval(idx_spindex);
+    jsval& lval = stackval(lval_spindex);
 
     if (JSVAL_IS_PRIMITIVE(lval))
         RETURN_STOP_A("left JSOP_SETELEM operand is not an object");
@@ -11887,6 +11887,12 @@ TraceRecorder::record_JSOP_SETELEM()
         set(&lval, v_ins);
 
     return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_SETELEM()
+{
+    return setElem(-3, -2, -1);
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -12957,7 +12963,7 @@ TraceRecorder::record_JSOP_INITPROP()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_INITELEM()
 {
-    return record_JSOP_SETELEM();
+    return setElem(-3, -2, -1);
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -13415,7 +13421,11 @@ TraceRecorder::record_JSOP_EVAL()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ENUMELEM()
 {
-    return ARECORD_STOP;
+    /*
+     * To quote from jsops.cpp's JSOP_ENUMELEM case:
+     * Funky: the value to set is under the [obj, id] pair.
+     */
+    return setElem(-2, -1, -3);
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
