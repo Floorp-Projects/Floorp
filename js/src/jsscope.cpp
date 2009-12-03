@@ -326,6 +326,10 @@ JSScope::searchTable(jsid id, bool adding)
     hash2 = SCOPE_HASH2(hash0, sizeLog2, hashShift);
     sizeMask = JS_BITMASK(sizeLog2);
 
+#ifdef DEBUG
+    jsuword collision_flag = SPROP_COLLISION;
+#endif
+
     /* Save the first removed entry pointer so we can recycle it if adding. */
     if (SPROP_IS_REMOVED(stored)) {
         firstRemoved = spp;
@@ -333,6 +337,9 @@ JSScope::searchTable(jsid id, bool adding)
         firstRemoved = NULL;
         if (adding && !SPROP_HAD_COLLISION(stored))
             SPROP_FLAG_COLLISION(spp, sprop);
+#ifdef DEBUG
+        collision_flag &= jsuword(*spp) & SPROP_COLLISION;
+#endif
     }
 
     for (;;) {
@@ -350,6 +357,7 @@ JSScope::searchTable(jsid id, bool adding)
         sprop = SPROP_CLEAR_COLLISION(stored);
         if (sprop && sprop->id == id) {
             METER(stepHits);
+            JS_ASSERT(collision_flag);
             return spp;
         }
 
@@ -359,6 +367,9 @@ JSScope::searchTable(jsid id, bool adding)
         } else {
             if (adding && !SPROP_HAD_COLLISION(stored))
                 SPROP_FLAG_COLLISION(spp, sprop);
+#ifdef DEBUG
+            collision_flag &= jsuword(*spp) & SPROP_COLLISION;
+#endif
         }
     }
 
@@ -1435,14 +1446,15 @@ JSScope::putProperty(JSContext *cx, jsid id,
     }
 
     if (sprop) {
-        /* Store the tree node pointer in the table entry for id. */
-        if (table)
-            SPROP_STORE_PRESERVING_COLLISION(spp, sprop);
         CHECK_ANCESTOR_LINE(this, false);
 
-        /* See comment in JSScope::addPropertyHelper about ignoring OOM here. */
-        if (!table && entryCount >= SCOPE_HASH_THRESHOLD)
+        if (table) {
+            /* Store the tree node pointer in the table entry for id. */
+            SPROP_STORE_PRESERVING_COLLISION(spp, sprop);
+        } else if (entryCount >= SCOPE_HASH_THRESHOLD) {
+            /* See comment in JSScope::addPropertyHelper about ignoring OOM here. */
             (void) createTable(cx, false);
+        }
 
         METER(puts);
         return sprop;
@@ -1520,7 +1532,7 @@ JSScope::changeProperty(JSContext *cx, JSScopeProperty *sprop,
         /*
          * Let JSScope::putProperty handle this |overwriting| case, including
          * the conservation of sprop->slot (if it's valid). We must not call
-         * JSScope::remove here, because it will free a valid sprop->slot and
+         * JSScope::removeProperty because it will free a valid sprop->slot and
          * JSScope::putProperty won't re-allocate it.
          */
         newsprop = putProperty(cx, child.id, child.getter, child.setter, child.slot,
@@ -1539,7 +1551,7 @@ JSScope::changeProperty(JSContext *cx, JSScopeProperty *sprop,
 bool
 JSScope::removeProperty(JSContext *cx, jsid id)
 {
-    JSScopeProperty **spp, *stored, *sprop;
+    JSScopeProperty **spp, *sprop;
     uint32 size;
 
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, this));
@@ -1550,8 +1562,7 @@ JSScope::removeProperty(JSContext *cx, jsid id)
     }
 
     spp = search(id, false);
-    stored = *spp;
-    sprop = SPROP_CLEAR_COLLISION(stored);
+    sprop = SPROP_CLEAR_COLLISION(*spp);
     if (!sprop) {
         METER(uselessRemoves);
         return true;
@@ -1574,14 +1585,19 @@ JSScope::removeProperty(JSContext *cx, jsid id)
     }
 
     /* Next, remove id by setting its entry to a removed or free sentinel. */
-    if (SPROP_HAD_COLLISION(stored)) {
+    if (SPROP_HAD_COLLISION(*spp)) {
         JS_ASSERT(table);
         *spp = SPROP_REMOVED;
         ++removedCount;
     } else {
         METER(removeFrees);
-        if (table)
+        if (table) {
             *spp = NULL;
+#ifdef DEBUG
+            for (JSScopeProperty *aprop = lastProp; aprop; aprop = aprop->parent)
+                JS_ASSERT_IF(aprop != sprop, hasProperty(aprop));
+#endif
+        }
     }
     LIVE_SCOPE_METER(cx, --cx->runtime->liveScopeProps);
 
