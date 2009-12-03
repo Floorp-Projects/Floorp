@@ -77,6 +77,9 @@ class TypeVisitor:
     def visitArrayType(self, a, *args):
         a.basetype.accept(self, *args)
 
+    def visitShmemType(self, s, *args):
+        pass
+
 
 class Type:
     def __cmp__(self, o):
@@ -173,6 +176,7 @@ class IPDLType(Type):
     def isActor(self): return False
     def isUnion(self): return False
     def isArray(self): return False
+    def isShmem(self): return False
 
     def isAsync(self): return self.sendSemantics is ASYNC
     def isSync(self): return self.sendSemantics is SYNC
@@ -189,10 +193,15 @@ class IPDLType(Type):
                 or o.isSync() and self.isRpc())
 
 class StateType(IPDLType):
-    def __init__(self, start=False):
+    def __init__(self, protocol, name, start=False):
+        self.protocol = protocol
+        self.name = name
         self.start = start
-    def isState(self):
-        return True
+    def isState(self): return True
+    def name(self):
+        return self.name
+    def fullname(self):
+        return self.name()
 
 class MessageType(IPDLType):
     def __init__(self, sendSemantics, direction,
@@ -281,6 +290,16 @@ class ArrayType(IPDLType):
     def name(self): return self.basetype.name() +'[]'
     def fullname(self): return self.basetype.fullname() +'[]'
 
+class ShmemType(IPDLType):
+    def __init__(self, qname):
+        self.qname = qname
+    def isShmem(self): return True
+
+    def name(self):
+        return self.qname.baseid
+    def fullname(self):
+        return str(self.qname)
+
 
 def iteractortypes(type):
     """Iterate over any actor(s) buried in |type|."""
@@ -300,6 +319,17 @@ def iteractortypes(type):
 def hasactor(type):
     """Return true iff |type| is an actor or has one buried within."""
     for _ in iteractortypes(type): return True
+    return False
+
+def hasshmem(type):
+    """Return true iff |type| is shmem or has it buried within."""
+    class found: pass
+    class findShmem(TypeVisitor):
+        def visitShmemType(self, s):  raise found()
+    try:
+        type.accept(findShmem())
+    except found:
+        return True
     return False
 
 ##--------------------
@@ -448,18 +478,6 @@ class GatherDecls(TcheckVisitor):
         TcheckVisitor.__init__(self, None, errors)
         self.builtinUsing = builtinUsing
 
-    def declareBuiltins(self):
-        for using in self.builtinUsing:
-            fullname = str(using.type)
-            if using.type.basename() == fullname:
-                fullname = None
-            using.decl = self.declareLocalGlobal(
-                loc=using.loc,
-                type=BuiltinCxxType(using.type.spec),
-                shortname=using.type.basename(),
-                fullname=fullname)
-            self.symtab.declare(using.decl)
-
     def visitTranslationUnit(self, tu):
         # all TranslationUnits declare symbols in global scope
         if hasattr(tu, 'symtab'):
@@ -558,9 +576,13 @@ class GatherDecls(TcheckVisitor):
         fullname = str(using.type)
         if using.type.basename() == fullname:
             fullname = None
+        if fullname == 'mozilla::ipc::Shmem':
+            ipdltype = ShmemType(using.type.spec)
+        else:
+            ipdltype = ImportedCxxType(using.type.spec)
         using.decl = self.declare(
             loc=using.loc,
-            type=ImportedCxxType(using.type.spec),
+            type=ipdltype,
             shortname=using.type.basename(),
             fullname=fullname)
 
@@ -611,12 +633,12 @@ class GatherDecls(TcheckVisitor):
             p.states[trans.state] = trans
             trans.state.decl = self.declare(
                 loc=trans.state.loc,
-                type=StateType(trans.state.start),
+                type=StateType(p.decl.type, trans.state, trans.state.start),
                 progname=trans.state.name)
 
         # declare implicit "any" state
         self.declare(loc=State.ANY.loc,
-                     type=StateType(start=False),
+                     type=StateType(p.decl.type, State.ANY.name, start=False),
                      progname=State.ANY.name)
 
         for trans in p.transitionStmts:
@@ -657,7 +679,7 @@ class GatherDecls(TcheckVisitor):
                     statename,
                     statedecl.type.typename())
             else:
-                actortype.state = statedecl
+                actortype.state = statedecl.type
 
         for msg in p.messageDecls:
             for iparam in msg.inParams:
