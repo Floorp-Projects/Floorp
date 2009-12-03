@@ -182,14 +182,22 @@ PluginModuleParent::NPP_NewStream(NPP instance, NPMIMEType type,
                                   NPStream* stream, NPBool seekable,
                                   uint16_t* stype)
 {
-    return InstCast(instance)->NPP_NewStream(type, stream, seekable,
-                                             stype);
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return NPERR_GENERIC_ERROR;
+
+    return i->NPP_NewStream(type, stream, seekable,
+                            stype);
 }
 
 NPError
 PluginModuleParent::NPP_SetWindow(NPP instance, NPWindow* window)
 {
-     return InstCast(instance)->NPP_SetWindow(window);
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return NPERR_GENERIC_ERROR;
+
+    return i->NPP_SetWindow(window);
 }
 
 NPError
@@ -197,14 +205,22 @@ PluginModuleParent::NPP_DestroyStream(NPP instance,
                                       NPStream* stream,
                                       NPReason reason)
 {
-    return InstCast(instance)->NPP_DestroyStream(stream, reason);
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return NPERR_GENERIC_ERROR;
+
+    return i->NPP_DestroyStream(stream, reason);
 }
 
 int32_t
 PluginModuleParent::NPP_WriteReady(NPP instance,
                                    NPStream* stream)
 {
-    return StreamCast(instance, stream)->WriteReady();
+    BrowserStreamParent* s = StreamCast(instance, stream);
+    if (!s)
+        return -1;
+
+    return s->WriteReady();
 }
 
 int32_t
@@ -214,7 +230,11 @@ PluginModuleParent::NPP_Write(NPP instance,
                               int32_t len,
                               void* buffer)
 {
-    return StreamCast(instance, stream)->Write(offset, len, buffer);
+    BrowserStreamParent* s = StreamCast(instance, stream);
+    if (!s)
+        return -1;
+
+    return s->Write(offset, len, buffer);
 }
 
 void
@@ -222,40 +242,62 @@ PluginModuleParent::NPP_StreamAsFile(NPP instance,
                                      NPStream* stream,
                                      const char* fname)
 {
-    StreamCast(instance, stream)->StreamAsFile(fname);
+    BrowserStreamParent* s = StreamCast(instance, stream);
+    if (!s)
+        return;
+
+    s->StreamAsFile(fname);
 }
 
 void
 PluginModuleParent::NPP_Print(NPP instance, NPPrint* platformPrint)
 {
-    InstCast(instance)->NPP_Print(platformPrint);
+    PluginInstanceParent* i = InstCast(instance);
+    if (i)
+        i->NPP_Print(platformPrint);
 }
 
 int16_t
 PluginModuleParent::NPP_HandleEvent(NPP instance, void* event)
 {
-    return InstCast(instance)->NPP_HandleEvent(event);
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return false;
+
+    return i->NPP_HandleEvent(event);
 }
 
 void
 PluginModuleParent::NPP_URLNotify(NPP instance, const char* url,
                                   NPReason reason, void* notifyData)
 {
-    return InstCast(instance)->NPP_URLNotify(url, reason, notifyData);
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return;
+
+    i->NPP_URLNotify(url, reason, notifyData);
 }
 
 NPError
 PluginModuleParent::NPP_GetValue(NPP instance,
                                  NPPVariable variable, void *ret_value)
 {
-    return InstCast(instance)->NPP_GetValue(variable, ret_value);
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return NPERR_GENERIC_ERROR;
+
+    return i->NPP_GetValue(variable, ret_value);
 }
 
 NPError
 PluginModuleParent::NPP_SetValue(NPP instance, NPNVariable variable,
                                  void *value)
 {
-    return InstCast(instance)->NPP_SetValue(variable, value);
+    PluginInstanceParent* i = InstCast(instance);
+    if (!i)
+        return NPERR_GENERIC_ERROR;
+
+    return i->NPP_SetValue(variable, value);
 }
 
 bool
@@ -410,6 +452,12 @@ PluginModuleParent::InstCast(NPP instance)
 {
     PluginInstanceParent* ip =
         static_cast<PluginInstanceParent*>(instance->pdata);
+
+    // If the plugin crashed and the PluginInstanceParent was deleted,
+    // instance->pdata will be NULL.
+    if (!ip)
+        return NULL;
+
     if (instance != ip->mNPP) {
         NS_RUNTIMEABORT("Corrupted plugin data.");
     }
@@ -421,6 +469,9 @@ PluginModuleParent::StreamCast(NPP instance,
                                NPStream* s)
 {
     PluginInstanceParent* ip = InstCast(instance);
+    if (!ip)
+        return NULL;
+
     BrowserStreamParent* sp =
         static_cast<BrowserStreamParent*>(static_cast<AStream*>(s->pdata));
     if (sp->mNPP != ip || s != sp->mStream) {

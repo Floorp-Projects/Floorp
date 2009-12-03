@@ -73,6 +73,8 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
 
 PluginInstanceParent::~PluginInstanceParent()
 {
+    if (mNPP)
+        mNPP->pdata = NULL;
 }
 
 void
