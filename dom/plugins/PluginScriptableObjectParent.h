@@ -52,10 +52,8 @@ class PluginScriptableObjectParent;
 
 struct ParentNPObject : NPObject
 {
-  PluginScriptableObjectParent()
-    : _class(NULL)
-    , referenceCount(0)
-    , parent(NULL) { }
+  ParentNPObject()
+    : parent(NULL) { }
 
   PluginScriptableObjectParent* parent;
 };
