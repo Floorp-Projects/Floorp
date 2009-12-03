@@ -44,8 +44,15 @@ include $(DEPTH)/config/autoconf.mk
 GARBAGE_DIRS += _ipdlheaders
 GARBAGE += ipdl_lextab.py ipdl_yacctab.py
 
-include $(topsrcdir)/config/rules.mk
+MODULE = ipdlgen
+LIBRARY_NAME = mozipdlgen_s
+FORCE_STATIC_LIB = 1
+LIBXUL_LIBRARY = 1
+EXPORT_LIBRARY = 1
 
+##-----------------------------------------------------------------------------
+## When you add IPDL files to a source directory, list the directory here.
+##
 IPDLDIRS =  \
   dom/plugins  \
   dom/ipc  \
@@ -54,22 +61,46 @@ IPDLDIRS =  \
   ipc/ipdl/test/cxx  \
   ipc/testshell  \
   $(NULL)
+##-----------------------------------------------------------------------------
+
+ifdef MOZ_IPDL_TESTS
+DIRS += test
+endif
 
 vpath %.ipdl $(topsrcdir)
 
 define ADD_IPDLDIR
 include $(topsrcdir)/$(IPDLDIR)/ipdl.mk
 ALL_IPDLSRCS += $$(IPDLSRCS:%=$(IPDLDIR)/%)
+PROTOCOLS += $$(IPDLSRCS)
 endef
 
 ALL_IPDLSRCS :=
+PROTOCOLS :=
 
 $(foreach IPDLDIR,$(IPDLDIRS),$(eval $(ADD_IPDLDIR)))
 
+
+CPPSRCS =					\
+  $(PROTOCOLS:%.ipdl=%Parent.cpp)		\
+  $(PROTOCOLS:%.ipdl=%Child.cpp)		\
+  $(NULL)
+
+LOCAL_INCLUDES += -I$(DEPTH)/ipc/ipdl/_ipdlheaders
+
+
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+include $(topsrcdir)/config/rules.mk
+
+
+# NB: the IPDL compiler manages .ipdl-->.h/.cpp dependencies itself,
+# which is why we don't have explicit .h/.cpp targets here
 export:: $(ALL_IPDLSRCS)
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  -I$(topsrcdir)/other-licenses/ply \
-	  $(srcdir)/ipdl.py \
-	  -d _ipdlheaders \
-	  $(IPDLDIRS:%=-I$(topsrcdir)/%) \
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py	\
+	  -I$(topsrcdir)/other-licenses/ply		\
+	  $(srcdir)/ipdl.py				\
+	  --outheaders-dir=_ipdlheaders			\
+	  --outcpp-dir=.				\
+	  $(IPDLDIRS:%=-I$(topsrcdir)/%)		\
 	  $^

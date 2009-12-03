@@ -136,6 +136,12 @@ class CxxCodeGen(CodePrinter, Visitor):
             d.type.nmemb.accept(self)
             self.write(']')
 
+    def visitParam(self, p):
+        self.visitDecl(p)
+        if p.default is not None:
+            self.write(' = ')
+            p.default.accept(self)
+
     def visitClass(self, c):
         if c.specializes is not None:
             self.printdentln('template<>')
@@ -258,7 +264,12 @@ class CxxCodeGen(CodePrinter, Visitor):
     def visitDestructorDecl(self, dd):
         if dd.virtual:
             self.write('virtual ')
-        self.write('~'+ dd.name +'()')
+
+        # hack alert
+        parts = dd.name.split('::')
+        parts[-1] = '~'+ parts[-1]
+
+        self.write('::'.join(parts) +'()')
 
     def visitDestructorDefn(self, dd):
         self.printdent()
