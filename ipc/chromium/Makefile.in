@@ -201,7 +201,7 @@ CPPSRCS += \
   waitable_event_watcher_posix.cc \
   file_descriptor_set_posix.cc \
   ipc_channel_posix.cc \
-  process_watcher_posix.cc \
+  process_watcher_posix_sigchld.cc \
   $(NULL)
 
 endif # } OS_POSIX
