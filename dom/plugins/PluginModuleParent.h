@@ -100,6 +100,8 @@ public:
 
     virtual ~PluginModuleParent();
 
+    NS_OVERRIDE virtual void ActorDestroy(ActorDestroyReason why);
+
     /**
      * LoadModule
      *
@@ -208,6 +210,7 @@ private:
                              NPError* error);
 private:
     PluginProcessParent* mSubprocess;
+    bool mShutdown;
     const NPNetscapeFuncs* mNPNIface;
     nsTHashtable<nsVoidPtrHashKey> mValidIdentifiers;
 };

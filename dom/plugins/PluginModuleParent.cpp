@@ -66,22 +66,47 @@ PluginModuleParent::LoadModule(const char* aFilePath)
 
 
 PluginModuleParent::PluginModuleParent(const char* aFilePath)
+    : mSubprocess(new PluginProcessParent(aFilePath))
+    , mShutdown(false)
+    , mNPNIface(NULL)
 {
-    mSubprocess = new PluginProcessParent(aFilePath);
     NS_ASSERTION(mSubprocess, "Out of memory!");
 
-#ifdef DEBUG
-    PRBool ok =
-#endif
-    mValidIdentifiers.Init();
-    NS_ASSERTION(ok, "Out of memory!");
+    if (!mValidIdentifiers.Init()) {
+        NS_ERROR("Out of memory");
+    }
 }
 
 PluginModuleParent::~PluginModuleParent()
 {
+    if (!mShutdown) {
+        NS_WARNING("Plugin host deleted the module without shutting down.");
+        NPError err;
+        NP_Shutdown(&err);
+    }
+    NS_ASSERTION(mShutdown, "NP_Shutdown didn't");
+
     if (mSubprocess) {
         mSubprocess->Delete();
         mSubprocess = nsnull;
+    }
+}
+
+void
+PluginModuleParent::ActorDestroy(ActorDestroyReason why)
+{
+    switch (why) {
+    case AbnormalShutdown:
+        // TODObsmedberg: notify the plugin host to forget this plugin module
+        // and instantiate us again.
+        // FALL THROUGH
+
+    case NormalShutdown:
+        mShutdown = true;
+        break;
+
+    default:
+        NS_ERROR("Unexpected shutdown reason for toplevel actor.");
     }
 }
 
@@ -494,6 +519,11 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
 
     mNPNIface = bFuncs;
 
+    if (mShutdown) {
+        *error = NPERR_GENERIC_ERROR;
+        return NS_ERROR_FAILURE;
+    }
+
     if (!CallNP_Initialize(error)) {
         return NS_ERROR_FAILURE;
     }
@@ -512,6 +542,11 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 
     mNPNIface = bFuncs;
 
+    if (mShutdown) {
+        *error = NPERR_GENERIC_ERROR;
+        return NS_ERROR_FAILURE;
+    }
+
     if (!CallNP_Initialize(error))
         return NS_ERROR_FAILURE;
 
@@ -523,6 +558,11 @@ nsresult
 PluginModuleParent::NP_Shutdown(NPError* error)
 {
     _MOZ_LOG(__FUNCTION__);
+
+    if (mShutdown) {
+        *error = NPERR_GENERIC_ERROR;
+        return NS_ERROR_FAILURE;
+    }
 
     bool ok = CallNP_Shutdown(error);
 
@@ -576,6 +616,11 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
                             NPError* error)
 {
     _MOZ_LOG(__FUNCTION__);
+
+    if (mShutdown) {
+        *error = NPERR_GENERIC_ERROR;
+        return NS_ERROR_FAILURE;
+    }
 
     // create the instance on the other side
     nsTArray<nsCString> names;
