@@ -473,9 +473,12 @@ PluginModuleParent::NP_Shutdown(NPError* error)
 {
     _MOZ_LOG(__FUNCTION__);
 
-    // FIXME/cjones: should all sub-actors be dead by now?
-
     bool ok = CallNP_Shutdown(error);
+
+    // if NP_Shutdown() is nested within another RPC call, this will
+    // break things.  but lord help us if we're doing that anyway; the
+    // plugin dso will have been unloaded on the other side by the
+    // CallNP_Shutdown() message
     Close();
 
     return ok ? NS_OK : NS_ERROR_FAILURE;

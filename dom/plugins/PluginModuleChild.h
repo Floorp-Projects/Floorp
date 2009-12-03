@@ -121,6 +121,9 @@ protected:
     virtual bool
     AnswerNP_Shutdown(NPError *rv);
 
+    virtual void
+    ActorDestroy(ActorDestroyReason why);
+
 public:
     PluginModuleChild();
     virtual ~PluginModuleChild();

@@ -1,11 +1,5 @@
 #include "TestArrays.h"
 
-#include "nsIAppShell.h"
-
-#include "nsCOMPtr.h"
-#include "nsServiceManagerUtils.h" // do_GetService()
-#include "nsWidgetsCID.h"       // NS_APPSHELL_CID
-
 #include "IPDLUnitTests.h"      // fail etc.
 
 namespace mozilla {
@@ -70,12 +64,6 @@ TestArraysParent::DeallocPTestArraysSub(PTestArraysSubParent* actor)
     delete actor;
     if (mKids.Length() > 0)
         return true;
-
-    passed("with flying colors");
-
-    static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-    nsCOMPtr<nsIAppShell> appShell (do_GetService(kAppShellCID));
-    appShell->Exit();
 
     return true;
 }
@@ -324,6 +312,8 @@ TestArraysChild::RecvStart()
     for (uint32 i = 0; i < nactors; ++i)
         if (!PTestArraysSubChild::Send__delete__(mKids[i]))
             fail("can't send dtor");
+
+    Close();
 
     return true;
 }

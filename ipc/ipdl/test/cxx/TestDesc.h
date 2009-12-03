@@ -1,6 +1,8 @@
 #ifndef mozilla_ipdltest_TestDesc_h
 #define mozilla_ipdltest_TestDesc_h
 
+#include "mozilla/_ipdltest/IPDLUnitTests.h"
+
 #include "mozilla/_ipdltest/PTestDescParent.h"
 #include "mozilla/_ipdltest/PTestDescChild.h"
 
@@ -25,11 +27,23 @@ public:
 
     void Main();
 
+    NS_OVERRIDE
     virtual bool RecvOk(PTestDescSubsubParent* a);
 
 protected:
+    NS_OVERRIDE
     virtual PTestDescSubParent* AllocPTestDescSub();
+    NS_OVERRIDE
     virtual bool DeallocPTestDescSub(PTestDescSubParent* actor);
+
+    NS_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why)
+    {
+        if (NormalShutdown != why)
+            fail("unexpected destruction!");  
+        passed("ok");
+        QuitParent();
+    }
 };
 
 
@@ -41,9 +55,22 @@ public:
     virtual ~TestDescChild() { }
 
 protected:
+    NS_OVERRIDE
     virtual PTestDescSubChild* AllocPTestDescSub();
+
+    NS_OVERRIDE
     virtual bool DeallocPTestDescSub(PTestDescSubChild* actor);
+
+    NS_OVERRIDE
     virtual bool RecvTest(PTestDescSubsubChild* a);
+
+    NS_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why)
+    {
+        if (NormalShutdown != why)
+            fail("unexpected destruction!");
+        QuitChild();
+    }
 };
 
 
@@ -58,7 +85,10 @@ public:
     virtual ~TestDescSubParent() { }
 
 protected:
+    NS_OVERRIDE
     virtual PTestDescSubsubParent* AllocPTestDescSubsub();
+
+    NS_OVERRIDE
     virtual bool DeallocPTestDescSubsub(PTestDescSubsubParent* actor);
 };
 
@@ -71,7 +101,9 @@ public:
     virtual ~TestDescSubChild() { }
 
 protected:
+    NS_OVERRIDE
     virtual PTestDescSubsubChild* AllocPTestDescSubsub();
+    NS_OVERRIDE
     virtual bool DeallocPTestDescSubsub(PTestDescSubsubChild* actor);
 };
 
