@@ -115,7 +115,7 @@ nsClipboardPrivacyHandler::Observe(nsISupports *aSubject, char const *aTopic, PR
       // 32-bit/64-bit boundaries, which could lead Explorer to crash.
       // We work around the problem by clearing the clipboard using
       // the usual Win32 API.
-      NS_ENSURE_TRUE(S_OK == ::OleSetClipboard(NULL), NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(SUCCEEDED(::OleSetClipboard(NULL)), NS_ERROR_FAILURE);
 #else
       // Empty the native clipboard by copying an empty transferable
       nsCOMPtr<nsITransferable> nullData =
