@@ -110,8 +110,8 @@ public:
   // returns the state of mStarted
   PRBool IsStarted();
 
-  // cache this NPAPI plugin like an XPCOM plugin
-  nsresult SetCached(PRBool aCache) { mCached = aCache; return NS_OK; }
+  // cache this NPAPI plugin
+  nsresult SetCached(PRBool aCache);
 
   already_AddRefed<nsPIDOMWindow> GetDOMWindow();
 
