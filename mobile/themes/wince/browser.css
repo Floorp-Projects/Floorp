@@ -328,7 +328,7 @@ placeitem {
 }
 
 autocompleteresult:active,
-placelist placeitem:active,
+placelist placeitem:active:not([selected="true"]),
 .autocompleteresult-selected {
   background-color: #8db8d8;
 }
