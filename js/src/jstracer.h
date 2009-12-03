@@ -1231,8 +1231,6 @@ class TraceRecorder
         return stobj_get_fslot(obj_ins, JSSLOT_PARENT);
     }
 
-    nanojit::LIns* getStringLength(nanojit::LIns* str_ins);
-
     JS_REQUIRES_STACK AbortableRecordingStatus name(jsval*& vp, nanojit::LIns*& ins, NameResult& nr);
     JS_REQUIRES_STACK AbortableRecordingStatus prop(JSObject* obj, nanojit::LIns* obj_ins, uint32 *slotp,
                                                       nanojit::LIns** v_insp, jsval* outp);
