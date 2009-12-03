@@ -338,6 +338,9 @@ Type.BOOL = Type('bool')
 Type.INT = Type('int')
 Type.INTPTR = Type('intptr_t')
 Type.UINT32 = Type('uint32')
+Type.SIZE = Type('size_t')
+Type.VOID = Type('void')
+Type.VOIDPTR = Type('void', ptr=1)
 
 class TypeArray(Node):
     def __init__(self, basetype, nmemb):
@@ -436,6 +439,7 @@ class MethodDecl(Node):
         assert not (static and typeop)
         assert not (name and typeop)
         assert name is None or isinstance(name, str)
+        assert not isinstance(ret, list)
 
         if typeop is not None:
             ret = None

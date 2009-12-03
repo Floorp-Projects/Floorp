@@ -157,11 +157,9 @@ reserved = set((
         'returns',
         'rpc',
         'send',
-        'share',
         'start',
         'state',
         'sync',
-        'transfer',
         'union',
         'using'))
 tokens = [
