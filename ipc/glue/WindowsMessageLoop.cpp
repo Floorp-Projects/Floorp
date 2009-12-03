@@ -201,6 +201,12 @@ ProcessOrDeferMessage(HWND hwnd,
       break;
     }
 
+    case WM_MOUSEACTIVATE: {
+      res = MA_NOACTIVATE;
+      deferred = new DeferredSendMessage(hwnd, uMsg, wParam, lParam);
+      break;
+    }
+
     // These messages need to use the RedrawWindow function to generate the
     // right kind of message. We can't simply fake them as the MSDN docs say
     // explicitly that paint messages should not be sent by an application.
