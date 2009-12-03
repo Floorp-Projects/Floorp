@@ -101,13 +101,8 @@ MinimizeDependentStrings(JSString *str, int level, JSString **basep)
                 base = base->dependentBase();
             } while (base->isDependent());
         }
-        if (start == 0) {
-            JS_ASSERT(str->dependentIsPrefix());
-            str->prefixSetBase(base);
-        } else if (start <= JSString::MAX_DEPENDENT_START) {
-            length = str->dependentLength();
-            str->reinitDependent(base, start, length);
-        }
+        length = str->dependentLength();
+        str->reinitDependent(base, start, length);
     }
     *basep = base;
     return start;
@@ -188,9 +183,9 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
     } else {
         str->flatSetMutable();
 
-        /* Morph left into a dependent prefix if we realloc'd its buffer. */
+        /* Morph left into a dependent string if we realloc'd its buffer. */
         if (ldep) {
-            ldep->reinitPrefix(str, ln);
+            ldep->reinitDependent(str, 0, ln);
 #ifdef DEBUG
             {
                 JSRuntime *rt = cx->runtime;
@@ -2636,7 +2631,7 @@ static const jschar UnitStringData[] = {
     C(0xf8), C(0xf9), C(0xfa), C(0xfb), C(0xfc), C(0xfd), C(0xfe), C(0xff)
 };
 
-#define U(c) { 1 | JSString::ATOMIZED, {(jschar *)UnitStringData + (c) * 2} }
+#define U(c) { 1, 0, JSString::ATOMIZED, {(jschar *)UnitStringData + (c) * 2} }
 
 #ifdef __SUNPRO_CC
 #pragma pack(8)
@@ -2743,9 +2738,9 @@ static const jschar Hundreds[] = {
     O25(0x30), O25(0x31), O25(0x32), O25(0x33), O25(0x34), O25(0x35)
 };
 
-#define L1(c) { 1 | JSString::ATOMIZED, {(jschar *)Hundreds + 2 + (c) * 4} } /* length 1: 0..9 */
-#define L2(c) { 2 | JSString::ATOMIZED, {(jschar *)Hundreds + 41 + (c - 10) * 4} } /* length 2: 10..99 */
-#define L3(c) { 3 | JSString::ATOMIZED, {(jschar *)Hundreds + (c - 100) * 4} } /* length 3: 100..255 */
+#define L1(c) { 1, 0, JSString::ATOMIZED, {(jschar *)Hundreds + 2 + (c) * 4} } /* length 1: 0..9 */
+#define L2(c) { 2, 0, JSString::ATOMIZED, {(jschar *)Hundreds + 41 + (c - 10) * 4} } /* length 2: 10..99 */
+#define L3(c) { 3, 0, JSString::ATOMIZED, {(jschar *)Hundreds + (c - 100) * 4} } /* length 3: 100..255 */
 
 #ifdef __SUNPRO_CC
 #pragma pack(8)
@@ -3156,18 +3151,10 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
     if (start == 0 && length == base->length())
         return base;
 
-    if (start > JSString::MAX_DEPENDENT_START ||
-        (start != 0 && length > JSString::MAX_DEPENDENT_LENGTH)) {
-        return js_NewStringCopyN(cx, base->chars() + start, length);
-    }
-
     ds = js_NewGCString(cx);
     if (!ds)
         return NULL;
-    if (start == 0)
-        ds->initPrefix(base, length);
-    else
-        ds->initDependent(base, start, length);
+    ds->initDependent(base, start, length);
 #ifdef DEBUG
   {
     JSRuntime *rt = cx->runtime;

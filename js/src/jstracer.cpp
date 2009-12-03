@@ -8324,11 +8324,7 @@ TraceRecorder::ifop()
                       lir->ins_eq0(lir->ins2(LIR_feq, v_ins, lir->insImmf(0))));
     } else if (JSVAL_IS_STRING(v)) {
         cond = JSVAL_TO_STRING(v)->length() != 0;
-        x = lir->ins2(LIR_piand,
-                      lir->insLoad(LIR_ldp,
-                                   v_ins,
-                                   (int)offsetof(JSString, mLength)),
-                      INS_CONSTWORD(JSString::LENGTH_MASK));
+        x = lir->insLoad(LIR_ldp, v_ins, offsetof(JSString, mLength));
     } else {
         JS_NOT_REACHED("ifop");
         return ARECORD_STOP;
@@ -9552,31 +9548,6 @@ TraceRecorder::getThis(LIns*& this_ins)
 }
 
 
-LIns*
-TraceRecorder::getStringLength(LIns* str_ins)
-{
-    LIns* len_ins = lir->insLoad(LIR_ldp, str_ins, (int)offsetof(JSString, mLength));
-
-    LIns* masked_len_ins = lir->ins2(LIR_piand,
-                                     len_ins,
-                                     INS_CONSTWORD(JSString::LENGTH_MASK));
-
-    LIns* real_len =
-        lir->ins_choose(lir->ins_peq0(lir->ins2(LIR_piand,
-                                                len_ins,
-                                                INS_CONSTWORD(JSString::DEPENDENT))),
-                        masked_len_ins,
-                        lir->ins_choose(lir->ins_peq0(lir->ins2(LIR_piand,
-                                                                len_ins,
-                                                                INS_CONSTWORD(JSString::PREFIX))),
-                                        lir->ins2(LIR_piand,
-                                                  len_ins,
-                                                  INS_CONSTWORD(JSString::DEPENDENT_LENGTH_MASK)),
-                                        masked_len_ins, avmplus::AvmCore::use_cmov()),
-                        avmplus::AvmCore::use_cmov());
-    return p2i(real_len);
-}
-
 JS_REQUIRES_STACK bool
 TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideExit* exit)
 {
@@ -10189,9 +10160,8 @@ TraceRecorder::record_JSOP_NOT()
         return ARECORD_CONTINUE;
     }
     JS_ASSERT(JSVAL_IS_STRING(v));
-    set(&v, lir->ins_peq0(lir->ins2(LIR_piand,
-                                    lir->insLoad(LIR_ldp, get(&v), (int)offsetof(JSString, mLength)),
-                                    INS_CONSTWORD(JSString::LENGTH_MASK))));
+    set(&v, lir->ins_peq0(lir->insLoad(LIR_ldp, get(&v),
+                                       offsetof(JSString, mLength))));
     return ARECORD_CONTINUE;
 }
 
@@ -14466,7 +14436,9 @@ TraceRecorder::record_JSOP_LENGTH()
     if (JSVAL_IS_PRIMITIVE(l)) {
         if (!JSVAL_IS_STRING(l))
             RETURN_STOP_A("non-string primitive JSOP_LENGTH unsupported");
-        set(&l, lir->ins1(LIR_i2f, getStringLength(get(&l))));
+        set(&l, lir->ins1(LIR_i2f,
+                          p2i(lir->insLoad(LIR_ldp, get(&l),
+                                           offsetof(JSString, mLength)))));
         return ARECORD_CONTINUE;
     }
 
