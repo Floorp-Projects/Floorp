@@ -168,7 +168,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
   static const GREProperty kExtraProperty =
     { "abi", TARGET_XPCOM_ABI };
 
-  nsAutoArrayPtr<GREProperty> allProperties = new GREProperty[propertiesLength + 1];
+  GREProperty *allProperties = new GREProperty[propertiesLength + 1];
   if (!allProperties)
     return NS_ERROR_OUT_OF_MEMORY;
 
