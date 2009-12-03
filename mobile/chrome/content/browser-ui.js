@@ -499,10 +499,13 @@ var BrowserUI = {
     gHistSvc.markPageAsTyped(gURIFixup.createFixupURI(aURI, 0));
   },
 
-  showAutoComplete : function() {
+  showAutoComplete : function showAutoComplete() {
     if (this.isAutoCompleteOpen())
       return;
+
     BrowserSearch.updateSearchButtons();
+
+    this._edit.focus();
     this._edit.showHistoryPopup();
   },
   
