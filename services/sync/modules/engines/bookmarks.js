@@ -48,6 +48,7 @@ const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 
 Cu.import("resource://gre/modules/utils.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://weave/ext/Observers.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
@@ -90,6 +91,28 @@ BookmarksEngine.prototype = {
   _recordObj: PlacesItem,
   _storeObj: BookmarksStore,
   _trackerObj: BookmarksTracker,
+
+  _init: function _init() {
+    SyncEngine.prototype._init.call(this);
+    this._handleImport();
+  },
+
+  _handleImport: function _handleImport() {
+    Observers.add("bookmarks-restore-begin", function() {
+      this._log.debug("Ignoring changes from importing bookmarks");
+      this._tracker.ignoreAll = true;
+    }, this);
+
+    Observers.add("bookmarks-restore-success", function() {
+      this._log.debug("Triggering fresh start on successful import");
+      this.resetLastSync();
+      this._tracker.ignoreAll = false;
+    }, this);
+
+    Observers.add("bookmarks-restore-failed", function() {
+      this._tracker.ignoreAll = false;
+    }, this);
+  },
 
   _sync: Utils.batchSync("Bookmark", SyncEngine),
 
