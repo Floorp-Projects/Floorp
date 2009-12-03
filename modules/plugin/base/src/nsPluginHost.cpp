@@ -442,12 +442,12 @@ PRBool nsPluginInstanceTagList::remove(nsPluginInstanceTag * plugin)
           rv = pref->GetBoolPref("plugins.unloadASAP", &unloadPluginsASAP);
           if (NS_SUCCEEDED(rv) && unloadPluginsASAP)
             pluginTag->TryUnloadPlugin();
-        } 
-        else
+        } else {
           NS_ASSERTION(pluginTag, "pluginTag was not set, plugin not shutdown");
-      }
-      else
+        }
+      } else {
         delete p;
+      }
 
       mCount--;
       return PR_TRUE;
@@ -598,7 +598,6 @@ nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
     mMimeDescriptionArray(aPluginTag->mMimeDescriptionArray),
     mExtensionsArray(nsnull),
     mLibrary(nsnull),
-    mEntryPoint(nsnull),
     mCanUnloadLibrary(PR_TRUE),
     mXPConnected(PR_FALSE),
     mIsJavaPlugin(aPluginTag->mIsJavaPlugin),
@@ -630,7 +629,6 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
     mMimeTypeArray(nsnull),
     mExtensionsArray(nsnull),
     mLibrary(nsnull),
-    mEntryPoint(nsnull),
 #ifdef XP_MACOSX
     mCanUnloadLibrary(!aPluginInfo->fBundle),
 #else
@@ -725,7 +723,6 @@ nsPluginTag::nsPluginTag(const char* aName,
     mMimeTypeArray(nsnull),
     mExtensionsArray(nsnull),
     mLibrary(nsnull),
-    mEntryPoint(nsnull),
     mCanUnloadLibrary(aCanUnload),
     mXPConnected(PR_FALSE),
     mIsJavaPlugin(PR_FALSE),
@@ -767,14 +764,6 @@ nsPluginTag::nsPluginTag(const char* aName,
 nsPluginTag::~nsPluginTag()
 {
   NS_ASSERTION(!mNext, "Risk of exhausting the stack space, bug 486349");
-
-  TryUnloadPlugin();
-
-  // Remove mime types added to the category manager
-  // only if we were made 'active' by setting the host
-  if (mPluginHost) {
-    RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginUnregister);
-  }
 
   if (mMimeTypeArray) {
     for (int i = 0; i < mVariants; i++)
@@ -973,7 +962,6 @@ void nsPluginTag::TryUnloadPlugin()
 {
   if (mEntryPoint) {
     mEntryPoint->Shutdown();
-    mEntryPoint->Release();
     mEntryPoint = nsnull;
   }
 
@@ -996,6 +984,12 @@ void nsPluginTag::TryUnloadPlugin()
   // again so the calling code should not be fooled and reload
   // the library fresh
   mLibrary = nsnull;
+
+  // Remove mime types added to the category manager
+  // only if we were made 'active' by setting the host
+  if (mPluginHost) {
+    RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginUnregister);
+  }
 }
 
 void nsPluginTag::Mark(PRUint32 mask)
@@ -2571,6 +2565,10 @@ nsresult nsPluginHost::ReloadPlugins(PRBool reloadPages)
         prev->mNext = next;
 
       p->mNext = nsnull;
+
+      // attempt to unload plugins whenever they are removed from the list
+      p->TryUnloadPlugin();
+
       p = next;
       continue;
     }
@@ -2908,9 +2906,9 @@ NS_IMETHODIMP nsPluginHost::Destroy()
   // at this point nsIPlugin::Shutdown calls will be performed if needed
   mPluginInstanceTagList.shutdown();
 
-  if (mPluginPath) {
-    PR_Free(mPluginPath);
-    mPluginPath = nsnull;
+  nsPluginTag *pluginTag;
+  for (pluginTag = mPlugins; pluginTag; pluginTag = pluginTag->mNext) {
+    pluginTag->TryUnloadPlugin();
   }
 
   NS_ITERATIVE_UNREF_LIST(nsRefPtr<nsPluginTag>, mPlugins, mNext);
@@ -4009,17 +4007,17 @@ NS_IMETHODIMP nsPluginHost::GetPlugin(const char *aMimeType, nsIPlugin** aPlugin
       pluginTag->mLibrary = pluginLibrary;
     }
 
-    nsIPlugin* plugin = pluginTag->mEntryPoint;
+    nsCOMPtr<nsIPlugin> plugin = pluginTag->mEntryPoint;
     if (!plugin) {
       // Now lets try to get the entry point from an NPAPI plugin
-      rv = CreateNPAPIPlugin(pluginTag, &plugin);
+      rv = CreateNPAPIPlugin(pluginTag, getter_AddRefs(plugin));
       if (NS_SUCCEEDED(rv))
         pluginTag->mEntryPoint = plugin;
     }
 
     if (plugin) {
-      *aPlugin = plugin;
-      plugin->AddRef();
+      NS_ADDREF(*aPlugin = plugin);
+
       return NS_OK;
     }
   }
