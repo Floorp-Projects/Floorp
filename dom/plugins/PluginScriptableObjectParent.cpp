@@ -56,7 +56,7 @@ GetInstance(NPObject* aObject)
                "Bad class!");
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
-  if (object->invalidated) {
+  if (!object->parent) {
     NS_WARNING("Calling method on an invalidated object!");
     return nsnull;
   }
@@ -270,12 +270,7 @@ PluginScriptableObjectParent::ScriptableAllocate(NPP aInstance,
     return nsnull;
   }
 
-  ParentNPObject* object =
-    reinterpret_cast<ParentNPObject*>(npn->memalloc(sizeof(ParentNPObject)));
-  if (object) {
-    memset(object, 0, sizeof(ParentNPObject));
-  }
-  return object;
+  return new ParentNPObject();
 }
 
 // static
@@ -288,13 +283,14 @@ PluginScriptableObjectParent::ScriptableInvalidate(NPObject* aObject)
   }
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
-  if (object->invalidated) {
+  if (!object->parent) {
     // This can happen more than once, and is just fine.
     return;
   }
 
   PluginScriptableObjectParent* actor = object->parent;
-  NS_ASSERTION(actor, "Null actor?!");
+
+  object->parent = NULL;
 
   PluginInstanceParent* instance = actor->GetInstance();
   NS_WARN_IF_FALSE(instance, "No instance?!");
@@ -302,8 +298,6 @@ PluginScriptableObjectParent::ScriptableInvalidate(NPObject* aObject)
   if (!actor->CallInvalidate()) {
     NS_WARNING("Failed to send message!");
   }
-
-  object->invalidated = true;
 
   if (instance &&
       !PPluginScriptableObjectParent::Call__delete__(actor)) {
@@ -321,13 +315,13 @@ PluginScriptableObjectParent::ScriptableDeallocate(NPObject* aObject)
   }
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
-  if (!object->invalidated) {
+  if (object->parent) {
     ScriptableInvalidate(aObject);
   }
 
-  NS_ASSERTION(object->invalidated, "Should be invalidated!");
+  NS_ASSERTION(!object->parent, "Should be invalidated!");
 
-  NS_Free(aObject);
+  delete object;
 }
 
 // static
@@ -341,7 +335,7 @@ PluginScriptableObjectParent::ScriptableHasMethod(NPObject* aObject,
   }
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
-  if (object->invalidated) {
+  if (!object->parent) {
     NS_WARNING("Calling method on an invalidated object!");
     return false;
   }
@@ -376,7 +370,7 @@ PluginScriptableObjectParent::ScriptableInvoke(NPObject* aObject,
   }
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
-  if (object->invalidated) {
+  if (!object->parent) {
     NS_WARNING("Calling method on an invalidated object!");
     return false;
   }
@@ -434,7 +428,7 @@ PluginScriptableObjectParent::ScriptableInvokeDefault(NPObject* aObject,
   }
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
-  if (object->invalidated) {
+  if (!object->parent) {
     NS_WARNING("Calling method on an invalidated object!");
     return false;
   }
@@ -485,7 +479,7 @@ PluginScriptableObjectParent::ScriptableHasProperty(NPObject* aObject,
   }
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
-  if (object->invalidated) {
+  if (!object->parent) {
     NS_WARNING("Calling method on an invalidated object!");
     return false;
   }
@@ -518,7 +512,7 @@ PluginScriptableObjectParent::ScriptableGetProperty(NPObject* aObject,
   }
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
-  if (object->invalidated) {
+  if (!object->parent) {
     NS_WARNING("Calling method on an invalidated object!");
     return false;
   }
@@ -561,7 +555,7 @@ PluginScriptableObjectParent::ScriptableSetProperty(NPObject* aObject,
   }
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
-  if (object->invalidated) {
+  if (!object->parent) {
     NS_WARNING("Calling method on an invalidated object!");
     return false;
   }
@@ -599,7 +593,7 @@ PluginScriptableObjectParent::ScriptableRemoveProperty(NPObject* aObject,
   }
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
-  if (object->invalidated) {
+  if (!object->parent) {
     NS_WARNING("Calling method on an invalidated object!");
     return false;
   }
@@ -632,7 +626,7 @@ PluginScriptableObjectParent::ScriptableEnumerate(NPObject* aObject,
   }
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
-  if (object->invalidated) {
+  if (!object->parent) {
     NS_WARNING("Calling method on an invalidated object!");
     return false;
   }
@@ -692,7 +686,7 @@ PluginScriptableObjectParent::ScriptableConstruct(NPObject* aObject,
   }
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
-  if (object->invalidated) {
+  if (!object->parent) {
     NS_WARNING("Calling method on an invalidated object!");
     return false;
   }
@@ -757,10 +751,8 @@ PluginScriptableObjectParent::PluginScriptableObjectParent()
 PluginScriptableObjectParent::~PluginScriptableObjectParent()
 {
   if (mObject) {
-    if (mObject->_class == GetClass()) {
-      if (!static_cast<ParentNPObject*>(mObject)->invalidated) {
-        ScriptableInvalidate(mObject);
-      }
+    if (GetClass() == mObject->_class) {
+      static_cast<ParentNPObject*>(mObject)->parent = NULL;
     }
     else {
       mInstance->GetNPNIface()->releaseobject(mObject);
