@@ -216,7 +216,7 @@ PluginScriptableObjectChild::ScriptableInvalidate(NPObject* aObject)
   object->invalidated = true;
 
   if (instance &&
-      !instance->CallPPluginScriptableObjectDestructor(object->parent)) {
+      !PPluginScriptableObjectChild::Call__delete__(object->parent)) {
     NS_WARNING("Failed to send message!");
   }
 }

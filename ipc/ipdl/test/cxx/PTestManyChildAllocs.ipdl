@@ -9,8 +9,6 @@ protocol PTestManyChildAllocs {
 child:
     Go();                       // start allocating
 
-    ~PTestManyChildAllocsSub();
-
 parent:
     Done();
 

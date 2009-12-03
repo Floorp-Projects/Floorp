@@ -48,12 +48,11 @@ protocol PTestShell
   manages PTestShellCommand;
 
 child:
+  __delete__();
+
   ExecuteCommand(nsString aCommand);
 
   PTestShellCommand(nsString aCommand);
-
-parent:
-  ~PTestShellCommand(nsString aResponse);
 };
 
 } // namespace ipc

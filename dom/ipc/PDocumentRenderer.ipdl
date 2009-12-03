@@ -43,6 +43,9 @@ namespace ipc {
 protocol PDocumentRenderer
 {
   manager PIFrameEmbedding;
+
+parent:
+    __delete__(PRUint32 w, PRUint32 h, nsCString data);
 };
 
 } // namespace ipc

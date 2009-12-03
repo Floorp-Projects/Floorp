@@ -296,12 +296,6 @@ class MessageDecl(Node):
     def hasReply(self):
         return self.sendSemantics is SYNC or self.sendSemantics is RPC
 
-class TransitionStmt(Node):
-    def __init__(self, loc, state, transitions):
-        Node.__init__(self, loc)
-        self.state = state
-        self.transitions = transitions
-
 class Transition(Node):
     def __init__(self, loc, trigger, msg, toStates):
         Node.__init__(self, loc)
@@ -312,6 +306,18 @@ class Transition(Node):
     @staticmethod
     def nameToTrigger(name):
         return { 'send': SEND, 'recv': RECV, 'call': CALL, 'answer': ANSWER }[name]
+
+Transition.NULL = Transition(Loc.NONE, None, None, [ ])
+
+class TransitionStmt(Node):
+    def __init__(self, loc, state, transitions):
+        Node.__init__(self, loc)
+        self.state = state
+        self.transitions = transitions
+
+    @staticmethod
+    def makeNullStmt(state):
+        return TransitionStmt(Loc.NONE, state, [ Transition.NULL ])
 
 class SEND:
     pretty = 'send'
@@ -355,7 +361,7 @@ class State(Node):
     def __str__(self): return '<State %s start=%s>'% (self.name, self.start)
 
 State.ANY = State(Loc.NONE, '[any]', start=True)
-State.NONE = State(Loc.NONE, '[none]', start=False)
+State.DEAD = State(Loc.NONE, '[dead]', start=False)
 
 class Param(Node):
     def __init__(self, loc, typespec, name):

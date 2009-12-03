@@ -145,6 +145,8 @@ reserved = set((
         'both',
         'call',
         'child',
+        '__delete__',
+        'delete',                       # reserve 'delete' to prevent its use
         'goto',
         'include',
         'manager',
@@ -395,9 +397,13 @@ def p_MessageBody(p):
 
 def p_MessageId(p):
     """MessageId : ID
+                 | __DELETE__
+                 | DELETE
                  | '~' ID"""
     if 3 == len(p):
-        p[1] += p[2] # munge dtor name to "~Foo". handled later
+        _error(locFromTok(p, 1), "sorry, `%s()' destructor syntax is a relic from a bygone era.  Declare `__delete__()' in the `%s' protocol instead", p[1]+p[2], p[2])
+    elif 'delete' == p[1]:
+        _error(locFromTok(p, 1), "`delete' is a reserved identifier")
     p[0] = p[1]
 
 def p_MessageInParams(p):
@@ -452,9 +458,18 @@ def p_Transitions(p):
         p[0] = [ p[1] ]
 
 def p_Transition(p):
-    """Transition : Trigger MessageId GOTO StateList ';'"""
+    """Transition : Trigger ID GOTO StateList ';'
+                  | Trigger __DELETE__ ';'
+                  | Trigger DELETE ';'"""
+    if 'delete' == p[2]:
+        _error(locFromTok(p, 1), "`delete' is a reserved identifier")
+    
     loc, trigger = p[1]
-    p[0] = Transition(loc, trigger, p[2], p[4])
+    if 6 == len(p):
+        nextstates = p[4]
+    else:
+        nextstates = [ State.DEAD ]
+    p[0] = Transition(loc, trigger, p[2], nextstates)
 
 def p_Trigger(p):
     """Trigger : SEND

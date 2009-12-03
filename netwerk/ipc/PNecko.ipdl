@@ -52,8 +52,9 @@ protocol PNecko
   manages PHttpChannel;
 
 parent:
+  __delete__();
+
   PHttpChannel();
-  ~PHttpChannel();
 };
 
 

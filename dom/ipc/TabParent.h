@@ -74,16 +74,7 @@ public:
             const nsString& bgcolor,
             const PRUint32& flags,
             const bool& flush);
-    virtual bool DeallocPDocumentRenderer(
-            mozilla::ipc::PDocumentRendererParent* __a,
-            const PRUint32& w,
-            const PRUint32& h,
-            const nsCString& data);
-    virtual bool RecvPDocumentRendererDestructor(
-            mozilla::ipc::PDocumentRendererParent* __a,
-            const PRUint32& w,
-            const PRUint32& h,
-            const nsCString& data);
+    virtual bool DeallocPDocumentRenderer(PDocumentRendererParent* actor);
 protected:
     nsIDOMElement* mFrameElement;
 };

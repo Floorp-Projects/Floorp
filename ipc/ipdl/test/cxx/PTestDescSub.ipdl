@@ -9,8 +9,9 @@ protocol PTestDescSub {
     manages PTestDescSubsub;
 
 child:
+    __delete__();
+
     PTestDescSubsub();
-    ~PTestDescSubsub();
 };
 
 }

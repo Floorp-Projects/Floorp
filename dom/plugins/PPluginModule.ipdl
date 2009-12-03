@@ -63,9 +63,6 @@ child:
                       nsCString[] aValues)
     returns (NPError rv);
 
-  rpc ~PPluginInstance()
-    returns (NPError rv);
-
   rpc NP_Shutdown()
     returns (NPError rv);
 

@@ -2,8 +2,11 @@ sync protocol trans_WrongDirection3 {
 
 parent:
     sync Msg();
+    delete();
 
 state S1:
     send Msg goto S1;
 
+start state _:
+    recv delete;
 };

@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -47,6 +50,23 @@
 namespace mozilla {
 namespace ipc {
 
+class TestShellCommandParent;
+
+
+class TestShellParent : public PTestShellParent
+{
+public:
+  PTestShellCommandParent*
+  AllocPTestShellCommand(const nsString& aCommand);
+
+  bool
+  DeallocPTestShellCommand(PTestShellCommandParent* aActor);
+
+  bool
+  CommandDone(TestShellCommandParent* aActor, const nsString& aResponse);
+};
+
+
 class TestShellCommandParent : public PTestShellCommandParent
 {
 public:
@@ -59,25 +79,17 @@ public:
 
   void ReleaseCallback();
 
+protected:
+  bool Recv__delete__(const nsString& aResponse) {
+    return static_cast<TestShellParent*>(Manager())->CommandDone(
+      this, aResponse);
+  }
+
 private:
   JSContext* mCx;
   nsAutoJSValHolder mCallback;
 };
 
-class TestShellParent : public PTestShellParent
-{
-public:
-  PTestShellCommandParent*
-  AllocPTestShellCommand(const nsString& aCommand);
-
-  bool
-  DeallocPTestShellCommand(PTestShellCommandParent* aActor,
-                           const nsString& aResponse);
-
-  bool
-  RecvPTestShellCommandDestructor(PTestShellCommandParent* aActor,
-                                  const nsString& aResponse);
-};
 
 } /* namespace ipc */
 } /* namespace mozilla */

@@ -87,6 +87,14 @@ PluginInstanceChild::~PluginInstanceChild()
 #endif
 }
 
+bool
+PluginInstanceChild::Answer__delete__(NPError* rv)
+{
+    return static_cast<PluginModuleChild*>(Manager())->
+        PluginInstanceDestroyed(this, rv);
+}
+
+
 NPError
 PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
                                   void* aValue)
@@ -721,7 +729,7 @@ PluginInstanceChild::AllocPPluginScriptableObject()
 
 bool
 PluginInstanceChild::DeallocPPluginScriptableObject(
-                                          PPluginScriptableObjectChild* aObject)
+    PPluginScriptableObjectChild* aObject)
 {
     AssertPluginThread();
 
@@ -788,20 +796,7 @@ PluginInstanceChild::AllocPBrowserStream(const nsCString& url,
 }
 
 bool
-PluginInstanceChild::AnswerPBrowserStreamDestructor(PBrowserStreamChild* stream,
-                                                    const NPError& reason,
-                                                    const bool& artificial)
-{
-    AssertPluginThread();
-    if (!artificial)
-        static_cast<BrowserStreamChild*>(stream)->NPP_DestroyStream(reason);
-    return true;
-}
-
-bool
-PluginInstanceChild::DeallocPBrowserStream(PBrowserStreamChild* stream,
-                                           const NPError& reason,
-                                           const bool& artificial)
+PluginInstanceChild::DeallocPBrowserStream(PBrowserStreamChild* stream)
 {
     AssertPluginThread();
     delete stream;
@@ -818,21 +813,7 @@ PluginInstanceChild::AllocPPluginStream(const nsCString& mimeType,
 }
 
 bool
-PluginInstanceChild::AnswerPPluginStreamDestructor(PPluginStreamChild* stream,
-                                                   const NPReason& reason,
-                                                   const bool& artificial)
-{
-    AssertPluginThread();
-    if (!artificial) {
-        static_cast<PluginStreamChild*>(stream)->NPP_DestroyStream(reason);
-    }
-    return true;
-}
-
-bool
-PluginInstanceChild::DeallocPPluginStream(PPluginStreamChild* stream,
-                                          const NPError& reason,
-                                          const bool& artificial)
+PluginInstanceChild::DeallocPPluginStream(PPluginStreamChild* stream)
 {
     AssertPluginThread();
     delete stream;
@@ -853,22 +834,27 @@ PluginInstanceChild::AllocPStreamNotify(const nsCString& url,
 }
 
 bool
-PluginInstanceChild::AnswerPStreamNotifyDestructor(PStreamNotifyChild* notifyData,
-                                                   const NPReason& reason)
+StreamNotifyChild::Answer__delete__(const NPReason& reason)
 {
     AssertPluginThread();
+    return static_cast<PluginInstanceChild*>(Manager())
+        ->NotifyStream(this, reason);
+}
 
-    StreamNotifyChild* sn = static_cast<StreamNotifyChild*>(notifyData);
-    if (sn->mClosure)
-        mPluginIface->urlnotify(&mData, sn->mURL.get(), reason, sn->mClosure);
-
+bool
+PluginInstanceChild::NotifyStream(StreamNotifyChild* notifyData,
+                                  NPReason reason)
+{
+    if (notifyData->mClosure)
+        mPluginIface->urlnotify(&mData, notifyData->mURL.get(), reason,
+                                notifyData->mClosure);
     return true;
 }
 
 bool
-PluginInstanceChild::DeallocPStreamNotify(PStreamNotifyChild* notifyData,
-                                          const NPReason& reason)
+PluginInstanceChild::DeallocPStreamNotify(PStreamNotifyChild* notifyData)
 {
+    AssertPluginThread();
     delete notifyData;
     return true;
 }
@@ -914,14 +900,14 @@ PluginInstanceChild::NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
 {
     AssertPluginThread();
 
-    PluginStreamChild* ps = new PluginStreamChild(this);
+    PluginStreamChild* ps = new PluginStreamChild();
 
     NPError result;
     CallPPluginStreamConstructor(ps, nsDependentCString(aMIMEType),
                                  NullableString(aWindow), &result);
     if (NPERR_NO_ERROR != result) {
         *aStream = NULL;
-        CallPPluginStreamDestructor(ps, NPERR_GENERIC_ERROR, true);
+        PPluginStreamChild::Call__delete__(ps, NPERR_GENERIC_ERROR, true);
         return result;
     }
 
