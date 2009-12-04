@@ -1111,7 +1111,7 @@ var FormHelper = {
       return this._isElementVisible(aElement);
     
     if (aElement instanceof HTMLInputElement) {
-      let ignoreInputElements = ["checkbox", "radio", "hidden", "reset", "button"];
+      let ignoreInputElements = ["checkbox", "radio", "hidden", "reset", "button", "image"];
       let isValidElement = (ignoreInputElements.indexOf(aElement.type) == -1);
       if (!isValidElement)
        return false;
