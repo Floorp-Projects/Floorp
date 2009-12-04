@@ -6661,7 +6661,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                       op == JSOP_GETLOCALPROP || op == JSOP_LENGTH ||
                       op == JSOP_GETELEM || op == JSOP_CALLELEM ||
                       op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETMETHOD ||
-                      op == JSOP_SETELEM || op == JSOP_INITELEM ||
+                      op == JSOP_SETELEM || op == JSOP_INITELEM || op == JSOP_ENUMELEM ||
                       op == JSOP_INSTANCEOF);
 
             /*
