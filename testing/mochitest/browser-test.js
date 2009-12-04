@@ -207,6 +207,15 @@ Tester.prototype = {
     else {
       var self = this;
       this.currentTest.scope.__waitTimer = setTimeout(function() {
+        if (--self.currentTest.scope.__timeoutFactor > 0) {
+          // We were asked to wait a bit longer.
+          self.currentTest.scope.info(
+            "Longer timeout required, waiting longer...  Remaining timeouts: " +
+            self.currentTest.scope.__timeoutFactor);
+          self.currentTest.scope.__waitTimer =
+            setTimeout(arguments.callee, TIMEOUT_SECONDS * 1000);
+          return;
+        }
         self.currentTest.addResult(new testResult(false, "Timed out", "", false));
         self.currentTest.scope.__waitTimer = null;
         self.nextTest();
@@ -307,6 +316,10 @@ function testScope(aTester, aTest) {
     self.__cleanupFunctions.push(aFunction);
   };
 
+  this.requestLongerTimeout = function test_requestLongerTimeout(aFactor) {
+    self.__timeoutFactor = aFactor;
+  };
+
   this.finish = function test_finish() {
     self.__done = true;
     if (self.__waitTimer) {
@@ -324,6 +337,7 @@ testScope.prototype = {
   __done: true,
   __waitTimer: null,
   __cleanupFunctions: [],
+  __timeoutFactor: 1,
 
   EventUtils: {},
   SimpleTest: {}
