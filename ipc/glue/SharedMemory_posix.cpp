@@ -1,4 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +14,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla IPC.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
+ *   The Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,83 +37,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "SharedDIB.h"
+#include <sys/mman.h>         // mprotect
+#include <unistd.h>           // sysconf
+
+#include "mozilla/ipc/SharedMemory.h"
 
 namespace mozilla {
-namespace gfx {
+namespace ipc {
 
-SharedDIB::SharedDIB() :
-  mShMem(nsnull)
+void
+SharedMemory::SystemProtect(char* aAddr, size_t aSize, int aRights)
 {
+  int flags = 0;
+  if (aRights & RightsRead)
+    flags |= PROT_READ;
+  if (aRights & RightsWrite)
+    flags |= PROT_WRITE;
+  if (RightsNone == aRights)
+    flags = PROT_NONE;
+
+  if (0 < mprotect(aAddr, aSize, flags))
+    NS_RUNTIMEABORT("can't mprotect()");
 }
 
-SharedDIB::~SharedDIB()
+size_t
+SharedMemory::SystemPageSize()
 {
-  Close();
+  return sysconf(_SC_PAGESIZE);
 }
 
-nsresult
-SharedDIB::Create(PRUint32 aSize)
-{
-  Close();
-
-  mShMem = new base::SharedMemory();
-  if (!mShMem || !mShMem->Create("", false, false, aSize))
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // Map the entire section
-  if (!mShMem->Map(0))
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-bool
-SharedDIB::IsValid()
-{
-  if (!mShMem)
-    return false;
-
-  return mShMem->IsHandleValid(mShMem->handle());
-}
-
-nsresult
-SharedDIB::Close()
-{
-  if (mShMem)
-    delete mShMem;
-
-  mShMem = nsnull;
-
-  return NS_OK;
-}
-
-nsresult
-SharedDIB::Attach(Handle aHandle, PRUint32 aSize)
-{
-  Close();
-
-  mShMem = new base::SharedMemory(aHandle, false);
-  if(!mShMem)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  if (!mShMem->Map(aSize))
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-nsresult
-SharedDIB::ShareToProcess(base::ProcessHandle aChildProcess, Handle *aChildHandle)
-{
-  if (!mShMem)
-    return NS_ERROR_UNEXPECTED;
-
-  if (!mShMem->ShareToProcess(aChildProcess, aChildHandle))
-    return NS_ERROR_UNEXPECTED;
-
-  return NS_OK;
-}
-
-} // gfx
-} // mozilla
+} // namespace ipc
+} // namespace mozilla
