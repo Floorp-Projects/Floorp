@@ -63,6 +63,7 @@ IPDLTESTS = \
   TestLatency \
   TestManyChildAllocs  \
   TestDesc \
+  TestShmem \
   TestShutdown \
   TestArrays \
   $(NULL)

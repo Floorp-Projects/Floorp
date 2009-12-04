@@ -56,6 +56,10 @@ Types = (
     'intptr_t',
     'uintptr_t',
 
+    # stddef types
+    'size_t',
+    'ssize_t',
+
     # NSPR types
     'PRBool',
     'PRPackedBool'
@@ -73,6 +77,7 @@ Types = (
     'nsresult',
     'nsString',
     'nsCString',
+    'mozilla::ipc::Shmem'
 )
 
 
@@ -82,6 +87,7 @@ Includes = (
     'nscore.h',
     'IPCMessageStart.h',
     'IPC/IPCMessageUtils.h',
+    'nsAutoPtr.h',
     'nsStringGlue.h',
     'nsTArray.h',
     'mozilla/ipc/ProtocolUtils.h',
