@@ -1576,54 +1576,6 @@ function safeInstallOperation(itemID, installLocation, file) {
     }
   }
 
-  /**
-   * Extracts an XPI's files into the item's directory.
-   * @param   itemID
-   *          The ID of the item being installed.
-   * @param   installLocation
-   *          The install location where the item is being installed.
-   * @param   xpiFile
-   *          The source XPI file that contains the item.
-   */
-  function extractFiles(itemID, installLocation, xpiFile) {
-    var zipReader = getZipReaderForFile(xpiFile);
-
-    // create directories first
-    var entries = zipReader.findEntries("*/");
-    while (entries.hasMore()) {
-      var entryName = entries.getNext();
-      var target = installLocation.getItemFile(itemID, entryName);
-      if (!target.exists()) {
-        try {
-          target.create(Ci.nsILocalFile.DIRECTORY_TYPE,
-                        FileUtils.PERMS_DIRECTORY);
-        }
-        catch (e) {
-          ERROR("extractFiles: failed to create target directory for extraction " +
-                "file = " + target.path + ", exception = " + e + "\n");
-        }
-      }
-    }
-
-    entries = zipReader.findEntries(null);
-    while (entries.hasMore()) {
-      var entryName = entries.getNext();
-      target = installLocation.getItemFile(itemID, entryName);
-      if (target.exists())
-        continue;
-
-      try {
-        target.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-      }
-      catch (e) {
-        ERROR("extractFiles: failed to create target file for extraction " +
-              "file = " + target.path + ", exception = " + e + "\n");
-      }
-      zipReader.extract(entryName, target);
-    }
-    zipReader.close();
-  }
-
   if (!installLocation.itemIsManagedIndependently(itemID)) {
     var itemLocation = installLocation.getItemLocation(itemID);
     if (itemLocation.exists()) {
@@ -1697,7 +1649,35 @@ function safeInstallOperation(itemID, installLocation, file) {
   if (file) {
     // Extract the xpi's files into the new directory
     try {
-      extractFiles(itemID, installLocation, file);
+      var zipReader = getZipReaderForFile(file);
+
+      // create directories first
+      var entries = zipReader.findEntries("*/");
+      while (entries.hasMore()) {
+        var entryName = entries.getNext();
+        var target = installLocation.getItemFile(itemID, entryName);
+        if (!target.exists()) {
+          try {
+            target.create(Ci.nsILocalFile.DIRECTORY_TYPE,
+                          FileUtils.PERMS_DIRECTORY);
+          }
+          catch (e) {
+            ERROR("extractFiles: failed to create target directory for extraction " +
+                  "file = " + target.path + ", exception = " + e + "\n");
+          }
+        }
+      }
+
+      entries = zipReader.findEntries(null);
+      while (entries.hasMore()) {
+        var entryName = entries.getNext();
+        target = installLocation.getItemFile(itemID, entryName);
+        if (target.exists())
+          continue;
+
+        zipReader.extract(entryName, target);
+        target.permissions = FileUtils.PERMS_FILE;
+      }
     }
     catch (e) {
       // This means the install operation failed. Remove everything and roll back.
@@ -1717,6 +1697,10 @@ function safeInstallOperation(itemID, installLocation, file) {
       rollbackMove();
       cleanUpTrash(itemLocationTrash);
       throw e;
+    }
+    finally {
+      if (zipReader)
+        zipReader.close();
     }
   }
 
