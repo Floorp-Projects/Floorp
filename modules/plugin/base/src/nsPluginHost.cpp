@@ -3917,6 +3917,19 @@ nsPluginHost::FindPluginEnabledForExtension(const char* aExtension,
   return nsnull;
 }
 
+nsPluginTag*
+nsPluginHost::FindPluginTag(nsIPlugin* plugin)
+{
+  nsPluginTag* plugins = mPlugins;
+  while (plugins) {
+    if (plugins->mEntryPoint == plugin)
+      return plugins;
+
+    plugins = plugins->mNext;
+  }
+  return nsnull;
+}
+
 static nsresult ConvertToNative(nsIUnicodeEncoder *aEncoder,
                                 const nsACString& aUTF8String,
                                 nsACString& aNativeString)
