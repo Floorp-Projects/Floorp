@@ -2781,6 +2781,7 @@ Tab.prototype = {
       this._browser = null;
 
       if (this._loading) {
+        this._loading = false;
         Browser._browserView.commitBatchOperation();
         clearTimeout(this._loadingTimeout);
         delete this._loadingTimeout;
@@ -2961,9 +2962,13 @@ function PluginObserver(bv) {
   this._contentShowing = document.getElementById("observe_contentShowing");
   this._bv = bv;
   this._started = false;
+  this._isRendering = false;
 }
 
 PluginObserver.prototype = {
+  // When calculating critical rect, subtract N pixels around popup boxes
+  POPUP_PADDING: 4,
+
   /** Starts flash objects fast path. */
   start: function() {
     if (this._started)
@@ -2975,6 +2980,7 @@ PluginObserver.prototype = {
     let browsers = document.getElementById("browsers");
     browsers.addEventListener("RenderStateChanged", this, false);
     gObserverService.addObserver(this, "plugin-changed-event", false);
+    Elements.stack.addEventListener("PopupChanged", this, false);
 
     let browser = Browser.selectedBrowser;
     if (browser) {
@@ -2994,6 +3000,7 @@ PluginObserver.prototype = {
     let browsers = document.getElementById("browsers");
     browsers.removeEventListener("RenderStateChanged", this, false);
     gObserverService.removeObserver(this, "plugin-changed-event");
+    Elements.stack.removeEventListener("PopupChanged", this, false);
 
     let browser = Browser.selectedBrowser;
     if (browser) {
@@ -3047,13 +3054,16 @@ PluginObserver.prototype = {
       return;
 
     let rect = this.getCriticalRect();
-    if (rect == this._emptyRect) {
-      // Always stop rendering immediately.
+    if (this._isRendering) {
+      // Update immediately if not just starting to render
+      if (rect == this._emptyRect)
+        this._isRendering = false;
       this.updateEmbedRegions(doc.pluginCache, rect);
     } else {
       // Wait a moment so that any chrome redraws occur first.
       let self = this;
       setTimeout(function() {
+        self._isRendering = true;
         // Recalculate critical rect so we don't render when we ought not to.
         self.updateEmbedRegions(doc.pluginCache, self.getCriticalRect());
       }, 0);
@@ -3079,8 +3089,32 @@ PluginObserver.prototype = {
       // Subtract urlbar area from critical rect area.  In general subtracting a rect from another
       // results in a region that can be described by a union of rects.  Luckily in this case,
       // we can cheat because the resulting area is still just one rect.
-      crit.top = Math.max(urlbarRect.height, crit.top);
+      crit.top = Math.max(Math.round(urlbarRect.height) + 1, crit.top);
+      // XXX we add 1 to the height so that flash overlays don't leak into URL bar (otherwise
+      // you may see a strip of junk if you pop up the identity panel over flash)
     }
+
+    let popup = BrowserUI._popup;
+    if (popup) {
+      let p = this.POPUP_PADDING;
+      let elements = BrowserUI._popup.elements;
+      for (let i = elements.length - 1; i >= 0; i--) {
+        let popupRect = Rect.fromRect(elements[i].getBoundingClientRect()).expandToIntegers();
+        // XXX Our CSS shadows don't seem to be included in getBoundingClientRect.  Compensate
+        // with some padding; may need to be changed depending on the theme. Otherwise, flash
+        // can "leak into" the popup.
+        popupRect.setBounds(popupRect.left - p, popupRect.top - p, popupRect.right + p, popupRect.bottom + p);
+        let areaRects = crit.subtract(popupRect);
+        if (areaRects.length == 1) {
+          // Yay, critical region is still just a rect!
+          crit = areaRects[0];
+        } else if (areaRects.length > 1) {
+          // Critical region is a union of rects. Give up.
+          return this._emptyRect;
+        }
+      }
+    }
+
     return crit;
   },
 

@@ -283,7 +283,6 @@ var BrowserUI = {
   },
 
   popDialog : function popDialog() {
-    // Passing null means we pop the topmost dialog
     if (this._dialogs.length) {
       this._dialogs.pop();
       this.unlockToolbar();
@@ -297,29 +296,41 @@ var BrowserUI = {
   },
 
   pushPopup: function pushPopup(aPanel, aElements) {
-    this._updatePopup();
+    this._hidePopup();
     this._popup =  { "panel": aPanel, 
                      "elements": (aElements instanceof Array) ? aElements : [aElements] };
+    this._dispatchPopupChanged();
   },
 
   popPopup: function popPopup() {
     this._popup = null;
+    this._dispatchPopupChanged();
   },
 
-  _updatePopup: function _updateContextualPanel(aEvent) {
+  _dispatchPopupChanged: function _dispatchPopupChanged() {
+    let stack = document.getElementById("stack");
+    let event = document.createEvent("Events");
+    event.initEvent("PopupChanged", true, false);
+    event.popup = this._popup;
+    stack.dispatchEvent(event);
+  },
+
+  _hidePopup: function _hidePopup() {
     if (!this._popup)
       return;
-
-    let element = this._popup.elements;
+    let panel = this._popup.panel;
+    if (panel.hide)
+      panel.hide();
+  },
+  
+  _isEventInsidePopup: function _isEventInsidePopup(aEvent) {
+    if (!this._popup)
+      return;
+    let elements = this._popup.elements;
     let targetNode = aEvent ? aEvent.target : null;
-    while (targetNode && element.indexOf(targetNode) == -1)
+    while (targetNode && elements.indexOf(targetNode) == -1)
       targetNode = targetNode.parentNode;
-
-    if (targetNode == null) {
-      let panel = this._popup.panel;
-      if (panel.hide)
-        panel.hide();
-    }
+    return targetNode ? true : false;
   },
 
   switchPane : function(id) {
@@ -680,7 +691,8 @@ var BrowserUI = {
         }
         break;
       case "mousedown":
-        this._updatePopup(aEvent);
+        if (!this._isEventInsidePopup(aEvent))
+          this._hidePopup();
 
         if (aEvent.detail == 2 &&
             aEvent.button == 0 &&
@@ -952,7 +964,8 @@ var BookmarkHelper = {
     BrowserUI.pushPopup(this, this._panel);
 
     let self = this;
-    Util.executeSoon(function() { self._editor.startEditing(); });
+    Browser.forceChromeReflow();
+    self._editor.startEditing();
   },
 
   save: function BH_save() {

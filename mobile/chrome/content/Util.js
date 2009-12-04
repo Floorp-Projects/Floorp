@@ -176,11 +176,15 @@ let Util = {
   }
 };
 
+/**
+ * Cache of commonly used elements.
+ */
 let Elements = {};
 
 [
   ["browserBundle",      "bundle_browser"],
   ["contentShowing",     "bcast_contentShowing"],
+  ["stack",              "stack"],
 ].forEach(function (elementGlobal) {
   let [name, id] = elementGlobal;
   Elements.__defineGetter__(name, function () {
@@ -314,7 +318,7 @@ Rect.prototype = {
     return this;
   },
 
-  setBounds: function(t, l, b, r) {
+  setBounds: function(l, t, r, b) {
     this.top = t;
     this.left = l;
     this.bottom = b;
@@ -452,8 +456,35 @@ Rect.prototype = {
   translateInside: function translateInside(other) {
     let offsetX = (this.left < other.left ? other.left - this.left :
         (this.right > other.right ? this.right - other.right : 0));
-   let offsetY = (this.top < other.top ? other.top - this.top :
+    let offsetY = (this.top < other.top ? other.top - this.top :
         (this.bottom > other.bottom ? this.bottom - other.bottom : 0));
     return this.translate(offsetX, offsetY);
-  }
+  },
+
+  /** Subtract other area from this. Returns array of rects whose union is this-other. */
+  subtract: function subtract(other) {
+    let r = new Rect(0, 0, 0, 0);
+    let result = [];
+    other = other.intersect(this);
+    if (other.isEmpty())
+      return [this.clone()];
+
+    // left strip
+    r.setBounds(this.left, this.top, other.left, this.bottom);
+    if (!r.isEmpty())
+      result.push(r.clone());
+    // inside strip
+    r.setBounds(other.left, this.top, other.right, other.top);
+    if (!r.isEmpty())
+      result.push(r.clone());
+    r.setBounds(other.left, other.bottom, other.right, this.bottom);
+    if (!r.isEmpty())
+      result.push(r.clone());
+    // right strip
+    r.setBounds(other.right, this.top, this.right, this.bottom);
+    if (!r.isEmpty())
+      result.push(r.clone());
+
+    return result;
+  },
 };
