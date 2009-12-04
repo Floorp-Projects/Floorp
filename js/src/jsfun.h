@@ -180,6 +180,12 @@ struct JSFunction : public JSObject {
 
     int sharpSlotBase(JSContext *cx);
 
+    /*
+     * If fun's formal parameters include any duplicate names, return one
+     * of them (chosen arbitrarily). If they are all unique, return NULL.
+     */
+    JSAtom *findDuplicateFormal() const;
+
     uint32 countInterpretedReservedSlots() const;
 };
 

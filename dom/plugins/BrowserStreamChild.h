@@ -71,6 +71,9 @@ public:
                                    int32_t* consumed);
 
   virtual bool AnswerNPP_StreamAsFile(const nsCString& fname);
+  virtual bool Answer__delete__(const NPError& reason,
+                                const bool& artificial);
+
 
   void EnsureCorrectInstance(PluginInstanceChild* i)
   {

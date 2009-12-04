@@ -54,6 +54,9 @@
   <textarea id="ime_mode_active_t"   style="ime-mode: active;">textarea</textarea><br/>
   <textarea id="ime_mode_inactive_t" style="ime-mode: inactive;">textarea</textarea><br/>
   <textarea id="ime_mode_disabled_t" style="ime-mode: disabled;">textarea</textarea><br/>
+
+  <!-- plugin -->
+  <object type="application/x-test" id="plugin"></object><br/>
 </p>
 <div id="content" style="display: none">
   
@@ -253,6 +256,46 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription)
   }
 }
 
+function runPluginTest()
+{
+  if (!kIMEEnabledSupported) {
+    return;
+  }
+
+  if (navigator.platform.indexOf("Mac") == 0) {
+    // XXX on mac, currently, this test isn't passed because it doesn't return
+    // IME_STATUS_PLUGIN by its bug.
+    return;
+  }
+
+  var plugin = document.getElementById("plugin");
+
+  document.activeElement.blur();
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     "runPluginTest: unexpected enabled state when no element has focus");
+
+  plugin.focus();
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_PLUGIN,
+     "runPluginTest: unexpected enabled state when plugin has focus");
+
+  plugin.blur();
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     "runPluginTest: unexpected enabled state when plugin has focus");
+
+  plugin.focus();
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_PLUGIN,
+     "runPluginTest: unexpected enabled state when plugin has focus #2");
+
+  var parent = plugin.parentNode;
+  parent.removeChild(plugin);
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     "runPluginTest: unexpected enabled state when plugin is removed from tree");
+
+  document.getElementById("text").focus();
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+     "runPluginTest: unexpected enabled state when input[type=text] has focus");
+}
+
 function runTypeChangingTest()
 {
   if (!kIMEEnabledSupported)
@@ -443,6 +486,9 @@ function runTests()
 
   // test for normal contents.
   runBasicTest(false, false, "Testing of normal contents");
+
+  // test for plugin contents
+  runPluginTest();
 
   var container = document.getElementById("display");
   // test for contentEditable="true"

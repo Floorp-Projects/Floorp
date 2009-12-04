@@ -112,7 +112,7 @@ GetArgsLength(JSObject *obj)
     return argc;
 }
 
-static inline void 
+static inline void
 SetArgsPrivateNative(JSObject *argsobj, js_ArgsPrivateNative *apn)
 {
     JS_ASSERT(STOBJ_GET_CLASS(argsobj) == &js_ArgumentsClass);
@@ -292,7 +292,7 @@ js_Arguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee,
 }
 #endif
 
-JS_DEFINE_CALLINFO_6(extern, OBJECT, js_Arguments, CONTEXT, OBJECT, UINT32, OBJECT, 
+JS_DEFINE_CALLINFO_6(extern, OBJECT, js_Arguments, CONTEXT, OBJECT, UINT32, OBJECT,
                      DOUBLEPTR, APNPTR, 0, 0)
 
 /* FIXME change the return type to void. */
@@ -2700,7 +2700,7 @@ HashLocalName(JSContext *cx, JSLocalNameMap *map, JSAtom *name,
     }
     if (entry->name) {
         JS_ASSERT(entry->name == name);
-        JS_ASSERT(entry->localKind == JSLOCAL_ARG);
+        JS_ASSERT(entry->localKind == JSLOCAL_ARG && localKind == JSLOCAL_ARG);
         dup = (JSNameIndexPair *) cx->malloc(sizeof *dup);
         if (!dup)
             return JS_FALSE;
@@ -3060,4 +3060,34 @@ js_FreezeLocalNames(JSContext *cx, JSFunction *fun)
     if (n > MAX_ARRAY_LOCALS)
         JS_DHashMarkTableImmutable(&fun->u.i.names.map->names);
 #endif
+}
+
+JSAtom *
+JSFunction::findDuplicateFormal() const
+{
+    if (nargs <= 1)
+        return NULL;
+
+    /* Function with two to MAX_ARRAY_LOCALS parameters use an aray. */
+    unsigned n = nargs + u.i.nvars + u.i.nupvars;
+    if (n <= MAX_ARRAY_LOCALS) {
+        jsuword *array = u.i.names.array;
+
+        /* Quadratic, but MAX_ARRAY_LOCALS is 8, so at most 28 comparisons. */
+        for (unsigned i = 0; i < nargs; i++) {
+            for (unsigned j = i + 1; j < nargs; j++) {
+                if (array[i] == array[j])
+                    return JS_LOCAL_NAME_TO_ATOM(array[i]);
+            }
+        }
+        return NULL;
+    }
+
+    /*
+     * Functions with more than MAX_ARRAY_LOCALS parameters use a hash
+     * table. Hashed local name maps have already made a list of any
+     * duplicate argument names for us.
+     */
+    JSNameIndexPair *dup = u.i.names.map->lastdup;
+    return dup ? dup->name : NULL;
 }

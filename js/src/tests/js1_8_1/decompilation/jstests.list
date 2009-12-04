@@ -18,3 +18,4 @@ script regress-380237-03.js
 script regress-380237-04.js
 script regress-443074.js
 script regress-466905-03.js
+script regress-530537.js

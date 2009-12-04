@@ -61,12 +61,16 @@ public:
   virtual bool AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                      NPError* result);
 
+  virtual bool
+  Answer__delete__(const NPError& reason, const bool& artificial);
+
   int32_t WriteReady();
   int32_t Write(int32_t offset, int32_t len, void* buffer);
   void StreamAsFile(const char* fname);
-  NPError NPN_DestroyStream(NPError reason);
 
 private:
+  NPError NPN_DestroyStream(NPError reason);
+
   PluginInstanceParent* mNPP;
   NPStream* mStream;
 };

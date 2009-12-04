@@ -165,6 +165,18 @@ struct JSAtomList : public JSAtomSet
 };
 
 /*
+ * A subclass of JSAtomList with a destructor.  This atom list owns its
+ * hash table and its entries, but no keys or values.
+ */
+struct JSAutoAtomList: public JSAtomList
+{
+    JSAutoAtomList(JSCompiler *c): compiler(c) {}
+    ~JSAutoAtomList();
+  private:
+    JSCompiler *compiler;       /* For freeing list entries. */
+};
+
+/*
  * Iterate over an atom list. We define a call operator to minimize the syntax
  * tax for users. We do not use a more standard pattern using ++ and * because
  * (a) it's the wrong pattern for a non-scalar; (b) it's overkill -- one method

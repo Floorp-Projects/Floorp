@@ -1,11 +1,5 @@
 #include "TestManyChildAllocs.h"
 
-#include "nsIAppShell.h"
-
-#include "nsCOMPtr.h"
-#include "nsServiceManagerUtils.h" // do_GetService()
-#include "nsWidgetsCID.h"       // NS_APPSHELL_CID
-
 #include "IPDLUnitTests.h"      // fail etc.
 
 
@@ -36,13 +30,9 @@ TestManyChildAllocsParent::Main()
 bool
 TestManyChildAllocsParent::RecvDone()
 {
-    // should clean up ...
-
-    passed("allocs were successfuly");
-    
-    static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-    nsCOMPtr<nsIAppShell> appShell (do_GetService(kAppShellCID));
-    appShell->Exit();
+    // explicitly *not* cleaning up, so we can sanity-check IPDL's
+    // auto-shutdown/cleanup handling
+    Close();
 
     return true;
 }
@@ -75,7 +65,7 @@ TestManyChildAllocsChild::~TestManyChildAllocsChild()
 
 bool TestManyChildAllocsChild::RecvGo()
 {
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < NALLOCS; ++i) {
         PTestManyChildAllocsSubChild* child =
             SendPTestManyChildAllocsSubConstructor();
 
@@ -85,6 +75,12 @@ bool TestManyChildAllocsChild::RecvGo()
         if (!child->SendHello())
             fail("can't send Hello()");
     }
+
+    nsTArray<PTestManyChildAllocsSubChild*> kids;
+    ManagedPTestManyChildAllocsSubChild(kids);
+
+    if (NALLOCS != kids.Length())
+        fail("expected %lu kids, got %lu", NALLOCS, kids.Length());
 
     if (!SendDone())
         fail("can't send Done()");
