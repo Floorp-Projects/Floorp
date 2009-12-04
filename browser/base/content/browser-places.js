@@ -637,6 +637,14 @@ var HistoryMenu = {
       m.setAttribute("class", "menuitem-iconic bookmark-item");
       m.setAttribute("value", i);
       m.setAttribute("oncommand", "undoCloseTab(" + i + ");");
+
+      // Set the targetURI attribute so it will be shown in tooltip and statusbar.
+      // SessionStore uses one-based indexes, so we need to normalize them.
+      let tabData = undoItems[i].state;
+      let activeIndex = (tabData.index || tabData.entries.length) - 1;
+      if (activeIndex >= 0 && tabData.entries[activeIndex])
+        m.setAttribute("targetURI", tabData.entries[activeIndex].url);
+
       m.addEventListener("click", this._undoCloseMiddleClick, false);
       if (i == 0)
         m.setAttribute("key", "key_undoCloseTab");
@@ -710,6 +718,13 @@ var HistoryMenu = {
       }
       m.setAttribute("class", "menuitem-iconic bookmark-item");
       m.setAttribute("oncommand", "undoCloseWindow(" + i + ");");
+
+      // Set the targetURI attribute so it will be shown in tooltip and statusbar.
+      // SessionStore uses one-based indexes, so we need to normalize them.
+      let activeIndex = (selectedTab.index || selectedTab.entries.length) - 1;
+      if (activeIndex >= 0 && selectedTab.entries[activeIndex])
+        m.setAttribute("targetURI", selectedTab.entries[activeIndex].url);
+
       if (i == 0)
         m.setAttribute("key", "key_undoCloseWindow");
       undoPopup.appendChild(m);
