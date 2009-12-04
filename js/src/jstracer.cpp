@@ -8005,8 +8005,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
     if (setflags && (sprop->attrs & JSPROP_READONLY))
         RETURN_STOP("writing to a read-only property");
 
-    JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
-    uintN slot = sprop->shortid;
+    uintN slot = uint16(sprop->shortid);
 
     vp = NULL;
     uintN upvar_slot = SPROP_INVALID_SLOT;
@@ -8026,6 +8025,9 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
         } else {
             RETURN_STOP("dynamic property of Call object");
         }
+
+        // Now assert that our use of sprop->shortid was in fact kosher.
+        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
 
         if (frameIfInRange(obj)) {
             // At this point we are guaranteed to be looking at an active call oject
@@ -8061,23 +8063,25 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
         // object loses its frame it never regains one, on trace we will also
         // have a null private in the Call object. So all we need to do is
         // write the value to the Call object's slot.
-        int32 offset = slot;
+        int32 dslot_index = slot;
         if (sprop->getter == js_GetCallArg) {
-            JS_ASSERT(offset < ArgClosureTraits::slot_count(obj));
-            offset += ArgClosureTraits::slot_offset(obj);
+            JS_ASSERT(dslot_index < ArgClosureTraits::slot_count(obj));
+            dslot_index += ArgClosureTraits::slot_offset(obj);
         } else if (sprop->getter == js_GetCallVar ||
                    sprop->getter == js_GetCallVarChecked) {
-            JS_ASSERT(offset < VarClosureTraits::slot_count(obj));
-            offset += VarClosureTraits::slot_offset(obj);
+            JS_ASSERT(dslot_index < VarClosureTraits::slot_count(obj));
+            dslot_index += VarClosureTraits::slot_offset(obj);
         } else {
             RETURN_STOP("dynamic property of Call object");
         }
 
+        // Now assert that our use of sprop->shortid was in fact kosher.
+        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+
         LIns* base = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
-        LIns* val_ins = lir->insLoad(LIR_ldp, base, offset * sizeof(jsval));
-        ins = unbox_jsval(obj->dslots[offset], val_ins, snapshot(BRANCH_EXIT));
-    }
-    else {
+        LIns* val_ins = lir->insLoad(LIR_ldp, base, dslot_index * sizeof(jsval));
+        ins = unbox_jsval(obj->dslots[dslot_index], val_ins, snapshot(BRANCH_EXIT));
+    } else {
         ClosureVarInfo* cv = new (traceAlloc()) ClosureVarInfo();
         cv->slot = slot;
 #ifdef DEBUG
@@ -8100,6 +8104,9 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
         } else {
             RETURN_STOP("dynamic property of Call object");
         }
+
+        // Now assert that our use of sprop->shortid was in fact kosher.
+        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
 
         call_ins = lir->insCall(ci, args);
 
@@ -11325,13 +11332,15 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     JSStackFrame *fp = frameIfInRange(callobj);
     if (fp) {
         if (sprop->setter == SetCallArg) {
-            jsint slot = JSVAL_TO_INT(SPROP_USERID(sprop));
+            JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+            uintN slot = uint16(sprop->shortid);
             jsval *vp2 = &fp->argv[slot];
             set(vp2, v_ins);
             return RECORD_CONTINUE;
         }
         if (sprop->setter == SetCallVar) {
-            jsint slot = JSVAL_TO_INT(SPROP_USERID(sprop));
+            JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+            uintN slot = uint16(sprop->shortid);
             jsval *vp2 = &fp->slots[slot];
             set(vp2, v_ins);
             return RECORD_CONTINUE;
@@ -11345,20 +11354,24 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
         // object loses its frame it never regains one, on trace we will also
         // have a null private in the Call object. So all we need to do is
         // write the value to the Call object's slot.
-        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
-        int32 offset = sprop->shortid;
+        int32 dslot_index = uint16(sprop->shortid);
         if (sprop->setter == SetCallArg) {
-            JS_ASSERT(offset < ArgClosureTraits::slot_count(callobj));
-            offset += ArgClosureTraits::slot_offset(callobj);
+            JS_ASSERT(dslot_index < ArgClosureTraits::slot_count(callobj));
+            dslot_index += ArgClosureTraits::slot_offset(callobj);
         } else if (sprop->setter == SetCallVar) {
-            JS_ASSERT(offset < VarClosureTraits::slot_count(callobj));
-            offset += VarClosureTraits::slot_offset(callobj);
+            JS_ASSERT(dslot_index < VarClosureTraits::slot_count(callobj));
+            dslot_index += VarClosureTraits::slot_offset(callobj);
         } else {
             RETURN_STOP("can't trace special CallClass setter");
         }
 
+        // Now assert that the shortid get we did above was ok. Have to do it
+        // after the RETURN_STOP above, since in that case we may in fact not
+        // have a valid shortid; but we don't use it in that case anyway.
+        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+
         LIns* base = lir->insLoad(LIR_ldp, callobj_ins, offsetof(JSObject, dslots));
-        lir->insStorei(box_jsval(v, v_ins), base, offset * sizeof(jsval));
+        lir->insStorei(box_jsval(v, v_ins), base, dslot_index * sizeof(jsval));
         return RECORD_CONTINUE;
     }
 
