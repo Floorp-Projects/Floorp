@@ -10,8 +10,8 @@ script regress-433279-03.js
 skip script regress-442333-01.js
 script regress-452491.js
 script regress-453492.js
-skip-if(isDebugBuild) fails-if(!isDebugBuild) script regress-455981-01.js
-skip-if(isDebugBuild) fails-if(!isDebugBuild) script regress-455981-02.js
+script regress-455981-01.js
+script regress-455981-02.js
 script regress-457065-01.js
 script regress-457065-02.js
 script regress-458076.js
@@ -26,7 +26,7 @@ script regress-463783.js
 script regress-464092-01.js
 script regress-464092-02.js
 script regress-464096.js
-skip-if(isDebugBuild) script regress-464418.js # slow
+script regress-464418.js
 script regress-464978.js
 script regress-465220.js
 script regress-465234.js
@@ -74,10 +74,11 @@ script regress-474769.js
 script regress-474771.js
 script regress-474935.js
 script regress-476655.js
-skip-if(isDebugBuild) script regress-477234.js # slow
+script regress-477234.js
 script regress-477581.js
 script regress-478205.js
 script regress-479353.js
 script regress-479740.js
 script regress-481800.js
 script regress-483749.js
+script regress-499524.js

@@ -68,8 +68,6 @@
 #include "jsstr.h"
 #include "jsvector.h"
 
-#include <algorithm>
-
 #ifdef JS_TRACER
 #include "jstracer.h"
 using namespace avmplus;
@@ -2077,7 +2075,9 @@ class CharSet {
   public:
     CharSet() : charEnd(charBuf), classes(0) {}
 
-    bool full() { return charEnd == charBuf + BufSize; }
+    static const uintN sBufSize = 8;
+
+    bool full() { return charEnd == charBuf + sBufSize; }
 
     /* Add a single char to the set. */
     bool addChar(jschar c)
@@ -2110,8 +2110,7 @@ class CharSet {
   private:
     static bool disjoint(const jschar *beg, const jschar *end, uintN classes);
 
-    static const uintN BufSize = 8;
-    mutable jschar charBuf[BufSize];
+    mutable jschar charBuf[sBufSize];
     jschar *charEnd;
     uintN classes;
 };
@@ -2181,6 +2180,14 @@ set_disjoint(InputIterator1 p1, InputIterator1 end1,
     return false;
 }
 
+static JSBool
+CharCmp(void *arg, const void *a, const void *b, int *result)
+{
+    jschar ca = *(jschar *)a, cb = *(jschar *)b;
+    *result = ca - cb;
+    return JS_TRUE;
+}
+
 bool
 CharSet::disjoint(const CharSet &other) const
 {
@@ -2197,8 +2204,11 @@ CharSet::disjoint(const CharSet &other) const
         return false;
 
     /* Check char-char overlap. */
-    std::sort(charBuf, charEnd);
-    std::sort(other.charBuf, other.charEnd);
+    jschar tmp[CharSet::sBufSize];
+    js_MergeSort(charBuf, charEnd - charBuf, sizeof(jschar),
+                 CharCmp, 0, tmp);
+    js_MergeSort(other.charBuf, other.charEnd - other.charBuf, sizeof(jschar),
+                 CharCmp, 0, tmp);
     return set_disjoint(charBuf, charEnd, other.charBuf, other.charEnd);
 }
 
@@ -2291,6 +2301,7 @@ class RegExpNativeCompiler {
     LirBufWriter*    lirBufWriter;  /* for skip */
 
     LIns*            state;
+    LIns*            start;
     LIns*            cpend;
 
     bool outOfMemory() {
@@ -2939,21 +2950,34 @@ class RegExpNativeCompiler {
         lir->ins2(LIR_j, NULL, loopTop);
 
         /*
-         * This might be the only LIR_live in Mozilla, so I will explain its
-         * sinister semantics. LIR_lives must appear immediately following a
-         * backwards jump and describe what is live immediately at the *target*
-         * of the back-edge. Thus, these instructions answer the question "what
-         * is live at the top of the loop?", which makes sense, because the
-         * backwards scan has not yet seen the top of the loop and needs this
-         * information to continue working backwards up the inside of the loop.
+         * Using '+' as branch, the intended control flow is:
          *
-         * Here, 'cpend' and 'state' get defined before the loop, and used
-         * inside, so they are live at 'loopTop'. While 'iterBegin' is used
-         * after the loop, making it live in on loop exit, it gets defined
-         * after 'loopTop', which "kills" its liveness.
+         *     ...
+         * A -> |
+         *      |<---.
+         * B -> |    |
+         *      +--. |
+         * C -> |  | |
+         *      +--. |
+         * D -> |  | |
+         *      +--|-'
+         * X -> |  |
+         *      |<-'
+         * E -> |
+         *     ...
+         *
+         * We are currently at point X. Since the regalloc makes a single,
+         * linear, backwards sweep over the IR (going from E to A), point X
+         * must tell the regalloc what LIR insns are live at the end of D.
+         * Thus, we need to report *all* insns defined *before* the end of D
+         * that may be used *after* D. This means insns defined in A, B, C, or
+         * D and used in B, C, D, or E. Since insns in B, C, and D are
+         * conditionally executed, and we (currently) don't have real phi
+         * nodes, we need only consider insns defined in A and used in E.
          */
         lir->ins1(LIR_live, state);
         lir->ins1(LIR_live, cpend);
+        lir->ins1(LIR_live, start);
 
         /* After the loop: reload 'pos' from memory and continue. */
         targetCurrentPoint(kidFails);
@@ -3121,7 +3145,6 @@ class RegExpNativeCompiler {
     JSBool compile()
     {
         GuardRecord* guard = NULL;
-        LIns* pos;
         const jschar* re_chars;
         size_t re_length;
         JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
@@ -3186,16 +3209,16 @@ class RegExpNativeCompiler {
             fragment->loopLabel = loopLabel;
         })
 
-        pos = addName(lirbuf,
+        start = addName(lirbuf,
                       lir->insLoad(LIR_ldp, state,
                                    offsetof(REGlobalData, skipped)),
-                      "pos");
+                      "start");
 
         if (cs->flags & JSREG_STICKY) {
-            if (!compileSticky(cs->result, pos))
+            if (!compileSticky(cs->result, start))
                 goto fail;
         } else {
-            if (!compileAnchoring(cs->result, pos))
+            if (!compileAnchoring(cs->result, start))
                 goto fail;
         }
 

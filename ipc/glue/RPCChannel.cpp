@@ -84,6 +84,7 @@ bool
 RPCChannel::Call(Message* msg, Message* reply)
 {
     AssertWorkerThread();
+    mMutex.AssertNotCurrentThreadOwns();
     RPC_ASSERT(!ProcessingSyncMessage(),
                "violation of sync handler invariant");
     RPC_ASSERT(msg->is_rpc(), "can only Call() RPC messages here");
@@ -417,19 +418,14 @@ void
 RPCChannel::OnChannelError()
 {
     AssertIOThread();
-    {
-        MutexAutoLock lock(mMutex);
 
-        mChannelState = ChannelError;
-
-        if (AwaitingSyncReply()
-            || 0 < StackDepth())
-            NotifyWorkerThread();
-    }
+    AsyncChannel::OnChannelError();
 
     // skip SyncChannel::OnError(); we subsume its duties
-
-    return AsyncChannel::OnChannelError();
+    MutexAutoLock lock(mMutex);
+    if (AwaitingSyncReply()
+        || 0 < StackDepth())
+        NotifyWorkerThread();
 }
 
 

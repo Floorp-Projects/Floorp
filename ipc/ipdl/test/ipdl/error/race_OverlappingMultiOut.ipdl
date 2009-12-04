@@ -2,13 +2,20 @@ protocol race_OverlappingMultiOut {
 child:
     Msg1();
     Msg1_();
+    delete(); suppressUndeleteableError()
+
 parent:
     Msg2();
     Msg2_();
 
+
+start state _:
+    send delete;
+    send suppressUndeleteableError goto S10;
+
     // *** ERROR: send/recv of Msg1/Msg2 in state S10 goes to overlapping
     // sets { S11, S12 }, { S12, S13 } and thus can't be unidirectional
-start state S10:
+state S10:
     send Msg1 goto S11 or S12;
     recv Msg2 goto S12 or S13;
 
@@ -25,5 +32,4 @@ state S13:
 state S14:
     send Msg1 goto S14;
     recv Msg2 goto S14;
-
 };

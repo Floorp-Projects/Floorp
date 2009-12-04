@@ -437,8 +437,18 @@ XRE_RunAppShell()
 }
 
 void
-XRE_ShutdownChildProcess(MessageLoop* aUILoop)
+XRE_ShutdownChildProcess()
 {
+    NS_ABORT_IF_FALSE(NS_IsMainThread(), "Wrong thread!");
+
+    MessageLoop* uiLoop = MessageLoop::current();
+    MessageLoop* ioLoop = XRE_GetIOMessageLoop();
+
+    NS_ABORT_IF_FALSE(!!ioLoop, "Bad shutdown order");
+    ioLoop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
+
+    NS_ABORT_IF_FALSE(!!uiLoop, "Bad shutdown order");
+    uiLoop->Quit();
 }
 
 #endif // MOZ_IPC

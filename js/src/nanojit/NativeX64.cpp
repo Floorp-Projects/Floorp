@@ -323,6 +323,25 @@ namespace nanojit
         emitrr(op, r, (Register)0);
     }
 
+    // Succeeds if 'target' is within a signed 8-bit offset from the current
+    // instruction's address.
+    bool Assembler::isTargetWithinS8(NIns* target)
+    {
+        NanoAssert(target);
+        // First call underrunProtect().  Without it, we might compute the
+        // difference just before starting a new code chunk.
+        underrunProtect(8);
+        return isS8(target - _nIns);
+    }
+
+    // Like isTargetWithinS8(), but for signed 32-bit offsets.
+    bool Assembler::isTargetWithinS32(NIns* target)
+    {
+        NanoAssert(target);
+        underrunProtect(8);
+        return isS32(target - _nIns);
+    }
+
 #define RB(r)       gpRegNames8[(r)]
 #define RBhi(r)     gpRegNames8hi[(r)]
 #define RL(r)       gpRegNames32[(r)]
@@ -456,7 +475,7 @@ namespace nanojit
 
     void Assembler::IMULI(R l, R r, I32 i32)    { emitrr_imm(X64_imuli,l,r,i32); asm_output("imuli %s, %s, %d",RL(l),RL(r),i32); }
 
-    void Assembler::MOVQI(R r, U64 u64)         { emitr_imm64(X64_movqi,r,u64); asm_output("movq %s, %lu",RQ(r),u64); }
+    void Assembler::MOVQI(R r, U64 u64)         { emitr_imm64(X64_movqi,r,u64); asm_output("movq %s, %p",RQ(r),(void*)u64); }
 
     void Assembler::LEARIP(R r, I32 d)          { emitrm(X64_learip,r,d,(Register)0); asm_output("lea %s, %d(rip)",RQ(r),d); }
 
@@ -475,6 +494,10 @@ namespace nanojit
     void Assembler::JMP8( S n, NIns* t)    { emit_target8(n, X64_jmp8,t); asm_output("jmp %p", t); }
 
     void Assembler::JMP32(S n, NIns* t)    { emit_target32(n,X64_jmp, t); asm_output("jmp %p", t); }
+
+    void Assembler::JMPX(R indexreg, NIns** table)  { emitrxb_imm(X64_jmpx, (R)0, indexreg, (Register)5, (int32_t)(uintptr_t)table); asm_output("jmpq [%s*8 + %p]", RQ(indexreg), (void*)table); }
+
+    void Assembler::JMPXB(R indexreg, R tablereg)   { emitxb(X64_jmpxb, indexreg, tablereg); asm_output("jmp [%s*8 + %s]", RQ(indexreg), RQ(tablereg)); }
 
     void Assembler::JO( S n, NIns* t)      { emit_target32(n,X64_jo,  t); asm_output("jo %p", t); }
     void Assembler::JE( S n, NIns* t)      { emit_target32(n,X64_je,  t); asm_output("je %p", t); }
@@ -555,8 +578,8 @@ namespace nanojit
     }
 
     void Assembler::JMP(NIns *target) {
-        if (!target || isS32(target - _nIns)) {
-            if (target && isS8(target - _nIns)) {
+        if (!target || isTargetWithinS32(target)) {
+            if (target && isTargetWithinS8(target)) {
                 JMP8(8, target);
             } else {
                 JMP32(8, target);
@@ -819,7 +842,7 @@ namespace nanojit
                 outputf("        %p:", _nIns);
             )
             NIns *target = (NIns*)call->_address;
-            if (isS32(target - _nIns)) {
+            if (isTargetWithinS32(target)) {
                 CALL(8, target);
             } else {
                 // can't reach target from here, load imm64 and do an indirect jump
@@ -1009,8 +1032,7 @@ namespace nanojit
         // the offset.  and the offset, determines the opcode (8bit or 32bit)
         NanoAssert((condop & ~LIR64) >= LIR_ov);
         NanoAssert((condop & ~LIR64) <= LIR_uge);
-        underrunProtect(8); // must do this before checking displacement size
-        if (target && isS8(target - _nIns)) {
+        if (target && isTargetWithinS8(target)) {
             if (onFalse) {
                 switch (condop & ~LIR64) {
                 case LIR_ov:  JNO8( 8, target); break;
@@ -1088,7 +1110,7 @@ namespace nanojit
         LIns *a = cond->oprnd1();
         Register ra, rb;
         if (a != b) {
-            findRegFor2b(GpRegs, a, ra, b, rb);
+            findRegFor2(GpRegs, a, ra, b, rb);
         } else {
             // optimize-me: this will produce a const result!
             ra = rb = findRegFor(a, GpRegs);
@@ -1152,10 +1174,11 @@ namespace nanojit
                 // jp skip (2byte)
                 // jeq target
                 // skip: ...
+                underrunProtect(16); // underrun of 7 needed but we write 2 instr --> 16
                 NIns *skip = _nIns;
-                JE(16, target);     // underrun of 7 needed but we write 2 instr --> 16
+                JE(0, target);      // no underrun needed, previous was enough
                 patch = _nIns;
-                JP8(0, skip);       // no underrun needed, previous was enough
+                JP8(0, skip);       // ditto
             }
         }
         else {
@@ -1215,12 +1238,11 @@ namespace nanojit
 
     void Assembler::fcmp(LIns *a, LIns *b) {
         Register ra, rb;
-        findRegFor2b(FpRegs, a, ra, b, rb);
+        findRegFor2(FpRegs, a, ra, b, rb);
         UCOMISD(ra, rb);
     }
 
-    void Assembler::asm_restore(LIns *ins, Reservation *, Register r) {
-        (void) r;
+    void Assembler::asm_restore(LIns *ins, Register r) {
         if (ins->isop(LIR_alloc)) {
             int d = disp(ins);
             LEAQRM(r, d, FP);
@@ -1251,9 +1273,6 @@ namespace nanojit
                 MOVLRM(r, d, FP);
             }
         }
-        verbose_only( if (_logc->lcbits & LC_RegAlloc) {
-                        outputForEOL("  <= restore %s",
-                        _thisfrag->lirbuf->names->formatRef(ins)); } )
     }
 
     void Assembler::asm_cond(LIns *ins) {
@@ -1399,7 +1418,7 @@ namespace nanojit
         } else if (isS32(v)) {
             // safe for sign-extension 32->64
             MOVQI32(r, int32_t(v));
-        } else if (isS32(int64_t(v)-int64_t(_nIns))) {
+        } else if (isTargetWithinS32((NIns*)v)) {
             // value is with +/- 2GB from RIP, can use LEA with RIP-relative disp32
             int32_t d = int32_t(int64_t(v)-int64_t(_nIns));
             LEARIP(r, d);
@@ -1440,7 +1459,7 @@ namespace nanojit
         TODO(asm_qjoin);
     }
 
-    Register Assembler::asm_prep_fcall(Reservation*, LIns *ins) {
+    Register Assembler::asm_prep_fcall(LIns *ins) {
         return prepResultReg(ins, rmask(XMM0));
     }
 
@@ -1484,7 +1503,7 @@ namespace nanojit
 
     void Assembler::asm_fneg(LIns *ins) {
         Register rr, ra;
-        if (isS32((uintptr_t)negateMask) || isS32((NIns*)negateMask - _nIns)) {
+        if (isS32((uintptr_t)negateMask) || isTargetWithinS32((NIns*)negateMask)) {
             regalloc_unary(ins, FpRegs, rr, ra);
             if (isS32((uintptr_t)negateMask)) {
                 // builtin code is in bottom or top 2GB addr space, use absolute addressing
@@ -1662,7 +1681,7 @@ namespace nanojit
     void Assembler::underrunProtect(ptrdiff_t bytes) {
         NanoAssertMsg(bytes<=LARGEST_UNDERRUN_PROT, "constant LARGEST_UNDERRUN_PROT is too small");
         NIns *pc = _nIns;
-        NIns *top = _inExit ? this->exitStart : this->codeStart;
+        NIns *top = codeStart;  // this may be in a normal code chunk or an exit code chunk
 
     #if PEDANTIC
         // pedanticTop is based on the last call to underrunProtect; any time we call
@@ -1677,10 +1696,8 @@ namespace nanojit
             if (pc - bytes - br_size < top) {
                 // really do need a page break
                 verbose_only(if (_logc->lcbits & LC_Assembly) outputf("newpage %p:", pc);)
-                if (_inExit)
-                    codeAlloc(exitStart, exitEnd, _nIns verbose_only(, exitBytes));
-                else
-                    codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
+                // This may be in a normal code chunk or an exit code chunk.
+                codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
             }
             // now emit the jump, but make sure we won't need another page break.
             // we're pedantic, but not *that* pedantic.
@@ -1691,11 +1708,9 @@ namespace nanojit
     #else
         if (pc - bytes < top) {
             verbose_only(if (_logc->lcbits & LC_Assembly) outputf("newpage %p:", pc);)
-            if (_inExit)
-                codeAlloc(exitStart, exitEnd, _nIns verbose_only(, exitBytes));
-            else
-                codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
-            // this jump will call underrunProtect again, but since we're on a new
+            // This may be in a normal code chunk or an exit code chunk.
+            codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
+            // This jump will call underrunProtect again, but since we're on a new
             // page, nothing will happen.
             JMP(pc);
         }
@@ -1707,6 +1722,7 @@ namespace nanojit
     }
 
     void Assembler::nativePageSetup() {
+        NanoAssert(!_inExit);
         if (!_nIns) {
             codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
             IF_PEDANTIC( pedanticTop = _nIns; )
@@ -1730,22 +1746,28 @@ namespace nanojit
 
     void Assembler::asm_jtbl(LIns* ins, NIns** table)
     {
-        // exclude R12 becuase ESP and R12 cannot be used as an index
+        // exclude R12 because ESP and R12 cannot be used as an index
         // (index=100 in SIB means "none")
         Register indexreg = findRegFor(ins->oprnd1(), GpRegs & ~rmask(R12));
         if (isS32((intptr_t)table)) {
             // table is in low 2GB or high 2GB, can use absolute addressing
             // jmpq [indexreg*8 + table]
-            emitrxb_imm(X64_jmpx, (Register)0, indexreg, (Register)5, (int32_t)(uintptr_t)table);
+            JMPX(indexreg, table);
         } else {
             // don't use R13 for base because we want to use mod=00, i.e. [index*8+base + 0]
-            Register tablereg = registerAlloc(GpRegs & ~(rmask(indexreg)|rmask(R13)));
-            _allocator.addFree(tablereg);
+            Register tablereg = registerAllocTmp(GpRegs & ~(rmask(indexreg)|rmask(R13)));
             // jmp [indexreg*8 + tablereg]
-            emitxb(X64_jmpxb, indexreg, tablereg);
+            JMPXB(indexreg, tablereg);
             // tablereg <- #table
             asm_quad(tablereg, (uint64_t)table);
         }
+    }
+
+    void Assembler::swapCodeChunks() {
+        SWAP(NIns*, _nIns, _nExitIns);
+        SWAP(NIns*, codeStart, exitStart);
+        SWAP(NIns*, codeEnd, exitEnd);
+        verbose_only( SWAP(size_t, codeBytes, exitBytes); )
     }
 
 } // namespace nanojit

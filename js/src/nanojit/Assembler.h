@@ -77,9 +77,9 @@ namespace nanojit
     //   values) contains a pointer to the instruction defining the spilled
     //   value.
     //
-    // - Each LIns has a Reservation which includes a stack index, 'arIndex'.
-    //   Combined with AR, it provides a two-way mapping between stack slots
-    //   and LIR instructions.
+    // - Each LIns has a "reservation" which includes a stack index,
+    //   'arIndex'.  Combined with AR, it provides a two-way mapping between
+    //   stack slots and LIR instructions.
     //
     // - Invariant: the two-way mapping between active stack slots and their
     //   defining/allocating instructions must hold in both directions and be
@@ -90,14 +90,14 @@ namespace nanojit
     //     for instructions producing 32-bit values, 2 slots for instructions
     //     producing 64-bit values, N slots for LIR_ialloc).
     //
-    //   * An LIns named by 'entry[i]' must have an in-use Reservation with
+    //   * An LIns named by 'entry[i]' must have an in-use reservation with
     //     arIndex==i (or an 'i' indexing the start of the same contiguous
     //     sequence that 'entry[i]' belongs to).
     //
-    //   * And vice versa:  an LIns with an in-use Reservation with arIndex==i
+    //   * And vice versa:  an LIns with an in-use reservation with arIndex==i
     //     must be named by 'entry[i]'.
     //
-    //   * If an LIns's Reservation names has arIndex==0 then LIns should not
+    //   * If an LIns's reservation names has arIndex==0 then LIns should not
     //     be in 'entry[]'.
     //
     struct AR
@@ -189,27 +189,41 @@ namespace nanojit
         friend class VerboseBlockReader;
         public:
             #ifdef NJ_VERBOSE
-            static char  outline[8192];
-            static char  outlineEOL[512];  // string to be added to the end of the line
-            static char* outputAlign(char* s, int col);
-
-            void outputForEOL(const char* format, ...);
-            void output(const char* s);
-            void outputf(const char* format, ...);
-            void output_asm(const char* s);
-
-            bool outputAddr, vpad[3];  // if outputAddr=true then next asm instr. will include address in output
-            void printActivationState(const char* what);
-
+            // Log controller object.  Contains what-stuff-should-we-print
+            // bits, and a sink function for debug printing.
+            LogControl* _logc;
+            // Buffer for holding text as we generate it in reverse order.
             StringList* _outputCache;
 
-            // Log controller object.  Contains what-stuff-should-we-print
-            // bits, and a sink function for debug printing
-            LogControl* _logc;
-            size_t codeBytes;
-            size_t exitBytes;
+            // Outputs the format string and 'outlineEOL', and resets
+            // 'outline' and 'outlineEOL'.
+            void outputf(const char* format, ...);
+
+        private:
+            // Buffer used in most of the output function.  It must big enough
+            // to hold both the output line and the 'outlineEOL' buffer, which
+            // is concatenated onto 'outline' just before it is printed.
+            static char  outline[8192];
+            // Buffer used to hold extra text to be printed at the end of some
+            // lines.
+            static char  outlineEOL[512];
+            // If outputAddr=true the next asm instruction output will
+            // be prepended with its address.
+            bool outputAddr, vpad[3];
+
+            // Outputs 'outline' and 'outlineEOL', and resets them both.
+            // Output goes to '_outputCache' if it's non-NULL, or is printed
+            // directly via '_logc'.
+            void output();
+
+            // Sets 'outlineEOL'.
+            void setOutputForEOL(const char* format, ...);
+
+            void printRegState();
+            void printActivationState();
             #endif // NJ_VERBOSE
 
+        public:
             #ifdef VTUNE
             avmplus::CodegenLIR *cgen;
             #endif
@@ -250,7 +264,8 @@ namespace nanojit
             void        arFree(uint32_t idx);
             void        arReset();
 
-            Register    registerAlloc(RegisterMask allow);
+            Register    registerAlloc(LIns* ins, RegisterMask allow);
+            Register    registerAllocTmp(RegisterMask allow);
             void        registerResetAll();
             void        evictAllActiveRegs();
             void        evictSomeActiveRegs(RegisterMask regs);
@@ -263,8 +278,7 @@ namespace nanojit
             Register    getBaseReg(LOpcode op, LIns *i, int &d, RegisterMask allow);
             int         findMemFor(LIns* i);
             Register    findRegFor(LIns* i, RegisterMask allow);
-            void        findRegFor2(RegisterMask allow, LIns* ia, Reservation* &resva, LIns *ib, Reservation* &resvb);
-            void        findRegFor2b(RegisterMask allow, LIns* ia, Register &ra, LIns *ib, Register &rb);
+            void        findRegFor2(RegisterMask allow, LIns* ia, Register &ra, LIns *ib, Register &rb);
             Register    findSpecificRegFor(LIns* i, Register r);
             Register    findSpecificRegForUnallocated(LIns* i, Register r);
             Register    prepResultReg(LIns *i, RegisterMask allow);
@@ -281,11 +295,6 @@ namespace nanojit
                 return r != UnknownReg;
             }
 
-            Reservation* getresv(LIns *x) {
-                Reservation* r = x->resv();
-                return r->used ? r : 0;
-            }
-
             Allocator&          alloc;              // for items with same lifetime as this Assembler
             CodeAlloc&          _codeAlloc;         // for code we generate
             Allocator&          _dataAlloc;         // for data used by generated code
@@ -294,10 +303,30 @@ namespace nanojit
             NInsMap             _patches;
             LabelStateMap       _labels;
 
-            NIns        *codeStart, *codeEnd;       // current block we're adding code to
-            NIns        *exitStart, *exitEnd;       // current block for exit stubs
-            NIns*       _nIns;          // current native instruction
-            NIns*       _nExitIns;      // current instruction in exit fragment page
+            // We generate code into two places:  normal code chunks, and exit
+            // code chunks (for exit stubs).  We use a hack to avoid having to
+            // parameterise the code that does the generating -- we let that
+            // code assume that it's always generating into a normal code
+            // chunk (most of the time it is), and when we instead need to
+            // generate into an exit code chunk, we set _inExit to true and
+            // temporarily swap all the code/exit variables below (using
+            // swapCodeChunks()).  Afterwards we swap them all back and set
+            // _inExit to false again.
+            bool        _inExit, vpad2[3];
+            NIns        *codeStart, *codeEnd;   // current normal code chunk
+            NIns        *exitStart, *exitEnd;   // current exit code chunk
+            NIns*       _nIns;                  // current instruction in current normal code chunk
+            NIns*       _nExitIns;              // current instruction in current exit code chunk
+        #ifdef NJ_VERBOSE
+        public:
+            size_t      codeBytes;              // bytes allocated in normal code chunks
+            size_t      exitBytes;              // bytes allocated in exit code chunks
+        #endif
+
+        private:
+            #define     SWAP(t, a, b)   do { t tmp = a; a = b; b = tmp; } while (0)
+            void        swapCodeChunks();
+
             NIns*       _epilogue;
             AssmError   _err;           // 0 = means assemble() appears ok, otherwise it failed
         #if PEDANTIC
@@ -307,18 +336,14 @@ namespace nanojit
             AR          _activation;
             RegAlloc    _allocator;
 
-            bool        _inExit, vpad2[3];
-
             verbose_only( void asm_inc_m32(uint32_t*); )
-            void        asm_setcc(Register res, LIns *cond);
-            NIns *      asm_jmpcc(bool brOnFalse, LIns *cond, NIns *target);
             void        asm_mmq(Register rd, int dd, Register rs, int ds);
             NIns*       asm_exit(LInsp guard);
             NIns*       asm_leave_trace(LInsp guard);
             void        asm_qjoin(LIns *ins);
             void        asm_store32(LIns *val, int d, LIns *base);
             void        asm_store64(LIns *val, int d, LIns *base);
-            void        asm_restore(LInsp, Reservation*, Register);
+            void        asm_restore(LInsp, Register);
             void        asm_load(int d, Register r);
             void        asm_spilli(LInsp i, bool pop);
             void        asm_spill(Register rr, int d, bool pop, bool quad);
@@ -340,7 +365,7 @@ namespace nanojit
             void        asm_i2f(LInsp ins);
             void        asm_u2f(LInsp ins);
             void        asm_promote(LIns *ins);
-            Register    asm_prep_fcall(Reservation *rR, LInsp ins);
+            Register    asm_prep_fcall(LInsp ins);
             void        asm_nongp_copy(Register r, Register s);
             void        asm_call(LInsp);
             Register    asm_binop_rhs_reg(LInsp ins);
@@ -373,20 +398,15 @@ namespace nanojit
 
             // since we generate backwards the depth is negative
             inline void fpu_push() {
-                debug_only( ++_fpuStkDepth; /*char foo[8]= "FPUSTK0"; foo[6]-=_fpuStkDepth; output_asm(foo);*/ NanoAssert(_fpuStkDepth<=0); )
+                debug_only( ++_fpuStkDepth; NanoAssert(_fpuStkDepth<=0); )
             }
             inline void fpu_pop() {
-                debug_only( --_fpuStkDepth; /*char foo[8]= "FPUSTK0"; foo[6]-=_fpuStkDepth; output_asm(foo);*/ NanoAssert(_fpuStkDepth<=0); )
+                debug_only( --_fpuStkDepth; NanoAssert(_fpuStkDepth<=0); )
             }
 #endif
             avmplus::Config &config;
     };
 
-    inline int32_t disp(Reservation* r)
-    {
-        // even on 64bit cpu's, we allocate stack area in 4byte chunks
-        return stack_direction(4 * int32_t(r->arIndex));
-    }
     inline int32_t disp(LIns* ins)
     {
         // even on 64bit cpu's, we allocate stack area in 4byte chunks

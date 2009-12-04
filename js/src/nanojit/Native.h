@@ -64,14 +64,14 @@ namespace nanojit {
         // flags; upper bits reserved
         LIR64    = 0x40,            // result is double or quad
 
-#define OPDEF(op, number, args, repkind) \
+#define OPDEF(op, number, repkind) \
         LIR_##op = (number),
-#define OPDEF64(op, number, args, repkind) \
+#define OPD64(op, number, repkind) \
         LIR_##op = ((number) | LIR64),
 #include "LIRopcode.tbl"
         LIR_sentinel,
 #undef OPDEF
-#undef OPDEF64
+#undef OPD64
 
 #ifdef NANOJIT_64BIT
 #  define PTR_SIZE(a,b)  b
@@ -127,6 +127,15 @@ namespace nanojit {
 
 namespace nanojit {
 
+    inline Register nextreg(Register r) {
+        return Register(r+1);
+    }
+
+    inline Register prevreg(Register r) {
+        return Register(r-1);
+    }
+
+
     class Fragment;
     struct SideExit;
     struct SwitchInfo;
@@ -172,6 +181,10 @@ namespace nanojit {
         #define gpn(r)                    regNames[(r)]
         #define fpn(r)                    regNames[(r)]
     #elif defined(NJ_VERBOSE)
+        // Used for printing native instructions.  Like Assembler::outputf(),
+        // but only outputs if LC_Assembly is set.  Also prepends the output
+        // with the address of the current native instruction if
+        // LC_NoCodeAddrs is not set.  
         #define asm_output(...) do { \
             counter_increment(native); \
             if (_logc->lcbits & LC_Assembly) { \
@@ -181,9 +194,7 @@ namespace nanojit {
                 else \
                    VMPI_memset(outline, (int)' ', 10+3); \
                 sprintf(&outline[13], ##__VA_ARGS__); \
-                Assembler::outputAlign(outline, 35); \
-                _allocator.formatRegisters(outline, _thisfrag); \
-                Assembler::output_asm(outline); \
+                output(); \
                 outputAddr=(_logc->lcbits & LC_NoCodeAddrs) ? false : true;    \
             } \
         } while (0) /* no semi */

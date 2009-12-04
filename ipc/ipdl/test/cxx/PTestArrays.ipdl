@@ -37,7 +37,7 @@ child:
     Start();
 
 parent:
-    ~PTestArraysSub();
+    __delete__();
 
     sync Test1(int[] i1)
         returns (int[] o1);
@@ -84,6 +84,24 @@ parent:
 
     sync Test10(Unions[] i1)
         returns (Unions[] o1);
+
+
+state START:
+    send Start goto TEST1;
+
+state TEST1:   recv Test1 goto TEST2;
+state TEST2:   recv Test2 goto TEST3;
+state TEST3:   recv Test3 goto TEST4;
+state TEST4:   recv Test4 goto TEST5;
+state TEST5:   recv Test5 goto TEST6;
+state TEST6:   recv Test6 goto TEST7;
+state TEST7:   recv Test7 goto TEST8;
+state TEST8:   recv Test8 goto TEST9;
+state TEST9:   recv Test9 goto TEST10;
+state TEST10:  recv Test10 goto DEAD;
+
+state DEAD:
+    recv __delete__;
 };
 
 } // namespace _ipdltest

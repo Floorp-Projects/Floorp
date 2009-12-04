@@ -44,6 +44,7 @@
 #include "mozIStorageConnection.h"
 #include "mozIStorageValueArray.h"
 #include "mozIStorageStatement.h"
+#include "nsToolkitCompsCID.h"
 
 // Favicons bigger than this size should not be saved to the db to avoid
 // bloating it with large image blobs.
@@ -60,6 +61,15 @@ class nsFaviconService : public nsIFaviconService
 {
 public:
   nsFaviconService();
+
+  /**
+   * Obtains the service's object.
+   */
+  static nsFaviconService * GetSingleton();
+
+  /**
+   * Initializes the service's object.  This should only be called once.
+   */
   nsresult Init();
 
   // called by nsNavHistory::Init
@@ -69,21 +79,14 @@ public:
    * Returns a cached pointer to the favicon service for consumers in the
    * places directory.
    */
-  static nsFaviconService* GetFaviconService()
+  static nsFaviconService * GetFaviconService()
   {
-    if (! gFaviconService) {
-      // note that we actually have to set the service to a variable here
-      // because the work in do_GetService actually happens during assignment >:(
-      nsresult rv;
-      nsCOMPtr<nsIFaviconService> serv(do_GetService("@mozilla.org/browser/favicon-service;1", &rv));
-      NS_ENSURE_SUCCESS(rv, nsnull);
-
-      // our constructor should have set the static variable. If it didn't,
-      // something is wrong.
-      NS_ASSERTION(gFaviconService, "Favicon service creation failed");
+    if (!gFaviconService) {
+      nsCOMPtr<nsIFaviconService> serv =
+        do_GetService(NS_FAVICONSERVICE_CONTRACTID);
+      NS_ENSURE_TRUE(serv, nsnull);
+      NS_ASSERTION(gFaviconService, "Should have static instance pointer now");
     }
-    // the service manager will keep the pointer to our service around, so
-    // this should always be valid even if nobody currently has a reference.
     return gFaviconService;
   }
 
@@ -143,7 +146,7 @@ private:
   nsCOMPtr<mozIStorageStatement> mDBUpdateIcon;
   nsCOMPtr<mozIStorageStatement> mDBSetPageFavicon;
 
-  static nsFaviconService* gFaviconService;
+  static nsFaviconService *gFaviconService;
 
   /**
    * A cached URI for the default icon. We return this a lot, and don't want to

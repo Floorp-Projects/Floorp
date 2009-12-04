@@ -414,11 +414,15 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
   // true:
   //
   // 1) The channel type is application/octet-stream and we have a
-  //    type hint
+  //    type hint and the type hint is not a document type.
   // 2) Our type hint is a type that we support with a plugin.
 
   if ((channelType.EqualsASCII(APPLICATION_OCTET_STREAM) && 
-       !mContentType.IsEmpty()) ||
+       !mContentType.IsEmpty() &&
+       GetTypeOfContent(mContentType) != eType_Document) ||
+      // Need to check IsSupportedPlugin() in addition to GetTypeOfContent()
+      // because otherwise the default plug-in's catch-all behavior would
+      // confuse things.
       (IsSupportedPlugin(mContentType) && 
        GetTypeOfContent(mContentType) == eType_Plugin)) {
     // Set the type we'll use for dispatch on the channel.  Otherwise we could

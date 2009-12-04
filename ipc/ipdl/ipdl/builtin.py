@@ -56,6 +56,19 @@ Types = (
     'intptr_t',
     'uintptr_t',
 
+    # NSPR types
+    'PRBool',
+    'PRPackedBool'
+    'PRInt8',
+    'PRUint8',
+    'PRInt16',
+    'PRUint16',
+    'PRInt32',
+    'PRUint32',
+    'PRInt64',
+    'PRUint64',
+    'PRSize',
+
     # Mozilla types: "less" standard things we know how serialize/deserialize
     'nsresult',
     'nsString',
@@ -67,6 +80,7 @@ Includes = (
     'base/basictypes.h',
     'prtime.h',
     'nscore.h',
+    'IPCMessageStart.h',
     'IPC/IPCMessageUtils.h',
     'nsStringGlue.h',
     'nsTArray.h',

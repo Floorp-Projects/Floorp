@@ -75,6 +75,15 @@ PluginStreamParent::AnswerNPN_Write(const Buffer& data, int32_t* written)
   return true;
 }
 
+bool
+PluginStreamParent::Answer__delete__(const NPError& reason,
+                                     const bool& artificial)
+{
+  if (!artificial)
+    this->NPN_DestroyStream(reason);
+  return true;
+}
+
 void
 PluginStreamParent::NPN_DestroyStream(NPReason reason)
 {

@@ -862,7 +862,7 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, jsval *vp);
  * Check whether it is OK to assign an undeclared property of the global
  * object at the current script PC.
  */
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 js_CheckUndeclaredVarAssignment(JSContext *cx);
 
 extern JSBool

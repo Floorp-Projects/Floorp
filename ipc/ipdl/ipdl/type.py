@@ -32,9 +32,10 @@
 
 import os, sys
 
-from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, State, TypeSpec, UsingStmt, Visitor, ASYNC, SYNC, RPC, IN, OUT, INOUT, ANSWER, CALL, RECV, SEND
+from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, State, TransitionStmt, TypeSpec, UsingStmt, Visitor, ASYNC, SYNC, RPC, IN, OUT, INOUT, ANSWER, CALL, RECV, SEND
 import ipdl.builtin as builtin
 
+_DELETE_MSG = '__delete__'
 
 class TypeVisitor:
     def defaultVisit(self, node, *args):
@@ -76,6 +77,9 @@ class TypeVisitor:
 
     def visitArrayType(self, a, *args):
         a.basetype.accept(self, *args)
+
+    def visitShmemType(self, s, *args):
+        pass
 
 
 class Type:
@@ -173,6 +177,7 @@ class IPDLType(Type):
     def isActor(self): return False
     def isUnion(self): return False
     def isArray(self): return False
+    def isShmem(self): return False
 
     def isAsync(self): return self.sendSemantics is ASYNC
     def isSync(self): return self.sendSemantics is SYNC
@@ -189,10 +194,15 @@ class IPDLType(Type):
                 or o.isSync() and self.isRpc())
 
 class StateType(IPDLType):
-    def __init__(self, start=False):
+    def __init__(self, protocol, name, start=False):
+        self.protocol = protocol
+        self.name = name
         self.start = start
-    def isState(self):
-        return True
+    def isState(self): return True
+    def name(self):
+        return self.name
+    def fullname(self):
+        return self.name()
 
 class MessageType(IPDLType):
     def __init__(self, sendSemantics, direction,
@@ -221,11 +231,12 @@ class MessageType(IPDLType):
         return self.isCtor() or self.isDtor()
 
 class ProtocolType(IPDLType):
-    def __init__(self, qname, sendSemantics):
+    def __init__(self, qname, sendSemantics, stateless=False):
         self.qname = qname
         self.sendSemantics = sendSemantics
         self.manager = None
         self.manages = [ ]
+        self.stateless = stateless
     def isProtocol(self): return True
 
     def name(self):
@@ -254,9 +265,10 @@ class ProtocolType(IPDLType):
         return not self.isManaged()
 
 class ActorType(IPDLType):
-    def __init__(self, protocol, state=None):
+    def __init__(self, protocol, state=None, nullable=0):
         self.protocol = protocol
         self.state = state
+        self.nullable = nullable
     def isActor(self): return True
 
     def name(self):
@@ -281,6 +293,16 @@ class ArrayType(IPDLType):
     def name(self): return self.basetype.name() +'[]'
     def fullname(self): return self.basetype.fullname() +'[]'
 
+class ShmemType(IPDLType):
+    def __init__(self, qname):
+        self.qname = qname
+    def isShmem(self): return True
+
+    def name(self):
+        return self.qname.baseid
+    def fullname(self):
+        return str(self.qname)
+
 
 def iteractortypes(type):
     """Iterate over any actor(s) buried in |type|."""
@@ -300,6 +322,17 @@ def iteractortypes(type):
 def hasactor(type):
     """Return true iff |type| is an actor or has one buried within."""
     for _ in iteractortypes(type): return True
+    return False
+
+def hasshmem(type):
+    """Return true iff |type| is shmem or has it buried within."""
+    class found: pass
+    class findShmem(TypeVisitor):
+        def visitShmemType(self, s):  raise found()
+    try:
+        type.accept(findShmem())
+    except found:
+        return True
     return False
 
 ##--------------------
@@ -416,7 +449,6 @@ With this information, it finally type checks the AST.'''
         if (len(tu.protocol.startStates)
             and not runpass(CheckStateMachine(self.errors))):
             return False
-
         return True
 
     def reportErrors(self, errout):
@@ -447,18 +479,6 @@ class GatherDecls(TcheckVisitor):
         # currently being visited
         TcheckVisitor.__init__(self, None, errors)
         self.builtinUsing = builtinUsing
-
-    def declareBuiltins(self):
-        for using in self.builtinUsing:
-            fullname = str(using.type)
-            if using.type.basename() == fullname:
-                fullname = None
-            using.decl = self.declareLocalGlobal(
-                loc=using.loc,
-                type=BuiltinCxxType(using.type.spec),
-                shortname=using.type.basename(),
-                fullname=fullname)
-            self.symtab.declare(using.decl)
 
     def visitTranslationUnit(self, tu):
         # all TranslationUnits declare symbols in global scope
@@ -495,7 +515,8 @@ class GatherDecls(TcheckVisitor):
             fullname = str(qname)
         p.decl = self.declare(
             loc=p.loc,
-            type=ProtocolType(qname, p.sendSemantics),
+            type=ProtocolType(qname, p.sendSemantics,
+                              stateless=(0 == len(p.transitionStmts))),
             shortname=p.name,
             fullname=fullname)
 
@@ -524,6 +545,11 @@ class GatherDecls(TcheckVisitor):
 
 
     def visitProtocolInclude(self, pi):
+        if pi.tu is None:
+            self.error(
+                pi.loc,
+                "(type checking here will be unreliable because of an earlier error)")
+            return
         pi.tu.accept(self)
         self.symtab.declare(pi.tu.protocol.decl)
 
@@ -541,12 +567,7 @@ class GatherDecls(TcheckVisitor):
                 self.error(c.loc, "unknown component type `%s' of union `%s'",
                            str(c), ud.name)
                 continue
-            ctype = cdecl.type
-            if ctype.isIPDL() and ctype.isProtocol():
-                ctype = ActorType(ctype)
-            if c.array:
-                ctype = ArrayType(ctype)
-            components.append(ctype)
+            components.append(self._canonicalType(cdecl.type, c))
 
         ud.decl = self.declare(
             loc=ud.loc,
@@ -558,9 +579,13 @@ class GatherDecls(TcheckVisitor):
         fullname = str(using.type)
         if using.type.basename() == fullname:
             fullname = None
+        if fullname == 'mozilla::ipc::Shmem':
+            ipdltype = ShmemType(using.type.spec)
+        else:
+            ipdltype = ImportedCxxType(using.type.spec)
         using.decl = self.declare(
             loc=using.loc,
-            type=ImportedCxxType(using.type.spec),
+            type=ipdltype,
             shortname=using.type.basename(),
             fullname=fullname)
 
@@ -586,16 +611,22 @@ class GatherDecls(TcheckVisitor):
             msg.accept(self)
         del self.currentProtocolDecl
 
+        if not p.decl.type.isToplevel():
+            dtordecl = self.symtab.lookup(_DELETE_MSG)
+            if not dtordecl:
+                self.error(
+                    p.loc,
+                    "destructor declaration `delete(...)' required for managed protocol `%s'",
+                    p.name)
+
         for managed in p.managesStmts:
             mgdname = managed.name
             ctordecl = self.symtab.lookup(mgdname +'Constructor')
-            dtordecl = self.symtab.lookup(mgdname +'Destructor')
 
-            if not(ctordecl and dtordecl
-                   and ctordecl.type.isCtor() and dtordecl.type.isDtor()):
+            if not (ctordecl and ctordecl.type.isCtor()):
                 self.error(
                     managed.loc,
-                    "constructor and destructor declarations are required for managed protocol `%s' (managed by protocol `%s')",
+                    "constructor declaration required for managed protocol `%s' (managed by protocol `%s')",
                     mgdname, p.name)
 
         p.states = { }
@@ -605,23 +636,33 @@ class GatherDecls(TcheckVisitor):
                               if ts.state.start ]
             if 0 == len(p.startStates):
                 p.startStates = [ p.transitionStmts[0] ]
+
+        # declare implicit "any" and "dead" states
+        self.declare(loc=State.ANY.loc,
+                     type=StateType(p.decl.type, State.ANY.name, start=False),
+                     progname=State.ANY.name)
+        self.declare(loc=State.DEAD.loc,
+                     type=StateType(p.decl.type, State.DEAD.name, start=False),
+                     progname=State.DEAD.name)
                 
         # declare each state before decorating their mention
         for trans in p.transitionStmts:
             p.states[trans.state] = trans
             trans.state.decl = self.declare(
                 loc=trans.state.loc,
-                type=StateType(trans.state.start),
+                type=StateType(p.decl.type, trans.state, trans.state.start),
                 progname=trans.state.name)
-
-        # declare implicit "any" state
-        self.declare(loc=State.ANY.loc,
-                     type=StateType(start=False),
-                     progname=State.ANY.name)
 
         for trans in p.transitionStmts:
             self.seentriggers = set()
             trans.accept(self)
+
+        if not (p.decl.type.stateless
+                or (p.decl.type.isToplevel()
+                    and None is self.symtab.lookup(_DELETE_MSG))):
+            # add a special state |state DEAD: null goto DEAD;|
+            deadtrans = TransitionStmt.makeNullStmt(State.DEAD)
+            p.states[State.DEAD] = deadtrans           
 
         # visit the message decls once more and resolve the state names
         # attached to actor params and returns
@@ -657,7 +698,7 @@ class GatherDecls(TcheckVisitor):
                     statename,
                     statedecl.type.typename())
             else:
-                actortype.state = statedecl
+                actortype.state = statedecl.type
 
         for msg in p.messageDecls:
             for iparam in msg.inParams:
@@ -732,23 +773,7 @@ class GatherDecls(TcheckVisitor):
         isdtor = False
         cdtype = None
 
-        if '~' == msgname[0]:
-            # it's a destructor.  look up the constructed type
-            msgname = msgname[1:]
-
-            decl = self.symtab.lookup(msgname)
-            if decl is None:
-                self.error(loc, "type `%s' has not been declared", msgname)
-            elif not decl.type.isProtocol():
-                self.error(loc, "destructor for non-protocol type `%s'",
-                           msgname)
-            else:
-                msgname += 'Destructor'
-                isdtor = True
-                cdtype = decl.type
-
         decl = self.symtab.lookup(msgname)
-
         if decl is not None and decl.type.isProtocol():
             # probably a ctor.  we'll check validity later.
             msgname += 'Constructor'
@@ -758,7 +783,11 @@ class GatherDecls(TcheckVisitor):
             self.error(loc, "message name `%s' already declared as `%s'",
                        msgname, decl.type.typename())
             # if we error here, no big deal; move on to find more
-        decl = None
+
+        if _DELETE_MSG == msgname:
+            isdtor = True
+            cdtype = self.currentProtocolDecl.type
+
 
         # enter message scope
         self.symtab.enterScope(md)
@@ -780,15 +809,8 @@ class GatherDecls(TcheckVisitor):
                     ptname, msgname)
                 return None
             else:
-                if ptdecl.type.isIPDL() and ptdecl.type.isProtocol():
-                    ptype = ActorType(ptdecl.type,
-                                      param.typespec.state)
-                else:
-                    ptype = ptdecl.type
-
-                if param.typespec.array:
-                    ptype = ArrayType(ptype)
-                
+                ptype = self._canonicalType(ptdecl.type, param.typespec,
+                                            chmodallowed=1)
                 return self.declare(
                     loc=ploc,
                     type=ptype,
@@ -832,6 +854,9 @@ class GatherDecls(TcheckVisitor):
         self.seentriggers.add(mname)
         
         mdecl = self.symtab.lookup(mname)
+        if mdecl.type.isIPDL() and mdecl.type.isProtocol():
+            mdecl = self.symtab.lookup(mname +'Constructor')
+        
         if mdecl is None:
             self.error(loc, "message `%s' has not been declared", mname)
         elif not mdecl.type.isMessage():
@@ -864,6 +889,43 @@ class GatherDecls(TcheckVisitor):
 
         t.toStates = set(t.toStates)
 
+
+    def _canonicalType(self, itype, typespec, chmodallowed=0):
+        loc = typespec.loc
+        
+        if itype.isIPDL():
+            if itype.isProtocol():
+                itype = ActorType(itype,
+                                  state=typespec.state,
+                                  nullable=typespec.nullable)
+            if chmodallowed and itype.isShmem():
+                itype = ShmemChmodType(
+                    itype,
+                    myChmod=typespec.myChmod,
+                    otherChmod=typespec.otherChmod)
+
+        if ((typespec.myChmod or typespec.otherChmod)
+            and not (itype.isIPDL() and (itype.isShmem() or itype.isChmod()))):
+            self.error(
+                loc,
+                "fine-grained access controls make no sense for type `%s'",
+                itype.name())
+
+        if not chmodallowed and (typespec.myChmod or typespec.otherChmod):
+            self.error(loc, "fine-grained access controls not allowed here")
+
+        if typespec.nullable and not (itype.isIPDL() and itype.isActor()):
+            self.error(
+                loc,
+                "`nullable' qualifier for type `%s' makes no sense",
+                itype.name())
+
+        if typespec.array:
+            itype = ArrayType(itype)
+
+        return itype
+
+
 ##-----------------------------------------------------------------------------
 
 class CheckTypes(TcheckVisitor):
@@ -889,6 +951,17 @@ class CheckTypes(TcheckVisitor):
                 p.decl.loc,
                 "protocol `%s' requires more powerful send semantics than its manager `%s' provides",
                 pname, mgrname)
+
+        # XXX currently we don't require a delete() message of top-level
+        # actors.  need to let experience guide this decision
+        if not p.decl.type.isToplevel():
+            for md in p.messageDecls:
+                if _DELETE_MSG == md.name: break
+            else:
+                self.error(
+                    p.decl.loc,
+                   "managed protocol `%s' requires a `delete()' message to be declared",
+                    p.name)
 
         return Visitor.visitProtocol(self, p)
         
@@ -961,10 +1034,10 @@ class CheckTypes(TcheckVisitor):
                        "asynchronous message `%s' declares return values",
                        mname)
 
-        if (mtype.isCtor() or mtype.isDtor()) and not ptype.isManagerOf(mtype.constructedType()):
+        if mtype.isCtor() and not ptype.isManagerOf(mtype.constructedType()):
             self.error(
                 loc,
-                "ctor/dtor for protocol `%s', which is not managed by protocol `%s'", 
+                "ctor for protocol `%s', which is not managed by protocol `%s'", 
                 mname[:-len('constructor')], pname)
 
 
@@ -974,7 +1047,7 @@ class CheckTypes(TcheckVisitor):
         loc = t.loc
         impliedDirection, impliedSems = {
             SEND: [ OUT, _YNC ], RECV: [ IN, _YNC ],
-            CALL: [ OUT, RPC ],  ANSWER: [ IN, RPC ]
+            CALL: [ OUT, RPC ],  ANSWER: [ IN, RPC ],
          } [t.trigger]
         
         if (OUT is impliedDirection and t.msg.type.isIn()
@@ -1205,18 +1278,30 @@ direction as trigger |t|'''
                     return
 
     def checkReachability(self, p):
-        visited = set()         # set(State)
-        def explore(ts):
+        def explore(ts, visited):
             if ts.state in visited:
                 return
             visited.add(ts.state)
             for outedge in ts.transitions:
                 for toState in outedge.toStates:
-                    explore(p.states[toState])
+                    explore(p.states[toState], visited)
 
+        checkfordelete = (State.DEAD in p.states)
+
+        allvisited = set()         # set(State)
         for root in p.startStates:
-            explore(root)
-        for ts in p.transitionStmts:
-            if ts.state not in visited:
-                self.error(ts.loc, "unreachable state `%s' in protocol `%s'",
+            visited = set()
+
+            explore(root, visited)
+            allvisited.update(visited)
+
+            if checkfordelete and State.DEAD not in visited:
+                self.error(
+                    root.loc,
+                    "when starting from state `%s', actors of protocol `%s' cannot be deleted", root.state.name, p.name)
+
+        for ts in p.states.itervalues():
+            if ts.state is not State.DEAD and ts.state not in allvisited:
+                self.error(ts.loc,
+                           "unreachable state `%s' in protocol `%s'",
                            ts.state.name, p.name)

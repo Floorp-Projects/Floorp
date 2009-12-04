@@ -5,6 +5,6 @@ script regress-349326.js
 script regress-349331.js
 script regress-380237-01.js
 script regress-380237-02.js
-skip script regress-380237-03.js # obsolete test
-skip script regress-380237-04.js # obsolete test
+script regress-380237-03.js
+skip script regress-380237-04.js # obsolete test, need to remove minor failures to reenable.
 script regress-384991.js

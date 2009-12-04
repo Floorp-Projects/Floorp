@@ -41,11 +41,19 @@
 #define mozilla_ipc_ProtocolUtils_h 1
 
 #include "base/process.h"
+#include "base/process_util.h"
 #include "chrome/common/ipc_message_utils.h"
 
 #include "prenv.h"
 
-#include "mozilla/ipc/RPCChannel.h"
+
+// WARNING: this takes into account the private, special-message-type
+// enum in ipc_channel.h.  They need to be kept in sync.
+namespace {
+enum {
+    GOODBYE_MESSAGE_TYPE       = kuint16max - 1,
+};
+}
 
 namespace mozilla {
 namespace ipc {
@@ -63,6 +71,13 @@ template<class ListenerT>
 class /*NS_INTERFACE_CLASS*/ IProtocolManager
 {
 public:
+    enum ActorDestroyReason {
+        Deletion,
+        AncestorDeletion,
+        NormalShutdown,
+        AbnormalShutdown
+    };
+
     typedef base::ProcessHandle ProcessHandle;
 
     virtual int32 Register(ListenerT*) = 0;
@@ -70,7 +85,7 @@ public:
     virtual ListenerT* Lookup(int32) = 0;
     virtual void Unregister(int32) = 0;
     // XXX odd duck, acknowledged
-    virtual ProcessHandle OtherProcess() = 0;
+    virtual ProcessHandle OtherProcess() const = 0;
 };
 
 
