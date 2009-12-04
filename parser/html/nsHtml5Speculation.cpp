@@ -39,9 +39,11 @@
 
 nsHtml5Speculation::nsHtml5Speculation(nsHtml5UTF16Buffer* aBuffer, 
                                        PRInt32 aStart, 
+                                       PRInt32 aStartLineNumber, 
                                        nsAHtml5TreeBuilderState* aSnapshot)
   : mBuffer(aBuffer)
   , mStart(aStart)
+  , mStartLineNumber(aStartLineNumber)
   , mSnapshot(aSnapshot)
 {
   MOZ_COUNT_CTOR(nsHtml5Speculation);

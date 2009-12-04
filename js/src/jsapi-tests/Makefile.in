@@ -49,6 +49,7 @@ CPPSRCS = \
   tests.cpp \
   selfTest.cpp \
   testContexts.cpp \
+  testDebugger.cpp \
   testDefineGetterSetterNonEnumerable.cpp \
   testIntString.cpp \
   testLookup.cpp \

@@ -1,0 +1,5 @@
+url-prefix ../../jsreftest.html?test=js1_8_1/strict/
+script 8.7.2.js
+script 12.2.1.js
+script generator-eval-arguments.js
+script let-block-eval-arguments.js

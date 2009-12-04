@@ -8154,7 +8154,7 @@ fi # COMPILE_ENVIRONMENT
 if test "$USE_FC_FREETYPE"; then
     if test "$COMPILE_ENVIRONMENT"; then
     	_SAVE_CPPFLAGS="$CPPFLAGS"
-    	CPPFLAGS="$CPPFLAGS $FT2_CFLAGS"
+    	CPPFLAGS="$CPPFLAGS $FT2_CFLAGS $XCFLAGS"
         AC_CHECK_HEADERS(fontconfig/fcfreetype.h, , 
             [AC_MSG_ERROR(Can't find header fontconfig/fcfreetype.h.)])
     	CPPFLAGS="$_SAVE_CPPFLAGS"
@@ -8446,7 +8446,16 @@ if test "$BUILD_CTYPES"; then
     if test -n "$CROSS_COMPILE"; then
       ac_configure_args="$ac_configure_args --build=$build --host=$target"
     fi
-    AC_OUTPUT_SUBDIRS(js/ctypes/libffi)
+    if test "$SOLARIS_SUNPRO_CC"; then
+      # Always use gcc for libffi on Solaris
+      old_cache_file=$cache_file
+      cache_file=js/ctypes/libffi/config.cache
+      ac_configure_args="$ac_configure_args CC=gcc"
+      AC_OUTPUT_SUBDIRS(js/ctypes/libffi)
+      cache_file=$old_cache_file
+    else
+      AC_OUTPUT_SUBDIRS(js/ctypes/libffi)
+    fi
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
   fi
 fi

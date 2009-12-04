@@ -757,8 +757,10 @@ nsHtml5StreamParser::ParseAvailableData()
         nsHtml5Speculation* speculation = 
           new nsHtml5Speculation(mFirstBuffer,
                                  mFirstBuffer->getStart(),
+                                 mTokenizer->getLineNumber(),
                                  mTreeBuilder->newSnapshot());
-        mTreeBuilder->AddSnapshotToScript(speculation->GetSnapshot());
+        mTreeBuilder->AddSnapshotToScript(speculation->GetSnapshot(), 
+                                          speculation->GetStartLineNumber());
         mTreeBuilder->Flush();
         if (NS_FAILED(NS_DispatchToMainThread(mExecutorFlusher))) {
           NS_WARNING("failed to dispatch executor flush event");
@@ -855,6 +857,7 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
       nsHtml5Speculation* speculation = mSpeculations.ElementAt(0);
       mFirstBuffer = speculation->GetBuffer();
       mFirstBuffer->setStart(speculation->GetStart());
+      mTokenizer->setLineNumber(speculation->GetStartLineNumber());
       nsHtml5UTF16Buffer* buffer = mFirstBuffer->next;
       while (buffer) {
         buffer->setStart(0);
@@ -863,7 +866,10 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
       
       mSpeculations.Clear(); // potentially a huge number of destructors 
                              // run here synchronously on the main thread...
-      
+
+      mTreeBuilder->flushCharacters(); // empty the pending buffer
+      mTreeBuilder->ClearOps(); // now get rid of the failed ops
+
       mTreeBuilder->SetOpSink(mExecutor->GetStage());
       mExecutor->StartReadingFromStage();
       mSpeculating = PR_FALSE;

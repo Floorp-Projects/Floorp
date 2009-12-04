@@ -1549,6 +1549,13 @@ nsNPAPIPluginInstance::DefineJavaProperties()
   return NS_OK;
 }
 
+nsresult
+nsNPAPIPluginInstance::SetCached(PRBool aCache)
+{
+  mCached = aCache;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNPAPIPluginInstance::ShouldCache(PRBool* shouldCache)
 {
