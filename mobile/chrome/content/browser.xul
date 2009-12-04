@@ -274,7 +274,7 @@
         <button id="form-helper-previous" class="button-dark" label="&formHelper.previous;" command="cmd_formPrevious"/>
         <button id="form-helper-next" class="button-dark" label="&formHelper.next;" command="cmd_formNext"/>
         <spacer flex="1"/>
-        <button id="form-helper-close" class="button-dark" label="&formHelper.done;" command="cmd_formClose"/>
+        <toolbarbutton id="form-helper-close" class="close-button" command="cmd_formClose"/>
       </hbox>
     </vbox>
 
