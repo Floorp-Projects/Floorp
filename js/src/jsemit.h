@@ -257,7 +257,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_NO_SCRIPT_RVAL    0x4000 /* API caller does not want result value
                                         from global script */
 #define TCF_HAS_SHARPS        0x8000 /* source contains sharp defs or uses */
-#define TCF_FUN_PARAM_EVAL   0x10000 /* function has parameter named 'eval' */
 
 /*
  * Set when parsing a declaration-like destructuring pattern.  This
@@ -286,7 +285,10 @@ struct JSTreeContext {              /* tree context for semantic checks */
  * the use of 'with'.  See also TSF_STRICT_MODE_CODE,
  * JSScript::strictModeCode, and JSREPORT_STRICT_ERROR.
  */
-#define TCF_STRICT_MODE_CODE       0x40000
+#define TCF_STRICT_MODE_CODE 0x40000
+
+/* Function has parameter named 'eval'. */
+#define TCF_FUN_PARAM_EVAL 0x80000
 
 /*
  * Flags to propagate out of the blocks.

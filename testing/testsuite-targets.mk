@@ -96,9 +96,9 @@ crashtest:
 	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH))
 	$(CHECK_TEST_ERROR)
 
-jstestbrowser: EXTRA_TEST_ARGS += --extra-profile-file=$(topsrcdir)/js/src/tests/user.js
+jstestbrowser: TEST_PATH=js/src/tests/jstests.list
 jstestbrowser:
-	$(call RUN_REFTEST,$(topsrcdir)/js/src/tests/jstests.list)
+	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) --extra-profile-file=$(topsrcdir)/js/src/tests/user.js)
 	$(CHECK_TEST_ERROR)
 
 # Execute all xpcshell tests in the directories listed in the manifest.

@@ -16,10 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2007
+ * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Jim Blandy
+ * Contributor(s): Andreas Gal
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,17 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-522123.js';
+var gTestfile = 'regress-532491.js';
 //-----------------------------------------------------------------------------
-var BUGNUMBER = 522123;
-var summary = 'Indirect eval confuses scope chain';
+var BUGNUMBER = 466128;
+var summary = 'Assertion failure: staticLevel == script->staticLevel, at ../jsobj.cpp';
 var actual = '';
 var expect = '';
 
 
 //-----------------------------------------------------------------------------
-var x=1;
-
 test();
 //-----------------------------------------------------------------------------
 
@@ -54,17 +52,20 @@ function test()
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
-  expect = 1;
 
-  evil=eval;
-  let (x=2) {
-    actual = evil("x");
-  };
+  jit(false);
+  function f(foo) {
+    if (a % 2 == 1) {
+      try {
+        eval(foo);
+      } catch(e) {}
+    }
+  }
+  a = 1;
+  f("eval(\"x\")");
+  f("x");
 
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');
 }
-
-reportCompare(true, true);

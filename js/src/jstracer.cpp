@@ -3232,10 +3232,10 @@ GetUpvarStackOnTrace(JSContext* cx, uint32 upvarLevel, int32 slot, uint32 callDe
 // Parameters needed to access a value from a closure on trace.
 struct ClosureVarInfo
 {
-    jsid     id;
     uint32   slot;
+#ifdef DEBUG
     uint32   callDepth;
-    uint32   resolveFlags;
+#endif
 };
 
 /*
@@ -3286,13 +3286,15 @@ GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* 
     if (fp) {
         v = T::slots(fp)[slot];
     } else {
-        JS_ASSERT(cv->resolveFlags != JSRESOLVE_INFER);
-        JSAutoResolveFlags rf(cx, cv->resolveFlags);
-#ifdef DEBUG
-        JSBool rv =
-#endif
-            js_GetPropertyHelper(cx, call, cv->id, JSGET_METHOD_BARRIER, &v);
-        JS_ASSERT(rv);
+        /*
+         * Get the value from the object. We know we have a Call object, and
+         * that our slot index is fine, so don't monkey around with calling the
+         * property getter (which just looks in the slot) or calling
+         * js_GetReservedSlot. Just get the slot directly. Note the static
+         * asserts in jsfun.cpp which make sure Call objects use dslots.
+         */
+        JS_ASSERT(slot < T::slot_count(call));
+        v = T::slots(call)[slot];
     }
     JSTraceType type = getCoercedType(v);
     ValueToNative(cx, v, type, result);
@@ -3301,8 +3303,28 @@ GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* 
 
 struct ArgClosureTraits
 {
-    static inline uint32 adj_slot(JSStackFrame* fp, uint32 slot) { return fp->argc + slot; }
+    // Adjust our slot to point to the correct slot on the native stack.
+    // See also UpvarArgTraits.
+    static inline uint32 adj_slot(JSStackFrame* fp, uint32 slot) { return 2 + slot; }
+
+    // Get the right frame slots to use our slot index with.
+    // See also UpvarArgTraits.
     static inline jsval* slots(JSStackFrame* fp) { return fp->argv; }
+
+    // Get the right object slots to use our slot index with.
+    static inline jsval* slots(JSObject* obj) {
+        // We know Call objects use dslots.
+        return obj->dslots + slot_offset(obj);
+    }
+    // Get the offset of our object slots from the object's dslots pointer.
+    static inline uint32 slot_offset(JSObject* obj) {
+        return JSSLOT_START(&js_CallClass) +
+            CALL_CLASS_FIXED_RESERVED_SLOTS - JS_INITIAL_NSLOTS;
+    }
+    // Get the maximum slot index of this type that should be allowed
+    static inline uint16 slot_count(JSObject* obj) {
+        return js_GetCallObjectFunction(obj)->nargs;
+    }
 private:
     ArgClosureTraits();
 };
@@ -3315,8 +3337,25 @@ GetClosureArg(JSContext* cx, JSObject* callee, const ClosureVarInfo* cv, double*
 
 struct VarClosureTraits
 {
-    static inline uint32 adj_slot(JSStackFrame* fp, uint32 slot) { return slot; }
+    // See documentation on ArgClosureTraits for what these functions
+    // should be doing.
+    // See also UpvarVarTraits.
+    static inline uint32 adj_slot(JSStackFrame* fp, uint32 slot) { return 3 + fp->argc + slot; }
+
+    // See also UpvarVarTraits.
     static inline jsval* slots(JSStackFrame* fp) { return fp->slots; }
+    static inline jsval* slots(JSObject* obj) {
+        // We know Call objects use dslots.
+        return obj->dslots + slot_offset(obj);
+    }
+    static inline uint32 slot_offset(JSObject* obj) {
+        return JSSLOT_START(&js_CallClass) +
+            CALL_CLASS_FIXED_RESERVED_SLOTS - JS_INITIAL_NSLOTS +
+            js_GetCallObjectFunction(obj)->nargs;
+    }
+    static inline uint16 slot_count(JSObject* obj) {
+        return js_GetCallObjectFunction(obj)->u.i.nvars;
+    }
 private:
     VarClosureTraits();
 };
@@ -6657,7 +6696,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
                       op == JSOP_GETLOCALPROP || op == JSOP_LENGTH ||
                       op == JSOP_GETELEM || op == JSOP_CALLELEM ||
                       op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETMETHOD ||
-                      op == JSOP_SETELEM || op == JSOP_INITELEM ||
+                      op == JSOP_SETELEM || op == JSOP_INITELEM || op == JSOP_ENUMELEM ||
                       op == JSOP_INSTANCEOF);
 
             /*
@@ -7941,8 +7980,12 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, jsval*& vp, LIns*& ins, NameR
         return ARECORD_CONTINUE;
     }
 
-    if (obj == obj2 && OBJ_GET_CLASS(cx, obj) == &js_CallClass)
-        return InjectStatus(callProp(obj, prop, ATOM_TO_JSID(atom), vp, ins, nr));
+    if (obj == obj2 && OBJ_GET_CLASS(cx, obj) == &js_CallClass) {
+        AbortableRecordingStatus status =
+            InjectStatus(callProp(obj, prop, ATOM_TO_JSID(atom), vp, ins, nr));
+        obj->dropProperty(cx, prop);
+        return status;
+    }
 
     obj2->dropProperty(cx, prop);
     RETURN_STOP_A("fp->scopeChain is not global or active call object");
@@ -7962,7 +8005,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
     if (setflags && (sprop->attrs & JSPROP_READONLY))
         RETURN_STOP("writing to a read-only property");
 
-    uintN slot = sprop->shortid;
+    uintN slot = uint16(sprop->shortid);
 
     vp = NULL;
     uintN upvar_slot = SPROP_INVALID_SLOT;
@@ -7973,7 +8016,8 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
             vp = &cfp->argv[slot];
             upvar_slot = slot;
             nr.v = *vp;
-        } else if (sprop->getter == js_GetCallVar) {
+        } else if (sprop->getter == js_GetCallVar ||
+                   sprop->getter == js_GetCallVarChecked) {
             JS_ASSERT(slot < cfp->script->nslots);
             vp = &cfp->slots[slot];
             upvar_slot = cx->fp->fun->nargs + slot;
@@ -7981,7 +8025,9 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
         } else {
             RETURN_STOP("dynamic property of Call object");
         }
-        obj->dropProperty(cx, prop);
+
+        // Now assert that our use of sprop->shortid was in fact kosher.
+        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
 
         if (frameIfInRange(obj)) {
             // At this point we are guaranteed to be looking at an active call oject
@@ -8003,7 +8049,6 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
                                  : JSGET_METHOD_BARRIER,
                                  &nr.v);
         JS_ASSERT(rv);
-        obj->dropProperty(cx, prop);
     }
 
     LIns* obj_ins;
@@ -8011,34 +8056,67 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
     LIns* parent_ins = stobj_get_parent(get(&cx->fp->argv[-2]));
     CHECK_STATUS(traverseScopeChain(parent, parent_ins, obj, obj_ins));
 
-    ClosureVarInfo* cv = new (traceAlloc()) ClosureVarInfo();
-    cv->id = id;
-    cv->slot = slot;
-    cv->callDepth = callDepth;
-    cv->resolveFlags = cx->resolveFlags == JSRESOLVE_INFER
-                     ? js_InferFlags(cx, 0)
-                     : cx->resolveFlags;
+    LIns* call_ins;
+    if (!cfp) {
+        // Because the parent guard in guardCallee ensures this Call object
+        // will be the same object now and on trace, and because once a Call
+        // object loses its frame it never regains one, on trace we will also
+        // have a null private in the Call object. So all we need to do is
+        // write the value to the Call object's slot.
+        int32 dslot_index = slot;
+        if (sprop->getter == js_GetCallArg) {
+            JS_ASSERT(dslot_index < ArgClosureTraits::slot_count(obj));
+            dslot_index += ArgClosureTraits::slot_offset(obj);
+        } else if (sprop->getter == js_GetCallVar ||
+                   sprop->getter == js_GetCallVarChecked) {
+            JS_ASSERT(dslot_index < VarClosureTraits::slot_count(obj));
+            dslot_index += VarClosureTraits::slot_offset(obj);
+        } else {
+            RETURN_STOP("dynamic property of Call object");
+        }
 
-    LIns* outp = lir->insAlloc(sizeof(double));
-    LIns* args[] = {
-        outp,
-        INS_CONSTPTR(cv),
-        obj_ins,
-        cx_ins
-    };
-    const CallInfo* ci;
-    if (sprop->getter == js_GetCallArg)
-        ci = &GetClosureArg_ci;
-    else
-        ci = &GetClosureVar_ci;
+        // Now assert that our use of sprop->shortid was in fact kosher.
+        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
 
-    LIns* call_ins = lir->insCall(ci, args);
-    JSTraceType type = getCoercedType(nr.v);
-    guard(true,
-          addName(lir->ins2(LIR_eq, call_ins, lir->insImm(type)),
-                  "guard(type-stable name access)"),
-          BRANCH_EXIT);
-    ins = stackLoad(outp, type);
+        LIns* base = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
+        LIns* val_ins = lir->insLoad(LIR_ldp, base, dslot_index * sizeof(jsval));
+        ins = unbox_jsval(obj->dslots[dslot_index], val_ins, snapshot(BRANCH_EXIT));
+    } else {
+        ClosureVarInfo* cv = new (traceAlloc()) ClosureVarInfo();
+        cv->slot = slot;
+#ifdef DEBUG
+        cv->callDepth = callDepth;
+#endif
+
+        LIns* outp = lir->insAlloc(sizeof(double));
+        LIns* args[] = {
+            outp,
+            INS_CONSTPTR(cv),
+            obj_ins,
+            cx_ins
+        };
+        const CallInfo* ci;
+        if (sprop->getter == js_GetCallArg) {
+            ci = &GetClosureArg_ci;
+        } else if (sprop->getter == js_GetCallVar ||
+                   sprop->getter == js_GetCallVarChecked) {
+            ci = &GetClosureVar_ci;
+        } else {
+            RETURN_STOP("dynamic property of Call object");
+        }
+
+        // Now assert that our use of sprop->shortid was in fact kosher.
+        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+
+        call_ins = lir->insCall(ci, args);
+
+        JSTraceType type = getCoercedType(nr.v);
+        guard(true,
+              addName(lir->ins2(LIR_eq, call_ins, lir->insImm(type)),
+                      "guard(type-stable name access)"),
+              BRANCH_EXIT);
+        ins = stackLoad(outp, type);
+    }
     nr.tracked = false;
     nr.obj = obj;
     nr.obj_ins = obj_ins;
@@ -8324,11 +8402,7 @@ TraceRecorder::ifop()
                       lir->ins_eq0(lir->ins2(LIR_feq, v_ins, lir->insImmf(0))));
     } else if (JSVAL_IS_STRING(v)) {
         cond = JSVAL_TO_STRING(v)->length() != 0;
-        x = lir->ins2(LIR_piand,
-                      lir->insLoad(LIR_ldp,
-                                   v_ins,
-                                   (int)offsetof(JSString, mLength)),
-                      INS_CONSTWORD(JSString::LENGTH_MASK));
+        x = lir->insLoad(LIR_ldp, v_ins, offsetof(JSString, mLength));
     } else {
         JS_NOT_REACHED("ifop");
         return ARECORD_STOP;
@@ -8641,6 +8715,11 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
 
     if (GetPromotedType(l) == GetPromotedType(r)) {
         if (JSVAL_TAG(l) == JSVAL_OBJECT || JSVAL_IS_SPECIAL(l)) {
+            if (JSVAL_TAG(l) == JSVAL_OBJECT && l) {
+                JSClass *clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(l));
+                if ((clasp->flags & JSCLASS_IS_EXTENDED) && ((JSExtendedClass*) clasp)->equality)
+                    RETURN_STOP_A("Can't trace extended class equality operator");
+            }
             if (JSVAL_TAG(l) == JSVAL_OBJECT)
                 op = LIR_peq;
             cond = (l == r);
@@ -9002,7 +9081,7 @@ DumpShape(JSObject* obj, const char* prefix)
     }
 
     fprintf(shapefp, "\n%s: shape %u flags %x\n", prefix, scope->shape, scope->flags);
-    for (JSScopeProperty* sprop = scope->lastProp; sprop; sprop = sprop->parent) {
+    for (JSScopeProperty* sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
         if (JSID_IS_ATOM(sprop->id)) {
             fprintf(shapefp, " %s", JS_GetStringBytes(JSVAL_TO_STRING(ID_TO_VALUE(sprop->id))));
         } else {
@@ -9551,31 +9630,6 @@ TraceRecorder::getThis(LIns*& this_ins)
     return RECORD_CONTINUE;
 }
 
-
-LIns*
-TraceRecorder::getStringLength(LIns* str_ins)
-{
-    LIns* len_ins = lir->insLoad(LIR_ldp, str_ins, (int)offsetof(JSString, mLength));
-
-    LIns* masked_len_ins = lir->ins2(LIR_piand,
-                                     len_ins,
-                                     INS_CONSTWORD(JSString::LENGTH_MASK));
-
-    LIns* real_len =
-        lir->ins_choose(lir->ins_peq0(lir->ins2(LIR_piand,
-                                                len_ins,
-                                                INS_CONSTWORD(JSString::DEPENDENT))),
-                        masked_len_ins,
-                        lir->ins_choose(lir->ins_peq0(lir->ins2(LIR_piand,
-                                                                len_ins,
-                                                                INS_CONSTWORD(JSString::PREFIX))),
-                                        lir->ins2(LIR_piand,
-                                                  len_ins,
-                                                  INS_CONSTWORD(JSString::DEPENDENT_LENGTH_MASK)),
-                                        masked_len_ins, avmplus::AvmCore::use_cmov()),
-                        avmplus::AvmCore::use_cmov());
-    return p2i(real_len);
-}
 
 JS_REQUIRES_STACK bool
 TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideExit* exit)
@@ -10189,9 +10243,8 @@ TraceRecorder::record_JSOP_NOT()
         return ARECORD_CONTINUE;
     }
     JS_ASSERT(JSVAL_IS_STRING(v));
-    set(&v, lir->ins_peq0(lir->ins2(LIR_piand,
-                                    lir->insLoad(LIR_ldp, get(&v), (int)offsetof(JSString, mLength)),
-                                    INS_CONSTWORD(JSString::LENGTH_MASK))));
+    set(&v, lir->ins_peq0(lir->insLoad(LIR_ldp, get(&v),
+                                       offsetof(JSString, mLength))));
     return ARECORD_CONTINUE;
 }
 
@@ -11215,7 +11268,7 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
     LIns* obj_ins = get(&l);
     JSScope* scope = OBJ_SCOPE(obj);
 
-    JS_ASSERT_IF(entry->vcap == PCVCAP_MAKE(entry->kshape, 0, 0), scope->has(sprop));
+    JS_ASSERT_IF(entry->vcap == PCVCAP_MAKE(entry->kshape, 0, 0), scope->hasProperty(sprop));
 
     // Fast path for CallClass. This is about 20% faster than the general case.
     v_ins = get(&v);
@@ -11237,7 +11290,7 @@ TraceRecorder::setProp(jsval &l, JSPropCacheEntry* entry, JSScopeProperty* sprop
     jsuword pcval;
     CHECK_STATUS(guardPropertyCacheHit(obj_ins, map_ins, obj, obj2, entry, pcval));
     JS_ASSERT(scope->object == obj2);
-    JS_ASSERT(scope->has(sprop));
+    JS_ASSERT(scope->hasProperty(sprop));
     JS_ASSERT_IF(obj2 != obj, sprop->attrs & JSPROP_SHARED);
 
     /*
@@ -11279,19 +11332,52 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     JSStackFrame *fp = frameIfInRange(callobj);
     if (fp) {
         if (sprop->setter == SetCallArg) {
-            jsint slot = JSVAL_TO_INT(SPROP_USERID(sprop));
+            JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+            uintN slot = uint16(sprop->shortid);
             jsval *vp2 = &fp->argv[slot];
             set(vp2, v_ins);
             return RECORD_CONTINUE;
         }
         if (sprop->setter == SetCallVar) {
-            jsint slot = JSVAL_TO_INT(SPROP_USERID(sprop));
+            JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+            uintN slot = uint16(sprop->shortid);
             jsval *vp2 = &fp->slots[slot];
             set(vp2, v_ins);
             return RECORD_CONTINUE;
         }
         RETURN_STOP("can't trace special CallClass setter");
     }
+
+    if (!callobj->getPrivate()) {
+        // Because the parent guard in guardCallee ensures this Call object
+        // will be the same object now and on trace, and because once a Call
+        // object loses its frame it never regains one, on trace we will also
+        // have a null private in the Call object. So all we need to do is
+        // write the value to the Call object's slot.
+        int32 dslot_index = uint16(sprop->shortid);
+        if (sprop->setter == SetCallArg) {
+            JS_ASSERT(dslot_index < ArgClosureTraits::slot_count(callobj));
+            dslot_index += ArgClosureTraits::slot_offset(callobj);
+        } else if (sprop->setter == SetCallVar) {
+            JS_ASSERT(dslot_index < VarClosureTraits::slot_count(callobj));
+            dslot_index += VarClosureTraits::slot_offset(callobj);
+        } else {
+            RETURN_STOP("can't trace special CallClass setter");
+        }
+
+        // Now assert that the shortid get we did above was ok. Have to do it
+        // after the RETURN_STOP above, since in that case we may in fact not
+        // have a valid shortid; but we don't use it in that case anyway.
+        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+
+        LIns* base = lir->insLoad(LIR_ldp, callobj_ins, offsetof(JSObject, dslots));
+        lir->insStorei(box_jsval(v, v_ins), base, dslot_index * sizeof(jsval));
+        return RECORD_CONTINUE;
+    }
+
+    // This is the hard case: we have a JSStackFrame private, but it's not in
+    // range.  During trace execution we may or may not have a JSStackFrame
+    // anymore.  Call the standard builtins, which handle that situation.
 
     // Set variables in off-trace-stack call objects by calling standard builtins.
     const CallInfo* ci = NULL;
@@ -11825,11 +11911,11 @@ TraceRecorder::initOrSetPropertyByIndex(LIns* obj_ins, LIns* index_ins, jsval* r
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_SETELEM()
+TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
 {
-    jsval& v = stackval(-1);
-    jsval& idx = stackval(-2);
-    jsval& lval = stackval(-3);
+    jsval& v = stackval(v_spindex);
+    jsval& idx = stackval(idx_spindex);
+    jsval& lval = stackval(lval_spindex);
 
     if (JSVAL_IS_PRIMITIVE(lval))
         RETURN_STOP_A("left JSOP_SETELEM operand is not an object");
@@ -11887,6 +11973,12 @@ TraceRecorder::record_JSOP_SETELEM()
         set(&lval, v_ins);
 
     return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_SETELEM()
+{
+    return setElem(-3, -2, -1);
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -12082,6 +12174,16 @@ TraceRecorder::guardCallee(jsval& callee)
                     stobj_get_private(callee_ins),
                     INS_CONSTPTR(callee_obj->getPrivate())),
           branchExit);
+
+    /*
+     * As long as we have this parent guard, we're guaranteed that if we record
+     * with a Call object which has a null getPrivate(), then on trace that
+     * Call object will continue to have a null private, because we're
+     * effectively guarding on Call object identity and Call objects can't pick
+     * up a stack frame once they have none. callProp and setCallProp depend
+     * on this and document where; if this guard is removed make sure to fix
+     * those methods. Search for the "parent guard" comments in them.
+     */
     guard(true,
           lir->ins2(LIR_peq,
                     stobj_get_parent(callee_ins),
@@ -12543,7 +12645,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
 
     if (PCVAL_IS_SPROP(pcval)) {
         sprop = PCVAL_TO_SPROP(pcval);
-        JS_ASSERT(OBJ_SCOPE(obj2)->has(sprop));
+        JS_ASSERT(OBJ_SCOPE(obj2)->hasProperty(sprop));
 
         if (setflags && !SPROP_HAS_STUB_SETTER(sprop))
             RETURN_STOP_A("non-stub setter");
@@ -12957,7 +13059,7 @@ TraceRecorder::record_JSOP_INITPROP()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_INITELEM()
 {
-    return record_JSOP_SETELEM();
+    return setElem(-3, -2, -1);
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -13415,7 +13517,11 @@ TraceRecorder::record_JSOP_EVAL()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ENUMELEM()
 {
-    return ARECORD_STOP;
+    /*
+     * To quote from jsops.cpp's JSOP_ENUMELEM case:
+     * Funky: the value to set is under the [obj, id] pair.
+     */
+    return setElem(-2, -1, -3);
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -14456,7 +14562,9 @@ TraceRecorder::record_JSOP_LENGTH()
     if (JSVAL_IS_PRIMITIVE(l)) {
         if (!JSVAL_IS_STRING(l))
             RETURN_STOP_A("non-string primitive JSOP_LENGTH unsupported");
-        set(&l, lir->ins1(LIR_i2f, getStringLength(get(&l))));
+        set(&l, lir->ins1(LIR_i2f,
+                          p2i(lir->insLoad(LIR_ldp, get(&l),
+                                           offsetof(JSString, mLength)))));
         return ARECORD_CONTINUE;
     }
 
