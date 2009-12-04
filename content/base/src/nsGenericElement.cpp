@@ -1132,9 +1132,7 @@ nsIFrame*
 nsGenericElement::GetStyledFrame()
 {
   nsIFrame *frame = GetPrimaryFrame(Flush_Layout);
-
-  return (frame && frame->GetType() == nsGkAtoms::tableOuterFrame) ?
-    frame->GetFirstChild(nsnull) : frame;
+  return frame ? nsLayoutUtils::GetStyleFrame(frame) : nsnull;
 }
 
 void

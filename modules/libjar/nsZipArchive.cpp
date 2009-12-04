@@ -190,6 +190,7 @@ nsresult nsZipHandle::Init(PRFileDesc *fd, nsZipHandle **ret)
 
   nsZipHandle *handle = new nsZipHandle();
   if (!handle) {
+    PR_MemUnmap(buf, size);
     PR_CloseFileMap(map);
     return NS_ERROR_OUT_OF_MEMORY;
   }

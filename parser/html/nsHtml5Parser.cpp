@@ -61,29 +61,6 @@
 #include "nsHtml5Parser.h"
 #include "nsHtml5AtomTable.h"
 
-//-------------- Begin ParseContinue Event Definition ------------------------
-/*
-The parser can be explicitly interrupted by calling Suspend(). This will cause
-the parser to stop processing and allow the application to return to the event
-loop. The parser will schedule a nsHtml5ParserContinueEvent which will call
-the parser to process the remaining data after returning to the event loop.
-*/
-class nsHtml5ParserContinueEvent : public nsRunnable
-{
-public:
-  nsRefPtr<nsHtml5Parser> mParser;
-  nsHtml5ParserContinueEvent(nsHtml5Parser* aParser)
-    : mParser(aParser)
-  {}
-  NS_IMETHODIMP Run()
-  {
-    mParser->HandleParserContinueEvent(this);
-    return NS_OK;
-  }
-};
-//-------------- End ParseContinue Event Definition ------------------------
-
-
 NS_INTERFACE_TABLE_HEAD(nsHtml5Parser)
   NS_INTERFACE_TABLE2(nsHtml5Parser, nsIParser, nsISupportsWeakReference)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsHtml5Parser)
@@ -110,6 +87,7 @@ nsHtml5Parser::nsHtml5Parser()
   , mExecutor(new nsHtml5TreeOpExecutor())
   , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor))
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder))
+  , mRootContextLineNumber(1)
 {
   mAtomTable.Init(); // we aren't checking for OOM anyway...
   mTokenizer->setInterner(&mAtomTable);
@@ -203,6 +181,13 @@ nsHtml5Parser::ContinueInterruptedParsing()
   if (mExecutor->IsScriptExecuting()) {
     return NS_OK;
   }
+  if (mExecutor->IsFlushing()) {
+    // A nested event loop dequeued the continue event and there aren't
+    // scripts executing. What's currently causing the flush is running to 
+    // completion or there will be a script later and the script will cause
+    // another continue event.
+    return NS_OK;
+  }
   // If the stream has already finished, there's a good chance
   // that we might start closing things down when the parser
   // is reenabled. To make sure that we're not deleted across
@@ -210,7 +195,6 @@ nsHtml5Parser::ContinueInterruptedParsing()
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
   nsRefPtr<nsHtml5StreamParser> streamKungFuDeathGrip(mStreamParser);
   nsRefPtr<nsHtml5TreeOpExecutor> treeOpKungFuDeathGrip(mExecutor);
-  CancelParsingEvents(); // If the executor caused us to continue, ignore event
   ParseUntilBlocked();
   return NS_OK;
 }
@@ -310,11 +294,11 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   NS_PRECONDITION(IsInsertionPointDefined(), 
                   "Document.write called when insertion point not defined.");
 
+  NS_PRECONDITION(!(mStreamParser && !aKey), "Got a null key in a non-script-created parser");
+
   if (aSourceBuffer.IsEmpty()) {
     return NS_OK;
   }
-
-  PRInt32 lineNumberSave = mTokenizer->getLineNumber();
 
   nsRefPtr<nsHtml5UTF16Buffer> buffer = new nsHtml5UTF16Buffer(aSourceBuffer.Length());
   memcpy(buffer->getBuffer(), aSourceBuffer.BeginReading(), aSourceBuffer.Length() * sizeof(PRUnichar));
@@ -363,7 +347,25 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
       buffer->adjust(mLastWasCR);
       mLastWasCR = PR_FALSE;
       if (buffer->hasMore()) {
+
+        PRInt32 lineNumberSave;
+        PRBool inRootContext = (!mStreamParser && (aKey == mRootContextKey));
+        if (inRootContext) {
+          mTokenizer->setLineNumber(mRootContextLineNumber);
+        } else {
+          // we aren't the root context, so save the line number on the 
+          // *stack* so that we can restore it.
+          lineNumberSave = mTokenizer->getLineNumber();
+        }
+
         mLastWasCR = mTokenizer->tokenizeBuffer(buffer);
+
+        if (inRootContext) {
+          mRootContextLineNumber = mTokenizer->getLineNumber();
+        } else {
+          mTokenizer->setLineNumber(lineNumberSave);
+        }
+
         if (mTreeBuilder->HasScript()) {
           // No need to flush characters, because an end tag was tokenized last
           mTreeBuilder->Flush(); // Move ops to the executor
@@ -379,18 +381,13 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   }
 
   if (!mBlocked) { // buffer was tokenized to completion
+    NS_ASSERTION(!buffer->hasMore(), "Buffer wasn't tokenized to completion?");  
     // Scripting semantics require a forced tree builder flush here
     mTreeBuilder->flushCharacters(); // Flush trailing characters
     mTreeBuilder->Flush(); // Move ops to the executor
     mExecutor->Flush(); // run the ops    
-  } else if (!mStreamParser && buffer->hasMore() && aKey == mRootContextKey) {
-    // The buffer wasn't parsed completely, the document was created by
-    // document.open() and the script that wrote wasn't created by this parser. 
-    // Can't rely on the executor causing the parser to continue.
-    MaybePostContinueEvent();
   }
 
-  mTokenizer->setLineNumber(lineNumberSave);
   return NS_OK;
 }
 
@@ -501,8 +498,8 @@ nsHtml5Parser::BuildModel(void)
 NS_IMETHODIMP
 nsHtml5Parser::CancelParsingEvents()
 {
-  mContinueEvent = nsnull;
-  return NS_OK;
+  NS_NOTREACHED("Don't call this!");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void
@@ -514,9 +511,9 @@ nsHtml5Parser::Reset()
   UnblockParser();
   mDocumentClosed = PR_FALSE;
   mStreamParser = nsnull;
+  mRootContextLineNumber = 1;
   mParserInsertedScriptsBeingEvaluated = 0;
   mRootContextKey = nsnull;
-  mContinueEvent = nsnull;  // weak ref
   mAtomTable.Clear(); // should be already cleared in the fragment case anyway
   // Portable parser objects
   mFirstBuffer->next = nsnull;
@@ -566,17 +563,6 @@ nsHtml5Parser::IsScriptCreated()
 
 // not from interface
 void
-nsHtml5Parser::HandleParserContinueEvent(nsHtml5ParserContinueEvent* ev)
-{
-  // Ignore any revoked continue events...
-  if (mContinueEvent != ev)
-    return;
-  mContinueEvent = nsnull;
-  NS_ASSERTION(!mExecutor->IsScriptExecuting(), "Interrupted in the middle of a script?");
-  ContinueInterruptedParsing();
-}
-
-void
 nsHtml5Parser::ParseUntilBlocked()
 {
   NS_PRECONDITION(!mFragmentMode, "ParseUntilBlocked called in fragment mode.");
@@ -616,6 +602,8 @@ nsHtml5Parser::ParseUntilBlocked()
           if (mStreamParser && 
               mReturnToStreamParserPermitted && 
               !mExecutor->IsScriptExecuting()) {
+            mTreeBuilder->flushCharacters();
+            mTreeBuilder->Flush();
             mReturnToStreamParserPermitted = PR_FALSE;
             mStreamParser->ContinueAfterScripts(mTokenizer, 
                                                 mTreeBuilder, 
@@ -637,7 +625,14 @@ nsHtml5Parser::ParseUntilBlocked()
     mFirstBuffer->adjust(mLastWasCR);
     mLastWasCR = PR_FALSE;
     if (mFirstBuffer->hasMore()) {
+      PRBool inRootContext = (!mStreamParser && (mFirstBuffer->key == mRootContextKey));
+      if (inRootContext) {
+        mTokenizer->setLineNumber(mRootContextLineNumber);
+      }
       mLastWasCR = mTokenizer->tokenizeBuffer(mFirstBuffer);
+      if (inRootContext) {
+        mRootContextLineNumber = mTokenizer->getLineNumber();
+      }
       if (mTreeBuilder->HasScript()) {
         mTreeBuilder->Flush();
         mExecutor->Flush();   
@@ -648,24 +643,6 @@ nsHtml5Parser::ParseUntilBlocked()
       }
     }
     continue;
-  }
-}
-
-void
-nsHtml5Parser::MaybePostContinueEvent()
-{
-  NS_PRECONDITION(!mExecutor->IsComplete(), 
-                  "Tried to post continue event when the parser is done.");
-  if (mContinueEvent) {
-    return; // we already have a pending event
-  }
-  // This creates a reference cycle between this and the event that is
-  // broken when the event fires.
-  nsCOMPtr<nsIRunnable> event = new nsHtml5ParserContinueEvent(this);
-  if (NS_FAILED(NS_DispatchToCurrentThread(event))) {
-    NS_WARNING("failed to dispatch parser continuation event");
-  } else {
-    mContinueEvent = event;
   }
 }
 
@@ -688,9 +665,10 @@ nsHtml5Parser::StartTokenizer(PRBool aScriptingEnabled) {
 }
 
 void
-nsHtml5Parser::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState)
+nsHtml5Parser::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState, PRInt32 aLine)
 {
   mTokenizer->resetToDataState();
+  mTokenizer->setLineNumber(aLine);
   mTreeBuilder->loadState(aState, &mAtomTable);
   mLastWasCR = PR_FALSE;
   mReturnToStreamParserPermitted = PR_TRUE;

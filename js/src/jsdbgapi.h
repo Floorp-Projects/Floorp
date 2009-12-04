@@ -421,11 +421,11 @@ JS_NewSystemObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 
 /************************************************************************/
 
-extern JS_PUBLIC_API(JSDebugHooks *)
+extern JS_PUBLIC_API(const JSDebugHooks *)
 JS_GetGlobalDebugHooks(JSRuntime *rt);
 
 extern JS_PUBLIC_API(JSDebugHooks *)
-JS_SetContextDebugHooks(JSContext *cx, JSDebugHooks *hooks);
+JS_SetContextDebugHooks(JSContext *cx, const JSDebugHooks *hooks);
 
 #ifdef MOZ_SHARK
 

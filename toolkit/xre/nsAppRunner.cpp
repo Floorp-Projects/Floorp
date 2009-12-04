@@ -2039,6 +2039,14 @@ SelectProfile(nsIProfileLock* *aResult, nsINativeAppSupport* aNative,
 
     nsCOMPtr<nsIProfileUnlocker> unlocker;
 
+    // Check if the profile path exists and it's a directory.
+    PRBool exists;
+    lf->Exists(&exists);
+    if (!exists) {
+        rv = lf->Create(nsIFile::DIRECTORY_TYPE, 0644);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     // If a profile path is specified directory on the command line, then
     // assume that the temp directory is the same as the given directory.
     rv = NS_LockProfilePath(lf, lf, getter_AddRefs(unlocker), aResult);

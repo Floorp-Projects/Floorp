@@ -1100,11 +1100,19 @@ StringMatch(const jschar *text, jsuint textlen,
 #endif
 
     /*
-     * XXX tune the BMH threshold (512) and pattern-length threshold (2).
-     * If the text or pattern strings are short, BMH will be more expensive
-     * than the basic linear scan.
+     * If the text or pattern string is short, BMH will be more expensive than
+     * the basic linear scan due to initialization cost and a more complex loop
+     * body. While the correct threshold is input-dependent, we can make a few
+     * conservative observations:
+     *  - When |textlen| is "big enough", the initialization time will be
+     *    proportionally small, so the worst-case slowdown is minimized.
+     *  - When |patlen| is "too small", even the best case for BMH will be
+     *    slower than a simple scan for large |textlen| due to the more complex
+     *    loop body of BMH.
+     * From this, the values for "big enough" and "too small" are determined
+     * empirically. See bug 526348.
      */
-    if (textlen >= 512 && jsuint(patlen - 2) <= sBMHPatLenMax - 2) {
+    if (textlen >= 512 && patlen >= 11 && patlen <= sBMHPatLenMax) {
         jsint index = js_BoyerMooreHorspool(text, textlen, pat, patlen);
         if (index != sBMHBadPattern)
             return index;

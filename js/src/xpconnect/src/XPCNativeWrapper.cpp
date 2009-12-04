@@ -268,6 +268,12 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj,
   }
 
   JSScript *script = JS_GetFrameScript(cx, fp);
+  if (!script) {
+    // This is likely a SJOW around an XPCNativeWrapper. We don't know
+    // who is accessing us, but given the TODO above, allow access.
+    return JS_TRUE;
+  }
+
   uint32 fileFlags = JS_GetScriptFilenameFlags(script);
   if (fileFlags == JSFILENAME_NULL || (fileFlags & JSFILENAME_SYSTEM)) {
     // We expect implicit native wrappers in system files.

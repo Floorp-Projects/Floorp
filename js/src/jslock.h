@@ -283,7 +283,6 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
 
 #define JS_LOCK_GC(rt)              JS_ACQUIRE_LOCK((rt)->gcLock)
 #define JS_UNLOCK_GC(rt)            JS_RELEASE_LOCK((rt)->gcLock)
-#define JS_LOCK_GC_VOID(rt,e)       (JS_LOCK_GC(rt), (e), JS_UNLOCK_GC(rt))
 #define JS_AWAIT_GC_DONE(rt)        JS_WAIT_CONDVAR((rt)->gcDone, JS_NO_TIMEOUT)
 #define JS_NOTIFY_GC_DONE(rt)       JS_NOTIFY_ALL_CONDVAR((rt)->gcDone)
 #define JS_AWAIT_REQUEST_DONE(rt)   JS_WAIT_CONDVAR((rt)->requestDone,        \

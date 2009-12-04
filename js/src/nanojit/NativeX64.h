@@ -369,6 +369,8 @@ namespace nanojit
         void emitr_imm8(uint64_t op, Register b, int32_t imm8);\
         void emitxm_abs(uint64_t op, Register r, int32_t addr32);\
         void emitxm_rel(uint64_t op, Register r, NIns* addr64);\
+        bool isTargetWithinS8(NIns* target);\
+        bool isTargetWithinS32(NIns* target);\
         void asm_quad(Register r, uint64_t v);\
         void asm_regarg(ArgSize, LIns*, Register);\
         void asm_stkarg(ArgSize, LIns*, int);\
@@ -500,6 +502,8 @@ namespace nanojit
         void MOVSDMR(Register r1, int d, Register r2);\
         void JMP8(size_t n, NIns* t);\
         void JMP32(size_t n, NIns* t);\
+        void JMPX(Register indexreg, NIns** table);\
+        void JMPXB(Register indexreg, Register tablereg);\
         void JO(size_t n, NIns* t);\
         void JE(size_t n, NIns* t);\
         void JL(size_t n, NIns* t);\
@@ -552,18 +556,12 @@ namespace nanojit
         void X86_SETNP(Register r);\
         void X86_SETE(Register r);\
 
-    #define swapptrs()  { NIns* _tins = _nIns; _nIns=_nExitIns; _nExitIns=_tins; }
-
     const int LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
 
     typedef uint8_t NIns;
 
     // Bytes of icache to flush after Assembler::patch
     const size_t LARGEST_BRANCH_PATCH = 16 * sizeof(NIns);
-
-    inline Register nextreg(Register r) {
-        return Register(r+1);
-    }
 
 } // namespace nanojit
 

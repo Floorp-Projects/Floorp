@@ -2192,7 +2192,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     uintN skip = cg->staticLevel - level;
     if (skip != 0) {
         JS_ASSERT(cg->flags & TCF_IN_FUNCTION);
-        JS_ASSERT(cg->lexdeps.lookup(atom));
+        JS_ASSERT_IF(UPVAR_FRAME_SLOT(cookie) != CALLEE_UPVAR_SLOT,
+                     cg->lexdeps.lookup(atom));
         JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
         JS_ASSERT(cg->fun->u.i.skipmin <= skip);
 
@@ -2259,7 +2260,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             }
 
             uintN slot = UPVAR_FRAME_SLOT(cookie);
-            if (dn_kind != JSDefinition::ARG) {
+            if (slot != CALLEE_UPVAR_SLOT && dn_kind != JSDefinition::ARG) {
                 JSTreeContext *tc = cg;
                 do {
                     tc = tc->parent;

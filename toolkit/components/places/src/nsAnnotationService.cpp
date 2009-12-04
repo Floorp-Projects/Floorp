@@ -53,6 +53,7 @@
 #include "nsNavBookmarks.h"
 #include "nsPlacesTables.h"
 #include "nsPlacesIndexes.h"
+#include "nsPlacesMacros.h"
 
 const PRInt32 nsAnnotationService::kAnnoIndex_ID = 0;
 const PRInt32 nsAnnotationService::kAnnoIndex_PageOrItem = 1;
@@ -65,7 +66,7 @@ const PRInt32 nsAnnotationService::kAnnoIndex_Type = 7;
 const PRInt32 nsAnnotationService::kAnnoIndex_DateAdded = 8;
 const PRInt32 nsAnnotationService::kAnnoIndex_LastModified = 9;
 
-nsAnnotationService* nsAnnotationService::gAnnotationService;
+PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsAnnotationService, gAnnotationService)
 
 NS_IMPL_ISUPPORTS1(nsAnnotationService,
                    nsIAnnotationService)
@@ -75,7 +76,7 @@ NS_IMPL_ISUPPORTS1(nsAnnotationService,
 nsAnnotationService::nsAnnotationService()
 {
   NS_ASSERTION(!gAnnotationService,
-               "ATTEMPTING TO CREATE TWO INSTANCES OF THE ANNOTATION SERVICE!");
+               "Attempting to create two instances of the service!");
   gAnnotationService = this;
 }
 
@@ -85,7 +86,7 @@ nsAnnotationService::nsAnnotationService()
 nsAnnotationService::~nsAnnotationService()
 {
   NS_ASSERTION(gAnnotationService == this,
-               "Deleting a non-singleton annotation service");
+               "Deleting a non-singleton instance of the service");
   if (gAnnotationService == this)
     gAnnotationService = nsnull;
 }
@@ -101,9 +102,9 @@ nsAnnotationService::Init()
   // The history service will normally already be created and will call our
   // static InitTables function. It will get autocreated here if it hasn't
   // already been created.
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  if (! history)
-    return NS_ERROR_FAILURE;
+  nsNavHistory *history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+
   mDBConn = history->GetStorageConnection();
 
   // annotation statements
@@ -1778,8 +1779,8 @@ nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
   // it gets the names. If this function requires optimization, we should only
   // do this once and get the names ourselves using the IDs.
   PRInt64 sourceID, destID;
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_FAILURE);
+  nsNavHistory *history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 
   rv = history->GetUrlIdFor(aSourceURI, &sourceID, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1964,7 +1965,7 @@ nsAnnotationService::StartGetAnnotationFromItemId(PRInt64 aItemId,
 PRBool
 nsAnnotationService::InPrivateBrowsingMode() const
 {
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  nsNavHistory *history = nsNavHistory::GetHistoryService();
   return history && history->InPrivateBrowsingMode();
 }
 
@@ -1973,8 +1974,8 @@ nsresult
 nsAnnotationService::GetPlaceIdForURI(nsIURI* aURI, PRInt64* _retval,
                                       PRBool aAutoCreate)
 {
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_FAILURE);
+  nsNavHistory *history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 
   return history->GetUrlIdFor(aURI, _retval, aAutoCreate);
 }
@@ -2004,7 +2005,7 @@ nsAnnotationService::StartSetAnnotation(PRInt64 aFkId,
   // Disallow setting item-annotations on invalid item ids
   if (aIsItemAnnotation) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-    NS_ENSURE_STATE(bookmarks);
+    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
     if (!bookmarks->ItemExists(aFkId))
       return NS_ERROR_INVALID_ARG;
   }
