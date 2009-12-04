@@ -11339,6 +11339,33 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
         RETURN_STOP("can't trace special CallClass setter");
     }
 
+    if (!callobj->getPrivate()) {
+        // Because the parent guard in guardCallee ensures this Call object
+        // will be the same object now and on trace, and because once a Call
+        // object loses its frame it never regains one, on trace we will also
+        // have a null private in the Call object. So all we need to do is
+        // write the value to the Call object's slot.
+        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+        int32 offset = sprop->shortid;
+        if (sprop->setter == SetCallArg) {
+            JS_ASSERT(offset < ArgClosureTraits::slot_count(callobj));
+            offset += ArgClosureTraits::slot_offset(callobj);
+        } else if (sprop->setter == SetCallVar) {
+            JS_ASSERT(offset < VarClosureTraits::slot_count(obj));
+            offset += VarClosureTraits::slot_offset(callobj);
+        } else {
+            RETURN_STOP("can't trace special CallClass setter");
+        }
+
+        LIns* base = lir->insLoad(LIR_ldp, callobj_ins, offsetof(JSObject, dslots));
+        lir->insStorei(box_jsval(v, v_ins), base, offset * sizeof(jsval));
+        return RECORD_CONTINUE;
+    }
+
+    // This is the hard case: we have a JSStackFrame private, but it's not in
+    // range.  During trace execution we may or may not have a JSStackFrame
+    // anymore.  Call the standard builtins, which handle that situation.
+
     // Set variables in off-trace-stack call objects by calling standard builtins.
     const CallInfo* ci = NULL;
     if (sprop->setter == SetCallArg)
