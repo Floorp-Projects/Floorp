@@ -58,6 +58,8 @@ _BROWSER_TEST_FILES = \
 #	                  browser_fail_pf.js \
 #	                  browser_fail_throw.js \
 #	                  browser_fail_timeout.js \
+# Disabled because it would take too long, useful to check functionality though.
+#	                  browser_requestLongerTimeout.js \
 	                  $(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
