@@ -301,6 +301,7 @@ nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
 }
 #endif
 
+#ifdef MOZ_IPC
 void
 nsNPAPIPlugin::PluginCrashed()
 {
@@ -309,6 +310,7 @@ nsNPAPIPlugin::PluginCrashed()
     NS_RELEASE(tag->mEntryPoint);
   }
 }
+#endif
 
 namespace {
 
