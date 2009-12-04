@@ -766,7 +766,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     /* Copy rval, argv and vars. */
     gen->frame.rval = fp->rval;
     memcpy(slots, fp->argv - 2, (2 + nargs) * sizeof(jsval));
-    gen->frame.argc = nargs;
+    gen->frame.argc = fp->argc;
     gen->frame.argv = slots + 2;
     slots += 2 + nargs;
     memcpy(slots, fp->slots, fp->script->nfixed * sizeof(jsval));

@@ -1,2 +1,3 @@
 include Date/jstests.list
 include Object/jstests.list
+include strict/jstests.list

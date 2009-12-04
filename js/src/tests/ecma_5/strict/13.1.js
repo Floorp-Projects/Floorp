@@ -14,21 +14,21 @@
  * The parameters of ordinary function definitions should not contain
  * duplicate identifiers.
  */
-assertEq(testLenientAndStrict('function(x,y) {}',
+assertEq(testLenientAndStrict('function f(x,y) {}',
                               parsesSuccessfully,
                               parsesSuccessfully),
          true);
-assertEq(testLenientAndStrict('function(x,x) {}',
+assertEq(testLenientAndStrict('function f(x,x) {}',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('function(x,y,z,y) {}',
+assertEq(testLenientAndStrict('function f(x,y,z,y) {}',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
 
 /* Exercise the hashed local name map case. */
-assertEq(testLenientAndStrict('function(a,b,c,d,e,f,g,h,d) {}',
+assertEq(testLenientAndStrict('function f(a,b,c,d,e,f,g,h,d) {}',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
@@ -37,15 +37,15 @@ assertEq(testLenientAndStrict('function(a,b,c,d,e,f,g,h,d) {}',
  * SpiderMonkey has always treated duplicates in destructuring
  * patterns as an error. Strict mode should not affect this.
  */
-assertEq(testLenientAndStrict('function([x,y]) {}',
+assertEq(testLenientAndStrict('function f([x,y]) {}',
                               parsesSuccessfully,
                               parsesSuccessfully),
          true);
-assertEq(testLenientAndStrict('function([x,x]){}',
+assertEq(testLenientAndStrict('function f([x,x]){}',
                               parseRaisesException(SyntaxError),
                               parseRaisesException(SyntaxError)),
          true);
-assertEq(testLenientAndStrict('function(x,[x]){}',
+assertEq(testLenientAndStrict('function f(x,[x]){}',
                               parseRaisesException(SyntaxError),
                               parseRaisesException(SyntaxError)),
          true);
@@ -54,7 +54,7 @@ assertEq(testLenientAndStrict('function(x,[x]){}',
  * Strict rules apply to the parameters if the function's body is
  * strict.
  */
-assertEq(testLenientAndStrict('function(x,x) { "use strict" };',
+assertEq(testLenientAndStrict('function f(x,x) { "use strict" };',
                               parseRaisesException(SyntaxError),
                               parseRaisesException(SyntaxError)),
          true);
@@ -410,3 +410,5 @@ assertEq(testLenientAndStrict('Function("arguments","\'use strict\';")',
                               raisesException(SyntaxError)),
          true);
 
+
+reportCompare(true, true);
