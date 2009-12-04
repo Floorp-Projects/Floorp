@@ -224,7 +224,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       mScriptElement = aScript;
     }
     
-    void InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState);
+    void InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState, PRInt32 aLine);
 
     PRBool IsScriptEnabled();
 

@@ -174,10 +174,6 @@ ifdef ACCESSIBILITY
 tier_gecko_dirs    += accessible
 endif
 
-ifdef MOZ_IPDL_TESTS
-tier_gecko_dirs += ipc/ipdl/test
-endif
-
 # 
 # tier "toolkit" - xpfe & toolkit
 #

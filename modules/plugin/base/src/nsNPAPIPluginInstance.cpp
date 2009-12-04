@@ -57,6 +57,8 @@
 
 #include "nsJSNPRuntime.h"
 
+using namespace mozilla::plugins::parent;
+
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
 // nsPluginStreamToFile
@@ -1544,6 +1546,13 @@ nsNPAPIPluginInstance::DefineJavaProperties()
   if (!ok)
     return NS_ERROR_FAILURE;
 
+  return NS_OK;
+}
+
+nsresult
+nsNPAPIPluginInstance::SetCached(PRBool aCache)
+{
+  mCached = aCache;
   return NS_OK;
 }
 

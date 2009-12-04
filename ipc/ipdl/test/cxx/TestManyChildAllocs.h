@@ -1,6 +1,8 @@
 #ifndef mozilla__ipdltest_TestManyChildAllocs_h
 #define mozilla__ipdltest_TestManyChildAllocs_h 1
 
+#include "mozilla/_ipdltest/IPDLUnitTests.h"
+
 #include "mozilla/_ipdltest/PTestManyChildAllocsParent.h"
 #include "mozilla/_ipdltest/PTestManyChildAllocsChild.h"
 
@@ -22,9 +24,21 @@ public:
     void Main();
 
 protected:
+    NS_OVERRIDE
     virtual bool RecvDone();
+    NS_OVERRIDE
     virtual bool DeallocPTestManyChildAllocsSub(PTestManyChildAllocsSubParent* __a);
+    NS_OVERRIDE
     virtual PTestManyChildAllocsSubParent* AllocPTestManyChildAllocsSub();
+
+    NS_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why)
+    {
+        if (NormalShutdown != why)
+            fail("unexpected destruction!");
+        passed("ok");
+        QuitParent();
+    }
 };
 
 
@@ -36,9 +50,20 @@ public:
     virtual ~TestManyChildAllocsChild();
 
 protected:
+    NS_OVERRIDE
     virtual bool RecvGo();
+    NS_OVERRIDE
     virtual bool DeallocPTestManyChildAllocsSub(PTestManyChildAllocsSubChild* __a);
+    NS_OVERRIDE
     virtual PTestManyChildAllocsSubChild* AllocPTestManyChildAllocsSub();
+
+    NS_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why)
+    {
+        if (NormalShutdown != why)
+            fail("unexpected destruction!");
+        QuitChild();
+    }
 };
 
 
@@ -52,6 +77,7 @@ public:
     virtual ~TestManyChildAllocsSubParent() { }
 
 protected:
+    NS_OVERRIDE
     virtual bool RecvHello() { return true; }
 };
 

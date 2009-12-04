@@ -57,12 +57,15 @@ union Variant {
   int;
   double;
   nsCString;
-  PPluginScriptableObject;
+  nullable PPluginScriptableObject;
 };
 
 rpc protocol PPluginScriptableObject
 {
   manager PPluginInstance;
+
+both:
+  rpc __delete__();
 
 parent:
   rpc NPN_Evaluate(nsCString aScript)

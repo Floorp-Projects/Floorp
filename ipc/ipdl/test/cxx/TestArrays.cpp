@@ -1,11 +1,5 @@
 #include "TestArrays.h"
 
-#include "nsIAppShell.h"
-
-#include "nsCOMPtr.h"
-#include "nsServiceManagerUtils.h" // do_GetService()
-#include "nsWidgetsCID.h"       // NS_APPSHELL_CID
-
 #include "IPDLUnitTests.h"      // fail etc.
 
 namespace mozilla {
@@ -62,19 +56,14 @@ TestArraysParent::Main()
 }
 
 bool
-TestArraysParent::RecvPTestArraysSubDestructor(PTestArraysSubParent* actor)
+TestArraysParent::DeallocPTestArraysSub(PTestArraysSubParent* actor)
 {
     test_assert(Cast(actor).mI == Cast(mKids[0]).mI,
                 "dtor sent to wrong actor");
     mKids.RemoveElementAt(0);
+    delete actor;
     if (mKids.Length() > 0)
         return true;
-
-    passed("with flying colors");
-
-    static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-    nsCOMPtr<nsIAppShell> appShell (do_GetService(kAppShellCID));
-    appShell->Exit();
 
     return true;
 }
@@ -321,8 +310,10 @@ TestArraysChild::RecvStart()
     Test10();
 
     for (uint32 i = 0; i < nactors; ++i)
-        if (!SendPTestArraysSubDestructor(mKids[i]))
+        if (!PTestArraysSubChild::Send__delete__(mKids[i]))
             fail("can't send dtor");
+
+    Close();
 
     return true;
 }

@@ -2,6 +2,10 @@
 
 include protocol "PPluginInstance.ipdl";
 
+include "npapi.h";
+
+using NPReason;
+
 namespace mozilla {
 namespace plugins {
 
@@ -11,6 +15,12 @@ namespace plugins {
 rpc protocol PStreamNotify
 {
   manager PPluginInstance;
+
+child:
+  /**
+   * Represents NPP_URLNotify
+   */
+  rpc __delete__(NPReason reason);
 };
 
 } // namespace plugins

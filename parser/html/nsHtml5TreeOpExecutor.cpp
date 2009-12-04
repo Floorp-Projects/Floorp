@@ -132,7 +132,6 @@ nsHtml5TreeOpExecutor::DidBuildModel(PRBool aTerminated)
   mDocument->RemoveObserver(this);
   mDocument->EndLoad();
   static_cast<nsHtml5Parser*> (mParser.get())->DropStreamParser();
-  static_cast<nsHtml5Parser*> (mParser.get())->CancelParsingEvents();
   DropParserAndPerfHint();
 #ifdef GATHER_DOCWRITE_STATISTICS
   printf("UNSAFE SCRIPTS: %d\n", sUnsafeDocWrites);
@@ -586,9 +585,9 @@ nsHtml5TreeOpExecutor::ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 }
 
 void
-nsHtml5TreeOpExecutor::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState)
+nsHtml5TreeOpExecutor::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState, PRInt32 aLine)
 {
-  static_cast<nsHtml5Parser*> (mParser.get())->InitializeDocWriteParserState(aState);
+  static_cast<nsHtml5Parser*> (mParser.get())->InitializeDocWriteParserState(aState, aLine);
 }
 
 void

@@ -1,0 +1,14 @@
+// XXX kind of a gray area whether |delete| should be a part of the
+// top-level protocol.  but if it's ever not, this test will break and
+// we'll notice, right?
+protocol DeleteRace {
+parent:
+    M1();
+
+child:
+    delete();
+
+state START:
+    send delete;
+    recv M1 goto START;
+};

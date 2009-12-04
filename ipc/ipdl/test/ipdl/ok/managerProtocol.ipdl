@@ -7,6 +7,7 @@ protocol managerProtocol {
 
 parent:
     managedProtocol(int i);
-    ~managedProtocol(int i);
 
+state CREATING:
+    recv managedProtocol goto CREATING;
 };

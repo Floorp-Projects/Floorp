@@ -44,6 +44,15 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
   return true;
 }
 
+bool
+BrowserStreamParent::Answer__delete__(const NPError& reason,
+                                      const bool& artificial)
+{
+  if (!artificial)
+    NPN_DestroyStream(reason);
+  return true;
+}
+
 int32_t
 BrowserStreamParent::WriteReady()
 {

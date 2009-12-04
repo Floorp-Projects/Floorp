@@ -173,6 +173,7 @@ ProcessOrDeferMessage(HWND hwnd,
     // their wParam or lParam arguments!
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
+    case WM_CAPTURECHANGED:
     case WM_CHILDACTIVATE:
     case WM_DESTROY:
     case WM_IME_NOTIFY:
@@ -197,6 +198,12 @@ ProcessOrDeferMessage(HWND hwnd,
     case WM_NCACTIVATE: {
       res = TRUE;
       deferred = new DeferredNCActivateMessage(hwnd, uMsg, wParam, lParam);
+      break;
+    }
+
+    case WM_MOUSEACTIVATE: {
+      res = MA_NOACTIVATE;
+      deferred = new DeferredSendMessage(hwnd, uMsg, wParam, lParam);
       break;
     }
 

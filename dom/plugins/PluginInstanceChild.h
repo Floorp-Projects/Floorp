@@ -41,6 +41,10 @@
 
 #include "mozilla/plugins/PPluginInstanceChild.h"
 #include "mozilla/plugins/PluginScriptableObjectChild.h"
+#include "mozilla/plugins/StreamNotifyChild.h"
+#if defined(OS_WIN)
+#include "mozilla/gfx/SharedDIBWin.h"
+#endif
 
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
@@ -69,6 +73,8 @@ class PluginInstanceChild : public PPluginInstanceChild
 
 protected:
     virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window, NPError* rv);
+
+    virtual bool Answer__delete__(NPError* rv);
 
 
     virtual bool
@@ -105,14 +111,7 @@ protected:
                         uint16_t *stype);
 
     virtual bool
-    AnswerPBrowserStreamDestructor(PBrowserStreamChild* stream,
-                                   const NPError& reason,
-                                   const bool& artificial);
-
-    virtual bool
-    DeallocPBrowserStream(PBrowserStreamChild* stream,
-                          const NPError& reason,
-                          const bool& artificial);
+    DeallocPBrowserStream(PBrowserStreamChild* stream);
 
     virtual PPluginStreamChild*
     AllocPPluginStream(const nsCString& mimeType,
@@ -120,14 +119,7 @@ protected:
                        NPError* result);
 
     virtual bool
-    AnswerPPluginStreamDestructor(PPluginStreamChild* stream,
-                                  const NPReason& reason,
-                                  const bool& artificial);
-
-    virtual bool
-    DeallocPPluginStream(PPluginStreamChild* stream,
-                         const NPReason& reason,
-                         const bool& artificial);
+    DeallocPPluginStream(PPluginStreamChild* stream);
 
     virtual PStreamNotifyChild*
     AllocPStreamNotify(const nsCString& url, const nsCString& target,
@@ -136,12 +128,7 @@ protected:
                        NPError* result);
 
     NS_OVERRIDE virtual bool
-    AnswerPStreamNotifyDestructor(PStreamNotifyChild* notifyData,
-                                  const NPReason& reason);
-
-    NS_OVERRIDE virtual bool
-    DeallocPStreamNotify(PStreamNotifyChild* notifyData,
-                         const NPReason& reason);
+    DeallocPStreamNotify(PStreamNotifyChild* notifyData);
 
 public:
     PluginInstanceChild(const NPPluginFuncs* aPluginIface);
@@ -174,6 +161,8 @@ public:
     bool
     InternalInvalidateRect(NPRect* aInvalidRect);
 
+    bool NotifyStream(StreamNotifyChild* notifyData, NPReason reason);
+
 private:
 
 #if defined(OS_WIN)
@@ -204,6 +193,17 @@ private:
 #endif
 
     nsTArray<nsAutoPtr<PluginScriptableObjectChild> > mScriptableObjects;
+
+#if defined(OS_WIN)
+private:
+    // Shared dib rendering management for windowless plugins.
+    bool SharedSurfaceSetWindow(const NPRemoteWindow& aWindow, NPError* rv);
+    void SharedSurfaceBeforePaint(NPEvent& evcopy);
+    void SharedSurfaceRelease();
+
+private:
+    gfx::SharedDIBWin mSharedSurfaceDib;
+#endif // defined(OS_WIN)
 };
 
 } // namespace plugins

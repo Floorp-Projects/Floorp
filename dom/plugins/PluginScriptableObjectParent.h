@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * vim: sw=4 ts=4 et :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -52,8 +52,10 @@ class PluginScriptableObjectParent;
 
 struct ParentNPObject : NPObject
 {
+  ParentNPObject()
+    : parent(NULL) { }
+
   PluginScriptableObjectParent* parent;
-  bool invalidated;
 };
 
 class PluginScriptableObjectParent : public PPluginScriptableObjectParent
