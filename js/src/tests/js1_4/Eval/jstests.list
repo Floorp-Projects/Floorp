@@ -3,3 +3,4 @@ script eval-001.js
 script eval-002.js
 script eval-003.js
 script regress-531037.js
+script regress-531682.js
