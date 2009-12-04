@@ -57,6 +57,8 @@ EXPORTS_mozilla/ipc = \
   GeckoThread.h \
   ProtocolUtils.h \
   RPCChannel.h \
+  SharedMemory.h \
+  Shmem.h \
   SyncChannel.h \
   ScopedXREEmbed.h \
   $(NULL)
@@ -70,12 +72,18 @@ CPPSRCS += \
   MessagePump.cpp \
   RPCChannel.cpp \
   ScopedXREEmbed.cpp \
+  Shmem.cpp \
   StringUtil.cpp \
   SyncChannel.cpp \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += WindowsMessageLoop.cpp
+CPPSRCS += \
+  SharedMemory_windows.cpp \
+  WindowsMessageLoop.cpp \
+  $(NULL)
+else
+CPPSRCS += SharedMemory_posix.cpp
 endif
 
 include $(topsrcdir)/ipc/app/defs.mk
