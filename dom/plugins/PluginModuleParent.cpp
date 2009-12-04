@@ -69,6 +69,7 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
     : mSubprocess(new PluginProcessParent(aFilePath))
     , mShutdown(false)
     , mNPNIface(NULL)
+    , mPlugin(NULL)
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
 
@@ -97,8 +98,8 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
 {
     switch (why) {
     case AbnormalShutdown:
-        // TODObsmedberg: notify the plugin host to forget this plugin module
-        // and instantiate us again.
+        if (mPlugin)
+            mPlugin->PluginCrashed();
         // FALL THROUGH
 
     case NormalShutdown:
