@@ -1,0 +1,5 @@
+using mozilla::ipc::Shmem;      // redeclaration
+
+protocol shmem {
+child: Msg(Shmem s);
+};

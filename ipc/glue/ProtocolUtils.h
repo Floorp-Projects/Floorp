@@ -46,11 +46,13 @@
 
 #include "prenv.h"
 
+#include "mozilla/ipc/Shmem.h"
 
 // WARNING: this takes into account the private, special-message-type
 // enum in ipc_channel.h.  They need to be kept in sync.
 namespace {
 enum {
+    SHMEM_CREATED_MESSAGE_TYPE = kuint16max - 2,
     GOODBYE_MESSAGE_TYPE       = kuint16max - 1,
 };
 }
@@ -89,6 +91,53 @@ public:
 };
 
 
+// This message is automatically sent by IPDL-generated code when a
+// new shmem segment is allocated.  It should never be used directly.
+class __internal__ipdl__ShmemCreated : public IPC::Message
+{
+private:
+    typedef Shmem::id_t id_t;
+    typedef Shmem::SharedMemoryHandle SharedMemoryHandle;
+
+public:
+    enum { ID = SHMEM_CREATED_MESSAGE_TYPE };
+
+    __internal__ipdl__ShmemCreated(
+        int32 routingId,
+        const SharedMemoryHandle& aHandle,
+        const id_t& aIPDLId,
+        const size_t& aSize) :
+        IPC::Message(routingId, ID, PRIORITY_NORMAL)
+    {
+        IPC::WriteParam(this, aHandle);
+        IPC::WriteParam(this, aIPDLId);
+        IPC::WriteParam(this, aSize);
+    }
+
+    static bool Read(const Message* msg,
+                     SharedMemoryHandle* aHandle,
+                     id_t* aIPDLId,
+                     size_t* aSize)
+    {
+        void* iter = 0;
+        if (!IPC::ReadParam(msg, &iter, aHandle))
+            return false;
+        if (!IPC::ReadParam(msg, &iter, aIPDLId))
+            return false;
+        if (!IPC::ReadParam(msg, &iter, aSize))
+            return false;
+        msg->EndRead(iter);
+        return true;
+    }
+
+    void Log(const std::string& aPrefix,
+             FILE* aOutf) const
+    {
+        fputs("(special ShmemCreated msg)", aOutf);
+    }
+};
+
+
 inline bool
 LoggingEnabled()
 {
@@ -98,6 +147,7 @@ LoggingEnabled()
     return false;
 #endif
 }
+
 
 } // namespace ipc
 } // namespace mozilla

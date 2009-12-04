@@ -81,6 +81,8 @@ class TypeVisitor:
     def visitShmemType(self, s, *args):
         pass
 
+    def visitShmemChmodType(self, c, *args):
+        c.shmem.accept(self)
 
 class Type:
     def __cmp__(self, o):
@@ -178,6 +180,7 @@ class IPDLType(Type):
     def isUnion(self): return False
     def isArray(self): return False
     def isShmem(self): return False
+    def isChmod(self): return False
 
     def isAsync(self): return self.sendSemantics is ASYNC
     def isSync(self): return self.sendSemantics is SYNC
@@ -303,7 +306,6 @@ class ShmemType(IPDLType):
     def fullname(self):
         return str(self.qname)
 
-
 def iteractortypes(type):
     """Iterate over any actor(s) buried in |type|."""
     # XXX |yield| semantics makes it hard to use TypeVisitor
@@ -318,6 +320,7 @@ def iteractortypes(type):
         for c in type.components:
             for actor in iteractortypes(c):
                 yield actor
+
 
 def hasactor(type):
     """Return true iff |type| is an actor or has one buried within."""
@@ -898,7 +901,8 @@ class GatherDecls(TcheckVisitor):
                 itype = ActorType(itype,
                                   state=typespec.state,
                                   nullable=typespec.nullable)
-            if chmodallowed and itype.isShmem():
+            # FIXME/cjones: ShmemChmod is disabled until bug 524193
+            if 0 and chmodallowed and itype.isShmem():
                 itype = ShmemChmodType(
                     itype,
                     myChmod=typespec.myChmod,
