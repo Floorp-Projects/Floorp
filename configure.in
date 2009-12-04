@@ -252,7 +252,7 @@ if test "$COMPILE_ENVIRONMENT"; then
 
 dnl Do some special WinCE toolchain stuff
 case "$target" in
-*wince)
+*wince|*winmo)
 
     MOZ_ARG_WITH_STRING(wince-sdk,
     [  --with-wince-sdk=WINCE_SDK_DIR
@@ -263,19 +263,6 @@ case "$target" in
     [  --with-ogles-sdk=OGLES_SDK_DIR
                         The path to the OGLES SDK],
     OGLES_SDK_DIR=$withval)
-
-    dnl Default to Windows Mobile components enabled
-    WINCE_WINDOWS_MOBILE=1
-
-    MOZ_ARG_DISABLE_BOOL(windows-mobile-components,
-    [  --disable-windows-mobile-components
-         Disable Windows Mobile specific components from CE build],
-    WINCE_WINDOWS_MOBILE=,
-    WINCE_WINDOWS_MOBILE=1)
-
-    if test "$WINCE_WINDOWS_MOBILE"; then
-        AC_DEFINE(WINCE_WINDOWS_MOBILE)
-    fi
 
     AC_DEFINE(WINCE)
     
@@ -290,16 +277,18 @@ case "$target" in
 
     _pwd=`pwd -W`
     _topsrcdirwin=`cd \`dirname $0\`; pwd -W`
-    make OGLES_SDK_DIR="$OGLES_SDK_DIR" WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$_topsrcdirwin" OBJDIR="$_pwd" -C $srcdir/build/wince/tools
+    make OGLES_SDK_DIR="$OGLES_SDK_DIR" WINCE_SDK_DIR="$WINCE_SDK_DIR" \
+    TOPSRCDIR="$_topsrcdirwin" OBJDIR="$_pwd" target="$target" \
+    -C $srcdir/build/wince/tools
 
-    CC="$_pwd/dist/sdk/bin/arm-wince-gcc.exe"
-    CXX="$_pwd/dist/sdk/bin/arm-wince-gcc.exe"
-    CPP="$_pwd/dist/sdk/bin/arm-wince-gcc.exe -E -nologo"
-    CXXCPP="$_pwd/dist/sdk/bin/arm-wince-gcc.exe -TP -E -nologo"
-    LD="$_pwd/dist/sdk/bin/arm-wince-link.exe"
-    AR="$_pwd/dist/sdk/bin/arm-wince-lib.exe"
-    AS="$_pwd/dist/sdk/bin/arm-wince-as.exe"
-    RC="$_pwd/dist/sdk/bin/arm-wince-res.exe"
+    CC="$_pwd/dist/sdk/bin/$target-gcc.exe"
+    CXX="$_pwd/dist/sdk/bin/$target-gcc.exe"
+    CPP="$_pwd/dist/sdk/bin/$target-gcc.exe -E -nologo"
+    CXXCPP="$_pwd/dist/sdk/bin/$target-gcc.exe -TP -E -nologo"
+    LD="$_pwd/dist/sdk/bin/$target-link.exe"
+    AR="$_pwd/dist/sdk/bin/$target-lib.exe"
+    AS="$_pwd/dist/sdk/bin/$target-as.exe"
+    RC="$_pwd/dist/sdk/bin/$target-res.exe"
 
 
     echo -----------------------------------------------------------------------------
@@ -473,7 +462,7 @@ fi
 dnl Special win32 checks
 dnl ========================================================
 case "$target" in
-*-wince)
+*-wince|*-winmo)
     WINVER=500
     ;;
 *)
@@ -530,7 +519,7 @@ fi
 AC_SUBST(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
 
 case "$target" in
-*-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince)
+*-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince|*-winmo)
     if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
         _WIN32_MSVC=1
@@ -785,7 +774,7 @@ if test -n "$_WIN32_MSVC"; then
     # Since we're skipping compiler and library checks, hard-code
     # some facts here.
     case "$target" in
-    *-wince)
+    *-wince|*-winmo)
         ;;
     *)
         AC_DEFINE(HAVE_IO_H)
@@ -1096,6 +1085,7 @@ if test -n "$CROSS_COMPILE"; then
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT ;;
         wince*)       OS_ARCH=WINCE ;;
+        winmo*)       OS_ARCH=WINCE ;;
         darwin*)      OS_ARCH=Darwin OS_TARGET=Darwin ;;
     esac
 else
@@ -1306,7 +1296,16 @@ UnixWare)
     ;;
 WINCE)
     OS_ARCH=WINCE
-    OS_TARGET=WINCE
+    case "${target_os}" in
+    *winmo)
+        OS_TARGET=WINMO
+        WINCE_WINDOWS_MOBILE=1
+        AC_DEFINE(WINCE_WINDOWS_MOBILE)
+        ;;
+    *)
+        OS_TARGET=WINCE
+        ;;
+    esac
     ;;
 Darwin)
     case "${target_cpu}" in
@@ -1654,7 +1653,7 @@ case "$host" in
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
-*cygwin*|*mingw*|*mks*|*msvc*|*wince)
+*cygwin*|*mingw*|*mks*|*msvc*|*wince|*winmo)
     # we need Python 2.5 on Windows
     PYTHON_VERSION=2.5
     if test -n "$_WIN32_MSVC"; then
@@ -2025,7 +2024,7 @@ case "$target" in
     esac
     ;;
 
-*-wince*)
+*-wince*|*-winmo*)
     TARGET_COMPILER_ABI=msvc
     _PLATFORM_DEFAULT_TOOLKIT=cairo-windows
     _PLATFORM_MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1
@@ -2719,7 +2718,7 @@ case "$target" in
 *-openvms*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
-*-msvc*|*-mks*|*-mingw*|*-cygwin*|*-wince)
+*-msvc*|*-mks*|*-mingw*|*-cygwin*|*-wince|*-winmo)
     if test -z "$GNU_CC"; then
         NO_LD_ARCHIVE_FLAGS=
     fi
@@ -2751,7 +2750,7 @@ case "$target" in
     *-darwin*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-exported_symbols_list -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-export-list'
         ;;
-    *-cygwin*|*-mingw*|*-mks*|*-msvc|*-wince)
+    *-cygwin*|*-mingw*|*-mks*|*-msvc|*-wince|*-winmo)
         if test -n "$GNU_CC"; then
            MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         fi
@@ -3646,7 +3645,7 @@ if test "$ac_cv_func_gnu_get_libc_version" = "yes"; then
 fi
 
 case $target_os in
-    os2*|msvc*|mks*|cygwin*|mingw*|darwin*|wince*|beos*)
+    os2*|msvc*|mks*|cygwin*|mingw*|darwin*|wince*|winmo*|beos*)
         ;;
     *)
     
@@ -5914,7 +5913,7 @@ dnl ========================================================
 dnl Installer
 dnl ========================================================
 case "$target_os" in
-    aix*|solaris*|linux*|msvc*|mks*|cygwin*|mingw*|os2*|wince*)
+    aix*|solaris*|linux*|msvc*|mks*|cygwin*|mingw*|os2*|wince*|winmo*)
         MOZ_INSTALLER=1
         ;;
 esac
@@ -6339,7 +6338,7 @@ MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
     beos*)
         MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USER}"
         ;;
-    msvc*|mks*|cygwin*|mingw*|os2*|wince*)
+    msvc*|mks*|cygwin*|mingw*|os2*|wince*|winmo*)
         MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
         ;;
     *) 
@@ -6591,6 +6590,10 @@ if test "$MOZ_MEMORY"; then
     if test -z "$WINCE_WINDOWS_MOBILE"; then
       AC_DEFINE(MOZ_MEMORY_WINCE6)
     fi
+    ;;
+  *winmo)
+    AC_DEFINE(MOZ_MEMORY_WINCE)
+    AC_DEFINE(MOZ_MEMORY_WINDOWS)
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -7324,7 +7327,7 @@ MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
 dnl Check for GLib and libIDL.
 dnl ========================================================
 case "$target_os" in
-msvc*|mks*|cygwin*|mingw*|wince*)
+msvc*|mks*|cygwin*|mingw*|wince*|winmo*)
     SKIP_IDL_CHECK="yes"
     ;;
 *)
@@ -7769,7 +7772,7 @@ dnl
 dnl Build jsctypes on the platforms we can.
 dnl
 AC_SUBST(BUILD_CTYPES)
-if test "$OS_TARGET" != "WINCE" -o `echo $OS_TEST | grep -ic arm` != 1; then
+if test "$OS_ARCH" != "WINCE" -o `echo $OS_TEST | grep -ic arm` != 1; then
   BUILD_CTYPES=1
   AC_DEFINE(BUILD_CTYPES)
 fi
