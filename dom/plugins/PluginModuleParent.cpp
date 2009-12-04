@@ -98,9 +98,10 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
 {
     switch (why) {
     case AbnormalShutdown:
+        mShutdown = true;
         if (mPlugin)
             mPlugin->PluginCrashed();
-        // FALL THROUGH
+        break;
 
     case NormalShutdown:
         mShutdown = true;
