@@ -69,5 +69,34 @@ let tests = {
     let r2 = new Rect(0, 0, 0, 0);
     r1.expandToContain(r2);
     ok(r1.isEmpty(), "expandToContain of empty and empty is empty");
-  }
+  },
+
+  testSubtract: function testSubtract() {
+    function equals(rects1, rects2) {
+      return rects1.length == rects2.length && rects1.every(function(r, i) {
+        return r.equals(rects2[i]);
+      });
+    }
+
+    let r1 = new Rect(0, 0, 100, 100);
+    let r2 = new Rect(500, 500, 100, 100);
+    ok(equals(r1.subtract(r2), [r1]), "subtract area outside of region yields same region");
+
+    let r1 = new Rect(0, 0, 100, 100);
+    let r2 = new Rect(-10, -10, 50, 120);
+    ok(equals(r1.subtract(r2), [new Rect(40, 0, 60, 100)]), "subtracting vertical bar from edge leaves one rect");
+
+    let r1 = new Rect(0, 0, 100, 100);
+    let r2 = new Rect(-10, -10, 120, 50);
+    ok(equals(r1.subtract(r2), [new Rect(0, 40, 100, 60)]), "subtracting horizontal bar from edge leaves one rect");
+
+    let r1 = new Rect(0, 0, 100, 100);
+    let r2 = new Rect(40, 40, 20, 20);
+    ok(equals(r1.subtract(r2), [
+      new Rect(0, 0, 40, 100),
+      new Rect(40, 0, 20, 40),
+      new Rect(40, 60, 20, 40),
+      new Rect(60, 0, 40, 100)]),
+      "subtracting rect in middle leaves union of rects");
+  },
 };
