@@ -11351,7 +11351,7 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
             JS_ASSERT(offset < ArgClosureTraits::slot_count(callobj));
             offset += ArgClosureTraits::slot_offset(callobj);
         } else if (sprop->setter == SetCallVar) {
-            JS_ASSERT(offset < VarClosureTraits::slot_count(obj));
+            JS_ASSERT(offset < VarClosureTraits::slot_count(callobj));
             offset += VarClosureTraits::slot_offset(callobj);
         } else {
             RETURN_STOP("can't trace special CallClass setter");
