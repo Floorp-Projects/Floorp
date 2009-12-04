@@ -653,17 +653,20 @@ NormalizeThis(JSContext *cx, jsval *vp)
     /*
      * js_GetPrimitiveThis seems to do a bunch of work (like calls to
      * JS_THIS_OBJECT) which we don't need in the common case (where
-     * vp[1] is a String object) here.
+     * vp[1] is a String object) here.  Note that vp[1] can still be a
+     * primitive value at this point.
      */
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
-    JSObject *obj = JSVAL_TO_OBJECT(vp[1]);
-    if (obj->getClass() == &js_StringClass) {
-        str = JSVAL_TO_STRING(obj->fslots[JSSLOT_PRIMITIVE_THIS]);
-    } else {
-        str = js_ValueToString(cx, vp[1]);
-        if (!str)
-            return NULL;
+    if (!JSVAL_IS_PRIMITIVE(vp[1])) {
+        JSObject *obj = JSVAL_TO_OBJECT(vp[1]);
+        if (obj->getClass() == &js_StringClass) {
+            vp[1] = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+            return JSVAL_TO_STRING(vp[1]);
+        }
     }
+
+    str = js_ValueToString(cx, vp[1]);
+    if (!str)
+        return NULL;
     vp[1] = STRING_TO_JSVAL(str);
     return str;
 }
