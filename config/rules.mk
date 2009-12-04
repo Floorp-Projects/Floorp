@@ -699,7 +699,7 @@ ifneq (,$(filter WINCE,$(OS_ARCH)))
 OUTOPTION = -Fo# eol
 endif
 
-ifeq ($(OS_TARGET), WINCE)
+ifeq ($(OS_ARCH), WINCE)
 OUTOPTION = -Fo# eol
 HOST_OUTOPTION = -Fo# eol
 else
