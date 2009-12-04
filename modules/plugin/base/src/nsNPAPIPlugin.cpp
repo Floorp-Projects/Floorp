@@ -281,6 +281,7 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks,
 #endif
 
   fLibrary = aLibrary;
+  fLibrary->SetPlugin(this);
 }
 
 nsNPAPIPlugin::~nsNPAPIPlugin()
@@ -299,6 +300,15 @@ nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
   fPluginRefNum = aRefNum;
 }
 #endif
+
+void
+nsNPAPIPlugin::PluginCrashed()
+{
+  nsPluginTag* tag = nsPluginHost::GetInst()->FindPluginTag(this);
+  if (tag) {
+    NS_RELEASE(tag->mEntryPoint);
+  }
+}
 
 namespace {
 
