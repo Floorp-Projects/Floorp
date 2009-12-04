@@ -392,7 +392,8 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!aBuilder->IsForEventDelivery()) {
     // Add the canvas background color.
     rv = presShell->AddCanvasBackgroundColorItem(
-           *aBuilder, childItems, f ? f : this, &shellBounds);
+           *aBuilder, childItems, f ? f : this, &shellBounds, NS_RGBA(0,0,0,0),
+           PR_TRUE);
   }
 
   if (f && NS_SUCCEEDED(rv)) {

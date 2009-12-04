@@ -424,10 +424,19 @@ js_DecompileFunctionBody(JSPrinter *jp);
 extern JSBool
 js_DecompileFunction(JSPrinter *jp);
 
+/*
+ * Some C++ compilers treat the language linkage (extern "C" vs.
+ * extern "C++") as part of function (and thus pointer-to-function)
+ * types. The use of this typedef (defined in "C") ensures that
+ * js_DecompileToString's definition (in "C++") gets matched up with
+ * this declaration.
+ */
+typedef JSBool (* JSDecompilerPtr)(JSPrinter *);
+
 extern JSString *
 js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
                      uintN indent, JSBool pretty, JSBool grouped, JSBool strict,
-                     JSBool (*decompiler)(JSPrinter *jp));
+                     JSDecompilerPtr decompiler);
 
 /*
  * Find the source expression that resulted in v, and return a newly allocated
