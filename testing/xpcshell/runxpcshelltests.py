@@ -281,7 +281,7 @@ class XPCShellTests(object):
     """
     return proc.returncode
 
-  def createLogFile(self, test, stdout):
+  def createLogFile(self, test, stdout, leakLogs):
     """
       For a given test and stdout buffer, create a log file.  also log any found leaks.
       On a remote system we have to fix the test name since it can contain directories.
@@ -290,10 +290,11 @@ class XPCShellTests(object):
       f = open(test + ".log", "w")
       f.write(stdout)
 
-      if os.path.exists(self.leakLogFile):
-        leaks = open(self.leakLogFile, "r")
-        f.write(leaks.read())
-        leaks.close()
+      for leakLog in leakLogs: 
+        if os.path.exists(leakLog):
+          leaks = open(leakLog, "r")
+          f.write(leaks.read())
+          leaks.close()
     finally:
       if f:
         f.close()
@@ -422,10 +423,17 @@ class XPCShellTests(object):
             passCount += 1
 
           checkForCrashes(testdir, self.symbolsPath, testName=test)
-          dumpLeakLog(self.leakLogFile, True)
+          # Find child process(es) leak log(s), if any: See InitLog() in
+          # xpcom/base/nsTraceRefcntImpl.cpp for logfile naming logic
+          leakLogs = [self.leakLogFile]
+          for childLog in glob(os.path.join(self.profileDir, "runxpcshelltests_leaks_*_pid*.log")):
+            if os.path.isfile(childLog):
+              leakLogs += [childLog]
+          for log in leakLogs:
+            dumpLeakLog(log, True)
 
           if self.logfiles and stdout:
-            self.createLogFile(test, stdout)
+            self.createLogFile(test, stdout, leakLogs)
         finally:
           if self.profileDir:
             self.removeDir(self.profileDir)
