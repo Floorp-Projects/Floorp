@@ -89,7 +89,7 @@ namespace ipc {
 
 class NS_FINAL_CLASS Shmem
 {
-  friend class IPC::ParamTraits<mozilla::ipc::Shmem>;
+  friend struct IPC::ParamTraits<mozilla::ipc::Shmem>;
 
 public:
   typedef int32 id_t;
