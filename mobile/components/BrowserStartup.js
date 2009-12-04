@@ -69,7 +69,7 @@ BrowserStartup.prototype = {
   _xpcom_factory: BrowserStartupServiceFactory,
 
   _init: function () {
-    this._observerService = Cc['@mozilla.org/observer-service;1'].
+    this._observerService = Cc["@mozilla.org/observer-service;1"].
                             getService(Ci.nsIObserverService);
     this._observerService.addObserver(this, "places-init-complete", false);
   },

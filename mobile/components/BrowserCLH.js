@@ -50,6 +50,17 @@ BrowserCLH.prototype = {
   // nsICommandLineHandler
   //
   handle: function fs_handle(cmdLine) {
+    // Instantiate the search service so the search engine cache is created now
+    // instead when the application is running. The install process will register
+    // this component by using the -silent command line flag, thereby creating
+    // the cache during install, not runtime.
+    // NOTE: This code assumes this CLH is run before the nsDefaultCLH, which
+    // consumes the "-silent" flag.
+    if (cmdLine.findFlag("silent", false) > -1) {
+      let searchService = Cc["@mozilla.org/browser/search-service;1"].
+                          getService(Ci.nsIBrowserSearchService);
+    }
+
     let win;
     try {
       var windowMediator =
