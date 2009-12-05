@@ -70,7 +70,7 @@ class RecursiveSlotMap : public SlotMap
          * Store at exit->sp_adj - sizeof(double)
          */
         ptrdiff_t retOffset = downPostSlots * sizeof(double) -
-                              mRecorder.treeInfo->nativeStackBase;
+                              mRecorder.tree->nativeStackBase;
         mRecorder.lir->insStorei(mRecorder.addName(rval_ins, "rval_ins"),
                                  mRecorder.lirbuf->sp, retOffset);
     }
@@ -93,7 +93,7 @@ class UpRecursiveSlotMap : public RecursiveSlotMap
         /*
          * The native stack offset of the return value once this frame has
          * returned, is:
-         *      -treeInfo->nativeStackBase + downPostSlots * sizeof(double)
+         *      -tree->nativeStackBase + downPostSlots * sizeof(double)
          *
          * Note, not +1, since the offset is 0-based.
          *
@@ -101,15 +101,15 @@ class UpRecursiveSlotMap : public RecursiveSlotMap
          * be the amount down recursion added, which was just guarded as
          * |downPostSlots|. So the offset is:
          *
-         *      -treeInfo->nativeStackBase + downPostSlots * sizeof(double) -
+         *      -tree->nativeStackBase + downPostSlots * sizeof(double) -
          *                                   downPostSlots * sizeof(double)
          * Or:
-         *      -treeInfo->nativeStackBase
+         *      -tree->nativeStackBase
          *
          * This makes sense because this slot is just above the highest sp for
          * the down frame.
          */
-        lir->insStorei(rval_ins, lirbuf->sp, -mRecorder.treeInfo->nativeStackBase);
+        lir->insStorei(rval_ins, lirbuf->sp, -mRecorder.tree->nativeStackBase);
 
         lirbuf->sp = lir->ins2(LIR_piadd, lirbuf->sp,
                                lir->insImmWord(-int(downPostSlots) * sizeof(double)));
@@ -152,7 +152,7 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
 
     /* Build the typemap the exit will have. Note extra stack slot for return value. */
     unsigned downPostSlots = downFrame->callerHeight;
-    unsigned ngslots = treeInfo->globalSlots->length();
+    unsigned ngslots = tree->globalSlots->length();
     unsigned exitTypeMapLen = downPostSlots + 1 + ngslots;
     JSTraceType* exitTypeMap = (JSTraceType*)alloca(sizeof(JSTraceType) * exitTypeMapLen);
     JSTraceType* typeMap = downFrame->get_typemap();
@@ -176,7 +176,7 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
     exit->block = cx->fp->down->blockChain;
     exit->pc = downFrame->pc + JSOP_CALL_LENGTH;
     exit->imacpc = NULL;
-    exit->sp_adj = ((downPostSlots + 1) * sizeof(double)) - treeInfo->nativeStackBase;
+    exit->sp_adj = ((downPostSlots + 1) * sizeof(double)) - tree->nativeStackBase;
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo*);
     exit->nativeCalleeWord = 0;
     exit->lookupFlags = js_InferFlags(cx, 0);
@@ -257,11 +257,11 @@ TraceRecorder::upRecursion()
          */
         js_CaptureStackTypes(cx, 1, fi->get_typemap());
     } else {
-        /* Case 2: Guess that up-recursion is backing out, infer types from our TreeInfo. */
-        JS_ASSERT(treeInfo->nStackTypes == downPostSlots + 1);
+        /* Case 2: Guess that up-recursion is backing out, infer types from our Tree. */
+        JS_ASSERT(tree->nStackTypes == downPostSlots + 1);
         JSTraceType* typeMap = fi->get_typemap();
         for (unsigned i = 0; i < downPostSlots; i++)
-            typeMap[i] = treeInfo->typeMap[i];
+            typeMap[i] = tree->typeMap[i];
     }
 
     fi = traceMonitor->frameCache->memoize(fi);
@@ -311,7 +311,7 @@ TraceRecorder::upRecursion()
     for (unsigned i = 0; i < downPostSlots; i++)
         slotMap.addSlot(exit->stackType(i));
     slotMap.addSlot(&stackval(-1));
-    VisitGlobalSlots(slotMap, cx, *treeInfo->globalSlots);
+    VisitGlobalSlots(slotMap, cx, *tree->globalSlots);
     if (recursive_pc == (jsbytecode*)fragment->root->ip) {
         debug_only_print0(LC_TMTracer, "Compiling up-recursive loop...\n");
     } else {
@@ -319,9 +319,9 @@ TraceRecorder::upRecursion()
         exit->exitType = RECURSIVE_UNLINKED_EXIT;
         exit->recursive_pc = recursive_pc;
     }
-    JS_ASSERT(treeInfo->recursion != Recursion_Disallowed);
-    if (treeInfo->recursion != Recursion_Detected)
-        treeInfo->recursion = Recursion_Unwinds;
+    JS_ASSERT(tree->recursion != Recursion_Disallowed);
+    if (tree->recursion != Recursion_Detected)
+        tree->recursion = Recursion_Unwinds;
     return closeLoop(slotMap, exit);
 }
 
@@ -424,7 +424,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
      * value. The slurpSlot variable keeps track of the last slot that has been
      * unboxed, as to avoid re-unboxing when taking a SLURP_FAIL exit.
      */
-    unsigned numGlobalSlots = treeInfo->globalSlots->length();
+    unsigned numGlobalSlots = tree->globalSlots->length();
     unsigned safeSlots = NativeStackSlots(cx, frameDepth) + 1 + numGlobalSlots;
     jsbytecode* recursive_pc = return_pc + JSOP_CALL_LENGTH;
     VMSideExit* exit = (VMSideExit*)
@@ -435,7 +435,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     exit->exitType = RECURSIVE_SLURP_FAIL_EXIT;
     exit->numStackSlots = downPostSlots + 1;
     exit->numGlobalSlots = numGlobalSlots;
-    exit->sp_adj = ((downPostSlots + 1) * sizeof(double)) - treeInfo->nativeStackBase;
+    exit->sp_adj = ((downPostSlots + 1) * sizeof(double)) - tree->nativeStackBase;
     exit->recursive_pc = recursive_pc;
 
     /*
@@ -557,7 +557,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     for (unsigned i = 0; i < downPostSlots; i++)
         slotMap.addSlot(typeMap[i]);
     slotMap.addSlot(&stackval(-1), typeMap[downPostSlots]);
-    VisitGlobalSlots(slotMap, cx, *treeInfo->globalSlots);
+    VisitGlobalSlots(slotMap, cx, *tree->globalSlots);
     debug_only_print0(LC_TMTracer, "Compiling up-recursive slurp...\n");
     exit = copy(exit);
     if (exit->recursive_pc == fragment->root->ip)
@@ -566,7 +566,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
         exit->exitType = RECURSIVE_UNLINKED_EXIT;
     debug_only_printf(LC_TMTreeVis, "TREEVIS CHANGEEXIT EXIT=%p TYPE=%s\n", (void*)exit,
                       getExitName(exit->exitType));
-    JS_ASSERT(treeInfo->recursion >= Recursion_Unwinds);
+    JS_ASSERT(tree->recursion >= Recursion_Unwinds);
     return closeLoop(slotMap, exit);
 }
 
@@ -584,9 +584,9 @@ TraceRecorder::downRecursion()
     JS_ASSERT(unsigned(slots) == NativeStackSlots(cx, 1) - fp->argc - 2 - fp->script->nfixed - 1);
 
     /* Guard that there is enough stack space. */
-    JS_ASSERT(treeInfo->maxNativeStackSlots >= treeInfo->nativeStackBase / sizeof(double));
-    int guardSlots = slots + treeInfo->maxNativeStackSlots -
-                     treeInfo->nativeStackBase / sizeof(double);
+    JS_ASSERT(tree->maxNativeStackSlots >= tree->nativeStackBase / sizeof(double));
+    int guardSlots = slots + tree->maxNativeStackSlots -
+                     tree->nativeStackBase / sizeof(double);
     LIns* sp_top = lir->ins2(LIR_piadd, lirbuf->sp, lir->insImmWord(guardSlots * sizeof(double)));
     guard(true, lir->ins2(LIR_plt, sp_top, eos_ins), OOM_EXIT);
 
@@ -618,8 +618,8 @@ TraceRecorder::downRecursion()
         exit = snapshot(RECURSIVE_UNLINKED_EXIT);
     exit->recursive_pc = fp->script->code;
     debug_only_print0(LC_TMTracer, "Compiling down-recursive function call.\n");
-    JS_ASSERT(treeInfo->recursion != Recursion_Disallowed);
-    treeInfo->recursion = Recursion_Detected;
+    JS_ASSERT(tree->recursion != Recursion_Disallowed);
+    tree->recursion = Recursion_Detected;
     return closeLoop(exit);
 }
 
@@ -783,7 +783,7 @@ TraceRecorder::slurpSlot(LIns* val_ins, jsval* vp, SlurpInfo* info)
     LIns* val = slurpSlot(val_ins, vp, exit);
     lir->insStorei(val,
                    lirbuf->sp,
-                   -treeInfo->nativeStackBase + ptrdiff_t(info->curSlot) * sizeof(double));
+                   -tree->nativeStackBase + ptrdiff_t(info->curSlot) * sizeof(double));
     info->curSlot++;
 }
 
