@@ -3650,5 +3650,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       CrashReporter::UnsetExceptionHandler();
 #endif
 
+  XRE_DeinitCommandLine();
+
   return NS_FAILED(rv) ? 1 : 0;
 }

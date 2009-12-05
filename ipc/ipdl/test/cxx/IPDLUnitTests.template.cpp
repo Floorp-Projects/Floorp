@@ -4,6 +4,7 @@
 
 #include "IPDLUnitTests.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "base/command_line.h"
@@ -111,7 +112,27 @@ IPDLUnitTest()
 // parent process only
 
 namespace {
+
 void* gParentActor = NULL;
+IPDLUnitTestSubprocess* gSubprocess;
+
+void
+DeleteParentGlobals()
+{
+    delete gSubprocess;
+
+    if (!gParentActor)
+        return;
+
+    switch (IPDLUnitTest()) {
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${PARENT_DELETE_CASES}
+//-----------------------------------------------------------------------------
+    default:  mozilla::_ipdltest::fail("???");
+    }
+}
+
 }
 
 
@@ -134,15 +155,18 @@ IPDLUnitTestMain(void* aData)
     std::vector<std::string> testCaseArgs;
     testCaseArgs.push_back(testString);
 
-    IPDLUnitTestSubprocess* subprocess = new IPDLUnitTestSubprocess();
-    if (!subprocess->SyncLaunch(testCaseArgs))
+    gSubprocess = new IPDLUnitTestSubprocess();
+    if (!gSubprocess->SyncLaunch(testCaseArgs))
         fail("problem launching subprocess");
 
-    IPC::Channel* transport = subprocess->GetChannel();
+    IPC::Channel* transport = gSubprocess->GetChannel();
     if (!transport)
         fail("no transport");
 
-    base::ProcessHandle child = subprocess->GetChildProcessHandle();
+    base::ProcessHandle child = gSubprocess->GetChildProcessHandle();
+
+    if (atexit(DeleteParentGlobals))
+        fail("can't install atexit() handler");
 
     switch (test) {
 //-----------------------------------------------------------------------------
@@ -164,7 +188,24 @@ ${PARENT_MAIN_CASES}
 // child process only
 
 namespace {
+
 void* gChildActor = NULL;
+
+void
+DeleteChildActor()
+{
+    if (!gChildActor)
+        return;
+
+    switch (IPDLUnitTest()) {
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${CHILD_DELETE_CASES}
+//-----------------------------------------------------------------------------
+    default:  mozilla::_ipdltest::fail("???");
+    }
+}
+
 }
 
 
@@ -176,6 +217,9 @@ IPDLUnitTestChildInit(IPC::Channel* transport,
                       base::ProcessHandle parent,
                       MessageLoop* worker)
 {
+    if (atexit(DeleteChildActor))
+        fail("can't install atexit() handler");
+
     switch (IPDLUnitTest()) {
 //-----------------------------------------------------------------------------
 //===== TEMPLATED =====
