@@ -307,7 +307,7 @@ nsNPAPIPlugin::PluginCrashed()
 {
   nsPluginTag* tag = nsPluginHost::GetInst()->FindPluginTag(this);
   if (tag) {
-    NS_RELEASE(tag->mEntryPoint);
+    tag->mEntryPoint = NULL;
   }
 }
 #endif
