@@ -99,8 +99,12 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
     switch (why) {
     case AbnormalShutdown:
         mShutdown = true;
-        if (mPlugin)
-            mPlugin->PluginCrashed();
+        if (mPlugin) {
+            nsCOMPtr<nsIRunnable> r =
+                new nsRunnableMethod<nsNPAPIPlugin>(
+                    mPlugin, &nsNPAPIPlugin::PluginCrashed);
+            NS_DispatchToMainThread(r);
+        }
         break;
 
     case NormalShutdown:
