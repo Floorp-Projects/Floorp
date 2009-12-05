@@ -475,6 +475,9 @@ XRE_API(nsresult,
 XRE_API(nsresult,
         XRE_InitCommandLine, (int aArgc, char* aArgv[]))
 
+XRE_API(nsresult,
+        XRE_DeinitCommandLine, ())
+
 class MessageLoop;
 
 XRE_API(void,
