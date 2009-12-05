@@ -336,7 +336,7 @@ XRE_InitChildProcess(int aArgc,
   }
 
   NS_LogTerm();
-  return NS_OK;
+  return XRE_DeinitCommandLine();
 }
 
 MessageLoop*
@@ -416,7 +416,7 @@ XRE_InitParentProcess(int aArgc,
     }
   }
 
-  return NS_OK;
+  return XRE_DeinitCommandLine();
 }
 
 #ifdef MOZ_IPDL_TESTS
@@ -528,7 +528,7 @@ XRE_ShutdownTestShell()
 nsresult
 XRE_InitCommandLine(int aArgc, char* aArgv[])
 {
-    nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
 
 #if defined(MOZ_IPC)
 
@@ -560,12 +560,25 @@ XRE_InitCommandLine(int aArgc, char* aArgv[])
   NS_ASSERTION(!CommandLine::IsInitialized(), "Bad news!");
   CommandLine::Init(aArgc, canonArgs);
 
+  for (int i = 0; i < aArgc; ++i)
+      free(canonArgs[i]);
   delete[] canonArgs;
 #endif
 #endif
   return rv;
 }
 
+nsresult
+XRE_DeinitCommandLine()
+{
+  nsresult rv = NS_OK;
+
+#if defined(MOZ_IPC)
+  CommandLine::Terminate();
+#endif
+
+  return rv;
+}
 
 GeckoProcessType
 XRE_GetProcessType()
