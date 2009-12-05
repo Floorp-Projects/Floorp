@@ -825,6 +825,9 @@ JSRuntime::~JSRuntime()
 JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes)
 {
+#ifdef MUST_DETECT_SSE2
+    js_use_SSE2 = js_DetectSSE2();
+#endif
 #ifdef DEBUG
     if (!js_NewRuntimeWasCalled) {
         /*
