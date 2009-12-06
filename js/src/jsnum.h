@@ -48,10 +48,10 @@
 #include <ieeefp.h>
 #endif
 #ifdef HAVE_SSE2
-#ifdef USE_EMM_INTRIN
-#include <emmintrin.h>
-#else
+#ifdef __GNUC__
 #include <xmmintrin.h>
+#else
+#include <emmintrin.h>
 #endif
 #endif
 
