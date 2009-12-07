@@ -105,7 +105,7 @@ ContentProcessParent::ContentProcessParent()
     : mMonitor("ContentProcessParent::mMonitor")
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-    mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, this);
+    mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content);
     mSubprocess->AsyncLaunch();
     Open(mSubprocess->GetChannel(), mSubprocess->GetChildProcessHandle());
 }
@@ -120,31 +120,27 @@ ContentProcessParent::~ContentProcessParent()
 
 NS_IMPL_ISUPPORTS1(ContentProcessParent, nsIObserver)
 
+namespace {
+void
+DeleteSubprocess(GeckoChildProcessHost* aSubprocess)
+{
+    delete aSubprocess;
+}
+}
+
 NS_IMETHODIMP
 ContentProcessParent::Observe(nsISupports* aSubject,
                               const char* aTopic,
                               const PRUnichar* aData)
 {
     if (!strcmp(aTopic, "xpcom-shutdown") && mSubprocess) {
-        SendQuit();
-#ifdef OS_WIN
-        MonitorAutoEnter mon(mMonitor);
-        while (mSubprocess) {
-            mon.Wait();
-        }
-#endif
+        Close();
+        XRE_GetIOMessageLoop()->PostTask(
+            FROM_HERE,
+            NewRunnableFunction(DeleteSubprocess, mSubprocess));
+        mSubprocess = nsnull;
     }
     return NS_OK;
-}
-
-void
-ContentProcessParent::OnWaitableEventSignaled(base::WaitableEvent *event)
-{
-    // The child process has died! Sadly we're on the wrong thread to do much.
-    NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-    MonitorAutoEnter mon(mMonitor);
-    mSubprocess = nsnull;
-    mon.Notify();
 }
 
 PIFrameEmbeddingParent*

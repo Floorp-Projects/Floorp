@@ -58,7 +58,6 @@ namespace dom {
 class TabParent;
 
 class ContentProcessParent : public PContentProcessParent,
-                             public base::WaitableEventWatcher::Delegate,
                              public nsIObserver
 {
 private:
@@ -75,8 +74,6 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
-
-    virtual void OnWaitableEventSignaled(base::WaitableEvent *event);
 
     TabParent* CreateTab();
 

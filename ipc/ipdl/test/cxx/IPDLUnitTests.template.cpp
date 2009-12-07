@@ -25,7 +25,7 @@ using mozilla::_ipdltest::IPDLUnitTestThreadChild;
 // data/functions accessed by both parent and child processes
 
 namespace {
-char* gIPDLUnitTestName = NULL; // "leaks"
+char* gIPDLUnitTestName = NULL;
 }
 
 
@@ -117,10 +117,8 @@ void* gParentActor = NULL;
 IPDLUnitTestSubprocess* gSubprocess;
 
 void
-DeleteParentGlobals()
+DeleteParentActor()
 {
-    delete gSubprocess;
-
     if (!gParentActor)
         return;
 
@@ -131,6 +129,23 @@ ${PARENT_DELETE_CASES}
 //-----------------------------------------------------------------------------
     default:  mozilla::_ipdltest::fail("???");
     }
+}
+
+void
+QuitXPCOM()
+{
+  DeleteParentActor();
+
+  static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+  nsCOMPtr<nsIAppShell> appShell (do_GetService(kAppShellCID));
+  appShell->Exit();
+}
+
+void
+DeleteSubprocess(MessageLoop* uiLoop)
+{
+  delete gSubprocess;
+  uiLoop->PostTask(FROM_HERE, NewRunnableFunction(QuitXPCOM));
 }
 
 }
@@ -165,9 +180,6 @@ IPDLUnitTestMain(void* aData)
 
     base::ProcessHandle child = gSubprocess->GetChildProcessHandle();
 
-    if (atexit(DeleteParentGlobals))
-        fail("can't install atexit() handler");
-
     switch (test) {
 //-----------------------------------------------------------------------------
 //===== TEMPLATED =====
@@ -178,6 +190,15 @@ ${PARENT_MAIN_CASES}
         fail("not reached");
         return;                 // unreached
     }
+}
+
+void
+QuitParent()
+{
+  // kick off the shutdown process
+  XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(DeleteSubprocess, MessageLoop::current()));
 }
 
 } // namespace _ipdltest

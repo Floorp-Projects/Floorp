@@ -635,7 +635,9 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
 }
 
 bool Channel::ChannelImpl::Send(Message* message) {
+#ifndef CHROMIUM_MOZILLA_BUILD
   chrome::Counters::ipc_send_counter().Increment();
+#endif
 #ifdef IPC_MESSAGE_DEBUG_EXTRA
   DLOG(INFO) << "sending message @" << message << " on channel @" << this
              << " with type " << message->type()
