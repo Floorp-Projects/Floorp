@@ -111,8 +111,7 @@ void IPDLUnitTestChildInit(IPC::Channel* transport,
                            base::ProcessHandle parent,
                            MessageLoop* worker);
 
-inline void
-QuitChild()
+inline void QuitChild()
 {
   XRE_ShutdownChildProcess();
 }

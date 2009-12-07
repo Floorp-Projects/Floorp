@@ -144,8 +144,18 @@ QuitXPCOM()
 void
 DeleteSubprocess(MessageLoop* uiLoop)
 {
+  // pong to QuitXPCOM
   delete gSubprocess;
   uiLoop->PostTask(FROM_HERE, NewRunnableFunction(QuitXPCOM));
+}
+
+void
+DeferredParentShutdown()
+{
+  // ping to DeleteSubprocess
+  XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(DeleteSubprocess, MessageLoop::current()));
 }
 
 }
@@ -195,10 +205,10 @@ ${PARENT_MAIN_CASES}
 void
 QuitParent()
 {
-  // kick off the shutdown process
-  XRE_GetIOMessageLoop()->PostTask(
-      FROM_HERE,
-      NewRunnableFunction(DeleteSubprocess, MessageLoop::current()));
+  // defer "real" shutdown to avoid *Channel::Close() racing with the
+  // deletion of the subprocess
+    MessageLoop::current()->PostTask(
+        FROM_HERE, NewRunnableFunction(DeferredParentShutdown));
 }
 
 } // namespace _ipdltest
