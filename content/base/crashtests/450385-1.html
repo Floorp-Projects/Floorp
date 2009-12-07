@@ -1,0 +1,11 @@
+<html>
+<BODY></BODY>
+<SCRIPT>
+document.body.addEventListener("DOMCharacterDataModified", function () {
+    document.body.innerHTML = "";
+    eventChild.appendChild(event.relatedNode);
+}, true);
+document.addEventListener("DOMNodeInserted", function () {}, true);
+document.body.innerHTML="]<kbd><small></kbd><base><optGroup></optGroup>";
+</SCRIPT>
+</html>
