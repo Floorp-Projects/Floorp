@@ -56,10 +56,6 @@
 #define GLAPI
 #endif
 
-#ifdef WINCE
-#define USE_GLES2
-#endif
-
 typedef char realGLboolean;
 
 class LibrarySymbolLoader
@@ -301,10 +297,12 @@ public:
     PFNGLLINEWIDTHPROC fLineWidth;
     typedef void (GLAPIENTRY * PFNGLLINKPROGRAMPROC) (GLuint program);
     PFNGLLINKPROGRAMPROC fLinkProgram;
+#if 0
     typedef void * (GLAPIENTRY * PFNGLMAPBUFFERPROC) (GLenum target, GLenum access);
     PFNGLMAPBUFFERPROC fMapBuffer;
     typedef realGLboolean (GLAPIENTRY * PFNGLUNAMPBUFFERPROC) (GLenum target);
     PFNGLUNAMPBUFFERPROC fUnmapBuffer;
+#endif
     typedef void (GLAPIENTRY * PFNGLPIXELSTOREIPROC) (GLenum pname, GLint param);
     PFNGLPIXELSTOREIPROC fPixelStorei;
     typedef void (GLAPIENTRY * PFNGLPOLYGONOFFSETPROC) (GLfloat factor, GLfloat bias);
