@@ -382,6 +382,8 @@ WebGLContext::BindBuffer(GLenum target, nsIWebGLBuffer *buffer)
 
     MakeContextCurrent();
 
+    //printf ("BindBuffer0: %04x\n", gl->fGetError());
+
     if (target == LOCAL_GL_ARRAY_BUFFER) {
         mBoundArrayBuffer = wbuf;
     } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
@@ -391,6 +393,8 @@ WebGLContext::BindBuffer(GLenum target, nsIWebGLBuffer *buffer)
     }
 
     gl->fBindBuffer(target, wbuf ? wbuf->GLName() : 0);
+
+    //printf ("BindBuffer: %04x\n", gl->fGetError());
 
     return NS_OK;
 }
@@ -981,7 +985,11 @@ WebGLContext::DrawArrays(GLenum mode, GLint offset, GLsizei count)
 
     MakeContextCurrent();
 
+    //printf ("DrawArrays0: %04x\n", gl->fGetError());
+
     gl->fDrawArrays(mode, offset, count);
+
+    //printf ("DrawArrays: %04x\n", gl->fGetError());
 
     Invalidate();
 
@@ -2038,7 +2046,6 @@ WebGLContext::GetUniform(nsIWebGLProgram *prog, GLint location)
     GLint uArraySize = 0;
     GLenum uType = 0;
 
-    fprintf (stderr, "GetUniform: program: %d location: %d\n", program, location);
     gl->fGetActiveUniform(program, location, 0, NULL, &uArraySize, &uType, NULL);
     if (uArraySize == 0)
         return NS_ERROR_FAILURE;
@@ -2902,15 +2909,29 @@ WebGLContext::ValidateGL()
     // make sure that the opengl stuff that we need is supported
     GLint val = 0;
 
+    MakeContextCurrent();
+
     gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &val);
     mAttribBuffers.SetLength(val);
+
+    //fprintf(stderr, "GL_MAX_VERTEX_ATTRIBS: %d\n", val);
 
     gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_UNITS, &val);
     mBound2DTextures.SetLength(val);
     mBoundCubeMapTextures.SetLength(val);
 
+    //fprintf(stderr, "GL_MAX_TEXTURE_UNITS: %d\n", val);
+
     gl->fGetIntegerv(LOCAL_GL_MAX_COLOR_ATTACHMENTS, &val);
     mBoundColorFramebuffers.SetLength(val);
+
+#ifdef DEBUG_vladimir
+    gl->fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT, &val);
+    fprintf(stderr, "GL_IMPLEMENTATION_COLOR_READ_FORMAT: 0x%04x\n", val);
+
+    gl->fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE, &val);
+    fprintf(stderr, "GL_IMPLEMENTATION_COLOR_READ_TYPE: 0x%04x\n", val);
+#endif
 
 #ifndef USE_GLES2
     // gl_PointSize is always available in ES2 GLSL
