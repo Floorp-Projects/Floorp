@@ -2203,12 +2203,28 @@ namespace nanojit
 
     LInsp LoadFilter::insLoad(LOpcode v, LInsp base, int32_t disp)
     {
-        if (base != sp && base != rp && (v == LIR_ld || v == LIR_ldq)) {
-            uint32_t k;
-            LInsp ins = exprs->findLoad(v, base, disp, k);
-            if (ins)
-                return ins;
-            return exprs->add(LInsLoad, out->insLoad(v,base,disp), k);
+        if (base != sp && base != rp) 
+        {
+            switch (v)
+            {
+                case LIR_ld:
+                case LIR_ldq:
+                case LIR_ld32f:
+                case LIR_ldsb:
+                case LIR_ldss:
+                case LIR_ldzb:
+                case LIR_ldzs:
+                {
+                    uint32_t k;
+                    LInsp ins = exprs->findLoad(v, base, disp, k);
+                    if (ins)
+                        return ins;
+                    return exprs->add(LInsLoad, out->insLoad(v,base,disp), k);
+                }
+                default:
+                    // fall thru
+                    break;
+            }
         }
         return out->insLoad(v, base, disp);
     }
