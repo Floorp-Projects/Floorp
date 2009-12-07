@@ -4781,9 +4781,7 @@ photon)
 
 cairo-windows)
     MOZ_WIDGET_TOOLKIT=windows
-    if test -z "$WINCE"; then
-        MOZ_WEBGL=1
-    fi
+    MOZ_WEBGL=1
     ;;
 
 cairo-gtk2|cairo-gtk2-x11)
@@ -4791,6 +4789,7 @@ cairo-gtk2|cairo-gtk2-x11)
     MOZ_ENABLE_GTK2=1
     MOZ_ENABLE_XREMOTE=1
     MOZ_WEBGL=1
+    MOZ_WEBGL_GLX=1
 
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
@@ -4804,7 +4803,7 @@ cairo-gtk2|cairo-gtk2-x11)
 cairo-gtk2-dfb)
     MOZ_WIDGET_TOOLKIT=gtk2
     MOZ_ENABLE_GTK2=1
-    MOZ_WEBGL=1
+    MOZ_WEBGL=
 
     AC_DEFINE(MOZ_DFB)
     MOZ_DFB=1
@@ -6260,7 +6259,7 @@ if test $NS_OSSO; then
     fi
     AC_DEFINE(NS_OSSO)
     MOZ_GFX_OPTIMIZE_MOBILE=1
-    MOZ_WEBGL=
+    MOZ_WEBGL_GLX=
 fi
 AC_SUBST(LIBOSSO_CFLAGS)
 AC_SUBST(LIBOSSO_LIBS)
@@ -8100,14 +8099,12 @@ if test "$MOZ_X11"; then
 fi # MOZ_X11
 
 dnl Check for headers, etc. needed by WebGL.
-if test -n "$MOZ_WEBGL"; then
-    if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
-        AC_CHECK_HEADER(GL/glx.h)
-        if test "$ac_cv_header_GL_glx_h" != "yes"; then
-            AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa (SuSE))])
-        fi
+if test -n "$MOZ_WEBGL_GLX"; then
+    AC_CHECK_HEADER(GL/glx.h)
+    if test "$ac_cv_header_GL_glx_h" != "yes"; then
+        AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa (SuSE))])
     fi
-fi # MOZ_WEBGL
+fi # MOZ_WEBGL_GLX
 fi # COMPILE_ENVIRONMENT
 
 if test "$USE_FC_FREETYPE"; then
