@@ -605,7 +605,7 @@ WebGLContext::BufferSubData(GLenum target, GLsizeiptr offset)
                                     boundBuffer->Count(), offset, arrayBuf->NativeSize());
                 return NS_ERROR_FAILURE;
             }
-#ifdef DEBUG
+#ifdef DEBUG_mwsteele
             LogMessage("bufferSubData: buffer (%d) for data at offset (%d+%d)", boundBuffer->Count(), offset, arrayBuf->NativeSize());
 #endif
             // all good
@@ -621,7 +621,7 @@ WebGLContext::BufferSubData(GLenum target, GLsizeiptr offset)
                                     boundBuffer->Count(), offset, canvasArrayObj->NativeCount());
                 return NS_ERROR_FAILURE;
             }
-#ifdef DEBUG
+#ifdef DEBUG_mwsteele
             LogMessage("bufferSubData: buffer (%d) for data at offset (%d+%d)", boundBuffer->Count(), offset, canvasArrayObj->NativeSize());
 #endif
             // all good
@@ -991,6 +991,8 @@ WebGLContext::DrawArrays(GLenum mode, GLint offset, GLsizei count)
 NS_IMETHODIMP
 WebGLContext::DrawElements(GLenum mode, GLuint count, GLenum type, GLuint offset)
 {
+    int elementSize = 0;
+
     switch (mode) {
         case LOCAL_GL_TRIANGLES:
         case LOCAL_GL_TRIANGLE_STRIP:
@@ -1006,9 +1008,17 @@ WebGLContext::DrawElements(GLenum mode, GLuint count, GLenum type, GLuint offset
 
     switch (type) {
         case LOCAL_GL_UNSIGNED_SHORT:
+            elementSize = 2;
+            if (offset % 2 != 0)
+                return ErrorMessage("drawElements: invalid offset (must be a multiple of 2) for UNSIGNED_SHORT");
             break;
+
+        case LOCAL_GL_UNSIGNED_BYTE:
+            elementSize = 1;
+            break;
+
         default:
-            return ErrorMessage("drawElements: type must be UNSIGNED_SHORT");
+            return ErrorMessage("drawElements: type must be UNSIGNED_SHORT or UNSIGNED_BYTE");
     }
 
     if (!mBoundElementArrayBuffer)
@@ -1017,12 +1027,13 @@ WebGLContext::DrawElements(GLenum mode, GLuint count, GLenum type, GLuint offset
     if (offset+count < offset || offset+count < count)
         return ErrorMessage("glDrawElements: overflow in offset+count");
 
-    if (count + offset > mBoundElementArrayBuffer->Count())
+    if (count*elementSize + offset > mBoundElementArrayBuffer->ByteCount())
         return ErrorMessage("glDrawElements: bound element array buffer is too small for given count and offset");
 
     MakeContextCurrent();
 
     // XXXmark fix validation
+    // XXX either GLushort or GLubyte; just put this calculation as a method on the array object
 #if 0
     GLuint maxindex = 0;
     GLushort *ubuf = (GLushort*) gl->fMapBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER, LOCAL_GL_READ_ONLY);
@@ -1040,7 +1051,7 @@ WebGLContext::DrawElements(GLenum mode, GLuint count, GLenum type, GLuint offset
     if (!ValidateBuffers(maxindex))
         return ErrorMessage("glDrawElements: ValidateBuffers failed");
 #endif
-    // XXX uh, is this offset, or offset * elementsize?
+
     gl->fDrawElements(mode, count, type, (GLvoid*) (offset));
 
     Invalidate();
