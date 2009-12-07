@@ -35,4 +35,6 @@ load 408939-1.html
 load 423373-1.html
 skip load 460706-1.xhtml # Bug 479499
 load 468538-1.xhtml
+load 515278-1.html
 load 515816-1.html
+load 522326-1.html
