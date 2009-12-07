@@ -56,8 +56,6 @@ child:
 
     PTestShell();
 
-    Quit();
-
 parent:
     PNecko();
 };

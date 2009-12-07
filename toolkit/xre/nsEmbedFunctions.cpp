@@ -463,22 +463,10 @@ XRE_ShutdownChildProcess()
 {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "Wrong thread!");
 
-    MessageLoop* uiLoop = MessageLoop::current();
     MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-
     NS_ABORT_IF_FALSE(!!ioLoop, "Bad shutdown order");
-    ioLoop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
 
-    NS_ABORT_IF_FALSE(!!uiLoop, "Bad shutdown order");
-    if (GeckoProcessType_Content == XRE_GetProcessType()) {
-        uiLoop->PostTask(
-            FROM_HERE,
-            NewRunnableMethod(ContentProcessChild::GetSingleton(),
-                              &ContentProcessChild::Quit));
-    }
-    else {
-        uiLoop->Quit();
-    }
+    ioLoop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
 }
 
 namespace {

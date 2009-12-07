@@ -136,23 +136,16 @@ ContentProcessChild::Quit()
     mTestShells.Clear();
 }
 
-static void
-QuitIOLoop()
+void
+ContentProcessChild::ActorDestroy(ActorDestroyReason why)
 {
-    MessageLoop::current()->Quit();
-}
+    if (AbnormalShutdown == why)
+        NS_WARNING("shutting down because of crash!");
 
-bool
-ContentProcessChild::RecvQuit()
-{
     mQuit = PR_TRUE;
-
     Quit();
 
-    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
-                                     NewRunnableFunction(&QuitIOLoop));
-
-    return true;
+    XRE_ShutdownChildProcess();
 }
 
 } // namespace dom
