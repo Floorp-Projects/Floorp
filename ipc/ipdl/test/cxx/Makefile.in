@@ -86,8 +86,7 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 
-RUNIPDLTEST := $(RUN_TEST_PROGRAM) $(DEPTH)/dist/bin/ipdlunittest$(BIN_SUFFIX)
-
+IPDLUNITTEST_BIN = $(DEPTH)/dist/bin/ipdlunittest$(BIN_SUFFIX)
 
 IPDLUnitTests.cpp : $(GENTESTER) $(TESTER_TEMPLATE) $(IPDLTESTHDRS)
 	$(PYTHON) $< $(TESTER_TEMPLATE) $(IPDLTESTS) > $@
@@ -95,5 +94,13 @@ IPDLUnitTests.cpp : $(GENTESTER) $(TESTER_TEMPLATE) $(IPDLTESTHDRS)
 check::
 	@$(EXIT_ON_ERROR)  \
 	for test in $(IPDLTESTS); do  \
-		 $(RUNIPDLTEST) $$test ;  \
+		 $(RUN_TEST_PROGRAM) $(IPDLUNITTEST_BIN) $$test ;  \
+	done
+
+check-valgrind::
+	@$(EXIT_ON_ERROR)  \
+	for test in $(IPDLTESTS); do  \
+		 $(RUN_TEST_PROGRAM) -g -d \
+                   valgrind -a '--leak-check=full --error-exitcode=1 --trace-children=yes -q' \
+                   $(IPDLUNITTEST_BIN) $$test ;  \
 	done
