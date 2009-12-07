@@ -71,10 +71,12 @@ public:
     virtual PNeckoChild* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoChild*);
 
-    void Quit();
-    virtual bool RecvQuit();
-
 private:
+    NS_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why);
+
+    void Quit();
+
     static ContentProcessChild* sSingleton;
 
     nsTArray<PIFrameEmbeddingChild* > mIFrames;
