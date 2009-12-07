@@ -409,17 +409,8 @@ WebGLContext::BindFramebuffer(GLenum target, nsIWebGLFramebuffer *fb)
 
     MakeContextCurrent();
 
-    if (target >= LOCAL_GL_COLOR_ATTACHMENT0 &&
-        target < (LOCAL_GL_COLOR_ATTACHMENT0 + mBoundColorFramebuffers.Length()))
-    {
-        int targetOffset = target - LOCAL_GL_COLOR_ATTACHMENT0;
-        mBoundColorFramebuffers[targetOffset] = wfb;
-    } else if (target == LOCAL_GL_DEPTH_ATTACHMENT) {
-        mBoundDepthFramebuffer = wfb;
-    } else if (target == LOCAL_GL_STENCIL_ATTACHMENT) {
-        mBoundStencilFramebuffer = wfb;
-    } else {
-        return ErrorMessage("glBindFramebuffer: invalid target");
+    if (target != LOCAL_GL_FRAMEBUFFER) {
+        return ErrorMessage("glBindFramebuffer: target must be GL_FRAMEBUFFER");
     }
 
     gl->fBindFramebuffer(target, wfb ? wfb->GLName() : 0);
@@ -436,7 +427,7 @@ WebGLContext::BindRenderbuffer(GLenum target, nsIWebGLRenderbuffer *rb)
         return ErrorMessage("glBindRenderbuffer: renderbuffer has already been deleted!");
 
     if (target != LOCAL_GL_RENDERBUFFER)
-        return ErrorMessage("glBindRenderbuffer: invalid target");
+        return ErrorMessage("glBindRenderbuffer: target must be GL_RENDERBUFFER");
 
     MakeContextCurrent();
 
@@ -1094,9 +1085,9 @@ WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum r
         return ErrorMessage("glFramebufferRenderbuffer: renderbuffer has already been deleted!");
 
     if (target != LOCAL_GL_FRAMEBUFFER)
-        return ErrorMessage("glFramebufferRenderbuffer: target must be LOCAL_GL_FRAMEBUFFER");
+        return ErrorMessage("glFramebufferRenderbuffer: target must be GL_FRAMEBUFFER");
 
-    if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 || attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mBoundColorFramebuffers.Length()) &&
+    if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 || attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mFramebufferColorAttachments.Length()) &&
         attachment != LOCAL_GL_DEPTH_ATTACHMENT &&
         attachment != LOCAL_GL_STENCIL_ATTACHMENT)
         return ErrorMessage("glFramebufferRenderbuffer: invalid attachment");
@@ -1115,10 +1106,10 @@ WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum r
 
 NS_IMETHODIMP
 WebGLContext::FramebufferTexture2D(GLenum target,
-                                     GLenum attachment,
-                                     GLenum textarget,
-                                     nsIWebGLTexture *wtex,
-                                     GLint level)
+                                   GLenum attachment,
+                                   GLenum textarget,
+                                   nsIWebGLTexture *wtex,
+                                   GLint level)
 {
     WebGLTexture *tex = static_cast<WebGLTexture*>(wtex);
 
@@ -1128,7 +1119,7 @@ WebGLContext::FramebufferTexture2D(GLenum target,
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorMessage("glFramebufferTexture2D: target must be GL_FRAMEBUFFER");
 
-    if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 || attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mBoundColorFramebuffers.Length()) &&
+    if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 || attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mFramebufferColorAttachments.Length()) &&
         attachment != LOCAL_GL_DEPTH_ATTACHMENT &&
         attachment != LOCAL_GL_STENCIL_ATTACHMENT)
         return ErrorMessage("glFramebufferTexture2D: invalid attachment");
@@ -1140,6 +1131,8 @@ WebGLContext::FramebufferTexture2D(GLenum target,
 
     if (level != 0)
         return ErrorMessage("glFramebufferTexture2D: level must be 0");
+
+    // XXXXX we need to store/reference this attachment!
 
     MakeContextCurrent();
 
@@ -2934,7 +2927,7 @@ WebGLContext::ValidateGL()
     //fprintf(stderr, "GL_MAX_TEXTURE_UNITS: %d\n", val);
 
     gl->fGetIntegerv(LOCAL_GL_MAX_COLOR_ATTACHMENTS, &val);
-    mBoundColorFramebuffers.SetLength(val);
+    mFramebufferColorAttachments.SetLength(val);
 
 #ifdef DEBUG_vladimir
     gl->fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT, &val);
