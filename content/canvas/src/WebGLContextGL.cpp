@@ -2909,14 +2909,25 @@ WebGLContext::ValidateGL()
     // make sure that the opengl stuff that we need is supported
     GLint val = 0;
 
-    MakeContextCurrent();
+    // XXX this exposes some strange latent bug; what's going on?
+    //MakeContextCurrent();
 
     gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &val);
+    if (val == 0) {
+        LogMessage("GL_MAX_VERTEX_ATTRIBS is 0!");
+        return PR_FALSE;
+    }
+
     mAttribBuffers.SetLength(val);
 
     //fprintf(stderr, "GL_MAX_VERTEX_ATTRIBS: %d\n", val);
 
     gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_UNITS, &val);
+    if (val == 0) {
+        LogMessage("GL_MAX_TEXTURE_UNITS is 0!");
+        return PR_FALSE;
+    }
+
     mBound2DTextures.SetLength(val);
     mBoundCubeMapTextures.SetLength(val);
 
