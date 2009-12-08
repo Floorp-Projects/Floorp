@@ -383,7 +383,7 @@ InitJITLogController()
             "  help         show this message\n"
             "  ------ options for jstracer & jsregexp ------\n"
             "  minimal      ultra-minimalist output; try this first\n"
-            "  full         everything except 'treevis' and 'nocodeaddrs'\n"
+            "  full         everything except 'treevis' and 'fragprofile'\n"
             "  tracer       tracer lifetime (FIXME:better description)\n"
             "  recorder     trace recording stuff (FIXME:better description)\n"
             "  abort        show trace recording aborts\n"
@@ -398,7 +398,6 @@ InitJITLogController()
             "  assembly     show final aggregated assembly code\n"
             "  regalloc     show regalloc state in 'assembly' output\n"
             "  activation   show activation state in 'assembly' output\n"
-            "  nocodeaddrs  omit code addresses in 'assembly' output\n"
             "\n"
         );
         exit(0);
@@ -424,7 +423,6 @@ InitJITLogController()
     if (strstr(tmf, "aftersf")    || strstr(tmf, "full")) bits |= LC_AfterSF;
     if (strstr(tmf, "regalloc")   || strstr(tmf, "full")) bits |= LC_RegAlloc;
     if (strstr(tmf, "assembly")   || strstr(tmf, "full")) bits |= LC_Assembly;
-    if (strstr(tmf, "nocodeaddrs"))                       bits |= LC_NoCodeAddrs;
 
     js_LogController.lcbits = bits;
     return;
