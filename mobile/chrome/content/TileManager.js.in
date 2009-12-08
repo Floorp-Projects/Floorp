@@ -236,6 +236,28 @@ TileManager.prototype = {
     }
   },
 
+  /**
+   * Erase everything in these rects.  Useful for tiles that are outside of the viewport rect but
+   * still visible.
+   */
+  clearRects: function clearRects(rects) {
+    let criticalIsDirty = false;
+    let criticalRect = this._criticalRect;
+    let tc = this._tileCache;
+    let crawler = this._crawler;
+
+    for (let i = rects.length - 1; i >= 0; --i) {
+      let rect = rects[i];
+
+      BEGIN_FOREACH_IN_RECT(rect, tc, tile)
+      tile.clear(rect);
+      END_FOREACH_IN_RECT
+    }
+
+    if (criticalIsDirty && doCriticalRender)
+      this.criticalRectPaint();
+  },
+
   dirtyRects: function dirtyRects(rects, doCriticalRender) {
     let criticalIsDirty = false;
     let criticalRect = this._criticalRect;
@@ -252,8 +274,7 @@ TileManager.prototype = {
       else
         criticalIsDirty = true;
 
-      let intersection = tile.boundRect.intersect(rects[i]);
-      tile.markDirty(intersection);
+      tile.markDirty(rects[i]);
 
       if (crawler)
         crawler.enqueue(tile.i, tile.j);
@@ -774,6 +795,15 @@ TileManager.Tile.prototype = {
   getContentImage: function getContentImage() { return this._canvas; },
 
   isDirty: function isDirty() { return this._dirtyTileCanvas; },
+
+  /** Clear region in rect. */
+  clear: function clear(rect) {
+    let boundRect = this.boundRect;
+    let region = rect.intersect(boundRect).expandToIntegers().translate(-boundRect.left, -boundRect.top);
+    let ctx = this._canvas.getContext("2d");
+    ctx.fillStyle = "white";
+    ctx.fillRect(region.left, region.top, region.right - region.left, region.bottom - region.top);
+  },
 
   /**
    * This will mark dirty at least everything in dirtyRect (which must be

@@ -778,10 +778,14 @@ BrowserView.prototype = {
         BrowserView.Util.getBrowserDOMWindowUtils(this._browser).clearMozAfterPaintEvents();
       }
 
+      let vr = this.getVisibleRect();
       this._tileManager.viewportChangeHandler(bvs.viewportRect,
-                                              BrowserView.Util.visibleRectToCriticalRect(this.getVisibleRect(), bvs),
+                                              BrowserView.Util.visibleRectToCriticalRect(vr, bvs),
                                               viewportSizeChanged,
                                               dirtyAll);
+
+      let rects = vr.subtract(bvs.viewportRect);
+      this._tileManager.clearRects(rects);
     }
   },
 
