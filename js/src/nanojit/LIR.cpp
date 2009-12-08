@@ -2282,18 +2282,12 @@ namespace nanojit
             const void *end = (const char*)start + e->size;
             const char *name = e->name;
             if (p == start) {
-                if (!(logc->lcbits & LC_NoCodeAddrs))
-                    VMPI_sprintf(b,"%p %s",p,name);
-                else
-                    VMPI_strcpy(b, name);
+                VMPI_sprintf(b,"%p %s",p,name);
                 return dup(b);
             }
             else if (p > start && p < end) {
                 int32_t d = int32_t(intptr_t(p)-intptr_t(start)) >> e->align;
-                if (!(logc->lcbits & LC_NoCodeAddrs))
-                    VMPI_sprintf(b, "%p %s+%d", p, name, d);
-                else
-                    VMPI_sprintf(b,"%s+%d", name, d);
+                VMPI_sprintf(b, "%p %s+%d", p, name, d);
                 return dup(b);
             }
             else {

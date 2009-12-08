@@ -187,19 +187,14 @@ namespace nanojit {
     #elif defined(NJ_VERBOSE)
         // Used for printing native instructions.  Like Assembler::outputf(),
         // but only outputs if LC_Assembly is set.  Also prepends the output
-        // with the address of the current native instruction if
-        // LC_NoCodeAddrs is not set.  
+        // with the address of the current native instruction.
         #define asm_output(...) do { \
             counter_increment(native); \
             if (_logc->lcbits & LC_Assembly) { \
                 outline[0]='\0'; \
-                if (outputAddr) \
-                   VMPI_sprintf(outline, "%010lx   ", (unsigned long)_nIns); \
-                else \
-                   VMPI_memset(outline, (int)' ', 10+3); \
+               VMPI_sprintf(outline, "%010lx   ", (unsigned long)_nIns); \
                 sprintf(&outline[13], ##__VA_ARGS__); \
                 output(); \
-                outputAddr=(_logc->lcbits & LC_NoCodeAddrs) ? false : true;    \
             } \
         } while (0) /* no semi */
         #define gpn(r)                  regNames[(r)]

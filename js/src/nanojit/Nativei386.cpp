@@ -136,7 +136,7 @@ namespace nanojit
             SUBi(SP, amt);
         }
 
-        verbose_only( outputAddr=true; asm_output("[frag entry]"); )
+        verbose_only( asm_output("[frag entry]"); )
         NIns *fragEntry = _nIns;
         MR(FP, SP); // Establish our own FP.
         PUSHr(FP); // Save caller's FP.

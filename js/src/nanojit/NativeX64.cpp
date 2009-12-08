@@ -1634,7 +1634,7 @@ namespace nanojit
                 SUBQRI(RSP, amt);
         }
 
-        verbose_only( outputAddr=true; asm_output("[patch entry]"); )
+        verbose_only( asm_output("[patch entry]"); )
         NIns *patchEntry = _nIns;
         MR(FP, RSP);    // Establish our own FP.
         PUSHR(FP);      // Save caller's FP.

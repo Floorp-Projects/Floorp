@@ -207,9 +207,6 @@ namespace nanojit
             // Buffer used to hold extra text to be printed at the end of some
             // lines.
             static char  outlineEOL[512];
-            // If outputAddr=true the next asm instruction output will
-            // be prepended with its address.
-            bool outputAddr, vpad[3];
 
             // Outputs 'outline' and 'outlineEOL', and resets them both.
             // Output goes to '_outputCache' if it's non-NULL, or is printed
