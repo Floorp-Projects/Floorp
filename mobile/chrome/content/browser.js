@@ -819,33 +819,6 @@ var Browser = {
     }
   },
 
-  translatePhoneNumbers: function translatePhoneNumbers() {
-    let doc = getBrowser().contentDocument;
-    // jonas black magic (only match text nodes that contain a sequence of 4 numbers)
-    let textnodes = doc.evaluate('//text()[contains(translate(., "0123456789", "^^^^^^^^^^"), "^^^^")]',
-                                 doc,
-                                 null,
-                                 XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
-                                 null);
-    let s, node, lastLastIndex;
-    let re = /(\+?1? ?-?\(?\d{3}\)?[ +-\.]\d{3}[ +-\.]\d{4})/;
-    for (var i = 0; i < textnodes.snapshotLength; i++) {
-      node = textnodes.snapshotItem(i);
-      s = node.data;
-      if (s.match(re)) {
-        s = s.replace(re, "<a href='tel:$1'> $1 </a>");
-        try {
-          let replacement = doc.createElement("span");
-          replacement.innerHTML = s;
-          node.parentNode.insertBefore(replacement, node);
-          node.parentNode.removeChild(node);
-        } catch(e) {
-          //do nothing, but continue
-        }
-      }
-    }
-  },
-
   /** Returns true iff a tab's browser has been destroyed to free up memory. */
   sacrificeTab: function sacrificeTab() {
     let tabToClear = this._tabs.reduce(function(prevTab, currentTab) {
@@ -2519,8 +2492,6 @@ ProgressController.prototype = {
   },
 
   _documentStop: function() {
-    // translate any phone numbers
-    Browser.translatePhoneNumbers();
   }
 };
 
