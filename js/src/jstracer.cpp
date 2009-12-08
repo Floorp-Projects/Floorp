@@ -6904,28 +6904,31 @@ js_MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
 
     /* Is the recorder currently active? */
     if (tm->recorder) {
-        jsbytecode* innerLoopHeaderPC = cx->fp->regs->pc;
+        jsbytecode* pc = cx->fp->regs->pc;
+        if (pc == tm->recorder->tree->ip) {
+            tm->recorder->closeLoop();
+        } else {
+            if (TraceRecorder::recordLoopEdge(cx, tm->recorder, inlineCallCount))
+                return true;
 
-        if (TraceRecorder::recordLoopEdge(cx, tm->recorder, inlineCallCount))
-            return true;
-
-        /*
-         * recordLoopEdge will invoke an inner tree if we have a matching
-         * one. If we arrive here, that tree didn't run to completion and
-         * instead we mis-matched or the inner tree took a side exit other than
-         * the loop exit. We are thus no longer guaranteed to be parked on the
-         * same loop header js_MonitorLoopEdge was called for. In fact, this
-         * might not even be a loop header at all. Hence if the program counter
-         * no longer hovers over the inner loop header, return to the
-         * interpreter and do not attempt to trigger or record a new tree at
-         * this location.
-         */
-         if (innerLoopHeaderPC != cx->fp->regs->pc) {
+            /*
+             * recordLoopEdge will invoke an inner tree if we have a matching
+             * one. If we arrive here, that tree didn't run to completion and
+             * instead we mis-matched or the inner tree took a side exit other than
+             * the loop exit. We are thus no longer guaranteed to be parked on the
+             * same loop header js_MonitorLoopEdge was called for. In fact, this
+             * might not even be a loop header at all. Hence if the program counter
+             * no longer hovers over the inner loop header, return to the
+             * interpreter and do not attempt to trigger or record a new tree at
+             * this location.
+             */
+            if (pc != cx->fp->regs->pc) {
 #ifdef MOZ_TRACEVIS
-             tvso.r = R_INNER_SIDE_EXIT;
+                tvso.r = R_INNER_SIDE_EXIT;
 #endif
-             return false;
-         }
+                return false;
+            }
+        }
     }
     JS_ASSERT(!tm->recorder);
 
