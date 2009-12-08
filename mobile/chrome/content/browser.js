@@ -1017,12 +1017,31 @@ var Browser = {
     return BrowserView.Util.clampZoomLevel(bv.getZoomLevel() * vis.width / (elRect.width + margin * 2));
   },
 
+  /** Find an appropriate zoom rect for an element, if it exists. */
+  _getZoomRectForElement: function _getZoomRectForElement(element, elementY) {
+    let bv = this._browserView;
+    let oldZoomLevel = bv.getZoomLevel();
+    let zoomLevel = this._getZoomLevelForElement(element);
+    let zoomRatio = oldZoomLevel / zoomLevel;
+
+    // Don't zoom in a marginal amount, but be more lenient for the first zoom.
+    // > 2/3 means operation increases the zoom level by less than 1.5
+    // > 9/10 means operation increases the zoom level by less than 1.1
+    let zoomTolerance = (bv.isDefaultZoom()) ? .9 : .6666;
+    if (zoomRatio >= zoomTolerance) {
+      return null;
+    } else {
+      let elRect = this.getBoundingContentRect(element);
+      return this._getZoomRectForPoint(elRect.center().x, elementY, zoomLevel);
+    }
+  },
+
   /**
    * Find a good zoom rectangle for point specified in browser coordinates.
    * @return Point in viewport coordinates
    */
   _getZoomRectForPoint: function _getZoomRectForPoint(x, y, zoomLevel) {
-    let bv = Browser._browserView;
+    let bv = this._browserView;
     let vis = bv.getVisibleRect();
     x = bv.browserToViewport(x);
     y = bv.browserToViewport(y);
@@ -1037,7 +1056,7 @@ var Browser = {
   },
 
   setVisibleRect: function setVisibleRect(rect) {
-    let bv = Browser._browserView;
+    let bv = this._browserView;
     let vis = bv.getVisibleRect();
     let zoomRatio = vis.width / rect.width;
     let zoomLevel = bv.getZoomLevel() * zoomRatio;
@@ -1055,14 +1074,14 @@ var Browser = {
     bv.beginBatchOperation();
 
     // Critical rect changes when controls are hidden. Must hide before tilemanager viewport.
-    Browser.hideSidebars();
-    Browser.hideTitlebar();
+    this.hideSidebars();
+    this.hideTitlebar();
     bv.setZoomLevel(zoomLevel);
 
     // Ensure container is big enough for scroll values.
     bv.forceContainerResize();
-    Browser.forceChromeReflow();
-    Browser.contentScrollboxScroller.scrollTo(scrollX, scrollY);
+    this.forceChromeReflow();
+    this.contentScrollboxScroller.scrollTo(scrollX, scrollY);
     bv.onAfterVisibleMove();
 
     // Inform tile manager, which happens to render new tiles too. Must call in case a batch
@@ -1074,29 +1093,21 @@ var Browser = {
   },
 
   zoomToPoint: function zoomToPoint(cX, cY) {
-    let [elementX, elementY] = Browser.transformClientToBrowser(cX, cY);
-
-    let element = Browser.elementFromPoint(elementX, elementY);
-    if (!element)
-      return false;
-
+    let [elementX, elementY] = this.transformClientToBrowser(cX, cY);
+    let zoomRect = null;
+    let element = this.elementFromPoint(elementX, elementY);
     let bv = this._browserView;
-    let oldZoomLevel = bv.getZoomLevel();
-    let zoomLevel = this._getZoomLevelForElement(element);
-    let zoomRatio = oldZoomLevel / zoomLevel;
+    if (element)
+      zoomRect = this._getZoomRectForElement(element, elementY);
+    if (!zoomRect && bv.isDefaultZoom())
+      zoomRect = this._getZoomRectForPoint(elementX, elementY, bv.getZoomLevel() * 2);
 
-    // Don't zoom in a marginal amount, but be more lenient for the first zoom.
-    // > 2/3 means operation increases the zoom level by less than 1.5
-    // > 9/10 means operation increases the zoom level by less than 1.1
-    let zoomTolerance = (bv.isDefaultZoom()) ? .9 : .6666;
-    if (zoomRatio >= zoomTolerance)
-       return false;
-
-    let elRect = Browser.getBoundingContentRect(element);
-    let zoomRect = this._getZoomRectForPoint(elRect.center().x, elementY, zoomLevel);
-
-    this.setVisibleRect(zoomRect);
-    return true;
+    if (zoomRect) {
+      this.setVisibleRect(zoomRect);
+      return true;
+    } else {
+      return false;
+    }
   },
 
   zoomFromPoint: function zoomFromPoint(cX, cY) {
