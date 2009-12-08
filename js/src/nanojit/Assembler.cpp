@@ -83,7 +83,6 @@ namespace nanojit
         verbose_only( _outputCache = 0; )
         verbose_only( outline[0] = '\0'; )
         verbose_only( outlineEOL[0] = '\0'; )
-        verbose_only( outputAddr = false; )
 
         reset();
     }
@@ -777,7 +776,6 @@ namespace nanojit
         }
 
         NIns* fragEntry = genPrologue();
-        verbose_only( outputAddr=true; )
         verbose_only( asm_output("[prologue]"); )
 
         // check for resource leaks
@@ -1335,8 +1333,7 @@ namespace nanojit
                         label->addr = _nIns;
                     }
                     verbose_only( if (_logc->lcbits & LC_Assembly) { 
-                        outputAddr=true; asm_output("[%s]", 
-                        _thisfrag->lirbuf->names->formatRef(ins)); 
+                        asm_output("[%s]", _thisfrag->lirbuf->names->formatRef(ins)); 
                     })
                     break;
                 }
