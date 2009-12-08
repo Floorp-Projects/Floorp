@@ -1488,8 +1488,16 @@ namespace nanojit
                 case LIR_ldc:
                 case LIR_ldq:
                 case LIR_ldqc:
+                case LIR_ldzb:
+                case LIR_ldzs:
                 case LIR_ldcb:
                 case LIR_ldcs:
+                case LIR_ldsb:
+                case LIR_ldss:
+                case LIR_ldcsb:
+                case LIR_ldcss:
+                case LIR_ld32f:
+                case LIR_ldc32f:
                 case LIR_ret:
                 case LIR_fret:
                 case LIR_live:
@@ -1515,6 +1523,8 @@ namespace nanojit
 
                 case LIR_sti:
                 case LIR_stqi:
+                case LIR_stb:
+                case LIR_sts:
                 case LIR_eq:
                 case LIR_lt:
                 case LIR_gt:

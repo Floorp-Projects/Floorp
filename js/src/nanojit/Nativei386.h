@@ -485,14 +485,12 @@ namespace nanojit
 
 #define LD8Zdm(r,addr) do { \
     count_ld(); \
-    NanoAssert((d)>=0&&(d)<=31); \
     ALU2dm(0x0fb6,r,addr); \
     asm_output("movzx8 %s,0(%lx)", gpn(r),(long unsigned)addr); \
     } while(0)
 
 #define LD8Zsib(r,disp,base,index,scale) do {    \
     count_ld();                                 \
-    NanoAssert((d)>=0&&(d)<=31);                \
     ALU2sib(0x0fb6,r,base,index,scale,disp);    \
     asm_output("movzx8 %s,%d(%s+%s*%c)",gpn(r),disp,gpn(base),gpn(index),SIBIDX(scale)); \
     } while(0)
@@ -502,14 +500,12 @@ namespace nanojit
 
 #define LD8Sdm(r,addr) do { \
     count_ld(); \
-    NanoAssert((d)>=0&&(d)<=31); \
     ALU2dm(0x0fbe,r,addr); \
     asm_output("movsx8 %s,0(%lx)", gpn(r),(long unsigned)addr); \
     } while(0)
 
 #define LD8Ssib(r,disp,base,index,scale) do {    \
     count_ld();                                 \
-    NanoAssert((d)>=0&&(d)<=31);                \
     ALU2sib(0x0fbe,r,base,index,scale,disp);    \
     asm_output("movsx8 %s,%d(%s+%s*%c)",gpn(r),disp,gpn(base),gpn(index),SIBIDX(scale)); \
     } while(0)
