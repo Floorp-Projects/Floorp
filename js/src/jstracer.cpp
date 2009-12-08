@@ -2360,7 +2360,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     eos_ins(NULL),
     eor_ins(NULL),
     loopLabel(NULL),
-    lirbuf(traceMonitor->lirbuf),
+    lirbuf(new (tempAlloc()) LirBuffer(tempAlloc())),
     mark(*traceMonitor->traceAlloc),
     numSideExitsBefore(tree->sideExits.length()),
     tracker(),
@@ -2383,6 +2383,12 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
 {
     JS_ASSERT(globalObj == JS_GetGlobalForObject(cx, cx->fp->scopeChain));
     JS_ASSERT(cx->fp->regs->pc == (jsbytecode*)fragment->ip);
+
+    fragment->lirbuf = lirbuf;
+#ifdef DEBUG
+    LabelMap* labels = new (tempAlloc()) LabelMap(tempAlloc(), &js_LogController);
+    lirbuf->names = new (tempAlloc()) LirNameMap(tempAlloc(), labels);
+#endif
 
     /*
      * Reset the fragment state we care about in case we got a recycled
@@ -2520,7 +2526,6 @@ TraceRecorder::~TraceRecorder()
 
     /* Purge the tempAlloc used during recording. */
     tempAlloc().reset();
-    traceMonitor->lirbuf->clear();
 
     forgetGuardedShapes();
 }
@@ -2853,15 +2858,7 @@ JSTraceMonitor::flush()
     }
 
     assembler = new (alloc) Assembler(*codeAlloc, alloc, alloc, core, &js_LogController);
-    lirbuf = new (alloc) LirBuffer(*tempAlloc);
-    reLirBuf = new (alloc) LirBuffer(*reTempAlloc);
     verbose_only( branches = NULL; )
-
-#ifdef DEBUG
-    labels = new (alloc) LabelMap(alloc, &js_LogController);
-    reLirBuf->names =
-    lirbuf->names = new (alloc) LirNameMap(alloc, labels);
-#endif
 
     memset(&vmfragments[0], 0, FRAGMENT_TABLE_SIZE * sizeof(TreeFragment*));
     reFragments = new (alloc) REHashMap(alloc);
@@ -4361,13 +4358,13 @@ TraceRecorder::compile()
     char* label = (char*)js_malloc((filename ? strlen(filename) : 7) + 16);
     sprintf(label, "%s:%u", filename ? filename : "<stdin>",
             js_FramePCToLineNumber(cx, cx->fp));
-    traceMonitor->labels->add(fragment, sizeof(Fragment), 0, label);
+    lirbuf->names->labels->add(fragment, sizeof(Fragment), 0, label);
     js_free(label);
 #endif
 
     Assembler *assm = traceMonitor->assembler;
     JS_ASSERT(assm->error() == nanojit::None);
-    nanojit::compile(assm, fragment, tempAlloc() verbose_only(, traceMonitor->labels));
+    nanojit::compile(assm, fragment, tempAlloc() verbose_only(, lirbuf->names->labels));
 
     if (assm->error() != nanojit::None) {
         assm->setError(nanojit::None);
