@@ -852,12 +852,12 @@ class GatherDecls(TcheckVisitor):
 
         # check the trigger message
         mname = t.msg
-        if mname in self.seentriggers:
-            self.error(loc, "trigger `%s' appears multiple times", mname)
-        self.seentriggers.add(mname)
-        
+        if t in self.seentriggers:
+            self.error(loc, "trigger `%s' appears multiple times", t.msg)
+        self.seentriggers.add(t)
+
         mdecl = self.symtab.lookup(mname)
-        if mdecl.type.isIPDL() and mdecl.type.isProtocol():
+        if mdecl is not None and mdecl.type.isIPDL() and mdecl.type.isProtocol():
             mdecl = self.symtab.lookup(mname +'Constructor')
         
         if mdecl is None:
