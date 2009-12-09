@@ -43,6 +43,13 @@
 #include <string>
 #include <sstream>
 
+#ifdef XP_WIN
+#include <process.h>
+#define getpid _getpid
+#else
+#include <unistd.h>
+#endif
+
  using namespace std;
 
 #define PLUGIN_NAME        "Test Plug-in"
@@ -2021,6 +2028,21 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
 static bool
 crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
+  char* bloatLog = getenv("XPCOM_MEM_BLOAT_LOG");
+  if (bloatLog) {
+    char* logExt = strstr(bloatLog, ".log");
+    if (logExt) {
+      bloatLog[strlen(bloatLog) - strlen(logExt)] = '\0';    
+    }
+    ostringstream bloatName;
+    bloatName << bloatLog << "_plugin_pid" << getpid();
+    if (logExt) {
+      bloatName << ".log";    
+    }
+    FILE* processfd = fopen(bloatName.str().c_str(), "a");
+    fprintf(processfd, "==> process %d will purposefully crash\n", getpid());
+    fclose(processfd);
+  }
   void (*funcptr)() = NULL;
   funcptr(); // Crash calling null function pointer
   return true;
