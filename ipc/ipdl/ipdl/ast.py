@@ -303,6 +303,15 @@ class Transition(Node):
         self.msg = msg
         self.toStates = toStates
 
+    def __cmp__(self, o):
+        c = cmp(self.msg, o.msg)
+        if c: return c
+        c = cmp(self.trigger, o.trigger)
+        if c: return c
+
+    def __hash__(self): return hash(str(self))
+    def __str__(self): return '%s %s'% (self.trigger, self.msg)
+
     @staticmethod
     def nameToTrigger(name):
         return { 'send': SEND, 'recv': RECV, 'call': CALL, 'answer': ANSWER }[name]
