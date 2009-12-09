@@ -10,20 +10,42 @@
 <video id='v1' onerror="event.stopPropagation();"></video><audio id='a1' onerror="event.stopPropagation();"></audio>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+"use strict";
 var v1 = document.getElementById('v1');
 var a1 = document.getElementById('a1');
-var passed = true;
+var passed = "truthy";
 
 is(v1.readyState, 0);
 is(a1.readyState, 0);
 
 try {
   v1.readyState = 0;
+} catch (e) {
+  passed = !passed;
+}
+try {
   a1.readyState = 0;
-  passed = false;
+} catch (e) {
+  passed = !passed;
+}
+ok(passed === true,
+   "Setting readyState throws in strict mode (readonly attribute)");
+</script>
+
+<script class="testbody" type="text/javascript">
+var v1 = document.getElementById('v1');
+var a1 = document.getElementById('a1');
+var passed = false;
+
+is(v1.readyState, 0);
+is(a1.readyState, 0);
+
+try {
+  v1.readyState = 1;
+  a1.readyState = 1;
+  passed = v1.readyState === 0 && a1.readyState === 0;
 } catch(e) { }
 ok(passed, "Should not be able to set readyState (readonly attribute)");
-
 </script>
 </pre>
 </body>
