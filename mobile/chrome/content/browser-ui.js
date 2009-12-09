@@ -1127,10 +1127,10 @@ var FormHelper = {
       return this._isElementVisible(aElement);
     
     if (aElement instanceof HTMLInputElement) {
-      let ignoreInputElements = ["checkbox", "radio", "hidden", "reset", "button", "image"];
+      let ignoreInputElements = ["checkbox", "radio", "hidden", "reset", "button"];
       let isValidElement = (ignoreInputElements.indexOf(aElement.type) == -1);
       if (!isValidElement)
-       return false;
+        return false;
  
       return this._isElementVisible(aElement);
     }
@@ -1318,8 +1318,14 @@ var FormHelper = {
   },
 
   canShowUIFor: function(aElement) {
-    return (this._isValidElement(aElement) && 
-            !(aElement instanceof HTMLInputElement && aElement.type == "submit"));
+    // Some forms elements are valid in the sense that we want the Form
+    // Assistant to stop on it, but we don't want it to display when
+    // the user clicks on it
+    let formExceptions = ["submit", "image", "file"];
+    if (aElement instanceof HTMLInputElement && formExceptions.indexOf(aElement.type) != -1)
+      return false;    
+
+    return this._isValidElement(aElement);
   }
 };
 
