@@ -227,8 +227,11 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
 
   leaks = open(leakLogFileName, "r")
   seenTotal = False
+  crashedOnPurpose = False
   prefix = "TEST-PASS"
   for line in leaks:
+    if line.find("purposefully crash") > -1:
+      crashedOnPurpose = True
     matches = lineRe.match(line)
     if not matches:
       continue
@@ -277,7 +280,11 @@ def processSingleLeakFile(leakLogFileName, PID, processType, leakThreshold):
                    "size": matches.group("size"),
                    "rest": rest })
   if not seenTotal:
-    log.info("TEST-UNEXPECTED-FAIL %s| automationutils.processLeakLog() | missing output line for total leaks!" %
+    if crashedOnPurpose:
+      log.info("INFO | automationutils.processLeakLog() | process %s was " \
+               "deliberately crashed and thus has no leak log" % PID)
+    else:
+      log.info("TEST-UNEXPECTED-FAIL %s| automationutils.processLeakLog() | missing output line for total leaks!" %
              processString)
   leaks.close()
 
