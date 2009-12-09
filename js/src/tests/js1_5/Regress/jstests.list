@@ -209,7 +209,7 @@ script regress-360969-06.js
 script regress-361467.js
 script regress-361617.js
 skip script regress-362583.js # obsolete test
-fails-if(xulRuntime.OS=="WINNT") random-if(xulRuntime.OS=="Linux"&&!xulRuntime.XPCOMABI.match(/x86_64/)) skip-if(xulRuntime.OS=="Linux"&&xulRuntime.XPCOMABI.match(/x86_64/)) script regress-3649-n.js # No test results on windows, sometimes no test results on 32 bit linux, hangs os/consumes ram/swap on 64bit linux.
+skip script regress-3649-n.js # skip test due to random oom related errors.
 script regress-366122.js
 script regress-366468.js
 script regress-366601.js
