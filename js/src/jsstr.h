@@ -133,8 +133,11 @@ struct JSString {
     }
 
   public:
-    /* Generous but sane length bound. */
-    static const size_t MAX_LENGTH = (1 << 28);
+    /*
+     * Generous but sane length bound; the "-1" is there for comptibility with
+     * OOM tests.
+     */
+    static const size_t MAX_LENGTH = (1 << 28) - 1;
 
     bool isDependent() const {
         return hasFlag(DEPENDENT);
