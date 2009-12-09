@@ -1931,7 +1931,7 @@ public:
                 LIns* lhs = s0->oprnd1();
                 LIns* rhs = s0->oprnd2();
                 if (isPromote(lhs) && isPromote(rhs)) {
-                    LOpcode op = LOpcode(s0->opcode() & ~LIR64);
+                    LOpcode op = f64arith_to_i32arith(s0->opcode());
                     return out->ins2(op, demote(out, lhs), demote(out, rhs));
                 }
             }
@@ -8203,7 +8203,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
 #endif
 
       default:
-        v = (LOpcode)((int)v & ~LIR64);
+        v = f64arith_to_i32arith(v);
         result = lir->ins2(v, d0, d1);
 
         /*
@@ -8890,7 +8890,7 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::unary(LOpcode op)
 {
     jsval& v = stackval(-1);
-    bool intop = !(op & LIR64);
+    bool intop = retTypes[op] == LTy_I32;
     if (isNumber(v)) {
         LIns* a = get(&v);
         if (intop)
@@ -8923,7 +8923,7 @@ TraceRecorder::binary(LOpcode op)
         return call_imacro(binary_imacros.any_obj);
     }
 
-    bool intop = !(op & LIR64);
+    bool intop = retTypes[op] == LTy_I32;
     LIns* a = get(&l);
     LIns* b = get(&r);
 
