@@ -966,7 +966,7 @@ namespace nanojit
             switch(op)
             {
                 default:
-                    NanoAssertMsgf(false, "unsupported LIR instruction: %d (~0x40: %d)\n", op, op&~LIR64);
+                    NanoAssertMsgf(false, "unsupported LIR instruction: %d\n", op);
                     break;
 
                 case LIR_regfence:

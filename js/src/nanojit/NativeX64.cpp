@@ -764,10 +764,10 @@ namespace nanojit
     void Assembler::asm_arith(LIns *ins) {
         Register rr, ra, rb;
 
-        switch (ins->opcode() & ~LIR64) {
-        case LIR_lsh:
-        case LIR_rsh:
-        case LIR_ush:
+        switch (ins->opcode()) {
+        case LIR_lsh: case LIR_qilsh:
+        case LIR_rsh: case LIR_qirsh:
+        case LIR_ush: case LIR_qursh:
             asm_shift(ins);
             return;
         case LIR_mod:
@@ -999,32 +999,32 @@ namespace nanojit
 
         LOpcode condop = cond->opcode();
         if (ins->opcode() == LIR_cmov) {
-            switch (condop & ~LIR64) {
-            case LIR_ov:  CMOVNO( rr, rf);  break;
-            case LIR_eq:  CMOVNE( rr, rf);  break;
-            case LIR_lt:  CMOVNL( rr, rf);  break;
-            case LIR_gt:  CMOVNG( rr, rf);  break;
-            case LIR_le:  CMOVNLE(rr, rf);  break;
-            case LIR_ge:  CMOVNGE(rr, rf);  break;
-            case LIR_ult: CMOVNB( rr, rf);  break;
-            case LIR_ugt: CMOVNA( rr, rf);  break;
-            case LIR_ule: CMOVNBE(rr, rf);  break;
-            case LIR_uge: CMOVNAE(rr, rf);  break;
-            default:      NanoAssert(0);    break;
+            switch (condop) {
+            case LIR_ov:                    CMOVNO( rr, rf);  break;
+            case LIR_eq:  case LIR_qeq:     CMOVNE( rr, rf);  break;
+            case LIR_lt:  case LIR_qlt:     CMOVNL( rr, rf);  break;
+            case LIR_gt:  case LIR_qgt:     CMOVNG( rr, rf);  break;
+            case LIR_le:  case LIR_qle:     CMOVNLE(rr, rf);  break;
+            case LIR_ge:  case LIR_qge:     CMOVNGE(rr, rf);  break;
+            case LIR_ult: case LIR_qult:    CMOVNB( rr, rf);  break;
+            case LIR_ugt: case LIR_qugt:    CMOVNA( rr, rf);  break;
+            case LIR_ule: case LIR_qule:    CMOVNBE(rr, rf);  break;
+            case LIR_uge: case LIR_quge:    CMOVNAE(rr, rf);  break;
+            default:                        NanoAssert(0);    break;
             }
         } else {
-            switch (condop & ~LIR64) {
-            case LIR_ov:  CMOVQNO( rr, rf); break;
-            case LIR_eq:  CMOVQNE( rr, rf); break;
-            case LIR_lt:  CMOVQNL( rr, rf); break;
-            case LIR_gt:  CMOVQNG( rr, rf); break;
-            case LIR_le:  CMOVQNLE(rr, rf); break;
-            case LIR_ge:  CMOVQNGE(rr, rf); break;
-            case LIR_ult: CMOVQNB( rr, rf); break;
-            case LIR_ugt: CMOVQNA( rr, rf); break;
-            case LIR_ule: CMOVQNBE(rr, rf); break;
-            case LIR_uge: CMOVQNAE(rr, rf); break;
-            default:      NanoAssert(0);    break;
+            switch (condop) {
+            case LIR_ov:                    CMOVQNO( rr, rf); break;
+            case LIR_eq:  case LIR_qeq:     CMOVQNE( rr, rf); break;
+            case LIR_lt:  case LIR_qlt:     CMOVQNL( rr, rf); break;
+            case LIR_gt:  case LIR_qgt:     CMOVQNG( rr, rf); break;
+            case LIR_le:  case LIR_qle:     CMOVQNLE(rr, rf); break;
+            case LIR_ge:  case LIR_qge:     CMOVQNGE(rr, rf); break;
+            case LIR_ult: case LIR_qult:    CMOVQNB( rr, rf); break;
+            case LIR_ugt: case LIR_qugt:    CMOVQNA( rr, rf); break;
+            case LIR_ule: case LIR_qule:    CMOVQNBE(rr, rf); break;
+            case LIR_uge: case LIR_quge:    CMOVQNAE(rr, rf); break;
+            default:                        NanoAssert(0);    break;
             }
         }
         /*const Register rt =*/ findSpecificRegFor(iftrue, rr);
@@ -1032,72 +1032,71 @@ namespace nanojit
     }
 
     NIns* Assembler::asm_branch(bool onFalse, LIns *cond, NIns *target) {
+        NanoAssert(cond->isCond());
         LOpcode condop = cond->opcode();
         if (condop >= LIR_feq && condop <= LIR_fge)
             return asm_fbranch(onFalse, cond, target);
 
-        // we must ensure there's room for the instr before calculating
-        // the offset.  and the offset, determines the opcode (8bit or 32bit)
-        NanoAssert((condop & ~LIR64) >= LIR_ov);
-        NanoAssert((condop & ~LIR64) <= LIR_uge);
+        // We must ensure there's room for the instr before calculating
+        // the offset.  And the offset determines the opcode (8bit or 32bit).
         if (target && isTargetWithinS8(target)) {
             if (onFalse) {
-                switch (condop & ~LIR64) {
-                case LIR_ov:  JNO8( 8, target); break;
-                case LIR_eq:  JNE8( 8, target); break;
-                case LIR_lt:  JNL8( 8, target); break;
-                case LIR_gt:  JNG8( 8, target); break;
-                case LIR_le:  JNLE8(8, target); break;
-                case LIR_ge:  JNGE8(8, target); break;
-                case LIR_ult: JNB8( 8, target); break;
-                case LIR_ugt: JNA8( 8, target); break;
-                case LIR_ule: JNBE8(8, target); break;
-                case LIR_uge: JNAE8(8, target); break;
-                default:      NanoAssert(0);    break;
+                switch (condop) {
+                case LIR_ov:                    JNO8( 8, target); break;
+                case LIR_eq:  case LIR_qeq:     JNE8( 8, target); break;
+                case LIR_lt:  case LIR_qlt:     JNL8( 8, target); break;
+                case LIR_gt:  case LIR_qgt:     JNG8( 8, target); break;
+                case LIR_le:  case LIR_qle:     JNLE8(8, target); break;
+                case LIR_ge:  case LIR_qge:     JNGE8(8, target); break;
+                case LIR_ult: case LIR_qult:    JNB8( 8, target); break;
+                case LIR_ugt: case LIR_qugt:    JNA8( 8, target); break;
+                case LIR_ule: case LIR_qule:    JNBE8(8, target); break;
+                case LIR_uge: case LIR_quge:    JNAE8(8, target); break;
+                default:                        NanoAssert(0);    break;
                 }
             } else {
-                switch (condop & ~LIR64) {
-                case LIR_ov:  JO8( 8, target);  break;
-                case LIR_eq:  JE8( 8, target);  break;
-                case LIR_lt:  JL8( 8, target);  break;
-                case LIR_gt:  JG8( 8, target);  break;
-                case LIR_le:  JLE8(8, target);  break;
-                case LIR_ge:  JGE8(8, target);  break;
-                case LIR_ult: JB8( 8, target);  break;
-                case LIR_ugt: JA8( 8, target);  break;
-                case LIR_ule: JBE8(8, target);  break;
-                case LIR_uge: JAE8(8, target);  break;
-                default:      NanoAssert(0);    break;
+                switch (condop) {
+                case LIR_ov:                    JO8( 8, target);  break;
+                case LIR_eq:  case LIR_qeq:     JE8( 8, target);  break;
+                case LIR_lt:  case LIR_qlt:     JL8( 8, target);  break;
+                case LIR_gt:  case LIR_qgt:     JG8( 8, target);  break;
+                case LIR_le:  case LIR_qle:     JLE8(8, target);  break;
+                case LIR_ge:  case LIR_qge:     JGE8(8, target);  break;
+                case LIR_ult: case LIR_qult:    JB8( 8, target);  break;
+                case LIR_ugt: case LIR_qugt:    JA8( 8, target);  break;
+                case LIR_ule: case LIR_qule:    JBE8(8, target);  break;
+                case LIR_uge: case LIR_quge:    JAE8(8, target);  break;
+                default:                        NanoAssert(0);    break;
                 }
             }
         } else {
             if (onFalse) {
-                switch (condop & ~LIR64) {
-                case LIR_ov:  JNO( 8, target);  break;
-                case LIR_eq:  JNE( 8, target);  break;
-                case LIR_lt:  JNL( 8, target);  break;
-                case LIR_gt:  JNG( 8, target);  break;
-                case LIR_le:  JNLE(8, target);  break;
-                case LIR_ge:  JNGE(8, target);  break;
-                case LIR_ult: JNB( 8, target);  break;
-                case LIR_ugt: JNA( 8, target);  break;
-                case LIR_ule: JNBE(8, target);  break;
-                case LIR_uge: JNAE(8, target);  break;
-                default:      NanoAssert(0);    break;
+                switch (condop) {
+                case LIR_ov:                    JNO( 8, target);  break;
+                case LIR_eq:  case LIR_qeq:     JNE( 8, target);  break;
+                case LIR_lt:  case LIR_qlt:     JNL( 8, target);  break;
+                case LIR_gt:  case LIR_qgt:     JNG( 8, target);  break;
+                case LIR_le:  case LIR_qle:     JNLE(8, target);  break;
+                case LIR_ge:  case LIR_qge:     JNGE(8, target);  break;
+                case LIR_ult: case LIR_qult:    JNB( 8, target);  break;
+                case LIR_ugt: case LIR_qugt:    JNA( 8, target);  break;
+                case LIR_ule: case LIR_qule:    JNBE(8, target);  break;
+                case LIR_uge: case LIR_quge:    JNAE(8, target);  break;
+                default:                        NanoAssert(0);    break;
                 }
             } else {
-                switch (condop & ~LIR64) {
-                case LIR_ov:  JO( 8, target);   break;
-                case LIR_eq:  JE( 8, target);   break;
-                case LIR_lt:  JL( 8, target);   break;
-                case LIR_gt:  JG( 8, target);   break;
-                case LIR_le:  JLE(8, target);   break;
-                case LIR_ge:  JGE(8, target);   break;
-                case LIR_ult: JB( 8, target);   break;
-                case LIR_ugt: JA( 8, target);   break;
-                case LIR_ule: JBE(8, target);   break;
-                case LIR_uge: JAE(8, target);   break;
-                default:      NanoAssert(0);    break;
+                switch (condop) {
+                case LIR_ov:                    JO( 8, target);   break;
+                case LIR_eq:  case LIR_qeq:     JE( 8, target);   break;
+                case LIR_lt:  case LIR_qlt:     JL( 8, target);   break;
+                case LIR_gt:  case LIR_qgt:     JG( 8, target);   break;
+                case LIR_le:  case LIR_qle:     JLE(8, target);   break;
+                case LIR_ge:  case LIR_qge:     JGE(8, target);   break;
+                case LIR_ult: case LIR_qult:    JB( 8, target);   break;
+                case LIR_ugt: case LIR_qugt:    JA( 8, target);   break;
+                case LIR_ule: case LIR_qule:    JBE(8, target);   break;
+                case LIR_uge: case LIR_quge:    JAE(8, target);   break;
+                default:                        NanoAssert(0);    break;
                 }
             }
         }
@@ -1125,25 +1124,29 @@ namespace nanojit
         }
 
         LOpcode condop = cond->opcode();
-        if (condop & LIR64)
+        if (LIR_qeq <= condop && condop <= LIR_quge) {
             CMPQR(ra, rb);
-        else
+        } else {
+            NanoAssert(LIR_eq <= condop && condop <= LIR_uge);
             CMPLR(ra, rb);
+        }
     }
 
     void Assembler::asm_cmp_imm(LIns *cond) {
+        LOpcode condop = cond->opcode();
         LIns *a = cond->oprnd1();
         LIns *b = cond->oprnd2();
         Register ra = findRegFor(a, GpRegs);
         int32_t imm = getImm32(b);
-        if (isS8(imm)) {
-            if (cond->opcode() & LIR64)
+        if (LIR_qeq <= condop && condop <= LIR_quge) {
+            if (isS8(imm))
                 CMPQR8(ra, imm);
-            else 
-                CMPLR8(ra, imm);
-        } else {
-            if (cond->opcode() & LIR64)
+            else
                 CMPQRI(ra, imm);
+        } else {
+            NanoAssert(LIR_eq <= condop && condop <= LIR_uge);
+            if (isS8(imm))
+                CMPLR8(ra, imm);
             else
                 CMPLRI(ra, imm);
         }
