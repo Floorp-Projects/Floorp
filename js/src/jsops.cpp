@@ -3566,7 +3566,8 @@ BEGIN_CASE(JSOP_INITMETHOD)
                       scope->shape == scope->lastProperty()->shape);
             if (scope->table) {
                 JSScopeProperty *sprop2 =
-                    scope->addDataProperty(cx, sprop->id, slot, sprop->attrs);
+                    scope->addProperty(cx, sprop->id, sprop->getter, sprop->setter, slot,
+                                       sprop->attrs, sprop->flags, sprop->shortid);
                 if (!sprop2) {
                     js_FreeSlot(cx, obj, slot);
                     JS_UNLOCK_SCOPE(cx, scope);
