@@ -88,8 +88,8 @@ include $(topsrcdir)/config/rules.mk
 
 IPDLUNITTEST_BIN = $(DEPTH)/dist/bin/ipdlunittest$(BIN_SUFFIX)
 
-IPDLUnitTests.cpp : $(GENTESTER) $(TESTER_TEMPLATE) $(IPDLTESTHDRS)
-	$(PYTHON) $< $(TESTER_TEMPLATE) $(IPDLTESTS) > $@
+IPDLUnitTests.cpp : Makefile.in $(GENTESTER) $(TESTER_TEMPLATE) $(IPDLTESTHDRS)
+	$(PYTHON) $(GENTESTER) $(TESTER_TEMPLATE) $(IPDLTESTS) > $@
 
 check::
 	@$(EXIT_ON_ERROR)  \
