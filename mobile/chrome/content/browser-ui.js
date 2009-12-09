@@ -1120,6 +1120,9 @@ var FormHelper = {
     if (aElement.disabled)
       return false;
 
+    if (aElement.getAttribute("role") == "button" && aElement.hasAttribute("tabindex"))
+      return this._isElementVisible(aElement);
+
     if (this._isValidSelectElement(aElement) || aElement instanceof HTMLTextAreaElement)
       return this._isElementVisible(aElement);
     
@@ -1144,29 +1147,23 @@ var FormHelper = {
     return (rect.height != 0 || rect.width != 0);
   },
 
-  _nsResolver: function(aPrefix) {
-    var ns = {
-      "xhtml" : "http://www.w3.org/1999/xhtml"
-    };
-    return ns[aPrefix] || null;
-  },
-
   _getAll: function() {
-    let doc = getBrowser().contentDocument;
-    let prefix = doc.documentElement.wrappedJSObject.namespaceURI ? "xhtml" : "";
-    let expression = "//input|//select|//button|//textarea".replace("//", "//" + prefix + ":");
-    let nodes = doc.evaluate(expression,
-                             doc,
-                             this._nsResolver,
-                             XPathResult.ORDERED_NODE_ITERATOR_TYPE,
-                             null);
-
     let elements = [];
-    let node = nodes.iterateNext();
-    while (node) {
-      if (this._isValidElement(node))
-        elements.push(node);
-      node = nodes.iterateNext();
+
+    // get all the documents
+    let documents = [getBrowser().contentDocument];
+    let iframes = getBrowser().contentDocument.getElementsByTagName("iframe");
+    for (let i = 0; i < iframes.length; i++)
+      documents.push(iframes[i].contentDocument);
+
+    for (let i = 0; i < documents.length; i++) {
+      let nodes = documents[i].querySelectorAll("input, button, select, textarea, [role=button]");
+
+      for (let j =0; j < nodes.length; j++) {
+        let node = nodes[j];
+        if (this._isValidElement(node))
+          elements.push(node.wrappedJSObject || node);
+      }
     }
 
     function orderByTabIndex(a, b) {
