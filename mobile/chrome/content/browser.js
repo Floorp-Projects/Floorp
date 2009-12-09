@@ -661,7 +661,7 @@ var Browser = {
   getTabForDocument: function(aDocument) {
     let tabs = this._tabs;
     for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i].browser.contentDocument === aDocument)
+      if (tabs[i].browser.contentDocument == aDocument)
         return tabs[i];
     }
     return null;
@@ -1122,13 +1122,15 @@ var Browser = {
   },
 
   getBoundingContentRect: function getBoundingContentRect(contentElem) {
-    let tab = Browser.getTabForDocument(contentElem.ownerDocument);
-    if (!tab)
-      return null;
-    let browser = tab.browser;
-    if (!browser)
+    let document = contentElem.ownerDocument;
+    while(document.defaultView.frameElement)
+      document = document.defaultView.frameElement.ownerDocument;
+
+    let tab = Browser.getTabForDocument(document);
+    if (!tab || !tab.browser)
       return null;
 
+    let browser = tab.browser;
     let offset = BrowserView.Util.getContentScrollOffset(browser);
 
     let r = contentElem.getBoundingClientRect();
