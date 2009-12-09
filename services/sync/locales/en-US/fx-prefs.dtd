@@ -7,17 +7,25 @@
 <!ENTITY serverType.custom.label    "Use a custom server">
 
 <!ENTITY signIn.username.label      "User Name">
+<!ENTITY signIn.username.accesskey  "U">
 <!ENTITY signIn.password.label      "Password">
+<!ENTITY signIn.password.accesskey  "P">
 <!ENTITY signIn.serverURL.label     "Server URL">
+<!ENTITY signIn.serverURL.accesskey "L">
 
 <!ENTITY setup.confirmPassword.label  "Confirm Password">
+<!ENTITY setup.confirmPassword.accesskey  "m">
 <!ENTITY setup.emailAddress.label     "Email Address">
+<!ENTITY setup.emailAddress.accesskey "E">
 
 <!ENTITY setup.tosAgree1.label      "I agree to the">
+<!ENTITY setup.tosAgree1.accesskey  "a">
 <!ENTITY setup.tosLink.label        "Terms of Service">
 <!ENTITY setup.tosAgree2.label      "">
+<!ENTITY setup.tosAgree2.accesskey  "">
 
 <!ENTITY setup.generalTitle.label     "Create your Weave Account">
+
 
 <!ENTITY weaveDesc.label            "&brandShortName; can use a Mozilla Weave account to sync your bookmarks, history, passwords, preferences, and tabs across multiple computers.">
 
@@ -27,18 +35,23 @@
 <!ENTITY setup.page4Title.label     "&setup.generalTitle.label; - Page 4 of 4">
 
 <!ENTITY signIn.button.label        "Sign In">
+<!ENTITY signIn.button.accesskey    "S">
 
 <!ENTITY createAccountButton.label      "Create Mozilla Weave Account">
 <!ENTITY createAccountButton.accesskey  "C">
 
-<!ENTITY noScriptWarning.label        "We have detected that you have NoScript installed.  You will may to allow scripts temporarily for the install to proceed.">
+<!ENTITY noScriptWarning.label        "We have detected that you have NoScript installed.  You may need to allow scripts temporarily for the install to proceed.">
 
 <!ENTITY goBack.label                 "Back">
+<!ENTITY goBack.accesskey             "B">
 <!ENTITY continue.label               "Continue">
+<!ENTITY continue.accesskey           "C">
 
 <!ENTITY passphraseGroupbox.label     "Enter Secret Phrase">
 <!ENTITY passphraseEntry.label        "Secret Phrase">
+<!ENTITY passphraseEntry.accesskey    "S">
 <!ENTITY passphraseConfirm.label      "Confirm">
+<!ENTITY passphraseConfirm.accesskey  "m">
 <!ENTITY passphraseDesc.label         "Please enter a secret phrase. This will be used to encrypt all your data so only you can access it. It is never stored on the server, so don't lose this!">
 <!ENTITY passphraseDesc2.label        "This must be at least 12 characters long and cannot match your account password.">
 <!ENTITY passphraseDesc3.label        "Please enter your secret phrase. This must be the same secret phrase that you used to encrypt yout data.">
@@ -70,6 +83,7 @@
 <!ENTITY currentUser.label            "Current User:">
 
 <!ENTITY manageAccount.label          "Manage Account">
+<!ENTITY manageAccount.accesskey      "A">
 
 <!ENTITY changePassword.label         "Change Password">
 <!ENTITY recoverPassword.label        "Recover Password">
@@ -80,6 +94,7 @@
 <!ENTITY syncPrefsCaption.label       "Browser Sync">
 
 <!ENTITY syncModeSwitchDesc.label     "&brandShortName; will: ">
+<!ENTITY syncModeSwitchDesc.accesskey "w">
 
 <!ENTITY syncEverything.label         "Sync Everything">
 <!ENTITY customSync.label             "Use my custom settings">
@@ -87,7 +102,12 @@
 <!ENTITY syncEverythingDescription.label  "Your bookmarks, history, passwords, preferences, and tabs will be synced using your Weave account.">
 
 <!ENTITY syncItem.bookmarks.label     "Sync Bookmarks">
+<!ENTITY syncItem.bookmarks.accesskey "m">
 <!ENTITY syncItem.tabs.label          "Sync Tabs">
+<!ENTITY syncItem.tabs.accesskey      "T">
 <!ENTITY syncItem.history.label       "Sync History">
+<!ENTITY syncItem.history.accesskey   "r">
 <!ENTITY syncItem.passwords.label     "Sync Passwords">
+<!ENTITY syncItem.passwords.accesskey "P">
 <!ENTITY syncItem.prefs.label         "Sync Preferences">
+<!ENTITY syncItem.prefs.accesskey     "S">
