@@ -105,6 +105,10 @@ RPCChannel::Call(Message* msg, Message* reply)
         NewRunnableMethod(this, &RPCChannel::OnSend, msg));
 
     while (1) {
+        // now might be the time to process a message deferred because
+        // of race resolution
+        MaybeProcessDeferredIncall();
+
         // here we're waiting for something to happen. see long
         // comment about the queue in RPCChannel.h
         while (Connected() && mPending.empty()) {
@@ -153,11 +157,6 @@ RPCChannel::Call(Message* msg, Message* reply)
             if (!isError) {
                 *reply = recvd;
             }
-
-            // the stack depth just shrunk, so now might be the time
-            // to process a message deferred because of race
-            // resolution
-            MaybeProcessDeferredIncall();
 
             if (0 == StackDepth())
                 // we may have received new messages while waiting for
@@ -220,11 +219,18 @@ RPCChannel::MaybeProcessDeferredIncall()
 void
 RPCChannel::EnqueuePendingMessages()
 {
-    // XXX performance tuning knob: could process all or k pending
-    // messages here, rather than enqueuing for later processing
-
     AssertWorkerThread();
     mMutex.AssertCurrentThreadOwns();
+    RPC_ASSERT(mDeferred.empty() || 1 == mDeferred.size(),
+               "expected mDeferred to have 0 or 1 items");
+
+    if (!mDeferred.empty())
+        mWorkerLoop->PostTask(
+            FROM_HERE,
+            NewRunnableMethod(this, &RPCChannel::OnMaybeDequeueOne));
+
+    // XXX performance tuning knob: could process all or k pending
+    // messages here, rather than enqueuing for later processing
 
     for (size_t i = 0; i < mPending.size(); ++i)
         mWorkerLoop->PostTask(
@@ -240,10 +246,15 @@ RPCChannel::OnMaybeDequeueOne()
 
     AssertWorkerThread();
     mMutex.AssertNotCurrentThreadOwns();
+    RPC_ASSERT(mDeferred.empty() || 1 == mDeferred.size(),
+               "expected mDeferred to have 0 or 1 items, but it has %lu");
 
     Message recvd;
     {
         MutexAutoLock lock(mMutex);
+
+        if (!mDeferred.empty())
+            return MaybeProcessDeferredIncall();
 
         if (mPending.empty())
             return;
