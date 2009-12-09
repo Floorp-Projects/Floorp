@@ -357,10 +357,6 @@ WeaveSvc.prototype = {
       case SEAMONKEY_ID:
         engines = ["Form", "History", "Password", "Tab"];
         break;
-
-      case THUNDERBIRD_ID:
-        engines = ["Password"];
-        break;
     }
 
     // Grab the actual engine and register them
