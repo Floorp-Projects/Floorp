@@ -373,9 +373,9 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
     ((platformID == PLATFORM_ID_MICROSOFT && encodingID == EncodingIDUCS4ForMicrosoftPlatform) || \
      (platformID == PLATFORM_ID_UNICODE   && encodingID == EncodingIDUCS4ForUnicodePlatform))
 
-nsresult
-gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCharacterMap, 
-                       PRPackedBool& aUnicodeFont, PRPackedBool& aSymbolFont)
+PRUint32
+gfxFontUtils::FindPreferredSubtable(PRUint8 *aBuf, PRUint32 aBufLength,
+                                    PRUint32 *aTableOffset, PRBool *aSymbolEncoding)
 {
     enum {
         OffsetVersion = 0,
@@ -399,8 +399,7 @@ gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCha
     // PRUint16 version = ReadShortAt(aBuf, OffsetVersion); // Unused: self-documenting.
     PRUint16 numTables = ReadShortAt(aBuf, OffsetNumTables);
 
-    // save the format and offset we want here
-    PRUint32 keepOffset = 0;
+    // save the format we want here
     PRUint32 keepFormat = 0;
 
     PRUint8 *table = aBuf + SizeOfHeader;
@@ -419,33 +418,144 @@ gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCha
         const PRUint16 format = ReadShortAt(subtable, SubtableOffsetFormat);
 
         if (isSymbol(platformID, encodingID)) {
-            aUnicodeFont = PR_FALSE;
-            aSymbolFont = PR_TRUE;
             keepFormat = format;
-            keepOffset = offset;
+            *aTableOffset = offset;
+            *aSymbolEncoding = PR_TRUE;
             break;
         } else if (format == 4 && acceptableFormat4(platformID, encodingID, keepFormat)) {
-            aUnicodeFont = PR_TRUE;
-            aSymbolFont = PR_FALSE;
             keepFormat = format;
-            keepOffset = offset;
+            *aTableOffset = offset;
+            *aSymbolEncoding = PR_FALSE;
         } else if (format == 12 && acceptableUCS4Encoding(platformID, encodingID)) {
-            aUnicodeFont = PR_TRUE;
-            aSymbolFont = PR_FALSE;
             keepFormat = format;
-            keepOffset = offset;
+            *aTableOffset = offset;
+            *aSymbolEncoding = PR_FALSE;
             break; // we don't want to try anything else when this format is available.
         }
     }
 
-    nsresult rv = NS_ERROR_FAILURE;
+    return keepFormat;
+}
 
-    if (keepFormat == 12)
-        rv = ReadCMAPTableFormat12(aBuf + keepOffset, aBufLength - keepOffset, aCharacterMap);
-    else if (keepFormat == 4)
-        rv = ReadCMAPTableFormat4(aBuf + keepOffset, aBufLength - keepOffset, aCharacterMap);
+nsresult
+gfxFontUtils::ReadCMAP(PRUint8 *aBuf, PRUint32 aBufLength, gfxSparseBitSet& aCharacterMap, 
+                       PRPackedBool& aUnicodeFont, PRPackedBool& aSymbolFont)
+{
+    PRUint32 offset;
+    PRBool   symbol;
+    PRUint32 format = FindPreferredSubtable(aBuf, aBufLength, &offset, &symbol);
 
-    return rv;
+    if (format == 4) {
+        if (symbol) {
+            aUnicodeFont = PR_FALSE;
+            aSymbolFont = PR_TRUE;
+        } else {
+            aUnicodeFont = PR_TRUE;
+            aSymbolFont = PR_FALSE;
+        }
+        return ReadCMAPTableFormat4(aBuf + offset, aBufLength - offset, aCharacterMap);
+    }
+
+    if (format == 12) {
+        aUnicodeFont = PR_TRUE;
+        aSymbolFont = PR_FALSE;
+        return ReadCMAPTableFormat12(aBuf + offset, aBufLength - offset, aCharacterMap);
+    }
+
+    return NS_ERROR_FAILURE;
+}
+
+using namespace mozilla; // for the AutoSwap_* types
+
+#pragma pack(1)
+
+typedef struct {
+    AutoSwap_PRUint16 format;
+    AutoSwap_PRUint16 length;
+    AutoSwap_PRUint16 language;
+    AutoSwap_PRUint16 segCountX2;
+    AutoSwap_PRUint16 searchRange;
+    AutoSwap_PRUint16 entrySelector;
+    AutoSwap_PRUint16 rangeShift;
+
+    AutoSwap_PRUint16 arrays[1];
+} Format4Cmap;
+
+PRUint32
+gfxFontUtils::MapCharToGlyphFormat4(const PRUint8 *aBuf, PRUnichar aCh)
+{
+    const Format4Cmap *cmap4 = reinterpret_cast<const Format4Cmap*>(aBuf);
+    PRUint16 segCount;
+    const AutoSwap_PRUint16 *endCodes;
+    const AutoSwap_PRUint16 *startCodes;
+    const AutoSwap_PRUint16 *idDelta;
+    const AutoSwap_PRUint16 *idRangeOffset;
+    PRUint16 probe;
+    PRUint16 rangeShiftOver2;
+    PRUint16 index;
+
+// not needed because PRUnichar cannot exceed 0xFFFF
+//    if (aCh >= 0x10000) {
+//        return 0;
+//    }
+
+    segCount = (PRUint16)(cmap4->segCountX2) / 2;
+
+    endCodes = &cmap4->arrays[0];
+    startCodes = &cmap4->arrays[segCount + 1]; // +1 for reserved word between arrays
+    idDelta = &startCodes[segCount];
+    idRangeOffset = &idDelta[segCount];
+
+    probe = 1 << (PRUint16)(cmap4->entrySelector);
+    rangeShiftOver2 = (PRUint16)(cmap4->rangeShift) / 2;
+
+    if ((PRUint16)(startCodes[rangeShiftOver2]) <= aCh) {
+        index = rangeShiftOver2;
+    } else {
+        index = 0;
+    }
+
+    while (probe > 1) {
+        probe >>= 1;
+        if ((PRUint16)(startCodes[index + probe]) <= aCh) {
+            index += probe;
+        }
+    }
+
+    if (aCh >= (PRUint16)(startCodes[index]) && aCh <= (PRUint16)(endCodes[index])) {
+        PRUint16 result;
+        if ((PRUint16)(idRangeOffset[index]) == 0) {
+            result = aCh;
+        } else {
+            PRUint16 offset = aCh - (PRUint16)(startCodes[index]);
+            const AutoSwap_PRUint16 *glyphIndexTable =
+                (const AutoSwap_PRUint16*)((const char*)&idRangeOffset[index] +
+                                           (PRUint16)(idRangeOffset[index]));
+            result = glyphIndexTable[offset];
+        }
+
+        // note that this is unsigned 16-bit arithmetic, and may wrap around
+        result += (PRUint16)(idDelta[index]);
+        return result;
+    }
+
+    return 0;
+}
+
+PRUint32
+gfxFontUtils::MapCharToGlyph(PRUint8 *aBuf, PRUint32 aBufLength, PRUnichar aCh)
+{
+    PRUint32 offset;
+    PRBool   symbol;
+    PRUint32 format = FindPreferredSubtable(aBuf, aBufLength, &offset, &symbol);
+
+    if (format == 4)
+        return MapCharToGlyphFormat4(aBuf + offset, aCh);
+
+    // other formats not currently supported; this is used only for the
+    // Mac OS X 10.6 LiGothic font hack (bug 532346)
+
+    return 0;
 }
 
 PRUint8 gfxFontUtils::CharRangeBit(PRUint32 ch) {
@@ -537,8 +647,6 @@ nsresult gfxFontUtils::MakeUniqueUserFontName(nsAString& aName)
 
 
 // TrueType/OpenType table handling code
-
-using namespace mozilla; // for the AutoSwap_* types
 
 // need byte aligned structs
 #pragma pack(1)
