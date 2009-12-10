@@ -228,7 +228,7 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     // commenting those properties out here for the time being, so that we
     // don't try to animate them yet.
     case eCSSProperty_clip_rule:
-    // case eCSSProperty_clip_path:
+    case eCSSProperty_clip_path:
     case eCSSProperty_color:
     case eCSSProperty_color_interpolation:
     case eCSSProperty_color_interpolation_filters:
@@ -238,7 +238,7 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     case eCSSProperty_fill:
     case eCSSProperty_fill_opacity:
     case eCSSProperty_fill_rule:
-    // case eCSSProperty_filter:
+    case eCSSProperty_filter:
     case eCSSProperty_flood_color:
     case eCSSProperty_flood_opacity:
     case eCSSProperty_font_family:
@@ -251,10 +251,10 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     case eCSSProperty_image_rendering:
     case eCSSProperty_letter_spacing:
     case eCSSProperty_lighting_color:
-    // case eCSSProperty_marker_end:
-    // case eCSSProperty_marker_mid:
-    // case eCSSProperty_marker_start:
-    // case eCSSProperty_mask:
+    case eCSSProperty_marker_end:
+    case eCSSProperty_marker_mid:
+    case eCSSProperty_marker_start:
+    case eCSSProperty_mask:
     case eCSSProperty_opacity:
     case eCSSProperty_pointer_events:
     case eCSSProperty_shape_rendering:
