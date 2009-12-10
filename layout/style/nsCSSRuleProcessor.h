@@ -93,6 +93,8 @@ public:
 
   NS_IMETHOD RulesMatching(PseudoElementRuleProcessorData* aData);
 
+  NS_IMETHOD RulesMatching(AnonBoxRuleProcessorData* aData);
+
   NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData);
 
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,

@@ -193,6 +193,24 @@ struct PseudoElementRuleProcessorData : public RuleProcessorData {
   nsCSSPseudoElements::Type mPseudoType;
 };
 
+struct AnonBoxRuleProcessorData {
+  AnonBoxRuleProcessorData(nsPresContext* aPresContext,
+                           nsIAtom* aPseudoTag,
+                           nsRuleWalker* aRuleWalker)
+    : mPresContext(aPresContext),
+      mPseudoTag(aPseudoTag),
+      mRuleWalker(aRuleWalker)
+  {
+    NS_PRECONDITION(mPresContext, "Must have prescontext");
+    NS_PRECONDITION(aPseudoTag, "Must have pseudo tag");
+    NS_PRECONDITION(aRuleWalker, "Must have rule walker");
+  }
+
+  nsPresContext* mPresContext;
+  nsIAtom* mPseudoTag;
+  nsRuleWalker* mRuleWalker;
+};
+
 struct PseudoRuleProcessorData : public RuleProcessorData {
   PseudoRuleProcessorData(nsPresContext* aPresContext,
                           nsIContent* aParentContent,
