@@ -3,5 +3,5 @@ include protocol "managerNoCtor.ipdl";
 protocol managedNoCtor {
     manager managerNoCtor;
     // empty
-child: delete();
+child: __delete__();
 };

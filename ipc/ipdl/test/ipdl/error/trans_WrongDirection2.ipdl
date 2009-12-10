@@ -2,11 +2,11 @@ protocol trans_WrongDirection2 {
 
 parent:
     Msg();
-    delete();
+    __delete__();
 
 state S1:
     send Msg goto S1;
 
 start state _:
-    recv delete;
+    recv __delete__;
 };

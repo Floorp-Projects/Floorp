@@ -2,9 +2,9 @@ protocol trans_WrongName {
 
 child:
     Msg();
-    delete();
+    __delete__();
 
 state S1:
     call Msg goto S1;
-    send delete();
+    send __delete__();
 };
