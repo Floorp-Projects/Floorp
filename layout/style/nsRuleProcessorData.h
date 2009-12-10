@@ -130,7 +130,8 @@ public:
   
   nsIAtom*          mContentTag;    // if content, then content->GetTag()
   nsIAtom*          mContentID;     // if styled content, then weak reference to styledcontent->GetID()
-  PRPackedBool      mIsHTMLContent; // if content, then does QI on HTMLContent, true or false
+  PRPackedBool      mIsHTMLContent; // if content, then whether it's IsHTML()
+  PRPackedBool      mIsHTML;        // if content then mIsHTMLContent && IsInHTMLDocument()
   PRPackedBool      mHasAttributes; // if content, content->GetAttrCount() > 0
   nsCompatibility   mCompatMode;    // Possibly remove use of this in SelectorMatches?
   PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
