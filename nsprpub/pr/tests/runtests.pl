@@ -170,7 +170,7 @@ $ltimeout = shift; # timeout
         # No timeout: use blocking wait
         $ret = waitpid($lpid,0);
         # Exit and don't kill
-        $lstatus = $? % 256;
+        $lstatus = $?;
         $ltimeout = -1;
     } else {
         while ($ltimeout > 0) {
