@@ -74,7 +74,14 @@ var _fromByTestLists =
     new AnimTestcaseFromBy("url(#gradA)", "url(#gradB) red", { noEffect: 1 }),
     new AnimTestcaseFromBy("url(#gradA)", "none", { noEffect: 1 }),
     new AnimTestcaseFromBy("red", "url(#gradA)", { noEffect: 1 }),
-  ]
+  ],
+  URIsAndNone: [
+    // No need to specify { noEffect: 1 }, since plain URI-valued properties
+    // aren't additive
+    new AnimTestcaseFromBy("url(#idA)", "url(#idB)"),
+    new AnimTestcaseFromBy("none", "url(#idB)"),
+    new AnimTestcaseFromBy("url(#idB)", "inherit"),
+  ],
 };
 
 // List of attribute/testcase-list bundles to be tested
@@ -82,6 +89,8 @@ var gFromByBundles =
 [
   new TestcaseBundle(gPropList.fill, [].concat(_fromByTestLists.color,
                                                _fromByTestLists.paint)),
+  // Check that 'by' animations involving URIs have no effect
+  new TestcaseBundle(gPropList.filter,         _fromByTestLists.URIsAndNone),
   new TestcaseBundle(gPropList.font_size,      _fromByTestLists.lengthPx),
   new TestcaseBundle(gPropList.font_size_adjust, [
     // These testcases implicitly have no effect, because font-size-adjust is
