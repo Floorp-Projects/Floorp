@@ -25,6 +25,7 @@
  *   Brodie Thiesfield <brofield@jellycan.com>
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   David Gardiner <david.gardiner@unisa.edu.au>
+ *   Kyle Huey <me@kylehuey.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1367,7 +1368,8 @@ HRESULT nsDataObj::GetFile(FORMATETC& aFE, STGMEDIUM& aSTG)
   PRBool found = PR_FALSE;
   while (NOERROR == m_enumFE->Next(1, &fe, &count)
          && dfInx < mDataFlavors.Length()) {
-    if (mDataFlavors[dfInx].EqualsLiteral(kNativeImageMime)) {
+    if (mDataFlavors[dfInx].EqualsLiteral(kNativeImageMime) ||
+        mDataFlavors[dfInx].EqualsLiteral(kFileMime)) {
       found = PR_TRUE;
       break;
     }
@@ -1377,6 +1379,75 @@ HRESULT nsDataObj::GetFile(FORMATETC& aFE, STGMEDIUM& aSTG)
   if (!found)
     return E_FAIL;
 
+  if (mDataFlavors[dfInx].EqualsLiteral(kNativeImageMime))
+    return DropImage(aFE, aSTG);
+  return DropFile(aFE, aSTG);
+}
+
+HRESULT nsDataObj::DropFile(FORMATETC& aFE, STGMEDIUM& aSTG)
+{
+  nsresult rv;
+  PRUint32 len = 0;
+  nsCOMPtr<nsISupports> genericDataWrapper;
+
+  mTransferable->GetTransferData(kFileMime, getter_AddRefs(genericDataWrapper),
+                                 &len);
+  nsCOMPtr<nsIFile> file ( do_QueryInterface(genericDataWrapper) );
+
+  if (!file)
+  {
+    nsCOMPtr<nsISupportsInterfacePointer> ptr(do_QueryInterface(genericDataWrapper));
+    if (ptr)
+      ptr->GetData(getter_AddRefs(file));
+  }
+
+  if (!file)
+    return E_FAIL;
+
+  aSTG.tymed = TYMED_HGLOBAL;
+  aSTG.pUnkForRelease = NULL;
+
+  nsAutoString path;
+  rv = file->GetPath(path);
+  if (NS_FAILED(rv))
+    return E_FAIL;
+
+  PRUint32 allocLen = path.Length() + 2;
+  HGLOBAL hGlobalMemory = NULL;
+  PRUnichar *dest, *dest2;
+
+  hGlobalMemory = GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) +
+                                             allocLen * sizeof(PRUnichar));
+  if (!hGlobalMemory)
+    return E_FAIL;
+
+  DROPFILES* pDropFile = (DROPFILES*)GlobalLock(hGlobalMemory);
+
+  // First, populate the drop file structure
+  pDropFile->pFiles = sizeof(DROPFILES); //Offset to start of file name string
+  pDropFile->fNC    = 0;
+  pDropFile->pt.x   = 0;
+  pDropFile->pt.y   = 0;
+  pDropFile->fWide  = TRUE;
+
+  // Copy the filename right after the DROPFILES structure
+  dest = (PRUnichar*)(((char*)pDropFile) + pDropFile->pFiles);
+  memcpy(dest, path.get(), (allocLen - 1) * sizeof(PRUnichar));
+
+  // Two null characters are needed at the end of the file name.
+  // Lookup the CF_HDROP shell clipboard format for more info.
+  // Add the second null character right after the first one.
+  dest[allocLen - 1] = L'\0';
+
+  GlobalUnlock(hGlobalMemory);
+
+  aSTG.hGlobal = hGlobalMemory;
+
+  return S_OK;
+}
+
+HRESULT nsDataObj::DropImage(FORMATETC& aFE, STGMEDIUM& aSTG)
+{
   nsresult rv;
   PRUint32 len = 0;
   nsCOMPtr<nsISupports> genericDataWrapper;
