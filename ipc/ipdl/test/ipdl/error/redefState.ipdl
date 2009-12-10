@@ -3,12 +3,12 @@ protocol redefState {
     // error: redefining state in state machine
 child:
     Msg();
-    delete();
+    __delete__();
 
 state S1: send Msg goto S1;
 
 state S1: send Msg goto S1;
 
 start state _:
-    send delete;
+    send __delete__;
 };
