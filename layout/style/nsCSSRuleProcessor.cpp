@@ -914,8 +914,10 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
   mHasAttributes = PR_FALSE;
   mIsHTMLContent = PR_FALSE;
   mIsLink = PR_FALSE;
+  mGotLinkInfo = PR_FALSE;
   mLinkState = eLinkState_Unknown;
-  mEventState = 0;
+  mContentState = 0;
+  mGotContentState = PR_FALSE;
   mNameSpaceID = kNameSpaceID_Unknown;
   mPreviousSiblingData = nsnull;
   mParentData = nsnull;
@@ -945,13 +947,6 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     mContentTag = aContent->Tag();
     mParentContent = aContent->GetParent();
 
-    // get the event state
-    if (mPresContext) {
-      mPresContext->EventStateManager()->GetContentState(aContent, mEventState);
-    } else {
-      mEventState = aContent->IntrinsicState();
-    }
-
     // get the ID and classes for the content
     mContentID = aContent->GetID();
     mClasses = aContent->GetClasses();
@@ -964,30 +959,6 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
 
     // check for HTMLContent and Link status
     mIsHTMLContent = (mNameSpaceID == kNameSpaceID_XHTML);
-
-    // if HTML content and it has some attributes, check for an HTML link
-    // NOTE: optimization: cannot be a link if no attributes (since it needs an href)
-    nsILinkHandler* linkHandler =
-      mPresContext ? mPresContext->GetLinkHandler() : nsnull;
-    if (mIsHTMLContent && mHasAttributes) {
-      // check if it is an HTML Link
-      if(nsStyleUtil::IsHTMLLink(aContent, linkHandler, &mLinkState)) {
-        mIsLink = PR_TRUE;
-      }
-    } 
-
-    // if not an HTML link, check for a simple xlink (cannot be both HTML link and xlink)
-    // NOTE: optimization: cannot be an XLink if no attributes (since it needs an 
-    if(!mIsLink &&
-       mHasAttributes && 
-       !(mIsHTMLContent || aContent->IsXUL()) && 
-       nsStyleUtil::IsLink(aContent, linkHandler, &mLinkState)) {
-      mIsLink = PR_TRUE;
-    } 
-  }
-
-  if (mLinkState == eLinkState_Visited && !gSupportVisitedPseudo) {
-    mLinkState = eLinkState_Unvisited;
   }
 }
 
@@ -1049,6 +1020,59 @@ const nsString* RuleProcessorData::GetLang()
     }
   }
   return mLanguage;
+}
+
+PRUint32
+RuleProcessorData::ContentState()
+{
+  if (!mGotContentState) {
+    mGotContentState = PR_TRUE;
+    if (mContent) {
+      if (mPresContext) {
+        mPresContext->EventStateManager()->GetContentState(mContent,
+                                                           mContentState);
+      } else {
+        mContentState = mContent->IntrinsicState();
+      }
+    }
+  }
+  return mContentState;
+}
+
+PRBool
+RuleProcessorData::IsLink()
+{
+  if (!mGotLinkInfo) {
+    mGotLinkInfo = PR_TRUE;
+    if (mContent) {
+      // if HTML content and it has some attributes, check for an HTML link
+      // NOTE: optimization: cannot be a link if no attributes (since it needs
+      // an href)
+      nsILinkHandler* linkHandler =
+        mPresContext ? mPresContext->GetLinkHandler() : nsnull;
+      if (mIsHTMLContent && mHasAttributes) {
+        // check if it is an HTML Link
+        if (nsStyleUtil::IsHTMLLink(mContent, linkHandler, &mLinkState)) {
+          mIsLink = PR_TRUE;
+        }
+      }
+
+      // if not an HTML link, check for a simple xlink (cannot be both HTML
+      // link and xlink) NOTE: optimization: cannot be an XLink if no
+      // attributes (since it needs an href)
+      if(!mIsLink &&
+         mHasAttributes && 
+         !(mIsHTMLContent || mContent->IsXUL()) && 
+         nsStyleUtil::IsLink(mContent, linkHandler, &mLinkState)) {
+        mIsLink = PR_TRUE;
+      }
+
+      if (mLinkState == eLinkState_Visited && !gSupportVisitedPseudo) {
+        mLinkState = eLinkState_Unvisited;
+      }
+    }
+  }
+  return mIsLink;
 }
 
 PRInt32
@@ -1166,7 +1190,7 @@ inline PRBool IsLinkPseudo(nsIAtom* aAtom)
 
 // Return whether we should apply a "global" (i.e., universal-tag)
 // selector for event states in quirks mode.  Note that
-// |data.mIsLink| is checked separately by the caller, so we return
+// |data.IsLink()| is checked separately by the caller, so we return
 // false for |nsGkAtoms::a|, which here means a named anchor.
 inline PRBool IsQuirkEventSensitive(nsIAtom *aContentTag)
 {
@@ -1600,7 +1624,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       stateToCheck = NS_EVENT_STATE_URLTARGET;
     }
     else if (IsLinkPseudo(pseudoClass->mAtom)) {
-      if (data.mIsLink) {
+      if (data.IsLink()) {
         if (nsCSSPseudoClasses::mozAnyLink == pseudoClass->mAtom) {
           result = PR_TRUE;
         }
@@ -1608,15 +1632,15 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           NS_ASSERTION(nsCSSPseudoClasses::link == pseudoClass->mAtom ||
                        nsCSSPseudoClasses::visited == pseudoClass->mAtom,
                        "somebody changed IsLinkPseudo");
-          NS_ASSERTION(data.mLinkState == eLinkState_Unvisited ||
-                       data.mLinkState == eLinkState_Visited,
+          NS_ASSERTION(data.LinkState() == eLinkState_Unvisited ||
+                       data.LinkState() == eLinkState_Visited,
                        "unexpected link state for mIsLink");
           if (aStateMask & NS_EVENT_STATE_VISITED) {
             result = PR_TRUE;
             if (aDependence)
               *aDependence = PR_TRUE;
           } else {
-            result = ((eLinkState_Unvisited == data.mLinkState) ==
+            result = ((eLinkState_Unvisited == data.LinkState()) ==
                       (nsCSSPseudoClasses::link == pseudoClass->mAtom));
           }
         }
@@ -1765,7 +1789,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           // (unnegated)). This at least makes it closer to the spec.
           !isNegated &&
           // important for |IsQuirkEventSensitive|:
-          data.mIsHTMLContent && !data.mIsLink &&
+          data.mIsHTMLContent && !data.IsLink() &&
           !IsQuirkEventSensitive(data.mContentTag)) {
         // In quirks mode, only make certain elements sensitive to
         // selectors ":hover" and ":active".
@@ -1776,7 +1800,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           if (aDependence)
             *aDependence = PR_TRUE;
         } else {
-          result = (0 != (data.mEventState & stateToCheck));
+          result = (0 != (data.ContentState() & stateToCheck));
         }
       }
     }
