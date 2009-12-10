@@ -206,16 +206,12 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
       // XXXdholbert Rect type not yet supported by nsStyleAnimation
       return PR_FALSE;
 
-    // XXXdholbert: Some properties' types aren't yet supported by
-    // nsStyleAnimation (due to using URI values or string values).  I'm
-    // commenting those properties out here for the time being, so that we
-    // don't try to animate them yet.
     case eCSSProperty_clip_rule:
     case eCSSProperty_clip_path:
     case eCSSProperty_color:
     case eCSSProperty_color_interpolation:
     case eCSSProperty_color_interpolation_filters:
-    // case eCSSProperty_cursor:
+    case eCSSProperty_cursor:
     case eCSSProperty_display:
     case eCSSProperty_dominant_baseline:
     case eCSSProperty_fill:
