@@ -170,7 +170,7 @@ class nsStyleSet
                                            nsIContent*    aContent,
                                            nsIAtom*       aAttribute,
                                            PRInt32        aModType,
-                                           PRUint32       aStateMask);
+                                           PRBool         aAttrHasChanged);
 
   /*
    * Do any processing that needs to happen as a result of a change in

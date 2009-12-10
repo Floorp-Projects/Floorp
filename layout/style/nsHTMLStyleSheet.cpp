@@ -523,6 +523,11 @@ nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData,
 nsReStyleHint
 nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
+  // Do nothing on before-change checks
+  if (!aData->mAttrHasChanged) {
+    return nsReStyleHint(0);
+  }
+
   // Note: no need to worry about whether some states changed with this
   // attribute here, because we handle that under HasStateDependentStyle() as
   // needed.
