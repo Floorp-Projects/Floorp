@@ -130,18 +130,16 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
 protected:
-  void CacheChildren();
 
-  already_AddRefed<nsIAccessible>
-    AccessibleForOption(nsIAccessibilityService *aAccService,
-                        nsIContent *aContent,
-                        nsIAccessible *aLastGoodAccessible,
-                        PRInt32 *aChildCount);
-  already_AddRefed<nsIAccessible>
-    CacheOptSiblings(nsIAccessibilityService *aAccService,
-                     nsIContent *aParentContent,
-                     nsIAccessible *aLastGoodAccessible,
-                     PRInt32 *aChildCount);
+  // nsAccessible
+  virtual void CacheChildren();
+
+  // nsHTMLSelectListAccessible
+
+  /**
+   * Recursive helper for CacheChildren().
+   */
+  void CacheOptSiblings(nsIContent *aParentContent);
 };
 
 /*
@@ -201,7 +199,8 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
 protected:
-  void CacheChildren();
+  // nsAccessible
+  virtual void CacheChildren();
 };
 
 /** ------------------------------------------------------ */
@@ -236,8 +235,10 @@ public:
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
 
 protected:
-  void CacheChildren();
+  // nsAccessible
+  virtual void CacheChildren();
 
+  // nsHTMLComboboxAccessible
   already_AddRefed<nsIAccessible> GetFocusedOptionAccessible();
 
 private:
@@ -259,7 +260,6 @@ public:
   virtual ~nsHTMLComboboxListAccessible() {}
 
   // nsIAccessible
-  NS_IMETHOD GetParent(nsIAccessible **aParent);
   NS_IMETHOD GetUniqueID(void **aUniqueID);
 
   // nsAccessNode
@@ -268,6 +268,7 @@ public:
   // nsAccessible
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
   virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
+  virtual nsIAccessible* GetParent();
 };
 
 #endif

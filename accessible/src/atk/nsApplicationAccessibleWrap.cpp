@@ -647,8 +647,7 @@ nsApplicationAccessibleWrap::AddRootAccessible(nsIAccessible *aRootAccWrap)
     AtkObject *atkAccessible = nsAccessibleWrap::GetAtkObject(aRootAccWrap);
     atk_object_set_parent(atkAccessible, mAtkObject);
 
-    PRUint32 count = 0;
-    mChildren->GetLength(&count);
+    PRUint32 count = mChildren.Count();
     g_signal_emit_by_name(mAtkObject, "children_changed::add", count - 1,
                           atkAccessible, NULL);
 
@@ -670,36 +669,27 @@ nsApplicationAccessibleWrap::RemoveRootAccessible(nsIAccessible *aRootAccWrap)
 {
     NS_ENSURE_ARG_POINTER(aRootAccWrap);
 
-    PRUint32 index = 0;
-    nsresult rv = NS_ERROR_FAILURE;
-
-    // we must use weak ref to get the index
-    nsCOMPtr<nsIWeakReference> weakPtr = do_GetWeakReference(aRootAccWrap);
-    rv = mChildren->IndexOf(0, weakPtr, &index);
+    PRInt32 index = mChildren.IndexOf(aRootAccWrap);
 
     AtkObject *atkAccessible = nsAccessibleWrap::GetAtkObject(aRootAccWrap);
     atk_object_set_parent(atkAccessible, NULL);
     g_signal_emit_by_name(mAtkObject, "children_changed::remove", index,
                           atkAccessible, NULL);
 
+    nsresult rv = nsApplicationAccessible::RemoveRootAccessible(aRootAccWrap);
+
 #ifdef MAI_LOGGING
-    PRUint32 count = 0;
-    mChildren->GetLength(&count);
+    PRUint32 count = mChildren.Count();
 
     if (NS_SUCCEEDED(rv)) {
-        rv = mChildren->RemoveElementAt(index);
         MAI_LOG_DEBUG(("\nRemove RootAcc=%p, count=%d\n",
                        (void*)aRootAccWrap, (count-1)));
     }
     else
         MAI_LOG_DEBUG(("\nFail to Remove RootAcc=%p, count=%d\n",
                        (void*)aRootAccWrap, count));
-#else
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mChildren->RemoveElementAt(index);
-
 #endif
-    InvalidateChildren();
+
     return rv;
 }
 

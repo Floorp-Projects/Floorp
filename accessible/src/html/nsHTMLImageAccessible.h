@@ -83,6 +83,7 @@ protected:
   // nsAccessible
   virtual void CacheChildren();
 
+  // nsHTMLImageAccessible
   already_AddRefed<nsIDOMHTMLCollection> GetAreaCollection();
   already_AddRefed<nsIAccessible>
     GetAreaAccessible(nsIDOMHTMLCollection* aAreaNodes, PRInt32 aAreaNum);
