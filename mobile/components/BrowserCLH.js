@@ -61,11 +61,6 @@ BrowserCLH.prototype = {
                           getService(Ci.nsIBrowserSearchService);
     }
 
-    if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH)
-      return;
-
-    cmdLine.preventDefault = true;
-
     let win;
     try {
       var windowMediator =
@@ -76,6 +71,7 @@ BrowserCLH.prototype = {
         return;
 
       win.focus();
+      cmdLine.preventDefault = true;
     } catch (e) { }
 
     // Assumption:  All CLH arguments we've received have been sent remotely,
