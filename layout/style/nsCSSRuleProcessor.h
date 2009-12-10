@@ -83,7 +83,9 @@ public:
   /*
    * Returns true if the given RuleProcessorData matches one of the
    * selectors in aSelectorList.  Note that this method will assume
-   * the matching is not for styling purposes.
+   * the matching is not for styling purposes.  aSelectorList must not
+   * include any pseudo-element selectors.  aSelectorList is allowed
+   * to be null; in this case PR_FALSE will be returned.
    */
   static PRBool SelectorListMatches(RuleProcessorData& aData,
                                     nsCSSSelectorList* aSelectorList);
