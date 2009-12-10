@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML img tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // image map
+      var accTree = {
+        role: ROLE_IMAGE_MAP,
+        children: [
+          {
+            role: ROLE_LINK,
+            children: []
+          },
+          {
+            role: ROLE_LINK,
+            children: []
+          }
+        ]
+      };
+
+      testAccessibleTree("imgmap", accTree);
+
+      // img
+      accTree = {
+        role: ROLE_GRAPHIC,
+        children: []
+      };
+
+      testAccessibleTree("img", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Fix O(n^2) access to all the children of a container"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=342045">
+    Mozilla Bug 342045
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <map name="atoz_map">
+    <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
+          coords="17,0,30,14" alt="b" shape="rect">
+    <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#a"
+          coords="0,0,13,14" alt="a" shape="rect">
+  </map>
+
+  <img id="imgmap" width="447" height="15"
+       usemap="#atoz_map"
+       src="chrome://mochikit/content/a11y/accessible/letters.gif">
+
+  <img id="img" src="chrome://mochikit/content/a11y/accessible/moz.png">
+
+</body>
+</html>
