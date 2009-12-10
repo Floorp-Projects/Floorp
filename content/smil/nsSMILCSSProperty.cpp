@@ -223,18 +223,6 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
       // XXXdholbert Rect type not yet supported by nsStyleAnimation
       return PR_FALSE;
 
-    // PROPERTIES OF TYPE eCSSType_ValueList
-    case eCSSProperty_cursor:
-    case eCSSProperty_stroke_dasharray:
-      // XXXdholbert List type not yet supported by nsStyleAnimation
-      return PR_FALSE;
-
-    // PROPERTIES OF TYPE eCSSType_ValuePair
-    case eCSSProperty_fill:
-    case eCSSProperty_stroke:
-      return PR_TRUE;
-
-    // PROPERTIES OF TYPE eCSSType_Value
     // XXXdholbert: Some properties' types aren't yet supported by
     // nsStyleAnimation (due to using URI values or string values).  I'm
     // commenting those properties out here for the time being, so that we
@@ -244,8 +232,10 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     case eCSSProperty_color:
     case eCSSProperty_color_interpolation:
     case eCSSProperty_color_interpolation_filters:
+    // case eCSSProperty_cursor:
     case eCSSProperty_display:
     case eCSSProperty_dominant_baseline:
+    case eCSSProperty_fill:
     case eCSSProperty_fill_opacity:
     case eCSSProperty_fill_rule:
     // case eCSSProperty_filter:
@@ -270,6 +260,8 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     case eCSSProperty_shape_rendering:
     case eCSSProperty_stop_color:
     case eCSSProperty_stop_opacity:
+    case eCSSProperty_stroke:
+    case eCSSProperty_stroke_dasharray:
     case eCSSProperty_stroke_dashoffset:
     case eCSSProperty_stroke_linecap:
     case eCSSProperty_stroke_linejoin:
