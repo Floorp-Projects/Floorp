@@ -1231,7 +1231,7 @@ public:
 
   virtual nsCSSDeclaration* GetDeclaration(void) const;
 
-  virtual already_AddRefed<nsIStyleRule> GetImportantRule(void);
+  virtual nsIStyleRule* GetImportantRule(void);
 
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
@@ -1382,7 +1382,7 @@ nsCSSDeclaration* CSSStyleRuleImpl::GetDeclaration(void) const
   return mDeclaration;
 }
 
-already_AddRefed<nsIStyleRule> CSSStyleRuleImpl::GetImportantRule(void)
+nsIStyleRule* CSSStyleRuleImpl::GetImportantRule(void)
 {
   if (!mDeclaration->HasImportantData()) {
     NS_ASSERTION(!mImportantRule, "immutable, so should be no important rule");
@@ -1395,7 +1395,6 @@ already_AddRefed<nsIStyleRule> CSSStyleRuleImpl::GetImportantRule(void)
       return nsnull;
     NS_ADDREF(mImportantRule);
   }
-  NS_ADDREF(mImportantRule);
   return mImportantRule;
 }
 
