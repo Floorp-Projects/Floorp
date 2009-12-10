@@ -460,20 +460,22 @@ nsStyleSet::AddImportantRules(nsRuleNode* aCurrLevelNode,
                               nsRuleNode* aLastPrevLevelNode,
                               nsRuleWalker* aRuleWalker)
 {
+  // The rulewalker will move itself to a null node on OOM.
   if (!aCurrLevelNode)
     return;
 
-  nsAutoTArray<nsCOMPtr<nsIStyleRule>, 16> importantRules;
+  nsAutoTArray<nsIStyleRule*, 16> importantRules;
   for (nsRuleNode *node = aCurrLevelNode; node != aLastPrevLevelNode;
        node = node->GetParent()) {
-    nsIStyleRule *rule = node->GetRule();
-    nsCOMPtr<nsICSSStyleRule> cssRule(do_QueryInterface(rule));
-    if (cssRule) {
-      nsCOMPtr<nsIStyleRule> impRule = cssRule->GetImportantRule();
-      if (impRule)
-        importantRules.AppendElement(impRule);
-    }
+    // We guarantee that we never walk the root node here, so no need
+    // to null-check GetRule().
+    nsIStyleRule* impRule = node->GetRule()->GetImportantRule();
+    if (impRule)
+      importantRules.AppendElement(impRule);
   }
+
+  NS_ASSERTION(importantRules.Length() != 0,
+               "Why did we think there were important rules?");
 
   for (PRUint32 i = importantRules.Length(); i-- != 0; ) {
     aRuleWalker->Forward(importantRules[i]);
@@ -490,11 +492,9 @@ nsStyleSet::AssertNoImportantRules(nsRuleNode* aCurrLevelNode,
 
   for (nsRuleNode *node = aCurrLevelNode; node != aLastPrevLevelNode;
        node = node->GetParent()) {
-    nsIStyleRule *rule = node->GetRule();
-    nsCOMPtr<nsICSSStyleRule> cssRule(do_QueryInterface(rule));
-    if (cssRule) {
-      nsCOMPtr<nsIStyleRule> impRule = cssRule->GetImportantRule();
-      NS_ASSERTION(!impRule, "Unexpected important rule");
+    nsIStyleRule* rule = node->GetRule();
+    if (rule) {
+      NS_ASSERTION(!rule->GetImportantRule(), "Unexpected important rule");
     }
   }
 }
@@ -538,29 +538,31 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
                   SheetCount(eHTMLPresHintSheet) == 0,
                   "Can't have both types of preshint sheets at once!");
   
-  aRuleWalker->SetLevel(eAgentSheet, PR_FALSE);
+  aRuleWalker->SetLevel(eAgentSheet, PR_FALSE, PR_TRUE);
   if (mRuleProcessors[eAgentSheet])
     (*aCollectorFunc)(mRuleProcessors[eAgentSheet], aData);
   nsRuleNode* lastAgentRN = aRuleWalker->GetCurrentNode();
+  PRBool haveImportantUARules = !aRuleWalker->GetCheckForImportantRules();
 
-  aRuleWalker->SetLevel(ePresHintSheet, PR_FALSE);
+  aRuleWalker->SetLevel(ePresHintSheet, PR_FALSE, PR_FALSE);
   if (mRuleProcessors[ePresHintSheet])
     (*aCollectorFunc)(mRuleProcessors[ePresHintSheet], aData);
   nsRuleNode* lastPresHintRN = aRuleWalker->GetCurrentNode();
 
-  aRuleWalker->SetLevel(eUserSheet, PR_FALSE);
+  aRuleWalker->SetLevel(eUserSheet, PR_FALSE, PR_TRUE);
   PRBool skipUserStyles =
     aData->mContent && aData->mContent->IsInNativeAnonymousSubtree();
   if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aCollectorFunc)(mRuleProcessors[eUserSheet], aData);
   nsRuleNode* lastUserRN = aRuleWalker->GetCurrentNode();
+  PRBool haveImportantUserRules = !aRuleWalker->GetCheckForImportantRules();
 
-  aRuleWalker->SetLevel(eHTMLPresHintSheet, PR_FALSE);
+  aRuleWalker->SetLevel(eHTMLPresHintSheet, PR_FALSE, PR_FALSE);
   if (mRuleProcessors[eHTMLPresHintSheet])
     (*aCollectorFunc)(mRuleProcessors[eHTMLPresHintSheet], aData);
   nsRuleNode* lastHTMLPresHintRN = aRuleWalker->GetCurrentNode();
   
-  aRuleWalker->SetLevel(eDocSheet, PR_FALSE);
+  aRuleWalker->SetLevel(eDocSheet, PR_FALSE, PR_TRUE);
   PRBool cutOffInheritance = PR_FALSE;
   if (mBindingManager) {
     // We can supply additional document-level sheets that should be walked.
@@ -569,37 +571,73 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   if (!skipUserStyles && !cutOffInheritance &&
       mRuleProcessors[eDocSheet]) // NOTE: different
     (*aCollectorFunc)(mRuleProcessors[eDocSheet], aData);
-  aRuleWalker->SetLevel(eStyleAttrSheet, PR_FALSE);
+  aRuleWalker->SetLevel(eStyleAttrSheet, PR_FALSE,
+                        aRuleWalker->GetCheckForImportantRules());
   if (mRuleProcessors[eStyleAttrSheet])
     (*aCollectorFunc)(mRuleProcessors[eStyleAttrSheet], aData);
   nsRuleNode* lastDocRN = aRuleWalker->GetCurrentNode();
+  PRBool haveImportantDocRules = !aRuleWalker->GetCheckForImportantRules();
 
-  aRuleWalker->SetLevel(eOverrideSheet, PR_FALSE);
+  aRuleWalker->SetLevel(eOverrideSheet, PR_FALSE, PR_TRUE);
   if (mRuleProcessors[eOverrideSheet])
     (*aCollectorFunc)(mRuleProcessors[eOverrideSheet], aData);
   nsRuleNode* lastOvrRN = aRuleWalker->GetCurrentNode();
+  PRBool haveImportantOverrideRules = !aRuleWalker->GetCheckForImportantRules();
 
-  aRuleWalker->SetLevel(eDocSheet, PR_TRUE);
-  AddImportantRules(lastDocRN, lastHTMLPresHintRN, aRuleWalker);  // doc
-  aRuleWalker->SetLevel(eOverrideSheet, PR_TRUE);
-  AddImportantRules(lastOvrRN, lastDocRN, aRuleWalker);  // override
+  if (haveImportantDocRules) {
+    aRuleWalker->SetLevel(eDocSheet, PR_TRUE, PR_FALSE);
+    AddImportantRules(lastDocRN, lastHTMLPresHintRN, aRuleWalker);  // doc
+  }
+#ifdef DEBUG
+  else {
+    AssertNoImportantRules(lastDocRN, lastHTMLPresHintRN);
+  }
+#endif
+
+  if (haveImportantOverrideRules) {
+    aRuleWalker->SetLevel(eOverrideSheet, PR_TRUE, PR_FALSE);
+    AddImportantRules(lastOvrRN, lastDocRN, aRuleWalker);  // override
+  }
+#ifdef DEBUG
+  else {
+    AssertNoImportantRules(lastOvrRN, lastDocRN);
+  }
+#endif
+
 #ifdef DEBUG
   AssertNoCSSRules(lastHTMLPresHintRN, lastUserRN);
   AssertNoImportantRules(lastHTMLPresHintRN, lastUserRN); // HTML preshints
 #endif
-  aRuleWalker->SetLevel(eUserSheet, PR_TRUE);
-  AddImportantRules(lastUserRN, lastPresHintRN, aRuleWalker); //user
+
+  if (haveImportantUserRules) {
+    aRuleWalker->SetLevel(eUserSheet, PR_TRUE, PR_FALSE);
+    AddImportantRules(lastUserRN, lastPresHintRN, aRuleWalker); //user
+  }
+#ifdef DEBUG
+  else {
+    AssertNoImportantRules(lastUserRN, lastPresHintRN);
+  }
+#endif
+
 #ifdef DEBUG
   AssertNoCSSRules(lastPresHintRN, lastAgentRN);
   AssertNoImportantRules(lastPresHintRN, lastAgentRN); // preshints
 #endif
-  aRuleWalker->SetLevel(eAgentSheet, PR_TRUE);
-  AddImportantRules(lastAgentRN, nsnull, aRuleWalker);     //agent
+
+  if (haveImportantUARules) {
+    aRuleWalker->SetLevel(eAgentSheet, PR_TRUE, PR_FALSE);
+    AddImportantRules(lastAgentRN, mRuleTree, aRuleWalker);     //agent
+  }
+#ifdef DEBUG
+  else {
+    AssertNoImportantRules(lastAgentRN, mRuleTree);
+  }
+#endif
 
 #ifdef DEBUG
   nsRuleNode *lastImportantRN = aRuleWalker->GetCurrentNode();
 #endif
-  aRuleWalker->SetLevel(eTransitionSheet, PR_FALSE);
+  aRuleWalker->SetLevel(eTransitionSheet, PR_FALSE, PR_FALSE);
   (*aCollectorFunc)(mRuleProcessors[eTransitionSheet], aData);
 #ifdef DEBUG
   AssertNoCSSRules(aRuleWalker->GetCurrentNode(), lastImportantRN);
@@ -719,7 +757,7 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
       ruleWalker.SetCurrentNode(aRuleNode);
     // FIXME: Perhaps this should be passed in, but it probably doesn't
     // matter.
-    ruleWalker.SetLevel(eDocSheet, PR_FALSE);
+    ruleWalker.SetLevel(eDocSheet, PR_FALSE, PR_FALSE);
     for (PRInt32 i = 0; i < aRules.Count(); i++) {
       ruleWalker.Forward(aRules.ObjectAt(i));
     }
@@ -749,7 +787,7 @@ nsStyleSet::WalkRestrictionRule(nsIAtom* aPseudoType,
 {
   // This needs to match GetPseudoRestriction in nsRuleNode.cpp.
   if (aPseudoType) {
-    aRuleWalker->SetLevel(eAgentSheet, PR_FALSE);
+    aRuleWalker->SetLevel(eAgentSheet, PR_FALSE, PR_FALSE);
     if (aPseudoType == nsCSSPseudoElements::firstLetter)
       aRuleWalker->Forward(mFirstLetterRule);
     else if (aPseudoType == nsCSSPseudoElements::firstLine)
