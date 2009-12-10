@@ -686,7 +686,13 @@
         document.getAnonymousElementByAttribute(this, "anonid", "child-items");
       </field>
 
-      <property name="scrollBoxObject" readonly="true" onget="return this._children.scrollBoxObject;"/>
+      <field name="scrollBoxObject">this._children.scrollBoxObject</field>
+      <!-- This won't be updated when the window size changes, but that's OK,
+           since we don't need an exact value - we just use it to get an
+           approximate scroll position for deciding whether to append additional
+           items (see batchSize/_insertItems()).
+        -->
+      <field name="_childrenHeight">this.scrollBoxObject.height;</field>
 
       <property name="items" readonly="true" onget="return this._children.childNodes"/>
 
@@ -823,6 +829,14 @@
         </body>
       </method>
 
+      <!-- Number of elements to add to the list initially. If there are more
+           than this many bookmarks to display, only add them to the list once
+           the user has scrolled towards them. This is a performance
+           optimization to avoid locking up while attempting to append hundreds
+           of bookmarks to our richlistbox.
+        -->
+      <field name="batchSize">25</field>
+
       <method name="openFolder">
         <parameter name="aRootFolder"/>
         <body>
@@ -865,17 +879,95 @@
 
             children.scrollBoxObject.scrollTo(0, 0);
 
-            let fragment = document.createDocumentFragment();
-            let childItems = (aRootFolder == this._fakeDesktopFolderId) ? this._desktopChildren
-                                                                        : this._getChildren(aRootFolder);
+            this._childItems = (aRootFolder == this._fakeDesktopFolderId) ? this._desktopChildren.concat()
+                                                                          : this._getChildren(aRootFolder);
 
             if (aRootFolder == this.mobileRoot && !this.isDesktopFolderEmpty())
-              fragment.appendChild(this.createItem(this._desktopFolder));
-            
-            let count = childItems.length;
+              this._childItems.unshift(this._desktopFolder);
+
+            this._insertItems();
+          ]]>
+        </body>
+      </method>
+
+      <method name="close">
+        <body>
+          <![CDATA[
+            // Clear out references to child items, and remove event listener
+            // if needed
+            this._childItems = null;
+            if (this._scrollListenerAdded) {
+              this._children.removeEventListener("scroll", this._scrollListener, false);
+              this._scrollListenerAdded = false;
+            }
+          ]]>
+        </body>        
+      </method>
+
+      <method name="_insertItems">
+        <body>
+          <![CDATA[
+            let items = this._childItems.splice(0, this.batchSize);
+
+            if (!items.length)
+              return; // no items to insert
+
+            let children = this._children;
+            let itemsRemaining = this._childItems.length > 0;
+            if (itemsRemaining && !this._scrollListenerAdded) {
+              // We're not going to insert all items, so add a scroll listener
+              // to know when to add them.
+              this._children.addEventListener("scroll", this._scrollListener, false);
+              this._scrollListenerAdded = true;
+            }
+
+            if (!itemsRemaining && this._scrollListenerAdded) {
+              // Can get rid of the scroll listener now that all items are added.
+              this._children.removeEventListener("scroll", this._scrollListener, false);
+              this._scrollListenerAdded = false;
+            }
+
+            let fragment = document.createDocumentFragment();            
+            let count = items.length;
             for (let i=0; i<count; i++)
-              fragment.appendChild(this.createItem(childItems[i]));
+              fragment.appendChild(this.createItem(items[i]));
             children.appendChild(fragment);
+
+            // make sure we recalculate the scrollHeight of the children
+            this._childrenScrollHeight = -1;
+          ]]>
+        </body>
+      </method>
+
+      <field name="_scrollListener"><![CDATA[
+        ({
+          self: this,
+          handleEvent: function () {
+            this.self._checkForInsert();
+          }
+        })
+      ]]></field>
+
+      <method name="_checkForInsert">
+        <body>
+          <![CDATA[
+            if (this._childrenScrollHeight == -1) {
+              // Need to force a reflow to get the right value here since we may
+              // have just added children.
+              Browser.forceChromeReflow();
+              let scrollheight = {};
+              this.scrollBoxObject.getScrolledSize({}, scrollheight);
+              this._childrenScrollHeight = scrollheight.value;
+            }
+
+            let y = {};
+            this.scrollBoxObject.getPosition({}, y);
+            let scrollRatio = (y.value + this._childrenHeight) / this._childrenScrollHeight;
+
+            // If we're scrolled 80% to the bottom of the list, append the next
+            // set of items
+            if (scrollRatio > 0.8)
+              this._insertItems();
           ]]>
         </body>
       </method>
