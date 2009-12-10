@@ -212,18 +212,18 @@ struct AttributeRuleProcessorData : public RuleProcessorData {
                              nsIContent* aContent,
                              nsIAtom* aAttribute,
                              PRInt32 aModType,
-                             PRUint32 aStateMask)
+                             PRBool aAttrHasChanged)
     : RuleProcessorData(aPresContext, aContent, nsnull),
       mAttribute(aAttribute),
       mModType(aModType),
-      mStateMask(aStateMask)
+      mAttrHasChanged(aAttrHasChanged)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
     NS_PRECONDITION(aContent, "null pointer");
   }
   nsIAtom* mAttribute; // |HasAttributeDependentStyle| for which attribute?
   PRInt32 mModType;    // The type of modification (see nsIDOMMutationEvent).
-  PRUint32 mStateMask; // The states that changed with the attr change.
+  PRBool mAttrHasChanged; // Whether the attribute has already changed.
 };
 
 #endif /* !defined(nsRuleProcessorData_h_) */
