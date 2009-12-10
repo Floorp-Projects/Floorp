@@ -46,6 +46,7 @@ const kBrowserFormZoomLevelMin = 1.0;
 const kBrowserFormZoomLevelMax = 2.0;
 const kBrowserViewZoomLevelPrecision = 10000;
 const kBrowserViewPrefetchBeginIdleWait = 1;    // seconds
+const kBrowserViewPrefetchBeginIdleWaitLoading = 10;    // seconds
 const kBrowserViewCacheSize = 15;
 
 /**
@@ -239,6 +240,7 @@ BrowserView.prototype = {
     this._contentWindow = null;
     this._renderMode = 0;
     this._offscreenDepth = 0;
+    this._aggro = false;
 
     let cacheSize = kBrowserViewCacheSize;
     try {
@@ -270,6 +272,7 @@ BrowserView.prototype = {
     this._idleServiceObserver = new BrowserView.IdleServiceObserver(this);
     this._idleService = Cc["@mozilla.org/widget/idleservice;1"].getService(Ci.nsIIdleService);
     this._idleService.addIdleObserver(this._idleServiceObserver, kBrowserViewPrefetchBeginIdleWait);
+    this._idleServiceWait = kBrowserViewPrefetchBeginIdleWait;
 
     let browsers = document.getElementById("browsers");
     browsers.addEventListener("MozScrolledAreaChanged", this.handleMozScrolledAreaChanged, false);
@@ -277,7 +280,16 @@ BrowserView.prototype = {
   
   uninit: function uninit() {
     this.setBrowser(null, null);
-    this._idleService.removeIdleObserver(this._idleServiceObserver, kBrowserViewPrefetchBeginIdleWait);
+    this._idleService.removeIdleObserver(this._idleServiceObserver, this._idleServiceWait);
+  },
+
+  /** When aggressive, spend more time rendering tiles. */
+  setAggressive: function setAggressive(aggro) {
+/*    this._aggro = aggro;
+    let wait = aggro ? kBrowserViewPrefetchBeginIdleWait : kBrowserViewPrefetchBeginIdleWaitLoading;
+    this._idleService.removeIdleObserver(this._idleServiceObserver, this._idleServiceWait);
+    this._idleService.addIdleObserver(this._idleServiceObserver, wait);
+    this._idleServiceWait = wait; */
   },
 
   getVisibleRect: function getVisibleRect() {
@@ -402,15 +414,11 @@ BrowserView.prototype = {
     if (renderNow || this._renderMode == 0)
       this.renderNow();
 
-    if (this._renderMode == 0) {
-      this._idleServiceObserver.resumeCrawls();
-
-      if (this._browser) {
-        let event = document.createEvent("Events");
-        event.initEvent("RenderStateChanged", true, false);
-        event.isRendering = true;
-        this._browser.dispatchEvent(event);
-      }
+    if (this._renderMode == 0 && this._browser) {
+      let event = document.createEvent("Events");
+      event.initEvent("RenderStateChanged", true, false);
+      event.isRendering = true;
+      this._browser.dispatchEvent(event);
     }
   },
 
@@ -867,44 +875,34 @@ BrowserView.BrowserViewportState.prototype = {
 BrowserView.IdleServiceObserver = function IdleServiceObserver(browserView) {
   this._browserView = browserView;
   this._crawlStarted = false;
-  this._crawlPause = false;
   this._idleState = false;
 };
 
 BrowserView.IdleServiceObserver.prototype = {
-
-  isIdle: function isIdle() {
-    return this._idleState;
-  },
-
-  observe: function observe(aSubject, aTopic, aUserIdleTime) {
-    let bv = this._browserView;
-
-    if (aTopic == "idle")
-      this._idleState = true;
-    else
-      this._idleState = false;
-
-    if (this._idleState && !this._crawlStarted) {
-      if (bv.isRendering()) {
-        bv._tileManager.restartPrefetchCrawl();
-        this._crawlStarted = true;
-        this._crawlPause = false;
-      } else {
-        this._crawlPause = true;
-      }
-    } else if (!this._idleState && this._crawlStarted) {
-      this._crawlStarted = false;
-      this._crawlPause = false;
-      bv._tileManager.stopPrefetchCrawl();
-    }
-  },
-
-  resumeCrawls: function resumeCrawls() {
-    if (this._crawlPause) {
-      this._browserView._tileManager.restartPrefetchCrawl();
+  /** Start prefetching tiles. */
+  _start: function _start() {
+    if (!this._crawlStarted) {
+      let bv = this._browserView;
+      bv._tileManager.restartPrefetchCrawl();
       this._crawlStarted = true;
-      this._crawlPause = false;
     }
-  }
+  },
+
+  /** Stop prefetching tiles. */
+  _stop: function _stop() {
+    if (this._crawlStarted) {
+      let bv = this._browserView;
+      bv._tileManager.stopPrefetchCrawl();
+      this._crawlStarted = false;
+    }
+  },
+
+  /** Idle event handler. */
+  observe: function observe(aSubject, aTopic, aUserIdleTime) {
+    this._idleState = (aTopic == "idle") ? true : false;
+    if (this._idleState)
+      this._start();
+    else
+      this._stop();
+  },
 };
