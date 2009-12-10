@@ -255,7 +255,7 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.font_family, [
     new AnimTestcaseFromTo("serif", "sans-serif"),
     new AnimTestcaseFromTo("cursive", "monospace"),
-  ], "need support for all properties that get stored in nsFont"),
+  ]),
   new TestcaseBundle(gPropList.font_size,
                      [].concat(_fromToTestLists.lengthPx, [
     new AnimTestcaseFromTo("10px", "40%", { midComp: "15px", toComp: "20px" }),
