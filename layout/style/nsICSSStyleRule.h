@@ -52,6 +52,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsIAtom.h"
+#include "nsCSSPseudoElements.h"
 
 class nsIAtom;
 class nsCSSDeclaration;
@@ -199,6 +200,15 @@ private:
   PRInt32 CalcWeightWithoutNegations() const;
 
 public:
+  // Get and set the selector's pseudo type
+  nsCSSPseudoElements::Type PseudoType() const {
+    return static_cast<nsCSSPseudoElements::Type>(mPseudoType);
+  }
+  void SetPseudoType(nsCSSPseudoElements::Type aType) {
+    NS_ASSERTION(aType > PR_INT16_MIN && aType < PR_INT16_MAX, "Out of bounds");
+    mPseudoType = static_cast<PRInt16>(aType);
+  }
+
   // For case-sensitive documents, mLowercaseTag is the same as mCasedTag,
   // but in case-insensitive documents (HTML) mLowercaseTag is lowercase.
   // Also, for pseudo-elements mCasedTag will be null but mLowercaseTag
@@ -214,7 +224,9 @@ public:
   nsCSSSelector*  mNext;
   PRInt32         mNameSpace;
   PRUnichar       mOperator;
-private: 
+private:
+  // PRInt16 to make sure it packs well with mOperator
+  PRInt16        mPseudoType;
   // These are not supported and are not implemented! 
   nsCSSSelector(const nsCSSSelector& aCopy);
   nsCSSSelector& operator=(const nsCSSSelector& aCopy); 

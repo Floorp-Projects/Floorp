@@ -65,9 +65,6 @@ math[mode="display"], math[display="block"] {
 math[display="inline"] {
   display: inline;
 }
-::-moz-math-inline {
-  display: inline;
-}
 
 /**************************************************************************/
 /* Style switching during frame construction depending on the context of <mi>:
