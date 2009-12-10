@@ -768,12 +768,10 @@ nsTransitionManager::HasStateDependentStyle(StateRuleProcessorData* aData,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTransitionManager::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                                nsReStyleHint* aResult)
+nsReStyleHint
+nsTransitionManager::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
-  *aResult = nsReStyleHint(0);
-  return NS_OK;
+  return nsReStyleHint(0);
 }
 
 NS_IMETHODIMP

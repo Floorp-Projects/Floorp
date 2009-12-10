@@ -2201,9 +2201,8 @@ AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
   }
 }
 
-NS_IMETHODIMP
-nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                               nsReStyleHint* aResult)
+nsReStyleHint
+nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
   NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
                   "content must be element");
@@ -2277,8 +2276,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
     }
   }
 
-  *aResult = data.change;
-  return NS_OK;
+  return data.change;
 }
 
 NS_IMETHODIMP
