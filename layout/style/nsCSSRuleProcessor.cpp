@@ -1269,6 +1269,73 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     return PR_FALSE;
   }
 
+  nsAtomList* IDList = aSelector->mIDList;
+  if (IDList) {
+    // test for ID match
+    if (aAttribute && aAttribute == data.mContent->GetIDAttributeName()) {
+      if (aDependence)
+        *aDependence = PR_TRUE;
+    }
+    else if (data.mContentID) {
+      // case sensitivity: bug 93371
+      const PRBool isCaseSensitive =
+        data.mCompatMode != eCompatibility_NavQuirks;
+
+      if (isCaseSensitive) {
+        do {
+          if (IDList->mAtom != data.mContentID) {
+            return PR_FALSE;
+          }
+          IDList = IDList->mNext;
+        } while (IDList);
+      } else {
+        const char* id1Str;
+        data.mContentID->GetUTF8String(&id1Str);
+        nsDependentCString id1(id1Str);
+        do {
+          const char* id2Str;
+          IDList->mAtom->GetUTF8String(&id2Str);
+          if (!id1.Equals(id2Str, nsCaseInsensitiveCStringComparator())) {
+            return PR_FALSE;
+          }
+          IDList = IDList->mNext;
+        } while (IDList);
+      }
+    } else {
+      // Element has no id but we have an id selector
+      return PR_FALSE;
+    }
+  }
+
+  nsAtomList* classList = aSelector->mClassList;
+  if (classList) {
+    // test for class match
+    if (aAttribute && aAttribute == data.mContent->GetClassAttributeName()) {
+      if (aDependence)
+        *aDependence = PR_TRUE;
+    }
+    else {
+      const nsAttrValue *elementClasses = data.mClasses;
+      if (!elementClasses) {
+        // Element has no classes but we have a class selector
+        return PR_FALSE;
+      }
+
+      // case sensitivity: bug 93371
+      const PRBool isCaseSensitive =
+        data.mCompatMode != eCompatibility_NavQuirks;
+
+      while (classList) {
+        if (!elementClasses->Contains(classList->mAtom,
+                                      isCaseSensitive ?
+                                        eCaseMatters : eIgnoreCase)) {
+          return PR_FALSE;
+        }
+        classList = classList->mNext;
+      }
+    }
+  }
+
   PRBool result = PR_TRUE;
   const PRBool isNegated = (aDependence != nsnull);
   // The selectors for which we set node bits are, unfortunately, early
@@ -1801,71 +1868,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       } while (attr && result);
     }
   }
-  nsAtomList* IDList = aSelector->mIDList;
-  if (result && IDList) {
-    // test for ID match
-    result = PR_FALSE;
 
-    if (aAttribute && aAttribute == data.mContent->GetIDAttributeName()) {
-      result = PR_TRUE;
-      if (aDependence)
-        *aDependence = PR_TRUE;
-    }
-    else if (nsnull != data.mContentID) {
-      // case sensitivity: bug 93371
-      const PRBool isCaseSensitive =
-        data.mCompatMode != eCompatibility_NavQuirks;
-
-      result = PR_TRUE;
-      if (isCaseSensitive) {
-        do {
-          if (IDList->mAtom != data.mContentID) {
-            result = PR_FALSE;
-            break;
-          }
-          IDList = IDList->mNext;
-        } while (IDList);
-      } else {
-        const char* id1Str;
-        data.mContentID->GetUTF8String(&id1Str);
-        nsDependentCString id1(id1Str);
-        do {
-          const char* id2Str;
-          IDList->mAtom->GetUTF8String(&id2Str);
-          if (!id1.Equals(id2Str, nsCaseInsensitiveCStringComparator())) {
-            result = PR_FALSE;
-            break;
-          }
-          IDList = IDList->mNext;
-        } while (IDList);
-      }
-    }
-  }
-    
-  if (result && aSelector->mClassList) {
-    // test for class match
-    if (aAttribute && aAttribute == data.mContent->GetClassAttributeName()) {
-      result = PR_TRUE;
-      if (aDependence)
-        *aDependence = PR_TRUE;
-    }
-    else {
-      // case sensitivity: bug 93371
-      const PRBool isCaseSensitive =
-        data.mCompatMode != eCompatibility_NavQuirks;
-
-      nsAtomList* classList = aSelector->mClassList;
-      const nsAttrValue *elementClasses = data.mClasses;
-      while (nsnull != classList) {
-        if (!(elementClasses && elementClasses->Contains(classList->mAtom, isCaseSensitive ? eCaseMatters : eIgnoreCase))) {
-          result = PR_FALSE;
-          break;
-        }
-        classList = classList->mNext;
-      }
-    }
-  }
-  
   // apply SelectorMatches to the negated selectors in the chain
   if (!isNegated) {
     for (nsCSSSelector *negation = aSelector->mNegations;
