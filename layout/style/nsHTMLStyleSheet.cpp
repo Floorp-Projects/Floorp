@@ -430,8 +430,8 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       // if we have anchor colors, check if this is an anchor with an href
       if (tag == nsGkAtoms::a) {
         if (mLinkRule || mVisitedRule || mActiveRule) {
-          if (aData->mIsLink) {
-            switch (aData->mLinkState) {
+          if (aData->IsLink()) {
+            switch (aData->LinkState()) {
               case eLinkState_Unvisited:
                 if (mLinkRule)
                   ruleWalker->Forward(mLinkRule);
@@ -445,7 +445,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
             }
 
             // No need to add to the active rule if it's not a link
-            if (mActiveRule && (aData->mEventState & NS_EVENT_STATE_ACTIVE))
+            if (mActiveRule && (aData->ContentState() & NS_EVENT_STATE_ACTIVE))
               ruleWalker->Forward(mActiveRule);
           }
         } // end link/visited/active rules
@@ -507,8 +507,8 @@ nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData,
 {
   if (aData->mContent &&
       aData->mIsHTMLContent &&
-      aData->mIsLink &&
       aData->mContentTag == nsGkAtoms::a &&
+      aData->IsLink() &&
       ((mActiveRule && (aData->mStateMask & NS_EVENT_STATE_ACTIVE)) ||
        (mLinkRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)) ||
        (mVisitedRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)))) {

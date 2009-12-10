@@ -106,6 +106,12 @@ private:
   }
 public:
   const nsString* GetLang();
+  PRUint32 ContentState();
+  PRBool IsLink();
+  nsLinkState LinkState() {
+    NS_ASSERTION(mGotLinkInfo && mIsLink, "Why am I being called?");
+    return mLinkState;
+  }
 
   // Returns a 1-based index of the child in its parent.  If the child
   // is not in its parent's child list (i.e., it is anonymous content),
@@ -125,11 +131,8 @@ public:
   nsIAtom*          mContentTag;    // if content, then content->GetTag()
   nsIAtom*          mContentID;     // if styled content, then weak reference to styledcontent->GetID()
   PRPackedBool      mIsHTMLContent; // if content, then does QI on HTMLContent, true or false
-  PRPackedBool      mIsLink;        // if content, calls nsStyleUtil::IsHTMLLink or nsStyleUtil::IsLink
   PRPackedBool      mHasAttributes; // if content, content->GetAttrCount() > 0
   nsCompatibility   mCompatMode;    // Possibly remove use of this in SelectorMatches?
-  nsLinkState       mLinkState;     // if a link, this is the state, otherwise unknown
-  PRInt32           mEventState;    // if content, eventStateMgr->GetContentState()
   PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
   const nsAttrValue* mClasses;      // if styled content, styledcontent->GetClasses()
   // mPreviousSiblingData and mParentData are always RuleProcessorData
@@ -138,7 +141,7 @@ public:
   RuleProcessorData* mPreviousSiblingData;
   RuleProcessorData* mParentData;
 
-protected:
+private:
   nsString *mLanguage; // NULL means we haven't found out the language yet
 
   // This node's index for :nth-child(), :nth-last-child(),
@@ -148,6 +151,14 @@ protected:
   // The first subscript is 0 for -child and 1 for -of-type, the second
   // subscript is 0 for nth- and 1 for nth-last-.
   PRInt32 mNthIndices[2][2];
+
+  PRInt32 mContentState;  // if content, eventStateMgr->GetContentState()
+  nsLinkState mLinkState; // if a link, this is the state, otherwise unknown
+  PRPackedBool mIsLink;   // if content, calls nsStyleUtil::IsHTMLLink
+                          // or nsStyleUtil::IsLink
+  PRPackedBool mGotContentState;
+  PRPackedBool mGotLinkInfo; // Whether we've gotten the right values
+                             // for mLinkState and mIsLink.
 };
 
 struct ElementRuleProcessorData : public RuleProcessorData {
