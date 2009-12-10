@@ -2,8 +2,9 @@
 <html>
 
 <head>
-  <title>HTML text containers tests</title>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <title>HTML text controls tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
   <script type="application/javascript"
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
@@ -18,17 +19,58 @@
   <script type="application/javascript">
     function doTest()
     {
+      // editable div
       var accTree = {
         role: ROLE_SECTION,
         children: [
           { // text child
-            role: ROLE_TEXT_LEAF
+            role: ROLE_TEXT_LEAF,
+            children: []
           }
         ]
       };
 
-      testAccessibleTree("c1", accTree);
-      testAccessibleTree("c2", accTree);
+      testAccessibleTree("txc1", accTree);
+
+      // input@type="text"
+      accTree = {
+        role: ROLE_ENTRY,
+        children: [
+          { // text child
+            role: ROLE_TEXT_LEAF,
+            children: []
+          }
+        ]
+      };
+
+      testAccessibleTree("txc2", accTree);
+
+      // textarea
+      accTree = {
+        role: ROLE_ENTRY,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF // hello1 text
+          },
+          {
+            role: ROLE_WHITESPACE
+          },
+          {
+            role: ROLE_TEXT_LEAF, // hello2 text
+          },
+          {
+            role: ROLE_WHITESPACE
+          },
+          {
+            role: ROLE_TEXT_LEAF, // whitepsace text
+          },
+          {
+            role: ROLE_WHITESPACE
+          }
+        ]
+      };
+
+      testAccessibleTree("txc3", accTree);
 
       SimpleTest.finish();
     }
@@ -47,11 +89,14 @@
   <pre id="test">
   </pre>
 
-  <div id="c1" style="width: 100px; height: 100px; overflow: auto;">
-    1hellohello 2hellohello 3hellohello 4hellohello 5hellohello 6hellohello 7hellohello
+  <div id="txc1" contentEditable="true">
+    1hellohello
   </div>
-  <div id="c2">
-    1hellohello 2hellohello 3hellohello 4hellohello 5hellohello 6hellohello 7hellohello
-  </div>
+  <input id="txc2" value="hello">
+  <textarea id="txc3">
+    hello1
+    hello2
+  </textarea>
+
 </body>
 </html>

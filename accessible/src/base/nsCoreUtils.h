@@ -413,7 +413,7 @@ public:
   /**
    * Return sensible columns count for the given tree box object.
    */
-  static PRUint32 GetSensiblecolumnCount(nsITreeBoxObject *aTree);
+  static PRUint32 GetSensibleColumnCount(nsITreeBoxObject *aTree);
 
   /**
    * Return sensible column at the given index for the given tree box object.
