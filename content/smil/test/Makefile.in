@@ -50,6 +50,7 @@ _TEST_FILES = \
 	  db_smilCSSPaced.js \
 	  db_smilCSSPropertyList.js \
 	  smilTestUtils.js \
+	  smilXHR_helper.svg \
 	  test_smilCSSFontStretchRelative.xhtml \
 	  test_smilCSSFromBy.xhtml \
 	  test_smilCSSFromTo.xhtml \
@@ -65,6 +66,7 @@ _TEST_FILES = \
 	  test_smilTextZoom.xhtml \
 	  test_smilTiming.xhtml \
 	  test_smilTimingZeroIntervals.xhtml \
+	  test_smilXHR.xhtml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
