@@ -371,7 +371,8 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
 
 #define acceptableUCS4Encoding(p, e) \
     ((platformID == PLATFORM_ID_MICROSOFT && encodingID == EncodingIDUCS4ForMicrosoftPlatform) || \
-     (platformID == PLATFORM_ID_UNICODE   && encodingID == EncodingIDUCS4ForUnicodePlatform))
+     (platformID == PLATFORM_ID_UNICODE   && \
+      (encodingID == EncodingIDDefaultForUnicodePlatform || encodingID >= EncodingIDUCS4ForUnicodePlatform)))
 
 PRUint32
 gfxFontUtils::FindPreferredSubtable(PRUint8 *aBuf, PRUint32 aBufLength,
@@ -392,6 +393,7 @@ gfxFontUtils::FindPreferredSubtable(PRUint8 *aBuf, PRUint32 aBufLength,
     enum {
         EncodingIDSymbol = 0,
         EncodingIDMicrosoft = 1,
+        EncodingIDDefaultForUnicodePlatform = 0,
         EncodingIDUCS4ForUnicodePlatform = 3,
         EncodingIDUCS4ForMicrosoftPlatform = 10
     };
