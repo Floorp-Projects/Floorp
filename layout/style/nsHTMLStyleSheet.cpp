@@ -569,7 +569,7 @@ nsHTMLStyleSheet::RulesMatching(PseudoElementRuleProcessorData* aData)
 }
 
 NS_IMETHODIMP
-nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData)
+nsHTMLStyleSheet::RulesMatching(AnonBoxRuleProcessorData* aData)
 {
   nsIAtom* pseudoTag = aData->mPseudoTag;
   if (pseudoTag == nsCSSAnonBoxes::tableCol) {
@@ -578,6 +578,12 @@ nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData)
       ruleWalker->Forward(mTableColRule);
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData)
+{
   return NS_OK;
 }
 
