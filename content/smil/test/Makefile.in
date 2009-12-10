@@ -55,6 +55,7 @@ _TEST_FILES = \
 	  test_smilCSSFromBy.xhtml \
 	  test_smilCSSFromTo.xhtml \
 	  test_smilCSSInherit.xhtml \
+	  test_smilCSSInvalidValues.xhtml \
 	  test_smilCSSPaced.xhtml \
 	  test_smilRestart.xhtml \
 	  test_smilGetStartTime.xhtml \
