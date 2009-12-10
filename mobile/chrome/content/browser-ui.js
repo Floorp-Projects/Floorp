@@ -1017,6 +1017,8 @@ var BookmarkList = {
   close: function() {
     BrowserUI.updateStar();
     
+    this._bookmarks.close();
+
     if (this._bookmarks.manageUI)
       this.toggleManage();
     this._bookmarks.blur();
