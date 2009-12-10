@@ -82,6 +82,8 @@
 #include "nsContentErrors.h"
 #include "mozAutoDocUpdate.h"
 
+#include "prlog.h"
+
 #define NS_IF_CLONE(member_)                                                  \
   PR_BEGIN_MACRO                                                              \
     if (member_) {                                                            \
@@ -280,9 +282,12 @@ nsCSSSelector::nsCSSSelector(void)
     mNegations(nsnull),
     mNext(nsnull),
     mNameSpace(kNameSpaceID_Unknown),
-    mOperator(0)
+    mOperator(0),
+    mPseudoType(nsCSSPseudoElements::ePseudo_NotPseudoElement)
 {
   MOZ_COUNT_CTOR(nsCSSSelector);
+  // Make sure mPseudoType can hold all nsCSSPseudoElements::Type values
+  PR_STATIC_ASSERT(nsCSSPseudoElements::ePseudo_MAX < PR_INT16_MAX);
 }
 
 nsCSSSelector*
@@ -296,6 +301,7 @@ nsCSSSelector::Clone(PRBool aDeepNext, PRBool aDeepNegations) const
   result->mLowercaseTag = mLowercaseTag;
   result->mCasedTag = mCasedTag;
   result->mOperator = mOperator;
+  result->mPseudoType = mPseudoType;
   
   NS_IF_CLONE(mIDList);
   NS_IF_CLONE(mClassList);
