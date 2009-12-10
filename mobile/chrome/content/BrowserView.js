@@ -527,11 +527,8 @@ BrowserView.prototype = {
   handlePageScroll: function handlePageScroll(aEvent) {
     if (aEvent.target != this._browser.contentDocument)
       return;
-
-    let { x: scrollX, y: scrollY } = BrowserView.Util.getContentScrollOffset(this._browser);
-    Browser.contentScrollboxScroller.scrollTo(this.browserToViewport(scrollX), 
-                                              this.browserToViewport(scrollY));
-    this.onAfterVisibleMove();
+    // XXX shouldn't really make calls to Browser
+    Browser.scrollContentToBrowser();
   },
 
   handleMozScrolledAreaChanged: function handleMozScrolledAreaChanged(ev) {
@@ -553,6 +550,7 @@ BrowserView.prototype = {
     if (x < 0) w += x;
     if (y < 0) h += y;
 
+    let vis = this.getVisibleRect();
     let viewport = bvs.viewportRect;
     let oldRight = viewport.right;
     let oldBottom = viewport.bottom;
@@ -564,6 +562,12 @@ BrowserView.prototype = {
       let sizeChanged = oldRight != viewport.right || oldBottom != viewport.bottom;
       this._viewportChanged(sizeChanged, false);
       this.updateDefaultZoom();
+      if (vis.right > viewport.right || vis.bottom > viewport.bottom) {
+        // Content has shrunk outside of the visible rectangle.
+        // XXX for some reason scroller doesn't know it is outside its bounds
+        Browser.contentScrollboxScroller.scrollBy(0, 0);
+        this.onAfterVisibleMove();
+      }
     }
   },
 

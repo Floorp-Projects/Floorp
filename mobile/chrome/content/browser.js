@@ -636,6 +636,29 @@ var Browser = {
     this._browserView.onAfterVisibleMove();
   },
 
+  /** Let current browser's scrollbox know about where content has been panned. */
+  scrollBrowserToContent: function scrollBrowserToContent() {
+    let browser = this.selectedBrowser;
+    if (browser) {
+      let scroll = Browser.getScrollboxPosition(Browser.contentScrollboxScroller);
+      let windowUtils = BrowserView.Util.getBrowserDOMWindowUtils(browser);
+      browser.contentWindow.scrollTo(scroll.x, scroll.y);
+    }
+  },
+
+  /** Update viewport to location of browser's scrollbars. */
+  scrollContentToBrowser: function scrollContentToBrowser() {
+    let bv = this._browserView;
+    let pos = BrowserView.Util.getContentScrollOffset(this.selectedBrowser);
+    pos.map(bv.browserToViewport);
+    if (pos.y != 0)
+      Browser.hideTitlebar();
+    else
+      Browser.pageScrollboxScroller.scrollTo(0, 0);
+    Browser.contentScrollboxScroller.scrollTo(pos.x, pos.y);
+    bv.onAfterVisibleMove();
+  },
+
   hideSidebars: function scrollSidebarsOffscreen() {
     let container = this.contentScrollbox;
     let rect = container.getBoundingClientRect();
@@ -2438,10 +2461,6 @@ ProgressController.prototype = {
 
       if (this._tab == Browser.selectedTab) {
         BrowserUI.updateURI();
-
-        // We're about to have new page content, to scroll the content area
-        // to the top so the new paints will draw correctly.
-        Browser.scrollContentToTop();
       }
     }
   },
@@ -2610,6 +2629,7 @@ function Tab() {
   this._listener = null;
   this._loading = false;
   this._chromeTab = null;
+  this._resizeAndPaint = Util.bind(this._resizeAndPaint, this);
 
   // Set to 0 since new tabs that have not been viewed yet are good tabs to
   // toss if app needs more memory.
@@ -2638,11 +2658,29 @@ Tab.prototype = {
   _resizeAndPaint: function() {
     let bv = Browser._browserView;
     bv.commitBatchOperation();
+
+    if (this._loadingPaintCount == 0)
+      Browser.scrollContentToTop();
+
     if (this._loading) {
       // kick ourselves off 2s later while we're still loading
       bv.beginBatchOperation();
-      this._loadingTimeout = setTimeout(Util.bind(this._resizeAndPaint, this), 2000);
+      this._loadingTimeout = setTimeout(this._resizeAndPaint, 2000);
     } else {
+      delete this._loadingTimeout;
+    }
+    this._loadingPaintCount++;
+  },
+
+  _startResizeAndPaint: function() {
+    this._loadingTimeout = setTimeout(this._resizeAndPaint, 2000);
+    this._loadingPaintCount = 0;
+  },
+
+  _stopResizeAndPaint: function() {
+    if (this._loadingTimeout) {
+      Browser._browserView.commitBatchOperation();
+      clearTimeout(this._loadingTimeout);
       delete this._loadingTimeout;
     }
   },
@@ -2660,7 +2698,10 @@ Tab.prototype = {
     if (!this._loadingTimeout) {
       Browser._browserView.beginBatchOperation();
       Browser._browserView.invalidateEntireView();
-      this._loadingTimeout = setTimeout(Util.bind(this._resizeAndPaint, this), 2000);
+      // Sync up browser so previous and forward scroll positions are set. This is a good time to do
+      // this because the resulting invalidation is irrelevant.
+      Browser.scrollBrowserToContent();
+      this._startResizeAndPaint();
     }
   },
 
@@ -2668,6 +2709,7 @@ Tab.prototype = {
     // Determine at what resolution the browser is rendered based on meta tag
     let browser = this._browser;
     let metaData = Util.contentIsHandheld(browser);
+    let bv = Browser._browserView;
 
     if (metaData.reason == "handheld" || metaData.reason == "doctype") {
       browser.className = "browser-handheld";
@@ -2695,13 +2737,18 @@ Tab.prototype = {
     }
 
     this.setIcon(browser.mIconURL);
-
     this._loading = false;
-    clearTimeout(this._loadingTimeout);
 
-    // in order to ensure we commit our current batch,
-    // we need to run this function here
-    this._resizeAndPaint();
+    // Don't render until pane has been scrolled to the correct position.
+    bv.pauseRendering();
+    this._stopResizeAndPaint();
+    // XXX Sometimes MozScrollSizeChange has not occurred, so the scroll pane will not
+    // be resized yet. We are assuming this event is on the queue, so scroll the pane
+    // "soon."
+    Util.executeSoon(function() {
+      Browser.scrollContentToBrowser();
+      bv.resumeRendering();
+    });
 
     // if this tab was sacrificed previously, restore its state
     this.restoreState();
@@ -2763,13 +2810,8 @@ Tab.prototype = {
     if (this._browser) {
       document.getElementById("browsers").removeChild(this._browser);
       this._browser = null;
-
-      if (this._loading) {
-        this._loading = false;
-        Browser._browserView.commitBatchOperation();
-        clearTimeout(this._loadingTimeout);
-        delete this._loadingTimeout;
-      }
+      this._loading = false;
+      this._stopResizeAndPaint();
     }
   },
 
