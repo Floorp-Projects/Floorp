@@ -725,10 +725,13 @@ BuildStyleRule(nsCSSProperty aProperty,
   nsCOMPtr<nsICSSParser> parser;
   nsCOMPtr<nsICSSStyleRule> styleRule;
 
-  // The next statement performs the following, in sequence: Get parser, use
-  // parser to parse property, check that parsing succeeded, and build a rule
-  // for the resulting declaration.  If any of these steps fails, we bail out
-  // and delete the declaration.
+  nsCSSProperty propertyToCheck = nsCSSProps::IsShorthand(aProperty) ?
+    nsCSSProps::SubpropertyEntryFor(aProperty)[0] : aProperty;
+
+  // The next clause performs the following, in sequence: Initialize our
+  // declaration, get a parser, parse property, check that parsing succeeded,
+  // and build a rule for the resulting declaration.  If any of these steps
+  // fails, we bail out and delete the declaration.
   if (!declaration->InitializeEmpty() ||
       NS_FAILED(doc->CSSLoader()->GetParserFor(nsnull,
                                                getter_AddRefs(parser))) ||
@@ -737,7 +740,7 @@ BuildStyleRule(nsCSSProperty aProperty,
                                       aTargetElement->NodePrincipal(),
                                       declaration, &changed)) ||
       // SlotForValue checks whether property parsed w/out CSS parsing errors
-      !declaration->SlotForValue(aProperty) ||
+      !declaration->SlotForValue(propertyToCheck) ||
       NS_FAILED(NS_NewCSSStyleRule(getter_AddRefs(styleRule), nsnull,
                                    declaration))) {
     NS_WARNING("failure in BuildStyleRule");
@@ -834,7 +837,8 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
     return PR_FALSE;
   }
 
-  if (nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_None) {
+ if (nsCSSProps::IsShorthand(aProperty) ||
+     nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_None) {
     // Just capture the specified value
     aComputedValue.SetUnparsedStringValue(nsString(aSpecifiedValue));
     return PR_TRUE;
