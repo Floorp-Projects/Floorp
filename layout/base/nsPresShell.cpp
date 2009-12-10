@@ -1028,6 +1028,18 @@ protected:
   // Utility method to restore the root scrollframe state
   void RestoreRootScrollPosition();
 
+  void MaybeReleaseCapturingContent()
+  {
+    nsCOMPtr<nsFrameSelection> frameSelection = FrameSelection();
+    if (frameSelection) {
+      frameSelection->SetMouseDownState(PR_FALSE);
+    }
+    if (gCaptureInfo.mContent &&
+        gCaptureInfo.mContent->GetOwnerDoc() == mDocument) {
+      SetCapturingContent(nsnull, 0);
+    }
+  }
+
   nsCOMPtr<nsICSSStyleSheet> mPrefStyleSheet; // mStyleSet owns it but we
                                               // maintain a ref, may be null
 #ifdef DEBUG
@@ -1831,6 +1843,8 @@ PresShell::Destroy()
 
   if (mHaveShutDown)
     return NS_OK;
+
+  MaybeReleaseCapturingContent();
 
   mContentToScrollTo = nsnull;
 
@@ -7075,6 +7089,8 @@ FreezeSubDocument(nsIDocument *aDocument, void *aData)
 void
 PresShell::Freeze()
 {
+  MaybeReleaseCapturingContent();
+
   mDocument->EnumerateFreezableElements(FreezeElement, this);
 
   if (mCaret)
