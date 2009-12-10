@@ -52,6 +52,7 @@
 struct RuleProcessorData;
 struct ElementRuleProcessorData;
 struct PseudoElementRuleProcessorData;
+struct AnonBoxRuleProcessorData;
 struct PseudoRuleProcessorData;
 struct StateRuleProcessorData;
 struct AttributeRuleProcessorData;
@@ -91,6 +92,11 @@ public:
    * node <em>and pseudo-element</em>.
    */
   NS_IMETHOD RulesMatching(PseudoElementRuleProcessorData* aData) = 0;
+
+  /**
+   * Just like the previous |RulesMatching|, except for a given anonymous box.
+   */
+  NS_IMETHOD RulesMatching(AnonBoxRuleProcessorData* aData) = 0;
 
   /**
    * Just like the previous |RulesMatching|, except for a given content
