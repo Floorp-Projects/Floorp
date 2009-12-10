@@ -87,6 +87,10 @@ var _fromByTestLists =
 // List of attribute/testcase-list bundles to be tested
 var gFromByBundles =
 [
+  // Check that 'by' animations for 'cursor' has no effect
+  new TestcaseBundle(gPropList.cursor, [
+    new AnimTestcaseFromBy("crosshair", "move"),
+  ]),
   new TestcaseBundle(gPropList.fill, [].concat(_fromByTestLists.color,
                                                _fromByTestLists.paint)),
   // Check that 'by' animations involving URIs have no effect

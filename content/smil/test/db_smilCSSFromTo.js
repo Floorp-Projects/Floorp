@@ -183,8 +183,8 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("url('a.cur'), url('b.cur'), nw-resize", "sw-resize",
                            { fromComp: "url(\"" + _testPath + "/a.cur\"), " +
                                        "url(\"" + _testPath + "/b.cur\"), " +
-                                       "nw-resize"})
-  ], "need support for CSS value-lists and URI values"),
+                                       "nw-resize"}),
+  ]),
   new TestcaseBundle(gPropList.direction, [
     new AnimTestcaseFromTo("ltr", "rtl"),
     new AnimTestcaseFromTo("rtl", "inherit"),
