@@ -563,6 +563,12 @@ nsHTMLStyleSheet::MediumFeaturesChanged(nsPresContext* aPresContext,
 
 
 NS_IMETHODIMP
+nsHTMLStyleSheet::RulesMatching(PseudoElementRuleProcessorData* aData)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData)
 {
   nsIAtom* pseudoTag = aData->mPseudoTag;

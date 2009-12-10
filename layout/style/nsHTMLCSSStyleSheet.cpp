@@ -89,6 +89,8 @@ public:
   // nsIStyleRuleProcessor api
   NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData);
 
+  NS_IMETHOD RulesMatching(PseudoElementRuleProcessorData* aData);
+
   NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData);
 
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
@@ -153,6 +155,12 @@ HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData)
 #endif // MOZ_SMIL
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::RulesMatching(PseudoElementRuleProcessorData* aData)
+{
   return NS_OK;
 }
 
