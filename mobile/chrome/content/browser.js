@@ -302,6 +302,8 @@ function onDebugKeyPress(ev) {
     window.infoMode = !window.infoMode;
     break;
   case m:
+    Util.dumpLn("renderMode:", bv._renderMode);
+    Util.dumpLn("batchOps:",bv._batchOps.length);
     bv.resumeRendering();
     break;
   case p:
@@ -794,6 +796,8 @@ var Browser = {
       let { x: scrollX, y: scrollY } = tab.scrollOffset;
       Browser.contentScrollboxScroller.scrollTo(scrollX, scrollY);
     }
+
+    bv.setAggressive(!tab._loading);
 
     bv.commitBatchOperation();
   },
@@ -2515,10 +2519,6 @@ ProgressController.prototype = {
       this.browser.docShell.isOffScreenBrowser = true;
     }
 
-    // if we are idle at this point, be sure to kick start the prefetcher
-    if (Browser._browserView._idleServiceObserver.isIdle())
-      Browser._browserView._tileManager.restartPrefetchCrawl();
-    
     if (this.browser.currentURI.spec != "about:blank")
       this._tab.updateThumbnail();
   },
@@ -2696,6 +2696,9 @@ Tab.prototype = {
     bvs.defaultZoomLevel = bvs.zoomLevel; // ensures zoom level is reset on new pages
 
     if (!this._loadingTimeout) {
+      let bv = Browser._browserView;
+      if (this == Browser.selectedTab)
+        bv.setAggressive(false);
       Browser._browserView.beginBatchOperation();
       Browser._browserView.invalidateEntireView();
       // Sync up browser so previous and forward scroll positions are set. This is a good time to do
@@ -2738,6 +2741,9 @@ Tab.prototype = {
 
     this.setIcon(browser.mIconURL);
     this._loading = false;
+
+    if (this == Browser.selectedTab)
+      bv.setAggressive(true);
 
     // Don't render until pane has been scrolled to the correct position.
     bv.pauseRendering();
