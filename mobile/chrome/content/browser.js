@@ -1021,14 +1021,10 @@ var Browser = {
   },
 
   zoom: function zoom(aDirection) {
-    Browser._browserView.zoom(aDirection);
-    //Browser.forceChromeReflow();  // Zoom causes a width/height change to the
-                                    // BrowserView's containing element, but
-                                    // sometimes doesn't cause the reflow that
-                                    // resizes the parent right away, so we
-                                    // can preempt it here.  Not needed anywhere
-                                    // currently but if this becomes API or is
-                                    // needed then uncomment this line.
+    let bv = this._browserView;
+    let zoomLevel = bv.getZoomLevel() + (aDirection > 0 ? -0.1 : 0.1);
+    let center = this.getVisibleRect().center().map(bv.viewportToBrowser);
+    this.setVisibleRect(this._getZoomRectForPoint(center.x, center.y, zoomLevel));
   },
 
   /**
