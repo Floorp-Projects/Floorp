@@ -749,6 +749,63 @@ LookupStyleContext(nsIContent* aElement)
   return nsComputedDOMStyle::GetStyleContextForContent(aElement, nsnull, shell);
 }
 
+
+/**
+ * Helper function: StyleWithDeclarationAdded
+ * Creates a nsStyleRule with the specified property set to the specified
+ * value, and returns a nsStyleContext for this rule, as a sibling of the
+ * given element's nsStyleContext.
+ *
+ * If we fail to parse |aSpecifiedValue| for |aProperty|, this method will
+ * return nsnull.
+ *
+ * NOTE: This method uses GetPrimaryShell() to access the style system,
+ * so it should only be used for style that applies to all presentations,
+ * rather than for style that only applies to a particular presentation.
+ * XXX Once we get rid of multiple presentations, we can remove the above
+ * note.
+ *
+ * @param aProperty       The property whose value we're customizing in the
+ *                        custom style context.
+ * @param aTargetElement  The element whose style context we'll use as a
+ *                        sibling for our custom style context.
+ * @param aSpecifiedValue The value for |aProperty| in our custom style
+ *                        context.
+ * @return The generated custom nsStyleContext, or nsnull on failure.
+ */
+already_AddRefed<nsStyleContext>
+StyleWithDeclarationAdded(nsCSSProperty aProperty,
+                          nsIContent* aTargetElement,
+                          const nsAString& aSpecifiedValue)
+{
+  NS_ABORT_IF_FALSE(aTargetElement, "null target element");
+  NS_ABORT_IF_FALSE(aTargetElement->GetCurrentDoc(),
+                    "element needs to be in a document "
+                    "if we're going to look up its style context");
+
+  // Look up style context for our target element
+  nsRefPtr<nsStyleContext> styleContext = LookupStyleContext(aTargetElement);
+  if (!styleContext) {
+    return nsnull;
+  }
+
+  // Parse specified value into a temporary nsICSSStyleRule
+  nsCOMPtr<nsICSSStyleRule> styleRule =
+    BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue);
+  if (!styleRule) {
+    return nsnull;
+  }
+
+  // Create a temporary nsStyleContext for the style rule
+  nsCOMArray<nsIStyleRule> ruleArray;
+  ruleArray.AppendObject(styleRule);
+  nsStyleSet* styleSet = styleContext->PresContext()->StyleSet();
+  return styleSet->ResolveStyleForRules(styleContext->GetParent(),
+                                        styleContext->GetPseudo(),
+                                        styleContext->GetRuleNode(),
+                                        ruleArray);
+}
+
 PRBool
 nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
                                nsIContent* aTargetElement,
@@ -760,27 +817,11 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
                     "we should only be able to actively animate nodes that "
                     "are in a document");
 
-  // Look up style context for our target element
-  nsRefPtr<nsStyleContext> styleContext = LookupStyleContext(aTargetElement);
-  if (!styleContext) {
-    return PR_FALSE;
-  }
-
-  // Parse specified value into a temporary nsICSSStyleRule
-  nsCOMPtr<nsICSSStyleRule> styleRule =
-    BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue);
-  if (!styleRule) {
-    return PR_FALSE;
-  }
-
-  // Create a temporary nsStyleContext for the style rule
-  nsCOMArray<nsIStyleRule> ruleArray;
-  ruleArray.AppendObject(styleRule);
-  nsStyleSet* styleSet = styleContext->PresContext()->StyleSet();
   nsRefPtr<nsStyleContext> tmpStyleContext =
-    styleSet->ResolveStyleForRules(styleContext->GetParent(),
-                                   styleContext->GetPseudo(),
-                                   styleContext->GetRuleNode(), ruleArray);
+    StyleWithDeclarationAdded(aProperty, aTargetElement, aSpecifiedValue);
+  if (!tmpStyleContext) {
+    return PR_FALSE;
+  }
 
   // Extract computed value of our property from the temporary style rule
   return ExtractComputedValue(aProperty, tmpStyleContext, aComputedValue);
