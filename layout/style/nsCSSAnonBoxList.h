@@ -59,6 +59,10 @@ CSS_ANON_BOX(mozAnonymousPositionedBlock, ":-moz-anonymous-positioned-block")
 CSS_ANON_BOX(mozMathMLAnonymousBlock, ":-moz-mathml-anonymous-block")
 CSS_ANON_BOX(mozXULAnonymousBlock, ":-moz-xul-anonymous-block")
 
+// Framesets
+CSS_ANON_BOX(horizontalFramesetBorder, ":-moz-hframeset-border")
+CSS_ANON_BOX(verticalFramesetBorder, ":-moz-vframeset-border")
+
 CSS_ANON_BOX(mozLineFrame, ":-moz-line-frame")
 
 CSS_ANON_BOX(buttonContent, ":-moz-button-content")
