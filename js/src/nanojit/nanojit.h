@@ -255,7 +255,7 @@ namespace nanojit {
         LC_ReadLIR     = 1<<3, // As read from LirBuffer
         LC_AfterSF     = 1<<2, // After StackFilter
         LC_RegAlloc    = 1<<1, // stuff to do with reg alloc
-        LC_Assembly    = 1<<0, // final assembly
+        LC_Assembly    = 1<<0  // final assembly
     };
 
     class LogControl
