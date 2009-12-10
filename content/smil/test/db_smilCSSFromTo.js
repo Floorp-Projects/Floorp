@@ -248,7 +248,7 @@ var gFromToBundles = [
                           toComp: "normal normal 400 100px / 10px monospace"}),
     new AnimTestcaseFromTo("oblique normal 200 30px / 10px cursive",
                            "normal small-caps 800 40px / 10px serif"),
-  ], "need support for 'font' shorthand"),
+  ]),
   new TestcaseBundle(gPropList.font_family, [
     new AnimTestcaseFromTo("serif", "sans-serif"),
     new AnimTestcaseFromTo("cursive", "monospace"),
@@ -328,8 +328,7 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.lighting_color,
                      [].concat(_fromToTestLists.color,
                                _fromToTestLists.colorFromInheritWhite)),
-  new TestcaseBundle(gPropList.marker, _fromToTestLists.URIsAndNone,
-                     "need support for 'marker' shorthand property"),
+  new TestcaseBundle(gPropList.marker, _fromToTestLists.URIsAndNone),
   new TestcaseBundle(gPropList.marker_end, _fromToTestLists.URIsAndNone),
   new TestcaseBundle(gPropList.marker_mid, _fromToTestLists.URIsAndNone),
   new TestcaseBundle(gPropList.marker_start, _fromToTestLists.URIsAndNone),
@@ -337,8 +336,9 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.opacity, _fromToTestLists.opacity),
   new TestcaseBundle(gPropList.overflow, [
     new AnimTestcaseFromTo("auto", "visible"),
+    new AnimTestcaseFromTo("inherit", "visible", { fromComp: "hidden" }),
     new AnimTestcaseFromTo("scroll", "auto"),
-  ], "need support for 'overflow' shorthand"),
+  ]),
   new TestcaseBundle(gPropList.pointer_events, [
     new AnimTestcaseFromTo("visibleFill", "stroke",
                            { fromComp: "visiblefill" }),

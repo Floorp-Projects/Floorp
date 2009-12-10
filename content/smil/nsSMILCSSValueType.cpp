@@ -307,9 +307,6 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
 {
   NS_ABORT_IF_FALSE(aValue.mType == &nsSMILCSSValueType::sSingleton,
                     "Passed-in value is wrong type");
-  NS_ABORT_IF_FALSE(aPropID < eCSSProperty_COUNT_no_shorthands,
-                    "nsSMILCSSValueType shouldn't be used with "
-                    "shorthand properties");
   NS_ABORT_IF_FALSE(!aValue.mU.mPtr, "expecting barely-initialized outparam");
 
   nsPresContext* presContext = GetPresContextForElement(aTargetElement);

@@ -91,6 +91,10 @@ var gFromByBundles =
                                                _fromByTestLists.paint)),
   // Check that 'by' animations involving URIs have no effect
   new TestcaseBundle(gPropList.filter,         _fromByTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.font, [
+    new AnimTestcaseFromBy("10px serif",
+                           "normal normal 400 100px / 10px monospace"),
+  ]),
   new TestcaseBundle(gPropList.font_size,      _fromByTestLists.lengthPx),
   new TestcaseBundle(gPropList.font_size_adjust, [
     // These testcases implicitly have no effect, because font-size-adjust is
@@ -100,6 +104,14 @@ var gFromByBundles =
     new AnimTestcaseFromBy("0.1", "none")
   ]),
   new TestcaseBundle(gPropList.lighting_color, _fromByTestLists.color),
+  new TestcaseBundle(gPropList.marker,         _fromByTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.marker_end,     _fromByTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.marker_mid,     _fromByTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.marker_start,   _fromByTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.overflow, [
+    new AnimTestcaseFromBy("inherit", "auto"),
+    new AnimTestcaseFromBy("scroll", "hidden")
+  ]),
   new TestcaseBundle(gPropList.opacity,        _fromByTestLists.opacity),
   new TestcaseBundle(gPropList.stroke_miterlimit, [
     new AnimTestcaseFromBy("1", "1", { midComp: "1.5", toComp: "2" }),
