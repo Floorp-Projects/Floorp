@@ -103,10 +103,20 @@ public:
                                     nsReStyleHint* aResult) = 0;
 
   /**
-   * Return how (as described by nsReStyleHint) style can depend on the
-   * presence or value of the given attribute for the given content
-   * node.  This test is used for optimization only, and may err on the
-   * side of reporting more dependencies than really exist.
+   * This method will be called twice for every attribute change.
+   * During the first call, aData->mAttrHasChanged will be false and
+   * the attribute change will not have happened yet.  During the
+   * second call, aData->mAttrHasChanged will be true and the
+   * change will have already happened.  The bitwise OR of the two
+   * return values must describe the style changes that are needed due
+   * to the attribute change.  It's up to the rule processor
+   * implementation to decide how to split the bits up amongst the two
+   * return values.  For example, it could return the bits needed by
+   * rules that might stop matching the node from the first call and
+   * the bits needed by rules that might have started matching the
+   * node from the second call.  This test is used for optimization
+   * only, and may err on the side of reporting more dependencies than
+   * really exist.
    */
   virtual nsReStyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData) = 0;

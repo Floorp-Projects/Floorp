@@ -152,11 +152,15 @@ public:
   // WillDestroyFrameTree hasn't been called yet.
   void NotifyDestroyingFrame(nsIFrame* aFrame);
 
-  nsresult AttributeChanged(nsIContent* aContent,
-                            PRInt32     aNameSpaceID,
-                            nsIAtom*    aAttribute,
-                            PRInt32     aModType,
-                            PRUint32    aStateMask);
+  void AttributeWillChange(nsIContent* aContent,
+                           PRInt32     aNameSpaceID,
+                           nsIAtom*    aAttribute,
+                           PRInt32     aModType);
+  void AttributeChanged(nsIContent* aContent,
+                        PRInt32     aNameSpaceID,
+                        nsIAtom*    aAttribute,
+                        PRInt32     aModType,
+                        PRUint32    aStateMask);
 
   void BeginUpdate();
   void EndUpdate();

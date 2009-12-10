@@ -8021,15 +8021,27 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
   }
 }
 
-nsresult
+void
+nsCSSFrameConstructor::AttributeWillChange(nsIContent* aContent,
+                                           PRInt32 aNameSpaceID,
+                                           nsIAtom* aAttribute,
+                                           PRInt32 aModType)
+{
+  nsReStyleHint rshint =
+    mPresShell->FrameManager()->HasAttributeDependentStyle(aContent,
+                                                           aAttribute,
+                                                           aModType,
+                                                           PR_FALSE);
+  PostRestyleEvent(aContent, rshint, NS_STYLE_HINT_NONE);
+}
+
+void
 nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
                                         PRInt32 aNameSpaceID,
                                         nsIAtom* aAttribute,
                                         PRInt32 aModType,
                                         PRUint32 aStateMask)
 {
-  nsresult  result = NS_OK;
-
   // Hold onto the PresShell to prevent ourselves from being destroyed.
   // XXXbz how, exactly, would this attribute change cause us to be
   // destroyed from inside this function?
@@ -8061,7 +8073,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
     if (namespaceID == kNameSpaceID_XUL &&
         (tag == nsGkAtoms::listitem ||
          tag == nsGkAtoms::listcell))
-      return NS_OK;
+      return;
   }
 
   if (aAttribute == nsGkAtoms::tooltiptext ||
@@ -8093,8 +8105,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
     }
    
     // let the frame deal with it now, so we don't have to deal later
-    result = primaryFrame->AttributeChanged(aNameSpaceID, aAttribute,
-                                            aModType);
+    primaryFrame->AttributeChanged(aNameSpaceID, aAttribute, aModType);
     // XXXwaterson should probably check for special IB siblings
     // here, and propagate the AttributeChanged notification to
     // them, as well. Currently, inline frames don't do anything on
@@ -8107,11 +8118,9 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
   nsReStyleHint rshint = frameManager->HasAttributeDependentStyle(aContent,
                                                                   aAttribute,
                                                                   aModType,
-                                                                  aStateMask);
+                                                                  PR_TRUE);
 
   PostRestyleEvent(aContent, rshint, hint);
-
-  return result;
 }
 
 void

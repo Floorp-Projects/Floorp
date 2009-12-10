@@ -1267,13 +1267,12 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
   }
 }
 
-// NOTE: For |aStateMask| and |aAttribute| to work correctly, it's
-// important that any change that changes multiple state bits and
-// maybe an attribute include all those state bits and the attribute
-// in the notification.  Otherwise, if multiple states change but we
-// do separate notifications then we might determine the style is not
-// state-dependent when it really is (e.g., determining that a
-// :hover:active rule no longer matches when both states are unset).
+// NOTE: For |aStateMask| to work correctly, it's important that any change
+// that changes multiple state bits include all those state bits in the
+// notification.  Otherwise, if multiple states change but we do separate
+// notifications then we might determine the style is not state-dependent when
+// it really is (e.g., determining that a :hover:active rule no longer matches
+// when both states are unset).
 
 // If |aForStyling| is false, we shouldn't mark slow-selector bits on nodes.
 
@@ -1281,11 +1280,10 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
 //  * when non-null, it indicates that we're processing a negation,
 //    which is done only when SelectorMatches calls itself recursively
 //  * what it points to should be set to true whenever a test is skipped
-//    because of aStateMask or aAttribute
+//    because of aStateMask
 static PRBool SelectorMatches(RuleProcessorData &data,
                               nsCSSSelector* aSelector,
                               PRInt32 aStateMask, // states NOT to test
-                              nsIAtom* aAttribute, // attribute NOT to test
                               PRBool aForStyling,
                               PRBool* const aDependence = nsnull) 
 
@@ -1304,12 +1302,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 
   nsAtomList* IDList = aSelector->mIDList;
   if (IDList) {
-    // test for ID match
-    if (aAttribute && aAttribute == data.mContent->GetIDAttributeName()) {
-      if (aDependence)
-        *aDependence = PR_TRUE;
-    }
-    else if (data.mContentID) {
+    if (data.mContentID) {
       // case sensitivity: bug 93371
       const PRBool isCaseSensitive =
         data.mCompatMode != eCompatibility_NavQuirks;
@@ -1343,29 +1336,23 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   nsAtomList* classList = aSelector->mClassList;
   if (classList) {
     // test for class match
-    if (aAttribute && aAttribute == data.mContent->GetClassAttributeName()) {
-      if (aDependence)
-        *aDependence = PR_TRUE;
+    const nsAttrValue *elementClasses = data.mClasses;
+    if (!elementClasses) {
+      // Element has no classes but we have a class selector
+      return PR_FALSE;
     }
-    else {
-      const nsAttrValue *elementClasses = data.mClasses;
-      if (!elementClasses) {
-        // Element has no classes but we have a class selector
+
+    // case sensitivity: bug 93371
+    const PRBool isCaseSensitive =
+      data.mCompatMode != eCompatibility_NavQuirks;
+
+    while (classList) {
+      if (!elementClasses->Contains(classList->mAtom,
+                                    isCaseSensitive ?
+                                      eCaseMatters : eIgnoreCase)) {
         return PR_FALSE;
       }
-
-      // case sensitivity: bug 93371
-      const PRBool isCaseSensitive =
-        data.mCompatMode != eCompatibility_NavQuirks;
-
-      while (classList) {
-        if (!elementClasses->Contains(classList->mAtom,
-                                      isCaseSensitive ?
-                                        eCaseMatters : eIgnoreCase)) {
-          return PR_FALSE;
-        }
-        classList = classList->mNext;
-      }
+      classList = classList->mNext;
     }
   }
 
@@ -1376,7 +1363,10 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   // generally quick to test, and thus earlier).  If they were later,
   // we'd probably avoid setting those bits in more cases where setting
   // them is unnecessary.
-  const PRBool setNodeFlags = aForStyling && aStateMask == 0 && !aAttribute;
+  NS_ASSERTION(aStateMask == 0 || !aForStyling,
+               "aForStyling must be false if we're just testing for "
+               "state-dependence");
+  const PRBool setNodeFlags = aForStyling;
 
   // test for pseudo class match
   // first-child, root, lang, active, focus, hover, link, visited...
@@ -1817,27 +1807,19 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 
   if (result && aSelector->mAttrList) {
     // test for attribute match
-    if (!data.mHasAttributes && !aAttribute) {
+    if (!data.mHasAttributes) {
       // if no attributes on the content, no match
-      result = PR_FALSE;
+      return PR_FALSE;
     } else {
       NS_ASSERTION(data.mContent,
-                   "Must have content if either data.mHasAttributes or "
-                   "aAttribute is set!");
+                   "Must have content if data.mHasAttributes is true!");
       result = PR_TRUE;
       nsAttrSelector* attr = aSelector->mAttrList;
       nsIAtom* matchAttribute;
 
       do {
         matchAttribute = data.mIsHTML ? attr->mLowercaseAttr : attr->mCasedAttr;
-        if (matchAttribute == aAttribute) {
-          // XXX we should really have a namespace, not just an attr
-          // name, in HasAttributeDependentStyle!
-          result = PR_TRUE;
-          if (aDependence)
-            *aDependence = PR_TRUE;
-        }
-        else if (attr->mNameSpace == kNameSpaceID_Unknown) {
+        if (attr->mNameSpace == kNameSpaceID_Unknown) {
           // Attr selector with a wildcard namespace.  We have to examine all
           // the attributes on our content node....  This sort of selector is
           // essentially a boolean OR, over all namespaces, of equivalent attr
@@ -1908,12 +1890,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
          result && negation; negation = negation->mNegations) {
       PRBool dependence = PR_FALSE;
       result = !SelectorMatches(data, negation, aStateMask,
-                                aAttribute, aForStyling, &dependence);
-      // If the selector does match due to the dependence on aStateMask
-      // or aAttribute, then we want to keep result true so that the
-      // final result of SelectorMatches is true.  Doing so tells
-      // StateEnumFunc or AttributeEnumFunc that there is a dependence
-      // on the state or attribute.
+                                aForStyling, &dependence);
+      // If the selector does match due to the dependence on aStateMask,
+      // then we want to keep result true so that the final result of
+      // SelectorMatches is true.  Doing so tells StateEnumFunc that
+      // there is a dependence on the state.
       result = result || dependence;
     }
   }
@@ -1949,7 +1930,8 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
         nsIContent* content = prevdata->mContent;
         nsIContent* parent = prevdata->mParentContent;
         if (parent) {
-          parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+          if (aForStyling)
+            parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
 
           PRInt32 index = parent->IndexOf(content);
           while (0 <= --index) {
@@ -1984,7 +1966,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
     if (! data) {
       return PR_FALSE;
     }
-    if (SelectorMatches(*data, selector, 0, nsnull, aForStyling)) {
+    if (SelectorMatches(*data, selector, 0, aForStyling)) {
       // to avoid greedy matching, we need to recur if this is a
       // descendant or general sibling combinator and the next
       // combinator is different, but we can make an exception for
@@ -2027,7 +2009,7 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
 {
   ElementRuleProcessorData* data = (ElementRuleProcessorData*)aData;
 
-  if (SelectorMatches(*data, aSelector, 0, nsnull, PR_TRUE)) {
+  if (SelectorMatches(*data, aSelector, 0, PR_TRUE)) {
     nsCSSSelector *next = aSelector->mNext;
     if (!next || SelectorMatchesTree(*data, next, PR_TRUE)) {
       // for performance, require that every implementation of
@@ -2083,7 +2065,7 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
       if (PRUnichar('+') == selector->mOperator) {
         return; // not valid here, can't match
       }
-      if (SelectorMatches(*data, selector, 0, nsnull, PR_TRUE)) {
+      if (SelectorMatches(*data, selector, 0, PR_TRUE)) {
         selector = selector->mNext;
       }
       else {
@@ -2164,8 +2146,8 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
       // don't bother calling SelectorMatches, since even if it returns false
       // *aResult won't change.
       if ((possibleChange & ~(*aResult)) &&
-          SelectorMatches(*aData, selector, aData->mStateMask, nsnull, PR_TRUE) &&
-          SelectorMatchesTree(*aData, selector->mNext, PR_TRUE)) {
+          SelectorMatches(*aData, selector, aData->mStateMask, PR_FALSE) &&
+          SelectorMatchesTree(*aData, selector->mNext, PR_FALSE)) {
         *aResult = nsReStyleHint(*aResult | possibleChange);
       }
     }
@@ -2194,9 +2176,8 @@ AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
   // bother calling SelectorMatches, since even if it returns false
   // enumData->change won't change.
   if ((possibleChange & ~(aData->change)) &&
-      SelectorMatches(*data, aSelector, data->mStateMask, data->mAttribute,
-                      PR_TRUE) &&
-      SelectorMatchesTree(*data, aSelector->mNext, PR_TRUE)) {
+      SelectorMatches(*data, aSelector, 0, PR_FALSE) &&
+      SelectorMatchesTree(*data, aSelector->mNext, PR_FALSE)) {
     aData->change = nsReStyleHint(aData->change | possibleChange);
   }
 }
@@ -2207,46 +2188,55 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
                   "content must be element");
 
+  //  We could try making use of aData->mModType, but :not rules make it a bit
+  //  of a pain to do so...  So just ignore it for now.
+
   AttributeEnumData data(aData);
 
-  // Since we always have :-moz-any-link (and almost always have :link
-  // and :visited rules from prefs), rather than hacking AddRule below
-  // to add |href| to the hash, we'll just handle it here.
-  if (aData->mAttribute == nsGkAtoms::href &&
-      aData->mIsHTMLContent &&
-      (aData->mContentTag == nsGkAtoms::a ||
-       aData->mContentTag == nsGkAtoms::area ||
-       aData->mContentTag == nsGkAtoms::link)) {
-    data.change = nsReStyleHint(data.change | eReStyle_Self);
-  }
-  // XXX What about XLinks?
+  // Don't do our special handling of certain attributes if the attr
+  // hasn't changed yet.
+  if (aData->mAttrHasChanged) {
+    // Since we always have :-moz-any-link (and almost always have :link
+    // and :visited rules from prefs), rather than hacking AddRule below
+    // to add |href| to the hash, we'll just handle it here.
+    if (aData->mAttribute == nsGkAtoms::href &&
+        aData->mIsHTMLContent &&
+        (aData->mContentTag == nsGkAtoms::a ||
+         aData->mContentTag == nsGkAtoms::area ||
+         aData->mContentTag == nsGkAtoms::link)) {
+      data.change = nsReStyleHint(data.change | eReStyle_Self);
+    }
+    // XXX What about XLinks?
 #ifdef MOZ_SVG
-  // XXX should really check the attribute namespace is XLink
-  if (aData->mAttribute == nsGkAtoms::href &&
-      aData->mNameSpaceID == kNameSpaceID_SVG &&
-      aData->mContentTag == nsGkAtoms::a) {
-    data.change = nsReStyleHint(data.change | eReStyle_Self);
-  }
+    // XXX should really check the attribute namespace is XLink
+    if (aData->mAttribute == nsGkAtoms::href &&
+        aData->mNameSpaceID == kNameSpaceID_SVG &&
+        aData->mContentTag == nsGkAtoms::a) {
+      data.change = nsReStyleHint(data.change | eReStyle_Self);
+    }
 #endif
-  // XXXbz now that :link and :visited are also states, do we need a
-  // similar optimization in HasStateDependentStyle?
+    // XXXbz now that :link and :visited are also states, do we need a
+    // similar optimization in HasStateDependentStyle?
 
-  // check for the localedir, lwtheme and lwthemetextcolor attribute on root XUL elements
-  if ((aData->mAttribute == nsGkAtoms::localedir ||
-       aData->mAttribute == nsGkAtoms::lwtheme ||
-       aData->mAttribute == nsGkAtoms::lwthemetextcolor) &&
-      aData->mNameSpaceID == kNameSpaceID_XUL &&
-      aData->mContent == aData->mContent->GetOwnerDoc()->GetRootContent())
-  {
-    data.change = nsReStyleHint(data.change | eReStyle_Self);
+    // check for the localedir, lwtheme and lwthemetextcolor attribute on root XUL elements
+    if ((aData->mAttribute == nsGkAtoms::localedir ||
+         aData->mAttribute == nsGkAtoms::lwtheme ||
+         aData->mAttribute == nsGkAtoms::lwthemetextcolor) &&
+        aData->mNameSpaceID == kNameSpaceID_XUL &&
+        aData->mContent == aData->mContent->GetOwnerDoc()->GetRootContent())
+      {
+        data.change = nsReStyleHint(data.change | eReStyle_Self);
+      }
   }
 
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
-  // We do the same thing for attributes that we do for state selectors
-  // (see HasStateDependentStyle), except that instead of one big list
-  // we have a hashtable with a per-attribute list.
-
+  // Since we get both before and after notifications for attributes, we
+  // don't have to ignore aData->mAttribute while matching.  Just check
+  // whether we have selectors relevant to aData->mAttribute that we
+  // match.  If this is the before change notification, that will catch
+  // rules we might stop matching; if the after change notification, the
+  // ones we might have started matching.
   if (cascade) {
     if (aData->mAttribute == aData->mContent->GetIDAttributeName()) {
       nsCSSSelector **iter = cascade->mIDSelectors.Elements(),
@@ -2701,7 +2691,7 @@ nsCSSRuleProcessor::SelectorListMatches(RuleProcessorData& aData,
   while (aSelectorList) {
     nsCSSSelector* sel = aSelectorList->mSelectors;
     NS_ASSERTION(sel, "Should have *some* selectors");
-    if (SelectorMatches(aData, sel, 0, nsnull, PR_FALSE)) {
+    if (SelectorMatches(aData, sel, 0, PR_FALSE)) {
       nsCSSSelector* next = sel->mNext;
       if (!next || SelectorMatchesTree(aData, next, PR_FALSE)) {
         return PR_TRUE;
