@@ -44,6 +44,7 @@
 #include "nsCSSProperty.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsRefreshDriver.h"
+#include "nsCSSPseudoElements.h"
 
 class nsStyleContext;
 class nsPresContext;
@@ -85,6 +86,7 @@ public:
 
   // nsIStyleRuleProcessor
   NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData);
+  NS_IMETHOD RulesMatching(PseudoElementRuleProcessorData* aData);
   NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData);
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
                                     nsReStyleHint* aResult);
@@ -108,11 +110,12 @@ private:
                                   PRBool *aStartedAny,
                                   nsCSSPropertySet *aWhichStarted);
   ElementTransitions* GetElementTransitions(nsIContent *aElement,
-                                            nsIAtom *aPseudo,
+                                            nsCSSPseudoElements::Type aPseudoType,
                                             PRBool aCreateIfNeeded);
   void AddElementTransitions(ElementTransitions* aElementTransitions);
   void TransitionsRemoved();
-  nsresult WalkTransitionRule(RuleProcessorData* aData, nsIAtom *aPseudo);
+  nsresult WalkTransitionRule(RuleProcessorData* aData,
+			      nsCSSPseudoElements::Type aPseudoType);
 
   PRCList mElementTransitions;
   nsPresContext *mPresContext;
