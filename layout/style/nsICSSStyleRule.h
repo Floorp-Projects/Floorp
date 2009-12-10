@@ -53,6 +53,7 @@
 #include "nsCSSValue.h"
 #include "nsIAtom.h"
 #include "nsCSSPseudoElements.h"
+#include "nsCSSPseudoClasses.h"
 
 class nsIAtom;
 class nsCSSDeclaration;
@@ -79,9 +80,11 @@ private:
 
 struct nsPseudoClassList {
 public:
-  nsPseudoClassList(nsIAtom* aAtom);
-  nsPseudoClassList(nsIAtom* aAtom, const PRUnichar *aString);
-  nsPseudoClassList(nsIAtom* aAtom, const PRInt32 *aIntPair);
+  nsPseudoClassList(nsIAtom* aAtom, nsCSSPseudoClasses::Type aType);
+  nsPseudoClassList(nsIAtom* aAtom, nsCSSPseudoClasses::Type aType,
+                    const PRUnichar *aString);
+  nsPseudoClassList(nsIAtom* aAtom, nsCSSPseudoClasses::Type aType,
+                    const PRInt32 *aIntPair);
   ~nsPseudoClassList(void);
 
   /** Do a deep clone.  Should be used only on the first in the linked list. */
@@ -100,6 +103,7 @@ public:
     PRUnichar*      mString;
     PRInt32*        mNumbers;
   } u;
+  nsCSSPseudoClasses::Type mType;
   nsPseudoClassList* mNext;
 private: 
   nsPseudoClassList* Clone(PRBool aDeep) const;
@@ -159,9 +163,11 @@ public:
   void SetTag(const nsString& aTag);
   void AddID(const nsString& aID);
   void AddClass(const nsString& aClass);
-  void AddPseudoClass(nsIAtom* aPseudoClass);
-  void AddPseudoClass(nsIAtom* aPseudoClass, const PRUnichar* aString);
-  void AddPseudoClass(nsIAtom* aPseudoClass, const PRInt32* aIntPair);
+  void AddPseudoClass(nsIAtom* aPseudoClass, nsCSSPseudoClasses::Type aType);
+  void AddPseudoClass(nsIAtom* aPseudoClass, nsCSSPseudoClasses::Type aType,
+                      const PRUnichar* aString);
+  void AddPseudoClass(nsIAtom* aPseudoClass, nsCSSPseudoClasses::Type aType,
+                      const PRInt32* aIntPair);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunc, 
                     const nsString& aValue, PRBool aCaseSensitive);
