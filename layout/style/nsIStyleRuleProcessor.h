@@ -56,9 +56,10 @@ struct StateRuleProcessorData;
 struct AttributeRuleProcessorData;
 class nsPresContext;
 
-// IID for the nsIStyleRuleProcessor interface {015575fe-7b6c-11d3-ba05-001083023c2b}
+// IID for the nsIStyleRuleProcessor interface {a4ec760e-6bfb-4b9f-bd08-9d1c23b700f6}
 #define NS_ISTYLE_RULE_PROCESSOR_IID     \
-{0x015575fe, 0x7b6c, 0x11d3, {0xba, 0x05, 0x00, 0x10, 0x83, 0x02, 0x3c, 0x2b}}
+{ 0xa4ec760e, 0x6bfb, 0x4b9f, \
+ { 0xbd, 0x08, 0x9d, 0x1c, 0x23, 0xb7, 0x00, 0xf6 } }
 
 /* The style rule processor interface is a mechanism to separate the matching
  * of style rules from style sheet instances.
@@ -107,8 +108,8 @@ public:
    * node.  This test is used for optimization only, and may err on the
    * side of reporting more dependencies than really exist.
    */
-  NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                        nsReStyleHint* aResult) = 0;
+  virtual nsReStyleHint
+    HasAttributeDependentStyle(AttributeRuleProcessorData* aData) = 0;
 
   /**
    * Do any processing that needs to happen as a result of a change in

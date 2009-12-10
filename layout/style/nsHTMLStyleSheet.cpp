@@ -520,9 +520,8 @@ nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                             nsReStyleHint* aResult)
+nsReStyleHint
+nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
   // Note: no need to worry about whether some states changed with this
   // attribute here, because we handle that under HasStateDependentStyle() as
@@ -535,8 +534,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
       content &&
       content->IsHTML() &&
       aData->mContentTag == nsGkAtoms::a) {
-    *aResult = eReStyle_Self;
-    return NS_OK;
+    return eReStyle_Self;
   }
 
   // Don't worry about the mDocumentColorRule since it only applies
@@ -544,12 +542,10 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
 
   // Handle the content style rules.
   if (content && content->IsAttributeMapped(aData->mAttribute)) {
-    *aResult = eReStyle_Self;
-    return NS_OK;
+    return eReStyle_Self;
   }
 
-  *aResult = nsReStyleHint(0);
-  return NS_OK;
+  return nsReStyleHint(0);
 }
 
 NS_IMETHODIMP

@@ -96,8 +96,8 @@ public:
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
                                     nsReStyleHint* aResult);
 
-  NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                        nsReStyleHint* aResult);
+  virtual nsReStyleHint
+    HasAttributeDependentStyle(AttributeRuleProcessorData* aData);
 
   NS_IMETHOD MediumFeaturesChanged(nsPresContext* aPresContext,
                                    PRBool* aRulesChanged);
