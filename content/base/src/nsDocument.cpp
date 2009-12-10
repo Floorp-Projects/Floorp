@@ -5344,8 +5344,9 @@ nsDocument::GetAnimationController()
   // one and only SVG documents and the like will call this
   if (mAnimationController)
     return mAnimationController;
-  // Refuse to create an Animation Controller if SMIL is disabled
-  if (!NS_SMILEnabled())
+  // Refuse to create an Animation Controller if SMIL is disabled, and also
+  // for data documents.
+  if (!NS_SMILEnabled() || mLoadedAsData)
     return nsnull;
 
   mAnimationController = NS_NewSMILAnimationController(this);
