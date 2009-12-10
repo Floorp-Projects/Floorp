@@ -201,7 +201,7 @@ OS_LIBS		= advapi32.lib wsock32.lib winmm.lib
 endif
 endif
 
-ifeq ($(OS_TARGET),WINCE)
+ifeq ($(OS_ARCH),WINCE)
 OS_LIBS		= ws2.lib
 endif
 
