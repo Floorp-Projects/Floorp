@@ -6365,24 +6365,25 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
         (nsnull == mBullet)) {
       // Resolve style for the bullet frame
       const nsStyleList* styleList = GetStyleList();
-      nsIAtom *pseudoElement;
+      nsCSSPseudoElements::Type pseudoType;
       switch (styleList->mListStyleType) {
         case NS_STYLE_LIST_STYLE_DISC:
         case NS_STYLE_LIST_STYLE_CIRCLE:
         case NS_STYLE_LIST_STYLE_SQUARE:
-          pseudoElement = nsCSSPseudoElements::mozListBullet;
+          pseudoType = nsCSSPseudoElements::ePseudo_mozListBullet;
           break;
         default:
-          pseudoElement = nsCSSPseudoElements::mozListNumber;
+          pseudoType = nsCSSPseudoElements::ePseudo_mozListNumber;
           break;
       }
 
       nsIPresShell *shell = presContext->PresShell();
 
       nsStyleContext* parentStyle =
-        CorrectStyleParentFrame(this, pseudoElement)->GetStyleContext();
+        CorrectStyleParentFrame(this,
+          nsCSSPseudoElements::GetPseudoAtom(pseudoType))->GetStyleContext();
       nsRefPtr<nsStyleContext> kidSC = shell->StyleSet()->
-        ResolvePseudoStyleFor(mContent, pseudoElement, parentStyle);
+        ResolvePseudoElementStyle(mContent, pseudoType, parentStyle);
 
       // Create bullet frame
       nsBulletFrame* bullet = new (shell) nsBulletFrame(kidSC);
