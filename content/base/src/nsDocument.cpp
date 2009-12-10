@@ -2462,8 +2462,7 @@ nsDocument::AttributeWillChange(nsIDocument* aDocument,
 void
 nsDocument::AttributeChanged(nsIDocument* aDocument,
                              nsIContent* aContent, PRInt32 aNameSpaceID,
-                             nsIAtom* aAttribute, PRInt32 aModType,
-                             PRUint32 aStateMask)
+                             nsIAtom* aAttribute, PRInt32 aModType)
 {
   NS_ASSERTION(aDocument == this, "unexpected doc");
 

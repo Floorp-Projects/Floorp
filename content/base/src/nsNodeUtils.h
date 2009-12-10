@@ -92,14 +92,12 @@ public:
    * @param aNameSpaceID  Namespace of changed attribute
    * @param aAttribute    Local-name of changed attribute
    * @param aModType      Type of change (add/change/removal)
-   * @param aStateMask    States which changed
    * @see nsIMutationObserver::AttributeChanged
    */
   static void AttributeChanged(nsIContent* aContent,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
-                               PRInt32 aModType,
-                               PRUint32 aStateMask);
+                               PRInt32 aModType);
 
   /**
    * Send ContentAppended notifications to nsIMutationObservers

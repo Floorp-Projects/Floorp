@@ -209,8 +209,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder)
           nsNodeUtils::AttributeChanged(node, 
                                         nsuri, 
                                         localName, 
-                                        static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION),
-                                        stateMask);
+                                        static_cast<PRUint8>(nsIDOMMutationEvent::ADDITION));
         }
       }
       

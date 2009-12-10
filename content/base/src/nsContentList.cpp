@@ -532,7 +532,7 @@ nsContentList::GetNamedItem(const nsAString& aName, nsresult* aResult)
 void
 nsContentList::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                                PRInt32 aModType, PRUint32 aStateMask)
+                                PRInt32 aModType)
 {
   NS_PRECONDITION(aContent, "Must have a content node to work with");
   NS_PRECONDITION(aContent->IsNodeOfType(nsINode::eELEMENT),
