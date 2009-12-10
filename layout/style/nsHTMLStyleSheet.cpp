@@ -581,12 +581,13 @@ nsHTMLStyleSheet::RulesMatching(AnonBoxRuleProcessorData* aData)
   return NS_OK;
 }
 
+#ifdef MOZ_XUL
 NS_IMETHODIMP
-nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData)
+nsHTMLStyleSheet::RulesMatching(XULTreeRuleProcessorData* aData)
 {
   return NS_OK;
 }
-
+#endif
 
   // nsIStyleSheet api
 NS_IMETHODIMP
