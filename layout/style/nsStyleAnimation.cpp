@@ -128,6 +128,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
   switch (commonUnit) {
     case eUnit_Null:
     case eUnit_None:
+    case eUnit_UnparsedString:
       success = PR_FALSE;
       break;
     case eUnit_Enumerated:
@@ -459,6 +460,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
   switch (commonUnit) {
     case eUnit_Null:
     case eUnit_None:
+    case eUnit_UnparsedString:
       success = PR_FALSE;
       break;
     case eUnit_Enumerated:
@@ -832,6 +834,11 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
     return PR_FALSE;
   }
 
+  if (nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_None) {
+    // Just capture the specified value
+    aComputedValue.SetUnparsedStringValue(nsString(aSpecifiedValue));
+    return PR_TRUE;
+  }
   // Extract computed value of our property from the temporary style rule
   return ExtractComputedValue(aProperty, tmpStyleContext, aComputedValue);
 }
@@ -934,6 +941,10 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
   NS_ABORT_IF_FALSE(aPresContext, "null pres context");
   aSpecifiedValue.Truncate(); // Clear outparam, if it's not already empty
 
+  if (aComputedValue.GetUnit() == eUnit_UnparsedString) {
+    aComputedValue.GetStringValue(aSpecifiedValue);
+    return PR_TRUE;
+  }
   nsCSSValuePair vp;
   nsCSSRect rect;
   void *ptr = nsnull;
@@ -1413,6 +1424,11 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
         mValue.mCSSValueList = nsnull;
       }
       break;
+    case eUnit_UnparsedString:
+      NS_ABORT_IF_FALSE(aOther.mValue.mString, "expecting non-null string");
+      mValue.mString = aOther.mValue.mString;
+      mValue.mString->AddRef();
+      break;
   }
 
   return *this;
@@ -1481,6 +1497,19 @@ nsStyleAnimation::Value::SetColorValue(nscolor aColor)
 }
 
 void
+nsStyleAnimation::Value::SetUnparsedStringValue(const nsString& aString)
+{
+  FreeValue();
+  mUnit = eUnit_UnparsedString;
+  mValue.mString = nsCSSValue::BufferFromString(aString);
+  if (NS_UNLIKELY(!mValue.mString)) {
+    // not much we can do here; just make sure that our promise of a
+    // non-null mValue.mString holds for string units.
+    mUnit = eUnit_Null;
+  }
+}
+
+void
 nsStyleAnimation::Value::SetAndAdoptCSSValuePairValue(
                            nsCSSValuePair *aValuePair, Unit aUnit)
 {
@@ -1510,6 +1539,9 @@ nsStyleAnimation::Value::FreeValue()
     delete mValue.mCSSValueList;
   } else if (IsCSSValuePairUnit(mUnit)) {
     delete mValue.mCSSValuePair;
+  } else if (mUnit == eUnit_UnparsedString) {
+    NS_ABORT_IF_FALSE(mValue.mString, "expecting non-null string");
+    mValue.mString->Release();
   }
 }
 
@@ -1542,6 +1574,9 @@ nsStyleAnimation::Value::operator==(const Value& aOther) const
     case eUnit_Shadow:
       return nsCSSValueList::Equal(mValue.mCSSValueList,
                                    aOther.mValue.mCSSValueList);
+    case eUnit_UnparsedString:
+      return (NS_strcmp(GetStringBufferValue(),
+                        aOther.GetStringBufferValue()) == 0);
   }
 
   NS_NOTREACHED("incomplete case");
