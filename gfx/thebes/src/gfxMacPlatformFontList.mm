@@ -117,7 +117,8 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
                                PRBool aIsStandardFace)
     : gfxFontEntry(aPostscriptName, aFamily, aIsStandardFace),
       mATSFontRef(0),
-      mATSFontRefInitialized(PR_FALSE)
+      mATSFontRefInitialized(PR_FALSE),
+      mUseLiGothicAtsuiHack(PR_FALSE)
 {
     mWeight = aWeight;
 }
@@ -127,7 +128,8 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName, ATSFontRef aFon
                                gfxUserFontData *aUserFontData)
     : gfxFontEntry(aPostscriptName),
       mATSFontRef(aFontRef),
-      mATSFontRefInitialized(PR_TRUE)
+      mATSFontRefInitialized(PR_TRUE),
+      mUseLiGothicAtsuiHack(PR_FALSE)
 {
     // xxx - stretch is basically ignored for now
 
@@ -189,13 +191,12 @@ MacOSFontEntry::ReadCMAP()
 
     PRUint32 kCMAP = TRUETYPE_TAG('c','m','a','p');
 
-    nsAutoTArray<PRUint8,16384> buffer;
-    if (GetFontTable(kCMAP, buffer) != NS_OK)
+    nsAutoTArray<PRUint8,16384> cmap;
+    if (GetFontTable(kCMAP, cmap) != NS_OK)
         return NS_ERROR_FAILURE;
-    PRUint8 *cmap = buffer.Elements();
 
     PRPackedBool  unicodeFont, symbolFont; // currently ignored
-    nsresult rv = gfxFontUtils::ReadCMAP(cmap, buffer.Length(),
+    nsresult rv = gfxFontUtils::ReadCMAP(cmap.Elements(), cmap.Length(),
                                          mCharacterMap, unicodeFont, symbolFont);
 
     if (NS_FAILED(rv)) {
@@ -260,6 +261,22 @@ MacOSFontEntry::ReadCMAP()
             if (omitRange) {
                 mCharacterMap.ClearRange(gScriptsThatRequireShaping[s].rangeStart,
                                          gScriptsThatRequireShaping[s].rangeEnd);
+            }
+        }
+    }
+
+    if ((gfxPlatformMac::GetPlatform()->OSXVersion() &
+         MAC_OS_X_MAJOR_VERSION_MASK) == MAC_OS_X_VERSION_10_6_HEX) {
+        // even ruder hack - LiGothic font on 10.6 has a bad glyph for U+775B
+        // that causes ATSUI failure, so we set a flag to tell our layout code
+        // to hack around that character
+        if (mName.EqualsLiteral("LiGothicMed")) {
+            // check whether the problem char maps to the expected glyph;
+            // if not, we'll assume this isn't the problem version of the font
+            if (gfxFontUtils::MapCharToGlyph(cmap.Elements(), cmap.Length(),
+                                             kLiGothicBadCharUnicode) ==
+                kLiGothicBadCharGlyph) {
+                mUseLiGothicAtsuiHack = PR_TRUE;
             }
         }
     }
