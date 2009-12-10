@@ -83,6 +83,9 @@ class imgIContainer;
 #define NS_STYLE_HAS_TEXT_DECORATIONS     0x01000000
 // See nsStyleContext::HasPseudoElementData.
 #define NS_STYLE_HAS_PSEUDO_ELEMENT_DATA  0x02000000
+// See nsStyleContext::GetPseudoEnum
+#define NS_STYLE_CONTEXT_TYPE_MASK        0xf0000000
+#define NS_STYLE_CONTEXT_TYPE_SHIFT       28
 
 // Additional bits for nsRuleNode's mDependentBits:
 #define NS_RULE_NODE_GC_MARK              0x02000000
