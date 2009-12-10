@@ -1392,12 +1392,11 @@ public:
                                 nsIContent* aContent,
                                 PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute,
-                                PRInt32 aModType,
-                                PRUint32 aStateMask)
+                                PRInt32 aModType)
   {
     if (AllowMutation(aContent)) {
       mBaseObserver->AttributeChanged(aDocument, aContent, aNameSpaceID,
-                                      aAttribute, aModType, aStateMask);
+                                      aAttribute, aModType);
     }
   }
   virtual void ContentAppended(nsIDocument* aDocument,
@@ -5057,8 +5056,7 @@ PresShell::AttributeChanged(nsIDocument* aDocument,
                             nsIContent*  aContent,
                             PRInt32      aNameSpaceID,
                             nsIAtom*     aAttribute,
-                            PRInt32      aModType,
-                            PRUint32     aStateMask)
+                            PRInt32      aModType)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
@@ -5069,7 +5067,7 @@ PresShell::AttributeChanged(nsIDocument* aDocument,
   if (mDidInitialReflow) {
     nsAutoCauseReflowNotifier crNotifier(this);
     mFrameConstructor->AttributeChanged(aContent, aNameSpaceID,
-                                        aAttribute, aModType, aStateMask);
+                                        aAttribute, aModType);
     VERIFY_STYLE_TREE;
   }
 }

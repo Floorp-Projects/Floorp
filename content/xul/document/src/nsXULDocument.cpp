@@ -987,14 +987,13 @@ nsXULDocument::AttributeWillChange(nsIDocument* aDocument,
 void
 nsXULDocument::AttributeChanged(nsIDocument* aDocument,
                                 nsIContent* aElement, PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute, PRInt32 aModType,
-                                PRUint32 aStateMask)
+                                nsIAtom* aAttribute, PRInt32 aModType)
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
 
     // Do this here so that all the exit paths below don't leave this undone
     nsXMLDocument::AttributeChanged(aDocument, aElement, aNameSpaceID,
-            aAttribute, aModType, aStateMask);
+                                    aAttribute, aModType);
 
     // XXXbz check aNameSpaceID, dammit!
     // See if we need to update our ref map.

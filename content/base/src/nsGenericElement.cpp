@@ -4432,8 +4432,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
       MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, aNotify);
       document->ContentStatesChanged(this, nsnull, stateMask);
     }
-    nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, modType,
-                                  stateMask);
+    nsNodeUtils::AttributeChanged(this, aNamespaceID, aName, modType);
   }
 
   if (aNamespaceID == kNameSpaceID_XMLEvents && 
@@ -4694,8 +4693,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       document->ContentStatesChanged(this, nsnull, stateMask);
     }
     nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
-                                  nsIDOMMutationEvent::REMOVAL,
-                                  stateMask);
+                                  nsIDOMMutationEvent::REMOVAL);
   }
 
   rv = AfterSetAttr(aNameSpaceID, aName, nsnull, aNotify);
