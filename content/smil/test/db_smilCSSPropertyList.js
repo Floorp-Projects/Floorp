@@ -105,7 +105,7 @@ var gPropList =
   stop_color:        new AdditiveAttribute("stop-color", "CSS", "stop"),
   stop_opacity:      new AdditiveAttribute("stop-opacity", "CSS", "stop"),
   stroke:            new AdditiveAttribute("stroke", "CSS", "rect"),
-  stroke_dasharray:  new AdditiveAttribute("stroke-dasharray", "CSS", "rect"),
+  stroke_dasharray:  new NonAdditiveAttribute("stroke-dasharray", "CSS", "rect"),
   stroke_dashoffset: new AdditiveAttribute("stroke-dashoffset", "CSS", "rect"),
   stroke_linecap:    new NonAdditiveAttribute("stroke-linecap", "CSS", "rect"),
   stroke_linejoin:   new NonAdditiveAttribute("stroke-linejoin", "CSS", "rect"),
