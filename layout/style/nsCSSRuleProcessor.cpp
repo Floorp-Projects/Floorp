@@ -2368,7 +2368,9 @@ AddRule(RuleValue* aRuleInfo, RuleCascadeData* aCascade)
 
   // Build the rule hash.
   nsCSSPseudoElements::Type pseudoType = aRuleInfo->mSelector->PseudoType();
-  if (pseudoType < nsCSSPseudoElements::ePseudo_PseudoElementCount) {
+  if (NS_LIKELY(pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement)) {
+    cascade->mRuleHash.PrependRule(aRuleInfo);
+  } else if (pseudoType < nsCSSPseudoElements::ePseudo_PseudoElementCount) {
     RuleHash*& ruleHash = cascade->mPseudoElementRuleHashes[pseudoType];
     if (!ruleHash) {
       ruleHash = new RuleHash(cascade->mQuirksMode);
@@ -2399,20 +2401,18 @@ AddRule(RuleValue* aRuleInfo, RuleCascadeData* aCascade)
     DoPrependRuleToTagTable(&cascade->mAnonBoxRules,
                             aRuleInfo->mSelector->mLowercaseTag,
                             aRuleInfo, 0);
-  }
+  } else {
 #ifdef MOZ_XUL
-  else if (pseudoType == nsCSSPseudoElements::ePseudo_XULTree) {
+    NS_ASSERTION(pseudoType == nsCSSPseudoElements::ePseudo_XULTree,
+                 "Unexpected pseudo type");
     // Index doesn't matter here, since we'll just be walking these
     // rules in order; just pass 0.
     DoPrependRuleToTagTable(&cascade->mXULTreeRules,
                             aRuleInfo->mSelector->mLowercaseTag,
                             aRuleInfo, 0);
-  }
+#else
+    NS_NOTREACHED("Unexpected pseudo type");
 #endif
-  else {
-    NS_ASSERTION(pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
-                 "Unexpected pseudoType");
-    cascade->mRuleHash.PrependRule(aRuleInfo);
   }
 
   nsTArray<nsCSSSelector*>* stateArray = &cascade->mStateSelectors;
