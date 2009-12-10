@@ -2,7 +2,7 @@ protocol race_OverlappingMultiOut {
 child:
     Msg1();
     Msg1_();
-    delete(); suppressUndeleteableError()
+    __delete__(); suppressUndeleteableError();
 
 parent:
     Msg2();
@@ -10,7 +10,7 @@ parent:
 
 
 start state _:
-    send delete;
+    send __delete__;
     send suppressUndeleteableError goto S10;
 
     // *** ERROR: send/recv of Msg1/Msg2 in state S10 goes to overlapping
