@@ -46,10 +46,17 @@
 #include "prinrval.h"
 #include "nsMemory.h"
 
+// Allows us to mark unused functions as known-unused
+#ifdef __GNUC__
+#define UNUSED __attribute__ ((unused))
+#else
+#define UNUSED
+#endif
+
 // forward declration
 static void DoMultipleInheritenceTest();
 static void DoMultipleInheritenceTest2();
-static void DoSpeedTest();
+static void UNUSED DoSpeedTest();
 
 // {AAC1FB90-E099-11d2-984E-006008962422}
 #define INVOKETESTTARGET_IID \
@@ -317,7 +324,7 @@ InvokeTestTarget::AddMixedInts3(PRInt64 p1, PRInt64 p2, PRInt32 p3, PRInt64 p4,
 	printf("P8 : %lld\n", p8);
 	printf("P9 : %d\n",   p9);
 	printf("P10: %lld\n", p10);
-	printf("ret: %p\n",   retval);
+	printf("ret: %p\n",   static_cast<void*>(retval));
     *retval = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10;
     return NS_OK;
 }
@@ -946,7 +953,7 @@ int main()
     var[2].ptr = &var[2].val.p;
     
     if(NS_SUCCEEDED(NS_InvokeByIndex(test, 15, 3, var)))
-        printf(" = %s\n", var[2].val.p);
+        printf(" = %s\n", static_cast<char*>(var[2].val.p));
     else
         printf("\tFAILED");
 
@@ -1209,9 +1216,9 @@ static void DoMultipleInheritenceTest()
     if(NS_SUCCEEDED(impl->QueryInterface(NS_GET_IID(nsIFoo), (void**)&foo)) &&
        NS_SUCCEEDED(impl->QueryInterface(NS_GET_IID(nsIBar), (void**)&bar)))
     {
-        printf("impl == %p\n", impl);
-        printf("foo  == %p\n", foo);
-        printf("bar  == %p\n", bar);
+        printf("impl == %p\n", static_cast<void*>(impl));
+        printf("foo  == %p\n", static_cast<void*>(foo));
+        printf("bar  == %p\n", static_cast<void*>(bar));
 
         printf("Calling Foo...\n");
         printf("direct calls:\n");
@@ -1379,9 +1386,9 @@ static void DoMultipleInheritenceTest2()
     if(NS_SUCCEEDED(impl->QueryInterface(NS_GET_IID(nsIFoo), (void**)&foo)) &&
        NS_SUCCEEDED(impl->QueryInterface(NS_GET_IID(nsIBar), (void**)&bar)))
     {
-        printf("impl == %p\n", impl);
-        printf("foo  == %p\n", foo);
-        printf("bar  == %p\n", bar);
+        printf("impl == %p\n", static_cast<void*>(impl));
+        printf("foo  == %p\n", static_cast<void*>(foo));
+        printf("bar  == %p\n", static_cast<void*>(bar));
 
         printf("Calling Foo...\n");
         printf("direct calls:\n");
