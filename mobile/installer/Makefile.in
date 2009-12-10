@@ -130,8 +130,8 @@ deb: debian/control debian/$(MOZ_APP_NAME).service debian/$(MOZ_APP_NAME).links 
 	$(DIST)/branding/$(MOZ_APP_NAME)_scalable.png $(DIST)/branding/$(MOZ_APP_NAME)_26x26.png $(DIST)/branding/$(MOZ_APP_NAME)_40x40.png
 	rm -rf $(DEBDESTDIR)/$(installdir)/*
 	$(NSINSTALL) -D $(DEBDESTDIR)/$(installdir)
-	bunzip2 -c $(DEPTH)/dist/$(PKG_BASENAME)$(PKG_SUFFIX) | $(UNPACK_TAR) -C $(DEBDESTDIR)/$(installdir)
-	rm -rf $(DEBDESTDIR)/$(installdir)/$(MOZ_APP_NAME)/xulrunner	
+	cp -pRL $(DIST)/$(MOZ_APP_NAME)/* $(DEBDESTDIR)/$(installdir)
+	rm -rf $(DEBDESTDIR)/$(installdir)/xulrunner	
 	$(NSINSTALL)  debian/$(MOZ_APP_NAME).desktop $(DEBDESTDIR)/usr/share/applications/hildon/
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/dbus-1/services/
 	cp debian/$(MOZ_APP_NAME).service $(DEBDESTDIR)/usr/share/dbus-1/services/org.mozilla.$(MOZ_APP_NAME).service

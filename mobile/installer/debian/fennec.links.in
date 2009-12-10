@@ -1,5 +1,5 @@
 #filter substitution
-@installdir@/fennec/fennec /usr/bin/fennec
+@installdir@/fennec /usr/bin/fennec
 /usr/share/applications/hildon/fennec.desktop etc/others-menu/0112_fennec.desktop
 
 
