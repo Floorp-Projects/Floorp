@@ -1069,8 +1069,7 @@ static PRBool
 SheetHasAttributeStyle(nsIStyleRuleProcessor* aProcessor, void *aData)
 {
   AttributeData* data = (AttributeData*)aData;
-  nsReStyleHint hint;
-  aProcessor->HasAttributeDependentStyle(data, &hint);
+  nsReStyleHint hint = aProcessor->HasAttributeDependentStyle(data);
   data->mHint = nsReStyleHint(data->mHint | hint);
   return PR_TRUE; // continue
 }
