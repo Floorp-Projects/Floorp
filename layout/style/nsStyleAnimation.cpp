@@ -596,6 +596,15 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
         ++len2;
       }
       NS_ABORT_IF_FALSE(len1 > 0 && len2 > 0, "unexpected length");
+      if (list1->mValue.GetUnit() == eCSSUnit_None ||
+          list2->mValue.GetUnit() == eCSSUnit_None) {
+        // One of our values is "none".  Can't do addition with that.
+        NS_ABORT_IF_FALSE(
+          (list1->mValue.GetUnit() != eCSSUnit_None || len1 == 1) &&
+          (list2->mValue.GetUnit() != eCSSUnit_None || len2 == 1),
+          "multi-value valuelist with 'none' as first element");
+        return PR_FALSE;
+      }
 
       nsAutoPtr<nsCSSValueList> result;
       nsCSSValueList **resultTail = getter_Transfers(result);
@@ -1107,8 +1116,10 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           NS_ABORT_IF_FALSE((svg->mStrokeDasharray != nsnull) ==
                             (svg->mStrokeDasharrayLength != 0),
                             "pointer/length mismatch");
+          nsAutoPtr<nsCSSValueList> result;
           if (svg->mStrokeDasharray) {
-            nsAutoPtr<nsCSSValueList> result;
+            NS_ABORT_IF_FALSE(svg->mStrokeDasharrayLength > 0,
+                              "non-null list should have positive length");
             nsCSSValueList **resultTail = getter_Transfers(result);
             for (PRUint32 i = 0, i_end = svg->mStrokeDasharrayLength;
                  i != i_end; ++i) {
@@ -1142,11 +1153,15 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                   return PR_FALSE;
               }
             }
-            aComputedValue.SetAndAdoptCSSValueListValue(result.forget(),
-                                                        eUnit_Dasharray);
           } else {
-            aComputedValue.SetNoneValue();
+            result = new nsCSSValueList;
+            if (!result) {
+              return PR_FALSE;
+            }
+            result->mValue.SetNoneValue();
           }
+          aComputedValue.SetAndAdoptCSSValueListValue(result.forget(),
+                                                      eUnit_Dasharray);
           break;
         }
 
