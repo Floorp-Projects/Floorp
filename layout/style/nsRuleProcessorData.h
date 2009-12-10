@@ -211,24 +211,27 @@ struct AnonBoxRuleProcessorData {
   nsRuleWalker* mRuleWalker;
 };
 
-struct PseudoRuleProcessorData : public RuleProcessorData {
-  PseudoRuleProcessorData(nsPresContext* aPresContext,
-                          nsIContent* aParentContent,
-                          nsIAtom* aPseudoTag,
-                          nsICSSPseudoComparator* aComparator,
-                          nsRuleWalker* aRuleWalker)
-  : RuleProcessorData(aPresContext, aParentContent, aRuleWalker)
+#ifdef MOZ_XUL
+struct XULTreeRuleProcessorData : public RuleProcessorData {
+  XULTreeRuleProcessorData(nsPresContext* aPresContext,
+                           nsIContent* aParentContent,
+                           nsRuleWalker* aRuleWalker,
+                           nsIAtom* aPseudoTag,
+                           nsICSSPseudoComparator* aComparator)
+    : RuleProcessorData(aPresContext, aParentContent, aRuleWalker),
+      mPseudoTag(aPseudoTag),
+      mComparator(aComparator)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
     NS_PRECONDITION(aPseudoTag, "null pointer");
     NS_PRECONDITION(aRuleWalker, "null pointer");
-    mPseudoTag = aPseudoTag;
-    mComparator = aComparator;
+    NS_PRECONDITION(aComparator, "must have a comparator");
   }
 
   nsIAtom*                 mPseudoTag;
   nsICSSPseudoComparator*  mComparator;
 };
+#endif
 
 struct StateRuleProcessorData : public RuleProcessorData {
   StateRuleProcessorData(nsPresContext* aPresContext,
