@@ -365,14 +365,12 @@ public:
   void EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag, nsIAtom* aID,
                          const nsAttrValue* aClassList,
                          RuleEnumFunc aFunc, RuleProcessorData* aData);
-  void EnumerateTagRules(nsIAtom* aTag,
-                         RuleEnumFunc aFunc, void* aData);
   PLArenaPool& Arena() { return mArena; }
 
 protected:
   void PrependRuleToTable(PLDHashTable* aTable, const void* aKey,
                           RuleValue* aRuleInfo);
-  void PrependRuleToTagTable(const void* aKey, RuleValue* aRuleInfo);
+  void PrependRuleToTagTable(nsIAtom* aKey, RuleValue* aRuleInfo);
   void PrependUniversalRule(RuleValue* aRuleInfo);
 
   // All rule values in these hashtables are arena allocated
@@ -396,15 +394,12 @@ protected:
   PRUint32    mIdSelectors;
 
   PRUint32    mElementsMatched;
-  PRUint32    mPseudosMatched;
 
   PRUint32    mElementUniversalCalls;
   PRUint32    mElementNameSpaceCalls;
   PRUint32    mElementTagCalls;
   PRUint32    mElementClassCalls;
   PRUint32    mElementIdCalls;
-
-  PRUint32    mPseudoTagCalls;
 #endif // RULE_HASH_STATS
 };
 
@@ -420,13 +415,11 @@ RuleHash::RuleHash(PRBool aQuirksMode)
     mClassSelectors(0),
     mIdSelectors(0),
     mElementsMatched(0),
-    mPseudosMatched(0),
     mElementUniversalCalls(0),
     mElementNameSpaceCalls(0),
     mElementTagCalls(0),
     mElementClassCalls(0),
-    mElementIdCalls(0),
-    mPseudoTagCalls(0)
+    mElementIdCalls(0)
 #endif
 {
   MOZ_COUNT_CTOR(RuleHash);
@@ -454,17 +447,14 @@ RuleHash::~RuleHash()
   printf(
 "RuleHash(%p):\n"
 "  Selectors: Universal (%u) NameSpace(%u) Tag(%u) Class(%u) Id(%u)\n"
-"  Content Nodes: Elements(%u) Pseudo-Elements(%u)\n"
+"  Content Nodes: Elements(%u)\n"
 "  Element Calls: Universal(%u) NameSpace(%u) Tag(%u) Class(%u) Id(%u)\n"
-"  Pseudo-Element Calls: Tag(%u)\n",
          static_cast<void*>(this),
          mUniversalSelectors, mNameSpaceSelectors, mTagSelectors,
            mClassSelectors, mIdSelectors,
          mElementsMatched,
-         mPseudosMatched,
          mElementUniversalCalls, mElementNameSpaceCalls, mElementTagCalls,
-           mElementClassCalls, mElementIdCalls,
-         mPseudoTagCalls);
+           mElementClassCalls, mElementIdCalls);
 #ifdef PRINT_UNIVERSAL_RULES
   {
     RuleValue* value = mUniversalRules;
@@ -511,19 +501,26 @@ void RuleHash::PrependRuleToTable(PLDHashTable* aTable, const void* aKey,
   entry->mRules = aRuleInfo->Add(mRuleCount++, entry->mRules);
 }
 
-void RuleHash::PrependRuleToTagTable(const void* aKey, RuleValue* aRuleInfo)
+static void
+DoPrependRuleToTagTable(PLDHashTable* aTable, nsIAtom* aKey,
+                        RuleValue* aRuleInfo, PRInt32 aBackwardsIndex)
 {
   // Get a new or exisiting entry
-   RuleHashTagTableEntry *entry = static_cast<RuleHashTagTableEntry*>
-                              (PL_DHashTableOperate(&mTagTable, aKey, PL_DHASH_ADD));
-   if (!entry)
-     return;
+  RuleHashTagTableEntry *entry = static_cast<RuleHashTagTableEntry*>
+    (PL_DHashTableOperate(aTable, aKey, PL_DHASH_ADD));
+  if (!entry)
+    return;
 
-   entry->mTag = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(aKey));
+  entry->mTag = aKey;
 
-   // This may give the same rule two different rule counts, but that is OK
-   // because we never combine two different entries in the tag table.
-   entry->mRules = aRuleInfo->Add(mRuleCount++, entry->mRules);
+  // This may give the same rule two different rule counts, but that is OK
+  // because we never combine two different entries in a tag table.
+  entry->mRules = aRuleInfo->Add(aBackwardsIndex, entry->mRules);
+}
+
+void RuleHash::PrependRuleToTagTable(nsIAtom* aKey, RuleValue* aRuleInfo)
+{
+  DoPrependRuleToTagTable(&mTagTable, aKey, aRuleInfo, mRuleCount++);
 }
 
 void RuleHash::PrependUniversalRule(RuleValue *aRuleInfo)
@@ -671,22 +668,6 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
   }
 }
 
-void RuleHash::EnumerateTagRules(nsIAtom* aTag, RuleEnumFunc aFunc, void* aData)
-{
-  RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
-                                         (PL_DHashTableOperate(&mTagTable, aTag, PL_DHASH_LOOKUP));
-
-  RULE_HASH_STAT_INCREMENT(mPseudosMatched);
-  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-    RuleValue *tagValue = entry->mRules;
-    do {
-      RULE_HASH_STAT_INCREMENT(mPseudoTagCalls);
-      (*aFunc)(tagValue->mRule, tagValue->mSelector, aData);
-      tagValue = tagValue->mNext;
-    } while (tagValue);
-  }
-}
-
 //--------------------------------
 
 // Attribute selectors hash table.
@@ -730,12 +711,17 @@ struct RuleCascadeData {
     PL_DHashTableInit(&mAnonBoxRules, &RuleHash_TagTable_Ops, nsnull,
                       sizeof(RuleHashTagTableEntry), 16);
     memset(mPseudoElementRuleHashes, 0, sizeof(mPseudoElementRuleHashes));
+#ifdef MOZ_XUL
+    PL_DHashTableInit(&mXULTreeRules, &RuleHash_TagTable_Ops, nsnull,
+                      sizeof(RuleHashTagTableEntry), 16);
+#endif
   }
 
   ~RuleCascadeData()
   {
     PL_DHashTableFinish(&mAttributeSelectors);
     PL_DHashTableFinish(&mAnonBoxRules);
+    PL_DHashTableFinish(&mXULTreeRules);
     for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mPseudoElementRuleHashes); ++i) {
       delete mPseudoElementRuleHashes[i];
     }
@@ -748,6 +734,9 @@ struct RuleCascadeData {
   nsTArray<nsCSSSelector*> mIDSelectors;
   PLDHashTable             mAttributeSelectors;
   PLDHashTable             mAnonBoxRules;
+#ifdef MOZ_XUL
+  PLDHashTable             mXULTreeRules;
+#endif
 
   nsTArray<nsFontFaceRuleContainer> mFontFaceRules;
 
@@ -2090,68 +2079,34 @@ nsCSSRuleProcessor::RulesMatching(AnonBoxRuleProcessorData* aData)
   return NS_OK;
 }
 
-static void PseudoEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
-                           void* aData)
-{
-  PseudoRuleProcessorData* data = (PseudoRuleProcessorData*)aData;
-
-  if (!aSelector->IsPseudoElement())
-    return;
-
-  NS_ASSERTION(aSelector->mLowercaseTag == data->mPseudoTag, "RuleHash failure");
-  PRBool matches = PR_TRUE;
-  if (data->mComparator)
-    data->mComparator->PseudoMatches(data->mPseudoTag, aSelector, &matches);
-
-  if (matches) {
-    nsCSSSelector *selector = aSelector->mNext;
-
-    if (selector) { // test next selector specially
-      if (PRUnichar('+') == selector->mOperator) {
-        return; // not valid here, can't match
-      }
-      if (SelectorMatches(*data, selector, 0, PR_TRUE)) {
-        selector = selector->mNext;
-      }
-      else {
-        if (PRUnichar('>') == selector->mOperator) {
-          return; // immediate parent didn't match
-        }
-      }
-    }
-
-    if (selector && 
-        (! SelectorMatchesTree(*data, selector, PR_TRUE))) {
-      return; // remaining selectors didn't match
-    }
-
-    // for performance, require that every implementation of
-    // nsICSSStyleRule return the same pointer for nsIStyleRule (why
-    // would anything multiply inherit nsIStyleRule anyway?)
-#ifdef DEBUG
-    nsCOMPtr<nsIStyleRule> iRule = do_QueryInterface(aRule);
-    NS_ASSERTION(static_cast<nsIStyleRule*>(aRule) == iRule.get(),
-                 "Please fix QI so this performance optimization is valid");
-#endif
-    data->mRuleWalker->Forward(static_cast<nsIStyleRule*>(aRule));
-    // nsStyleSet will deal with the !important rule
-  }
-}
-
+#ifdef MOZ_XUL
 NS_IMETHODIMP
-nsCSSRuleProcessor::RulesMatching(PseudoRuleProcessorData* aData)
+nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
 {
   NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
                   "content must be element");
 
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
-  if (cascade) {
-    cascade->mRuleHash.EnumerateTagRules(aData->mPseudoTag,
-                                         PseudoEnumFunc, aData);
+  if (cascade && cascade->mXULTreeRules.entryCount) {
+    RuleHashTagTableEntry* entry = static_cast<RuleHashTagTableEntry*>
+      (PL_DHashTableOperate(&cascade->mXULTreeRules, aData->mPseudoTag,
+                            PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      for (RuleValue *value = entry->mRules; value; value = value->mNext) {
+        PRBool matches = PR_TRUE;
+        aData->mComparator->PseudoMatches(aData->mPseudoTag, value->mSelector,
+                                          &matches);
+        if (matches) {
+          ContentEnumFunc(value->mRule, value->mSelector->mNext,
+                          static_cast<RuleProcessorData*>(aData));
+        }
+      }
+    }
   }
   return NS_OK;
 }
+#endif
 
 inline PRBool
 IsSiblingOperator(PRUnichar oper)
@@ -2407,9 +2362,9 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
 }
 
 static PRBool
-AddRule(RuleValue* aRuleInfo, void* aCascade)
+AddRule(RuleValue* aRuleInfo, RuleCascadeData* aCascade)
 {
-  RuleCascadeData *cascade = static_cast<RuleCascadeData*>(aCascade);
+  RuleCascadeData * const cascade = aCascade;
 
   // Build the rule hash.
   nsCSSPseudoElements::Type pseudoType = aRuleInfo->mSelector->PseudoType();
@@ -2429,18 +2384,34 @@ AddRule(RuleValue* aRuleInfo, void* aCascade)
     aRuleInfo->mSelector = aRuleInfo->mSelector->mNext;
     ruleHash->PrependRule(aRuleInfo);
   } else if (pseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
-    RuleHashTagTableEntry *entry = static_cast<RuleHashTagTableEntry*>
-      (PL_DHashTableOperate(&cascade->mAnonBoxRules,
-                            aRuleInfo->mSelector->mLowercaseTag,
-                            PL_DHASH_ADD));
-    if (!entry)
-      return PR_FALSE;
+    NS_ASSERTION(!aRuleInfo->mSelector->mCasedTag &&
+                 !aRuleInfo->mSelector->mIDList &&
+                 !aRuleInfo->mSelector->mClassList &&
+                 !aRuleInfo->mSelector->mPseudoClassList &&
+                 !aRuleInfo->mSelector->mAttrList &&
+                 !aRuleInfo->mSelector->mNegations &&
+                 !aRuleInfo->mSelector->mNext &&
+                 aRuleInfo->mSelector->mNameSpace == kNameSpaceID_Unknown,
+                 "Parser messed up with anon box selector");
 
-    entry->mTag = aRuleInfo->mSelector->mLowercaseTag;
     // Index doesn't matter here, since we'll just be walking these
     // rules in order; just pass 0.
-    entry->mRules = aRuleInfo->Add(0, entry->mRules);
-  } else {
+    DoPrependRuleToTagTable(&cascade->mAnonBoxRules,
+                            aRuleInfo->mSelector->mLowercaseTag,
+                            aRuleInfo, 0);
+  }
+#ifdef MOZ_XUL
+  else if (pseudoType == nsCSSPseudoElements::ePseudo_XULTree) {
+    // Index doesn't matter here, since we'll just be walking these
+    // rules in order; just pass 0.
+    DoPrependRuleToTagTable(&cascade->mXULTreeRules,
+                            aRuleInfo->mSelector->mLowercaseTag,
+                            aRuleInfo, 0);
+  }
+#endif
+  else {
+    NS_ASSERTION(pseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                 "Unexpected pseudoType");
     cascade->mRuleHash.PrependRule(aRuleInfo);
   }
 

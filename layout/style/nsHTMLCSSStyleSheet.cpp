@@ -93,7 +93,9 @@ public:
 
   NS_IMETHOD RulesMatching(AnonBoxRuleProcessorData* aData);
 
-  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData);
+#ifdef MOZ_XUL
+  NS_IMETHOD RulesMatching(XULTreeRuleProcessorData* aData);
+#endif
 
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
                                     nsReStyleHint* aResult);
@@ -170,11 +172,13 @@ HTMLCSSStyleSheetImpl::RulesMatching(AnonBoxRuleProcessorData* aData)
   return NS_OK;
 }
 
+#ifdef MOZ_XUL
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData)
+HTMLCSSStyleSheetImpl::RulesMatching(XULTreeRuleProcessorData* aData)
 {
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::Init(nsIURI* aURL, nsIDocument* aDocument)
