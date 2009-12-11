@@ -165,8 +165,8 @@ nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext*  aPresContext,
                                       PRBool           aIsMutableChar)
 {
   nsIAtom* pseudoStyle = (aIsMutableChar) ?
-    nsCSSAnonBoxes::mozMathStretchy :
-    nsCSSAnonBoxes::mozMathAnonymous; // savings
+    nsCSSPseudoElements::mozMathStretchy :
+    nsCSSPseudoElements::mozMathAnonymous; // savings
   nsRefPtr<nsStyleContext> newStyleContext;
   newStyleContext = aPresContext->StyleSet()->
     ResolvePseudoStyleFor(aContent, pseudoStyle, aParentStyleContext);
