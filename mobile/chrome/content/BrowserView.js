@@ -533,10 +533,15 @@ BrowserView.prototype = {
 
   /** If browser scrolls, pan content to new scroll area. */
   handlePageScroll: function handlePageScroll(aEvent) {
-    if (aEvent.target != this._browser.contentDocument)
+    if (aEvent.target != this._browser.contentDocument || this._ignorePageScroll)
       return;
     // XXX shouldn't really make calls to Browser
     Browser.scrollContentToBrowser();
+  },
+
+  _ignorePageScroll: false,
+  ignorePageScroll: function ignorePageScroll(aIgnoreScroll) {
+    this._ignorePageScroll = aIgnoreScroll;
   },
 
   handleMozScrolledAreaChanged: function handleMozScrolledAreaChanged(ev) {
