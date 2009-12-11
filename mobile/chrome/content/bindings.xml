@@ -704,8 +704,11 @@
               this._manageUI = val;
               if (this._manageUI) {
                 this.setAttribute("ui", "manage");
-                if (this.getAttribute("autoedit") == "true" && this._children.hasChildNodes())
-                  this._children.firstChild.startEditing();
+                if (this.getAttribute("autoedit") == "true" && this._children.hasChildNodes()) {
+                  let first = this._getFirstVisibleChild();
+                  if (first)
+                    first.startEditing();
+                }
               }
               else {
                 if (this._activeItem && this._activeItem.isEditing)
@@ -717,6 +720,21 @@
           ]]>
         </setter>
       </property>
+
+      <method name="_getFirstVisibleChild">
+        <body>
+          <![CDATA[
+            let children = this._children.childNodes;
+            for (let i = 0; i < children.length; i++) {
+              let rect = children[i].getBoundingClientRect();
+              let position = rect.top - rect.height;
+              if (position > 0)
+                return children[i];
+            }
+            return null;
+          ]]>
+        </body>
+      </method>
 
       <method name="_getChildren">
         <parameter name="aFolder"/>
