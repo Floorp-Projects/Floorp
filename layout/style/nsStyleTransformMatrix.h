@@ -171,11 +171,11 @@ class nsStyleTransformMatrix
    *
    * |       0        0     mX[0]|
    * |       0        0     mX[1]| <-- Scaled by width of element
-   * |       0        0         1|
+   * |       0        0         0|
    *
    * |       0        0     mY[0]|
    * |       0        0     mY[1]| <-- Scaled by height of element
-   * |       0        0         1|
+   * |       0        0         0|
    */
   float mMain[4];
   nscoord mDelta[2];
