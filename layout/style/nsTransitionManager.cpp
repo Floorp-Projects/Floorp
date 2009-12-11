@@ -358,12 +358,20 @@ nsTransitionManager::StyleContextChanged(nsIContent *aElement,
                       aNewStyleContext->HasPseudoElementData(),
                   "pseudo type mismatch");
 
+  // NOTE: Things in this function (and ConsiderStartingTransition)
+  // should never call PeekStyleData because we don't preserve gotten
+  // structs across reframes.
+
   // Return sooner (before the startedAny check below) for the most
   // common case: no transitions specified.
   const nsStyleDisplay *disp = aNewStyleContext->GetStyleDisplay();
+  const nsStyleDisplay *oldDisp = aOldStyleContext->GetStyleDisplay();
   if (disp->mTransitionPropertyCount == 1 &&
+      oldDisp->mTransitionPropertyCount == 1 &&
       disp->mTransitions[0].GetDelay() == 0.0f &&
-      disp->mTransitions[0].GetDuration() == 0.0f) {
+      disp->mTransitions[0].GetDuration() == 0.0f &&
+      oldDisp->mTransitions[0].GetProperty() ==
+        disp->mTransitions[0].GetProperty()) {
     return nsnull;
   }      
 
@@ -392,16 +400,17 @@ nsTransitionManager::StyleContextChanged(nsIContent *aElement,
   // ones (tracked using |whichStarted|).
   PRBool startedAny = PR_FALSE;
   nsCSSPropertySet whichStarted;
-  ElementTransitions *et = nsnull;
+  ElementTransitions *et =
+    GetElementTransitions(aElement, pseudoType, PR_FALSE);
   for (PRUint32 i = disp->mTransitionPropertyCount; i-- != 0; ) {
     const nsTransition& t = disp->mTransitions[i];
     // Check delay and duration first, since they default to zero, and
     // when they're both zero, we can ignore the transition.
     if (t.GetDelay() != 0.0f || t.GetDuration() != 0.0f) {
-      et = GetElementTransitions(aElement, pseudoType, PR_FALSE);
-
       // We might have something to transition.  See if any of the
       // properties in question changed and are animatable.
+      // FIXME: Would be good to find a way to share code between this
+      // interpretation of transition-property and the one below.
       nsCSSProperty property = t.GetProperty();
       if (property == eCSSPropertyExtra_no_properties ||
           property == eCSSProperty_UNKNOWN) {
@@ -425,6 +434,51 @@ nsTransitionManager::StyleContextChanged(nsIContent *aElement,
                                    aOldStyleContext, aNewStyleContext,
                                    &startedAny, &whichStarted);
       }
+    }
+  }
+
+  // Stop any transitions for properties that are no longer in
+  // 'transition-property'.
+  if (et && disp->mTransitions[0].GetProperty() !=
+            eCSSPropertyExtra_all_properties) {
+    nsCSSPropertySet allTransitionProperties;
+    for (PRUint32 i = disp->mTransitionPropertyCount; i-- != 0; ) {
+      const nsTransition& t = disp->mTransitions[i];
+      // FIXME: Would be good to find a way to share code between this
+      // interpretation of transition-property and the one above.
+      nsCSSProperty property = t.GetProperty();
+      if (property == eCSSPropertyExtra_no_properties ||
+          property == eCSSProperty_UNKNOWN) {
+        // Nothing to do, but need to exclude this from cases below.
+      } else if (property == eCSSPropertyExtra_all_properties) {
+        for (nsCSSProperty p = nsCSSProperty(0); 
+             p < eCSSProperty_COUNT_no_shorthands;
+             p = nsCSSProperty(p + 1)) {
+          allTransitionProperties.AddProperty(p);
+        }
+      } else if (nsCSSProps::IsShorthand(property)) {
+        CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, property) {
+          allTransitionProperties.AddProperty(*subprop);
+        }
+      } else {
+        allTransitionProperties.AddProperty(property);
+      }
+    }
+
+    nsTArray<ElementPropertyTransition> &pts = et->mPropertyTransitions;
+    PRUint32 i = pts.Length();
+    NS_ABORT_IF_FALSE(i != 0, "empty transitions list?");
+    do {
+      --i;
+      ElementPropertyTransition &pt = pts[i];
+      if (!allTransitionProperties.HasProperty(pt.mProperty)) {
+        pts.RemoveElementAt(i);
+      }
+    } while (i != 0);
+
+    if (pts.IsEmpty()) {
+      et->Destroy();
+      et = nsnull;
     }
   }
 
@@ -542,7 +596,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
         // |aElementTransitions| is now a dangling pointer!
         aElementTransitions = nsnull;
       }
-      presContext->PresShell()->RestyleForAnimation(aElement);
+      // WalkTransitionRule already called RestyleForAnimation.
     }
     return;
   }
@@ -564,9 +618,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
       // If we got a style change that changed the value to the endpoint
       // of the currently running transition, we don't want to interrupt
       // its timing function.
-      // But don't forget to restyle with animation so we show the
-      // current transition.
-      presContext->PresShell()->RestyleForAnimation(aElement);
+      // WalkTransitionRule already called RestyleForAnimation.
       return;
     }
 
@@ -712,21 +764,27 @@ nsresult
 nsTransitionManager::WalkTransitionRule(RuleProcessorData* aData,
                                         nsCSSPseudoElements::Type aPseudoType)
 {
-  if (!aData->mPresContext->IsProcessingAnimationStyleChange()) {
-    // If we're processing a normal style change rather than one from
-    // animation, don't add the transition rule.  This allows us to
-    // compute the new style value rather than having the transition
-    // override it, so that we can start transitioning differently.
-
-    // In most cases, we need to immediately restyle with animation
-    // after doing this.  However, ConsiderStartingTransition takes care
-    // of that for us.
+  if (!aData->mContent) {
     return NS_OK;
   }
 
   ElementTransitions *et =
     GetElementTransitions(aData->mContent, aPseudoType, PR_FALSE);
   if (!et) {
+    return NS_OK;
+  }
+
+  if (!aData->mPresContext->IsProcessingAnimationStyleChange()) {
+    // If we're processing a normal style change rather than one from
+    // animation, don't add the transition rule.  This allows us to
+    // compute the new style value rather than having the transition
+    // override it, so that we can start transitioning differently.
+
+    // We need to immediately restyle with animation
+    // after doing this.
+    if (et) {
+      mPresContext->PresShell()->RestyleForAnimation(aData->mContent);
+    }
     return NS_OK;
   }
 
