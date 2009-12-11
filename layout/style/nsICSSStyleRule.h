@@ -278,10 +278,10 @@ private:
   nsCSSSelectorList& operator=(const nsCSSSelectorList& aCopy); 
 };
 
-// IID for the nsICSSStyleRule interface {3ffbd89e-3c83-4e9b-9b1f-424c6cebac1b}
-#define NS_ICSS_STYLE_RULE_IID     \
-{ 0x3ffbd89e, 0x3c83, 0x4e9b, \
- { 0x9b, 0x1f, 0x42, 0x4c, 0x6c, 0xeb, 0xac, 0x1b } }
+// e665007e-5d4a-433a-9056-4310701c08b9
+#define NS_ICSS_STYLE_RULE_IID \
+{ 0xe665007e, 0x5d4a, 0x433a, \
+  { 0x90, 0x56, 0x43, 0x10, 0x70, 0x1c, 0x08, 0xb9 } }
 
 class nsICSSStyleRule : public nsICSSRule {
 public:
@@ -306,6 +306,12 @@ public:
    */
   virtual already_AddRefed<nsICSSStyleRule>
     DeclarationChanged(PRBool aHandleContainer) = 0;
+
+  /**
+   * The rule processor must call this method before calling
+   * nsRuleWalker::Forward on this rule during rule matching.
+   */
+  virtual void RuleMatched() = 0;
 
   // hooks for DOM rule
   virtual nsresult GetCssText(nsAString& aCssText) = 0;

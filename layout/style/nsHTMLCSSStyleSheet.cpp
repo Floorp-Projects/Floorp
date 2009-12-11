@@ -148,13 +148,17 @@ HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData)
 
   // just get the one and only style rule from the content's STYLE attribute
   nsICSSStyleRule* rule = content->GetInlineStyleRule();
-  if (rule)
+  if (rule) {
+    rule->RuleMatched();
     aData->mRuleWalker->Forward(rule);
+  }
 
 #ifdef MOZ_SMIL
   rule = content->GetSMILOverrideStyleRule();
-  if (rule)
+  if (rule) {
+    rule->RuleMatched();
     aData->mRuleWalker->Forward(rule);
+  }
 #endif // MOZ_SMIL
 
   return NS_OK;
