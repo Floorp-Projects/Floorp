@@ -107,6 +107,7 @@ static NSArray* sSpinCursorFrames = nil;
 
   switch(aCursor)
   {
+    SEL cursorSelector;
     case eCursor_standard:
       return [nsMacCursor cursorWithCursor: [NSCursor arrowCursor]];
     case eCursor_wait:
@@ -123,12 +124,20 @@ static NSArray* sSpinCursorFrames = nil;
     case eCursor_help:
       return [nsMacCursor cursorWithImageNamed: @"help" hotSpot: NSMakePoint(1,1)];
     case eCursor_copy:
-      return [nsMacCursor cursorWithCursor: [NSCursor arrowCursor]]; //XXX needs real implementation
+      cursorSelector = @selector(dragCopyCursor);
+      return [nsMacCursor cursorWithCursor: [NSCursor respondsToSelector: cursorSelector] ?
+              [NSCursor performSelector: cursorSelector] :
+              [NSCursor arrowCursor]];
     case eCursor_alias:
-      return [nsMacCursor cursorWithCursor: [NSCursor arrowCursor]]; //XXX needs real implementation
+      cursorSelector = @selector(dragLinkCursor);
+      return [nsMacCursor cursorWithCursor: [NSCursor respondsToSelector: cursorSelector] ?
+              [NSCursor performSelector: cursorSelector] :
+              [NSCursor arrowCursor]];
     case eCursor_context_menu:
-      return [nsMacCursor cursorWithCursor: [NSCursor arrowCursor]]; //XXX needs real implementation
-
+      cursorSelector = @selector(contextualMenuCursor);
+      return [nsMacCursor cursorWithCursor: [NSCursor respondsToSelector: cursorSelector] ?
+              [NSCursor performSelector: cursorSelector] :
+              [NSCursor arrowCursor]];
     case eCursor_cell:
       return [nsMacCursor cursorWithCursor: [NSCursor crosshairCursor]];
     case eCursor_grab:
@@ -145,8 +154,10 @@ static NSArray* sSpinCursorFrames = nil;
       return [nsMacCursor cursorWithCursor: [NSCursor openHandCursor]];;
     case eCursor_not_allowed:
     case eCursor_no_drop:
-      return [nsMacCursor cursorWithCursor: [NSCursor arrowCursor]]; //XXX needs real implementation
-
+      cursorSelector = @selector(operationNotAllowedCursor);
+      return [nsMacCursor cursorWithCursor: [NSCursor respondsToSelector: cursorSelector] ?
+              [NSCursor performSelector: cursorSelector] :
+              [NSCursor arrowCursor]];
     // Resize Cursors:
     //North
     case eCursor_n_resize:
