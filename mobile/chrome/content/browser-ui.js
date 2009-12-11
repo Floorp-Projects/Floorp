@@ -1244,6 +1244,8 @@ var FormHelper = {
   open: function formHelperOpen(aElement) {
     this._open = true;
     window.addEventListener("keypress", this, true);
+    let bv = Browser._browserView;
+    bv.ignorePageScroll(true);
 
     this._container.hidden = false;
     this._helperSpacer.hidden = false;
@@ -1264,6 +1266,8 @@ var FormHelper = {
     bv.onBeforeVisibleMove(0, 0);
     Browser.contentScrollboxScroller.scrollBy(0, 0);
     bv.onAfterVisibleMove();
+    
+    bv.ignorePageScroll(false);
 
     window.removeEventListener("keypress", this, true);
     this._container.hidden = true;
