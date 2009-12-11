@@ -124,19 +124,19 @@ public:
                       PRBool aCheckEdgeOnly);
 
   nsPresContext*    mPresContext;
-  nsIContent*       mContent;       // weak ref
-  nsIContent*       mParentContent; // if content, content->GetParent(); weak ref
+  nsIContent*       mContent;       // weak ref, must not be null
+  nsIContent*       mParentContent; // mContent->GetParent(); weak ref
   nsRuleWalker*     mRuleWalker; // Used to add rules to our results.
   nsIContent*       mScopedRoot;    // Root of scoped stylesheet (set and unset by the supplier of the scoped stylesheet
   
-  nsIAtom*          mContentTag;    // if content, then content->GetTag()
-  nsIAtom*          mContentID;     // if styled content, then weak reference to styledcontent->GetID()
-  PRPackedBool      mIsHTMLContent; // if content, then whether it's IsHTML()
-  PRPackedBool      mIsHTML;        // if content then mIsHTMLContent && IsInHTMLDocument()
-  PRPackedBool      mHasAttributes; // if content, content->GetAttrCount() > 0
+  nsIAtom*          mContentTag;    // mContent->GetTag()
+  nsIAtom*          mContentID;     // mContent->GetID()
+  PRPackedBool      mIsHTMLContent; // whether mContent it's IsHTML()
+  PRPackedBool      mIsHTML;        // mIsHTMLContent && IsInHTMLDocument()
+  PRPackedBool      mHasAttributes; // mContent->GetAttrCount() > 0
   nsCompatibility   mCompatMode;    // Possibly remove use of this in SelectorMatches?
-  PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
-  const nsAttrValue* mClasses;      // if styled content, styledcontent->GetClasses()
+  PRInt32           mNameSpaceID;   // mContent->GetNameSapce()
+  const nsAttrValue* mClasses;      // mContent->GetClasses()
   // mPreviousSiblingData and mParentData are always RuleProcessorData
   // and never a derived class.  They are allocated lazily, when
   // selectors require matching of prior siblings or ancestors.
@@ -154,10 +154,11 @@ private:
   // subscript is 0 for nth- and 1 for nth-last-.
   PRInt32 mNthIndices[2][2];
 
-  PRInt32 mContentState;  // if content, eventStateMgr->GetContentState()
+  // mContentState, mLinkState, mIsLink are initialized lazily.
+  PRInt32 mContentState;  // eventStateMgr->GetContentState() or
+                          // mContent->IntrinsicState() if we have no ESM
   nsLinkState mLinkState; // if a link, this is the state, otherwise unknown
-  PRPackedBool mIsLink;   // if content, calls nsStyleUtil::IsHTMLLink
-                          // or nsStyleUtil::IsLink
+  PRPackedBool mIsLink;   // nsStyleUtil::IsHTMLLink or nsStyleUtil::IsLink
   PRPackedBool mGotContentState;
   PRPackedBool mGotLinkInfo; // Whether we've gotten the right values
                              // for mLinkState and mIsLink.
@@ -170,7 +171,6 @@ struct ElementRuleProcessorData : public RuleProcessorData {
   : RuleProcessorData(aPresContext,aContent,aRuleWalker)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
-    NS_PRECONDITION(aContent, "null pointer");
     NS_PRECONDITION(aRuleWalker, "null pointer");
   }
 };
@@ -238,7 +238,6 @@ struct StateRuleProcessorData : public RuleProcessorData {
       mStateMask(aStateMask)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
-    NS_PRECONDITION(aContent, "null pointer");
   }
   const PRInt32 mStateMask; // |HasStateDependentStyle| for which state(s)?
                             //  Constants defined in nsIEventStateManager.h .
@@ -256,7 +255,6 @@ struct AttributeRuleProcessorData : public RuleProcessorData {
       mAttrHasChanged(aAttrHasChanged)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
-    NS_PRECONDITION(aContent, "null pointer");
   }
   nsIAtom* mAttribute; // |HasAttributeDependentStyle| for which attribute?
   PRInt32 mModType;    // The type of modification (see nsIDOMMutationEvent).
