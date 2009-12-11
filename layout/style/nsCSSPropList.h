@@ -2612,8 +2612,8 @@ CSS_PROP_XUL(
     mBoxFlex,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    offsetof(nsStyleXUL, mBoxFlex),
+    eStyleAnimType_float) // XXX bug 3935
 CSS_PROP_XUL(
     -moz-box-orient,
     box_orient,
