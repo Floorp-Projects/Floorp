@@ -150,27 +150,9 @@ class nsStyleSet
   ResolveXULTreePseudoStyle(nsIContent* aParentContent,
                             nsIAtom* aPseudoTag,
                             nsStyleContext* aParentContext,
-                            nsICSSPseudoComparator* aComparator) {
-    NS_PRECONDITION(nsCSSAnonBoxes::IsTreePseudoElement(aPseudoTag),
-                    "Unexpected pseudo");
-    return ResolvePseudoStyleFor(aParentContent, aPseudoTag,
-                                 nsCSSPseudoElements::ePseudo_XULTree,
-                                 aParentContext, aComparator);
-  }
+                            nsICSSPseudoComparator* aComparator);
 #endif
 
-private:
-  // get a style context for a pseudo-element (i.e.,
-  // |aPseudoTag == nsCOMPtr<nsIAtom>(do_GetAtom(":first-line"))|, in
-  // which case aParentContent must be non-null, or an anonymous box, in
-  // which case it may be null or non-null.
-  already_AddRefed<nsStyleContext>
-  ResolvePseudoStyleFor(nsIContent* aParentContent,
-                        nsIAtom* aPseudoTag,
-                        nsCSSPseudoElements::Type aPseudoType,
-                        nsStyleContext* aParentContext,
-                        nsICSSPseudoComparator* aComparator = nsnull);
-public:
   // Append all the currently-active font face rules to aArray.  Return
   // true for success and false for failure.
   PRBool AppendFontFaceRules(nsPresContext* aPresContext,
