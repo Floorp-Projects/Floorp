@@ -557,6 +557,11 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
         it->DoSetChecked(checked, PR_FALSE);
       }
       break;
+    case NS_FORM_INPUT_IMAGE:
+      if (it->GetOwnerDoc()->IsStaticDocument()) {
+        CreateStaticImageClone(it);
+      }
+      break;
     default:
       break;
   }

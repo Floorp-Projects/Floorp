@@ -2269,12 +2269,12 @@ nsComputedDOMStyle::GetListStyleImage(nsIDOMCSSValue** aValue)
 
   const nsStyleList* list = GetStyleList();
 
-  if (!list->mListStyleImage) {
+  if (!list->GetListStyleImage()) {
     val->SetIdent(eCSSKeyword_none);
   } else {
     nsCOMPtr<nsIURI> uri;
-    if (list->mListStyleImage) {
-      list->mListStyleImage->GetURI(getter_AddRefs(uri));
+    if (list->GetListStyleImage()) {
+      list->GetListStyleImage()->GetURI(getter_AddRefs(uri));
     }
     val->SetURI(uri);
   }

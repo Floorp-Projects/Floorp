@@ -59,6 +59,8 @@
 #include "nsString.h"
 #include "nsTObserverArray.h"
 #include "nsWeakReference.h"
+#include "ImageErrors.h"
+#include "imgIRequest.h"
 
 class imgCacheValidator;
 
@@ -118,7 +120,14 @@ public:
   nsresult LockImage();
   nsresult UnlockImage();
   nsresult RequestDecode();
-
+  static nsresult GetResultFromImageStatus(PRUint32 aStatus)
+  {
+    if (aStatus & imgIRequest::STATUS_ERROR)
+      return NS_IMAGELIB_ERROR_FAILURE;
+    if (aStatus & imgIRequest::STATUS_LOAD_COMPLETE)
+      return NS_IMAGELIB_SUCCESS_LOAD_FINISHED;
+    return NS_OK;
+  }
 private:
   friend class imgCacheEntry;
   friend class imgRequestProxy;
@@ -131,7 +140,7 @@ private:
     mLoadTime = PR_Now();
   }
   inline PRUint32 GetImageStatus() const { return mImageStatus; }
-  inline nsresult GetResultFromImageStatus(PRUint32 aStatus) const;
+  inline PRUint32 GetState() const { return mState; }
   void Cancel(nsresult aStatus);
   nsresult GetURI(nsIURI **aURI);
   nsresult GetKeyURI(nsIURI **aURI);

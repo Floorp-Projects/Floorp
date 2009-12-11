@@ -62,7 +62,8 @@ public:
   ~nsPrintObject(); // non-virtual
 
   // Methods
-  nsresult Init(nsIDocShell* aDocShell);
+  nsresult Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
+                PRBool aPrintPreview);
 
   PRBool IsPrintable()  { return !mDontPrint; }
   void   DestroyPresentation();
@@ -76,7 +77,7 @@ public:
   nsCOMPtr<nsIViewManager> mViewManager;
   nsCOMPtr<nsIWidget>      mWindow;
 
-  nsIContent*      mContent;
+  nsCOMPtr<nsIContent>     mContent;
   PrintObjectType  mFrameType;
   
   nsTArray<nsPrintObject*> mKids;
@@ -86,7 +87,7 @@ public:
   PRPackedBool     mPrintAsIs;
   PRPackedBool     mSharedPresShell;
   PRPackedBool     mInvisible;        // Indicates PO is set to not visible by CSS
-
+  PRPackedBool     mPrintPreview;
   float            mShrinkRatio;
   float            mZoomRatio;
 

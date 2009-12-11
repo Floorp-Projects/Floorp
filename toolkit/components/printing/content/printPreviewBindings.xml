@@ -161,7 +161,7 @@
      
       <constructor>
       <![CDATA[
-        var print = PrintUtils.getWebBrowserPrint();
+        var print = PrintUtils.getPrintPreview();
         this.mTotalPages.value = print.printPreviewNumPages;
         this.mPageTextBox.max = print.printPreviewNumPages;
 
@@ -236,7 +236,7 @@
         <parameter name="aHomeOrEnd"/>
         <body>
         <![CDATA[          
-          var print = PrintUtils.getWebBrowserPrint();
+          var print = PrintUtils.getPrintPreview();
 
           // we use only one of aHomeOrEnd, aDirection, or aPageNum
           if (aHomeOrEnd)
@@ -367,7 +367,7 @@
       <method name="updateToolbar">
         <body>
         <![CDATA[
-          var print = PrintUtils.getWebBrowserPrint();
+          var print = PrintUtils.getPrintPreview();
           var settings = PrintUtils.getPrintSettings();
 
           var isPortrait = settings.orientation == Components.interfaces.nsIPrintSettings.kPortraitOrientation;

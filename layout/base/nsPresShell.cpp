@@ -1223,9 +1223,6 @@ protected:
 
   static PRBool sDisableNonTestMouseEvents;
 
-
-  nsCOMPtr<nsIDocumentObserver> mDocumentObserverForNonDynamicContext;
-
   // false if a check should be done for key/ime events that should be
   // retargeted to the currently focused presshell
   static PRBool sDontRetargetEvents;
@@ -1339,122 +1336,6 @@ public:
 
   nsRefPtr<PresShell> mPresShell;
 };
-
-class nsDocumentObserverForNonDynamicPresContext : public nsStubDocumentObserver
-{
-public:
-  nsDocumentObserverForNonDynamicPresContext(PresShell* aBaseObserver)
-  : mBaseObserver(aBaseObserver)
-  {
-    NS_ASSERTION(aBaseObserver, "Null document observer!");
-  }
-
-  NS_DECL_ISUPPORTS
-
-  virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
-  {
-    mBaseObserver->BeginUpdate(aDocument, aUpdateType);
-  }
-  virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
-  {
-    mBaseObserver->EndUpdate(aDocument, aUpdateType);
-  }
-  virtual void BeginLoad(nsIDocument* aDocument)
-  {
-    mBaseObserver->BeginLoad(aDocument);
-  }
-  virtual void EndLoad(nsIDocument* aDocument)
-  {
-    mBaseObserver->EndLoad(aDocument);
-  }
-  virtual void ContentStatesChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent1,
-                                    nsIContent* aContent2,
-                                    PRInt32 aStateMask)
-  {
-    if ((!aContent1 || AllowMutation(aContent1)) &&
-        (!aContent2 || AllowMutation(aContent2))) {
-      mBaseObserver->ContentStatesChanged(aDocument, aContent1, aContent2,
-                                          aStateMask);
-    }
-  }
-
-  // nsIMutationObserver
-  virtual void CharacterDataChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent,
-                                    CharacterDataChangeInfo* aInfo)
-  {
-    if (AllowMutation(aContent)) {
-      mBaseObserver->CharacterDataChanged(aDocument, aContent, aInfo);
-    }
-  }
-  virtual void AttributeChanged(nsIDocument* aDocument,
-                                nsIContent* aContent,
-                                PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute,
-                                PRInt32 aModType)
-  {
-    if (AllowMutation(aContent)) {
-      mBaseObserver->AttributeChanged(aDocument, aContent, aNameSpaceID,
-                                      aAttribute, aModType);
-    }
-  }
-  virtual void ContentAppended(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               PRInt32 aNewIndexInContainer)
-  {
-    if (AllowMutation(aContainer)) {
-      mBaseObserver->ContentAppended(aDocument, aContainer,
-                                     aNewIndexInContainer);
-    }
-  }
-  virtual void ContentInserted(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer)
-  {
-    if (AllowMutation(aContainer)) {
-      mBaseObserver->ContentInserted(aDocument, aContainer, aChild,
-                                     aIndexInContainer);
-    }
-  }
-  virtual void ContentRemoved(nsIDocument* aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer)
-  {
-    if (AllowMutation(aContainer)) {
-      mBaseObserver->ContentRemoved(aDocument, aContainer, aChild, 
-                                    aIndexInContainer);
-    }
-  }
-
-  PRBool AllowMutation(nsIContent* aContent) {
-    if(aContent && aContent->IsInDoc()) {
-       if (mBaseObserver->ObservesNativeAnonMutationsForPrint() &&
-           aContent->IsInNativeAnonymousSubtree()) {
-         return PR_TRUE;
-       }
-       // Changes to scrollbar are always ok.
-       nsIContent* root = aContent->GetCurrentDoc()->GetRootContent();
-       while (aContent && aContent->IsInNativeAnonymousSubtree()) {
-         nsIContent* parent = aContent->GetParent();
-         if (parent == root && aContent->IsXUL()) {
-           nsIAtom* tag = aContent->Tag();
-           return tag == nsGkAtoms::scrollbar || tag == nsGkAtoms::scrollcorner;
-         }
-         aContent = parent;
-       }
-    }
-    return PR_FALSE;
-  }
-protected:
-  nsRefPtr<PresShell> mBaseObserver;
-};
-
-NS_IMPL_ISUPPORTS2(nsDocumentObserverForNonDynamicPresContext,
-                   nsIDocumentObserver,
-                   nsIMutationObserver)
 
 PRBool PresShell::sDisableNonTestMouseEvents = PR_FALSE;
 PRBool PresShell::sDontRetargetEvents = PR_FALSE;
@@ -2532,14 +2413,7 @@ NS_IMETHODIMP
 PresShell::BeginObservingDocument()
 {
   if (mDocument && !mIsDestroying) {
-    if (mPresContext->IsDynamic()) {
-      mDocument->AddObserver(this);
-    } else {
-      mDocumentObserverForNonDynamicContext =
-        new nsDocumentObserverForNonDynamicPresContext(this);
-      NS_ENSURE_TRUE(mDocumentObserverForNonDynamicContext, NS_ERROR_OUT_OF_MEMORY);
-      mDocument->AddObserver(mDocumentObserverForNonDynamicContext);
-    }
+    mDocument->AddObserver(this);
     if (mIsDocumentGone) {
       NS_WARNING("Adding a presshell that was disconnected from the document "
                  "as a document observer?  Sounds wrong...");
@@ -2557,10 +2431,7 @@ PresShell::EndObservingDocument()
   // is gone, perhaps?  Except for printing it's NOT gone, sometimes.
   mIsDocumentGone = PR_TRUE;
   if (mDocument) {
-    mDocument->RemoveObserver(mDocumentObserverForNonDynamicContext ?
-                              mDocumentObserverForNonDynamicContext.get() :
-                              this);
-    mDocumentObserverForNonDynamicContext = nsnull;
+    mDocument->RemoveObserver(this);
   }
   return NS_OK;
 }
@@ -3621,10 +3492,6 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
   if (!mDidInitialReflow) {
     // Nothing to do here.  In fact, if we proceed and aContent is the
     // root we will crash.
-    return NS_OK;
-  }
-
-  if (!mPresContext->IsDynamic()) {
     return NS_OK;
   }
 
@@ -5159,9 +5026,6 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 nsresult
 PresShell::ReconstructFrames(void)
 {
-  if (!mPresContext || !mPresContext->IsDynamic()) {
-    return NS_OK;
-  }
   nsAutoCauseReflowNotifier crNotifier(this);
   mFrameConstructor->BeginUpdate();
   nsresult rv = mFrameConstructor->ReconstructDocElementHierarchy();

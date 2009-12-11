@@ -2504,6 +2504,16 @@ nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent,
   return imgContainer.forget();
 }
 
+//static
+already_AddRefed<imgIRequest>
+nsContentUtils::GetStaticRequest(imgIRequest* aRequest)
+{
+  NS_ENSURE_TRUE(aRequest, nsnull);
+  nsCOMPtr<imgIRequest> retval;
+  aRequest->GetStaticRequest(getter_AddRefs(retval));
+  return retval.forget();
+}
+
 // static
 PRBool
 nsContentUtils::ContentIsDraggable(nsIContent* aContent)

@@ -67,7 +67,6 @@ class nsClientRectList;
 #include "nsCSSPseudoElements.h"
 
 class nsBlockFrame;
-class nsTextFragment;
 
 /**
  * nsLayoutUtils is a namespace class used for various helper
@@ -1062,12 +1061,6 @@ public:
    * disabled.
    */
   static PRBool sDisableGetUsedXAssertions;
-
-  /**
-   * Returns the text fragment, which aFrame should use for printing.
-   * @param aFrame The nsIFrame object, which uses text fragment data.
-   */
-  static nsTextFragment* GetTextFragmentForPrinting(const nsIFrame* aFrame);
 
   /**
    * Return true if aFrame is in an {ib} split and is NOT one of the

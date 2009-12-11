@@ -671,6 +671,11 @@ public:
   static already_AddRefed<imgIContainer> GetImageFromContent(nsIImageLoadingContent* aContent, imgIRequest **aRequest = nsnull);
 
   /**
+   * Helper method to call imgIRequest::GetStaticRequest.
+   */
+  static already_AddRefed<imgIRequest> GetStaticRequest(imgIRequest* aRequest);
+
+  /**
    * Method that decides whether a content node is draggable
    *
    * @param aContent The content node to test.
