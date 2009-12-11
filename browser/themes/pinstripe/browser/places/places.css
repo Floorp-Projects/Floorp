@@ -45,12 +45,12 @@
   border-top: @sidebarItemFocusedBorderTop@;
 }
 
-.sidebar-placesTreechildren::-moz-tree-row(selected):-moz-system-metric(mac-graphite-theme) {
+.sidebar-placesTreechildren:-moz-system-metric(mac-graphite-theme)::-moz-tree-row(selected) {
   background: @sidebarItemGraphiteBackground@;
   border-top: @sidebarItemGraphiteBorderTop@;
 }
 
-.sidebar-placesTreechildren::-moz-tree-row(selected,focus):-moz-system-metric(mac-graphite-theme) {
+.sidebar-placesTreechildren:-moz-system-metric(mac-graphite-theme)::-moz-tree-row(selected,focus) {
   background: @sidebarItemGraphiteFocusedBackground@;
   border-top: @sidebarItemGraphiteFocusedBorderTop@;
 }
