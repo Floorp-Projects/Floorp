@@ -1544,7 +1544,7 @@ nsStyleAnimation::Value::FreeValue()
     delete mValue.mCSSValueList;
   } else if (IsCSSValuePairUnit(mUnit)) {
     delete mValue.mCSSValuePair;
-  } else if (mUnit == eUnit_UnparsedString) {
+  } else if (IsStringUnit(mUnit)) {
     NS_ABORT_IF_FALSE(mValue.mString, "expecting non-null string");
     mValue.mString->Release();
   }
