@@ -563,13 +563,7 @@ nsHTMLStyleSheet::MediumFeaturesChanged(nsPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsHTMLStyleSheet::RulesMatching(PseudoElementRuleProcessorData* aData)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLStyleSheet::RulesMatching(AnonBoxRuleProcessorData* aData)
+nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData)
 {
   nsIAtom* pseudoTag = aData->mPseudoTag;
   if (pseudoTag == nsCSSAnonBoxes::tableCol) {
@@ -581,13 +575,6 @@ nsHTMLStyleSheet::RulesMatching(AnonBoxRuleProcessorData* aData)
   return NS_OK;
 }
 
-#ifdef MOZ_XUL
-NS_IMETHODIMP
-nsHTMLStyleSheet::RulesMatching(XULTreeRuleProcessorData* aData)
-{
-  return NS_OK;
-}
-#endif
 
   // nsIStyleSheet api
 NS_IMETHODIMP

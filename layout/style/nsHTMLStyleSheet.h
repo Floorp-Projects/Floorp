@@ -79,11 +79,7 @@ public:
 
   // nsIStyleRuleProcessor API
   NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData);
-  NS_IMETHOD RulesMatching(PseudoElementRuleProcessorData* aData);
-  NS_IMETHOD RulesMatching(AnonBoxRuleProcessorData* aData);
-#ifdef MOZ_XUL
-  NS_IMETHOD RulesMatching(XULTreeRuleProcessorData* aData);
-#endif
+  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData);
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
                                     nsReStyleHint* aResult);
   virtual nsReStyleHint

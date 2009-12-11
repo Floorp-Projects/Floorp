@@ -64,7 +64,6 @@ class nsClientRectList;
 #include "nsIPrincipal.h"
 #include "gfxPattern.h"
 #include "imgIContainer.h"
-#include "nsCSSPseudoElements.h"
 
 class nsBlockFrame;
 class nsTextFragment;
@@ -328,21 +327,22 @@ public:
    *
    * @param aContent the content node we're looking at
    * @param aStyleContext aContent's style context
-   * @param aPseudoElement the id of the pseudo style we care about
+   * @param aPseudoElement the name of the pseudo style we care about
    * @param aPresContext the presentation context
    * @return whether aContent has aPseudoElement style attached to it
    */
   static PRBool HasPseudoStyle(nsIContent* aContent,
                                nsStyleContext* aStyleContext,
-                               nsCSSPseudoElements::Type aPseudoElement,
+                               nsIAtom* aPseudoElement,
                                nsPresContext* aPresContext)
   {
     NS_PRECONDITION(aPresContext, "Must have a prescontext");
+    NS_PRECONDITION(aPseudoElement, "Must have a pseudo name");
 
     nsRefPtr<nsStyleContext> pseudoContext;
     if (aContent) {
       pseudoContext = aPresContext->StyleSet()->
-        ProbePseudoElementStyle(aContent, aPseudoElement, aStyleContext);
+        ProbePseudoStyleFor(aContent, aPseudoElement, aStyleContext);
     }
     return pseudoContext != nsnull;
   }

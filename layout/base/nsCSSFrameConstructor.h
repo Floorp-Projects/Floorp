@@ -52,7 +52,6 @@
 #include "nsHashKeys.h"
 #include "nsThreadUtils.h"
 #include "nsPageContentFrame.h"
-#include "nsCSSPseudoElements.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -437,11 +436,11 @@ private:
                                                       PRUint32        aContentIndex);
 
   // aFrame may be null; this method doesn't use it directly in any case.
-  void CreateGeneratedContentItem(nsFrameConstructorState&   aState,
-                                  nsIFrame*                  aFrame,
-                                  nsIContent*                aContent,
-                                  nsStyleContext*            aStyleContext,
-                                  nsCSSPseudoElements::Type  aPseudoElement,
+  void CreateGeneratedContentItem(nsFrameConstructorState& aState,
+                                  nsIFrame*                aFrame,
+                                  nsIContent*              aContent,
+                                  nsStyleContext*          aStyleContext,
+                                  nsIAtom*                 aPseudoElement,
                                   FrameConstructionItemList& aItems);
 
   // This method can change aFrameList: it can chop off the beginning and put

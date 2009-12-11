@@ -949,7 +949,6 @@ TryStartingTransition(nsPresContext *aPresContext, nsIContent *aContent,
     *aNewStyleContext = aPresContext->StyleSet()->ResolveStyleForRules(
                      (*aNewStyleContext)->GetParent(),
                      (*aNewStyleContext)->GetPseudo(),
-                     (*aNewStyleContext)->GetPseudoType(),
                      (*aNewStyleContext)->GetRuleNode(),
                      rules);
   }
@@ -1234,7 +1233,6 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
   if (oldContext) {
     oldContext->AddRef();
     nsIAtom* const pseudoTag = oldContext->GetPseudo();
-    const nsCSSPseudoElements::Type pseudoType = oldContext->GetPseudoType();
     nsIContent* localContent = aFrame->GetContent();
     // |content| is the node that we used for rule matching of
     // normal elements (not pseudo-elements) and for which we generate
@@ -1336,9 +1334,9 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       if (pseudoTag == nsCSSPseudoElements::before ||
           pseudoTag == nsCSSPseudoElements::after) {
         // XXX what other pseudos do we need to treat like this?
-        newContext = styleSet->ProbePseudoElementStyle(pseudoContent,
-                                                       pseudoType,
-                                                       parentContext);
+        newContext = styleSet->ProbePseudoStyleFor(pseudoContent,
+                                                   pseudoTag,
+                                                   parentContext);
         if (!newContext) {
           // This pseudo should no longer exist; gotta reframe
           NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
@@ -1347,24 +1345,18 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
           // We're reframing anyway; just keep the same context
           newContext = oldContext;
         }
-      } else if (pseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
-        newContext = styleSet->ResolveAnonymousBoxStyle(pseudoTag,
-                                                        parentContext);
       } else {
-        // Don't expect XUL tree stuff here, since it needs a comparator and
-        // all.
-        NS_ASSERTION(pseudoType <
-                       nsCSSPseudoElements::ePseudo_PseudoElementCount,
-                     "Unexpected pseudo type");
         if (pseudoTag == nsCSSPseudoElements::firstLetter) {
           NS_ASSERTION(aFrame->GetType() == nsGkAtoms::letterFrame, 
                        "firstLetter pseudoTag without a nsFirstLetterFrame");
           nsBlockFrame* block = nsBlockFrame::GetNearestAncestorBlock(aFrame);
           pseudoContent = block->GetContent();
+        } else if (pseudoTag == nsCSSAnonBoxes::pageBreak) {
+          pseudoContent = nsnull;
         }
-        newContext = styleSet->ResolvePseudoElementStyle(pseudoContent,
-                                                         pseudoType,
-                                                         parentContext);
+        newContext = styleSet->ResolvePseudoStyleFor(pseudoContent,
+                                                     pseudoTag,
+                                                     parentContext);
       }
     }
     else {
@@ -1414,25 +1406,12 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       if (oldExtraContext) {
         nsRefPtr<nsStyleContext> newExtraContext;
         nsIAtom* const extraPseudoTag = oldExtraContext->GetPseudo();
-        const nsCSSPseudoElements::Type extraPseudoType =
-          oldExtraContext->GetPseudoType();
         NS_ASSERTION(extraPseudoTag &&
                      extraPseudoTag != nsCSSAnonBoxes::mozNonElement,
                      "extra style context is not pseudo element");
-        if (extraPseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
-          newExtraContext = styleSet->ResolveAnonymousBoxStyle(extraPseudoTag,
-                                                               newContext);
-        }
-        else {
-          // Don't expect XUL tree stuff here, since it needs a comparator and
-          // all.
-          NS_ASSERTION(extraPseudoType <
-                         nsCSSPseudoElements::ePseudo_PseudoElementCount,
-                       "Unexpected type");
-          newExtraContext = styleSet->ResolvePseudoElementStyle(content,
-                                                                extraPseudoType,
-                                                                newContext);
-        }
+        newExtraContext = styleSet->ResolvePseudoStyleFor(content,
+                                                          extraPseudoTag,
+                                                          newContext);
         if (newExtraContext) {
           if (oldExtraContext != newExtraContext) {
             aMinChange = CaptureChange(oldExtraContext, newExtraContext,
@@ -1510,7 +1489,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
           // :before style context.
           if (!nsLayoutUtils::GetBeforeFrame(aFrame) &&
               nsLayoutUtils::HasPseudoStyle(localContent, newContext,
-                                            nsCSSPseudoElements::ePseudo_before,
+                                            nsCSSPseudoElements::before,
                                             aPresContext)) {
             // Have to create the new :before frame
             NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
@@ -1536,7 +1515,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
           // Getting the :after frame is more expensive than getting the pseudo
           // context, so get the pseudo context first.
           if (nsLayoutUtils::HasPseudoStyle(localContent, newContext,
-                                            nsCSSPseudoElements::ePseudo_after,
+                                            nsCSSPseudoElements::after,
                                             aPresContext) &&
               !nsLayoutUtils::GetAfterFrame(aFrame)) {
             // have to create the new :after frame

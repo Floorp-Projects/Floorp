@@ -5140,8 +5140,6 @@ nsGenericElement::GetLinkTarget(nsAString& aTarget)
 }
 
 // NOTE: The aPresContext pointer is NOT addrefed.
-// *aSelectorList might be null even if NS_OK is returned; this
-// happens when all the selectors were pseudo-element selectors.
 static nsresult
 ParseSelectorList(nsINode* aNode,
                   const nsAString& aSelectorString,
@@ -5157,27 +5155,12 @@ ParseSelectorList(nsINode* aNode,
   nsresult rv = doc->CSSLoader()->GetParserFor(nsnull, getter_AddRefs(parser));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCSSSelectorList* selectorList;
   rv = parser->ParseSelectorString(aSelectorString,
                                    doc->GetDocumentURI(),
                                    0, // XXXbz get the right line number!
-                                   &selectorList);
+                                   aSelectorList);
   doc->CSSLoader()->RecycleParser(parser);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Filter out pseudo-element selectors from selectorList
-  nsCSSSelectorList** slot = &selectorList;
-  do {
-    nsCSSSelectorList* cur = *slot;
-    if (cur->mSelectors->IsPseudoElement()) {
-      *slot = cur->mNext;
-      cur->mNext = nsnull;
-      delete cur;
-    } else {
-      slot = &cur->mNext;
-    }
-  } while (*slot);
-  *aSelectorList = selectorList;
 
   // It's not strictly necessary to have a prescontext here, but it's
   // a bit of an optimization for various stuff.
