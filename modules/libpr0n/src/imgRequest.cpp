@@ -45,7 +45,6 @@
 #include "imgContainer.h"
 
 #include "imgILoader.h"
-#include "ImageErrors.h"
 #include "ImageLogging.h"
 
 #include "netCore.h"
@@ -255,6 +254,8 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
 {
   nsCOMPtr<imgIRequest> kungFuDeathGrip(proxy);
 
+  // Keep these notifications in sync with imgContainerRequest::Clone!
+
   // OnStartRequest
   if (mState & stateRequestStarted)
     proxy->OnStartRequest(nsnull, nsnull);
@@ -303,18 +304,6 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
   }
 
   return NS_OK;
-}
-
-nsresult imgRequest::GetResultFromImageStatus(PRUint32 aStatus) const
-{
-  nsresult rv = NS_OK;
-
-  if (aStatus & imgIRequest::STATUS_ERROR)
-    rv = NS_IMAGELIB_ERROR_FAILURE;
-  else if (aStatus & imgIRequest::STATUS_LOAD_COMPLETE)
-    rv = NS_IMAGELIB_SUCCESS_LOAD_FINISHED;
-
-  return rv;
 }
 
 void imgRequest::Cancel(nsresult aStatus)

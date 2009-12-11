@@ -66,6 +66,7 @@
 #include "nsCSSValue.h"
 #include "nsStyleTransformMatrix.h"
 #include "nsAlgorithm.h"
+#include "imgIRequest.h"
 
 class nsIFrame;
 class imgIRequest;
@@ -915,7 +916,7 @@ protected:
   PRUint8       mBorderStyle[4];  // [reset] See nsStyleConsts.h
   nscolor       mBorderColor[4];  // [reset] the colors to use for a simple border.  not used
                                   // if -moz-border-colors is specified
-
+private:
   nsCOMPtr<imgIRequest> mBorderImage; // [reset]
 
   // Cache used by callers for border-image painting
@@ -1033,9 +1034,17 @@ struct nsStyleList {
 #endif
   static PRBool ForceCompare() { return PR_FALSE; }
   
+  imgIRequest* GetListStyleImage() const { return mListStyleImage; }
+  void SetListStyleImage(imgIRequest* aReq)
+  {
+    mListStyleImage = aReq;
+  }
+
   PRUint8   mListStyleType;             // [inherited] See nsStyleConsts.h
-  PRUint8   mListStylePosition;         // [inherited] 
+  PRUint8   mListStylePosition;         // [inherited]
+private:
   nsCOMPtr<imgIRequest> mListStyleImage; // [inherited]
+public:
   nsRect        mImageRegion;           // [inherited] the rect to use within an image  
 };
 
@@ -1451,6 +1460,12 @@ struct nsStyleContentData {
 
   PRBool operator!=(const nsStyleContentData& aOther) const {
     return !(*this == aOther);
+  }
+
+  void SetImage(imgIRequest* aRequest)
+  {
+    NS_ASSERTION(mType == eStyleContentType_Image, "Wrong type!");
+    NS_IF_ADDREF(mContent.mImage = aRequest);
   }
 private:
   nsStyleContentData(const nsStyleContentData&); // not to be implemented

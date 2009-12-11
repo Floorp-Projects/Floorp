@@ -1322,22 +1322,12 @@ void
 nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect)
 {
-  // if we are printing, we need to get the correct nsIPluginInstance
-  // for THIS content node in order to call ->Print() on the right plugin
-
-  // first, we need to get the document
-  nsIDocument* doc = mContent->GetCurrentDoc();
-  if (!doc)
+  nsCOMPtr<nsIObjectLoadingContent> obj(do_QueryInterface(mContent));
+  if (!obj)
     return;
 
-  // now we need to get the shell for the screen
-  // XXX assuming that the shell at zero will always be the screen one
-  nsIPresShell *shell = doc->GetPrimaryShell();
-  if (!shell)
-    return;
-
-  // then the shell can give us the screen frame for this content node
-  nsIFrame* frame = shell->GetPrimaryFrameFor(mContent);
+  nsIFrame* frame = nsnull;
+  obj->GetPrintFrame(&frame);
   if (!frame)
     return;
 
