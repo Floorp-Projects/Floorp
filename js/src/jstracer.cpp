@@ -5910,7 +5910,10 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
                       "trying to attach another branch to the tree (hits = %d)\n", c->hits());
 
     int32_t& hits = c->hits();
-    if (outer || (hits++ >= HOTEXIT && hits <= HOTEXIT+MAXEXIT)) {
+    int32_t maxHits = HOTEXIT + MAXEXIT;
+    if (anchor->exitType == CASE_EXIT)
+        maxHits *= anchor->switchInfo->count;
+    if (outer || (hits++ >= HOTEXIT && hits <= maxHits)) {
         /* start tracing secondary trace from this point */
         unsigned stackSlots;
         unsigned ngslots;
