@@ -1073,7 +1073,7 @@ nsXULTreeItemAccessibleBase::GetStateInternal(PRUint32 *aState,
 nsIAccessible*
 nsXULTreeItemAccessibleBase::GetParent()
 {
-  return IsDefunct() ? nsnull : mParent;
+  return IsDefunct() ? nsnull : mParent.get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1225,7 +1225,7 @@ nsXULTreeGridCellAccessible::GetStateInternal(PRUint32 *aStates,
 nsIAccessible*
 nsXULTreeGridCellAccessible::GetParent()
 {
-  return IsDefunct() ? nsnull : mParent;
+  return IsDefunct() ? nsnull : mParent.get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
