@@ -242,9 +242,11 @@
             <stack id="tile-stack" class="window-width" flex="1">
               <scrollbox id="content-scrollbox" style="overflow: hidden;" class="window-width" flex="1">
                 <!-- Content viewport -->
-                <html:div id="tile-container" style="overflow: hidden;"/>
+                <html:div id="tile-container" style="overflow: hidden;">
+                  <html:canvas id="content-overlay" style="display: none; position: absolute; z-index: 1000;">
+                  </html:canvas>
+                </html:div>
               </scrollbox>
-
               <html:canvas id="view-buffer" style="display: none;" moz-opaque="true">
               </html:canvas>
             </stack>
