@@ -1066,7 +1066,7 @@ WeaveSvc.prototype = {
           this.wipeClient();
           break;
         case "wipeRemote":
-          this.wipeRemote();
+          this.wipeRemote(Engines.getAll().map(function(e) e.name));
           break;
         default:
           this._scheduleNextSync();
@@ -1332,17 +1332,21 @@ WeaveSvc.prototype = {
    */
   wipeRemote: function WeaveSvc_wipeRemote(engines)
     this._catch(this._notify("wipe-remote", "", function() {
+      // Make sure stuff gets uploaded
+      Clients.resetSyncID();
+
       // Clear out any server data
-      //this.wipeServer(engines);
+      this.wipeServer(engines);
 
       // Only wipe the engines provided
-      if (engines) {
+      if (engines)
         engines.forEach(function(e) this.prepCommand("wipeEngine", [e]), this);
-        return;
-      }
-
       // Tell the remote machines to wipe themselves
-      this.prepCommand("wipeAll", []);
+      else
+        this.prepCommand("wipeAll", []);
+
+      // Make sure the changed clients get updated
+      Clients.sync();
     }))(),
 
   /**
