@@ -124,6 +124,7 @@ EXPORTS = \
 		$(NULL)
 
 EXPORTS_mozilla = \
+  AutoRestore.h \
   BlockingResourceBase.h \
   CondVar.h \
   DeadlockDetector.h \
