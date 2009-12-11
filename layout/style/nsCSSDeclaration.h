@@ -148,9 +148,14 @@ public:
     void* slot = mData->SlotForValue(aProperty);
 
     NS_ASSERTION(!slot || !mImportantData ||
-                 !mImportantData->SlotForValue(aProperty),
+                 !mImportantData->StorageFor(aProperty),
                  "Property both important and not?");
     return slot;
+  }
+
+  PRBool HasNonImportantValueFor(nsCSSProperty aProperty) const {
+    NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty), "must be longhand");
+    return !!mData->StorageFor(aProperty);
   }
 
   /**

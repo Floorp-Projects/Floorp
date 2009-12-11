@@ -739,8 +739,8 @@ BuildStyleRule(nsCSSProperty aProperty,
                                       doc->GetDocumentURI(), baseURI,
                                       aTargetElement->NodePrincipal(),
                                       declaration, &changed)) ||
-      // SlotForValue checks whether property parsed w/out CSS parsing errors
-      !declaration->SlotForValue(propertyToCheck) ||
+      // check whether property parsed without CSS parsing errors
+      !declaration->HasNonImportantValueFor(propertyToCheck) ||
       NS_FAILED(NS_NewCSSStyleRule(getter_AddRefs(styleRule), nsnull,
                                    declaration))) {
     NS_WARNING("failure in BuildStyleRule");
