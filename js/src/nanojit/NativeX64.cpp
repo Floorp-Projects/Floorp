@@ -431,7 +431,8 @@ namespace nanojit
 // XORPS is a 4x32f vector operation, we use it instead of the more obvious
 // XORPD because it's one byte shorter.  This is ok because it's only used for
 // zeroing an XMM register;  hence the single argument.
-    void Assembler::XORPS(        R r)  { emitprr(X64_xorps,   r,r); asm_output("xorps %s, %s",   RQ(r),RQ(r)); }
+// Also note that (unlike most SSE2 instructions) XORPS does not have a prefix, thus emitrr() should be used.
+    void Assembler::XORPS(        R r)  { emitrr(X64_xorps,   r,r); asm_output("xorps %s, %s",   RQ(r),RQ(r)); }
     void Assembler::DIVSD(   R l, R r)  { emitprr(X64_divsd,   l,r); asm_output("divsd %s, %s",   RQ(l),RQ(r)); }
     void Assembler::MULSD(   R l, R r)  { emitprr(X64_mulsd,   l,r); asm_output("mulsd %s, %s",   RQ(l),RQ(r)); }
     void Assembler::ADDSD(   R l, R r)  { emitprr(X64_addsd,   l,r); asm_output("addsd %s, %s",   RQ(l),RQ(r)); }
