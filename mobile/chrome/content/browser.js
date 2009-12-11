@@ -1144,6 +1144,33 @@ var Browser = {
     }
   },
 
+  getContentClientRects: function getContentClientRects(contentElem) {
+    // XXX don't copy getBoundingContentRect
+    let browser = Browser._browserView.getBrowser();
+
+    if (!browser)
+      return null;
+
+    let offset = BrowserView.Util.getContentScrollOffset(browser);
+    let nativeRects = contentElem.getClientRects();
+
+    // step out of iframes and frames, offsetting scroll values
+    let rect;
+    for (let frame = contentElem.ownerDocument.defaultView; frame != browser.contentWindow; frame = frame.parent) {
+      // adjust client coordinates' origin to be top left of iframe viewport
+      rect = frame.frameElement.getBoundingClientRect();
+      offset.add(rect.left, rect.top);
+    }
+
+    let result = [];
+    let r;
+    for (let i = nativeRects.length - 1; i >= 0; i--) {
+      r = nativeRects[i];
+      result.push(new Rect(r.left + offset.x, r.top + offset.y, r.width, r.height));
+    }
+    return result;
+  },
+
   getBoundingContentRect: function getBoundingContentRect(contentElem) {
     let document = contentElem.ownerDocument;
     while(document.defaultView.frameElement)
@@ -1702,6 +1729,9 @@ const BrowserSearch = {
 /** Watches for mouse events in chrome and sends them to content. */
 function ContentCustomClicker(browserView) {
   this._browserView = browserView;
+  this._overlay = document.getElementById("content-overlay");
+  this._width = 0;
+  this._height = 0;
 }
 
 ContentCustomClicker.prototype = {
@@ -1717,13 +1747,79 @@ ContentCustomClicker.prototype = {
       }
     },
 
+    /** Returns a node if selecting this node causes a focus. */
+    _getFocusable: function(node) {
+      if (node && node.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,button,input,option,select,textarea"))
+        return node;
+      return null;
+    },
+ 
+    /** Stop highlighting current element. */
+    _hideCanvas: function _hideCanvas() {
+      let overlay = this._overlay;
+      overlay.style.display = "none";
+      overlay.getContext("2d").clearRect(0, 0, this._width, this._height);
+    },
+
+    /** Make sure canvas is at least width x height. */
+    _ensureSize: function _ensureSize(width, height) {
+      if (this._width <= width) {
+        this._width = width;
+        this._overlay.width = width;
+      }
+      if (this._height <= height) {
+        this._height = height;
+        this._overlay.height = height;
+      }
+    },
+
     mouseDown: function mouseDown(cX, cY) {
+      // This code is sensitive to performance. Please profile changes you make to
+      // keep this running fast.
+
+      let bv = this._browserView;
+      let overlay = this._overlay;
+      let ctx = overlay.getContext("2d");
+      let [elementX, elementY] = Browser.transformClientToBrowser(cX, cY);
+      let element = this._getFocusable(Browser.elementFromPoint(elementX, elementY));
+      if (!element)
+        return;
+
+      let rects = Browser.getContentClientRects(element);
+      let union = rects.reduce(function(a, b) {
+        return a.expandToContain(b);
+      }, new Rect(0, 0, 0, 0)).map(bv.browserToViewport);
+
+      let vis = Browser.getVisibleRect();
+      let canvasArea = vis.intersect(union);
+      this._ensureSize(canvasArea.width, canvasArea.height);
+
+      ctx.save();
+      ctx.translate(-canvasArea.left, -canvasArea.top);
+      bv.browserToViewportCanvasContext(ctx);
+
+      overlay.style.left = canvasArea.left + "px";
+      overlay.style.top = canvasArea.top + "px";
+      ctx.fillStyle = "rgba(0, 145, 255, .5)";
+      let rect;
+      for (let i = rects.length - 1; i >= 0; i--) {
+        rect = rects[i];
+        ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
+      }
+      ctx.restore();
+      overlay.style.display = "block";
     },
 
     mouseUp: function mouseUp(cX, cY) {
     },
 
+    panBegin: function panBegin() {
+      this._hideCanvas();
+    },
+
     singleClick: function singleClick(cX, cY, modifiers) {
+      this._hideCanvas();
+
       let [elementX, elementY] = Browser.transformClientToBrowser(cX, cY);
       let element = Browser.elementFromPoint(elementX, elementY);
       if (modifiers == 0) {
@@ -1746,6 +1842,8 @@ ContentCustomClicker.prototype = {
     },
 
     doubleClick: function doubleClick(cX1, cY1, cX2, cY2) {
+      this._hideCanvas();
+
       const kDoubleClickRadius = 32;
       
       let maxRadius = kDoubleClickRadius * Browser._browserView.getZoomLevel();

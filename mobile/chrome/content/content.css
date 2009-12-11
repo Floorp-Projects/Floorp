@@ -38,19 +38,20 @@
 
 /* make clicking on links stand out a bit (bug 532206) */
 html *:not(embed):focus, *:focus > font {
-  color: #000000 !important;
-  background-color: #ffffa0 !important;
+  outline: 2px solid #8db8d8 !important;
+  /*
+   XXX How do I preserve mac focusring without blowing focus color on other platforms?
+   outline-color: -moz-mac-focusring !important;
+   */
 }
 
 html *|*:link:focus, *|*:visited:focus {
-  outline: 1px solid -moz-mac-focusring !important;
-  -moz-outline-radius: 3px;
-  outline-offset: 1px;
+  outline-offset: -2px;
 }
 
 html button::-moz-focus-inner, input[type="reset"]::-moz-focus-inner, input[type="button"]::-moz-focus-inner, input[type="submit"]::-moz-focus-inner {
   padding: 1px 2px 1px 2px;
-  border: 1px solid transparent !important;
+  border: 0px !important;
 } 
 
 html button:focus::-moz-focus-inner, input[type="reset"]:focus::-moz-focus-inner, input[type="button"]:focus::-moz-focus-inner, input[type="submit"]:focus::-moz-focus-inner {

@@ -533,14 +533,12 @@ MouseModule.prototype = {
    */
   _onMouseUp: function _onMouseUp(evInfo) {
     let dragData = this._dragData;
+    let oldIsPan = dragData.isPan();
     if (dragData.dragging) {
       dragData.setDragPosition(evInfo.event.screenX, evInfo.event.screenY);
       let [sX, sY] = dragData.panPosition();
       this._doDragStop(sX, sY, !dragData.isPan());
     }
-
-    if (this._clicker)
-      this._clicker.mouseUp(evInfo.event.clientX, evInfo.event.clientY);
 
     if (this._targetIsContent(evInfo.event)) {
       // User possibly clicked on something in content
@@ -564,6 +562,14 @@ MouseModule.prototype = {
         this._owner.suppressNextClick();
     }
 
+    let clicker = this._clicker;
+    if (clicker) {
+      // Let clicker know when mousemove begins a pan
+      if (!oldIsPan && dragData.isPan())
+        clicker.panBegin();
+      clicker.mouseUp(evInfo.event.clientX, evInfo.event.clientY);
+    }
+
     this._owner.ungrab(this);
   },
 
@@ -574,6 +580,7 @@ MouseModule.prototype = {
     let dragData = this._dragData;
 
     if (dragData.dragging) {
+      let oldIsPan = dragData.isPan();
       dragData.setDragPosition(evInfo.event.screenX, evInfo.event.screenY);
       evInfo.event.stopPropagation();
       evInfo.event.preventDefault();
@@ -581,6 +588,11 @@ MouseModule.prototype = {
         // Only pan when mouse event isn't part of a click. Prevent jittering on tap.
         let [sX, sY] = dragData.panPosition();
         this._doDragMove(sX, sY);
+
+        // Let clicker know when mousemove begins a pan
+        let clicker = this._clicker;
+        if (!oldIsPan && clicker)
+          clicker.panBegin();
       }
     }
   },
