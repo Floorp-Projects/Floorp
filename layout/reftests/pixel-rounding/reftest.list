@@ -1,4 +1,4 @@
-random == check-image.html check-image-ref.html # bug 371232
+== check-image.html check-image-ref.html
 == check-image-blue.html check-image-blue-ref.html
 
 
@@ -95,24 +95,22 @@ fails == collapsed-border-top-5.html border-top-10-ref.html
 fails == collapsed-border-top-6.html border-top-10-ref.html
 
 
-# Mac failures covered by bug 371316, although perhaps a separate bug
-# should be filed.
 != image-base-ref.html image-height-10-ref.html
 == image-height-4.html image-base-ref.html
 == image-height-5.html image-height-10-ref.html
 == image-height-6.html image-height-10-ref.html
 != image-base-ref.html image-top-10-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-top-4.html image-base-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-top-5.html image-top-10-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-top-6.html image-top-10-ref.html
+== image-top-4.html image-base-ref.html
+== image-top-5.html image-top-10-ref.html
+== image-top-6.html image-top-10-ref.html
 != image-base-ref.html image-width-10-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-width-4.html image-base-ref.html
+== image-width-4.html image-base-ref.html
 == image-width-5.html image-width-10-ref.html
 == image-width-6.html image-width-10-ref.html
 != image-base-ref.html image-left-10-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-left-4.html image-base-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-left-5.html image-left-10-ref.html
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-left-6.html image-left-10-ref.html
+== image-left-4.html image-base-ref.html
+== image-left-5.html image-left-10-ref.html
+== image-left-6.html image-left-10-ref.html
 == image-top-height-4.html image-height-4.html
 == image-top-height-5.html image-height-5.html
 == image-top-height-6.html image-height-6.html
@@ -136,9 +134,9 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == image-left-6.html image-left-10-ref.ht
 == offscreen-image-pos-4.html offscreen-0-ref.html
 == offscreen-image-pos-5.html offscreen-10-ref.html
 == offscreen-image-pos-6.html offscreen-10-ref.html
-== offscreen-image-size-4.html offscreen-0-ref.html # bug 371316
-== offscreen-image-size-5.html offscreen-10-ref.html # bug 371316
-== offscreen-image-size-6.html offscreen-10-ref.html # bug 371316
+== offscreen-image-size-4.html offscreen-0-ref.html
+== offscreen-image-size-5.html offscreen-10-ref.html
+== offscreen-image-size-6.html offscreen-10-ref.html
 
 
 != rounded-background-color-base-ref.html rounded-background-color-height-10-ref.html
