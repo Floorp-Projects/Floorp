@@ -405,8 +405,11 @@ mtd[-moz-math-columnline="dashed"] {
   font-family: serif; /* an empty family is ignored as an error and behaves like inherit */
 /*  background-color: #3C6; */
 }
+/* Don't actually style -moz-math-anonymous by default */
+/*
 ::-moz-math-anonymous {
 }
+*/
 
 /**********************************************************************/
 /* Hide embedded semantic MathML content (as opposed to presentational

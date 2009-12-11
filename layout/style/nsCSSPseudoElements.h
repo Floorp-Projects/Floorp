@@ -87,15 +87,18 @@ public:
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
     ePseudo_PseudoElementCount,
-    ePseudo_NotPseudoElement = ePseudo_PseudoElementCount,
-    ePseudo_AnonBox,
+    ePseudo_AnonBox = ePseudo_PseudoElementCount,
 #ifdef MOZ_XUL
     ePseudo_XULTree,
 #endif
+    ePseudo_NotPseudoElement,
     ePseudo_MAX
   };
 
   static Type GetPseudoType(nsIAtom* aAtom);
+
+  // Get the atom for a given Type.  aType must be < ePseudo_PseudoElementCount
+  static nsIAtom* GetPseudoAtom(Type aType);
 
 private:
   static PRUint32 FlagsForPseudoElement(nsIAtom *aAtom);

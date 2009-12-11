@@ -816,6 +816,7 @@ StyleWithDeclarationAdded(nsCSSProperty aProperty,
   nsStyleSet* styleSet = styleContext->PresContext()->StyleSet();
   return styleSet->ResolveStyleForRules(styleContext->GetParent(),
                                         styleContext->GetPseudo(),
+                                        styleContext->GetPseudoType(),
                                         styleContext->GetRuleNode(),
                                         ruleArray);
 }
