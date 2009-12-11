@@ -545,7 +545,8 @@ BrowserView.prototype = {
   },
 
   handleMozScrolledAreaChanged: function handleMozScrolledAreaChanged(ev) {
-    let tab = Browser.getTabForDocument(ev.originalTarget);
+    let tab = Browser.getTabForDocument(ev.originalTarget) || 
+             Browser.getTabForDocument(ev.target.contentDocument);
     if (!tab)
       return;
 

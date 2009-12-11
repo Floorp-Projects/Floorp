@@ -2731,6 +2731,16 @@ Tab.prototype = {
       browser.className = "browser-viewport";
       browser.style.width = viewportW + "px";
       browser.style.height = viewportH + "px";
+    } else if (browser.contentDocument instanceof XULDocument) {
+       // XXX XUL documents do not receive scroll change event
+       let [w, h] = BrowserView.Util.getBrowserDimensions(browser);
+       let event = document.createEvent("Event");
+       event.initEvent("MozScrolledAreaChanged", true, false);
+       event.x = 0;
+       event.y = 0;
+       event.width = w;
+       event.height = h;
+       browser.dispatchEvent(event);
     } else {
       browser.className = "browser";
     }
