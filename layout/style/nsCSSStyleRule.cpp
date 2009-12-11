@@ -136,8 +136,10 @@ nsAtomList::~nsAtomList(void)
   NS_CSS_DELETE_LIST_MEMBER(nsAtomList, this, mNext);
 }
 
-nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom)
+nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
+                                     nsCSSPseudoClasses::Type aType)
   : mAtom(aAtom),
+    mType(aType),
     mNext(nsnull)
 {
   NS_ASSERTION(!nsCSSPseudoClasses::HasStringArg(aAtom) &&
@@ -147,8 +149,11 @@ nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom)
   u.mMemory = nsnull;
 }
 
-nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom, const PRUnichar* aString)
+nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
+                                     nsCSSPseudoClasses::Type aType,
+                                     const PRUnichar* aString)
   : mAtom(aAtom),
+    mType(aType),
     mNext(nsnull)
 {
   NS_ASSERTION(nsCSSPseudoClasses::HasStringArg(aAtom),
@@ -158,8 +163,11 @@ nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom, const PRUnichar* aString)
   u.mString = NS_strdup(aString);
 }
 
-nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom, const PRInt32* aIntPair)
+nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
+                                     nsCSSPseudoClasses::Type aType,
+                                     const PRInt32* aIntPair)
   : mAtom(aAtom),
+    mType(aType),
     mNext(nsnull)
 {
   NS_ASSERTION(nsCSSPseudoClasses::HasNthPairArg(aAtom),
@@ -175,13 +183,13 @@ nsPseudoClassList::Clone(PRBool aDeep) const
 {
   nsPseudoClassList *result;
   if (!u.mMemory) {
-    result = new nsPseudoClassList(mAtom);
+    result = new nsPseudoClassList(mAtom, mType);
   } else if (nsCSSPseudoClasses::HasStringArg(mAtom)) {
-    result = new nsPseudoClassList(mAtom, u.mString);
+    result = new nsPseudoClassList(mAtom, mType, u.mString);
   } else {
     NS_ASSERTION(nsCSSPseudoClasses::HasNthPairArg(mAtom),
                  "unexpected pseudo-class");
-    result = new nsPseudoClassList(mAtom, u.mNumbers);
+    result = new nsPseudoClassList(mAtom, mType, u.mNumbers);
   }
 
   if (aDeep)
@@ -392,21 +400,24 @@ void nsCSSSelector::AddClass(const nsString& aClass)
   }
 }
 
-void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass)
+void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
+                                   nsCSSPseudoClasses::Type aType)
 {
-  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass));
+  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aType));
 }
 
 void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
+                                   nsCSSPseudoClasses::Type aType,
                                    const PRUnichar* aString)
 {
-  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aString));
+  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aType, aString));
 }
 
 void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
+                                   nsCSSPseudoClasses::Type aType,
                                    const PRInt32* aIntPair)
 {
-  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aIntPair));
+  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aType, aIntPair));
 }
 
 void nsCSSSelector::AddPseudoClassInternal(nsPseudoClassList *aPseudoClass)
