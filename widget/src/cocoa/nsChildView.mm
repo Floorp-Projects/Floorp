@@ -2980,9 +2980,27 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+// Returning NO from this method only disallows ordering on mousedown - in order
+// to prevent it for mouseup too, we need to call [NSApp preventWindowOrdering]
+// when handling the mousedown event.
+- (BOOL)shouldDelayWindowOrderingForEvent:(NSEvent*)aEvent
+{
+  // Always using system-provided window ordering for normal windows.
+  if (![[self window] isKindOfClass:[PopupWindow class]])
+    return NO;
+
+  // Don't reorder when we're already accepting mouse events, for example
+  // because we're a context menu.
+  return ChildViewMouseTracker::WindowAcceptsEvent([self window], aEvent);
+}
+
 - (void)mouseDown:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if ([self shouldDelayWindowOrderingForEvent:theEvent]) {
+    [NSApp preventWindowOrdering];
+  }
 
   // If we've already seen this event due to direct dispatch from menuForEvent:
   // just bail; if not, remember it.
