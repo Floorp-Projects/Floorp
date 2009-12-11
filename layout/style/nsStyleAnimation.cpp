@@ -1127,6 +1127,18 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
+        case eCSSProperty__moz_column_count: {
+          const nsStyleColumn *styleColumn =
+            static_cast<const nsStyleColumn*>(styleStruct);
+          if (styleColumn->mColumnCount == NS_STYLE_COLUMN_COUNT_AUTO) {
+            aComputedValue.SetAutoValue();
+          } else {
+            aComputedValue.SetIntValue(styleColumn->mColumnCount,
+                                       eUnit_Integer);
+          }
+          break;
+        }
+
         case eCSSProperty_stroke_dasharray: {
           const nsStyleSVG *svg = static_cast<const nsStyleSVG*>(styleStruct);
           NS_ABORT_IF_FALSE((svg->mStrokeDasharray != nsnull) ==
