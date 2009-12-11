@@ -1278,6 +1278,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                               PRBool* const aDependence = nsnull) 
 
 {
+  NS_PRECONDITION(!aSelector->IsPseudoElement(),
+                  "Pseudo-element snuck into SelectorMatches?");
   // namespace/tag match
   // optimization : bail out early if we can
   if ((kNameSpaceID_Unknown != aSelector->mNameSpace &&
@@ -2421,6 +2423,13 @@ AddRule(RuleValue* aRuleInfo, RuleCascadeData* aCascade)
   
   for (nsCSSSelector* selector = aRuleInfo->mSelector;
            selector; selector = selector->mNext) {
+    if (selector->IsPseudoElement()) {
+      NS_ASSERTION(!selector->mNegations, "Shouldn't have negations");
+      // Make sure these selectors don't end up in the hashtables we use to
+      // match against actual elements, no matter what.  Normally they wouldn't
+      // anyway, but trees overload mPseudoClassList with weird stuff.
+      continue;
+    }
     // It's worth noting that this loop over negations isn't quite
     // optimal for two reasons.  One, we could add something to one of
     // these lists twice, which means we'll check it twice, but I don't
@@ -2736,6 +2745,7 @@ nsCSSRuleProcessor::SelectorListMatches(RuleProcessorData& aData,
   while (aSelectorList) {
     nsCSSSelector* sel = aSelectorList->mSelectors;
     NS_ASSERTION(sel, "Should have *some* selectors");
+    NS_ASSERTION(!sel->IsPseudoElement(), "Shouldn't have been called");
     if (SelectorMatches(aData, sel, 0, PR_FALSE)) {
       nsCSSSelector* next = sel->mNext;
       if (!next || SelectorMatchesTree(aData, next, PR_FALSE)) {
