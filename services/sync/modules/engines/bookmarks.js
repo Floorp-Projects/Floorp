@@ -65,6 +65,18 @@ let kSpecialIds = {};
 ].forEach(function([guid, placeName]) {
   Utils.lazy2(kSpecialIds, guid, function() Svc.Bookmark[placeName]);
 });
+Utils.lazy2(kSpecialIds, "mobile", function() {
+  // Use the (one) mobile root if it already exists
+  let anno = "mobile/bookmarksRoot";
+  let root = Svc.Annos.getItemsWithAnnotation(anno, {});
+  if (root.length != 0)
+    return root[0];
+
+  // Create the special mobile folder to store mobile bookmarks
+  let mobile = Svc.Bookmark.createFolder(Svc.Bookmark.placesRoot, "mobile", -1);
+  Utils.anno(mobile, anno, 1);
+  return mobile;
+});
 
 // Create some helper functions to convert GUID/ids
 function idForGUID(guid) {
@@ -1026,6 +1038,15 @@ BookmarksTracker.prototype = {
     if (this.ignoreAll)
       return true;
 
+    // Ensure that the mobile bookmarks query is correct in the UI
+    this._ensureMobileQuery();
+
+    // Make sure to remove items that have the exclude annotation
+    if (Svc.Annos.itemHasAnnotation(itemId, "places/excludeFromBackup")) {
+      this.removeChangedID(GUIDForId(itemId));
+      return true;
+    }
+
     // Get the folder id if we weren't given one
     if (folder == null)
       folder = this._bms.getFolderIdForItem(itemId);
@@ -1061,15 +1082,38 @@ BookmarksTracker.prototype = {
     this._addSuccessor(itemId);
   },
 
+  _ensureMobileQuery: function _ensureMobileQuery() {
+    let anno = "PlacesOrganizer/OrganizerQuery";
+    let find = function(val) Svc.Annos.getItemsWithAnnotation(anno, {}).filter(
+      function(id) Utils.anno(id, anno) == val);
+
+    // Don't continue if the Library isn't ready
+    let all = find("AllBookmarks");
+    if (all.length == 0)
+      return;
+
+    // Disable handling of notifications while changing the mobile query
+    this.ignoreAll = true;
+
+    // Make sure we have a mobile bookmarks query
+    let mobile = find("MobileBookmarks");
+    let queryURI = Utils.makeURI("place:folder=" + kSpecialIds.mobile);
+    let title = Str.sync.get("mobile.label");
+    if (mobile.length == 0) {
+      let query = Svc.Bookmark.insertBookmark(all[0], queryURI, -1, title);
+      Utils.anno(query, anno, "MobileBookmarks");
+      Utils.anno(query, "places/excludeFromBackup", 1);
+    }
+    // Make sure the existing title is correct
+    else if (Svc.Bookmark.getItemTitle(mobile[0]) != title)
+      Svc.Bookmark.setItemTitle(mobile[0], title);
+
+    this.ignoreAll = false;
+  },
+
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value) {
     if (this._ignore(itemId))
       return;
-
-    // Make sure to remove items that now have the exclude annotation
-    if (property == "places/excludeFromBackup") {
-      this.removeChangedID(GUIDForId(itemId));
-      return;
-    }
 
     // ignore annotations except for the ones that we sync
     let annos = ["bookmarkProperties/description",
