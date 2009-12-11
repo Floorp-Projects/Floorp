@@ -223,15 +223,17 @@ static NSArray* sSpinCursorFrames = nil;
   if (aCursor != mCurrentCursor || ![currentCursor isSet]) {
     [currentCursor unset];
     [[self getCursor: aCursor] set];
-
-    mCurrentCursor = aCursor;
   }
 
-  if (mCurrentCursor == eCursor_none) {
-    [NSCursor hide];
-  } else {
-    [NSCursor unhide];
+  if (mCurrentCursor != aCursor) {
+    if (aCursor == eCursor_none) {
+      [NSCursor hide];
+    } else if (mCurrentCursor == eCursor_none) {
+      [NSCursor unhide];
+    }
   }
+
+  mCurrentCursor = aCursor;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
