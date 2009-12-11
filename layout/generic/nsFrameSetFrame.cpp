@@ -68,7 +68,6 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsINameSpaceManager.h"
-#include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
@@ -1043,7 +1042,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
 
         nsRefPtr<nsStyleContext> pseudoStyleContext;
         pseudoStyleContext = styleSet->ResolvePseudoStyleFor(mContent,
-                                                             nsCSSPseudoElements::horizontalFramesetBorder,
+                                                             nsCSSAnonBoxes::horizontalFramesetBorder,
                                                              mStyleContext);
 
         borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoStyleContext,
@@ -1079,7 +1078,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
             
             nsRefPtr<nsStyleContext> pseudoStyleContext;
             pseudoStyleContext = styleSet->ResolvePseudoStyleFor(mContent,
-                                                                 nsCSSPseudoElements::verticalFramesetBorder,
+                                                                 nsCSSAnonBoxes::verticalFramesetBorder,
                                                                  mStyleContext);
 
             borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoStyleContext, 

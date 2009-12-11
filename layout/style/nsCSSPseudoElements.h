@@ -79,6 +79,24 @@ public:
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 
+  enum Type {
+    // If the actual pseudo-elements stop being first here, change
+    // GetPseudoType.
+#define CSS_PSEUDO_ELEMENT(_name, _value_, _flags) \
+    ePseudo_##_name,
+#include "nsCSSPseudoElementList.h"
+#undef CSS_PSEUDO_ELEMENT
+    ePseudo_PseudoElementCount,
+    ePseudo_NotPseudoElement = ePseudo_PseudoElementCount,
+    ePseudo_AnonBox,
+#ifdef MOZ_XUL
+    ePseudo_XULTree,
+#endif
+    ePseudo_MAX
+  };
+
+  static Type GetPseudoType(nsIAtom* aAtom);
+
 private:
   static PRUint32 FlagsForPseudoElement(nsIAtom *aAtom);
 
