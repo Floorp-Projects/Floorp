@@ -100,6 +100,28 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsIAtom *aAtom)
   return result;
 }
 
+/* static */ nsCSSPseudoElements::Type
+nsCSSPseudoElements::GetPseudoType(nsIAtom *aAtom)
+{
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(CSSPseudoElements_info); ++i) {
+    if (*CSSPseudoElements_info[i].mAtom == aAtom) {
+      return Type(i);
+    }
+  }
+
+  if (nsCSSAnonBoxes::IsAnonBox(aAtom)) {
+#ifdef MOZ_XUL
+    if (nsCSSAnonBoxes::IsTreePseudoElement(aAtom)) {
+      return ePseudo_XULTree;
+    }
+#endif
+
+    return ePseudo_AnonBox;
+  }
+
+  return ePseudo_NotPseudoElement;
+}
+
 /* static */ PRUint32
 nsCSSPseudoElements::FlagsForPseudoElement(nsIAtom *aAtom)
 {
