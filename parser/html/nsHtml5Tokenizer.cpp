@@ -3427,23 +3427,25 @@ nsHtml5Tokenizer::emitOrAppendStrBuf(PRInt32 returnState)
 void 
 nsHtml5Tokenizer::handleNcrValue(PRInt32 returnState)
 {
-  if (value >= 0x80 && value <= 0x9f) {
+  if (value <= 0xFFFF) {
+    if (value >= 0x80 && value <= 0x9f) {
 
-    PRUnichar* val = nsHtml5NamedCharacters::WINDOWS_1252[value - 0x80];
-    emitOrAppendOne(val, returnState);
-  } else if (value == 0x0D) {
+      PRUnichar* val = nsHtml5NamedCharacters::WINDOWS_1252[value - 0x80];
+      emitOrAppendOne(val, returnState);
+    } else if (value == 0x0D) {
 
-    emitOrAppendOne(nsHtml5Tokenizer::LF, returnState);
-  } else if (value == 0x0) {
+      emitOrAppendOne(nsHtml5Tokenizer::LF, returnState);
+    } else if (value == 0x0) {
 
-    emitOrAppendOne(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, returnState);
-  } else if ((value & 0xF800) == 0xD800) {
+      emitOrAppendOne(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, returnState);
+    } else if ((value & 0xF800) == 0xD800) {
 
-    emitOrAppendOne(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, returnState);
-  } else if (value <= 0xFFFF) {
-    PRUnichar ch = (PRUnichar) value;
-    bmpChar[0] = ch;
-    emitOrAppendOne(bmpChar, returnState);
+      emitOrAppendOne(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, returnState);
+    } else {
+      PRUnichar ch = (PRUnichar) value;
+      bmpChar[0] = ch;
+      emitOrAppendOne(bmpChar, returnState);
+    }
   } else if (value <= 0x10FFFF) {
     astralChar[0] = (PRUnichar) (NS_HTML5TOKENIZER_LEAD_OFFSET + (value >> 10));
     astralChar[1] = (PRUnichar) (0xDC00 + (value & 0x3FF));
