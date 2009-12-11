@@ -551,11 +551,6 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 
   ElementPropertyTransition pt;
   nsStyleAnimation::Value dummyValue;
-  // FIXME (Bug 522595): This call on the old style context gets
-  // incorrect style data since we don't quite enforce style rule
-  // immutability:  we didn't need to worry about callers calling
-  // GetStyleData rather than PeekStyleData after a style rule becomes
-  // "old" before transitions existed.
   PRBool shouldAnimate =
     nsStyleAnimation::ExtractComputedValue(aProperty, aOldStyleContext,
                                            pt.mStartValue) &&
