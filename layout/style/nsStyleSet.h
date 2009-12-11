@@ -55,6 +55,8 @@
 #include "nsCOMArray.h"
 #include "nsAutoPtr.h"
 #include "nsIStyleRule.h"
+#include "nsCSSPseudoElements.h"
+#include "nsCSSAnonBoxes.h"
 
 class nsIURI;
 class nsCSSFontFaceRule;
@@ -97,7 +99,7 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(nsIContent* aContent, nsStyleContext* aParentContext);
 
-  // Get a style context (with the given parent and pseudo-tag) for a
+  // Get a style context (with the given parent and pseudo-tag/type) for a
   // sequence of style rules consisting of the concatenation of:
   //  (1) the rule sequence represented by aRuleNode (which is the empty
   //      sequence if aRuleNode is null or the root of the rule tree), and
@@ -105,6 +107,7 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   ResolveStyleForRules(nsStyleContext* aParentContext,
                        nsIAtom* aPseudoTag,
+                       nsCSSPseudoElements::Type aPseudoType,
                        nsRuleNode *aRuleNode,
                        const nsCOMArray<nsIStyleRule> &aRules);
 
@@ -118,6 +121,63 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   ResolveStyleForNonElement(nsStyleContext* aParentContext);
 
+  // Get a style context for a pseudo-element.  aParentContent must be
+  // non-null.  aPseudoID is the nsCSSPseudoElements::Type for the
+  // pseudo-element.
+  already_AddRefed<nsStyleContext>
+  ResolvePseudoElementStyle(nsIContent* aParentContent,
+                            nsCSSPseudoElements::Type aType,
+                            nsStyleContext* aParentContext) {
+    return ResolvePseudoStyleFor(aParentContent,
+                                 nsCSSPseudoElements::GetPseudoAtom(aType),
+                                 aType,
+                                 aParentContext);
+  }
+
+  // This functions just like ResolvePseudoElementStyle except that it will
+  // return nsnull if there are no explicit style rules for that
+  // pseudo element.
+  already_AddRefed<nsStyleContext>
+  ProbePseudoElementStyle(nsIContent* aParentContent,
+                          nsCSSPseudoElements::Type aType,
+                          nsStyleContext* aParentContext);
+  
+  // Get a style context for an anonymous box.  aPseudoTag is the
+  // pseudo-tag to use and must be non-null.
+  already_AddRefed<nsStyleContext>
+  ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
+                           nsStyleContext* aParentContext) {
+#ifdef DEBUG
+    PRBool isAnonBox = nsCSSAnonBoxes::IsAnonBox(aPseudoTag)
+#ifdef MOZ_XUL
+                 && !nsCSSAnonBoxes::IsTreePseudoElement(aPseudoTag)
+#endif
+      ;
+    NS_PRECONDITION(isAnonBox, "Unexpected pseudo");
+#endif
+    return ResolvePseudoStyleFor(nsnull, aPseudoTag,
+                                 nsCSSPseudoElements::ePseudo_AnonBox,
+                                 aParentContext);
+  }
+
+#ifdef MOZ_XUL
+  // Get a style context for a XUL tree pseudo.  aPseudoTag is the
+  // pseudo-tag to use and must be non-null.  aParentContent must be
+  // non-null.  aComparator must be non-null.
+  already_AddRefed<nsStyleContext>
+  ResolveXULTreePseudoStyle(nsIContent* aParentContent,
+                            nsIAtom* aPseudoTag,
+                            nsStyleContext* aParentContext,
+                            nsICSSPseudoComparator* aComparator) {
+    NS_PRECONDITION(nsCSSAnonBoxes::IsTreePseudoElement(aPseudoTag),
+                    "Unexpected pseudo");
+    return ResolvePseudoStyleFor(aParentContent, aPseudoTag,
+                                 nsCSSPseudoElements::ePseudo_XULTree,
+                                 aParentContext, aComparator);
+  }
+#endif
+
+private:
   // get a style context for a pseudo-element (i.e.,
   // |aPseudoTag == nsCOMPtr<nsIAtom>(do_GetAtom(":first-line"))|, in
   // which case aParentContent must be non-null, or an anonymous box, in
@@ -125,17 +185,10 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   ResolvePseudoStyleFor(nsIContent* aParentContent,
                         nsIAtom* aPseudoTag,
+                        nsCSSPseudoElements::Type aPseudoType,
                         nsStyleContext* aParentContext,
                         nsICSSPseudoComparator* aComparator = nsnull);
-
-  // This functions just like ResolvePseudoStyleFor except that it will
-  // return nsnull if there are no explicit style rules for that
-  // pseudo element.  It should be used only for pseudo-elements.
-  already_AddRefed<nsStyleContext>
-  ProbePseudoStyleFor(nsIContent* aParentContent,
-                      nsIAtom* aPseudoTag,
-                      nsStyleContext* aParentContext);
-
+public:
   // Append all the currently-active font face rules to aArray.  Return
   // true for success and false for failure.
   PRBool AppendFontFaceRules(nsPresContext* aPresContext,
@@ -311,7 +364,8 @@ class nsStyleSet
   already_AddRefed<nsStyleContext> GetContext(nsPresContext* aPresContext,
                                               nsStyleContext* aParentContext,
                                               nsRuleNode* aRuleNode,
-                                              nsIAtom* aPseudoTag);
+                                              nsIAtom* aPseudoTag,
+                                              nsCSSPseudoElements::Type aPseudoType);
 
   nsPresContext* PresContext() { return mRuleTree->GetPresContext(); }
 
