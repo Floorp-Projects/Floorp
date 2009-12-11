@@ -6504,26 +6504,28 @@ ChildViewMouseTracker::OnDestroyView(ChildView* aView)
 }
 
 void
-ChildViewMouseTracker::MouseMoved(NSEvent* aEvent)
+ChildViewMouseTracker::ReEvaluateMouseEnterState(NSEvent* aEvent)
 {
   ChildView* oldView = sLastMouseEventView;
-  ChildView* newView = ViewForEvent(aEvent);
-  sLastMouseEventView = newView;
-  if (newView != oldView) {
+  sLastMouseEventView = ViewForEvent(aEvent);
+  if (sLastMouseEventView != oldView) {
     // Send enter and / or exit events.
-    nsMouseEvent::exitType type = [newView window] == [oldView window] ?
+    nsMouseEvent::exitType type = [sLastMouseEventView window] == [oldView window] ?
                                     nsMouseEvent::eChild : nsMouseEvent::eTopLevel;
     [oldView sendMouseEnterOrExitEvent:aEvent enter:NO type:type];
     // After the cursor exits the window set it to a visible regular arrow cursor.
     if (type == nsMouseEvent::eTopLevel) {
       [[nsCursorManager sharedInstance] setCursor:eCursor_standard];
     }
-    // Sending the exit event to the old view might have destroyed our new view;
-    // if that has happened, sLastMouseEventView has been set to nil.
-    newView = sLastMouseEventView;
-    [newView sendMouseEnterOrExitEvent:aEvent enter:YES type:type];
+    [sLastMouseEventView sendMouseEnterOrExitEvent:aEvent enter:YES type:type];
   }
-  [newView handleMouseMoved:aEvent];
+}
+
+void
+ChildViewMouseTracker::MouseMoved(NSEvent* aEvent)
+{
+  ReEvaluateMouseEnterState(aEvent);
+  [sLastMouseEventView handleMouseMoved:aEvent];
 }
 
 ChildView*
