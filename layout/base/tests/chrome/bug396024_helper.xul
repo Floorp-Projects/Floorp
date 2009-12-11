@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396024
 <window title="Mozilla Bug 396024" onload="run()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <iframe src="data:text/html;charset=utf-8,&lt;body onload='window.parent.loadedChild()'&gt;"></iframe>
+<iframe src="about:blank"/>
 <script type="application/javascript">
 <![CDATA[
 var is = window.opener.wrappedJSObject.is;
@@ -15,7 +16,7 @@ var ok = window.opener.wrappedJSObject.ok;
 var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 var gWbp;
 function printpreview() {
-  gWbp = window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+  gWbp = window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
              .getInterface(Components.interfaces.nsIWebBrowserPrint);
   var listener = {
     onLocationChange: function(webProgress, request, location) { },
@@ -37,12 +38,12 @@ function printpreview() {
   prefs.setBoolPref('print.show_print_progress', false);
   //XXX I would have thought this would work, instead I'm forced to use prefs service
   gWbp.globalPrintSettings.showPrintProgress = false; 
-  gWbp.printPreview(gWbp.globalPrintSettings, null, listener);
+  gWbp.printPreview(gWbp.globalPrintSettings, window.frames[0], listener);
   prefs.clearUserPref('print.show_print_progress');
 }
 
 function exitprintpreview() {
-  window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+  window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
    .getInterface(Components.interfaces.nsIWebBrowserPrint).exitPrintPreview(); 
 }
 
@@ -80,11 +81,11 @@ function run2() {
 }
 
 function run3() {
-  gWbp = window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+  gWbp = window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
              .getInterface(Components.interfaces.nsIWebBrowserPrint);
-  ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore2");
+  ok(gWbp.doingPrintPreview, "Should be doing print preview");
   window.loadedChild = null;
-  printpreview();
+  exitprintpreview();
   setTimeout(run4, 0);
 }
 
@@ -93,9 +94,9 @@ function run4() {
   window.loadedChild = function() { setTimeout(run5, 0); };
   document.documentElement.getBoundingClientRect();
   document.documentElement.appendChild(x);
-  gWbp = window.frames[0].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+  gWbp = window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
              .getInterface(Components.interfaces.nsIWebBrowserPrint);
-  ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore3");
+  ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore2");
 }
 
 function run5() {

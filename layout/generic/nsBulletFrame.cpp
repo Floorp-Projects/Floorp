@@ -137,7 +137,7 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   nsFrame::DidSetStyleContext(aOldStyleContext);
 
-  imgIRequest *newRequest = GetStyleList()->mListStyleImage;
+  imgIRequest *newRequest = GetStyleList()->GetListStyleImage();
 
   if (newRequest) {
 
@@ -228,7 +228,7 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
   const nsStyleList* myList = GetStyleList();
   PRUint8 listStyleType = myList->mListStyleType;
 
-  if (myList->mListStyleImage && mImageRequest) {
+  if (myList->GetListStyleImage() && mImageRequest) {
     PRUint32 status;
     mImageRequest->GetImageStatus(&status);
     if (status & imgIRequest::STATUS_LOAD_COMPLETE &&
@@ -1258,7 +1258,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   const nsStyleList* myList = GetStyleList();
   nscoord ascent;
 
-  if (myList->mListStyleImage && mImageRequest) {
+  if (myList->GetListStyleImage() && mImageRequest) {
     PRUint32 status;
     mImageRequest->GetImageStatus(&status);
     if (status & imgIRequest::STATUS_SIZE_AVAILABLE &&
