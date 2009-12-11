@@ -1096,6 +1096,12 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         BORDER_WIDTH_CASE(eCSSProperty_border_top_width, top)
         #undef BORDER_WIDTH_CASE
 
+        case eCSSProperty__moz_column_rule_width:
+          aComputedValue.SetCoordValue(
+            static_cast<const nsStyleColumn*>(styleStruct)->
+              GetComputedColumnRuleWidth());
+          break;
+
         case eCSSProperty_border_bottom_color:
           ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_BOTTOM,
                              aComputedValue);
