@@ -1409,23 +1409,16 @@ nsCSSDeclaration* CSSStyleRuleImpl::GetDeclaration(void) const
 
 nsIStyleRule* CSSStyleRuleImpl::GetImportantRule(void)
 {
-  if (!mDeclaration->HasImportantData()) {
-    NS_ASSERTION(!mImportantRule, "immutable, so should be no important rule");
-    return nsnull;
-  }
-
-  if (!mImportantRule) {
-    mImportantRule = new CSSImportantRule(mDeclaration);
-    if (!mImportantRule)
-      return nsnull;
-    NS_ADDREF(mImportantRule);
-  }
   return mImportantRule;
 }
 
 /* virtual */ void
 CSSStyleRuleImpl::RuleMatched()
 {
+  if (mDeclaration->HasImportantData() && !mImportantRule) {
+    mImportantRule = new CSSImportantRule(mDeclaration);
+    NS_IF_ADDREF(mImportantRule);
+  }
 }
 
 NS_IMETHODIMP
