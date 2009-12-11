@@ -1213,8 +1213,8 @@ CSS_PROP_COLUMN(
     mColumnCount,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleColumn, mColumnCount),
+    eStyleAnimType_Custom)
 CSS_PROP_COLUMN(
     -moz-column-width,
     _moz_column_width,
