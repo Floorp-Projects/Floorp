@@ -1169,7 +1169,7 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
       aAttribute == nsAccessibilityAtoms::aria_selected) {
     // ARIA or XUL selection
     nsCOMPtr<nsIAccessible> multiSelect =
-      nsAccUtils::GetMultiSelectFor(targetNode);
+      nsAccUtils::GetMultiSelectableContainer(targetNode);
     // Multi selects use selection_add and selection_remove
     // Single select widgets just mirror event_selection for
     // whatever gets event_focus, which is done in

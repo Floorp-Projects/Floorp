@@ -42,7 +42,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = accessible
 
-DIRS	= tree
+DIRS	= tree selectable
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
@@ -132,7 +132,6 @@ _TEST_FILES =\
 		test_relations_tree.xul \
 		test_role_nsHyperTextAcc.html \
 		test_role_table_cells.html \
-		test_selectable_tree.xul \
 		test_states.html \
 		test_states_doc.html \
 		test_states_docarticle.html \
