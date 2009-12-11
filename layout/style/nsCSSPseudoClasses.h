@@ -66,7 +66,8 @@ public:
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
     ePseudoClass_Count,
-    ePseudoClass_NotPseudoClass
+    ePseudoClass_NotPseudoClass /* This value MUST be last!  SelectorMatches
+                                   depends on it. */
   };
 
   static Type GetPseudoType(nsIAtom* aAtom);
