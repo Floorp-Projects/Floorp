@@ -138,6 +138,8 @@ public:
    * returns non-null if the property is set and it not !important.  This
    * should only be called when not expanded.  Always returns null for
    * shorthand properties.
+   *
+   * The caller must call EnsureMutable first.
    */
   void* SlotForValue(nsCSSProperty aProperty) {
     NS_PRECONDITION(mData, "How did that happen?");
@@ -157,6 +159,13 @@ public:
     NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty), "must be longhand");
     return !!mData->StorageFor(aProperty);
   }
+
+  /**
+   * Ensures that IsMutable on both data blocks will return true by
+   * cloning data blocks if needed.  Returns false on out-of-memory
+   * (which means IsMutable won't return true).
+   */
+  PRBool EnsureMutable();
 
   /**
    * Clear the data, in preparation for its replacement with entirely
