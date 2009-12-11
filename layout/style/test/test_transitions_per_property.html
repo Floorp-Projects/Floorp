@@ -54,6 +54,7 @@ var supported_properties = {
     "-moz-box-flex": [ test_float_zeroToOne_transition,
                        test_float_aboveOne_transition ],
     "-moz-box-shadow": [ test_shadow_transition ],
+    "-moz-column-count": [ test_pos_integer_or_auto_transition ],
     "-moz-column-gap": [ test_length_transition ],
     "-moz-column-rule-color": [ test_color_transition ],
     "-moz-column-width": [ test_length_transition ],
@@ -118,7 +119,7 @@ var supported_properties = {
     "vertical-align": [ test_length_transition, test_percent_transition ],
     "width": [ test_length_transition, test_percent_transition ],
     "word-spacing": [ test_length_transition ],
-    "z-index": [ test_zindex_transition ],
+    "z-index": [ test_zindex_transition, test_pos_integer_or_auto_transition ],
 };
 
 var div = document.getElementById("display");
@@ -477,6 +478,26 @@ function test_font_weight(prop) {
   div.style.setProperty(prop, "100", "");
   is(cs.getPropertyValue(prop), "400",
      "font-weight property " + prop + ": interpolation of font-weights");
+}
+
+function test_pos_integer_or_auto_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "4", "");
+  is(cs.getPropertyValue(prop), "4",
+     "integer-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "7", "");
+  is(cs.getPropertyValue(prop), "5",
+     "integer-valued property " + prop + ": interpolation of lengths");
+  div.style.setProperty(prop, "auto", "");
+  is(cs.getPropertyValue(prop), "auto",
+     "integer-valued property " + prop + ": auto not interpolable");
+  div.style.setProperty(prop, "8", "");
+  is(cs.getPropertyValue(prop), "8",
+     "integer-valued property " + prop + ": computed value before transition");
+  div.style.setProperty(prop, "4", "");
+  is(cs.getPropertyValue(prop), "6",
+     "integer-valued property " + prop + ": interpolation of lengths");
 }
 
 </script>
