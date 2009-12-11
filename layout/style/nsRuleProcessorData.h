@@ -48,6 +48,7 @@
 #include "nsString.h"
 #include "nsChangeHint.h"
 #include "nsIContent.h"
+#include "nsCSSPseudoElements.h"
 
 class nsIStyleSheet;
 class nsPresContext;
@@ -172,6 +173,24 @@ struct ElementRuleProcessorData : public RuleProcessorData {
     NS_PRECONDITION(aContent, "null pointer");
     NS_PRECONDITION(aRuleWalker, "null pointer");
   }
+};
+
+struct PseudoElementRuleProcessorData : public RuleProcessorData {
+  PseudoElementRuleProcessorData(nsPresContext* aPresContext,
+                                 nsIContent* aParentContent,
+                                 nsRuleWalker* aRuleWalker,
+                                 nsCSSPseudoElements::Type aPseudoType)
+    : RuleProcessorData(aPresContext, aParentContent, aRuleWalker),
+      mPseudoType(aPseudoType)
+  {
+    NS_PRECONDITION(aPresContext, "null pointer");
+    NS_PRECONDITION(aPseudoType <
+                      nsCSSPseudoElements::ePseudo_PseudoElementCount,
+                    "null pointer");
+    NS_PRECONDITION(aRuleWalker, "null pointer");
+  }
+
+  nsCSSPseudoElements::Type mPseudoType;
 };
 
 struct PseudoRuleProcessorData : public RuleProcessorData {

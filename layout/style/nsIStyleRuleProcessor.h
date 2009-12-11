@@ -51,6 +51,7 @@
 
 struct RuleProcessorData;
 struct ElementRuleProcessorData;
+struct PseudoElementRuleProcessorData;
 struct PseudoRuleProcessorData;
 struct StateRuleProcessorData;
 struct AttributeRuleProcessorData;
@@ -88,6 +89,12 @@ public:
   /**
    * Just like the previous |RulesMatching|, except for a given content
    * node <em>and pseudo-element</em>.
+   */
+  NS_IMETHOD RulesMatching(PseudoElementRuleProcessorData* aData) = 0;
+
+  /**
+   * Just like the previous |RulesMatching|, except for a given content
+   * node <em>and pseudo</em>.
    */
   NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData) = 0;
 

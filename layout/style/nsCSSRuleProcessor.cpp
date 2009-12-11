@@ -69,6 +69,7 @@
 #include "nsDOMError.h"
 #include "nsRuleWalker.h"
 #include "nsCSSPseudoClasses.h"
+#include "nsCSSPseudoElements.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
@@ -363,7 +364,7 @@ public:
   void PrependRule(RuleValue *aRuleInfo);
   void EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag, nsIAtom* aID,
                          const nsAttrValue* aClassList,
-                         RuleEnumFunc aFunc, void* aData);
+                         RuleEnumFunc aFunc, RuleProcessorData* aData);
   void EnumerateTagRules(nsIAtom* aTag,
                          RuleEnumFunc aFunc, void* aData);
   PLArenaPool& Arena() { return mArena; }
@@ -428,6 +429,7 @@ RuleHash::RuleHash(PRBool aQuirksMode)
     mPseudoTagCalls(0)
 #endif
 {
+  MOZ_COUNT_CTOR(RuleHash);
   // Initialize our arena
   PL_INIT_ARENA_POOL(&mArena, "RuleHashArena", NS_RULEHASH_ARENA_BLOCK_SIZE);
 
@@ -447,6 +449,7 @@ RuleHash::RuleHash(PRBool aQuirksMode)
 
 RuleHash::~RuleHash()
 {
+  MOZ_COUNT_DTOR(RuleHash);
 #ifdef RULE_HASH_STATS
   printf(
 "RuleHash(%p):\n"
@@ -574,7 +577,7 @@ void RuleHash::PrependRule(RuleValue *aRuleInfo)
 
 void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
                                  nsIAtom* aID, const nsAttrValue* aClassList,
-                                 RuleEnumFunc aFunc, void* aData)
+                                 RuleEnumFunc aFunc, RuleProcessorData* aData)
 {
   PRInt32 classCount = aClassList ? aClassList->GetAtomCount() : 0;
 
@@ -599,7 +602,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
     }
   }
   // universal rules within the namespace
-  if (kNameSpaceID_Unknown != aNameSpace) {
+  if (kNameSpaceID_Unknown != aNameSpace && mNameSpaceTable.entryCount) {
     RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
                                            (PL_DHashTableOperate(&mNameSpaceTable, NS_INT32_TO_PTR(aNameSpace),
                              PL_DHASH_LOOKUP));
@@ -609,7 +612,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(value, mElementNameSpaceCalls);
     }
   }
-  if (nsnull != aTag) {
+  if (aTag && mTagTable.entryCount) {
     RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
                                            (PL_DHashTableOperate(&mTagTable, aTag, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -618,7 +621,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(value, mElementTagCalls);
     }
   }
-  if (nsnull != aID) {
+  if (aID && mIdTable.entryCount) {
     RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
                                            (PL_DHashTableOperate(&mIdTable, aID, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -627,7 +630,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(value, mElementIdCalls);
     }
   }
-  { // extra scope to work around compiler bugs with |for| scoping.
+  if (mClassTable.entryCount) {
     for (PRInt32 index = 0; index < classCount; ++index) {
       RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
                                              (PL_DHashTableOperate(&mClassTable, aClassList->AtomAt(index),
@@ -719,17 +722,24 @@ struct RuleCascadeData {
     : mRuleHash(aQuirksMode),
       mStateSelectors(),
       mCacheKey(aMedium),
-      mNext(nsnull)
+      mNext(nsnull),
+      mQuirksMode(aQuirksMode)
   {
     PL_DHashTableInit(&mAttributeSelectors, &AttributeSelectorOps, nsnull,
                       sizeof(AttributeSelectorEntry), 16);
+    memset(mPseudoElementRuleHashes, 0, sizeof(mPseudoElementRuleHashes));
   }
 
   ~RuleCascadeData()
   {
     PL_DHashTableFinish(&mAttributeSelectors);
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mPseudoElementRuleHashes); ++i) {
+      delete mPseudoElementRuleHashes[i];
+    }
   }
   RuleHash                 mRuleHash;
+  RuleHash*
+    mPseudoElementRuleHashes[nsCSSPseudoElements::ePseudo_PseudoElementCount];
   nsTArray<nsCSSSelector*> mStateSelectors;
   nsTArray<nsCSSSelector*> mClassSelectors;
   nsTArray<nsCSSSelector*> mIDSelectors;
@@ -743,6 +753,8 @@ struct RuleCascadeData {
 
   nsMediaQueryResultCacheKey mCacheKey;
   RuleCascadeData*  mNext; // for a different medium
+
+  const PRBool mQuirksMode;
 };
 
 nsTArray<nsCSSSelector*>*
@@ -2007,7 +2019,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
 static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
                             void* aData)
 {
-  ElementRuleProcessorData* data = (ElementRuleProcessorData*)aData;
+  RuleProcessorData* data = (RuleProcessorData*)aData;
 
   if (SelectorMatches(*data, aSelector, 0, PR_TRUE)) {
     nsCSSSelector *next = aSelector->mNext;
@@ -2041,6 +2053,28 @@ nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData)
                                          aData->mClasses,
                                          ContentEnumFunc,
                                          aData);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSRuleProcessor::RulesMatching(PseudoElementRuleProcessorData* aData)
+{
+  NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
+                  "content must be element");
+
+  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
+
+  if (cascade) {
+    RuleHash* ruleHash = cascade->mPseudoElementRuleHashes[aData->mPseudoType];
+    if (ruleHash) {
+      ruleHash->EnumerateAllRules(aData->mNameSpaceID,
+                                  aData->mContentTag,
+                                  aData->mContentID,
+                                  aData->mClasses,
+                                  ContentEnumFunc,
+                                  aData);
+    }
   }
   return NS_OK;
 }
@@ -2368,7 +2402,25 @@ AddRule(RuleValue* aRuleInfo, void* aCascade)
   RuleCascadeData *cascade = static_cast<RuleCascadeData*>(aCascade);
 
   // Build the rule hash.
-  cascade->mRuleHash.PrependRule(aRuleInfo);
+  nsCSSPseudoElements::Type pseudoType = aRuleInfo->mSelector->PseudoType();
+  if (pseudoType < nsCSSPseudoElements::ePseudo_PseudoElementCount) {
+    RuleHash*& ruleHash = cascade->mPseudoElementRuleHashes[pseudoType];
+    if (!ruleHash) {
+      ruleHash = new RuleHash(cascade->mQuirksMode);
+      if (!ruleHash) {
+        // Out of memory; give up
+        return PR_FALSE;
+      }
+    }
+    NS_ASSERTION(aRuleInfo->mSelector->mNext,
+                 "Must have mNext; parser screwed up");
+    NS_ASSERTION(aRuleInfo->mSelector->mNext->mOperator == '>',
+                 "Unexpected mNext combinator");
+    aRuleInfo->mSelector = aRuleInfo->mSelector->mNext;
+    ruleHash->PrependRule(aRuleInfo);
+  } else {
+    cascade->mRuleHash.PrependRule(aRuleInfo);
+  }
 
   nsTArray<nsCSSSelector*>* stateArray = &cascade->mStateSelectors;
   nsTArray<nsCSSSelector*>* classArray = &cascade->mClassSelectors;
