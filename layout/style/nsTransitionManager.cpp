@@ -762,6 +762,12 @@ nsTransitionManager::RulesMatching(PseudoElementRuleProcessorData* aData)
 }
 
 NS_IMETHODIMP
+nsTransitionManager::RulesMatching(AnonBoxRuleProcessorData* aData)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsTransitionManager::RulesMatching(PseudoRuleProcessorData* aData)
 {
   return NS_OK;
