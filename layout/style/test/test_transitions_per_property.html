@@ -63,6 +63,8 @@ var supported_properties = {
     "-moz-outline-radius-bottomright": [ test_radius_transition ],
     "-moz-outline-radius-topleft": [ test_radius_transition ],
     "-moz-outline-radius-topright": [ test_radius_transition ],
+    "-moz-transform-origin": [ test_length_pair_transition,
+                               test_length_percent_pair_transition ],
     "background-color": [ test_color_transition ],
     "border-bottom-color": [ test_color_transition ],
     "border-bottom-width": [ test_length_transition ],
@@ -70,6 +72,7 @@ var supported_properties = {
     "border-left-width": [ test_length_transition ],
     "border-right-color": [ test_color_transition ],
     "border-right-width": [ test_length_transition ],
+    "border-spacing": [ test_length_pair_transition ],
     "border-top-color": [ test_color_transition ],
     "border-top-width": [ test_length_transition ],
     "bottom": [ test_length_transition, test_percent_transition ],
@@ -499,6 +502,28 @@ function test_pos_integer_or_auto_transition(prop) {
   div.style.setProperty(prop, "4", "");
   is(cs.getPropertyValue(prop), "6",
      "integer-valued property " + prop + ": interpolation of lengths");
+}
+
+function test_length_pair_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "4px 8px", "");
+  is(cs.getPropertyValue(prop), "4px 8px",
+     "length-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "12px 10px", "");
+  is(cs.getPropertyValue(prop), "8px 9px",
+     "length-valued property " + prop + ": interpolation of lengths");
+}
+
+function test_length_percent_pair_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "4px 50%", "");
+  is(cs.getPropertyValue(prop), "4px 50%",
+     "length-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "12px 70%", "");
+  is(cs.getPropertyValue(prop), "8px 60%",
+     "length-valued property " + prop + ": interpolation of lengths");
 }
 
 </script>
