@@ -2134,6 +2134,7 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
       NS_ASSERTION(static_cast<nsIStyleRule*>(aRule) == iRule.get(),
                    "Please fix QI so this performance optimization is valid");
 #endif
+      aRule->RuleMatched();
       data->mRuleWalker->Forward(static_cast<nsIStyleRule*>(aRule));
       // nsStyleSet will deal with the !important rule
     }
@@ -2200,6 +2201,7 @@ nsCSSRuleProcessor::RulesMatching(AnonBoxRuleProcessorData* aData)
         NS_ASSERTION(static_cast<nsIStyleRule*>(value->mRule) == iRule.get(),
                      "Please fix QI so this performance optimization is valid");
 #endif
+        value->mRule->RuleMatched();
         aData->mRuleWalker->Forward(static_cast<nsIStyleRule*>(value->mRule));
       }
     }

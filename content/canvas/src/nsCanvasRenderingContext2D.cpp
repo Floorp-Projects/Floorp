@@ -1882,6 +1882,8 @@ CreateFontStyleRule(const nsAString& aFont,
     if (NS_FAILED(rv))
         return rv;
 
+    rule->RuleMatched();
+
     rule.forget(aResult);
     return NS_OK;
 }

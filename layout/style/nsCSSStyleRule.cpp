@@ -1256,6 +1256,7 @@ public:
   virtual nsCSSDeclaration* GetDeclaration(void) const;
 
   virtual nsIStyleRule* GetImportantRule(void);
+  virtual void RuleMatched();
 
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
@@ -1420,6 +1421,11 @@ nsIStyleRule* CSSStyleRuleImpl::GetImportantRule(void)
     NS_ADDREF(mImportantRule);
   }
   return mImportantRule;
+}
+
+/* virtual */ void
+CSSStyleRuleImpl::RuleMatched()
+{
 }
 
 NS_IMETHODIMP
