@@ -451,15 +451,27 @@ XPC_COW_RewrapForChrome(JSContext *cx, JSObject *wrapperObj, jsval *vp)
   }
 
   XPCWrappedNative *wn;
+  JSBool ok;
+
+  // Set aside the frame chain so that we'll be able to wrap this object for
+  // chrome's use.
+  JSStackFrame *fp = JS_SaveFrameChain(cx);
+
   if (IS_WN_WRAPPER(obj) &&
       (wn = (XPCWrappedNative*)xpc_GetJSPrivate(obj)) &&
       !nsXPCWrappedJSClass::IsWrappedJS(wn->Native())) {
     // Return an explicit XPCNativeWrapper in case "chrome" code happens to be
     // XBL code cloned into an untrusted context.
-    return XPCNativeWrapper::CreateExplicitWrapper(cx, wn, JS_TRUE, vp);
+    ok = XPCNativeWrapper::CreateExplicitWrapper(cx, wn, JS_TRUE, vp);
+  } else {
+    // Note: we're passing the wrapped chrome object as the scope for the SJOW.
+    ok = XPCSafeJSObjectWrapper::WrapObject(cx, GetWrappedObject(cx, wrapperObj),
+                                            *vp, vp);
   }
 
-  return XPCSafeJSObjectWrapper::WrapObject(cx, obj, *vp, vp);
+  JS_RestoreFrameChain(cx, fp);
+
+  return ok;
 }
 
 JSBool
