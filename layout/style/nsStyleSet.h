@@ -140,20 +140,7 @@ class nsStyleSet
   // Get a style context for an anonymous box.  aPseudoTag is the
   // pseudo-tag to use and must be non-null.
   already_AddRefed<nsStyleContext>
-  ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
-                           nsStyleContext* aParentContext) {
-#ifdef DEBUG
-    PRBool isAnonBox = nsCSSAnonBoxes::IsAnonBox(aPseudoTag)
-#ifdef MOZ_XUL
-                 && !nsCSSAnonBoxes::IsTreePseudoElement(aPseudoTag)
-#endif
-      ;
-    NS_PRECONDITION(isAnonBox, "Unexpected pseudo");
-#endif
-    return ResolvePseudoStyleFor(nsnull, aPseudoTag,
-                                 nsCSSPseudoElements::ePseudo_AnonBox,
-                                 aParentContext);
-  }
+  ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag, nsStyleContext* aParentContext);
 
 #ifdef MOZ_XUL
   // Get a style context for a XUL tree pseudo.  aPseudoTag is the
@@ -348,8 +335,11 @@ public:
   
   // Enumerate the rules in a way that cares about the order of the
   // rules.
+  // aContent is the node the rules are for.  It might be null.  aData
+  // is the closure to pass to aCollectorFunc.  If aContent is not null,
+  // aData must be a RuleProcessorData*
   void FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
-                 RuleProcessorData* aData, nsRuleWalker* aRuleWalker);
+                 void* aData, nsIContent* aContent, nsRuleWalker* aRuleWalker);
 
   // Enumerate all the rules in a way that doesn't care about the order
   // of the rules and break out if the enumeration is halted.
