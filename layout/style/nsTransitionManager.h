@@ -44,7 +44,6 @@
 #include "nsCSSProperty.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsRefreshDriver.h"
-#include "nsCSSPseudoElements.h"
 
 class nsStyleContext;
 class nsPresContext;
@@ -86,11 +85,7 @@ public:
 
   // nsIStyleRuleProcessor
   NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData);
-  NS_IMETHOD RulesMatching(PseudoElementRuleProcessorData* aData);
-  NS_IMETHOD RulesMatching(AnonBoxRuleProcessorData* aData);
-#ifdef MOZ_XUL
-  NS_IMETHOD RulesMatching(XULTreeRuleProcessorData* aData);
-#endif
+  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData);
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
                                     nsReStyleHint* aResult);
   virtual nsReStyleHint
@@ -113,12 +108,11 @@ private:
                                   PRBool *aStartedAny,
                                   nsCSSPropertySet *aWhichStarted);
   ElementTransitions* GetElementTransitions(nsIContent *aElement,
-                                            nsCSSPseudoElements::Type aPseudoType,
+                                            nsIAtom *aPseudo,
                                             PRBool aCreateIfNeeded);
   void AddElementTransitions(ElementTransitions* aElementTransitions);
   void TransitionsRemoved();
-  nsresult WalkTransitionRule(RuleProcessorData* aData,
-			      nsCSSPseudoElements::Type aPseudoType);
+  nsresult WalkTransitionRule(RuleProcessorData* aData, nsIAtom *aPseudo);
 
   PRCList mElementTransitions;
   nsPresContext *mPresContext;

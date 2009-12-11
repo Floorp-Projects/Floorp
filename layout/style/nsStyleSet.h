@@ -55,8 +55,6 @@
 #include "nsCOMArray.h"
 #include "nsAutoPtr.h"
 #include "nsIStyleRule.h"
-#include "nsCSSPseudoElements.h"
-#include "nsCSSAnonBoxes.h"
 
 class nsIURI;
 class nsCSSFontFaceRule;
@@ -99,7 +97,7 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(nsIContent* aContent, nsStyleContext* aParentContext);
 
-  // Get a style context (with the given parent and pseudo-tag/type) for a
+  // Get a style context (with the given parent and pseudo-tag) for a
   // sequence of style rules consisting of the concatenation of:
   //  (1) the rule sequence represented by aRuleNode (which is the empty
   //      sequence if aRuleNode is null or the root of the rule tree), and
@@ -107,7 +105,6 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   ResolveStyleForRules(nsStyleContext* aParentContext,
                        nsIAtom* aPseudoTag,
-                       nsCSSPseudoElements::Type aPseudoType,
                        nsRuleNode *aRuleNode,
                        const nsCOMArray<nsIStyleRule> &aRules);
 
@@ -121,37 +118,23 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   ResolveStyleForNonElement(nsStyleContext* aParentContext);
 
-  // Get a style context for a pseudo-element.  aParentContent must be
-  // non-null.  aPseudoID is the nsCSSPseudoElements::Type for the
-  // pseudo-element.
+  // get a style context for a pseudo-element (i.e.,
+  // |aPseudoTag == nsCOMPtr<nsIAtom>(do_GetAtom(":first-line"))|, in
+  // which case aParentContent must be non-null, or an anonymous box, in
+  // which case it may be null or non-null.
   already_AddRefed<nsStyleContext>
-  ResolvePseudoElementStyle(nsIContent* aParentContent,
-                            nsCSSPseudoElements::Type aType,
-                            nsStyleContext* aParentContext);
+  ResolvePseudoStyleFor(nsIContent* aParentContent,
+                        nsIAtom* aPseudoTag,
+                        nsStyleContext* aParentContext,
+                        nsICSSPseudoComparator* aComparator = nsnull);
 
-  // This functions just like ResolvePseudoElementStyle except that it will
+  // This functions just like ResolvePseudoStyleFor except that it will
   // return nsnull if there are no explicit style rules for that
-  // pseudo element.
+  // pseudo element.  It should be used only for pseudo-elements.
   already_AddRefed<nsStyleContext>
-  ProbePseudoElementStyle(nsIContent* aParentContent,
-                          nsCSSPseudoElements::Type aType,
-                          nsStyleContext* aParentContext);
-  
-  // Get a style context for an anonymous box.  aPseudoTag is the
-  // pseudo-tag to use and must be non-null.
-  already_AddRefed<nsStyleContext>
-  ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag, nsStyleContext* aParentContext);
-
-#ifdef MOZ_XUL
-  // Get a style context for a XUL tree pseudo.  aPseudoTag is the
-  // pseudo-tag to use and must be non-null.  aParentContent must be
-  // non-null.  aComparator must be non-null.
-  already_AddRefed<nsStyleContext>
-  ResolveXULTreePseudoStyle(nsIContent* aParentContent,
-                            nsIAtom* aPseudoTag,
-                            nsStyleContext* aParentContext,
-                            nsICSSPseudoComparator* aComparator);
-#endif
+  ProbePseudoStyleFor(nsIContent* aParentContent,
+                      nsIAtom* aPseudoTag,
+                      nsStyleContext* aParentContext);
 
   // Append all the currently-active font face rules to aArray.  Return
   // true for success and false for failure.
@@ -298,7 +281,7 @@ class nsStyleSet
 
   // Move aRuleWalker forward by the appropriate rule if we need to add
   // a rule due to property restrictions on pseudo-elements.
-  void WalkRestrictionRule(nsCSSPseudoElements::Type aPseudoType,
+  void WalkRestrictionRule(nsIAtom* aPseudoType,
                            nsRuleWalker* aRuleWalker);
 
 #ifdef DEBUG
@@ -317,11 +300,8 @@ class nsStyleSet
   
   // Enumerate the rules in a way that cares about the order of the
   // rules.
-  // aContent is the node the rules are for.  It might be null.  aData
-  // is the closure to pass to aCollectorFunc.  If aContent is not null,
-  // aData must be a RuleProcessorData*
   void FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
-                 void* aData, nsIContent* aContent, nsRuleWalker* aRuleWalker);
+                 RuleProcessorData* aData, nsRuleWalker* aRuleWalker);
 
   // Enumerate all the rules in a way that doesn't care about the order
   // of the rules and break out if the enumeration is halted.
@@ -331,8 +311,7 @@ class nsStyleSet
   already_AddRefed<nsStyleContext> GetContext(nsPresContext* aPresContext,
                                               nsStyleContext* aParentContext,
                                               nsRuleNode* aRuleNode,
-                                              nsIAtom* aPseudoTag,
-                                              nsCSSPseudoElements::Type aPseudoType);
+                                              nsIAtom* aPseudoTag);
 
   nsPresContext* PresContext() { return mRuleTree->GetPresContext(); }
 

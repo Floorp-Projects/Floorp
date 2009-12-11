@@ -385,16 +385,14 @@ nsButtonFrameRenderer::ReResolveStyles(nsPresContext* aPresContext)
   nsStyleSet *styleSet = aPresContext->StyleSet();
 
   // style for the inner such as a dotted line (Windows)
-  mInnerFocusStyle =
-    styleSet->ProbePseudoElementStyle(mFrame->GetContent(),
-                                      nsCSSPseudoElements::ePseudo_mozFocusInner,
-                                      context);
+  mInnerFocusStyle = styleSet->ProbePseudoStyleFor(mFrame->GetContent(),
+                                                   nsCSSPseudoElements::mozFocusInner,
+                                                   context);
 
   // style for outer focus like a ridged border (MAC).
-  mOuterFocusStyle =
-    styleSet->ProbePseudoElementStyle(mFrame->GetContent(),
-                                      nsCSSPseudoElements::ePseudo_mozFocusOuter,
-                                      context);
+  mOuterFocusStyle = styleSet->ProbePseudoStyleFor(mFrame->GetContent(),
+                                                   nsCSSPseudoElements::mozFocusOuter,
+                                                   context);
 }
 
 nsStyleContext*

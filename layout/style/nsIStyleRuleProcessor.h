@@ -51,20 +51,15 @@
 
 struct RuleProcessorData;
 struct ElementRuleProcessorData;
-struct PseudoElementRuleProcessorData;
-struct AnonBoxRuleProcessorData;
-#ifdef MOZ_XUL
-struct XULTreeRuleProcessorData;
-#endif
+struct PseudoRuleProcessorData;
 struct StateRuleProcessorData;
 struct AttributeRuleProcessorData;
 class nsPresContext;
 
-// IID for the nsIStyleRuleProcessor interface
-// {ec92bc0c-9518-48ea-9289-74e654659be9}
+// IID for the nsIStyleRuleProcessor interface {a4ec760e-6bfb-4b9f-bd08-9d1c23b700f6}
 #define NS_ISTYLE_RULE_PROCESSOR_IID     \
-{ 0xec92bc0c, 0x9518, 0x48ea, \
- { 0x92, 0x89, 0x74, 0xe6, 0x54, 0x65, 0x9b, 0xe9 } }
+{ 0xa4ec760e, 0x6bfb, 0x4b9f, \
+ { 0xbd, 0x08, 0x9d, 0x1c, 0x23, 0xb7, 0x00, 0xf6 } }
 
 /* The style rule processor interface is a mechanism to separate the matching
  * of style rules from style sheet instances.
@@ -94,20 +89,7 @@ public:
    * Just like the previous |RulesMatching|, except for a given content
    * node <em>and pseudo-element</em>.
    */
-  NS_IMETHOD RulesMatching(PseudoElementRuleProcessorData* aData) = 0;
-
-  /**
-   * Just like the previous |RulesMatching|, except for a given anonymous box.
-   */
-  NS_IMETHOD RulesMatching(AnonBoxRuleProcessorData* aData) = 0;
-
-#ifdef MOZ_XUL
-  /**
-   * Just like the previous |RulesMatching|, except for a given content
-   * node <em>and tree pseudo</em>.
-   */
-  NS_IMETHOD RulesMatching(XULTreeRuleProcessorData* aData) = 0;
-#endif
+  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData) = 0;
 
   /**
    * Return how (as described by nsReStyleHint) style can depend on a
