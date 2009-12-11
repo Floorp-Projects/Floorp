@@ -45,6 +45,7 @@
 #include "prlink.h"
 #include "prclist.h"
 #include "npapi.h"
+#include "nsNPAPIPluginInstance.h"
 #include "nsIPlugin.h"
 #include "nsIPluginTag.h"
 #include "nsPluginsDir.h"
@@ -266,8 +267,6 @@ public:
   static nsresult GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt);
 
 private:
-  friend class nsNPAPIPlugin;
-
   nsresult
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
 
@@ -289,9 +288,6 @@ private:
 
   nsPluginTag*
   FindPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
-
-  nsPluginTag*
-  FindPluginTag(nsIPlugin* plugin);
 
   nsresult
   FindStoppedPluginForURL(nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
@@ -388,7 +384,12 @@ public:
     Init();
   }
 
-  PluginDestructionGuard(NPP npp);
+  PluginDestructionGuard(NPP npp)
+    : mInstance(npp ? static_cast<nsNPAPIPluginInstance*>(npp->ndata) : nsnull)
+  {
+    Init();
+  }
+
   ~PluginDestructionGuard();
 
   static PRBool DelayDestroy(nsIPluginInstance *aInstance);

@@ -281,7 +281,6 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks,
 #endif
 
   fLibrary = aLibrary;
-  fLibrary->SetPlugin(this);
 }
 
 nsNPAPIPlugin::~nsNPAPIPlugin()
@@ -298,17 +297,6 @@ void
 nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
 {
   fPluginRefNum = aRefNum;
-}
-#endif
-
-#ifdef MOZ_IPC
-void
-nsNPAPIPlugin::PluginCrashed()
-{
-  nsPluginTag* tag = nsPluginHost::GetInst()->FindPluginTag(this);
-  if (tag) {
-    tag->mEntryPoint = NULL;
-  }
 }
 #endif
 
@@ -597,7 +585,7 @@ nsNPAPIPlugin::CreatePluginInstance(nsIPluginInstance **aResult)
   *aResult = NULL;
 
   nsRefPtr<nsNPAPIPluginInstance> inst =
-    new nsNPAPIPluginInstance(this);
+    new nsNPAPIPluginInstance(&fCallbacks, fLibrary);
   if (!inst)
     return NS_ERROR_OUT_OF_MEMORY;
 
