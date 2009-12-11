@@ -1145,6 +1145,42 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
+        case eCSSProperty_border_spacing: {
+          const nsStyleTableBorder *styleTableBorder =
+            static_cast<const nsStyleTableBorder*>(styleStruct);
+          nsCSSValuePair *pair = new nsCSSValuePair;
+          if (!pair) {
+            return PR_FALSE;
+          }
+          pair->mXValue.SetFloatValue(
+            nsPresContext::AppUnitsToFloatCSSPixels(
+              styleTableBorder->mBorderSpacingX),
+            eCSSUnit_Pixel);
+          pair->mYValue.SetFloatValue(
+            nsPresContext::AppUnitsToFloatCSSPixels(
+              styleTableBorder->mBorderSpacingY),
+            eCSSUnit_Pixel);
+          aComputedValue.SetAndAdoptCSSValuePairValue(pair,
+                                                      eUnit_CSSValuePair);
+          break;
+        }
+
+        case eCSSProperty__moz_transform_origin: {
+          const nsStyleDisplay *styleDisplay =
+            static_cast<const nsStyleDisplay*>(styleStruct);
+          nsCSSValuePair *pair = new nsCSSValuePair;
+          if (!pair) {
+            return PR_FALSE;
+          }
+          StyleCoordToCSSValue(styleDisplay->mTransformOrigin[0],
+                               pair->mXValue);
+          StyleCoordToCSSValue(styleDisplay->mTransformOrigin[1],
+                               pair->mYValue);
+          aComputedValue.SetAndAdoptCSSValuePairValue(pair,
+                                                      eUnit_CSSValuePair);
+          break;
+        }
+
         case eCSSProperty_stroke_dasharray: {
           const nsStyleSVG *svg = static_cast<const nsStyleSVG*>(styleStruct);
           NS_ABORT_IF_FALSE((svg->mStrokeDasharray != nsnull) ==

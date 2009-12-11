@@ -1003,7 +1003,7 @@ CSS_PROP_TABLEBORDER(
     eCSSType_ValuePair,
     nsnull,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    eStyleAnimType_Custom) // XXX bug 3935
 CSS_PROP_SHORTHAND(
     -moz-border-start,
     border_start,
@@ -2347,7 +2347,7 @@ CSS_PROP_DISPLAY(
     eCSSType_ValuePair,
     kBackgroundPositionKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_POSITION(
     top,
     top,
