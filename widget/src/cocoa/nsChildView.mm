@@ -2665,11 +2665,11 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
 - (void)viewWillDraw
 {
-  if (!mGeckoChild)
-    return;
-
-  nsPaintEvent paintEvent(PR_TRUE, NS_WILL_PAINT, mGeckoChild);
-  mGeckoChild->DispatchWindowEvent(paintEvent);
+  if (mGeckoChild) {
+    nsPaintEvent paintEvent(PR_TRUE, NS_WILL_PAINT, mGeckoChild);
+    mGeckoChild->DispatchWindowEvent(paintEvent);
+  }
+  [super viewWillDraw];
 }
 
 // Allows us to turn off setting up the clip region
