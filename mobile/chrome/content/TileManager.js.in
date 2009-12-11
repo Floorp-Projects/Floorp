@@ -854,9 +854,10 @@ TileManager.Tile.prototype = {
 
     ctx.translate(x, y);
     browserView.browserToViewportCanvasContext(ctx);
+    // We expand the rect to working around a gfx issue (bug 534054)
     ctx.drawWindow(browserView._contentWindow,
-                   rect.left, rect.top,
-                   rect.right - rect.left, rect.bottom - rect.top,
+                   rect.left - 1 , rect.top - 1,
+                   rect.right - rect.left + 1, rect.bottom - rect.top + 1,
                    "white",
                    (ctx.DRAWWINDOW_DRAW_CARET));
 
