@@ -195,9 +195,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 + (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent;
 
-- (void)maybeInvalidateShadow;
-- (void)invalidateShadow;
-
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
  // a context menu (click-hold)
@@ -2497,37 +2494,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// Limit shadow invalidation to 10 times per second.
-static const PRInt32 sShadowInvalidationInterval = 100;
-- (void)maybeInvalidateShadow
-{
-  NSWindow* window = [self window];
-  if (!window || [window isOpaque] || ![window hasShadow])
-    return;
-
-  PRIntervalTime now = PR_IntervalNow();
-  PRInt32 elapsed = PR_IntervalToMilliseconds(now - mLastShadowInvalidation);
-  if (!mLastShadowInvalidation ||
-      elapsed >= sShadowInvalidationInterval) {
-    [window invalidateShadow];
-    mLastShadowInvalidation = now;
-    mNeedsShadowInvalidation = NO;
-  } else if (!mNeedsShadowInvalidation) {
-    mNeedsShadowInvalidation = YES;
-    [self performSelector:@selector(invalidateShadow)
-               withObject:nil
-               afterDelay:(sShadowInvalidationInterval - elapsed) / 1000.0];
-  }
-}
-
-- (void)invalidateShadow
-{
-  if (![self window] || !mNeedsShadowInvalidation)
-    return;
-  [[self window] invalidateShadow];
-  mNeedsShadowInvalidation = NO;
-}
-
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
@@ -2535,9 +2501,11 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
   [self drawRect:aRect inContext:cgContext];
 
-  // If we're a transparent window, and our contents have changed, we need
+  // If we're a transparent window and our contents have changed, we need
   // to make sure the shadow is updated to the new contents.
-  [self maybeInvalidateShadow];
+  if ([[self window] isKindOfClass:[BaseWindow class]]) {
+    [(BaseWindow*)[self window] deferredInvalidateShadow];
+  }
 }
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext

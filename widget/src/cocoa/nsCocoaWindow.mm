@@ -1744,6 +1744,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
   mDrawsIntoWindowFrame = NO;
   mActiveTitlebarColor = nil;
   mInactiveTitlebarColor = nil;
+  mScheduledShadowInvalidation = NO;
   return self;
 }
 
@@ -1810,6 +1811,21 @@ static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor"
 - (NSColor*)titlebarColorForActiveWindow:(BOOL)aActive
 {
   return aActive ? mActiveTitlebarColor : mInactiveTitlebarColor;
+}
+
+- (void)deferredInvalidateShadow
+{
+  if (mScheduledShadowInvalidation || [self isOpaque] || ![self hasShadow])
+    return;
+
+  [self performSelector:@selector(invalidateShadow) withObject:nil afterDelay:0];
+  mScheduledShadowInvalidation = YES;
+}
+
+- (void)invalidateShadow
+{
+  [super invalidateShadow];
+  mScheduledShadowInvalidation = NO;
 }
 
 @end
