@@ -727,12 +727,15 @@ struct RuleCascadeData {
   {
     PL_DHashTableInit(&mAttributeSelectors, &AttributeSelectorOps, nsnull,
                       sizeof(AttributeSelectorEntry), 16);
+    PL_DHashTableInit(&mAnonBoxRules, &RuleHash_TagTable_Ops, nsnull,
+                      sizeof(RuleHashTagTableEntry), 16);
     memset(mPseudoElementRuleHashes, 0, sizeof(mPseudoElementRuleHashes));
   }
 
   ~RuleCascadeData()
   {
     PL_DHashTableFinish(&mAttributeSelectors);
+    PL_DHashTableFinish(&mAnonBoxRules);
     for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mPseudoElementRuleHashes); ++i) {
       delete mPseudoElementRuleHashes[i];
     }
@@ -744,6 +747,7 @@ struct RuleCascadeData {
   nsTArray<nsCSSSelector*> mClassSelectors;
   nsTArray<nsCSSSelector*> mIDSelectors;
   PLDHashTable             mAttributeSelectors;
+  PLDHashTable             mAnonBoxRules;
 
   nsTArray<nsFontFaceRuleContainer> mFontFaceRules;
 
@@ -2079,6 +2083,32 @@ nsCSSRuleProcessor::RulesMatching(PseudoElementRuleProcessorData* aData)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCSSRuleProcessor::RulesMatching(AnonBoxRuleProcessorData* aData)
+{
+  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
+
+  if (cascade && cascade->mAnonBoxRules.entryCount) {
+    RuleHashTagTableEntry* entry = static_cast<RuleHashTagTableEntry*>
+      (PL_DHashTableOperate(&cascade->mAnonBoxRules, aData->mPseudoTag,
+                            PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      for (RuleValue *value = entry->mRules; value; value = value->mNext) {
+        // for performance, require that every implementation of
+        // nsICSSStyleRule return the same pointer for nsIStyleRule (why
+        // would anything multiply inherit nsIStyleRule anyway?)
+#ifdef DEBUG
+        nsCOMPtr<nsIStyleRule> iRule = do_QueryInterface(value->mRule);
+        NS_ASSERTION(static_cast<nsIStyleRule*>(value->mRule) == iRule.get(),
+                     "Please fix QI so this performance optimization is valid");
+#endif
+        aData->mRuleWalker->Forward(static_cast<nsIStyleRule*>(value->mRule));
+      }
+    }
+  }
+  return NS_OK;
+}
+
 static void PseudoEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
                            void* aData)
 {
@@ -2418,6 +2448,18 @@ AddRule(RuleValue* aRuleInfo, void* aCascade)
                  "Unexpected mNext combinator");
     aRuleInfo->mSelector = aRuleInfo->mSelector->mNext;
     ruleHash->PrependRule(aRuleInfo);
+  } else if (pseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
+    RuleHashTagTableEntry *entry = static_cast<RuleHashTagTableEntry*>
+      (PL_DHashTableOperate(&cascade->mAnonBoxRules,
+                            aRuleInfo->mSelector->mLowercaseTag,
+                            PL_DHASH_ADD));
+    if (!entry)
+      return PR_FALSE;
+
+    entry->mTag = aRuleInfo->mSelector->mLowercaseTag;
+    // Index doesn't matter here, since we'll just be walking these
+    // rules in order; just pass 0.
+    entry->mRules = aRuleInfo->Add(0, entry->mRules);
   } else {
     cascade->mRuleHash.PrependRule(aRuleInfo);
   }
