@@ -767,11 +767,13 @@ nsTransitionManager::RulesMatching(AnonBoxRuleProcessorData* aData)
   return NS_OK;
 }
 
+#ifdef MOZ_XUL
 NS_IMETHODIMP
-nsTransitionManager::RulesMatching(PseudoRuleProcessorData* aData)
+nsTransitionManager::RulesMatching(XULTreeRuleProcessorData* aData)
 {
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsTransitionManager::HasStateDependentStyle(StateRuleProcessorData* aData,
