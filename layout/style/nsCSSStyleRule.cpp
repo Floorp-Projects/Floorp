@@ -82,8 +82,6 @@
 #include "nsContentErrors.h"
 #include "mozAutoDocUpdate.h"
 
-#include "prlog.h"
-
 #define NS_IF_CLONE(member_)                                                  \
   PR_BEGIN_MACRO                                                              \
     if (member_) {                                                            \
@@ -136,10 +134,8 @@ nsAtomList::~nsAtomList(void)
   NS_CSS_DELETE_LIST_MEMBER(nsAtomList, this, mNext);
 }
 
-nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
-                                     nsCSSPseudoClasses::Type aType)
+nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom)
   : mAtom(aAtom),
-    mType(aType),
     mNext(nsnull)
 {
   NS_ASSERTION(!nsCSSPseudoClasses::HasStringArg(aAtom) &&
@@ -149,11 +145,8 @@ nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
   u.mMemory = nsnull;
 }
 
-nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
-                                     nsCSSPseudoClasses::Type aType,
-                                     const PRUnichar* aString)
+nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom, const PRUnichar* aString)
   : mAtom(aAtom),
-    mType(aType),
     mNext(nsnull)
 {
   NS_ASSERTION(nsCSSPseudoClasses::HasStringArg(aAtom),
@@ -163,11 +156,8 @@ nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
   u.mString = NS_strdup(aString);
 }
 
-nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
-                                     nsCSSPseudoClasses::Type aType,
-                                     const PRInt32* aIntPair)
+nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom, const PRInt32* aIntPair)
   : mAtom(aAtom),
-    mType(aType),
     mNext(nsnull)
 {
   NS_ASSERTION(nsCSSPseudoClasses::HasNthPairArg(aAtom),
@@ -183,13 +173,13 @@ nsPseudoClassList::Clone(PRBool aDeep) const
 {
   nsPseudoClassList *result;
   if (!u.mMemory) {
-    result = new nsPseudoClassList(mAtom, mType);
+    result = new nsPseudoClassList(mAtom);
   } else if (nsCSSPseudoClasses::HasStringArg(mAtom)) {
-    result = new nsPseudoClassList(mAtom, mType, u.mString);
+    result = new nsPseudoClassList(mAtom, u.mString);
   } else {
     NS_ASSERTION(nsCSSPseudoClasses::HasNthPairArg(mAtom),
                  "unexpected pseudo-class");
-    result = new nsPseudoClassList(mAtom, mType, u.mNumbers);
+    result = new nsPseudoClassList(mAtom, u.mNumbers);
   }
 
   if (aDeep)
@@ -290,12 +280,9 @@ nsCSSSelector::nsCSSSelector(void)
     mNegations(nsnull),
     mNext(nsnull),
     mNameSpace(kNameSpaceID_Unknown),
-    mOperator(0),
-    mPseudoType(nsCSSPseudoElements::ePseudo_NotPseudoElement)
+    mOperator(0)
 {
   MOZ_COUNT_CTOR(nsCSSSelector);
-  // Make sure mPseudoType can hold all nsCSSPseudoElements::Type values
-  PR_STATIC_ASSERT(nsCSSPseudoElements::ePseudo_MAX < PR_INT16_MAX);
 }
 
 nsCSSSelector*
@@ -309,7 +296,6 @@ nsCSSSelector::Clone(PRBool aDeepNext, PRBool aDeepNegations) const
   result->mLowercaseTag = mLowercaseTag;
   result->mCasedTag = mCasedTag;
   result->mOperator = mOperator;
-  result->mPseudoType = mPseudoType;
   
   NS_IF_CLONE(mIDList);
   NS_IF_CLONE(mClassList);
@@ -400,24 +386,21 @@ void nsCSSSelector::AddClass(const nsString& aClass)
   }
 }
 
-void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
-                                   nsCSSPseudoClasses::Type aType)
+void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass)
 {
-  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aType));
+  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass));
 }
 
 void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
-                                   nsCSSPseudoClasses::Type aType,
                                    const PRUnichar* aString)
 {
-  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aType, aString));
+  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aString));
 }
 
 void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
-                                   nsCSSPseudoClasses::Type aType,
                                    const PRInt32* aIntPair)
 {
-  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aType, aIntPair));
+  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aIntPair));
 }
 
 void nsCSSSelector::AddPseudoClassInternal(nsPseudoClassList *aPseudoClass)

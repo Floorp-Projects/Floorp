@@ -39,7 +39,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsMathMLFrame.h"
 #include "nsMathMLChar.h"
-#include "nsCSSPseudoElements.h"
+#include "nsCSSAnonBoxes.h"
 
 // used to map attributes into CSS rules
 #include "nsIDocument.h"
@@ -164,12 +164,12 @@ nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext*  aPresContext,
                                       nsMathMLChar*    aMathMLChar,
                                       PRBool           aIsMutableChar)
 {
-  nsCSSPseudoElements::Type pseudoType = (aIsMutableChar) ?
-    nsCSSPseudoElements::ePseudo_mozMathStretchy :
-    nsCSSPseudoElements::ePseudo_mozMathAnonymous; // savings
+  nsIAtom* pseudoStyle = (aIsMutableChar) ?
+    nsCSSAnonBoxes::mozMathStretchy :
+    nsCSSAnonBoxes::mozMathAnonymous; // savings
   nsRefPtr<nsStyleContext> newStyleContext;
   newStyleContext = aPresContext->StyleSet()->
-    ResolvePseudoElementStyle(aContent, pseudoType, aParentStyleContext);
+    ResolvePseudoStyleFor(aContent, pseudoStyle, aParentStyleContext);
 
   if (newStyleContext)
     aMathMLChar->SetStyleContext(newStyleContext);
