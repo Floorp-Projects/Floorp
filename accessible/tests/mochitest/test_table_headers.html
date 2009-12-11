@@ -119,6 +119,32 @@
 
       testHeaderCells(headerInfoMap);
 
+      //////////////////////////////////////////////////////////////////////////
+      // table consisted of one column
+
+      headerInfoMap = [
+        {
+          cell: "table4_cell",
+          rowHeaderCells: [],
+          columnHeaderCells: [ "table4_ch" ]
+        }
+      ];
+
+      testHeaderCells(headerInfoMap);
+
+      //////////////////////////////////////////////////////////////////////////
+      // table consisted of one row
+
+      headerInfoMap = [
+        {
+          cell: "table5_cell",
+          rowHeaderCells: [ "table5_rh" ],
+          columnHeaderCells: [ ]
+        }
+      ];
+
+      testHeaderCells(headerInfoMap);
+
       SimpleTest.finish();
     }
 
@@ -198,6 +224,26 @@
     <tr>
       <td id="table3_ch_1" scope="col">col1</td>
       <td id="table3_ch_2" scope="col">col2</td>
+    </tr>
+  </table>
+
+  <table id="table4">
+    <thead>
+      <tr>
+        <th id="table4_ch">colheader</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="table4_cell">bla</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table id="table5">
+    <tr>
+      <th id="table5_rh">rowheader</th>
+      <td id="table5_cell">cell</td>
     </tr>
   </table>
 </body>
