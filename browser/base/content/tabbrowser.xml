@@ -3398,7 +3398,7 @@
         this._updateTabsVisibilityStatus();
       ]]></handler>
 
-      <handler event="popuphiding">
+      <handler event="popuphidden">
       <![CDATA[
         // clear out the menu popup and remove the listeners
         while (this.hasChildNodes()) {
