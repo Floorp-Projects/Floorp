@@ -916,6 +916,7 @@ public:
                                             nsICSSLoader** aCSSLoader,
                                             nsICSSParser** aCSSParser);
   virtual nsresult DeclarationChanged();
+  virtual nsIDocument* DocToUpdate();
 
   // Override |AddRef| and |Release| for being a member of
   // |DOMCSSStyleRuleImpl|.
@@ -1107,6 +1108,12 @@ DOMCSSDeclarationImpl::DeclarationChanged()
     owningDoc->StyleRuleChanged(sheet, oldRule, mRule);
   }
   return NS_OK;
+}
+
+nsIDocument*
+DOMCSSDeclarationImpl::DocToUpdate()
+{
+  return nsnull;
 }
 
 DOMCSSStyleRuleImpl::DOMCSSStyleRuleImpl(nsICSSStyleRule* aRule)
