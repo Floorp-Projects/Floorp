@@ -129,6 +129,7 @@ EXPORTS_mozilla = \
   DeadlockDetector.h \
   Monitor.h \
   Mutex.h \
+  SSE.h \
   $(NULL)
 
 SDK_LIBRARY     =                        \
