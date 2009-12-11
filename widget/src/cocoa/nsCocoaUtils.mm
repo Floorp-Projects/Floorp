@@ -100,7 +100,7 @@ NSPoint nsCocoaUtils::ScreenLocationForEvent(NSEvent* anEvent)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   // Don't trust mouse locations of mouse move events, see bug 443178.
-  if ([anEvent type] == NSMouseMoved)
+  if (!anEvent || [anEvent type] == NSMouseMoved)
     return [NSEvent mouseLocation];
 
   return [[anEvent window] convertBaseToScreen:[anEvent locationInWindow]];
