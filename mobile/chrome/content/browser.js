@@ -3039,7 +3039,7 @@ PluginObserver.prototype = {
 
   /** Observe listens for plugin change events and maintains an embed cache. */
   observe: function observe(subject, topic, data) {
-    let doc = subject.ownerDocument;
+    let doc = subject.ownerDocument.defaultView.top.document;
     if (data == "init") {
       if (doc.pluginCache === undefined)
         doc.pluginCache = [];
