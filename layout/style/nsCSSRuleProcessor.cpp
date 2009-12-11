@@ -86,6 +86,7 @@
 #include "nsCSSRules.h"
 #include "nsIPrincipal.h"
 #include "nsStyleSet.h"
+#include "prlog.h"
 
 #define VISITED_PSEUDO_PREF "layout.css.visited_links_enabled"
 
@@ -1183,13 +1184,6 @@ static PRBool ValueIncludes(const nsSubstring& aValueList,
   return PR_FALSE;
 }
 
-inline PRBool IsLinkPseudo(nsIAtom* aAtom)
-{
-  return PRBool ((nsCSSPseudoClasses::link == aAtom) || 
-                 (nsCSSPseudoClasses::visited == aAtom) ||
-                 (nsCSSPseudoClasses::mozAnyLink == aAtom));
-}
-
 // Return whether we should apply a "global" (i.e., universal-tag)
 // selector for event states in quirks mode.  Note that
 // |data.IsLink()| is checked separately by the caller, so we return
@@ -1256,6 +1250,515 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
       return PR_FALSE;
   }
 }
+
+static PRBool NS_FASTCALL
+firstNodeMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                 nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::firstNode,
+                  "Unexpected atom");
+  nsIContent *firstNode = nsnull;
+  nsIContent *parent = data.mParentContent;
+  if (parent) {
+    if (setNodeFlags)
+      parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
+
+    PRInt32 index = -1;
+    do {
+      firstNode = parent->GetChildAt(++index);
+      // stop at first non-comment and non-whitespace node
+    } while (firstNode &&
+             !IsSignificantChild(firstNode, PR_TRUE, PR_FALSE));
+  }
+  return (data.mContent == firstNode);
+}
+
+static PRBool NS_FASTCALL
+lastNodeMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::lastNode,
+                  "Unexpected atom");
+  nsIContent *lastNode = nsnull;
+  nsIContent *parent = data.mParentContent;
+  if (parent) {
+    if (setNodeFlags)
+      parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
+
+    PRUint32 index = parent->GetChildCount();
+    do {
+      lastNode = parent->GetChildAt(--index);
+      // stop at first non-comment and non-whitespace node
+    } while (lastNode &&
+             !IsSignificantChild(lastNode, PR_TRUE, PR_FALSE));
+  }
+  return (data.mContent == lastNode);
+}
+
+static inline PRBool
+edgeChildMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                 PRBool checkFirst, PRBool checkLast)
+{
+  nsIContent *parent = data.mParentContent;
+  if (!parent) {
+    return PR_FALSE;
+  }
+
+  if (setNodeFlags)
+    parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
+
+  return (!checkFirst ||
+          data.GetNthIndex(PR_FALSE, PR_FALSE, PR_TRUE) == 1) &&
+         (!checkLast ||
+          data.GetNthIndex(PR_FALSE, PR_TRUE, PR_TRUE) == 1);
+}
+
+static PRBool NS_FASTCALL
+firstChildMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                  nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::firstChild,
+                  "Unexpected atom");
+  return edgeChildMatches(data, setNodeFlags, PR_TRUE, PR_FALSE);
+}
+
+static PRBool NS_FASTCALL
+lastChildMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                 nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::lastChild,
+                  "Unexpected atom");
+  return edgeChildMatches(data, setNodeFlags, PR_FALSE, PR_TRUE);
+}
+
+static PRBool NS_FASTCALL
+onlyChildMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                 nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::onlyChild,
+                  "Unexpected atom");
+  return edgeChildMatches(data, setNodeFlags, PR_TRUE, PR_TRUE);
+}
+
+static inline PRBool
+nthChildGenericMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                       nsPseudoClassList* pseudoClass,
+                       PRBool isOfType, PRBool isFromEnd)
+{
+  nsIContent *parent = data.mParentContent;
+  if (!parent) {
+    return PR_FALSE;
+  }
+
+  if (setNodeFlags) {
+    if (isFromEnd)
+      parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
+    else
+      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+  }
+
+  const PRInt32 index = data.GetNthIndex(isOfType, isFromEnd, PR_FALSE);
+  if (index <= 0) {
+    // Node is anonymous content (not really a child of its parent).
+    return PR_FALSE;
+  }
+
+  const PRInt32 a = pseudoClass->u.mNumbers[0];
+  const PRInt32 b = pseudoClass->u.mNumbers[1];
+  // result should be true if there exists n >= 0 such that
+  // a * n + b == index.
+  if (a == 0) {
+    return b == index;
+  }
+
+  // Integer division in C does truncation (towards 0).  So
+  // check that the result is nonnegative, and that there was no
+  // truncation.
+  const PRInt32 n = (index - b) / a;
+  return n >= 0 && (a * n == index - b);
+}
+
+static PRBool NS_FASTCALL
+nthChildMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::nthChild,
+                  "Unexpected atom");
+  return nthChildGenericMatches(data, setNodeFlags, pseudoClass,
+                                PR_FALSE, PR_FALSE);
+}
+
+static PRBool NS_FASTCALL
+nthLastChildMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                    nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::nthLastChild,
+                  "Unexpected atom");
+  return nthChildGenericMatches(data, setNodeFlags, pseudoClass,
+                                PR_FALSE, PR_TRUE);
+}
+
+static PRBool NS_FASTCALL
+nthOfTypeMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                 nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::nthOfType,
+                  "Unexpected atom");
+  return nthChildGenericMatches(data, setNodeFlags, pseudoClass,
+                                PR_TRUE, PR_FALSE);
+}
+
+static PRBool NS_FASTCALL
+nthLastOfTypeMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                     nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::nthLastOfType,
+                  "Unexpected atom");
+  return nthChildGenericMatches(data, setNodeFlags, pseudoClass,
+                                PR_TRUE, PR_TRUE);
+}
+
+static inline PRBool
+edgeOfTypeMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                  PRBool checkFirst, PRBool checkLast)
+{
+  nsIContent *parent = data.mParentContent;
+  if (!parent) {
+    return PR_FALSE;
+  }
+
+  if (setNodeFlags) {
+    if (checkLast)
+      parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
+    else
+      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+  }
+
+  return (!checkFirst ||
+          data.GetNthIndex(PR_TRUE, PR_FALSE, PR_TRUE) == 1) &&
+         (!checkLast ||
+          data.GetNthIndex(PR_TRUE, PR_TRUE, PR_TRUE) == 1);
+}
+
+static PRBool NS_FASTCALL
+firstOfTypeMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                   nsPseudoClassList* pseudoClass)
+{ 
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::firstOfType,
+                  "Unexpected atom");
+  return edgeOfTypeMatches(data, setNodeFlags, PR_TRUE, PR_FALSE);
+}
+
+static PRBool NS_FASTCALL
+lastOfTypeMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                  nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::lastOfType,
+                  "Unexpected atom");
+  return edgeOfTypeMatches(data, setNodeFlags, PR_FALSE, PR_TRUE);
+}
+
+static PRBool NS_FASTCALL
+onlyOfTypeMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                  nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::onlyOfType,
+                  "Unexpected atom");
+  return edgeOfTypeMatches(data, setNodeFlags, PR_TRUE, PR_TRUE);
+}
+
+static inline PRBool
+checkGenericEmptyMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                         PRBool isWhitespaceSignificant)
+{
+  nsIContent *child = nsnull;
+  nsIContent *element = data.mContent;
+  PRInt32 index = -1;
+
+  if (setNodeFlags)
+    element->SetFlags(NODE_HAS_EMPTY_SELECTOR);
+
+  do {
+    child = element->GetChildAt(++index);
+    // stop at first non-comment (and non-whitespace for
+    // :-moz-only-whitespace) node        
+  } while (child && !IsSignificantChild(child, PR_TRUE, isWhitespaceSignificant));
+  return (child == nsnull);
+}
+
+static PRBool NS_FASTCALL
+emptyMatches(RuleProcessorData& data, PRBool setNodeFlags,
+             nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::empty,
+                  "Unexpected atom");
+  return checkGenericEmptyMatches(data, setNodeFlags, PR_TRUE);
+}
+
+static PRBool NS_FASTCALL
+mozOnlyWhitespaceMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                         nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozOnlyWhitespace,
+                  "Unexpected atom");
+  return checkGenericEmptyMatches(data, setNodeFlags, PR_FALSE);
+}
+
+static PRBool NS_FASTCALL
+mozEmptyExceptChildrenWithLocalnameMatches(RuleProcessorData& data,
+                                           PRBool setNodeFlags,
+                                           nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom ==
+                    nsCSSPseudoClasses::mozEmptyExceptChildrenWithLocalname,
+                  "Unexpected atom");
+  NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
+  nsIContent *child = nsnull;
+  nsIContent *element = data.mContent;
+  PRInt32 index = -1;
+
+  if (setNodeFlags)
+    element->SetFlags(NODE_HAS_SLOW_SELECTOR);
+
+  do {
+    child = element->GetChildAt(++index);
+  } while (child &&
+           (!IsSignificantChild(child, PR_TRUE, PR_FALSE) ||
+            (child->GetNameSpaceID() == element->GetNameSpaceID() &&
+             child->Tag()->Equals(nsDependentString(pseudoClass->u.mString)))));
+  return (child == nsnull);
+}
+
+static PRBool NS_FASTCALL
+mozSystemMetricMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                       nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozSystemMetric,
+                  "Unexpected atom");
+  NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
+  nsCOMPtr<nsIAtom> metric = do_GetAtom(pseudoClass->u.mString);
+  return nsCSSRuleProcessor::HasSystemMetric(metric);
+}
+
+static PRBool NS_FASTCALL
+mozHasHandlerRefMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                        nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozHasHandlerRef,
+                  "Unexpected atom");
+  nsIContent *child = nsnull;
+  nsIContent *element = data.mContent;
+  PRInt32 index = -1;
+
+  do {
+    child = element->GetChildAt(++index);
+    if (child && child->IsHTML() &&
+        child->Tag() == nsGkAtoms::param &&
+        child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                           NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
+      return PR_TRUE;
+    }
+  } while (child);
+  return PR_FALSE;
+}
+
+static PRBool NS_FASTCALL
+rootMatches(RuleProcessorData& data, PRBool setNodeFlags,
+            nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::root,
+                  "Unexpected atom");
+  return (data.mParentContent == nsnull &&
+          data.mContent == data.mContent->GetOwnerDoc()->GetRootContent());
+}
+
+static PRBool NS_FASTCALL
+mozBoundElementMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                       nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozBoundElement,
+                  "Unexpected atom");
+  // XXXldb How do we know where the selector came from?  And what
+  // if there are multiple bindings, and we should be matching the
+  // outer one?
+  return (data.mScopedRoot == data.mContent);
+}
+
+static PRBool NS_FASTCALL
+langMatches(RuleProcessorData& data, PRBool setNodeFlags,
+            nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::lang,
+                  "Unexpected atom");
+  NS_ASSERTION(nsnull != pseudoClass->u.mString, "null lang parameter");
+  if (!pseudoClass->u.mString || !*pseudoClass->u.mString) {
+    return PR_FALSE;
+  }
+
+  // We have to determine the language of the current element.  Since
+  // this is currently no property and since the language is inherited
+  // from the parent we have to be prepared to look at all parent
+  // nodes.  The language itself is encoded in the LANG attribute.
+  const nsString* lang = data.GetLang();
+  if (lang && !lang->IsEmpty()) { // null check for out-of-memory
+    return
+      nsStyleUtil::DashMatchCompare(*lang,
+                                    nsDependentString(pseudoClass->u.mString), 
+                                    nsCaseInsensitiveStringComparator());
+  }
+
+  nsIDocument* doc = data.mContent->GetDocument();
+  if (doc) {
+    // Try to get the language from the HTTP header or if this
+    // is missing as well from the preferences.
+    // The content language can be a comma-separated list of
+    // language codes.
+    nsAutoString language;
+    doc->GetContentLanguage(language);
+
+    nsDependentString langString(pseudoClass->u.mString);
+    language.StripWhitespace();
+    PRInt32 begin = 0;
+    PRInt32 len = language.Length();
+    while (begin < len) {
+      PRInt32 end = language.FindChar(PRUnichar(','), begin);
+      if (end == kNotFound) {
+        end = len;
+      }
+      if (nsStyleUtil::DashMatchCompare(Substring(language, begin, end-begin),
+                                        langString,
+                                        nsCaseInsensitiveStringComparator())) {
+        return PR_TRUE;
+      }
+      begin = end + 1;
+    }
+  }
+
+  return PR_FALSE;
+}
+
+static PRBool NS_FASTCALL
+mozAnyLinkMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                  nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozAnyLink,
+                  "Unexpected atom");
+  return data.IsLink();
+}
+
+static PRBool NS_FASTCALL
+linkMatches(RuleProcessorData& data, PRBool setNodeFlags,
+            nsPseudoClassList* pseudoClass)
+{
+  NS_NOTREACHED("Shouldn't be called");
+  return PR_FALSE;
+}
+
+static PRBool NS_FASTCALL
+visitedMatches(RuleProcessorData& data, PRBool setNodeFlags,
+               nsPseudoClassList* pseudoClass)
+{
+  NS_NOTREACHED("Shouldn't be called");
+  return PR_FALSE;
+}
+
+static PRBool NS_FASTCALL
+mozIsHTMLMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                 nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozIsHTML,
+                  "Unexpected atom");
+  return data.mIsHTML;
+}
+
+static PRBool NS_FASTCALL
+mozLocaleDirMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                    nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozLocaleDir,
+                  "Unexpected atom");
+  nsIDocument* doc = data.mContent->GetDocument();
+
+  if (!doc) {
+    return PR_FALSE;
+  }
+
+  PRBool docIsRTL = doc && doc->IsDocumentRightToLeft();
+
+  nsDependentString dirString(pseudoClass->u.mString);
+  NS_ASSERTION(dirString.EqualsLiteral("ltr") || dirString.EqualsLiteral("rtl"),
+               "invalid value for -moz-locale-dir");
+
+  return dirString.EqualsLiteral("rtl") == docIsRTL;
+}
+
+static PRBool NS_FASTCALL
+mozLWThemeMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                  nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozLWTheme,
+                  "Unexpected atom");
+  nsIDocument* doc = data.mContent->GetOwnerDoc();
+  return doc && doc->GetDocumentLWTheme() > nsIDocument::Doc_Theme_None;
+}
+
+static PRBool NS_FASTCALL
+mozLWThemeBrightTextMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                            nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom ==
+                    nsCSSPseudoClasses::mozLWThemeBrightText,
+                  "Unexpected atom");
+  nsIDocument* doc = data.mContent->GetOwnerDoc();
+  return doc && doc->GetDocumentLWTheme() == nsIDocument::Doc_Theme_Bright;
+}
+
+static PRBool NS_FASTCALL
+mozLWThemeDarkTextMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                          nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom ==
+                    nsCSSPseudoClasses::mozLWThemeDarkText,
+                  "Unexpected atom");
+  nsIDocument* doc = data.mContent->GetOwnerDoc();
+  return doc && doc->GetDocumentLWTheme() == nsIDocument::Doc_Theme_Dark;
+}
+
+static PRBool NS_FASTCALL
+notPseudoMatches(RuleProcessorData& data, PRBool setNodeFlags,
+                 nsPseudoClassList* pseudoClass)
+{
+  NS_NOTREACHED("Why did this get called?");
+  return PR_FALSE;
+}
+
+typedef PRBool
+  (NS_FASTCALL * PseudoClassMatcher)(RuleProcessorData&, PRBool setNodeFlags,
+                                     nsPseudoClassList* pseudoClass);
+// Only one of mFunc or mBit will be set; the other will be null or 0
+// respectively.  We could use a union, but then we'd still need to
+// differentiate somehow, eiher with another member in the struct or
+// with a boolean coming from _sowewhere_.
+struct PseudoClassInfo {
+  PseudoClassMatcher mFunc;
+  PRInt32 mBit;
+};
+
+static const PseudoClassInfo sPseudoClassInfo[] = {
+#define CSS_PSEUDO_CLASS(_name, _value)         \
+  { &_name##Matches, 0 },
+#define CSS_STATE_PSEUDO_CLASS(_name, _value, _bit) \
+  { nsnull, _bit },
+#include "nsCSSPseudoClassList.h"
+#undef CSS_STATE_PSEUDO_CLASS
+#undef CSS_PSEUDO_CLASS
+  // Add more entries for our fake values to make sure we can't
+  // index out of bounds into this array no matter what.
+  { nsnull, 0 },
+  { nsnull, 0 }
+};
+PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sPseudoClassInfo) >
+                   nsCSSPseudoClasses::ePseudoClass_NotPseudoClass);
 
 // NOTE: For |aStateMask| to work correctly, it's important that any change
 // that changes multiple state bits include all those state bits in the
@@ -1348,7 +1851,6 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     }
   }
 
-  PRBool result = PR_TRUE;
   const PRBool isNegated = (aDependence != nsnull);
   // The selectors for which we set node bits are, unfortunately, early
   // in this function (because they're pseudo-classes, which are
@@ -1361,412 +1863,34 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   const PRBool setNodeFlags = aForStyling;
 
   // test for pseudo class match
-  // first-child, root, lang, active, focus, hover, link, visited...
-  // XXX disabled, enabled, selected, selection
   for (nsPseudoClassList* pseudoClass = aSelector->mPseudoClassList;
-       pseudoClass && result; pseudoClass = pseudoClass->mNext) {
-    PRInt32 stateToCheck = 0;
-    if (nsCSSPseudoClasses::firstNode == pseudoClass->mAtom) {
-      nsIContent *firstNode = nsnull;
-      nsIContent *parent = data.mParentContent;
-      if (parent) {
-        if (setNodeFlags)
-          parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
-
-        PRInt32 index = -1;
-        do {
-          firstNode = parent->GetChildAt(++index);
-          // stop at first non-comment and non-whitespace node
-        } while (firstNode &&
-                 !IsSignificantChild(firstNode, PR_TRUE, PR_FALSE));
+       pseudoClass; pseudoClass = pseudoClass->mNext) {
+    // XXXbz special-case for :link and :visited, which are neither
+    // fish nor fowl
+    if (pseudoClass->mAtom == nsCSSPseudoClasses::link ||
+        pseudoClass->mAtom == nsCSSPseudoClasses::visited) {
+      if (!data.IsLink()) {
+        return PR_FALSE;
       }
-      result = (data.mContent == firstNode);
-    }
-    else if (nsCSSPseudoClasses::lastNode == pseudoClass->mAtom) {
-      nsIContent *lastNode = nsnull;
-      nsIContent *parent = data.mParentContent;
-      if (parent) {
-        if (setNodeFlags)
-          parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
 
-        PRUint32 index = parent->GetChildCount();
-        do {
-          lastNode = parent->GetChildAt(--index);
-          // stop at first non-comment and non-whitespace node
-        } while (lastNode &&
-                 !IsSignificantChild(lastNode, PR_TRUE, PR_FALSE));
+      if (aStateMask & NS_EVENT_STATE_VISITED) {
+        if (aDependence)
+          *aDependence = PR_TRUE;
+      } else if ((eLinkState_Visited == data.LinkState()) ==
+                 (nsCSSPseudoClasses::link == pseudoClass->mAtom)) {
+        // Visited but :link or unvisited but :visited
+        return PR_FALSE;
       }
-      result = (data.mContent == lastNode);
+      continue;
     }
-    else if (nsCSSPseudoClasses::firstChild == pseudoClass->mAtom ||
-             nsCSSPseudoClasses::lastChild == pseudoClass->mAtom ||
-             nsCSSPseudoClasses::onlyChild == pseudoClass->mAtom) {
-      nsIContent *parent = data.mParentContent;
-      if (parent) {
-        const PRBool checkFirst =
-          pseudoClass->mAtom != nsCSSPseudoClasses::lastChild;
-        const PRBool checkLast =
-          pseudoClass->mAtom != nsCSSPseudoClasses::firstChild;
-        if (setNodeFlags)
-          parent->SetFlags(NODE_HAS_EDGE_CHILD_SELECTOR);
-
-        result = (!checkFirst ||
-                  data.GetNthIndex(PR_FALSE, PR_FALSE, PR_TRUE) == 1) &&
-                 (!checkLast ||
-                  data.GetNthIndex(PR_FALSE, PR_TRUE, PR_TRUE) == 1);
-      } else {
-        result = PR_FALSE;
+    const PseudoClassInfo& info = sPseudoClassInfo[pseudoClass->mType];
+    if (info.mFunc) {
+      if (!(*info.mFunc)(data, setNodeFlags, pseudoClass)) {
+        return PR_FALSE;
       }
-    }
-    else if (nsCSSPseudoClasses::nthChild == pseudoClass->mAtom ||
-             nsCSSPseudoClasses::nthLastChild == pseudoClass->mAtom ||
-             nsCSSPseudoClasses::nthOfType == pseudoClass->mAtom ||
-             nsCSSPseudoClasses::nthLastOfType == pseudoClass->mAtom) {
-      nsIContent *parent = data.mParentContent;
-      if (parent) {
-        PRBool isOfType =
-          nsCSSPseudoClasses::nthOfType == pseudoClass->mAtom ||
-          nsCSSPseudoClasses::nthLastOfType == pseudoClass->mAtom;
-        PRBool isFromEnd =
-          nsCSSPseudoClasses::nthLastChild == pseudoClass->mAtom ||
-          nsCSSPseudoClasses::nthLastOfType == pseudoClass->mAtom;
-        if (setNodeFlags) {
-          if (isFromEnd)
-            parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
-          else
-            parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
-        }
-
-        const PRInt32 index = data.GetNthIndex(isOfType, isFromEnd, PR_FALSE);
-        if (index <= 0) {
-          // Node is anonymous content (not really a child of its parent).
-          result = PR_FALSE;
-        } else {
-          const PRInt32 a = pseudoClass->u.mNumbers[0];
-          const PRInt32 b = pseudoClass->u.mNumbers[1];
-          // result should be true if there exists n >= 0 such that
-          // a * n + b == index.
-          if (a == 0) {
-            result = b == index;
-          } else {
-            // Integer division in C does truncation (towards 0).  So
-            // check that the result is nonnegative, and that there was no
-            // truncation.
-            const PRInt32 n = (index - b) / a;
-            result = n >= 0 && (a * n == index - b);
-          }
-        }
-      } else {
-        result = PR_FALSE;
-      }
-    }
-    else if (nsCSSPseudoClasses::firstOfType == pseudoClass->mAtom ||
-             nsCSSPseudoClasses::lastOfType == pseudoClass->mAtom ||
-             nsCSSPseudoClasses::onlyOfType == pseudoClass->mAtom) {
-      nsIContent *parent = data.mParentContent;
-      if (parent) {
-        const PRBool checkFirst =
-          pseudoClass->mAtom != nsCSSPseudoClasses::lastOfType;
-        const PRBool checkLast =
-          pseudoClass->mAtom != nsCSSPseudoClasses::firstOfType;
-        if (setNodeFlags) {
-          if (checkLast)
-            parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
-          else
-            parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
-        }
-
-        result = (!checkFirst ||
-                  data.GetNthIndex(PR_TRUE, PR_FALSE, PR_TRUE) == 1) &&
-                 (!checkLast ||
-                  data.GetNthIndex(PR_TRUE, PR_TRUE, PR_TRUE) == 1);
-      } else {
-        result = PR_FALSE;
-      }
-    }
-    else if (nsCSSPseudoClasses::empty == pseudoClass->mAtom ||
-             nsCSSPseudoClasses::mozOnlyWhitespace == pseudoClass->mAtom) {
-      nsIContent *child = nsnull;
-      nsIContent *element = data.mContent;
-      const PRBool isWhitespaceSignificant =
-        nsCSSPseudoClasses::empty == pseudoClass->mAtom;
-      PRInt32 index = -1;
-
-      if (setNodeFlags)
-        element->SetFlags(NODE_HAS_EMPTY_SELECTOR);
-
-      do {
-        child = element->GetChildAt(++index);
-        // stop at first non-comment (and non-whitespace for
-        // :-moz-only-whitespace) node        
-      } while (child && !IsSignificantChild(child, PR_TRUE, isWhitespaceSignificant));
-      result = (child == nsnull);
-    }
-    else if (nsCSSPseudoClasses::mozEmptyExceptChildrenWithLocalname == pseudoClass->mAtom) {
-      NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
-      nsIContent *child = nsnull;
-      nsIContent *element = data.mContent;
-      PRInt32 index = -1;
-
-      if (setNodeFlags)
-        element->SetFlags(NODE_HAS_SLOW_SELECTOR);
-
-      do {
-        child = element->GetChildAt(++index);
-      } while (child &&
-               (!IsSignificantChild(child, PR_TRUE, PR_FALSE) ||
-                (child->GetNameSpaceID() == element->GetNameSpaceID() &&
-                 child->Tag()->Equals(nsDependentString(pseudoClass->u.mString)))));
-      result = (child == nsnull);
-    }
-    else if (nsCSSPseudoClasses::mozSystemMetric == pseudoClass->mAtom) {
-      NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
-      nsCOMPtr<nsIAtom> metric = do_GetAtom(pseudoClass->u.mString);
-      result = nsCSSRuleProcessor::HasSystemMetric(metric);
-    }
-    else if (nsCSSPseudoClasses::mozHasHandlerRef == pseudoClass->mAtom) {
-      nsIContent *child = nsnull;
-      nsIContent *element = data.mContent;
-      PRInt32 index = -1;
-
-      result = PR_FALSE;
-      if (element) {
-        do {
-          child = element->GetChildAt(++index);
-          if (child && child->IsHTML() &&
-              child->Tag() == nsGkAtoms::param &&
-              child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                                 NS_LITERAL_STRING("pluginurl"), eIgnoreCase)) {
-            result = PR_TRUE;
-            break;
-          }
-        } while (child);
-      }
-    }
-    else if (nsCSSPseudoClasses::root == pseudoClass->mAtom) {
-      result = (data.mParentContent == nsnull &&
-                data.mContent ==
-                  data.mContent->GetOwnerDoc()->GetRootContent());
-    }
-    else if (nsCSSPseudoClasses::mozBoundElement == pseudoClass->mAtom) {
-      // XXXldb How do we know where the selector came from?  And what
-      // if there are multiple bindings, and we should be matching the
-      // outer one?
-      result = (data.mScopedRoot == data.mContent);
-    }
-    else if (nsCSSPseudoClasses::lang == pseudoClass->mAtom) {
-      NS_ASSERTION(nsnull != pseudoClass->u.mString, "null lang parameter");
-      result = PR_FALSE;
-      if (pseudoClass->u.mString && *pseudoClass->u.mString) {
-        // We have to determine the language of the current element.  Since
-        // this is currently no property and since the language is inherited
-        // from the parent we have to be prepared to look at all parent
-        // nodes.  The language itself is encoded in the LANG attribute.
-        const nsString* lang = data.GetLang();
-        if (lang && !lang->IsEmpty()) { // null check for out-of-memory
-          result = nsStyleUtil::DashMatchCompare(*lang,
-                                    nsDependentString(pseudoClass->u.mString), 
-                                    nsCaseInsensitiveStringComparator());
-        }
-        else {
-          nsIDocument* doc = data.mContent->GetDocument();
-          if (doc) {
-            // Try to get the language from the HTTP header or if this
-            // is missing as well from the preferences.
-            // The content language can be a comma-separated list of
-            // language codes.
-            nsAutoString language;
-            doc->GetContentLanguage(language);
-
-            nsDependentString langString(pseudoClass->u.mString);
-            language.StripWhitespace();
-            PRInt32 begin = 0;
-            PRInt32 len = language.Length();
-            while (begin < len) {
-              PRInt32 end = language.FindChar(PRUnichar(','), begin);
-              if (end == kNotFound) {
-                end = len;
-              }
-              if (nsStyleUtil::DashMatchCompare(Substring(language, begin, end-begin),
-                                   langString,
-                                   nsCaseInsensitiveStringComparator())) {
-                result = PR_TRUE;
-                break;
-              }
-              begin = end + 1;
-            }
-          }
-        }
-      }
-    } else if (nsCSSPseudoClasses::active == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_ACTIVE;
-    }
-    else if (nsCSSPseudoClasses::focus == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_FOCUS;
-    }
-    else if (nsCSSPseudoClasses::hover == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_HOVER;
-    }
-    else if (nsCSSPseudoClasses::mozDragOver == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_DRAGOVER;
-    }
-    else if (nsCSSPseudoClasses::target == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_URLTARGET;
-    }
-    else if (IsLinkPseudo(pseudoClass->mAtom)) {
-      if (data.IsLink()) {
-        if (nsCSSPseudoClasses::mozAnyLink == pseudoClass->mAtom) {
-          result = PR_TRUE;
-        }
-        else {
-          NS_ASSERTION(nsCSSPseudoClasses::link == pseudoClass->mAtom ||
-                       nsCSSPseudoClasses::visited == pseudoClass->mAtom,
-                       "somebody changed IsLinkPseudo");
-          NS_ASSERTION(data.LinkState() == eLinkState_Unvisited ||
-                       data.LinkState() == eLinkState_Visited,
-                       "unexpected link state for IsLink()");
-          if (aStateMask & NS_EVENT_STATE_VISITED) {
-            result = PR_TRUE;
-            if (aDependence)
-              *aDependence = PR_TRUE;
-          } else {
-            result = ((eLinkState_Unvisited == data.LinkState()) ==
-                      (nsCSSPseudoClasses::link == pseudoClass->mAtom));
-          }
-        }
-      }
-      else {
-        result = PR_FALSE;  // not a link
-      }
-    }
-    else if (nsCSSPseudoClasses::checked == pseudoClass->mAtom) {
-      // This pseudoclass matches the selected state on the following elements:
-      //  <option>
-      //  <input type=checkbox>
-      //  <input type=radio>
-      stateToCheck = NS_EVENT_STATE_CHECKED;
-    }
-    else if (nsCSSPseudoClasses::enabled == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_ENABLED;
-    }
-    else if (nsCSSPseudoClasses::disabled == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_DISABLED;
-    }    
-    else if (nsCSSPseudoClasses::mozBroken == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_BROKEN;
-    }
-    else if (nsCSSPseudoClasses::mozUserDisabled == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_USERDISABLED;
-    }
-    else if (nsCSSPseudoClasses::mozSuppressed == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_SUPPRESSED;
-    }
-    else if (nsCSSPseudoClasses::mozLoading == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_LOADING;
-    }
-    else if (nsCSSPseudoClasses::mozTypeUnsupported == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_TYPE_UNSUPPORTED;
-    }
-    else if (nsCSSPseudoClasses::mozHandlerDisabled == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_HANDLER_DISABLED;
-    }
-    else if (nsCSSPseudoClasses::mozHandlerBlocked == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_HANDLER_BLOCKED;
-    }
-    else if (nsCSSPseudoClasses::defaultPseudo == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_DEFAULT;
-    }
-    else if (nsCSSPseudoClasses::required == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_REQUIRED;
-    }
-    else if (nsCSSPseudoClasses::optional == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_OPTIONAL;
-    }
-    else if (nsCSSPseudoClasses::valid == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_VALID;
-    }
-    else if (nsCSSPseudoClasses::invalid == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_INVALID;
-    }
-    else if (nsCSSPseudoClasses::inRange == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_INRANGE;
-    }
-    else if (nsCSSPseudoClasses::outOfRange == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_OUTOFRANGE;
-    }
-    else if (nsCSSPseudoClasses::mozReadOnly == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_MOZ_READONLY;
-    }
-    else if (nsCSSPseudoClasses::mozReadWrite == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_MOZ_READWRITE;
-    }
-    else if (nsCSSPseudoClasses::indeterminate == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_INDETERMINATE;
-    }
-    else if (nsCSSPseudoClasses::mozIsHTML == pseudoClass->mAtom) {
-      result = data.mIsHTML;
-    }
-    else if (nsCSSPseudoClasses::mozLocaleDir == pseudoClass->mAtom) {
-      nsIDocument* doc = data.mContent->GetDocument();
-
-      if (doc) {
-        PRBool docIsRTL = doc && doc->IsDocumentRightToLeft();
-
-        nsDependentString dirString(pseudoClass->u.mString);
-        NS_ASSERTION(dirString.EqualsLiteral("ltr") || dirString.EqualsLiteral("rtl"),
-                     "invalid value for -moz-locale-dir");
-
-        if (dirString.EqualsLiteral("rtl")) {
-          result = docIsRTL;
-        } else if (dirString.EqualsLiteral("ltr")) {
-          result = !docIsRTL;
-        }
-      }
-      else {
-        result = PR_FALSE;
-      }
-    }
-    else if (nsCSSPseudoClasses::mozLWTheme == pseudoClass->mAtom) {
-      nsIDocument* doc = data.mContent->GetOwnerDoc();
-
-      if (doc) {
-        result = doc->GetDocumentLWTheme() > nsIDocument::Doc_Theme_None;
-      }
-      else {
-        result = PR_FALSE;
-      }
-    }
-    else if (nsCSSPseudoClasses::mozLWThemeBrightText == pseudoClass->mAtom) {
-      nsIDocument* doc = data.mContent->GetOwnerDoc();
-
-      if (doc) {
-        result = doc->GetDocumentLWTheme() == nsIDocument::Doc_Theme_Bright;
-      }
-      else {
-        result = PR_FALSE;
-      }
-    }
-    else if (nsCSSPseudoClasses::mozLWThemeDarkText == pseudoClass->mAtom) {
-      nsIDocument* doc = data.mContent->GetOwnerDoc();
-
-      if (doc) {
-        result = doc->GetDocumentLWTheme() == nsIDocument::Doc_Theme_Dark;
-      }
-      else {
-        result = PR_FALSE;
-      }
-    }
-#ifdef MOZ_MATHML
-    else if (nsCSSPseudoClasses::mozMathIncrementScriptLevel == pseudoClass->mAtom) {
-      stateToCheck = NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL;
-    }
-#endif
-    else {
-      NS_ERROR("CSS parser parsed a pseudo-class that we do not handle");
-      result = PR_FALSE;  // unknown pseudo class
-    }
-    if (stateToCheck) {
-      // check if the element is event-sensitive for :hover and :active
+    } else {
+      PRInt32 stateToCheck = info.mBit;
+      NS_ABORT_IF_FALSE(stateToCheck != 0, "How did that happen?");
       if ((stateToCheck & (NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) &&
           data.mCompatMode == eCompatibility_NavQuirks &&
           // global selector (but don't check .class):
@@ -1782,20 +1906,22 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           !IsQuirkEventSensitive(data.mContentTag)) {
         // In quirks mode, only make certain elements sensitive to
         // selectors ":hover" and ":active".
-        result = PR_FALSE;
+        return PR_FALSE;
       } else {
         if (aStateMask & stateToCheck) {
-          result = PR_TRUE;
           if (aDependence)
             *aDependence = PR_TRUE;
         } else {
-          result = (0 != (data.ContentState() & stateToCheck));
+          if (!(data.ContentState() & stateToCheck)) {
+            return PR_FALSE;
+          }
         }
       }
     }
   }
 
-  if (result && aSelector->mAttrList) {
+  PRBool result = PR_TRUE;
+  if (aSelector->mAttrList) {
     // test for attribute match
     if (!data.mHasAttributes) {
       // if no attributes on the content, no match
@@ -2330,33 +2456,16 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
 {
   for (nsPseudoClassList* pseudoClass = aSelector.mPseudoClassList;
        pseudoClass; pseudoClass = pseudoClass->mNext) {
-    if ((pseudoClass->mAtom == nsCSSPseudoClasses::active) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::checked) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::mozDragOver) || 
-        (pseudoClass->mAtom == nsCSSPseudoClasses::focus) || 
-        (pseudoClass->mAtom == nsCSSPseudoClasses::hover) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::target) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::link) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::visited) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::enabled) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::disabled) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::mozBroken) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::mozUserDisabled) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::mozSuppressed) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::mozLoading) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::required) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::optional) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::valid) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::invalid) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::inRange) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::outOfRange) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::mozReadOnly) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::mozReadWrite) ||
-        (pseudoClass->mAtom == nsCSSPseudoClasses::indeterminate) ||
-#ifdef MOZ_MATHML
-        (pseudoClass->mAtom == nsCSSPseudoClasses::mozMathIncrementScriptLevel) ||
-#endif
-        (pseudoClass->mAtom == nsCSSPseudoClasses::defaultPseudo)) {
+    // Tree pseudo-elements overload mPseudoClassList for things that
+    // aren't pseudo-classes.
+    if (pseudoClass->mType >= nsCSSPseudoClasses::ePseudoClass_Count) {
+      continue;
+    }
+    // XXXbz special-case for now for :link/:visited, since they're
+    // sorta-states-but-not-really right now.
+    if (sPseudoClassInfo[pseudoClass->mType].mBit ||
+        pseudoClass->mAtom == nsCSSPseudoClasses::link ||
+        pseudoClass->mAtom == nsCSSPseudoClasses::visited) {
       return PR_TRUE;
     }
   }
