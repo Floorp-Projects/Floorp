@@ -1151,8 +1151,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   appendVoidElementToCurrentMayFoster(kNameSpaceID_XHTML, nsHtml5ElementName::ELT_HR, nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
                   pop();
                   selfClosing = PR_FALSE;
-                  delete formAttrs;
-                  delete inputAttributes;
+                  delete attributes;
                   attributes = nsnull;
                   goto starttagloop_end;
                 }
