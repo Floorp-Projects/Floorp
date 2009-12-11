@@ -180,6 +180,21 @@ public:
                            nsIAccessible **aTreeItemParent);
 
   /**
+   * Return single or multi selectable container for the given item.
+   *
+   * @param  aAccessible  [in] the item accessible
+   * @param  aState       [in] the state of the item accessible
+   */
+  static already_AddRefed<nsIAccessible>
+    GetSelectableContainer(nsIAccessible *aAccessible, PRUint32 aState);
+
+  /**
+   * Return multi selectable container for the given item.
+   */
+  static already_AddRefed<nsIAccessible>
+    GetMultiSelectableContainer(nsIDOMNode *aNode);
+
+  /**
    * Return true if the DOM node of given accessible has aria-selected="true"
    * attribute.
    */
@@ -466,11 +481,6 @@ public:
    * the document's accessible tree.
    */
   static PRBool IsNodeRelevant(nsIDOMNode *aNode);
-
-  /**
-   * Return multiselectable parent for the given selectable accessible if any.
-   */
-  static already_AddRefed<nsIAccessible> GetMultiSelectFor(nsIDOMNode *aNode);
 
   /**
    * Search hint enum constants. Used by GetHeaderCellsFor() method.

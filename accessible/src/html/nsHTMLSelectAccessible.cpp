@@ -795,7 +795,7 @@ void nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibl
   NS_ASSERTION(optionNode, "No option node for nsIContent with option tag!");
 
   nsCOMPtr<nsIAccessible> multiSelect =
-    nsAccUtils::GetMultiSelectFor(optionNode);
+    nsAccUtils::GetMultiSelectableContainer(optionNode);
   if (!multiSelect)
     return;
 
