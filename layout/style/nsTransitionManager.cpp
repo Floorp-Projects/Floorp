@@ -49,7 +49,6 @@
 #include "nsRuleData.h"
 #include "nsSMILKeySpline.h"
 #include "gfxColor.h"
-#include "nsCSSPseudoElements.h"
 #include "nsCSSPropertySet.h"
 #include "nsStyleAnimation.h"
 #include "nsCSSDataBlock.h"
@@ -373,9 +372,10 @@ nsTransitionManager::StyleContextChanged(nsIContent *aElement,
     return nsnull;
   }
   
-  nsIAtom *pseudo = aNewStyleContext->GetPseudo();
-  if (pseudo && (pseudo != nsCSSPseudoElements::before &&
-                 pseudo != nsCSSPseudoElements::after)) {
+  nsCSSPseudoElements::Type pseudoType = aNewStyleContext->GetPseudoType();
+  if (pseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement &&
+      pseudoType != nsCSSPseudoElements::ePseudo_before &&
+      pseudoType != nsCSSPseudoElements::ePseudo_after) {
     return nsnull;
   }
   if (aNewStyleContext->GetParent() &&
@@ -398,9 +398,7 @@ nsTransitionManager::StyleContextChanged(nsIContent *aElement,
     // Check delay and duration first, since they default to zero, and
     // when they're both zero, we can ignore the transition.
     if (t.GetDelay() != 0.0f || t.GetDuration() != 0.0f) {
-      et = GetElementTransitions(aElement,
-                                 aNewStyleContext->GetPseudo(),
-                                 PR_FALSE);
+      et = GetElementTransitions(aElement, pseudoType, PR_FALSE);
 
       // We might have something to transition.  See if any of the
       // properties in question changed and are animatable.
@@ -614,7 +612,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 
   if (!aElementTransitions) {
     aElementTransitions =
-      GetElementTransitions(aElement, aNewStyleContext->GetPseudo(),
+      GetElementTransitions(aElement, aNewStyleContext->GetPseudoType(),
                             PR_TRUE);
     if (!aElementTransitions) {
       NS_WARNING("allocating ElementTransitions failed");
@@ -648,16 +646,17 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 
 ElementTransitions*
 nsTransitionManager::GetElementTransitions(nsIContent *aElement,
-                                           nsIAtom *aPseudo,
+                                           nsCSSPseudoElements::Type aPseudoType,
                                            PRBool aCreateIfNeeded)
 {
   nsIAtom *propName;
-  if (aPseudo == nsCSSPseudoElements::before) {
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_before) {
     propName = nsGkAtoms::transitionsOfBeforeProperty;
-  } else if (aPseudo == nsCSSPseudoElements::after) {
+  } else if (aPseudoType == nsCSSPseudoElements::ePseudo_after) {
     propName = nsGkAtoms::transitionsOfAfterProperty;
   } else {
-    NS_ASSERTION(!aPseudo || !aCreateIfNeeded,
+    NS_ASSERTION(aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
+		 !aCreateIfNeeded,
                  "should never try to create transitions for pseudo "
                  "other than :before or :after");
     propName = nsGkAtoms::transitionsProperty;
@@ -711,7 +710,7 @@ NS_IMPL_QUERY_INTERFACE1(nsTransitionManager, nsIStyleRuleProcessor)
 
 nsresult
 nsTransitionManager::WalkTransitionRule(RuleProcessorData* aData,
-                                        nsIAtom *aPseudo)
+                                        nsCSSPseudoElements::Type aPseudoType)
 {
   if (!aData->mPresContext->IsProcessingAnimationStyleChange()) {
     // If we're processing a normal style change rather than one from
@@ -726,7 +725,7 @@ nsTransitionManager::WalkTransitionRule(RuleProcessorData* aData,
   }
 
   ElementTransitions *et =
-    GetElementTransitions(aData->mContent, aPseudo, PR_FALSE);
+    GetElementTransitions(aData->mContent, aPseudoType, PR_FALSE);
   if (!et) {
     return NS_OK;
   }
@@ -746,18 +745,26 @@ nsTransitionManager::RulesMatching(ElementRuleProcessorData* aData)
 {
   NS_ABORT_IF_FALSE(aData->mPresContext == mPresContext,
                     "pres context mismatch");
-  return WalkTransitionRule(aData, nsnull);
+  return WalkTransitionRule(aData,
+			    nsCSSPseudoElements::ePseudo_NotPseudoElement);
+}
+
+NS_IMETHODIMP
+nsTransitionManager::RulesMatching(PseudoElementRuleProcessorData* aData)
+{
+  NS_ABORT_IF_FALSE(aData->mPresContext == mPresContext,
+                    "pres context mismatch");
+
+  // Note:  If we're the only thing keeping a pseudo-element frame alive
+  // (per ProbePseudoStyleContext), we still want to keep it alive, so
+  // this is ok.
+  return WalkTransitionRule(aData, aData->mPseudoType);
 }
 
 NS_IMETHODIMP
 nsTransitionManager::RulesMatching(PseudoRuleProcessorData* aData)
 {
-  NS_ABORT_IF_FALSE(aData->mPresContext == mPresContext,
-                    "pres context mismatch");
-  // Note:  If we're the only thing keeping a pseudo-element frame alive
-  // (per ProbePseudoStyleContext), we still want to keep it alive, so
-  // this is ok.
-  return WalkTransitionRule(aData, aData->mPseudoTag);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
