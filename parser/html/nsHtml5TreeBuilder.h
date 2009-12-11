@@ -131,6 +131,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     PRBool clearLastStackSlot();
     PRBool clearLastListSlot();
     void push(nsHtml5StackNode* node);
+    void silentPush(nsHtml5StackNode* node);
     void append(nsHtml5StackNode* node);
     inline void insertMarker()
     {
@@ -160,6 +161,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void insertIntoFosterParent(nsIContent** child);
     PRBool isInStack(nsHtml5StackNode* node);
     void pop();
+    void silentPop();
     void popOnEof();
     void appendHtmlElementToDocumentAndPush(nsHtml5HtmlAttributes* attributes);
     void appendHtmlElementToDocumentAndPush();

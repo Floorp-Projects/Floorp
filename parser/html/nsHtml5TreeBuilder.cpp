@@ -2699,10 +2699,10 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
         continue;
       }
       case NS_HTML5TREE_BUILDER_TEXT: {
-        if (originalMode == NS_HTML5TREE_BUILDER_AFTER_HEAD) {
-          pop();
-        }
         pop();
+        if (originalMode == NS_HTML5TREE_BUILDER_AFTER_HEAD) {
+          silentPop();
+        }
         mode = originalMode;
         goto endtagloop_end;
       }
@@ -3063,6 +3063,19 @@ nsHtml5TreeBuilder::push(nsHtml5StackNode* node)
 }
 
 void 
+nsHtml5TreeBuilder::silentPush(nsHtml5StackNode* node)
+{
+  currentPtr++;
+  if (currentPtr == stack.length) {
+    jArray<nsHtml5StackNode*,PRInt32> newStack = jArray<nsHtml5StackNode*,PRInt32>(stack.length + 64);
+    nsHtml5ArrayCopy::arraycopy(stack, newStack, stack.length);
+    stack.release();
+    stack = newStack;
+  }
+  stack[currentPtr] = node;
+}
+
+void 
 nsHtml5TreeBuilder::append(nsHtml5StackNode* node)
 {
   listPtr++;
@@ -3352,14 +3365,12 @@ nsHtml5TreeBuilder::addAttributesToHtml(nsHtml5HtmlAttributes* attributes)
 void 
 nsHtml5TreeBuilder::pushHeadPointerOntoStack()
 {
+
+
+
   flushCharacters();
 
-  if (!headPointer) {
-
-    push(stack[currentPtr]);
-  } else {
-    push(new nsHtml5StackNode(kNameSpaceID_XHTML, nsHtml5ElementName::ELT_HEAD, headPointer));
-  }
+  silentPush(new nsHtml5StackNode(kNameSpaceID_XHTML, nsHtml5ElementName::ELT_HEAD, headPointer));
 }
 
 void 
@@ -3439,6 +3450,16 @@ nsHtml5TreeBuilder::pop()
 
   currentPtr--;
   elementPopped(node->ns, node->popName, node->node);
+  node->release();
+}
+
+void 
+nsHtml5TreeBuilder::silentPop()
+{
+  flushCharacters();
+  nsHtml5StackNode* node = stack[currentPtr];
+
+  currentPtr--;
   node->release();
 }
 
