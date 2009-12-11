@@ -375,6 +375,7 @@ nsHtml5Tokenizer::emitCurrentTagToken(PRBool selfClosing, PRInt32 pos)
   if (endTag) {
 
     tokenHandler->endTag(tagName);
+    delete attributes;
   } else {
     tokenHandler->startTag(tagName, attrs, selfClosing);
   }
