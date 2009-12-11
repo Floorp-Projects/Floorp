@@ -1124,6 +1124,10 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   // a shorthand, we parse successfully, then we can just directly copy our
   // parsed value into the declaration without going through the whole
   // expand/compress thing.
+  if (!aDeclaration->EnsureMutable()) {
+    NS_WARNING("out of memory");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   void* valueSlot = aDeclaration->SlotForValue(aPropID);
   if (!valueSlot) {
     // Do it the slow way
