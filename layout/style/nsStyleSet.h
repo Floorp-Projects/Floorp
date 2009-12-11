@@ -127,12 +127,7 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   ResolvePseudoElementStyle(nsIContent* aParentContent,
                             nsCSSPseudoElements::Type aType,
-                            nsStyleContext* aParentContext) {
-    return ResolvePseudoStyleFor(aParentContent,
-                                 nsCSSPseudoElements::GetPseudoAtom(aType),
-                                 aType,
-                                 aParentContext);
-  }
+                            nsStyleContext* aParentContext);
 
   // This functions just like ResolvePseudoElementStyle except that it will
   // return nsnull if there are no explicit style rules for that
@@ -334,7 +329,7 @@ public:
 
   // Move aRuleWalker forward by the appropriate rule if we need to add
   // a rule due to property restrictions on pseudo-elements.
-  void WalkRestrictionRule(nsIAtom* aPseudoType,
+  void WalkRestrictionRule(nsCSSPseudoElements::Type aPseudoType,
                            nsRuleWalker* aRuleWalker);
 
 #ifdef DEBUG
