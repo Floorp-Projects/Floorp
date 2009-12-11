@@ -83,8 +83,6 @@ public:
         // unref here??
     }
 
-    virtual void SetPlugin(nsNPAPIPlugin*) { }
-
     virtual bool HasRequiredFunctions() {
         mNP_Initialize = (NP_InitializeFunc)
             PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
