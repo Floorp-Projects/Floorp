@@ -91,13 +91,8 @@ public:
 
   nsCSSDeclaration* Clone() const;
 
-  nsresult MapRuleInfoInto(nsRuleData *aRuleData) const {
-    return mData->MapRuleInfoInto(aRuleData);
-  }
-
-  nsresult MapImportantRuleInfoInto(nsRuleData *aRuleData) const {
-    return mImportantData->MapRuleInfoInto(aRuleData);
-  }
+  nsCSSCompressedDataBlock* GetNormalBlock() const { return mData; }
+  nsCSSCompressedDataBlock* GetImportantBlock() const { return mImportantData; }
 
   /**
    * Initialize this declaration as holding no data.  Return false on

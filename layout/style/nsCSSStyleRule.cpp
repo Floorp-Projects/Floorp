@@ -837,7 +837,7 @@ class CSSStyleRuleImpl;
 
 class CSSImportantRule : public nsIStyleRule {
 public:
-  CSSImportantRule(nsCSSDeclaration* aDeclaration);
+  CSSImportantRule(nsCSSCompressedDataBlock *aImportantBlock);
 
   NS_DECL_ISUPPORTS
 
@@ -850,19 +850,18 @@ public:
 protected:
   virtual ~CSSImportantRule(void);
 
-  nsCSSDeclaration*  mDeclaration;
+  nsRefPtr<nsCSSCompressedDataBlock> mImportantBlock;
 
   friend class CSSStyleRuleImpl;
 };
 
-CSSImportantRule::CSSImportantRule(nsCSSDeclaration* aDeclaration)
-  : mDeclaration(aDeclaration)
+CSSImportantRule::CSSImportantRule(nsCSSCompressedDataBlock* aImportantBlock)
+  : mImportantBlock(aImportantBlock)
 {
 }
 
 CSSImportantRule::~CSSImportantRule(void)
 {
-  mDeclaration = nsnull;
 }
 
 NS_IMPL_ISUPPORTS1(CSSImportantRule, nsIStyleRule)
@@ -870,10 +869,7 @@ NS_IMPL_ISUPPORTS1(CSSImportantRule, nsIStyleRule)
 NS_IMETHODIMP
 CSSImportantRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  // Check this at runtime because it might be hit in some out-of-memory cases.
-  NS_ENSURE_TRUE(mDeclaration->HasImportantData(), NS_ERROR_UNEXPECTED);
-
-  return mDeclaration->MapImportantRuleInfoInto(aRuleData);
+  return mImportantBlock->MapRuleInfoInto(aRuleData);
 }
 
 #ifdef DEBUG
@@ -883,15 +879,7 @@ CSSImportantRule::List(FILE* out, PRInt32 aIndent) const
   // Indent
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  fputs("! Important rule ", out);
-  if (nsnull != mDeclaration) {
-    mDeclaration->List(out);
-  }
-  else {
-    fputs("{ null declaration }", out);
-  }
-  fputs("\n", out);
-
+  fprintf(out, "! Important rule block=%p\n", mImportantBlock);
   return NS_OK;
 }
 #endif
@@ -1295,6 +1283,7 @@ protected:
 protected:
   nsCSSSelectorList*      mSelector; // null for style attribute
   nsCSSDeclaration*       mDeclaration;
+  nsRefPtr<nsCSSCompressedDataBlock> mNormalBlock;
   CSSImportantRule*       mImportantRule;
   DOMCSSStyleRuleImpl*    mDOMRule;                          
   PRUint32                mLineNumber;
@@ -1342,17 +1331,17 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(CSSStyleRuleImpl& aCopy,
 
   NS_ASSERTION(aDeclaration == aCopy.mDeclaration, "declaration mismatch");
   // Transfer ownership of selector and declaration:
+  // NOTE that transferring ownership of the declaration relies on the
+  // code in RuleMatched caching what we need from mDeclaration so that
+  // mDeclaration is unused in CSSStyleRuleImpl::GetImportantRule,
+  // CSSStyleRuleImpl::MapRuleInfoInto, and
+  // CSSImportantRule::MapRuleInfoInto.  This means that any style rule
+  // that has become part of the rule tree has already retrieved the
+  // necessary data blocks from its declaration, so any later
+  // MapRuleInfoInto calls (see stack in bug 209575; also needed for CSS
+  // Transitions) and GetImportantRule calls will also work.
   aCopy.mSelector = nsnull;
-#if 0
   aCopy.mDeclaration = nsnull;
-#else
-  // We ought to be able to transfer ownership of the selector and the
-  // declaration since this rule should now be unused, but unfortunately
-  // SetInlineStyleRule might use it before setting the new rule (see
-  // stack in bug 209575).  So leave the declaration pointer on the old
-  // rule.
-  mDeclaration->AddRef();
-#endif
 }
 
 
@@ -1415,8 +1404,16 @@ nsIStyleRule* CSSStyleRuleImpl::GetImportantRule(void)
 /* virtual */ void
 CSSStyleRuleImpl::RuleMatched()
 {
-  if (mDeclaration->HasImportantData() && !mImportantRule) {
-    mImportantRule = new CSSImportantRule(mDeclaration);
+  if (mNormalBlock) {
+    // This method has already been called.
+    return;
+  }
+  NS_ABORT_IF_FALSE(!mImportantRule, "should not have important rule either");
+
+  mNormalBlock = mDeclaration->GetNormalBlock();
+
+  if (mDeclaration->HasImportantData()) {
+    mImportantRule = new CSSImportantRule(mDeclaration->GetImportantBlock());
     NS_IF_ADDREF(mImportantRule);
   }
 }
@@ -1504,7 +1501,9 @@ CSSStyleRuleImpl::DeclarationChanged(PRBool aHandleContainer)
 NS_IMETHODIMP
 CSSStyleRuleImpl::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  return mDeclaration->MapRuleInfoInto(aRuleData);
+  NS_ABORT_IF_FALSE(mNormalBlock,
+                    "somebody forgot to call nsICSSStyleRule::RuleMatched");
+  return mNormalBlock->MapRuleInfoInto(aRuleData);
 }
 
 #ifdef DEBUG
