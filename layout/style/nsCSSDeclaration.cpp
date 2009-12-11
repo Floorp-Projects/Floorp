@@ -1317,3 +1317,23 @@ nsCSSDeclaration::InitializeEmpty()
   mData = nsCSSCompressedDataBlock::CreateEmptyBlock();
   return mData != nsnull;
 }
+
+PRBool
+nsCSSDeclaration::EnsureMutable()
+{
+  if (!mData->IsMutable()) {
+    nsRefPtr<nsCSSCompressedDataBlock> newBlock = mData->Clone();
+    if (!newBlock) {
+      return PR_FALSE;
+    }
+    newBlock.swap(mData);
+  }
+  if (mImportantData && !mImportantData->IsMutable()) {
+    nsRefPtr<nsCSSCompressedDataBlock> newBlock = mImportantData->Clone();
+    if (!newBlock) {
+      return PR_FALSE;
+    }
+    newBlock.swap(mImportantData);
+  }
+  return PR_TRUE;
+}
