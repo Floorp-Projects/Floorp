@@ -1269,9 +1269,12 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
 
   if (aFrame->IsVisibleForPainting(aBuilder)) {
     nsDisplayTableItem* currentItem = aBuilder->GetCurrentTableItem();
-    NS_ASSERTION(currentItem, "No current table item!");
-    currentItem->UpdateForFrameBackground(aFrame);
-  
+    // currentItem may be null, when none of the table parts have a
+    // background or border
+    if (currentItem) {
+      currentItem->UpdateForFrameBackground(aFrame);
+    }
+
     // Paint the outset box-shadows for the table frames
     PRBool hasBoxShadow = aFrame->GetStyleBorder()->mBoxShadow != nsnull;
     if (hasBoxShadow) {
@@ -1326,19 +1329,26 @@ IsFrameAllowedInTable(nsIAtom* aType)
 #endif
 
 static PRBool
-AnyTablePartVisible(nsIFrame* aFrame)
+AnyTablePartHasBorderOrBackground(nsIFrame* aFrame)
 {
   NS_ASSERTION(IsFrameAllowedInTable(aFrame->GetType()), "unexpected frame type");
-  if (aFrame->GetStyleVisibility()->IsVisible())
+
+  if (aFrame->GetStyleVisibility()->IsVisible() &&
+      (!aFrame->GetStyleBackground()->IsTransparent() ||
+       aFrame->GetStyleDisplay()->mAppearance ||
+       aFrame->HasBorder()))
     return PR_TRUE;
+
   nsTableCellFrame *cellFrame = do_QueryFrame(aFrame);
   if (cellFrame)
     return PR_FALSE;
+
   nsFrameList children = aFrame->GetChildList(nsnull);
   for (nsIFrame* f = children.FirstChild(); f; f = f->GetNextSibling()) {
-    if (AnyTablePartVisible(f))
+    if (AnyTablePartHasBorderOrBackground(f))
       return PR_TRUE;
   }
+
   return PR_FALSE;
 }
 
@@ -1369,7 +1379,7 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // This background is created if any of the table parts are visible.
   // Specific visibility decisions are delegated to the table background
   // painter, which handles borders and backgrounds for the table.
-  if (AnyTablePartVisible(this)) {
+  if (AnyTablePartHasBorderOrBackground(this)) {
     item = new (aBuilder) nsDisplayTableBorderBackground(this);
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
     NS_ENSURE_SUCCESS(rv, rv);
