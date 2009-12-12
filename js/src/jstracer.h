@@ -1145,6 +1145,7 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* alu(nanojit::LOpcode op, jsdouble v0, jsdouble v1,
                                          nanojit::LIns* s0, nanojit::LIns* s1);
     nanojit::LIns* f2i(nanojit::LIns* f);
+    nanojit::LIns* f2u(nanojit::LIns* f);
     JS_REQUIRES_STACK nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
     JS_REQUIRES_STACK nanojit::LIns* stringify(jsval& v);
 
