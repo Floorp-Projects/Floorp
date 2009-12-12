@@ -803,7 +803,8 @@ public:
    * user does "Select All" while the focus is in this node. Note that if this
    * node is not in an editor, the result comes from the nsFrameSelection that
    * is related to aPresShell, so the result might not be the ancestor of this
-   * node.
+   * node. Be aware that if this node and the computed selection limiter are
+   * not in same subtree, this returns the root content of the closeset subtree.
    */
   nsIContent* GetSelectionRootContent(nsIPresShell* aPresShell);
 
