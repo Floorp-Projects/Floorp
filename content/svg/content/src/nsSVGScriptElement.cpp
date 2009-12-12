@@ -174,8 +174,7 @@ nsSVGScriptElement::GetType(nsAString & aType)
 NS_IMETHODIMP
 nsSVGScriptElement::SetType(const nsAString & aType)
 {
-  NS_ERROR("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::type, aType, PR_TRUE); 
 }
 
 //----------------------------------------------------------------------
