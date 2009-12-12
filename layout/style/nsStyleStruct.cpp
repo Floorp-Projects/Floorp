@@ -782,7 +782,6 @@ nsChangeHint nsStyleColumn::MaxDifference()
 }
 #endif
 
-#ifdef MOZ_SVG
 // --------------------
 // nsStyleSVG
 //
@@ -1059,8 +1058,6 @@ PRBool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
     return PR_TRUE;
   return mPaint.mColor == aOther.mPaint.mColor;
 }
-
-#endif // MOZ_SVG
 
 
 // --------------------
