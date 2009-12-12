@@ -80,3 +80,4 @@
 == ignored-margins-2a.html ignored-margins-2-ref.html
 == ignored-margins-2b.html ignored-margins-2-ref.html
 == trailing-inline-with-continuations-1.html trailing-inline-with-continuations-1-ref.html
+== append-to-empty-trailing-inline-1.html append-to-empty-trailing-inline-1-ref.html
