@@ -1201,8 +1201,16 @@ GeolocationPrompt.prototype = {
               },
           }];
       
-      var message = browserBundle.formatStringFromName("geolocation.siteWantsToKnow",
-                                                       [request.requestingURI.host], 1);      
+      var message;
+
+      // Different message/info if it is a local file
+      if (request.requestingURI.schemeIs("file")) {
+        message = browserBundle.formatStringFromName("geolocation.fileWantsToKnow",
+                                                     [request.requestingURI.path], 1);
+      } else {
+        message = browserBundle.formatStringFromName("geolocation.siteWantsToKnow",
+                                                     [request.requestingURI.host], 1);
+      }
 
       var newBar = notificationBox.appendNotification(message,
                                                       "geolocation",
