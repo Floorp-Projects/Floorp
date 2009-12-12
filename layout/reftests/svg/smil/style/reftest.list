@@ -66,8 +66,7 @@ fails == anim-css-fillopacity-3-clamp-big.svg     anim-css-fillopacity-3-ref.svg
 == anim-css-fillopacity-3-clamp-small.svg   anim-css-fillopacity-3-ref.svg
 
 # 'font' shorthand property
-# XXXdholbert We don't yet support animating shorthand properties (bug 520239)
-fails == anim-css-font-1.svg  anim-css-font-1-ref.svg
+== anim-css-font-1.svg  anim-css-font-1-ref.svg
 
 # 'font-size' property, from/by/to with pixel values only
 == anim-css-fontsize-1-from-by-px-px.svg    anim-css-fontsize-1-ref.svg

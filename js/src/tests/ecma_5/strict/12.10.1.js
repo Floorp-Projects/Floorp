@@ -26,3 +26,5 @@ assertEq(testLenientAndStrict('function f() { "use strict"; with (1) {} }',
  */
 assertEq(parsesSuccessfully('function f() { "use strict"; }; with (1) {}'),
          true);
+
+reportCompare(true, true);

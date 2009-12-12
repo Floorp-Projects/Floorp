@@ -68,8 +68,9 @@ interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
 interface nsIDOMStorage;
 interface nsIPrincipal;
+interface nsIWebBrowserPrint;
 
-[scriptable, uuid(8ADFB831-1053-4A19-884D-BCDAD7277B4B)]
+[scriptable, uuid(1067ee1a-08e8-455d-9b12-19eeeee56b8e)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -488,4 +489,11 @@ interface nsIDocShell : nsISupports
    * and should be treated accordingly.
    **/
   attribute boolean isOffScreenBrowser;    
+
+  /**
+   * If the current content viewer isn't initialized for print preview,
+   * it is replaced with one which is and to which an about:blank document
+   * is loaded.
+   */
+  readonly attribute nsIWebBrowserPrint printPreview;
 };

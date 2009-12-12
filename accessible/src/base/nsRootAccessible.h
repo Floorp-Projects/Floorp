@@ -74,7 +74,6 @@ public:
 
   // nsIAccessible
   NS_IMETHOD GetName(nsAString& aName);
-  NS_IMETHOD GetParent(nsIAccessible * *aParent);
   NS_IMETHOD GetRelationByType(PRUint32 aRelationType,
                                nsIAccessibleRelation **aRelation);
 
@@ -88,6 +87,7 @@ public:
   // nsAccessible
   virtual nsresult GetRoleInternal(PRUint32 *aRole);
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual nsIAccessible* GetParent();
 
   // nsDocAccessible
   virtual void FireDocLoadEvents(PRUint32 aEventType);

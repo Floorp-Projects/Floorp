@@ -30,3 +30,5 @@ assertEq(testLenientAndStrict('let ({x:arguments}=1) {}',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
+
+reportCompare(true, true);

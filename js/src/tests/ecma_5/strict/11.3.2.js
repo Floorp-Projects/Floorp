@@ -25,3 +25,5 @@ assertEq(testLenientAndStrict('(eval)--',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
+
+reportCompare(true, true);

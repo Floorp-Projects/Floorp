@@ -65,9 +65,6 @@ math[mode="display"], math[display="block"] {
 math[display="inline"] {
   display: inline;
 }
-::-moz-math-inline {
-  display: inline;
-}
 
 /**************************************************************************/
 /* Style switching during frame construction depending on the context of <mi>:
@@ -408,8 +405,11 @@ mtd[-moz-math-columnline="dashed"] {
   font-family: serif; /* an empty family is ignored as an error and behaves like inherit */
 /*  background-color: #3C6; */
 }
+/* Don't actually style -moz-math-anonymous by default */
+/*
 ::-moz-math-anonymous {
 }
+*/
 
 /**********************************************************************/
 /* Hide embedded semantic MathML content (as opposed to presentational

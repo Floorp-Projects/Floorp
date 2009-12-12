@@ -72,15 +72,10 @@ class nsHtml5Speculation : public nsAHtml5TreeOpSink
     }
 
     /**
-     * No-op.
-     */
-    virtual void MaybeFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
-
-    /**
      * Flush the operations from the tree operations from the argument
      * queue unconditionally.
      */
-    virtual void ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
+    virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue);
     
     void FlushToSink(nsAHtml5TreeOpSink* aSink);
 

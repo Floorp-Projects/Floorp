@@ -139,15 +139,12 @@ var _fromToTestLists = {
   URIsAndNone: [
     new AnimTestcaseFromTo("url(#idA)", "url(#idB)",
                            { fromComp: "url(\"" + document.URL + "#idA\")",
-                             toComp: "url(\"" + document.URL + "#idB\")"},
-                           "need support for URI values"),
+                             toComp: "url(\"" + document.URL + "#idB\")"}),
     new AnimTestcaseFromTo("none", "url(#idB)",
-                           { toComp: "url(\"" + document.URL + "#idB\")"},
-                           "need support for URI values"),
+                           { toComp: "url(\"" + document.URL + "#idB\")"}),
     new AnimTestcaseFromTo("url(#idB)", "inherit",
                            { fromComp: "url(\"" + document.URL + "#idB\")",
-                             toComp: "none"},
-                           "need support for URI values"),
+                             toComp: "none"}),
   ],
 };
 
@@ -186,8 +183,8 @@ var gFromToBundles = [
     new AnimTestcaseFromTo("url('a.cur'), url('b.cur'), nw-resize", "sw-resize",
                            { fromComp: "url(\"" + _testPath + "/a.cur\"), " +
                                        "url(\"" + _testPath + "/b.cur\"), " +
-                                       "nw-resize"})
-  ], "need support for CSS value-lists and URI values"),
+                                       "nw-resize"}),
+  ]),
   new TestcaseBundle(gPropList.direction, [
     new AnimTestcaseFromTo("ltr", "rtl"),
     new AnimTestcaseFromTo("rtl", "inherit"),
@@ -251,11 +248,11 @@ var gFromToBundles = [
                           toComp: "normal normal 400 100px / 10px monospace"}),
     new AnimTestcaseFromTo("oblique normal 200 30px / 10px cursive",
                            "normal small-caps 800 40px / 10px serif"),
-  ], "need support for 'font' shorthand"),
+  ]),
   new TestcaseBundle(gPropList.font_family, [
     new AnimTestcaseFromTo("serif", "sans-serif"),
     new AnimTestcaseFromTo("cursive", "monospace"),
-  ], "need support for all properties that get stored in nsFont"),
+  ]),
   new TestcaseBundle(gPropList.font_size,
                      [].concat(_fromToTestLists.lengthPx, [
     new AnimTestcaseFromTo("10px", "40%", { midComp: "15px", toComp: "20px" }),
@@ -339,8 +336,9 @@ var gFromToBundles = [
   new TestcaseBundle(gPropList.opacity, _fromToTestLists.opacity),
   new TestcaseBundle(gPropList.overflow, [
     new AnimTestcaseFromTo("auto", "visible"),
+    new AnimTestcaseFromTo("inherit", "visible", { fromComp: "hidden" }),
     new AnimTestcaseFromTo("scroll", "auto"),
-  ], "need support for 'overflow' shorthand"),
+  ]),
   new TestcaseBundle(gPropList.pointer_events, [
     new AnimTestcaseFromTo("visibleFill", "stroke",
                            { fromComp: "visiblefill" }),
@@ -365,14 +363,18 @@ var gFromToBundles = [
      new AnimTestcaseFromTo("inherit", "rgb(200, 200, 200)",
                             { fromComp: "none"})])),
   new TestcaseBundle(gPropList.stroke_dasharray,
-                     [].concat(_fromToTestLists.lengthPx,
-                               _fromToTestLists.lengthPxPctSVG,
-                               _fromToTestLists.lengthPctSVG,
+                     [].concat(_fromToTestLists.lengthPctSVG,
                                [
-    new AnimTestcaseFromTo("10px", "20px"),
-    new AnimTestcaseFromTo("1px, 5px", "1px"),
-    new AnimTestcaseFromTo("1px, 15px", "1px, 2px, 3px, 4px, 5px"),
-  ]), "need support for CSS value-lists"),
+    new AnimTestcaseFromTo("inherit", "20", { fromComp: "none"}),
+    new AnimTestcaseFromTo("1", "none"),
+    new AnimTestcaseFromTo("10", "20", { midComp: "15"}),
+    new AnimTestcaseFromTo("1", "2, 3", { fromComp: "1, 1",
+                                          midComp: "1.5, 2"}),
+    new AnimTestcaseFromTo("2, 8", "6", { midComp: "4, 7"}),
+    new AnimTestcaseFromTo("1, 3", "1, 3, 5, 7, 9",
+                           { fromComp: "1, 3, 1, 3, 1, 3, 1, 3, 1, 3",
+                             midComp:  "1, 3, 3, 5, 5, 2, 2, 4, 4, 6"}),
+  ])),
   new TestcaseBundle(gPropList.stroke_dashoffset,
                      [].concat(_fromToTestLists.lengthPx,
                                _fromToTestLists.lengthPxPctSVG,

@@ -27,3 +27,5 @@ assertEq(parsesSuccessfully('function f() { "use strict"; }; 010'),
 /* Octal integer literal in function body */
 assertEq(parsesSuccessfully('function f() { 010; }'),
          true);
+
+reportCompare(true, true);

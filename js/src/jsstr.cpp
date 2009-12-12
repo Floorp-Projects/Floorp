@@ -101,13 +101,8 @@ MinimizeDependentStrings(JSString *str, int level, JSString **basep)
                 base = base->dependentBase();
             } while (base->isDependent());
         }
-        if (start == 0) {
-            JS_ASSERT(str->dependentIsPrefix());
-            str->prefixSetBase(base);
-        } else if (start <= JSString::MAX_DEPENDENT_START) {
-            length = str->dependentLength();
-            str->reinitDependent(base, start, length);
-        }
+        length = str->dependentLength();
+        str->reinitDependent(base, start, length);
     }
     *basep = base;
     return start;
@@ -188,9 +183,9 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
     } else {
         str->flatSetMutable();
 
-        /* Morph left into a dependent prefix if we realloc'd its buffer. */
+        /* Morph left into a dependent string if we realloc'd its buffer. */
         if (ldep) {
-            ldep->reinitPrefix(str, ln);
+            ldep->reinitDependent(str, 0, ln);
 #ifdef DEBUG
             {
                 JSRuntime *rt = cx->runtime;
@@ -654,6 +649,21 @@ NormalizeThis(JSContext *cx, jsval *vp)
 
     if (JSVAL_IS_NULL(vp[1]) && JSVAL_IS_NULL(JS_THIS(cx, vp)))
         return NULL;
+
+    /*
+     * js_GetPrimitiveThis seems to do a bunch of work (like calls to
+     * JS_THIS_OBJECT) which we don't need in the common case (where
+     * vp[1] is a String object) here.  Note that vp[1] can still be a
+     * primitive value at this point.
+     */
+    if (!JSVAL_IS_PRIMITIVE(vp[1])) {
+        JSObject *obj = JSVAL_TO_OBJECT(vp[1]);
+        if (obj->getClass() == &js_StringClass) {
+            vp[1] = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+            return JSVAL_TO_STRING(vp[1]);
+        }
+    }
+
     str = js_ValueToString(cx, vp[1]);
     if (!str)
         return NULL;
@@ -933,9 +943,7 @@ str_charAt(JSContext *cx, uintN argc, jsval *vp)
         if ((size_t)i >= str->length())
             goto out_of_range;
     } else {
-        str = NormalizeThis(cx, vp);
-        if (!str)
-            return JS_FALSE;
+        NORMALIZE_THIS(cx, vp, str);
 
         if (argc == 0) {
             d = 0.0;
@@ -977,9 +985,7 @@ str_charCodeAt(JSContext *cx, uintN argc, jsval *vp)
         if ((size_t)i >= str->length())
             goto out_of_range;
     } else {
-        str = NormalizeThis(cx, vp);
-        if (!str)
-            return JS_FALSE;
+        NORMALIZE_THIS(cx, vp, str);
 
         if (argc == 0) {
             d = 0.0;
@@ -2636,7 +2642,7 @@ static const jschar UnitStringData[] = {
     C(0xf8), C(0xf9), C(0xfa), C(0xfb), C(0xfc), C(0xfd), C(0xfe), C(0xff)
 };
 
-#define U(c) { 1 | JSString::ATOMIZED, {(jschar *)UnitStringData + (c) * 2} }
+#define U(c) { 1, 0, JSString::ATOMIZED, {(jschar *)UnitStringData + (c) * 2} }
 
 #ifdef __SUNPRO_CC
 #pragma pack(8)
@@ -2743,9 +2749,9 @@ static const jschar Hundreds[] = {
     O25(0x30), O25(0x31), O25(0x32), O25(0x33), O25(0x34), O25(0x35)
 };
 
-#define L1(c) { 1 | JSString::ATOMIZED, {(jschar *)Hundreds + 2 + (c) * 4} } /* length 1: 0..9 */
-#define L2(c) { 2 | JSString::ATOMIZED, {(jschar *)Hundreds + 41 + (c - 10) * 4} } /* length 2: 10..99 */
-#define L3(c) { 3 | JSString::ATOMIZED, {(jschar *)Hundreds + (c - 100) * 4} } /* length 3: 100..255 */
+#define L1(c) { 1, 0, JSString::ATOMIZED, {(jschar *)Hundreds + 2 + (c) * 4} } /* length 1: 0..9 */
+#define L2(c) { 2, 0, JSString::ATOMIZED, {(jschar *)Hundreds + 41 + (c - 10) * 4} } /* length 2: 10..99 */
+#define L3(c) { 3, 0, JSString::ATOMIZED, {(jschar *)Hundreds + (c - 100) * 4} } /* length 3: 100..255 */
 
 #ifdef __SUNPRO_CC
 #pragma pack(8)
@@ -3156,18 +3162,10 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
     if (start == 0 && length == base->length())
         return base;
 
-    if (start > JSString::MAX_DEPENDENT_START ||
-        (start != 0 && length > JSString::MAX_DEPENDENT_LENGTH)) {
-        return js_NewStringCopyN(cx, base->chars() + start, length);
-    }
-
     ds = js_NewGCString(cx);
     if (!ds)
         return NULL;
-    if (start == 0)
-        ds->initPrefix(base, length);
-    else
-        ds->initDependent(base, start, length);
+    ds->initDependent(base, start, length);
 #ifdef DEBUG
   {
     JSRuntime *rt = cx->runtime;
@@ -5482,7 +5480,7 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
     return ucs4Char;
 }
 
-#if defined DEBUG || defined JS_DUMP_PROPTREE_STATS
+#ifdef DEBUG
 
 JS_FRIEND_API(size_t)
 js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,

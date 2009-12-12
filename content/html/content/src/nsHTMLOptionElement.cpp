@@ -120,6 +120,8 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  nsresult CopyInnerTo(nsGenericElement* aDest) const;
+
 protected:
   /**
    * Get the select content element that contains this option, this
@@ -528,3 +530,18 @@ nsHTMLOptionElement::Initialize(nsISupports* aOwner,
 
   return result;
 }
+
+nsresult
+nsHTMLOptionElement::CopyInnerTo(nsGenericElement* aDest) const
+{
+  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aDest->GetOwnerDoc()->IsStaticDocument()) {
+    PRBool selected = PR_FALSE;
+    const_cast<nsHTMLOptionElement*>(this)->GetSelected(&selected);
+    static_cast<nsHTMLOptionElement*>(aDest)->SetSelected(selected);
+  }
+  return NS_OK;
+}
+

@@ -70,5 +70,4 @@ void
 nsTextAccessible::CacheChildren()
 {
   // No children for text accessible.
-  mAccChildCount = IsDefunct() ? eChildCountUninitialized : 0;
 }

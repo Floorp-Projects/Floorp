@@ -94,6 +94,8 @@
 #include "nsINameSpaceManager.h"
 
 #include "nsThreadUtils.h"
+#include "nsICSSStyleSheet.h"
+#include "nsIContentViewer.h"
 #include "nsIView.h"
 
 #ifdef MOZ_WIDGET_GTK2
@@ -161,9 +163,11 @@ nsFrameLoader*
 nsFrameLoader::Create(nsIContent* aOwner)
 {
   NS_ENSURE_TRUE(aOwner, nsnull);
-  nsIDocument* doc = aOwner->GetCurrentDoc();
+  nsIDocument* doc = aOwner->GetOwnerDoc();
   NS_ENSURE_TRUE(doc && !doc->GetDisplayDocument() &&
-                 !doc->IsLoadedAsData(), nsnull);
+                 ((!doc->IsLoadedAsData() && aOwner->GetCurrentDoc()) ||
+                   doc->IsStaticDocument()),
+                 nsnull);
 
   return new nsFrameLoader(aOwner);
 }
@@ -183,7 +187,7 @@ nsFrameLoader::LoadFrame()
   }
 
   nsIDocument* doc = mOwnerContent->GetOwnerDoc();
-  if (!doc) {
+  if (!doc || doc->IsStaticDocument()) {
     return NS_OK;
   }
 
@@ -1107,8 +1111,8 @@ nsFrameLoader::MaybeCreateDocShell()
   // Get our parent docshell off the document of mOwnerContent
   // XXXbz this is such a total hack.... We really need to have a
   // better setup for doing this.
-  nsIDocument* doc = mOwnerContent->GetDocument();
-  if (!doc) {
+  nsIDocument* doc = mOwnerContent->GetOwnerDoc();
+  if (!doc || !(doc->IsStaticDocument() || mOwnerContent->IsInDoc())) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -1117,8 +1121,9 @@ nsFrameLoader::MaybeCreateDocShell()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsIWebNavigation> parentAsWebNav =
-    do_GetInterface(doc->GetScriptGlobalObject());
+  nsCOMPtr<nsISupports> container =
+    doc->GetContainer();
+  nsCOMPtr<nsIWebNavigation> parentAsWebNav = do_QueryInterface(container);
 
   // Create the docshell...
   mDocShell = do_CreateInstance("@mozilla.org/docshell;1");
@@ -1508,3 +1513,27 @@ nsFrameLoader::ActivateFrameEvent(const nsAString& aType,
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
+{
+  nsFrameLoader* dest = static_cast<nsFrameLoader*>(aDest);
+  dest->MaybeCreateDocShell();
+  NS_ENSURE_STATE(dest->mDocShell);
+
+  nsCOMPtr<nsIDOMDocument> dummy = do_GetInterface(dest->mDocShell);
+  nsCOMPtr<nsIContentViewer> viewer;
+  dest->mDocShell->GetContentViewer(getter_AddRefs(viewer));
+  NS_ENSURE_STATE(viewer);
+
+  nsCOMPtr<nsIDocShell> origDocShell;
+  GetDocShell(getter_AddRefs(origDocShell));
+  nsCOMPtr<nsIDOMDocument> domDoc = do_GetInterface(origDocShell);
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  NS_ENSURE_STATE(doc);
+  nsCOMPtr<nsIDocument> clonedDoc = doc->CreateStaticClone(dest->mDocShell);
+  nsCOMPtr<nsIDOMDocument> clonedDOMDoc = do_QueryInterface(clonedDoc);
+
+  viewer->SetDOMDocument(clonedDOMDoc);
+  return NS_OK;
+}

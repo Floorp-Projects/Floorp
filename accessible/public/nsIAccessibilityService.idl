@@ -46,7 +46,7 @@ interface nsObjectFrame;
 interface nsIContent;
 interface nsITimer;
 
-[uuid(29384ba1-f9ce-425d-afb5-54e2ee949d87)]
+[uuid(61098f48-4fcc-4b05-9cf3-c11b8efbe682)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -76,9 +76,18 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
   nsIAccessible createHTMLTextFieldAccessible(in nsIFrame aFrame);
   nsIAccessible createHTMLCaptionAccessible(in nsIFrame aFrame);
 
-  nsIAccessible getAccessible(in nsIDOMNode aNode, in nsIPresShell aPresShell,                          
-                              in nsIWeakReference aWeakShell, 
-                              inout nsIFrame frameHint, out boolean aIsHidden);
+  /**
+   * Return an accessible for the given DOM node.
+   *
+   * @param  aNode       [in] the given node
+   * @param  aPresShell  [in] the pres shell of the node
+   * @param  aWeakShell  [in] the weak shell for the pres shell
+   * @param  aFrameHint  [in] the frame of the given node
+   * @param  aIsHidden   [out] indicates whether the node's frame is hidden
+   */
+  nsIAccessible getAccessible(in nsIDOMNode aNode, in nsIPresShell aPresShell,
+                              in nsIWeakReference aWeakShell,
+                              in nsIFrame aFrameHint, out boolean aIsHidden);
 
   // For gtk+ native window accessible
   nsIAccessible addNativeRootAccessible(in voidPtr aAtkAccessible);

@@ -33,3 +33,5 @@ assertEq(testLenientAndStrict('try{}catch({x:arguments}){}',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
+
+reportCompare(true, true);

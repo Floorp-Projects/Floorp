@@ -60,6 +60,7 @@ endif
 
 CPPSRCS		= \
 		nsIFileEnumerator.cpp \
+		ShowSSEConfig.cpp \
 		TestCallTemplates.cpp \
 		TestINIParser.cpp \
 		TestRacingServiceManager.cpp \

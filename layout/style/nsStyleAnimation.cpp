@@ -128,6 +128,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
   switch (commonUnit) {
     case eUnit_Null:
     case eUnit_None:
+    case eUnit_UnparsedString:
       success = PR_FALSE;
       break;
     case eUnit_Enumerated:
@@ -459,6 +460,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
   switch (commonUnit) {
     case eUnit_Null:
     case eUnit_None:
+    case eUnit_UnparsedString:
       success = PR_FALSE;
       break;
     case eUnit_Enumerated:
@@ -596,6 +598,15 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
         ++len2;
       }
       NS_ABORT_IF_FALSE(len1 > 0 && len2 > 0, "unexpected length");
+      if (list1->mValue.GetUnit() == eCSSUnit_None ||
+          list2->mValue.GetUnit() == eCSSUnit_None) {
+        // One of our values is "none".  Can't do addition with that.
+        NS_ABORT_IF_FALSE(
+          (list1->mValue.GetUnit() != eCSSUnit_None || len1 == 1) &&
+          (list2->mValue.GetUnit() != eCSSUnit_None || len2 == 1),
+          "multi-value valuelist with 'none' as first element");
+        return PR_FALSE;
+      }
 
       nsAutoPtr<nsCSSValueList> result;
       nsCSSValueList **resultTail = getter_Transfers(result);
@@ -714,10 +725,13 @@ BuildStyleRule(nsCSSProperty aProperty,
   nsCOMPtr<nsICSSParser> parser;
   nsCOMPtr<nsICSSStyleRule> styleRule;
 
-  // The next statement performs the following, in sequence: Get parser, use
-  // parser to parse property, check that parsing succeeded, and build a rule
-  // for the resulting declaration.  If any of these steps fails, we bail out
-  // and delete the declaration.
+  nsCSSProperty propertyToCheck = nsCSSProps::IsShorthand(aProperty) ?
+    nsCSSProps::SubpropertyEntryFor(aProperty)[0] : aProperty;
+
+  // The next clause performs the following, in sequence: Initialize our
+  // declaration, get a parser, parse property, check that parsing succeeded,
+  // and build a rule for the resulting declaration.  If any of these steps
+  // fails, we bail out and delete the declaration.
   if (!declaration->InitializeEmpty() ||
       NS_FAILED(doc->CSSLoader()->GetParserFor(nsnull,
                                                getter_AddRefs(parser))) ||
@@ -725,8 +739,8 @@ BuildStyleRule(nsCSSProperty aProperty,
                                       doc->GetDocumentURI(), baseURI,
                                       aTargetElement->NodePrincipal(),
                                       declaration, &changed)) ||
-      // SlotForValue checks whether property parsed w/out CSS parsing errors
-      !declaration->SlotForValue(aProperty) ||
+      // check whether property parsed without CSS parsing errors
+      !declaration->HasNonImportantValueFor(propertyToCheck) ||
       NS_FAILED(NS_NewCSSStyleRule(getter_AddRefs(styleRule), nsnull,
                                    declaration))) {
     NS_WARNING("failure in BuildStyleRule");
@@ -749,6 +763,66 @@ LookupStyleContext(nsIContent* aElement)
   return nsComputedDOMStyle::GetStyleContextForContent(aElement, nsnull, shell);
 }
 
+
+/**
+ * Helper function: StyleWithDeclarationAdded
+ * Creates a nsStyleRule with the specified property set to the specified
+ * value, and returns a nsStyleContext for this rule, as a sibling of the
+ * given element's nsStyleContext.
+ *
+ * If we fail to parse |aSpecifiedValue| for |aProperty|, this method will
+ * return nsnull.
+ *
+ * NOTE: This method uses GetPrimaryShell() to access the style system,
+ * so it should only be used for style that applies to all presentations,
+ * rather than for style that only applies to a particular presentation.
+ * XXX Once we get rid of multiple presentations, we can remove the above
+ * note.
+ *
+ * @param aProperty       The property whose value we're customizing in the
+ *                        custom style context.
+ * @param aTargetElement  The element whose style context we'll use as a
+ *                        sibling for our custom style context.
+ * @param aSpecifiedValue The value for |aProperty| in our custom style
+ *                        context.
+ * @return The generated custom nsStyleContext, or nsnull on failure.
+ */
+already_AddRefed<nsStyleContext>
+StyleWithDeclarationAdded(nsCSSProperty aProperty,
+                          nsIContent* aTargetElement,
+                          const nsAString& aSpecifiedValue)
+{
+  NS_ABORT_IF_FALSE(aTargetElement, "null target element");
+  NS_ABORT_IF_FALSE(aTargetElement->GetCurrentDoc(),
+                    "element needs to be in a document "
+                    "if we're going to look up its style context");
+
+  // Look up style context for our target element
+  nsRefPtr<nsStyleContext> styleContext = LookupStyleContext(aTargetElement);
+  if (!styleContext) {
+    return nsnull;
+  }
+
+  // Parse specified value into a temporary nsICSSStyleRule
+  nsCOMPtr<nsICSSStyleRule> styleRule =
+    BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue);
+  if (!styleRule) {
+    return nsnull;
+  }
+
+  styleRule->RuleMatched();
+
+  // Create a temporary nsStyleContext for the style rule
+  nsCOMArray<nsIStyleRule> ruleArray;
+  ruleArray.AppendObject(styleRule);
+  nsStyleSet* styleSet = styleContext->PresContext()->StyleSet();
+  return styleSet->ResolveStyleForRules(styleContext->GetParent(),
+                                        styleContext->GetPseudo(),
+                                        styleContext->GetPseudoType(),
+                                        styleContext->GetRuleNode(),
+                                        ruleArray);
+}
+
 PRBool
 nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
                                nsIContent* aTargetElement,
@@ -760,28 +834,18 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
                     "we should only be able to actively animate nodes that "
                     "are in a document");
 
-  // Look up style context for our target element
-  nsRefPtr<nsStyleContext> styleContext = LookupStyleContext(aTargetElement);
-  if (!styleContext) {
-    return PR_FALSE;
-  }
-
-  // Parse specified value into a temporary nsICSSStyleRule
-  nsCOMPtr<nsICSSStyleRule> styleRule =
-    BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue);
-  if (!styleRule) {
-    return PR_FALSE;
-  }
-
-  // Create a temporary nsStyleContext for the style rule
-  nsCOMArray<nsIStyleRule> ruleArray;
-  ruleArray.AppendObject(styleRule);
-  nsStyleSet* styleSet = styleContext->PresContext()->StyleSet();
   nsRefPtr<nsStyleContext> tmpStyleContext =
-    styleSet->ResolveStyleForRules(styleContext->GetParent(),
-                                   styleContext->GetPseudo(),
-                                   styleContext->GetRuleNode(), ruleArray);
+    StyleWithDeclarationAdded(aProperty, aTargetElement, aSpecifiedValue);
+  if (!tmpStyleContext) {
+    return PR_FALSE;
+  }
 
+ if (nsCSSProps::IsShorthand(aProperty) ||
+     nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_None) {
+    // Just capture the specified value
+    aComputedValue.SetUnparsedStringValue(nsString(aSpecifiedValue));
+    return PR_TRUE;
+  }
   // Extract computed value of our property from the temporary style rule
   return ExtractComputedValue(aProperty, tmpStyleContext, aComputedValue);
 }
@@ -884,6 +948,10 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
   NS_ABORT_IF_FALSE(aPresContext, "null pres context");
   aSpecifiedValue.Truncate(); // Clear outparam, if it's not already empty
 
+  if (aComputedValue.GetUnit() == eUnit_UnparsedString) {
+    aComputedValue.GetStringValue(aSpecifiedValue);
+    return PR_TRUE;
+  }
   nsCSSValuePair vp;
   nsCSSRect rect;
   void *ptr = nsnull;
@@ -948,8 +1016,6 @@ static PRBool
 StyleCoordToValue(const nsStyleCoord& aCoord, nsStyleAnimation::Value& aValue)
 {
   switch (aCoord.GetUnit()) {
-    case eStyleUnit_Null:
-      return PR_FALSE;
     case eStyleUnit_Normal:
       aValue.SetNormalValue();
       break;
@@ -976,6 +1042,8 @@ StyleCoordToValue(const nsStyleCoord& aCoord, nsStyleAnimation::Value& aValue)
       aValue.SetIntValue(aCoord.GetIntValue(),
                          nsStyleAnimation::eUnit_Integer);
       break;
+    default:
+      return PR_FALSE;
   }
   return PR_TRUE;
 }
@@ -1030,6 +1098,12 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         BORDER_WIDTH_CASE(eCSSProperty_border_top_width, top)
         #undef BORDER_WIDTH_CASE
 
+        case eCSSProperty__moz_column_rule_width:
+          aComputedValue.SetCoordValue(
+            static_cast<const nsStyleColumn*>(styleStruct)->
+              GetComputedColumnRuleWidth());
+          break;
+
         case eCSSProperty_border_bottom_color:
           ExtractBorderColor(aStyleContext, styleStruct, NS_SIDE_BOTTOM,
                              aComputedValue);
@@ -1061,13 +1135,63 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
+        case eCSSProperty__moz_column_count: {
+          const nsStyleColumn *styleColumn =
+            static_cast<const nsStyleColumn*>(styleStruct);
+          if (styleColumn->mColumnCount == NS_STYLE_COLUMN_COUNT_AUTO) {
+            aComputedValue.SetAutoValue();
+          } else {
+            aComputedValue.SetIntValue(styleColumn->mColumnCount,
+                                       eUnit_Integer);
+          }
+          break;
+        }
+
+        case eCSSProperty_border_spacing: {
+          const nsStyleTableBorder *styleTableBorder =
+            static_cast<const nsStyleTableBorder*>(styleStruct);
+          nsCSSValuePair *pair = new nsCSSValuePair;
+          if (!pair) {
+            return PR_FALSE;
+          }
+          pair->mXValue.SetFloatValue(
+            nsPresContext::AppUnitsToFloatCSSPixels(
+              styleTableBorder->mBorderSpacingX),
+            eCSSUnit_Pixel);
+          pair->mYValue.SetFloatValue(
+            nsPresContext::AppUnitsToFloatCSSPixels(
+              styleTableBorder->mBorderSpacingY),
+            eCSSUnit_Pixel);
+          aComputedValue.SetAndAdoptCSSValuePairValue(pair,
+                                                      eUnit_CSSValuePair);
+          break;
+        }
+
+        case eCSSProperty__moz_transform_origin: {
+          const nsStyleDisplay *styleDisplay =
+            static_cast<const nsStyleDisplay*>(styleStruct);
+          nsCSSValuePair *pair = new nsCSSValuePair;
+          if (!pair) {
+            return PR_FALSE;
+          }
+          StyleCoordToCSSValue(styleDisplay->mTransformOrigin[0],
+                               pair->mXValue);
+          StyleCoordToCSSValue(styleDisplay->mTransformOrigin[1],
+                               pair->mYValue);
+          aComputedValue.SetAndAdoptCSSValuePairValue(pair,
+                                                      eUnit_CSSValuePair);
+          break;
+        }
+
         case eCSSProperty_stroke_dasharray: {
           const nsStyleSVG *svg = static_cast<const nsStyleSVG*>(styleStruct);
           NS_ABORT_IF_FALSE((svg->mStrokeDasharray != nsnull) ==
                             (svg->mStrokeDasharrayLength != 0),
                             "pointer/length mismatch");
+          nsAutoPtr<nsCSSValueList> result;
           if (svg->mStrokeDasharray) {
-            nsAutoPtr<nsCSSValueList> result;
+            NS_ABORT_IF_FALSE(svg->mStrokeDasharrayLength > 0,
+                              "non-null list should have positive length");
             nsCSSValueList **resultTail = getter_Transfers(result);
             for (PRUint32 i = 0, i_end = svg->mStrokeDasharrayLength;
                  i != i_end; ++i) {
@@ -1101,11 +1225,15 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                   return PR_FALSE;
               }
             }
-            aComputedValue.SetAndAdoptCSSValueListValue(result.forget(),
-                                                        eUnit_Dasharray);
           } else {
-            aComputedValue.SetNoneValue();
+            result = new nsCSSValueList;
+            if (!result) {
+              return PR_FALSE;
+            }
+            result->mValue.SetNoneValue();
           }
+          aComputedValue.SetAndAdoptCSSValueListValue(result.forget(),
+                                                      eUnit_Dasharray);
           break;
         }
 
@@ -1357,6 +1485,11 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
         mValue.mCSSValueList = nsnull;
       }
       break;
+    case eUnit_UnparsedString:
+      NS_ABORT_IF_FALSE(aOther.mValue.mString, "expecting non-null string");
+      mValue.mString = aOther.mValue.mString;
+      mValue.mString->AddRef();
+      break;
   }
 
   return *this;
@@ -1425,6 +1558,19 @@ nsStyleAnimation::Value::SetColorValue(nscolor aColor)
 }
 
 void
+nsStyleAnimation::Value::SetUnparsedStringValue(const nsString& aString)
+{
+  FreeValue();
+  mUnit = eUnit_UnparsedString;
+  mValue.mString = nsCSSValue::BufferFromString(aString);
+  if (NS_UNLIKELY(!mValue.mString)) {
+    // not much we can do here; just make sure that our promise of a
+    // non-null mValue.mString holds for string units.
+    mUnit = eUnit_Null;
+  }
+}
+
+void
 nsStyleAnimation::Value::SetAndAdoptCSSValuePairValue(
                            nsCSSValuePair *aValuePair, Unit aUnit)
 {
@@ -1454,6 +1600,9 @@ nsStyleAnimation::Value::FreeValue()
     delete mValue.mCSSValueList;
   } else if (IsCSSValuePairUnit(mUnit)) {
     delete mValue.mCSSValuePair;
+  } else if (IsStringUnit(mUnit)) {
+    NS_ABORT_IF_FALSE(mValue.mString, "expecting non-null string");
+    mValue.mString->Release();
   }
 }
 
@@ -1486,6 +1635,9 @@ nsStyleAnimation::Value::operator==(const Value& aOther) const
     case eUnit_Shadow:
       return nsCSSValueList::Equal(mValue.mCSSValueList,
                                    aOther.mValue.mCSSValueList);
+    case eUnit_UnparsedString:
+      return (NS_strcmp(GetStringBufferValue(),
+                        aOther.GetStringBufferValue()) == 0);
   }
 
   NS_NOTREACHED("incomplete case");
