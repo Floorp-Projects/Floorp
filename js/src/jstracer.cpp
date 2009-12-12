@@ -1544,128 +1544,6 @@ AttemptCompilation(JSContext *cx, JSTraceMonitor* tm, JSObject* globalObj, jsbyt
     }
 }
 
-// Forward declarations.
-JS_DEFINE_CALLINFO_1(static, DOUBLE, i2f,  INT32, 1, 1)
-JS_DEFINE_CALLINFO_1(static, DOUBLE, u2f, UINT32, 1, 1)
-
-static bool
-isi2f(LIns* i)
-{
-    if (i->isop(LIR_i2f))
-        return true;
-
-    if (nanojit::AvmCore::config.soft_float &&
-        i->isop(LIR_qjoin) &&
-        i->oprnd1()->isop(LIR_pcall) &&
-        i->oprnd2()->isop(LIR_callh)) {
-        if (i->oprnd1()->callInfo() == &i2f_ci)
-            return true;
-    }
-
-    return false;
-}
-
-static bool
-isu2f(LIns* i)
-{
-    if (i->isop(LIR_u2f))
-        return true;
-
-    if (nanojit::AvmCore::config.soft_float &&
-        i->isop(LIR_qjoin) &&
-        i->oprnd1()->isop(LIR_pcall) &&
-        i->oprnd2()->isop(LIR_callh)) {
-        if (i->oprnd1()->callInfo() == &u2f_ci)
-            return true;
-    }
-
-    return false;
-}
-
-static LIns*
-iu2fArg(LIns* i)
-{
-    if (nanojit::AvmCore::config.soft_float &&
-        i->isop(LIR_qjoin)) {
-        return i->oprnd1()->arg(0);
-    }
-
-    return i->oprnd1();
-}
-
-static LIns*
-demote(LirWriter *out, LIns* i)
-{
-    if (i->isCall())
-        return i->callArgN(0);
-    if (isi2f(i) || isu2f(i))
-        return iu2fArg(i);
-    if (i->isconst())
-        return i;
-    JS_ASSERT(i->isconstf());
-    double cf = i->imm64f();
-    int32_t ci = cf > 0x7fffffff ? uint32_t(cf) : int32_t(cf);
-    return out->insImm(ci);
-}
-
-static bool
-isPromoteInt(LIns* i)
-{
-    if (isi2f(i) || i->isconst())
-        return true;
-    if (!i->isconstf())
-        return false;
-    jsdouble d = i->imm64f();
-    return d == jsdouble(jsint(d)) && !JSDOUBLE_IS_NEGZERO(d);
-}
-
-static bool
-isPromoteUint(LIns* i)
-{
-    if (isu2f(i) || i->isconst())
-        return true;
-    if (!i->isconstf())
-        return false;
-    jsdouble d = i->imm64f();
-    return d == jsdouble(jsuint(d)) && !JSDOUBLE_IS_NEGZERO(d);
-}
-
-static bool
-isPromote(LIns* i)
-{
-    return isPromoteInt(i) || isPromoteUint(i);
-}
-
-static bool
-IsConst(LIns* i, int32_t c)
-{
-    return i->isconst() && i->imm32() == c;
-}
-
-/*
- * Determine whether this operand is guaranteed to not overflow the specified
- * integer operation.
- */
-static bool
-IsOverflowSafe(LOpcode op, LIns* i)
-{
-    LIns* c;
-    switch (op) {
-      case LIR_add:
-      case LIR_sub:
-          return (i->isop(LIR_and) && ((c = i->oprnd2())->isconst()) &&
-                  ((c->imm32() & 0xc0000000) == 0)) ||
-                 (i->isop(LIR_rsh) && ((c = i->oprnd2())->isconst()) &&
-                  ((c->imm32() > 0)));
-    default:
-        JS_ASSERT(op == LIR_mul);
-    }
-    return (i->isop(LIR_and) && ((c = i->oprnd2())->isconst()) &&
-            ((c->imm32() & 0xffff0000) == 0)) ||
-           (i->isop(LIR_ush) && ((c = i->oprnd2())->isconst()) &&
-            ((c->imm32() >= 16)));
-}
-
 /* soft float support */
 
 static jsdouble FASTCALL
@@ -1680,12 +1558,14 @@ i2f(int32 i)
 {
     return i;
 }
+JS_DEFINE_CALLINFO_1(static, DOUBLE, i2f,  INT32, 1, 1)
 
 static jsdouble FASTCALL
 u2f(jsuint u)
 {
     return u;
 }
+JS_DEFINE_CALLINFO_1(static, DOUBLE, u2f, UINT32, 1, 1)
 
 static int32 FASTCALL
 fcmpeq(jsdouble x, jsdouble y)
@@ -1750,6 +1630,27 @@ fsub(jsdouble x, jsdouble y)
 }
 JS_DEFINE_CALLINFO_2(static, DOUBLE, fsub, DOUBLE, DOUBLE, 1, 1)
 
+static struct SoftFloatOps
+{
+    const CallInfo *map[LIR_sentinel];
+
+    SoftFloatOps() {
+        memset(map, 0, sizeof map);
+        map[LIR_i2f] = &i2f_ci;
+        map[LIR_u2f] = &u2f_ci;
+        map[LIR_fneg] = &fneg_ci;
+        map[LIR_fadd] = &fadd_ci;
+        map[LIR_fsub] = &fsub_ci;
+        map[LIR_fmul] = &fmul_ci;
+        map[LIR_fdiv] = &fdiv_ci;
+        map[LIR_feq] = &fcmpeq_ci;
+        map[LIR_flt] = &fcmplt_ci;
+        map[LIR_fgt] = &fcmpgt_ci;
+        map[LIR_fle] = &fcmple_ci;
+        map[LIR_fge] = &fcmpge_ci;
+    }
+} softFloatOps;
+
 // replace fpu ops with function calls
 class SoftFloatFilter: public LirWriter
 {
@@ -1794,42 +1695,20 @@ public:
     }
 
     LIns *ins1(LOpcode op, LIns *a) {
-        switch (op) {
-        case LIR_i2f:
-            return fcall1(&i2f_ci, a);
-        case LIR_u2f:
-            return fcall1(&u2f_ci, a);
-        case LIR_fneg:
-            return fcall1(&fneg_ci, a);
-        case LIR_fret:
+        const CallInfo *ci = softFloatOps.map[op];
+        if (ci)
+            return fcall1(ci, a);
+        if (op == LIR_fret)
             return out->ins1(op, split(a));
-        default:
-            return out->ins1(op, a);
-        }
+        return out->ins1(op, a);
     }
 
     LIns *ins2(LOpcode op, LIns *a, LIns *b) {
-        switch (op) {
-        case LIR_fadd:
-            return fcall2(&fadd_ci, a, b);
-        case LIR_fsub:
-            return fcall2(&fsub_ci, a, b);
-        case LIR_fmul:
-            return fcall2(&fmul_ci, a, b);
-        case LIR_fdiv:
-            return fcall2(&fdiv_ci, a, b);
-        case LIR_feq:
-            return fcmp(&fcmpeq_ci, a, b);
-        case LIR_flt:
-            return fcmp(&fcmplt_ci, a, b);
-        case LIR_fgt:
-            return fcmp(&fcmpgt_ci, a, b);
-        case LIR_fle:
-            return fcmp(&fcmple_ci, a, b);
-        case LIR_fge:
-            return fcmp(&fcmpge_ci, a, b);
-        default:
-            ;
+        const CallInfo *ci = softFloatOps.map[op];
+        if (ci) {
+            if ((op >= LIR_feq && op <= LIR_fge))
+                return fcmp(ci, a, b);
+            return fcall2(ci, a, b);
         }
         return out->ins2(op, a, b);
     }
@@ -1849,6 +1728,132 @@ public:
         }
     }
 };
+
+static bool
+isfop(LIns* i, LOpcode op)
+{
+    if (i->isop(op))
+        return true;
+    if (nanojit::AvmCore::config.soft_float &&
+        i->isop(LIR_qjoin) &&
+        i->oprnd1()->isop(LIR_icall) &&
+        i->oprnd2()->isop(LIR_callh)) {
+        return i->oprnd1()->callInfo() == softFloatOps.map[op];
+    }
+    return false;
+}
+
+static const CallInfo *
+fcallinfo(LIns *i)
+{
+    if (nanojit::AvmCore::config.soft_float) {
+        if (i->isop(LIR_qjoin))
+            return NULL;
+        i = i->oprnd1();
+        return i->isop(LIR_icall) ? i->callInfo() : NULL;
+    }
+    return i->isop(LIR_fcall) ? i->callInfo() : NULL;
+}
+
+static LIns*
+fcallarg(LIns* i, int n)
+{
+    if (nanojit::AvmCore::config.soft_float) {
+        NanoAssert(i->isop(LIR_qjoin));
+        return i->oprnd1()->callArgN(n);
+    }
+    NanoAssert(i->isop(LIR_fcall));
+    return i->callArgN(n);
+}
+
+static LIns*
+foprnd1(LIns* i)
+{
+    if (nanojit::AvmCore::config.soft_float)
+        return fcallarg(i, 0);
+    return i->oprnd1();
+}
+
+static LIns*
+foprnd2(LIns* i)
+{
+    if (nanojit::AvmCore::config.soft_float)
+        return fcallarg(i, 1);
+    return i->oprnd2();
+}
+
+static LIns*
+demote(LirWriter *out, LIns* i)
+{
+    if (i->isCall())
+        return i->callArgN(0);
+    if (isfop(i, LIR_i2f) || isfop(i, LIR_u2f))
+        return foprnd1(i);
+    if (i->isconst())
+        return i;
+    JS_ASSERT(i->isconstf());
+    double cf = i->imm64f();
+    int32_t ci = cf > 0x7fffffff ? uint32_t(cf) : int32_t(cf);
+    return out->insImm(ci);
+}
+
+static bool
+isPromoteInt(LIns* i)
+{
+    if (isfop(i, LIR_i2f) || i->isconst())
+        return true;
+    if (!i->isconstf())
+        return false;
+    jsdouble d = i->imm64f();
+    return d == jsdouble(jsint(d)) && !JSDOUBLE_IS_NEGZERO(d);
+}
+
+static bool
+isPromoteUint(LIns* i)
+{
+    if (isfop(i, LIR_u2f) || i->isconst())
+        return true;
+    if (!i->isconstf())
+        return false;
+    jsdouble d = i->imm64f();
+    return d == jsdouble(jsuint(d)) && !JSDOUBLE_IS_NEGZERO(d);
+}
+
+static bool
+isPromote(LIns* i)
+{
+    return isPromoteInt(i) || isPromoteUint(i);
+}
+
+static bool
+IsConst(LIns* i, int32_t c)
+{
+    return i->isconst() && i->imm32() == c;
+}
+
+/*
+ * Determine whether this operand is guaranteed to not overflow the specified
+ * integer operation.
+ */
+static bool
+IsOverflowSafe(LOpcode op, LIns* i)
+{
+    LIns* c;
+    switch (op) {
+      case LIR_add:
+      case LIR_sub:
+          return (i->isop(LIR_and) && ((c = i->oprnd2())->isconst()) &&
+                  ((c->imm32() & 0xc0000000) == 0)) ||
+                 (i->isop(LIR_rsh) && ((c = i->oprnd2())->isconst()) &&
+                  ((c->imm32() > 0)));
+    default:
+        JS_ASSERT(op == LIR_mul);
+    }
+    return (i->isop(LIR_and) && ((c = i->oprnd2())->isconst()) &&
+            ((c->imm32() & 0xffff0000) == 0)) ||
+           (i->isop(LIR_ush) && ((c = i->oprnd2())->isconst()) &&
+            ((c->imm32() >= 16)));
+}
 
 class FuncFilter: public LirWriter
 {
@@ -1911,69 +1916,7 @@ public:
                 return out->ins2(LIR_add, x, y);
             }
         }
-
         return out->ins2(v, s0, s1);
-    }
-
-    LIns* insCall(const CallInfo *ci, LIns* args[])
-    {
-        if (ci == &js_DoubleToUint32_ci) {
-            LIns* s0 = args[0];
-            if (s0->isconstf())
-                return out->insImm(js_DoubleToECMAUint32(s0->imm64f()));
-            if (isi2f(s0) || isu2f(s0))
-                return iu2fArg(s0);
-        } else if (ci == &js_DoubleToInt32_ci) {
-            LIns* s0 = args[0];
-            if (s0->isconstf())
-                return out->insImm(js_DoubleToECMAInt32(s0->imm64f()));
-            if (s0->isop(LIR_fadd) || s0->isop(LIR_fsub)) {
-                LIns* lhs = s0->oprnd1();
-                LIns* rhs = s0->oprnd2();
-                if (isPromote(lhs) && isPromote(rhs)) {
-                    LOpcode op = f64arith_to_i32arith(s0->opcode());
-                    return out->ins2(op, demote(out, lhs), demote(out, rhs));
-                }
-            }
-            if (isi2f(s0) || isu2f(s0))
-                return iu2fArg(s0);
-
-            // XXX ARM -- check for qjoin(call(UnboxDouble),call(UnboxDouble))
-            if (s0->isCall()) {
-                const CallInfo* ci2 = s0->callInfo();
-                if (ci2 == &js_UnboxDouble_ci) {
-                    LIns* args2[] = { s0->callArgN(0) };
-                    return out->insCall(&js_UnboxInt32_ci, args2);
-                } else if (ci2 == &js_StringToNumber_ci) {
-                    // callArgN's ordering is that as seen by the builtin, not as stored in
-                    // args here. True story!
-                    LIns* args2[] = { s0->callArgN(1), s0->callArgN(0) };
-                    return out->insCall(&js_StringToInt32_ci, args2);
-                } else if (ci2 == &js_String_p_charCodeAt0_ci) {
-                    // Use a fast path builtin for a charCodeAt that converts to an int right away.
-                    LIns* args2[] = { s0->callArgN(0) };
-                    return out->insCall(&js_String_p_charCodeAt0_int_ci, args2);
-                } else if (ci2 == &js_String_p_charCodeAt_ci) {
-                    LIns* idx = s0->callArgN(1);
-                    // If the index is not already an integer, force it to be an integer.
-                    idx = isPromote(idx)
-                        ? demote(out, idx)
-                        : out->insCall(&js_DoubleToInt32_ci, &idx);
-                    LIns* args2[] = { idx, s0->callArgN(0) };
-                    return out->insCall(&js_String_p_charCodeAt_int_ci, args2);
-                }
-            }
-        } else if (ci == &js_BoxDouble_ci) {
-            LIns* s0 = args[0];
-            JS_ASSERT(s0->isQuad());
-            if (isPromoteInt(s0)) {
-                LIns* args2[] = { demote(out, s0), args[1] };
-                return out->insCall(&js_BoxInt32_ci, args2);
-            }
-            if (s0->isCall() && s0->callInfo() == &js_UnboxDouble_ci)
-                return s0->callArgN(0);
-        }
-        return out->insCall(ci, args);
     }
 };
 
@@ -8355,7 +8298,51 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
 LIns*
 TraceRecorder::f2i(LIns* f)
 {
+    if (f->isconstf())
+        return lir->insImm(js_DoubleToECMAInt32(f->imm64f()));
+    if (isfop(f, LIR_i2f) || isfop(f, LIR_u2f))
+        return foprnd1(f);
+    if (isfop(f, LIR_fadd) || isfop(f, LIR_fsub)) {
+        LIns* lhs = foprnd1(f);
+        LIns* rhs = foprnd2(f);
+        if (isPromote(lhs) && isPromote(rhs)) {
+            LOpcode op = f64arith_to_i32arith(f->opcode());
+            return lir->ins2(op, demote(lir, lhs), demote(lir, rhs));
+        }
+    }
+    if (f->isCall()) {
+        const CallInfo* ci = f->callInfo();
+        if (ci == &js_UnboxDouble_ci) {
+            LIns* args[] = { fcallarg(f, 0) };
+            return lir->insCall(&js_UnboxInt32_ci, args);
+        } else if (ci == &js_StringToNumber_ci) {
+            LIns* args[] = { fcallarg(f, 1), fcallarg(f, 0) };
+            return lir->insCall(&js_StringToInt32_ci, args);
+        } else if (ci == &js_String_p_charCodeAt0_ci) {
+            // Use a fast path builtin for a charCodeAt that converts to an int right away.
+            LIns* args[] = { fcallarg(f, 1) };
+            return lir->insCall(&js_String_p_charCodeAt0_int_ci, args);
+        } else if (ci == &js_String_p_charCodeAt_ci) {
+            LIns* idx = fcallarg(f, 1);
+            // If the index is not already an integer, force it to be an integer.
+            idx = isPromote(idx)
+                ? demote(lir, idx)
+                : lir->insCall(&js_DoubleToInt32_ci, &idx);
+            LIns* args[] = { idx, fcallarg(f, 0) };
+            return lir->insCall(&js_String_p_charCodeAt_int_ci, args);
+        }
+    }
     return lir->insCall(&js_DoubleToInt32_ci, &f);
+}
+
+LIns*
+TraceRecorder::f2u(LIns* f)
+{
+    if (f->isconstf())
+        return lir->insImm(js_DoubleToECMAUint32(f->imm64f()));
+    if (isfop(f, LIR_i2f) || isfop(f, LIR_u2f))
+        return foprnd1(f);
+    return lir->insCall(&js_DoubleToUint32_ci, &f);
 }
 
 JS_REQUIRES_STACK LIns*
@@ -9091,8 +9078,7 @@ TraceRecorder::binary(LOpcode op)
     }
     if (leftIsNumber && rightIsNumber) {
         if (intop) {
-            LIns *args[] = { a };
-            a = lir->insCall(op == LIR_ush ? &js_DoubleToUint32_ci : &js_DoubleToInt32_ci, args);
+            a = (op == LIR_ush) ? f2u(a) : f2i(a);
             b = f2i(b);
         }
         a = alu(op, lnum, rnum, a, b);
@@ -9521,6 +9507,13 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::box_jsval(jsval v, LIns* v_ins)
 {
     if (isNumber(v)) {
+        JS_ASSERT(v_ins->isQuad());
+        if (fcallinfo(v_ins) == &js_UnboxDouble_ci)
+            return fcallarg(v_ins, 0);
+        if (isPromoteInt(v_ins)) {
+            LIns* args[] = { demote(lir, v_ins), cx_ins };
+            return lir->insCall(&js_BoxInt32_ci, args);
+        }
         LIns* args[] = { v_ins, cx_ins };
         v_ins = lir->insCall(&js_BoxDouble_ci, args);
         guard(false, lir->ins2(LIR_peq, v_ins, INS_CONSTWORD(JSVAL_ERROR_COOKIE)),
