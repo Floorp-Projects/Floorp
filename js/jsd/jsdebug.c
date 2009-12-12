@@ -65,6 +65,19 @@ JSD_DebuggerOff(JSDContext* jsdc)
     jsd_DebuggerOff(jsdc);
 }
 
+JSD_PUBLIC_API(void)
+JSD_DebuggerPause(JSDContext* jsdc)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    jsd_DebuggerPause(jsdc, JS_FALSE);
+}
+
+JSD_PUBLIC_API(void)
+JSD_DebuggerUnpause(JSDContext* jsdc)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    jsd_DebuggerUnpause(jsdc);
+}
 
 JSD_PUBLIC_API(uintN)
 JSD_GetMajorVersion(void)
@@ -123,7 +136,25 @@ JSD_PUBLIC_API(void)
 JSD_SetContextFlags(JSDContext *jsdc, uint32 flags)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
+    uint32 oldFlags = jsdc->flags;
     jsdc->flags = flags;
+    if ((flags & JSD_COLLECT_PROFILE_DATA) ||
+        !(flags & JSD_DISABLE_OBJECT_TRACE)) {
+        // Need to reenable our call hooks now
+        JS_SetExecuteHook(jsdc->jsrt, jsd_TopLevelCallHook, jsdc);
+        JS_SetCallHook(jsdc->jsrt, jsd_FunctionCallHook, jsdc);
+    }
+    if ((oldFlags ^ flags) & JSD_DISABLE_OBJECT_TRACE) {
+        // Changing our JSD_DISABLE_OBJECT_TRACE flag
+        if (!(flags & JSD_DISABLE_OBJECT_TRACE)) {
+            // Need to reenable our object hooks now
+            if (jsd_InitObjectManager(jsdc))
+                JS_SetObjectHook(jsdc->jsrt, jsd_ObjectHook, jsdc);
+        } else {
+            jsd_DestroyObjectManager(jsdc);
+            JS_SetObjectHook(jsdc->jsrt, NULL, NULL);
+        }
+    }
 }
 
 JSD_PUBLIC_API(uint32)
