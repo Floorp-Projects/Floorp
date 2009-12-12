@@ -372,6 +372,20 @@ static nsIEditor* GetHTMLEditor(nsPresContext* aPresContext)
   return editor;
 }
 
+static nsIContent* GetRootForContentSubtree(nsIContent* aContent)
+{
+  NS_ENSURE_TRUE(aContent, nsnull);
+  nsIContent* stop = aContent->GetBindingParent();
+  while (aContent) {
+    nsIContent* parent = aContent->GetParent();
+    if (parent == stop) {
+      break;
+    }
+    aContent = parent;
+  }
+  return aContent;
+}
+
 nsIContent*
 nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
 {
@@ -397,8 +411,13 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
     if (editor) {
       // This node is in HTML editor.
       nsIDocument* doc = GetCurrentDoc();
-      if (!doc || doc->HasFlag(NODE_IS_EDITABLE) || !HasFlag(NODE_IS_EDITABLE))
-        return GetEditorRootContent(editor);
+      if (!doc || doc->HasFlag(NODE_IS_EDITABLE) ||
+          !HasFlag(NODE_IS_EDITABLE)) {
+        nsIContent* editorRoot = GetEditorRootContent(editor);
+        return nsContentUtils::IsInSameAnonymousTree(this, editorRoot) ?
+                 editorRoot :
+                 GetRootForContentSubtree(static_cast<nsIContent*>(this));
+      }
       // If the current document is not editable, but current content is
       // editable, we should assume that the child of the nearest non-editable
       // ancestor is selection root.
@@ -413,14 +432,21 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
 
   nsCOMPtr<nsFrameSelection> fs = aPresShell->FrameSelection();
   nsIContent* content = fs->GetLimiter();
-  if (content)
-    return content;
-  content = fs->GetAncestorLimiter();
-  if (content)
-    return content;
-  nsIDocument* doc = aPresShell->GetDocument();
-  NS_ENSURE_TRUE(doc, nsnull);
-  return doc->GetRootContent();
+  if (!content) {
+    content = fs->GetAncestorLimiter();
+    if (!content) {
+      nsIDocument* doc = aPresShell->GetDocument();
+      NS_ENSURE_TRUE(doc, nsnull);
+      content = doc->GetRootContent();
+      if (!content)
+        return nsnull;
+    }
+  }
+
+  // This node might be in another subtree, if so, we should find this subtree's
+  // root.  Otherwise, we can return the content simply.
+  return nsContentUtils::IsInSameAnonymousTree(this, content) ?
+           content : GetRootForContentSubtree(static_cast<nsIContent*>(this));
 }
 
 nsINodeList*

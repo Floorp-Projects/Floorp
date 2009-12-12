@@ -852,52 +852,6 @@ nsFrameSelection::SetDesiredX(nscoord aX) //set the mDesiredX
 }
 
 nsresult
-nsFrameSelection::GetRootForContentSubtree(nsIContent  *aContent,
-                                           nsIContent **aParent)
-{
-  // This method returns the root of the sub-tree containing aContent.
-  // We do this by searching up through the parent hierarchy, and stopping
-  // when there are no more parents, or we hit a situation where the
-  // parent/child relationship becomes invalid.
-  //
-  // An example of an invalid parent/child relationship is anonymous content.
-  // Anonymous content has a pointer to its parent, but it is not listed
-  // as a child of its parent. In this case, the anonymous content would
-  // be considered the root of the subtree.
-
-  if (!aContent || !aParent)
-    return NS_ERROR_NULL_POINTER;
-
-  *aParent = 0;
-
-  nsIContent* child = aContent;
-
-  while (child)
-  {
-    nsIContent* parent = child->GetParent();
-
-    if (!parent)
-      break;
-
-    PRUint32 childCount = parent->GetChildCount();
-
-    if (childCount < 1)
-      break;
-
-    PRInt32 childIndex = parent->IndexOf(child);
-
-    if (childIndex < 0 || ((PRUint32)childIndex) >= childCount)
-      break;
-
-    child = parent;
-  }
-
-  NS_IF_ADDREF(*aParent = child);
-
-  return NS_OK;
-}
-
-nsresult
 nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame  *aFrame,
                                                         nsPoint&   aPoint,
                                                         nsIFrame **aRetFrame,
@@ -956,11 +910,8 @@ nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame  *aFrame,
   // Now find the root of the subtree containing the anchor's content.
   //
 
-  nsCOMPtr<nsIContent> anchorRoot;
-  result = GetRootForContentSubtree(anchorContent, getter_AddRefs(anchorRoot));
-
-  if (NS_FAILED(result))
-    return result;
+  NS_ENSURE_STATE(mShell);
+  nsIContent* anchorRoot = anchorContent->GetSelectionRootContent(mShell);
 
   //
   // Now find the root of the subtree containing aFrame's content.
@@ -970,29 +921,53 @@ nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame  *aFrame,
 
   if (content)
   {
-    nsCOMPtr<nsIContent> contentRoot;
-
-    result = GetRootForContentSubtree(content, getter_AddRefs(contentRoot));
+    nsIContent* contentRoot = content->GetSelectionRootContent(mShell);
 
     if (anchorRoot == contentRoot)
     {
-      //
-      // The anchor and AFrame's root are the same. There
-      // is no need to constrain, simply return aFrame.
-      //
-      *aRetFrame = aFrame;
-      return NS_OK;
+      // If the aFrame's content isn't the capturing content, it should be
+      // a descendant.  At this time, we can return simply.
+      nsIContent* capturedContent = nsIPresShell::GetCapturingContent();
+      if (capturedContent != content)
+      {
+        return NS_OK;
+      }
+
+      // Find the frame under the mouse cursor with the root frame.
+      // At this time, don't use the anchor's frame because it may not have
+      // fixed positioned frames.
+      nsIFrame* rootFrame = mShell->FrameManager()->GetRootFrame();
+      nsPoint ptInRoot = aPoint + aFrame->GetOffsetTo(rootFrame);
+      nsIFrame* cursorFrame =
+        nsLayoutUtils::GetFrameForPoint(rootFrame, ptInRoot);
+
+      // If the mouse cursor in on a frame which is descendant of same
+      // selection root, we can expand the selection to the frame.
+      if (cursorFrame && cursorFrame->PresContext()->PresShell() == mShell)
+      {
+        nsIContent* cursorContent = cursorFrame->GetContent();
+        NS_ENSURE_TRUE(cursorContent, NS_ERROR_FAILURE);
+        nsIContent* cursorContentRoot =
+          cursorContent->GetSelectionRootContent(mShell);
+        if (cursorContentRoot == anchorRoot)
+        {
+          *aRetFrame = cursorFrame;
+          aRetPoint = aPoint + aFrame->GetOffsetTo(cursorFrame);
+          return NS_OK;
+        }
+      }
+      // Otherwise, e.g., the cursor isn't on any frames (e.g., the mouse
+      // cursor is out of the window), we should use the frame of the anchor
+      // root.
     }
   }
 
   //
-  // aFrame's root does not match the anchor's root, or there is no
-  // content associated with aFrame. Just return the primary frame
-  // for the anchor's root. We'll let GetContentAndOffsetsFromPoint()
-  // find the closest frame aPoint.
+  // When we can't find a frame which is under the mouse cursor and has a same
+  // selection root as the anchor node's, we should return the selection root
+  // frame.
   //
 
-  NS_ENSURE_STATE(mShell);
   *aRetFrame = mShell->GetPrimaryFrameFor(anchorRoot);
 
   if (!*aRetFrame)
