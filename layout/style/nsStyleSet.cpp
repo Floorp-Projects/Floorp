@@ -472,9 +472,8 @@ nsStyleSet::AddImportantRules(nsRuleNode* aCurrLevelNode,
                               nsRuleNode* aLastPrevLevelNode,
                               nsRuleWalker* aRuleWalker)
 {
-  // The rulewalker will move itself to a null node on OOM.
-  if (!aCurrLevelNode)
-    return;
+  NS_ASSERTION(aCurrLevelNode &&
+               aCurrLevelNode != aLastPrevLevelNode, "How did we get here?");
 
   nsAutoTArray<nsIStyleRule*, 16> importantRules;
   for (nsRuleNode *node = aCurrLevelNode; node != aLastPrevLevelNode;
@@ -554,26 +553,26 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   aRuleWalker->SetLevel(eAgentSheet, PR_FALSE, PR_TRUE);
   if (mRuleProcessors[eAgentSheet])
     (*aCollectorFunc)(mRuleProcessors[eAgentSheet], aData);
-  nsRuleNode* lastAgentRN = aRuleWalker->GetCurrentNode();
+  nsRuleNode* lastAgentRN = aRuleWalker->CurrentNode();
   PRBool haveImportantUARules = !aRuleWalker->GetCheckForImportantRules();
 
   aRuleWalker->SetLevel(ePresHintSheet, PR_FALSE, PR_FALSE);
   if (mRuleProcessors[ePresHintSheet])
     (*aCollectorFunc)(mRuleProcessors[ePresHintSheet], aData);
-  nsRuleNode* lastPresHintRN = aRuleWalker->GetCurrentNode();
+  nsRuleNode* lastPresHintRN = aRuleWalker->CurrentNode();
 
   aRuleWalker->SetLevel(eUserSheet, PR_FALSE, PR_TRUE);
   PRBool skipUserStyles =
     aContent && aContent->IsInNativeAnonymousSubtree();
   if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aCollectorFunc)(mRuleProcessors[eUserSheet], aData);
-  nsRuleNode* lastUserRN = aRuleWalker->GetCurrentNode();
+  nsRuleNode* lastUserRN = aRuleWalker->CurrentNode();
   PRBool haveImportantUserRules = !aRuleWalker->GetCheckForImportantRules();
 
   aRuleWalker->SetLevel(eHTMLPresHintSheet, PR_FALSE, PR_FALSE);
   if (mRuleProcessors[eHTMLPresHintSheet])
     (*aCollectorFunc)(mRuleProcessors[eHTMLPresHintSheet], aData);
-  nsRuleNode* lastHTMLPresHintRN = aRuleWalker->GetCurrentNode();
+  nsRuleNode* lastHTMLPresHintRN = aRuleWalker->CurrentNode();
   
   aRuleWalker->SetLevel(eDocSheet, PR_FALSE, PR_TRUE);
   PRBool cutOffInheritance = PR_FALSE;
@@ -590,13 +589,13 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
                         aRuleWalker->GetCheckForImportantRules());
   if (mRuleProcessors[eStyleAttrSheet])
     (*aCollectorFunc)(mRuleProcessors[eStyleAttrSheet], aData);
-  nsRuleNode* lastDocRN = aRuleWalker->GetCurrentNode();
+  nsRuleNode* lastDocRN = aRuleWalker->CurrentNode();
   PRBool haveImportantDocRules = !aRuleWalker->GetCheckForImportantRules();
 
   aRuleWalker->SetLevel(eOverrideSheet, PR_FALSE, PR_TRUE);
   if (mRuleProcessors[eOverrideSheet])
     (*aCollectorFunc)(mRuleProcessors[eOverrideSheet], aData);
-  nsRuleNode* lastOvrRN = aRuleWalker->GetCurrentNode();
+  nsRuleNode* lastOvrRN = aRuleWalker->CurrentNode();
   PRBool haveImportantOverrideRules = !aRuleWalker->GetCheckForImportantRules();
 
   if (haveImportantDocRules) {
@@ -650,13 +649,13 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 #endif
 
 #ifdef DEBUG
-  nsRuleNode *lastImportantRN = aRuleWalker->GetCurrentNode();
+  nsRuleNode *lastImportantRN = aRuleWalker->CurrentNode();
 #endif
   aRuleWalker->SetLevel(eTransitionSheet, PR_FALSE, PR_FALSE);
   (*aCollectorFunc)(mRuleProcessors[eTransitionSheet], aData);
 #ifdef DEBUG
-  AssertNoCSSRules(aRuleWalker->GetCurrentNode(), lastImportantRN);
-  AssertNoImportantRules(aRuleWalker->GetCurrentNode(), lastImportantRN);
+  AssertNoCSSRules(aRuleWalker->CurrentNode(), lastImportantRN);
+  AssertNoImportantRules(aRuleWalker->CurrentNode(), lastImportantRN);
 #endif
 
 }
@@ -750,7 +749,7 @@ nsStyleSet::ResolveStyleFor(nsIContent* aContent,
     FileRules(EnumRulesMatching<ElementRuleProcessorData>, &data, aContent,
               &ruleWalker);
     result = GetContext(presContext, aParentContext,
-                        ruleWalker.GetCurrentNode(), nsnull,
+                        ruleWalker.CurrentNode(), nsnull,
                         nsCSSPseudoElements::ePseudo_NotPseudoElement).get();
   }
 
@@ -779,7 +778,7 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
       ruleWalker.Forward(aRules.ObjectAt(i));
     }
     result = GetContext(presContext, aParentContext,
-                        ruleWalker.GetCurrentNode(), aPseudoTag,
+                        ruleWalker.CurrentNode(), aPseudoTag,
                         aPseudoType).get();
   }
   return result;
@@ -833,7 +832,7 @@ nsStyleSet::ResolvePseudoElementStyle(nsIContent* aParentContent,
   FileRules(EnumRulesMatching<PseudoElementRuleProcessorData>, &data,
             aParentContent, &ruleWalker);
 
-  return GetContext(presContext, aParentContext, ruleWalker.GetCurrentNode(),
+  return GetContext(presContext, aParentContext, ruleWalker.CurrentNode(),
                     nsCSSPseudoElements::GetPseudoAtom(aType), aType);
 }
 
@@ -859,11 +858,11 @@ nsStyleSet::ProbePseudoElementStyle(nsIContent* aParentContent,
                                       aType);
   WalkRestrictionRule(aType, &ruleWalker);
   // not the root if there was a restriction rule
-  nsRuleNode *adjustedRoot = ruleWalker.GetCurrentNode();
+  nsRuleNode *adjustedRoot = ruleWalker.CurrentNode();
   FileRules(EnumRulesMatching<PseudoElementRuleProcessorData>, &data,
             aParentContent, &ruleWalker);
 
-  nsRuleNode *ruleNode = ruleWalker.GetCurrentNode();
+  nsRuleNode *ruleNode = ruleWalker.CurrentNode();
   if (ruleNode == adjustedRoot) {
     return nsnull;
   }
@@ -910,7 +909,7 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
   FileRules(EnumRulesMatching<AnonBoxRuleProcessorData>, &data, nsnull,
             &ruleWalker);
 
-  return GetContext(presContext, aParentContext, ruleWalker.GetCurrentNode(),
+  return GetContext(presContext, aParentContext, ruleWalker.CurrentNode(),
                     aPseudoTag, nsCSSPseudoElements::ePseudo_AnonBox);
 }
 
@@ -937,7 +936,7 @@ nsStyleSet::ResolveXULTreePseudoStyle(nsIContent* aParentContent,
   FileRules(EnumRulesMatching<XULTreeRuleProcessorData>, &data, aParentContent,
             &ruleWalker);
 
-  return GetContext(presContext, aParentContext, ruleWalker.GetCurrentNode(),
+  return GetContext(presContext, aParentContext, ruleWalker.CurrentNode(),
                     aPseudoTag, nsCSSPseudoElements::ePseudo_XULTree);
 }
 #endif
