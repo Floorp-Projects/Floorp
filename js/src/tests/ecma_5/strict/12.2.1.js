@@ -21,3 +21,5 @@ assertEq(testLenientAndStrict('var x,arguments;',
                               parsesSuccessfully,
                               parseRaisesException(SyntaxError)),
          true);
+
+reportCompare(true, true);

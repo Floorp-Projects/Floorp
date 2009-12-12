@@ -103,6 +103,7 @@ class nsUserFontSet;
 struct nsFontFaceRuleContainer;
 class nsObjectFrame;
 class nsTransitionManager;
+class imgIContainer;
 
 #ifdef MOZ_REFLOW_PERF
 class nsIRenderingContext;
@@ -278,7 +279,6 @@ public:
    * Access the image animation mode for this context
    */
   PRUint16     ImageAnimationMode() const { return mImageAnimationMode; }
-  void RestoreImageAnimationMode() { SetImageAnimationMode(mImageAnimationModePref); }
   virtual NS_HIDDEN_(void) SetImageAnimationModeExternal(PRUint16 aMode);
   NS_HIDDEN_(void) SetImageAnimationModeInternal(PRUint16 aMode);
 #ifdef _IMPL_NS_LAYOUT

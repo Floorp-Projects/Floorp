@@ -195,9 +195,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 + (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent;
 
-- (void)maybeInvalidateShadow;
-- (void)invalidateShadow;
-
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
  // a context menu (click-hold)
@@ -2497,37 +2494,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// Limit shadow invalidation to 10 times per second.
-static const PRInt32 sShadowInvalidationInterval = 100;
-- (void)maybeInvalidateShadow
-{
-  NSWindow* window = [self window];
-  if (!window || [window isOpaque] || ![window hasShadow])
-    return;
-
-  PRIntervalTime now = PR_IntervalNow();
-  PRInt32 elapsed = PR_IntervalToMilliseconds(now - mLastShadowInvalidation);
-  if (!mLastShadowInvalidation ||
-      elapsed >= sShadowInvalidationInterval) {
-    [window invalidateShadow];
-    mLastShadowInvalidation = now;
-    mNeedsShadowInvalidation = NO;
-  } else if (!mNeedsShadowInvalidation) {
-    mNeedsShadowInvalidation = YES;
-    [self performSelector:@selector(invalidateShadow)
-               withObject:nil
-               afterDelay:(sShadowInvalidationInterval - elapsed) / 1000.0];
-  }
-}
-
-- (void)invalidateShadow
-{
-  if (![self window] || !mNeedsShadowInvalidation)
-    return;
-  [[self window] invalidateShadow];
-  mNeedsShadowInvalidation = NO;
-}
-
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
@@ -2535,9 +2501,11 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
   [self drawRect:aRect inContext:cgContext];
 
-  // If we're a transparent window, and our contents have changed, we need
+  // If we're a transparent window and our contents have changed, we need
   // to make sure the shadow is updated to the new contents.
-  [self maybeInvalidateShadow];
+  if ([[self window] isKindOfClass:[BaseWindow class]]) {
+    [(BaseWindow*)[self window] deferredInvalidateShadow];
+  }
 }
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext
@@ -2665,11 +2633,11 @@ static const PRInt32 sShadowInvalidationInterval = 100;
 
 - (void)viewWillDraw
 {
-  if (!mGeckoChild)
-    return;
-
-  nsPaintEvent paintEvent(PR_TRUE, NS_WILL_PAINT, mGeckoChild);
-  mGeckoChild->DispatchWindowEvent(paintEvent);
+  if (mGeckoChild) {
+    nsPaintEvent paintEvent(PR_TRUE, NS_WILL_PAINT, mGeckoChild);
+    mGeckoChild->DispatchWindowEvent(paintEvent);
+  }
+  [super viewWillDraw];
 }
 
 // Allows us to turn off setting up the clip region
@@ -3012,9 +2980,27 @@ static const PRInt32 sShadowInvalidationInterval = 100;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+// Returning NO from this method only disallows ordering on mousedown - in order
+// to prevent it for mouseup too, we need to call [NSApp preventWindowOrdering]
+// when handling the mousedown event.
+- (BOOL)shouldDelayWindowOrderingForEvent:(NSEvent*)aEvent
+{
+  // Always using system-provided window ordering for normal windows.
+  if (![[self window] isKindOfClass:[PopupWindow class]])
+    return NO;
+
+  // Don't reorder when we're already accepting mouse events, for example
+  // because we're a context menu.
+  return ChildViewMouseTracker::WindowAcceptsEvent([self window], aEvent);
+}
+
 - (void)mouseDown:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if ([self shouldDelayWindowOrderingForEvent:theEvent]) {
+    [NSApp preventWindowOrdering];
+  }
 
   // If we've already seen this event due to direct dispatch from menuForEvent:
   // just bail; if not, remember it.
@@ -6536,26 +6522,28 @@ ChildViewMouseTracker::OnDestroyView(ChildView* aView)
 }
 
 void
-ChildViewMouseTracker::MouseMoved(NSEvent* aEvent)
+ChildViewMouseTracker::ReEvaluateMouseEnterState(NSEvent* aEvent)
 {
   ChildView* oldView = sLastMouseEventView;
-  ChildView* newView = ViewForEvent(aEvent);
-  sLastMouseEventView = newView;
-  if (newView != oldView) {
+  sLastMouseEventView = ViewForEvent(aEvent);
+  if (sLastMouseEventView != oldView) {
     // Send enter and / or exit events.
-    nsMouseEvent::exitType type = [newView window] == [oldView window] ?
+    nsMouseEvent::exitType type = [sLastMouseEventView window] == [oldView window] ?
                                     nsMouseEvent::eChild : nsMouseEvent::eTopLevel;
     [oldView sendMouseEnterOrExitEvent:aEvent enter:NO type:type];
     // After the cursor exits the window set it to a visible regular arrow cursor.
     if (type == nsMouseEvent::eTopLevel) {
       [[nsCursorManager sharedInstance] setCursor:eCursor_standard];
     }
-    // Sending the exit event to the old view might have destroyed our new view;
-    // if that has happened, sLastMouseEventView has been set to nil.
-    newView = sLastMouseEventView;
-    [newView sendMouseEnterOrExitEvent:aEvent enter:YES type:type];
+    [sLastMouseEventView sendMouseEnterOrExitEvent:aEvent enter:YES type:type];
   }
-  [newView handleMouseMoved:aEvent];
+}
+
+void
+ChildViewMouseTracker::MouseMoved(NSEvent* aEvent)
+{
+  ReEvaluateMouseEnterState(aEvent);
+  [sLastMouseEventView handleMouseMoved:aEvent];
 }
 
 ChildView*

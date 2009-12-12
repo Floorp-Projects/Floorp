@@ -735,6 +735,7 @@ private:
 public:
   static NS_HIDDEN_(nsRuleNode*) CreateRootNode(nsPresContext* aPresContext);
 
+  // Transition never returns null; on out of memory it'll just return |this|.
   NS_HIDDEN_(nsRuleNode*) Transition(nsIStyleRule* aRule, PRUint8 aLevel,
                                      PRPackedBool aIsImportantRule);
   nsRuleNode* GetParent() const { return mParent; }

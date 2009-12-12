@@ -64,9 +64,9 @@ class nsClientRectList;
 #include "nsIPrincipal.h"
 #include "gfxPattern.h"
 #include "imgIContainer.h"
+#include "nsCSSPseudoElements.h"
 
 class nsBlockFrame;
-class nsTextFragment;
 
 /**
  * nsLayoutUtils is a namespace class used for various helper
@@ -327,22 +327,21 @@ public:
    *
    * @param aContent the content node we're looking at
    * @param aStyleContext aContent's style context
-   * @param aPseudoElement the name of the pseudo style we care about
+   * @param aPseudoElement the id of the pseudo style we care about
    * @param aPresContext the presentation context
    * @return whether aContent has aPseudoElement style attached to it
    */
   static PRBool HasPseudoStyle(nsIContent* aContent,
                                nsStyleContext* aStyleContext,
-                               nsIAtom* aPseudoElement,
+                               nsCSSPseudoElements::Type aPseudoElement,
                                nsPresContext* aPresContext)
   {
     NS_PRECONDITION(aPresContext, "Must have a prescontext");
-    NS_PRECONDITION(aPseudoElement, "Must have a pseudo name");
 
     nsRefPtr<nsStyleContext> pseudoContext;
     if (aContent) {
       pseudoContext = aPresContext->StyleSet()->
-        ProbePseudoStyleFor(aContent, aPseudoElement, aStyleContext);
+        ProbePseudoElementStyle(aContent, aPseudoElement, aStyleContext);
     }
     return pseudoContext != nsnull;
   }
@@ -1062,12 +1061,6 @@ public:
    * disabled.
    */
   static PRBool sDisableGetUsedXAssertions;
-
-  /**
-   * Returns the text fragment, which aFrame should use for printing.
-   * @param aFrame The nsIFrame object, which uses text fragment data.
-   */
-  static nsTextFragment* GetTextFragmentForPrinting(const nsIFrame* aFrame);
 
   /**
    * Return true if aFrame is in an {ib} split and is NOT one of the

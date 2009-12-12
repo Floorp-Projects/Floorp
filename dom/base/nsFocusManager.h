@@ -150,7 +150,7 @@ protected:
    * the active top-level window and navigate down the currently focused
    * elements for each frame in the tree to get to aNewWindow.
    */
-  void AdjustWindowFocus(nsPIDOMWindow* aNewWindow);
+  void AdjustWindowFocus(nsPIDOMWindow* aNewWindow, PRBool aCheckPermission);
 
   /**
    * Returns true if aWindow is visible.

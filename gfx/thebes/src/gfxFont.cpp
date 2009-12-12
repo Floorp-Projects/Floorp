@@ -412,6 +412,9 @@ void gfxFontFamily::LocalizedName(nsAString& aLocalizedName)
 void
 gfxFontFamily::FindFontForChar(FontSearch *aMatchData)
 {
+    if (!mHasStyles)
+        FindStyleVariations();
+
     // xxx - optimization point - keep a bit vector with the union of supported unicode ranges
     // by all fonts for this family and bail immediately if the character is not in any of
     // this family's cmaps
@@ -546,6 +549,8 @@ gfxFontFamily::ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFunct
     if (mOtherFamilyNamesInitialized) 
         return;
     mOtherFamilyNamesInitialized = PR_TRUE;
+
+    FindStyleVariations();
 
     // read in other family names for the first face in the list
     PRUint32 numFonts = mAvailableFonts.Length();

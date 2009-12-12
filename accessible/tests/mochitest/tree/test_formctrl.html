@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>HTML form controls tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // input@type="checkbox"
+      var accTree = {
+        role: ROLE_CHECKBUTTON,
+        children: [ ]
+      };
+
+      testAccessibleTree("checkbox", accTree);
+
+      // input@type="radio"
+      accTree = {
+        role: ROLE_RADIOBUTTON,
+        children: [ ]
+      };
+
+      testAccessibleTree("radio", accTree);
+
+      // input@type="button" and button
+      accTree = {
+        role: ROLE_PUSHBUTTON,
+        children: [ ]
+      };
+
+      testAccessibleTree("btn1", accTree);
+
+      // button
+      accTree = {
+        role: ROLE_PUSHBUTTON,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF
+          }
+        ]
+      };
+
+      testAccessibleTree("btn2", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Fix O(n^2) access to all the children of a container"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=342045">
+    Mozilla Bug 342045
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input type="checkbox" id="checkbox">
+  <input type="radio" id="radio">
+  <input type="button" value="button" id="btn1">
+  <button id="btn2">button</button>
+
+</body>
+</html>

@@ -50,11 +50,6 @@
 #define MAX_SYMBOL_LENGTH 128
 #define MAX_SYMBOL_NAMES 5
 
-#ifdef MOZ_X11
-#define GLX_GLXEXT_LEGACY
-#include <GL/glx.h>
-#endif
-
 bool
 LibrarySymbolLoader::OpenLibrary(const char *library)
 {
@@ -333,8 +328,10 @@ GLES20Wrap::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &fIsFramebuffer, { "IsFramebuffer", "IsFramebufferEXT", NULL } },
         { (PRFuncPtr*) &fIsRenderbuffer, { "IsRenderbuffer", "IsRenderbufferEXT", NULL } },
         { (PRFuncPtr*) &fRenderbufferStorage, { "RenderbufferStorage", "RenderbufferStorageEXT", NULL } },
+#if 0
 	{ (PRFuncPtr*) &fMapBuffer, { "MapBuffer", NULL } },
 	{ (PRFuncPtr*) &fUnmapBuffer, { "UnmapBuffer", NULL } },
+#endif
 
         { NULL, { NULL } },
 

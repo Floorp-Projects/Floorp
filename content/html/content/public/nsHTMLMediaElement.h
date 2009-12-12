@@ -267,8 +267,9 @@ public:
    * Returns PR_TRUE if the media has played or completed a seek.
    * Used by video frame to determine whether to paint the poster.
    */
-  PRBool GetPlayedOrSeeked() { return mHasPlayedOrSeeked; }
+  PRBool GetPlayedOrSeeked() const { return mHasPlayedOrSeeked; }
 
+  nsresult CopyInnerTo(nsGenericElement* aDest) const;
 protected:
   class MediaLoadListener;
   class LoadNextSourceEvent;
@@ -519,4 +520,6 @@ protected:
   // alive while no-one is referencing it but the element may still fire
   // events of its own accord.
   PRPackedBool mHasSelfReference;
+
+  nsRefPtr<gfxASurface> mPrintSurface;
 };

@@ -34,3 +34,5 @@ assertEq(completesNormally("Function('010')"),
          true);
 assertEq(raisesException(SyntaxError)("Function('\"use strict\"; 010')"),
          true);
+
+reportCompare(true, true);
