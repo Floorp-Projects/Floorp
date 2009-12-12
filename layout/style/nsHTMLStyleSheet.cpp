@@ -476,7 +476,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
         if (aData->mCompatMode == eCompatibility_NavQuirks) {
           nscolor bodyColor;
           nsresult rv =
-            GetBodyColor(ruleWalker->GetCurrentNode()->GetPresContext(),
+            GetBodyColor(ruleWalker->CurrentNode()->GetPresContext(),
                          &bodyColor);
           if (NS_SUCCEEDED(rv) &&
               (!mDocumentColorRule || bodyColor != mDocumentColorRule->mColor)) {

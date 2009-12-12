@@ -965,7 +965,8 @@ nsRuleNode::Transition(nsIStyleRule* aRule, PRUint8 aLevel,
     ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>
                                           (PL_DHashTableOperate(ChildrenHash(), &key, PL_DHASH_ADD));
     if (!entry) {
-      return nsnull;
+      NS_WARNING("out of memory");
+      return this;
     }
     if (entry->mRuleNode)
       next = entry->mRuleNode;
@@ -974,7 +975,8 @@ nsRuleNode::Transition(nsIStyleRule* aRule, PRUint8 aLevel,
         nsRuleNode(mPresContext, this, aRule, aLevel, aIsImportantRule);
       if (!next) {
         PL_DHashTableRawRemove(ChildrenHash(), entry);
-        return nsnull;
+        NS_WARNING("out of memory");
+        return this;
       }
     }
   } else if (!next) {
@@ -982,7 +984,8 @@ nsRuleNode::Transition(nsIStyleRule* aRule, PRUint8 aLevel,
     next = new (mPresContext)
       nsRuleNode(mPresContext, this, aRule, aLevel, aIsImportantRule);
     if (!next) {
-      return nsnull;
+      NS_WARNING("out of memory");
+      return this;
     }
     next->mNextSibling = ChildrenList();
     SetChildrenList(next);
