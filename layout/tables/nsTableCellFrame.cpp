@@ -502,6 +502,11 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Push a null 'current table item' so that descendant tables can't
+  // accidentally mess with our table
+  nsAutoPushCurrentTableItem pushTableItem;
+  pushTableItem.Push(aBuilder, nsnull);
+
   nsIFrame* kid = mFrames.FirstChild();
   NS_ASSERTION(kid && !kid->GetNextSibling(), "Table cells should have just one child");
   // The child's background will go in our BorderBackground() list.
