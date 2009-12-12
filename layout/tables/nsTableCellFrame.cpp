@@ -448,8 +448,9 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     PRBool isRoot = aBuilder->IsAtRootOfPseudoStackingContext();
     if (!isRoot) {
       nsDisplayTableItem* currentItem = aBuilder->GetCurrentTableItem();
-      NS_ASSERTION(currentItem, "No current table item???");
-      currentItem->UpdateForFrameBackground(this);
+      if (currentItem) {
+        currentItem->UpdateForFrameBackground(this);
+      }
     }
 
     // display outset box-shadows if we need to.
