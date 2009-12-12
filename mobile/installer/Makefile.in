@@ -152,7 +152,7 @@ ifdef MOZ_FASTSTART
 CABARGS += -faststart
 endif
 
-ifeq ($(OS_TARGET),WINCE)
+ifeq ($(OS_ARCH),WINCE)
 
 VSINSTALLDIR ?= $(error VSINSTALLDIR not set, must be set to the Visual Studio install directory)
 
