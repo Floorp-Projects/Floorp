@@ -135,8 +135,8 @@ JSD_ClearAllProfileData(JSDContext *jsdc)
 JSD_PUBLIC_API(void)
 JSD_SetContextFlags(JSDContext *jsdc, uint32 flags)
 {
-    JSD_ASSERT_VALID_CONTEXT(jsdc);
     uint32 oldFlags = jsdc->flags;
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
     jsdc->flags = flags;
     if ((flags & JSD_COLLECT_PROFILE_DATA) ||
         !(flags & JSD_DISABLE_OBJECT_TRACE)) {
