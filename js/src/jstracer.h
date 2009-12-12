@@ -156,6 +156,16 @@ public:
     T* data() const {
         return _data;
     }
+
+    int offsetOf(T slot) {
+        T* p = _data;
+        unsigned n = 0;
+        for (n = 0; n < _len; ++n)
+            if (*p++ == slot)
+                return n;
+        return -1;
+    }
+
 };
 
 /*
@@ -337,7 +347,8 @@ enum JSTraceType_
     TT_STRING         = 4, /* pointer to JSString */
     TT_NULL           = 5, /* null */
     TT_PSEUDOBOOLEAN  = 6, /* true, false, or undefined (0, 1, or 2) */
-    TT_FUNCTION       = 7  /* pointer to JSObject whose class is js_FunctionClass */
+    TT_FUNCTION       = 7, /* pointer to JSObject whose class is js_FunctionClass */
+    TT_IGNORE         = 8
 }
 #if defined(__GNUC__) && defined(USE_TRACE_TYPE_ENUM)
 __attribute__((packed))
@@ -362,6 +373,8 @@ typedef Queue<uint16> SlotList;
 class TypeMap : public Queue<JSTraceType> {
 public:
     TypeMap(nanojit::Allocator* alloc) : Queue<JSTraceType>(alloc) {}
+    void set(unsigned stackSlots, unsigned ngslots,
+             const JSTraceType* stackTypeMap, const JSTraceType* globalTypeMap);
     JS_REQUIRES_STACK void captureTypes(JSContext* cx, JSObject* globalObj, SlotList& slots, unsigned callDepth);
     JS_REQUIRES_STACK void captureMissingGlobalTypes(JSContext* cx, JSObject* globalObj, SlotList& slots,
                                                      unsigned stackSlots);
@@ -941,6 +954,11 @@ class TraceRecorder
     nanojit::LIns* const            eor_ins;
     nanojit::LIns* const            loopLabel;
 
+    /* Lazy slot import state. */
+    unsigned                        importStackSlots;
+    unsigned                        importGlobalSlots;
+    TypeMap                         importTypeMap;
+
     /*
      * The LirBuffer used to supply memory to our LirWriter pipeline. Also contains the most recent
      * instruction for {sp, rp, state}. Also contains names for debug JIT spew. Should be split.
@@ -1040,8 +1058,10 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::GuardRecord* createGuardRecord(VMSideExit* exit);
 
     bool isGlobal(jsval* p) const;
+    ptrdiff_t nativeGlobalSlot(jsval *p) const;
     ptrdiff_t nativeGlobalOffset(jsval* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativeStackOffset(jsval* p) const;
+    JS_REQUIRES_STACK ptrdiff_t nativeStackSlot(jsval* p) const;
     JS_REQUIRES_STACK ptrdiff_t nativespOffset(jsval* p) const;
     JS_REQUIRES_STACK void import(nanojit::LIns* base, ptrdiff_t offset, jsval* p, JSTraceType t,
                                   const char *prefix, uintN index, JSStackFrame *fp);
@@ -1051,6 +1071,7 @@ class TraceRecorder
 
     JS_REQUIRES_STACK bool isValidSlot(JSScope* scope, JSScopeProperty* sprop);
     JS_REQUIRES_STACK bool lazilyImportGlobalSlot(unsigned slot);
+    JS_REQUIRES_STACK void importGlobalSlot(unsigned slot);
 
     JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, ExitType exitType);
     JS_REQUIRES_STACK void guard(bool expected, nanojit::LIns* cond, VMSideExit* exit);
@@ -1266,7 +1287,7 @@ class TraceRecorder
                                                                              ExitType exitType);
     JS_REQUIRES_STACK RecordingStatus guardNotGlobalObject(JSObject* obj,
                                                              nanojit::LIns* obj_ins);
-    void clearFrameSlotsFromCache();
+    void clearFrameSlotsFromTracker(Tracker& which);
     JS_REQUIRES_STACK void putArguments();
     JS_REQUIRES_STACK RecordingStatus guardCallee(jsval& callee);
     JS_REQUIRES_STACK JSStackFrame      *guardArguments(JSObject *obj, nanojit::LIns* obj_ins,
