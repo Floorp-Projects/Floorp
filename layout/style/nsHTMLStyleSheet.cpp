@@ -501,23 +501,19 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 }
 
 // Test if style is dependent on content state
-NS_IMETHODIMP
-nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData,
-                                         nsReStyleHint* aResult)
+nsReStyleHint
+nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
-  if (aData->mContent &&
-      aData->mIsHTMLContent &&
+  if (aData->mIsHTMLContent &&
       aData->mContentTag == nsGkAtoms::a &&
       aData->IsLink() &&
       ((mActiveRule && (aData->mStateMask & NS_EVENT_STATE_ACTIVE)) ||
        (mLinkRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)) ||
        (mVisitedRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)))) {
-    *aResult = eReStyle_Self;
+    return eReStyle_Self;
   }
-  else
-    *aResult = nsReStyleHint(0);
-
-  return NS_OK;
+  
+  return nsReStyleHint(0);
 }
 
 nsReStyleHint
