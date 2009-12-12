@@ -50,6 +50,7 @@
 
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
+#include "prlog.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -60,6 +61,7 @@
 
 nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                                nsIAtom* aPseudoTag,
+                               nsCSSPseudoElements::Type aPseudoType,
                                nsRuleNode* aRuleNode,
                                nsPresContext* aPresContext)
   : mParent(aParent),
@@ -67,9 +69,12 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
     mEmptyChild(nsnull),
     mPseudoTag(aPseudoTag),
     mRuleNode(aRuleNode),
-    mBits(0),
+    mBits(((PRUint32)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT),
     mRefCnt(0)
 {
+  PR_STATIC_ASSERT((PR_UINT32_MAX >> NS_STYLE_CONTEXT_TYPE_SHIFT) >
+                   nsCSSPseudoElements::ePseudo_MAX);
+
   mNextSibling = this;
   mPrevSibling = this;
   if (mParent) {
@@ -572,11 +577,13 @@ nsStyleContext::Destroy()
 already_AddRefed<nsStyleContext>
 NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
+                   nsCSSPseudoElements::Type aPseudoType,
                    nsRuleNode* aRuleNode,
                    nsPresContext* aPresContext)
 {
-  nsStyleContext* context = new (aPresContext) nsStyleContext(aParentContext, aPseudoTag, 
-                                                              aRuleNode, aPresContext);
+  nsStyleContext* context =
+    new (aPresContext) nsStyleContext(aParentContext, aPseudoTag, aPseudoType,
+                                      aRuleNode, aPresContext);
   if (context)
     context->AddRef();
   return context;

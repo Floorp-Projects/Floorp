@@ -3426,10 +3426,23 @@ PRBool nsWindow::DispatchFocusToTopLevelWindow(PRUint32 aEventType)
     sJustGotActivate = PR_FALSE;
   sJustGotDeactivate = PR_FALSE;
 
-  // clear the flags, and retrieve the toplevel window. This way, it doesn't
-  // mattter what child widget received the focus event and it will always be
-  // fired at the toplevel window.
-  HWND toplevelWnd = GetTopLevelHWND(mWnd);
+  // retrive the toplevel window or dialog
+  HWND curWnd = mWnd;
+  HWND toplevelWnd = NULL;
+  while (curWnd) {
+    toplevelWnd = curWnd;
+
+    nsWindow *win = GetNSWindowPtr(curWnd);
+    if (win) {
+      nsWindowType wintype;
+      win->GetWindowType(wintype);
+      if (wintype == eWindowType_toplevel || wintype == eWindowType_dialog)
+        break;
+    }
+
+    curWnd = ::GetParent(curWnd); // Parent or owner (if has no parent)
+  }
+
   if (toplevelWnd) {
     nsWindow *win = GetNSWindowPtr(toplevelWnd);
     if (win)

@@ -2824,3 +2824,12 @@ pref("geo.enabled", true);
 pref("html5.enable", false);
 // Toggle which thread the HTML5 parser uses for streama parsing
 pref("html5.offmainthread", true);
+// Time in milliseconds between the start of the network stream and the 
+// first time the flush timer fires in the off-the-main-thread HTML5 parser.
+pref("html5.flushtimer.startdelay", 200);
+// Time in milliseconds between the return to non-speculating more and the 
+// first time the flush timer fires thereafter.
+pref("html5.flushtimer.continuedelay", 150);
+// Time in milliseconds between timer firings once the timer has starting 
+// firing.
+pref("html5.flushtimer.interval", 100);

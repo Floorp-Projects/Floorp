@@ -58,7 +58,7 @@
 #include "nsIRenderingContext.h"
 
 #include "nsICanvasRenderingContextInternal.h"
-
+#include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsLayoutUtils.h"
 
 #define DEFAULT_CANVAS_WIDTH 300
@@ -118,7 +118,7 @@ public:
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
+  nsresult CopyInnerTo(nsGenericElement* aDest) const;
 protected:
   nsIntSize GetWidthHeight();
 
@@ -215,6 +215,24 @@ nsHTMLCanvasElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  return rv;
+}
+
+nsresult
+nsHTMLCanvasElement::CopyInnerTo(nsGenericElement* aDest) const
+{
+  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aDest->GetOwnerDoc()->IsStaticDocument()) {
+    nsHTMLCanvasElement* dest = static_cast<nsHTMLCanvasElement*>(aDest);
+    nsCOMPtr<nsISupports> cxt;
+    dest->GetContext(NS_LITERAL_STRING("2d"), getter_AddRefs(cxt));
+    nsCOMPtr<nsIDOMCanvasRenderingContext2D> context2d = do_QueryInterface(cxt);
+    if (context2d) {
+      context2d->DrawImage(const_cast<nsHTMLCanvasElement*>(this),
+                           0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0);
+    }
+  }
   return rv;
 }
 

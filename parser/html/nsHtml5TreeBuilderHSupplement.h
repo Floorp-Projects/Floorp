@@ -45,6 +45,7 @@
     PRInt32                                mHandlesUsed;
     nsTArray<nsAutoArrayPtr<nsIContent*> > mOldHandles;
     nsRefPtr<nsHtml5SpeculativeLoader>     mSpeculativeLoader;
+    PRBool                                 mCurrentHtmlScriptIsAsyncOrDefer;
 #ifdef DEBUG
     PRBool                                 mActive;
 #endif
@@ -63,6 +64,8 @@
 
     ~nsHtml5TreeBuilder();
     
+    PRBool IsDiscretionaryFlushSafe();
+
     PRBool HasScript();
     
     void SetOpSink(nsAHtml5TreeOpSink* aOpSink) {
@@ -77,9 +80,7 @@
 
     void DropSpeculativeLoader();
 
-    void Flush();
-    
-    void MaybeFlush();
+    PRBool Flush();
     
     void SetDocumentCharset(nsACString& aCharset);
 

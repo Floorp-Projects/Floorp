@@ -587,7 +587,7 @@ SessionStoreService.prototype = {
 
     // ignore non-browser windows and windows opened while shutting down
     if (aWindow.document.documentElement.getAttribute("windowtype") != "navigator:browser" ||
-      this._loadState == STATE_QUITTING)
+        this._loadState == STATE_QUITTING)
       return;
 
     // assign it a unique identifier (timestamp)
@@ -595,6 +595,8 @@ SessionStoreService.prototype = {
 
     // and create its data object
     this._windows[aWindow.__SSi] = { tabs: [], selected: 0, _closedTabs: [] };
+    if (!this._isWindowLoaded(aWindow))
+      this._windows[aWindow.__SSi]._restoring = true;
     if (!aWindow.toolbar.visible)
       this._windows[aWindow.__SSi].isPopup = true;
     
@@ -1742,6 +1744,8 @@ SessionStoreService.prototype = {
     var nonPopupCount = 0;
     var ix;
     for (ix in this._windows) {
+      if (this._windows[ix]._restoring) // window data is still in _statesToRestore
+        continue;
       total.push(this._windows[ix]);
       windows.push(ix);
       if (!this._windows[ix].isPopup)
@@ -2033,6 +2037,7 @@ SessionStoreService.prototype = {
       // from now on, the data will come from the actual window
       delete this._statesToRestore[aWindow.__SS_restoreID];
       delete aWindow.__SS_restoreID;
+      delete this._windows[aWindow.__SSi]._restoring;
     }
     
     // helper hash for ensuring unique frame IDs

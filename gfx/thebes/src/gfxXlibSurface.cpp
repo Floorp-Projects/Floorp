@@ -71,7 +71,7 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, 
     Init(surf);
 }
 
-gfxXlibSurface::gfxXlibSurface(Display *dpy, Visual *visual, const gfxIntSize& size)
+gfxXlibSurface::gfxXlibSurface(Display *dpy, Visual *visual, const gfxIntSize& size, int depth)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mSize(size)
 
 {
@@ -81,7 +81,7 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Visual *visual, const gfxIntSize& s
     mDrawable = (Drawable)XCreatePixmap(dpy,
                                         RootWindow(dpy, DefaultScreen(dpy)),
                                         mSize.width, mSize.height,
-                                        DefaultDepth(dpy, DefaultScreen(dpy)));
+                                        depth ? depth : DefaultDepth(dpy, DefaultScreen(dpy)));
 
     cairo_surface_t *surf = cairo_xlib_surface_create(dpy, mDrawable, visual, mSize.width, mSize.height);
 

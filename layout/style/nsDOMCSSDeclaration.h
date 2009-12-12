@@ -50,6 +50,7 @@ class nsICSSParser;
 class nsICSSLoader;
 class nsIURI;
 class nsIPrincipal;
+class nsIDocument;
 
 class CSS2PropertiesTearoff : public nsIDOMNSCSS2Properties
 {
@@ -101,6 +102,10 @@ protected:
   virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                      PRBool aAllocate) = 0;
   virtual nsresult DeclarationChanged() = 0;
+  // Document that we must call BeginUpdate/EndUpdate on around the
+  // calls to DeclarationChanged and the style rule mutation that leads
+  // to it.
+  virtual nsIDocument* DocToUpdate() = 0;
   
   // This will only fail if it can't get a parser or a principal.
   // This means it can return NS_OK without aURI or aCSSLoader being

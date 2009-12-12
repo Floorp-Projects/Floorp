@@ -52,7 +52,7 @@ script regress-354145-03.js
 script regress-354145-04.js
 script regress-354145-05.js
 script regress-354145-07.js
-script regress-354998.js
+skip-if(!xulRuntime.shell&&isDebugBuild) script regress-354998.js # very slow; test needs revising
 script regress-355474-02.js
 script regress-355478.js
 script regress-355569.js

@@ -1364,6 +1364,7 @@ gfxCoreTextFontGroup::UpdateFontList()
     if (mUserFontSet && mCurrGeneration != GetGeneration()) {
         // xxx - can probably improve this to detect when all fonts were found, so no need to update list
         mFonts.Clear();
+        mUnderlineOffset = UNDERLINE_OFFSET_NOT_SET;
         ForEachFont(FindCTFont, this);
         mCurrGeneration = GetGeneration();
     }

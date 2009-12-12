@@ -34,3 +34,5 @@ assertEq(testLenientAndStrict('"\\0x"',
                               parsesSuccessfully,
                               parsesSuccessfully),
          true);
+
+reportCompare(true, true);

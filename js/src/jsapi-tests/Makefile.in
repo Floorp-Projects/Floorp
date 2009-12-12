@@ -51,6 +51,7 @@ CPPSRCS = \
   testContexts.cpp \
   testDebugger.cpp \
   testDefineGetterSetterNonEnumerable.cpp \
+  testExtendedEq.cpp \
   testIntString.cpp \
   testLookup.cpp \
   testPropCache.cpp \

@@ -37,3 +37,5 @@ assertEq(testLenientAndStrict('function f() { "use strict"; delete x; }',
                               parseRaisesException(SyntaxError),
                               parseRaisesException(SyntaxError)),
          true);
+
+reportCompare(true, true);

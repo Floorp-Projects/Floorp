@@ -678,6 +678,9 @@ us.com
 uy.com
 za.com
 
+// Requested by Yngve Pettersen <yngve@opera.com> 2009-11-26
+operaunite.com
+
 // coop : http://en.wikipedia.org/wiki/.coop
 coop
 
@@ -807,6 +810,8 @@ fi
 // completely removed.
 // TODO: Check for updates (expected to be phased out around Q1/2009)
 aland.fi
+// iki.fi : Submitted by Hannu Aronsson <haa@iki.fi> 2009-11-05
+iki.fi
 
 // fj : http://en.wikipedia.org/wiki/.fj
 *.fj
@@ -2408,7 +2413,22 @@ zoology.museum
 иком.museum
 
 // mv : http://en.wikipedia.org/wiki/.mv
-*.mv
+// "mv" included because, contra Wikipedia, google.mv exists.
+mv
+aero.mv
+biz.mv
+com.mv
+coop.mv
+edu.mv
+gov.mv
+info.mv
+int.mv
+mil.mv
+museum.mv
+name.mv
+net.mv
+org.mv
+pro.mv
 
 // mw : http://www.registrar.mw/
 mw

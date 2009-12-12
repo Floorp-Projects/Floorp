@@ -1160,6 +1160,25 @@ public:
   PRBool IsDNSPrefetchAllowed() const { return mAllowDNSPrefetch; }
 
   /**
+   * PR_TRUE when this document is a static clone of a normal document.
+   * For example print preview and printing use static documents.
+   */
+  PRBool IsStaticDocument() { return mIsStaticDocument; }
+
+  /**
+   * Clones the document and subdocuments and stylesheet etc.
+   * @param aCloneContainer The container for the clone document.
+   */
+  virtual already_AddRefed<nsIDocument>
+  CreateStaticClone(nsISupports* aCloneContainer);
+
+  /**
+   * If this document is a static clone, this returns the original
+   * document.
+   */
+  nsIDocument* GetOriginalDocument() { return mOriginalDocument; }
+
+  /**
    * Called by nsParser to preload images. Can be removed and code moved
    * to nsPreloadURIs::PreloadURIs() in file nsParser.cpp whenever the
    * parser-module is linked with gklayout-module.
@@ -1308,6 +1327,16 @@ protected:
   // document has no window, DNS prefetch won't be performed no matter what.
   PRPackedBool mAllowDNSPrefetch;
   
+  // True when this document is a static clone of a normal document
+  PRPackedBool mIsStaticDocument;
+
+  // True while this document is being cloned to a static document.
+  PRPackedBool mCreatingStaticClone;
+
+  // If mIsStaticDocument is true, mOriginalDocument points to the original
+  // document.
+  nsCOMPtr<nsIDocument> mOriginalDocument;
+
   // The bidi options for this document.  What this bitfield means is
   // defined in nsBidiUtils.h
   PRUint32 mBidiOptions;
