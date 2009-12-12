@@ -726,6 +726,17 @@ public:
   nsCSSShadowArray* GetEffectiveBoxShadows();
 
   /**
+   * @return PR_FALSE if this frame definitely has no borders at all
+   */                 
+  PRBool HasBorder() const
+  {
+    // Border images contribute to the background of the content area
+    // even if there's no border proper.
+    return (GetUsedBorder() != nsMargin(0,0,0,0) ||
+            GetStyleBorder()->IsBorderImageLoaded());
+  }
+
+  /**
    * Accessor functions for geometric parent
    */
   nsIFrame* GetParent() const { return mParent; }
