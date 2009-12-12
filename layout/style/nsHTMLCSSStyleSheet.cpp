@@ -97,8 +97,7 @@ public:
   NS_IMETHOD RulesMatching(XULTreeRuleProcessorData* aData);
 #endif
 
-  NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
-                                    nsReStyleHint* aResult);
+  virtual nsReStyleHint HasStateDependentStyle(StateRuleProcessorData* aData);
 
   virtual nsReStyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData);
@@ -201,12 +200,10 @@ HTMLCSSStyleSheetImpl::Init(nsIURI* aURL, nsIDocument* aDocument)
 }
 
 // Test if style is dependent on content state
-NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
-                                              nsReStyleHint* aResult)
+nsReStyleHint
+HTMLCSSStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
-  *aResult = nsReStyleHint(0);
-  return NS_OK;
+  return nsReStyleHint(0);
 }
 
 // Test if style is dependent on attribute
