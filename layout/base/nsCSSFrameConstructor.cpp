@@ -1379,9 +1379,10 @@ PRBool IsBorderCollapse(nsIFrame* aFrame)
  * Moves aFrameList from aOldParent to aNewParent.  This updates the parent
  * pointer of the frames in the list, reparents their views as needed, and sets
  * the NS_FRAME_HAS_VIEW bit on aNewParent and its ancestors as needed.  Then
- * it sets the list as the initial child list on aNewParent.  Note that this
- * method differs from ReparentFrames in that it doesn't change the kids' style
- * contexts.
+ * it sets the list as the initial child list on aNewParent, unless aNewParent
+ * either already has kids or has been reflowed; in that case it appends the
+ * new frames.  Note that this method differs from ReparentFrames in that it
+ * doesn't change the kids' style contexts.
  */
 // XXXbz Since this is only used for {ib} splits, could we just copy the view
 // bits from aOldParent to aNewParent and then use the
@@ -1397,10 +1398,6 @@ MoveChildrenTo(nsPresContext* aPresContext,
 {
   NS_PRECONDITION(aOldParent->GetParent() == aNewParent->GetParent(),
                   "Unexpected old and new parents");
-  NS_PRECONDITION(aNewParent->GetChildList(nsnull).IsEmpty(),
-                  "New parent should have no kids");
-  NS_PRECONDITION(aNewParent->GetStateBits() & NS_FRAME_FIRST_REFLOW,
-                  "New parent shouldn't have been reflowed yet");
 
   if (aNewParent->HasView() || aOldParent->HasView()) {
     // Move the frames into the new view
@@ -1424,7 +1421,12 @@ MoveChildrenTo(nsPresContext* aPresContext,
     aNewParent->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
   }
 
-  aNewParent->SetInitialChildList(nsnull, aFrameList);
+  if (aNewParent->GetChildList(nsnull).IsEmpty() &&
+      (aNewParent->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    aNewParent->SetInitialChildList(nsnull, aFrameList);
+  } else {
+    aNewParent->AppendFrames(nsnull, aFrameList);
+  }
 }
 
 // -----------------------------------------------------------
@@ -5799,6 +5801,32 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
   // of an {ib} split, we may need to create additional {ib} siblings to parent
   // them.
   if (!nextSibling && IsFrameSpecial(aParentFrame)) {
+    // When we get here, our frame list might start with a block.  If it does
+    // so, and aParentFrame is an inline, and it and all its previous
+    // continuations have no siblings, then put the initial blocks from the
+    // frame list into the previous block of the {ib} split.  Note that we
+    // didn't want to stop at the block part of the split when figuring out
+    // initial parent, because that could screw up float parenting; it's easier
+    // to do this little fixup here instead.
+    if (aFrameList.NotEmpty() && !IsInlineOutside(aFrameList.FirstChild())) {
+      // See whether out trailing inline is empty
+      nsIFrame* firstContinuation = aParentFrame->GetFirstContinuation();
+      if (firstContinuation->GetChildList(nsnull).IsEmpty()) {
+        // Our trailing inline is empty.  Collect our starting blocks from
+        // aFrameList, get the right parent frame for them, and put them in.
+        nsFrameList::FrameLinkEnumerator firstNonBlockEnumerator =
+          FindFirstNonBlock(aFrameList);
+        nsFrameList blockKids = aFrameList.ExtractHead(firstNonBlockEnumerator);
+        NS_ASSERTION(blockKids.NotEmpty(), "No blocks?");
+
+        nsIFrame* prevBlock =
+          GetSpecialPrevSibling(firstContinuation)->GetLastContinuation();
+        NS_ASSERTION(prevBlock, "Should have previous block here");
+
+        MoveChildrenTo(aState.mPresContext, aParentFrame, prevBlock, blockKids);
+      }
+    }
+
     // We want to put some of the frames into this inline frame.
     nsFrameList::FrameLinkEnumerator firstBlockEnumerator(aFrameList);
     FindFirstBlock(firstBlockEnumerator);
