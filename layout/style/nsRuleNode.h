@@ -630,7 +630,6 @@ protected:
                       RuleDetail aRuleDetail,
                       const PRBool aCanStoreInRuleTree);
 
-#ifdef MOZ_SVG
   NS_HIDDEN_(const void*)
     ComputeSVGData(void* aStartStruct,
                    const nsRuleDataStruct& aData, 
@@ -644,7 +643,6 @@ protected:
                         nsStyleContext* aContext, nsRuleNode* aHighestNode,
                         RuleDetail aRuleDetail,
                         const PRBool aCanStoreInRuleTree);
-#endif
 
   // helpers for |ComputeFontData| that need access to |mNoneBits|:
   static NS_HIDDEN_(void) SetFontSize(nsPresContext* aPresContext,
@@ -715,10 +713,8 @@ protected:
   NS_HIDDEN_(const void*) GetUIResetData(nsStyleContext* aContext);
   NS_HIDDEN_(const void*) GetXULData(nsStyleContext* aContext);
   NS_HIDDEN_(const void*) GetColumnData(nsStyleContext* aContext);
-#ifdef MOZ_SVG
   NS_HIDDEN_(const void*) GetSVGData(nsStyleContext* aContext);
   NS_HIDDEN_(const void*) GetSVGResetData(nsStyleContext* aContext);
-#endif
 
   NS_HIDDEN_(already_AddRefed<nsCSSShadowArray>)
                           GetShadowData(nsCSSValueList* aList,

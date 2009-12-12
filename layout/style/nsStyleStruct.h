@@ -1797,7 +1797,6 @@ protected:
   nscoord mTwipsPerPixel;
 };
 
-#ifdef MOZ_SVG
 enum nsStyleSVGPaintType {
   eStyleSVGPaintType_None = 1,
   eStyleSVGPaintType_Color,
@@ -1901,6 +1900,5 @@ struct nsStyleSVGReset {
 
   PRUint8          mDominantBaseline; // [reset] see nsStyleConsts.h
 };
-#endif
 
 #endif /* nsStyleStruct_h___ */
