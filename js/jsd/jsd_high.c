@@ -203,15 +203,19 @@ jsd_DebuggerOnForUser(JSRuntime*         jsrt,
     if( ! jsdc )
         return NULL;
 
-    /* set hooks here */
+    /*
+     * Set hooks here.  The new/destroy script hooks are on even when
+     * the debugger is paused.  The destroy hook so we'll clean up
+     * internal data structures when scripts are destroyed, and the
+     * newscript hook for backwards compatibility for now.  We'd like
+     * to stop doing that.
+     */
     JS_SetNewScriptHookProc(jsdc->jsrt, jsd_NewScriptHookProc, jsdc);
     JS_SetDestroyScriptHookProc(jsdc->jsrt, jsd_DestroyScriptHookProc, jsdc);
-    JS_SetDebuggerHandler(jsdc->jsrt, jsd_DebuggerHandler, jsdc);
-    JS_SetExecuteHook(jsdc->jsrt, jsd_TopLevelCallHook, jsdc);
-    JS_SetCallHook(jsdc->jsrt, jsd_FunctionCallHook, jsdc);
-    JS_SetObjectHook(jsdc->jsrt, jsd_ObjectHook, jsdc);
-    JS_SetThrowHook(jsdc->jsrt, jsd_ThrowHandler, jsdc);
-    JS_SetDebugErrorHook(jsdc->jsrt, jsd_DebugErrorHook, jsdc);
+    jsd_DebuggerUnpause(jsdc);
+    if (!(jsdc->flags & JSD_DISABLE_OBJECT_TRACE)) {
+        JS_SetObjectHook(jsdc->jsrt, jsd_ObjectHook, jsdc);
+    }
 #ifdef LIVEWIRE
     LWDBG_SetNewScriptHookProc(jsd_NewScriptHookProc, jsdc);
 #endif
@@ -231,15 +235,13 @@ jsd_DebuggerOn(void)
 void
 jsd_DebuggerOff(JSDContext* jsdc)
 {
+    jsd_DebuggerPause(jsdc, JS_TRUE);
     /* clear hooks here */
     JS_SetNewScriptHookProc(jsdc->jsrt, NULL, NULL);
     JS_SetDestroyScriptHookProc(jsdc->jsrt, NULL, NULL);
-    JS_SetDebuggerHandler(jsdc->jsrt, NULL, NULL);
-    JS_SetExecuteHook(jsdc->jsrt, NULL, NULL);
-    JS_SetCallHook(jsdc->jsrt, NULL, NULL);
+    /* Have to unset these too, since jsd_DebuggerPause only unsets
+       them conditionally */
     JS_SetObjectHook(jsdc->jsrt, NULL, NULL);
-    JS_SetThrowHook(jsdc->jsrt, NULL, NULL);
-    JS_SetDebugErrorHook(jsdc->jsrt, NULL, NULL);
 #ifdef LIVEWIRE
     LWDBG_SetNewScriptHookProc(NULL,NULL);
 #endif
@@ -254,6 +256,30 @@ jsd_DebuggerOff(JSDContext* jsdc)
 
     if( jsdc->userCallbacks.setContext )
         jsdc->userCallbacks.setContext(NULL, jsdc->user);
+}
+
+void
+jsd_DebuggerPause(JSDContext* jsdc, JSBool forceAllHooksOff)
+{
+    JS_SetDebuggerHandler(jsdc->jsrt, NULL, NULL);
+    if (forceAllHooksOff ||
+        (!(jsdc->flags & JSD_COLLECT_PROFILE_DATA) &&
+         (jsdc->flags & JSD_DISABLE_OBJECT_TRACE))) {
+        JS_SetExecuteHook(jsdc->jsrt, NULL, NULL);
+        JS_SetCallHook(jsdc->jsrt, NULL, NULL);
+    }
+    JS_SetThrowHook(jsdc->jsrt, NULL, NULL);
+    JS_SetDebugErrorHook(jsdc->jsrt, NULL, NULL);
+}
+
+void
+jsd_DebuggerUnpause(JSDContext* jsdc)
+{
+    JS_SetDebuggerHandler(jsdc->jsrt, jsd_DebuggerHandler, jsdc);
+    JS_SetExecuteHook(jsdc->jsrt, jsd_TopLevelCallHook, jsdc);
+    JS_SetCallHook(jsdc->jsrt, jsd_FunctionCallHook, jsdc);
+    JS_SetThrowHook(jsdc->jsrt, jsd_ThrowHandler, jsdc);
+    JS_SetDebugErrorHook(jsdc->jsrt, jsd_DebugErrorHook, jsdc);
 }
 
 void
