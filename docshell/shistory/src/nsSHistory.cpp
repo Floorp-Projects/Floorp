@@ -836,8 +836,8 @@ nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
       nsCOMPtr<nsISHEntry> ownerEntry;
       entry->GetAnyContentViewer(getter_AddRefs(ownerEntry),
                                  getter_AddRefs(viewer));
-      NS_ASSERTION(!viewer,
-                   "ContentViewer exists outside gHistoryMaxViewer range");
+      NS_WARN_IF_FALSE(!viewer,
+                       "ContentViewer exists outside gHistoryMaxViewer range");
     }
 
     nsISHTransaction *temp = trans;
