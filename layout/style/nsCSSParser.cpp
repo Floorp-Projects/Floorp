@@ -2505,7 +2505,8 @@ CSSParserImpl::ParseSelectorGroup(nsCSSSelectorList*& aList)
     }
     nsCOMPtr<nsIAtom> pseudoElement;
     nsAutoPtr<nsPseudoClassList> pseudoElementArgs;
-    nsCSSPseudoElements::Type pseudoElementType;
+    nsCSSPseudoElements::Type pseudoElementType =
+      nsCSSPseudoElements::ePseudo_NotPseudoElement;
     nsSelectorParsingStatus parsingStatus =
       ParseSelector(*newSelector, getter_AddRefs(pseudoElement),
                     getter_Transfers(pseudoElementArgs),
@@ -2520,8 +2521,7 @@ CSSParserImpl::ParseSelectorGroup(nsCSSSelectorList*& aList)
       list = nsnull;
       break;
     }
-    if (pseudoElement &&
-        pseudoElementType == nsCSSPseudoElements::ePseudo_AnonBox &&
+    if (pseudoElementType == nsCSSPseudoElements::ePseudo_AnonBox &&
         (list || !IsUniversalSelector(*newSelector))) {
       REPORT_UNEXPECTED(PEAnonBoxNotAlone);
       list = nsnull;
