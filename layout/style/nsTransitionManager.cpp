@@ -828,12 +828,10 @@ nsTransitionManager::RulesMatching(XULTreeRuleProcessorData* aData)
 }
 #endif
 
-NS_IMETHODIMP
-nsTransitionManager::HasStateDependentStyle(StateRuleProcessorData* aData,
-                                            nsReStyleHint* aResult)
+nsReStyleHint
+nsTransitionManager::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
-  *aResult = nsReStyleHint(0);
-  return NS_OK;
+  return nsReStyleHint(0);
 }
 
 nsReStyleHint

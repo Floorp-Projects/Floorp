@@ -2244,9 +2244,8 @@ IsSiblingOperator(PRUnichar oper)
   return oper == PRUnichar('+') || oper == PRUnichar('~');
 }
 
-NS_IMETHODIMP
-nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
-                                           nsReStyleHint* aResult)
+nsReStyleHint
+nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
   NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
                   "content must be element");
@@ -2261,8 +2260,8 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
   // "body > p:hover" will be in |cascade->mStateSelectors|).  Note that
   // |IsStateSelector| below determines which selectors are in
   // |cascade->mStateSelectors|.
+  nsReStyleHint hint = nsReStyleHint(0);
   if (cascade) {
-    *aResult = nsReStyleHint(0);
     nsCSSSelector **iter = cascade->mStateSelectors.Elements(),
                   **end = iter + cascade->mStateSelectors.Length();
     for(; iter != end; ++iter) {
@@ -2271,17 +2270,17 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
       nsReStyleHint possibleChange = IsSiblingOperator(selector->mOperator) ?
         eReStyle_LaterSiblings : eReStyle_Self;
 
-      // If *aResult already includes all the bits of possibleChange,
+      // If hint already includes all the bits of possibleChange,
       // don't bother calling SelectorMatches, since even if it returns false
-      // *aResult won't change.
-      if ((possibleChange & ~(*aResult)) &&
+      // hint won't change.
+      if ((possibleChange & ~hint) &&
           SelectorMatches(*aData, selector, aData->mStateMask, PR_FALSE) &&
           SelectorMatchesTree(*aData, selector->mNext, PR_FALSE)) {
-        *aResult = nsReStyleHint(*aResult | possibleChange);
+        hint = nsReStyleHint(hint | possibleChange);
       }
     }
   }
-  return NS_OK;
+  return hint;
 }
 
 struct AttributeEnumData {

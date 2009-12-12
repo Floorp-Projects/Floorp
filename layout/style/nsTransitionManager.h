@@ -91,8 +91,7 @@ public:
 #ifdef MOZ_XUL
   NS_IMETHOD RulesMatching(XULTreeRuleProcessorData* aData);
 #endif
-  NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
-                                    nsReStyleHint* aResult);
+  virtual nsReStyleHint HasStateDependentStyle(StateRuleProcessorData* aData);
   virtual nsReStyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData);
   NS_IMETHOD MediumFeaturesChanged(nsPresContext* aPresContext,

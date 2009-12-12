@@ -1076,8 +1076,7 @@ static PRBool SheetHasStatefulStyle(nsIStyleRuleProcessor* aProcessor,
                                     void *aData)
 {
   StatefulData* data = (StatefulData*)aData;
-  nsReStyleHint hint;
-  aProcessor->HasStateDependentStyle(data, &hint);
+  nsReStyleHint hint = aProcessor->HasStateDependentStyle(data);
   data->mHint = nsReStyleHint(data->mHint | hint);
   return PR_TRUE; // continue
 }
