@@ -1688,7 +1688,12 @@ nsTableFrame::RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
   // notify the frame and its ancestors of the special reflow, stopping at the containing table
   for (const nsHTMLReflowState* rs = &aReflowState; rs && rs->frame; rs = rs->parentReflowState) {
     nsIAtom* frameType = rs->frame->GetType();
-    NS_ASSERTION(IsFrameAllowedInTable(frameType), "unexpected frame type");
+    NS_ASSERTION(IS_TABLE_CELL(frameType) ||
+                 nsGkAtoms::tableRowFrame == frameType ||
+                 nsGkAtoms::tableRowGroupFrame == frameType ||
+                 nsGkAtoms::scrollFrame == frameType ||
+                 nsGkAtoms::tableFrame == frameType,
+                 "unexpected frame type");
                  
     rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
     if (nsGkAtoms::tableFrame == frameType) {
