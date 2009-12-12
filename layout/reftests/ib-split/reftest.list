@@ -81,3 +81,5 @@
 == ignored-margins-2b.html ignored-margins-2-ref.html
 == trailing-inline-with-continuations-1.html trailing-inline-with-continuations-1-ref.html
 == append-to-empty-trailing-inline-1.html append-to-empty-trailing-inline-1-ref.html
+== append-to-nested-split-inline-1.html append-to-nested-split-inline-1-ref.html
+== append-to-nested-split-inline-1-ref.html append-to-nested-split-inline-1-noib-ref.html

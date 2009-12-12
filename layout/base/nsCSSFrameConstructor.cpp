@@ -5852,8 +5852,9 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
                                    nsIPresShell::eTreeChange,
                                    NS_FRAME_HAS_DIRTY_CHILDREN);
 
-      return aState.mFrameManager->InsertFrames(aParentFrame->GetParent(),
-                                                nsnull, aParentFrame, ibSiblings);
+      // Recurse so we create new ib siblings as needed for aParentFrame's parent
+      return AppendFrames(aState, aParentFrame->GetParent(), ibSiblings,
+                          aParentFrame);
     }
 
     return NS_OK;
@@ -11030,6 +11031,26 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
   aParentItem.mIsAllInline = aParentItem.mChildItems.AreAllItemsInline();
 }
 
+// return whether it's ok to append (in the AppendFrames sense) to
+// aParentFrame if our nextSibling is aNextSibling.  aParentFrame must
+// be an {ib} special inline.
+static PRBool
+IsSafeToAppendToSpecialInline(nsIFrame* aParentFrame, nsIFrame* aNextSibling)
+{
+  NS_PRECONDITION(IsInlineFrame(aParentFrame),
+                  "Must have an inline parent here");
+  do {
+    NS_ASSERTION(IsFrameSpecial(aParentFrame), "How is this not special?");
+    if (aNextSibling || aParentFrame->GetNextContinuation() ||
+        GetSpecialSibling(aParentFrame)) {
+      return PR_FALSE;
+    }
+
+    aNextSibling = aParentFrame->GetNextSibling();
+    aParentFrame = aParentFrame->GetParent();
+  } while (IsInlineFrame(aParentFrame));
+}
+
 PRBool
 nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
                                            nsIFrame* aContainingBlock,
@@ -11240,10 +11261,12 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
       // Now we're adding kids including some blocks to an inline part of an
       // {ib} split.  If we plan to call AppendFrames, and don't have a next
       // sibling for the new frames, and our parent is the last continuation of
-      // the last part of the {ib} split, then AppendFrames will handle things
-      // for us.  Bail out in that case.
-      if (aIsAppend && !nextSibling && !aFrame->GetNextContinuation() &&
-          !GetSpecialSibling(aFrame)) {
+      // the last part of the {ib} split, and the same is true of all our
+      // ancestor inlines (they have no following continuations and they're the
+      // last part of their {ib} splits and we'd be adding to the end for all
+      // of them), then AppendFrames will handle things for us.  Bail out in
+      // that case.
+      if (aIsAppend && IsSafeToAppendToSpecialInline(aFrame, nextSibling)) {
         return PR_FALSE;
       }
 
