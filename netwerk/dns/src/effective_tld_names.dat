@@ -2413,7 +2413,22 @@ zoology.museum
 иком.museum
 
 // mv : http://en.wikipedia.org/wiki/.mv
-*.mv
+// "mv" included because, contra Wikipedia, google.mv exists.
+mv
+aero.mv
+biz.mv
+com.mv
+coop.mv
+edu.mv
+gov.mv
+info.mv
+int.mv
+mil.mv
+museum.mv
+name.mv
+net.mv
+org.mv
+pro.mv
 
 // mw : http://www.registrar.mw/
 mw
