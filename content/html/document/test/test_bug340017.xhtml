@@ -1,0 +1,28 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=340017
+-->
+<head>
+  <title>Test for Bug 340017</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=340017">Mozilla Bug 340017</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <form id="frmfoo" name="foo" action="" />
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 340017 **/
+is(document.foo, document.getElementById("frmfoo"),
+   "The form with name 'foo' should be a document accessible property");
+]]>
+</script>
+</pre>
+</body>
+</html>
