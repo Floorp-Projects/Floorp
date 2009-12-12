@@ -1098,7 +1098,6 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       break;
     }
 
-#ifdef MOZ_SVG
     case eCSSProperty_marker: {
       const nsCSSValue &endValue =
         *data->ValueStorageFor(eCSSProperty_marker_end);
@@ -1110,7 +1109,6 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
         AppendValueToString(eCSSProperty_marker_end, aValue);
       break;
     }
-#endif
     default:
       NS_NOTREACHED("no other shorthands");
       break;

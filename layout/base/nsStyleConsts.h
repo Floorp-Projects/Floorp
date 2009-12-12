@@ -758,7 +758,6 @@
 #define NS_STYLE_GRADIENT_SIZE_FARTHEST_SIDE    2
 #define NS_STYLE_GRADIENT_SIZE_FARTHEST_CORNER  3
 
-#ifdef MOZ_SVG
 // See nsStyleSVG
 
 // dominant-baseline
@@ -816,8 +815,6 @@
 #define NS_STYLE_COLOR_INTERPOLATION_AUTO           0
 #define NS_STYLE_COLOR_INTERPOLATION_SRGB           1
 #define NS_STYLE_COLOR_INTERPOLATION_LINEARRGB      2
-
-#endif // MOZ_SVG
 
 /*****************************************************************************
  * Constants for media features.                                             *

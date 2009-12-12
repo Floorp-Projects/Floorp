@@ -3742,8 +3742,6 @@ nsComputedDOMStyle::GetFrameBoundsHeightForTransform(nscoord& aHeight)
   return PR_TRUE;
 }
 
-#ifdef MOZ_SVG
-
 nsresult
 nsComputedDOMStyle::GetSVGPaintFor(PRBool aFill,
                                    nsIDOMCSSValue** aValue)
@@ -4208,8 +4206,6 @@ nsComputedDOMStyle::GetMask(nsIDOMCSSValue** aValue)
   return CallQueryInterface(val, aValue);
 }
 
-#endif // MOZ_SVG
-
 nsresult
 nsComputedDOMStyle::GetTransitionDelay(nsIDOMCSSValue** aValue)
 {
@@ -4537,10 +4533,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(transition_property,           TransitionProperty),
     COMPUTED_STYLE_MAP_ENTRY(transition_timing_function,    TransitionTimingFunction),
     COMPUTED_STYLE_MAP_ENTRY(_moz_window_shadow,            WindowShadow),
-    COMPUTED_STYLE_MAP_ENTRY(word_wrap,                     WordWrap)
-
-#ifdef MOZ_SVG
-    ,
+    COMPUTED_STYLE_MAP_ENTRY(word_wrap,                     WordWrap),
     COMPUTED_STYLE_MAP_ENTRY(clip_path,                     ClipPath),
     COMPUTED_STYLE_MAP_ENTRY(clip_rule,                     ClipRule),
     COMPUTED_STYLE_MAP_ENTRY(color_interpolation,           ColorInterpolation),
@@ -4571,7 +4564,6 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(stroke_width,                  StrokeWidth),
     COMPUTED_STYLE_MAP_ENTRY(text_anchor,                   TextAnchor),
     COMPUTED_STYLE_MAP_ENTRY(text_rendering,                TextRendering)
-#endif
 
   };
 
