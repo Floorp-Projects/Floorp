@@ -2147,7 +2147,7 @@ case "$target" in
         # Use temp file for windres (bug 213281)
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
-        LIBS="$LIBS -lgdi32 -lwinmm -lwsock32"
+        LIBS="$LIBS -luuid -lgdi32 -lwinmm -lwsock32"
         MOZ_JS_LIBS='-L$(LIBXUL_DIST)/lib -lmozjs'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom -lxpcom_core'
