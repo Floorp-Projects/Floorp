@@ -245,10 +245,10 @@ jsds_RemoveEphemeral (LiveEphemeral **listHead, LiveEphemeral *item)
  * utility functions for filters
  *******************************************************************************/
 void
-jsds_FreeFilter (FilterRecord *filter)
+jsds_FreeFilter (FilterRecord *rec)
 {
-    NS_IF_RELEASE (filter->filterObject);
-    delete filter;
+    NS_IF_RELEASE (rec->filterObject);
+    PR_Free (rec);
 }
 
 /* copies appropriate |filter| attributes into |rec|.
