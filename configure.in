@@ -1191,7 +1191,9 @@ esac
 
 case "$OS_ARCH" in
 WINNT)
-    OS_TEST=`uname -p`
+    if test -z "$CROSS_COMPILE" ; then
+        OS_TEST=`uname -p`
+    fi
     ;;
 Windows_NT)
 #
