@@ -162,6 +162,20 @@ FORCE_STATIC_LIB = 1
 # This library is used by other shared libs in a static build
 FORCE_USE_PIC = 1
 
+include $(topsrcdir)/config/config.mk
+
+ifndef MOZ_ENABLE_LIBXUL
+ifdef GNU_CC
+# -fvisibility=hidden works fine but PIXMAN_EXPORT is not used in header
+# files, so pixman.h needs to be included before
+# "#pragma GCC visibility -push(hidden)".
+ifdef WRAP_SYSTEM_INCLUDES
+MY_VISIBILITY_FLAGS := -include pixman.h $(VISIBILITY_FLAGS)
+COMPILE_CFLAGS += $(MY_VISIBILITY_FLAGS)
+endif # WRAP_SYSTEM_INCLUDES
+endif # GNU_CC
+endif # !MOZ_ENABLE_LIBXUL
+
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS += -DPACKAGE="mozpixman" -D_USE_MATH_DEFINES
