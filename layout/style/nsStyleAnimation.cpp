@@ -859,6 +859,16 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
   NS_ABORT_IF_FALSE(aPresContext, "null pres context");
 
   switch (aComputedValue.GetUnit()) {
+    case eUnit_Normal:
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                        "type mismatch");
+      static_cast<nsCSSValue*>(aSpecifiedValue)->SetNormalValue();
+      break;
+    case eUnit_Auto:
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
+                        "type mismatch");
+      static_cast<nsCSSValue*>(aSpecifiedValue)->SetAutoValue();
+      break;
     case eUnit_None:
       if (nsCSSProps::kAnimTypeTable[aProperty] == eStyleAnimType_PaintServer) {
         NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
