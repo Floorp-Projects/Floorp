@@ -107,13 +107,14 @@ SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
+		-lthebes \
+		$(MOZ_CAIRO_LIBS) \
                 $(MOZ_STARTUP_NOTIFICATION_LIBS) \
 		$(XLDFLAGS) \
 		$(XLIBS) \
 		$(XEXT_LIBS) \
 		$(XCOMPOSITE_LIBS) \
 		$(MOZ_GTK2_LIBS) \
-		-lthebes \
 		$(QCMS_LIBS) \
 		$(NULL)
 
@@ -142,7 +143,7 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS          += $(MOZ_GTK2_CFLAGS) $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
-CXXFLAGS        += $(MOZ_GTK2_CFLAGS) $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
+CXXFLAGS        += $(MOZ_CAIRO_CFLAGS) $(MOZ_GTK2_CFLAGS) $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
 
 ifdef MOZ_PLATFORM_HILDON
 ifdef MOZ_ENABLE_GCONF
