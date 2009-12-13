@@ -2289,8 +2289,8 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
 
   DWORD ourThreadID = GetWindowThreadProcessId(mWnd, NULL);
 
-  for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
-    const nsIntRect& destRect = aDestRects[i];
+  for (BlitRectIter iter(aDelta, aDestRects); !iter.IsDone(); ++iter) {
+    const nsIntRect& destRect = iter.Rect();
     nsIntRect affectedRect;
     affectedRect.UnionRect(destRect, destRect - aDelta);
     UINT flags = SW_SCROLLCHILDREN;
@@ -2304,8 +2304,8 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
         if (entry) {
           // It's supposed to be scrolled, so we can still use
           // SW_SCROLLCHILDREN. But don't allow SW_SCROLLCHILDREN to be
-          // used on it again by a later rectangle in aDestRects, we
-          // don't want it to move twice!
+          // used on it again by a later rectangle; we don't want it to
+          // move twice!
           scrolledWidgets.RawRemoveEntry(entry);
 
           nsIntPoint screenOffset = WidgetToScreenOffset();
