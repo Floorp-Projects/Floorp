@@ -92,7 +92,6 @@ ifdef USE_STATIC_LIBS
 
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH))) 
-SQLITE = $(LIB_PREFIX)sqlite3.$(LIB_SUFFIX)
 
 DEFINES += -DNSS_USE_STATIC_LIBS
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
@@ -130,7 +129,7 @@ EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)nssb.$(LIB_SUFFIX) \
 	$(PKIXLIB) \
 	$(DBMLIB) \
-	$(DIST)/lib/$(SQLITE) \
+	$(DIST)/lib/$(LIB_PREFIX)sqlite3.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nssutil3.$(LIB_SUFFIX) \
 	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4.$(LIB_SUFFIX) \
 	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4.$(LIB_SUFFIX) \
