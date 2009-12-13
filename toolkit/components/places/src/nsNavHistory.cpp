@@ -186,7 +186,7 @@ using namespace mozilla::places;
 // We use a guess of the number of months considering all of them 30 days
 // long, but we split only the last 6 months.
 #define DATE_CONT_NUM(_expireDays) \
-  (ADDITIONAL_DATE_CONT_NUM + PR_MIN(6, (_expireDays/30)))
+  (ADDITIONAL_DATE_CONT_NUM + NS_MIN(6, (_expireDays/30)))
 
 // fraction of free pages in the database to force a vacuum between
 // MAX_TIME_BEFORE_VACUUM and MIN_TIME_BEFORE_VACUUM.
