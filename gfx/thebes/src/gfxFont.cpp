@@ -260,7 +260,7 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, PRBool& aNeedsBo
         }
     }
 
-    gfxFontEntry *matchFE;
+    gfxFontEntry *matchFE = nsnull;
     const PRInt8 absDistance = abs(weightDistance);
     direction = (weightDistance >= 0) ? 1 : -1;
     PRInt8 i, wghtSteps = 0;
@@ -284,10 +284,6 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, PRBool& aNeedsBo
 
     if (weightDistance > 0 && wghtSteps <= absDistance) {
         aNeedsBold = PR_TRUE;
-    }
-
-    if (!matchFE) {
-        matchFE = weightList[matchBaseWeight];
     }
 
     PR_LOG(gFontSelection, PR_LOG_DEBUG,
