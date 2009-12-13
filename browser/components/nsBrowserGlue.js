@@ -1228,7 +1228,14 @@ GeolocationPrompt.prototype = {
         var inPrivateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].
                                 getService(Ci.nsIPrivateBrowsingService).
                                 privateBrowsingEnabled;
-        if (!inPrivateBrowsing) {
+
+        // don't show "Remember for this site" checkbox for file:
+        var host;
+        try {
+            host = request.requestingURI.host;
+        } catch (ex) {}
+
+        if (!inPrivateBrowsing && host) {
           var checkbox = newBar.ownerDocument.createElementNS(XULNS, "checkbox");
           checkbox.className = "rememberChoice";
           checkbox.setAttribute("label", browserBundle.GetStringFromName("geolocation.remember"));
