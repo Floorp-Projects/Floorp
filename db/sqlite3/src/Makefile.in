@@ -46,7 +46,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE           = sqlite3
-LIBRARY_NAME     = mozsqlite3
+LIBRARY_NAME     = sqlite3
 FORCE_SHARED_LIB = 1
 VISIBILITY_FLAGS =
 LIB_IS_C_ONLY    = 1
