@@ -3814,6 +3814,7 @@ SetRectProperty(nsIFrame* aFrame, nsIAtom* aProp, const nsRect& aRect)
 static nsRect
 ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
                              const nsRect& aOverflowRect,
+                             const nsSize& aNewSize,
                              PRBool aStoreRectProperties) {
   nsRect r = aOverflowRect;
   *aAnyOutlineOrEffects = PR_FALSE;
@@ -3823,7 +3824,7 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, PRBool* aAnyOutlineOrEffects,
   if (boxShadows) {
     nsRect shadows;
     for (PRUint32 i = 0; i < boxShadows->Length(); ++i) {
-      nsRect tmpRect = r;
+      nsRect tmpRect(nsPoint(0, 0), aNewSize);
       nsCSSShadowItem* shadow = boxShadows->ShadowAt(i);
 
       // inset shadows are never painted outside the frame
@@ -3987,7 +3988,8 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
   // Invalidate the entire old frame+outline if the frame has an outline
   PRBool anyOutlineOrEffects;
   nsRect r = ComputeOutlineAndEffectsRect(this, &anyOutlineOrEffects,
-                                          aOldOverflowRect, PR_FALSE);
+                                          aOldOverflowRect, aNewDesiredSize,
+                                          PR_FALSE);
   if (anyOutlineOrEffects) {
     r.UnionRect(aOldOverflowRect, r);
     InvalidateRectForFrameSizeChange(this, r);
@@ -5558,7 +5560,7 @@ nsIFrame::GetAdditionalOverflow(const nsRect& aOverflowArea,
 {
   nsRect overflowRect =
     ComputeOutlineAndEffectsRect(this, aHasOutlineOrEffects,
-                                 aOverflowArea, PR_TRUE);
+                                 aOverflowArea, aNewSize, PR_TRUE);
 
   // Absolute position clipping
   PRBool hasAbsPosClip;
