@@ -52,6 +52,7 @@
 #include "processor/stackwalker_sparc.h"
 #include "processor/stackwalker_x86.h"
 #include "processor/stackwalker_amd64.h"
+#include "processor/stackwalker_arm.h"
 
 namespace google_breakpad {
 
@@ -181,6 +182,13 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
                                              memory, modules, supplier,
                                              resolver);
       break;
+
+    case MD_CONTEXT_ARM:
+      cpu_stackwalker = new StackwalkerARM(system_info,
+                                           context->GetContextARM(),
+                                           memory, modules, supplier,
+                                           resolver);
+      break;
   }
 
   BPLOG_IF(ERROR, !cpu_stackwalker) << "Unknown CPU type " << HexString(cpu) <<
@@ -189,5 +197,39 @@ Stackwalker* Stackwalker::StackwalkerForCPU(
   return cpu_stackwalker;
 }
 
+bool Stackwalker::InstructionAddressSeemsValid(u_int64_t address) {
+  const CodeModule *module = modules_->GetModuleForAddress(address);
+  if (!module) {
+    // not inside any loaded module
+    return false;
+  }
+
+  if (!resolver_ || !supplier_) {
+    // we don't have a resolver and or symbol supplier,
+    // but we're inside a known module
+    return true;
+  }
+
+  if (!resolver_->HasModule(module->code_file())) {
+    string symbol_data, symbol_file;
+    SymbolSupplier::SymbolResult symbol_result =
+      supplier_->GetSymbolFile(module, system_info_,
+                               &symbol_file, &symbol_data);
+
+    if (symbol_result != SymbolSupplier::FOUND ||
+        !resolver_->LoadModuleUsingMapBuffer(module->code_file(),
+                                             symbol_data)) {
+      // we don't have symbols, but we're inside a loaded module
+      return true;
+    }
+  }
+
+  StackFrame frame;
+  frame.module = module;
+  frame.instruction = address;
+  resolver_->FillSourceLineInfo(&frame);
+  // we have symbols, so return true if inside a function
+  return !frame.function_name.empty();
+}
 
 }  // namespace google_breakpad

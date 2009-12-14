@@ -160,6 +160,28 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
         sequence = PrintRegister("edx", frame_x86->context.edx, sequence);
         sequence = PrintRegister("efl", frame_x86->context.eflags, sequence);
       }
+      const char *trust_name;
+      switch (frame_x86->trust) {
+        case StackFrameX86::FRAME_TRUST_NONE:
+          trust_name = "unknown";
+          break;
+        case StackFrameX86::FRAME_TRUST_CONTEXT:
+          trust_name = "given as instruction pointer in context";
+          break;
+        case StackFrameX86::FRAME_TRUST_CFI:
+          trust_name = "call frame info";
+          break;
+        case StackFrameX86::FRAME_TRUST_CFI_SCAN:
+          trust_name = "call frame info with scanning";
+          break;
+        case StackFrameX86::FRAME_TRUST_FP:
+          trust_name = "previous frame's frame pointer";
+          break;
+        case StackFrameX86::FRAME_TRUST_SCAN:
+          trust_name = "stack scanning";
+          break;
+      }
+      printf("\n    Found by: %s", trust_name);
     } else if (cpu == "ppc") {
       const StackFramePPC *frame_ppc =
           reinterpret_cast<const StackFramePPC*>(frame);
@@ -339,6 +361,11 @@ static void PrintProcessState(const ProcessState& process_state) {
     printf("No crash\n");
   }
 
+  string assertion = process_state.assertion();
+  if (!assertion.empty()) {
+    printf("Assertion: %s\n", assertion.c_str());
+  }
+
   // If the thread that requested the dump is known, print it first.
   int requesting_thread = process_state.requesting_thread();
   if (requesting_thread != -1) {
@@ -391,7 +418,15 @@ static void PrintProcessStateMachineReadable(const ProcessState& process_state)
            StripSeparator(process_state.crash_reason()).c_str(),
            kOutputSeparator, process_state.crash_address(), kOutputSeparator);
   } else {
-    printf("No crash%c%c", kOutputSeparator, kOutputSeparator);
+    // print assertion info, if available, in place of crash reason,
+    // instead of the unhelpful "No crash"
+    string assertion = process_state.assertion();
+    if (!assertion.empty()) {
+      printf("%s%c%c", StripSeparator(assertion).c_str(),
+             kOutputSeparator, kOutputSeparator);
+    } else {
+      printf("No crash%c%c", kOutputSeparator, kOutputSeparator);
+    }
   }
 
   if (requesting_thread != -1) {
