@@ -68,7 +68,7 @@ typedef MDRawContextPPC MinidumpContext;
 
 // Use the REGISTER_FROM_THREADSTATE to access a register name from the
 // breakpad_thread_state_t structure.
-#if __DARWIN_UNIX03 || !TARGET_CPU_X86 || TARGET_CPU_X86_64
+#if __DARWIN_UNIX03 || TARGET_CPU_X86_64 || TARGET_CPU_PPC64
 // In The 10.5 SDK Headers Apple prepended __ to the variable names in the
 // i386_thread_state_t structure.  There's no good way to tell what version of
 // the SDK we're compiling against so we just toggle on the same preprocessor

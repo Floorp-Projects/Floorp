@@ -2,14 +2,14 @@ protocol race_ViolateSameDirection {
 child:
     Msg1();
     Msg1_();
-    delete(); suppressUndeleteableError();
+    __delete__(); suppressUndeleteableError();
 parent:
     Msg2();
     Msg2_();
 
     // *** ERROR: state S7 doesn't have all-same-direction
 start state _:
-    send delete;
+    send __delete__;
     send suppressUndeleteableError goto S6;
 
 state S6:

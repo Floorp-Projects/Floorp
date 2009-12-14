@@ -37,6 +37,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIFrame;
 interface nsIObjectFrame;
 interface nsIPluginInstance;
 interface nsIDOMElement;
@@ -45,7 +46,7 @@ interface nsIDOMClientRect;
 /**
  * This interface represents a content node that loads objects.
  */
-[scriptable, uuid(8afe3b08-293c-48bd-a997-321745478611)]
+[scriptable, uuid(7749d965-92f3-473e-b12d-de1e342acf1c)]
 interface nsIObjectLoadingContent : nsISupports
 {
   const unsigned long TYPE_LOADING  = 0;
@@ -115,4 +116,12 @@ interface nsIObjectLoadingContent : nsISupports
   void setAbsoluteScreenPosition(in nsIDOMElement element,
                                  in nsIDOMClientRect position,
                                  in nsIDOMClientRect clip);
+
+  /**
+   * If this object is in going to be printed, this method
+   * returns the nsIObjectFrame object which should be used when
+   * printing the plugin. The returned nsIFrame is in the original document,
+   * not in the static clone.
+   */
+  [noscript] nsIFrame getPrintFrame();
 };

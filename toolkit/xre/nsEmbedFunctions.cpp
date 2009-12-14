@@ -321,7 +321,7 @@ XRE_InitChildProcess(int aArgc,
   }
 
   NS_LogTerm();
-  return NS_OK;
+  return XRE_DeinitCommandLine();
 }
 
 MessageLoop*
@@ -401,7 +401,7 @@ XRE_InitParentProcess(int aArgc,
     }
   }
 
-  return NS_OK;
+  return XRE_DeinitCommandLine();
 }
 
 #ifdef MOZ_IPDL_TESTS
@@ -441,14 +441,10 @@ XRE_ShutdownChildProcess()
 {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "Wrong thread!");
 
-    MessageLoop* uiLoop = MessageLoop::current();
     MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-
     NS_ABORT_IF_FALSE(!!ioLoop, "Bad shutdown order");
-    ioLoop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
 
-    NS_ABORT_IF_FALSE(!!uiLoop, "Bad shutdown order");
-    uiLoop->Quit();
+    ioLoop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
 }
 
 #endif // MOZ_IPC
@@ -457,7 +453,7 @@ XRE_ShutdownChildProcess()
 nsresult
 XRE_InitCommandLine(int aArgc, char* aArgv[])
 {
-    nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
 
 #if defined(MOZ_IPC)
 
@@ -489,12 +485,25 @@ XRE_InitCommandLine(int aArgc, char* aArgv[])
   NS_ASSERTION(!CommandLine::IsInitialized(), "Bad news!");
   CommandLine::Init(aArgc, canonArgs);
 
+  for (int i = 0; i < aArgc; ++i)
+      free(canonArgs[i]);
   delete[] canonArgs;
 #endif
 #endif
   return rv;
 }
 
+nsresult
+XRE_DeinitCommandLine()
+{
+  nsresult rv = NS_OK;
+
+#if defined(MOZ_IPC)
+  CommandLine::Terminate();
+#endif
+
+  return rv;
+}
 
 GeckoProcessType
 XRE_GetProcessType()

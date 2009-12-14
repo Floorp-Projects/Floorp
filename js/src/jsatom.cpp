@@ -748,7 +748,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
                     if (!key)
                         return NULL;
                 }
-           } else {
+            } else {
                 JS_ASSERT(str->isDependent());
                 if (!js_UndependString(cx, str))
                     return NULL;

@@ -52,11 +52,12 @@
 /*static*/ nsSMILCSSValueType nsSMILCSSValueType::sSingleton;
 
 struct ValueWrapper {
-  ValueWrapper() : mCSSValue(), mPropID(eCSSProperty_UNKNOWN),
-                   mPresContext(nsnull) {}
+  ValueWrapper(nsCSSProperty aPropID, const nsStyleAnimation::Value& aValue,
+               nsPresContext* aPresContext) :
+    mPropID(aPropID), mCSSValue(aValue), mPresContext(aPresContext) {}
 
+  nsCSSProperty mPropID;
   nsStyleAnimation::Value mCSSValue;
-  nsCSSProperty  mPropID;
   nsPresContext* mPresContext;
 };
 
@@ -128,14 +129,9 @@ ExtractValueWrapper(const nsSMILValue& aValue)
 nsresult
 nsSMILCSSValueType::Init(nsSMILValue& aValue) const
 {
-  NS_ABORT_IF_FALSE(aValue.IsNull(),
-                    "Unexpected value type");
+  NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected SMIL value type");
 
-  aValue.mU.mPtr = new ValueWrapper();
-  if (!aValue.mU.mPtr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
+  aValue.mU.mPtr = nsnull;
   aValue.mType = this;
   return NS_OK;
 }
@@ -144,12 +140,8 @@ void
 nsSMILCSSValueType::Destroy(nsSMILValue& aValue) const
 {
   NS_ABORT_IF_FALSE(aValue.mType == this, "Unexpected SMIL value type");
-  NS_ABORT_IF_FALSE(aValue.mU.mPtr,
-                    "nsSMILValue for CSS val should have non-null pointer");
-
   delete static_cast<ValueWrapper*>(aValue.mU.mPtr);
-  aValue.mU.mPtr    = nsnull;
-  aValue.mType      = &nsSMILNullType::sSingleton;
+  aValue.mType = &nsSMILNullType::sSingleton;
 }
 
 nsresult
@@ -157,13 +149,25 @@ nsSMILCSSValueType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
 {
   NS_ABORT_IF_FALSE(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   NS_ABORT_IF_FALSE(aDest.mType == this, "Unexpected SMIL value type");
-  NS_ABORT_IF_FALSE(aDest.mU.mPtr,
-                    "nsSMILValue for CSS val should have non-null pointer");
-  NS_ABORT_IF_FALSE(aSrc.mU.mPtr,
-                    "nsSMILValue for CSS val should have non-null pointer");
   const ValueWrapper* srcWrapper = ExtractValueWrapper(aSrc);
   ValueWrapper* destWrapper = ExtractValueWrapper(aDest);
-  *destWrapper = *srcWrapper; // Directly copy prop ID & CSS value
+
+  if (srcWrapper) {
+    if (!destWrapper) {
+      // barely-initialized dest -- need to alloc & copy
+      aDest.mU.mPtr = new ValueWrapper(*srcWrapper);
+      if (!aDest.mU.mPtr) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    } else {
+      // both already fully-initialized -- just copy straight across
+      *destWrapper = *srcWrapper;
+    }
+  } else if (destWrapper) {
+    // fully-initialized dest, barely-initialized src -- clear dest
+    delete destWrapper;
+    aDest.mU.mPtr = destWrapper = nsnull;
+  } // else, both are barely-initialized -- nothing to do.
 
   return NS_OK;
 }
@@ -178,41 +182,44 @@ nsSMILCSSValueType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
 
   ValueWrapper* destWrapper = ExtractValueWrapper(aDest);
   const ValueWrapper* valueToAddWrapper = ExtractValueWrapper(aValueToAdd);
+  NS_ABORT_IF_FALSE(destWrapper || valueToAddWrapper,
+                    "need at least one fully-initialized value");
 
-  NS_ABORT_IF_FALSE(destWrapper && valueToAddWrapper,
-                    "these pointers shouldn't be null");
+  nsCSSProperty property = (valueToAddWrapper ? valueToAddWrapper->mPropID :
+                            destWrapper->mPropID);
+  // Special case: font-size-adjust and stroke-dasharray are explicitly
+  // non-additive (even though nsStyleAnimation *could* support adding them)
+  if (property == eCSSProperty_font_size_adjust ||
+      property == eCSSProperty_stroke_dasharray) {
+    return NS_ERROR_FAILURE;
+  }
 
-  const nsStyleAnimation::Value* realValueToAdd = &valueToAddWrapper->mCSSValue;
-  if (destWrapper->mPropID == eCSSProperty_UNKNOWN) {
-    NS_ABORT_IF_FALSE(destWrapper->mCSSValue.IsNull() &&
-                      !destWrapper->mPresContext,
-                      "Partially-initialized ValueWrapper");
-    // We need to update destWrapper, since it's part of an outparam.
+  // Handle barely-initialized "zero" added value.
+  const nsStyleAnimation::Value* realValueToAdd = valueToAddWrapper ?
+    &valueToAddWrapper->mCSSValue :
+    GetZeroValueForUnit(destWrapper->mCSSValue.GetUnit());
+  if (!realValueToAdd) {
+    // No zero value for this unit --> doesn't support addition.
+    return NS_ERROR_FAILURE;
+  }
+
+  // Handle barely-initialized "zero" destination.
+  if (!destWrapper) {
+    // Need to fully initialize destination, since it's an outparam
     const nsStyleAnimation::Value* zeroVal =
       GetZeroValueForUnit(valueToAddWrapper->mCSSValue.GetUnit());
     if (!zeroVal) {
       // No zero value for this unit --> doesn't support addition.
       return NS_ERROR_FAILURE;
     }
-    destWrapper->mCSSValue = *zeroVal;
-    destWrapper->mPropID = valueToAddWrapper->mPropID;
-    destWrapper->mPresContext = valueToAddWrapper->mPresContext;
-  } else if (valueToAddWrapper->mPropID == eCSSProperty_UNKNOWN) {
-    NS_ABORT_IF_FALSE(valueToAddWrapper->mCSSValue.IsNull() &&
-                      !valueToAddWrapper->mPresContext,
-                      "Partially-initialized ValueWrapper");
-    realValueToAdd = GetZeroValueForUnit(destWrapper->mCSSValue.GetUnit());
-    if (!realValueToAdd) {
-      // No zero value for this unit --> doesn't support addition.
-      return NS_ERROR_FAILURE;
-    }      
+    aDest.mU.mPtr = destWrapper =
+      new ValueWrapper(property, *zeroVal, valueToAddWrapper->mPresContext);
+    if (!destWrapper) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
-  // Special case: font-size-adjust is explicitly non-additive
-  if (destWrapper->mPropID == eCSSProperty_font_size_adjust) {
-    return NS_ERROR_FAILURE;
-  }
-  return nsStyleAnimation::Add(destWrapper->mPropID, destWrapper->mCSSValue,
+  return nsStyleAnimation::Add(property, destWrapper->mCSSValue,
                                *realValueToAdd, aCount) ?
     NS_OK : NS_ERROR_FAILURE;
 }
@@ -228,29 +235,18 @@ nsSMILCSSValueType::ComputeDistance(const nsSMILValue& aFrom,
 
   const ValueWrapper* fromWrapper = ExtractValueWrapper(aFrom);
   const ValueWrapper* toWrapper = ExtractValueWrapper(aTo);
-  NS_ABORT_IF_FALSE(fromWrapper && toWrapper,
-                    "These pointers shouldn't be null");
+  NS_ABORT_IF_FALSE(toWrapper, "expecting non-null endpoint");
 
-  const nsStyleAnimation::Value* fromCSSValue;
-  if (fromWrapper->mPropID == eCSSProperty_UNKNOWN) {
-    NS_ABORT_IF_FALSE(fromWrapper->mCSSValue.IsNull() &&
-                      !fromWrapper->mPresContext,
-                      "Partially-initialized ValueWrapper");
-    fromCSSValue = GetZeroValueForUnit(toWrapper->mCSSValue.GetUnit());
-    if (!fromCSSValue) {
-      // No zero value for this unit --> doesn't support distance-computation.
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    fromCSSValue = &fromWrapper->mCSSValue;
+  const nsStyleAnimation::Value* fromCSSValue = fromWrapper ?
+    &fromWrapper->mCSSValue :
+    GetZeroValueForUnit(toWrapper->mCSSValue.GetUnit());
+  if (!fromCSSValue) {
+    // No zero value for this unit --> doesn't support distance-computation.
+    return NS_ERROR_FAILURE;
   }
-  NS_ABORT_IF_FALSE(toWrapper->mPropID != eCSSProperty_UNKNOWN &&
-                    !toWrapper->mCSSValue.IsNull() && toWrapper->mPresContext,
-                    "ComputeDistance endpoint should be a parsed value");
 
-  return nsStyleAnimation::ComputeDistance(toWrapper->mPropID,
-                                           *fromCSSValue, toWrapper->mCSSValue,
-                                           aDistance) ?
+  return nsStyleAnimation::ComputeDistance(toWrapper->mPropID, *fromCSSValue,
+                                           toWrapper->mCSSValue, aDistance) ?
     NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -270,38 +266,37 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
 
   const ValueWrapper* startWrapper = ExtractValueWrapper(aStartVal);
   const ValueWrapper* endWrapper = ExtractValueWrapper(aEndVal);
-  ValueWrapper* resultWrapper = ExtractValueWrapper(aResult);
+  NS_ABORT_IF_FALSE(endWrapper, "expecting non-null endpoint");
+  NS_ABORT_IF_FALSE(!aResult.mU.mPtr, "expecting barely-initialized outparam");
 
-  NS_ABORT_IF_FALSE(startWrapper && endWrapper && resultWrapper,
-                    "These pointers shouldn't be null");
-
-  const nsStyleAnimation::Value* startCSSValue;
-  if (startWrapper->mPropID == eCSSProperty_UNKNOWN) {
-    NS_ABORT_IF_FALSE(startWrapper->mCSSValue.IsNull() &&
-                      !startWrapper->mPresContext,
-                      "Partially-initialized ValueWrapper");
-    startCSSValue = GetZeroValueForUnit(endWrapper->mCSSValue.GetUnit());
-    if (!startCSSValue) {
-      // No zero value for this unit --> doesn't support interpolation.
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    startCSSValue = &startWrapper->mCSSValue;
+  const nsStyleAnimation::Value* startCSSValue = startWrapper ?
+    &startWrapper->mCSSValue :
+    GetZeroValueForUnit(endWrapper->mCSSValue.GetUnit());
+  if (!startCSSValue) {
+    // No zero value for this unit --> doesn't support interpolation.
+    return NS_ERROR_FAILURE;
   }
-  NS_ABORT_IF_FALSE(endWrapper->mPropID != eCSSProperty_UNKNOWN &&
-                    !endWrapper->mCSSValue.IsNull() && endWrapper->mPresContext,
-                    "Interpolate endpoint should be a parsed value");
-
-  if (nsStyleAnimation::Interpolate(endWrapper->mPropID,
-                                    *startCSSValue,
-                                    endWrapper->mCSSValue,
-                                    aUnitDistance,
-                                    resultWrapper->mCSSValue)) {
-    resultWrapper->mPropID = endWrapper->mPropID;
-    resultWrapper->mPresContext = endWrapper->mPresContext;
-    return NS_OK;
+  
+  nsStyleAnimation::Value resultValue;
+  if (nsStyleAnimation::Interpolate(endWrapper->mPropID, *startCSSValue,
+                                    endWrapper->mCSSValue, aUnitDistance,
+                                    resultValue)) {
+    aResult.mU.mPtr = new ValueWrapper(endWrapper->mPropID, resultValue,
+                                       endWrapper->mPresContext);
+    return aResult.mU.mPtr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_ERROR_FAILURE;
+}
+
+// Helper function to extract presContext
+static nsPresContext*
+GetPresContextForElement(nsIContent* aElem)
+{
+  nsIDocument* doc = aElem->GetCurrentDoc();
+  NS_ABORT_IF_FALSE(doc, "active animations should only be able to "
+                    "target elements that are in a document");
+  nsIPresShell* shell = doc->GetPrimaryShell();
+  return shell ? shell->GetPresContext() : nsnull;
 }
 
 PRBool
@@ -312,9 +307,13 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
 {
   NS_ABORT_IF_FALSE(aValue.mType == &nsSMILCSSValueType::sSingleton,
                     "Passed-in value is wrong type");
-  NS_ABORT_IF_FALSE(aPropID < eCSSProperty_COUNT_no_shorthands,
-                    "nsSMILCSSValueType shouldn't be used with "
-                    "shorthand properties");
+  NS_ABORT_IF_FALSE(!aValue.mU.mPtr, "expecting barely-initialized outparam");
+
+  nsPresContext* presContext = GetPresContextForElement(aTargetElement);
+  if (!presContext) {
+    NS_WARNING("Not parsing animation value; unable to get PresContext");
+    return PR_FALSE;
+  }
 
   // If value is negative, we'll strip off the "-" so the CSS parser won't
   // barf, and then manually make the parsed value negative. (This is a partial
@@ -328,40 +327,21 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
     isNegative = PR_TRUE;
   }
   nsDependentSubstring subString(aString, subStringBegin);
-  ValueWrapper* wrapper = ExtractValueWrapper(aValue);
-  NS_ABORT_IF_FALSE(wrapper, "Wrapper should be non-null if type is set.");
-
+  nsStyleAnimation::Value parsedValue;
   if (nsStyleAnimation::ComputeValue(aPropID, aTargetElement,
-                                     subString, wrapper->mCSSValue)) {
-    wrapper->mPropID = aPropID;
+                                     subString, parsedValue)) {
     if (isNegative) {
-      InvertSign(wrapper->mCSSValue);
+      InvertSign(parsedValue);
     }
-    // Cache a reference to the PresContext, if we've got one
-    nsIDocument* doc = aTargetElement->GetCurrentDoc();
-    NS_ABORT_IF_FALSE(doc, "active animations should only be able to "
-                      "target elements that are in a document");
-    nsIPresShell* shell = doc->GetPrimaryShell();
-    if (shell) {
-      wrapper->mPresContext = shell->GetPresContext();
-    }
-    if (wrapper->mPresContext) {
+    if (aPropID == eCSSProperty_font_size) {
       // Divide out text-zoom, since SVG is supposed to ignore it
-      if (aPropID == eCSSProperty_font_size) {
-        NS_ABORT_IF_FALSE(wrapper->mCSSValue.GetUnit() ==
-                            nsStyleAnimation::eUnit_Coord,
-                          "'font-size' value with unexpected style unit");
-        wrapper->mCSSValue.SetCoordValue(wrapper->mCSSValue.GetCoordValue() /
-                                         wrapper->mPresContext->TextZoom());
-      }
-      return PR_TRUE;
+      NS_ABORT_IF_FALSE(parsedValue.GetUnit() == nsStyleAnimation::eUnit_Coord,
+                        "'font-size' value with unexpected style unit");
+      parsedValue.SetCoordValue(parsedValue.GetCoordValue() /
+                                presContext->TextZoom());
     }
-    // Crap! We lack a PresContext or a PresShell
-    NS_NOTREACHED("Not parsing animation value; unable to get PresContext");
-    // Destroy & re-initialize aValue to make sure we leave it in a
-    // consistent state
-    Destroy(aValue);
-    Init(aValue);
+    aValue.mU.mPtr = new ValueWrapper(aPropID, parsedValue, presContext);
+    return aValue.mU.mPtr != nsnull;
   }
   return PR_FALSE;
 }
@@ -372,9 +352,8 @@ nsSMILCSSValueType::ValueToString(const nsSMILValue& aValue,
 {
   NS_ABORT_IF_FALSE(aValue.mType == &nsSMILCSSValueType::sSingleton,
                     "Passed-in value is wrong type");
-
   const ValueWrapper* wrapper = ExtractValueWrapper(aValue);
-  return nsStyleAnimation::UncomputeValue(wrapper->mPropID,
-                                          wrapper->mPresContext,
-                                          wrapper->mCSSValue, aString);
+  return !wrapper ||
+    nsStyleAnimation::UncomputeValue(wrapper->mPropID, wrapper->mPresContext,
+                                     wrapper->mCSSValue, aString);
 }

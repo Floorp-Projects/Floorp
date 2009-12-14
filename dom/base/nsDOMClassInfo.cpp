@@ -583,11 +583,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DEFAULT_SCRIPTABLE_FLAGS |
                            WINDOW_SCRIPTABLE_FLAGS)
 
-  // Don't allow modifications to Location.prototype
   NS_DEFINE_CLASSINFO_DATA(Location, nsLocationSH,
-                           (DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                            nsIXPCScriptable::WANT_PRECREATE) &
-                           ~nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE)
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(Navigator, nsNavigatorSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
@@ -4325,14 +4322,6 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
     JS_ClearPendingException(cx);
   }
 
-  static const nsIID *sSupportsIID = &NS_GET_IID(nsISupports);
-
-  // This is safe because...
-  if (mData->mProtoChainInterface == sSupportsIID ||
-      !mData->mProtoChainInterface) {
-    return NS_OK;
-  }
-
   // This is called before any other location that requires
   // sObjectClass, so compute it here. We assume that nobody has had a
   // chance to monkey around with proto's prototype chain before this.
@@ -4345,9 +4334,10 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
   NS_ASSERTION(::JS_GetPrototype(cx, proto) &&
                JS_GET_CLASS(cx, ::JS_GetPrototype(cx, proto)) == sObjectClass,
                "Hmm, somebody did something evil?");
- 
+
 #ifdef DEBUG
-  if (mData->mHasClassInterface) {
+  if (mData->mHasClassInterface && mData->mProtoChainInterface &&
+      mData->mProtoChainInterface != &NS_GET_IID(nsISupports)) {
     nsCOMPtr<nsIInterfaceInfoManager>
       iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
 
@@ -5516,7 +5506,7 @@ private:
 
   static PRBool IsConstructable(const nsDOMClassInfoData *aData)
   {
-    if (IS_EXTERNAL(aData)) {
+    if (IS_EXTERNAL(aData->mCachedClassInfo)) {
       const nsExternalDOMClassInfoData* data =
         static_cast<const nsExternalDOMClassInfoData*>(aData);
       return data->mConstructorCID != nsnull;

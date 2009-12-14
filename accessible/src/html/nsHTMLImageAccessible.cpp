@@ -155,42 +155,28 @@ nsHTMLImageAccessible::GetRoleInternal(PRUint32 *aRole)
   return NS_OK;
 }
 
-void nsHTMLImageAccessible::CacheChildren()
+void 
+nsHTMLImageAccessible::CacheChildren()
 {
-  if (!mWeakShell) {
-    // This node has been shut down
-    mAccChildCount = eChildCountUninitialized;
-    return;
-  }
-
-  if (mAccChildCount != eChildCountUninitialized) {
-    return;
-  }
-
-  mAccChildCount = 0;
   nsCOMPtr<nsIDOMHTMLCollection> mapAreas = GetAreaCollection();
   if (!mapAreas)
     return;
 
-  PRUint32 numMapAreas;
-  mapAreas->GetLength(&numMapAreas);
-  PRInt32 childCount = 0;
-  
+  PRUint32 areaCount = 0;
+  mapAreas->GetLength(&areaCount);
+
   nsCOMPtr<nsIAccessible> areaAccessible;
-  nsRefPtr<nsAccessible> prevAcc;
-  while (childCount < (PRInt32)numMapAreas && 
-         (areaAccessible = GetAreaAccessible(mapAreas, childCount)) != nsnull) {
-    if (prevAcc)
-      prevAcc->SetNextSibling(areaAccessible);
-    else
-      SetFirstChild(areaAccessible);
+  nsRefPtr<nsAccessible> areaAcc;
 
-    ++ childCount;
+  for (PRUint32 areaIdx = 0; areaIdx < areaCount; areaIdx++) {
+    areaAccessible = GetAreaAccessible(mapAreas, areaIdx);
+    if (!areaAccessible)
+      return;
 
-    prevAcc = nsAccUtils::QueryAccessible(areaAccessible);
-    prevAcc->SetParent(this);
+    mChildren.AppendObject(areaAccessible);
+    areaAcc = nsAccUtils::QueryObject<nsAccessible>(areaAccessible);
+    areaAcc->SetParent(this);
   }
-  mAccChildCount = childCount;
 }
 
 NS_IMETHODIMP

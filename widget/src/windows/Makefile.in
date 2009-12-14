@@ -137,6 +137,10 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 endif
 
+ifdef ENABLE_TESTS
+TOOL_DIRS  += tests
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)

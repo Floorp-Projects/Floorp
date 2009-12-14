@@ -1468,6 +1468,14 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
 
     PRUint32 r, numRanges = fontRanges.Length();
 
+    // Bug 532346: Work around rendering failure with Apple LiGothic font on 10.6,
+    // triggered by U+775B.
+    // We record the offset(s) in layoutString where this character occurs, and replace
+    // them with U+775C, which has the same metrics but doesn't disrupt ATSUI layout.
+    // Then after layout is complete, we poke the correct glyph for U+775B into the
+    // text run at the recorded positions.
+    nsTArray<PRUint32> hackForLiGothic;
+
     for (r = 0; r < numRanges; r++) {
         const gfxTextRange& range = fontRanges[r];
    
@@ -1518,6 +1526,19 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
 
             // add a glyph run for the matched substring
             aRun->AddGlyphRun(matchedFont, aOffsetInTextRun + runStart - aLayoutStart, PR_TRUE);
+
+            if (matchedFont->GetFontEntry()->UseLiGothicAtsuiHack()) {
+                PRUnichar *text = const_cast<PRUnichar*>(layoutString);
+                for (PRUint32 i = 0; i < matchedLength; ++i) {
+                    if (text[aOffsetInTextRun + runStart + i] ==
+                        kLiGothicBadCharUnicode) {
+                        hackForLiGothic.AppendElement(aOffsetInTextRun +
+                                                      runStart + i);
+                        text[aOffsetInTextRun + runStart + i] =
+                            kLiGothicBadCharUnicode + 1;
+                    }
+                }
+            }
         }
         
         runStart += matchedLength;
@@ -1541,6 +1562,16 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
     ATSUDisposeTextLayout(layout);
 
     aRun->AdjustAdvancesForSyntheticBold(aOffsetInTextRun, aLengthInTextRun);
+
+    for (PRUint32 i = 0; i < hackForLiGothic.Length(); ++i) {
+        gfxTextRun::CompressedGlyph glyph =
+            aRun->GetCharacterGlyphs()[hackForLiGothic[i]];
+        if (glyph.IsSimpleGlyph()) {
+            aRun->SetSimpleGlyph(hackForLiGothic[i],
+                                 glyph.SetSimpleGlyph(glyph.GetSimpleAdvance(),
+                                                      kLiGothicBadCharGlyph));
+        }
+    }
 
     PRUint32 i;
     for (i = 0; i < stylesToDispose.Length(); ++i) {

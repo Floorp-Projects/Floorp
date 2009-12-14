@@ -259,10 +259,6 @@ select:empty {
   -moz-box-sizing: border-box ! important;
 }
 
-select::-moz-scrolled-content {
-  display: block !important;
-}
-
 option {
   display: block;
   float: none !important;

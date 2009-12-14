@@ -59,13 +59,17 @@ enum eHtml5TreeOperation {
   eTreeOpDocumentMode,
   eTreeOpCreateElement,
   eTreeOpSetFormElement,
-  eTreeOpCreateTextNode,
-  eTreeOpCreateComment,
-  eTreeOpCreateDoctype,
+  eTreeOpAppendText,
+  eTreeOpFosterParentText,
+  eTreeOpAppendComment,
+  eTreeOpAppendCommentToDocument,
+  eTreeOpAppendDoctypeToDocument,
   // Gecko-specific on-pop ops
   eTreeOpRunScript,
+  eTreeOpRunScriptAsyncDefer,
   eTreeOpDoneAddingChildren,
   eTreeOpDoneCreatingElement,
+  eTreeOpFlushPendingAppendNotifications,
   eTreeOpSetDocumentCharset,
   eTreeOpNeedsCharsetSwitchTo,
   eTreeOpUpdateStyleSheet,
@@ -75,7 +79,7 @@ enum eHtml5TreeOperation {
   eTreeOpMarkMalformedIfScript,
   eTreeOpStreamEnded,
   eTreeOpSetStyleLineNumber,
-  eTreeOpSetScriptLineNumber,
+  eTreeOpSetScriptLineNumberAndFreeze,
   eTreeOpStartLayout
 };
 
@@ -187,12 +191,38 @@ class nsHtml5TreeOperation {
     inline void Init(eHtml5TreeOperation aOpCode, 
                      PRUnichar* aBuffer, 
                      PRInt32 aLength, 
-                     nsIContent** aTarget) {
+                     nsIContent** aStackParent,
+                     nsIContent** aTable) {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
         "Op code must be uninitialized when initializing.");
       NS_PRECONDITION(aBuffer, "Initialized tree op with null buffer.");
       mOpCode = aOpCode;
-      mOne.node = aTarget;
+      mOne.node = aStackParent;
+      mTwo.unicharPtr = aBuffer;
+      mThree.node = aTable;
+      mInt = aLength;
+    }
+
+    inline void Init(eHtml5TreeOperation aOpCode, 
+                     PRUnichar* aBuffer, 
+                     PRInt32 aLength, 
+                     nsIContent** aParent) {
+      NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
+        "Op code must be uninitialized when initializing.");
+      NS_PRECONDITION(aBuffer, "Initialized tree op with null buffer.");
+      mOpCode = aOpCode;
+      mOne.node = aParent;
+      mTwo.unicharPtr = aBuffer;
+      mInt = aLength;
+    }
+
+    inline void Init(eHtml5TreeOperation aOpCode, 
+                     PRUnichar* aBuffer, 
+                     PRInt32 aLength) {
+      NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
+        "Op code must be uninitialized when initializing.");
+      NS_PRECONDITION(aBuffer, "Initialized tree op with null buffer.");
+      mOpCode = aOpCode;
       mTwo.unicharPtr = aBuffer;
       mInt = aLength;
     }
@@ -209,13 +239,12 @@ class nsHtml5TreeOperation {
     
     inline void Init(nsIAtom* aName, 
                      const nsAString& aPublicId, 
-                     const nsAString& aSystemId, nsIContent** aTarget) {
+                     const nsAString& aSystemId) {
       NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
         "Op code must be uninitialized when initializing.");
-      mOpCode = eTreeOpCreateDoctype;
+      mOpCode = eTreeOpAppendDoctypeToDocument;
       mOne.atom = aName;
       mTwo.stringPair = new nsHtml5TreeOperationStringPair(aPublicId, aSystemId);
-      mThree.node = aTarget;
     }
     
     inline void Init(eHtml5TreeOperation aOpCode, const nsACString& aString) {
@@ -257,7 +286,7 @@ class nsHtml5TreeOperation {
       mInt = aLine;
     }
 
-    nsresult Perform(nsHtml5TreeOpExecutor* aBuilder);
+    nsresult Perform(nsHtml5TreeOpExecutor* aBuilder, nsIContent** aScriptElement);
 
     inline already_AddRefed<nsIAtom> Reget(nsIAtom* aAtom) {
       if (!aAtom || aAtom->IsStaticAtom()) {
@@ -269,6 +298,23 @@ class nsHtml5TreeOperation {
     }
 
   private:
+
+    nsresult AppendTextToTextNode(PRUnichar* aBuffer,
+                                  PRInt32 aLength,
+                                  nsIContent* aTextNode,
+                                  nsHtml5TreeOpExecutor* aBuilder);
+
+    nsresult AppendText(PRUnichar* aBuffer,
+                        PRInt32 aLength,
+                        nsIContent* aParent,
+                        nsHtml5TreeOpExecutor* aBuilder);
+
+    nsresult Append(nsIContent* aNode,
+                    nsIContent* aParent,
+                    nsHtml5TreeOpExecutor* aBuilder);
+
+    nsresult AppendToDocument(nsIContent* aNode,
+                              nsHtml5TreeOpExecutor* aBuilder);
   
     // possible optimization:
     // Make the queue take items the size of pointer and make the op code

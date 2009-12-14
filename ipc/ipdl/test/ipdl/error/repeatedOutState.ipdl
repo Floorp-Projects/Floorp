@@ -1,5 +1,5 @@
 protocol repeatedOutState {
-child: Msg(); delete();
+child: Msg(); __delete__();
 
     // error: S2 repeated in multi-out set
 
@@ -8,5 +8,5 @@ state S1:
 
 state S2: send Msg goto S2;
 state S3: send Msg goto S3;
-state S4: send Mesg goto S4;  send delete;
+state S4: send Mesg goto S4;  send __delete__;
 };

@@ -7,7 +7,9 @@ IPDLSRCS =					\
   PTestLatency.ipdl				\
   PTestManyChildAllocs.ipdl			\
   PTestManyChildAllocsSub.ipdl			\
+  PTestRPCRaces.ipdl				\
   PTestSanity.ipdl				\
+  PTestShmem.ipdl				\
   PTestShutdown.ipdl				\
   PTestShutdownSub.ipdl				\
   PTestShutdownSubsub.ipdl			\
