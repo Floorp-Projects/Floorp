@@ -617,11 +617,16 @@ namespace nanojit
                     {
                         NanoAssert(rmask(rr)&x87Regs);
                         _allocator.retire(rr);
+                        // Be sure to shadow the value onto our local area if there's space for it,
+                        // but don't pop the FP stack, we expect the register to stay valid.
+                        if (dr)
+                            FSTQ(0,dr, FP);
                         FLD32(db, rb);
                     }
                     else
                     {
-                        // need to use fpu to expand 32->64
+                        // We need to use fpu to expand 32->64, can't use asm_mmq...
+                        // just load-and-store-with-pop. 
                         NanoAssert(dr != 0);
                         FSTPQ(dr, FP);
                         FLD32(db, rb);
