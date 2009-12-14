@@ -240,7 +240,6 @@ BrowserView.prototype = {
     this._contentWindow = null;
     this._renderMode = 0;
     this._offscreenDepth = 0;
-    this._aggro = false;
 
     let cacheSize = kBrowserViewCacheSize;
     try {
@@ -285,11 +284,10 @@ BrowserView.prototype = {
 
   /** When aggressive, spend more time rendering tiles. */
   setAggressive: function setAggressive(aggro) {
-/*    this._aggro = aggro;
     let wait = aggro ? kBrowserViewPrefetchBeginIdleWait : kBrowserViewPrefetchBeginIdleWaitLoading;
     this._idleService.removeIdleObserver(this._idleServiceObserver, this._idleServiceWait);
     this._idleService.addIdleObserver(this._idleServiceObserver, wait);
-    this._idleServiceWait = wait; */
+    this._idleServiceWait = wait;
   },
 
   getVisibleRect: function getVisibleRect() {

@@ -2791,10 +2791,10 @@ Tab.prototype = {
 
     if (!this._loadingTimeout) {
       let bv = Browser._browserView;
+      bv.beginBatchOperation();
+      bv.invalidateEntireView();
       if (this == Browser.selectedTab)
         bv.setAggressive(false);
-      Browser._browserView.beginBatchOperation();
-      Browser._browserView.invalidateEntireView();
       // Sync up browser so previous and forward scroll positions are set. This is a good time to do
       // this because the resulting invalidation is irrelevant.
       Browser.scrollBrowserToContent();
