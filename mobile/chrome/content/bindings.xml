@@ -351,7 +351,7 @@
       <field name="_control">null</field>
       <field name="_isEditing">false</field>
 
-      <field name="_ioService" readonly="true">
+      <field name="_ioService">
         Components.classes["@mozilla.org/network/io-service;1"]
                   .getService(Components.interfaces.nsIIOService);
       </field>
@@ -605,7 +605,6 @@
             document.getAnonymousElementByAttribute(this, "anonid", "bookmark-item").hidden = this._isEditing;
             document.getAnonymousElementByAttribute(this, "anonid", "bookmark-url").hidden = this._isEditing;
 
-
             this._uriField.hidden = true;
             this._tagsField.hidden = true;
             document.getAnonymousElementByAttribute(this, "anonid", "bookmark-manage").hidden = !this._isEditing;
@@ -633,13 +632,47 @@
         <![CDATA[
           this._type = this.getAttribute("type");
           this._mode = this.getAttribute("mode");
+
+          this._folderParents = {};
+          this._folderParents[this._fakeDesktopFolderId] = this.mobileRoot;
+          this._folderParents[PlacesUtils.bookmarks.unfiledBookmarksFolder] = this._fakeDesktopFolderId;
+          this._folderParents[PlacesUtils.bookmarksMenuFolderId] = this._fakeDesktopFolderId;
+          this._folderParents[PlacesUtils.toolbarFolderId] = this._fakeDesktopFolderId;
         ]]>
       </constructor>
-      <field name="_bundle" readonly="true">
+      <field name="_bundle">
         Components.classes["@mozilla.org/intl/stringbundle;1"]
                   .getService(Components.interfaces.nsIStringBundleService)
                   .createBundle("chrome://browser/locale/browser.properties");
       </field>
+
+      <field name="_fakeDesktopFolderId">-1000</field>
+      <field name="_desktopFolder"><![CDATA[
+        ({
+          itemId: this._fakeDesktopFolderId, tags: "", uri: "",
+          title: Elements.browserBundle.getString("bookmarkList.desktop"),
+          type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
+        })
+      ]]></field>
+      <field name="_desktopChildren"><![CDATA[
+        [
+          {
+            itemId: PlacesUtils.bookmarks.unfiledBookmarksFolder, tags: "", uri: "",
+            title: PlacesUtils.bookmarks.getItemTitle(PlacesUtils.bookmarks.unfiledBookmarksFolder),
+            type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
+          },
+          {
+            itemId: PlacesUtils.bookmarksMenuFolderId, tags: "", uri: "",
+            title: PlacesUtils.bookmarks.getItemTitle(PlacesUtils.bookmarksMenuFolderId),
+            type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
+          },
+          { 
+            itemId: PlacesUtils.toolbarFolderId, tags: "", uri: "",
+            title: PlacesUtils.bookmarks.getItemTitle(PlacesUtils.toolbarFolderId),
+            type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
+          }
+        ];
+      ]]></field>
 
       <field name="_type"/>
       <field name="_mode"/>
@@ -721,6 +754,28 @@
         </setter>
       </property>
 
+      <method name="isDesktopFolderEmpty">
+        <body>
+          <![CDATA[
+            let options = PlacesUtils.history.getNewQueryOptions();
+            options.queryType = options.QUERY_TYPE_BOOKMARKS;
+            let query = PlacesUtils.history.getNewQuery();
+            let folders = [ PlacesUtils.bookmarks.unfiledBookmarksFolder,
+                            PlacesUtils.bookmarksMenuFolderId,
+                            PlacesUtils.toolbarFolderId
+                          ];
+            query.setFolders(folders, 3);
+            let result = PlacesUtils.history.executeQuery(query, options);
+            let rootNode = result.root;
+            rootNode.containerOpen = true;
+            let isEmpty = !rootNode.childCount;
+            rootNode.containerOpen = false;
+
+            return isEmpty;
+          ]]>
+        </body>
+      </method>
+
       <method name="_getFirstVisibleChild">
         <body>
           <![CDATA[
@@ -785,7 +840,11 @@
 
             let folderId = aRootFolder;
             do {
-              let title = PlacesUtils.bookmarks.getItemTitle(folderId);
+              let title;
+              if (folderId == this._fakeDesktopFolderId)
+                title = this._desktopFolder.title;
+              else
+                title = PlacesUtils.bookmarks.getItemTitle(folderId);
 
               let parent = document.createElementNS(XULNS, "placelabel");
               parent.setAttribute("class", "bookmark-folder");
@@ -796,8 +855,8 @@
 
               // XXX Fix me - use <handler>?
               parent.addEventListener("click", function(e) { self.openFolder(e.target.previousSibling.itemId); }, false);
-
-              folderId = PlacesUtils.bookmarks.getFolderIdForItem(folderId);
+              
+              folderId = this._folderParents[folderId] || PlacesUtils.bookmarks.getFolderIdForItem(folderId);
             } while (folderId != PlacesUtils.bookmarks.placesRoot)
 
             let children = this._children;
@@ -807,7 +866,12 @@
             children.scrollBoxObject.scrollTo(0, 0);
 
             let fragment = document.createDocumentFragment();
-            let childItems = this._getChildren(aRootFolder);
+            let childItems = (aRootFolder == this._fakeDesktopFolderId) ? this._desktopChildren
+                                                                        : this._getChildren(aRootFolder);
+
+            if (aRootFolder == this.mobileRoot && !this.isDesktopFolderEmpty())
+              fragment.appendChild(this.createItem(this._desktopFolder));
+            
             let count = childItems.length;
             for (let i=0; i<count; i++)
               fragment.appendChild(this.createItem(childItems[i]));
