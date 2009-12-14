@@ -606,14 +606,10 @@ struct JSRuntime {
      */
     ptrdiff_t           gcMallocBytes;
 
-    /*
-     * Stack of GC arenas containing things that the GC marked, where children
-     * reached from those things have not yet been marked. This helps avoid
-     * using too much native stack during recursive GC marking.
-     */
-    JSGCArenaInfo       *gcUntracedArenaStackTop;
+    /* See comments before DelayMarkingChildren is jsgc.cpp. */
+    JSGCArenaInfo       *gcUnmarkedArenaStackTop;
 #ifdef DEBUG
-    size_t              gcTraceLaterCount;
+    size_t              gcMarkLaterCount;
 #endif
 
     /*
