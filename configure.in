@@ -4566,6 +4566,7 @@ MOZ_DBGRINFO_MODULES=
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
+MOZ_IPC=1
 MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
 MOZ_JSLOADER=1
@@ -5294,8 +5295,6 @@ MOZ_ARG_DISABLE_BOOL(jsd,
 dnl ========================================================
 dnl = Disable IPC support for tabs and plugins
 dnl ========================================================
-MOZ_IPC=1
-
 case "${target}" in
 *-apple-darwin*)
     MOZ_IPC=
