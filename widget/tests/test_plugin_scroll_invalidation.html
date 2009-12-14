@@ -2,12 +2,9 @@
 <html>
 <head>
   <title>Test for plugin child widgets not being invalidated by scrolling</title>
-  <script type="text/javascript"
-          src="chrome://mochikit/content/MochiKit/packed.js"></script>
-  <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css"
-          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="initialize()">
 <p id="display">
@@ -20,7 +17,7 @@
 <pre id="test">
 </pre>
 
-<script class="testbody" type="application/javascript">
+<script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
 var scrolling;
@@ -33,14 +30,9 @@ function initialize() {
   scrolling_plugins = scrolling.document.querySelectorAll("embed.scrolling");
   paint_waiter = scrolling.document.getElementById("paint-waiter");
 
-  // Plugins are not instantiated until after reflow
-  waitForPlugin(startTest);
-}
-
-function startTest() {
   scrolling.scrollTo(50, 45);
-  is(paint_waiter.getPaintCount(), 0, "zero-sized plugin not painted");
 
+  is(paint_waiter.getPaintCount(), 0, "zero-sized plugin not painted");
   waitForPaint(scrollAround);
 }
 
@@ -70,14 +62,6 @@ function scrollAround() {
 function done() {
   is(sum(getPaintCounts()), last_paint_count, "no paint on scroll");
   SimpleTest.finish();  
-}
-
-function waitForPlugin(func) {
-  if (paint_waiter.getPaintCount) {
-    func();
-    return;
-  }
-  setTimeout(function() { waitForPlugin(func); }, 0);
 }
 
 function waitForPaint(func) {
