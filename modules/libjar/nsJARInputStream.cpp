@@ -234,7 +234,7 @@ nsJARInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead)
 
       case MODE_COPY:
         if (mFd) {
-          PRUint32 count = PR_MIN(aCount, mOutSize - mZs.total_out);
+          PRUint32 count = NS_MIN(aCount, mOutSize - PRUint32(mZs.total_out));
           if (count) {
               memcpy(aBuffer, mZs.next_in + mZs.total_out, count);
               mZs.total_out += count;
@@ -286,7 +286,7 @@ nsJARInputStream::ContinueInflate(char* aBuffer, PRUint32 aCount,
     const PRUint32 oldTotalOut = mZs.total_out;
     
     // make sure we aren't reading too much
-    mZs.avail_out = PR_MIN(aCount, (mOutSize-oldTotalOut));
+    mZs.avail_out = NS_MIN(aCount, (mOutSize-oldTotalOut));
     mZs.next_out = (unsigned char*)aBuffer;
 
     // now inflate
@@ -383,7 +383,7 @@ nsJARInputStream::ReadDirectory(char* aBuffer, PRUint32 aCount, PRUint32 *aBytes
 PRUint32
 nsJARInputStream::CopyDataToBuffer(char* &aBuffer, PRUint32 &aCount)
 {
-    const PRUint32 writeLength = PR_MIN(aCount, mBuffer.Length() - mCurPos);
+    const PRUint32 writeLength = NS_MIN(aCount, mBuffer.Length() - mCurPos);
 
     if (writeLength > 0) {
         memcpy(aBuffer, mBuffer.get() + mCurPos, writeLength);

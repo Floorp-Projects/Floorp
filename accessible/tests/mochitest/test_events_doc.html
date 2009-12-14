@@ -47,7 +47,12 @@
       var docAcc = getAccessible(document);
       while (docAcc) {
         this.mRootAcc = docAcc;
-        docAcc = docAcc.parent;
+        try {
+          docAcc = docAcc.parent;
+        } catch (e) {
+          ok(false, "Can't get parent for " + prettyName(docAcc));
+          throw e;
+        }
       }
 
       this.eventSeq = [

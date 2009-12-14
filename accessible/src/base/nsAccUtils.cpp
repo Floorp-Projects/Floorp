@@ -502,6 +502,46 @@ nsAccUtils::GetARIATreeItemParent(nsIAccessible *aStartTreeItem,
   }
 }
 
+already_AddRefed<nsIAccessible>
+nsAccUtils::GetSelectableContainer(nsIAccessible *aAccessible, PRUint32 aState)
+{
+  if (!aAccessible)
+    return nsnull;
+
+  if (!(aState & nsIAccessibleStates::STATE_SELECTABLE))
+    return nsnull;
+
+  nsCOMPtr<nsIAccessibleSelectable> container;
+  nsCOMPtr<nsIAccessible> parent, accessible(aAccessible);
+  while (!container) {
+    accessible->GetParent(getter_AddRefs(parent));
+
+    if (!parent || Role(parent) == nsIAccessibleRole::ROLE_PANE)
+      return nsnull;
+
+    container = do_QueryInterface(parent);
+    parent.swap(accessible);
+  }
+
+  return accessible.forget();
+}
+
+already_AddRefed<nsIAccessible>
+nsAccUtils::GetMultiSelectableContainer(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsIAccessible> accessible;
+  nsAccessNode::GetAccService()->GetAccessibleFor(aNode,
+                                                  getter_AddRefs(accessible));
+
+  nsCOMPtr<nsIAccessible> container =
+    GetSelectableContainer(accessible, State(accessible));
+
+  if (State(container) & nsIAccessibleStates::STATE_MULTISELECTABLE)
+    return container.forget();
+
+  return nsnull;
+}
+
 PRBool
 nsAccUtils::IsARIASelected(nsIAccessible *aAccessible)
 {
@@ -925,37 +965,6 @@ nsAccUtils::IsNodeRelevant(nsIDOMNode *aNode)
   nsAccessNode::GetAccService()->GetRelevantContentNodeFor(aNode,
                                                            getter_AddRefs(relevantNode));
   return aNode == relevantNode;
-}
-
-already_AddRefed<nsIAccessible>
-nsAccUtils::GetMultiSelectFor(nsIDOMNode *aNode)
-{
-  if (!aNode)
-    return nsnull;
-
-  nsCOMPtr<nsIAccessible> accessible;
-  nsAccessNode::GetAccService()->GetAccessibleFor(aNode,
-                                                  getter_AddRefs(accessible));
-  if (!accessible)
-    return nsnull;
-
-  PRUint32 state = State(accessible);
-  if (0 == (state & nsIAccessibleStates::STATE_SELECTABLE))
-    return nsnull;
-
-  while (0 == (state & nsIAccessibleStates::STATE_MULTISELECTABLE)) {
-    nsIAccessible *current = accessible;
-    current->GetParent(getter_AddRefs(accessible));
-    if (!accessible ||
-        nsAccUtils::Role(accessible) == nsIAccessibleRole::ROLE_PANE) {
-      return nsnull;
-    }
-    state = State(accessible);
-  }
-
-  nsIAccessible *returnAccessible = nsnull;
-  accessible.swap(returnAccessible);
-  return returnAccessible;
 }
 
 nsresult

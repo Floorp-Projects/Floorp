@@ -1405,6 +1405,13 @@ class Protocol(ipdl.ast.Protocol):
         assert self.usesShmem()
         return ExprVar('mLastShmemId')
 
+    def shmemIdInit(self, side):
+        assert self.usesShmem()
+        # use the same scheme for shmem IDs as actor IDs
+        if side is 'parent':  return _FREED_ACTOR_ID
+        elif side is 'child': return _NULL_ACTOR_ID
+        else: assert 0
+
     def nextShmemIdExpr(self, side):
         assert self.usesShmem()
         if side is 'parent':   op = '++'
@@ -2604,6 +2611,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         else:
             ctor.memberinits = [
                 ExprMemberInit(p.idVar(), [ ExprLiteral.ZERO ]) ]
+
+        if p.usesShmem():
+            ctor.memberinits.append(
+                ExprMemberInit(p.lastShmemIdVar(),
+                               [ p.shmemIdInit(self.side) ]))
 
         ctor.addstmt(StmtExpr(ExprCall(ExprVar('MOZ_COUNT_CTOR'),
                                        [ ExprVar(self.clsname) ])))

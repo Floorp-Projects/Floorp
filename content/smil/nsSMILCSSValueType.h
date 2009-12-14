@@ -40,16 +40,18 @@
 #ifndef NS_SMILCSSVALUETYPE_H_
 #define NS_SMILCSSVALUETYPE_H_
 
-#include "nsISMILCSSValueType.h"
+#include "nsISMILType.h"
+#include "nsCSSProperty.h"
 #include "nscore.h" // For NS_OVERRIDE
 
+class nsPresContext;
 class nsIContent;
+class nsAString;
 
 /*
- * nsSMILCSSValueType: Represents a SMIL-animated simple (non-shorthand) CSS
- * value.
+ * nsSMILCSSValueType: Represents a SMIL-animated CSS value.
  */
-class nsSMILCSSValueType : public nsISMILCSSValueType
+class nsSMILCSSValueType : public nsISMILType
 {
 public:
   // nsISMILValueType Methods
@@ -69,15 +71,38 @@ public:
                                            double aUnitDistance,
                                            nsSMILValue& aResult) const;
 
-  // nsISMILCSSValueType Methods
-  // ---------------------------
-  NS_OVERRIDE virtual PRBool ValueFromString(nsCSSProperty aPropID,
-                                             nsIContent* aTargetElement,
-                                             const nsAString& aString,
-                                             nsSMILValue& aValue) const;
+  /**
+   * Sets up the given nsSMILValue to represent the given string value.  The
+   * string is interpreted as a value for the given property on the given
+   * element.
+   *
+   * Note: aValue is expected to be freshly initialized (i.e. it should already
+   * have been passed into nsSMILCSSValueType::Init(), and it should not have
+   * been set up further via e.g. Assign() or another ValueFromString() call.)
+   *
+   * @param       aPropID         The property for which we're parsing a value.
+   * @param       aTargetElement  The target element to whom the property/value
+   *                              setting applies.
+   * @param       aString         The string to be parsed as a CSS value.
+   * @param [out] aValue          The nsSMILValue to be populated.
+   * @return                      PR_TRUE on success, PR_FALSE on failure.
+   */
+  PRBool ValueFromString(nsCSSProperty aPropID, nsIContent* aTargetElement,
+                         const nsAString& aString, nsSMILValue& aValue) const;
 
-  NS_OVERRIDE virtual PRBool ValueToString(const nsSMILValue& aValue,
-                                           nsAString& aString) const;
+  /**
+   * Creates a string representation of the given nsSMILValue.
+   *
+   * Note: aValue is expected to be of this type (that is, it's expected to
+   * have been initialized by nsSMILCSSValueType::sSingleton).  If aValue is a
+   * freshly-initialized value, this method will succeed, though the resulting
+   * string will be empty.
+   *
+   * @param       aValue   The nsSMILValue to be converted into a string.
+   * @param [out] aString  The string to be populated with the given value.
+   * @return               PR_TRUE on success, PR_FALSE on failure.
+   */
+  PRBool ValueToString(const nsSMILValue& aValue, nsAString& aString) const;
 
   // Singleton for nsSMILValue objects to hold onto.
   static nsSMILCSSValueType sSingleton;

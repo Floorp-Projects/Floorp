@@ -51,3 +51,7 @@ fails == border-separate-opacity-table-column.html border-separate-opacity-table
 == border-separate-opacity-table-row-group.html border-separate-opacity-table-row-group-ref.html
 == border-separate-opacity-table-row.html border-separate-opacity-table-row-ref.html
 == border-separate-opacity-table.html border-separate-opacity-table-ref.html
+!= scrollable-rowgroup-collapse-background.html scrollable-rowgroup-collapse-notref.html
+!= scrollable-rowgroup-collapse-border.html scrollable-rowgroup-collapse-notref.html
+!= scrollable-rowgroup-separate-background.html scrollable-rowgroup-separate-notref.html
+!= scrollable-rowgroup-separate-border.html scrollable-rowgroup-separate-notref.html

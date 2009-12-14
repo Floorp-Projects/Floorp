@@ -812,6 +812,14 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
   LOG(("OBJLC [%p]: Got frame %p (mInstantiating=%i)\n", this, aFrame,
        mInstantiating));
 
+  nsCOMPtr<nsIContent> thisContent = 
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  NS_ASSERTION(thisContent, "must be a content");
+  nsIDocument* doc = thisContent->GetOwnerDoc();
+  if (!doc || doc->IsStaticDocument()) {
+    return NS_OK;
+  }
+  
   // "revoke" any existing instantiate event as it likely has out of
   // date data (frame pointer etc).
   mPendingInstantiateEvent = nsnull;
@@ -1098,7 +1106,9 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
 
   // Security checks
   if (doc->IsLoadedAsData()) {
-    Fallback(PR_FALSE);
+    if (!doc->IsStaticDocument()) {
+      Fallback(PR_FALSE);
+    }
     return NS_OK;
   }
 
@@ -1768,6 +1778,9 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
     aURI = baseURI;
   }
 
+  nsIFrame *nsiframe = do_QueryFrame(aFrame);
+  nsWeakFrame weakFrame(nsiframe);
+
   // We'll always have a type or a URI by the time we get here
   NS_ASSERTION(aURI || !typeToUse.IsEmpty(), "Need a URI or a type");
   LOG(("OBJLC [%p]: Calling [%p]->Instantiate(<%s>, %p)\n", this, aFrame,
@@ -1777,7 +1790,9 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
   mInstantiating = oldInstantiatingValue;
 
   nsCOMPtr<nsIPluginInstance> pluginInstance;
-  aFrame->GetPluginInstance(*getter_AddRefs(pluginInstance));
+  if (weakFrame.IsAlive()) {
+    aFrame->GetPluginInstance(*getter_AddRefs(pluginInstance));
+  }
   if (pluginInstance) {
     nsCOMPtr<nsIPluginTag> pluginTag;
     nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
@@ -1874,6 +1889,40 @@ nsObjectLoadingContent::GetPluginDisabledState(const nsCString& aContentType)
   if (rv == NS_ERROR_PLUGIN_BLOCKLISTED)
     return ePluginBlocklisted;
   return ePluginUnsupported;
+}
+
+void
+nsObjectLoadingContent::CreateStaticClone(nsObjectLoadingContent* aDest) const
+{
+  nsImageLoadingContent::CreateStaticImageClone(aDest);
+
+  aDest->mType = mType;
+  nsObjectLoadingContent* thisObj = const_cast<nsObjectLoadingContent*>(this);
+  if (thisObj->mPrintFrame.IsAlive()) {
+    aDest->mPrintFrame = thisObj->mPrintFrame;
+  } else {
+    nsIObjectFrame* frame =
+      const_cast<nsObjectLoadingContent*>(this)->GetExistingFrame(eDontFlush);
+    nsIFrame* f = do_QueryFrame(frame);
+    aDest->mPrintFrame = f;
+  }
+
+  if (mFrameLoader) {
+    nsCOMPtr<nsIContent> content =
+      do_QueryInterface(static_cast<nsIImageLoadingContent*>((aDest)));
+    nsFrameLoader* fl = nsFrameLoader::Create(content);
+    if (fl) {
+      aDest->mFrameLoader = fl;
+      mFrameLoader->CreateStaticClone(fl);
+    }
+  }
+}
+
+NS_IMETHODIMP
+nsObjectLoadingContent::GetPrintFrame(nsIFrame** aFrame)
+{
+  *aFrame = mPrintFrame.GetFrame();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -76,6 +76,7 @@ byteswap.h
 #define WRAP_CAIRO_HEADERS
 #endif
 #ifdef WRAP_CAIRO_HEADERS
+pixman.h
 cairo.h
 cairo-atsui.h
 cairo-beos.h

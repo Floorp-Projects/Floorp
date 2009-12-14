@@ -70,6 +70,8 @@ public:
     ATSFontRef GetFontRef();
     nsresult ReadCMAP();
 
+    PRBool UseLiGothicAtsuiHack() { return mUseLiGothicAtsuiHack; }
+
 protected:
     // for use with data fonts
     MacOSFontEntry(const nsAString& aPostscriptName, ATSFontRef aFontRef,
@@ -80,6 +82,7 @@ protected:
 
     ATSFontRef mATSFontRef;
     PRPackedBool mATSFontRefInitialized;
+    PRPackedBool mUseLiGothicAtsuiHack;
 };
 
 class gfxMacPlatformFontList : public gfxPlatformFontList {

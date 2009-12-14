@@ -124,11 +124,13 @@ EXPORTS = \
 		$(NULL)
 
 EXPORTS_mozilla = \
+  AutoRestore.h \
   BlockingResourceBase.h \
   CondVar.h \
   DeadlockDetector.h \
   Monitor.h \
   Mutex.h \
+  SSE.h \
   $(NULL)
 
 SDK_LIBRARY     =                        \

@@ -105,7 +105,9 @@
  * notifications. The latter won't.
  */
 
-function browserWindowsCount() {
+function browserWindowsCount(expected, msg) {
+  if (typeof expected == "number")
+    expected = [expected, expected];
   let count = 0;
   let e = Cc["@mozilla.org/appshell/window-mediator;1"]
             .getService(Ci.nsIWindowMediator)
@@ -114,11 +116,16 @@ function browserWindowsCount() {
     if (!e.getNext().closed)
       ++count;
   }
-  return count;
+  is(count, expected[0], msg + " (nsIWindowMediator)");
+  let state = Cc["@mozilla.org/browser/sessionstore;1"]
+                .getService(Ci.nsISessionStore)
+                .getBrowserState();
+  info(state);
+  is(JSON.parse(state).windows.length, expected[1], msg + " (getBrowserState)");
 }
 
 function test() {
-  is(browserWindowsCount(), 1, "Only one browser window should be open initially");
+  browserWindowsCount(1, "Only one browser window should be open initially");
 
   waitForExplicitFinish();
 
@@ -511,34 +518,35 @@ function test() {
   setupTestsuite();
   if (navigator.platform.match(/Mac/)) {
     // Mac tests
-    testMacNotifications(
-      function() testNotificationCount(
-        function() {
-          cleanupTestsuite();
-          is(browserWindowsCount(), 1, "Only one browser window should be open eventually");
-          finish();
-        }
-      )
-    );
+    testMacNotifications(function () {
+      testNotificationCount(function () {
+        cleanupTestsuite();
+        browserWindowsCount(1, "Only one browser window should be open eventually");
+        finish();
+      });
+    });
   }
   else {
     // Non-Mac Tests
-    testOpenCloseNormal(
-      function() testOpenClosePrivateBrowsing(
-        function() testOpenCloseWindowAndPopup(
-          function() testOpenCloseOnlyPopup(
-            function() testOpenCloseRestoreFromPopup (
-              function() testNotificationCount(
-                function() {
-                  cleanupTestsuite();
-                  is(browserWindowsCount(), 1, "Only one browser window should be open eventually");
-                  finish();
-                }
-              )
-            )
-          )
-        )
-      )
-    );
+    testOpenCloseNormal(function () {
+      browserWindowsCount([0, 1], "browser windows after testOpenCloseNormal");
+      testOpenClosePrivateBrowsing(function () {
+        browserWindowsCount([0, 1], "browser windows after testOpenClosePrivateBrowsing");
+        testOpenCloseWindowAndPopup(function () {
+          browserWindowsCount([0, 1], "browser windows after testOpenCloseWindowAndPopup");
+          testOpenCloseOnlyPopup(function () {
+            browserWindowsCount([0, 1], "browser windows after testOpenCloseOnlyPopup");
+            testOpenCloseRestoreFromPopup (function () {
+              browserWindowsCount([0, 1], "browser windows after testOpenCloseRestoreFromPopup");
+              testNotificationCount(function () {
+                cleanupTestsuite();
+                browserWindowsCount(1, "browser windows after testNotificationCount");
+                finish();
+              });
+            });
+          });
+        });
+      });
+    });
   }
 }

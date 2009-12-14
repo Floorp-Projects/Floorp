@@ -1299,14 +1299,12 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   NP.trackBrowserWindow(window);
 
   // initialize the session-restore service (in case it's not already running)
-  if (document.documentElement.getAttribute("windowtype") == "navigator:browser") {
-    try {
-      var ss = Cc["@mozilla.org/browser/sessionstore;1"].
-               getService(Ci.nsISessionStore);
-      ss.init(window);
-    } catch(ex) {
-      dump("nsSessionStore could not be initialized: " + ex + "\n");
-    }
+  try {
+    Cc["@mozilla.org/browser/sessionstore;1"]
+      .getService(Ci.nsISessionStore)
+      .init(window);
+  } catch (ex) {
+    dump("nsSessionStore could not be initialized: " + ex + "\n");
   }
 
   // bookmark-all-tabs command

@@ -81,6 +81,8 @@ class TypeVisitor:
     def visitShmemType(self, s, *args):
         pass
 
+    def visitShmemChmodType(self, c, *args):
+        c.shmem.accept(self)
 
 class Type:
     def __cmp__(self, o):
@@ -178,6 +180,7 @@ class IPDLType(Type):
     def isUnion(self): return False
     def isArray(self): return False
     def isShmem(self): return False
+    def isChmod(self): return False
 
     def isAsync(self): return self.sendSemantics is ASYNC
     def isSync(self): return self.sendSemantics is SYNC
@@ -303,7 +306,6 @@ class ShmemType(IPDLType):
     def fullname(self):
         return str(self.qname)
 
-
 def iteractortypes(type):
     """Iterate over any actor(s) buried in |type|."""
     # XXX |yield| semantics makes it hard to use TypeVisitor
@@ -318,6 +320,7 @@ def iteractortypes(type):
         for c in type.components:
             for actor in iteractortypes(c):
                 yield actor
+
 
 def hasactor(type):
     """Return true iff |type| is an actor or has one buried within."""
@@ -849,12 +852,12 @@ class GatherDecls(TcheckVisitor):
 
         # check the trigger message
         mname = t.msg
-        if mname in self.seentriggers:
-            self.error(loc, "trigger `%s' appears multiple times", mname)
-        self.seentriggers.add(mname)
-        
+        if t in self.seentriggers:
+            self.error(loc, "trigger `%s' appears multiple times", t.msg)
+        self.seentriggers.add(t)
+
         mdecl = self.symtab.lookup(mname)
-        if mdecl.type.isIPDL() and mdecl.type.isProtocol():
+        if mdecl is not None and mdecl.type.isIPDL() and mdecl.type.isProtocol():
             mdecl = self.symtab.lookup(mname +'Constructor')
         
         if mdecl is None:
@@ -898,7 +901,8 @@ class GatherDecls(TcheckVisitor):
                 itype = ActorType(itype,
                                   state=typespec.state,
                                   nullable=typespec.nullable)
-            if chmodallowed and itype.isShmem():
+            # FIXME/cjones: ShmemChmod is disabled until bug 524193
+            if 0 and chmodallowed and itype.isShmem():
                 itype = ShmemChmodType(
                     itype,
                     myChmod=typespec.myChmod,
@@ -1125,7 +1129,7 @@ class CheckStateMachine(TcheckVisitor):
         # race only if processing A then B leaves the protocol in
         # state S, *and* processing B then A also leaves the protocol
         # in state S.  Technically, if this holds, then messages A and
-        # B could be called "commutative".
+        # B could be called "commutative" wrt to actor state.
         #
         # "Formally", state machine definitions must adhere to two
         # rules.
@@ -1238,6 +1242,7 @@ direction as trigger |t|'''
 
             return (S1 == S2 == S3) and terminalState(S1)
 
+        S = ts.state.name
 
         # check the Diamond Rule
         for (t1, t2) in unique_pairs(ts.transitions):
@@ -1247,34 +1252,54 @@ direction as trigger |t|'''
             if t1.trigger.direction() == t2.trigger.direction():
                 continue
 
+            loc = t1.loc
             t1_out = t1.toStates
             t2_out = t2.toStates
 
             for (T1, T2) in cartesian_product(t1_out, t2_out):
+                # U1 <- { u | T1 --t2--> u }
                 U1 = triggerTargets(T1, t2)
+                # U2 <- { u | T2 --t1--> u }
                 U2 = triggerTargets(T2, t1)
 
-                if (0 == len(U1)
-                    # check U1 = U2 = { U }
-                    or 1 < len(U1) or 1 < len(U2)
-                    or U1 != U2
-                    or not (
-                        (allTriggersSameDirectionAs(T1, t2.trigger)
-                         and allTriggersSameDirectionAs(T2, t1.trigger))
-                        or
-                        sameTerminalState(T1, T2, U1)
-                    )):
-                    self.error(
-                        t2.loc,
-                        "in protocol `%s' state `%s', trigger `%s' potentially races (does not commute) with `%s'",
-                        self.p.name, ts.state.name,
-                        t1.msg.progname, t2.msg.progname)
-                    # don't report more than one Diamond Rule
-                    # violation per state. there may be O(n^4)
-                    # total, way too many for a human to parse
-                    #
-                    # XXX/cjones: could set a limit on #printed
-                    # and stop after that limit ...
+                # don't report more than one Diamond Rule violation
+                # per state. there may be O(n^4) total, way too many
+                # for a human to parse
+                #
+                # XXX/cjones: could set a limit on #printed and stop
+                # after that limit ...
+                raceError = False
+                errT1 = None
+                errT2 = None
+
+                if 0 == len(U1) or 0 == len(U2):
+                    print "******* case 1"
+                    raceError = True
+                elif 1 < len(U1) or 1 < len(U2):
+                    raceError = True
+                    # there are potentially many unpaired states; just
+                    # pick two
+                    print "******* case 2"
+                    for u1, u2 in cartesian_product(U1, U2):
+                        if u1 != u2:
+                            errT1, errT2 = u1, u2
+                            break
+                elif U1 != U2:
+                    print "******* case 3"
+                    raceError = True
+                    for errT1 in U1: pass
+                    for errT2 in U2: pass
+
+                if raceError:
+                    self.reportRaceError(loc, S,
+                                         [ T1, t1, errT1 ],
+                                         [ T2, t2, errT2 ])
+                    return
+
+                if not ((allTriggersSameDirectionAs(T1, t2.trigger)
+                           and allTriggersSameDirectionAs(T2, t1.trigger))
+                          or sameTerminalState(T1, T2, U1)):
+                    self.reportRunawayError(loc, S, [ T1, t1, None ], [ T2, t2, None ])
                     return
 
     def checkReachability(self, p):
@@ -1305,3 +1330,55 @@ direction as trigger |t|'''
                 self.error(ts.loc,
                            "unreachable state `%s' in protocol `%s'",
                            ts.state.name, p.name)
+
+
+    def _normalizeTransitionSequences(self, t1Seq, t2Seq):
+        T1, M1, U1 = t1Seq
+        T2, M2, U2 = t2Seq
+        assert M1 is not None and M2 is not None
+
+        # make sure that T1/M1/U1 is the parent side of the race
+        if M1.trigger is RECV or M1.trigger is ANSWER:
+            T1, M1, U1, T2, M2, U2 = T2, M2, U2, T1, M1, U1
+
+        def stateName(S):
+            if S: return S.name
+            return '[error]'
+
+        T1 = stateName(T1)
+        T2 = stateName(T2)
+        U1 = stateName(U1)
+        U2 = stateName(U2)
+
+        return T1, M1.msg.progname, U1, T2, M2.msg.progname, U2
+        
+
+    def reportRaceError(self, loc, S, t1Seq, t2Seq):
+        T1, M1, U1, T2, M2, U2 = self._normalizeTransitionSequences(t1Seq, t2Seq)
+        self.error(
+            loc,
+"""in protocol `%(P)s', the sequence of events
+     parent:    +--`send %(M1)s'-->( state `%(T1)s' )--`recv %(M2)s'-->( state %(U1)s )
+               /
+ ( state `%(S)s' )
+               \\
+      child:    +--`send %(M2)s'-->( state `%(T2)s' )--`recv %(M1)s'-->( state %(U2)s )
+results in error(s) or leaves parent/child state out of sync for more than one step and is thus a race hazard; i.e., triggers `%(M1)s' and `%(M2)s' fail to commute in state `%(S)s'"""% {
+                'P': self.p.name, 'S': S, 'M1': M1, 'M2': M2,
+                'T1': T1, 'T2': T2, 'U1': U1, 'U2': U2
+        })
+
+
+    def reportRunawayError(self, loc, S, t1Seq, t2Seq):
+        T1, M1, _, T2, M2, __ = self._normalizeTransitionSequences(t1Seq, t2Seq)
+        self.error(
+            loc,
+        """in protocol `%(P)s', the sequence of events
+     parent:    +--`send %(M1)s'-->( state `%(T1)s' )
+               /
+ ( state `%(S)s' )
+               \\
+      child:    +--`send %(M2)s'-->( state `%(T2)s' )
+lead to parent/child states in which parent/child state can become more than one step out of sync (though this divergence might not lead to error conditions)"""% {
+                'P': self.p.name, 'S': S, 'M1': M1, 'M2': M2, 'T1': T1, 'T2': T2
+        })

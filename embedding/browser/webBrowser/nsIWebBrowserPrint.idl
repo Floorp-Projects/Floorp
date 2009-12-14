@@ -144,7 +144,7 @@ interface nsIWebBrowserPrint : nsISupports
    *
    * @param aThePrintSettings - Printer Settings for the print preview, if aThePrintSettings is null
    *                            then the global PS will be used.
-   * @param aChildDOMWin - DOM Window of the child document to be PP (FrameSet frames)
+   * @param aChildDOMWin - DOM Window to be print previewed.
    * @param aWPListener - is updated during the printpreview
    * @return void
    */

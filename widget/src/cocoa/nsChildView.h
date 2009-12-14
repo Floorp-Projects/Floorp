@@ -155,9 +155,6 @@ enum {
   NSMutableArray* mPendingDirtyRects;
   BOOL mPendingFullDisplay;
 
-  PRIntervalTime mLastShadowInvalidation;
-  BOOL mNeedsShadowInvalidation;
-
   // Holds our drag service across multiple drag calls. The reference to the
   // service is obtained when the mouse enters the view and is released when
   // the mouse exits or there is a drop. This prevents us from having to
@@ -287,6 +284,7 @@ public:
   static void MouseMoved(NSEvent* aEvent);
   static void OnDestroyView(ChildView* aView);
   static BOOL WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent);
+  static void ReEvaluateMouseEnterState(NSEvent* aEvent = nil);
 
   static ChildView* sLastMouseEventView;
 

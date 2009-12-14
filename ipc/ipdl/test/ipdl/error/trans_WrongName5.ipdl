@@ -2,9 +2,9 @@ rpc protocol trans_WrongName5 {
 
 parent:
     rpc Msg();
-    delete();
+    __delete__();
 
 state S1:
     recv Msg goto S1;
-    recv delete;
+    recv __delete__;
 };

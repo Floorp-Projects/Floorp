@@ -2,11 +2,11 @@ rpc protocol trans_WrongDirection5 {
 
 parent:
     rpc Msg();
-    delete()
+    __delete__()
 
 state S1:
     call Msg goto S1;
 
 start state_:
-    recv delete;
+    recv __delete__;
 };

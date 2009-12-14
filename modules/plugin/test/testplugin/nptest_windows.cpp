@@ -39,8 +39,6 @@
 
  using namespace std;
 
-#pragma comment(lib, "msimg32.lib")
-
 void SetSubclass(HWND hWnd, InstanceData* instanceData);
 void ClearSubclass(HWND hWnd);
 LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

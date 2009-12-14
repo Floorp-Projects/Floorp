@@ -506,7 +506,7 @@ IsHiddenInput(CToken* aToken, nsITokenizer* aTokenizer)
   NS_ASSERTION(ac <= aTokenizer->GetCount(),
                "Not enough tokens in the tokenizer");
   // But we don't really trust ourselves to get that right
-  ac = PR_MIN(ac, aTokenizer->GetCount());
+  ac = NS_MIN(ac, aTokenizer->GetCount());
   
   for (PRInt32 i = 0; i < ac; ++i) {
     NS_ASSERTION(eHTMLTokenTypes(aTokenizer->GetTokenAt(i)->GetTokenType()) ==
