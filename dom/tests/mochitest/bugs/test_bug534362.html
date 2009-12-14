@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=534362
+-->
+<head>
+  <title>Test for Bug 534362</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=534362">Mozilla Bug 534362</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe src="http://example.org/tests/dom/tests/mochitest/bugs/iframe_bug534362.html" name="testFrame" onload="changeLocation();"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 534362 **/
+
+function checkSetterCalled(called, shouldCall)
+{
+  is(called, shouldCall, "Setter " + (called ? "" : "not ") + "called.");
+  if (!shouldCall) {
+    top.SimpleTest.finish();
+  }
+}
+
+function changeLocation()
+{
+  checkSetterCalled(setterCalled, true);
+  setterCalled = false;
+  frames["testFrame"].location.href = "javascript:";
+  checkSetterCalled(setterCalled, false);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
