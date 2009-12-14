@@ -697,6 +697,13 @@ function OnDocumentLoad(event)
        ps.footerStrCenter = "";
        ps.footerStrRight = "";
        gBrowser.docShell.contentViewer.setPageMode(true, ps);
+
+       // WORKAROUND FOR ASSERTIONS IN BUG 534478:  Calling setPageMode
+       // above causes 2 assertions.  So that we don't have to annotate
+       // the manifests for every reftest-print reftest, bump the
+       // assertion count by two right here.
+       gURLs[0].minAsserts += 2;
+       gURLs[0].maxAsserts += 2;
     }
 
     setupZoom(contentRootElement);
