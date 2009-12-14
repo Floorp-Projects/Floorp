@@ -46,6 +46,14 @@ MODULE		= necko
 LIBRARY_NAME = nkhttp_s
 LIBXUL_LIBRARY  = 1
 
+ifdef MOZ_IPC
+EXPORTS_NAMESPACES = mozilla/net
+
+EXPORTS_mozilla/net = \
+  HttpChannelParent.h \
+  HttpChannelChild.h  \
+  $(NULL)
+endif
 
 CPPSRCS		= \
 		nsHttp.cpp \
@@ -68,12 +76,21 @@ CPPSRCS		= \
 		nsHttpActivityDistributor.cpp \
 		$(NULL)
 
+ifdef MOZ_IPC
+CPPSRCS += \
+  HttpChannelParent.cpp \
+  HttpChannelChild.cpp \
+  $(NULL)
+endif
+
 LOCAL_INCLUDES=-I$(srcdir)/../../../base/src -I$(topsrcdir)/xpcom/ds
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DIMPL_NS_NET
