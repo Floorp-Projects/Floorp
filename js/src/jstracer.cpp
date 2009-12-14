@@ -7535,6 +7535,11 @@ js_InitJIT(JSTraceMonitor *tm)
 
         js_disable_debugger_exceptions();
 
+        // Get the pre-defined values (if they are set). If the values aren't
+        // pre-defined using NJ_FORCE_*, they will be overwritten anyway.
+        bool            arm_vfp     = avmplus::AvmCore::config.vfp;
+
+
         bool            arm_vfp     = js_arm_check_vfp();
         bool            arm_thumb   = js_arm_check_thumb();
         bool            arm_thumb2  = js_arm_check_thumb2();
