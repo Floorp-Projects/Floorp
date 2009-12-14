@@ -78,6 +78,7 @@ DIRS += \
   google-breakpad/src/common/linux \
   google-breakpad/src/client \
   google-breakpad/src/client/linux/handler \
+  google-breakpad/src/client/linux/minidump_writer \
   google-breakpad/src/tools/linux/dump_syms \
   $(NULL)
 endif

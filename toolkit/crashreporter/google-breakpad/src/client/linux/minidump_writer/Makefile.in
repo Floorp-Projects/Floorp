@@ -14,11 +14,12 @@
 # The Original Code is Mozilla Breakpad integration
 #
 # The Initial Developer of the Original Code is
-# Ted Mielczarek <ted.mielczarek@gmail.com>
-# Portions created by the Initial Developer are Copyright (C) 2007
+# The Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#  Ted Mielczarek <ted.mielczarek@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,14 +42,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= handler
-LIBRARY_NAME	= exception_handler_s
+MODULE		= writer
+LIBRARY_NAME	= minidump_writer_s
 XPI_NAME 	= crashreporter
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../../..
 
 CPPSRCS	= \
-  exception_handler.cc \
+  linux_dumper.cc \
+  minidump_writer.cc \
   $(NULL)
 
 # need static lib
