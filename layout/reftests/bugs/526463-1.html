@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>Testcase, bug 526463</title>
+    <script>
+      window.addEventListener("MozReftestInvalidate",
+        function() {
+          var div = document.getElementById("div");
+          div.style.display = "";
+          document.documentElement.className = "";
+        }, false);
+    </script>
+  </head>
+  <body>
+    <div style="-moz-border-radius: 50px;overflow:hidden;background:gold">
+      outer div
+      <div id="div" style="display:none">inner div</div>
+    </div>
+  </body>
+</html>
