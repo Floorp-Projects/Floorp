@@ -57,6 +57,30 @@ CPPSRCS	= \
 
 ifdef MOZ_WEBGL
 
+ifeq (1_1,$(MOZ_X11)_$(NS_OSSO))
+WEBGL_PLATFORM = EGL
+DEFINES += -DUSE_GLES2
+endif
+
+ifeq (1_,$(MOZ_X11)_$(NS_OSSO))
+WEBGL_PLATFORM = GLX
+EXTRA_DSO_LIBS += X11
+endif
+
+
+ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
+ifdef WINCE
+WEBGL_PLATFORM = EGL
+DEFINES += -DUSE_GLES2
+else
+WEBGL_PLATFORM = WGL
+endif
+endif
+
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+WEBGL_PLATFORM = CGL
+endif
+
 CPPSRCS += \
 	WebGLArrays.cpp \
 	WebGLContext.cpp \
@@ -70,26 +94,8 @@ CPPSRCS += \
 	SimpleBuffer.cpp \
 	$(NULL)
 
-ifdef MOZ_X11
-EXTRA_DSO_LIBS += X11
-CPPSRCS += nsGLPbufferGLX.cpp
-DEFINES += -DUSE_GLX
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-ifdef WINCE
-CPPSRCS += nsGLPbufferEGL.cpp
-DEFINES += -DUSE_EGL
-else
-CPPSRCS += nsGLPbufferWGL.cpp
-DEFINES += -DUSE_WGL
-endif
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += nsGLPbufferCGL.cpp
-DEFINES += -DUSE_CGL
-endif
+CPPSRCS += nsGLPbuffer$(WEBGL_PLATFORM).cpp
+DEFINES += -DUSE_$(WEBGL_PLATFORM)
 
 else
 

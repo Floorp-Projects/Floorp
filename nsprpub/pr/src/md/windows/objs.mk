@@ -51,7 +51,7 @@ CSRCS = ntmisc.c \
 	w32rng.c \
 	w32shm.c
 else
-ifeq (,$(filter-out WIN95 WINCE, $(OS_TARGET)))
+ifeq (,$(filter-out WIN95 WINCE WINMO, $(OS_TARGET)))
 CSRCS =	ntmisc.c \
 	ntsec.c \
 	ntsem.c \

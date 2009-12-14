@@ -416,7 +416,7 @@ public:
     return strncmp(GetPluginName(), aPluginName, strlen(aPluginName)) == 0;
   }
 
-#ifdef MOZ_PLATFORM_HILDON
+#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
   nsresult SetAbsoluteScreenPosition(nsIDOMElement* element,
                                      nsIDOMClientRect* position,
                                      nsIDOMClientRect* clip);
@@ -512,7 +512,8 @@ private:
     const nsIntRect& mDirtyRect;
   };
 #endif
-#ifdef MOZ_PLATFORM_HILDON
+
+#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
 
   // On hildon, we attempt to use NPImageExpose which allows us faster
   // painting.
@@ -1230,7 +1231,7 @@ nsObjectFrame::SetAbsoluteScreenPosition(nsIDOMElement* element,
                                          nsIDOMClientRect* position,
                                          nsIDOMClientRect* clip)
 {
-#ifdef MOZ_PLATFORM_HILDON
+#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
   if (!mInstanceOwner)
     return NS_ERROR_NOT_AVAILABLE;
   return mInstanceOwner->SetAbsoluteScreenPosition(element, position, clip);
@@ -1327,22 +1328,12 @@ void
 nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect)
 {
-  // if we are printing, we need to get the correct nsIPluginInstance
-  // for THIS content node in order to call ->Print() on the right plugin
-
-  // first, we need to get the document
-  nsIDocument* doc = mContent->GetCurrentDoc();
-  if (!doc)
+  nsCOMPtr<nsIObjectLoadingContent> obj(do_QueryInterface(mContent));
+  if (!obj)
     return;
 
-  // now we need to get the shell for the screen
-  // XXX assuming that the shell at zero will always be the screen one
-  nsIPresShell *shell = doc->GetPrimaryShell();
-  if (!shell)
-    return;
-
-  // then the shell can give us the screen frame for this content node
-  nsIFrame* frame = shell->GetPrimaryFrameFor(mContent);
+  nsIFrame* frame = nsnull;
+  obj->GetPrintFrame(&frame);
   if (!frame)
     return;
 
@@ -2134,7 +2125,7 @@ GetMIMEType(nsIPluginInstance *aPluginInstance)
 static PRBool
 DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
 {
-#ifdef MOZ_PLATFORM_HILDON
+#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
   // Don't delay stop on Maemo/Hildon (bug 530739).
   if (aDelayedStop && aInstanceOwner->MatchPluginName("Shockwave Flash"))
     return PR_FALSE;
@@ -2447,7 +2438,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mLastPoint = nsIntPoint(0,0);
 #endif
 
-#ifdef MOZ_PLATFORM_HILDON
+#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
   mPluginSize = nsIntSize(0,0);
   mXlibSurfGC = None;
   mSharedXImage = nsnull;
@@ -2515,7 +2506,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
     mInstance->InvalidateOwner();
   }
 
-#ifdef MOZ_PLATFORM_HILDON
+#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
   ReleaseXShm();
 #endif
 }
@@ -2737,7 +2728,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   if (!mObjectFrame || !invalidRect || !mWidgetVisible)
     return NS_ERROR_FAILURE;
 
-#ifdef MOZ_PLATFORM_HILDON
+#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
   PRBool simpleImageRender = PR_FALSE;
   mInstance->GetValueFromPlugin(NPPVpluginWindowlessLocalBool,
                                 &simpleImageRender);
@@ -4826,7 +4817,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   if (!mInstance || !mObjectFrame)
     return;
 
-#ifdef MOZ_PLATFORM_HILDON
+#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
   // through to be able to paint the context passed in.  This allows
   // us to handle plugins that do not self invalidate (slowly, but
   // accurately), and it allows us to reduce flicker.
@@ -4915,7 +4906,7 @@ DepthOfVisual(const Screen* screen, const Visual* visual)
 }
 #endif
 
-#ifdef MOZ_PLATFORM_HILDON
+#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
 
 static GdkWindow* GetClosestWindow(nsIDOMElement *element)
 {
@@ -5628,7 +5619,7 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
   mPluginHost = aHost;
 }
 
-#ifdef MOZ_PLATFORM_HILDON
+#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
 PRBool nsPluginInstanceOwner::UpdateVisibility()
 {
   if (!mInstance)
@@ -5785,7 +5776,7 @@ void nsPluginInstanceOwner::FixUpURLS(const nsString &name, nsAString &value)
   }
 }
 
-#ifdef MOZ_PLATFORM_HILDON
+#if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
 nsresult
 nsPluginInstanceOwner::SetAbsoluteScreenPosition(nsIDOMElement* element,
                                                  nsIDOMClientRect* position,

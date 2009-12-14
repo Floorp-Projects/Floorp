@@ -68,7 +68,6 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsINameSpaceManager.h"
-#include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
@@ -285,7 +284,7 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
     nsNodeUtils::AttributeChanged(frame->GetContent(),
                                   kNameSpaceID_None,
                                   nsGkAtoms::frameborder,
-                                  nsIDOMMutationEvent::MODIFICATION, 0);
+                                  nsIDOMMutationEvent::MODIFICATION);
   }
 
   return 0;
@@ -430,7 +429,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
   for (int blankX = mChildCount; blankX < numCells; blankX++) {
     nsRefPtr<nsStyleContext> pseudoStyleContext;
     pseudoStyleContext = shell->StyleSet()->
-      ResolvePseudoStyleFor(nsnull, nsCSSAnonBoxes::framesetBlank, mStyleContext);
+      ResolveAnonymousBoxStyle(nsCSSAnonBoxes::framesetBlank, mStyleContext);
     if (!pseudoStyleContext) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1042,9 +1041,9 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
       if (firstTime) { // create horizontal border
 
         nsRefPtr<nsStyleContext> pseudoStyleContext;
-        pseudoStyleContext = styleSet->ResolvePseudoStyleFor(mContent,
-                                                             nsCSSPseudoElements::horizontalFramesetBorder,
-                                                             mStyleContext);
+        pseudoStyleContext = styleSet->
+          ResolveAnonymousBoxStyle(nsCSSAnonBoxes::horizontalFramesetBorder,
+                                   mStyleContext);
 
         borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoStyleContext,
                                                             borderWidth,
@@ -1078,9 +1077,9 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
           if (firstTime) { // create vertical border
             
             nsRefPtr<nsStyleContext> pseudoStyleContext;
-            pseudoStyleContext = styleSet->ResolvePseudoStyleFor(mContent,
-                                                                 nsCSSPseudoElements::verticalFramesetBorder,
-                                                                 mStyleContext);
+            pseudoStyleContext = styleSet->
+              ResolveAnonymousBoxStyle(nsCSSAnonBoxes::verticalFramesetBorder,
+                                       mStyleContext);
 
             borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoStyleContext, 
                                                                 borderWidth,

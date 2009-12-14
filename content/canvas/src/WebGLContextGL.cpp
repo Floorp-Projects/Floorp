@@ -382,6 +382,8 @@ WebGLContext::BindBuffer(GLenum target, nsIWebGLBuffer *buffer)
 
     MakeContextCurrent();
 
+    //printf ("BindBuffer0: %04x\n", gl->fGetError());
+
     if (target == LOCAL_GL_ARRAY_BUFFER) {
         mBoundArrayBuffer = wbuf;
     } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
@@ -391,6 +393,8 @@ WebGLContext::BindBuffer(GLenum target, nsIWebGLBuffer *buffer)
     }
 
     gl->fBindBuffer(target, wbuf ? wbuf->GLName() : 0);
+
+    //printf ("BindBuffer: %04x\n", gl->fGetError());
 
     return NS_OK;
 }
@@ -405,17 +409,8 @@ WebGLContext::BindFramebuffer(GLenum target, nsIWebGLFramebuffer *fb)
 
     MakeContextCurrent();
 
-    if (target >= LOCAL_GL_COLOR_ATTACHMENT0 &&
-        target < (LOCAL_GL_COLOR_ATTACHMENT0 + mBoundColorFramebuffers.Length()))
-    {
-        int targetOffset = target - LOCAL_GL_COLOR_ATTACHMENT0;
-        mBoundColorFramebuffers[targetOffset] = wfb;
-    } else if (target == LOCAL_GL_DEPTH_ATTACHMENT) {
-        mBoundDepthFramebuffer = wfb;
-    } else if (target == LOCAL_GL_STENCIL_ATTACHMENT) {
-        mBoundStencilFramebuffer = wfb;
-    } else {
-        return ErrorMessage("glBindFramebuffer: invalid target");
+    if (target != LOCAL_GL_FRAMEBUFFER) {
+        return ErrorMessage("glBindFramebuffer: target must be GL_FRAMEBUFFER");
     }
 
     gl->fBindFramebuffer(target, wfb ? wfb->GLName() : 0);
@@ -432,7 +427,7 @@ WebGLContext::BindRenderbuffer(GLenum target, nsIWebGLRenderbuffer *rb)
         return ErrorMessage("glBindRenderbuffer: renderbuffer has already been deleted!");
 
     if (target != LOCAL_GL_RENDERBUFFER)
-        return ErrorMessage("glBindRenderbuffer: invalid target");
+        return ErrorMessage("glBindRenderbuffer: target must be GL_RENDERBUFFER");
 
     MakeContextCurrent();
 
@@ -605,7 +600,7 @@ WebGLContext::BufferSubData(GLenum target, GLsizeiptr offset)
                                     boundBuffer->Count(), offset, arrayBuf->NativeSize());
                 return NS_ERROR_FAILURE;
             }
-#ifdef DEBUG
+#ifdef DEBUG_mwsteele
             LogMessage("bufferSubData: buffer (%d) for data at offset (%d+%d)", boundBuffer->Count(), offset, arrayBuf->NativeSize());
 #endif
             // all good
@@ -621,7 +616,7 @@ WebGLContext::BufferSubData(GLenum target, GLsizeiptr offset)
                                     boundBuffer->Count(), offset, canvasArrayObj->NativeCount());
                 return NS_ERROR_FAILURE;
             }
-#ifdef DEBUG
+#ifdef DEBUG_mwsteele
             LogMessage("bufferSubData: buffer (%d) for data at offset (%d+%d)", boundBuffer->Count(), offset, canvasArrayObj->NativeSize());
 #endif
             // all good
@@ -981,7 +976,11 @@ WebGLContext::DrawArrays(GLenum mode, GLint offset, GLsizei count)
 
     MakeContextCurrent();
 
+    //printf ("DrawArrays0: %04x\n", gl->fGetError());
+
     gl->fDrawArrays(mode, offset, count);
+
+    //printf ("DrawArrays: %04x\n", gl->fGetError());
 
     Invalidate();
 
@@ -991,6 +990,8 @@ WebGLContext::DrawArrays(GLenum mode, GLint offset, GLsizei count)
 NS_IMETHODIMP
 WebGLContext::DrawElements(GLenum mode, GLuint count, GLenum type, GLuint offset)
 {
+    int elementSize = 0;
+
     switch (mode) {
         case LOCAL_GL_TRIANGLES:
         case LOCAL_GL_TRIANGLE_STRIP:
@@ -1006,9 +1007,17 @@ WebGLContext::DrawElements(GLenum mode, GLuint count, GLenum type, GLuint offset
 
     switch (type) {
         case LOCAL_GL_UNSIGNED_SHORT:
+            elementSize = 2;
+            if (offset % 2 != 0)
+                return ErrorMessage("drawElements: invalid offset (must be a multiple of 2) for UNSIGNED_SHORT");
             break;
+
+        case LOCAL_GL_UNSIGNED_BYTE:
+            elementSize = 1;
+            break;
+
         default:
-            return ErrorMessage("drawElements: type must be UNSIGNED_SHORT");
+            return ErrorMessage("drawElements: type must be UNSIGNED_SHORT or UNSIGNED_BYTE");
     }
 
     if (!mBoundElementArrayBuffer)
@@ -1017,12 +1026,13 @@ WebGLContext::DrawElements(GLenum mode, GLuint count, GLenum type, GLuint offset
     if (offset+count < offset || offset+count < count)
         return ErrorMessage("glDrawElements: overflow in offset+count");
 
-    if (count + offset > mBoundElementArrayBuffer->Count())
+    if (count*elementSize + offset > mBoundElementArrayBuffer->ByteCount())
         return ErrorMessage("glDrawElements: bound element array buffer is too small for given count and offset");
 
     MakeContextCurrent();
 
     // XXXmark fix validation
+    // XXX either GLushort or GLubyte; just put this calculation as a method on the array object
 #if 0
     GLuint maxindex = 0;
     GLushort *ubuf = (GLushort*) gl->fMapBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER, LOCAL_GL_READ_ONLY);
@@ -1040,7 +1050,7 @@ WebGLContext::DrawElements(GLenum mode, GLuint count, GLenum type, GLuint offset
     if (!ValidateBuffers(maxindex))
         return ErrorMessage("glDrawElements: ValidateBuffers failed");
 #endif
-    // XXX uh, is this offset, or offset * elementsize?
+
     gl->fDrawElements(mode, count, type, (GLvoid*) (offset));
 
     Invalidate();
@@ -1075,9 +1085,9 @@ WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum r
         return ErrorMessage("glFramebufferRenderbuffer: renderbuffer has already been deleted!");
 
     if (target != LOCAL_GL_FRAMEBUFFER)
-        return ErrorMessage("glFramebufferRenderbuffer: target must be LOCAL_GL_FRAMEBUFFER");
+        return ErrorMessage("glFramebufferRenderbuffer: target must be GL_FRAMEBUFFER");
 
-    if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 || attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mBoundColorFramebuffers.Length()) &&
+    if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 || attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mFramebufferColorAttachments.Length()) &&
         attachment != LOCAL_GL_DEPTH_ATTACHMENT &&
         attachment != LOCAL_GL_STENCIL_ATTACHMENT)
         return ErrorMessage("glFramebufferRenderbuffer: invalid attachment");
@@ -1096,10 +1106,10 @@ WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum r
 
 NS_IMETHODIMP
 WebGLContext::FramebufferTexture2D(GLenum target,
-                                     GLenum attachment,
-                                     GLenum textarget,
-                                     nsIWebGLTexture *wtex,
-                                     GLint level)
+                                   GLenum attachment,
+                                   GLenum textarget,
+                                   nsIWebGLTexture *wtex,
+                                   GLint level)
 {
     WebGLTexture *tex = static_cast<WebGLTexture*>(wtex);
 
@@ -1109,7 +1119,7 @@ WebGLContext::FramebufferTexture2D(GLenum target,
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorMessage("glFramebufferTexture2D: target must be GL_FRAMEBUFFER");
 
-    if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 || attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mBoundColorFramebuffers.Length()) &&
+    if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 || attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mFramebufferColorAttachments.Length()) &&
         attachment != LOCAL_GL_DEPTH_ATTACHMENT &&
         attachment != LOCAL_GL_STENCIL_ATTACHMENT)
         return ErrorMessage("glFramebufferTexture2D: invalid attachment");
@@ -1121,6 +1131,8 @@ WebGLContext::FramebufferTexture2D(GLenum target,
 
     if (level != 0)
         return ErrorMessage("glFramebufferTexture2D: level must be 0");
+
+    // XXXXX we need to store/reference this attachment!
 
     MakeContextCurrent();
 
@@ -2027,7 +2039,6 @@ WebGLContext::GetUniform(nsIWebGLProgram *prog, GLint location)
     GLint uArraySize = 0;
     GLenum uType = 0;
 
-    fprintf (stderr, "GetUniform: program: %d location: %d\n", program, location);
     gl->fGetActiveUniform(program, location, 0, NULL, &uArraySize, &uType, NULL);
     if (uArraySize == 0)
         return NS_ERROR_FAILURE;
@@ -2891,15 +2902,40 @@ WebGLContext::ValidateGL()
     // make sure that the opengl stuff that we need is supported
     GLint val = 0;
 
+    // XXX this exposes some strange latent bug; what's going on?
+    //MakeContextCurrent();
+
     gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &val);
+    if (val == 0) {
+        LogMessage("GL_MAX_VERTEX_ATTRIBS is 0!");
+        return PR_FALSE;
+    }
+
     mAttribBuffers.SetLength(val);
 
+    //fprintf(stderr, "GL_MAX_VERTEX_ATTRIBS: %d\n", val);
+
     gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_UNITS, &val);
+    if (val == 0) {
+        LogMessage("GL_MAX_TEXTURE_UNITS is 0!");
+        return PR_FALSE;
+    }
+
     mBound2DTextures.SetLength(val);
     mBoundCubeMapTextures.SetLength(val);
 
+    //fprintf(stderr, "GL_MAX_TEXTURE_UNITS: %d\n", val);
+
     gl->fGetIntegerv(LOCAL_GL_MAX_COLOR_ATTACHMENTS, &val);
-    mBoundColorFramebuffers.SetLength(val);
+    mFramebufferColorAttachments.SetLength(val);
+
+#ifdef DEBUG_vladimir
+    gl->fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT, &val);
+    fprintf(stderr, "GL_IMPLEMENTATION_COLOR_READ_FORMAT: 0x%04x\n", val);
+
+    gl->fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE, &val);
+    fprintf(stderr, "GL_IMPLEMENTATION_COLOR_READ_TYPE: 0x%04x\n", val);
+#endif
 
 #ifndef USE_GLES2
     // gl_PointSize is always available in ES2 GLSL

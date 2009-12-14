@@ -57,7 +57,7 @@ SharedDIB::Create(PRUint32 aSize)
   Close();
 
   mShMem = new base::SharedMemory();
-  if (!mShMem || !mShMem->Create(std::wstring(L""), false, false, aSize))
+  if (!mShMem || !mShMem->Create("", false, false, aSize))
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Map the entire section

@@ -726,6 +726,11 @@ public:
   nsCSSShadowArray* GetEffectiveBoxShadows();
 
   /**
+   * @return PR_FALSE if this frame definitely has no borders at all
+   */                 
+  PRBool HasBorder() const;
+
+  /**
    * Accessor functions for geometric parent
    */
   nsIFrame* GetParent() const { return mParent; }

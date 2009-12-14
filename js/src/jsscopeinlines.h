@@ -41,20 +41,26 @@
 #define jsscopeinlines_h___
 
 #include "jscntxt.h"
+#include "jsdbgapi.h"
 #include "jsfun.h"
-#include "jsinterp.h"
 #include "jsobj.h"
 #include "jsscope.h"
 
 inline void
+JSScope::updateShape(JSContext *cx)
+{
+    JS_ASSERT(object);
+    js_LeaveTraceIfGlobalObject(cx, object);
+
+    shape = (hasOwnShape() || !lastProp) ? js_GenerateShape(cx, false) : lastProp->shape;
+}
+
+inline void
 JSScope::extend(JSContext *cx, JSScopeProperty *sprop)
 {
-    js_LeaveTraceIfGlobalObject(cx, object);
-    shape = (!lastProp || shape == lastProp->shape)
-            ? sprop->shape
-            : js_GenerateShape(cx, false);
     ++entryCount;
-    lastProp = sprop;
+    setLastProperty(sprop);
+    updateShape(cx);
 
     jsuint index;
     if (js_IdIsIndex(sprop->id, &index))
@@ -72,7 +78,7 @@ inline bool
 JSScope::methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, jsval *vp)
 {
     JS_ASSERT(hasMethodBarrier());
-    JS_ASSERT(has(sprop));
+    JS_ASSERT(hasProperty(sprop));
     JS_ASSERT(sprop->isMethod());
     JS_ASSERT(sprop->methodValue() == *vp);
     JS_ASSERT(object->getClass() == &js_ObjectClass);
@@ -148,12 +154,10 @@ JSScope::trace(JSTracer *trc)
         }
     }
     if (sprop) {
-        JS_ASSERT(has(sprop));
+        JS_ASSERT(hasProperty(sprop));
 
         /* Trace scope's property tree ancestor line. */
         do {
-            if (hadMiddleDelete() && !has(sprop))
-                continue;
             sprop->trace(trc);
         } while ((sprop = sprop->parent) != NULL);
     }

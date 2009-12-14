@@ -4,6 +4,7 @@
 
 #include "IPDLUnitTests.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "base/command_line.h"
@@ -24,7 +25,7 @@ using mozilla::_ipdltest::IPDLUnitTestThreadChild;
 // data/functions accessed by both parent and child processes
 
 namespace {
-char* gIPDLUnitTestName = NULL; // "leaks"
+char* gIPDLUnitTestName = NULL;
 }
 
 
@@ -111,7 +112,52 @@ IPDLUnitTest()
 // parent process only
 
 namespace {
+
 void* gParentActor = NULL;
+IPDLUnitTestSubprocess* gSubprocess;
+
+void
+DeleteParentActor()
+{
+    if (!gParentActor)
+        return;
+
+    switch (IPDLUnitTest()) {
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${PARENT_DELETE_CASES}
+//-----------------------------------------------------------------------------
+    default:  mozilla::_ipdltest::fail("???");
+    }
+}
+
+void
+QuitXPCOM()
+{
+  DeleteParentActor();
+
+  static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+  nsCOMPtr<nsIAppShell> appShell (do_GetService(kAppShellCID));
+  appShell->Exit();
+}
+
+void
+DeleteSubprocess(MessageLoop* uiLoop)
+{
+  // pong to QuitXPCOM
+  delete gSubprocess;
+  uiLoop->PostTask(FROM_HERE, NewRunnableFunction(QuitXPCOM));
+}
+
+void
+DeferredParentShutdown()
+{
+  // ping to DeleteSubprocess
+  XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(DeleteSubprocess, MessageLoop::current()));
+}
+
 }
 
 
@@ -134,15 +180,15 @@ IPDLUnitTestMain(void* aData)
     std::vector<std::string> testCaseArgs;
     testCaseArgs.push_back(testString);
 
-    IPDLUnitTestSubprocess* subprocess = new IPDLUnitTestSubprocess();
-    if (!subprocess->SyncLaunch(testCaseArgs))
+    gSubprocess = new IPDLUnitTestSubprocess();
+    if (!gSubprocess->SyncLaunch(testCaseArgs))
         fail("problem launching subprocess");
 
-    IPC::Channel* transport = subprocess->GetChannel();
+    IPC::Channel* transport = gSubprocess->GetChannel();
     if (!transport)
         fail("no transport");
 
-    base::ProcessHandle child = subprocess->GetChildProcessHandle();
+    base::ProcessHandle child = gSubprocess->GetChildProcessHandle();
 
     switch (test) {
 //-----------------------------------------------------------------------------
@@ -156,6 +202,15 @@ ${PARENT_MAIN_CASES}
     }
 }
 
+void
+QuitParent()
+{
+  // defer "real" shutdown to avoid *Channel::Close() racing with the
+  // deletion of the subprocess
+    MessageLoop::current()->PostTask(
+        FROM_HERE, NewRunnableFunction(DeferredParentShutdown));
+}
+
 } // namespace _ipdltest
 } // namespace mozilla
 
@@ -164,7 +219,24 @@ ${PARENT_MAIN_CASES}
 // child process only
 
 namespace {
+
 void* gChildActor = NULL;
+
+void
+DeleteChildActor()
+{
+    if (!gChildActor)
+        return;
+
+    switch (IPDLUnitTest()) {
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${CHILD_DELETE_CASES}
+//-----------------------------------------------------------------------------
+    default:  mozilla::_ipdltest::fail("???");
+    }
+}
+
 }
 
 
@@ -176,6 +248,9 @@ IPDLUnitTestChildInit(IPC::Channel* transport,
                       base::ProcessHandle parent,
                       MessageLoop* worker)
 {
+    if (atexit(DeleteChildActor))
+        fail("can't install atexit() handler");
+
     switch (IPDLUnitTest()) {
 //-----------------------------------------------------------------------------
 //===== TEMPLATED =====

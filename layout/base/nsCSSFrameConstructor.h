@@ -52,6 +52,7 @@
 #include "nsHashKeys.h"
 #include "nsThreadUtils.h"
 #include "nsPageContentFrame.h"
+#include "nsCSSPseudoElements.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -152,11 +153,14 @@ public:
   // WillDestroyFrameTree hasn't been called yet.
   void NotifyDestroyingFrame(nsIFrame* aFrame);
 
-  nsresult AttributeChanged(nsIContent* aContent,
-                            PRInt32     aNameSpaceID,
-                            nsIAtom*    aAttribute,
-                            PRInt32     aModType,
-                            PRUint32    aStateMask);
+  void AttributeWillChange(nsIContent* aContent,
+                           PRInt32     aNameSpaceID,
+                           nsIAtom*    aAttribute,
+                           PRInt32     aModType);
+  void AttributeChanged(nsIContent* aContent,
+                        PRInt32     aNameSpaceID,
+                        nsIAtom*    aAttribute,
+                        PRInt32     aModType);
 
   void BeginUpdate();
   void EndUpdate();
@@ -433,11 +437,11 @@ private:
                                                       PRUint32        aContentIndex);
 
   // aFrame may be null; this method doesn't use it directly in any case.
-  void CreateGeneratedContentItem(nsFrameConstructorState& aState,
-                                  nsIFrame*                aFrame,
-                                  nsIContent*              aContent,
-                                  nsStyleContext*          aStyleContext,
-                                  nsIAtom*                 aPseudoElement,
+  void CreateGeneratedContentItem(nsFrameConstructorState&   aState,
+                                  nsIFrame*                  aFrame,
+                                  nsIContent*                aContent,
+                                  nsStyleContext*            aStyleContext,
+                                  nsCSSPseudoElements::Type  aPseudoElement,
                                   FrameConstructionItemList& aItems);
 
   // This method can change aFrameList: it can chop off the beginning and put

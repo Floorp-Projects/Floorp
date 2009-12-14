@@ -76,6 +76,15 @@
 #include "nsCSSKeywords.h"
 #include "nsCSSProps.h"
 #include "nsTArray.h"
+#include "nsContentUtils.h"
+
+#define NS_SET_IMAGE_REQUEST(method_, context_, request_)                   \
+  if ((context_)->PresContext()->IsDynamic()) {                               \
+    method_(request_);                                                      \
+  } else {                                                                  \
+    nsCOMPtr<imgIRequest> req = nsContentUtils::GetStaticRequest(request_); \
+    method_(req);                                                           \
+  }
 
 /*
  * For storage of an |nsRuleNode|'s children in a PLDHashTable.
@@ -607,7 +616,8 @@ static void SetGradient(const nsCSSValue& aValue, nsPresContext* aPresContext,
 }
 
 // -moz-image-rect(<uri>, <top>, <right>, <bottom>, <left>)
-static void SetStyleImageToImageRect(const nsCSSValue& aValue,
+static void SetStyleImageToImageRect(nsStyleContext* aStyleContext,
+                                     const nsCSSValue& aValue,
                                      nsStyleImage& aResult)
 {
   NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Function &&
@@ -619,7 +629,9 @@ static void SetStyleImageToImageRect(const nsCSSValue& aValue,
 
   // <uri>
   if (arr->Item(1).GetUnit() == eCSSUnit_Image) {
-    aResult.SetImageData(arr->Item(1).GetImageValue());
+    NS_SET_IMAGE_REQUEST(aResult.SetImageData,
+                         aStyleContext,
+                         arr->Item(1).GetImageValue())
   } else {
     NS_WARNING("nsCSSValue::Image::Image() failed?");
   }
@@ -645,11 +657,13 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
 
   switch (aValue.GetUnit()) {
     case eCSSUnit_Image:
-      aResult.SetImageData(aValue.GetImageValue());
+      NS_SET_IMAGE_REQUEST(aResult.SetImageData,
+                           aStyleContext,
+                           aValue.GetImageValue())
       break;
     case eCSSUnit_Function:
       if (aValue.EqualsFunction(eCSSKeyword__moz_image_rect)) {
-        SetStyleImageToImageRect(aValue, aResult);
+        SetStyleImageToImageRect(aStyleContext, aValue, aResult);
       } else {
         NS_NOTREACHED("-moz-image-rect() is the only expected function");
       }
@@ -951,7 +965,8 @@ nsRuleNode::Transition(nsIStyleRule* aRule, PRUint8 aLevel,
     ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>
                                           (PL_DHashTableOperate(ChildrenHash(), &key, PL_DHASH_ADD));
     if (!entry) {
-      return nsnull;
+      NS_WARNING("out of memory");
+      return this;
     }
     if (entry->mRuleNode)
       next = entry->mRuleNode;
@@ -960,7 +975,8 @@ nsRuleNode::Transition(nsIStyleRule* aRule, PRUint8 aLevel,
         nsRuleNode(mPresContext, this, aRule, aLevel, aIsImportantRule);
       if (!next) {
         PL_DHashTableRawRemove(ChildrenHash(), entry);
-        return nsnull;
+        NS_WARNING("out of memory");
+        return this;
       }
     }
   } else if (!next) {
@@ -968,7 +984,8 @@ nsRuleNode::Transition(nsIStyleRule* aRule, PRUint8 aLevel,
     next = new (mPresContext)
       nsRuleNode(mPresContext, this, aRule, aLevel, aIsImportantRule);
     if (!next) {
-      return nsnull;
+      NS_WARNING("out of memory");
+      return this;
     }
     next->mNextSibling = ChildrenList();
     SetChildrenList(next);
@@ -1312,7 +1329,6 @@ static const PropertyCheckData XULCheckProperties[] = {
 #undef CSS_PROP_XUL
 };
 
-#ifdef MOZ_SVG
 static const PropertyCheckData SVGCheckProperties[] = {
 #define CSS_PROP_SVG CHECK_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
@@ -1324,7 +1340,6 @@ static const PropertyCheckData SVGResetCheckProperties[] = {
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SVGRESET
 };
-#endif
 
 static const PropertyCheckData ColumnCheckProperties[] = {
 #define CSS_PROP_COLUMN CHECK_DATA_FOR_PROPERTY
@@ -1795,7 +1810,6 @@ nsRuleNode::GetColumnData(nsStyleContext* aContext)
   return WalkRuleTree(eStyleStruct_Column, aContext, &ruleData, &columnData);
 }
 
-#ifdef MOZ_SVG
 const void*
 nsRuleNode::GetSVGData(nsStyleContext* aContext)
 {
@@ -1817,7 +1831,6 @@ nsRuleNode::GetSVGResetData(nsStyleContext* aContext)
 
   return WalkRuleTree(eStyleStruct_SVGReset, aContext, &ruleData, &svgData);
 }
-#endif
 
 // If we need to restrict which properties apply to the style context,
 // return the bit to check in nsCSSProp's flags table.  Otherwise,
@@ -2233,7 +2246,6 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       return column;
     }
 
-#ifdef MOZ_SVG
     case eStyleStruct_SVG:
     {
       nsStyleSVG* svg = new (mPresContext) nsStyleSVG();
@@ -2251,7 +2263,6 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       }
       return svgReset;
     }
-#endif
     default:
       /*
        * unhandled case: nsStyleStructID_Length.
@@ -4874,7 +4885,9 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
 
     // the image
     if (eCSSUnit_Image == arr->Item(0).GetUnit()) {
-      border->SetBorderImage(arr->Item(0).GetImageValue());
+      NS_SET_IMAGE_REQUEST(border->SetBorderImage,
+                           aContext,
+                           arr->Item(0).GetImageValue())
     }
 
     // the numbers saying where to split the image
@@ -4937,7 +4950,8 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
     border->mBorderImageHFill = parentBorder->mBorderImageHFill;
     border->mBorderImageVFill = parentBorder->mBorderImageVFill;
     border->mHaveBorderImageWidth = parentBorder->mHaveBorderImageWidth;
-    border->SetBorderImage(parentBorder->GetBorderImage());
+    NS_SET_IMAGE_REQUEST(border->SetBorderImage, aContext,
+                         parentBorder->GetBorderImage())
   }
 
   COMPUTE_END_RESET(Border, border)
@@ -5094,15 +5108,19 @@ nsRuleNode::ComputeListData(void* aStartStruct,
 
   // list-style-image: url, none, inherit
   if (eCSSUnit_Image == listData.mImage.GetUnit()) {
-    list->mListStyleImage = listData.mImage.GetImageValue();
+    NS_SET_IMAGE_REQUEST(list->SetListStyleImage,
+                         aContext,
+                         listData.mImage.GetImageValue())
   }
   else if (eCSSUnit_None == listData.mImage.GetUnit() ||
            eCSSUnit_Initial == listData.mImage.GetUnit()) {
-    list->mListStyleImage = nsnull;
+    list->SetListStyleImage(nsnull);
   }
   else if (eCSSUnit_Inherit == listData.mImage.GetUnit()) {
     canStoreInRuleTree = PR_FALSE;
-    list->mListStyleImage = parentList->mListStyleImage;
+    NS_SET_IMAGE_REQUEST(list->SetListStyleImage,
+                         aContext,
+                         parentList->GetListStyleImage())
   }
 
   // list-style-position: enum, inherit, initial
@@ -5382,8 +5400,7 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
           }
           data.mType = type;
           if (type == eStyleContentType_Image) {
-            data.mContent.mImage = value.GetImageValue();
-            NS_IF_ADDREF(data.mContent.mImage);
+            NS_SET_IMAGE_REQUEST(data.SetImage, aContext, value.GetImageValue());
           }
           else if (type <= eStyleContentType_Attr) {
             value.GetStringValue(buffer);
@@ -5692,7 +5709,6 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   COMPUTE_END_RESET(Column, column)
 }
 
-#ifdef MOZ_SVG
 static void
 SetSVGPaint(const nsCSSValuePair& aValue, const nsStyleSVGPaint& parentPaint,
             nsPresContext* aPresContext, nsStyleContext *aContext,
@@ -6000,7 +6016,6 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
 
   COMPUTE_END_RESET(SVGReset, svgReset)
 }
-#endif
 
 inline const void*
 nsRuleNode::GetParentData(const nsStyleStructID aSID)

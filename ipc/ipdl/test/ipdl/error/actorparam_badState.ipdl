@@ -2,9 +2,9 @@ protocol actorparam_badState {
 
 child:
     Msg(actorparam_badState:FARGEL p);
-    delete();
+    __delete__();
 
 state S1:
     send Msg goto S1;
-    send delete;
+    send __delete__;
 };

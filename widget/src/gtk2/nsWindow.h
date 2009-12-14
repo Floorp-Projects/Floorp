@@ -442,7 +442,8 @@ private:
     void               SetDefaultIcon(void);
     void               InitButtonEvent(nsMouseEvent &aEvent, GdkEventButton *aGdkEvent);
     PRBool             DispatchCommandEvent(nsIAtom* aCommand);
-    nsresult           SetWindowClipRegion(const nsTArray<nsIntRect>& aRects);
+    void               SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
+                                           PRBool aIntersectWithExisting);
 
     GtkWidget          *mShell;
     MozContainer       *mContainer;

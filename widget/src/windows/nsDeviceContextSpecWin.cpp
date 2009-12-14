@@ -464,8 +464,10 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
   HGLOBAL   hDevNames = NULL;
 
   // Get the Print Name to be used
-  PRUnichar * printerName;
-  mPrintSettings->GetPrinterName(&printerName);
+  PRUnichar * printerName = nsnull;
+  if (mPrintSettings) {
+    mPrintSettings->GetPrinterName(&printerName);
+  }
 
   // If there is no name then use the default printer
   if (!printerName || (printerName && !*printerName)) {
@@ -508,8 +510,10 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
 
   nsRefPtr<gfxASurface> newSurface;
 
-  PRInt16 outputFormat;
-  mPrintSettings->GetOutputFormat(&outputFormat);
+  PRInt16 outputFormat = 0;
+  if (mPrintSettings) {
+    mPrintSettings->GetOutputFormat(&outputFormat);
+  }
 
   if (outputFormat == nsIPrintSettings::kOutputFormatPDF) {
     nsXPIDLString filename;
@@ -534,6 +538,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
     newSurface = new gfxPDFSurface(stream, gfxSize(width, height));
   } else {
     if (mDevMode) {
+      NS_WARN_IF_FALSE(mDriverName, "No driver!");
       HDC dc = ::CreateDCW(mDriverName, mDeviceName, NULL, mDevMode);
 
       // have this surface take over ownership of this DC

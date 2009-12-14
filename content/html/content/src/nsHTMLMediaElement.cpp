@@ -78,6 +78,8 @@
 #include "nsContentErrors.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsLayoutUtils.h"
+#include "nsVideoFrame.h"
 
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
@@ -1084,7 +1086,8 @@ nsresult nsHTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aPar
                                         PRBool aCompileEventHandlers)
 {
   mIsBindingToTree = PR_TRUE;
-  mAutoplayEnabled = IsAutoplayEnabled();
+  mAutoplayEnabled =
+    IsAutoplayEnabled() && (!aDocument || !aDocument->IsStaticDocument());
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument,
                                                  aParent,
                                                  aBindingParent,
@@ -1711,8 +1714,22 @@ void nsHTMLMediaElement::Paint(gfxContext* aContext,
                                gfxPattern::GraphicsFilter aFilter,
                                const gfxRect& aRect)
 {
-  if (mDecoder)
+  if (mPrintSurface) {
+    nsRefPtr<gfxPattern> pat = new gfxPattern(mPrintSurface);
+    if (!pat)
+      return;
+    // Make the source image fill the rectangle completely
+    pat->SetMatrix(gfxMatrix().Scale(mMediaSize.width/aRect.Width(),
+                                     mMediaSize.height/aRect.Height()));
+
+    pat->SetFilter(aFilter);
+
+    aContext->NewPath();
+    aContext->PixelSnappedRectangleAndSetPattern(aRect, pat);
+    aContext->Fill();
+  } else if (mDecoder) {
     mDecoder->Paint(aContext, aFilter, aRect);
+  }
 }
 
 nsresult nsHTMLMediaElement::DispatchSimpleEvent(const nsAString& aName)
@@ -1994,4 +2011,37 @@ already_AddRefed<nsILoadGroup> nsHTMLMediaElement::GetDocumentLoadGroup()
 {
   nsIDocument* doc = GetOwnerDoc();
   return doc ? doc->GetDocumentLoadGroup() : nsnull;
+}
+
+nsresult
+nsHTMLMediaElement::CopyInnerTo(nsGenericElement* aDest) const
+{
+  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aDest->GetOwnerDoc()->IsStaticDocument()) {
+    nsHTMLMediaElement* dest = static_cast<nsHTMLMediaElement*>(aDest);
+    if (mPrintSurface) {
+      dest->mPrintSurface = mPrintSurface;
+      dest->mMediaSize = mMediaSize;
+    } else {
+      nsIFrame* frame =
+        GetPrimaryFrameFor(const_cast<nsHTMLMediaElement*>(this),
+                           GetOwnerDoc());
+      nsCOMPtr<nsIDOMElement> elem;
+      if (frame && frame->GetType() == nsGkAtoms::HTMLVideoFrame &&
+          static_cast<nsVideoFrame*>(frame)->ShouldDisplayPoster()) {
+        elem = do_QueryInterface(static_cast<nsVideoFrame*>(frame)->
+                                 GetPosterImage());
+      } else {
+        elem = do_QueryInterface(const_cast<nsHTMLMediaElement*>(this));
+      }
+
+      nsLayoutUtils::SurfaceFromElementResult res =
+        nsLayoutUtils::SurfaceFromElement(elem,
+                                          nsLayoutUtils::SFE_WANT_NEW_SURFACE);
+      dest->mPrintSurface = res.mSurface;
+      dest->mMediaSize = nsIntSize(res.mSize.width, res.mSize.height);
+    }
+  }
+  return rv;
 }

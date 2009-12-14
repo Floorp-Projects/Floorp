@@ -51,14 +51,20 @@
 
 struct RuleProcessorData;
 struct ElementRuleProcessorData;
-struct PseudoRuleProcessorData;
+struct PseudoElementRuleProcessorData;
+struct AnonBoxRuleProcessorData;
+#ifdef MOZ_XUL
+struct XULTreeRuleProcessorData;
+#endif
 struct StateRuleProcessorData;
 struct AttributeRuleProcessorData;
 class nsPresContext;
 
-// IID for the nsIStyleRuleProcessor interface {015575fe-7b6c-11d3-ba05-001083023c2b}
+// IID for the nsIStyleRuleProcessor interface
+// {566a7bea-fdc5-40a5-bf8a-87b5a231d79e}
 #define NS_ISTYLE_RULE_PROCESSOR_IID     \
-{0x015575fe, 0x7b6c, 0x11d3, {0xba, 0x05, 0x00, 0x10, 0x83, 0x02, 0x3c, 0x2b}}
+{ 0x566a7bea, 0xfdc5, 0x40a5, \
+ { 0xbf, 0x8a, 0x87, 0xb5, 0xa2, 0x31, 0xd7, 0x9e } }
 
 /* The style rule processor interface is a mechanism to separate the matching
  * of style rules from style sheet instances.
@@ -88,7 +94,20 @@ public:
    * Just like the previous |RulesMatching|, except for a given content
    * node <em>and pseudo-element</em>.
    */
-  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData) = 0;
+  NS_IMETHOD RulesMatching(PseudoElementRuleProcessorData* aData) = 0;
+
+  /**
+   * Just like the previous |RulesMatching|, except for a given anonymous box.
+   */
+  NS_IMETHOD RulesMatching(AnonBoxRuleProcessorData* aData) = 0;
+
+#ifdef MOZ_XUL
+  /**
+   * Just like the previous |RulesMatching|, except for a given content
+   * node <em>and tree pseudo</em>.
+   */
+  NS_IMETHOD RulesMatching(XULTreeRuleProcessorData* aData) = 0;
+#endif
 
   /**
    * Return how (as described by nsReStyleHint) style can depend on a
@@ -98,17 +117,27 @@ public:
    *
    * Event states are defined in nsIEventStateManager.h.
    */
-  NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
-                                    nsReStyleHint* aResult) = 0;
+  virtual nsReStyleHint
+    HasStateDependentStyle(StateRuleProcessorData* aData) = 0;
 
   /**
-   * Return how (as described by nsReStyleHint) style can depend on the
-   * presence or value of the given attribute for the given content
-   * node.  This test is used for optimization only, and may err on the
-   * side of reporting more dependencies than really exist.
+   * This method will be called twice for every attribute change.
+   * During the first call, aData->mAttrHasChanged will be false and
+   * the attribute change will not have happened yet.  During the
+   * second call, aData->mAttrHasChanged will be true and the
+   * change will have already happened.  The bitwise OR of the two
+   * return values must describe the style changes that are needed due
+   * to the attribute change.  It's up to the rule processor
+   * implementation to decide how to split the bits up amongst the two
+   * return values.  For example, it could return the bits needed by
+   * rules that might stop matching the node from the first call and
+   * the bits needed by rules that might have started matching the
+   * node from the second call.  This test is used for optimization
+   * only, and may err on the side of reporting more dependencies than
+   * really exist.
    */
-  NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                        nsReStyleHint* aResult) = 0;
+  virtual nsReStyleHint
+    HasAttributeDependentStyle(AttributeRuleProcessorData* aData) = 0;
 
   /**
    * Do any processing that needs to happen as a result of a change in

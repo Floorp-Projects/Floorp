@@ -1003,7 +1003,7 @@ CSS_PROP_TABLEBORDER(
     eCSSType_ValuePair,
     nsnull,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    eStyleAnimType_Custom) // XXX bug 3935
 CSS_PROP_SHORTHAND(
     -moz-border-start,
     border_start,
@@ -1213,8 +1213,8 @@ CSS_PROP_COLUMN(
     mColumnCount,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    offsetof(nsStyleColumn, mColumnCount),
+    eStyleAnimType_Custom)
 CSS_PROP_COLUMN(
     -moz-column-width,
     _moz_column_width,
@@ -1274,7 +1274,7 @@ CSS_PROP_COLUMN(
     eCSSType_Value,
     kBorderWidthKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_CONTENT(
     content,
     content,
@@ -2347,7 +2347,7 @@ CSS_PROP_DISPLAY(
     eCSSType_ValuePair,
     kBackgroundPositionKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_POSITION(
     top,
     top,
@@ -2612,8 +2612,8 @@ CSS_PROP_XUL(
     mBoxFlex,
     eCSSType_Value,
     nsnull,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None) // XXX bug 3935
+    offsetof(nsStyleXUL, mBoxFlex),
+    eStyleAnimType_float) // XXX bug 3935
 CSS_PROP_XUL(
     -moz-box-orient,
     box_orient,
@@ -2697,7 +2697,6 @@ CSS_PROP_FONT(
 #endif
 #endif
 
-#ifdef MOZ_SVG
 // XXX treat SVG's CSS Properties as internal for now.
 // Do we want to create an nsIDOMSVGCSS2Properties interface?
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
@@ -3037,7 +3036,6 @@ CSS_PROP_SVG(
     offsetof(nsStyleSVG, mTextRendering),
     eStyleAnimType_EnumU8)
 #endif /* !defined (CSS_PROP_LIST_EXCLUDE_INTERNAL) */
-#endif
 
 // Callers that want information on the properties that are in
 // the style structs but not in the nsCSS* structs should define

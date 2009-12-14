@@ -202,6 +202,11 @@
 // for embedding
 #include "nsIWebBrowserChromeFocus.h"
 
+#if NS_PRINT_PREVIEW
+#include "nsIDocumentViewerPrint.h"
+#include "nsIWebBrowserPrint.h"
+#endif
+
 #include "nsPluginError.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
@@ -9912,13 +9917,10 @@ nsDocShell::EnsureScriptEnvironment()
     NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
+    NS_ENSURE_TRUE(browserChrome, NS_ERROR_NOT_AVAILABLE);
 
     PRUint32 chromeFlags;
-    if (browserChrome) {
-        browserChrome->GetChromeFlags(&chromeFlags);
-    } else {
-        chromeFlags = 0;
-    }
+    browserChrome->GetChromeFlags(&chromeFlags);
 
     PRBool isModalContentWindow =
         (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL) &&
@@ -11074,6 +11076,32 @@ nsDocShell::SetRendering(PRBool aRender)
   //return failer if this request is not accepted due to mCharsetReloadState
   return NS_ERROR_DOCSHELL_REQUEST_REJECTED;
 }
+
+NS_IMETHODIMP
+nsDocShell::GetPrintPreview(nsIWebBrowserPrint** aPrintPreview)
+{
+  *aPrintPreview = nsnull;
+#if NS_PRINT_PREVIEW
+  nsCOMPtr<nsIDocumentViewerPrint> print = do_QueryInterface(mContentViewer);
+  if (!print || !print->IsInitializedForPrintPreview()) {
+    Stop(nsIWebNavigation::STOP_ALL);
+    nsCOMPtr<nsIPrincipal> principal =
+      do_CreateInstance("@mozilla.org/nullprincipal;1");
+    NS_ENSURE_STATE(principal);
+    nsresult rv = CreateAboutBlankContentViewer(principal, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+    print = do_QueryInterface(mContentViewer);
+    NS_ENSURE_STATE(print);
+    print->InitializeForPrintPreview();
+  }
+  nsCOMPtr<nsIWebBrowserPrint> result = do_QueryInterface(print);
+  result.forget(aPrintPreview);
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 
 #ifdef DEBUG
 unsigned long nsDocShell::gNumberOfDocShells = 0;

@@ -432,6 +432,10 @@ nsHTMLTableHeaderCellAccessible::GetRoleInternal(PRUint32 *aRole)
     }
   }
 
+  // No elements in siblings what means the table has one column only. Therefore
+  // it should be column header.
+  *aRole = nsIAccessibleRole::ROLE_COLUMNHEADER;
+
   return NS_OK;
 }
 
@@ -455,47 +459,27 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTableAccessible, nsAccessible,
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLTableAccessible: nsAccessible implementation
 
-void nsHTMLTableAccessible::CacheChildren()
+void
+nsHTMLTableAccessible::CacheChildren()
 {
-  if (!mWeakShell) {
-    // This node has been shut down
-    mAccChildCount = eChildCountUninitialized;
-    return;
-  }
-  
-  if (mAccChildCount == eChildCountUninitialized) {
-    nsAccessible::CacheChildren();
-    nsCOMPtr<nsIAccessible> captionAccessible;
-    while (NextChild(captionAccessible)) {
-      if (nsAccUtils::Role(captionAccessible) == nsIAccessibleRole::ROLE_CAPTION) {
-        nsCOMPtr<nsIAccessible> captionParentAccessible;
-        captionAccessible->GetParent(getter_AddRefs(captionParentAccessible));
-        if (captionParentAccessible != this) {
-          NS_WARNING("Should not happen: parser ensures caption is the table's child, not the tbody's");
-          return;
-        }
-        nsCOMPtr<nsIAccessible> beforeCaptionAccessible;
-        captionAccessible->GetPreviousSibling(getter_AddRefs(beforeCaptionAccessible));
-        if (beforeCaptionAccessible) {
-          // Move caption accessible so that it's the first child
-          nsRefPtr<nsAccessible> acc =
-            nsAccUtils::QueryAccessible(beforeCaptionAccessible);
+  nsAccessible::CacheChildren();
 
-          nsCOMPtr<nsIAccessible> afterCaptionAccessible;
-          captionAccessible->GetNextSibling(getter_AddRefs(afterCaptionAccessible));
-          acc->SetNextSibling(afterCaptionAccessible);
+  // Move caption accessible so that it's the first child.
+  PRInt32 length = mChildren.Count();
+  for (PRInt32 idx = 0; idx < length; idx++) {
+    // Check for the first caption, because nsAccessibilityService ensures we
+    // don't create accessibles for the other captions, since only the first is
+    // actually visible.
 
-          GetFirstChild(getter_AddRefs(afterCaptionAccessible));
-          SetFirstChild(captionAccessible);
-
-          acc = nsAccUtils::QueryAccessible(captionAccessible);
-          acc->SetNextSibling(afterCaptionAccessible);        
-        }
-        // Don't check for more captions, because nsAccessibilityService ensures
-        // we don't create accessibles for the other captions, since only the
-        // first is actually visible
+    nsIAccessible* child = mChildren.ObjectAt(idx);
+    if (nsAccUtils::Role(child) == nsIAccessibleRole::ROLE_CAPTION) {
+      if (idx == 0)
         break;
-      }
+
+      nsCOMPtr<nsIAccessible> tmp = mChildren.ObjectAt(0);
+      mChildren.ReplaceObjectAt(child, 0);
+      mChildren.ReplaceObjectAt(tmp, idx);
+      break;
     }
   }
 }
