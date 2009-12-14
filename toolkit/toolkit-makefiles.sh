@@ -670,6 +670,7 @@ MAKEFILES_xulapp="
   toolkit/crashreporter/client/Makefile
   toolkit/crashreporter/google-breakpad/src/client/Makefile
   toolkit/crashreporter/google-breakpad/src/client/linux/handler/Makefile
+  toolkit/crashreporter/google-breakpad/src/client/linux/minidump_writer/Makefile
   toolkit/crashreporter/google-breakpad/src/client/mac/handler/Makefile
   toolkit/crashreporter/google-breakpad/src/client/solaris/handler/Makefile
   toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation/Makefile

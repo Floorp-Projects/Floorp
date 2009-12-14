@@ -285,7 +285,7 @@ nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRUint32 a
     frame->GetOffsets(startFrameTextOffset, endFrameTextOffset);
     PRInt32 frameTotalTextLength = endFrameTextOffset - startFrameTextOffset;
     PRInt32 seekLength = endContentOffset - startContentOffset;
-    PRInt32 frameSubStringLength = PR_MIN(frameTotalTextLength - startContentOffsetInFrame, seekLength);
+    PRInt32 frameSubStringLength = NS_MIN(frameTotalTextLength - startContentOffsetInFrame, seekLength);
 
     // Add the point where the string starts to the frameScreenRect
     nsPoint frameTextStartPoint;

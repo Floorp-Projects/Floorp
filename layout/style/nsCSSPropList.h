@@ -2697,7 +2697,6 @@ CSS_PROP_FONT(
 #endif
 #endif
 
-#ifdef MOZ_SVG
 // XXX treat SVG's CSS Properties as internal for now.
 // Do we want to create an nsIDOMSVGCSS2Properties interface?
 #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
@@ -3037,7 +3036,6 @@ CSS_PROP_SVG(
     offsetof(nsStyleSVG, mTextRendering),
     eStyleAnimType_EnumU8)
 #endif /* !defined (CSS_PROP_LIST_EXCLUDE_INTERNAL) */
-#endif
 
 // Callers that want information on the properties that are in
 // the style structs but not in the nsCSS* structs should define

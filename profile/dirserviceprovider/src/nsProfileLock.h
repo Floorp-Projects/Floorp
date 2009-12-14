@@ -55,6 +55,7 @@ class nsIProfileUnlocker;
 #endif
 
 #if defined (XP_UNIX)
+#include <signal.h>
 #include "prclist.h"
 #endif
 
@@ -92,7 +93,8 @@ private:
     LHANDLE                 mLockFileHandle;
 #elif defined (XP_UNIX)
     static void             RemovePidLockFiles();
-    static void             FatalSignalHandler(int signo);
+    static void             FatalSignalHandler(int signo, siginfo_t *info,
+                                               void *context);
     static PRCList          mPidLockList;
 
     nsresult                LockWithFcntl(const nsACString& lockFilePath);

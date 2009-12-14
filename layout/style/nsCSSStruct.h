@@ -672,7 +672,6 @@ private:
   nsRuleDataColumn(const nsRuleDataColumn& aOther); // NOT IMPLEMENTED
 };
 
-#ifdef MOZ_SVG
 struct nsCSSSVG : public nsCSSStruct {
   nsCSSSVG(void);
   ~nsCSSSVG(void);
@@ -716,6 +715,5 @@ struct nsRuleDataSVG : public nsCSSSVG {
 private:
   nsRuleDataSVG(const nsRuleDataSVG& aOther); // NOT IMPLEMENTED
 };
-#endif
 
 #endif /* nsCSSStruct_h___ */

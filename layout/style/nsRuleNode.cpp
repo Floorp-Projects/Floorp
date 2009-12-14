@@ -1329,7 +1329,6 @@ static const PropertyCheckData XULCheckProperties[] = {
 #undef CSS_PROP_XUL
 };
 
-#ifdef MOZ_SVG
 static const PropertyCheckData SVGCheckProperties[] = {
 #define CSS_PROP_SVG CHECK_DATA_FOR_PROPERTY
 #include "nsCSSPropList.h"
@@ -1341,7 +1340,6 @@ static const PropertyCheckData SVGResetCheckProperties[] = {
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SVGRESET
 };
-#endif
 
 static const PropertyCheckData ColumnCheckProperties[] = {
 #define CSS_PROP_COLUMN CHECK_DATA_FOR_PROPERTY
@@ -1812,7 +1810,6 @@ nsRuleNode::GetColumnData(nsStyleContext* aContext)
   return WalkRuleTree(eStyleStruct_Column, aContext, &ruleData, &columnData);
 }
 
-#ifdef MOZ_SVG
 const void*
 nsRuleNode::GetSVGData(nsStyleContext* aContext)
 {
@@ -1834,7 +1831,6 @@ nsRuleNode::GetSVGResetData(nsStyleContext* aContext)
 
   return WalkRuleTree(eStyleStruct_SVGReset, aContext, &ruleData, &svgData);
 }
-#endif
 
 // If we need to restrict which properties apply to the style context,
 // return the bit to check in nsCSSProp's flags table.  Otherwise,
@@ -2250,7 +2246,6 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       return column;
     }
 
-#ifdef MOZ_SVG
     case eStyleStruct_SVG:
     {
       nsStyleSVG* svg = new (mPresContext) nsStyleSVG();
@@ -2268,7 +2263,6 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       }
       return svgReset;
     }
-#endif
     default:
       /*
        * unhandled case: nsStyleStructID_Length.
@@ -5715,7 +5709,6 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   COMPUTE_END_RESET(Column, column)
 }
 
-#ifdef MOZ_SVG
 static void
 SetSVGPaint(const nsCSSValuePair& aValue, const nsStyleSVGPaint& parentPaint,
             nsPresContext* aPresContext, nsStyleContext *aContext,
@@ -6023,7 +6016,6 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
 
   COMPUTE_END_RESET(SVGReset, svgReset)
 }
-#endif
 
 inline const void*
 nsRuleNode::GetParentData(const nsStyleStructID aSID)

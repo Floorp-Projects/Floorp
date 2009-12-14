@@ -583,11 +583,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DEFAULT_SCRIPTABLE_FLAGS |
                            WINDOW_SCRIPTABLE_FLAGS)
 
-  // Don't allow modifications to Location.prototype
   NS_DEFINE_CLASSINFO_DATA(Location, nsLocationSH,
-                           (DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                            nsIXPCScriptable::WANT_PRECREATE) &
-                           ~nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE)
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(Navigator, nsNavigatorSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |

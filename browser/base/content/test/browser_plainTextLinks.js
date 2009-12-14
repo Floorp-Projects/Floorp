@@ -6,21 +6,23 @@ function setSelection(el1, el2, index1, index2) {
   selection.addRange(range);
 }
 
-function initContextMenu() {
-  document.popupNode = doc.getElementsByTagName("DIV")[0];
+function initContextMenu(aNode) {
+  document.popupNode = aNode;
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   let contextMenu = new nsContextMenu(contentAreaContextMenu, gBrowser);
   return contextMenu;
 }
 
-function testExpected(expected, msg) {
-  initContextMenu();
+function testExpected(expected, msg, aNode) {
+  let popupNode = aNode || doc.getElementsByTagName("DIV")[0];
+  initContextMenu(popupNode);
   let linkMenuItem = document.getElementById("context-openlinkincurrent");
   is(linkMenuItem.hidden, expected, msg);
 }
 
-function testLinkExpected(expected, msg) {
-  let contextMenu = initContextMenu();
+function testLinkExpected(expected, msg, aNode) {
+  let popupNode = aNode || doc.getElementsByTagName("DIV")[0];
+  let contextMenu = initContextMenu(popupNode);
   is(contextMenu.linkURL, expected, msg);
 }
 
@@ -31,16 +33,19 @@ function runSelectionTests() {
   let span1 = doc.createElement("span");
   let span2 = doc.createElement("span");
   let span3 = doc.createElement("span");
+  let span4 = doc.createElement("span");
   let p1 = doc.createElement("p");
   let p2 = doc.createElement("p");
   span1.textContent = "http://index.";
   span2.textContent = "example.com example.com";
   span3.textContent = " - Test";
+  span4.innerHTML = "<a href='http://www.example.com'>http://www.example.com/example</a>";
   p1.textContent = "mailto:test.com ftp.example.com";
   p2.textContent = "example.com   -";
   div.appendChild(span1);
   div.appendChild(span2);
   div.appendChild(span3);
+  div.appendChild(span4);
   div.appendChild(p1);
   div.appendChild(p2);
   let p3 = doc.createElement("p");
@@ -75,6 +80,8 @@ function runSelectionTests() {
   testExpected(false, "Link options should show for www.example.com  ");
   selection.selectAllChildren(div2);
   testExpected(false, "Link options should show for triple-click selections");
+  selection.selectAllChildren(span4);
+  testLinkExpected("http://www.example.com/", "Linkified text should open the correct link", span4.firstChild);
   gBrowser.removeCurrentTab();
   finish();
 }
