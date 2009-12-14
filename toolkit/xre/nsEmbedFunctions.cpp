@@ -97,6 +97,8 @@ using mozilla::plugins::PluginThreadChild;
 
 using mozilla::Monitor;
 using mozilla::MonitorAutoEnter;
+
+using mozilla::startup::sChildProcessType;
 #endif
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -232,7 +234,11 @@ XRE_StringToChildProcessType(const char* aProcessTypeString)
 }
 
 #ifdef MOZ_IPC
-static GeckoProcessType sChildProcessType = GeckoProcessType_Default;
+namespace mozilla {
+namespace startup {
+GeckoProcessType sChildProcessType = GeckoProcessType_Default;
+}
+}
 
 static MessageLoop* sIOMessageLoop;
 
@@ -448,70 +454,4 @@ XRE_ShutdownChildProcess()
 }
 
 #endif // MOZ_IPC
-
-
-nsresult
-XRE_InitCommandLine(int aArgc, char* aArgv[])
-{
-  nsresult rv = NS_OK;
-
-#if defined(MOZ_IPC)
-
-#if defined(OS_WIN)
-  CommandLine::Init(aArgc, aArgv);
-#else
-  // these leak on error, but that's OK: we'll just exit()
-  char** canonArgs = new char*[aArgc];
-
-  // get the canonical version of the binary's path
-  nsCOMPtr<nsILocalFile> binFile;
-  rv = XRE_GetBinaryPath(aArgv[0], getter_AddRefs(binFile));
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  nsCAutoString canonBinPath;
-  rv = binFile->GetNativePath(canonBinPath);
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  canonArgs[0] = strdup(canonBinPath.get());
-
-  for (int i = 1; i < aArgc; ++i) {
-    if (aArgv[i]) {
-      canonArgs[i] = strdup(aArgv[i]);
-    }
-  }
- 
-  NS_ASSERTION(!CommandLine::IsInitialized(), "Bad news!");
-  CommandLine::Init(aArgc, canonArgs);
-
-  for (int i = 0; i < aArgc; ++i)
-      free(canonArgs[i]);
-  delete[] canonArgs;
-#endif
-#endif
-  return rv;
-}
-
-nsresult
-XRE_DeinitCommandLine()
-{
-  nsresult rv = NS_OK;
-
-#if defined(MOZ_IPC)
-  CommandLine::Terminate();
-#endif
-
-  return rv;
-}
-
-GeckoProcessType
-XRE_GetProcessType()
-{
-#ifdef MOZ_IPC
-  return sChildProcessType;
-#else
-  return GeckoProcessType_Default;
-#endif
-}
 
