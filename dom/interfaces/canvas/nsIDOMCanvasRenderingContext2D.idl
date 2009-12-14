@@ -43,6 +43,7 @@ interface nsIDOMElement;
 interface nsIDOMHTMLElement;
 interface nsIDOMHTMLImageElement;
 interface nsIDOMHTMLCanvasElement;
+interface nsIDOMXULElement;
 
 [scriptable, uuid(bbb20a59-524e-4662-981e-5e142814b20c)]
 interface nsIDOMCanvasGradient : nsISupports
@@ -61,7 +62,7 @@ interface nsIDOMTextMetrics : nsISupports
   readonly attribute float width;
 };
 
-[scriptable, uuid(72635fb6-0c1c-47d7-bf69-49388d5980fc)]
+[scriptable, uuid(408be1b9-4d75-4873-b50b-9b651626e41d)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // back-reference to the canvas element for which
@@ -220,6 +221,9 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
    * only.
    */
   void drawWindow(in nsIDOMWindow window, in float x, in float y,
+                  in float w, in float h, in DOMString bgColor,
+                  [optional] in unsigned long flags);
+  void asyncDrawXULElement(in nsIDOMXULElement elem, in float x, in float y,
                   in float w, in float h, in DOMString bgColor,
                   [optional] in unsigned long flags);
 };

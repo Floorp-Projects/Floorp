@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 # NB: chromium/ and glue/ are in tier_xpcom
 
 # tier_gecko:
-DIRS += ipdl
+DIRS += ipdl testshell
 
 TOOL_DIRS = app
 
