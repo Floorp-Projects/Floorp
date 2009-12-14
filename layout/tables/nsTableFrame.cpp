@@ -73,6 +73,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsStyleSet.h"
 #include "nsDisplayList.h"
+#include "nsIScrollableFrame.h"
 
 /********************************************************************************
  ** nsTableReflowState                                                         **
@@ -1332,6 +1333,11 @@ static PRBool
 AnyTablePartHasBorderOrBackground(nsIFrame* aFrame)
 {
   NS_ASSERTION(IsFrameAllowedInTable(aFrame->GetType()), "unexpected frame type");
+
+  nsIScrollableFrame *scrollFrame = do_QueryFrame(aFrame);
+  if (scrollFrame) {
+    return AnyTablePartHasBorderOrBackground(scrollFrame->GetScrolledFrame());
+  }
 
   if (aFrame->GetStyleVisibility()->IsVisible() &&
       (!aFrame->GetStyleBackground()->IsTransparent() ||
