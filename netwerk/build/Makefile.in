@@ -63,6 +63,13 @@ SHARED_LIBRARY_LIBS = \
 		../mime/src/$(LIB_PREFIX)nkmime_s.$(LIB_SUFFIX) \
 		../cache/src/$(LIB_PREFIX)nkcache_s.$(LIB_SUFFIX) \
 		../protocol/about/src/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
+		$(NULL)
+
+ifdef MOZ_IPC
+SHARED_LIBRARY_LIBS += ../ipc/$(LIB_PREFIX)neckoipc_s.$(LIB_SUFFIX)
+endif
+
+SHARED_LIBRARY_LIBS += \
 		$(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
 			../protocol/$(d)/src/$(LIB_PREFIX)nk$(d)_s.$(LIB_SUFFIX)) \
 		$(NULL)
@@ -154,6 +161,8 @@ ifeq ($(OS_ARCH),AIX)
 EXTRA_DSO_LDOPTS += -lodm -lcfg
 endif
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)
