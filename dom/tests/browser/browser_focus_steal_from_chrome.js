@@ -51,8 +51,7 @@ function test() {
   function runNextTest() {
     if (++testingIndex >= testingList.length) {
       // cleaning-up...
-      let cleanTab = gBrowser.addTab();
-      gBrowser.selectedTab = cleanTab;
+      gBrowser.addTab();
       for (let i = 0; i < tabs.length; i++) {
         gBrowser.removeTab(tabs[i]);
       }
