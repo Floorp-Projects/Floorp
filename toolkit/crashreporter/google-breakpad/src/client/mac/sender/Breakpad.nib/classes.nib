@@ -5,6 +5,14 @@
 	<key>IBClasses</key>
 	<array>
 		<dict>
+			<key>CLASS</key>
+			<string>LengthLimitingTextField</string>
+			<key>LANGUAGE</key>
+			<string>ObjC</string>
+			<key>SUPERCLASS</key>
+			<string>NSTextField</string>
+		</dict>
+		<dict>
 			<key>ACTIONS</key>
 			<dict>
 				<key>cancel</key>
@@ -26,10 +34,14 @@
 				<string>NSButton</string>
 				<key>commentMessage_</key>
 				<string>NSTextField</string>
+				<key>commentsEntryField_</key>
+				<string>LengthLimitingTextField</string>
+				<key>countdownLabel_</key>
+				<string>NSTextField</string>
 				<key>dialogTitle_</key>
 				<string>NSTextField</string>
 				<key>emailEntryField_</key>
-				<string>NSView</string>
+				<string>LengthLimitingTextField</string>
 				<key>emailLabel_</key>
 				<string>NSTextField</string>
 				<key>emailMessage_</key>
