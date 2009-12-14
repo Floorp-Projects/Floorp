@@ -24,7 +24,7 @@ function checkSetterCalled(called, shouldCall)
 {
   is(called, shouldCall, "Setter " + (called ? "" : "not ") + "called.");
   if (!shouldCall) {
-    top.SimpleTest.finish();
+    SimpleTest.finish();
   }
 }
 
