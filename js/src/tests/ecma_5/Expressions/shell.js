@@ -5,4 +5,4 @@
  * http://creativecommons.org/licenses/publicdomain/
  */
 
-var gTestsubsuite = 'extensions';
+var gTestsubsuite = 'Expressions';

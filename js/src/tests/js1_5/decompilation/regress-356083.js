@@ -54,13 +54,13 @@ function test()
   printStatus (summary);
  
   var f = function() { return {this setter: function () { } }; } ;
-  expect = 'function() { return {this setter: function () { } }; }';
+  expect = 'function() { return { set this() { } }; }';
   actual = f + '';
 
   compareSource(expect, actual, summary);
 
   expect = "({'' setter:(function () {})})";
-  actual = uneval({'' setter: function(){}});
+  actual = uneval({ set ''() {} });
   reportCompare(expect, actual, expect);
   exitFunc ('test');
 }

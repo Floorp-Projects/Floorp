@@ -8088,10 +8088,13 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
                 if (!pn3)
                     return NULL;
                 pn3->pn_dval = tokenStream.currentToken().t_dval;
-                if (tc->needStrictChecks())
+                if (tc->needStrictChecks()) {
                     atom = js_AtomizeDouble(context, pn3->pn_dval);
-                else
+                    if (!atom)
+                        return NULL;
+                } else {
                     atom = NULL; /* for the compiler */
+                }
                 break;
               case TOK_NAME:
 #if JS_HAS_GETTER_SETTER
@@ -8107,14 +8110,27 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
                     tokenStream.flags |= TSF_KEYWORD_IS_NAME;
                     tt = tokenStream.getToken();
                     tokenStream.flags &= ~TSF_KEYWORD_IS_NAME;
-                    if (tt != TOK_NAME) {
+                    if (tt == TOK_NAME || tt == TOK_STRING) {
+                        atom = tokenStream.currentToken().t_atom;
+                        pn3 = NameNode::create(atom, tc);
+                        if (!pn3)
+                            return NULL;
+                    } else if (tt == TOK_NUMBER) {
+                        pn3 = NullaryNode::create(tc);
+                        if (!pn3)
+                            return NULL;
+                        pn3->pn_dval = tokenStream.currentToken().t_dval;
+                        if (tc->needStrictChecks()) {
+                            atom = js_AtomizeDouble(context, pn3->pn_dval);
+                            if (!atom)
+                                return NULL;
+                        } else {
+                            atom = NULL; /* for the compiler */
+                        }
+                    } else {
                         tokenStream.ungetToken();
                         goto property_name;
                     }
-                    atom = tokenStream.currentToken().t_atom;
-                    pn3 = NameNode::create(atom, tc);
-                    if (!pn3)
-                        return NULL;
 
                     /* We have to fake a 'function' token here. */
                     tokenStream.mutableCurrentToken()->t_op = JSOP_NOP;
