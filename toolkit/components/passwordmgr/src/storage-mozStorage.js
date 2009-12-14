@@ -40,6 +40,7 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cr = Components.results;
 
 const DB_VERSION = 3; // The database schema version
 
@@ -65,26 +66,12 @@ LoginManagerStorage_mozStorage.prototype = {
         return this.__logService;
     },
 
-    __decoderRing : null,  // nsSecretDecoderRing service
-    get _decoderRing() {
-        if (!this.__decoderRing)
-            this.__decoderRing = Cc["@mozilla.org/security/sdr;1"].
-                                 getService(Ci.nsISecretDecoderRing);
-        return this.__decoderRing;
-    },
-
-    __utfConverter : null, // UCS2 <--> UTF8 string conversion
-    get _utfConverter() {
-        if (!this.__utfConverter) {
-            this.__utfConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                                  createInstance(Ci.nsIScriptableUnicodeConverter);
-            this.__utfConverter.charset = "UTF-8";
-        }
-        return this.__utfConverter;
-    },
-
-    _utfConverterReset : function() {
-        this.__utfConverter = null;
+    __crypto : null,  // nsILoginManagerCrypto service
+    get _crypto() {
+        if (!this.__crypto)
+            this.__crypto = Cc["@mozilla.org/login-manager/crypto/SDR;1"].
+                            getService(Ci.nsILoginManagerCrypto);
+        return this.__crypto;
     },
 
     __profileDir: null,  // nsIFile for the user's profile dir
@@ -219,17 +206,6 @@ LoginManagerStorage_mozStorage.prototype = {
 
         this._debug = this._prefBranch.getBoolPref("debug");
 
-        // Check to see if the internal PKCS#11 token has been initialized.
-        // If not, set a blank password.
-        let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].
-                      getService(Ci.nsIPK11TokenDB);
-
-        let token = tokenDB.getInternalKeyToken();
-        if (token.needsUserInit) {
-            this.log("Initializing key3.db with default blank password.");
-            token.initPassword("");
-        }
-
         let isFirstRun;
         try {
             // If initWithFile is calling us, _signonsFile may already be set.
@@ -276,19 +252,15 @@ LoginManagerStorage_mozStorage.prototype = {
      * Private function wrapping core addLogin functionality.
      */
     _addLogin : function (login, isEncrypted) {
-        let userCanceled, encUsername, encPassword;
+        let encUsername, encPassword;
 
         // Throws if there are bogus values.
         this._checkLoginValues(login);
 
-        if (isEncrypted) {
+        if (isEncrypted)
             [encUsername, encPassword] = [login.username, login.password];
-        } else {
-            // Get the encrypted value of the username and password.
-            [encUsername, encPassword, userCanceled] = this._encryptLogin(login);
-            if (userCanceled)
-                throw "User canceled master password entry, login not added.";
-        }
+        else
+            [encUsername, encPassword] = this._encryptLogin(login);
 
         // Clone the login, so we don't modify the caller's object.
         let loginClone = login.clone();
@@ -433,9 +405,7 @@ LoginManagerStorage_mozStorage.prototype = {
         this._checkLoginValues(newLogin);
 
         // Get the encrypted value of the username and password.
-        let [encUsername, encPassword, userCanceled] = this._encryptLogin(newLogin);
-        if (userCanceled)
-            throw "User canceled master password entry, login not modified.";
+        let [encUsername, encPassword] = this._encryptLogin(newLogin);
 
         let query =
             "UPDATE moz_logins " +
@@ -484,14 +454,10 @@ LoginManagerStorage_mozStorage.prototype = {
      * Returns an array of nsILoginInfo.
      */
     getAllLogins : function (count) {
-        let userCanceled;
         let [logins, ids] = this._searchLogins({});
 
         // decrypt entries for caller.
-        [logins, userCanceled] = this._decryptLogins(logins);
-
-        if (userCanceled)
-            throw "User canceled Master Password entry";
+        logins = this._decryptLogins(logins);
 
         this.log("_getAllLogins: returning " + logins.length + " logins.");
         if (count)
@@ -509,7 +475,7 @@ LoginManagerStorage_mozStorage.prototype = {
      * obtained with SQL and the mozStorage APIs.
      */
     getAllEncryptedLogins : function (count) {
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
 
 
@@ -532,12 +498,8 @@ LoginManagerStorage_mozStorage.prototype = {
 
         let [logins, ids] = this._searchLogins(realMatchData);
 
-        let userCanceled;
         // Decrypt entries found for the caller.
-        [logins, userCanceled] = this._decryptLogins(logins);
-
-        if (userCanceled)
-        throw "User canceled Master Password entry";
+        logins = this._decryptLogins(logins);
 
         count.value = logins.length; // needed for XPCOM
         return logins;
@@ -716,7 +678,6 @@ LoginManagerStorage_mozStorage.prototype = {
      *
      */
     findLogins : function (count, hostname, formSubmitURL, httpRealm) {
-        let userCanceled;
         let loginData = {
             hostname: hostname,
             formSubmitURL: formSubmitURL,
@@ -729,13 +690,7 @@ LoginManagerStorage_mozStorage.prototype = {
         let [logins, ids] = this._searchLogins(matchData);
 
         // Decrypt entries found for the caller.
-        [logins, userCanceled] = this._decryptLogins(logins);
-
-        // We want to throw in this case, so that the Login Manager
-        // knows to stop processing forms on the page so the user isn't
-        // prompted multiple times.
-        if (userCanceled)
-            throw "User canceled Master Password entry";
+        logins = this._decryptLogins(logins);
 
         this.log("_findLogins: returning " + logins.length + " logins");
         count.value = logins.length; // needed for XPCOM
@@ -818,11 +773,7 @@ LoginManagerStorage_mozStorage.prototype = {
         // at a time, lest _decryptLogins return fewer entries and screw up
         // indices between the two.
         for (let i = 0; i < logins.length; i++) {
-            let [[decryptedLogin], userCanceled] =
-                        this._decryptLogins([logins[i]]);
-
-            if (userCanceled)
-                throw "User canceled master password entry.";
+            let [decryptedLogin] = this._decryptLogins([logins[i]]);
 
             if (!decryptedLogin || !decryptedLogin.equals(login))
                 continue;
@@ -1070,20 +1021,13 @@ LoginManagerStorage_mozStorage.prototype = {
      * (in which case no encrypted values are returned).
      */
     _encryptLogin : function (login) {
-        let encUsername, encPassword, userCanceled;
-        [encUsername, userCanceled] = this._encrypt(login.username);
-        if (userCanceled)
-            return [null, null, true];
-
-        [encPassword, userCanceled] = this._encrypt(login.password);
-        // Probably can't hit this case, but for completeness...
-        if (userCanceled)
-            return [null, null, true];
+        let encUsername = this._crypto.encrypt(login.username);
+        let encPassword = this._crypto.encrypt(login.password);
 
         if (!this._base64checked)
             this._reencryptBase64Logins();
 
-        return [encUsername, encPassword, false];
+        return [encUsername, encPassword];
     },
 
 
@@ -1101,37 +1045,26 @@ LoginManagerStorage_mozStorage.prototype = {
      * instead of entering their master password)
      */
     _decryptLogins : function (logins) {
-        let result = [], userCanceled = false;
+        let result = [];
 
         for each (let login in logins) {
-            let decryptedUsername, decryptedPassword;
-
-            [decryptedUsername, userCanceled] = this._decrypt(login.username);
-
-            if (userCanceled)
-                break;
-
-            [decryptedPassword, userCanceled] = this._decrypt(login.password);
-
-            // Probably can't hit this case, but for completeness...
-            if (userCanceled)
-                break;
-
-            // If decryption failed (corrupt entry?) skip it.
-            // Note that we allow password-only logins, so username can be "".
-            if (decryptedUsername == null || !decryptedPassword)
-                continue;
-
-            login.username = decryptedUsername;
-            login.password = decryptedPassword;
-
+            try {
+                login.username = this._crypto.decrypt(login.username);
+                login.password = this._crypto.decrypt(login.password);
+            } catch (e) {
+                // If decryption failed (corrupt entry?), just skip it.
+                // Rethrow other errors (like canceling entry of a master pw)
+                if (e.result == Cr.NS_ERROR_FAILURE)
+                    continue;
+                throw e;
+            }
             result.push(login);
         }
 
-        if (!this._base64checked && !userCanceled)
+        if (!this._base64checked)
             this._reencryptBase64Logins();
 
-        return [result, userCanceled];
+        return result;
     },
 
 
@@ -1156,16 +1089,17 @@ LoginManagerStorage_mozStorage.prototype = {
             if (!logins.length)
                 return;
 
-            let userCancelled;
-            [logins, userCanceled] = this._decryptLogins(logins);
-            if (userCanceled)
+            try {
+                logins = this._decryptLogins(logins);
+            } catch (e) {
+                // User might have canceled master password entry, just ignore.
                 return;
+            }
 
             let encUsername, encPassword, stmt;
             for each (let login in logins) {
-                [encUsername, encPassword, userCanceled] = this._encryptLogin(login);
-                if (userCanceled)
-                    throw "User canceled master password entry, login not modified.";
+                [encUsername, encPassword] = this._encryptLogin(login);
+
                 let query =
                     "UPDATE moz_logins " +
                     "SET encryptedUsername = :encryptedUsername, " +
@@ -1193,86 +1127,6 @@ LoginManagerStorage_mozStorage.prototype = {
         } finally {
             this._dbConnection.commitTransaction();
         }
-    },
-
-
-    /*
-     * _encrypt
-     *
-     * Encrypts the specified string, using the SecretDecoderRing.
-     *
-     * Returns [cipherText, userCanceled] where:
-     *  cipherText   -- the encrypted string, or null if it failed.
-     *  userCanceled -- if the encryption failed, this is true if the
-     *                  user selected Cancel when prompted to enter their
-     *                  Master Password. The caller should bail out, and not
-     *                  not request that more things be encrypted (which
-     *                  results in prompting the user for a Master Password
-     *                  over and over.)
-     */
-    _encrypt : function (plainText) {
-        let cipherText = null, userCanceled = false;
-
-        try {
-            let plainOctet = this._utfConverter.ConvertFromUnicode(plainText);
-            plainOctet += this._utfConverter.Finish();
-            cipherText = this._decoderRing.encryptString(plainOctet);
-        } catch (e) {
-            this.log("Failed to encrypt string. (" + e.name + ")");
-            // If the user clicks Cancel, we get NS_ERROR_FAILURE.
-            // (unlike decrypting, which gets NS_ERROR_NOT_AVAILABLE).
-            if (e.result == Components.results.NS_ERROR_FAILURE)
-                userCanceled = true;
-        }
-
-        return [cipherText, userCanceled];
-    },
-
-
-    /*
-     * _decrypt
-     *
-     * Decrypts the specified string, using the SecretDecoderRing.
-     *
-     * Returns [plainText, userCanceled] where:
-     *  plainText    -- the decrypted string, or null if it failed.
-     *  userCanceled -- if the decryption failed, this is true if the
-     *                  user selected Cancel when prompted to enter their
-     *                  Master Password. The caller should bail out, and not
-     *                  not request that more things be decrypted (which
-     *                  results in prompting the user for a Master Password
-     *                  over and over.)
-     */
-    _decrypt : function (cipherText) {
-        let plainText = null, userCanceled = false;
-
-        try {
-            let plainOctet;
-            if (cipherText.charAt(0) == '~') {
-                // The old Wallet file format obscured entries by
-                // base64-encoding them. These entries are signaled by a
-                // leading '~' character.
-                plainOctet = atob(cipherText.substring(1));
-            } else {
-                plainOctet = this._decoderRing.decryptString(cipherText);
-            }
-            plainText = this._utfConverter.ConvertToUnicode(plainOctet);
-        } catch (e) {
-            this.log("Failed to decrypt string: " + cipherText +
-                " (" + e.name + ")");
-
-            // In the unlikely event the converter threw, reset it.
-            this._utfConverterReset();
-
-            // If the user clicks Cancel, we get NS_ERROR_NOT_AVAILABLE.
-            // If the cipherText is bad / wrong key, we get NS_ERROR_FAILURE
-            // Wrong passwords are handled by the decoderRing reprompting;
-            // we get no notification.
-            if (e.result == Components.results.NS_ERROR_NOT_AVAILABLE)
-                userCanceled = true;
-        }
-
-        return [plainText, userCanceled];
     },
 
 
@@ -1323,7 +1177,7 @@ LoginManagerStorage_mozStorage.prototype = {
             } else if (version != DB_VERSION) {
                 this._dbMigrate(version);
             }
-        } catch (e if e.result == Components.results.NS_ERROR_FILE_CORRUPTED) {
+        } catch (e if e.result == Cr.NS_ERROR_FILE_CORRUPTED) {
             // Database is corrupted, so we backup the database, then throw
             // causing initialization to fail and a new db to be created next use
             this._dbCleanup(true);
@@ -1377,7 +1231,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
             if (!this._dbAreExpectedColumnsPresent())
                 throw Components.Exception("DB is missing expected columns",
-                                           Components.results.NS_ERROR_FILE_CORRUPTED);
+                                           Cr.NS_ERROR_FILE_CORRUPTED);
 
             // Change the stored version to the current version. If the user
             // runs the newer code again, it will see the lower version number
