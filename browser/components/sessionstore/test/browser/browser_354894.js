@@ -106,6 +106,8 @@
  */
 
 function browserWindowsCount(expected, msg) {
+  if (typeof expected == "number")
+    expected = [expected, expected];
   let count = 0;
   let e = Cc["@mozilla.org/appshell/window-mediator;1"]
             .getService(Ci.nsIWindowMediator)
@@ -114,12 +116,12 @@ function browserWindowsCount(expected, msg) {
     if (!e.getNext().closed)
       ++count;
   }
-  is(count, expected, msg + " (nsIWindowMediator)");
+  is(count, expected[0], msg + " (nsIWindowMediator)");
   let state = Cc["@mozilla.org/browser/sessionstore;1"]
                 .getService(Ci.nsISessionStore)
                 .getBrowserState();
   info(state);
-  is(JSON.parse(state).windows.length, expected, msg + " (getBrowserState)");
+  is(JSON.parse(state).windows.length, expected[1], msg + " (getBrowserState)");
 }
 
 function test() {
@@ -527,13 +529,18 @@ function test() {
   else {
     // Non-Mac Tests
     testOpenCloseNormal(function () {
+      browserWindowsCount([0, 1], "browser windows after testOpenCloseNormal");
       testOpenClosePrivateBrowsing(function () {
+        browserWindowsCount([0, 1], "browser windows after testOpenClosePrivateBrowsing");
         testOpenCloseWindowAndPopup(function () {
+          browserWindowsCount([0, 1], "browser windows after testOpenCloseWindowAndPopup");
           testOpenCloseOnlyPopup(function () {
+            browserWindowsCount([0, 1], "browser windows after testOpenCloseOnlyPopup");
             testOpenCloseRestoreFromPopup (function () {
+              browserWindowsCount([0, 1], "browser windows after testOpenCloseRestoreFromPopup");
               testNotificationCount(function () {
                 cleanupTestsuite();
-                browserWindowsCount(1, "Only one browser window should be open eventually");
+                browserWindowsCount(1, "browser windows after testNotificationCount");
                 finish();
               });
             });
