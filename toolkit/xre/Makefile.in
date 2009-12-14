@@ -176,10 +176,7 @@ include $(topsrcdir)/config/rules.mk
 
 ifdef BUILD_STATIC_LIBS
 export::
-	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_COMP_NAMES) Apprunner
-#	embedding/browser/gtk/src/Makefile.in sucks! we need to add an empty line to 
-# FINAL_LINK_COMPS to keep the two lists in sync :-(
-	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_COMPS) ""
+	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_LINK_COMP_NAMES) Apprunner
 endif
 
 LOCAL_INCLUDES += \
