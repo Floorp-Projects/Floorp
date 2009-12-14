@@ -112,12 +112,12 @@ typedef struct {
   u_int32_t context_flags;
 } MDRawContextBase;
 
-#include "minidump_cpu_sparc.h"
-#include "minidump_cpu_x86.h"
+#include "minidump_cpu_amd64.h"
+#include "minidump_cpu_arm.h"
 #include "minidump_cpu_ppc.h"
 #include "minidump_cpu_ppc64.h"
-#include "minidump_cpu_amd64.h"
-
+#include "minidump_cpu_sparc.h"
+#include "minidump_cpu_x86.h"
 
 /*
  * WinVer.h

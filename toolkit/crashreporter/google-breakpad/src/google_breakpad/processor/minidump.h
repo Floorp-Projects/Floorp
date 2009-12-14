@@ -81,6 +81,7 @@
 
 #include <unistd.h>
 
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
@@ -178,10 +179,11 @@ class MinidumpContext : public MinidumpStream {
   // Returns raw CPU-specific context data for the named CPU type.  If the
   // context data does not match the CPU type or does not exist, returns
   // NULL.
-  const MDRawContextX86*   GetContextX86() const;
-  const MDRawContextPPC*   GetContextPPC() const;
   const MDRawContextAMD64* GetContextAMD64() const;
+  const MDRawContextARM*   GetContextARM() const;
+  const MDRawContextPPC*   GetContextPPC() const;
   const MDRawContextSPARC* GetContextSPARC() const;
+  const MDRawContextX86*   GetContextX86() const;
  
   // Print a human-readable representation of the object to stdout.
   void Print();
@@ -215,7 +217,8 @@ class MinidumpContext : public MinidumpStream {
     MDRawContextAMD64* amd64;
     // on Solaris SPARC, sparc is defined as a numeric constant,
     // so variables can NOT be named as sparc
-    MDRawContextSPARC*  ctx_sparc;
+    MDRawContextSPARC* ctx_sparc;
+    MDRawContextARM*   arm;
   } context_;
 };
 
@@ -639,6 +642,46 @@ class MinidumpException : public MinidumpStream {
   MinidumpContext*     context_;
 };
 
+// MinidumpAssertion wraps MDRawAssertionInfo, which contains information
+// about an assertion that caused the minidump to be generated.
+class MinidumpAssertion : public MinidumpStream {
+ public:
+  virtual ~MinidumpAssertion();
+
+  const MDRawAssertionInfo* assertion() const {
+    return valid_ ? &assertion_ : NULL;
+  }
+
+  string expression() const {
+    return valid_ ? expression_ : "";
+  }
+
+  string function() const {
+    return valid_ ? function_ : "";
+  }
+
+  string file() const {
+    return valid_ ? file_ : "";
+  }
+
+  // Print a human-readable representation of the object to stdout.
+  void Print();
+
+ private:
+  friend class Minidump;
+
+  static const u_int32_t kStreamType = MD_ASSERTION_INFO_STREAM;
+
+  explicit MinidumpAssertion(Minidump* minidump);
+
+  bool Read(u_int32_t expected_size);
+
+  MDRawAssertionInfo assertion_;
+  string expression_;
+  string function_;
+  string file_;
+};
+
 
 // MinidumpSystemInfo wraps MDRawSystemInfo and provides information about
 // the system on which the minidump was generated.  See also MinidumpMiscInfo.
@@ -756,9 +799,14 @@ class Minidump {
  public:
   // path is the pathname of a file containing the minidump.
   explicit Minidump(const string& path);
+  // input is an istream wrapping minidump data. Minidump holds a
+  // weak pointer to input, and the caller must ensure that the stream
+  // is valid as long as the Minidump object is.
+  explicit Minidump(std::istream& input);
 
   virtual ~Minidump();
 
+  // path may be empty if the minidump was not opened from a file
   virtual string path() const {
     return path_;
   }
@@ -788,6 +836,7 @@ class Minidump {
   MinidumpModuleList* GetModuleList();
   MinidumpMemoryList* GetMemoryList();
   MinidumpException* GetException();
+  MinidumpAssertion* GetAssertion();
   MinidumpSystemInfo* GetSystemInfo();
   MinidumpMiscInfo* GetMiscInfo();
   MinidumpBreakpadInfo* GetBreakpadInfo();
@@ -813,7 +862,7 @@ class Minidump {
   bool SeekSet(off_t offset);
 
   // Returns the current position of the minidump file.
-  off_t Tell() { return valid_ ? lseek(fd_, 0, SEEK_CUR) : (off_t)-1; }
+  off_t Tell();
 
   // The next 2 methods are medium-level I/O routines.
 
@@ -884,11 +933,12 @@ class Minidump {
   MinidumpStreamMap*        stream_map_;
 
   // The pathname of the minidump file to process, set in the constructor.
+  // This may be empty if the minidump was opened directly from a stream.
   const string              path_;
 
-  // The file descriptor for all file I/O.  Used by ReadBytes and SeekSet.
-  // Set based on the |path_| member by Open, which is called by Read.
-  int                       fd_;
+  // The stream for all file I/O.  Used by ReadBytes and SeekSet.
+  // Set based on the path in Open, or directly in the constructor.
+  std::istream*             stream_;
 
   // swap_ is true if the minidump file should be byte-swapped.  If the
   // minidump was produced by a CPU that is other-endian than the CPU
