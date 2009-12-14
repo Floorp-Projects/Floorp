@@ -49,6 +49,7 @@ EXTRA_COMPONENTS = \
 			nsLoginInfo.js \
 			storage-Legacy.js \
 			storage-mozStorage.js \
+			crypto-SDR.js \
 			$(NULL)
 
 

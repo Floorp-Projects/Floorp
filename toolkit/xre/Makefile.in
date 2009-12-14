@@ -151,6 +151,7 @@ endif
 ifeq ($(OS_ARCH),Linux)
 SHARED_LIBRARY_LIBS += \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/linux/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/linux/minidump_writer/$(LIB_PREFIX)minidump_writer_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
@@ -179,10 +180,7 @@ LOCAL_INCLUDES += -I$(topsrcdir)/dom/ipc
 
 ifdef BUILD_STATIC_LIBS
 export::
-	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_COMP_NAMES) Apprunner
-#	embedding/browser/gtk/src/Makefile.in sucks! we need to add an empty line to 
-# FINAL_LINK_COMPS to keep the two lists in sync :-(
-	@$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_COMPS) ""
+	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_LINK_COMP_NAMES) Apprunner
 endif
 
 LOCAL_INCLUDES += \

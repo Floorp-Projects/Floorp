@@ -71,6 +71,7 @@ enum {
   stateRequestStarted    = PR_BIT(0),
   stateHasSize           = PR_BIT(1),
   stateDecodeStarted     = PR_BIT(2),
+  stateDecodeStopped     = PR_BIT(3),
   stateRequestStopped    = PR_BIT(4)
 };
 

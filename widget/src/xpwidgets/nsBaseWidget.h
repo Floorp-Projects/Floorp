@@ -191,7 +191,7 @@ protected:
   nsIntRect*        mOriginalBounds;
   // When this pointer is null, the widget is not clipped
   nsAutoArrayPtr<nsIntRect> mClipRects;
-  PRInt32           mClipRectCount;
+  PRUint32          mClipRectCount;
   PRInt32           mZIndex;
   nsSizeMode        mSizeMode;
 
@@ -247,6 +247,91 @@ class nsAutoRollup
 
   nsAutoRollup();
   ~nsAutoRollup();
+};
+
+/**
+ * BlitRectIter and/or ScrollRectIterBase are classes used in
+ * nsIWidget::Scroll() implementations.  They provide sorting of rectangles
+ * such that copying from rects[i] - aDelta to rects[i] does not alter
+ * anything in rects[j] for each j > i when rect[i] and rect[j] do not
+ * intersect each other nor any other rectangle.  That is, it is safe to just
+ * copy non-intersecting rectangles in the order provided.
+ *
+ * ScrollRectIterBase is only instantiated within derived classes.  It expects
+ * to be initialized through BaseInit() with a linked list of rectangles.
+ *
+ * BlitRectIter provides a simple constructor from an array of nsIntRects.
+ */
+
+class ScrollRectIterBase {
+public:
+  PRBool IsDone() { return mHead == nsnull; }
+  void operator++() { mHead = mHead->mNext; }
+  const nsIntRect& Rect() const { return *mHead; }
+
+protected:
+  ScrollRectIterBase() {}
+
+  struct ScrollRect : public nsIntRect {
+    ScrollRect(const nsIntRect& aIntRect) : nsIntRect(aIntRect) {}
+
+    // Flip the coordinate system so that we can assume that the rectangles
+    // are moving in the direction of decreasing x and y (left and up).
+    // This function is its own inverse.
+    void Flip(const nsIntPoint& aDelta)
+    {
+      if (aDelta.x > 0) x = -XMost();
+      if (aDelta.y > 0) y = -YMost();
+    }
+
+    ScrollRect* mNext;
+  };
+
+  void BaseInit(const nsIntPoint& aDelta, ScrollRect* aHead);
+
+private:
+  void Flip(const nsIntPoint& aDelta)
+  {
+    for (ScrollRect* r = mHead; r; r = r->mNext) {
+      r->Flip(aDelta);
+    }
+  }
+
+  /**
+   * Comparator for an initial sort of the rectangles.  The rectangles are
+   * primarily sorted in increasing y, which is required for the algorithm.
+   * The secondary sort is in decreasing x, chosen to make Move() more
+   * efficient for rows of rectangles with equal y.
+   */
+  class InitialSortComparator {
+  public:
+    PRBool Equals(const ScrollRect* a, const ScrollRect* b) const
+    {
+      return a->y == b->y && a->x == b->x;
+    }
+    PRBool LessThan(const ScrollRect* a, const ScrollRect* b) const
+    {
+      return a->y < b->y || (a->y == b->y && a->x > b->x);
+    }
+  };
+
+  void Move(ScrollRect** aUnmovedLink);
+
+  // Linked list of rectangles; these are assumed owned by the derived class
+  ScrollRect* mHead;
+  // Used in sorting to point to the last mNext link in the moved chain.
+  ScrollRect** mTailLink;
+};
+
+class BlitRectIter : public ScrollRectIterBase {
+public:
+  BlitRectIter(const nsIntPoint& aDelta, const nsTArray<nsIntRect>& aRects);
+private:
+  // Copying is not supported.
+  BlitRectIter(const BlitRectIter&);
+  void operator=(const BlitRectIter&);
+
+  nsTArray<ScrollRect> mRects;
 };
 
 #endif // nsBaseWidget_h__

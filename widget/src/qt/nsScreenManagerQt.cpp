@@ -46,12 +46,12 @@
 nsScreenManagerQt::nsScreenManagerQt()
 {
     desktop = 0;
+    screens = 0;
 }
-
 
 nsScreenManagerQt::~nsScreenManagerQt()
 {
-    // nothing to see here.
+    delete [] screens;
 }
 
 // addref, release, QI

@@ -3441,6 +3441,11 @@ public:
         return GetDataImpl(cx);
     }
 
+    static inline JSBool IsMainThreadContext(JSContext *cx)
+    {
+        return cx->thread == sMainJSThread;
+    }
+
     static void CleanupAllThreads();
 
     ~XPCPerThreadData();

@@ -84,7 +84,6 @@ LIBS += \
 LOCAL_INCLUDES += -I$(srcdir)
 OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS) $(MOZ_GTHREAD_CFLAGS)
 OS_LIBS += $(MOZ_GTK2_LIBS) $(MOZ_GTHREAD_LIBS)
-CPPSRCS += http_upload.cc
 FORCE_USE_PIC=1
 endif
 
@@ -96,7 +95,6 @@ LIBS += \
 LOCAL_INCLUDES += -I$(srcdir)
 OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS) $(MOZ_GTHREAD_CFLAGS)
 OS_LIBS += $(MOZ_GTK2_LIBS) $(MOZ_GTHREAD_LIBS)
-CPPSRCS += http_upload.cc
 FORCE_USE_PIC=1
 endif
 
@@ -114,9 +112,6 @@ libs::
 endif
 
 ifeq (,$(filter-out Linux SunOS,$(OS_ARCH)))
-export:: $(srcdir)/../google-breakpad/src/common/linux/http_upload.cc
-	$(INSTALL) $^ .
-
 libs:: $(topsrcdir)/toolkit/themes/winstripe/global/throbber/Throbber-small.gif
 	$(INSTALL) $^ $(DIST)/bin
 endif

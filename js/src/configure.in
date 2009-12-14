@@ -490,6 +490,13 @@ case "$target" in
             _USE_DYNAMICBASE=1
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
+        elif test "$_CC_MAJOR_VERSION" = "16"; then
+            _CC_SUITE=10
+            CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
+            LDFLAGS="$LDFLAGS -MANIFESTUAC:NO"
+            _USE_DYNAMICBASE=1
+            AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
+            AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         else
             AC_MSG_ERROR([This version of the MSVC compiler, $CC_VERSION , is unsupported.])
         fi

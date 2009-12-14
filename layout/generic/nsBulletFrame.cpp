@@ -980,7 +980,7 @@ nsBulletFrame::AppendCounterText(PRInt32 aListStyleType,
                                  PRInt32 aOrdinal,
                                  nsString& result)
 {
-  PRBool success;
+  PRBool success = PR_TRUE;
   
   switch (aListStyleType) {
     case NS_STYLE_LIST_STYLE_NONE: // used by counters code only
