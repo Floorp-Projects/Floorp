@@ -576,6 +576,13 @@ case "$target" in
             _USE_DYNAMICBASE=1
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
+        elif test "$_CC_MAJOR_VERSION" = "16"; then
+            _CC_SUITE=10
+            CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
+            LDFLAGS="$LDFLAGS -MANIFESTUAC:NO"
+            _USE_DYNAMICBASE=1
+            AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
+            AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         else
             AC_MSG_ERROR([This version of the MSVC compiler, $CC_VERSION , is unsupported.])
         fi
@@ -1187,7 +1194,9 @@ esac
 
 case "$OS_ARCH" in
 WINNT)
-    OS_TEST=`uname -p`
+    if test -z "$CROSS_COMPILE" ; then
+        OS_TEST=`uname -p`
+    fi
     ;;
 Windows_NT)
 #
@@ -2141,7 +2150,7 @@ case "$target" in
         # Use temp file for windres (bug 213281)
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
-        LIBS="$LIBS -lgdi32 -lwinmm -lwsock32"
+        LIBS="$LIBS -luuid -lgdi32 -lwinmm -lwsock32"
         MOZ_JS_LIBS='-L$(LIBXUL_DIST)/lib -lmozjs'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom -lxpcom_core'
@@ -7645,7 +7654,7 @@ if test "$MOZ_TREE_CAIRO"; then
     mv -f $CAIRO_FEATURES_H "$CAIRO_FEATURES_H".orig 2> /dev/null
 
 else
-   PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION freetype2 fontconfig)
+   PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION pixman-1 freetype2 fontconfig)
    MOZ_CAIRO_CFLAGS=$CAIRO_CFLAGS
    MOZ_CAIRO_LIBS=$CAIRO_LIBS
    if test "$MOZ_X11"; then

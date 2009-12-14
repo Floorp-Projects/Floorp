@@ -731,6 +731,7 @@
               aTab.setAttribute("image", browser.mIconURL);
             else
               aTab.removeAttribute("image");
+            this._tabAttrModified(aTab);
           ]]>
         </body>
       </method>
@@ -866,9 +867,11 @@
             if (this.mCurrentBrowser == newBrowser && !aForceUpdate)
               return;
 
+            var oldTab = this.mCurrentTab;
+
             // Preview mode should not reset the owner
-            if (!this._previewMode && this.mCurrentTab != this.selectedTab)
-              this.mCurrentTab.owner = null;
+            if (!this._previewMode && oldTab != this.selectedTab)
+              oldTab.owner = null;
 
             this._lastRelatedTab = null;
 
@@ -966,6 +969,9 @@
               event.initEvent("TabSelect", true, false);
               this.mCurrentTab.dispatchEvent(event);
 
+              this._tabAttrModified(oldTab);
+              this._tabAttrModified(this.mCurrentTab);
+
               // Change focus to the new browser unless the findbar is focused.
               if (gFindBar.hidden ||
                   gFindBar.getElement("findbar-textbox").getAttribute("focused") != "true")
@@ -973,6 +979,17 @@
             }
           ]]>
         </body>
+      </method>
+
+      <method name="_tabAttrModified">
+        <parameter name="aTab"/>
+        <body><![CDATA[
+          // This event should be dispatched when any of these attributes change:
+          // label, crop, busy, image, selected
+          var event = document.createEvent("Events");
+          event.initEvent("TabAttrModified", true, false);
+          aTab.dispatchEvent(event);
+        ]]></body>
       </method>
 
       <method name="onTabClick">
@@ -1015,6 +1032,7 @@
           <![CDATA[
             aTab.label = this.mStringBundle.getString("tabs.loading");
             aTab.setAttribute("crop", "end");
+            this._tabAttrModified(aTab);
           ]]>
         </body>
       </method>
@@ -1055,6 +1073,7 @@
 
             aTab.label = title;
             aTab.setAttribute("crop", crop);
+            this._tabAttrModified(aTab);
           ]]>
         </body>
       </method>
@@ -1724,6 +1743,7 @@
             var isBusy = aOtherTab.hasAttribute("busy");
             if (isBusy) {
               aOurTab.setAttribute("busy", "true");
+              this._tabAttrModified(aOurTab);
               if (aOurTab == this.selectedTab)
                 this.mIsBusy = true;
             }
@@ -3264,7 +3284,6 @@
     <implementation implements="nsIDOMEventListener">
       <method name="_menuItemOnCommand">
         <parameter name="aEvent"/>
-
         <body><![CDATA[
           var tabcontainer = document.getBindingParent(this);
           tabcontainer.selectedItem = aEvent.target.tab;
@@ -3274,27 +3293,13 @@
       <method name="_tabOnAttrModified">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          var menuItem = aEvent.target.mCorrespondingMenuitem;
-          if (menuItem) {
-            var attrName = aEvent.attrName;
-            switch (attrName) {
-              case "label":
-              case "crop":
-              case "busy":
-              case "image":
-              case "selected":
-                if (aEvent.attrChange == aEvent.REMOVAL)
-                  menuItem.removeAttribute(attrName);
-                else
-                  menuItem.setAttribute(attrName, aEvent.newValue);
-            }
-          }
+          var tab = aEvent.target;
+          this._setMenuitemAttributes(tab.mCorrespondingMenuitem, tab);
         ]]></body>
       </method>
 
       <method name="_tabOnTabClose">
         <parameter name="aEvent"/>
-
         <body><![CDATA[
           var menuItem = aEvent.target.mCorrespondingMenuitem;
           if (menuItem)
@@ -3312,7 +3317,7 @@
             case "command":
               this._menuItemOnCommand(aEvent);
               break;
-            case "DOMAttrModified":
+            case "TabAttrModified":
               this._tabOnAttrModified(aEvent);
               break;
             case "TabClose":
@@ -3345,7 +3350,6 @@
               this.childNodes[i].removeAttribute("tabIsVisible");
           }
         ]]></body>
-
       </method>
 
       <method name="_createTabMenuItem">
@@ -3357,20 +3361,11 @@
 
           menuItem.setAttribute("class", "menuitem-iconic alltabs-item");
 
-          menuItem.setAttribute("label", aTab.label);
-          menuItem.setAttribute("crop", aTab.getAttribute("crop"));
-          menuItem.setAttribute("image", aTab.getAttribute("image"));
-
-          if (aTab.hasAttribute("busy"))
-            menuItem.setAttribute("busy", aTab.getAttribute("busy"));
-          if (aTab.selected)
-            menuItem.setAttribute("selected", "true");
+          this._setMenuitemAttributes(menuItem, aTab);
 
           // Keep some attributes of the menuitem in sync with its
           // corresponding tab (e.g. the tab label)
           aTab.mCorrespondingMenuitem = menuItem;
-          aTab.addEventListener("DOMAttrModified", this, false);
-          aTab.addEventListener("TabClose", this, false);
           menuItem.tab = aTab;
           menuItem.addEventListener("command", this, false);
 
@@ -3378,11 +3373,30 @@
           return menuItem;
         ]]></body>
       </method>
+
+      <method name="_setMenuitemAttributes">
+        <parameter name="aMenuitem"/>
+        <parameter name="aTab"/>
+        <body><![CDATA[
+          aMenuitem.setAttribute("label", aTab.label);
+          aMenuitem.setAttribute("crop", aTab.getAttribute("crop"));
+          aMenuitem.setAttribute("image", aTab.getAttribute("image"));
+
+          if (aTab.hasAttribute("busy"))
+            aMenuitem.setAttribute("busy", aTab.getAttribute("busy"));
+          else
+            aMenuitem.removeAttribute("busy");
+
+          if (aTab.selected)
+            aMenuitem.setAttribute("selected", "true");
+          else
+            aMenuitem.removeAttribute("selected");
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
       <handler event="popupshowing">
-
       <![CDATA[
         // set up the menu popup
         var tabcontainer = document.getBindingParent(this);
@@ -3390,6 +3404,8 @@
 
         // Listen for changes in the tab bar.
         tabcontainer.addEventListener("TabOpen", this, false);
+        tabcontainer.addEventListener("TabAttrModified", this, false);
+        tabcontainer.addEventListener("TabClose", this, false);
         tabcontainer.mTabstrip.addEventListener("scroll", this, false);
 
         for (var i = 0; i < tabs.length; i++) {
@@ -3404,14 +3420,14 @@
         while (this.hasChildNodes()) {
           var menuItem = this.lastChild;
           menuItem.removeEventListener("command", this, false);
-          menuItem.tab.removeEventListener("DOMAttrModified", this, false);
-          menuItem.tab.removeEventListener("TabClose", this, false);
           menuItem.tab.mCorrespondingMenuitem = null;
           this.removeChild(menuItem);
         }
         var tabcontainer = document.getBindingParent(this);
         tabcontainer.mTabstrip.removeEventListener("scroll", this, false);
         tabcontainer.removeEventListener("TabOpen", this, false);
+        tabcontainer.removeEventListener("TabAttrModified", this, false);
+        tabcontainer.removeEventListener("TabClose", this, false);
       ]]></handler>
 
       <handler event="DOMMenuItemActive">

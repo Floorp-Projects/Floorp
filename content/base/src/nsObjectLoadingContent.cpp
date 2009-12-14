@@ -1778,6 +1778,9 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
     aURI = baseURI;
   }
 
+  nsIFrame *nsiframe = do_QueryFrame(aFrame);
+  nsWeakFrame weakFrame(nsiframe);
+
   // We'll always have a type or a URI by the time we get here
   NS_ASSERTION(aURI || !typeToUse.IsEmpty(), "Need a URI or a type");
   LOG(("OBJLC [%p]: Calling [%p]->Instantiate(<%s>, %p)\n", this, aFrame,
@@ -1787,7 +1790,9 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
   mInstantiating = oldInstantiatingValue;
 
   nsCOMPtr<nsIPluginInstance> pluginInstance;
-  aFrame->GetPluginInstance(*getter_AddRefs(pluginInstance));
+  if (weakFrame.IsAlive()) {
+    aFrame->GetPluginInstance(*getter_AddRefs(pluginInstance));
+  }
   if (pluginInstance) {
     nsCOMPtr<nsIPluginTag> pluginTag;
     nsCOMPtr<nsIPluginHost> host(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
