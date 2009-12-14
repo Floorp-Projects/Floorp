@@ -14,12 +14,12 @@
 # The Original Code is Mozilla Breakpad integration
 #
 # The Initial Developer of the Original Code is
-# The Mozilla Foundation
-# Portions created by the Initial Developer are Copyright (C) 2008
+# The Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-# Ted Mielczarek <ted.mielczarek@gmail.com>
+#  Ted Mielczarek <ted.mielczarek@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,20 +42,19 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= breakpad_mac_dwarf
-HOST_LIBRARY_NAME = host_breakpad_mac_dwarf_s
+MODULE		= writer
+LIBRARY_NAME	= minidump_writer_s
+XPI_NAME 	= crashreporter
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../../..
 
-HOST_CPPSRCS = \
-  bytereader.cc \
-  dwarf2reader.cc \
-  functioninfo.cc \
+CPPSRCS	= \
+  linux_dumper.cc \
+  minidump_writer.cc \
   $(NULL)
-
-HOST_CXXFLAGS += -funsigned-char
 
 # need static lib
 FORCE_STATIC_LIB = 1
+FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk
