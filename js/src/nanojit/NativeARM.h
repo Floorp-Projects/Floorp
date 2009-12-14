@@ -800,22 +800,6 @@ enum {
         }                                                               \
     } while(0)
 
-#define STMIA(_b, _mask) do {                                           \
-        underrunProtect(4);                                             \
-        NanoAssert(IsGpReg(_b));                                        \
-        NanoAssert(((_mask)&rmask(_b))==0 && isU8(_mask));              \
-        *(--_nIns) = (NIns)(COND_AL | (0x8A<<20) | ((_b)<<16) | (_mask)&0xFF); \
-        asm_output("stmia %s!,{0x%x}", gpn(_b), _mask); \
-    } while (0)
-
-#define LDMIA(_b, _mask) do {                                           \
-        underrunProtect(4);                                             \
-        NanoAssert(IsGpReg(_b));                                        \
-        NanoAssert(((_mask)&rmask(_b))==0 && isU8(_mask));              \
-        *(--_nIns) = (NIns)(COND_AL | (0x8B<<20) | ((_b)<<16) | (_mask)&0xFF); \
-        asm_output("ldmia %s!,{0x%x}", gpn(_b), (_mask)); \
-    } while (0)
-
 /*
  * VFP
  */
