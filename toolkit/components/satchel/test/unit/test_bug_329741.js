@@ -42,7 +42,9 @@
 function run_test()
 {
   var file = do_get_file("formhistory.dat");
-  var formhistFile = dirSvc.get("ProfD", Ci.nsIFile);
+  var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
+  var formhistFile = profileDir.clone();
+  formhistFile.append("formhistory.dat");
 
   // Cleanup from any previous test.
   if (formhistFile.exists())
@@ -50,8 +52,7 @@ function run_test()
   do_check_false(formhistFile.exists());
 
   // Copy a formhistory.dat into place
-  file.copyTo(formhistFile, "formhistory.dat");
-  formhistFile.append("formhistory.dat");
+  file.copyTo(profileDir, "formhistory.dat");
   do_check_true(formhistFile.exists());
 
   // Clear form history, test that file was deleted.
