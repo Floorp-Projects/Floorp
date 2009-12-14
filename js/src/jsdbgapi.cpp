@@ -526,7 +526,7 @@ js_SweepWatchPoints(JSContext *cx)
          &wp->links != &rt->watchPointList;
          wp = next) {
         next = (JSWatchPoint *)wp->links.next;
-        if (js_IsAboutToBeFinalized(cx, wp->object)) {
+        if (js_IsAboutToBeFinalized(wp->object)) {
             sample = rt->debuggerMutations;
 
             /* Ignore failures. */
