@@ -10,6 +10,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crash_report_sender", "send
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crash_generation", "crash_generation\crash_generation.vcproj", "{A820AF62-6239-4693-8430-4F516C1838F4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "exception_handler_test", "handler\exception_handler_test\exception_handler_test.vcproj", "{89094A11-CF25-4037-AF43-EACFA751405E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -42,6 +44,14 @@ Global
 		{A820AF62-6239-4693-8430-4F516C1838F4}.Release|Win32.Build.0 = Release|Win32
 		{A820AF62-6239-4693-8430-4F516C1838F4}.ReleaseStaticCRT|Win32.ActiveCfg = ReleaseStaticCRT|Win32
 		{A820AF62-6239-4693-8430-4F516C1838F4}.ReleaseStaticCRT|Win32.Build.0 = ReleaseStaticCRT|Win32
+		{89094A11-CF25-4037-AF43-EACFA751405E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{89094A11-CF25-4037-AF43-EACFA751405E}.Debug|Win32.Build.0 = Debug|Win32
+		{89094A11-CF25-4037-AF43-EACFA751405E}.DebugStaticCRT|Win32.ActiveCfg = Debug|Win32
+		{89094A11-CF25-4037-AF43-EACFA751405E}.DebugStaticCRT|Win32.Build.0 = Debug|Win32
+		{89094A11-CF25-4037-AF43-EACFA751405E}.Release|Win32.ActiveCfg = Release|Win32
+		{89094A11-CF25-4037-AF43-EACFA751405E}.Release|Win32.Build.0 = Release|Win32
+		{89094A11-CF25-4037-AF43-EACFA751405E}.ReleaseStaticCRT|Win32.ActiveCfg = Release|Win32
+		{89094A11-CF25-4037-AF43-EACFA751405E}.ReleaseStaticCRT|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
