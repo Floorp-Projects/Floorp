@@ -53,9 +53,6 @@
 
 #include "nsServiceManagerUtils.h"
 #include "nsToolkitCompsCID.h"
-#ifdef MOZ_MORKREADER
-#include "nsMorkReader.h"
-#endif
 
 class nsIAutoCompleteSimpleResult;
 class nsIAutoCompleteResult;
@@ -130,21 +127,5 @@ public:
   nsCOMPtr<mozIStorageStatement> mDBInsertNameValue;
   nsCOMPtr<mozIStorageStatement> mDBUpdateEntry;
 };
-
-#ifdef MOZ_MORKREADER
-class nsFormHistoryImporter : public nsIFormHistoryImporter
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIFORMHISTORYIMPORTER
-
-private:
-  // Enumerator callback to add a single row to the FormHistory.
-  static PLDHashOperator
-  AddToFormHistoryCB(const nsCSubstring &aRowID,
-                     const nsTArray<nsCString> *aValues,
-                     void *aData);
-};
-#endif
 
 #endif // __nsFormHistory__
