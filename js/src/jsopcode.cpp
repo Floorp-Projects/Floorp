@@ -4553,8 +4553,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_INITMETHOD:
                 LOAD_ATOM(0);
                 xval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
-                                   (jschar)
-                                   (ATOM_IS_IDENTIFIER(atom) ? 0 : '\''));
+                                   jschar(ATOM_IS_IDENTIFIER(atom) ? 0 : '\''));
                 if (!xval)
                     return NULL;
                 isFirst = (ss->opcodes[ss->top - 2] == JSOP_NEWINIT);
@@ -4579,8 +4578,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 if (lastop == JSOP_GETTER || lastop == JSOP_SETTER) {
                     if (!atom ||
                         !ATOM_IS_STRING(atom) ||
-                        !ATOM_IS_IDENTIFIER(atom) ||
-                        ATOM_IS_KEYWORD(atom) ||
                         (ss->opcodes[ss->top+1] != JSOP_LAMBDA &&
                          ss->opcodes[ss->top+1] != JSOP_LAMBDA_FC)) {
                         todo = Sprint(&ss->sprinter, "%s%s%s %s: %s",
