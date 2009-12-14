@@ -508,6 +508,11 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       *aScriptElement = node;
       return rv;
     }
+    case eTreeOpRunScriptAsyncDefer: {
+      nsIContent* node = *(mOne.node);
+      aBuilder->RunScript(node);
+      return rv;
+    }
     case eTreeOpDoneAddingChildren: {
       nsIContent* node = *(mOne.node);
       node->DoneAddingChildren(aBuilder->HaveNotified(node));
