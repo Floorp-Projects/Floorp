@@ -6311,6 +6311,12 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
     }
   }
 
+  // Should we do this if IsCollapsed() is true?
+  nsSize size(GetSize());
+  desiredSize.mOverflowArea.UnionRect(desiredSize.mOverflowArea,
+                                      nsRect(nsPoint(0, 0), size));
+  FinishAndStoreOverflow(&desiredSize.mOverflowArea, size);
+
   SyncLayout(aState);
 
   return rv;
