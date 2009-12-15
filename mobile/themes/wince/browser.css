@@ -185,6 +185,18 @@ toolbarbutton.page-button {
   }
 }
 
+richlistitem[isDisabled="true"] .title {
+  color : gray;
+}
+
+richlistitem[isDisabled="true"] .normal {
+  color : lightgray;
+}
+
+richlistitem[isDisabled="true"] image {
+  opacity: 0.25;
+}
+
 /* downloads panel UI   ---------------------------------------------------- */
 .download-retry-failed {
   color: red !important;

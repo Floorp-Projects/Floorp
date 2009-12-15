@@ -403,6 +403,18 @@ toolbarbutton.page-button {
   -moz-image-region: rect(90px 78px 108px 0px);
 }
 
+richlistitem[isDisabled="true"] .title {
+  color : gray;
+}
+
+richlistitem[isDisabled="true"] .normal {
+  color : lightgray;
+}
+
+richlistitem[isDisabled="true"] image {
+  opacity: 0.25;
+}
+
 /* downloads panel UI   ---------------------------------------------------- */
 .download-retry-failed {
   color: red !important;
