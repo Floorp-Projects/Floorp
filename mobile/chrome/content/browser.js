@@ -1607,7 +1607,7 @@ const BrowserSearch = {
   engines: null,
   _allEngines: [],
 
-  observe: function (aSubject, aTopic, aData) {
+  observe: function bs_observe(aSubject, aTopic, aData) {
     if (aTopic != "browser-search-engine-modified")
       return;
 
@@ -1750,7 +1750,7 @@ ContentCustomClicker.prototype = {
     },
 
     /** Returns a node if selecting this node causes a focus. */
-    _getFocusable: function(node) {
+    _getFocusable: function _getFocusable(node) {
       if (node && node.mozMatchesSelector("*:link,*:visited,*:link *,*:visited *,button,input,option,select,textarea"))
         return node;
       return null;
@@ -2350,7 +2350,7 @@ const gSessionHistoryObserver = {
 };
 
 var MemoryObserver = {
-  observe: function() {
+  observe: function mo_observe() {
     let memory = Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory);
     do {
       Browser.windowUtils.garbageCollect();      
@@ -2547,11 +2547,11 @@ ProgressController.prototype = {
   },
 
   /** This method is called to indicate progress changes for the currently loading page. */
-  onProgressChange: function(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
+  onProgressChange: function onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
   },
 
   /** This method is called to indicate a change to the current location. */
-  onLocationChange: function(aWebProgress, aRequest, aLocationURI) {
+  onLocationChange: function onLocationChange(aWebProgress, aRequest, aLocationURI) {
     let location = aLocationURI ? aLocationURI.spec : "";
 
     this._hostChanged = true;
@@ -2570,11 +2570,11 @@ ProgressController.prototype = {
    * This method is called to indicate a status changes for the currently
    * loading page.  The message is already formatted for display.
    */
-  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {
+  onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
   },
 
   /** This method is called when the security state of the browser changes. */
-  onSecurityChange: function(aWebProgress, aRequest, aState) {
+  onSecurityChange: function onSecurityChange(aWebProgress, aRequest, aState) {
     // Don't need to do anything if the data we use to update the UI hasn't changed
     if (this.state == aState && !this._hostChanged)
       return;
@@ -2620,7 +2620,7 @@ ProgressController.prototype = {
       this._tab.updateThumbnail();
   },
 
-  _documentStop: function() {
+  _documentStop: function _documentStop() {
   }
 };
 
@@ -2752,7 +2752,7 @@ Tab.prototype = {
    * Throttles redraws to once every 2 seconds while loading the page, zooming to fit page if
    * user hasn't started zooming.
    */
-  _resizeAndPaint: function() {
+  _resizeAndPaint: function _resizeAndPaint() {
     let bv = Browser._browserView;
     bv.commitBatchOperation();
 
@@ -2769,12 +2769,12 @@ Tab.prototype = {
     this._loadingPaintCount++;
   },
 
-  _startResizeAndPaint: function() {
+  _startResizeAndPaint: function _startResizeAndPaint() {
     this._loadingTimeout = setTimeout(this._resizeAndPaint, 2000);
     this._loadingPaintCount = 0;
   },
 
-  _stopResizeAndPaint: function() {
+  _stopResizeAndPaint: function _stopResizeAndPaint() {
     if (this._loadingTimeout) {
       Browser._browserView.commitBatchOperation();
       clearTimeout(this._loadingTimeout);
@@ -2783,11 +2783,11 @@ Tab.prototype = {
   },
 
   /** Returns tab's identity state for updating security UI. */
-  getIdentityState: function() {
+  getIdentityState: function getIdentityState() {
     return this._listener.state;
   },
 
-  startLoading: function() {
+  startLoading: function startLoading() {
     this._loading = true;
     let bvs = this._browserViewportState;
     bvs.defaultZoomLevel = bvs.zoomLevel; // ensures zoom level is reset on new pages
@@ -2805,7 +2805,7 @@ Tab.prototype = {
     }
   },
 
-  endLoading: function() {
+  endLoading: function endLoading() {
     // Determine at what resolution the browser is rendered based on meta tag
     let browser = this._browser;
     let metaData = Util.contentIsHandheld(browser);
@@ -2855,6 +2855,7 @@ Tab.prototype = {
     // Don't render until pane has been scrolled to the correct position.
     bv.pauseRendering();
     this._stopResizeAndPaint();
+
     // XXX Sometimes MozScrollSizeChange has not occurred, so the scroll pane will not
     // be resized yet. We are assuming this event is on the queue, so scroll the pane
     // "soon."
@@ -2867,15 +2868,15 @@ Tab.prototype = {
     this.restoreState();
   },
 
-  isLoading: function() {
+  isLoading: function isLoading() {
     return this._loading;
   },
 
-  load: function(uri) {
+  load: function load(uri) {
     this._browser.setAttribute("src", uri);
   },
 
-  create: function() {
+  create: function create() {
     // Initialize a viewport state for BrowserView
     this._browserViewportState = BrowserView.Util.createBrowserViewportState();
 
@@ -2883,21 +2884,21 @@ Tab.prototype = {
     this._createBrowser();
   },
 
-  destroy: function() {
-    this._destroyBrowser();
+  destroy: function destroy() {
     document.getElementById("tabs").removeTab(this._chromeTab);
     this._chromeTab = null;
+    this._destroyBrowser();
   },
 
   /** Create browser if it doesn't already exist. */
-  ensureBrowserExists: function() {
+  ensureBrowserExists: function ensureBrowserExists() {
     if (!this._browser) {
       this._createBrowser();
       this.browser.contentDocument.location = this._state._url;
     }
   },
 
-  _createBrowser: function() {
+  _createBrowser: function _createBrowser() {
     if (this._browser)
       throw "Browser already exists";
 
@@ -2919,17 +2920,24 @@ Tab.prototype = {
     browser.addProgressListener(this._listener);
   },
 
-  _destroyBrowser: function() {
+  _destroyBrowser: function _destroyBrowser() {
     if (this._browser) {
-      document.getElementById("browsers").removeChild(this._browser);
+      var browser = this._browser;
+      browser.removeProgressListener(this._listener);
+
       this._browser = null;
+      this._listener = null;
       this._loading = false;
       this._stopResizeAndPaint();
+
+      Util.executeSoon(function() {
+        document.getElementById("browsers").removeChild(browser);
+      });      
     }
   },
 
   /** Serializes as much state as possible of the current content.  */
-  saveState: function() {
+  saveState: function saveState() {
     let state = { };
 
     var browser = this._browser;
@@ -2959,7 +2967,7 @@ Tab.prototype = {
   },
 
   /** Restores serialized content from saveState.  */
-  restoreState: function() {
+  restoreState: function restoreState() {
     let state = this._state;
     if (!state)
       return;
@@ -2986,7 +2994,7 @@ Tab.prototype = {
     this._state = null;
   },
 
-  updateThumbnail: function() {
+  updateThumbnail: function updateThumbnail() {
     if (!this._browser)
       return;
 
@@ -2994,7 +3002,7 @@ Tab.prototype = {
     this._chromeTab.updateThumbnail(this._browser, browserView);
   },
 
-  setIcon: function(aURI) {
+  setIcon: function setIcon(aURI) {
     let faviconURI = null;
     if (aURI) {
       try {
