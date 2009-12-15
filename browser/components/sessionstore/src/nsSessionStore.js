@@ -116,17 +116,41 @@ const CAPABILITIES = [
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function debug(aMsg) {
-  aMsg = ("SessionStore: " + aMsg).replace(/\S{80}/g, "$&\n");
-  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService)
-                                     .logStringMessage(aMsg);
-}
-
-__defineGetter__("NetUtil", function() {
-  delete this.NetUtil;
+XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   Cu.import("resource://gre/modules/NetUtil.jsm");
   return NetUtil;
 });
+
+XPCOMUtils.defineLazyServiceGetter(this, "ConsoleSvc",
+  "@mozilla.org/consoleservice;1", "nsIConsoleService");
+
+XPCOMUtils.defineLazyServiceGetter(this, "CookieSvc",
+  "@mozilla.org/cookiemanager;1", "nsICookieManager2");
+
+#ifdef MOZ_CRASH_REPORTER
+XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
+  "@mozilla.org/xre/app-info;1", "nsICrashReporter");
+#endif
+
+XPCOMUtils.defineLazyServiceGetter(this, "IOSvc",
+  "@mozilla.org/network/io-service;1", "nsIIOService");
+
+XPCOMUtils.defineLazyServiceGetter(this, "ObserverSvc",
+  "@mozilla.org/observer-service;1", "nsIObserverService");
+
+XPCOMUtils.defineLazyServiceGetter(this, "SecuritySvc",
+  "@mozilla.org/scriptsecuritymanager;1", "nsIScriptSecurityManager");
+
+XPCOMUtils.defineLazyServiceGetter(this, "WindowMediator",
+  "@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator");
+
+XPCOMUtils.defineLazyServiceGetter(this, "WindowWatcher",
+  "@mozilla.org/embedcomp/window-watcher;1", "nsIWindowWatcher");
+
+function debug(aMsg) {
+  aMsg = ("SessionStore: " + aMsg).replace(/\S{80}/g, "$&\n");
+  ConsoleSvc.logStringMessage(aMsg);
+}
 
 /* :::::::: The Service ::::::::::::::: */
 
@@ -209,11 +233,8 @@ SessionStoreService.prototype = {
                        getService(Ci.nsIPrefService).getBranch("browser.");
     this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
 
-    this._observerService = Cc["@mozilla.org/observer-service;1"].
-                            getService(Ci.nsIObserverService);
-
     OBSERVING.forEach(function(aTopic) {
-      this._observerService.addObserver(this, aTopic, true);
+      ObserverSvc.addObserver(this, aTopic, true);
     }, this);
 
     var pbs = Cc["@mozilla.org/privatebrowsing;1"].
@@ -608,7 +629,7 @@ SessionStoreService.prototype = {
       }
       else {
         // Nothing to restore, notify observers things are complete.
-        this._observerService.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
+        ObserverSvc.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
         
         // the next delayed save request should execute immediately
         this._lastSaveTime -= this._interval;
@@ -1384,9 +1405,7 @@ SessionStoreService.prototype = {
 
       let storage, storageItemCount = 0;
       try {
-        var principal = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                        getService(Ci.nsIScriptSecurityManager).
-                        getCodebasePrincipal(uri);
+        var principal = SecuritySvc.getCodebasePrincipal(uri);
 
         // Using getSessionStorageForPrincipal instead of getSessionStorageForURI
         // just to be able to pass aCreate = false, that avoids creation of the
@@ -1636,7 +1655,6 @@ SessionStoreService.prototype = {
       aHash[aHost][aPath][aName] = aCookie;
     }
 
-    var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
     // collect the cookies per window
     for (var i = 0; i < aWindows.length; i++)
       aWindows[i].cookies = [];
@@ -1647,7 +1665,7 @@ SessionStoreService.prototype = {
     var MAX_EXPIRY = Math.pow(2, 62);
     aWindows.forEach(function(aWindow) {
       for (var host in aWindow._hosts) {
-        var list = cm.getCookiesFromHost(host);
+        var list = CookieSvc.getCookiesFromHost(host);
         while (list.hasMoreElements()) {
           var cookie = list.getNext().QueryInterface(Ci.nsICookie2);
           if (cookie.isSession && _this._checkPrivacyLevel(cookie.isSecure)) {
@@ -2160,19 +2178,17 @@ SessionStoreService.prototype = {
   _deserializeHistoryEntry: function sss_deserializeHistoryEntry(aEntry, aIdMap) {
     var shEntry = Cc["@mozilla.org/browser/session-history-entry;1"].
                   createInstance(Ci.nsISHEntry);
-    
-    var ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
-    shEntry.setURI(ioService.newURI(aEntry.url, null, null));
+
+    shEntry.setURI(IOSvc.newURI(aEntry.url, null, null));
     shEntry.setTitle(aEntry.title || aEntry.url);
     if (aEntry.subframe)
       shEntry.setIsSubFrame(aEntry.subframe || false);
     shEntry.loadType = Ci.nsIDocShellLoadInfo.loadHistory;
     if (aEntry.contentType)
       shEntry.contentType = aEntry.contentType;
-    if (aEntry.referrer) 
-      shEntry.referrerURI = ioService.newURI(aEntry.referrer, null, null);
-    
+    if (aEntry.referrer)
+      shEntry.referrerURI = IOSvc.newURI(aEntry.referrer, null, null);
+
     if (aEntry.cacheKey) {
       var cacheKey = Cc["@mozilla.org/supports-PRUint32;1"].
                      createInstance(Ci.nsISupportsPRUint32);
@@ -2224,10 +2240,8 @@ SessionStoreService.prototype = {
         shEntry.owner = binaryStream.readObject(true);
       } catch (ex) { debug(ex); }
     } else if (aEntry.ownerURI) { // Firefox 2
-      var uriObj = ioService.newURI(aEntry.ownerURI, null, null);
-      shEntry.owner = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                      getService(Ci.nsIScriptSecurityManager).
-                      getCodebasePrincipal(uriObj);
+      var uriObj = IOSvc.newURI(aEntry.ownerURI, null, null);
+      shEntry.owner = SecuritySvc.getCodebasePrincipal(uriObj);
     }
     
     if (aEntry.children && shEntry instanceof Ci.nsISHContainer) {
@@ -2250,9 +2264,8 @@ SessionStoreService.prototype = {
    *        A tab's docshell (containing the sessionStorage)
    */
   _deserializeSessionStorage: function sss_deserializeSessionStorage(aStorageData, aDocShell) {
-    let ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     for (let url in aStorageData) {
-      let uri = ioService.newURI(url, null, null);
+      let uri = IOSvc.newURI(url, null, null);
       let storage = aDocShell.getSessionStorageForURI(uri);
       for (let key in aStorageData[url]) {
         try {
@@ -2498,15 +2511,15 @@ SessionStoreService.prototype = {
       }
       aCookies = converted;
     }
-    
-    var cookieManager = Cc["@mozilla.org/cookiemanager;1"].
-                        getService(Ci.nsICookieManager2);
+
     // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision
     var MAX_EXPIRY = Math.pow(2, 62);
     for (i = 0; i < aCookies.length; i++) {
       var cookie = aCookies[i];
       try {
-        cookieManager.add(cookie.host, cookie.path || "", cookie.name || "", cookie.value, !!cookie.secure, !!cookie.httponly, true, "expiry" in cookie ? cookie.expiry : MAX_EXPIRY);
+        CookieSvc.add(cookie.host, cookie.path || "", cookie.name || "",
+                      cookie.value, !!cookie.secure, !!cookie.httponly, true,
+                      "expiry" in cookie ? cookie.expiry : MAX_EXPIRY);
       }
       catch (ex) { Cu.reportError(ex); } // don't let a single cookie stop recovering
     }
@@ -2578,8 +2591,7 @@ SessionStoreService.prototype = {
     // parentheses are for backwards compatibility with Firefox 2.0 and 3.0
     stateString.data = "(" + this._toJSONString(aStateObj) + ")";
 
-    this._observerService.notifyObservers(stateString,
-                                          "sessionstore-state-write", "");
+    ObserverSvc.notifyObservers(stateString, "sessionstore-state-write", "");
 
     // don't touch the file if an observer has deleted all state data
     if (stateString.data)
@@ -2615,9 +2627,7 @@ SessionStoreService.prototype = {
    *        Callback each window is passed to
    */
   _forEachBrowserWindow: function sss_forEachBrowserWindow(aFunc) {
-    var windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
-                         getService(Ci.nsIWindowMediator);
-    var windowsEnum = windowMediator.getEnumerator("navigator:browser");
+    var windowsEnum = WindowMediator.getEnumerator("navigator:browser");
     
     while (windowsEnum.hasMoreElements()) {
       var window = windowsEnum.getNext();
@@ -2632,10 +2642,7 @@ SessionStoreService.prototype = {
    * @returns Window reference
    */
   _getMostRecentBrowserWindow: function sss_getMostRecentBrowserWindow() {
-    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-             getService(Ci.nsIWindowMediator);
-
-    var win = wm.getMostRecentWindow("navigator:browser");
+    var win = WindowMediator.getMostRecentWindow("navigator:browser");
     if (!win)
       return null;
     if (!win.closed)
@@ -2643,7 +2650,7 @@ SessionStoreService.prototype = {
 
 #ifdef BROKEN_WM_Z_ORDER
     win = null;
-    var windowsEnum = wm.getEnumerator("navigator:browser");
+    var windowsEnum = WindowMediator.getEnumerator("navigator:browser");
     // this is oldest to newest, so this gets a bit ugly
     while (windowsEnum.hasMoreElements()) {
       let nextWin = windowsEnum.getNext();
@@ -2652,7 +2659,8 @@ SessionStoreService.prototype = {
     }
     return win;
 #else
-    var windowsEnum = wm.getZOrderDOMWindowEnumerator("navigator:browser", true);
+    var windowsEnum =
+      WindowMediator.getZOrderDOMWindowEnumerator("navigator:browser", true);
     while (windowsEnum.hasMoreElements()) {
       win = windowsEnum.getNext();
       if (!win.closed)
@@ -2700,10 +2708,9 @@ SessionStoreService.prototype = {
         features += "," + aFeature + "=" + winState[aFeature];
     });
 
-    var window = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-                 getService(Ci.nsIWindowWatcher).
-                 openWindow(null, this._prefBranch.getCharPref("chromeURL"), "_blank",
-                            features, argString);
+    var window =
+      WindowWatcher.openWindow(null, this._prefBranch.getCharPref("chromeURL"),
+                               "_blank", features, argString);
 
     do {
       var ID = "window" + Math.random();
@@ -2801,36 +2808,30 @@ SessionStoreService.prototype = {
    * @returns nsIURI
    */
   _getURIFromString: function sss_getURIFromString(aString) {
-    var ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
-    return ioService.newURI(aString, null, null);
+    return IOSvc.newURI(aString, null, null);
   },
 
   /**
    * Annotate a breakpad crash report with the currently selected tab's URL.
    */
   _updateCrashReportURL: function sss_updateCrashReportURL(aWindow) {
-    if (!Ci.nsICrashReporter) {
-      // if breakpad isn't built, don't bother next time at all
-      this._updateCrashReportURL = function(aWindow) {};
-      return;
-    }
+#ifdef MOZ_CRASH_REPORTER
     try {
       var currentURI = aWindow.gBrowser.currentURI.clone();
       // if the current URI contains a username/password, remove it
-      try { 
-        currentURI.userPass = ""; 
-      } 
+      try {
+        currentURI.userPass = "";
+      }
       catch (ex) { } // ignore failures on about: URIs
 
-      var cr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsICrashReporter);
-      cr.annotateCrashReport("URL", currentURI.spec);
+      CrashReporter.annotateCrashReport("URL", currentURI.spec);
     }
     catch (ex) {
       // don't make noise when crashreporter is built but not enabled
       if (ex.result != Components.results.NS_ERROR_NOT_INITIALIZED)
         debug(ex);
     }
+#endif
   },
 
   /**
@@ -2904,7 +2905,7 @@ SessionStoreService.prototype = {
       this._restoreCount--;
       if (this._restoreCount == 0) {
         // This was the last window restored at startup, notify observers.
-        this._observerService.notifyObservers(null,
+        ObserverSvc.notifyObservers(null,
           this._browserSetState ? NOTIFY_BROWSER_STATE_RESTORED : NOTIFY_WINDOWS_RESTORED,
           "");
         this._browserSetState = false;
@@ -2985,9 +2986,9 @@ SessionStoreService.prototype = {
     var self = this;
     NetUtil.asyncCopy(istream, ostream, function(rc) {
       if (Components.isSuccessCode(rc)) {
-        self._observerService.notifyObservers(null,
-                                              "sessionstore-state-write-complete",
-                                              "");
+        ObserverSvc.notifyObservers(null,
+                                    "sessionstore-state-write-complete",
+                                    "");
       }
     });
   }
