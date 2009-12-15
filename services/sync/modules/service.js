@@ -302,6 +302,9 @@ WeaveSvc.prototype = {
 
     this._updateCachedURLs();
 
+    // Send an event now that Weave service is ready
+    Svc.Obs.notify("weave:service:ready");
+
     if (Svc.Prefs.get("autoconnect"))
       this._autoConnect();
   },
