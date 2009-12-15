@@ -43,10 +43,5 @@
  */
 
 MSG_DEF(CTYPESMSG_PLACEHOLDER_0, 0, 0, JSEXN_NONE, NULL)
-MSG_DEF(CTYPESMSG_PLACEHOLDER_1, 1, 0, JSEXN_NONE, NULL)
-MSG_DEF(CTYPESMSG_PLACEHOLDER_2, 2, 0, JSEXN_NONE, NULL)
-
-// This error has to be number 3 in order to be a TypeError,
-// due to a bug in the js engine.
-MSG_DEF(CTYPESMSG_TYPE_ERROR,    3, 2, JSEXN_TYPEERR, "expected type {0}, got {1}")
+MSG_DEF(CTYPESMSG_TYPE_ERROR,    1, 2, JSEXN_TYPEERR, "expected type {0}, got {1}")
 
