@@ -659,6 +659,9 @@ nsThebesDeviceContext::SetDPI()
                     dpi = lDPI;
                 break;
 #endif
+            default:
+                NS_NOTREACHED("Unexpected printing surface type");
+                break;
         }
         dotsArePixels = PR_FALSE;
     } else {
