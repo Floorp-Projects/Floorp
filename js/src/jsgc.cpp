@@ -3224,7 +3224,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
             ap = &a->prev;
 #ifdef JS_GCMETER
             for (size_t i = 0; i != DOUBLES_PER_ARENA; ++i) {
-                if (IsMarkedDouble(a, index))
+                if (IsMarkedDouble(a, i))
                     METER(nthings++);
             }
             METER(nlivearenas++);
