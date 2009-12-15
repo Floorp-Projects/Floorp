@@ -2691,17 +2691,25 @@ SessionStoreService.prototype = {
                     createInstance(Ci.nsISupportsString);
     argString.data = "";
 
-    //XXXzeniko shouldn't it be possible to set the window's dimensions here (as feature)?
+    // Build feature string
+    let features = "chrome,dialog=no,all";
+    let winState = aState.windows[0];
+    WINDOW_ATTRIBUTES.forEach(function(aFeature) {
+      // Use !isNaN as an easy way to ignore sizemode and check for numbers
+      if (aFeature in winState && !isNaN(winState[aFeature]))
+        features += "," + aFeature + "=" + winState[aFeature];
+    });
+
     var window = Cc["@mozilla.org/embedcomp/window-watcher;1"].
                  getService(Ci.nsIWindowWatcher).
                  openWindow(null, this._prefBranch.getCharPref("chromeURL"), "_blank",
-                            "chrome,dialog=no,all", argString);
-    
+                            features, argString);
+
     do {
       var ID = "window" + Math.random();
     } while (ID in this._statesToRestore);
     this._statesToRestore[(window.__SS_restoreID = ID)] = aState;
-    
+
     return window;
   },
 
