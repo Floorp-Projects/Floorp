@@ -103,6 +103,8 @@ static bool convertPointX(NPObject* npobj, const NPVariant* args, uint32_t argCo
 static bool convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool setCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -132,6 +134,8 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "convertPointY",
   "streamTest",
   "crash",
+  "setCookie",
+  "getCookie",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
@@ -162,6 +166,8 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   convertPointY,
   streamTest,
   crashPlugin,
+  setCookie,
+  getCookie,
 };
 
 struct URLNotifyData
@@ -1263,6 +1269,18 @@ NPN_ConvertPoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace
   return sBrowserFuncs->convertpoint(instance, sourceX, sourceY, sourceSpace, destX, destY, destSpace);
 }
 
+NPError
+NPN_SetValueForURL(NPP instance, NPNURLVariable variable, const char *url, const char *value, uint32_t len)
+{
+  return sBrowserFuncs->setvalueforurl(instance, variable, url, value, len);
+}
+
+NPError
+NPN_GetValueForURL(NPP instance, NPNURLVariable variable, const char *url, char **value, uint32_t *len)
+{
+  return sBrowserFuncs->getvalueforurl(instance, variable, url, value, len);
+}
+
 //
 // npruntime object functions
 //
@@ -2045,6 +2063,75 @@ crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant
   }
   void (*funcptr)() = NULL;
   funcptr(); // Crash calling null function pointer
+  return true;
+}
+
+// caller is responsible for freeing return buffer
+static char* URLForInstanceWindow(NPP instance) {
+  char *outString = NULL;
+
+  NPObject* windowObject = NULL;
+  NPN_GetValue(instance, NPNVWindowNPObject, &windowObject);
+
+  NPIdentifier locationIdentifier = NPN_GetStringIdentifier("location");
+  NPVariant locationVariant;
+  if (NPN_GetProperty(instance, windowObject, locationIdentifier, &locationVariant)) {
+    NPObject *locationObject = locationVariant.value.objectValue;
+    if (locationObject) {
+      NPIdentifier hrefIdentifier = NPN_GetStringIdentifier("href");
+      NPVariant hrefVariant;
+      if (NPN_GetProperty(instance, locationObject, hrefIdentifier, &hrefVariant)) {
+        const NPString* hrefString = &NPVARIANT_TO_STRING(hrefVariant);
+        if (hrefString) {
+          outString = (char *)malloc(hrefString->UTF8Length + 1);
+          if (outString) {
+            strcpy(outString, hrefString->UTF8Characters);
+            outString[hrefString->UTF8Length] = '\0';
+          }
+        }
+        NPN_ReleaseVariantValue(&hrefVariant);
+      }      
+    }
+    NPN_ReleaseVariantValue(&locationVariant);
+  }
+  return outString;
+}
+
+static bool
+setCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 1)
+    return false;
+  if (!NPVARIANT_IS_STRING(args[0]))
+    return false;
+  const NPString* cookie = &NPVARIANT_TO_STRING(args[0]);
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+
+  char* url = URLForInstanceWindow(npp);
+  NPError err = NPN_SetValueForURL(npp, NPNURLVCookie, url, cookie->UTF8Characters, cookie->UTF8Length);
+  free(url);
+
+  return (err == NPERR_NO_ERROR);
+}
+
+static bool
+getCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+
+  char* cookie = NULL;
+  unsigned int length = 0;
+  char* url = URLForInstanceWindow(npp);
+  NPError err = NPN_GetValueForURL(npp, NPNURLVCookie, url, &cookie, &length);
+  free(url);
+  if (err != NPERR_NO_ERROR || !cookie)
+    return false;
+
+  STRINGZ_TO_NPVARIANT(cookie, *result);
   return true;
 }
 
