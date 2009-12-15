@@ -895,11 +895,10 @@ namespace nanojit
         if (rhs->isconst())
         {
             int c = rhs->imm32();
+            Register r = findRegFor(lhs, GpRegs);
             if (c == 0 && cond->isop(LIR_eq)) {
-                Register r = findRegFor(lhs, GpRegs);
-                TEST(r,r);
-            } else if (!rhs->isQuad()) {
-                Register r = getBaseReg(condop, lhs, c, GpRegs);
+                TEST(r, r);
+            } else {
                 CMPi(r, c);
             }
         }
