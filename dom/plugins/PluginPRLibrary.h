@@ -96,13 +96,17 @@ public:
 
         mNP_GetMIMEDescription = (NP_GetMIMEDescriptionFunc)
             PR_FindFunctionSymbol(mLibrary, "NP_GetMIMEDescription");
+#ifndef XP_MACOSX
         if (!mNP_GetMIMEDescription)
             return false;
+#endif
 
         mNP_GetValue = (NP_GetValueFunc)
             PR_FindFunctionSymbol(mLibrary, "NP_GetValue");
+#ifndef XP_MACOSX
         if (!mNP_GetValue)
             return false;
+#endif
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
         mNP_GetEntryPoints = (NP_GetEntryPointsFunc)
