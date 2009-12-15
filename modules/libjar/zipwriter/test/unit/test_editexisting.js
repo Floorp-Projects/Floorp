@@ -42,13 +42,13 @@ var TESTS = [
     name: "test.txt",
     size: 232,
     crc: 0x0373ac26,
-    time: new Date(2007, 4, 1, 21, 44, 56)
+    time: Date.UTC(2007, 4, 1, 20, 44, 55)
   },
   {
     name: "test.png",
     size: 3402,
     crc: 0x504a5c30,
-    time: new Date(2007, 4, 1, 21, 49, 40)
+    time: Date.UTC(2007, 4, 1, 20, 49, 39)
   }
 ];
 var BADENTRY = "unknown.txt";
@@ -70,10 +70,7 @@ function run_test()
 
     do_check_eq(entry.realSize, TESTS[i].size);
     do_check_eq(entry.CRC32, TESTS[i].crc);
-    var diff = Math.abs(TESTS[i].time -
-               (entry.lastModifiedTime / PR_USEC_PER_MSEC));
-    if (diff > TIME_RESOLUTION)
-      do_throw(diff);
+    do_check_eq(entry.lastModifiedTime / PR_USEC_PER_MSEC, TESTS[i].time);
   }
 
   try {

@@ -50,47 +50,43 @@
  * The off argument, where present, is incremented according to the number of
  * bytes consumed from the buffer.
  */
-inline NS_HIDDEN_(void) WRITE8(char* buf, PRUint32* off, PRUint8 val)
+inline NS_HIDDEN_(void) WRITE8(PRUint8* buf, PRUint32* off, PRUint8 val)
 {
-  buf[(*off)++] = val & 0xff;
+  buf[(*off)++] = val;
 }
 
-inline NS_HIDDEN_(void) WRITE16(char* buf, PRUint32* off, PRUint16 val)
+inline NS_HIDDEN_(void) WRITE16(PRUint8* buf, PRUint32* off, PRUint16 val)
 {
-  buf[(*off)++] = val & 0xff;
-  buf[(*off)++] = (val >> 8) & 0xff;
+  WRITE8(buf, off, val & 0xff);
+  WRITE8(buf, off, (val >> 8) & 0xff);
 }
 
-inline NS_HIDDEN_(void) WRITE32(char* buf, PRUint32* off, PRUint32 val)
+inline NS_HIDDEN_(void) WRITE32(PRUint8* buf, PRUint32* off, PRUint32 val)
 {
-  buf[(*off)++] = val & 0xff;
-  buf[(*off)++] = (val >> 8) & 0xff;
-  buf[(*off)++] = (val >> 16) & 0xff;
-  buf[(*off)++] = (val >> 24) & 0xff;
+  WRITE16(buf, off, val & 0xffff);
+  WRITE16(buf, off, (val >> 16) & 0xffff);
 }
 
-inline NS_HIDDEN_(PRUint8) READ8(char* buf, PRUint32* off)
+inline NS_HIDDEN_(PRUint8) READ8(const PRUint8* buf, PRUint32* off)
 {
-  return (PRUint8)buf[(*off)++];
+  return buf[(*off)++];
 }
 
-inline NS_HIDDEN_(PRUint16) READ16(char* buf, PRUint32* off)
+inline NS_HIDDEN_(PRUint16) READ16(const PRUint8* buf, PRUint32* off)
 {
-  PRUint16 val = (PRUint16)buf[(*off)++] & 0xff;
-  val |= ((PRUint16)buf[(*off)++] & 0xff) << 8;
+  PRUint16 val = READ8(buf, off);
+  val |= READ8(buf, off) << 8;
   return val;
 }
 
-inline NS_HIDDEN_(PRUint32) READ32(char* buf, PRUint32* off)
+inline NS_HIDDEN_(PRUint32) READ32(const PRUint8* buf, PRUint32* off)
 {
-  PRUint32 val = (PRUint32)buf[(*off)++] & 0xff;
-  val |= ((PRUint32)buf[(*off)++] & 0xff) << 8;
-  val |= ((PRUint32)buf[(*off)++] & 0xff) << 16;
-  val |= ((PRUint32)buf[(*off)++] & 0xff) << 24;
+  PRUint32 val = READ16(buf, off);
+  val |= READ16(buf, off) << 16;
   return val;
 }
 
-inline NS_HIDDEN_(PRUint32) PEEK32(unsigned char *buf)
+inline NS_HIDDEN_(PRUint32) PEEK32(const PRUint8* buf)
 {
   return (PRUint32)( (buf [0]      ) |
                      (buf [1] <<  8) |

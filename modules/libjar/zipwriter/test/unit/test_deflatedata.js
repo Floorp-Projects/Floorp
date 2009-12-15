@@ -65,9 +65,7 @@ function run_test()
   do_check_eq(entry.compression, ZIP_METHOD_DEFLATE);
   do_check_eq(entry.CRC32, CRC);
   do_check_eq(entry.realSize, DATA.length);
-  var diff = Math.abs((entry.lastModifiedTime/PR_USEC_PER_MSEC) - time);
-  if (diff > TIME_RESOLUTION)
-    do_throw(diff);
+  do_check_eq(entry.lastModifiedTime / PR_USEC_PER_MSEC, time);
 
   zipW.close();
 
