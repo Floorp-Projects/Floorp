@@ -301,3 +301,11 @@ overridden windowproc.
 * WM_MOUSEACTIVATE events are handled by calling SetFocus on the plugin's
 widget, if the plugin is windowed. If it's not windowed they're passed to
 the overriden windowproc (but hopefully never sent by the browser anyway).
+
+== Getting and Setting Cookies ==
+
+* setCookie(string)
+Sets the given string as the cookie for window's URL.
+
+* getCookie()
+Returns the cookie string for the window's URL, the cookie set by setCookie.

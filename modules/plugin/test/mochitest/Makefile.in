@@ -65,6 +65,7 @@ _MOCHITEST_FILES = \
 		test_pluginstream_seek.html \
 		test_pluginstream_newstream.html \
 		test_streamNotify.html \
+		test_cookies.html \
 		$(NULL)
 
 #		test_npruntime_npnsetexception.html \ Disabled for e10s

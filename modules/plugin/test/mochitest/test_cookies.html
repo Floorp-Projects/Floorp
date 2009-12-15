@@ -1,0 +1,20 @@
+<html>
+<head>
+  <title>NPAPI Cookie Tests</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+
+<body onload="runTests()">
+  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
+  <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    function runTests() {
+      var pluginElement = document.getElementById("plugin1");
+      pluginElement.setCookie("foo");
+      ok(pluginElement.getCookie() == "foo", "Cookie was set and retrieved correctly via NPAPI.");
+      SimpleTest.finish();
+    }
+  </script>
+</body>
+</html>
