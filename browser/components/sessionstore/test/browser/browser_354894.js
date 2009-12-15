@@ -443,6 +443,8 @@ function test() {
         newWin.BrowserTryToCloseWindow();
         newWin2.BrowserTryToCloseWindow();
 
+        browserWindowsCount([0, 1], "browser windows while running testOpenCloseRestoreFromPopup");
+
         newWin = undoCloseWindow(0);
         newWin.addEventListener("load", function () {
           info(["testOpenCloseRestoreFromPopup: newWin loaded", newWin.closed, newWin.document]);
@@ -451,6 +453,18 @@ function test() {
             info(["testOpenCloseRestoreFromPopup: newWin delayedStartup", newWin.closed, newWin.document]);
             ds.apply(newWin, arguments);
           };
+        }, false);
+        newWin.addEventListener("unload", function () {
+          info("testOpenCloseRestoreFromPopup: newWin unloaded");
+/*
+          var data;
+          try {
+            data = Cc["@mozilla.org/browser/sessionstore;1"]
+                     .getService(Ci.nsISessionStore)
+                     .getWindowState(newWin);
+          } catch (e) { }
+          ok(!data, "getWindowState should not have data about newWin");
+*/
         }, false);
 
         newWin2 = openDialog(location, "_blank", CHROME_FEATURES);
