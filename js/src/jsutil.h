@@ -119,7 +119,7 @@ static const bool js_use_SSE2 = true;
  */
 extern JS_PUBLIC_API(void) JS_Abort(void);
 
-#if 0
+#ifdef DEBUG
 # define JS_BASIC_STATS 1
 # define JS_SCOPE_DEPTH_METER 1
 #endif

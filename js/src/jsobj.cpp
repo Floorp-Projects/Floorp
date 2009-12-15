@@ -4175,7 +4175,7 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
                                              scopeIndex, protoIndex, pobj,
                                              (JSScopeProperty *) prop, false);
             }
-            SCOPE_DEPTH_ACCUM(&rt->scopeSearchDepthStats, scopeIndex);
+            SCOPE_DEPTH_ACCUM(&cx->runtime->scopeSearchDepthStats, scopeIndex);
             goto out;
         }
 
