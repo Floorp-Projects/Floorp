@@ -2990,7 +2990,7 @@ nsHtml5TreeBuilder::resetTheInsertionMode()
     } else if (nsHtml5Atoms::table == name) {
       mode = NS_HTML5TREE_BUILDER_IN_TABLE;
       return;
-    } else if (kNameSpaceID_XHTML != node->ns) {
+    } else if (kNameSpaceID_XHTML != ns) {
       foreignFlag = NS_HTML5TREE_BUILDER_IN_FOREIGN;
       mode = NS_HTML5TREE_BUILDER_IN_BODY;
       return;
