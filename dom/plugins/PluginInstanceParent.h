@@ -219,12 +219,14 @@ private:
     bool SharedSurfaceSetWindow(const NPWindow* aWindow, NPRemoteWindow& aRemoteWindow);
     void SharedSurfaceBeforePaint(RECT &rect, NPRemoteEvent& npremoteevent);
     void SharedSurfaceAfterPaint(NPEvent* npevent);
+    void SharedSurfaceSetOrigin(NPRemoteEvent& npremoteevent);
     void SharedSurfaceRelease();
 
 private:
     gfx::SharedDIBWin  mSharedSurfaceDib;
     nsIntRect          mPluginPort;
     nsIntRect          mSharedSize;
+    nsIntPoint         mPluginPosOrigin;
 #endif // defined(XP_WIN)
 };
 
