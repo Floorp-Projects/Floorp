@@ -164,7 +164,6 @@ protected:
   PRBool HandleReconvert(nsWindow* aWindow, LPARAM lParam, LRESULT *oResult);
   PRBool HandleQueryCharPosition(nsWindow* aWindow, LPARAM lParam,
                                  LRESULT *oResult);
-  PRBool HandleDocumentFeed(nsWindow* aWindow, LPARAM lParam, LRESULT *oResult);
 
   /**
    *  ResolveIMECaretPos
@@ -197,19 +196,6 @@ protected:
                                           nsIntRect &aCharRect);
   PRBool GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect);
   void GetCompositionString(const nsIMEContext &aIMEContext, DWORD aIndex);
-  /**
-   *  Get the current target clause of composition string.
-   *  If there are one or more characters whose attribute is ATTR_TARGET_*,
-   *  this returns the first character's offset and its length.
-   *  Otherwise, e.g., the all characters are ATTR_INPUT, this returns
-   *  the composition string range because the all is the current target.
-   *
-   *  aLength can be null (default), but aOffset must not be null.
-   *
-   *  The aOffset value is offset in the contents.  So, when you need offset
-   *  in the composition string, you need to subtract mCompositionStart from it.
-   */
-  PRBool GetTargetClauseRange(PRUint32 *aOffset, PRUint32 *aLength = nsnull);
   void DispatchTextEvent(nsWindow* aWindow, const nsIMEContext &aIMEContext,
                          PRBool aCheckAttr = PR_TRUE);
   void SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList);
