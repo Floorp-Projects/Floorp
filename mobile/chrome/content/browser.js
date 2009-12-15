@@ -2569,6 +2569,10 @@ ProgressController.prototype = {
 
       if (this._tab == Browser.selectedTab) {
         BrowserUI.updateURI();
+
+       // We're about to have new page content, to scroll the content area
+       // to the top so the new paints will draw correctly.
+       Browser.scrollContentToTop();
       }
     }
   },
@@ -2764,14 +2768,9 @@ Tab.prototype = {
 
     bv.commitBatchOperation();
 
-    if (this._loadingPaintCount == 0)
-      Browser.scrollContentToTop();
-
     // kick ourselves off 2s later while we're still loading
     bv.beginBatchOperation();
     this._loadingTimeout = setTimeout(this._resizeAndPaint, 2000);
-
-    this._loadingPaintCount++;
   },
 
   _startResizeAndPaint: function _startResizeAndPaint() {
@@ -2780,7 +2779,6 @@ Tab.prototype = {
 
     Browser._browserView.beginBatchOperation();
     this._loadingTimeout = setTimeout(this._resizeAndPaint, 2000);
-    this._loadingPaintCount = 0;
   },
 
   _stopResizeAndPaint: function _stopResizeAndPaint() {
