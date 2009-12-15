@@ -53,11 +53,12 @@ RES = $(OBJDIR)/$(LIBRARY_NAME).res
 RESNAME = $(LIBRARY_NAME).rc
 
 ifdef NS_USE_GCC
+SQLITE = -lsqlite3
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
 	-L$(NSSUTIL_LIB_DIR) \
 	-lnssutil3 \
-	-lsqlite3 \
+	$(SQLITE) \
 	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
 	-lplds4 \
@@ -65,8 +66,9 @@ EXTRA_SHARED_LIBS += \
 	$(NULL)
 else # ! NS_USE_GCC
 
+SQLITE = sqlite3.lib
 EXTRA_SHARED_LIBS += \
-	$(DIST)/lib/sqlite3.lib \
+	$(DIST)/lib/$(SQLITE) \
 	$(DIST)/lib/nssutil3.lib \
 	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4.lib \
 	$(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4.lib \
@@ -79,11 +81,12 @@ else
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
+SQLITE = -lsqlite3
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
 	-L$(NSSUTIL_LIB_DIR) \
 	-lnssutil3 \
-	-lsqlite3 \
+	$(SQLITE) \
 	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
 	-lplds4 \
