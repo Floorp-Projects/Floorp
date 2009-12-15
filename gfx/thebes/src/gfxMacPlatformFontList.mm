@@ -117,8 +117,10 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
                                PRBool aIsStandardFace)
     : gfxFontEntry(aPostscriptName, aFamily, aIsStandardFace),
       mATSFontRef(0),
-      mATSFontRefInitialized(PR_FALSE),
-      mUseLiGothicAtsuiHack(PR_FALSE)
+      mATSFontRefInitialized(PR_FALSE)
+#ifndef __LP64__
+      , mUseLiGothicAtsuiHack(PR_FALSE)
+#endif
 {
     mWeight = aWeight;
 }
@@ -128,8 +130,10 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName, ATSFontRef aFon
                                gfxUserFontData *aUserFontData)
     : gfxFontEntry(aPostscriptName),
       mATSFontRef(aFontRef),
-      mATSFontRefInitialized(PR_TRUE),
-      mUseLiGothicAtsuiHack(PR_FALSE)
+      mATSFontRefInitialized(PR_TRUE)
+#ifndef __LP64__
+      , mUseLiGothicAtsuiHack(PR_FALSE)
+#endif
 {
     // xxx - stretch is basically ignored for now
 
@@ -265,6 +269,8 @@ MacOSFontEntry::ReadCMAP()
         }
     }
 
+#ifndef __LP64__  /* ATSUI not available on 64-bit */
+
     if ((gfxPlatformMac::GetPlatform()->OSXVersion() &
          MAC_OS_X_MAJOR_VERSION_MASK) == MAC_OS_X_VERSION_10_6_HEX) {
         // even ruder hack - LiGothic font on 10.6 has a bad glyph for U+775B
@@ -280,6 +286,8 @@ MacOSFontEntry::ReadCMAP()
             }
         }
     }
+
+#endif /* not __LP64__ */
 
     PR_LOG(gFontInfoLog, PR_LOG_DEBUG, ("(fontinit-cmap) psname: %s, size: %d\n",
                                         NS_ConvertUTF16toUTF8(mName).get(), mCharacterMap.GetSize()));
