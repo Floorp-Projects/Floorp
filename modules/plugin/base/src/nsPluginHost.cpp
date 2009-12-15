@@ -3536,9 +3536,14 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
   // it is adreffed here
   aOwner->SetInstance(instance);
 
-  result = instance->Initialize(aOwner, mimetype);  // this should not addref the instance or owner
-  if (NS_FAILED(result))                // except in some cases not Java, see bug 140931
-    return result;                      // our COM pointer will free the peer
+  // this should not addref the instance or owner
+  // except in some cases not Java, see bug 140931
+  // our COM pointer will free the peer
+  result = instance->Initialize(aOwner, mimetype);
+  if (NS_FAILED(result)) {
+    aOwner->SetInstance(nsnull);
+    return result;
+  }
 
   // instance and peer will be addreffed here
   result = AddInstanceToActiveList(plugin, instance, aURL, PR_FALSE);
@@ -3600,8 +3605,10 @@ nsPluginHost::SetUpDefaultPluginInstance(const char *aMimeType,
 
   // this should not addref the instance or owner
   result = instance->Initialize(aOwner, mimetype);
-  if (NS_FAILED(result))
+  if (NS_FAILED(result)) {
+    aOwner->SetInstance(nsnull);
     return result;
+  }
 
   // instance will be addreffed here
   result = AddInstanceToActiveList(plugin, instance, aURL, PR_TRUE);
