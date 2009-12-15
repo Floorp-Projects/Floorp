@@ -666,7 +666,6 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
     }
 
     for (BlitRectIter iter(aDelta, aDestRects); !iter.IsDone(); ++iter) {
-    {
         const nsIntRect & r = iter.Rect();
         QRect rect(r.x - aDelta.x, r.y - aDelta.y, r.width, r.height);
         mWidget->scroll(aDelta.x, aDelta.y, rect);
