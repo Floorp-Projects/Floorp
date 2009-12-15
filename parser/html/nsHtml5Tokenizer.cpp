@@ -222,18 +222,6 @@ nsHtml5Tokenizer::appendStrBuf(PRUnichar c)
   strBuf[strBufLen++] = c;
 }
 
-void 
-nsHtml5Tokenizer::appendStrBufForceWrite(PRUnichar c)
-{
-  if (strBufLen == strBuf.length) {
-    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(strBuf.length + NS_HTML5TOKENIZER_BUFFER_GROW_BY);
-    nsHtml5ArrayCopy::arraycopy(strBuf, newBuf, strBuf.length);
-    strBuf.release();
-    strBuf = newBuf;
-  }
-  strBuf[strBufLen++] = c;
-}
-
 nsString* 
 nsHtml5Tokenizer::strBufToString()
 {
@@ -413,8 +401,8 @@ void
 nsHtml5Tokenizer::addAttributeWithValue()
 {
   if (!!attributeName) {
-    nsString* value = longStrBufToString();
-    attributes->addAttribute(attributeName, value);
+    nsString* val = longStrBufToString();
+    attributes->addAttribute(attributeName, val);
     attributeName = nsnull;
   }
 }
