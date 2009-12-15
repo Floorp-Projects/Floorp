@@ -476,9 +476,13 @@ function test() {
             is(TEST_URLS.indexOf(newWin2.gBrowser.browsers[0].currentURI.spec), -1,
                "Did not restore, as undoCloseWindow() was last called (2)");
 
+            browserWindowsCount([2, 3], "browser windows while running testOpenCloseRestoreFromPopup");
+
             // Cleanup
             newWin.close();
             newWin2.close();
+
+            browserWindowsCount([0, 1], "browser windows while running testOpenCloseRestoreFromPopup");
 
             // Next please
             executeSoon(nextFn);
