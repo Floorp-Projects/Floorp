@@ -220,7 +220,6 @@ function submitForm(iframe, dump, extra, link)
     onProgressChange: function() {return 0;},
     onStatusChange: function() {return 0;},
     onSecurityChange: function() {return 0;},
-    onLinkIconAvailable: function() {return 0;}
   };
   iframe.docShell.QueryInterface(Ci.nsIWebProgress);
   iframe.docShell.addProgressListener(myListener, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
