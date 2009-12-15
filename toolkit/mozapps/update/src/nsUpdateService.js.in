@@ -2822,6 +2822,20 @@ UpdatePrompt.prototype = {
       }
     };
 
+    // bug 534090 - show the UI for update available notifications when the
+    // the system has been idle for at least IDLE_TIME without displaying an
+    // alert notification.
+    if (page == "updatesavailable") {
+      var idleService = Cc["@mozilla.org/widget/idleservice;1"].
+                        getService(Ci.nsIIdleService);
+
+      const IDLE_TIME = getPref("getIntPref", PREF_APP_UPDATE_IDLETIME, 60);
+      if (idleService.idleTime / 1000 >= IDLE_TIME) {
+        this._showUI(parent, uri, features, name, page, update);
+        return;
+      }
+    }
+
     try {
       var notifier = Cc["@mozilla.org/alerts-service;1"].
                      getService(Ci.nsIAlertsService);
@@ -2836,6 +2850,12 @@ UpdatePrompt.prototype = {
     observer.service = Cc["@mozilla.org/observer-service;1"].
                        getService(Ci.nsIObserverService);
     observer.service.addObserver(observer, "quit-application", false);
+
+    // bug 534090 - show the UI when idle for update available notifications.
+    if (page == "updatesavailable") {
+      this._showUIWhenIdle(parent, uri, features, name, page, update);
+      return;
+    }
 
     // Give the user x seconds to react before showing the big UI
     var promptWaitTime = getPref("getIntPref", PREF_APP_UPDATE_PROMPTWAITTIME, 43200);
