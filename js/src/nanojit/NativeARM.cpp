@@ -2199,7 +2199,7 @@ Assembler::asm_cmp(LIns *cond)
             TST(r,r);
             // No 64-bit immediates so fall-back to below
         } else if (!rhs->isQuad()) {
-            Register r = getBaseReg(condop, lhs, c, GpRegs);
+            Register r = getBaseReg(lhs, c, GpRegs);
             asm_cmpi(r, c);
         } else {
             NanoAssert(0);
@@ -2490,22 +2490,54 @@ Assembler::asm_load32(LInsp ins)
     int d = ins->disp();
 
     Register rr = prepResultReg(ins, GpRegs);
-    Register ra = getBaseReg(op, base, d, GpRegs);
+    Register ra = getBaseReg(base, d, GpRegs);
 
-    switch(op) {
+    switch (op) {
         case LIR_ldzb:
         case LIR_ldcb:
-            LDRB(rr, ra, d);
+            // These are expected to be 2 or 4-byte aligned.
+            if (isS12(d)) {
+                LDRB(rr, ra, d);
+            } else {
+                // If the offset doesn't fit in 12-bits we can't use it, so we
+                // recompute 'base' with a smaller (zero) offset.  If
+                // getBaseReg() returned FP, we can't use it, and so we must
+                // find a GpReg for 'base'.  Otherwise getBaseReg() must have
+                // returned a GpReg.
+                if (ra == FP)
+                    ra = findRegFor(base, GpRegs);
+                NanoAssert(IsGpReg(ra));
+                LDRB(rr, IP, 0);
+                // Nb: getBaseReg() may have modified 'd', so we must use
+                // ins->disp() here instead of 'd'.
+                asm_add_imm(IP, ra, ins->disp());
+            }
             return;
         case LIR_ldzs:
         case LIR_ldcs:
-            // these are expected to be 2 or 4-byte aligned
-            LDRH(rr, ra, d);
+            // These are expected to be 2 or 4-byte aligned.
+            if (isS12(d)) {
+                LDRH(rr, ra, d);
+            } else {
+                if (ra == FP)
+                    ra = findRegFor(base, GpRegs);
+                NanoAssert(IsGpReg(ra));
+                LDRH(rr, IP, 0);
+                asm_add_imm(IP, ra, ins->disp());
+            }
             return;
         case LIR_ld:
         case LIR_ldc:
-            // these are expected to be 4-byte aligned
-            LDR(rr, ra, d);
+            // These are expected to be 4-byte aligned.
+            if (isS12(d)) {
+                LDR(rr, ra, d);
+            } else {
+                if (ra == FP)
+                    ra = findRegFor(base, GpRegs);
+                NanoAssert(IsGpReg(ra));
+                LDR(rr, IP, 0);
+                asm_add_imm(IP, ra, ins->disp());
+            }
             return;
         case LIR_ldsb:
         case LIR_ldss:

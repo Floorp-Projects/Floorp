@@ -1368,7 +1368,7 @@ namespace nanojit
     void Assembler::regalloc_load(LIns *ins, RegisterMask allow, Register &rr, int32_t &dr, Register &rb) {
         dr = ins->disp();
         LIns *base = ins->oprnd1();
-        rb = getBaseReg(ins->opcode(), base, dr, BaseRegs);
+        rb = getBaseReg(base, dr, BaseRegs);
         if (ins->isUnusedOrHasUnknownReg() || !(allow & rmask(ins->getReg()))) {
             rr = prepResultReg(ins, allow & ~rmask(rb));
         } else {
@@ -1446,7 +1446,7 @@ namespace nanojit
     void Assembler::asm_store64(LOpcode op, LIns *value, int d, LIns *base) {
         NanoAssert(value->isQuad());
 
-        Register b = getBaseReg(LIR_stqi, base, d, BaseRegs);
+        Register b = getBaseReg(base, d, BaseRegs);
         Register r;
 
         // if we have to choose a register, use a GPR, but not the base reg
@@ -1516,7 +1516,7 @@ namespace nanojit
                         GpRegs;
 
         NanoAssert(!value->isQuad());
-        Register b = getBaseReg(LIR_sti, base, d, BaseRegs);
+        Register b = getBaseReg(base, d, BaseRegs);
         Register r = findRegFor(value, SrcRegs & ~rmask(b));
 
         switch (op) {
