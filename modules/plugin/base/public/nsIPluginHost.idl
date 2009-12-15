@@ -64,7 +64,7 @@ interface nsIPluginStreamListener;
 [ref] native nsIStreamListenerRef(nsIStreamListener *);
 [ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
 
-[scriptable, uuid(30C7C529-B05C-4950-B5B8-9AF673E46521)]
+[scriptable, uuid(AA13B116-2AFC-4F23-8395-913C0475D173)]
 interface nsIPluginHost : nsISupports
 {
   [noscript] void init();
@@ -285,6 +285,11 @@ interface nsIPluginHost : nsISupports
    * @return plugin tag object
    */
   [noscript] nsIPluginTag getPluginTagForInstance(in nsIPluginInstance aInstance);
+  
+%{C++
+  virtual void AddIdleTimeTarget(nsIPluginInstanceOwner* objectFrame, PRBool isVisible) = 0;
+  virtual void RemoveIdleTimeTarget(nsIPluginInstanceOwner* objectFrame) = 0;
+%}
 };
 
 %{C++

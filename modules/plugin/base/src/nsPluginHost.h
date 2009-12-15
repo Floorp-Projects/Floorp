@@ -58,6 +58,8 @@
 #include "nsWeakReference.h"
 #include "nsThreadUtils.h"
 #include "nsTArray.h"
+#include "nsTObserverArray.h"
+#include "nsITimer.h"
 
 class nsNPAPIPlugin;
 class nsIComponentManager;
@@ -72,6 +74,10 @@ class nsPluginHost;
 #define NS_PLUGIN_FLAG_FROMCACHE    0x0004    // this plugintag info was loaded from cache
 #define NS_PLUGIN_FLAG_UNWANTED     0x0008    // this is an unwanted plugin
 #define NS_PLUGIN_FLAG_BLOCKLISTED  0x0010    // this is a blocklisted plugin
+
+#if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
+#define MAC_CARBON_PLUGINS
+#endif
 
 // A linked-list of plugin information that is used for instantiating plugins
 // and reflecting plugin information into JavaScript.
@@ -184,6 +190,7 @@ public:
 
 class nsPluginHost : public nsIPluginHost,
                      public nsIObserver,
+                     public nsITimerCallback,
                      public nsSupportsWeakReference
 {
 public:
@@ -198,6 +205,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGINHOST
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSITIMERCALLBACK
 
   NS_IMETHOD
   GetURL(nsISupports* pluginInst, 
@@ -266,6 +274,9 @@ public:
 
   static nsresult GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt);
 
+  void AddIdleTimeTarget(nsIPluginInstanceOwner* objectFrame, PRBool isVisible);
+  void RemoveIdleTimeTarget(nsIPluginInstanceOwner* objectFrame);
+  
 private:
   nsresult
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
@@ -373,6 +384,13 @@ private:
   // We need to hold a global ptr to ourselves because we register for
   // two different CIDs for some reason...
   static nsPluginHost* sInst;
+
+#ifdef MAC_CARBON_PLUGINS
+  nsCOMPtr<nsITimer> mVisiblePluginTimer;
+  nsTObserverArray<nsIPluginInstanceOwner*> mVisibleTimerTargets;
+  nsCOMPtr<nsITimer> mHiddenPluginTimer;
+  nsTObserverArray<nsIPluginInstanceOwner*> mHiddenTimerTargets;
+#endif
 };
 
 class NS_STACK_CLASS PluginDestructionGuard : protected PRCList

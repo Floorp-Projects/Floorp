@@ -2448,6 +2448,11 @@ nsPluginHost::nsPluginHost()
   PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("nsPluginHost::ctor\n"));
   PR_LogFlush();
 #endif
+
+#ifdef MAC_CARBON_PLUGINS
+  mVisiblePluginTimer = do_CreateInstance("@mozilla.org/timer;1");
+  mHiddenPluginTimer = do_CreateInstance("@mozilla.org/timer;1");
+#endif
 }
 
 nsPluginHost::~nsPluginHost()
@@ -2997,7 +3002,7 @@ NS_IMETHODIMP nsPluginHost::InstantiatePluginForChannel(nsIChannel* aChannel,
   return NewEmbeddedPluginStreamListener(uri, aOwner, nsnull, aListener);
 }
 
-// Called by nsPluginInstanceOwner (nsObjectFrame.cpp - embedded case)
+// Called by nsPluginInstanceOwner
 NS_IMETHODIMP nsPluginHost::InstantiateEmbeddedPlugin(const char *aMimeType,
                                                           nsIURI* aURL,
                                                           nsIPluginInstanceOwner *aOwner)
@@ -5886,6 +5891,76 @@ nsresult nsPluginHost::AddUnusedLibrary(PRLibrary * aLibrary)
     mUnusedLibraries.AppendElement(aLibrary);
 
   return NS_OK;
+}
+
+#ifdef MAC_CARBON_PLUGINS
+// Flash requires a minimum of 8 events per second to avoid audio skipping.
+// Since WebKit uses a hidden plugin event rate of 4 events per second Flash
+// uses a Carbon timer for WebKit which fires at 8 events per second.
+#define HIDDEN_PLUGIN_DELAY 125
+#define VISIBLE_PLUGIN_DELAY 20
+#endif
+
+void nsPluginHost::AddIdleTimeTarget(nsIPluginInstanceOwner* objectFrame, PRBool isVisible)
+{
+#ifdef MAC_CARBON_PLUGINS
+  nsTObserverArray<nsIPluginInstanceOwner*> *targetArray;
+  if (isVisible) {
+    targetArray = &mVisibleTimerTargets;
+  } else {
+    targetArray = &mHiddenTimerTargets;
+  }
+
+  if (targetArray->Contains(objectFrame)) {
+    return;
+  }
+
+  targetArray->AppendElement(objectFrame);
+  if (targetArray->Length() == 1) {
+    if (isVisible) {
+      mVisiblePluginTimer->InitWithCallback(this, VISIBLE_PLUGIN_DELAY, nsITimer::TYPE_REPEATING_SLACK);
+    } else {
+      mHiddenPluginTimer->InitWithCallback(this, HIDDEN_PLUGIN_DELAY, nsITimer::TYPE_REPEATING_SLACK);
+    }
+  }
+#endif
+}
+
+void nsPluginHost::RemoveIdleTimeTarget(nsIPluginInstanceOwner* objectFrame)
+{
+#ifdef MAC_CARBON_PLUGINS
+  PRBool visibleRemoved = mVisibleTimerTargets.RemoveElement(objectFrame);
+  if (visibleRemoved && mVisibleTimerTargets.IsEmpty()) {
+    mVisiblePluginTimer->Cancel();
+  }
+
+  PRBool hiddenRemoved = mHiddenTimerTargets.RemoveElement(objectFrame);
+  if (hiddenRemoved && mHiddenTimerTargets.IsEmpty()) {
+    mHiddenPluginTimer->Cancel();
+  }
+
+  NS_ASSERTION(!(hiddenRemoved && visibleRemoved), "Plugin instance received visible and hidden idle event notifications");
+#endif
+}
+
+NS_IMETHODIMP nsPluginHost::Notify(nsITimer* timer)
+{
+#ifdef MAC_CARBON_PLUGINS
+  if (timer == mVisiblePluginTimer) {
+    nsTObserverArray<nsIPluginInstanceOwner*>::ForwardIterator iter(mVisibleTimerTargets);
+    while (iter.HasMore()) {
+      iter.GetNext()->SendIdleEvent();
+    }
+    return NS_OK;
+  } else if (timer == mHiddenPluginTimer) {
+    nsTObserverArray<nsIPluginInstanceOwner*>::ForwardIterator iter(mHiddenTimerTargets);
+    while (iter.HasMore()) {
+      iter.GetNext()->SendIdleEvent();
+    }
+    return NS_OK;
+  }
+#endif
+  return NS_ERROR_FAILURE;
 }
 
 nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
