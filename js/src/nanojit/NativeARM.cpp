@@ -2194,15 +2194,11 @@ Assembler::asm_cmp(LIns *cond)
     // ready to issue the compare
     if (rhs->isconst()) {
         int c = rhs->imm32();
+        Register r = findRegFor(lhs, GpRegs);
         if (c == 0 && cond->isop(LIR_eq)) {
-            Register r = findRegFor(lhs, GpRegs);
-            TST(r,r);
-            // No 64-bit immediates so fall-back to below
-        } else if (!rhs->isQuad()) {
-            Register r = getBaseReg(condop, lhs, c, GpRegs);
-            asm_cmpi(r, c);
+            TST(r, r);
         } else {
-            NanoAssert(0);
+            asm_cmpi(r, c);
         }
     } else {
         Register ra, rb;
