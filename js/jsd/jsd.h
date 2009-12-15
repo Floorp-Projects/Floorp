@@ -1042,6 +1042,9 @@ extern void
 jsd_DestroyObjectManager(JSDContext* jsdc);
 
 extern void
+jsd_DestroyObjects(JSDContext* jsdc);
+
+extern void
 jsd_ObjectHook(JSContext *cx, JSObject *obj, JSBool isNew, void *closure);
 
 extern void
