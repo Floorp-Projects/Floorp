@@ -1108,8 +1108,9 @@ KineticController.prototype = {
     let swipeLength = this._swipeLength;
 
     // determine speed based on recorded input
+    let me;
     for (let i = 0; i < mblen; i++) {
-      let me = mb[i];
+      me = mb[i];
       if (lastTime - me.t < swipeLength) {
         distanceX += me.dx;
         distanceY += me.dy;
