@@ -68,7 +68,6 @@ var reporterListener = {
   onProgressChange: function() {  },
   onStatusChange: function() {  },
   onSecurityChange: function() {  },
-  onLinkIconAvailable: function() {  },
   onProgressChange64: function() { },
   onRefreshAttempted: function() { return true; }
 }
