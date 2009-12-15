@@ -584,12 +584,11 @@ namespace nanojit
         if (rhs->isconst())
             {
                 int c = rhs->imm32();
+                Register r = findRegFor(lhs, GpRegs);
                 if (c == 0 && cond->isop(LIR_eq)) {
-                    Register r = findRegFor(lhs, GpRegs);
                     ANDCC(r, r, G0);
                 }
-                else if (!rhs->isQuad()) {
-                    Register r = getBaseReg(condop, lhs, c, GpRegs);
+                else {
                     SUBCC(r, L2, G0);
                     SET32(c, L2);
                 }
