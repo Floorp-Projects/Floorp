@@ -59,7 +59,7 @@ include $(topsrcdir)/build/automation-build.mk
 
 _PGO_FILES = 	\
   automation.py \
-  $(CURDIR)/automationutils.py \
+  $(topsrcdir)/build/automationutils.py \
   profileserver.py \
   genpgocert.py \
   index.html \
