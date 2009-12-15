@@ -245,7 +245,13 @@ nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest,
     PRBool succeeded;
     rv = http->GetRequestSucceeded(&succeeded);
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(succeeded, NS_ERROR_DOM_BAD_URI);
+    if (!succeeded) {
+      PRUint32 responseStatus;
+      rv = http->GetResponseStatus(&responseStatus);
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_TRUE(mAllowedHTTPErrors.Contains(responseStatus),
+                     NS_ERROR_DOM_BAD_URI);
+    }
   }
 
   // Check the Access-Control-Allow-Origin header
