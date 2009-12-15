@@ -538,8 +538,10 @@ var Browser = {
     }
 
     this.addTab(whereURI, true);
-    if (whereURI == "about:blank")
+    if (whereURI == "about:blank") {
+      BrowserUI.showToolbar(true);
       BrowserUI.showAutoComplete();
+    }
 
     // JavaScript Error Console
     if (gPrefService.getBoolPref("browser.console.showInPanel")){
