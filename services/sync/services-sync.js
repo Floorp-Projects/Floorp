@@ -29,6 +29,7 @@ pref("extensions.weave.log.logger.engine.clients", "Debug");
 pref("extensions.weave.log.logger.engine.forms", "Debug");
 pref("extensions.weave.log.logger.engine.history", "Debug");
 pref("extensions.weave.log.logger.engine.passwords", "Debug");
+pref("extensions.weave.log.logger.engine.prefs", "Debug");
 pref("extensions.weave.log.logger.engine.tabs", "Debug");
 
 // Preferences to be synced by default
@@ -75,8 +76,6 @@ pref("extensions.weave.prefs.sync.general.smoothScroll", true);
 pref("extensions.weave.prefs.sync.javascript.enabled", true);
 pref("extensions.weave.prefs.sync.layout.spellcheckDefault", true);
 pref("extensions.weave.prefs.sync.lightweightThemes.isThemeSelected", true);
-pref("extensions.weave.prefs.sync.lightweightThemes.persisted.footerURL", true);
-pref("extensions.weave.prefs.sync.lightweightThemes.persisted.headerURL", true);
 pref("extensions.weave.prefs.sync.lightweightThemes.usedThemes", true);
 pref("extensions.weave.prefs.sync.network.cookie.cookieBehavior", true);
 pref("extensions.weave.prefs.sync.network.cookie.lifetimePolicy", true);
