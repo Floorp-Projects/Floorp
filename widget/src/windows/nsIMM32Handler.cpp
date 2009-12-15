@@ -605,6 +605,11 @@ nsIMM32Handler::OnIMERequest(nsWindow* aWindow,
         ("IMM32: OnIMERequest, hWnd=%08x, IMR_QUERYCHARPOSITION\n",
          aWindow->GetWindowHandle()));
       return HandleQueryCharPosition(aWindow, lParam, oResult);
+    case IMR_DOCUMENTFEED:
+      PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+        ("IMM32: OnIMERequest, hWnd=%08x, IMR_DOCUMENTFEED\n",
+         aWindow->GetWindowHandle()));
+      return HandleDocumentFeed(aWindow, lParam, oResult);
     default:
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: OnIMERequest, hWnd=%08x, wParam=%08x\n",
@@ -922,6 +927,24 @@ nsIMM32Handler::HandleEndComposition(nsWindow* aWindow)
   mIsComposing = PR_FALSE;
 }
 
+static void
+DumpReconvertString(RECONVERTSTRING* aReconv)
+{
+  PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+    ("  dwSize=%ld, dwVersion=%ld, dwStrLen=%ld, dwStrOffset=%ld\n",
+     aReconv->dwSize, aReconv->dwVersion,
+     aReconv->dwStrLen, aReconv->dwStrOffset));
+  PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+    ("  dwCompStrLen=%ld, dwCompStrOffset=%ld, dwTargetStrLen=%ld, dwTargetStrOffset=%ld\n",
+     aReconv->dwCompStrLen, aReconv->dwCompStrOffset,
+     aReconv->dwTargetStrLen, aReconv->dwTargetStrOffset));
+  PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+    ("  result str=\"%s\"\n",
+     NS_ConvertUTF16toUTF8(
+       nsAutoString((PRUnichar*)((char*)(aReconv) + aReconv->dwStrOffset),
+                    aReconv->dwStrLen)).get()));
+}
+
 PRBool
 nsIMM32Handler::HandleReconvert(nsWindow* aWindow,
                                 LPARAM lParam,
@@ -940,24 +963,22 @@ nsIMM32Handler::HandleReconvert(nsWindow* aWindow,
     return PR_FALSE;
   }
 
+  PRUint32 len = selection.mReply.mString.Length();
+  PRUint32 needSize = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
+
   if (!pReconv) {
     // Return need size to reconvert.
-    if (selection.mReply.mString.IsEmpty()) {
+    if (len == 0) {
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
         ("IMM32: HandleReconvert, There are not selected text\n"));
       return PR_FALSE;
     }
-    PRUint32 len = selection.mReply.mString.Length();
-    *oResult = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
+    *oResult = needSize;
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
       ("IMM32: HandleReconvert, SUCCEEDED result=%ld\n",
        *oResult));
     return PR_TRUE;
   }
-
-  // Fill reconvert struct
-  PRUint32 len = selection.mReply.mString.Length();
-  PRUint32 needSize = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
 
   if (pReconv->dwSize < needSize) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
@@ -968,9 +989,7 @@ nsIMM32Handler::HandleReconvert(nsWindow* aWindow,
 
   *oResult = needSize;
 
-  DWORD tmpSize = pReconv->dwSize;
-  ::ZeroMemory(pReconv, tmpSize);
-  pReconv->dwSize            = tmpSize;
+  // Fill reconvert struct
   pReconv->dwVersion         = 0;
   pReconv->dwStrLen          = len;
   pReconv->dwStrOffset       = sizeof(RECONVERTSTRING);
@@ -979,12 +998,13 @@ nsIMM32Handler::HandleReconvert(nsWindow* aWindow,
   pReconv->dwTargetStrLen    = len;
   pReconv->dwTargetStrOffset = 0;
 
-  ::CopyMemory((LPVOID) (lParam + sizeof(RECONVERTSTRING)),
+  ::CopyMemory(reinterpret_cast<LPVOID>(lParam + sizeof(RECONVERTSTRING)),
                selection.mReply.mString.get(), len * sizeof(WCHAR));
 
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-    ("IMM32: HandleReconvert, SUCCEEDED str=\"%s\"\n",
-     NS_ConvertUTF16toUTF8(selection.mReply.mString).get()));
+    ("IMM32: HandleReconvert, SUCCEEDED result=%ld\n",
+     *oResult));
+  DumpReconvertString(pReconv);
 
   return PR_TRUE;
 }
@@ -1043,6 +1063,132 @@ nsIMM32Handler::HandleQueryCharPosition(nsWindow* aWindow,
 
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: HandleQueryCharPosition, SUCCEEDED\n"));
+  return PR_TRUE;
+}
+
+PRBool
+nsIMM32Handler::HandleDocumentFeed(nsWindow* aWindow,
+                                   LPARAM lParam,
+                                   LRESULT *oResult)
+{
+  *oResult = 0;
+  RECONVERTSTRING* pReconv = reinterpret_cast<RECONVERTSTRING*>(lParam);
+
+  nsIntPoint point(0, 0);
+
+  PRBool hasCompositionString =
+    mIsComposing && ShouldDrawCompositionStringOurselves();
+
+  PRInt32 targetOffset, targetLength;
+  if (!hasCompositionString) {
+    nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, aWindow);
+    aWindow->InitEvent(selection, &point);
+    aWindow->DispatchWindowEvent(&selection);
+    if (!selection.mSucceeded) {
+      PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+        ("IMM32: HandleDocumentFeed, FAILED (NS_QUERY_SELECTED_TEXT)\n"));
+      return PR_FALSE;
+    }
+    targetOffset = PRInt32(selection.mReply.mOffset);
+    targetLength = PRInt32(selection.mReply.mString.Length());
+  } else {
+    targetOffset = PRInt32(mCompositionStart);
+    targetLength = PRInt32(mCompositionString.Length());
+  }
+
+  // XXX nsString::Find and nsString::RFind take PRInt32 for offset, so,
+  //     we cannot support this message when the current offset is larger than
+  //     PR_INT32_MAX.
+  if (targetOffset < 0 || targetLength < 0 ||
+      targetOffset + targetLength < 0) {
+    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+      ("IMM32: HandleDocumentFeed, FAILED (The selection is out of range)\n"));
+    return PR_FALSE;
+  }
+
+  // Get all contents of the focused editor.
+  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, aWindow);
+  textContent.InitForQueryTextContent(0, PR_UINT32_MAX);
+  aWindow->InitEvent(textContent, &point);
+  aWindow->DispatchWindowEvent(&textContent);
+  if (!textContent.mSucceeded) {
+    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+      ("IMM32: HandleDocumentFeed, FAILED (NS_QUERY_TEXT_CONTENT)\n"));
+    return PR_FALSE;
+  }
+
+  nsAutoString str(textContent.mReply.mString);
+  if (targetOffset > PRInt32(str.Length())) {
+    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+      ("IMM32: HandleDocumentFeed, FAILED (The caret offset is invalid)\n"));
+    return PR_FALSE;
+  }
+
+  // Get the focused paragraph, we decide that it starts from the previous CRLF
+  // (or start of the editor) to the next one (or the end of the editor).
+  PRInt32 paragraphStart = str.RFind("\n", PR_FALSE, targetOffset, -1) + 1;
+  PRInt32 paragraphEnd =
+    str.Find("\r", PR_FALSE, targetOffset + targetLength, -1);
+  if (paragraphEnd < 0) {
+    paragraphEnd = str.Length();
+  }
+  nsDependentSubstring paragraph(str, paragraphStart,
+                                 paragraphEnd - paragraphStart);
+
+  PRUint32 len = paragraph.Length();
+  PRUint32 needSize = sizeof(RECONVERTSTRING) + len * sizeof(WCHAR);
+
+  if (!pReconv) {
+    *oResult = needSize;
+    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+      ("IMM32: HandleDocumentFeed, SUCCEEDED result=%ld\n",
+       *oResult));
+    return PR_TRUE;
+  }
+
+  if (pReconv->dwSize < needSize) {
+    PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+      ("IMM32: HandleDocumentFeed, FAILED pReconv->dwSize=%ld, needSize=%ld\n",
+       pReconv->dwSize, needSize));
+    return PR_FALSE;
+  }
+
+  // Fill reconvert struct
+  pReconv->dwVersion         = 0;
+  pReconv->dwStrLen          = len;
+  pReconv->dwStrOffset       = sizeof(RECONVERTSTRING);
+  if (hasCompositionString) {
+    pReconv->dwCompStrLen      = targetLength;
+    pReconv->dwCompStrOffset   =
+      (targetOffset - paragraphStart) * sizeof(WCHAR);
+    // Set composition target clause information
+    PRUint32 offset, length;
+    if (!GetTargetClauseRange(&offset, &length)) {
+      PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+        ("IMM32: HandleDocumentFeed, FAILED, by GetTargetClauseRange\n"));
+      return PR_FALSE;
+    }
+    pReconv->dwTargetStrLen    = offset - mCompositionStart;
+    pReconv->dwTargetStrOffset = length;
+  } else {
+    pReconv->dwTargetStrLen    = targetLength;
+    pReconv->dwTargetStrOffset =
+      (targetOffset - paragraphStart) * sizeof(WCHAR);
+    // There is no composition string, so, the length is zero but we should
+    // set the cursor offset to the composition str offset.
+    pReconv->dwCompStrLen      = 0;
+    pReconv->dwCompStrOffset   = pReconv->dwTargetStrOffset;
+  }
+
+  *oResult = needSize;
+  ::CopyMemory(reinterpret_cast<LPVOID>(lParam + sizeof(RECONVERTSTRING)),
+               paragraph.BeginReading(), len * sizeof(WCHAR));
+
+  PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+    ("IMM32: HandleDocumentFeed, SUCCEEDED result=%ld\n",
+     *oResult));
+  DumpReconvertString(pReconv);
+
   return PR_TRUE;
 }
 
@@ -1228,6 +1374,37 @@ nsIMM32Handler::GetCompositionString(const nsIMEContext &aIMEContext,
 }
 
 PRBool
+nsIMM32Handler::GetTargetClauseRange(PRUint32 *aOffset, PRUint32 *aLength)
+{
+  NS_ENSURE_TRUE(aOffset, PR_FALSE);
+  NS_ENSURE_TRUE(mIsComposing, PR_FALSE);
+  NS_ENSURE_TRUE(ShouldDrawCompositionStringOurselves(), PR_FALSE);
+
+  *aOffset = mCompositionStart;
+  for (PRUint32 i = 0; i < mAttributeArray.Length(); i++) {
+    if (mAttributeArray[i] == ATTR_TARGET_NOTCONVERTED ||
+        mAttributeArray[i] == ATTR_TARGET_CONVERTED) {
+      *aOffset = mCompositionStart + i;
+      break;
+    }
+  }
+
+  if (!aLength) {
+    return PR_TRUE;
+  }
+
+  *aLength = mCompositionString.Length() - (*aOffset - mCompositionStart);
+  for (PRUint32 i = *aOffset; i < mAttributeArray.Length(); i++) {
+    if (mAttributeArray[i] != ATTR_TARGET_NOTCONVERTED &&
+        mAttributeArray[i] != ATTR_TARGET_CONVERTED) {
+      *aLength = i - (*aOffset - mCompositionStart);
+      break;
+    }
+  }
+  return PR_TRUE;
+}
+
+PRBool
 nsIMM32Handler::ConvertToANSIString(const nsAFlatString& aStr, UINT aCodePage,
                                    nsACString& aANSIStr)
 {
@@ -1372,15 +1549,14 @@ nsIMM32Handler::SetIMERelatedWindowsPos(nsWindow* aWindow,
     if (mIsComposing && !mCompositionString.IsEmpty()) {
       // If there are no targetted selection, we should use it's first character
       // rect instead.
-      PRUint32 offset = 0;
-      for (PRUint32 i = 0; i < mAttributeArray.Length(); i++) {
-        if (mAttributeArray[i] == ATTR_TARGET_NOTCONVERTED ||
-            mAttributeArray[i] == ATTR_TARGET_CONVERTED) {
-          offset = i;
-          break;
-        }
+      PRUint32 offset;
+      if (!GetTargetClauseRange(&offset)) {
+        PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
+          ("IMM32: SetIMERelatedWindowsPos, FAILED, by GetTargetClauseRange\n"));
+        return PR_FALSE;
       }
-      ret = GetCharacterRectOfSelectedTextAt(aWindow, offset, r);
+      ret = GetCharacterRectOfSelectedTextAt(aWindow,
+                                             offset - mCompositionStart, r);
       NS_ENSURE_TRUE(ret, PR_FALSE);
     } else {
       // If there are no composition string, we should use a first character
