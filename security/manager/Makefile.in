@@ -183,6 +183,9 @@ DEFAULT_GMAKE_FLAGS += MOZILLA_CLIENT=1
 DEFAULT_GMAKE_FLAGS += NO_MDUPDATE=1
 DEFAULT_GMAKE_FLAGS += NSS_ENABLE_ECC=1
 DEFAULT_GMAKE_FLAGS += IMPORT_LIB_SUFFIX=".$(IMPORT_LIB_SUFFIX)"
+ifndef MOZ_NATIVE_SQLITE
+DEFAULT_GMAKE_FLAGS += SQLITE=$(call EXPAND_LIBNAME,mozsqlite3)
+endif
 ifdef NSS_DISABLE_DBM 
 DEFAULT_GMAKE_FLAGS += NSS_DISABLE_DBM=1
 endif
@@ -320,7 +323,7 @@ ifndef NSS_DISABLE_DBM
 endif
 	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
 ifdef ENABLE_TESTS
-	# Need certutil binary for mochitest certificates generation
+# Need certutil binary for mochitest certificates generation
 	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS)
 	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/cmd/certutil $(DEFAULT_GMAKE_FLAGS)
 	$(NSSMAKE) -C $(NSS_SRCDIR)/security/nss/cmd/pk12util $(DEFAULT_GMAKE_FLAGS)

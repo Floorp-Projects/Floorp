@@ -843,4 +843,5 @@ components/brwsrcmp.dll
 components/nsUpdateService.js
 components/nsUpdateServiceStub.js
 #endif
+@DLL_PREFIX@sqlite3@DLL_SUFFIX@
 old-homepage-default.properties
