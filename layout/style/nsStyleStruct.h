@@ -448,12 +448,17 @@ struct nsStyleBackground {
 
     void SetInitialValues();
 
-    // True if the rendering of this layer might change when the size of the
-    // corresponding frame changes (if its position or size is a percentage of
-    // the frame's dimensions).
+    // True if the rendering of this layer might change when the size
+    // of the corresponding frame changes.  This is true for any
+    // non-solid-color background whose position or size depends on
+    // the frame size (that is, was specified with percentages) and is
+    // also true for nearly all gradients.  We don't currently bother
+    // trying to identify gradients that don't depend on the frame size.
     PRBool RenderingMightDependOnFrameSize() const {
-      return !mImage.IsEmpty() &&
-             (mPosition.DependsOnFrameSize() || mSize.DependsOnFrameSize());
+      return (!mImage.IsEmpty() &&
+              (mImage.GetType() == eStyleImageType_Gradient ||
+               mPosition.DependsOnFrameSize() ||
+               mSize.DependsOnFrameSize()));
     }
 
     // An equality operator that compares the images using URL-equality

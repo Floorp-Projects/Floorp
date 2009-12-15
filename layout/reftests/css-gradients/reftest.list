@@ -85,4 +85,5 @@ fails == aja-linear-2d.html aja-linear-2-ref.html # bug 526694
 == aja-linear-5a.html aja-linear-5-ref.html
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == aja-linear-6a.html aja-linear-6-ref.html # bug 526708
 fails == aja-linear-6b.html aja-linear-6-ref.html # bug 522607
-
+== height-dependence-1.html height-dependence-1-ref.html
+== height-dependence-2.html height-dependence-2-ref.html
