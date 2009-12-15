@@ -1324,7 +1324,9 @@ Browser.MainDragger.prototype = {
     // Check if we are in a scrollable HTML element
     let htmlElement = element;
     if (htmlElement && htmlElement instanceof HTMLElement) {
-      let win = htmlElement.ownerDocument.defaultView; 
+      let win = htmlElement.ownerDocument.defaultView;
+      let oScroll;
+      let oAuto;
       for (; htmlElement; htmlElement = htmlElement.parentNode) {
         try {
           let cs = win.getComputedStyle(htmlElement, null);
@@ -1332,8 +1334,8 @@ Browser.MainDragger.prototype = {
           let overflowX = cs.getPropertyValue("overflow-x");
           let overflowY = cs.getPropertyValue("overflow-y");
           let cbr = htmlElement.getBoundingClientRect();
-          let oScroll = (overflow == "scroll") || (overflowX == "scroll") || (overflowY == "scroll");
-          let oAuto = (overflow == "auto") || (overflowX == "auto") || (overflowY == "auto");
+          oScroll = (overflow == "scroll") || (overflowX == "scroll") || (overflowY == "scroll");
+          oAuto = (overflow == "auto") || (overflowX == "auto") || (overflowY == "auto");
           
           if (oScroll ||
               (oAuto && (cbr.height < target.scrollHeight || cbr.width < target.scrollWidth))) {
@@ -1802,7 +1804,8 @@ ContentCustomClicker.prototype = {
       overlay.style.top = canvasArea.top + "px";
       ctx.fillStyle = "rgba(0, 145, 255, .5)";
       let rect;
-      for (let i = rects.length - 1; i >= 0; i--) {
+      let i;
+      for (i = rects.length - 1; i >= 0; i--) {
         rect = rects[i];
         ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
       }
@@ -3266,7 +3269,9 @@ PluginObserver.prototype = {
       dest = Browser.browserViewToClientRect(r);
       clip = dest.intersect(crit).translate(-dest.left, -dest.top);
       oprivate = objects[i].QueryInterface(nsIObjectLoadingContent);
-      oprivate.setAbsoluteScreenPosition(Browser.contentScrollbox, dest, clip);
+      try {
+        oprivate.setAbsoluteScreenPosition(Browser.contentScrollbox, dest, clip);
+      } catch(e) {}; 
     }
   },
 };
