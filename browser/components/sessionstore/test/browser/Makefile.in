@@ -110,6 +110,7 @@ _BROWSER_TEST_FILES = \
 	browser_495495.js \
 	browser_514751.js \
 	browser_522545.js \
+	browser_524745.js \
 	browser_528776.js \
 	$(NULL)
 
