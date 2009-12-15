@@ -61,3 +61,9 @@ mobile/installer/debian/menu
 mobile/installer/debian/fennec.preinst
 mobile/installer/debian/fennec.prerm
 mobile/installer/debian/fennec.postinst"
+
+if test -n "$MOZ_UPDATE_PACKAGING"; then
+   add_makefiles "
+     tools/update-packaging/Makefile
+   "
+fi
