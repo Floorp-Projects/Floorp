@@ -110,7 +110,7 @@ debian/control: $(srcdir)/debian/control.in $(LIBXUL_DIST)/bin/platform.ini
 	mkdir -p debian
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
         $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
-	
+
 debian/$(MOZ_APP_NAME).desktop: $(srcdir)/debian/$(MOZ_APP_NAME).desktop.in
 	mkdir -p debian
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \

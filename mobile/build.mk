@@ -67,6 +67,9 @@ install::
 	@echo "Mobile can't be installed directly."
 	@exit 1
 
+deb: package
+	@$(MAKE) -C mobile/installer deb
+
 upload::
 	@$(MAKE) -C mobile/installer upload
 
