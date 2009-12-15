@@ -72,6 +72,7 @@ const Cr = Components.results;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const STATE_RUNNING_STR = "running";
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 megabytes
 
 XPCOMUtils.defineLazyServiceGetter(this, "ConsoleSvc",
   "@mozilla.org/consoleservice;1", "nsIConsoleService");
@@ -280,19 +281,21 @@ SessionStartup.prototype = {
       stream.init(aFile, 0x01, 0, 0);
       var cvstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
                      createInstance(Ci.nsIConverterInputStream);
-      cvstream.init(stream, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-      
-      var content = "";
+
+      var fileSize = stream.available();
+      if (fileSize > MAX_FILE_SIZE)
+        throw "SessionStartup: sessionstore.js was not processed because it was too large.";
+
+      cvstream.init(stream, "UTF-8", fileSize, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
       var data = {};
-      while (cvstream.readString(4096, data)) {
-        content += data.value;
-      }
+      cvstream.readString(fileSize, data);
+      var content = data.value;
       cvstream.close();
-      
+
       return content.replace(/\r\n?/g, "\n");
     }
     catch (ex) { Components.utils.reportError(ex); }
-    
+
     return null;
   },
 
