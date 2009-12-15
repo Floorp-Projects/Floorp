@@ -191,6 +191,10 @@ namespace nanojit
     1<<F22;
     static const RegisterMask AllowableFlagRegs = GpRegs;
 
+    static inline bool isValidDisplacement(LOpcode, int32_t) {
+        return true;
+    }
+
     verbose_only( extern const char* regNames[]; )
 
 #define DECLARE_PLATFORM_STATS()

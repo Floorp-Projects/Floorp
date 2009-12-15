@@ -185,6 +185,12 @@ static const RegisterMask AllowableFlagRegs = 1<<R0 | 1<<R1 | 1<<R2 | 1<<R3 | 1<
 #define isS12(offs) ((-(1<<12)) <= (offs) && (offs) < (1<<12))
 #define isU12(offs) (((offs) & 0xfff) == (offs))
 
+static inline bool isValidDisplacement(LOpcode op, int32_t d) {
+    if (op == LIR_ldcs)
+        return (d >= 0) ? isU8(d) : isU8(-d);
+    return isS12(d);
+}
+
 #define IsFpReg(_r)     ((rmask((Register)_r) & (FpRegs)) != 0)
 #define IsGpReg(_r)     ((rmask((Register)_r) & (GpRegs)) != 0)
 #define FpRegNum(_fpr)  ((_fpr) - FirstFloatReg)
