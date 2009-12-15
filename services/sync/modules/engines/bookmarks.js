@@ -187,6 +187,7 @@ BookmarksEngine.prototype = {
   _syncFinish: function _syncFinish() {
     SyncEngine.prototype._syncFinish.call(this);
     delete this._lazyMap;
+    this._tracker._ensureMobileQuery();
   },
 
   _findDupe: function _findDupe(item) {
@@ -1095,11 +1096,17 @@ BookmarksTracker.prototype = {
     // Disable handling of notifications while changing the mobile query
     this.ignoreAll = true;
 
-    // Make sure we have a mobile bookmarks query
     let mobile = find("MobileBookmarks");
     let queryURI = Utils.makeURI("place:folder=" + kSpecialIds.mobile);
     let title = Str.sync.get("mobile.label");
-    if (mobile.length == 0) {
+
+    // Don't add OR do remove the mobile bookmarks if there's nothing
+    if (Svc.Bookmark.getIdForItemAt(kSpecialIds.mobile, 0) == -1) {
+      if (mobile.length != 0)
+        Svc.Bookmark.removeItem(mobile[0]);
+    }
+    // Add the mobile bookmarks query if it doesn't exist
+    else if (mobile.length == 0) {
       let query = Svc.Bookmark.insertBookmark(all[0], queryURI, -1, title);
       Utils.anno(query, anno, "MobileBookmarks");
       Utils.anno(query, "places/excludeFromBackup", 1);
