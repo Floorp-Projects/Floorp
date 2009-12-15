@@ -67,7 +67,11 @@ bool
 PluginProcessParent::Launch()
 {
     std::vector<std::string> args;
+#if defined(XP_WIN)
+    args.push_back("\""+ mPluginFilePath +"\"");
+#else
     args.push_back(mPluginFilePath);
+#endif
     return SyncLaunch(args);
 }
 
