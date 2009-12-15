@@ -58,4 +58,6 @@ mobile/installer/debian/changelog
 mobile/installer/debian/compat
 mobile/installer/debian/files
 mobile/installer/debian/menu
+mobile/installer/debian/fennec.preinst
+mobile/installer/debian/fennec.prerm
 mobile/installer/debian/fennec.postinst"
