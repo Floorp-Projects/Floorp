@@ -253,8 +253,6 @@ WeaveSvc.prototype = {
         while (enum.hasMoreElements())
           wait += enum.getNext().gBrowser.mTabs.length;
         break;
-      case FENNEC_ID:
-        wait = 10;
     }
 
     // Make sure we wait a little but but not too long in the worst case
@@ -1523,3 +1521,6 @@ WeaveSvc.prototype = {
     }
   },
 };
+
+// Load Weave on the first time this file is loaded
+Weave.Service.onStartup();
