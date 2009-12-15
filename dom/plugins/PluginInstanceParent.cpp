@@ -47,10 +47,6 @@
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
 
-#if defined(OS_WIN)
-#define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
-#endif
-
 using namespace mozilla::plugins;
 
 PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
@@ -61,14 +57,6 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     mNPNIface(npniface),
     mWindowType(NPWindowTypeWindow)
 {
-#if defined(OS_WIN)
-    // Event sent from nsObjectFrame indicating double pass rendering for
-    // windowless plugins. RegisterWindowMessage makes it easy sync event
-    // values, and insures we never conflict with windowing events we allow
-    // for windowless plugins.
-    mDoublePassEvent = ::RegisterWindowMessage(NS_OOPP_DOUBLEPASS_MSGID);
-    mLocalCopyRender = false;
-#endif
 }
 
 PluginInstanceParent::~PluginInstanceParent()
@@ -467,16 +455,9 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
 
 #if defined(OS_WIN)
     RECT rect;
-    if (mWindowType == NPWindowTypeDrawable) {
-        if (mDoublePassEvent && mDoublePassEvent == npevent->event) {
-            // Sent from nsObjectFrame to let us know a double pass render is in progress.
-            mLocalCopyRender = PR_TRUE;
-            return true;
-        } else if (WM_PAINT == npevent->event) {
-            // Don't forward on the second pass, otherwise, fall through.
-            if (!SharedSurfaceBeforePaint(rect, npremoteevent))
-                return true;
-        }
+    if (mWindowType == NPWindowTypeDrawable && 
+        npevent->event == WM_PAINT) {
+        SharedSurfaceBeforePaint(rect, npremoteevent);
     }
 #endif
 
@@ -503,7 +484,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
     }
 
 #if defined(OS_WIN)
-    if (handled && mWindowType == NPWindowTypeDrawable && WM_PAINT == npevent->event)
+    if (handled && mWindowType == NPWindowTypeDrawable && npevent->event == WM_PAINT)
         SharedSurfaceAfterPaint(npevent);
 #endif
 
@@ -730,25 +711,12 @@ PluginInstanceParent::SharedSurfaceSetWindow(const NPWindow* aWindow,
     return true;
 }
 
-bool
+void
 PluginInstanceParent::SharedSurfaceBeforePaint(RECT& rect,
                                                NPRemoteEvent& npremoteevent)
 {
     RECT* dr = (RECT*)npremoteevent.event.lParam;
     HDC parentHdc = (HDC)npremoteevent.event.wParam;
-
-    // We render twice per frame for windowless plugins that sit in transparent
-    // frames. (See nsObjectFrame and gfxWindowsNativeDrawing for details.) IPC
-    // message delays in OOP plugin painting can result in two passes yeilding
-    // different animation frames. The second rendering doesn't need to go over
-    // the wire (we already have a copy of the frame in mSharedSurfaceDib) so we
-    // skip off requesting the second. This also gives us a nice perf boost.
-    if (mLocalCopyRender) {
-      mLocalCopyRender = false;
-      // Reuse the old render.
-      SharedSurfaceAfterPaint(&npremoteevent.event);
-      return false;
-    }
 
     nsIntRect dirtyRect(dr->left, dr->top, dr->right-dr->left, dr->bottom-dr->top);
     dirtyRect.MoveBy(-mPluginPort.x, -mPluginPort.y); // should always be smaller than dirtyRect
@@ -766,14 +734,11 @@ PluginInstanceParent::SharedSurfaceBeforePaint(RECT& rect,
     // setup the translated dirty rect we'll send to the child
     rect.left   = dirtyRect.x;
     rect.top    = dirtyRect.y;
-    rect.right  = dirtyRect.width;
-    rect.bottom = dirtyRect.height;
+    rect.right  = dirtyRect.x + dirtyRect.width;
+    rect.bottom = dirtyRect.y + dirtyRect.height;
 
     npremoteevent.event.wParam = WPARAM(0);
     npremoteevent.event.lParam = LPARAM(&rect);
-
-    // Send the event to the plugin
-    return true;
 }
 
 void
