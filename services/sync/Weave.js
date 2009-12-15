@@ -59,8 +59,13 @@ WeaveService.prototype = {
       break;
 
     case "final-ui-startup":
-      Cu.import("resource://weave/service.js");
-      Weave.Service.onStartup();
+      // Force Weave service to load if it hasn't triggered from overlays
+      this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      this.timer.initWithCallback({
+        notify: function() {
+          Cu.import("resource://weave/service.js");
+        }
+      }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
       break;
     }
   }
