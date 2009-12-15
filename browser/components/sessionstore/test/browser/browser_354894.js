@@ -444,6 +444,14 @@ function test() {
         newWin2.BrowserTryToCloseWindow();
 
         newWin = undoCloseWindow(0);
+        newWin.addEventListener("load", function () {
+          info(["testOpenCloseRestoreFromPopup: newWin loaded", newWin.closed, newWin.document]);
+          var ds = newWin.delayedStartup;
+          newWin.delayedStartup = function () {
+            info(["testOpenCloseRestoreFromPopup: newWin delayedStartup", newWin.closed, newWin.document]);
+            ds.apply(newWin, arguments);
+          };
+        }, false);
 
         newWin2 = openDialog(location, "_blank", CHROME_FEATURES);
         newWin2.addEventListener("load", function() {
@@ -536,7 +544,7 @@ function test() {
           browserWindowsCount([0, 1], "browser windows after testOpenCloseWindowAndPopup");
           testOpenCloseOnlyPopup(function () {
             browserWindowsCount([0, 1], "browser windows after testOpenCloseOnlyPopup");
-            testOpenCloseRestoreFromPopup (function () {
+            testOpenCloseRestoreFromPopup(function () {
               browserWindowsCount([0, 1], "browser windows after testOpenCloseRestoreFromPopup");
               testNotificationCount(function () {
                 cleanupTestsuite();
