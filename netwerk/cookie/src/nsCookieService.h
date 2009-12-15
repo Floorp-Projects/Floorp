@@ -144,10 +144,11 @@ class nsCookieEntry : public PLDHashEntryHdr
 // conveniently switch state when entering or exiting private browsing.
 struct DBState
 {
-  DBState() : cookieCount(0) { }
+  DBState() : cookieCount(0), cookieOldestTime(LL_MAXINT) { }
 
   nsTHashtable<nsCookieEntry>     hostTable;
   PRUint32                        cookieCount;
+  PRInt64                         cookieOldestTime;
   nsCOMPtr<mozIStorageConnection> dbConn;
   nsCOMPtr<mozIStorageStatement>  stmtInsert;
   nsCOMPtr<mozIStorageStatement>  stmtDelete;
@@ -187,7 +188,7 @@ class nsCookieService : public nsICookieService
     void                          GetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, PRBool aHttpBound, char **aCookie);
     nsresult                      SetCookieStringInternal(nsIURI *aHostURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, PRBool aFromHttp);
     PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, nsDependentCString &aCookieHeader, PRInt64 aServerTime, PRBool aFromHttp);
-    void                          AddInternal(nsCookie *aCookie, PRInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader, PRBool aFromHttp);
+    void                          AddInternal(nsCookie *aCookie, PRInt64 aCurrentTimeInUsec, nsIURI *aHostURI, const char *aCookieHeader, PRBool aFromHttp);
     void                          RemoveCookieFromList(nsListIter &aIter);
     PRBool                        AddCookieToList(nsCookie *aCookie, PRBool aWriteToDB = PR_TRUE);
     void                          UpdateCookieInList(nsCookie *aCookie, PRInt64 aLastAccessed);
@@ -199,12 +200,11 @@ class nsCookieService : public nsICookieService
     static PRBool                 CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static PRBool                 GetExpiry(nsCookieAttributes &aCookie, PRInt64 aServerTime, PRInt64 aCurrentTime);
     void                          RemoveAllFromMemory();
-    void                          RemoveExpiredCookies(PRInt64 aCurrentTime);
+    void                          PurgeCookies(PRInt64 aCurrentTimeInUsec);
     PRBool                        FindCookie(const nsAFlatCString &aHost, const nsAFlatCString &aName, const nsAFlatCString &aPath, nsListIter &aIter, PRInt64 aCurrentTime);
-    void                          FindOldestCookie(nsEnumerationData &aData);
     PRUint32                      CountCookiesFromHostInternal(const nsACString &aHost, nsEnumerationData &aData);
     void                          NotifyRejected(nsIURI *aHostURI);
-    void                          NotifyChanged(nsICookie2 *aCookie, const PRUnichar *aData);
+    void                          NotifyChanged(nsISupports *aSubject, const PRUnichar *aData);
 
   protected:
     // cached members.
@@ -225,13 +225,14 @@ class nsCookieService : public nsICookieService
     PRUint8                       mCookiesPermissions;   // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT}
     PRUint16                      mMaxNumberOfCookies;
     PRUint16                      mMaxCookiesPerHost;
+    PRInt64                       mCookiePurgeAge;
 
     // private static member, used to cache a ptr to nsCookieService,
     // so we can make nsCookieService a singleton xpcom object.
     static nsCookieService        *gCookieService;
 
     // this callback needs access to member functions
-    friend PLDHashOperator removeExpiredCallback(nsCookieEntry *aEntry, void *aArg);
+    friend PLDHashOperator purgeCookiesCallback(nsCookieEntry *aEntry, void *aArg);
 };
 
 #endif // nsCookieService_h__
