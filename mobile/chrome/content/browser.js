@@ -1158,7 +1158,8 @@ var Browser = {
 
     // step out of iframes and frames, offsetting scroll values
     let rect;
-    for (let frame = contentElem.ownerDocument.defaultView; frame != browser.contentWindow; frame = frame.parent) {
+    let cw = browser.contentWindow;
+    for (let frame = contentElem.ownerDocument.defaultView; frame != cw; frame = frame.parent) {
       // adjust client coordinates' origin to be top left of iframe viewport
       rect = frame.frameElement.getBoundingClientRect();
       offset.add(rect.left, rect.top);
@@ -2537,6 +2538,10 @@ ProgressController.prototype = {
   },
 
   onStateChange: function onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+    // ignore notification that aren't about the main document (iframes, etc)
+    if (aWebProgress.DOMWindow != this._tab.browser.contentWindow)
+      return;
+
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_START)
         this._networkStart();
@@ -2756,32 +2761,35 @@ Tab.prototype = {
    */
   _resizeAndPaint: function _resizeAndPaint() {
     let bv = Browser._browserView;
+
     bv.commitBatchOperation();
 
     if (this._loadingPaintCount == 0)
       Browser.scrollContentToTop();
 
-    if (this._loading) {
-      // kick ourselves off 2s later while we're still loading
-      bv.beginBatchOperation();
-      this._loadingTimeout = setTimeout(this._resizeAndPaint, 2000);
-    } else {
-      delete this._loadingTimeout;
-    }
+    // kick ourselves off 2s later while we're still loading
+    bv.beginBatchOperation();
+    this._loadingTimeout = setTimeout(this._resizeAndPaint, 2000);
+
     this._loadingPaintCount++;
   },
 
   _startResizeAndPaint: function _startResizeAndPaint() {
+    if (this._loadingTimeout)
+      throw "Already have a loading timeout";
+
+    Browser._browserView.beginBatchOperation();
     this._loadingTimeout = setTimeout(this._resizeAndPaint, 2000);
     this._loadingPaintCount = 0;
   },
 
   _stopResizeAndPaint: function _stopResizeAndPaint() {
-    if (this._loadingTimeout) {
-      Browser._browserView.commitBatchOperation();
-      clearTimeout(this._loadingTimeout);
-      delete this._loadingTimeout;
-    }
+    if (!this._loadingTimeout)
+      throw "No loading timeout!";
+
+    clearTimeout(this._loadingTimeout);
+    delete this._loadingTimeout;
+    Browser._browserView.commitBatchOperation();
   },
 
   /** Returns tab's identity state for updating security UI. */
@@ -2790,24 +2798,28 @@ Tab.prototype = {
   },
 
   startLoading: function startLoading() {
+    if (this._loading) throw "Already Loading!";
+
     this._loading = true;
     let bvs = this._browserViewportState;
     bvs.defaultZoomLevel = bvs.zoomLevel; // ensures zoom level is reset on new pages
 
     if (!this._loadingTimeout) {
       let bv = Browser._browserView;
-      bv.beginBatchOperation();
       bv.invalidateEntireView();
+
+      this._startResizeAndPaint();
       if (this == Browser.selectedTab)
         bv.setAggressive(false);
       // Sync up browser so previous and forward scroll positions are set. This is a good time to do
       // this because the resulting invalidation is irrelevant.
       Browser.scrollBrowserToContent();
-      this._startResizeAndPaint();
     }
   },
 
   endLoading: function endLoading() {
+    if (!this._loading) throw "Not Loading!";
+
     // Determine at what resolution the browser is rendered based on meta tag
     let browser = this._browser;
     let metaData = Util.contentIsHandheld(browser);
@@ -2930,7 +2942,10 @@ Tab.prototype = {
       this._browser = null;
       this._listener = null;
       this._loading = false;
-      this._stopResizeAndPaint();
+
+      try { // this will throw if we're not loading
+        this._stopResizeAndPaint();
+      } catch(ex) {}
 
       Util.executeSoon(function() {
         document.getElementById("browsers").removeChild(browser);
