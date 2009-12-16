@@ -2476,42 +2476,6 @@ if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_LIBRARY_CHECKS=1
 fi
 
-dnl Configure SSE2 support
-
-dnl Enable SSE2 support in the compiler if available.
-dnl ========================================================
-case "$target" in
-i?86-*|x86_64*-*)
-    if test "$GNU_CC"; then
-        CFLAGS="$CFLAGS -msse2"
-    fi
-    if test "$GNU_CXX"; then
-        CXXFLAGS="$CXXFLAGS -msse2"
-    fi
-    ;;
-esac
-
-dnl If we have the proper include file, enable SSE2 support.
-dnl ========================================================
-HAVE_SSE2=
-AC_CHECK_HEADER(xmmintrin.h, HAVE_SSE2=1)
-AC_CHECK_HEADER(emmintrin.h, HAVE_SSE2=1 && AC_DEFINE(USE_EMM_INTRIN))
-
-if test "$HAVE_SSE2"; then
-    AC_DEFINE(HAVE_SSE2)
-    case "$target_os" in
-    darwin*)
-        ;;
-    *)
-        case "$target" in
-        i?86-*)
-            AC_DEFINE(MUST_DETECT_SSE2)
-            ;;
-        esac
-        ;;
-    esac
-fi
-
 dnl Configure JIT support
 
 case "$target" in
