@@ -37,9 +37,11 @@ inline uint8 ByteReader::ReadOneByte(const char* buffer) const {
   return buffer[0];
 }
 
-inline uint16 ByteReader::ReadTwoBytes(const char* buffer) const {
-  const uint16 buffer0 = static_cast<uint16>(buffer[0]);
-  const uint16 buffer1 = static_cast<uint16>(buffer[1]);
+inline uint16 ByteReader::ReadTwoBytes(const char* signed_buffer) const {
+  const unsigned char *buffer
+    = reinterpret_cast<const unsigned char *>(signed_buffer);
+  const uint16 buffer0 = buffer[0];
+  const uint16 buffer1 = buffer[1];
   if (endian_ == ENDIANNESS_LITTLE) {
     return buffer0 | buffer1 << 8;
   } else {
@@ -47,11 +49,13 @@ inline uint16 ByteReader::ReadTwoBytes(const char* buffer) const {
   }
 }
 
-inline uint64 ByteReader::ReadFourBytes(const char* buffer) const {
-  const uint32 buffer0 = static_cast<uint32>(buffer[0]);
-  const uint32 buffer1 = static_cast<uint32>(buffer[1]);
-  const uint32 buffer2 = static_cast<uint32>(buffer[2]);
-  const uint32 buffer3 = static_cast<uint32>(buffer[3]);
+inline uint64 ByteReader::ReadFourBytes(const char* signed_buffer) const {
+  const unsigned char *buffer
+    = reinterpret_cast<const unsigned char *>(signed_buffer);
+  const uint32 buffer0 = buffer[0];
+  const uint32 buffer1 = buffer[1];
+  const uint32 buffer2 = buffer[2];
+  const uint32 buffer3 = buffer[3];
   if (endian_ == ENDIANNESS_LITTLE) {
     return buffer0 | buffer1 << 8 | buffer2 << 16 | buffer3 << 24;
   } else {
@@ -59,15 +63,17 @@ inline uint64 ByteReader::ReadFourBytes(const char* buffer) const {
   }
 }
 
-inline uint64 ByteReader::ReadEightBytes(const char* buffer) const {
-  const uint64 buffer0 = static_cast<uint64>(buffer[0]);
-  const uint64 buffer1 = static_cast<uint64>(buffer[1]);
-  const uint64 buffer2 = static_cast<uint64>(buffer[2]);
-  const uint64 buffer3 = static_cast<uint64>(buffer[3]);
-  const uint64 buffer4 = static_cast<uint64>(buffer[4]);
-  const uint64 buffer5 = static_cast<uint64>(buffer[5]);
-  const uint64 buffer6 = static_cast<uint64>(buffer[6]);
-  const uint64 buffer7 = static_cast<uint64>(buffer[7]);
+inline uint64 ByteReader::ReadEightBytes(const char* signed_buffer) const {
+  const unsigned char *buffer
+    = reinterpret_cast<const unsigned char *>(signed_buffer);
+  const uint64 buffer0 = buffer[0];
+  const uint64 buffer1 = buffer[1];
+  const uint64 buffer2 = buffer[2];
+  const uint64 buffer3 = buffer[3];
+  const uint64 buffer4 = buffer[4];
+  const uint64 buffer5 = buffer[5];
+  const uint64 buffer6 = buffer[6];
+  const uint64 buffer7 = buffer[7];
   if (endian_ == ENDIANNESS_LITTLE) {
     return buffer0 | buffer1 << 8 | buffer2 << 16 | buffer3 << 24 |
       buffer4 << 32 | buffer5 << 40 | buffer6 << 48 | buffer7 << 56;

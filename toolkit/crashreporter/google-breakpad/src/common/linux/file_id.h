@@ -35,25 +35,30 @@
 
 #include <limits.h>
 
+#include "common/linux/guid_creator.h"
+
 namespace google_breakpad {
+
+static const size_t kMDGUIDSize = sizeof(MDGUID);
 
 class FileID {
  public:
-  FileID(const char *path);
-  ~FileID() {};
+  explicit FileID(const char* path);
+  ~FileID() {}
 
   // Load the identifier for the elf file path specified in the constructor into
   // |identifier|.  Return false if the identifier could not be created for the
   // file.
-  // The current implementation will return the MD5 hash of the file's bytes.
-  bool ElfFileIdentifier(unsigned char identifier[16]);
+  // The current implementation will XOR the first page of data to generate an
+  // identifier.
+  bool ElfFileIdentifier(uint8_t identifier[kMDGUIDSize]);
 
   // Convert the |identifier| data to a NULL terminated string.  The string will
   // be formatted as a UUID (e.g., 22F065BB-FC9C-49F7-80FE-26A7CEBD7BCE).
   // The |buffer| should be at least 37 bytes long to receive all of the data
   // and termination.  Shorter buffers will contain truncated data.
-  static void ConvertIdentifierToString(const unsigned char identifier[16],
-                                        char *buffer, int buffer_length);
+  static void ConvertIdentifierToString(const uint8_t identifier[kMDGUIDSize],
+                                        char* buffer, int buffer_length);
 
  private:
   // Storage for the path specified
@@ -63,4 +68,3 @@ class FileID {
 }  // namespace google_breakpad
 
 #endif  // COMMON_LINUX_FILE_ID_H__
-

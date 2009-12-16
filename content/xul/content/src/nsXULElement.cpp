@@ -1431,8 +1431,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
             doc->ContentStatesChanged(this, nsnull, stateMask);
         }
         nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
-                                      nsIDOMMutationEvent::REMOVAL,
-                                      stateMask);
+                                      nsIDOMMutationEvent::REMOVAL);
     }
 
     if (hasMutationListeners) {

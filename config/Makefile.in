@@ -163,6 +163,7 @@ PYUNITS := \
   unit-nsinstall.py \
   unit-printprereleasesuffix.py \
   unit-JarMaker.py \
+  unit-buildlist.py \
   $(NULL)
 
 check:: check-python-modules check-jar-mn

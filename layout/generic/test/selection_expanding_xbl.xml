@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="binding">
+    <content>
+      <html:div xmlns:html="http://www.w3.org/1999/xhtml">
+        <p>xxxxxxx xxxxxxx xxxxxxx</p>
+        <children/>
+      </html:div>
+    </content>
+  </binding>
+</bindings>

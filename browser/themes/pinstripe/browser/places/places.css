@@ -45,12 +45,12 @@
   border-top: @sidebarItemFocusedBorderTop@;
 }
 
-.sidebar-placesTreechildren::-moz-tree-row(selected):-moz-system-metric(mac-graphite-theme) {
+.sidebar-placesTreechildren:-moz-system-metric(mac-graphite-theme)::-moz-tree-row(selected) {
   background: @sidebarItemGraphiteBackground@;
   border-top: @sidebarItemGraphiteBorderTop@;
 }
 
-.sidebar-placesTreechildren::-moz-tree-row(selected,focus):-moz-system-metric(mac-graphite-theme) {
+.sidebar-placesTreechildren:-moz-system-metric(mac-graphite-theme)::-moz-tree-row(selected,focus) {
   background: @sidebarItemGraphiteFocusedBackground@;
   border-top: @sidebarItemGraphiteFocusedBorderTop@;
 }
@@ -68,7 +68,7 @@
   -moz-appearance: none;
   border: 1px solid #7F7F7F;
   -moz-border-radius: 10px;
-  background: url("chrome://global/skin/icons/white-gray-gradient.gif") #A09E9D repeat-x top center;
+  background: @toolbarbuttonBackground@;
   min-width: 0px;
   min-height: 0px;
   -moz-padding-start: 5px;

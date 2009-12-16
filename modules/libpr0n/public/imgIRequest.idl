@@ -52,7 +52,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(c0c9f606-19d6-4ed1-8486-6cae2fe0a6a4)]
+[scriptable, uuid(ebde51c9-cc11-4b6a-99c3-d7f568c7481b)]
 interface imgIRequest : nsIRequest
 {
   /**
@@ -173,5 +173,11 @@ interface imgIRequest : nsIRequest
    */
   void unlockImage();
 
+  /**
+   * If this request is for an animated image, the method creates a new
+   * request which contains the current frame of the image.
+   * Otherwise returns the same request.
+   */
+  imgIRequest getStaticRequest();
 };
 

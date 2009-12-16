@@ -56,7 +56,9 @@ CPPSRCS		= \
 			imgLoader.cpp    \
 			imgRequest.cpp   \
 			imgRequestProxy.cpp \
-			imgTools.cpp
+			imgTools.cpp \
+			imgContainerRequest.cpp \
+			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -2635,11 +2635,6 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 {
   *aResult = nsnull;
 
-  if (!mIsRegularHTML) {
-    // We don't dynamically resolve names on non-HTML documents.
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIAtom> name(do_GetAtom(aName));
 
   // We have built a table and cache the named items. The table will

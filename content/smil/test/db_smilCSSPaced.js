@@ -227,6 +227,16 @@ var gPacedBundles =
                           "need support for more font properties"),
   ]),
   new TestcaseBundle(gPropList.opacity, _pacedTestLists.opacity),
+  new TestcaseBundle(gPropList.stroke_dasharray,
+                     [].concat(_pacedTestLists.lengthPctSVG, [
+    new AnimTestcasePaced("7, 7, 7; 7, 10, 3; 1, 2, 3",
+                          { comp0:   "7, 7, 7",
+                            comp1_6: "7, 8.5, 5",
+                            comp1_3: "7, 10, 3",
+                            comp2_3: "4, 6, 3",
+                            comp1:   "1, 2, 3"
+                          }),
+  ])),
   new TestcaseBundle(gPropList.stroke_dashoffset,
                      [].concat(_pacedTestLists.lengthPx,
                                _pacedTestLists.lengthPctSVG,

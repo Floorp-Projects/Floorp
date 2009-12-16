@@ -201,49 +201,44 @@ nsHyperTextAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-void nsHyperTextAccessible::CacheChildren()
+void
+nsHyperTextAccessible::CacheChildren()
 {
-  if (!mWeakShell) {
-    // This node has been shut down
-    mAccChildCount = eChildCountUninitialized;
+  PRUint32 role;
+  GetRoleInternal(&role);
+  if (role != nsIAccessibleRole::ROLE_ENTRY &&
+      role != nsIAccessibleRole::ROLE_PASSWORD_TEXT) {
+    nsAccessible::CacheChildren();
     return;
   }
 
-  // Special case for text entry fields, go directly to editor's root for children
-  if (mAccChildCount == eChildCountUninitialized) {
-    PRUint32 role;
-    GetRoleInternal(&role);
-    if (role != nsIAccessibleRole::ROLE_ENTRY && role != nsIAccessibleRole::ROLE_PASSWORD_TEXT) {
-      nsAccessible::CacheChildren();
-      return;
-    }
-    nsCOMPtr<nsIEditor> editor;
-    GetAssociatedEditor(getter_AddRefs(editor));
-    if (!editor) {
-      nsAccessible::CacheChildren();
-      return;
-    }
-    mAccChildCount = 0;  // Avoid reentry
-    nsCOMPtr<nsIDOMElement> editorRoot;
-    editor->GetRootElement(getter_AddRefs(editorRoot));
-    nsCOMPtr<nsIDOMNode> editorRootDOMNode = do_QueryInterface(editorRoot);
-    if (!editorRootDOMNode) {
-      return;
-    }
-    nsAccessibleTreeWalker walker(mWeakShell, editorRootDOMNode, PR_TRUE);
-    nsRefPtr<nsAccessible> prevAcc;
-    PRInt32 childCount = 0;
-    walker.GetFirstChild();
-    SetFirstChild(walker.mState.accessible);
+  nsCOMPtr<nsIEditor> editor;
+  GetAssociatedEditor(getter_AddRefs(editor));
+  if (!editor) {
+    nsAccessible::CacheChildren();
+    return;
+  }
 
-    while (walker.mState.accessible) {
-      ++ childCount;
-      prevAcc = nsAccUtils::QueryAccessible(walker.mState.accessible);
-      prevAcc->SetParent(this);
-      walker.GetNextSibling();
-      prevAcc->SetNextSibling(walker.mState.accessible);
-    }
-    mAccChildCount = childCount;
+  // Special case for text entry fields, go directly to editor's root for
+  // children.
+
+  nsCOMPtr<nsIDOMElement> editorRoot;
+  editor->GetRootElement(getter_AddRefs(editorRoot));
+  nsCOMPtr<nsIDOMNode> editorRootDOMNode = do_QueryInterface(editorRoot);
+  if (!editorRootDOMNode)
+    return;
+
+  nsAccessibleTreeWalker walker(mWeakShell, editorRootDOMNode, PR_TRUE);
+
+  walker.GetFirstChild();
+  while (walker.mState.accessible) {
+    mChildren.AppendObject(walker.mState.accessible);
+
+    nsRefPtr<nsAccessible> acc =
+      nsAccUtils::QueryObject<nsAccessible>(walker.mState.accessible);
+    acc->SetParent(this);
+
+    walker.GetNextSibling();
   }
 }
 
@@ -290,7 +285,7 @@ nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRUint32 a
     frame->GetOffsets(startFrameTextOffset, endFrameTextOffset);
     PRInt32 frameTotalTextLength = endFrameTextOffset - startFrameTextOffset;
     PRInt32 seekLength = endContentOffset - startContentOffset;
-    PRInt32 frameSubStringLength = PR_MIN(frameTotalTextLength - startContentOffsetInFrame, seekLength);
+    PRInt32 frameSubStringLength = NS_MIN(frameTotalTextLength - startContentOffsetInFrame, seekLength);
 
     // Add the point where the string starts to the frameScreenRect
     nsPoint frameTextStartPoint;
@@ -866,10 +861,11 @@ nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell,
     hyperTextOffset = 0;
   }  
   else if (aAmount == eSelectBeginLine) {
+    nsIAccessible *firstChild = mChildren.SafeObjectAt(0);
     // For line selection with needsStart, set start of line exactly to line break
-    if (pos.mContentOffset == 0 && mFirstChild && 
-        nsAccUtils::Role(mFirstChild) == nsIAccessibleRole::ROLE_STATICTEXT &&
-        nsAccUtils::TextLength(mFirstChild) == hyperTextOffset) {
+    if (pos.mContentOffset == 0 && firstChild &&
+        nsAccUtils::Role(firstChild) == nsIAccessibleRole::ROLE_STATICTEXT &&
+        nsAccUtils::TextLength(firstChild) == hyperTextOffset) {
       // XXX Bullet hack -- we should remove this once list bullets use anonymous content
       hyperTextOffset = 0;
     }

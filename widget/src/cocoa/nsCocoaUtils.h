@@ -138,6 +138,7 @@ class nsCocoaUtils
   
   // Gives the location for the event in screen coordinates. Do not call this
   // unless the window the event was originally targeted at is still alive!
+  // anEvent may be nil -- in that case the current mouse location is returned.
   static NSPoint ScreenLocationForEvent(NSEvent* anEvent);
   
   // Determines if an event happened over a window, whether or not the event

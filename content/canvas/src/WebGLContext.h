@@ -266,7 +266,7 @@ protected:
 
     nsresult TexImageElementBase(nsIDOMHTMLElement *imageOrCanvas,
                                  gfxImageSurface **imageOut,
-                                 bool flipY, bool premultiplyAlpha);
+                                 PRBool flipY, PRBool premultiplyAlpha);
 
     GLuint mActiveTexture;
 
@@ -284,10 +284,12 @@ protected:
     WebGLObjectRefPtr<WebGLBuffer> mBoundElementArrayBuffer;
     WebGLObjectRefPtr<WebGLProgram> mCurrentProgram;
 
-    nsTArray<nsRefPtr<WebGLFramebuffer> > mBoundColorFramebuffers;
-    nsRefPtr<WebGLFramebuffer> mBoundDepthFramebuffer;
-    nsRefPtr<WebGLFramebuffer> mBoundStencilFramebuffer;
+    // XXX these 3 are wrong types, and aren't used atm (except for the length of the attachments)
+    nsTArray<WebGLObjectRefPtr<WebGLTexture> > mFramebufferColorAttachments;
+    nsRefPtr<WebGLFramebuffer> mFramebufferDepthAttachment;
+    nsRefPtr<WebGLFramebuffer> mFramebufferStencilAttachment;
 
+    nsRefPtr<WebGLFramebuffer> mBoundFramebuffer;
     nsRefPtr<WebGLRenderbuffer> mBoundRenderbuffer;
 
     // lookup tables for GL name -> object wrapper
@@ -353,7 +355,7 @@ public:
     PRBool Deleted() { return mDeleted; }
     GLuint GLName() { return mName; }
 
-    void Set(nsICanvasArray *na) {
+    void Set(nsIWebGLArray *na) {
         mGLType = na->NativeType();
         mElementSize = na->NativeElementSize();
         mCount = na->NativeCount();

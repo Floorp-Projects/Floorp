@@ -21,6 +21,7 @@
  * Contributor(s):
  *  Mark Mentovai <mark@moxienet.com> (Original Author)
  *  Josh Aas <josh@mozilla.com>
+ *  Benjamin Frisch <bfrisch@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -54,6 +55,7 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSSValue.h"
 #include "nsIDOMCSSPrimitiveValue.h"
+#include "nsIDOMRect.h"
 #include "nsThreadUtils.h"
 #include "nsToolkit.h"
 #include "nsNetUtil.h"
@@ -76,6 +78,8 @@ static void
 PRAllocCGFree(void* aInfo, const void* aData, size_t aSize) {
   free((void*)aData);
 }
+
+typedef nsresult (nsIDOMRect::*GetRectSideMethod)(nsIDOMCSSPrimitiveValue**);
 
 NS_IMPL_ISUPPORTS2(nsMenuItemIconX, imgIContainerObserver, imgIDecoderObserver)
 
@@ -131,9 +135,38 @@ nsMenuItemIconX::SetupIcon()
     return NS_OK;
   }
 
-  return LoadIcon(iconURI);
+  rv = LoadIcon(iconURI);
+  if (NS_FAILED(rv)) {
+    // There is no icon for this menu item, as an error occured while loading it.
+    // An icon might have been set earlier or the place holder icon may have
+    // been set.  Clear it.
+    [mNativeMenuItem setImage:nil];
+  }
+  return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+static PRInt32
+GetDOMRectSide(nsIDOMRect* aRect, GetRectSideMethod aMethod)
+{
+  nsCOMPtr<nsIDOMCSSPrimitiveValue> dimensionValue;
+  (aRect->*aMethod)(getter_AddRefs(dimensionValue));
+  if (!dimensionValue)
+    return -1;
+
+  PRUint16 primitiveType;
+  nsresult rv = dimensionValue->GetPrimitiveType(&primitiveType);
+  if (NS_FAILED(rv) || primitiveType != nsIDOMCSSPrimitiveValue::CSS_PX)
+    return -1;
+
+  float dimension = 0;
+  rv = dimensionValue->GetFloatValue(nsIDOMCSSPrimitiveValue::CSS_PX,
+                                     &dimension);
+  if (NS_FAILED(rv))
+    return -1;
+
+  return NSToIntRound(dimension);
 }
 
 nsresult
@@ -164,6 +197,10 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
                                           imageURIString);
 
   nsresult rv;
+  nsCOMPtr<nsIDOMCSSValue> cssValue;
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssStyleDecl;
+  nsCOMPtr<nsIDOMCSSPrimitiveValue> primitiveValue;
+  PRUint16 primitiveType;
   if (!hasImageAttr) {
     // If the content node has no "image" attribute, get the
     // "list-style-image" property from CSS.
@@ -181,23 +218,19 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mContent);
     if (!domElement) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIDOMCSSStyleDeclaration> cssStyleDecl;
     nsAutoString empty;
     rv = domViewCSS->GetComputedStyle(domElement, empty,
                                       getter_AddRefs(cssStyleDecl));
     if (NS_FAILED(rv)) return rv;
 
     NS_NAMED_LITERAL_STRING(listStyleImage, "list-style-image");
-    nsCOMPtr<nsIDOMCSSValue> cssValue;
     rv = cssStyleDecl->GetPropertyCSSValue(listStyleImage,
                                            getter_AddRefs(cssValue));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIDOMCSSPrimitiveValue> primitiveValue =
-     do_QueryInterface(cssValue);
+    primitiveValue = do_QueryInterface(cssValue);
     if (!primitiveValue) return NS_ERROR_FAILURE;
 
-    PRUint16 primitiveType;
     rv = primitiveValue->GetPrimitiveType(&primitiveType);
     if (NS_FAILED(rv)) return rv;
     if (primitiveType != nsIDOMCSSPrimitiveValue::CSS_URI)
@@ -207,6 +240,11 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
     if (NS_FAILED(rv)) return rv;
   }
 
+  // Empty the mImageRegionRect initially as the image region CSS could
+  // have been changed and now have an error or have been removed since the
+  // last GetIconURI call.
+  mImageRegionRect.Empty();
+
   // If this menu item shouldn't have an icon, the string will be empty,
   // and NS_NewURI will fail.
   nsCOMPtr<nsIURI> iconURI;
@@ -215,6 +253,44 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
 
   *aIconURI = iconURI;
   NS_ADDREF(*aIconURI);
+
+  if (!hasImageAttr) {
+    // Check if the icon has a specified image region so that it can be
+    // cropped appropriately before being displayed.
+    NS_NAMED_LITERAL_STRING(imageRegion, "-moz-image-region");
+    rv = cssStyleDecl->GetPropertyCSSValue(imageRegion,
+                                           getter_AddRefs(cssValue));
+    // Just return NS_OK if there if there is a failure due to no
+    // moz-image region specified so the whole icon will be drawn anyway.
+    if (NS_FAILED(rv)) return NS_OK;
+
+    primitiveValue = do_QueryInterface(cssValue);
+    if (!primitiveValue) return NS_OK;
+
+    rv = primitiveValue->GetPrimitiveType(&primitiveType);
+    if (NS_FAILED(rv)) return NS_OK;
+    if (primitiveType != nsIDOMCSSPrimitiveValue::CSS_RECT)
+      return NS_OK;
+
+    nsCOMPtr<nsIDOMRect> imageRegionRect;
+    rv = primitiveValue->GetRectValue(getter_AddRefs(imageRegionRect));
+    if (NS_FAILED(rv)) return NS_OK;
+
+    if (imageRegionRect) {
+      // Return NS_ERROR_FAILURE if the image region is invalid so the image
+      // is not drawn, and behavior is similar to XUL menus.
+      PRInt32 bottom = GetDOMRectSide(imageRegionRect, &nsIDOMRect::GetBottom);
+      PRInt32 right = GetDOMRectSide(imageRegionRect, &nsIDOMRect::GetRight);
+      PRInt32 top = GetDOMRectSide(imageRegionRect, &nsIDOMRect::GetTop);
+      PRInt32 left = GetDOMRectSide(imageRegionRect, &nsIDOMRect::GetLeft);
+
+      if (top < 0 || left < 0 || bottom <= top || right <= left)
+        return NS_ERROR_FAILURE;
+
+      mImageRegionRect.SetRect(left, top, right - left, bottom - top);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -344,46 +420,77 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
 
   nsCOMPtr<imgIContainer> imageContainer;
   aRequest->GetImage(getter_AddRefs(imageContainer));
-  if (!imageContainer)
+  if (!imageContainer) {
+    [mNativeMenuItem setImage:nil];
     return NS_ERROR_FAILURE;
+  }
 
   nsRefPtr<gfxImageSurface> image;
   nsresult rv = imageContainer->CopyFrame(imgIContainer::FRAME_CURRENT,
                                           imgIContainer::FLAG_NONE,
                                           getter_AddRefs(image));
-  if (NS_FAILED(rv) || !image)
+  if (NS_FAILED(rv) || !image) {
+    [mNativeMenuItem setImage:nil];
     return NS_ERROR_FAILURE;
+  }
 
-  PRInt32 height = image->Height();
-  PRInt32 stride = image->Stride();
-  PRInt32 width = image->Width();
-  PRUint32 imageLength = ((stride * height) / 4);
-  if ((stride % 4 != 0) || (height < 1) || (width < 1))
+  PRInt32 origHeight = image->Height();
+  PRInt32 origStride = image->Stride();
+  PRInt32 origWidth = image->Width();
+  if ((origStride % 4 != 0) || (origHeight < 1) || (origWidth < 1)) {
+    [mNativeMenuItem setImage:nil];
     return NS_ERROR_FAILURE;
+  }
 
   PRUint32* imageData = (PRUint32*)image->Data();
 
-  PRUint32* reorderedData = (PRUint32*)malloc(height * stride);
-  if (!reorderedData)
-    return NS_ERROR_OUT_OF_MEMORY;
+  // If the image region is invalid, don't draw the image to almost match
+  // the behavior of other platforms.
+  if (!mImageRegionRect.IsEmpty() &&
+      (mImageRegionRect.XMost() > origWidth ||
+       mImageRegionRect.YMost() > origHeight)) {
+    [mNativeMenuItem setImage:nil];
+    return NS_ERROR_FAILURE;
+  }
 
-  // We have to reorder data to have alpha last because only Tiger can handle
-  // alpha being first. Also the data must always be big endian (silly).
-  
-  for (PRUint32 i = 0; i < imageLength; i++) {
-    PRUint32 pixel = imageData[i];
-    reorderedData[i] = CFSwapInt32HostToBig((pixel << 8) | (pixel >> 24));
+  if (mImageRegionRect.IsEmpty()) {
+    mImageRegionRect.SetRect(0, 0, origWidth, origHeight);
+  }
+
+  PRInt32 newStride = mImageRegionRect.width * sizeof(PRUint32);
+  PRInt32 imageLength = mImageRegionRect.height * mImageRegionRect.width;
+
+  PRUint32* reorderedData = (PRUint32*)malloc(imageLength * sizeof(PRUint32));
+  if (!reorderedData) {
+    [mNativeMenuItem setImage:nil];
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // We have to clip the data to the image region and reorder the data to have
+  // alpha last because only Tiger can handle alpha being first. Also the data
+  // must always be big endian (silly).
+  for (PRInt32 y = 0; y < mImageRegionRect.height; y++) {
+    PRInt32 srcLine = (mImageRegionRect.y + y) * (origStride/4);
+    PRInt32 dstLine = y * mImageRegionRect.width;
+    for (PRInt32 x = 0; x < mImageRegionRect.width; x++) {
+      PRUint32 pixel = imageData[srcLine + x + mImageRegionRect.x];
+      reorderedData[dstLine + x] =
+        CFSwapInt32HostToBig((pixel << 8) | (pixel >> 24));
+    }
   }
 
   CGDataProviderRef provider = ::CGDataProviderCreateWithData(NULL, reorderedData, imageLength, PRAllocCGFree);
   if (!provider) {
     free(reorderedData);
+    [mNativeMenuItem setImage:nil];
     return NS_ERROR_FAILURE;
   }
   CGColorSpaceRef colorSpace = ::CGColorSpaceCreateDeviceRGB();
-  CGImageRef cgImage = ::CGImageCreate(width, height, 8, 32, stride, colorSpace,
-                                       kCGImageAlphaPremultipliedLast, provider,
-                                       NULL, true, kCGRenderingIntentDefault);
+  CGImageRef cgImage = ::CGImageCreate(mImageRegionRect.width,
+                                       mImageRegionRect.height, 8, 32, newStride,
+                                       colorSpace, kCGImageAlphaPremultipliedLast,
+                                       provider, NULL, true,
+                                       kCGRenderingIntentDefault);
   ::CGDataProviderRelease(provider);
 
   // The image may not be the right size for a menu icon (16x16).

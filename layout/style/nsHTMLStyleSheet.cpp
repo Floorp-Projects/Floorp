@@ -430,8 +430,8 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       // if we have anchor colors, check if this is an anchor with an href
       if (tag == nsGkAtoms::a) {
         if (mLinkRule || mVisitedRule || mActiveRule) {
-          if (aData->mIsLink) {
-            switch (aData->mLinkState) {
+          if (aData->IsLink()) {
+            switch (aData->LinkState()) {
               case eLinkState_Unvisited:
                 if (mLinkRule)
                   ruleWalker->Forward(mLinkRule);
@@ -445,7 +445,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
             }
 
             // No need to add to the active rule if it's not a link
-            if (mActiveRule && (aData->mEventState & NS_EVENT_STATE_ACTIVE))
+            if (mActiveRule && (aData->ContentState() & NS_EVENT_STATE_ACTIVE))
               ruleWalker->Forward(mActiveRule);
           }
         } // end link/visited/active rules
@@ -476,7 +476,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
         if (aData->mCompatMode == eCompatibility_NavQuirks) {
           nscolor bodyColor;
           nsresult rv =
-            GetBodyColor(ruleWalker->GetCurrentNode()->GetPresContext(),
+            GetBodyColor(ruleWalker->CurrentNode()->GetPresContext(),
                          &bodyColor);
           if (NS_SUCCEEDED(rv) &&
               (!mDocumentColorRule || bodyColor != mDocumentColorRule->mColor)) {
@@ -501,29 +501,29 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 }
 
 // Test if style is dependent on content state
-NS_IMETHODIMP
-nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData,
-                                         nsReStyleHint* aResult)
+nsReStyleHint
+nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
-  if (aData->mContent &&
-      aData->mIsHTMLContent &&
-      aData->mIsLink &&
+  if (aData->mIsHTMLContent &&
       aData->mContentTag == nsGkAtoms::a &&
+      aData->IsLink() &&
       ((mActiveRule && (aData->mStateMask & NS_EVENT_STATE_ACTIVE)) ||
        (mLinkRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)) ||
        (mVisitedRule && (aData->mStateMask & NS_EVENT_STATE_VISITED)))) {
-    *aResult = eReStyle_Self;
+    return eReStyle_Self;
   }
-  else
-    *aResult = nsReStyleHint(0);
-
-  return NS_OK;
+  
+  return nsReStyleHint(0);
 }
 
-NS_IMETHODIMP
-nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                             nsReStyleHint* aResult)
+nsReStyleHint
+nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
+  // Do nothing on before-change checks
+  if (!aData->mAttrHasChanged) {
+    return nsReStyleHint(0);
+  }
+
   // Note: no need to worry about whether some states changed with this
   // attribute here, because we handle that under HasStateDependentStyle() as
   // needed.
@@ -535,8 +535,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
       content &&
       content->IsHTML() &&
       aData->mContentTag == nsGkAtoms::a) {
-    *aResult = eReStyle_Self;
-    return NS_OK;
+    return eReStyle_Self;
   }
 
   // Don't worry about the mDocumentColorRule since it only applies
@@ -544,12 +543,10 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
 
   // Handle the content style rules.
   if (content && content->IsAttributeMapped(aData->mAttribute)) {
-    *aResult = eReStyle_Self;
-    return NS_OK;
+    return eReStyle_Self;
   }
 
-  *aResult = nsReStyleHint(0);
-  return NS_OK;
+  return nsReStyleHint(0);
 }
 
 NS_IMETHODIMP
@@ -562,7 +559,13 @@ nsHTMLStyleSheet::MediumFeaturesChanged(nsPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData)
+nsHTMLStyleSheet::RulesMatching(PseudoElementRuleProcessorData* aData)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLStyleSheet::RulesMatching(AnonBoxRuleProcessorData* aData)
 {
   nsIAtom* pseudoTag = aData->mPseudoTag;
   if (pseudoTag == nsCSSAnonBoxes::tableCol) {
@@ -574,6 +577,13 @@ nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData)
   return NS_OK;
 }
 
+#ifdef MOZ_XUL
+NS_IMETHODIMP
+nsHTMLStyleSheet::RulesMatching(XULTreeRuleProcessorData* aData)
+{
+  return NS_OK;
+}
+#endif
 
   // nsIStyleSheet api
 NS_IMETHODIMP

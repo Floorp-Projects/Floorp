@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Test HTML li and listitem bullet accessible cache</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+
+  <script type="application/javascript">
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Helpers
+
+    function testLiAccessibleTree()
+    {
+      // Test accessible tree.
+      var accTree = {
+        role: ROLE_LISTITEM,
+        children: [
+          {
+            role: ROLE_STATICTEXT,
+            children: []
+          },
+          {
+            role: ROLE_TEXT_LEAF,
+            children: []
+          }
+        ]
+      };
+
+      testAccessibleTree("li", accTree);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Sequence item processors
+
+    function hideProcessor()
+    {
+      this.liNode = getNode("li");
+      this.li = getAccessible(this.liNode);
+      this.bullet = this.li.firstChild;
+
+      this.process = function hideProcessor_process()
+      {
+        this.liNode.style.display = "none";
+      }
+
+      this.onProcessed = function hideProcessor_onProcessed()
+      {
+        window.setTimeout(
+          function(aLiAcc, aLiNode, aBulletAcc)
+          {
+            testDefunctAccessible(aLiAcc, aLiNode);
+            testDefunctAccessible(aBulletAcc);
+
+            gSequence.processNext();
+          },
+          0, this.li, this.liNode, this.bullet
+        );
+      }
+    };
+
+    function showProcessor()
+    {
+      this.liNode = getNode("li");
+
+      this.process = function showProcessor_process()
+      {
+        this.liNode.style.display = "list-item";
+      }
+
+      this.onProcessed = function showProcessor_onProcessed()
+      {
+        testLiAccessibleTree();
+        SimpleTest.finish();
+      }
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    var gSequence = null;
+
+    function doTest()
+    {
+      testLiAccessibleTree();
+
+      gSequence = new sequence();
+
+      gSequence.append(new hideProcessor(), EVENT_HIDE, getAccessible("li"),
+                       "hide HTML li");
+      gSequence.append(new showProcessor(), EVENT_SHOW, getNode("li"),
+                       "show HTML li");
+
+      gSequence.processNext(); // SimpleTest.finish() will be called in the end
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="setParent shouldn't be virtual"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=496783">Mozilla Bug 496783</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <ul>
+    <li id="li">item1</li>
+  </ul>
+</body>
+</html>

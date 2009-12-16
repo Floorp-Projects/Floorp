@@ -66,17 +66,19 @@
  *   - NSS 3.10 branch: 50-59
  *   - NSS 3.11 branch: 60-69
  *     ...
- *   - NSS 3.14 branch: 90-99
+ *   - NSS 3.12 branch: 70-89
+ *   - NSS 3.13 branch: 90-99
+ *   - NSS 3.14 branch: 100-109
  *     ...
- *   - NSS 3.30 branch: 250-255
+ *   - NSS 3.29 branch: 250-255
  *
  * NSS_BUILTINS_LIBRARY_VERSION_MINOR is a CK_BYTE.  It's not clear
  * whether we may use its full range (0-255) or only 0-99 because
  * of the comment in the CK_VERSION type definition.
  */
 #define NSS_BUILTINS_LIBRARY_VERSION_MAJOR 1
-#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 75
-#define NSS_BUILTINS_LIBRARY_VERSION "1.75"
+#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 77
+#define NSS_BUILTINS_LIBRARY_VERSION "1.77"
 
 /* These version numbers detail the semantic changes to the ckfw engine. */
 #define NSS_BUILTINS_HARDWARE_VERSION_MAJOR 1

@@ -290,10 +290,10 @@ nsNavHistoryResultNode::GetTags(nsAString& aTags) {
   }
 
   // Fetch the tags
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_STATE(history);
-  mozIStorageStatement* getTagsStatement = history->DBGetTags();
-
+  nsNavHistory *history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+  mozIStorageStatement *getTagsStatement = history->DBGetTags();
+  NS_ENSURE_STATE(getTagsStatement);
   mozStorageStatementScoper scoper(getTagsStatement);
   nsresult rv = getTagsStatement->BindInt64Parameter(0, history->GetTagsFolder());
   NS_ENSURE_SUCCESS(rv, rv);

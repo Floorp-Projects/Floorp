@@ -78,6 +78,9 @@ private:
     PRUint32     mServiceFlags;
     PRUint32     mMaxTokenLen;
     pType        mPackage;
+    nsString     mDomain;
+    nsString     mUsername;
+    nsString     mPassword;
 };
 
 #endif /* nsAuthSSPI_h__ */

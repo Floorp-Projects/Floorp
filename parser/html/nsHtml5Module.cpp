@@ -46,6 +46,8 @@
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5UTF16Buffer.h"
 #include "nsHtml5Module.h"
+#include "nsIObserverService.h"
+#include "nsIServiceManager.h"
 
 // static
 PRBool nsHtml5Module::sEnabled = PR_FALSE;
@@ -69,6 +71,7 @@ nsHtml5Module::InitializeStatics()
   nsHtml5Tokenizer::initializeStatics();
   nsHtml5TreeBuilder::initializeStatics();
   nsHtml5UTF16Buffer::initializeStatics();
+  nsHtml5StreamParser::InitializeStatics();
 #ifdef DEBUG
   sNsHtml5ModuleInitialized = PR_TRUE;
 #endif
@@ -90,9 +93,6 @@ nsHtml5Module::ReleaseStatics()
   nsHtml5Tokenizer::releaseStatics();
   nsHtml5TreeBuilder::releaseStatics();
   nsHtml5UTF16Buffer::releaseStatics();
-  if (sStreamParserThread) {
-    sStreamParserThread->Shutdown();
-  }
   NS_IF_RELEASE(sStreamParserThread);
   NS_IF_RELEASE(sMainThread);
 }
@@ -116,6 +116,29 @@ nsHtml5Module::Initialize(nsIParser* aParser, nsIDocument* aDoc, nsIURI* aURI, n
   return parser->Initialize(aDoc, aURI, aContainer, aChannel);
 }
 
+class nsHtml5ParserThreadTerminator : public nsIObserver
+{
+  public:
+    NS_DECL_ISUPPORTS
+    nsHtml5ParserThreadTerminator(nsIThread* aThread)
+      : mThread(aThread)
+    {}
+    NS_IMETHODIMP Observe(nsISupports *, const char *topic, const PRUnichar *)
+    {
+      NS_ASSERTION(!strcmp(topic, "xpcom-shutdown-threads"), 
+                   "Unexpected topic");
+      if (mThread) {
+        mThread->Shutdown();
+        mThread = nsnull;
+      }
+      return NS_OK;
+    }
+  private:
+    nsCOMPtr<nsIThread> mThread;
+};
+
+NS_IMPL_ISUPPORTS1(nsHtml5ParserThreadTerminator, nsIObserver)
+
 // static 
 nsIThread*
 nsHtml5Module::GetStreamParserThread()
@@ -124,6 +147,11 @@ nsHtml5Module::GetStreamParserThread()
     if (!sStreamParserThread) {
       NS_NewThread(&sStreamParserThread);
       NS_ASSERTION(sStreamParserThread, "Thread creation failed!");
+      nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+      NS_ASSERTION(os, "do_GetService failed");
+      os->AddObserver(new nsHtml5ParserThreadTerminator(sStreamParserThread), 
+                      "xpcom-shutdown-threads",
+                      PR_FALSE);
     }
     return sStreamParserThread;
   }

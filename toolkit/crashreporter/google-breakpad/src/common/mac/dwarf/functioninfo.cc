@@ -29,24 +29,15 @@
 // This is a client for the dwarf2reader to extract function and line
 // information from the debug info.
 
+#include <assert.h>
+
 #include <map>
 #include <queue>
 #include <vector>
 
-
 #include "common/mac/dwarf/functioninfo.h"
 
 #include "common/mac/dwarf/bytereader.h"
-
-
-namespace __gnu_cxx 
-{
-  template<> 
-    struct hash<std::string> 
-    {
-      size_t operator()(const std::string& k) const;
-    };
-}
 
 
 namespace dwarf2reader {

@@ -42,6 +42,8 @@
 
 #include "nsContainerFrame.h"
 #include "gfxPoint.h"
+#include "nsIDeviceContext.h"
+
 class nsString;
 class nsAbsoluteFrame;
 class nsPlaceholderFrame;
@@ -54,10 +56,8 @@ class nsLineBox;
 // Some macros for container classes to do sanity checking on
 // width/height/x/y values computed during reflow.
 #ifdef DEBUG
-#define CRAZY_W 500000
-
-// 100000 lines, approximately. Assumes p2t is 15 and 15 pixels per line
-#define CRAZY_H 22500000
+#define CRAZY_W (1000000*nsIDeviceContext::AppUnitsPerCSSPixel())
+#define CRAZY_H CRAZY_W
 
 #define CRAZY_WIDTH(_x) (((_x) < -CRAZY_W) || ((_x) > CRAZY_W))
 #define CRAZY_HEIGHT(_y) (((_y) < -CRAZY_H) || ((_y) > CRAZY_H))

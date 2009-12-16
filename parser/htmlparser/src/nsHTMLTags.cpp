@@ -383,7 +383,7 @@ nsHTMLTags::AddRefTable(void)
       PRUint32 maxTagNameLength = 0;
       for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
         PRUint32 len = nsCRT::strlen(sTagUnicodeTable[i]);
-        maxTagNameLength = PR_MAX(len, maxTagNameLength);        
+        maxTagNameLength = NS_MAX(len, maxTagNameLength);        
       }
       NS_ASSERTION(maxTagNameLength == NS_HTMLTAG_NAME_MAX_LENGTH,
                    "NS_HTMLTAG_NAME_MAX_LENGTH not set correctly!");

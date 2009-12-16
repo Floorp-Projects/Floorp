@@ -48,9 +48,6 @@ using namespace mozilla;
 PRBool
 WebGLContext::ValidateBuffers(PRUint32 count)
 {
-    GLint len = 0;
-    GLint enabled = 0, size = 4, type = LOCAL_GL_FLOAT, binding = 0;
-    PRBool someEnabled = PR_FALSE;
     GLint currentProgram = -1;
     GLint numAttributes = -1;
 

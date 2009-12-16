@@ -44,6 +44,7 @@
 
 #include "nsRuleNode.h"
 #include "nsIAtom.h"
+#include "nsCSSPseudoElements.h"
 
 class nsPresContext;
 
@@ -72,7 +73,8 @@ class nsPresContext;
 class nsStyleContext
 {
 public:
-  nsStyleContext(nsStyleContext* aParent, nsIAtom* aPseudoTag, 
+  nsStyleContext(nsStyleContext* aParent, nsIAtom* aPseudoTag,
+                 nsCSSPseudoElements::Type aPseudoType,
                  nsRuleNode* aRuleNode, nsPresContext* aPresContext) NS_HIDDEN;
   ~nsStyleContext() NS_HIDDEN;
 
@@ -108,6 +110,10 @@ public:
   nsStyleContext* GetParent() const { return mParent; }
 
   nsIAtom* GetPseudo() const { return mPseudoTag; }
+  nsCSSPseudoElements::Type GetPseudoType() const {
+    return static_cast<nsCSSPseudoElements::Type>(mBits >>
+                                                  NS_STYLE_CONTEXT_TYPE_SHIFT);
+  }
 
   NS_HIDDEN_(already_AddRefed<nsStyleContext>)
   FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules);
@@ -222,6 +228,7 @@ protected:
 NS_HIDDEN_(already_AddRefed<nsStyleContext>)
 NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
+                   nsCSSPseudoElements::Type aPseudoType,
                    nsRuleNode* aRuleNode,
                    nsPresContext* aPresContext);
 #endif

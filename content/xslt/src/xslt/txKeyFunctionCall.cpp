@@ -398,9 +398,9 @@ nsresult txXSLKey::testNode(const txXPathNode& aNode,
             nsRefPtr<txAExprResult> exprResult;
             rv = mKeys[currKey].useExpr->evaluate(evalContext,
                                                   getter_AddRefs(exprResult));
-            NS_ENSURE_SUCCESS(rv, rv);
 
             delete aEs.popEvalContext();
+            NS_ENSURE_SUCCESS(rv, rv);
 
             if (exprResult->getResultType() == txAExprResult::NODESET) {
                 txNodeSet* res = static_cast<txNodeSet*>

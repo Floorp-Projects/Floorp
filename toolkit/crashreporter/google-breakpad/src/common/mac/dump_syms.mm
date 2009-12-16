@@ -68,15 +68,6 @@ static NSString *kHeaderCPUTypeKey = @"cpuType";
 // for pruning out extraneous non-function symbols.
 static const int kTextSection = 1;
 
-namespace __gnu_cxx {
-template<> 
-  struct hash<std::string> {
-    size_t operator()(const std::string& k) const {
-      return hash< const char* >()( k.c_str() );
-  }
-};
-}
-
 // Dump FunctionMap to stdout.  Print address, function name, file
 // name, line number, lowpc, and highpc if available.
 void DumpFunctionMap(const dwarf2reader::FunctionMap function_map) {
@@ -321,13 +312,16 @@ void DumpFunctionMap(const dwarf2reader::FunctionMap function_map) {
 
 //=============================================================================
 - (BOOL)loadSymbolInfo:(void *)base offset:(uint32_t)offset {
+  BOOL loadedStabs = [self loadSTABSSymbolInfo:base offset:offset];
+
   NSMutableDictionary *archSections = [sectionData_ objectForKey:architecture_];
+  BOOL loadedDWARF = NO;
   if ([archSections objectForKey:@"__DWARF__debug_info"]) {
     // Treat this this as debug information
-    return [self loadDWARFSymbolInfo:base offset:offset];
+    loadedDWARF = [self loadDWARFSymbolInfo:base offset:offset];
   }
 
-  return [self loadSTABSSymbolInfo:base offset:offset];
+  return loadedDWARF || loadedStabs;
 }
 
 //=============================================================================
@@ -342,11 +336,15 @@ void DumpFunctionMap(const dwarf2reader::FunctionMap function_map) {
   section *dbgInfoSection = [[archSections objectForKey:@"__DWARF__debug_info"] sectionPointer];
   uint32_t debugInfoSize = SwapLongIfNeeded(dbgInfoSection->size);
 
-  // i think this will break if run on a big-endian machine
+#if __BIG_ENDIAN__
+  dwarf2reader::ByteReader byte_reader(swap ?
+                                       dwarf2reader::ENDIANNESS_LITTLE :
+                                       dwarf2reader::ENDIANNESS_BIG);
+#elif __LITTLE_ENDIAN__
   dwarf2reader::ByteReader byte_reader(swap ?
                                        dwarf2reader::ENDIANNESS_BIG :
                                        dwarf2reader::ENDIANNESS_LITTLE);
-
+#endif
   uint64_t dbgOffset = 0;
 
   dwarf2reader::SectionMap* oneArchitectureSectionMap = [self getSectionMapForArchitecture:architecture_];

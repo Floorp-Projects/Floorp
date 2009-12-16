@@ -110,6 +110,10 @@
           NSEventTypeBeginGesture = 19,
           NSEventTypeEndGesture   = 20;
 
+    const gDebug = false;
+
+    function printDebug(msg) { if (gDebug) dump(msg); }
+
     var gExpectedEvents = [];
     var gRightWindow = null, gPopup = null;
 
@@ -120,6 +124,7 @@
         expEv.screenY = y;
         gExpectedEvents.push(expEv);
       });
+      printDebug("sending event: " + x + ", " + y + " (" + msg + ")\n");
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                                      getInterface(Components.interfaces.nsIDOMWindowUtils);
@@ -139,6 +144,7 @@
 
     function focusAndThen(win, callback) {
       eventListenOnce(win, "focus", callback);
+      printDebug("focusing a window\n");
       win.focus();
     }
 
@@ -159,6 +165,7 @@
     var gEventNum = 0;
 
     function eventMonitor(e) {
+      printDebug("got event: " + eventToString(e) + "\n");
       var expectedEvent = gExpectedEvents.shift();
       while (expectedEvent && expectedEvent.todoShouldHaveFired) {
         todo(false, "Should have got event: " + eventToString(expectedEvent));
@@ -238,22 +245,21 @@
         [400, 150, NSMouseMoved, null, right, [
           { type: "mouseout", target: leftElem },
         ]],
-        // Clicking an inactive window shouldn't have any effect, other
-        // than focusing it.
+        // Clicking an inactive window should make it active and fire a mouseover
+        // event.
         [400, 150, NSLeftMouseDown, null, right, [
+          { type: "mouseover", target: rightElem },
         ]],
         [400, 150, NSLeftMouseUp, null, right, [
         ]],
         // Now it's focused, so we should get a mousedown event when clicking.
         [400, 150, NSLeftMouseDown, null, right, [
           { type: "mousedown", target: rightElem },
-          { type: "mouseover", target: rightElem, todoShouldHaveFired: true },
         ]],
         // Let's drag to the right without letting the button go. It would be better
         // if the mouseover event had fired as soon as the mouse entered the window,
         // and not only when dragging, but that's ok.
         [410, 150, NSLeftMouseDragged, null, right, [
-          { type: "mouseover", target: rightElem, todoShouldNotHaveFired: true },
           { type: "mousemove", target: rightElem },
         ]],
         // Let go of the mouse.
@@ -279,12 +285,15 @@
         ]],
         // Right clicking hasn't focused it, so the window is still inactive.
         // Let's focus it; this time without the mouse, for variaton's sake.
+        // Still, mouseout and mouseover events should fire.
         function raiseLeftWindow(callback) {
-          focusAndThen(left, callback);
+          clearExpectedEvents();
+          gExpectedEvents.push({ screenX: 150, screenY: 170, type: "mouseout", target: rightElem });
+          gExpectedEvents.push({ screenX: 150, screenY: 170, type: "mouseover", target: leftElem });
+          focusAndThen(left, function () { SimpleTest.executeSoon(callback); });
         },
         // It's active, so it should respond to mousemove events now.
         [150, 170, NSMouseMoved, null, left, [
-          { type: "mouseover", target: leftElem },
           { type: "mousemove", target: leftElem },
         ]],
 
@@ -328,8 +337,9 @@
         [400, 180, NSMouseMoved, null, right, [
         ]],
         // Activate the right window with a click.
-        // This will close the popup.
+        // This will close the popup and make the mouse enter the right window.
         [400, 180, NSLeftMouseDown, null, right, [
+          { type: "mouseover", target: rightElem },
         ]],
         [400, 180, NSLeftMouseUp, null, right, [
         ]],
@@ -338,9 +348,7 @@
           callback();
         },
         // Now the right window is active; click it again, just for fun.
-        // (Would be good to have a mouseover event here.)
         [400, 180, NSLeftMouseDown, null, right, [
-          { type: "mouseover", target: rightElem, todoShouldHaveFired: true },
           { type: "mousedown", target: rightElem },
         ]],
         [400, 180, NSLeftMouseUp, null, right, [

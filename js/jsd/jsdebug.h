@@ -151,6 +151,18 @@ extern JSD_PUBLIC_API(void)
 JSD_DebuggerOff(JSDContext* jsdc);
 
 /*
+ * Pause JSD for this JSDContext
+ */
+extern JSD_PUBLIC_API(void)
+JSD_DebuggerPause(JSDContext* jsdc);
+
+/*
+ * Unpause JSD for this JSDContext
+ */
+extern JSD_PUBLIC_API(void)
+JSD_DebuggerUnpause(JSDContext* jsdc);
+
+/*
 * Get the Major Version (initial JSD release used major version = 1)
 */
 extern JSD_PUBLIC_API(uintN)

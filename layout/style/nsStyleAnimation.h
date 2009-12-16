@@ -44,6 +44,8 @@
 
 #include "prtypes.h"
 #include "nsAString.h"
+#include "nsCRTGlue.h"
+#include "nsStringBuffer.h"
 #include "nsCSSProperty.h"
 #include "nsCoord.h"
 #include "nsColor.h"
@@ -233,7 +235,8 @@ public:
     eUnit_Color,
     eUnit_CSSValuePair, // nsCSSValuePair* (never null)
     eUnit_Dasharray, // nsCSSValueList* (never null)
-    eUnit_Shadow  // nsCSSValueList* (may be null)
+    eUnit_Shadow, // nsCSSValueList* (may be null)
+    eUnit_UnparsedString // nsStringBuffer* (never null)
   };
 
   class Value {
@@ -246,6 +249,7 @@ public:
       nscolor mColor;
       nsCSSValuePair* mCSSValuePair;
       nsCSSValueList* mCSSValueList;
+      nsStringBuffer* mString;
     } mValue;
   public:
     Unit GetUnit() const {
@@ -287,6 +291,17 @@ public:
       NS_ASSERTION(IsCSSValueListUnit(mUnit), "unit mismatch");
       return mValue.mCSSValueList;
     }
+    const PRUnichar* GetStringBufferValue() const {
+      NS_ASSERTION(IsStringUnit(mUnit), "unit mismatch");
+      return GetBufferValue(mValue.mString);
+    }
+
+    void GetStringValue(nsAString& aBuffer) const {
+      NS_ASSERTION(IsStringUnit(mUnit), "unit mismatch");
+      aBuffer.Truncate();
+      PRUint32 len = NS_strlen(GetBufferValue(mValue.mString));
+      mValue.mString->ToString(len, aBuffer);
+    }
 
     explicit Value(Unit aUnit = eUnit_Null) : mUnit(aUnit) {
       NS_ASSERTION(aUnit == eUnit_Null || aUnit == eUnit_Normal ||
@@ -315,6 +330,8 @@ public:
     void SetPercentValue(float aPercent);
     void SetFloatValue(float aFloat);
     void SetColorValue(nscolor aColor);
+    void SetUnparsedStringValue(const nsString& aString);
+
     // These setters take ownership of |aValue|, and are therefore named
     // "SetAndAdopt*".
     void SetAndAdoptCSSValueListValue(nsCSSValueList *aValue, Unit aUnit);
@@ -329,6 +346,10 @@ public:
   private:
     void FreeValue();
 
+    static const PRUnichar* GetBufferValue(nsStringBuffer* aBuffer) {
+      return static_cast<PRUnichar*>(aBuffer->Data());
+    }
+
     static PRBool IsIntUnit(Unit aUnit) {
       return aUnit == eUnit_Enumerated || aUnit == eUnit_Integer;
     }
@@ -337,6 +358,9 @@ public:
     }
     static PRBool IsCSSValueListUnit(Unit aUnit) {
       return aUnit == eUnit_Dasharray || aUnit == eUnit_Shadow;
+    }
+    static PRBool IsStringUnit(Unit aUnit) {
+      return aUnit == eUnit_UnparsedString;
     }
   };
 };

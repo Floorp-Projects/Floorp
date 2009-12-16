@@ -604,6 +604,7 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
   nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(aElement));
   if (!imgElement) {
     // XXX write background loading stuff!
+    return NS_ERROR_NOT_AVAILABLE;
   } 
   else {
     nsCOMPtr<nsIImageLoadingContent> imageContent =
