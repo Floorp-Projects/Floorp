@@ -70,7 +70,9 @@ public:
     ATSFontRef GetFontRef();
     nsresult ReadCMAP();
 
+#ifndef __LP64__
     PRBool UseLiGothicAtsuiHack() { return mUseLiGothicAtsuiHack; }
+#endif
 
 protected:
     // for use with data fonts
@@ -82,7 +84,9 @@ protected:
 
     ATSFontRef mATSFontRef;
     PRPackedBool mATSFontRefInitialized;
+#ifndef __LP64__
     PRPackedBool mUseLiGothicAtsuiHack;
+#endif
 };
 
 class gfxMacPlatformFontList : public gfxPlatformFontList {

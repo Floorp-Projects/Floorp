@@ -67,33 +67,37 @@ function makeResult() {
   };
 }
 
-function waitInterrupt(result, gen, timewait) {
+function makeListener(result, eventGen) {
+  return function(ev) {
+    result.success = true;
+    result.event = ev;
+    setTimeout(function() { eventGen.next(); }, 0);
+  };
+}
+
+function waitInterrupt(result, gen) {
   result.event = null;
   result.success = false;
-  setTimeout(function() { if (!result.success) gen.next(); }, (timewait || 2000));
+  setTimeout(function() { if (!result.success) gen.next(); }, 3500);
 }
 
 function testPhoom(isCapturing, x, y, expectEvent) {
-  var result;
 
   var eventGen = (function() {
     var innerdoc = document.getElementById('testframe').contentDocument;
 
     for each (var doc in [document, innerdoc]) {
       var inner = (doc == innerdoc);
-      var w, h;
-      var listener = function(ev) {
-        result.success = true;
-        result.event = ev;
-        setTimeout(function() { eventGen.next(); }, 0);
-      };
+      var w, h, result, listener;
 
       /* --- EXPANSION --- */
 
+      result = makeResult();
+      listener = makeListener(result, eventGen);
+
       doc.addEventListener("MozScrolledAreaChanged", listener, isCapturing);
 
-      result = makeResult();
-      waitInterrupt(result, eventGen, 1200);
+      if (!expectEvent) waitInterrupt(result, eventGen);
       phoom(doc, x, y);
       yield;
 
@@ -103,7 +107,7 @@ function testPhoom(isCapturing, x, y, expectEvent) {
          one can still arrive, but we don't complain if it did not.  In either case, any event
          that arrives will have its data checked below. */
       if (expectEvent) {
-        ok(result.success, "Received expected expansion event");
+        ok(result.success, "Received expected " + (inner ? "inner" : "") + " expansion event");
       }
 
       if (result.success) {
@@ -129,17 +133,19 @@ function testPhoom(isCapturing, x, y, expectEvent) {
 
       /* --- CONTRACTION --- */
 
+      result = makeResult();
+      listener = makeListener(result, eventGen);
+
       doc.addEventListener("MozScrolledAreaChanged", listener, isCapturing);
 
-      result = makeResult();
-      waitInterrupt(result, eventGen, 1200);
+      if (!expectEvent) waitInterrupt(result, eventGen);
       unphoom(doc);
       yield;
 
       doc.removeEventListener("MozScrolledAreaChanged", listener, isCapturing);
 
       if (expectEvent) {
-        ok(result.success, "Received expected contraction event");
+        ok(result.success, "Received expected " + (inner ? "inner" : "") + " contraction event");
       }
 
       if (result.success) {

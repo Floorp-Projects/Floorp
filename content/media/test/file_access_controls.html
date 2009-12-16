@@ -15,7 +15,7 @@ var gTests = [
   },{
     // Test 1
     url: "redirect.sjs?http://example.com/tests/content/media/test/320x240.allow-origin.ogv",
-    result: "loaded",
+    result: "loadeddata",
     description: "Can load when redirected to different domain with allow-origin",
   },{
     // Test 2
@@ -25,17 +25,17 @@ var gTests = [
   },{
     // Test 3
     url: "redirect.sjs?http://test1.example.org/tests/content/media/test/320x240.allow-origin.ogv",
-    result: "loaded",
+    result: "loadeddata",
     description: "Can load when redirected to subdomain with allow-origin",
   },{
     // Test 4
     url: "redirect.sjs?http://example.org/tests/content/media/test/320x240.ogv",
-    result: "loaded",
+    result: "loadeddata",
     description: "Can load when redirected to same domain",
   },{
     // Test 5
     url: "http://example.org/tests/content/media/test/320x240.ogv",
-    result: "loaded",
+    result: "loadeddata",
     description: "Can load from same domain"
   },{
     // Test 6
@@ -45,7 +45,7 @@ var gTests = [
   },{
     // Test 7
     url: "http://example.org:8000/tests/content/media/test/320x240.allow-origin.ogv",
-    result: "loaded",
+    result: "loadeddata",
     description: "Can load from different port on same domain with allow-origin",
   },{
     // Test 8
@@ -55,12 +55,12 @@ var gTests = [
   },{
     // Test 9
     url: "http://example.com/tests/content/media/test/320x240.allow-origin.ogv",
-    result: "loaded",
+    result: "loadeddata",
     description: "Can load cross domain with allow-origin",
   },{
     // Test 10
     url: "http://test1.example.org/tests/content/media/test/320x240.allow-origin.ogv",
-    result: "loaded",
+    result: "loadeddata",
     description: "Can load from subdomain with allow-origin",
   },{
     // Test 11
@@ -71,24 +71,25 @@ var gTests = [
 ];
 
 var gTestNum = 0;
-var gExpectedResult = null;
-var gTestDescription = null;
 var gVideo = null;
 var gTestedRemoved = false;
 var gOldPref;
 
-function result(code) {
-  //dump((gTestNum - 1) + ": " + code + "\n");
+function eventHandler(event) {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  opener.is(code, gExpectedResult, gTestDescription);
+  //dump((gTestNum - 1) + ": " + event.type + "\n");
+  var video = event.target;
+  opener.is(event.type, video.expectedResult, video.testDescription +
+    (gTestedRemoved ? " (element not in document)" : " (element in document)"));
+  // Make sure any extra events cause an error
+  video.expectedResult = "<none>";
   nextTest();
 }
 
 function createVideo() {
   var v = document.createElement('video');
-  v.addEventListener('loadeddata', function(){result('loaded');}, false);
-  v.addEventListener('error', function(){result('error');}, false);
-  v.id = 'video';
+  v.addEventListener('loadeddata', eventHandler, false);
+  v.addEventListener('error', eventHandler, false);
   return v;
 }
 
@@ -112,7 +113,6 @@ function load() {
 
 function nextTest() {
   //dump("nextTest() called, gTestNum="+gTestNum+" gTestedRemoved="+gTestedRemoved+"\n");
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   if (gTestNum == gTests.length) {
     //dump("gTestNum == gTests.length\n");
     if (!gTestedRemoved) {
@@ -126,15 +126,15 @@ function nextTest() {
       return;
     }
   }
-  gExpectedResult = gTests[gTestNum].result;
-  gTestDescription = gTests[gTestNum].description;
-  //dump("Starting test " + gTestNum + " at " + gTests[gTestNum].url + " expecting:" + gExpectedResult + "\n");
 
   if (gVideo && gVideo.parentNode)
     gVideo.parentNode.removeChild(gVideo);
   
   gVideo = createVideo();
+  gVideo.expectedResult = gTests[gTestNum].result;
+  gVideo.testDescription = gTests[gTestNum].description;
   gVideo.src = gTests[gTestNum].url;
+  //dump("Starting test " + gTestNum + " at " + gVideo.src + " expecting:" + gVideo.expectedResult + "\n");
   if (!gTestedRemoved) {
     document.body.appendChild(gVideo); 
     // Will cause load() to be invoked.
