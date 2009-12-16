@@ -141,11 +141,6 @@ class MinidumpProcessor {
     return (p != PROCESS_SYMBOL_SUPPLIER_INTERRUPTED);
   }
 
-  // Returns a textual representation of an assertion included
-  // in the minidump.  Returns an empty string if this information
-  // does not exist or cannot be determined.
-  static string GetAssertion(Minidump *dump);
-
  private:
   SymbolSupplier *supplier_;
   SourceLineResolverInterface *resolver_;
