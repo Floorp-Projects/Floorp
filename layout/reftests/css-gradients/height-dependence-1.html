@@ -2,7 +2,8 @@
 <html class="reftest-wait"><head>
 <style>
 html {
-  background-image: -moz-linear-gradient(black, white 20%)
+  background-image: -moz-linear-gradient(black, white 20%);
+  background-repeat: repeat-x;
 }
 body {
   font-size: 1em;
@@ -14,14 +15,10 @@ body {
 }
 </style>
 <script>
-window.onload = function() {
-  setTimeout(function() {
-    document.body.style.width = "14em";
-    setTimeout(function() {
-      document.documentElement.removeAttribute("class");
-    }, 100);
-  }, 100);
-}
+window.addEventListener("MozReftestInvalidate", function() {
+  document.body.style.width = "14em";
+  document.documentElement.removeAttribute("class");
+}, false);
 </script>
 </head><body>
 pad pad pad pad pad pad pad pad

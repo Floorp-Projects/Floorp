@@ -644,7 +644,7 @@ static PRBool InitLog(const char* envVar, const char* msg, FILE* *result)
         fname.AppendLiteral("_");
         fname.Append((char*)XRE_ChildProcessTypeToString(XRE_GetProcessType()));
         fname.AppendLiteral("_pid");
-        fname.AppendInt(getpid());
+        fname.AppendInt((PRUint32)getpid());
         if (hasLogExtension)
           fname.AppendLiteral(".log");
       }
