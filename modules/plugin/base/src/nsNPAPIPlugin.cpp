@@ -280,6 +280,7 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks,
 #endif
 
   fLibrary = aLibrary;
+  fLibrary->SetPlugin(this);
 }
 
 nsNPAPIPlugin::~nsNPAPIPlugin()
@@ -296,6 +297,15 @@ void
 nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
 {
   fPluginRefNum = aRefNum;
+}
+#endif
+
+#ifdef MOZ_IPC
+void
+nsNPAPIPlugin::PluginCrashed()
+{
+  nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
+  host->PluginCrashed(this);
 }
 #endif
 
