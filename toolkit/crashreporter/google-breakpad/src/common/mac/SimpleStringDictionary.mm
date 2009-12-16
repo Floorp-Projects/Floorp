@@ -31,8 +31,6 @@
 //  Simple string dictionary that does not allocate memory
 //
 
-#include <assert.h>
-
 #import "SimpleStringDictionary.h"
 
 namespace google_breakpad {
