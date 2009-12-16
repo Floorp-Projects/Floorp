@@ -179,7 +179,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void appendVoidElementToCurrentMayFoster(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
     void appendVoidElementToCurrentMayFosterCamelCase(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
     void appendVoidElementToCurrent(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form);
-    void appendVoidElementToCurrent(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes);
+    void appendVoidFormToCurrent(nsHtml5HtmlAttributes* attributes);
   protected:
     void accumulateCharacters(PRUnichar* buf, PRInt32 start, PRInt32 length);
     void accumulateCharacter(PRUnichar c);
