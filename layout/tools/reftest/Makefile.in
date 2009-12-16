@@ -75,7 +75,7 @@ endif
 _HARNESS_FILES = \
   $(srcdir)/runreftest.py \
   automation.py \
-  $(topsrcdir)/build/automationutils.py \
+  $(CURDIR)/automationutils.py \
   $(NULL)
 
 $(_DEST_DIR):
