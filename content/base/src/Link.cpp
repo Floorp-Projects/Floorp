@@ -58,6 +58,11 @@ Link::Link()
 {
 }
 
+Link::~Link()
+{
+  UnregisterFromHistory();
+}
+
 nsLinkState
 Link::GetLinkState() const
 {
@@ -461,13 +466,11 @@ Link::UnregisterFromHistory()
     return;
   }
 
-  // Obtain the URI that we registered with.
-  nsCOMPtr<nsIURI> hrefURI(GetURI());
-  NS_ASSERTION(hrefURI, "mRegistered is true, but we have no URI?!");
+  NS_ASSERTION(mCachedURI, "mRegistered is true, but we have no cached URI?!");
 
   // And tell History to stop tracking us.
   IHistory *history = nsContentUtils::GetHistory();
-  nsresult rv = history->UnregisterVisitedCallback(hrefURI, this);
+  nsresult rv = history->UnregisterVisitedCallback(mCachedURI, this);
   NS_ASSERTION(NS_SUCCEEDED(rv), "This should only fail if we misuse the API!");
   if (NS_SUCCEEDED(rv)) {
     mRegistered = false;
