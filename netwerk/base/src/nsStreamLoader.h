@@ -65,9 +65,11 @@ protected:
   nsCOMPtr<nsISupports>             mContext;  // the observer's context
   nsCOMPtr<nsIRequest>              mRequest;
 
-  PRUint8  *mData;
-  PRUint32  mAllocated;
-  PRUint32  mLength;
+  PRUint8  *mData;      // buffer to accumulate incoming data
+  PRUint32  mAllocated; // allocated size of data buffer (we preallocate if
+                        //   contentSize is available)
+  PRUint32  mLength;    // actual length of data in buffer
+                        //   (must be <= mAllocated)
 };
 
 #endif // nsStreamLoader_h__

@@ -71,23 +71,81 @@ const DEFAULT_LEVEL                   = 2;
 const MAX_BLOCK_LEVEL                 = 3;
 const SEVERITY_OUTDATED               = 0;
 
-var gApp = null;
-var gPref = null;
-var gOS = null;
-var gConsole = null;
-var gVersionChecker = null;
 var gLoggingEnabled = null;
-var gABI = null;
-var gOSVersion = null;
 var gBlocklistEnabled = true;
 var gBlocklistLevel = DEFAULT_LEVEL;
 
+XPCOMUtils.defineLazyServiceGetter(this, "gConsole",
+                                   "@mozilla.org/consoleservice;1",
+                                   "nsIConsoleService");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gVersionChecker",
+                                   "@mozilla.org/xpcom/version-comparator;1",
+                                   "nsIVersionComparator");
+
+XPCOMUtils.defineLazyGetter(this, "gPref", function bls_gPref() {
+  return Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).
+         QueryInterface(Ci.nsIPrefBranch2);
+});
+
+XPCOMUtils.defineLazyGetter(this, "gApp", function bls_gApp() {
+  return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).
+         QueryInterface(Ci.nsIXULRuntime);
+});
+
+XPCOMUtils.defineLazyGetter(this, "gABI", function bls_gABI() {
+  let abi = null;
+  try {
+    abi = gApp.XPCOMABI;
+  }
+  catch (e) {
+    LOG("BlockList Global gABI: XPCOM ABI unknown.");
+  }
+#ifdef XP_MACOSX
+  // Mac universal build should report a different ABI than either macppc
+  // or mactel.
+  let macutils = Cc["@mozilla.org/xpcom/mac-utils;1"].
+                 getService(Ci.nsIMacUtils);
+
+  if (macutils.isUniversalBinary)
+    abi = "Universal-gcc3";
+#endif
+  return abi;
+});
+
+XPCOMUtils.defineLazyGetter(this, "gOSVersion", function bls_gOSVersion() {
+  let osVersion;
+  let sysInfo = Cc["@mozilla.org/system-info;1"].
+                getService(Ci.nsIPropertyBag2);
+  try {
+    osVersion = sysInfo.getProperty("name") + " " + sysInfo.getProperty("version");
+  }
+  catch (e) {
+    LOG("BlockList Global gOSVersion: OS Version unknown.");
+  }
+
+  if (osVersion) {
+    try {
+      osVersion += " (" + sysInfo.getProperty("secondaryLibrary") + ")";
+    }
+    catch (e) {
+      // Not all platforms have a secondary widget library, so an error is nothing to worry about.
+    }
+    osVersion = encodeURIComponent(osVersion);
+  }
+  return osVersion;
+});
+
 // shared code for suppressing bad cert dialogs
-XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
+XPCOMUtils.defineLazyGetter(this, "gCertUtils", function bls_gCertUtils() {
   let temp = { };
   Components.utils.import("resource://gre/modules/CertUtils.jsm", temp);
   return temp;
 });
+
+function getObserverService() {
+  return Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
+}
 
 /**
  * Logs a string to the error console.
@@ -97,8 +155,7 @@ XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {
 function LOG(string) {
   if (gLoggingEnabled) {
     dump("*** " + string + "\n");
-    if (gConsole)
-      gConsole.logStringMessage(string);
+    gConsole.logStringMessage(string);
   }
 }
 
@@ -248,58 +305,13 @@ function getDistributionPrefValue(aPrefName) {
  */
 
 function Blocklist() {
-  gApp = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
-  gApp.QueryInterface(Ci.nsIXULRuntime);
-  gPref = Cc["@mozilla.org/preferences-service;1"].
-          getService(Ci.nsIPrefService).
-          QueryInterface(Ci.nsIPrefBranch2);
-  gVersionChecker = Cc["@mozilla.org/xpcom/version-comparator;1"].
-                    getService(Ci.nsIVersionComparator);
-  gConsole = Cc["@mozilla.org/consoleservice;1"].
-             getService(Ci.nsIConsoleService);
-
-  gOS = Cc["@mozilla.org/observer-service;1"].
-        getService(Ci.nsIObserverService);
-  gOS.addObserver(this, "xpcom-shutdown", false);
-
-  // Not all builds have a known ABI
-  try {
-    gABI = gApp.XPCOMABI;
-  }
-  catch (e) {
-    LOG("Blocklist: XPCOM ABI unknown.");
-    gABI = UNKNOWN_XPCOM_ABI;
-  }
-
-  var osVersion;
-  var sysInfo = Components.classes["@mozilla.org/system-info;1"]
-                          .getService(Components.interfaces.nsIPropertyBag2);
-  try {
-    osVersion = sysInfo.getProperty("name") + " " + sysInfo.getProperty("version");
-  }
-  catch (e) {
-    LOG("Blocklist: OS Version unknown.");
-  }
-
-  if (osVersion) {
-    try {
-      osVersion += " (" + sysInfo.getProperty("secondaryLibrary") + ")";
-    }
-    catch (e) {
-      // Not all platforms have a secondary widget library, so an error is nothing to worry about.
-    }
-    gOSVersion = encodeURIComponent(osVersion);
-  }
-
-#ifdef XP_MACOSX
-  // Mac universal build should report a different ABI than either macppc
-  // or mactel.
-  var macutils = Components.classes["@mozilla.org/xpcom/mac-utils;1"]
-                           .getService(Components.interfaces.nsIMacUtils);
-
-  if (macutils.isUniversalBinary)
-    gABI = "Universal-gcc3";
-#endif
+  let os = getObserverService();
+  os.addObserver(this, "xpcom-shutdown", false);
+  gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
+  gBlocklistEnabled = getPref("getBoolPref", PREF_BLOCKLIST_ENABLED, true);
+  gBlocklistLevel = Math.min(getPref("getIntPref", PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
+                                     MAX_BLOCK_LEVEL);
+  gPref.addObserver("extensions.blocklist.", this, false);
 }
 
 Blocklist.prototype = {
@@ -321,23 +333,12 @@ Blocklist.prototype = {
   _addonEntries: null,
   _pluginEntries: null,
 
-  observe: function (aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
-    case "profile-after-change":
-      gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
-      gBlocklistEnabled = getPref("getBoolPref", PREF_BLOCKLIST_ENABLED, true);
-      gBlocklistLevel = Math.min(getPref("getIntPref", PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
-                                 MAX_BLOCK_LEVEL);
-      gPref.addObserver("extensions.blocklist.", this, false);
-      break;
     case "xpcom-shutdown":
-      gOS.removeObserver(this, "xpcom-shutdown");
-      gOS = null;
+      let os = getObserverService();
+      os.removeObserver(this, "xpcom-shutdown");
       gPref.removeObserver("extensions.blocklist.", this);
-      gPref = null;
-      gConsole = null;
-      gVersionChecker = null;
-      gApp = null;
       break;
     case "nsPref:changed":
       switch (aData) {
@@ -861,7 +862,8 @@ Blocklist.prototype = {
       else if (addonList[i].item instanceof Ci.nsIPluginTag)
         addonList[i].item.disabled = true;
       else
-        LOG("Unknown add-on type: " + addonList[i].item);
+        LOG("Blocklist::_blocklistUpdated: Unknown add-on type: " +
+            addonList[i].item);
     }
 
     if (args.restart)
@@ -874,8 +876,7 @@ Blocklist.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsIBlocklistService,
                                          Ci.nsITimerCallback]),
-  _xpcom_categories: [{ category: "profile-after-change" },
-                      { category: "update-timer",
+  _xpcom_categories: [{ category: "update-timer",
                         value: "@mozilla.org/extensions/blocklist;1," +
                                "getService,blocklist-background-update-timer," +
                                PREF_BLOCKLIST_INTERVAL + ",86400" }]

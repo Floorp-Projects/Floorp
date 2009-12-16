@@ -189,6 +189,8 @@ nsSVGTextFrame::NotifySVGChanged(PRUint32 aFlags)
     mCanvasTM = nsnull;
   }
 
+  nsSVGTextFrameBase::NotifySVGChanged(aFlags);
+
   if (aFlags & COORD_CONTEXT_CHANGED) {
     // If we are positioned using percentage values we need to update our
     // position whenever our viewport's dimensions change.
@@ -198,8 +200,6 @@ nsSVGTextFrame::NotifySVGChanged(PRUint32 aFlags)
     // may not be worth it as we might need to check each glyph
     NotifyGlyphMetricsChange();
   }
-
-  nsSVGTextFrameBase::NotifySVGChanged(aFlags);
 }
 
 NS_IMETHODIMP

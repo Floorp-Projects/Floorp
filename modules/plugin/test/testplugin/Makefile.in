@@ -77,6 +77,7 @@ CPPSRCS  += nptest_windows.cpp
 RCFILE    = nptest.rc
 RESFILE   = nptest.res
 DEFFILE   = $(win_srcdir)/nptest.def
+OS_LIBS  += $(call EXPAND_LIBNAME,msimg32)
 endif
 
 include $(topsrcdir)/config/rules.mk

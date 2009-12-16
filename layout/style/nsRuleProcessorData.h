@@ -48,6 +48,7 @@
 #include "nsString.h"
 #include "nsChangeHint.h"
 #include "nsIContent.h"
+#include "nsCSSPseudoElements.h"
 
 class nsIStyleSheet;
 class nsPresContext;
@@ -106,6 +107,12 @@ private:
   }
 public:
   const nsString* GetLang();
+  PRUint32 ContentState();
+  PRBool IsLink();
+  nsLinkState LinkState() {
+    NS_ASSERTION(mGotLinkInfo && mIsLink, "Why am I being called?");
+    return mLinkState;
+  }
 
   // Returns a 1-based index of the child in its parent.  If the child
   // is not in its parent's child list (i.e., it is anonymous content),
@@ -117,28 +124,26 @@ public:
                       PRBool aCheckEdgeOnly);
 
   nsPresContext*    mPresContext;
-  nsIContent*       mContent;       // weak ref
-  nsIContent*       mParentContent; // if content, content->GetParent(); weak ref
+  nsIContent*       mContent;       // weak ref, must not be null
+  nsIContent*       mParentContent; // mContent->GetParent(); weak ref
   nsRuleWalker*     mRuleWalker; // Used to add rules to our results.
   nsIContent*       mScopedRoot;    // Root of scoped stylesheet (set and unset by the supplier of the scoped stylesheet
   
-  nsIAtom*          mContentTag;    // if content, then content->GetTag()
-  nsIAtom*          mContentID;     // if styled content, then weak reference to styledcontent->GetID()
-  PRPackedBool      mIsHTMLContent; // if content, then does QI on HTMLContent, true or false
-  PRPackedBool      mIsLink;        // if content, calls nsStyleUtil::IsHTMLLink or nsStyleUtil::IsLink
-  PRPackedBool      mHasAttributes; // if content, content->GetAttrCount() > 0
+  nsIAtom*          mContentTag;    // mContent->GetTag()
+  nsIAtom*          mContentID;     // mContent->GetID()
+  PRPackedBool      mIsHTMLContent; // whether mContent it's IsHTML()
+  PRPackedBool      mIsHTML;        // mIsHTMLContent && IsInHTMLDocument()
+  PRPackedBool      mHasAttributes; // mContent->GetAttrCount() > 0
   nsCompatibility   mCompatMode;    // Possibly remove use of this in SelectorMatches?
-  nsLinkState       mLinkState;     // if a link, this is the state, otherwise unknown
-  PRInt32           mEventState;    // if content, eventStateMgr->GetContentState()
-  PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
-  const nsAttrValue* mClasses;      // if styled content, styledcontent->GetClasses()
+  PRInt32           mNameSpaceID;   // mContent->GetNameSapce()
+  const nsAttrValue* mClasses;      // mContent->GetClasses()
   // mPreviousSiblingData and mParentData are always RuleProcessorData
   // and never a derived class.  They are allocated lazily, when
   // selectors require matching of prior siblings or ancestors.
   RuleProcessorData* mPreviousSiblingData;
   RuleProcessorData* mParentData;
 
-protected:
+private:
   nsString *mLanguage; // NULL means we haven't found out the language yet
 
   // This node's index for :nth-child(), :nth-last-child(),
@@ -148,6 +153,15 @@ protected:
   // The first subscript is 0 for -child and 1 for -of-type, the second
   // subscript is 0 for nth- and 1 for nth-last-.
   PRInt32 mNthIndices[2][2];
+
+  // mContentState, mLinkState, mIsLink are initialized lazily.
+  PRInt32 mContentState;  // eventStateMgr->GetContentState() or
+                          // mContent->IntrinsicState() if we have no ESM
+  nsLinkState mLinkState; // if a link, this is the state, otherwise unknown
+  PRPackedBool mIsLink;   // nsStyleUtil::IsHTMLLink or nsStyleUtil::IsLink
+  PRPackedBool mGotContentState;
+  PRPackedBool mGotLinkInfo; // Whether we've gotten the right values
+                             // for mLinkState and mIsLink.
 };
 
 struct ElementRuleProcessorData : public RuleProcessorData {
@@ -157,29 +171,67 @@ struct ElementRuleProcessorData : public RuleProcessorData {
   : RuleProcessorData(aPresContext,aContent,aRuleWalker)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
-    NS_PRECONDITION(aContent, "null pointer");
     NS_PRECONDITION(aRuleWalker, "null pointer");
   }
 };
 
-struct PseudoRuleProcessorData : public RuleProcessorData {
-  PseudoRuleProcessorData(nsPresContext* aPresContext,
-                          nsIContent* aParentContent,
-                          nsIAtom* aPseudoTag,
-                          nsICSSPseudoComparator* aComparator,
-                          nsRuleWalker* aRuleWalker)
-  : RuleProcessorData(aPresContext, aParentContent, aRuleWalker)
+struct PseudoElementRuleProcessorData : public RuleProcessorData {
+  PseudoElementRuleProcessorData(nsPresContext* aPresContext,
+                                 nsIContent* aParentContent,
+                                 nsRuleWalker* aRuleWalker,
+                                 nsCSSPseudoElements::Type aPseudoType)
+    : RuleProcessorData(aPresContext, aParentContent, aRuleWalker),
+      mPseudoType(aPseudoType)
+  {
+    NS_PRECONDITION(aPresContext, "null pointer");
+    NS_PRECONDITION(aPseudoType <
+                      nsCSSPseudoElements::ePseudo_PseudoElementCount,
+                    "null pointer");
+    NS_PRECONDITION(aRuleWalker, "null pointer");
+  }
+
+  nsCSSPseudoElements::Type mPseudoType;
+};
+
+struct AnonBoxRuleProcessorData {
+  AnonBoxRuleProcessorData(nsPresContext* aPresContext,
+                           nsIAtom* aPseudoTag,
+                           nsRuleWalker* aRuleWalker)
+    : mPresContext(aPresContext),
+      mPseudoTag(aPseudoTag),
+      mRuleWalker(aRuleWalker)
+  {
+    NS_PRECONDITION(mPresContext, "Must have prescontext");
+    NS_PRECONDITION(aPseudoTag, "Must have pseudo tag");
+    NS_PRECONDITION(aRuleWalker, "Must have rule walker");
+  }
+
+  nsPresContext* mPresContext;
+  nsIAtom* mPseudoTag;
+  nsRuleWalker* mRuleWalker;
+};
+
+#ifdef MOZ_XUL
+struct XULTreeRuleProcessorData : public RuleProcessorData {
+  XULTreeRuleProcessorData(nsPresContext* aPresContext,
+                           nsIContent* aParentContent,
+                           nsRuleWalker* aRuleWalker,
+                           nsIAtom* aPseudoTag,
+                           nsICSSPseudoComparator* aComparator)
+    : RuleProcessorData(aPresContext, aParentContent, aRuleWalker),
+      mPseudoTag(aPseudoTag),
+      mComparator(aComparator)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
     NS_PRECONDITION(aPseudoTag, "null pointer");
     NS_PRECONDITION(aRuleWalker, "null pointer");
-    mPseudoTag = aPseudoTag;
-    mComparator = aComparator;
+    NS_PRECONDITION(aComparator, "must have a comparator");
   }
 
   nsIAtom*                 mPseudoTag;
   nsICSSPseudoComparator*  mComparator;
 };
+#endif
 
 struct StateRuleProcessorData : public RuleProcessorData {
   StateRuleProcessorData(nsPresContext* aPresContext,
@@ -189,7 +241,6 @@ struct StateRuleProcessorData : public RuleProcessorData {
       mStateMask(aStateMask)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
-    NS_PRECONDITION(aContent, "null pointer");
   }
   const PRInt32 mStateMask; // |HasStateDependentStyle| for which state(s)?
                             //  Constants defined in nsIEventStateManager.h .
@@ -200,18 +251,17 @@ struct AttributeRuleProcessorData : public RuleProcessorData {
                              nsIContent* aContent,
                              nsIAtom* aAttribute,
                              PRInt32 aModType,
-                             PRUint32 aStateMask)
+                             PRBool aAttrHasChanged)
     : RuleProcessorData(aPresContext, aContent, nsnull),
       mAttribute(aAttribute),
       mModType(aModType),
-      mStateMask(aStateMask)
+      mAttrHasChanged(aAttrHasChanged)
   {
     NS_PRECONDITION(aPresContext, "null pointer");
-    NS_PRECONDITION(aContent, "null pointer");
   }
   nsIAtom* mAttribute; // |HasAttributeDependentStyle| for which attribute?
   PRInt32 mModType;    // The type of modification (see nsIDOMMutationEvent).
-  PRUint32 mStateMask; // The states that changed with the attr change.
+  PRBool mAttrHasChanged; // Whether the attribute has already changed.
 };
 
 #endif /* !defined(nsRuleProcessorData_h_) */

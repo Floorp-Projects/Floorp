@@ -317,22 +317,6 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
   return rv;
 }
 
-static nsStyleContext*
-GetStyleContextForFrame(nsIFrame* aFrame)
-{
-  nsStyleContext* styleContext = aFrame->GetStyleContext();
-
-  /* For tables the primary frame is the "outer frame" but the style
-   * rules are applied to the "inner frame".  Luckily, the "outer
-   * frame" actually inherits style from the "inner frame" so we can
-   * just move one level up in the style context hierarchy....
-   */
-  if (aFrame->GetType() == nsGkAtoms::tableOuterFrame)
-    return styleContext->GetParent();
-
-  return styleContext;
-}    
-
 /* static */
 already_AddRefed<nsStyleContext>
 nsComputedDOMStyle::GetStyleContextForContent(nsIContent* aContent,
@@ -341,16 +325,15 @@ nsComputedDOMStyle::GetStyleContextForContent(nsIContent* aContent,
 {
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eELEMENT),
                "aContent must be an element");
-  if (!aPseudo) {
-    // If there's no pres shell, get it from the content
-    if (!aPresShell) {
-      aPresShell = GetPresShellForContent(aContent);
-      if (!aPresShell)
-        return nsnull;
-    }
 
-    aPresShell->FlushPendingNotifications(Flush_Style);
+  // If there's no pres shell, get it from the content
+  if (!aPresShell) {
+    aPresShell = GetPresShellForContent(aContent);
+    if (!aPresShell)
+      return nsnull;
   }
+
+  aPresShell->FlushPendingNotifications(Flush_Style);
 
   return GetStyleContextForContentNoFlush(aContent, aPseudo, aPresShell);
 }
@@ -373,7 +356,8 @@ nsComputedDOMStyle::GetStyleContextForContentNoFlush(nsIContent* aContent,
   if (!aPseudo) {
     nsIFrame* frame = aPresShell->GetPrimaryFrameFor(aContent);
     if (frame) {
-      nsStyleContext* result = GetStyleContextForFrame(frame);
+      nsStyleContext* result =
+        nsLayoutUtils::GetStyleFrame(frame)->GetStyleContext();
       // Don't use the style context if it was influenced by
       // pseudo-elements, since then it's not the primary style
       // for this element.
@@ -391,7 +375,7 @@ nsComputedDOMStyle::GetStyleContextForContentNoFlush(nsIContent* aContent,
   nsIContent* parent = aPseudo ? aContent : aContent->GetParent();
   // Don't resolve parent context for document fragments.
   if (parent && parent->IsNodeOfType(nsINode::eELEMENT))
-    parentContext = GetStyleContextForContent(parent, nsnull, aPresShell);
+    parentContext = GetStyleContextForContentNoFlush(parent, nsnull, aPresShell);
 
   nsPresContext *presContext = aPresShell->GetPresContext();
   if (!presContext)
@@ -400,7 +384,11 @@ nsComputedDOMStyle::GetStyleContextForContentNoFlush(nsIContent* aContent,
   nsStyleSet *styleSet = aPresShell->StyleSet();
 
   if (aPseudo) {
-    return styleSet->ResolvePseudoStyleFor(aContent, aPseudo, parentContext);
+    nsCSSPseudoElements::Type type = nsCSSPseudoElements::GetPseudoType(aPseudo);
+    if (type >= nsCSSPseudoElements::ePseudo_PseudoElementCount) {
+      return nsnull;
+    }
+    return styleSet->ResolvePseudoElementStyle(aContent, type, parentContext);
   }
 
   return styleSet->ResolveStyleFor(aContent, parentContext);
@@ -2281,12 +2269,12 @@ nsComputedDOMStyle::GetListStyleImage(nsIDOMCSSValue** aValue)
 
   const nsStyleList* list = GetStyleList();
 
-  if (!list->mListStyleImage) {
+  if (!list->GetListStyleImage()) {
     val->SetIdent(eCSSKeyword_none);
   } else {
     nsCOMPtr<nsIURI> uri;
-    if (list->mListStyleImage) {
-      list->mListStyleImage->GetURI(getter_AddRefs(uri));
+    if (list->GetListStyleImage()) {
+      list->GetListStyleImage()->GetURI(getter_AddRefs(uri));
     }
     val->SetURI(uri);
   }
@@ -3754,8 +3742,6 @@ nsComputedDOMStyle::GetFrameBoundsHeightForTransform(nscoord& aHeight)
   return PR_TRUE;
 }
 
-#ifdef MOZ_SVG
-
 nsresult
 nsComputedDOMStyle::GetSVGPaintFor(PRBool aFill,
                                    nsIDOMCSSValue** aValue)
@@ -4220,8 +4206,6 @@ nsComputedDOMStyle::GetMask(nsIDOMCSSValue** aValue)
   return CallQueryInterface(val, aValue);
 }
 
-#endif // MOZ_SVG
-
 nsresult
 nsComputedDOMStyle::GetTransitionDelay(nsIDOMCSSValue** aValue)
 {
@@ -4549,10 +4533,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(transition_property,           TransitionProperty),
     COMPUTED_STYLE_MAP_ENTRY(transition_timing_function,    TransitionTimingFunction),
     COMPUTED_STYLE_MAP_ENTRY(_moz_window_shadow,            WindowShadow),
-    COMPUTED_STYLE_MAP_ENTRY(word_wrap,                     WordWrap)
-
-#ifdef MOZ_SVG
-    ,
+    COMPUTED_STYLE_MAP_ENTRY(word_wrap,                     WordWrap),
     COMPUTED_STYLE_MAP_ENTRY(clip_path,                     ClipPath),
     COMPUTED_STYLE_MAP_ENTRY(clip_rule,                     ClipRule),
     COMPUTED_STYLE_MAP_ENTRY(color_interpolation,           ColorInterpolation),
@@ -4583,7 +4564,6 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(stroke_width,                  StrokeWidth),
     COMPUTED_STYLE_MAP_ENTRY(text_anchor,                   TextAnchor),
     COMPUTED_STYLE_MAP_ENTRY(text_rendering,                TextRendering)
-#endif
 
   };
 

@@ -60,18 +60,22 @@ typedef struct _nsCocoaWindowList {
 } nsCocoaWindowList;
 
 // NSWindow subclass that is the base class for all of our own window classes.
-// This class handles the storage of those settings that need to be persisted
-// across window destruction and reconstruction, i.e. when switching to and from
-// fullscreen mode.
+// Among other things, this class handles the storage of those settings that
+// need to be persisted across window destruction and reconstruction, i.e. when
+// switching to and from fullscreen mode.
 // We don't save shadow, transparency mode or background color because it's not
 // worth the hassle - Gecko will reset them anyway as soon as the window is
 // resized.
 @interface BaseWindow : NSWindow
 {
+  // Data Storage
   NSMutableDictionary* mState;
   BOOL mDrawsIntoWindowFrame;
   NSColor* mActiveTitlebarColor;
   NSColor* mInactiveTitlebarColor;
+
+  // Shadow
+  BOOL mScheduledShadowInvalidation;
 }
 
 - (void)importState:(NSDictionary*)aState;
@@ -80,6 +84,9 @@ typedef struct _nsCocoaWindowList {
 - (BOOL)drawsContentsIntoWindowFrame;
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
 - (NSColor*)titlebarColorForActiveWindow:(BOOL)aActive;
+
+- (void)deferredInvalidateShadow;
+- (void)invalidateShadow;
 
 @end
 

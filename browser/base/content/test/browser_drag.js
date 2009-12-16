@@ -20,4 +20,7 @@ function test()
   var dt = EventUtils.synthesizeDragStart(proxyicon, expected);
   is(dt, null, "drag on proxy icon");
   proxyicon.setAttribute("pageproxystate", oldstate);
+  // Now, the identity information panel is opened by the proxy icon click.
+  // We need to close it for next tests.
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
 }

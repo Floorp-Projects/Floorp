@@ -53,7 +53,8 @@
         <xul:vbox class="menupopup-drop-indicator-bar" hidden="true">
           <xul:image class="menupopup-drop-indicator" mousethrough="always"/>
         </xul:vbox>
-        <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical">
+        <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical"
+                            smoothscroll="false">
           <children/>
         </xul:arrowscrollbox>
       </xul:hbox>

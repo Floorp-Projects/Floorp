@@ -44,7 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = test_dom
 
-DIRS		+= mochitest
+DIRS		+= mochitest \
+		browser \
+		$(NULL)
 XPCSHELL_TESTS = unit
 
 include $(topsrcdir)/config/rules.mk

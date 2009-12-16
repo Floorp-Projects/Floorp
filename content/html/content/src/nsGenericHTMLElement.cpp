@@ -2869,6 +2869,25 @@ nsGenericHTMLFrameElement::DestroyContent()
   nsGenericHTMLElement::DestroyContent();
 }
 
+nsresult
+nsGenericHTMLFrameElement::CopyInnerTo(nsGenericElement* aDest) const
+{
+  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIDocument* doc = aDest->GetOwnerDoc();
+  if (doc->IsStaticDocument() && mFrameLoader) {
+    nsGenericHTMLFrameElement* dest =
+      static_cast<nsGenericHTMLFrameElement*>(aDest);
+    nsFrameLoader* fl = nsFrameLoader::Create(dest);
+    NS_ENSURE_STATE(fl);
+    dest->mFrameLoader = fl;
+    static_cast<nsFrameLoader*>(mFrameLoader.get())->CreateStaticClone(fl);
+  }
+
+  return rv;
+}
+
 //----------------------------------------------------------------------
 
 nsresult

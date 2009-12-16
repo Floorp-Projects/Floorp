@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>HTML text containers tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      var accTree = {
+        role: ROLE_SECTION,
+        children: [
+          { // text child
+            role: ROLE_TEXT_LEAF,
+            children: []
+          }
+        ]
+      };
+
+      testAccessibleTree("c1", accTree);
+      testAccessibleTree("c2", accTree);
+
+      accTree = {
+        role: ROLE_SECTION,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF,
+            name: "Hello1"
+          },
+          {
+            role: ROLE_WHITESPACE
+          },
+          {
+            role: ROLE_TEXT_LEAF,
+            name: "Hello2"
+          },
+          {
+            role: ROLE_SEPARATOR
+          },
+          {
+            role: ROLE_TEXT_LEAF,
+            name: "Hello3 "
+          },
+          {
+            role: ROLE_PARAGRAPH,
+            children: [
+              {
+                role: ROLE_TEXT_LEAF,
+                name: "Hello4 "
+              }
+            ]
+          }
+        ]
+      };
+
+      testAccessibleTree("c3", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="overflowed content doesn't expose child text accessibles"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=489306">Mozilla Bug 489306</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="c1" style="width: 100px; height: 100px; overflow: auto;">
+    1hellohello 2hellohello 3hellohello 4hellohello 5hellohello 6hellohello 7hellohello
+  </div>
+  <div id="c2">
+    1hellohello 2hellohello 3hellohello 4hellohello 5hellohello 6hellohello 7hellohello
+  </div>
+  <div id="c3">
+    Hello1<br>
+    Hello2<hr>
+    Hello3
+    <p>
+      Hello4
+    </p>
+  </div>
+</body>
+</html>

@@ -269,3 +269,12 @@ nsSVGImageElement::GetStringInfo()
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               NS_ARRAY_LENGTH(sStringInfo));
 }
+
+nsresult
+nsSVGImageElement::CopyInnerTo(nsGenericElement* aDest) const
+{
+  if (aDest->GetOwnerDoc()->IsStaticDocument()) {
+    CreateStaticImageClone(static_cast<nsSVGImageElement*>(aDest));
+  }
+  return nsSVGImageElementBase::CopyInnerTo(aDest);
+}

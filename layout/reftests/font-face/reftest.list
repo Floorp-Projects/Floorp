@@ -113,3 +113,8 @@ HTTP(..) != 507960-1-bad-sfnt-version-woff.html 507960-1-ref.html
 HTTP(..) != 507960-1-bad-woff-sig.html 507960-1-ref.html
 HTTP(..) != 507960-1-bad-offset-woff.html 507960-1-ref.html
 HTTP(..) != 507960-1-woff-bad-hint.html 507960-1-ref.html
+
+# Bug 523717
+HTTP(..) == underline-offset-change-1.html underline-offset-change-1-ref.html
+HTTP(..) == underline-offset-change-2.html underline-offset-change-2-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") fails-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) != underline-offset-change-1-ref.html underline-offset-change-2-ref.html # Bug 534132

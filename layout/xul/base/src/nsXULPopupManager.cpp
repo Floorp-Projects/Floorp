@@ -1235,6 +1235,12 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
   if (state != ePopupClosed && state != ePopupInvisible)
     return PR_FALSE;
 
+  // Don't show popups that we already have in our popup chain
+  if (IsPopupOpen(aPopup->GetContent())) {
+    NS_WARNING("Refusing to show duplicate popup");
+    return PR_FALSE;
+  }
+
   // if the popup was just rolled up, don't reopen it
   nsCOMPtr<nsIWidget> widget;
   aPopup->GetWidget(getter_AddRefs(widget));

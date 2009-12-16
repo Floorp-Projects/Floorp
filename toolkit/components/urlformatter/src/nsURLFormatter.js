@@ -42,7 +42,7 @@
  * Mozilla Applications linking to Mozilla websites are strongly encouraged to use
  * URLs of the following format:
  *
- *   http[s]://%LOCALE%.%SERVICE%.mozilla.[com|org]/%LOCALE%/
+ *   http[s]://%SERVICE%.mozilla.[com|org]/%LOCALE%/
  */
 
 const Cc = Components.classes;

@@ -123,10 +123,6 @@ protected:
     NS_IMETHOD AddChromeListeners();
     NS_IMETHOD RemoveChromeListeners();
 
-    nsresult   FindChildWithName(const PRUnichar *aName, 
-                 PRBool aRecurse, nsIDocShellTreeItem* aRequestor,
-                 nsIDocShellTreeItem* aOriginalRequestor,
-                 nsIDocShellTreeItem **aFoundItem);
     nsresult   FindItemWithNameAcrossWindows(const PRUnichar* aName,
                  nsIDocShellTreeItem* aRequestor,
                  nsIDocShellTreeItem* aOriginalRequestor,

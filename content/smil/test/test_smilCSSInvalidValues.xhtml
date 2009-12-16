@@ -1,0 +1,65 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for Animation Behavior on CSS Properties</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="smilTestUtils.js"></script>
+  <script type="text/javascript" src="db_smilCSSPropertyList.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+<svg xmlns="http://www.w3.org/2000/svg">
+  <rect x="20" y="20" width="200" height="200"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var invalidTestcaseBundles = [
+  new TestcaseBundle(gPropList.opacity, [
+    new AnimTestcaseFromTo("", "",     { noEffect: true }),
+    new AnimTestcaseFromTo("", "0.5",  { noEffect: true }),
+    new AnimTestcaseFromTo(".", "0.5", { noEffect: true }),
+    new AnimTestcaseFromTo("0.5", "-", { noEffect: true }),
+    new AnimTestcaseFromTo("0.5", "bogus",   { noEffect: true }),
+    new AnimTestcaseFromTo("bogus", "bogus", { noEffect: true }),
+  ]),
+  new TestcaseBundle(gPropList.color, [
+    new AnimTestcaseFromTo("", "",            { noEffect: true }),
+    new AnimTestcaseFromTo("", "red",         { noEffect: true }),
+    new AnimTestcaseFromTo("greeeen", "red",  { noEffect: true }),
+    new AnimTestcaseFromTo("rgb(red, 255, 255)", "red", { noEffect: true }),
+    new AnimTestcaseFromTo("#FFFFFFF", "red", { noEffect: true }),
+    new AnimTestcaseFromTo("bogus", "bogus",  { noEffect: true }),
+  ]),
+];
+function main()
+{
+  if (!SMILUtil.isSMILEnabled()) {
+    ok(false, "SMIL dosn't seem to be enabled");
+    SimpleTest.finish();
+    return;
+  }
+
+  // Start out with document paused
+  var svg = SMILUtil.getSVGRoot();
+  svg.pauseAnimations();
+  svg.setCurrentTime(0);
+
+  // Run the tests
+  testBundleList(invalidTestcaseBundles, new SMILTimingData(1.0, 1.0));
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main, false);
+]]>
+</script>
+</pre>
+</body>
+</html>

@@ -1105,28 +1105,23 @@ __try {
   if (mEnumVARIANTPosition == kIEnumVariantDisconnected)
     return CO_E_OBJNOTCONNECTED;
 
-  nsCOMPtr<nsIAccessible> traversedAcc;
-  nsresult rv = GetChildAt(mEnumVARIANTPosition, getter_AddRefs(traversedAcc));
-  if (!traversedAcc)
-    return S_FALSE;
+  PRUint32 numElementsFetched = 0;
+  for (; numElementsFetched < aNumElementsRequested;
+       numElementsFetched++, mEnumVARIANTPosition++) {
 
-  for (PRUint32 i = 0; i < aNumElementsRequested; i++) {
-    VariantInit(&aPVar[i]);
-
-    aPVar[i].pdispVal = NativeAccessible(traversedAcc);
-    aPVar[i].vt = VT_DISPATCH;
-    (*aNumElementsFetched)++;
-
-    nsCOMPtr<nsIAccessible> nextAcc;
-    traversedAcc->GetNextSibling(getter_AddRefs(nextAcc));
-    if (!nextAcc)
+    nsIAccessible* accessible = GetChildAt(mEnumVARIANTPosition);
+    if (!accessible)
       break;
 
-    traversedAcc = nextAcc;
+    VariantInit(&aPVar[numElementsFetched]);
+
+    aPVar[numElementsFetched].pdispVal = NativeAccessible(accessible);
+    aPVar[numElementsFetched].vt = VT_DISPATCH;
   }
 
-  mEnumVARIANTPosition += *aNumElementsFetched;
-  return (*aNumElementsFetched) < aNumElementsRequested ? S_FALSE : S_OK;
+  (*aNumElementsFetched) = numElementsFetched;
+
+  return numElementsFetched < aNumElementsRequested ? S_FALSE : S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return E_FAIL;

@@ -1,0 +1,120 @@
+<html>
+
+<head>
+  <title>nsIAccessibleSelectable ARIA widgets testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  </style>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      var id = "list1";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for " + id);
+
+      id = "listbox1";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for " + id);
+
+      id = "listbox2";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for " + id);
+
+      id = "grid1";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for " + id);
+
+      id = "tree1";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for " + id);
+
+      id = "treegrid1";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for " + id);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=530014"
+     title="ARIA single selectable widget should implement nsIAccessibleSelectable">
+    Mozilla Bug 530014
+  </a><br>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div role="list" id="list1">
+    <div role="listitem">item1</div>
+    <div role="listitem">item2</div>
+  </div>
+
+  <div role="listbox" id="listbox1">
+    <div role="listitem">item1</div>
+    <div role="listitem">item2</div>
+  </div>
+
+  <div role="listbox" id="listbox2" aria-multiselectable="true">
+    <div role="listitem">item1</div>
+    <div role="listitem">item2</div>
+  </div>
+
+  <div role="grid" id="grid1">
+    <div role="row">
+      <span role="gridcell">cell</span>
+      <span role="gridcell">cell</span>
+    </div>
+    <div role="row">
+      <span role="gridcell">cell</span>
+      <span role="gridcell">cell</span>
+    </div>
+  </div>
+
+  <div role="tree" id="tree1">
+    <div role="treeitem">
+      item1
+      <div role="group">
+        <div role="treeitem">item1.1</div>
+      </div>
+    </div>
+    <div>item2</div>
+  </div>
+
+  <div role="treegrid" id="treegrid1">
+    <div role="row" aria-level="1">
+      <span role="gridcell">cell</span>
+      <span role="gridcell">cell</span>
+    </div>
+    <div role="row" aria-level="2">
+      <span role="gridcell">cell</span>
+      <span role="gridcell">cell</span>
+    </div>
+    <div role="row" aria-level="1">
+      <span role="gridcell">cell</span>
+      <span role="gridcell">cell</span>
+    </div>
+  </div>
+</body>
+</html>

@@ -782,7 +782,6 @@ nsChangeHint nsStyleColumn::MaxDifference()
 }
 #endif
 
-#ifdef MOZ_SVG
 // --------------------
 // nsStyleSVG
 //
@@ -1059,8 +1058,6 @@ PRBool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
     return PR_TRUE;
   return mPaint.mColor == aOther.mPaint.mColor;
 }
-
-#endif // MOZ_SVG
 
 
 // --------------------
@@ -1918,15 +1915,16 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
         break;
       }
   }
-  
-  // Note:  Our current behavior for handling changes to transition
+
+  // Note:  Our current behavior for handling changes to the
+  // transition-duration, transition-delay, and transition-timing-function
   // properties is to do nothing.  In other words, the transition
   // property that matters is what it is when the transition begins, and
   // we don't stop a transition later because the transition property
   // changed.
-  // FIXME (Bug 522599):  Need to test for this and write it in the
-  // spec, if it's compatible with other browsers.  Test for behavior at
-  // http://dbaron.org/css/test/2009/transitions/dynamic-transition-change
+  // We do handle changes to transition-property, but we don't need to
+  // bother with anything here, since the transition manager is notified
+  // of any style context change anyway.
   
   return hint;
 }

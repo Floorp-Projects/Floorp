@@ -38,13 +38,13 @@
 #ifndef WEBGLARRAY_H_
 #define WEBGLARRAY_H_
 
-nsresult NS_NewCanvasArrayBuffer(nsISupports **aNewObject);
-nsresult NS_NewCanvasFloatArray(nsISupports **aNewObject);
-nsresult NS_NewCanvasByteArray(nsISupports **aNewObject);
-nsresult NS_NewCanvasUnsignedByteArray(nsISupports **aNewObject);
-nsresult NS_NewCanvasShortArray(nsISupports **aNewObject);
-nsresult NS_NewCanvasUnsignedShortArray(nsISupports **aNewObject);
-nsresult NS_NewCanvasIntArray(nsISupports **aNewObject);
-nsresult NS_NewCanvasUnsignedIntArray(nsISupports **aNewObject);
+nsresult NS_NewWebGLArrayBuffer(nsISupports **aNewObject);
+nsresult NS_NewWebGLFloatArray(nsISupports **aNewObject);
+nsresult NS_NewWebGLByteArray(nsISupports **aNewObject);
+nsresult NS_NewWebGLUnsignedByteArray(nsISupports **aNewObject);
+nsresult NS_NewWebGLShortArray(nsISupports **aNewObject);
+nsresult NS_NewWebGLUnsignedShortArray(nsISupports **aNewObject);
+nsresult NS_NewWebGLIntArray(nsISupports **aNewObject);
+nsresult NS_NewWebGLUnsignedIntArray(nsISupports **aNewObject);
 
 #endif

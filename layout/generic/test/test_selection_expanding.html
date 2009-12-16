@@ -1,0 +1,413 @@
+<!DOCTYPE>
+<html>
+<head>
+<title>selection expanding test</title>
+<script type="text/javascript" src="/MochiKit/packed.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<style type="text/css">
+  .testingDiv {
+    font-size: 16px;
+    width: 300px;
+    height: 140px;
+    background-color: white;
+  }
+  #fixedDiv1, #fixedDiv2 {
+    position: fixed;
+    right: 0;
+    overflow: scroll;
+    width: 200px;
+  }
+  #fixedDiv1 {
+    top: 0;
+  }
+  #fixedDiv2 {
+    top: 150px;
+  }
+  iframe, input, textarea {
+    font-size: 16px;
+    height: 16px;
+    width: 80px;
+    margin: 0;
+    padding: 0;
+  }
+  #xbl {
+    -moz-binding: url(selection_expanding_xbl.xml#binding);
+  }
+</style>
+
+</head>
+<body>
+<div id="div1" class="testingDiv">
+  aaaaaaa
+  <iframe id="iframe" src="data:text/html,<style type='text/css'>*{margin: 0; padding: 0; font-size: 16px;}</style><div>ffffff ffffff ffffff ffffff</div>"></iframe>
+  aaaaaaa aaaaaaa<br>aaaaaaa aaaaaaa aaaaaaa aaaaaaa<br>aaaaaaa
+</div>
+<div id="div2" class="testingDiv">
+  bbbbbbb
+  <input id="input" type="text" value="iiiiiiiii iiiiiiiii iiiiiiiii">
+  bbbbbbb bbbbbbb<br>bbbbbbb bbbbbbb bbbbbbb<br>bbbbbbb
+</div>
+<div id="div3" class="testingDiv">
+  ccccccc
+  <textarea id="textarea">tttttt tttttt tttttt</textarea>
+  ccccccc ccccccc<br>ccccccc ccccccc ccccccc ccccccc<br>ccccccc
+  <div id="fixedDiv1" class="testingDiv">
+    dddddd dddddd dddddd
+  </div>
+</div>
+<div id="xbl">
+  <p id="xbl_child">yyyyyyy yyyyyyy yyyyyyy</p>
+</div>
+<div id="fixedDiv2" class="testingDiv">
+  eeeeee eeeeee eeeeee
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var div1 = document.getElementById("div1");
+var div2 = document.getElementById("div2");
+var div3 = document.getElementById("div3");
+var xbl = document.getElementById("xbl");
+var xbl_child = document.getElementById("xbl_child");
+var fixedDiv1 = document.getElementById("fixedDiv1");
+var fixedDiv2 = document.getElementById("fixedDiv2");
+var iframe = document.getElementById("iframe");
+var input = document.getElementById("input");
+var textarea = document.getElementById("textarea");
+
+function test()
+{
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  function getSelectionForEditor(aEditorElement)
+  {
+    const nsIDOMNSEditableElement =
+      Components.interfaces.nsIDOMNSEditableElement;
+    return aEditorElement.QueryInterface(nsIDOMNSEditableElement).editor.selection;
+  }
+
+  function clear()
+  {
+    synthesizeMouse(div1, 10, 5, { type: "mouseup" });
+    var sel = window.getSelection();
+    if (sel.rangeCount > 0)
+      sel.collapseToEnd();
+    sel = iframe.contentWindow.getSelection();
+    if (sel.rangeCount > 0)
+      sel.collapseToEnd();
+    sel = getSelectionForEditor(input);
+    if (sel.rangeCount > 0)
+      sel.collapseToEnd();
+    sel = getSelectionForEditor(textarea);
+    if (sel.rangeCount > 0)
+      sel.collapseToEnd();
+
+    div1.scrollTop = 0;
+    div1.scrollLeft = 0;
+    div2.scrollTop = 0;
+    div2.scrollLeft = 0;
+    div3.scrollTop = 0;
+    div3.scrollLeft = 0;
+  }
+
+  const kFalse = 0;
+  const kTrue  = 1;
+  const kToDo  = 2;
+
+  function check(aDiv1ShouldBeSelected,
+                 aDiv2ShouldBeSelected,
+                 aDiv3ShouldBeSelected,
+                 aFixedDiv1ShouldBeSelected,
+                 aXBLChildShouldBeSelected,
+                 aFixedDiv2ShouldBeSelected,
+                 aIFrameShouldBeSelected,
+                 aInputShouldBeSelected,
+                 aTextareaShouldBeSelected,
+                 aTestingDescription)
+  {
+    function checkCharacter(aSelectedText,
+                            aShouldBeIncludedCharacter,
+                            aSouldBeSelected,
+                            aElementName)
+    {
+      var boolvalue = aSouldBeSelected & kTrue;
+      var f = aSouldBeSelected & kToDo ? todo : ok;
+      var str = aSelectedText.replace('\n', '\\n');
+      if (boolvalue) {
+        f(aSelectedText.indexOf(aShouldBeIncludedCharacter) >= 0,
+          "The contents of " + aElementName +
+          " aren't selected (" + aTestingDescription +
+          "): Selected String: \"" + str + "\"");
+      } else {
+        f(aSelectedText.indexOf(aShouldBeIncludedCharacter) < 0,
+          "The contents of " + aElementName +
+          " are selected (" + aTestingDescription +
+          "): Selected String: \"" + str + "\"");
+      }
+    }
+
+    var sel = window.getSelection().toString();
+    checkCharacter(sel, "a", aDiv1ShouldBeSelected, "div1");
+    checkCharacter(sel, "b", aDiv2ShouldBeSelected, "div2");
+    checkCharacter(sel, "c", aDiv3ShouldBeSelected, "div3");
+    checkCharacter(sel, "y", aXBLChildShouldBeSelected, "xbl_child");
+    checkCharacter(sel, "d", aFixedDiv1ShouldBeSelected, "fixedDiv1");
+    checkCharacter(sel, "e", aFixedDiv2ShouldBeSelected, "fixedDiv2");
+
+    // iframe/input/xbl-bound contents must not be included on the parent
+    // selection.
+    checkCharacter(sel, "f", false, "iframe (checking on parent)");
+    checkCharacter(sel, "i", false, "input (checking on parent)");
+    checkCharacter(sel, "x", false, "XBL bound contents (checking on parent)");
+
+    var selInIFrame = iframe.contentWindow.getSelection().toString();
+    checkCharacter(selInIFrame, "f", aIFrameShouldBeSelected, "iframe");
+
+    var selInput = getSelectionForEditor(input).toString();
+    checkCharacter(selInput, "i", aInputShouldBeSelected, "input");
+    var selTextarea = getSelectionForEditor(textarea).toString();
+    checkCharacter(selTextarea, "t", aTextareaShouldBeSelected, "textarea");
+  }
+
+  // ***********************************************************
+  // Set all divs to overflow: auto;
+  const kOverflows = ["visible", "hidden", "scroll", "auto"];
+  for (var i = 0; i < kOverflows.length; i++) {
+    div1.style.overflow = kOverflows[i];
+    div2.style.overflow = kOverflows[i];
+    div3.style.overflow = kOverflows[i];
+
+    // ***********************************************************
+    // selection starting at div1
+    synthesizeMouse(div1, 30, 5, { type: "mousedown" });
+
+    // XXX if we move the mouse cursor to another document, the
+    // nsFrameSelection::HandleDrag method is called on the another document's.
+
+    // to iframe
+    synthesizeMouse(iframe, 30, 5, { type: "mousemove" });
+    check(kTrue | kToDo, kFalse, kFalse,
+          kFalse, kFalse, kFalse, kFalse, kFalse, kFalse,
+          "div1-iframe, all boxes are overflow: " + kOverflows[i] + ";");
+
+    // XXX if the overflow is visible, synthesizeMouse with the input element
+    // or textarea element doesn't work fine.
+    var isVisibleTesting = kOverflows[i] == "visible";
+    var todoFlag = isVisibleTesting ? kToDo : 0;
+    // to input
+    synthesizeMouse(input, 30, 5, { type: "mousemove" });
+    check(kTrue | todoFlag, kTrue | todoFlag, kFalse,
+          kFalse, kFalse, kFalse, kFalse, kFalse, kFalse,
+         "div1-input, all boxes are overflow: " + kOverflows[i] + ";");
+
+    // to textarea
+    synthesizeMouse(textarea, 30, 5, { type: "mousemove" });
+    check(kTrue | todoFlag, kTrue | todoFlag, kTrue | todoFlag,
+          kFalse, kFalse, kFalse, kFalse, kFalse, kFalse,
+          "div1-textarea, all boxes are overflow: " + kOverflows[i] + ";");
+
+    // to div2
+    synthesizeMouse(div2, 30, 5, { type: "mousemove" });
+    check(kTrue, kTrue, kFalse,
+          kFalse, kFalse, kFalse, kFalse, kFalse, kFalse,
+          "div1-div2, all boxes are overflow: " + kOverflows[i] + ";");
+
+    // to div3
+    synthesizeMouse(div3, 30, 5, { type: "mousemove" });
+    check(kTrue, kTrue, kTrue,
+          kFalse, kFalse, kFalse, kFalse, kFalse, kFalse,
+          "div1-div3, all boxes are overflow: " + kOverflows[i] + ";");
+
+    // to fixedDiv1 (child of div3)
+    synthesizeMouse(fixedDiv1, 30, 5, { type: "mousemove" });
+    check(kTrue, kTrue, kTrue,
+          kTrue, kFalse, kFalse, kFalse, kFalse, kFalse,
+          "div1-fixedDiv1, all boxes are overflow: " + kOverflows[i] + ";");
+
+    // to xbl_child
+    synthesizeMouse(xbl_child, 30, 5, { type: "mousemove" });
+    check(kTrue, kTrue, kTrue,
+          kTrue, kTrue, kFalse, kFalse, kFalse, kFalse,
+          "div1-xbl_child, all boxes are overflow: " + kOverflows[i] + ";");
+
+    // to fixedDiv2 (sibling of div*)
+    synthesizeMouse(fixedDiv2, 30, 5, { type: "mousemove" });
+    check(kTrue, kTrue, kTrue,
+          kTrue, kTrue, kTrue, kFalse, kFalse, kFalse,
+          "div1-fixedDiv2, all boxes are overflow: " + kOverflows[i] + ";");
+
+    clear();
+
+    // ***********************************************************
+    // selection starting at fixedDiv1
+    synthesizeMouse(fixedDiv1, 30, 5, { type: "mousedown" });
+
+    // to xbl_child
+    synthesizeMouse(xbl_child, 30, 5, { type: "mousemove" });
+    check(kFalse, kFalse, kFalse,
+          kTrue, kTrue, kFalse, kFalse, kFalse, kFalse,
+          "fixedDiv1-xbl_child, all boxes are overflow: " + kOverflows[i] + ";");
+
+    // to fixedDiv2
+    synthesizeMouse(fixedDiv2, 30, 5, { type: "mousemove" });
+    check(kFalse, kFalse, kFalse,
+          kTrue, kTrue, kTrue, kFalse, kFalse, kFalse,
+          "fixedDiv1-fixedDiv2, all boxes are overflow: " + kOverflows[i] + ";");
+
+    clear();
+
+    // ***********************************************************
+    // selection starting at fixedDiv2
+    synthesizeMouse(fixedDiv2, 30, 5, { type: "mousedown" });
+
+    // to xbl_child
+    synthesizeMouse(xbl_child, 30, 5, { type: "mousemove" });
+    check(kFalse, kFalse, kFalse,
+          kFalse, kTrue, kTrue, kFalse, kFalse, kFalse,
+          "fixedDiv2-xbl_child, all boxes are overflow: " + kOverflows[i] + ";");
+
+    // to fixedDiv1
+    synthesizeMouse(fixedDiv1, 30, 5, { type: "mousemove" });
+    check(kFalse, kFalse, kFalse,
+          kTrue, kTrue, kTrue, kFalse, kFalse, kFalse,
+          "fixedDiv2-fixedDiv1, all boxes are overflow: " + kOverflows[i] + ";");
+
+    clear();
+
+    // ***********************************************************
+    div2.style.overflow = "visible";
+
+    // ***********************************************************
+    // selection starting at div2
+    synthesizeMouse(div2, 30, 5, { type: "mousedown" });
+
+    // to div3
+    synthesizeMouse(div3, 30, 5, { type: "mousemove" });
+    check(kFalse, kTrue, kTrue,
+          kFalse, kFalse, kFalse, kFalse, kFalse, kFalse,
+          "div2-div3, div3 is overflow: " + kOverflows[i] +
+          ";, but div2 is overflow: visible;");
+
+    // to fixedDiv1 (child of div3)
+    synthesizeMouse(fixedDiv1, 30, 5, { type: "mousemove" });
+    check(kFalse, kTrue, kTrue,
+          kTrue, kFalse, kFalse, kFalse, kFalse, kFalse,
+          "div2-fixedDiv1, div3 is overflow: " + kOverflows[i] +
+          ";, but div2 is overflow: visible;");
+
+    // to xbl_child
+    synthesizeMouse(xbl_child, 30, 5, { type: "mousemove" });
+    check(kFalse, kTrue, kTrue,
+          kTrue, kTrue, kFalse, kFalse, kFalse, kFalse,
+          "div2-xbl_child, div3 is overflow: " + kOverflows[i] +
+          ";, but div2 is overflow: visible;");
+
+    // to fixedDiv2 (sibling of div*)
+    synthesizeMouse(fixedDiv2, 30, 5, { type: "mousemove" });
+    check(kFalse, kTrue, kTrue,
+          kTrue, kTrue, kTrue, kFalse, kFalse, kFalse,
+          "div2-fixedDiv2, div3 is overflow: " + kOverflows[i] +
+          ";, but div2 is overflow: visible;");
+
+    clear();
+
+    // ***********************************************************
+    // selection starting at div3
+    synthesizeMouse(div3, 30, 5, { type: "mousedown" });
+
+    // to div2
+    synthesizeMouse(div2, 30, 5, { type: "mousemove" });
+    check(kFalse, kTrue, kTrue,
+          kFalse, kFalse, kFalse, kFalse, kFalse, kFalse,
+          "div3-div2, div3 is overflow: " + kOverflows[i] +
+          ";, but div2 is overflow: visible;");
+
+    // to fixedDiv1 (child of div3)
+    synthesizeMouse(fixedDiv1, 30, 5, { type: "mousemove" });
+    check(kFalse, kFalse, kTrue,
+          kTrue, kFalse, kFalse, kFalse, kFalse, kFalse,
+          "div3-fixedDiv1, div3 is overflow: " + kOverflows[i] +
+          ";, but div2 is overflow: visible;");
+
+    // to xbl_child
+    synthesizeMouse(xbl_child, 30, 5, { type: "mousemove" });
+    check(kFalse, kFalse, kTrue,
+          kTrue, kTrue, kFalse, kFalse, kFalse, kFalse,
+          "div3-xbl_child, div3 is overflow: " + kOverflows[i] +
+          ";, but div2 is overflow: visible;");
+
+    // to fixedDiv2 (sibling of div*)
+    synthesizeMouse(fixedDiv2, 30, 5, { type: "mousemove" });
+    check(kFalse, kFalse, kTrue,
+          kTrue, kTrue, kTrue, kFalse, kFalse, kFalse,
+          "div3-fixedDiv2, div3 is overflow: " + kOverflows[i] +
+          ";, but div2 is overflow: visible;");
+
+    clear();
+  }
+
+  // ***********************************************************
+  // selection starting at iframe
+  synthesizeMouse(iframe, 30, 5, { type: "mousedown" });
+
+  // inside iframe
+  synthesizeMouse(iframe, 50, 5, { type: "mousemove" });
+  check(kFalse, kFalse, kFalse,
+        kFalse, kFalse, kFalse, kTrue, kFalse, kFalse,
+        "iframe-iframe");
+
+  // to div2
+  synthesizeMouse(div2, 30, 5, { type: "mousemove" });
+  check(kFalse, kFalse, kFalse,
+        kFalse, kFalse, kFalse, kTrue, kFalse, kFalse,
+        "iframe-div2");
+
+  clear();
+
+  // ***********************************************************
+  // selection starting at input
+  synthesizeMouse(input, 20, 5, { type: "mousedown" });
+
+  // inside input
+  synthesizeMouse(input, 40, 5, { type: "mousemove" });
+  check(kFalse, kFalse, kFalse,
+        kFalse, kFalse, kFalse, kFalse, kTrue, kFalse,
+        "input-input");
+
+  // to div3
+  synthesizeMouse(div3, 30, 5, { type: "mousemove" });
+  check(kFalse, kFalse, kFalse,
+        kFalse, kFalse, kFalse, kFalse, kTrue, kFalse,
+        "input-div3");
+
+  clear();
+
+  // ***********************************************************
+  // selection starting at textarea
+  synthesizeMouse(textarea, 30, 5, { type: "mousedown" });
+
+  // inside textarea
+  synthesizeMouse(textarea, 50, 5, { type: "mousemove" });
+  check(kFalse, kFalse, kFalse,
+        kFalse, kFalse, kFalse, kFalse, kFalse, kTrue,
+        "textarea-textarea");
+
+  // to div2
+  synthesizeMouse(div2, 30, 5, { type: "mousemove" });
+  check(kFalse, kFalse, kFalse,
+        kFalse, kFalse, kFalse, kFalse, kFalse, kTrue,
+        "textarea-div2");
+
+  clear();
+
+  SimpleTest.finish();
+}
+window.onload = function() { setTimeout(test, 0); };
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

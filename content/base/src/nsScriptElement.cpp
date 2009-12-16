@@ -121,8 +121,7 @@ nsScriptElement::AttributeChanged(nsIDocument* aDocument,
                                   nsIContent* aContent,
                                   PRInt32 aNameSpaceID,
                                   nsIAtom* aAttribute,
-                                  PRInt32 aModType,
-                                  PRUint32 aStateMask)
+                                  PRInt32 aModType)
 {
   MaybeProcessScript();
 }
@@ -180,6 +179,8 @@ nsScriptElement::MaybeProcessScript()
       mMalformed || !HasScriptContent()) {
     return NS_OK;
   }
+
+  FreezeUriAsyncDefer();
 
   if (InNonScriptingContainer(cont)) {
     // Make sure to flag ourselves as evaluated

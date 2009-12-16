@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+<style type="text/css">
+
+#relleft {
+	float: left;
+	width: 290px;
+	margin: 15px 0 0 0;
+}
+
+#fl:first-line {  }
+
+#cols { -moz-column-width: 4503599627370497mm; }
+
+</style>
+
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("x").setAttribute("id", "cols");
+  document.getElementById("fl").firstChild.splitText(1);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<div id="x"><div id="relleft"></div><div id="fl">
+a b c d</div></div>
+</body>
+</html>

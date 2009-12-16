@@ -61,7 +61,7 @@
 #include <osso-mem.h>
 #include <fcntl.h>
 #include <unistd.h>
-const char* kHighMark = "/sys/kernel/high_watermark";
+static const char kHighMark[] = "/sys/kernel/high_watermark";
 #endif
 
 // Some platforms notify you when system memory is low, others do not.
@@ -129,14 +129,23 @@ nsMemoryImpl::IsLowMemory(PRBool *result)
     *result = (stat.ullAvailPageFile < kRequiredMemory) &&
         ((float)stat.ullAvailPageFile / stat.ullTotalPageFile) < 0.1;
 #elif defined(NS_OSSO)
-    int fd = open (kHighMark, O_RDONLY);
-    if (fd == -1) {
-        *result = PR_FALSE;
-        return NS_OK;
+    static int osso_highmark_fd = -1;
+    if (osso_highmark_fd == -1) {
+        osso_highmark_fd = open (kHighMark, O_RDONLY);
+
+        if (osso_highmark_fd == -1) {
+            NS_ERROR("can't find the osso highmark file");    
+            *result = PR_FALSE;
+            return NS_OK;
+        }
     }
+
+    // be kind, rewind.
+    lseek(osso_highmark_fd, 0L, SEEK_SET);
+
     int c = 0;
-    read (fd, &c, 1);
-    close(fd);
+    read (osso_highmark_fd, &c, 1);
+
     *result = (c == '1');
 #else
     *result = PR_FALSE;

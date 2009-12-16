@@ -61,8 +61,4 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
 
-ifdef MOZ_MORKREADER
-EXTRA_DSO_LDOPTS += $(DEPTH)/db/morkreader/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX)
-endif
-
 include $(topsrcdir)/config/rules.mk

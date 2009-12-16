@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      #outermost { border: 2px solid; }
+      #outer { border: 4px solid yellow; }
+      #inner { border: 6px sold green; }
+    </style>
+    <script>
+      function doTest() {
+        var i = document.getElementById("inner");
+        var frag = document.createDocumentFragment();
+        var newSpan = document.createElement("span");
+        newSpan.appendChild(document.createTextNode("span"));
+        newSpan.style.display = "block";
+        frag.appendChild(newSpan);
+        frag.appendChild(document.createTextNode("after span"));
+        i.appendChild(frag);
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <span id="outermost">
+      <span id="outer">
+        <span id="inner">
+          <span style="display: block"></span>
+          before span
+        </span>
+      </span>
+    </span>
+  </body>
+</html>

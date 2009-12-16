@@ -44,6 +44,7 @@ using google_breakpad::MinidumpThreadList;
 using google_breakpad::MinidumpModuleList;
 using google_breakpad::MinidumpMemoryList;
 using google_breakpad::MinidumpException;
+using google_breakpad::MinidumpAssertion;
 using google_breakpad::MinidumpSystemInfo;
 using google_breakpad::MinidumpMiscInfo;
 using google_breakpad::MinidumpBreakpadInfo;
@@ -87,6 +88,13 @@ static bool PrintMinidumpDump(const char *minidump_file) {
     BPLOG(INFO) << "minidump.GetException() failed";
   } else {
     exception->Print();
+  }
+
+  MinidumpAssertion *assertion = minidump.GetAssertion();
+  if (!assertion) {
+    BPLOG(INFO) << "minidump.GetAssertion() failed";
+  } else {
+    assertion->Print();
   }
 
   MinidumpSystemInfo *system_info = minidump.GetSystemInfo();

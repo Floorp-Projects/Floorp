@@ -207,7 +207,7 @@ endif
 ifneq ($(OS_ARCH)_$(GNU_CC), WINNT_)
 # No point in clobbering if PGO has been explicitly disabled.
 ifndef NO_PROFILE_GUIDED_OPTIMIZE
-maybe_clobber_profiledbuild: clobber_all
+maybe_clobber_profiledbuild: clean
 else
 maybe_clobber_profiledbuild:
 endif

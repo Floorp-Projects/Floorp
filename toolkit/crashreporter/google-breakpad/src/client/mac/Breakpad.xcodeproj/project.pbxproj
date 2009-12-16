@@ -19,6 +19,9 @@
 				F945858E0F782333009A47BF /* PBXTargetDependency */,
 				F94585900F782336009A47BF /* PBXTargetDependency */,
 				F93DE3A70F830D1D00608B94 /* PBXTargetDependency */,
+				F95BB8B3101F94D300AA053B /* PBXTargetDependency */,
+				F95BB8B5101F94D300AA053B /* PBXTargetDependency */,
+				F95BB8B7101F94D300AA053B /* PBXTargetDependency */,
 			);
 			name = All;
 			productName = All;
@@ -88,6 +91,7 @@
 		F93DE33F0F82C66B00608B94 /* string_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = F92C53820ECCE635009BE4BA /* string_utilities.cc */; };
 		F93DE3410F82C68300608B94 /* exception_handler_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = F93DE3400F82C68300608B94 /* exception_handler_test.cc */; };
 		F945849E0F280E3C009A47BF /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F945849C0F280E3C009A47BF /* Localizable.strings */; };
+		F9B630A0100FF96B00D0F4AC /* goArrow.png in Resources */ = {isa = PBXBuildFile; fileRef = F9B6309F100FF96B00D0F4AC /* goArrow.png */; };
 		F9C44DB20EF07288003AEBAA /* Controller.m in Sources */ = {isa = PBXBuildFile; fileRef = F9C44DAC0EF07288003AEBAA /* Controller.m */; };
 		F9C44DB30EF07288003AEBAA /* crashduringload in Resources */ = {isa = PBXBuildFile; fileRef = F9C44DAD0EF07288003AEBAA /* crashduringload */; };
 		F9C44DB40EF07288003AEBAA /* crashInMain in Resources */ = {isa = PBXBuildFile; fileRef = F9C44DAE0EF07288003AEBAA /* crashInMain */; };
@@ -191,6 +195,55 @@
 			remoteGlobalIDString = F9C44DA40EF060A8003AEBAA;
 			remoteInfo = BreakpadTest;
 		};
+		F95BB884101F949F00AA053B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F95BB87C101F949F00AA053B /* crash_report.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8DD76FA10486AA7600D96B5E /* crash_report */;
+			remoteInfo = crash_report;
+		};
+		F95BB891101F94AC00AA053B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F95BB889101F94AC00AA053B /* dump_syms.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8DD76FA10486AA7600D96B5E /* dump_syms */;
+			remoteInfo = dump_syms;
+		};
+		F95BB89E101F94C000AA053B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F95BB894101F94C000AA053B /* symupload.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8DD76FA10486AA7600D96B5E /* symupload */;
+			remoteInfo = symupload;
+		};
+		F95BB8A0101F94C000AA053B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F95BB894101F94C000AA053B /* symupload.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 9BD835FB0B0544950055103E /* minidump_upload */;
+			remoteInfo = minidump_upload;
+		};
+		F95BB8B2101F94D300AA053B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F95BB889101F94AC00AA053B /* dump_syms.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8DD76F960486AA7600D96B5E /* dump_syms */;
+			remoteInfo = dump_syms;
+		};
+		F95BB8B4101F94D300AA053B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F95BB894101F94C000AA053B /* symupload.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8DD76F960486AA7600D96B5E /* symupload */;
+			remoteInfo = symupload;
+		};
+		F95BB8B6101F94D300AA053B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F95BB87C101F949F00AA053B /* crash_report.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8DD76F960486AA7600D96B5E /* crash_report */;
+			remoteInfo = crash_report;
+		};
 		F9C44E190EF0790F003AEBAA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
@@ -288,6 +341,10 @@
 		F93DE3400F82C68300608B94 /* exception_handler_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = exception_handler_test.cc; path = handler/exception_handler_test.cc; sourceTree = "<group>"; };
 		F945849D0F280E3C009A47BF /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = sender/English.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F945859D0F78241E009A47BF /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Framework/Info.plist; sourceTree = "<group>"; };
+		F95BB87C101F949F00AA053B /* crash_report.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = crash_report.xcodeproj; path = ../../tools/mac/crash_report/crash_report.xcodeproj; sourceTree = SOURCE_ROOT; };
+		F95BB889101F94AC00AA053B /* dump_syms.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = dump_syms.xcodeproj; path = ../../tools/mac/dump_syms/dump_syms.xcodeproj; sourceTree = SOURCE_ROOT; };
+		F95BB894101F94C000AA053B /* symupload.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = symupload.xcodeproj; path = ../../tools/mac/symupload/symupload.xcodeproj; sourceTree = SOURCE_ROOT; };
+		F9B6309F100FF96B00D0F4AC /* goArrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = goArrow.png; path = sender/goArrow.png; sourceTree = "<group>"; };
 		F9C44DA50EF060A8003AEBAA /* BreakpadTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BreakpadTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9C44DAC0EF07288003AEBAA /* Controller.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Controller.m; path = testapp/Controller.m; sourceTree = "<group>"; };
 		F9C44DAD0EF07288003AEBAA /* crashduringload */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = crashduringload; path = testapp/crashduringload; sourceTree = "<group>"; };
@@ -404,6 +461,7 @@
 		0867D691FE84028FC02AAC07 /* Breakpad */ = {
 			isa = PBXGroup;
 			children = (
+				F95BB8A3101F94C300AA053B /* Tools */,
 				32DBCF5E0370ADEE00C91783 /* Breakpad_Prefix.pch */,
 				F92C538D0ECCE6F2009BE4BA /* client */,
 				F92C53600ECCE3D6009BE4BA /* common */,
@@ -535,6 +593,7 @@
 		F92C56A60ECE04B6009BE4BA /* sender */ = {
 			isa = PBXGroup;
 			children = (
+				F9B6309F100FF96B00D0F4AC /* goArrow.png */,
 				F92C56A70ECE04C5009BE4BA /* crash_report_sender.h */,
 				F92C56A80ECE04C5009BE4BA /* crash_report_sender.m */,
 				F945849C0F280E3C009A47BF /* Localizable.strings */,
@@ -544,6 +603,41 @@
 				F92C56A20ECE04A7009BE4BA /* crash_report_sender-Info.plist */,
 			);
 			name = sender;
+			sourceTree = "<group>";
+		};
+		F95BB87D101F949F00AA053B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F95BB885101F949F00AA053B /* crash_report */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F95BB88A101F94AC00AA053B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F95BB892101F94AC00AA053B /* dump_syms */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F95BB895101F94C000AA053B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F95BB89F101F94C000AA053B /* symupload */,
+				F95BB8A1101F94C000AA053B /* minidump_upload */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F95BB8A3101F94C300AA053B /* Tools */ = {
+			isa = PBXGroup;
+			children = (
+				F95BB894101F94C000AA053B /* symupload.xcodeproj */,
+				F95BB889101F94AC00AA053B /* dump_syms.xcodeproj */,
+				F95BB87C101F949F00AA053B /* crash_report.xcodeproj */,
+			);
+			name = Tools;
 			sourceTree = "<group>";
 		};
 		F9C44DAB0EF0726F003AEBAA /* testapp */ = {
@@ -778,6 +872,20 @@
 			mainGroup = 0867D691FE84028FC02AAC07 /* Breakpad */;
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = F95BB87D101F949F00AA053B /* Products */;
+					ProjectRef = F95BB87C101F949F00AA053B /* crash_report.xcodeproj */;
+				},
+				{
+					ProductGroup = F95BB88A101F94AC00AA053B /* Products */;
+					ProjectRef = F95BB889101F94AC00AA053B /* dump_syms.xcodeproj */;
+				},
+				{
+					ProductGroup = F95BB895101F94C000AA053B /* Products */;
+					ProjectRef = F95BB894101F94C000AA053B /* symupload.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				8DC2EF4F0486A6940098B216 /* Breakpad */,
@@ -793,6 +901,37 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		F95BB885101F949F00AA053B /* crash_report */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = crash_report;
+			remoteRef = F95BB884101F949F00AA053B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		F95BB892101F94AC00AA053B /* dump_syms */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = dump_syms;
+			remoteRef = F95BB891101F94AC00AA053B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		F95BB89F101F94C000AA053B /* symupload */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = symupload;
+			remoteRef = F95BB89E101F94C000AA053B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		F95BB8A1101F94C000AA053B /* minidump_upload */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = minidump_upload;
+			remoteRef = F95BB8A0101F94C000AA053B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		8DC2EF520486A6940098B216 /* Resources */ = {
@@ -813,6 +952,7 @@
 				4084699D0F5D9CF900FDCA37 /* crash_report_sender.icns in Resources */,
 				33880C800F9E097100817F82 /* InfoPlist.strings in Resources */,
 				3329D4ED0FA16D820007BBC5 /* Breakpad.nib in Resources */,
+				F9B630A0100FF96B00D0F4AC /* goArrow.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1062,6 +1202,21 @@
 			isa = PBXTargetDependency;
 			target = F9C44DA40EF060A8003AEBAA /* BreakpadTest */;
 			targetProxy = F945858F0F782336009A47BF /* PBXContainerItemProxy */;
+		};
+		F95BB8B3101F94D300AA053B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = dump_syms;
+			targetProxy = F95BB8B2101F94D300AA053B /* PBXContainerItemProxy */;
+		};
+		F95BB8B5101F94D300AA053B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = symupload;
+			targetProxy = F95BB8B4101F94D300AA053B /* PBXContainerItemProxy */;
+		};
+		F95BB8B7101F94D300AA053B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = crash_report;
+			targetProxy = F95BB8B6101F94D300AA053B /* PBXContainerItemProxy */;
 		};
 		F9C44E1A0EF0790F003AEBAA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

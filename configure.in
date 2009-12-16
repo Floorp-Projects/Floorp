@@ -252,7 +252,7 @@ if test "$COMPILE_ENVIRONMENT"; then
 
 dnl Do some special WinCE toolchain stuff
 case "$target" in
-*wince)
+*wince|*winmo)
 
     MOZ_ARG_WITH_STRING(wince-sdk,
     [  --with-wince-sdk=WINCE_SDK_DIR
@@ -263,19 +263,6 @@ case "$target" in
     [  --with-ogles-sdk=OGLES_SDK_DIR
                         The path to the OGLES SDK],
     OGLES_SDK_DIR=$withval)
-
-    dnl Default to Windows Mobile components enabled
-    WINCE_WINDOWS_MOBILE=1
-
-    MOZ_ARG_DISABLE_BOOL(windows-mobile-components,
-    [  --disable-windows-mobile-components
-         Disable Windows Mobile specific components from CE build],
-    WINCE_WINDOWS_MOBILE=,
-    WINCE_WINDOWS_MOBILE=1)
-
-    if test "$WINCE_WINDOWS_MOBILE"; then
-        AC_DEFINE(WINCE_WINDOWS_MOBILE)
-    fi
 
     AC_DEFINE(WINCE)
     
@@ -290,16 +277,18 @@ case "$target" in
 
     _pwd=`pwd -W`
     _topsrcdirwin=`cd \`dirname $0\`; pwd -W`
-    make OGLES_SDK_DIR="$OGLES_SDK_DIR" WINCE_SDK_DIR="$WINCE_SDK_DIR" TOPSRCDIR="$_topsrcdirwin" OBJDIR="$_pwd" -C $srcdir/build/wince/tools
+    make OGLES_SDK_DIR="$OGLES_SDK_DIR" WINCE_SDK_DIR="$WINCE_SDK_DIR" \
+    TOPSRCDIR="$_topsrcdirwin" OBJDIR="$_pwd" target="$target" \
+    -C $srcdir/build/wince/tools
 
-    CC="$_pwd/dist/sdk/bin/arm-wince-gcc.exe"
-    CXX="$_pwd/dist/sdk/bin/arm-wince-gcc.exe"
-    CPP="$_pwd/dist/sdk/bin/arm-wince-gcc.exe -E -nologo"
-    CXXCPP="$_pwd/dist/sdk/bin/arm-wince-gcc.exe -TP -E -nologo"
-    LD="$_pwd/dist/sdk/bin/arm-wince-link.exe"
-    AR="$_pwd/dist/sdk/bin/arm-wince-lib.exe"
-    AS="$_pwd/dist/sdk/bin/arm-wince-as.exe"
-    RC="$_pwd/dist/sdk/bin/arm-wince-res.exe"
+    CC="$_pwd/dist/sdk/bin/$target-gcc.exe"
+    CXX="$_pwd/dist/sdk/bin/$target-gcc.exe"
+    CPP="$_pwd/dist/sdk/bin/$target-gcc.exe -E -nologo"
+    CXXCPP="$_pwd/dist/sdk/bin/$target-gcc.exe -TP -E -nologo"
+    LD="$_pwd/dist/sdk/bin/$target-link.exe"
+    AR="$_pwd/dist/sdk/bin/$target-lib.exe"
+    AS="$_pwd/dist/sdk/bin/$target-as.exe"
+    RC="$_pwd/dist/sdk/bin/$target-res.exe"
 
 
     echo -----------------------------------------------------------------------------
@@ -473,7 +462,7 @@ fi
 dnl Special win32 checks
 dnl ========================================================
 case "$target" in
-*-wince)
+*-wince|*-winmo)
     WINVER=500
     ;;
 *)
@@ -530,7 +519,7 @@ fi
 AC_SUBST(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
 
 case "$target" in
-*-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince)
+*-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince|*-winmo)
     if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
         _WIN32_MSVC=1
@@ -586,6 +575,13 @@ case "$target" in
             AC_DEFINE(_CRT_NONSTDC_NO_DEPRECATE)
         elif test "$_CC_MAJOR_VERSION" = "15"; then
             _CC_SUITE=9
+            CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
+            LDFLAGS="$LDFLAGS -MANIFESTUAC:NO"
+            _USE_DYNAMICBASE=1
+            AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
+            AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
+        elif test "$_CC_MAJOR_VERSION" = "16"; then
+            _CC_SUITE=10
             CXXFLAGS="$CXXFLAGS -Zc:wchar_t-"
             LDFLAGS="$LDFLAGS -MANIFESTUAC:NO"
             _USE_DYNAMICBASE=1
@@ -785,7 +781,7 @@ if test -n "$_WIN32_MSVC"; then
     # Since we're skipping compiler and library checks, hard-code
     # some facts here.
     case "$target" in
-    *-wince)
+    *-wince|*-winmo)
         ;;
     *)
         AC_DEFINE(HAVE_IO_H)
@@ -1096,6 +1092,7 @@ if test -n "$CROSS_COMPILE"; then
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT ;;
         wince*)       OS_ARCH=WINCE ;;
+        winmo*)       OS_ARCH=WINCE ;;
         darwin*)      OS_ARCH=Darwin OS_TARGET=Darwin ;;
     esac
 else
@@ -1201,7 +1198,9 @@ esac
 
 case "$OS_ARCH" in
 WINNT)
-    OS_TEST=`uname -p`
+    if test -z "$CROSS_COMPILE" ; then
+        OS_TEST=`uname -p`
+    fi
     ;;
 Windows_NT)
 #
@@ -1306,7 +1305,16 @@ UnixWare)
     ;;
 WINCE)
     OS_ARCH=WINCE
-    OS_TARGET=WINCE
+    case "${target_os}" in
+    *winmo)
+        OS_TARGET=WINMO
+        WINCE_WINDOWS_MOBILE=1
+        AC_DEFINE(WINCE_WINDOWS_MOBILE)
+        ;;
+    *)
+        OS_TARGET=WINCE
+        ;;
+    esac
     ;;
 Darwin)
     case "${target_cpu}" in
@@ -1654,7 +1662,7 @@ case "$host" in
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
-*cygwin*|*mingw*|*mks*|*msvc*|*wince)
+*cygwin*|*mingw*|*mks*|*msvc*|*wince|*winmo)
     # we need Python 2.5 on Windows
     PYTHON_VERSION=2.5
     if test -n "$_WIN32_MSVC"; then
@@ -2025,7 +2033,7 @@ case "$target" in
     esac
     ;;
 
-*-wince*)
+*-wince*|*-winmo*)
     TARGET_COMPILER_ABI=msvc
     _PLATFORM_DEFAULT_TOOLKIT=cairo-windows
     _PLATFORM_MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1
@@ -2146,7 +2154,7 @@ case "$target" in
         # Use temp file for windres (bug 213281)
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
-        LIBS="$LIBS -lgdi32 -lwinmm -lwsock32"
+        LIBS="$LIBS -luuid -lgdi32 -lwinmm -lwsock32"
         MOZ_JS_LIBS='-L$(LIBXUL_DIST)/lib -lmozjs'
         MOZ_FIX_LINK_PATHS=
         DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxpcom -lxpcom_core'
@@ -2719,7 +2727,7 @@ case "$target" in
 *-openvms*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
-*-msvc*|*-mks*|*-mingw*|*-cygwin*|*-wince)
+*-msvc*|*-mks*|*-mingw*|*-cygwin*|*-wince|*-winmo)
     if test -z "$GNU_CC"; then
         NO_LD_ARCHIVE_FLAGS=
     fi
@@ -2751,7 +2759,7 @@ case "$target" in
     *-darwin*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-exported_symbols_list -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-export-list'
         ;;
-    *-cygwin*|*-mingw*|*-mks*|*-msvc|*-wince)
+    *-cygwin*|*-mingw*|*-mks*|*-msvc|*-wince|*-winmo)
         if test -n "$GNU_CC"; then
            MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         fi
@@ -3646,7 +3654,7 @@ if test "$ac_cv_func_gnu_get_libc_version" = "yes"; then
 fi
 
 case $target_os in
-    os2*|msvc*|mks*|cygwin*|mingw*|darwin*|wince*|beos*)
+    os2*|msvc*|mks*|cygwin*|mingw*|darwin*|wince*|winmo*|beos*)
         ;;
     *)
     
@@ -4781,9 +4789,7 @@ photon)
 
 cairo-windows)
     MOZ_WIDGET_TOOLKIT=windows
-    if test -z "$WINCE"; then
-        MOZ_WEBGL=1
-    fi
+    MOZ_WEBGL=1
     ;;
 
 cairo-gtk2|cairo-gtk2-x11)
@@ -4791,6 +4797,7 @@ cairo-gtk2|cairo-gtk2-x11)
     MOZ_ENABLE_GTK2=1
     MOZ_ENABLE_XREMOTE=1
     MOZ_WEBGL=1
+    MOZ_WEBGL_GLX=1
 
     AC_DEFINE(MOZ_X11)
     MOZ_X11=1
@@ -4804,7 +4811,7 @@ cairo-gtk2|cairo-gtk2-x11)
 cairo-gtk2-dfb)
     MOZ_WIDGET_TOOLKIT=gtk2
     MOZ_ENABLE_GTK2=1
-    MOZ_WEBGL=1
+    MOZ_WEBGL=
 
     AC_DEFINE(MOZ_DFB)
     MOZ_DFB=1
@@ -5915,7 +5922,7 @@ dnl ========================================================
 dnl Installer
 dnl ========================================================
 case "$target_os" in
-    aix*|solaris*|linux*|msvc*|mks*|cygwin*|mingw*|os2*|wince*)
+    aix*|solaris*|linux*|msvc*|mks*|cygwin*|mingw*|os2*|wince*|winmo*)
         MOZ_INSTALLER=1
         ;;
 esac
@@ -6260,7 +6267,7 @@ if test $NS_OSSO; then
     fi
     AC_DEFINE(NS_OSSO)
     MOZ_GFX_OPTIMIZE_MOBILE=1
-    MOZ_WEBGL=
+    MOZ_WEBGL_GLX=
 fi
 AC_SUBST(LIBOSSO_CFLAGS)
 AC_SUBST(LIBOSSO_LIBS)
@@ -6340,7 +6347,7 @@ MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
     beos*)
         MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USER}"
         ;;
-    msvc*|mks*|cygwin*|mingw*|os2*|wince*)
+    msvc*|mks*|cygwin*|mingw*|os2*|wince*|winmo*)
         MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
         ;;
     *) 
@@ -6592,6 +6599,10 @@ if test "$MOZ_MEMORY"; then
     if test -z "$WINCE_WINDOWS_MOBILE"; then
       AC_DEFINE(MOZ_MEMORY_WINCE6)
     fi
+    ;;
+  *winmo)
+    AC_DEFINE(MOZ_MEMORY_WINCE)
+    AC_DEFINE(MOZ_MEMORY_WINDOWS)
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -7325,7 +7336,7 @@ MOZ_ARG_HEADER(Standalone module options (Not for building Mozilla))
 dnl Check for GLib and libIDL.
 dnl ========================================================
 case "$target_os" in
-msvc*|mks*|cygwin*|mingw*|wince*)
+msvc*|mks*|cygwin*|mingw*|wince*|winmo*)
     SKIP_IDL_CHECK="yes"
     ;;
 *)
@@ -7602,7 +7613,7 @@ if test "$MOZ_TREE_CAIRO"; then
     mv -f $CAIRO_FEATURES_H "$CAIRO_FEATURES_H".orig 2> /dev/null
 
 else
-   PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION freetype2 fontconfig)
+   PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION pixman-1 freetype2 fontconfig)
    MOZ_CAIRO_CFLAGS=$CAIRO_CFLAGS
    MOZ_CAIRO_LIBS=$CAIRO_LIBS
    if test "$MOZ_X11"; then
@@ -7770,7 +7781,7 @@ dnl
 dnl Build jsctypes on the platforms we can.
 dnl
 AC_SUBST(BUILD_CTYPES)
-if test "$OS_TARGET" != "WINCE" -o `echo $OS_TEST | grep -ic arm` != 1; then
+if test "$OS_ARCH" != "WINCE" -o `echo $OS_TEST | grep -ic arm` != 1; then
   BUILD_CTYPES=1
   AC_DEFINE(BUILD_CTYPES)
 fi
@@ -8100,20 +8111,18 @@ if test "$MOZ_X11"; then
 fi # MOZ_X11
 
 dnl Check for headers, etc. needed by WebGL.
-if test -n "$MOZ_WEBGL"; then
-    if test "$MOZ_WIDGET_TOOLKIT" = gtk2; then
-        AC_CHECK_HEADER(GL/glx.h)
-        if test "$ac_cv_header_GL_glx_h" != "yes"; then
-            AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa (SuSE))])
-        fi
+if test -n "$MOZ_WEBGL_GLX"; then
+    AC_CHECK_HEADER(GL/glx.h)
+    if test "$ac_cv_header_GL_glx_h" != "yes"; then
+        AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa (SuSE))])
     fi
-fi # MOZ_WEBGL
+fi # MOZ_WEBGL_GLX
 fi # COMPILE_ENVIRONMENT
 
 if test "$USE_FC_FREETYPE"; then
     if test "$COMPILE_ENVIRONMENT"; then
     	_SAVE_CPPFLAGS="$CPPFLAGS"
-    	CPPFLAGS="$CPPFLAGS $FT2_CFLAGS"
+    	CPPFLAGS="$CPPFLAGS $FT2_CFLAGS $XCFLAGS"
         AC_CHECK_HEADERS(fontconfig/fcfreetype.h, , 
             [AC_MSG_ERROR(Can't find header fontconfig/fcfreetype.h.)])
     	CPPFLAGS="$_SAVE_CPPFLAGS"
@@ -8405,7 +8414,16 @@ if test "$BUILD_CTYPES"; then
     if test -n "$CROSS_COMPILE"; then
       ac_configure_args="$ac_configure_args --build=$build --host=$target"
     fi
-    AC_OUTPUT_SUBDIRS(js/ctypes/libffi)
+    if test "$SOLARIS_SUNPRO_CC"; then
+      # Always use gcc for libffi on Solaris
+      old_cache_file=$cache_file
+      cache_file=js/ctypes/libffi/config.cache
+      ac_configure_args="$ac_configure_args CC=gcc"
+      AC_OUTPUT_SUBDIRS(js/ctypes/libffi)
+      cache_file=$old_cache_file
+    else
+      AC_OUTPUT_SUBDIRS(js/ctypes/libffi)
+    fi
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
   fi
 fi

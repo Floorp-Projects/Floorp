@@ -1563,6 +1563,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   RollUpPopups();
+  ChildViewMouseTracker::ReEvaluateMouseEnterState();
 
   // [NSApp _isRunningAppModal] will return true if we're running an OS dialog
   // app modally. If one of those is up then we want it to retain its menu bar.
@@ -1578,6 +1579,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
 - (void)windowDidResignMain:(NSNotification *)aNotification
 {
   RollUpPopups();
+  ChildViewMouseTracker::ReEvaluateMouseEnterState();
 
   // [NSApp _isRunningAppModal] will return true if we're running an OS dialog
   // app modally. If one of those is up then we want it to retain its menu bar.
@@ -1595,6 +1597,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   RollUpPopups();
+  ChildViewMouseTracker::ReEvaluateMouseEnterState();
 
   NSWindow* window = [aNotification object];
   if ([window isSheet])
@@ -1608,6 +1611,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   RollUpPopups();
+  ChildViewMouseTracker::ReEvaluateMouseEnterState();
 
   // If a sheet just resigned key then we should paint the menu bar
   // for whatever window is now main.
@@ -1744,6 +1748,7 @@ nsCocoaWindow::UnifiedShading(void* aInfo, const CGFloat* aIn, CGFloat* aOut)
   mDrawsIntoWindowFrame = NO;
   mActiveTitlebarColor = nil;
   mInactiveTitlebarColor = nil;
+  mScheduledShadowInvalidation = NO;
   return self;
 }
 
@@ -1810,6 +1815,21 @@ static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor"
 - (NSColor*)titlebarColorForActiveWindow:(BOOL)aActive
 {
   return aActive ? mActiveTitlebarColor : mInactiveTitlebarColor;
+}
+
+- (void)deferredInvalidateShadow
+{
+  if (mScheduledShadowInvalidation || [self isOpaque] || ![self hasShadow])
+    return;
+
+  [self performSelector:@selector(invalidateShadow) withObject:nil afterDelay:0];
+  mScheduledShadowInvalidation = YES;
+}
+
+- (void)invalidateShadow
+{
+  [super invalidateShadow];
+  mScheduledShadowInvalidation = NO;
 }
 
 @end
@@ -2226,53 +2246,6 @@ ContentPatternDrawCallback(void* aInfo, CGContextRef aContext)
     switch (type) {
       case NSScrollWheel:
         [target scrollWheel:anEvent];
-        break;
-      case NSLeftMouseDown:
-        if ([NSApp isActive]) {
-          [target mouseDown:anEvent];
-        } else if (mIsContextMenu) {
-          [target mouseDown:anEvent];
-          // If we're in a context menu and our NSApp isn't active (i.e. if
-          // we're in a context menu raised by a right mouse-down event), we
-          // don't want the OS to send the coming NSLeftMouseUp event to NSApp
-          // via the window server, but we do want our ChildView to receive an
-          // NSLeftMouseUp event (and to send a Gecko NS_MOUSE_BUTTON_UP event
-          // to the corresponding nsChildView object).  If our NSApp isn't
-          // active when it receives the coming NSLeftMouseUp via the window
-          // server, our app will (in effect) become partially activated,
-          // which has strange side effects:  For example, if another app's
-          // window had the focus, that window will lose the focus and the
-          // other app's main menu will be completely disabled (though it will
-          // continue to be displayed).
-          // A side effect of not allowing the coming NSLeftMouseUp event to be
-          // sent to NSApp via the window server is that our custom context
-          // menus will roll up whenever the user left-clicks on them, whether
-          // or not the left-click hit an active menu item.  This is how native
-          // context menus behave, but wasn't how our custom context menus
-          // behaved previously (on the trunk or e.g. in Firefox 2.0.0.4).
-          // If our ChildView's corresponding nsChildView object doesn't
-          // dispatch an NS_MOUSE_BUTTON_UP event, none of our active menu items
-          // will "work" on an NSLeftMouseUp.
-          NSEvent *newEvent = [NSEvent mouseEventWithType:NSLeftMouseUp
-                                                 location:windowLocation
-                                            modifierFlags:nsCocoaUtils::GetCocoaEventModifierFlags(anEvent)
-                                                timestamp:GetCurrentEventTime()
-                                             windowNumber:[self windowNumber]
-                                                  context:nil
-                                              eventNumber:0
-                                               clickCount:1
-                                                 pressure:0.0];
-          [target mouseUp:newEvent];
-          RollUpPopups();
-        } else {
-          // If our NSApp isn't active and we're not a context menu (i.e. if
-          // we're an ordinary popup window), activate us before sending the
-          // event to its target.  This prevents us from being used in the
-          // background, and resolves bmo bug 434097 (another app focus
-          // wierdness bug).
-          [NSApp activateIgnoringOtherApps:YES];
-          [target mouseDown:anEvent];
-        }
         break;
       case NSLeftMouseUp:
         [target mouseUp:anEvent];

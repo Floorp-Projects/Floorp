@@ -53,7 +53,7 @@
 #include "ImageLogging.h"
 
 #include "nspr.h"
-
+#include "imgContainerRequest.h"
 
 NS_IMPL_ISUPPORTS4(imgRequestProxy, imgIRequest, nsIRequest,
                    nsISupportsPriority, nsISecurityInfoProvider)
@@ -673,3 +673,47 @@ void imgRequestProxy::NullOutListener()
     mListener = nsnull;
   }
 }
+
+NS_IMETHODIMP
+imgRequestProxy::GetStaticRequest(imgIRequest** aReturn)
+{
+  *aReturn = nsnull;
+  nsCOMPtr<imgIContainer> img, currentFrame;
+  GetImage(getter_AddRefs(img));
+  if (img) {
+    PRBool animated = PR_FALSE;
+    nsresult rv = img->GetAnimated(&animated);
+    if (NS_SUCCEEDED(rv) && !animated) {
+      NS_ADDREF(*aReturn = this);
+      return NS_OK;
+    }
+
+    PRInt32 w = 0;
+    PRInt32 h = 0;
+    img->GetWidth(&w);
+    img->GetHeight(&h);
+    nsIntRect rect(0, 0, w, h);
+    img->ExtractFrame(imgIContainer::FRAME_CURRENT, rect,
+                      imgIContainer::FLAG_SYNC_DECODE,
+                      getter_AddRefs(currentFrame));
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  GetURI(getter_AddRefs(uri));
+  PRUint32 imageStatus = 0;
+  GetImageStatus(&imageStatus);
+  nsCOMPtr<nsIPrincipal> principal;
+  GetImagePrincipal(getter_AddRefs(principal));
+
+  imgContainerRequest* req =
+    new imgContainerRequest(currentFrame, uri, imageStatus,
+                            mOwner ? mOwner->GetState() : 0,
+                            principal);
+  if (!req) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(*aReturn = req);
+  return NS_OK;
+}
+
