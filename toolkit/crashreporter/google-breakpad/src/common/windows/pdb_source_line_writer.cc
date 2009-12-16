@@ -118,13 +118,11 @@ bool PDBSourceLineWriter::PrintLines(IDiaEnumLineNumbers *lines) {
       return false;
     }
 
-    DWORD dia_source_id;
-    if (FAILED(line->get_sourceFileId(&dia_source_id))) {
+    DWORD source_id;
+    if (FAILED(line->get_sourceFileId(&source_id))) {
       fprintf(stderr, "failed to get line source file id\n");
       return false;
     }
-    // duplicate file names are coalesced to share one ID
-    DWORD source_id = GetRealFileID(dia_source_id);
 
     DWORD line_num;
     if (FAILED(line->get_lineNumber(&line_num))) {
@@ -138,18 +136,17 @@ bool PDBSourceLineWriter::PrintLines(IDiaEnumLineNumbers *lines) {
   return true;
 }
 
-bool PDBSourceLineWriter::PrintFunction(IDiaSymbol *function,
-                                        IDiaSymbol *block) {
+bool PDBSourceLineWriter::PrintFunction(IDiaSymbol *function) {
   // The function format is:
   // FUNC <address> <length> <param_stack_size> <function>
   DWORD rva;
-  if (FAILED(block->get_relativeVirtualAddress(&rva))) {
+  if (FAILED(function->get_relativeVirtualAddress(&rva))) {
     fprintf(stderr, "couldn't get rva\n");
     return false;
   }
 
   ULONGLONG length;
-  if (FAILED(block->get_length(&length))) {
+  if (FAILED(function->get_length(&length))) {
     fprintf(stderr, "failed to get function length\n");
     return false;
   }
@@ -218,16 +215,7 @@ bool PDBSourceLineWriter::PrintSourceFiles() {
         return false;
       }
 
-      wstring file_name_string(file_name);
-      if (!FileIDIsCached(file_name_string)) {
-        // this is a new file name, cache it and output a FILE line.
-        CacheFileID(file_name_string, file_id);
-        fwprintf(output_, L"FILE %d %s\n", file_id, file_name);
-      } else {
-        // this file name has already been seen, just save this
-        // ID for later lookup.
-        StoreDuplicateFileID(file_name_string, file_id);
-      }
+      fwprintf(output_, L"FILE %d %s\n", file_id, file_name);
       file.Release();
     }
     compiland.Release();
@@ -267,7 +255,7 @@ bool PDBSourceLineWriter::PrintFunctions() {
     // that PDBSourceLineWriter will output either a FUNC or PUBLIC line,
     // but not both.
     if (tag == SymTagFunction) {
-      if (!PrintFunction(symbol, symbol)) {
+      if (!PrintFunction(symbol)) {
         return false;
       }
     } else if (tag == SymTagPublicSymbol) {
@@ -277,64 +265,6 @@ bool PDBSourceLineWriter::PrintFunctions() {
     }
     symbol.Release();
   } while (SUCCEEDED(symbols->Next(1, &symbol, &count)) && count == 1);
-
-  // When building with PGO, the compiler can split functions into
-  // "hot" and "cold" blocks, and move the "cold" blocks out to separate
-  // pages, so the function can be noncontiguous. To find these blocks,
-  // we have to iterate over all the compilands, and then find blocks
-  // that are children of them. We can then find the lexical parents
-  // of those blocks and print out an extra FUNC line for blocks
-  // that are not contained in their parent functions.
-  CComPtr<IDiaSymbol> global;
-  if (FAILED(session_->get_globalScope(&global))) {
-    fprintf(stderr, "get_globalScope failed\n");
-    return false;
-  }
-
-  CComPtr<IDiaEnumSymbols> compilands;
-  if (FAILED(global->findChildren(SymTagCompiland, NULL,
-                                  nsNone, &compilands))) {
-    fprintf(stderr, "findChildren failed on the global\n");
-    return false;
-  }
-
-  CComPtr<IDiaSymbol> compiland;
-  while (SUCCEEDED(compilands->Next(1, &compiland, &count)) && count == 1) {
-    CComPtr<IDiaEnumSymbols> blocks;
-    if (FAILED(compiland->findChildren(SymTagBlock, NULL,
-                                       nsNone, &blocks))) {
-      fprintf(stderr, "findChildren failed on a compiland\n");
-      return false;
-    }
-
-    CComPtr<IDiaSymbol> block;
-    while (SUCCEEDED(blocks->Next(1, &block, &count)) && count == 1) {
-      // find this block's lexical parent function
-      CComPtr<IDiaSymbol> parent;
-      DWORD tag;
-      if (SUCCEEDED(block->get_lexicalParent(&parent)) &&
-          SUCCEEDED(parent->get_symTag(&tag)) &&
-          tag == SymTagFunction) {
-        // now get the block's offset and the function's offset and size,
-        // and determine if the block is outside of the function
-        DWORD func_rva, block_rva;
-        ULONGLONG func_length;
-        if (SUCCEEDED(block->get_relativeVirtualAddress(&block_rva)) &&
-            SUCCEEDED(parent->get_relativeVirtualAddress(&func_rva)) &&
-            SUCCEEDED(parent->get_length(&func_length))) {
-          if (block_rva < func_rva || block_rva > (func_rva + func_length)) {
-            if (!PrintFunction(parent, block)) {
-              return false;
-            }
-          }
-        }
-      }
-      parent.Release();
-      block.Release();
-    }
-    blocks.Release();
-    compiland.Release();
-  }
 
   return true;
 }

@@ -209,9 +209,8 @@ const mach_port_t kNoLastExceptionThread = MACH_PORT_NULL;
                  @"Last exception type is not 0 for on demand");
   STAssertEquals(last_exception_code_, 0,
                  @"Last exception code is not 0 for on demand");
-  STAssertEquals(last_exception_thread_, mach_thread_self(),
-                 @"Last exception thread is not mach_thread_self() "
-                 "for on demand");
+  STAssertEquals(last_exception_thread_, (mach_port_t)0,
+                 @"Last exception thread is not 0 for on demand");
 }
 
 @end

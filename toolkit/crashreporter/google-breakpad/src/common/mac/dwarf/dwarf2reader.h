@@ -36,8 +36,8 @@
 #ifndef COMMON_MAC_DWARF_DWARF2READER_H__
 #define COMMON_MAC_DWARF_DWARF2READER_H__
 
+#include <ext/hash_map>
 #include <list>
-#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -46,6 +46,7 @@
 #include "common/mac/dwarf/types.h"
 
 using namespace std;
+using namespace __gnu_cxx;
 
 namespace dwarf2reader {
 struct LineStateMachine;
@@ -55,7 +56,7 @@ class LineInfoHandler;
 
 // This maps from a string naming a section to a pair containing a
 // the data for the section, and the size of the section.
-typedef map<string, pair<const char*, uint64> > SectionMap;
+typedef hash_map<string, pair<const char*, uint64> > SectionMap;
 typedef list<pair<enum DwarfAttribute, enum DwarfForm> > AttributeList;
 typedef AttributeList::iterator AttributeIterator;
 typedef AttributeList::const_iterator ConstAttributeIterator;

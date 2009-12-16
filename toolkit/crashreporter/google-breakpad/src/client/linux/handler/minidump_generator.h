@@ -1,5 +1,7 @@
-// Copyright (c) 2007, Google Inc.
+// Copyright (c) 2006, Google Inc.
 // All rights reserved.
+//
+// Author: Li Liu
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -27,58 +29,45 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef BASE_LOG_SEVERITY_H__
-#define BASE_LOG_SEVERITY_H__
+#ifndef CLIENT_LINUX_HANDLER_MINIDUMP_GENERATOR_H__
+#define CLIENT_LINUX_HANDLER_MINIDUMP_GENERATOR_H__
 
-// Annoying stuff for windows -- makes sure clients can import these functions
-#ifndef GOOGLE_GLOG_DLL_DECL
-# if defined(_WIN32) && !defined(__CYGWIN__)
-#   define GOOGLE_GLOG_DLL_DECL  __declspec(dllimport)
-# else
-#   define GOOGLE_GLOG_DLL_DECL
-# endif
-#endif
+#include <stdint.h>
 
-// Variables of type LogSeverity are widely taken to lie in the range
-// [0, NUM_SEVERITIES-1].  Be careful to preserve this assumption if
-// you ever need to change their values or add a new severity.
-typedef int LogSeverity;
+#include "google_breakpad/common/breakpad_types.h"
+#include "processor/scoped_ptr.h"
 
-const int INFO = 0, WARNING = 1, ERROR = 2, FATAL = 3, NUM_SEVERITIES = 4;
+struct sigcontext;
 
-// DFATAL is FATAL in debug mode, ERROR in normal mode
-#ifdef NDEBUG
-#define DFATAL_LEVEL ERROR
-#else
-#define DFATAL_LEVEL FATAL
-#endif
+namespace google_breakpad {
 
-extern GOOGLE_GLOG_DLL_DECL const char* const LogSeverityNames[NUM_SEVERITIES];
-
-// NDEBUG usage helpers related to (RAW_)DCHECK:
 //
-// DEBUG_MODE is for small !NDEBUG uses like
-//   if (DEBUG_MODE) foo.CheckThatFoo();
-// instead of substantially more verbose
-//   #ifndef NDEBUG
-//     foo.CheckThatFoo();
-//   #endif
+// MinidumpGenerator
 //
-// IF_DEBUG_MODE is for small !NDEBUG uses like
-//   IF_DEBUG_MODE( string error; )
-//   DCHECK(Foo(&error)) << error;
-// instead of substantially more verbose
-//   #ifndef NDEBUG
-//     string error;
-//     DCHECK(Foo(&error)) << error;
-//   #endif
+// Write a minidump to file based on the signo and sig_ctx.
+// A minidump generator should be created before any exception happen.
 //
-#ifdef NDEBUG
-enum { DEBUG_MODE = 0 };
-#define IF_DEBUG_MODE(x)
-#else
-enum { DEBUG_MODE = 1 };
-#define IF_DEBUG_MODE(x) x
-#endif
+class MinidumpGenerator {
+  public:
+   MinidumpGenerator();
 
-#endif  // BASE_LOG_SEVERITY_H__
+   ~MinidumpGenerator();
+
+   // Write minidump.
+   bool WriteMinidumpToFile(const char *file_pathname,
+                            int signo,
+                            uintptr_t sighandler_ebp,
+                            struct sigcontext **sig_ctx) const;
+  private:
+   // Allocate memory for stack.
+   void AllocateStack();
+
+  private:
+   // Stack size of the writer thread.
+   static const int kStackSize = 1024 * 1024;
+   scoped_array<char> stack_;
+};
+
+}  // namespace google_breakpad
+
+#endif   // CLIENT_LINUX_HANDLER_MINIDUMP_GENERATOR_H__
