@@ -40,7 +40,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <zlib.h>
+#include "zlib.h"
 
 #ifdef WOFF_MOZILLA_CLIENT /* define this when building as part of Gecko */
 # include "prmem.h"

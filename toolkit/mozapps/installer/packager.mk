@@ -263,7 +263,6 @@ NO_PKG_FILES += \
 	msmap* \
 	nm2tsv* \
 	nsinstall* \
-	rebasedlls* \
 	res/samples \
 	res/throbber \
 	shlibsign* \

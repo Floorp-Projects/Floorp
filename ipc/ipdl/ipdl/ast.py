@@ -123,7 +123,7 @@ class Loc:
 
 Loc.NONE = Loc(filename='<??>', lineno=0)
 
-class _struct():
+class _struct:
     pass
 
 class Node:

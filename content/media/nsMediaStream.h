@@ -53,6 +53,8 @@
 // done rather than a byte range request.
 #define SEEK_VS_READ_THRESHOLD (32*1024)
 
+#define HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE 416
+
 class nsMediaDecoder;
 
 /**

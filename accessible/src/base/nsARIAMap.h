@@ -157,6 +157,12 @@ enum eStateValueType
   kMixedType
 };
 
+enum EDefaultStateRule
+{
+  //eNoDefaultState,
+  eUseFirstState
+};
+
 /**
  * ID for state map entry, used in nsRoleMapEntry.
  */
@@ -174,6 +180,7 @@ enum eStateMapEntryID
   eARIAInvalid,
   eARIAMultiline,
   eARIAMultiSelectable,
+  eARIAOrientation,
   eARIAPressed,
   eARIAReadonly,
   eARIAReadonlyOrEditable,
@@ -202,6 +209,17 @@ public:
    * Used for ARIA attributes having enumerated values.
    */
   nsStateMapEntry(nsIAtom **aAttrName,
+                  const char *aValue1, PRUint32 aState1, PRUint32 aExtraState1,
+                  const char *aValue2, PRUint32 aState2, PRUint32 aExtraState2,
+                  const char *aValue3 = 0, PRUint32 aState3 = 0,
+                  PRUint32 aExtraState3 = 0);
+
+  /**
+   * Used for ARIA attributes having enumerated values, and where a default
+   * attribute state should be assumed when not supplied by the author.
+   */
+  nsStateMapEntry(nsIAtom **aAttrName,
+                  EDefaultStateRule aDefaultStateRule,
                   const char *aValue1, PRUint32 aState1, PRUint32 aExtraState1,
                   const char *aValue2, PRUint32 aState2, PRUint32 aExtraState2,
                   const char *aValue3 = 0, PRUint32 aState3 = 0,

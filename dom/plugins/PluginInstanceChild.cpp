@@ -59,6 +59,7 @@ using mozilla::gfx::SharedDIB;
 
 #include <windows.h>
 
+#define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
 #endif
 
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface) :
@@ -77,6 +78,10 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface) :
 #  ifdef MOZ_WIDGET_GTK2
         mWsInfo.display = GDK_DISPLAY();
 #  endif
+#endif
+#if defined(OS_WIN)
+    memset(&mAlphaExtract, 0, sizeof(mAlphaExtract));
+    mAlphaExtract.doublePassEvent = ::RegisterWindowMessage(NS_OOPP_DOUBLEPASS_MSGID);
 #endif
     }
 
@@ -342,9 +347,21 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
     NPEvent evcopy = event.event;
 
 #ifdef OS_WIN
-    // Setup the shared dib for painting and update evcopy.
-    if (NPWindowTypeDrawable == mWindow.type && WM_PAINT == evcopy.event)
-        SharedSurfaceBeforePaint(evcopy);
+    // Painting for win32. SharedSurfacePaint handles everything.
+    if (mWindow.type == NPWindowTypeDrawable) {
+       if (evcopy.event == WM_PAINT) {
+          *handled = SharedSurfacePaint(evcopy);
+          return true;
+       }
+       else if (evcopy.event == mAlphaExtract.doublePassEvent) {
+            // We'll render to mSharedSurfaceDib first, then render to a cached bitmap
+            // we store locally. The two passes are for alpha extraction, so the second
+            // pass must be to a flat white surface in order for things to work.
+            mAlphaExtract.doublePass = RENDER_BACK_ONE;
+            *handled = true;
+            return true;
+       }
+    }
 #endif
 
     *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
@@ -675,6 +692,9 @@ PluginInstanceChild::SharedSurfaceSetWindow(const NPRemoteWindow& aWindow,
         if (NS_FAILED(mSharedSurfaceDib.Attach((SharedDIB::Handle)aWindow.surfaceHandle,
                                                aWindow.width, aWindow.height, 32)))
           return false;
+        // Free any alpha extraction resources if needed. This will be reset
+        // the next time it's used.
+        AlphaExtractCacheRelease();
     }
       
     // NPRemoteWindow's origin is the origin of our shared dib.
@@ -694,20 +714,137 @@ void
 PluginInstanceChild::SharedSurfaceRelease()
 {
     mSharedSurfaceDib.Close();
+    AlphaExtractCacheRelease();
+}
+
+/* double pass cache buffer - (rarely) used in cases where alpha extraction
+ * occurs for windowless plugins. */
+ 
+bool
+PluginInstanceChild::AlphaExtractCacheSetup()
+{
+    AlphaExtractCacheRelease();
+
+    mAlphaExtract.hdc = ::CreateCompatibleDC(NULL);
+
+    if (!mAlphaExtract.hdc)
+        return false;
+
+    BITMAPINFOHEADER bmih;
+    memset((void*)&bmih, 0, sizeof(BITMAPINFOHEADER));
+    bmih.biSize        = sizeof(BITMAPINFOHEADER);
+    bmih.biWidth       = mWindow.width;
+    bmih.biHeight      = mWindow.height;
+    bmih.biPlanes      = 1;
+    bmih.biBitCount    = 32;
+    bmih.biCompression = BI_RGB;
+
+    void* ppvBits = nsnull;
+    mAlphaExtract.bmp = ::CreateDIBSection(mAlphaExtract.hdc,
+                                           (BITMAPINFO*)&bmih,
+                                           DIB_RGB_COLORS,
+                                           (void**)&ppvBits,
+                                           NULL,
+                                           (unsigned long)sizeof(BITMAPINFOHEADER));
+    if (!mAlphaExtract.bmp)
+      return false;
+
+    DeleteObject(::SelectObject(mAlphaExtract.hdc, mAlphaExtract.bmp));
+    return true;
 }
 
 void
-PluginInstanceChild::SharedSurfaceBeforePaint(NPEvent& evcopy)
+PluginInstanceChild::AlphaExtractCacheRelease()
 {
-    // Update the clip rect on our internal hdc
-    RECT* pRect = reinterpret_cast<RECT*>(evcopy.lParam);
-    if (pRect) {
-      HRGN clip = ::CreateRectRgnIndirect(pRect);
-      ::SelectClipRgn(mSharedSurfaceDib.GetHDC(), clip);
-      ::DeleteObject(clip);
+    if (mAlphaExtract.bmp)
+        ::DeleteObject(mAlphaExtract.bmp);
+
+    if (mAlphaExtract.hdc)
+        ::DeleteObject(mAlphaExtract.hdc);
+
+    mAlphaExtract.bmp = NULL;
+    mAlphaExtract.hdc = NULL;
+}
+
+void
+PluginInstanceChild::UpdatePaintClipRect(RECT* aRect)
+{
+    if (aRect) {
+        // Update the clip rect on our internal hdc
+        HRGN clip = ::CreateRectRgnIndirect(aRect);
+        ::SelectClipRgn(mSharedSurfaceDib.GetHDC(), clip);
+        ::DeleteObject(clip);
     }
-    // pass the internal hdc to the plugin
-    evcopy.wParam = WPARAM(mSharedSurfaceDib.GetHDC());
+}
+
+int16_t
+PluginInstanceChild::SharedSurfacePaint(NPEvent& evcopy)
+{
+    RECT* pRect = reinterpret_cast<RECT*>(evcopy.lParam);
+
+    switch(mAlphaExtract.doublePass) {
+        case RENDER_NATIVE:
+            // pass the internal hdc to the plugin
+            UpdatePaintClipRect(pRect);
+            evcopy.wParam = WPARAM(mSharedSurfaceDib.GetHDC());
+            return mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
+        break;
+        case RENDER_BACK_ONE:
+              // Handle a double pass render used in alpha extraction for transparent
+              // plugins. (See nsObjectFrame and gfxWindowsNativeDrawing for details.)
+              // We render twice, once to the shared dib, and once to a cache which
+              // we copy back on a second paint. These paints can't be spread across
+              // multiple rpc messages as delays cause animation frame changes.
+              if (!mAlphaExtract.bmp && !AlphaExtractCacheSetup()) {
+                  mAlphaExtract.doublePass = RENDER_NATIVE;
+                  return false;
+              }
+
+              // See gfxWindowsNativeDrawing, color order doesn't have to match.
+              ::FillRect(mSharedSurfaceDib.GetHDC(), pRect, (HBRUSH)GetStockObject(WHITE_BRUSH));
+              UpdatePaintClipRect(pRect);
+              evcopy.wParam = WPARAM(mSharedSurfaceDib.GetHDC());
+              if (!mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy))) {
+                  mAlphaExtract.doublePass = RENDER_NATIVE;
+                  return false;
+              }
+
+              // Copy to cache. We render to shared dib so we don't have to call
+              // setwindow between calls (flash issue).  
+              ::BitBlt(mAlphaExtract.hdc,
+                       pRect->left,
+                       pRect->top,
+                       pRect->right - pRect->left,
+                       pRect->bottom - pRect->top,
+                       mSharedSurfaceDib.GetHDC(),
+                       pRect->left,
+                       pRect->top,
+                       SRCCOPY);
+
+              ::FillRect(mSharedSurfaceDib.GetHDC(), pRect, (HBRUSH)GetStockObject(BLACK_BRUSH));
+              if (!mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy))) {
+                  mAlphaExtract.doublePass = RENDER_NATIVE;
+                  return false;
+              }
+              mAlphaExtract.doublePass = RENDER_BACK_TWO;
+              return true;
+        break;
+        case RENDER_BACK_TWO:
+              // copy our cached surface back
+              ::BitBlt(mSharedSurfaceDib.GetHDC(),
+                       pRect->left,
+                       pRect->top,
+                       pRect->right - pRect->left,
+                       pRect->bottom - pRect->top,
+                       mAlphaExtract.hdc,
+                       pRect->left,
+                       pRect->top,
+                       SRCCOPY);
+              mAlphaExtract.doublePass = RENDER_NATIVE;
+              return true;
+        break;
+    }
+    return false;
 }
 
 #endif // OS_WIN

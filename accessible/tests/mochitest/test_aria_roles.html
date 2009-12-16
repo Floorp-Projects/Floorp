@@ -3,6 +3,7 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=481114
 https://bugzilla.mozilla.org/show_bug.cgi?id=469688
+https://bugzilla.mozilla.org/show_bug.cgi?id=529289
 -->
 <head>
   <title>Test weak ARIA roles</title>
@@ -63,6 +64,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469688
       for (a in abstract_roles)
         testRole(abstract_roles[a], ROLE_SECTION);
 
+      // aria scrollbar
+      testRole("scrollbar", ROLE_SCROLLBAR);
       SimpleTest.finish();
     }
 
@@ -74,6 +77,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469688
 
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=481114">Mozilla Bug 481114</a>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469688">Mozilla Bug 469688</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529289">Mozilla Bug 529289</a>
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -134,5 +139,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469688
   <div role="section" id="section">section</div>
   <div role="sectionhead" id="sectionhead">sectionhead</div>
 
+  <!-- aria scrollbar -->
+  <div role="scrollbar" id="scrollbar">scrollbar</div>
 </body>
 </html>

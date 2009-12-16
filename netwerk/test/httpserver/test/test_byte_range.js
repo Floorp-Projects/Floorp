@@ -65,6 +65,8 @@ var tests =
             init_byterange11, start_byterange11, stop_byterange11),
    new Test(PREFIX + "/empty.txt",
             null, start_byterange12, stop_byterange12),
+   new Test(PREFIX + "/headers.txt",
+            init_byterange13, start_byterange13, null),
    new Test(PREFIX + "/range.txt",
             null, start_normal, stop_normal)
    ];
@@ -288,4 +290,15 @@ function start_byterange12(ch, cx)
 function stop_byterange12(ch, cx, status, data)
 {
   do_check_eq(data.length, 0);
+}
+
+function init_byterange13(ch)
+{
+  ch.setRequestHeader("Range", "bytes=9999999-", false);
+}
+
+function start_byterange13(ch, cx)
+{
+  do_check_eq(ch.responseStatus, 416);
+  do_check_eq(ch.getResponseHeader("X-SJS-Header"), "customized");
 }

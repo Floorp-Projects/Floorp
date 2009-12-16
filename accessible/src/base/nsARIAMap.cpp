@@ -409,6 +409,17 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eARIAReadonly
   },
   {
+    "scrollbar",
+    nsIAccessibleRole::ROLE_SCROLLBAR,
+    kUseMapRole,
+    eHasValueMinMax,
+    eNoAction,
+    eNoLiveAttr,
+    kNoReqStates,
+    eARIAOrientation,
+    eARIAReadonly
+  },
+  {
     "separator",
     nsIAccessibleRole::ROLE_SEPARATOR,
     kUseMapRole,
@@ -628,6 +639,11 @@ nsStateMapEntry nsARIAMap::gWAIStateMap[] = {
   nsStateMapEntry(&nsAccessibilityAtoms::aria_multiselectable, kBoolType, 0,
                   nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE, 0),
 
+  // eARIAOrientation
+  nsStateMapEntry(&nsAccessibilityAtoms::aria_orientation, eUseFirstState,
+                  "vertical", 0, nsIAccessibleStates::EXT_STATE_VERTICAL,
+                  "horizontal", 0, nsIAccessibleStates::EXT_STATE_HORIZONTAL),
+
   // eARIAPressed
   nsStateMapEntry(&nsAccessibilityAtoms::aria_pressed, kMixedType,
                   nsIAccessibleStates::STATE_CHECKABLE,
@@ -693,6 +709,7 @@ nsAttributeCharacteristics nsARIAMap::gWAIUnivAttrMap[] = {
   {&nsAccessibilityAtoms::aria_multiline,         ATTR_BYPASSOBJ | ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_multiselectable,   ATTR_BYPASSOBJ | ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_owns,              ATTR_BYPASSOBJ                 },
+  {&nsAccessibilityAtoms::aria_orientation,                        ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_pressed,           ATTR_BYPASSOBJ | ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_readonly,          ATTR_BYPASSOBJ | ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_relevant,          ATTR_BYPASSOBJ                 },
@@ -747,6 +764,26 @@ nsStateMapEntry::nsStateMapEntry(nsIAtom **aAttrName,
   value3(aValue3), state3(aState3), extraState3(aExtraState3),
   defaultState(0), defaultExtraState(0), definedIfAbsent(PR_FALSE)
 {
+}
+
+nsStateMapEntry::nsStateMapEntry(nsIAtom **aAttrName,
+                                 EDefaultStateRule aDefaultStateRule,
+                                 const char *aValue1,
+                                 PRUint32 aState1, PRUint32 aExtraState1,
+                                 const char *aValue2,
+                                 PRUint32 aState2, PRUint32 aExtraState2,
+                                 const char *aValue3,
+                                 PRUint32 aState3, PRUint32 aExtraState3) :
+  attributeName(aAttrName), isToken(PR_TRUE), permanentState(0),
+  value1(aValue1), state1(aState1), extraState1(aExtraState1),
+  value2(aValue2), state2(aState2), extraState2(aExtraState2),
+  value3(aValue3), state3(aState3), extraState3(aExtraState3),
+  defaultState(0), defaultExtraState(0), definedIfAbsent(PR_TRUE)
+{
+  if (aDefaultStateRule == eUseFirstState) {
+    defaultState = aState1;
+    defaultExtraState = aExtraState1;
+  }
 }
 
 PRBool
