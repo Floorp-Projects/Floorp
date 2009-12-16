@@ -925,10 +925,10 @@ refChildCB(AtkObject *aAtkObj, gint aChildIndex)
     NS_ASSERTION(childAtkObj, "Fail to get AtkObj");
     if (!childAtkObj)
         return nsnull;
-    g_object_ref(childAtkObj);
     
     //this will addref parent
     atk_object_set_parent(childAtkObj, aAtkObj);
+    g_object_ref(childAtkObj);
     return childAtkObj;
 }
 

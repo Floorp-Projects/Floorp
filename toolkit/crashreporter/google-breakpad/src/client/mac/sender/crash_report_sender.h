@@ -41,24 +41,6 @@
 extern NSString *const kGoogleServerType;
 extern NSString *const kSocorroServerType;
 extern NSString *const kDefaultServerType;
-
-// We're sublcassing NSTextField in order to override a particular
-// method (see the implementation) that lets us reject changes if they
-// are longer than a particular length.  Bindings would normally solve
-// this problem, but when we implemented a validation method, and
-// returned NO for strings that were too long, the UI was not updated
-// right away, which was a poor user experience.  The UI would be
-// updated as soon as the text field lost first responder status,
-// which isn't soon enough.  It is a known bug that the UI KVO didn't
-// work in the middle of a validation.
-@interface LengthLimitingTextField : NSTextField {
-  @private
-   unsigned int maximumLength_;
-}
-
-- (void) setMaximumLength:(unsigned int)maxLength;
-@end
-
 @interface Reporter : NSObject {
  @public
   IBOutlet NSWindow *alertWindow_;        // The alert window
@@ -68,34 +50,26 @@ extern NSString *const kDefaultServerType;
   IBOutlet NSBox *preEmailBox_;
   IBOutlet NSBox *emailSectionBox_;
   // Localized elements (or things that need to be moved during localization).
-  IBOutlet NSTextField                *dialogTitle_;
-  IBOutlet NSTextField                *commentMessage_;
-  IBOutlet NSTextField                *emailMessage_;
-  IBOutlet NSTextField                *emailLabel_;
-  IBOutlet NSTextField                *privacyLinkLabel_;
-  IBOutlet NSButton                   *sendButton_;
-  IBOutlet NSButton                   *cancelButton_;
-  IBOutlet LengthLimitingTextField    *emailEntryField_;
-  IBOutlet LengthLimitingTextField    *commentsEntryField_;
-  IBOutlet NSTextField                *countdownLabel_;
-  IBOutlet NSView                     *privacyLinkArrow_;
+  IBOutlet NSTextField *dialogTitle_;
+  IBOutlet NSTextField *commentMessage_;
+  IBOutlet NSTextField *emailMessage_;
+  IBOutlet NSTextField *emailLabel_;
+  IBOutlet NSTextField *privacyLinkLabel_;
+  IBOutlet NSButton    *sendButton_;
+  IBOutlet NSButton    *cancelButton_;
+  IBOutlet NSView      *emailEntryField_;
+  IBOutlet NSView      *privacyLinkArrow_;
 
   // Text field bindings, for user input.
   NSString *commentsValue_;                // Comments from the user
   NSString *emailValue_;                   // Email from the user
-  NSString *countdownMessage_;             // Message indicating time
-                                           // left for input.
+
  @private
   int configFile_;                         // File descriptor for config file
   NSMutableDictionary *parameters_;        // Key value pairs of data (STRONG)
   NSData *minidumpContents_;               // The data in the minidump (STRONG)
   NSData *logFileData_;                    // An NSdata for the tar,
                                            // bz2'd log file.
-  NSTimeInterval remainingDialogTime_;     // Keeps track of how long
-                                           // we have until we cancel
-                                           // the dialog
-  NSTimer *messageTimer_;                  // Timer we use to update
-                                           // the dialog
   NSMutableDictionary *serverDictionary_;  // The dictionary mapping a
                                            // server type name to a
                                            // dictionary of server
@@ -132,8 +106,5 @@ extern NSString *const kDefaultServerType;
 
 - (NSString *)emailValue;
 - (void)setEmailValue:(NSString *)value;
-
-- (NSString *)countdownMessage;
-- (void)setCountdownMessage:(NSString *)value;
 
 @end

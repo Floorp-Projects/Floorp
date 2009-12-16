@@ -637,7 +637,6 @@ bool MinidumpGenerator::WriteSystemInfoStream(
       // get version and feature info
       cpuid(1, info_ptr->cpu.x86_cpu_info.version_information, unused, unused2,
             info_ptr->cpu.x86_cpu_info.feature_information);
-
       // family
       info_ptr->processor_level =
         (info_ptr->cpu.x86_cpu_info.version_information & 0xF00) >> 8;
@@ -645,20 +644,6 @@ bool MinidumpGenerator::WriteSystemInfoStream(
       info_ptr->processor_revision =
         (info_ptr->cpu.x86_cpu_info.version_information & 0xF) |
         ((info_ptr->cpu.x86_cpu_info.version_information & 0xF0) << 4);
-
-      // decode extended model info
-      if (info_ptr->processor_level == 0xF ||
-          info_ptr->processor_level == 0x6) {
-        info_ptr->processor_revision |=
-          ((info_ptr->cpu.x86_cpu_info.version_information & 0xF0000) >> 4);
-      }
-
-      // decode extended family info
-      if (info_ptr->processor_level == 0xF) {
-        info_ptr->processor_level +=
-          ((info_ptr->cpu.x86_cpu_info.version_information & 0xFF00000) >> 20);
-      }
-
 #endif // __i386__
       break;
     default:
