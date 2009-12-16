@@ -57,6 +57,7 @@ CPPSRCS		= \
 		nsPluginHost.cpp \
 		nsPluginModule.cpp \
 		nsJSNPRuntime.cpp \
+		nsPluginTags.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH), BeOS)
