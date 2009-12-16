@@ -315,6 +315,11 @@ nsAuthSSPI::GetNextToken(const void *inToken,
 
     LOG(("entering nsAuthSSPI::GetNextToken()\n"));
 
+    if (!mCtxt.dwLower && !mCtxt.dwUpper) {
+        LOG(("nsAuthSSPI::GetNextToken(), not initialized. exiting."));
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+
     if (mServiceFlags & REQ_DELEGATE)
         ctxReq |= ISC_REQ_DELEGATE;
     if (mServiceFlags & REQ_MUTUAL_AUTH)

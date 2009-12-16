@@ -72,6 +72,9 @@
     }
 
     function onTestsFinished() {
+      observe(window, eventMonitor, false);
+      observe(gRightWindow, eventMonitor, false);
+      observe(gPopup, eventMonitor, false);
       gRightWindow.close();
       window.close();
       window.opener.wrappedJSObject.SimpleTest.finish();
@@ -185,13 +188,14 @@
       }
     }
 
-    function observe(elem, fun) {
-      elem.addEventListener("mousemove", fun, false);
-      elem.addEventListener("mouseover", fun, false);
-      elem.addEventListener("mouseout", fun, false);
-      elem.addEventListener("mousedown", fun, false);
-      elem.addEventListener("mouseup", fun, false);
-      elem.addEventListener("click", fun, false);
+    function observe(elem, fun, add) {
+      var addOrRemove = add ? "addEventListener" : "removeEventListener";
+      elem[addOrRemove]("mousemove", fun, false);
+      elem[addOrRemove]("mouseover", fun, false);
+      elem[addOrRemove]("mouseout", fun, false);
+      elem[addOrRemove]("mousedown", fun, false);
+      elem[addOrRemove]("mouseup", fun, false);
+      elem[addOrRemove]("click", fun, false);
     }
 
     function start() {
@@ -205,9 +209,9 @@
     }
 
     function runTests() {
-      observe(window, eventMonitor);
-      observe(gRightWindow, eventMonitor);
-      observe(gPopup, eventMonitor);
+      observe(window, eventMonitor, true);
+      observe(gRightWindow, eventMonitor, true);
+      observe(gPopup, eventMonitor, true);
       var left = window, right = gRightWindow;
       var leftElem = document.getElementById("box");
       var rightElem = gRightWindow.document.documentElement;

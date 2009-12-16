@@ -526,15 +526,17 @@ else:
       # The method throws OSError if the PID is invalid, which we catch below.
       os.kill(pid, 0)
 
-      # wait on it to see if it's a zombie
+      # Wait on it to see if it's a zombie. This can throw OSError.ECHILD if
+      # the process terminates before we get to this point.
       wpid, wstatus = os.waitpid(pid, os.WNOHANG)
       if wpid == 0:
         return True
 
       return False
     except OSError, err:
-      # Catch the one error we expect from os.kill, and re-raise any others
-      if err.errno == errno.ESRCH:
+      # Catch the errors we might expect from os.kill/os.waitpid, 
+      # and re-raise any others
+      if err.errno == errno.ESRCH or err.errno == errno.ECHILD:
         return False
       raise
 

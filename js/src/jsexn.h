@@ -63,7 +63,8 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj);
  * found and set, JS_FALSE otherwise.
  */
 extern JSBool
-js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp);
+js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
+                    JSErrorCallback callback, void *userRef);
 
 /*
  * Called if a JS API call to js_Execute or js_InternalCall fails; calls the

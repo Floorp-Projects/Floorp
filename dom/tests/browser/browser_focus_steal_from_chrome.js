@@ -1,6 +1,10 @@
 function test() {
   waitForExplicitFinish();
 
+  let secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                         .getService(Components.interfaces
+                                               .nsIScriptSecurityManager);
+
   let fm = Components.classes["@mozilla.org/focus-manager;1"]
                      .getService(Components.interfaces.nsIFocusManager);
 
@@ -134,6 +138,32 @@ function test() {
     if (canRetry-- > 0 && !isPrepared()) {
       setTimeout(callback, 10); // retry
       return;
+    }
+
+    // XXX puts some useful information for bug 534420
+    let activeWindow = fm.activeWindow;
+    let focusedWindow = fm.focusedWindow;
+    ok(activeWindow, "We're not active");
+    ok(focusedWindow, "There is no focused window");
+    is(activeWindow, window.top, "our window isn't active");
+    let searchbar = BrowserSearch.searchBar;
+    let focusedElement = fm.focusedElement;
+    if (searchbar) {
+      let principal = searchbar.nodePrincipal;
+      ok(principal, "principal is null");
+      info("search bar: tagName=" + searchbar.tagName + " id=" + searchbar.id);
+      ok(secMan.isSystemPrincipal(principal), "search bar isn't chrome");
+    } else {
+      info("search bar is NULL!!");
+    }
+    if (focusedElement) {
+      let principal = focusedElement.nodePrincipal;
+      ok(principal, "principal is null");
+      info("focusedElement: tagName=" + focusedElement.tagName +
+           " id=" + focusedElement.id);
+      ok(secMan.isSystemPrincipal(principal), "focusedElement isn't chrome");
+    } else {
+      info("focusedElement is NULL!!");
     }
 
     // The contents shouldn't be able to steal the focus from chrome.
