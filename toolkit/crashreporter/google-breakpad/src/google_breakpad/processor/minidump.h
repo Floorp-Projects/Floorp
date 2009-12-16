@@ -639,46 +639,6 @@ class MinidumpException : public MinidumpStream {
   MinidumpContext*     context_;
 };
 
-// MinidumpAssertion wraps MDRawAssertionInfo, which contains information
-// about an assertion that caused the minidump to be generated.
-class MinidumpAssertion : public MinidumpStream {
- public:
-  virtual ~MinidumpAssertion();
-
-  const MDRawAssertionInfo* assertion() const {
-    return valid_ ? &assertion_ : NULL;
-  }
-
-  string expression() const {
-    return valid_ ? expression_ : "";
-  }
-
-  string function() const {
-    return valid_ ? function_ : "";
-  }
-
-  string file() const {
-    return valid_ ? file_ : "";
-  }
-
-  // Print a human-readable representation of the object to stdout.
-  void Print();
-
- private:
-  friend class Minidump;
-
-  static const u_int32_t kStreamType = MD_ASSERTION_INFO_STREAM;
-
-  explicit MinidumpAssertion(Minidump* minidump);
-
-  bool Read(u_int32_t expected_size);
-
-  MDRawAssertionInfo assertion_;
-  string expression_;
-  string function_;
-  string file_;
-};
-
 
 // MinidumpSystemInfo wraps MDRawSystemInfo and provides information about
 // the system on which the minidump was generated.  See also MinidumpMiscInfo.
@@ -828,7 +788,6 @@ class Minidump {
   MinidumpModuleList* GetModuleList();
   MinidumpMemoryList* GetMemoryList();
   MinidumpException* GetException();
-  MinidumpAssertion* GetAssertion();
   MinidumpSystemInfo* GetSystemInfo();
   MinidumpMiscInfo* GetMiscInfo();
   MinidumpBreakpadInfo* GetBreakpadInfo();
