@@ -128,23 +128,23 @@ const NetUtil = {
     },
 
     /**
-     * Asynchronously opens a channel and fetches the response.  The provided
-     * callback will get an input stream containing the response, and the result
-     * code.
+     * Asynchronously opens a source and fetches the response.  A source can be
+     * an nsIURI, nsIFile, string spec, or nsIChannel.  The provided callback
+     * will get an input stream containing the response, and the result code.
      *
-     * @param aChannel
-     *        The nsIChannel to open.
+     * @param aSource
+     *        The nsIURI, nsIFile, string spec, or nsIChannel to open.
      * @param aCallback
      *        The callback function that will be notified upon completion.  It
      *        will get two arguments:
      *        1) An nsIInputStream containing the data from the channel, if any.
-     *        2) The status code from opening the channel.
+     *        2) The status code from opening the source.
      */
-    asyncFetch: function NetUtil_asyncOpen(aChannel, aCallback)
+    asyncFetch: function NetUtil_asyncOpen(aSource, aCallback)
     {
-        if (!aChannel || !aCallback) {
+        if (!aSource || !aCallback) {
             let exception = new Components.Exception(
-                "Must have a channel and a callback",
+                "Must have a source and a callback",
                 Cr.NS_ERROR_INVALID_ARG,
                 Components.stack.caller
             );
@@ -168,7 +168,12 @@ const NetUtil = {
             }
         });
 
-        aChannel.asyncOpen(listener, null);
+        let channel = aSource;
+        if (!(channel instanceof Ci.nsIChannel)) {
+            channel = this.newChannel(aSource);
+        }
+
+        channel.asyncOpen(listener, null);
     },
 
     /**
