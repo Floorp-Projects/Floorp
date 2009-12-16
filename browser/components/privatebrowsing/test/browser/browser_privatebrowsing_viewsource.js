@@ -102,7 +102,6 @@ function test() {
         onSecurityChange: function() {},
         onStatusChange: function() {},
         onRefreshAttempted: function() {},
-        onLinkIconAvailable: function() {},
         onStateChange: function(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
           if (aStateFlags & (Ci.nsIWebProgressListener.STATE_STOP |
                              Ci.nsIWebProgressListener.STATE_IS_WINDOW)) {

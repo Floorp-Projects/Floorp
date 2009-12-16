@@ -646,11 +646,12 @@ nsThebesDeviceContext::SetDPI()
                 break;
 #ifdef XP_WIN
             case gfxASurface::SurfaceTypeWin32:
-            case gfxASurface::SurfaceTypeWin32Printing:
+            case gfxASurface::SurfaceTypeWin32Printing: {
                 PRInt32 OSVal = GetDeviceCaps(GetPrintHDC(), LOGPIXELSY);
                 dpi = 144;
                 mPrintingScale = float(OSVal) / dpi;
                 break;
+            }
 #endif
 #ifdef XP_OS2
             case gfxASurface::SurfaceTypeOS2:
@@ -659,6 +660,9 @@ nsThebesDeviceContext::SetDPI()
                     dpi = lDPI;
                 break;
 #endif
+            default:
+                NS_NOTREACHED("Unexpected printing surface type");
+                break;
         }
         dotsArePixels = PR_FALSE;
     } else {

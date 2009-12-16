@@ -74,11 +74,6 @@ else
 AUTOMATION_PPARGS += -DCRASHREPORTER=0
 endif
 
-$(CURDIR)/automationutils.py: $(MOZILLA_DIR)/build/automationutils.py
-	$(INSTALL) $< .
-
-automation.py: $(MOZILLA_DIR)/build/automation.py.in $(MOZILLA_DIR)/build/automation-build.mk $(CURDIR)/automationutils.py
+automation.py: $(MOZILLA_DIR)/build/automation.py.in $(MOZILLA_DIR)/build/automation-build.mk
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py \
 	$(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
-
-GARBAGE += automation.py $(CURDIR)/automationutils.py

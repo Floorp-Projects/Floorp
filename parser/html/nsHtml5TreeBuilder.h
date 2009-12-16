@@ -198,7 +198,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void appendCommentToDocument(PRUnichar* buf, PRInt32 start, PRInt32 length);
     void addAttributesToElement(nsIContent** element, nsHtml5HtmlAttributes* attributes);
     void markMalformedIfScript(nsIContent** elt);
-    void start(PRBool fragment);
+    void start(PRBool fragmentMode);
     void end();
     void appendDoctypeToDocument(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier);
     void elementPushed(PRInt32 ns, nsIAtom* name, nsIContent** node);

@@ -63,7 +63,11 @@ public:
     // this is in points!
     const gfxSize& GetSize() const { return mSize; }
 
-    virtual PRInt32 GetDefaultContextFlags() const { return gfxContext::FLAG_DISABLE_SNAPPING; }
+    virtual PRInt32 GetDefaultContextFlags() const
+    {
+        return gfxContext::FLAG_SIMPLIFY_OPERATORS |
+               gfxContext::FLAG_DISABLE_SNAPPING;
+    }
 
 private:
     nsCOMPtr<nsIOutputStream> mStream;

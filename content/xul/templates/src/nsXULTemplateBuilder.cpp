@@ -1870,9 +1870,11 @@ nsXULTemplateBuilder::CompileTemplate(nsIContent* aTemplate,
                                               getter_AddRefs(action));
 
             if (action){
-                nsCOMPtr<nsIAtom> memberVariable;
-                DetermineMemberVariable(action, getter_AddRefs(memberVariable));
-                if (! memberVariable) continue;
+                nsCOMPtr<nsIAtom> memberVariable = mMemberVariable;
+                if (!memberVariable) {
+                    memberVariable = DetermineMemberVariable(action);
+                    if (!memberVariable) continue;
+                }
 
                 if (hasQuery) {
                     nsCOMPtr<nsIAtom> tag;
@@ -1994,9 +1996,11 @@ nsXULTemplateBuilder::CompileTemplate(nsIContent* aTemplate,
             if (tag)
                 aQuerySet->SetTag(tag);
 
-            nsCOMPtr<nsIAtom> memberVariable;
-            DetermineMemberVariable(rulenode, getter_AddRefs(memberVariable));
-            if (! memberVariable) continue;
+            nsCOMPtr<nsIAtom> memberVariable = mMemberVariable;
+            if (!memberVariable) {
+                memberVariable = DetermineMemberVariable(rulenode);
+                if (!memberVariable) continue;
+            }
 
             nsCOMPtr<nsIDOMNode> query(do_QueryInterface(aQuerySet->mQueryNode));
 
@@ -2077,53 +2081,26 @@ nsXULTemplateBuilder::CompileExtendedQuery(nsIContent* aRuleElement,
     return NS_OK;
 }
 
-nsresult
-nsXULTemplateBuilder::DetermineMemberVariable(nsIContent* aActionElement,
-                                              nsIAtom** aMemberVariable)
+already_AddRefed<nsIAtom>
+nsXULTemplateBuilder::DetermineMemberVariable(nsIContent* aElement)
 {
-    // If the member variable hasn't already been specified, then
-    // grovel over <action> to find it. We'll use the first one
-    // that we find in a breadth-first search.
+    // recursively iterate over the children looking for an element
+    // with uri="?..."
+    for (nsINode::ChildIterator iter(aElement); !iter.IsDone(); iter.Next()) {
+        nsAutoString uri;
+        nsIContent *child = iter;
+        child->GetAttr(kNameSpaceID_None, nsGkAtoms::uri, uri);
+        if (!uri.IsEmpty() && uri[0] == PRUnichar('?')) {
+            return NS_NewAtom(uri);
+        }
 
-    if (mMemberVariable) {
-        *aMemberVariable = mMemberVariable;
-        NS_IF_ADDREF(*aMemberVariable);
-    }
-    else {
-        *aMemberVariable = nsnull;
-
-        nsCOMArray<nsIContent> unvisited;
-
-        if (!unvisited.AppendObject(aActionElement))
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        while (unvisited.Count()) {
-            nsIContent* next = unvisited[0];
-            unvisited.RemoveObjectAt(0);
-
-            nsAutoString uri;
-            next->GetAttr(kNameSpaceID_None, nsGkAtoms::uri, uri);
-
-            if (!uri.IsEmpty() && uri[0] == PRUnichar('?')) {
-                // Found it.
-                *aMemberVariable = NS_NewAtom(uri);
-                break;
-            }
-
-            // otherwise, append the children to the unvisited list: this
-            // results in a breadth-first search.
-            PRUint32 count = next->GetChildCount();
-
-            for (PRUint32 i = 0; i < count; ++i) {
-                nsIContent *child = next->GetChildAt(i);
-
-                if (!unvisited.AppendObject(child))
-                    return NS_ERROR_OUT_OF_MEMORY;
-            }
+        nsCOMPtr<nsIAtom> result = DetermineMemberVariable(child);
+        if (result) {
+            return result.forget();
         }
     }
 
-    return NS_OK;
+    return nsnull;
 }
 
 void
