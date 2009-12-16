@@ -114,6 +114,8 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual PRInt32 IntrinsicState() const;
+
 protected:
 };
 
@@ -328,4 +330,10 @@ already_AddRefed<nsIURI>
 nsHTMLAreaElement::GetHrefURI() const
 {
   return GetHrefURIForAnchors();
+}
+
+PRInt32
+nsHTMLAreaElement::IntrinsicState() const
+{
+  return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
 }
