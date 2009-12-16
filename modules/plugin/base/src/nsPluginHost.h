@@ -161,7 +161,11 @@ public:
 
   void AddIdleTimeTarget(nsIPluginInstanceOwner* objectFrame, PRBool isVisible);
   void RemoveIdleTimeTarget(nsIPluginInstanceOwner* objectFrame);
-  
+
+#ifdef MOZ_IPC
+  void PluginCrashed(nsNPAPIPlugin* plugin);
+#endif
+
 private:
   nsresult
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
