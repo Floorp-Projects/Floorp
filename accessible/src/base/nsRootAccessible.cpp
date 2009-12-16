@@ -947,12 +947,9 @@ nsRootAccessible::Init()
   nsRefPtr<nsApplicationAccessibleWrap> root = GetApplicationAccessible();
   NS_ENSURE_STATE(root);
 
-  nsresult rv = nsDocAccessibleWrap::Init();
+  root->AddRootAccessible(this);
 
-  if (NS_SUCCEEDED(rv))
-    root->AddRootAccessible(this);
-
-  return rv;
+  return nsDocAccessibleWrap::Init();
 }
 
 nsresult
