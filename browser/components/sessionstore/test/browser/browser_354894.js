@@ -478,11 +478,17 @@ function test() {
 
             browserWindowsCount([2, 3], "browser windows while running testOpenCloseRestoreFromPopup");
 
+            info([newWin.closed, newWin.__SSi, newWin.__SS_restoreID, newWin.__SS_dyingCache]);
+
             // Cleanup
             newWin.close();
             newWin2.close();
 
+            info([newWin.closed, newWin.__SSi, newWin.__SS_restoreID, newWin.__SS_dyingCache]);
+
             browserWindowsCount([0, 1], "browser windows while running testOpenCloseRestoreFromPopup");
+
+            info([newWin.closed, newWin.__SSi, newWin.__SS_restoreID, newWin.__SS_dyingCache]);
 
             // Next please
             executeSoon(nextFn);
