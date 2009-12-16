@@ -1,5 +1,7 @@
-// Copyright (c) 2009, Google Inc.
+// Copyright (c) 2006, Google Inc.
 // All rights reserved.
+//
+// Author: Li Liu
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -27,51 +29,58 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <set>
-#include <string>
+#include <pthread.h>
+#include <unistd.h>
 
-#include <dirent.h>
-#include <fcntl.h>
-#include <sys/types.h>
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
-#include "client/linux/minidump_writer/directory_reader.h"
-#include "breakpad_googletest_includes.h"
+#include "client/linux/handler/minidump_generator.h"
 
 using namespace google_breakpad;
 
-namespace {
-typedef testing::Test DirectoryReaderTest;
+// Thread use this to see if it should stop working.
+static bool should_exit = false;
+
+static void foo2(int arg) {
+  // Stack variable, used for debugging stack dumps.
+  int c = arg;
+  c = 0xcccccccc;
+  while (!should_exit)
+    sleep(1);
 }
 
-TEST(DirectoryReaderTest, CompareResults) {
-  std::set<std::string> dent_set;
+static void foo(int arg) {
+  // Stack variable, used for debugging stack dumps.
+  int b = arg;
+  b = 0xbbbbbbbb;
+  foo2(b);
+}
 
-  DIR *const dir = opendir("/proc/self");
-  ASSERT_TRUE(dir != NULL);
+static void *thread_main(void *) {
+  // Stack variable, used for debugging stack dumps.
+  int a = 0xaaaaaaaa;
+  foo(a);
+  return NULL;
+}
 
-  struct dirent* dent;
-  while ((dent = readdir(dir)))
-    dent_set.insert(dent->d_name);
-
-  closedir(dir);
-
-  const int fd = open("/proc/self", O_DIRECTORY | O_RDONLY);
-  ASSERT_GE(fd, 0);
-
-  DirectoryReader dir_reader(fd);
-  unsigned seen = 0;
-
-  const char* name;
-  while (dir_reader.GetNextEntry(&name)) {
-    ASSERT_TRUE(dent_set.find(name) != dent_set.end());
-    seen++;
-    dir_reader.PopEntry();
+static void CreateThread(int num) {
+  pthread_t h;
+  for (int i = 0; i < num; ++i) {
+    pthread_create(&h, NULL, thread_main, NULL);
+    pthread_detach(h);
   }
+}
 
-  ASSERT_TRUE(dent_set.find("status") != dent_set.end());
-  ASSERT_TRUE(dent_set.find("stat") != dent_set.end());
-  ASSERT_TRUE(dent_set.find("cmdline") != dent_set.end());
-
-  ASSERT_EQ(dent_set.size(), seen);
-  close(fd);
+int main(int argc, char *argv[]) {
+  CreateThread(10);
+  google_breakpad::MinidumpGenerator mg;
+  if (mg.WriteMinidumpToFile("minidump_test.out", -1, 0, NULL))
+    printf("Succeeded written minidump\n");
+  else
+    printf("Failed to write minidump\n");
+  should_exit = true;
+  return 0;
 }
