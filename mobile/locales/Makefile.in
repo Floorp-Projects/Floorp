@@ -175,19 +175,19 @@ $(DATASTAGE): $(DEB_PKG_NAME)
 	$(RM) -rf $(DATASTAGE)
 	$(NSINSTALL) -D $(DATASTAGE)
 	ar -p $(DEB_PKG_NAME) data.tar.gz | $(TAR) -zx -C $(DATASTAGE)
-	$(MAKE) clobber-zip AB_CD=en-US STAGEDIST=$(DATASTAGE)/$(installdir)/$(MOZ_APP_NAME)
+	$(MAKE) clobber-zip AB_CD=en-US STAGEDIST=$(DATASTAGE)/$(installdir)
 # XXX hack around multi-locale deb right now
-	$(RM) $(DATASTAGE)/$(installdir)/$(MOZ_APP_NAME)/chrome/??.*
-	$(RM) $(DATASTAGE)/$(installdir)/$(MOZ_APP_NAME)/chrome/??-??.*
+	$(RM) $(DATASTAGE)/$(installdir)/chrome/??.*
+	$(RM) $(DATASTAGE)/$(installdir)/chrome/??-??.*
 
 repackage-deb: $(DATASTAGE)
 	$(RM) -rf $(AB_CD)
 	$(NSINSTALL) -D $(AB_CD)
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
-	  tar --exclude=install.rdf --exclude=chrome.manifest --exclude=crashreporter.app $(TAR_CREATE_FLAGS) - * | ( cd $(DATASTAGE)/$(installdir)/$(MOZ_APP_NAME) && tar -xf - )
+	  tar --exclude=install.rdf --exclude=chrome.manifest --exclude=crashreporter.app $(TAR_CREATE_FLAGS) - * | ( cd $(DATASTAGE)/$(installdir) && tar -xf - )
 	$(NSINSTALL) $(DEB_PKG_NAME) $(AB_CD)
 	cd $(DATASTAGE) && $(TAR) -zcf $(CURDIR)/$(AB_CD)/data.tar.gz *
-	$(MAKE) clobber-zip STAGEDIST=$(DATASTAGE)/$(installdir)/$(MOZ_APP_NAME)
+	$(MAKE) clobber-zip STAGEDIST=$(DATASTAGE)/$(installdir)
 	cd $(AB_CD) && ar -rv $(DEB_PKG_NAME) data.tar.gz
 	$(RM) $(AB_CD)/data.tar.gz
 
