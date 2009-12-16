@@ -1673,7 +1673,6 @@ PresShell::Init(nsIDocument* aDocument,
     nsCOMPtr<nsIObserverService> os =
       do_GetService("@mozilla.org/observer-service;1", &result);
     if (os) {
-      os->AddObserver(this, NS_LINK_VISITED_EVENT_TOPIC, PR_FALSE);
       os->AddObserver(this, "agent-sheet-added", PR_FALSE);
       os->AddObserver(this, "user-sheet-added", PR_FALSE);
       os->AddObserver(this, "agent-sheet-removed", PR_FALSE);
@@ -1741,7 +1740,6 @@ PresShell::Destroy()
     nsCOMPtr<nsIObserverService> os =
       do_GetService("@mozilla.org/observer-service;1");
     if (os) {
-      os->RemoveObserver(this, NS_LINK_VISITED_EVENT_TOPIC);
       os->RemoveObserver(this, "agent-sheet-added");
       os->RemoveObserver(this, "user-sheet-added");
       os->RemoveObserver(this, "agent-sheet-removed");
@@ -7571,14 +7569,6 @@ PresShell::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 #endif
-
-  if (!nsCRT::strcmp(aTopic, NS_LINK_VISITED_EVENT_TOPIC)) {
-    nsCOMPtr<nsIURI> uri = do_QueryInterface(aSubject);
-    if (uri && mDocument) {
-      mDocument->NotifyURIVisitednessChanged(uri);
-    }
-    return NS_OK;
-  }
 
   if (!nsCRT::strcmp(aTopic, "agent-sheet-added") && mStyleSet) {
     AddAgentSheet(aSubject);
