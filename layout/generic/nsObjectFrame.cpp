@@ -224,9 +224,9 @@ enum { XKeyPress = KeyPress };
 static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 #endif /* PR_LOGGING */
 
-#define NORMAL_PLUGIN_DELAY 20
-// must avoid audio skipping/delays
-#define HIDDEN_PLUGIN_DELAY 125
+#if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
+#define MAC_CARBON_PLUGINS
+#endif
 
 // special class for handeling DOM context menu events because for
 // some reason it starves other mouse events if implemented on the
@@ -257,7 +257,6 @@ public:
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo,
-                              public nsITimerCallback,
                               public nsIDOMMouseListener,
                               public nsIDOMMouseMotionListener,
                               public nsIDOMKeyListener,
@@ -325,11 +324,11 @@ public:
   void Paint(const nsRect& aDirtyRect, HPS aHPS);
 #endif
 
-  // nsITimerCallback interface
-  NS_DECL_NSITIMERCALLBACK
-  
+#ifdef MAC_CARBON_PLUGINS
   void CancelTimer();
-  void StartTimer(unsigned int aDelay);
+  void StartTimer(PRBool isVisible);
+#endif
+  void SendIdleEvent();
 
   // nsIScrollPositionListener interface
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
@@ -432,7 +431,6 @@ private:
   nsCString                   mDocumentBase;
   char                       *mTagText;
   nsCOMPtr<nsIWidget>         mWidget;
-  nsCOMPtr<nsITimer>          mPluginTimer;
   nsCOMPtr<nsIPluginHost>     mPluginHost;
 
 #ifdef XP_MACOSX
@@ -452,7 +450,6 @@ private:
   // If true, destroy the widget on destruction. Used when plugin stop
   // is being delayed to a safer point in time.
   PRPackedBool                mDestroyWidget;
-  PRPackedBool                mTimerCanceled;
   PRUint16          mNumCachedAttrs;
   PRUint16          mNumCachedParams;
   char              **mCachedAttrParamNames;
@@ -1368,7 +1365,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   window.clipRect.left = 0; window.clipRect.right = 0;
   
 // platform specific printing code
-#if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
+#ifdef MAC_CARBON_PLUGINS
   nsSize contentSize = GetContentRect().Size();
   window.x = 0;
   window.y = 0;
@@ -1675,9 +1672,26 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       PRBool doupdatewindow = PR_FALSE;
       // the offset of the DC
       nsPoint origin;
-      
+
       gfxWindowsNativeDrawing nativeDraw(ctx, frameGfxRect);
-      PRBool doublePass = PR_FALSE;
+#ifdef MOZ_IPC
+      if (nativeDraw.IsDoublePass()) {
+        // OOP plugin specific: let the shim know before we paint if we are doing a
+        // double pass render. If this plugin isn't oop, the register window message
+        // will be ignored.
+        if (!mDoublePassEvent)
+          mDoublePassEvent = ::RegisterWindowMessage(NS_OOPP_DOUBLEPASS_MSGID);
+        if (mDoublePassEvent) {
+          NPEvent pluginEvent;
+          pluginEvent.event = mDoublePassEvent;
+          pluginEvent.wParam = 0;
+          pluginEvent.lParam = 0;
+          PRBool eventHandled = PR_FALSE;
+
+          inst->HandleEvent(&pluginEvent, &eventHandled);
+        }
+      }
+#endif
       do {
         HDC hdc = nativeDraw.BeginNativeDrawing();
         if (!hdc)
@@ -1696,17 +1710,22 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
           window->x = dest.left;
           window->y = dest.top;
 
-          // Windowless plugins on windows need a special event to update their location, see bug 135737
+          // Windowless plugins on windows need a special event to update their location,
+          // see bug 135737.
+          //
           // bug 271442: note, the rectangle we send is now purely the bounds of the plugin
-          // relative to the window it is contained in, which is useful for the plugin to correctly translate mouse coordinates
+          // relative to the window it is contained in, which is useful for the plugin to
+          // correctly translate mouse coordinates.
           //
           // this does not mesh with the comments for bug 135737 which imply that the rectangle
-          // must be clipped in some way to prevent the plugin attempting to paint over areas it shouldn't;
+          // must be clipped in some way to prevent the plugin attempting to paint over areas
+          // it shouldn't.
           //
-          // since the two uses of the rectangle are mutually exclusive in some cases,
-          // and since I don't see any incorrect painting (at least with Flash and ViewPoint - the originator of 135737),
-          // it seems that windowless plugins are not relying on information here for clipping their drawing,
-          // and we can safely use this message to tell the plugin exactly where it is in all cases.
+          // since the two uses of the rectangle are mutually exclusive in some cases, and
+          // since I don't see any incorrect painting (at least with Flash and ViewPoint -
+          // the originator of bug 135737), it seems that windowless plugins are not relying
+          // on information here for clipping their drawing, and we can safely use this message
+          // to tell the plugin exactly where it is in all cases.
 
           nsIntPoint origin = GetWindowOriginInPixels(PR_TRUE);
           nsIntRect winlessRect = nsIntRect(origin, nsIntSize(window->width, window->height));
@@ -1735,32 +1754,11 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
             inst->HandleEvent(&pluginEvent, &eventHandled);
           }
 
-          inst->SetWindow(window);        
+          inst->SetWindow(window);
         }
-
         mInstanceOwner->Paint(dirty, hdc);
         nativeDraw.EndNativeDrawing();
-        doublePass = nativeDraw.ShouldRenderAgain();
-#ifdef MOZ_IPC
-        if (doublePass) {
-          // OOP plugin specific: let the shim know we are in the middle of a double pass
-          // render. The second pass will reuse the previous rendering without going over
-          // the wire.
-          if (!mDoublePassEvent)
-            mDoublePassEvent = ::RegisterWindowMessage(NS_OOPP_DOUBLEPASS_MSGID);
-          if (mDoublePassEvent) {
-            NPEvent pluginEvent;
-            pluginEvent.event = mDoublePassEvent;
-            pluginEvent.wParam = 0;
-            pluginEvent.lParam = 0;
-            PRBool eventHandled = PR_FALSE;
-
-            inst->HandleEvent(&pluginEvent, &eventHandled);
-          }          
-        }
-#endif
-      } while (doublePass);
-
+      } while (nativeDraw.ShouldRenderAgain());
       nativeDraw.PaintToContext();
     } else if (!(ctx->GetFlags() & gfxContext::FLAG_DESTINED_FOR_SCREEN)) {
       // Get PrintWindow dynamically since it's not present on Win2K,
@@ -1932,7 +1930,9 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
 #endif
 
   if (anEvent->message == NS_DESTROY) {
+#ifdef MAC_CARBON_PLUGINS
     mInstanceOwner->CancelTimer();
+#endif
     return rv;
   }
 
@@ -2432,7 +2432,6 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mCachedAttrParamNames = nsnull;
   mCachedAttrParamValues = nsnull;
   mDestroyWidget = PR_FALSE;
-  mTimerCanceled = PR_TRUE;
 
 #ifdef MOZ_COMPOSITED_PLUGINS
   mLastPoint = nsIntPoint(0,0);
@@ -2463,8 +2462,9 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   PR_LOG(nsObjectFrameLM, PR_LOG_DEBUG,
          ("nsPluginInstanceOwner %p deleted\n", this));
 
-  // shut off the timer.
+#ifdef MAC_CARBON_PLUGINS
   CancelTimer();
+#endif
 
   mObjectFrame = nsnull;
 
@@ -2521,7 +2521,6 @@ NS_IMPL_RELEASE(nsPluginInstanceOwner)
 NS_INTERFACE_MAP_BEGIN(nsPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIPluginTagInfo)
-  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
@@ -3571,7 +3570,7 @@ nsPluginInstanceOwner::GetEventloopNestingLevel()
 
 nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
-#if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
+#ifdef MAC_CARBON_PLUGINS
   if (GetEventModel() != NPEventModelCarbon)
     return NS_OK;
 
@@ -3598,7 +3597,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScr
 
 nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
-#if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
+#ifdef MAC_CARBON_PLUGINS
   if (GetEventModel() != NPEventModelCarbon)
     return NS_OK;
 
@@ -3617,9 +3616,9 @@ nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScro
       pluginWidget->EndDrawPlugin();
     }
   }
-#endif
 
-  StartTimer(NORMAL_PLUGIN_DELAY);
+  StartTimer(PR_TRUE);
+#endif
   return NS_OK;
 }
 
@@ -3679,7 +3678,7 @@ nsresult nsPluginInstanceOwner::KeyUp(nsIDOMEvent* aKeyEvent)
 
 nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-#if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
+#ifdef MAC_CARBON_PLUGINS
   // send KeyPress events only for Mac OS X Carbon event model
   if (GetEventModel() != NPEventModelCarbon)
     return aKeyEvent->PreventDefault();
@@ -4634,8 +4633,10 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 nsresult
 nsPluginInstanceOwner::Destroy()
 {
+#ifdef MAC_CARBON_PLUGINS
   // stop the timer explicitly to reduce reference count.
   CancelTimer();
+#endif
 
   // unregister context menu listener
   if (mCXMenuListener) {
@@ -5361,14 +5362,9 @@ nsPluginInstanceOwner::Renderer::NativeDraw(QWidget * drawable,
 }
 #endif
 
-// Here's how we give idle time to plugins.
-
-NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* timer)
+void nsPluginInstanceOwner::SendIdleEvent()
 {
-#if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
-  if (GetEventModel() != NPEventModelCarbon)
-    return NS_OK;
-
+#ifdef MAC_CARBON_PLUGINS
   // validate the plugin clipping information by syncing the plugin window info to
   // reflect the current widget location. This makes sure that everything is updated
   // correctly in the event of scrolling in the window.
@@ -5394,36 +5390,22 @@ NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* timer)
     }
   }
 #endif
-  return NS_OK;
 }
 
-void nsPluginInstanceOwner::StartTimer(unsigned int aDelay)
+#ifdef MAC_CARBON_PLUGINS
+void nsPluginInstanceOwner::StartTimer(PRBool isVisible)
 {
-#if defined(XP_MACOSX) && !defined(NP_NO_CARBON)
   if (GetEventModel() != NPEventModelCarbon)
     return;
 
-  if (!mTimerCanceled)
-    return;
-
-  // start a periodic timer to provide null events to the plugin instance.
-  if (!mPluginTimer) {
-    mPluginTimer = do_CreateInstance("@mozilla.org/timer;1");
-  }
-  if (mPluginTimer) {
-    mTimerCanceled = PR_FALSE;
-    mPluginTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_REPEATING_SLACK);
-  }
-#endif
+  mPluginHost->AddIdleTimeTarget(this, isVisible);
 }
 
 void nsPluginInstanceOwner::CancelTimer()
 {
-  if (mPluginTimer) {
-    mPluginTimer->Cancel();
-  }
-  mTimerCanceled = PR_TRUE;
+  mPluginHost->RemoveIdleTimeTarget(this);
 }
+#endif
 
 nsresult nsPluginInstanceOwner::Init(nsPresContext* aPresContext,
                                      nsObjectFrame* aFrame,
@@ -5596,8 +5578,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           mPluginWindow->type = NPWindowTypeWindow;
           mPluginWindow->window = GetPluginPort();
 
+#ifdef MAC_CARBON_PLUGINS
           // start the idle timer.
-          StartTimer(NORMAL_PLUGIN_DELAY);
+          StartTimer(PR_TRUE);
+#endif
 
           // tell the plugin window about the widget
           mPluginWindow->SetPluginWidget(mWidget);
@@ -5638,7 +5622,7 @@ PRBool nsPluginInstanceOwner::UpdateVisibility()
 }
 #endif
 
-  // Mac specific code to fix up the port location and clipping region
+// Mac specific code to fix up the port location and clipping region
 #ifdef XP_MACOSX
 
 void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
@@ -5734,15 +5718,17 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
   {
     mInstance->SetWindow(mPluginWindow);
     mPluginPortChanged = PR_FALSE;
+#ifdef MAC_CARBON_PLUGINS
     // if the clipRect is of size 0, make the null timer fire less often
     CancelTimer();
     if (mPluginWindow->clipRect.left == mPluginWindow->clipRect.right ||
         mPluginWindow->clipRect.top == mPluginWindow->clipRect.bottom) {
-      StartTimer(HIDDEN_PLUGIN_DELAY);
+      StartTimer(PR_FALSE);
     }
     else {
-      StartTimer(NORMAL_PLUGIN_DELAY);
+      StartTimer(PR_TRUE);
     }
+#endif
   } else if (mPluginPortChanged) {
     mInstance->SetWindow(mPluginWindow);
     mPluginPortChanged = PR_FALSE;

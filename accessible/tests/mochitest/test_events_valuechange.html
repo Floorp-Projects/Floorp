@@ -66,6 +66,7 @@
       testValue("slider_vn", "5", 5, 0, 1000, 0);
       testValue("slider_vnvt", "plain", 0, 0, 5, 0);
       testValue("slider_vt", "hi", 0, 0, 3, 0);
+      testValue("scrollbar", "5", 5, 0, 1000, 0);
 
       // Test value change events
       gQueue = new eventQueue(nsIAccessibleEvent.EVENT_VALUE_CHANGE);
@@ -73,6 +74,7 @@
       gQueue.push(new changeValue("slider_vn", "6", undefined));
       gQueue.push(new changeValue("slider_vt", undefined, "hey!"));
       gQueue.push(new changeValue("slider_vnvt", "3", "sweet"));
+      gQueue.push(new changeValue("scrollbar", "6", undefined));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -89,6 +91,11 @@
      title=" Fire delayed value changed event for aria-valuetext changes">
     Mozilla Bug 478032
   </a>
+  <a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=529289"
+    title="We dont expose new aria role 'scrollbar' and property aria-orientation">
+   Mozilla Bug 529289
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -98,12 +105,16 @@
 
   <!-- ARIA sliders -->
   <div id="slider_vn" role="slider" aria-valuenow="5"
-    aria-valuemin="0" aria-valuemax="1000">slider</div>
+       aria-valuemin="0" aria-valuemax="1000">slider</div>
 
   <div id="slider_vt" role="slider" aria-valuetext="hi"
-    aria-valuemin="0" aria-valuemax="3">greeting slider</div>
+       aria-valuemin="0" aria-valuemax="3">greeting slider</div>
 
   <div id="slider_vnvt" role="slider" aria-valuenow="0" aria-valuetext="plain"
-    aria-valuemin="0" aria-valuemax="5">sweetness slider</div>
+       aria-valuemin="0" aria-valuemax="5">sweetness slider</div>
+
+  <!-- ARIA scrollbar -->
+  <div id="scrollbar" role="scrollbar" aria-valuenow="5"
+       aria-valuemin="0" aria-valuemax="1000">slider</div>
 </body>
 </html>

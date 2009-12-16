@@ -702,8 +702,11 @@ function OnDocumentLoad(event)
        // above causes 2 assertions.  So that we don't have to annotate
        // the manifests for every reftest-print reftest, bump the
        // assertion count by two right here.
-       gURLs[0].minAsserts += 2;
-       gURLs[0].maxAsserts += 2;
+       // And on Mac, it causes *three* assertions.
+       var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
+       var count = (xr.widgetToolkit == "cocoa") ? 3 : 2;
+       gURLs[0].minAsserts += count;
+       gURLs[0].maxAsserts += count;
     }
 
     setupZoom(contentRootElement);
