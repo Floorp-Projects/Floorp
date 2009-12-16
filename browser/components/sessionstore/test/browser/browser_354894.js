@@ -443,7 +443,29 @@ function test() {
         newWin.BrowserTryToCloseWindow();
         newWin2.BrowserTryToCloseWindow();
 
+        browserWindowsCount([0, 1], "browser windows while running testOpenCloseRestoreFromPopup");
+
         newWin = undoCloseWindow(0);
+        newWin.addEventListener("load", function () {
+          info(["testOpenCloseRestoreFromPopup: newWin loaded", newWin.closed, newWin.document]);
+          var ds = newWin.delayedStartup;
+          newWin.delayedStartup = function () {
+            info(["testOpenCloseRestoreFromPopup: newWin delayedStartup", newWin.closed, newWin.document]);
+            ds.apply(newWin, arguments);
+          };
+        }, false);
+        newWin.addEventListener("unload", function () {
+          info("testOpenCloseRestoreFromPopup: newWin unloaded");
+/*
+          var data;
+          try {
+            data = Cc["@mozilla.org/browser/sessionstore;1"]
+                     .getService(Ci.nsISessionStore)
+                     .getWindowState(newWin);
+          } catch (e) { }
+          ok(!data, "getWindowState should not have data about newWin");
+*/
+        }, false);
 
         newWin2 = openDialog(location, "_blank", CHROME_FEATURES);
         newWin2.addEventListener("load", function() {
@@ -454,9 +476,13 @@ function test() {
             is(TEST_URLS.indexOf(newWin2.gBrowser.browsers[0].currentURI.spec), -1,
                "Did not restore, as undoCloseWindow() was last called (2)");
 
+            browserWindowsCount([2, 3], "browser windows while running testOpenCloseRestoreFromPopup");
+
             // Cleanup
             newWin.close();
             newWin2.close();
+
+            browserWindowsCount([0, 1], "browser windows while running testOpenCloseRestoreFromPopup");
 
             // Next please
             executeSoon(nextFn);
@@ -536,7 +562,7 @@ function test() {
           browserWindowsCount([0, 1], "browser windows after testOpenCloseWindowAndPopup");
           testOpenCloseOnlyPopup(function () {
             browserWindowsCount([0, 1], "browser windows after testOpenCloseOnlyPopup");
-            testOpenCloseRestoreFromPopup (function () {
+            testOpenCloseRestoreFromPopup(function () {
               browserWindowsCount([0, 1], "browser windows after testOpenCloseRestoreFromPopup");
               testNotificationCount(function () {
                 cleanupTestsuite();

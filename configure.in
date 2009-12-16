@@ -6182,7 +6182,7 @@ MOZ_NATIVE_SQLITE= )
 if test -z "$MOZ_NATIVE_SQLITE"
 then
     SQLITE_CFLAGS=
-    SQLITE_LIBS='$(call EXPAND_LIBNAME_PATH,sqlite3,$(DIST)/lib)'
+    SQLITE_LIBS='$(call EXPAND_LIBNAME_PATH,mozsqlite3,$(DIST)/lib)'
 else
     PKG_CHECK_MODULES(SQLITE, sqlite3 >= $SQLITE_VERSION)
 fi

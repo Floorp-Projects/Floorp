@@ -876,6 +876,12 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       const nsCSSValuePairList *size =
         * data->ValuePairListStorageFor(eCSSProperty__moz_background_size);
       for (;;) {
+        if (size->mXValue.GetUnit() != eCSSUnit_Auto ||
+            size->mYValue.GetUnit() != eCSSUnit_Auto) {
+          // Non-default background-size, so can't be serialized as shorthand.
+          aValue.Truncate();
+          return NS_OK;
+        }
         AppendCSSValueToString(eCSSProperty_background_image,
                                image->mValue, aValue);
         aValue.Append(PRUnichar(' '));

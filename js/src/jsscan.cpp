@@ -607,7 +607,7 @@ ReportCompileErrorNumberVA(JSContext *cx, JSTokenStream *ts, JSParseNode *pn,
      * which is likely spurious.
      */
     if (!(ts->flags & TSF_ERROR)) {
-        if (js_ErrorToException(cx, message, &report))
+        if (js_ErrorToException(cx, message, &report, NULL, NULL))
             onError = NULL;
     }
 
