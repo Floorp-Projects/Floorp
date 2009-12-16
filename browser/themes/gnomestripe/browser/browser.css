@@ -556,6 +556,9 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
 #home-button {
   list-style-image: url("moz-icon://stock/gtk-home?size=toolbar");
 }
+#home-button[disabled="true"] {
+  list-style-image: url("moz-icon://stock/gtk-home?size=toolbar&state=disabled");
+}
 
 #downloads-button {
   -moz-image-region: rect(0px 24px 24px 0px);
@@ -677,6 +680,10 @@ toolbar[iconsize="small"] #reload-button[disabled="true"] {
 toolbar[iconsize="small"] #home-button ,
 #home-button.bookmark-item {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu");
+}
+toolbar[iconsize="small"] #home-button[disabled="true"],
+#home-button.bookmark-item[disabled="true"] {
+  list-style-image: url("moz-icon://stock/gtk-home?size=menu&state=disabled");
 }
 
 toolbar[iconsize="small"] #downloads-button {
