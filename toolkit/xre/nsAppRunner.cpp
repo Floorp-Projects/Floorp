@@ -3607,20 +3607,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       }
 #endif
 
-// XXXkt s/MOZ_TOOLKIT_GTK2/MOZ_WIDGET_GTK2/?
-// but the hidden window has been destroyed so toolkit is NULL anyway.
-#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_TOOLKIT_GTK2)
-      nsGTKToolkit* toolkit = GetGTKToolkit();
-      if (toolkit) {
-        nsCAutoString currentDesktopStartupID;
-        toolkit->GetDesktopStartupID(&currentDesktopStartupID);
-        if (!currentDesktopStartupID.IsEmpty()) {
-          nsCAutoString desktopStartupEnv;
-          desktopStartupEnv.AssignLiteral("DESKTOP_STARTUP_ID=");
-          desktopStartupEnv.Append(currentDesktopStartupID);
-          // Leak it with extreme prejudice!
-          PR_SetEnv(ToNewCString(desktopStartupEnv));
-        }
+#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
+      if (!desktopStartupID.IsEmpty()) {
+        nsCAutoString desktopStartupEnv;
+        desktopStartupEnv.AssignLiteral("DESKTOP_STARTUP_ID=");
+        desktopStartupEnv.Append(desktopStartupID);
+        // Leak it with extreme prejudice!
+        PR_SetEnv(ToNewCString(desktopStartupEnv));
       }
 #endif
 
