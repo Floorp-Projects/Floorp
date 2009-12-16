@@ -224,7 +224,7 @@ function test_asyncFetch_no_callback()
   run_next_test();
 }
 
-function test_asyncFetch()
+function test_asyncFetch_with_nsIChannel()
 {
   const TEST_DATA = "this is a test string";
 
@@ -255,6 +255,110 @@ function test_asyncFetch()
     do_check_eq(TEST_DATA, result);
 
     server.stop(run_next_test);
+  });
+}
+
+function test_asyncFetch_with_nsIURI()
+{
+  const TEST_DATA = "this is a test string";
+
+  // Start the http server, and register our handler.
+  let server = new nsHttpServer();
+  server.registerPathHandler("/test", function(aRequest, aResponse) {
+    aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
+    aResponse.setHeader("Content-Type", "text/plain", false);
+    aResponse.write(TEST_DATA);
+  });
+  server.start(4444);
+
+  // Create our URI.
+  let uri = NetUtil.newURI("http://localhost:4444/test");
+
+  // Open our URI asynchronously.
+  NetUtil.asyncFetch(uri, function(aInputStream, aResult) {
+    // Check that we had success.
+    do_check_true(Components.isSuccessCode(aResult));
+
+    // Check that we got the right data.
+    do_check_eq(aInputStream.available(), TEST_DATA.length);
+    let is = Cc["@mozilla.org/scriptableinputstream;1"].
+             createInstance(Ci.nsIScriptableInputStream);
+    is.init(aInputStream);
+    let result = is.read(TEST_DATA.length);
+    do_check_eq(TEST_DATA, result);
+
+    server.stop(run_next_test);
+  });
+}
+
+function test_asyncFetch_with_string()
+{
+  const TEST_DATA = "this is a test string";
+
+  // Start the http server, and register our handler.
+  let server = new nsHttpServer();
+  server.registerPathHandler("/test", function(aRequest, aResponse) {
+    aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
+    aResponse.setHeader("Content-Type", "text/plain", false);
+    aResponse.write(TEST_DATA);
+  });
+  server.start(4444);
+
+  // Open our location asynchronously.
+  NetUtil.asyncFetch("http://localhost:4444/test", function(aInputStream,
+                                                            aResult) {
+    // Check that we had success.
+    do_check_true(Components.isSuccessCode(aResult));
+
+    // Check that we got the right data.
+    do_check_eq(aInputStream.available(), TEST_DATA.length);
+    let is = Cc["@mozilla.org/scriptableinputstream;1"].
+             createInstance(Ci.nsIScriptableInputStream);
+    is.init(aInputStream);
+    let result = is.read(TEST_DATA.length);
+    do_check_eq(TEST_DATA, result);
+
+    server.stop(run_next_test);
+  });
+}
+
+function test_asyncFetch_with_nsIFile()
+{
+  const TEST_DATA = "this is a test string";
+
+  // First we need a file to read from.
+  let file = Cc["@mozilla.org/file/directory_service;1"].
+             getService(Ci.nsIProperties).
+             get("TmpD", Ci.nsIFile);
+  file.append("NetUtil-asyncFetch-test-file.tmp");
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+
+  // Write the test data to the file.
+  let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
+                createInstance(Ci.nsIFileOutputStream);
+  ostream.init(file, -1, -1, 0);
+  ostream.write(TEST_DATA, TEST_DATA.length);
+
+  // Sanity check to make sure the data was written.
+  do_check_eq(TEST_DATA, getFileContents(file));
+
+  // Open our file asynchronously.
+  NetUtil.asyncFetch(file, function(aInputStream, aResult) {
+    // Check that we had success.
+    do_check_true(Components.isSuccessCode(aResult));
+
+    // Check that we got the right data.
+    do_check_eq(aInputStream.available(), TEST_DATA.length);
+    let is = Cc["@mozilla.org/scriptableinputstream;1"].
+             createInstance(Ci.nsIScriptableInputStream);
+    is.init(aInputStream);
+    let result = is.read(TEST_DATA.length);
+    do_check_eq(TEST_DATA, result);
+
+    // Remove our test file.
+    file.remove(false);
+
+    run_next_test();
   });
 }
 
@@ -356,7 +460,10 @@ let tests = [
   test_ioService,
   test_asyncFetch_no_channel,
   test_asyncFetch_no_callback,
-  test_asyncFetch,
+  test_asyncFetch_with_nsIChannel,
+  test_asyncFetch_with_nsIURI,
+  test_asyncFetch_with_string,
+  test_asyncFetch_with_nsIFile,
   test_asyncFetch_does_not_block,
   test_newChannel_no_specifier,
   test_newChannel_with_string,
