@@ -286,6 +286,64 @@ function test_asyncFetch_does_not_block()
   });
 }
 
+function test_newChannel_no_specifier()
+{
+  try {
+    NetUtil.newChannel();
+    do_throw("should throw!");
+  }
+  catch (e) {
+    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
+  }
+
+  run_next_test();
+}
+
+function test_newChannel_with_string()
+{
+  const TEST_SPEC = "http://mozilla.org";
+
+  // Check that we get the same URI back from channel the IO service creates and
+  // the channel the utility method creates.
+  let ios = NetUtil.ioService;
+  let iosChannel = ios.newChannel(TEST_SPEC, null, null);
+  let NetUtilChannel = NetUtil.newChannel(TEST_SPEC);
+  do_check_true(iosChannel.URI.equals(NetUtilChannel.URI));
+
+  run_next_test();
+}
+
+function test_newChannel_with_nsIURI()
+{
+  const TEST_SPEC = "http://mozilla.org";
+
+  // Check that we get the same URI back from channel the IO service creates and
+  // the channel the utility method creates.
+  let uri = NetUtil.newURI(TEST_SPEC);
+  let iosChannel = NetUtil.ioService.newChannelFromURI(uri);
+  let NetUtilChannel = NetUtil.newChannel(uri);
+  do_check_true(iosChannel.URI.equals(NetUtilChannel.URI));
+
+  run_next_test();
+}
+
+function test_newChannel_with_nsIFile()
+{
+  let file = Cc["@mozilla.org/file/directory_service;1"].
+             getService(Ci.nsIProperties).
+             get("TmpD", Ci.nsIFile);
+  file.append("NetUtil-test-file.tmp");
+
+  // Check that we get the same URI back from channel the IO service creates and
+  // the channel the utility method creates.
+  let uri = NetUtil.newURI(file);
+  let iosChannel = NetUtil.ioService.newChannelFromURI(uri);
+  let NetUtilChannel = NetUtil.newChannel(uri);
+  do_check_true(iosChannel.URI.equals(NetUtilChannel.URI));
+
+  run_next_test();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
@@ -300,6 +358,10 @@ let tests = [
   test_asyncFetch_no_callback,
   test_asyncFetch,
   test_asyncFetch_does_not_block,
+  test_newChannel_no_specifier,
+  test_newChannel_with_string,
+  test_newChannel_with_nsIURI,
+  test_newChannel_with_nsIFile,
 ];
 let index = 0;
 
