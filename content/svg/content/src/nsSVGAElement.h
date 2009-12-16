@@ -89,6 +89,7 @@ public:
   virtual nsLinkState GetLinkState() const;
   virtual void SetLinkState(nsLinkState aState);
   virtual already_AddRefed<nsIURI> GetHrefURI() const;
+  virtual PRInt32 IntrinsicState() const;
 
 protected:
 
