@@ -119,6 +119,8 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  virtual PRInt32 IntrinsicState() const;
+
 protected:
   virtual already_AddRefed<nsIURI> GetStyleSheetURL(PRBool* aIsInline);
   virtual void GetStyleSheetInfo(nsAString& aTitle,
@@ -433,4 +435,10 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
   aType.AssignLiteral("text/css");
 
   return;
+}
+
+PRInt32
+nsHTMLLinkElement::IntrinsicState() const
+{
+  return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();
 }
