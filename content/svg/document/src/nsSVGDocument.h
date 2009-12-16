@@ -54,7 +54,7 @@ class nsSVGDocument : public nsXMLDocument,
   NS_FORWARD_NSIDOMNODE(nsXMLDocument::)
   NS_FORWARD_NSIDOMDOCUMENTEVENT(nsXMLDocument::)
   NS_DECL_ISUPPORTS_INHERITED
-
+  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 #endif

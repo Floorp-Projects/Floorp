@@ -77,7 +77,7 @@ void nsAccessibleTreeWalker::GetKids(nsIDOMNode *aParentNode)
     mState.frame = nsnull;  // Don't walk frames in non-HTML content, just walk the DOM.
   }
 
-  UpdateFrame(PR_TRUE);
+  WalkFrames();
 
   // Walk frames? UpdateFrame() sets this when it sees anonymous frames
   if (mState.siblingIndex == eSiblingsWalkFrames) {
@@ -160,20 +160,40 @@ NS_IMETHODIMP nsAccessibleTreeWalker::PushState()
 
 void nsAccessibleTreeWalker::GetNextDOMNode()
 {
-  // Get next DOM node
+  // Get next DOM node and its frame.
   if (mState.parentContent) {
-    mState.domNode = do_QueryInterface(mState.parentContent->GetChildAt(++mState.siblingIndex));
-  }
-  else if (mState.siblingIndex == eSiblingsWalkFrames) {
-    if (mState.frame.GetFrame()) {
-      mState.domNode = do_QueryInterface(mState.frame.GetFrame()->GetContent());
-    } else {
-      mState.domNode = nsnull;
+    mState.domNode =
+      do_QueryInterface(mState.parentContent->GetChildAt(++mState.siblingIndex));
+
+  } else if (mState.siblingIndex == eSiblingsWalkFrames) {
+    if (mState.frame.IsAlive()) {
+      mState.frame = mState.frame.GetFrame()->GetNextSibling();
+
+      if (mState.frame.IsAlive()) {
+        mState.domNode = do_QueryInterface(mState.frame.GetFrame()->GetContent());
+        return;
+      }
     }
+
+    mState.domNode = nsnull;
+    return;
+
+  } else {
+    mState.siblingList->Item(++mState.siblingIndex,
+                             getter_AddRefs(mState.domNode));
   }
-  else { 
-    mState.siblingList->Item(++mState.siblingIndex, getter_AddRefs(mState.domNode));
-  }
+
+  // Update the frame.
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
+  NS_ASSERTION(presShell, "Huh? No presshell?");
+  if (!presShell)
+    return;
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mState.domNode);
+  if (content)
+    mState.frame = presShell->GetRealPrimaryFrameFor(content);
+  else
+    mState.frame = presShell->GetRootFrame();
 }
 
 NS_IMETHODIMP nsAccessibleTreeWalker::GetNextSibling()
@@ -185,7 +205,6 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetNextSibling()
 
   while (PR_TRUE) {
     // Get next frame
-    UpdateFrame(PR_FALSE);
     GetNextDOMNode();
 
     if (!mState.domNode) {  // Done with current siblings
@@ -219,7 +238,7 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetFirstChild()
   while (mState.domNode) {
     if ((mState.domNode != parent && GetAccessible()) || NS_SUCCEEDED(GetFirstChild()))
       return NS_OK;
-    UpdateFrame(PR_FALSE);
+
     GetNextDOMNode();
   }
 
@@ -227,50 +246,46 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetFirstChild()
   return NS_ERROR_FAILURE;
 }
 
-void nsAccessibleTreeWalker::UpdateFrame(PRBool aTryFirstChild)
+void 
+nsAccessibleTreeWalker::WalkFrames()
 {
   nsIFrame *curFrame = mState.frame.GetFrame();
   if (!curFrame) {
     return;
   }
 
-  if (aTryFirstChild) {
-    // If the frame implements nsIAnonymousContentCreator interface then go down
-    // through the frames and obtain anonymous nodes for them.
-    nsIAnonymousContentCreator* creator = do_QueryFrame(curFrame);
-    nsIFrame *child = curFrame->GetFirstChild(nsnull);
-    mState.frame = child;
+  // If the frame implements nsIAnonymousContentCreator interface then go down
+  // through the frames and obtain anonymous nodes for them.
+  nsIAnonymousContentCreator* creator = do_QueryFrame(curFrame);
+  nsIFrame *child = curFrame->GetFirstChild(nsnull);
 
-    if (creator && child && mState.siblingIndex < 0) {
-      mState.domNode = do_QueryInterface(child->GetContent());
-      mState.siblingIndex = eSiblingsWalkFrames;
-    }
+  if (creator && child && mState.siblingIndex < 0) {
+    mState.frame = child;
+    mState.domNode = do_QueryInterface(child->GetContent());
+    mState.siblingIndex = eSiblingsWalkFrames;
+  }
 // temporary workaround for Bug 359210. We never want to walk frames.
 // Aaron Leventhal will refix :before and :after content later without walking frames.
 #if 0
-    if (mState.frame && mState.siblingIndex < 0) {
-      // Container frames can contain generated content frames from
-      // :before and :after style rules, so we walk their frame trees
-      // instead of content trees
-      // XXX Walking the frame tree doesn't get us Aural CSS nodes, e.g. 
-      // @media screen { display: none; }
-      // Asking the style system might be better (with ProbePseudoStyleFor(),
-      // except that we need to ask only for those display types that support 
-      // :before and :after (which roughly means non-replaced elements)
-      // Here's some code to see if there is an :after rule for an element
-      // nsRefPtr<nsStyleContext> pseudoContext;
-      // nsStyleContext *styleContext = primaryFrame->GetStyleContext();
-      // if (aContent) {
-      //   pseudoContext = presContext->StyleSet()->
-      //     ProbePseudoStyleFor(content, nsAccessibilityAtoms::after, aStyleContext);
-      mState.domNode = do_QueryInterface(mState.frame->GetContent());
-      mState.siblingIndex = eSiblingsWalkFrames;
-    }
+  if (mState.frame && mState.siblingIndex < 0) {
+    // Container frames can contain generated content frames from
+    // :before and :after style rules, so we walk their frame trees
+    // instead of content trees
+    // XXX Walking the frame tree doesn't get us Aural CSS nodes, e.g. 
+    // @media screen { display: none; }
+    // Asking the style system might be better (with ProbePseudoStyleFor(),
+    // except that we need to ask only for those display types that support 
+    // :before and :after (which roughly means non-replaced elements)
+    // Here's some code to see if there is an :after rule for an element
+    // nsRefPtr<nsStyleContext> pseudoContext;
+    // nsStyleContext *styleContext = primaryFrame->GetStyleContext();
+    // if (aContent) {
+    //   pseudoContext = presContext->StyleSet()->
+    //     ProbePseudoStyleFor(content, nsAccessibilityAtoms::after, aStyleContext);
+    mState.domNode = do_QueryInterface(mState.frame->GetContent());
+    mState.siblingIndex = eSiblingsWalkFrames;
+  }
 #endif
-  }
-  else {
-    mState.frame = curFrame->GetNextSibling();
-  }
 }
 
 /**
@@ -286,11 +301,10 @@ PRBool nsAccessibleTreeWalker::GetAccessible()
   mState.accessible = nsnull;
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
 
-  nsIFrame *frame = mState.frame.GetFrame();
   mAccService->GetAccessible(mState.domNode, presShell, mWeakShell,
-                             &frame, &mState.isHidden,
+                             mState.frame.GetFrame(), &mState.isHidden,
                              getter_AddRefs(mState.accessible));
-  mState.frame = frame;
+
   return mState.accessible ? PR_TRUE : PR_FALSE;
 }
 

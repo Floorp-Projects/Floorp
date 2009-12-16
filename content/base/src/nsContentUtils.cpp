@@ -1957,6 +1957,9 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 
   if (htmlDocument) {
     // Flush our content model so it'll be up to date
+    // If this becomes unnecessary and the following line is removed,
+    // please also remove the corresponding flush operation from
+    // nsHtml5TreeBuilderCppSupplement.h. (Look for "See bug 497861." there.)
     aContent->GetCurrentDoc()->FlushPendingNotifications(Flush_Content);
 
     nsContentList *htmlForms = htmlDocument->GetForms();
@@ -2504,6 +2507,16 @@ nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent,
   return imgContainer.forget();
 }
 
+//static
+already_AddRefed<imgIRequest>
+nsContentUtils::GetStaticRequest(imgIRequest* aRequest)
+{
+  NS_ENSURE_TRUE(aRequest, nsnull);
+  nsCOMPtr<imgIRequest> retval;
+  aRequest->GetStaticRequest(getter_AddRefs(retval));
+  return retval.forget();
+}
+
 // static
 PRBool
 nsContentUtils::ContentIsDraggable(nsIContent* aContent)
@@ -2663,6 +2676,23 @@ nsContentUtils::AddBoolPrefVarCache(const char *aPref,
 {
   *aCache = GetBoolPref(aPref, PR_FALSE);
   RegisterPrefCallback(aPref, BoolVarChanged, aCache);
+}
+
+static int
+IntVarChanged(const char *aPref, void *aClosure)
+{
+  PRInt32* cache = static_cast<PRInt32*>(aClosure);
+  *cache = nsContentUtils::GetIntPref(aPref, 0);
+  
+  return 0;
+}
+
+void
+nsContentUtils::AddIntPrefVarCache(const char *aPref,
+                                   PRInt32* aCache)
+{
+  *aCache = GetIntPref(aPref, PR_FALSE);
+  RegisterPrefCallback(aPref, IntVarChanged, aCache);
 }
 
 static const char *gEventNames[] = {"event"};

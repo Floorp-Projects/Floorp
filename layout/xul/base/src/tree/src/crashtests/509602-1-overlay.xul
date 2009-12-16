@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<box id="b">
+<box onDOMAttrModified="event.target.parentNode.removeChild(event.target)" id="d"/>
+<tree/>
+</box>
+
+<tree>
+<box  id="b" observes="d"/>
+<treechildren observes="b"/>
+</tree>
+</overlay>

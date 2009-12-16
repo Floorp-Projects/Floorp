@@ -53,6 +53,7 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsIRunnable.h"
 #include "nsIChannelClassifier.h"
+#include "nsIFrame.h"
 
 class nsAsyncInstantiateEvent;
 class AutoNotifier;
@@ -223,6 +224,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 
     void Traverse(nsCycleCollectionTraversalCallback &cb);
 
+    void CreateStaticClone(nsObjectLoadingContent* aDest) const;
   private:
     /**
      * Check whether the given request represents a successful load.
@@ -421,6 +423,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     PRPackedBool                mSuppressed    : 1;
     // A specific state that caused us to fallback
     PluginSupportState          mPluginState;
+
+    nsWeakFrame                 mPrintFrame;
 
     friend class nsAsyncInstantiateEvent;
 };

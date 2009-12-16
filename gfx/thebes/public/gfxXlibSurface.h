@@ -54,10 +54,12 @@ public:
     // with explicitly provided width/height.
     gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, const gfxIntSize& size);
 
-    // create a new Pixmap on the display dpy, with
-    // the root window as the parent and the default depth
-    // for the default screen, and attach the given visual
-    gfxXlibSurface(Display *dpy, Visual *visual, const gfxIntSize& size);
+    // create a new Pixmap on the display dpy, with the root window as
+    // the parent and the default depth for the default screen, and
+    // attach the given visual.  The depth argument is optional, and
+    // if not specified (or 0), the default depth of the default
+    // screen of dpy is used.
+    gfxXlibSurface(Display *dpy, Visual *visual, const gfxIntSize& size, int depth = 0);
 
     gfxXlibSurface(Display* dpy, Drawable drawable, XRenderPictFormat *format,
                    const gfxIntSize& size);

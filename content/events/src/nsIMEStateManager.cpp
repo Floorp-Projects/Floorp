@@ -80,6 +80,11 @@ nsIMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
   NS_ENSURE_ARG_POINTER(aPresContext);
   if (aPresContext != sPresContext)
     return NS_OK;
+  nsCOMPtr<nsIWidget> widget = GetWidget(sPresContext);
+  if (widget) {
+    PRUint32 newState = GetNewIMEState(sPresContext, nsnull);
+    SetIMEState(sPresContext, newState, widget);
+  }
   sContent = nsnull;
   sPresContext = nsnull;
   OnTextStateBlur(nsnull, nsnull);
@@ -102,6 +107,8 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
     nsresult rv = widget->CancelIMEComposition();
     if (NS_FAILED(rv))
       widget->ResetInputState();
+    PRUint32 newState = GetNewIMEState(sPresContext, nsnull);
+    SetIMEState(sPresContext, newState, widget);
   }
 
   sContent = nsnull;

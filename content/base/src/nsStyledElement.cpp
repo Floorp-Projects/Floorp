@@ -222,7 +222,9 @@ nsStyledElement::ParseStyleAttribute(nsIContent* aContent,
   nsresult result = NS_OK;
   nsIDocument* doc = aContent->GetOwnerDoc();
 
-  if (doc && (aForceInDataDoc || !doc->IsLoadedAsData())) {
+  if (doc && (aForceInDataDoc ||
+              !doc->IsLoadedAsData() ||
+              doc->IsStaticDocument())) {
     PRBool isCSS = PR_TRUE; // assume CSS until proven otherwise
 
     if (!aContent->IsInNativeAnonymousSubtree()) {  // native anonymous content

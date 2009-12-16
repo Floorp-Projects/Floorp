@@ -105,6 +105,14 @@ nsDOMCSSAttributeDeclaration::DeclarationChanged()
     mContent->SetInlineStyleRule(newRule, PR_TRUE);
 }
 
+nsIDocument*
+nsDOMCSSAttributeDeclaration::DocToUpdate()
+{
+  // We need GetOwnerDoc() rather than GetCurrentDoc() because it might
+  // be the BeginUpdate call that inserts mContent into the document.
+  return mContent->GetOwnerDoc();
+}
+
 nsresult
 nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                                 PRBool aAllocate)

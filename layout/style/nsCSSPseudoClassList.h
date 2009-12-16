@@ -42,15 +42,28 @@
  * This file contains the list of nsIAtoms and their values for CSS
  * pseudo-classes.  It is designed to be used as inline input to
  * nsCSSPseudoClasses.cpp *only* through the magic of C preprocessing.
- * All entries must be enclosed in the macro CSS_PSEUDO_CLASS which will
- * have cruel and unusual things done to it.  The entries should be kept
- * in some sort of logical order.  The first argument to
- * CSS_PSEUDO_CLASS is the C++ identifier of the atom.  The second
- * argument is the string value of the atom.
+ * All entries must be enclosed in the macros CSS_PSEUDO_CLASS or
+ * CSS_STATE_PSEUDO_CLASS which will have cruel and unusual things
+ * done to it.  The entries should be kept in some sort of logical
+ * order.  The first argument to CSS_PSEUDO_CLASS is the C++
+ * identifier of the atom.  The second argument is the string value of
+ * the atom.  CSS_STATE_PSEUDO_CLASS also takes the name of the state
+ * bit that the class corresponds to.  If CSS_STATE_PSEUDO_CLASS is
+ * not defined, it'll be automatically defined to CSS_PSEUDO_CLASS.
  */
 
 // OUTPUT_CLASS=nsCSSPseudoClasses
 // MACRO_NAME=CSS_PSEUDO_CLASS
+
+#ifdef DEFINED_CSS_STATE_PSEUDO_CLASS
+#error "This shouldn't be defined"
+#endif
+
+#ifndef CSS_STATE_PSEUDO_CLASS
+#define CSS_STATE_PSEUDO_CLASS(_name, _value, _bit) \
+  CSS_PSEUDO_CLASS(_name, _value)
+#define DEFINED_CSS_STATE_PSEUDO_CLASS
+#endif
 
 CSS_PSEUDO_CLASS(empty, ":empty")
 CSS_PSEUDO_CLASS(mozOnlyWhitespace, ":-moz-only-whitespace")
@@ -64,15 +77,16 @@ CSS_PSEUDO_CLASS(link, ":link")
 CSS_PSEUDO_CLASS(mozAnyLink, ":-moz-any-link") // what matches :link or :visited
 CSS_PSEUDO_CLASS(visited, ":visited")
 
-CSS_PSEUDO_CLASS(active, ":active")
-CSS_PSEUDO_CLASS(checked, ":checked")
-CSS_PSEUDO_CLASS(disabled, ":disabled")
-CSS_PSEUDO_CLASS(enabled, ":enabled")
-CSS_PSEUDO_CLASS(focus, ":focus")
-CSS_PSEUDO_CLASS(hover, ":hover")
-CSS_PSEUDO_CLASS(mozDragOver, ":-moz-drag-over")
-CSS_PSEUDO_CLASS(target, ":target")
-CSS_PSEUDO_CLASS(indeterminate, ":indeterminate")
+CSS_STATE_PSEUDO_CLASS(active, ":active", NS_EVENT_STATE_ACTIVE)
+CSS_STATE_PSEUDO_CLASS(checked, ":checked", NS_EVENT_STATE_CHECKED)
+CSS_STATE_PSEUDO_CLASS(disabled, ":disabled", NS_EVENT_STATE_DISABLED)
+CSS_STATE_PSEUDO_CLASS(enabled, ":enabled", NS_EVENT_STATE_ENABLED)
+CSS_STATE_PSEUDO_CLASS(focus, ":focus", NS_EVENT_STATE_FOCUS)
+CSS_STATE_PSEUDO_CLASS(hover, ":hover", NS_EVENT_STATE_HOVER)
+CSS_STATE_PSEUDO_CLASS(mozDragOver, ":-moz-drag-over", NS_EVENT_STATE_DRAGOVER)
+CSS_STATE_PSEUDO_CLASS(target, ":target", NS_EVENT_STATE_URLTARGET)
+CSS_STATE_PSEUDO_CLASS(indeterminate, ":indeterminate",
+                       NS_EVENT_STATE_INDETERMINATE)
 
 CSS_PSEUDO_CLASS(firstChild, ":first-child")
 CSS_PSEUDO_CLASS(firstNode, ":-moz-first-node")
@@ -88,13 +102,18 @@ CSS_PSEUDO_CLASS(nthOfType, ":nth-of-type")
 CSS_PSEUDO_CLASS(nthLastOfType, ":nth-last-of-type")
 
 // Image, object, etc state pseudo-classes
-CSS_PSEUDO_CLASS(mozBroken, ":-moz-broken")
-CSS_PSEUDO_CLASS(mozUserDisabled, ":-moz-user-disabled")
-CSS_PSEUDO_CLASS(mozSuppressed, ":-moz-suppressed")
-CSS_PSEUDO_CLASS(mozLoading, ":-moz-loading")
-CSS_PSEUDO_CLASS(mozTypeUnsupported, ":-moz-type-unsupported")
-CSS_PSEUDO_CLASS(mozHandlerDisabled, ":-moz-handler-disabled")
-CSS_PSEUDO_CLASS(mozHandlerBlocked, ":-moz-handler-blocked")
+CSS_STATE_PSEUDO_CLASS(mozBroken, ":-moz-broken", NS_EVENT_STATE_BROKEN)
+CSS_STATE_PSEUDO_CLASS(mozUserDisabled, ":-moz-user-disabled",
+                       NS_EVENT_STATE_USERDISABLED)
+CSS_STATE_PSEUDO_CLASS(mozSuppressed, ":-moz-suppressed",
+                       NS_EVENT_STATE_SUPPRESSED)
+CSS_STATE_PSEUDO_CLASS(mozLoading, ":-moz-loading", NS_EVENT_STATE_LOADING)
+CSS_STATE_PSEUDO_CLASS(mozTypeUnsupported, ":-moz-type-unsupported",
+                       NS_EVENT_STATE_TYPE_UNSUPPORTED)
+CSS_STATE_PSEUDO_CLASS(mozHandlerDisabled, ":-moz-handler-disabled",
+                       NS_EVENT_STATE_HANDLER_DISABLED)
+CSS_STATE_PSEUDO_CLASS(mozHandlerBlocked, ":-moz-handler-blocked",
+                       NS_EVENT_STATE_HANDLER_BLOCKED)
 
 CSS_PSEUDO_CLASS(mozHasHandlerRef, ":-moz-has-handlerref")
 
@@ -118,17 +137,26 @@ CSS_PSEUDO_CLASS(mozLWThemeBrightText, ":-moz-lwtheme-brighttext")
 CSS_PSEUDO_CLASS(mozLWThemeDarkText, ":-moz-lwtheme-darktext")
 
 #ifdef MOZ_MATHML
-CSS_PSEUDO_CLASS(mozMathIncrementScriptLevel, ":-moz-math-increment-script-level")
+CSS_STATE_PSEUDO_CLASS(mozMathIncrementScriptLevel,
+                       ":-moz-math-increment-script-level",
+                       NS_EVENT_STATE_INCREMENT_SCRIPT_LEVEL)
 #endif
 
 // CSS 3 UI
 // http://www.w3.org/TR/2004/CR-css3-ui-20040511/#pseudo-classes
-CSS_PSEUDO_CLASS(required, ":required")
-CSS_PSEUDO_CLASS(optional, ":optional")
-CSS_PSEUDO_CLASS(valid, ":valid")
-CSS_PSEUDO_CLASS(invalid, ":invalid")
-CSS_PSEUDO_CLASS(inRange, ":in-range")
-CSS_PSEUDO_CLASS(outOfRange, ":out-of-range")
-CSS_PSEUDO_CLASS(defaultPseudo, ":default")
-CSS_PSEUDO_CLASS(mozReadOnly, ":-moz-read-only")
-CSS_PSEUDO_CLASS(mozReadWrite, ":-moz-read-write")
+CSS_STATE_PSEUDO_CLASS(required, ":required", NS_EVENT_STATE_REQUIRED)
+CSS_STATE_PSEUDO_CLASS(optional, ":optional", NS_EVENT_STATE_OPTIONAL)
+CSS_STATE_PSEUDO_CLASS(valid, ":valid", NS_EVENT_STATE_VALID)
+CSS_STATE_PSEUDO_CLASS(invalid, ":invalid", NS_EVENT_STATE_INVALID)
+CSS_STATE_PSEUDO_CLASS(inRange, ":in-range", NS_EVENT_STATE_INRANGE)
+CSS_STATE_PSEUDO_CLASS(outOfRange, ":out-of-range", NS_EVENT_STATE_OUTOFRANGE)
+CSS_STATE_PSEUDO_CLASS(defaultPseudo, ":default", NS_EVENT_STATE_DEFAULT)
+CSS_STATE_PSEUDO_CLASS(mozReadOnly, ":-moz-read-only",
+                       NS_EVENT_STATE_MOZ_READONLY)
+CSS_STATE_PSEUDO_CLASS(mozReadWrite, ":-moz-read-write",
+                       NS_EVENT_STATE_MOZ_READWRITE)
+
+#ifdef DEFINED_CSS_STATE_PSEUDO_CLASS
+#undef DEFINED_CSS_STATE_PSEUDO_CLASS
+#undef CSS_STATE_PSEUDO_CLASS
+#endif

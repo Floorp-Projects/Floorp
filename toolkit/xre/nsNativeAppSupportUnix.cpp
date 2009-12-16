@@ -48,6 +48,12 @@
 #include "nsXREDirProvider.h"
 #include "nsReadableUtils.h"
 
+#include "nsIFile.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsICommandLineRunner.h"
+#include "nsIWindowMediator.h"
+#include "nsIDOMWindowInternal.h"
+
 #include <stdlib.h>
 #include <glib.h>
 #include <glib-object.h>
@@ -59,7 +65,6 @@ struct DBusMessage;  /* libosso.h references internals of dbus */
 #include <dbus/dbus.h>
 #include <dbus/dbus-protocol.h>
 #include <libosso.h>
-
 #endif
 
 #define MIN_GTK_MAJOR_VERSION 2
@@ -205,7 +210,7 @@ class nsNativeAppSupportUnix : public nsNativeAppSupportBase
 {
 public:
   NS_IMETHOD Start(PRBool* aRetVal);
-  NS_IMETHOD Stop( PRBool *aResult);
+  NS_IMETHOD Stop(PRBool *aResult);
 
 private:
 #ifdef NS_OSSO
@@ -241,7 +246,7 @@ static void OssoHardwareCallback(osso_hw_state_t *state, gpointer data)
   osso_hw_state_t* ourState = (osso_hw_state_t*) data;
 
   if (state->shutdown_ind) {
-    nsCOMPtr<nsIAppStartup> appService =  do_GetService("@mozilla.org/toolkit/app-startup;1");
+    nsCOMPtr<nsIAppStartup> appService = do_GetService("@mozilla.org/toolkit/app-startup;1");
     if (appService)
       appService->Quit(nsIAppStartup::eForceQuit);
     return;
@@ -267,6 +272,73 @@ static void OssoHardwareCallback(osso_hw_state_t *state, gpointer data)
   }
 
   memcpy(ourState, state, sizeof(osso_hw_state_t));
+}
+
+static gint
+OssoDbusCallback(const gchar *interface, const gchar *method,
+                 GArray *arguments, gpointer data, osso_rpc_t *retval)
+{
+  retval->type = DBUS_TYPE_INVALID;
+
+  // The "top_application" method just wants us to focus the top-most window.
+  if (!strcmp("top_application", method)) {
+    nsCOMPtr<nsIWindowMediator> wm = do_GetService("@mozilla.org/appshell/window-mediator;1");
+
+    nsCOMPtr<nsIDOMWindowInternal> window;
+    wm->GetMostRecentWindow(NS_LITERAL_STRING("").get(), getter_AddRefs(window));
+    if (window) {
+      window->Focus();
+    }
+    return OSSO_OK;
+  }
+
+  if (!strcmp("quit", method)) {
+    nsCOMPtr<nsIAppStartup> appService = do_GetService("@mozilla.org/toolkit/app-startup;1");
+    if (appService)
+      appService->Quit(nsIAppStartup::eForceQuit);
+
+    return OSSO_OK;
+  }
+
+  // Other methods can have arguments, which we convert and send to commandline
+  // handlers.
+  nsCOMPtr<nsICommandLineRunner> cmdLine
+    (do_CreateInstance("@mozilla.org/toolkit/command-line;1"));
+
+  nsCOMPtr<nsIFile> workingDir;
+  NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                         getter_AddRefs(workingDir));
+
+  char** argv = 0;
+  int argc = 0;
+
+  // Not all DBus methods pass arguments
+  if (arguments && arguments->len > 0) {
+    // Create argument list with a dummy argv[0]
+    argc = arguments->len + 1;
+    argv = (char**)calloc(1, argc * sizeof(*argv));
+
+    // Start at 1 to skip the dummy argv[0]
+    for (int i = 1; i < argc; i++) {
+      osso_rpc_t* entry = (osso_rpc_t*)&g_array_index(arguments, osso_rpc_t, i - 1);
+      if (entry->type != DBUS_TYPE_STRING)
+        continue;
+
+      argv[i] = strdup(entry->value.s);
+    }
+  }
+
+  cmdLine->Init(argc, argv, workingDir, nsICommandLine::STATE_REMOTE_AUTO);
+
+  // Cleanup argument list
+  while (argc) {
+    free(argv[--argc]);
+  }
+  free(argv);
+
+  cmdLine->Run();
+
+  return OSSO_OK;
 }
 
 #endif
@@ -324,19 +396,9 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
       return NS_ERROR_FAILURE;
   }
 
-  osso_hw_set_event_cb(m_osso_context,
-                       nsnull,
-                       OssoHardwareCallback,
-                       &m_hw_state);
-
-
-  osso_hw_set_display_event_cb(m_osso_context,
-                               OssoDisplayCallback,
-                               nsnull);
-
-
-
-
+  osso_hw_set_event_cb(m_osso_context, nsnull, OssoHardwareCallback, &m_hw_state);
+  osso_hw_set_display_event_cb(m_osso_context, OssoDisplayCallback, nsnull);
+  osso_rpc_set_default_cb_f(m_osso_context, OssoDbusCallback, nsnull);
 #endif
 
   *aRetVal = PR_TRUE;
@@ -413,15 +475,15 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
 }
 
 NS_IMETHODIMP
-nsNativeAppSupportUnix::Stop( PRBool *aResult )
+nsNativeAppSupportUnix::Stop(PRBool *aResult)
 {
-  NS_ENSURE_ARG( aResult );
+  NS_ENSURE_ARG(aResult);
   *aResult = PR_TRUE;
 
 #ifdef NS_OSSO
-  if (m_osso_context)
-  {
+  if (m_osso_context) {
     osso_hw_unset_event_cb(m_osso_context, nsnull);
+    osso_rpc_unset_default_cb_f(m_osso_context, OssoDbusCallback, nsnull);
     osso_deinitialize(m_osso_context);
     m_osso_context = nsnull;
   }

@@ -147,7 +147,7 @@ nsContextMenu.prototype = {
     // Time to do some bad things and see if we've highlighted a URL that
     // isn't actually linked.
     var onPlainTextLink = false;
-    if (this.isTextSelected) {
+    if (this.isTextSelected && !this.onLink) {
       // Ok, we have some text, let's figure out if it looks like a URL.
       let selection =  document.commandDispatcher.focusedWindow
                                .getSelection();

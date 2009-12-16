@@ -103,21 +103,3 @@ interface nsIFormHistory2 : nsISupports
    */
   readonly attribute mozIStorageConnection DBConnection;
 };
-
-/**
- * nsIFormHistoryImporter is an interface for importing a Mork formhistory.dat
- * file into the new form history storage.
- */
-
-[scriptable, uuid(9e811188-6a5b-4d96-a92d-1bac66a41898)]
-interface nsIFormHistoryImporter : nsISupports
-{
-  /**
-   * Import the given Mork form history file.
-   *  @param file     The Mork form history file to import
-   *  @param history  A reference to the nsIFormHistory.  This is
-   *                  supplied since the importer is invoked during
-   *                  form history initialization.
-   */
-  void importFormHistory(in nsIFile file, in nsIFormHistory2 formHistory);
-};

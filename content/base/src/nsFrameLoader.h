@@ -81,6 +81,8 @@ public:
   void Finalize();
   nsIDocShell* GetExistingDocShell() { return mDocShell; }
 
+  nsresult CreateStaticClone(nsIFrameLoader* aDest);
+
   /**
    * Called from the layout frame associated with this frame loader;
    * this notifies us to hook up with the widget and view.
@@ -95,6 +97,8 @@ public:
    * are going away and we should unhook from them.
    */
   void Hide();
+
+  nsresult CloneForStatic(nsIFrameLoader* aOriginal);
 
   // The guts of an nsIFrameLoaderOwner::SwapFrameLoader implementation.  A
   // frame loader owner needs to call this, and pass in the two references to

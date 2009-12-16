@@ -94,11 +94,11 @@ CFLAGS	+= -DJEMALLOC_LIB='"$(OBJDIR)/dist/lib/jemalloc.lib"'
 endif
 CFLAGS += -DEBUG -Zi
 
-SDK_TOOLS = $(MOZCE_TOOLS_BIN_DIR)/arm-wince-as.exe \
-            $(MOZCE_TOOLS_BIN_DIR)/arm-wince-gcc.exe \
-            $(MOZCE_TOOLS_BIN_DIR)/arm-wince-lib.exe \
-            $(MOZCE_TOOLS_BIN_DIR)/arm-wince-link.exe \
-            $(MOZCE_TOOLS_BIN_DIR)/arm-wince-res.exe 
+SDK_TOOLS = $(MOZCE_TOOLS_BIN_DIR)/$(target)-as.exe \
+            $(MOZCE_TOOLS_BIN_DIR)/$(target)-gcc.exe \
+            $(MOZCE_TOOLS_BIN_DIR)/$(target)-lib.exe \
+            $(MOZCE_TOOLS_BIN_DIR)/$(target)-link.exe \
+            $(MOZCE_TOOLS_BIN_DIR)/$(target)-res.exe 
 
 all: libs export
 
@@ -118,23 +118,23 @@ $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj:	$(MOZCE_TOOLS_DIR)/toolspath.c $(MOZCE_TOO
 	mkdir -p $(MOZCE_TOOLS_BIN_DIR);
 	$(CC) $(CFLAGS) -c -Fo$(MOZCE_TOOLS_BIN_DIR)/toolspath.obj $(MOZCE_TOOLS_DIR)/toolspath.c
 
-$(MOZCE_TOOLS_BIN_DIR)/arm-wince-as.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-as.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
+$(MOZCE_TOOLS_BIN_DIR)/$(target)-as.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-as.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
 	mkdir -p $(MOZCE_TOOLS_BIN_DIR);
 	$(CC) $(CFLAGS) -Fo$(MOZCE_TOOLS_BIN_DIR) -Fe$@ $(MOZCE_TOOLS_DIR)/arm-wince-as.c -link $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
 
-$(MOZCE_TOOLS_BIN_DIR)/arm-wince-gcc.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-gcc.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile $(MOZCE_TOOLS_BIN_DIR)/linkargs.obj $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
+$(MOZCE_TOOLS_BIN_DIR)/$(target)-gcc.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-gcc.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile $(MOZCE_TOOLS_BIN_DIR)/linkargs.obj $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
 	mkdir -p $(MOZCE_TOOLS_BIN_DIR);
 	$(CC) $(CFLAGS) -Fo$(MOZCE_TOOLS_BIN_DIR) -Fe$@ $(MOZCE_TOOLS_DIR)/arm-wince-gcc.c -link $(MOZCE_TOOLS_BIN_DIR)/linkargs.obj $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
 
-$(MOZCE_TOOLS_BIN_DIR)/arm-wince-lib.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-lib.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
+$(MOZCE_TOOLS_BIN_DIR)/$(target)-lib.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-lib.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
 	mkdir -p $(MOZCE_TOOLS_BIN_DIR);
 	$(CC) $(CFLAGS) -Fo$(MOZCE_TOOLS_BIN_DIR) -Fe$@ $(MOZCE_TOOLS_DIR)/arm-wince-lib.c -link $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
 
-$(MOZCE_TOOLS_BIN_DIR)/arm-wince-link.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-link.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile $(MOZCE_TOOLS_BIN_DIR)/linkargs.obj $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
+$(MOZCE_TOOLS_BIN_DIR)/$(target)-link.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-link.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile $(MOZCE_TOOLS_BIN_DIR)/linkargs.obj $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
 	mkdir -p $(MOZCE_TOOLS_BIN_DIR);
 	$(CC) $(CFLAGS) -Fo$(MOZCE_TOOLS_BIN_DIR) -Fe$@ $(MOZCE_TOOLS_DIR)/arm-wince-link.c -link $(MOZCE_TOOLS_BIN_DIR)/linkargs.obj $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
 
-$(MOZCE_TOOLS_BIN_DIR)/arm-wince-res.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-res.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
+$(MOZCE_TOOLS_BIN_DIR)/$(target)-res.exe:	$(MOZCE_TOOLS_DIR)/arm-wince-res.c $(MOZCE_TOOLS_DIR)/toolspath.h $(MOZCE_TOOLS_DIR)/Makefile $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
 	mkdir -p $(MOZCE_TOOLS_BIN_DIR);
 	$(CC) $(CFLAGS) -Fo$(MOZCE_TOOLS_BIN_DIR) -Fe$@ $(MOZCE_TOOLS_DIR)/arm-wince-res.c -link $(MOZCE_TOOLS_BIN_DIR)/toolspath.obj
 

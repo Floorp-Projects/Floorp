@@ -592,7 +592,6 @@ CSS_KEY(-moz-win-communicationstext, _moz_win_communicationstext)
 CSS_KEY(-moz-win-glass, _moz_win_glass)
 CSS_KEY(-moz-mac-unified-toolbar, _moz_mac_unified_toolbar)
 
-#ifdef MOZ_SVG
 CSS_KEY(alphabetic, alphabetic)
 CSS_KEY(bevel, bevel)
 CSS_KEY(butt, butt)
@@ -620,4 +619,3 @@ CSS_KEY(text-after-edge, text_after_edge)
 CSS_KEY(text-before-edge, text_before_edge)
 CSS_KEY(use-script, use_script)
 CSS_KEY(-moz-crisp-edges, _moz_crisp_edges)
-#endif

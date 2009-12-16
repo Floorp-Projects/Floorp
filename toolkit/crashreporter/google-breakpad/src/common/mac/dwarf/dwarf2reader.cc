@@ -26,7 +26,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <ext/hash_map>
+#include <assert.h>
+
 #include <stack>
 #include <utility>
 
@@ -34,17 +35,6 @@
 #include "common/mac/dwarf/dwarf2reader.h"
 #include "common/mac/dwarf/bytereader.h"
 #include "common/mac/dwarf/line_state_machine.h"
-
-namespace __gnu_cxx
-{
-  template<> struct hash< std::string >
-  {
-    size_t operator()( const std::string& x ) const
-    {
-      return hash< const char* >()( x.c_str() );
-    }
-  };
-}
 
 namespace dwarf2reader {
 

@@ -934,6 +934,117 @@ nsBaseWidget::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 a
   return NS_ERROR_NOT_IMPLEMENTED;
 }
  
+//////////////////////////////////////////////////////////////
+//
+// Code to sort rectangles for scrolling.
+//
+// The algorithm used here is similar to that described at
+// http://weblogs.mozillazine.org/roc/archives/2009/08/homework_answer.html
+//
+//////////////////////////////////////////////////////////////
+
+void
+ScrollRectIterBase::BaseInit(const nsIntPoint& aDelta, ScrollRect* aHead)
+{
+  mHead = aHead;
+  // Reflect the coordinate system of the rectangles so that we can assume
+  // that rectangles are moving in the direction of decreasing x and y.
+  Flip(aDelta);
+
+  // Do an initial sort of the rectangles by y and then reverse-x.
+  // nsRegion does not guarantee yx-banded rectangles but still tends to
+  // prefer breaking up rectangles vertically and joining horizontally, so
+  // tends to have fewer rectangles across x than down y, making this
+  // algorithm more efficient for rectangles from nsRegion when y is the
+  // primary sort parameter.
+  ScrollRect* unmovedHead; // chain of unmoved rectangles
+  {
+    nsTArray<ScrollRect*> array;
+    for (ScrollRect* r = mHead; r; r = r->mNext) {
+      array.AppendElement(r);
+    }
+    array.Sort(InitialSortComparator());
+
+    ScrollRect *next = nsnull;
+    for (PRUint32 i = array.Length(); i--; ) {
+      array[i]->mNext = next;
+      next = array[i];
+    }
+    unmovedHead = next;
+    // mHead becomes the start of the moved chain.
+    mHead = nsnull;
+  }
+
+  // Try to move each rect from an unmoved chain to the moved chain.
+  mTailLink = &mHead;
+  while (unmovedHead) {
+    // Move() will check for other rectangles that might need to be moved first
+    // and move them also.
+    Move(&unmovedHead);
+  }
+
+  // Reflect back to the original coordinate system.
+  Flip(aDelta);
+}
+
+void ScrollRectIterBase::Move(ScrollRect** aUnmovedLink)
+{
+  ScrollRect* rect = *aUnmovedLink;
+  // Remove rect from the unmoved chain.
+  *aUnmovedLink = rect->mNext;
+  rect->mNext = nsnull;
+
+  // Check subsequent rectangles that overlap vertically to see whether they
+  // might need to be moved first.
+  //
+  // The overlapping subsequent rectangles that are not moved this time get
+  // checked for each of their preceding unmoved overlapping rectangles,
+  // which adds an O(n^2) cost to this algorithm (where n is the number of
+  // rectangles across x).  The reverse-x ordering from InitialSortComparator
+  // avoids this for the case when rectangles are aligned in y.
+  for (ScrollRect** nextLink = aUnmovedLink;
+       ScrollRect* otherRect = *nextLink; ) {
+    NS_ASSERTION(otherRect->y >= rect->y, "Scroll rectangles out of order");
+    if (otherRect->y >= rect->YMost()) // doesn't overlap vertically
+      break;
+
+    // This only moves the other rectangle first if it is entirely to the
+    // left.  No promises are made regarding intersecting rectangles.  Moving
+    // another intersecting rectangle with merely x < rect->x (but XMost() >
+    // rect->x) can cause more conflicts between rectangles that do not
+    // intersect each other.
+    if (otherRect->XMost() <= rect->x) {
+      Move(nextLink);
+      // *nextLink now points to a subsequent rectangle.
+    } else {
+      // Step over otherRect for now.
+      nextLink = &otherRect->mNext;
+    }
+  }
+
+  // Add rect to the moved chain.
+  *mTailLink = rect;
+  mTailLink = &rect->mNext;
+}
+
+BlitRectIter::BlitRectIter(const nsIntPoint& aDelta,
+                           const nsTArray<nsIntRect>& aRects)
+    : mRects(aRects.Length())
+{
+    for (PRUint32 i = 0; i < aRects.Length(); ++i) {
+        mRects.AppendElement(aRects[i]);
+    }
+
+    // Link rectangles into a chain.
+    ScrollRect *next = nsnull;
+    for (PRUint32 i = mRects.Length(); i--; ) {
+        mRects[i].mNext = next;
+        next = &mRects[i];
+    }
+
+    BaseInit(aDelta, next);
+}
+
 #ifdef DEBUG
 //////////////////////////////////////////////////////////////
 //

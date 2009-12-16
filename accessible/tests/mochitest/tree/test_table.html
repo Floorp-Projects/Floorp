@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML table tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // table1
+
+      var accTree = {
+        role: ROLE_TABLE,
+        children: [
+          {
+            role: ROLE_CAPTION,
+            children: [
+              {
+                role: ROLE_TEXT_LEAF
+              }
+            ]
+          },
+          {
+            role: ROLE_ROW,
+            children: [
+              {
+                role: ROLE_COLUMNHEADER
+              },
+              {
+                role: ROLE_COLUMNHEADER
+              }
+            ]
+          },
+          {
+            role: ROLE_ROW,
+            children: [
+              {
+                role: ROLE_CELL
+              },
+              {
+                role: ROLE_CELL
+              }
+            ]
+          },
+          {
+            role: ROLE_ROW,
+            children: [
+              {
+                role: ROLE_CELL
+              },
+              {
+                role: ROLE_CELL
+              }
+            ]
+          },
+          {
+            role: ROLE_ROW,
+            children: [
+              {
+                role: ROLE_CELL
+              },
+              {
+                role: ROLE_CELL
+              }
+            ]
+          }
+        ]
+      };
+
+      testAccessibleTree("table", accTree);
+
+      //////////////////////////////////////////////////////////////////////////
+      // table2 (consist of one column)
+
+      accTree = {
+        role: ROLE_TABLE,
+        children: [
+          {
+            role: ROLE_ROW,
+            children: [
+              {
+                role: ROLE_COLUMNHEADER
+              }
+            ]
+          },
+          {
+            role: ROLE_ROW,
+            children: [
+              {
+                role: ROLE_CELL
+              }
+            ]
+          }
+        ]
+      };
+
+      testAccessibleTree("table2", accTree);
+
+      //////////////////////////////////////////////////////////////////////////
+      // table3 (consist of one row)
+
+      accTree = {
+        role: ROLE_TABLE,
+        children: [
+          {
+            role: ROLE_ROW,
+            children: [
+              {
+                role: ROLE_ROWHEADER
+              },
+              {
+                role: ROLE_CELL
+              }
+            ]
+          }
+        ]
+      };
+
+      testAccessibleTree("table3", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="When a table has only one column per row and that column happens to be a column header its role is exposed wrong"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=529621">
+    Mozilla Bug 529621
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <table id="table">
+    <thead>
+      <tr>
+        <th>col1</th><th>col2</th>
+      </tr>
+    </thead>
+    <caption>caption</caption>
+    <tbody>
+      <tr>
+        <td>cell1</td><td>cell2</td>
+      </tr>
+    </tbody>
+    <tr>
+      <td>cell3</td><td>cell4</td>
+    </tr>
+    <caption>caption2</caption>
+    <tfoot>
+      <tr>
+        <td>cell5</td><td>cell6</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <table id="table2">
+    <thead>
+      <tr>
+        <th>colheader</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>bla</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table id="table3">
+    <tr>
+      <th>rowheader</th>
+      <td>cell</td>
+    </tr>
+  </table>
+</body>
+</html>

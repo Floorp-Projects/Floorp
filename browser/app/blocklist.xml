@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem id="fdm_ffext@freedownloadmanager.org">
@@ -23,11 +23,7 @@
     </emItem>
     <emItem id="{2224e955-00e9-4613-a844-ce69fccaae91}"/>
     <emItem id="{3f963a5b-e555-4543-90e2-c3908898db71}">
-      <versionRange minVersion=" " maxVersion="8.0">
-        <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-           <versionRange minVersion="3.1a1" maxVersion="*"/>
-        </targetApplication>
-      </versionRange>
+      <versionRange minVersion=" " maxVersion="8.5"/>
     </emItem>
     <emItem id="{4B3803EA-5230-4DC3-A7FC-33638F3D3542}">
       <versionRange minVersion="1.2" maxVersion="1.2">
@@ -35,6 +31,9 @@
            <versionRange minVersion="3.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
+    </emItem>
+    <emItem id="{B13721C7-F507-4982-B2E5-502A71474FED}">
+      <versionRange minVersion=" " maxVersion="3.3.0.3970" severity="1"/>
     </emItem>
   </emItems>
 <pluginItems>

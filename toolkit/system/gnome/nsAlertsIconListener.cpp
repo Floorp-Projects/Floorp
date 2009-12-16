@@ -42,9 +42,8 @@
 #include "nsNetUtil.h"
 #include "nsIImageToPixbuf.h"
 #include "nsIStringBundle.h"
+#include "nsIObserverService.h"
 
-#include <gdk-pixbuf/gdk-pixbuf.h>
-#include <libnotify/notify.h>
 #include <gdk/gdk.h>
 
 static PRBool gHasActions = PR_FALSE;
@@ -56,22 +55,36 @@ static void notify_action_cb(NotifyNotification *notification,
   alert->SendCallback();
 }
 
-static void notify_closed_cb(NotifyNotification *notification,
-                             gpointer user_data)
+static void notify_closed_marshal(GClosure* closure,
+                                  GValue* return_value,
+                                  guint n_param_values,
+                                  const GValue* param_values,
+                                  gpointer invocation_hint,
+                                  gpointer marshal_data)
 {
+  NS_ABORT_IF_FALSE(n_param_values >= 1, "No object in params");
+
+  gpointer notification = g_value_peek_pointer(param_values);
   g_object_unref(notification);
 
-  nsAlertsIconListener* alert = static_cast<nsAlertsIconListener*> (user_data);
+  nsAlertsIconListener* alert =
+    static_cast<nsAlertsIconListener*>(closure->data);
   alert->SendClosed();
   NS_RELEASE(alert);
 }
 
-NS_IMPL_ISUPPORTS2(nsAlertsIconListener, imgIContainerObserver, imgIDecoderObserver)
+NS_IMPL_ISUPPORTS3(nsAlertsIconListener, imgIContainerObserver, imgIDecoderObserver, nsIObserver)
 
 nsAlertsIconListener::nsAlertsIconListener()
-: mLoadedFrame(PR_FALSE)
+: mLoadedFrame(PR_FALSE),
+  mHasQuit(PR_FALSE),
+  mNotification(NULL)
 {
   MOZ_COUNT_CTOR(nsAlertsIconListener);
+
+  nsCOMPtr<nsIObserverService> obsServ =
+      do_GetService("@mozilla.org/observer-service;1");
+  obsServ->AddObserver(this, "quit-application", PR_FALSE);
 }
 
 nsAlertsIconListener::~nsAlertsIconListener()
@@ -80,6 +93,12 @@ nsAlertsIconListener::~nsAlertsIconListener()
 
   if (mIconRequest)
     mIconRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
+
+  if (!mHasQuit) {
+    nsCOMPtr<nsIObserverService> obsServ =
+        do_GetService("@mozilla.org/observer-service;1");
+    obsServ->RemoveObserver(this, "quit-application");
+  }
 }
 
 NS_IMETHODIMP
@@ -200,26 +219,32 @@ nsAlertsIconListener::OnStopFrame(imgIRequest* aRequest,
 nsresult
 nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf)
 {
-  NotifyNotification* notify = notify_notification_new(mAlertTitle.get(),
-                                                       mAlertText.get(),
-                                                       NULL, NULL);
-  if (!notify)
+  mNotification = notify_notification_new(mAlertTitle.get(),
+                                          mAlertText.get(),
+                                          NULL, NULL);
+  if (!mNotification)
     return NS_ERROR_OUT_OF_MEMORY;
 
   if (aPixbuf)
-    notify_notification_set_icon_from_pixbuf(notify, aPixbuf);
+    notify_notification_set_icon_from_pixbuf(mNotification, aPixbuf);
 
   NS_ADDREF(this);
   if (mAlertHasAction) {
     // What we put as the label doesn't matter here, if the action
     // string is "default" then that makes the entire bubble clickable
     // rather than creating a button.
-    notify_notification_add_action(notify, "default", "Activate",
+    notify_notification_add_action(mNotification, "default", "Activate",
                                    notify_action_cb, this, NULL);
   }
 
-  g_signal_connect(notify, "closed", G_CALLBACK(notify_closed_cb), this);
-  gboolean result = notify_notification_show(notify, NULL);
+  // Fedora 10 calls NotifyNotification "closed" signal handlers with a
+  // different signature, so a marshaller is used instead of a C callback to
+  // get the user_data (this) in a parseable format.  |closure| is created
+  // with a floating reference, which gets sunk by g_signal_connect_closure().
+  GClosure* closure = g_closure_new_simple(sizeof(GClosure), this);
+  g_closure_set_marshal(closure, notify_closed_marshal);
+  g_signal_connect_closure(mNotification, "closed", closure, FALSE);
+  gboolean result = notify_notification_show(mNotification, NULL);
 
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -257,8 +282,21 @@ nsAlertsIconListener::SendCallback()
 void
 nsAlertsIconListener::SendClosed()
 {
+  mNotification = NULL;
   if (mAlertListener)
     mAlertListener->Observe(NULL, "alertfinished", mAlertCookie.get());
+}
+
+NS_IMETHODIMP
+nsAlertsIconListener::Observe(nsISupports *aSubject, const char *aTopic,
+                              const PRUnichar *aData) {
+  // We need to close any open notifications upon application exit, otherwise
+  // we will leak since libnotify holds a ref for us.
+  if (!nsCRT::strcmp(aTopic, "quit-application") && mNotification) {
+    notify_notification_close(mNotification, NULL);
+    mHasQuit = PR_TRUE;
+  }
+  return NS_OK;
 }
 
 nsresult

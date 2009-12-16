@@ -7730,12 +7730,18 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   }
 
   PRUint32 nestingLevel = sNestingLevel + 1;
-  if (interval < DOM_MIN_TIMEOUT_VALUE &&
-      (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL)) {
-    // Don't allow timeouts less than DOM_MIN_TIMEOUT_VALUE from
-    // now...
+  if (interval < DOM_MIN_TIMEOUT_VALUE) {
+    if (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
+      // Don't allow timeouts less than DOM_MIN_TIMEOUT_VALUE from
+      // now...
 
-    interval = DOM_MIN_TIMEOUT_VALUE;
+      interval = DOM_MIN_TIMEOUT_VALUE;
+    }
+    else if (interval < 0) {
+      // Clamp negative intervals to 0.
+
+      interval = 0;
+    }
   }
 
   NS_ASSERTION(interval >= 0, "DOM_MIN_TIMEOUT_VALUE lies");

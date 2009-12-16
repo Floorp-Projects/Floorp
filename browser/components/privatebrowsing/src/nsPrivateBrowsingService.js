@@ -38,6 +38,10 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+#ifndef XP_WIN
+#define BROKEN_WM_Z_ORDER
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities
 
@@ -328,9 +332,37 @@ PrivateBrowsingService.prototype = {
   },
 
   _getBrowserWindow: function PBS__getBrowserWindow() {
-    return Cc["@mozilla.org/appshell/window-mediator;1"].
-           getService(Ci.nsIWindowMediator).
-           getMostRecentWindow("navigator:browser");
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+             getService(Ci.nsIWindowMediator);
+
+    var win = wm.getMostRecentWindow("navigator:browser");
+
+    // We don't just return |win| now because of bug 528706.
+
+    if (!win)
+      return null;
+    if (!win.closed)
+      return win;
+
+#ifdef BROKEN_WM_Z_ORDER
+    win = null;
+    var windowsEnum = wm.getEnumerator("navigator:browser");
+    // this is oldest to newest, so this gets a bit ugly
+    while (windowsEnum.hasMoreElements()) {
+      let nextWin = windowsEnum.getNext();
+      if (!nextWin.closed)
+        win = nextWin;
+    }
+    return win;
+#else
+    var windowsEnum = wm.getZOrderDOMWindowEnumerator("navigator:browser", true);
+    while (windowsEnum.hasMoreElements()) {
+      win = windowsEnum.getNext();
+      if (!win.closed)
+        return win;
+    }
+    return null;
+#endif
   },
 
   _ensureCanCloseWindows: function PBS__ensureCanCloseWindows() {
@@ -345,12 +377,19 @@ PrivateBrowsingService.prototype = {
 
     let windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
                          getService(Ci.nsIWindowMediator);
-    let windowsEnum = windowMediator.getXULWindowEnumerator("navigator:browser");
+    let windowsEnum = windowMediator.getEnumerator("navigator:browser");
 
     while (windowsEnum.hasMoreElements()) {
-      let win = windowsEnum.getNext().QueryInterface(Ci.nsIXULWindow);
-      if (win.docShell.contentViewer.permitUnload(true))
-        this._windowsToClose.push(win);
+      let win = windowsEnum.getNext();
+      if (win.closed)
+        continue;
+      let xulWin = win.QueryInterface(Ci.nsIInterfaceRequestor).
+                   getInterface(Ci.nsIWebNavigation).
+                   QueryInterface(Ci.nsIDocShellTreeItem).
+                   treeOwner.QueryInterface(Ci.nsIInterfaceRequestor).
+                   getInterface(Ci.nsIXULWindow);
+      if (xulWin.docShell.contentViewer.permitUnload(true))
+        this._windowsToClose.push(xulWin);
       else
         throw Cr.NS_ERROR_ABORT;
     }

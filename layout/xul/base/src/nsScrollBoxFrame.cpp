@@ -77,7 +77,7 @@ protected:
     nsButtonBoxFrame(aPresShell, aContext) {}
   
   void StartRepeat() {
-    nsRepeatService::GetInstance()->Start(Notify, this);
+    nsRepeatService::GetInstance()->Start(Notify, this, 0);
   }
   void StopRepeat() {
     nsRepeatService::GetInstance()->Stop(Notify, this);

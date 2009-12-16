@@ -1566,8 +1566,7 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
                                       nsIContent*  aContent,
                                       PRInt32      aNameSpaceID,
                                       nsIAtom*     aAttribute,
-                                      PRInt32      aModType,
-                                      PRUint32     aStateMask)
+                                      PRInt32      aModType)
 {
     // Handle "open" and "close" cases. We do this handling before
     // we've notified the observer, so that content is already created
@@ -1591,7 +1590,7 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
 
     // Pass along to the generic template builder.
     nsXULTemplateBuilder::AttributeChanged(aDocument, aContent, aNameSpaceID,
-                                           aAttribute, aModType, aStateMask);
+                                           aAttribute, aModType);
 }
 
 void

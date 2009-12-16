@@ -60,10 +60,6 @@
 class nsTextPaintStyle;
 class PropertyProvider;
 
-// This bit is set while the frame is registered as a blinking frame or if
-// frame is within a non-dynamic PresContext.
-#define TEXT_BLINK_ON_OR_PRINTING  0x20000000
-
 // This state bit is set on frames that have some non-collapsed characters after
 // reflow
 #define TEXT_HAS_NONCOLLAPSED_CHARACTERS 0x80000000
@@ -369,16 +365,8 @@ public:
   TrimmedOffsets GetTrimmedOffsets(const nsTextFragment* aFrag,
                                    PRBool aTrimAfter);
 
-  const nsTextFragment* GetFragment() const
-  {
-    return !(GetStateBits() & TEXT_BLINK_ON_OR_PRINTING) ?
-      mContent->GetText() : GetFragmentInternal();
-  }
-
 protected:
   virtual ~nsTextFrame();
-
-  const nsTextFragment* GetFragmentInternal() const;
 
   nsIFrame*   mNextContinuation;
   // The key invariant here is that mContentOffset never decreases along

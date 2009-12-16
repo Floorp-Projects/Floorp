@@ -150,6 +150,8 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  nsresult CopyInnerTo(nsGenericElement* aDest) const;
+
   /**
    * Called when an attribute is about to be changed
    */
@@ -975,3 +977,18 @@ nsHTMLTextAreaElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return nsGenericHTMLFormElement::AfterSetAttr(aNameSpaceID, aName, aValue,
                                                 aNotify);
 }
+
+nsresult
+nsHTMLTextAreaElement::CopyInnerTo(nsGenericElement* aDest) const
+{
+  nsresult rv = nsGenericHTMLFormElement::CopyInnerTo(aDest);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aDest->GetOwnerDoc()->IsStaticDocument()) {
+    nsAutoString value;
+    const_cast<nsHTMLTextAreaElement*>(this)->GetValue(value);
+    static_cast<nsHTMLTextAreaElement*>(aDest)->SetValue(value);
+  }
+  return NS_OK;
+}
+

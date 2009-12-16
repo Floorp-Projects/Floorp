@@ -6187,7 +6187,8 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
   // Create special list bullet accessible
   const nsStyleList* myList = GetStyleList();
   nsAutoString bulletText;
-  if (myList->mListStyleImage || myList->mListStyleType == NS_STYLE_LIST_STYLE_DISC ||
+  if (myList->GetListStyleImage() ||
+      myList->mListStyleType == NS_STYLE_LIST_STYLE_DISC ||
       myList->mListStyleType == NS_STYLE_LIST_STYLE_CIRCLE ||
       myList->mListStyleType == NS_STYLE_LIST_STYLE_SQUARE) {
     bulletText.Assign(PRUnichar(0x2022));; // Unicode bullet character
@@ -6365,24 +6366,25 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
         (nsnull == mBullet)) {
       // Resolve style for the bullet frame
       const nsStyleList* styleList = GetStyleList();
-      nsIAtom *pseudoElement;
+      nsCSSPseudoElements::Type pseudoType;
       switch (styleList->mListStyleType) {
         case NS_STYLE_LIST_STYLE_DISC:
         case NS_STYLE_LIST_STYLE_CIRCLE:
         case NS_STYLE_LIST_STYLE_SQUARE:
-          pseudoElement = nsCSSPseudoElements::mozListBullet;
+          pseudoType = nsCSSPseudoElements::ePseudo_mozListBullet;
           break;
         default:
-          pseudoElement = nsCSSPseudoElements::mozListNumber;
+          pseudoType = nsCSSPseudoElements::ePseudo_mozListNumber;
           break;
       }
 
       nsIPresShell *shell = presContext->PresShell();
 
       nsStyleContext* parentStyle =
-        CorrectStyleParentFrame(this, pseudoElement)->GetStyleContext();
+        CorrectStyleParentFrame(this,
+          nsCSSPseudoElements::GetPseudoAtom(pseudoType))->GetStyleContext();
       nsRefPtr<nsStyleContext> kidSC = shell->StyleSet()->
-        ResolvePseudoStyleFor(mContent, pseudoElement, parentStyle);
+        ResolvePseudoElementStyle(mContent, pseudoType, parentStyle);
 
       // Create bullet frame
       nsBulletFrame* bullet = new (shell) nsBulletFrame(kidSC);
@@ -6418,7 +6420,7 @@ nsBlockFrame::BulletIsEmpty() const
                "should only care when we have an outside bullet");
   const nsStyleList* list = GetStyleList();
   return list->mListStyleType == NS_STYLE_LIST_STYLE_NONE &&
-         !list->mListStyleImage;
+         !list->GetListStyleImage();
 }
 
 // static

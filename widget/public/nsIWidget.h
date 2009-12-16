@@ -673,11 +673,8 @@ class nsIWidget : public nsISupports {
      * operation fails to blit because part of the window is unavailable
      * (e.g. partially offscreen).
      * 
-     * The caller guarantees that the rectangles in aDestRects are ordered
-     * so that copying from aDestRects[i] - aDelta to aDestRects[i] does
-     * not alter anything in aDestRects[j] - aDelta for j > i. That is,
-     * it's safe to just copy the rectangles in the order given in
-     * aDestRects.
+     * The caller guarantees that the rectangles in aDestRects are
+     * non-intersecting.
      *
      * @param aDelta amount to scroll (device pixels)
      * @param aDestRects rectangles to copy into

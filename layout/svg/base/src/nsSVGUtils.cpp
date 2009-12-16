@@ -732,13 +732,19 @@ nsSVGUtils::ObjectSpace(const gfxRect &aRect, const nsSVGLength2 *aLength)
     break;
   case XY:
     axis = float(ComputeNormalizedHypotenuse(aRect.Width(), aRect.Height()));
+    break;
+  default:
+    NS_NOTREACHED("unexpected ctx type");
+    axis = 0.0f;
+    break;
   }
 
   if (aLength->IsPercentage()) {
     fraction = aLength->GetAnimValInSpecifiedUnits() / 100;
-  } else
+  } else {
     fraction = aLength->GetAnimValue(static_cast<nsSVGSVGElement*>
                                                 (nsnull));
+  }
 
   return fraction * axis;
 }

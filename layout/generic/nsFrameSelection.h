@@ -658,7 +658,6 @@ private:
   void         InvalidateDesiredX(); //do not listen to mDesiredX you must get another.
   void         SetDesiredX(nscoord aX); //set the mDesiredX
 
-  nsresult     GetRootForContentSubtree(nsIContent *aContent, nsIContent **aParent);
   nsresult     ConstrainFrameAndPointToAnchorSubtree(nsIFrame *aFrame, nsPoint& aPoint, nsIFrame **aRetFrame, nsPoint& aRetPoint);
 
   PRUint32     GetBatching() const {return mBatching; }

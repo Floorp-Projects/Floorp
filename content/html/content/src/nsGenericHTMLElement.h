@@ -917,6 +917,8 @@ public:
                            PRBool aNotify);
   virtual void DestroyContent();
 
+  nsresult CopyInnerTo(nsGenericElement* aDest) const;
+
   // nsIDOMNSHTMLElement 
   NS_IMETHOD GetTabIndex(PRInt32 *aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);

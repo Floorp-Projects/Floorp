@@ -2834,6 +2834,9 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
 
     nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(newChannel);
     if (httpInternal) {
+        // convey the mForceAllowThirdPartyCookie flag
+        httpInternal->SetForceAllowThirdPartyCookie(mForceAllowThirdPartyCookie);
+
         // update the DocumentURI indicator since we are being redirected.
         // if this was a top-level document channel, then the new channel
         // should have its mDocumentURI point to newURI; otherwise, we

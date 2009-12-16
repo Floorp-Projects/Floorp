@@ -78,7 +78,6 @@
 #include "gfxTypes.h"
 #include "gfxUserFontSet.h"
 #include "nsTArray.h"
-#include "nsTextFragment.h"
 #include "nsICanvasElement.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "gfxPlatform.h"
@@ -225,6 +224,19 @@ nsLayoutUtils::GetClosestFrameOfType(nsIFrame* aFrame, nsIAtom* aFrameType)
     }
   }
   return nsnull;
+}
+
+// static
+nsIFrame*
+nsLayoutUtils::GetStyleFrame(nsIFrame* aFrame)
+{
+  if (aFrame->GetType() == nsGkAtoms::tableOuterFrame) {
+    nsIFrame* inner = aFrame->GetFirstChild(nsnull);
+    NS_ASSERTION(inner, "Outer table must have an inner");
+    return inner;
+  }
+
+  return aFrame;
 }
 
 nsIFrame*
@@ -1133,6 +1145,29 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   return NS_OK;
 }
 
+#ifdef DEBUG
+static void
+PrintAddedRegion(const char* aFormat, nsIFrame* aFrame,
+                 const nsRegion& aRegion)
+{
+  if (!gDumpRepaintRegionForCopy)
+    return;
+  fprintf(stderr, aFormat, (void*)aFrame);
+  fprintf(stderr, " : [");
+  nsRegionRectIterator iter(aRegion);
+  PRBool first = PR_TRUE;
+  const nsRect* r;
+  while ((r = iter.Next()) != nsnull) {
+    if (!first) {
+      fprintf(stderr, ",");
+    }
+    fprintf(stderr, "(%d,%d,%d,%d)",
+            r->x, r->y, r->XMost(), r->YMost());
+  }
+  fprintf(stderr, "]\n");
+}
+#endif
+
 static void
 AccumulateItemInRegion(nsRegion* aRegion, const nsRect& aUpdateRect,
                        const nsRect& aItemRect, const nsRect& aExclude,
@@ -1143,12 +1178,8 @@ AccumulateItemInRegion(nsRegion* aRegion, const nsRect& aUpdateRect,
     nsRegion r;
     r.Sub(damageRect, aExclude);
 #ifdef DEBUG
-    if (gDumpRepaintRegionForCopy) {
-      nsRect bounds = r.GetBounds();
-      fprintf(stderr, "Adding rect %d,%d,%d,%d for frame %p\n",
-              bounds.x, bounds.y, bounds.width, bounds.height,
-              (void*)aItem->GetUnderlyingFrame());
-    }
+    PrintAddedRegion("Adding rect for frame %p",
+                     aItem->GetUnderlyingFrame(), r);
 #endif
     aRegion->Or(*aRegion, r);
   }
@@ -1170,6 +1201,10 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
           // Invalidate the whole thing
           nsRect r;
           r.IntersectRect(aClipRect, effectsItem->GetBounds(aBuilder));
+ #ifdef DEBUG
+          PrintAddedRegion("Adding region for SVG effects frame %p",
+                           effectsItem->GetEffectsFrame(), nsRegion(r));
+ #endif
           aRegion->Or(*aRegion, r);
         }
       } else
@@ -1185,7 +1220,7 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
         // do anything special.
         nsIFrame* clipFrame = clipItem->GetClippingFrame();
         if (!aBuilder->IsMovingFrame(clipFrame) &&
-            nsLayoutUtils::IsProperAncestorFrame(clipFrame, aBuilder->GetRootMovingFrame())) {
+            nsLayoutUtils::IsProperAncestorFrameCrossDoc(clipFrame, aBuilder->GetRootMovingFrame())) {
           nscoord appUnitsPerDevPixel = clipFrame->PresContext()->AppUnitsPerDevPixel();
           // We know the nsDisplayClip will snap because we're in a context
           // where pixels can be blitted and we don't traverse down through
@@ -1199,11 +1234,19 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
           nsRegion clippedOutSource;
           clippedOutSource.Sub(aUpdateRect - aDelta, clip);
           clippedOutSource.MoveBy(aDelta);
+ #ifdef DEBUG
+          PrintAddedRegion("Adding region for clipped out source frame %p",
+                           clipFrame, clippedOutSource);
+ #endif
           aRegion->Or(*aRegion, clippedOutSource);
 
           // Invalidate the destination area that is clipped out
           nsRegion clippedOutDestination;
           clippedOutDestination.Sub(aUpdateRect, clip);
+ #ifdef DEBUG
+          PrintAddedRegion("Adding region for clipped out source frame %p",
+                           clipFrame, clippedOutDestination);
+ #endif
           aRegion->Or(*aRegion, clippedOutDestination);
         }
         AddItemsToRegion(aBuilder, sublist, aUpdateRect, clip, aDelta, aRegion);
@@ -2759,7 +2802,7 @@ nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
 {
 #ifdef MOZ_SVG
   nsIFrame *frame = nsCSSRendering::IsCanvasFrame(aForFrame) ?
-    nsCSSRendering::FindRootFrame(aForFrame) : aForFrame;
+    nsCSSRendering::FindBackgroundStyleFrame(aForFrame) : aForFrame;
 
   switch (frame->GetStyleSVG()->mImageRendering) {
   case NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED:
@@ -3229,48 +3272,6 @@ nsLayoutUtils::IsReallyFixedPos(nsIFrame* aFrame)
   nsIAtom *parentType = aFrame->GetParent()->GetType();
   return parentType == nsGkAtoms::viewportFrame ||
          parentType == nsGkAtoms::pageContentFrame;
-}
-
-static void DeleteTextFragment(void* aObject, nsIAtom* aPropertyName,
-                               void* aPropertyValue, void* aData)
-{
-  delete static_cast<nsTextFragment*>(aPropertyValue);
-}
-
-/* static */ nsTextFragment*
-nsLayoutUtils::GetTextFragmentForPrinting(const nsIFrame* aFrame)
-{
-  nsPresContext* presContext = aFrame->PresContext();
-  NS_PRECONDITION(!presContext->IsDynamic(),
-                  "Shouldn't call this with dynamic PresContext");
-#ifdef MOZ_SVG
-  NS_PRECONDITION(aFrame->GetType() == nsGkAtoms::textFrame ||
-                  aFrame->GetType() == nsGkAtoms::svgGlyphFrame,
-                  "Wrong frame type!");
-#else
-  NS_PRECONDITION(aFrame->GetType() == nsGkAtoms::textFrame,
-                  "Wrong frame type!");
-#endif // MOZ_SVG
-
-  nsIContent* content = aFrame->GetContent();
-  nsTextFragment* frag =
-    static_cast<nsTextFragment*>(presContext->PropertyTable()->
-      GetProperty(content, nsGkAtoms::clonedTextForPrint));
-
-  if (!frag) {
-    frag = new nsTextFragment();
-    NS_ENSURE_TRUE(frag, nsnull);
-    *frag = *content->GetText();
-    nsresult rv = presContext->PropertyTable()->
-                    SetProperty(content, nsGkAtoms::clonedTextForPrint, frag,
-                                DeleteTextFragment, nsnull);
-    if (NS_FAILED(rv)) {
-      delete frag;
-      return nsnull;
-    }
-  }
-
-  return frag;
 }
 
 nsLayoutUtils::SurfaceFromElementResult

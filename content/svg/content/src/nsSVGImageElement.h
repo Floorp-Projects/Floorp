@@ -90,6 +90,8 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
+  nsresult CopyInnerTo(nsGenericElement* aDest) const;
+
   void MaybeLoadSVGImage();
 protected:
   nsresult LoadSVGImage(PRBool aForce, PRBool aNotify);

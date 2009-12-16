@@ -281,6 +281,7 @@
 @BINPATH@/components/nsLoginManagerPrompter.js
 @BINPATH@/components/storage-Legacy.js
 @BINPATH@/components/storage-mozStorage.js
+@BINPATH@/components/crypto-SDR.js
 @BINPATH@/components/jsconsole-clhandler.js
 #ifdef MOZ_GTK2
 @BINPATH@/components/nsFilePicker.js

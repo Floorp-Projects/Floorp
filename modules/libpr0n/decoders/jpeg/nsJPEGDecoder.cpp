@@ -208,7 +208,7 @@ NS_IMETHODIMP nsJPEGDecoder::Close(PRUint32 aFlags)
   /* If we're doing a full decode and haven't notified of completion yet,
    * we must not have got everything we wanted. Send error notifications. */
   if (!(aFlags & CLOSE_FLAG_DONTNOTIFY) &&
-      !(mFlags && imgIDecoder::DECODER_FLAG_HEADERONLY) &&
+      !(mFlags & imgIDecoder::DECODER_FLAG_HEADERONLY) &&
       !mNotifiedDone)
     NotifyDone(/* aSuccess = */ PR_FALSE);
 

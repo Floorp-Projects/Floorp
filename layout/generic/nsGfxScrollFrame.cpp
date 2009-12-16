@@ -882,6 +882,9 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
     state.mComputedBorder.TopBottom();
 
   aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+
+  CheckInvalidateSizeChange(aDesiredSize);
+
   FinishAndStoreOverflow(&aDesiredSize);
 
   if (!InInitialReflow() && !mInner.mHadNonInitialReflow) {

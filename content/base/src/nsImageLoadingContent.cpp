@@ -987,3 +987,19 @@ nsImageLoadingContent::SetBlockingOnload(PRBool aBlocking)
     mBlockingOnload = aBlocking;
   }
 }
+
+void
+nsImageLoadingContent::CreateStaticImageClone(nsImageLoadingContent* aDest) const
+{
+  aDest->mCurrentRequest = nsContentUtils::GetStaticRequest(mCurrentRequest);
+  aDest->mForcedImageState = mForcedImageState;
+  aDest->mImageBlockingStatus = mImageBlockingStatus;
+  aDest->mLoadingEnabled = mLoadingEnabled;
+  aDest->mStartingLoad = mStartingLoad;
+  aDest->mIsImageStateForced = mIsImageStateForced;
+  aDest->mLoading = mLoading;
+  aDest->mBroken = mBroken;
+  aDest->mUserDisabled = mUserDisabled;
+  aDest->mSuppressed = mSuppressed;
+}
+

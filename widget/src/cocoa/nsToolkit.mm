@@ -192,10 +192,17 @@ nsToolkit::RemoveSleepWakeNotifcations()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// We shouldn't do anything here.  See RegisterForAllProcessMouseEvents() for
-// the reason why.
+// This is the callback used in RegisterForAllProcessMouseEvents.
 static OSStatus EventMonitorHandler(EventHandlerCallRef aCaller, EventRef aEvent, void* aRefcon)
 {
+  // Up to Mac OS 10.4 (or when building with the 10.4 SDK), installing a Carbon
+  // event handler like this one caused the OS to post the equivalent Cocoa
+  // events to [NSApp sendEvent:]. When using the 10.5 SDK, this doesn't happen
+  // any more, so we need to do it manually.
+#ifdef NS_LEOPARD_AND_LATER
+  [NSApp sendEvent:[NSEvent eventWithEventRef:aEvent]];
+#endif // NS_LEOPARD_AND_LATER
+
   return eventNotHandledErr;
 }
 
@@ -265,16 +272,6 @@ nsToolkit::RegisterForAllProcessMouseEvents()
       return;
   }
   if (!mEventMonitorHandler) {
-    // Installing a handler for particular Carbon events causes the OS to post
-    // equivalent Cocoa events to the browser's event stream (the one that
-    // passes through [NSApp sendEvent:]).  For this reason installing a
-    // handler for kEventMouseMoved fixes bmo bug 368077, even though our
-    // handler does nothing on mouse-moved events.  (Actually it's more
-    // accurate to say that the OS (working in a different process) sends
-    // events to the window server, from which the OS (acting in the browser's
-    // process on its behalf) grabs them and turns them into both Carbon
-    // events (which get fed to our handler) and Cocoa events (which get fed
-    // to [NSApp sendEvent:]).)
     EventTypeSpec kEvents[] = {{kEventClassMouse, kEventMouseMoved}};
     InstallEventHandler(GetEventMonitorTarget(), EventMonitorHandler,
                         GetEventTypeCount(kEvents), kEvents, 0,

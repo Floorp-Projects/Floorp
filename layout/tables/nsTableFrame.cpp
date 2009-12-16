@@ -73,6 +73,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsStyleSet.h"
 #include "nsDisplayList.h"
+#include "nsIScrollableFrame.h"
 
 /********************************************************************************
  ** nsTableReflowState                                                         **
@@ -668,9 +669,8 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsTableColGroupType aColGroupType)
   nsIPresShell *shell = presContext->PresShell();
 
   nsRefPtr<nsStyleContext> colGroupStyle;
-  colGroupStyle = shell->StyleSet()->ResolvePseudoStyleFor(colGroupContent,
-                                                           nsCSSAnonBoxes::tableColGroup,
-                                                           mStyleContext);
+  colGroupStyle = shell->StyleSet()->
+    ResolveAnonymousBoxStyle(nsCSSAnonBoxes::tableColGroup, mStyleContext);
   // Create a col group frame
   nsIFrame* newFrame = NS_NewTableColGroupFrame(shell, colGroupStyle);
   if (newFrame) {
@@ -733,9 +733,8 @@ nsTableFrame::AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
     // col group
     iContent = aColGroupFrame->GetContent();
     parentStyleContext = aColGroupFrame->GetStyleContext();
-    styleContext = shell->StyleSet()->ResolvePseudoStyleFor(iContent,
-                                                            nsCSSAnonBoxes::tableCol,
-                                                            parentStyleContext);
+    styleContext = shell->StyleSet()->
+      ResolveAnonymousBoxStyle(nsCSSAnonBoxes::tableCol, parentStyleContext);
     // ASSERTION to check for bug 54454 sneaking back in...
     NS_ASSERTION(iContent, "null content in CreateAnonymousColFrames");
 
@@ -1268,34 +1267,38 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
   if (aDisplayItem) {
     pushTableItem.Push(aBuilder, aDisplayItem);
   }
-  nsDisplayTableItem* currentItem = aBuilder->GetCurrentTableItem();
-  NS_ASSERTION(currentItem, "No current table item!");
-  currentItem->UpdateForFrameBackground(aFrame);
-  
-  // Paint the outset box-shadows for the table frames
-  PRBool hasBoxShadow = aFrame->IsVisibleForPainting(aBuilder) &&
-                        aFrame->GetStyleBorder()->mBoxShadow;
-  if (hasBoxShadow) {
-    nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadowOuter(aFrame);
-    nsresult rv = lists->BorderBackground()->AppendNewToTop(item);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
-  // Create dedicated background display items per-frame when we're
-  // handling events.
-  // XXX how to handle collapsed borders?
-  if (aBuilder->IsForEventDelivery() &&
-      aFrame->IsVisibleForPainting(aBuilder)) {
-    nsresult rv = lists->BorderBackground()->AppendNewToTop(new (aBuilder)
-        nsDisplayBackground(aFrame));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  if (aFrame->IsVisibleForPainting(aBuilder)) {
+    nsDisplayTableItem* currentItem = aBuilder->GetCurrentTableItem();
+    // currentItem may be null, when none of the table parts have a
+    // background or border
+    if (currentItem) {
+      currentItem->UpdateForFrameBackground(aFrame);
+    }
 
-  // Paint the inset box-shadows for the table frames
-  if (hasBoxShadow) {
-    nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadowInner(aFrame);
-    nsresult rv = lists->BorderBackground()->AppendNewToTop(item);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Paint the outset box-shadows for the table frames
+    PRBool hasBoxShadow = aFrame->GetStyleBorder()->mBoxShadow != nsnull;
+    if (hasBoxShadow) {
+      nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadowOuter(aFrame);
+      nsresult rv = lists->BorderBackground()->AppendNewToTop(item);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // Create dedicated background display items per-frame when we're
+    // handling events.
+    // XXX how to handle collapsed borders?
+    if (aBuilder->IsForEventDelivery()) {
+      nsresult rv = lists->BorderBackground()->AppendNewToTop(new (aBuilder)
+          nsDisplayBackground(aFrame));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // Paint the inset box-shadows for the table frames
+    if (hasBoxShadow) {
+      nsDisplayItem* item = new (aBuilder) nsDisplayBoxShadowInner(aFrame);
+      nsresult rv = lists->BorderBackground()->AppendNewToTop(item);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   nsresult rv = aTraversal(aBuilder, aFrame, aDirtyRect, *lists);
@@ -1310,6 +1313,49 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
   }
   
   return aFrame->DisplayOutline(aBuilder, aLists);
+}
+
+#ifdef DEBUG
+static PRBool
+IsFrameAllowedInTable(nsIAtom* aType)
+{
+  return IS_TABLE_CELL(aType) ||
+         nsGkAtoms::tableRowFrame == aType ||
+         nsGkAtoms::tableRowGroupFrame == aType ||
+         nsGkAtoms::scrollFrame == aType ||
+         nsGkAtoms::tableFrame == aType ||
+         nsGkAtoms::tableColFrame == aType ||
+         nsGkAtoms::tableColGroupFrame == aType;
+}
+#endif
+
+static PRBool
+AnyTablePartHasBorderOrBackground(nsIFrame* aFrame)
+{
+  NS_ASSERTION(IsFrameAllowedInTable(aFrame->GetType()), "unexpected frame type");
+
+  nsIScrollableFrame *scrollFrame = do_QueryFrame(aFrame);
+  if (scrollFrame) {
+    return AnyTablePartHasBorderOrBackground(scrollFrame->GetScrolledFrame());
+  }
+
+  if (aFrame->GetStyleVisibility()->IsVisible() &&
+      (!aFrame->GetStyleBackground()->IsTransparent() ||
+       aFrame->GetStyleDisplay()->mAppearance ||
+       aFrame->HasBorder()))
+    return PR_TRUE;
+
+  nsTableCellFrame *cellFrame = do_QueryFrame(aFrame);
+  if (cellFrame)
+    return PR_FALSE;
+
+  nsFrameList children = aFrame->GetChildList(nsnull);
+  for (nsIFrame* f = children.FirstChild(); f; f = f->GetNextSibling()) {
+    if (AnyTablePartHasBorderOrBackground(f))
+      return PR_TRUE;
+  }
+
+  return PR_FALSE;
 }
 
 // table paint code is concerned primarily with borders and bg color
@@ -1335,14 +1381,16 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
-  // This background is created regardless of whether this frame is
-  // visible or not. Visibility decisions are delegated to the
-  // table background painter. This handles borders and backgrounds
-  // for the table.
-  nsDisplayTableItem* item = new (aBuilder) nsDisplayTableBorderBackground(this);
-  nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
+  nsDisplayTableItem* item = nsnull;
+  // This background is created if any of the table parts are visible.
+  // Specific visibility decisions are delegated to the table background
+  // painter, which handles borders and backgrounds for the table.
+  if (AnyTablePartHasBorderOrBackground(this)) {
+    item = new (aBuilder) nsDisplayTableBorderBackground(this);
+    nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, item);
 }
 

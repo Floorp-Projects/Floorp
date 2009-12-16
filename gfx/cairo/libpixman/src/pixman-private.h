@@ -5,8 +5,6 @@
 #ifndef PIXMAN_PRIVATE_H
 #define PIXMAN_PRIVATE_H
 
-#include "cairo-platform.h"
-
 #include "pixman.h"
 #include <time.h>
 

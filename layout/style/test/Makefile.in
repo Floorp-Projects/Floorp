@@ -140,6 +140,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_transitions_computed_value_combinations.html \
 		test_transitions.html \
 		test_transitions_per_property.html \
+		test_transitions_dynamic_changes.html \
 		test_units_angle.html \
 		test_units_frequency.html \
 		test_units_length.html \
@@ -172,6 +173,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		media_queries_dynamic_xbl_style.css \
 		bug453896_iframe.html \
 		bug517224.sjs \
+		test_bug525952.html \
 		$(NULL)
 
 _BROWSER_FILES = \

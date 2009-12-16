@@ -50,6 +50,7 @@ class nsHtml5Speculation : public nsAHtml5TreeOpSink
   public:
     nsHtml5Speculation(nsHtml5UTF16Buffer* aBuffer, 
                        PRInt32 aStart, 
+                       PRInt32 aStartLineNumber, 
                        nsAHtml5TreeBuilderState* aSnapshot);
     
     ~nsHtml5Speculation();
@@ -61,21 +62,20 @@ class nsHtml5Speculation : public nsAHtml5TreeOpSink
     PRInt32 GetStart() {
       return mStart;
     }
+
+    PRInt32 GetStartLineNumber() {
+      return mStartLineNumber;
+    }
     
     nsAHtml5TreeBuilderState* GetSnapshot() {
       return mSnapshot;
     }
 
     /**
-     * No-op.
-     */
-    virtual void MaybeFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
-
-    /**
      * Flush the operations from the tree operations from the argument
      * queue unconditionally.
      */
-    virtual void ForcedFlush(nsTArray<nsHtml5TreeOperation>& aOpQueue);
+    virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue);
     
     void FlushToSink(nsAHtml5TreeOpSink* aSink);
 
@@ -89,6 +89,11 @@ class nsHtml5Speculation : public nsAHtml5TreeOpSink
      * The start index of this speculation in the first buffer
      */
     PRInt32                             mStart;
+
+    /**
+     * The current line number at the start of the speculation
+     */
+    PRInt32                             mStartLineNumber;
     
     nsAutoPtr<nsAHtml5TreeBuilderState> mSnapshot;
 

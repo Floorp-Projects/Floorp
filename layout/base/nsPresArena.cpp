@@ -53,6 +53,13 @@
 #include "prinit.h"
 #include "prlog.h"
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsICrashReporter.h"
+#include "nsCOMPtr.h"
+#include "nsServiceManagerUtils.h"
+#include "nsPrintfCString.h"
+#endif
+
 // Even on 32-bit systems, we allocate objects from the frame arena
 // that require 8-byte alignment.  The cast to PRUword is needed
 // because plarena isn't as careful about mask construction as it
@@ -158,26 +165,19 @@ GetDesiredRegionSize()
 
 #endif // system dependencies
 
-static PRUword ARENA_POISON;
-static PRCallOnceType ARENA_POISON_guard;
-
 PR_STATIC_ASSERT(sizeof(PRUword) == 4 || sizeof(PRUword) == 8);
 PR_STATIC_ASSERT(sizeof(PRUword) == sizeof(void *));
 
-static PRStatus
-ARENA_POISON_init()
+static PRUword
+ReservePoisonArea(PRUword rgnsize)
 {
-  PRUword rgnsize = GetDesiredRegionSize();
-
   if (sizeof(PRUword) == 8) {
     // Use the hardware-inaccessible region.
     // We have to avoid 64-bit constants and shifts by 32 bits, since this
     // code is compiled in 32-bit mode, although it is never executed there.
-    ARENA_POISON =
+    return
       (((PRUword(0x7FFFFFFFu) << 31) << 1 | PRUword(0xF0DEAFFFu))
-       & ~(rgnsize-1))
-      + rgnsize/2 - 1;
-    return PR_SUCCESS;
+       & ~(rgnsize-1));
 
   } else {
     // First see if we can allocate the preferred poison address from the OS.
@@ -185,38 +185,62 @@ ARENA_POISON_init()
     void *result = ReserveRegion(candidate, rgnsize);
     if (result == (void *)candidate) {
       // success - inaccessible page allocated
-      ARENA_POISON = candidate + rgnsize/2 - 1;
-      return PR_SUCCESS;
+      return candidate;
     }
 
     // That didn't work, so see if the preferred address is within a range
     // of permanently inacessible memory.
     if (ProbeRegion(candidate, rgnsize)) {
       // success - selected page cannot be usable memory
-      ARENA_POISON = candidate + rgnsize/2 - 1;
       if (result != RESERVE_FAILED)
         ReleaseRegion(result, rgnsize);
-      return PR_SUCCESS;
+      return candidate;
     }
 
     // The preferred address is already in use.  Did the OS give us a
     // consolation prize?
     if (result != RESERVE_FAILED) {
-      ARENA_POISON = PRUword(result) + rgnsize/2 - 1;
-      return PR_SUCCESS;
+      return PRUword(result);
     }
 
     // It didn't, so try to allocate again, without any constraint on
     // the address.
     result = ReserveRegion(0, rgnsize);
     if (result != RESERVE_FAILED) {
-      ARENA_POISON = PRUword(result) + rgnsize/2 - 1;
-      return PR_SUCCESS;
+      return PRUword(result);
     }
 
     NS_RUNTIMEABORT("no usable poison region identified");
-    return PR_FAILURE;
+    return 0;
   }
+}
+
+static PRUword ARENA_POISON;
+static PRCallOnceType ARENA_POISON_guard;
+
+static PRStatus
+ARENA_POISON_init()
+{
+  PRUword rgnsize = GetDesiredRegionSize();
+  PRUword rgnbase = ReservePoisonArea(rgnsize);
+
+  if (rgnsize == 0) // can't happen
+    return PR_FAILURE;
+
+  ARENA_POISON = rgnbase + rgnsize/2 - 1;
+
+#ifdef MOZ_CRASHREPORTER
+  nsCOMPtr<nsICrashReporter> cr =
+    do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+  PRBool enabled;
+  if (cr && NS_SUCCEEDED(cr->GetEnabled(&enabled)) && enabled) {
+    cr->AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonBase"),
+                            nsPrintfCString(17, "%.16llx", PRUint64(rgnbase)));
+    cr->AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonSize"),
+                            nsPrintfCString("%lu", PRUint32(rgnsize)));
+  }
+#endif
+  return PR_SUCCESS;
 }
 
 

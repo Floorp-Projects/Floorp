@@ -38,7 +38,6 @@
 /* representation of a SMIL-animatable CSS property on an element */
 
 #include "nsSMILCSSProperty.h"
-#include "nsISMILCSSValueType.h"
 #include "nsSMILCSSValueType.h"
 #include "nsSMILValue.h"
 #include "nsCSSDeclaration.h"
@@ -46,20 +45,6 @@
 #include "nsStyleAnimation.h"
 #include "nsIContent.h"
 #include "nsPIDOMWindow.h"
-
-// Helper Functions
-static nsISMILCSSValueType*
-GetSMILTypeForProperty(nsCSSProperty aPropID)
-{
-  if (!nsSMILCSSProperty::IsPropertyAnimatable(aPropID)) {
-    NS_NOTREACHED("Attempting to animate an un-animatable property");
-    return nsnull;
-  }
-  if (aPropID < eCSSProperty_COUNT_no_shorthands) {
-    return &nsSMILCSSValueType::sSingleton;
-  }
-  return nsnull; // XXXdholbert Return shorthand type here, when we add it
-}
 
 static PRBool
 GetCSSComputedValue(nsIContent* aElem,
@@ -125,13 +110,12 @@ nsSMILCSSProperty::GetBaseValue() const
   nsSMILValue baseValue;
   if (didGetComputedVal) {
     // (4) Create the nsSMILValue from the computed style value
-    nsISMILCSSValueType* smilType = GetSMILTypeForProperty(mPropID);
-    NS_ABORT_IF_FALSE(smilType, "animating an unsupported type");
-    
-    smilType->Init(baseValue);
-    if (!smilType->ValueFromString(mPropID, mElement,
-                                   computedStyleVal, baseValue)) {
-      smilType->Destroy(baseValue);
+    nsSMILCSSValueType::sSingleton.Init(baseValue);
+    if (!nsCSSProps::IsShorthand(mPropID) &&
+        !nsSMILCSSValueType::sSingleton.ValueFromString(mPropID, mElement,
+                                                        computedStyleVal,
+                                                        baseValue)) {
+      nsSMILCSSValueType::sSingleton.Destroy(baseValue);
       NS_ABORT_IF_FALSE(baseValue.IsNull(),
                         "Destroy should leave us with null-typed value");
     }
@@ -145,11 +129,12 @@ nsSMILCSSProperty::ValueFromString(const nsAString& aStr,
                                    nsSMILValue& aValue) const
 {
   NS_ENSURE_TRUE(IsPropertyAnimatable(mPropID), NS_ERROR_FAILURE);
-  nsISMILCSSValueType* smilType = GetSMILTypeForProperty(mPropID);
-  smilType->Init(aValue);
-  PRBool success = smilType->ValueFromString(mPropID, mElement, aStr, aValue);
+  nsSMILCSSValueType::sSingleton.Init(aValue);
+  PRBool success =
+    nsSMILCSSValueType::sSingleton.ValueFromString(mPropID, mElement,
+                                                   aStr, aValue);
   if (!success) {
-    smilType->Destroy(aValue);
+    nsSMILCSSValueType::sSingleton.Destroy(aValue);
   }
   return success ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -161,9 +146,8 @@ nsSMILCSSProperty::SetAnimValue(const nsSMILValue& aValue)
 
   nsresult rv = NS_OK;
   nsAutoString valStr;
-  nsISMILCSSValueType* smilType = GetSMILTypeForProperty(mPropID);
 
-  if (smilType->ValueToString(aValue, valStr)) {
+  if (nsSMILCSSValueType::sSingleton.ValueToString(aValue, valStr)) {
     // Apply the style to the target element
     nsCOMPtr<nsIDOMCSSStyleDeclaration> overrideStyle;
     mElement->GetSMILOverrideStyle(getter_AddRefs(overrideStyle));
@@ -215,43 +199,28 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     case eCSSProperty_font:
     case eCSSProperty_marker:
     case eCSSProperty_overflow:
-      // XXXdholbert Shorthand types not yet supported
-      return PR_FALSE;
+      return PR_TRUE;
 
     // PROPERTIES OF TYPE eCSSType_Rect
     case eCSSProperty_clip:
       // XXXdholbert Rect type not yet supported by nsStyleAnimation
       return PR_FALSE;
 
-    // PROPERTIES OF TYPE eCSSType_ValueList
-    case eCSSProperty_cursor:
-    case eCSSProperty_stroke_dasharray:
-      // XXXdholbert List type not yet supported by nsStyleAnimation
-      return PR_FALSE;
-
-    // PROPERTIES OF TYPE eCSSType_ValuePair
-    case eCSSProperty_fill:
-    case eCSSProperty_stroke:
-      return PR_TRUE;
-
-    // PROPERTIES OF TYPE eCSSType_Value
-    // XXXdholbert: Some properties' types aren't yet supported by
-    // nsStyleAnimation (due to using URI values or string values).  I'm
-    // commenting those properties out here for the time being, so that we
-    // don't try to animate them yet.
     case eCSSProperty_clip_rule:
-    // case eCSSProperty_clip_path:
+    case eCSSProperty_clip_path:
     case eCSSProperty_color:
     case eCSSProperty_color_interpolation:
     case eCSSProperty_color_interpolation_filters:
+    case eCSSProperty_cursor:
     case eCSSProperty_display:
     case eCSSProperty_dominant_baseline:
+    case eCSSProperty_fill:
     case eCSSProperty_fill_opacity:
     case eCSSProperty_fill_rule:
-    // case eCSSProperty_filter:
+    case eCSSProperty_filter:
     case eCSSProperty_flood_color:
     case eCSSProperty_flood_opacity:
-    // case eCSSProperty_font_family:
+    case eCSSProperty_font_family:
     case eCSSProperty_font_size:
     case eCSSProperty_font_size_adjust:
     case eCSSProperty_font_stretch:
@@ -261,15 +230,17 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     case eCSSProperty_image_rendering:
     case eCSSProperty_letter_spacing:
     case eCSSProperty_lighting_color:
-    // case eCSSProperty_marker_end:
-    // case eCSSProperty_marker_mid:
-    // case eCSSProperty_marker_start:
-    // case eCSSProperty_mask:
+    case eCSSProperty_marker_end:
+    case eCSSProperty_marker_mid:
+    case eCSSProperty_marker_start:
+    case eCSSProperty_mask:
     case eCSSProperty_opacity:
     case eCSSProperty_pointer_events:
     case eCSSProperty_shape_rendering:
     case eCSSProperty_stop_color:
     case eCSSProperty_stop_opacity:
+    case eCSSProperty_stroke:
+    case eCSSProperty_stroke_dasharray:
     case eCSSProperty_stroke_dashoffset:
     case eCSSProperty_stroke_linecap:
     case eCSSProperty_stroke_linejoin:

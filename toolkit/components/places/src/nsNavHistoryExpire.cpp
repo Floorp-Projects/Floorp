@@ -261,7 +261,7 @@ nsNavHistoryExpire::ClearHistory()
 
   ENUMERATE_OBSERVERS(mHistory->canNotify(), mHistory->mCacheObservers,
                       mHistory->mObservers, nsINavHistoryObserver,
-                      OnClearHistory())
+                      OnClearHistory());
 
   return NS_OK;
 }

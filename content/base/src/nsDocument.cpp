@@ -2462,8 +2462,7 @@ nsDocument::AttributeWillChange(nsIDocument* aDocument,
 void
 nsDocument::AttributeChanged(nsIDocument* aDocument,
                              nsIContent* aContent, PRInt32 aNameSpaceID,
-                             nsIAtom* aAttribute, PRInt32 aModType,
-                             PRUint32 aStateMask)
+                             nsIAtom* aAttribute, PRInt32 aModType)
 {
   NS_ASSERTION(aDocument == this, "unexpected doc");
 
@@ -3061,6 +3060,9 @@ nsDocument::doCreateShell(nsPresContext* aContext,
   // Note: we don't hold a ref to the shell (it holds a ref to us)
   NS_ENSURE_TRUE(mPresShells.AppendElementUnlessExists(shell),
                  NS_ERROR_OUT_OF_MEMORY);
+
+  NS_WARN_IF_FALSE(mPresShells.Length() == 1, "More than one presshell!");
+
   shell.swap(*aInstancePtrResult);
 
   return NS_OK;
@@ -5344,8 +5346,9 @@ nsDocument::GetAnimationController()
   // one and only SVG documents and the like will call this
   if (mAnimationController)
     return mAnimationController;
-  // Refuse to create an Animation Controller if SMIL is disabled
-  if (!NS_SMILEnabled())
+  // Refuse to create an Animation Controller if SMIL is disabled, and also
+  // for data documents.
+  if (!NS_SMILEnabled() || mLoadedAsData)
     return nsnull;
 
   mAnimationController = NS_NewSMILAnimationController(this);
@@ -7587,6 +7590,8 @@ nsDocument::QuerySelectorAll(const nsAString& aSelector,
 nsresult
 nsDocument::CloneDocHelper(nsDocument* clone) const
 {
+  clone->mIsStaticDocument = mCreatingStaticClone;
+
   // Init document
   nsresult rv = clone->Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -7596,6 +7601,21 @@ nsDocument::CloneDocHelper(nsDocument* clone) const
   // Must set the principal first, since SetBaseURI checks it.
   clone->SetPrincipal(NodePrincipal());
   clone->mDocumentBaseURI = mDocumentBaseURI;
+
+  if (mCreatingStaticClone) {
+    nsCOMPtr<nsIChannel> channel = GetChannel();
+    nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
+    if (channel && loadGroup) {
+      clone->Reset(channel, loadGroup);
+    } else {
+      nsIURI* uri = static_cast<const nsIDocument*>(this)->GetDocumentURI();
+      if (uri) {
+        clone->ResetToURI(uri, loadGroup, NodePrincipal());
+      }
+    }
+    nsCOMPtr<nsISupports> container = GetContainer();
+    clone->SetContainer(container);
+  }
 
   // Set scripting object
   PRBool hasHadScriptObject = PR_TRUE;
@@ -7821,3 +7841,67 @@ nsIDocument::EnumerateFreezableElements(FreezableElementEnumerator aEnumerator,
   EnumerateFreezablesData data = { aEnumerator, aData };
   mFreezableElements->EnumerateEntries(EnumerateFreezables, &data);
 }
+
+already_AddRefed<nsIDocument>
+nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
+{
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(this);
+  NS_ENSURE_TRUE(domDoc, nsnull);
+  mCreatingStaticClone = PR_TRUE;
+
+  // Make document use different container during cloning.
+  nsCOMPtr<nsISupports> originalContainer = GetContainer();
+  SetContainer(aCloneContainer);
+  nsCOMPtr<nsIDOMNode> clonedNode;
+  nsresult rv = domDoc->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
+  SetContainer(originalContainer);
+
+  nsCOMPtr<nsIDocument> clonedDoc;
+  if (NS_SUCCEEDED(rv)) {
+    clonedDoc = do_QueryInterface(clonedNode);
+    nsCOMPtr<nsIDOMDocument> clonedDOMDoc = do_QueryInterface(clonedDoc);
+    if (clonedDOMDoc) {
+      clonedDoc->mOriginalDocument = this;
+      PRInt32 sheetsCount = GetNumberOfStyleSheets();
+      for (PRInt32 i = 0; i < sheetsCount; ++i) {
+        nsCOMPtr<nsICSSStyleSheet> sheet =
+          do_QueryInterface(GetStyleSheetAt(i));
+        if (sheet) {
+          PRBool applicable = PR_TRUE;
+          sheet->GetApplicable(applicable);
+          if (applicable) {
+            nsCOMPtr<nsICSSStyleSheet> clonedSheet;
+            sheet->Clone(nsnull, nsnull, clonedDoc, nsnull,
+                         getter_AddRefs(clonedSheet));
+            NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
+            if (clonedSheet) {
+              clonedDoc->AddStyleSheet(clonedSheet);
+            }
+          }
+        }
+      }
+
+      sheetsCount = GetNumberOfCatalogStyleSheets();
+      for (PRInt32 i = 0; i < sheetsCount; ++i) {
+        nsCOMPtr<nsICSSStyleSheet> sheet =
+          do_QueryInterface(GetCatalogStyleSheetAt(i));
+        if (sheet) {
+          PRBool applicable = PR_TRUE;
+          sheet->GetApplicable(applicable);
+          if (applicable) {
+            nsCOMPtr<nsICSSStyleSheet> clonedSheet;
+            sheet->Clone(nsnull, nsnull, clonedDoc, nsnull,
+                         getter_AddRefs(clonedSheet));
+            NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
+            if (clonedSheet) {
+              clonedDoc->AddCatalogStyleSheet(clonedSheet);
+            }
+          }
+        }
+      }
+    }
+  }
+  mCreatingStaticClone = PR_FALSE;
+  return clonedDoc.forget();
+}
+

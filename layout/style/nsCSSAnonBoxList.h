@@ -59,6 +59,10 @@ CSS_ANON_BOX(mozAnonymousPositionedBlock, ":-moz-anonymous-positioned-block")
 CSS_ANON_BOX(mozMathMLAnonymousBlock, ":-moz-mathml-anonymous-block")
 CSS_ANON_BOX(mozXULAnonymousBlock, ":-moz-xul-anonymous-block")
 
+// Framesets
+CSS_ANON_BOX(horizontalFramesetBorder, ":-moz-hframeset-border")
+CSS_ANON_BOX(verticalFramesetBorder, ":-moz-vframeset-border")
+
 CSS_ANON_BOX(mozLineFrame, ":-moz-line-frame")
 
 CSS_ANON_BOX(buttonContent, ":-moz-button-content")
@@ -103,12 +107,6 @@ CSS_ANON_BOX(moztreecelltext, ":-moz-tree-cell-text")
 CSS_ANON_BOX(moztreecheckbox, ":-moz-tree-checkbox")
 CSS_ANON_BOX(moztreeprogressmeter, ":-moz-tree-progressmeter")
 CSS_ANON_BOX(moztreedropfeedback, ":-moz-tree-drop-feedback")
-#endif
-
-#ifdef MOZ_MATHML
-CSS_ANON_BOX(mozMathStretchy, ":-moz-math-stretchy")
-CSS_ANON_BOX(mozMathAnonymous, ":-moz-math-anonymous")
-CSS_ANON_BOX(mozMathInline, ":-moz-math-inline")
 #endif
 
 #ifdef MOZ_SVG

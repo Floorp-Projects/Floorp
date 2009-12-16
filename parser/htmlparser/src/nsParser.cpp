@@ -503,7 +503,7 @@ nsSpeculativeScriptThread::StartParsing(nsParser *aParser)
       // We consumed more the last time we tried speculatively parsing than we
       // did the last time we actually parsed.
       PRUint32 distance = Distance(start, end);
-      start.advance(PR_MIN(mNumConsumed - context->mNumConsumed, distance));
+      start.advance(NS_MIN(mNumConsumed - context->mNumConsumed, distance));
     }
 
     if (start == end) {
@@ -2721,7 +2721,7 @@ nsParser::DetectMetaTag(const char* aBytes,
   // Fast and loose parsing to determine if we have a complete
   // META tag in this block, looking upto 2k into it.
   const nsASingleFragmentCString& str =
-      Substring(aBytes, aBytes + PR_MIN(aLen, 2048));
+      Substring(aBytes, aBytes + NS_MIN(aLen, 2048));
   // XXXldb Should be const_char_iterator when FindInReadable supports it.
   nsACString::const_iterator begin, end;
 

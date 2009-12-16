@@ -1272,8 +1272,7 @@ nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
 {
   *aCutOffInheritance = PR_FALSE;
   
-  if (!aData->mContent)
-    return NS_OK;
+  NS_ASSERTION(aData->mContent, "How did that happen?");
 
   // Walk the binding scope chain, starting with the binding attached to our
   // content, up till we run out of scopes or we get cut off.

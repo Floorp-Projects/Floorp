@@ -2227,6 +2227,29 @@ HasDescendantWindowOutsideRect(DWORD aThisThreadID, HWND aWnd,
   return PR_FALSE;
 }
 
+static void
+InvalidateRgnInWindowSubtree(HWND aWnd, HRGN aRgn, HRGN aTmpRgn)
+{
+  RECT clientRect;
+  ::GetClientRect(aWnd, &clientRect);
+  ::SetRectRgn(aTmpRgn, clientRect.left, clientRect.top,
+               clientRect.right, clientRect.bottom);
+  if (::CombineRgn(aTmpRgn, aTmpRgn, aRgn, RGN_AND) == NULLREGION) {
+    return;
+  }
+
+  ::InvalidateRgn(aWnd, aTmpRgn, FALSE);
+
+  for (HWND child = ::GetWindow(aWnd, GW_CHILD); child;
+       child = ::GetWindow(child, GW_HWNDNEXT)) {
+    POINT pt = { 0, 0 };
+    ::MapWindowPoints(child, aWnd, &pt, 1);
+    ::OffsetRgn(aRgn, -pt.x, -pt.y);
+    InvalidateRgnInWindowSubtree(child, aRgn, aTmpRgn);
+    ::OffsetRgn(aRgn, pt.x, pt.y);
+  }
+}
+
 void
 nsWindow::Scroll(const nsIntPoint& aDelta,
                  const nsTArray<nsIntRect>& aDestRects,
@@ -2266,8 +2289,8 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
 
   DWORD ourThreadID = GetWindowThreadProcessId(mWnd, NULL);
 
-  for (PRUint32 i = 0; i < aDestRects.Length(); ++i) {
-    const nsIntRect& destRect = aDestRects[i];
+  for (BlitRectIter iter(aDelta, aDestRects); !iter.IsDone(); ++iter) {
+    const nsIntRect& destRect = iter.Rect();
     nsIntRect affectedRect;
     affectedRect.UnionRect(destRect, destRect - aDelta);
     UINT flags = SW_SCROLLCHILDREN;
@@ -2281,8 +2304,8 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
         if (entry) {
           // It's supposed to be scrolled, so we can still use
           // SW_SCROLLCHILDREN. But don't allow SW_SCROLLCHILDREN to be
-          // used on it again by a later rectangle in aDestRects, we
-          // don't want it to move twice!
+          // used on it again by a later rectangle; we don't want it to
+          // move twice!
           scrolledWidgets.RawRemoveEntry(entry);
 
           nsIntPoint screenOffset = WidgetToScreenOffset();
@@ -2362,7 +2385,11 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
     // it.
     ::SetRectRgn(destRgn, destRect.x, destRect.y, destRect.XMost(), destRect.YMost());
     ::CombineRgn(updateRgn, updateRgn, destRgn, RGN_AND);
-    ::InvalidateRgn(mWnd, updateRgn, FALSE);
+    if (flags & SW_SCROLLCHILDREN) {
+      InvalidateRgnInWindowSubtree(mWnd, updateRgn, destRgn);
+    } else {
+      ::InvalidateRgn(mWnd, updateRgn, FALSE);
+    }
   }
 
   ::DeleteObject((HGDIOBJ)updateRgn);
@@ -3113,6 +3140,12 @@ BOOL CALLBACK nsWindow::DispatchStarvedPaints(HWND aWnd, LPARAM aMsg)
 // nsIWidget managed windows.
 void nsWindow::DispatchPendingEvents()
 {
+  if (mPainting) {
+    NS_WARNING("We were asked to dispatch pending events during painting, "
+               "denying since that's unsafe.");
+    return;
+  }
+
   UpdateLastInputEventTime();
 
   // We need to ensure that reflow events do not get starved.
@@ -3416,10 +3449,23 @@ PRBool nsWindow::DispatchFocusToTopLevelWindow(PRUint32 aEventType)
     sJustGotActivate = PR_FALSE;
   sJustGotDeactivate = PR_FALSE;
 
-  // clear the flags, and retrieve the toplevel window. This way, it doesn't
-  // mattter what child widget received the focus event and it will always be
-  // fired at the toplevel window.
-  HWND toplevelWnd = GetTopLevelHWND(mWnd);
+  // retrive the toplevel window or dialog
+  HWND curWnd = mWnd;
+  HWND toplevelWnd = NULL;
+  while (curWnd) {
+    toplevelWnd = curWnd;
+
+    nsWindow *win = GetNSWindowPtr(curWnd);
+    if (win) {
+      nsWindowType wintype;
+      win->GetWindowType(wintype);
+      if (wintype == eWindowType_toplevel || wintype == eWindowType_dialog)
+        break;
+    }
+
+    curWnd = ::GetParent(curWnd); // Parent or owner (if has no parent)
+  }
+
   if (toplevelWnd) {
     nsWindow *win = GetNSWindowPtr(toplevelWnd);
     if (win)

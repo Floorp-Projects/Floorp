@@ -55,7 +55,9 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES =	test_bug343416.xul \
+_TEST_FILES =
+
+_CHROME_FILES =	test_bug343416.xul \
 		test_bug429954.xul \
 		window_bug429954.xul \
 		test_bug444800.xul \
@@ -71,7 +73,7 @@ _TEST_FILES =	test_bug343416.xul \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-_TEST_FILES += native_menus_window.xul \
+_CHROME_FILES += native_menus_window.xul \
                test_native_menus.xul \
                native_mouse_mac_window.xul \
                test_native_mouse_mac.xul \
@@ -86,12 +88,23 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifneq ($(OS_ARCH), WINCE)
-_TEST_FILES  += taskbar_previews.xul \
+_CHROME_FILES  += taskbar_previews.xul \
 		window_state_windows.xul \
 		taskbar_progress.xul \
 		$(NULL)
 endif
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+_TEST_FILES += 	plugin_scroll_invalidation.html \
+		test_plugin_scroll_invalidation.html \
+		$(NULL)
+endif
+
+ifdef _TEST_FILES
 libs:: $(_TEST_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+endif
+
+libs:: $(_CHROME_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

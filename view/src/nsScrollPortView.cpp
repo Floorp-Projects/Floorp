@@ -577,91 +577,6 @@ ConvertBlitRegionToPixelRects(const nsRegion& aBlitRegion,
   aRepaintRegion->Or(*aRepaintRegion, repaint);
 }
 
-/**
- * An nsTArray comparator that lets us sort nsIntRects by their right edge.
- */
-class RightEdgeComparator {
-public:
-  /** @return True if the elements are equals; false otherwise. */
-  PRBool Equals(const nsIntRect& aA, const nsIntRect& aB) const
-  {
-    return aA.XMost() == aB.XMost();
-  }
-  /** @return True if (a < b); false otherwise. */
-  PRBool LessThan(const nsIntRect& aA, const nsIntRect& aB) const
-  {
-    return aA.XMost() < aB.XMost();
-  }
-};
-
-// If aPixDelta has a negative component, flip aRect across the
-// axis in that direction. We do this so we can assume all scrolling is
-// down and to the right to simplify SortBlitRectsForCopy
-static nsIntRect
-FlipRect(const nsIntRect& aRect, nsIntPoint aPixDelta)
-{
-  nsIntRect r = aRect;
-  if (aPixDelta.x < 0) {
-    r.x = -r.XMost();
-  }
-  if (aPixDelta.y < 0) {
-    r.y = -r.YMost();
-  }
-  return r;
-}
-
-// Sort aRects so that moving rectangle aRects[i] - aPixDelta to aRects[i]
-// will not cause the rectangle to overlap any rectangles that haven't
-// moved yet.
-// See http://weblogs.mozillazine.org/roc/archives/2009/08/homework_answer.html
-static void
-SortBlitRectsForCopy(nsIntPoint aPixDelta, nsTArray<nsIntRect>* aRects)
-{
-  nsTArray<nsIntRect> rects;
-
-  for (PRUint32 i = 0; i < aRects->Length(); ++i) {
-    nsIntRect* r = &aRects->ElementAt(i);
-    nsIntRect rect =
-      FlipRect(nsIntRect(r->x, r->y, r->width, r->height), aPixDelta);
-    rects.AppendElement(rect);
-  }
-  rects.Sort(RightEdgeComparator());
-
-  aRects->Clear();
-  // This could probably be improved a bit for some worst-case scenarios.
-  // But in common cases this should be very fast, and we shouldn't
-  // make it more complex unless we really need to.
-  while (!rects.IsEmpty()) {
-    PRInt32 i = rects.Length() - 1;
-    PRBool overlappedBelow;
-    do {
-      overlappedBelow = PR_FALSE;
-      const nsIntRect& rectI = rects[i];
-      // see if any rectangle < i overlaps rectI horizontally and is below
-      // rectI
-      for (PRInt32 j = i - 1; j >= 0; --j) {
-        if (rects[j].XMost() <= rectI.x) {
-          // No rectangle with index <= j can overlap rectI horizontally
-          break;
-        }
-        // Rectangle j overlaps rectI horizontally.
-        if (rects[j].y >= rectI.y) {
-          // Rectangle j is below rectangle i. This is the rightmost such
-          // rectangle, so set i to this rectangle and continue.
-          i = j;
-          overlappedBelow = PR_TRUE;
-          break;
-        }
-      }
-    } while (overlappedBelow); 
-
-    // Rectangle i has no rectangles to the right or below.
-    // Flip it back before saving the result.
-    aRects->AppendElement(FlipRect(rects[i], aPixDelta));
-    rects.RemoveElementAt(i);
-  }
-}
-
 void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta,
                               nsIntPoint aPixDelta, PRInt32 aP2A,
                               const nsTArray<nsIWidget::Configuration>& aConfigurations)
@@ -708,7 +623,6 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta,
       nsRegion blitRectsRegion;
       ConvertBlitRegionToPixelRects(blitRegion, aP2A, &blitRects, &repaintRegion,
                                     &blitRectsRegion);
-      SortBlitRectsForCopy(aPixDelta, &blitRects);
 
       nearestWidget->Scroll(aPixDelta, blitRects, aConfigurations);
       AdjustChildWidgets(aScrolledView, nearestWidgetOffset, aP2A, PR_TRUE);

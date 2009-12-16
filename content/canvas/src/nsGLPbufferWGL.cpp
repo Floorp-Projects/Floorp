@@ -287,7 +287,7 @@ nsGLPbufferWGL::Resize(PRInt32 width, PRInt32 height)
     // matching formats; so just allocate room for a lot.
 #define MAX_NUM_FORMATS 256
     UINT numFormats = MAX_NUM_FORMATS;
-    nsAutoArrayPtr<int> formats = new int[numFormats];
+    int formats[MAX_NUM_FORMATS];
 
     //fprintf (stderr, "EXT: %p ARB: %p rest: %s\n", wglewGetContext()->__wglewChoosePixelFormatEXT, wglewGetContext()->__wglewChoosePixelFormatARB, wglGetExtensionsStringARB(mGlewDC));
 

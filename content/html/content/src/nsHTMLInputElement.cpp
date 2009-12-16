@@ -557,6 +557,11 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
         it->DoSetChecked(checked, PR_FALSE);
       }
       break;
+    case NS_FORM_INPUT_IMAGE:
+      if (it->GetOwnerDoc()->IsStaticDocument()) {
+        CreateStaticImageClone(it);
+      }
+      break;
     default:
       break;
   }
@@ -1743,6 +1748,22 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   if (!aVisitor.mPresContext) {
     return NS_OK;
   }
+
+  // ignore the activate event fired by the "Browse..." button
+  // (file input controls fire their own) (bug 500885)
+  if (mType == NS_FORM_INPUT_FILE) {
+    nsCOMPtr<nsIContent> maybeButton =
+      do_QueryInterface(aVisitor.mEvent->originalTarget);
+    if (maybeButton &&
+      maybeButton->IsRootOfNativeAnonymousSubtree() &&
+      maybeButton->AttrValueIs(kNameSpaceID_None,
+                               nsGkAtoms::type,
+                               nsGkAtoms::button,
+                               eCaseMatters)) {
+        return NS_OK;
+    }
+  }
+
   nsresult rv = NS_OK;
   PRBool outerActivateEvent = !!(aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT);
   PRBool originalCheckedValue =

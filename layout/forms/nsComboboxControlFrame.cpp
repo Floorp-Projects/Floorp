@@ -1162,9 +1162,8 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
   // create the style contexts for the anonymous block frame and text frame
   nsRefPtr<nsStyleContext> styleContext;
   styleContext = styleSet->
-    ResolvePseudoStyleFor(mContent, 
-                          nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
-                          mStyleContext);
+    ResolveAnonymousBoxStyle(nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
+                             mStyleContext);
   if (NS_UNLIKELY(!styleContext)) {
     return nsnull;
   }

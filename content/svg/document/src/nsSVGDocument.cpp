@@ -129,6 +129,20 @@ nsSVGDocument::GetRootElement(nsIDOMSVGSVGElement** aRootElement)
   return root ? CallQueryInterface(root, aRootElement) : NS_OK;
 }
 
+nsresult
+nsSVGDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+{
+  NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
+               "Can't import this document into another document!");
+
+  nsRefPtr<nsSVGDocument> clone = new nsSVGDocument();
+  NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv = CloneDocHelper(clone.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(clone.get(), aResult);
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Exported creation functions
 

@@ -329,11 +329,9 @@ public:
 
   // nsIScriptElement
   virtual void GetScriptType(nsAString& type);
-  virtual already_AddRefed<nsIURI> GetScriptURI();
   virtual void GetScriptText(nsAString& text);
   virtual void GetScriptCharset(nsAString& charset);
-  virtual PRBool GetScriptDeferred();
-  virtual PRBool GetScriptAsync();
+  virtual void FreezeUriAsyncDefer();
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -477,7 +475,14 @@ nsresult
 nsHTMLScriptElement::DoneAddingChildren(PRBool aHaveNotified)
 {
   mDoneAddingChildren = PR_TRUE;
-  return MaybeProcessScript();
+  nsresult rv = MaybeProcessScript();
+  if (!mIsEvaluated) {
+    // Need to thaw the script uri here to allow another script to cause
+    // execution later.
+    mFrozen = PR_FALSE;
+    mUri = nsnull;
+  }
+  return rv;
 }
 
 PRBool
@@ -495,20 +500,6 @@ nsHTMLScriptElement::GetScriptType(nsAString& type)
   GetType(type);
 }
 
-// variation of this code in nsSVGScriptElement - check if changes
-// need to be transfered when modifying
-
-already_AddRefed<nsIURI>
-nsHTMLScriptElement::GetScriptURI()
-{
-  nsIURI *uri = nsnull;
-  nsAutoString src;
-  GetSrc(src);
-  if (!src.IsEmpty())
-    NS_NewURI(&uri, src);
-  return uri;
-}
-
 void
 nsHTMLScriptElement::GetScriptText(nsAString& text)
 {
@@ -521,31 +512,35 @@ nsHTMLScriptElement::GetScriptCharset(nsAString& charset)
   GetCharset(charset);
 }
 
-PRBool
-nsHTMLScriptElement::GetScriptDeferred()
+void
+nsHTMLScriptElement::FreezeUriAsyncDefer()
 {
-  PRBool defer, async;
-  GetAsync(&async);
-  GetDefer(&defer);
-  nsCOMPtr<nsIURI> uri = GetScriptURI();
+  if (mFrozen) {
+    return;
+  }
+  
+  // variation of this code in nsSVGScriptElement - check if changes
+  // need to be transfered when modifying
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
+    nsAutoString src;
+    GetSrc(src);
+    NS_NewURI(getter_AddRefs(mUri), src);
 
-  return !async && defer && uri;
-}
+    PRBool defer, async;
+    GetAsync(&async);
+    GetDefer(&defer);
 
-PRBool
-nsHTMLScriptElement::GetScriptAsync()
-{
-  PRBool async;
-  GetAsync(&async);
-  nsCOMPtr<nsIURI> uri = GetScriptURI();
-
-  return async && uri;
+    mDefer = !async && defer;
+    mAsync = async;
+  }
+  
+  mFrozen = PR_TRUE;
 }
 
 PRBool
 nsHTMLScriptElement::HasScriptContent()
 {
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::src) ||
+  return (mFrozen ? !!mUri : HasAttr(kNameSpaceID_None, nsGkAtoms::src)) ||
          nsContentUtils::HasNonEmptyTextContent(this);
 }
 

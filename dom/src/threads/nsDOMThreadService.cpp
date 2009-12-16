@@ -995,8 +995,10 @@ nsDOMThreadService::CreateJSContext()
     nsDOMWorkerSecurityManager::JSTranscodePrincipals,
     nsDOMWorkerSecurityManager::JSFindPrincipal
   };
-
   JS_SetContextSecurityCallbacks(cx, &securityCallbacks);
+
+  static JSDebugHooks debugHooks;
+  JS_SetContextDebugHooks(cx, &debugHooks);
 
   nsresult rv = nsContentUtils::XPConnect()->
     SetSecurityManagerForJSContext(cx, gWorkerSecurityManager, 0);

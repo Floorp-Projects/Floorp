@@ -948,6 +948,8 @@ PRBool CViewSourceHTML::IsUrlAttribute(const nsAString& tagName,
 
   PRBool isHref = trimmedAttrName.LowerCaseEqualsLiteral("href");
   PRBool isSrc = !isHref && trimmedAttrName.LowerCaseEqualsLiteral("src");
+  PRBool isXLink = !isHref && !isSrc &&
+    mDocType == eXML && trimmedAttrName.EqualsLiteral("xlink:href");
 
   // If this is the HREF attribute of a BASE element, then update the base URI.
   // This doesn't feel like the ideal place for this, but the alternatives don't
@@ -959,7 +961,7 @@ PRBool CViewSourceHTML::IsUrlAttribute(const nsAString& tagName,
     SetBaseURI(expandedBaseSpec);
   }
 
-  return isHref || isSrc;
+  return isHref || isSrc || isXLink;
 }
 
 void CViewSourceHTML::WriteHrefAttribute(nsTokenAllocator* allocator,

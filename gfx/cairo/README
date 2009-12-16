@@ -66,7 +66,7 @@ quartz-first-stop.patch: return the first stop for negative positions on the gra
 
 pixman-neon.patch: add ARM NEON optimized compositing functions
 
-endian.patch: include cairo-platform.h for endian macros
+pixman-rename-and-endian.patch: include cairo-platform.h for renaming of external symbols and endian macros
 
 ==== disable printing patch ====
 

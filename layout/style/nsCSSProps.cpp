@@ -1304,7 +1304,6 @@ const PRInt32 nsCSSProps::kBoxPackKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-#ifdef MOZ_SVG
 // keyword tables for SVG properties
 
 const PRInt32 nsCSSProps::kDominantBaselineKTable[] = {
@@ -1380,8 +1379,6 @@ const PRInt32 nsCSSProps::kColorInterpolationKTable[] = {
   eCSSKeyword_linearrgb, NS_STYLE_COLOR_INTERPOLATION_LINEARRGB,
   eCSSKeyword_UNKNOWN, -1
 };
-
-#endif
 
 PRBool
 nsCSSProps::FindKeyword(nsCSSKeyword aKeyword, const PRInt32 aTable[], PRInt32& aResult)
@@ -1955,14 +1952,12 @@ static const nsCSSProperty gMozTransitionSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-#ifdef MOZ_SVG
 static const nsCSSProperty gMarkerSubpropTable[] = {
   eCSSProperty_marker_start,
   eCSSProperty_marker_mid,
   eCSSProperty_marker_end,
   eCSSProperty_UNKNOWN
 };
-#endif
 
 const nsCSSProperty *const
 nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands] = {

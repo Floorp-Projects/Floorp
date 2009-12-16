@@ -448,8 +448,9 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     PRBool isRoot = aBuilder->IsAtRootOfPseudoStackingContext();
     if (!isRoot) {
       nsDisplayTableItem* currentItem = aBuilder->GetCurrentTableItem();
-      NS_ASSERTION(currentItem, "No current table item???");
-      currentItem->UpdateForFrameBackground(this);
+      if (currentItem) {
+        currentItem->UpdateForFrameBackground(this);
+      }
     }
 
     // display outset box-shadows if we need to.
@@ -501,6 +502,11 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // the 'empty-cells' property has no effect on 'outline'
   nsresult rv = DisplayOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Push a null 'current table item' so that descendant tables can't
+  // accidentally mess with our table
+  nsAutoPushCurrentTableItem pushTableItem;
+  pushTableItem.Push(aBuilder, nsnull);
 
   nsIFrame* kid = mFrames.FirstChild();
   NS_ASSERTION(kid && !kid->GetNextSibling(), "Table cells should have just one child");

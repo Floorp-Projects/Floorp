@@ -62,8 +62,6 @@
 #include "nsCOMPtr.h"
 
 nsCSSDeclaration::nsCSSDeclaration() 
-  : mData(nsnull),
-    mImportantData(nsnull)
 {
   // check that we can fit all the CSS properties into a PRUint8
   // for the mOrder array - if not, might need to use PRUint16!
@@ -74,22 +72,17 @@ nsCSSDeclaration::nsCSSDeclaration()
 
 nsCSSDeclaration::nsCSSDeclaration(const nsCSSDeclaration& aCopy)
   : mOrder(aCopy.mOrder),
-    mData(aCopy.mData ? aCopy.mData->Clone() : nsnull),
-    mImportantData(aCopy.mImportantData ? aCopy.mImportantData->Clone()
-                                         : nsnull)
+    mData(aCopy.mData ? aCopy.mData->Clone()
+                      : already_AddRefed<nsCSSCompressedDataBlock>(nsnull)),
+    mImportantData(aCopy.mImportantData
+                      ? aCopy.mImportantData->Clone()
+                      : already_AddRefed<nsCSSCompressedDataBlock>(nsnull))
 {
   MOZ_COUNT_CTOR(nsCSSDeclaration);
 }
 
 nsCSSDeclaration::~nsCSSDeclaration(void)
 {
-  if (mData) {
-    mData->Destroy();
-  }
-  if (mImportantData) {
-    mImportantData->Destroy();
-  }
-
   MOZ_COUNT_DTOR(nsCSSDeclaration);
 }
 
@@ -108,7 +101,7 @@ nsresult
 nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty)
 {
   nsCSSExpandedDataBlock data;
-  data.Expand(&mData, &mImportantData);
+  ExpandTo(&data);
   NS_ASSERTION(!mData && !mImportantData, "Expand didn't null things out");
 
   if (nsCSSProps::IsShorthand(aProperty)) {
@@ -121,7 +114,7 @@ nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty)
     mOrder.RemoveElement(aProperty);
   }
 
-  data.Compress(&mData, &mImportantData);
+  CompressFrom(&data);
   return NS_OK;
 }
 
@@ -1105,7 +1098,6 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       break;
     }
 
-#ifdef MOZ_SVG
     case eCSSProperty_marker: {
       const nsCSSValue &endValue =
         *data->ValueStorageFor(eCSSProperty_marker_end);
@@ -1117,7 +1109,6 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
         AppendValueToString(eCSSProperty_marker_end, aValue);
       break;
     }
-#endif
     default:
       NS_NOTREACHED("no other shorthands");
       break;
@@ -1323,4 +1314,24 @@ nsCSSDeclaration::InitializeEmpty()
   NS_ASSERTION(!mData && !mImportantData, "already initialized");
   mData = nsCSSCompressedDataBlock::CreateEmptyBlock();
   return mData != nsnull;
+}
+
+PRBool
+nsCSSDeclaration::EnsureMutable()
+{
+  if (!mData->IsMutable()) {
+    nsRefPtr<nsCSSCompressedDataBlock> newBlock = mData->Clone();
+    if (!newBlock) {
+      return PR_FALSE;
+    }
+    newBlock.swap(mData);
+  }
+  if (mImportantData && !mImportantData->IsMutable()) {
+    nsRefPtr<nsCSSCompressedDataBlock> newBlock = mImportantData->Clone();
+    if (!newBlock) {
+      return PR_FALSE;
+    }
+    newBlock.swap(mImportantData);
+  }
+  return PR_TRUE;
 }

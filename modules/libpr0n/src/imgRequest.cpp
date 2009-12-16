@@ -45,7 +45,6 @@
 #include "imgContainer.h"
 
 #include "imgILoader.h"
-#include "ImageErrors.h"
 #include "ImageLogging.h"
 
 #include "netCore.h"
@@ -191,11 +190,15 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
    */
 
   if (aNotify) {
+    // The "real" OnStopDecode - fix this with bug 505385.
+    if (!(mState & stateDecodeStopped)) {
+      proxy->OnStopContainer(mImage);
+    }
+
     // make sure that observer gets an OnStopDecode message sent to it
     if (!(mState & stateRequestStopped)) {
       proxy->OnStopDecode(aStatus, nsnull);
     }
-
   }
 
   // make sure that observer gets an OnStopRequest message sent to it
@@ -255,6 +258,8 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
 {
   nsCOMPtr<imgIRequest> kungFuDeathGrip(proxy);
 
+  // Keep these notifications in sync with imgContainerRequest::Clone!
+
   // OnStartRequest
   if (mState & stateRequestStarted)
     proxy->OnStartRequest(nsnull, nsnull);
@@ -294,8 +299,11 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
     mImage->ResetAnimation();
   }
 
-  if (mState & stateRequestStopped) {
+  // The "real" OnStopDecode - Fix this with bug 505385.
+  if (mState & stateDecodeStopped)
     proxy->OnStopContainer(mImage);
+
+  if (mState & stateRequestStopped) {
     proxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nsnull);
     proxy->OnStopRequest(nsnull, nsnull,
                          GetResultFromImageStatus(mImageStatus),
@@ -303,18 +311,6 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
   }
 
   return NS_OK;
-}
-
-nsresult imgRequest::GetResultFromImageStatus(PRUint32 aStatus) const
-{
-  nsresult rv = NS_OK;
-
-  if (aStatus & imgIRequest::STATUS_ERROR)
-    rv = NS_IMAGELIB_ERROR_FAILURE;
-  else if (aStatus & imgIRequest::STATUS_LOAD_COMPLETE)
-    rv = NS_IMAGELIB_SUCCESS_LOAD_FINISHED;
-
-  return rv;
 }
 
 void imgRequest::Cancel(nsresult aStatus)
@@ -662,6 +658,10 @@ NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request,
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnStopContainer");
 
+  // XXXbholley - This should be moved into OnStopDecode when we fix bug
+  // 505385.
+  mState |= stateDecodeStopped;
+
   nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
   while (iter.HasMore()) {
     iter.GetNext()->OnStopContainer(image);
@@ -711,7 +711,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(imgIRequest *aRequest,
 NS_IMETHODIMP imgRequest::OnDiscard(imgIRequest *aRequest)
 {
   // Clear the state bits we no longer deserve.
-  PRUint32 stateBitsToClear = stateDecodeStarted;
+  PRUint32 stateBitsToClear = stateDecodeStarted | stateDecodeStopped;
   mState &= ~stateBitsToClear;
 
   // Clear the status bits we no longer deserve.
@@ -761,6 +761,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     mImageStatus &= ~imgIRequest::STATUS_FRAME_COMPLETE;
     mState &= ~stateRequestStarted;
     mState &= ~stateDecodeStarted;
+    mState &= ~stateDecodeStopped;
     mState &= ~stateRequestStopped;
   }
 

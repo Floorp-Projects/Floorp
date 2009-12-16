@@ -74,14 +74,31 @@ var _fromByTestLists =
     new AnimTestcaseFromBy("url(#gradA)", "url(#gradB) red", { noEffect: 1 }),
     new AnimTestcaseFromBy("url(#gradA)", "none", { noEffect: 1 }),
     new AnimTestcaseFromBy("red", "url(#gradA)", { noEffect: 1 }),
-  ]
+  ],
+  URIsAndNone: [
+    // No need to specify { noEffect: 1 }, since plain URI-valued properties
+    // aren't additive
+    new AnimTestcaseFromBy("url(#idA)", "url(#idB)"),
+    new AnimTestcaseFromBy("none", "url(#idB)"),
+    new AnimTestcaseFromBy("url(#idB)", "inherit"),
+  ],
 };
 
 // List of attribute/testcase-list bundles to be tested
 var gFromByBundles =
 [
+  // Check that 'by' animations for 'cursor' has no effect
+  new TestcaseBundle(gPropList.cursor, [
+    new AnimTestcaseFromBy("crosshair", "move"),
+  ]),
   new TestcaseBundle(gPropList.fill, [].concat(_fromByTestLists.color,
                                                _fromByTestLists.paint)),
+  // Check that 'by' animations involving URIs have no effect
+  new TestcaseBundle(gPropList.filter,         _fromByTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.font, [
+    new AnimTestcaseFromBy("10px serif",
+                           "normal normal 400 100px / 10px monospace"),
+  ]),
   new TestcaseBundle(gPropList.font_size,      _fromByTestLists.lengthPx),
   new TestcaseBundle(gPropList.font_size_adjust, [
     // These testcases implicitly have no effect, because font-size-adjust is
@@ -91,10 +108,25 @@ var gFromByBundles =
     new AnimTestcaseFromBy("0.1", "none")
   ]),
   new TestcaseBundle(gPropList.lighting_color, _fromByTestLists.color),
+  new TestcaseBundle(gPropList.marker,         _fromByTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.marker_end,     _fromByTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.marker_mid,     _fromByTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.marker_start,   _fromByTestLists.URIsAndNone),
+  new TestcaseBundle(gPropList.overflow, [
+    new AnimTestcaseFromBy("inherit", "auto"),
+    new AnimTestcaseFromBy("scroll", "hidden")
+  ]),
   new TestcaseBundle(gPropList.opacity,        _fromByTestLists.opacity),
   new TestcaseBundle(gPropList.stroke_miterlimit, [
     new AnimTestcaseFromBy("1", "1", { midComp: "1.5", toComp: "2" }),
     new AnimTestcaseFromBy("20.1", "-10", { midComp: "15.1", toComp: "10.1" }),
+  ]),
+  new TestcaseBundle(gPropList.stroke_dasharray, [
+    // These testcases implicitly have no effect, because stroke-dasharray is
+    // non-additive (and is declared as such in db_smilCSSPropertyList.js)
+    new AnimTestcaseFromBy("none", "5"),
+    new AnimTestcaseFromBy("10", "5"),
+    new AnimTestcaseFromBy("1", "2, 3"),
   ]),
   new TestcaseBundle(gPropList.stroke_width,   _fromByTestLists.lengthPx),
 ];

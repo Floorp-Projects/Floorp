@@ -27,114 +27,48 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <a.out.h>
-#include <cstdarg>
-#include <cstdlib>
-#include <cstdio>
+#include <assert.h>
 #include <cxxabi.h>
 #include <elf.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <link.h>
+#include <string.h>
 #include <sys/mman.h>
-#include <stab.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <algorithm>
 
+#include <algorithm>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <functional>
 #include <list>
+#include <map>
+#include <string>
 #include <vector>
-#include <string.h>
 
 #include "common/linux/dump_symbols.h"
 #include "common/linux/file_id.h"
-#include "common/linux/guid_creator.h"
-#include "processor/scoped_ptr.h"
+#include "common/linux/module.h"
+#include "common/linux/stabs_reader.h"
 
 // This namespace contains helper functions.
 namespace {
 
-// Infomation of a line.
-struct LineInfo {
-  // The index into string table for the name of the source file which
-  // this line belongs to.
-  // Load from stab symbol.
-  uint32_t source_name_index;
-  // Offset from start of the function.
-  // Load from stab symbol.
-  ElfW(Off) rva_to_func;
-  // Offset from base of the loading binary.
-  ElfW(Off) rva_to_base;
-  // Size of the line.
-  // It is the difference of the starting address of the line and starting
-  // address of the next N_SLINE, N_FUN or N_SO.
-  uint32_t size;
-  // Line number.
-  uint32_t line_num;
-  // Id of the source file for this line.
-  int source_id;
-};
-
-typedef std::list<struct LineInfo> LineInfoList;
-
-// Information of a function.
-struct FuncInfo {
-  // Name of the function.
-  const char *name;
-  // Offset from the base of the loading address.
-  ElfW(Off) rva_to_base;
-  // Virtual address of the function.
-  // Load from stab symbol.
-  ElfW(Addr) addr;
-  // Size of the function.
-  // It is the difference of the starting address of the function and starting
-  // address of the next N_FUN or N_SO.
-  uint32_t size;
-  // Total size of stack parameters.
-  uint32_t stack_param_size;
-  // Is there any lines included from other files?
-  bool has_sol;
-  // Line information array.
-  LineInfoList line_info;
-};
-
-typedef std::list<struct FuncInfo> FuncInfoList;
-
-// Information of a source file.
-struct SourceFileInfo {
-  // Name string index into the string table.
-  uint32_t name_index;
-  // Name of the source file.
-  const char *name;
-  // Starting address of the source file.
-  ElfW(Addr) addr;
-  // Id of the source file.
-  int source_id;
-  // Functions information.
-  FuncInfoList func_info;
-};
-
-typedef std::list<struct SourceFileInfo> SourceFileInfoList;
-
-// Information of a symbol table.
-// This is the root of all types of symbol.
-struct SymbolInfo {
-  SourceFileInfoList source_file_info;
-
-  // The next source id for newly found source file.
-  int next_source_id;
-};
+using google_breakpad::Module;
+using std::vector;
 
 // Stab section name.
 static const char *kStabName = ".stab";
 
 // Demangle using abi call.
 // Older GCC may not support it.
-static std::string Demangle(const char *mangled) {
+static std::string Demangle(const std::string &mangled) {
   int status = 0;
-  char *demangled = abi::__cxa_demangle(mangled, NULL, NULL, &status);
+  char *demangled = abi::__cxa_demangle(mangled.c_str(), NULL, NULL, &status);
   if (status == 0 && demangled != NULL) {
     std::string str(demangled);
     free(demangled);
@@ -146,7 +80,7 @@ static std::string Demangle(const char *mangled) {
 // Fix offset into virtual address by adding the mapped base into offsets.
 // Make life easier when want to find something by offset.
 static void FixAddress(void *obj_base) {
-  ElfW(Word) base = reinterpret_cast<ElfW(Word)>(obj_base);
+  ElfW(Addr) base = reinterpret_cast<ElfW(Addr)>(obj_base);
   ElfW(Ehdr) *elf_header = static_cast<ElfW(Ehdr) *>(obj_base);
   elf_header->e_phoff += base;
   elf_header->e_shoff += base;
@@ -187,384 +121,219 @@ static const ElfW(Shdr) *FindSectionByName(const char *name,
 
   for (int i = 0; i < nsection; ++i) {
     const char *section_name =
-      (char*)(strtab->sh_offset + sections[i].sh_name);
+      reinterpret_cast<char*>(strtab->sh_offset + sections[i].sh_name);
     if (!strncmp(name, section_name, name_len))
       return sections + i;
   }
   return NULL;
 }
 
-// TODO(liuli): Computer the stack parameter size.
-// Expect parameter variables are immediately following the N_FUN symbol.
-// Will need to parse the type information to get a correct size.
-static int LoadStackParamSize(struct nlist *list,
-                              struct nlist *list_end,
-                              struct FuncInfo *func_info) {
-  struct nlist *cur_list = list;
-  assert(cur_list->n_type == N_FUN);
-  ++cur_list;
-  int step = 1;
-  while (cur_list < list_end && cur_list->n_type == N_PSYM) {
-    ++cur_list;
-    ++step;
-  }
-  func_info->stack_param_size = 0;
-  return step;
-}
+// Our handler class for STABS data.
+class DumpStabsHandler: public google_breakpad::StabsHandler {
+ public:
+  DumpStabsHandler(Module *module) :
+      module_(module),
+      comp_unit_base_address_(0),
+      current_function_(NULL),
+      current_source_file_(NULL),
+      current_source_file_name_(NULL) { }
 
-static int LoadLineInfo(struct nlist *list,
-                        struct nlist *list_end,
-                        const struct SourceFileInfo &source_file_info,
-                        struct FuncInfo *func_info) {
-  struct nlist *cur_list = list;
-  func_info->has_sol = false;
-  // Records which source file the following lines belongs. Default
-  // to the file we are handling. This helps us handling inlined source.
-  // When encountering N_SOL, we will change this to the source file
-  // specified by N_SOL.
-  int current_source_name_index = source_file_info.name_index;
-  do {
-    // Skip non line information.
-    while (cur_list < list_end && cur_list->n_type != N_SLINE) {
-      // Only exit when got another function, or source file.
-      if (cur_list->n_type == N_FUN || cur_list->n_type == N_SO)
-        return cur_list - list;
-      // N_SOL means source lines following it will be from
-      // another source file.
-      if (cur_list->n_type == N_SOL) {
-        func_info->has_sol = true;
+  bool StartCompilationUnit(const char *name, uint64_t address,
+                            const char *build_directory);
+  bool EndCompilationUnit(uint64_t address);
+  bool StartFunction(const std::string &name, uint64_t address);
+  bool EndFunction(uint64_t address);
+  bool Line(uint64_t address, const char *name, int number);
 
-        if (cur_list->n_un.n_strx > 0 &&
-            cur_list->n_un.n_strx != current_source_name_index) {
-          // The following lines will be from this source file.
-          current_source_name_index = cur_list->n_un.n_strx;
-        }
-      }
-      ++cur_list;
-    }
-    struct LineInfo line;
-    while (cur_list < list_end && cur_list->n_type == N_SLINE) {
-      line.source_name_index = current_source_name_index;
-      line.rva_to_func = cur_list->n_value;
-      // n_desc is a signed short
-      line.line_num = (unsigned short)cur_list->n_desc;
-      // Don't set it here.
-      // Will be processed in later pass.
-      line.source_id = -1;
-      func_info->line_info.push_back(line);
-      ++cur_list;
-    }
-  } while (list < list_end);
+  // Do any final processing necessary to make module_ contain all the
+  // data provided by the STABS reader.
+  //
+  // Because STABS does not provide reliable size information for
+  // functions and lines, we need to make a pass over the data after
+  // processing all the STABS to compute those sizes.  We take care of
+  // that here.
+  void Finalize();
 
-  return cur_list - list;
-}
+ private:
 
-static int LoadFuncSymbols(struct nlist *list,
-                           struct nlist *list_end,
-                           const ElfW(Shdr) *stabstr_section,
-                           struct SourceFileInfo *source_file_info) {
-  struct nlist *cur_list = list;
-  assert(cur_list->n_type == N_SO);
-  ++cur_list;
-  source_file_info->func_info.clear();
-  while (cur_list < list_end) {
-    // Go until the function symbol.
-    while (cur_list < list_end && cur_list->n_type != N_FUN) {
-      if (cur_list->n_type == N_SO) {
-        return cur_list - list;
-      }
-      ++cur_list;
-      continue;
-    }
-    if (cur_list->n_type == N_FUN) {
-      struct FuncInfo func_info;
-      func_info.name =
-        reinterpret_cast<char *>(cur_list->n_un.n_strx +
-                                 stabstr_section->sh_offset);
-      func_info.addr = cur_list->n_value;
-      func_info.rva_to_base = 0;
-      func_info.size = 0;
-      func_info.stack_param_size = 0;
-      func_info.has_sol = 0;
+  // An arbitrary, but very large, size to use for functions whose
+  // size we can't compute properly.
+  static const uint64_t kFallbackSize = 0x10000000;
 
-      // Stack parameter size.
-      cur_list += LoadStackParamSize(cur_list, list_end, &func_info);
-      // Line info.
-      cur_list += LoadLineInfo(cur_list,
-                               list_end,
-                               *source_file_info,
-                               &func_info);
+  // The module we're contributing debugging info to.
+  Module *module_;
 
-      // Functions in this module should have address bigger than the module
-      // startring address.
-      // There maybe a lot of duplicated entry for a function in the symbol,
-      // only one of them can met this.
-      if (func_info.addr >= source_file_info->addr) {
-        source_file_info->func_info.push_back(func_info);
-      }
-    }
-  }
-  return cur_list - list;
-}
+  // The functions we've generated so far.  We don't add these to
+  // module_ as we parse them.  Instead, we wait until we've computed
+  // their ending address, and their lines' ending addresses.
+  //
+  // We could just stick them in module_ from the outset, but if
+  // module_ already contains data gathered from other debugging
+  // formats, that would complicate the size computation.
+  vector<Module::Function *> functions_;
 
-// Comapre the address.
-// The argument should have a memeber named "addr"
-template<class T1, class T2>
-static bool CompareAddress(T1 *a, T2 *b) {
-  return a->addr < b->addr;
-}
+  // Boundary addresses.  STABS doesn't necessarily supply sizes for
+  // functions and lines, so we need to compute them ourselves by
+  // finding the next object.
+  vector<Module::Address> boundaries_;
 
-// Sort the array into increasing ordered array based on the virtual address.
-// Return vector of pointers to the elements in the incoming array. So caller
-// should make sure the returned vector lives longer than the incoming vector.
-template<class Container>
-static std::vector<typename Container::value_type *> SortByAddress(
-    Container *container) {
-  typedef typename Container::iterator It;
-  typedef typename Container::value_type T;
-  std::vector<T *> sorted_array_ptr;
-  sorted_array_ptr.reserve(container->size());
-  for (It it = container->begin(); it != container->end(); it++)
-    sorted_array_ptr.push_back(&(*it));
-  std::sort(sorted_array_ptr.begin(),
-            sorted_array_ptr.end(),
-            std::ptr_fun(CompareAddress<T, T>));
+  // The base address of the current compilation unit.  We use this to
+  // recognize functions we should omit from the symbol file.  (If you
+  // know the details of why we omit these, please patch this
+  // comment.)
+  Module::Address comp_unit_base_address_;
 
-  return sorted_array_ptr;
-}
+  // The function we're currently contributing lines to.
+  Module::Function *current_function_;
 
-// Find the address of the next function or source file symbol in the symbol
-// table. The address should be bigger than the current function's address.
-static ElfW(Addr) NextAddress(
-    std::vector<struct FuncInfo *> *sorted_functions,
-    std::vector<struct SourceFileInfo *> *sorted_files,
-    const struct FuncInfo &func_info) {
-  std::vector<struct FuncInfo *>::iterator next_func_iter =
-    std::find_if(sorted_functions->begin(),
-                 sorted_functions->end(),
-                 std::bind1st(
-                     std::ptr_fun(
-                         CompareAddress<struct FuncInfo,
-                                        struct FuncInfo>
-                         ),
-                     &func_info)
-                );
-  if (next_func_iter != sorted_functions->end())
-    return (*next_func_iter)->addr;
+  // The last Module::File we got a line number in.
+  Module::File *current_source_file_;
 
-  std::vector<struct SourceFileInfo *>::iterator next_file_iter =
-    std::find_if(sorted_files->begin(),
-                 sorted_files->end(),
-                 std::bind1st(
-                     std::ptr_fun(
-                         CompareAddress<struct FuncInfo,
-                                        struct SourceFileInfo>
-                         ),
-                     &func_info)
-                );
-  if (next_file_iter != sorted_files->end()) {
-    return (*next_file_iter)->addr;
-  }
-  return 0;
-}
-
-static int FindFileByNameIdx(uint32_t name_index,
-                             SourceFileInfoList &files) {
-  for (SourceFileInfoList::iterator it = files.begin();
-       it != files.end(); it++) {
-    if (it->name_index == name_index)
-      return it->source_id;
-  }
-
-  return -1;
-}
-
-// Add included file information.
-// Also fix the source id for the line info.
-static void AddIncludedFiles(struct SymbolInfo *symbols,
-                             const ElfW(Shdr) *stabstr_section) {
-  for (SourceFileInfoList::iterator source_file_it =
-	 symbols->source_file_info.begin();
-       source_file_it != symbols->source_file_info.end();
-       ++source_file_it) {
-    struct SourceFileInfo &source_file = *source_file_it;
-
-    for (FuncInfoList::iterator func_info_it = source_file.func_info.begin(); 
-	 func_info_it != source_file.func_info.end();
-	 ++func_info_it) {
-      struct FuncInfo &func_info = *func_info_it;
-
-      for (LineInfoList::iterator line_info_it = func_info.line_info.begin(); 
-	   line_info_it != func_info.line_info.end(); ++line_info_it) {
-        struct LineInfo &line_info = *line_info_it;
-
-        assert(line_info.source_name_index > 0);
-        assert(source_file.name_index > 0);
-
-        // Check if the line belongs to the source file by comparing the
-        // name index into string table.
-        if (line_info.source_name_index != source_file.name_index) {
-          // This line is not from the current source file, check if this
-          // source file has been added before.
-          int found_source_id = FindFileByNameIdx(line_info.source_name_index,
-                                                  symbols->source_file_info);
-          if (found_source_id < 0) {
-            // Got a new included file.
-            // Those included files don't have address or line information.
-            SourceFileInfo new_file;
-            new_file.name_index = line_info.source_name_index;
-            new_file.name = reinterpret_cast<char *>(new_file.name_index +
-                                                     stabstr_section->sh_offset);
-            new_file.addr = 0;
-            new_file.source_id = symbols->next_source_id++;
-            line_info.source_id = new_file.source_id;
-            symbols->source_file_info.push_back(new_file);
-          } else {
-            // The file has been added.
-            line_info.source_id = found_source_id;
-          }
-        } else {
-          // The line belongs to the file.
-          line_info.source_id = source_file.source_id;
-        }
-      }  // for each line.
-    }  // for each function.
-  } // for each source file.
-
-}
-
-// Compute size and rva information based on symbols loaded from stab section.
-static bool ComputeSizeAndRVA(ElfW(Addr) loading_addr,
-                              struct SymbolInfo *symbols) {
-  std::vector<struct SourceFileInfo *> sorted_files =
-    SortByAddress(&(symbols->source_file_info));
-  for (size_t i = 0; i < sorted_files.size(); ++i) {
-    struct SourceFileInfo &source_file = *sorted_files[i];
-    std::vector<struct FuncInfo *> sorted_functions =
-      SortByAddress(&(source_file.func_info));
-    for (size_t j = 0; j < sorted_functions.size(); ++j) {
-      struct FuncInfo &func_info = *sorted_functions[j];
-      assert(func_info.addr >= loading_addr);
-      func_info.rva_to_base = func_info.addr - loading_addr;
-      func_info.size = 0;
-      ElfW(Addr) next_addr = NextAddress(&sorted_functions,
-                                         &sorted_files,
-                                         func_info);
-      // I've noticed functions with an address bigger than any other functions
-      // and source files modules, this is probably the last function in the
-      // module, due to limitions of Linux stab symbol, it is impossible to get
-      // the exact size of this kind of function, thus we give it a default
-      // very big value. This should be safe since this is the last function.
-      // But it is a ugly hack.....
-      // The following code can reproduce the case:
-      // template<class T>
-      // void Foo(T value) {
-      // }
-      //
-      // int main(void) {
-      //   Foo(10);
-      //   Foo(std::string("hello"));
-      //   return 0;
-      // }
-      // TODO(liuli): Find a better solution.
-      static const int kDefaultSize = 0x10000000;
-      static int no_next_addr_count = 0;
-      if (next_addr != 0) {
-        func_info.size = next_addr - func_info.addr;
-      } else {
-        if (no_next_addr_count > 1) {
-          fprintf(stderr, "Got more than one funtion without the \
-                  following symbol. Igore this function.\n");
-          fprintf(stderr, "The dumped symbol may not correct.\n");
-          assert(!"This should not happen!\n");
-          func_info.size = 0;
-          continue;
-        }
-
-        no_next_addr_count++;
-        func_info.size = kDefaultSize;
-      }
-      // Compute line size.
-      for (LineInfoList::iterator line_info_it = func_info.line_info.begin(); 
-	   line_info_it != func_info.line_info.end(); line_info_it++) {
-        struct LineInfo &line_info = *line_info_it;
-	LineInfoList::iterator next_line_info_it = line_info_it;
-	next_line_info_it++;
-        line_info.size = 0;
-        if (next_line_info_it != func_info.line_info.end()) {
-          line_info.size =
-            next_line_info_it->rva_to_func - line_info.rva_to_func;
-        } else {
-          // The last line in the function.
-          // If we can find a function or source file symbol immediately
-          // following the line, we can get the size of the line by computing
-          // the difference of the next address to the starting address of this
-          // line.
-          // Otherwise, we need to set a default big enough value. This occurs
-          // mostly because the this function is the last one in the module.
-          if (next_addr != 0) {
-            ElfW(Off) next_addr_offset = next_addr - func_info.addr;
-            line_info.size = next_addr_offset - line_info.rva_to_func;
-          } else {
-            line_info.size = kDefaultSize;
-          }
-        }
-        line_info.rva_to_base = line_info.rva_to_func + func_info.rva_to_base;
-      }  // for each line.
-    }  // for each function.
-  } // for each source file.
+  // The pointer in the .stabstr section of the name that
+  // current_source_file_ is built from.  This allows us to quickly
+  // recognize when the current line is in the same file as the
+  // previous one (which it usually is).
+  const char *current_source_file_name_;
+};
+    
+bool DumpStabsHandler::StartCompilationUnit(const char *name, uint64_t address,
+                                            const char *build_directory) {
+  assert(! comp_unit_base_address_);
+  current_source_file_name_ = name;
+  current_source_file_ = module_->FindFile(name);
+  comp_unit_base_address_ = address;
+  boundaries_.push_back(static_cast<Module::Address>(address));
   return true;
+}
+
+bool DumpStabsHandler::EndCompilationUnit(uint64_t address) {
+  assert(comp_unit_base_address_);
+  comp_unit_base_address_ = 0;
+  current_source_file_ = NULL;
+  current_source_file_name_ = NULL;
+  if (address)
+    boundaries_.push_back(static_cast<Module::Address>(address));
+  return true;
+}
+
+bool DumpStabsHandler::StartFunction(const std::string &name,
+                                     uint64_t address) {
+  assert(! current_function_);
+  Module::Function *f = new Module::Function;
+  f->name_ = Demangle(name);
+  f->address_ = address;
+  f->size_ = 0;           // We compute this in DumpStabsHandler::Finalize().
+  f->parameter_size_ = 0; // We don't provide this information.
+  current_function_ = f;
+  boundaries_.push_back(static_cast<Module::Address>(address));
+  return true;
+}
+
+bool DumpStabsHandler::EndFunction(uint64_t address) {
+  assert(current_function_);
+  // Functions in this compilation unit should have address bigger
+  // than the compilation unit's starting address.  There may be a lot
+  // of duplicated entries for functions in the STABS data; only one
+  // entry can meet this requirement.
+  //
+  // (I don't really understand the above comment; just bringing it
+  // along from the previous code, and leaving the behaivor unchanged.
+  // If you know the whole story, please patch this comment.  --jimb)
+  if (current_function_->address_ >= comp_unit_base_address_)
+    functions_.push_back(current_function_);
+  else
+    delete current_function_;
+  current_function_ = NULL;
+  if (address)
+    boundaries_.push_back(static_cast<Module::Address>(address));
+  return true;
+}
+
+bool DumpStabsHandler::Line(uint64_t address, const char *name, int number) {
+  assert(current_function_);
+  assert(current_source_file_);
+  if (name != current_source_file_name_) {
+    current_source_file_ = module_->FindFile(name);
+    current_source_file_name_ = name;
+  }
+  Module::Line line;
+  line.address_ = address;
+  line.size_ = 0;  // We compute this in DumpStabsHandler::Finalize().
+  line.file_ = current_source_file_;
+  line.number_ = number;
+  current_function_->lines_.push_back(line);
+  return true;
+}
+
+void DumpStabsHandler::Finalize() {
+  // Sort our boundary list, so we can search it quickly.
+  sort(boundaries_.begin(), boundaries_.end());
+  // Sort all functions by address, just for neatness.
+  sort(functions_.begin(), functions_.end(),
+       Module::Function::CompareByAddress);
+  for (vector<Module::Function *>::iterator func_it = functions_.begin();
+       func_it != functions_.end();
+       func_it++) {
+    Module::Function *f = *func_it;
+    // Compute the function f's size.
+    vector<Module::Address>::iterator boundary
+        = std::upper_bound(boundaries_.begin(), boundaries_.end(), f->address_);
+    if (boundary != boundaries_.end())
+      f->size_ = *boundary - f->address_;
+    else
+      // If this is the last function in the module, and the STABS
+      // reader was unable to give us its ending address, then assign
+      // it a bogus, very large value.  This will happen at most once
+      // per module: since we've added all functions' addresses to the
+      // boundary table, only one can be the last.
+      f->size_ = kFallbackSize;
+
+    // Compute sizes for each of the function f's lines --- if it has any.
+    if (! f->lines_.empty()) {
+      stable_sort(f->lines_.begin(), f->lines_.end(),
+                  Module::Line::CompareByAddress);
+      vector<Module::Line>::iterator last_line = f->lines_.end() - 1;
+      for (vector<Module::Line>::iterator line_it = f->lines_.begin();
+           line_it != last_line; line_it++)
+        line_it[0].size_ = line_it[1].address_ - line_it[0].address_;
+      // Compute the size of the last line from f's end address.
+      last_line->size_ = (f->address_ + f->size_) - last_line->address_;
+    }
+  }
+  // Now that everything has a size, add our functions to the module, and
+  // dispose of our private list.
+  module_->AddFunctions(functions_.begin(), functions_.end());
+  functions_.clear();
 }
 
 static bool LoadSymbols(const ElfW(Shdr) *stab_section,
                         const ElfW(Shdr) *stabstr_section,
-                        ElfW(Addr) loading_addr,
-                        struct SymbolInfo *symbols) {
+                        Module *module) {
   if (stab_section == NULL || stabstr_section == NULL)
     return false;
 
-  struct nlist *lists =
-    reinterpret_cast<struct nlist *>(stab_section->sh_offset);
-  int nstab = stab_section->sh_size / sizeof(struct nlist);
-  // First pass, load all symbols from the object file.
-  for (int i = 0; i < nstab; ) {
-    int step = 1;
-    struct nlist *cur_list = lists + i;
-    if (cur_list->n_type == N_SO) {
-      // FUNC <address> <length> <param_stack_size> <function>
-      struct SourceFileInfo source_file_info;
-      source_file_info.name_index = cur_list->n_un.n_strx;
-      source_file_info.name = reinterpret_cast<char *>(cur_list->n_un.n_strx +
-                                 stabstr_section->sh_offset);
-      source_file_info.addr = cur_list->n_value;
-      if (strchr(source_file_info.name, '.'))
-        source_file_info.source_id = symbols->next_source_id++;
-      else
-        source_file_info.source_id = -1;
-      step = LoadFuncSymbols(cur_list, lists + nstab,
-                             stabstr_section, &source_file_info);
-      symbols->source_file_info.push_back(source_file_info);
-    }
-    i += step;
-  }
-
-  // Second pass, compute the size of functions and lines.
-  if (ComputeSizeAndRVA(loading_addr, symbols)) {
-    // Third pass, check for included source code, especially for header files.
-    // Until now, we only have compiling unit information, but they can
-    // have code from include files, add them here.
-    AddIncludedFiles(symbols, stabstr_section);
-    return true;
-  }
-  return false;
+  // A callback object to handle data from the STABS reader.
+  DumpStabsHandler handler(module);
+  // Find the addresses of the STABS data, and create a STABS reader object.
+  uint8_t *stabs = reinterpret_cast<uint8_t *>(stab_section->sh_offset);
+  uint8_t *stabstr = reinterpret_cast<uint8_t *>(stabstr_section->sh_offset);
+  google_breakpad::StabsReader reader(stabs, stab_section->sh_size,
+                                      stabstr, stabstr_section->sh_size,
+                                      &handler);
+  // Read the STABS data, and do post-processing.
+  if (! reader.Process())
+    return false;
+  handler.Finalize();
+  return true;
 }
 
-static bool LoadSymbols(ElfW(Ehdr) *elf_header, struct SymbolInfo *symbols) {
+static bool LoadSymbols(ElfW(Ehdr) *elf_header, Module *module) {
   // Translate all offsets in section headers into address.
   FixAddress(elf_header);
   ElfW(Addr) loading_addr = GetLoadingAddress(
       reinterpret_cast<ElfW(Phdr) *>(elf_header->e_phoff),
       elf_header->e_phnum);
+  module->SetLoadAddress(loading_addr);
 
   const ElfW(Shdr) *sections =
     reinterpret_cast<ElfW(Shdr) *>(elf_header->e_shoff);
@@ -578,107 +347,7 @@ static bool LoadSymbols(ElfW(Ehdr) *elf_header, struct SymbolInfo *symbols) {
   const ElfW(Shdr) *stabstr_section = stab_section->sh_link + sections;
 
   // Load symbols.
-  return LoadSymbols(stab_section, stabstr_section, loading_addr, symbols);
-}
-
-static bool WriteModuleInfo(FILE *file,
-                            ElfW(Half) arch,
-                            const std::string &obj_file) {
-  const char *arch_name = NULL;
-  if (arch == EM_386)
-    arch_name = "x86";
-  else if (arch == EM_X86_64)
-    arch_name = "x86_64";
-  else
-    return false;
-
-  unsigned char identifier[16];
-  google_breakpad::FileID file_id(obj_file.c_str());
-  if (file_id.ElfFileIdentifier(identifier)) {
-    char identifier_str[40];
-    file_id.ConvertIdentifierToString(identifier,
-                                      identifier_str, sizeof(identifier_str));
-    char id_no_dash[40];
-    int id_no_dash_len = 0;
-    memset(id_no_dash, 0, sizeof(id_no_dash));
-    for (int i = 0; identifier_str[i] != '\0'; ++i)
-      if (identifier_str[i] != '-')
-        id_no_dash[id_no_dash_len++] = identifier_str[i];
-    // Add an extra "0" by the end.
-    id_no_dash[id_no_dash_len++] = '0';
-    std::string filename = obj_file;
-    size_t slash_pos = obj_file.find_last_of("/");
-    if (slash_pos != std::string::npos)
-      filename = obj_file.substr(slash_pos + 1);
-    return 0 <= fprintf(file, "MODULE Linux %s %s %s\n", arch_name,
-                        id_no_dash, filename.c_str());
-  }
-  return false;
-}
-
-static bool WriteSourceFileInfo(FILE *file, const struct SymbolInfo &symbols) {
-  for (SourceFileInfoList::const_iterator it =
-	 symbols.source_file_info.begin();
-       it != symbols.source_file_info.end(); it++) {
-    if (it->source_id != -1) {
-      const char *name = it->name;
-      if (0 > fprintf(file, "FILE %d %s\n", it->source_id, name))
-        return false;
-    }
-  }
-  return true;
-}
-
-static bool WriteOneFunction(FILE *file,
-                             const struct FuncInfo &func_info){
-  // Discard the ending part of the name.
-  std::string func_name(func_info.name);
-  std::string::size_type last_colon = func_name.find_last_of(':');
-  if (last_colon != std::string::npos)
-    func_name = func_name.substr(0, last_colon);
-  func_name = Demangle(func_name.c_str());
-
-  if (func_info.size <= 0)
-    return true;
-
-  if (0 <= fprintf(file, "FUNC %lx %lx %d %s\n",
-                   (unsigned long) func_info.rva_to_base,
-                   (unsigned long) func_info.size,
-                   func_info.stack_param_size,
-                   func_name.c_str())) {
-    for (LineInfoList::const_iterator it = func_info.line_info.begin();
-	 it != func_info.line_info.end(); it++) {
-      const struct LineInfo &line_info = *it;
-      if (0 > fprintf(file, "%lx %lx %d %d\n",
-                      (unsigned long) line_info.rva_to_base,
-                      (unsigned long) line_info.size,
-                      line_info.line_num,
-                      line_info.source_id))
-        return false;
-    }
-    return true;
-  }
-  return false;
-}
-
-static bool WriteFunctionInfo(FILE *file, const struct SymbolInfo &symbols) {
-  for (SourceFileInfoList::const_iterator it =
-	 symbols.source_file_info.begin();
-       it != symbols.source_file_info.end(); it++) {
-    const struct SourceFileInfo &file_info = *it;
-    for (FuncInfoList::const_iterator fiIt = file_info.func_info.begin(); 
-	 fiIt != file_info.func_info.end(); fiIt++) {
-      const struct FuncInfo &func_info = *fiIt;
-      if (!WriteOneFunction(file, func_info))
-        return false;
-    }
-  }
-  return true;
-}
-
-static bool DumpStabSymbols(FILE *file, const struct SymbolInfo &symbols) {
-  return WriteSourceFileInfo(file, symbols) &&
-    WriteFunctionInfo(file, symbols);
+  return LoadSymbols(stab_section, stabstr_section, module);
 }
 
 //
@@ -733,6 +402,48 @@ class MmapWrapper {
    size_t size_;
 };
 
+// Return the breakpad symbol file identifier for the architecture of
+// ELF_HEADER.
+const char *ElfArchitecture(const ElfW(Ehdr) *elf_header) {
+  ElfW(Half) arch = elf_header->e_machine;
+  if (arch == EM_386)
+    return "x86";
+  else if (arch == EM_X86_64)
+    return "x86_64";
+  else
+    return NULL;
+}
+
+// Format the Elf file identifier in IDENTIFIER as a UUID with the
+// dashes removed.
+std::string FormatIdentifier(unsigned char identifier[16]) {
+  char identifier_str[40];
+  google_breakpad::FileID::ConvertIdentifierToString(
+      identifier,
+      identifier_str,
+      sizeof(identifier_str));
+  std::string id_no_dash;
+  for (int i = 0; identifier_str[i] != '\0'; ++i)
+    if (identifier_str[i] != '-')
+      id_no_dash += identifier_str[i];
+  // Add an extra "0" by the end.  PDB files on Windows have an 'age'
+  // number appended to the end of the file identifier; this isn't
+  // really used or necessary on other platforms, but let's preserve
+  // the pattern.
+  id_no_dash += '0';
+  return id_no_dash;
+}
+
+// Return the non-directory portion of FILENAME: the portion after the
+// last slash, or the whole filename if there are no slashes.
+std::string BaseFileName(const std::string &filename) {
+  // Lots of copies!  basename's behavior is less than ideal.
+  char *c_filename = strdup(filename.c_str());
+  std::string base = basename(c_filename);
+  free(c_filename);
+  return base;
+}
+
 }  // namespace
 
 namespace google_breakpad {
@@ -754,17 +465,27 @@ bool DumpSymbols::WriteSymbolFile(const std::string &obj_file,
   ElfW(Ehdr) *elf_header = reinterpret_cast<ElfW(Ehdr) *>(obj_base);
   if (!IsValidElf(elf_header))
     return false;
-  struct SymbolInfo symbols;
-  symbols.next_source_id = 0;
 
-  if (!LoadSymbols(elf_header, &symbols))
-     return false;
-  // Write to symbol file.
-  if (WriteModuleInfo(sym_file, elf_header->e_machine, obj_file) &&
-      DumpStabSymbols(sym_file, symbols))
-    return true;
+  unsigned char identifier[16];
+  google_breakpad::FileID file_id(obj_file.c_str());
+  if (! file_id.ElfFileIdentifier(identifier))
+    return false;
 
-  return false;
+  const char *architecture = ElfArchitecture(elf_header);
+  if (! architecture)
+    return false;
+
+  std::string name = BaseFileName(obj_file);
+  std::string os = "Linux";
+  std::string id = FormatIdentifier(identifier);
+
+  Module module(name, os, architecture, id);
+  if (!LoadSymbols(elf_header, &module))
+    return false;
+  if (!module.Write(sym_file))
+    return false;
+
+  return true;
 }
 
 }  // namespace google_breakpad

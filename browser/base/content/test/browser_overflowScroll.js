@@ -16,6 +16,13 @@ function nextRightElement()  elementFromPoint(right(scrollbox) + 1);
 function test() {
   waitForExplicitFinish();
 
+  // If the previous (or more) test finished with cleaning up the tabs,
+  // there may be some pending animations. That can cause a failure of
+  // this tests, so, we should test this in another stack.
+  setTimeout(doTest, 0);
+}
+
+function doTest() {
   tabstrip.smoothScroll = false;
 
   var tabMinWidth = gPrefService.getIntPref("browser.tabs.tabMinWidth");

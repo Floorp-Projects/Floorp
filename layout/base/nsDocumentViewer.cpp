@@ -498,7 +498,7 @@ protected:
   
   PRPackedBool mIsPageMode;
   PRPackedBool mCallerIsClosingWindow;
-
+  PRPackedBool mInitializedForPrintPreview;
 };
 
 //------------------------------------------------------------------
@@ -540,11 +540,10 @@ void DocumentViewerImpl::PrepareToStartLoad()
   if (mPrintEngine) {
     mPrintEngine->Destroy();
     mPrintEngine = nsnull;
-  }
-
 #ifdef NS_PRINT_PREVIEW
-  SetIsPrintPreview(PR_FALSE);
+    SetIsPrintPreview(PR_FALSE);
 #endif
+  }
 
 #ifdef NS_DEBUG
   mDebugFile = nsnull;
@@ -560,7 +559,8 @@ DocumentViewerImpl::DocumentViewerImpl()
 #ifdef NS_PRINT_PREVIEW
     mPrintPreviewZoom(1.0),
 #endif
-    mHintCharsetSource(kCharsetUninitialized)
+    mHintCharsetSource(kCharsetUninitialized),
+    mInitializedForPrintPreview(PR_FALSE)
 {
   PrepareToStartLoad();
 }
@@ -700,6 +700,9 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
 nsresult
 DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow, PRBool aReenableRefresh)
 {
+  if (GetIsPrintPreview())
+    return NS_OK;
+
   NS_ASSERTION(!mPresShell,
                "Someone should have destroyed the presshell!");
 
@@ -1700,14 +1703,16 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 
     // Clear the list of old child docshells. CChild docshells for the new
     // document will be constructed as frames are created.
-    nsCOMPtr<nsIDocShellTreeNode> node = do_QueryInterface(container);
-    if (node) {
-      PRInt32 count;
-      node->GetChildCount(&count);
-      for (PRInt32 i = 0; i < count; ++i) {
-        nsCOMPtr<nsIDocShellTreeItem> child;
-        node->GetChildAt(0, getter_AddRefs(child));
-        node->RemoveChild(child);
+    if (!newDoc->IsStaticDocument()) {
+      nsCOMPtr<nsIDocShellTreeNode> node = do_QueryInterface(container);
+      if (node) {
+        PRInt32 count;
+        node->GetChildCount(&count);
+        for (PRInt32 i = 0; i < count; ++i) {
+          nsCOMPtr<nsIDocShellTreeItem> child;
+          node->GetChildAt(0, getter_AddRefs(child));
+          node->RemoveChild(child);
+        }
       }
     }
   }
@@ -1767,37 +1772,19 @@ DocumentViewerImpl::GetDocument(nsIDocument** aResult)
 nsIPresShell*
 DocumentViewerImpl::GetPresShell()
 {
-  if (!GetIsPrintPreview()) {
-    return mPresShell;
-  }
-  NS_ENSURE_TRUE(mDocument, nsnull);
-  nsCOMPtr<nsIPresShell> shell;
-  nsCOMPtr<nsIPresShell> currentShell;
-  nsPresShellIterator iter(mDocument);
-  while ((shell = iter.GetNextShell())) {
-    currentShell.swap(shell);
-  }
-  return currentShell.get();
+  return mPresShell;
 }
 
 nsPresContext*
 DocumentViewerImpl::GetPresContext()
 {
-  if (!GetIsPrintPreview()) {
-    return mPresContext;
-  }
-  nsIPresShell* shell = GetPresShell();
-  return shell ? shell->GetPresContext() : nsnull;
+  return mPresContext;
 }
 
 nsIViewManager*
 DocumentViewerImpl::GetViewManager()
 {
-  if (!GetIsPrintPreview()) {
-    return mViewManager;
-  }
-  nsIPresShell* shell = GetPresShell();
-  return shell ? shell->GetViewManager() : nsnull;
+  return mViewManager;
 }
 
 NS_IMETHODIMP
@@ -2011,8 +1998,10 @@ DocumentViewerImpl::Show(void)
     // window is shown because some JS on the page caused it to be
     // shown...
 
-    nsCOMPtr<nsIPresShell> shellDeathGrip(mPresShell); // bug 378682
-    mPresShell->UnsuppressPainting();
+    if (mPresShell) {
+      nsCOMPtr<nsIPresShell> shellDeathGrip(mPresShell); // bug 378682
+      mPresShell->UnsuppressPainting();
+    }
   }
 
   return NS_OK;
@@ -2285,8 +2274,10 @@ DocumentViewerImpl::ClearHistoryEntry()
 nsresult
 DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
 {
-  nsresult rv;
+  if (GetIsPrintPreview())
+    return NS_OK;
 
+  nsresult rv;
   mViewManager = do_CreateInstance(kViewManagerCID, &rv);
   if (NS_FAILED(rv))
     return rv;
@@ -3774,6 +3765,10 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
                                  nsIWebProgressListener* aWebProgressListener)
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
+  NS_WARN_IF_FALSE(IsInitializedForPrintPreview(),
+                   "Using docshell.printPreview is the preferred way for print previewing!");
+
+  NS_ENSURE_ARG_POINTER(aChildDOMWin);
   nsresult rv = NS_OK;
 
   if (GetIsPrinting()) {
@@ -3791,25 +3786,23 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
   }
 #endif
 
-  if (!mContainer) {
-    PR_PL(("Container was destroyed yet we are still trying to use it!"));
-    return NS_ERROR_FAILURE;
-  }
-
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   NS_ASSERTION(docShell, "This has to be a docshell");
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
-  if (!presShell || !mDocument || !mDeviceContext || !mParentWidget) {
-    PR_PL(("Can't Print Preview without pres shell, document etc"));
+  if (!docShell ||! mDeviceContext || !mParentWidget) {
+    PR_PL(("Can't Print Preview without device context, docshell etc"));
     return NS_ERROR_FAILURE;
   }
 
   if (!mPrintEngine) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aChildDOMWin->GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    NS_ENSURE_STATE(doc);
+
     mPrintEngine = new nsPrintEngine();
     NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = mPrintEngine->Initialize(this, docShell, mDocument,
+    rv = mPrintEngine->Initialize(this, docShell, doc,
                                   float(mDeviceContext->AppUnitsPerInch()) /
                                   float(mDeviceContext->AppUnitsPerDevPixel()) /
                                   mPageZoom,
@@ -4224,6 +4217,12 @@ DocumentViewerImpl::SetIsPrintPreview(PRBool aIsPrintPreview)
     SetIsPrintingInDocShellTree(docShellTreeNode, aIsPrintPreview, PR_TRUE);
   }
 #endif
+  if (!aIsPrintPreview) {
+    mWindow = nsnull;
+    mViewManager = nsnull;
+    mPresContext = nsnull;
+    mPresShell = nsnull;
+  }
 }
 
 //----------------------------------------------------------------------------------
@@ -4256,13 +4255,12 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
   mPrintEngine->Destroy();
   mPrintEngine = nsnull;
 
-  mViewManager->EnableRefresh(NS_VMREFRESH_DEFERRED);
+  if (mViewManager) {
+    mViewManager->EnableRefresh(NS_VMREFRESH_DEFERRED);
+  }
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   ResetFocusState(docShell);
-
-  if (mPresContext)
-    mPresContext->RestoreImageAnimationMode();
 
   SetTextZoom(mTextZoom);
   SetFullZoom(mPageZoom);
@@ -4335,8 +4333,6 @@ DocumentViewerImpl::OnDonePrinting()
       }
       mClosingWhilePrinting = PR_FALSE;
     }
-    if (mPresContext)
-      mPresContext->RestoreImageAnimationMode();
   }
 #endif // NS_PRINTING && NS_PRINT_PREVIEW
 }
@@ -4401,4 +4397,32 @@ DocumentViewerImpl::DestroyPresShell()
   nsAutoScriptBlocker scriptBlocker;
   mPresShell->Destroy();
   mPresShell = nsnull;
+}
+
+PRBool
+DocumentViewerImpl::IsInitializedForPrintPreview()
+{
+  return mInitializedForPrintPreview;
+}
+
+void
+DocumentViewerImpl::InitializeForPrintPreview()
+{
+  mInitializedForPrintPreview = PR_TRUE;
+}
+
+void
+DocumentViewerImpl::SetPrintPreviewPresentation(nsIWidget* aWidget,
+                                                nsIViewManager* aViewManager,
+                                                nsPresContext* aPresContext,
+                                                nsIPresShell* aPresShell)
+{
+  if (mPresShell) {
+    DestroyPresShell();
+  }
+
+  mWindow = aWidget;
+  mViewManager = aViewManager;
+  mPresContext = aPresContext;
+  mPresShell = aPresShell;
 }

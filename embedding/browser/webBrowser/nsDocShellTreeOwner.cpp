@@ -241,37 +241,27 @@ nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
     return NS_OK;
   // _main is an IE target which should be case-insensitive but isn't
   // see bug 217886 for details
+  // XXXbz what if our browser isn't targetable?  We need to handle that somehow.
   if(name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main")) {
     *aFoundItem = mWebBrowser->mDocShellAsItem;
     NS_IF_ADDREF(*aFoundItem);
     return NS_OK;
   }
 
-  // first, is it us?
-  {
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-    if (domWindow) {
-      nsAutoString ourName;
-      domWindow->GetName(ourName);
-      if (name.Equals(ourName, nsCaseInsensitiveStringComparator())) {
-        *aFoundItem = mWebBrowser->mDocShellAsItem;
-        NS_IF_ADDREF(*aFoundItem);
-        return NS_OK;
-      }
+  if (!SameCOMIdentity(aRequestor, mWebBrowser->mDocShellAsItem)) {
+    // This isn't a request coming up from our kid, so check with said kid
+    nsISupports* thisSupports = static_cast<nsIDocShellTreeOwner*>(this);
+    rv =
+      mWebBrowser->mDocShellAsItem->FindItemWithName(aName, thisSupports,
+                                                     aOriginalRequestor, aFoundItem);
+    if (NS_FAILED(rv) || *aFoundItem) {
+      return rv;
     }
   }
 
-  // next, check our children
-  rv = FindChildWithName(aName, PR_TRUE, aRequestor, aOriginalRequestor,
-                         aFoundItem);
-  if(NS_FAILED(rv) || *aFoundItem)
-    return rv;
-
   // next, if we have a parent and it isn't the requestor, ask it
-  nsCOMPtr<nsIDocShellTreeOwner> reqAsTreeOwner(do_QueryInterface(aRequestor));
-
   if(mTreeOwner) {
+    nsCOMPtr<nsIDocShellTreeOwner> reqAsTreeOwner(do_QueryInterface(aRequestor));
     if (mTreeOwner != reqAsTreeOwner)
       return mTreeOwner->FindItemWithName(aName, mWebBrowser->mDocShellAsItem,
                                           aOriginalRequestor, aFoundItem);
@@ -281,47 +271,6 @@ nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
   // finally, failing everything else, search all windows
   return FindItemWithNameAcrossWindows(aName, aRequestor, aOriginalRequestor,
                                        aFoundItem);
-}
-
-nsresult
-nsDocShellTreeOwner::FindChildWithName(const PRUnichar *aName, PRBool aRecurse,
-                                       nsIDocShellTreeItem* aRequestor,
-                                       nsIDocShellTreeItem* aOriginalRequestor,
-                                       nsIDocShellTreeItem **aFoundItem)
-{
-  if (!mWebBrowser)
-    return NS_OK;
-
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIDOMWindow> domWindow;
-  mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-  if (!domWindow)
-    return NS_OK;
-
-  nsCOMPtr<nsIDOMWindowCollection> frames;
-  domWindow->GetFrames(getter_AddRefs(frames));
-  if (!frames)
-    return NS_OK;
-
-  PRUint32 ctr, count;
-  frames->GetLength(&count);
-  for (ctr = 0; ctr < count; ctr++) {
-    nsCOMPtr<nsIDOMWindow> frame;
-    frames->Item(ctr, getter_AddRefs(frame));
-    nsCOMPtr<nsPIDOMWindow> w(do_QueryInterface(frame));
-    if (w) {
-      nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(w->GetDocShell());
-      if (item && item != aRequestor) {
-        rv = item->FindItemWithName(aName, mWebBrowser->mDocShellAsItem,
-                                    aOriginalRequestor, aFoundItem);
-        if (NS_FAILED(rv) || *aFoundItem)
-          break;
-      }
-    }
-  }
-
-  return rv;
 }
 
 nsresult

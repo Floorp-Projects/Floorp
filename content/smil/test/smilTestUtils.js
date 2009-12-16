@@ -359,6 +359,10 @@ AnimTestcase.prototype =
       return this.buildSeekListStatic(aAnimAttr, aBaseVal, aTimeData,
                                       "defined as non-animatable in SVG spec");
     }
+    if (this.computedValMap.noEffect) {
+      return this.buildSeekListStatic(aAnimAttr, aBaseVal, aTimeData,
+                                      "testcase specified to have no effect");
+    }      
     return this.buildSeekListAnimated(aAnimAttr, aBaseVal,
                                       aTimeData, aIsFreeze)
   },
@@ -457,6 +461,9 @@ extend(AnimTestcaseFrom, AnimTestcase);
  *    - midComp:  Computed value that we expect to visit halfway through the
  *                animation (if different from |aTo|)
  *    - toComp:   Computed value version of |aTo| (if different from |aTo|)
+ *    - noEffect: Special flag -- if set, indicates that this testcase is
+ *                expected to have no effect on the computed value. (e.g. the
+ *                given values are invalid.)
  * @param aSkipReason  If this test-case is known to currently fail, this
  *                     parameter should be a string explaining why.
  *                     Otherwise, this value should be null (or omitted).
@@ -498,9 +505,10 @@ extend(AnimTestcaseFromTo, AnimTestcaseFrom);
  *                animation (|aFrom| + |aBy|/2)
  *    - toComp:   Computed value of the animation endpoint (|aFrom| + |aBy|)
  *    - noEffect: Special flag -- if set, indicates that this testcase is
- *                expected to have no effect on the computed value. (i.e. the
- *                attribute may be animatable and additive, but the particular
- *                "from" & "by" values that are used don't support addition.)
+ *                expected to have no effect on the computed value. (e.g. the
+ *                given values are invalid.  Or the attribute may be animatable
+ *                and additive, but the particular "from" & "by" values that
+ *                are used don't support addition.)
  * @param aSkipReason  If this test-case is known to currently fail, this
  *                     parameter should be a string explaining why.
  *                     Otherwise, this value should be null (or omitted).
@@ -532,7 +540,7 @@ AnimTestcaseFromBy.prototype =
   },
   buildSeekList : function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze)
   {
-    if (!aAnimAttr.isAdditive || this.computedValMap.noEffect) {
+    if (!aAnimAttr.isAdditive) {
       return this.buildSeekListStatic(aAnimAttr, aBaseVal, aTimeData,
                                       "defined as non-additive in SVG spec");
     }

@@ -1299,14 +1299,12 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   NP.trackBrowserWindow(window);
 
   // initialize the session-restore service (in case it's not already running)
-  if (document.documentElement.getAttribute("windowtype") == "navigator:browser") {
-    try {
-      var ss = Cc["@mozilla.org/browser/sessionstore;1"].
-               getService(Ci.nsISessionStore);
-      ss.init(window);
-    } catch(ex) {
-      dump("nsSessionStore could not be initialized: " + ex + "\n");
-    }
+  try {
+    Cc["@mozilla.org/browser/sessionstore;1"]
+      .getService(Ci.nsISessionStore)
+      .init(window);
+  } catch (ex) {
+    dump("nsSessionStore could not be initialized: " + ex + "\n");
   }
 
   // bookmark-all-tabs command
@@ -6292,8 +6290,8 @@ function undoCloseWindow(aIndex) {
 /**
  * Format a URL
  * eg:
- * echo formatURL("http://%LOCALE%.amo.mozilla.org/%LOCALE%/%APP%/%VERSION%/");
- * > http://en-US.amo.mozilla.org/en-US/firefox/3.0a1/
+ * echo formatURL("https://addons.mozilla.org/%LOCALE%/%APP%/%VERSION%/");
+ * > https://addons.mozilla.org/en-US/firefox/3.0a1/
  *
  * Currently supported built-ins are LOCALE, APP, and any value from nsIXULAppInfo, uppercased.
  */

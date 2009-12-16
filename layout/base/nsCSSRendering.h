@@ -138,9 +138,13 @@ struct nsCSSRendering {
                             const nsRect& aFillArea);
 
   /**
-   * Gets the root frame for the frame
+   * Find the frame whose background style should be used to draw the
+   * canvas background. aForFrame must be the frame for the root element
+   * whose background style should be used. This function will return
+   * aForFrame unless the <body> background should be propagated, in
+   * which case we return the frame associated with the <body>'s background.
    */
-  static nsIFrame* FindRootFrame(nsIFrame* aForFrame);
+  static nsIFrame* FindBackgroundStyleFrame(nsIFrame* aForFrame);
 
   /**
    * @return PR_TRUE if |aFrame| is a canvas frame, in the CSS sense.

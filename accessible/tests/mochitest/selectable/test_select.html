@@ -1,0 +1,66 @@
+<html>
+
+<head>
+  <title>nsIAccessibleSelectable HTML select testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  </style>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+
+  <script type="application/javascript">
+
+    function doTest()
+    {
+      var combobox = getAccessible("combobox");
+      var comboboxList = combobox.firstChild;
+      ok(isAccessible(comboboxList, [nsIAccessibleSelectable]),
+         "No selectable accessible for list of " + id);
+
+      var id = "listbox";
+      ok(isAccessible(id, [nsIAccessibleSelectable]),
+         "No selectable accessible for " + id);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=530014"
+     title="ARIA single selectable widget should implement nsIAccessibleSelectable">
+    Mozilla Bug 530014
+  </a><br>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <select id="combobox">
+    <option>option</option>
+    <option>option</option>
+  </select>
+
+  <select id="listbox" size="4">
+    <option>option</option>
+    <option>option</option>
+  </select>
+
+</body>
+</html>

@@ -55,6 +55,8 @@
 
 const WCHAR c_sInstallPathTemplate[] = L"%s\\%s";
 const WCHAR c_sExtractCardPathTemplate[] = L"\\%s%s\\%s";
+const WCHAR c_sAppRegKeyTemplate[] = L"Software\\%s";
+const WCHAR c_sFastStartTemplate[] = L"%s\\%sfaststart.exe";
 
 // Message handler for the dialog
 INT_PTR CALLBACK DlgMain(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -71,6 +73,8 @@ INT_PTR CALLBACK DlgMain(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 nsInstallerDlg::nsInstallerDlg()
 {
   m_hInst = NULL;
+  m_hDlg = NULL;
+  m_bFastStart = FALSE;
   m_sExtractPath[0] = 0;
   m_sInstallPath[0] = 0;
   m_sProgramFiles[0] = 0;
@@ -169,6 +173,8 @@ BOOL nsInstallerDlg::OnInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam)
 
   SendMessageToControl(IDC_CMB_PATH, CB_SETCURSEL, 0, 0 );
 
+  RunUninstall();
+
   return (INT_PTR)TRUE;
 }
 
@@ -266,6 +272,8 @@ BOOL nsInstallerDlg::PostExtract()
 {
   BOOL bResult = TRUE;
 
+  m_bFastStart = FastStartFileExists();
+
   if (!CreateShortcut())
   {
     bResult = FALSE;
@@ -293,7 +301,7 @@ BOOL nsInstallerDlg::StoreInstallPath()
 {
   HKEY hKey;
   WCHAR sRegFennecKey[MAX_PATH];
-  _snwprintf(sRegFennecKey, MAX_PATH, L"Software\\%s", Strings.GetString(StrID_AppShortName));
+  _snwprintf(sRegFennecKey, MAX_PATH, c_sAppRegKeyTemplate, Strings.GetString(StrID_AppShortName));
 
   // Store the installation path - to be used by the uninstaller
   LONG result = RegCreateKeyEx(HKEY_LOCAL_MACHINE, sRegFennecKey, 0, REG_NONE,
@@ -307,19 +315,40 @@ BOOL nsInstallerDlg::StoreInstallPath()
   return (result == ERROR_SUCCESS);
 }
 
+// Creates shortcuts for Fennec and (optionally) FastStart service.
+// Note: The shortcut names have to be in sync with DeleteShortcut in Uninstaller.cpp
 BOOL nsInstallerDlg::CreateShortcut()
 {
+  BOOL result = FALSE;
+
   WCHAR sFennecPath[MAX_PATH];
   _snwprintf(sFennecPath, MAX_PATH, L"\"%s\\%s.exe\"", m_sInstallPath, Strings.GetString(StrID_AppShortName));
 
   WCHAR sProgramsPath[MAX_PATH];
-  if (!SHGetSpecialFolderPath(m_hDlg, sProgramsPath, CSIDL_PROGRAMS, FALSE))
-    wcscpy(sProgramsPath, L"\\Windows\\Start Menu\\Programs");
+  if (SHGetSpecialFolderPath(m_hDlg, sProgramsPath, CSIDL_PROGRAMS, FALSE))
+  {
+    WCHAR sShortcutPath[MAX_PATH];
+    _snwprintf(sShortcutPath, MAX_PATH, L"%s\\%s.lnk", sProgramsPath, Strings.GetString(StrID_AppShortName));
 
-  WCHAR sShortcutPath[MAX_PATH];
-  _snwprintf(sShortcutPath, MAX_PATH, L"%s\\%s.lnk", sProgramsPath, Strings.GetString(StrID_AppShortName));
+    result = SHCreateShortcut(sShortcutPath, sFennecPath);
+  }
 
-  return SHCreateShortcut(sShortcutPath, sFennecPath);
+  if (m_bFastStart)
+  {
+    WCHAR sFastStartPath[MAX_PATH];
+    _snwprintf(sFastStartPath, MAX_PATH, L"\"%s\\%sfaststart.exe\"", m_sInstallPath, Strings.GetString(StrID_AppShortName));
+
+    WCHAR sStartupPath[MAX_PATH];
+    if (SHGetSpecialFolderPath(m_hDlg, sStartupPath, CSIDL_STARTUP, FALSE))
+    {
+      WCHAR sStartupShortcutPath[MAX_PATH];
+      _snwprintf(sStartupShortcutPath, MAX_PATH, L"%s\\%sFastStart.lnk", sStartupPath, Strings.GetString(StrID_AppShortName));
+
+      result = SHCreateShortcut(sStartupShortcutPath, sFastStartPath) && result;
+    }
+  }
+
+  return result;
 }
 
 BOOL nsInstallerDlg::MoveSetupStrings()
@@ -339,9 +368,19 @@ BOOL nsInstallerDlg::SilentFirstRun()
   UpdateWindow(m_hDlg); // make sure the text is drawn
 
   WCHAR sCmdLine[MAX_PATH];
-  _snwprintf(sCmdLine, MAX_PATH, L"%s\\%s.exe", m_sInstallPath, Strings.GetString(StrID_AppShortName));
+  WCHAR *sParams = NULL;
+  if (m_bFastStart)
+  {
+    // Run fast start exe instead - it will create the profile and stay in the background
+    _snwprintf(sCmdLine, MAX_PATH, c_sFastStartTemplate, m_sInstallPath, Strings.GetString(StrID_AppShortName));
+  }
+  else
+  {
+    _snwprintf(sCmdLine, MAX_PATH, L"%s\\%s.exe", m_sInstallPath, Strings.GetString(StrID_AppShortName));
+    sParams = L"-silent -nosplash";
+  }
   PROCESS_INFORMATION pi;
-  BOOL bResult = CreateProcess(sCmdLine, L"-silent -nosplash",
+  BOOL bResult = CreateProcess(sCmdLine, sParams,
                                NULL, NULL, FALSE, 0, NULL, NULL, NULL, &pi);
   if (bResult)
   {
@@ -359,4 +398,67 @@ void nsInstallerDlg::AddErrorMsg(WCHAR* sErr)
   WCHAR sMsg[c_nMaxErrorLen];
   _snwprintf(sMsg, c_nMaxErrorLen, L"%s. LastError = %d\n", sErr, GetLastError());
   wcsncat(m_sErrorMsg, sMsg, c_nMaxErrorLen - wcslen(m_sErrorMsg));
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Uninstall previous installation
+//
+//////////////////////////////////////////////////////////////////////////
+
+BOOL nsInstallerDlg::GetInstallPath(WCHAR *sPath)
+{
+  HKEY hKey;
+  WCHAR sRegFennecKey[MAX_PATH];
+  _snwprintf(sRegFennecKey, MAX_PATH, c_sAppRegKeyTemplate, Strings.GetString(StrID_AppShortName));
+
+  LONG result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, sRegFennecKey, 0, KEY_ALL_ACCESS, &hKey);
+  if (result == ERROR_SUCCESS)
+  {
+    DWORD dwType = NULL;
+    DWORD dwCount = MAX_PATH * sizeof(WCHAR);
+    result = RegQueryValueEx(hKey, L"Path", NULL, &dwType, (LPBYTE)sPath, &dwCount);
+
+    RegCloseKey(hKey);
+  }
+
+  return (result == ERROR_SUCCESS);
+}
+
+void nsInstallerDlg::RunUninstall()
+{
+  WCHAR sUninstallPath[MAX_PATH];
+  if (GetInstallPath(sUninstallPath))
+  {
+    if (wcslen(sUninstallPath) > 0 && sUninstallPath[wcslen(sUninstallPath)-1] != '\\')
+      wcscat(sUninstallPath, L"\\");
+
+    WCHAR sParam[MAX_PATH+10];
+    _snwprintf(sParam, MAX_PATH+9, L"remove %s", sUninstallPath);
+
+    wcscat(sUninstallPath, L"uninstall.exe");
+
+    PROCESS_INFORMATION pi;
+    BOOL bResult = CreateProcess(sUninstallPath, sParam,
+                                 NULL, NULL, FALSE, 0, NULL, NULL, NULL, &pi);
+    if (bResult)
+    {
+      // Wait for it to finish
+      WaitForSingleObject(pi.hProcess, INFINITE);
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Helper functions
+//
+//////////////////////////////////////////////////////////////////////////
+
+BOOL nsInstallerDlg::FastStartFileExists()
+{
+  WCHAR sFastStartPath[MAX_PATH];
+  _snwprintf(sFastStartPath, MAX_PATH, c_sFastStartTemplate, m_sInstallPath, Strings.GetString(StrID_AppShortName));
+  // Check if file exists
+  return (GetFileAttributes(sFastStartPath) != INVALID_FILE_ATTRIBUTES);
 }
