@@ -11345,30 +11345,6 @@ nsDocShell::OnLeaveLink()
   return rv;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetLinkState(nsIURI* aLinkURI, nsLinkState& aState)
-{
-  if (!aLinkURI) {
-    // No uri means not a link
-    aState = eLinkState_NotLink;
-    return NS_OK;
-  }
-    
-  aState = eLinkState_Unvisited;
-
-  // no history, leave state unchanged
-  if (!mGlobalHistory)
-    return NS_OK;
-
-  PRBool isVisited;
-  NS_ENSURE_SUCCESS(mGlobalHistory->IsVisited(aLinkURI, &isVisited),
-                    NS_ERROR_FAILURE);
-  if (isVisited)
-    aState = eLinkState_Visited;
-  
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Web Shell Services API
 
