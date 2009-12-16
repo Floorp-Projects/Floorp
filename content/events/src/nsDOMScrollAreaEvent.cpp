@@ -35,10 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-#include "base/basictypes.h"
-#include "IPC/IPCMessageUtils.h"
-#endif
 #include "nsDOMScrollAreaEvent.h"
 #include "nsGUIEvent.h"
 #include "nsClientRect.h"
@@ -109,64 +105,6 @@ nsDOMScrollAreaEvent::InitScrollAreaEvent(const nsAString &aEventType,
 
   return NS_OK;
 }
-
-#ifdef MOZ_IPC
-void
-nsDOMScrollAreaEvent::Serialize(IPC::Message* aMsg,
-                                PRBool aSerializeInterfaceType)
-{
-  if (aSerializeInterfaceType) {
-    IPC::WriteParam(aMsg, NS_LITERAL_STRING("scrollareaevent"));
-  }
-
-  nsDOMUIEvent::Serialize(aMsg, PR_FALSE);
-
-  NS_ASSERTION(sizeof(PRInt32) == sizeof(float),
-               "PRInt32 and float should be the same size!");
-
-  float x = 0.0f;
-  GetX(&x);
-  IPC::WriteParam(aMsg, reinterpret_cast<PRInt32&>(x));
-
-  float y = 0.0f;
-  GetY(&y);
-  IPC::WriteParam(aMsg, reinterpret_cast<PRInt32&>(y));
-
-  float width = 0.0f;
-  GetWidth(&width);
-  IPC::WriteParam(aMsg, reinterpret_cast<PRInt32&>(width));
-
-  float height = 0.0f;
-  GetHeight(&height);
-  IPC::WriteParam(aMsg, reinterpret_cast<PRInt32&>(height));
-}
-
-PRBool
-nsDOMScrollAreaEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
-{
-  NS_ENSURE_TRUE(nsDOMUIEvent::Deserialize(aMsg, aIter), PR_FALSE);
-
-  PRInt32 x_;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &x_), PR_FALSE);
-  float x = reinterpret_cast<float&>(x_);
-
-  PRInt32 y_;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &y_), PR_FALSE);
-  float y = reinterpret_cast<float&>(y_);
-
-  PRInt32 width_;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &width_), PR_FALSE);
-  float width = reinterpret_cast<float&>(width_);
-
-  PRInt32 height_;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &height_), PR_FALSE);
-  float height = reinterpret_cast<float&>(height_);
-
-  mClientArea.SetRect(x, y, width, height);
-
-  return PR_TRUE;
-}
-#endif
 
 nsresult
 NS_NewDOMScrollAreaEvent(nsIDOMEvent **aInstancePtrResult,

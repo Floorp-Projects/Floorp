@@ -1698,9 +1698,6 @@ GK_ATOM(TypingTxnName, "Typing")
 GK_ATOM(IMETxnName, "IME")
 GK_ATOM(DeleteTxnName, "Deleting")
 
-// IPC stuff
-GK_ATOM(Remote, "remote")
-
 // Names for system metrics
 GK_ATOM(scrollbar_start_backward, "scrollbar-start-backward")
 GK_ATOM(scrollbar_start_forward, "scrollbar-start-forward")

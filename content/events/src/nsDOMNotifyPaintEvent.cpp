@@ -36,10 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-#include "base/basictypes.h"
-#include "IPC/IPCMessageUtils.h"
-#endif
 #include "nsDOMNotifyPaintEvent.h"
 #include "nsContentUtils.h"
 #include "nsClientRect.h"
@@ -145,50 +141,6 @@ nsDOMNotifyPaintEvent::GetPaintRequests(nsIDOMPaintRequestList** aResult)
   requests.forget(aResult);
   return NS_OK;
 }
-
-#ifdef MOZ_IPC
-void
-nsDOMNotifyPaintEvent::Serialize(IPC::Message* aMsg,
-                                 PRBool aSerializeInterfaceType)
-{
-  if (aSerializeInterfaceType) {
-    IPC::WriteParam(aMsg, NS_LITERAL_STRING("notifypaintevent"));
-  }
-
-  nsDOMEvent::Serialize(aMsg, PR_FALSE);
-
-  PRUint32 length = mInvalidateRequests.Length();
-  IPC::WriteParam(aMsg, length);
-  for (PRUint32 i = 0; i < length; ++i) {
-    IPC::WriteParam(aMsg, mInvalidateRequests[i].mRect.x);
-    IPC::WriteParam(aMsg, mInvalidateRequests[i].mRect.y);
-    IPC::WriteParam(aMsg, mInvalidateRequests[i].mRect.width);
-    IPC::WriteParam(aMsg, mInvalidateRequests[i].mRect.height);
-    IPC::WriteParam(aMsg, mInvalidateRequests[i].mFlags);
-  }
-}
-
-PRBool
-nsDOMNotifyPaintEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
-{
-  NS_ENSURE_TRUE(nsDOMEvent::Deserialize(aMsg, aIter), PR_FALSE);
-
-  PRUint32 length = 0;
-  NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &length), PR_FALSE);
-  mInvalidateRequests.SetCapacity(length);
-  for (PRUint32 i = 0; i < length; ++i) {
-    nsInvalidateRequestList::Request req;
-    NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &req.mRect.x), PR_FALSE);
-    NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &req.mRect.y), PR_FALSE);
-    NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &req.mRect.width), PR_FALSE);
-    NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &req.mRect.height), PR_FALSE);
-    NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &req.mFlags), PR_FALSE);
-    mInvalidateRequests.AppendElement(req);
-  }
-
-  return PR_TRUE;
-}
-#endif
 
 nsresult NS_NewDOMNotifyPaintEvent(nsIDOMEvent** aInstancePtrResult,
                                    nsPresContext* aPresContext,
