@@ -45,6 +45,10 @@ do_load_httpd_js();
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
+// We need the profile directory so the test harness will clean up our test
+// files.
+do_get_profile();
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Helper Methods
 
@@ -81,7 +85,7 @@ function test_async_write_file()
   // First, we need an output file to write to.
   let file = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties).
-             get("TmpD", Ci.nsIFile);
+             get("ProfD", Ci.nsIFile);
   file.append("NetUtil-async-test-file.tmp");
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
 
@@ -103,8 +107,7 @@ function test_async_write_file()
     // Check the file contents.
     do_check_eq(TEST_DATA, getFileContents(file));
 
-    // Remove the file, and finish the test.
-    file.remove(false);
+    // Finish the test.
     do_test_finished();
     run_next_test();
   });
@@ -117,7 +120,7 @@ function test_async_write_file_nsISafeOutputStream()
   // First, we need an output file to write to.
   let file = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties).
-             get("TmpD", Ci.nsIFile);
+             get("ProfD", Ci.nsIFile);
   file.append("NetUtil-async-test-file.tmp");
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
 
@@ -139,8 +142,7 @@ function test_async_write_file_nsISafeOutputStream()
     // Check the file contents.
     do_check_eq(TEST_DATA, getFileContents(file));
 
-    // Remove the file, and finish the test.
-    file.remove(false);
+    // Finish the test.
     do_test_finished();
     run_next_test();
   });
@@ -180,7 +182,7 @@ function test_newURI_takes_nsIFile()
   // Create a test file that we can pass into NetUtil.newURI
   let file = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties).
-             get("TmpD", Ci.nsIFile);
+             get("ProfD", Ci.nsIFile);
   file.append("NetUtil-test-file.tmp");
 
   // Check that we get the same URI back from the IO service and the utility
@@ -286,6 +288,64 @@ function test_asyncFetch_does_not_block()
   });
 }
 
+function test_newChannel_no_specifier()
+{
+  try {
+    NetUtil.newChannel();
+    do_throw("should throw!");
+  }
+  catch (e) {
+    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
+  }
+
+  run_next_test();
+}
+
+function test_newChannel_with_string()
+{
+  const TEST_SPEC = "http://mozilla.org";
+
+  // Check that we get the same URI back from channel the IO service creates and
+  // the channel the utility method creates.
+  let ios = NetUtil.ioService;
+  let iosChannel = ios.newChannel(TEST_SPEC, null, null);
+  let NetUtilChannel = NetUtil.newChannel(TEST_SPEC);
+  do_check_true(iosChannel.URI.equals(NetUtilChannel.URI));
+
+  run_next_test();
+}
+
+function test_newChannel_with_nsIURI()
+{
+  const TEST_SPEC = "http://mozilla.org";
+
+  // Check that we get the same URI back from channel the IO service creates and
+  // the channel the utility method creates.
+  let uri = NetUtil.newURI(TEST_SPEC);
+  let iosChannel = NetUtil.ioService.newChannelFromURI(uri);
+  let NetUtilChannel = NetUtil.newChannel(uri);
+  do_check_true(iosChannel.URI.equals(NetUtilChannel.URI));
+
+  run_next_test();
+}
+
+function test_newChannel_with_nsIFile()
+{
+  let file = Cc["@mozilla.org/file/directory_service;1"].
+             getService(Ci.nsIProperties).
+             get("ProfD", Ci.nsIFile);
+  file.append("NetUtil-test-file.tmp");
+
+  // Check that we get the same URI back from channel the IO service creates and
+  // the channel the utility method creates.
+  let uri = NetUtil.newURI(file);
+  let iosChannel = NetUtil.ioService.newChannelFromURI(uri);
+  let NetUtilChannel = NetUtil.newChannel(uri);
+  do_check_true(iosChannel.URI.equals(NetUtilChannel.URI));
+
+  run_next_test();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
@@ -300,6 +360,10 @@ let tests = [
   test_asyncFetch_no_callback,
   test_asyncFetch,
   test_asyncFetch_does_not_block,
+  test_newChannel_no_specifier,
+  test_newChannel_with_string,
+  test_newChannel_with_nsIURI,
+  test_newChannel_with_nsIFile,
 ];
 let index = 0;
 
