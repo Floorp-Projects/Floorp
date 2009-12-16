@@ -205,6 +205,41 @@ const NetUtil = {
     },
 
     /**
+     * Constructs a new channel for the given spec, character set, and base URI,
+     * or nsIURI, or nsIFile.
+     *
+     * @param aWhatToLoad
+     *        The string spec for the desired URI, an nsIURI, or an nsIFile.
+     * @param aOriginCharset [optional]
+     *        The character set for the URI.  Only used if aWhatToLoad is a
+     *        string.
+     * @param aBaseURI [optional]
+     *        The base URI for the spec.  Only used if aWhatToLoad is a string.
+     *
+     * @return an nsIChannel object.
+     */
+    newChannel: function NetUtil_newChannel(aWhatToLoad, aOriginCharset,
+                                            aBaseURI)
+    {
+        if (!aWhatToLoad) {
+            let exception = new Components.Exception(
+                "Must have a non-null string spec, nsIURI, or nsIFile object",
+                Cr.NS_ERROR_INVALID_ARG,
+                Components.stack.caller
+            );
+            throw exception;
+        }
+
+        let uri = aWhatToLoad;
+        if (!(aWhatToLoad instanceof Ci.nsIURI)) {
+            // We either have a string or an nsIFile that we'll need a URI for.
+            uri = this.newURI(aWhatToLoad, aOriginCharset, aBaseURI);
+        }
+
+        return this.ioService.newChannelFromURI(uri);
+    },
+
+    /**
      * Returns a reference to nsIIOService.
      *
      * @return a reference to nsIIOService.
