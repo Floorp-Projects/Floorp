@@ -39,8 +39,8 @@
 #ifndef nsHttpRequestHead_h__
 #define nsHttpRequestHead_h__
 
-#include "nsHttp.h"
 #include "nsHttpHeaderArray.h"
+#include "nsHttp.h"
 #include "nsString.h"
 #include "nsCRT.h"
 

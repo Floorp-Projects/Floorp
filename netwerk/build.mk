@@ -45,7 +45,10 @@ ifndef tier_xpcom_dirs
 include $(topsrcdir)/xpcom/build.mk
 endif
 
-TIERS += zlib
+TIERS += zlib \
+	necko \
+	$(NULL)
+
 
 ifndef MOZ_NATIVE_ZLIB
 tier_zlib_dirs	+= modules/zlib

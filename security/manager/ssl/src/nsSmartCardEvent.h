@@ -66,9 +66,6 @@ public:
   NS_IMETHOD_(nsEvent*) GetInternalNSEvent();
   NS_IMETHOD_(PRBool ) IsDispatchStopped();
   NS_IMETHOD SetTrusted(PRBool aResult);
-  virtual void Serialize(IPC::Message* aMsg,
-                         PRBool aSerializeInterfaceType);
-  virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter);
 
   NS_DECL_NSIDOMEVENT
 
