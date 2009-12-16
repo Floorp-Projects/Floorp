@@ -1180,21 +1180,13 @@ var FormHelper = {
   },
 
   _getPrevious: function() {
-    let elements = this._nodes;
-    for (let i = elements.length; i>0; --i) {
-      if (elements[i] == this._currentElement)
-        return elements[--i];
-    }
-   return null;
+    let index = this._nodes.indexOf(this._currentElement);
+    return (index != -1 ? this._nodes[--index] : null);
   },
 
   _getNext: function() {
-    let elements = this._nodes;
-    for (let i = 0; i<elements.length; i++) {
-      if (elements[i] == this._currentElement)
-        return elements[++i];
-    }
-    return null;
+    let index = this._nodes.indexOf(this._currentElement);
+    return (index != -1 ? this._nodes[++index] : null);
   },
 
   getLabelsFor: function(aElement) {
@@ -1253,7 +1245,7 @@ var FormHelper = {
     this._helperSpacer.hidden = false;
 
     this._nodes = this._getAll();
-    this.setCurrentElement(aElement);
+    this.setCurrentElement(aElement.wrappedJSObject || aElement);
   },
 
   close: function formHelperHide() {
