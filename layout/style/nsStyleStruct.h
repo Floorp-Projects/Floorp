@@ -421,10 +421,10 @@ struct nsStyleBackground {
     PRBool DependsOnFrameSize(nsStyleImageType aType) const {
       if (aType == eStyleImageType_Image) {
         return mWidthType <= ePercentage || mHeightType <= ePercentage;
-      } else if (aType == eStyleImageType_Gradient) {
-        return mWidthType <= eAuto || mHeightType <= eAuto;
       } else {
-        NS_NOTREACHED("unrecognized image type");
+        NS_ABORT_IF_FALSE(aType == eStyleImageType_Gradient,
+                          "unrecognized image type");
+        return mWidthType <= eAuto || mHeightType <= eAuto;
       }
     }
 
@@ -460,9 +460,7 @@ struct nsStyleBackground {
     // True if the rendering of this layer might change when the size
     // of the corresponding frame changes.  This is true for any
     // non-solid-color background whose position or size depends on
-    // the frame size (that is, was specified with percentages) and is
-    // also true for nearly all gradients.  We don't currently bother
-    // trying to identify gradients that don't depend on the frame size.
+    // the frame size.
     PRBool RenderingMightDependOnFrameSize() const {
       return (!mImage.IsEmpty() &&
               (mPosition.DependsOnFrameSize() ||

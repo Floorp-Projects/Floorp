@@ -582,6 +582,9 @@ toolbar[iconsize="small"] #unified-back-forward-button > #back-forward-dropmarke
 #home-button {
   -moz-image-region: rect(0px, 180px, 23px, 144px);
 }
+#home-button[disabled="true"] {
+  -moz-image-region: rect(23px, 180px, 46px, 144px) !important;
+}
 #home-button:hover:active {
   -moz-image-region: rect(46px, 180px, 69px, 144px);
 }
