@@ -225,6 +225,8 @@ PRLogModuleInfo* nsPluginLogging::gPluginLog = nsnull;
 
 #define MAGIC_REQUEST_CONTEXT 0x01020304
 
+nsresult PostPluginUnloadEvent(PRLibrary * aLibrary);
+
 static nsPluginInstanceTagList *gActivePluginList;
 
 #ifdef CALL_SAFETY_ON
