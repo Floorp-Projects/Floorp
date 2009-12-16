@@ -3102,7 +3102,7 @@ const BrowserSearch = {
       var ss = Cc["@mozilla.org/browser/search-service;1"].
                getService(Ci.nsIBrowserSearchService);
       var searchForm = ss.defaultEngine.searchForm;
-      loadURI(searchForm, null, null, false);
+      openUILinkIn(searchForm, "current");
     }
   },
 

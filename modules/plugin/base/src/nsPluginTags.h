@@ -49,8 +49,8 @@
 #include "nsISupportsArray.h"
 
 class nsPluginHost;
-class PRLibrary;
-class nsPluginInfo;
+struct PRLibrary;
+struct nsPluginInfo;
 
 // Remember that flags are written out to pluginreg.dat, be careful
 // changing their meaning.
