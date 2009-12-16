@@ -1787,6 +1787,13 @@ namespace nanojit
             }
         }
 
+        // profiling for the exit
+        verbose_only(
+           if (_logc->lcbits & LC_FragProfile) {
+              asm_inc_m32( &guard->record()->profCount );
+           }
+        )
+
         MR(RSP, RBP);
 
         // return value is GuardRecord*
@@ -1861,9 +1868,17 @@ namespace nanojit
     // Increment the 32-bit profiling counter at pCtr, without
     // changing any registers.
     verbose_only(
-    void Assembler::asm_inc_m32(uint32_t* /*pCtr*/)
+    void Assembler::asm_inc_m32(uint32_t* pCtr)
     {
-        // todo: implement this
+        // Not as simple as on x86.  We need to temporarily free up a
+        // register into which to generate the address, so just push
+        // it on the stack.  This assumes that the scratch area at
+        // -8(%rsp) .. -1(%esp) isn't being used for anything else
+        // at this point.
+        emitr(X64_popr, RAX);             // popq    %rax
+        emit(X64_inclmRAX);               // incl    (%rax)
+        asm_quad(RAX, (uint64_t)pCtr);    // movabsq $pCtr, %rax
+        emitr(X64_pushr, RAX);            // pushq   %rax
     }
     )
 
