@@ -224,6 +224,8 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks,
                              PluginLibrary* aLibrary)
 {
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
+
+  fCallbacks.size = sizeof(fCallbacks);
   fLibrary = nsnull;
 
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -234,8 +236,6 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks,
   nsresult gepResult = aLibrary->NP_GetEntryPoints(&fCallbacks, &gepError);
   if (gepResult != NS_OK || gepError != NPERR_NO_ERROR)
     return;
-
-  fCallbacks.size = sizeof(fCallbacks);
 
   NS_ASSERTION(HIBYTE(fCallbacks.version) >= NP_VERSION_MAJOR,
                "callback version is less than NP version");
