@@ -261,7 +261,6 @@ nsNPAPIPlugin::nsNPAPIPlugin(NPPluginFuncs* callbacks,
   if (gepResult != NS_OK || gepError != NPERR_NO_ERROR)
     return;
 
-  fCallbacks.size = sizeof(fCallbacks);
   fCallbacks.version = np_callbacks.version;
   fCallbacks.newp = (NPP_NewProcPtr)np_callbacks.newp;
   fCallbacks.destroy = (NPP_DestroyProcPtr)np_callbacks.destroy;
