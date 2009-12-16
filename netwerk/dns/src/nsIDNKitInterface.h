@@ -92,7 +92,6 @@ typedef struct idn_nameprep *idn_nameprep_t;
  */
 #define IDN_NAMEPREP_CURRENT	"nameprep-11"
 
-#undef assert
 #define assert(a)
 #define TRACE(a)
 

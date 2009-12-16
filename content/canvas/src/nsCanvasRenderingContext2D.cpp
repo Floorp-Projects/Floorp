@@ -37,12 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-#  include "base/basictypes.h"
-#endif
-
-#include "nsIDOMXULElement.h"
-
 #ifdef _MSC_VER
 #define _USE_MATH_DEFINES
 #endif
@@ -109,19 +103,9 @@
 
 #include "nsFrameManager.h"
 
-#include "nsFrameLoader.h"
-
 #include "nsBidiPresUtils.h"
 
 #include "CanvasUtils.h"
-
-#ifdef MOZ_IPC
-#  include "mozilla/ipc/PDocumentRendererParent.h"
-#  include "mozilla/dom/PIFrameEmbeddingParent.h"
-#  include "mozilla/ipc/DocumentRendererParent.h"
-// windows.h (included by chromium code) defines this, in its infinite wisdom
-#  undef DrawText
-#endif
 
 using namespace mozilla;
 
@@ -327,6 +311,8 @@ public:
     virtual ~nsCanvasRenderingContext2D();
 
     nsresult Redraw();
+    // this rect is in CSS pixels
+    nsresult Redraw(const gfxRect& r);
 
     // nsICanvasRenderingContextInternal
     NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas);
@@ -338,8 +324,6 @@ public:
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     NS_IMETHOD SetIsOpaque(PRBool isOpaque);
-    // this rect is in CSS pixels
-    NS_IMETHOD Redraw(const gfxRect &r);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -864,7 +848,7 @@ nsCanvasRenderingContext2D::Redraw()
     return mCanvasElement->InvalidateFrame();
 }
 
-NS_IMETHODIMP
+nsresult
 nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
 {
     if (!mCanvasElement)
@@ -3329,83 +3313,6 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
     Redraw(damageRect);
 
     return rv;
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float aX, float aY,
-                                                float aW, float aH,
-                                                const nsAString& aBGColor,
-                                                PRUint32 flags)
-{
-    NS_ENSURE_ARG(aElem != nsnull);
-
-    // We can't allow web apps to call this until we fix at least the
-    // following potential security issues:
-    // -- rendering cross-domain IFRAMEs and then extracting the results
-    // -- rendering the user's theme and then extracting the results
-    // -- rendering native anonymous content (e.g., file input paths;
-    // scrollbars should be allowed)
-    if (!nsContentUtils::IsCallerTrustedForRead()) {
-        // not permitted to use DrawWindow
-        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-        return NS_ERROR_DOM_SECURITY_ERR;
-    }
-
-    nsCOMPtr<nsIFrameLoaderOwner> loaderOwner = do_QueryInterface(aElem);
-    if (!loaderOwner)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsFrameLoader> frameloader = loaderOwner->GetFrameLoader();
-    if (!frameloader)
-        return NS_ERROR_FAILURE;
-
-#ifdef MOZ_IPC
-    mozilla::dom::PIFrameEmbeddingParent *child = frameloader->GetChildProcess();
-    if (!child) {
-        nsCOMPtr<nsIDOMWindow> window =
-            do_GetInterface(frameloader->GetExistingDocShell());
-        if (!window)
-            return NS_ERROR_FAILURE;
-
-        return DrawWindow(window, aX, aY, aW, aH, aBGColor, flags);
-    }
-
-    // protect against too-large surfaces that will cause allocation
-    // or overflow issues
-    if (!gfxASurface::CheckSurfaceSize(gfxIntSize(aW, aH), 0xffff))
-        return NS_ERROR_FAILURE;
-
-    PRBool flush =
-        (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DO_NOT_FLUSH) == 0;
-
-    PRUint32 renderDocFlags = nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
-    if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_CARET) {
-        renderDocFlags |= nsIPresShell::RENDER_CARET;
-    }
-    if (flags & nsIDOMCanvasRenderingContext2D::DRAWWINDOW_DRAW_VIEW) {
-        renderDocFlags &= ~nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
-    }
-
-    PRInt32 x = nsPresContext::CSSPixelsToAppUnits(aX),
-            y = nsPresContext::CSSPixelsToAppUnits(aY),
-            w = nsPresContext::CSSPixelsToAppUnits(aW),
-            h = nsPresContext::CSSPixelsToAppUnits(aH);
-
-    mozilla::ipc::PDocumentRendererParent *pdocrender =
-        child->SendPDocumentRendererConstructor(x, y, w, h, nsString(aBGColor), renderDocFlags, flush);
-    mozilla::ipc::DocumentRendererParent *docrender = static_cast<mozilla::ipc::DocumentRendererParent *>(pdocrender);
-
-    docrender->SetCanvasContext(this, mThebes);
-
-    return NS_OK;
-#else
-    nsCOMPtr<nsIDOMWindow> window =
-        do_GetInterface(frameloader->GetExistingDocShell());
-    if (!window)
-        return NS_ERROR_FAILURE;
-
-    return DrawWindow(window, aX, aY, aW, aH, aBGColor, flags);
-#endif
 }
 
 //
