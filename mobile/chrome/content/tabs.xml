@@ -12,7 +12,7 @@
       <xul:stack anonid="page" class="documenttab-container" flex="1">
         <html:canvas anonid="canvas" class="documenttab-canvas" left="8" width="106" height="64" moz-opaque="true"
           onclick="document.getBindingParent(this)._onClick()"/>
-        <xul:hbox left="0" top="10" height="64" align="center" onclick="document.getBindingParent(this)._close()">
+        <xul:hbox left="0" top="10" height="64" width="55" align="center" onclick="document.getBindingParent(this)._close()">
           <xul:image anonid="close" class="documenttab-close" mousethrough="always"/>
         </xul:hbox>
       </xul:stack>
