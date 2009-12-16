@@ -3460,13 +3460,14 @@ nsHtml5Tokenizer::eof()
         tokenHandler->characters(nsHtml5Tokenizer::LT_GT, 0, 1);
         goto eofloop_end;
       }
+      case NS_HTML5TOKENIZER_RAWTEXT_RCDATA_LESS_THAN_SIGN_STATE: {
+        tokenHandler->characters(nsHtml5Tokenizer::LT_GT, 0, 1);
+        goto eofloop_end;
+      }
       case NS_HTML5TOKENIZER_NON_DATA_END_TAG_NAME: {
-        if (index < contentModelElementNameAsArray.length) {
-          goto eofloop_end;
-        } else {
-
-          goto eofloop_end;
-        }
+        tokenHandler->characters(nsHtml5Tokenizer::LT_SOLIDUS, 0, 2);
+        emitStrBuf();
+        goto eofloop_end;
       }
       case NS_HTML5TOKENIZER_CLOSE_TAG_OPEN: {
 
