@@ -41,7 +41,7 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           if (aEvent.originalTarget == document && aEvent.type == "unload")
-            this._closed = true;
+            this._removeDialog();
         ]]></body>
       </method>
       
@@ -51,6 +51,13 @@
             var f = new Function(this.getAttribute("onclose"));
             f.call(this);
           }
+          this._removeDialog();
+        </body>
+      </method>
+
+      <method name="_removeDialog">
+        <body><![CDATA[
+          window.removeEventListener("unload", this, true);
           this.parentNode.parentNode.removeChild(this.parentNode);
           this._closed = true;
 
@@ -59,7 +66,7 @@
           event.initEvent("DOMModalDialogClosed", true, false);
           let dispatcher = this.parent || getBrowser();
           dispatcher.dispatchEvent(event);
-        </body>
+        ]]></body>
       </method>
       
       <method name="waitForClose">
