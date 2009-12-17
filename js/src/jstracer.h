@@ -1379,6 +1379,7 @@ class TraceRecorder
     friend class AdjustCallerGlobalTypesVisitor;
     friend class AdjustCallerStackTypesVisitor;
     friend class TypeCompatibilityVisitor;
+    friend class ImportFrameSlotsVisitor;
     friend class SlotMap;
     friend class DefaultSlotMap;
     friend class DetermineTypesVisitor;

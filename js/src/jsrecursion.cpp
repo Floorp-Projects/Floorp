@@ -570,6 +570,21 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     return closeLoop(slotMap, exit);
 }
 
+class ImportFrameSlotsVisitor : public SlotVisitorBase
+{
+    TraceRecorder &mRecorder;
+public:
+    ImportFrameSlotsVisitor(TraceRecorder &recorder) : mRecorder(recorder)
+    {}
+
+    JS_REQUIRES_STACK JS_ALWAYS_INLINE bool
+    visitStackSlots(jsval *vp, size_t count, JSStackFrame* fp) {
+        for (size_t i = 0; i < count; ++i)
+            mRecorder.get(vp++);
+        return true;
+    }
+};
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::downRecursion()
 {
@@ -593,6 +608,16 @@ TraceRecorder::downRecursion()
     /* Guard that there is enough call stack space. */
     LIns* rp_top = lir->ins2(LIR_piadd, lirbuf->rp, lir->insImmWord(sizeof(FrameInfo*)));
     guard(true, lir->ins2(LIR_plt, rp_top, eor_ins), OOM_EXIT);
+
+    /*
+     * For every slot in the new frame that is not in the tracker, create a load
+     * in the tracker. This is necessary because otherwise snapshot() will see
+     * missing imports and use the down frame, rather than the new frame.
+     * This won't affect performance because the loads will be killed if not
+     * used.
+     */
+    ImportFrameSlotsVisitor visitor(*this);
+    VisitStackSlots(visitor, cx, callDepth);
 
     /* Add space for a new JIT frame. */
     lirbuf->sp = lir->ins2(LIR_piadd, lirbuf->sp, lir->insImmWord(slots * sizeof(double)));
