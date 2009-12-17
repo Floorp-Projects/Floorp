@@ -4769,20 +4769,6 @@ nsPluginHost::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInstance)
 }
 
 NS_IMETHODIMP
-nsPluginHost::SetIsScriptableInstance(nsIPluginInstance * aPluginInstance, PRBool aScriptable)
-{
-  nsPluginInstanceTag * p = mPluginInstanceTagList.find(aPluginInstance);
-  if (p == nsnull)
-    return NS_ERROR_FAILURE;
-
-  p->mXPConnected = aScriptable;
-  if (p->mPluginTag)
-    p->mPluginTag->mXPConnected = aScriptable;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPluginHost::ParsePostBufferToFixHeaders(const char *inPostData, PRUint32 inPostDataLen,
                                           char **outPostData, PRUint32 *outPostDataLen)
 {

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:html="http://www.w3.org/1999/xhtml">
+
+<foreignObject id="f" width="500" height="500" y="300">
+
+<div xmlns="http://www.w3.org/1999/xhtml">
+
+<table border="1">
+ <tr>
+  <td><input type="text" value="3" /></td>
+ </tr>
+</table>
+
+</div>
+
+</foreignObject>
+
+</svg>
