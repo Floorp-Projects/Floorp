@@ -51,14 +51,13 @@ MODULE_NAME	= nsPluginModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
-
-
 CPPSRCS		= \
 		nsNPAPIPlugin.cpp \
 		nsNPAPIPluginInstance.cpp \
 		nsPluginHost.cpp \
 		nsPluginModule.cpp \
 		nsJSNPRuntime.cpp \
+		nsPluginTags.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH), BeOS)
@@ -111,6 +110,10 @@ ifndef WINCE
 ENABLE_CXX_EXCEPTIONS = 1
 endif
 
+include $(topsrcdir)/config/config.mk
+ifdef MOZ_IPC
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+endif
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)

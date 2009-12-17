@@ -41,11 +41,20 @@
 #include "nsISupports.idl"
 
 [ptr] native JSRuntime(JSRuntime);
+native JSGCCallback(JSGCCallback);
+
 interface nsIXPCScriptable;
 
-[uuid(e7d09265-4c23-4028-b1b0-c99e02aa78f8)]
+[uuid(364bcec3-7034-4a4e-bff5-b3f796ca9771)]
 interface nsIJSRuntimeService : nsISupports
 {
     readonly attribute JSRuntime        runtime;
     readonly attribute nsIXPCScriptable backstagePass;
+
+    /**
+     * Register additional GC callback which will run after the
+     * standard XPConnect callback.
+     */
+    [noscript, notxpcom] void registerGCCallback(in JSGCCallback func);
+    [noscript, notxpcom] void unregisterGCCallback(in JSGCCallback func);
 };

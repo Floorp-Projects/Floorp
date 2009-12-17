@@ -1,0 +1,21 @@
+This contains a copy of libevent-1.4.7-stable for use on Linux and Mac
+
+Rather than use libevent's own build system, we just build a Chrome 
+static library using SConscript
+
+Changes from upstream:
+1) add linux/config.h from a run of configure on a Linux development box.
+2) add SConscript and libevent.gyp
+3) quotes.patch is applied to allow libevent to be used without
+being installed (alternative is adding crazy -I arguments to the commandline)
+4) The directories WIN32-Code and WIN32-Prj are not included
+5) add mac/config.h from a run of configure on a Mac.
+6) sys-queue-macros.patch is applied to build on systems which are missing a
+complete sys/queue.h
+
+SConscript does not include a few files that don't build on Linux:
+    devpoll.c, evport.c, kqueue.c
+
+TODO: currently we -I the source directory, which exposes event-config.h, which
+is dangerous as this file was generated for Linux and is not entirely correct on
+other platforms.

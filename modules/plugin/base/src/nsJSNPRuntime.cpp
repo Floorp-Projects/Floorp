@@ -53,6 +53,8 @@
 // FIXME(bug 332648): Give me a real API please!
 #include "jscntxt.h"
 
+using namespace mozilla::plugins::parent;
+
 // Hash of JSObject wrappers that wraps JSObjects as NPObjects. There
 // will be one wrapper per JSObject per plugin instance, i.e. if two
 // plugins access the JSObject x, two wrappers for x will be
@@ -78,6 +80,7 @@ static JSRuntime *sJSRuntime;
 // while executing JS on the context.
 static nsIJSContextStack *sContextStack;
 
+static nsTArray<NPObject*>* sDelayedReleases;
 
 // Helper class that reports any JS exceptions that were thrown while
 // the plugin executed JS.
@@ -198,6 +201,27 @@ static JSClass sNPObjectMemberClass =
   };
 
 static void
+OnWrapperDestroyed();
+
+static JSBool
+DelayedReleaseGCCallback(JSContext* cx, JSGCStatus status)
+{
+  if (JSGC_END == status) {
+    if (sDelayedReleases) {
+      for (PRInt32 i = 0; i < sDelayedReleases->Length(); ++i) {
+        NPObject* obj = (*sDelayedReleases)[i];
+        if (obj)
+          _releaseobject(obj);
+        OnWrapperDestroyed();
+      }
+      delete sDelayedReleases;
+      sDelayedReleases = NULL;
+    }
+  }
+  return JS_TRUE;
+}
+
+static void
 OnWrapperCreated()
 {
   if (sWrapperCount++ == 0) {
@@ -208,6 +232,10 @@ OnWrapperCreated()
 
     rtsvc->GetRuntime(&sJSRuntime);
     NS_ASSERTION(sJSRuntime != nsnull, "no JSRuntime?!");
+
+    // Register our GC callback to perform delayed destruction of finalized
+    // NPObjects. Leave this callback around and don't ever unregister it.
+    rtsvc->RegisterGCCallback(DelayedReleaseGCCallback);
 
     CallGetService("@mozilla.org/js/xpc/ContextStack;1", &sContextStack);
   }
@@ -488,11 +516,14 @@ ReportExceptionIfPending(JSContext *cx)
 nsJSObjWrapper::nsJSObjWrapper(NPP npp)
   : nsJSObjWrapperKey(nsnull, npp)
 {
+  MOZ_COUNT_CTOR(nsJSObjWrapper);
   OnWrapperCreated();
 }
 
 nsJSObjWrapper::~nsJSObjWrapper()
 {
+  MOZ_COUNT_DTOR(nsJSObjWrapper);
+
   // Invalidate first, since it relies on sJSRuntime and sJSObjWrappers.
   NP_Invalidate(this);
 
@@ -1625,17 +1656,15 @@ static void
 NPObjWrapper_Finalize(JSContext *cx, JSObject *obj)
 {
   NPObject *npobj = (NPObject *)::JS_GetPrivate(cx, obj);
-
   if (npobj) {
     if (sNPObjWrappers.ops) {
       PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_REMOVE);
     }
-
-    // Let go of our NPObject
-    _releaseobject(npobj);
   }
 
-  OnWrapperDestroyed();
+  if (!sDelayedReleases)
+    sDelayedReleases = new nsTArray<NPObject*>;
+  sDelayedReleases->AppendElement(npobj);
 }
 
 static JSBool
@@ -1855,6 +1884,16 @@ NPObjWrapperPluginDestroyedCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
     if (npobj->_class && npobj->_class->invalidate) {
       npobj->_class->invalidate(npobj);
     }
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+    {
+      int32_t refCnt = npobj->referenceCount;
+      while (refCnt) {
+        --refCnt;
+        NS_LOG_RELEASE(npobj, refCnt, "BrowserNPObject");
+      }
+    }
+#endif
 
     // Force deallocation of plugin objects since the plugin they came
     // from is being torn down.

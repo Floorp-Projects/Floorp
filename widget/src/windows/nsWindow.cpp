@@ -104,6 +104,10 @@
  **************************************************************
  **************************************************************/
 
+#ifdef MOZ_IPC
+#include "mozilla/ipc/SyncChannel.h"
+#endif
+
 #include "nsWindow.h"
 
 #include <windows.h>
@@ -2337,21 +2341,6 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
     }
 
     if (flags & SW_SCROLLCHILDREN) {
-      for (PRUint32 i = 0; i < aConfigurations.Length(); ++i) {
-        const Configuration& configuration = aConfigurations[i];
-        nsWindow* w = static_cast<nsWindow*>(configuration.mChild);
-        // Widgets that will be scrolled by SW_SCROLLCHILDREN but which
-        // will be partly visible outside the scroll area after scrolling
-        // must be invalidated, because SW_SCROLLCHILDREN doesn't
-        // update parts of widgets outside the area it scrolled, even
-        // if it moved them.
-        if (w->mBounds.Intersects(affectedRect) &&
-            !ClipRegionContainedInRect(configuration.mClipRegion,
-                                       affectedRect - (w->mBounds.TopLeft() + aDelta))) {
-          w->Invalidate(PR_FALSE);
-        }
-      }
-
       // ScrollWindowEx will send WM_MOVE to each moved window to tell it
       // its new position. Unfortunately those messages don't reach our
       // WM_MOVE handler for some plugins, so we have to update their
@@ -2386,6 +2375,25 @@ nsWindow::Scroll(const nsIntPoint& aDelta,
     ::SetRectRgn(destRgn, destRect.x, destRect.y, destRect.XMost(), destRect.YMost());
     ::CombineRgn(updateRgn, updateRgn, destRgn, RGN_AND);
     if (flags & SW_SCROLLCHILDREN) {
+      for (nsWindow* w = static_cast<nsWindow*>(GetFirstChild()); w;
+           w = static_cast<nsWindow*>(w->GetNextSibling())) {
+        if ((w->mBounds - aDelta).Intersects(affectedRect)) {
+          // Widgets that have been scrolled by SW_SCROLLCHILDREN but which
+          // were, or are, partly outside the scroll area must be invalidated
+          // because SW_SCROLLCHILDREN doesn't update parts of widgets outside
+          // the area it scrolled, even if it moved them.
+          nsAutoTArray<nsIntRect,1> clipRegion;
+          w->GetWindowClipRegion(&clipRegion);
+          if (!ClipRegionContainedInRect(clipRegion,
+                                         destRect - w->mBounds.TopLeft()) ||
+              !ClipRegionContainedInRect(clipRegion,
+                                         destRect - (w->mBounds.TopLeft() - aDelta))) {
+            ::SetRectRgn(destRgn, w->mBounds.x, w->mBounds.y, w->mBounds.XMost(), w->mBounds.YMost());
+            ::CombineRgn(updateRgn, updateRgn, destRgn, RGN_OR);
+          }
+        }
+      }
+
       InvalidateRgnInWindowSubtree(mWnd, updateRgn, destRgn);
     } else {
       ::InvalidateRgn(mWnd, updateRgn, FALSE);
@@ -3587,6 +3595,11 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 // The WndProc procedure for all nsWindows in this toolkit
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+#ifdef MOZ_IPC
+  NS_ASSERTION(!mozilla::ipc::SyncChannel::IsPumpingMessages(),
+               "Failed to prevent a nonqueued message from running!");
+#endif
+
   // create this here so that we store the last rolled up popup until after
   // the event has been processed.
   nsAutoRollup autoRollup;

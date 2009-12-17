@@ -42,7 +42,6 @@
 #define GOOGLE_BREAKPAD_PROCESSOR_STACKWALKER_H__
 
 #include <vector>
-#include "google_breakpad/common/breakpad_types.h"
 
 namespace google_breakpad {
 
@@ -95,16 +94,6 @@ class Stackwalker {
               const CodeModules *modules,
               SymbolSupplier *supplier,
               SourceLineResolverInterface *resolver);
-
-  // This can be used to filter out potential return addresses when
-  // the stack walker resorts to stack scanning.
-  // Returns true if any of:
-  // * This address is within a loaded module, but we don't have symbols
-  //   for that module.
-  // * This address is within a loaded module for which we have symbols,
-  //   and falls inside a function in that module.
-  // Returns false otherwise.
-  bool InstructionAddressSeemsValid(u_int64_t address);
 
   // Information about the system that produced the minidump.  Subclasses
   // and the SymbolSupplier may find this information useful.

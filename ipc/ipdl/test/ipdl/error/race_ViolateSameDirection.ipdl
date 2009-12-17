@@ -1,0 +1,29 @@
+protocol race_ViolateSameDirection {
+child:
+    Msg1();
+    Msg1_();
+    __delete__(); suppressUndeleteableError();
+parent:
+    Msg2();
+    Msg2_();
+
+    // *** ERROR: state S7 doesn't have all-same-direction
+start state _:
+    send __delete__;
+    send suppressUndeleteableError goto S6;
+
+state S6:
+    send Msg1 goto S7;
+    recv Msg2 goto S8;
+
+state S7:
+    recv Msg2 goto S9;
+    send Msg1 goto S9;
+
+state S8:
+    send Msg1 goto S9;
+
+state S9:
+    send Msg1 goto S9;
+    recv Msg2 goto S9;
+};

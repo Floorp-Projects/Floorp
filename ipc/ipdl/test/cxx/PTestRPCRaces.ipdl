@@ -1,0 +1,49 @@
+namespace mozilla {
+namespace _ipdltest {
+
+rpc protocol PTestRPCRaces {
+both:
+    rpc Race() returns (bool hasReply);
+    rpc StackFrame() returns ();
+parent:
+    sync StartRace();
+child:
+    Start();
+    Wakeup();
+    __delete__();
+
+state START:
+    send Start goto TEST1;
+
+// First test: race while no other messages are on the RPC stack
+state TEST1:
+    recv StartRace goto RACE1;
+state RACE1:
+    call Race goto DUMMY1_1;
+    answer Race goto DUMMY1_2;
+state DUMMY1_1:
+    answer Race goto TEST2;
+state DUMMY1_2:
+    call Race goto TEST2;
+
+// Second test: race while other messages are on the RPC stack
+state TEST2:
+    call StackFrame goto MORESTACK;
+state MORESTACK:
+    answer StackFrame goto STARTRACE;
+state STARTRACE:
+    send Wakeup goto RACE2;
+state RACE2:
+    call Race goto DUMMY2_1;
+    answer Race goto DUMMY2_2;
+state DUMMY2_1:
+    answer Race goto DYING;
+state DUMMY2_2:
+    call Race goto DYING;
+
+state DYING:
+    send __delete__;
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

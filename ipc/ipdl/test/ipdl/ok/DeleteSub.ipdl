@@ -1,0 +1,12 @@
+include protocol "Delete.ipdl";
+
+sync protocol DeleteSub {
+    manager Delete;
+
+parent:
+    sync __delete__(int x) returns (double d);
+
+state START:
+    recv __delete__;
+};
+

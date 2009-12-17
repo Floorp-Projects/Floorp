@@ -1,0 +1,27 @@
+protocol race_DiamondRule1 {
+
+child:
+    Msg1();
+    Msg1_();
+parent:
+    Msg2();
+    Msg2_();
+
+    // OK: this state machine is one of the simplest that follows the
+    // Diamond Rule
+
+start state S1:
+    send Msg1 goto S2;
+    recv Msg2 goto S3;
+
+state S2:
+    recv Msg2 goto S4;
+    recv Msg2_ goto S2;
+
+state S3:
+    send Msg1 goto S4;
+    send Msg1_ goto S3;
+
+state S4:
+    send Msg1 goto S4;
+};

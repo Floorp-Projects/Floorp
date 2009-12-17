@@ -1,0 +1,10 @@
+protocol trans_WrongName2 {
+
+parent:
+    Msg();
+    __delete__();
+
+state S1:
+    answer Msg goto S1;
+    recv __delete__;
+};

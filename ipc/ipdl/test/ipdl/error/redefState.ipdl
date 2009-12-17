@@ -1,0 +1,14 @@
+protocol redefState {
+
+    // error: redefining state in state machine
+child:
+    Msg();
+    __delete__();
+
+state S1: send Msg goto S1;
+
+state S1: send Msg goto S1;
+
+start state _:
+    send __delete__;
+};
