@@ -1730,6 +1730,17 @@ var PlacesUtils = {
   },
 
   /**
+   * Creates a dated backup in <profile>/bookmarkbackups.
+   * Stores the bookmarks using JSON.
+   *
+   * @see backups.create(aMaxBackups, aForceBackup)
+   */
+  archiveBookmarksFile:
+  function PU_archiveBookmarksFile(aMaxBackups, aForceBackup) {
+    this.backups.create(aMaxBackups, aForceBackup);
+  },
+
+  /**
    * Helper to create and manage backups.
    */
   backups: {
