@@ -369,9 +369,6 @@ pref("app.creditsURL", "http://www.mozilla.com/%LOCALE%/mobile/credits");
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
 
-// Inherit locale from the OS
-pref("intl.locale.matchOS", true);
-
 // Override some named colors to avoid inverse OS themes
 pref("ui.-moz-dialog", "#efebe7");
 pref("ui.-moz-dialogtext", "#101010");
