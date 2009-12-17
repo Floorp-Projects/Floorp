@@ -805,17 +805,27 @@
 
             let options = PlacesUtils.history.getNewQueryOptions();
             options.queryType = (this._type == "bookmarks" ? options.QUERY_TYPE_BOOKMARKS : options.QUERY_TYPE_HISTORY);
+
+            // Exclude "query" items (e.g. "smart folders")
+            options.excludeQueries = true;
+
             let query = PlacesUtils.history.getNewQuery();
 
             if (aFolder)
               query.setFolders([aFolder], 1);
+
             let result = PlacesUtils.history.executeQuery(query, options);
             let rootNode = result.root;
             rootNode.containerOpen = true;
     
             let cc = rootNode.childCount;
             for (var i=0; i<cc; ++i) {
-              var node = rootNode.getChild(i);
+              let node = rootNode.getChild(i);
+
+              // Ignore separators
+              if (node.type == node.RESULT_TYPE_SEPARATOR)
+                continue;
+
               if (this._mode == "folders" && node.type == node.RESULT_TYPE_FOLDER) {
                 items.push(node);
               }
