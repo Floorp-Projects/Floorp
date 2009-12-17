@@ -1100,6 +1100,7 @@ namespace nanojit
         };
         HashMap<LInsp, Entry*> names;
         void formatImm(int32_t c, char *buf);
+        void formatImmq(uint64_t c, char *buf);
 
     public:
         LabelMap *labels;
