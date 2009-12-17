@@ -48,6 +48,7 @@ _BROWSER_TEST_FILES =  \
 		browser_console_clear.js \
 		browser_privatebrowsing_beforeunload.js \
 		browser_privatebrowsing_certexceptionsui.js \
+		browser_privatebrowsing_commandline_toggle.js \
 		browser_privatebrowsing_crh.js \
 		browser_privatebrowsing_downloadmonitor.js \
 		browser_privatebrowsing_fastswitch.js \
