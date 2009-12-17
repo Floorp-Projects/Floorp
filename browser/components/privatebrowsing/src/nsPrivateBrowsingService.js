@@ -472,6 +472,7 @@ PrivateBrowsingService.prototype = {
     else if (aCmdLine.handleFlag("private-toggle", false)) {
       this.privateBrowsingEnabled = !this.privateBrowsingEnabled;
       this._autoStarted = false;
+    }
   },
 
   get helpInfo PBS_get_helpInfo() {
