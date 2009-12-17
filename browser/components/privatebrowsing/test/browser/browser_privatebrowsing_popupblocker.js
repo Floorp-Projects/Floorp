@@ -88,10 +88,14 @@ function test() {
     gBrowser.selectedTab = tab;
   }
 
-  pb.privateBrowsingEnabled = true;
-  testPopupBlockerMenuItem(true, function() {
-    pb.privateBrowsingEnabled = false;
-    gPrefService.setBoolPref("dom.disable_open_during_load", oldPopupPolicy);
-    finish();
+  testPopupBlockerMenuItem(false, function() {
+    pb.privateBrowsingEnabled = true;
+    testPopupBlockerMenuItem(true, function() {
+      pb.privateBrowsingEnabled = false;
+      testPopupBlockerMenuItem(false, function() {
+        gPrefService.setBoolPref("dom.disable_open_during_load", oldPopupPolicy);
+        finish();
+      });
+    });
   });
 }

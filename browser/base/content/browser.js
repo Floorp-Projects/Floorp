@@ -440,6 +440,8 @@ const gPopupBlockerObserver = {
 
     if (gPrivateBrowsingUI.privateBrowsingEnabled)
       blockedPopupAllowSite.setAttribute("disabled", "true");
+    else
+      blockedPopupAllowSite.removeAttribute("disabled", "true");
 
     var item = aEvent.target.lastChild;
     while (item && item.getAttribute("observes") != "blockedPopupsSeparator") {
