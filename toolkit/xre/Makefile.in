@@ -67,6 +67,7 @@ CPPSRCS = \
 	nsXREDirProvider.cpp \
 	nsNativeAppSupportBase.cpp \
 	nsAppData.cpp \
+	nsSigHandlers.cpp \
 	$(NULL)
 
 ifdef MOZ_SPLASHSCREEN
@@ -118,10 +119,6 @@ OS_CXXFLAGS += -fexceptions
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS += MacApplicationDelegate.mm
-endif
-
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-CPPSRCS	  += nsSigHandlers.cpp
 endif
 
 SHARED_LIBRARY_LIBS += ../profile/src/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX)
