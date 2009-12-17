@@ -3353,11 +3353,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         failif.addifstmts(
             self.unregisterActor(actorvar)
             + [ StmtExpr(ExprCall(_deallocMethod(md.decl.type.constructedType()), args=[actorvar])),
-                StmtReturn(ExprLiteral.NULL),
                 StmtExpr(_callCxxArrayRemoveSorted(
                     self.protocol.managedVar(
                         md.decl.type.constructedType(), self.side),
-                    actorvar))
+                    actorvar)),
+                StmtReturn(ExprLiteral.NULL),
             ])
         return [ failif ]
 
