@@ -192,6 +192,19 @@ TabStore.prototype = {
   create: function TabStore_create(record) {
     this._log.debug("Adding remote tabs from " + record.clientName);
     this._remoteClients[record.id] = record.cleartext;
+
+    // Lose some precision, but that's good enough (seconds)
+    let roundModify = Math.floor(record.modified / 1000);
+    let notifyState = Svc.Prefs.get("notifyTabState");
+    // If there's no existing pref, save this first modified time
+    if (notifyState == null)
+      Svc.Prefs.set("notifyTabState", roundModify);
+    // Don't change notifyState if it's already 0 (don't notify)
+    else if (notifyState == 0)
+      return;
+    // We must have gotten a new tab that isn't the same as last time
+    else if (notifyState != roundModify)
+      Svc.Prefs.set("notifyTabState", 0);
   }
 };
 
