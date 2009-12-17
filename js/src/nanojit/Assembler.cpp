@@ -335,20 +335,12 @@ namespace nanojit
         return findRegFor(i, rmask(w));
     }
 
-    // The 'op' argument is the opcode of the instruction containing the
-    // displaced i[d] operand we're finding a register for. It is only used
-    // for differentiating classes of valid displacement in the native
-    // backends; a bit of a hack.
-    Register Assembler::getBaseReg(LOpcode op, LIns *i, int &d, RegisterMask allow)
+    Register Assembler::getBaseReg(LIns *i, int &d, RegisterMask allow)
     {
     #if !PEDANTIC
         if (i->isop(LIR_alloc)) {
-            int d2 = d;
-            d2 += findMemFor(i);
-            if (isValidDisplacement(op, d2)) {
-                d = d2;
-                return FP;
-            }
+            d += findMemFor(i);
+            return FP;
         }
     #else
         (void) d;

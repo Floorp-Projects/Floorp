@@ -476,7 +476,7 @@ namespace nanojit
     {
         if (value->isconst())
         {
-            Register rb = getBaseReg(LIR_sti, base, dr, GpRegs);
+            Register rb = getBaseReg(base, dr, GpRegs);
             int c = value->imm32();
             switch(op) {
                 case LIR_stb:
@@ -566,7 +566,7 @@ namespace nanojit
         if (isKnownReg(rr) && rmask(rr) & XmmRegs)
         {
             freeRsrcOf(ins, false);
-            Register rb = getBaseReg(ins->opcode(), base, db, GpRegs);
+            Register rb = getBaseReg(base, db, GpRegs);
             switch (ins->opcode()) {
                 case LIR_ldq:
                 case LIR_ldqc:
@@ -1254,7 +1254,7 @@ namespace nanojit
             }
         }
 
-        Register ra = getBaseReg(op, base, d, GpRegs);
+        Register ra = getBaseReg(base, d, GpRegs);
         switch(op) {
             case LIR_ldzb:
             case LIR_ldcb:
