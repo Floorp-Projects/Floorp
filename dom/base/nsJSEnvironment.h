@@ -205,8 +205,6 @@ public:
 
 protected:
   nsresult InitializeExternalClasses();
-  // aHolder should be holding our global object
-  nsresult FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder);
 
   // Helper to convert xpcom datatypes to jsvals.
   JS_FORCES_STACK nsresult ConvertSupportsTojsvals(nsISupports *aArgs,
