@@ -1786,10 +1786,10 @@ nsSVGFEComponentTransferElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& 
 
 nsSVGElement::NumberInfo nsSVGComponentTransferFunctionElement::sNumberInfo[5] =
 {
-  { &nsGkAtoms::slope,     0 },
+  { &nsGkAtoms::slope,     1 },
   { &nsGkAtoms::intercept, 0 },
-  { &nsGkAtoms::amplitude, 0 },
-  { &nsGkAtoms::exponent,  0 },
+  { &nsGkAtoms::amplitude, 1 },
+  { &nsGkAtoms::exponent,  1 },
   { &nsGkAtoms::offset,    0 }
 };
 
@@ -4445,7 +4445,7 @@ nsSVGElement::NumberInfo nsSVGFESpotLightElement::sNumberInfo[8] =
   { &nsGkAtoms::pointsAtX, 0 },
   { &nsGkAtoms::pointsAtY, 0 },
   { &nsGkAtoms::pointsAtZ, 0 },
-  { &nsGkAtoms::specularExponent, 0 },
+  { &nsGkAtoms::specularExponent, 1 },
   { &nsGkAtoms::limitingConeAngle, 0 }
 };
 
