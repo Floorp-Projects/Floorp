@@ -2542,6 +2542,8 @@ ProgressController.prototype = {
     if (aWebProgress.DOMWindow != this._tab.browser.contentWindow)
       return;
 
+    // If you want to observe other state flags, be sure they're listed in the
+    // Tab._createBrowser's call to addProgressListener
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_START)
         this._networkStart();
@@ -2552,7 +2554,7 @@ ProgressController.prototype = {
 
   /** This method is called to indicate progress changes for the currently loading page. */
   onProgressChange: function onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
-    // To use this method, change the flags in Tab._createBrowser
+    // To use this method, add NOTIFY_PROGRESS to the flags in Tab._createBrowser
   },
 
   /** This method is called to indicate a change to the current location. */
@@ -2580,7 +2582,7 @@ ProgressController.prototype = {
    * loading page.  The message is already formatted for display.
    */
   onStatusChange: function onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
-    // To use this method, change the flags in Tab._createBrowser
+    // To use this method, add NOTIFY_STATUS to the flags in Tab._createBrowser
   },
 
   /** This method is called when the security state of the browser changes. */
