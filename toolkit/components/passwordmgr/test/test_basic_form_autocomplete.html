@@ -578,6 +578,17 @@ function runTest(testNum) {
         uname = $_(6, "uname");
         pword = $_(6, "pword");
         checkACForm("singleuser5", "singlepass5");
+        break;
+
+    case 109:
+        // Test that the password field remains filled in after changing
+        // the username.
+        uname.focus();
+        doKey("right");
+        sendChar("X", uname);
+        // Trigger the 'blur' event on uname
+        pword.focus();
+        checkACForm("singleuser5X", "singlepass5");
 
         pwmgr.removeLogin(login5);
         testNum = 499;

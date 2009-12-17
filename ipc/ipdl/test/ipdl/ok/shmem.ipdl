@@ -1,0 +1,13 @@
+union Foo {
+    int;
+    Shmem;
+};
+
+rpc protocol shmem {
+parent:
+    Msg(Shmem s, Foo f);
+    sync SyncMsg(Shmem s, Foo f)
+        returns (Shmem t, Foo g);
+    rpc RPCMsg(Shmem s, Foo f)
+        returns (Shmem t, Foo g);
+};

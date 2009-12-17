@@ -37,7 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "base/basictypes.h"
+#endif
+
 #include "mozilla/XPCOM.h"
+#include "nsXULAppAPI.h"
 
 #include "nsXPCOMPrivate.h"
 #include "nsXPCOMCIDInternal.h"
@@ -141,6 +146,26 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 #include "nsMemoryReporterManager.h"
 
 #include <locale.h>
+
+#ifdef MOZ_IPC
+#include "base/at_exit.h"
+#include "base/command_line.h"
+#include "base/message_loop.h"
+
+#include "mozilla/ipc/GeckoThread.h"
+
+using base::AtExitManager;
+using mozilla::ipc::BrowserProcessSubThread;
+
+namespace {
+
+static AtExitManager* sExitManager;
+static MessageLoop* sMessageLoop;
+static bool sCommandLineWasInitialized;
+static BrowserProcessSubThread* sIOThread;
+
+} /* anonymous namespace */
+#endif
 
 using mozilla::TimeStamp;
 
@@ -467,6 +492,34 @@ NS_InitXPCOM3(nsIServiceManager* *result,
      // We are not shutting down
     gXPCOMShuttingDown = PR_FALSE;
 
+#ifdef MOZ_IPC
+    // Set up chromium libs
+    NS_ASSERTION(!sExitManager && !sMessageLoop, "Bad logic!");
+
+    if (!AtExitManager::AlreadyRegistered()) {
+        sExitManager = new AtExitManager();
+        NS_ENSURE_STATE(sExitManager);
+    }
+
+    if (!MessageLoop::current()) {
+        sMessageLoop = new MessageLoopForUI();
+        NS_ENSURE_STATE(sMessageLoop);
+    }
+
+    if (XRE_GetProcessType() == GeckoProcessType_Default &&
+        !BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO)) {
+        scoped_ptr<BrowserProcessSubThread> ioThread(
+            new BrowserProcessSubThread(BrowserProcessSubThread::IO));
+        NS_ENSURE_TRUE(ioThread.get(), NS_ERROR_OUT_OF_MEMORY);
+
+        base::Thread::Options options;
+        options.message_loop_type = MessageLoop::TYPE_IO;
+        NS_ENSURE_TRUE(ioThread->StartWithOptions(options), NS_ERROR_FAILURE);
+
+        sIOThread = ioThread.release();
+    }
+#endif
+
     NS_LogInit();
 
     // Set up TimeStamp
@@ -526,6 +579,30 @@ NS_InitXPCOM3(nsIServiceManager* *result,
         rv = nsDirectoryService::gService->RegisterProvider(appFileLocationProvider);
         if (NS_FAILED(rv)) return rv;
     }
+
+#ifdef MOZ_IPC
+    if ((sCommandLineWasInitialized = !CommandLine::IsInitialized())) {
+#ifdef OS_WIN
+        CommandLine::Init(0, nsnull);
+#else
+        nsCOMPtr<nsIFile> binaryFile;
+        nsDirectoryService::gService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, 
+                                          NS_GET_IID(nsIFile), 
+                                          getter_AddRefs(binaryFile));
+        NS_ENSURE_STATE(binaryFile);
+        
+        rv = binaryFile->AppendNative(NS_LITERAL_CSTRING("nonexistent-executable"));
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        nsCString binaryPath;
+        rv = binaryFile->GetNativePath(binaryPath);
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        static char const *const argv = { strdup(binaryPath.get()) };
+        CommandLine::Init(1, &argv);
+#endif
+    }
+#endif
 
     NS_ASSERTION(nsComponentManagerImpl::gComponentManager == NULL, "CompMgr not null at init");
 
@@ -830,6 +907,25 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 #endif
     
     NS_LogTerm();
+
+#ifdef MOZ_IPC
+    if (sIOThread) {
+        delete sIOThread;
+        sIOThread = nsnull;
+    }
+    if (sMessageLoop) {
+        delete sMessageLoop;
+        sMessageLoop = nsnull;
+    }
+    if (sCommandLineWasInitialized) {
+        CommandLine::Terminate();
+        sCommandLineWasInitialized = false;
+    }
+    if (sExitManager) {
+        delete sExitManager;
+        sExitManager = nsnull;
+    }
+#endif
 
     return NS_OK;
 }

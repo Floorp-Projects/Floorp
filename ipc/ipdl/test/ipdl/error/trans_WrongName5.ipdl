@@ -1,0 +1,10 @@
+rpc protocol trans_WrongName5 {
+
+parent:
+    rpc Msg();
+    __delete__();
+
+state S1:
+    recv Msg goto S1;
+    recv __delete__;
+};

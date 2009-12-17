@@ -179,7 +179,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void appendVoidElementToCurrentMayFoster(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
     void appendVoidElementToCurrentMayFosterCamelCase(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
     void appendVoidElementToCurrent(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form);
-    void appendVoidElementToCurrent(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes);
+    void appendVoidFormToCurrent(nsHtml5HtmlAttributes* attributes);
   protected:
     void accumulateCharacters(PRUnichar* buf, PRInt32 start, PRInt32 length);
     void accumulateCharacter(PRUnichar c);
@@ -198,7 +198,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void appendCommentToDocument(PRUnichar* buf, PRInt32 start, PRInt32 length);
     void addAttributesToElement(nsIContent** element, nsHtml5HtmlAttributes* attributes);
     void markMalformedIfScript(nsIContent** elt);
-    void start(PRBool fragment);
+    void start(PRBool fragmentMode);
     void end();
     void appendDoctypeToDocument(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier);
     void elementPushed(PRInt32 ns, nsIAtom* name, nsIContent** node);

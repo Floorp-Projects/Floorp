@@ -243,15 +243,6 @@ static string* UTF16ToUTF8(const vector<u_int16_t>& in,
   return out.release();
 }
 
-// Return the smaller of the number of code units in the UTF-16 string,
-// not including the terminating null word, or maxlen.
-static size_t UTF16codeunits(const u_int16_t *string, size_t maxlen) {
-  size_t count = 0;
-  while (count < maxlen && string[count] != 0)
-    count++;
-  return count;
-}
-
 
 //
 // MinidumpObject
@@ -617,9 +608,8 @@ bool MinidumpContext::Read(u_int32_t expected_size) {
       }
 
       default: {
-        // Unknown context type - Don't log as an error yet. Let the 
-        // caller work that out.
-        BPLOG(INFO) << "MinidumpContext unknown context type " <<
+        // Unknown context type
+        BPLOG(ERROR) << "MinidumpContext unknown context type " <<
           HexString(cpu_type);
         return false;
         break;
@@ -1312,7 +1302,7 @@ void MinidumpThread::Print() {
 //
 
 
-u_int32_t MinidumpThreadList::max_threads_ = 4096;
+u_int32_t MinidumpThreadList::max_threads_ = 256;
 
 
 MinidumpThreadList::MinidumpThreadList(Minidump* minidump)
@@ -1474,8 +1464,8 @@ void MinidumpThreadList::Print() {
 //
 
 
-u_int32_t MinidumpModule::max_cv_bytes_ = 32768;
-u_int32_t MinidumpModule::max_misc_bytes_ = 32768;
+u_int32_t MinidumpModule::max_cv_bytes_ = 1024;
+u_int32_t MinidumpModule::max_misc_bytes_ = 1024;
 
 
 MinidumpModule::MinidumpModule(Minidump* minidump)
@@ -2434,7 +2424,7 @@ void MinidumpModuleList::Print() {
 //
 
 
-u_int32_t MinidumpMemoryList::max_regions_ = 4096;
+u_int32_t MinidumpMemoryList::max_regions_ = 256;
 
 
 MinidumpMemoryList::MinidumpMemoryList(Minidump* minidump)
@@ -2723,10 +2713,8 @@ MinidumpContext* MinidumpException::GetContext() {
 
     scoped_ptr<MinidumpContext> context(new MinidumpContext(minidump_));
 
-    // Don't log as an error if we can still fall back on th thread's context
-    // (which must be possible if we got his far.)
     if (!context->Read(exception_.thread_context.data_size)) {
-      BPLOG(INFO) << "MinidumpException cannot read context";
+      BPLOG(ERROR) << "MinidumpException cannot read context";
       return NULL;
     }
 
@@ -2777,109 +2765,6 @@ void MinidumpException::Print() {
   }
 }
 
-//
-// MinidumpAssertion
-//
-
-
-MinidumpAssertion::MinidumpAssertion(Minidump* minidump)
-    : MinidumpStream(minidump),
-      assertion_(),
-      expression_(),
-      function_(),
-      file_() {
-}
-
-
-MinidumpAssertion::~MinidumpAssertion() {
-}
-
-
-bool MinidumpAssertion::Read(u_int32_t expected_size) {
-  // Invalidate cached data.
-  valid_ = false;
-
-  if (expected_size != sizeof(assertion_)) {
-    BPLOG(ERROR) << "MinidumpAssertion size mismatch, " << expected_size <<
-                    " != " << sizeof(assertion_);
-    return false;
-  }
-
-  if (!minidump_->ReadBytes(&assertion_, sizeof(assertion_))) {
-    BPLOG(ERROR) << "MinidumpAssertion cannot read assertion";
-    return false;
-  }
-
-  // Each of {expression, function, file} is a UTF-16 string,
-  // we'll convert them to UTF-8 for ease of use.
-  // expression
-  // Since we don't have an explicit byte length for each string,
-  // we use UTF16codeunits to calculate word length, then derive byte
-  // length from that.
-  u_int32_t word_length = UTF16codeunits(assertion_.expression,
-                                         sizeof(assertion_.expression));
-  if (word_length > 0) {
-    u_int32_t byte_length = word_length * 2;
-    vector<u_int16_t> expression_utf16(word_length);
-    memcpy(&expression_utf16[0], &assertion_.expression[0], byte_length);
-
-    scoped_ptr<string> new_expression(UTF16ToUTF8(expression_utf16,
-                                                  minidump_->swap()));
-    expression_ = *new_expression;
-  }
-  
-  // assertion
-  word_length = UTF16codeunits(assertion_.function,
-                               sizeof(assertion_.function));
-  if (word_length) {
-    u_int32_t byte_length = word_length * 2;
-    vector<u_int16_t> function_utf16(word_length);
-    memcpy(&function_utf16[0], &assertion_.function[0], byte_length);
-    scoped_ptr<string> new_function(UTF16ToUTF8(function_utf16,
-                                                minidump_->swap()));
-    function_ = *new_function;
-  }
-
-  // file
-  word_length = UTF16codeunits(assertion_.file,
-                               sizeof(assertion_.file));
-  if (word_length > 0) {
-    u_int32_t byte_length = word_length * 2;
-    vector<u_int16_t> file_utf16(word_length);
-    memcpy(&file_utf16[0], &assertion_.file[0], byte_length);
-    scoped_ptr<string> new_file(UTF16ToUTF8(file_utf16,
-                                            minidump_->swap()));
-    file_ = *new_file;
-  }
-
-  if (minidump_->swap()) {
-    Swap(&assertion_.line);
-    Swap(&assertion_.type);
-  }
-
-  valid_ = true;
-  return true;
-}
-
-void MinidumpAssertion::Print() {
-  if (!valid_) {
-    BPLOG(ERROR) << "MinidumpAssertion cannot print invalid data";
-    return;
-  }
-
-  printf("MDAssertion\n");
-  printf("  expression                                 = %s\n",
-         expression_.c_str());
-  printf("  function                                   = %s\n",
-         function_.c_str());
-  printf("  file                                       = %s\n",
-         file_.c_str());
-  printf("  line                                       = %u\n",
-         assertion_.line);
-  printf("  type                                       = %u\n",
-         assertion_.type);
-  printf("\n");
-}
 
 //
 // MinidumpSystemInfo
@@ -3525,11 +3410,6 @@ MinidumpMemoryList* Minidump::GetMemoryList() {
 MinidumpException* Minidump::GetException() {
   MinidumpException* exception;
   return GetStream(&exception);
-}
-
-MinidumpAssertion* Minidump::GetAssertion() {
-  MinidumpAssertion* assertion;
-  return GetStream(&assertion);
 }
 
 

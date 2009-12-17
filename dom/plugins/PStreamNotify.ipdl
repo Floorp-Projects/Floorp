@@ -1,0 +1,27 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+
+include protocol "PPluginInstance.ipdl";
+
+include "npapi.h";
+
+using NPReason;
+
+namespace mozilla {
+namespace plugins {
+
+/**
+ * This empty protocol exists only to be constructed and destroyed.
+ */
+rpc protocol PStreamNotify
+{
+  manager PPluginInstance;
+
+child:
+  /**
+   * Represents NPP_URLNotify
+   */
+  rpc __delete__(NPReason reason);
+};
+
+} // namespace plugins
+} // namespace mozilla

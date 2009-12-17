@@ -59,7 +59,11 @@ pref("general.warnOnAboutConfig", true);
 pref("browser.bookmarks.max_backups",       5);
 
 pref("browser.cache.disk.enable",           true);
+#ifndef WINCE
 pref("browser.cache.disk.capacity",         51200);
+#else
+pref("browser.cache.disk.capacity",         20000);
+#endif
 pref("browser.cache.memory.enable",         true);
 //pref("browser.cache.memory.capacity",     -1);
 // -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes
@@ -68,6 +72,7 @@ pref("browser.cache.disk_cache_ssl",        false);
 pref("browser.cache.check_doc_frequency",   3);
 
 pref("browser.cache.offline.enable",           true);
+#ifndef WINCE
 // offline cache capacity in kilobytes
 pref("browser.cache.offline.capacity",         512000);
 
@@ -78,6 +83,12 @@ pref("offline-apps.quota.max",        204800);
 // the user should be warned if offline app disk usage exceeds this amount
 // (in kilobytes)
 pref("offline-apps.quota.warn",        51200);
+#else
+// Limited disk space on WinCE, tighten limits.
+pref("browser.cache.offline.capacity", 15000);
+pref("offline-apps.quota.max",          7000);
+pref("offline-apps.quota.warn",         4000);
+#endif
 
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.

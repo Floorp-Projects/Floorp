@@ -1,0 +1,20 @@
+protocol race_ToDiffStates {
+child:  M1();
+parent: M2();
+
+state S1:
+    send M1 goto S2;
+    recv M2 goto S3;
+
+state S2:
+    recv M2 goto S4;
+
+state S3:
+    send M1 goto S5;
+
+state S4:
+    send M1 goto S4;
+
+state S5:
+    recv M2 goto S5;
+};

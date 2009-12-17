@@ -208,6 +208,10 @@
 #include "nsIPrefService.h"
 #endif
 
+#ifdef MOZ_IPC
+#include "base/command_line.h"
+#endif
+
 #ifdef WINCE
 class WindowsMutex {
 public:
@@ -712,6 +716,29 @@ NS_IMETHODIMP
 nsXULAppInfo::GetWidgetToolkit(nsACString& aResult)
 {
   aResult.AssignLiteral(MOZ_WIDGET_TOOLKIT);
+  return NS_OK;
+}
+
+// Ensure that the GeckoProcessType enum, defined in xpcom/build/nsXULAppAPI.h,
+// is synchronized with the const unsigned longs defined in
+// xpcom/system/nsIXULRuntime.idl.
+#define SYNC_ENUMS(a,b) \
+  PR_STATIC_ASSERT(nsIXULRuntime::PROCESS_TYPE_ ## a == \
+                   static_cast<int>(GeckoProcessType_ ## b));
+
+SYNC_ENUMS(DEFAULT, Default)
+SYNC_ENUMS(PLUGIN, Plugin)
+SYNC_ENUMS(CONTENT, Content)
+SYNC_ENUMS(IPDLUNITTEST, IPDLUnitTest)
+
+// .. and ensure that that is all of them:
+PR_STATIC_ASSERT(GeckoProcessType_IPDLUnitTest + 1 == GeckoProcessType_End);
+
+NS_IMETHODIMP
+nsXULAppInfo::GetProcessType(PRUint32* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = XRE_GetProcessType();
   return NS_OK;
 }
 
@@ -3019,6 +3046,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   MOZ_SPLASHSCREEN_UPDATE(20);
 
+  rv = XRE_InitCommandLine(gArgc, gArgv);
+  NS_ENSURE_SUCCESS(rv, 1);
+
   {
     nsXREDirProvider dirProvider;
     rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
@@ -3494,13 +3524,14 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           }
 
           MOZ_SPLASHSCREEN_UPDATE(90);
-
-          NS_TIMELINE_ENTER("appStartup->Run");
-          rv = appStartup->Run();
-          NS_TIMELINE_LEAVE("appStartup->Run");
-          if (NS_FAILED(rv)) {
-            NS_ERROR("failed to run appstartup");
-            gLogConsoleErrors = PR_TRUE;
+          {
+            NS_TIMELINE_ENTER("appStartup->Run");
+            rv = appStartup->Run();
+            NS_TIMELINE_LEAVE("appStartup->Run");
+            if (NS_FAILED(rv)) {
+              NS_ERROR("failed to run appstartup");
+              gLogConsoleErrors = PR_TRUE;
+            }
           }
 
           // Check for an application initiated restart.  This is one that
@@ -3576,20 +3607,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       }
 #endif
 
-// XXXkt s/MOZ_TOOLKIT_GTK2/MOZ_WIDGET_GTK2/?
-// but the hidden window has been destroyed so toolkit is NULL anyway.
-#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_TOOLKIT_GTK2)
-      nsGTKToolkit* toolkit = GetGTKToolkit();
-      if (toolkit) {
-        nsCAutoString currentDesktopStartupID;
-        toolkit->GetDesktopStartupID(&currentDesktopStartupID);
-        if (!currentDesktopStartupID.IsEmpty()) {
-          nsCAutoString desktopStartupEnv;
-          desktopStartupEnv.AssignLiteral("DESKTOP_STARTUP_ID=");
-          desktopStartupEnv.Append(currentDesktopStartupID);
-          // Leak it with extreme prejudice!
-          PR_SetEnv(ToNewCString(desktopStartupEnv));
-        }
+#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
+      if (!desktopStartupID.IsEmpty()) {
+        nsCAutoString desktopStartupEnv;
+        desktopStartupEnv.AssignLiteral("DESKTOP_STARTUP_ID=");
+        desktopStartupEnv.Append(desktopStartupID);
+        // Leak it with extreme prejudice!
+        PR_SetEnv(ToNewCString(desktopStartupEnv));
       }
 #endif
 
@@ -3619,5 +3643,73 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       CrashReporter::UnsetExceptionHandler();
 #endif
 
+  XRE_DeinitCommandLine();
+
   return NS_FAILED(rv) ? 1 : 0;
 }
+
+nsresult
+XRE_InitCommandLine(int aArgc, char* aArgv[])
+{
+  nsresult rv = NS_OK;
+
+#if defined(MOZ_IPC)
+
+#if defined(OS_WIN)
+  CommandLine::Init(aArgc, aArgv);
+#else
+  // these leak on error, but that's OK: we'll just exit()
+  char** canonArgs = new char*[aArgc];
+
+  // get the canonical version of the binary's path
+  nsCOMPtr<nsILocalFile> binFile;
+  rv = XRE_GetBinaryPath(aArgv[0], getter_AddRefs(binFile));
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  nsCAutoString canonBinPath;
+  rv = binFile->GetNativePath(canonBinPath);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  canonArgs[0] = strdup(canonBinPath.get());
+
+  for (int i = 1; i < aArgc; ++i) {
+    if (aArgv[i]) {
+      canonArgs[i] = strdup(aArgv[i]);
+    }
+  }
+ 
+  NS_ASSERTION(!CommandLine::IsInitialized(), "Bad news!");
+  CommandLine::Init(aArgc, canonArgs);
+
+  for (int i = 0; i < aArgc; ++i)
+      free(canonArgs[i]);
+  delete[] canonArgs;
+#endif
+#endif
+  return rv;
+}
+
+nsresult
+XRE_DeinitCommandLine()
+{
+  nsresult rv = NS_OK;
+
+#if defined(MOZ_IPC)
+  CommandLine::Terminate();
+#endif
+
+  return rv;
+}
+
+GeckoProcessType
+XRE_GetProcessType()
+{
+#ifdef MOZ_IPC
+  return mozilla::startup::sChildProcessType;
+#else
+  return GeckoProcessType_Default;
+#endif
+}
+

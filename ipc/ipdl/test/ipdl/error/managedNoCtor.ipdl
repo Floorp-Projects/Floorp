@@ -1,0 +1,7 @@
+include protocol "managerNoCtor.ipdl";
+
+protocol managedNoCtor {
+    manager managerNoCtor;
+    // empty
+child: __delete__();
+};

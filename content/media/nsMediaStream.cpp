@@ -59,7 +59,6 @@
 
 #define HTTP_OK_CODE 200
 #define HTTP_PARTIAL_RESPONSE_CODE 206
-#define HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE 416
 
 using mozilla::TimeStamp;
 
@@ -425,13 +424,16 @@ nsresult nsMediaChannelStream::OpenChannel(nsIStreamListener** aStreamListener)
     NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
     if (element->ShouldCheckAllowOrigin()) {
       nsresult rv;
-      listener = new nsCrossSiteListenerProxy(mListener,
-                                              element->NodePrincipal(),
-                                              mChannel,
-                                              PR_FALSE,
-                                              &rv);
-      NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
+      nsCrossSiteListenerProxy* crossSiteListener =
+        new nsCrossSiteListenerProxy(mListener,
+                                     element->NodePrincipal(),
+                                     mChannel,
+                                     PR_FALSE,
+                                     &rv);
+      listener = crossSiteListener;
+      NS_ENSURE_TRUE(crossSiteListener, NS_ERROR_OUT_OF_MEMORY);
       NS_ENSURE_SUCCESS(rv, rv);
+      crossSiteListener->AllowHTTPResult(HTTP_REQUESTED_RANGE_NOT_SATISFIABLE_CODE);
     } else {
       nsresult rv = nsContentUtils::GetSecurityManager()->
         CheckLoadURIWithPrincipal(element->NodePrincipal(),

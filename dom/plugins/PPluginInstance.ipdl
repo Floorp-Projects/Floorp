@@ -1,0 +1,147 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Plugins.
+ *
+ * The Initial Developer of the Original Code is
+ *   Chris Jones <jones.chris.g@gmail.com>.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
+ *   Ben Turner <bent.mozilla@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+include protocol "PPluginModule.ipdl";
+include protocol "PPluginScriptableObject.ipdl";
+include protocol "PBrowserStream.ipdl";
+include protocol "PPluginStream.ipdl";
+include protocol "PStreamNotify.ipdl";
+
+include "mozilla/plugins/PluginMessageUtils.h";
+
+using NPError;
+using NPRemoteWindow;
+using NPRemoteEvent;
+using NPRect;
+
+namespace mozilla {
+namespace plugins {
+
+rpc protocol PPluginInstance
+{
+  manager PPluginModule;
+
+  manages PPluginScriptableObject;
+  manages PBrowserStream;
+  manages PPluginStream;
+  manages PStreamNotify;
+
+child:
+  rpc __delete__()
+    returns (NPError rv);
+
+  rpc NPP_SetWindow(NPRemoteWindow window)
+    returns (NPError rv);
+
+  rpc NPP_GetValue_NPPVpluginWindow()
+    returns (bool value, NPError result);
+  rpc NPP_GetValue_NPPVpluginTransparent()
+    returns (bool value, NPError result);
+  // this message is not used on non-X platforms
+  rpc NPP_GetValue_NPPVpluginNeedsXEmbed()
+    returns (bool value, NPError result);
+  rpc NPP_GetValue_NPPVpluginScriptableNPObject()
+    returns (nullable PPluginScriptableObject value, NPError result);
+
+  rpc NPP_HandleEvent(NPRemoteEvent event)
+    returns (int16_t handled);
+
+parent:
+  rpc NPN_GetValue_NPNVjavascriptEnabledBool()
+    returns (bool value, NPError result);
+  rpc NPN_GetValue_NPNVisOfflineBool()
+    returns (bool value, NPError result);
+  rpc NPN_GetValue_NPNVWindowNPObject()
+    returns (nullable PPluginScriptableObject value, NPError result);
+  rpc NPN_GetValue_NPNVPluginElementNPObject()
+    returns (nullable PPluginScriptableObject value, NPError result);
+  rpc NPN_GetValue_NPNVprivateModeBool()
+    returns (bool value, NPError result);
+
+  rpc NPN_SetValue_NPPVpluginWindow(bool windowed)
+    returns (NPError result);
+  rpc NPN_SetValue_NPPVpluginTransparent(bool transparent)
+    returns (NPError result);
+
+  rpc NPN_GetURL(nsCString url, nsCString target)
+    returns (NPError result);
+  rpc NPN_PostURL(nsCString url, nsCString target, nsCString buffer, bool file)
+    returns (NPError result);
+
+  /**
+   * Covers both NPN_GetURLNotify and NPN_PostURLNotify.
+   * @TODO This would be more readable as an overloaded method,
+   *       but IPDL doesn't allow that for constructors (or any method?).
+   */
+  rpc PStreamNotify(nsCString url, nsCString target, bool post,
+                    nsCString buffer, bool file)
+    returns (NPError result);
+
+  async NPN_InvalidateRect(NPRect rect);
+
+  rpc NPN_PushPopupsEnabledState(bool aState)
+    returns (bool aSuccess);
+
+  rpc NPN_PopPopupsEnabledState()
+    returns (bool aSuccess);
+
+both:
+  rpc PPluginScriptableObject();
+
+child:
+  /* NPP_NewStream */
+  rpc PBrowserStream(nsCString url,
+                     uint32_t length,
+                     uint32_t lastmodified,
+                     nullable PStreamNotify notifyData,
+                     nsCString headers,
+                     nsCString mimeType,
+                     bool seekable)
+    returns (NPError rv,
+             uint16_t stype);
+
+parent:
+  /* NPN_NewStream */
+  rpc PPluginStream(nsCString mimeType,
+                    nsCString target)
+    returns (NPError result);
+};
+
+} // namespace plugins
+} // namespace mozilla

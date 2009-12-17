@@ -1,0 +1,12 @@
+protocol trans_WrongDirection2 {
+
+parent:
+    Msg();
+    __delete__();
+
+state S1:
+    send Msg goto S1;
+
+start state _:
+    recv __delete__;
+};

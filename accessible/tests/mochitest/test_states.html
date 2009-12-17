@@ -93,6 +93,11 @@
       testStates("aria_main_anchor", STATE_SELECTABLE);
       testStates("aria_navigation_anchor", STATE_SELECTABLE);
 
+      // scrollbar
+      testStates("aria_scrollbar", 0, EXT_STATE_VERTICAL);
+      testStates("aria_hscrollbar", 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_vscrollbar", 0, EXT_STATE_VERTICAL);
+
       SimpleTest.finish();
     }
 
@@ -183,5 +188,9 @@
   <a id="aria_main_anchor" role="main" name="main_anchor">main</a>
   <a id="aria_navigation_anchor" role="navigation" name="nav_anchor">nav</a>
 
+  <!-- scrollbar -->
+  <div id="aria_scrollbar" role="scrollbar">scrollbar</a>
+  <div id="aria_hscrollbar" role="scrollbar" aria-orientation="horizontal">horizontal scrollbar</a>
+  <div id="aria_vscrollbar" role="scrollbar" aria-orientation="vertical">vertical scrollbar</a>
 </body>
 </html>

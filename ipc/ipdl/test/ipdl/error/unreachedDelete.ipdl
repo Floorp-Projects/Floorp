@@ -1,0 +1,5 @@
+protocol unreachedDelete {
+child:  M1(); __delete__();
+
+state S1:  send M1 goto S1;
+};

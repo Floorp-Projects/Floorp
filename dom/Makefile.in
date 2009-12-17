@@ -79,6 +79,7 @@ DIRS += \
   base \
   src \
   locales \
+  plugins \
   $(NULL)
 
 ifdef ENABLE_TESTS

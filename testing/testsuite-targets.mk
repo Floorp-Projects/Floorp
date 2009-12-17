@@ -48,7 +48,7 @@ endif
 SYMBOLS_PATH := --symbols-path=$(DIST)/crashreporter-symbols
 
 # Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] mochitest*|.
-mochitest:: mochitest-plain mochitest-chrome mochitest-a11y
+mochitest:: mochitest-plain mochitest-chrome mochitest-a11y mochitest-ipcplugins
 
 RUN_MOCHITEST = \
 	rm -f ./$@.log && \
@@ -81,6 +81,9 @@ mochitest-a11y:
 	$(RUN_MOCHITEST) --a11y
 	$(CHECK_TEST_ERROR)
 
+mochitest-ipcplugins:
+	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled=true --test-path=modules/plugin/test
+	$(CHECK_TEST_ERROR)
 
 # Usage: |make [EXTRA_TEST_ARGS=...] *test|.
 RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
@@ -146,7 +149,7 @@ stage-jstests: make-stage-dir
 	$(MAKE) -C $(DEPTH)/js/src/tests stage-package
 
 .PHONY: \
-  mochitest mochitest-plain mochitest-chrome mochitest-a11y \
+  mochitest mochitest-plain mochitest-chrome mochitest-a11y mochitest-ipcplugins \
   reftest crashtest \
   xpcshell-tests \
   jstestbrowser \

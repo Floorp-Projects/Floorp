@@ -1,0 +1,47 @@
+diff --git a/third_party/libevent/event-internal.h b/third_party/libevent/event-internal.h
+index 7485f21..93ac568 100644
+--- a/event-internal.h
++++ b/event-internal.h
+@@ -71,7 +71,7 @@ struct event_base {
+ };
+ 
+ /* Internal use only: Functions that might be missing from <sys/queue.h> */
+-#ifndef HAVE_TAILQFOREACH
++#if !defined(HAVE_TAILQFOREACH) || defined(__QUENTIN_BUILD__)
+ #define	TAILQ_FIRST(head)		((head)->tqh_first)
+ #define	TAILQ_END(head)			NULL
+ #define	TAILQ_NEXT(elm, field)		((elm)->field.tqe_next)
+@@ -85,6 +85,9 @@ struct event_base {
+ 	*(listelm)->field.tqe_prev = (elm);				\
+ 	(listelm)->field.tqe_prev = &(elm)->field.tqe_next;		\
+ } while (0)
++#define TAILQ_LAST(head, headname) \
++	(*(((struct headname *)((head)->tqh_last))->tqh_last))
++#define TAILQ_EMPTY(head)	((head)->tqh_first == NULL)
+ #endif /* TAILQ_FOREACH */
+ 
+ int _evsignal_set_handler(struct event_base *base, int evsignal,
+diff --git a/third_party/libevent/evrpc.c b/third_party/libevent/evrpc.c
+index 070fd9e..194cdab 100644
+--- a/evrpc.c
++++ b/evrpc.c
+@@ -55,6 +55,7 @@
+ 
+ #include "event.h"
+ #include "evrpc.h"
++#include "event-internal.h"
+ #include "evrpc-internal.h"
+ #include "evhttp.h"
+ #include "evutil.h"
+diff --git a/third_party/libevent/http.c b/third_party/libevent/http.c
+index 38a89b6..8fce37a 100644
+--- a/http.c
++++ b/http.c
+@@ -88,6 +88,7 @@
+ #include "evutil.h"
+ #include "log.h"
+ #include "http-internal.h"
++#include "event-internal.h"
+ 
+ #ifdef WIN32
+ #define strcasecmp _stricmp

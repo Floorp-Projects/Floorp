@@ -47,7 +47,7 @@ XPIDL_MODULE	= xpcom_base
 LIBRARY_NAME	= xpcombase_s
 GRE_MODULE	= 1
 MOZILLA_INTERNAL_API =1
-
+LIBXUL_LIBRARY = 1
 
 CPPSRCS		= \
 		nsVersionComparatorImpl.cpp \

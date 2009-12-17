@@ -1,0 +1,10 @@
+rpc protocol trans_WrongName4 {
+
+child:
+    rpc Msg();
+    __delete__();
+
+state S1:
+    send Msg goto S1;
+    send __delete__
+};

@@ -1,0 +1,55 @@
+<head>
+  <title>NPN_Get/PostURLNotify tests</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<body onload="runTests()">
+  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
+
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  var pending = 4;
+  function testDone() {
+    dump("testDone: " + pending + "\n")
+    --pending;
+    if (0 == pending)
+      SimpleTest.finish();
+  }
+
+  function runTests() {
+    var p = document.getElementById('plugin1');
+
+    ok(p.streamTest("loremipsum.txt", false, null,
+                    function(r, t) {
+                      is(r, 0, "GET loremipsum.txt");
+                      is(t.substr(0, 11), "Lorem ipsum",
+                         "GET loremipsum.txt correct");
+                      testDone();
+                    }), "streamTest GET");
+
+    ok(!p.streamTest("post.sjs", true, null,
+                     function(r, t) {
+                       ok(false, "Shouldn't get callback from null post");
+                     }), "streamTest POST null postdata");
+
+    ok(p.streamTest("post.sjs", true, "Something good",
+                    function(r, t) {
+                      is(r, 0, "POST something good");
+                      is(t, "Something good", "POST non-null correct");
+                      testDone();
+                    }), "streamTest POST valid postdata");
+
+    ok(p.streamTest("http://example.invalid/", false, null,
+                    function(r, t) {
+                      is(r, 1, "Shouldn't load example.invalid DNS name");
+                      testDone();
+                    }), "streamTest GET bad DNS");
+
+    ok(p.streamTest("http://localhost:-8/", false, null,
+                    function(r, t) {
+                      is(r, 1, "Shouldn't load invalid URI");
+                      testDone();
+                    }), "streamTest GET invalid URL");
+  }
+  </script>

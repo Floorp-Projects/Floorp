@@ -594,8 +594,8 @@ nsSHEntry::AddChild(nsISHEntry * aChild, PRInt32 aOffset)
   if (aOffset < mChildren.Count()) {
     nsISHEntry* oldChild = mChildren.ObjectAt(aOffset);
     if (oldChild && oldChild != aChild) {
-      NS_ERROR("Adding child where we already have a child?  "
-               "This will likely misbehave");
+      NS_WARNING("Adding child where we already have a child?  "
+                 "This will likely misbehave");
       oldChild->SetParent(nsnull);
     }
   }

@@ -37,7 +37,7 @@
 
 // This will map from an architecture string to a SectionMap, which
 // will contain the offsets for all the sections in the dictionary
-typedef map<string, dwarf2reader::SectionMap *> ArchSectionMap;
+typedef hash_map<string, dwarf2reader::SectionMap *> ArchSectionMap;
 
 @interface DumpSymbols : NSObject {
  @protected

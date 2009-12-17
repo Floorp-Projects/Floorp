@@ -1,0 +1,10 @@
+protocol actorparam_state {
+
+child:
+    Msg(actorparam_state:S1 p);
+    __delete__();
+
+state S1:
+    send Msg goto S1;
+    send __delete__;
+};

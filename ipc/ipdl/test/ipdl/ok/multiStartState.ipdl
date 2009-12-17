@@ -1,0 +1,11 @@
+protocol multiStartState {
+
+child: Msg(); __delete__();
+
+start state S1:
+    send Msg goto S1; send __delete__;
+
+start state S2:
+    send Msg goto S2; send __delete__;
+
+};

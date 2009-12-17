@@ -1,0 +1,11 @@
+union Basic {
+    int;
+    double;
+};
+
+sync protocol union_Basic {
+
+parent:
+    sync Msg(Basic p) returns (Basic r);
+
+};

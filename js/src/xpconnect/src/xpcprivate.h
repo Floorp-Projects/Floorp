@@ -757,6 +757,9 @@ private:
 public:
 #endif
 
+    void AddGCCallback(JSGCCallback cb);
+    void RemoveGCCallback(JSGCCallback cb);
+
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect);
@@ -794,6 +797,7 @@ private:
     uintN mUnrootedGlobalCount;
     PRCondVar *mWatchdogWakeup;
     PRThread *mWatchdogThread;
+    nsTArray<JSGCCallback> extraGCCallbacks;
 };
 
 /***************************************************************************/
@@ -4342,31 +4346,6 @@ xpc_SameScope(XPCWrappedNativeScope *objectscope,
 
 nsISupports *
 XPC_GetIdentityObject(JSContext *cx, JSObject *obj);
-
-PRBool
-IsXPCSafeJSObjectWrapperClass(JSClass *clazz);
-
-JSObject *
-XPC_SJOW_GetUnsafeObject(JSObject *obj);
-
-JSBool
-XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN, jsval *argv,
-                   jsval *rval);
-
-PRBool
-XPC_SJOW_AttachNewConstructorObject(XPCCallContext &ccx,
-                                    JSObject *aGlobalObject);
-
-JSBool
-XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp,
-                   XPCWrappedNative *wn = nsnull);
-
-JSBool
-XPC_SOW_WrapObject(JSContext *cx, JSObject *parent, jsval v,
-                   jsval *vp);
-
-JSBool
-XPC_COW_WrapObject(JSContext *cx, JSObject *parent, jsval v, jsval *vp);
 
 #ifdef XPC_IDISPATCH_SUPPORT
 

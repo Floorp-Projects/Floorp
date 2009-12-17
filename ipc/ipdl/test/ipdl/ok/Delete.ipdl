@@ -1,0 +1,8 @@
+include protocol "DeleteSub.ipdl";
+
+sync protocol Delete {
+    manages DeleteSub;
+
+child:
+    DeleteSub();
+};

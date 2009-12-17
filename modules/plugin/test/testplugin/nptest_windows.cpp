@@ -472,7 +472,7 @@ void
 ClearSubclass(HWND hWnd)
 {
   if (GetProp(hWnd, "MozillaWndProc")) {
-    ::SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)GetProp(hWnd, "MozillaWndProc"));
+    ::SetWindowLong(hWnd, GWL_WNDPROC, (long)GetProp(hWnd, "MozillaWndProc"));
     RemoveProp(hWnd, "MozillaWndProc");
     RemoveProp(hWnd, "InstanceData");
   }
@@ -483,7 +483,7 @@ SetSubclass(HWND hWnd, InstanceData* instanceData)
 {
   // Subclass the plugin window so we can handle our own windows events.
   SetProp(hWnd, "InstanceData", (HANDLE)instanceData);
-  WNDPROC origProc = (WNDPROC)::SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)PluginWndProc);
+  WNDPROC origProc = (WNDPROC)::SetWindowLong(hWnd, GWL_WNDPROC, (long)PluginWndProc);
   SetProp(hWnd, "MozillaWndProc", (HANDLE)origProc);
 }
 

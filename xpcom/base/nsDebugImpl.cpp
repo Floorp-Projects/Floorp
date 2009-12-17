@@ -76,6 +76,9 @@ static void
 Abort(const char *aMsg);
 
 static void
+RealBreak();
+
+static void
 Break(const char *aMsg);
 
 #if defined(XP_OS2)
@@ -317,6 +320,9 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
      return;
 
    case NS_DEBUG_ABORT:
+#ifdef DEBUG
+     RealBreak();
+#endif
      nsTraceRefcntImpl::WalkTheStack(stderr);
      Abort(buf.buffer);
      return;
@@ -356,9 +362,18 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
 }
 
 static void
+TouchBadMemory()
+{
+  // XXX this should use the frame poisoning code
+  gAssertionCount += *((PRInt32 *) 0); // TODO annotation saying we know 
+                                       // this is crazy
+}
+
+static void
 Abort(const char *aMsg)
 {
 #if defined(_WIN32)
+  TouchBadMemory();
 
 #ifndef WINCE
   //This should exit us
@@ -380,12 +395,29 @@ Abort(const char *aMsg)
 #endif
 
   // Still haven't aborted?  Try dereferencing null.
-  // (Written this way to lessen the likelihood of it being optimized away.)
-  gAssertionCount += *((PRInt32 *) 0); // TODO annotation saying we know 
-                                       // this is crazy
+  TouchBadMemory();
 
   // Still haven't aborted?  Try _exit().
   PR_ProcessExit(127);
+}
+
+static void
+RealBreak()
+{
+#if defined(_WIN32)
+#ifndef WINCE
+  ::DebugBreak();
+#endif
+#elif defined(XP_OS2)
+   asm("int $3");
+#elif defined(XP_BEOS)
+#elif defined(XP_MACOSX)
+   raise(SIGTRAP);
+#elif defined(__GNUC__) && (defined(__i386__) || defined(__i386) || defined(__x86_64__))
+   asm("int $3");
+#else
+   // don't know how to break on this platform
+#endif
 }
 
 // Abort() calls this function, don't call it!
@@ -448,8 +480,7 @@ Break(const char *aMsg)
     }
   }
 
-  ::DebugBreak();
-
+  RealBreak();
 #endif // WINCE
 #elif defined(XP_OS2)
    char msg[1200];
@@ -472,17 +503,18 @@ Break(const char *aMsg)
    if (( code == MBID_ENTER ) || (code == MBID_ERROR))
      return;
 
-   asm("int $3");
+   RealBreak();
 #elif defined(XP_BEOS)
    DEBUGGER(aMsg);
+   RealBreak();
 #elif defined(XP_MACOSX)
    /* Note that we put this Mac OS X test above the GNUC/x86 test because the
     * GNUC/x86 test is also true on Intel Mac OS X and we want the PPC/x86
     * impls to be the same.
     */
-   raise(SIGTRAP);
+   RealBreak();
 #elif defined(__GNUC__) && (defined(__i386__) || defined(__i386) || defined(__x86_64__))
-   asm("int $3");
+   RealBreak();
 #else
    // don't know how to break on this platform
 #endif

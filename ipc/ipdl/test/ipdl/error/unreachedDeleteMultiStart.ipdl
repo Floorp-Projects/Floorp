@@ -1,0 +1,10 @@
+protocol unreachedDeleteMultiStart {
+child:
+    M1(); M2(); __delete__();
+
+start state S1:  send M1 goto S2;
+state S2:        send __delete__;
+
+start state S3:  send M2 goto S4;
+state S4:        send M1 goto S3;
+};

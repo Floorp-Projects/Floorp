@@ -1,0 +1,8 @@
+include protocol "managedNoCtor.ipdl";
+
+protocol managerNoCtor {
+    manages managedNoCtor;
+
+parent:
+    // error: no ctor defined
+};

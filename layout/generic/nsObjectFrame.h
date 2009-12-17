@@ -235,6 +235,9 @@ private:
   nsIView*                        mInnerView;
   nsCOMPtr<nsIWidget>             mWidget;
   nsIntRect                       mWindowlessRect;
+#ifdef XP_WIN
+  PRUint32                        mDoublePassEvent;
+#endif
 
   // For assertions that make it easier to determine if a crash is due
   // to the underlying problem described in bug 136927, and to prevent

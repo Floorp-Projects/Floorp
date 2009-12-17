@@ -1,0 +1,11 @@
+union Union {
+    nullable Nullable;
+    nullable Nullable[];
+};
+
+protocol Nullable {
+child:
+    Msg(nullable Nullable n);
+    Msg2(nullable Nullable[] N);
+    Msg3(Union u);
+};

@@ -1,0 +1,8 @@
+protocol dtorReserved {
+
+    // it's an error to use old-style dtor syntax
+
+child:
+    ~SomeMsg();
+
+};
