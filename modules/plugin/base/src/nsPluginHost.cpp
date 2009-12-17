@@ -1754,9 +1754,10 @@ nsPluginHost::~nsPluginHost()
   sInst = nsnull;
 }
 
-NS_IMPL_ISUPPORTS3(nsPluginHost,
+NS_IMPL_ISUPPORTS4(nsPluginHost,
                    nsIPluginHost,
                    nsIObserver,
+                   nsITimerCallback,
                    nsISupportsWeakReference)
 
 nsPluginHost*
@@ -5179,6 +5180,44 @@ NS_IMETHODIMP nsPluginHost::Notify(nsITimer* timer)
 #endif
   return NS_ERROR_FAILURE;
 }
+
+#ifdef MOZ_IPC
+void
+nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin)
+{
+  // Find the nsPluginTag corresponding to this plugin
+
+  nsPluginTag* plugin;
+  for (plugin = mPlugins; plugin; plugin = plugin->mNext) {
+    if (plugin->mEntryPoint == aPlugin)
+      break;
+  }
+  if (!plugin) {
+    NS_WARNING("nsPluginTag not found in nsPluginHost::PluginCrashed");
+    return;
+  }
+
+  // Invalidate each nsPluginInstanceTag for the crashed plugin
+
+  nsPluginInstanceTag** pinstancetag = &mPluginInstanceTagList.mFirst;
+  while (*pinstancetag) {
+    nsPluginInstanceTag* instancetag = *pinstancetag;
+    if (instancetag->mPluginTag == plugin) {
+      *pinstancetag = (*pinstancetag)->mNext;
+      delete instancetag;
+    }
+    else {
+      pinstancetag = &(*pinstancetag)->mNext;
+    }
+  }
+
+  // Only after all instances have been invalidated is it safe to null
+  // out nsPluginTag.mEntryPoint. The next time we try to create an
+  // instance of this plugin we reload it (launch a new plugin process).
+
+  plugin->mEntryPoint = nsnull;
+}
+#endif
 
 nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
                                                        nsISupports* aContext)

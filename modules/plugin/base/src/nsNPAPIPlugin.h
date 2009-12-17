@@ -94,6 +94,12 @@ public:
   void SetPluginRefNum(short aRefNum);
 #endif
 
+#ifdef MOZ_IPC
+  // The IPC mechanism notifies the nsNPAPIPlugin if the plugin crashes and is
+  // no longer usable.
+  void PluginCrashed();
+#endif
+
 protected:
   // Ensures that the static CALLBACKS is properly initialized
   static void CheckClassInitialized(void);
