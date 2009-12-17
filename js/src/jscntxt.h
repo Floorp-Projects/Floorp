@@ -317,7 +317,7 @@ typedef struct InterpStruct InterpStruct;
 # define JS_ON_TRACE(cx)            JS_FALSE
 #endif
 
-#ifdef DEBUG
+#ifdef DEBUG_brendan
 # define JS_EVAL_CACHE_METERING     1
 # define JS_FUNCTION_METERING       1
 #endif
