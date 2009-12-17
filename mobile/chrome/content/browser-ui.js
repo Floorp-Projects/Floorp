@@ -325,7 +325,7 @@ var BrowserUI = {
   
   _isEventInsidePopup: function _isEventInsidePopup(aEvent) {
     if (!this._popup)
-      return;
+      return false;
     let elements = this._popup.elements;
     let targetNode = aEvent ? aEvent.target : null;
     while (targetNode && elements.indexOf(targetNode) == -1)
@@ -333,11 +333,13 @@ var BrowserUI = {
     return targetNode ? true : false;
   },
 
-  switchPane : function(id) {
+  switchPane : function switchPane(id) {
     let button = document.getElementsByAttribute("linkedpanel", id)[0];
     if (button)
       button.checked = true;
-    document.getElementById("panel-items").selectedPanel = document.getElementById(id);
+
+    let pane = document.getElementById(id);
+    document.getElementById("panel-items").selectedPanel = pane;
   },
 
   get toolbarH() {
@@ -406,10 +408,16 @@ var BrowserUI = {
     // listening escape to dismiss dialog on VK_ESCAPE
     window.addEventListener("keypress", this, true);
 
-    ExtensionsView.init();
-    DownloadsView.init();
-    PreferencesView.init();
-    ConsoleView.init();
+    // Push the panel initialization out of the startup path
+    // (Using a timeout because we have no good way to delay-init [Bug 535366])
+    setTimeout(function() {
+      // We unhide the panelUI so the XBL and settings can initialize
+      Elements.panelUI.hidden = false;
+      ExtensionsView.init();
+      DownloadsView.init();
+      PreferencesView.init();
+      ConsoleView.init();
+    }, 1000);
   },
 
   uninit : function() {
@@ -609,11 +617,10 @@ var BrowserUI = {
   },
 
   showPanel: function showPanel(aPage) {
-    let panelUI = document.getElementById("panel-container");
-
-    panelUI.hidden = false;
-    panelUI.width = window.innerWidth;
-    panelUI.height = window.innerHeight;
+    Elements.panelUI.left = 0;
+    Elements.panelUI.hidden = false;
+    Elements.panelUI.width = window.innerWidth;
+    Elements.panelUI.height = window.innerHeight;
 
     Elements.contentShowing.setAttribute("disabled", "true");
 
@@ -622,12 +629,14 @@ var BrowserUI = {
   },
 
   hidePanel: function hidePanel() {
-    let panelUI = document.getElementById("panel-container");
-    panelUI.hidden = true;
-
+    Elements.panelUI.hidden = true;
     Elements.contentShowing.removeAttribute("disabled");
   },
-  
+
+  isPanelVisible: function isPanelVisible() {
+    return (!Elements.panelUI.hidden && Elements.panelUI.left == 0);
+  },
+
   switchTask: function switchTask() {
     try {
       let phone = Cc["@mozilla.org/phone/support;1"].createInstance(Ci.nsIPhoneSupport);
@@ -814,11 +823,10 @@ var BrowserUI = {
       }
       case "cmd_panel":
       {
-        let panelUI = document.getElementById("panel-container");
-        if (panelUI.hidden)
-          this.showPanel();
-        else
+        if (BrowserUI.isPanelVisible())
           this.hidePanel();
+        else
+          this.showPanel();
         break;
       }
       case "cmd_zoomin":

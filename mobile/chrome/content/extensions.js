@@ -212,9 +212,8 @@ var ExtensionsView = {
   },
 
   get visible() {
-    let panel = document.getElementById("panel-container");
     let items = document.getElementById("panel-items");
-    if (panel.hidden == false && items.selectedPanel.id == "addons-container")
+    if (BrowserUI.isPanelVisible() && items.selectedPanel.id == "addons-container")
       return true;
     return false;
   },

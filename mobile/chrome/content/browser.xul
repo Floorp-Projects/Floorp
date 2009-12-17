@@ -331,7 +331,7 @@
       </hbox>
     </vbox>
 
-    <box id="panel-container" hidden="true" class="panel-dark">
+    <box id="panel-container" class="panel-dark" style="-moz-stack-sizing: ignore" left="10000" hidden="true">
       <box id="panel-controls" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
         <toolbarbutton id="tool-panel-close" class="page-button button-image" command="cmd_panel"/>
         <toolbarbutton id="tool-addons" type="radio" group="1" class="panel-button button-image" linkedpanel="addons-container"/>

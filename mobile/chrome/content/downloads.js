@@ -118,9 +118,8 @@ var DownloadsView = {
   },
 
   get visible() {
-    let panel = document.getElementById("panel-container");
     let items = document.getElementById("panel-items");
-    if (panel.hidden == false && items.selectedPanel.id == "downloads-container")
+    if (BrowserUI.isPanelVisible() && items.selectedPanel.id == "downloads-container")
       return true;
     return false;
   },
