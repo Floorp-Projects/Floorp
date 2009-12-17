@@ -2556,9 +2556,7 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
     // Now check whether we need to grab a pointer to the
     // XPCNativeWrapper class
     if (!nsDOMClassInfo::GetXPCNativeWrapperClass()) {
-      JSAutoRequest ar(mContext);
-      rv = FindXPCNativeWrapperClass(holder);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsDOMClassInfo::SetXPCNativeWrapperClass(xpc->GetNativeWrapperClass());
     }
   } else {
     // There's already a global object. We are preparing this outer window
@@ -2955,52 +2953,6 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv)
       break;
     }
   }
-  return NS_OK;
-}
-
-nsresult
-nsJSContext::FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder)
-{
-  NS_ASSERTION(!nsDOMClassInfo::GetXPCNativeWrapperClass(),
-               "Why was this called?");
-
-  JSObject *globalObj;
-  aHolder->GetJSObject(&globalObj);
-  NS_ASSERTION(globalObj, "Must have global by now!");
-
-  const char* arg = "arg";
-  NS_NAMED_LITERAL_STRING(body, "return new XPCNativeWrapper(arg);");
-
-  // Can't use CompileFunction() here because our principal isn't
-  // inited yet and a null principal makes it fail.
-  JSFunction *fun =
-    ::JS_CompileUCFunction(mContext,
-                           globalObj,
-                           "_XPCNativeWrapperCtor",
-                           1, &arg,
-                           (jschar*)body.get(),
-                           body.Length(),
-                           "javascript:return new XPCNativeWrapper(arg);",
-                           1 // lineno
-                           );
-  NS_ENSURE_TRUE(fun, NS_ERROR_FAILURE);
-
-  jsval globalVal = OBJECT_TO_JSVAL(globalObj);
-  jsval wrapper;
-
-  JSBool ok = ::JS_CallFunction(mContext, globalObj, fun,
-                                1, &globalVal, &wrapper);
-  if (!ok) {
-    // No need to notify about pending exceptions here; we don't
-    // expect any other than out of memory, really.
-    return NS_ERROR_FAILURE;
-  }
-
-  NS_ASSERTION(JSVAL_IS_OBJECT(wrapper), "This should be an object!");
-
-  nsDOMClassInfo::SetXPCNativeWrapperClass(
-    ::JS_GET_CLASS(mContext, JSVAL_TO_OBJECT(wrapper)));
-
   return NS_OK;
 }
 
