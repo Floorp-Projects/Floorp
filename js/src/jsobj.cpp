@@ -3562,8 +3562,8 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 }
 
 /*
- * If one adds props, deletes earlier props, adds more, the last added won't
- * recycle the deleted props' slots. FIXME: bug NNNNNN
+ * FIXME bug 535629: If one adds props, deletes earlier props, adds more, the
+ * last added won't recycle the deleted props' slots.
  */
 JSBool
 js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
