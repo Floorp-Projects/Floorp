@@ -41,6 +41,7 @@
  */
 
 #import <Cocoa/Cocoa.h>
+#include <dlfcn.h>
 
 #include "nsAppShell.h"
 #include "nsCOMPtr.h"
@@ -431,6 +432,17 @@ nsAppShell::Init()
                               @selector(nsAppShell_NSApplication_beginModalSessionForWindow:));
     nsToolkit::SwizzleMethods([NSApplication class], @selector(endModalSession:),
                               @selector(nsAppShell_NSApplication_endModalSession:));
+    if (nsToolkit::OnLeopardOrLater() && !nsToolkit::OnSnowLeopardOrLater()) {
+      dlopen("/System/Library/Frameworks/Carbon.framework/Frameworks/Print.framework/Versions/Current/Plugins/PrintCocoaUI.bundle/Contents/MacOS/PrintCocoaUI",
+             RTLD_LAZY);
+      Class PDEPluginCallbackClass = ::NSClassFromString(@"PDEPluginCallback");
+      nsresult rv1 = nsToolkit::SwizzleMethods(PDEPluginCallbackClass, @selector(initWithPrintWindowController:),
+                                               @selector(nsAppShell_PDEPluginCallback_initWithPrintWindowController:));
+      if (NS_SUCCEEDED(rv1)) {
+        nsToolkit::SwizzleMethods(PDEPluginCallbackClass, @selector(dealloc),
+                                  @selector(nsAppShell_PDEPluginCallback_dealloc));
+      }
+    }
     gAppShellMethodsSwizzled = PR_TRUE;
   }
 
@@ -1101,6 +1113,44 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   if (gCocoaAppModalWindowList &&
       wasRunningAppModal && (prevAppModalWindow != [NSApp modalWindow]))
     gCocoaAppModalWindowList->PopCocoa(prevAppModalWindow, aSession);
+}
+
+@end
+
+@interface PDEPluginCallback : NSObject
+{
+@public
+    id _printWindowController;
+}
+- (PMPrintSettings *)printSettings;
+@end
+
+@interface PDEPluginCallback (MethodSwizzling)
+- (PDEPluginCallback *)nsAppShell_PDEPluginCallback_initWithPrintWindowController:(id)controller;
+- (void)nsAppShell_PDEPluginCallback_dealloc;
+@end
+
+@implementation PDEPluginCallback (MethodSwizzling)
+
+// On Leopard, the PDEPluginCallback class in Apple's PrintCocoaUI module
+// fails to retain and release its PMPrintWindowController object.  This
+// causes the PMPrintWindowController to sometimes be deleted prematurely,
+// leading to crashes on attempts to access it.  One example is bug 396680,
+// caused by attempting to call a deleted PMPrintWindowController object's
+// printSettings method.  We work around the problem by hooking the
+// appropriate methods and retaining and releasing the object ourselves.
+// PrintCocoaUI.bundle is a "plugin" of the Carbon framework's Print
+// framework.
+
+- (PDEPluginCallback *)nsAppShell_PDEPluginCallback_initWithPrintWindowController:(id)controller
+{
+  return [self nsAppShell_PDEPluginCallback_initWithPrintWindowController:[controller retain]];
+}
+
+- (void)nsAppShell_PDEPluginCallback_dealloc
+{
+  [self->_printWindowController release];
+  [self nsAppShell_PDEPluginCallback_dealloc];
 }
 
 @end
