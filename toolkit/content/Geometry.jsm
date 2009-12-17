@@ -185,6 +185,7 @@ let Elements = {};
   ["browserBundle",      "bundle_browser"],
   ["contentShowing",     "bcast_contentShowing"],
   ["stack",              "stack"],
+  ["panelUI",            "panel-container"],
 ].forEach(function (elementGlobal) {
   let [name, id] = elementGlobal;
   Elements.__defineGetter__(name, function () {
