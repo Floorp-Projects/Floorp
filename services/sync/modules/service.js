@@ -1099,8 +1099,17 @@ WeaveSvc.prototype = {
     if (!(this._remoteSetup()))
       throw "aborting sync, remote setup failed";
 
+    // Ping the server with a special info request once a day
+    let infoURL = this.infoURL;
+    let now = Math.floor(Date.now() / 1000);
+    let lastPing = Svc.Prefs.get("lastPing", 0);
+    if (now - lastPing > 86400) { // 60 * 60 * 24
+      infoURL += "?";
+      Svc.Prefs.set("lastPing", now);
+    }
+
     // Figure out what the last modified time is for each collection
-    let info = new Resource(this.infoURL).get();
+    let info = new Resource(infoURL).get();
     if (!info.success)
       throw "aborting sync, failed to get collections";
 
