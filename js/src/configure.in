@@ -2488,6 +2488,39 @@ if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_LIBRARY_CHECKS=1
 fi
 
+dnl Configure SSE2 support
+
+HAVE_SSE2=
+MUST_DETECT_SSE2=
+case "$target" in
+i?86-*)
+    HAVE_SSE2=1
+    case "$target_os" in
+    darwin*)
+        ;;
+    *)
+        MUST_DETECT_SSE2=1
+        ;;
+    esac
+    ;;
+x86_64*-*)e
+    HAVE_SSE2=1
+    ;;
+esac
+
+if test "$HAVE_SSE2"; then
+    AC_DEFINE(HAVE_SSE2)
+    if test "$GNU_CC"; then
+        CFLAGS="$CFLAGS -msse2"
+    fi
+    if test "$GNU_CXX"; then
+        CXXFLAGS="$CXXFLAGS -msse2"
+    fi
+    if test "$MUST_DETECT_SSE2"; then
+        AC_DEFINE(MUST_DETECT_SSE2)
+    fi
+fi
+
 dnl Configure JIT support
 
 case "$target" in

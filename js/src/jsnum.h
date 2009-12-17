@@ -47,6 +47,13 @@
 #ifdef SOLARIS
 #include <ieeefp.h>
 #endif
+#ifdef HAVE_SSE2
+#ifdef __GNUC__
+#include <xmmintrin.h>
+#else
+#include <emmintrin.h>
+#endif
+#endif
 
 /*
  * JS number (IEEE double) interface.
@@ -131,9 +138,32 @@ JSDOUBLE_IS_NEGZERO(jsdouble d)
 #define JSDOUBLE_HI32_EXPMASK   0x7ff00000
 #define JSDOUBLE_HI32_MANTMASK  0x000fffff
 
-static inline int
+/* Older versions of MSVC don't have _mm_castpd_si128. */
+#if defined(HAVE_SSE2) && defined (_MSC_VER) && (_MSC_VER < 1500)
+static inline __m128i
+_mm_castpd_si128(__m128d v) {
+    return *(__m128i *)&v;
+}
+#endif
+
+static inline bool
 JSDOUBLE_IS_INT(jsdouble d, jsint& i)
 {
+#ifdef HAVE_SSE2
+    if (js_use_SSE2) {
+        __m128d xd = _mm_set_sd(d);      /* load double into an XMM register */
+        int ii = _mm_cvtsd_si32(xd);     /* Inf/NaN & large |d| convert to -2^31 */
+        __m128d xdi = _mm_setzero_pd();  /* kill dependencies for the top half of xdi */
+        xdi = _mm_cvtsi32_sd(xdi, ii);   /* convert the result back to double */
+        __m128i xcmp = _mm_cmpeq_epi32(_mm_castpd_si128(xd),   /* 32-bit integer bit-to-bit */
+                                       _mm_castpd_si128(xdi)); /* comparison */
+        int m = _mm_movemask_epi8(xcmp); /* extract significant bits of compare */
+        if ((m & 0xff) != 0xff)          /* result is non-integer? */
+            return false;
+        i = ii;
+        return true;
+    }
+#endif
     if (JSDOUBLE_IS_NEGZERO(d))
         return false;
     return d == (i = jsint(d));
