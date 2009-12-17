@@ -111,7 +111,6 @@ public:
   PRLibrary     *mLibrary;
   nsCOMPtr<nsIPlugin> mEntryPoint;
   PRPackedBool  mCanUnloadLibrary;
-  PRPackedBool  mXPConnected;
   PRPackedBool  mIsJavaPlugin;
   PRPackedBool  mIsNPRuntimeEnabledJavaPlugin;
   nsCString     mFileName; // UTF-8
@@ -133,7 +132,6 @@ struct nsPluginInstanceTag
   PRTime                 mllStopTime;
   PRPackedBool           mStopped;
   PRPackedBool           mDefaultPlugin;
-  PRPackedBool           mXPConnected;
   // Array holding all opened stream listeners for this entry
   nsCOMPtr <nsISupportsArray> mStreams; 
   
