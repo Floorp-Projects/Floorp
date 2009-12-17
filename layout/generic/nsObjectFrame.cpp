@@ -1263,25 +1263,23 @@ nsObjectFrame::IsOpaque() const
 #if defined(XP_MACOSX)
   return PR_FALSE;
 #else
-  if (mInstanceOwner) {
-    NPWindow *window;
-    mInstanceOwner->GetWindow(window);
-    if (window->type == NPWindowTypeDrawable) {
-      // XXX we possibly should check NPPVpluginTransparentBool
-      // here to optimize for windowless but opaque plugins
-      if (mInstanceOwner) {
-        nsresult rv;
-        PRBool transparent = PR_FALSE;
-        nsCOMPtr<nsIPluginInstance> pi;
-        if (NS_SUCCEEDED(rv = mInstanceOwner->GetInstance(*getter_AddRefs(pi)))) {
-          pi->IsTransparent(&transparent);
-          return !transparent;
-        }
-      }
-      return PR_FALSE;
-    }
-  }
-  return PR_TRUE;
+  if (!mInstanceOwner)
+    return PR_FALSE;
+
+  NPWindow *window;
+  mInstanceOwner->GetWindow(window);
+  if (window->type != NPWindowTypeDrawable)
+    return PR_TRUE;
+
+  nsresult rv;
+  nsCOMPtr<nsIPluginInstance> pi;
+  rv = mInstanceOwner->GetInstance(*getter_AddRefs(pi));
+  if (NS_FAILED(rv) || !pi)
+    return PR_FALSE;
+
+  PRBool transparent = PR_FALSE;
+  pi->IsTransparent(&transparent);
+  return !transparent;
 #endif
 }
 
