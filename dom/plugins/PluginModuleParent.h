@@ -97,8 +97,12 @@ protected:
 
 public:
     PluginModuleParent(const char* aFilePath);
-
     virtual ~PluginModuleParent();
+
+    NS_OVERRIDE virtual void SetPlugin(nsNPAPIPlugin* plugin)
+    {
+        mPlugin = plugin;
+    }
 
     NS_OVERRIDE virtual void ActorDestroy(ActorDestroyReason why);
 
@@ -213,6 +217,7 @@ private:
     bool mShutdown;
     const NPNetscapeFuncs* mNPNIface;
     nsTHashtable<nsVoidPtrHashKey> mValidIdentifiers;
+    nsNPAPIPlugin* mPlugin;
 };
 
 } // namespace plugins

@@ -542,10 +542,8 @@ public:
                    PRUint32 aPlatformCode, PRUint32 aScriptCode,
                    PRUint32 aLangCode, nsAString& dest);
 
-    static inline bool IsJoiner(PRUint32 ch) {
-        return (ch == 0x200C ||
-                ch == 0x200D ||
-                ch == 0x2060);
+    static inline bool IsJoinCauser(PRUint32 ch) {
+        return (ch == 0x200D);
     }
 
     static inline bool IsInvalid(PRUint32 ch) {

@@ -315,7 +315,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
 
     LOG(("entering nsAuthSSPI::GetNextToken()\n"));
 
-    if (!mCtxt.dwLower && !mCtxt.dwUpper) {
+    if (!mCred.dwLower && !mCred.dwUpper) {
         LOG(("nsAuthSSPI::GetNextToken(), not initialized. exiting."));
         return NS_ERROR_NOT_INITIALIZED;
     }
