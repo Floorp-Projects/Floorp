@@ -313,8 +313,6 @@ typedef struct JSPropertyCache {
     uint32              addpchits;      /* adding next property pchit case */
     uint32              setpchits;      /* setting existing property pchit */
     uint32              setpcmisses;    /* setting/adding property pc misses */
-    uint32              slotchanges;    /* clasp->reserveSlots result variance-
-                                           induced slot changes */
     uint32              setmisses;      /* JSOP_SET{NAME,PROP} total misses */
     uint32              idmisses;       /* slow-path key id == atom misses */
     uint32              komisses;       /* slow-path key object misses */
