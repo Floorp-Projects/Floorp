@@ -79,7 +79,7 @@ Unwrap(JSContext *cx, JSObject *wrapper)
     JSObject *wrappedObj =
       XPCSafeJSObjectWrapper::GetUnsafeObject(cx, wrapper);
 
-    if (NS_FAILED(XPCCrossOriginWrapper::CanAccessWrapper(cx, wrappedObj, nsnull))) {
+    if (NS_FAILED(XPCCrossOriginWrapper::CanAccessWrapper(cx, nsnull, wrappedObj, nsnull))) {
       JS_ClearPendingException(cx);
 
       return nsnull;
