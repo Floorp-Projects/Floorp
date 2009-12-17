@@ -545,8 +545,8 @@ var Browser = {
 
     // JavaScript Error Console
     if (gPrefService.getBoolPref("browser.console.showInPanel")){
-      let tool_console = document.getElementById("tool-console");
-      tool_console.hidden = false;
+      let button = document.getElementById("tool-console");
+      button.hidden = false;
     }
 
     bv.commitBatchOperation();
