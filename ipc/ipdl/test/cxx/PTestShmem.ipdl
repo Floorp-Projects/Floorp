@@ -1,0 +1,22 @@
+namespace mozilla {
+namespace _ipdltest {
+
+protocol PTestShmem {
+child:
+    Give(Shmem mem, size_t expectedSize);
+
+parent:
+    Take(Shmem mem, size_t expectedSize);
+    __delete__();
+
+
+state GIVING:
+    send Give goto TAKING;
+
+state TAKING:
+    recv Take goto TAKING;
+    recv __delete__;
+};
+
+}
+}

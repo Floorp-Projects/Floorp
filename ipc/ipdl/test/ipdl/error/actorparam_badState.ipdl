@@ -1,0 +1,10 @@
+protocol actorparam_badState {
+
+child:
+    Msg(actorparam_badState:FARGEL p);
+    __delete__();
+
+state S1:
+    send Msg goto S1;
+    send __delete__;
+};

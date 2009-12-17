@@ -43,6 +43,13 @@
 #include <string>
 #include <sstream>
 
+#ifdef XP_WIN
+#include <process.h>
+#define getpid _getpid
+#else
+#include <unistd.h>
+#endif
+
  using namespace std;
 
 #define PLUGIN_NAME        "Test Plug-in"
@@ -57,6 +64,10 @@
 
 static NPNetscapeFuncs* sBrowserFuncs = NULL;
 static NPClass sNPClass;
+
+static void
+testplugin_URLNotify(NPP instance, const char* url, NPReason reason,
+                     void* notifyData);
 
 //
 // identifiers
@@ -90,6 +101,8 @@ static bool setColor(NPObject* npobj, const NPVariant* args, uint32_t argCount, 
 static bool throwExceptionNextInvoke(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool convertPointX(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -117,6 +130,8 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "throwExceptionNextInvoke",
   "convertPointX",
   "convertPointY",
+  "streamTest",
+  "crash",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
@@ -145,9 +160,24 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   throwExceptionNextInvoke,
   convertPointX,
   convertPointY,
+  streamTest,
+  crashPlugin,
 };
 
-static const char* NPN_GetURLNotifyCookie = "NPN_GetURLNotify_Cookie";
+struct URLNotifyData
+{
+  const char* cookie;
+  NPObject* callback;
+  uint32_t size;
+  char* data;
+};
+
+static URLNotifyData kNotifyData = {
+  "static-cookie",
+  NULL,
+  0,
+  NULL
+};
 
 static const char* SUCCESS_STRING = "pass";
 
@@ -376,7 +406,7 @@ static void fillPluginFunctionTable(NPPluginFuncs* pFuncs)
   pFuncs->write = NPP_Write;
   pFuncs->print = NPP_Print;
   pFuncs->event = NPP_HandleEvent;
-  pFuncs->urlnotify = NPP_URLNotify;
+  pFuncs->urlnotify = testplugin_URLNotify;
   pFuncs->getvalue = NPP_GetValue;
   pFuncs->setvalue = NPP_SetValue;
 }
@@ -478,7 +508,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     free(instanceData);
     return NPERR_GENERIC_ERROR;
   }
-  NPN_RetainObject(scriptableObject);
   scriptableObject->npp = instance;
   scriptableObject->drawMode = DM_DEFAULT;
   scriptableObject->drawColor = 0;
@@ -630,7 +659,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   }
   else if (instanceData->testFunction == FUNCTION_NPP_GETURLNOTIFY) {
     NPError err = NPN_GetURLNotify(instance, instanceData->testUrl.c_str(), 
-        NULL, (void *)NPN_GetURLNotifyCookie);
+                                   NULL, static_cast<void*>(&kNotifyData));
     if (err != NPERR_NO_ERROR) {
       instanceData->err << "NPN_GetURLNotify returned " << err;
     }
@@ -697,15 +726,22 @@ NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream, NPBool seekable, 
     }
     return instanceData->failureCode;
   }
-  
-  *stype = instanceData->streamMode;
 
-  if (instanceData->streamBufSize) {
-    free(instanceData->streamBuf);
-    instanceData->streamBufSize = 0;
-    if (instanceData->testFunction == FUNCTION_NPP_POSTURL &&
-      instanceData->postMode == POSTMODE_STREAM) {
-      instanceData->testFunction = FUNCTION_NPP_GETURL;
+  if (stream->notifyData &&
+      static_cast<URLNotifyData*>(stream->notifyData) != &kNotifyData) {
+    // stream from streamTest
+    *stype = NP_NORMAL;
+  }
+  else {
+    *stype = instanceData->streamMode;
+
+    if (instanceData->streamBufSize) {
+      free(instanceData->streamBuf);
+      instanceData->streamBufSize = 0;
+      if (instanceData->testFunction == FUNCTION_NPP_POSTURL &&
+          instanceData->postMode == POSTMODE_STREAM) {
+        instanceData->testFunction = FUNCTION_NPP_GETURL;
+      }
     }
   }
   return NPERR_NO_ERROR;
@@ -737,10 +773,27 @@ NPP_DestroyStream(NPP instance, NPStream* stream, NPReason reason)
     return instanceData->failureCode;
   }
 
+  URLNotifyData* nd = static_cast<URLNotifyData*>(stream->notifyData);
+  if (nd && nd != &kNotifyData) {
+    return NPERR_NO_ERROR;
+  }
+
   if (instanceData->streamMode == NP_ASFILE &&
       instanceData->functionToFail == FUNCTION_NONE) {
+    if (!instanceData->streamBuf) {
+      instanceData->err <<
+        "Error: no data written with NPP_Write";
+      return NPERR_GENERIC_ERROR;
+    }
+
+    if (!instanceData->fileBuf) {
+      instanceData->err <<
+        "Error: no data written with NPP_StreamAsFile";
+      return NPERR_GENERIC_ERROR;
+    }
+
     if (strcmp(reinterpret_cast<char *>(instanceData->fileBuf), 
-      reinterpret_cast<char *>(instanceData->streamBuf)) != 0) {
+               reinterpret_cast<char *>(instanceData->streamBuf))) {
       instanceData->err <<
         "Error: data passed to NPP_Write and NPP_StreamAsFile differed";
     }
@@ -798,6 +851,15 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
 
   if (instanceData->functionToFail == FUNCTION_NPP_WRITE) {
     return -1;
+  }
+
+  URLNotifyData* nd = static_cast<URLNotifyData*>(stream->notifyData);
+  if (nd && nd != &kNotifyData) {
+    uint32_t newsize = nd->size + len;
+    nd->data = (char*) realloc(nd->data, newsize);
+    memcpy(nd->data + nd->size, buffer, len);
+    nd->size = newsize;
+    return len;
   }
 
   // If the complete stream has been written, and we're doing a seek test,
@@ -911,16 +973,38 @@ NPP_HandleEvent(NPP instance, void* event)
 }
 
 void
-NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
+testplugin_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 {
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+  URLNotifyData* ndata = static_cast<URLNotifyData*>(notifyData);
+
   printf("NPP_URLNotify called\n");
-  if (strcmp((char*)notifyData, NPN_GetURLNotifyCookie) != 0) {
+  if (&kNotifyData == ndata) {
+    if (instanceData->frame.length() > 0) {
+      sendBufferToFrame(instance);
+    }
+  }
+  else if (!strcmp(ndata->cookie, "dynamic-cookie")) {
+    NPVariant args[2];
+    NPVariant result;
+    INT32_TO_NPVARIANT(reason, args[0]);
+
+    if (ndata->data)
+      STRINGN_TO_NPVARIANT(ndata->data, ndata->size, args[1]);
+    else
+      STRINGN_TO_NPVARIANT("", 0, args[1]);
+
+    NPN_InvokeDefault(instance, ndata->callback, args, 2, &result);
+    NPN_ReleaseVariantValue(&result);
+
+    // clean up the URLNotifyData
+    NPN_ReleaseObject(ndata->callback);
+    free(ndata->data);
+    delete ndata;
+  }
+  else {
     printf("ERROR! NPP_URLNotify called with wrong cookie\n");
     instanceData->err << "Error: NPP_URLNotify called with wrong cookie";
-  }
-  if (instanceData->frame.length() > 0) {
-    sendBufferToFrame(instance);
   }
 }
 
@@ -1876,6 +1960,95 @@ convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVaria
 }
 
 static bool
+streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  // .streamTest(url, doPost, doNull, callback)
+  if (4 != argCount)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+
+  if (!NPVARIANT_IS_STRING(args[0]))
+    return false;
+  NPString url = NPVARIANT_TO_STRING(args[0]);
+
+  if (!NPVARIANT_IS_BOOLEAN(args[1]))
+    return false;
+  bool doPost = NPVARIANT_TO_BOOLEAN(args[1]);
+
+  NPString postData = { NULL, 0 };
+  if (NPVARIANT_IS_NULL(args[2])) {
+  }
+  else if (NPVARIANT_IS_STRING(args[2])) {
+    postData = NPVARIANT_TO_STRING(args[2]);
+  }
+  else {
+    return false;
+  }
+
+  if (!NPVARIANT_IS_OBJECT(args[3]))
+    return false;
+  NPObject* callback = NPVARIANT_TO_OBJECT(args[3]);
+
+  URLNotifyData* ndata = new URLNotifyData;
+  ndata->cookie = "dynamic-cookie";
+  ndata->callback = callback;
+  ndata->size = 0;
+  ndata->data = NULL;
+
+  /* null-terminate "url" */
+  char* urlstr = (char*) malloc(url.UTF8Length + 1);
+  strncpy(urlstr, url.UTF8Characters, url.UTF8Length);
+  urlstr[url.UTF8Length] = '\0';
+
+  NPError err;
+  if (doPost) {
+    err = NPN_PostURLNotify(npp, urlstr, NULL,
+                            postData.UTF8Length, postData.UTF8Characters,
+                            false, ndata);
+  }
+  else {
+    err = NPN_GetURLNotify(npp, urlstr, NULL, ndata);
+  }
+
+  free(urlstr);
+
+  if (NPERR_NO_ERROR == err) {
+    NPN_RetainObject(ndata->callback);
+    BOOLEAN_TO_NPVARIANT(true, *result);
+  }
+  else {
+    delete ndata;
+    BOOLEAN_TO_NPVARIANT(false, *result);
+  }
+
+  return true;
+}
+
+static bool
+crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  char* bloatLog = getenv("XPCOM_MEM_BLOAT_LOG");
+  if (bloatLog) {
+    char* logExt = strstr(bloatLog, ".log");
+    if (logExt) {
+      bloatLog[strlen(bloatLog) - strlen(logExt)] = '\0';    
+    }
+    ostringstream bloatName;
+    bloatName << bloatLog << "_plugin_pid" << getpid();
+    if (logExt) {
+      bloatName << ".log";    
+    }
+    FILE* processfd = fopen(bloatName.str().c_str(), "a");
+    fprintf(processfd, "==> process %d will purposefully crash\n", getpid());
+    fclose(processfd);
+  }
+  void (*funcptr)() = NULL;
+  funcptr(); // Crash calling null function pointer
+  return true;
+}
+
+static bool
 setColor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
   if (argCount != 1)
@@ -1897,5 +2070,6 @@ setColor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* r
   r.bottom = id->window.height;
   NPN_InvalidateRect(npp, &r);
 
+  VOID_TO_NPVARIANT(*result);
   return true;
 }

@@ -1,0 +1,21 @@
+protocol builtins {
+
+    // sanity-check that "essential" builtins are being declared
+
+child: Msg(bool b,
+           char c,
+           int i,
+           long l,
+
+           float f,
+           double d,
+
+           int8_t i8t,
+           uint8_t u8t,
+           int16_t i16t,
+           uint16_t u16t,
+           int32_t i32t,
+           uint32_t u32t,
+           int64_t i64t,
+           uint64_t u64t);
+};

@@ -1,0 +1,12 @@
+protocol multiOutStates {
+child: Msg();
+
+    // sanity check that multi-out-states are being processed correctly
+
+state S1:
+    send Msg goto S2 or S3 or S4;
+
+state S2: send Msg goto S2;
+state S3: send Msg goto S3;
+state S4: send Msg goto S4;
+};

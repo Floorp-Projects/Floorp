@@ -60,6 +60,7 @@
 /***************************************************************************/
 
 [ptr] native JSContextPtr(JSContext);
+[ptr] native JSClassPtr(JSClass);
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native JSValPtr(jsval);
       native JSVal(jsval);
@@ -394,7 +395,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(44d52d63-6575-4b09-a29f-e6708203fa9d)]
+[uuid(96540596-c21e-4183-bb47-f6a5c1ad2dba)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -859,4 +860,6 @@ interface nsIXPConnect : nsISupports
                                        PRBool allowShortCircuit) const = 0;
 #endif
 %}
+
+    [notxpcom] JSClassPtr getNativeWrapperClass();
 };

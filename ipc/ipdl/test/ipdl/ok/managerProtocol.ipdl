@@ -1,0 +1,13 @@
+include protocol "managedProtocol.ipdl";
+
+// sanity check of managed/manager protocols
+
+protocol managerProtocol {
+    manages managedProtocol;
+
+parent:
+    managedProtocol(int i);
+
+state CREATING:
+    recv managedProtocol goto CREATING;
+};

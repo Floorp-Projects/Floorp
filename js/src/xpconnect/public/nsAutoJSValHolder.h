@@ -42,6 +42,8 @@
 
 #include "jsapi.h"
 
+#include "nsDebug.h"
+
 /**
  * Simple class that looks and acts like a jsval except that it unroots
  * itself automatically if Root() is ever called. Designed to be rooted on the

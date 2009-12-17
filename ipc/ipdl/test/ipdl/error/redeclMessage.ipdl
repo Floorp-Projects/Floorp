@@ -1,0 +1,9 @@
+protocol redeclMessage {
+
+    // can't declare two messages with the same name
+
+child:
+    Msg();
+    Msg();
+
+};

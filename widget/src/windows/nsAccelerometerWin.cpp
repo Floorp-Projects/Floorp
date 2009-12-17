@@ -410,7 +410,7 @@ ThinkPadSensor::~ThinkPadSensor()
 PRBool
 ThinkPadSensor::Startup()
 {
-  mLibrary = LoadLibrary("sensor.dll");
+  mLibrary = LoadLibraryW(L"sensor.dll");
   if (!mLibrary)
     return PR_FALSE;
 

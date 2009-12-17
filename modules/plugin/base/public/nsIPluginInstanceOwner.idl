@@ -49,7 +49,7 @@ class nsPluginEvent;
 
 [ref] native nsIPluginInstanceRef(nsIPluginInstance*);
 
-[uuid(8080E717-7261-4707-B8B4-48250F47055F)]
+[uuid(D8776CDC-00DF-4395-A432-2E78EBCC12B6)]
 interface nsIPluginInstanceOwner : nsISupports
 {
   /**
@@ -137,4 +137,8 @@ interface nsIPluginInstanceOwner : nsISupports
 %}
 
   void setEventModel(in PRInt32 eventModel);
+
+%{C++
+  virtual void SendIdleEvent() = 0;
+%}
 };

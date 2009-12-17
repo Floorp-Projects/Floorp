@@ -1,0 +1,8 @@
+The original code is the Network Security Services (NSS), licensed under
+the MPL/GPL/LGPL tri-license (http://www.mozilla.org/MPL/).
+
+We extracted the SHA-256 source files, eliminated unneeded dependencies,
+deleted or commented out unused code, and tweaked them for Chrome's source
+tree.  sha512.c is renamed sha512.cc so that it can include Chrome's C++
+header "base/basictypes.h".  We define NOUNROLL256 to reduce the object code
+size.

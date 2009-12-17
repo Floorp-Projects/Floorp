@@ -239,10 +239,18 @@ jsd_InitObjectManager(JSDContext* jsdc)
 void
 jsd_DestroyObjectManager(JSDContext* jsdc)
 {
+    jsd_DestroyObjects(jsdc);
+    JSD_LOCK_OBJECTS(jsdc);
+    JS_HashTableDestroy(jsdc->objectsTable);
+    JSD_UNLOCK_OBJECTS(jsdc);
+}
+
+void
+jsd_DestroyObjects(JSDContext* jsdc)
+{
     JSD_LOCK_OBJECTS(jsdc);
     while( !JS_CLIST_IS_EMPTY(&jsdc->objectsList) )
         _destroyJSDObject(jsdc, (JSDObject*)JS_NEXT_LINK(&jsdc->objectsList));
-    JS_HashTableDestroy(jsdc->objectsTable);
     JSD_UNLOCK_OBJECTS(jsdc);
 }
 

@@ -44,6 +44,7 @@ const ROLE_PUSHBUTTON = nsIAccessibleRole.ROLE_PUSHBUTTON;
 const ROLE_RADIOBUTTON = nsIAccessibleRole.ROLE_RADIOBUTTON;
 const ROLE_ROW = nsIAccessibleRole.ROLE_ROW;
 const ROLE_ROWHEADER = nsIAccessibleRole.ROLE_ROWHEADER;
+const ROLE_SCROLLBAR = nsIAccessibleRole.ROLE_SCROLLBAR;
 const ROLE_SECTION = nsIAccessibleRole.ROLE_SECTION;
 const ROLE_SEPARATOR = nsIAccessibleRole.ROLE_SEPARATOR;
 const ROLE_SLIDER = nsIAccessibleRole.ROLE_SLIDER;

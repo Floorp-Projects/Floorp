@@ -79,6 +79,7 @@ const EXT_STATE_MULTI_LINE = nsIAccessibleStates.EXT_STATE_MULTI_LINE;
 const EXT_STATE_SINGLE_LINE = nsIAccessibleStates.EXT_STATE_SINGLE_LINE;
 const EXT_STATE_SUPPORTS_AUTOCOMPLETION = 
       nsIAccessibleStates.EXT_STATE_SUPPORTS_AUTOCOMPLETION;
+const EXT_STATE_VERTICAL = nsIAccessibleStates.EXT_STATE_VERTICAL;
 
 ////////////////////////////////////////////////////////////////////////////////
 // OS detect

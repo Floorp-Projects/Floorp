@@ -113,7 +113,6 @@ const HTTP_412 = new HttpError(412, "Precondition Failed");
 const HTTP_413 = new HttpError(413, "Request Entity Too Large");
 const HTTP_414 = new HttpError(414, "Request-URI Too Long");
 const HTTP_415 = new HttpError(415, "Unsupported Media Type");
-const HTTP_416 = new HttpError(416, "Requested Range Not Satisfiable");
 const HTTP_417 = new HttpError(417, "Expectation Failed");
 
 const HTTP_500 = new HttpError(500, "Internal Server Error");
@@ -2227,6 +2226,8 @@ ServerHandler.prototype =
         dumpn("*** errorCode == " + errorCode);
 
         response = new Response(connection);
+        if (e.customErrorHandling)
+          e.customErrorHandling(response);
         this._handleError(errorCode, request, response);
         return;
       }
@@ -2446,8 +2447,14 @@ ServerHandler.prototype =
       if (end === undefined || end >= file.fileSize)
         end = file.fileSize - 1;
 
-      if (start !== undefined && start >= file.fileSize)
+      if (start !== undefined && start >= file.fileSize) {
+        var HTTP_416 = new HttpError(416, "Requested Range Not Satisfiable");
+        HTTP_416.customErrorHandling = function(errorResponse)
+        {
+          maybeAddHeaders(file, metadata, errorResponse);
+        };
         throw HTTP_416;
+      }
 
       if (end < start)
       {

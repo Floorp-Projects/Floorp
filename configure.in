@@ -466,11 +466,7 @@ case "$target" in
     WINVER=500
     ;;
 *)
-    if test -n "$GNU_CC"; then  
-        WINVER=501
-    else    
-        WINVER=500
-    fi
+    WINVER=502
     ;;
 esac
 
@@ -4243,7 +4239,7 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(External Packages)
 
-MOZ_ENABLE_LIBXUL=
+MOZ_ENABLE_LIBXUL=1
 
 MOZ_ARG_WITH_STRING(libxul-sdk,
 [  --with-libxul-sdk=PFX   Use the libXUL SDK at <PFX>],
@@ -4570,6 +4566,7 @@ MOZ_DBGRINFO_MODULES=
 MOZ_FEEDS=1
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp icon"
 MOZ_IMG_ENCODERS_DEFAULT="png jpeg"
+MOZ_IPC=1
 MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
 MOZ_JSLOADER=1
@@ -5294,6 +5291,49 @@ MOZ_ARG_DISABLE_BOOL(jsd,
     MOZ_JSDEBUGGER=,
     MOZ_JSDEBUGGER=1)
 
+
+dnl ========================================================
+dnl = Disable IPC support for tabs and plugins
+dnl ========================================================
+case "${target}" in
+*-apple-darwin*)
+    MOZ_IPC=
+    ;;
+*-wince*)
+    MOZ_IPC=
+    ;;
+esac
+
+MOZ_ARG_DISABLE_BOOL(ipc,
+[  --disable-ipc           Disable IPC supports for tabs and plugins],
+    MOZ_IPC=,
+    MOZ_IPC=1)
+
+if test -n "$MOZ_IPC"; then
+    AC_DEFINE(MOZ_IPC)
+fi
+
+AC_SUBST(MOZ_IPC)
+
+dnl ========================================================
+dnl = Enable IPDL's "expensive" unit tests
+dnl ========================================================
+MOZ_IPDL_TESTS=
+
+MOZ_ARG_ENABLE_BOOL(ipdl-tests,
+[  --enable-ipdl-tests     Enable expensive IPDL tests],
+    MOZ_IPDL_TESTS=1,
+    MOZ_IPDL_TESTS=)
+
+if test -z "$MOZ_IPC" -a -n "$MOZ_IPDL_TESTS"; then
+    AC_MSG_ERROR([--enable-ipdl-tests requires --enable-ipc])
+fi
+
+if test -n "$MOZ_IPDL_TESTS"; then
+    AC_DEFINE(MOZ_IPDL_TESTS)
+fi
+
+AC_SUBST(MOZ_IPDL_TESTS)
 
 dnl ========================================================
 dnl = Disable plugin support
@@ -7185,6 +7225,7 @@ dnl ========================================================
 dnl C++ rtti
 dnl Should be smarter and check that the compiler does indeed have rtti
 dnl ========================================================
+
 MOZ_ARG_ENABLE_BOOL(cpp-rtti,
 [  --enable-cpp-rtti       Enable C++ RTTI ],
 [ _MOZ_USE_RTTI=1 ],
@@ -7296,11 +7337,6 @@ MOZ_ARG_ENABLE_BOOL(static,
     BUILD_STATIC_LIBS=1,
     BUILD_STATIC_LIBS=)
 
-dnl Disable libxul in debug builds, but not for xulrunner.
-if test -n "$MOZ_DEBUG" -a "$MOZ_BUILD_APP" != "xulrunner"; then
-   MOZ_ENABLE_LIBXUL=
-fi
-
 MOZ_ARG_ENABLE_BOOL(libxul,
 [  --enable-libxul         Enable building of libxul],
     MOZ_ENABLE_LIBXUL=1,
@@ -7312,6 +7348,10 @@ fi
 
 if test -n "$MOZ_ENABLE_LIBXUL" -a -n "$BUILD_STATIC_LIBS"; then
 	AC_MSG_ERROR([--enable-libxul is not compatible with --enable-static])
+fi
+
+if test -n "$MOZ_IPC" -a -z "$MOZ_ENABLE_LIBXUL"; then
+    AC_MSG_ERROR([--enable-ipc requires --enable-libxul])
 fi
 
 AC_SUBST(LIBXUL_LIBS)

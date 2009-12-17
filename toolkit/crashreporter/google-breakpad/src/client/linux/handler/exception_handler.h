@@ -1,5 +1,7 @@
-// Copyright (c) 2009, Google Inc.
+// Copyright (c) 2006, Google Inc.
 // All rights reserved.
+//
+// Author: Li Liu
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -27,16 +29,26 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef CLIENT_LINUX_HANDLER_EXCEPTION_HANDLER_H_
-#define CLIENT_LINUX_HANDLER_EXCEPTION_HANDLER_H_
+#ifndef CLIENT_LINUX_HANDLER_EXCEPTION_HANDLER_H__
+#define CLIENT_LINUX_HANDLER_EXCEPTION_HANDLER_H__
 
-#include <vector>
+#include <pthread.h>
+
+#include <map>
 #include <string>
-
 #include <signal.h>
+#include <vector>
+
+#include "client/linux/handler/minidump_generator.h"
+
+// Context information when exception occured.
+struct sigcontex;
 
 namespace google_breakpad {
 
+using std::string;
+
+//
 // ExceptionHandler
 //
 // ExceptionHandler can write a minidump file when an exception occurs,
@@ -61,6 +73,7 @@ namespace google_breakpad {
 //
 // Caller should try to make the callbacks as crash-friendly as possible,
 // it should avoid use heap memory allocation as much as possible.
+//
 class ExceptionHandler {
  public:
   // A callback function to run before Breakpad performs any substantial
@@ -95,15 +108,6 @@ class ExceptionHandler {
                                    void *context,
                                    bool succeeded);
 
-  // In certain cases, a user may wish to handle the generation of the minidump
-  // themselves. In this case, they can install a handler callback which is
-  // called when a crash has occured. If this function returns true, no other
-  // processing of occurs and the process will shortly be crashed. If this
-  // returns false, the normal processing continues.
-  typedef bool (*HandlerCallback)(const void* crash_context,
-                                  size_t crash_context_size,
-                                  void* context);
-
   // Creates a new ExceptionHandler instance to handle writing minidumps.
   // Before writing a minidump, the optional filter callback will be called.
   // Its return value determines whether or not Breakpad should write a
@@ -112,22 +116,18 @@ class ExceptionHandler {
   // If install_handler is true, then a minidump will be written whenever
   // an unhandled exception occurs.  If it is false, minidumps will only
   // be written when WriteMinidump is called.
-  ExceptionHandler(const std::string &dump_path,
+  ExceptionHandler(const string &dump_path,
                    FilterCallback filter, MinidumpCallback callback,
                    void *callback_context,
                    bool install_handler);
   ~ExceptionHandler();
 
   // Get and set the minidump path.
-  std::string dump_path() const { return dump_path_; }
-  void set_dump_path(const std::string &dump_path) {
+  string dump_path() const { return dump_path_; }
+  void set_dump_path(const string &dump_path) {
     dump_path_ = dump_path;
     dump_path_c_ = dump_path_.c_str();
     UpdateNextID();
-  }
-
-  void set_crash_handler(HandlerCallback callback) {
-    crash_handler_ = callback;
   }
 
   // Writes a minidump immediately.  This can be used to capture the
@@ -136,63 +136,91 @@ class ExceptionHandler {
 
   // Convenience form of WriteMinidump which does not require an
   // ExceptionHandler instance.
-  static bool WriteMinidump(const std::string &dump_path,
+  static bool WriteMinidump(const string &dump_path,
                             MinidumpCallback callback,
                             void *callback_context);
 
-  // This structure is passed to minidump_writer.h:WriteMinidump via an opaque
-  // blob. It shouldn't be needed in any user code.
-  struct CrashContext {
-    siginfo_t siginfo;
-    pid_t tid;  // the crashing thread.
-    struct ucontext context;
-    struct _libc_fpstate float_state;
-  };
+ private:
+  // Setup crash handler.
+  void SetupHandler();
+  // Setup signal handler for a signal.
+  void SetupHandler(int signo);
+  // Teardown the handler for a signal.
+  void TeardownHandler(int signo);
+  // Teardown the handler for a signal.
+  void TeardownHandler(int signo, struct sigaction *old);
+  // Teardown all handlers.
+  void TeardownAllHandler();
+
+  // Signal handler.
+  static void HandleException(int signo);
+
+  // If called from a signal handler, sighandler_ebp is the ebp of
+  // that signal handler's frame, and sig_ctx is an out parameter
+  // that will be set to point at the sigcontext that was placed
+  // on the stack by the kernel.  You can pass zero and NULL
+  // for the second and third parameters if you are not calling
+  // this from a signal handler.
+  bool InternalWriteMinidump(int signo, uintptr_t sighandler_ebp,
+                             struct sigcontext **sig_ctx);
+
+  // Generates a new ID and stores it in next_minidump_id, and stores the
+  // path of the next minidump to be written in next_minidump_path_.
+  void UpdateNextID();
 
  private:
-  bool InstallHandlers();
-  void UninstallHandlers();
-  void PreresolveSymbols();
+  FilterCallback filter_;
+  MinidumpCallback callback_;
+  void *callback_context_;
 
-  void UpdateNextID();
-  static void SignalHandler(int sig, siginfo_t* info, void* uc);
-  bool HandleSignal(int sig, siginfo_t* info, void* uc);
-  static int ThreadEntry(void* arg);
-  bool DoDump(pid_t crashing_process, const void* context,
-              size_t context_size);
+  // The directory in which a minidump will be written, set by the dump_path
+  // argument to the constructor, or set_dump_path.
+  string dump_path_;
 
-  const FilterCallback filter_;
-  const MinidumpCallback callback_;
-  void* const callback_context_;
+  // The basename of the next minidump to be written, without the extension
+  string next_minidump_id_;
 
-  std::string dump_path_;
-  std::string next_minidump_path_;
-  std::string next_minidump_id_;
+  // The full pathname of the next minidump to be written, including the file
+  // extension
+  string next_minidump_path_;
 
   // Pointers to C-string representations of the above. These are set
   // when the above are set so we can avoid calling c_str during
   // an exception.
-  const char* dump_path_c_;
-  const char* next_minidump_path_c_;
-  const char* next_minidump_id_c_;
+  const char *dump_path_c_;
+  const char *next_minidump_id_c_;
+  const char *next_minidump_path_c_;
 
-  const bool handler_installed_;
-  void* signal_stack;  // the handler stack.
-  HandlerCallback crash_handler_;
+  // True if the ExceptionHandler installed an unhandled exception filter
+  // when created (with an install_handler parameter set to true).
+  bool installed_handler_;
 
   // The global exception handler stack. This is need becuase there may exist
   // multiple ExceptionHandler instances in a process. Each will have itself
   // registered in this stack.
-  static std::vector<ExceptionHandler*> *handler_stack_;
+  static std::vector<ExceptionHandler *> *handler_stack_;
   // The index of the handler that should handle the next exception.
-  static unsigned handler_stack_index_;
+  static int handler_stack_index_;
   static pthread_mutex_t handler_stack_mutex_;
 
-  // A vector of the old signal handlers. The void* is a pointer to a newly
-  // allocated sigaction structure to avoid pulling in too many includes.
-  std::vector<std::pair<int, void *> > old_handlers_;
+  // The minidump generator.
+  MinidumpGenerator minidump_generator_;
+
+  // disallow copy ctor and operator=
+  explicit ExceptionHandler(const ExceptionHandler &);
+  void operator=(const ExceptionHandler &);
+
+  // The sigactions structure we use for each signal
+  struct sigaction act_;
+
+
+  // Keep the previous handlers for the signal.
+  // We're wasting a bit of memory here since we only change
+  // the handler for some signals but i want to avoid allocating
+  // memory in the signal handler
+  struct sigaction old_actions_[NSIG];
 };
 
 }  // namespace google_breakpad
 
-#endif  // CLIENT_LINUX_HANDLER_EXCEPTION_HANDLER_H_
+#endif  // CLIENT_LINUX_HANDLER_EXCEPTION_HANDLER_H__

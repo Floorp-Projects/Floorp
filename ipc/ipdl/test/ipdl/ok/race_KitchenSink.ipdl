@@ -1,0 +1,61 @@
+protocol race_KitchenSink {
+child:
+    Msg1();
+    Msg1_();
+parent:
+    Msg2();
+    Msg2_();
+
+
+    // concatenation of a few other state machines, should be OK
+
+start state S1:
+    send Msg1 goto S2;
+    recv Msg2 goto S3;
+
+state S2:
+    recv Msg2 goto S4;
+    recv Msg2_ goto S2;
+
+state S3:
+    send Msg1 goto S4;
+    send Msg1_ goto S3;
+
+state S4:
+    send Msg1 goto S4;
+
+
+
+start state S5:
+    send Msg1 goto S5;
+    recv Msg2 goto S5;
+
+
+
+start state S15:
+    send Msg1 goto S16 or S17;
+    recv Msg2 goto S18 or S19;
+
+state S16:
+    recv Msg2 goto S20;
+    recv Msg2_ goto S18;
+
+state S17:
+    recv Msg2 goto S20;
+    recv Msg2_ goto S15;
+
+state S18:
+    send Msg1 goto S20;
+    send Msg1_ goto S15;
+
+state S19:
+    send Msg1 goto S20;
+    send Msg1_ goto S16;
+
+state S20:
+    send Msg1 goto S20;
+    send Msg1_ goto S20;
+    recv Msg2 goto S20;
+    recv Msg2_ goto S20;
+
+};

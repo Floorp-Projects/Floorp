@@ -1,0 +1,4 @@
+protocol array_Basic {
+child:
+    Msg(int[] array);
+};

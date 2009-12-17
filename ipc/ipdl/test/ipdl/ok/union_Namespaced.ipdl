@@ -1,0 +1,18 @@
+namespace kitties {
+
+union Socks {
+    int;
+    double;
+};
+
+} // namespace kitties
+
+
+namespace puppies {
+
+protocol union_Namespaced {
+child:
+    Msg(Socks s);
+};
+
+} // namespace puppies
