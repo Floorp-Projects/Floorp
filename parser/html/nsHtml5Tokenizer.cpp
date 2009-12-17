@@ -3903,6 +3903,7 @@ nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other)
   }
   nsHtml5ArrayCopy::arraycopy(other->longStrBuf, longStrBuf, longStrBufLen);
   stateSave = other->stateSave;
+  returnStateSave = other->returnStateSave;
   lastCR = other->lastCR;
   index = other->index;
   forceQuirks = other->forceQuirks;
