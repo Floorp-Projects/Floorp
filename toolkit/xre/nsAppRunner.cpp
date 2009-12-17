@@ -235,9 +235,7 @@ protected:
 };
 #endif
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
-  extern void InstallUnixSignalHandlers(const char *ProgramName);
-#endif
+extern void InstallSignalHandlers(const char *ProgramName);
 
 #define FILE_COMPATIBILITY_INFO NS_LITERAL_CSTRING("compatibility.ini")
 
@@ -2651,9 +2649,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 #endif
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
-  InstallUnixSignalHandlers(argv[0]);
-#endif
+  InstallSignalHandlers(argv[0]);
 
 #ifdef MOZ_ACCESSIBILITY_ATK
   // Reset GTK_MODULES, strip atk-bridge if exists
