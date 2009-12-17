@@ -284,7 +284,11 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(
 
 #ifdef OS_LINUX
 
-    NPBool needsXEmbed;
+    // on x86/32-bit, flash stores to this using |movl 0x1,&needsXEmbed|.
+    // thus we can't NPBool for needsXEmbed, or the three bytes above
+    // it on the stack would get clobbered. so protect with unsigned
+    // long.
+    unsigned long needsXEmbed = 0;
     *rv = mPluginIface->getvalue(GetNPP(), NPPVpluginNeedsXEmbed,
                                  reinterpret_cast<void*>(&needsXEmbed));
     *needs = needsXEmbed;
