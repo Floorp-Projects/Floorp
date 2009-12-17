@@ -137,10 +137,6 @@ function InputHandler(browserViewContainer) {
   /* when set to true, next click won't be dispatched */
   this._suppressNextClick = false;
 
-  /* used to cancel actions with browser window changes */
-  this.listenFor(window, "URLChanged");
-  this.listenFor(window, "TabSelect");
-
   /* these handle dragging of both chrome elements and content */
   this.listenFor(window, "mousedown");
   this.listenFor(window, "mouseup");
@@ -307,12 +303,6 @@ InputHandler.prototype = {
     /* ignore all events that belong to other windows or documents (e.g. content events) */
     if (aEvent.view != window)
       return;
-
-    /* changing URL or selected a new tab will immediately stop active input handlers */
-    if (aEvent.type == "URLChanged" || aEvent.type == "TabSelect") {
-      this.grab(null);
-      return;
-    }
 
     if (this._suppressNextClick && aEvent.type == "click") {
       this._suppressNextClick = false;
@@ -493,6 +483,11 @@ MouseModule.prototype = {
     // returned if none found.
     let [targetScrollbox, targetScrollInterface]
       = this.getScrollboxFromElement(evInfo.event.target);
+
+    // stop kinetic panning if targetScrollbox has changed
+    let oldInterface = this._targetScrollInterface;
+    if (this._kinetic.isActive() && targetScrollInterface != oldInterface)
+      this._kinetic.end();
 
     let targetClicker = this.getClickerFromElement(evInfo.event.target);
 
