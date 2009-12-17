@@ -10078,11 +10078,10 @@ TraceRecorder::record_JSOP_IFNE()
 }
 
 LIns*
-TraceRecorder::newArguments()
+TraceRecorder::newArguments(LIns* callee_ins)
 {
     LIns* global_ins = INS_CONSTOBJ(globalObj);
     LIns* argc_ins = INS_CONST(cx->fp->argc);
-    LIns* callee_ins = get(&cx->fp->argv[-2]);
     LIns* argv_ins = cx->fp->argc
         ? lir->ins2(LIR_piadd, lirbuf->sp, 
                     lir->insImmWord(nativespOffset(&cx->fp->argv[0])))
@@ -10106,9 +10105,10 @@ TraceRecorder::record_JSOP_ARGUMENTS()
 
     LIns* a_ins = get(&cx->fp->argsobj);
     LIns* args_ins;
+    LIns* callee_ins = get(&cx->fp->argv[-2]);
     if (a_ins->opcode() == LIR_int) {
         // |arguments| is set to 0 by EnterFrame on this trace, so call to create it.
-        args_ins = newArguments();
+        args_ins = newArguments(callee_ins);
     } else {
         // Generate LIR to create arguments only if it has not already been created.
         
@@ -10121,7 +10121,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
         LIns* label1 = lir->ins0(LIR_label);
         br1->setTarget(label1);
 
-        LIns* call_ins = newArguments();
+        LIns* call_ins = newArguments(callee_ins);
         lir->insStorei(call_ins, mem_ins, 0);
 
         LIns* label2 = lir->ins0(LIR_label);
