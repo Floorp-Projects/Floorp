@@ -1187,18 +1187,10 @@ WeaveSvc.prototype = {
     if (numClients == 1) {
       this.syncInterval = SINGLE_USER_SYNC;
       this.syncThreshold = SINGLE_USER_THRESHOLD;
-
-      // Disable tabs sync for single client, but store the original value
-      Svc.Prefs.set("engine.tabs.backup", tabEngine.enabled);
-      tabEngine.enabled = false;
     }
     else {
       this.syncInterval = hasMobile ? MULTI_MOBILE_SYNC : MULTI_DESKTOP_SYNC;
       this.syncThreshold = hasMobile ? MULTI_MOBILE_THRESHOLD : MULTI_DESKTOP_THRESHOLD;
-
-      // Restore the original tab enabled value
-      tabEngine.enabled = Svc.Prefs.get("engine.tabs.backup", true);
-      Svc.Prefs.reset("engine.tabs.backup");
     }
   },
 
