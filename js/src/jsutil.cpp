@@ -43,6 +43,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "jstypes.h"
 #include "jsstdint.h"
 #include "jsutil.h"
@@ -70,6 +71,52 @@ JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
     raise(SIGABRT);
 #endif
 }
+
+#ifdef MUST_DETECT_SSE2
+bool js_use_SSE2;
+
+bool
+js_DetectSSE2()
+{
+    char *c = getenv("X86_FORCE_SSE2");
+    if (c)
+        return (!strcmp(c, "true") ||
+                !strcmp(c, "1") ||
+                !strcmp(c, "yes"));
+
+    int features = 0;
+#if defined _MSC_VER
+    __asm
+    {
+        pushad
+        mov eax, 1
+        cpuid
+        mov features, edx
+        popad
+    }
+#elif defined __GNUC__
+    asm("xchg %%esi, %%ebx\n" /* we can't clobber ebx on gcc (PIC register) */
+        "mov $0x01, %%eax\n"
+        "cpuid\n"
+        "mov %%edx, %0\n"
+        "xchg %%esi, %%ebx\n"
+        : "=m" (features)
+        : /* We have no inputs */
+        : "%eax", "%esi", "%ecx", "%edx"
+       );
+#elif defined __SUNPRO_C || defined __SUNPRO_CC
+    asm("push %%ebx\n"
+        "mov $0x01, %%eax\n"
+        "cpuid\n"
+        "pop %%ebx\n"
+        : "=d" (features)
+        : /* We have no inputs */
+        : "%eax", "%ecx"
+       );
+#endif
+    return (features & (1<<26)) != 0;
+}
+#endif
 
 #ifdef JS_BASIC_STATS
 
