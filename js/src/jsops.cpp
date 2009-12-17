@@ -1815,10 +1815,10 @@ BEGIN_CASE(JSOP_SETMETHOD)
                          * if something created a hash table for scope, we must
                          * pay the price of JSScope::putProperty.
                          *
-                         * If slot does not match the cached sprop's slot,
-                         * update the cache entry in the hope that obj and
-                         * other instances with the same number of reserved
-                         * slots are now "hot".
+                         * (A reserveSlots hook can cause scopes of the same
+                         * shape to have different freeslot values. This is
+                         * what causes the slot != sprop->slot case. See
+                         * js_GetMutableScope.)
                          */
                         if (slot != sprop->slot || scope->table) {
                             JSScopeProperty *sprop2 =
@@ -1830,13 +1830,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
                                 js_FreeSlot(cx, obj, slot);
                                 JS_UNLOCK_SCOPE(cx, scope);
                                 goto error;
-                            }
-                            if (sprop2 != sprop) {
-                                PCMETER(cache->slotchanges++);
-                                JS_ASSERT(slot != sprop->slot &&
-                                          slot == sprop2->slot &&
-                                          sprop2->id == sprop->id);
-                                entry->vword = SPROP_TO_PCVAL(sprop2);
                             }
                             sprop = sprop2;
                         } else {

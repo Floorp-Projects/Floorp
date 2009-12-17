@@ -112,6 +112,12 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
     JS_ASSERT(newscope->freeslot == JSSLOT_FREE(STOBJ_GET_CLASS(obj)));
     clasp = STOBJ_GET_CLASS(obj);
     if (clasp->reserveSlots) {
+        /*
+         * FIXME: Here we change OBJ_SCOPE(obj)->freeslot without changing
+         * OBJ_SHAPE(obj). If we strengthen the shape guarantees to cover
+         * freeslot, we can eliminate a check in JSOP_SETPROP and in
+         * js_AddProperty. See bug 535416.
+         */
         freeslot = JSSLOT_FREE(clasp) + clasp->reserveSlots(cx, obj);
         if (freeslot > STOBJ_NSLOTS(obj))
             freeslot = STOBJ_NSLOTS(obj);

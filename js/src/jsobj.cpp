@@ -2206,13 +2206,24 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* o
 
     /* Share proto's emptyScope only if obj is similar to proto. */
     JSClass *clasp = OBJ_GET_CLASS(cx, obj);
-    JSScope *scope;
-    if (proto && OBJ_IS_NATIVE(proto) &&
-        (scope = OBJ_SCOPE(proto))->canProvideEmptyScope(ops, clasp)) {
-        scope = scope->getEmptyScope(cx, clasp);
-        if (!scope)
-            goto bad;
-    } else {
+    JSScope *scope = NULL;
+
+    if (proto && OBJ_IS_NATIVE(proto)) {
+        JS_LOCK_OBJ(cx, proto);
+        scope = OBJ_SCOPE(proto);
+        if (scope->canProvideEmptyScope(ops, clasp)) {
+            JSScope *emptyScope = scope->getEmptyScope(cx, clasp);
+            JS_UNLOCK_SCOPE(cx, scope);
+            if (!emptyScope)
+                goto bad;
+            scope = emptyScope;
+        } else {
+            JS_UNLOCK_SCOPE(cx, scope);
+            scope = NULL;
+        }
+    }
+
+    if (!scope) {
         scope = JSScope::create(cx, ops, clasp, obj, js_GenerateShape(cx, false));
         if (!scope)
             goto bad;
@@ -2225,6 +2236,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* o
             goto bad;
         }
     }
+
     obj->map = scope;
     return true;
 
@@ -3549,14 +3561,16 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     return obj;
 }
 
-/* XXXbe if one adds props, deletes earlier props, adds more, the last added
-         won't recycle the deleted props' slots. */
+/*
+ * If one adds props, deletes earlier props, adds more, the last added won't
+ * recycle the deleted props' slots. FIXME: bug NNNNNN
+ */
 JSBool
 js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
 {
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
-
     JSScope *scope = OBJ_SCOPE(obj);
+    JS_ASSERT(scope->object == obj);
+
     JSClass *clasp = obj->getClass();
     if (scope->freeslot == JSSLOT_FREE(clasp) && clasp->reserveSlots) {
         /* Adjust scope->freeslot to include computed reserved slots, if any. */
@@ -3577,9 +3591,8 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
 void
 js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
 {
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
-
     JSScope *scope = OBJ_SCOPE(obj);
+    JS_ASSERT(scope->object == obj);
     LOCKED_OBJ_SET_SLOT(obj, slot, JSVAL_VOID);
     if (scope->freeslot == slot + 1)
         scope->freeslot = slot;

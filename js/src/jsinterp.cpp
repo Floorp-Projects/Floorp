@@ -535,7 +535,6 @@ js_PurgePropertyCache(JSContext *cx, JSPropertyCache *cache)
         P(addpchits);
         P(setpchits);
         P(setpcmisses);
-        P(slotchanges);
         P(setmisses);
         P(idmisses);
         P(komisses);
