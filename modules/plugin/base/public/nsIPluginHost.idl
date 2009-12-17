@@ -64,7 +64,7 @@ interface nsIPluginStreamListener;
 [ref] native nsIStreamListenerRef(nsIStreamListener *);
 [ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
 
-[scriptable, uuid(AA13B116-2AFC-4F23-8395-913C0475D173)]
+[scriptable, uuid(33211305-4ABD-4E2E-BD73-A05A7DA0E82E)]
 interface nsIPluginHost : nsISupports
 {
   [noscript] void init();
@@ -212,11 +212,6 @@ interface nsIPluginHost : nsISupports
   void findProxyForURL(in string aURL, out string aResult);
 
   [noscript] void UserAgent(in nativeChar resultingAgentString);
-
-  /**
-   * To notify the plugin manager that the plugin created a script object 
-   */
-  [noscript] void setIsScriptableInstance(in nsIPluginInstance aInstance, in boolean aScriptable);
 
   /**
    * This method parses post buffer to find out case insensitive "Content-length" string

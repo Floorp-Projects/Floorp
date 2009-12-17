@@ -77,7 +77,7 @@ static JSBool
 XPC_SJOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval);
 
-JSBool
+static JSBool
 XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                    jsval *rval);
 
@@ -102,6 +102,9 @@ ThrowException(nsresult ex, JSContext *cx)
 
   return JS_FALSE;
 }
+
+using namespace XPCSafeJSObjectWrapper;
+using namespace XPCWrapper;
 
 // Find the subject and object principal. The argument
 // subjectPrincipal can be null if the caller doesn't care about the
@@ -171,15 +174,10 @@ CanCallerAccess(JSContext *cx, JSObject *unsafeObj)
 
 // Reserved slot indexes on safe wrappers.
 
-// Boolean value, initialized to false on object creation and true
-// only while we're resolving a property on the object.
-#define XPC_SJOW_SLOT_IS_RESOLVING           0
-
 // Slot for holding on to the principal to use if a principal other
 // than that of the unsafe object is desired for this wrapper
 // (nsIPrincipal, strong reference).
-#define XPC_SJOW_SLOT_PRINCIPAL              1
-
+static const PRUint32 sPrincipalSlot = sNumSlots;
 
 // Returns a weak reference.
 static nsIPrincipal *
@@ -187,7 +185,7 @@ FindObjectPrincipals(JSContext *cx, JSObject *safeObj, JSObject *innerObj)
 {
   // Check if we have a cached principal first.
   jsval v;
-  if (!JS_GetReservedSlot(cx, safeObj, XPC_SJOW_SLOT_PRINCIPAL, &v)) {
+  if (!JS_GetReservedSlot(cx, safeObj, sPrincipalSlot, &v)) {
     return nsnull;
   }
 
@@ -203,7 +201,7 @@ FindObjectPrincipals(JSContext *cx, JSObject *safeObj, JSObject *innerObj)
     return nsnull;
   }
 
-  if (!JS_SetReservedSlot(cx, safeObj, XPC_SJOW_SLOT_PRINCIPAL,
+  if (!JS_SetReservedSlot(cx, safeObj, sPrincipalSlot,
                           PRIVATE_TO_JSVAL(objPrincipal.get()))) {
     return nsnull;
   }
@@ -212,15 +210,34 @@ FindObjectPrincipals(JSContext *cx, JSObject *safeObj, JSObject *innerObj)
   return objPrincipal.forget().get();
 }
 
+static inline JSObject *
+FindSafeObject(JSObject *obj)
+{
+  while (STOBJ_GET_CLASS(obj) != &SJOWClass.base) {
+    obj = STOBJ_GET_PROTO(obj);
+
+    if (!obj) {
+      break;
+    }
+  }
+
+  return obj;
+}
+
+static JSBool
+XPC_SJOW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                  jsval *rval);
+
+namespace XPCSafeJSObjectWrapper {
 
 // JS class for XPCSafeJSObjectWrapper (and this doubles as the
 // constructor for XPCSafeJSObjectWrapper for the moment too...)
 
-JSExtendedClass sXPC_SJOW_JSClass = {
+JSExtendedClass SJOWClass = {
   // JSClass (JSExtendedClass.base) initialization
   { "XPCSafeJSObjectWrapper",
     JSCLASS_NEW_RESOLVE | JSCLASS_IS_EXTENDED |
-    JSCLASS_HAS_RESERVED_SLOTS(XPCWrapper::sNumSlots + 3),
+    JSCLASS_HAS_RESERVED_SLOTS(XPCWrapper::sNumSlots + 1),
     XPC_SJOW_AddProperty, XPC_SJOW_DelProperty,
     XPC_SJOW_GetProperty, XPC_SJOW_SetProperty,
     XPC_SJOW_Enumerate,   (JSResolveOp)XPC_SJOW_NewResolve,
@@ -239,10 +256,69 @@ JSExtendedClass sXPC_SJOW_JSClass = {
   JSCLASS_NO_RESERVED_MEMBERS
 };
 
-static JSBool
-XPC_SJOW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                  jsval *rval);
+JSBool
+WrapObject(JSContext *cx, JSObject *scope, jsval v, jsval *vp)
+{
+  *vp = v;
+  return XPC_SJOW_Construct(cx, scope, 1, vp, vp);
+}
 
+PRBool
+AttachNewConstructorObject(XPCCallContext &ccx, JSObject *aGlobalObject)
+{
+  // Initialize sEvalNative the first time we attach a constructor.
+  // NB: This always happens before any cross origin wrappers are
+  // created, so it's OK to do this here.
+  if (!XPCWrapper::FindEval(ccx, aGlobalObject)) {
+    return PR_FALSE;
+  }
+
+  JSObject *class_obj =
+    ::JS_InitClass(ccx, aGlobalObject, nsnull, &SJOWClass.base,
+                   XPC_SJOW_Construct, 0, nsnull, nsnull, nsnull, nsnull);
+  if (!class_obj) {
+    NS_WARNING("can't initialize the XPCSafeJSObjectWrapper class");
+    return PR_FALSE;
+  }
+
+  if (!::JS_DefineFunction(ccx, class_obj, "toString", XPC_SJOW_toString,
+                           0, 0)) {
+    return PR_FALSE;
+  }
+
+  // Null out the class object's parent to prevent code in this class
+  // from thinking the class object is a wrapper for the global
+  // object.
+  ::JS_SetParent(ccx, class_obj, nsnull);
+
+  // Make sure our prototype chain is empty and that people can't mess
+  // with XPCSafeJSObjectWrapper.prototype.
+  ::JS_SetPrototype(ccx, class_obj, nsnull);
+  if (!::JS_SealObject(ccx, class_obj, JS_FALSE)) {
+    NS_WARNING("Failed to seal XPCSafeJSObjectWrapper.prototype");
+    return PR_FALSE;
+  }
+
+  JSBool found;
+  return ::JS_SetPropertyAttributes(ccx, aGlobalObject,
+                                    SJOWClass.base.name,
+                                    JSPROP_READONLY | JSPROP_PERMANENT,
+                                    &found);
+}
+
+JSObject *
+GetUnsafeObject(JSObject *obj)
+{
+  obj = FindSafeObject(obj);
+
+  if (!obj) {
+    return nsnull;
+  }
+
+  return STOBJ_GET_PARENT(obj);
+}
+
+} // namespace XPCSafeJSObjectWrapper
 
 // Wrap a JS value in a safe wrapper of a function wrapper if
 // needed. Note that rval must point to something rooted when calling
@@ -259,7 +335,7 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
     // parent we pass in here, the construct hook will ensure we get
     // the right parent for the wrapper.
     JSObject *safeObj =
-      ::JS_ConstructObjectWithArguments(cx, &sXPC_SJOW_JSClass.base, nsnull,
+      ::JS_ConstructObjectWithArguments(cx, &SJOWClass.base, nsnull,
                                         nsnull, 1, &val);
     if (!safeObj) {
       return JS_FALSE;
@@ -315,7 +391,7 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
         // the principal of the unsafe object to prevent users of the
         // new object wrapper from evaluating code through the new
         // wrapper with the principal of the new object.
-        if (!::JS_SetReservedSlot(cx, safeObj, XPC_SJOW_SLOT_PRINCIPAL,
+        if (!::JS_SetReservedSlot(cx, safeObj, sPrincipalSlot,
                                   PRIVATE_TO_JSVAL(srcObjPrincipal.get()))) {
           return JS_FALSE;
         }
@@ -329,44 +405,6 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
   }
 
   return ok;
-}
-
-static inline JSObject *
-FindSafeObject(JSObject *obj)
-{
-  while (STOBJ_GET_CLASS(obj) != &sXPC_SJOW_JSClass.base) {
-    obj = STOBJ_GET_PROTO(obj);
-
-    if (!obj) {
-      break;
-    }
-  }
-
-  return obj;
-}
-
-PRBool
-IsXPCSafeJSObjectWrapperClass(JSClass *clazz)
-{
-  return clazz == &sXPC_SJOW_JSClass.base;
-}
-
-static inline JSObject *
-GetUnsafeObject(JSObject *obj)
-{
-  obj = FindSafeObject(obj);
-
-  if (!obj) {
-    return nsnull;
-  }
-
-  return STOBJ_GET_PARENT(obj);
-}
-
-JSObject *
-XPC_SJOW_GetUnsafeObject(JSObject *obj)
-{
-  return GetUnsafeObject(obj);
 }
 
 static jsval
@@ -400,8 +438,7 @@ XPC_SJOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   // Do nothing here if we're in the middle of resolving a property on
   // this safe wrapper.
   jsval isResolving;
-  JSBool ok = ::JS_GetReservedSlot(cx, obj, XPC_SJOW_SLOT_IS_RESOLVING,
-                                   &isResolving);
+  JSBool ok = ::JS_GetReservedSlot(cx, obj, sFlagsSlot, &isResolving);
   if (!ok || HAS_FLAGS(isResolving, FLAG_RESOLVING)) {
     return ok;
   }
@@ -619,8 +656,7 @@ XPC_SJOW_Finalize(JSContext *cx, JSObject *obj)
 {
   // Release the reference to the cached principal if we have one.
   jsval v;
-  if (::JS_GetReservedSlot(cx, obj, XPC_SJOW_SLOT_PRINCIPAL, &v) &&
-      !JSVAL_IS_VOID(v)) {
+  if (::JS_GetReservedSlot(cx, obj, sPrincipalSlot, &v) && !JSVAL_IS_VOID(v)) {
     nsIPrincipal *principal = (nsIPrincipal *)JSVAL_TO_PRIVATE(v);
 
     NS_RELEASE(principal);
@@ -738,7 +774,7 @@ XPC_SJOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   return WrapJSValue(cx, obj, *rval, rval);
 }
 
-JSBool
+static JSBool
 XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                    jsval *rval)
 {
@@ -796,7 +832,7 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   // Don't use the object the JS engine created for us, it is in most
   // cases incorectly parented and has a proto from the wrong scope.
   JSObject *wrapperObj =
-    ::JS_NewObjectWithGivenProto(cx, &sXPC_SJOW_JSClass.base, nsnull,
+    ::JS_NewObjectWithGivenProto(cx, &SJOWClass.base, nsnull,
                                  objToWrap);
 
   if (!wrapperObj) {
@@ -804,8 +840,7 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
-  if (!::JS_SetReservedSlot(cx, wrapperObj, XPC_SJOW_SLOT_IS_RESOLVING,
-                            JSVAL_ZERO)) {
+  if (!::JS_SetReservedSlot(cx, wrapperObj, sFlagsSlot, JSVAL_ZERO)) {
     return JS_FALSE;
   }
 
@@ -893,7 +928,9 @@ XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     return nsnull;
   }
 
-  JSObject *tmp = XPCWrapper::UnwrapGeneric(cx, &sXPC_XOW_JSClass, unsafeObj);
+  JSObject *tmp =
+    XPCWrapper::UnwrapGeneric(cx, &XPCCrossOriginWrapper::XOWClass,
+                              unsafeObj);
   if (tmp) {
     unsafeObj = tmp;
 
@@ -907,14 +944,13 @@ XPC_SJOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
 
   // Create our dummy SJOW.
   JSObject *wrapperIter =
-    ::JS_NewObjectWithGivenProto(cx, &sXPC_SJOW_JSClass.base, nsnull,
+    ::JS_NewObjectWithGivenProto(cx, &SJOWClass.base, nsnull,
                                  unsafeObj);
   if (!wrapperIter) {
     return nsnull;
   }
 
-  if (!::JS_SetReservedSlot(cx, wrapperIter, XPC_SJOW_SLOT_IS_RESOLVING,
-                            JSVAL_ZERO)) {
+  if (!::JS_SetReservedSlot(cx, wrapperIter, sFlagsSlot, JSVAL_ZERO)) {
     return nsnull;
   }
 
@@ -976,48 +1012,4 @@ XPC_SJOW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     *rval = STRING_TO_JSVAL(str);
   }
   return JS_TRUE;
-}
-
-PRBool
-XPC_SJOW_AttachNewConstructorObject(XPCCallContext &ccx,
-                                    JSObject *aGlobalObject)
-{
-  // Initialize sEvalNative the first time we attach a constructor.
-  // NB: This always happens before any cross origin wrappers are
-  // created, so it's OK to do this here.
-  if (!XPCWrapper::FindEval(ccx, aGlobalObject)) {
-    return PR_FALSE;
-  }
-
-  JSObject *class_obj =
-    ::JS_InitClass(ccx, aGlobalObject, nsnull, &sXPC_SJOW_JSClass.base,
-                   XPC_SJOW_Construct, 0, nsnull, nsnull, nsnull, nsnull);
-  if (!class_obj) {
-    NS_WARNING("can't initialize the XPCSafeJSObjectWrapper class");
-    return PR_FALSE;
-  }
-
-  if (!::JS_DefineFunction(ccx, class_obj, "toString", XPC_SJOW_toString,
-                           0, 0)) {
-    return PR_FALSE;
-  }
-
-  // Null out the class object's parent to prevent code in this class
-  // from thinking the class object is a wrapper for the global
-  // object.
-  ::JS_SetParent(ccx, class_obj, nsnull);
-
-  // Make sure our prototype chain is empty and that people can't mess
-  // with XPCSafeJSObjectWrapper.prototype.
-  ::JS_SetPrototype(ccx, class_obj, nsnull);
-  if (!::JS_SealObject(ccx, class_obj, JS_FALSE)) {
-    NS_WARNING("Failed to seal XPCSafeJSObjectWrapper.prototype");
-    return PR_FALSE;
-  }
-
-  JSBool found;
-  return ::JS_SetPropertyAttributes(ccx, aGlobalObject,
-                                    sXPC_SJOW_JSClass.base.name,
-                                    JSPROP_READONLY | JSPROP_PERMANENT,
-                                    &found);
 }

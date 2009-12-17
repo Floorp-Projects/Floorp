@@ -78,7 +78,6 @@ mMimeDescriptionArray(aPluginTag->mMimeDescriptionArray),
 mExtensionsArray(nsnull),
 mLibrary(nsnull),
 mCanUnloadLibrary(PR_TRUE),
-mXPConnected(PR_FALSE),
 mIsJavaPlugin(aPluginTag->mIsJavaPlugin),
 mIsNPRuntimeEnabledJavaPlugin(aPluginTag->mIsNPRuntimeEnabledJavaPlugin),
 mFileName(aPluginTag->mFileName),
@@ -113,7 +112,6 @@ mCanUnloadLibrary(!aPluginInfo->fBundle),
 #else
 mCanUnloadLibrary(PR_TRUE),
 #endif
-mXPConnected(PR_FALSE),
 mIsJavaPlugin(PR_FALSE),
 mIsNPRuntimeEnabledJavaPlugin(PR_FALSE),
 mFileName(aPluginInfo->fFileName),
@@ -203,7 +201,6 @@ mMimeTypeArray(nsnull),
 mExtensionsArray(nsnull),
 mLibrary(nsnull),
 mCanUnloadLibrary(aCanUnload),
-mXPConnected(PR_FALSE),
 mIsJavaPlugin(PR_FALSE),
 mIsNPRuntimeEnabledJavaPlugin(PR_FALSE),
 mFileName(aFileName),
@@ -543,16 +540,8 @@ void nsPluginTag::TryUnloadPlugin()
   
   // before we unload check if we are allowed to, see bug #61388
   if (mLibrary && mCanUnloadLibrary) {
-    // NPAPI plugins can be unloaded now if they don't use XPConnect
-    if (!mXPConnected) {
-      // unload the plugin asynchronously by posting a PLEvent
-      nsPluginHost::PostPluginUnloadEvent(mLibrary);
-    }
-    else {
-      // add library to the unused library list to handle it later
-      if (mPluginHost)
-        mPluginHost->AddUnusedLibrary(mLibrary);
-    }
+    // unload the plugin asynchronously by posting a PLEvent
+    nsPluginHost::PostPluginUnloadEvent(mLibrary);
   }
   
   // we should zero it anyway, it is going to be unloaded by
@@ -582,7 +571,6 @@ nsPluginInstanceTag::nsPluginInstanceTag(nsPluginTag* aPluginTag,
   mInstance = aInstance;
   if (aInstance)
     NS_ADDREF(aInstance);
-  mXPConnected = PR_FALSE;
   mDefaultPlugin = aDefaultPlugin;
   mStopped = PR_FALSE;
   mllStopTime = LL_ZERO;

@@ -456,15 +456,6 @@ function test() {
         }, false);
         newWin.addEventListener("unload", function () {
           info("testOpenCloseRestoreFromPopup: newWin unloaded");
-/*
-          var data;
-          try {
-            data = Cc["@mozilla.org/browser/sessionstore;1"]
-                     .getService(Ci.nsISessionStore)
-                     .getWindowState(newWin);
-          } catch (e) { }
-          ok(!data, "getWindowState should not have data about newWin");
-*/
         }, false);
 
         newWin2 = openDialog(location, "_blank", CHROME_FEATURES);
@@ -479,6 +470,7 @@ function test() {
             browserWindowsCount([2, 3], "browser windows while running testOpenCloseRestoreFromPopup");
 
             info([newWin.closed, newWin.__SSi, newWin.__SS_restoreID, newWin.__SS_dyingCache]);
+            info(newWin2.__SSi);
 
             // Cleanup
             newWin.close();

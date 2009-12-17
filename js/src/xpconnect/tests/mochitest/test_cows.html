@@ -35,6 +35,13 @@ sandbox.getCOW = getCOW;
 const TEST_API = ['is', 'isnot', 'ok', 'todo_is', 'todo_isnot', 'todo'];
 TEST_API.forEach(function(name) { sandbox[name] = window[name]; });
 
+sandbox.alienObject = test_utils.getCOWForObject(sandbox, {
+  __exposedProps__: {funProp: 'r'},
+  funProp: function foo(x) {
+    return x + 1;
+  }
+});
+
 function COWTests() {
     // This function is actually decompiled and run inside a
     // sandbox with content privileges.
@@ -117,7 +124,7 @@ function COWTests() {
 
     try {
         delete getCOW(readable).foo;
-        todo(false, "deleting a read-only exposed prop shouldn't work");
+        ok(false, "deleting a read-only exposed prop shouldn't work");
     } catch (e) {
         ok(/SECURITY_MANAGER/.test(e),
            "deleting a read-only exposed prop should throw error");
@@ -148,6 +155,22 @@ function COWTests() {
            "Readable function exposed props should be callable");
     } catch (e) {
         ok(false, "Readable function exposed props should be callable" + e);
+    }
+
+    try {
+        is(alienObject.funProp(1), 2,
+           "COWs wrapping objects from different principals should work");
+    } catch (e) {
+        ok(false, "COWs wrapping objs from different principals " +
+                  "shouldn't throw " + e);
+    }
+
+    try {
+        is(alienObject.funProp(1), 2,
+           "COWs wrapping objs from different principals should work twice");
+    } catch (e) {
+        ok(false, "COWs wrapping objs from different principals " +
+                  "shouldn't throw on second access but not first: " + e);
     }
 }
 

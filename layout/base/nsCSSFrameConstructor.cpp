@@ -11049,6 +11049,8 @@ IsSafeToAppendToSpecialInline(nsIFrame* aParentFrame, nsIFrame* aNextSibling)
     aNextSibling = aParentFrame->GetNextSibling();
     aParentFrame = aParentFrame->GetParent();
   } while (IsInlineFrame(aParentFrame));
+
+  return PR_TRUE;
 }
 
 PRBool
