@@ -63,6 +63,7 @@
 #include "nscore.h"
 #include "prtypes.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsITimer.h"
 
 // XXX Duped from profile/src/nsProfile.cpp.
 #include <stdlib.h>
@@ -448,6 +449,22 @@ STDMETHODIMP_(ULONG) nsDataObj::Release()
 	if (0 != m_cRef)
 		return m_cRef;
 
+  // We have released our last ref on this object and need to delete the
+  // temp file. External app acting as drop target may still need to open the
+  // temp file. Addref a timer so it can delay deleting file and destroying
+  // this object. Delete file anyway and destroy this obj if there's a problem.
+  if (mCachedTempFile) {
+    nsresult rv;
+    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      mTimer->InitWithFuncCallback(nsDataObj::RemoveTempFile, this,
+                                   500, nsITimer::TYPE_ONE_SHOT);
+      return AddRef();
+    }
+    mCachedTempFile->Remove(PR_FALSE);
+    mCachedTempFile = NULL;
+  }
+
 	delete this;
 
 	return 0;
@@ -622,15 +639,6 @@ IUnknown* nsDataObj::GetCanonicalIUnknown(IUnknown *punk)
 STDMETHODIMP nsDataObj::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease)
 {
   PRNTDEBUG("nsDataObj::SetData\n");
-  static CLIPFORMAT PerformedDropEffect = ::RegisterClipboardFormat( CFSTR_PERFORMEDDROPEFFECT );  
-
-  if (pFE && pFE->cfFormat == PerformedDropEffect) {
-    // The drop operation has completed.  Delete the temp file if it exists.
-    if (mCachedTempFile) {
-      mCachedTempFile->Remove(PR_FALSE);
-      mCachedTempFile = NULL;
-    }
-  }
   // Store arbitrary system formats
   LPDATAENTRY pde;
   HRESULT hres = FindFORMATETC(pFE, &pde, TRUE); // add
@@ -1355,8 +1363,6 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
 //-----------------------------------------------------
 HRESULT nsDataObj::GetFile(FORMATETC& aFE, STGMEDIUM& aSTG)
 {
-  HRESULT res = S_OK;
-
   // We do  not support 'application/x-moz-file-promise' since CF_HDROP does not
   // allow for delayed rendering of content. We'll need to write the content out emmediately
   // and return the path to it. Confirm we have support for 'application/x-moz-nativeimage',
@@ -1449,101 +1455,99 @@ HRESULT nsDataObj::DropFile(FORMATETC& aFE, STGMEDIUM& aSTG)
 HRESULT nsDataObj::DropImage(FORMATETC& aFE, STGMEDIUM& aSTG)
 {
   nsresult rv;
-  PRUint32 len = 0;
-  nsCOMPtr<nsISupports> genericDataWrapper;
+  if (!mCachedTempFile) {
+    PRUint32 len = 0;
+    nsCOMPtr<nsISupports> genericDataWrapper;
 
-  mTransferable->GetTransferData(kNativeImageMime, getter_AddRefs(genericDataWrapper), &len);
-  nsCOMPtr<imgIContainer> image ( do_QueryInterface(genericDataWrapper) );
-  
-  if (!image) {
-    // Check if the image was put in an nsISupportsInterfacePointer wrapper.
-    // This might not be necessary any more, but could be useful for backwards
-    // compatibility.
-    nsCOMPtr<nsISupportsInterfacePointer> ptr(do_QueryInterface(genericDataWrapper));
-    if (ptr)
-      ptr->GetData(getter_AddRefs(image));
-  }
+    mTransferable->GetTransferData(kNativeImageMime, getter_AddRefs(genericDataWrapper), &len);
+    nsCOMPtr<imgIContainer> image(do_QueryInterface(genericDataWrapper));
 
-  if (!image) 
-    return E_FAIL;
+    if (!image) {
+      // Check if the image was put in an nsISupportsInterfacePointer wrapper.
+      // This might not be necessary any more, but could be useful for backwards
+      // compatibility.
+      nsCOMPtr<nsISupportsInterfacePointer> ptr(do_QueryInterface(genericDataWrapper));
+      if (ptr)
+        ptr->GetData(getter_AddRefs(image));
+    }
 
-  // Use the clipboard helper class to build up a memory bitmap.
-  nsImageToClipboard converter(image);
-  HANDLE bits = nsnull;
-  rv = converter.GetPicture(&bits); // Clipboard routines return a global handle we own.
-  
-  if (NS_FAILED(rv) || !bits)
-    return E_FAIL;
+    if (!image) 
+      return E_FAIL;
 
-  // We now own these bits!
-  PRUint32 bitmapSize = GlobalSize(bits);
-  if (!bitmapSize) {
+    // Use the clipboard helper class to build up a memory bitmap.
+    nsImageToClipboard converter(image);
+    HANDLE bits = nsnull;
+    rv = converter.GetPicture(&bits); // Clipboard routines return a global handle we own.
+
+    if (NS_FAILED(rv) || !bits)
+      return E_FAIL;
+
+    // We now own these bits!
+    PRUint32 bitmapSize = GlobalSize(bits);
+    if (!bitmapSize) {
+      GlobalFree(bits);
+      return E_FAIL;
+    }
+
+    // Save the bitmap to a temporary location.      
+    nsCOMPtr<nsIFile> dropFile;
+    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dropFile));
+    if (!dropFile) {
+      GlobalFree(bits);
+      return E_FAIL;
+    }
+
+    // Filename must be random so as not to confuse apps like
+    // Photoshop which handle multiple drags into a single window.
+    char buf[13];
+    nsCString filename;
+    MakeRandomString(buf, 8);
+    memcpy(buf+8, ".bmp", 5);
+    filename.Append(nsDependentCString(buf, 12));
+    dropFile->AppendNative(filename);
+    rv = dropFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0660);
+    if (NS_FAILED(rv)) { 
+      GlobalFree(bits);
+      return E_FAIL;
+    }
+
+    // Cache the temp file so we can delete it later and so
+    // it doesn't get recreated over and over on multiple calls
+    // which does occur from windows shell.
+    dropFile->Clone(getter_AddRefs(mCachedTempFile));
+
+    // Write the data to disk.
+    nsCOMPtr<nsIOutputStream> outStream;
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStream), dropFile);
+    if (NS_FAILED(rv)) { 
+      GlobalFree(bits);
+      return E_FAIL;
+    }
+
+    char * bm = (char *)GlobalLock(bits);
+
+    BITMAPFILEHEADER	fileHdr;
+    BITMAPINFOHEADER *bmpHdr = (BITMAPINFOHEADER*)bm;
+
+    fileHdr.bfType        = ((WORD) ('M' << 8) | 'B');
+    fileHdr.bfSize        = GlobalSize (bits) + sizeof(fileHdr);
+    fileHdr.bfReserved1   = 0;
+    fileHdr.bfReserved2   = 0;
+    fileHdr.bfOffBits     = (DWORD) (sizeof(fileHdr) + bmpHdr->biSize);
+
+    PRUint32 writeCount = 0;
+    if (NS_FAILED(outStream->Write((const char *)&fileHdr, sizeof(fileHdr), &writeCount)) ||
+        NS_FAILED(outStream->Write((const char *)bm, bitmapSize, &writeCount)))
+      rv = NS_ERROR_FAILURE;
+
+    outStream->Close();
+
+    GlobalUnlock(bits);
     GlobalFree(bits);
-    return E_FAIL;
+
+    if (NS_FAILED(rv))
+      return E_FAIL;
   }
-
-  if (mCachedTempFile) {
-    mCachedTempFile->Remove(PR_FALSE);
-    mCachedTempFile = NULL;
-  }
-
-  // Save the bitmap to a temporary location.      
-  nsCOMPtr<nsIFile> dropFile;
-  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dropFile));
-  if (!dropFile)
-    return E_FAIL;
-
-  // Filename must be random so as not to confuse apps like Photshop which handle
-  // multiple drags into a single window.
-  char buf[13];
-  nsCString filename;
-  MakeRandomString(buf, 8);
-  memcpy(buf+8, ".bmp", 5);
-  filename.Append(nsDependentCString(buf, 12));
-  dropFile->AppendNative(filename);
-  rv = dropFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0660);
-  if (NS_FAILED(rv)) { 
-    GlobalFree(bits);
-    return E_FAIL;
-  }
-
-  // Cache the temp file so we can delete it later.
-  dropFile->Clone(getter_AddRefs(mCachedTempFile));
-
-  // Write the data to disk.
-  nsCOMPtr<nsIOutputStream> outStream;
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStream), dropFile);
-  if (NS_FAILED(rv)) { 
-    GlobalFree(bits);
-    return E_FAIL;
-  }
-  
-  char * bm = (char *)GlobalLock(bits);
-
-  BITMAPFILEHEADER	fileHdr;
-  BITMAPINFOHEADER *bmpHdr = (BITMAPINFOHEADER*)bm;
-
-	fileHdr.bfType		    = ((WORD) ('M' << 8) | 'B');
-	fileHdr.bfSize		    = GlobalSize (bits) + sizeof(fileHdr);
-	fileHdr.bfReserved1 	= 0;
-	fileHdr.bfReserved2 	= 0;
-	fileHdr.bfOffBits		  = (DWORD) (sizeof(fileHdr) + bmpHdr->biSize);
-
-  PRUint32 writeCount = 0;
-  if (NS_FAILED(outStream->Write((const char *)&fileHdr, sizeof(fileHdr), &writeCount)) ||
-      NS_FAILED(outStream->Write((const char *)bm, bitmapSize, &writeCount)))
-     rv = NS_ERROR_FAILURE;
-  
-  outStream->Close();
-
-  GlobalUnlock(bits);
-
-  if (NS_FAILED(rv)) { 
-    GlobalFree(bits);
-    return E_FAIL;
-  }
-
-  GlobalFree(bits);
   
   // Pass the file name back to the drop target so that it can access the file.
   nsAutoString path;
@@ -2072,4 +2076,14 @@ HRESULT nsDataObj::GetFileContents_IStream(FORMATETC& aFE, STGMEDIUM& aSTG)
   aSTG.pUnkForRelease = NULL;
 
   return S_OK;
+}
+
+void nsDataObj::RemoveTempFile(nsITimer* aTimer, void* aClosure)
+{
+  nsDataObj *timedDataObj = static_cast<nsDataObj *>(aClosure);
+  if (timedDataObj->mCachedTempFile) {
+    timedDataObj->mCachedTempFile->Remove(PR_FALSE);
+    timedDataObj->mCachedTempFile = NULL;
+  }
+  timedDataObj->Release();
 }
