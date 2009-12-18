@@ -472,12 +472,14 @@ MouseModule.prototype = {
    */
   _onMouseDown: function _onMouseDown(evInfo) {
     this._owner.allowClicks();
-    if (this._dragData.dragging) {
+
+    let dragData = this._dragData;
+    if (dragData.dragging) {
       // Somehow a mouse up was missed.
       let [sX, sY] = dragData.panPosition();
       this._doDragStop(sX, sY, !dragData.isPan());
     }
-    this._dragData.reset();
+    dragData.reset();
 
     // walk up the DOM tree in search of nearest scrollable ancestor.  nulls are
     // returned if none found.
@@ -513,7 +515,7 @@ MouseModule.prototype = {
       let cX = {}, cY = {};
       targetScrollInterface.getScrolledSize(cX, cY);
       let rect = targetScrollbox.getBoundingClientRect();
-      this._dragData.locked = ((cX.value > rect.width) != (cY.value > rect.height));
+      dragData.locked = ((cX.value > rect.width) != (cY.value > rect.height));
     }
   },
 
