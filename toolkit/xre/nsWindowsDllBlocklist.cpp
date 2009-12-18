@@ -207,8 +207,6 @@ continue_loading:
   printf_stderr("LdrLoadDll: continuing load... ('%S')\n", moduleFileName->Buffer);
 #endif
 
-  NS_SetHasLoadedNewDLLs();
-
   return stub_LdrLoadDll(filePath, flags, moduleFileName, handle);
 }
 
