@@ -128,6 +128,7 @@ function run_test() {
   var removeAllTestURI = uri("http://removeallpages.com");
   var removeAllTestURINever = uri("http://removeallpagesnever.com");
   histsvc.addVisit(removeAllTestURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.addVisit(removeAllTestURINever, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
   var bmURI = uri("http://bookmarked");
   var bookmark2 = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, bmURI, bmsvc.DEFAULT_INDEX, "foo");
   var placeURI = uri("place:folder=23");
@@ -229,8 +230,8 @@ function run_test() {
 
   // set dateAdded to 8 days ago
   var expirationDate = (Date.now() - (8 * 86400 * 1000)) * 1000;
-  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
-  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
 
   // these annotations should remain
   annosvc.setPageAnnotation(testURI, testAnnoName + "NotExpired", testAnnoVal, 0, annosvc.EXPIRE_DAYS);
@@ -270,8 +271,8 @@ function run_test() {
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_DAYS);
   // these annotations should remain as they are only 6 days old
   var expirationDate = (Date.now() - (6 * 86400 * 1000)) * 1000;
-  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
-  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
 
   // add a uri and then remove it, to trigger expiration
   histsvc.addVisit(triggerURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
@@ -298,8 +299,8 @@ function run_test() {
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
   // these annotations should not remain as they are 31 days old
   var expirationDate = (Date.now() - (31 * 86400 * 1000)) * 1000;
-  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
-  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
   // these annotations should remain
   annosvc.setPageAnnotation(testURI, testAnnoName + "NotExpired", testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
   annosvc.setItemAnnotation(bookmark, testAnnoName + "NotExpired", testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
@@ -337,8 +338,8 @@ function run_test() {
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
   // these annotations should remain as they are only 29 days old
   var expirationDate = (Date.now() - (29 * 86400 * 1000)) * 1000;
-  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
-  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
 
   // add a uri and then remove it, to trigger expiration
   histsvc.addVisit(triggerURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
@@ -362,8 +363,8 @@ function run_test() {
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
   var expirationDate = (Date.now() - (181 * 86400 * 1000)) * 1000;
-  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
-  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
   // these annotations should remain
   annosvc.setPageAnnotation(testURI, testAnnoName + "NotExpired", testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
   annosvc.setItemAnnotation(bookmark, testAnnoName + "NotExpired", testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
@@ -401,8 +402,8 @@ function run_test() {
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
   // these annotations should remain as they are only 179 days old
   var expirationDate = (Date.now() - (179 * 86400 * 1000)) * 1000;
-  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
-  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
 
   // add a uri and then remove it, to trigger expiration
   histsvc.addVisit(triggerURI, Date.now() * 1000, null, histsvc.TRANSITION_TYPED, false, 0);
@@ -431,8 +432,8 @@ function run_test() {
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_DAYS);
   // make it 8 days old
   var expirationDate = (Date.now() - (8 * 86400 * 1000)) * 1000;
-  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
-  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate + ", lastModified = " + expirationDate);
   // modify its value
   annosvc.setPageAnnotation(testURI, testAnnoName, "mod", 0, annosvc.EXPIRE_DAYS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, "mod", 0, annosvc.EXPIRE_DAYS);
