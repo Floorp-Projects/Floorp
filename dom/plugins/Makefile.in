@@ -116,3 +116,5 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DFORCE_PR_LOG

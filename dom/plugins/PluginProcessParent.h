@@ -50,9 +50,6 @@
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
-#undef _MOZ_LOG
-#define _MOZ_LOG(s) printf("[PluginProcessParent] %s\n", s)
-
 namespace mozilla {
 namespace plugins {
 //-----------------------------------------------------------------------------
