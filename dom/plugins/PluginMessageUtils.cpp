@@ -71,6 +71,8 @@ DeferNPObjectReleaseRunnable::Run()
 namespace mozilla {
 namespace plugins {
 
+PRLogModuleInfo* gPluginLog = PR_NewLogModule("IPCPlugins");
+
 void
 DeferNPObjectLastRelease(const NPNetscapeFuncs* f, NPObject* o)
 {
