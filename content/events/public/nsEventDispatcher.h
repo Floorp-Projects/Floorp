@@ -136,8 +136,8 @@ public:
   : nsEventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus),
     mCanHandle(PR_TRUE), mForceContentDispatch(PR_FALSE),
     mRelatedTargetIsInAnon(PR_FALSE), mOriginalTargetIsInAnon(aIsInAnon),
-    mWantsWillHandleEvent(PR_FALSE), mParentTarget(nsnull),
-    mEventTargetAtParent(nsnull) {}
+    mWantsWillHandleEvent(PR_FALSE), mMayHaveListenerManager(PR_TRUE),
+    mParentTarget(nsnull), mEventTargetAtParent(nsnull) {}
 
   void Reset() {
     mItemFlags = 0;
@@ -145,6 +145,7 @@ public:
     mCanHandle = PR_TRUE;
     mForceContentDispatch = PR_FALSE;
     mWantsWillHandleEvent = PR_FALSE;
+    mMayHaveListenerManager = PR_TRUE;
     mParentTarget = nsnull;
     mEventTargetAtParent = nsnull;
   }
@@ -181,6 +182,12 @@ public:
    * called. Default is PR_FALSE;
    */
   PRPackedBool          mWantsWillHandleEvent;
+
+  /**
+   * If it is known that the current target doesn't have a listener manager
+   * when PreHandleEvent is called, set this to PR_FALSE.
+   */
+  PRPackedBool          mMayHaveListenerManager;
 
   /**
    * Parent item in the event target chain.
