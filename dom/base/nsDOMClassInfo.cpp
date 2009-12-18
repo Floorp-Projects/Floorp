@@ -7415,12 +7415,15 @@ nsEventReceiverSH::AddEventListenerHelper(JSContext *cx, JSObject *obj,
     return JS_FALSE;
   }
 
-  OBJ_TO_INNER_OBJECT(cx, obj);
-
   nsresult rv = sXPConnect->GetJSObjectOfWrapper(cx, obj, &obj);
   if (NS_FAILED(rv)) {
     nsDOMClassInfo::ThrowJSException(cx, rv);
 
+    return JS_FALSE;
+  }
+
+  OBJ_TO_INNER_OBJECT(cx, obj);
+  if (!obj) {
     return JS_FALSE;
   }
 
