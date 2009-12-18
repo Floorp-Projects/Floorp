@@ -51,6 +51,7 @@
 
 #define NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH  (1 << 0)
 #define NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT (1 << 1)
+#define NS_TARGET_CHAIN_MAY_HAVE_MANAGER        (1 << 2)
 
 // nsEventTargetChainItem represents a single item in the event target chain.
 class nsEventTargetChainItem
@@ -118,7 +119,6 @@ public:
     return !!(mFlags & NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH);
   }
 
-
   void SetWantsWillHandleEvent(PRBool aWants)
   {
     if (aWants) {
@@ -133,6 +133,20 @@ public:
     return !!(mFlags & NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT);
   }
 
+  void SetMayHaveListenerManager(PRBool aMayHave)
+  {
+    if (aMayHave) {
+      mFlags |= NS_TARGET_CHAIN_MAY_HAVE_MANAGER;
+    } else {
+      mFlags &= ~NS_TARGET_CHAIN_MAY_HAVE_MANAGER;
+    }
+  }
+
+  PRBool MayHaveListenerManager()
+  {
+    return !!(mFlags & NS_TARGET_CHAIN_MAY_HAVE_MANAGER);
+  }
+  
   nsPIDOMEventTarget* CurrentTarget()
   {
     return mTarget;
@@ -158,12 +172,37 @@ public:
 
   /**
    * If the current item in the event target chain has an event listener
-   * manager, this method sets the .currentTarget to the CurrentTarget()
-   * and calls nsIEventListenerManager::HandleEvent().
+   * manager, this method calls nsIEventListenerManager::HandleEvent().
    */
   nsresult HandleEvent(nsEventChainPostVisitor& aVisitor, PRUint32 aFlags,
                        PRBool aMayHaveNewListenerManagers,
-                       nsCxPusher* aPusher);
+                       nsCxPusher* aPusher)
+  {
+    if (WantsWillHandleEvent()) {
+      mTarget->WillHandleEvent(aVisitor);
+    }
+    if (aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) {
+      return NS_OK;
+    }
+    if (!mManager) {
+      if (!MayHaveListenerManager() && !aMayHaveNewListenerManagers) {
+        return NS_OK;
+      }
+      mManager = mTarget->GetListenerManager(PR_FALSE);
+    }
+    if (mManager) {
+      NS_ASSERTION(aVisitor.mEvent->currentTarget == nsnull,
+                   "CurrentTarget should be null!");
+      mManager->HandleEvent(aVisitor.mPresContext, aVisitor.mEvent,
+                            &aVisitor.mDOMEvent,
+                            CurrentTarget(), aFlags,
+                            &aVisitor.mEventStatus,
+                            aPusher);
+      NS_ASSERTION(aVisitor.mEvent->currentTarget == nsnull,
+                   "CurrentTarget should be null!");
+    }
+    return NS_OK;
+  }
 
   /**
    * Copies mItemFlags and mItemData to aVisitor and calls PostHandleEvent.
@@ -217,41 +256,10 @@ nsEventTargetChainItem::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   nsresult rv = mTarget->PreHandleEvent(aVisitor);
   SetForceContentDispatch(aVisitor.mForceContentDispatch);
   SetWantsWillHandleEvent(aVisitor.mWantsWillHandleEvent);
+  SetMayHaveListenerManager(aVisitor.mMayHaveListenerManager);
   mItemFlags = aVisitor.mItemFlags;
   mItemData = aVisitor.mItemData;
   return rv;
-}
-
-nsresult
-nsEventTargetChainItem::HandleEvent(nsEventChainPostVisitor& aVisitor,
-                                    PRUint32 aFlags,
-                                    PRBool aMayHaveNewListenerManagers,
-                                    nsCxPusher* aPusher)
-{
-  if (WantsWillHandleEvent()) {
-    mTarget->WillHandleEvent(aVisitor);
-  }
-  if (aVisitor.mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) {
-    return NS_OK;
-  }
-  if (!mManager) {
-    if (!aMayHaveNewListenerManagers) {
-      return NS_OK;
-    }
-    mManager = mTarget->GetListenerManager(PR_FALSE);
-  }
-  if (mManager) {
-    NS_ASSERTION(aVisitor.mEvent->currentTarget == nsnull,
-                 "CurrentTarget should be null!");
-    mManager->HandleEvent(aVisitor.mPresContext, aVisitor.mEvent,
-                          &aVisitor.mDOMEvent,
-                          CurrentTarget(), aFlags,
-                          &aVisitor.mEventStatus,
-                          aPusher);
-    NS_ASSERTION(aVisitor.mEvent->currentTarget == nsnull,
-                 "CurrentTarget should be null!");
-  }
-  return NS_OK;
 }
 
 nsresult
@@ -580,7 +588,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
                                              NS_EVENT_FLAG_BUBBLE |
                                              NS_EVENT_FLAG_CAPTURE,
                                              aCallback,
-                                             PR_TRUE,
+                                             PR_FALSE,
                                              &pusher);
   
         preVisitor.mEventStatus = postVisitor.mEventStatus;
