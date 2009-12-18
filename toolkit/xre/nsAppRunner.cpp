@@ -2631,20 +2631,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   nsSplashScreen *splashScreen = nsnull;
 #endif
 
-#ifdef XP_WIN
-  /* On Windows XPSP3 and Windows Vista if DEP is configured off-by-default
-     we still want DEP protection: enable it explicitly and programmatically.
-     
-     This function is not available on WinXPSP2 so we dynamically load it.
-  */
-
-  HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
-  SetProcessDEPPolicyFunc _SetProcessDEPPolicy =
-    (SetProcessDEPPolicyFunc) GetProcAddress(kernel32, "SetProcessDEPPolicy");
-  if (_SetProcessDEPPolicy)
-    _SetProcessDEPPolicy(PROCESS_DEP_ENABLE);
-#endif
-
   nsresult rv;
   ArgResult ar;
   NS_TIMELINE_MARK("enter main");
@@ -2654,33 +2640,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     NS_BREAK();
 #endif
 
-#if defined (XP_WIN32) && !defined (WINCE)
-  // Suppress the "DLL Foo could not be found" dialog, such that if dependent
-  // libraries (such as GDI+) are not preset, we gracefully fail to load those
-  // XPCOM components, instead of being ungraceful.
-  UINT realMode = SetErrorMode(0);
-  realMode |= SEM_FAILCRITICALERRORS;
-  // If XRE_NO_WINDOWS_CRASH_DIALOG is set, suppress displaying the "This
-  // application has crashed" dialog box.  This is mainly useful for
-  // automated testing environments, e.g. tinderbox, where there's no need
-  // for a dozen of the dialog boxes to litter the console
-  if (getenv("XRE_NO_WINDOWS_CRASH_DIALOG"))
-    realMode |= SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX;
-
-  SetErrorMode(realMode);
-
-#ifdef DEBUG
-  // Disable small heap allocator to get heapwalk() giving us
-  // accurate heap numbers. Win2k non-debug does not use small heap allocator.
-  // Win2k debug seems to be still using it.
-  // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vclib/html/_crt__set_sbh_threshold.asp
-  _set_sbh_threshold(0);
-#endif
-#endif
-
-#if defined(XP_UNIX) || defined(XP_BEOS)
-  InstallUnixSignalHandlers(argv[0]);
-#endif
+  SetupErrorHandling();
 
 #ifdef MOZ_ACCESSIBILITY_ATK
   // Reset GTK_MODULES, strip atk-bridge if exists
@@ -2697,18 +2657,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   // Suppress atk-bridge init at startup, it works after GNOME 2.24.2
   PR_SetEnv("NO_AT_BRIDGE=1");
-#endif
-
-#ifndef WINCE
-  // Unbuffer stdout, needed for tinderbox tests.
-  setbuf(stdout, 0);
-#endif
-
-#if defined(FREEBSD)
-  // Disable all SIGFPE's on FreeBSD, as it has non-IEEE-conformant fp
-  // trap behavior that trips up on floating-point tests performed by
-  // the JS engine.  See bugzilla bug 9967 details.
-  fpsetmask(0);
 #endif
 
   gArgc = argc;
@@ -3713,3 +3661,60 @@ XRE_GetProcessType()
 #endif
 }
 
+void
+SetupErrorHandling()
+{
+#ifdef XP_WIN
+  /* On Windows XPSP3 and Windows Vista if DEP is configured off-by-default
+     we still want DEP protection: enable it explicitly and programmatically.
+     
+     This function is not available on WinXPSP2 so we dynamically load it.
+  */
+
+  HMODULE kernel32 = GetModuleHandleW(L"kernel32.dll");
+  SetProcessDEPPolicyFunc _SetProcessDEPPolicy =
+    (SetProcessDEPPolicyFunc) GetProcAddress(kernel32, "SetProcessDEPPolicy");
+  if (_SetProcessDEPPolicy)
+    _SetProcessDEPPolicy(PROCESS_DEP_ENABLE);
+#endif
+
+#if defined (XP_WIN32) && !defined (WINCE)
+  // Suppress the "DLL Foo could not be found" dialog, such that if dependent
+  // libraries (such as GDI+) are not preset, we gracefully fail to load those
+  // XPCOM components, instead of being ungraceful.
+  UINT realMode = SetErrorMode(0);
+  realMode |= SEM_FAILCRITICALERRORS;
+  // If XRE_NO_WINDOWS_CRASH_DIALOG is set, suppress displaying the "This
+  // application has crashed" dialog box.  This is mainly useful for
+  // automated testing environments, e.g. tinderbox, where there's no need
+  // for a dozen of the dialog boxes to litter the console
+  if (getenv("XRE_NO_WINDOWS_CRASH_DIALOG"))
+    realMode |= SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX;
+
+  SetErrorMode(realMode);
+
+#ifdef DEBUG
+  // Disable small heap allocator to get heapwalk() giving us
+  // accurate heap numbers. Win2k non-debug does not use small heap allocator.
+  // Win2k debug seems to be still using it.
+  // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vclib/html/_crt__set_sbh_threshold.asp
+  _set_sbh_threshold(0);
+#endif
+#endif
+
+#if defined(XP_UNIX) || defined(XP_BEOS)
+  InstallUnixSignalHandlers(argv[0]);
+#endif
+
+#ifndef WINCE
+  // Unbuffer stdout, needed for tinderbox tests.
+  setbuf(stdout, 0);
+#endif
+
+#if defined(FREEBSD)
+  // Disable all SIGFPE's on FreeBSD, as it has non-IEEE-conformant fp
+  // trap behavior that trips up on floating-point tests performed by
+  // the JS engine.  See bugzilla bug 9967 details.
+  fpsetmask(0);
+#endif
+}
