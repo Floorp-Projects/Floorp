@@ -251,6 +251,8 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
 
+  SetupErrorHandling();
+
   sChildProcessType = aProcess;
   
 #if defined(MOZ_WIDGET_GTK2)

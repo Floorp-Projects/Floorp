@@ -190,4 +190,10 @@ extern GeckoProcessType sChildProcessType;
 }
 #endif
 
+/**
+ * Set up platform specific error handling such as suppressing DLL load dialog
+ * and the JIT debugger on Windows, and install unix signal handlers.
+ */
+void SetupErrorHandling();
+
 #endif // nsAppRunner_h__
