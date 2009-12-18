@@ -263,15 +263,6 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(PRUint32 aLevel)
     }
   }
 
-  // disallow user script
-  nsCOMPtr<nsIScriptSecurityManager> secMan =
-           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-  if (!secMan)
-    return NS_ERROR_FAILURE;
-  PRBool inChrome;
-  if (NS_FAILED(secMan->SubjectPrincipalIsSystem(&inChrome)) || !inChrome)
-    return NS_ERROR_FAILURE;
-
   // do it
   mediator->SetZLevel(this, aLevel);
   PersistentAttributesDirty(PAD_MISC);
