@@ -119,6 +119,7 @@ BEGIN_TEST(testXDR_bug525481)
     JSXDRState *r = JS_XDRNewMem(cx, JSXDR_DECODE);
     JS_XDRMemSetData(r, frozen, nbytes);
     CHECK(JS_XDRScript(r, &script));
+    JS_DestroyScript(cx, script);
     JS_XDRDestroy(r);  // this frees `frozen`
     return true;
 }

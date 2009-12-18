@@ -128,61 +128,64 @@ struct JSString {
     static const size_t ATOMIZED =      JSSTRING_BIT(3);
     static const size_t DEFLATED =      JSSTRING_BIT(4);
 
-    bool hasFlag(size_t flag) const {
+    inline bool hasFlag(size_t flag) const {
         return (mFlags & flag) != 0;
     }
 
   public:
-    /* Generous but sane length bound. */
-    static const size_t MAX_LENGTH = (1 << 28);
+    /*
+     * Generous but sane length bound; the "-1" is there for comptibility with
+     * OOM tests.
+     */
+    static const size_t MAX_LENGTH = (1 << 28) - 1;
 
-    bool isDependent() const {
+    inline bool isDependent() const {
         return hasFlag(DEPENDENT);
     }
 
-    bool isFlat() const {
+    inline bool isFlat() const {
         return !isDependent();
     }
 
-    bool isDeflated() const {
+    inline bool isDeflated() const {
         return hasFlag(DEFLATED);
     }
 
-    void setDeflated() {
+    inline void setDeflated() {
         JS_ATOMIC_SET_MASK(&mFlags, DEFLATED);
     }
 
-    bool isMutable() const {
+    inline bool isMutable() const {
         return !isDependent() && hasFlag(MUTABLE);
     }
 
-    bool isAtomized() const {
+    inline bool isAtomized() const {
         return !isDependent() && hasFlag(ATOMIZED);
     }
 
-    JS_ALWAYS_INLINE jschar *chars() {
+    inline jschar *chars() {
         return isDependent() ? dependentChars() : flatChars();
     }
 
-    JS_ALWAYS_INLINE size_t length() const {
+    inline size_t length() const {
         return mLength;
     }
 
-    JS_ALWAYS_INLINE bool empty() const {
+    inline bool empty() const {
         return length() == 0;
     }
 
-    JS_ALWAYS_INLINE void getCharsAndLength(const jschar *&chars, size_t &length) {
+    inline void getCharsAndLength(const jschar *&chars, size_t &length) {
         chars = this->chars();
         length = this->length();
     }
 
-    JS_ALWAYS_INLINE void getCharsAndEnd(const jschar *&chars, const jschar *&end) {
+    inline void getCharsAndEnd(const jschar *&chars, const jschar *&end) {
         end = length() + (chars = this->chars());
     }
 
     /* Specific flat string initializer and accessor methods. */
-    void initFlat(jschar *chars, size_t length) {
+    inline void initFlat(jschar *chars, size_t length) {
         JS_ASSERT(length <= MAX_LENGTH);
         mLength = length;
         mOffset = 0;
@@ -190,12 +193,12 @@ struct JSString {
         mChars = chars;
     }
 
-    jschar *flatChars() const {
+    inline jschar *flatChars() const {
         JS_ASSERT(isFlat());
         return mChars;
     }
 
-    JS_ALWAYS_INLINE size_t flatLength() const {
+    inline size_t flatLength() const {
         JS_ASSERT(isFlat());
         return length();
     }
@@ -239,23 +242,23 @@ struct JSString {
      * js_AtomizeString.  This function would find that the string was already
      * hashed and return it with the atomized bit set.
      */
-    void flatSetAtomized() {
+    inline void flatSetAtomized() {
         JS_ASSERT(isFlat() && !isMutable());
         JS_ATOMIC_SET_MASK(&mFlags, ATOMIZED);
     }
 
-    void flatSetMutable() {
+    inline void flatSetMutable() {
         JS_ASSERT(isFlat() && !isAtomized());
         mFlags |= MUTABLE;
     }
 
-    void flatClearMutable() {
+    inline void flatClearMutable() {
         JS_ASSERT(isFlat());
         if (hasFlag(MUTABLE))
             mFlags &= ~MUTABLE;
     }
 
-    void initDependent(JSString *bstr, size_t off, size_t len) {
+    inline void initDependent(JSString *bstr, size_t off, size_t len) {
         JS_ASSERT(len <= MAX_LENGTH);
         mLength = len;
         mOffset = off;
@@ -264,7 +267,7 @@ struct JSString {
     }
 
     /* See JSString::reinitFlat. */
-    void reinitDependent(JSString *bstr, size_t off, size_t len) {
+    inline void reinitDependent(JSString *bstr, size_t off, size_t len) {
         JS_ASSERT(len <= MAX_LENGTH);
         mLength = len;
         mOffset = off;
@@ -272,22 +275,22 @@ struct JSString {
         mBase = bstr;
     }
 
-    JSString *dependentBase() const {
+    inline JSString *dependentBase() const {
         JS_ASSERT(isDependent());
         return mBase;
     }
 
-    JS_ALWAYS_INLINE jschar *dependentChars() {
+    inline jschar *dependentChars() {
         return dependentBase()->isDependent()
                ? js_GetDependentStringChars(this)
                : dependentBase()->flatChars() + dependentStart();
     }
 
-    JS_ALWAYS_INLINE size_t dependentStart() const {
+    inline size_t dependentStart() const {
         return mOffset;
     }
 
-    JS_ALWAYS_INLINE size_t dependentLength() const {
+    inline size_t dependentLength() const {
         JS_ASSERT(isDependent());
         return length();
     }
