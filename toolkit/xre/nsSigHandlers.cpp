@@ -229,10 +229,12 @@ void InstallUnixSignalHandlers(const char *ProgramName)
   signal(SIGFPE,  abnormal_exit_handler);
 
 #elif defined(CRAWL_STACK_ON_SIGSEGV)
-  signal(SIGSEGV, ah_crap_handler);
-  signal(SIGILL, ah_crap_handler);
-  signal(SIGABRT, ah_crap_handler);
-  signal(SIGFPE, ah_crap_handler);
+  if (!getenv("XRE_NO_WINDOWS_CRASH_DIALOG")) {
+    signal(SIGSEGV, ah_crap_handler);
+    signal(SIGILL, ah_crap_handler);
+    signal(SIGABRT, ah_crap_handler);
+    signal(SIGFPE, ah_crap_handler);
+  }
 #endif // CRAWL_STACK_ON_SIGSEGV
 
 #if defined(DEBUG) && defined(LINUX)
