@@ -330,4 +330,9 @@ NS_ErrorAccordingToNSPR();
 #pragma warning(disable: 4275) /* non dll-interface class 'nsISupports' used as base for dll-interface class 'nsIRDFNode' */
 #endif
 
+#ifdef XP_WIN
+extern NS_COM PRBool sXPCOMHasLoadedNewDLLs;
+NS_EXPORT void NS_SetHasLoadedNewDLLs();
+#endif
+
 #endif
