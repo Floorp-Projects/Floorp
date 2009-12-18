@@ -53,7 +53,7 @@ PR_STATIC_ASSERT(sizeof(NPIdentifier) == sizeof(void*));
 PluginLibrary*
 PluginModuleParent::LoadModule(const char* aFilePath)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_FUNCTION;
 
     // Block on the child process being launched and initialized.
     PluginModuleParent* parent = new PluginModuleParent(aFilePath);
@@ -132,7 +132,7 @@ PluginModuleParent::AllocPPluginInstance(const nsCString& aMimeType,
 bool
 PluginModuleParent::DeallocPPluginInstance(PPluginInstanceParent* aActor)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_METHOD;
     delete aActor;
     return true;
 }
@@ -167,7 +167,7 @@ PluginModuleParent::NPP_Destroy(NPP instance,
     //  (2) the child shuts down its instance
     //  (3) remove both parent and child IDs from map
     //  (4) free parent
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_FUNCTION;
 
     PluginInstanceParent* parentInstance =
         static_cast<PluginInstanceParent*>(instance->pdata);
@@ -523,7 +523,7 @@ PluginModuleParent::HasRequiredFunctions()
 nsresult
 PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_METHOD;
 
     mNPNIface = bFuncs;
 
@@ -546,7 +546,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
 nsresult
 PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_METHOD;
 
     mNPNIface = bFuncs;
 
@@ -565,7 +565,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 nsresult
 PluginModuleParent::NP_Shutdown(NPError* error)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_METHOD;
 
     if (mShutdown) {
         *error = NPERR_GENERIC_ERROR;
@@ -586,7 +586,7 @@ PluginModuleParent::NP_Shutdown(NPError* error)
 nsresult
 PluginModuleParent::NP_GetMIMEDescription(char** mimeDesc)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_METHOD;
 
     *mimeDesc = (char*)"application/x-foobar";
     return NS_OK;
@@ -596,11 +596,10 @@ nsresult
 PluginModuleParent::NP_GetValue(void *future, NPPVariable aVariable,
                                    void *aValue, NPError* error)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PR_LOG(gPluginLog, PR_LOG_WARNING, ("%s Not implemented, requested variable %i", __FUNCTION__,
+                                        (int) aVariable));
 
     //TODO: implement this correctly
-    printf("[%s] Not yet implemented\n", __FUNCTION__);
-
     *error = NPERR_GENERIC_ERROR;
     return NS_OK;
 }
@@ -623,7 +622,7 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
                             char* argv[], NPSavedData* saved,
                             NPError* error)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_METHOD;
 
     if (mShutdown) {
         *error = NPERR_GENERIC_ERROR;
@@ -656,9 +655,6 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
             *error = NPERR_GENERIC_ERROR;
         return NS_ERROR_FAILURE;
     }
-
-    printf ("[PluginModuleParent] %s: got return value %hd\n", __FUNCTION__,
-            *error);
 
     if (*error != NPERR_NO_ERROR) {
         PPluginInstanceParent::Call__delete__(parentInstance, error);

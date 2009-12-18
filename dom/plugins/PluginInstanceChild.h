@@ -50,9 +50,6 @@
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 
-#undef _MOZ_LOG
-#define _MOZ_LOG(s) printf("[PluginInstanceChild] %s\n", s)
-
 namespace mozilla {
 namespace plugins {
 
