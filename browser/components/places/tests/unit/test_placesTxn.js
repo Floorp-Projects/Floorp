@@ -548,6 +548,10 @@ function run_test() {
                       flags: 0,
                       value: 123,
                       expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
+  var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsINavHistoryService);
+  hs.addVisit(uri("http://www.mozilla.org/"), Date.now() * 1000, null,
+              hs.TRANSITION_TYPED, false, 0);
   var genPageAnnoTxn = ptSvc.setPageAnnotation(uri("http://www.mozilla.org/"), pageAnnoObj);
   genPageAnnoTxn.doTransaction();
   do_check_true(annosvc.pageHasAnnotation(uri("http://www.mozilla.org/"), "testAnno/testInt"));
