@@ -1648,6 +1648,28 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
     mFirstFocusEvent = nsnull;
 }
 
+class FocusBlurEvent : public nsRunnable
+{
+public:
+  FocusBlurEvent(nsISupports* aTarget, PRUint32 aType,
+                 nsPresContext* aContext, PRBool aWindowRaised)
+  : mTarget(aTarget), mType(aType), mContext(aContext),
+    mWindowRaised(aWindowRaised) {}
+
+  NS_IMETHOD Run()
+  {
+    nsFocusEvent event(PR_TRUE, mType);
+    event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+    event.fromRaise = mWindowRaised;
+    return nsEventDispatcher::Dispatch(mTarget, mContext, &event);
+  }
+
+  nsCOMPtr<nsISupports>   mTarget;
+  PRUint32                mType;
+  nsCOMPtr<nsPresContext> mContext;
+  PRBool                  mWindowRaised;
+};
+
 void
 nsFocusManager::SendFocusOrBlurEvent(PRUint32 aType,
                                      nsIPresShell* aPresShell,
@@ -1684,14 +1706,9 @@ nsFocusManager::SendFocusOrBlurEvent(PRUint32 aType,
     return;
   }
 
-  nsCOMPtr<nsPresContext> presContext = aPresShell->GetPresContext();
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsFocusEvent event(PR_TRUE, aType);
-  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
-  event.fromRaise = aWindowRaised;
-
-  nsEventDispatcher::Dispatch(aTarget, presContext, &event, nsnull, &status);
+  nsContentUtils::AddScriptRunner(
+    new FocusBlurEvent(aTarget, aType, aPresShell->GetPresContext(),
+                       aWindowRaised));
 }
 
 void
