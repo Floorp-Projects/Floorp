@@ -146,7 +146,7 @@ js_CheckKeyword(const jschar *str, size_t length)
 }
 
 JS_FRIEND_API(void)
-js_MapKeywords(void (*mapfun)(const char *))
+js_MapKeywords(JSMapKeywordFun mapfun)
 {
     size_t i;
 

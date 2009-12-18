@@ -824,6 +824,37 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
 void
 Assembler::asm_call(LInsp ins)
 {
+    if (ARM_VFP && ins->isop(LIR_fcall)) {
+        /* Because ARM actually returns the result in (R0,R1), and not in a
+         * floating point register, the code to move the result into a correct
+         * register is below.  We do nothing here.
+         *
+         * The reason being that if we did something here, the final code
+         * sequence we'd get would be something like:
+         *     MOV {R0-R3},params        [from below]
+         *     BL function               [from below]
+         *     MOV {R0-R3},spilled data  [from evictScratchRegs()]
+         *     MOV Dx,{R0,R1}            [from here]
+         * which is clearly broken.
+         *
+         * This is not a problem for non-floating point calls, because the
+         * restoring of spilled data into R0 is done via a call to
+         * prepResultReg(R0) in the other branch of this if-then-else,
+         * meaning that evictScratchRegs() will not modify R0. However,
+         * prepResultReg is not aware of the concept of using a register pair
+         * (R0,R1) for the result of a single operation, so it can only be
+         * used here with the ultimate VFP register, and not R0/R1, which
+         * potentially allows for R0/R1 to get corrupted as described.
+         */
+    } else {
+        prepResultReg(ins, rmask(retRegs[0]));
+    }
+
+    // Do this after we've handled the call result, so we don't
+    // force the call result to be spilled unnecessarily.
+
+    evictScratchRegs();
+
     const CallInfo* call = ins->callInfo();
     ArgSize sizes[MAXARGS];
     uint32_t argc = call->get_sizes(sizes);
@@ -835,8 +866,8 @@ Assembler::asm_call(LInsp ins)
 
     // If we're using VFP, and the return type is a double, it'll come back in
     // R0/R1. We need to either place it in the result fp reg, or store it.
-    // See comments in asm_prep_fcall() for more details as to why this is
-    // necessary here for floating point calls, but not for integer calls.
+    // See comments above for more details as to why this is necessary here
+    // for floating point calls, but not for integer calls.
     if (ARM_VFP && ins->isUsed()) {
         // Determine the size (and type) of the instruction result.
         ArgSize rsize = (ArgSize)(call->_argtypes & ARGSIZE_MASK_ANY);
@@ -1172,8 +1203,21 @@ Assembler::asm_qjoin(LIns *ins)
 }
 
 void
-Assembler::asm_store32(LIns *value, int dr, LIns *base)
+Assembler::asm_store32(LOpcode op, LIns *value, int dr, LIns *base)
 {
+    switch (op) {
+        case LIR_sti:
+            // handled by mainline code below for now
+            break;
+        case LIR_stb:
+        case LIR_sts:
+            NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+            return;
+        default:
+            NanoAssertMsg(0, "asm_store32 should never receive this LIR opcode");
+            return;
+    }
+
     Register ra, rb;
     if (base->isop(LIR_alloc)) {
         rb = FP;
@@ -1268,6 +1312,20 @@ Assembler::asm_load64(LInsp ins)
 {
     //asm_output("<<< load64");
 
+    switch (ins->opcode()) {
+        case LIR_ldq:
+        case LIR_ldqc:
+            // handled by mainline code below for now
+            break;
+        case LIR_ld32f:
+        case LIR_ldc32f:
+            NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+            return;
+        default:
+            NanoAssertMsg(0, "asm_load64 should never receive this LIR opcode");
+            return;
+    }
+
     NanoAssert(ins->isQuad());
 
     LIns* base = ins->oprnd1();
@@ -1310,9 +1368,21 @@ Assembler::asm_load64(LInsp ins)
 }
 
 void
-Assembler::asm_store64(LInsp value, int dr, LInsp base)
+Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
 {
     //asm_output("<<< store64 (dr: %d)", dr);
+
+    switch (op) {
+        case LIR_stqi:
+            // handled by mainline code below for now
+            break;
+        case LIR_st32f:
+            NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+            return;
+        default:
+            NanoAssertMsg(0, "asm_store64 should never receive this LIR opcode");
+            return;
+    }
 
     if (ARM_VFP) {
         Register rb = findRegFor(base, GpRegs);
@@ -2028,33 +2098,6 @@ Assembler::asm_fcmp(LInsp ins)
     FCMPD(ra, rb, e_bit);
 }
 
-Register
-Assembler::asm_prep_fcall(LInsp)
-{
-    /* Because ARM actually returns the result in (R0,R1), and not in a
-     * floating point register, the code to move the result into a correct
-     * register is at the beginning of asm_call(). This function does
-     * nothing.
-     *
-     * The reason being that if this function did something, the final code
-     * sequence we'd get would be something like:
-     *     MOV {R0-R3},params        [from asm_call()]
-     *     BL function               [from asm_call()]
-     *     MOV {R0-R3},spilled data  [from evictScratchRegs()]
-     *     MOV Dx,{R0,R1}            [from this function]
-     * which is clearly broken.
-     *
-     * This is not a problem for non-floating point calls, because the
-     * restoring of spilled data into R0 is done via a call to prepResultReg(R0)
-     * at the same point in the sequence as this function is called, meaning that
-     * evictScratchRegs() will not modify R0. However, prepResultReg is not aware
-     * of the concept of using a register pair (R0,R1) for the result of a single
-     * operation, so it can only be used here with the ultimate VFP register, and
-     * not R0/R1, which potentially allows for R0/R1 to get corrupted as described.
-     */
-    return UnknownReg;
-}
-
 /* Call this with targ set to 0 if the target is not yet known and the branch
  * will be patched up later.
  */
@@ -2440,7 +2483,7 @@ Assembler::asm_neg_not(LInsp ins)
 }
 
 void
-Assembler::asm_ld(LInsp ins)
+Assembler::asm_load32(LInsp ins)
 {
     LOpcode op = ins->opcode();
     LIns* base = ins->oprnd1();
@@ -2449,25 +2492,31 @@ Assembler::asm_ld(LInsp ins)
     Register rr = prepResultReg(ins, GpRegs);
     Register ra = getBaseReg(op, base, d, GpRegs);
 
-    // these will always be 4-byte aligned
-    if (op == LIR_ld || op == LIR_ldc) {
-        LDR(rr, ra, d);
-        return;
+    switch(op) {
+        case LIR_ldzb:
+        case LIR_ldcb:
+            LDRB(rr, ra, d);
+            return;
+        case LIR_ldzs:
+        case LIR_ldcs:
+            // these are expected to be 2 or 4-byte aligned
+            LDRH(rr, ra, d);
+            return;
+        case LIR_ld:
+        case LIR_ldc:
+            // these are expected to be 4-byte aligned
+            LDR(rr, ra, d);
+            return;
+        case LIR_ldsb:
+        case LIR_ldss:
+        case LIR_ldcsb:
+        case LIR_ldcss:
+            NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+            return;
+        default:
+            NanoAssertMsg(0, "asm_load32 should never receive this LIR opcode");
+            return;
     }
-
-    // these will be 2 or 4-byte aligned
-    if (op == LIR_ldcs) {
-        LDRH(rr, ra, d);
-        return;
-    }
-
-    // aaand this is just any byte.
-    if (op == LIR_ldcb) {
-        LDRB(rr, ra, d);
-        return;
-    }
-
-    NanoAssertMsg(0, "Unsupported instruction in asm_ld");
 }
 
 void

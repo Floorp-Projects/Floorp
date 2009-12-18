@@ -207,9 +207,6 @@ namespace nanojit
             // Buffer used to hold extra text to be printed at the end of some
             // lines.
             static char  outlineEOL[512];
-            // If outputAddr=true the next asm instruction output will
-            // be prepended with its address.
-            bool outputAddr, vpad[3];
 
             // Outputs 'outline' and 'outlineEOL', and resets them both.
             // Output goes to '_outputCache' if it's non-NULL, or is printed
@@ -341,10 +338,9 @@ namespace nanojit
             NIns*       asm_exit(LInsp guard);
             NIns*       asm_leave_trace(LInsp guard);
             void        asm_qjoin(LIns *ins);
-            void        asm_store32(LIns *val, int d, LIns *base);
-            void        asm_store64(LIns *val, int d, LIns *base);
+            void        asm_store32(LOpcode op, LIns *val, int d, LIns *base);
+            void        asm_store64(LOpcode op, LIns *val, int d, LIns *base);
             void        asm_restore(LInsp, Register);
-            void        asm_load(int d, Register r);
             void        asm_spilli(LInsp i, bool pop);
             void        asm_spill(Register rr, int d, bool pop, bool quad);
             void        asm_load64(LInsp i);
@@ -354,7 +350,7 @@ namespace nanojit
             void        asm_cond(LInsp i);
             void        asm_arith(LInsp i);
             void        asm_neg_not(LInsp i);
-            void        asm_ld(LInsp i);
+            void        asm_load32(LInsp i);
             void        asm_cmov(LInsp i);
             void        asm_param(LInsp i);
             void        asm_int(LInsp i);
@@ -365,7 +361,6 @@ namespace nanojit
             void        asm_i2f(LInsp ins);
             void        asm_u2f(LInsp ins);
             void        asm_promote(LIns *ins);
-            Register    asm_prep_fcall(LInsp ins);
             void        asm_nongp_copy(Register r, Register s);
             void        asm_call(LInsp);
             Register    asm_binop_rhs_reg(LInsp ins);

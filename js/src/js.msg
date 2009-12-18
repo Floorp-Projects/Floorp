@@ -86,7 +86,7 @@ MSG_DEF(JSMSG_MORE_ARGS_NEEDED,         3, 3, JSEXN_TYPEERR, "{0} requires more 
 MSG_DEF(JSMSG_BAD_CHAR,                 4, 1, JSEXN_INTERNALERR, "invalid format character {0}")
 MSG_DEF(JSMSG_BAD_TYPE,                 5, 1, JSEXN_TYPEERR, "unknown type {0}")
 MSG_DEF(JSMSG_ALLOC_OVERFLOW,           6, 0, JSEXN_INTERNALERR, "allocation size overflow")
-MSG_DEF(JSMSG_CANT_UNLOCK,              7, 0, JSEXN_INTERNALERR, "can't unlock memory")
+MSG_DEF(JSMSG_UNUSED7,                  7, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_INCOMPATIBLE_PROTO,       8, 3, JSEXN_TYPEERR, "{0}.prototype.{1} called on incompatible {2}")
 MSG_DEF(JSMSG_NO_CONSTRUCTOR,           9, 1, JSEXN_TYPEERR, "{0} has no constructor")
 MSG_DEF(JSMSG_CANT_ALIAS,              10, 3, JSEXN_TYPEERR, "can't alias {0} to {1} in class {2}")

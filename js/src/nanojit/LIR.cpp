@@ -45,27 +45,29 @@ namespace nanojit
     #ifdef FEATURE_NANOJIT
 
     const uint8_t repKinds[] = {
-#define OPDEF(op, number, repkind) \
-        LRK_##repkind,
-#define OPD64(op, number, repkind) \
-        LRK_##repkind,
+#define OPDEF(op, number, repKind, retType) \
+        LRK_##repKind,
 #include "LIRopcode.tbl"
 #undef OPDEF
-#undef OPD64
         0
+    };
+
+    const LTy retTypes[] = {
+#define OPDEF(op, number, repKind, retType) \
+        LTy_##retType,
+#include "LIRopcode.tbl"
+#undef OPDEF
+        LTy_Void
     };
 
     // LIR verbose specific
     #ifdef NJ_VERBOSE
 
     const char* lirNames[] = {
-#define OPDEF(op, number, repkind) \
-        #op,
-#define OPD64(op, number, repkind) \
+#define OPDEF(op, number, repKind, retType) \
         #op,
 #include "LIRopcode.tbl"
 #undef OPDEF
-#undef OPD64
         NULL
     };
 
@@ -223,9 +225,8 @@ namespace nanojit
         return startOfRoom;
     }
 
-    LInsp LirBufWriter::insStorei(LInsp val, LInsp base, int32_t d)
+    LInsp LirBufWriter::insStore(LOpcode op, LInsp val, LInsp base, int32_t d)
     {
-        LOpcode op = val->isQuad() ? LIR_stqi : LIR_sti;
         base = insDisp(op, base, d);
         LInsSti* insSti = (LInsSti*)_buf->makeRoom(sizeof(LInsSti));
         LIns*    ins    = insSti->getLIns();
@@ -328,22 +329,22 @@ namespace nanojit
 
     LInsp LirBufWriter::insImmq(uint64_t imm)
     {
-        LInsI64* insI64 = (LInsI64*)_buf->makeRoom(sizeof(LInsI64));
-        LIns*    ins    = insI64->getLIns();
-        ins->initLInsI64(LIR_quad, imm);
+        LInsN64* insN64 = (LInsN64*)_buf->makeRoom(sizeof(LInsN64));
+        LIns*    ins    = insN64->getLIns();
+        ins->initLInsN64(LIR_quad, imm);
         return ins;
     }
 
     LInsp LirBufWriter::insImmf(double d)
     {
-        LInsI64* insI64 = (LInsI64*)_buf->makeRoom(sizeof(LInsI64));
-        LIns*    ins    = insI64->getLIns();
+        LInsN64* insN64 = (LInsN64*)_buf->makeRoom(sizeof(LInsN64));
+        LIns*    ins    = insN64->getLIns();
         union {
             double d;
             uint64_t q;
         } u;
         u.d = d;
-        ins->initLInsI64(LIR_float, u.q);
+        ins->initLInsN64(LIR_float, u.q);
         return ins;
     }
 
@@ -352,13 +353,10 @@ namespace nanojit
     {
         static const uint8_t insSizes[] = {
         // LIR_start is treated specially -- see below.
-#define OPDEF(op, number, repkind) \
-            ((number) == LIR_start ? 0 : sizeof(LIns##repkind)),
-#define OPD64(op, number, repkind) \
-            OPDEF(op, number, repkind)
+#define OPDEF(op, number, repKind, retType) \
+            ((number) == LIR_start ? 0 : sizeof(LIns##repKind)),
 #include "LIRopcode.tbl"
 #undef OPDEF
-#undef OPD64
             0
         };
 
@@ -381,6 +379,33 @@ namespace nanojit
         return ret;
     }
 
+    LOpcode f64arith_to_i32arith(LOpcode op)
+    {
+        switch (op) {
+        case LIR_fneg:  return LIR_neg;
+        case LIR_fadd:  return LIR_add;
+        case LIR_fsub:  return LIR_sub;
+        case LIR_fmul:  return LIR_mul;
+        default:        NanoAssert(0); return LIR_skip;
+        }
+    }
+
+    LOpcode i32cmp_to_i64cmp(LOpcode op)
+    {
+        switch (op) {
+        case LIR_eq:    return LIR_qeq;
+        case LIR_lt:    return LIR_qlt;
+        case LIR_gt:    return LIR_qgt;
+        case LIR_le:    return LIR_qle;
+        case LIR_ge:    return LIR_qge;
+        case LIR_ult:   return LIR_qult;
+        case LIR_ugt:   return LIR_qugt;
+        case LIR_ule:   return LIR_qule;
+        case LIR_uge:   return LIR_quge;
+        default:        NanoAssert(0); return LIR_skip;
+        }
+    }
+
     // This is never called, but that's ok because it contains only static
     // assertions.
     void LIns::staticSanityCheck()
@@ -400,9 +425,9 @@ namespace nanojit
         NanoStaticAssert(sizeof(LInsP)   == 2*sizeof(void*));
         NanoStaticAssert(sizeof(LInsI)   == 2*sizeof(void*));
     #if defined NANOJIT_64BIT
-        NanoStaticAssert(sizeof(LInsI64) == 2*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsN64) == 2*sizeof(void*));
     #else
-        NanoStaticAssert(sizeof(LInsI64) == 3*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsN64) == 3*sizeof(void*));
     #endif
 
         // oprnd_1 must be in the same position in LIns{Op1,Op2,Op3,Ld,Sti}
@@ -857,6 +882,12 @@ namespace nanojit
 #else
         return uintIns;
 #endif
+    }
+
+    LIns* LirWriter::insStorei(LIns* value, LIns* base, int32_t d)
+    {
+        LOpcode op = value->isQuad() ? LIR_stqi : LIR_sti;
+        return insStore(op, value, base, d);
     }
 
     LIns* LirWriter::qjoin(LInsp lo, LInsp hi)
@@ -1483,8 +1514,16 @@ namespace nanojit
                 case LIR_ldc:
                 case LIR_ldq:
                 case LIR_ldqc:
+                case LIR_ldzb:
+                case LIR_ldzs:
                 case LIR_ldcb:
                 case LIR_ldcs:
+                case LIR_ldsb:
+                case LIR_ldss:
+                case LIR_ldcsb:
+                case LIR_ldcss:
+                case LIR_ld32f:
+                case LIR_ldc32f:
                 case LIR_ret:
                 case LIR_fret:
                 case LIR_live:
@@ -1510,6 +1549,8 @@ namespace nanojit
 
                 case LIR_sti:
                 case LIR_stqi:
+                case LIR_stb:
+                case LIR_sts:
                 case LIR_eq:
                 case LIR_lt:
                 case LIR_gt:
@@ -1884,8 +1925,16 @@ namespace nanojit
             case LIR_ldc:
             case LIR_ldq:
             case LIR_ldqc:
+            case LIR_ldzb:
+            case LIR_ldzs:
             case LIR_ldcb:
             case LIR_ldcs:
+            case LIR_ldsb:
+            case LIR_ldss:
+            case LIR_ldcsb:
+            case LIR_ldcss:
+            case LIR_ld32f:
+            case LIR_ldc32f:
                 VMPI_sprintf(s, "%s = %s %s[%d]", formatRef(i), lirNames[op],
                     formatRef(i->oprnd1()),
                     i->disp());
@@ -1893,6 +1942,9 @@ namespace nanojit
 
             case LIR_sti:
             case LIR_stqi:
+            case LIR_stb:
+            case LIR_sts:
+            case LIR_st32f:
                 VMPI_sprintf(s, "%s %s[%d] = %s", lirNames[op],
                     formatRef(i->oprnd2()),
                     i->disp(),
@@ -2187,12 +2239,28 @@ namespace nanojit
 
     LInsp LoadFilter::insLoad(LOpcode v, LInsp base, int32_t disp)
     {
-        if (base != sp && base != rp && (v == LIR_ld || v == LIR_ldq)) {
-            uint32_t k;
-            LInsp ins = exprs->findLoad(v, base, disp, k);
-            if (ins)
-                return ins;
-            return exprs->add(LInsLoad, out->insLoad(v,base,disp), k);
+        if (base != sp && base != rp) 
+        {
+            switch (v)
+            {
+                case LIR_ld:
+                case LIR_ldq:
+                case LIR_ld32f:
+                case LIR_ldsb:
+                case LIR_ldss:
+                case LIR_ldzb:
+                case LIR_ldzs:
+                {
+                    uint32_t k;
+                    LInsp ins = exprs->findLoad(v, base, disp, k);
+                    if (ins)
+                        return ins;
+                    return exprs->add(LInsLoad, out->insLoad(v,base,disp), k);
+                }
+                default:
+                    // fall thru
+                    break;
+            }
         }
         return out->insLoad(v, base, disp);
     }
@@ -2203,10 +2271,10 @@ namespace nanojit
             exprs->clear();
     }
 
-    LInsp LoadFilter::insStorei(LInsp v, LInsp b, int32_t d)
+    LInsp LoadFilter::insStore(LOpcode op, LInsp v, LInsp b, int32_t d)
     {
         clear(b);
-        return out->insStorei(v, b, d);
+        return out->insStore(op, v, b, d);
     }
 
     LInsp LoadFilter::insCall(const CallInfo *ci, LInsp args[])
@@ -2250,18 +2318,12 @@ namespace nanojit
             const void *end = (const char*)start + e->size;
             const char *name = e->name;
             if (p == start) {
-                if (!(logc->lcbits & LC_NoCodeAddrs))
-                    VMPI_sprintf(b,"%p %s",p,name);
-                else
-                    VMPI_strcpy(b, name);
+                VMPI_sprintf(b,"%p %s",p,name);
                 return dup(b);
             }
             else if (p > start && p < end) {
                 int32_t d = int32_t(intptr_t(p)-intptr_t(start)) >> e->align;
-                if (!(logc->lcbits & LC_NoCodeAddrs))
-                    VMPI_sprintf(b, "%p %s+%d", p, name, d);
-                else
-                    VMPI_sprintf(b,"%s+%d", name, d);
+                VMPI_sprintf(b, "%p %s+%d", p, name, d);
                 return dup(b);
             }
             else {
