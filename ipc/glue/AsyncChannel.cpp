@@ -64,7 +64,8 @@ AsyncChannel::AsyncChannel(AsyncListener* aListener)
     mMutex("mozilla.ipc.AsyncChannel.mMutex"),
     mCvar(mMutex, "mozilla.ipc.AsyncChannel.mCvar"),
     mIOLoop(),
-    mWorkerLoop()
+    mWorkerLoop(),
+    mChannelErrorTask(NULL)
 {
     MOZ_COUNT_CTOR(AsyncChannel);
 }
@@ -128,6 +129,9 @@ AsyncChannel::Close()
 {
     {
         MutexAutoLock lock(mMutex);
+
+        if (ChannelError == mChannelState)
+            return;
 
         if (ChannelConnected != mChannelState)
             // XXX be strict about this until there's a compelling reason
@@ -295,6 +299,10 @@ AsyncChannel::Clear()
         // by GeckoChildProcess/GeckoThread
         mTransport = 0;
     }
+    if (mChannelErrorTask) {
+        mChannelErrorTask->Cancel();
+        mChannelErrorTask = NULL;
+    }
 }
 
 bool
@@ -398,9 +406,11 @@ AsyncChannel::OnChannelError()
     if (ChannelClosing != mChannelState)
         mChannelState = ChannelError;
 
-    mWorkerLoop->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(this, &AsyncChannel::NotifyMaybeChannelError));
+    NS_ASSERTION(!mChannelErrorTask, "OnChannelError called twice?");
+
+    mChannelErrorTask =
+        NewRunnableMethod(this, &AsyncChannel::NotifyMaybeChannelError);
+    mWorkerLoop->PostTask(FROM_HERE, mChannelErrorTask);
 }
 
 void
