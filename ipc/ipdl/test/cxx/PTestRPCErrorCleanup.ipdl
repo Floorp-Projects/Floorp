@@ -1,0 +1,11 @@
+namespace mozilla {
+namespace _ipdltest {
+
+rpc protocol PTestRPCErrorCleanup {
+child:
+    rpc Error();
+    rpc __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla
