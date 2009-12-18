@@ -56,6 +56,9 @@ public:
 #endif
 
 protected:
+#if defined(_MSC_VER) && defined(_M_IX86)
+  NS_IMETHOD Run();
+#endif
   virtual void ScheduleNativeEventCallback();
   virtual PRBool ProcessNextNativeEvent(PRBool mayWait);
   virtual ~nsAppShell();
