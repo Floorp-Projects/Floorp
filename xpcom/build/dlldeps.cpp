@@ -286,6 +286,8 @@ void XXXNeverCalled()
 
     nsXPCOMCycleCollectionParticipant();
     nsCycleCollector_collect();
+    sXPCOMHasLoadedNewDLLs = !sXPCOMHasLoadedNewDLLs;
+    NS_SetHasLoadedNewDLLs();
 
 #if !defined(XP_OS2)
     NS_NewWindowsRegKey(nsnull);
