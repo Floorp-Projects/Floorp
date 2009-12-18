@@ -87,9 +87,6 @@ typedef NS_NPAPIPLUGIN_CALLBACK(NPError, NP_PLUGINSHUTDOWN) (void);
 typedef NS_NPAPIPLUGIN_CALLBACK(NPError, NP_MAIN) (NPNetscapeFuncs* nCallbacks, NPPluginFuncs* pCallbacks, NPP_ShutdownProcPtr* unloadProcPtr);
 #endif
 
-#undef _MOZ_LOG
-#define _MOZ_LOG(s)  printf("[PluginModuleChild] %s\n", s)
-
 namespace mozilla {
 namespace plugins {
 

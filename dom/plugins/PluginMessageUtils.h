@@ -47,6 +47,7 @@
 #include "nsAutoPtr.h"
 #include "nsStringGlue.h"
 #include "nsThreadUtils.h"
+#include "prlog.h"
 
 namespace mozilla {
 
@@ -62,6 +63,20 @@ typedef intptr_t NPRemoteIdentifier;
 } /* namespace ipc */
 
 namespace plugins {
+
+extern PRLogModuleInfo* gPluginLog;
+
+#if defined(_MSC_VER)
+#define FULLFUNCTION __FUNCSIG__
+#elif (__GNUC__ >= 4)
+#define FULLFUNCTION __PRETTY_FUNCTION__
+#else
+#define FULLFUNCTION __FUNCTION__
+#endif
+
+#define PLUGIN_LOG_DEBUG(args) PR_LOG(gPluginLog, PR_LOG_DEBUG, args)
+#define PLUGIN_LOG_DEBUG_FUNCTION PR_LOG(gPluginLog, PR_LOG_DEBUG, ("%s", FULLFUNCTION))
+#define PLUGIN_LOG_DEBUG_METHOD PR_LOG(gPluginLog, PR_LOG_DEBUG, ("%s [%p]", FULLFUNCTION, (void*) this))
 
 /**
  * This is NPByteRange without the linked list.

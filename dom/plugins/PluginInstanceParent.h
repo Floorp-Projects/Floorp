@@ -50,9 +50,6 @@
 #include "nsTArray.h"
 #include "nsRect.h"
 
-#undef _MOZ_LOG
-#define _MOZ_LOG(s) printf("[PluginInstanceParent] %s\n", s)
-
 namespace mozilla {
 namespace plugins {
 
@@ -164,7 +161,7 @@ public:
     NPError NPP_GetValue(NPPVariable variable, void *ret_value);
     NPError NPP_SetValue(NPNVariable variable, void *value)
     {
-        _MOZ_LOG(__FUNCTION__);
+        PLUGIN_LOG_DEBUG_FUNCTION;
         return 1;
     }
 
@@ -174,7 +171,7 @@ public:
 
     void NPP_Print(NPPrint* platformPrint)
     {
-        _MOZ_LOG(__FUNCTION__);
+        PLUGIN_LOG_DEBUG_FUNCTION;
     }
 
     int16_t NPP_HandleEvent(void* event);

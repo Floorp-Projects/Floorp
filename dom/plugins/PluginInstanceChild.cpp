@@ -104,8 +104,7 @@ NPError
 PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
                                   void* aValue)
 {
-    printf ("[PluginInstanceChild] NPN_GetValue(%s)\n",
-            NPNVariableToString(aVar));
+    PLUGIN_LOG_DEBUG(("%s (aVar=%i)", FULLFUNCTION, (int) aVar));
     AssertPluginThread();
 
     switch(aVar) {
@@ -208,7 +207,9 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     }
 
     default:
-        printf("  unhandled var %s\n", NPNVariableToString(aVar));
+        PR_LOG(gPluginLog, PR_LOG_WARNING,
+               ("In PluginInstanceChild::NPN_GetValue: Unhandled NPNVariable %i (%s)",
+                (int) aVar, NPNVariableToString(aVar)));
         return NPERR_GENERIC_ERROR;
     }
 
@@ -218,8 +219,9 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 NPError
 PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 {
-    printf ("[PluginInstanceChild] NPN_SetValue(%s, %ld)\n",
-            NPPVariableToString(aVar), reinterpret_cast<intptr_t>(aValue));
+    PR_LOG(gPluginLog, PR_LOG_DEBUG, ("%s (aVar=%i, aValue=%p)",
+                                      FULLFUNCTION, (int) aVar, aValue));
+
     AssertPluginThread();
 
     switch (aVar) {
@@ -244,7 +246,9 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
     }
 
     default:
-        printf("  unhandled var %s\n", NPPVariableToString(aVar));
+        PR_LOG(gPluginLog, PR_LOG_WARNING,
+               ("In PluginInstanceChild::NPN_SetValue: Unhandled NPPVariable %i (%s)",
+                (int) aVar, NPPVariableToString(aVar)));
         return NPERR_GENERIC_ERROR;
     }
 }
@@ -338,7 +342,7 @@ bool
 PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
                                            int16_t* handled)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
 
 #if defined(OS_LINUX) && defined(DEBUG)
@@ -420,10 +424,11 @@ bool
 PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
                                          NPError* rv)
 {
-    printf("[PluginInstanceChild] NPP_SetWindow(0x%lx, %d, %d, %d x %d)\n",
-           aWindow.window,
-           aWindow.x, aWindow.y,
-           aWindow.width, aWindow.height);
+    PLUGIN_LOG_DEBUG(("%s (aWindow=<window: 0x%lx, x: %d, y: %d, width: %d, height: %d>)",
+                      FULLFUNCTION,
+                      aWindow.window,
+                      aWindow.x, aWindow.y,
+                      aWindow.width, aWindow.height));
     AssertPluginThread();
 
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
