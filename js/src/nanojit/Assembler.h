@@ -279,9 +279,11 @@ namespace nanojit
             Register    findSpecificRegFor(LIns* i, Register r);
             Register    findSpecificRegForUnallocated(LIns* i, Register r);
             Register    prepResultReg(LIns *i, RegisterMask allow);
+            Register    prepareResultReg(LIns *i, RegisterMask allow);
             void        freeRsrcOf(LIns *i, bool pop);
+            void        freeResourcesOf(LIns *ins);
             void        evictIfActive(Register r);
-            void        evict(Register r, LIns* vic);
+            void        evict(LIns* vic);
             RegisterMask hint(LIns*i, RegisterMask allow);
 
             void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip
