@@ -343,7 +343,7 @@ interface nsIUpdateChecker : nsISupports
  * background update checks and provides utilities for selecting and
  * downloading update patches.
  */
-[scriptable, uuid(9849c4bf-5197-4d22-baa8-e3b44a1703d2)]
+[scriptable, uuid(b5811144-ed30-4343-aff9-c514034aa19a)]
 interface nsIApplicationUpdateService : nsISupports
 {
   /**
@@ -395,22 +395,6 @@ interface nsIApplicationUpdateService : nsISupports
    */
   readonly attribute boolean isDownloading;
 
-  /**
-   * Whether or not the Update Service can download and install updates.
-   * This is a function of whether or not the current user has access
-   * privileges to the install directory.
-   */
-  readonly attribute boolean canUpdate;
-};
-
-/**
- * A temporary interface to allow adding new methods without changing existing
- * interfaces for Gecko 1.9.2. After the 1.9.2 release this interface will be
- * removed.
- */
-[scriptable, uuid(e22e4bf1-b18c-40cd-a2be-2d565723d056)]
-interface nsIApplicationUpdateService2 : nsIApplicationUpdateService
-{
   /**
    * Whether or not the Update Service can check for updates. This is a function
    * of whether or not application update is disabled by the application and the
