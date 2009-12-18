@@ -478,6 +478,14 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 
   nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(aTarget);
 #ifdef DEBUG
+  if (!nsContentUtils::IsSafeToRunScript()) {
+    nsresult rv = NS_ERROR_FAILURE;
+    if (target->GetContextForEventHandlers(&rv) ||
+        NS_FAILED(rv)) {
+      NS_ERROR("This is unsafe!");
+    }
+  }
+
   if (aDOMEvent) {
     nsCOMPtr<nsIPrivateDOMEvent> privEvt(do_QueryInterface(aDOMEvent));
     if (privEvt) {
