@@ -82,7 +82,7 @@ NS_IMPL_ISUPPORTS1(nsAnnotationService,
                    nsIAnnotationService)
 
 
-nsAnnotationService::nsAnnotationService()
+nsAnnotationService::nsAnnotationService() : mShuttingDown(false)
 {
   NS_ASSERTION(!gAnnotationService,
                "Attempting to create two instances of the service!");
@@ -109,150 +109,133 @@ nsAnnotationService::Init()
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
   mDBConn = history->GetStorageConnection();
 
-  // TODO: some of these statements should be getters.  See bug 500306.
-
-  // mDBGetAnnotationsForPage
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT n.name "
-      "FROM moz_anno_attributes n "
-      "JOIN moz_annos a ON a.anno_attribute_id = n.id "
-      "JOIN ( "
-        "SELECT id FROM moz_places_temp WHERE url = ?1 "
-        "UNION "
-        "SELECT id FROM moz_places WHERE url = ?1 "
-      ") AS h ON h.id = a.place_id "),
-    getter_AddRefs(mDBGetAnnotationsForPage));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBGetAnnotationsForItem
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT n.name "
-      "FROM moz_anno_attributes n "
-      "JOIN moz_items_annos a ON a.anno_attribute_id = n.id "
-      "WHERE a.item_id = ?1"),
-    getter_AddRefs(mDBGetAnnotationsForItem));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBGetPageAnnotationValue
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT a.id, a.place_id, ?2, a.mime_type, a.content, a.flags, "
-      "a.expiration, a.type "
-      "FROM moz_anno_attributes n "
-      "JOIN moz_annos a ON n.id = a.anno_attribute_id "
-      "JOIN ( "
-        "SELECT id FROM moz_places_temp WHERE url = ?1 "
-        "UNION "
-        "SELECT id FROM moz_places WHERE url = ?1 "
-      ") AS h ON h.id = a.place_id "
-      "WHERE n.name = ?2"),
-    getter_AddRefs(mDBGetPageAnnotationValue));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBGetItemAnnotationValue
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT a.id, a.item_id, ?2, a.mime_type, a.content, a.flags, "
-        "a.expiration, a.type "
-      "FROM moz_anno_attributes n "
-      "JOIN moz_items_annos a ON a.anno_attribute_id = n.id "
-      "WHERE a.item_id = ?1 "
-        "AND n.name = ?2"),
-    getter_AddRefs(mDBGetItemAnnotationValue));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBAddAnnotationName
-  // Since "name" column is unique, we will get a conflict if we try to insert
-  // the same attribute name again.  In such a case we ignore the change.
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT OR IGNORE INTO moz_anno_attributes (name) VALUES (?1)"),
-    getter_AddRefs(mDBAddAnnotationName));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBAddPageAnnotation
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT OR REPLACE INTO moz_annos "
-        "(id, place_id, anno_attribute_id, mime_type, content, flags, "
-         "expiration, type, dateAdded, lastModified) "
-      "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"),
-    getter_AddRefs(mDBAddPageAnnotation));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBAddItemAnnotation
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT OR REPLACE INTO moz_items_annos "
-        "(id, item_id, anno_attribute_id, mime_type, content, flags, "
-         "expiration, type, dateAdded, lastModified) "
-      "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"),
-    getter_AddRefs(mDBAddItemAnnotation));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBRemovePageAnnotation
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_annos "
-      "WHERE place_id = ("
-        "SELECT id FROM moz_places_temp WHERE url = ?1 "
-        "UNION "
-        "SELECT id FROM moz_places WHERE url = ?1)"
-      "AND anno_attribute_id = "
-        "(SELECT id FROM moz_anno_attributes WHERE name = ?2)"),
-    getter_AddRefs(mDBRemovePageAnnotation));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBRemoveItemAnnotation
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_items_annos "
-      "WHERE item_id = ?1 "
-      "AND anno_attribute_id = "
-        "(SELECT id FROM moz_anno_attributes WHERE name = ?2)"),
-    getter_AddRefs(mDBRemoveItemAnnotation));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBGetPagesWithAnnotation
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT IFNULL(h_t.url, h.url) AS page_url "
-      "FROM moz_anno_attributes n "
-      "JOIN moz_annos a ON n.id = a.anno_attribute_id "
-      "LEFT JOIN moz_places h ON h.id = a.place_id "
-      "LEFT JOIN moz_places_temp h_t ON h_t.id = a.place_id "
-      "WHERE n.name = ?1 AND page_url NOT NULL"),
-    getter_AddRefs(mDBGetPagesWithAnnotation));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBGetItemsWithAnnotation
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT a.item_id "
-      "FROM moz_anno_attributes n "
-      "JOIN moz_items_annos a ON n.id = a.anno_attribute_id "
-      "WHERE n.name = ?1"),
-    getter_AddRefs(mDBGetItemsWithAnnotation));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBCheckPageAnnotation
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, "
-             "(SELECT id FROM moz_anno_attributes WHERE name = ?1) AS nameid, "
-             "a.id, a.dateAdded "
-      "FROM (SELECT id FROM moz_places_temp WHERE url = ?2 "
-            "UNION "
-            "SELECT id FROM moz_places WHERE url = ?2 "
-            ") AS h "
-      "LEFT JOIN moz_annos a ON a.place_id = h.id "
-                           "AND a.anno_attribute_id = nameid "),
-    getter_AddRefs(mDBCheckPageAnnotation));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBCheckItemAnnotation
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT b.id, "
-             "(SELECT id FROM moz_anno_attributes WHERE name = ?1) AS nameid, "
-             "a.id, a.dateAdded "
-      "FROM moz_bookmarks b "
-      "LEFT JOIN moz_items_annos a ON a.item_id = b.id "
-                                 "AND a.anno_attribute_id = nameid "
-      "WHERE b.id = ?2 "),
-    getter_AddRefs(mDBCheckItemAnnotation));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // These statements should be responsive, so we init them immediately.
+  (void*)GetStatement(mDBCheckPageAnnotation);
+  (void*)GetStatement(mDBCheckItemAnnotation);
 
   return NS_OK;
+}
+
+
+mozIStorageStatement*
+nsAnnotationService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
+{
+#define RETURN_IF_STMT(_stmt, _sql)                                        \
+  PR_BEGIN_MACRO                                                           \
+  if (address_of(_stmt) == address_of(aStmt)) {                            \
+    if (!_stmt) {                                                          \
+      nsresult rv = mDBConn->CreateStatement(_sql, getter_AddRefs(_stmt)); \
+      NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && _stmt, nsnull);                   \
+    }                                                                      \
+    return _stmt.get();                                                    \
+  }                                                                        \
+  PR_END_MACRO
+
+  if (mShuttingDown)
+    return nsnull;
+
+  RETURN_IF_STMT(mDBGetAnnotationsForItem, NS_LITERAL_CSTRING(
+    "SELECT n.name "
+    "FROM moz_anno_attributes n "
+    "JOIN moz_items_annos a ON a.anno_attribute_id = n.id "
+    "WHERE a.item_id = ?1"));
+
+  RETURN_IF_STMT(mDBGetAnnotationsForPage, NS_LITERAL_CSTRING(
+    "SELECT n.name "
+    "FROM moz_anno_attributes n "
+    "JOIN moz_annos a ON a.anno_attribute_id = n.id "
+    "JOIN ( "
+      "SELECT id FROM moz_places_temp WHERE url = ?1 "
+      "UNION "
+      "SELECT id FROM moz_places WHERE url = ?1 "
+    ") AS h ON h.id = a.place_id"));
+
+  RETURN_IF_STMT(mDBGetPageAnnotationValue, NS_LITERAL_CSTRING(
+    "SELECT a.id, a.place_id, ?2, a.mime_type, a.content, a.flags, "
+           "a.expiration, a.type "
+    "FROM moz_anno_attributes n "
+    "JOIN moz_annos a ON n.id = a.anno_attribute_id "
+    "JOIN ( "
+      "SELECT id FROM moz_places_temp WHERE url = ?1 "
+      "UNION "
+      "SELECT id FROM moz_places WHERE url = ?1 "
+    ") AS h ON h.id = a.place_id "
+    "WHERE n.name = ?2"));
+
+  RETURN_IF_STMT(mDBGetItemAnnotationValue, NS_LITERAL_CSTRING(
+    "SELECT a.id, a.item_id, ?2, a.mime_type, a.content, a.flags, "
+           "a.expiration, a.type "
+    "FROM moz_anno_attributes n "
+    "JOIN moz_items_annos a ON a.anno_attribute_id = n.id "
+    "WHERE a.item_id = ?1 "
+    "AND n.name = ?2"));
+
+  RETURN_IF_STMT(mDBAddAnnotationName, NS_LITERAL_CSTRING(
+    "INSERT OR IGNORE INTO moz_anno_attributes (name) VALUES (?1)"));
+
+  RETURN_IF_STMT(mDBAddPageAnnotation, NS_LITERAL_CSTRING(
+    "INSERT OR REPLACE INTO moz_annos "
+      "(id, place_id, anno_attribute_id, mime_type, content, flags, "
+       "expiration, type, dateAdded, lastModified) "
+    "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"));
+
+  RETURN_IF_STMT(mDBAddItemAnnotation, NS_LITERAL_CSTRING(
+    "INSERT OR REPLACE INTO moz_items_annos "
+      "(id, item_id, anno_attribute_id, mime_type, content, flags, "
+       "expiration, type, dateAdded, lastModified) "
+    "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"));
+
+  RETURN_IF_STMT(mDBRemovePageAnnotation, NS_LITERAL_CSTRING(
+    "DELETE FROM moz_annos "
+    "WHERE place_id = ( "
+      "SELECT id FROM moz_places_temp WHERE url = ?1 "
+      "UNION "
+      "SELECT id FROM moz_places WHERE url = ?1) "
+    "AND anno_attribute_id = "
+      "(SELECT id FROM moz_anno_attributes WHERE name = ?2)"));
+
+  RETURN_IF_STMT(mDBRemoveItemAnnotation, NS_LITERAL_CSTRING(
+    "DELETE FROM moz_items_annos "
+    "WHERE item_id = ?1 "
+    "AND anno_attribute_id = "
+      "(SELECT id FROM moz_anno_attributes WHERE name = ?2)"));
+
+  RETURN_IF_STMT(mDBGetPagesWithAnnotation, NS_LITERAL_CSTRING(
+    "SELECT IFNULL(h_t.url, h.url) AS page_url "
+    "FROM moz_anno_attributes n "
+    "JOIN moz_annos a ON n.id = a.anno_attribute_id "
+    "LEFT JOIN moz_places h ON h.id = a.place_id "
+    "LEFT JOIN moz_places_temp h_t ON h_t.id = a.place_id "
+    "WHERE n.name = ?1 AND page_url NOT NULL"));
+
+  RETURN_IF_STMT(mDBGetItemsWithAnnotation, NS_LITERAL_CSTRING(
+    "SELECT a.item_id "
+    "FROM moz_anno_attributes n "
+    "JOIN moz_items_annos a ON n.id = a.anno_attribute_id "
+    "WHERE n.name = ?1"));
+
+  RETURN_IF_STMT(mDBCheckPageAnnotation, NS_LITERAL_CSTRING(
+    "SELECT h.id, "
+           "(SELECT id FROM moz_anno_attributes WHERE name = ?1) AS nameid, "
+           "a.id, a.dateAdded "
+    "FROM (SELECT id FROM moz_places_temp WHERE url = ?2 "
+          "UNION "
+          "SELECT id FROM moz_places WHERE url = ?2 "
+          ") AS h "
+    "LEFT JOIN moz_annos a ON a.place_id = h.id "
+                         "AND a.anno_attribute_id = nameid"));
+
+  RETURN_IF_STMT(mDBCheckItemAnnotation, NS_LITERAL_CSTRING(
+    "SELECT b.id, "
+           "(SELECT id FROM moz_anno_attributes WHERE name = ?1) AS nameid, "
+           "a.id, a.dateAdded "
+    "FROM moz_bookmarks b "
+    "LEFT JOIN moz_items_annos a ON a.item_id = b.id "
+                               "AND a.anno_attribute_id = nameid "
+    "WHERE b.id = ?2"));
+
+   return nsnull;
+#undef RETURN_IF_STMT
 }
 
 
@@ -1308,16 +1291,18 @@ nsresult
 nsAnnotationService::GetPagesWithAnnotationCOMArray(const nsACString& aName,
                                                     nsCOMArray<nsIURI>* _results)
 {
-  mozStorageStatementScoper scoper(mDBGetPagesWithAnnotation);
+  mozIStorageStatement* stmt = GetStatement(mDBGetPagesWithAnnotation);
+  NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = mDBGetPagesWithAnnotation->BindUTF8StringParameter(0, aName);
+  nsresult rv = stmt->BindUTF8StringParameter(0, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasMore = PR_FALSE;
-  while (NS_SUCCEEDED(rv = mDBGetPagesWithAnnotation->ExecuteStep(&hasMore)) &&
+  while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasMore)) &&
          hasMore) {
     nsCAutoString uristring;
-    rv = mDBGetPagesWithAnnotation->GetUTF8String(0, uristring);
+    rv = stmt->GetUTF8String(0, uristring);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // convert to a URI, in case of some invalid URI, just ignore this row
@@ -1372,14 +1357,16 @@ nsresult
 nsAnnotationService::GetItemsWithAnnotationTArray(const nsACString& aName,
                                                   nsTArray<PRInt64>* _results)
 {
-  mozStorageStatementScoper scoper(mDBGetItemsWithAnnotation);
-  nsresult rv = mDBGetItemsWithAnnotation->BindUTF8StringParameter(0, aName);
+  mozIStorageStatement* stmt = GetStatement(mDBGetItemsWithAnnotation);
+  NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scoper(stmt);
+  nsresult rv = stmt->BindUTF8StringParameter(0, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasMore = PR_FALSE;
-  while (NS_SUCCEEDED(mDBGetItemsWithAnnotation->ExecuteStep(&hasMore)) &&
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) &&
          hasMore) {
-    if (!_results->AppendElement(mDBGetItemsWithAnnotation->AsInt64(0)))
+    if (!_results->AppendElement(stmt->AsInt64(0)))
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1436,7 +1423,8 @@ nsAnnotationService::GetAnnotationNamesTArray(nsIURI* aURI,
 {
   bool isItemAnnotation = (aItemId > 0);
   mozIStorageStatement* statement = isItemAnnotation ?
-    mDBGetAnnotationsForItem.get() : mDBGetAnnotationsForPage.get();
+    GetStatement(mDBGetAnnotationsForItem) : GetStatement(mDBGetAnnotationsForPage);
+  NS_ENSURE_STATE(statement);
 
   _result->Clear();
 
@@ -1546,8 +1534,8 @@ nsAnnotationService::RemoveAnnotationInternal(nsIURI* aURI,
 {
   bool isItemAnnotation = (aItemId > 0);
   mozIStorageStatement* statement = isItemAnnotation ?
-    mDBRemoveItemAnnotation.get() : mDBRemovePageAnnotation.get();
-
+    GetStatement(mDBRemoveItemAnnotation) : GetStatement(mDBRemovePageAnnotation);
+  NS_ENSURE_STATE(statement);
   mozStorageStatementScoper scoper(statement);
 
   nsresult rv;
@@ -1881,7 +1869,8 @@ nsAnnotationService::HasAnnotationInternal(nsIURI* aURI,
 {
   bool isItemAnnotation = (aItemId > 0);
   mozIStorageStatement* stmt = isItemAnnotation ?
-    mDBCheckItemAnnotation.get() : mDBCheckPageAnnotation.get();
+    GetStatement(mDBCheckItemAnnotation) : GetStatement(mDBCheckPageAnnotation);
+  NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper checkAnnoScoper(stmt);
 
   nsresult rv = stmt->BindUTF8StringParameter(0, aName);
@@ -1928,9 +1917,9 @@ nsAnnotationService::StartGetAnnotation(nsIURI* aURI,
 {
   bool isItemAnnotation = (aItemId > 0);
 
-  *_statement = isItemAnnotation ? mDBGetItemAnnotationValue.get()
-                                 : mDBGetPageAnnotationValue.get();
-
+  *_statement = isItemAnnotation ? GetStatement(mDBGetItemAnnotationValue)
+                                 : GetStatement(mDBGetPageAnnotationValue);
+  NS_ENSURE_STATE(_statement);
   mozStorageStatementScoper getAnnoScoper(*_statement);
 
   nsresult rv;
@@ -1985,10 +1974,12 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
   bool isItemAnnotation = (aItemId > 0);
 
   // Ensure the annotation name exists.
-  mozStorageStatementScoper addNameScoper(mDBAddAnnotationName);
-  nsresult rv = mDBAddAnnotationName->BindUTF8StringParameter(0, aName);
+  mozIStorageStatement* addNameStmt = GetStatement(mDBAddAnnotationName);
+  NS_ENSURE_STATE(addNameStmt);
+  mozStorageStatementScoper addNameScoper(addNameStmt);
+  nsresult rv = addNameStmt->BindUTF8StringParameter(0, aName);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDBAddAnnotationName->Execute();
+  rv = addNameStmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We have to check 2 things:
@@ -2000,7 +1991,8 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
   // - the nameID associated with the annotation name.
   // - the id and dateAdded of the old annotation, if it exists.
   mozIStorageStatement* stmt = isItemAnnotation ?
-    mDBCheckItemAnnotation.get() : mDBCheckPageAnnotation.get();
+    GetStatement(mDBCheckItemAnnotation) : GetStatement(mDBCheckPageAnnotation);
+  NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper checkAnnoScoper(stmt);
   rv = stmt->BindUTF8StringParameter(0, aName);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2024,8 +2016,9 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
   PRInt64 oldAnnoId = stmt->AsInt64(2);
   PRInt64 oldAnnoDate = stmt->AsInt64(3);
 
-  *_statement = isItemAnnotation ? mDBAddItemAnnotation.get()
-                                 : mDBAddPageAnnotation.get();
+  *_statement = isItemAnnotation ? GetStatement(mDBAddItemAnnotation)
+                                 : GetStatement(mDBAddPageAnnotation);
+  NS_ENSURE_STATE(_statement);
   mozStorageStatementScoper setAnnoScoper(*_statement);
 
   // Don't replace existing annotations.
@@ -2066,6 +2059,8 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
 
 nsresult
 nsAnnotationService::FinalizeStatements() {
+  mShuttingDown = true;
+
   mozIStorageStatement* stmts[] = {
     mDBGetAnnotationsForPage
   , mDBGetAnnotationsForItem

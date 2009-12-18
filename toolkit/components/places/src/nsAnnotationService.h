@@ -97,6 +97,10 @@ protected:
   nsCOMPtr<mozIStorageService> mDBService;
   nsCOMPtr<mozIStorageConnection> mDBConn;
 
+  /**
+   * Always use this getter and never use directly the statement nsCOMPtr.
+   */
+  mozIStorageStatement* GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt);
   nsCOMPtr<mozIStorageStatement> mDBGetAnnotationsForPage;
   nsCOMPtr<mozIStorageStatement> mDBGetAnnotationsForItem;
   nsCOMPtr<mozIStorageStatement> mDBGetPageAnnotationValue;
@@ -182,6 +186,8 @@ protected:
                                     const nsACString& aName);
 
   PRBool InPrivateBrowsingMode() const;
+
+  bool mShuttingDown;
 
 public:
   nsresult GetPagesWithAnnotationCOMArray(const nsACString& aName,
