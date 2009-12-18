@@ -57,6 +57,7 @@ CPPSRCS = \
   testPropCache.cpp \
   testTrap.cpp \
   testSameValue.cpp \
+  testSeal.cpp \
   testXDR.cpp \
   $(NULL)
 
