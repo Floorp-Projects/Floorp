@@ -2,7 +2,6 @@
 #include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
 #include "nsITestCrasher.h"
-#include "nsXULAppAPI.h"
 
 class nsTestCrasher : public nsITestCrasher
 {
@@ -26,13 +25,6 @@ NS_IMETHODIMP nsTestCrasher::Crash()
   *foo = 0;
   // not reached
   return NS_OK;
-}
-
-/* nsISupports LockDir (in nsILocalFile directory); */
-NS_IMETHODIMP nsTestCrasher::LockDir(nsILocalFile *directory,
-                                     nsISupports **_retval NS_OUTPARAM)
-{
-  return XRE_LockProfileDirectory(directory, _retval);
 }
 
 // 54afce51-38d7-4df0-9750-2f90f9ffbca2
