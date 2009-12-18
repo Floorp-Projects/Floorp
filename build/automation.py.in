@@ -451,6 +451,7 @@ def environment(env = None, xrePath = DIST_BIN, crashreporter = True):
     env['MOZ_CRASHREPORTER_DISABLE'] = '1'
 
   env['GNOME_DISABLE_CRASH_DIALOG'] = "1"
+  env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
   return env
 
 if IS_WIN32:
