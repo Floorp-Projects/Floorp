@@ -99,6 +99,11 @@ namespace nanojit
         "ah", "ch", "dh", "bh"
     };
 
+    const char *gpRegNames16[] = {
+        "ax",  "cx",  "dx",   "bx",   "spx",  "bpx",  "six",  "dix",
+        "r8x", "r9x", "r10x", "r11x", "r12x", "r13x", "r14x", "r15x"
+    };
+
 #ifdef _DEBUG
     #define TODO(x) todo(#x)
     static void todo(const char *s) {
@@ -240,6 +245,11 @@ namespace nanojit
         emit(rexprb(mod_rr(op, r, b), r, b));
     }
 
+    // disp32 modrm8 form, when the disp fits in the instruction (opcode is 1-3 bytes)
+    void Assembler::emitrm8(uint64_t op, Register r, int32_t d, Register b) {
+        emit(rexrb8(mod_disp32(op, r, b, d), r, b));
+    }
+
     // disp32 modrm form, when the disp fits in the instruction (opcode is 1-3 bytes)
     void Assembler::emitrm(uint64_t op, Register r, int32_t d, Register b) {
         emit(rexrb(mod_disp32(op, r, b, d), r, b));
@@ -343,6 +353,7 @@ namespace nanojit
     }
 
 #define RB(r)       gpRegNames8[(r)]
+#define RS(r)       gpRegNames16[(r)]
 #define RBhi(r)     gpRegNames8hi[(r)]
 #define RL(r)       gpRegNames32[(r)]
 #define RQ(r)       gpn(r)
@@ -431,13 +442,16 @@ namespace nanojit
 // XORPS is a 4x32f vector operation, we use it instead of the more obvious
 // XORPD because it's one byte shorter.  This is ok because it's only used for
 // zeroing an XMM register;  hence the single argument.
-    void Assembler::XORPS(        R r)  { emitprr(X64_xorps,   r,r); asm_output("xorps %s, %s",   RQ(r),RQ(r)); }
+// Also note that (unlike most SSE2 instructions) XORPS does not have a prefix, thus emitrr() should be used.
+    void Assembler::XORPS(        R r)  { emitrr(X64_xorps,   r,r); asm_output("xorps %s, %s",   RQ(r),RQ(r)); }
     void Assembler::DIVSD(   R l, R r)  { emitprr(X64_divsd,   l,r); asm_output("divsd %s, %s",   RQ(l),RQ(r)); }
     void Assembler::MULSD(   R l, R r)  { emitprr(X64_mulsd,   l,r); asm_output("mulsd %s, %s",   RQ(l),RQ(r)); }
     void Assembler::ADDSD(   R l, R r)  { emitprr(X64_addsd,   l,r); asm_output("addsd %s, %s",   RQ(l),RQ(r)); }
     void Assembler::SUBSD(   R l, R r)  { emitprr(X64_subsd,   l,r); asm_output("subsd %s, %s",   RQ(l),RQ(r)); }
     void Assembler::CVTSQ2SD(R l, R r)  { emitprr(X64_cvtsq2sd,l,r); asm_output("cvtsq2sd %s, %s",RQ(l),RQ(r)); }
     void Assembler::CVTSI2SD(R l, R r)  { emitprr(X64_cvtsi2sd,l,r); asm_output("cvtsi2sd %s, %s",RQ(l),RL(r)); }
+    void Assembler::CVTSS2SD(R l, R r)  { emitprr(X64_cvtss2sd,l,r); asm_output("cvtss2sd %s, %s",RQ(l),RL(r)); }
+    void Assembler::CVTSD2SS(R l, R r)  { emitprr(X64_cvtsd2ss,l,r); asm_output("cvtsd2ss %s, %s",RL(l),RQ(r)); }
     void Assembler::UCOMISD( R l, R r)  { emitprr(X64_ucomisd, l,r); asm_output("ucomisd %s, %s", RQ(l),RQ(r)); }
     void Assembler::MOVQRX(  R l, R r)  { emitprr(X64_movqrx,  r,l); asm_output("movq %s, %s",    RQ(l),RQ(r)); } // Nb: r and l are deliberately reversed within the emitprr() call.
     void Assembler::MOVQXR(  R l, R r)  { emitprr(X64_movqxr,  l,r); asm_output("movq %s, %s",    RQ(l),RQ(r)); }
@@ -482,14 +496,21 @@ namespace nanojit
     void Assembler::LEAQRM(R r1, I d, R r2)     { emitrm(X64_leaqrm,r1,d,r2); asm_output("leaq %s, %d(%s)",RQ(r1),d,RQ(r2)); }
     void Assembler::MOVLRM(R r1, I d, R r2)     { emitrm(X64_movlrm,r1,d,r2); asm_output("movl %s, %d(%s)",RL(r1),d,RQ(r2)); }
     void Assembler::MOVQRM(R r1, I d, R r2)     { emitrm(X64_movqrm,r1,d,r2); asm_output("movq %s, %d(%s)",RQ(r1),d,RQ(r2)); }
+    void Assembler::MOVBMR(R r1, I d, R r2)     { emitrm8(X64_movbmr,r1,d,r2); asm_output("movb %d(%s), %s",d,RQ(r1),RB(r2)); }
+    void Assembler::MOVSMR(R r1, I d, R r2)     { emitprm(X64_movsmr,r1,d,r2); asm_output("movs %d(%s), %s",d,RQ(r1),RS(r2)); }
     void Assembler::MOVLMR(R r1, I d, R r2)     { emitrm(X64_movlmr,r1,d,r2); asm_output("movl %d(%s), %s",d,RQ(r1),RL(r2)); }
     void Assembler::MOVQMR(R r1, I d, R r2)     { emitrm(X64_movqmr,r1,d,r2); asm_output("movq %d(%s), %s",d,RQ(r1),RQ(r2)); }
 
     void Assembler::MOVZX8M( R r1, I d, R r2)   { emitrm_wide(X64_movzx8m, r1,d,r2); asm_output("movzxb %s, %d(%s)",RQ(r1),d,RQ(r2)); }
     void Assembler::MOVZX16M(R r1, I d, R r2)   { emitrm_wide(X64_movzx16m,r1,d,r2); asm_output("movzxs %s, %d(%s)",RQ(r1),d,RQ(r2)); }
 
+    void Assembler::MOVSX8M( R r1, I d, R r2)   { emitrm_wide(X64_movsx8m, r1,d,r2); asm_output("movsxb %s, %d(%s)",RQ(r1),d,RQ(r2)); }
+    void Assembler::MOVSX16M(R r1, I d, R r2)   { emitrm_wide(X64_movsx16m,r1,d,r2); asm_output("movsxs %s, %d(%s)",RQ(r1),d,RQ(r2)); }
+
     void Assembler::MOVSDRM(R r1, I d, R r2)    { emitprm(X64_movsdrm,r1,d,r2); asm_output("movsd %s, %d(%s)",RQ(r1),d,RQ(r2)); }
     void Assembler::MOVSDMR(R r1, I d, R r2)    { emitprm(X64_movsdmr,r1,d,r2); asm_output("movsd %d(%s), %s",d,RQ(r1),RQ(r2)); }
+    void Assembler::MOVSSRM(R r1, I d, R r2)    { emitprm(X64_movssrm,r1,d,r2); asm_output("movss %s, %d(%s)",RQ(r1),d,RQ(r2)); }
+    void Assembler::MOVSSMR(R r1, I d, R r2)    { emitprm(X64_movssmr,r1,d,r2); asm_output("movss %d(%s), %s",d,RQ(r1),RQ(r2)); }
 
     void Assembler::JMP8( S n, NIns* t)    { emit_target8(n, X64_jmp8,t); asm_output("jmp %p", t); }
 
@@ -764,10 +785,10 @@ namespace nanojit
     void Assembler::asm_arith(LIns *ins) {
         Register rr, ra, rb;
 
-        switch (ins->opcode() & ~LIR64) {
-        case LIR_lsh:
-        case LIR_rsh:
-        case LIR_ush:
+        switch (ins->opcode()) {
+        case LIR_lsh: case LIR_qilsh:
+        case LIR_rsh: case LIR_qirsh:
+        case LIR_ush: case LIR_qursh:
             asm_shift(ins);
             return;
         case LIR_mod:
@@ -832,6 +853,14 @@ namespace nanojit
     }
 
     void Assembler::asm_call(LIns *ins) {
+        Register retReg = ( ins->isop(LIR_fcall) ? XMM0 : retRegs[0] );
+        prepResultReg(ins, rmask(retReg));
+
+        // Do this after we've handled the call result, so we don't
+        // force the call result to be spilled unnecessarily.
+
+        evictScratchRegs();
+
         const CallInfo *call = ins->callInfo();
         ArgSize sizes[MAXARGS];
         int argc = call->get_sizes(sizes);
@@ -991,32 +1020,32 @@ namespace nanojit
 
         LOpcode condop = cond->opcode();
         if (ins->opcode() == LIR_cmov) {
-            switch (condop & ~LIR64) {
-            case LIR_ov:  CMOVNO( rr, rf);  break;
-            case LIR_eq:  CMOVNE( rr, rf);  break;
-            case LIR_lt:  CMOVNL( rr, rf);  break;
-            case LIR_gt:  CMOVNG( rr, rf);  break;
-            case LIR_le:  CMOVNLE(rr, rf);  break;
-            case LIR_ge:  CMOVNGE(rr, rf);  break;
-            case LIR_ult: CMOVNB( rr, rf);  break;
-            case LIR_ugt: CMOVNA( rr, rf);  break;
-            case LIR_ule: CMOVNBE(rr, rf);  break;
-            case LIR_uge: CMOVNAE(rr, rf);  break;
-            default:      NanoAssert(0);    break;
+            switch (condop) {
+            case LIR_ov:                    CMOVNO( rr, rf);  break;
+            case LIR_eq:  case LIR_qeq:     CMOVNE( rr, rf);  break;
+            case LIR_lt:  case LIR_qlt:     CMOVNL( rr, rf);  break;
+            case LIR_gt:  case LIR_qgt:     CMOVNG( rr, rf);  break;
+            case LIR_le:  case LIR_qle:     CMOVNLE(rr, rf);  break;
+            case LIR_ge:  case LIR_qge:     CMOVNGE(rr, rf);  break;
+            case LIR_ult: case LIR_qult:    CMOVNB( rr, rf);  break;
+            case LIR_ugt: case LIR_qugt:    CMOVNA( rr, rf);  break;
+            case LIR_ule: case LIR_qule:    CMOVNBE(rr, rf);  break;
+            case LIR_uge: case LIR_quge:    CMOVNAE(rr, rf);  break;
+            default:                        NanoAssert(0);    break;
             }
         } else {
-            switch (condop & ~LIR64) {
-            case LIR_ov:  CMOVQNO( rr, rf); break;
-            case LIR_eq:  CMOVQNE( rr, rf); break;
-            case LIR_lt:  CMOVQNL( rr, rf); break;
-            case LIR_gt:  CMOVQNG( rr, rf); break;
-            case LIR_le:  CMOVQNLE(rr, rf); break;
-            case LIR_ge:  CMOVQNGE(rr, rf); break;
-            case LIR_ult: CMOVQNB( rr, rf); break;
-            case LIR_ugt: CMOVQNA( rr, rf); break;
-            case LIR_ule: CMOVQNBE(rr, rf); break;
-            case LIR_uge: CMOVQNAE(rr, rf); break;
-            default:      NanoAssert(0);    break;
+            switch (condop) {
+            case LIR_ov:                    CMOVQNO( rr, rf); break;
+            case LIR_eq:  case LIR_qeq:     CMOVQNE( rr, rf); break;
+            case LIR_lt:  case LIR_qlt:     CMOVQNL( rr, rf); break;
+            case LIR_gt:  case LIR_qgt:     CMOVQNG( rr, rf); break;
+            case LIR_le:  case LIR_qle:     CMOVQNLE(rr, rf); break;
+            case LIR_ge:  case LIR_qge:     CMOVQNGE(rr, rf); break;
+            case LIR_ult: case LIR_qult:    CMOVQNB( rr, rf); break;
+            case LIR_ugt: case LIR_qugt:    CMOVQNA( rr, rf); break;
+            case LIR_ule: case LIR_qule:    CMOVQNBE(rr, rf); break;
+            case LIR_uge: case LIR_quge:    CMOVQNAE(rr, rf); break;
+            default:                        NanoAssert(0);    break;
             }
         }
         /*const Register rt =*/ findSpecificRegFor(iftrue, rr);
@@ -1024,72 +1053,71 @@ namespace nanojit
     }
 
     NIns* Assembler::asm_branch(bool onFalse, LIns *cond, NIns *target) {
+        NanoAssert(cond->isCond());
         LOpcode condop = cond->opcode();
         if (condop >= LIR_feq && condop <= LIR_fge)
             return asm_fbranch(onFalse, cond, target);
 
-        // we must ensure there's room for the instr before calculating
-        // the offset.  and the offset, determines the opcode (8bit or 32bit)
-        NanoAssert((condop & ~LIR64) >= LIR_ov);
-        NanoAssert((condop & ~LIR64) <= LIR_uge);
+        // We must ensure there's room for the instr before calculating
+        // the offset.  And the offset determines the opcode (8bit or 32bit).
         if (target && isTargetWithinS8(target)) {
             if (onFalse) {
-                switch (condop & ~LIR64) {
-                case LIR_ov:  JNO8( 8, target); break;
-                case LIR_eq:  JNE8( 8, target); break;
-                case LIR_lt:  JNL8( 8, target); break;
-                case LIR_gt:  JNG8( 8, target); break;
-                case LIR_le:  JNLE8(8, target); break;
-                case LIR_ge:  JNGE8(8, target); break;
-                case LIR_ult: JNB8( 8, target); break;
-                case LIR_ugt: JNA8( 8, target); break;
-                case LIR_ule: JNBE8(8, target); break;
-                case LIR_uge: JNAE8(8, target); break;
-                default:      NanoAssert(0);    break;
+                switch (condop) {
+                case LIR_ov:                    JNO8( 8, target); break;
+                case LIR_eq:  case LIR_qeq:     JNE8( 8, target); break;
+                case LIR_lt:  case LIR_qlt:     JNL8( 8, target); break;
+                case LIR_gt:  case LIR_qgt:     JNG8( 8, target); break;
+                case LIR_le:  case LIR_qle:     JNLE8(8, target); break;
+                case LIR_ge:  case LIR_qge:     JNGE8(8, target); break;
+                case LIR_ult: case LIR_qult:    JNB8( 8, target); break;
+                case LIR_ugt: case LIR_qugt:    JNA8( 8, target); break;
+                case LIR_ule: case LIR_qule:    JNBE8(8, target); break;
+                case LIR_uge: case LIR_quge:    JNAE8(8, target); break;
+                default:                        NanoAssert(0);    break;
                 }
             } else {
-                switch (condop & ~LIR64) {
-                case LIR_ov:  JO8( 8, target);  break;
-                case LIR_eq:  JE8( 8, target);  break;
-                case LIR_lt:  JL8( 8, target);  break;
-                case LIR_gt:  JG8( 8, target);  break;
-                case LIR_le:  JLE8(8, target);  break;
-                case LIR_ge:  JGE8(8, target);  break;
-                case LIR_ult: JB8( 8, target);  break;
-                case LIR_ugt: JA8( 8, target);  break;
-                case LIR_ule: JBE8(8, target);  break;
-                case LIR_uge: JAE8(8, target);  break;
-                default:      NanoAssert(0);    break;
+                switch (condop) {
+                case LIR_ov:                    JO8( 8, target);  break;
+                case LIR_eq:  case LIR_qeq:     JE8( 8, target);  break;
+                case LIR_lt:  case LIR_qlt:     JL8( 8, target);  break;
+                case LIR_gt:  case LIR_qgt:     JG8( 8, target);  break;
+                case LIR_le:  case LIR_qle:     JLE8(8, target);  break;
+                case LIR_ge:  case LIR_qge:     JGE8(8, target);  break;
+                case LIR_ult: case LIR_qult:    JB8( 8, target);  break;
+                case LIR_ugt: case LIR_qugt:    JA8( 8, target);  break;
+                case LIR_ule: case LIR_qule:    JBE8(8, target);  break;
+                case LIR_uge: case LIR_quge:    JAE8(8, target);  break;
+                default:                        NanoAssert(0);    break;
                 }
             }
         } else {
             if (onFalse) {
-                switch (condop & ~LIR64) {
-                case LIR_ov:  JNO( 8, target);  break;
-                case LIR_eq:  JNE( 8, target);  break;
-                case LIR_lt:  JNL( 8, target);  break;
-                case LIR_gt:  JNG( 8, target);  break;
-                case LIR_le:  JNLE(8, target);  break;
-                case LIR_ge:  JNGE(8, target);  break;
-                case LIR_ult: JNB( 8, target);  break;
-                case LIR_ugt: JNA( 8, target);  break;
-                case LIR_ule: JNBE(8, target);  break;
-                case LIR_uge: JNAE(8, target);  break;
-                default:      NanoAssert(0);    break;
+                switch (condop) {
+                case LIR_ov:                    JNO( 8, target);  break;
+                case LIR_eq:  case LIR_qeq:     JNE( 8, target);  break;
+                case LIR_lt:  case LIR_qlt:     JNL( 8, target);  break;
+                case LIR_gt:  case LIR_qgt:     JNG( 8, target);  break;
+                case LIR_le:  case LIR_qle:     JNLE(8, target);  break;
+                case LIR_ge:  case LIR_qge:     JNGE(8, target);  break;
+                case LIR_ult: case LIR_qult:    JNB( 8, target);  break;
+                case LIR_ugt: case LIR_qugt:    JNA( 8, target);  break;
+                case LIR_ule: case LIR_qule:    JNBE(8, target);  break;
+                case LIR_uge: case LIR_quge:    JNAE(8, target);  break;
+                default:                        NanoAssert(0);    break;
                 }
             } else {
-                switch (condop & ~LIR64) {
-                case LIR_ov:  JO( 8, target);   break;
-                case LIR_eq:  JE( 8, target);   break;
-                case LIR_lt:  JL( 8, target);   break;
-                case LIR_gt:  JG( 8, target);   break;
-                case LIR_le:  JLE(8, target);   break;
-                case LIR_ge:  JGE(8, target);   break;
-                case LIR_ult: JB( 8, target);   break;
-                case LIR_ugt: JA( 8, target);   break;
-                case LIR_ule: JBE(8, target);   break;
-                case LIR_uge: JAE(8, target);   break;
-                default:      NanoAssert(0);    break;
+                switch (condop) {
+                case LIR_ov:                    JO( 8, target);   break;
+                case LIR_eq:  case LIR_qeq:     JE( 8, target);   break;
+                case LIR_lt:  case LIR_qlt:     JL( 8, target);   break;
+                case LIR_gt:  case LIR_qgt:     JG( 8, target);   break;
+                case LIR_le:  case LIR_qle:     JLE(8, target);   break;
+                case LIR_ge:  case LIR_qge:     JGE(8, target);   break;
+                case LIR_ult: case LIR_qult:    JB( 8, target);   break;
+                case LIR_ugt: case LIR_qugt:    JA( 8, target);   break;
+                case LIR_ule: case LIR_qule:    JBE(8, target);   break;
+                case LIR_uge: case LIR_quge:    JAE(8, target);   break;
+                default:                        NanoAssert(0);    break;
                 }
             }
         }
@@ -1117,25 +1145,29 @@ namespace nanojit
         }
 
         LOpcode condop = cond->opcode();
-        if (condop & LIR64)
+        if (LIR_qeq <= condop && condop <= LIR_quge) {
             CMPQR(ra, rb);
-        else
+        } else {
+            NanoAssert(LIR_eq <= condop && condop <= LIR_uge);
             CMPLR(ra, rb);
+        }
     }
 
     void Assembler::asm_cmp_imm(LIns *cond) {
+        LOpcode condop = cond->opcode();
         LIns *a = cond->oprnd1();
         LIns *b = cond->oprnd2();
         Register ra = findRegFor(a, GpRegs);
         int32_t imm = getImm32(b);
-        if (isS8(imm)) {
-            if (cond->opcode() & LIR64)
+        if (LIR_qeq <= condop && condop <= LIR_quge) {
+            if (isS8(imm))
                 CMPQR8(ra, imm);
-            else 
-                CMPLR8(ra, imm);
-        } else {
-            if (cond->opcode() & LIR64)
+            else
                 CMPQRI(ra, imm);
+        } else {
+            NanoAssert(LIR_eq <= condop && condop <= LIR_uge);
+            if (isS8(imm))
+                CMPLR8(ra, imm);
             else
                 CMPLRI(ra, imm);
         }
@@ -1327,61 +1359,103 @@ namespace nanojit
             // xmm <- xmm: use movaps. movsd r,r causes partial register stall
             MOVAPSR(d, s);
         } else {
+            NanoAssert(IsFpReg(d) && !IsFpReg(s));
             // xmm <- gpr: use movq xmm, r/m64 (66 REX.W 0F 6E /r)
             MOVQXR(d, s);
         }
     }
 
-    void Assembler::regalloc_load(LIns *ins, Register &rr, int32_t &dr, Register &rb) {
+    void Assembler::regalloc_load(LIns *ins, RegisterMask allow, Register &rr, int32_t &dr, Register &rb) {
         dr = ins->disp();
         LIns *base = ins->oprnd1();
         rb = getBaseReg(ins->opcode(), base, dr, BaseRegs);
-        if (ins->isUnusedOrHasUnknownReg()) {
-            // use a gpr in case we're copying a non-double
-            rr = prepResultReg(ins, GpRegs & ~rmask(rb));
+        if (ins->isUnusedOrHasUnknownReg() || !(allow & rmask(ins->getReg()))) {
+            rr = prepResultReg(ins, allow & ~rmask(rb));
         } else {
             // keep already assigned register
             rr = ins->getReg();
+            NanoAssert(allow & rmask(rr));
             freeRsrcOf(ins, false);
         }
     }
 
     void Assembler::asm_load64(LIns *ins) {
+
         Register rr, rb;
         int32_t dr;
-        regalloc_load(ins, rr, dr, rb);
-        if (IsGpReg(rr)) {
-            // general 64bit load, 32bit const displacement
-            MOVQRM(rr, dr, rb);
-        } else {
-            // load 64bits into XMM.  don't know if double or int64, assume double.
-            MOVSDRM(rr, dr, rb);
+        switch (ins->opcode()) {
+            case LIR_ldq:
+            case LIR_ldqc:
+                regalloc_load(ins, GpRegs, rr, dr, rb);
+                if (IsGpReg(rr)) {
+                    // general 64bit load, 32bit const displacement
+                    MOVQRM(rr, dr, rb);
+                } else {
+                    NanoAssert(IsFpReg(rr));
+                    // load 64bits into XMM.  don't know if double or int64, assume double.
+                    MOVSDRM(rr, dr, rb);
+                }
+                break;
+            case LIR_ld32f:
+            case LIR_ldc32f:
+                regalloc_load(ins, FpRegs, rr, dr, rb);
+                NanoAssert(IsFpReg(rr));
+                CVTSS2SD(rr, rr);
+                MOVSSRM(rr, dr, rb); 
+                break;
+            default:
+                NanoAssertMsg(0, "asm_load64 should never receive this LIR opcode");
+                break;
         }
+
     }
 
-    void Assembler::asm_ld(LIns *ins) {
+    void Assembler::asm_load32(LIns *ins) {
         NanoAssert(!ins->isQuad());
         Register r, b;
         int32_t d;
-        regalloc_load(ins, r, d, b);
+        regalloc_load(ins, GpRegs, r, d, b);
         LOpcode op = ins->opcode();
-        switch (op) {
-        case LIR_ldcb: MOVZX8M( r, d, b);   break;
-        case LIR_ldcs: MOVZX16M(r, d, b);   break;
-        default:       MOVLRM(  r, d, b);   break;
+        switch(op) {
+            case LIR_ldzb:
+            case LIR_ldcb:
+                MOVZX8M( r, d, b);
+                break;
+            case LIR_ldzs:
+            case LIR_ldcs:
+                MOVZX16M(r, d, b);
+                break;
+            case LIR_ld:
+            case LIR_ldc:
+                MOVLRM(  r, d, b);
+                break;
+            case LIR_ldsb:
+            case LIR_ldcsb:
+                MOVSX8M( r, d, b);
+                break;
+            case LIR_ldss:
+            case LIR_ldcss:
+                MOVSX16M( r, d, b);
+                break;
+            default:
+                NanoAssertMsg(0, "asm_load32 should never receive this LIR opcode");
+                break;
         }
     }
 
-    void Assembler::asm_store64(LIns *value, int d, LIns *base) {
+    void Assembler::asm_store64(LOpcode op, LIns *value, int d, LIns *base) {
         NanoAssert(value->isQuad());
+
         Register b = getBaseReg(LIR_stqi, base, d, BaseRegs);
+        Register r;
 
         // if we have to choose a register, use a GPR, but not the base reg
-        Register r;
         if (value->isUnusedOrHasUnknownReg()) {
             RegisterMask allow;
+            // If op is LIR_st32f and we have no reg, prefer FPR over GPR: saves an instruction later,
+            // and the value is almost certainly going to operated on as FP later anyway.
             // XXX: isFloat doesn't cover float/fmod!  see bug 520208.
-            if (value->isFloat() || value->isop(LIR_float) || value->isop(LIR_fmod)) {
+            if (op == LIR_st32f || value->isFloat() || value->isop(LIR_float) || value->isop(LIR_fmod)) {
                 allow = FpRegs;
             } else {
                 allow = GpRegs;
@@ -1391,23 +1465,76 @@ namespace nanojit
             r = value->getReg();
         }
 
-        if (IsGpReg(r)) {
-            // gpr store
-            MOVQMR(r, d, b);
-        }
-        else {
-            // xmm store
-            MOVSDMR(r, d, b);
+        switch (op) {
+            case LIR_stqi:
+            {
+                if (IsGpReg(r)) {
+                    // gpr store
+                    MOVQMR(r, d, b);
+                }
+                else {
+                    // xmm store
+                    MOVSDMR(r, d, b);
+                }
+                break;
+            }
+            case LIR_st32f:
+            {
+                // need a scratch FPR reg
+                Register t = registerAllocTmp(FpRegs & ~rmask(r));
+
+                // store
+                MOVSSMR(t, d, b);
+
+                // cvt to single-precision
+                if (IsGpReg(r))
+                {
+                    CVTSD2SS(t, t);
+                    MOVQXR(t, r); // xmm <- gpr: use movq xmm, r/m64 (66 REX.W 0F 6E /r)
+                }
+                else
+                {
+                    NanoAssert(IsFpReg(r));
+                    CVTSD2SS(t, r);
+                }
+                XORPS(t); // break dependency chains
+                break;
+            }
+            default:
+                NanoAssertMsg(0, "asm_store64 should never receive this LIR opcode");
+                break;
         }
     }
 
-    void Assembler::asm_store32(LIns *value, int d, LIns *base) {
+    void Assembler::asm_store32(LOpcode op, LIns *value, int d, LIns *base) {
+
+        // quirk of x86-64: reg cannot appear to be ah/bh/ch/dh 
+        // for single-byte stores with REX prefix
+        const RegisterMask SrcRegs = 
+                        (op == LIR_stb) ?
+                        (GpRegs & ~(1<<RSP | 1<<RBP | 1<<RSI | 1<<RDI)) :
+                        GpRegs;
+
         NanoAssert(!value->isQuad());
         Register b = getBaseReg(LIR_sti, base, d, BaseRegs);
-        Register r = findRegFor(value, GpRegs & ~rmask(b));
+        Register r = findRegFor(value, SrcRegs & ~rmask(b));
 
-        // store 32bits to 64bit addr.  use rex so we can use all 16 regs
-        MOVLMR(r, d, b);
+        switch (op) {
+            case LIR_stb:
+                MOVBMR(r, d, b);
+                break;
+            case LIR_sts:
+                MOVSMR(r, d, b);
+                break;
+            case LIR_sti:
+                MOVLMR(r, d, b);
+                break;
+            default:
+                NanoAssertMsg(0, "asm_store32 should never receive this LIR opcode");
+                break;
+        }
+
+
     }
 
     // generate a 64bit constant, must not affect condition codes!
@@ -1457,10 +1584,6 @@ namespace nanojit
 
     void Assembler::asm_qjoin(LIns*) {
         TODO(asm_qjoin);
-    }
-
-    Register Assembler::asm_prep_fcall(LIns *ins) {
-        return prepResultReg(ins, rmask(XMM0));
     }
 
     void Assembler::asm_param(LIns *ins) {
@@ -1570,7 +1693,7 @@ namespace nanojit
                 SUBQRI(RSP, amt);
         }
 
-        verbose_only( outputAddr=true; asm_output("[patch entry]"); )
+        verbose_only( asm_output("[patch entry]"); )
         NIns *patchEntry = _nIns;
         MR(FP, RSP);    // Establish our own FP.
         PUSHR(FP);      // Save caller's FP.

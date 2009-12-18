@@ -79,6 +79,7 @@ namespace nanojit
 #define NJ_MAX_PARAMETERS               16
 #define NJ_ALIGN_STACK                  8
 #define NJ_JTBL_SUPPORTED               1
+#define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
 
 #define NJ_CONSTANT_POOLS
 const int NJ_MAX_CPOOL_OFFSET = 4096;
@@ -798,22 +799,6 @@ enum {
             } else NanoAssert(0);                                        \
         }                                                               \
     } while(0)
-
-#define STMIA(_b, _mask) do {                                           \
-        underrunProtect(4);                                             \
-        NanoAssert(IsGpReg(_b));                                        \
-        NanoAssert(((_mask)&rmask(_b))==0 && isU8(_mask));              \
-        *(--_nIns) = (NIns)(COND_AL | (0x8A<<20) | ((_b)<<16) | (_mask)&0xFF); \
-        asm_output("stmia %s!,{0x%x}", gpn(_b), _mask); \
-    } while (0)
-
-#define LDMIA(_b, _mask) do {                                           \
-        underrunProtect(4);                                             \
-        NanoAssert(IsGpReg(_b));                                        \
-        NanoAssert(((_mask)&rmask(_b))==0 && isU8(_mask));              \
-        *(--_nIns) = (NIns)(COND_AL | (0x8B<<20) | ((_b)<<16) | (_mask)&0xFF); \
-        asm_output("ldmia %s!,{0x%x}", gpn(_b), (_mask)); \
-    } while (0)
 
 /*
  * VFP

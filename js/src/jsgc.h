@@ -148,11 +148,11 @@ js_ReserveObjects(JSContext *cx, size_t nobjects);
 extern JSBool
 js_LockGCThingRT(JSRuntime *rt, void *thing);
 
-extern JSBool
+extern void
 js_UnlockGCThingRT(JSRuntime *rt, void *thing);
 
-extern JSBool
-js_IsAboutToBeFinalized(JSContext *cx, void *thing);
+extern bool
+js_IsAboutToBeFinalized(void *thing);
 
 /*
  * Macro to test if a traversal is the marking phase of GC to avoid exposing
@@ -414,10 +414,10 @@ typedef struct JSGCStats {
     uint32  maxdepth;   /* maximum mark tail recursion depth */
     uint32  cdepth;     /* mark recursion depth of C functions */
     uint32  maxcdepth;  /* maximum mark recursion depth of C functions */
-    uint32  untraced;   /* number of times tracing of GC thing's children were
+    uint32  unmarked;   /* number of times marking of GC thing's children were
                            delayed due to a low C stack */
 #ifdef DEBUG
-    uint32  maxuntraced;/* maximum number of things with children to trace
+    uint32  maxunmarked;/* maximum number of things with children to mark
                            later */
 #endif
     uint32  maxlevel;   /* maximum GC nesting (indirect recursion) level */
