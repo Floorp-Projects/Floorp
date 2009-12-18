@@ -336,8 +336,17 @@ pref("geo.wifi.uri", "https://www.google.com/loc/json");
 pref("geo.enabled", true);
 
 // content sink control -- controls responsiveness during page load
-pref("content.max.deflected.tokens", 10);
-pref("content.max.tokenizing.time", 50000);
+// see https://bugzilla.mozilla.org/show_bug.cgi?id=481566#c9
+// use interactive mode rather than perf mode since that prioritizes user events while loading
+pref("content.sink.enable_perf_mode", 1); // 0 - switch, 1 - interactive, 2 - perf
+pref("content.sink.pending_event_mode", 2);
+pref("content.sink.event_probe_rate", 5);
+pref("content.sink.interactive_deflect_count", 10);
+pref("content.sink.perf_deflect_count", 10);
+pref("content.sink.interactive_parse_time", 50000);
+pref("content.sink.perf_parse_time", 50000);
+pref("content.sink.interactive_time", 0);
+pref("content.sink.initial_perf_time", 0);
 
 pref("javascript.options.jit.content", true);
 pref("javascript.options.jit.chrome", true);
