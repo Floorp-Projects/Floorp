@@ -315,7 +315,8 @@ PluginInstanceParent::RecvNPN_InvalidateRect(const NPRect& rect)
 NPError
 PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG(("%s (aWindow=%p)", FULLFUNCTION, (void*) aWindow));
+
     NS_ENSURE_TRUE(aWindow, NPERR_GENERIC_ERROR);
 
     NPRemoteWindow window;
@@ -364,9 +365,6 @@ NPError
 PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
                                    void* _retval)
 {
-    printf("[PluginInstanceParent] NPP_GetValue(%s)\n",
-           NPPVariableToString(aVariable));
-
     switch (aVariable) {
 
     case NPPVpluginWindowBool: {
@@ -450,7 +448,9 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
     }
 
     default:
-        printf("  unhandled var %s\n", NPPVariableToString(aVariable));
+        PR_LOG(gPluginLog, PR_LOG_WARNING,
+               ("In PluginInstanceParent::NPP_GetValue: Unhandled NPPVariable %i (%s)",
+                (int) aVariable, NPPVariableToString(aVariable)));
         return NPERR_GENERIC_ERROR;
     }
 }
@@ -458,7 +458,7 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
 int16_t
 PluginInstanceParent::NPP_HandleEvent(void* event)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_FUNCTION;
 
     NPEvent* npevent = reinterpret_cast<NPEvent*>(event);
     NPRemoteEvent npremoteevent;
@@ -544,7 +544,8 @@ NPError
 PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
                                     NPBool seekable, uint16_t* stype)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG(("%s (type=%s, stream=%p, seekable=%i)",
+                      FULLFUNCTION, (char*) type, (void*) stream, (int) seekable));
 
     BrowserStreamParent* bs = new BrowserStreamParent(this, stream);
 
@@ -568,7 +569,8 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
 NPError
 PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG(("%s (stream=%p, reason=%i)",
+                      FULLFUNCTION, (void*) stream, (int) reason));
 
     AStream* s = static_cast<AStream*>(stream->pdata);
     if (s->IsBrowserStream()) {
@@ -654,7 +656,8 @@ void
 PluginInstanceParent::NPP_URLNotify(const char* url, NPReason reason,
                                     void* notifyData)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG(("%s (%s, %i, %p)",
+                      FULLFUNCTION, url, (int) reason, notifyData));
 
     PStreamNotifyParent* streamNotify =
         static_cast<PStreamNotifyParent*>(notifyData);

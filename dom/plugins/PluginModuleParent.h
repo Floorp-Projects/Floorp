@@ -59,9 +59,6 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 
-#undef _MOZ_LOG
-#define _MOZ_LOG(s) printf("[PluginModuleParent] %s\n", s)
-
 namespace mozilla {
 namespace plugins {
 //-----------------------------------------------------------------------------
