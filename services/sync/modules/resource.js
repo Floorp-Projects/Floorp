@@ -235,23 +235,15 @@ Resource.prototype = {
       status = channel.responseStatus;
       success = channel.requestSucceeded;
 
-      if (success) {
-        this._log.debug(action + " success: " + status);
-        if (this._log.level <= Log4Moz.Level.Trace)
-          this._log.trace(action + " Body: " + this._data);
-      }
-      else {
-        let log = "debug";
-        let mesg = action + " fail: " + status;
-
-        // Only log the full response body (may be HTML) when Trace logging
-        if (this._log.level <= Log4Moz.Level.Trace) {
-          log = "trace";
-          mesg += " " + this._data;
-        }
-
-        this._log[log](mesg);
-      }
+      // Log the status of the request
+      let mesg = [action, success ? "success" : "fail", status,
+        channel.URI.spec].join(" ");
+      if (mesg.length > 200)
+        mesg = mesg.substr(0, 200) + "…";
+      this._log.debug(mesg);
+      // Additionally give the full response body when Trace logging
+      if (this._log.level <= Log4Moz.Level.Trace)
+        this._log.trace(action + " body: " + this._data);
 
       // this is a server-side safety valve to allow slowing down clients without hurting performance
       if (headers["X-Weave-Backoff"])
@@ -314,19 +306,8 @@ function ChannelListener(onComplete, onProgress, logger) {
 }
 ChannelListener.prototype = {
   onStartRequest: function Channel_onStartRequest(channel) {
-    // XXX Bug 482179 Some reason xpconnect makes |channel| only nsIRequest
     channel.QueryInterface(Ci.nsIHttpChannel);
-
-    let log = "trace";
-    let mesg = channel.requestMethod + " request for " + channel.URI.spec;
-    // Only log a part of the uri for logs higher than trace
-    if (this._log.level > Log4Moz.Level.Trace) {
-      log = "debug";
-      if (mesg.length > 200)
-        mesg = mesg.substr(0, 200) + "...";
-    }
-    this._log[log](mesg);
-
+    this._log.trace(channel.requestMethod + " " + channel.URI.spec);
     this._data = '';
   },
 
