@@ -1062,8 +1062,6 @@ function BrowserStartup() {
     gURLBar.setAttribute("enablehistory", "false");
   }
 
-  CombinedStopReload.wrap();
-
   allTabs.readPref();
 
   setTimeout(delayedStartup, 0, isLoadingBlank, mustLoadSidebar);
@@ -1387,8 +1385,6 @@ function BrowserShutdown()
   tabPreviews.uninit();
   ctrlTab.uninit();
   allTabs.uninit();
-
-  CombinedStopReload.uninit();
 
   gGestureSupport.init(false);
 
@@ -3321,8 +3317,6 @@ function BrowserCustomizeToolbar()
   if (splitter)
     splitter.parentNode.removeChild(splitter);
 
-  CombinedStopReload.unwrap();
-
   var customizeURL = "chrome://global/content/customizeToolbar.xul";
   gCustomizeSheet = getBoolPref("toolbar.customization.usesheet", false);
 
@@ -3392,8 +3386,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
   }
 
   UpdateUrlbarSearchSplitterState();
-
-  CombinedStopReload.wrap();
 
   gHomeButton.updatePersonalToolbarStyle();
 
@@ -3951,10 +3943,14 @@ var XULBrowserWindow = {
   onStateChange: function (aWebProgress, aRequest, aStateFlags, aStatus) {
     const nsIWebProgressListener = Ci.nsIWebProgressListener;
     const nsIChannel = Ci.nsIChannel;
-    if (aStateFlags & nsIWebProgressListener.STATE_START &&
-        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+    if (aStateFlags & nsIWebProgressListener.STATE_START) {
+      // This (thanks to the filter) is a network start or the first
+      // stray request (the first request outside of the document load),
+      // initialize the throbber and his friends.
 
-      if (aRequest && aWebProgress.DOMWindow == content)
+      // Call start document load listeners (only if this is a network load)
+      if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK &&
+          aRequest && aWebProgress.DOMWindow == content)
         this.startDocumentLoad(aRequest);
 
       this.isBusy = true;
@@ -3977,7 +3973,6 @@ var XULBrowserWindow = {
 
         // XXX: This needs to be based on window activity...
         this.stopCommand.removeAttribute("disabled");
-        CombinedStopReload.switchToStop();
       }
     }
     else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
@@ -4045,7 +4040,6 @@ var XULBrowserWindow = {
           this.throbberElement.removeAttribute("busy");
 
         this.stopCommand.setAttribute("disabled", "true");
-        CombinedStopReload.switchToReload(aRequest instanceof Ci.nsIRequest);
       }
     }
   },
@@ -4320,105 +4314,7 @@ var XULBrowserWindow = {
     } catch (e) {
     }
   }
-};
-
-var CombinedStopReload = {
-  wrap: function () {
-    if (this.container)
-      return;
-
-    var stop = document.getElementById("stop-button");
-    if (!stop)
-      return;
-
-    var reload = document.getElementById("reload-button");
-    if (!reload)
-      return;
-
-    this._reloadBeforeStop = (reload.nextSibling == stop);
-    if (!this._reloadBeforeStop && stop.nextSibling != reload)
-      return;
-
-    this.container = document.createElement("deck");
-    this.container.id = "stop-reload-container";
-    stop.parentNode.replaceChild(this.container, stop);
-    this.container.appendChild(stop);
-    this.container.appendChild(reload);
-    this.stop = stop;
-    this.reload = reload;
-    this.container.selectedPanel =
-      XULBrowserWindow.stopCommand.getAttribute("disabled") == "true"
-      ? reload : stop;
-    stop.addEventListener("click", this, false);
-  },
-
-  handleEvent: function (event) {
-    // the only event we listen to is "click" on the stop button
-    if (event.button == 0 &&
-        !this.stop.disabled)
-      this._stopClicked = true;
-  },
-
-  switchToStop: function () {
-    if (!this.container)
-      return;
-
-    this._cancelTransition();
-    this.container.selectedPanel = this.stop;
-  },
-
-  switchToReload: function (aDelay) {
-    if (!this.container)
-      return;
-
-    if (!aDelay || this._stopClicked) {
-      this._stopClicked = false;
-      this._cancelTransition();
-      this.container.selectedPanel = this.reload;
-      return;
-    }
-
-    if (this._timer)
-      return;
-
-    this._timer = setTimeout(function (self) {
-      self._timer = 0;
-      self.container.selectedPanel = self.reload;
-    }, 650, this);
-  },
-
-  _cancelTransition: function () {
-    if (this._timer) {
-      clearTimeout(this._timer);
-      this._timer = 0;
-    }
-  },
-
-  unwrap: function () {
-    if (!this.container)
-      return;
-
-    var toolbar = this.container.parentNode;
-    if (this._reloadBeforeStop) {
-      toolbar.replaceChild(this.stop, this.container);
-      toolbar.insertBefore(this.reload, this.stop);
-    } else {
-      toolbar.replaceChild(this.reload, this.container);
-      toolbar.insertBefore(this.stop, this.reload);
-    }
-    this.uninit();
-  },
-
-  uninit: function () {
-    this._cancelTransition();
-    if (this.container) {
-      this.stop.removeEventListener("click", this, false);
-      this.container = null;
-      this.reload = null;
-      this.stop = null;
-    }
-  }
-};
+}
 
 var TabsProgressListener = {
   onProgressChange: function (aBrowser, aWebProgress, aRequest,
