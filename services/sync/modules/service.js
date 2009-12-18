@@ -1023,7 +1023,7 @@ WeaveSvc.prototype = {
       return;
     }
 
-    this._log.debug("Next sync in " + Math.ceil(interval / 1000) + " sec.");
+    this._log.trace("Next sync in " + Math.ceil(interval / 1000) + " sec.");
     Utils.delay(function() this.syncOnIdle(), interval, this, "_syncTimer");
 
     // Save the next sync time in-case sync is disabled (logout/offline/etc.)

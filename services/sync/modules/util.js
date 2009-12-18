@@ -104,7 +104,7 @@ let Utils = {
       let thisArg = this;
       let notify = function(state) {
         let mesg = prefix + name + ":" + state;
-        thisArg._log.debug("Event: " + mesg);
+        thisArg._log.trace("Event: " + mesg);
         Observers.notify(mesg, subject);
       };
 
