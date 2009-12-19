@@ -95,14 +95,13 @@ interface nsICookieManager2 : nsICookieManager
   boolean cookieExists(in nsICookie2 aCookie);
 
   /**
-   * Count how many cookies would be returned to a given host, ignoring the
-   * cookie flags isDomain, isSecure, and isHttpOnly. Thus, for a host
-   * "weather.yahoo.com", host or domain cookies for "weather.yahoo.com" and
-   * "yahoo.com" would be counted, while a cookie for "my.weather.yahoo.com"
-   * would not.
+   * Count how many cookies exist within the base domain of 'aHost'.
+   * Thus, for a host "weather.yahoo.com", the base domain would be "yahoo.com",
+   * and any host or domain cookies for "yahoo.com" and its subdomains would be
+   * counted.
    *
    * @param aHost
-   *        the host string to look for, e.g. "google.com". this should consist
+   *        the host string to begin from, e.g. "google.com". this should consist
    *        of only the host portion of a URI, and should not contain a leading
    *        dot, a port, etc.
    *
@@ -111,14 +110,13 @@ interface nsICookieManager2 : nsICookieManager
   unsigned long countCookiesFromHost(in ACString aHost);
 
   /**
-   * Returns an enumerator of cookies that would be returned to a given host,
-   * ignoring the cookie flags isDomain, isSecure, and isHttpOnly. Thus, for a
-   * host "weather.yahoo.com", host or domain cookies for "weather.yahoo.com"
-   * and "yahoo.com" would be returned, while a cookie for "my.weather.yahoo.com"
-   * would not.
+   * Returns an enumerator of cookies that exist within the base domain of
+   * 'aHost'. Thus, for a host "weather.yahoo.com", the base domain would be
+   * "yahoo.com", and any host or domain cookies for "yahoo.com" and its
+   * subdomains would be returned.
    *
    * @param aHost
-   *        the host string to look for, e.g. "google.com". this should consist
+   *        the host string to begin from, e.g. "google.com". this should consist
    *        of only the host portion of a URI, and should not contain a leading
    *        dot, a port, etc.
    *
