@@ -242,10 +242,10 @@ static void fpehandler(int signum, siginfo_t *si, void *context)
   *sw &= ~FPU_STATUS_FLAGS;
 #endif
 #if defined(__amd64__)
-  uint16_t *cw = &uc->uc_mcontext.fpregs->cwd;
+  __uint16_t *cw = &uc->uc_mcontext.fpregs->cwd;
   *cw |= FPU_EXCEPTION_MASK;
 
-  uint16_t *sw = &uc->uc_mcontext.fpregs->swd;
+  __uint16_t *sw = &uc->uc_mcontext.fpregs->swd;
   *sw &= ~FPU_STATUS_FLAGS;
 
   __uint32_t *mxcsr = &uc->uc_mcontext.fpregs->mxcsr;
