@@ -78,11 +78,14 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
 }
 
 GeckoChildProcessHost::~GeckoChildProcessHost()
-{
-    MOZ_COUNT_DTOR(GeckoChildProcessHost);
 
-    if (mChildProcessHandle > 0)
-      ProcessWatcher::EnsureProcessTerminated(mChildProcessHandle);
+{
+  AssertIOThread();
+
+  MOZ_COUNT_DTOR(GeckoChildProcessHost);
+
+  if (mChildProcessHandle > 0)
+    ProcessWatcher::EnsureProcessTerminated(mChildProcessHandle);
 }
 
 bool
