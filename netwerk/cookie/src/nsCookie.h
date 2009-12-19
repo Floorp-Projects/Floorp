@@ -75,8 +75,7 @@ class nsCookie : public nsICookie2
              PRBool          aIsSession,
              PRBool          aIsSecure,
              PRBool          aIsHttpOnly)
-     : mNext(nsnull)
-     , mName(aName)
+     : mName(aName)
      , mValue(aValue)
      , mHost(aHost)
      , mPath(aPath)
@@ -128,17 +127,12 @@ class nsCookie : public nsICookie2
     // use with caution!
     inline void SetCreationID(PRInt64 aID)        { mCreationID = aID; }
 
-    // linked list management helper
-    inline nsCookie*& Next() { return mNext; }
-
   protected:
     // member variables
     // we use char* ptrs to store the strings in a contiguous block,
     // so we save on the overhead of using nsCStrings. However, we
     // store a terminating null for each string, so we can hand them
     // out as nsAFlatCStrings.
-
-    nsCookie    *mNext;
     const char  *mName;
     const char  *mValue;
     const char  *mHost;
