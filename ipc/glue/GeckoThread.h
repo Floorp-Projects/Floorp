@@ -43,12 +43,20 @@
 
 #include "chrome/common/child_thread.h"
 
+#include "nsDebug.h"
+
 #include "mozilla/ipc/ScopedXREEmbed.h"
 
 class NotificationService;
 
 namespace mozilla {
 namespace ipc {
+
+inline void AssertIOThread()
+{
+    NS_ASSERTION(MessageLoop::TYPE_IO == MessageLoop::current()->type(),
+                 "should be on the IO thread!");
+}
 
 class GeckoThread : public ChildThread
 {
