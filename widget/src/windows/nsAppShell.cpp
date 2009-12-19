@@ -184,7 +184,7 @@ static void
 CollectNewLoadedModules()
 {
   HANDLE hModuleSnap = INVALID_HANDLE_VALUE;
-  MODULEENTRY32 module;
+  MODULEENTRY32W module;
 
   // Take a snapshot of all modules in our process.
   hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0);
@@ -192,11 +192,11 @@ CollectNewLoadedModules()
     return;
 
   // Set the size of the structure before using it.
-  module.dwSize = sizeof(MODULEENTRY32);
+  module.dwSize = sizeof(MODULEENTRY32W);
 
   // Now walk the module list of the process,
   // and display information about each module
-  PRBool done = !Module32First(hModuleSnap, &module);
+  PRBool done = !Module32FirstW(hModuleSnap, &module);
   while (!done) {
     NS_LossyConvertUTF16toASCII moduleName(module.szModule);
     PRBool found = PR_FALSE;
@@ -219,7 +219,7 @@ CollectNewLoadedModules()
       sLoadedModules[i].mName[LOADEDMODULEINFO_STRSIZE] = 0;
     }
 
-    done = !Module32Next(hModuleSnap, &module);
+    done = !Module32NextW(hModuleSnap, &module);
   }
 
   PRUint32 i;
