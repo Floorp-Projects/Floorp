@@ -270,16 +270,6 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
 
   if (HasStroke()) {
     SetupCairoStrokeGeometry(&context);
-    if (extent.IsEmpty()) {
-      // If 'extent' is empty, its position will not be set. Although
-      // GetUserStrokeExtent gets the extents wrong we can still use it
-      // to get the device space position of zero length stroked paths.
-      extent = context.GetUserStrokeExtent();
-      extent.pos.x += extent.size.width / 2;
-      extent.pos.y += extent.size.height / 2;
-      extent.size.width = 0;
-      extent.size.height = 0;
-    }
     extent = nsSVGUtils::PathExtentsToMaxStrokeExtents(extent, this);
   } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_None) {
     extent = gfxRect(0, 0, 0, 0);
