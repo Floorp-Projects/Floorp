@@ -1,7 +1,14 @@
 #include "TestRPCErrorCleanup.h"
 
+#include "mozilla/CondVar.h"
+#include "mozilla/Mutex.h"
+
 #include "IPDLUnitTests.h"      // fail etc.
 #include "IPDLUnitTestSubprocess.h"
+
+using mozilla::CondVar;
+using mozilla::Mutex;
+using mozilla::MutexAutoLock;
 
 namespace mozilla {
 namespace _ipdltest {
@@ -12,12 +19,33 @@ namespace _ipdltest {
 // NB: this test does its own shutdown, rather than going through
 // QuitParent(), because it's testing degenerate edge cases
 
+void DeleteSubprocess(Mutex* mutex, CondVar* cvar)
+{
+    MutexAutoLock lock(*mutex);
+
+    delete gSubprocess;
+    gSubprocess = NULL;
+
+    cvar->Notify();
+}
+
 void DeleteTheWorld()
 {
     delete static_cast<TestRPCErrorCleanupParent*>(gParentActor);
     gParentActor = NULL;
-    delete gSubprocess;
-    gSubprocess = NULL;
+
+    // needs to be synchronous to avoid affecting event ordering on
+    // the main thread
+    Mutex mutex("TestRPCErrorCleanup.DeleteTheWorld.mutex");
+    CondVar cvar(mutex, "TestRPCErrorCleanup.DeleteTheWorld.cvar");
+
+    MutexAutoLock lock(mutex);
+
+    XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(DeleteSubprocess, &mutex, &cvar));
+
+    cvar.Wait();
 }
 
 void Done()
