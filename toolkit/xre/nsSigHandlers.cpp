@@ -243,12 +243,12 @@ static void fpehandler(int signum, siginfo_t *si, void *context)
 #endif
 #if defined(__amd64__)
   uint16_t *cw = &uc->uc_mcontext.fpregs->cwd;
-  *cwd |= FPU_EXCEPTION_MASK;
+  *cw |= FPU_EXCEPTION_MASK;
 
   uint16_t *sw = &uc->uc_mcontext.fpregs->swd;
-  *swd &= ~FPU_STATUS_FLAGS;
+  *sw &= ~FPU_STATUS_FLAGS;
 
-  __uint32_t *mxcsr = &uc->uc_mcontext->fpregs->mxcsr;
+  __uint32_t *mxcsr = &uc->uc_mcontext.fpregs->mxcsr;
   *mxcsr |= SSE_EXCEPTION_MASK; /* disable all SSE exceptions */
   *mxcsr &= ~SSE_STATUS_FLAGS; /* clear all pending SSE exceptions */
 #endif
