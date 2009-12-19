@@ -1117,20 +1117,12 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 
 @end
 
-@interface PDEPluginCallback : NSObject
-{
-@public
-    id _printWindowController;
-}
-- (PMPrintSettings *)printSettings;
-@end
-
-@interface PDEPluginCallback (MethodSwizzling)
-- (PDEPluginCallback *)nsAppShell_PDEPluginCallback_initWithPrintWindowController:(id)controller;
+@interface NSObject (PDEPluginCallbackMethodSwizzling)
+- (id)nsAppShell_PDEPluginCallback_initWithPrintWindowController:(id)controller;
 - (void)nsAppShell_PDEPluginCallback_dealloc;
 @end
 
-@implementation PDEPluginCallback (MethodSwizzling)
+@implementation NSObject (PDEPluginCallbackMethodSwizzling)
 
 // On Leopard, the PDEPluginCallback class in Apple's PrintCocoaUI module
 // fails to retain and release its PMPrintWindowController object.  This
@@ -1142,14 +1134,21 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 // PrintCocoaUI.bundle is a "plugin" of the Carbon framework's Print
 // framework.
 
-- (PDEPluginCallback *)nsAppShell_PDEPluginCallback_initWithPrintWindowController:(id)controller
+- (id)nsAppShell_PDEPluginCallback_initWithPrintWindowController:(id)controller
 {
   return [self nsAppShell_PDEPluginCallback_initWithPrintWindowController:[controller retain]];
 }
 
 - (void)nsAppShell_PDEPluginCallback_dealloc
 {
-  [self->_printWindowController release];
+  // Since the PDEPluginCallback class is undocumented (and the OS header
+  // files have no definition for it), we need to use low-level methods to
+  // access its _printWindowController variable.  (object_getInstanceVariable()
+  // is also available in Objective-C 2.0, so this code is 64-bit safe.)
+  id _printWindowController = nil;
+  object_getInstanceVariable(self, "_printWindowController",
+                             (void **) &_printWindowController);
+  [_printWindowController release];
   [self nsAppShell_PDEPluginCallback_dealloc];
 }
 
