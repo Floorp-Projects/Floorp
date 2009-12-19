@@ -257,6 +257,7 @@ OBJS = \
     misc/$(OBJDIR)/prlog2.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prlong.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prnetdb.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/praton.$(OBJ_SUFFIX) \
     misc/$(OBJDIR)/prolock.$(OBJ_SUFFIX)	 \
     misc/$(OBJDIR)/prrng.$(OBJ_SUFFIX)	 \
     misc/$(OBJDIR)/prsystem.$(OBJ_SUFFIX) \
