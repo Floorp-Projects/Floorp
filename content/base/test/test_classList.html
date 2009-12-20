@@ -91,6 +91,24 @@ function checkModification(e, funcName, argument, expectedRes, before, after) {
   }
 }
 
+function assignToClassListStrict(e) {
+  "use strict";
+  try {
+    e.classList = "foo";
+    ok(false, "assigning to classList didn't throw");
+  } catch (e) { }
+}
+
+function assignToClassList(e) {
+  try {
+    var expect = e.classList;
+    e.classList = "foo";
+    is(e.classList, expect, "classList should be unchanged after assignment");
+  } catch (e) {
+    ok(false, "assigning to classList threw");
+  }
+}
+
 function testClassList(e) {
 
   // basic tests
@@ -101,10 +119,9 @@ function testClassList(e) {
   is(typeof(e.classList.add), "function", "no classList.add function");
   is(typeof(e.classList.remove), "function", "no classList.remove function");
   is(typeof(e.classList.toggle), "function", "no classList.toggle function");
-  try {
-    e.classList = "foo";
-    ok(false, "assigning to classList didn't throw");
-  } catch (e) { }
+
+  assignToClassListStrict(e);
+  assignToClassList(e);
 
   // length attribute
 

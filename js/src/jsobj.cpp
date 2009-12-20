@@ -4390,11 +4390,12 @@ js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, bool added,
     } else {
         /*
          * Allow API consumers to create shared properties with stub setters.
-         * Such properties lack value storage, so setting them is like writing
-         * to /dev/null.
+         * Such properties effectively function as data descriptors which are
+         * not writable, so attempting to set such a property should do nothing
+         * or throw if we're in strict mode.
          */
-        if (SPROP_HAS_STUB_SETTER(sprop))
-            return true;
+        if (!(sprop->attrs & JSPROP_GETTER) && SPROP_HAS_STUB_SETTER(sprop))
+            return js_ReportGetterOnlyAssignment(cx);
     }
 
     sample = cx->runtime->propertyRemovals;
@@ -6121,17 +6122,20 @@ js_IsCallable(JSObject *obj, JSContext *cx)
     return callable;
 }
 
-void
+JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                         JSMSG_GETTER_ONLY, NULL);
+    return JS_ReportErrorFlagsAndNumber(cx,
+                                        JSREPORT_WARNING | JSREPORT_STRICT |
+                                        JSREPORT_STRICT_MODE_ERROR,
+                                        js_GetErrorMessage, NULL,
+                                        JSMSG_GETTER_ONLY);
 }
 
 JS_FRIEND_API(JSBool)
 js_GetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    js_ReportGetterOnlyAssignment(cx);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_GETTER_ONLY);
     return JS_FALSE;
 }
 
