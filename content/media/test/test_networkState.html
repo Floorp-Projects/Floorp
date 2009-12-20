@@ -10,17 +10,37 @@
 <video id='v1' onerror="event.stopPropagation();"></video><audio id='a1' onerror="event.stopPropagation();"></audio>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+"use strict";
 var v1 = document.getElementById('v1');
 var a1 = document.getElementById('a1');
-var passed = true;
+var passed = "truthy";
 
 try {
   v1.networkState = 0;
+} catch (e) {
+  passed = !passed;
+}
+try {
   a1.networkState = 0;
-  passed = false;
-} catch(e) { }
-ok(passed, "Should not be able to set networkState (readonly attribute)");
+} catch (e) {
+  passed = !passed;
+}
+ok(passed === true,
+   "Setting networkState throws in strict mode (readonly attribute)");
+</script>
 
+<script class="testbody" type="text/javascript">
+var v1 = document.getElementById('v1');
+var a1 = document.getElementById('a1');
+var passed = false;
+
+var oldv1ns = v1.networkState, olda1ns = a1.networkState;
+try {
+  v1.networkState = 0;
+  a1.networkState = 0;
+  passed = v1.networkState === oldv1ns && a1.networkState === olda1ns;
+} catch (e) { }
+ok(passed, "Should not be able to modify networkState (readonly attribute)");
 </script>
 </pre>
 </body>
