@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,288 +37,169 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "IEnumFE.h"
-#include <stdio.h>
-#include "nsISupports.h"
+#include "nsAlgorithm.h"
 
-/*
- * CEnumFormatEtc::CEnumFormatEtc
- * CEnumFormatEtc::~CEnumFormatEtc
- *
- * Parameters (Constructor):
- *  cFE             ULONG number of FORMATETCs in pFE
- *  prgFE           LPFORMATETC to the array to enumerate.
- */
-
-CEnumFormatEtc::CEnumFormatEtc(ULONG aNumFEs, LPFORMATETC aFEList)
+CEnumFormatEtc::CEnumFormatEtc() :
+  mRefCnt(0),
+  mCurrentIdx(0)
 {
-  UINT        i;
-
-  mRefCnt     = 0;
-
-  mCurrentInx = 0;
-  mNumFEs     = aNumFEs;
-  mMaxNumFEs  = aNumFEs;
-  mFEList     = new FORMATETC[(UINT)aNumFEs];
-
-  if (NULL!=mFEList) {
-    for (i=0; i < aNumFEs; i++) {
-      mFEList[i] = aFEList[i];
-    }
-  }
-
 }
 
-/*
- * CEnumFormatEtc::CEnumFormatEtc
- * CEnumFormatEtc::~CEnumFormatEtc
- *
- * Parameters (Constructor):
- *  pUnkRef         LPUNKNOWN to use for reference counting.
- *  cFE             ULONG number of FORMATETCs in pFE
- */
-
-CEnumFormatEtc::CEnumFormatEtc(ULONG aMaxFE)
+// Constructor used by Clone()
+CEnumFormatEtc::CEnumFormatEtc(nsTArray<FormatEtc>& aArray) :
+  mRefCnt(0),
+  mCurrentIdx(0)
 {
-  mRefCnt     = 0;
-
-  mCurrentInx = 0;
-  mNumFEs     = 0;
-  mMaxNumFEs  = aMaxFE;
-  mFEList     = new FORMATETC[(UINT)aMaxFE];
+  // a deep copy, calls FormatEtc's copy constructor on each
+  mFormatList.AppendElements(aArray);
 }
 
-
-//----------------------------------------------------
-CEnumFormatEtc::~CEnumFormatEtc(void)
+CEnumFormatEtc::~CEnumFormatEtc()
 {
-  if (NULL != mFEList) {
-    delete [] mFEList;
-  }
-
 }
 
-//----------------------------------------------------
-void CEnumFormatEtc::AddFE(LPFORMATETC aFE)
+/* IUnknown impl. */
+
+STDMETHODIMP
+CEnumFormatEtc::QueryInterface(REFIID riid, LPVOID *ppv)
 {
-  mFEList[mNumFEs++] = *aFE;
+  *ppv = NULL;
+
+  if (IsEqualIID(riid, IID_IUnknown) ||
+      IsEqualIID(riid, IID_IEnumFORMATETC))
+      *ppv = (LPVOID)this;
+
+  if (*ppv == NULL)
+      return E_NOINTERFACE;
+
+  // AddRef any interface we'll return.
+  ((LPUNKNOWN)*ppv)->AddRef();
+  return S_OK;
 }
 
-//----------------------------------------------------
-bool CEnumFormatEtc::InsertFEAt(LPFORMATETC aFE, ULONG aIndex)
-{
-  if (NULL==aFE || aIndex >= mNumFEs) return FALSE;
-
-  UINT i;
-  if (mNumFEs == mMaxNumFEs) {
-    // Grow the list.  Just growing by 1 for now.  If this becomes a perf
-    // bottleneck we should grow in larger chunks.
-    LPFORMATETC newFEList = (LPFORMATETC) new FORMATETC[(UINT) mNumFEs + 1];
-    for (i = 0; i < mNumFEs - 1; ++i) {
-      newFEList[i] = mFEList[i];
-    }
-    delete [] mFEList;
-    mFEList = newFEList;
-    ++mMaxNumFEs;
-  }  
-  
-  // XXX This insert loop should really be a memmove() call but
-  // this code is easier to read so sticking with this unless
-  // we find that this method is a performance bottleneck.  
-  for (i = mNumFEs; i > aIndex; --i) {
-    mFEList[i] = mFEList[i - 1];
-  }
-  mFEList[aIndex] = *aFE;
-  ++mNumFEs;
-
-  return TRUE;
-}
-
-/*
- * CEnumFormatEtc::QueryInterface
- * CEnumFormatEtc::AddRef
- * CEnumFormatEtc::Release
- *
- * Purpose:
- *  IUnknown members for CEnumFormatEtc object.  For QueryInterface
- *  we only return out own interfaces and not those of the data
- *  object.  However, since enumerating formats only makes sense
- *  when the data object is around, we insure that it stays as
- *  long as we stay by calling an outer IUnknown for AddRef
- *  and Release.  But since we are not controlled by the lifetime
- *  of the outer object, we still keep our own reference count in
- *  order to free ourselves.
- */
-
-STDMETHODIMP CEnumFormatEtc::QueryInterface(REFIID riid, LPVOID *ppv)
-{
-  *ppv=NULL;
-
-  /*
-   * Enumerators are separate objects, not the data object, so
-   * we only need to support out IUnknown and IEnumFORMATETC
-   * interfaces here with no concern for aggregation.
-   */
-  if (IsEqualIID(riid, IID_IUnknown)
-      || IsEqualIID(riid, IID_IEnumFORMATETC))
-      *ppv=(LPVOID)this;
-
-  //AddRef any interface we'll return.
-  if (NULL!=*ppv)
-      {
-      ((LPUNKNOWN)*ppv)->AddRef();
-      return NOERROR;
-      }
-
-  return ResultFromScode(E_NOINTERFACE);
-}
-
-STDMETHODIMP_(ULONG) CEnumFormatEtc::AddRef(void)
+STDMETHODIMP_(ULONG)
+CEnumFormatEtc::AddRef()
 {
   ++mRefCnt;
   NS_LOG_ADDREF(this, mRefCnt, "CEnumFormatEtc",sizeof(*this));
-#ifdef DEBUG
-  //printf("CEnumFormatEtc::AddRef >>>>>>>>>>>>>>>>>> %d on %p\n", mRefCnt, this);
-#endif
   return mRefCnt;
 }
 
-STDMETHODIMP_(ULONG) CEnumFormatEtc::Release(void)
+STDMETHODIMP_(ULONG)
+CEnumFormatEtc::Release()
 {
-  ULONG cRefT;
+  PRUint32 refReturn;
 
-  cRefT = --mRefCnt;
+  refReturn = --mRefCnt;
   NS_LOG_RELEASE(this, mRefCnt, "CEnumFormatEtc");
 
-  if (0L == mRefCnt)
+  if (mRefCnt == 0)
       delete this;
 
-#ifdef DEBUG
-  //printf("CEnumFormatEtc::Release >>>>>>>>>>>>>>>>>> %d on %p\n", mRefCnt, this);
-#endif
-  return cRefT;
+  return refReturn;
 }
 
+/* IEnumFORMATETC impl. */
 
-/*
- * CEnumFormatEtc::Next
- *
- * Purpose:
- *  Returns the next element in the enumeration.
- *
- * Parameters:
- *  cFE             ULONG number of FORMATETCs to return.
- *  pFE             LPFORMATETC in which to store the returned
- *                  structures.
- *  pulFE           ULONG * in which to return how many we
- *                  enumerated.
- *
- * Return Value:
- *  HRESULT         NOERROR if successful, S_FALSE otherwise,
- */
-
-STDMETHODIMP CEnumFormatEtc::Next(ULONG cFE, LPFORMATETC pFE, ULONG * pulFE)
+STDMETHODIMP
+CEnumFormatEtc::Next(ULONG aMaxToFetch, FORMATETC *aResult, ULONG *aNumFetched)
 {
-  ULONG               cReturn=0L;
+  // If the method retrieves the number of items requested, the return
+  // value is S_OK. Otherwise, it is S_FALSE.
 
-  if (NULL==mFEList)
-      return ResultFromScode(S_FALSE);
+  if (aNumFetched)
+      *aNumFetched = 0;
 
-  if (NULL==pulFE)
-      {
-      if (1L!=cFE)
-          return ResultFromScode(E_POINTER);
-      }
-  else
-      *pulFE=0L;
+  // aNumFetched can be null if aMaxToFetch is 1
+  if (!aNumFetched && aMaxToFetch > 1)
+      return S_FALSE;
 
-  if (NULL==pFE || mCurrentInx >= mNumFEs)
-      return ResultFromScode(S_FALSE);
+  if (!aResult)
+      return S_FALSE;
 
-  while (mCurrentInx < mNumFEs && cFE > 0)
-      {
-      *pFE++=mFEList[mCurrentInx++];
-      cReturn++;
-      cFE--;
-      }
+  // We're done walking the list
+  if (mCurrentIdx >= mFormatList.Length())
+      return S_FALSE;
 
-  if (NULL!=pulFE)
-      *pulFE=cReturn;
+  PRInt32 left = mFormatList.Length() - mCurrentIdx;
 
-  return NOERROR;
+  if (!left || !aMaxToFetch)
+      return S_FALSE;
+
+  PRInt32 count = NS_MIN(static_cast<PRInt32>(aMaxToFetch), left);
+
+  PRUint32 idx = 0;
+  while (count > 0) {
+      // Copy out to aResult
+      mFormatList[mCurrentIdx++].CopyOut(&aResult[idx++]);
+      count--;
+  }
+
+  if (aNumFetched)
+      *aNumFetched = idx-1;
+
+  return S_OK;
 }
 
-/*
- * CEnumFormatEtc::Skip
- *
- * Purpose:
- *  Skips the next n elements in the enumeration.
- *
- * Parameters:
- *  cSkip           ULONG number of elements to skip.
- *
- * Return Value:
- *  HRESULT         NOERROR if successful, S_FALSE if we could not
- *                  skip the requested number.
- */
-
-STDMETHODIMP CEnumFormatEtc::Skip(ULONG cSkip)
+STDMETHODIMP
+CEnumFormatEtc::Skip(ULONG aSkipNum)
 {
-  if (((mCurrentInx+cSkip) >= mNumFEs) || NULL==mFEList)
-      return ResultFromScode(S_FALSE);
+  // If the method skips the number of items requested, the return value is S_OK.
+  // Otherwise, it is S_FALSE.
 
-  mCurrentInx+=cSkip;
-  return NOERROR;
+  if ((mCurrentIdx + aSkipNum) >= mFormatList.Length())
+      return S_FALSE;
+
+  mCurrentIdx += aSkipNum;
+
+  return S_OK;
 }
 
-/*
- * CEnumFormatEtc::Reset
- *
- * Purpose:
- *  Resets the current element index in the enumeration to zero.
- *
- * Parameters:
- *  None
- *
- * Return Value:
- *  HRESULT         NOERROR
- */
-
-STDMETHODIMP CEnumFormatEtc::Reset(void)
+STDMETHODIMP
+CEnumFormatEtc::Reset(void)
 {
-  mCurrentInx=0;
-  return NOERROR;
+  mCurrentIdx = 0;
+  return S_OK;
 }
 
-/*
- * CEnumFormatEtc::Clone
- *
- * Purpose:
- *  Returns another IEnumFORMATETC with the same state as ourselves.
- *  It is addrefed.
- *
- * Parameters:
- *  ppEnum          LPENUMFORMATETC * in which to return the
- *                  new object.
- *
- * Return Value:
- *  HRESULT         NOERROR or a general error value.
- */
-
-STDMETHODIMP CEnumFormatEtc::Clone(LPENUMFORMATETC *ppEnum)
+STDMETHODIMP
+CEnumFormatEtc::Clone(LPENUMFORMATETC *aResult)
 {
-  LPCEnumFormatEtc    pNew;
+  // Must return a new IEnumFORMATETC interface with the same iterative state.
 
-  *ppEnum=NULL;
+  if (!aResult)
+      return E_INVALIDARG;
 
-  //Create the clone
-  pNew = new CEnumFormatEtc(mNumFEs, mFEList);
+  CEnumFormatEtc * pEnumObj = new CEnumFormatEtc(mFormatList);
 
-  if (NULL==pNew)
-      return ResultFromScode(E_OUTOFMEMORY);
+  if (!pEnumObj)
+      return E_OUTOFMEMORY;
 
-  pNew->AddRef();
-  pNew->mCurrentInx=mCurrentInx;
+  pEnumObj->AddRef();
+  pEnumObj->SetIndex(mCurrentIdx);
 
-  *ppEnum=pNew;
-  return NOERROR;
+  *aResult = pEnumObj;
+
+  return S_OK;
+}
+
+/* utils */
+
+void
+CEnumFormatEtc::AddFormatEtc(LPFORMATETC aFormat)
+{
+  if (!aFormat)
+      return;
+  FormatEtc * etc = mFormatList.AppendElement();
+  // Make a copy of aFormat
+  if (etc)
+      etc->CopyIn(aFormat);
+}
+
+/* private */
+
+void
+CEnumFormatEtc::SetIndex(PRUint32 aIdx)
+{
+  mCurrentIdx = aIdx;
 }

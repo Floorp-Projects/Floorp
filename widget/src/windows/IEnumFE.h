@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,52 +36,87 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#ifndef _IENUMFE_H_
-#define _IENUMFE_H_
-#include <ole2.h>
+#ifndef IEnumeFE_h__
+#define IEnumeFE_h__
 
 /*
- * IEnumFORMATETC object that is created from
- * IDataObject::EnumFormatEtc.  This object lives on its own,
- * that is, QueryInterface only knows IUnknown and IEnumFormatEtc,
- * nothing more.  We still use an outer unknown for reference
- * counting, because as long as this enumerator lives, the data
- * object should live, thereby keeping the application up.
+ * CEnumFormatEtc - implements IEnumFORMATETC
  */
 
-class CEnumFormatEtc;
-typedef class CEnumFormatEtc *LPCEnumFormatEtc;
+#include <ole2.h>
+
+#include "nsTArray.h"
+
+// FORMATETC container
+class FormatEtc
+{
+public:
+  FormatEtc() { memset(&mFormat, 0, sizeof(FORMATETC)); }
+  FormatEtc(const FormatEtc& copy) { CopyIn(&copy.mFormat); }
+  ~FormatEtc() { if (mFormat.ptd) CoTaskMemFree(mFormat.ptd); }
+
+  void CopyIn(const FORMATETC *aSrc) {
+    if (!aSrc) {
+        memset(&mFormat, 0, sizeof(FORMATETC));
+        return;
+    }
+    mFormat = *aSrc;
+    if (aSrc->ptd) {
+        mFormat.ptd = (DVTARGETDEVICE*)CoTaskMemAlloc(sizeof(DVTARGETDEVICE));
+        *(mFormat.ptd) = *(aSrc->ptd);
+    }
+  }
+
+  void CopyOut(LPFORMATETC aDest) {
+    if (!aDest)
+        return;
+    *aDest = mFormat;
+    if (mFormat.ptd) {
+        aDest->ptd = (DVTARGETDEVICE*)CoTaskMemAlloc(sizeof(DVTARGETDEVICE));
+        *(aDest->ptd) = *(mFormat.ptd);
+    }
+  }
+
+private:
+  FORMATETC mFormat;
+};
+
+/*
+ * CEnumFormatEtc is created within IDataObject::EnumFormatEtc. This object lives
+ * on its own, that is, QueryInterface only knows IUnknown and IEnumFormatEtc,
+ * nothing more.  We still use an outer unknown for reference counting, because as
+ * long as this enumerator lives, the data object should live, thereby keeping the
+ * application up.
+ */
 
 class CEnumFormatEtc : public IEnumFORMATETC
-    {
-    private:
-        ULONG           mRefCnt;      // Object reference count
-        ULONG           mCurrentInx;  // Current element
-        ULONG           mNumFEs;      // Number of FORMATETCs in us
-        LPFORMATETC     mFEList;      // Source of FORMATETCs
-        ULONG           mMaxNumFEs;   // Max number of us
+{
+public:
+    CEnumFormatEtc(nsTArray<FormatEtc>& aArray);
+    CEnumFormatEtc();
+    ~CEnumFormatEtc();
 
-    public:
-        CEnumFormatEtc(ULONG, LPFORMATETC);
-        CEnumFormatEtc(ULONG aMaxSize);
-        ~CEnumFormatEtc(void);
+    // IUnknown impl.
+    STDMETHODIMP QueryInterface(REFIID riid, LPVOID *ppv);
+    STDMETHODIMP_(ULONG) AddRef();
+    STDMETHODIMP_(ULONG) Release();
 
-        //IUnknown members that delegate to m_pUnkOuter.
-        STDMETHODIMP         QueryInterface(REFIID, LPVOID*);
-        STDMETHODIMP_(ULONG) AddRef(void);
-        STDMETHODIMP_(ULONG) Release(void);
+    // IEnumFORMATETC impl.
+    STDMETHODIMP Next(ULONG aMaxToFetch, FORMATETC *aResult, ULONG *aNumFetched);
+    STDMETHODIMP Skip(ULONG aSkipNum);
+    STDMETHODIMP Reset();
+    STDMETHODIMP Clone(LPENUMFORMATETC *aResult); // Addrefs
 
-        //IEnumFORMATETC members
-        STDMETHODIMP Next(ULONG, LPFORMATETC, ULONG *);
-        STDMETHODIMP Skip(ULONG);
-        STDMETHODIMP Reset(void);
-        STDMETHODIMP Clone(IEnumFORMATETC **);
+    // Utils 
+    void AddFormatEtc(LPFORMATETC aFormat);
 
-        // Extra Methods
-        void AddFE(LPFORMATETC);
-        bool InsertFEAt(LPFORMATETC, ULONG);
-    };
+private:
+    nsTArray<FormatEtc> mFormatList; // Formats
+    ULONG mRefCnt; // Object reference count
+    ULONG mCurrentIdx; // Current element
+
+    void SetIndex(PRUint32 aIdx);
+};
 
 
 #endif //_IENUMFE_H_
