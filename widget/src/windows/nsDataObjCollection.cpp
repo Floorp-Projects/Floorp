@@ -65,7 +65,7 @@ EXTERN_C GUID CDECL CLSID_nsDataObjCollection =
 nsDataObjCollection::nsDataObjCollection()
   : m_cRef(0), mTransferable(nsnull)
 {
-  m_enumFE = new CEnumFormatEtc(32);
+  m_enumFE = new CEnumFormatEtc();
   m_enumFE->AddRef();
 }
 
@@ -317,7 +317,7 @@ void nsDataObjCollection::AddDataFlavor(nsString * aDataFlavor, LPFORMATETC aFE)
   // so we will look up data flavor that corresponds to the FE
   // and then ask the transferable for that type of data
   mDataFlavors.AppendElement(*aDataFlavor);
-  m_enumFE->AddFE(aFE);
+  m_enumFE->AddFormatEtc(aFE);
 }
 
 //-----------------------------------------------------
