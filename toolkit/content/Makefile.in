@@ -58,9 +58,9 @@ DEFINES += \
   -DCPPFLAGS="$(CPPFLAGS)" \
   $(NULL)
 
-CHANGESET := $(shell cd $(topsrcdir) && hg identify . 2>/dev/null | cut -f1 -d' ')
-ifdef CHANGESET
-DEFINES += -DSOURCE_CHANGESET="$(CHANGESET)"
+MOZ_SOURCE_STAMP ?= $(shell hg -R $(topsrcdir) parent --template="{node|short}\n" 2>/dev/null)
+ifdef MOZ_SOURCE_STAMP
+DEFINES += -DSOURCE_CHANGESET="$(MOZ_SOURCE_STAMP)"
 endif
 
 # strip a trailing slash from the repo URL because it's not always present,
