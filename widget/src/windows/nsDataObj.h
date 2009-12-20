@@ -233,6 +233,7 @@ class nsDataObj : public IDataObject,
         
         virtual HRESULT DropImage( FORMATETC& aFE, STGMEDIUM& aSTG );
         virtual HRESULT DropFile( FORMATETC& aFE, STGMEDIUM& aSTG );
+        virtual HRESULT DropTempFile( FORMATETC& aFE, STGMEDIUM& aSTG );
 
     virtual HRESULT GetUniformResourceLocator ( FORMATETC& aFE, STGMEDIUM& aSTG, PRBool aIsUnicode ) ;
     virtual HRESULT ExtractUniformResourceLocatorA ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
