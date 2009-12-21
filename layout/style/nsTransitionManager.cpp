@@ -523,6 +523,24 @@ nsTransitionManager::StyleContextChanged(nsIContent *aElement,
            static_cast<nsIStyleRule*>(coverRule.forget().get()));
 }
 
+static PRBool
+TransExtractComputedValue(nsCSSProperty aProperty,
+                          nsStyleContext* aStyleContext,
+                          nsStyleAnimation::Value& aComputedValue)
+{
+  PRBool result =
+    nsStyleAnimation::ExtractComputedValue(aProperty, aStyleContext,
+                                           aComputedValue);
+  if (aProperty == eCSSProperty_visibility) {
+    NS_ABORT_IF_FALSE(aComputedValue.GetUnit() ==
+                        nsStyleAnimation::eUnit_Enumerated,
+                      "unexpected unit");
+    aComputedValue.SetIntValue(aComputedValue.GetIntValue(),
+                               nsStyleAnimation::eUnit_Visibility);
+  }
+  return result;
+}
+
 void
 nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
                        const nsTransition& aTransition,
@@ -552,10 +570,8 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
   ElementPropertyTransition pt;
   nsStyleAnimation::Value dummyValue;
   PRBool shouldAnimate =
-    nsStyleAnimation::ExtractComputedValue(aProperty, aOldStyleContext,
-                                           pt.mStartValue) &&
-    nsStyleAnimation::ExtractComputedValue(aProperty, aNewStyleContext,
-                                           pt.mEndValue) &&
+    TransExtractComputedValue(aProperty, aOldStyleContext, pt.mStartValue) &&
+    TransExtractComputedValue(aProperty, aNewStyleContext, pt.mEndValue) &&
     pt.mStartValue != pt.mEndValue &&
     // Check that we can interpolate between these values
     // (If this is ever a performance problem, we could add a

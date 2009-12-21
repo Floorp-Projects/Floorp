@@ -229,6 +229,8 @@ public:
     eUnit_Auto,
     eUnit_None,
     eUnit_Enumerated,
+    eUnit_Visibility, // special case for transitions (which converts
+                      // Enumerated to Visibility as needed)
     eUnit_Integer,
     eUnit_Coord,
     eUnit_Percent,
@@ -359,7 +361,8 @@ public:
     }
 
     static PRBool IsIntUnit(Unit aUnit) {
-      return aUnit == eUnit_Enumerated || aUnit == eUnit_Integer;
+      return aUnit == eUnit_Enumerated || aUnit == eUnit_Visibility ||
+             aUnit == eUnit_Integer;
     }
     static PRBool IsCSSValuePairUnit(Unit aUnit) {
       return aUnit == eUnit_CSSValuePair;
