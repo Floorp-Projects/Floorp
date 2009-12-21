@@ -1302,14 +1302,7 @@ struct nsStyleDisplay {
   // We guarantee that if mBinding is non-null, so are mBinding->mURI and
   // mBinding->mOriginPrincipal.
   nsRefPtr<nsCSSValue::URL> mBinding;    // [reset]
-#if 0
-  // XXX This is how it is defined in the CSS2 spec, but the errata
-  // changed it to be consistent with the positioning draft and how
-  // Nav and IE implement it
-  nsMargin  mClip;              // [reset] offsets from respective edge
-#else
   nsRect    mClip;              // [reset] offsets from upper-left border edge
-#endif
   float   mOpacity;             // [reset]
   PRUint8 mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
   PRUint8 mOriginalDisplay;     // [reset] saved mDisplay for position:absolute/fixed
