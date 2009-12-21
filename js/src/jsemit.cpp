@@ -4384,7 +4384,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         cg2->staticLevel = cg->staticLevel + 1;
 
         /* We measured the max scope depth when we parsed the function. */
-        JS_SCOPE_DEPTH_METERING(cg2->maxScopeDepth = (uintN) -1);
+        JS_SCOPE_DEPTH_METERING(cg2->maxScopeDepth = uint16(-1));
         if (!js_EmitFunctionScript(cx, cg2, pn->pn_body))
             pn = NULL;
 

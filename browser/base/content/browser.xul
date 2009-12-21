@@ -296,10 +296,16 @@
                        style="visibility:hidden"/>
       </stack>
     </panel>
-  </popupset>
 
-  <!-- Bookmarks and history tooltip -->
-  <tooltip id="bhTooltip"/>
+    <!-- Bookmarks and history tooltip -->
+    <tooltip id="bhTooltip"/>
+
+    <panel id="customizeToolbarSheetPopup" noautohide="true">
+      <iframe id="customizeToolbarSheetIFrame"
+              style="&dialog.style;"
+              hidden="true"/>
+    </panel>
+  </popupset>
 
   <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
 #ifdef WINCE
@@ -596,11 +602,6 @@
                   onclick="return contentAreaClick(event, false);"/>
     </vbox>
   </hbox>
-  <panel id="customizeToolbarSheetPopup" noautohide="true">
-    <iframe id="customizeToolbarSheetIFrame"
-            style="&dialog.style;"
-            hidden="true"/>
-  </panel>
 
   <vbox id="browser-bottombox">
     <findbar browserid="content" id="FindToolbar"/>

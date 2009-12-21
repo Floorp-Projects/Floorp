@@ -239,9 +239,7 @@ protected:
 };
 #endif
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
-  extern void InstallUnixSignalHandlers(const char *ProgramName);
-#endif
+extern void InstallSignalHandlers(const char *ProgramName);
 
 #define FILE_COMPATIBILITY_INFO NS_LITERAL_CSTRING("compatibility.ini")
 
@@ -3702,9 +3700,7 @@ SetupErrorHandling(const char* progname)
 #endif
 #endif
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
-  InstallUnixSignalHandlers(progname);
-#endif
+  InstallSignalHandlers(progname);
 
 #ifndef WINCE
   // Unbuffer stdout, needed for tinderbox tests.

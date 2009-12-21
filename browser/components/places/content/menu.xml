@@ -624,8 +624,7 @@
         <parameter name="aParentPopup"/>
         <parameter name="aBefore"/>
         <body><![CDATA[
-          var element = PlacesUIUtils.createMenuItemForNode(aChild);
-
+          let element = PlacesUIUtils.createMenuItemForNode(aChild);
           if (aBefore)
             aParentPopup.insertBefore(element, aBefore);
           else {
@@ -642,6 +641,28 @@
 
           if (aParentPopup._endMarker != -1)
             aParentPopup._endMarker++;
+
+#ifdef XP_MACOSX
+          // Bug 529062:
+          // We rely on the menu* bindings, but those aren't never applied
+          // in native mac menus, for elements which are added to the document
+          // through appendChild / insertBefore.
+          if (this.parentNode.parentNode.localName != "menubar")
+            return;
+
+          function applyBinding(elm) {
+            // getPropertyCSSValue is semi-deprecared, but there's no
+            // alternative for parsing css_uri values reliably.
+            let elmBindingURI = window.getComputedStyle(element, "")
+                                      .getPropertyCSSValue("-moz-binding");
+            if (elmBindingURI.primitiveType == CSSPrimitiveValue.CSS_URI)
+              document.addBinding(elm, elmBindingURI.getStringValue());
+          }
+
+          applyBinding(element);
+          if (element.localName == "menu")
+            applyBinding(element.firstChild);
+#endif
         ]]></body>
       </method>
 

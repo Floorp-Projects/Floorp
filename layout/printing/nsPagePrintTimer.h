@@ -75,6 +75,7 @@ private:
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
   nsCOMPtr<nsITimer>         mTimer;
   PRUint32                   mDelay;
+  PRUint32                   mFiringCount;
   nsPrintObject *            mPrintObj;
 };
 

@@ -581,7 +581,6 @@ js_atom_sweeper(JSDHashTable *table, JSDHashEntryHdr *hdr,
                 uint32 number, void *arg)
 {
     JSAtomHashEntry *entry = TO_ATOM_ENTRY(hdr);
-    JSContext *cx = (JSContext *)arg;
 
     /* Remove uninitialized entries.  */
     if (entry->keyAndFlags == 0)
@@ -589,8 +588,8 @@ js_atom_sweeper(JSDHashTable *table, JSDHashEntryHdr *hdr,
 
     if (ATOM_ENTRY_FLAGS(entry) & (ATOM_PINNED | ATOM_INTERNED)) {
         /* Pinned or interned key cannot be finalized. */
-        JS_ASSERT(!js_IsAboutToBeFinalized(cx, ATOM_ENTRY_KEY(entry)));
-    } else if (js_IsAboutToBeFinalized(cx, ATOM_ENTRY_KEY(entry))) {
+        JS_ASSERT(!js_IsAboutToBeFinalized(ATOM_ENTRY_KEY(entry)));
+    } else if (js_IsAboutToBeFinalized(ATOM_ENTRY_KEY(entry))) {
         /* Remove entries with things about to be GC'ed. */
         return JS_DHASH_REMOVE;
     }
@@ -602,8 +601,8 @@ js_SweepAtomState(JSContext *cx)
 {
     JSAtomState *state = &cx->runtime->atomState;
 
-    JS_DHashTableEnumerate(&state->doubleAtoms, js_atom_sweeper, cx);
-    JS_DHashTableEnumerate(&state->stringAtoms, js_atom_sweeper, cx);
+    JS_DHashTableEnumerate(&state->doubleAtoms, js_atom_sweeper, NULL);
+    JS_DHashTableEnumerate(&state->stringAtoms, js_atom_sweeper, NULL);
 
     /*
      * Optimize for simplicity and mutate table generation numbers even if the
