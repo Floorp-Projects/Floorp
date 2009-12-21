@@ -40,6 +40,20 @@ p.style.MozTransitionProperty = "font";
 is(cs.textIndent, "0px",
    "relevant change to transition property does change transitioning");
 
+/** Test for Bug 522643 */
+p.style.MozTransitionDuration = "4s";
+p.style.MozTransitionDelay = "-2s";
+p.style.MozTransitionProperty = "text-indent";
+p.style.textIndent = "100px";
+is(cs.textIndent, "50px", "transition is halfway");
+p.style.MozTransitionDuration = "0s";
+p.style.MozTransitionDelay = "0s";
+is(cs.textIndent, "50px",
+   "changing duration and delay doesn't change transitioning");
+p.style.textIndent = "0px";
+is(cs.textIndent, "0px",
+   "changing property after changing duration and delay stops transition");
+
 </script>
 </pre>
 </body>
