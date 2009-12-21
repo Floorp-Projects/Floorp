@@ -953,7 +953,7 @@ namespace nanojit
         // Nb: this must be kept in sync with arg().
         LInsp* args2 = (LInsp*)_buf->_allocator.alloc(argc * sizeof(LInsp));
         memcpy(args2, args, argc * sizeof(LInsp));
- 
+
         // Allocate and write the call instruction.
         LInsC* insC = (LInsC*)_buf->makeRoom(sizeof(LInsC));
         LIns*  ins  = insC->getLIns();
@@ -1032,7 +1032,7 @@ namespace nanojit
                 spTop >>= 2;
                 rpTop >>= 2;
             }
-            
+
             return i;
         }
     }
@@ -1407,7 +1407,7 @@ namespace nanojit
         SeqBuilder<RetiredEntry*> retired;
         int retiredCount;
         int maxlive;
-        LiveTable(Allocator& alloc) 
+        LiveTable(Allocator& alloc)
             : alloc(alloc)
             , live(alloc)
             , retired(alloc)
@@ -2173,7 +2173,7 @@ namespace nanojit
             logc->printf("=== -- Compile trunk %s: begin\n",
                          labels->format(frag));
         })
-        
+
         // Used for debug printing, if needed
         verbose_only(
         ReverseLister *pp_init = NULL;
@@ -2205,16 +2205,16 @@ namespace nanojit
                                                 "After StackFilter");
         prev = pp_after_sf;
         })
-        
+
         assm->assemble(frag, prev);
-        
+
         // If we were accumulating debug info in the various ReverseListers,
         // call finish() to emit whatever contents they have accumulated.
         verbose_only(
         if (pp_init)        pp_init->finish();
         if (pp_after_sf)    pp_after_sf->finish();
         )
-        
+
         verbose_only( if (anyVerb) {
             logc->printf("=== -- Compile trunk %s: end\n",
                          labels->format(frag));
@@ -2267,7 +2267,7 @@ namespace nanojit
 
     LInsp LoadFilter::insLoad(LOpcode v, LInsp base, int32_t disp)
     {
-        if (base != sp && base != rp) 
+        if (base != sp && base != rp)
         {
             switch (v)
             {

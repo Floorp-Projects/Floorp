@@ -98,10 +98,10 @@ extern void VMPI_setPageProtection(void *address,
 //  Keep this warning-set relatively in sync with platform/win32/win32-platform.h in tamarin.
 
 #ifdef _MSC_VER
-	#pragma warning(disable:4201) // nonstandard extension used : nameless struct/union
-	#pragma warning(disable:4512) // assignment operator could not be generated
-	#pragma warning(disable:4511) // can't generate copy ctor
-	#pragma warning(disable:4127) // conditional expression is constant - appears to be compiler noise primarily
+    #pragma warning(disable:4201) // nonstandard extension used : nameless struct/union
+    #pragma warning(disable:4512) // assignment operator could not be generated
+    #pragma warning(disable:4511) // can't generate copy ctor
+    #pragma warning(disable:4127) // conditional expression is constant - appears to be compiler noise primarily
     #pragma warning(disable:4611) // interaction between _setjmp and destruct
     #pragma warning(disable:4725) // instruction may be inaccurate on some Pentiums
     #pragma warning(disable:4611) // interaction between '_setjmp' and C++ object destruction is non-portable

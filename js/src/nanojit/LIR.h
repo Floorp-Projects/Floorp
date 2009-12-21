@@ -236,9 +236,9 @@ namespace nanojit
     //        oprnd_1
     //        opcode + resv ] <-- LIns* ins
     //
-    // - LIR_skip instructions are used to link code chunks.  If the first  
+    // - LIR_skip instructions are used to link code chunks.  If the first
     //   instruction on a chunk isn't a LIR_start, it will be a skip, and the
-    //   skip's operand will point to the last LIns on the preceding chunk.  
+    //   skip's operand will point to the last LIns on the preceding chunk.
     //   LInsSk has the same layout as LInsOp1, but we represent it as a
     //   different class because there are some places where we treat
     //   skips specially and so having it separate seems like a good idea.
@@ -1464,7 +1464,7 @@ namespace nanojit
 
         // Returns next instruction and advances to the prior instruction.
         // Invariant: never returns a skip.
-        LInsp read(); 
+        LInsp read();
 
         // Returns next instruction.  Invariant: never returns a skip.
         LInsp pos() {
@@ -1506,7 +1506,7 @@ namespace nanojit
     public:
         LoadFilter(LirWriter *out, Allocator& alloc)
             : LirWriter(out), sp(NULL), rp(NULL)
-        { 
+        {
             uint32_t kInitialCaps[LInsLast + 1];
             kInitialCaps[LInsImm]   = 1;
             kInitialCaps[LInsImmq]  = 1;

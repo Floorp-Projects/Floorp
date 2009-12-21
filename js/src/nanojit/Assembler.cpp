@@ -99,7 +99,7 @@ namespace nanojit
             NanoAssert(_entries[i] != BAD_ENTRY);
         for (uint32_t i = _highWaterMark+1; i < NJ_MAX_STACK_ENTRY; ++i)
             NanoAssert(_entries[i] == BAD_ENTRY);
-    } 
+    }
 
 #endif
 
@@ -111,13 +111,13 @@ namespace nanojit
             _entries[i] = BAD_ENTRY;
     #endif
      }
- 
-     bool AR::Iter::next(LIns*& ins, uint32_t& nStackSlots, int32_t& arIndex) 
-     { 
+
+     bool AR::Iter::next(LIns*& ins, uint32_t& nStackSlots, int32_t& arIndex)
+     {
          while (++_i <= _ar._highWaterMark)
          {
              if ((ins = _ar._entries[_i]) != NULL)
-             {   
+             {
                  nStackSlots = nStackSlotsFor(ins);
                  _i += nStackSlots - 1;
                  arIndex = _i;
@@ -160,7 +160,7 @@ namespace nanojit
         NanoAssert(ins->isUsed());
 
         if (allowedAndFree) {
-            // At least one usable register is free -- no need to steal.  
+            // At least one usable register is free -- no need to steal.
             // Pick a preferred one if possible.
             RegisterMask preferredAndFree = allowedAndFree & SavedRegs;
             RegisterMask set = ( preferredAndFree ? preferredAndFree : allowedAndFree );
@@ -196,7 +196,7 @@ namespace nanojit
     {
         LIns dummyIns;
         dummyIns.markAsUsed();
-        Register r = registerAlloc(&dummyIns, allow); 
+        Register r = registerAlloc(&dummyIns, allow);
 
         // Mark r as free, ready for use as a temporary value.
         _allocator.removeActive(r);
@@ -278,7 +278,7 @@ namespace nanojit
             if (ins->isop(LIR_alloc)) {
                 int const n = i + (ins->size()>>2);
                 for (int j=i+1; j < n; j++) {
-                    NanoAssert(_entries[j]==ins); 
+                    NanoAssert(_entries[j]==ins);
                 }
                 NanoAssert(arIndex == (uint32_t)n-1);
                 i = n-1;
@@ -499,7 +499,7 @@ namespace nanojit
 
         return r;
     }
- 
+
     int Assembler::findMemFor(LIns *ins)
     {
         if (!ins->isUsed())
@@ -1427,8 +1427,8 @@ namespace nanojit
                         intersectRegisterState(label->regs);
                         label->addr = _nIns;
                     }
-                    verbose_only( if (_logc->lcbits & LC_Assembly) { 
-                        asm_output("[%s]", _thisfrag->lirbuf->names->formatRef(ins)); 
+                    verbose_only( if (_logc->lcbits & LC_Assembly) {
+                        asm_output("[%s]", _thisfrag->lirbuf->names->formatRef(ins));
                     })
                     break;
                 }
@@ -1709,7 +1709,7 @@ namespace nanojit
         s += VMPI_strlen(s);
         VMPI_sprintf(s, "AR");
         s += VMPI_strlen(s);
-        
+
         LIns* ins = 0;
         uint32_t nStackSlots = 0;
         int32_t arIndex = 0;
@@ -1730,7 +1730,7 @@ namespace nanojit
 
     inline bool AR::isEmptyRange(uint32_t start, uint32_t nStackSlots) const
     {
-        for (uint32_t i=0; i < nStackSlots; i++) 
+        for (uint32_t i=0; i < nStackSlots; i++)
         {
             if (_entries[start-i] != NULL)
                 return false;
@@ -1742,11 +1742,11 @@ namespace nanojit
     {
         uint32_t const nStackSlots = nStackSlotsFor(ins);
 
-        if (nStackSlots == 1) 
+        if (nStackSlots == 1)
         {
-            for (uint32_t i = 1; i <= _highWaterMark; i++) 
+            for (uint32_t i = 1; i <= _highWaterMark; i++)
             {
-                if (_entries[i] == NULL) 
+                if (_entries[i] == NULL)
                 {
                     _entries[i] = ins;
                     return i;
@@ -1760,16 +1760,16 @@ namespace nanojit
                 return _highWaterMark;
              }
         }
-        else 
+        else
         {
             // alloc larger block on 8byte boundary.
             uint32_t const start = nStackSlots + (nStackSlots & 1);
-            for (uint32_t i = start; i <= _highWaterMark; i += 2) 
+            for (uint32_t i = start; i <= _highWaterMark; i += 2)
             {
-                if (isEmptyRange(i, nStackSlots)) 
+                if (isEmptyRange(i, nStackSlots))
                 {
                     // place the entry in the table and mark the instruction with it
-                    for (uint32_t j=0; j < nStackSlots; j++) 
+                    for (uint32_t j=0; j < nStackSlots; j++)
                     {
                         NanoAssert(i-j <= _highWaterMark);
                         NanoAssert(_entries[i-j] == NULL);
@@ -1923,7 +1923,7 @@ namespace nanojit
             }
         }
     }
-    
+
     /**
      * Merge the current regstate with a previously stored version.
      * current == saved    skip
