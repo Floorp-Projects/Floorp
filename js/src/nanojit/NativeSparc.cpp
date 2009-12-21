@@ -260,7 +260,7 @@ namespace nanojit
 
         Register rr = ins->getReg();
         if (isKnownReg(rr) && (rmask(rr) & FpRegs))
-            evict(rr, ins);
+            evict(ins);
 
         if (hi->isconst()) {
             STW32(L2, d+4, FP);
