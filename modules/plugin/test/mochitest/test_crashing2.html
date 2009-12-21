@@ -1,0 +1,71 @@
+<head>
+  <title>Plugin crashing</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<body onload="mainLoaded()">
+  <iframe id="iframe1" src="about:blank" width="600" height="600"></iframe>
+
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  var iframe = document.getElementById('iframe1');
+
+  function mainLoaded() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var prefs = Components.classes['@mozilla.org/preferences-service;1']
+      .getService(Components.interfaces.nsIPrefBranch);
+    if (!prefs.getBoolPref('dom.ipc.plugins.enabled')) {
+      ok(true, "Skipping this test when IPC plugins are not enabled.");
+      SimpleTest.finish();
+      return;
+    }
+
+    var p = iframe.contentDocument.createElement('embed');
+    p.setAttribute('id', 'plugin1');
+    p.setAttribute('type', 'application/x-test');
+    p.setAttribute('width', '400');
+    p.setAttribute('height', '400');
+    p.setAttribute('drawmode', 'solid');
+    p.setAttribute('color', 'FF00FFFF');
+    p.setAttribute('newCrash', 'true');
+    iframe.contentDocument.body.appendChild(p);
+
+    try {
+      p.setColor('FFFF0000');
+      ok(false, "plugin crashes on creation");
+    }
+    catch (e) {
+      ok(true, "plugin crashes on creation");
+    }
+
+    window.frameLoaded = reloaded1;
+    iframe.contentWindow.location.replace('crashing_subpage.html');
+  }
+
+  function reloaded1() {
+    var p = iframe.contentDocument.getElementById('plugin1');
+    try {
+      p.setColor('FF00FF00');
+      ok(true, "Reloading worked");
+    }
+    catch (e) {
+      ok(false, "Reloading didn't give us a usable plugin");
+    }
+    p.crashOnDestroy();
+    window.frameLoaded = reloaded2;
+    iframe.contentWindow.location.reload();
+  }
+
+  function reloaded2() {
+    var p = iframe.contentDocument.getElementById('plugin1');
+    try {
+      p.setColor('FF00FF00');
+      ok(true, "Reloading worked");
+    }
+    catch (e) {
+      ok(false, "Reloading didn't give us a usable plugin");
+    }
+    SimpleTest.finish();
+  }
+  </script>
