@@ -1016,6 +1016,7 @@ hildon-file-chooser-dialog.h
 #endif
 #ifdef NS_OSSO
 libosso.h
+osso-mem.h
 #endif
 #ifdef MOZ_ENABLE_GIO
 gio/gio.h
