@@ -58,7 +58,7 @@
 
 namespace nanojit
 {
-#define NJ_MAX_STACK_ENTRY              256
+#define NJ_MAX_STACK_ENTRY              16384
 #define NJ_ALIGN_STACK                  16
 #define NJ_JTBL_SUPPORTED               1
 #define NJ_EXPANDED_LOADSTORE_SUPPORTED 1
