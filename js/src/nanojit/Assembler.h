@@ -112,22 +112,22 @@ namespace nanojit
 
         bool isEmptyRange(uint32_t start, uint32_t nStackSlots) const;
         static uint32_t nStackSlotsFor(LIns* ins);
-        
+
     public:
-        
+
         uint32_t stackSlotsNeeded() const;
 
         void clear();
         void freeEntryAt(uint32_t i);
         uint32_t reserveEntry(LIns* ins); /* return 0 if unable to reserve the entry */
-        
+
         #ifdef _DEBUG
-        void validate(); 
+        void validate();
         bool isValidEntry(uint32_t idx, LIns* ins) const; /* return true iff idx and ins are matched */
         void checkForResourceConsistency(const RegAlloc& regs) const;
         void checkForResourceLeaks() const;
         #endif
-        
+
         class Iter
         {
         private:
@@ -144,19 +144,19 @@ namespace nanojit
         return ins->isop(LIR_alloc) ? (ins->size()>>2) : (ins->isQuad() ? 2 : 1);
     }
 
-    inline uint32_t AR::stackSlotsNeeded() const 
-    { 
+    inline uint32_t AR::stackSlotsNeeded() const
+    {
         // NB: _highWaterMark is an index, not a count
-        return _highWaterMark+1; 
+        return _highWaterMark+1;
     }
 
-	#ifndef AVMPLUS_ALIGN16
-		#ifdef AVMPLUS_WIN32
-			#define AVMPLUS_ALIGN16(type) __declspec(align(16)) type
-		#else
-			#define AVMPLUS_ALIGN16(type) type __attribute__ ((aligned (16)))
-		#endif
-	#endif
+    #ifndef AVMPLUS_ALIGN16
+        #ifdef AVMPLUS_WIN32
+            #define AVMPLUS_ALIGN16(type) __declspec(align(16)) type
+        #else
+            #define AVMPLUS_ALIGN16(type) type __attribute__ ((aligned (16)))
+        #endif
+    #endif
 
     struct Stats
     {

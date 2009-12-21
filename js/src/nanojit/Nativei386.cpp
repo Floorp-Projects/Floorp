@@ -279,11 +279,11 @@ namespace nanojit
         ArgSize sizes[MAXARGS];
         uint32_t argc = call->get_sizes(sizes);
         int32_t stkd = 0;
-        
+
         if (indirect) {
             argc--;
             asm_arg(ARGSIZE_P, ins->arg(argc), EAX, stkd);
-            if (!config.fixed_esp) 
+            if (!config.fixed_esp)
                 stkd = 0;
         }
 
@@ -296,7 +296,7 @@ namespace nanojit
                 r = argRegs[n++]; // tell asm_arg what reg to use
             }
             asm_arg(sz, ins->arg(j), r, stkd);
-            if (!config.fixed_esp) 
+            if (!config.fixed_esp)
                 stkd = 0;
         }
 
@@ -572,7 +572,7 @@ namespace nanojit
                 case LIR_ldc32f:
                     SSE_CVTSS2SD(rr, rr);
                     SSE_LDSS(rr, db, rb);
-                    SSE_XORPDr(rr,rr);  
+                    SSE_XORPDr(rr,rr);
                     break;
                 default:
                     NanoAssertMsg(0, "asm_load64 should never receive this LIR opcode");
@@ -581,7 +581,7 @@ namespace nanojit
         }
         else
         {
-            
+
             int dr = disp(ins);
             Register rb;
             if (base->isop(LIR_alloc)) {
@@ -622,7 +622,7 @@ namespace nanojit
                     else
                     {
                         // We need to use fpu to expand 32->64, can't use asm_mmq...
-                        // just load-and-store-with-pop. 
+                        // just load-and-store-with-pop.
                         NanoAssert(dr != 0);
                         FSTPQ(dr, FP);
                         FLD32(db, rb);
@@ -694,7 +694,7 @@ namespace nanojit
         }
     }
 
-    // Copy 64 bits: (rd+dd) <- (rs+ds).  
+    // Copy 64 bits: (rd+dd) <- (rs+ds).
     //
     void Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
     {
@@ -799,7 +799,7 @@ namespace nanojit
     //   LIR:   eq1 = eq a, 0
     //   LIR:       test edx, edx
     //   asm:       sete ebx
-    //   asm:       movzx ebx, ebx        
+    //   asm:       movzx ebx, ebx
     //
     // In this case we end up computing the condition twice, but that's ok, as
     // it's just as short as testing eq1's value in the code generated for the
@@ -1434,7 +1434,7 @@ namespace nanojit
         }
     }
 
-	// negateMask is used by asm_fneg.
+    // negateMask is used by asm_fneg.
 #if defined __SUNPRO_CC
     // From Sun Studio C++ Readme: #pragma align inside namespace requires mangled names.
     // Initialize here to avoid multithreading contention issues during initialization.
@@ -1609,7 +1609,7 @@ namespace nanojit
             SSE_STQ(stkd, SP, r);
         } else {
             FSTPQ(stkd, SP);
-            
+
             //
             // 22Jul09 rickr - Enabling the evict causes a 10% slowdown on primes
             //
@@ -1617,7 +1617,7 @@ namespace nanojit
             // We need to resolve the bug some other way.
             //
             // see https://bugzilla.mozilla.org/show_bug.cgi?id=491084
-            
+
             /* It's possible that the same LIns* with r=FST0 will appear in the argument list more
              * than once.  In this case FST0 will not have been evicted and the multiple pop
              * actions will unbalance the FPU stack.  A quick fix is to always evict FST0 manually.
@@ -1877,7 +1877,7 @@ namespace nanojit
                     // -------       ---   ---------       ---   -------
                     // UNORDERED     111   0100_0100       001   SETNP/JNP fails
                     // EQUAL         100   0100_0000       000   SETNP/JNP succeeds
-                    // GREATER_THAN  000   0000_0000       011   SETNP/JNP fails 
+                    // GREATER_THAN  000   0000_0000       011   SETNP/JNP fails
                     // LESS_THAN     001   0000_0000       011   SETNP/JNP fails
 
                     evictIfActive(EAX);
@@ -1894,8 +1894,8 @@ namespace nanojit
                 //   -------       ---   -------
                 //   UNORDERED     111   SETA/JA fails
                 //   EQUAL         100   SETA/JA fails
-                //   GREATER_THAN  000   SETA/JA succeeds 
-                //   LESS_THAN     001   SETA/JA fails 
+                //   GREATER_THAN  000   SETA/JA succeeds
+                //   LESS_THAN     001   SETA/JA fails
                 //
                 // LIR_fge:
                 //   ucomisd       ZPC   outcome (SETAE/JAE succeeds if C==0)
@@ -1942,7 +1942,7 @@ namespace nanojit
             //   -------  --------   ---------       ---   -------
             //   UNORDERED     111   0100_0100       001   SETNP fails
             //   EQUAL         100   0100_0000       000   SETNP succeeds
-            //   GREATER_THAN  000   0000_0000       011   SETNP fails 
+            //   GREATER_THAN  000   0000_0000       011   SETNP fails
             //   LESS_THAN     001   0000_0000       011   SETNP fails
             //
             // LIR_flt:
@@ -1950,7 +1950,7 @@ namespace nanojit
             //   -------  --------   ---------       ---   -------
             //   UNORDERED     111   0000_0101       001   SETNP fails
             //   EQUAL         100   0000_0000       011   SETNP fails
-            //   GREATER_THAN  000   0000_0000       011   SETNP fails 
+            //   GREATER_THAN  000   0000_0000       011   SETNP fails
             //   LESS_THAN     001   0000_0001       000   SETNP succeeds
             //
             // LIR_fle:
@@ -1958,7 +1958,7 @@ namespace nanojit
             //   -------       ---   ---------       ---   -------
             //   UNORDERED     111   0100_0001       001   SETNP fails
             //   EQUAL         100   0100_0000       000   SETNP succeeds
-            //   GREATER_THAN  000   0000_0000       011   SETNP fails 
+            //   GREATER_THAN  000   0000_0000       011   SETNP fails
             //   LESS_THAN     001   0000_0001       010   SETNP succeeds
 
             int mask = 0;   // init to avoid MSVC compile warnings
@@ -2053,6 +2053,6 @@ namespace nanojit
         SWAP(NIns*, codeEnd, exitEnd);
         verbose_only( SWAP(size_t, codeBytes, exitBytes); )
     }
-    
+
     #endif /* FEATURE_NANOJIT */
 }

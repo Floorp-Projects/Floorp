@@ -140,7 +140,7 @@ namespace nanojit
         //   and thus available for use.  At the start of register
         //   allocation most registers are free;  those that are not
         //   aren't available for general use, e.g. the stack pointer and
-        //   frame pointer registers.  
+        //   frame pointer registers.
         //
         // - 'managed' is exactly this list of initially free registers,
         //   ie. the registers managed by the register allocator.
@@ -166,10 +166,10 @@ namespace nanojit
         //   * An LIns can appear at most once in 'active'.
         //
         //   * An LIns named by 'active[R]' must have an in-use
-        //     reservation that names R.  
+        //     reservation that names R.
         //
         //   * And vice versa:  an LIns with an in-use reservation that
-        //     names R must be named by 'active[R]'.  
+        //     names R must be named by 'active[R]'.
         //
         //   * If an LIns's reservation names 'UnknownReg' then LIns
         //     should not be in 'active'.
