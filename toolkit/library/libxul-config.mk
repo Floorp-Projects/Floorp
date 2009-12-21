@@ -292,10 +292,6 @@ COMPONENT_LIBS += \
 	$(NULL)
 endif
 
-ifdef MOZ_MATHML
-COMPONENT_LIBS += ucvmath
-endif
-
 ifdef MOZ_ENABLE_GTK2
 COMPONENT_LIBS += widget_gtk2
 ifdef MOZ_PREF_EXTENSIONS
