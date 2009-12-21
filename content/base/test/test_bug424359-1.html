@@ -44,6 +44,11 @@ function loadFileContent(aFile, aCharset) {
     return content;
 }
 
+function isRoughly(actual, expected, message) {
+  return is(actual.replace("<!DOCTYPE HTML", "<!DOCTYPE html"), 
+            expected, 
+            message);
+}
 
 function testHtmlSerializer_1 () {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -63,26 +68,26 @@ function testHtmlSerializer_1 () {
   encoder.setCharset("UTF-8");
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_1_noflag.html");
-  is(out, expected, "test no flags");
+  isRoughly(out, expected, "test no flags");
 
   //------------- unsupported flags
   // since the following flags are not supported, we should
   // have a result like the one without flag
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputPreformatted);
   out = encoder.encodeToString();
-  is(out, expected, "test OutputPreformatted");
+  isRoughly(out, expected, "test OutputPreformatted");
 
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputFormatFlowed);
   out = encoder.encodeToString();
-  is(out, expected, "test OutputFormatFlowed");
+  isRoughly(out, expected, "test OutputFormatFlowed");
 
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputNoScriptContent);
   out = encoder.encodeToString();
-  is(out, expected, "test OutputNoScriptContent");
+  isRoughly(out, expected, "test OutputNoScriptContent");
 
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputNoFramesContent);
   out = encoder.encodeToString();
-  is(out, expected, "test OutputNoFramesContent");
+  isRoughly(out, expected, "test OutputNoFramesContent");
 
 
   //------------ OutputWrap
@@ -90,25 +95,25 @@ function testHtmlSerializer_1 () {
   // when there are no flags.
   encoder.init(doc, "text/html", de.OutputLFLineBreak |de.OutputWrap);
   out = encoder.encodeToString();
-  is(out, expected, "test OutputWrap");
+  isRoughly(out, expected, "test OutputWrap");
 
   //------------ OutputFormatted
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputFormatted);
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_1_format.html");
-  is(out, expected, "test OutputFormatted");
+  isRoughly(out, expected, "test OutputFormatted");
 
   //------------ OutputRaw
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputRaw);
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_1_raw.html");
-  is(out, expected, "test OutputRaw");
+  isRoughly(out, expected, "test OutputRaw");
 
   //------------ OutputBodyOnly
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputBodyOnly);
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_1_bodyonly.html");
-  is(out, expected, "test OutputBodyOnly");
+  isRoughly(out, expected, "test OutputBodyOnly");
 
 
 
@@ -116,31 +121,31 @@ function testHtmlSerializer_1 () {
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputAbsoluteLinks);
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_1_links.html");
-  is(out, expected, "test OutputAbsoluteLinks");
+  isRoughly(out, expected, "test OutputAbsoluteLinks");
 
   //------------ OutputLFLineBreak
   encoder.init(doc, "text/html",de.OutputLFLineBreak);
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_1_linebreak.html");
-  is(out, expected, "test OutputLFLineBreak");
+  isRoughly(out, expected, "test OutputLFLineBreak");
 
   //------------ OutputCRLineBreak
   encoder.init(doc, "text/html",de.OutputCRLineBreak);
   out = encoder.encodeToString();
   expected = expected.replace(/\n/mg, "\r");
-  is(out, expected, "test OutputCRLineBreak");
+  isRoughly(out, expected, "test OutputCRLineBreak");
 
   //------------ OutputLFLineBreak + OutputCRLineBreak
   encoder.init(doc, "text/html",de.OutputLFLineBreak | de.OutputCRLineBreak);
   out = encoder.encodeToString();
   expected = expected.replace(/\r/mg, "\r\n");
-  is(out, expected, "test OutputLFLineBreak + OutputCRLineBreak");
+  isRoughly(out, expected, "test OutputLFLineBreak + OutputCRLineBreak");
 
   //------------ OutputNoFormattingInPre
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputNoFormattingInPre);
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_1_noformatpre.html");
-  is(out, expected, "test OutputNoFormattingInPre");
+  isRoughly(out, expected, "test OutputNoFormattingInPre");
 
   // ------------- nested body elements
   var body2 = doc.createElement('body');
@@ -156,7 +161,7 @@ function testHtmlSerializer_1 () {
   encoder.setCharset("UTF-8");
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_1_nested_body.html");
-  is(out, expected, "test with two nested body elements");
+  isRoughly(out, expected, "test with two nested body elements");
 
   // ------------- two body elements
   body.parentNode.insertBefore(body2, body);
@@ -166,13 +171,13 @@ function testHtmlSerializer_1 () {
   encoder.setCharset("UTF-8");
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_1_sibling_body.html");
-  is(out, expected, "test with two body elements");
+  isRoughly(out, expected, "test with two body elements");
 
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputBodyOnly);
   encoder.setCharset("UTF-8");
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_1_sibling_body_only_body.html");
-  is(out, expected, "test with two body elements, and output body only");
+  isRoughly(out, expected, "test with two body elements, and output body only");
 
   // --------------- no body element
   doc.documentElement.removeChild(body);
@@ -182,7 +187,7 @@ function testHtmlSerializer_1 () {
   encoder.setCharset("UTF-8");
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_1_no_body.html");
-  is(out, expected, "test with no body element");
+  isRoughly(out, expected, "test with no body element");
 
   SimpleTest.finish();
 }
