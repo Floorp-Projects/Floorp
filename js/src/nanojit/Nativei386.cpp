@@ -118,7 +118,7 @@ namespace nanojit
     NIns* Assembler::genPrologue()
     {
         // Prologue
-        uint32_t stackNeeded = max_stk_args + STACK_GRANULARITY * _activation.tos;
+        uint32_t stackNeeded = max_stk_args + STACK_GRANULARITY * _activation.stackSlotsNeeded();
 
         uint32_t stackPushed =
             STACK_GRANULARITY + // returnaddr

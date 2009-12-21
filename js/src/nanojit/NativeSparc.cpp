@@ -83,7 +83,7 @@ namespace nanojit
          * Prologue
          */
         underrunProtect(16);
-        uint32_t stackNeeded = STACK_GRANULARITY * _activation.tos;
+        uint32_t stackNeeded = STACK_GRANULARITY * _activation.stackSlotsNeeded();
         uint32_t frameSize = stackNeeded + kcalleeAreaSize + kLinkageAreaSize;
         frameSize = BIT_ROUND_UP(frameSize, 8);
 
