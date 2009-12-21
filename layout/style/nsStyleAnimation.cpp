@@ -402,6 +402,54 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       aDistance = sqrt(squareDistance);
       break;
     }
+    case eUnit_CSSValuePairList: {
+      const nsCSSValuePairList *list1 = aStartValue.GetCSSValuePairListValue();
+      const nsCSSValuePairList *list2 = aEndValue.GetCSSValuePairListValue();
+      double squareDistance = 0.0f;
+      do {
+        static nsCSSValue nsCSSValuePairList::* const pairListValues[] = {
+          &nsCSSValuePairList::mXValue,
+          &nsCSSValuePairList::mYValue,
+        };
+        for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(pairListValues); ++i) {
+          const nsCSSValue &v1 = list1->*(pairListValues[i]);
+          const nsCSSValue &v2 = list2->*(pairListValues[i]);
+          if (v1.GetUnit() != v2.GetUnit()) {
+            success = PR_FALSE;
+            break; // to failure case
+          }
+          double diff = 0.0;
+          switch (v1.GetUnit()) {
+            case eCSSUnit_Pixel:
+              diff = v1.GetFloatValue() - v2.GetFloatValue();
+              break;
+            case eCSSUnit_Percent:
+              diff = v1.GetPercentValue() - v2.GetPercentValue();
+              break;
+            default:
+              if (v1 != v2) {
+                success = PR_FALSE;
+              }
+              break;
+          }
+          squareDistance += diff * diff;
+        }
+        if (!success) {
+          break; // to failure case
+        }
+
+        list1 = list1->mNext;
+        list2 = list2->mNext;
+      } while (list1 && list2);
+      if (list1 || list2) {
+        // We can't interpolate lists of different lengths.  (Also,
+        // failure cases above break to here.)
+        success = PR_FALSE;
+      } else {
+        aDistance = sqrt(squareDistance);
+      }
+      break;
+    }
     default:
       NS_NOTREACHED("Can't compute distance using the given common unit");
       success = PR_FALSE;
@@ -803,6 +851,66 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       aResultValue.SetAndAdoptCSSValueListValue(result.forget(), eUnit_Shadow);
       break;
     }
+    case eUnit_CSSValuePairList: {
+      const nsCSSValuePairList *list1 = aValue1.GetCSSValuePairListValue();
+      const nsCSSValuePairList *list2 = aValue2.GetCSSValuePairListValue();
+      nsAutoPtr<nsCSSValuePairList> result;
+      nsCSSValuePairList **resultTail = getter_Transfers(result);
+      do {
+        nsCSSValuePairList *item = new nsCSSValuePairList;
+        if (!item) {
+          break; // to failure case
+        }
+        *resultTail = item;
+        resultTail = &item->mNext;
+
+        static nsCSSValue nsCSSValuePairList::* const pairListValues[] = {
+          &nsCSSValuePairList::mXValue,
+          &nsCSSValuePairList::mYValue,
+        };
+        for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(pairListValues); ++i) {
+          const nsCSSValue &v1 = list1->*(pairListValues[i]);
+          const nsCSSValue &v2 = list2->*(pairListValues[i]);
+          nsCSSValue &vr = item->*(pairListValues[i]);
+          if (v1.GetUnit() != v2.GetUnit()) {
+            success = PR_FALSE;
+            break; // to failure case
+          }
+          switch (v1.GetUnit()) {
+            case eCSSUnit_Pixel:
+              vr.SetFloatValue(aCoeff1 * v1.GetFloatValue() +
+                               aCoeff2 * v2.GetFloatValue(),
+                               eCSSUnit_Pixel);
+              break;
+            case eCSSUnit_Percent:
+              vr.SetPercentValue(aCoeff1 * v1.GetPercentValue() +
+                                 aCoeff2 * v2.GetPercentValue());
+              break;
+            default:
+              if (v1 == v2) {
+                vr = v1;
+              } else {
+                success = PR_FALSE;
+              }
+              break;
+          }
+        }
+        if (!success) {
+          break; // to failure case
+        }
+
+        list1 = list1->mNext;
+        list2 = list2->mNext;
+      } while (list1 && list2);
+      if (list1 || list2) {
+        // We can't interpolate lists of different lengths.  (Also,
+        // failure cases above break to here.)
+        success = PR_FALSE;
+      } else {
+        aResultValue.SetAndAdoptCSSValuePairListValue(result.forget());
+      }
+      break;
+    }
     default:
       NS_NOTREACHED("Can't interpolate using the given common unit");
       success = PR_FALSE;
@@ -1051,6 +1159,12 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
                           eCSSType_ValueList, "type mismatch");
       *static_cast<nsCSSValueList**>(aSpecifiedValue) =
         aComputedValue.GetCSSValueListValue();
+      break;
+    case eUnit_CSSValuePairList:
+      NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] ==
+                          eCSSType_ValuePairList, "type mismatch");
+      *static_cast<nsCSSValuePairList**>(aSpecifiedValue) =
+        aComputedValue.GetCSSValuePairListValue();
       break;
     default:
       return PR_FALSE;
@@ -1429,6 +1543,92 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
+        case eCSSProperty_background_position: {
+          const nsStyleBackground *bg =
+            static_cast<const nsStyleBackground*>(styleStruct);
+          nsCSSValuePairList *result = nsnull;
+          nsCSSValuePairList **resultTail = &result;
+          NS_ABORT_IF_FALSE(bg->mPositionCount > 0, "unexpected count");
+          for (PRUint32 i = 0, i_end = bg->mPositionCount; i != i_end; ++i) {
+            nsCSSValuePairList *item = new nsCSSValuePairList;
+            if (!item) {
+              delete result;
+              return PR_FALSE;
+            }
+            *resultTail = item;
+            resultTail = &item->mNext;
+            
+            const nsStyleBackground::Position &pos = bg->mLayers[i].mPosition;
+            if (pos.mXIsPercent) {
+              item->mXValue.SetPercentValue(pos.mXPosition.mFloat);
+            } else {
+              nscoordToCSSValue(pos.mXPosition.mCoord, item->mXValue);
+            }
+            if (pos.mYIsPercent) {
+              item->mYValue.SetPercentValue(pos.mYPosition.mFloat);
+            } else {
+              nscoordToCSSValue(pos.mYPosition.mCoord, item->mYValue);
+            }
+          }
+
+          aComputedValue.SetAndAdoptCSSValuePairListValue(result);
+          break;
+        }
+
+        case eCSSProperty__moz_background_size: {
+          const nsStyleBackground *bg =
+            static_cast<const nsStyleBackground*>(styleStruct);
+          nsCSSValuePairList *result = nsnull;
+          nsCSSValuePairList **resultTail = &result;
+          NS_ABORT_IF_FALSE(bg->mSizeCount > 0, "unexpected count");
+          for (PRUint32 i = 0, i_end = bg->mSizeCount; i != i_end; ++i) {
+            nsCSSValuePairList *item = new nsCSSValuePairList;
+            if (!item) {
+              delete result;
+              return PR_FALSE;
+            }
+            *resultTail = item;
+            resultTail = &item->mNext;
+            
+            const nsStyleBackground::Size &size = bg->mLayers[i].mSize;
+            switch (size.mWidthType) {
+              case nsStyleBackground::Size::eContain:
+              case nsStyleBackground::Size::eCover:
+                item->mXValue.SetIntValue(size.mWidthType,
+                                          eCSSUnit_Enumerated);
+                break;
+              case nsStyleBackground::Size::ePercentage:
+                item->mXValue.SetPercentValue(size.mWidth.mFloat);
+                break;
+              case nsStyleBackground::Size::eAuto:
+                item->mXValue.SetAutoValue();
+                break;
+              case nsStyleBackground::Size::eLength:
+                nscoordToCSSValue(size.mWidth.mCoord, item->mXValue);
+                break;
+            }
+
+            switch (size.mHeightType) {
+              case nsStyleBackground::Size::eContain:
+              case nsStyleBackground::Size::eCover:
+                // leave it null
+                break;
+              case nsStyleBackground::Size::ePercentage:
+                item->mYValue.SetPercentValue(size.mHeight.mFloat);
+                break;
+              case nsStyleBackground::Size::eAuto:
+                item->mYValue.SetAutoValue();
+                break;
+              case nsStyleBackground::Size::eLength:
+                nscoordToCSSValue(size.mHeight.mCoord, item->mYValue);
+                break;
+            }
+          }
+
+          aComputedValue.SetAndAdoptCSSValuePairListValue(result);
+          break;
+        }
+
         default:
           NS_ABORT_IF_FALSE(PR_FALSE, "missing property implementation");
           return PR_FALSE;
@@ -1654,6 +1854,14 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
         mValue.mCSSValueList = nsnull;
       }
       break;
+    case eUnit_CSSValuePairList:
+      NS_ABORT_IF_FALSE(aOther.mValue.mCSSValuePairList,
+                        "value pair lists may not be null");
+      mValue.mCSSValuePairList = aOther.mValue.mCSSValuePairList->Clone();
+      if (!mValue.mCSSValuePairList) {
+        mUnit = eUnit_Null;
+      }
+      break;
     case eUnit_UnparsedString:
       NS_ABORT_IF_FALSE(aOther.mValue.mString, "expecting non-null string");
       mValue.mString = aOther.mValue.mString;
@@ -1773,6 +1981,16 @@ nsStyleAnimation::Value::SetAndAdoptCSSValueListValue(
 }
 
 void
+nsStyleAnimation::Value::SetAndAdoptCSSValuePairListValue(
+                           nsCSSValuePairList *aValuePairList)
+{
+  FreeValue();
+  NS_ABORT_IF_FALSE(aValuePairList, "may not be null");
+  mUnit = eUnit_CSSValuePairList;
+  mValue.mCSSValuePairList = aValuePairList; // take ownership
+}
+
+void
 nsStyleAnimation::Value::FreeValue()
 {
   if (IsCSSValueListUnit(mUnit)) {
@@ -1781,6 +1999,8 @@ nsStyleAnimation::Value::FreeValue()
     delete mValue.mCSSValuePair;
   } else if (IsCSSRectUnit(mUnit)) {
     delete mValue.mCSSRect;
+  } else if (IsCSSValuePairListUnit(mUnit)) {
+    delete mValue.mCSSValuePairList;
   } else if (IsStringUnit(mUnit)) {
     NS_ABORT_IF_FALSE(mValue.mString, "expecting non-null string");
     mValue.mString->Release();
@@ -1819,6 +2039,9 @@ nsStyleAnimation::Value::operator==(const Value& aOther) const
     case eUnit_Shadow:
       return nsCSSValueList::Equal(mValue.mCSSValueList,
                                    aOther.mValue.mCSSValueList);
+    case eUnit_CSSValuePairList:
+      return nsCSSValuePairList::Equal(mValue.mCSSValuePairList,
+                                       aOther.mValue.mCSSValuePairList);
     case eUnit_UnparsedString:
       return (NS_strcmp(GetStringBufferValue(),
                         aOther.GetStringBufferValue()) == 0);
