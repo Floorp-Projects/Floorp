@@ -342,6 +342,24 @@ nsTransitionManager::~nsTransitionManager()
   }
 }
 
+static PRBool
+TransExtractComputedValue(nsCSSProperty aProperty,
+                          nsStyleContext* aStyleContext,
+                          nsStyleAnimation::Value& aComputedValue)
+{
+  PRBool result =
+    nsStyleAnimation::ExtractComputedValue(aProperty, aStyleContext,
+                                           aComputedValue);
+  if (aProperty == eCSSProperty_visibility) {
+    NS_ABORT_IF_FALSE(aComputedValue.GetUnit() ==
+                        nsStyleAnimation::eUnit_Enumerated,
+                      "unexpected unit");
+    aComputedValue.SetIntValue(aComputedValue.GetIntValue(),
+                               nsStyleAnimation::eUnit_Visibility);
+  }
+  return result;
+}
+
 already_AddRefed<nsIStyleRule>
 nsTransitionManager::StyleContextChanged(nsIContent *aElement,
                                          nsStyleContext *aOldStyleContext,
@@ -521,24 +539,6 @@ nsTransitionManager::StyleContextChanged(nsIContent *aElement,
 
   return already_AddRefed<nsIStyleRule>(
            static_cast<nsIStyleRule*>(coverRule.forget().get()));
-}
-
-static PRBool
-TransExtractComputedValue(nsCSSProperty aProperty,
-                          nsStyleContext* aStyleContext,
-                          nsStyleAnimation::Value& aComputedValue)
-{
-  PRBool result =
-    nsStyleAnimation::ExtractComputedValue(aProperty, aStyleContext,
-                                           aComputedValue);
-  if (aProperty == eCSSProperty_visibility) {
-    NS_ABORT_IF_FALSE(aComputedValue.GetUnit() ==
-                        nsStyleAnimation::eUnit_Enumerated,
-                      "unexpected unit");
-    aComputedValue.SetIntValue(aComputedValue.GetIntValue(),
-                               nsStyleAnimation::eUnit_Visibility);
-  }
-  return result;
 }
 
 void
