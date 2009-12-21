@@ -1156,8 +1156,6 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   appendVoidElementToCurrentMayFoster(kNameSpaceID_XHTML, nsHtml5ElementName::ELT_HR, nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
                   pop();
                   selfClosing = PR_FALSE;
-                  delete attributes;
-                  attributes = nsnull;
                   goto starttagloop_end;
                 }
                 case NS_HTML5TREE_BUILDER_TEXTAREA: {
