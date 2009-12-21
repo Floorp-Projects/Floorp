@@ -49,6 +49,8 @@
 #include "nsCOMPtr.h"
 #include "nsTObserverArray.h"
 
+class nsPresContext;
+
 /**
  * An abstract base class to be implemented by callers wanting to be
  * notified at refresh times.  When nothing needs to be painted, callers
@@ -59,15 +61,16 @@ public:
   virtual void WillRefresh(mozilla::TimeStamp aTime) = 0;
 };
 
-/*
- * nsRefreshDriver MUST ONLY be constructed as a sub-object of
- * nsPresContext (since its reference counting methods forward to the
- * pres context of which it is an mRefreshDriver)
- */
-class nsRefreshDriver : private nsITimerCallback {
+class nsRefreshDriver : public nsITimerCallback {
 public:
-  nsRefreshDriver();
+  nsRefreshDriver(nsPresContext *aPresContext);
   ~nsRefreshDriver();
+
+  // nsISupports implementation
+  NS_DECL_ISUPPORTS
+
+  // nsITimerCallback implementation
+  NS_DECL_NSITIMERCALLBACK
 
   /**
    * Return the time of the most recent refresh.  This is intended to be
@@ -95,13 +98,18 @@ public:
                             mozFlushType aFlushType);
   PRBool RemoveRefreshObserver(nsARefreshObserver *aObserver,
                                mozFlushType aFlushType);
+
+  /**
+   * Tell the refresh driver that it is done driving refreshes and
+   * should stop its timer and forget about its pres context.  This may
+   * be called from within a refresh.
+   */
+  void Disconnect() {
+    StopTimer();
+    mPresContext = nsnull;
+  }
+
 private:
-  // nsISupports implementation
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsITimerCallback implementation
-  NS_IMETHOD Notify(nsITimer *aTimer);
-
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
 
   void EnsureTimerStarted();
@@ -112,6 +120,9 @@ private:
 
   nsCOMPtr<nsITimer> mTimer;
   mozilla::TimeStamp mMostRecentRefresh; // only valid when mTimer non-null
+
+  nsPresContext *mPresContext; // weak; pres context passed in constructor
+                               // and unset in Disconnect
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[3];
