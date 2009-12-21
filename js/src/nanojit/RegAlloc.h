@@ -62,7 +62,7 @@ namespace nanojit
             VMPI_memset(this, 0, sizeof(*this));
         }
 
-        bool isFree(Register r)
+        bool isFree(Register r) const
         {
             NanoAssert(r != UnknownReg);
             return (free & rmask(r)) != 0;
@@ -120,13 +120,13 @@ namespace nanojit
             return usepri[r];
         }
 
-        LIns* getActive(Register r) {
+        LIns* getActive(Register r) const {
             NanoAssert(r != UnknownReg);
             return active[r];
         }
 
         debug_only( uint32_t    countActive(); )
-        debug_only( bool        isConsistent(Register r, LIns* v); )
+        debug_only( bool        isConsistent(Register r, LIns* v) const; )
         debug_only( RegisterMask managed; )     // the registers managed by the register allocator
 
         // Some basics:
