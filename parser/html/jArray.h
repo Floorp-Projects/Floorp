@@ -65,7 +65,7 @@ jArray<T,L>::jArray(T* const a, L const len)
 
 template<class T, class L>
 jArray<T,L>::jArray(L const len)
-       : arr(new T[len]), length(len)
+       : arr(len ? new T[len] : 0), length(len)
 {
 }
 
