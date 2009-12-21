@@ -106,6 +106,9 @@ namespace nanojit
         uint32_t        _highWaterMark;                 /* index of highest entry used since last clear() */
         LIns*           _entries[ NJ_MAX_STACK_ENTRY ]; /* maps to 4B contiguous locations relative to the frame pointer.
                                                             NB: _entries[0] is always unused */
+        #ifdef _DEBUG
+        static LIns* const BAD_ENTRY;
+        #endif
 
         bool isEmptyRange(uint32_t start, uint32_t nStackSlots) const;
         static uint32_t nStackSlotsFor(LIns* ins);
@@ -119,6 +122,7 @@ namespace nanojit
         uint32_t reserveEntry(LIns* ins); /* return 0 if unable to reserve the entry */
         
         #ifdef _DEBUG
+        void validate(); 
         bool isValidEntry(uint32_t idx, LIns* ins) const; /* return true iff idx and ins are matched */
         void checkForResourceConsistency(const RegAlloc& regs) const;
         void checkForResourceLeaks() const;
@@ -446,7 +450,7 @@ namespace nanojit
     inline int32_t disp(LIns* ins)
     {
         // even on 64bit cpu's, we allocate stack area in 4byte chunks
-        return stack_direction(4 * int32_t(ins->getArIndex()));
+        return -4 * int32_t(ins->getArIndex());
     }
 }
 #endif // __nanojit_Assembler__
