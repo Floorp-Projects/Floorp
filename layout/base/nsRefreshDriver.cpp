@@ -44,6 +44,7 @@
 #include "nsPresContext.h"
 #include "nsComponentManagerUtils.h"
 #include "prlog.h"
+#include "nsAutoPtr.h"
 
 /*
  * TODO:
@@ -194,10 +195,22 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
     return NS_OK;
   }
 
+  /*
+   * The timer holds a reference to |this| while calling |Notify|.
+   * However, implementations of |WillRefresh| are permitted to destroy
+   * the pres context, which will cause our |mPresContext| to become
+   * null.  If this happens, we must stop notifying observers.
+   */
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mObservers); ++i) {
     ObserverArray::EndLimitedIterator etor(mObservers[i]);
     while (etor.HasMore()) {
-      etor.GetNext()->WillRefresh(mMostRecentRefresh);
+      nsRefPtr<nsARefreshObserver> obs = etor.GetNext();
+      obs->WillRefresh(mMostRecentRefresh);
+      
+      if (!mPresContext || !mPresContext->GetPresShell()) {
+        StopTimer();
+        return NS_OK;
+      }
     }
     if (i == 0) {
       // This is the Flush_Style case.
