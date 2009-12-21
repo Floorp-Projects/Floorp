@@ -952,7 +952,7 @@ protected:
   nsIEventStateManager* mEventManager;  // [STRONG]
   nsILookAndFeel*       mLookAndFeel;   // [STRONG]
   nsRefPtr<nsRefreshDriver> mRefreshDriver;
-  nsTransitionManager*  mTransitionManager; // owns; it aggregates our refcount
+  nsRefPtr<nsTransitionManager> mTransitionManager;
   nsIAtom*              mMedium;        // initialized by subclass ctors;
                                         // weak pointer to static atom
 
