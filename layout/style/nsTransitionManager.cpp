@@ -712,17 +712,23 @@ nsTransitionManager::GetElementTransitions(nsIContent *aElement,
                                            nsCSSPseudoElements::Type aPseudoType,
                                            PRBool aCreateIfNeeded)
 {
+  if (!aCreateIfNeeded && PR_CLIST_IS_EMPTY(&mElementTransitions)) {
+    // Early return for the most common case.
+    return nsnull;
+  }
+
   nsIAtom *propName;
-  if (aPseudoType == nsCSSPseudoElements::ePseudo_before) {
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+    propName = nsGkAtoms::transitionsProperty;
+  } else if (aPseudoType == nsCSSPseudoElements::ePseudo_before) {
     propName = nsGkAtoms::transitionsOfBeforeProperty;
   } else if (aPseudoType == nsCSSPseudoElements::ePseudo_after) {
     propName = nsGkAtoms::transitionsOfAfterProperty;
   } else {
-    NS_ASSERTION(aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
-		 !aCreateIfNeeded,
+    NS_ASSERTION(!aCreateIfNeeded,
                  "should never try to create transitions for pseudo "
                  "other than :before or :after");
-    propName = nsGkAtoms::transitionsProperty;
+    return nsnull;
   }
   ElementTransitions *et = static_cast<ElementTransitions*>(
                              aElement->GetProperty(propName));
