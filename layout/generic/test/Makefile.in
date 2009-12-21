@@ -114,5 +114,13 @@ _TEST_FILES = \
 # disabled temporarily
 #		test_bug488417.html \
 
+_CHROME_FILES = \
+		test_bug514732-2.xul \
+		file_bug514732_window.xul \
+		$(NULL)
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

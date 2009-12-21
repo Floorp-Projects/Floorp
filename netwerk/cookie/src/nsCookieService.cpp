@@ -80,7 +80,6 @@
 
 // XXX_hack. See bug 178993.
 // This is a hack to hide HttpOnly cookies from older browsers
-//
 static const char kHttpOnlyPrefix[] = "#HttpOnly_";
 
 static const char kCookieFileName[] = "cookies.sqlite";
@@ -139,41 +138,44 @@ struct nsCookieAttributes
   PRBool isHttpOnly;
 };
 
-// stores linked list iteration state, and provides a rudimentary
-// list traversal method
+// stores the nsCookieEntry entryclass and an index into the cookie array
+// within that entryclass, for purposes of storing an iteration state that
+// points to a certain cookie.
 struct nsListIter
 {
-  nsListIter() {}
+  // default (non-initializing) constructor.
+  nsListIter()
+  {
+  }
 
+  // explicit constructor to a given iterator state with entryclass 'aEntry'
+  // and index 'aIndex'.
   explicit
-  nsListIter(nsCookieEntry *aEntry)
+  nsListIter(nsCookieEntry *aEntry, nsCookieEntry::IndexType aIndex)
    : entry(aEntry)
-   , prev(nsnull)
-   , current(aEntry ? aEntry->Head() : nsnull) {}
+   , index(aIndex)
+  {
+  }
 
-  nsListIter(nsCookieEntry *aEntry,
-             nsCookie      *aPrev,
-             nsCookie      *aCurrent)
-   : entry(aEntry)
-   , prev(aPrev)
-   , current(aCurrent) {}
+  // get the nsCookie * the iterator currently points to.
+  nsCookie * Cookie() const
+  {
+    return entry->GetCookies()[index];
+  }
 
-  nsListIter& operator++() { prev = current; current = current->Next(); return *this; }
-
-  nsCookieEntry *entry;
-  nsCookie      *prev;
-  nsCookie      *current;
+  nsCookieEntry            *entry;
+  nsCookieEntry::IndexType  index;
 };
 
 // stores temporary data for enumerating over the hash entries,
-// since enumeration is done using callback functions
+// since enumeration is done using callback functions.
 struct nsEnumerationData
 {
-  nsEnumerationData(PRInt64 aCurrentTime,
-                    PRInt64 aOldestTime)
+  nsEnumerationData(PRInt64 aCurrentTime, PRInt64 aOldestTime)
    : currentTime(aCurrentTime)
    , oldestTime(aOldestTime)
-   , iter(nsnull, nsnull, nsnull) {}
+  {
+  }
 
   // the current time, in seconds
   PRInt64 currentTime;
@@ -552,7 +554,15 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
         // check if all the expected columns exist
         nsCOMPtr<mozIStorageStatement> stmt;
         rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT id, name, value, host, path, expiry, isSecure, isHttpOnly "
+          "SELECT "
+            "id, "
+            "name, "
+            "value, "
+            "host, "
+            "path, "
+            "expiry, "
+            "isSecure, "
+            "isHttpOnly "
           "FROM moz_cookies"), getter_AddRefs(stmt));
         if (NS_SUCCEEDED(rv))
           break;
@@ -576,9 +586,17 @@ nsCookieService::TryInitDB(PRBool aDeleteExistingDB)
 
   // cache frequently used statements (for insertion, deletion, and updating)
   rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO moz_cookies "
-    "(id, name, value, host, path, expiry, lastAccessed, isSecure, isHttpOnly) "
-    "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)"),
+    "INSERT INTO moz_cookies ("
+      "id, "
+      "name, "
+      "value, "
+      "host, "
+      "path, "
+      "expiry, "
+      "lastAccessed, "
+      "isSecure, "
+      "isHttpOnly"
+    ") VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)"),
     getter_AddRefs(mDBState->stmtInsert));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -629,8 +647,16 @@ nsCookieService::CreateTable()
   // create the table
   return mDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE moz_cookies ("
-    "id INTEGER PRIMARY KEY, name TEXT, value TEXT, host TEXT, path TEXT,"
-    "expiry INTEGER, lastAccessed INTEGER, isSecure INTEGER, isHttpOnly INTEGER)"));
+      "id INTEGER PRIMARY KEY, "
+      "name TEXT, "
+      "value TEXT, "
+      "host TEXT, "
+      "path TEXT, "
+      "expiry INTEGER, "
+      "lastAccessed INTEGER, "
+      "isSecure INTEGER, "
+      "isHttpOnly INTEGER"
+    ")"));
 }
 
 void
@@ -782,8 +808,20 @@ nsCookieService::SetCookieStringInternal(nsIURI     *aHostURI,
     return NS_OK;
   }
 
+  // get the base domain for the host URI.
+  // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
+  PRBool isIPAddress;
+  nsCAutoString baseDomain;
+  nsresult rv = GetBaseDomain(aHostURI, baseDomain, isIPAddress);
+  if (NS_FAILED(rv)) {
+    COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, 
+                      "couldn't get base domain from URI");
+    return NS_OK;
+  }
+
   // check default prefs
-  PRUint32 cookieStatus = CheckPrefs(aHostURI, aChannel, aCookieHeader);
+  PRUint32 cookieStatus = CheckPrefs(aHostURI, aChannel, baseDomain,
+                                     isIPAddress, aCookieHeader);
   // fire a notification if cookie was rejected (but not if there was an error)
   switch (cookieStatus) {
   case STATUS_REJECTED:
@@ -799,7 +837,8 @@ nsCookieService::SetCookieStringInternal(nsIURI     *aHostURI,
   // user is prompted).
   PRTime tempServerTime;
   PRInt64 serverTime;
-  if (aServerTime && PR_ParseTimeString(aServerTime, PR_TRUE, &tempServerTime) == PR_SUCCESS) {
+  if (aServerTime &&
+      PR_ParseTimeString(aServerTime, PR_TRUE, &tempServerTime) == PR_SUCCESS) {
     serverTime = tempServerTime / PR_USEC_PER_SEC;
   } else {
     serverTime = PR_Now() / PR_USEC_PER_SEC;
@@ -811,7 +850,8 @@ nsCookieService::SetCookieStringInternal(nsIURI     *aHostURI,
  
   // switch to a nice string type now, and process each cookie in the header
   nsDependentCString cookieHeader(aCookieHeader);
-  while (SetCookieInternal(aHostURI, aChannel, cookieHeader, serverTime, aFromHttp));
+  while (SetCookieInternal(aHostURI, aChannel, baseDomain, isIPAddress,
+                           cookieHeader, serverTime, aFromHttp));
 
   return NS_OK;
 }
@@ -909,7 +949,10 @@ COMArrayCallback(nsCookieEntry *aEntry,
 {
   nsGetEnumeratorData *data = static_cast<nsGetEnumeratorData *>(aArg);
 
-  for (nsCookie *cookie = aEntry->Head(); cookie; cookie = cookie->Next()) {
+  const nsCookieEntry::ArrayType &cookies = aEntry->GetCookies();
+  for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
+    nsCookie *cookie = cookies[i];
+
     // only append non-expired cookies
     if (cookie->Expiry() > data->currentTime)
       data->array->AppendObject(cookie);
@@ -938,8 +981,11 @@ nsCookieService::Add(const nsACString &aDomain,
                      PRBool            aIsSession,
                      PRInt64           aExpiry)
 {
-  NS_ENSURE_TRUE(!aDomain.IsEmpty() && !aDomain.EqualsLiteral("."),
-                 NS_ERROR_INVALID_ARG);
+  // get the base domain for the host URI.
+  // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
+  nsCAutoString baseDomain;
+  nsresult rv = GetBaseDomainFromHost(aDomain, baseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt64 currentTimeInUsec = PR_Now();
 
@@ -955,7 +1001,7 @@ nsCookieService::Add(const nsACString &aDomain,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  AddInternal(cookie, currentTimeInUsec, nsnull, nsnull, PR_TRUE);
+  AddInternal(baseDomain, cookie, currentTimeInUsec, nsnull, nsnull, PR_TRUE);
   return NS_OK;
 }
 
@@ -965,16 +1011,18 @@ nsCookieService::Remove(const nsACString &aHost,
                         const nsACString &aPath,
                         PRBool           aBlocked)
 {
-  NS_ENSURE_TRUE(!aHost.IsEmpty() && !aHost.EqualsLiteral("."),
-                 NS_ERROR_INVALID_ARG);
+  nsCAutoString baseDomain;
+  nsresult rv = GetBaseDomainFromHost(aHost, baseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsListIter matchIter;
-  if (FindCookie(PromiseFlatCString(aHost),
+  if (FindCookie(baseDomain,
+                 PromiseFlatCString(aHost),
                  PromiseFlatCString(aName),
                  PromiseFlatCString(aPath),
                  matchIter,
                  PR_Now() / PR_USEC_PER_SEC)) {
-    nsRefPtr<nsCookie> cookie = matchIter.current;
+    nsRefPtr<nsCookie> cookie = matchIter.Cookie();
     RemoveCookieFromList(matchIter);
     NotifyChanged(cookie, NS_LITERAL_STRING("deleted").get());
   }
@@ -1029,11 +1077,20 @@ nsCookieService::Read()
   // let the reading begin!
   nsCOMPtr<mozIStorageStatement> stmt;
   rv = mDBState->dbConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id, name, value, host, path, expiry, lastAccessed, isSecure, isHttpOnly "
+    "SELECT "
+      "id, "
+      "name, "
+      "value, "
+      "host, "
+      "path, "
+      "expiry, "
+      "lastAccessed, "
+      "isSecure, "
+      "isHttpOnly "
     "FROM moz_cookies"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString name, value, host, path;
+  nsCAutoString baseDomain, name, value, host, path;
   PRBool hasResult;
   while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasResult)) && hasResult) {
     PRInt64 creationID = stmt->AsInt64(0);
@@ -1048,6 +1105,11 @@ nsCookieService::Read()
     PRBool isSecure = 0 != stmt->AsInt32(7);
     PRBool isHttpOnly = 0 != stmt->AsInt32(8);
 
+    // compute the baseDomain from the host
+    rv = GetBaseDomainFromHost(host, baseDomain);
+    if (NS_FAILED(rv))
+      continue;
+
     // create a new nsCookie and assign the data.
     nsCookie* newCookie =
       nsCookie::Create(name, value, host, path,
@@ -1060,7 +1122,7 @@ nsCookieService::Read()
     if (!newCookie)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    if (!AddCookieToList(newCookie, PR_FALSE))
+    if (!AddCookieToList(baseDomain, newCookie, PR_FALSE))
       // It is purpose that created us; purpose that connects us;
       // purpose that pulls us; that guides us; that drives us.
       // It is purpose that defines us; purpose that binds us.
@@ -1093,7 +1155,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
 
   static const char kTrue[] = "TRUE";
 
-  nsCAutoString buffer;
+  nsCAutoString buffer, baseDomain;
   PRBool isMore = PR_TRUE;
   PRInt32 hostIndex, isDomainIndex, pathIndex, secureIndex, expiresIndex, nameIndex, cookieIndex;
   nsASingleFragmentCString::char_iterator iter;
@@ -1173,6 +1235,11 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
       continue;
     }
 
+    // compute the baseDomain from the host
+    rv = GetBaseDomainFromHost(host, baseDomain);
+    if (NS_FAILED(rv))
+      continue;
+
     // create a new nsCookie and assign the data.
     // we don't know the cookie creation time, so just use the current time;
     // this is okay, since nsCookie::Create() will make sure the creation id
@@ -1197,9 +1264,9 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     lastAccessedCounter--;
 
     if (originalCookieCount == 0)
-      AddCookieToList(newCookie);
+      AddCookieToList(baseDomain, newCookie);
     else
-      AddInternal(newCookie, currentTimeInUsec, nsnull, nsnull, PR_TRUE);
+      AddInternal(baseDomain, newCookie, currentTimeInUsec, nsnull, nsnull, PR_TRUE);
   }
 
   COOKIE_LOGSTRING(PR_LOG_DEBUG, ("ImportCookies(): %ld cookies imported", mDBState->cookieCount));
@@ -1254,33 +1321,31 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
     return;
   }
 
+  // get the base domain, host, and path from the URI.
+  // e.g. for "www.bbc.co.uk", the base domain would be "bbc.co.uk".
+  PRBool isIPAddress;
+  nsCAutoString baseDomain, hostFromURI, pathFromURI;
+  nsresult rv = GetBaseDomain(aHostURI, baseDomain, isIPAddress);
+  if (NS_SUCCEEDED(rv))
+    rv = aHostURI->GetAsciiHost(hostFromURI);
+  if (NS_SUCCEEDED(rv))
+    rv = aHostURI->GetPath(pathFromURI);
+  // trim trailing dots
+  hostFromURI.Trim(".");
+  if (NS_FAILED(rv) || hostFromURI.IsEmpty()) {
+    COOKIE_LOGFAILURE(GET_COOKIE, aHostURI, nsnull, "invalid host/path from URI");
+    return;
+  }
+
   // check default prefs
-  PRUint32 cookieStatus = CheckPrefs(aHostURI, aChannel, nsnull);
+  PRUint32 cookieStatus = CheckPrefs(aHostURI, aChannel, baseDomain,
+                                     isIPAddress, nsnull);
   // for GetCookie(), we don't fire rejection notifications.
   switch (cookieStatus) {
   case STATUS_REJECTED:
   case STATUS_REJECTED_WITH_ERROR:
     return;
   }
-
-  // get host and path from the nsIURI
-  // note: there was a "check if host has embedded whitespace" here.
-  // it was removed since this check was added into the nsIURI impl (bug 146094).
-  nsCAutoString hostFromURI, pathFromURI;
-  if (NS_FAILED(aHostURI->GetAsciiHost(hostFromURI)) ||
-      NS_FAILED(aHostURI->GetPath(pathFromURI))) {
-    COOKIE_LOGFAILURE(GET_COOKIE, aHostURI, nsnull, "couldn't get host/path from URI");
-    return;
-  }
-  // trim trailing dots
-  hostFromURI.Trim(".");
-  if (hostFromURI.IsEmpty()) {
-    COOKIE_LOGFAILURE(GET_COOKIE, aHostURI, nsnull, "empty host");
-    return;
-  }
-  // insert a leading dot, so we begin the hash lookup with the
-  // equivalent domain cookie host
-  hostFromURI.Insert(NS_LITERAL_CSTRING("."), 0);
 
   // check if aHostURI is using an https secure protocol.
   // if it isn't, then we can't send a secure cookie over the connection.
@@ -1294,67 +1359,67 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
   nsAutoTArray<nsCookie*, 8> foundCookieList;
   PRInt64 currentTimeInUsec = PR_Now();
   PRInt64 currentTime = currentTimeInUsec / PR_USEC_PER_SEC;
-  const char *currentDot = hostFromURI.get();
-  const char *nextDot = currentDot + 1;
   PRBool stale = PR_FALSE;
 
-  // begin hash lookup, walking up the subdomain levels.
-  // we use nextDot to force a lookup of the original host (without leading dot).
-  do {
-    nsCookieEntry *entry = mDBState->hostTable.GetEntry(currentDot);
-    cookie = entry ? entry->Head() : nsnull;
-    for (; cookie; cookie = cookie->Next()) {
-      // if the cookie is secure and the host scheme isn't, we can't send it
-      if (cookie->IsSecure() && !isSecure) {
-        continue;
-      }
+  // perform the hash lookup
+  nsCookieEntry *entry = mDBState->hostTable.GetEntry(baseDomain);
+  if (!entry)
+    return;
 
-      // if the cookie is httpOnly and it's not going directly to the HTTP
-      // connection, don't send it
-      if (cookie->IsHttpOnly() && !aHttpBound) {
-        continue;
-      }
+  // iterate the cookies!
+  const nsCookieEntry::ArrayType &cookies = entry->GetCookies();
+  for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
+    cookie = cookies[i];
 
-      // calculate cookie path length, excluding trailing '/'
-      PRUint32 cookiePathLen = cookie->Path().Length();
-      if (cookiePathLen > 0 && cookie->Path().Last() == '/') {
-        --cookiePathLen;
-      }
+    // check the host, since the base domain lookup is conservative.
+    // first, check for an exact host or domain cookie match, e.g. "google.com"
+    // or ".google.com"; second a subdomain match, e.g.
+    // host = "mail.google.com", cookie domain = ".google.com".
+    if (cookie->RawHost() != hostFromURI &&
+        !(cookie->IsDomain() && StringEndsWith(hostFromURI, cookie->Host())))
+      continue;
 
-      // if the nsIURI path is shorter than the cookie path, don't send it back
-      if (!StringBeginsWith(pathFromURI, Substring(cookie->Path(), 0, cookiePathLen))) {
-        continue;
-      }
+    // if the cookie is secure and the host scheme isn't, we can't send it
+    if (cookie->IsSecure() && !isSecure)
+      continue;
 
-      if (pathFromURI.Length() > cookiePathLen &&
-          !ispathdelimiter(pathFromURI.CharAt(cookiePathLen))) {
-        /*
-         * |ispathdelimiter| tests four cases: '/', '?', '#', and ';'.
-         * '/' is the "standard" case; the '?' test allows a site at host/abc?def
-         * to receive a cookie that has a path attribute of abc.  this seems
-         * strange but at least one major site (citibank, bug 156725) depends
-         * on it.  The test for # and ; are put in to proactively avoid problems
-         * with other sites - these are the only other chars allowed in the path.
-         */
-        continue;
-      }
+    // if the cookie is httpOnly and it's not going directly to the HTTP
+    // connection, don't send it
+    if (cookie->IsHttpOnly() && !aHttpBound)
+      continue;
 
-      // check if the cookie has expired
-      if (cookie->Expiry() <= currentTime) {
-        continue;
-      }
+    // calculate cookie path length, excluding trailing '/'
+    PRUint32 cookiePathLen = cookie->Path().Length();
+    if (cookiePathLen > 0 && cookie->Path().Last() == '/')
+      --cookiePathLen;
 
-      // all checks passed - add to list and check if lastAccessed stamp needs updating
-      foundCookieList.AppendElement(cookie);
-      if (currentTimeInUsec - cookie->LastAccessed() > kCookieStaleThreshold)
-        stale = PR_TRUE;
+    // if the nsIURI path is shorter than the cookie path, don't send it back
+    if (!StringBeginsWith(pathFromURI, Substring(cookie->Path(), 0, cookiePathLen)))
+      continue;
+
+    if (pathFromURI.Length() > cookiePathLen &&
+        !ispathdelimiter(pathFromURI.CharAt(cookiePathLen))) {
+      /*
+       * |ispathdelimiter| tests four cases: '/', '?', '#', and ';'.
+       * '/' is the "standard" case; the '?' test allows a site at host/abc?def
+       * to receive a cookie that has a path attribute of abc.  this seems
+       * strange but at least one major site (citibank, bug 156725) depends
+       * on it.  The test for # and ; are put in to proactively avoid problems
+       * with other sites - these are the only other chars allowed in the path.
+       */
+      continue;
     }
 
-    currentDot = nextDot;
-    if (currentDot)
-      nextDot = strchr(currentDot + 1, '.');
+    // check if the cookie has expired
+    if (cookie->Expiry() <= currentTime) {
+      continue;
+    }
 
-  } while (currentDot);
+    // all checks passed - add to list and check if lastAccessed stamp needs updating
+    foundCookieList.AppendElement(cookie);
+    if (currentTimeInUsec - cookie->LastAccessed() > kCookieStaleThreshold)
+      stale = PR_TRUE;
+  }
 
   PRInt32 count = foundCookieList.Length();
   if (count == 0)
@@ -1415,6 +1480,8 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
 PRBool
 nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
                                    nsIChannel         *aChannel,
+                                   const nsCString    &aBaseDomain,
+                                   PRBool              aIsIPAddress,
                                    nsDependentCString &aCookieHeader,
                                    PRInt64             aServerTime,
                                    PRBool              aFromHttp)
@@ -1452,7 +1519,7 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
   }
 
   // domain & path checks
-  if (!CheckDomain(cookieAttributes, aHostURI)) {
+  if (!CheckDomain(cookieAttributes, aHostURI, aBaseDomain, aIsIPAddress)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader, "failed the domain tests");
     return newCookie;
   }
@@ -1501,7 +1568,8 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
 
   // add the cookie to the list. AddInternal() takes care of logging.
   // we get the current time again here, since it may have changed during prompting
-  AddInternal(cookie, PR_Now(), aHostURI, savedCookieHeader.get(), aFromHttp);
+  AddInternal(aBaseDomain, cookie, PR_Now(), aHostURI, savedCookieHeader.get(),
+              aFromHttp);
   return newCookie;
 }
 
@@ -1511,11 +1579,12 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
 // and deletes a cookie (if maximum number of cookies has been
 // reached). also performs list maintenance by removing expired cookies.
 void
-nsCookieService::AddInternal(nsCookie   *aCookie,
-                             PRInt64     aCurrentTimeInUsec,
-                             nsIURI     *aHostURI,
-                             const char *aCookieHeader,
-                             PRBool      aFromHttp)
+nsCookieService::AddInternal(const nsCString &aBaseDomain,
+                             nsCookie        *aCookie,
+                             PRInt64          aCurrentTimeInUsec,
+                             nsIURI          *aHostURI,
+                             const char      *aCookieHeader,
+                             PRBool           aFromHttp)
 {
   PRInt64 currentTime = aCurrentTimeInUsec / PR_USEC_PER_SEC;
 
@@ -1531,12 +1600,12 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
   mozStorageTransaction transaction(mDBState->dbConn, PR_TRUE);
 
   nsListIter matchIter;
-  PRBool foundCookie = FindCookie(aCookie->Host(), aCookie->Name(), aCookie->Path(),
-                                  matchIter, currentTime);
+  PRBool foundCookie = FindCookie(aBaseDomain, aCookie->Host(),
+    aCookie->Name(), aCookie->Path(), matchIter, currentTime);
 
   nsRefPtr<nsCookie> oldCookie;
   if (foundCookie) {
-    oldCookie = matchIter.current;
+    oldCookie = matchIter.Cookie();
 
     // if the old cookie is httponly, make sure we're not coming from script
     if (!aFromHttp && oldCookie->IsHttpOnly()) {
@@ -1566,9 +1635,9 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
 
     // check if we have to delete an old cookie.
     nsEnumerationData data(currentTime, LL_MAXINT);
-    if (CountCookiesFromHostInternal(aCookie->RawHost(), data) >= mMaxCookiesPerHost) {
+    if (CountCookiesFromHostInternal(aBaseDomain, data) >= mMaxCookiesPerHost) {
       // remove the oldest cookie from host
-      oldCookie = data.iter.current;
+      oldCookie = data.iter.Cookie();
       COOKIE_LOGEVICTED(oldCookie);
       RemoveCookieFromList(data.iter);
 
@@ -1590,7 +1659,7 @@ nsCookieService::AddInternal(nsCookie   *aCookie,
   }
 
   // add the cookie to head of list
-  AddCookieToList(aCookie);
+  AddCookieToList(aBaseDomain, aCookie);
   NotifyChanged(aCookie, foundCookie ? NS_LITERAL_STRING("changed").get()
                                      : NS_LITERAL_STRING("added").get());
 
@@ -1851,59 +1920,98 @@ nsCookieService::ParseAttributes(nsDependentCString &aCookieHeader,
  * private domain & permission compliance enforcement functions
  ******************************************************************************/
 
-PRBool
-nsCookieService::IsForeign(nsIURI *aHostURI,
-                           nsIURI *aFirstURI)
+nsresult
+nsCookieService::GetBaseDomain(nsIURI    *aHostURI,
+                               nsCString &aBaseDomain,
+                               PRBool    &aIsIPAddress)
 {
-  // Get hosts
-  nsCAutoString currentHost, firstHost;
-  if (NS_FAILED(aHostURI->GetAsciiHost(currentHost)) ||
-      NS_FAILED(aFirstURI->GetAsciiHost(firstHost))) {
+  // get the base domain for the host URI.
+  // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
+  nsresult rv = mTLDService->GetBaseDomain(aHostURI, 0, aBaseDomain);
+  aIsIPAddress = rv == NS_ERROR_HOST_IS_IP_ADDRESS;
+  if (rv == NS_ERROR_HOST_IS_IP_ADDRESS ||
+      rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+    // address is either an IP address or an alias such as 'localhost'.
+    // use the host as a key in such cases.
+    rv = aHostURI->GetAsciiHost(aBaseDomain);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // trim trailing dots
+  aBaseDomain.Trim(".");
+  if (aBaseDomain.IsEmpty())
+    return NS_ERROR_INVALID_ARG;
+
+  aIsIPAddress = PR_FALSE;
+  return NS_OK;
+}
+
+nsresult 
+nsCookieService::GetBaseDomainFromHost(const nsACString &aHost,
+                                       nsCString        &aBaseDomain)
+{
+  // trim leading and trailing dots
+  nsCAutoString host(aHost);
+  host.Trim(".");
+  if (host.IsEmpty())
+    return NS_ERROR_INVALID_ARG;
+
+  // get the base domain for the host.
+  // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
+  nsresult rv = mTLDService->GetBaseDomainFromHost(host, 0, aBaseDomain);
+  if (rv == NS_ERROR_HOST_IS_IP_ADDRESS ||
+      rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+    // address is either an IP address or an alias such as 'localhost'.
+    // use the host as a key in such cases.
+    aBaseDomain = host;
+    return NS_OK;
+  }
+  return rv;
+}
+
+// returns PR_TRUE if 'a' is equal to or a subdomain of 'b',
+// assuming no leading or trailing dots are present.
+static inline PRBool IsSubdomainOf(const nsCString &a, const nsCString &b)
+{
+  if (a == b)
+    return PR_TRUE;
+  if (a.Length() > b.Length())
+    return a[a.Length() - b.Length() - 1] == '.' && StringEndsWith(a, b);
+  return PR_FALSE;
+}
+
+PRBool
+nsCookieService::IsForeign(const nsCString &aBaseDomain,
+                           PRBool           aHostIsIPAddress,
+                           nsIURI          *aFirstURI)
+{
+  nsCAutoString firstHost;
+  if (NS_FAILED(aFirstURI->GetAsciiHost(firstHost))) {
     // assume foreign
     return PR_TRUE;
   }
   // trim trailing dots
-  currentHost.Trim(".");
   firstHost.Trim(".");
-  if (currentHost.IsEmpty() || firstHost.IsEmpty())
-    return PR_TRUE;
 
-  // fast path: check if the two hosts are identical.
-  // this also covers two special cases:
-  // 1) if we're dealing with IP addresses, require an exact match. this
+  // if we're dealing with IP addresses, require an exact match. this
   // eliminates any chance of IP address funkiness (e.g. the alias 127.1
-  // domain-matching 99.54.127.1). bug 105917 originally noted the requirement
-  // to deal with IP addresses. note that GetBaseDomain() below will return an
-  // error if the URI is an IP address.
-  // 2) we also need this for the (rare) case where the site is actually an eTLD,
-  // e.g. http://co.tv; GetBaseDomain() will throw an error and we might
-  // erroneously think currentHost is foreign. so we consider this case non-
-  // foreign only if the hosts exactly match.
-  if (firstHost.Equals(currentHost))
-    return PR_FALSE;
+  // domain-matching 99.54.127.1). note that the base domain parameter will be
+  // equivalent to the host IP in this case.
+  if (aHostIsIPAddress)
+    return !firstHost.Equals(aBaseDomain);
 
-  // get the base domain for the originating URI.
-  // e.g. for "images.bbc.co.uk", this would be "bbc.co.uk".
-  nsCAutoString baseDomain;
-  nsresult rv = mTLDService->GetBaseDomain(aFirstURI, 0, baseDomain);
-  if (NS_FAILED(rv)) {
-    // URI is an IP, eTLD, or something else went wrong - assume foreign
-    return PR_TRUE;
-  }  
-  baseDomain.Trim(".");
-
-  // ensure the host domain is derived from the base domain.
-  // we prepend dots before the comparison to ensure e.g.
-  // "mybbc.co.uk" isn't matched as a superset of "bbc.co.uk".
-  currentHost.Insert(NS_LITERAL_CSTRING("."), 0);
-  baseDomain.Insert(NS_LITERAL_CSTRING("."), 0);
-  return !StringEndsWith(currentHost, baseDomain);
+  // ensure the originating domain is also derived from the host's base domain.
+  // note that if the host is an alias such as 'localhost', the base domain
+  // parameter will also be 'localhost', and this comparison will work.
+  return !IsSubdomainOf(firstHost, aBaseDomain);
 }
 
 PRUint32
-nsCookieService::CheckPrefs(nsIURI     *aHostURI,
-                            nsIChannel *aChannel,
-                            const char *aCookieHeader)
+nsCookieService::CheckPrefs(nsIURI          *aHostURI,
+                            nsIChannel      *aChannel,
+                            const nsCString &aBaseDomain,
+                            PRBool           aIsIPAddress,
+                            const char      *aCookieHeader)
 {
   nsresult rv;
 
@@ -1949,7 +2057,7 @@ nsCookieService::CheckPrefs(nsIURI     *aHostURI,
     nsCOMPtr<nsIURI> firstURI;
     rv = mPermissionService->GetOriginatingURI(aChannel, getter_AddRefs(firstURI));
 
-    if (NS_FAILED(rv) || IsForeign(aHostURI, firstURI)) {
+    if (NS_FAILED(rv) || IsForeign(aBaseDomain, aIsIPAddress, firstURI)) {
       COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "originating server test failed");
       return STATUS_REJECTED;
     }
@@ -1962,19 +2070,17 @@ nsCookieService::CheckPrefs(nsIURI     *aHostURI,
 // processes domain attribute, and returns PR_TRUE if host has permission to set for this domain.
 PRBool
 nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
-                             nsIURI             *aHostURI)
+                             nsIURI             *aHostURI,
+                             const nsCString    &aBaseDomain,
+                             PRBool              aIsIPAddress)
 {
-  nsresult rv;
-
   // get host from aHostURI
   nsCAutoString hostFromURI;
-  if (NS_FAILED(aHostURI->GetAsciiHost(hostFromURI))) {
-    return PR_FALSE;
-  }
+  aHostURI->GetAsciiHost(hostFromURI);
+
   // trim trailing dots
   hostFromURI.Trim(".");
-  if (hostFromURI.IsEmpty())
-    return PR_FALSE;
+  NS_ASSERTION(!hostFromURI.IsEmpty(), "empty host");
 
   // if a domain is given, check the host has permission
   if (!aCookieAttributes.host.IsEmpty()) {
@@ -1982,33 +2088,22 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
     // switch to lowercase now, to avoid case-insensitive compares everywhere
     ToLowerCase(aCookieAttributes.host);
 
-    // get the base domain for the host URI.
-    // e.g. for "images.bbc.co.uk", this would be "bbc.co.uk", which
-    // represents the lowest level domain a cookie can be set for.
-    nsCAutoString baseDomain;
-    rv = mTLDService->GetBaseDomain(aHostURI, 0, baseDomain);
-    baseDomain.Trim(".");
-    if (NS_FAILED(rv)) {
-      // check whether the host is an IP address, and leave the cookie as
-      // a non-domain one. this will require an exact host match for the cookie,
-      // so we eliminate any chance of IP address funkiness (e.g. the alias 127.1
-      // domain-matching 99.54.127.1). bug 105917 originally noted the
-      // requirement to deal with IP addresses.
-      if (rv == NS_ERROR_HOST_IS_IP_ADDRESS)
-        return hostFromURI.Equals(aCookieAttributes.host);
-
-      return PR_FALSE;
-    }
+    // check whether the host is an IP address, and leave the cookie as
+    // a non-domain one. this will require an exact host match for the cookie,
+    // so we eliminate any chance of IP address funkiness (e.g. the alias 127.1
+    // domain-matching 99.54.127.1). bug 105917 originally noted the
+    // requirement to deal with IP addresses.
+    if (aIsIPAddress)
+      return hostFromURI.Equals(aCookieAttributes.host);
 
     // ensure the proposed domain is derived from the base domain; and also
     // that the host domain is derived from the proposed domain (per RFC2109).
-    // we prepend a dot before the comparison to ensure e.g.
-    // "mybbc.co.uk" isn't matched as a superset of "bbc.co.uk".
-    hostFromURI.Insert(NS_LITERAL_CSTRING("."), 0);
-    aCookieAttributes.host.Insert(NS_LITERAL_CSTRING("."), 0);
-    baseDomain.Insert(NS_LITERAL_CSTRING("."), 0);
-    return StringEndsWith(aCookieAttributes.host, baseDomain) &&
-           StringEndsWith(hostFromURI, aCookieAttributes.host);
+    if (IsSubdomainOf(aCookieAttributes.host, aBaseDomain) &&
+        IsSubdomainOf(hostFromURI, aCookieAttributes.host)) {
+      // prepend a dot to indicate a domain cookie
+      aCookieAttributes.host.Insert(NS_LITERAL_CSTRING("."), 0);
+      return PR_TRUE;
+    }
 
     /*
      * note: RFC2109 section 4.3.2 requires that we check the following:
@@ -2017,19 +2112,11 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
      * entire .co.nz domain. however, it's only a only a partial solution and
      * it breaks sites (IE doesn't enforce it), so we don't perform this check.
      */
-  }
-
-  // block any URIs without a host that aren't file:/// URIs
-  if (hostFromURI.IsEmpty()) {
-    PRBool isFileURI = PR_FALSE;
-    aHostURI->SchemeIs("file", &isFileURI);
-    if (!isFileURI)
-      return PR_FALSE;
+    return PR_FALSE;
   }
 
   // no domain specified, use hostFromURI
   aCookieAttributes.host = hostFromURI;
-
   return PR_TRUE;
 }
 
@@ -2150,9 +2237,11 @@ nsCookieService::RemoveAllFromMemory()
 // since enumeration is done using callback functions
 struct nsPurgeData
 {
+  typedef nsTArray<nsListIter> ArrayType;
+
   nsPurgeData(PRInt64 aCurrentTime,
               PRInt64 aPurgeTime,
-              nsTArray<nsListIter> &aPurgeList,
+              ArrayType &aPurgeList,
               nsIMutableArray *aRemovedList)
    : currentTime(aCurrentTime)
    , purgeTime(aPurgeTime)
@@ -2170,7 +2259,7 @@ struct nsPurgeData
   PRInt64 oldestTime;
 
   // list of cookies over the age limit, for purging
-  nsTArray<nsListIter> &purgeList;
+  ArrayType &purgeList;
 
   // list of all cookies we've removed, for notification
   nsIMutableArray *removedList;
@@ -2188,11 +2277,29 @@ public:
   PRBool LessThan(const nsListIter &a, const nsListIter &b) const
   {
     // compare by LastAccessed time, and tiebreak by CreationID.
-    PRInt64 result = a.current->LastAccessed() - b.current->LastAccessed();
+    PRInt64 result = a.Cookie()->LastAccessed() - b.Cookie()->LastAccessed();
     if (result != 0)
       return result < 0;
 
-    return a.current->CreationID() < b.current->CreationID();
+    return a.Cookie()->CreationID() < b.Cookie()->CreationID();
+  }
+};
+
+// comparator class for sorting cookies by entry and index.
+class CompareCookiesByIndex {
+public:
+  PRBool Equals(const nsListIter &a, const nsListIter &b) const
+  {
+    return PR_FALSE;
+  }
+
+  PRBool LessThan(const nsListIter &a, const nsListIter &b) const
+  {
+    // compare by entryclass pointer, then by index.
+    if (&a != &b)
+      return &a < &b;
+
+    return a.index < b.index;
   }
 };
 
@@ -2201,27 +2308,31 @@ purgeCookiesCallback(nsCookieEntry *aEntry,
                      void          *aArg)
 {
   nsPurgeData &data = *static_cast<nsPurgeData*>(aArg);
-  for (nsListIter iter(aEntry, nsnull, aEntry->Head()); iter.current; ) {
+
+  const nsCookieEntry::ArrayType &cookies = aEntry->GetCookies();
+  for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ) {
+    nsListIter iter(aEntry, i);
+    nsCookie *cookie = cookies[i];
+
     // check if the cookie has expired
-    if (iter.current->Expiry() <= data.currentTime) {
-      nsCookie *cookie = iter.current;
+    if (cookie->Expiry() <= data.currentTime) {
       data.removedList->AppendElement(cookie, PR_FALSE);
       COOKIE_LOGEVICTED(cookie);
 
-      // remove from list. this takes care of updating the iterator for us
+      // remove from list; do not increment our iterator
       nsCookieService::gCookieService->RemoveCookieFromList(iter);
 
     } else {
       // check if the cookie is over the age limit
-      if (iter.current->LastAccessed() <= data.purgeTime) {
+      if (cookie->LastAccessed() <= data.purgeTime) {
         data.purgeList.AppendElement(iter);
 
-      } else if (iter.current->LastAccessed() < data.oldestTime) {
+      } else if (cookie->LastAccessed() < data.oldestTime) {
         // reset our indicator
-        data.oldestTime = iter.current->LastAccessed();
+        data.oldestTime = cookie->LastAccessed();
       }
 
-      ++iter;
+      ++i;
     }
   }
   return PL_DHASH_NEXT;
@@ -2261,27 +2372,21 @@ nsCookieService::PurgeCookies(PRInt64 aCurrentTimeInUsec)
   PRUint32 excess = mDBState->cookieCount - mMaxNumberOfCookies;
   if (purgeList.Length() > excess) {
     // we're not purging everything in the list, so update our indicator
-    data.oldestTime = purgeList[excess].current->LastAccessed();
+    data.oldestTime = purgeList[excess].Cookie()->LastAccessed();
 
     purgeList.SetLength(excess);
   }
 
-  // traverse the list and remove cookies. the iterators we've stored
-  // in the list aren't stable under list mutation, so we need to do a
-  // fresh linked list traversal from the hash entryclass for each cookie.
-  for (PRUint32 i = 0; i < purgeList.Length(); ++i) {
-    nsListIter iter(purgeList[i].entry, nsnull, purgeList[i].entry->Head());
-    for (; iter.current; ++iter) {
-      if (iter.current == purgeList[i].current) {
-        // remove from list. this takes care of updating the iterator for us
-        nsCookie *cookie = iter.current;
-        removedList->AppendElement(cookie, PR_FALSE);
-        COOKIE_LOGEVICTED(cookie);
+  // sort the list again, this time grouping cookies with a common entryclass
+  // together, and with ascending index. this allows us to iterate backwards
+  // over the list removing cookies, without having to adjust indexes as we go.
+  purgeList.Sort(CompareCookiesByIndex());
+  for (nsPurgeData::ArrayType::index_type i = purgeList.Length(); i--; ) {
+    nsCookie *cookie = purgeList[i].Cookie();
+    removedList->AppendElement(cookie, PR_FALSE);
+    COOKIE_LOGEVICTED(cookie);
 
-        RemoveCookieFromList(iter);
-        break;
-      }
-    }
+    RemoveCookieFromList(purgeList[i]);
   }
 
   // take all the cookies in the removed list, and notify about them in one batch
@@ -2306,8 +2411,6 @@ nsCookieService::CookieExists(nsICookie2 *aCookie,
 {
   NS_ENSURE_ARG_POINTER(aCookie);
 
-  // just a placeholder
-  nsListIter iter;
   nsCAutoString host, name, path;
   nsresult rv = aCookie->GetHost(host);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2316,44 +2419,42 @@ nsCookieService::CookieExists(nsICookie2 *aCookie,
   rv = aCookie->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aFoundCookie = FindCookie(host, name, path, iter,
+  nsCAutoString baseDomain;
+  rv = GetBaseDomainFromHost(host, baseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsListIter iter;
+  *aFoundCookie = FindCookie(baseDomain, host, name, path, iter,
                              PR_Now() / PR_USEC_PER_SEC);
   return NS_OK;
 }
 
-// count the number of cookies from a given host, and simultaneously find the
-// oldest cookie from the host.
+// count the number of cookies in a base domain, and simultaneously find the
+// oldest cookie in that domain.
 PRUint32
-nsCookieService::CountCookiesFromHostInternal(const nsACString  &aHost,
+nsCookieService::CountCookiesFromHostInternal(const nsCString   &aBaseDomain,
                                               nsEnumerationData &aData)
 {
-  NS_ASSERTION(!aHost.IsEmpty() && !aHost.EqualsLiteral("."), "empty host");
+  nsCookieEntry *entry = mDBState->hostTable.GetEntry(aBaseDomain);
+  if (!entry)
+    return 0;
 
   PRUint32 countFromHost = 0;
-  nsCAutoString hostWithDot(NS_LITERAL_CSTRING(".") + aHost);
+  const nsCookieEntry::ArrayType &cookies = entry->GetCookies();
+  for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
+    nsCookie *cookie = cookies[i];
 
-  const char *currentDot = hostWithDot.get();
-  const char *nextDot = currentDot + 1;
-  do {
-    nsCookieEntry *entry = mDBState->hostTable.GetEntry(currentDot);
-    for (nsListIter iter(entry); iter.current; ++iter) {
-      // only count non-expired cookies
-      if (iter.current->Expiry() > aData.currentTime) {
-        ++countFromHost;
+    // only count non-expired cookies
+    if (cookie->Expiry() > aData.currentTime) {
+      ++countFromHost;
 
-        // check if we've found the oldest cookie so far
-        if (aData.oldestTime > iter.current->LastAccessed()) {
-          aData.oldestTime = iter.current->LastAccessed();
-          aData.iter = iter;
-        }
+      // check if we've found the oldest cookie so far
+      if (aData.oldestTime > cookie->LastAccessed()) {
+        aData.oldestTime = cookie->LastAccessed();
+        aData.iter = nsListIter(entry, i);
       }
     }
-
-    currentDot = nextDot;
-    if (currentDot)
-      nextDot = strchr(currentDot + 1, '.');
-
-  } while (currentDot);
+  }
 
   return countFromHost;
 }
@@ -2364,14 +2465,16 @@ NS_IMETHODIMP
 nsCookieService::CountCookiesFromHost(const nsACString &aHost,
                                       PRUint32         *aCountFromHost)
 {
-  if (aHost.IsEmpty() || aHost.EqualsLiteral(".")) {
+  nsCAutoString baseDomain;
+  nsresult rv = GetBaseDomainFromHost(aHost, baseDomain);
+  if (NS_FAILED(rv)) {
     *aCountFromHost = 0;
     return NS_OK;
   }
 
   // we don't care about finding the oldest cookie here, so disable the search
   nsEnumerationData data(PR_Now() / PR_USEC_PER_SEC, LL_MININT);
-  *aCountFromHost = CountCookiesFromHostInternal(aHost, data);
+  *aCountFromHost = CountCookiesFromHostInternal(baseDomain, data);
   return NS_OK;
 }
 
@@ -2381,47 +2484,52 @@ NS_IMETHODIMP
 nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
                                     nsISimpleEnumerator **aEnumerator)
 {
-  if (aHost.IsEmpty() || aHost.EqualsLiteral("."))
+  nsCAutoString baseDomain;
+  nsresult rv = GetBaseDomainFromHost(aHost, baseDomain);
+  if (NS_FAILED(rv))
     return NS_NewEmptyEnumerator(aEnumerator);
 
   nsCOMArray<nsICookie> cookieList(mMaxCookiesPerHost);
-  nsCAutoString hostWithDot(NS_LITERAL_CSTRING(".") + aHost);
   PRInt64 currentTime = PR_Now() / PR_USEC_PER_SEC;
 
-  const char *currentDot = hostWithDot.get();
-  const char *nextDot = currentDot + 1;
-  do {
-    nsCookieEntry *entry = mDBState->hostTable.GetEntry(currentDot);
-    for (nsListIter iter(entry); iter.current; ++iter) {
-      // only append non-expired cookies
-      if (iter.current->Expiry() > currentTime)
-        cookieList.AppendObject(iter.current);
-    }
+  nsCookieEntry *entry = mDBState->hostTable.GetEntry(baseDomain);
+  if (!entry)
+    return NS_NewEmptyEnumerator(aEnumerator);
 
-    currentDot = nextDot;
-    if (currentDot)
-      nextDot = strchr(currentDot + 1, '.');
+  const nsCookieEntry::ArrayType &cookies = entry->GetCookies();
+  for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
+    nsCookie *cookie = cookies[i];
 
-  } while (currentDot);
+    // only append non-expired cookies
+    if (cookie->Expiry() > currentTime)
+      cookieList.AppendObject(cookie);
+  }
 
   return NS_NewArrayEnumerator(aEnumerator, cookieList);
 }
 
 // find an exact cookie specified by host, name, and path that hasn't expired.
 PRBool
-nsCookieService::FindCookie(const nsAFlatCString &aHost,
+nsCookieService::FindCookie(const nsCString      &aBaseDomain,
+                            const nsAFlatCString &aHost,
                             const nsAFlatCString &aName,
                             const nsAFlatCString &aPath,
                             nsListIter           &aIter,
                             PRInt64               aCurrentTime)
 {
-  NS_ASSERTION(!aHost.IsEmpty() && !aHost.EqualsLiteral("."), "empty host");
+  nsCookieEntry *entry = mDBState->hostTable.GetEntry(aBaseDomain);
+  if (!entry)
+    return PR_FALSE;
 
-  nsCookieEntry *entry = mDBState->hostTable.GetEntry(aHost.get());
-  for (aIter = nsListIter(entry); aIter.current; ++aIter) {
-    if (aIter.current->Expiry() > aCurrentTime &&
-        aPath.Equals(aIter.current->Path()) &&
-        aName.Equals(aIter.current->Name())) {
+  const nsCookieEntry::ArrayType &cookies = entry->GetCookies();
+  for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
+    nsCookie *cookie = cookies[i];
+
+    if (cookie->Expiry() > aCurrentTime &&
+        aHost.Equals(cookie->Host()) &&
+        aPath.Equals(cookie->Path()) &&
+        aName.Equals(cookie->Name())) {
+      aIter = nsListIter(entry, i);
       return PR_TRUE;
     }
   }
@@ -2429,16 +2537,17 @@ nsCookieService::FindCookie(const nsAFlatCString &aHost,
   return PR_FALSE;
 }
 
-// removes a cookie from the hashtable, and update the iterator state.
+// remove a cookie from the hashtable, and update the iterator state.
 void
-nsCookieService::RemoveCookieFromList(nsListIter &aIter)
+nsCookieService::RemoveCookieFromList(const nsListIter &aIter)
 {
   // if it's a non-session cookie, remove it from the db
-  if (!aIter.current->IsSession() && mDBState->dbConn) {
+  if (!aIter.Cookie()->IsSession() && mDBState->dbConn) {
     // use our cached sqlite "delete" statement
     mozStorageStatementScoper scoper(mDBState->stmtDelete);
 
-    nsresult rv = mDBState->stmtDelete->BindInt64Parameter(0, aIter.current->CreationID());
+    PRInt64 creationID = aIter.Cookie()->CreationID();
+    nsresult rv = mDBState->stmtDelete->BindInt64Parameter(0, creationID);
     if (NS_SUCCEEDED(rv)) {
       PRBool hasResult;
       rv = mDBState->stmtDelete->ExecuteStep(&hasResult);
@@ -2450,34 +2559,25 @@ nsCookieService::RemoveCookieFromList(nsListIter &aIter)
     }
   }
 
-  if (!aIter.prev && !aIter.current->Next()) {
-    // we're removing the last element in the list - so just remove the entry
+  if (aIter.entry->GetCookies().Length() == 1) {
+    // we're removing the last element in the array - so just remove the entry
     // from the hash. note that the entryclass' dtor will take care of
     // releasing this last element for us!
     mDBState->hostTable.RawRemoveEntry(aIter.entry);
-    aIter.current = nsnull;
 
   } else {
-    // just remove the element from the list, and increment the iterator
-    nsCookie *next = aIter.current->Next();
-    NS_RELEASE(aIter.current);
-    if (aIter.prev) {
-      // element to remove is not the head
-      aIter.current = aIter.prev->Next() = next;
-    } else {
-      // element to remove is the head
-      aIter.current = aIter.entry->Head() = next;
-    }
+    // just remove the element from the list
+    aIter.entry->GetCookies().RemoveElementAt(aIter.index);
   }
 
   --mDBState->cookieCount;
 }
 
-nsresult
-bindCookieParameters(mozIStorageStatement* aStmt, const nsCookie* aCookie)
+static nsresult
+bindCookieParameters(mozIStorageStatement *aStmt, const nsCookie *aCookie)
 {
   nsresult rv;
-  
+
   rv = aStmt->BindInt64Parameter(0, aCookie->CreationID());
   if (NS_FAILED(rv)) return rv;
 
@@ -2507,19 +2607,17 @@ bindCookieParameters(mozIStorageStatement* aStmt, const nsCookie* aCookie)
 }
 
 PRBool
-nsCookieService::AddCookieToList(nsCookie *aCookie, PRBool aWriteToDB)
+nsCookieService::AddCookieToList(const nsCString &aBaseDomain,
+                                 nsCookie        *aCookie,
+                                 PRBool           aWriteToDB)
 {
-  nsCookieEntry *entry = mDBState->hostTable.PutEntry(aCookie->Host().get());
-
+  nsCookieEntry *entry = mDBState->hostTable.PutEntry(aBaseDomain);
   if (!entry) {
     NS_ERROR("can't insert element into a null entry!");
     return PR_FALSE;
   }
 
-  NS_ADDREF(aCookie);
-
-  aCookie->Next() = entry->Head();
-  entry->Head() = aCookie;
+  entry->GetCookies().AppendElement(aCookie);
   ++mDBState->cookieCount;
 
   // keep track of the oldest cookie, for when it comes time to purge

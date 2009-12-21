@@ -669,7 +669,6 @@ nsViewManager::UpdateViewAfterScroll(nsView *aView,
     GetViewObserver()->NotifyInvalidateForScrolledView(blit, update);
   }
 
-  Composite();
   --RootViewManager()->mScrollCnt;
 }
 

@@ -369,8 +369,10 @@ js_CheckKeyword(const jschar *chars, size_t length);
  * Friend-exported API entry point to call a mapping function on each reserved
  * identifier in the scanner's keyword table.
  */
+typedef void (*JSMapKeywordFun)(const char *);
+
 extern JS_FRIEND_API(void)
-js_MapKeywords(void (*mapfun)(const char *));
+js_MapKeywords(JSMapKeywordFun mapfun);
 
 /*
  * Check that str forms a valid JS identifier name. The function does not

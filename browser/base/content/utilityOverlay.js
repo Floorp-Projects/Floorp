@@ -475,7 +475,7 @@ function buildHelpMenu()
 #ifdef MOZ_UPDATER
   var updates = 
       Components.classes["@mozilla.org/updates/update-service;1"].
-      getService(Components.interfaces.nsIApplicationUpdateService2);
+      getService(Components.interfaces.nsIApplicationUpdateService);
   var um = 
       Components.classes["@mozilla.org/updates/update-manager;1"].
       getService(Components.interfaces.nsIUpdateManager);

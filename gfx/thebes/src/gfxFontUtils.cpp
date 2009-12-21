@@ -1824,22 +1824,22 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
         PRUint32 nameoff = names[i].offset;  // offset from base of string storage
 
         // sanity check the name string location
-        if (PRUint64(nameOffset) + PRUint64(nameStringsBase) + PRUint64(nameoff) 
-            + PRUint64(namelen) > dataLength) {
+        if (PRUint64(nameOffset) + PRUint64(nameStringsBase) +
+            PRUint64(nameoff) + PRUint64(namelen) > dataLength) {
             return NS_ERROR_FAILURE;
         }
-    
-        strOffset = nameOffset + nameStringsBase + nameoff + namelen;
 
-        // output 2-byte str size   
+        strOffset = nameOffset + nameStringsBase + nameoff;
+
+        // output 2-byte str size
         strLen = namelen & (~1);  // UTF-16 string len must be even
         *((PRUint16*) eotEnd) = PRUint16(strLen);
         eotEnd += 2;
 
-        // length is number of UTF-16 chars, not bytes    
-        CopySwapUTF16(reinterpret_cast<const PRUint16*>(aFontData + strOffset), 
-                      reinterpret_cast<PRUint16*>(eotEnd), 
-                      (strLen >> 1));  
+        // length is number of UTF-16 chars, not bytes
+        CopySwapUTF16(reinterpret_cast<const PRUint16*>(aFontData + strOffset),
+                      reinterpret_cast<PRUint16*>(eotEnd),
+                      (strLen >> 1));
         eotEnd += strLen;
 
         // add 2-byte zero padding to the end of each string

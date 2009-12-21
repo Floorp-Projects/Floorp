@@ -67,6 +67,7 @@ CPPSRCS = \
 	nsXREDirProvider.cpp \
 	nsNativeAppSupportBase.cpp \
 	nsAppData.cpp \
+	nsSigHandlers.cpp \
 	$(NULL)
 
 ifdef MOZ_SPLASHSCREEN
@@ -118,10 +119,6 @@ OS_CXXFLAGS += -fexceptions
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS += MacApplicationDelegate.mm
-endif
-
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-CPPSRCS	  += nsSigHandlers.cpp
 endif
 
 SHARED_LIBRARY_LIBS += ../profile/src/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX)
@@ -221,15 +218,15 @@ DEFINES     += -DHAVE_USR_LIB64_DIR
 endif
 endif
 
-SOURCE_STAMP := $(shell cd $(topsrcdir) && hg identify . 2>/dev/null | cut -f1 -d' ')
+MOZ_SOURCE_STAMP ?= $(shell hg -R $(topsrcdir) parent --template="{node|short}\n" 2>/dev/null)
 # strip a trailing slash from the repo URL because it's not always present,
 # and we want to construct a working URL in buildconfig.html
 # make+shell+sed = awful
 _dollar=$$
 SOURCE_REPO := $(shell cd $(topsrcdir) && hg showconfig paths.default 2>/dev/null | head -n1 | sed -e "s/^ssh:/http:/" -e "s/\/$(_dollar)//" )
 
-ifdef SOURCE_STAMP
-INIARGS = --sourcestamp=$(SOURCE_STAMP)
+ifdef MOZ_SOURCE_STAMP
+INIARGS = --sourcestamp=$(MOZ_SOURCE_STAMP)
 # extra sanity check for old versions of hg
 # that don't support showconfig
 ifeq (http,$(patsubst http%,http,$(SOURCE_REPO)))

@@ -2008,19 +2008,16 @@ JS_LockGCThingRT(JSRuntime *rt, void *thing)
 JS_PUBLIC_API(JSBool)
 JS_UnlockGCThing(JSContext *cx, void *thing)
 {
-    JSBool ok;
-
     CHECK_REQUEST(cx);
-    ok = js_UnlockGCThingRT(cx->runtime, thing);
-    if (!ok)
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_UNLOCK);
-    return ok;
+    js_UnlockGCThingRT(cx->runtime, thing);
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_UnlockGCThingRT(JSRuntime *rt, void *thing)
 {
-    return js_UnlockGCThingRT(rt, thing);
+    js_UnlockGCThingRT(rt, thing);
+    return true;
 }
 
 JS_PUBLIC_API(void)
@@ -2543,7 +2540,7 @@ JS_PUBLIC_API(JSBool)
 JS_IsAboutToBeFinalized(JSContext *cx, void *thing)
 {
     JS_ASSERT(thing);
-    return js_IsAboutToBeFinalized(cx, thing);
+    return js_IsAboutToBeFinalized(thing);
 }
 
 JS_PUBLIC_API(void)
@@ -2950,6 +2947,8 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     nslots = scope->freeslot;
     for (i = 0; i != nslots; ++i) {
         v = STOBJ_GET_SLOT(obj, i);
+        if (i == JSSLOT_PRIVATE && (obj->getClass()->flags & JSCLASS_HAS_PRIVATE))
+            continue;
         if (JSVAL_IS_PRIMITIVE(v))
             continue;
         if (!JS_SealObject(cx, JSVAL_TO_OBJECT(v), deep))

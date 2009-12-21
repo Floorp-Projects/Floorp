@@ -1214,7 +1214,6 @@ if [ "$MOZ_MATHML" ]; then
     content/mathml/Makefile
     content/mathml/content/Makefile
     content/mathml/content/src/Makefile
-    intl/uconv/ucvmath/Makefile
     layout/mathml/Makefile
   "
 fi

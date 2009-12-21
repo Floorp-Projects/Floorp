@@ -83,7 +83,6 @@ namespace nanojit
         verbose_only( _outputCache = 0; )
         verbose_only( outline[0] = '\0'; )
         verbose_only( outlineEOL[0] = '\0'; )
-        verbose_only( outputAddr = false; )
 
         reset();
     }
@@ -777,7 +776,6 @@ namespace nanojit
         }
 
         NIns* fragEntry = genPrologue();
-        verbose_only( outputAddr=true; )
         verbose_only( asm_output("[prologue]"); )
 
         // check for resource leaks
@@ -968,7 +966,7 @@ namespace nanojit
             switch(op)
             {
                 default:
-                    NanoAssertMsgf(false, "unsupported LIR instruction: %d (~0x40: %d)\n", op, op&~LIR64);
+                    NanoAssertMsgf(false, "unsupported LIR instruction: %d\n", op);
                     break;
 
                 case LIR_regfence:
@@ -1063,15 +1061,24 @@ namespace nanojit
                     asm_cmov(ins);
                     break;
                 }
+                case LIR_ldzb:
+                case LIR_ldzs:
+                case LIR_ldsb:
+                case LIR_ldss:
+                case LIR_ldcsb:
+                case LIR_ldcss:
                 case LIR_ld:
                 case LIR_ldc:
                 case LIR_ldcb:
                 case LIR_ldcs:
                 {
                     countlir_ld();
-                    asm_ld(ins);
+                    asm_load32(ins);
                     break;
                 }
+
+                case LIR_ld32f:
+                case LIR_ldc32f:
                 case LIR_ldq:
                 case LIR_ldqc:
                 {
@@ -1159,27 +1166,30 @@ namespace nanojit
                     asm_promote(ins);
                     break;
                 }
+                case LIR_stb:
+                case LIR_sts:
                 case LIR_sti:
                 {
                     countlir_st();
-                    asm_store32(ins->oprnd1(), ins->disp(), ins->oprnd2());
+                    asm_store32(op, ins->oprnd1(), ins->disp(), ins->oprnd2());
                     break;
                 }
+                case LIR_st32f:
                 case LIR_stqi:
                 {
                     countlir_stq();
                     LIns* value = ins->oprnd1();
                     LIns* base = ins->oprnd2();
                     int dr = ins->disp();
-                    if (value->isop(LIR_qjoin))
+                    if (value->isop(LIR_qjoin) && op != LIR_st32f)
                     {
                         // this is correct for little-endian only
-                        asm_store32(value->oprnd1(), dr, base);
-                        asm_store32(value->oprnd2(), dr+4, base);
+                        asm_store32(LIR_sti, value->oprnd1(), dr, base);
+                        asm_store32(LIR_sti, value->oprnd2(), dr+4, base);
                     }
                     else
                     {
-                        asm_store64(value, dr, base);
+                        asm_store64(op, value, dr, base);
                     }
                     break;
                 }
@@ -1323,8 +1333,7 @@ namespace nanojit
                         label->addr = _nIns;
                     }
                     verbose_only( if (_logc->lcbits & LC_Assembly) { 
-                        outputAddr=true; asm_output("[%s]", 
-                        _thisfrag->lirbuf->names->formatRef(ins)); 
+                        asm_output("[%s]", _thisfrag->lirbuf->names->formatRef(ins)); 
                     })
                     break;
                 }
@@ -1407,23 +1416,6 @@ namespace nanojit
                 case LIR_icall:
                 {
                     countlir_call();
-                    Register rr = UnknownReg;
-                    if (ARM_VFP && op == LIR_fcall)
-                    {
-                        // fcall
-                        rr = asm_prep_fcall(ins);
-                    }
-                    else
-                    {
-                        rr = retRegs[0];
-                        prepResultReg(ins, rmask(rr));
-                    }
-
-                    // do this after we've handled the call result, so we dont
-                    // force the call result to be spilled unnecessarily.
-
-                    evictScratchRegs();
-
                     asm_call(ins);
                     break;
                 }
@@ -1805,7 +1797,7 @@ namespace nanojit
             }
         }
     }
-
+    
     /**
      * Merge the current state of the registers with a previously stored version
      * current == saved    skip
@@ -1825,9 +1817,13 @@ namespace nanojit
         // of load/store multiple instructions.  Hence iterate the loop the
         // other way.  The "r <= LastReg" guards against wraparound in
         // the case where Register is treated as unsigned and FirstReg is zero.
-        for (Register r=LastReg; r >= FirstReg && r <= LastReg;
-                                 r = prevreg(r))
+        //
+        // Note, the loop var is deliberately typed as int (*not* Register)
+        // to outsmart compilers that will otherwise report
+        // "error: comparison is always true due to limited range of data type".
+        for (int ri=LastReg; ri >= FirstReg && ri <= LastReg; ri = int(prevreg(Register(ri))))
         {
+            Register const r = Register(ri);
             LIns * curins = _allocator.getActive(r);
             LIns * savedins = saved.getActive(r);
             if (curins == savedins)

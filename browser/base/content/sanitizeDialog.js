@@ -92,6 +92,8 @@ var gSanitizePromptDialog = {
     if (this.selectedTimespan === Sanitizer.TIMESPAN_EVERYTHING) {
       this.prepareWarning();
       this.warningBox.hidden = false;
+      document.title =
+        this.bundleBrowser.getString("sanitizeDialog2.everything.title");
     }
     else
       this.warningBox.hidden = true;

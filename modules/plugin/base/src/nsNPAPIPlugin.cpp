@@ -889,7 +889,7 @@ nsPluginThreadRunnable::nsPluginThreadRunnable(NPP instance,
     nsAutoLock lock(sPluginThreadAsyncCallLock);
 
     nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
-    if (!inst || !inst->IsStarted()) {
+    if (!inst || !inst->IsRunning()) {
       // The plugin was stopped, ignore this async call.
       mFunc = nsnull;
 

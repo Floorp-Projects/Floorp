@@ -67,10 +67,6 @@ endif
 
 DIRS		+= src
 
-ifdef MOZ_MATHML
-DIRS           += ucvmath
-endif
-
 ifdef ENABLE_TESTS
 TOOL_DIRS += tests
 endif

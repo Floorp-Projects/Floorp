@@ -57,7 +57,9 @@ CPPSRCS = \
   testPropCache.cpp \
   testTrap.cpp \
   testSameValue.cpp \
+  testSeal.cpp \
   testXDR.cpp \
+  testSetPropertyWithNativeGetterStubSetter.cpp \
   $(NULL)
 
 DEFINES         += -DEXPORT_JS_API

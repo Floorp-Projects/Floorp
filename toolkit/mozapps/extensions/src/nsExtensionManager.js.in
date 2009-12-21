@@ -1455,6 +1455,8 @@ WinRegInstallLocation.prototype = {
 
   getItemFile: function RegInstallLocation_getItemFile(id, filePath) {
     var itemLocation = this.getItemLocation(id);
+    if (!itemLocation)
+      return null;
     var parts = filePath.split("/");
     for (var i = 0; i < parts.length; ++i)
       itemLocation.append(parts[i]);
@@ -4326,7 +4328,7 @@ ExtensionManager.prototype = {
       safeInstallOperation(id, installLocation, file);
 
     var metadataFile = installLocation.getItemFile(id, FILE_INSTALL_MANIFEST);
-    if (metadataFile.exists()) {
+    if (metadataFile && metadataFile.exists()) {
       var metadataDS = getInstallManifest(metadataFile);
       if (metadataDS) {
         // Add metadata for the item to the extensions datasource
@@ -4367,7 +4369,7 @@ ExtensionManager.prototype = {
       var installRDF = extractRDFFileToTempDir(stagedFile, FILE_INSTALL_MANIFEST, true);
     else
       installRDF = installLocation.getItemFile(id, FILE_INSTALL_MANIFEST);
-    if (installRDF.exists()) {
+    if (installRDF && installRDF.exists()) {
       var installManifest = getInstallManifest(installRDF);
       if (installManifest) {
         var type = getAddonTypeFromInstallManifest(installManifest);
@@ -4413,7 +4415,7 @@ ExtensionManager.prototype = {
         // If there is no manifest then either the rollback failed, or there was
         // no manifest in the first place. Either way this item is now invalid
         // and we shouldn't try to re-install it.
-        if (manifest.exists()) {
+        if (manifest && manifest.exists()) {
           // Removal of the files failed, reset the uninstalled flag and rewrite
           // the install manifests so this item's components are registered.
           // Clear the op flag from the Startup Cache
@@ -7674,7 +7676,7 @@ ExtensionsDataSource.prototype = {
     if (!installLocation)
       return null;
     var file = installLocation.getItemFile(id, fileName)
-    if (file.exists())
+    if (file && file.exists())
       return gRDF.GetResource(getURLSpecFromFile(file));
 
     return null;

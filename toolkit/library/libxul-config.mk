@@ -93,12 +93,10 @@ endif
 # dependent libraries
 ifdef MOZ_IPC
 STATIC_LIBS += \
-  domipc_s \
   domplugins_s \
   mozipc_s \
   mozipdlgen_s \
   chromium_s \
-  ipcshell_s \
   gfxipc_s \
   $(NULL)
 
@@ -292,10 +290,6 @@ COMPONENT_LIBS += \
 	satchel \
 	pippki \
 	$(NULL)
-endif
-
-ifdef MOZ_MATHML
-COMPONENT_LIBS += ucvmath
 endif
 
 ifdef MOZ_ENABLE_GTK2

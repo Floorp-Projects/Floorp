@@ -291,8 +291,6 @@ function populateDB(aArray) {
           bmsvc.setItemDateAdded(itemId, qdata.dateAdded);
         if (qdata.lastModified)
           bmsvc.setItemLastModified(itemId, qdata.lastModified);
-
-        LOG("added bookmark");
       }
 
       if (qdata.isTag) {
@@ -402,14 +400,18 @@ function compareArrayToResult(aArray, aRoot) {
       LOG("testing testData[" + i + "] vs result[" + inQueryIndex + "]");
       if(!aArray[i].isFolder) {
         LOG("testing testData[" + aArray[i].uri + "] vs result[" + child.uri + "]");
-        do_check_eq(aArray[i].uri, child.uri);
+        if (aArray[i].uri != child.uri)
+          do_throw("Expected " + aArray[i].uri + " found " + child.uri);
       }
-      do_check_eq(aArray[i].title, child.title);
-      if (aArray[i].hasOwnProperty("lastVisit"))
-        do_check_eq(aArray[i].lastVisit, child.time);
+      if (aArray[i].title != child.title)
+        do_throw("Expected " + aArray[i].title + " found " + child.title);
+      if (aArray[i].hasOwnProperty("lastVisit") &&
+          aArray[i].lastVisit != child.time)
+        do_throw("Expected " + aArray[i].lastVisit + " found " + child.time);
       if (aArray[i].hasOwnProperty("index") &&
-          aArray[i].index != bmsvc.DEFAULT_INDEX)
-        do_check_eq(aArray[i].index, child.bookmarkIndex);
+          aArray[i].index != bmsvc.DEFAULT_INDEX &&
+          aArray[i].index != child.bookmarkIndex)
+        do_throw("Expected " + aArray[i].index + " found " + child.bookmarkIndex);
 
       inQueryIndex++;
     }

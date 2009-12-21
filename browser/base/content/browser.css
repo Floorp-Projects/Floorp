@@ -148,11 +148,11 @@ window[chromehidden~="toolbar"] toolbar:not(.toolbar-primary):not(.chromeclass-m
 
 #navigator-toolbox[inFullscreen="true"] > #fullscr-toggler,
 #nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-icon {
- display: -moz-box;
+  display: -moz-box;
 }
 
 #nav-bar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
- display: none;
+  display: none;
 }
 
 /* ::::: Keyboard UI Panel ::::: */

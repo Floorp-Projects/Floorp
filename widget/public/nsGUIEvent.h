@@ -23,6 +23,7 @@
  *   Makoto Kato  <m_kato@ga2.so-net.ne.jp>
  *   Dean Tessman <dean_tessman@hotmail.com>
  *   Thomas K. Dyas <tdyas@zecador.org> (simple gestures support)
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1431,6 +1432,14 @@ enum nsDragDropEventStatus {
   (event)->flags &= ~NS_EVENT_FLAG_DISPATCHING; \
   (event)->flags |= NS_EVENT_DISPATCHED;
 
+// Be aware the query content events and the selection events are a part of IME
+// processing.  So, you shouldn't use NS_IS_IME_EVENT macro directly in most
+// cases, you should use NS_IS_IME_RELATED_EVENT instead.
+#define NS_IS_IME_RELATED_EVENT(evnt) \
+  (NS_IS_IME_EVENT(evnt) || \
+   NS_IS_QUERY_CONTENT_EVENT(evnt) || \
+   NS_IS_SELECTION_EVENT(evnt))
+
 /*
  * Virtual key bindings for keyboard events.
  * These come from nsIDOMKeyEvent.h, which is generated from MouseKeyEvent.idl.
@@ -1586,7 +1595,7 @@ inline PRBool NS_TargetUnfocusedEventToLastFocusedContent(nsEvent* aEvent)
   // the next focused widget getting the focus.
   // We need to send the commit event to last focused content.
 
-  return NS_IS_IME_EVENT(aEvent);
+  return NS_IS_IME_RELATED_EVENT(aEvent);
 #elif defined(XP_WIN)
   // bug 292263 (XP_WIN)
   // If software keyboard has focus, it may send the key messages and
@@ -1594,27 +1603,41 @@ inline PRBool NS_TargetUnfocusedEventToLastFocusedContent(nsEvent* aEvent)
   // doesn't have focus and event is key event or IME event, we should
   // send the events to pre-focused element.
 
-  return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
+  return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_RELATED_EVENT(aEvent) ||
          NS_IS_PLUGIN_EVENT(aEvent) || NS_IS_CONTENT_COMMAND_EVENT(aEvent);
 #else
   return PR_FALSE;
 #endif
 }
 
+/**
+ * Whether the event should be handled by the frame of the mouse cursor
+ * position or not.  When it should be handled there (e.g., the mouse events),
+ * this returns TRUE.
+ */
 inline PRBool NS_IsEventUsingCoordinates(nsEvent* aEvent)
 {
-  return !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_EVENT(aEvent) &&
+  return !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_RELATED_EVENT(aEvent) &&
          !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_ACTIVATION_EVENT(aEvent) &&
-         !NS_IS_QUERY_CONTENT_EVENT(aEvent) && !NS_IS_PLUGIN_EVENT(aEvent) &&
-         !NS_IS_SELECTION_EVENT(aEvent) &&
-         !NS_IS_CONTENT_COMMAND_EVENT(aEvent) &&
+         !NS_IS_PLUGIN_EVENT(aEvent) && !NS_IS_CONTENT_COMMAND_EVENT(aEvent) &&
          aEvent->eventStructType != NS_ACCESSIBLE_EVENT;
 }
 
+/**
+ * Whether the event should be handled by the focused DOM window in the
+ * same top level window's or not.  E.g., key events, IME related events
+ * (including the query content events, they are used in IME transaction)
+ * should be handled by the (last) focused window rather than the dispatched
+ * window.
+ *
+ * NOTE: Even if this returns TRUE, the event isn't going to be handled by the
+ * application level active DOM window which is on another top level window.
+ * So, when the event is fired on a deactive window, the event is going to be
+ * handled by the last focused DOM window in the last focused window.
+ */
 inline PRBool NS_IsEventTargetedAtFocusedWindow(nsEvent* aEvent)
 {
   return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
-         NS_IS_QUERY_CONTENT_EVENT(aEvent) || NS_IS_SELECTION_EVENT(aEvent) ||
          NS_IS_CONTEXT_MENU_KEY(aEvent) || NS_IS_CONTENT_COMMAND_EVENT(aEvent);
 }
 

@@ -67,34 +67,26 @@
 
 #include "jsscriptinlines.h"
 
+const uint32 JSSLOT_EXEC_DEPTH          = JSSLOT_PRIVATE + 1;
+const uint32 JSSCRIPT_RESERVED_SLOTS    = 1;
+
 #if JS_HAS_SCRIPT_OBJECT
 
 static const char js_script_exec_str[]    = "Script.prototype.exec";
 static const char js_script_compile_str[] = "Script.prototype.compile";
 
-/*
- * This routine requires that obj has been locked previously.
- */
 static jsint
-GetScriptExecDepth(JSContext *cx, JSObject *obj)
+GetScriptExecDepth(JSObject *obj)
 {
-    jsval v;
-
-    JS_ASSERT(JS_IS_OBJ_LOCKED(cx, obj));
-    v = LOCKED_OBJ_GET_SLOT(obj, JSSLOT_START(&js_ScriptClass));
+    jsval v = obj->fslots[JSSLOT_EXEC_DEPTH];
     return JSVAL_IS_VOID(v) ? 0 : JSVAL_TO_INT(v);
 }
 
 static void
-AdjustScriptExecDepth(JSContext *cx, JSObject *obj, jsint delta)
+AdjustScriptExecDepth(JSObject *obj, jsint delta)
 {
-    jsint execDepth;
-
-    JS_LOCK_OBJ(cx, obj);
-    execDepth = GetScriptExecDepth(cx, obj);
-    LOCKED_OBJ_SET_SLOT(obj, JSSLOT_START(&js_ScriptClass),
-                        INT_TO_JSVAL(execDepth + delta));
-    JS_UNLOCK_OBJ(cx, obj);
+    jsint execDepth = GetScriptExecDepth(obj);
+    obj->fslots[JSSLOT_EXEC_DEPTH] = INT_TO_JSVAL(execDepth + delta);
 }
 
 #if JS_HAS_TOSOURCE
@@ -272,7 +264,7 @@ script_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
 
     JS_LOCK_OBJ(cx, obj);
-    execDepth = GetScriptExecDepth(cx, obj);
+    execDepth = GetScriptExecDepth(obj);
 
     /*
      * execDepth must be 0 to allow compilation here, otherwise the JSScript
@@ -378,7 +370,7 @@ script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
 
     /* Keep track of nesting depth for the script. */
-    AdjustScriptExecDepth(cx, obj, 1);
+    AdjustScriptExecDepth(obj, 1);
 
     /* Must get to out label after this */
     script = (JSScript *) obj->getPrivate();
@@ -397,7 +389,7 @@ script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
 
 out:
-    AdjustScriptExecDepth(cx, obj, -1);
+    AdjustScriptExecDepth(obj, -1);
     return ok;
 }
 
@@ -855,7 +847,7 @@ script_thaw(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JS_LOCK_OBJ(cx, obj);
-    execDepth = GetScriptExecDepth(cx, obj);
+    execDepth = GetScriptExecDepth(obj);
 
     /*
      * execDepth must be 0 to allow compilation here, otherwise the JSScript
@@ -948,7 +940,7 @@ script_trace(JSTracer *trc, JSObject *obj)
 
 JS_FRIEND_DATA(JSClass) js_ScriptClass = {
     js_Script_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1) |
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSCRIPT_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Script),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   script_finalize,

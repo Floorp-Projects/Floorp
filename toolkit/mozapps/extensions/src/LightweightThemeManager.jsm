@@ -310,8 +310,8 @@ function _persistImages(aData) {
 
 function _getLocalImageURI(localFileName) {
   var localFile = Cc["@mozilla.org/file/directory_service;1"]
-                     .getService(Ci.nsIProperties)
-                     .get("ProfD", Ci.nsILocalFile);
+                    .getService(Ci.nsIProperties)
+                    .get("ProfD", Ci.nsILocalFile);
   localFile.append(localFileName);
   return _ioService.newFileURI(localFile);
 }

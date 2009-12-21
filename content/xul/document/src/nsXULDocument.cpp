@@ -4700,27 +4700,10 @@ nsXULDocument::IsDocumentRightToLeft()
                 }
             }
 
-            nsCAutoString locale;
-            reg->GetSelectedLocale(package, locale);
-            if (locale.Length() >= 2) {
-                // first check the intl.uidirection.<locale> preference,
-                // and if that is not set, check the same preference but
-                // with just the first two characters of the locale. If
-                // that isn't set, default to left-to-right.
-                nsCAutoString prefString =
-                    NS_LITERAL_CSTRING("intl.uidirection.") + locale;
-                nsAdoptingCString dir = nsContentUtils::GetCharPref(prefString.get());
-                if (dir.IsEmpty()) {
-                    PRInt32 hyphen = prefString.FindChar('-');
-                    if (hyphen >= 1) {
-                        nsCAutoString shortPref(Substring(prefString, 0, hyphen));
-                        dir = nsContentUtils::GetCharPref(shortPref.get());
-                    }
-                }
-
-                mDocDirection = dir.EqualsLiteral("rtl") ?
-                                Direction_RightToLeft : Direction_LeftToRight;
-            }
+            PRBool isRTL = PR_FALSE;
+            reg->IsLocaleRTL(package, &isRTL);
+            mDocDirection = isRTL ?
+                            Direction_RightToLeft : Direction_LeftToRight;
         }
     }
 

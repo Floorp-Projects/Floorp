@@ -3313,7 +3313,7 @@ nsPrintEngine::StartPagePrintTimer(nsPrintObject* aPO)
 
     // Get the delay time in between the printing of each page
     // this gives the user more time to press cancel
-    PRInt32 printPageDelay = 500;
+    PRInt32 printPageDelay = 50;
     mPrt->mPrintSettings->GetPrintPageDelay(&printPageDelay);
 
     mPagePrintTimer->Init(this, mDocViewerPrint, printPageDelay);

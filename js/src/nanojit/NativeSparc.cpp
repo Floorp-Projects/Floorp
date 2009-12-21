@@ -153,6 +153,14 @@ namespace nanojit
 
     void Assembler::asm_call(LInsp ins)
     {
+        Register retReg = ( ins->isop(LIR_fcall) ? F0 : retRegs[0] );
+        prepResultReg(ins, rmask(retReg));
+
+        // Do this after we've handled the call result, so we don't
+        // force the call result to be spilled unnecessarily.
+
+        evictScratchRegs();
+
         const CallInfo* call = ins->callInfo();
 
         underrunProtect(8);
@@ -299,8 +307,21 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_store32(LIns *value, int dr, LIns *base)
+    void Assembler::asm_store32(LOpcode op, LIns *value, int dr, LIns *base)
     {
+        switch (op) {
+            case LIR_sti:
+                // handled by mainline code below for now
+                break;
+            case LIR_stb:
+            case LIR_sts:
+                NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+                return;
+            default:
+                NanoAssertMsg(0, "asm_store32 should never receive this LIR opcode");
+                return;
+        }
+
         underrunProtect(20);
         if (value->isconst())
             {
@@ -344,6 +365,20 @@ namespace nanojit
 
     void Assembler::asm_load64(LInsp ins)
     {
+        switch (ins->opcode()) {
+            case LIR_ldq:
+            case LIR_ldqc:
+                // handled by mainline code below for now
+                break;
+            case LIR_ld32f:
+            case LIR_ldc32f:
+                NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+                return;
+            default:
+                NanoAssertMsg(0, "asm_load64 should never receive this LIR opcode");
+                return;
+        }
+
         underrunProtect(72);
         LIns* base = ins->oprnd1();
         int db = ins->disp();
@@ -373,8 +408,20 @@ namespace nanojit
             }
     }
 
-    void Assembler::asm_store64(LInsp value, int dr, LInsp base)
+    void Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
     {
+        switch (op) {
+            case LIR_stqi:
+                // handled by mainline code below for now
+                break;
+            case LIR_st32f:
+                NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+                return;
+            default:
+                NanoAssertMsg(0, "asm_store64 should never receive this LIR opcode");
+                return;
+        }
+
         underrunProtect(48);
         if (value->isconstq())
             {
@@ -716,7 +763,7 @@ namespace nanojit
             ORI(ra, 0, rr);
     }
 
-    void Assembler::asm_ld(LInsp ins)
+    void Assembler::asm_load32(LInsp ins)
     {
         underrunProtect(12);
         LOpcode op = ins->opcode();
@@ -724,12 +771,28 @@ namespace nanojit
         int d = ins->disp();
         Register rr = prepResultReg(ins, GpRegs);
         Register ra = getBaseReg(ins->opcode(), base, d, GpRegs);
-        if (op == LIR_ldcb) {
-            LDUB32(ra, d, rr);
-        } else if (op == LIR_ldcs) {
-            LDUH32(ra, d, rr);
-        } else {
-            LDSW32(ra, d, rr);
+        switch(op) {
+            case LIR_ldzb:
+            case LIR_ldcb:
+                LDUB32(ra, d, rr);
+                break;
+            case LIR_ldzs:
+            case LIR_ldcs:
+                LDUH32(ra, d, rr);
+                break;
+            case LIR_ld:
+            case LIR_ldc:
+                LDSW32(ra, d, rr);
+                break;
+            case LIR_ldsb:
+            case LIR_ldss:
+            case LIR_ldcsb:
+            case LIR_ldcss:
+                NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+                return;
+            default:
+                NanoAssertMsg(0, "asm_load32 should never receive this LIR opcode");
+                return;
         }
     }
 
@@ -877,11 +940,6 @@ namespace nanojit
         int d = findMemFor(ins->oprnd1());
         FITOD(rr, rr);
         LDDF32(FP, d, rr);
-    }
-
-    Register Assembler::asm_prep_fcall(LInsp ins)
-    {
-        return prepResultReg(ins, rmask(F0));
     }
 
     void Assembler::asm_u2f(LInsp ins)
