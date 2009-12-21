@@ -189,11 +189,11 @@ namespace nanojit
  #define IMM8(i)    \
      _nIns -= 1;     \
      *((int8_t*)_nIns) = (int8_t)(i)
- 
+
  #define IMM16(i)    \
      _nIns -= 2;     \
      *((int16_t*)_nIns) = (int16_t)(i)
- 
+
 #define IMM32(i)    \
     _nIns -= 4;     \
     *((int32_t*)_nIns) = (int32_t)(i)
@@ -451,8 +451,8 @@ namespace nanojit
 
 // note: movzx/movsx are being output with an 8/16 suffix to indicate the size
 // being loaded. this doesn't really match standard intel format (though is arguably
-// terser and more obvious in this case) and would probably be nice to fix. 
-// (likewise, the 8/16 bit stores being output as "mov8" and "mov16" respectively.) 
+// terser and more obvious in this case) and would probably be nice to fix.
+// (likewise, the 8/16 bit stores being output as "mov8" and "mov16" respectively.)
 
 // load 16-bit, sign extend
 #define LD16S(r,d,b) do { count_ld(); ALU2m(0x0fbf,r,d,b); asm_output("movsx16 %s,%d(%s)", gpn(r),d,gpn(b)); } while(0)
