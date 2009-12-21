@@ -123,6 +123,7 @@ var supported_properties = {
     "text-shadow": [ test_shadow_transition ],
     "top": [ test_length_transition, test_percent_transition ],
     "vertical-align": [ test_length_transition, test_percent_transition ],
+    "visibility": [ test_visibility_transition ],
     "width": [ test_length_transition, test_percent_transition ],
     "word-spacing": [ test_length_transition ],
     "z-index": [ test_zindex_transition, test_pos_integer_or_auto_transition ],
@@ -546,6 +547,17 @@ function test_rect_transition(prop) {
   div.style.setProperty(prop, "auto", "");
   is(cs.getPropertyValue(prop), "auto",
      "rect-valued property " + prop + ": can't interpolate auto components");
+}
+
+function test_visibility_transition(prop) {
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "visible", "");
+  is(cs.getPropertyValue(prop), "visible",
+     "visibility property " + prop + ": computed value before transition");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "hidden", "");
+  is(cs.getPropertyValue(prop), "visible",
+     "visibility property " + prop + ": interpolation of visibility");
 }
 
 </script>

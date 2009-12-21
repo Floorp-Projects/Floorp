@@ -145,6 +145,14 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           break;
       }
       break;
+   case eUnit_Visibility: {
+      PRInt32 startVal =
+        aStartValue.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
+      PRInt32 endVal =
+        aEndValue.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
+      aDistance = PR_ABS(startVal - endVal);
+      break;
+    }
     case eUnit_Integer: {
       PRInt32 startInt = aStartValue.GetIntValue();
       PRInt32 endInt = aEndValue.GetIntValue();
@@ -520,6 +528,15 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
           break;
       }
       break;
+    case eUnit_Visibility: {
+      PRInt32 val1 = aValue1.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
+      PRInt32 val2 = aValue2.GetIntValue() == NS_STYLE_VISIBILITY_VISIBLE;
+      double interp = aCoeff1 * val1 + aCoeff2 * val2;
+      PRInt32 result = interp > 0.0 ? NS_STYLE_VISIBILITY_VISIBLE
+                                    : NS_STYLE_VISIBILITY_HIDDEN;
+      aResultValue.SetIntValue(result, eUnit_Visibility);
+      break;
+    }
     case eUnit_Integer: {
       // http://dev.w3.org/csswg/css3-transitions/#animation-of-property-types-
       // says we should use floor
@@ -969,6 +986,7 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
       }
       break;
     case eUnit_Enumerated:
+    case eUnit_Visibility:
       NS_ABORT_IF_FALSE(nsCSSProps::kTypeTable[aProperty] == eCSSType_Value,
                         "type mismatch");
       static_cast<nsCSSValue*>(aSpecifiedValue)->
@@ -1594,6 +1612,7 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
     case eUnit_None:
       break;
     case eUnit_Enumerated:
+    case eUnit_Visibility:
     case eUnit_Integer:
       mValue.mInt = aOther.mValue.mInt;
       break;
@@ -1782,6 +1801,7 @@ nsStyleAnimation::Value::operator==(const Value& aOther) const
     case eUnit_None:
       return PR_TRUE;
     case eUnit_Enumerated:
+    case eUnit_Visibility:
     case eUnit_Integer:
       return mValue.mInt == aOther.mValue.mInt;
     case eUnit_Coord:
