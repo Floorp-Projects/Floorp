@@ -113,6 +113,7 @@ typedef struct InstanceData {
   TestRange* testrange;
   void* streamBuf;
   void* fileBuf;
+  bool crashOnDestroy;
 } InstanceData;
 
 #endif // nptest_h_
