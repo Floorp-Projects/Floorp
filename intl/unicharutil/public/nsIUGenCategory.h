@@ -54,7 +54,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IUGENCATEGORY_IID)
 
    /**
-    *  Read http://www.unicode.org/Public/UNIDATA/UCD.html#General_Category_Values
+    *  Read http://unicode.org/reports/tr44/#General_Category_Values
     *  for the detailed definition of the following categories
     */
    typedef enum {
