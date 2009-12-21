@@ -80,7 +80,7 @@ interface nsIChromeRegistry : nsISupports
   [notxpcom] boolean wrappersEnabled(in nsIURI aURI);
 };
 
-[scriptable, uuid(2860e205-490e-4b06-90b6-87160d35a5a7)]
+[scriptable, uuid(c2461347-2b8f-48c7-9d59-3a61fb868828)]
 interface nsIXULChromeRegistry : nsIChromeRegistry
 {
   /* Should be called when locales change to reload all chrome (including XUL). */
@@ -88,6 +88,9 @@ interface nsIXULChromeRegistry : nsIChromeRegistry
   
   ACString getSelectedLocale(in ACString packageName);
   
+  // Get the direction of the locale via the intl.uidirection.<locale> pref
+  boolean isLocaleRTL(in ACString package);
+
   /* Should be called when skins change. Reloads only stylesheets. */
   void refreshSkins();
 

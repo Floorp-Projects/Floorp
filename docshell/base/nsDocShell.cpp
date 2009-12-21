@@ -6199,7 +6199,7 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
         viewer->SetDOMDocument(domdoc);
 
         SetCurrentURI(blankDoc->GetDocumentURI(), nsnull, PR_TRUE);
-        rv = NS_OK;
+        rv = mIsBeingDestroyed ? NS_ERROR_NOT_AVAILABLE : NS_OK;
       }
     }
   }

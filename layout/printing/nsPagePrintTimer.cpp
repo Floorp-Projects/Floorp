@@ -45,6 +45,7 @@ NS_IMPL_ISUPPORTS1(nsPagePrintTimer, nsITimerCallback)
 nsPagePrintTimer::nsPagePrintTimer() :
   mPrintEngine(nsnull),
   mDelay(0),
+  mFiringCount(0),
   mPrintObj(nsnull)
 {
 }
@@ -69,7 +70,16 @@ nsPagePrintTimer::StartTimer(PRBool aUseDelay)
   if (NS_FAILED(result)) {
     NS_WARNING("unable to start the timer");
   } else {
-    mTimer->InitWithCallback(this, aUseDelay?mDelay:0, nsITimer::TYPE_ONE_SHOT);
+    PRUint32 delay = 0;
+    if (aUseDelay) {
+      if (mFiringCount < 10) {
+        // Longer delay for the few first pages.
+        delay = mDelay + ((10 - mFiringCount) * 100);
+      } else {
+        delay = mDelay;
+      }
+    }
+    mTimer->InitWithCallback(this, delay, nsITimer::TYPE_ONE_SHOT);
   }
   return result;
 }
@@ -100,6 +110,7 @@ nsPagePrintTimer::Notify(nsITimer *timer)
     // returns true.)
     Stop(); 
     if (initNewTimer) {
+      ++mFiringCount;
       nsresult result = StartTimer(inRange);
       if (NS_FAILED(result)) {
         donePrinting = PR_TRUE;     // had a failure.. we are finished..

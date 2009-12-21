@@ -71,8 +71,10 @@ namespace nanojit
 
     const int LARGEST_UNDERRUN_PROT = 32;  // largest value passed to underrunProtect
 
-#define NJ_MAX_STACK_ENTRY 256
-#define NJ_MAX_PARAMETERS 1
+#define NJ_MAX_STACK_ENTRY              256
+#define NJ_MAX_PARAMETERS               1
+#define NJ_JTBL_SUPPORTED               0
+#define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
 
     const int NJ_ALIGN_STACK = 16;
 

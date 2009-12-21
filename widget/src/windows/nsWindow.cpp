@@ -552,6 +552,10 @@ nsWindow::Create(nsIWidget *aParent,
   DWORD style = WindowStyle();
   DWORD extendedStyle = WindowExStyle();
 
+  if (aInitData->mRTL) {
+    extendedStyle |= WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
+  }
+
   if (mWindowType == eWindowType_popup) {
     // if a parent was specified, don't use WS_EX_TOPMOST so that the popup
     // only appears above the parent, instead of all windows

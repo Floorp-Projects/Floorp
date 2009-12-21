@@ -101,7 +101,6 @@ function buildTestDatabase() {
               0);
 
   testURI = uri("http://foo.com/youdontseeme.html");
-  annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, 0);
   for (var i=0; i < 12; ++i)
     add_visit(testURI,
               today,
@@ -109,6 +108,7 @@ function buildTestDatabase() {
               modHistoryTypes(i), // will work with different values, for ex: histsvc.TRANSITION_TYPED,
               false,
               0);
+  annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, 0);
 }
 
 /**
