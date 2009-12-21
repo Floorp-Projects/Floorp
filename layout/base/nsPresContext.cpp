@@ -263,7 +263,9 @@ nsPresContext::~nsPresContext()
     mRefreshDriver->Disconnect();
   }
 
-  delete mTransitionManager;
+  if (mTransitionManager) {
+    mTransitionManager->Disconnect();
+  }
 
   if (mEventManager) {
     // unclear if these are needed, but can't hurt

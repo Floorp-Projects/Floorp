@@ -747,9 +747,7 @@ nsTransitionManager::AddElementTransitions(ElementTransitions* aElementTransitio
  * nsISupports implementation
  */
 
-NS_IMPL_ADDREF_USING_AGGREGATOR(nsTransitionManager, mPresContext)
-NS_IMPL_RELEASE_USING_AGGREGATOR(nsTransitionManager, mPresContext)
-NS_IMPL_QUERY_INTERFACE1(nsTransitionManager, nsIStyleRuleProcessor)
+NS_IMPL_ISUPPORTS1(nsTransitionManager, nsIStyleRuleProcessor)
 
 /*
  * nsIStyleRuleProcessor implementation
@@ -851,6 +849,10 @@ nsTransitionManager::MediumFeaturesChanged(nsPresContext* aPresContext,
 /* virtual */ void
 nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
 {
+  NS_ABORT_IF_FALSE(mPresContext,
+                    "refresh driver should not notify additional observers "
+                    "after pres context has been destroyed");
+
   // Trim transitions that have completed, and post restyle events for
   // frames that are still transitioning.
   {
