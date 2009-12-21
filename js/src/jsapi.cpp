@@ -2604,14 +2604,6 @@ JS_GetGCParameterForThread(JSContext *cx, JSGCParamKey key)
 #endif
 }
 
-JS_PUBLIC_API(void)
-JS_FlushCaches(JSContext *cx)
-{
-#ifdef JS_TRACER
-    js_FlushJITCache(cx);
-#endif
-}
-
 JS_PUBLIC_API(intN)
 JS_AddExternalStringFinalizer(JSStringFinalizeOp finalizer)
 {
