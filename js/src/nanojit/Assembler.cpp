@@ -1710,7 +1710,7 @@ namespace nanojit
     {
         for (uint32_t i=0; i < nStackSlots; i++) 
         {
-            if (_entries[start+stack_direction(i)] != NULL)
+            if (_entries[start-i] != NULL)
                 return false;
         }
         return true;
@@ -1755,8 +1755,8 @@ namespace nanojit
                 if (isEmptyRange(i, nStackSlots)) {
                     // place the entry in the table and mark the instruction with it
                     for (uint32_t j=0; j < nStackSlots; j++) {
-                        NanoAssert(_entries[i+stack_direction(j)] == 0);
-                        _entries[i+stack_direction(j)] = ins;
+                        NanoAssert(_entries[i-j] == 0);
+                        _entries[i-j] = ins;
                     }
                     found = i;
                     break;
