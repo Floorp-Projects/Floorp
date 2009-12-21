@@ -300,7 +300,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP == 289480.html#top 289480-ref.html # b
 == 309914-1.xul 309914-1-ref.xul
 == 311366-unknown-inline-1.html 311366-unknown-inline-1-ref.html
 == 311366-unknown-block-1.html 311366-unknown-block-1-ref.html
-fails == 311366-unknown-block-3.html 311366-unknown-block-3-ref.html
+fails-if(!prefs.getBoolPref("html5.enable")) == 311366-unknown-block-3.html 311366-unknown-block-3-ref.html
 == 311366-unknown-block-2.html 311366-unknown-block-2-ref.html
 == 311366-unknown-inline-2.html 311366-unknown-inline-2-ref.html
 == 311822-1.html 311822-1-ref-a.html
