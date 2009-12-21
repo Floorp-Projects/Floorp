@@ -59,6 +59,32 @@
 #define ARRAY_LENGTH(a) (sizeof(a)/sizeof(a[0]))
 
 //
+// Intentional crash
+//
+
+static void
+Crash()
+{
+  char* bloatLog = getenv("XPCOM_MEM_BLOAT_LOG");
+  if (bloatLog) {
+    char* logExt = strstr(bloatLog, ".log");
+    if (logExt) {
+      bloatLog[strlen(bloatLog) - strlen(logExt)] = '\0';
+    }
+    ostringstream bloatName;
+    bloatName << bloatLog << "_plugin_pid" << getpid();
+    if (logExt) {
+      bloatName << ".log";
+    }
+    FILE* processfd = fopen(bloatName.str().c_str(), "a");
+    fprintf(processfd, "==> process %d will purposefully crash\n", getpid());
+    fclose(processfd);
+  }
+  void (*funcptr)() = NULL;
+  funcptr(); // Crash calling null function pointer
+}
+
+//
 // static data
 //
 
@@ -103,6 +129,7 @@ static bool convertPointX(NPObject* npobj, const NPVariant* args, uint32_t argCo
 static bool convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool crashOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -132,6 +159,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "convertPointY",
   "streamTest",
   "crash",
+  "crashOnDestroy",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
@@ -162,6 +190,7 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   convertPointY,
   streamTest,
   crashPlugin,
+  crashOnDestroy,
 };
 
 struct URLNotifyData
@@ -500,6 +529,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->writeCount = 0;
   instanceData->writeReadyCount = 0;
   memset(&instanceData->window, 0, sizeof(instanceData->window));
+  instanceData->crashOnDestroy = false;
   instance->pdata = instanceData;
 
   TestNPObject* scriptableObject = (TestNPObject*)NPN_CreateObject(instance, &sNPClass);
@@ -595,6 +625,9 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
         strcmp(argv[i], "true") == 0) {
       instanceData->npnNewStream = true;
     }
+    if (strcmp(argn[i], "newcrash") == 0) {
+      Crash();
+    }
   }
 
   if (!browserSupportsWindowless || !pluginSupportsWindowlessMode()) {
@@ -673,6 +706,9 @@ NPP_Destroy(NPP instance, NPSavedData** save)
 {
   printf("NPP_Destroy\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
+
+  if (instanceData->crashOnDestroy)
+    Crash();
 
   if (instanceData->streamBuf) {
     free(instanceData->streamBuf);
@@ -2028,23 +2064,19 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
 static bool
 crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  char* bloatLog = getenv("XPCOM_MEM_BLOAT_LOG");
-  if (bloatLog) {
-    char* logExt = strstr(bloatLog, ".log");
-    if (logExt) {
-      bloatLog[strlen(bloatLog) - strlen(logExt)] = '\0';    
-    }
-    ostringstream bloatName;
-    bloatName << bloatLog << "_plugin_pid" << getpid();
-    if (logExt) {
-      bloatName << ".log";    
-    }
-    FILE* processfd = fopen(bloatName.str().c_str(), "a");
-    fprintf(processfd, "==> process %d will purposefully crash\n", getpid());
-    fclose(processfd);
-  }
-  void (*funcptr)() = NULL;
-  funcptr(); // Crash calling null function pointer
+  Crash();
+  VOID_TO_NPVARIANT(*result);
+  return true;
+}
+
+static bool
+crashOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+
+  id->crashOnDestroy = true;
+  VOID_TO_NPVARIANT(*result);
   return true;
 }
 
