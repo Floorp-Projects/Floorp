@@ -43,6 +43,11 @@ function loadFileContent(aFile, aCharset) {
     return content;
 }
 
+function isRoughly(actual, expected, message) {
+  return is(actual.replace("<!DOCTYPE HTML", "<!DOCTYPE html"), 
+            expected, 
+            message);
+}
 
 function testHtmlSerializer_1 () {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -62,19 +67,19 @@ function testHtmlSerializer_1 () {
   encoder.setCharset("UTF-8");
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_ipv6_out.html");
-  is(out, expected, "test no flags");
+  isRoughly(out, expected, "test no flags");
   //------------ OutputAbsoluteLinks
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputAbsoluteLinks);
   encoder.setCharset("UTF-8");
   out = encoder.encodeToString();
   expected = loadFileContent("file_htmlserializer_ipv6_out.html");
-  is(out, expected, "test OutputAbsoluteLinks");
+  isRoughly(out, expected, "test OutputAbsoluteLinks");
   //------------ serializing a selection
   encoder.init(doc, "text/html", de.OutputLFLineBreak | de.OutputAbsoluteLinks);
   encoder.setNode(doc.links[0]);
   out = encoder.encodeToString();
   expected = "<a href=\"http://[2001:4860:a003::68]/\">Test</a>";
-  is(out, expected, "test selection");
+  isRoughly(out, expected, "test selection");
 
 
   SimpleTest.finish();
