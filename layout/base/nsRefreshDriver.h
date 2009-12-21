@@ -58,6 +58,15 @@ class nsPresContext;
  */
 class nsARefreshObserver {
 public:
+  // AddRef and Release signatures that match nsISupports.  Implementors
+  // must implement reference counting, and those that do implement
+  // nsISupports will already have methods with the correct signature.
+  //
+  // The refresh driver does NOT hold references to refresh observers
+  // except while it is notifying them.  
+  NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
+  NS_IMETHOD_(nsrefcnt) Release(void) = 0;
+
   virtual void WillRefresh(mozilla::TimeStamp aTime) = 0;
 };
 
@@ -93,6 +102,9 @@ public:
    *     painting, and, correspondingly, which get notified when there
    *     is a flush during such suppression
    * and it must be either Flush_Style, Flush_Layout, or Flush_Display.
+   *
+   * The refresh driver does NOT own a reference to these observers;
+   * they must remove themselves before they are destroyed.
    */
   PRBool AddRefreshObserver(nsARefreshObserver *aObserver,
                             mozFlushType aFlushType);
