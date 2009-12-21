@@ -3267,7 +3267,7 @@ class RegExpNativeCompiler {
                     js_FragProfiling_FragFinalizer(frag, tm);
                 }
             )
-            js_FlushJITCache(cx);
+            js_ResetJIT(cx);
         } else {
             if (!guard) insertGuard(loopLabel, re_chars, re_length);
             re->flags |= JSREG_NOCOMPILE;

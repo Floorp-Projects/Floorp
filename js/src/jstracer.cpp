@@ -2293,12 +2293,6 @@ ResetJIT(JSContext* cx, TraceVisFlushReason r)
 #define ResetJIT(cx, r) ResetJITImpl(cx)
 #endif
 
-void
-js_FlushJITCache(JSContext *cx)
-{
-    ResetJIT(cx, FR_OOM);
-}
-
 static void
 TrashTree(JSContext* cx, TreeFragment* f);
 
