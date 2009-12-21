@@ -521,7 +521,7 @@ CSS_PROP_BACKGROUND(
     eCSSType_ValuePairList,
     kBackgroundPositionKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_BACKGROUND(
     background-repeat,
     background_repeat,
@@ -545,7 +545,7 @@ CSS_PROP_BACKGROUND(
     eCSSType_ValuePairList,
     kBackgroundSizeKTable,
     CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
+    eStyleAnimType_Custom)
 CSS_PROP_DISPLAY(
     -moz-binding,
     binding,

@@ -56,6 +56,7 @@ class nsPresContext;
 class nsStyleContext;
 struct nsCSSValueList;
 struct nsCSSValuePair;
+struct nsCSSValuePairList;
 struct nsCSSRect;
 
 /**
@@ -240,6 +241,7 @@ public:
     eUnit_CSSRect, // nsCSSRect* (never null)
     eUnit_Dasharray, // nsCSSValueList* (never null)
     eUnit_Shadow, // nsCSSValueList* (may be null)
+    eUnit_CSSValuePairList, // nsCSSValuePairList* (never null)
     eUnit_UnparsedString // nsStringBuffer* (never null)
   };
 
@@ -254,6 +256,7 @@ public:
       nsCSSValuePair* mCSSValuePair;
       nsCSSRect* mCSSRect;
       nsCSSValueList* mCSSValueList;
+      nsCSSValuePairList* mCSSValuePairList;
       nsStringBuffer* mString;
     } mValue;
   public:
@@ -300,6 +303,10 @@ public:
       NS_ASSERTION(IsCSSValueListUnit(mUnit), "unit mismatch");
       return mValue.mCSSValueList;
     }
+    nsCSSValuePairList* GetCSSValuePairListValue() const {
+      NS_ASSERTION(IsCSSValuePairListUnit(mUnit), "unit mismatch");
+      return mValue.mCSSValuePairList;
+    }
     const PRUnichar* GetStringBufferValue() const {
       NS_ASSERTION(IsStringUnit(mUnit), "unit mismatch");
       return GetBufferValue(mValue.mString);
@@ -343,9 +350,10 @@ public:
 
     // These setters take ownership of |aValue|, and are therefore named
     // "SetAndAdopt*".
-    void SetAndAdoptCSSValueListValue(nsCSSValueList *aValue, Unit aUnit);
     void SetAndAdoptCSSValuePairValue(nsCSSValuePair *aValue, Unit aUnit);
     void SetAndAdoptCSSRectValue(nsCSSRect *aValue, Unit aUnit);
+    void SetAndAdoptCSSValueListValue(nsCSSValueList *aValue, Unit aUnit);
+    void SetAndAdoptCSSValuePairListValue(nsCSSValuePairList *aValue);
 
     Value& operator=(const Value& aOther);
 
@@ -372,6 +380,9 @@ public:
     }
     static PRBool IsCSSValueListUnit(Unit aUnit) {
       return aUnit == eUnit_Dasharray || aUnit == eUnit_Shadow;
+    }
+    static PRBool IsCSSValuePairListUnit(Unit aUnit) {
+      return aUnit == eUnit_CSSValuePairList;
     }
     static PRBool IsStringUnit(Unit aUnit) {
       return aUnit == eUnit_UnparsedString;
