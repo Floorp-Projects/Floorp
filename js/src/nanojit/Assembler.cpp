@@ -87,11 +87,29 @@ namespace nanojit
         reset();
     }
 
+#ifdef _DEBUG
+
+    /*static*/ LIns* const AR::BAD_ENTRY = (LIns*)0xdeadbeef;
+
+    void AR::validate()
+    {
+        NanoAssert(_highWaterMark < NJ_MAX_STACK_ENTRY);
+        NanoAssert(_entries[0] == BAD_ENTRY);
+        for (uint32_t i = 1; i <= _highWaterMark; ++i)
+            NanoAssert(_entries[i] != BAD_ENTRY);
+        for (uint32_t i = _highWaterMark+1; i < NJ_MAX_STACK_ENTRY; ++i)
+            NanoAssert(_entries[i] == BAD_ENTRY);
+    } 
+
+#endif
+
      inline void AR::clear()
      {
          _highWaterMark = 0;
-         for(uint32_t i=0; i<NJ_MAX_STACK_ENTRY; i++)
-             _entries[i] = 0;
+    #ifdef _DEBUG
+        for (uint32_t i = 0; i < NJ_MAX_STACK_ENTRY; ++i)
+            _entries[i] = BAD_ENTRY;
+    #endif
      }
  
      bool AR::Iter::next(LIns*& ins, uint32_t& nStackSlots, int32_t& arIndex) 
@@ -266,7 +284,7 @@ namespace nanojit
                 i = n-1;
             }
             else if (ins->isQuad()) {
-                NanoAssert(_entries[i - stack_direction(1)]==ins);
+                NanoAssert(_entries[i + 1]==ins);
                 i += 1; // skip high word
             }
             else {
@@ -1641,12 +1659,16 @@ namespace nanojit
 
     void AR::freeEntryAt(uint32_t idx)
     {
+        NanoAssert(idx > 0 && idx <= _highWaterMark);
+
         LIns *i = _entries[idx];
         NanoAssert(i != 0);
         do {
             _entries[idx] = 0;
             idx--;
         } while (_entries[idx] == i);
+
+        debug_only(validate();)
     }
 
 #ifdef NJ_VERBOSE
@@ -1719,61 +1741,73 @@ namespace nanojit
     uint32_t AR::reserveEntry(LIns* ins)
     {
         uint32_t const nStackSlots = nStackSlotsFor(ins);
-        uint32_t start = 1;
-        uint32_t found = 0;
 
-        if (nStackSlots == 1) {
-            // easy most common case -- find a hole, or make the frame bigger
-            for (uint32_t i=start; i < NJ_MAX_STACK_ENTRY; i++) {
-                if (_entries[i] == 0) {
-                    // found a hole
+        if (nStackSlots == 1) 
+        {
+            for (uint32_t i = 1; i <= _highWaterMark; i++) 
+            {
+                if (_entries[i] == NULL) 
+                {
                     _entries[i] = ins;
-                    found = i;
-                    break;
+                    return i;
                 }
             }
+            uint32_t const spaceLeft = NJ_MAX_STACK_ENTRY - _highWaterMark - 1;
+            if (spaceLeft >= 1)
+            {
+                 NanoAssert(_entries[_highWaterMark+1] == BAD_ENTRY);
+                _entries[++_highWaterMark] = ins;
+                return _highWaterMark;
+             }
         }
-        else if (nStackSlots == 2) {
-            if ( (start&1)==1 ) start++;  // even 8 boundary
-            for (uint32_t i=start; i < NJ_MAX_STACK_ENTRY; i+=2) {
-                if ( (_entries[i+stack_direction(1)] == 0) && (i>_highWaterMark || (_entries[i] == 0)) ) {
-                    // found 2 adjacent aligned slots
-                    NanoAssert(_entries[i] == 0);
-                    NanoAssert(_entries[i+stack_direction(1)] == 0);
-                    _entries[i] = ins;
-                    _entries[i+stack_direction(1)] = ins;
-                    found = i;
-                    break;
-                }
-            }
-        }
-        else {
+        else 
+        {
             // alloc larger block on 8byte boundary.
-            if (start < nStackSlots) start = nStackSlots;
-            if ((start&1)==1) start++;
-            for (uint32_t i=start; i < NJ_MAX_STACK_ENTRY; i+=2) {
-                if (isEmptyRange(i, nStackSlots)) {
+            uint32_t const start = nStackSlots + (nStackSlots & 1);
+            for (uint32_t i = start; i <= _highWaterMark; i += 2) 
+            {
+                if (isEmptyRange(i, nStackSlots)) 
+                {
                     // place the entry in the table and mark the instruction with it
-                    for (uint32_t j=0; j < nStackSlots; j++) {
-                        NanoAssert(_entries[i-j] == 0);
+                    for (uint32_t j=0; j < nStackSlots; j++) 
+                    {
+                        NanoAssert(i-j <= _highWaterMark);
+                        NanoAssert(_entries[i-j] == NULL);
                         _entries[i-j] = ins;
                     }
-                    found = i;
-                    break;
+                    return i;
                 }
             }
+
+            // Be sure to account for any 8-byte-round-up when calculating spaceNeeded.
+            uint32_t const spaceLeft = NJ_MAX_STACK_ENTRY - _highWaterMark - 1;
+            uint32_t const spaceNeeded = nStackSlots + (_highWaterMark & 1);
+            if (spaceLeft >= spaceNeeded)
+            {
+                if (_highWaterMark & 1)
+                {
+                    NanoAssert(_entries[_highWaterMark+1] == BAD_ENTRY);
+                    _entries[_highWaterMark+1] = NULL;
+                }
+                _highWaterMark += spaceNeeded;
+                for (uint32_t j = 0; j < nStackSlots; j++)
+                {
+                    NanoAssert(_highWaterMark-j < NJ_MAX_STACK_ENTRY);
+                    NanoAssert(_entries[_highWaterMark-j] == BAD_ENTRY);
+                    _entries[_highWaterMark-j] = ins;
+                }
+                return _highWaterMark;
+            }
         }
-        if (_highWaterMark < found) {
-            _highWaterMark = found;
-        }
-        return found;
+        // no space. oh well.
+        return 0;
     }
 
     #ifdef _DEBUG
     void AR::checkForResourceLeaks() const
     {
         for (uint32_t i = 1; i <= _highWaterMark; i++) {
-            NanoAssertMsgf(_entries[i] == 0, "frame entry %d wasn't freed\n",-4*i);
+            NanoAssertMsgf(_entries[i] == NULL, "frame entry %d wasn't freed\n",-4*i);
         }
     }
     #endif
@@ -1781,6 +1815,7 @@ namespace nanojit
     uint32_t Assembler::arReserve(LIns* ins)
     {
         uint32_t i = _activation.reserveEntry(ins);
+        debug_only( _activation.validate(); )
         if (!i)
             setError(StackFull);
         return i;
