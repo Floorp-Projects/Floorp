@@ -106,7 +106,7 @@ using namespace mozilla::places;
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN    "history_expire_days_min"
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX    "history_expire_days"
 #define PREF_BROWSER_HISTORY_EXPIRE_SITES       "history_expire_sites"
-#define PREF_DB_CACHE_PERCENTAGE                "history_cache_percentage"
+
 #define PREF_FRECENCY_NUM_VISITS                "places.frecency.numVisits"
 #define PREF_FRECENCY_FIRST_BUCKET_CUTOFF       "places.frecency.firstBucketCutoff"
 #define PREF_FRECENCY_SECOND_BUCKET_CUTOFF      "places.frecency.secondBucketCutoff"
@@ -127,14 +127,15 @@ using namespace mozilla::places;
 #define PREF_FRECENCY_DEFAULT_VISIT_BONUS       "places.frecency.defaultVisitBonus"
 #define PREF_FRECENCY_UNVISITED_BOOKMARK_BONUS  "places.frecency.unvisitedBookmarkBonus"
 #define PREF_FRECENCY_UNVISITED_TYPED_BONUS     "places.frecency.unvisitedTypedBonus"
+
 #define PREF_LAST_VACUUM                        "places.last_vacuum"
 
-// Default (integer) value of PREF_DB_CACHE_PERCENTAGE from 0-100
+#define PREF_CACHE_TO_MEMORY_PERCENTAGE         "places.database.cache_to_memory_percentage"
+
+// Default integer value for PREF_CACHE_TO_MEMORY_PERCENTAGE.
 // This is 6% of machine memory, giving 15MB for a user with 256MB of memory.
-// The most that will be used is the size of the DB file. Normal history sizes
-// look like 10MB would be a high average for a typical user, so the maximum
-// should not normally be required.
-#define DEFAULT_DB_CACHE_PERCENTAGE 6
+// Out of this cache, SQLite will use at most the size of the database file.
+#define DATABASE_DEFAULT_CACHE_TO_MEMORY_PERCENTAGE 6
 
 // We set the default database page size to be larger. sqlite's default is 1K.
 // This gives good performance when many small parts of the file have to be
@@ -717,17 +718,24 @@ nsNavHistory::InitDB()
       "PRAGMA synchronous = FULL"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-
-  // Compute the size of the database cache.
+  // Compute the size of the database cache using the device's memory size.
+  // We don't use PRAGMA default_cache_size, since the database could be moved
+  // among different devices and the value would adapt accordingly.
+  nsCOMPtr<nsIPrefBranch> prefs =
+    do_GetService("@mozilla.org/preferences-service;1");
+  NS_WARN_IF_FALSE(prefs, "Unable to get the preferences service");
   PRInt32 cachePercentage;
-  if (NS_FAILED(mPrefBranch->GetIntPref(PREF_DB_CACHE_PERCENTAGE,
-                                        &cachePercentage)))
-    cachePercentage = DEFAULT_DB_CACHE_PERCENTAGE;
+  if (!prefs || NS_FAILED(prefs->GetIntPref(PREF_CACHE_TO_MEMORY_PERCENTAGE,
+                                            &cachePercentage)))
+    cachePercentage = DATABASE_DEFAULT_CACHE_TO_MEMORY_PERCENTAGE;
+  // Sanity checks, we allow values between 0 (disable cache) and 50%.
   if (cachePercentage > 50)
-    cachePercentage = 50; // sanity check, don't take too much
+    cachePercentage = 50;
   if (cachePercentage < 0)
     cachePercentage = 0;
   PRInt64 cacheSize = PR_GetPhysicalMemorySize() * cachePercentage / 100;
+
+  // Compute number of cached pages, this will be our cache size.
   PRInt64 cachePages = cacheSize / pageSize;
 
   // Set the cache size.  We don't use default_cache_size so the database can
