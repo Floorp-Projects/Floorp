@@ -300,10 +300,8 @@ function flush_main_thread_events()
 // These tests are known to randomly fail due to bug 507790 when database
 // flushes are active, so we turn off syncing for them.
 let randomFailingSyncTests = [
-  "test_annotations.js",
   "test_multi_word_tags.js",
   "test_removeVisitsByTimeframe.js",
-  "test_tagging.js",
   "test_utils_getURLsForContainerNode.js",
   "test_exclude_livemarks.js",
   "test_402799.js",
