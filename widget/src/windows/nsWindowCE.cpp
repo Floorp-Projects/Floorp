@@ -80,7 +80,7 @@ TriStateBool    nsWindowCE::sHardKBPresence       = TRI_UNKNOWN;
  **************************************************************/
 
 #ifdef WINCE_HAVE_SOFTKB
-void nsWindowCE::NotifySoftKbObservers(LPRECT visRect)
+void nsWindowCE::NotifySoftKbObservers(HWND wnd, LPRECT visRect)
 {
   if (!visRect) {
     SIPINFO sipInfo;
@@ -91,7 +91,23 @@ void nsWindowCE::NotifySoftKbObservers(LPRECT visRect)
     else
       return;
   }
-  
+
+  if (wnd) {
+    HWND wndMain = nsWindow::GetTopLevelHWND(wnd);
+    RECT winRect;
+    ::GetWindowRect(wndMain, &winRect);
+    if (winRect.bottom != visRect->bottom) {
+      if (winRect.bottom < visRect->bottom && sShowSIPButton != TRI_TRUE) {
+        // Soft keyboard has been hidden, have to hide the SIP button as well
+        HWND hWndSIPB = FindWindowW(L"MS_SIPBUTTON", NULL ); 
+        if (hWndSIPB)
+          ShowWindow(hWndSIPB, SW_HIDE);
+      }
+
+      winRect.bottom = visRect->bottom;
+      MoveWindow(wndMain, winRect.left, winRect.top, winRect.right - winRect.left, winRect.bottom - winRect.top, TRUE);
+    }
+  }
   
   nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
   if (observerService) {
@@ -103,7 +119,7 @@ void nsWindowCE::NotifySoftKbObservers(LPRECT visRect)
   }
 }
 
-void nsWindowCE::ToggleSoftKB(PRBool show)
+void nsWindowCE::ToggleSoftKB(HWND wnd, PRBool show)
 {
   if (sHardKBPresence == TRI_UNKNOWN)
     CheckKeyboardStatus();
@@ -165,9 +181,9 @@ void nsWindowCE::ToggleSoftKB(PRBool show)
     sipInfo.dwImDataSize = 0;
     sipInfo.pvImData = NULL;
     SipSetInfo(&sipInfo);
-    NotifySoftKbObservers(&visRect);
+    NotifySoftKbObservers(wnd, &visRect);
   } else {
-    NotifySoftKbObservers();
+    NotifySoftKbObservers(wnd);
   }
   sSIPInTransition = PR_FALSE;
 }
