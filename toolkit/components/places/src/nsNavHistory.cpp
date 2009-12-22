@@ -384,6 +384,7 @@ nsNavHistory::nsNavHistory()
 , mBatchHasTransaction(PR_FALSE)
 , mCachedNow(0)
 , mExpireNowTimer(nsnull)
+, mLastSessionID(0)
 , mExpireDaysMin(0)
 , mExpireDaysMax(0)
 , mExpireSites(0)
@@ -469,25 +470,6 @@ nsNavHistory::Init()
     new PlacesEvent(PLACES_INIT_COMPLETE_TOPIC);
   rv = NS_DispatchToMainThread(completeEvent);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // extract the last session ID so we know where to pick up. There is no index
-  // over sessions so the naive statement "SELECT MAX(session) FROM
-  // moz_historyvisits" won't have good performance.
-  // This is long before we use our temporary tables, so we do not have to join
-  // on moz_historyvisits_temp to get the right result here.
-  {
-    nsCOMPtr<mozIStorageStatement> selectSession;
-    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT session FROM moz_historyvisits "
-        "ORDER BY visit_date DESC LIMIT 1"),
-      getter_AddRefs(selectSession));
-    NS_ENSURE_SUCCESS(rv, rv);
-    PRBool hasSession;
-    if (NS_SUCCEEDED(selectSession->ExecuteStep(&hasSession)) && hasSession)
-      mLastSessionID = selectSession->AsInt64(0);
-    else
-      mLastSessionID = 1;
-  }
 
   // recent events hash tables
   NS_ENSURE_TRUE(mRecentTyped.Init(128), NS_ERROR_OUT_OF_MEMORY);
@@ -2112,6 +2094,33 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
   }
   return NS_OK;
 }
+
+
+PRInt64
+nsNavHistory::GetNewSessionID()
+{
+  // Use cached value if already initialized.
+  if (mLastSessionID)
+    return ++mLastSessionID;
+
+  // Extract the last session ID, so we know where to pick up. There is no
+  // index over sessions so we use the visit_date index.
+  // This happens on the first visit, so we don't care about temp tables.
+  nsCOMPtr<mozIStorageStatement> selectSession;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT session FROM moz_historyvisits "
+      "ORDER BY visit_date DESC LIMIT 1"),
+    getter_AddRefs(selectSession));
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool hasSession;
+  if (NS_SUCCEEDED(selectSession->ExecuteStep(&hasSession)) && hasSession)
+    mLastSessionID = selectSession->AsInt64(0) + 1;
+  else
+    mLastSessionID = 1;
+
+  return mLastSessionID;
+}
+
 
 PRInt32
 nsNavHistory::GetDaysOfHistory() {
