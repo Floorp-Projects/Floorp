@@ -1345,6 +1345,7 @@ namespace nanojit
         // Restore RSP from RBP, undoing SUB(RSP,amt) in the prologue
         MR(RSP,FP);
 
+        releaseRegisters();
         assignSavedRegs();
         LIns *value = ins->oprnd1();
         Register r = ins->isop(LIR_ret) ? RAX : XMM0;
