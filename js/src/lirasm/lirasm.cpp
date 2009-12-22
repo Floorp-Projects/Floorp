@@ -1445,7 +1445,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LALLOC: {
             // The stack has a limited size, so we (a) don't want chunks to be
             // too big, and (b) have to stop allocating them after a while.
-            size_t szB;
+            size_t szB = 0;
             switch (rnd(3)) {
             case 0: szB = 4;                break;
             case 1: szB = 8;                break;
