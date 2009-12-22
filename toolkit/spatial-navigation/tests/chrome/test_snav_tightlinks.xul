@@ -8,8 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=436084
 
 <window title="Mozilla Bug 288254"
   xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="onLoad();">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
@@ -97,7 +96,7 @@ var prefs = [
 ["keyCode.modifier",  "char", "none"],
 ];
 
-function onLoad()
+function runtest()
 {
     prepareTest(prefs);
 
@@ -114,6 +113,8 @@ function onLoad()
 
     SpatialNavigation.uninit();
 }
+
+SimpleTest.waitForFocus(runtest);
 
 ]]></script>
 </window>
