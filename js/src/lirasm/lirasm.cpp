@@ -1102,8 +1102,8 @@ rndI32()
 
 // The maximum number of live values (per type, ie. B/I/Q/F) that are
 // available to be used as operands.  If we make it too high we're prone to
-// run out of stack space due to spilling.  If the stack size increases (see
-// bug 473769) this situation will improve.
+// run out of stack space due to spilling.  Needs to be set in consideration
+// with spillStackSzB.
 const size_t maxLiveValuesPerType = 20;
 
 // Returns a uint32_t in the range 0..(RAND_MAX*2).
@@ -1131,16 +1131,16 @@ addOrReplace(vector<t> &v, t x)
     }
 }
 
-// Returns a 4-aligned address within the scratch space.
-static int32_t rndOffset32(size_t scratchSzB)
+// Returns a 4-aligned address within the given size.
+static int32_t rndOffset32(size_t szB)
 {
-    return int32_t(rnd(scratchSzB)) & ~3;
+    return int32_t(rnd(szB)) & ~3;
 }
 
-// Returns an 8-aligned address within the scratch space.
-static int32_t rndOffset64(size_t scratchSzB)
+// Returns an 8-aligned address within the give size.
+static int32_t rndOffset64(size_t szB)
 {
-    return int32_t(rnd(scratchSzB)) & ~7;
+    return int32_t(rnd(szB)) & ~7;
 }
 
 static int32_t f_I_I1(int32_t a)
@@ -1243,8 +1243,6 @@ const CallInfo ci_N_IQF = CI(f_N_IQF, argMask(I32, 1, 3) |
 // The following instructions aren't generated yet:
 // - iparam/qparam (hard to test beyond what is auto-generated in fragment
 //   prologues)
-// - ialloc/qalloc (except for the load/store scratch space;  hard to do so
-//   long as the stack is only 1024 bytes, see bug 473769)
 // - live/flive
 // - callh
 // - x/xt/xf/xtbl (hard to test without having multiple fragments;  when we
@@ -1260,10 +1258,12 @@ const CallInfo ci_N_IQF = CI(f_N_IQF, argMask(I32, 1, 3) |
 void
 FragmentAssembler::assembleRandomFragment(int nIns)
 {
-    vector<LIns*> Bs;
-    vector<LIns*> Is;
-    vector<LIns*> Qs;
-    vector<LIns*> Fs;
+    vector<LIns*> Bs;       // boolean values, ie. 32-bit int values produced by tests
+    vector<LIns*> Is;       // 32-bit int values
+    vector<LIns*> Qs;       // 64-bit int values
+    vector<LIns*> Fs;       // 64-bit float values
+    vector<LIns*> M4s;      // 4 byte allocs
+    vector<LIns*> M8ps;     // 8+ byte allocs
 
     vector<LOpcode> I_I_ops;
     I_I_ops.push_back(LIR_neg);
@@ -1415,11 +1415,16 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         }
     }
 
-    // An area on the stack in which we do our loads and stores.
-    // NJ_MAX_STACK_ENTRY entries has a size of NJ_MAX_STACK_ENTRY*4 bytes, so
-    // we use a quarter of the maximum stack size.
-    const size_t scratchSzB = NJ_MAX_STACK_ENTRY;
-    LIns *scratch = mLir->insAlloc(scratchSzB);
+    // Used to keep track of how much stack we've explicitly used via
+    // LIR_alloc.  We then need to keep some reserve for spills as well.
+    const size_t stackSzB = NJ_MAX_STACK_ENTRY * 4;
+    const size_t spillStackSzB = 1024;
+    const size_t maxExplicitlyUsedStackSzB = stackSzB - spillStackSzB;
+    size_t explicitlyUsedStackSzB = 0;
+
+    // Do an 8-byte stack alloc right at the start so that loads and stores
+    // can be done immediately.
+    addOrReplace(M8ps, mLir->insAlloc(8));
 
     int n = 0;
     while (n < nIns) {
@@ -1436,6 +1441,38 @@ FragmentAssembler::assembleRandomFragment(int nIns)
             }
             n++;
             break;
+
+        case LALLOC: {
+            // The stack has a limited size, so we (a) don't want chunks to be
+            // too big, and (b) have to stop allocating them after a while.
+            size_t szB;
+            switch (rnd(3)) {
+            case 0: szB = 4;                break;
+            case 1: szB = 8;                break;
+            case 2: szB = 4 * (rnd(6) + 3); break;  // 12, 16, ..., 32
+            }
+            if (explicitlyUsedStackSzB + szB <= maxExplicitlyUsedStackSzB) {
+                ins = mLir->insAlloc(szB);
+                // We add the result to Is/Qs so it can be used as an ordinary
+                // operand, and to M4s/M8ps so that loads/stores can be done from
+                // it.
+#if defined NANOJIT_64BIT
+                addOrReplace(Qs, ins);
+#else
+                addOrReplace(Is, ins);
+#endif
+                if (szB == 4)
+                    addOrReplace(M4s, ins);
+                else
+                    addOrReplace(M8ps, ins);
+
+                // It's possible that we will exceed maxExplicitlyUsedStackSzB
+                // by up to 28 bytes.  Doesn't matter.
+                explicitlyUsedStackSzB += szB;
+                n++;
+            }
+            break;
+        }
 
         // For the immediates, we bias towards smaller numbers, especially 0
         // and 1 and small multiples of 4 which are common due to memory
@@ -1652,31 +1689,45 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 #endif
             break;
 
-        case LLD_I:
-            ins = mLir->insLoad(rndPick(I_loads), scratch, rndOffset32(scratchSzB));
-            addOrReplace(Is, ins);
-            n++;
-            break;
-
-        case LLD_QorF:
-            ins = mLir->insLoad(rndPick(QorF_loads), scratch, rndOffset64(scratchSzB));
-            addOrReplace((rnd(2) ? Qs : Fs), ins);
-            n++;
-            break;
-
-        case LST_I:
-            if (!Is.empty()) {
-                mLir->insStorei(rndPick(Is), scratch, rndOffset32(scratchSzB));
+        case LLD_I: {
+            vector<LIns*> Ms = rnd(2) ? M4s : M8ps;
+            if (!Ms.empty()) {
+                LIns* base = rndPick(Ms);
+                ins = mLir->insLoad(rndPick(I_loads), base, rndOffset32(base->size()));
+                addOrReplace(Is, ins);
                 n++;
             }
             break;
+        }
 
-        case LST_QorF:
-            if (!Fs.empty()) {
-                mLir->insStorei(rndPick(Fs), scratch, rndOffset64(scratchSzB));
+        case LLD_QorF: {
+            if (!M8ps.empty()) {
+                LIns* base = rndPick(M8ps);
+                ins = mLir->insLoad(rndPick(QorF_loads), base, rndOffset64(base->size()));
+                addOrReplace((rnd(2) ? Qs : Fs), ins);
                 n++;
             }
             break;
+        }
+
+        case LST_I: {
+            vector<LIns*> Ms = rnd(2) ? M4s : M8ps;
+            if (!Ms.empty() && !Is.empty()) {
+                LIns* base = rndPick(Ms);
+                mLir->insStorei(rndPick(Is), base, rndOffset32(base->size()));
+                n++;
+            }
+            break;
+        }
+
+        case LST_QorF: {
+            if (!M8ps.empty() && !Fs.empty()) {
+                LIns* base = rndPick(M8ps);
+                mLir->insStorei(rndPick(Fs), base, rndOffset64(base->size()));
+                n++;
+            }
+            break;
+        }
 
         case LCALL_I_I1:
             if (!Is.empty()) {
