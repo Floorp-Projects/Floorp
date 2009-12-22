@@ -1021,13 +1021,23 @@ js_String_p_charCodeAt(JSString* str, jsdouble d)
 }
 
 int32 FASTCALL
-js_String_p_charCodeAt_int(JSString* str, jsint i)
+js_String_p_charCodeAt_int_int(JSString* str, jsint i)
 {
     if (i < 0 || (int32)str->length() <= i)
         return 0;
     return str->chars()[i];
 }
-JS_DEFINE_CALLINFO_2(extern, INT32, js_String_p_charCodeAt_int,  STRING, INT32, 1, 1)
+JS_DEFINE_CALLINFO_2(extern, INT32, js_String_p_charCodeAt_int_int,  STRING, INT32, 1, 1)
+
+int32 FASTCALL
+js_String_p_charCodeAt_double_int(JSString* str, double d)
+{
+    d = js_DoubleToInteger(d);
+    if (d < 0 || (int32)str->length() <= d)
+        return 0;
+    return str->chars()[jsuint(d)];
+}
+JS_DEFINE_CALLINFO_2(extern, INT32, js_String_p_charCodeAt_double_int,  STRING, DOUBLE, 1, 1)
 
 jsdouble FASTCALL
 js_String_p_charCodeAt0(JSString* str)
