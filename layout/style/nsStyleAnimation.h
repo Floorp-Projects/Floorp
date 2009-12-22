@@ -56,6 +56,8 @@ class nsPresContext;
 class nsStyleContext;
 struct nsCSSValueList;
 struct nsCSSValuePair;
+struct nsCSSValuePairList;
+struct nsCSSRect;
 
 /**
  * Utility class to handle animated style values
@@ -228,14 +230,18 @@ public:
     eUnit_Auto,
     eUnit_None,
     eUnit_Enumerated,
+    eUnit_Visibility, // special case for transitions (which converts
+                      // Enumerated to Visibility as needed)
     eUnit_Integer,
     eUnit_Coord,
     eUnit_Percent,
     eUnit_Float,
     eUnit_Color,
     eUnit_CSSValuePair, // nsCSSValuePair* (never null)
+    eUnit_CSSRect, // nsCSSRect* (never null)
     eUnit_Dasharray, // nsCSSValueList* (never null)
     eUnit_Shadow, // nsCSSValueList* (may be null)
+    eUnit_CSSValuePairList, // nsCSSValuePairList* (never null)
     eUnit_UnparsedString // nsStringBuffer* (never null)
   };
 
@@ -248,7 +254,9 @@ public:
       float mFloat;
       nscolor mColor;
       nsCSSValuePair* mCSSValuePair;
+      nsCSSRect* mCSSRect;
       nsCSSValueList* mCSSValueList;
+      nsCSSValuePairList* mCSSValuePairList;
       nsStringBuffer* mString;
     } mValue;
   public:
@@ -287,9 +295,17 @@ public:
       NS_ASSERTION(IsCSSValuePairUnit(mUnit), "unit mismatch");
       return mValue.mCSSValuePair;
     }
+    nsCSSRect* GetCSSRectValue() const {
+      NS_ASSERTION(IsCSSRectUnit(mUnit), "unit mismatch");
+      return mValue.mCSSRect;
+    }
     nsCSSValueList* GetCSSValueListValue() const {
       NS_ASSERTION(IsCSSValueListUnit(mUnit), "unit mismatch");
       return mValue.mCSSValueList;
+    }
+    nsCSSValuePairList* GetCSSValuePairListValue() const {
+      NS_ASSERTION(IsCSSValuePairListUnit(mUnit), "unit mismatch");
+      return mValue.mCSSValuePairList;
     }
     const PRUnichar* GetStringBufferValue() const {
       NS_ASSERTION(IsStringUnit(mUnit), "unit mismatch");
@@ -334,8 +350,10 @@ public:
 
     // These setters take ownership of |aValue|, and are therefore named
     // "SetAndAdopt*".
-    void SetAndAdoptCSSValueListValue(nsCSSValueList *aValue, Unit aUnit);
     void SetAndAdoptCSSValuePairValue(nsCSSValuePair *aValue, Unit aUnit);
+    void SetAndAdoptCSSRectValue(nsCSSRect *aValue, Unit aUnit);
+    void SetAndAdoptCSSValueListValue(nsCSSValueList *aValue, Unit aUnit);
+    void SetAndAdoptCSSValuePairListValue(nsCSSValuePairList *aValue);
 
     Value& operator=(const Value& aOther);
 
@@ -351,13 +369,20 @@ public:
     }
 
     static PRBool IsIntUnit(Unit aUnit) {
-      return aUnit == eUnit_Enumerated || aUnit == eUnit_Integer;
+      return aUnit == eUnit_Enumerated || aUnit == eUnit_Visibility ||
+             aUnit == eUnit_Integer;
     }
     static PRBool IsCSSValuePairUnit(Unit aUnit) {
       return aUnit == eUnit_CSSValuePair;
     }
+    static PRBool IsCSSRectUnit(Unit aUnit) {
+      return aUnit == eUnit_CSSRect;
+    }
     static PRBool IsCSSValueListUnit(Unit aUnit) {
       return aUnit == eUnit_Dasharray || aUnit == eUnit_Shadow;
+    }
+    static PRBool IsCSSValuePairListUnit(Unit aUnit) {
+      return aUnit == eUnit_CSSValuePairList;
     }
     static PRBool IsStringUnit(Unit aUnit) {
       return aUnit == eUnit_UnparsedString;

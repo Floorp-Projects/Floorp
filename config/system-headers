@@ -1012,10 +1012,17 @@ bzlib.h
 #ifdef MOZ_PLATFORM_HILDON
 hildon-uri.h
 hildon-mime.h
+hildon-file-chooser-dialog.h
 #endif
 #ifdef NS_OSSO
 libosso.h
+osso-mem.h
 #endif
 #ifdef MOZ_ENABLE_GIO
 gio/gio.h
+#endif
+#ifdef MOZ_ENABLE_LIBCONIC
+conic/conicconnection.h
+conic/conicconnectionevent.h
+conic/conicstatisticsevent.h
 #endif
