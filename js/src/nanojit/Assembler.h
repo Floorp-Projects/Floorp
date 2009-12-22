@@ -272,16 +272,18 @@ namespace nanojit
             void        assignSaved(RegAlloc &saved, RegisterMask skip);
             LInsp       findVictim(RegisterMask allow);
 
-            Register    getBaseReg(LOpcode op, LIns *i, int &d, RegisterMask allow);
+            Register    getBaseReg(LIns *i, int &d, RegisterMask allow);
             int         findMemFor(LIns* i);
             Register    findRegFor(LIns* i, RegisterMask allow);
             void        findRegFor2(RegisterMask allow, LIns* ia, Register &ra, LIns *ib, Register &rb);
             Register    findSpecificRegFor(LIns* i, Register r);
             Register    findSpecificRegForUnallocated(LIns* i, Register r);
             Register    prepResultReg(LIns *i, RegisterMask allow);
+            Register    prepareResultReg(LIns *i, RegisterMask allow);
             void        freeRsrcOf(LIns *i, bool pop);
+            void        freeResourcesOf(LIns *ins);
             void        evictIfActive(Register r);
-            void        evict(Register r, LIns* vic);
+            void        evict(LIns* vic);
             RegisterMask hint(LIns*i, RegisterMask allow);
 
             void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip

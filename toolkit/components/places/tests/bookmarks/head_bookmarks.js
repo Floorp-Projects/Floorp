@@ -170,9 +170,6 @@ function flush_main_thread_events()
 let randomFailingSyncTests = [
   "test_384228.js",
   "test_395593.js",
-  "test_405938_restore_queries.js",
-  "test_423515_forceCopyShortcuts.js",
-  "test_448584.js",
 ];
 let currentTestFilename = do_get_file(_TEST_FILE[0], true).leafName;
 if (randomFailingSyncTests.indexOf(currentTestFilename) != -1) {

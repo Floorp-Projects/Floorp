@@ -121,6 +121,7 @@ def run_test(test, lib_dir):
         any([os.path.exists(os.path.join(d, 'valgrind'))
              for d in os.environ['PATH'].split(os.pathsep)])):
         valgrind_prefix = [ 'valgrind',
+                            '-q',
                             '--smc-check=all',
                             '--error-exitcode=1',
                             '--leak-check=full']

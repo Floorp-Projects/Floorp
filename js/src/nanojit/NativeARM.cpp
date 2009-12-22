@@ -1227,11 +1227,11 @@ Assembler::asm_store32(LOpcode op, LIns *value, int dr, LIns *base)
         findRegFor2(GpRegs, value, ra, base, rb);
     }
 
-    if (!isS12(dr)) {
+    if (isU12(-dr) || isU12(dr)) {
+        STR(ra, rb, dr);
+    } else {
         STR(ra, IP, 0);
         asm_add_imm(IP, rb, dr);
-    } else {
-        STR(ra, rb, dr);
     }
 }
 
@@ -1912,7 +1912,7 @@ Assembler::asm_ld_imm(Register d, int32_t imm, bool chk /* = true */)
         ++_nSlot;
         offset += sizeof(_nSlot);
     }
-    NanoAssert(isS12(offset) && (offset <= -8));
+    NanoAssert((isU12(-offset) || isU12(offset)) && (offset <= -8));
 
     // Write the literal.
     *(_nSlot++) = imm;
@@ -2194,15 +2194,11 @@ Assembler::asm_cmp(LIns *cond)
     // ready to issue the compare
     if (rhs->isconst()) {
         int c = rhs->imm32();
+        Register r = findRegFor(lhs, GpRegs);
         if (c == 0 && cond->isop(LIR_eq)) {
-            Register r = findRegFor(lhs, GpRegs);
-            TST(r,r);
-            // No 64-bit immediates so fall-back to below
-        } else if (!rhs->isQuad()) {
-            Register r = getBaseReg(condop, lhs, c, GpRegs);
-            asm_cmpi(r, c);
+            TST(r, r);
         } else {
-            NanoAssert(0);
+            asm_cmpi(r, c);
         }
     } else {
         Register ra, rb;
@@ -2490,22 +2486,39 @@ Assembler::asm_load32(LInsp ins)
     int d = ins->disp();
 
     Register rr = prepResultReg(ins, GpRegs);
-    Register ra = getBaseReg(op, base, d, GpRegs);
+    Register ra = getBaseReg(base, d, GpRegs);
 
-    switch(op) {
+    switch (op) {
         case LIR_ldzb:
         case LIR_ldcb:
-            LDRB(rr, ra, d);
+            if (isU12(-d) || isU12(d)) {
+                LDRB(rr, ra, d);
+            } else {
+                LDRB(rr, IP, 0);
+                asm_add_imm(IP, ra, d);
+            }
             return;
         case LIR_ldzs:
         case LIR_ldcs:
-            // these are expected to be 2 or 4-byte aligned
-            LDRH(rr, ra, d);
+            // These are expected to be 2-byte aligned.  (Not all ARM machines
+            // can handle unaligned accesses.)
+            // Similar to the ldcb/ldzb case, but the max offset is smaller.
+            if (isU8(-d) || isU8(d)) {
+                LDRH(rr, ra, d);
+            } else {
+                LDRH(rr, IP, 0);
+                asm_add_imm(IP, ra, d);
+            }
             return;
         case LIR_ld:
         case LIR_ldc:
-            // these are expected to be 4-byte aligned
-            LDR(rr, ra, d);
+            // These are expected to be 4-byte aligned.
+            if (isU12(-d) || isU12(d)) {
+                LDR(rr, ra, d);
+            } else {
+                LDR(rr, IP, 0);
+                asm_add_imm(IP, ra, d);
+            }
             return;
         case LIR_ldsb:
         case LIR_ldss:
