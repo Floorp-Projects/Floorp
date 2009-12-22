@@ -272,11 +272,13 @@ public:
   void SendPageChangedNotification(nsIURI* aURI, PRUint32 aWhat,
                                    const nsAString& aValue);
 
+  /**
+   * Returns current number of days stored in history.
+   */
+  PRInt32 GetDaysOfHistory();
+
   // current time optimization
   PRTime GetNow();
-
-  // well-known annotations used by the history and bookmarks systems
-  static const char kAnnotationPreviousEncoding[];
 
   // used by query result nodes to update: see comment on body of CanLiveUpdateQuery
   static PRUint32 GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQueries,
