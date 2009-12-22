@@ -127,11 +127,10 @@ void nsMenuChainItem::Detach(nsMenuChainItem** aRoot)
   }
 }
 
-NS_IMPL_ISUPPORTS5(nsXULPopupManager,
+NS_IMPL_ISUPPORTS4(nsXULPopupManager,
                    nsIDOMKeyListener,
                    nsIDOMEventListener,
                    nsIMenuRollup,
-                   nsIRollupListener,
                    nsITimerCallback)
 
 nsXULPopupManager::nsXULPopupManager() :
@@ -1391,7 +1390,7 @@ nsXULPopupManager::SetCaptureState(nsIContent* aOldPopup)
     return;
 
   if (mWidget) {
-    mWidget->CaptureRollupEvents(this, PR_FALSE, PR_FALSE);
+    mWidget->CaptureRollupEvents(this, this, PR_FALSE, PR_FALSE);
     mWidget = nsnull;
   }
 
@@ -1400,7 +1399,8 @@ nsXULPopupManager::SetCaptureState(nsIContent* aOldPopup)
     nsCOMPtr<nsIWidget> widget;
     popup->GetWidget(getter_AddRefs(widget));
     if (widget) {
-      widget->CaptureRollupEvents(this, PR_TRUE, popup->ConsumeOutsideClicks());
+      widget->CaptureRollupEvents(this, this, PR_TRUE,
+                                  popup->ConsumeOutsideClicks());
       mWidget = widget;
       popup->AttachedDismissalListener();
     }

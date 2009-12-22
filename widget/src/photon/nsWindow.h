@@ -91,6 +91,7 @@ public:
 		}
 
   NS_IMETHOD           CaptureRollupEvents(nsIRollupListener * aListener,
+                                           nsIMenuRollup * aMenuRollup,
                                            PRBool aDoCapture,
                                            PRBool aConsumeRollupEvent);
 
@@ -155,6 +156,7 @@ private:
   PRBool mIsTooSmall;
   PRBool mIsDestroying;
 	static nsIRollupListener *gRollupListener;
+  static nsIMenuRollup* gMenuRollup;
 	static nsIWidget *gRollupWidget;
 };
 
