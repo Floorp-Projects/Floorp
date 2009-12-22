@@ -277,9 +277,6 @@ public:
    */
   PRInt32 GetDaysOfHistory();
 
-  // current time optimization
-  PRTime GetNow();
-
   // used by query result nodes to update: see comment on body of CanLiveUpdateQuery
   static PRUint32 GetUpdateRequirements(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                         nsNavHistoryQueryOptions* aOptions,
@@ -509,10 +506,18 @@ protected:
    */
   nsresult LoadPrefs(PRBool aInitializing);
 
-  // Current time optimization
-  PRTime mLastNow;
-  PRBool mNowValid;
+  /**
+   * Calculates and returns value for mCachedNow.
+   * This is an hack to avoid calling PR_Now() too often, as is the case when
+   * we're asked the ageindays of many history entries in a row.  A timer is
+   * set which will clear our valid flag after a short timeout.
+   */
+  PRTime GetNow();
+  PRTime mCachedNow;
   nsCOMPtr<nsITimer> mExpireNowTimer;
+  /**
+   * Called when the cached now value is expired and needs renewal.
+   */
   static void expireNowTimerCallback(nsITimer* aTimer, void* aClosure);
 
   // expiration
