@@ -251,25 +251,19 @@ nsNavBookmarks::InitStatements()
   // This is a LEFT OUTER JOIN with moz_places since folders does not have
   // a reference into that table.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.id, h.url, COALESCE(b.title, h.title), "
-        "h.rev_host, h.visit_count, h.last_visit_date, f.url, null, b.id, "
-        "b.dateAdded, b.lastModified, b.parent, null, b.position, b.type, "
-        "b.fk, b.folder_type "
+      "SELECT IFNULL(h_t.id, h.id), IFNULL(h_t.url, h.url), "
+             "COALESCE(b.title, h_t.title, h.title), "
+             "IFNULL(h_t.rev_host, h.rev_host), "
+             "IFNULL(h_t.visit_count, h.visit_count), "
+             "IFNULL(h_t.last_visit_date, h.last_visit_date), "
+             "f.url, null, b.id, b.dateAdded, b.lastModified, b.parent, null, "
+             "b.position, b.type, b.fk, b.folder_type "
       "FROM moz_bookmarks b "
-      "JOIN moz_places_temp h ON b.fk = h.id "
-      "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
-      "WHERE b.parent = ?1 "
-      "UNION ALL "
-      "SELECT h.id, h.url, COALESCE(b.title, h.title), "
-        "h.rev_host, h.visit_count, h.last_visit_date, f.url, null, b.id, "
-        "b.dateAdded, b.lastModified, b.parent, null, b.position, b.type, "
-        "b.fk, b.folder_type "
-      "FROM moz_bookmarks b "
+      "LEFT JOIN moz_places_temp h_t ON b.fk = h_t.id "
       "LEFT JOIN moz_places h ON b.fk = h.id "
       "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
       "WHERE b.parent = ?1 "
-        "AND (b.fk ISNULL OR b.fk NOT IN (select id FROM moz_places_temp)) "
-      "ORDER BY position ASC"),
+      "ORDER BY b.position ASC"),
     getter_AddRefs(mDBGetChildren));
   NS_ENSURE_SUCCESS(rv, rv);
 
