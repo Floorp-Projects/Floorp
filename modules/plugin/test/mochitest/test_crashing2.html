@@ -31,16 +31,20 @@
     p.setAttribute('newCrash', 'true');
     iframe.contentDocument.body.appendChild(p);
 
-    try {
-      p.setColor('FFFF0000');
-      ok(false, "plugin crashes on creation");
-    }
-    catch (e) {
-      ok(true, "plugin crashes on creation");
-    }
+    // The plugin will now crash when it is instantiated, but
+    // that happens asynchronously. HACK: this should use an
+    // event instead of nested pending runnables, but I don't
+    // know of any DOM event that's fired when a plugin is
+    // instantiated.
+    SimpleTest.executeSoon(function() {
+      SimpleTest.executeSoon(function() {
+        ok(p.setColor === undefined,
+           "Plugin should have crashed on creation");
 
-    window.frameLoaded = reloaded1;
-    iframe.contentWindow.location.replace('crashing_subpage.html');
+        window.frameLoaded = reloaded1;
+        iframe.contentWindow.location.replace('crashing_subpage.html');
+      })
+    });
   }
 
   function reloaded1() {
@@ -53,6 +57,9 @@
       ok(false, "Reloading didn't give us a usable plugin");
     }
     p.crashOnDestroy();
+    // the child crash should happen here
+    p.parentNode.removeChild(p);
+
     window.frameLoaded = reloaded2;
     iframe.contentWindow.location.reload();
   }
