@@ -83,6 +83,11 @@
 // mInPrivateBrowsing member
 #define PRIVATEBROWSING_NOTINITED (PRBool(0xffffffff))
 
+// Clamp title and URL to generously large, but not too large, length.
+// See bug 319004 for details.
+#define URI_LENGTH_MAX 65536
+#define TITLE_LENGTH_MAX 4096
+
 
 class mozIAnnotationService;
 class nsNavHistory;
@@ -408,22 +413,22 @@ protected:
   /**
    * Finalize all internal statements.
    */
-  NS_HIDDEN_(nsresult) FinalizeStatements();
+  nsresult FinalizeStatements();
 
   /**
    * Analyzes the database and VACUUM it, if needed.
    */
-  NS_HIDDEN_(nsresult) DecayFrecency();
+  nsresult DecayFrecency();
   /**
    * Decays frecency and inputhistory values.
    */
-  NS_HIDDEN_(nsresult) VacuumDatabase();
+  nsresult VacuumDatabase();
 
   /**
    * Finalizes all Places internal statements, allowing to safely close the
    * database connection.
    */
-  NS_HIDDEN_(nsresult) FinalizeInternalStatements();
+  nsresult FinalizeInternalStatements();
 
   // nsICharsetResolver
   NS_DECL_NSICHARSETRESOLVER
@@ -569,7 +574,7 @@ protected:
   nsresult StartLazyTimer();
   nsresult AddLazyMessage(const LazyMessage& aMessage);
   static void LazyTimerCallback(nsITimer* aTimer, void* aClosure);
-  NS_HIDDEN_(void) CommitLazyMessages(PRBool aIsShutdown = PR_FALSE);
+  void CommitLazyMessages(PRBool aIsShutdown = PR_FALSE);
 #endif
 
   nsresult ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries, 
