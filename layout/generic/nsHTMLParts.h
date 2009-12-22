@@ -68,7 +68,7 @@ class nsTableColFrame;
  * NS_BLOCK_HAS_FIRST_LETTER_CHILD means that there is an inflow first-letter
  *  frame among the block's descendants. If there is a floating first-letter
  *  frame, or the block has first-letter style but has no first letter, this
- *  bit is not set.
+ *  bit is not set. This bit is set on the first continuation only.
  */
 #define NS_BLOCK_NO_AUTO_MARGINS            0x00200000
 #define NS_BLOCK_MARGIN_ROOT                0x00400000
