@@ -68,6 +68,9 @@
 #define F_DEMANGLE 0
 #endif /* WIN32 */
 
+#define STRINGIFY(s_) STRINGIFY2(s_)
+#define STRINGIFY2(s_) #s_
+#define SYMBOL_BUF_CHARS 511
 
 #define ERROR_REPORT(num, val, msg)   fprintf(stderr, "error(%d):\t\"%s\"\t%s\n", (num), (val), (msg));
 #define CLEANUP(ptr)    do { if(NULL != ptr) { free(ptr); ptr = NULL; } } while(0)
@@ -1196,7 +1199,7 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                                             MSMap_Symbol* theSymbol = NULL;
                                             unsigned index = 0;
                                             int scanRes = 0;
-                                            char symbolBuf[0x200];
+                                            char symbolBuf[SYMBOL_BUF_CHARS + 1];
                                             
                                             index = inModule->mSymbolCount;
                                             inModule->mSymbolCount++;
@@ -1205,7 +1208,7 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                                             memset(theSymbol, 0, sizeof(MSMap_Symbol));
                                             theSymbol->mScope = STATIC;
                                             
-                                            scanRes = sscanf(current, "%x:%x %s %x", (unsigned*)&(theSymbol->mPrefix), (unsigned*)&(theSymbol->mOffset), symbolBuf, (unsigned*)&(theSymbol->mRVABase));
+                                            scanRes = sscanf(current, "%x:%x %" STRINGIFY(SYMBOL_BUF_CHARS) "s %x", (unsigned*)&(theSymbol->mPrefix), (unsigned*)&(theSymbol->mOffset), symbolBuf, (unsigned*)&(theSymbol->mRVABase));
                                             if(4 == scanRes)
                                             {
                                                 theSymbol->mSymbol = symdup(symbolBuf);
@@ -1321,7 +1324,7 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                                         MSMap_Symbol* theSymbol = NULL;
                                         unsigned index = 0;
                                         int scanRes = 0;
-                                        char symbolBuf[0x200];
+                                        char symbolBuf[SYMBOL_BUF_CHARS + 1];
                                         
                                         index = inModule->mSymbolCount;
                                         inModule->mSymbolCount++;
@@ -1330,7 +1333,7 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                                         memset(theSymbol, 0, sizeof(MSMap_Symbol));
                                         theSymbol->mScope = PUBLIC;
                                         
-                                        scanRes = sscanf(current, "%x:%x %s %x", (unsigned*)&(theSymbol->mPrefix), (unsigned*)&(theSymbol->mOffset), symbolBuf, (unsigned *)&(theSymbol->mRVABase));
+                                        scanRes = sscanf(current, "%x:%x %" STRINGIFY(SYMBOL_BUF_CHARS) "s %x", (unsigned*)&(theSymbol->mPrefix), (unsigned*)&(theSymbol->mOffset), symbolBuf, (unsigned *)&(theSymbol->mRVABase));
                                         if(4 == scanRes)
                                         {
                                             theSymbol->mSymbol = symdup(symbolBuf);
@@ -1416,8 +1419,10 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                                 {
                                     MSMap_Segment* theSegment = NULL;
                                     unsigned index = 0;
-                                    char classBuf[0x10];
-                                    char nameBuf[0x20];
+                                    #define CLASS_BUF_CHARS 15
+                                    char classBuf[CLASS_BUF_CHARS + 1];
+                                    #define NAME_BUF_CHARS 31
+                                    char nameBuf[NAME_BUF_CHARS + 1];
                                     int scanRes = 0;
                                     
                                     index = inModule->mSegmentCount;
@@ -1426,7 +1431,7 @@ int readmap(Options* inOptions, MSMap_Module* inModule)
                                     
                                     memset(theSegment, 0, sizeof(MSMap_Segment));
                                     
-                                    scanRes = sscanf(current, "%x:%x %xH %s %s", (unsigned*)&(theSegment->mPrefix), (unsigned*)&(theSegment->mOffset), (unsigned*)&(theSegment->mLength), nameBuf, classBuf);
+                                    scanRes = sscanf(current, "%x:%x %xH %" STRINGIFY(NAME_BUF_CHARS) "s %" STRINGIFY(CLASS_BUF_CHARS) "s", (unsigned*)&(theSegment->mPrefix), (unsigned*)&(theSegment->mOffset), (unsigned*)&(theSegment->mLength), nameBuf, classBuf);
                                     if(5 == scanRes)
                                     {
                                         if('.' == nameBuf[0])
