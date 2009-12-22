@@ -642,9 +642,9 @@ protected:
   PRBool GetRedirectFor(const nsACString& aDestination, nsACString& aSource,
                         PRTime* aTime, PRUint32* aRedirectType);
 
-  // session tracking
+  // Sessions tracking.
   PRInt64 mLastSessionID;
-  PRInt64 GetNewSessionID() { mLastSessionID ++; return mLastSessionID; }
+  PRInt64 GetNewSessionID();
 
 #ifdef MOZ_XUL
   // AutoComplete stuff
@@ -659,7 +659,7 @@ protected:
   PRInt32 mExpireDaysMax;
   PRInt32 mExpireSites;
 
-  // frecency prefs
+  // Frecency preferences.
   PRInt32 mNumVisitsForFrecency;
   PRInt32 mFirstBucketCutoffInDays;
   PRInt32 mSecondBucketCutoffInDays;
