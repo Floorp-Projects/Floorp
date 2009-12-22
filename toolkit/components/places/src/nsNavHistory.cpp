@@ -144,8 +144,12 @@ using namespace mozilla::places;
 // sqlite's default max page size.
 #define DEFAULT_DB_PAGE_SIZE 4096
 
-// the value of mLastNow expires every 3 seconds
-#define HISTORY_EXPIRE_NOW_TIMEOUT (3 * PR_MSEC_PER_SEC)
+// In order to avoid calling PR_now() too often we use a cached "now" value
+// for repeating stuff.  These are milliseconds between "now" cache refreshes.
+#define RENEW_CACHED_NOW_TIMEOUT ((PRInt32)3 * PR_MSEC_PER_SEC)
+
+// USECS_PER_DAY == PR_USEC_PER_SEC * 60 * 60 * 24;
+static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 
 // see bug #319004 -- clamp title and URL to generously-large but not too large
 // length
@@ -371,30 +375,24 @@ static const char* gXpcomShutdown = "xpcom-shutdown";
 static const char* gAutoCompleteFeedback = "autocomplete-will-enter-text";
 static const char* gIdleDaily = "idle-daily";
 
-// code borrowed from mozilla/xpfe/components/history/src/nsGlobalHistory.cpp
-// pass in a pre-normalized now and a date, and we'll find
-// the difference since midnight on each of the days.
-//
-// USECS_PER_DAY == PR_USEC_PER_SEC * 60 * 60 * 24;
-static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavHistory, gHistoryService)
 
-// nsNavHistory::nsNavHistory
 
-nsNavHistory::nsNavHistory() : mBatchLevel(0),
-                               mBatchHasTransaction(PR_FALSE),
-                               mNowValid(PR_FALSE),
-                               mExpireNowTimer(nsnull),
-                               mExpireDaysMin(0),
-                               mExpireDaysMax(0),
-                               mExpireSites(0),
-                               mNumVisitsForFrecency(10),
-                               mTagsFolder(-1),
-                               mInPrivateBrowsing(PRIVATEBROWSING_NOTINITED),
-                               mDatabaseStatus(DATABASE_STATUS_OK),
-                               mCanNotify(true),
-                               mCacheObservers("history-observers")
+nsNavHistory::nsNavHistory()
+: mBatchLevel(0)
+, mBatchHasTransaction(PR_FALSE)
+, mCachedNow(0)
+, mExpireNowTimer(nsnull)
+, mExpireDaysMin(0)
+, mExpireDaysMax(0)
+, mExpireSites(0)
+, mNumVisitsForFrecency(10)
+, mTagsFolder(-1)
+, mInPrivateBrowsing(PRIVATEBROWSING_NOTINITED)
+, mDatabaseStatus(DATABASE_STATUS_OK)
+, mCanNotify(true)
+, mCacheObservers("history-observers")
 {
 #ifdef LAZY_ADD
   mLazyTimerSet = PR_TRUE;
@@ -2139,40 +2137,38 @@ nsNavHistory::GetDaysOfHistory() {
   return daysOfHistory;
 }
 
-// nsNavHistory::GetNow
-//
-//    This is a hack to avoid calling PR_Now() too often, as is the case when
-//    we're asked the ageindays of many history entries in a row. A timer is
-//    set which will clear our valid flag after a short timeout.
 
 PRTime
 nsNavHistory::GetNow()
 {
-  if (!mNowValid) {
-    mLastNow = PR_Now();
-    mNowValid = PR_TRUE;
+  if (!mCachedNow) {
+    mCachedNow = PR_Now();
     if (!mExpireNowTimer)
       mExpireNowTimer = do_CreateInstance("@mozilla.org/timer;1");
-
     if (mExpireNowTimer)
       mExpireNowTimer->InitWithFuncCallback(expireNowTimerCallback, this,
-                                            HISTORY_EXPIRE_NOW_TIMEOUT,
+                                            RENEW_CACHED_NOW_TIMEOUT,
                                             nsITimer::TYPE_ONE_SHOT);
   }
-
-  return mLastNow;
+  return mCachedNow;
 }
 
-
-// nsNavHistory::expireNowTimerCallback
 
 void nsNavHistory::expireNowTimerCallback(nsITimer* aTimer, void* aClosure)
 {
   nsNavHistory *history = static_cast<nsNavHistory *>(aClosure);
-  history->mNowValid = PR_FALSE;
-  history->mExpireNowTimer = nsnull;
+  if (history) {
+    history->mCachedNow = 0;
+    history->mExpireNowTimer = 0;
+  }
 }
 
+
+/**
+ * Code borrowed from mozilla/xpfe/components/history/src/nsGlobalHistory.cpp
+ * Pass in a pre-normalized now and a date, and we'll find the difference since
+ * midnight on each of the days.
+ */
 static PRTime
 NormalizeTimeRelativeToday(PRTime aTime)
 {
