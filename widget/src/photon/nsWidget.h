@@ -92,7 +92,9 @@ public:
 
   NS_IMETHOD SetModal(PRBool aModal);
   NS_IMETHOD Show(PRBool state);
-  inline NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent) { return NS_OK; }
+  inline NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, nsIMenuRollup *aMenuRollup,
+                                        PRBool aDoCapture, PRBool aConsumeRollupEvent)
+  { return NS_OK; }
 
   inline NS_IMETHOD IsVisible(PRBool &aState) { aState = mShown; return NS_OK; }
 

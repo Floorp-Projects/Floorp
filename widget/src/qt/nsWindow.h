@@ -175,6 +175,7 @@ public:
     NS_IMETHOD         EnableDragDrop(PRBool aEnable);
     NS_IMETHOD         CaptureMouse(PRBool aCapture);
     NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
+                                           nsIMenuRollup *aMenuRollup,
                                            PRBool aDoCapture,
                                            PRBool aConsumeRollupEvent);
 

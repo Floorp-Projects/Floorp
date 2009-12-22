@@ -153,6 +153,7 @@ static void blinkRgn(RgnHandle rgn);
 #endif
 
 nsIRollupListener * gRollupListener = nsnull;
+nsIMenuRollup     * gMenuRollup = nsnull;
 nsIWidget         * gRollupWidget   = nsnull;
 
 PRUint32 gLastModifierState = 0;
@@ -1891,6 +1892,7 @@ nsIntPoint nsChildView::WidgetToScreenOffset()
 }
 
 NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener, 
+                                               nsIMenuRollup * aMenuRollup,
                                                PRBool aDoCapture, 
                                                PRBool aConsumeRollupEvent)
 {
@@ -2749,12 +2751,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
       // we don't want to rollup if the click is in a parent menu of
       // the current submenu
       PRUint32 popupsToRollup = PR_UINT32_MAX;
-      nsCOMPtr<nsIMenuRollup> menuRollup;
-      menuRollup = (do_QueryInterface(gRollupListener));
-      if (menuRollup) {
+      if (gMenuRollup) {
         nsAutoTArray<nsIWidget*, 5> widgetChain;
-        menuRollup->GetSubmenuWidgetChain(&widgetChain);
-        PRUint32 sameTypeCount = menuRollup->GetSubmenuWidgetChain(&widgetChain);
+        gMenuRollup->GetSubmenuWidgetChain(&widgetChain);
+        PRUint32 sameTypeCount = gMenuRollup->GetSubmenuWidgetChain(&widgetChain);
         for (PRUint32 i = 0; i < widgetChain.Length(); i++) {
           nsIWidget* widget = widgetChain[i];
           NSWindow* currWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
