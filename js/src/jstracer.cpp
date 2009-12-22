@@ -12126,8 +12126,8 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
     jsval& vr = js_GetUpvar(cx, script->staticLevel, cookie);
     v = vr;
 
-    if (LIns* ins = get(&vr))
-        return ins;
+    if (known(&vr))
+        return get(&vr);
 
     /*
      * The upvar is not in the current trace, so get the upvar value exactly as
