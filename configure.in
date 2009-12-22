@@ -6185,6 +6185,75 @@ then
     SQLITE_LIBS='$(call EXPAND_LIBNAME_PATH,mozsqlite3,$(DIST)/lib)'
 else
     PKG_CHECK_MODULES(SQLITE, sqlite3 >= $SQLITE_VERSION)
+    dnl ===================================
+    dnl === SQLITE_SECURE_DELETE checks ===
+    dnl ===================================
+    dnl check to see if the system sqlite package is compiled with
+    dnl SQLITE_SECURE_DELETE enabled.
+    AC_MSG_CHECKING(for SQLITE_SECURE_DELETE support in system sqlite)
+    _SAVE_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $SQLITE_CFLAGS"
+    _SAVE_LIBS="$LIBS"
+    LIBS="$LIBS $SQLITE_LIBS"
+    AC_CACHE_VAL(ac_cv_sqlite_secure_delete,[
+        AC_TRY_RUN([
+            #include "sqlite3.h"
+            #include <stdio.h>
+            #include <assert.h>
+
+            int main(int argc, char **argv){
+              sqlite3 *db;
+              sqlite3_uint64 r;
+              char *zFilename;
+              FILE *in;
+              int i;
+              int rc;
+              char *zBuf;
+
+              zBuf = malloc(1024*3*sizeof(char));
+              assert( zBuf );
+              rc = sqlite3_open(":memory:", &db);
+              assert( rc==SQLITE_OK );
+              sqlite3_close(db);
+              sqlite3_randomness(sizeof(r), &r);
+              zFilename = sqlite3_mprintf("test_db_%llu.sqlite", r);
+              rc = sqlite3_open(zFilename, &db);
+              assert( rc==SQLITE_OK );
+              rc = sqlite3_exec(db, 
+                "BEGIN;"
+                "CREATE TABLE t1(x);"
+                "INSERT INTO t1 VALUES(zeroblob(1000)||'abcdefghijklmnopqrstuvwxyz');"
+                "COMMIT;"
+                "DELETE FROM t1;",
+                0, 0, 0
+              );
+              assert( rc==SQLITE_OK );
+              sqlite3_close(db);
+              in = fopen(zFilename, "r");
+              assert( in!=0 );
+              rc = fread(zBuf, 1, sizeof(zBuf), in);
+              assert( rc==sizeof(zBuf) );
+              fclose(in);
+              unlink(zFilename);
+              free( zBuf );
+              for(i=0; i<sizeof(zBuf)-11; i++){
+                if( *(zBuf+i)=='h' && memcmp(zBuf+i, "hijklmnopq", 10)==0 ){
+                  return 1;
+                }
+              }
+              return 0;
+            }],
+            ac_cv_sqlite_secure_delete=yes,
+            ac_cv_sqlite_secure_delete=no,
+            ac_cv_sqlite_secure_delete=no
+        )
+    ])
+    AC_MSG_RESULT($ac_cv_sqlite_secure_delete)
+    CFLAGS="$_SAVE_CFLAGS"
+    LIBS="$_SAVE_LIBS"
+    if test "x$ac_cv_sqlite_secure_delete" = "xno"; then
+        AC_MSG_ERROR([System Sqlite library is not compiled with SQLITE_SECURE_DELETE.])
+    fi
 fi
 
 AC_SUBST(MOZ_NATIVE_SQLITE)
