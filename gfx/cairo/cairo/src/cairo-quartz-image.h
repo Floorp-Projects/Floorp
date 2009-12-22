@@ -27,7 +27,7 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Mozilla Corporation.
+ * The Initial Developer of the Original Code is Mozilla Foundation.
  *
  * Contributor(s):
  *      Vladimir Vukicevic <vladimir@mozilla.com>
