@@ -325,7 +325,7 @@ namespace nanojit
         underrunProtect(20);
         if (value->isconst())
             {
-                Register rb = getBaseReg(LIR_sti, base, dr, GpRegs);
+                Register rb = getBaseReg(base, dr, GpRegs);
                 int c = value->imm32();
                 STW32(L2, dr, rb);
                 SET32(c, L2);
@@ -584,12 +584,11 @@ namespace nanojit
         if (rhs->isconst())
             {
                 int c = rhs->imm32();
+                Register r = findRegFor(lhs, GpRegs);
                 if (c == 0 && cond->isop(LIR_eq)) {
-                    Register r = findRegFor(lhs, GpRegs);
                     ANDCC(r, r, G0);
                 }
-                else if (!rhs->isQuad()) {
-                    Register r = getBaseReg(condop, lhs, c, GpRegs);
+                else {
                     SUBCC(r, L2, G0);
                     SET32(c, L2);
                 }
@@ -770,7 +769,7 @@ namespace nanojit
         LIns* base = ins->oprnd1();
         int d = ins->disp();
         Register rr = prepResultReg(ins, GpRegs);
-        Register ra = getBaseReg(ins->opcode(), base, d, GpRegs);
+        Register ra = getBaseReg(base, d, GpRegs);
         switch(op) {
             case LIR_ldzb:
             case LIR_ldcb:

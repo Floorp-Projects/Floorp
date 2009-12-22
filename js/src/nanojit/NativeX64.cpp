@@ -631,7 +631,7 @@ namespace nanojit
             // To make sure floating point operations stay in FPU registers
             // as much as possible, make sure that only a few opcodes are
             // reserving GPRs.
-            NanoAssert(a->isop(LIR_quad) || a->isop(LIR_ldq) || a->isop(LIR_ldqc)|| a->isop(LIR_u2f) || a->isop(LIR_float));
+            NanoAssert(a->isop(LIR_quad) || a->isop(LIR_ldq) || a->isop(LIR_ldqc)|| a->isop(LIR_ld32f) || a->isop(LIR_ldc32f)|| a->isop(LIR_u2f) || a->isop(LIR_float));
             allow &= ~rmask(rr);
             ra = findRegFor(a, allow);
         } else {
@@ -1368,7 +1368,7 @@ namespace nanojit
     void Assembler::regalloc_load(LIns *ins, RegisterMask allow, Register &rr, int32_t &dr, Register &rb) {
         dr = ins->disp();
         LIns *base = ins->oprnd1();
-        rb = getBaseReg(ins->opcode(), base, dr, BaseRegs);
+        rb = getBaseReg(base, dr, BaseRegs);
         if (ins->isUnusedOrHasUnknownReg() || !(allow & rmask(ins->getReg()))) {
             rr = prepResultReg(ins, allow & ~rmask(rb));
         } else {
@@ -1446,7 +1446,7 @@ namespace nanojit
     void Assembler::asm_store64(LOpcode op, LIns *value, int d, LIns *base) {
         NanoAssert(value->isQuad());
 
-        Register b = getBaseReg(LIR_stqi, base, d, BaseRegs);
+        Register b = getBaseReg(base, d, BaseRegs);
         Register r;
 
         // if we have to choose a register, use a GPR, but not the base reg
@@ -1516,7 +1516,7 @@ namespace nanojit
                         GpRegs;
 
         NanoAssert(!value->isQuad());
-        Register b = getBaseReg(LIR_sti, base, d, BaseRegs);
+        Register b = getBaseReg(base, d, BaseRegs);
         Register r = findRegFor(value, SrcRegs & ~rmask(b));
 
         switch (op) {
@@ -1787,6 +1787,13 @@ namespace nanojit
             }
         }
 
+        // profiling for the exit
+        verbose_only(
+           if (_logc->lcbits & LC_FragProfile) {
+              asm_inc_m32( &guard->record()->profCount );
+           }
+        )
+
         MR(RSP, RBP);
 
         // return value is GuardRecord*
@@ -1861,9 +1868,17 @@ namespace nanojit
     // Increment the 32-bit profiling counter at pCtr, without
     // changing any registers.
     verbose_only(
-    void Assembler::asm_inc_m32(uint32_t* /*pCtr*/)
+    void Assembler::asm_inc_m32(uint32_t* pCtr)
     {
-        // todo: implement this
+        // Not as simple as on x86.  We need to temporarily free up a
+        // register into which to generate the address, so just push
+        // it on the stack.  This assumes that the scratch area at
+        // -8(%rsp) .. -1(%esp) isn't being used for anything else
+        // at this point.
+        emitr(X64_popr, RAX);             // popq    %rax
+        emit(X64_inclmRAX);               // incl    (%rax)
+        asm_quad(RAX, (uint64_t)pCtr);    // movabsq $pCtr, %rax
+        emitr(X64_pushr, RAX);            // pushq   %rax
     }
     )
 

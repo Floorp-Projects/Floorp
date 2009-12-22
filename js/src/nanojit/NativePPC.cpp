@@ -144,7 +144,7 @@ namespace nanojit
         LIns* base = ins->oprnd1();
         int d = ins->disp();
         Register rr = prepResultReg(ins, GpRegs);
-        Register ra = getBaseReg(ins->opcode(), base, d, GpRegs);
+        Register ra = getBaseReg(base, d, GpRegs);
 
         switch(ins->opcode()) {
             case LIR_ldzb:
@@ -204,7 +204,7 @@ namespace nanojit
         }
 
         Register rs = findRegFor(value, GpRegs);
-        Register ra = value == base ? rs : getBaseReg(LIR_sti, base, dr, GpRegs & ~rmask(rs));
+        Register ra = value == base ? rs : getBaseReg(base, dr, GpRegs & ~rmask(rs));
 
     #if !PEDANTIC
         if (isS16(dr)) {
@@ -250,7 +250,7 @@ namespace nanojit
     #endif
 
         int dr = ins->disp();
-        Register ra = getBaseReg(ins->opcode(), base, dr, GpRegs);
+        Register ra = getBaseReg(base, dr, GpRegs);
 
     #ifdef NANOJIT_64BIT
         if (rmask(rr) & GpRegs) {
@@ -325,7 +325,7 @@ namespace nanojit
                 return;
         }
 
-        Register ra = getBaseReg(LIR_stqi, base, dr, GpRegs);
+        Register ra = getBaseReg(base, dr, GpRegs);
 
     #if !PEDANTIC && !defined NANOJIT_64BIT
         if (value->isop(LIR_quad) && isS16(dr) && isS16(dr+4)) {
