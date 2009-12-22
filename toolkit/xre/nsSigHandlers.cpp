@@ -361,7 +361,7 @@ void InstallSignalHandlers(const char *ProgramName)
 #define MXCSR(ctx) (ctx)->MxCsr
 #endif
 
-#if defined(_M_IA32) || define(_M_X64)
+#if defined(_M_IA32) || defined(_M_X64)
 
 #define X87CW(ctx) (ctx)->FloatSave.ControlWord
 #define X87SW(ctx) (ctx)->FloatSave.StatusWord
