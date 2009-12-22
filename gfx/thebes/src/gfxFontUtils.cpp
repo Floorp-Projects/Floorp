@@ -317,13 +317,13 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
         const PRUint16 endCount = ReadShortAt16(endCounts, i);
         const PRUint16 startCount = ReadShortAt16(startCounts, i);
         const PRUint16 idRangeOffset = ReadShortAt16(idRangeOffsets, i);
-        
+
         // sanity-check range
-        NS_ENSURE_TRUE((startCount > prevEndCount || i == 0) && 
+        NS_ENSURE_TRUE((startCount > prevEndCount || i == 0 || startCount == 0xFFFF) &&
                        startCount <= endCount,
                        NS_ERROR_GFX_CMAP_MALFORMED);
         prevEndCount = endCount;
-        
+
         if (idRangeOffset == 0) {
             aCharacterMap.SetRange(startCount, endCount);
         } else {
