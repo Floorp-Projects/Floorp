@@ -206,6 +206,18 @@ static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 // operations.
 #define MIN_TIME_BEFORE_VACUUM (PRInt64)30 * 24 * 60 * 60 * 1000 * 1000
 
+#ifdef MOZ_XUL
+#define TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING "autocomplete-will-enter-text"
+#define TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED "places-autocomplete-feedback-updated"
+#endif
+#define TOPIC_XPCOM_SHUTDOWN "xpcom-shutdown"
+#define TOPIC_IDLE_DAILY "idle-daily"
+#define TOPIC_DATABASE_VACUUM_STARTING "places-vacuum-starting"
+#define TOPIC_DATABASE_LOCKED "places-database-locked"
+#define TOPIC_PLACES_INIT_COMPLETE "places-init-complete"
+#define TOPIC_PREF_CHANGED "nsPref:changed"
+
+
 NS_IMPL_THREADSAFE_ADDREF(nsNavHistory)
 NS_IMPL_THREADSAFE_RELEASE(nsNavHistory)
 
@@ -340,13 +352,10 @@ class PlacesEvent : public nsRunnable {
   }
 
   NS_IMETHOD Run() {
-    nsresult rv;
     nsCOMPtr<nsIObserverService> observerService =
-      do_GetService("@mozilla.org/observer-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = observerService->NotifyObservers(nsnull, mTopic, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (observerService)
+      (void)observerService->NotifyObservers(nsnull, mTopic, nsnull);
 
     return NS_OK;
   }
@@ -354,8 +363,8 @@ class PlacesEvent : public nsRunnable {
   const char* mTopic;
 };
 
-// if adding a new one, be sure to update nsNavBookmarks statements and
-// its kGetChildrenIndex_* constants
+// Queries rows indexes to bind or get values, if adding a new one, be sure to
+// update nsNavBookmarks statements and its kGetChildrenIndex_* constants
 const PRInt32 nsNavHistory::kGetInfoIndex_PageID = 0;
 const PRInt32 nsNavHistory::kGetInfoIndex_URL = 1;
 const PRInt32 nsNavHistory::kGetInfoIndex_Title = 2;
@@ -369,11 +378,6 @@ const PRInt32 nsNavHistory::kGetInfoIndex_ItemDateAdded = 9;
 const PRInt32 nsNavHistory::kGetInfoIndex_ItemLastModified = 10;
 const PRInt32 nsNavHistory::kGetInfoIndex_ItemParentId = 11;
 const PRInt32 nsNavHistory::kGetInfoIndex_ItemTags = 12;
-
-
-static const char* gXpcomShutdown = "xpcom-shutdown";
-static const char* gAutoCompleteFeedback = "autocomplete-will-enter-text";
-static const char* gIdleDaily = "idle-daily";
 
 
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavHistory, gHistoryService)
@@ -404,7 +408,6 @@ nsNavHistory::nsNavHistory()
   gHistoryService = this;
 }
 
-// nsNavHistory::~nsNavHistory
 
 nsNavHistory::~nsNavHistory()
 {
@@ -416,8 +419,6 @@ nsNavHistory::~nsNavHistory()
     gHistoryService = nsnull;
 }
 
-
-// nsNavHistory::Init
 
 nsresult
 nsNavHistory::Init()
@@ -467,7 +468,7 @@ nsNavHistory::Init()
   // Enqueue the notification, so if we init another service that requires
   // nsNavHistoryService we don't recursive try to get it.
   nsRefPtr<PlacesEvent> completeEvent =
-    new PlacesEvent(PLACES_INIT_COMPLETE_TOPIC);
+    new PlacesEvent(TOPIC_PLACES_INIT_COMPLETE);
   rv = NS_DispatchToMainThread(completeEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -484,10 +485,6 @@ nsNavHistory::Init()
    *** by the observer service and the preference service. 
    ****************************************************************************/
 
-  nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
   if (pbi) {
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, this, PR_FALSE);
@@ -495,34 +492,37 @@ nsNavHistory::Init()
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_SITES, this, PR_FALSE);
   }
 
-  observerService->AddObserver(this, gXpcomShutdown, PR_FALSE);
-  observerService->AddObserver(this, gAutoCompleteFeedback, PR_FALSE);
-  observerService->AddObserver(this, gIdleDaily, PR_FALSE);
-  observerService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
+  nsCOMPtr<nsIObserverService> obsSvc =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  if (obsSvc) {
+    (void)obsSvc->AddObserver(this, TOPIC_XPCOM_SHUTDOWN, PR_FALSE);
+    (void)obsSvc->AddObserver(this, TOPIC_IDLE_DAILY, PR_FALSE);
+    (void)obsSvc->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
+#ifdef MOZ_XUL
+    (void)obsSvc->AddObserver(this, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING, PR_FALSE);
+#endif
+  }
+
   // In case we've either imported or done a migration from a pre-frecency
   // build, we will calculate the first cutoff period's frecencies once the rest
   // of the places infrastructure has been initialized.
   if (mDatabaseStatus == DATABASE_STATUS_CREATE ||
       mDatabaseStatus == DATABASE_STATUS_UPGRADED) {
-    (void)observerService->AddObserver(this, PLACES_INIT_COMPLETE_TOPIC,
-                                       PR_FALSE);
-  }
-
-  /*****************************************************************************
-   *** IMPORTANT NOTICE!
-   ***
-   *** NO CODE SHOULD GO BEYOND THIS POINT THAT WOULD PROPAGATE AN ERROR.  IN
-   *** OTHER WORDS, THE ONLY THING THAT SHOULD BE RETURNED AFTER THIS POINT IS
-   *** NS_OK.
-   ****************************************************************************/
-
-  if (mDatabaseStatus == DATABASE_STATUS_CREATE) {
-    nsCOMPtr<nsIFile> historyFile;
-    rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
-                                getter_AddRefs(historyFile));
-    if (NS_SUCCEEDED(rv) && historyFile) {
-      (void)ImportHistory(historyFile);
+    if (mDatabaseStatus == DATABASE_STATUS_CREATE) {
+      // Check if we should import old history from history.dat
+      nsCOMPtr<nsIFile> historyFile;
+      rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
+                                  getter_AddRefs(historyFile));
+      if (NS_SUCCEEDED(rv) && historyFile) {
+        (void)ImportHistory(historyFile);
+      }
     }
+
+    // In case we've either imported or done a migration from a pre-frecency
+    // build, we will calculate the first cutoff period's frecencies once the
+    // rest of the places infrastructure has been initialized.
+    if (obsSvc)
+      (void)obsSvc->AddObserver(this, TOPIC_PLACES_INIT_COMPLETE, PR_FALSE);
   }
 
   // Don't add code that can fail here! Do it up above, before we add our
@@ -531,7 +531,7 @@ nsNavHistory::Init()
   return NS_OK;
 }
 
-// nsNavHistory::InitDBFile
+
 nsresult
 nsNavHistory::InitDBFile(PRBool aForceInit)
 {
@@ -582,7 +582,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
       // We can't do much at this point, so fire a locked event so that user is
       // notified that we can't ensure Places to work.
       nsRefPtr<PlacesEvent> lockedEvent =
-        new PlacesEvent(PLACES_DB_LOCKED_TOPIC);
+        new PlacesEvent(TOPIC_DATABASE_LOCKED);
       (void)NS_DispatchToMainThread(lockedEvent);
     }
     NS_ENSURE_SUCCESS(rv, rv);
@@ -632,7 +632,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
     // send out a notification and do not continue initialization.
     // Note: We swallow errors here, since we want service init to fail anyway.
     nsRefPtr<PlacesEvent> lockedEvent =
-      new PlacesEvent(PLACES_DB_LOCKED_TOPIC);
+      new PlacesEvent(TOPIC_DATABASE_LOCKED);
     (void)NS_DispatchToMainThread(lockedEvent);
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2811,7 +2811,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   // send it ourselves.
   if (newItem && (aIsRedirect || aTransitionType == TRANSITION_DOWNLOAD)) {
     nsCOMPtr<nsIObserverService> obsService =
-      do_GetService("@mozilla.org/observer-service;1");
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
     if (obsService)
       obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
   }
@@ -5503,21 +5503,23 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
-  if (strcmp(aTopic, gXpcomShutdown) == 0) {
+  if (strcmp(aTopic, TOPIC_XPCOM_SHUTDOWN) == 0) {
     nsCOMPtr<nsIObserverService> os =
-      do_GetService("@mozilla.org/observer-service;1");
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
     if (os) {
-      os->RemoveObserver(this, gAutoCompleteFeedback);
       os->RemoveObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC);
-      os->RemoveObserver(this, gIdleDaily);
-      os->RemoveObserver(this, gXpcomShutdown);
+      os->RemoveObserver(this, TOPIC_IDLE_DAILY);
+      os->RemoveObserver(this, TOPIC_XPCOM_SHUTDOWN);
+#ifdef MOZ_XUL
+      os->RemoveObserver(this, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING);
+#endif
     }
 
     // If xpcom-shutdown is called in the same scope as the service init, we
-    // should Immediately serve topics we generated, this way they won't try to
-    // access the database later.
+    // should immediately serve the places-init topic, this way topic observers
+    // won't try to access the database after xpcom-shutdown.
     nsCOMPtr<nsISimpleEnumerator> e;
-    nsresult rv = os->EnumerateObservers(PLACES_INIT_COMPLETE_TOPIC,
+    nsresult rv = os->EnumerateObservers(TOPIC_PLACES_INIT_COMPLETE,
                                          getter_AddRefs(e));
     if (NS_SUCCEEDED(rv) && e) {
       nsCOMPtr<nsIObserver> observer;
@@ -5526,7 +5528,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
       {
         e->GetNext(getter_AddRefs(observer));
         rv = observer->Observe(observer,
-                               PLACES_INIT_COMPLETE_TOPIC,
+                               TOPIC_PLACES_INIT_COMPLETE,
                                nsnull);
       }
     }
@@ -5559,7 +5561,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     // need it for a final flush.
   }
 #ifdef MOZ_XUL
-  else if (strcmp(aTopic, gAutoCompleteFeedback) == 0) {
+  else if (strcmp(aTopic, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING) == 0) {
     nsCOMPtr<nsIAutoCompleteInput> input = do_QueryInterface(aSubject);
     if (!input)
       return NS_OK;
@@ -5592,7 +5594,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 #endif
-  else if (strcmp(aTopic, "nsPref:changed") == 0) {
+  else if (strcmp(aTopic, TOPIC_PREF_CHANGED) == 0) {
     PRInt32 oldDaysMin = mExpireDaysMin;
     PRInt32 oldDaysMax = mExpireDaysMax;
     PRInt32 oldVisits = mExpireSites;
@@ -5601,7 +5603,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
         oldVisits != mExpireSites)
       mExpire->OnExpirationChanged();
   }
-  else if (strcmp(aTopic, gIdleDaily) == 0) {
+  else if (strcmp(aTopic, TOPIC_IDLE_DAILY) == 0) {
     // Ensure our connection is still alive.  The idle-daily observer is removed
     // on xpcom-shutdown, but we could have closed the connection earlier due
     // to errors or during normal shutdown process.
@@ -5634,11 +5636,11 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
       mInPrivateBrowsing = PR_FALSE;
     }
   }
-  else if (strcmp(aTopic, PLACES_INIT_COMPLETE_TOPIC) == 0) {
+  else if (strcmp(aTopic, TOPIC_PLACES_INIT_COMPLETE) == 0) {
     nsCOMPtr<nsIObserverService> os =
-      do_GetService("@mozilla.org/observer-service;1");
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
     NS_ENSURE_TRUE(os, NS_ERROR_FAILURE);
-    (void)os->RemoveObserver(this, PLACES_INIT_COMPLETE_TOPIC);
+    (void)os->RemoveObserver(this, TOPIC_PLACES_INIT_COMPLETE);
 
     // This code is only called if we've either imported or done a migration
     // from a pre-frecency build, so we will calculate all their frecencies.
@@ -5709,12 +5711,12 @@ nsNavHistory::VacuumDatabase()
 
     // Notify we are about to vacuum.  This is mostly for testability.
     nsCOMPtr<nsIObserverService> observerService =
-      do_GetService("@mozilla.org/observer-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = observerService->NotifyObservers(nsnull,
-                                          PLACES_VACUUM_STARTING_TOPIC,
-                                          nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (observerService) {
+      (void)observerService->NotifyObservers(nsnull,
+                                             TOPIC_DATABASE_VACUUM_STARTING,
+                                             nsnull);
+    }
 
     // Actually vacuuming a database is a slow operation, since it could take
     // seconds.  Part of the time is spent in updating the journal file on disk
@@ -7764,14 +7766,13 @@ AutoCompleteStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
   if (aReason != mozIStorageStatementCallback::REASON_FINISHED)
     return NS_ERROR_UNEXPECTED;
 
-  nsresult rv;
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = observerService->NotifyObservers(nsnull,
-                                        PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC,
-                                        nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  if (observerService) {
+    (void)observerService->NotifyObservers(nsnull,
+                                           TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED,
+                                           nsnull);
+  }
 
   return NS_OK;
 }
