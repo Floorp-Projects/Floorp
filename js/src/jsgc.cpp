@@ -900,6 +900,9 @@ js_IsAboutToBeFinalized(void *thing)
     JSGCArenaInfo *a;
     uint32 index, flags;
 
+    if (JSString::isStatic(thing))
+        return false;
+
     a = THING_TO_ARENA(thing);
     if (!a->list) {
         /*
