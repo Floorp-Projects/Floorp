@@ -6985,7 +6985,13 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
     
     // Examine the containing-block for the removed content and see if
     // :first-letter style applies.
-    nsIFrame* containingBlock = GetFloatContainingBlock(parentFrame);
+    nsIFrame* inflowChild = childFrame;
+    if (childFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+      inflowChild = frameManager->GetPlaceholderFrameFor(childFrame);
+      NS_ASSERTION(inflowChild, "No placeholder for out-of-flow?");
+    }
+    nsIFrame* containingBlock =
+      GetFloatContainingBlock(inflowChild->GetParent());
     PRBool haveFLS = containingBlock && HasFirstLetterStyle(containingBlock);
     if (haveFLS) {
       // Trap out to special routine that handles adjusting a blocks
@@ -7057,11 +7063,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
     }
 
     if (haveFLS && mRootElementFrame) {
-      NS_ASSERTION(containingBlock == GetFloatContainingBlock(parentFrame),
-                   "What happened here?");
-      nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
-                                    GetAbsoluteContainingBlock(parentFrame),
-                                    containingBlock);
       RecoverLetterFrames(containingBlock);
     }
 
@@ -7414,9 +7415,6 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
     frame->CharacterDataChanged(aInfo);
 
     if (haveFirstLetterStyle) {
-      nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
-                                    GetAbsoluteContainingBlock(frame),
-                                    block, nsnull);
       RecoverLetterFrames(block);
     }
   }
