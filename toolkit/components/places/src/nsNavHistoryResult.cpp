@@ -4000,13 +4000,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryResult)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-nsNavHistoryResult::nsNavHistoryResult(nsNavHistoryContainerResultNode* aRoot) :
-  mRootNode(aRoot),
-  mIsHistoryObserver(PR_FALSE),
-  mIsBookmarkFolderObserver(PR_FALSE),
-  mIsAllBookmarksObserver(PR_FALSE),
-  mBatchInProgress(PR_FALSE),
-  mNeedsToApplySortingMode(PR_FALSE)
+nsNavHistoryResult::nsNavHistoryResult(nsNavHistoryContainerResultNode* aRoot)
+: mRootNode(aRoot)
+, mIsHistoryObserver(PR_FALSE)
+, mIsBookmarkFolderObserver(PR_FALSE)
+, mIsAllBookmarksObserver(PR_FALSE)
+, mNeedsToApplySortingMode(PR_FALSE)
+, mBatchInProgress(PR_FALSE)
 {
   mRootNode->mResult = this;
 }

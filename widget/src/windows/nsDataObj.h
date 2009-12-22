@@ -219,21 +219,20 @@ class nsDataObj : public IDataObject,
                                 nsAString &aFilename);
 
 	protected:
-	  // help determine the kind of drag
+    // help determine the kind of drag
     PRBool IsFlavourPresent(const char *inFlavour);
 
-		virtual HRESULT AddSetFormat(FORMATETC&  FE);
-		virtual HRESULT AddGetFormat(FORMATETC&  FE);
+    virtual HRESULT AddSetFormat(FORMATETC&  FE);
+    virtual HRESULT AddGetFormat(FORMATETC&  FE);
 
-		virtual HRESULT GetFile ( FORMATETC& aFE, STGMEDIUM& aSTG );
-		virtual HRESULT GetText ( const nsACString& aDF, FORMATETC& aFE, STGMEDIUM & aSTG );
-		virtual HRESULT GetBitmap ( const nsACString& inFlavor, FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG );
-		virtual HRESULT GetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
+    virtual HRESULT GetFile ( FORMATETC& aFE, STGMEDIUM& aSTG );
+    virtual HRESULT GetText ( const nsACString& aDF, FORMATETC& aFE, STGMEDIUM & aSTG );
+    virtual HRESULT GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG );
+    virtual HRESULT GetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
         
-        virtual HRESULT DropImage( FORMATETC& aFE, STGMEDIUM& aSTG );
-        virtual HRESULT DropFile( FORMATETC& aFE, STGMEDIUM& aSTG );
-        virtual HRESULT DropTempFile( FORMATETC& aFE, STGMEDIUM& aSTG );
+    virtual HRESULT DropImage( FORMATETC& aFE, STGMEDIUM& aSTG );
+    virtual HRESULT DropFile( FORMATETC& aFE, STGMEDIUM& aSTG );
+    virtual HRESULT DropTempFile( FORMATETC& aFE, STGMEDIUM& aSTG );
 
     virtual HRESULT GetUniformResourceLocator ( FORMATETC& aFE, STGMEDIUM& aSTG, PRBool aIsUnicode ) ;
     virtual HRESULT ExtractUniformResourceLocatorA ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
@@ -241,11 +240,11 @@ class nsDataObj : public IDataObject,
     virtual HRESULT GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG, PRBool aIsUnicode ) ;
     virtual HRESULT GetFileContents ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
     virtual HRESULT GetPreferredDropEffect ( FORMATETC& aFE, STGMEDIUM& aSTG );
-   
-		virtual HRESULT SetBitmap(FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT SetDib   (FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT SetText  (FORMATETC&  FE, STGMEDIUM&  STM);
-		virtual HRESULT SetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
+
+    virtual HRESULT SetBitmap(FORMATETC&  FE, STGMEDIUM&  STM);
+    virtual HRESULT SetDib   (FORMATETC&  FE, STGMEDIUM&  STM);
+    virtual HRESULT SetText  (FORMATETC&  FE, STGMEDIUM&  STM);
+    virtual HRESULT SetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
 
       // Provide the structures needed for an internet shortcut by the shell
     virtual HRESULT GetFileDescriptorInternetShortcutA ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
@@ -259,7 +258,7 @@ class nsDataObj : public IDataObject,
 
     nsresult ExtractShortcutURL ( nsString & outURL ) ;
     nsresult ExtractShortcutTitle ( nsString & outTitle ) ;
-    
+
       // munge our HTML data to win32's CF_HTML spec. Will null terminate
     nsresult BuildPlatformHTML ( const char* inOurHTML, char** outPlatformHTML ) ;
 
@@ -323,21 +322,18 @@ class nsDataObj : public IDataObject,
 
   private:
 
-    // Drag and drop helper data for implementing drag and drop image support 
+    // Drag and drop helper data for implementing drag and drop image support
     typedef struct {
       FORMATETC   fe;
       STGMEDIUM   stgm;
     } DATAENTRY, *LPDATAENTRY;
 
     nsTArray <LPDATAENTRY> mDataEntryList;
-
-    HRESULT FindFORMATETC(FORMATETC *pfe, LPDATAENTRY *ppde, BOOL fAdd);
-    HRESULT AddRefStgMedium(STGMEDIUM *pstgmIn, STGMEDIUM *pstgmOut,
-                            BOOL fCopyIn);
-    IUnknown* GetCanonicalIUnknown(IUnknown *punk);
-    HGLOBAL GlobalClone(HGLOBAL hglobIn);
-    static void RemoveTempFile(nsITimer* aTimer, void* aClosure);
     nsCOMPtr<nsITimer> mTimer;
+
+    PRBool LookupArbitraryFormat(FORMATETC *aFormat, LPDATAENTRY *aDataEntry, BOOL aAddorUpdate);
+    PRBool CopyMediumData(STGMEDIUM *aMediumDst, STGMEDIUM *aMediumSrc, LPFORMATETC aFormat, BOOL aSetData);
+    static void RemoveTempFile(nsITimer* aTimer, void* aClosure);
 };
 
 

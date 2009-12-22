@@ -125,6 +125,18 @@ inline Atomic64 NoBarrier_AtomicIncrement(volatile Atomic64* ptr,
   return Barrier_AtomicIncrement(ptr, increment);
 }
 
+inline Atomic64 Acquire_CompareAndSwap(volatile Atomic64* ptr,
+                                       Atomic64 old_value,
+                                       Atomic64 new_value) {
+  return NoBarrier_CompareAndSwap(ptr, old_value, new_value);
+}
+
+inline Atomic64 Release_CompareAndSwap(volatile Atomic64* ptr,
+                                       Atomic64 old_value,
+                                       Atomic64 new_value) {
+  return NoBarrier_CompareAndSwap(ptr, old_value, new_value);
+}
+
 inline void NoBarrier_Store(volatile Atomic64* ptr, Atomic64 value) {
   *ptr = value;
 }

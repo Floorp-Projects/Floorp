@@ -72,7 +72,6 @@
 #include "nsContentUtils.h"
 #include "nsIWidget.h"
 #include "mozilla/TimeStamp.h"
-#include "nsRefreshDriver.h"
 
 class nsImageLoader;
 #ifdef IBMBIDI
@@ -103,6 +102,7 @@ class nsUserFontSet;
 struct nsFontFaceRuleContainer;
 class nsObjectFrame;
 class nsTransitionManager;
+class nsRefreshDriver;
 class imgIContainer;
 
 #ifdef MOZ_REFLOW_PERF
@@ -233,13 +233,7 @@ public:
 
   nsTransitionManager* TransitionManager() { return mTransitionManager; }
 
-  nsRefreshDriver* RefreshDriver() { return &mRefreshDriver; }
-
-  static nsPresContext* FromRefreshDriver(nsRefreshDriver* aRefreshDriver) {
-    return reinterpret_cast<nsPresContext*>(
-             reinterpret_cast<char*>(aRefreshDriver) -
-             offsetof(nsPresContext, mRefreshDriver));
-  }
+  nsRefreshDriver* RefreshDriver() { return mRefreshDriver; }
 #endif
 
   /**
@@ -957,8 +951,8 @@ protected:
                                         // from gfx back to layout.
   nsIEventStateManager* mEventManager;  // [STRONG]
   nsILookAndFeel*       mLookAndFeel;   // [STRONG]
-  nsRefreshDriver       mRefreshDriver;
-  nsTransitionManager*  mTransitionManager; // owns; it aggregates our refcount
+  nsRefPtr<nsRefreshDriver> mRefreshDriver;
+  nsRefPtr<nsTransitionManager> mTransitionManager;
   nsIAtom*              mMedium;        // initialized by subclass ctors;
                                         // weak pointer to static atom
 

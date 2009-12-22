@@ -65,6 +65,8 @@ function main()
     // property, which should _not_ be affected by textZoom.
     var text = document.getElementsByTagName("text")[0];
     var rect = document.getElementsByTagName("rect")[0];
+
+    svg.setCurrentTime(0);
     verifyStyle(text, "font-size",    "10px");
     verifyStyle(rect, "stroke-width", "5px");
     svg.setCurrentTime(1);
