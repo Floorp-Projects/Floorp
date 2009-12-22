@@ -84,9 +84,9 @@ public:
   static BOOL EnumChildWindows(HWND inParent, WNDENUMPROC inFunc, LPARAM inParam);
 
 #if defined(WINCE_HAVE_SOFTKB)
-  static void ToggleSoftKB(PRBool show);
+  static void ToggleSoftKB(HWND wnd, PRBool show);
   static void CreateSoftKeyMenuBar(HWND wnd);
-  static void NotifySoftKbObservers(LPRECT = NULL);
+  static void NotifySoftKbObservers(HWND wnd, LPRECT = NULL);
   static PRBool sSIPInTransition;
   static TriStateBool sShowSIPButton;
   static void CheckKeyboardStatus();
