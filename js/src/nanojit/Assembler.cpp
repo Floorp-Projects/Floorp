@@ -711,11 +711,10 @@ namespace nanojit
         verbose_only( int32_t nativeSave = _stats.native );
         verbose_only( verbose_outputf("----------------------------------- ## END exit block %p", guard);)
 
+        // This point is unreachable.  So free all the registers.  If an
+        // instruction has a stack entry we will leave it alone, otherwise we
+        // free it entirely.  intersectRegisterState() will restore.
         RegAlloc capture = _allocator;
-
-        // this point is unreachable.  so free all the registers.
-        // if an instruction has a stack entry we will leave it alone,
-        // otherwise we free it entirely.  intersectRegisterState will restore.
         releaseRegisters();
 
         swapCodeChunks();
@@ -727,7 +726,7 @@ namespace nanojit
 
         nFragExit(guard);
 
-        // restore the callee-saved register and parameters
+        // Restore the callee-saved register and parameters.
         assignSavedRegs();
         assignParamRegs();
 
@@ -1605,8 +1604,7 @@ namespace nanojit
 
     void Assembler::assignSavedRegs()
     {
-        // restore saved regs
-        releaseRegisters();
+        // Restore saved regsters.
         LirBuffer *b = _thisfrag->lirbuf;
         for (int i=0, n = NumSavedRegs; i < n; i++) {
             LIns *p = b->savedRegs[i];
@@ -1625,7 +1623,6 @@ namespace nanojit
         }
     }
 
-    // restore parameter registers
     void Assembler::assignParamRegs()
     {
         LInsp state = _thisfrag->lirbuf->state;

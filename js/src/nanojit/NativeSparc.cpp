@@ -1068,6 +1068,7 @@ namespace nanojit
     void Assembler::asm_ret(LInsp ins)
     {
         genEpilogue();
+        releaseRegisters();
         assignSavedRegs();
         LIns *val = ins->oprnd1();
         if (ins->isop(LIR_ret)) {

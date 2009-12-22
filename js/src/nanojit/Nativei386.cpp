@@ -2031,6 +2031,7 @@ namespace nanojit
         // Restore ESP from EBP, undoing SUBi(SP,amt) in the prologue
         MR(SP,FP);
 
+        releaseRegisters();
         assignSavedRegs();
 
         LIns *val = ins->oprnd1();

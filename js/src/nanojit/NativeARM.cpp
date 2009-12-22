@@ -2640,6 +2640,7 @@ Assembler::asm_ret(LIns *ins)
     // Pop the stack frame.
     MOV(SP,FP);
 
+    releaseRegisters();
     assignSavedRegs();
     LIns *value = ins->oprnd1();
     if (ins->isop(LIR_ret)) {
