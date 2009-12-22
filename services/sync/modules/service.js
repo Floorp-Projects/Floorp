@@ -1104,7 +1104,7 @@ WeaveSvc.prototype = {
     let now = Math.floor(Date.now() / 1000);
     let lastPing = Svc.Prefs.get("lastPing", 0);
     if (now - lastPing > 86400) { // 60 * 60 * 24
-      infoURL += "?";
+      infoURL += "?v=" + WEAVE_VERSION;
       Svc.Prefs.set("lastPing", now);
     }
 
