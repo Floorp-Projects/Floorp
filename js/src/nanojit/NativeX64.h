@@ -307,6 +307,7 @@ namespace nanojit
         X64_xorps   = 0xC0570F4000000004LL, // 128bit xor xmm (four packed singles), one byte shorter
         X64_xorpsm  = 0x05570F4000000004LL, // 128bit xor xmm, [rip+disp32]
         X64_xorpsa  = 0x2504570F40000005LL, // 128bit xor xmm, [disp32]
+        X64_inclmRAX= 0x00FF000000000002LL, // incl (%rax)
         X64_jmpx    = 0xC524ff4000000004LL, // jmp [d32+x*8]
         X64_jmpxb   = 0xC024ff4000000004LL, // jmp [b+x*8]
 
@@ -329,9 +330,6 @@ namespace nanojit
     static const int NumArgRegs = 6;
 #endif
 
-    static inline bool isValidDisplacement(LOpcode, int32_t) {
-        return true;
-    }
     static inline bool IsFpReg(Register r) {
         return ((1<<r) & FpRegs) != 0;
     }
