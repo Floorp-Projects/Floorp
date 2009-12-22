@@ -9653,6 +9653,8 @@ nsCSSFrameConstructor::CreateLetterFrame(nsIFrame* aBlockFrame,
         SetInitialSingleChild(letterFrame, textFrame);
         aResult.Clear();
         aResult.AddChild(letterFrame);
+        NS_ASSERTION(!aBlockFrame->GetPrevContinuation(),
+                     "should have the first continuation here");
         aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
       }
     }
@@ -9871,6 +9873,7 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
                                                nsIPresShell* aPresShell,
                                                nsFrameManager* aFrameManager,
                                                nsIFrame* aFrame,
+                                               nsIFrame* aBlockFrame,
                                                PRBool* aStopLooking)
 {
   nsIFrame* prevSibling = nsnull;
@@ -9913,13 +9916,15 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
       aFrameManager->InsertFrames(aFrame, nsnull, prevSibling, textList);
 
       *aStopLooking = PR_TRUE;
-      aFrame->RemoveStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
+      NS_ASSERTION(!aBlockFrame->GetPrevContinuation(),
+                   "should have the first continuation here");
+      aBlockFrame->RemoveStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
       break;
     }
     else if (IsInlineFrame(kid)) {
       // Look inside child inline frame for the letter frame
-      RemoveFirstLetterFrames(aPresContext, aPresShell, aFrameManager, kid,
-                              aStopLooking);
+      RemoveFirstLetterFrames(aPresContext, aPresShell, aFrameManager,
+                              kid, aBlockFrame, aStopLooking);
       if (*aStopLooking) {
         break;
       }
@@ -9938,22 +9943,23 @@ nsCSSFrameConstructor::RemoveLetterFrames(nsPresContext* aPresContext,
                                           nsIFrame* aBlockFrame)
 {
   aBlockFrame = aBlockFrame->GetFirstContinuation();
-  
+  nsIFrame* continuation = aBlockFrame;
+
   PRBool stopLooking = PR_FALSE;
   nsresult rv;
   do {
     rv = RemoveFloatingFirstLetterFrames(aPresContext, aPresShell,
                                          aFrameManager,
-                                         aBlockFrame, &stopLooking);
+                                         continuation, &stopLooking);
     if (NS_SUCCEEDED(rv) && !stopLooking) {
       rv = RemoveFirstLetterFrames(aPresContext, aPresShell, aFrameManager,
-                                   aBlockFrame, &stopLooking);
+                                   continuation, aBlockFrame, &stopLooking);
     }
     if (stopLooking) {
       break;
     }
-    aBlockFrame = aBlockFrame->GetNextContinuation();
-  }  while (aBlockFrame);
+    continuation = continuation->GetNextContinuation();
+  }  while (continuation);
   return rv;
 }
 
@@ -9962,7 +9968,8 @@ nsresult
 nsCSSFrameConstructor::RecoverLetterFrames(nsIFrame* aBlockFrame)
 {
   aBlockFrame = aBlockFrame->GetFirstContinuation();
-  
+  nsIFrame* continuation = aBlockFrame;
+
   nsIFrame* parentFrame = nsnull;
   nsIFrame* textFrame = nsnull;
   nsIFrame* prevFrame = nsnull;
@@ -9971,9 +9978,9 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsIFrame* aBlockFrame)
   nsresult rv;
   do {
     // XXX shouldn't this bit be set already (bug 408493), assert instead?
-    aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
-    rv = WrapFramesInFirstLetterFrame(aBlockFrame, aBlockFrame,
-                                      aBlockFrame->GetFirstChild(nsnull),
+    continuation->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
+    rv = WrapFramesInFirstLetterFrame(aBlockFrame, continuation,
+                                      continuation->GetFirstChild(nsnull),
                                       &parentFrame, &textFrame, &prevFrame,
                                       letterFrames, &stopLooking);
     if (NS_FAILED(rv)) {
@@ -9982,8 +9989,8 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsIFrame* aBlockFrame)
     if (stopLooking) {
       break;
     }
-    aBlockFrame = aBlockFrame->GetNextContinuation();
-  } while (aBlockFrame);
+    continuation = continuation->GetNextContinuation();
+  } while (continuation);
 
   if (parentFrame) {
     // Take the old textFrame out of the parents child list
