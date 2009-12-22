@@ -8369,12 +8369,13 @@ TraceRecorder::f2i(LIns* f)
         }
         if (ci == &js_String_p_charCodeAt_ci) {
             LIns* idx = fcallarg(f, 1);
-            // If the index is not already an integer, force it to be an integer.
-            idx = isPromote(idx)
-                ? demote(lir, idx)
-                : lir->insCall(&js_DoubleToInt32_ci, &idx);
-            LIns* args[] = { idx, fcallarg(f, 0) };
-            return lir->insCall(&js_String_p_charCodeAt_int_ci, args);
+            if (isPromote(idx)) {
+                LIns* args[] = { demote(lir, idx), fcallarg(f, 0) };
+                return lir->insCall(&js_String_p_charCodeAt_int_int_ci, args);
+            } else {
+                LIns* args[] = { idx, fcallarg(f, 0) };
+                return lir->insCall(&js_String_p_charCodeAt_double_int_ci, args);
+            }
         }
     }
     return lir->insCall(&js_DoubleToInt32_ci, &f);
