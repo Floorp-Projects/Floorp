@@ -71,9 +71,11 @@
 
 CLASS(  LFENCE,         0,  1)  //  1%  LIR_regfence, LIR_xbarrier
 
-CLASS(  LIMM_I,         0,  4)  //  5%  LIR_imm
-CLASS(  LIMM_Q,         1,  3)  //  8%  LIR_quad
-CLASS(  LIMM_F,         0,  4)  // 12%  LIR_float
+CLASS(  LALLOC,         0,  1)  //  2%  LIR_alloc
+
+CLASS(  LIMM_I,         0,  4)  //  6%  LIR_imm
+CLASS(  LIMM_Q,         1,  3)  //  9%  LIR_quad
+CLASS(  LIMM_F,         0,  3)  // 12%  LIR_float
 
 CLASS(  LOP_I_I,        0,  2)  // 14%  LIR_neg, LIR_not
 CLASS(  LOP_Q_Q,        1,  0)  // 14%  (none)
