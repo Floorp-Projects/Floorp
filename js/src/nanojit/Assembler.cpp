@@ -94,7 +94,7 @@ namespace nanojit
     void AR::validate()
     {
         NanoAssert(_highWaterMark < NJ_MAX_STACK_ENTRY);
-        NanoAssert(_entries[0] == BAD_ENTRY);
+        NanoAssert(_entries[0] == NULL);
         for (uint32_t i = 1; i <= _highWaterMark; ++i)
             NanoAssert(_entries[i] != BAD_ENTRY);
         for (uint32_t i = _highWaterMark+1; i < NJ_MAX_STACK_ENTRY; ++i)
@@ -106,8 +106,9 @@ namespace nanojit
      inline void AR::clear()
      {
          _highWaterMark = 0;
+        NanoAssert(_entries[0] == NULL);
     #ifdef _DEBUG
-        for (uint32_t i = 0; i < NJ_MAX_STACK_ENTRY; ++i)
+        for (uint32_t i = 1; i < NJ_MAX_STACK_ENTRY; ++i)
             _entries[i] = BAD_ENTRY;
     #endif
      }
@@ -1658,6 +1659,9 @@ namespace nanojit
     {
         NanoAssert(idx > 0 && idx <= _highWaterMark);
 
+        // NB: this loop relies on using entry[0] being NULL,
+        // so that we are guaranteed to terminate
+        // without access negative entries.
         LIns *i = _entries[idx];
         NanoAssert(i != 0);
         do {
