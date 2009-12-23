@@ -56,7 +56,8 @@
 
 using mozilla::TimeStamp;
 
-nsRefreshDriver::nsRefreshDriver()
+nsRefreshDriver::nsRefreshDriver(nsPresContext *aPresContext)
+  : mPresContext(aPresContext)
 {
 }
 
@@ -170,11 +171,7 @@ nsRefreshDriver::ArrayFor(mozFlushType aFlushType)
  * nsISupports implementation
  */
 
-NS_IMPL_ADDREF_USING_AGGREGATOR(nsRefreshDriver,
-                                nsPresContext::FromRefreshDriver(this))
-NS_IMPL_RELEASE_USING_AGGREGATOR(nsRefreshDriver,
-                                 nsPresContext::FromRefreshDriver(this))
-NS_IMPL_QUERY_INTERFACE1(nsRefreshDriver, nsITimerCallback)
+NS_IMPL_ISUPPORTS1(nsRefreshDriver, nsITimerCallback)
 
 /*
  * nsITimerCallback implementation
@@ -185,8 +182,12 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
 {
   UpdateMostRecentRefresh();
 
-  nsPresContext *presContext = nsPresContext::FromRefreshDriver(this);
-  nsCOMPtr<nsIPresShell> presShell = presContext->GetPresShell();
+  if (!mPresContext) {
+    // Things are being destroyed.
+    NS_ABORT_IF_FALSE(!mTimer, "timer should have been stopped");
+    return NS_OK;
+  }
+  nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
   if (!presShell) {
     // Things are being destroyed.
     StopTimer();
