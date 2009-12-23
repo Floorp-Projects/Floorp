@@ -241,8 +241,10 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   if (surfaceSize.width <= 0 || surfaceSize.height <= 0)
     return NS_ERROR_FAILURE;
 
-  if (resultOverflows) {
-    // scale down drawing to new pattern surface size
+  if (resultOverflows ||
+      patternWidth != surfaceSize.width ||
+      patternHeight != surfaceSize.height) {
+    // scale drawing to pattern surface size
     nsCOMPtr<nsIDOMSVGMatrix> tempTM, aCTM;
     NS_NewSVGMatrix(getter_AddRefs(tempTM),
                     surfaceSize.width / patternWidth, 0.0f,
@@ -251,7 +253,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
     patternFrame->mCTM->Multiply(tempTM, getter_AddRefs(aCTM));
     aCTM.swap(patternFrame->mCTM);
 
-    // and magnify pattern to compensate
+    // and rescale pattern to compensate
     patternMatrix->Scale(patternWidth / surfaceSize.width,
                          patternHeight / surfaceSize.height);
   }
