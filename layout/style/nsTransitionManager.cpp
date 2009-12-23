@@ -334,12 +334,20 @@ nsTransitionManager::nsTransitionManager(nsPresContext *aPresContext)
 
 nsTransitionManager::~nsTransitionManager()
 {
+  NS_ABORT_IF_FALSE(!mPresContext, "Disconnect should have been called");
+}
+
+void
+nsTransitionManager::Disconnect()
+{
   // Content nodes might outlive the transition manager.
   while (!PR_CLIST_IS_EMPTY(&mElementTransitions)) {
     ElementTransitions *head = static_cast<ElementTransitions*>(
                                  PR_LIST_HEAD(&mElementTransitions));
     head->Destroy();
   }
+
+  mPresContext = nsnull;
 }
 
 static PRBool
@@ -781,9 +789,7 @@ nsTransitionManager::AddElementTransitions(ElementTransitions* aElementTransitio
  * nsISupports implementation
  */
 
-NS_IMPL_ADDREF_USING_AGGREGATOR(nsTransitionManager, mPresContext)
-NS_IMPL_RELEASE_USING_AGGREGATOR(nsTransitionManager, mPresContext)
-NS_IMPL_QUERY_INTERFACE1(nsTransitionManager, nsIStyleRuleProcessor)
+NS_IMPL_ISUPPORTS1(nsTransitionManager, nsIStyleRuleProcessor)
 
 /*
  * nsIStyleRuleProcessor implementation
@@ -885,6 +891,10 @@ nsTransitionManager::MediumFeaturesChanged(nsPresContext* aPresContext,
 /* virtual */ void
 nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
 {
+  NS_ABORT_IF_FALSE(mPresContext,
+                    "refresh driver should not notify additional observers "
+                    "after pres context has been destroyed");
+
   // Trim transitions that have completed, and post restyle events for
   // frames that are still transitioning.
   {
