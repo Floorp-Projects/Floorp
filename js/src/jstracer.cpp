@@ -1745,7 +1745,7 @@ static const CallInfo *
 fcallinfo(LIns *i)
 {
     if (nanojit::AvmCore::config.soft_float) {
-        if (i->isop(LIR_qjoin))
+        if (!i->isop(LIR_qjoin))
             return NULL;
         i = i->oprnd1();
         return i->isop(LIR_icall) ? i->callInfo() : NULL;
