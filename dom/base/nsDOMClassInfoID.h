@@ -489,8 +489,6 @@ enum nsDOMClassInfoID {
 
   eDOMClassInfo_EventListenerInfo_id,
 
-  eDOMClassInfo_TransitionEvent_id,
-
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

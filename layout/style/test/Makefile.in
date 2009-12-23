@@ -138,7 +138,6 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_system_font_serialization.html \
 		test_transitions_computed_values.html \
 		test_transitions_computed_value_combinations.html \
-		test_transitions_events.html \
 		test_transitions.html \
 		test_transitions_per_property.html \
 		test_transitions_dynamic_changes.html \
