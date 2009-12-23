@@ -259,7 +259,9 @@ nsPresContext::~nsPresContext()
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nsnull);
 
-  delete mTransitionManager;
+  if (mTransitionManager) {
+    mTransitionManager->Disconnect();
+  }
 
   // Disconnect the refresh driver *after* the transition manager, which
   // needs it.
