@@ -259,15 +259,7 @@ nsPresContext::~nsPresContext()
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nsnull);
 
-  if (mTransitionManager) {
-    mTransitionManager->Disconnect();
-  }
-
-  // Disconnect the refresh driver *after* the transition manager, which
-  // needs it.
-  if (mRefreshDriver) {
-    mRefreshDriver->Disconnect();
-  }
+  delete mTransitionManager;
 
   if (mEventManager) {
     // unclear if these are needed, but can't hurt
@@ -881,12 +873,6 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   NS_ADDREF(mEventManager);
 
   mTransitionManager = new nsTransitionManager(this);
-  if (!mTransitionManager)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  mRefreshDriver = new nsRefreshDriver(this);
-  if (!mRefreshDriver)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
 
