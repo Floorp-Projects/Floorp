@@ -234,7 +234,6 @@
 #include "nsPaintRequest.h"
 #include "nsIDOMNotifyPaintEvent.h"
 #include "nsIDOMScrollAreaEvent.h"
-#include "nsIDOMTransitionEvent.h"
 #include "nsIDOMNSDocumentStyle.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMDocumentTraversal.h"
@@ -1366,8 +1365,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(ScrollAreaEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(EventListenerInfo, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(TransitionEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
@@ -3788,11 +3785,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(EventListenerInfo, nsIEventListenerInfo)
     DOM_CLASSINFO_MAP_ENTRY(nsIEventListenerInfo)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(TransitionEvent, nsIDOMTransitionEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTransitionEvent)
-    DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
