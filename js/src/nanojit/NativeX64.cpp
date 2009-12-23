@@ -631,7 +631,7 @@ namespace nanojit
             // To make sure floating point operations stay in FPU registers
             // as much as possible, make sure that only a few opcodes are
             // reserving GPRs.
-            NanoAssert(a->isop(LIR_quad) || a->isop(LIR_ldq) || a->isop(LIR_ldqc)|| a->isop(LIR_ld32f) || a->isop(LIR_ldc32f)|| a->isop(LIR_u2f) || a->isop(LIR_float));
+            NanoAssert(a->isop(LIR_quad) || a->isop(LIR_ldq) || a->isop(LIR_ldqc)|| a->isop(LIR_ld32f) || a->isop(LIR_ldc32f)|| a->isop(LIR_u2f) || a->isop(LIR_float) || a->isop(LIR_fcall));
             allow &= ~rmask(rr);
             ra = findRegFor(a, allow);
         } else {
