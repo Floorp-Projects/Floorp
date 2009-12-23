@@ -1396,10 +1396,9 @@ MoveChildrenTo(nsPresContext* aPresContext,
                nsIFrame* aNewParent,
                nsFrameList& aFrameList)
 {
-  NS_PRECONDITION(aOldParent->GetParent() == aNewParent->GetParent(),
-                  "Unexpected old and new parents");
+  PRBool sameGrandParent = aOldParent->GetParent() == aNewParent->GetParent();
 
-  if (aNewParent->HasView() || aOldParent->HasView()) {
+  if (aNewParent->HasView() || aOldParent->HasView() || !sameGrandParent) {
     // Move the frames into the new view
     nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, aFrameList,
                                                 aOldParent, aNewParent);
@@ -1419,6 +1418,12 @@ MoveChildrenTo(nsPresContext* aPresContext,
 
   if (setHasChildWithView) {
     aNewParent->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
+    if (!sameGrandParent) {
+      for (nsIFrame* ancestor = aNewParent->GetParent();
+           ancestor; ancestor = ancestor->GetParent()) {
+        ancestor->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
+      }
+    }
   }
 
   if (aNewParent->GetChildList(nsnull).IsEmpty() &&
@@ -5812,7 +5817,7 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
     // initial parent, because that could screw up float parenting; it's easier
     // to do this little fixup here instead.
     if (aFrameList.NotEmpty() && !IsInlineOutside(aFrameList.FirstChild())) {
-      // See whether out trailing inline is empty
+      // See whether our trailing inline is empty
       nsIFrame* firstContinuation = aParentFrame->GetFirstContinuation();
       if (firstContinuation->GetChildList(nsnull).IsEmpty()) {
         // Our trailing inline is empty.  Collect our starting blocks from
