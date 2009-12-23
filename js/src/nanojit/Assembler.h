@@ -106,6 +106,7 @@ namespace nanojit
         uint32_t        _highWaterMark;                 /* index of highest entry used since last clear() */
         LIns*           _entries[ NJ_MAX_STACK_ENTRY ]; /* maps to 4B contiguous locations relative to the frame pointer.
                                                             NB: _entries[0] is always unused */
+
         #ifdef _DEBUG
         static LIns* const BAD_ENTRY;
         #endif
@@ -114,7 +115,8 @@ namespace nanojit
         static uint32_t nStackSlotsFor(LIns* ins);
 
     public:
-
+        AR();
+        
         uint32_t stackSlotsNeeded() const;
 
         void clear();
@@ -138,6 +140,12 @@ namespace nanojit
             bool next(LIns*& ins, uint32_t& nStackSlots, int32_t& offset);             // get the next one (moves iterator forward)
         };
     };
+
+    inline AR::AR()
+    {
+         _entries[0] = 0; 
+         clear();
+    }
 
     inline /*static*/ uint32_t AR::nStackSlotsFor(LIns* ins)
     {
