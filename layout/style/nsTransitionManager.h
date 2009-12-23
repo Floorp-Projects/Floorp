@@ -52,15 +52,16 @@ class nsCSSPropertySet;
 struct nsTransition;
 struct ElementTransitions;
 
-/**
- * Must be created only as a sub-object of an nsPresContext (since its
- * reference counting methods assume that).
- */
 class nsTransitionManager : public nsIStyleRuleProcessor,
                             public nsARefreshObserver {
 public:
   nsTransitionManager(nsPresContext *aPresContext);
   ~nsTransitionManager();
+
+  /**
+   * Notify the transition manager that the pres context is going away.
+   */
+  void Disconnect();
 
   /**
    * StyleContextChanged 
@@ -82,7 +83,7 @@ public:
                         nsStyleContext *aNewStyleContext);
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
 
   // nsIStyleRuleProcessor
   NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData);
@@ -120,7 +121,7 @@ private:
 			      nsCSSPseudoElements::Type aPseudoType);
 
   PRCList mElementTransitions;
-  nsPresContext *mPresContext;
+  nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
 };
 
 #endif /* !defined(nsTransitionManager_h_) */
