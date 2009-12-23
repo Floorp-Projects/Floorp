@@ -41,7 +41,7 @@ MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/branding/official
 # MOZ_APP_DISPLAYNAME is set by branding/configure.sh
 
 case "$target" in
-*-wince)
+*-wince*)
     MOZ_APP_VERSION=1.0a4pre
     ;;
 *)
