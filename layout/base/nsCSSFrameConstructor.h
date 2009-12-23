@@ -452,7 +452,8 @@ private:
   nsresult AppendFrames(nsFrameConstructorState&       aState,
                         nsIFrame*                      aParentFrame,
                         nsFrameItems&                  aFrameList,
-                        nsIFrame*                      aPrevSibling);
+                        nsIFrame*                      aPrevSibling,
+                        PRBool                         aIsRecursiveCall = PR_FALSE);
 
   // BEGIN TABLE SECTION
   /**
