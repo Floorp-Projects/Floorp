@@ -91,7 +91,21 @@ namespace nanojit
 
     /*static*/ LIns* const AR::BAD_ENTRY = (LIns*)0xdeadbeef;
 
-    void AR::validate()
+    void AR::validateQuick()
+    {
+        NanoAssert(_highWaterMark < NJ_MAX_STACK_ENTRY);
+        NanoAssert(_entries[0] == NULL);
+        // Only check a few entries around _highWaterMark.
+        uint32_t const RADIUS = 4;
+        uint32_t const lo = (_highWaterMark > 1 + RADIUS ? _highWaterMark - RADIUS : 1);
+        uint32_t const hi = (_highWaterMark + 1 + RADIUS < NJ_MAX_STACK_ENTRY ? _highWaterMark + 1 + RADIUS : NJ_MAX_STACK_ENTRY);
+        for (uint32_t i = lo; i <= _highWaterMark; ++i)
+            NanoAssert(_entries[i] != BAD_ENTRY);
+        for (uint32_t i = _highWaterMark+1; i < hi; ++i)
+            NanoAssert(_entries[i] == BAD_ENTRY);
+    }
+
+    void AR::validateFull()
     {
         NanoAssert(_highWaterMark < NJ_MAX_STACK_ENTRY);
         NanoAssert(_entries[0] == NULL);
@@ -101,6 +115,20 @@ namespace nanojit
             NanoAssert(_entries[i] == BAD_ENTRY);
     }
 
+     void AR::validate()
+     {
+        static uint32_t validateCounter = 0;
+         if (++validateCounter >= 100)
+         {
+             validateFull();
+             validateCounter = 0;
+         }
+         else
+         {
+             validateQuick();
+         }
+     }
+ 
 #endif
 
      inline void AR::clear()
@@ -266,8 +294,9 @@ namespace nanojit
         return idx > 0 && idx <= _highWaterMark && _entries[idx] == ins;
     }
 
-    void AR::checkForResourceConsistency(const RegAlloc& regs) const
+    void AR::checkForResourceConsistency(const RegAlloc& regs)
     {
+        validate();
         for (uint32_t i = 1; i <= _highWaterMark; ++i)
         {
             LIns* ins = _entries[i];
@@ -1662,14 +1691,12 @@ namespace nanojit
         // NB: this loop relies on using entry[0] being NULL,
         // so that we are guaranteed to terminate
         // without access negative entries.
-        LIns *i = _entries[idx];
-        NanoAssert(i != 0);
+        LIns* i = _entries[idx];
+        NanoAssert(i != NULL);
         do {
-            _entries[idx] = 0;
+            _entries[idx] = NULL;
             idx--;
         } while (_entries[idx] == i);
-
-        debug_only(validate();)
     }
 
 #ifdef NJ_VERBOSE
@@ -1816,7 +1843,6 @@ namespace nanojit
     uint32_t Assembler::arReserve(LIns* ins)
     {
         uint32_t i = _activation.reserveEntry(ins);
-        debug_only( _activation.validate(); )
         if (!i)
             setError(StackFull);
         return i;
