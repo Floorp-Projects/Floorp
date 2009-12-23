@@ -68,8 +68,6 @@
 #include "nsLWBrkCIID.h"
 #include "nsIScriptElement.h"
 #include "nsAttrName.h"
-#include "nsHtml5Module.h"
-#include "nsIHTMLDocument.h"
 
 static const char kMozStr[] = "moz";
 
@@ -118,31 +116,8 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
   nsAutoString nameStr, valueStr;
   NS_NAMED_LITERAL_STRING(_mozStr, "_moz");
 
-  // HTML5 parser stored them in the order they were parsed so we want to
-  // loop forward in that case.
-  nsIDocument* doc = aContent->GetOwnerDocument();
-  PRBool loopForward = PR_FALSE;
-  if (!doc || doc->IsHTML()) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(doc));
-    if (htmlDoc) {
-      loopForward = nsHtml5Module::sEnabled;
-    }
-  }
-  PRInt32 index, limit, step;
-  if (loopForward) {
-    index = 0;
-    limit = count;
-    step = 1;
-  }
-  else {
-    // Loop backward over the attributes, since the order they are stored in is
-    // the opposite of the order they were parsed in (see bug 213347 for reason).
-    index = count - 1;
-    limit = -1;
-    step = -1;
-  }
-  
-  for (; index != limit; index += step) {
+  for (PRInt32 index = count; index > 0;) {
+    --index;
     const nsAttrName* name = aContent->GetAttrNameAt(index);
     PRInt32 namespaceID = name->NamespaceID();
     nsIAtom* attrName = name->LocalName();
