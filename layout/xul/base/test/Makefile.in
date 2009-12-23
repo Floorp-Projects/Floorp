@@ -48,6 +48,7 @@ _TEST_FILES = 	test_bug381167.xhtml \
 		test_bug393970.xul \
 		test_resizer.xul \
 		window_resizer.xul \
+		window_resizer_element.xul \
 		test_bug477754.xul \
 		test_stack.xul \
 		$(NULL)
