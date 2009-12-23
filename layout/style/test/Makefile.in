@@ -108,6 +108,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_cascade.html \
 		test_compute_data_with_start_struct.html \
 		test_computed_style_no_pseudo.html \
+		test_css_cross_domain.html \
 		test_css_eof_handling.html \
 		test_descriptor_storage.html \
 		test_descriptor_syntax_errors.html \
@@ -156,14 +157,9 @@ _TEST_FILES =	test_acid3_test46.html \
 		unstyled.css \
 		unstyled-frame.xml \
 		unstyled-frame.css \
-		redirect-1.css \
+		redirect.sjs \
 		post-redirect-1.css \
-		redirect-1.css^headers^ \
-		redirect-2.css \
 		post-redirect-2.css \
-		redirect-2.css^headers^ \
-		redirect-3.css \
-		redirect-3.css^headers^ \
 		post-redirect-3.css \
 		xbl_bindings.xml \
 		empty.html \
@@ -174,6 +170,9 @@ _TEST_FILES =	test_acid3_test46.html \
 		bug453896_iframe.html \
 		bug517224.sjs \
 		test_bug525952.html \
+		ccd-quirks.html \
+		ccd-standards.html \
+		ccd.sjs \
 		$(NULL)
 
 _BROWSER_FILES = \
