@@ -46,6 +46,8 @@ include $(topsrcdir)/config/rules.mk
 _CHROME_FILES = \
 	test_bug396024.xul \
 	bug396024_helper.xul \
+	test_bug396367-1.html \
+	test_bug396367-2.html \
 	test_bug482976.xul \
 	bug482976_helper.xul \
 	test_bug504311.xul \
