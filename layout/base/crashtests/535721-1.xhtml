@@ -1,0 +1,17 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+function boom()
+{
+
+  document.getElementById("i").appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "div"));
+
+}
+</script>
+</head>
+<body onload="boom();">
+
+<div><span><span id="i"><div></div></span></span></div>
+
+</body>
+</html>
