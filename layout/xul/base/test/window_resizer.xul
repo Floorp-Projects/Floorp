@@ -1,10 +1,7 @@
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	hidechrome="true"
-	windowtype="main"
-	orient="vertical"
-	sizemode="normal"
-	onload="setTimeout(doTest, 0)"
-	persist="screenX screenY width height">
+    screenX="200" screenY="200" width="300" height="300"
+	onload="setTimeout(doTest, 0)">
 <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
 <script><![CDATA[
 var is = window.opener.SimpleTest.is;
@@ -18,6 +15,11 @@ function doTest() {
   var screenScale = expectX/window.screenX;
   var root = document.documentElement;
 
+  var oldScreenX = window.screenX;
+  var oldScreenY = window.screenY;
+  var oldWidth = window.outerWidth;
+  var oldHeight = window.outerHeight;
+
   function testResizer(dx, dy) {
     var offset = 20;
     var scale = 5;
@@ -25,8 +27,8 @@ function doTest() {
     var offsetX = window.innerWidth/2 + (window.innerWidth/3)*dx;
     var offsetY = window.innerHeight/2 + (window.innerHeight/3)*dy;
 
-    for (mouseX = -1; mouseX <= 1; ++mouseX) {
-      for (mouseY = -1; mouseY <= 1; ++mouseY) {
+    for (var mouseX = -1; mouseX <= 1; ++mouseX) {
+      for (var mouseY = -1; mouseY <= 1; ++mouseY) {
         var newExpectX = expectX;
         var newExpectXMost = expectXMost;
         var newExpectY = expectY;
@@ -44,19 +46,36 @@ function doTest() {
 
         synthesizeMouse(root, offsetX, offsetY, { type:"mousedown" });
         synthesizeMouse(root, offsetX + mouseX*scale, offsetY + mouseY*scale, { type:"mousemove" });
-        is(window.screenX*screenScale, newExpectX,
-           "Bad x for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
-        is(window.screenY*screenScale, newExpectY,
-           "Bad y for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
-        is(window.outerWidth, newExpectXMost - newExpectX,
-           "Bad width for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
-        is(window.outerHeight, newExpectYMost - newExpectY,
-           "Bad height for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
+        if (window instanceof Components.interfaces.nsIDOMChromeWindow) {
+          is(window.screenX*screenScale, newExpectX,
+             "Bad x for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
+          is(window.screenY*screenScale, newExpectY,
+             "Bad y for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
+          is(window.outerWidth, newExpectXMost - newExpectX,
+             "Bad width for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
+          is(window.outerHeight, newExpectYMost - newExpectY,
+             "Bad height for " + dx + "," + dy + " moving " + mouseX + "," + mouseY);
+        }
+        else {
+          is(window.screenX, oldScreenX, "window not moved for non-chrome window screenX");
+          is(window.screenY, oldScreenY, "window not moved for non-chrome window screenY");
+          is(window.outerWidth, oldWidth, "window not moved for non-chrome window outerWidth");
+          is(window.outerHeight, oldHeight, "window not moved for non-chrome window outerHeight");
+        }
+
         // move it back before we release! Adjust for any window movement
         synthesizeMouse(root, offsetX - (newExpectX - expectX),
                               offsetY - (newExpectY - expectY), { type:"mousemove" });
         synthesizeMouse(root, offsetX, offsetY, { type:"mouseup" });
       }
+    }
+  }
+
+  function testElementResizer()
+  {
+    var resizers = document.getElementsByTagName("resizer");
+    for (var r = 0; r < resizers.length; r++) {
+      resizers.setAttribute("element", "container");
     }
   }
 
@@ -69,7 +88,7 @@ function doTest() {
   testResizer(1, 0);
   testResizer(1, 1);
   window.close();
-  window.opener.SimpleTest.finish();
+  window.opener.nextResizerTest();
 }
 ]]></script>
 	<hbox flex="1">
