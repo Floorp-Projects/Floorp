@@ -127,19 +127,27 @@ nsPlaceholderFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 void
-nsPlaceholderFrame::Destroy()
+nsPlaceholderFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   nsIPresShell* shell = PresContext()->GetPresShell();
   nsIFrame* oof = mOutOfFlowFrame;
   if (oof) {
-    NS_ASSERTION(shell && oof->GetParent(), "Null presShell or parent!?");
-    // Unregister and destroy out-of-flow frame
+    // Unregister out-of-flow frame
     shell->FrameManager()->UnregisterPlaceholderFrame(this);
-    nsIAtom* listName = nsLayoutUtils::GetChildListNameFor(oof);
-    shell->FrameManager()->RemoveFrame(listName, oof);
+    mOutOfFlowFrame = nsnull;
+    // If aDestructRoot is not an ancestor of the out-of-flow frame,
+    // then call RemoveFrame on it here.
+    // Also destroy it here if it's a popup frame. (Bug 96291)
+    if (shell->FrameManager() &&
+        ((GetStateBits() & PLACEHOLDER_FOR_FLOAT) ||
+         !nsLayoutUtils::IsProperAncestorFrame(aDestructRoot, oof))) {
+      nsIAtom* listName = nsLayoutUtils::GetChildListNameFor(oof);
+      shell->FrameManager()->RemoveFrame(listName, oof);
+    }
+    // else oof will be destroyed by its parent
   }
 
-  nsFrame::Destroy();
+  nsFrame::DestroyFrom(aDestructRoot);
 }
 
 nsIAtom*

@@ -1104,7 +1104,7 @@ nsTextControlFrame::PreDestroy()
 }
 
 void
-nsTextControlFrame::Destroy()
+nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (mInSecureKeyboardInputMode) {
     MaybeEndSecureKeyboardInput();
@@ -1116,7 +1116,7 @@ nsTextControlFrame::Destroy()
     mFrameSel->SetScrollableViewProvider(nsnull);
   }
   nsContentUtils::DestroyAnonymousContent(&mAnonymousDiv);
-  nsBoxFrame::Destroy();
+  nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 nsIAtom*

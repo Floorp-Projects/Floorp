@@ -123,7 +123,7 @@ nsFileControlFrame::Init(nsIContent* aContent,
 }
 
 void
-nsFileControlFrame::Destroy()
+nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   mTextFrame = nsnull;
   ENSURE_TRUE(mContent);
@@ -149,7 +149,7 @@ nsFileControlFrame::Destroy()
   }
 
   mMouseListener->ForgetFrame();
-  nsBlockFrame::Destroy();
+  nsBlockFrame::DestroyFrom(aDestructRoot);
 }
 
 nsresult

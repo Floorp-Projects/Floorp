@@ -284,38 +284,38 @@ nsBlockFrame::~nsBlockFrame()
 }
 
 void
-nsBlockFrame::Destroy()
+nsBlockFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  mAbsoluteContainer.DestroyFrames(this);
+  mAbsoluteContainer.DestroyFrames(this, aDestructRoot);
   // Outside bullets are not in our child-list so check for them here
   // and delete them when present.
   if (mBullet && HaveOutsideBullet()) {
-    mBullet->Destroy();
+    mBullet->DestroyFrom(aDestructRoot);
     mBullet = nsnull;
   }
 
-  mFloats.DestroyFrames();
+  mFloats.DestroyFramesFrom(aDestructRoot);
 
   nsPresContext* presContext = PresContext();
 
-  nsLineBox::DeleteLineList(presContext, mLines);
+  nsLineBox::DeleteLineList(presContext, mLines, aDestructRoot);
   // Now clear mFrames, since we've destroyed all the frames in it.
   mFrames.Clear();
 
   // destroy overflow lines now
   nsLineList* overflowLines = RemoveOverflowLines();
   if (overflowLines) {
-    nsLineBox::DeleteLineList(presContext, *overflowLines);
+    nsLineBox::DeleteLineList(presContext, *overflowLines, aDestructRoot);
     delete overflowLines;
   }
 
   {
     nsAutoOOFFrameList oofs(this);
-    oofs.mList.DestroyFrames();
+    oofs.mList.DestroyFramesFrom(aDestructRoot);
     // oofs is now empty and will remove the frame list property
   }
 
-  nsBlockFrameSuper::Destroy();
+  nsBlockFrameSuper::DestroyFrom(aDestructRoot);
 }
 
 /* virtual */ nsILineIterator*
@@ -4548,7 +4548,7 @@ DestroyOverflowLines(void*           aFrame,
   if (aPropertyValue) {
     nsLineList* lines = static_cast<nsLineList*>(aPropertyValue);
     nsPresContext *context = static_cast<nsPresContext*>(aDtorData);
-    nsLineBox::DeleteLineList(context, *lines);
+    nsLineBox::DeleteLineList(context, *lines, nsnull);
     delete lines;
   }
 }

@@ -130,7 +130,7 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
-  virtual void Destroy();
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   // nsIFrame overrides
 #if defined(DEBUG) || (defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF))

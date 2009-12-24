@@ -85,9 +85,23 @@ public:
 
   /**
    * For each frame in this list: remove it from the list then call
+   * DestroyFrom() on it.
+   */
+  void DestroyFramesFrom(nsIFrame* aDestructRoot);
+
+  /**
+   * For each frame in this list: remove it from the list then call
    * Destroy() on it. Finally <code>delete this</code>.
+   * 
    */
   void Destroy();
+
+  /**
+   * For each frame in this list: remove it from the list then call
+   * DestroyFrom() on it. Finally <code>delete this</code>.
+   *
+   */
+  void DestroyFrom(nsIFrame* aDestructRoot);
 
   void Clear() { mFirstChild = mLastChild = nsnull; }
 
