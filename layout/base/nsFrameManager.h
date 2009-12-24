@@ -159,8 +159,7 @@ public:
                                     nsIFrame*       aPrevFrame,
                                     nsFrameList&    aFrameList);
 
-  NS_HIDDEN_(nsresult) RemoveFrame(nsIFrame*       aParentFrame,
-                                   nsIAtom*        aListName,
+  NS_HIDDEN_(nsresult) RemoveFrame(nsIAtom*        aListName,
                                    nsIFrame*       aOldFrame);
 
   /*

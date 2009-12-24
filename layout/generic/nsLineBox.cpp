@@ -331,6 +331,7 @@ nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines)
 #endif
     for (nsIFrame* child = aLines.front()->mFirstChild; child; ) {
       nsIFrame* nextChild = child->GetNextSibling();
+      child->SetNextSibling(nsnull);
       child->Destroy();
       child = nextChild;
 #ifdef DEBUG
