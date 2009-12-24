@@ -865,7 +865,7 @@ public:
    */
   nsIFrame* GetPrimaryFrame() const { return mPrimaryFrame; }
   void SetPrimaryFrame(nsIFrame* aFrame) {
-    NS_PRECONDITION(!aFrame || !mPrimaryFrame,
+    NS_PRECONDITION(!aFrame || !mPrimaryFrame || aFrame == mPrimaryFrame,
                     "Losing track of existing primary frame");
     mPrimaryFrame = aFrame;
   }
