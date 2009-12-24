@@ -2323,14 +2323,11 @@ NS_IMETHODIMP
 nsTableFrame::RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame)
 {
-  // See what kind of frame we have
-  const nsStyleDisplay* display = aOldFrame->GetStyleDisplay();
-
-  // XXX The frame construction code should be separating out child frames
-  // based on the type, bug 343048.
-  if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
-    NS_ASSERTION(!aListName || aListName == nsGkAtoms::colGroupList,
-                 "unexpected child list");
+  NS_ASSERTION(aListName == nsGkAtoms::colGroupList ||
+               NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP !=
+                 aOldFrame->GetStyleDisplay()->mDisplay,
+               "Wrong list name; use nsGkAtoms::colGroupList iff colgroup");
+  if (aListName == nsGkAtoms::colGroupList) {
     nsIFrame* nextColGroupFrame = aOldFrame->GetNextSibling();
     nsTableColGroupFrame* colGroup = (nsTableColGroupFrame*)aOldFrame;
     PRInt32 firstColIndex = colGroup->GetStartColumnIndex();

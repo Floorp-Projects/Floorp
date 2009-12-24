@@ -146,9 +146,9 @@ public:
 
   /**
    * Take the first frame (if any) out of the frame list.
-   * @return PR_TRUE if a frame was removed
+   * @return the first child, or nsnull if the list is empty
    */
-  PRBool RemoveFirstChild();
+  nsIFrame* RemoveFirstChild();
 
   /**
    * Take aFrame out of the frame list and then destroy it.

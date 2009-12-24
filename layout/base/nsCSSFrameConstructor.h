@@ -103,6 +103,7 @@ public:
   static void GetAlternateTextFor(nsIContent*    aContent,
                                   nsIAtom*       aTag,  // content object's tag
                                   nsXPIDLString& aAltText);
+
 private: 
   // These are not supported and are not implemented! 
   nsCSSFrameConstructor(const nsCSSFrameConstructor& aCopy); 
@@ -307,8 +308,6 @@ public:
                                 PRBool          aIsAppend,
                                 PRBool          aIsScrollbar,
                                 nsILayoutHistoryState* aFrameState);
-
-  nsresult RemoveMappingsForFrameSubtree(nsIFrame* aRemovedFrame);
 
   // GetInitialContainingBlock() is deprecated in favor of GetRootElementFrame();
   // nsIFrame* GetInitialContainingBlock() { return mRootElementFrame; }

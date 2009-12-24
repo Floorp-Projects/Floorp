@@ -5296,6 +5296,7 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRUint32 aFlags)
         // change this SetNextSibling call.
         prevSibling->SetNextSibling(nextFrame);
       }
+      aDeletedFrame->SetNextSibling(nsnull);
     } else {
       mFrames.RemoveFrame(aDeletedFrame);
     }

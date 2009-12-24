@@ -716,8 +716,7 @@ nsFrameManager::InsertFrames(nsIFrame*       aParentFrame,
 }
 
 nsresult
-nsFrameManager::RemoveFrame(nsIFrame*       aParentFrame,
-                            nsIAtom*        aListName,
+nsFrameManager::RemoveFrame(nsIAtom*        aListName,
                             nsIFrame*       aOldFrame)
 {
   PRBool wasDestroyingFrames = mIsDestroyingFrames;
@@ -731,7 +730,14 @@ nsFrameManager::RemoveFrame(nsIFrame*       aParentFrame,
   // is important in the presence of absolute positioning
   aOldFrame->Invalidate(aOldFrame->GetOverflowRect());
 
-  nsresult rv = aParentFrame->RemoveFrame(aListName, aOldFrame);
+  NS_ASSERTION(!aOldFrame->GetPrevContinuation() ||
+               // exception for nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames
+               aOldFrame->GetType() == nsGkAtoms::textFrame,
+               "Must remove first continuation.");
+  NS_ASSERTION(!(aOldFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW &&
+                 GetPlaceholderFrameFor(aOldFrame)),
+               "Must call RemoveFrame on placeholder for out-of-flows.");
+  nsresult rv = aOldFrame->GetParent()->RemoveFrame(aListName, aOldFrame);
 
   mIsDestroyingFrames = wasDestroyingFrames;
 
@@ -743,17 +749,13 @@ nsFrameManager::RemoveFrame(nsIFrame*       aParentFrame,
 void
 nsFrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
 {
-  // We've already removed from the primary frame map once, but we're
-  // going to try to do it again here to fix callers of GetPrimaryFrameFor
-  // during frame destruction, since this problem keeps coming back to
-  // bite us.  We may want to remove the previous caller.
-  if (mPrimaryFrameMap.ops) {
-    PrimaryFrameMapEntry *entry = static_cast<PrimaryFrameMapEntry*>
-                                             (PL_DHashTableOperate(&mPrimaryFrameMap, aFrame->GetContent(), PL_DHASH_LOOKUP));
-    if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->frame == aFrame) {
-      NS_NOTREACHED("frame was not removed from primary frame map before "
-                    "destruction or was readded to map after being removed");
-      PL_DHashTableRawRemove(&mPrimaryFrameMap, entry);
+  //XXXfr Because we destroy most continuation chains starting from the FIF
+  // this does excess work by triggering on every continuation in the chain
+  nsIContent* content = aFrame->GetContent();
+  if (!aFrame->GetPrevContinuation() && content) {
+    RemoveAsPrimaryFrame(content, aFrame);
+    if (content != aFrame->GetParent()->GetContent()) { // first-letter
+      ClearAllUndisplayedContentIn(content);
     }
   }
 }
