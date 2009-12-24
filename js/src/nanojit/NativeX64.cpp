@@ -493,24 +493,24 @@ namespace nanojit
 
     void Assembler::LEARIP(R r, I32 d)          { emitrm(X64_learip,r,d,(Register)0); asm_output("lea %s, %d(rip)",RQ(r),d); }
 
-    void Assembler::LEAQRM(R r1, I d, R r2)     { emitrm(X64_leaqrm,r1,d,r2); asm_output("leaq %s, %d(%s)",RQ(r1),d,RQ(r2)); }
-    void Assembler::MOVLRM(R r1, I d, R r2)     { emitrm(X64_movlrm,r1,d,r2); asm_output("movl %s, %d(%s)",RL(r1),d,RQ(r2)); }
-    void Assembler::MOVQRM(R r1, I d, R r2)     { emitrm(X64_movqrm,r1,d,r2); asm_output("movq %s, %d(%s)",RQ(r1),d,RQ(r2)); }
-    void Assembler::MOVBMR(R r1, I d, R r2)     { emitrm8(X64_movbmr,r1,d,r2); asm_output("movb %d(%s), %s",d,RQ(r1),RB(r2)); }
-    void Assembler::MOVSMR(R r1, I d, R r2)     { emitprm(X64_movsmr,r1,d,r2); asm_output("movs %d(%s), %s",d,RQ(r1),RS(r2)); }
-    void Assembler::MOVLMR(R r1, I d, R r2)     { emitrm(X64_movlmr,r1,d,r2); asm_output("movl %d(%s), %s",d,RQ(r1),RL(r2)); }
-    void Assembler::MOVQMR(R r1, I d, R r2)     { emitrm(X64_movqmr,r1,d,r2); asm_output("movq %d(%s), %s",d,RQ(r1),RQ(r2)); }
+    void Assembler::LEAQRM(R r, I d, R b)       { emitrm(X64_leaqrm,r,d,b); asm_output("leaq %s, %d(%s)",RQ(r),d,RQ(b)); }
+    void Assembler::MOVLRM(R r, I d, R b)       { emitrm(X64_movlrm,r,d,b); asm_output("movl %s, %d(%s)",RL(r),d,RQ(b)); }
+    void Assembler::MOVQRM(R r, I d, R b)       { emitrm(X64_movqrm,r,d,b); asm_output("movq %s, %d(%s)",RQ(r),d,RQ(b)); }
+    void Assembler::MOVBMR(R r, I d, R b)       { emitrm8(X64_movbmr,r,d,b); asm_output("movb %d(%s), %s",d,RQ(b),RB(r)); }
+    void Assembler::MOVSMR(R r, I d, R b)       { emitprm(X64_movsmr,r,d,b); asm_output("movs %d(%s), %s",d,RQ(b),RS(r)); }
+    void Assembler::MOVLMR(R r, I d, R b)       { emitrm(X64_movlmr,r,d,b); asm_output("movl %d(%s), %s",d,RQ(b),RL(r)); }
+    void Assembler::MOVQMR(R r, I d, R b)       { emitrm(X64_movqmr,r,d,b); asm_output("movq %d(%s), %s",d,RQ(b),RQ(r)); }
 
-    void Assembler::MOVZX8M( R r1, I d, R r2)   { emitrm_wide(X64_movzx8m, r1,d,r2); asm_output("movzxb %s, %d(%s)",RQ(r1),d,RQ(r2)); }
-    void Assembler::MOVZX16M(R r1, I d, R r2)   { emitrm_wide(X64_movzx16m,r1,d,r2); asm_output("movzxs %s, %d(%s)",RQ(r1),d,RQ(r2)); }
+    void Assembler::MOVZX8M( R r, I d, R b)     { emitrm_wide(X64_movzx8m, r,d,b); asm_output("movzxb %s, %d(%s)",RQ(r),d,RQ(b)); }
+    void Assembler::MOVZX16M(R r, I d, R b)     { emitrm_wide(X64_movzx16m,r,d,b); asm_output("movzxs %s, %d(%s)",RQ(r),d,RQ(b)); }
 
-    void Assembler::MOVSX8M( R r1, I d, R r2)   { emitrm_wide(X64_movsx8m, r1,d,r2); asm_output("movsxb %s, %d(%s)",RQ(r1),d,RQ(r2)); }
-    void Assembler::MOVSX16M(R r1, I d, R r2)   { emitrm_wide(X64_movsx16m,r1,d,r2); asm_output("movsxs %s, %d(%s)",RQ(r1),d,RQ(r2)); }
+    void Assembler::MOVSX8M( R r, I d, R b)     { emitrm_wide(X64_movsx8m, r,d,b); asm_output("movsxb %s, %d(%s)",RQ(r),d,RQ(b)); }
+    void Assembler::MOVSX16M(R r, I d, R b)     { emitrm_wide(X64_movsx16m,r,d,b); asm_output("movsxs %s, %d(%s)",RQ(r),d,RQ(b)); }
 
-    void Assembler::MOVSDRM(R r1, I d, R r2)    { emitprm(X64_movsdrm,r1,d,r2); asm_output("movsd %s, %d(%s)",RQ(r1),d,RQ(r2)); }
-    void Assembler::MOVSDMR(R r1, I d, R r2)    { emitprm(X64_movsdmr,r1,d,r2); asm_output("movsd %d(%s), %s",d,RQ(r1),RQ(r2)); }
-    void Assembler::MOVSSRM(R r1, I d, R r2)    { emitprm(X64_movssrm,r1,d,r2); asm_output("movss %s, %d(%s)",RQ(r1),d,RQ(r2)); }
-    void Assembler::MOVSSMR(R r1, I d, R r2)    { emitprm(X64_movssmr,r1,d,r2); asm_output("movss %d(%s), %s",d,RQ(r1),RQ(r2)); }
+    void Assembler::MOVSDRM(R r, I d, R b)      { emitprm(X64_movsdrm,r,d,b); asm_output("movsd %s, %d(%s)",RQ(r),d,RQ(b)); }
+    void Assembler::MOVSDMR(R r, I d, R b)      { emitprm(X64_movsdmr,r,d,b); asm_output("movsd %d(%s), %s",d,RQ(b),RQ(r)); }
+    void Assembler::MOVSSRM(R r, I d, R b)      { emitprm(X64_movssrm,r,d,b); asm_output("movss %s, %d(%s)",RQ(r),d,RQ(b)); }
+    void Assembler::MOVSSMR(R r, I d, R b)      { emitprm(X64_movssmr,r,d,b); asm_output("movss %d(%s), %s",d,RQ(b),RQ(r)); }
 
     void Assembler::JMP8( S n, NIns* t)    { emit_target8(n, X64_jmp8,t); asm_output("jmp %p", t); }
 
