@@ -57,6 +57,7 @@ class nsAttrValue;
 class nsAttrName;
 class nsTextFragment;
 class nsIDocShell;
+class nsIFrame;
 #ifdef MOZ_SMIL
 class nsISMILAttr;
 class nsIDOMCSSStyleDeclaration;
@@ -86,7 +87,8 @@ public:
   // nsIContent is that it exists with an IID
 
   nsIContent(nsINodeInfo *aNodeInfo)
-    : nsINode(aNodeInfo)
+    : nsINode(aNodeInfo),
+      mPrimaryFrame(nsnull)
   {
     NS_ASSERTION(aNodeInfo,
                  "No nsINodeInfo passed to nsIContent, PREPARE TO CRASH!!!");
@@ -870,6 +872,20 @@ public:
    */
   virtual void SaveSubtreeState() = 0;
 
+  /**
+   * Getter and setter for our primary frame pointer.  This is the frame that
+   * is most closely associated with the content. A frame is more closely
+   * associated with the content than another frame if the one frame contains
+   * directly or indirectly the other frame (e.g., when a frame is scrolled
+   * there is a scroll frame that contains the frame being scrolled). This
+   * frame is always the first continuation.
+   *
+   * In the case of absolutely positioned elements and floated elements, this
+   * frame is the out of flow frame, not the placeholder.
+   */
+  nsIFrame* GetPrimaryFrame() const { return mPrimaryFrame; }
+  void SetPrimaryFrame(nsIFrame* aFrame) { mPrimaryFrame = aFrame; }
+
 #ifdef MOZ_SMIL
   /*
    * Returns a new nsISMILAttr that allows the caller to animate the given
@@ -911,6 +927,11 @@ private:
    * called if the NODE_MAY_HAVE_CLASS flag is set.
    */
   virtual const nsAttrValue* DoGetClasses() const = 0;
+
+  /**
+   * Pointer to our primary frame.  Might be null.
+   */
+  nsIFrame* mPrimaryFrame;
 
 public:
 #ifdef DEBUG
