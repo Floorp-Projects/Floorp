@@ -100,7 +100,7 @@ public:
   
   // nsIFrame overrides - see there for a description
 
-  virtual void Destroy();
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
   
   virtual PRBool IsContainingBlock() const;
 

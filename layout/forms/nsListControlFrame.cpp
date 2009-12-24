@@ -195,7 +195,7 @@ nsListControlFrame::~nsListControlFrame()
 
 // for Bug 47302 (remove this comment later)
 void
-nsListControlFrame::Destroy()
+nsListControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // get the receiver interface from the browser button's content node
   ENSURE_TRUE(mContent);
@@ -218,7 +218,7 @@ nsListControlFrame::Destroy()
                                      NS_GET_IID(nsIDOMKeyListener));
 
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), PR_FALSE);
-  nsHTMLScrollFrame::Destroy();
+  nsHTMLScrollFrame::DestroyFrom(aDestructRoot);
 }
 
 NS_IMETHODIMP

@@ -527,7 +527,18 @@ public:
    * If the frame is a placeholder, it also ensures the out-of-flow frame's
    * removal and destruction.
    */
-  virtual void Destroy() = 0;
+  void Destroy() { DestroyFrom(this); }
+
+protected:
+  /**
+   * Implements Destroy(). Do not call this directly except from within a
+   * DestroyFrom() implementation.
+   * @param  aDestructRoot is the root of the subtree being destroyed
+   */
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) = 0;
+  friend class nsFrameList; // needed to pass aDestructRoot through to children
+  friend class nsLineBox;   // needed to pass aDestructRoot through to children
+public:
 
   /**
    * Called to set the initial list of frames. This happens after the frame

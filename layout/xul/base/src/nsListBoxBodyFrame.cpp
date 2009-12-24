@@ -235,7 +235,7 @@ nsListBoxBodyFrame::Init(nsIContent*     aContent,
 }
 
 void
-nsListBoxBodyFrame::Destroy()
+nsListBoxBodyFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // make sure we cancel any posted callbacks.
   if (mReflowCallbackPosted)
@@ -251,7 +251,7 @@ nsListBoxBodyFrame::Destroy()
     mBoxObject->ClearCachedValues();
   }
 
-  nsBoxFrame::Destroy();
+  nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 NS_IMETHODIMP

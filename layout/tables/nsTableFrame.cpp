@@ -261,10 +261,10 @@ nsTableFrame::~nsTableFrame()
 }
 
 void
-nsTableFrame::Destroy()
+nsTableFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  mColGroups.DestroyFrames();
-  nsHTMLContainerFrame::Destroy();
+  mColGroups.DestroyFramesFrom(aDestructRoot);
+  nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 // Make sure any views are positioned properly
