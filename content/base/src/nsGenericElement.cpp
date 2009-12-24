@@ -396,8 +396,9 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
   if (!IsNodeOfType(eCONTENT))
     return nsnull;
 
-  nsIFrame* frame =
-    aPresShell->GetPrimaryFrameFor(static_cast<nsIContent*>(this));
+  NS_ASSERTION(GetCurrentDoc() == aPresShell->GetDocument(),
+               "Wrong document somewhere");
+  nsIFrame* frame = static_cast<nsIContent*>(this)->GetPrimaryFrame();
   if (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) {
     // This node should be a descendant of input/textarea editor.
     nsIContent* content = GetTextEditorRootContent();
@@ -3489,17 +3490,6 @@ nsGenericElement::DispatchClickEvent(nsPresContext* aPresContext,
 }
 
 nsIFrame*
-nsGenericElement::GetPrimaryFrame()
-{
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc) {
-    return nsnull;
-  }
-
-  return GetPrimaryFrameFor(this, doc);
-}
-
-nsIFrame*
 nsGenericElement::GetPrimaryFrame(mozFlushType aType)
 {
   nsIDocument* doc = GetCurrentDoc();
@@ -3511,21 +3501,7 @@ nsGenericElement::GetPrimaryFrame(mozFlushType aType)
   // information
   doc->FlushPendingNotifications(aType);
 
-  return GetPrimaryFrameFor(this, doc);
-}
-
-/* static */
-nsIFrame*
-nsGenericElement::GetPrimaryFrameFor(nsIContent* aContent,
-                                     nsIDocument* aDocument)
-{
-  // Get presentation shell 0
-  nsIPresShell *presShell = aDocument->GetPrimaryShell();
-  if (!presShell) {
-    return nsnull;
-  }
-
-  return presShell->GetPrimaryFrameFor(aContent);
+  return GetPrimaryFrame();
 }
 
 void
