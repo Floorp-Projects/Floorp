@@ -501,21 +501,21 @@ namespace nanojit
         void IMULI(Register l, Register r, int32_t i32);\
         void MOVQI(Register r, uint64_t u64);\
         void LEARIP(Register r, int32_t d);\
-        void LEAQRM(Register r1, int d, Register r2);\
-        void MOVLRM(Register r1, int d, Register r2);\
-        void MOVQRM(Register r1, int d, Register r2);\
-        void MOVBMR(Register r1, int d, Register r2);\
-        void MOVSMR(Register r1, int d, Register r2);\
-        void MOVLMR(Register r1, int d, Register r2);\
-        void MOVQMR(Register r1, int d, Register r2);\
-        void MOVZX8M(Register r1, int d, Register r2);\
-        void MOVZX16M(Register r1, int d, Register r2);\
-        void MOVSX8M(Register r1, int d, Register r2);\
-        void MOVSX16M(Register r1, int d, Register r2);\
-        void MOVSDRM(Register r1, int d, Register r2);\
-        void MOVSDMR(Register r1, int d, Register r2);\
-        void MOVSSMR(Register r1, int d, Register r2);\
-        void MOVSSRM(Register r1, int d, Register r2);\
+        void LEAQRM(Register r, int d, Register b);\
+        void MOVLRM(Register r, int d, Register b);\
+        void MOVQRM(Register r, int d, Register b);\
+        void MOVBMR(Register r, int d, Register b);\
+        void MOVSMR(Register r, int d, Register b);\
+        void MOVLMR(Register r, int d, Register b);\
+        void MOVQMR(Register r, int d, Register b);\
+        void MOVZX8M(Register r, int d, Register b);\
+        void MOVZX16M(Register r, int d, Register b);\
+        void MOVSX8M(Register r, int d, Register b);\
+        void MOVSX16M(Register r, int d, Register b);\
+        void MOVSDRM(Register r, int d, Register b);\
+        void MOVSDMR(Register r, int d, Register b);\
+        void MOVSSMR(Register r, int d, Register b);\
+        void MOVSSRM(Register r, int d, Register b);\
         void JMP8(size_t n, NIns* t);\
         void JMP32(size_t n, NIns* t);\
         void JMPX(Register indexreg, NIns** table);\
