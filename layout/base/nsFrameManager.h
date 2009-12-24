@@ -110,8 +110,6 @@ public:
   NS_HIDDEN_(nsIFrame*) GetCanvasFrame();
 
   // Primary frame functions
-  NS_HIDDEN_(nsIFrame*) GetPrimaryFrameFor(nsIContent* aContent,
-                                           PRInt32 aIndexHint);
   // If aPrimaryFrame is the current primary frame for aContent, set its
   // primary frame to null.  aPrimaryFrame must not be null.
   NS_HIDDEN_(void)      RemoveAsPrimaryFrame(nsIContent* aContent,
