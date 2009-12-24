@@ -287,7 +287,7 @@ nsXULPopupManager::GetFrameOfTypeForContent(nsIContent* aContent,
       if (aShouldFlush)
         presShell->FlushPendingNotifications(Flush_Frames);
 
-      nsIFrame* frame = presShell->GetPrimaryFrameFor(aContent);
+      nsIFrame* frame = aContent->GetPrimaryFrame();
       if (frame && frame->GetType() == aFrameType)
         return frame;
     }
@@ -1064,7 +1064,7 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
     document->FlushPendingNotifications(Flush_Layout);
 
   // get the frame again in case it went away
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(aPopup);
+  nsIFrame* frame = aPopup->GetPrimaryFrame();
   if (frame && frame->GetType() == nsGkAtoms::menuPopupFrame) {
     nsMenuPopupFrame* popupFrame = static_cast<nsMenuPopupFrame *>(frame);
 
@@ -1113,7 +1113,7 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
   }
 
   // get frame again in case it went away
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(aPopup);
+  nsIFrame* frame = aPopup->GetPrimaryFrame();
   if (frame && frame->GetType() == nsGkAtoms::menuPopupFrame) {
     nsMenuPopupFrame* popupFrame = static_cast<nsMenuPopupFrame *>(frame);
 

@@ -279,9 +279,6 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
   nsPresContext* presContext = PresContext();
   if (!GetScrollableView()) return;
 
-  nsIPresShell *presShell = presContext->GetPresShell();
-  if (!presShell) return;
-
   nsIFrame* containerFrame = GetOptionsContainer();
   if (!containerFrame) return;
 
@@ -301,7 +298,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
     focusedContent = GetOptionContent(focusedIndex);
     // otherwise we find the focusedContent's frame and scroll to it
     if (focusedContent) {
-      childframe = presShell->GetPrimaryFrameFor(focusedContent);
+      childframe = focusedContent->GetPrimaryFrame();
     }
   } else {
     nsCOMPtr<nsIDOMHTMLSelectElement> selectHTMLElement(do_QueryInterface(mContent));
@@ -337,7 +334,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
     // if we found a node use it, if not get the first child (this is for empty selects)
     if (node) {
       focusedContent = do_QueryInterface(node);
-      childframe = presShell->GetPrimaryFrameFor(focusedContent);
+      childframe = focusedContent->GetPrimaryFrame();
     }
     if (!childframe) {
       // Failing all else, try the first thing we have, but only if
@@ -476,8 +473,7 @@ GetNumberOfOptionsRecursive(nsIContent* aContent)
 }
 
 static nscoord
-GetOptGroupLabelsHeight(nsPresContext* aPresContext,
-                        nsIContent*    aContent,
+GetOptGroupLabelsHeight(nsIContent*    aContent,
                         nscoord        aRowHeight)
 {
   nscoord height = 0;
@@ -487,7 +483,7 @@ GetOptGroupLabelsHeight(nsPresContext* aPresContext,
     if (::IsOptGroup(child)) {
       PRUint32 numOptions = ::GetNumberOfOptionsRecursive(child);
       nscoord optionsHeight = aRowHeight * numOptions;
-      nsIFrame* frame = aPresContext->GetPresShell()->GetPrimaryFrameFor(child);
+      nsIFrame* frame = child->GetPrimaryFrame();
       nscoord totalHeight = frame ? frame->GetSize().height : 0;
       height += NS_MAX(0, totalHeight - optionsHeight);
     }
@@ -1933,8 +1929,7 @@ nsListControlFrame::CalcIntrinsicHeight(nscoord aHeightOfARow,
     // When SIZE=0 or unspecified we constrain the height to
     // [2..kMaxDropDownRows] rows.  We add in the height of optgroup labels
     // (within the constraint above), bug 300474.
-    nscoord labelHeight =
-      ::GetOptGroupLabelsHeight(PresContext(), mContent, aHeightOfARow);
+    nscoord labelHeight = ::GetOptGroupLabelsHeight(mContent, aHeightOfARow);
 
     if (GetMultiple()) {
       if (aNumberOfOptions < 2) {
@@ -2136,7 +2131,6 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     return NS_OK;
   }
 
-  nsIPresShell *presShell = PresContext()->PresShell();
   PRInt32 numOptions = GetNumberOfOptions();
   if (numOptions < 1)
     return NS_ERROR_FAILURE;
@@ -2147,7 +2141,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   // first option frame
   nsCOMPtr<nsIContent> firstOption = GetOptionContent(0);
   NS_ASSERTION(firstOption, "Can't find first option that's supposed to be there");
-  nsIFrame* optionFrame = presShell->GetPrimaryFrameFor(firstOption);
+  nsIFrame* optionFrame = firstOption->GetPrimaryFrame();
   if (optionFrame) {
     nsPoint ptInOptionFrame = pt - optionFrame->GetOffsetTo(this);
     if (ptInOptionFrame.y < 0 && ptInOptionFrame.x >= 0 &&
@@ -2161,7 +2155,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   // If the event coordinate is below the last option frame, then target the
   // last option frame
   NS_ASSERTION(lastOption, "Can't find last option that's supposed to be there");
-  optionFrame = presShell->GetPrimaryFrameFor(lastOption);
+  optionFrame = lastOption->GetPrimaryFrame();
   if (optionFrame) {
     nsPoint ptInOptionFrame = pt - optionFrame->GetOffsetTo(this);
     if (ptInOptionFrame.y >= optionFrame->GetSize().height && ptInOptionFrame.x >= 0 &&
@@ -2327,10 +2321,9 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
     }
   
     // otherwise we find the content's frame and scroll to it
-    nsIPresShell *presShell = PresContext()->PresShell();
     nsIFrame * childframe;
     if (aOptElement) {
-      childframe = presShell->GetPrimaryFrameFor(aOptElement);
+      childframe = aOptElement->GetPrimaryFrame();
     } else {
       return NS_ERROR_FAILURE;
     }
@@ -2363,7 +2356,7 @@ nsListControlFrame::ScrollToFrame(nsIContent* aOptElement)
         nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroup(do_QueryInterface(parentContent));
         nsRect optRect(0,0,0,0);
         if (optGroup) {
-          nsIFrame * optFrame = presShell->GetPrimaryFrameFor(parentContent);
+          nsIFrame * optFrame = parentContent->GetPrimaryFrame();
           if (optFrame) {
             optRect = optFrame->GetRect();
           }

@@ -376,16 +376,7 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
   }
   NS_ASSERTION(!aContent->IsRootOfNativeAnonymousSubtree(), "invalid call");
 
-  nsIDocument* doc = aContent->GetDocument();
-  nsIPresShell* shell = doc ? doc->GetPrimaryShell() : nsnull;
-  if (!shell)
-    return;
-
-  nsIFrame* frame = shell->GetPrimaryFrameFor(aContent);
-  if (!frame)
-    return;
-
-  nsITextControlFrame* tcFrame = do_QueryFrame(frame);
+  nsITextControlFrame* tcFrame = do_QueryFrame(aContent->GetPrimaryFrame());
   if (!tcFrame)
     return;
 
@@ -827,15 +818,7 @@ PRBool nsFind::IsVisibleNode(nsIDOMNode *aDOMNode)
   if (!content)
     return PR_FALSE;
 
-  nsCOMPtr<nsIDocument> doc = content->GetDocument();
-  if (!doc)
-    return PR_FALSE;
-
-  nsIPresShell *presShell = doc->GetPrimaryShell();
-  if (!presShell)
-    return PR_FALSE;
-
-  nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
+  nsIFrame *frame = content->GetPrimaryFrame();
   if (!frame) {
     // No frame! Not visible then.
     return PR_FALSE;
