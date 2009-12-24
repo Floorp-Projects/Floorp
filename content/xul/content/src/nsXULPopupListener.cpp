@@ -274,10 +274,11 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
       return NS_ERROR_FAILURE;
 
     // strong reference to keep this from going away between events
+    // XXXbz between what events?  We don't use this local at all!
     nsCOMPtr<nsPresContext> context = shell->GetPresContext();
  
     nsCOMPtr<nsIContent> content = do_QueryInterface(aTargetNode);
-    nsIFrame* targetFrame = shell->GetPrimaryFrameFor(content);
+    nsIFrame* targetFrame = content->GetPrimaryFrame();
     if (!targetFrame) return NS_ERROR_FAILURE;
 
     const nsStyleUserInterface* ui = targetFrame->GetStyleUserInterface();
@@ -451,9 +452,7 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
   nsCOMPtr<nsIContent> popup = do_QueryInterface(popupElement);
   nsIContent* parent = popup->GetParent();
   if (parent) {
-    nsIDocument* doc = parent->GetCurrentDoc();
-    nsIPresShell* presShell = doc ? doc->GetPrimaryShell() : nsnull;
-    nsIFrame* frame = presShell ? presShell->GetPrimaryFrameFor(parent) : nsnull;
+    nsIFrame* frame = parent->GetPrimaryFrame();
     if (frame && frame->GetType() == nsGkAtoms::menuFrame)
       return NS_OK;
   }

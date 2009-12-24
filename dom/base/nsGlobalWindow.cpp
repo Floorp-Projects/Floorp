@@ -7019,7 +7019,7 @@ nsGlobalWindow::UpdateCanvasFocus(PRBool aFocusChanged, nsIContent* aNewContent)
   if (rootContent) {
       if ((mHasFocus || aFocusChanged) &&
           (mFocusedNode == rootContent || aNewContent == rootContent)) {
-          nsIFrame* frame = presShell->GetPrimaryFrameFor(rootContent);
+          nsIFrame* frame = rootContent->GetPrimaryFrame();
           if (frame) {
               frame = frame->GetParent();
               nsCanvasFrame* canvasFrame = do_QueryFrame(frame);
@@ -9147,11 +9147,7 @@ nsGlobalChromeWindow::NotifyDefaultButtonLoaded(nsIDOMElement* aDefaultButton)
   // Get the button rect in screen coordinates.
   nsCOMPtr<nsIContent> content(do_QueryInterface(aDefaultButton));
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
-  nsIDocument *doc = content->GetCurrentDoc();
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-  nsIPresShell *shell = doc->GetPrimaryShell();
-  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
-  nsIFrame *frame = shell->GetPrimaryFrameFor(content);
+  nsIFrame *frame = content->GetPrimaryFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
   nsIntRect buttonRect = frame->GetScreenRect();
 

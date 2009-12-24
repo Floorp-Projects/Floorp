@@ -2152,8 +2152,7 @@ nsGfxScrollFrameInner::IsLTR() const
     }
 
     if (root) {
-      nsIFrame *rootsFrame =
-        presContext->PresShell()->GetPrimaryFrameFor(root);
+      nsIFrame *rootsFrame = root->GetPrimaryFrame();
       if (rootsFrame)
         frame = rootsFrame;
     }
