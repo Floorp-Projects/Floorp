@@ -687,7 +687,6 @@ public:
   NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD StyleChangeReflow();
   NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const;
-  virtual NS_HIDDEN_(nsIFrame*) GetPrimaryFrameFor(nsIContent* aContent) const;
   virtual NS_HIDDEN_(nsIFrame*) GetRealPrimaryFrameFor(nsIContent* aContent) const;
 
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
@@ -5141,12 +5140,6 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
                             nsIStyleRule* aStyleRule) 
 {
   mStylesHaveChanged = PR_TRUE;
-}
-
-nsIFrame*
-PresShell::GetPrimaryFrameFor(nsIContent* aContent) const
-{
-  return FrameManager()->GetPrimaryFrameFor(aContent, -1);
 }
 
 nsIFrame*
