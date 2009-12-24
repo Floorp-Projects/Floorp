@@ -80,7 +80,7 @@ public:
                              PRBool aShrinkWrap);
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
-  virtual void Destroy();
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
   virtual PRBool IsLeaf() const;
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,

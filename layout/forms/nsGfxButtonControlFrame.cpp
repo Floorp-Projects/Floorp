@@ -72,10 +72,10 @@ NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsGfxButtonControlFrame)
 
-void nsGfxButtonControlFrame::Destroy()
+void nsGfxButtonControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   nsContentUtils::DestroyAnonymousContent(&mTextContent);
-  nsHTMLButtonControlFrame::Destroy();
+  nsHTMLButtonControlFrame::DestroyFrom(aDestructRoot);
 }
 
 nsIAtom*

@@ -60,7 +60,7 @@ public:
     nsButtonBoxFrame(aPresShell, aContext) {}
 
   // Overrides
-  virtual void Destroy();
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   friend nsIFrame* NS_NewScrollbarButtonFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 

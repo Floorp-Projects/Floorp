@@ -453,7 +453,7 @@ nsMenuBarFrame::RemoveKeyboardNavigator()
 }
 
 void
-nsMenuBarFrame::Destroy()
+nsMenuBarFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm)
@@ -468,5 +468,5 @@ nsMenuBarFrame::Destroy()
 
   NS_IF_RELEASE(mMenuBarListener);
 
-  nsBoxFrame::Destroy();
+  nsBoxFrame::DestroyFrom(aDestructRoot);
 }

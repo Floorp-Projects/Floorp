@@ -1063,7 +1063,7 @@ nsSliderFrame::HandleRelease(nsPresContext* aPresContext,
 }
 
 void
-nsSliderFrame::Destroy()
+nsSliderFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // tell our mediator if we have one we are gone.
   if (mMediator) {
@@ -1073,7 +1073,7 @@ nsSliderFrame::Destroy()
   StopRepeat();
 
   // call base class Destroy()
-  nsBoxFrame::Destroy();
+  nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 nsSize

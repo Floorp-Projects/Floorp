@@ -136,7 +136,7 @@ public:
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
 
-  virtual void Destroy();
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
@@ -783,7 +783,7 @@ NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsSubDocumentFrame)
 
 void
-nsSubDocumentFrame::Destroy()
+nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (mPostedReflowCallback) {
     PresContext()->PresShell()->CancelReflowCallback(this);
@@ -792,7 +792,7 @@ nsSubDocumentFrame::Destroy()
   
   HideViewer();
 
-  nsLeafFrame::Destroy();
+  nsLeafFrame::DestroyFrom(aDestructRoot);
 }
 
 void

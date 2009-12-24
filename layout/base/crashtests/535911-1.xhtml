@@ -1,0 +1,16 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+
+function boom()
+{
+    var s = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+    var b = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "box");
+    s.appendChild(b);
+    document.getElementById("a").appendChild(s); 
+}
+
+</script>
+</head>
+<body onload="boom();" style="-moz-column-width: 1px;"><span id="a"><box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/></span><div>Hello</div></body>
+</html>

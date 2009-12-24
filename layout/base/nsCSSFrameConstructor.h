@@ -103,6 +103,7 @@ public:
   static void GetAlternateTextFor(nsIContent*    aContent,
                                   nsIAtom*       aTag,  // content object's tag
                                   nsXPIDLString& aAltText);
+
 private: 
   // These are not supported and are not implemented! 
   nsCSSFrameConstructor(const nsCSSFrameConstructor& aCopy); 
@@ -308,8 +309,6 @@ public:
                                 PRBool          aIsScrollbar,
                                 nsILayoutHistoryState* aFrameState);
 
-  nsresult RemoveMappingsForFrameSubtree(nsIFrame* aRemovedFrame);
-
   // GetInitialContainingBlock() is deprecated in favor of GetRootElementFrame();
   // nsIFrame* GetInitialContainingBlock() { return mRootElementFrame; }
   // This returns the outermost frame for the root element
@@ -452,7 +451,8 @@ private:
   nsresult AppendFrames(nsFrameConstructorState&       aState,
                         nsIFrame*                      aParentFrame,
                         nsFrameItems&                  aFrameList,
-                        nsIFrame*                      aPrevSibling);
+                        nsIFrame*                      aPrevSibling,
+                        PRBool                         aIsRecursiveCall = PR_FALSE);
 
   // BEGIN TABLE SECTION
   /**

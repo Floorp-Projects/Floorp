@@ -173,11 +173,11 @@ nsTextBoxFrame::Init(nsIContent*      aContent,
 }
 
 void
-nsTextBoxFrame::Destroy()
+nsTextBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
     // unregister access key
     RegUnregAccessKey(PR_FALSE);
-    nsTextBoxFrameSuper::Destroy();
+    nsTextBoxFrameSuper::DestroyFrom(aDestructRoot);
 }
 
 PRBool

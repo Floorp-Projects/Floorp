@@ -451,6 +451,7 @@ def environment(env = None, xrePath = DIST_BIN, crashreporter = True):
     env['MOZ_CRASHREPORTER_DISABLE'] = '1'
 
   env['GNOME_DISABLE_CRASH_DIALOG'] = "1"
+  env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
   return env
 
 if IS_WIN32:
@@ -681,7 +682,6 @@ def runApp(testURL, env, app, profileDir, extraArgs,
       if m:
         processList.append(int(m.group(1)))
     processLogFD.close()
-    os.unlink(processLog)
 
     for processPID in processList:
       log.info("INFO | automation.py | Checking for orphan process with PID: %d", processPID)
@@ -691,6 +691,9 @@ def runApp(testURL, env, app, profileDir, extraArgs,
 
   if checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath):
     status = -1
+
+  if os.path.exists(processLog):
+    os.unlink(processLog)
 
   if IS_TEST_BUILD and runSSLTunnel:
     ssltunnelProcess.kill()
