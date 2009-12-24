@@ -382,8 +382,8 @@ upcase(uintN ch)
  */
 static inline jschar inverse_upcase(jschar ch)
 {
-  jschar lch = JS_TOLOWER(ch);
-  return upcase(lch) == ch ? lch : ch;       
+    jschar lch = JS_TOLOWER(ch);
+    return (upcase(lch) == ch) ? lch : ch;       
 }
 
 /* Construct and initialize an RENode, returning NULL for out-of-memory */
