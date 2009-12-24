@@ -45,7 +45,7 @@ interface nsIDOMXULTextBoxElement;
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(1f8111b2-d44d-4d11-845a-a70ae06b7d04)]
+[scriptable, uuid(2f7d124f-eb51-4baa-baba-eeed051b4da0)]
 interface nsIDOMXULTreeElement : nsIDOMXULElement
 {
 
