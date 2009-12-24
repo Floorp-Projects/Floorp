@@ -72,12 +72,6 @@ class nsICSSAnonBoxPseudo;
 class nsPageContentFrame;
 struct PendingBinding;
 
-struct nsFindFrameHint
-{
-  nsIFrame *mPrimaryFrameForPrevSibling;  // weak ref to the primary frame for the content for which we need a frame
-  nsFindFrameHint() : mPrimaryFrameForPrevSibling(nsnull) { }
-};
-
 typedef void (nsLazyFrameConstructionCallback)
              (nsIContent* aContent, nsIFrame* aFrame, void* aArg);
 
@@ -286,14 +280,6 @@ public:
   // Copy over fixed frames from aParentFrame's prev-in-flow
   nsresult ReplicateFixedFrames(nsPageContentFrame* aParentFrame);
 
-  // Request to find the primary frame associated with a given content object.
-  // This is typically called by the pres shell when there is no mapping in
-  // the pres shell hash table
-  nsresult FindPrimaryFrameFor(nsFrameManager*  aFrameManager,
-                               nsIContent*      aContent,
-                               nsIFrame**       aFrame,
-                               nsFindFrameHint* aHint);
-
   // Get the XBL insertion point for a child
   nsresult GetInsertionPoint(nsIFrame*     aParentFrame,
                              nsIContent*   aChildContent,
@@ -337,6 +323,7 @@ private:
                              PRInt32         aStateMask);
 
   /* aMinHint is the minimal change that should be made to the element */
+  // XXXbz do we really need the aPrimaryFrame argument here?
   void RestyleElement(nsIContent*     aContent,
                       nsIFrame*       aPrimaryFrame,
                       nsChangeHint    aMinHint);
@@ -551,7 +538,7 @@ private:
      not the thing that ends up in aFrameItems?  If not, would it be safe to do
      the add into the frame construction state after processing kids?  Look
      into this as a followup!), process children as needed, etc.  It is NOT
-     expected to deal with the primary frame map.
+     expected to deal with setting the frame on the content.
 
      @param aState the frame construction state to use.
      @param aItem the frame construction item to use
@@ -561,7 +548,7 @@ private:
      @param aFrameItems the frame list to add the new frame (or its
                         placeholder) to.
      @param aFrame out param handing out the frame that was constructed.  This
-                   frame is what the caller will add to the primary frame map.
+                   frame is what the caller will set as the frame on the content.
   */
   typedef nsresult
     (nsCSSFrameConstructor::* FrameFullConstructor)(nsFrameConstructorState& aState,
@@ -573,11 +560,11 @@ private:
 
   /* Bits that modify the way a FrameConstructionData is handled */
 
-  /* If the FCDATA_SKIP_FRAMEMAP bit is set, then the frame created should not
-     be added to the primary frame map.  This flag might get ignored when used
-     with FCDATA_MAY_NEED_SCROLLFRAME, since scrollframe construction will add
-     to the frame map. */
-#define FCDATA_SKIP_FRAMEMAP 0x1
+  /* If the FCDATA_SKIP_FRAMESET bit is set, then the frame created should not
+     be set as the primary frame on the content node.  This should only be used
+     in very rare cases when we create more than one frame for a given content
+     node. */
+#define FCDATA_SKIP_FRAMESET 0x1
   /* If the FCDATA_FUNC_IS_DATA_GETTER bit is set, then the mFunc of the
      FrameConstructionData is a getter function that can be used to get the
      actual FrameConstructionData to use. */
@@ -1129,8 +1116,8 @@ private:
     FindObjectData(nsIContent* aContent, nsStyleContext* aStyleContext);
 
   /* Construct a frame from the given FrameConstructionItem.  This function
-     will handle adding the frame to frame lists, processing children, adding
-     it to the primary frame map, and so forth.
+     will handle adding the frame to frame lists, processing children, setting
+     the frame as the primary frame for the item's content, and so forth.
 
      @param aItem the FrameConstructionItem to use.
      @param aState the frame construction state to use.
@@ -1393,10 +1380,11 @@ private:
   // containing block (either of aFrame or of its parent) due to {ib} splits or
   // table pseudo-frames, recreate the relevant frame subtree.  The return value
   // indicates whether this happened.  If this method returns true, *aResult is
-  // the return value of ReframeContainingBlock or RecreateFramesForContent.
-  // If this method returns false, the value of *aResult is not affected.
-  // aFrame and aResult must not be null.  aFrame must be the result of a
-  // GetPrimaryFrameFor() call (which means its parent is also not null).
+  // the return value of ReframeContainingBlock or RecreateFramesForContent.  If
+  // this method returns false, the value of *aResult is not affected.  aFrame
+  // and aResult must not be null.  aFrame must be the result of a
+  // GetPrimaryFrame() call on a content node (which means its parent is also
+  // not null).
   PRBool MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
                                                nsresult* aResult);
 
@@ -1525,21 +1513,6 @@ private:
   nsresult ReframeContainingBlock(nsIFrame* aFrame);
 
   nsresult StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint);
-
-  /** Helper function that searches the immediate child frames 
-    * (and their children if the frames are "special")
-    * for a frame that maps the specified content object
-    *
-    * @param aParentFrame   the primary frame for aParentContent
-    * @param aContent       the content node for which we seek a frame
-    * @param aParentContent the parent for aContent 
-    * @param aHint          an optional hint used to make the search for aFrame faster
-    */
-  nsIFrame* FindFrameWithContent(nsFrameManager*  aFrameManager,
-                                 nsIFrame*        aParentFrame,
-                                 nsIContent*      aParentContent,
-                                 nsIContent*      aContent,
-                                 nsFindFrameHint* aHint);
 
   //----------------------------------------
 

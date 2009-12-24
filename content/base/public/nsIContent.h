@@ -884,7 +884,11 @@ public:
    * frame is the out of flow frame, not the placeholder.
    */
   nsIFrame* GetPrimaryFrame() const { return mPrimaryFrame; }
-  void SetPrimaryFrame(nsIFrame* aFrame) { mPrimaryFrame = aFrame; }
+  void SetPrimaryFrame(nsIFrame* aFrame) {
+    NS_PRECONDITION(!aFrame || !mPrimaryFrame,
+                    "Losing track of existing primary frame");
+    mPrimaryFrame = aFrame;
+  }
 
 #ifdef MOZ_SMIL
   /*
