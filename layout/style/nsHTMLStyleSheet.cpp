@@ -410,7 +410,7 @@ static nsresult GetBodyColor(nsPresContext* aPresContext, nscolor* aColor)
   nsCOMPtr<nsIDOMHTMLElement> body;
   domdoc->GetBody(getter_AddRefs(body));
   nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(body);
-  nsIFrame *bodyFrame = shell->GetPrimaryFrameFor(bodyContent);
+  nsIFrame *bodyFrame = bodyContent->GetPrimaryFrame();
   if (!bodyFrame)
     return NS_ERROR_FAILURE;
   *aColor = bodyFrame->GetStyleColor()->mColor;

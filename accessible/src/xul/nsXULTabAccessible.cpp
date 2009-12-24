@@ -109,9 +109,8 @@ nsXULTabAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   // Check style for -moz-user-focus: normal to see if it's focusable
   *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
-  if (presShell && content) {
-    nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
+  if (content) {
+    nsIFrame *frame = content->GetPrimaryFrame();
     if (frame) {
       const nsStyleUserInterface* ui = frame->GetStyleUserInterface();
       if (ui->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL)

@@ -284,7 +284,7 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   // Set the primary frame now so that
   // DocumentViewerImpl::FindContainerView called by ShowViewer below
   // can find it if necessary.
-  PresContext()->FrameManager()->SetPrimaryFrameFor(aContent, this);
+  aContent->SetPrimaryFrame(this);
 
   ShowViewer();
   return NS_OK;
@@ -566,7 +566,7 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
 
-  NS_ASSERTION(aPresContext->GetPresShell()->GetPrimaryFrameFor(mContent) == this,
+  NS_ASSERTION(mContent->GetPrimaryFrame() == this,
                "Shouldn't happen");
 
   // "offset" is the offset of our content area from our frame's

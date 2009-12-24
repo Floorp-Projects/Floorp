@@ -911,7 +911,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
         if (!shell)
           return NS_ERROR_FAILURE;
 
-        aAnchorFrame = shell->GetPrimaryFrameFor(mAnchorContent);
+        aAnchorFrame = mAnchorContent->GetPrimaryFrame();
       }
     }
 
