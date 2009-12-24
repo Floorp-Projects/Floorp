@@ -61,6 +61,7 @@ EXTRA_COMPONENTS = \
         HelperAppDialog.js \
         PromptService.js \
         BrowserCLH.js \
+        ContentDispatchChooser.js \
 	$(NULL)
 
 DIRS = protocols \
