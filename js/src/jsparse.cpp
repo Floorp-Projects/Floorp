@@ -8059,6 +8059,19 @@ JSCompiler::primaryExpr(TokenKind tt, JSBool afterDot)
                     attributesMask = 0;
                 }
 
+                /*
+                 * Use only string-valued atoms for detecting duplicate
+                 * properties so that 1 and "1" properly collide.
+                 */
+                if (ATOM_IS_DOUBLE(atom)) {
+                    JSString *str = js_NumberToString(context, pn3->pn_dval);
+                    if (!str)
+                        return JS_FALSE;
+                    atom = js_AtomizeString(context, str, 0);
+                    if (!atom)
+                        return JS_FALSE;
+                }
+
                 JSAtomListElement *ale = seen.lookup(atom);
                 if (ale) {
                     if (ALE_INDEX(ale) & attributesMask) {
