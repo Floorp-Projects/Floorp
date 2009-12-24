@@ -97,7 +97,7 @@ nsIsIndexFrame::~nsIsIndexFrame()
 }
 
 void
-nsIsIndexFrame::Destroy()
+nsIsIndexFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // remove ourself as a listener of the text control (bug 40533)
   if (mInputContent) {
@@ -109,7 +109,7 @@ nsIsIndexFrame::Destroy()
   nsContentUtils::DestroyAnonymousContent(&mTextContent);
   nsContentUtils::DestroyAnonymousContent(&mPreHr);
   nsContentUtils::DestroyAnonymousContent(&mPostHr);
-  nsBlockFrame::Destroy();
+  nsBlockFrame::DestroyFrom(aDestructRoot);
 }
 
 // REVIEW: We don't need to override BuildDisplayList, nsBlockFrame will honour

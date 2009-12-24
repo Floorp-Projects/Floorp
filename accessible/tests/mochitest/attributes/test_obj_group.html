@@ -56,6 +56,30 @@
       testGroupAttrs("n_li11", 2, 3, 2);
       testGroupAttrs("n_li12", 3, 3, 2);
 
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA grid
+      testGroupAttrs("grid_row1", 1, 2);
+      testGroupAttrs("grid_cell1", 1, 2);
+      testGroupAttrs("grid_cell2", 2, 2);
+
+      testGroupAttrs("grid_row2", 2, 2);
+      testGroupAttrs("grid_cell3", 1, 2);
+      testGroupAttrs("grid_cell4", 2, 2);
+
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA treegrid
+      testGroupAttrs("treegrid_row1", 1, 3, 1);
+      testGroupAttrs("treegrid_cell1", 1, 2);
+      testGroupAttrs("treegrid_cell2", 2, 2);
+
+      testGroupAttrs("treegrid_row2", 2, 3, 2);
+      testGroupAttrs("treegrid_cell3", 1, 2);
+      testGroupAttrs("treegrid_cell4", 2, 2);
+
+      testGroupAttrs("treegrid_row3", 3, 3, 1);
+      testGroupAttrs("treegrid_cell5", 1, 2);
+      testGroupAttrs("treegrid_cell6", 2, 2);
+
       SimpleTest.finish();
     }
 
@@ -116,5 +140,31 @@
       </span>
     </span>
   </span>
+
+  <table role="grid">
+    <tr role="row" id="grid_row1">
+      <td role="gridcell" id="grid_cell1">cell1</td>
+      <td role="gridcell" id="grid_cell2">cell2</td>
+    </tr>
+    <tr role="row" id="grid_row2">
+      <td role="gridcell" id="grid_cell3">cell3</td>
+      <td role="gridcell" id="grid_cell4">cell4</td>
+    </tr>
+  </table>
+
+  <div role="treegrid">
+    <div role="row" aria-level="1" id="treegrid_row1">
+      <div role="gridcell" id="treegrid_cell1">cell1</div>
+      <div role="gridcell" id="treegrid_cell2">cell2</div>
+    </div>
+    <div role="row" aria-level="2" id="treegrid_row2">
+      <div role="gridcell" id="treegrid_cell3">cell1</div>
+      <div role="gridcell" id="treegrid_cell4">cell2</div>
+    </div>
+    <div role="row" id="treegrid_row3">
+      <div role="gridcell" id="treegrid_cell5">cell1</div>
+      <div role="gridcell" id="treegrid_cell6">cell2</div>
+    </div>
+  </div>
 </body>
 </html>

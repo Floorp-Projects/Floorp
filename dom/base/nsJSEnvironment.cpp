@@ -1264,6 +1264,9 @@ nsJSContext::LeaveModalState()
 
 static const char js_options_dot_str[]   = JS_OPTIONS_DOT_STR;
 static const char js_strict_option_str[] = JS_OPTIONS_DOT_STR "strict";
+#ifdef DEBUG
+static const char js_strict_debug_option_str[] = JS_OPTIONS_DOT_STR "strict.debug";
+#endif
 static const char js_werror_option_str[] = JS_OPTIONS_DOT_STR "werror";
 static const char js_relimit_option_str[]= JS_OPTIONS_DOT_STR "relimit";
 #ifdef JS_GC_ZEAL
@@ -1307,10 +1310,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions &= ~JSOPTION_JIT;
 
 #ifdef DEBUG
-  // In debug builds, warnings are always enabled in chrome context
+  // In debug builds, warnings are enabled in chrome context if javascript.options.strict.debug is true
+  PRBool strictDebug = nsContentUtils::GetBoolPref(js_strict_debug_option_str);
   // Note this callback is also called from context's InitClasses thus we don't
   // need to enable this directly from InitContext
-  if ((newDefaultJSOptions & JSOPTION_STRICT) == 0) {
+  if (strictDebug && (newDefaultJSOptions & JSOPTION_STRICT) == 0) {
     if (chromeWindow)
       newDefaultJSOptions |= JSOPTION_STRICT;
   }

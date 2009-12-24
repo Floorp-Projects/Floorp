@@ -57,7 +57,7 @@ public:
   
   virtual nsSplittableType GetSplittableType() const;
 
-  virtual void Destroy();
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   /*
    * Frame continuations can be either fluid or not:
