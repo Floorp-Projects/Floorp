@@ -305,7 +305,7 @@ nsTreeBodyFrame::CalcMaxRowWidth()
 }
 
 void
-nsTreeBodyFrame::Destroy()
+nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   mScrollEvent.Revoke();
   // Make sure we cancel any posted callbacks. 
@@ -342,7 +342,7 @@ nsTreeBodyFrame::Destroy()
     mView = nsnull;
   }
 
-  nsLeafBoxFrame::Destroy();
+  nsLeafBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 void

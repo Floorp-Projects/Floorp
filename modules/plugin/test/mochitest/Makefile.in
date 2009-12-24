@@ -65,16 +65,18 @@ _MOCHITEST_FILES = \
 		test_pluginstream_seek.html \
 		test_pluginstream_newstream.html \
 		test_streamNotify.html \
+		test_instantiation.html \
 		$(NULL)
 
 #		test_npruntime_npnsetexception.html \ Disabled for e10s
 
-#ifdef MOZ_IPC
-#_MOCHITEST_FILES += \
-#		test_crashing.html \
-#		crashing_subpage.html \
-#		$(NULL)
-#endif
+ifdef MOZ_IPC
+_MOCHITEST_FILES += \
+		test_crashing.html \
+		test_crashing2.html \
+		crashing_subpage.html \
+		$(NULL)
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 _MOCHITEST_FILES += \

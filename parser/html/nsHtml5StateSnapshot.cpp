@@ -57,13 +57,14 @@
 #include "nsHtml5StateSnapshot.h"
 
 
-nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer, nsIContent** headPointer, PRInt32 mode, PRInt32 originalMode, PRInt32 foreignFlag, PRBool needToDropLF, PRBool quirks)
+nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer, nsIContent** headPointer, PRInt32 mode, PRInt32 originalMode, PRBool framesetOk, PRInt32 foreignFlag, PRBool needToDropLF, PRBool quirks)
   : stack(stack),
     listOfActiveFormattingElements(listOfActiveFormattingElements),
     formPointer(formPointer),
     headPointer(headPointer),
     mode(mode),
     originalMode(originalMode),
+    framesetOk(framesetOk),
     foreignFlag(foreignFlag),
     needToDropLF(needToDropLF),
     quirks(quirks)
@@ -105,6 +106,12 @@ PRInt32
 nsHtml5StateSnapshot::getOriginalMode()
 {
   return originalMode;
+}
+
+PRBool 
+nsHtml5StateSnapshot::isFramesetOk()
+{
+  return framesetOk;
 }
 
 PRInt32 

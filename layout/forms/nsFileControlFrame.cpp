@@ -77,6 +77,8 @@
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
+#include "nsIVariant.h"
+#include "nsIContentPrefService.h"
 
 #define SYNC_TEXT 0x1
 #define SYNC_BUTTON 0x2
@@ -121,7 +123,7 @@ nsFileControlFrame::Init(nsIContent* aContent,
 }
 
 void
-nsFileControlFrame::Destroy()
+nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   mTextFrame = nsnull;
   ENSURE_TRUE(mContent);
@@ -147,7 +149,7 @@ nsFileControlFrame::Destroy()
   }
 
   mMouseListener->ForgetFrame();
-  nsBlockFrame::Destroy();
+  nsBlockFrame::DestroyFrom(aDestructRoot);
 }
 
 nsresult
@@ -343,6 +345,13 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
         filePicker->SetDefaultString(leafName);
       }
     }
+  } else {
+    // Attempt to retrieve the last used directory from the content pref service
+    nsCOMPtr<nsILocalFile> localFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+    if (!localFile)
+      return NS_ERROR_OUT_OF_MEMORY;
+    if (NS_SUCCEEDED(FetchLastUsedDirectory(doc->GetDocumentURI(), localFile)))
+      filePicker->SetDisplayDirectory(localFile);
   }
 
   // Tell our textframe to remember the currently focused value
@@ -372,6 +381,7 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
     NS_ENSURE_SUCCESS(result, result);
 
     nsCOMPtr<nsISupports> tmp;
+    PRBool prefSaved = PR_FALSE;
     while (NS_SUCCEEDED(iter->GetNext(getter_AddRefs(tmp)))) {
       nsCOMPtr<nsIFile> file = do_QueryInterface(tmp);
       if (file) {
@@ -379,6 +389,11 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
         result = file->GetPath(unicodePath);
         if (!unicodePath.IsEmpty()) {
           newFileNames.AppendElement(unicodePath);
+        }
+        if (!prefSaved) {
+          // Store the last used directory using the content pref service
+          StoreLastUsedDirectory(doc->GetDocumentURI(), file);
+          prefSaved = PR_TRUE;
         }
       }
     }
@@ -392,6 +407,8 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
       if (!unicodePath.IsEmpty()) {
         newFileNames.AppendElement(unicodePath);
       }
+      // Store the last used directory using the content pref service
+      StoreLastUsedDirectory(doc->GetDocumentURI(), localFile);
     }
   }
 
@@ -410,6 +427,60 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
   }
 
   return NS_OK;
+}
+
+nsresult
+nsFileControlFrame::FetchLastUsedDirectory(nsIURI* aURI, nsILocalFile* aFile)
+{
+  // Attempt to get the CPS, if it's not present we'll just return
+  nsCOMPtr<nsIContentPrefService> contentPrefService =
+    do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
+  if (!contentPrefService)
+    return NS_ERROR_NOT_AVAILABLE;
+  nsCOMPtr<nsIWritableVariant> uri = do_CreateInstance(NS_VARIANT_CONTRACTID);
+  if (!uri)
+    return NS_ERROR_OUT_OF_MEMORY;
+  uri->SetAsISupports(aURI);
+  NS_NAMED_LITERAL_STRING(prefName, "lastUploadDirectory");
+
+  // Get the last used directory, if it is stored
+  PRBool hasPref;
+  if (NS_SUCCEEDED(contentPrefService->HasPref(uri, prefName, &hasPref)) && hasPref) {
+    nsCOMPtr<nsIVariant> pref;
+    contentPrefService->GetPref(uri, prefName, getter_AddRefs(pref));
+    nsString prefStr;
+    pref->GetAsAString(prefStr);
+    return aFile->InitWithPath(prefStr);
+  }
+  return NS_OK;
+}
+
+void
+nsFileControlFrame::StoreLastUsedDirectory(nsIURI* aURI, nsIFile* aFile)
+{
+  // Attempt to get the CPS, if it's not present we'll just return
+  nsCOMPtr<nsIContentPrefService> contentPrefService =
+    do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
+  if (!contentPrefService)
+    return;
+  nsCOMPtr<nsIWritableVariant> uri = do_CreateInstance(NS_VARIANT_CONTRACTID);
+  if (!uri)
+    return;
+  uri->SetAsISupports(aURI);
+  NS_NAMED_LITERAL_STRING(prefName, "lastUploadDirectory");
+
+  // Find the parent of aFile, and store it
+  nsCOMPtr<nsIFile> parentFile;
+  nsString unicodePath;
+  aFile->GetParent(getter_AddRefs(parentFile));
+  parentFile->GetPath(unicodePath);
+  if (!unicodePath.IsEmpty()) {
+    nsCOMPtr<nsIWritableVariant> prefValue = do_CreateInstance(NS_VARIANT_CONTRACTID);
+    if (!prefValue)
+      return;
+    prefValue->SetAsAString(unicodePath);
+    contentPrefService->SetPref(uri, prefName, prefValue);
+  }
 }
 
 nscoord

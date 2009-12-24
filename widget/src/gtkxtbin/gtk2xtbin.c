@@ -434,7 +434,8 @@ gtk_xtbin_resize (GtkWidget *widget,
   }
   XtSetArg(args[0], XtNheight, height);
   XtSetArg(args[1], XtNwidth,  width);
-  XtSetValues(xtbin->xtclient.top_widget, args, 2);
+  if (xtbin->xtclient.top_widget)
+    XtSetValues(xtbin->xtclient.top_widget, args, 2);
 
   /* we need to send a size allocate so the socket knows about the
      size changes */

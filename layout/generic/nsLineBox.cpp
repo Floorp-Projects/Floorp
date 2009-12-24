@@ -320,7 +320,8 @@ nsLineBox::CachedIsEmpty()
 }
 
 void
-nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines)
+nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
+                          nsIFrame* aDestructRoot)
 {
   if (! aLines.empty()) {
     // Delete our child frames before doing anything else. In particular
@@ -331,7 +332,8 @@ nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines)
 #endif
     for (nsIFrame* child = aLines.front()->mFirstChild; child; ) {
       nsIFrame* nextChild = child->GetNextSibling();
-      child->Destroy();
+      child->SetNextSibling(nsnull);
+      child->DestroyFrom((aDestructRoot) ? aDestructRoot : child);
       child = nextChild;
 #ifdef DEBUG
       numFrames++;
