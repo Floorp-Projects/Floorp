@@ -900,9 +900,7 @@ nsImageMap::AddArea(nsIContent* aArea)
   // nsCSSFrameConstructor::ContentRemoved (both hacks there), and
   // nsCSSFrameConstructor::ProcessRestyledFrames to work around this issue can
   // be removed.
-  mPresShell->FrameManager()->SetPrimaryFrameFor(aArea, mImageFrame);
-  aArea->SetMayHaveFrame(PR_TRUE);
-  NS_ASSERTION(aArea->MayHaveFrame(), "SetMayHaveFrame failed?");
+  aArea->SetPrimaryFrame(mImageFrame);
 
   area->ParseCoords(coords);
   mAreas.AppendElement(area);
