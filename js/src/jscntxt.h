@@ -558,7 +558,7 @@ struct JSRuntime {
     JSGCArenaList       gcArenaList[FINALIZE_LIMIT];
     JSGCDoubleArenaList gcDoubleArenaList;
     JSDHashTable        gcRootsHash;
-    JSDHashTable        *gcLocksHash;
+    JSDHashTable        gcLocksHash;
     jsrefcount          gcKeepAtoms;
     size_t              gcBytes;
     size_t              gcLastBytes;
