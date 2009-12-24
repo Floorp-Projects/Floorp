@@ -525,11 +525,6 @@ public:
    */
   virtual void Destroy() = 0;
 
-  /*
-   * Notify the frame that it has been removed as the primary frame for its content
-   */
-  virtual void RemovedAsPrimaryFrame() {}
-
   /**
    * Called to set the initial list of frames. This happens after the frame
    * has been initialized.

@@ -1119,15 +1119,6 @@ nsTextControlFrame::Destroy()
   nsBoxFrame::Destroy();
 }
 
-void 
-nsTextControlFrame::RemovedAsPrimaryFrame()
-{
-  if (!mDidPreDestroy) {
-    PreDestroy();
-  }
-  else NS_ASSERTION(PR_FALSE, "RemovedAsPrimaryFrame called after PreDestroy");
-}
-
 nsIAtom*
 nsTextControlFrame::GetType() const 
 { 
