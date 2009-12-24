@@ -474,7 +474,7 @@ nsDOMWindowUtils::GetWidgetForElement(nsIDOMElement* aElement)
   nsIPresShell* presShell = doc ? doc->GetPrimaryShell() : nsnull;
 
   if (presShell) {
-    nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+    nsIFrame* frame = content->GetPrimaryFrame();
     if (!frame) {
       frame = presShell->GetRootFrame();
     }
