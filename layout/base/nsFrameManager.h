@@ -120,8 +120,7 @@ public:
                                            nsIFrame* aPrimaryFrame);
   // If aPrimaryFrame is the current primary frame for aContent, remove the
   // relevant hashtable entry.  If the current primary frame for aContent is
-  // null, this does nothing.  aPrimaryFrame must not be null, and this method
-  // handles calling RemovedAsPrimaryFrame on aPrimaryFrame.
+  // null, this does nothing.  aPrimaryFrame must not be null.
   NS_HIDDEN_(void)      RemoveAsPrimaryFrame(nsIContent* aContent,
                                              nsIFrame* aPrimaryFrame);
   NS_HIDDEN_(void)      ClearPrimaryFrameMap();

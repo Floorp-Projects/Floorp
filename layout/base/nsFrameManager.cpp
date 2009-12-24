@@ -471,8 +471,6 @@ nsFrameManager::RemoveAsPrimaryFrame(nsIContent* aContent,
       PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_REMOVE);
     }
   }
-
-  aPrimaryFrame->RemovedAsPrimaryFrame();
 }
 
 void
