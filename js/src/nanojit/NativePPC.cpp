@@ -1060,11 +1060,11 @@ namespace nanojit
                 } w;
             };
             d = ins->imm64f();
-            LFD(r, 12, SP);
+            LFD(r, 8, SP);
             STW(R0, 12, SP);
-            asm_li(R0, w.hi);
-            STW(R0, 16, SP);
             asm_li(R0, w.lo);
+            STW(R0, 8, SP);
+            asm_li(R0, w.hi);
         }
         else {
             int64_t q = ins->imm64();
