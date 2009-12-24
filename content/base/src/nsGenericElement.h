@@ -422,8 +422,6 @@ public:
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
   virtual PRBool IsLink(nsIURI** aURI) const;
-  virtual void SetMayHaveFrame(PRBool aMayHaveFrame);
-  virtual PRBool MayHaveFrame() const;
 
   virtual PRUint32 GetScriptTypeID() const;
   NS_IMETHOD SetScriptTypeID(PRUint32 aLang);
