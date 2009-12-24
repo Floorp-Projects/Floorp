@@ -4907,19 +4907,8 @@ DepthOfVisual(const Screen* screen, const Visual* visual)
 
 static GdkWindow* GetClosestWindow(nsIDOMElement *element)
 {
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  element->GetOwnerDocument(getter_AddRefs(domDocument));
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDocument);  
-  if (!doc)
-    return nsnull;
-
-  nsIPresShell *presShell = doc->GetPrimaryShell();
-  if (!presShell)
-    return nsnull;
-
   nsCOMPtr<nsIContent> content = do_QueryInterface(element);
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+  nsIFrame* frame = content->GetPrimaryFrame();
   if (!frame)
     return nsnull;
 

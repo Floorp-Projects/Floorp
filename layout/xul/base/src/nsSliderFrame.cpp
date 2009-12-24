@@ -818,13 +818,10 @@ nsSliderFrame::SetCurrentPositionInternal(nsIContent* aScrollbar, PRInt32 aNewPo
       mediator->PositionChanged(scrollbarFrame, GetCurrentPosition(scrollbar), aNewPos);
       // 'mediator' might be dangling now...
       UpdateAttribute(scrollbar, aNewPos, PR_FALSE, aIsSmooth);
-      nsIPresShell* shell = context->GetPresShell();
-      if (shell) {
-        nsIFrame* frame = shell->GetPrimaryFrameFor(content);
-        if (frame && frame->GetType() == nsGkAtoms::sliderFrame) {
-          static_cast<nsSliderFrame*>(frame)->
-            CurrentPositionChanged(frame->PresContext(), aImmediateRedraw);
-        }
+      nsIFrame* frame = content->GetPrimaryFrame();
+      if (frame && frame->GetType() == nsGkAtoms::sliderFrame) {
+        static_cast<nsSliderFrame*>(frame)->
+          CurrentPositionChanged(frame->PresContext(), aImmediateRedraw);
       }
       mUserChanged = PR_FALSE;
       return;

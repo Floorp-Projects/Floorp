@@ -566,7 +566,7 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
 
-  NS_ASSERTION(aPresContext->GetPresShell()->GetPrimaryFrameFor(mContent) == this,
+  NS_ASSERTION(mContent->GetPrimaryFrame() == this,
                "Shouldn't happen");
 
   // "offset" is the offset of our content area from our frame's

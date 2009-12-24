@@ -882,11 +882,10 @@ FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
 
 nsTreeBodyFrame::ScrollParts nsTreeBodyFrame::GetScrollParts()
 {
-  nsPresContext* presContext = PresContext();
   ScrollParts result = { nsnull, nsnull, nsnull, nsnull, nsnull, nsnull };
   nsIContent* baseElement = GetBaseElement();
   nsIFrame* treeFrame =
-    baseElement ? presContext->PresShell()->GetPrimaryFrameFor(baseElement) : nsnull;
+    baseElement ? baseElement->GetPrimaryFrame() : nsnull;
   if (treeFrame) {
     // The way we do this, searching through the entire frame subtree, is pretty
     // dumb! We should know where these frames are.
@@ -1364,7 +1363,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
                                    nsIRenderingContext& aRenderingContext,
                                    nsRect& aTextRect)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
+  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   nscoord width =
     nsLayoutUtils::GetStringWidth(this, &aRenderingContext, aText.get(), aText.Length());
@@ -1522,7 +1521,7 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
                                      PRInt32 aRowIndex,
                                      nsTreeColumn* aColumn)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
+  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   // Obtain the properties for our cell.
   PrefillPropertyArray(aRowIndex, aColumn);
@@ -1966,7 +1965,7 @@ nsTreeBodyFrame::EndUpdateBatch()
 void
 nsTreeBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol)
 {
-  NS_PRECONDITION(!aCol || aCol->GetFrame(this), "invalid column passed");
+  NS_PRECONDITION(!aCol || aCol->GetFrame(), "invalid column passed");
   mScratchArray->Clear();
   
   // focus
@@ -2911,7 +2910,7 @@ nsTreeBodyFrame::PaintColumn(nsTreeColumn*        aColumn,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
+  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   // Now obtain the properties for our cell.
   PrefillPropertyArray(-1, aColumn);
@@ -3146,7 +3145,7 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
                            nscoord&             aCurrX,
                            nsPoint              aPt)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
+  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   // Now obtain the properties for our cell.
   // XXX Automatically fill in the following props: open, closed, container, leaf, selected, focused, and the col ID.
@@ -3325,7 +3324,7 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
                              nscoord&             aRemainingWidth,
                              nscoord&             aCurrX)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
+  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   nscoord rightEdge = aCurrX + aRemainingWidth;
@@ -3417,7 +3416,7 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
                             nscoord&             aRemainingWidth,
                             nscoord&             aCurrX)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
+  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   nscoord rightEdge = aCurrX + aRemainingWidth;
@@ -3553,7 +3552,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
                            nscoord&             aCurrX,
                            PRBool               aTextRTL)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
+  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   nscoord rightEdge = aTextRect.XMost();
@@ -3659,7 +3658,7 @@ nsTreeBodyFrame::PaintCheckbox(PRInt32              aRowIndex,
                                nsIRenderingContext& aRenderingContext,
                                const nsRect&        aDirtyRect)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
+  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   // Resolve style for the checkbox.
   nsStyleContext* checkboxContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecheckbox);
@@ -3721,7 +3720,7 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
                                     nsIRenderingContext& aRenderingContext,
                                     const nsRect&        aDirtyRect)
 {
-  NS_PRECONDITION(aColumn && aColumn->GetFrame(this), "invalid column passed");
+  NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
 
   // Resolve style for the progress meter.  It contains all the info we need
   // to lay ourselves out and to paint.
