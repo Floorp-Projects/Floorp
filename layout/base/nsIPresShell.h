@@ -222,7 +222,7 @@ public:
   virtual void PopStackMemory() = 0;
   virtual void* AllocateStackMemory(size_t aSize) = 0;
   
-  nsIDocument* GetDocument() { return mDocument; }
+  nsIDocument* GetDocument() const { return mDocument; }
 
   nsPresContext* GetPresContext() { return mPresContext; }
 
