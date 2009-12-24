@@ -734,10 +734,9 @@ NS_IMPL_ISUPPORTS4(nsImageMap,
 
 NS_IMETHODIMP
 nsImageMap::GetBoundsForAreaContent(nsIContent *aContent,
-                                   nsPresContext* aPresContext,
-                                   nsRect& aBounds)
+                                    nsRect& aBounds)
 {
-  NS_ENSURE_TRUE(aContent && aPresContext, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(aContent, NS_ERROR_INVALID_ARG);
 
   // Find the Area struct associated with this content node, and return bounds
   PRUint32 i, n = mAreas.Length();
@@ -745,12 +744,9 @@ nsImageMap::GetBoundsForAreaContent(nsIContent *aContent,
     Area* area = mAreas.ElementAt(i);
     if (area->mArea == aContent) {
       aBounds = nsRect();
-      nsIPresShell* shell = aPresContext->PresShell();
-      if (shell) {
-        nsIFrame* frame = shell->GetPrimaryFrameFor(aContent);
-        if (frame) {
-          area->GetRect(frame, aBounds);
-        }
+      nsIFrame* frame = aContent->GetPrimaryFrame();
+      if (frame) {
+        area->GetRect(frame, aBounds);
       }
       return NS_OK;
     }
@@ -1015,22 +1011,15 @@ nsImageMap::ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus)
         Area* area = mAreas.ElementAt(i);
         nsCOMPtr<nsIContent> areaContent;
         area->GetArea(getter_AddRefs(areaContent));
-        if (areaContent.get() == targetContent.get()) {
+        if (areaContent == targetContent) {
           //Set or Remove internal focus
           area->HasFocus(aFocus);
           //Now invalidate the rect
-          nsCOMPtr<nsIDocument> doc = targetContent->GetDocument();
-          //This check is necessary to see if we're still attached to the doc
-          if (doc) {
-            nsIPresShell *presShell = doc->GetPrimaryShell();
-            if (presShell) {
-              nsIFrame* imgFrame = presShell->GetPrimaryFrameFor(targetContent);
-              if (imgFrame) {
-                nsRect dmgRect;
-                area->GetRect(imgFrame, dmgRect);
-                imgFrame->Invalidate(dmgRect);
-              }
-            }
+          nsIFrame* imgFrame = targetContent->GetPrimaryFrame();
+          if (imgFrame) {
+            nsRect dmgRect;
+            area->GetRect(imgFrame, dmgRect);
+            imgFrame->Invalidate(dmgRect);
           }
           break;
         }

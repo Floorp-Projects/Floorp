@@ -60,6 +60,7 @@ struct WalkState {
   nsCOMPtr<nsIDOMNodeList> siblingList;
   nsIContent *parentContent; // For walking normal DOM
   WalkState *prevState;
+  // XXXbz is |frame| still needed?
   nsWeakFrame frame;       // Helps avoid GetPrimaryFrameFor() calls
   PRInt32 siblingIndex;    // Holds a state flag or an index into the siblingList
   PRBool isHidden;         // Don't enter subtree if hidden
