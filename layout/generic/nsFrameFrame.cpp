@@ -284,7 +284,7 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   // Set the primary frame now so that
   // DocumentViewerImpl::FindContainerView called by ShowViewer below
   // can find it if necessary.
-  PresContext()->FrameManager()->SetPrimaryFrameFor(aContent, this);
+  aContent->SetPrimaryFrame(this);
 
   ShowViewer();
   return NS_OK;

@@ -339,8 +339,6 @@ nsFrame::Init(nsIContent*      aContent,
 
   if (aContent) {
     NS_ADDREF(aContent);
-    aContent->SetMayHaveFrame(PR_TRUE);
-    NS_ASSERTION(mContent->MayHaveFrame(), "SetMayHaveFrame failed?");
   }
 
   if (aPrevInFlow) {
@@ -464,6 +462,11 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
     // Destroy the view
     view->Destroy();
+  }
+
+  // Make sure that our deleted frame can't be returned from GetPrimaryFrame()
+  if (mContent && mContent->GetPrimaryFrame() == this) {
+    mContent->SetPrimaryFrame(nsnull);
   }
 
   // Must retrieve the object ID before calling destructors, so the
