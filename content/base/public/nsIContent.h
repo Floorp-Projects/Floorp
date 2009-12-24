@@ -71,10 +71,9 @@ enum nsLinkState {
 };
 
 // IID for the nsIContent interface
-// c726e716-a4be-4202-8a5e-32d0525903e8
 #define NS_ICONTENT_IID       \
-{ 0xc726e716, 0xa4be, 0x4202, \
-  { 0x8a, 0x5e, 0x32, 0xd0, 0x52, 0x59, 0x03, 0xe8 } }
+{ 0xe88a767e, 0x1ca1, 0x4855, \
+ { 0xa7, 0xa4, 0x37, 0x9f, 0x07, 0x89, 0x45, 0xef } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -706,25 +705,6 @@ public:
   {
   }
 
-  /**
-   * Call to let the content node know that it may now have a frame.
-   * The content node may use this to determine what MayHaveFrame
-   * returns.
-   */
-  virtual void SetMayHaveFrame(PRBool aMayHaveFrame)
-  {
-  }
-
-  /**
-   * @returns PR_TRUE if there is a chance that the content node has a
-   *                  frame.
-   * @returns PR_FALSE otherwise.
-   */
-  virtual PRBool MayHaveFrame() const
-  {
-    return PR_TRUE;
-  }
-    
   /**
    * This method is called when the parser begins creating the element's 
    * children, if any are present.
