@@ -211,10 +211,10 @@ nsTableOuterFrame::IsContainingBlock() const
 }
 
 void
-nsTableOuterFrame::Destroy()
+nsTableOuterFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  mCaptionFrames.DestroyFrames();
-  nsHTMLContainerFrame::Destroy();
+  mCaptionFrames.DestroyFramesFrom(aDestructRoot);
+  nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 nsFrameList

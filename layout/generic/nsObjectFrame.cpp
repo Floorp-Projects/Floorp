@@ -613,7 +613,7 @@ nsObjectFrame::Init(nsIContent*      aContent,
 }
 
 void
-nsObjectFrame::Destroy()
+nsObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   NS_ASSERTION(!mPreventInstantiation ||
                (mContent && mContent->GetCurrentDoc()->GetDisplayDocument()),
@@ -634,7 +634,7 @@ nsObjectFrame::Destroy()
     mWidget->Destroy();
   }
 
-  nsObjectFrameSuper::Destroy();
+  nsObjectFrameSuper::DestroyFrom(aDestructRoot);
 }
 
 /* virtual */ void

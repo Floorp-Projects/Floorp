@@ -100,10 +100,10 @@ nsSVGForeignObjectFrame::Init(nsIContent* aContent,
   return rv;
 }
 
-void nsSVGForeignObjectFrame::Destroy()
+void nsSVGForeignObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   nsSVGUtils::GetOuterSVGFrame(this)->UnregisterForeignObject(this);
-  nsSVGForeignObjectFrameBase::Destroy();
+  nsSVGForeignObjectFrameBase::DestroyFrom(aDestructRoot);
 }
 
 nsIAtom *
