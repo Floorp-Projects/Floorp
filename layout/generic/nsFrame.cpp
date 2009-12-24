@@ -418,6 +418,8 @@ nsFrame::Destroy()
 {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
     "destroy called on frame while scripts not blocked");
+  NS_ASSERTION(!GetNextSibling() && !GetPrevSibling(),
+               "Frames should be removed before destruction.");
 
 #ifdef MOZ_SVG
   nsSVGEffects::InvalidateDirectRenderingObservers(this);

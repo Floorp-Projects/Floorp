@@ -59,6 +59,7 @@ struct nsPopupFrameList {
 
 public:
   nsPopupFrameList(nsIContent* aPopupContent, nsPopupFrameList* aNext);
+  ~nsPopupFrameList();
 };
 
 class nsPopupSetFrame : public nsBoxFrame

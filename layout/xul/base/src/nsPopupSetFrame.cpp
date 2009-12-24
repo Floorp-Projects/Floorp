@@ -56,6 +56,17 @@ nsPopupFrameList::nsPopupFrameList(nsIContent* aPopupContent, nsPopupFrameList* 
 {
 }
 
+nsPopupFrameList::~nsPopupFrameList()
+{
+  if (mPopupFrame) {
+    nsIFrame* prevSib = mPopupFrame->GetPrevSibling();
+    if (prevSib)
+      prevSib->SetNextSibling(mPopupFrame->GetNextSibling());
+    mPopupFrame->SetNextSibling(nsnull);
+    mPopupFrame->Destroy();
+  }
+}
+
 //
 // NS_NewPopupSetFrame
 //
@@ -138,12 +149,9 @@ nsPopupSetFrame::Destroy()
 {
   // remove each popup from the list as we go.
   while (mPopupList) {
-    if (mPopupList->mPopupFrame) {
-      mPopupList->mPopupFrame->Destroy();
-    }
     nsPopupFrameList* temp = mPopupList;
     mPopupList = mPopupList->mNextPopup;
-    delete temp;
+    delete temp; // destroys frame
   }
 
   // Normally the root box is our grandparent, but in case of wrapping
@@ -242,12 +250,9 @@ nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup)
       NS_ASSERTION((aPopup->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
                    aPopup->GetType() == nsGkAtoms::menuPopupFrame,
                    "found wrong type of frame in popupset's ::popupList");
-      // Destroy the frame.
-      currEntry->mPopupFrame->Destroy();
-
       // Delete the entry.
       currEntry->mNextPopup = nsnull;
-      delete currEntry;
+      delete currEntry; // destroys the frame
 #ifdef DEBUG
       found = PR_TRUE;
 #endif
