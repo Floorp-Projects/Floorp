@@ -3204,24 +3204,6 @@ nsGenericElement::IsNodeOfType(PRUint32 aFlags) const
 
 //----------------------------------------------------------------------
 
-// virtual
-void
-nsGenericElement::SetMayHaveFrame(PRBool aMayHaveFrame)
-{
-  if (aMayHaveFrame) {
-    SetFlags(NODE_MAY_HAVE_FRAME);
-  } else {
-    UnsetFlags(NODE_MAY_HAVE_FRAME);
-  }
-}
-
-// virtual
-PRBool
-nsGenericElement::MayHaveFrame() const
-{
-  return HasFlag(NODE_MAY_HAVE_FRAME);
-}
-
 PRUint32
 nsGenericElement::GetScriptTypeID() const
 {
