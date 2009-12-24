@@ -22,6 +22,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=531585
   border-color: black; /* don't derive from color */
 }
 
+#four {
+  /* give the reversing transition a long duration; the reversing will
+     still be quick */
+  -moz-transition-duration: 30s;
+  -moz-transition-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+
 </style>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=531585">Mozilla Bug 531585</a>
@@ -79,7 +86,7 @@ document.documentElement.addEventListener("transitionend",
       is(event.propertyName, "color",
          "propertyName for transitionend on four");
       // Reported time should (really?) be shortened by reversing.
-      ok(event.elapsedTime < 0.5,
+      ok(event.elapsedTime < 30,
          "elapsedTime for transitionend on four");
       is(cs("four").color, "rgb(0, 0, 255)",
          "computed style for transitionend on four (end of reverse transition)");
