@@ -74,8 +74,6 @@ public:
   nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aContext);
   virtual ~nsTextControlFrame();
 
-  virtual void RemovedAsPrimaryFrame(); 
-
   virtual void Destroy();
 
   virtual nscoord GetMinWidth(nsIRenderingContext* aRenderingContext);
