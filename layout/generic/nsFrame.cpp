@@ -758,13 +758,10 @@ nsFrame::GetChildList(nsIAtom* aListName) const
 static nsIFrame*
 GetActiveSelectionFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
-  nsIPresShell* shell = aPresContext->GetPresShell(); 
-  if (shell) {
-    nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
-    if (capturingContent) {
-      nsIFrame* activeFrame = shell->GetPrimaryFrameFor(capturingContent);
-      return activeFrame ? activeFrame : aFrame;
-    }
+  nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
+  if (capturingContent) {
+    nsIFrame* activeFrame = aPresContext->GetPrimaryFrameFor(capturingContent);
+    return activeFrame ? activeFrame : aFrame;
   }
 
   return aFrame;

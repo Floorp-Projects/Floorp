@@ -127,13 +127,10 @@ nsTreeBoxObject::GetTreeBody()
   // Iterate over our content model children looking for the body.
   nsCOMPtr<nsIContent> content;
   FindBodyElement(frame->GetContent(), getter_AddRefs(content));
-
-  nsIPresShell* shell = GetPresShell(PR_FALSE);
-  if (!shell) {
+  if (!content)
     return nsnull;
-  }
 
-  frame = shell->GetPrimaryFrameFor(content);
+  frame = content->GetPrimaryFrame();
   if (!frame)
      return nsnull;
 

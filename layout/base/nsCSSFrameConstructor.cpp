@@ -5450,7 +5450,7 @@ nsIFrame*
 nsCSSFrameConstructor::GetFrameFor(nsIContent* aContent)
 {
   // Get the primary frame associated with the content
-  nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
+  nsIFrame* frame = aContent->GetPrimaryFrame();
 
   if (!frame)
     return nsnull;
@@ -5827,14 +5827,14 @@ nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
                                                   PRUint8& aTargetContentDisplay,
                                                   PRBool aPrevSibling)
 {
-  nsIFrame* sibling = mPresShell->GetPrimaryFrameFor(aContent);
+  nsIFrame* sibling = aContent->GetPrimaryFrame();
   if (!sibling || sibling->GetContent() != aContent) {
     // XXX the GetContent() != aContent check is needed due to bug 135040.
     // Remove it once that's fixed.
     return nsnull;
   }
 
-  // If the frame is out-of-flow, GPFF() will have returned the
+  // If the frame is out-of-flow, GetPrimaryFrame() will have returned the
   // out-of-flow frame; we want the placeholder.
   if (sibling->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
     nsIFrame* placeholderFrame;
@@ -6075,7 +6075,7 @@ nsCSSFrameConstructor::AddTextItemIfNeeded(nsFrameConstructorState& aState,
     // NS_CREATE_FRAME_IF_NON_WHITESPACE flag)
     return;
   }
-  NS_ASSERTION(!mPresShell->GetPrimaryFrameFor(content),
+  NS_ASSERTION(!content->GetPrimaryFrame(),
                "Text node has a frame and NS_CREATE_FRAME_IF_NON_WHITESPACE");
   AddFrameConstructionItems(aState, content, aContentIndex, aParentFrame, aItems);
 }
@@ -6095,7 +6095,7 @@ nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aParentContent,
     // NS_CREATE_FRAME_IF_NON_WHITESPACE flag)
     return;
   }
-  NS_ASSERTION(!mPresShell->GetPrimaryFrameFor(content),
+  NS_ASSERTION(!content->GetPrimaryFrame(),
                "Text node has a frame and NS_CREATE_FRAME_IF_NON_WHITESPACE");
   ContentInserted(aParentContent, content, aContentIndex, nsnull);
 }
@@ -6190,7 +6190,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
       PRUint32 containerCount = aContainer->GetChildCount();
       for (PRUint32 i = aNewIndexInContainer; i < containerCount; i++) {
         nsIContent* content = aContainer->GetChildAt(i);
-        if ((mPresShell->GetPrimaryFrameFor(content) ||
+        if ((content->GetPrimaryFrame() ||
              mPresShell->FrameManager()->GetUndisplayedContent(content))
 #ifdef MOZ_XUL
             //  Except listboxes suck, so do NOT skip anything here if
@@ -6886,8 +6886,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
   nsresult                  rv = NS_OK;
 
   // Find the child frame that maps the content
-  nsIFrame* childFrame =
-    frameManager->GetPrimaryFrameFor(aChild, aIndexInContainer);
+  nsIFrame* childFrame = aChild->GetPrimaryFrame();
 
   if (!childFrame || childFrame->GetContent() != aChild) {
     // XXXbz the GetContent() != aChild check is needed due to bug 135040.
@@ -7006,7 +7005,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
                          containingBlock);
 
       // Recover childFrame and parentFrame
-      childFrame = mPresShell->GetPrimaryFrameFor(aChild);
+      childFrame = aChild->GetPrimaryFrame();
       if (!childFrame || childFrame->GetContent() != aChild) {
         // XXXbz the GetContent() != aChild check is needed due to bug 135040.
         // Remove it once that's fixed.
@@ -7360,7 +7359,7 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
       (aContent->HasFlag(NS_REFRAME_IF_WHITESPACE) &&
        aContent->TextIsOnlyWhitespace())) {
 #ifdef DEBUG
-    nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
+    nsIFrame* frame = aContent->GetPrimaryFrame();
     NS_ASSERTION(!frame || !frame->IsGeneratedContentFrame(),
                  "Bit should never be set on generated content");
 #endif
@@ -7371,7 +7370,7 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
   }
 
   // Find the child frame
-  nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
+  nsIFrame* frame = aContent->GetPrimaryFrame();
 
   // Notify the first frame that maps the content. It will generate a reflow
   // command
@@ -7405,7 +7404,7 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
                            mPresShell->FrameManager(), block);
         // Reget |frame|, since we might have killed it.
         // Do we really need to call CharacterDataChanged in this case, though?
-        frame = mPresShell->GetPrimaryFrameFor(aContent);
+        frame = aContent->GetPrimaryFrame();
         NS_ASSERTION(frame, "Should have frame here!");
       }
     }
@@ -7537,7 +7536,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 #ifdef DEBUG
     // reget frame from content since it may have been regenerated...
     if (changeData->mContent) {
-      nsIFrame* frame = mPresShell->GetPrimaryFrameFor(changeData->mContent);
+      nsIFrame* frame = changeData->mContent->GetPrimaryFrame();
       if (frame) {
         mPresShell->FrameManager()->DebugVerifyStyleTree(frame);
       }
@@ -7556,7 +7555,7 @@ nsCSSFrameConstructor::RestyleElement(nsIContent     *aContent,
                                       nsIFrame       *aPrimaryFrame,
                                       nsChangeHint   aMinHint)
 {
-  NS_ASSERTION(aPrimaryFrame == mPresShell->GetPrimaryFrameFor(aContent),
+  NS_ASSERTION(aPrimaryFrame == aContent->GetPrimaryFrame(),
                "frame/content mismatch");
   if (aPrimaryFrame && aPrimaryFrame->GetContent() != aContent) {
     // XXXbz this is due to image maps messing with the primary frame pointer
@@ -7593,7 +7592,7 @@ nsCSSFrameConstructor::RestyleLaterSiblings(nsIContent *aContent)
     if (!child->IsNodeOfType(nsINode::eELEMENT))
       continue;
 
-    nsIFrame* primaryFrame = mPresShell->GetPrimaryFrameFor(child);
+    nsIFrame* primaryFrame = child->GetPrimaryFrame();
     RestyleElement(child, primaryFrame, NS_STYLE_HINT_NONE);
   }
 }
@@ -7624,7 +7623,7 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
     // based on content states, so if we already don't have a frame we don't
     // need to force a reframe -- if it's needed, the HasStateDependentStyle
     // call will handle things.
-    nsIFrame* primaryFrame = mPresShell->GetPrimaryFrameFor(aContent);
+    nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
     if (primaryFrame) {
       // If it's generated content, ignore LOADING/etc state changes on it.
       if (!primaryFrame->IsGeneratedContentFrame() &&
@@ -7684,7 +7683,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
   nsCOMPtr<nsIPresShell> shell = mPresShell;
 
   // Get the frame associated with the content which is the highest in the frame tree
-  nsIFrame* primaryFrame = shell->GetPrimaryFrameFor(aContent); 
+  nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
 
 #if 0
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
@@ -8315,7 +8314,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIFrame*     aParentFrame,
   }
 
   if (insertionElement) {
-    nsIFrame* insertionPoint = mPresShell->GetPrimaryFrameFor(insertionElement);
+    nsIFrame* insertionPoint = insertionElement->GetPrimaryFrame();
     if (insertionPoint) {
       // Use the content insertion frame of the insertion point.
       insertionPoint = insertionPoint->GetContentInsertionFrame();
@@ -8347,7 +8346,7 @@ nsresult
 nsCSSFrameConstructor::CaptureStateForFramesOf(nsIContent* aContent,
                                                nsILayoutHistoryState* aHistoryState)
 {
-  nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
+  nsIFrame* frame = aContent->GetPrimaryFrame();
   if (frame == mRootElementFrame) {
     frame = mFixedContainingBlock;
   }
@@ -8418,7 +8417,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   NS_PRECONDITION(aFrame->GetParent(), "Frame shouldn't be root");
   NS_PRECONDITION(aResult, "Null out param?");
   NS_PRECONDITION(aFrame == aFrame->GetFirstContinuation(),
-                  "aFrame not the result of GetPrimaryFrameFor()?");
+                  "aFrame not the result of GetPrimaryFrame()?");
 
   if (IsFrameSpecial(aFrame)) {
     // The removal functions can't handle removal of an {ib} split directly; we
@@ -8544,13 +8543,13 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
   // below!).  We'd really like to optimize away one of those
   // containing block reframes, hence the code here.
 
-  nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
+  nsIFrame* frame = aContent->GetPrimaryFrame();
   if (frame && frame->IsFrameOfType(nsIFrame::eMathML)) {
     // Reframe the topmost MathML element to prevent exponential blowup
     // (see bug 397518)
     while (PR_TRUE) {
       nsIContent* parentContent = aContent->GetParent();
-      nsIFrame* parentContentFrame = mPresShell->GetPrimaryFrameFor(parentContent);
+      nsIFrame* parentContentFrame = parentContent->GetPrimaryFrame();
       if (!parentContentFrame || !parentContentFrame->IsFrameOfType(nsIFrame::eMathML))
         break;
       aContent = parentContent;
@@ -8608,7 +8607,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
   if (mPresShell->IsAccessibilityActive()) {
     PRUint32 changeType;
     if (frame) {
-      nsIFrame *newFrame = mPresShell->GetPrimaryFrameFor(aContent);
+      nsIFrame *newFrame = aContent->GetPrimaryFrame();
       changeType = newFrame ? nsIAccessibilityService::FRAME_SIGNIFICANT_CHANGE :
                               nsIAccessibilityService::FRAME_HIDE;
     }
@@ -11002,7 +11001,7 @@ nsCSSFrameConstructor::ProcessOneRestyle(nsIContent* aContent,
     return;
   }
   
-  nsIFrame* primaryFrame = mPresShell->GetPrimaryFrameFor(aContent);
+  nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
   if (aRestyleHint & eReStyle_Self) {
     RestyleElement(aContent, primaryFrame, aChangeHint);
   } else if (aChangeHint &&
@@ -11232,7 +11231,8 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
   mPresShell->GetDocument()->FlushPendingNotifications(Flush_Layout);
 
   // this is hard-coded to handle only menu popup frames
-  nsIFrame* frame = mPresShell->GetPrimaryFrameFor(mContent);
+  nsIFrame* frame = mPresShell->GetPresContext() ?
+    mPresShell->GetPresContext()->GetPrimaryFrameFor(mContent) : nsnull;
   if (frame && frame->GetType() == nsGkAtoms::menuPopupFrame) {
     nsWeakFrame weakFrame(frame);
 #ifdef MOZ_XUL
