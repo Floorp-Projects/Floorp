@@ -1942,9 +1942,6 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
         // Houston, we have a loop, blow off this child and pretend this never
         // happened
         LOG_ERROR(("  @import cycle detected, dropping load"));
-#ifdef NS_BUILD_REFCNT_LOGGING
-        printf("@import cycle detected, dropping load");
-#endif
         return NS_OK;
       }
       data = data->mParentData;
@@ -2250,11 +2247,6 @@ CSSLoaderImpl::Stop()
 #endif
   }
   mPostedEvents.Clear();
-#ifdef NS_BUILD_REFCNT_LOGGING
-  if (arr.Length() != 0) {
-    printf("nsCSSLoader::Stop: stopping %d loads\n", int(arr.Length()));
-  }
-#endif
 
   mDatasToNotifyOn += arr.Length();
   for (i = 0; i < arr.Length(); ++i) {
@@ -2338,11 +2330,6 @@ CSSLoaderImpl::StopLoadingSheet(nsIURI* aURL)
   }
   mPostedEvents.Clear();
 
-#ifdef NS_BUILD_REFCNT_LOGGING
-  if (arr.Length() != 0) {
-    printf("nsCSSLoader::StopLoadingSheet: stopping %d loads\n", int(arr.Length()));
-  }
-#endif
   mDatasToNotifyOn += arr.Length();
   for (i = 0; i < arr.Length(); ++i) {
     --mDatasToNotifyOn;
