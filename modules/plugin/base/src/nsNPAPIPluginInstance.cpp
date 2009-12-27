@@ -141,7 +141,7 @@ nsPluginStreamToFile::Write(const char* aBuf, PRUint32 aCount,
 {
   mOutputStream->Write(aBuf, aCount, aWriteCount);
   mOutputStream->Flush();
-  mOwner->GetURL(mFileURL.get(), mTarget, nsnull, 0, nsnull, 0);
+  mOwner->GetURL(mFileURL.get(), mTarget, nsnull, nsnull, 0);
   
   return NS_OK;
 }
@@ -173,7 +173,7 @@ NS_IMETHODIMP
 nsPluginStreamToFile::Close(void)
 {
   mOutputStream->Close();
-  mOwner->GetURL(mFileURL.get(), mTarget, nsnull, 0, nsnull, 0);
+  mOwner->GetURL(mFileURL.get(), mTarget, nsnull, nsnull, 0);
   return NS_OK;
 }
 
