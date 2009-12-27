@@ -41,6 +41,7 @@
 #include "nsIStreamListener.idl"
 #include "nsIStringStream.idl"
 #include "nsIPluginTag.idl"
+#include "nsIFile.idl"
 
 %{C++
 #include "nsPluginNativeWindow.h"
@@ -64,7 +65,7 @@ interface nsIPluginStreamListener;
 [ref] native nsIStreamListenerRef(nsIStreamListener *);
 [ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
 
-[scriptable, uuid(33211305-4ABD-4E2E-BD73-A05A7DA0E82E)]
+[scriptable, uuid(3F3C4952-4877-4D8A-B3CE-A0AFFD2C0785)]
 interface nsIPluginHost : nsISupports
 {
   [noscript] void init();
@@ -242,9 +243,9 @@ interface nsIPluginHost : nsISupports
                                               out unsigned long aOutPostDataLen);
 
   /**
-   * To create tmp file with Content len header in, it will use by http POST
+   * To create temp file with Content len header in, it will use by http POST
    */
-  [noscript] void createTmpFileToPost(in string aPostDataURL, out string aTmpFileName);
+  [noscript] nsIFile createTempFileToPost(in string aPostDataURL);
 
   /**
    *  Creates a new plugin native window object
@@ -286,64 +287,3 @@ interface nsIPluginHost : nsISupports
   virtual void RemoveIdleTimeTarget(nsIPluginInstanceOwner* objectFrame) = 0;
 %}
 };
-
-%{C++
-#ifdef MOZILLA_INTERNAL_API
-/**
- * Used for creating the correct input stream for plugins
- * We can either have raw data (with or without \r\n\r\n) or a path to a file (but it must be native!)
- * When making an nsIInputStream stream for the plugins POST data, be sure to take into 
- * account that it could be binary and full of nulls, see bug 105417. Also, we need 
- * to make a copy of the buffer because the plugin may have allocated it on the stack.
- * For an example of this, see Shockwave registration or bug 108966
- * We malloc only for headers here, buffer for data itself is malloced by ParsePostBufferToFixHeaders()
- */
-
-inline nsresult
-NS_NewPluginPostDataStream(nsIInputStream **result,
-                           const char *data,
-                           PRUint32 contentLength,
-                           PRBool isFile = PR_FALSE,
-                           PRBool headers = PR_FALSE)
-{
-  nsresult rv = NS_ERROR_UNEXPECTED;
-  if (!data)
-    return rv;
-
-  if (!isFile) { // do raw data case first
-    if (contentLength < 1)
-      return rv;
-    
-    char *buf = (char*) data;
-    if (headers) {
-      // in assumption we got correctly formated headers just passed in
-      if (!(buf = (char*)nsMemory::Alloc(contentLength)))
-        return NS_ERROR_OUT_OF_MEMORY;
-      memcpy(buf, data, contentLength);
-    }
-    nsCOMPtr<nsIStringInputStream> sis = do_CreateInstance("@mozilla.org/io/string-input-stream;1",&rv);
-    if (NS_SUCCEEDED(rv)) {
-      sis->AdoptData(buf, contentLength);  // let the string stream manage our data
-      rv = CallQueryInterface(sis, result);
-    }
-    else if (headers) {
-      nsMemory::Free(buf); // Cleanup the memory if the data was copied.
-    }
-  } else {
-    nsCOMPtr<nsILocalFile> file; // tmp file will be deleted on release of stream
-    nsCOMPtr<nsIInputStream> fileStream;
-    if (NS_SUCCEEDED(rv = NS_NewNativeLocalFile(nsDependentCString(data), PR_FALSE, getter_AddRefs(file))) &&
-        NS_SUCCEEDED(rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream),
-                                                     file,
-                                                     PR_RDONLY,
-                                                     0600,
-                                                     nsIFileInputStream::DELETE_ON_CLOSE |
-                                                     nsIFileInputStream::CLOSE_ON_EOF))) {
-      // wrap the file stream with a buffered input stream
-      return NS_NewBufferedInputStream(result, fileStream, 8192);
-    }
-  }
-  return rv;
-}
-#endif
-%}

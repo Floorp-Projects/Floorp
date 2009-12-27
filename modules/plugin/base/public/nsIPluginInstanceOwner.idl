@@ -38,6 +38,7 @@
 #include "nsISupports.idl"
 #include "nspluginroot.idl"
 #include "nsIPlugin.idl"
+#include "nsIInputStream.idl"
 
 interface nsIPluginInstance;
 interface nsIDocument;
@@ -49,7 +50,7 @@ class nsPluginEvent;
 
 [ref] native nsIPluginInstanceRef(nsIPluginInstance*);
 
-[uuid(D8776CDC-00DF-4395-A432-2E78EBCC12B6)]
+[uuid(B48DC23E-C20B-4292-974E-E8FF97B9F1CC)]
 interface nsIPluginInstanceOwner : nsISupports
 {
   /**
@@ -88,9 +89,8 @@ interface nsIPluginInstanceOwner : nsISupports
    */
   NS_IMETHOD
   GetURL(const char *aURL, const char *aTarget, 
-         void *aPostData, PRUint32 aPostDataLen, 
-         void *aHeadersData, PRUint32 aHeadersDataLen, 
-         PRBool aIsFile = PR_FALSE) = 0;
+         nsIInputStream *aPostStream,
+         void *aHeadersData, PRUint32 aHeadersDataLen) = 0;
 %}
 
   /**
