@@ -4658,6 +4658,7 @@ nsCSSFrameConstructor::FindMathMLData(nsIContent* aContent,
 
     static const FrameConstructionData sInlineMathData =
       FCDATA_DECL(FCDATA_FORCE_NULL_ABSPOS_CONTAINER |
+                  FCDATA_IS_LINE_PARTICIPANT |
                   FCDATA_WRAP_KIDS_IN_BLOCKS,
                   NS_NewMathMLmathInlineFrame);
     return &sInlineMathData;
