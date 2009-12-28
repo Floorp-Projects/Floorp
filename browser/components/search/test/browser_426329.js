@@ -7,15 +7,44 @@ function test() {
   ok(searchButton, "got search-go-button");
 
   searchBar.value = "test";
-  var preSelectedBrowser, preTabNo;
 
+  var obs = Cc["@mozilla.org/observer-service;1"].
+            getService(Ci.nsIObserverService);
+  var ss = Cc["@mozilla.org/browser/search-service;1"].
+           getService(Ci.nsIBrowserSearchService);
+
+  var observer = {
+    observe: function(aSub, aTopic, aData) {
+      switch (aData) {
+        case "engine-added":
+          var engine = ss.getEngineByName("Bug 426329");
+          ok(engine, "Engine was added.");
+          //XXX Bug 493051
+          //ss.currentEngine = engine;
+          break;
+        case "engine-current":
+          ok(ss.currentEngine.name == "Bug 426329", "currentEngine set");
+          testReturn();
+          break;
+        case "engine-removed":
+          obs.removeObserver(this, "browser-search-engine-modified");
+          finish();
+          break;
+      }
+    }
+  };
+
+  obs.addObserver(observer, "browser-search-engine-modified", false);
+  ss.addEngine("http://localhost:8888/browser/browser/components/search/test/426329.xml",
+               Ci.nsISearchEngine.DATA_XML, "data:image/x-icon,%00",
+               false);
+
+  var preSelectedBrowser, preTabNo;
   function init() {
     preSelectedBrowser = gBrowser.selectedBrowser;
     preTabNo = gBrowser.mTabs.length;
     searchBar.focus();
   }
-
-  testReturn();
 
   function testReturn() {
     init();
@@ -124,7 +153,8 @@ function test() {
       gBrowser.removeTab(gBrowser.mTabs[0]);
     }
     content.location.href = "about:blank";
-    finish();
+    var engine = ss.getEngineByName("Bug 426329");
+    ss.removeEngine(engine);
   }
 
   function doOnloadOnce(callback) {
