@@ -1741,7 +1741,9 @@ InitRegion(pixman_region32* aRegion,
     nsAutoTArray<pixman_box32,10> rects;
     rects.SetCapacity(aRects.Length());
     for (PRUint32 i = 0; i < aRects.Length (); ++i) {
-        rects.AppendElement(ToPixmanBox(aRects[i]));
+        if (!aRects[i].IsEmpty()) {
+            rects.AppendElement(ToPixmanBox(aRects[i]));
+        }
     }
 
     pixman_region32_init_rects(aRegion,
