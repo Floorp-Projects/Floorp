@@ -74,10 +74,11 @@ if ("@mozilla.org/toolkit/crash-reporter;1" in Components.classes) {
 }
 
 
-function _TimerCallback(expr, timer) {
-  this._func = typeof expr === "function"
-             ? expr
-             : function() { eval(expr); };
+function _TimerCallback(func, timer) {
+  if (typeof func !== "function")
+    throw new Error("string callbacks no longer accepted; use a function!");
+
+  this._func = func;
   // Keep timer alive until it fires
   _pendingCallbacks.push(timer);
 }
@@ -174,10 +175,10 @@ function _load_files(aFiles) {
 /************** Functions to be used from the tests **************/
 
 
-function do_timeout(delay, expr) {
+function do_timeout(delay, func) {
   var timer = Components.classes["@mozilla.org/timer;1"]
                         .createInstance(Components.interfaces.nsITimer);
-  timer.initWithCallback(new _TimerCallback(expr, timer), delay, timer.TYPE_ONE_SHOT);
+  timer.initWithCallback(new _TimerCallback(func, timer), delay, timer.TYPE_ONE_SHOT);
 }
 
 function do_execute_soon(callback) {
