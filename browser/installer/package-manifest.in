@@ -318,6 +318,7 @@
 @BINPATH@/components/nsTaggingService.js
 @BINPATH@/components/nsPlacesDBFlush.js
 @BINPATH@/components/nsPlacesAutoComplete.js
+@BINPATH@/components/PlacesProtocolHandler.js
 @BINPATH@/components/nsDefaultCLH.js
 @BINPATH@/components/nsContentPrefService.js
 @BINPATH@/components/nsContentDispatchChooser.js
