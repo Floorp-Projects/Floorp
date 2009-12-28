@@ -202,6 +202,9 @@ nsListBoxObject::GetListBoxBody(PRBool aFlush)
   nsCOMPtr<nsIContent> content;
   FindBodyContent(frame->GetContent(), getter_AddRefs(content));
 
+  if (!content)
+    return nsnull;
+
   // this frame will be a nsGFXScrollFrame
   frame = content->GetPrimaryFrame();
   if (!frame)
