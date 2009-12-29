@@ -1106,14 +1106,13 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
   if (mHeight != aOther.mHeight ||
       mMinHeight != aOther.mMinHeight ||
       mMaxHeight != aOther.mMaxHeight) {
-    // Height changes can't affect descendant intrinsic sizes, but due to our
-    // not-so-great computation of mVResize in nsHTMLReflowState, do need to
-    // force reflow of the whole subtree.
-    // XXXbz due to XUL caching heights as well, height changes _do_
-    // need to clear ancestor intrinsics!
-    return NS_CombineHint(hint,
-                          NS_SubtractHint(nsChangeHint_ReflowFrame,
-                                          nsChangeHint_ClearDescendantIntrinsics));
+    // Height changes can affect descendant intrinsic sizes due to replaced
+    // elements with percentage heights in descendants which also have
+    // percentage heights.  And due to our not-so-great computation of mVResize
+    // in nsHTMLReflowState, they do need to force reflow of the whole subtree.
+    // XXXbz due to XUL caching heights as well, height changes also need to
+    // clear ancestor intrinsics!
+    return NS_CombineHint(hint, nsChangeHint_ReflowFrame);
   }
 
   if ((mWidth == aOther.mWidth) &&
