@@ -394,27 +394,6 @@ ReserveNegativeControl()
   return (uintptr_t)result;
 }
 
-#ifdef _WIN32
-static BOOL
-IsBadExecPtr(uintptr_t ptr)
-{
-  BOOL ret = true;
-
-#ifdef _MSC_VER
-  __try {
-    ((void (*)())ptr)();
-  } __except (EXCEPTION_EXECUTE_HANDLER) {
-    ret = false;
-  }
-#else
-  printf("INFO | exec test not supported on MinGW build\n");
-  // We do our best
-  ret = IsBadReadPtr((const void*)ptr, 1);
-#endif
-  return ret;
-}
-#endif
-
 /* Test each page.  */
 static bool
 TestPage(const char *pagelabel, uintptr_t pageaddr, int should_succeed)
@@ -434,29 +413,32 @@ TestPage(const char *pagelabel, uintptr_t pageaddr, int should_succeed)
     }
 
 #ifdef _WIN32
-    BOOL badptr;
-
-    switch (test) {
-    case 0: badptr = IsBadReadPtr((const void*)opaddr, 1); break;
-    case 1: badptr = IsBadExecPtr(opaddr); break;
-    case 2: badptr = IsBadWritePtr((void*)opaddr, 1); break;
-    default: abort();
-    }
-
-    if (badptr) {
-      if (should_succeed) {
-        printf("TEST-UNEXPECTED-FAIL | %s %s\n", oplabel, pagelabel);
-        failed = true;
-      } else {
-        printf("TEST-PASS | %s %s\n", oplabel, pagelabel);
+    __try {
+      unsigned char scratch;
+      switch (test) {
+      case 0: scratch = *(volatile unsigned char *)opaddr; break;
+      case 1: ((void (*)())opaddr)(); break;
+      case 2: *(volatile unsigned char *)opaddr = 0; break;
+      default: abort();
       }
-    } else {
+
       // if control reaches this point the probe succeeded
       if (should_succeed) {
         printf("TEST-PASS | %s %s\n", oplabel, pagelabel);
       } else {
         printf("TEST-UNEXPECTED-FAIL | %s %s\n", oplabel, pagelabel);
         failed = true;
+      }
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+      // Unfortunately, there is no equivalent of strsignal().
+      DWORD code = GetExceptionCode();
+      if (should_succeed) {
+        printf("TEST-UNEXPECTED-FAIL | %s %s | exception code %x\n",
+               oplabel, pagelabel, code);
+        failed = true;
+      } else {
+        printf("TEST-PASS | %s %s | exception code %x\n",
+               oplabel, pagelabel, code);
       }
     }
 #else
