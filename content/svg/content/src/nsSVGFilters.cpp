@@ -131,7 +131,8 @@ nsSVGFE::ScaleInfo
 nsSVGFE::SetupScalingFilter(nsSVGFilterInstance *aInstance,
                             const Image *aSource, const Image *aTarget,
                             const nsIntRect& aDataRect,
-                            nsSVGNumber2 *aUnitX, nsSVGNumber2 *aUnitY)
+                            nsSVGNumber2 *aUnitX, nsSVGNumber2 *aUnitY,
+                            nsSVGElement *aElement)
 {
   ScaleInfo result;
   result.mRescaling = HasAttr(kNameSpaceID_None, nsGkAtoms::kernelUnitLength);
@@ -145,11 +146,11 @@ nsSVGFE::SetupScalingFilter(nsSVGFilterInstance *aInstance,
   float kernelX, kernelY;
   nsSVGLength2 val;
   val.Init(nsSVGUtils::X, 0xff,
-           aUnitX->GetAnimValue(),
+           aUnitX->GetAnimValue(aElement),
            nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
   kernelX = aInstance->GetPrimitiveLength(&val);
   val.Init(nsSVGUtils::Y, 0xff,
-           aUnitY->GetAnimValue(),
+           aUnitY->GetAnimValue(aElement),
            nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
   kernelY = aInstance->GetPrimitiveLength(&val);
 #ifdef DEBUG_tor
@@ -4142,7 +4143,7 @@ nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance,
 
   float divisor;
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::divisor)) {
-    divisor = mNumberAttributes[DIVISOR].GetAnimValue();
+    divisor = mNumberAttributes[DIVISOR].GetAnimValue(this);
     if (divisor == 0)
       return NS_ERROR_FAILURE;
   } else {
@@ -4155,7 +4156,8 @@ nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance,
 
   ScaleInfo info = SetupScalingFilter(instance, aSources[0], aTarget, rect,
                                       &mNumberAttributes[KERNEL_UNIT_LENGTH_X],
-                                      &mNumberAttributes[KERNEL_UNIT_LENGTH_Y]);
+                                      &mNumberAttributes[KERNEL_UNIT_LENGTH_Y],
+                                      this);
   if (!info.mTarget)
     return NS_ERROR_FAILURE;
 
@@ -4164,7 +4166,7 @@ nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance,
 
   float bias = 0;
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::bias)) {
-    bias = mNumberAttributes[BIAS].GetAnimValue();
+    bias = mNumberAttributes[BIAS].GetAnimValue(this);
   }
 
   const nsIntRect& dataRect = info.mDataRect;
@@ -4740,7 +4742,8 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
 {
   ScaleInfo info = SetupScalingFilter(instance, aSources[0], aTarget, rect,
                                       &mNumberAttributes[KERNEL_UNIT_LENGTH_X],
-                                      &mNumberAttributes[KERNEL_UNIT_LENGTH_Y]);
+                                      &mNumberAttributes[KERNEL_UNIT_LENGTH_Y],
+                                      this);
   if (!info.mTarget)
     return NS_ERROR_FAILURE;
 
@@ -4809,7 +4812,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
     }
   }
 
-  float surfaceScale = mNumberAttributes[SURFACE_SCALE].GetAnimValue();
+  float surfaceScale = mNumberAttributes[SURFACE_SCALE].GetAnimValue(this);
 
   const nsIntRect& dataRect = info.mDataRect;
   PRInt32 stride = info.mSource->Stride();
@@ -4982,7 +4985,7 @@ nsSVGFEDiffuseLightingElement::LightPixel(const float *N, const float *L,
                                           nscolor color, PRUint8 *targetData)
 {
   float diffuseNL =
-    mNumberAttributes[DIFFUSE_CONSTANT].GetAnimValue() * DOT(N, L);
+    mNumberAttributes[DIFFUSE_CONSTANT].GetAnimValue(this) * DOT(N, L);
 
   if (diffuseNL > 0) {
     targetData[GFX_ARGB32_OFFSET_B] =
@@ -5112,7 +5115,7 @@ nsSVGFESpecularLightingElement::Filter(nsSVGFilterInstance *instance,
                                        const Image* aTarget,
                                        const nsIntRect& rect)
 {
-  float specularExponent = mNumberAttributes[SPECULAR_EXPONENT].GetAnimValue();
+  float specularExponent = mNumberAttributes[SPECULAR_EXPONENT].GetAnimValue(this);
 
   // specification defined range (15.22)
   if (specularExponent < 1 || specularExponent > 128)
@@ -5132,12 +5135,12 @@ nsSVGFESpecularLightingElement::LightPixel(const float *N, const float *L,
   H[2] = L[2] + 1;
   NORMALIZE(H);
 
-  float kS = mNumberAttributes[SPECULAR_CONSTANT].GetAnimValue();
+  float kS = mNumberAttributes[SPECULAR_CONSTANT].GetAnimValue(this);
   float dotNH = DOT(N, H);
 
   if (dotNH > 0 && kS > 0) {
     float specularNH =
-      kS * pow(dotNH, mNumberAttributes[SPECULAR_EXPONENT].GetAnimValue());
+      kS * pow(dotNH, mNumberAttributes[SPECULAR_EXPONENT].GetAnimValue(this));
 
     targetData[GFX_ARGB32_OFFSET_B] =
       NS_MIN(PRUint32(specularNH * NS_GET_B(color)), 255U);
@@ -5683,7 +5686,7 @@ nsSVGFEDisplacementMapElement::Filter(nsSVGFilterInstance *instance,
           rect.x, rect.y, rect.width, rect.height);
 #endif
 
-  float scale = mNumberAttributes[SCALE].GetAnimValue();
+  float scale = mNumberAttributes[SCALE].GetAnimValue(this);
   if (scale == 0.0f) {
     CopyRect(aTarget, aSources[0], rect);
     return NS_OK;
