@@ -51,7 +51,6 @@
 #include "jshash.h" /* Added by JSIFY */
 #include "jspubtd.h"
 #include "jsprvtd.h"
-#include "jsstdint.h"
 
 /*
  * A representation of ECMA-262 ed. 5's internal property descriptor data
@@ -118,7 +117,7 @@ struct PropertyDescriptor {
     jsval value, get, set;
 
     /* Property descriptor boolean fields. */
-    uint8_t attrs;
+    uint8 attrs;
 
     /* Bits indicating which values are set. */
     bool hasGet : 1;
