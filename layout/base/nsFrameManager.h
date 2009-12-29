@@ -109,12 +109,6 @@ public:
    */
   NS_HIDDEN_(nsIFrame*) GetCanvasFrame();
 
-  // Primary frame functions
-  // If aPrimaryFrame is the current primary frame for aContent, set its
-  // primary frame to null.  aPrimaryFrame must not be null.
-  NS_HIDDEN_(void)      RemoveAsPrimaryFrame(nsIContent* aContent,
-                                             nsIFrame* aPrimaryFrame);
-
   // Placeholder frame functions
   NS_HIDDEN_(nsPlaceholderFrame*) GetPlaceholderFrameFor(nsIFrame* aFrame);
   NS_HIDDEN_(nsresult)
