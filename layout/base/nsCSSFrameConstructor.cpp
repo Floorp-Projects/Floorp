@@ -605,18 +605,6 @@ SetInitialSingleChild(nsIFrame* aParent, nsIFrame* aFrame)
 
 // -----------------------------------------------------------
 
-static PRBool
-IsOutOfFlowList(nsIAtom* aListName)
-{
-  return
-    aListName == nsGkAtoms::floatList ||
-    aListName == nsGkAtoms::absoluteList ||
-    aListName == nsGkAtoms::overflowOutOfFlowList ||
-    aListName == nsGkAtoms::fixedList;
-}
-
-// -----------------------------------------------------------
-
 // Structure used when constructing formatting object trees.
 struct nsFrameItems : public nsFrameList
 {
