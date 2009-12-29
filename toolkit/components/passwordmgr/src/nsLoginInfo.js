@@ -121,6 +121,10 @@ nsLoginInfo.prototype = {
         // Copy nsILoginMetaInfo props
         clone.QueryInterface(Ci.nsILoginMetaInfo);
         clone.guid = this.guid;
+        clone.timeCreated = this.timeCreated;
+        clone.timeLastUsed = this.timeLastUsed;
+        clone.timePasswordChanged = this.timePasswordChanged;
+        clone.timesUsed = this.timesUsed;
 
         return clone;
     },
@@ -129,7 +133,11 @@ nsLoginInfo.prototype = {
     // nsILoginMetaInfo interfaces...
     //
 
-    guid : null
+    guid : null,
+    timeCreated : null,
+    timeLastUsed : null,
+    timePasswordChanged : null,
+    timesUsed : null
 
 }; // end of nsLoginInfo implementation
 
