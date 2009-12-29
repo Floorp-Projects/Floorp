@@ -1424,7 +1424,7 @@ TSFContextImpl::OnLockGranted(DWORD dwLockFlags)
 {
   // If we have a test, run it
   if (mDocMgr->mMgr->mTest &&
-     !(mDocMgr->mMgr->mTestApp->*(mDocMgr->mMgr->mTest))())
+     !((*mDocMgr->mMgr->mTestApp).*(mDocMgr->mMgr->mTest))())
     return S_FALSE;
   return S_OK;
 }
