@@ -828,6 +828,7 @@ LoginManager.prototype = {
         // Check for autocomplete=off attribute. We don't use it to prevent
         // autofilling (for existing logins), but won't save logins when it's
         // present.
+        // XXX spin out a bug that we don't update timeLastUsed in this case?
         if (this._isAutocompleteDisabled(form) ||
             this._isAutocompleteDisabled(usernameField) ||
             this._isAutocompleteDisabled(newPasswordField) ||
@@ -913,6 +914,13 @@ LoginManager.prototype = {
                 this.log("...passwords differ, prompting to change.");
                 prompter = getPrompter(win);
                 prompter.promptToChangePassword(existingLogin, formLogin);
+            } else {
+                // Update the lastUsed timestamp.
+                var propBag = Cc["@mozilla.org/hash-property-bag;1"].
+                              createInstance(Ci.nsIWritablePropertyBag);
+                propBag.setProperty("timeLastUsed", Date.now());
+                propBag.setProperty("timesUsedIncrement", 1);
+                this.modifyLogin(existingLogin, propBag);
             }
 
             return;
