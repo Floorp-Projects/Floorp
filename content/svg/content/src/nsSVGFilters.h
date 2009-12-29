@@ -217,6 +217,7 @@ protected:
 
   // nsSVGElement specializations:
   virtual LengthAttributesInfo GetLengthInfo();
+  virtual void DidAnimateNumber(PRUint8 aAttrEnum);
 
   // nsIDOMSVGFitlerPrimitiveStandardAttributes values
   enum { X, Y, WIDTH, HEIGHT };

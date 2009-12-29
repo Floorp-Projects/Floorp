@@ -67,6 +67,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsSVGFilterElement.h"
 #include "nsSVGString.h"
+#include "nsSVGEffects.h"
 
 #if defined(XP_WIN) 
 // Prevent Windows redefining LoadImage
@@ -299,6 +300,16 @@ nsSVGFE::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
+}
+
+void
+nsSVGFE::DidAnimateNumber(PRUint8 aAttrEnum)
+{
+  // nsSVGLeafFrame doesn't implement AttributeChanged.
+  nsIFrame* frame = GetPrimaryFrame();
+  if (frame) {
+    nsSVGEffects::InvalidateRenderingObservers(frame);
+  }
 }
 
 //---------------------Gaussian Blur------------------------

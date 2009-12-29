@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(1, true)">
+  <title>Test animation of the "dx" and "dy" attributes on the "feOffset" element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <filter id="offset_filter_1" x="0%" y="0%" width="300%" height="100%">
+    <feOffset in="SourceGraphic">
+      <animate attributeName="dx"
+               calcMode="linear"
+               begin="0s" dur="2s"
+               from="0" to="200"
+               fill="freeze"/>
+    </feOffset>
+  </filter>
+  <filter id="offset_filter_2" x="0%" y="0%" width="100%" height="200%">
+    <feOffset in="SourceGraphic">
+      <animate attributeName="dy"
+               calcMode="linear"
+               begin="0s" dur="1s"
+               from="0" to="100"
+               fill="freeze"/>
+    </feOffset>
+  </filter>
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <!-- test 50% completed animation -->
+  <rect x="100" width="100" height="100" fill="red"/>
+  <rect width="100" height="100" fill="lime" filter="url(#offset_filter_1)"/>
+
+  <!-- test 100% completed animation -->
+  <rect y="100" width="100" height="100" fill="red"/>
+  <rect width="100" height="100" fill="lime" filter="url(#offset_filter_2)"/>
+</svg>
