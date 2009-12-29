@@ -156,6 +156,7 @@ public:
   virtual void DidChangeString(PRUint8 aAttrEnum) {}
 
   void DidAnimateLength(PRUint8 aAttrEnum);
+  virtual void DidAnimateNumber(PRUint8 aAttrEnum);
 
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);

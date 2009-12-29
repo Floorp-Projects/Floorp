@@ -1271,6 +1271,19 @@ nsSVGElement::DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 }
 
 void
+nsSVGElement::DidAnimateNumber(PRUint8 aAttrEnum)
+{
+  nsIFrame* frame = GetPrimaryFrame();
+
+  if (frame) {
+    NumberAttributesInfo info = GetNumberInfo();
+    frame->AttributeChanged(kNameSpaceID_None,
+                            *info.mNumberInfo[aAttrEnum].mName,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
+void
 nsSVGElement::GetAnimatedNumberValues(float *aFirst, ...)
 {
   NumberAttributesInfo info = GetNumberInfo();
@@ -1669,6 +1682,24 @@ nsSVGElement::GetAnimatedAttr(const nsIAtom* aName)
   for (PRUint32 i = 0; i < info.mLengthCount; i++) {
     if (aName == *info.mLengthInfo[i].mName) {
       return info.mLengths[i].ToSMILAttr(this);
+    }
+  }
+
+  // Numbers:
+  {
+    NumberAttributesInfo info = GetNumberInfo();
+    for (PRUint32 i = 0; i < info.mNumberCount; i++) {
+      // XXX this isn't valid for either of the two properties corresponding to
+      // attributes of type <number-optional-number> - see filter,
+      // feConvolveMatrix, feDiffuseLighting, feGaussianBlur, feMorphology and
+      // feTurbulence.
+      // The way to fix this is probably to handle them as 2-item number lists
+      // once we implement number list animation, and put the number list loop
+      // *above* this one at that time to catch those properties before we get
+      // here. The separate properties should then point into the list.
+      if (aName == *info.mNumberInfo[i].mName) {
+        return info.mNumbers[i].ToSMILAttr(this);
+      }
     }
   }
 

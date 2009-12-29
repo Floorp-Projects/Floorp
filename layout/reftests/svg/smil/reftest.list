@@ -72,6 +72,11 @@ fails == anim-fillopacity-1xml.svg  anim-standard-ref.svg # bug 534028
 == anim-height-interp-5.svg anim-height-interp-5-ref.svg
 == anim-height-interp-6.svg anim-height-interp-6-ref.svg
 
+# animate some <number> attributes:
+== anim-feOffset-01.svg lime.svg
+== anim-offset-01.svg lime.svg
+== anim-pathLength-01.svg anim-pathLength-01-ref.svg
+
 == anim-remove-1.svg anim-standard-ref.svg
 == anim-remove-2.svg anim-standard-ref.svg
 == anim-remove-3.svg anim-standard-ref.svg
