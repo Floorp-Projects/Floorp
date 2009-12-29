@@ -1,8 +1,8 @@
 url-prefix ../../jsreftest.html?test=ecma_5/Object/
 script 15.2.3.3-01.js # does not use reportCompare
-script 15.2.3.6-function-length.js
+skip-if(!xulRuntime.shell) script 15.2.3.6-function-length.js # uses shell load() function
 script 15.2.3.6-miscellaneous.js
-script 15.2.3.6-new-definition.js
+skip-if(!xulRuntime.shell) script 15.2.3.6-new-definition.js # uses shell load() function
 skip-if(!xulRuntime.shell) script 15.2.3.6-redefinition-1-of-4.js # uses shell load() function
 skip-if(!xulRuntime.shell) script 15.2.3.6-redefinition-2-of-4.js # uses shell load() function
 skip-if(!xulRuntime.shell) script 15.2.3.6-redefinition-3-of-4.js # uses shell load() function
