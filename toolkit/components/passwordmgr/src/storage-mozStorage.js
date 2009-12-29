@@ -42,7 +42,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-const DB_VERSION = 3; // The database schema version
+const DB_VERSION = 4; // The database schema version
 
 const ENCTYPE_BASE64 = 0;
 const ENCTYPE_SDR = 1;
@@ -94,18 +94,23 @@ LoginManagerStorage_mozStorage.prototype = {
     // The current database schema.
     _dbSchema: {
         tables: {
-            moz_logins:         "id                 INTEGER PRIMARY KEY," +
-                                "hostname           TEXT NOT NULL,"       +
-                                "httpRealm          TEXT,"                +
-                                "formSubmitURL      TEXT,"                +
-                                "usernameField      TEXT NOT NULL,"       +
-                                "passwordField      TEXT NOT NULL,"       +
-                                "encryptedUsername  TEXT NOT NULL,"       +
-                                "encryptedPassword  TEXT NOT NULL,"       +
-                                "guid               TEXT,"                +
-                                "encType            INTEGER",
-            // Changes must be reflected in this._dbAreExpectedColumnsPresent
-            //                          and this._searchLogins
+            moz_logins:         "id                  INTEGER PRIMARY KEY," +
+                                "hostname            TEXT NOT NULL,"       +
+                                "httpRealm           TEXT,"                +
+                                "formSubmitURL       TEXT,"                +
+                                "usernameField       TEXT NOT NULL,"       +
+                                "passwordField       TEXT NOT NULL,"       +
+                                "encryptedUsername   TEXT NOT NULL,"       +
+                                "encryptedPassword   TEXT NOT NULL,"       +
+                                "guid                TEXT,"                +
+                                "encType             INTEGER,"             +
+                                "timeCreated         INTEGER,"             +
+                                "timeLastUsed        INTEGER,"             +
+                                "timePasswordChanged INTEGER,"             +
+                                "timesUsed           INTEGER",
+            // Changes must be reflected in this._dbAreExpectedColumnsPresent(),
+            // this._searchLogins(), and this.modifyLogin().
+
             moz_disabledHosts:  "id                 INTEGER PRIMARY KEY," +
                                 "hostname           TEXT UNIQUE ON CONFLICT REPLACE",
         },
@@ -259,25 +264,42 @@ LoginManagerStorage_mozStorage.prototype = {
             (encUsername.charAt(0) == '~' || encPassword.charAt(0) == '~'))
             encType = ENCTYPE_BASE64;
 
+        // Set timestamps
+        let currentTime = Date.now();
+        if (!loginClone.timeCreated)
+            loginClone.timeCreated = currentTime;
+        if (!loginClone.timeLastUsed)
+            loginClone.timeLastUsed = currentTime;
+        if (!loginClone.timePasswordChanged)
+            loginClone.timePasswordChanged = currentTime;
+        if (!loginClone.timesUsed)
+            loginClone.timesUsed = 1;
+
         let query =
             "INSERT INTO moz_logins " +
             "(hostname, httpRealm, formSubmitURL, usernameField, " +
              "passwordField, encryptedUsername, encryptedPassword, " +
-             "guid, encType) " +
+             "guid, encType, timeCreated, timeLastUsed, timePasswordChanged, " +
+             "timesUsed) " +
             "VALUES (:hostname, :httpRealm, :formSubmitURL, :usernameField, " +
                     ":passwordField, :encryptedUsername, :encryptedPassword, " +
-                    ":guid, :encType)";
+                    ":guid, :encType, :timeCreated, :timeLastUsed, " +
+                    ":timePasswordChanged, :timesUsed)";
 
         let params = {
-            hostname:          loginClone.hostname,
-            httpRealm:         loginClone.httpRealm,
-            formSubmitURL:     loginClone.formSubmitURL,
-            usernameField:     loginClone.usernameField,
-            passwordField:     loginClone.passwordField,
-            encryptedUsername: encUsername,
-            encryptedPassword: encPassword,
-            guid:              loginClone.guid,
-            encType:           encType
+            hostname:            loginClone.hostname,
+            httpRealm:           loginClone.httpRealm,
+            formSubmitURL:       loginClone.formSubmitURL,
+            usernameField:       loginClone.usernameField,
+            passwordField:       loginClone.passwordField,
+            encryptedUsername:   encUsername,
+            encryptedPassword:   encPassword,
+            guid:                loginClone.guid,
+            encType:             encType,
+            timeCreated:         loginClone.timeCreated,
+            timeLastUsed:        loginClone.timeLastUsed,
+            timePasswordChanged: loginClone.timePasswordChanged,
+            timesUsed:           loginClone.timesUsed
         };
 
         let stmt;
@@ -344,10 +366,32 @@ LoginManagerStorage_mozStorage.prototype = {
                           newLoginData.username, newLoginData.password,
                           newLoginData.usernameField, newLoginData.passwordField);
             newLogin.QueryInterface(Ci.nsILoginMetaInfo);
+
+            // Automatically update metainfo when password is changed.
+            if (newLogin.password != oldLogin.password)
+                newLogin.timePasswordChanged = Date.now();
         } else if (newLoginData instanceof Ci.nsIPropertyBag) {
+            function _bagHasProperty(aPropName) {
+                try {
+                    newLoginData.getProperty(aPropName);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+
             // Clone the existing login, along with all its properties.
             newLogin = oldStoredLogin.clone();
             newLogin.QueryInterface(Ci.nsILoginMetaInfo);
+
+            // Automatically update metainfo when password is changed.
+            // (Done before the main property updates, lest the caller be
+            // explicitly updating both .password and .timePasswordChanged)
+            if (_bagHasProperty("password")) {
+                let newPassword = newLoginData.getProperty("password");
+                if (newPassword != oldLogin.password)
+                    newLogin.timePasswordChanged = Date.now();
+            }
 
             let propEnum = newLoginData.enumerator;
             while (propEnum.hasMoreElements()) {
@@ -361,14 +405,20 @@ LoginManagerStorage_mozStorage.prototype = {
                     case "password":
                     case "usernameField":
                     case "passwordField":
-                        newLogin[prop.name] = prop.value;
-                        break;
-
                     // nsILoginMetaInfo properties...
                     case "guid":
-                        newLogin.guid = prop.value;
-                        if (!this._isGuidUnique(newLogin.guid))
+                    case "timeCreated":
+                    case "timeLastUsed":
+                    case "timePasswordChanged":
+                    case "timesUsed":
+                        newLogin[prop.name] = prop.value;
+                        if (prop.name == "guid" && !this._isGuidUnique(newLogin.guid))
                             throw "specified GUID already exists";
+                        break;
+
+                    // Fake property, allows easy incrementing.
+                    case "timesUsedIncrement":
+                        newLogin.timesUsed += prop.value;
                         break;
 
                     // Fail if caller requests setting an unknown property.
@@ -396,20 +446,28 @@ LoginManagerStorage_mozStorage.prototype = {
                 "encryptedUsername = :encryptedUsername, " +
                 "encryptedPassword = :encryptedPassword, " +
                 "guid = :guid, " +
-                "encType = :encType " +
+                "encType = :encType, " +
+                "timeCreated = :timeCreated, " +
+                "timeLastUsed = :timeLastUsed, " +
+                "timePasswordChanged = :timePasswordChanged, " +
+                "timesUsed = :timesUsed " +
             "WHERE id = :id";
 
         let params = {
-            id:                idToModify,
-            hostname:          newLogin.hostname,
-            httpRealm:         newLogin.httpRealm,
-            formSubmitURL:     newLogin.formSubmitURL,
-            usernameField:     newLogin.usernameField,
-            passwordField:     newLogin.passwordField,
-            encryptedUsername: encUsername,
-            encryptedPassword: encPassword,
-            guid:              newLogin.guid,
-            encType:           ENCTYPE_SDR
+            id:                  idToModify,
+            hostname:            newLogin.hostname,
+            httpRealm:           newLogin.httpRealm,
+            formSubmitURL:       newLogin.formSubmitURL,
+            usernameField:       newLogin.usernameField,
+            passwordField:       newLogin.passwordField,
+            encryptedUsername:   encUsername,
+            encryptedPassword:   encPassword,
+            guid:                newLogin.guid,
+            encType:             ENCTYPE_SDR,
+            timeCreated:         newLogin.timeCreated,
+            timeLastUsed:        newLogin.timeLastUsed,
+            timePasswordChanged: newLogin.timePasswordChanged,
+            timesUsed:           newLogin.timesUsed
         };
 
         let stmt;
@@ -518,6 +576,10 @@ LoginManagerStorage_mozStorage.prototype = {
                 case "encryptedPassword":
                 case "guid":
                 case "encType":
+                case "timeCreated":
+                case "timeLastUsed":
+                case "timePasswordChanged":
+                case "timesUsed":
                     if (value == null) {
                         conditions.push(field + " isnull");
                     } else {
@@ -554,6 +616,10 @@ LoginManagerStorage_mozStorage.prototype = {
                 // set nsILoginMetaInfo values
                 login.QueryInterface(Ci.nsILoginMetaInfo);
                 login.guid = stmt.row.guid;
+                login.timeCreated = stmt.row.timeCreated;
+                login.timeLastUsed = stmt.row.timeLastUsed;
+                login.timePasswordChanged = stmt.row.timePasswordChanged;
+                login.timesUsed = stmt.row.timesUsed;
                 logins.push(login);
                 ids.push(stmt.row.id);
             }
@@ -1247,25 +1313,14 @@ LoginManagerStorage_mozStorage.prototype = {
      * Version 2 adds a GUID column. Existing logins are assigned a random GUID.
      */
     _dbMigrateToVersion2 : function () {
-        // Check to see if GUID column already exists.
-        let exists = true;
-        try { 
-            let stmt = this._dbConnection.createStatement(
-                           "SELECT guid FROM moz_logins");
-            // (no need to execute statement, if it compiled we're good)
-            stmt.finalize();
-        } catch (e) {
-            exists = false;
-        }
+        // Check to see if GUID column already exists, add if needed
+        let query;
+        if (!this._dbColumnExists("guid")) {
+            query = "ALTER TABLE moz_logins ADD COLUMN guid TEXT";
+            this._dbConnection.executeSimpleSQL(query);
 
-        // Add the new column and index only if needed.
-        if (!exists) {
-            this._dbConnection.executeSimpleSQL(
-                "ALTER TABLE moz_logins ADD COLUMN guid TEXT");
-
-            this._dbConnection.executeSimpleSQL(
-                "CREATE INDEX IF NOT EXISTS " +
-                    "moz_logins_guid_index ON moz_logins (guid)");
+            query = "CREATE INDEX IF NOT EXISTS moz_logins_guid_index ON moz_logins (guid)";
+            this._dbConnection.executeSimpleSQL(query);
         }
 
         // Get a list of IDs for existing logins
@@ -1310,20 +1365,9 @@ LoginManagerStorage_mozStorage.prototype = {
      * Version 3 adds a encType column.
      */
     _dbMigrateToVersion3 : function () {
-        // Check to see if encType column already exists.
-        let exists = true;
-        let query = "SELECT encType FROM moz_logins";
-        let stmt;
-        try { 
-            stmt = this._dbConnection.createStatement(query);
-            // (no need to execute statement, if it compiled we're good)
-            stmt.finalize();
-        } catch (e) {
-            exists = false;
-        }
-
-        // Add the new column and index only if needed.
-        if (!exists) {
+        // Check to see if encType column already exists, add if needed
+        let query;
+        if (!this._dbColumnExists("encType")) {
             query = "ALTER TABLE moz_logins ADD COLUMN encType INTEGER";
             this._dbConnection.executeSimpleSQL(query);
 
@@ -1372,6 +1416,59 @@ LoginManagerStorage_mozStorage.prototype = {
 
 
     /*
+     * _dbMigrateToVersion4
+     *
+     * Version 4 adds timeCreated, timeLastUsed, timePasswordChanged,
+     * and timesUsed columns
+     */
+    _dbMigrateToVersion4 : function () {
+        let query;
+        // Add the new columns, if needed.
+        for each (let column in ["timeCreated", "timeLastUsed", "timePasswordChanged", "timesUsed"]) {
+            if (!this._dbColumnExists(column)) {
+                query = "ALTER TABLE moz_logins ADD COLUMN " + column + " INTEGER";
+                this._dbConnection.executeSimpleSQL(query);
+            }
+        }
+
+        // Get a list of IDs for existing logins.
+        let ids = [];
+        query = "SELECT id FROM moz_logins WHERE timeCreated isnull OR " +
+                "timeLastUsed isnull OR timePasswordChanged isnull OR timesUsed isnull";
+        try {
+            stmt = this._dbCreateStatement(query);
+            while (stmt.executeStep())
+                ids.push(stmt.row.id);
+        } catch (e) {
+            this.log("Failed getting IDs: " + e);
+            throw e;
+        } finally {
+            stmt.reset();
+        }
+
+        // Initialize logins with current time.
+        query = "UPDATE moz_logins SET timeCreated = :initTime, timeLastUsed = :initTime, " +
+                "timePasswordChanged = :initTime, timesUsed = 1 WHERE id = :id";
+        let params = {
+            id:       null,
+            initTime: Date.now()
+        };
+        for each (let id in ids) {
+            params.id = id;
+            try {
+                stmt = this._dbCreateStatement(query, params);
+                stmt.execute();
+            } catch (e) {
+                this.log("Failed setting timestamps: " + e);
+                throw e;
+            } finally {
+                stmt.reset();
+            }
+        }
+    },
+
+
+    /*
      * _dbAreExpectedColumnsPresent
      *
      * Sanity check to ensure that the columns this version of the code expects
@@ -1388,7 +1485,11 @@ LoginManagerStorage_mozStorage.prototype = {
                        "encryptedUsername, " +
                        "encryptedPassword, " +
                        "guid, " +
-                       "encType " +
+                       "encType, " +
+                       "timeCreated, " +
+                       "timeLastUsed, " +
+                       "timePasswordChanged, " +
+                       "timesUsed " +
                     "FROM moz_logins";
         try { 
             let stmt = this._dbConnection.createStatement(query);
@@ -1412,6 +1513,24 @@ LoginManagerStorage_mozStorage.prototype = {
 
         this.log("verified that expected columns are present in DB.");
         return true;
+    },
+
+
+    /*
+     * _dbColumnExists
+     *
+     * Checks to see if the named column already exists.
+     */
+    _dbColumnExists : function (columnName) {
+        let query = "SELECT " + columnName + " FROM moz_logins";
+        try {
+            let stmt = this._dbConnection.createStatement(query);
+            // (no need to execute statement, if it compiled we're good)
+            stmt.finalize();
+            return true;
+        } catch (e) {
+            return false;
+        }
     },
 
 
