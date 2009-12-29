@@ -511,7 +511,8 @@ nsSVGPathElement::GetFlattenedPath(const gfxMatrix &aMatrix)
 PRBool
 nsSVGPathElement::AttributeDefinesGeometry(const nsIAtom *aName)
 {
-  if (aName == nsGkAtoms::d)
+  if (aName == nsGkAtoms::d ||
+      aName == nsGkAtoms::pathLength)
     return PR_TRUE;
 
   return PR_FALSE;
