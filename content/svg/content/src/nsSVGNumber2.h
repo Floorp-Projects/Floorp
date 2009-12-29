@@ -59,8 +59,10 @@ public:
   void SetBaseValue(float aValue, nsSVGElement *aSVGElement, PRBool aDoSetAttr);
   float GetBaseValue() const
     { return mBaseVal; }
-  float GetAnimValue() const
-    { return mAnimVal; }
+  float GetAnimValue(nsSVGElement *aSVGElement) const
+  {
+    return mAnimVal;
+  }
 
   nsresult ToDOMAnimatedNumber(nsIDOMSVGAnimatedNumber **aResult,
                                nsSVGElement* aSVGElement);
@@ -91,7 +93,7 @@ private:
         return NS_OK;
       }
     NS_IMETHOD GetAnimVal(float* aResult)
-      { *aResult = mVal->GetAnimValue(); return NS_OK; }
+      { *aResult = mVal->GetAnimValue(mSVGElement); return NS_OK; }
 
   };
 

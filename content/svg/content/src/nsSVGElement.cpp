@@ -1285,7 +1285,7 @@ nsSVGElement::GetAnimatedNumberValues(float *aFirst, ...)
   va_start(args, aFirst);
 
   while (f && i < info.mNumberCount) {
-    *f = info.mNumbers[i++].GetAnimValue();
+    *f = info.mNumbers[i++].GetAnimValue(this);
     f = va_arg(args, float*);
   }
   va_end(args);
