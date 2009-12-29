@@ -55,10 +55,7 @@ endif
 
 CPPSRCS = nsPlacesImportExportService.cpp
 
-EXTRA_COMPONENTS = \
-  nsPlacesTransactionsService.js \
-  PlacesProtocolHandler.js \
-  $(NULL)
+EXTRA_COMPONENTS = nsPlacesTransactionsService.js
 
 include $(topsrcdir)/config/rules.mk
 
