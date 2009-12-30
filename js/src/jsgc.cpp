@@ -87,6 +87,8 @@
 #include "jsdtracef.h"
 #endif
 
+#include "jsobjinlines.h"
+
 /*
  * Include the headers for mmap.
  */
@@ -2594,8 +2596,8 @@ js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data)
     }
 }
 
-static inline void
-FinalizeGCThing(JSContext *cx, JSObject *obj, unsigned thingKind)
+inline void
+FinalizeObject(JSContext *cx, JSObject *obj, unsigned thingKind)
 {
     JS_ASSERT(thingKind == FINALIZE_FUNCTION || thingKind == FINALIZE_OBJECT);
 
@@ -2603,13 +2605,8 @@ FinalizeGCThing(JSContext *cx, JSObject *obj, unsigned thingKind)
     if (!obj->map)
         return;
 
-    if (JS_UNLIKELY(cx->debugHooks->objectHook != NULL)) {
-        cx->debugHooks->objectHook(cx, obj, JS_FALSE,
-                                   cx->debugHooks->objectHookData);
-    }
-
     /* Finalize obj first, in case it needs map and slots. */
-    JSClass *clasp = STOBJ_GET_CLASS(obj);
+    JSClass *clasp = obj->getClass();
     if (clasp->finalize)
         clasp->finalize(cx, obj);
 
@@ -2620,19 +2617,38 @@ FinalizeGCThing(JSContext *cx, JSObject *obj, unsigned thingKind)
 
     if (JS_LIKELY(OBJ_IS_NATIVE(obj)))
         OBJ_SCOPE(obj)->drop(cx, obj);
-    js_FreeSlots(cx, obj);
+    if (obj->hasSlotsArray())
+        obj->freeSlotsArray(cx);
 }
 
-static inline void
-FinalizeGCThing(JSContext *cx, JSFunction *fun, unsigned thingKind)
+inline void
+FinalizeFunction(JSContext *cx, JSFunction *fun, unsigned thingKind)
 {
-    JS_ASSERT(thingKind == FINALIZE_FUNCTION);
-    ::FinalizeGCThing(cx, FUN_OBJECT(fun), thingKind);
+    FinalizeObject(cx, FUN_OBJECT(fun), thingKind);
+}
+
+inline void
+FinalizeHookedObject(JSContext *cx, JSObject *obj, unsigned thingKind)
+{
+    if (!obj->map)
+        return;
+
+    if (cx->debugHooks->objectHook) {
+        cx->debugHooks->objectHook(cx, obj, JS_FALSE,
+                                   cx->debugHooks->objectHookData);
+    }
+    FinalizeObject(cx, obj, thingKind);
+}
+
+inline void
+FinalizeHookedFunction(JSContext *cx, JSFunction *fun, unsigned thingKind)
+{
+    FinalizeHookedObject(cx, FUN_OBJECT(fun), thingKind);
 }
 
 #if JS_HAS_XML_SUPPORT
-static inline void
-FinalizeGCThing(JSContext *cx, JSXML *xml, unsigned thingKind)
+inline void
+FinalizeXML(JSContext *cx, JSXML *xml, unsigned thingKind)
 {
     js_FinalizeXML(cx, xml);
 }
@@ -2656,70 +2672,90 @@ js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
     return -1;
 }
 
-/*
- * cx is NULL when we are called from js_FinishAtomState to force the
- * finalization of the permanently interned strings.
- */
-static void
-FinalizeString(JSRuntime *rt, JSString *str, unsigned thingKind, JSContext *cx)
+inline void
+FinalizeString(JSContext *cx, JSString *str, unsigned thingKind)
 {
-    jschar *chars;
-    JSBool valid;
-    JSStringFinalizeOp finalizer;
+    JS_ASSERT(FINALIZE_STRING == thingKind);
+    JS_ASSERT(!JSString::isStatic(str));
+    JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
+    if (str->isDependent()) {
+        JS_ASSERT(str->dependentBase());
+        JS_RUNTIME_UNMETER(cx->runtime, liveDependentStrings);
+    } else {
+        /*
+         * flatChars for stillborn string is null, but cx->free would checks
+         * for a null pointer on its own.
+         */
+        cx->free(str->flatChars());
+    }
+    if (str->isDeflated())
+        js_PurgeDeflatedStringCache(cx->runtime, str);
+}
 
+inline void
+FinalizeExternalString(JSContext *cx, JSString *str, unsigned thingKind)
+{
+    unsigned type = thingKind - FINALIZE_EXTERNAL_STRING0;
+    JS_ASSERT(type < JS_ARRAY_LENGTH(str_finalizers));
+    JS_ASSERT(!JSString::isStatic(str));
+    JS_ASSERT(!str->isDependent());
+
+    JS_RUNTIME_UNMETER(cx->runtime, liveStrings);
+
+    /* A stillborn string has null chars. */
+    jschar *chars = str->flatChars();
+    if (!chars)
+        return;
+    JSStringFinalizeOp finalizer = str_finalizers[type];
+    if (finalizer)
+        finalizer(cx, str);
+    if (str->isDeflated())
+        js_PurgeDeflatedStringCache(cx->runtime, str);
+}
+
+/*
+ * This function is called from js_FinishAtomState to force the finalization
+ * of the permanently interned strings when cx is not available.
+ */
+void
+js_FinalizeStringRT(JSRuntime *rt, JSString *str)
+{
     JS_RUNTIME_UNMETER(rt, liveStrings);
     JS_ASSERT(!JSString::isStatic(str));
+
+    unsigned thingKind = THING_TO_ARENA(str)->list->thingKind;
     JS_ASSERT(IsFinalizableStringKind(thingKind));
     if (str->isDependent()) {
         /* A dependent string can not be external and must be valid. */
         JS_ASSERT(thingKind == FINALIZE_STRING);
         JS_ASSERT(str->dependentBase());
         JS_RUNTIME_UNMETER(rt, liveDependentStrings);
-        valid = JS_TRUE;
     } else {
         /* A stillborn string has null chars, so is not valid. */
-        chars = str->flatChars();
-        valid = (chars != NULL);
-        if (valid) {
-            if (thingKind == FINALIZE_STRING) {
-                if (cx)
-                    cx->free(chars);
-                else
-                    rt->free(chars);
-            } else {
-                unsigned type = thingKind - FINALIZE_EXTERNAL_STRING0;
-                JS_ASSERT(type < JS_ARRAY_LENGTH(str_finalizers));
-                finalizer = str_finalizers[type];
-                if (finalizer) {
-                    /*
-                     * Assume that the finalizer for the permanently interned
-                     * string knows how to deal with null context.
-                     */
-                    finalizer(cx, str);
-                }
+        jschar *chars = str->flatChars();
+        if (!chars)
+            return;
+        if (thingKind == FINALIZE_STRING) {
+            rt->free(chars);
+        } else {
+            unsigned type = thingKind - FINALIZE_EXTERNAL_STRING0;
+            JS_ASSERT(type < JS_ARRAY_LENGTH(str_finalizers));
+            JSStringFinalizeOp finalizer = str_finalizers[type];
+            if (finalizer) {
+                /*
+                 * Assume that the finalizer for the permanently interned
+                 * string knows how to deal with null context.
+                 */
+                finalizer(NULL, str);
             }
         }
     }
-    if (valid && str->isDeflated())
+    if (str->isDeflated())
         js_PurgeDeflatedStringCache(rt, str);
 }
 
-static inline void
-FinalizeGCThing(JSContext *cx, JSString *str, unsigned thingKind)
-{
-    return FinalizeString(cx->runtime, str, thingKind, cx);
-}
-
-void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str)
-{
-    JS_ASSERT(!JSString::isStatic(str));
-
-    unsigned thingKind = THING_TO_ARENA(str)->list->thingKind;
-    FinalizeString(rt, str, thingKind, NULL);
-}
-
-template<typename T>
+template<typename T,
+         void finalizer(JSContext *cx, T *thing, unsigned thingKind)>
 static void
 FinalizeArenaList(JSContext *cx, unsigned thingKind,
                   JSGCArenaInfo **emptyArenas)
@@ -2771,7 +2807,7 @@ FinalizeArenaList(JSContext *cx, unsigned thingKind,
                     METER(nthings++);
                     continue;
                 }
-                ::FinalizeGCThing(cx, reinterpret_cast<T *>(thing), thingKind);
+                finalizer(cx, reinterpret_cast<T *>(thing), thingKind);
 #ifdef DEBUG
                 memset(thing, JS_FREE_PATTERN, sizeof(T));
 #endif
@@ -3136,16 +3172,27 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      * installed.
      */
     emptyArenas = NULL;
-    FinalizeArenaList<JSObject>(cx, FINALIZE_OBJECT, &emptyArenas);
-    FinalizeArenaList<JSFunction>(cx, FINALIZE_FUNCTION, &emptyArenas);
+    if (!cx->debugHooks->objectHook) {
+        FinalizeArenaList<JSObject, FinalizeObject>
+            (cx, FINALIZE_OBJECT, &emptyArenas);
+        FinalizeArenaList<JSFunction, FinalizeFunction>
+            (cx, FINALIZE_FUNCTION, &emptyArenas);
+    } else {
+        FinalizeArenaList<JSObject, FinalizeHookedObject>
+            (cx, FINALIZE_OBJECT, &emptyArenas);
+        FinalizeArenaList<JSFunction, FinalizeHookedFunction>
+            (cx, FINALIZE_FUNCTION, &emptyArenas);
+    }
 #if JS_HAS_XML_SUPPORT
-    FinalizeArenaList<JSXML>(cx, FINALIZE_XML, &emptyArenas);
+    FinalizeArenaList<JSXML, FinalizeXML>(cx, FINALIZE_XML, &emptyArenas);
 #endif
-    FinalizeArenaList<JSString>(cx, FINALIZE_STRING, &emptyArenas);
+    FinalizeArenaList<JSString, FinalizeString>
+        (cx, FINALIZE_STRING, &emptyArenas);
     for (unsigned i = FINALIZE_EXTERNAL_STRING0;
          i <= FINALIZE_EXTERNAL_STRING_LAST;
          ++i) {
-        FinalizeArenaList<JSString>(cx, i, &emptyArenas);
+        FinalizeArenaList<JSString, FinalizeExternalString>
+            (cx, i, &emptyArenas);
     }
 
     ap = &rt->gcDoubleArenaList.head;
