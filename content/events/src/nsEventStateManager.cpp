@@ -154,6 +154,7 @@
 #endif
 #include "nsIFocusController.h"
 #include "nsIController.h"
+#include "nsICommandParams.h"
 
 #ifdef XP_MACOSX
 #import <ApplicationServices/ApplicationServices.h>
@@ -1344,6 +1345,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case NS_CONTENT_COMMAND_DELETE:
   case NS_CONTENT_COMMAND_UNDO:
   case NS_CONTENT_COMMAND_REDO:
+  case NS_CONTENT_COMMAND_PASTE_TRANSFERABLE:
     {
       DoContentCommandEvent(static_cast<nsContentCommandEvent*>(aEvent));
     }
@@ -4546,6 +4548,9 @@ nsEventStateManager::DoContentCommandEvent(nsContentCommandEvent* aEvent)
     case NS_CONTENT_COMMAND_REDO:
       cmd = "cmd_redo";
       break;
+    case NS_CONTENT_COMMAND_PASTE_TRANSFERABLE:
+      cmd = "cmd_pasteTransferable";
+      break;
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -4562,7 +4567,25 @@ nsEventStateManager::DoContentCommandEvent(nsContentCommandEvent* aEvent)
     NS_ENSURE_SUCCESS(rv, rv);
     aEvent->mIsEnabled = canDoIt;
     if (canDoIt && !aEvent->mOnlyEnabledCheck) {
-      rv = controller->DoCommand(cmd);
+      switch (aEvent->message) {
+        case NS_CONTENT_COMMAND_PASTE_TRANSFERABLE: {
+          nsCOMPtr<nsICommandController> commandController = do_QueryInterface(controller);
+          NS_ENSURE_STATE(commandController);
+
+          nsCOMPtr<nsICommandParams> params = do_CreateInstance("@mozilla.org/embedcomp/command-params;1", &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          rv = params->SetISupportsValue("transferable", aEvent->mTransferable);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          rv = commandController->DoCommandWithParams(cmd, params);
+          break;
+        }
+        
+        default:
+          rv = controller->DoCommand(cmd);
+          break;
+      }
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

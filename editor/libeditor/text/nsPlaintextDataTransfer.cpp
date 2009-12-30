@@ -455,6 +455,30 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(PRInt32 aSelectionType)
   return rv;
 }
 
+NS_IMETHODIMP nsPlaintextEditor::PasteTransferable(nsITransferable *aTransferable)
+{
+  ForceCompositionEnd();
+
+  PRBool preventDefault;
+  nsresult rv = FireClipboardEvent(NS_PASTE, &preventDefault);
+  if (NS_FAILED(rv) || preventDefault)
+    return rv;
+
+  if (!IsModifiable())
+    return NS_OK;
+
+  // handle transferable hooks
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  GetDocument(getter_AddRefs(domdoc));
+  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, aTransferable))
+    return NS_OK;
+
+  // Beware! This may flush notifications via synchronous
+  // ScrollSelectionIntoView.
+  rv = InsertTextFromTransferable(aTransferable, nsnull, nsnull, PR_TRUE);
+
+  return rv;
+}
 
 NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
 {
@@ -481,6 +505,37 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPa
   *aCanPaste = haveFlavors;
   return NS_OK;
 }
+
+
+NS_IMETHODIMP nsPlaintextEditor::CanPasteTransferable(nsITransferable *aTransferable, PRBool *aCanPaste)
+{
+  NS_ENSURE_ARG_POINTER(aCanPaste);
+
+  // can't paste if readonly
+  if (!IsModifiable()) {
+    *aCanPaste = PR_FALSE;
+    return NS_OK;
+  }
+
+  // If |aTransferable| is null, assume that a paste will succeed.
+  if (!aTransferable) {
+    *aCanPaste = PR_TRUE;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISupports> data;
+  PRUint32 dataLen;
+  nsresult rv = aTransferable->GetTransferData(kUnicodeMime,
+                                               getter_AddRefs(data),
+                                               &dataLen);
+  if (NS_SUCCEEDED(rv) && data)
+    *aCanPaste = PR_TRUE;
+  else
+    *aCanPaste = PR_FALSE;
+  
+  return NS_OK;
+}
+
 
 nsresult
 nsPlaintextEditor::SetupDocEncoder(nsIDocumentEncoder **aDocEncoder)
