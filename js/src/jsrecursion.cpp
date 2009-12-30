@@ -625,7 +625,7 @@ TraceRecorder::downRecursion()
     lirbuf->rp = lir->ins2(LIR_piadd, lirbuf->rp, lir->insImmWord(sizeof(FrameInfo*)));
     lir->insStorei(lirbuf->rp, lirbuf->state, offsetof(InterpState, rp));
     --callDepth;
-    clearFrameSlotsFromTracker(nativeFrameTracker);
+    clearCurrentFrameSlotsFromTracker(nativeFrameTracker);
 
     /*
      * If the callee and caller have identical call sites, this is a down-
