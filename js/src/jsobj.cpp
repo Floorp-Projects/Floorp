@@ -2802,10 +2802,10 @@ obj_create(JSContext *cx, uintN argc, jsval *vp)
         AutoDescriptorArray descs(cx);
         size_t len = ida.length();
         for (size_t i = 0; i < len; i++) {
-            PropertyDescriptor desc;
             jsid id = ida[i];
-            if (!JS_GetPropertyById(cx, props, id, &vp[1]) || !desc.initialize(cx, id, vp[1]) ||
-                !descs.append(desc)) {
+            PropertyDescriptor *desc = descs.append();
+            if (!desc || !JS_GetPropertyById(cx, props, id, &vp[1]) ||
+                !desc->initialize(cx, id, vp[1])) {
                 return JS_FALSE;
             }
         }
