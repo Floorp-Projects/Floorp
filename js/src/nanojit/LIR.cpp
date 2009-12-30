@@ -1539,6 +1539,7 @@ namespace nanojit
                 case LIR_u2q:
                 case LIR_i2f:
                 case LIR_u2f:
+                case LIR_mod:
                     live.add(ins->oprnd1(), ins);
                     break;
 
@@ -1581,7 +1582,6 @@ namespace nanojit
                 case LIR_sub:
                 case LIR_mul:
                 case LIR_div:
-                case LIR_mod:
                 case LIR_fadd:
                 case LIR_fsub:
                 case LIR_fmul:
