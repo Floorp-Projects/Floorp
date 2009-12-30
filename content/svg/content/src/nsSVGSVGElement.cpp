@@ -1128,8 +1128,8 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
     }
   }
 
-  w = PR_MAX(w, 0.0f);
-  h = PR_MAX(h, 0.0f);
+  w = NS_MAX(w, 0.0f);
+  h = NS_MAX(h, 0.0f);
 
   switch (aCtxType) {
   case nsSVGUtils::X:

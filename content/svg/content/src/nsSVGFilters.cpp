@@ -479,8 +479,8 @@ BoxBlur(const PRUint8 *aInput, PRUint8 *aOutput,
 
   for (PRUint32 i=0; i < boxSize; i++) {
     PRInt32 pos = aStartMinor - aLeftLobe + i;
-    pos = PR_MAX(pos, aStartMinor);
-    pos = PR_MIN(pos, aEndMinor - 1);
+    pos = NS_MAX(pos, aStartMinor);
+    pos = NS_MIN(pos, aEndMinor - 1);
 #define SUM(j)     sums[j] += aInput[aStrideMinor*pos + j];
     SUM(0); SUM(1); SUM(2); SUM(3);
 #undef SUM
@@ -531,8 +531,8 @@ BoxBlur(const PRUint8 *aInput, PRUint8 *aOutput,
   } else {
     for (PRInt32 minor = aStartMinor; minor < aEndMinor; minor++) {
       PRInt32 tmp = minor - aLeftLobe;
-      PRInt32 last = PR_MAX(tmp, aStartMinor);
-      PRInt32 next = PR_MIN(tmp + boxSize, aEndMinor - 1);
+      PRInt32 last = NS_MAX(tmp, aStartMinor);
+      PRInt32 next = NS_MIN(tmp + PRInt32(boxSize), aEndMinor - 1);
 
       OUTPUT_PIXEL();
 #define SUM(j)     sums[j] += aInput[aStrideMinor*next + j] - \
@@ -912,8 +912,8 @@ nsSVGFEBlendElement::Filter(nsSVGFilterInstance* aInstance,
       PRUint32 targIndex = y * stride + 4 * x;
       PRUint32 qa = targetData[targIndex + GFX_ARGB32_OFFSET_A];
       PRUint32 qb = sourceData[targIndex + GFX_ARGB32_OFFSET_A];
-      for (PRInt32 i = PR_MIN(GFX_ARGB32_OFFSET_B, GFX_ARGB32_OFFSET_R);
-           i <= PR_MAX(GFX_ARGB32_OFFSET_B, GFX_ARGB32_OFFSET_R); i++) {
+      for (PRInt32 i = NS_MIN(GFX_ARGB32_OFFSET_B, GFX_ARGB32_OFFSET_R);
+           i <= NS_MAX(GFX_ARGB32_OFFSET_B, GFX_ARGB32_OFFSET_R); i++) {
         PRUint32 ca = targetData[targIndex + i];
         PRUint32 cb = sourceData[targIndex + i];
         PRUint32 val;
@@ -928,18 +928,18 @@ nsSVGFEBlendElement::Filter(nsSVGFilterInstance* aInstance,
             val = 255 * (cb + ca) - ca * cb;
             break;
           case nsSVGFEBlendElement::SVG_MODE_DARKEN:
-            val = PR_MIN((255 - qa) * cb + 255 * ca,
+            val = NS_MIN((255 - qa) * cb + 255 * ca,
                          (255 - qb) * ca + 255 * cb);
             break;
           case nsSVGFEBlendElement::SVG_MODE_LIGHTEN:
-            val = PR_MAX((255 - qa) * cb + 255 * ca,
+            val = NS_MAX((255 - qa) * cb + 255 * ca,
                          (255 - qb) * ca + 255 * cb);
             break;
           default:
             return NS_ERROR_FAILURE;
             break;
         }
-        val = PR_MIN(val / 255, 255);
+        val = NS_MIN(val / 255, 255U);
         targetData[targIndex + i] =  static_cast<PRUint8>(val);
       }
       PRUint32 alpha = 255 * 255 - (255 - qa) * (255 - qb);
@@ -1266,7 +1266,7 @@ nsSVGFEColorMatrixElement::Filter(nsSVGFilterInstance *instance,
           sourceData[targIndex + GFX_ARGB32_OFFSET_B] * colorMatrix[row + 2] +
           sourceData[targIndex + GFX_ARGB32_OFFSET_A] * colorMatrix[row + 3] +
           255 *                                         colorMatrix[row + 4];
-        col[i] = PR_MIN(PR_MAX(0, col[i]), 255);
+        col[i] = NS_MIN(NS_MAX(0.f, col[i]), 255.f);
       }
       targetData[targIndex + GFX_ARGB32_OFFSET_R] =
         static_cast<PRUint8>(col[0]);
@@ -1503,7 +1503,7 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance,
           PRUint8 i2 = sourceData[targIndex + i];
           float result = k1Scaled*i1*i2 + k2*i1 + k3*i2 + k4Scaled;
           targetData[targIndex + i] =
-                       static_cast<PRUint8>(PR_MIN(PR_MAX(0, result), 255));
+                       static_cast<PRUint8>(NS_MIN(NS_MAX(0.f, result), 255.f));
         }
       }
     }
@@ -1931,12 +1931,12 @@ nsSVGComponentTransferFunctionElement::GenerateLookupTable(PRUint8 *aTable)
       float v1, v2;
       list->GetItem(k, getter_AddRefs(number));
       number->GetValue(&v1);
-      list->GetItem(PR_MIN(k + 1, num - 1), getter_AddRefs(number));
+      list->GetItem(NS_MIN(k + 1, num - 1), getter_AddRefs(number));
       number->GetValue(&v2);
       PRInt32 val =
         PRInt32(255 * (v1 + (i/255.0f - k/float(num-1))*(num - 1)*(v2 - v1)));
-      val = PR_MIN(255, val);
-      val = PR_MAX(0, val);
+      val = NS_MIN(255, val);
+      val = NS_MAX(0, val);
       aTable[i] = val;
     }
     break;
@@ -1955,13 +1955,13 @@ nsSVGComponentTransferFunctionElement::GenerateLookupTable(PRUint8 *aTable)
 
     for (i = 0; i < 256; i++) {
       PRUint32 k = (i * num) / 255;
-      k = PR_MIN(k, num - 1);
+      k = NS_MIN(k, num - 1);
       float v;
       list->GetItem(k, getter_AddRefs(number));
       number->GetValue(&v);
       PRInt32 val = PRInt32(255 * v);
-      val = PR_MIN(255, val);
-      val = PR_MAX(0, val);
+      val = NS_MIN(255, val);
+      val = NS_MAX(0, val);
       aTable[i] = val;
     }
     break;
@@ -1971,8 +1971,8 @@ nsSVGComponentTransferFunctionElement::GenerateLookupTable(PRUint8 *aTable)
   {
     for (i = 0; i < 256; i++) {
       PRInt32 val = PRInt32(slope * i + 255 * intercept);
-      val = PR_MIN(255, val);
-      val = PR_MAX(0, val);
+      val = NS_MIN(255, val);
+      val = NS_MAX(0, val);
       aTable[i] = val;
     }
     break;
@@ -1982,8 +1982,8 @@ nsSVGComponentTransferFunctionElement::GenerateLookupTable(PRUint8 *aTable)
   {
     for (i = 0; i < 256; i++) {
       PRInt32 val = PRInt32(255 * (amplitude * pow(i / 255.0f, exponent) + offset));
-      val = PR_MIN(255, val);
-      val = PR_MAX(0, val);
+      val = NS_MIN(255, val);
+      val = NS_MAX(0, val);
       aTable[i] = val;
     }
     break;
@@ -3214,8 +3214,8 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance,
                                doStitch, filterX, filterY, filterWidth, filterHeight) * 255 + 255) / 2;
       }
       for (int i = 0; i < 4; i++) {
-        col[i] = PR_MIN(col[i], 255);
-        col[i] = PR_MAX(col[i], 0);
+        col[i] = NS_MIN(col[i], 255.f);
+        col[i] = NS_MAX(col[i], 0.f);
       }
 
       PRUint8 r, g, b, a;
@@ -3590,7 +3590,7 @@ nsSVGFEMorphologyElement::InflateRect(const nsIntRect& aRect,
   PRInt32 rx, ry;
   GetRXY(&rx, &ry, aInstance);
   nsIntRect result = aRect;
-  result.Inflate(PR_MAX(0, rx), PR_MAX(0, ry));
+  result.Inflate(NS_MAX(0, rx), NS_MAX(0, ry));
   return result;
 }
 
@@ -3671,14 +3671,14 @@ nsSVGFEMorphologyElement::Filter(nsSVGFilterInstance *instance,
    * not fall within the current kernel or if we are starting a new row.
    */
   for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
-    PRUint32 startY = PR_MAX(0, y - ry);
+    PRUint32 startY = NS_MAX(0, y - ry);
     // We need to read pixels not just in 'rect', which is limited to
     // the dirty part of our filter primitive subregion, but all pixels in
     // the given radii from the source surface, so use the surface size here.
-    PRUint32 endY = PR_MIN(y + ry, instance->GetSurfaceHeight() - 1);
+    PRUint32 endY = NS_MIN(y + ry, instance->GetSurfaceHeight() - 1);
     for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
-      PRUint32 startX = PR_MAX(0, x - rx);
-      PRUint32 endX = PR_MIN(x + rx, instance->GetSurfaceWidth() - 1);
+      PRUint32 startX = NS_MAX(0, x - rx);
+      PRUint32 endX = NS_MIN(x + rx, instance->GetSurfaceWidth() - 1);
       PRUint32 targIndex = y * stride + 4 * x;
 
       // We need to scan the entire kernel
@@ -4025,8 +4025,8 @@ nsSVGFEConvolveMatrixElement::ComputeChangeBBox(const nsTArray<nsIntRect>& aSour
 
 static PRInt32 BoundInterval(PRInt32 aVal, PRInt32 aMax)
 {
-  aVal = PR_MAX(aVal, 0);
-  return PR_MIN(aVal, aMax - 1);
+  aVal = NS_MAX(aVal, 0);
+  return NS_MIN(aVal, aMax - 1);
 }
 
 static void
@@ -4803,7 +4803,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
                                                  nsnull);
     nsCOMPtr<nsIContent> spot = do_QueryInterface(spotLight);
     if (spot->HasAttr(kNameSpaceID_None, nsGkAtoms::limitingConeAngle)) {
-      cosConeAngle = PR_MAX(cos(limitingConeAngle * radPerDeg), 0);
+      cosConeAngle = NS_MAX<double>(cos(limitingConeAngle * radPerDeg), 0.0);
     } else {
       cosConeAngle = 0;
     }
@@ -4986,11 +4986,11 @@ nsSVGFEDiffuseLightingElement::LightPixel(const float *N, const float *L,
 
   if (diffuseNL > 0) {
     targetData[GFX_ARGB32_OFFSET_B] =
-      PR_MIN(PRUint32(diffuseNL * NS_GET_B(color)), 255);
+      NS_MIN(PRUint32(diffuseNL * NS_GET_B(color)), 255U);
     targetData[GFX_ARGB32_OFFSET_G] =
-      PR_MIN(PRUint32(diffuseNL * NS_GET_G(color)), 255);
+      NS_MIN(PRUint32(diffuseNL * NS_GET_G(color)), 255U);
     targetData[GFX_ARGB32_OFFSET_R] =
-      PR_MIN(PRUint32(diffuseNL * NS_GET_R(color)), 255);
+      NS_MIN(PRUint32(diffuseNL * NS_GET_R(color)), 255U);
   } else {
     targetData[GFX_ARGB32_OFFSET_B] = 0;
     targetData[GFX_ARGB32_OFFSET_G] = 0;
@@ -5140,15 +5140,15 @@ nsSVGFESpecularLightingElement::LightPixel(const float *N, const float *L,
       kS * pow(dotNH, mNumberAttributes[SPECULAR_EXPONENT].GetAnimValue());
 
     targetData[GFX_ARGB32_OFFSET_B] =
-      PR_MIN(PRUint32(specularNH * NS_GET_B(color)), 255);
+      NS_MIN(PRUint32(specularNH * NS_GET_B(color)), 255U);
     targetData[GFX_ARGB32_OFFSET_G] =
-      PR_MIN(PRUint32(specularNH * NS_GET_G(color)), 255);
+      NS_MIN(PRUint32(specularNH * NS_GET_G(color)), 255U);
     targetData[GFX_ARGB32_OFFSET_R] =
-      PR_MIN(PRUint32(specularNH * NS_GET_R(color)), 255);
+      NS_MIN(PRUint32(specularNH * NS_GET_R(color)), 255U);
 
     targetData[GFX_ARGB32_OFFSET_A] =
-      PR_MAX(targetData[GFX_ARGB32_OFFSET_B],
-             PR_MAX(targetData[GFX_ARGB32_OFFSET_G],
+      NS_MAX(targetData[GFX_ARGB32_OFFSET_B],
+             NS_MAX(targetData[GFX_ARGB32_OFFSET_G],
                     targetData[GFX_ARGB32_OFFSET_R]));
   } else {
     targetData[GFX_ARGB32_OFFSET_B] = 0;
