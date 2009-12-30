@@ -718,7 +718,7 @@ nsUrlClassifierHashCompleter::NoteServerResponse(PRBool success)
   }
 
   if (mBackoff) {
-    mBackoffTime = PR_MIN(mBackoffTime, gBackoffMax);
+    mBackoffTime = NS_MIN(mBackoffTime, gBackoffMax);
     LOG(("Using %d for backoff time", mBackoffTime));
     mNextRequestTime = now + PR_SecondsToInterval(mBackoffTime);
   }
