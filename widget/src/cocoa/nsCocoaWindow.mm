@@ -1763,6 +1763,7 @@ static const NSString* kStateTitleKey = @"title";
 static const NSString* kStateDrawsContentsIntoWindowFrameKey = @"drawsContentsIntoWindowFrame";
 static const NSString* kStateActiveTitlebarColorKey = @"activeTitlebarColor";
 static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor";
+static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
 - (void)importState:(NSDictionary*)aState
 {
@@ -1770,6 +1771,7 @@ static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor"
   [self setDrawsContentsIntoWindowFrame:[[aState objectForKey:kStateDrawsContentsIntoWindowFrameKey] boolValue]];
   [self setTitlebarColor:[aState objectForKey:kStateActiveTitlebarColorKey] forActiveWindow:YES];
   [self setTitlebarColor:[aState objectForKey:kStateInactiveTitlebarColorKey] forActiveWindow:NO];
+  [self setShowsToolbarButton:[[aState objectForKey:kStateShowsToolbarButton] boolValue]];
 }
 
 - (NSMutableDictionary*)exportState
@@ -1786,6 +1788,8 @@ static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor"
   if (inactiveTitlebarColor) {
     [state setObject:inactiveTitlebarColor forKey:kStateInactiveTitlebarColorKey];
   }
+  [state setObject:[NSNumber numberWithBool:[self showsToolbarButton]]
+            forKey:kStateShowsToolbarButton];
   return state;
 }
 
