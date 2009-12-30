@@ -105,6 +105,13 @@ extern "C" {
   CG_EXTERN void CGContextResetCTM(CGContextRef);
   CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
   CG_EXTERN void CGContextResetClip(CGContextRef);
+
+  // CGSPrivate.h
+  typedef NSInteger CGSConnection;
+  typedef NSInteger CGSWindow;
+  extern CGSConnection _CGSDefaultConnection();
+  extern CGError CGSGetScreenRectForWindow(const CGSConnection cid, CGSWindow wid, CGRect *outRect);
+  extern CGError CGSGetWindowLevel(const CGSConnection cid, CGSWindow wid, CGWindowLevel *level);
 }
 
 #ifndef NS_LEOPARD_AND_LATER
@@ -6561,33 +6568,100 @@ ChildViewMouseTracker::ViewForEvent(NSEvent* aEvent)
   return [view isKindOfClass:[ChildView class]] ? (ChildView*)view : nil;
 }
 
-// Find the active window under the mouse. Returns nil if the mouse isn't over
-// any active window.
-NSWindow*
-ChildViewMouseTracker::WindowForEvent(NSEvent* anEvent)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+static CGWindowLevel kDockWindowLevel = 0;
+static CGWindowLevel kPopupWindowLevel = 0;
+static CGWindowLevel kFloatingWindowLevel = 0;
 
+static BOOL WindowNumberIsUnderPoint(NSInteger aWindowNumber, NSPoint aPoint) {
+  NSWindow* window = [NSApp windowWithWindowNumber:aWindowNumber];
+  if (window) {
+    // This is one of our own windows.
+    return NSMouseInRect(aPoint, [window frame], NO);
+  }
+
+  CGSConnection cid = _CGSDefaultConnection();
+
+  if (!kDockWindowLevel) {
+    // These constants are in fact function calls, so cache them.
+    kDockWindowLevel = kCGDockWindowLevel;
+    kPopupWindowLevel = kCGPopUpMenuWindowLevel;
+    kFloatingWindowLevel = kCGFloatingWindowLevel;
+  }
+
+  // Some things put transparent windows on top of everything. Ignore them.
+  CGWindowLevel level;
+  if ((kCGErrorSuccess == CGSGetWindowLevel(cid, aWindowNumber, &level)) &&
+      (level == kDockWindowLevel ||     // Transparent layer, spanning the whole screen
+       level == kFloatingWindowLevel || // invisible Jing window
+       level > kPopupWindowLevel))      // Snapz Pro X while recording a screencast
+    return false;
+
+  CGRect rect;
+  if (kCGErrorSuccess != CGSGetScreenRectForWindow(cid, aWindowNumber, &rect))
+    return false;
+
+  CGPoint point = { aPoint.x, nsCocoaUtils::FlippedScreenY(aPoint.y) };
+  return CGRectContainsPoint(rect, point);
+}
+
+@interface NSWindow(SnowLeopardWindowUnderPointAPI)
++ (NSInteger)windowNumberAtPoint:(NSPoint)point belowWindowWithWindowNumber:(NSInteger)windowNumber;
+@end
+
+// Find the window number of the window under the given point, regardless of
+// which app the window belongs to. Returns 0 if no window was found.
+static NSInteger WindowNumberAtPoint(NSPoint aPoint) {
+  // Use the awesome new API on 10.6+.
+  if ([NSWindow respondsToSelector:@selector(windowNumberAtPoint:belowWindowWithWindowNumber:)])
+    return [NSWindow windowNumberAtPoint:aPoint belowWindowWithWindowNumber:0];
+
+  // windowNumberAtPoint is not supported, so we'll have to find the right
+  // window manually by iterating over all windows on the screen and testing
+  // whether the mouse is inside the window's rect. We do this using private CGS
+  // functions.
+  // Another way of doing it would be to use tracking rects, but those are
+  // view-controlled, so they need to be reset whenever an NSView changes its
+  // size or position, which is expensive. See bug 300904 comment 20.
+  // A problem with using the CGS functions is that we only look at the windows'
+  // rects, not at the transparency of the actual pixel the mouse is over. This
+  // means that we won't treat transparent pixels as transparent to mouse
+  // events, which is a disadvantage over using tracking rects and leads to the
+  // crummy window level workarounds in WindowNumberIsUnderPoint.
+  // But speed is more important.
+
+  // Get the window list.
   NSInteger windowCount;
   NSCountWindows(&windowCount);
   NSInteger* windowList = (NSInteger*)malloc(sizeof(NSInteger) * windowCount);
   if (!windowList)
     return nil;
+
   // The list we get back here is in order from front to back.
   NSWindowList(windowCount, windowList);
-
-  NSPoint screenPoint = nsCocoaUtils::ScreenLocationForEvent(anEvent);
-
   for (NSInteger i = 0; i < windowCount; i++) {
-    NSWindow* currentWindow = [NSApp windowWithWindowNumber:windowList[i]];
-    if (currentWindow && NSMouseInRect(screenPoint, [currentWindow frame], NO)) {
+    NSInteger windowNumber = windowList[i];
+    if (WindowNumberIsUnderPoint(windowNumber, aPoint)) {
       free(windowList);
-      return currentWindow;
+      return windowNumber;
     }
   }
 
   free(windowList);
-  return nil;
+  return 0;
+}
+
+// Find Gecko window under the mouse. Returns nil if the mouse isn't over
+// any of our windows.
+NSWindow*
+ChildViewMouseTracker::WindowForEvent(NSEvent* anEvent)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  NSPoint screenPoint = nsCocoaUtils::ScreenLocationForEvent(anEvent);
+  NSInteger windowNumber = WindowNumberAtPoint(screenPoint);
+
+  // This will return nil if windowNumber belongs to a window that we don't own.
+  return [NSApp windowWithWindowNumber:windowNumber];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
