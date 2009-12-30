@@ -189,6 +189,7 @@ public:
   void EnsureWidget();
 
   nsresult CreateWidgetForView(nsIView* aView);
+  PRUint8 GetShadowStyle();
 
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsFrameList&    aChildList);
