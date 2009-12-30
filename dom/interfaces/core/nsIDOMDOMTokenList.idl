@@ -42,19 +42,18 @@
  * that consists of a set of space-separated tokens.
  *
  * For more information on this interface please see
- * http://www.w3.org/TR/html5/infrastructure.html#domtokenlist
- *
+ * <http://www.whatwg.org/html5/#domtokenlist>
  */
 [scriptable, uuid(c6f1e160-eeeb-404a-98b0-6f1246520b6e)]
 interface nsIDOMDOMTokenList : nsISupports
 {
   readonly attribute unsigned long length;
 
-  DOMString                        item(in unsigned long index);
-  boolean                          contains(in DOMString token);
-  void                             add(in DOMString token);
-  void                             remove(in DOMString token);
-  boolean                          toggle(in DOMString token);
+  DOMString          item(in unsigned long index);
+  boolean            contains([Null(Stringify)] in DOMString token);
+  void               add([Null(Stringify)] in DOMString token);
+  void               remove([Null(Stringify)] in DOMString token);
+  boolean            toggle([Null(Stringify)] in DOMString token);
 
-  DOMString                        toString();
+  DOMString          toString();
 };
