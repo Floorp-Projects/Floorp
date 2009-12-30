@@ -4025,12 +4025,16 @@ nsEditor::IsTextNode(nsIDOMNode *aNode)
 PRInt32 
 nsEditor::GetIndexOf(nsIDOMNode *parent, nsIDOMNode *child)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
+  nsCOMPtr<nsINode> parentNode = do_QueryInterface(parent);
+  NS_PRECONDITION(parentNode, "null parentNode in nsEditor::GetIndexOf");
+  NS_PRECONDITION(parentNode->IsNodeOfType(nsINode::eCONTENT) ||
+                    parentNode->IsNodeOfType(nsINode::eDOCUMENT),
+                  "The parent node must be an element node or a document node");
+
   nsCOMPtr<nsIContent> cChild = do_QueryInterface(child);
-  NS_PRECONDITION(content, "null content in nsEditor::GetIndexOf");
   NS_PRECONDITION(cChild, "null content in nsEditor::GetIndexOf");
 
-  return content->IndexOf(cChild);
+  return parentNode->IndexOf(cChild);
 }
   
 
