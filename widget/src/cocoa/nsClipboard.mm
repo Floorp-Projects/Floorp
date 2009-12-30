@@ -132,10 +132,17 @@ nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsresult
-nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteboard *cocoaPasteboard)
+NS_IMETHODIMP
+nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhichClipboard)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  if ((aWhichClipboard != kGlobalClipboard) || !aTransferable)
+    return NS_ERROR_FAILURE;
+
+  NSPasteboard* cocoaPasteboard = [NSPasteboard generalPasteboard];
+  if (!cocoaPasteboard)
+    return NS_ERROR_FAILURE;
 
   // get flavor list that includes all acceptable flavors (including ones obtained through conversion)
   nsCOMPtr<nsISupportsArray> flavorList;
@@ -145,6 +152,37 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
 
   PRUint32 flavorCount;
   flavorList->Count(&flavorCount);
+
+  // If we were the last ones to put something on the pasteboard, then just use the cached
+  // transferable. Otherwise clear it because it isn't relevant any more.
+  if (mChangeCount == [cocoaPasteboard changeCount]) {
+    if (mTransferable) {
+      for (PRUint32 i = 0; i < flavorCount; i++) {
+        nsCOMPtr<nsISupports> genericFlavor;
+        flavorList->GetElementAt(i, getter_AddRefs(genericFlavor));
+        nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
+        if (!currentFlavor)
+          continue;
+
+        nsXPIDLCString flavorStr;
+        currentFlavor->ToString(getter_Copies(flavorStr));
+
+        nsCOMPtr<nsISupports> dataSupports;
+        PRUint32 dataSize = 0;
+        rv = mTransferable->GetTransferData(flavorStr, getter_AddRefs(dataSupports), &dataSize);
+        if (NS_SUCCEEDED(rv)) {
+          aTransferable->SetTransferData(flavorStr, dataSupports, dataSize);
+          return NS_OK; // maybe try to fill in more types? Is there a point?
+        }
+      }
+    }
+  }
+  else {
+    nsBaseClipboard::EmptyClipboard(kGlobalClipboard);
+  }
+
+  // at this point we can't satisfy the request from cache data so let's look
+  // for things other people put on the system clipboard
 
   for (PRUint32 i = 0; i < flavorCount; i++) {
     nsCOMPtr<nsISupports> genericFlavor;
@@ -255,63 +293,6 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
   }
 
   return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
-NS_IMETHODIMP
-nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhichClipboard)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  if ((aWhichClipboard != kGlobalClipboard) || !aTransferable)
-    return NS_ERROR_FAILURE;
-
-  NSPasteboard* cocoaPasteboard = [NSPasteboard generalPasteboard];
-  if (!cocoaPasteboard)
-    return NS_ERROR_FAILURE;
-
-  // get flavor list that includes all acceptable flavors (including ones obtained through conversion)
-  nsCOMPtr<nsISupportsArray> flavorList;
-  nsresult rv = aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  PRUint32 flavorCount;
-  flavorList->Count(&flavorCount);
-
-  // If we were the last ones to put something on the pasteboard, then just use the cached
-  // transferable. Otherwise clear it because it isn't relevant any more.
-  if (mChangeCount == [cocoaPasteboard changeCount]) {
-    if (mTransferable) {
-      for (PRUint32 i = 0; i < flavorCount; i++) {
-        nsCOMPtr<nsISupports> genericFlavor;
-        flavorList->GetElementAt(i, getter_AddRefs(genericFlavor));
-        nsCOMPtr<nsISupportsCString> currentFlavor(do_QueryInterface(genericFlavor));
-        if (!currentFlavor)
-          continue;
-
-        nsXPIDLCString flavorStr;
-        currentFlavor->ToString(getter_Copies(flavorStr));
-
-        nsCOMPtr<nsISupports> dataSupports;
-        PRUint32 dataSize = 0;
-        rv = mTransferable->GetTransferData(flavorStr, getter_AddRefs(dataSupports), &dataSize);
-        if (NS_SUCCEEDED(rv)) {
-          aTransferable->SetTransferData(flavorStr, dataSupports, dataSize);
-          return NS_OK; // maybe try to fill in more types? Is there a point?
-        }
-      }
-    }
-  }
-  else {
-    nsBaseClipboard::EmptyClipboard(kGlobalClipboard);
-  }
-
-  // at this point we can't satisfy the request from cache data so let's look
-  // for things other people put on the system clipboard
-
-  return nsClipboard::TransferableFromPasteboard(aTransferable, cocoaPasteboard);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
