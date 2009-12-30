@@ -2278,7 +2278,7 @@ class AutoDescriptorArray : private JSTempValueRooter
 
   public:
     AutoDescriptorArray(JSContext *cx)
-    : cx(cx), descriptors(cx)
+      : cx(cx), descriptors(cx)
     {
         JS_PUSH_TEMP_ROOT_TRACE(cx, trace, this);
     }
@@ -6907,8 +6907,7 @@ js_DumpObject(JSObject *obj)
     clasp = STOBJ_GET_CLASS(obj);
     fprintf(stderr, "class %p %s\n", (void *)clasp, clasp->name);
 
-    /* OBJ_IS_DENSE_ARRAY ignores the cx argument. */
-    if (OBJ_IS_DENSE_ARRAY(BOGUS_CX, obj)) {
+    if (obj->isDenseArray()) {
         slots = JS_MIN((jsuint) obj->fslots[JSSLOT_ARRAY_LENGTH],
                        js_DenseArrayCapacity(obj));
         fprintf(stderr, "elements\n");
