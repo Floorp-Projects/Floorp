@@ -112,6 +112,9 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 
 #define NS_STYLE_WINDOW_SHADOW_NONE             0
 #define NS_STYLE_WINDOW_SHADOW_DEFAULT          1
+#define NS_STYLE_WINDOW_SHADOW_MENU             2
+#define NS_STYLE_WINDOW_SHADOW_TOOLTIP          3
+#define NS_STYLE_WINDOW_SHADOW_SHEET            4
 
 /**
  * Cursor types.
