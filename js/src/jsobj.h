@@ -57,8 +57,12 @@
  * structure.
  */
 struct PropertyDescriptor {
+  friend class AutoDescriptorArray;
+
+  private:
     PropertyDescriptor();
 
+  public:
     /* 8.10.5 ToPropertyDescriptor(Obj) */
     bool initialize(JSContext* cx, jsid id, jsval v);
 
