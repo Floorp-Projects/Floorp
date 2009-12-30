@@ -127,8 +127,8 @@ nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
     float pathLength = mPathLength.GetAnimValue();
     distance *= totalLength / pathLength;
   }
-  distance = PR_MAX(0,           distance);
-  distance = PR_MIN(totalLength, distance);
+  distance = NS_MAX(0.f,         distance);
+  distance = NS_MIN(totalLength, distance);
 
   return NS_NewSVGPoint(_retval, flat->FindPoint(gfxPoint(distance, 0)));
 }

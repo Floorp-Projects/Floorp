@@ -843,7 +843,7 @@ nsSMILTimedElement::CalcActiveEnd(const nsSMILTimeValue& aBegin,
     nsSMILTime activeDur = aEnd.GetMillis() - aBegin.GetMillis();
 
     if (result.IsResolved()) {
-      result.SetMillis(PR_MIN(result.GetMillis(), activeDur));
+      result.SetMillis(NS_MIN(result.GetMillis(), activeDur));
     } else {
       result.SetMillis(activeDur);
     }
@@ -867,7 +867,7 @@ nsSMILTimedElement::GetRepeatDuration()
   if (mRepeatCount.IsDefinite() && mRepeatDur.IsResolved()) {
     if (mSimpleDur.IsResolved()) {
       nsSMILTime activeDur = mRepeatCount * double(mSimpleDur.GetMillis());
-      result.SetMillis(PR_MIN(activeDur, mRepeatDur.GetMillis()));
+      result.SetMillis(NS_MIN(activeDur, mRepeatDur.GetMillis()));
     } else {
       result = mRepeatDur;
     }
