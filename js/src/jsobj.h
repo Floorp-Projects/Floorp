@@ -391,6 +391,12 @@ struct JSObject {
         if (map->ops->dropProperty)
             map->ops->dropProperty(cx, this, prop);
     }
+
+    inline bool isArray() const;
+    inline bool isDenseArray() const;
+    inline bool isFunction() const;
+    inline bool isRegExp() const;
+    inline bool isXML() const;
 };
 
 /* Compatibility macros. */
