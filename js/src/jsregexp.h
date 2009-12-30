@@ -149,10 +149,15 @@ extern void
 js_FreeRegExpStatics(JSContext *cx);
 
 #define VALUE_IS_REGEXP(cx, v)                                                \
-    (JSVAL_IS_OBJECT(v) && JSVAL_TO_OBJECT(v) &&                              \
-     OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_RegExpClass)
+    (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isRegExp())
 
 extern JSClass js_RegExpClass;
+
+inline bool
+JSObject::isRegExp() const
+{
+    return getClass() == &js_RegExpClass;
+}
 
 enum regexp_tinyid {
     REGEXP_SOURCE       = -1,

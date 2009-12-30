@@ -554,7 +554,7 @@ struct JSScopeProperty {
     jsval getterValue() const {
         JS_ASSERT(attrs & JSPROP_GETTER);
         jsval getterVal = getter ? js_CastAsObjectJSVal(getter) : JSVAL_VOID;
-        JS_ASSERT_IF(getter, VALUE_IS_FUNCTION(BOGUS_CX, getterVal));
+        JS_ASSERT_IF(getter, HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(getterVal)));
         return getterVal;
     }
 
@@ -565,7 +565,7 @@ struct JSScopeProperty {
     jsval setterValue() const {
         JS_ASSERT(attrs & JSPROP_SETTER);
         jsval setterVal = setter ? js_CastAsObjectJSVal(setter) : JSVAL_VOID;
-        JS_ASSERT_IF(setter, VALUE_IS_FUNCTION(BOGUS_CX, setterVal));
+        JS_ASSERT_IF(setter, HAS_FUNCTION_CLASS(JSVAL_TO_OBJECT(setterVal)));
         return setterVal;
     }
 

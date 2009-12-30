@@ -1206,7 +1206,7 @@ array_trace(JSTracer *trc, JSObject *obj)
     size_t i;
     jsval v;
 
-    JS_ASSERT(js_IsDenseArray(obj));
+    JS_ASSERT(obj->isDenseArray());
     obj->traceProtoAndParent(trc);
 
     capacity = js_DenseArrayCapacity(obj);
@@ -3541,7 +3541,7 @@ js_CoerceArrayToCanvasImageData(JSObject *obj, jsuint offset, jsuint count,
 {
     uint32 length;
 
-    if (!obj || !js_IsDenseArray(obj))
+    if (!obj || !obj->isDenseArray())
         return JS_FALSE;
 
     length = obj->fslots[JSSLOT_ARRAY_LENGTH];

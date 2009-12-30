@@ -88,10 +88,8 @@ using namespace nanojit;
 #if JS_HAS_XML_SUPPORT
 #define RETURN_VALUE_IF_XML(val, ret)                                         \
     JS_BEGIN_MACRO                                                            \
-        if (!JSVAL_IS_PRIMITIVE(val) &&                                       \
-            OBJECT_IS_XML(BOGUS_CX, JSVAL_TO_OBJECT(val))) {                  \
+        if (!JSVAL_IS_PRIMITIVE(val) && JSVAL_TO_OBJECT(val)->isXML())        \
             RETURN_VALUE("xml detected", ret);                                \
-        }                                                                     \
     JS_END_MACRO
 #else
 #define RETURN_IF_XML(val, ret) ((void) 0)
@@ -11881,7 +11879,7 @@ TraceRecorder::record_JSOP_GETELEM()
         }
         RETURN_STOP_A("can't reach arguments object's frame");
     }
-    if (js_IsDenseArray(obj)) {
+    if (obj->isDenseArray()) {
         // Fast path for dense arrays accessed with a integer index.
         jsval* vp;
         LIns* addr_ins;
