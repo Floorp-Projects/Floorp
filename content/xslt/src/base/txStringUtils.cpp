@@ -121,7 +121,7 @@ public:
 
   void write(const PRUnichar* aSource, PRUint32 aSourceLength)
   {
-    PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
+    PRUint32 len = NS_MIN(PRUint32(mIter.size_forward()), aSourceLength);
     PRUnichar* cp = mIter.get();
     const PRUnichar* end = aSource + len;
     while (aSource != end) {
