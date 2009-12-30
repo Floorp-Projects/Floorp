@@ -2286,8 +2286,10 @@ class AutoDescriptorArray : private JSTempValueRooter
         JS_POP_TEMP_ROOT(cx, this);
     }
 
-    bool append(PropertyDescriptor &desc) {
-        return descriptors.append(desc);
+    PropertyDescriptor * append() {
+        if (!descriptors.append(PropertyDescriptor()))
+            return NULL;
+        return &descriptors.back();
     }
 
     PropertyDescriptor& operator[](size_t i) {
@@ -2701,13 +2703,13 @@ obj_defineProperty(JSContext* cx, uintN argc, jsval* vp)
 
     /* 15.2.3.6 step 3. */
     AutoDescriptorArray descs(cx);
-    PropertyDescriptor desc;
-    if (!desc.initialize(cx, nameidr.id(), argc >= 3 ? vp[4] : JSVAL_VOID) || !descs.append(desc))
+    PropertyDescriptor *desc = descs.append();
+    if (!desc || !desc->initialize(cx, nameidr.id(), argc >= 3 ? vp[4] : JSVAL_VOID))
         return JS_FALSE;
 
     /* 15.2.3.6 step 4 */
     bool dummy;
-    return DefineProperty(cx, obj, desc, true, &dummy);
+    return DefineProperty(cx, obj, *desc, true, &dummy);
 }
 
 /* ES5 15.2.3.7: Object.defineProperties(O, Properties) */
@@ -2736,10 +2738,10 @@ obj_defineProperties(JSContext* cx, uintN argc, jsval* vp)
     AutoDescriptorArray descs(cx);
     size_t len = ida.length();
     for (size_t i = 0; i < len; i++) {
-        PropertyDescriptor desc;
         jsid id = ida[i];
-        if (!JS_GetPropertyById(cx, props, id, &vp[1]) || !desc.initialize(cx, id, vp[1]) ||
-            !descs.append(desc)) {
+        PropertyDescriptor* desc = descs.append();
+        if (!desc || !JS_GetPropertyById(cx, props, id, &vp[1]) ||
+            !desc->initialize(cx, id, vp[1])) {
             return JS_FALSE;
         }
     }
