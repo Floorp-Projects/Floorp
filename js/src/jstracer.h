@@ -1289,10 +1289,7 @@ class TraceRecorder
                                                                              ExitType exitType);
     JS_REQUIRES_STACK RecordingStatus guardNotGlobalObject(JSObject* obj,
                                                              nanojit::LIns* obj_ins);
-    JS_REQUIRES_STACK JSStackFrame* entryFrame() const;
-    JS_REQUIRES_STACK void clearEntryFrameSlotsFromTracker(Tracker& which);
-    JS_REQUIRES_STACK void clearCurrentFrameSlotsFromTracker(Tracker& which);
-    JS_REQUIRES_STACK void clearFrameSlotsFromTracker(Tracker& which, JSStackFrame* fp, unsigned nslots);
+    void clearFrameSlotsFromTracker(Tracker& which);
     JS_REQUIRES_STACK void putArguments();
     JS_REQUIRES_STACK RecordingStatus guardCallee(jsval& callee);
     JS_REQUIRES_STACK JSStackFrame      *guardArguments(JSObject *obj, nanojit::LIns* obj_ins,
