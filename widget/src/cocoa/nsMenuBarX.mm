@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <objc/objc-runtime.h>
+
 #include "nsMenuBarX.h"
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
@@ -594,7 +596,7 @@ nsresult nsMenuBarX::CreateApplicationMenu(nsMenuX* inMenu)
       [sApplicationMenu addItem:itemBeingAdded];
       
       // set this menu item up as the Mac OS X Services menu
-      NSMenu* servicesMenu = [[NSMenu alloc] initWithTitle:@""];
+      NSMenu* servicesMenu = [[GeckoServicesNSMenu alloc] initWithTitle:@""];
       [itemBeingAdded setSubmenu:servicesMenu];
       [NSApp setServicesMenu:servicesMenu];
       
@@ -962,6 +964,81 @@ static BOOL gActOnSpecialCommands = YES;
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+@end
+
+// Objective-C class used for menu items on the Services menu to allow Gecko
+// to override their standard behavior in order to stop key equivalents from
+// firing in certain instances. When gActOnSpecialCommands is NO, we return
+// a dummy target and action instead of the actual target and action.
+
+@implementation GeckoServicesNSMenuItem
+
+- (id) target
+{
+  id realTarget = [super target];
+  if (gActOnSpecialCommands)
+    return realTarget;
+  else
+    return realTarget != nil ? self : nil;
+}
+
+- (SEL) action
+{
+  SEL realAction = [super action];
+  if (gActOnSpecialCommands)
+    return realAction;
+  else
+    return realAction != NULL ? @selector(_doNothing:) : NULL;
+}
+
+- (void) _doNothing:(id)sender
+{
+}
+
+@end
+
+// Objective-C class used as the Services menu so that Gecko can override the
+// standard behavior of the Services menu in order to stop key equivalents
+// from firing in certain instances.
+
+@implementation GeckoServicesNSMenu
+
+- (void)addItem:(NSMenuItem *)newItem
+{
+  [self _overrideClassOfMenuItem:newItem];
+  [super addItem:newItem];
+}
+
+- (NSMenuItem *)addItemWithTitle:(NSString *)aString action:(SEL)aSelector keyEquivalent:(NSString *)keyEquiv
+{
+  NSMenuItem * newItem = [super addItemWithTitle:aString action:aSelector keyEquivalent:keyEquiv];
+  [self _overrideClassOfMenuItem:newItem];
+  return newItem;
+}
+
+- (void)insertItem:(NSMenuItem *)newItem atIndex:(NSInteger)index
+{
+  [self _overrideClassOfMenuItem:newItem];
+  [super insertItem:newItem atIndex:index];
+}
+
+- (NSMenuItem *)insertItemWithTitle:(NSString *)aString action:(SEL)aSelector  keyEquivalent:(NSString *)keyEquiv atIndex:(NSInteger)index
+{
+  NSMenuItem * newItem = [super insertItemWithTitle:aString action:aSelector keyEquivalent:keyEquiv atIndex:index];
+  [self _overrideClassOfMenuItem:newItem];
+  return newItem;
+}
+
+- (void) _overrideClassOfMenuItem:(NSMenuItem *)menuItem
+{
+  if ([menuItem class] == [NSMenuItem class])
+#ifdef NS_LEOPARD_AND_LATER
+    object_setClass(menuItem, [GeckoServicesNSMenuItem class]);
+#else
+    menuItem->isa = [GeckoServicesNSMenuItem class];
+#endif
 }
 
 @end
