@@ -150,8 +150,9 @@ CSSRuleListImpl::GetItemAt(PRUint32 aIndex, nsresult* aResult)
   nsresult result = NS_OK;
 
   if (mStyleSheet) {
-    result = mStyleSheet->EnsureUniqueInner(); // needed to ensure rules have correct parent
-    if (NS_SUCCEEDED(result)) {
+    // ensure rules have correct parent
+    if (mStyleSheet->EnsureUniqueInner() !=
+          nsCSSStyleSheet::eUniqueInner_CloneFailed) {
       nsCOMPtr<nsICSSRule> rule;
 
       result = mStyleSheet->GetStyleRuleAt(aIndex, *getter_AddRefs(rule));
@@ -1017,6 +1018,7 @@ nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
   if (aCopy.mRuleCollection && 
       aCopy.mRuleCollection->mRulesAccessed) {  // CSSOM's been there, force full copy now
     NS_ASSERTION(mInner->mComplete, "Why have rules been accessed on an incomplete sheet?");
+    // FIXME: handle failure?
     EnsureUniqueInner();
   }
 
@@ -1465,20 +1467,21 @@ nsCSSStyleSheet::GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) cons
   return NS_OK;
 }
 
-nsresult  
+nsCSSStyleSheet::EnsureUniqueInnerResult
 nsCSSStyleSheet::EnsureUniqueInner()
 {
-  if (1 < mInner->mSheets.Length()) {
-    nsCSSStyleSheetInner* clone = mInner->CloneFor(this);
-    if (clone) {
-      mInner->RemoveSheet(this);
-      mInner = clone;
-    }
-    else {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  NS_ABORT_IF_FALSE(mInner->mSheets.Length() != 0,
+                    "unexpected number of outers");
+  if (mInner->mSheets.Length() == 1) {
+    return eUniqueInner_AlreadyUnique;
   }
-  return NS_OK;
+  nsCSSStyleSheetInner* clone = mInner->CloneFor(this);
+  if (!clone) {
+    return eUniqueInner_CloneFailed;
+  }
+  mInner->RemoveSheet(this);
+  mInner = clone;
+  return eUniqueInner_ClonedInner;
 }
 
 NS_IMETHODIMP
@@ -1577,8 +1580,11 @@ nsCSSStyleSheet::WillDirty()
     // Do nothing
     return NS_OK;
   }
-  
-  return EnsureUniqueInner();
+
+  if (EnsureUniqueInner() == eUniqueInner_CloneFailed) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
 }
 
 void
