@@ -58,10 +58,10 @@
 
 // -----------------------------------------------------------
 
-class HTMLCSSStyleSheetImpl : public nsIHTMLCSSStyleSheet,
-                              public nsIStyleRuleProcessor {
+class nsHTMLCSSStyleSheet : public nsIHTMLCSSStyleSheet,
+                            public nsIStyleRuleProcessor {
 public:
-  HTMLCSSStyleSheetImpl();
+  nsHTMLCSSStyleSheet();
 
   NS_DECL_ISUPPORTS
 
@@ -110,11 +110,11 @@ public:
 
 private: 
   // These are not supported and are not implemented! 
-  HTMLCSSStyleSheetImpl(const HTMLCSSStyleSheetImpl& aCopy); 
-  HTMLCSSStyleSheetImpl& operator=(const HTMLCSSStyleSheetImpl& aCopy); 
+  nsHTMLCSSStyleSheet(const nsHTMLCSSStyleSheet& aCopy); 
+  nsHTMLCSSStyleSheet& operator=(const nsHTMLCSSStyleSheet& aCopy); 
 
 protected:
-  virtual ~HTMLCSSStyleSheetImpl();
+  virtual ~nsHTMLCSSStyleSheet();
 
 protected:
   nsIURI*         mURL;
@@ -122,7 +122,7 @@ protected:
 };
 
 
-HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl()
+nsHTMLCSSStyleSheet::nsHTMLCSSStyleSheet()
   : nsIHTMLCSSStyleSheet(),
     mRefCnt(0),
     mURL(nsnull),
@@ -130,18 +130,18 @@ HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl()
 {
 }
 
-HTMLCSSStyleSheetImpl::~HTMLCSSStyleSheetImpl()
+nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet()
 {
   NS_RELEASE(mURL);
 }
 
-NS_IMPL_ISUPPORTS3(HTMLCSSStyleSheetImpl,
+NS_IMPL_ISUPPORTS3(nsHTMLCSSStyleSheet,
                    nsIHTMLCSSStyleSheet,
                    nsIStyleSheet,
                    nsIStyleRuleProcessor)
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData)
+nsHTMLCSSStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 {
   nsIContent* content = aData->mContent;
 
@@ -164,27 +164,27 @@ HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData)
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::RulesMatching(PseudoElementRuleProcessorData* aData)
+nsHTMLCSSStyleSheet::RulesMatching(PseudoElementRuleProcessorData* aData)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::RulesMatching(AnonBoxRuleProcessorData* aData)
+nsHTMLCSSStyleSheet::RulesMatching(AnonBoxRuleProcessorData* aData)
 {
   return NS_OK;
 }
 
 #ifdef MOZ_XUL
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::RulesMatching(XULTreeRuleProcessorData* aData)
+nsHTMLCSSStyleSheet::RulesMatching(XULTreeRuleProcessorData* aData)
 {
   return NS_OK;
 }
 #endif
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::Init(nsIURI* aURL, nsIDocument* aDocument)
+nsHTMLCSSStyleSheet::Init(nsIURI* aURL, nsIDocument* aDocument)
 {
   NS_PRECONDITION(aURL && aDocument, "null ptr");
   if (! aURL || ! aDocument)
@@ -201,21 +201,21 @@ HTMLCSSStyleSheetImpl::Init(nsIURI* aURL, nsIDocument* aDocument)
 
 // Test if style is dependent on content state
 nsReStyleHint
-HTMLCSSStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData)
+nsHTMLCSSStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
   return nsReStyleHint(0);
 }
 
 // Test if style is dependent on attribute
 nsReStyleHint
-HTMLCSSStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
+nsHTMLCSSStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
   return nsReStyleHint(0);
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::MediumFeaturesChanged(nsPresContext* aPresContext,
-                                             PRBool* aRulesChanged)
+nsHTMLCSSStyleSheet::MediumFeaturesChanged(nsPresContext* aPresContext,
+                                           PRBool* aRulesChanged)
 {
   *aRulesChanged = PR_FALSE;
   return NS_OK;
@@ -223,7 +223,7 @@ HTMLCSSStyleSheetImpl::MediumFeaturesChanged(nsPresContext* aPresContext,
 
 
 NS_IMETHODIMP 
-HTMLCSSStyleSheetImpl::Reset(nsIURI* aURL)
+nsHTMLCSSStyleSheet::Reset(nsIURI* aURL)
 {
   NS_IF_RELEASE(mURL);
   mURL = aURL;
@@ -233,7 +233,7 @@ HTMLCSSStyleSheetImpl::Reset(nsIURI* aURL)
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetSheetURI(nsIURI** aSheetURL) const
+nsHTMLCSSStyleSheet::GetSheetURI(nsIURI** aSheetURL) const
 {
   NS_IF_ADDREF(mURL);
   *aSheetURL = mURL;
@@ -241,7 +241,7 @@ HTMLCSSStyleSheetImpl::GetSheetURI(nsIURI** aSheetURL) const
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetBaseURI(nsIURI** aBaseURL) const
+nsHTMLCSSStyleSheet::GetBaseURI(nsIURI** aBaseURL) const
 {
   NS_IF_ADDREF(mURL);
   *aBaseURL = mURL;
@@ -249,62 +249,62 @@ HTMLCSSStyleSheetImpl::GetBaseURI(nsIURI** aBaseURL) const
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetTitle(nsString& aTitle) const
+nsHTMLCSSStyleSheet::GetTitle(nsString& aTitle) const
 {
   aTitle.AssignLiteral("Internal HTML/CSS Style Sheet");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetType(nsString& aType) const
+nsHTMLCSSStyleSheet::GetType(nsString& aType) const
 {
   aType.AssignLiteral("text/html");
   return NS_OK;
 }
 
 NS_IMETHODIMP_(PRBool)
-HTMLCSSStyleSheetImpl::HasRules() const
+nsHTMLCSSStyleSheet::HasRules() const
 {
   // Say we always have rules, since we don't know.
   return PR_TRUE;
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetApplicable(PRBool& aApplicable) const
+nsHTMLCSSStyleSheet::GetApplicable(PRBool& aApplicable) const
 {
   aApplicable = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::SetEnabled(PRBool aEnabled)
+nsHTMLCSSStyleSheet::SetEnabled(PRBool aEnabled)
 { // these can't be disabled
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetComplete(PRBool& aComplete) const
+nsHTMLCSSStyleSheet::GetComplete(PRBool& aComplete) const
 {
   aComplete = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::SetComplete()
+nsHTMLCSSStyleSheet::SetComplete()
 {
   return NS_OK;
 }
 
 // style sheet owner info
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetParentSheet(nsIStyleSheet*& aParent) const
+nsHTMLCSSStyleSheet::GetParentSheet(nsIStyleSheet*& aParent) const
 {
   aParent = nsnull;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetOwningDocument(nsIDocument*& aDocument) const
+nsHTMLCSSStyleSheet::GetOwningDocument(nsIDocument*& aDocument) const
 {
   NS_IF_ADDREF(mDocument);
   aDocument = mDocument;
@@ -312,14 +312,14 @@ HTMLCSSStyleSheetImpl::GetOwningDocument(nsIDocument*& aDocument) const
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::SetOwningDocument(nsIDocument* aDocument)
+nsHTMLCSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
 {
   mDocument = aDocument;
   return NS_OK;
 }
 
 #ifdef DEBUG
-void HTMLCSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
+void nsHTMLCSSStyleSheet::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
@@ -360,7 +360,7 @@ NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
   }
 
-  HTMLCSSStyleSheetImpl*  it = new HTMLCSSStyleSheetImpl();
+  nsHTMLCSSStyleSheet*  it = new nsHTMLCSSStyleSheet();
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
