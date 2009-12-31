@@ -1096,7 +1096,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   if (!content)
     return PR_FALSE;
 
-  nsIFrame *frame = aPresShell->GetPrimaryFrameFor(content);
+  nsIFrame *frame = content->GetPrimaryFrame();
   if (!frame)    
     return PR_FALSE;  // No frame! Not visible then.
 

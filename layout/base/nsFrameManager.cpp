@@ -150,41 +150,6 @@ static PLDHashTableOps PlaceholderMapOps = {
 
 //----------------------------------------------------------------------
 
-struct PrimaryFrameMapEntry : public PLDHashEntryHdr {
-  // key (the content node) can almost always be obtained through the
-  // frame.  If it weren't for the way image maps (mis)used the primary
-  // frame map, we'd be able to have a 2 word entry instead of a 3 word
-  // entry.
-  nsIContent *content;
-  nsIFrame *frame;
-};
-
-  // These ops should be used if/when we switch back to a 2-word entry.
-  // See comment in |PrimaryFrameMapEntry| above.
-#if 0
-static PRBool
-PrimaryFrameMapMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
-                         const void *key)
-{
-  const PrimaryFrameMapEntry *entry =
-    static_cast<const PrimaryFrameMapEntry*>(hdr);
-  return entry->frame->GetContent() == key;
-}
-
-static PLDHashTableOps PrimaryFrameMapOps = {
-  PL_DHashAllocTable,
-  PL_DHashFreeTable,
-  PL_DHashVoidPtrKeyStub,
-  PrimaryFrameMapMatchEntry,
-  PL_DHashMoveEntryStub,
-  PL_DHashClearEntryStub,
-  PL_DHashFinalizeStub,
-  NULL
-};
-#endif /* 0 */
-
-//----------------------------------------------------------------------
-
 // XXXldb This seems too complicated for what I think it's doing, and it
 // should also be using pldhash rather than plhash to use less memory.
 
@@ -282,8 +247,6 @@ nsFrameManager::Destroy()
   // Destroy the frame hierarchy.
   mPresShell->SetIgnoreFrameDestruction(PR_TRUE);
 
-  mIsDestroying = PR_TRUE;  // This flag prevents GetPrimaryFrameFor from returning pointers to destroyed frames
-
   // Unregister all placeholders before tearing down the frame tree
   nsFrameManager::ClearPlaceholderFrameMap();
 
@@ -292,7 +255,6 @@ nsFrameManager::Destroy()
     mRootFrame = nsnull;
   }
   
-  nsFrameManager::ClearPrimaryFrameMap();
   delete mUndisplayedMap;
   mUndisplayedMap = nsnull;
 
@@ -325,162 +287,6 @@ nsFrameManager::GetCanvasFrame()
 }
 
 //----------------------------------------------------------------------
-
-// Primary frame functions
-nsIFrame*
-nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent,
-                                   PRInt32 aIndexHint)
-{
-  NS_ASSERTION(!mIsDestroyingFrames,
-               "GetPrimaryFrameFor() called while frames are being destroyed!");
-  NS_ENSURE_TRUE(aContent, nsnull);
-
-  if (mIsDestroying) {
-    NS_ERROR("GetPrimaryFrameFor() called while nsFrameManager is being destroyed!");
-    return nsnull;
-  }
-
-  if (!aContent->MayHaveFrame()) {
-    return nsnull;
-  }
-
-  if (mPrimaryFrameMap.ops) {
-    PrimaryFrameMapEntry *entry = static_cast<PrimaryFrameMapEntry*>
-                                             (PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_LOOKUP));
-    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      return entry->frame;
-    }
-
-    // XXX: todo:  Add a lookup into the undisplay map to skip searches 
-    //             if we already know the content has no frame.
-    //             nsCSSFrameConstructor calls SetUndisplayedContent() for every
-    //             content node that has display: none.
-    //             Today, the undisplay map doesn't quite support what we need.
-    //             We need to see if we can add a method to make a search for aContent 
-    //             very fast in the embedded hash table.
-    //             This would almost completely remove the lookup penalty for things
-    //             like <SCRIPT> and comments in very large documents.
-    // XXX with the nsIContent::MayHaveFrame bit, is that really necessary now?
-
-    // Give the frame construction code the opportunity to return the
-    // frame that maps the content object
-
-    // if the prev sibling of aContent has a cached primary frame,
-    // pass that data in to the style set to speed things up
-    // if any methods in here fail, don't report that failure
-    // we're just trying to enhance performance here, not test for correctness
-    nsFindFrameHint hint;
-    nsIContent* parent = aContent->GetParent();
-    if (parent)
-    {
-      PRInt32 index = aIndexHint >= 0 ? aIndexHint : parent->IndexOf(aContent);
-      if (index > 0)  // no use looking if it's the first child
-      {
-        nsIContent *prevSibling;
-        do {
-          prevSibling = parent->GetChildAt(--index);
-        } while (index &&
-                 (prevSibling->IsNodeOfType(nsINode::eTEXT) ||
-                  prevSibling->IsNodeOfType(nsINode::eCOMMENT) ||
-                  prevSibling->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)));
-        if (prevSibling) {
-          entry = static_cast<PrimaryFrameMapEntry*>
-                             (PL_DHashTableOperate(&mPrimaryFrameMap, prevSibling,
-                                               PL_DHASH_LOOKUP));
-          // XXXbz the GetContent() == prevSibling check is needed due to bug
-          // 135040.  Remove it once that's fixed.
-          if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->frame &&
-              entry->frame->GetContent() == prevSibling)
-            hint.mPrimaryFrameForPrevSibling = entry->frame;
-        }
-      }
-    }
-
-    // walk the frame tree to find the frame that maps aContent.  
-    // Use the hint if we have it.
-    nsIFrame *result;
-
-    mPresShell->FrameConstructor()->
-      FindPrimaryFrameFor(this, aContent, &result, 
-                          hint.mPrimaryFrameForPrevSibling ? &hint : nsnull);
-
-    return result;
-  }
-
-  return nsnull;
-}
-
-nsresult
-nsFrameManager::SetPrimaryFrameFor(nsIContent* aContent,
-                                   nsIFrame*   aPrimaryFrame)
-{
-  NS_ENSURE_ARG_POINTER(aContent);
-  NS_ASSERTION(aPrimaryFrame && aPrimaryFrame->GetParent(),
-               "BOGUS!");
-#ifdef DEBUG
-  {
-    nsIFrame *docElementCB = 
-      mPresShell->FrameConstructor()->GetDocElementContainingBlock();
-    NS_ASSERTION(aPrimaryFrame != docElementCB &&
-                 !nsLayoutUtils::IsProperAncestorFrame(aPrimaryFrame,
-                                                       docElementCB),
-                 "too high in the frame tree to be a primary frame");
-  }
-#endif
-
-  // This code should be used if/when we switch back to a 2-word entry
-  // in the primary frame map.
-#if 0
-  NS_PRECONDITION(aPrimaryFrame->GetContent() == aContent, "wrong content");
-#endif
-
-  // Create a new hashtable if necessary
-  if (!mPrimaryFrameMap.ops) {
-    if (!PL_DHashTableInit(&mPrimaryFrameMap, PL_DHashGetStubOps(), nsnull,
-                           sizeof(PrimaryFrameMapEntry), 16)) {
-      mPrimaryFrameMap.ops = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  // Add a mapping to the hash table
-  PrimaryFrameMapEntry *entry = static_cast<PrimaryFrameMapEntry*>
-                                           (PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_ADD));
-#ifdef DEBUG_dbaron
-  if (entry->frame) {
-    NS_WARNING("already have primary frame for content");
-  }
-#endif
-  entry->frame = aPrimaryFrame;
-  entry->content = aContent;
-    
-  return NS_OK;
-}
-
-void
-nsFrameManager::RemoveAsPrimaryFrame(nsIContent* aContent,
-                                     nsIFrame* aPrimaryFrame)
-{
-  NS_PRECONDITION(aPrimaryFrame, "Must have a frame");
-  if (aContent && mPrimaryFrameMap.ops) {
-    PrimaryFrameMapEntry *entry = static_cast<PrimaryFrameMapEntry*>
-                                             (PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_LOOKUP));
-    if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->frame == aPrimaryFrame) {
-      // Don't use PL_DHashTableRawRemove, since we want the table to
-      // shrink as needed.
-      PL_DHashTableOperate(&mPrimaryFrameMap, aContent, PL_DHASH_REMOVE);
-    }
-  }
-}
-
-void
-nsFrameManager::ClearPrimaryFrameMap()
-{
-  if (mPrimaryFrameMap.ops) {
-    PL_DHashTableFinish(&mPrimaryFrameMap);
-    mPrimaryFrameMap.ops = nsnull;
-  }
-}
 
 // Placeholder frame functions
 nsPlaceholderFrame*
@@ -749,14 +555,9 @@ nsFrameManager::RemoveFrame(nsIAtom*        aListName,
 void
 nsFrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
 {
-  //XXXfr Because we destroy most continuation chains starting from the FIF
-  // this does excess work by triggering on every continuation in the chain
   nsIContent* content = aFrame->GetContent();
-  if (!aFrame->GetPrevContinuation() && content) {
-    RemoveAsPrimaryFrame(content, aFrame);
-    if (content != aFrame->GetParent()->GetContent()) { // first-letter
-      ClearAllUndisplayedContentIn(content);
-    }
+  if (content && content->GetPrimaryFrame() == aFrame) {
+    ClearAllUndisplayedContentIn(content);
   }
 }
 

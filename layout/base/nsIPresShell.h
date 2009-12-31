@@ -122,10 +122,10 @@ typedef struct CapturingContentInfo {
     mAllowed(PR_FALSE), mRetargetToElement(PR_FALSE), mContent(nsnull) { }
 } CapturingContentInfo;
 
-// 4e8724b5-14f9-4bb0-b5a0-24041d653c9f
- #define NS_IPRESSHELL_IID     \
-{ 0x4e8724b5, 0x14f9, 0x4bb0, \
-  { 0xb5, 0xa0, 0x24, 0x04, 0x1d, 0x65, 0x3c, 0x9f } }
+// 06AA90C2-5234-4F1C-81D7-773B5E4CBB8B
+#define NS_IPRESSHELL_IID     \
+{ 0x06aa90c2, 0x5234, 0x4f1c, \
+ { 0x81, 0xd7, 0x77, 0x3b, 0x5e, 0x4c, 0xbb, 0x8b } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -222,7 +222,7 @@ public:
   virtual void PopStackMemory() = 0;
   virtual void* AllocateStackMemory(size_t aSize) = 0;
   
-  nsIDocument* GetDocument() { return mDocument; }
+  nsIDocument* GetDocument() const { return mDocument; }
 
   nsPresContext* GetPresContext() { return mPresContext; }
 
@@ -356,21 +356,6 @@ public:
    * Returns NULL if not a paginated view.
    */
   NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const = 0;
-
-  /**
-   * Gets the primary frame associated with the content object. This is a
-   * helper function that just forwards the request to the frame manager.
-   *
-   * The primary frame is the frame that is most closely associated with the
-   * content. A frame is more closely associated with the content that another
-   * frame if the one frame contains directly or indirectly the other frame (e.g.,
-   * when a frame is scrolled there is a scroll frame that contains the frame
-   * being scrolled). The primary frame is always the first-in-flow.
-   *
-   * In the case of absolutely positioned elements and floated elements,
-   * the primary frame is the placeholder frame.
-   */
-  virtual NS_HIDDEN_(nsIFrame*) GetPrimaryFrameFor(nsIContent* aContent) const = 0;
 
   /**
    * Gets the real primary frame associated with the content object.

@@ -232,21 +232,13 @@ public:
   void GetBaseTarget(nsAString& aBaseTarget) const;
 
   /**
-   * Get the primary form control frame for this content (see
-   * GetFormControlFrameFor)
+   * Get the primary form control frame for this element.  Same as
+   * GetPrimaryFrame(), except it QI's to nsIFormControlFrame.
    *
-   * @param aFlushContent whether to flush the content sink
-   * @return the primary form control frame (or null)
+   * @param aFlush whether to flush out frames so that they're up to date.
+   * @return the primary frame as nsIFormControlFrame
    */
-  nsIFormControlFrame* GetFormControlFrame(PRBool aFlushContent)
-  {
-    nsIDocument* doc = GetCurrentDoc();
-    if (!doc) {
-      return nsnull;
-    }
-
-    return GetFormControlFrameFor(this, doc, aFlushContent);
-  }
+  nsIFormControlFrame* GetFormControlFrame(PRBool aFlushFrames);
 
   //----------------------------------------
 
@@ -444,19 +436,6 @@ public:
    */
   static void MapScrollingAttributeInto(const nsMappedAttributes* aAttributes,
                                         nsRuleData* aData);
-  /**
-   * Get the primary form control frame for a piece of content.  Same as
-   * GetPrimaryFrameFor, except it QI's to nsIFormControlFrame.
-   *
-   * @param aContent the content to get the primary frame for
-   * @param aDocument the document for this content
-   * @param aFlushContent whether to flush the content sink, which creates
-   *        frames for content that do not already have it.  EXPENSIVE.
-   * @return the primary frame as nsIFormControlFrame
-   */
-  static nsIFormControlFrame* GetFormControlFrameFor(nsIContent* aContent,
-                                                     nsIDocument* aDocument,
-                                                     PRBool aFlushContent);
   /**
    * Get the presentation state for a piece of content, or create it if it does
    * not exist.  Generally used by SaveState().

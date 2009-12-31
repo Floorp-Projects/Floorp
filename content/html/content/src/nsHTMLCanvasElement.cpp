@@ -521,14 +521,9 @@ nsHTMLCanvasElement::SetWriteOnly()
 NS_IMETHODIMP
 nsHTMLCanvasElement::InvalidateFrame()
 {
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc) {
-    return NS_OK;
-  }
-
   // We don't need to flush anything here; if there's no frame or if
   // we plan to reframe we don't need to invalidate it anyway.
-  nsIFrame *frame = GetPrimaryFrameFor(this, doc);
+  nsIFrame *frame = GetPrimaryFrame();
   if (frame) {
     nsRect r = frame->GetRect();
     r.x = r.y = 0;
@@ -541,14 +536,9 @@ nsHTMLCanvasElement::InvalidateFrame()
 NS_IMETHODIMP
 nsHTMLCanvasElement::InvalidateFrameSubrect(const gfxRect& damageRect)
 {
-  nsIDocument* doc = GetCurrentDoc();
-  if (!doc) {
-    return NS_OK;
-  }
-
   // We don't need to flush anything here; if there's no frame or if
   // we plan to reframe we don't need to invalidate it anyway.
-  nsIFrame *frame = GetPrimaryFrameFor(this, doc);
+  nsIFrame *frame = GetPrimaryFrame();
   if (frame) {
     // Frame might be dirty, but we don't care about that; if the geometry
     // changes the right invalidates will happen anyway.  Don't assert on our

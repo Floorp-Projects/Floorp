@@ -494,8 +494,7 @@ static nsINode* AdjustTextRectNode(nsINode* aNode,
 
 // Similar to nsFrameSelection::GetFrameForNodeOffset,
 // but this is more flexible for OnQueryTextRect to use
-static nsresult GetFrameForTextRect(nsIPresShell* aPresShell,
-                                    nsINode* aNode,
+static nsresult GetFrameForTextRect(nsINode* aNode,
                                     PRInt32 aOffset,
                                     PRBool aHint,
                                     nsIFrame** aReturnFrame)
@@ -503,7 +502,7 @@ static nsresult GetFrameForTextRect(nsIPresShell* aPresShell,
   NS_ENSURE_TRUE(aNode && aNode->IsNodeOfType(nsINode::eCONTENT),
                  NS_ERROR_UNEXPECTED);
   nsIContent* content = static_cast<nsIContent*>(aNode);
-  nsIFrame* frame = aPresShell->GetPrimaryFrameFor(content);
+  nsIFrame* frame = content->GetPrimaryFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
   PRInt32 childOffset = 0;
   return frame->GetChildFrameContainingOffset(aOffset, aHint, &childOffset,
@@ -539,8 +538,7 @@ nsContentEventHandler::OnQueryTextRect(nsQueryContentEvent* aEvent)
     node = AdjustTextRectNode(range->GetStartParent(), offset);
   }
   nsIFrame* firstFrame = nsnull;
-  rv = GetFrameForTextRect(mPresShell, node, offset,
-                           PR_TRUE, &firstFrame);
+  rv = GetFrameForTextRect(node, offset, PR_TRUE, &firstFrame);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get the starting frame rect
@@ -558,8 +556,7 @@ nsContentEventHandler::OnQueryTextRect(nsQueryContentEvent* aEvent)
   offset = range->EndOffset();
   node = AdjustTextRectNode(range->GetEndParent(), offset);
   nsIFrame* lastFrame = nsnull;
-  rv = GetFrameForTextRect(mPresShell, node, offset,
-                           range->Collapsed(), &lastFrame);
+  rv = GetFrameForTextRect(node, offset, range->Collapsed(), &lastFrame);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // iterate over all covered frames
@@ -571,7 +568,7 @@ nsContentEventHandler::OnQueryTextRect(nsQueryContentEvent* aEvent)
         node = iter->GetCurrentNode();
         if (!node || !node->IsNodeOfType(nsINode::eCONTENT))
           continue;
-        frame = mPresShell->GetPrimaryFrameFor(static_cast<nsIContent*>(node));
+        frame = static_cast<nsIContent*>(node)->GetPrimaryFrame();
       } while (!frame && !iter->IsDone());
       if (!frame) {
         // this can happen when the end offset of the range is 0.
@@ -610,7 +607,7 @@ nsContentEventHandler::OnQueryEditorRect(nsQueryContentEvent* aEvent)
   if (NS_FAILED(rv))
     return rv;
 
-  nsIFrame* frame = mPresShell->GetPrimaryFrameFor(mRootContent);
+  nsIFrame* frame = mRootContent->GetPrimaryFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   // get rect for first frame

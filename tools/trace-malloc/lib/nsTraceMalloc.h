@@ -165,6 +165,11 @@ PR_EXTERN(void) NS_TraceMallocStartup(int logfd);
 PR_EXTERN(int) NS_TraceMallocStartupArgs(int argc, char* argv[]);
 
 /**
+ * Return PR_TRUE iff |NS_TraceMallocStartup[Args]| has been successfully called.
+ */
+PR_EXTERN(PRBool) NS_TraceMallocHasStarted(void);
+
+/**
  * Stop all malloc tracing, flushing any buffered events to the logfile.
  */
 PR_EXTERN(void) NS_TraceMallocShutdown(void);

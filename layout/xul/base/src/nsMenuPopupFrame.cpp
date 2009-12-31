@@ -87,6 +87,7 @@
 #include "nsIRootBox.h"
 #include "nsIScreenManager.h"
 #include "nsIServiceManager.h"
+#include "nsThemeConstants.h"
 
 PRInt8 nsMenuPopupFrame::sDefaultLevelParent = -1;
 
@@ -295,8 +296,24 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
 #endif
   nsIWidget* widget = aView->GetWidget();
   widget->SetTransparencyMode(mode);
-  widget->SetWindowShadowStyle(GetStyleUIReset()->mWindowShadow);
+  widget->SetWindowShadowStyle(GetShadowStyle());
   return NS_OK;
+}
+
+PRUint8
+nsMenuPopupFrame::GetShadowStyle()
+{
+  PRUint8 shadow = GetStyleUIReset()->mWindowShadow;
+  if (shadow != NS_STYLE_WINDOW_SHADOW_DEFAULT)
+    return shadow;
+
+  switch (GetStyleDisplay()->mAppearance) {
+    case NS_THEME_TOOLTIP:
+      return NS_STYLE_WINDOW_SHADOW_TOOLTIP;
+    case NS_THEME_MENUPOPUP:
+      return NS_STYLE_WINDOW_SHADOW_MENU;
+  }
+  return NS_STYLE_WINDOW_SHADOW_DEFAULT;
 }
 
 // this class is used for dispatching popupshowing events asynchronously.
@@ -911,7 +928,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
         if (!shell)
           return NS_ERROR_FAILURE;
 
-        aAnchorFrame = shell->GetPrimaryFrameFor(mAnchorContent);
+        aAnchorFrame = mAnchorContent->GetPrimaryFrame();
       }
     }
 
