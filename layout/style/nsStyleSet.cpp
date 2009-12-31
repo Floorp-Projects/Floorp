@@ -1161,3 +1161,41 @@ nsStyleSet::MediumFeaturesChanged(nsPresContext* aPresContext)
 
   return stylesChanged;
 }
+
+nsCSSStyleSheet::EnsureUniqueInnerResult
+nsStyleSet::EnsureUniqueInnerOnCSSSheets()
+{
+  nsAutoTArray<nsCSSStyleSheet*, 32> queue;
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gCSSSheetTypes); ++i) {
+    nsCOMArray<nsIStyleSheet> &sheets = mSheets[gCSSSheetTypes[i]];
+    for (PRUint32 j = 0, j_end = sheets.Count(); j < j_end; ++j) {
+      nsCSSStyleSheet *sheet = static_cast<nsCSSStyleSheet*>(sheets[j]);
+      if (!queue.AppendElement(sheet)) {
+        return nsCSSStyleSheet::eUniqueInner_CloneFailed;
+      }
+    }
+  }
+
+  nsCSSStyleSheet::EnsureUniqueInnerResult res =
+    nsCSSStyleSheet::eUniqueInner_AlreadyUnique;
+  while (!queue.IsEmpty()) {
+    PRUint32 idx = queue.Length() - 1;
+    nsCSSStyleSheet *sheet = queue[idx];
+    queue.RemoveElementAt(idx);
+
+    nsCSSStyleSheet::EnsureUniqueInnerResult sheetRes =
+      sheet->EnsureUniqueInner();
+    if (sheetRes == nsCSSStyleSheet::eUniqueInner_CloneFailed) {
+      return sheetRes;
+    }
+    if (sheetRes == nsCSSStyleSheet::eUniqueInner_ClonedInner) {
+      res = sheetRes;
+    }
+
+    // Enqueue all the sheet's children.
+    if (!sheet->AppendAllChildSheets(queue)) {
+      return nsCSSStyleSheet::eUniqueInner_CloneFailed;
+    }
+  }
+  return res;
+}
