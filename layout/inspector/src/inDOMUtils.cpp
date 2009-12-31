@@ -279,6 +279,12 @@ inDOMUtils::GetRuleNodeForContent(nsIContent* aContent,
   nsIPresShell *presShell = doc->GetPrimaryShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_UNEXPECTED);
 
+  nsPresContext *presContext = presShell->GetPresContext();
+  NS_ENSURE_TRUE(presContext, NS_ERROR_UNEXPECTED);
+
+  PRBool safe = presContext->EnsureSafeToHandOutCSSRules();
+  NS_ENSURE_TRUE(safe, NS_ERROR_OUT_OF_MEMORY);
+
   nsRefPtr<nsStyleContext> sContext =
     nsComputedDOMStyle::GetStyleContextForContent(aContent, nsnull, presShell);
   *aRuleNode = sContext->GetRuleNode();
