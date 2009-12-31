@@ -594,9 +594,7 @@ private:
      set. */
 #define FCDATA_SUPPRESS_FRAME 0x40
   /* If FCDATA_MAY_NEED_SCROLLFRAME is set, the new frame should be wrapped in
-     a scrollframe if its overflow type so requires.  This flag might override
-     FCDATA_SKIP_FRAMEMAP, since scrollframe construction will add to the frame
-     map. */
+     a scrollframe if its overflow type so requires. */
 #define FCDATA_MAY_NEED_SCROLLFRAME 0x80
 #ifdef MOZ_XUL
   /* If FCDATA_IS_POPUP is set, the new frame is a XUL popup frame.  These need
@@ -1331,7 +1329,6 @@ private:
 
   // Build a scroll frame: 
   //  Calls BeginBuildingScrollFrame, InitAndRestoreFrame, and then FinishBuildingScrollFrame.
-  //  Sets the primary frame for the content to the output aNewFrame.
   // @param aNewFrame the created scrollframe --- output only
   // @param aParentFrame the geometric parent that the scrollframe will have.
   nsresult
