@@ -499,9 +499,14 @@ tr:focus, tt:focus, u:focus, ul:focus, var:focus {
 }
 
 /* hidden elements */
-area, base, basefont, head, meta, script, style, title,
+base, basefont, head, meta, script, style, title,
 noembed, param {
    display: none;
+}
+
+area {
+  /* Don't give it frames other than its imageframe */
+  display: none ! important;
 }
 
 /* media elements */
