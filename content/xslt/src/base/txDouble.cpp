@@ -265,7 +265,7 @@ void Double::toString(double aValue, nsAString& aDest)
         }
     }
     // mantissa
-    int firstlen = NS_MIN(intDigits, endp - buf);
+    int firstlen = PR_MIN(intDigits, endp - buf);
     for (i = 0; i < firstlen; i++) {
         *dest = buf[i]; ++dest;
     }
