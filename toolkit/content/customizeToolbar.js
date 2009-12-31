@@ -44,7 +44,6 @@ var gToolboxDocument = null;
 var gToolbox = null;
 var gCurrentDragOverItem = null;
 var gToolboxChanged = false;
-var gToolboxIconSize = false;
 var gToolboxSheet = false;
 
 function onLoad()
@@ -104,9 +103,8 @@ function initDialog()
 {
   var mode = gToolbox.getAttribute("mode");
   document.getElementById("modelist").value = mode;
-  gToolboxIconSize = gToolbox.getAttribute("iconsize");
   var smallIconsCheckbox = document.getElementById("smallicons");
-  smallIconsCheckbox.checked = gToolboxIconSize == "small";
+  smallIconsCheckbox.checked = gToolbox.getAttribute("iconsize") == "small";
   if (mode == "text")
     smallIconsCheckbox.disabled = true;
 
