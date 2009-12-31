@@ -5288,8 +5288,13 @@ nsPluginInstanceOwner::Renderer::NativeDraw(QWidget * drawable,
   }
 
 #ifdef MOZ_X11
-  // Translate the dirty rect to drawable coordinates.
-  nsIntRect dirtyRect = mDirtyRect + nsIntPoint(offsetX, offsetY);
+  // Translate the dirty rect to drawable coordinates,
+  // and work around a bug in Flash up to 10.1 d51 at least, where expose
+  // event top left coordinates within the plugin-rect and not at the drawable
+  // origin are misinterpreted.  (We can move the top left coordinate provided
+  // if it is within the clipRect.)
+  nsIntRect dirtyRect(offsetX, offsetY,
+                      mDirtyRect.XMost(), mDirtyRect.YMost());
   // Intersect the dirty rect with the clip rect to ensure that it lies within
   // the drawable.
   if (!dirtyRect.IntersectRect(dirtyRect, clipRect))
@@ -5309,10 +5314,10 @@ nsPluginInstanceOwner::Renderer::NativeDraw(QWidget * drawable,
 #elif defined(MOZ_WIDGET_QT)
       drawable->x11PictureHandle();
 #endif
-    exposeEvent.x = mDirtyRect.x + offsetX;
-    exposeEvent.y = mDirtyRect.y + offsetY;
-    exposeEvent.width  = mDirtyRect.width;
-    exposeEvent.height = mDirtyRect.height;
+    exposeEvent.x = dirtyRect.x;
+    exposeEvent.y = dirtyRect.y;
+    exposeEvent.width  = dirtyRect.width;
+    exposeEvent.height = dirtyRect.height;
     exposeEvent.count = 0;
     // information not set:
     exposeEvent.serial = 0;
