@@ -824,6 +824,12 @@ public:
   // user font set is changed and fonts become unavailable).
   void UserFontSetUpdated();
 
+  // Ensure that it is safe to hand out CSS rules outside the layout
+  // engine by ensuring that all CSS style sheets have unique inners
+  // and, if necessary, synchronously rebuilding all style data.
+  // Returns true on success and false on failure (not safe).
+  PRBool EnsureSafeToHandOutCSSRules();
+
   PRBool MayHavePaintEventListener();
   void NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags);
   void FireDOMPaintEvent();
