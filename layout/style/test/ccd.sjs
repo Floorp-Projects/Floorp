@@ -3,8 +3,6 @@ const DEBUG_all_stub = false;
 
 function handleRequest(request, response)
 {
-    dump("ccd.sjs: handling request with query " + request.queryString + "\n");
-
     // Decode the query string to know what test we're doing.
 
     // character 1: 'I' = text/css response, 'J' = text/html response

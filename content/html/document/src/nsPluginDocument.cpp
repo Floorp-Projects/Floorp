@@ -138,7 +138,7 @@ nsPluginStreamListener::SetupPlugin()
   // nsObjectFrame does that at the end of reflow.
   shell->FlushPendingNotifications(Flush_Layout);
 
-  nsIFrame* frame = shell->GetPrimaryFrameFor(embed);
+  nsIFrame* frame = embed->GetPrimaryFrame();
   if (!frame) {
     mPluginDoc->AllowNormalInstantiation();
     return NS_OK;
@@ -341,15 +341,8 @@ nsPluginDocument::Print()
 {
   NS_ENSURE_TRUE(mPluginContent, NS_ERROR_FAILURE);
 
-  nsIPresShell *shell = GetPrimaryShell();
-  if (!shell) {
-    return NS_OK;
-  }
-
-  nsIFrame* frame = shell->GetPrimaryFrameFor(mPluginContent);
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  nsIObjectFrame* objectFrame = do_QueryFrame(frame);
+  nsIObjectFrame* objectFrame =
+    do_QueryFrame(mPluginContent->GetPrimaryFrame());
   if (objectFrame) {
     nsCOMPtr<nsIPluginInstance> pi;
     objectFrame->GetPluginInstance(*getter_AddRefs(pi));

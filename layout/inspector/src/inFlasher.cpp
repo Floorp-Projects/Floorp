@@ -133,11 +133,7 @@ NS_IMETHODIMP
 inFlasher::RepaintElement(nsIDOMElement* aElement)
 {
   NS_ENSURE_ARG_POINTER(aElement);
-  nsCOMPtr<nsIDOMWindowInternal> window = inLayoutUtils::GetWindowFor(aElement);
-  if (!window) return NS_OK;
-  nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
-  if (!presShell) return NS_OK;
-  nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
+  nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement);
   if (!frame) return NS_OK;
 
   frame->Invalidate(frame->GetRect());
@@ -154,7 +150,7 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
   nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(window);
   if (!presShell) return NS_OK;
 
-  nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement, presShell);
+  nsIFrame* frame = inLayoutUtils::GetFrameFor(aElement);
 
   PRBool isFirstFrame = PR_TRUE;
 

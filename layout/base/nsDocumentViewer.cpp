@@ -1067,10 +1067,9 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
     window = mDocument->GetWindow();
     if (window) {
       nsIDocShell *docShell = window->GetDocShell();
-      PRBool beingDestroyed;
-      if (docShell &&
-          NS_SUCCEEDED(docShell->IsBeingDestroyed(&beingDestroyed)) &&
-          !beingDestroyed) {
+      PRBool isInUnload;
+      if (docShell && NS_SUCCEEDED(docShell->GetIsInUnload(&isInUnload)) &&
+          !isInUnload) {
         mDocument->OnPageShow(restoring, nsnull);
       }
     }

@@ -48,7 +48,7 @@
 #define nsStyleSet_h_
 
 #include "nsIStyleRuleProcessor.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsBindingManager.h"
 #include "nsRuleNode.h"
 #include "nsTArray.h"
@@ -277,7 +277,9 @@ class nsStyleSet
   void RuleNodeInUse() {
     --mUnusedRuleNodeCount;
   }
-  
+
+  nsCSSStyleSheet::EnsureUniqueInnerResult EnsureUniqueInnerOnCSSSheets();
+
  private:
   // Not to be implemented
   nsStyleSet(const nsStyleSet& aCopy);

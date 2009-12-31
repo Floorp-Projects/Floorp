@@ -109,22 +109,6 @@ public:
    */
   NS_HIDDEN_(nsIFrame*) GetCanvasFrame();
 
-  // Primary frame functions
-  // If aIndexHint it not -1, it will be used as when determining a frame hint
-  // instead of calling IndexOf(aContent).
-  NS_HIDDEN_(nsIFrame*) GetPrimaryFrameFor(nsIContent* aContent,
-                                           PRInt32 aIndexHint);
-  // aPrimaryFrame must not be null.  If you're trying to remove a primary frame
-  // mapping, use RemoveAsPrimaryFrame.
-  NS_HIDDEN_(nsresult)  SetPrimaryFrameFor(nsIContent* aContent,
-                                           nsIFrame* aPrimaryFrame);
-  // If aPrimaryFrame is the current primary frame for aContent, remove the
-  // relevant hashtable entry.  If the current primary frame for aContent is
-  // null, this does nothing.  aPrimaryFrame must not be null.
-  NS_HIDDEN_(void)      RemoveAsPrimaryFrame(nsIContent* aContent,
-                                             nsIFrame* aPrimaryFrame);
-  NS_HIDDEN_(void)      ClearPrimaryFrameMap();
-
   // Placeholder frame functions
   NS_HIDDEN_(nsPlaceholderFrame*) GetPlaceholderFrameFor(nsIFrame* aFrame);
   NS_HIDDEN_(nsresult)

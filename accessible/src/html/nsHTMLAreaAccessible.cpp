@@ -116,7 +116,7 @@ nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y,
 
   nsRect rect;
   nsIntRect orgRectPixels;
-  rv = map->GetBoundsForAreaContent(ourContent, presContext, rect);
+  rv = map->GetBoundsForAreaContent(ourContent, rect);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *x      = presContext->AppUnitsToDevPixels(rect.x); 

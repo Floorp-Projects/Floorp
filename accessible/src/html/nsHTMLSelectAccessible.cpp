@@ -539,11 +539,11 @@ nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
   PRUint32 state;
   nsCOMPtr<nsIContent> content = GetSelectState(&state);
   if (state & nsIAccessibleStates::STATE_COLLAPSED) {
-    nsCOMPtr<nsIPresShell> presShell(GetPresShell());
-    if (!presShell) {
-      return nsnull;
+    if (content) {
+      return content->GetPrimaryFrame();
     }
-    return presShell->GetPrimaryFrameFor(content);
+
+    return nsnull;
   }
 
   return nsAccessible::GetBoundsFrame();
@@ -695,7 +695,7 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::DoAction(PRUint8 index)
     if (!testSelectNode || !selectContent || !presShell || !option) 
       return NS_ERROR_FAILURE;
 
-    nsIFrame *selectFrame = presShell->GetPrimaryFrameFor(selectContent);
+    nsIFrame *selectFrame = selectContent->GetPrimaryFrame();
     nsIComboboxControlFrame *comboBoxFrame = do_QueryFrame(selectFrame);
     if (comboBoxFrame) {
       nsIFrame *listFrame = comboBoxFrame->GetDropDown();
@@ -727,14 +727,7 @@ nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIDOMNode *aListNod
   NS_ASSERTION(aListNode, "Called GetFocusedOptionNode without a valid list node");
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aListNode));
-  nsCOMPtr<nsIDocument> document = content->GetDocument();
-  nsIPresShell *shell = nsnull;
-  if (document)
-    shell = document->GetPrimaryShell();
-  if (!shell)
-    return NS_ERROR_FAILURE;
-
-  nsIFrame *frame = shell->GetPrimaryFrameFor(content);
+  nsIFrame *frame = content->GetPrimaryFrame();
   if (!frame)
     return NS_ERROR_FAILURE;
 
@@ -1177,16 +1170,11 @@ void nsHTMLComboboxListAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aBo
   mDOMNode->GetFirstChild(getter_AddRefs(child));
 
   // now get its frame
-  nsCOMPtr<nsIPresShell> shell = GetPresShell();
-  if (!shell) {
-    return;
-  }
-
   nsCOMPtr<nsIContent> content(do_QueryInterface(child));
   if (!content) {
     return;
   }
-  nsIFrame* frame = shell->GetPrimaryFrameFor(content);
+  nsIFrame* frame = content->GetPrimaryFrame();
   if (!frame) {
     *aBoundingFrame = nsnull;
     return;

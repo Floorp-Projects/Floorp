@@ -1973,6 +1973,25 @@ nsPresContext::UserFontSetUpdated()
   PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW);
 }
 
+PRBool
+nsPresContext::EnsureSafeToHandOutCSSRules()
+{
+  nsCSSStyleSheet::EnsureUniqueInnerResult res =
+    mShell->StyleSet()->EnsureUniqueInnerOnCSSSheets();
+  if (res == nsCSSStyleSheet::eUniqueInner_AlreadyUnique) {
+    // Nothing to do.
+    return PR_TRUE;
+  }
+  if (res == nsCSSStyleSheet::eUniqueInner_CloneFailed) {
+    return PR_FALSE;
+  }
+
+  NS_ABORT_IF_FALSE(res == nsCSSStyleSheet::eUniqueInner_ClonedInner,
+                    "unexpected result");
+  RebuildAllStyleData(nsChangeHint(0));
+  return PR_TRUE;
+}
+
 void
 nsPresContext::FireDOMPaintEvent()
 {

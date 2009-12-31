@@ -92,6 +92,14 @@ extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 extern BOOL                gSomeMenuBarPainted;
 
+extern "C" {
+  // CGSPrivate.h
+  typedef NSInteger CGSConnection;
+  typedef NSInteger CGSWindow;
+  extern CGSConnection _CGSDefaultConnection(void);
+  extern CGError CGSSetWindowShadowAndRimParameters(const CGSConnection cid, CGSWindow wid, float standardDeviation, float density, int offsetX, int offsetY, unsigned int flags);
+}
+
 #define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
@@ -114,6 +122,7 @@ nsCocoaWindow::nsCocoaWindow()
 , mDelegate(nil)
 , mSheetWindowParent(nil)
 , mPopupContentView(nil)
+, mShadowStyle(NS_STYLE_WINDOW_SHADOW_DEFAULT)
 , mIsResizing(PR_FALSE)
 , mWindowMadeHere(PR_FALSE)
 , mSheetNeedsShow(PR_FALSE)
@@ -647,6 +656,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       [mWindow orderFront:nil];
       NS_OBJC_END_TRY_LOGONLY_BLOCK;
       SendSetZLevelEvent();
+      AdjustWindowShadow();
       // If our popup window is a non-native context menu, tell the OS (and
       // other programs) that a menu has opened.  This is how the OS knows to
       // close other programs' context menus when ours open.
@@ -783,6 +793,48 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+struct ShadowParams {
+  float standardDeviation;
+  float density;
+  int offsetX;
+  int offsetY;
+  unsigned int flags;
+};
+
+// These numbers have been determined by looking at the results of
+// CGSGetWindowShadowAndRimParameters for native window types.
+static const ShadowParams kWindowShadowParameters[] = {
+  { 0.0f, 0.0f, 0, 0, 0 },        // none
+  { 8.0f, 0.5f, 0, 6, 1 },        // default
+  { 10.0f, 0.44f, 0, 10, 512 },   // menu
+  { 8.0f, 0.5f, 0, 6, 1 },        // tooltip
+  { 4.0f, 0.6f, 0, 4, 512 }       // sheet
+};
+
+// This method will adjust the window shadow style for popup windows after
+// they have been made visible. Before they're visible, their window number
+// might be -1, which is not useful.
+// We won't attempt to change the shadow for windows that can acquire key state
+// since OS X will reset the shadow whenever that happens.
+void
+nsCocoaWindow::AdjustWindowShadow()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (![mWindow isVisible] || ![mWindow hasShadow] ||
+      [mWindow canBecomeKeyWindow] || [mWindow windowNumber] == -1)
+    return;
+
+  const ShadowParams& params = kWindowShadowParameters[mShadowStyle];
+  CGSConnection cid = _CGSDefaultConnection();
+  CGSSetWindowShadowAndRimParameters(cid, [mWindow windowNumber],
+                                     params.standardDeviation, params.density,
+                                     params.offsetX, params.offsetY,
+                                     params.flags);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 nsresult
@@ -1353,8 +1405,10 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(PRInt32 aStyle)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if ([mWindow hasShadow] != (aStyle != NS_STYLE_WINDOW_SHADOW_NONE))
-    [mWindow setHasShadow:(aStyle != NS_STYLE_WINDOW_SHADOW_NONE)];
+  mShadowStyle = aStyle;
+  [mWindow setHasShadow:(aStyle != NS_STYLE_WINDOW_SHADOW_NONE)];
+  AdjustWindowShadow();
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -1763,6 +1817,7 @@ static const NSString* kStateTitleKey = @"title";
 static const NSString* kStateDrawsContentsIntoWindowFrameKey = @"drawsContentsIntoWindowFrame";
 static const NSString* kStateActiveTitlebarColorKey = @"activeTitlebarColor";
 static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor";
+static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
 - (void)importState:(NSDictionary*)aState
 {
@@ -1770,6 +1825,7 @@ static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor"
   [self setDrawsContentsIntoWindowFrame:[[aState objectForKey:kStateDrawsContentsIntoWindowFrameKey] boolValue]];
   [self setTitlebarColor:[aState objectForKey:kStateActiveTitlebarColorKey] forActiveWindow:YES];
   [self setTitlebarColor:[aState objectForKey:kStateInactiveTitlebarColorKey] forActiveWindow:NO];
+  [self setShowsToolbarButton:[[aState objectForKey:kStateShowsToolbarButton] boolValue]];
 }
 
 - (NSMutableDictionary*)exportState
@@ -1786,6 +1842,8 @@ static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor"
   if (inactiveTitlebarColor) {
     [state setObject:inactiveTitlebarColor forKey:kStateInactiveTitlebarColorKey];
   }
+  [state setObject:[NSNumber numberWithBool:[self showsToolbarButton]]
+            forKey:kStateShowsToolbarButton];
   return state;
 }
 

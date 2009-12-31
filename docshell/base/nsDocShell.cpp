@@ -4497,7 +4497,7 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
             pPresShell->GetDocument()->FindContentForSubDocument(presShell->GetDocument());
         NS_ASSERTION(shellContent, "subshell not in the map");
 
-        nsIFrame* frame = pPresShell->GetPrimaryFrameFor(shellContent);
+        nsIFrame* frame = shellContent ? shellContent->GetPrimaryFrame() : nsnull;
         PRBool isDocShellOffScreen = PR_FALSE;
         docShell->GetIsOffScreenBrowser(&isDocShellOffScreen);
         if (frame && !frame->AreAncestorViewsVisible() && !isDocShellOffScreen)

@@ -339,8 +339,6 @@ nsFrame::Init(nsIContent*      aContent,
 
   if (aContent) {
     NS_ADDREF(aContent);
-    aContent->SetMayHaveFrame(PR_TRUE);
-    NS_ASSERTION(mContent->MayHaveFrame(), "SetMayHaveFrame failed?");
   }
 
   if (aPrevInFlow) {
@@ -464,6 +462,11 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
 
     // Destroy the view
     view->Destroy();
+  }
+
+  // Make sure that our deleted frame can't be returned from GetPrimaryFrame()
+  if (mContent && mContent->GetPrimaryFrame() == this) {
+    mContent->SetPrimaryFrame(nsnull);
   }
 
   // Must retrieve the object ID before calling destructors, so the
@@ -755,13 +758,10 @@ nsFrame::GetChildList(nsIAtom* aListName) const
 static nsIFrame*
 GetActiveSelectionFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
-  nsIPresShell* shell = aPresContext->GetPresShell(); 
-  if (shell) {
-    nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
-    if (capturingContent) {
-      nsIFrame* activeFrame = shell->GetPrimaryFrameFor(capturingContent);
-      return activeFrame ? activeFrame : aFrame;
-    }
+  nsIContent* capturingContent = nsIPresShell::GetCapturingContent();
+  if (capturingContent) {
+    nsIFrame* activeFrame = aPresContext->GetPrimaryFrameFor(capturingContent);
+    return activeFrame ? activeFrame : aFrame;
   }
 
   return aFrame;

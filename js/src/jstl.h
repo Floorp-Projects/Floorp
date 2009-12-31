@@ -192,7 +192,7 @@ class ReentrancyGuard
  * Round x up to the nearest power of 2.  This function assumes that the most
  * significant bit of x is not set, which would lead to overflow.
  */
-static JS_ALWAYS_INLINE size_t
+JS_ALWAYS_INLINE size_t
 RoundUpPow2(size_t x)
 {
     typedef tl::StaticAssert<tl::IsSameType<size_t,JSUword>::result>::result _;
@@ -209,7 +209,7 @@ RoundUpPow2(size_t x)
  * size_t(-1), instead of the real difference.
  */
 template <class T>
-static JS_ALWAYS_INLINE size_t
+JS_ALWAYS_INLINE size_t
 PointerRangeSize(T *begin, T *end)
 {
     return (size_t(end) - size_t(begin)) / sizeof(T);
