@@ -1488,6 +1488,18 @@ nsCSSStyleSheet::EnsureUniqueInner()
   return eUniqueInner_ClonedInner;
 }
 
+PRBool
+nsCSSStyleSheet::AppendAllChildSheets(nsTArray<nsCSSStyleSheet*>& aArray)
+{
+  for (nsCSSStyleSheet* child = mInner->mFirstChild; child;
+       child = child->mNext) {
+    if (!aArray.AppendElement(child)) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsCSSStyleSheet::Clone(nsICSSStyleSheet* aCloneParent,
                        nsICSSImportRule* aCloneOwnerRule,
