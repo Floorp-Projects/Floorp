@@ -3694,6 +3694,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   const nsStyleDisplay* display = styleContext->GetStyleDisplay();
 
   nsIFrame* newFrame;
+  nsIFrame* primaryFrame;
   if (bits & FCDATA_FUNC_IS_FULL_CTOR) {
     nsresult rv =
       (this->*(data->mFullConstructor))(aState, aItem, aParentFrame,
@@ -3701,6 +3702,8 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
     if (NS_FAILED(rv)) {
       return rv;
     }
+
+    primaryFrame = newFrame;
   } else {
     nsIContent* const content = aItem.mContent;
 
@@ -3731,8 +3734,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
         display->IsScrollableOverflow()) {
       BuildScrollFrame(aState, content, styleContext, newFrame,
                        geometricParent, frameToAddToList);
-      // No need to set the primary frame, since BuildScrollFrame did it already
-      bits |= FCDATA_SKIP_FRAMESET;
     } else {
       rv = InitAndRestoreFrame(aState, content, geometricParent, nsnull,
                                newFrame);
@@ -3742,6 +3743,12 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
                                                (bits & FCDATA_FORCE_VIEW) != 0);
       frameToAddToList = newFrame;
     }
+
+    // Use frameToAddToList as the primary frame.  In the non-scrollframe case
+    // they're equal, but in the scrollframe case newFrame is the scrolled
+    // frame, while frameToAddToList is the scrollframe (and should be the
+    // primary frame).
+    primaryFrame = frameToAddToList;
 
     rv = aState.AddChild(frameToAddToList, aFrameItems, content, styleContext,
                          aParentFrame, allowOutOfFlow, allowOutOfFlow, isPopup);
@@ -3839,7 +3846,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
                "Incorrectly set FCDATA_IS_LINE_PARTICIPANT bits");
 
   if (!(bits & FCDATA_SKIP_FRAMESET)) {
-    aItem.mContent->SetPrimaryFrame(newFrame);
+    aItem.mContent->SetPrimaryFrame(primaryFrame);
   }
 
   return NS_OK;
@@ -4315,11 +4322,7 @@ nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
     InitAndRestoreFrame(aState, aContent, aNewFrame, nsnull, aScrolledFrame);
 
     FinishBuildingScrollFrame(aNewFrame, aScrolledFrame);
-
-    // now set the primary frame to the ScrollFrame
-    aContent->SetPrimaryFrame(aNewFrame);
     return NS_OK;
-
 }
 
 const nsCSSFrameConstructor::FrameConstructionData*
@@ -9596,7 +9599,13 @@ nsCSSFrameConstructor::CreateLetterFrame(nsIFrame* aBlockFrame,
     textSC = mPresShell->StyleSet()->ResolveStyleForNonElement(sc);
     
     // Create a new text frame (the original one will be discarded)
-    // pass a temporary stylecontext, the correct one will be set later
+    // pass a temporary stylecontext, the correct one will be set
+    // later.  Start off by unsetting the primary frame for
+    // aTextContent, so it's no longer pointing to the to-be-destroyed
+    // frame.
+    // XXXbz it would be really nice to destroy the old frame _first_,
+    // then create the new one, so we could avoid this hack.
+    aTextContent->SetPrimaryFrame(nsnull);
     nsIFrame* textFrame = NS_NewTextFrame(mPresShell, textSC);
 
     NS_ASSERTION(aBlockFrame == GetFloatContainingBlock(aParentFrame),
@@ -9811,7 +9820,6 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
     return NS_ERROR_OUT_OF_MEMORY;;
   }
   newTextFrame->Init(textContent, parentFrame, nsnull);
-  textContent->SetPrimaryFrame(newTextFrame);
 
   // Destroy the old text frame's continuations (the old text frame
   // will be destroyed when its letter frame is destroyed).
@@ -9832,6 +9840,10 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
 
   // Remove placeholder frame and the float
   aFrameManager->RemoveFrame(nsnull, placeholderFrame);
+
+  // Now that the old frames are gone, we can start pointing to our
+  // new primary frame.
+  textContent->SetPrimaryFrame(newTextFrame);
 
   // Insert text frame in its place
   nsFrameList textList(newTextFrame, newTextFrame);
@@ -9874,10 +9886,13 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
       }
       textFrame = NS_NewTextFrame(aPresShell, newSC);
       textFrame->Init(textContent, aFrame, nsnull);
-      textContent->SetPrimaryFrame(textFrame);
 
       // Next rip out the kid and replace it with the text frame
       aFrameManager->RemoveFrame(nsnull, kid);
+
+      // Now that the old frames are gone, we can start pointing to our
+      // new primary frame.
+      textContent->SetPrimaryFrame(textFrame);
 
       // Insert text frame in its place
       nsFrameList textList(textFrame, textFrame);
