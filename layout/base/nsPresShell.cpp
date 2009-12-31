@@ -4374,21 +4374,8 @@ PresShell::ClearMouseCapture(nsIView* aView)
   if (gCaptureInfo.mContent) {
     if (aView) {
       // if a view was specified, ensure that the captured content is within
-      // this view. Get the frame for the captured content from the right
-      // presshell first.
-      nsIFrame* frame = nsnull;
-      nsIDocument* doc = gCaptureInfo.mContent->GetCurrentDoc();
-      if (doc) {
-        nsIPresShell *shell = doc->GetPrimaryShell();
-        if (shell) {
-          // not much can happen if frames are being destroyed so just return.
-          if (shell->FrameManager()->IsDestroyingFrames())
-            return;
-
-          frame = gCaptureInfo.mContent->GetPrimaryFrame();
-        }
-      }
-
+      // this view.
+      nsIFrame* frame = gCaptureInfo.mContent->GetPrimaryFrame();
       if (frame) {
         nsIView* view = frame->GetClosestView();
         // if there is no view, capturing won't be handled any more, so
