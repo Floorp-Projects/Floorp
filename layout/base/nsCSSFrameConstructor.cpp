@@ -1381,6 +1381,8 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mIsDestroyingFrameTree(PR_FALSE)
   , mRebuildAllStyleData(PR_FALSE)
   , mHasRootAbsPosContainingBlock(PR_FALSE)
+  , mObservingRefreshDriver(PR_FALSE)
+  , mInStyleRefresh(PR_FALSE)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
 {
@@ -7809,8 +7811,12 @@ nsCSSFrameConstructor::WillDestroyFrameTree()
   mQuoteList.Clear();
   mCounterManager.Clear();
 
-  // Cancel all pending re-resolves
-  mRestyleEvent.Revoke();
+  // Remove ourselves as a refresh observer, so the refresh driver
+  // won't assert about us.  But leave mObservingRefreshDriver true so
+  // we don't readd to it even if someone tries to post restyle events
+  // on us from this point on for some reason.
+  mPresShell->GetPresContext()->RefreshDriver()->
+    RemoveRefreshObserver(this, Flush_Style);
 }
 
 //STATIC
@@ -11143,6 +11149,9 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   // Process non-animation restyles...
   ProcessPendingRestyleTable(mPendingRestyles);
 
+  NS_POSTCONDITION(mPendingRestyles.Count() == 0,
+                   "We should have processed mPendingRestyles to completion");
+
   // ...and then process animation restyles.  This needs to happen
   // second because we need to start animations that resulted from the
   // first set of restyles (e.g., CSS transitions with negative
@@ -11156,9 +11165,19 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   ProcessPendingRestyleTable(mPendingAnimationRestyles);
   presContext->SetProcessingAnimationStyleChange(PR_FALSE);
 
+  mInStyleRefresh = PR_FALSE;
+
+  NS_POSTCONDITION(mPendingAnimationRestyles.Count() == 0,
+                   "We should have processed mPendingAnimationRestyles to "
+                   "completion");
+  NS_POSTCONDITION(mPendingRestyles.Count() == 0,
+                   "We should not have posted new non-animation restyles while "
+                   "processing animation restyles");
+
   if (mRebuildAllStyleData) {
     // We probably wasted a lot of work up above, but this seems safest
     // and it should be rarely used.
+    // This might add us as a refresh observer again; that's ok.
     RebuildAllStyleData(nsChangeHint(0));
   }
 }
@@ -11201,15 +11220,27 @@ nsCSSFrameConstructor::PostRestyleEventCommon(nsIContent* aContent,
 void
 nsCSSFrameConstructor::PostRestyleEventInternal()
 {
-  if (!mRestyleEvent.IsPending()) {
-    nsRefPtr<RestyleEvent> ev = new RestyleEvent(this);
-    if (NS_FAILED(NS_DispatchToCurrentThread(ev))) {
-      NS_WARNING("failed to dispatch restyle event");
-      // XXXbz and what?
-    } else {
-      mRestyleEvent = ev;
-    }
+  // Make sure we're not in a style refresh; if we are, we still have
+  // a call to ProcessPendingRestyles coming and there's no need to
+  // add ourselves as a refresh observer until then.
+  if (!mInStyleRefresh && !mObservingRefreshDriver) {
+    mObservingRefreshDriver = mPresShell->GetPresContext()->
+      RefreshDriver()->AddRefreshObserver(this, Flush_Style);
   }
+}
+
+void
+nsCSSFrameConstructor::WillRefresh(mozilla::TimeStamp aTime)
+{
+  NS_ASSERTION(mObservingRefreshDriver, "How did we get here?");
+  // Stop observing the refresh driver and flag ourselves as being in
+  // a refresh so we don't restart due to animation-triggered
+  // restyles.  The actual work of processing our restyles will get
+  // done when the refresh driver flushes styles.
+  mPresShell->GetPresContext()->RefreshDriver()->
+    RemoveRefreshObserver(this, Flush_Style);
+  mObservingRefreshDriver = PR_FALSE;
+  mInStyleRefresh = PR_TRUE;
 }
 
 void
@@ -11223,18 +11254,6 @@ nsCSSFrameConstructor::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
   NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
   // Get a restyle event posted if necessary
   PostRestyleEventInternal();
-}
-
-NS_IMETHODIMP nsCSSFrameConstructor::RestyleEvent::Run()
-{
-  if (!mConstructor)
-    return NS_OK;  // event was revoked
-
-  // Make sure that any restyles that happen from now on will go into
-  // a new event.
-  mConstructor->mRestyleEvent.Forget();  
-  
-  return mConstructor->mPresShell->FlushPendingNotifications(Flush_Style);
 }
 
 NS_IMETHODIMP

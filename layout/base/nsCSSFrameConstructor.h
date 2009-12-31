@@ -53,6 +53,7 @@
 #include "nsThreadUtils.h"
 #include "nsPageContentFrame.h"
 #include "nsCSSPseudoElements.h"
+#include "nsRefreshDriver.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -78,7 +79,7 @@ typedef void (nsLazyFrameConstructionCallback)
 class nsFrameConstructorState;
 class nsFrameConstructorSaveState;
 
-class nsCSSFrameConstructor
+class nsCSSFrameConstructor : public nsARefreshObserver
 {
 public:
   nsCSSFrameConstructor(nsIDocument *aDocument, nsIPresShell* aPresShell);
@@ -245,6 +246,9 @@ public:
   {
     PostRestyleEventCommon(aContent, aRestyleHint, aMinChangeHint, PR_TRUE);
   }
+
+  // nsARefreshObserver
+  virtual void WillRefresh(mozilla::TimeStamp aTime);
 private:
   /**
    * Notify the frame constructor that a content node needs to have its
@@ -1677,21 +1681,6 @@ public:
     nsCOMPtr<nsIContent> mContent;
   };
 
-  class RestyleEvent;
-  friend class RestyleEvent;
-
-  class RestyleEvent : public nsRunnable {
-  public:
-    NS_DECL_NSIRUNNABLE
-    RestyleEvent(nsCSSFrameConstructor *aConstructor)
-      : mConstructor(aConstructor) {
-      NS_PRECONDITION(aConstructor, "Must have a constructor!");
-    }
-    void Revoke() { mConstructor = nsnull; }
-  private:
-    nsCSSFrameConstructor *mConstructor;
-  };
-
   friend class nsFrameConstructorState;
 
 private:
@@ -1744,10 +1733,12 @@ private:
   PRPackedBool        mRebuildAllStyleData : 1;
   // This is true if mDocElementContainingBlock supports absolute positioning
   PRPackedBool        mHasRootAbsPosContainingBlock : 1;
+  // True if we're already waiting for a refresh notification
+  PRPackedBool        mObservingRefreshDriver : 1;
+  // True if we're in the middle of a nsRefreshDriver refresh
+  PRPackedBool        mInStyleRefresh : 1;
   PRUint32            mHoverGeneration;
   nsChangeHint        mRebuildAllExtraHint;
-
-  nsRevocableEventPtr<RestyleEvent> mRestyleEvent;
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 
