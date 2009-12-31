@@ -171,8 +171,17 @@ public:
   // nsICSSLoaderObserver interface
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
                               nsresult aStatus);
-  
-  nsresult EnsureUniqueInner();
+
+  enum EnsureUniqueInnerResult {
+    // No work was needed to ensure a unique inner.
+    eUniqueInner_AlreadyUnique,
+    // A clone was done to ensure a unique inner (which means the style
+    // rules in this sheet have changed).
+    eUniqueInner_ClonedInner,
+    // A clone was attempted, but it failed.
+    eUniqueInner_CloneFailed
+  };
+  EnsureUniqueInnerResult EnsureUniqueInner();
 
   PRBool UseForPresentation(nsPresContext* aPresContext,
                             nsMediaQueryResultCacheKey& aKey) const;
