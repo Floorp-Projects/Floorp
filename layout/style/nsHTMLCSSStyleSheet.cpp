@@ -57,8 +57,7 @@
 #include "nsRuleProcessorData.h"
 
 nsHTMLCSSStyleSheet::nsHTMLCSSStyleSheet()
-  : nsIHTMLCSSStyleSheet(),
-    mRefCnt(0),
+  : mRefCnt(0),
     mURL(nsnull),
     mDocument(nsnull)
 {
@@ -69,8 +68,7 @@ nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet()
   NS_RELEASE(mURL);
 }
 
-NS_IMPL_ISUPPORTS3(nsHTMLCSSStyleSheet,
-                   nsIHTMLCSSStyleSheet,
+NS_IMPL_ISUPPORTS2(nsHTMLCSSStyleSheet,
                    nsIStyleSheet,
                    nsIStyleRuleProcessor)
 
@@ -117,7 +115,7 @@ nsHTMLCSSStyleSheet::RulesMatching(XULTreeRuleProcessorData* aData)
 }
 #endif
 
-NS_IMETHODIMP
+nsresult
 nsHTMLCSSStyleSheet::Init(nsIURI* aURL, nsIDocument* aDocument)
 {
   NS_PRECONDITION(aURL && aDocument, "null ptr");
@@ -156,7 +154,7 @@ nsHTMLCSSStyleSheet::MediumFeaturesChanged(nsPresContext* aPresContext,
 }
 
 
-NS_IMETHODIMP 
+nsresult
 nsHTMLCSSStyleSheet::Reset(nsIURI* aURL)
 {
   NS_IF_RELEASE(mURL);
@@ -267,40 +265,3 @@ void nsHTMLCSSStyleSheet::List(FILE* out, PRInt32 aIndent) const
   fputs("\n", out);
 }
 #endif
-
-// XXX For backwards compatibility and convenience
-nsresult
-NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult,
-                        nsIURI* aURL, nsIDocument* aDocument)
-{
-  nsresult rv;
-  nsIHTMLCSSStyleSheet* sheet;
-  if (NS_FAILED(rv = NS_NewHTMLCSSStyleSheet(&sheet)))
-    return rv;
-
-  if (NS_FAILED(rv = sheet->Init(aURL, aDocument))) {
-    NS_RELEASE(sheet);
-    return rv;
-  }
-
-  *aInstancePtrResult = sheet;
-  return NS_OK;
-}
-
-nsresult
-NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult)
-{
-  if (aInstancePtrResult == nsnull) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsHTMLCSSStyleSheet*  it = new nsHTMLCSSStyleSheet();
-
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(it);
-  *aInstancePtrResult = it;
-  return NS_OK;
-}
