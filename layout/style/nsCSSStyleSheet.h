@@ -183,6 +183,10 @@ public:
   };
   EnsureUniqueInnerResult EnsureUniqueInner();
 
+  // Append all of this sheet's child sheets to aArray.  Return PR_TRUE
+  // on success and PR_FALSE on allocation failure.
+  PRBool AppendAllChildSheets(nsTArray<nsCSSStyleSheet*>& aArray);
+
   PRBool UseForPresentation(nsPresContext* aPresContext,
                             nsMediaQueryResultCacheKey& aKey) const;
 
