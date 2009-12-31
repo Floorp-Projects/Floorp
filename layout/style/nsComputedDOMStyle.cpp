@@ -354,7 +354,7 @@ nsComputedDOMStyle::GetStyleContextForContentNoFlush(nsIContent* aContent,
   }
 
   if (!aPseudo) {
-    nsIFrame* frame = aPresShell->GetPrimaryFrameFor(aContent);
+    nsIFrame* frame = aContent->GetPrimaryFrame();
     if (frame) {
       nsStyleContext* result =
         nsLayoutUtils::GetStyleFrame(frame)->GetStyleContext();
@@ -453,7 +453,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   NS_ENSURE_TRUE(mPresShell && mPresShell->GetPresContext(),
                  NS_ERROR_NOT_AVAILABLE);
 
-  mOuterFrame = mPresShell->GetPrimaryFrameFor(mContent);
+  mOuterFrame = mContent->GetPrimaryFrame();
   mInnerFrame = mOuterFrame;
   if (mOuterFrame && !mPseudo) {
     nsIAtom* type = mOuterFrame->GetType();

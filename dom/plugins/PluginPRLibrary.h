@@ -54,7 +54,7 @@ class PluginPRLibrary : public PluginLibrary
     typedef NPError (OSCALL *NP_ShutdownFunc)();
     typedef char* (*NP_GetMIMEDescriptionFunc)();
     typedef NPError (*NP_GetValueFunc)(void *, NPPVariable, void*);
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
     typedef NPError (OSCALL *NP_GetEntryPointsFunc)(NPPluginFuncs*);
 #endif
 
@@ -68,7 +68,7 @@ public:
         mNP_Shutdown(nsnull),
         mNP_GetMIMEDescription(nsnull),
         mNP_GetValue(nsnull),
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
         mNP_GetEntryPoints(nsnull),
 #endif
         mNPP_New(nsnull),
@@ -110,7 +110,7 @@ public:
             return false;
 #endif
 
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
         mNP_GetEntryPoints = (NP_GetEntryPointsFunc)
             PR_FindFunctionSymbol(mLibrary, "NP_GetEntryPoints");
         if (!mNP_GetEntryPoints)
@@ -198,7 +198,7 @@ public:
         return NS_OK;
     }
 
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
     virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error) {
         if (mNP_GetEntryPoints) {
             *error = mNP_GetEntryPoints(pFuncs);
@@ -231,7 +231,7 @@ private:
     NP_ShutdownFunc mNP_Shutdown;
     NP_GetMIMEDescriptionFunc mNP_GetMIMEDescription;
     NP_GetValueFunc mNP_GetValue;
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
     NP_GetEntryPointsFunc mNP_GetEntryPoints;
 #endif
     NPP_NewProcPtr mNPP_New;

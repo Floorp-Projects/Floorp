@@ -221,10 +221,10 @@ Atob(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     char *base64Str = JS_GetStringBytes(str);
 
     PRUint32 bin_dataLength = (PRUint32)base64StrLength;
-    if (base64Str[base64StrLength - 1] == '=') {
-        if (base64Str[base64StrLength - 2] == '=')
+    if (base64StrLength >= 1 && base64Str[base64StrLength - 1] == '=') {
+        if (base64StrLength >= 2 && base64Str[base64StrLength - 2] == '=')
             bin_dataLength -= 2;
-        else  
+        else
             --bin_dataLength;
     }
     bin_dataLength = (PRUint32)((PRUint64)bin_dataLength * 3) / 4;

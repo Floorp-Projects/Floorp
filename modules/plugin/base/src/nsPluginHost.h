@@ -117,9 +117,7 @@ public:
   NewPluginURLStream(const nsString& aURL, 
                      nsIPluginInstance *aInstance, 
                      nsIPluginStreamListener *aListener,
-                     const char *aPostData = nsnull, 
-                     PRBool isFile = PR_FALSE,
-                     PRUint32 aPostDataLen = 0, 
+                     nsIInputStream *aPostStream = nsnull,
                      const char *aHeadersData = nsnull, 
                      PRUint32 aHeadersDataLen = 0);
 

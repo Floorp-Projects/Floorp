@@ -57,6 +57,7 @@ class nsAttrValue;
 class nsAttrName;
 class nsTextFragment;
 class nsIDocShell;
+class nsIFrame;
 #ifdef MOZ_SMIL
 class nsISMILAttr;
 class nsIDOMCSSStyleDeclaration;
@@ -70,10 +71,9 @@ enum nsLinkState {
 };
 
 // IID for the nsIContent interface
-// c726e716-a4be-4202-8a5e-32d0525903e8
 #define NS_ICONTENT_IID       \
-{ 0xc726e716, 0xa4be, 0x4202, \
-  { 0x8a, 0x5e, 0x32, 0xd0, 0x52, 0x59, 0x03, 0xe8 } }
+{ 0xe88a767e, 0x1ca1, 0x4855, \
+ { 0xa7, 0xa4, 0x37, 0x9f, 0x07, 0x89, 0x45, 0xef } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -86,7 +86,8 @@ public:
   // nsIContent is that it exists with an IID
 
   nsIContent(nsINodeInfo *aNodeInfo)
-    : nsINode(aNodeInfo)
+    : nsINode(aNodeInfo),
+      mPrimaryFrame(nsnull)
   {
     NS_ASSERTION(aNodeInfo,
                  "No nsINodeInfo passed to nsIContent, PREPARE TO CRASH!!!");
@@ -705,25 +706,6 @@ public:
   }
 
   /**
-   * Call to let the content node know that it may now have a frame.
-   * The content node may use this to determine what MayHaveFrame
-   * returns.
-   */
-  virtual void SetMayHaveFrame(PRBool aMayHaveFrame)
-  {
-  }
-
-  /**
-   * @returns PR_TRUE if there is a chance that the content node has a
-   *                  frame.
-   * @returns PR_FALSE otherwise.
-   */
-  virtual PRBool MayHaveFrame() const
-  {
-    return PR_TRUE;
-  }
-    
-  /**
    * This method is called when the parser begins creating the element's 
    * children, if any are present.
    *
@@ -870,6 +852,24 @@ public:
    */
   virtual void SaveSubtreeState() = 0;
 
+  /**
+   * Getter and setter for our primary frame pointer.  This is the frame that
+   * is most closely associated with the content. A frame is more closely
+   * associated with the content than another frame if the one frame contains
+   * directly or indirectly the other frame (e.g., when a frame is scrolled
+   * there is a scroll frame that contains the frame being scrolled). This
+   * frame is always the first continuation.
+   *
+   * In the case of absolutely positioned elements and floated elements, this
+   * frame is the out of flow frame, not the placeholder.
+   */
+  nsIFrame* GetPrimaryFrame() const { return mPrimaryFrame; }
+  void SetPrimaryFrame(nsIFrame* aFrame) {
+    NS_WARN_IF_FALSE(!aFrame || !mPrimaryFrame || aFrame == mPrimaryFrame,
+                     "Losing track of existing primary frame");
+    mPrimaryFrame = aFrame;
+  }
+
 #ifdef MOZ_SMIL
   /*
    * Returns a new nsISMILAttr that allows the caller to animate the given
@@ -911,6 +911,11 @@ private:
    * called if the NODE_MAY_HAVE_CLASS flag is set.
    */
   virtual const nsAttrValue* DoGetClasses() const = 0;
+
+  /**
+   * Pointer to our primary frame.  Might be null.
+   */
+  nsIFrame* mPrimaryFrame;
 
 public:
 #ifdef DEBUG

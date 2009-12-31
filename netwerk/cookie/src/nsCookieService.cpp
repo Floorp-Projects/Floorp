@@ -2084,7 +2084,10 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
 
   // if a domain is given, check the host has permission
   if (!aCookieAttributes.host.IsEmpty()) {
-    aCookieAttributes.host.Trim(".");
+    // Tolerate leading '.' characters.
+    if (aCookieAttributes.host.First() == '.')
+      aCookieAttributes.host.Cut(0, 1);
+
     // switch to lowercase now, to avoid case-insensitive compares everywhere
     ToLowerCase(aCookieAttributes.host);
 

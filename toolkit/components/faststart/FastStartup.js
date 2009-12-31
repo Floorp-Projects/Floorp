@@ -85,6 +85,7 @@ function nsFastStartupObserver() {
 
     function restart() {
       setenv(RESTART_ENV_VAR, "1");
+      setenv("NO_SPLASH", "1");
       let appstartup = Cc["@mozilla.org/toolkit/app-startup;1"].
                        getService(Ci.nsIAppStartup);
       appstartup.quit(Ci.nsIAppStartup.eRestart | Ci.nsIAppStartup.eAttemptQuit);

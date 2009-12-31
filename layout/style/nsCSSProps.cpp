@@ -1292,6 +1292,9 @@ const PRInt32 nsCSSProps::kWidthKTable[] = {
 const PRInt32 nsCSSProps::kWindowShadowKTable[] = {
   eCSSKeyword_none, NS_STYLE_WINDOW_SHADOW_NONE,
   eCSSKeyword_default, NS_STYLE_WINDOW_SHADOW_DEFAULT,
+  eCSSKeyword_menu, NS_STYLE_WINDOW_SHADOW_MENU,
+  eCSSKeyword_tooltip, NS_STYLE_WINDOW_SHADOW_TOOLTIP,
+  eCSSKeyword_sheet, NS_STYLE_WINDOW_SHADOW_SHEET,
   eCSSKeyword_UNKNOWN,-1
 };
 

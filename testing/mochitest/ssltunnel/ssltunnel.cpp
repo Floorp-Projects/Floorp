@@ -357,6 +357,7 @@ void HandleConnection(void* data)
   client_auth_option clientAuth;
   string fullHost;
 
+  printf("SSLTUNNEL(%p): incoming connection csock(0)=%p, ssock(1)=%p\n", data, ci->client_sock, (PRFileDesc*)other_sock);
   if (other_sock) 
   {
     PRInt32 numberOfSockets = 1;
@@ -384,16 +385,25 @@ void HandleConnection(void* data)
     {
       sockets[0].in_flags |= PR_POLL_EXCEPT;
       sockets[1].in_flags |= PR_POLL_EXCEPT;
+      printf("SSLTUNNEL(%p): polling flags csock(0)=%c%c, ssock(1)=%c%c\n", data, 
+		sockets[0].in_flags & PR_POLL_READ  ? 'R' : '-', 
+		sockets[0].in_flags & PR_POLL_WRITE ? 'W' : '-',
+		sockets[1].in_flags & PR_POLL_READ  ? 'R' : '-', 
+		sockets[1].in_flags & PR_POLL_WRITE ? 'W' : '-');
       PRInt32 pollStatus = PR_Poll(sockets, numberOfSockets, PR_MillisecondsToInterval(1000));
       if (pollStatus < 0)
       {
+        printf("SSLTUNNEL(%p): pollStatus=%d, exiting\n", data, pollStatus);
         client_error = true;
         break;
       }
 
       if (pollStatus == 0)
+      {
         // timeout
+        printf("SSLTUNNEL(%p): poll timeout, looping\n", data);
         continue;
+      }
 
       for (PRInt32 s = 0; s < numberOfSockets; ++s)
       {
@@ -403,8 +413,10 @@ void HandleConnection(void* data)
         PRInt16 &in_flags2 = sockets[s2].in_flags;
         sockets[s].out_flags = 0;
 
+        printf("SSLTUNNEL(%p): %csock(%d)=%p out_flags=%d", data, s==0?'c':'s', s, sockets[s].fd, out_flags);
         if (out_flags & (PR_POLL_EXCEPT | PR_POLL_ERR | PR_POLL_HUP))
         {
+          printf(" :exception\n");
           client_error = true;
           socketErrorState[s] = PR_TRUE;
           // We got a fatal error state on the socket. Clear the output buffer
@@ -414,13 +426,21 @@ void HandleConnection(void* data)
           continue;
         } // PR_POLL_EXCEPT, PR_POLL_ERR, PR_POLL_HUP handling
 
+        if (out_flags & PR_POLL_READ && !buffers[s].free())
+        {
+           printf(" no place in read buffer but got read flag, dropping it now!");
+	   in_flags &= ~PR_POLL_READ;
+        }
+
         if (out_flags & PR_POLL_READ && buffers[s].free())
         {
+          printf(" :reading");
           PRInt32 bytesRead = PR_Recv(sockets[s].fd, buffers[s].buffertail, 
               buffers[s].free(), 0, PR_INTERVAL_NO_TIMEOUT);
 
           if (bytesRead == 0)
           {
+            printf(" socket gracefully closed");
             client_done = true;
             in_flags &= ~PR_POLL_READ;
           }
@@ -428,6 +448,7 @@ void HandleConnection(void* data)
           {
             if (PR_GetError() != PR_WOULD_BLOCK_ERROR)
             {
+              printf(" error=%d", PR_GetError());
               // We are in error state, indicate that the connection was 
               // not closed gracefully
               client_error = true;
@@ -435,15 +456,21 @@ void HandleConnection(void* data)
               // Wipe out our send buffer, we cannot send it anyway.
               buffers[s2].bufferhead = buffers[s2].buffertail = buffers[s2].buffer;
             }
+            else
+              printf(" would block");
           }
           else
           {
             // If the other socket is in error state (unable to send/receive)
             // throw this data away and continue loop
             if (socketErrorState[s2])
+            {
+              printf(" have read but other socket is in error state\n");
               continue;
+            }
 
             buffers[s].buffertail += bytesRead;
+            printf(", read %d bytes", bytesRead);
 
             // We have to accept and handle the initial CONNECT request here
             PRInt32 response;
@@ -467,18 +494,24 @@ void HandleConnection(void* data)
 
               if (!ConnectSocket(other_sock, &remote_addr, connect_timeout))
               {
+                printf(" could not open connection to the real server\n");
                 client_error = true;
                 break;
               }
 
+              printf(" accepted CONNECT request, connected to the server, sending OK to the client\n");
               // Send the response to the client socket
               in_flags |= PR_POLL_WRITE;
               connect_accepted = true;
               break;
             } // end of CONNECT handling
 
-            if (!buffers[s].free()) // Do not poll for read when the buffer is full
+            if (!buffers[s].free())
+            {
+              // Do not poll for read when the buffer is full
+              printf(" no place in our read buffer, stop reading");
               in_flags &= ~PR_POLL_READ;
+            }
 
             if (ssl_updated)
             {
@@ -486,57 +519,74 @@ void HandleConnection(void* data)
                 expect_request_start = !AdjustRequestURI(buffers[s], &fullHost);
 
               in_flags2 |= PR_POLL_WRITE;
+              printf(" telling the other socket to write");
             }
+            else
+              printf(" we have something for the other socket to write, but ssl has not been administered on it");
           }
         } // PR_POLL_READ handling
 
         if (out_flags & PR_POLL_WRITE)
         {
+          printf(" :writting");
           PRInt32 bytesWrite = PR_Send(sockets[s].fd, buffers[s2].bufferhead, 
               buffers[s2].present(), 0, PR_INTERVAL_NO_TIMEOUT);
 
           if (bytesWrite < 0)
           {
             if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
+              printf(" error=%d", PR_GetError());
               client_error = true;
               socketErrorState[s] = PR_TRUE;
               // We got a fatal error while writting the buffer. Clear it to break
               // the main loop, we will never more be able to send it.
               buffers[s2].bufferhead = buffers[s2].buffertail = buffers[s2].buffer;
             }
+            else
+              printf(" would block");
           }
           else
           {
+            printf(", writen %d bytes", bytesWrite);
             buffers[s2].bufferhead += bytesWrite;
             if (buffers[s2].present())
-              in_flags |= PR_POLL_WRITE;              
+            {
+              printf(" still have to write %d bytes", (int)buffers[s2].present());
+              in_flags |= PR_POLL_WRITE;
+            }              
             else
             {
               if (!ssl_updated)
               {
+                printf(" proxy response sent to the client");
                 // Proxy response has just been writen, update to ssl
                 ssl_updated = true;
                 if (!ConfigureSSLServerSocket(ci->client_sock, ci->server_info, certificateToUse, clientAuth))
                 {
+                  printf(" but failed to config server socket\n");
                   client_error = true;
                   break;
                 }
 
+                printf(" client socket updated to SSL");
                 numberOfSockets = 2;
               } // sslUpdate
 
-              in_flags &= ~PR_POLL_WRITE;              
+              printf(" dropping our write flag and setting other socket read flag");
+              in_flags &= ~PR_POLL_WRITE;
               in_flags2 |= PR_POLL_READ;
               buffers[s2].compact();
             }
           }
         } // PR_POLL_WRITE handling
+        printf("\n"); // end the log
       } // for...
     } // while, poll
   }
   else
     client_error = true;
 
+  printf("SSLTUNNEL(%p): exiting root function for csock=%p, ssock=%p\n", data, ci->client_sock, (PRFileDesc*)other_sock);
   if (!client_error)
     PR_Shutdown(ci->client_sock, PR_SHUTDOWN_SEND);
   PR_Close(ci->client_sock);

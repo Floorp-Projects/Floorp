@@ -632,15 +632,7 @@ nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
             return;
     }
 
-    nsIDocument* doc = GetCurrentDoc();
-    if (!doc)
-        return;
-
-    nsIPresShell *shell = doc->GetPrimaryShell();
-    if (!shell)
-        return;
-
-    nsIFrame* frame = shell->GetPrimaryFrameFor(content);
+    nsIFrame* frame = content->GetPrimaryFrame();
     if (!frame)
         return;
 
@@ -2385,8 +2377,7 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
     nsIPresShell *shell = doc->GetPrimaryShell();
 
     if (shell) {
-        nsIContent* content = static_cast<nsIContent*>(this);
-        nsIFrame* frame = shell->GetPrimaryFrameFor(content);
+        nsIFrame* frame = GetPrimaryFrame();
 
         nsPresContext *presContext = shell->GetPresContext();
 

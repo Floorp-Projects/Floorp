@@ -54,6 +54,7 @@ _MOCHITEST_FILES = \
 		post.sjs \
 		pluginstream.js \
 		plugin_window.html \
+		test_painting.html \
 		test_pluginstream_err.html \
 		test_pluginstream_src.html \
 		test_pluginstream_geturl.html \

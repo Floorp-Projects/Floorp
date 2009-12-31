@@ -534,22 +534,26 @@ nsSVGPatternFrame::ConstructCTM(const gfxRect &callerBBox,
     tCTM.Scale(scale, scale);
   }
 
-  gfxMatrix viewBoxTM;
+  gfxMatrix tm;
   const nsSVGViewBoxRect viewBox = GetViewBox().GetAnimValue();
 
   if (viewBox.height > 0.0f && viewBox.width > 0.0f) {
     nsSVGSVGElement *ctx = aTargetContent->GetCtx();
     float viewportWidth = GetWidth()->GetAnimValue(ctx);
     float viewportHeight = GetHeight()->GetAnimValue(ctx);
+    gfxMatrix viewBoxTM = nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
+                                                          viewBox.x, viewBox.y,
+                                                          viewBox.width, viewBox.height,
+                                                          GetPreserveAspectRatio(),
+                                                          PR_TRUE);
+
     float refX = GetX()->GetAnimValue(ctx);
     float refY = GetY()->GetAnimValue(ctx);
-    viewBoxTM = nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
-                                                viewBox.x + refX, viewBox.y + refY,
-                                                viewBox.width, viewBox.height,
-                                                GetPreserveAspectRatio(),
-                                                PR_TRUE);
+    gfxPoint ref = viewBoxTM.Transform(gfxPoint(refX, refY));
+
+    tm = viewBoxTM * gfxMatrix().Translate(gfxPoint(-ref.x, -ref.y));
   }
-  return viewBoxTM * tCTM;
+  return tm * tCTM;
 }
 
 gfxMatrix

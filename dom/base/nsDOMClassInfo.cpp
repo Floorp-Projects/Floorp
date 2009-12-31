@@ -7740,10 +7740,7 @@ GetBindingURL(nsIContent *aContent, nsIDocument *aDocument,
   // otherwise, don't do anything else here unless we're dealing with
   // XUL.
   nsIPresShell *shell = aDocument->GetPrimaryShell();
-  nsIFrame *frame;
-  if (!shell ||
-      (frame = shell->GetPrimaryFrameFor(aContent)) ||
-      !aContent->IsXUL()) {
+  if (!shell || aContent->GetPrimaryFrame() || !aContent->IsXUL()) {
     *aResult = nsnull;
 
     return PR_TRUE;
@@ -9805,7 +9802,23 @@ nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
+                                     JSContext *cx, JSObject *obj, jsval id,
+                                     PRUint32 flags, JSObject **objp,
+                                     PRBool *_retval)
+{
+  // Make sure the plugin instance is loaded and instantiated, if
+  // possible.
 
+  nsCOMPtr<nsIPluginInstance> pi;
+  nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, getter_AddRefs(pi));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return nsElementSH::NewResolve(wrapper, cx, obj, id, flags, objp,
+                                 _retval);
+}
+ 
 // HTMLOptionsCollection helper
 
 NS_IMETHODIMP

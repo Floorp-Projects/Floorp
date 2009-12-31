@@ -44,7 +44,6 @@ var gToolboxDocument = null;
 var gToolbox = null;
 var gCurrentDragOverItem = null;
 var gToolboxChanged = false;
-var gToolboxIconSize = false;
 var gToolboxSheet = false;
 
 function onLoad()
@@ -104,9 +103,8 @@ function initDialog()
 {
   var mode = gToolbox.getAttribute("mode");
   document.getElementById("modelist").value = mode;
-  gToolboxIconSize = gToolbox.getAttribute("iconsize");
   var smallIconsCheckbox = document.getElementById("smallicons");
-  smallIconsCheckbox.checked = gToolboxIconSize == "small";
+  smallIconsCheckbox.checked = gToolbox.getAttribute("iconsize") == "small";
   if (mode == "text")
     smallIconsCheckbox.disabled = true;
 
@@ -650,11 +648,11 @@ function restoreDefaultSet()
 }
 
 function updateIconSize(aSize) {
-  return updateToolboxProperty("iconsize", aSize);
+  return updateToolboxProperty("iconsize", aSize, "large");
 }
 
 function updateToolbarMode(aModeValue) {
-  var mode = updateToolboxProperty("mode", aModeValue);
+  var mode = updateToolboxProperty("mode", aModeValue, "icons");
 
   var iconSizeCheckbox = document.getElementById("smallicons");
   iconSizeCheckbox.disabled = mode == "text";
@@ -662,8 +660,9 @@ function updateToolbarMode(aModeValue) {
   return mode;
 }
 
-function updateToolboxProperty(aProp, aValue) {
-  var toolboxDefault = gToolbox.getAttribute("default" + aProp);
+function updateToolboxProperty(aProp, aValue, aToolkitDefault) {
+  var toolboxDefault = gToolbox.getAttribute("default" + aProp) ||
+                       aToolkitDefault;
 
   gToolbox.setAttribute(aProp, aValue || toolboxDefault);
   gToolboxDocument.persist(gToolbox.id, aProp);
@@ -682,7 +681,7 @@ function updateToolboxProperty(aProp, aValue) {
     gToolboxDocument.persist(toolbar.id, aProp);
   });
 
-  return aValue;
+  return aValue || toolboxDefault;
 }
 
 function isCustomizableToolbar(aElt)
