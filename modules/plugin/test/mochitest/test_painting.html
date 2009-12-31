@@ -88,7 +88,15 @@ function invalidate() {
 }
 
 function done() {
-  is(clipped.getPaintCount(), 2, "painted after invalidate");
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var prefs = Components.classes['@mozilla.org/preferences-service;1']
+    .getService(Components.interfaces.nsIPrefBranch);
+  if (prefs.getBoolPref('dom.ipc.plugins.enabled')) {
+    // bug 535687
+    todo_is(clipped.getPaintCount(), 2, "painted after invalidate");
+  } else {
+    is(clipped.getPaintCount(), 2, "painted after invalidate");
+  }
   SimpleTest.finish();  
 }
 
