@@ -86,6 +86,15 @@ public:
     NS_ASSERTION(mUpdateCount == 0, "Dying in the middle of our own update?");
   }
 
+  // Matches signature on nsARefreshObserver.  Just like
+  // NS_DECL_ISUPPORTS, but without the QI part.
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+protected:
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+public:
+
   struct RestyleData;
   friend struct RestyleData;
 
