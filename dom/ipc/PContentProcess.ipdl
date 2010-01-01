@@ -45,7 +45,7 @@ include "mozilla/TabTypes.h";
 namespace mozilla {
 namespace dom {
 
-sync protocol PContentProcess
+rpc protocol PContentProcess
 {
     manages PIFrameEmbedding;
     manages PTestShell;
