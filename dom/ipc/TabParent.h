@@ -43,6 +43,9 @@
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
+#include "nsCOMPtr.h"
+#include "nsIBrowserDOMWindow.h"
+
 class nsIURI;
 class nsIDOMElement;
 
@@ -55,9 +58,13 @@ public:
     TabParent();
     virtual ~TabParent();
     void SetOwnerElement(nsIDOMElement* aElement) { mFrameElement = aElement; }
+    void SetBrowserDOMWindow(nsIBrowserDOMWindow* aBrowserDOMWindow) {
+        mBrowserDOMWindow = aBrowserDOMWindow;
+    }
 
     virtual bool RecvmoveFocus(const bool& aForward);
     virtual bool RecvsendEvent(const RemoteDOMEvent& aEvent);
+    virtual bool AnswercreateWindow(PIFrameEmbeddingParent** retval);
 
     void LoadURL(nsIURI* aURI);
     void Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height);
@@ -77,6 +84,7 @@ public:
     virtual bool DeallocPDocumentRenderer(PDocumentRendererParent* actor);
 protected:
     nsIDOMElement* mFrameElement;
+    nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
 };
 
 } // namespace dom

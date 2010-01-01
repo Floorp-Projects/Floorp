@@ -50,6 +50,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsFrameLoader.h"
 
 using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::DocumentRendererParent;
@@ -91,6 +92,33 @@ TabParent::RecvsendEvent(const RemoteDOMEvent& aEvent)
   PRBool dummy;
   target->DispatchEvent(event, &dummy);
   return true;
+}
+
+bool
+TabParent::AnswercreateWindow(PIFrameEmbeddingParent** retval)
+{
+    if (!mBrowserDOMWindow) {
+        return false;
+    }
+
+    // Get a new rendering area from the browserDOMWin.  We don't want
+    // to be starting any loads here, so get it with a null URI.
+    nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner;
+    mBrowserDOMWindow->OpenURIInFrame(nsnull, nsnull,
+                                      nsIBrowserDOMWindow::OPEN_NEWTAB,
+                                      nsIBrowserDOMWindow::OPEN_NEW,
+                                      getter_AddRefs(frameLoaderOwner));
+    if (!frameLoaderOwner) {
+        return false;
+    }
+
+    nsRefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
+    if (!frameLoader) {
+        return false;
+    }
+
+    *retval = frameLoader->GetChildProcess();
+    return true;
 }
 
 void

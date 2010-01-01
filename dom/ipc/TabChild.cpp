@@ -102,9 +102,10 @@ TabChild::Init()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS6(TabChild, nsIWebBrowserChrome, nsIWebBrowserChrome2,
+NS_IMPL_ISUPPORTS7(TabChild, nsIWebBrowserChrome, nsIWebBrowserChrome2,
                    nsIEmbeddingSiteWindow, nsIEmbeddingSiteWindow2,
-                   nsIWebBrowserChromeFocus, nsIInterfaceRequestor)
+                   nsIWebBrowserChromeFocus, nsIInterfaceRequestor,
+                   nsIWindowProvider)
 
 NS_IMETHODIMP
 TabChild::SetStatus(PRUint32 aStatusType, const PRUnichar* aStatus)
@@ -252,6 +253,26 @@ TabChild::GetInterface(const nsIID & aIID, void **aSink)
     // XXXbz should we restrict the set of interfaces we hand out here?
     // See bug 537429
     return QueryInterface(aIID, aSink);
+}
+
+NS_IMETHODIMP
+TabChild::ProvideWindow(nsIDOMWindow* aParent, PRUint32 aChromeFlags,
+                        PRBool aPositionSpecified, PRBool aSizeSpecified,
+                        nsIURI* aURI, const nsAString& aName,
+                        const nsACString& aFeatures, PRBool* aWindowIsNew,
+                        nsIDOMWindow** aReturn)
+{
+    *aReturn = nsnull;
+
+    PIFrameEmbeddingChild* newChild;
+    if (!CallcreateWindow(&newChild)) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    nsCOMPtr<nsIDOMWindow> win =
+        do_GetInterface(static_cast<TabChild*>(newChild)->mWebNav);
+    win.forget(aReturn);
+    return NS_OK;
 }
 
 bool

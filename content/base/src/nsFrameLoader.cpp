@@ -98,6 +98,8 @@
 #include "nsIContentViewer.h"
 #include "nsIView.h"
 
+#include "nsIDOMChromeWindow.h"
+
 #ifdef MOZ_WIDGET_GTK2
 #include "mozcontainer.h"
 
@@ -1456,6 +1458,16 @@ nsFrameLoader::TryNewProcess()
   if (mChildProcess) {
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mOwnerContent);
     mChildProcess->SetOwnerElement(element);
+
+    nsCOMPtr<nsIDocShellTreeItem> rootItem;
+    parentAsItem->GetRootTreeItem(getter_AddRefs(rootItem));
+    nsCOMPtr<nsIDOMWindow> rootWin = do_GetInterface(rootItem);
+    nsCOMPtr<nsIDOMChromeWindow> rootChromeWin = do_QueryInterface(rootWin);
+    NS_ABORT_IF_FALSE(rootChromeWin, "How did we not get a chrome window here?");
+
+    nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
+    rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
+    mChildProcess->SetBrowserDOMWindow(browserDOMWin);
   }
   return true;
 }
