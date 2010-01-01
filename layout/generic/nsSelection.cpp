@@ -467,7 +467,8 @@ public:
   {
     if (mSelection && mPresContext)
     {
-      nsWeakFrame frame = mPresContext->GetPrimaryFrameFor(mContent);
+      nsWeakFrame frame =
+        mContent ? mPresContext->GetPrimaryFrameFor(mContent) : nsnull;
       mContent = nsnull;
 
       mFrameSelection->HandleDrag(frame, mPoint);
