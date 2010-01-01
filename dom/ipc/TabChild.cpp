@@ -102,9 +102,9 @@ TabChild::Init()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS5(TabChild, nsIWebBrowserChrome, nsIWebBrowserChrome2,
+NS_IMPL_ISUPPORTS6(TabChild, nsIWebBrowserChrome, nsIWebBrowserChrome2,
                    nsIEmbeddingSiteWindow, nsIEmbeddingSiteWindow2,
-                   nsIWebBrowserChromeFocus)
+                   nsIWebBrowserChromeFocus, nsIInterfaceRequestor)
 
 NS_IMETHODIMP
 TabChild::SetStatus(PRUint32 aStatusType, const PRUnichar* aStatus)
@@ -244,6 +244,14 @@ TabChild::FocusPrevElement()
 {
   SendmoveFocus(PR_FALSE);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+TabChild::GetInterface(const nsIID & aIID, void **aSink)
+{
+    // XXXbz should we restrict the set of interfaces we hand out here?
+    // See bug 537429
+    return QueryInterface(aIID, aSink);
 }
 
 bool
