@@ -49,6 +49,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIWindowProvider.h"
 
 namespace mozilla {
 namespace dom {
@@ -69,7 +70,8 @@ class TabChild : public PIFrameEmbeddingChild,
                  public nsIWebBrowserChrome2,
                  public nsIEmbeddingSiteWindow2,
                  public nsIWebBrowserChromeFocus,
-                 public nsIInterfaceRequestor
+                 public nsIInterfaceRequestor,
+                 public nsIWindowProvider
 {
 public:
     TabChild();
@@ -84,6 +86,7 @@ public:
     NS_DECL_NSIEMBEDDINGSITEWINDOW2
     NS_DECL_NSIWEBBROWSERCHROMEFOCUS
     NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSIWINDOWPROVIDER
 
     virtual bool RecvcreateWidget(const MagicWindowHandle& parentWidget);
     virtual bool RecvloadURL(const nsCString& uri);
