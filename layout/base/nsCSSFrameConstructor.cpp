@@ -11057,18 +11057,14 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
   if (!mPresShell || !mPresShell->GetRootFrame())
     return;
 
+  nsAutoScriptBlocker scriptBlocker;
+
   // Make sure that the viewmanager will outlive the presshell
   nsIViewManager::UpdateViewBatch batch(mPresShell->GetViewManager());
 
   // Processing the style changes could cause a flush that propagates to
   // the parent frame and thus destroys the pres shell.
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(mPresShell);
-
-  // We may reconstruct frames below and hence process anything that is in the
-  // tree. We don't want to get notified to process those items again after.
-  mPresShell->GetDocument()->FlushPendingNotifications(Flush_ContentAndNotify);
-
-  nsAutoScriptBlocker scriptBlocker;
 
   // Tell the style set to get the old rule tree out of the way
   // so we can recalculate while maintaining rule tree immutability
