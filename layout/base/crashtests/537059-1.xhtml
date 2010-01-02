@@ -1,0 +1,14 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <bindings xmlns="http://www.mozilla.org/xbl" xmlns:html="http://www.w3.org/1999/xhtml">
+      <binding id="td"><content><html:div><children/></html:div></content></binding>
+    </bindings>
+    <style type="text/css">
+      div, tbody { position: absolute; }
+      div:first-letter { }
+    </style>
+  </head>
+  <body>
+    <div><table>A<tbody><tr style="-moz-binding: url(#td);"></tr></tbody>B</table></div>
+  </body>
+</html>
