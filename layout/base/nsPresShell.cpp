@@ -2650,10 +2650,6 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   {
     nsIViewManager::UpdateViewBatch batch(mViewManager);
 
-    // Have to make sure that the content notifications are flushed before we
-    // start messing with the frame model; otherwise we can get content doubling.
-    mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
-
     // Make sure style is up to date
     {
       nsAutoScriptBlocker scriptBlocker;
@@ -5023,12 +5019,6 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 nsresult
 PresShell::ReconstructFrames(void)
 {
-  nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
-
-  // Have to make sure that the content notifications are flushed before we
-  // start messing with the frame model; otherwise we can get content doubling.
-  mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
-
   nsAutoCauseReflowNotifier crNotifier(this);
   mFrameConstructor->BeginUpdate();
   nsresult rv = mFrameConstructor->ReconstructDocElementHierarchy();
@@ -7554,29 +7544,23 @@ PresShell::Observe(nsISupports* aSubject,
       NS_ASSERTION(mViewManager, "View manager must exist");
       nsIViewManager::UpdateViewBatch batch(mViewManager);
 
-      nsWeakFrame weakRoot(rootFrame);
-      // Have to make sure that the content notifications are flushed before we
-      // start messing with the frame model; otherwise we can get content doubling.
-      mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
+      WalkFramesThroughPlaceholders(mPresContext, rootFrame,
+                                    &ReResolveMenusAndTrees, nsnull);
 
-      if (weakRoot.IsAlive()) {
-        WalkFramesThroughPlaceholders(mPresContext, rootFrame,
-                                      &ReResolveMenusAndTrees, nsnull);
-
-        // Because "chrome:" URL equality is messy, reframe image box
-        // frames (hack!).
-        nsStyleChangeList changeList;
-        WalkFramesThroughPlaceholders(mPresContext, rootFrame,
-                                      ReframeImageBoxes, &changeList);
-        // Mark ourselves as not safe to flush while we're doing frame
-        // construction.
-        {
-          nsAutoScriptBlocker scriptBlocker;
-          ++mChangeNestCount;
-          mFrameConstructor->ProcessRestyledFrames(changeList);
-          --mChangeNestCount;
-        }
+      // Because "chrome:" URL equality is messy, reframe image box
+      // frames (hack!).
+      nsStyleChangeList changeList;
+      WalkFramesThroughPlaceholders(mPresContext, rootFrame,
+                                    ReframeImageBoxes, &changeList);
+      // Mark ourselves as not safe to flush while we're doing frame
+      // construction.
+      {
+        nsAutoScriptBlocker scriptBlocker;
+        ++mChangeNestCount;
+        mFrameConstructor->ProcessRestyledFrames(changeList);
+        --mChangeNestCount;
       }
+
       batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 #ifdef ACCESSIBILITY
       InvalidateAccessibleSubtree(nsnull);
