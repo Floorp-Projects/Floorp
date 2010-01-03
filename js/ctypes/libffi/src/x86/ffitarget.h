@@ -31,15 +31,7 @@
 
 /* ---- System specific configurations ----------------------------------- */
 
-// Define __i386__ and __x86_64__ for Solaris.
-#ifdef __i386
-#define __i386__
-#endif
-#ifdef __x86_64
-#define __x86_64__
-#endif
-
-#if defined (X86_64) && defined (__i386__)
+#if defined (X86_64) && (defined (__i386__) || defined(__i386))
 #undef X86_64
 #define X86
 #endif
@@ -62,10 +54,10 @@ typedef enum ffi_abi {
 #endif
 
   /* ---- Intel x86 and AMD x86-64 - */
-#if !defined(X86_WIN32) && (defined(__i386__) || defined(__x86_64__))
+#if !defined(X86_WIN32) && (defined(__i386__) || defined(__i386) || defined(__x86_64__) || defined(__x86_64))
   FFI_SYSV,
   FFI_UNIX64,   /* Unix variants all use the same ABI for x86-64  */
-#ifdef __i386__
+#if defined(__i386__) || defined(__i386)
   FFI_DEFAULT_ABI = FFI_SYSV,
 #else
   FFI_DEFAULT_ABI = FFI_UNIX64,
@@ -82,7 +74,7 @@ typedef enum ffi_abi {
 #define FFI_TYPE_SMALL_STRUCT_1B (FFI_TYPE_LAST + 1)
 #define FFI_TYPE_SMALL_STRUCT_2B (FFI_TYPE_LAST + 2)
 
-#if defined (X86_64) || (defined (__x86_64__) && defined (X86_DARWIN))
+#if defined (X86_64) || ((defined (__x86_64__) || defined (__x86_64)) && defined (X86_DARWIN))
 #define FFI_TRAMPOLINE_SIZE 24
 #define FFI_NATIVE_RAW_API 0
 #else
