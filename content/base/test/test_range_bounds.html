@@ -13,10 +13,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=421640
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=396392">Mozilla Bug Range getClientRects and getBoundingClientRect</a>
-<div id="content" style="font-face:monospace;font-size:12px;width:100px">
+<div id="content" style="font-family:monospace;font-size:12px;width:100px">
 <p>000000<span>0</span></p><div>00000<span>0</span></div><p>0000<span>0000</span>0000</p><div><span>000000000000 00000000000000 000000</span></div><div>000000000000 00000000000003 100305</div>
 </div>
-<div id="mixeddir" style="font-face:monospace;font-size:12px;width:100px"><span>english <bdo dir="rtl">rtl-overide english</bdo> word</span></div>
+<div id="mixeddir" style="font-family:monospace;font-size:12px;width:100px"><span>english <bdo id="bdo" dir="rtl">rtl-overide english</bdo> word</span></div>
+<div id="mixeddir2" style="font-family:monospace;font-size:12px"><span>english <bdo id="bdo2" dir="rtl">rtl-override english</bdo> word</span></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
@@ -225,6 +226,28 @@ function testMixedDir(){
       firstSpanRectList = firstSpan.getClientRects();
   runATest({name:'mixeddir',range:[firstSpan.firstChild,0,firstSpan.lastChild,firstSpan.lastChild.length],
              rect: firstSpanRect, rectList:firstSpanRectList});
+
+  root = document.getElementById('mixeddir2');
+  firstSpan = root.firstElementChild;
+  firstSpanRect = firstSpan.getBoundingClientRect();
+  bdo = document.getElementById('bdo2');
+  bdoRect=bdo.getBoundingClientRect();
+  var widthPerChar = bdoRect.width / bdo.firstChild.length;
+  runATest({name:'mixeddirPartial', range:[firstSpan.firstChild, 3, 
+					   bdo.firstChild, 7],
+	rect: [firstSpanRect.left + 3*widthPerChar, bdoRect.right,
+	       bdoRect.top, bdoRect.bottom,
+	       (firstSpan.firstChild.length + bdo.firstChild.length - 3) *
+	        widthPerChar,
+	       bdoRect.height],
+	rectList:[[firstSpanRect.left + 3*widthPerChar,
+		   bdoRect.left,
+		   firstSpanRect.top, firstSpanRect.bottom,
+		   (firstSpan.firstChild.length - 3) * widthPerChar,
+		   firstSpanRect.height],
+		  [bdoRect.right - 7 * widthPerChar, bdoRect.right,
+		   bdoRect.top, bdoRect.bottom,
+		   7*widthPerChar, bdoRect.height]]});
 }
 function test(){
   //test ltr
