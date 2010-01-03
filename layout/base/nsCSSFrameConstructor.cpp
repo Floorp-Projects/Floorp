@@ -9620,7 +9620,8 @@ nsCSSFrameConstructor::CreateLetterFrame(nsIFrame* aBlockFrame,
     aTextContent->SetPrimaryFrame(nsnull);
     nsIFrame* textFrame = NS_NewTextFrame(mPresShell, textSC);
 
-    NS_ASSERTION(aBlockFrame == GetFloatContainingBlock(aParentFrame),
+    NS_ASSERTION(aBlockFrame == GetFloatContainingBlock(aParentFrame)->
+                   GetFirstContinuation(),
                  "Containing block is confused");
     nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                   GetAbsoluteContainingBlock(aParentFrame),
