@@ -159,10 +159,17 @@ function doTest(){
 	spanInSecondPRect,
 	[spanInSecondPRect.right, spanInSecondPRect.right + widthPerchar,
           spanInSecondPRect.top, spanInSecondPRect.bottom, widthPerchar,
-          spanInSecondPRect.height]]},
-    {name:'spanAcrossLines',range:[spanInSecondDiv.firstChild, 1, spanInSecondDiv.firstChild, 30],
-      rect: spanInSecondDivRect,
-      rectList:[[spanInSecondDivRectList[0].left+widthPerchar,
+          spanInSecondPRect.height]]}
+  ];
+  testcases.forEach(runATest);
+
+  // testcases that have different ranges in LTR and RTL
+  var directionDependentTestcases;
+  if (isLTR) {
+    directionDependentTestcases = [
+      {name:'spanAcrossLines',range:[spanInSecondDiv.firstChild, 1, spanInSecondDiv.firstChild, 30],
+       rect: spanInSecondDivRect,
+       rectList:[[spanInSecondDivRectList[0].left+widthPerchar,
         spanInSecondDivRectList[0].right, spanInSecondDivRectList[0].top,
 	spanInSecondDivRectList[0].bottom, spanInSecondDivRectList[0].width - widthPerchar,
 	spanInSecondDivRectList[0].height],
@@ -172,14 +179,45 @@ function doTest(){
 	spanInSecondDivRectList[2].bottom, 
 	spanInSecondDivRectList[2].width - 4 * widthPerchar,
 	spanInSecondDivRectList[2].height]]},
-    {name:'textAcrossLines',range:[thirdDiv.firstChild, 13, thirdDiv.firstChild, 28],
-      rect: [spanInSecondDivRectList[1].left, spanInSecondDivRectList[1].right,
-        spanInSecondDivRectList[1].top + secondDivRect.height, 
-        spanInSecondDivRectList[1].bottom + secondDivRect.height,
-        spanInSecondDivRectList[1].width, spanInSecondDivRectList[1].height]}
-    
-  ];
-  testcases.forEach(runATest);
+      {name:'textAcrossLines',range:[thirdDiv.firstChild, 13, thirdDiv.firstChild, 28],
+        rect: [spanInSecondDivRectList[1].left, spanInSecondDivRectList[1].right,
+          spanInSecondDivRectList[1].top + secondDivRect.height, 
+          spanInSecondDivRectList[1].bottom + secondDivRect.height,
+          spanInSecondDivRectList[1].width, spanInSecondDivRectList[1].height]}
+    ];
+  } else {
+    directionDependentTestcases = [
+      {name:'spanAcrossLines',range:[spanInSecondDiv.firstChild, 1, spanInSecondDiv.firstChild, 30],
+       rect: spanInSecondDivRect,
+       rectList:[[spanInSecondDivRectList[0].left+widthPerchar,
+        spanInSecondDivRectList[0].right, spanInSecondDivRectList[0].top,
+	spanInSecondDivRectList[0].bottom, spanInSecondDivRectList[0].width - widthPerchar,
+	spanInSecondDivRectList[0].height],
+	spanInSecondDivRectList[1],
+	spanInSecondDivRectList[2],
+	spanInSecondDivRectList[3],
+	[spanInSecondDivRectList[4].left,
+	spanInSecondDivRectList[4].right - 4 * widthPerchar,
+        spanInSecondDivRectList[4].top,
+	spanInSecondDivRectList[4].bottom, 
+	spanInSecondDivRectList[4].width - 4 * widthPerchar,
+	spanInSecondDivRectList[4].height]]},
+      {name:'textAcrossLines',range:[thirdDiv.firstChild, 13, thirdDiv.firstChild, 28],
+        rect: [spanInSecondDivRectList[2].left, spanInSecondDivRectList[2].right,
+          spanInSecondDivRectList[2].top + secondDivRect.height, 
+          spanInSecondDivRectList[2].bottom + secondDivRect.height,
+	       spanInSecondDivRectList[2].width, spanInSecondDivRectList[2].height],
+       rectList:[[spanInSecondDivRectList[2].left, spanInSecondDivRectList[2].right,
+          spanInSecondDivRectList[2].top + secondDivRect.height, 
+          spanInSecondDivRectList[2].bottom + secondDivRect.height,
+          spanInSecondDivRectList[2].width, spanInSecondDivRectList[2].height],
+          [spanInSecondDivRectList[2].left, spanInSecondDivRectList[2].left,
+          spanInSecondDivRectList[2].top + secondDivRect.height, 
+          spanInSecondDivRectList[2].bottom + secondDivRect.height,
+          0, spanInSecondDivRectList[2].height]]}
+     ];
+  }
+  directionDependentTestcases.forEach(runATest);
 }
 function testMixedDir(){
   var root = document.getElementById('mixeddir');
