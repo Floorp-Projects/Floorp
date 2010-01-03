@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=421640
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=396392">Mozilla Bug Range getClientRects and getBoundingClientRect</a>
 <div id="content" style="font-face:monospace;font-size:12px;width:100px">
-<p>000000<span>0</span></p><div>00000<span>0</span></div><p>0000<span>0000</span>0000</p>
+<p>000000<span>0</span></p><div>00000<span>0</span></div><p>0000<span>0000</span>0000</p><div><span>000000000000 00000000000000 000000</span></div><div>000000000000 00000000000003 100305</div>
 </div>
 <div id="mixeddir" style="font-face:monospace;font-size:12px;width:100px"><span>english <bdo dir="rtl">rtl-overide english</bdo> word</span></div>
 <pre id="test">
@@ -36,13 +36,20 @@ function isEmptyRectList(rectlist, name) {
   is(rectlist.length, 0, name + 'empty rectlist should have zero rects');
 }
 
+// round coordinates to the nearest 1/256 of a pixel
+function roundCoord(x) {
+  return Math.round(x * 256) / 256;
+}
+
 function _getRect(r) {
   if (r.length) //array
-    return "{left:"+r[0]+",right:"+r[1]+",top:"+r[2]+",bottom:"+r[3]
-      +",width:"+r[4]+",height:"+r[5]+"}";
+    return "{left:"+roundCoord(r[0])+",right:"+roundCoord(r[1])+
+      ",top:"   +roundCoord(r[2])+",bottom:"+roundCoord(r[3])+
+      ",width:"+roundCoord(r[4])+",height:"+roundCoord(r[5])+"}";
   else
-    return "{left:"+r.left+",right:"+r.right+",top:"+r.top+",bottom:"
-      +r.bottom+",width:"+r.width+",height:"+r.height+"}";
+    return "{left:"+roundCoord(r.left)+",right:"+roundCoord(r.right)+
+      ",top:"+roundCoord(r.top)+",bottom:"+roundCoord(r.bottom)+
+      ",width:"+roundCoord(r.width)+",height:"+roundCoord(r.height)+"}";
 }
 
 function runATest(obj) {
@@ -90,13 +97,18 @@ function doTest(){
   var root = document.getElementById('content');
   var firstP = root.firstElementChild, spanInFirstP = firstP.childNodes[1],
     firstDiv = root.childNodes[2], spanInFirstDiv = firstDiv.childNodes[1],
-    secondP = root.childNodes[3], spanInSecondP = secondP.childNodes[1];
+    secondP = root.childNodes[3], spanInSecondP = secondP.childNodes[1],
+    secondDiv = root.childNodes[4], spanInSecondDiv = secondDiv.firstChild,
+    thirdDiv = root.childNodes[5];
   var firstPRect = firstP.getBoundingClientRect(),
     spanInFirstPRect = spanInFirstP.getBoundingClientRect(),
     firstDivRect = firstDiv.getBoundingClientRect(),
     spanInFirstDivRect = spanInFirstDiv.getBoundingClientRect(),
     secondPRect = secondP.getBoundingClientRect(),
-    spanInSecondPRect = spanInSecondP.getBoundingClientRect();
+    secondDivRect = secondDiv.getBoundingClientRect(),
+    spanInSecondPRect = spanInSecondP.getBoundingClientRect(),
+    spanInSecondDivRect = spanInSecondDiv.getBoundingClientRect(),
+    spanInSecondDivRectList = spanInSecondDiv.getClientRects();
   var widthPerchar = spanInSecondPRect.width / spanInSecondP.firstChild.length;
   var testcases = [
     {name:'nodesNotInDocument', range:[document.createTextNode('abc'), 1], 
@@ -147,7 +159,25 @@ function doTest(){
 	spanInSecondPRect,
 	[spanInSecondPRect.right, spanInSecondPRect.right + widthPerchar,
           spanInSecondPRect.top, spanInSecondPRect.bottom, widthPerchar,
-          spanInSecondPRect.height]]}
+          spanInSecondPRect.height]]},
+    {name:'spanAcrossLines',range:[spanInSecondDiv.firstChild, 1, spanInSecondDiv.firstChild, 30],
+      rect: spanInSecondDivRect,
+      rectList:[[spanInSecondDivRectList[0].left+widthPerchar,
+        spanInSecondDivRectList[0].right, spanInSecondDivRectList[0].top,
+	spanInSecondDivRectList[0].bottom, spanInSecondDivRectList[0].width - widthPerchar,
+	spanInSecondDivRectList[0].height],
+	spanInSecondDivRectList[1],
+	[spanInSecondDivRectList[2].left,
+	spanInSecondDivRectList[2].right - 4 * widthPerchar, spanInSecondDivRectList[2].top,
+	spanInSecondDivRectList[2].bottom, 
+	spanInSecondDivRectList[2].width - 4 * widthPerchar,
+	spanInSecondDivRectList[2].height]]},
+    {name:'textAcrossLines',range:[thirdDiv.firstChild, 13, thirdDiv.firstChild, 28],
+      rect: [spanInSecondDivRectList[1].left, spanInSecondDivRectList[1].right,
+        spanInSecondDivRectList[1].top + secondDivRect.height, 
+        spanInSecondDivRectList[1].bottom + secondDivRect.height,
+        spanInSecondDivRectList[1].width, spanInSecondDivRectList[1].height]}
+    
   ];
   testcases.forEach(runATest);
 }
