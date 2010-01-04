@@ -76,6 +76,53 @@ assertEq(Object.getOwnPropertyDescriptor(o, "b"), undefined,
          "Object.defineProperties(O, Properties) should only use enumerable " +
          "properties directly on Properties");
 
+Number.prototype.foo = { value: 17, enumerable: true };
+Boolean.prototype.bar = { value: 8675309, enumerable: true };
+String.prototype.quux = { value: "Are you HAPPY yet?", enumerable: true };
+o = {};
+Object.defineProperties(o, 5); // ToObject only throws for null/undefined
+assertEq("foo" in o, false, "foo is not an enumerable own property");
+Object.defineProperties(o, false);
+assertEq("bar" in o, false, "bar is not an enumerable own property");
+
+/*
+ * There's potential ambiguity over whether indexes should show up as enumerable
+ * own properties here, so don't run this bit yet until correctness is verified.
+ */
+if (false)
+{
+  Object.defineProperties(o, "baz");
+  assertEq("quux" in o, false, "quux is not an enumerable own property");
+}
+
+error = "before";
+try
+{
+  Object.defineProperties(o, null);
+}
+catch (e)
+{
+  if (e instanceof TypeError)
+    error = "typeerror";
+  else
+    error = "bad exception: " + e;
+}
+assertEq(error, "typeerror", "should throw on Properties == null");
+
+error = "before";
+try
+{
+  Object.defineProperties(o, undefined);
+}
+catch (e)
+{
+  if (e instanceof TypeError)
+    error = "typeerror";
+  else
+    error = "bad exception: " + e;
+}
+assertEq(error, "typeerror", "should throw on Properties == undefined");
+
 /******************************************************************************/
 
 reportCompare(true, true);

@@ -2176,9 +2176,7 @@ PropertyDescriptor::initialize(JSContext* cx, jsid id, jsval v)
 
     /* 8.10.5 step 1 */
     if (JSVAL_IS_PRIMITIVE(v)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_NOT_NONNULL_OBJECT,
-                             js_getter_str);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
         return false;
     }
     JSObject* desc = JSVAL_TO_OBJECT(v);
@@ -2686,11 +2684,9 @@ static JSBool
 obj_defineProperty(JSContext* cx, uintN argc, jsval* vp)
 {
     /* 15.2.3.6 steps 1 and 5. */
-    jsval v = argc == 0 ? JSVAL_VOID : vp[2];
+    jsval v = (argc == 0) ? JSVAL_VOID : vp[2];
     if (JSVAL_IS_PRIMITIVE(v)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_NOT_NONNULL_OBJECT,
-                             js_getter_str);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
         return JS_FALSE;
     }
     *vp = vp[2];
@@ -2717,20 +2713,23 @@ static JSBool
 obj_defineProperties(JSContext* cx, uintN argc, jsval* vp)
 {
     /* 15.2.3.6 steps 1 and 5. */
-    jsval v = argc > 0 ? vp[2] : JSVAL_VOID;
-    if (JSVAL_IS_PRIMITIVE(v)) {
-        js_ReportValueError(cx, JSMSG_NOT_NONNULL_OBJECT, -1, v, NULL);
+    if (argc < 2) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
+                             "Object.defineProperties", "0", "s");
         return JS_FALSE;
     }
+
     *vp = vp[2];
-
-    v = argc > 1 ? vp[3] : JSVAL_VOID;
-    if (JSVAL_IS_PRIMITIVE(v)) {
-        js_ReportValueError(cx, JSMSG_NOT_NONNULL_OBJECT, -1, v, NULL);
+    if (JSVAL_IS_PRIMITIVE(vp[2])) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
         return JS_FALSE;
     }
 
-    JSObject* props = JSVAL_TO_OBJECT(v);
+    JSObject* props = js_ValueToNonNullObject(cx, vp[3]);
+    if (!props)
+        return JS_FALSE;
+    vp[3] = OBJECT_TO_JSVAL(props);
+
     JSAutoIdArray ida(cx, JS_Enumerate(cx, props));
     if (!ida)
         return JS_FALSE;
@@ -2790,7 +2789,7 @@ obj_create(JSContext *cx, uintN argc, jsval *vp)
     /* 15.2.3.5 step 4. */
     if (argc > 1 && vp[3] != JSVAL_VOID) {
         if (JSVAL_IS_PRIMITIVE(vp[3])) {
-            js_ReportValueError(cx, JSMSG_NOT_NONNULL_OBJECT, -1, vp[3], NULL);
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
             return JS_FALSE;
         }
 
