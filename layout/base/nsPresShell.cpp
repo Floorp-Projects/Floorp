@@ -1553,7 +1553,7 @@ PresShell::~PresShell()
 #endif
 
   delete mStyleSet;
-  delete mFrameConstructor;
+  NS_IF_RELEASE(mFrameConstructor);
 
   mCurrentEventContent = nsnull;
 
@@ -1600,6 +1600,7 @@ PresShell::Init(nsIDocument* aDocument,
   // Create our frame constructor.
   mFrameConstructor = new nsCSSFrameConstructor(mDocument, this);
   NS_ENSURE_TRUE(mFrameConstructor, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(mFrameConstructor);
 
   // The document viewer owns both view manager and pres shell.
   mViewManager->SetViewObserver(this);
@@ -2648,6 +2649,10 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   if (!GetPresContext()->SupressingResizeReflow())
   {
     nsIViewManager::UpdateViewBatch batch(mViewManager);
+
+    // Have to make sure that the content notifications are flushed before we
+    // start messing with the frame model; otherwise we can get content doubling.
+    mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
 
     // Make sure style is up to date
     {
@@ -4374,21 +4379,8 @@ PresShell::ClearMouseCapture(nsIView* aView)
   if (gCaptureInfo.mContent) {
     if (aView) {
       // if a view was specified, ensure that the captured content is within
-      // this view. Get the frame for the captured content from the right
-      // presshell first.
-      nsIFrame* frame = nsnull;
-      nsIDocument* doc = gCaptureInfo.mContent->GetCurrentDoc();
-      if (doc) {
-        nsIPresShell *shell = doc->GetPrimaryShell();
-        if (shell) {
-          // not much can happen if frames are being destroyed so just return.
-          if (shell->FrameManager()->IsDestroyingFrames())
-            return;
-
-          frame = gCaptureInfo.mContent->GetPrimaryFrame();
-        }
-      }
-
+      // this view.
+      nsIFrame* frame = gCaptureInfo.mContent->GetPrimaryFrame();
       if (frame) {
         nsIView* view = frame->GetClosestView();
         // if there is no view, capturing won't be handled any more, so
@@ -5031,6 +5023,12 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 nsresult
 PresShell::ReconstructFrames(void)
 {
+  nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+
+  // Have to make sure that the content notifications are flushed before we
+  // start messing with the frame model; otherwise we can get content doubling.
+  mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
+
   nsAutoCauseReflowNotifier crNotifier(this);
   mFrameConstructor->BeginUpdate();
   nsresult rv = mFrameConstructor->ReconstructDocElementHierarchy();
@@ -7556,23 +7554,29 @@ PresShell::Observe(nsISupports* aSubject,
       NS_ASSERTION(mViewManager, "View manager must exist");
       nsIViewManager::UpdateViewBatch batch(mViewManager);
 
-      WalkFramesThroughPlaceholders(mPresContext, rootFrame,
-                                    &ReResolveMenusAndTrees, nsnull);
+      nsWeakFrame weakRoot(rootFrame);
+      // Have to make sure that the content notifications are flushed before we
+      // start messing with the frame model; otherwise we can get content doubling.
+      mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
 
-      // Because "chrome:" URL equality is messy, reframe image box
-      // frames (hack!).
-      nsStyleChangeList changeList;
-      WalkFramesThroughPlaceholders(mPresContext, rootFrame,
-                                    ReframeImageBoxes, &changeList);
-      // Mark ourselves as not safe to flush while we're doing frame
-      // construction.
-      {
-        nsAutoScriptBlocker scriptBlocker;
-        ++mChangeNestCount;
-        mFrameConstructor->ProcessRestyledFrames(changeList);
-        --mChangeNestCount;
+      if (weakRoot.IsAlive()) {
+        WalkFramesThroughPlaceholders(mPresContext, rootFrame,
+                                      &ReResolveMenusAndTrees, nsnull);
+
+        // Because "chrome:" URL equality is messy, reframe image box
+        // frames (hack!).
+        nsStyleChangeList changeList;
+        WalkFramesThroughPlaceholders(mPresContext, rootFrame,
+                                      ReframeImageBoxes, &changeList);
+        // Mark ourselves as not safe to flush while we're doing frame
+        // construction.
+        {
+          nsAutoScriptBlocker scriptBlocker;
+          ++mChangeNestCount;
+          mFrameConstructor->ProcessRestyledFrames(changeList);
+          --mChangeNestCount;
+        }
       }
-
       batch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 #ifdef ACCESSIBILITY
       InvalidateAccessibleSubtree(nsnull);

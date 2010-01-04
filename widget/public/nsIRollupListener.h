@@ -39,34 +39,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef __nsIRollupListener_h__
+#define __nsIRollupListener_h__
 
-interface nsIContent;
+class nsIContent;
 
-[uuid(0CA103E5-80D4-4B81-A310-BE0708F8EAA9)]
-interface nsIRollupListener : nsISupports
-{
+class nsIRollupListener {
+ public: 
+
   /**
    * Notifies the object to rollup, optionally returning the node that
    * was just rolled up.
    *
    * aCount is the number of popups in a chain to close. If this is
    * PR_UINT32_MAX, then all popups are closed.
-   *
-   * @result NS_Ok if no errors
    */
-  nsIContent Rollup(in unsigned long aCount);
+  NS_IMETHOD Rollup(PRUint32 aCount, nsIContent **aContent) = 0;
 
   /**
    * Asks the RollupListener if it should rollup on mousevents
-   * @result NS_Ok if no errors
    */
-  void ShouldRollupOnMouseWheelEvent(out PRBool aShould);
+  NS_IMETHOD ShouldRollupOnMouseWheelEvent(PRBool *aShould) = 0;
 
   /**
    * Asks the RollupListener if it should rollup on mouse activate, eg. X-Mouse
-   * @result NS_Ok if no errors
    */
-  void ShouldRollupOnMouseActivate(out PRBool aShould);
+  NS_IMETHOD ShouldRollupOnMouseActivate(PRBool *aShould) = 0;
 
 };
+
+#endif /* __nsIRollupListener_h__ */

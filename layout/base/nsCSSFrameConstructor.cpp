@@ -1362,6 +1362,9 @@ MoveChildrenTo(nsPresContext* aPresContext,
 
 //----------------------------------------------------------------------
 
+NS_IMPL_ADDREF(nsCSSFrameConstructor)
+NS_IMPL_RELEASE(nsCSSFrameConstructor)
+
 nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
                                              nsIPresShell *aPresShell)
   : mDocument(aDocument)
@@ -1378,6 +1381,8 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mIsDestroyingFrameTree(PR_FALSE)
   , mRebuildAllStyleData(PR_FALSE)
   , mHasRootAbsPosContainingBlock(PR_FALSE)
+  , mObservingRefreshDriver(PR_FALSE)
+  , mInStyleRefresh(PR_FALSE)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
 {
@@ -2161,6 +2166,8 @@ static PRBool
 NeedFrameFor(nsIFrame*   aParentFrame,
              nsIContent* aChildContent) 
 {
+  NS_PRECONDITION(!aChildContent->GetPrimaryFrame(), "Why did we get called?");
+
   // don't create a whitespace frame if aParentFrame doesn't want it.
   // always create frames for children in generated content. counter(),
   // quotes, and attr() content can easily change dynamically and we don't
@@ -3694,6 +3701,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   const nsStyleDisplay* display = styleContext->GetStyleDisplay();
 
   nsIFrame* newFrame;
+  nsIFrame* primaryFrame;
   if (bits & FCDATA_FUNC_IS_FULL_CTOR) {
     nsresult rv =
       (this->*(data->mFullConstructor))(aState, aItem, aParentFrame,
@@ -3701,6 +3709,8 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
     if (NS_FAILED(rv)) {
       return rv;
     }
+
+    primaryFrame = newFrame;
   } else {
     nsIContent* const content = aItem.mContent;
 
@@ -3731,8 +3741,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
         display->IsScrollableOverflow()) {
       BuildScrollFrame(aState, content, styleContext, newFrame,
                        geometricParent, frameToAddToList);
-      // No need to set the primary frame, since BuildScrollFrame did it already
-      bits |= FCDATA_SKIP_FRAMESET;
     } else {
       rv = InitAndRestoreFrame(aState, content, geometricParent, nsnull,
                                newFrame);
@@ -3742,6 +3750,12 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
                                                (bits & FCDATA_FORCE_VIEW) != 0);
       frameToAddToList = newFrame;
     }
+
+    // Use frameToAddToList as the primary frame.  In the non-scrollframe case
+    // they're equal, but in the scrollframe case newFrame is the scrolled
+    // frame, while frameToAddToList is the scrollframe (and should be the
+    // primary frame).
+    primaryFrame = frameToAddToList;
 
     rv = aState.AddChild(frameToAddToList, aFrameItems, content, styleContext,
                          aParentFrame, allowOutOfFlow, allowOutOfFlow, isPopup);
@@ -3839,7 +3853,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
                "Incorrectly set FCDATA_IS_LINE_PARTICIPANT bits");
 
   if (!(bits & FCDATA_SKIP_FRAMESET)) {
-    aItem.mContent->SetPrimaryFrame(newFrame);
+    aItem.mContent->SetPrimaryFrame(primaryFrame);
   }
 
   return NS_OK;
@@ -4315,11 +4329,7 @@ nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
     InitAndRestoreFrame(aState, aContent, aNewFrame, nsnull, aScrolledFrame);
 
     FinishBuildingScrollFrame(aNewFrame, aScrolledFrame);
-
-    // now set the primary frame to the ScrollFrame
-    aContent->SetPrimaryFrame(aNewFrame);
     return NS_OK;
-
 }
 
 const nsCSSFrameConstructor::FrameConstructionData*
@@ -6289,9 +6299,11 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   }
 
   nsIAtom* frameType = parentFrame->GetType();
-
+  PRBool haveNoXBLChildren =
+    mDocument->BindingManager()->GetXBLChildNodesFor(aContainer) == nsnull;
   FrameConstructionItemList items;
-  if (aNewIndexInContainer > 0 && GetParentType(frameType) == eTypeBlock) {
+  if (aNewIndexInContainer > 0 && GetParentType(frameType) == eTypeBlock &&
+      haveNoXBLChildren) {
     // If there's a text node in the normal content list just before the new
     // items, and it has no frame, make a frame construction item for it. If it
     // doesn't need a frame, ConstructFramesFromItemList below won't give it
@@ -6342,8 +6354,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   // To suppress whitespace-only text frames, we have to verify that
   // our container's DOM child list matches its flattened tree child list.
   // This is guaranteed to be true if GetXBLChildNodesFor() returns null.
-  items.SetParentHasNoXBLChildren(
-      !mDocument->BindingManager()->GetXBLChildNodesFor(aContainer));
+  items.SetParentHasNoXBLChildren(haveNoXBLChildren);
 
   nsFrameItems frameItems;
   ConstructFramesFromItemList(state, items, parentFrame, frameItems);
@@ -6670,7 +6681,9 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 
   FrameConstructionItemList items;
   ParentType parentType = GetParentType(frameType);
-  if (aIndexInContainer > 0 && parentType == eTypeBlock) {
+  PRBool haveNoXBLChildren =
+    mDocument->BindingManager()->GetXBLChildNodesFor(aContainer) == nsnull;
+  if (aIndexInContainer > 0 && parentType == eTypeBlock && haveNoXBLChildren) {
     // If there's a text node in the normal content list just before the
     // new node, and it has no frame, make a frame construction item for
     // it, because it might need a frame now.  No need to do this if our
@@ -6683,7 +6696,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   AddFrameConstructionItems(state, aChild, aIndexInContainer, parentFrame, items);
 
   if (aIndexInContainer + 1 < PRInt32(aContainer->GetChildCount()) &&
-      parentType == eTypeBlock) {
+      parentType == eTypeBlock && haveNoXBLChildren) {
     // If there's a text node in the normal content list just after the
     // new node, and it has no frame, make a frame construction item for
     // it, because it might need a frame now.  No need to do this if our
@@ -6972,7 +6985,13 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
     
     // Examine the containing-block for the removed content and see if
     // :first-letter style applies.
-    nsIFrame* containingBlock = GetFloatContainingBlock(parentFrame);
+    nsIFrame* inflowChild = childFrame;
+    if (childFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+      inflowChild = frameManager->GetPlaceholderFrameFor(childFrame);
+      NS_ASSERTION(inflowChild, "No placeholder for out-of-flow?");
+    }
+    nsIFrame* containingBlock =
+      GetFloatContainingBlock(inflowChild->GetParent());
     PRBool haveFLS = containingBlock && HasFirstLetterStyle(containingBlock);
     if (haveFLS) {
       // Trap out to special routine that handles adjusting a blocks
@@ -7044,11 +7063,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
     }
 
     if (haveFLS && mRootElementFrame) {
-      NS_ASSERTION(containingBlock == GetFloatContainingBlock(parentFrame),
-                   "What happened here?");
-      nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
-                                    GetAbsoluteContainingBlock(parentFrame),
-                                    containingBlock);
       RecoverLetterFrames(containingBlock);
     }
 
@@ -7401,9 +7415,6 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
     frame->CharacterDataChanged(aInfo);
 
     if (haveFirstLetterStyle) {
-      nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
-                                    GetAbsoluteContainingBlock(frame),
-                                    block, nsnull);
       RecoverLetterFrames(block);
     }
   }
@@ -7798,8 +7809,12 @@ nsCSSFrameConstructor::WillDestroyFrameTree()
   mQuoteList.Clear();
   mCounterManager.Clear();
 
-  // Cancel all pending re-resolves
-  mRestyleEvent.Revoke();
+  // Remove ourselves as a refresh observer, so the refresh driver
+  // won't assert about us.  But leave mObservingRefreshDriver true so
+  // we don't readd to it even if someone tries to post restyle events
+  // on us from this point on for some reason.
+  mPresShell->GetPresContext()->RefreshDriver()->
+    RemoveRefreshObserver(this, Flush_Style);
 }
 
 //STATIC
@@ -9596,10 +9611,17 @@ nsCSSFrameConstructor::CreateLetterFrame(nsIFrame* aBlockFrame,
     textSC = mPresShell->StyleSet()->ResolveStyleForNonElement(sc);
     
     // Create a new text frame (the original one will be discarded)
-    // pass a temporary stylecontext, the correct one will be set later
+    // pass a temporary stylecontext, the correct one will be set
+    // later.  Start off by unsetting the primary frame for
+    // aTextContent, so it's no longer pointing to the to-be-destroyed
+    // frame.
+    // XXXbz it would be really nice to destroy the old frame _first_,
+    // then create the new one, so we could avoid this hack.
+    aTextContent->SetPrimaryFrame(nsnull);
     nsIFrame* textFrame = NS_NewTextFrame(mPresShell, textSC);
 
-    NS_ASSERTION(aBlockFrame == GetFloatContainingBlock(aParentFrame),
+    NS_ASSERTION(aBlockFrame == GetFloatContainingBlock(aParentFrame)->
+                   GetFirstContinuation(),
                  "Containing block is confused");
     nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                   GetAbsoluteContainingBlock(aParentFrame),
@@ -9630,6 +9652,8 @@ nsCSSFrameConstructor::CreateLetterFrame(nsIFrame* aBlockFrame,
         SetInitialSingleChild(letterFrame, textFrame);
         aResult.Clear();
         aResult.AddChild(letterFrame);
+        NS_ASSERTION(!aBlockFrame->GetPrevContinuation(),
+                     "should have the first continuation here");
         aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
       }
     }
@@ -9811,7 +9835,6 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
     return NS_ERROR_OUT_OF_MEMORY;;
   }
   newTextFrame->Init(textContent, parentFrame, nsnull);
-  textContent->SetPrimaryFrame(newTextFrame);
 
   // Destroy the old text frame's continuations (the old text frame
   // will be destroyed when its letter frame is destroyed).
@@ -9833,6 +9856,10 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   // Remove placeholder frame and the float
   aFrameManager->RemoveFrame(nsnull, placeholderFrame);
 
+  // Now that the old frames are gone, we can start pointing to our
+  // new primary frame.
+  textContent->SetPrimaryFrame(newTextFrame);
+
   // Insert text frame in its place
   nsFrameList textList(newTextFrame, newTextFrame);
   aFrameManager->InsertFrames(parentFrame, nsnull, prevSibling, textList);
@@ -9845,6 +9872,7 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
                                                nsIPresShell* aPresShell,
                                                nsFrameManager* aFrameManager,
                                                nsIFrame* aFrame,
+                                               nsIFrame* aBlockFrame,
                                                PRBool* aStopLooking)
 {
   nsIFrame* prevSibling = nsnull;
@@ -9874,23 +9902,28 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
       }
       textFrame = NS_NewTextFrame(aPresShell, newSC);
       textFrame->Init(textContent, aFrame, nsnull);
-      textContent->SetPrimaryFrame(textFrame);
 
       // Next rip out the kid and replace it with the text frame
       aFrameManager->RemoveFrame(nsnull, kid);
+
+      // Now that the old frames are gone, we can start pointing to our
+      // new primary frame.
+      textContent->SetPrimaryFrame(textFrame);
 
       // Insert text frame in its place
       nsFrameList textList(textFrame, textFrame);
       aFrameManager->InsertFrames(aFrame, nsnull, prevSibling, textList);
 
       *aStopLooking = PR_TRUE;
-      aFrame->RemoveStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
+      NS_ASSERTION(!aBlockFrame->GetPrevContinuation(),
+                   "should have the first continuation here");
+      aBlockFrame->RemoveStateBits(NS_BLOCK_HAS_FIRST_LETTER_CHILD);
       break;
     }
     else if (IsInlineFrame(kid)) {
       // Look inside child inline frame for the letter frame
-      RemoveFirstLetterFrames(aPresContext, aPresShell, aFrameManager, kid,
-                              aStopLooking);
+      RemoveFirstLetterFrames(aPresContext, aPresShell, aFrameManager,
+                              kid, aBlockFrame, aStopLooking);
       if (*aStopLooking) {
         break;
       }
@@ -9909,22 +9942,23 @@ nsCSSFrameConstructor::RemoveLetterFrames(nsPresContext* aPresContext,
                                           nsIFrame* aBlockFrame)
 {
   aBlockFrame = aBlockFrame->GetFirstContinuation();
-  
+  nsIFrame* continuation = aBlockFrame;
+
   PRBool stopLooking = PR_FALSE;
   nsresult rv;
   do {
     rv = RemoveFloatingFirstLetterFrames(aPresContext, aPresShell,
                                          aFrameManager,
-                                         aBlockFrame, &stopLooking);
+                                         continuation, &stopLooking);
     if (NS_SUCCEEDED(rv) && !stopLooking) {
       rv = RemoveFirstLetterFrames(aPresContext, aPresShell, aFrameManager,
-                                   aBlockFrame, &stopLooking);
+                                   continuation, aBlockFrame, &stopLooking);
     }
     if (stopLooking) {
       break;
     }
-    aBlockFrame = aBlockFrame->GetNextContinuation();
-  }  while (aBlockFrame);
+    continuation = continuation->GetNextContinuation();
+  }  while (continuation);
   return rv;
 }
 
@@ -9933,7 +9967,8 @@ nsresult
 nsCSSFrameConstructor::RecoverLetterFrames(nsIFrame* aBlockFrame)
 {
   aBlockFrame = aBlockFrame->GetFirstContinuation();
-  
+  nsIFrame* continuation = aBlockFrame;
+
   nsIFrame* parentFrame = nsnull;
   nsIFrame* textFrame = nsnull;
   nsIFrame* prevFrame = nsnull;
@@ -9942,9 +9977,9 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsIFrame* aBlockFrame)
   nsresult rv;
   do {
     // XXX shouldn't this bit be set already (bug 408493), assert instead?
-    aBlockFrame->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
-    rv = WrapFramesInFirstLetterFrame(aBlockFrame, aBlockFrame,
-                                      aBlockFrame->GetFirstChild(nsnull),
+    continuation->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
+    rv = WrapFramesInFirstLetterFrame(aBlockFrame, continuation,
+                                      continuation->GetFirstChild(nsnull),
                                       &parentFrame, &textFrame, &prevFrame,
                                       letterFrames, &stopLooking);
     if (NS_FAILED(rv)) {
@@ -9953,8 +9988,8 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsIFrame* aBlockFrame)
     if (stopLooking) {
       break;
     }
-    aBlockFrame = aBlockFrame->GetNextContinuation();
-  } while (aBlockFrame);
+    continuation = continuation->GetNextContinuation();
+  } while (continuation);
 
   if (parentFrame) {
     // Take the old textFrame out of the parents child list
@@ -11023,14 +11058,18 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
   if (!mPresShell || !mPresShell->GetRootFrame())
     return;
 
-  nsAutoScriptBlocker scriptBlocker;
-
   // Make sure that the viewmanager will outlive the presshell
   nsIViewManager::UpdateViewBatch batch(mPresShell->GetViewManager());
 
   // Processing the style changes could cause a flush that propagates to
   // the parent frame and thus destroys the pres shell.
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(mPresShell);
+
+  // We may reconstruct frames below and hence process anything that is in the
+  // tree. We don't want to get notified to process those items again after.
+  mPresShell->GetDocument()->FlushPendingNotifications(Flush_ContentAndNotify);
+
+  nsAutoScriptBlocker scriptBlocker;
 
   // Tell the style set to get the old rule tree out of the way
   // so we can recalculate while maintaining rule tree immutability
@@ -11120,6 +11159,9 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   // Process non-animation restyles...
   ProcessPendingRestyleTable(mPendingRestyles);
 
+  NS_POSTCONDITION(mPendingRestyles.Count() == 0,
+                   "We should have processed mPendingRestyles to completion");
+
   // ...and then process animation restyles.  This needs to happen
   // second because we need to start animations that resulted from the
   // first set of restyles (e.g., CSS transitions with negative
@@ -11133,9 +11175,19 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   ProcessPendingRestyleTable(mPendingAnimationRestyles);
   presContext->SetProcessingAnimationStyleChange(PR_FALSE);
 
+  mInStyleRefresh = PR_FALSE;
+
+  NS_POSTCONDITION(mPendingAnimationRestyles.Count() == 0,
+                   "We should have processed mPendingAnimationRestyles to "
+                   "completion");
+  NS_POSTCONDITION(mPendingRestyles.Count() == 0,
+                   "We should not have posted new non-animation restyles while "
+                   "processing animation restyles");
+
   if (mRebuildAllStyleData) {
     // We probably wasted a lot of work up above, but this seems safest
     // and it should be rarely used.
+    // This might add us as a refresh observer again; that's ok.
     RebuildAllStyleData(nsChangeHint(0));
   }
 }
@@ -11178,15 +11230,27 @@ nsCSSFrameConstructor::PostRestyleEventCommon(nsIContent* aContent,
 void
 nsCSSFrameConstructor::PostRestyleEventInternal()
 {
-  if (!mRestyleEvent.IsPending()) {
-    nsRefPtr<RestyleEvent> ev = new RestyleEvent(this);
-    if (NS_FAILED(NS_DispatchToCurrentThread(ev))) {
-      NS_WARNING("failed to dispatch restyle event");
-      // XXXbz and what?
-    } else {
-      mRestyleEvent = ev;
-    }
+  // Make sure we're not in a style refresh; if we are, we still have
+  // a call to ProcessPendingRestyles coming and there's no need to
+  // add ourselves as a refresh observer until then.
+  if (!mInStyleRefresh && !mObservingRefreshDriver) {
+    mObservingRefreshDriver = mPresShell->GetPresContext()->
+      RefreshDriver()->AddRefreshObserver(this, Flush_Style);
   }
+}
+
+void
+nsCSSFrameConstructor::WillRefresh(mozilla::TimeStamp aTime)
+{
+  NS_ASSERTION(mObservingRefreshDriver, "How did we get here?");
+  // Stop observing the refresh driver and flag ourselves as being in
+  // a refresh so we don't restart due to animation-triggered
+  // restyles.  The actual work of processing our restyles will get
+  // done when the refresh driver flushes styles.
+  mPresShell->GetPresContext()->RefreshDriver()->
+    RemoveRefreshObserver(this, Flush_Style);
+  mObservingRefreshDriver = PR_FALSE;
+  mInStyleRefresh = PR_TRUE;
 }
 
 void
@@ -11200,18 +11264,6 @@ nsCSSFrameConstructor::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
   NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
   // Get a restyle event posted if necessary
   PostRestyleEventInternal();
-}
-
-NS_IMETHODIMP nsCSSFrameConstructor::RestyleEvent::Run()
-{
-  if (!mConstructor)
-    return NS_OK;  // event was revoked
-
-  // Make sure that any restyles that happen from now on will go into
-  // a new event.
-  mConstructor->mRestyleEvent.Forget();  
-  
-  return mConstructor->mPresShell->FlushPendingNotifications(Flush_Style);
 }
 
 NS_IMETHODIMP
@@ -11279,6 +11331,7 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
 PRBool
 nsCSSFrameConstructor::FrameConstructionItem::IsWhitespace() const
 {
+  NS_PRECONDITION(!mContent->GetPrimaryFrame(), "How did that happen?");
   if (!mIsText) {
     return PR_FALSE;
   }

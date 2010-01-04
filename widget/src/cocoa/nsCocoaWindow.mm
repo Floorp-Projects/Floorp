@@ -66,6 +66,7 @@
 #include "nsStyleConsts.h"
 #include "nsNativeThemeColors.h"
 #include "nsChildView.h"
+#include "nsIMenuRollup.h"
 
 #include "gfxPlatform.h"
 #include "qcms.h"
@@ -89,6 +90,7 @@ extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
 
 // defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
+extern nsIMenuRollup     * gMenuRollup;
 extern nsIWidget         * gRollupWidget;
 extern BOOL                gSomeMenuBarPainted;
 
@@ -1344,17 +1346,21 @@ nsMenuBarX* nsCocoaWindow::GetMenuBar()
 }
 
 NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener, 
+                                                 nsIMenuRollup * aMenuRollup,
                                                  PRBool aDoCapture, 
                                                  PRBool aConsumeRollupEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NS_IF_RELEASE(gRollupListener);
+  gRollupListener = nsnull;
+  NS_IF_RELEASE(gMenuRollup);
   NS_IF_RELEASE(gRollupWidget);
   
   if (aDoCapture) {
     gRollupListener = aListener;
-    NS_ADDREF(aListener);
+    NS_IF_RELEASE(gMenuRollup);
+    gMenuRollup = aMenuRollup;
+    NS_IF_ADDREF(aMenuRollup);
     gRollupWidget = this;
     NS_ADDREF(this);
 

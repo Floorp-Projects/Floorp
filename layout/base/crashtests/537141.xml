@@ -1,0 +1,2 @@
+<!-- This has to be a separate file to trigger the bug -->
+<bindings xmlns="http://www.mozilla.org/xbl"><binding id="mo"><content><mrow xmlns="http://www.w3.org/1998/Math/MathML"><children xmlns="http://www.mozilla.org/xbl"/></mrow></content></binding></bindings>
