@@ -2438,117 +2438,21 @@ BEGIN_CASE(JSOP_OBJECT)
 END_CASE(JSOP_OBJECT)
 
 BEGIN_CASE(JSOP_REGEXP)
-{
-    JSObject *funobj;
-
     /*
-     * Push a regexp object for the atom mapped by the bytecode at pc, cloning
-     * the literal's regexp object if necessary, to simulate in the
-     * pre-compile/execute-later case what ECMA specifies for the
-     * compile-and-go case: that scanning each regexp literal creates a single
-     * corresponding RegExp object.
-     *
-     * To support pre-compilation transparently, we must handle the case where
-     * a regexp object literal is used in a different global at execution time
-     * from the global with which it was scanned at compile time.  We do this
-     * by re-wrapping the JSRegExp private data struct with a cloned object
-     * having the right prototype and parent, and having its own lastIndex
-     * property value storage.
-     *
-     * Unlike JSOP_DEFFUN and other prolog bytecodes that may clone literal
-     * objects, we don't want to pay a script prolog execution price for all
-     * regexp literals in a script (many may not be used by a particular
-     * execution of that script, depending on control flow), so we initialize
-     * lazily here.
+     * Push a regexp object cloned from the regexp literal object mapped by the
+     * bytecode at pc. ES5 finally fixed this bad old ES3 design flaw which was
+     * flouted by many browser-based implementations.
      *
      * XXX This code is specific to regular expression objects.  If we need a
      * similar op for other kinds of object literals, we should push cloning
      * down under JSObjectOps and reuse code here.
      */
     index = GET_FULL_INDEX(0);
-    JS_ASSERT(index < script->regexps()->length);
-
-    slot = index;
-    if (fp->fun) {
-        /*
-         * We're in function code, not global or eval code (in eval code,
-         * JSOP_REGEXP is never emitted). The cloned funobj contains
-         * script->regexps()->length reserved slots for the cloned regexps; see
-         * fun_reserveSlots, jsfun.c.
-         */
-        funobj = JSVAL_TO_OBJECT(fp->argv[-2]);
-        slot += JSCLASS_RESERVED_SLOTS(&js_FunctionClass);
-        if (script->upvarsOffset != 0)
-            slot += script->upvars()->length;
-        if (!JS_GetReservedSlot(cx, funobj, slot, &rval))
-            goto error;
-        if (JSVAL_IS_VOID(rval))
-            rval = JSVAL_NULL;
-    } else {
-        /*
-         * We're in global code. The code generator reserved a slot for the
-         * regexp among script->nfixed slots. All such slots are initialized to
-         * null, not void, for faster testing in JSOP_*GVAR cases. To simplify
-         * index calculations we count regexps in the reverse order down from
-         * script->nslots - 1.
-         */
-        JS_ASSERT(slot < script->nfixed);
-        slot = script->nfixed - slot - 1;
-        rval = fp->slots[slot];
-#ifdef __GNUC__
-        funobj = NULL;  /* suppress bogus gcc warnings */
-#endif
-    }
-
-    if (JSVAL_IS_NULL(rval)) {
-        /* Compute the current global object in obj2. */
-        obj2 = fp->scopeChain;
-        while ((parent = OBJ_GET_PARENT(cx, obj2)) != NULL)
-            obj2 = parent;
-
-        /*
-         * If obj's parent is not obj2, we must clone obj so that it has the
-         * right parent, and therefore, the right prototype.
-         *
-         * Yes, this means we assume that the correct RegExp.prototype to which
-         * regexp instances (including literals) delegate can be distinguished
-         * solely by the instance's parent, which was set to the parent of the
-         * RegExp constructor function object when the instance was created.
-         * In other words,
-         *
-         *   (/x/.__parent__ == RegExp.__parent__) implies
-         *   (/x/.__proto__ == RegExp.prototype)
-         *
-         * (unless you assign a different object to RegExp.prototype at
-         * runtime, in which case, ECMA doesn't specify operation, and you get
-         * what you deserve).
-         *
-         * This same coupling between instance parent and constructor parent
-         * turns up everywhere (see jsobj.c's FindClassObject,
-         * js_ConstructObject, and js_NewObject).  It's fundamental to the
-         * design of the language when you consider multiple global objects and
-         * separate compilation and execution, even though it is not specified
-         * fully in ECMA.
-         */
-        obj = script->getRegExp(index);
-        if (OBJ_GET_PARENT(cx, obj) != obj2) {
-            obj = js_CloneRegExpObject(cx, obj, obj2);
-            if (!obj)
-                goto error;
-        }
-        rval = OBJECT_TO_JSVAL(obj);
-
-        /* Store the regexp object value in its cloneIndex slot. */
-        if (fp->fun) {
-            if (!JS_SetReservedSlot(cx, funobj, slot, rval))
-                goto error;
-        } else {
-            fp->slots[slot] = rval;
-        }
-    }
-
+    obj = js_CloneRegExpObject(cx, script->getRegExp(index), NULL);
+    if (!obj)
+        goto error;
+    rval = OBJECT_TO_JSVAL(obj);
     PUSH_OPND(rval);
-}
 END_CASE(JSOP_REGEXP)
 
 BEGIN_CASE(JSOP_ZERO)
