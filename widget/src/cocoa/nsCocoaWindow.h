@@ -245,7 +245,8 @@ public:
                         const nsTArray<nsIntRect>& aDestRects,
                         const nsTArray<Configuration>& aConfigurations);
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
+    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, nsIMenuRollup * aMenuRollup,
+                                   PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD GetAttention(PRInt32 aCycleCount);
     virtual PRBool HasPendingInputEvent();
     virtual nsTransparencyMode GetTransparencyMode();

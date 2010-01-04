@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=396367
+-->
+<head>
+  <title>Test for Bug 396367</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <style>select::after { content:"m"; }</style>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    function finish() {
+      ok(true, "didn't crash");
+      var docviewer = getdocviewer();
+      docviewer.textZoom = 1;
+      SimpleTest.finish();
+    }
+
+    function getdocviewer() {
+      //netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      var navigator1 = top.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebNavigation);
+      var docShell = navigator1.QueryInterface(Components.interfaces.nsIDocShell);
+      var docviewer = docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+      return docviewer;
+    }
+  </script>
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=396367">Mozilla Bug 396367</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+
+<div style="overflow: scroll; float: left;">
+
+<select></select>
+
+<li style="display: table-cell;">
+
+<script>
+var docviewer = getdocviewer();
+docviewer.textZoom=Math.floor(10*Math.random())/4+0.2;
+document.documentElement.offsetHeight;
+setTimeout(finish,10);
+</script>
+</li>
+</div>
+
+
+</pre>
+</body>
+</html>

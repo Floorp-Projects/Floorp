@@ -13,10 +13,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=421640
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=396392">Mozilla Bug Range getClientRects and getBoundingClientRect</a>
-<div id="content" style="font-face:monospace;font-size:12px;width:100px">
-<p>000000<span>0</span></p><div>00000<span>0</span></div><p>0000<span>0000</span>0000</p>
+<div id="content" style="font-family:monospace;font-size:12px;width:100px">
+<p>000000<span>0</span></p><div>00000<span>0</span></div><p>0000<span>0000</span>0000</p><div><span>000000000000 00000000000000 000000</span></div><div>000000000000 00000000000003 100305</div>
 </div>
-<div id="mixeddir" style="font-face:monospace;font-size:12px;width:100px"><span>english <bdo dir="rtl">rtl-overide english</bdo> word</span></div>
+<div id="mixeddir" style="font-family:monospace;font-size:12px;width:100px"><span>english <bdo id="bdo" dir="rtl">rtl-overide english</bdo> word</span></div>
+<div id="mixeddir2" style="font-family:monospace;font-size:12px"><span>english <bdo id="bdo2" dir="rtl">rtl-override english</bdo> word</span></div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
@@ -36,13 +37,20 @@ function isEmptyRectList(rectlist, name) {
   is(rectlist.length, 0, name + 'empty rectlist should have zero rects');
 }
 
+// round coordinates to the nearest 1/256 of a pixel
+function roundCoord(x) {
+  return Math.round(x * 256) / 256;
+}
+
 function _getRect(r) {
   if (r.length) //array
-    return "{left:"+r[0]+",right:"+r[1]+",top:"+r[2]+",bottom:"+r[3]
-      +",width:"+r[4]+",height:"+r[5]+"}";
+    return "{left:"+roundCoord(r[0])+",right:"+roundCoord(r[1])+
+      ",top:"   +roundCoord(r[2])+",bottom:"+roundCoord(r[3])+
+      ",width:"+roundCoord(r[4])+",height:"+roundCoord(r[5])+"}";
   else
-    return "{left:"+r.left+",right:"+r.right+",top:"+r.top+",bottom:"
-      +r.bottom+",width:"+r.width+",height:"+r.height+"}";
+    return "{left:"+roundCoord(r.left)+",right:"+roundCoord(r.right)+
+      ",top:"+roundCoord(r.top)+",bottom:"+roundCoord(r.bottom)+
+      ",width:"+roundCoord(r.width)+",height:"+roundCoord(r.height)+"}";
 }
 
 function runATest(obj) {
@@ -90,13 +98,18 @@ function doTest(){
   var root = document.getElementById('content');
   var firstP = root.firstElementChild, spanInFirstP = firstP.childNodes[1],
     firstDiv = root.childNodes[2], spanInFirstDiv = firstDiv.childNodes[1],
-    secondP = root.childNodes[3], spanInSecondP = secondP.childNodes[1];
+    secondP = root.childNodes[3], spanInSecondP = secondP.childNodes[1],
+    secondDiv = root.childNodes[4], spanInSecondDiv = secondDiv.firstChild,
+    thirdDiv = root.childNodes[5];
   var firstPRect = firstP.getBoundingClientRect(),
     spanInFirstPRect = spanInFirstP.getBoundingClientRect(),
     firstDivRect = firstDiv.getBoundingClientRect(),
     spanInFirstDivRect = spanInFirstDiv.getBoundingClientRect(),
     secondPRect = secondP.getBoundingClientRect(),
-    spanInSecondPRect = spanInSecondP.getBoundingClientRect();
+    secondDivRect = secondDiv.getBoundingClientRect(),
+    spanInSecondPRect = spanInSecondP.getBoundingClientRect(),
+    spanInSecondDivRect = spanInSecondDiv.getBoundingClientRect(),
+    spanInSecondDivRectList = spanInSecondDiv.getClientRects();
   var widthPerchar = spanInSecondPRect.width / spanInSecondP.firstChild.length;
   var testcases = [
     {name:'nodesNotInDocument', range:[document.createTextNode('abc'), 1], 
@@ -150,6 +163,62 @@ function doTest(){
           spanInSecondPRect.height]]}
   ];
   testcases.forEach(runATest);
+
+  // testcases that have different ranges in LTR and RTL
+  var directionDependentTestcases;
+  if (isLTR) {
+    directionDependentTestcases = [
+      {name:'spanAcrossLines',range:[spanInSecondDiv.firstChild, 1, spanInSecondDiv.firstChild, 30],
+       rect: spanInSecondDivRect,
+       rectList:[[spanInSecondDivRectList[0].left+widthPerchar,
+        spanInSecondDivRectList[0].right, spanInSecondDivRectList[0].top,
+	spanInSecondDivRectList[0].bottom, spanInSecondDivRectList[0].width - widthPerchar,
+	spanInSecondDivRectList[0].height],
+	spanInSecondDivRectList[1],
+	[spanInSecondDivRectList[2].left,
+	spanInSecondDivRectList[2].right - 4 * widthPerchar, spanInSecondDivRectList[2].top,
+	spanInSecondDivRectList[2].bottom, 
+	spanInSecondDivRectList[2].width - 4 * widthPerchar,
+	spanInSecondDivRectList[2].height]]},
+      {name:'textAcrossLines',range:[thirdDiv.firstChild, 13, thirdDiv.firstChild, 28],
+        rect: [spanInSecondDivRectList[1].left, spanInSecondDivRectList[1].right,
+          spanInSecondDivRectList[1].top + secondDivRect.height, 
+          spanInSecondDivRectList[1].bottom + secondDivRect.height,
+          spanInSecondDivRectList[1].width, spanInSecondDivRectList[1].height]}
+    ];
+  } else {
+    directionDependentTestcases = [
+      {name:'spanAcrossLines',range:[spanInSecondDiv.firstChild, 1, spanInSecondDiv.firstChild, 30],
+       rect: spanInSecondDivRect,
+       rectList:[[spanInSecondDivRectList[0].left+widthPerchar,
+        spanInSecondDivRectList[0].right, spanInSecondDivRectList[0].top,
+	spanInSecondDivRectList[0].bottom, spanInSecondDivRectList[0].width - widthPerchar,
+	spanInSecondDivRectList[0].height],
+	spanInSecondDivRectList[1],
+	spanInSecondDivRectList[2],
+	spanInSecondDivRectList[3],
+	[spanInSecondDivRectList[4].left,
+	spanInSecondDivRectList[4].right - 4 * widthPerchar,
+        spanInSecondDivRectList[4].top,
+	spanInSecondDivRectList[4].bottom, 
+	spanInSecondDivRectList[4].width - 4 * widthPerchar,
+	spanInSecondDivRectList[4].height]]},
+      {name:'textAcrossLines',range:[thirdDiv.firstChild, 13, thirdDiv.firstChild, 28],
+        rect: [spanInSecondDivRectList[2].left, spanInSecondDivRectList[2].right,
+          spanInSecondDivRectList[2].top + secondDivRect.height, 
+          spanInSecondDivRectList[2].bottom + secondDivRect.height,
+	       spanInSecondDivRectList[2].width, spanInSecondDivRectList[2].height],
+       rectList:[[spanInSecondDivRectList[2].left, spanInSecondDivRectList[2].right,
+          spanInSecondDivRectList[2].top + secondDivRect.height, 
+          spanInSecondDivRectList[2].bottom + secondDivRect.height,
+          spanInSecondDivRectList[2].width, spanInSecondDivRectList[2].height],
+          [spanInSecondDivRectList[2].left, spanInSecondDivRectList[2].left,
+          spanInSecondDivRectList[2].top + secondDivRect.height, 
+          spanInSecondDivRectList[2].bottom + secondDivRect.height,
+          0, spanInSecondDivRectList[2].height]]}
+     ];
+  }
+  directionDependentTestcases.forEach(runATest);
 }
 function testMixedDir(){
   var root = document.getElementById('mixeddir');
@@ -157,6 +226,28 @@ function testMixedDir(){
       firstSpanRectList = firstSpan.getClientRects();
   runATest({name:'mixeddir',range:[firstSpan.firstChild,0,firstSpan.lastChild,firstSpan.lastChild.length],
              rect: firstSpanRect, rectList:firstSpanRectList});
+
+  root = document.getElementById('mixeddir2');
+  firstSpan = root.firstElementChild;
+  firstSpanRect = firstSpan.getBoundingClientRect();
+  bdo = document.getElementById('bdo2');
+  bdoRect=bdo.getBoundingClientRect();
+  var widthPerChar = bdoRect.width / bdo.firstChild.length;
+  runATest({name:'mixeddirPartial', range:[firstSpan.firstChild, 3, 
+					   bdo.firstChild, 7],
+	rect: [firstSpanRect.left + 3*widthPerChar, bdoRect.right,
+	       bdoRect.top, bdoRect.bottom,
+	       (firstSpan.firstChild.length + bdo.firstChild.length - 3) *
+	        widthPerChar,
+	       bdoRect.height],
+	rectList:[[firstSpanRect.left + 3*widthPerChar,
+		   bdoRect.left,
+		   firstSpanRect.top, firstSpanRect.bottom,
+		   (firstSpan.firstChild.length - 3) * widthPerChar,
+		   firstSpanRect.height],
+		  [bdoRect.right - 7 * widthPerChar, bdoRect.right,
+		   bdoRect.top, bdoRect.bottom,
+		   7*widthPerChar, bdoRect.height]]});
 }
 function test(){
   //test ltr

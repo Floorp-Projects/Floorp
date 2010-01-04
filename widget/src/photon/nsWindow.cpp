@@ -59,6 +59,7 @@
 
 #include "nsClipboard.h"
 #include "nsIRollupListener.h"
+#include "nsIMenuRollup.h"
 
 #include "nsIServiceManager.h"
 #include "nsIAppShell.h"
@@ -74,6 +75,7 @@
 static PhTile_t *GetWindowClipping( PtWidget_t *aWidget );
 
 nsIRollupListener *nsWindow::gRollupListener = nsnull;
+nsIMenuRollup     *nsWindow::gMenuRollup = nsnull;
 nsIWidget         *nsWindow::gRollupWidget = nsnull;
 static PtWidget_t	*gMenuRegion;
 
@@ -171,15 +173,21 @@ void nsWindow::DestroyNativeChildren(void)
   }
 }
 
-NS_IMETHODIMP nsWindow::CaptureRollupEvents( nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent ) {
+NS_IMETHODIMP nsWindow::CaptureRollupEvents( nsIRollupListener * aListener,
+                                             nsIMenuRollup * aMenuRollup,
+                                             PRBool aDoCapture,
+                                             PRBool aConsumeRollupEvent )
+{
   PtWidget_t *grabWidget;
   grabWidget = mWidget;
 
   if (aDoCapture) {
-    NS_IF_RELEASE(gRollupListener);
+    gRollupListener = nsnull;
     NS_IF_RELEASE(gRollupWidget);
     gRollupListener = aListener;
-    NS_ADDREF(aListener);
+    NS_IF_RELEASE(gMenuRollup);
+    gMenuRollup = aMenuRollup;
+    NS_IF_ADDREF(aMenuRollup);
     gRollupWidget = this;
     NS_ADDREF(this);
 	
@@ -203,8 +211,8 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents( nsIRollupListener * aListener, PRBo
 			}
   	}
 	else {
-    NS_IF_RELEASE(gRollupListener);
     gRollupListener = nsnull;
+    NS_IF_RELEASE(gMenuRollup);
     NS_IF_RELEASE(gRollupWidget);
 		gRollupWidget = nsnull;
 
