@@ -8385,7 +8385,7 @@ TraceRecorder::f2i(LIns* f)
         }
         if (ci == &js_String_p_charCodeAt0_ci) {
             // Use a fast path builtin for a charCodeAt that converts to an int right away.
-            LIns* args[] = { fcallarg(f, 1) };
+            LIns* args[] = { fcallarg(f, 0) };
             return lir->insCall(&js_String_p_charCodeAt0_int_ci, args);
         }
         if (ci == &js_String_p_charCodeAt_ci) {
