@@ -53,6 +53,7 @@
 #include "nsThreadUtils.h"
 #include "nsPageContentFrame.h"
 #include "nsCSSPseudoElements.h"
+#include "nsRefreshDriver.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -78,13 +79,22 @@ typedef void (nsLazyFrameConstructionCallback)
 class nsFrameConstructorState;
 class nsFrameConstructorSaveState;
 
-class nsCSSFrameConstructor
+class nsCSSFrameConstructor : public nsARefreshObserver
 {
 public:
   nsCSSFrameConstructor(nsIDocument *aDocument, nsIPresShell* aPresShell);
   ~nsCSSFrameConstructor(void) {
     NS_ASSERTION(mUpdateCount == 0, "Dying in the middle of our own update?");
   }
+
+  // Matches signature on nsARefreshObserver.  Just like
+  // NS_DECL_ISUPPORTS, but without the QI part.
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+protected:
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+public:
 
   struct RestyleData;
   friend struct RestyleData;
@@ -236,6 +246,9 @@ public:
   {
     PostRestyleEventCommon(aContent, aRestyleHint, aMinChangeHint, PR_TRUE);
   }
+
+  // nsARefreshObserver
+  virtual void WillRefresh(mozilla::TimeStamp aTime);
 private:
   /**
    * Notify the frame constructor that a content node needs to have its
@@ -594,9 +607,7 @@ private:
      set. */
 #define FCDATA_SUPPRESS_FRAME 0x40
   /* If FCDATA_MAY_NEED_SCROLLFRAME is set, the new frame should be wrapped in
-     a scrollframe if its overflow type so requires.  This flag might override
-     FCDATA_SKIP_FRAMEMAP, since scrollframe construction will add to the frame
-     map. */
+     a scrollframe if its overflow type so requires. */
 #define FCDATA_MAY_NEED_SCROLLFRAME 0x80
 #ifdef MOZ_XUL
   /* If FCDATA_IS_POPUP is set, the new frame is a XUL popup frame.  These need
@@ -1331,7 +1342,6 @@ private:
 
   // Build a scroll frame: 
   //  Calls BeginBuildingScrollFrame, InitAndRestoreFrame, and then FinishBuildingScrollFrame.
-  //  Sets the primary frame for the content to the output aNewFrame.
   // @param aNewFrame the created scrollframe --- output only
   // @param aParentFrame the geometric parent that the scrollframe will have.
   nsresult
@@ -1558,6 +1568,7 @@ private:
                                    nsIPresShell*    aPresShell,
                                    nsFrameManager*  aFrameManager,
                                    nsIFrame*        aFrame,
+                                   nsIFrame*        aBlockFrame,
                                    PRBool*          aStopLooking);
 
   // Special remove method for those pesky floating first-letter frames
@@ -1671,21 +1682,6 @@ public:
     nsCOMPtr<nsIContent> mContent;
   };
 
-  class RestyleEvent;
-  friend class RestyleEvent;
-
-  class RestyleEvent : public nsRunnable {
-  public:
-    NS_DECL_NSIRUNNABLE
-    RestyleEvent(nsCSSFrameConstructor *aConstructor)
-      : mConstructor(aConstructor) {
-      NS_PRECONDITION(aConstructor, "Must have a constructor!");
-    }
-    void Revoke() { mConstructor = nsnull; }
-  private:
-    nsCSSFrameConstructor *mConstructor;
-  };
-
   friend class nsFrameConstructorState;
 
 private:
@@ -1738,10 +1734,12 @@ private:
   PRPackedBool        mRebuildAllStyleData : 1;
   // This is true if mDocElementContainingBlock supports absolute positioning
   PRPackedBool        mHasRootAbsPosContainingBlock : 1;
+  // True if we're already waiting for a refresh notification
+  PRPackedBool        mObservingRefreshDriver : 1;
+  // True if we're in the middle of a nsRefreshDriver refresh
+  PRPackedBool        mInStyleRefresh : 1;
   PRUint32            mHoverGeneration;
   nsChangeHint        mRebuildAllExtraHint;
-
-  nsRevocableEventPtr<RestyleEvent> mRestyleEvent;
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 

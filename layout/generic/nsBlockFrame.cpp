@@ -3520,6 +3520,9 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
       (NS_BLOCK_HAS_FIRST_LETTER_STYLE & mState)) {
     aLineLayout.SetFirstLetterStyleOK(PR_TRUE);
   }
+  NS_ASSERTION(!((NS_BLOCK_HAS_FIRST_LETTER_CHILD & mState) &&
+                 GetPrevContinuation()),
+               "first letter child bit should only be on first continuation");
 
   // Reflow the frames that are already on the line first
   nsresult rv = NS_OK;
@@ -6318,8 +6321,12 @@ nsBlockFrame::Init(nsIContent*      aContent,
     // Copy over the block frame type flags
     nsBlockFrame*  blockFrame = (nsBlockFrame*)aPrevInFlow;
 
+    // Don't copy NS_BLOCK_HAS_FIRST_LETTER_CHILD as that is set on the first
+    // continuation only.
     SetFlags(blockFrame->mState &
-             (NS_BLOCK_FLAGS_MASK & ~NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET));
+             (NS_BLOCK_FLAGS_MASK &
+               (~NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET &
+                ~NS_BLOCK_HAS_FIRST_LETTER_CHILD)));
   }
 
   nsresult rv = nsBlockFrameSuper::Init(aContent, aParent, aPrevInFlow);

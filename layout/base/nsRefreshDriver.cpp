@@ -94,13 +94,7 @@ nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver *aObserver,
                                        mozFlushType aFlushType)
 {
   ObserverArray& array = ArrayFor(aFlushType);
-  PRBool success = array.RemoveElement(aObserver);
-
-  if (ObserverCount() == 0) {
-    StopTimer();
-  }
-
-  return success;
+  return array.RemoveElement(aObserver);
 }
 
 void
@@ -189,8 +183,14 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
     return NS_OK;
   }
   nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
-  if (!presShell) {
-    // Things are being destroyed.
+  if (!presShell || ObserverCount() == 0) {
+    // Things are being destroyed, or we no longer have any observers.
+    // We don't want to stop the timer when observers are initially
+    // removed, because sometimes observers can be added and removed
+    // often depending on what other things are going on and in that
+    // situation we don't want to thrash our timer.  So instead we
+    // wait until we get a Notify() call when we have no observers
+    // before stopping the timer.
     StopTimer();
     return NS_OK;
   }
@@ -223,10 +223,6 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
       // then Flush_InterruptibleLayout).
       presShell->FlushPendingNotifications(Flush_Style);
     }
-  }
-
-  if (ObserverCount() == 0) {
-    StopTimer();
   }
 
   return NS_OK;

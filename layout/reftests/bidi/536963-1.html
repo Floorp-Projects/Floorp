@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+ <head>
+  <title>Dynamic bidi bug</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <style type="text/css">
+  p { width: 3ch;}
+  </style>
+  <script type="text/javascript">
+function flip()
+{
+    var flipped= document.getElementById('flipped');
+    flipped.dir = "rtl";
+}
+  </script>
+ </head>
+ <body onload="flip()">
+  <p id="flipped">0 123 4</p>
+ </body>
+</html>
