@@ -1067,7 +1067,7 @@ PluginInstanceChild::InvalidateRect(NPRect* aInvalidRect)
       NS_ASSERTION(IsWindow(mPluginWindowHWND), "Bad window?!");
       RECT rect = { aInvalidRect->left, aInvalidRect->top,
                     aInvalidRect->right, aInvalidRect->bottom };
-      InvalidateRect(mPluginWindowHWND, &rect, FALSE);
+      ::InvalidateRect(mPluginWindowHWND, &rect, FALSE);
       return;
     }
 #endif
