@@ -383,13 +383,27 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   nscoord dx = 0;
   nsBoundingMetrics bm;
   bool firstTime = true;
-  if (mOpenChar) {
-    PlaceChar(mOpenChar, ascent, bm, dx);
+  nsMathMLChar *leftChar, *rightChar;
+  bool isRTL = NS_MATHML_IS_RTL(mPresentationData.flags);
+  if (isRTL) {
+    leftChar = mCloseChar;
+    rightChar = mOpenChar;
+  } else {
+    leftChar = mOpenChar;
+    rightChar = mCloseChar;
+  }
+
+  if (leftChar) {
+    PlaceChar(leftChar, ascent, bm, dx);
     aDesiredSize.mBoundingMetrics = bm;
     firstTime = false;
   }
 
-  childFrame = firstChild;
+  if (isRTL) {
+    childFrame = this->GetLastChild(nsIFrame::kPrincipalList);
+  } else {
+    childFrame = firstChild;
+  }
   while (childFrame) {
     nsHTMLReflowMetrics childSize;
     GetReflowAndBoundingMetricsFor(childFrame, childSize, bm);
@@ -405,16 +419,21 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
     dx += childSize.width;
 
     if (i < mSeparatorsCount) {
-      PlaceChar(&mSeparatorsChar[i], ascent, bm, dx);
+      PlaceChar(&mSeparatorsChar[isRTL ? mSeparatorsCount - 1 - i : i],
+                ascent, bm, dx);
       aDesiredSize.mBoundingMetrics += bm;
     }
     i++;
 
-    childFrame = childFrame->GetNextSibling();
+    if (isRTL) {
+      childFrame = childFrame->GetPrevSibling();
+    } else {
+      childFrame = childFrame->GetNextSibling();
+    }
   }
 
-  if (mCloseChar) {
-    PlaceChar(mCloseChar, ascent, bm, dx);
+  if (rightChar) {
+    PlaceChar(rightChar, ascent, bm, dx);
     if (firstTime)
       aDesiredSize.mBoundingMetrics  = bm;
     else  

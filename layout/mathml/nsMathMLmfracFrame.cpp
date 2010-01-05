@@ -501,18 +501,26 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     mReference.y = aDesiredSize.ascent;
     
     if (aPlaceOrigin) {
-      FinishReflowChild(frameNum, presContext, nsnull, sizeNum,
-                        leftSpace,
-                        aDesiredSize.ascent - numShift - sizeNum.ascent, 0);
+      nscoord dx, dy;
 
-      mLineRect.SetRect(leftSpace + bmNum.width,
-                        aDesiredSize.ascent - mBoundingMetrics.ascent,
-                        mLineRect.width,
-                        aDesiredSize.height - 2 * padding);
+      // place numerator
+      dx = MirrorIfRTL(aDesiredSize.width, sizeNum.width,
+                       leftSpace);
+      dy = aDesiredSize.ascent - numShift - sizeNum.ascent;
+      FinishReflowChild(frameNum, presContext, nsnull, sizeNum, dx, dy, 0);
 
-      FinishReflowChild(frameDen, presContext, nsnull, sizeDen,
-                        leftSpace + bmNum.width + mLineRect.width,
-                        aDesiredSize.ascent + denShift - sizeDen.ascent, 0);
+      // place the fraction bar
+      dx = MirrorIfRTL(aDesiredSize.width, mLineRect.width,
+                       leftSpace + bmNum.width);
+      dy = aDesiredSize.ascent - mBoundingMetrics.ascent;
+      mLineRect.SetRect(dx, dy,
+                        mLineRect.width, aDesiredSize.height - 2 * padding);
+
+      // place denominator
+      dx = MirrorIfRTL(aDesiredSize.width, sizeDen.width,
+                       leftSpace + bmNum.width + mLineRect.width);
+      dy = aDesiredSize.ascent + denShift - sizeDen.ascent;
+      FinishReflowChild(frameDen, presContext, nsnull, sizeDen, dx, dy, 0);
     }
 
   }
@@ -549,8 +557,9 @@ class nsDisplayMathMLSlash : public nsDisplayItem {
 public:
   nsDisplayMathMLSlash(nsDisplayListBuilder* aBuilder,
                        nsIFrame* aFrame, const nsRect& aRect,
-                       nscoord aThickness)
-    : nsDisplayItem(aBuilder, aFrame), mRect(aRect), mThickness(aThickness) {
+                       nscoord aThickness, bool aRTL)
+    : nsDisplayItem(aBuilder, aFrame), mRect(aRect), mThickness(aThickness),
+      mRTL(aRTL) {
     MOZ_COUNT_CTOR(nsDisplayMathMLSlash);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -565,6 +574,7 @@ public:
 private:
   nsRect    mRect;
   nscoord   mThickness;
+  bool      mRTL;
 };
 
 void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
@@ -581,10 +591,19 @@ void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
   gfxContext *gfxCtx = aCtx->ThebesContext();
   gfxPoint delta = gfxPoint(presContext->AppUnitsToGfxUnits(mThickness), 0);
   gfxCtx->NewPath();
-  gfxCtx->MoveTo(rect.BottomLeft());
-  gfxCtx->LineTo(rect.BottomLeft() + delta);
-  gfxCtx->LineTo(rect.TopRight());
-  gfxCtx->LineTo(rect.TopRight() - delta);
+
+  if (mRTL) {
+    gfxCtx->MoveTo(rect.TopLeft());
+    gfxCtx->LineTo(rect.TopLeft() + delta);
+    gfxCtx->LineTo(rect.BottomRight());
+    gfxCtx->LineTo(rect.BottomRight() - delta);
+  } else {
+    gfxCtx->MoveTo(rect.BottomLeft());
+    gfxCtx->LineTo(rect.BottomLeft() + delta);
+    gfxCtx->LineTo(rect.TopRight());
+    gfxCtx->LineTo(rect.TopRight() - delta);
+  }
+
   gfxCtx->ClosePath();
   gfxCtx->Fill();
 }
@@ -596,7 +615,8 @@ nsMathMLmfracFrame::DisplaySlash(nsDisplayListBuilder* aBuilder,
                                  const nsDisplayListSet& aLists) {
   if (!aFrame->GetStyleVisibility()->IsVisible() || aRect.IsEmpty())
     return NS_OK;
-  
+
   return aLists.Content()->AppendNewToTop(new (aBuilder)
-      nsDisplayMathMLSlash(aBuilder, aFrame, aRect, aThickness));
+      nsDisplayMathMLSlash(aBuilder, aFrame, aRect, aThickness,
+                           NS_MATHML_IS_RTL(mPresentationData.flags)));
 }

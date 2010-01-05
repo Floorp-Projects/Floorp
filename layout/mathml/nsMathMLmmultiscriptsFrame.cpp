@@ -417,7 +417,11 @@ nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
         // place the base ...
         childFrame = baseFrame;
         dy = aDesiredSize.ascent - baseSize.ascent;
-        FinishReflowChild (baseFrame, PresContext(), nsnull, baseSize, dx, dy, 0);
+        FinishReflowChild (baseFrame, PresContext(), nsnull, baseSize,
+                           MirrorIfRTL(aDesiredSize.width,
+                                       baseSize.width,
+                                       dx),
+                           dy, 0);
         dx += bmBase.width + italicCorrection;
       }
       else if (mprescriptsFrame != childFrame) {
@@ -440,13 +444,21 @@ nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
 
           dy = aDesiredSize.ascent - subScriptSize.ascent +
             maxSubScriptShift;
-          FinishReflowChild (subScriptFrame, PresContext(), nsnull, subScriptSize,
-                             dx + (width-subScriptSize.width)/2, dy, 0);
+          FinishReflowChild (subScriptFrame, PresContext(), nsnull,
+                             subScriptSize,
+                             MirrorIfRTL(aDesiredSize.width,
+                                         subScriptSize.width,
+                                         dx + (width-subScriptSize.width)/2),
+                             dy, 0);
 
           dy = aDesiredSize.ascent - supScriptSize.ascent -
             maxSupScriptShift;
-          FinishReflowChild (supScriptFrame, PresContext(), nsnull, supScriptSize,
-                             dx + (width-supScriptSize.width)/2, dy, 0);
+          FinishReflowChild (supScriptFrame, PresContext(), nsnull,
+                             supScriptSize,
+                             MirrorIfRTL(aDesiredSize.width,
+                                         supScriptSize.width,
+                                         dx + (width-supScriptSize.width)/2),
+                             dy, 0);
 
           dx += width + scriptSpace;
         }
