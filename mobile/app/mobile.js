@@ -57,13 +57,9 @@ pref("javascript.options.showInConsole", false);
 pref("browser.dom.window.dump.enabled", false);
 
 /* cache prefs */
-#ifdef MOZ_PLATFORM_HILDON
-pref("browser.cache.disk.enable", true);
-pref("browser.cache.disk.capacity", 10240); // kilobytes
-#elifdef WINCE
 pref("browser.cache.disk.enable", false);
 pref("browser.cache.disk.capacity", 0); // kilobytes
-#endif
+
 pref("browser.cache.memory.enable", true);
 pref("browser.cache.memory.capacity", 1024); // kilobytes
 
