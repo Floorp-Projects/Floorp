@@ -4412,7 +4412,8 @@ var TabsProgressListener = {
 #ifdef MOZ_CRASHREPORTER
     if (aRequest instanceof Ci.nsIChannel &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT &&
+        gCrashReporter.enabled) {
       gCrashReporter.annotateCrashReport("URL", aRequest.URI.spec);
     }
 #endif
