@@ -345,6 +345,10 @@ var Browser = {
   startup: function() {
     var self = this;
 
+    let needOverride = Util.needHomepageOverride();
+    if (needOverride == "new profile")
+      this.initNewProfile();
+
     let container = document.getElementById("tile-container");
     let bv = this._browserView = new BrowserView(container, Browser.getVisibleRect);
 
@@ -499,7 +503,7 @@ var Browser = {
 
     // Command line arguments/initial homepage
     let whereURI = "about:blank";
-    switch (Util.needHomepageOverride()) {
+    switch (needOverride) {
       case "new profile":
         whereURI = "about:firstrun";
         break;
@@ -627,6 +631,44 @@ var Browser = {
       if (nameMatch && !nameMatch.test(plugins[i].name))
         continue;
       plugins[i].disabled = !enabled;
+    }
+  },
+
+  initNewProfile: function initNewProfile() {
+    let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
+    let device = sysInfo.get("device");
+
+#ifdef MOZ_PLATFORM_HILDON
+    // The flash plugin on the n8xx doesn't support the image expose fast
+    // drawing we are doing. Disable all plugins by default. Users can override
+    // in prefs
+    if (device == "Nokia N8xx") {
+      gPrefService.setBoolPref("plugins.enabled", false);
+      this.setPluginState(true);
+    }
+#endif
+    // set up the cache size
+    let cacheSize = -1;
+    try {
+      cacheSize = gPrefService.getIntPref("tile.cache.size");
+    } catch(e) {}
+
+    if (cacheSize == -1) {
+      switch (device) {
+#ifdef MOZ_PLATFORM_HILDON
+        case "Nokia N900":
+          cacheSize = 26;
+          break;
+        case "Nokia N8xx":
+          // N8xx has half the memory of N900 and crashes with higher numbers
+          cacheSize = 10;
+          break;
+#endif
+        default:
+          // Use a minimum number of tiles sice we don't know the device
+          cacheSize = 6;
+      }
+      gPrefService.setIntPref("tile.cache.size", cacheSize);
     }
   },
 
