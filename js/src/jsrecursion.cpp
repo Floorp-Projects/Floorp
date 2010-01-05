@@ -487,7 +487,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
             rval_ins = lir->insLoad(LIR_ld, lirbuf->sp, exit->sp_adj - sizeof(double));
             break;
           case TT_DOUBLE:
-            rval_ins = lir->insLoad(LIR_ldq, lirbuf->sp, exit->sp_adj - sizeof(double));
+            rval_ins = lir->insLoad(LIR_ldf, lirbuf->sp, exit->sp_adj - sizeof(double));
             break;
           case TT_FUNCTION:
           case TT_OBJECT:
