@@ -245,25 +245,6 @@ BrowserView.prototype = {
     try {
       cacheSize = gPrefService.getIntPref("tile.cache.size");
     } catch(e) {}
-
-    if (cacheSize == -1) {
-      let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-      let device = sysInfo.get("device");
-      switch (device) {
-#ifdef MOZ_PLATFORM_HILDON
-        case "Nokia N900":
-          cacheSize = 26;
-          break;
-        case "Nokia N8xx":
-          // N8xx has half the memory of N900 and crashes with higher numbers
-          cacheSize = 10;
-          break;
-#endif
-        default:
-          // Use a minimum number of tiles sice we don't know the device
-          cacheSize = 6;
-      }
-    }
     
     this._tileManager = new TileManager(this._appendTile, this._removeTile, this, cacheSize);
     this._visibleRectFactory = visibleRectFactory;
