@@ -1343,7 +1343,8 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
     /* Define a top-level property 'undefined' with the undefined value. */
     atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), JSVAL_VOID,
-                             JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT)) {
+                             JS_PropertyStub, JS_PropertyStub,
+                             JSPROP_PERMANENT | JSPROP_READONLY)) {
         return JS_FALSE;
     }
 
@@ -1550,7 +1551,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
         *resolved = JS_TRUE;
         return obj->defineProperty(cx, ATOM_TO_JSID(atom), JSVAL_VOID,
                                    JS_PropertyStub, JS_PropertyStub,
-                                   JSPROP_PERMANENT);
+                                   JSPROP_PERMANENT | JSPROP_READONLY);
     }
 
     /* Try for class constructors/prototypes named by well-known atoms. */
