@@ -197,6 +197,9 @@ namespace nanojit
 
     typedef SeqBuilder<NIns*> NInsList;
     typedef HashMap<NIns*, LIns*> NInsMap;
+#if NJ_USES_QUAD_CONSTANTS
+    typedef HashMap<uint64_t, uint64_t*> QuadConstantMap;
+#endif
 
 #ifdef VTUNE
     class avmplus::CodegenLIR;
@@ -326,6 +329,10 @@ namespace nanojit
             LInsp       findVictim(RegisterMask allow);
 
             Register    getBaseReg(LIns *i, int &d, RegisterMask allow);
+#if NJ_USES_QUAD_CONSTANTS
+            const uint64_t* 
+                        findQuadConstant(uint64_t q);
+#endif
             int         findMemFor(LIns* i);
             Register    findRegFor(LIns* i, RegisterMask allow);
             void        findRegFor2(RegisterMask allow, LIns* ia, Register &ra, LIns *ib, Register &rb);
@@ -354,6 +361,9 @@ namespace nanojit
             RegAllocMap         _branchStateMap;
             NInsMap             _patches;
             LabelStateMap       _labels;
+        #if NJ_USES_QUAD_CONSTANTS
+            QuadConstantMap     _quadConstants; 
+        #endif
 
             // We generate code into two places:  normal code chunks, and exit
             // code chunks (for exit stubs).  We use a hack to avoid having to

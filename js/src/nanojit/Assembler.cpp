@@ -66,6 +66,9 @@ namespace nanojit
         , _branchStateMap(alloc)
         , _patches(alloc)
         , _labels(alloc)
+    #if NJ_USES_QUAD_CONSTANTS
+        , _quadConstants(alloc)
+    #endif
         , _epilogue(NULL)
         , _err(None)
     #if PEDANTIC
@@ -165,6 +168,9 @@ namespace nanojit
         _branchStateMap.clear();
         _patches.clear();
         _labels.clear();
+    #if NJ_USES_QUAD_CONSTANTS
+        _quadConstants.clear();
+    #endif
     }
 
     void Assembler::registerResetAll()
@@ -530,8 +536,25 @@ namespace nanojit
         return r;
     }
 
+#if NJ_USES_QUAD_CONSTANTS
+    const uint64_t* Assembler::findQuadConstant(uint64_t q)
+    {
+        uint64_t* p = _quadConstants.get(q);
+        if (!p)
+        {
+            p = new (_dataAlloc) uint64_t;
+            *p = q;
+            _quadConstants.put(q, p);
+        }
+        return p;
+    }
+#endif
+
     int Assembler::findMemFor(LIns *ins)
     {
+#if NJ_USES_QUAD_CONSTANTS
+        NanoAssert(!ins->isconstq());
+#endif
         if (!ins->isUsed())
             ins->markAsUsed();
         if (!ins->getArIndex()) {
@@ -1677,7 +1700,14 @@ namespace nanojit
             // must findMemFor even if we're going to findRegFor; loop-carried
             // operands may spill on another edge, and we need them to always
             // spill to the same place.
-            findMemFor(op1);
+#if NJ_USES_QUAD_CONSTANTS
+            // exception: if quad constants are true constants, we should
+            // never call findMemFor on those ops
+            if (!op1->isconstq())
+#endif
+            {
+                findMemFor(op1);
+            }
             if (! (op1->isconst() || op1->isconstf() || op1->isconstq()))
                 findRegFor(op1, i->isop(LIR_flive) ? FpRegs : GpRegs);
         }
