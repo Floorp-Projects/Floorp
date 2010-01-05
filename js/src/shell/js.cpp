@@ -1757,10 +1757,37 @@ DisassembleValue(JSContext *cx, jsval v, bool lines, bool recursive)
 
 #undef SHOW_FLAG
 
-            if (FUN_NULL_CLOSURE(fun))
-                fputs(" NULL_CLOSURE", stdout);
-            else if (FUN_FLAT_CLOSURE(fun))
-                fputs(" FLAT_CLOSURE", stdout);
+            if (FUN_INTERPRETED(fun)) {
+                if (FUN_NULL_CLOSURE(fun))
+                    fputs(" NULL_CLOSURE", stdout);
+                else if (FUN_FLAT_CLOSURE(fun))
+                    fputs(" FLAT_CLOSURE", stdout);
+
+                if (fun->u.i.nupvars) {
+                    fputs("\nupvars: {\n", stdout);
+
+                    void *mark = JS_ARENA_MARK(&cx->tempPool);
+                    jsuword *localNames = js_GetLocalNameArray(cx, fun, &cx->tempPool);
+                    if (!localNames)
+                        return false;
+
+                    JSUpvarArray *uva = fun->u.i.script->upvars();
+                    uintN upvar_base = fun->countArgsAndVars();
+
+                    for (uint32 i = 0, n = uva->length; i < n; i++) {
+                        JSAtom *atom = JS_LOCAL_NAME_TO_ATOM(localNames[upvar_base + i]);
+                        uint32 cookie = uva->vector[i];
+
+                        printf("  %s: {skip:%u, slot:%u},\n",
+                               js_AtomToPrintableString(cx, atom),
+                               UPVAR_FRAME_SKIP(cookie),
+                               UPVAR_FRAME_SLOT(cookie));
+                    }
+
+                    JS_ARENA_RELEASE(&cx->tempPool, mark);
+                    putchar('}');
+                }
+            }
             putchar('\n');
         }
     }
