@@ -270,6 +270,10 @@ PluginInstanceParent::AnswerPStreamNotifyConstructor(PStreamNotifyParent* actor,
                                                      const bool& file,
                                                      NPError* result)
 {
+    bool streamDestroyed = false;
+    static_cast<StreamNotifyParent*>(actor)->
+        SetDestructionFlag(&streamDestroyed);
+
     if (!post) {
         *result = mNPNIface->geturlnotify(mNPP,
                                           NullableStringGet(url),
@@ -285,8 +289,11 @@ PluginInstanceParent::AnswerPStreamNotifyConstructor(PStreamNotifyParent* actor,
                                            file, actor);
     }
 
-    if (*result != NPERR_NO_ERROR)
-        PStreamNotifyParent::Call__delete__(actor, NPERR_GENERIC_ERROR);
+    if (!streamDestroyed) {
+        static_cast<StreamNotifyParent*>(actor)->ClearDestructionFlag();
+        if (*result != NPERR_NO_ERROR)
+            PStreamNotifyParent::Call__delete__(actor, NPERR_GENERIC_ERROR);
+    }
 
     return true;
 }
