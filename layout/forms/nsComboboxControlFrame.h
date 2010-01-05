@@ -98,7 +98,6 @@ public:
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
-  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
@@ -141,7 +140,7 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
-  virtual void Destroy();
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
   virtual nsFrameList GetChildList(nsIAtom* aListName) const;
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsFrameList&    aChildList);

@@ -2084,7 +2084,10 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
 
   // if a domain is given, check the host has permission
   if (!aCookieAttributes.host.IsEmpty()) {
-    aCookieAttributes.host.Trim(".");
+    // Tolerate leading '.' characters.
+    if (aCookieAttributes.host.First() == '.')
+      aCookieAttributes.host.Cut(0, 1);
+
     // switch to lowercase now, to avoid case-insensitive compares everywhere
     ToLowerCase(aCookieAttributes.host);
 
@@ -2296,8 +2299,8 @@ public:
   PRBool LessThan(const nsListIter &a, const nsListIter &b) const
   {
     // compare by entryclass pointer, then by index.
-    if (&a != &b)
-      return &a < &b;
+    if (a.entry != b.entry)
+      return a.entry < b.entry;
 
     return a.index < b.index;
   }

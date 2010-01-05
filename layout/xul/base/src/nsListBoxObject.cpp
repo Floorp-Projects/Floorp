@@ -194,7 +194,7 @@ nsListBoxObject::GetListBoxBody(PRBool aFlush)
 
   nsIFrame* frame = aFlush ? 
                       GetFrame(PR_FALSE) /* does Flush_Frames */ :
-                      shell->GetPrimaryFrameFor(mContent);
+                      mContent->GetPrimaryFrame();
   if (!frame)
     return nsnull;
 
@@ -202,8 +202,11 @@ nsListBoxObject::GetListBoxBody(PRBool aFlush)
   nsCOMPtr<nsIContent> content;
   FindBodyContent(frame->GetContent(), getter_AddRefs(content));
 
+  if (!content)
+    return nsnull;
+
   // this frame will be a nsGFXScrollFrame
-  frame = shell->GetPrimaryFrameFor(content);
+  frame = content->GetPrimaryFrame();
   if (!frame)
      return nsnull;
   nsIScrollableFrame* scrollFrame = do_QueryFrame(frame);

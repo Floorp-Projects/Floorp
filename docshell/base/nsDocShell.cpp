@@ -4497,7 +4497,7 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
             pPresShell->GetDocument()->FindContentForSubDocument(presShell->GetDocument());
         NS_ASSERTION(shellContent, "subshell not in the map");
 
-        nsIFrame* frame = pPresShell->GetPrimaryFrameFor(shellContent);
+        nsIFrame* frame = shellContent ? shellContent->GetPrimaryFrame() : nsnull;
         PRBool isDocShellOffScreen = PR_FALSE;
         docShell->GetIsOffScreenBrowser(&isDocShellOffScreen);
         if (frame && !frame->AreAncestorViewsVisible() && !isDocShellOffScreen)
@@ -6709,8 +6709,14 @@ nsDocShell::RestoreFromHistory()
         viewer->SetPreviousViewer(mContentViewer);
     }
 
+    // Order the mContentViewer setup just like Embed does.
+    mContentViewer = nsnull;
+
+    // Now that we're about to switch documents, forget all of our children.
+    // Note that we cached them as needed up in CaptureState above.
+    DestroyChildren();
+
     mContentViewer.swap(viewer);
-    viewer = nsnull; // force a release to complete ownership transfer
 
     // Grab all of the related presentation from the SHEntry now.
     // Clearing the viewer from the SHEntry will clear all of this state.
@@ -6764,8 +6770,6 @@ nsDocShell::RestoreFromHistory()
     // to avoid teardown of the presentation.
     mContentViewer->SetSticky(sticky);
 
-    // Now that we have switched documents, forget all of our children.
-    DestroyChildren();
     NS_ENSURE_SUCCESS(rv, rv);
 
     // mLSHE is now our currently-loaded document.
@@ -7311,6 +7315,10 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
         mContentViewer = nsnull;
     }
 
+    // Now that we're about to switch documents, forget all of our children.
+    // Note that we cached them as needed up in CaptureState above.
+    DestroyChildren();
+
     mContentViewer = aNewViewer;
 
     nsCOMPtr<nsIWidget> widget;
@@ -7366,9 +7374,6 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     // We don't show the mContentViewer yet, since we want to draw the old page
     // until we have enough of the new page to show.  Just return with the new
     // viewer still set to hidden.
-
-    // Now that we have switched documents, forget all of our children
-    DestroyChildren();
 
     return NS_OK;
 }

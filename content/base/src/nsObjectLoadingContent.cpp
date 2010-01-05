@@ -1665,17 +1665,7 @@ nsObjectLoadingContent::GetExistingFrame(FlushType aFlushType)
 
   nsIFrame* frame;
   do {
-    nsIDocument* doc = thisContent->GetCurrentDoc();
-    if (!doc) {
-      return nsnull; // No current doc -> no frame
-    }
-
-    nsIPresShell* shell = doc->GetPrimaryShell();
-    if (!shell) {
-      return nsnull; // No presentation -> no frame
-    }
-
-    frame = shell->GetPrimaryFrameFor(thisContent);
+    frame = thisContent->GetPrimaryFrame();
     if (!frame) {
       return nsnull;
     }
@@ -1686,6 +1676,8 @@ nsObjectLoadingContent::GetExistingFrame(FlushType aFlushType)
     
     // OK, let's flush out and try again.  Note that we want to reget
     // the document, etc, since flushing might run script.
+    nsIDocument* doc = thisContent->GetCurrentDoc();
+    NS_ASSERTION(doc, "Frame but no document?");
     mozFlushType flushType =
       aFlushType == eFlushLayout ? Flush_Layout : Flush_ContentAndNotify;
     doc->FlushPendingNotifications(flushType);

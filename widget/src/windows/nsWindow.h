@@ -153,7 +153,8 @@ public:
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
   NS_IMETHOD              EnableDragDrop(PRBool aEnable);
   NS_IMETHOD              CaptureMouse(PRBool aCapture);
-  NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
+  NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, nsIMenuRollup * aMenuRollup,
+                                              PRBool aDoCapture, PRBool aConsumeRollupEvent);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   virtual PRBool          HasPendingInputEvent();
   gfxASurface             *GetThebesSurface();
@@ -462,6 +463,7 @@ protected:
   static nsIWidget*     sRollupWidget;
   static PRBool         sRollupConsumeEvent;
   static nsIRollupListener* sRollupListener;
+  static nsIMenuRollup* sMenuRollup;
 
   // Mouse Clicks - static variable definitions for figuring
   // out 1 - 3 Clicks.

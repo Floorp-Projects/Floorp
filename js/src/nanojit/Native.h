@@ -119,12 +119,6 @@ namespace nanojit {
     };
 }
 
-    #ifdef NJ_STACK_GROWTH_UP
-        #define stack_direction(n)   n
-    #else
-        #define stack_direction(n)  -n
-    #endif
-
     #define isSPorFP(r)     ( (r)==SP || (r)==FP )
 
     #ifdef NJ_NO_VARIADIC_MACROS

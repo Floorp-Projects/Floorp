@@ -196,7 +196,7 @@ NS_IMETHODIMP nsImageFrame::GetAccessible(nsIAccessible** aAccessible)
 #endif
 
 void
-nsImageFrame::Destroy()
+nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Tell our image map, if there is one, to clean up
   // This causes the nsImageMap to unregister itself as
@@ -222,7 +222,7 @@ nsImageFrame::Destroy()
   if (mDisplayingIcon)
     gIconLoad->RemoveIconObserver(this);
 
-  nsSplittableFrame::Destroy();
+  nsSplittableFrame::DestroyFrom(aDestructRoot);
 }
 
 

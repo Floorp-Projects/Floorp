@@ -243,7 +243,6 @@ struct JSGCArenaInfo {
 
 /* GC flag definitions, must fit in 8 bits. */
 const uint8 GCF_MARK        = JS_BIT(0);
-const uint8 GCF_LOCK        = JS_BIT(1); /* lock request bit in API */
 
 /*
  * The private JSGCThing struct, which describes a JSRuntime.gcFreeList element.
@@ -843,20 +842,6 @@ FinishGCArenaLists(JSRuntime *rt)
     JS_ASSERT(rt->gcChunkList == 0);
 }
 
-/*
- * This function must not be called when thing is jsdouble.
- */
-static uint8 *
-GetGCThingFlags(void *thing)
-{
-    JSGCArenaInfo *a;
-    uint32 index;
-
-    a = THING_TO_ARENA(thing);
-    index = THING_TO_INDEX(thing, a->list->thingSize);
-    return THING_FLAGP(a, index);
-}
-
 intN
 js_GetExternalStringGCType(JSString *str)
 {
@@ -900,6 +885,9 @@ js_IsAboutToBeFinalized(void *thing)
     JSGCArenaInfo *a;
     uint32 index, flags;
 
+    if (JSString::isStatic(thing))
+        return false;
+
     a = THING_TO_ARENA(thing);
     if (!a->list) {
         /*
@@ -914,7 +902,7 @@ js_IsAboutToBeFinalized(void *thing)
     }
     index = THING_TO_INDEX(thing, a->list->thingSize);
     flags = *THING_FLAGP(a, index);
-    return !(flags & (GCF_MARK | GCF_LOCK));
+    return !(flags & GCF_MARK);
 }
 
 /* This is compatible with JSDHashEntryStub. */
@@ -924,16 +912,17 @@ typedef struct JSGCRootHashEntry {
     const char      *name;
 } JSGCRootHashEntry;
 
-/* Initial size of the gcRootsHash table (SWAG, small enough to amortize). */
-#define GC_ROOTS_SIZE   256
-
 /*
- * For a CPU with extremely large pages using them for GC things wastes
- * too much memory.
+ * Initial size of the gcRootsHash and gcLocksHash tables (SWAG, small enough
+ * to amortize).
  */
-#define GC_ARENAS_PER_CPU_PAGE_LIMIT JS_BIT(18 - GC_ARENA_SHIFT)
+const uint32 GC_ROOTS_SIZE = 256;
 
-JS_STATIC_ASSERT(GC_ARENAS_PER_CPU_PAGE_LIMIT <= NO_FREE_ARENAS);
+struct JSGCLockHashEntry : public JSDHashEntryHdr
+{
+    const void      *thing;
+    uint32          count;
+};
 
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
@@ -942,9 +931,13 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
     if (!JS_DHashTableInit(&rt->gcRootsHash, JS_DHashGetStubOps(), NULL,
                            sizeof(JSGCRootHashEntry), GC_ROOTS_SIZE)) {
         rt->gcRootsHash.ops = NULL;
-        return JS_FALSE;
+        return false;
     }
-    rt->gcLocksHash = NULL;     /* create lazily */
+    if (!JS_DHashTableInit(&rt->gcLocksHash, JS_DHashGetStubOps(), NULL,
+                           sizeof(JSGCLockHashEntry), GC_ROOTS_SIZE)) {
+        rt->gcLocksHash.ops = NULL;
+        return false;
+    }
 
     /*
      * Separate gcMaxMallocBytes from gcMaxBytes but initialize to maxbytes
@@ -968,7 +961,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
     rt->setGCLastBytes(8192);
 
     METER(memset(&rt->gcStats, 0, sizeof rt->gcStats));
-    return JS_TRUE;
+    return true;
 }
 
 #ifdef JS_GCMETER
@@ -998,53 +991,60 @@ UpdateArenaStats(JSGCArenaStats *st, uint32 nlivearenas, uint32 nkilledArenas,
 JS_FRIEND_API(void)
 js_DumpGCStats(JSRuntime *rt, FILE *fp)
 {
-    int i;
-    size_t sumArenas, sumTotalArenas;
-    size_t sumThings, sumMaxThings;
-    size_t sumThingSize, sumTotalThingSize;
-    size_t sumArenaCapacity, sumTotalArenaCapacity;
-    JSGCArenaStats *st;
-    size_t thingSize, thingsPerArena;
-    size_t sumAlloc, sumLocalAlloc, sumFail, sumRetry;
+    static const char *const GC_ARENA_NAMES[] = {
+        "double",
+        "object",
+        "function",
+#if JS_HAS_XML_SUPPORT
+        "xml",
+#endif
+        "string",
+        "external_string_0",
+        "external_string_1",
+        "external_string_2",
+        "external_string_3",
+        "external_string_4",
+        "external_string_5",
+        "external_string_6",
+        "external_string_7",
+    };
+    JS_STATIC_ASSERT(JS_ARRAY_LENGTH(GC_ARENA_NAMES) == FINALIZE_LIMIT + 1);
 
-    fprintf(fp, "\nGC allocation statistics:\n");
+    fprintf(fp, "\nGC allocation statistics:\n\n");
 
 #define UL(x)       ((unsigned long)(x))
 #define ULSTAT(x)   UL(rt->gcStats.x)
 #define PERCENT(x,y)  (100.0 * (double) (x) / (double) (y))
 
-    sumArenas = 0;
-    sumTotalArenas = 0;
-    sumThings = 0;
-    sumMaxThings = 0;
-    sumThingSize = 0;
-    sumTotalThingSize = 0;
-    sumArenaCapacity = 0;
-    sumTotalArenaCapacity = 0;
-    sumAlloc = 0;
-    sumLocalAlloc = 0;
-    sumFail = 0;
-    sumRetry = 0;
-    for (i = -1; i < (int) GC_NUM_FREELISTS; i++) {
+    size_t sumArenas = 0;
+    size_t sumTotalArenas = 0;
+    size_t sumThings = 0;
+    size_t sumMaxThings = 0;
+    size_t sumThingSize = 0;
+    size_t sumTotalThingSize = 0;
+    size_t sumArenaCapacity = 0;
+    size_t sumTotalArenaCapacity = 0;
+    size_t sumAlloc = 0;
+    size_t sumLocalAlloc = 0;
+    size_t sumFail = 0;
+    size_t sumRetry = 0;
+    for (int i = -1; i < (int) FINALIZE_LIMIT; i++) {
+        size_t thingSize, thingsPerArena;
+        JSGCArenaStats *st;
         if (i == -1) {
             thingSize = sizeof(jsdouble);
             thingsPerArena = DOUBLES_PER_ARENA;
             st = &rt->gcStats.doubleArenaStats;
-            fprintf(fp,
-                    "Arena list for double values (%lu doubles per arena):",
-                    UL(thingsPerArena));
         } else {
             thingSize = rt->gcArenaList[i].thingSize;
             thingsPerArena = THINGS_PER_ARENA(thingSize);
             st = &rt->gcStats.arenaStats[i];
-            fprintf(fp,
-                    "Arena list %d (thing size %lu, %lu things per arena):",
-                    i, UL(GC_FREELIST_NBYTES(i)), UL(thingsPerArena));
         }
-        if (st->maxarenas == 0) {
-            fputs(" NEVER USED\n", fp);
+        if (st->maxarenas == 0)
             continue;
-        }
+        fprintf(fp,
+                "%s arenas (thing size %lu, %lu things per arena):",
+                GC_ARENA_NAMES[i + 1], UL(thingSize), UL(thingsPerArena));
         putc('\n', fp);
         fprintf(fp, "           arenas before GC: %lu\n", UL(st->narenas));
         fprintf(fp, "       new arenas before GC: %lu (%.1f%%)\n",
@@ -1059,7 +1059,7 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
                 PERCENT(st->totalthings, thingsPerArena * st->totalarenas));
         fprintf(fp, "                 max things: %lu\n", UL(st->maxthings));
         fprintf(fp, "             alloc attempts: %lu\n", UL(st->alloc));
-        fprintf(fp, "        alloc without locks: %1u  (%.1f%%)\n",
+        fprintf(fp, "        alloc without locks: %lu  (%.1f%%)\n",
                 UL(st->localalloc), PERCENT(st->localalloc, st->alloc));
         sumArenas += st->narenas;
         sumTotalArenas += st->totalarenas;
@@ -1073,8 +1073,29 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
         sumLocalAlloc += st->localalloc;
         sumFail += st->fail;
         sumRetry += st->retry;
+        putc('\n', fp);
     }
-    fprintf(fp, "TOTAL STATS:\n");
+
+    fputs("Never used arenas:\n", fp);
+    for (int i = -1; i < (int) FINALIZE_LIMIT; i++) {
+        size_t thingSize, thingsPerArena;
+        JSGCArenaStats *st;
+        if (i == -1) {
+            thingSize = sizeof(jsdouble);
+            thingsPerArena = DOUBLES_PER_ARENA;
+            st = &rt->gcStats.doubleArenaStats;
+        } else {
+            thingSize = rt->gcArenaList[i].thingSize;
+            thingsPerArena = THINGS_PER_ARENA(thingSize);
+            st = &rt->gcStats.arenaStats[i];
+        }
+        if (st->maxarenas != 0)
+            continue;
+        fprintf(fp,
+                "%s (thing size %lu, %lu things per arena)\n",
+                GC_ARENA_NAMES[i + 1], UL(thingSize), UL(thingsPerArena));
+    }
+    fprintf(fp, "\nTOTAL STATS:\n");
     fprintf(fp, "            bytes allocated: %lu\n", UL(rt->gcBytes));
     fprintf(fp, "            total GC arenas: %lu\n", UL(sumArenas));
     fprintf(fp, "            total GC things: %lu\n", UL(sumThings));
@@ -1085,7 +1106,7 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
             PERCENT(sumTotalThingSize, sumTotalArenaCapacity));
     fprintf(fp, "allocation retries after GC: %lu\n", UL(sumRetry));
     fprintf(fp, "             alloc attempts: %lu\n", UL(sumAlloc));
-    fprintf(fp, "        alloc without locks: %1u  (%.1f%%)\n",
+    fprintf(fp, "        alloc without locks: %lu  (%.1f%%)\n",
             UL(sumLocalAlloc), PERCENT(sumLocalAlloc, sumAlloc));
     fprintf(fp, "        allocation failures: %lu\n", UL(sumFail));
     fprintf(fp, "         things born locked: %lu\n", ULSTAT(lockborn));
@@ -1112,10 +1133,6 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
 #undef UL
 #undef ULSTAT
 #undef PERCENT
-
-#ifdef JS_ARENAMETER
-    JS_DumpArenaStats(fp);
-#endif
 }
 #endif
 
@@ -1131,7 +1148,8 @@ js_FinishGC(JSRuntime *rt)
     JS_DumpArenaStats(stdout);
 #endif
 #ifdef JS_GCMETER
-    js_DumpGCStats(rt, stdout);
+    if (JS_WANT_GC_METER_PRINT)
+        js_DumpGCStats(rt, stdout);
 #endif
 
     rt->gcIteratorTable.clear();
@@ -1144,9 +1162,9 @@ js_FinishGC(JSRuntime *rt)
         JS_DHashTableFinish(&rt->gcRootsHash);
         rt->gcRootsHash.ops = NULL;
     }
-    if (rt->gcLocksHash) {
-        JS_DHashTableDestroy(rt->gcLocksHash);
-        rt->gcLocksHash = NULL;
+    if (rt->gcLocksHash.ops) {
+        JS_DHashTableFinish(&rt->gcLocksHash);
+        rt->gcLocksHash.ops = NULL;
     }
 }
 
@@ -1440,7 +1458,6 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
         return NULL;
     }
 
-    METER(JSGCArenaStats *astats = &cx->runtime->gcStats.arenaStats[thingKind]);
     bool canGC = !JS_ON_TRACE(cx) && !JS_THREAD_DATA(cx)->waiveGCQuota;
     bool doGC = canGC && IsGCThresholdReached(rt);
     JSGCArenaList *arenaList = &rt->gcArenaList[thingKind];
@@ -1456,7 +1473,7 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
              * see bug 162779 at https://bugzilla.mozilla.org/.
              */
             js_GC(cx, GC_LAST_DITCH);
-            METER(astats->retry++);
+            METER(cx->runtime->gcStats.arenaStats[thingKind].retry++);
             canGC = false;
 
             /*
@@ -1485,7 +1502,7 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
         if (a)
             break;
         if (!canGC) {
-            METER(astats->fail++);
+            METER(cx->runtime->gcStats.arenaStats[thingKind].fail++);
             JS_UNLOCK_GC(rt);
             return NULL;
         }
@@ -1544,7 +1561,7 @@ js_NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
         *freeListp = thing->link;
         cx->weakRoots.finalizableNewborns[thingKind] = thing;
         CheckGCFreeListLink(thing);
-        METER(astats->localalloc++);
+        METER(cx->runtime->gcStats.arenaStats[thingKind].localalloc++);
         return thing;
     }
 
@@ -1561,7 +1578,7 @@ js_NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
             thing = *freeListp;
             if (thing) {
                 *freeListp = thing->link;
-                METER(astats->localalloc++);
+                METER(cx->runtime->gcStats.arenaStats[thingKind].localalloc++);
                 break;
             }
         }
@@ -1732,13 +1749,12 @@ JSBool
 js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
 {
     /* Updates of metering counters here are not thread-safe. */
-    METER(JSGCArenaStats *astats = &cx->runtime->gcStats.doubleArenaStats);
-    METER(astats->alloc++);
+    METER(cx->runtime->gcStats.doubleArenaStats.alloc++);
 
     JSGCThing **freeListp = &JS_THREAD_DATA(cx)->gcFreeLists.doubles;
     JSGCThing *thing = *freeListp;
     if (thing) {
-        METER(astats->localalloc++);
+        METER(cx->runtime->gcStats.doubleArenaStats.localalloc++);
         JS_ASSERT(!JS_THREAD_DATA(cx)->localRootStack);
         CheckGCFreeListLink(thing);
         *freeListp = thing->link;
@@ -1755,7 +1771,7 @@ js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
             freeListp = &lrs->gcFreeLists.doubles;
             thing = *freeListp;
             if (thing) {
-                METER(astats->localalloc++);
+                METER(cx->runtime->gcStats.doubleArenaStats.localalloc++);
                 break;
             }
         }
@@ -1768,7 +1784,7 @@ js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
         if (!JS_ON_TRACE(cx)) {
             /* Trace code handle this on its own. */
             js_ReportOutOfMemory(cx);
-            METER(astats->fail++);
+            METER(cx->runtime->gcStats.doubleArenaStats.fail++);
         }
         return false;
     }
@@ -1794,85 +1810,27 @@ js_NewWeaklyRootedDouble(JSContext *cx, jsdouble d)
     return dp;
 }
 
-/*
- * Shallow GC-things can be locked just by setting the GCF_LOCK bit, because
- * they have no descendants to mark during the GC. Currently the optimization
- * is only used for non-dependant strings.
- */
-static uint8 *
-GetShallowGCThingFlag(void *thing)
-{
-    if (JSString::isStatic(thing))
-        return NULL;
-    JSGCArenaInfo *a = THING_TO_ARENA(thing);
-    if (!a->list || !IsFinalizableStringKind(a->list->thingKind))
-        return NULL;
-
-    JS_ASSERT(sizeof(JSString) == a->list->thingSize);
-    JSString *str = (JSString *) thing;
-    if (str->isDependent())
-        return NULL;
-
-    uint32 index = THING_TO_INDEX(thing, sizeof(JSString));
-    return THING_FLAGP(a, index);
-}
-
-/* This is compatible with JSDHashEntryStub. */
-typedef struct JSGCLockHashEntry {
-    JSDHashEntryHdr hdr;
-    const void      *thing;
-    uint32          count;
-} JSGCLockHashEntry;
-
 JSBool
 js_LockGCThingRT(JSRuntime *rt, void *thing)
 {
     if (!thing)
-        return JS_TRUE;
+        return true;
 
     JS_LOCK_GC(rt);
-
-    /*
-     * Avoid adding a rt->gcLocksHash entry for shallow things until someone
-     * nests a lock.
-     */
-    uint8 *flagp = GetShallowGCThingFlag(thing);
-    JSBool ok;
-    JSGCLockHashEntry *lhe;
-    if (flagp && !(*flagp & GCF_LOCK)) {
-        *flagp |= GCF_LOCK;
-        METER(rt->gcStats.lock++);
-        ok = JS_TRUE;
-        goto out;
-    }
-
-    if (!rt->gcLocksHash) {
-        rt->gcLocksHash = JS_NewDHashTable(JS_DHashGetStubOps(), NULL,
-                                           sizeof(JSGCLockHashEntry),
-                                           GC_ROOTS_SIZE);
-        if (!rt->gcLocksHash) {
-            ok = JS_FALSE;
-            goto out;
+    JSGCLockHashEntry *lhe = (JSGCLockHashEntry *)
+                             JS_DHashTableOperate(&rt->gcLocksHash, thing,
+                                                  JS_DHASH_ADD);
+    bool ok = !!lhe;
+    if (ok) {
+        if (!lhe->thing) {
+            lhe->thing = thing;
+            lhe->count = 1;
+        } else {
+            JS_ASSERT(lhe->count >= 1);
+            lhe->count++;
         }
+        METER(rt->gcStats.lock++);
     }
-
-    lhe = (JSGCLockHashEntry *)
-          JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_ADD);
-    if (!lhe) {
-        ok = JS_FALSE;
-        goto out;
-    }
-    if (!lhe->thing) {
-        lhe->thing = thing;
-        lhe->count = 1;
-    } else {
-        JS_ASSERT(lhe->count >= 1);
-        lhe->count++;
-    }
-
-    METER(rt->gcStats.lock++);
-    ok = JS_TRUE;
-  out:
     JS_UNLOCK_GC(rt);
     return ok;
 }
@@ -1884,30 +1842,15 @@ js_UnlockGCThingRT(JSRuntime *rt, void *thing)
         return;
 
     JS_LOCK_GC(rt);
-
-    uint8 *flagp = GetShallowGCThingFlag(thing);
-    JSGCLockHashEntry *lhe;
-    if (flagp && !(*flagp & GCF_LOCK))
-        goto out;
-    if (!rt->gcLocksHash ||
-        (lhe = (JSGCLockHashEntry *)
-         JS_DHashTableOperate(rt->gcLocksHash, thing,
-                              JS_DHASH_LOOKUP),
-             JS_DHASH_ENTRY_IS_FREE(&lhe->hdr))) {
-        /* Shallow entry is not in the hash -> clear its lock bit. */
-        if (flagp)
-            *flagp &= ~GCF_LOCK;
-        else
-            goto out;
-    } else {
-        if (--lhe->count != 0)
-            goto out;
-        JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_REMOVE);
+    JSGCLockHashEntry *lhe = (JSGCLockHashEntry *)
+                             JS_DHashTableOperate(&rt->gcLocksHash, thing,
+                                                  JS_DHASH_LOOKUP);
+    if (JS_DHASH_ENTRY_IS_BUSY(lhe)) {
+        rt->gcPoke = true;
+        if (--lhe->count == 0)
+            JS_DHashTableOperate(&rt->gcLocksHash, thing, JS_DHASH_REMOVE);
+        METER(rt->gcStats.unlock++);
     }
-
-    rt->gcPoke = JS_TRUE;
-    METER(rt->gcStats.unlock++);
-  out:
     JS_UNLOCK_GC(rt);
 }
 
@@ -2185,8 +2128,10 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
         /* NOTREACHED */
     }
 
-    JS_ASSERT(kind == GetFinalizableArenaTraceKind(THING_TO_ARENA(thing)));
-    flagp = GetGCThingFlags(thing);
+    a = THING_TO_ARENA(thing);
+    JS_ASSERT(kind == GetFinalizableArenaTraceKind(a));
+    index = THING_TO_INDEX(thing, a->list->thingSize);
+    flagp = THING_FLAGP(a, index);
     if (*flagp & GCF_MARK)
         goto out;
 
@@ -2572,8 +2517,7 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
     JSContext *iter, *acx;
 
     JS_DHashTableEnumerate(&rt->gcRootsHash, gc_root_traversal, trc);
-    if (rt->gcLocksHash)
-        JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_traversal, trc);
+    JS_DHashTableEnumerate(&rt->gcLocksHash, gc_lock_traversal, trc);
     js_TraceAtomState(trc, allAtoms);
     js_TraceRuntimeNumberState(trc);
     js_MarkTraps(trc);
@@ -2820,19 +2764,13 @@ FinalizeArenaList(JSContext *cx, unsigned thingKind,
                     JS_ASSERT(nextFree < thingsEnd);
                 }
             } else {
-                JS_ASSERT(!(*flagp & ~(GCF_MARK | GCF_LOCK)));
+                JS_ASSERT(!(*flagp & ~GCF_MARK));
                 if (*flagp) {
-                    *flagp &= ~GCF_MARK;
+                    *flagp = 0;
                     allClear = false;
                     METER(nthings++);
                     continue;
                 }
-
-                /*
-                 * Call the finalizer with cleared flags so
-                 * js_IsAboutToBeFinalized will be false.
-                 */
-                *flagp = 0;
                 ::FinalizeGCThing(cx, reinterpret_cast<T *>(thing), thingKind);
 #ifdef DEBUG
                 memset(thing, JS_FREE_PATTERN, sizeof(T));
@@ -2879,7 +2817,7 @@ FinalizeArenaList(JSContext *cx, unsigned thingKind,
     }
     arenaList->cursor = arenaList->head;
 
-    METER(UpdateArenaStats(&rt->gcStats.arenaStats[thingKind],
+    METER(UpdateArenaStats(&cx->runtime->gcStats.arenaStats[thingKind],
                            nlivearenas, nkilledarenas, nthings));
 }
 
@@ -3220,8 +3158,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
             emptyArenas = a;
             METER(nkilledarenas++);
         } else {
-            a->hasMarkedDoubles = false;
-            ap = &a->prev;
 #ifdef JS_GCMETER
             for (size_t i = 0; i != DOUBLES_PER_ARENA; ++i) {
                 if (IsMarkedDouble(a, i))
@@ -3229,6 +3165,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
             }
             METER(nlivearenas++);
 #endif
+            a->hasMarkedDoubles = false;
+            ap = &a->prev;
         }
     }
     METER(UpdateArenaStats(&rt->gcStats.doubleArenaStats,

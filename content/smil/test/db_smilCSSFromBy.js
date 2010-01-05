@@ -87,6 +87,27 @@ var _fromByTestLists =
 // List of attribute/testcase-list bundles to be tested
 var gFromByBundles =
 [
+  new TestcaseBundle(gPropList.clip, [
+    new AnimTestcaseFromBy("rect(1px, 2px, 3px, 4px)",
+                           "rect(10px, 20px, 30px, 40px)",
+                           { midComp: "rect(6px, 12px, 18px, 24px)",
+                             toComp:  "rect(11px, 22px, 33px, 44px)"}),
+    // Adding "auto" (either as a standalone value or a subcomponent value)
+    // should cause animation to fail.
+    new AnimTestcaseFromBy("auto", "auto", { noEffect: 1 }),
+    new AnimTestcaseFromBy("auto",
+                           "rect(auto, auto, auto, auto)", { noEffect: 1 }),
+    new AnimTestcaseFromBy("rect(auto, auto, auto, auto)",
+                           "rect(auto, auto, auto, auto)", { noEffect: 1 }),
+    new AnimTestcaseFromBy("rect(1px, 2px, 3px, 4px)", "auto", { noEffect: 1 }),
+    new AnimTestcaseFromBy("auto", "rect(1px, 2px, 3px, 4px)", { noEffect: 1 }),
+    new AnimTestcaseFromBy("rect(1px, 2px, 3px, auto)",
+                           "rect(10px, 20px, 30px, 40px)", { noEffect: 1 }),
+    new AnimTestcaseFromBy("rect(1px, auto, 3px, 4px)",
+                           "rect(10px, auto, 30px, 40px)", { noEffect: 1 }),
+    new AnimTestcaseFromBy("rect(1px, 2px, 3px, 4px)",
+                           "rect(10px, auto, 30px, 40px)", { noEffect: 1 }),
+  ]),
   // Check that 'by' animations for 'cursor' has no effect
   new TestcaseBundle(gPropList.cursor, [
     new AnimTestcaseFromBy("crosshair", "move"),

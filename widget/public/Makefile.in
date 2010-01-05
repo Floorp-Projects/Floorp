@@ -58,6 +58,7 @@ EXPORTS		= \
 		nsINativeKeyBindings.h \
 		nsIDeviceContextSpec.h \
 		nsIMenuRollup.h \
+		nsIRollupListener.h \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
@@ -97,7 +98,6 @@ XPIDLSRCS	= \
 		nsIClipboard.idl \
 		nsIClipboardHelper.idl \
 		nsIClipboardOwner.idl \
-		nsIRollupListener.idl \
 		nsIBaseWindow.idl \
 		nsIBidiKeyboard.idl \
 		nsIScreen.idl \

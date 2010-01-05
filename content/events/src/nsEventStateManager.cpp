@@ -1444,12 +1444,12 @@ nsEventStateManager::ExecuteAccessKey(nsTArray<PRUint32>& aAccessCharCodes,
     AppendUCS4ToUTF16(ch, accessKey);
     for (count = 1; count <= length; ++count) {
       content = mAccessKeys[(start + count) % length];
-      frame = mPresContext->PresShell()->GetPrimaryFrameFor(content);
+      frame = content->GetPrimaryFrame();
       if (IsAccessKeyTarget(content, frame, accessKey)) {
         PRBool shouldActivate = sKeyCausesActivation;
         while (shouldActivate && ++count <= length) {
           nsIContent *oc = mAccessKeys[(start + count) % length];
-          nsIFrame *of = mPresContext->PresShell()->GetPrimaryFrameFor(oc);
+          nsIFrame *of = oc->GetPrimaryFrame();
           if (IsAccessKeyTarget(oc, of, accessKey))
             shouldActivate = PR_FALSE;
         }
@@ -1683,93 +1683,88 @@ nsEventStateManager::FireContextClick()
   // the same. (Note: saari and I have decided that we don't have to reset |mCurrentTarget|
   // when we're through because no one else is doing anything more with this
   // event and it will get reset on the very next event to the correct frame).
-  mCurrentTarget = nsnull;
-  nsIPresShell *shell = mPresContext->GetPresShell();
-  if ( shell ) {
-    mCurrentTarget = shell->GetPrimaryFrameFor(mGestureDownFrameOwner);
+  mCurrentTarget = mPresContext->GetPrimaryFrameFor(mGestureDownContent);
+  if (mCurrentTarget) {
+    NS_ASSERTION(mPresContext == mCurrentTarget->PresContext(),
+                 "a prescontext returned a primary frame that didn't belong to it?");
 
-    if ( mCurrentTarget ) {
-      NS_ASSERTION(mPresContext == mCurrentTarget->PresContext(),
-                   "a prescontext returned a primary frame that didn't belong to it?");
+    // before dispatching, check that we're not on something that
+    // doesn't get a context menu
+    nsIAtom *tag = mGestureDownContent->Tag();
+    PRBool allowedToDispatch = PR_TRUE;
 
-      // before dispatching, check that we're not on something that
-      // doesn't get a context menu
-      nsIAtom *tag = mGestureDownContent->Tag();
-      PRBool allowedToDispatch = PR_TRUE;
-
-      if (mGestureDownContent->IsXUL()) {
-        if (tag == nsGkAtoms::scrollbar ||
-            tag == nsGkAtoms::scrollbarbutton ||
-            tag == nsGkAtoms::button)
+    if (mGestureDownContent->IsXUL()) {
+      if (tag == nsGkAtoms::scrollbar ||
+          tag == nsGkAtoms::scrollbarbutton ||
+          tag == nsGkAtoms::button)
+        allowedToDispatch = PR_FALSE;
+      else if (tag == nsGkAtoms::toolbarbutton) {
+        // a <toolbarbutton> that has the container attribute set
+        // will already have its own dropdown.
+        if (nsContentUtils::HasNonEmptyAttr(mGestureDownContent,
+                kNameSpaceID_None, nsGkAtoms::container)) {
           allowedToDispatch = PR_FALSE;
-        else if (tag == nsGkAtoms::toolbarbutton) {
-          // a <toolbarbutton> that has the container attribute set
-          // will already have its own dropdown.
-          if (nsContentUtils::HasNonEmptyAttr(mGestureDownContent,
-                  kNameSpaceID_None, nsGkAtoms::container)) {
-            allowedToDispatch = PR_FALSE;
-          } else {
-            // If the toolbar button has an open menu, don't attempt to open
+        } else {
+          // If the toolbar button has an open menu, don't attempt to open
             // a second menu
-            if (mGestureDownContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::open,
-                                                 nsGkAtoms::_true, eCaseMatters)) {
-              allowedToDispatch = PR_FALSE;
-            }
+          if (mGestureDownContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::open,
+                                               nsGkAtoms::_true, eCaseMatters)) {
+            allowedToDispatch = PR_FALSE;
           }
         }
       }
-      else if (mGestureDownContent->IsHTML()) {
-        nsCOMPtr<nsIFormControl> formCtrl(do_QueryInterface(mGestureDownContent));
+    }
+    else if (mGestureDownContent->IsHTML()) {
+      nsCOMPtr<nsIFormControl> formCtrl(do_QueryInterface(mGestureDownContent));
 
-        if (formCtrl) {
-          // of all form controls, only ones dealing with text are
-          // allowed to have context menus
-          PRInt32 type = formCtrl->GetType();
+      if (formCtrl) {
+        // of all form controls, only ones dealing with text are
+        // allowed to have context menus
+        PRInt32 type = formCtrl->GetType();
 
-          allowedToDispatch = (type == NS_FORM_INPUT_TEXT ||
-                               type == NS_FORM_INPUT_PASSWORD ||
-                               type == NS_FORM_INPUT_FILE ||
-                               type == NS_FORM_TEXTAREA);
-        }
-        else if (tag == nsGkAtoms::applet ||
-                 tag == nsGkAtoms::embed  ||
-                 tag == nsGkAtoms::object) {
-          allowedToDispatch = PR_FALSE;
+        allowedToDispatch = (type == NS_FORM_INPUT_TEXT ||
+                             type == NS_FORM_INPUT_PASSWORD ||
+                             type == NS_FORM_INPUT_FILE ||
+                             type == NS_FORM_TEXTAREA);
+      }
+      else if (tag == nsGkAtoms::applet ||
+               tag == nsGkAtoms::embed  ||
+               tag == nsGkAtoms::object) {
+        allowedToDispatch = PR_FALSE;
+      }
+    }
+
+    if (allowedToDispatch) {
+      // make sure the widget sticks around
+      nsCOMPtr<nsIWidget> targetWidget(mCurrentTarget->GetWindow());
+      // init the event while mCurrentTarget is still good
+      nsMouseEvent event(PR_TRUE, NS_CONTEXTMENU,
+                         targetWidget,
+                         nsMouseEvent::eReal);
+      event.clickCount = 1;
+      FillInEventFromGestureDown(&event);
+        
+      // stop selection tracking, we're in control now
+      if (mCurrentTarget)
+      {
+        nsCOMPtr<nsFrameSelection> frameSel =
+          mCurrentTarget->GetFrameSelection();
+        
+        if (frameSel && frameSel->GetMouseDownState()) {
+          // note that this can cause selection changed events to fire if we're in
+          // a text field, which will null out mCurrentTarget
+          frameSel->SetMouseDownState(PR_FALSE);
         }
       }
 
-      if (allowedToDispatch) {
-        // make sure the widget sticks around
-        nsCOMPtr<nsIWidget> targetWidget(mCurrentTarget->GetWindow());
-        // init the event while mCurrentTarget is still good
-        nsMouseEvent event(PR_TRUE, NS_CONTEXTMENU,
-                           targetWidget,
-                           nsMouseEvent::eReal);
-        event.clickCount = 1;
-        FillInEventFromGestureDown(&event);
-        
-        // stop selection tracking, we're in control now
-        if (mCurrentTarget)
-        {
-          nsCOMPtr<nsFrameSelection> frameSel =
-            mCurrentTarget->GetFrameSelection();
-        
-          if (frameSel && frameSel->GetMouseDownState()) {
-            // note that this can cause selection changed events to fire if we're in
-            // a text field, which will null out mCurrentTarget
-            frameSel->SetMouseDownState(PR_FALSE);
-          }
-        }
+      // dispatch to DOM
+      nsEventDispatcher::Dispatch(mGestureDownContent, mPresContext, &event,
+                                  nsnull, &status);
 
-        // dispatch to DOM
-        nsEventDispatcher::Dispatch(mGestureDownContent, mPresContext, &event,
-                                    nsnull, &status);
-
-        // We don't need to dispatch to frame handling because no frames
-        // watch NS_CONTEXTMENU except for nsMenuFrame and that's only for
-        // dismissal. That's just as well since we don't really know
-        // which frame to send it to.
-      }
+      // We don't need to dispatch to frame handling because no frames
+      // watch NS_CONTEXTMENU except for nsMenuFrame and that's only for
+      // dismissal. That's just as well since we don't really know
+      // which frame to send it to.
     }
   }
 
@@ -1874,7 +1869,7 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 {
   NS_ASSERTION(aPresContext, "This shouldn't happen.");
   if ( IsTrackingDragGesture() ) {
-    mCurrentTarget = aPresContext->GetPresShell()->GetPrimaryFrameFor(mGestureDownFrameOwner);
+    mCurrentTarget = mGestureDownFrameOwner->GetPrimaryFrame();
 
     if (!mCurrentTarget) {
       StopTrackingDragGesture();
@@ -2216,16 +2211,9 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
       nsCOMPtr<nsIContent> content = do_QueryInterface(dragTarget);
       if (content->NodeInfo()->Equals(nsGkAtoms::treechildren,
                                       kNameSpaceID_XUL)) {
-        nsIDocument* doc = content->GetCurrentDoc();
-        if (doc) {
-          nsIPresShell* presShell = doc->GetPrimaryShell();
-          if (presShell) {
-            nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
-            if (frame) {
-              nsTreeBodyFrame* treeBody = do_QueryFrame(frame);
-              treeBody->GetSelectionRegion(getter_AddRefs(region));
-            }
-          }
+        nsTreeBodyFrame* treeBody = do_QueryFrame(content->GetPrimaryFrame());
+        if (treeBody) {
+          treeBody->GetSelectionRegion(getter_AddRefs(region));
         }
       }
     }
@@ -2788,7 +2776,7 @@ nsEventStateManager::GetParentScrollingView(nsInputEvent *aEvent,
     because they are not used by DoScrollText().
   */
 
-  nsIFrame* frameFrame = pPresShell->GetPrimaryFrameFor(frameContent);
+  nsIFrame* frameFrame = frameContent->GetPrimaryFrame();
   if (!frameFrame) return NS_ERROR_FAILURE;
 
   NS_IF_ADDREF(presCtxOuter = pPresShell->GetPresContext());
@@ -3577,14 +3565,11 @@ public:
   virtual void HandleEvent(nsEventChainPostVisitor& aVisitor)
   {
     if (aVisitor.mPresContext) {
-      nsIPresShell* shell = aVisitor.mPresContext->GetPresShell();
-      if (shell) {
-        nsIFrame* frame = shell->GetPrimaryFrameFor(mTarget);
-        if (frame) {
-          frame->HandleEvent(aVisitor.mPresContext,
-                             (nsGUIEvent*) aVisitor.mEvent,
-                             &aVisitor.mEventStatus);
-        }
+      nsIFrame* frame = aVisitor.mPresContext->GetPrimaryFrameFor(mTarget);
+      if (frame) {
+        frame->HandleEvent(aVisitor.mPresContext,
+                           (nsGUIEvent*) aVisitor.mEvent,
+                           &aVisitor.mEventStatus);
       }
     }
   }
@@ -3616,12 +3601,11 @@ nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
     nsEventDispatcher::Dispatch(aTargetContent, mPresContext, &event, nsnull,
                                 &status, &callback);
 
-    nsIPresShell *shell = mPresContext ? mPresContext->GetPresShell() : nsnull;
-    if (shell) {
-      // Although the primary frame was checked in event callback, 
-      // it may not be the same object after event dispatching and handling.
-      // So we need to refetch it.
-      targetFrame = shell->GetPrimaryFrameFor(aTargetContent);
+    // Although the primary frame was checked in event callback, 
+    // it may not be the same object after event dispatching and handling.
+    // So we need to refetch it.
+    if (mPresContext) {
+      targetFrame = mPresContext->GetPrimaryFrameFor(aTargetContent);
     }
   }
 
@@ -4059,7 +4043,7 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
   }
 
   if (mCurrentTargetContent) {
-    mCurrentTarget = shell->GetPrimaryFrameFor(mCurrentTargetContent);
+    mCurrentTarget = mPresContext->GetPrimaryFrameFor(mCurrentTargetContent);
     if (mCurrentTarget) {
       *aFrame = mCurrentTarget;
       return NS_OK;
@@ -4232,8 +4216,10 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     if (!mPresContext || mPresContext->IsDynamic()) {
       newHover = aContent;
     } else {
-      nsIFrame *frame = aContent ?
-        mPresContext->PresShell()->GetPrimaryFrameFor(aContent) : nsnull;
+      NS_ASSERTION(!aContent ||
+                   aContent->GetCurrentDoc() == mPresContext->PresShell()->GetDocument(),
+                   "Unexpected document");
+      nsIFrame *frame = aContent ? aContent->GetPrimaryFrame() : nsnull;
       if (frame && nsLayoutUtils::IsViewportScrollbarFrame(frame)) {
         // The scrollbars of viewport should not ignore the hover state.
         // Because they are *not* the content of the web page.

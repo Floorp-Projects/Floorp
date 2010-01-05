@@ -234,6 +234,7 @@
 #include "nsPaintRequest.h"
 #include "nsIDOMNotifyPaintEvent.h"
 #include "nsIDOMScrollAreaEvent.h"
+#include "nsIDOMTransitionEvent.h"
 #include "nsIDOMNSDocumentStyle.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMDocumentTraversal.h"
@@ -1365,6 +1366,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(ScrollAreaEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(EventListenerInfo, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(TransitionEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
@@ -3785,6 +3788,11 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(EventListenerInfo, nsIEventListenerInfo)
     DOM_CLASSINFO_MAP_ENTRY(nsIEventListenerInfo)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(TransitionEvent, nsIDOMTransitionEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTransitionEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
@@ -7415,12 +7423,15 @@ nsEventReceiverSH::AddEventListenerHelper(JSContext *cx, JSObject *obj,
     return JS_FALSE;
   }
 
-  OBJ_TO_INNER_OBJECT(cx, obj);
-
   nsresult rv = sXPConnect->GetJSObjectOfWrapper(cx, obj, &obj);
   if (NS_FAILED(rv)) {
     nsDOMClassInfo::ThrowJSException(cx, rv);
 
+    return JS_FALSE;
+  }
+
+  OBJ_TO_INNER_OBJECT(cx, obj);
+  if (!obj) {
     return JS_FALSE;
   }
 
@@ -7729,10 +7740,7 @@ GetBindingURL(nsIContent *aContent, nsIDocument *aDocument,
   // otherwise, don't do anything else here unless we're dealing with
   // XUL.
   nsIPresShell *shell = aDocument->GetPrimaryShell();
-  nsIFrame *frame;
-  if (!shell ||
-      (frame = shell->GetPrimaryFrameFor(aContent)) ||
-      !aContent->IsXUL()) {
+  if (!shell || aContent->GetPrimaryFrame() || !aContent->IsXUL()) {
     *aResult = nsnull;
 
     return PR_TRUE;
@@ -9794,7 +9802,23 @@ nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
+                                     JSContext *cx, JSObject *obj, jsval id,
+                                     PRUint32 flags, JSObject **objp,
+                                     PRBool *_retval)
+{
+  // Make sure the plugin instance is loaded and instantiated, if
+  // possible.
 
+  nsCOMPtr<nsIPluginInstance> pi;
+  nsresult rv = GetPluginInstanceIfSafe(wrapper, obj, getter_AddRefs(pi));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return nsElementSH::NewResolve(wrapper, cx, obj, id, flags, objp,
+                                 _retval);
+}
+ 
 // HTMLOptionsCollection helper
 
 NS_IMETHODIMP

@@ -4463,7 +4463,7 @@ nsBrowserAccess.prototype = {
         newWindow = content;
         if (aURI) {
           let referrer = aOpener ? makeURI(aOpener.location.href) : null;
-          gBrowser.loadURIWithFlag(aURI.spec, loadflags, referrer, null, null);
+          gBrowser.loadURIWithFlags(aURI.spec, loadflags, referrer, null, null);
         }
         if (!gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground"))
           content.focus();

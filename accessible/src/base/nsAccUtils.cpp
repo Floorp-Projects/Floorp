@@ -368,7 +368,7 @@ nsAccUtils::HasAccessibleChildren(nsIDOMNode *aNode)
   if (!presShell)
     return PR_FALSE;
 
-  nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
+  nsIFrame *frame = content->GetPrimaryFrame();
   if (!frame)
     return PR_FALSE;
   

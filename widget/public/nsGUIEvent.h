@@ -91,7 +91,7 @@ class nsHashKey;
 #define NS_POPUP_EVENT                    23
 #define NS_COMMAND_EVENT                  24
 #define NS_SCROLLAREA_EVENT               25
-
+#define NS_TRANSITION_EVENT               26
 
 #define NS_UI_EVENT                       27
 #ifdef MOZ_SVG
@@ -448,6 +448,8 @@ class nsHashKey;
 #define NS_SCROLLAREA_EVENT_START    4100
 #define NS_SCROLLEDAREACHANGED       (NS_SCROLLAREA_EVENT_START)
 
+#define NS_TRANSITION_EVENT_START    4200
+#define NS_TRANSITION_END            (NS_TRANSITION_EVENT_START)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -1329,6 +1331,21 @@ public:
   PRFloat64 delta;      // Delta for magnify and rotate events
 };
 
+class nsTransitionEvent : public nsEvent
+{
+public:
+  nsTransitionEvent(PRBool isTrusted, PRUint32 msg,
+                    const nsString &propertyNameArg, float elapsedTimeArg)
+    : nsEvent(isTrusted, msg, NS_TRANSITION_EVENT),
+      propertyName(propertyNameArg), elapsedTime(elapsedTimeArg)
+  {
+  }
+
+  nsString propertyName;
+  float elapsedTime;
+};
+
+
 /**
  * Event status for D&D Event
  */
@@ -1637,7 +1654,7 @@ inline PRBool NS_IsEventUsingCoordinates(nsEvent* aEvent)
  */
 inline PRBool NS_IsEventTargetedAtFocusedWindow(nsEvent* aEvent)
 {
-  return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) ||
+  return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_RELATED_EVENT(aEvent) ||
          NS_IS_CONTEXT_MENU_KEY(aEvent) || NS_IS_CONTENT_COMMAND_EVENT(aEvent);
 }
 

@@ -1,0 +1,20 @@
+<html class="reftest-wait">
+<head>
+<style>
+  div::first-letter { color: red; font-size: 200%; background-color: blue; }
+</style>
+<script>
+function boom() {
+  document.documentElement.offsetWidth;
+  var s = document.getElementById("s");
+  s.parentNode.removeChild(s);
+  document.documentElement.offsetWidth;
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload="boom();">
+  <div>
+    <span id="s" style="position: absolute;">abcdefh</span>T
+  </div>
+</body>

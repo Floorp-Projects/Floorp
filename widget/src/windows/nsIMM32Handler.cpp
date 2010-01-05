@@ -1650,8 +1650,8 @@ nsIMM32Handler::OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction)
   // char :            JCH1|JCH2|JCH3
   // offset:           0011 1122 2233
   // positioning:      2301 2301 2301
-  nsIntRect cursorInTopLevel;
-  ResolveIMECaretPos(aWindow, nsIntRect(cursor, nsIntSize(0, 0)),
+  nsIntRect cursorInTopLevel, cursorRect(cursor, nsIntSize(0, 0));
+  ResolveIMECaretPos(aWindow, cursorRect,
                      aWindow->GetTopLevelWindow(PR_FALSE), cursorInTopLevel);
   PRInt32 cursorXInChar = cursorInTopLevel.x - charAtPt.mReply.mRect.x;
   int positioning = cursorXInChar * 4 / charAtPt.mReply.mRect.width;

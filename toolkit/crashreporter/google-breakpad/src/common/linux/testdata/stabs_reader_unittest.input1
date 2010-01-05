@@ -1,0 +1,19 @@
+SO      10   11   0x02 builddir/
+FUN     20   21   0x12 not the SO with source file name we expected 
+SO      30   31   0x22 
+SO      40   41   0x32 builddir1/
+SO      50   51   0x42 file1.c
+LSYM    60   61   0x52 not the FUN we're looking for
+FUN     70   71   0x62 fun1
+BINCL   80   81   0x72 something to ignore in a FUN body
+SLINE   90   91   0x82
+SOL    100  101   0x92 header.h
+SLINE  110  111  0x102
+FUN    120  121  0x112 fun2:some stabs type info here, to trim from the name
+SLINE  130  131  0x122
+SOL    140  141  0x132 file1.c
+SLINE  150  151  0x142
+SO     160  161  0x152
+LSYM   170  171  0x162
+SO     180  181  0x182 file3.c
+SO     190  191  0x192

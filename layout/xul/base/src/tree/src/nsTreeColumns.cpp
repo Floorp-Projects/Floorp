@@ -93,49 +93,29 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeColumn)
 NS_INTERFACE_MAP_END
 
 nsIFrame*
-nsTreeColumn::GetFrame(nsTreeBodyFrame* aBodyFrame)
-{
-  NS_PRECONDITION(aBodyFrame, "null frame?");
-
-  nsIPresShell *shell = aBodyFrame->PresContext()->PresShell();
-  if (!shell)
-    return nsnull;
-
-  return shell->GetPrimaryFrameFor(mContent);
-}
-
-nsIFrame*
 nsTreeColumn::GetFrame()
 {
   NS_ENSURE_TRUE(mContent, nsnull);
 
-  nsCOMPtr<nsIDocument> document = mContent->GetDocument();
-  if (!document)
-    return nsnull;
-
-  nsIPresShell *shell = document->GetPrimaryShell();
-  if (!shell)
-    return nsnull;
-
-  return shell->GetPrimaryFrameFor(mContent);
+  return mContent->GetPrimaryFrame();
 }
 
 PRBool
 nsTreeColumn::IsLastVisible(nsTreeBodyFrame* aBodyFrame)
 {
-  NS_ASSERTION(GetFrame(aBodyFrame), "should have checked for this already");
+  NS_ASSERTION(GetFrame(), "should have checked for this already");
 
   // cyclers are fixed width, don't adjust them
   if (IsCycler())
     return PR_FALSE;
 
   // we're certainly not the last visible if we're not visible
-  if (GetFrame(aBodyFrame)->GetRect().width == 0)
+  if (GetFrame()->GetRect().width == 0)
     return PR_FALSE;
 
   // try to find a visible successor
   for (nsTreeColumn *next = GetNext(); next; next = next->GetNext()) {
-    nsIFrame* frame = next->GetFrame(aBodyFrame);
+    nsIFrame* frame = next->GetFrame();
     if (frame && frame->GetRect().width > 0)
       return PR_FALSE;
   }
@@ -145,7 +125,7 @@ nsTreeColumn::IsLastVisible(nsTreeBodyFrame* aBodyFrame)
 nsresult
 nsTreeColumn::GetRect(nsTreeBodyFrame* aBodyFrame, nscoord aY, nscoord aHeight, nsRect* aResult)
 {
-  nsIFrame* frame = GetFrame(aBodyFrame);
+  nsIFrame* frame = GetFrame();
   if (!frame) {
     *aResult = nsRect();
     return NS_ERROR_FAILURE;
@@ -165,7 +145,7 @@ nsTreeColumn::GetRect(nsTreeBodyFrame* aBodyFrame, nscoord aY, nscoord aHeight, 
 nsresult
 nsTreeColumn::GetXInTwips(nsTreeBodyFrame* aBodyFrame, nscoord* aResult)
 {
-  nsIFrame* frame = GetFrame(aBodyFrame);
+  nsIFrame* frame = GetFrame();
   if (!frame) {
     *aResult = 0;
     return NS_ERROR_FAILURE;
@@ -177,7 +157,7 @@ nsTreeColumn::GetXInTwips(nsTreeBodyFrame* aBodyFrame, nscoord* aResult)
 nsresult
 nsTreeColumn::GetWidthInTwips(nsTreeBodyFrame* aBodyFrame, nscoord* aResult)
 {
-  nsIFrame* frame = GetFrame(aBodyFrame);
+  nsIFrame* frame = GetFrame();
   if (!frame) {
     *aResult = 0;
     return NS_ERROR_FAILURE;
@@ -648,17 +628,12 @@ nsTreeColumns::EnsureColumns()
     if (!colsContent)
       return;
 
-    nsCOMPtr<nsIDocument> document = treeContent->GetDocument();
-    nsIPresShell *shell = document->GetPrimaryShell();
-    if (!shell)
-      return;
-
     nsIContent* colContent =
       nsTreeUtils::GetDescendantChild(colsContent, nsGkAtoms::treecol);
     if (!colContent)
       return;
 
-    nsIFrame* colFrame = shell->GetPrimaryFrameFor(colContent);
+    nsIFrame* colFrame = colContent->GetPrimaryFrame();
     if (!colFrame)
       return;
 

@@ -45,15 +45,14 @@ class nsIContent;
 struct nsRect;
 
 #define NS_IIMAGEMAP_IID \
-{ 0x36a48085, 0xc213, 0x4464, { 0xab, 0x60, 0x41, 0x2e, 0xc8, 0xe8, 0xb1, 0xfe } }
-
+{ 0x2fca3d7e, 0x5b1f, 0x4ecf, \
+ { 0xb5, 0x7a, 0x84, 0x24, 0x97, 0x81, 0x2e, 0x62 } }
 
 class nsIImageMap : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IIMAGEMAP_IID)
 
   NS_IMETHOD GetBoundsForAreaContent(nsIContent *aContent, 
-                                     nsPresContext* aPresContext, 
                                      nsRect& aBounds) = 0;
 };
 

@@ -562,6 +562,31 @@ XPC_NW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSBool
+GetwrappedJSObject(JSContext *cx, JSObject *obj, jsval *vp)
+{
+  // If we're wrapping an untrusted content wrapper, then we should
+  // return a safe wrapper for the underlying native object. Otherwise,
+  // such a wrapper would be superfluous.
+
+  nsIScriptSecurityManager *ssm = GetSecurityManager();
+  nsCOMPtr<nsIPrincipal> prin;
+  nsresult rv = ssm->GetObjectPrincipal(cx, obj, getter_AddRefs(prin));
+  if (NS_FAILED(rv)) {
+    return ThrowException(rv, cx);
+  }
+
+  jsval v = OBJECT_TO_JSVAL(obj);
+
+  PRBool isSystem;
+  if (NS_SUCCEEDED(ssm->IsSystemPrincipal(prin, &isSystem)) && isSystem) {
+    *vp = v;
+    return JS_TRUE;
+  }
+
+  return XPCSafeJSObjectWrapper::WrapObject(cx, JS_GetScopeChain(cx), v, vp);
+}
+
+static JSBool
 XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
                         JSBool aIsSet)
 {
@@ -611,27 +636,7 @@ XPC_NW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
 
   if (!aIsSet &&
       id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
-    // If we're wrapping an untrusted content wrapper, then we should
-    // return a safe wrapper for the underlying native object. Otherwise,
-    // such a wrapper would be superfluous.
-
-    jsval nativeVal = OBJECT_TO_JSVAL(nativeObj);
-
-    nsIScriptSecurityManager *ssm = GetSecurityManager();
-    nsCOMPtr<nsIPrincipal> prin;
-    nsresult rv = ssm->GetObjectPrincipal(cx, nativeObj,
-                                          getter_AddRefs(prin));
-    if (NS_FAILED(rv)) {
-      return ThrowException(rv, cx);
-    }
-
-    PRBool isSystem;
-    if (NS_SUCCEEDED(ssm->IsSystemPrincipal(prin, &isSystem)) && isSystem) {
-      *vp = nativeVal;
-      return JS_TRUE;
-    }
-
-    return XPCSafeJSObjectWrapper::WrapObject(cx, nsnull, nativeVal, vp);
+    return GetwrappedJSObject(cx, nativeObj, vp);
   }
 
   return GetOrSetNativeProperty(cx, obj, wrappedNative, id, vp, aIsSet,
@@ -1158,6 +1163,31 @@ XPC_NW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   return NativeToString(cx, wrappedNative, argc, argv, rval, JS_TRUE);
 }
 
+static JSBool
+UnwrapNW(JSContext *cx, uintN argc, jsval *vp)
+{
+  if (argc != 1) {
+    return ThrowException(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx);
+  }
+
+  jsval v = JS_ARGV(cx, vp)[0];
+  if (JSVAL_IS_PRIMITIVE(v)) {
+    return ThrowException(NS_ERROR_INVALID_ARG, cx);
+  }
+
+  if (!IsNativeWrapper(JSVAL_TO_OBJECT(v))) {
+    JS_SET_RVAL(cx, vp, v);
+    return JS_TRUE;
+  }
+
+  return GetwrappedJSObject(cx, JSVAL_TO_OBJECT(v), vp);
+}
+
+static JSFunctionSpec static_functions[] = {
+  JS_FN("unwrap", UnwrapNW, 1, 0),
+  JS_FS_END
+};
+
 // static
 PRBool
 XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
@@ -1166,7 +1196,7 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
   JSObject *class_obj =
     ::JS_InitClass(ccx, aGlobalObject, nsnull, &internal::NWClass.base,
                    XPCNativeWrapperCtor, 0, nsnull, nsnull,
-                   nsnull, nsnull);
+                   nsnull, static_functions);
   if (!class_obj) {
     NS_WARNING("can't initialize the XPCNativeWrapper class");
     return PR_FALSE;

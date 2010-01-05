@@ -166,7 +166,7 @@ function testClassList(e) {
   // item() method
 
   // TODO out of bounds array indexing should return undefined according to the
-  // WebIDL spec. They are returning an empty string at the moment.
+  // WebIDL spec. They are returning an empty string at the moment. (bug 529328)
   var OOB_VALUE = "";
   todo_is(OOB_VALUE, undefined, "Wrong out of bounds value");
 
@@ -250,6 +250,11 @@ function testClassList(e) {
   is(e.classList.contains("a"), true, "wrong classList.contains() result");
   is(e.classList.contains("b"), true, "wrong classList.contains() result");
 
+  // Test for bug 530171
+  e.setAttribute("class", "null undefined");
+  is(e.classList.contains(null), true, "wrong classList.contains() result");
+  is(e.classList.contains(undefined), true, "wrong classList.contains() result");
+
   // add() method
 
   function checkAdd(before, argument, after) {
@@ -271,6 +276,10 @@ function testClassList(e) {
   checkAdd("a", "b", "a b");
   checkAdd("a b c", "d", "a b c d");
   checkAdd("a b c ", "d", "a b c d");
+
+  // Test for bug 530171
+  checkAdd(null, null, "null");
+  checkAdd(null, undefined, "undefined");
 
   // remove() method
 
@@ -307,6 +316,10 @@ function testClassList(e) {
 
   checkRemove("\ra\na\ta\f", "a", "");
 
+  // Test for bug 530171
+  checkRemove("null", null, "");
+  checkRemove("undefined", undefined, "");
+
   // toggle() method
 
   function checkToggle(before, argument, expectedRes, after) {
@@ -332,6 +345,12 @@ function testClassList(e) {
   checkToggle(" a b c b b", "b", false, " a c");
   checkToggle(" a b  c  ", "c", false, " a b");
   checkToggle(" a b c ", "a", false, "b c ");
+
+  // Test for bug 530171
+  checkToggle("null", null, false, "");
+  checkToggle("", null, true, "null");
+  checkToggle("undefined", undefined, false, "");
+  checkToggle("", undefined, true, "undefined");
 }
 var content = document.getElementById("content");
 

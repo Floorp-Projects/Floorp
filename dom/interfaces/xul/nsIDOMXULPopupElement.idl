@@ -39,7 +39,7 @@
 #include "nsIDOMElement.idl"
 #include "nsIDOMXULElement.idl"
 
-[scriptable, uuid(c32390a8-2bd8-4d1b-bf9f-1b1d0a944d19)]
+[scriptable, uuid(d647cb9a-aa67-4549-9219-b0345fcefe67)]
 interface nsIDOMXULPopupElement : nsIDOMXULElement {
   const unsigned short      BEFORE_START                   = 1;
   const unsigned short      BEFORE_END                     = 2;

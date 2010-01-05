@@ -1248,7 +1248,7 @@ nsAccessible::TakeFocus()
       if (ancestorContent) {
         nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
         if (presShell) {
-          nsIFrame *frame = presShell->GetPrimaryFrameFor(ancestorContent);
+          nsIFrame *frame = ancestorContent->GetPrimaryFrame();
           if (frame && frame->IsFocusable()) {
 
             content = ancestorContent;            
@@ -3049,6 +3049,7 @@ nsAccessible::CacheChildren()
   // Seed the frame hint early while we're still on a container node.
   // This is better than doing the GetPrimaryFrameFor() later on
   // a text node, because text nodes aren't in the frame map.
+  // XXXbz is this code still needed?
   walker.mState.frame = GetFrame();
 
   walker.GetFirstChild();
@@ -3204,7 +3205,7 @@ PRBool nsAccessible::CheckVisibilityInParentChain(nsIDocument* aDocument, nsIVie
         if (!shell) {
           return PR_FALSE;
         }
-        nsIFrame* frame = shell->GetPrimaryFrameFor(content);
+        nsIFrame* frame = content->GetPrimaryFrame();
         while (frame != nsnull && !frame->HasView()) {
           frame = frame->GetParent();
         }
@@ -3312,7 +3313,9 @@ nsAccessible::ComputeGroupAttributes(PRUint32 aRole,
       aRole != nsIAccessibleRole::ROLE_RADIOBUTTON &&
       aRole != nsIAccessibleRole::ROLE_PAGETAB &&
       aRole != nsIAccessibleRole::ROLE_OPTION &&
-      aRole != nsIAccessibleRole::ROLE_OUTLINEITEM)
+      aRole != nsIAccessibleRole::ROLE_OUTLINEITEM &&
+      aRole != nsIAccessibleRole::ROLE_ROW &&
+      aRole != nsIAccessibleRole::ROLE_GRID_CELL)
     return NS_OK;
 
   PRUint32 baseRole = aRole;
@@ -3424,6 +3427,12 @@ nsAccessible::ComputeGroupAttributes(PRUint32 aRole,
       }
     } else
       groupLevel++; // level is 1-index based
+
+  } else if (aRole == nsIAccessibleRole::ROLE_ROW &&
+             nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_TREE_TABLE) {
+    // It is a row inside flatten treegrid. Group level is always 1 until it is
+    // overriden by aria-level attribute.
+    groupLevel = 1;
   }
 
   nsAccUtils::SetAccGroupAttrs(aAttributes, groupLevel, positionInGroup,

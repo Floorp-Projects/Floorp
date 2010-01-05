@@ -300,20 +300,6 @@ NS_QUERYFRAME_HEAD(nsComboboxControlFrame)
   NS_QUERYFRAME_ENTRY(nsIScrollableViewProvider)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
-NS_IMPL_QUERY_INTERFACE1(nsComboboxControlFrame, nsIRollupListener)
-
-NS_IMETHODIMP_(nsrefcnt)
-nsComboboxControlFrame::AddRef()
-{
-  return 2;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsComboboxControlFrame::Release()
-{
-  return 1;
-}
-
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsComboboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
 {
@@ -427,7 +413,7 @@ nsComboboxControlFrame::ShowList(PRBool aShowList)
     if (view) {
       nsIWidget* widget = view->GetWidget();
       if (widget)
-        widget->CaptureRollupEvents(this, mDroppedDown, mDroppedDown);
+        widget->CaptureRollupEvents(this, nsnull, mDroppedDown, mDroppedDown);
     }
   }
 
@@ -1210,7 +1196,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
 }
 
 void
-nsComboboxControlFrame::Destroy()
+nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Revoke any pending RedisplayTextEvent
   mRedisplayTextEvent.Revoke();
@@ -1226,16 +1212,16 @@ nsComboboxControlFrame::Destroy()
       if (view) {
         nsIWidget* widget = view->GetWidget();
         if (widget)
-          widget->CaptureRollupEvents(this, PR_FALSE, PR_TRUE);
+          widget->CaptureRollupEvents(this, nsnull, PR_FALSE, PR_TRUE);
       }
     }
   }
 
   // Cleanup frames in popup child list
-  mPopupFrames.DestroyFrames();
+  mPopupFrames.DestroyFramesFrom(aDestructRoot);
   nsContentUtils::DestroyAnonymousContent(&mDisplayContent);
   nsContentUtils::DestroyAnonymousContent(&mButtonContent);
-  nsBlockFrame::Destroy();
+  nsBlockFrame::DestroyFrom(aDestructRoot);
 }
 
 

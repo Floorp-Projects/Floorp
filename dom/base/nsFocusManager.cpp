@@ -1306,13 +1306,13 @@ nsFocusManager::CheckIfFocusable(nsIContent* aContent, PRUint32 aFlags)
   if (presContext && presContext->Type() == nsPresContext::eContext_PrintPreview)
     return nsnull;
 
-  nsIFrame* frame = shell->GetPrimaryFrameFor(aContent);
+  nsIFrame* frame = aContent->GetPrimaryFrame();
   if (!frame)
     return nsnull;
 
   if (aContent->Tag() == nsGkAtoms::area && aContent->IsHTML()) {
     // HTML areas do not have their own frame, and the img frame we get from
-    // GetPrimaryFrameFor() is not relevant as to whether it is focusable or
+    // GetPrimaryFrame() is not relevant as to whether it is focusable or
     // not, so we have to do all the relevant checks manually for them.
     return frame->AreAncestorViewsVisible() &&
            frame->GetStyleVisibility()->IsVisible() &&
@@ -1409,7 +1409,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
     // But don't do this if we are blurring due to the window being lowered,
     // otherwise, the parent window can get raised again.
     if (mActiveWindow) {
-      nsIFrame* contentFrame = presShell->GetPrimaryFrameFor(content);
+      nsIFrame* contentFrame = content->GetPrimaryFrame();
       nsIObjectFrame* objectFrame = do_QueryFrame(contentFrame);
       if (objectFrame) {
         // note that the presshell's widget is being retrieved here, not the one
@@ -1602,13 +1602,17 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
       nsPresContext* presContext = presShell->GetPresContext();
       presContext->EventStateManager()->SetContentState(aContent, NS_EVENT_STATE_FOCUS);  
 
-      // if this is an object/plug-in, focus the plugin's widget
-      nsIFrame* contentFrame = presShell->GetPrimaryFrameFor(aContent);
-      nsIObjectFrame* objectFrame = do_QueryFrame(contentFrame);
-      if (objectFrame) {
-        nsIWidget* widget = objectFrame->GetWidget();
-        if (widget)
-          widget->SetFocus(PR_FALSE);
+      // if this is an object/plug-in, focus the plugin's widget.  Note that we might
+      // no longer be in the same document, due to the events we fired above when
+      // aIsNewDocument.
+      if (presShell->GetDocument() == aContent->GetDocument()) {
+        nsIFrame* contentFrame = aContent->GetPrimaryFrame();
+        nsIObjectFrame* objectFrame = do_QueryFrame(contentFrame);
+        if (objectFrame) {
+          nsIWidget* widget = objectFrame->GetWidget();
+          if (widget)
+            widget->SetFocus(PR_FALSE);
+        }
       }
 
       nsIMEStateManager::OnChangeFocus(presContext, aContent);
@@ -1906,7 +1910,9 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
 
   nsCOMPtr<nsFrameSelection> frameSelection;
   if (aContent) {
-    nsIFrame *focusFrame = aPresShell->GetPrimaryFrameFor(aContent);
+    NS_ASSERTION(aContent->GetDocument() == aPresShell->GetDocument(),
+                 "Wrong document?");
+    nsIFrame *focusFrame = aContent->GetPrimaryFrame();
     if (focusFrame)
       frameSelection = focusFrame->GetFrameSelection();
   }
@@ -2001,7 +2007,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
 
   nsIFrame *startFrame = nsnull;
   if (startContent) {
-    startFrame = aPresShell->GetPrimaryFrameFor(startContent);
+    startFrame = startContent->GetPrimaryFrame();
     if (isCollapsed) {
       // Next check to see if our caret is at the very end of a node
       // If so, the caret is actually sitting in front of the next
@@ -2152,7 +2158,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
 
   PRInt32 tabIndex = forward ? 1 : 0;
   if (startContent) {
-    nsIFrame* frame = presShell->GetPrimaryFrameFor(startContent);
+    nsIFrame* frame = startContent->GetPrimaryFrame();
     if (startContent->Tag() == nsGkAtoms::area &&
         startContent->IsHTML())
       startContent->IsFocusable(&tabIndex);
@@ -2333,7 +2339,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
       rootContent = doc->GetRootContent();
       startContent = do_QueryInterface(piWindow->GetFrameElementInternal());
       if (startContent) {
-        nsIFrame* frame = presShell->GetPrimaryFrameFor(startContent);
+        nsIFrame* frame = startContent->GetPrimaryFrame();
         if (!frame)
           return NS_OK;
 
@@ -2415,7 +2421,7 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
   PRBool getNextFrame = PR_TRUE;
   nsCOMPtr<nsIContent> iterStartContent = aStartContent;
   while (1) {
-    nsIFrame* startFrame = aPresShell->GetPrimaryFrameFor(iterStartContent);
+    nsIFrame* startFrame = iterStartContent->GetPrimaryFrame();
     // if there is no frame, look for another content node that has a frame
     if (!startFrame) {
       // if the root content doesn't have a frame, just return
@@ -2730,7 +2736,7 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
   if (rootContent) {
     if (aCheckVisibility) {
       nsIPresShell* presShell = aDocument->GetPrimaryShell();
-      if (!presShell || !presShell->GetPrimaryFrameFor(rootContent))
+      if (!presShell || !rootContent->GetPrimaryFrame())
         return nsnull;
     }
 
@@ -2928,7 +2934,7 @@ nsFocusManager::GetFocusInSelection(nsPIDOMWindow* aWindow,
 
   // Method #1: Keep going up while we look - an ancestor might be focusable
   // We could end the loop earlier, such as when we're no longer
-  // in the same frame, by comparing getPrimaryFrameFor(selectionContent)
+  // in the same frame, by comparing selectionContent->GetPrimaryFrame()
   // with a variable holding the starting selectionContent
   while (testContent) {
     // Keep testing while selectionContent is equal to something,

@@ -420,6 +420,16 @@ _cairo_quartz_init_glyph_metrics (cairo_quartz_scaled_font_t *font,
 	!CGFontGetGlyphBBoxesPtr (font_face->cgFont, &glyph, 1, &bbox))
 	goto FAIL;
 
+    /* broken fonts like Al Bayan return incorrect bounds for some null characters,
+       see https://bugzilla.mozilla.org/show_bug.cgi?id=534260 */
+    if (unlikely (bbox.origin.x == -32767 &&
+                  bbox.origin.y == -32767 &&
+                  bbox.size.width == 65534 &&
+                  bbox.size.height == 65534)) {
+        bbox.origin.x = bbox.origin.y = 0;
+        bbox.size.width = bbox.size.height = 0;
+    }
+
     status = _cairo_matrix_compute_basis_scale_factors (&font->base.scale,
 						  &xscale, &yscale, 1);
     if (status)

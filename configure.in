@@ -1533,6 +1533,24 @@ if test "$GNU_CXX"; then
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-variadic-macros"
     fi
 
+    AC_CACHE_CHECK(whether the compiler supports -Werror=return-type,
+                   ac_has_werror_return_type,
+        [
+            AC_LANG_SAVE
+            AC_LANG_CPLUSPLUS
+            _SAVE_CXXFLAGS="$CXXFLAGS"
+            CXXFLAGS="$CXXFLAGS -Werror=return-type"
+            AC_TRY_COMPILE([],
+                           [return(0);],
+                           ac_has_werror_return_type="yes",
+                           ac_has_werror_return_type="no")
+            CXXFLAGS="$_SAVE_CXXFLAGS"
+            AC_LANG_RESTORE
+        ])
+    if test "$ac_has_werror_return_type" = "yes"; then
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=return-type"
+    fi
+
 else
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -D_MOZILLA_CONFIG_H_ $(ACDEFINES)'
 fi
@@ -5088,7 +5106,7 @@ then
 fi
 
 dnl ========================================================
-dnl = GnomeVFS support module
+dnl = GnomeVFS, GIO and GConf support module
 dnl ========================================================
 
 if test "$MOZ_X11"
@@ -5101,6 +5119,9 @@ then
         MOZ_ENABLE_GCONF=1
     fi
 
+    dnl ========================================================
+    dnl = GnomeVFS support module
+    dnl ========================================================
     MOZ_ARG_DISABLE_BOOL(gnomevfs,
     [  --disable-gnomevfs      Disable GnomeVFS support ],
         MOZ_ENABLE_GNOMEVFS=,
@@ -5119,29 +5140,17 @@ then
             fi
             MOZ_ENABLE_GNOMEVFS=
         ])
+    else
+        if test `echo "$MOZ_EXTENSIONS" | grep -c gnomevfs` -ne 0; then
+            PKG_CHECK_MODULES(MOZ_GNOMEVFS, gnome-vfs-2.0 >= $GNOMEVFS_VERSION gnome-vfs-module-2.0 >= $GNOMEVFS_VERSION,[
+              MOZ_GNOMEVFS_LIBS=`echo $MOZ_GNOMEVFS_LIBS | sed 's/-llinc\>//'`
+            ])
+        fi
     fi
 
     AC_SUBST(MOZ_ENABLE_GNOMEVFS)
     AC_SUBST(MOZ_GNOMEVFS_CFLAGS)
     AC_SUBST(MOZ_GNOMEVFS_LIBS)
-
-    if test "$MOZ_ENABLE_GCONF"
-    then
-        PKG_CHECK_MODULES(MOZ_GCONF, gconf-2.0 >= $GCONF_VERSION,[
-            MOZ_GCONF_LIBS=`echo $MOZ_GCONF_LIBS | sed 's/-llinc\>//'`
-            MOZ_ENABLE_GCONF=1
-        ],[
-            MOZ_ENABLE_GCONF=
-        ])
-    fi
-
-    if test "$MOZ_ENABLE_GCONF"; then
-        AC_DEFINE(MOZ_ENABLE_GCONF)
-    fi
-
-    AC_SUBST(MOZ_ENABLE_GCONF)
-    AC_SUBST(MOZ_GCONF_CFLAGS)
-    AC_SUBST(MOZ_GCONF_LIBS)
 
     dnl ========================================================
     dnl = GIO support module
@@ -5169,78 +5178,32 @@ then
     AC_SUBST(MOZ_ENABLE_GIO)
     AC_SUBST(MOZ_GIO_CFLAGS)
     AC_SUBST(MOZ_GIO_LIBS)
-fi
-
-dnl ========================================================
-dnl = libgnomeui support module
-dnl ========================================================
-
-if test "$MOZ_ENABLE_GTK2"
-then
-    MOZ_ENABLE_GNOMEUI=1
-
-    MOZ_ARG_DISABLE_BOOL(gnomeui,
-    [  --disable-gnomeui       Disable libgnomeui support (default: auto, optional at runtime) ],
-        MOZ_ENABLE_GNOMEUI=,
-        MOZ_ENABLE_GNOMEUI=force)
-
-    if test "$MOZ_ENABLE_GNOMEUI"
+   
+    dnl ========================================================
+    dnl = GConf support module
+    dnl ========================================================
+    if test "$MOZ_ENABLE_GCONF"
     then
-        PKG_CHECK_MODULES(MOZ_GNOMEUI, libgnomeui-2.0 >= $GNOMEUI_VERSION,
-        [
-            MOZ_GNOMEUI_LIBS=`echo $MOZ_GNOMEUI_LIBS | sed 's/-llinc\>//'`
-            MOZ_ENABLE_GNOMEUI=1
+        PKG_CHECK_MODULES(MOZ_GCONF, gconf-2.0 >= $GCONF_VERSION gobject-2.0 ,[
+            MOZ_GCONF_LIBS=`echo $MOZ_GCONF_LIBS | sed 's/-llinc\>//'`
+            MOZ_ENABLE_GCONF=1
         ],[
-            if test "$MOZ_ENABLE_GNOMEUI" = "force"
+            if test "$MOZ_ENABLE_GCONF" = "force"
             then
-                AC_MSG_ERROR([* * * Could not find libgnomeui-2.0 >= $GNOMEUI_VERSION])
+                AC_MSG_ERROR([* * * Could not find gconf-2.0 ])
             fi
-            MOZ_ENABLE_GNOMEUI=
+            MOZ_ENABLE_GCONF=
         ])
     fi
 
-    if test "$MOZ_ENABLE_GNOMEUI"; then
-        AC_DEFINE(MOZ_ENABLE_GNOMEUI)
+    if test "$MOZ_ENABLE_GCONF"; then
+        AC_DEFINE(MOZ_ENABLE_GCONF)
     fi
 
-    # The GNOME component is built if gtk2, gconf and gnome-vfs
-    # are all available.
-
-    if test "$MOZ_ENABLE_GTK2" -a "$MOZ_ENABLE_GCONF" && \
-            (test "$MOZ_ENABLE_GNOMEVFS" || test "$MOZ_ENABLE_GIO"); then
-      MOZ_ENABLE_GNOME_COMPONENT=1
-    else
-      MOZ_ENABLE_GNOME_COMPONENT=
-    fi
-
-    AC_SUBST(MOZ_ENABLE_GNOME_COMPONENT)
+    AC_SUBST(MOZ_ENABLE_GCONF)
+    AC_SUBST(MOZ_GCONF_CFLAGS)
+    AC_SUBST(MOZ_GCONF_LIBS)
 fi
-AC_SUBST(MOZ_ENABLE_GNOMEUI)
-AC_SUBST(MOZ_GNOMEUI_CFLAGS)
-AC_SUBST(MOZ_GNOMEUI_LIBS)
-
-dnl ========================================================
-dnl = dbus support
-dnl ========================================================
-
-if test "$MOZ_ENABLE_GTK2" || test "$MOZ_ENABLE_QT"
-then
-    MOZ_ENABLE_DBUS=1
-
-    MOZ_ARG_DISABLE_BOOL(dbus,
-    [  --disable-dbus       Disable dbus support ],
-        MOZ_ENABLE_DBUS=,
-        MOZ_ENABLE_DBUS=1)
-
-    if test "$MOZ_ENABLE_DBUS"
-    then
-        PKG_CHECK_MODULES(MOZ_DBUS_GLIB, dbus-glib-1 >= $DBUS_VERSION)
-        AC_DEFINE(MOZ_ENABLE_DBUS)
-    fi
-fi
-AC_SUBST(MOZ_ENABLE_DBUS)
-AC_SUBST(MOZ_DBUS_GLIB_CFLAGS)
-AC_SUBST(MOZ_DBUS_GLIB_LIBS)
 
 dnl ========================================================
 dnl = libnotify support
@@ -5274,6 +5237,82 @@ fi
 AC_SUBST(MOZ_ENABLE_LIBNOTIFY)
 AC_SUBST(MOZ_LIBNOTIFY_CFLAGS)
 AC_SUBST(MOZ_LIBNOTIFY_LIBS)
+
+dnl ========================================================
+dnl = GNOME component (mozgnome)
+dnl ========================================================
+
+# The GNOME component is built if one of 
+# gnome-vfs, gio, gconf or libnotify is available.
+if test "$MOZ_ENABLE_GCONF" || \
+   test "$MOZ_ENABLE_GNOMEVFS" || \
+   test "$MOZ_ENABLE_GIO" || \
+   test "$MOZ_ENABLE_LIBNOTIFY"; then
+    MOZ_ENABLE_GNOME_COMPONENT=1
+else
+    MOZ_ENABLE_GNOME_COMPONENT=
+fi
+AC_SUBST(MOZ_ENABLE_GNOME_COMPONENT)
+
+dnl ========================================================
+dnl = libgnomeui support module
+dnl ========================================================
+
+if test "$MOZ_ENABLE_GTK2"
+then
+    MOZ_ENABLE_GNOMEUI=1
+
+    MOZ_ARG_DISABLE_BOOL(gnomeui,
+    [  --disable-gnomeui       Disable libgnomeui support (default: auto, optional at runtime) ],
+        MOZ_ENABLE_GNOMEUI=,
+        MOZ_ENABLE_GNOMEUI=force)
+
+    if test "$MOZ_ENABLE_GNOMEUI"
+    then
+        PKG_CHECK_MODULES(MOZ_GNOMEUI, libgnomeui-2.0 >= $GNOMEUI_VERSION,
+        [
+            MOZ_GNOMEUI_LIBS=`echo $MOZ_GNOMEUI_LIBS | sed 's/-llinc\>//'`
+            MOZ_ENABLE_GNOMEUI=1
+        ],[
+            if test "$MOZ_ENABLE_GNOMEUI" = "force"
+            then
+                AC_MSG_ERROR([* * * Could not find libgnomeui-2.0 >= $GNOMEUI_VERSION])
+            fi
+            MOZ_ENABLE_GNOMEUI=
+        ])
+    fi
+
+    if test "$MOZ_ENABLE_GNOMEUI"; then
+        AC_DEFINE(MOZ_ENABLE_GNOMEUI)
+    fi
+fi
+
+AC_SUBST(MOZ_ENABLE_GNOMEUI)
+AC_SUBST(MOZ_GNOMEUI_CFLAGS)
+AC_SUBST(MOZ_GNOMEUI_LIBS)
+
+dnl ========================================================
+dnl = dbus support
+dnl ========================================================
+
+if test "$MOZ_ENABLE_GTK2" || test "$MOZ_ENABLE_QT"
+then
+    MOZ_ENABLE_DBUS=1
+
+    MOZ_ARG_DISABLE_BOOL(dbus,
+    [  --disable-dbus       Disable dbus support ],
+        MOZ_ENABLE_DBUS=,
+        MOZ_ENABLE_DBUS=1)
+
+    if test "$MOZ_ENABLE_DBUS"
+    then
+        PKG_CHECK_MODULES(MOZ_DBUS_GLIB, dbus-glib-1 >= $DBUS_VERSION)
+        AC_DEFINE(MOZ_ENABLE_DBUS)
+    fi
+fi
+AC_SUBST(MOZ_ENABLE_DBUS)
+AC_SUBST(MOZ_DBUS_GLIB_CFLAGS)
+AC_SUBST(MOZ_DBUS_GLIB_LIBS)
 
 dnl ========================================================
 dnl = Build Personal Security Manager
@@ -5740,7 +5779,7 @@ MOZ_ARG_ENABLE_STRING(extensions,
 done],
     MOZ_EXTENSIONS="$MOZ_EXTENSIONS_DEFAULT")
 
-if test -z "$MOZ_ENABLE_GNOMEVFS" && test `echo "$MOZ_EXTENSIONS" | grep -c gnomevfs` -ne 0; then
+if test -z "$MOZ_ENABLE_GNOMEVFS" && test -z "$MOZ_GNOMEVFS_LIBS" && test `echo "$MOZ_EXTENSIONS" | grep -c gnomevfs` -ne 0; then
     # Suppress warning on non-X11 platforms
     if test -n "$MOZ_X11"; then
         AC_MSG_WARN([Cannot build gnomevfs without required libraries. Removing gnomevfs from MOZ_EXTENSIONS.])

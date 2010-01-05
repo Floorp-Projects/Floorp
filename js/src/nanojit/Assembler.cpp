@@ -87,14 +87,81 @@ namespace nanojit
         reset();
     }
 
+#ifdef _DEBUG
+
+    /*static*/ LIns* const AR::BAD_ENTRY = (LIns*)0xdeadbeef;
+
+    void AR::validateQuick()
+    {
+        NanoAssert(_highWaterMark < NJ_MAX_STACK_ENTRY);
+        NanoAssert(_entries[0] == NULL);
+        // Only check a few entries around _highWaterMark.
+        uint32_t const RADIUS = 4;
+        uint32_t const lo = (_highWaterMark > 1 + RADIUS ? _highWaterMark - RADIUS : 1);
+        uint32_t const hi = (_highWaterMark + 1 + RADIUS < NJ_MAX_STACK_ENTRY ? _highWaterMark + 1 + RADIUS : NJ_MAX_STACK_ENTRY);
+        for (uint32_t i = lo; i <= _highWaterMark; ++i)
+            NanoAssert(_entries[i] != BAD_ENTRY);
+        for (uint32_t i = _highWaterMark+1; i < hi; ++i)
+            NanoAssert(_entries[i] == BAD_ENTRY);
+    }
+
+    void AR::validateFull()
+    {
+        NanoAssert(_highWaterMark < NJ_MAX_STACK_ENTRY);
+        NanoAssert(_entries[0] == NULL);
+        for (uint32_t i = 1; i <= _highWaterMark; ++i)
+            NanoAssert(_entries[i] != BAD_ENTRY);
+        for (uint32_t i = _highWaterMark+1; i < NJ_MAX_STACK_ENTRY; ++i)
+            NanoAssert(_entries[i] == BAD_ENTRY);
+    }
+
+     void AR::validate()
+     {
+        static uint32_t validateCounter = 0;
+         if (++validateCounter >= 100)
+         {
+             validateFull();
+             validateCounter = 0;
+         }
+         else
+         {
+             validateQuick();
+         }
+     }
+ 
+#endif
+
+     inline void AR::clear()
+     {
+         _highWaterMark = 0;
+        NanoAssert(_entries[0] == NULL);
+    #ifdef _DEBUG
+        for (uint32_t i = 1; i < NJ_MAX_STACK_ENTRY; ++i)
+            _entries[i] = BAD_ENTRY;
+    #endif
+     }
+
+     bool AR::Iter::next(LIns*& ins, uint32_t& nStackSlots, int32_t& arIndex)
+     {
+         while (++_i <= _ar._highWaterMark)
+         {
+             if ((ins = _ar._entries[_i]) != NULL)
+             {
+                 nStackSlots = nStackSlotsFor(ins);
+                 _i += nStackSlots - 1;
+                 arIndex = _i;
+                 return true;
+             }
+         }
+         ins = NULL;
+         nStackSlots = 0;
+         arIndex = 0;
+         return false;
+     }
+
     void Assembler::arReset()
     {
-        _activation.lowwatermark = 0;
-        _activation.tos = 0;
-
-        for (uint32_t i = 0; i < NJ_MAX_STACK_ENTRY; i++)
-            _activation.entry[i] = 0;
-
+        _activation.clear();
         _branchStateMap.clear();
         _patches.clear();
         _labels.clear();
@@ -122,7 +189,7 @@ namespace nanojit
         NanoAssert(ins->isUsed());
 
         if (allowedAndFree) {
-            // At least one usable register is free -- no need to steal.  
+            // At least one usable register is free -- no need to steal.
             // Pick a preferred one if possible.
             RegisterMask preferredAndFree = allowedAndFree & SavedRegs;
             RegisterMask set = ( preferredAndFree ? preferredAndFree : allowedAndFree );
@@ -158,7 +225,7 @@ namespace nanojit
     {
         LIns dummyIns;
         dummyIns.markAsUsed();
-        Register r = registerAlloc(&dummyIns, allow); 
+        Register r = registerAlloc(&dummyIns, allow);
 
         // Mark r as free, ready for use as a temporary value.
         _allocator.removeActive(r);
@@ -222,6 +289,41 @@ namespace nanojit
 
     #ifdef _DEBUG
 
+    bool AR::isValidEntry(uint32_t idx, LIns* ins) const
+    {
+        return idx > 0 && idx <= _highWaterMark && _entries[idx] == ins;
+    }
+
+    void AR::checkForResourceConsistency(const RegAlloc& regs)
+    {
+        validate();
+        for (uint32_t i = 1; i <= _highWaterMark; ++i)
+        {
+            LIns* ins = _entries[i];
+            if (!ins)
+                continue;
+            Register r = ins->getReg();
+            uint32_t arIndex = ins->getArIndex();
+            NanoAssert(arIndex != 0);
+            if (ins->isop(LIR_alloc)) {
+                int const n = i + (ins->size()>>2);
+                for (int j=i+1; j < n; j++) {
+                    NanoAssert(_entries[j]==ins);
+                }
+                NanoAssert(arIndex == (uint32_t)n-1);
+                i = n-1;
+            }
+            else if (ins->isQuad()) {
+                NanoAssert(_entries[i + 1]==ins);
+                i += 1; // skip high word
+            }
+            else {
+                NanoAssertMsg(arIndex == i, "Stack record index mismatch");
+            }
+            NanoAssertMsg(r == UnknownReg || regs.isConsistent(r, ins), "Register record mismatch");
+        }
+    }
+
     void Assembler::resourceConsistencyCheck()
     {
         NanoAssert(!error());
@@ -231,37 +333,7 @@ namespace nanojit
             (!_allocator.active[FST0] && _fpuStkDepth == 0));
 #endif
 
-        AR &ar = _activation;
-        // check AR entries
-        NanoAssert(ar.tos < NJ_MAX_STACK_ENTRY);
-        LIns* ins = 0;
-        RegAlloc* regs = &_allocator;
-        for (uint32_t i = ar.lowwatermark; i < ar.tos; i++)
-        {
-            ins = ar.entry[i];
-            if ( !ins )
-                continue;
-            Register r = ins->getReg();
-            uint32_t arIndex = ins->getArIndex();
-            if (arIndex != 0) {
-                if (ins->isop(LIR_alloc)) {
-                    int j=i+1;
-                    for (int n = i + (ins->size()>>2); j < n; j++) {
-                        NanoAssert(ar.entry[j]==ins);
-                    }
-                    NanoAssert(arIndex == (uint32_t)j-1);
-                    i = j-1;
-                }
-                else if (ins->isQuad()) {
-                    NanoAssert(ar.entry[i - stack_direction(1)]==ins);
-                    i += 1; // skip high word
-                }
-                else {
-                    NanoAssertMsg(arIndex == i, "Stack record index mismatch");
-                }
-            }
-            NanoAssertMsg( !isKnownReg(r) || regs->isConsistent(r,ins), "Register record mismatch");
-        }
+        _activation.checkForResourceConsistency(_allocator);
 
         registerConsistencyCheck();
     }
@@ -457,14 +529,15 @@ namespace nanojit
 
         return r;
     }
- 
+
     int Assembler::findMemFor(LIns *ins)
     {
         if (!ins->isUsed())
             ins->markAsUsed();
         if (!ins->getArIndex()) {
-            ins->setArIndex(arReserve(ins));
-            NanoAssert(ins->getArIndex() <= _activation.tos);
+            uint32_t const arIndex = arReserve(ins);
+            ins->setArIndex(arIndex);
+            NanoAssert(_activation.isValidEntry(ins->getArIndex(), ins) == (arIndex != 0));
         }
         return disp(ins);
     }
@@ -553,11 +626,7 @@ namespace nanojit
             asm_spilli(ins, pop);
             _allocator.retire(r);   // free any register associated with entry
         }
-        int arIndex = ins->getArIndex();
-        if (arIndex) {
-            NanoAssert(_activation.entry[arIndex] == ins);
-            arFree(arIndex);        // free any stack stack space associated with entry
-        }
+        arFreeIfInUse(ins);        // free any stack stack space associated with entry
         ins->markAsClear();
     }
 
@@ -568,11 +637,7 @@ namespace nanojit
         if (isKnownReg(r)) {
             _allocator.retire(r);   // free any register associated with entry
         }
-        int arIndex = ins->getArIndex();
-        if (arIndex) {
-            NanoAssert(_activation.entry[arIndex] == ins);
-            arFree(arIndex);        // free any stack stack space associated with entry
-        }
+        arFreeIfInUse(ins);        // free any stack stack space associated with entry
         ins->markAsClear();
     }
 
@@ -676,11 +741,10 @@ namespace nanojit
         verbose_only( int32_t nativeSave = _stats.native );
         verbose_only( verbose_outputf("----------------------------------- ## END exit block %p", guard);)
 
+        // This point is unreachable.  So free all the registers.  If an
+        // instruction has a stack entry we will leave it alone, otherwise we
+        // free it entirely.  intersectRegisterState() will restore.
         RegAlloc capture = _allocator;
-
-        // this point is unreachable.  so free all the registers.
-        // if an instruction has a stack entry we will leave it alone,
-        // otherwise we free it entirely.  intersectRegisterState will restore.
         releaseRegisters();
 
         swapCodeChunks();
@@ -692,7 +756,7 @@ namespace nanojit
 
         nFragExit(guard);
 
-        // restore the callee-saved register and parameters
+        // Restore the callee-saved register and parameters.
         assignSavedRegs();
         assignParamRegs();
 
@@ -739,8 +803,6 @@ namespace nanojit
         NanoAssert(_nExitIns == 0);
 
         _thisfrag = frag;
-        _activation.lowwatermark = 1;
-        _activation.tos = _activation.lowwatermark;
         _inExit = false;
 
         counter_reset(native);
@@ -837,12 +899,7 @@ namespace nanojit
         NIns* fragEntry = genPrologue();
         verbose_only( asm_output("[prologue]"); )
 
-        // check for resource leaks
-        debug_only(
-            for (uint32_t i = _activation.lowwatermark; i < _activation.tos; i++) {
-                NanoAssertMsgf(_activation.entry[i] == 0, "frame entry %d wasn't freed\n",-4*i);
-            }
-        )
+        debug_only(_activation.checkForResourceLeaks());
 
         NanoAssert(!_inExit);
         // save used parts of current block on fragment's code list, free the rest
@@ -1399,8 +1456,8 @@ namespace nanojit
                         intersectRegisterState(label->regs);
                         label->addr = _nIns;
                     }
-                    verbose_only( if (_logc->lcbits & LC_Assembly) { 
-                        asm_output("[%s]", _thisfrag->lirbuf->names->formatRef(ins)); 
+                    verbose_only( if (_logc->lcbits & LC_Assembly) {
+                        asm_output("[%s]", _thisfrag->lirbuf->names->formatRef(ins));
                     })
                     break;
                 }
@@ -1577,8 +1634,7 @@ namespace nanojit
 
     void Assembler::assignSavedRegs()
     {
-        // restore saved regs
-        releaseRegisters();
+        // Restore saved regsters.
         LirBuffer *b = _thisfrag->lirbuf;
         for (int i=0, n = NumSavedRegs; i < n; i++) {
             LIns *p = b->savedRegs[i];
@@ -1597,7 +1653,6 @@ namespace nanojit
         }
     }
 
-    // restore parameter registers
     void Assembler::assignParamRegs()
     {
         LInsp state = _thisfrag->lirbuf->state;
@@ -1629,15 +1684,19 @@ namespace nanojit
         pending_lives.clear();
     }
 
-    void Assembler::arFree(uint32_t idx)
+    void AR::freeEntryAt(uint32_t idx)
     {
-        AR &ar = _activation;
-        LIns *i = ar.entry[idx];
-        NanoAssert(i != 0);
+        NanoAssert(idx > 0 && idx <= _highWaterMark);
+
+        // NB: this loop relies on using entry[0] being NULL,
+        // so that we are guaranteed to terminate
+        // without access negative entries.
+        LIns* i = _entries[idx];
+        NanoAssert(i != NULL);
         do {
-            ar.entry[idx] = 0;
+            _entries[idx] = NULL;
             idx--;
-        } while (ar.entry[idx] == i);
+        } while (_entries[idx] == i);
     }
 
 #ifdef NJ_VERBOSE
@@ -1679,28 +1738,17 @@ namespace nanojit
         VMPI_sprintf(s, "AR");
         s += VMPI_strlen(s);
 
-        int32_t max = _activation.tos < NJ_MAX_STACK_ENTRY ? _activation.tos : NJ_MAX_STACK_ENTRY;
-        for (int32_t i = _activation.lowwatermark; i < max; i++) {
-            LIns *ins = _activation.entry[i];
-            if (ins) {
-                const char* n = _thisfrag->lirbuf->names->formatRef(ins);
-                if (ins->isop(LIR_alloc)) {
-                    int32_t count = ins->size()>>2;
-                    VMPI_sprintf(s," %d-%d(%s)", 4*i, 4*(i+count-1), n);
-                    count += i-1;
-                    while (i < count) {
-                        NanoAssert(_activation.entry[i] == ins);
-                        i++;
-                    }
-                }
-                else if (ins->isQuad()) {
-                    VMPI_sprintf(s," %d+(%s)", 4*i, n);
-                    NanoAssert(_activation.entry[i+1] == ins);
-                    i++;
-                }
-                else {
-                    VMPI_sprintf(s," %d(%s)", 4*i, n);
-                }
+        LIns* ins = 0;
+        uint32_t nStackSlots = 0;
+        int32_t arIndex = 0;
+        for (AR::Iter iter(_activation); iter.next(ins, nStackSlots, arIndex); )
+        {
+            const char* n = _thisfrag->lirbuf->names->formatRef(ins);
+            if (nStackSlots > 1) {
+                VMPI_sprintf(s," %d-%d(%s)", 4*arIndex, 4*(arIndex+nStackSlots-1), n);
+            }
+            else {
+                VMPI_sprintf(s," %d(%s)", 4*arIndex, n);
             }
             s += VMPI_strlen(s);
         }
@@ -1708,68 +1756,105 @@ namespace nanojit
     }
 #endif
 
-    bool canfit(int32_t size, int32_t loc, AR &ar) {
-        for (int i=0; i < size; i++) {
-            if (ar.entry[loc+stack_direction(i)])
+    inline bool AR::isEmptyRange(uint32_t start, uint32_t nStackSlots) const
+    {
+        for (uint32_t i=0; i < nStackSlots; i++)
+        {
+            if (_entries[start-i] != NULL)
                 return false;
         }
         return true;
     }
 
+    uint32_t AR::reserveEntry(LIns* ins)
+    {
+        uint32_t const nStackSlots = nStackSlotsFor(ins);
+
+        if (nStackSlots == 1)
+        {
+            for (uint32_t i = 1; i <= _highWaterMark; i++)
+            {
+                if (_entries[i] == NULL)
+                {
+                    _entries[i] = ins;
+                    return i;
+                }
+            }
+            uint32_t const spaceLeft = NJ_MAX_STACK_ENTRY - _highWaterMark - 1;
+            if (spaceLeft >= 1)
+            {
+                 NanoAssert(_entries[_highWaterMark+1] == BAD_ENTRY);
+                _entries[++_highWaterMark] = ins;
+                return _highWaterMark;
+             }
+        }
+        else
+        {
+            // alloc larger block on 8byte boundary.
+            uint32_t const start = nStackSlots + (nStackSlots & 1);
+            for (uint32_t i = start; i <= _highWaterMark; i += 2)
+            {
+                if (isEmptyRange(i, nStackSlots))
+                {
+                    // place the entry in the table and mark the instruction with it
+                    for (uint32_t j=0; j < nStackSlots; j++)
+                    {
+                        NanoAssert(i-j <= _highWaterMark);
+                        NanoAssert(_entries[i-j] == NULL);
+                        _entries[i-j] = ins;
+                    }
+                    return i;
+                }
+            }
+
+            // Be sure to account for any 8-byte-round-up when calculating spaceNeeded.
+            uint32_t const spaceLeft = NJ_MAX_STACK_ENTRY - _highWaterMark - 1;
+            uint32_t const spaceNeeded = nStackSlots + (_highWaterMark & 1);
+            if (spaceLeft >= spaceNeeded)
+            {
+                if (_highWaterMark & 1)
+                {
+                    NanoAssert(_entries[_highWaterMark+1] == BAD_ENTRY);
+                    _entries[_highWaterMark+1] = NULL;
+                }
+                _highWaterMark += spaceNeeded;
+                for (uint32_t j = 0; j < nStackSlots; j++)
+                {
+                    NanoAssert(_highWaterMark-j < NJ_MAX_STACK_ENTRY);
+                    NanoAssert(_entries[_highWaterMark-j] == BAD_ENTRY);
+                    _entries[_highWaterMark-j] = ins;
+                }
+                return _highWaterMark;
+            }
+        }
+        // no space. oh well.
+        return 0;
+    }
+
+    #ifdef _DEBUG
+    void AR::checkForResourceLeaks() const
+    {
+        for (uint32_t i = 1; i <= _highWaterMark; i++) {
+            NanoAssertMsgf(_entries[i] == NULL, "frame entry %d wasn't freed\n",-4*i);
+        }
+    }
+    #endif
+
     uint32_t Assembler::arReserve(LIns* ins)
     {
-        int32_t size = ins->isop(LIR_alloc) ? (ins->size()>>2) : ins->isQuad() ? 2 : 1;
-        AR &ar = _activation;
-        const int32_t tos = ar.tos;
-        int32_t start = ar.lowwatermark;
-        int32_t i = 0;
-        NanoAssert(start>0);
-
-        if (size == 1) {
-            // easy most common case -- find a hole, or make the frame bigger
-            for (i=start; i < NJ_MAX_STACK_ENTRY; i++) {
-                if (ar.entry[i] == 0) {
-                    // found a hole
-                    ar.entry[i] = ins;
-                    break;
-                }
-            }
-        }
-        else if (size == 2) {
-            if ( (start&1)==1 ) start++;  // even 8 boundary
-            for (i=start; i < NJ_MAX_STACK_ENTRY; i+=2) {
-                if ( (ar.entry[i+stack_direction(1)] == 0) && (i==tos || (ar.entry[i] == 0)) ) {
-                    // found 2 adjacent aligned slots
-                    NanoAssert(ar.entry[i] == 0);
-                    NanoAssert(ar.entry[i+stack_direction(1)] == 0);
-                    ar.entry[i] = ins;
-                    ar.entry[i+stack_direction(1)] = ins;
-                    break;
-                }
-            }
-        }
-        else {
-            // alloc larger block on 8byte boundary.
-            if (start < size) start = size;
-            if ((start&1)==1) start++;
-            for (i=start; i < NJ_MAX_STACK_ENTRY; i+=2) {
-                if (canfit(size, i, ar)) {
-                    // place the entry in the table and mark the instruction with it
-                    for (int32_t j=0; j < size; j++) {
-                        NanoAssert(ar.entry[i+stack_direction(j)] == 0);
-                        ar.entry[i+stack_direction(j)] = ins;
-                    }
-                    break;
-                }
-            }
-        }
-        if (i >= (int32_t)ar.tos) {
-            ar.tos = i+1;
-        }
-        if (tos+size >= NJ_MAX_STACK_ENTRY) {
+        uint32_t i = _activation.reserveEntry(ins);
+        if (!i)
             setError(StackFull);
-        }
         return i;
+    }
+
+    void Assembler::arFreeIfInUse(LIns* ins)
+    {
+        uint32_t arIndex = ins->getArIndex();
+        if (arIndex) {
+            NanoAssert(_activation.isValidEntry(arIndex, ins));
+            _activation.freeEntryAt(arIndex);        // free any stack stack space associated with entry
+        }
     }
 
     /**
@@ -1865,7 +1950,7 @@ namespace nanojit
             }
         }
     }
-    
+
     /**
      * Merge the current regstate with a previously stored version.
      * current == saved    skip

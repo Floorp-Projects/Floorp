@@ -47,8 +47,6 @@
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsHTMLStyleSheet.h"
-#include "nsIHTMLCSSStyleSheet.h"
-#include "nsICSSStyleRule.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsMappedAttributes.h"

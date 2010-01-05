@@ -23,13 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=416896
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 416896 **/
- // Ensure all of our sheets have unique inners and trigger a rule cascade
- // reconstruct for each of them, so that all the rules the inspector APIs see
- // will have the right parents.  This is basicaly working around bug 253354.
- for (var sheetIdx = 0; sheetIdx < document.styleSheets.length; ++sheetIdx) {
-   document.styleSheets[sheetIdx].insertRule("dummy {}", 0);
- }
-
  var inlineSheet = $("i").sheet;
  isnot(inlineSheet, null, "Should have sheet here");
 

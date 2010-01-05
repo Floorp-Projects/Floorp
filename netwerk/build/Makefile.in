@@ -157,6 +157,13 @@ EXTRA_DSO_LDOPTS += \
 	$(NULL)
 endif
 
+ifdef MOZ_ENABLE_LIBCONIC
+EXTRA_DSO_LDOPTS += \
+		$(LIBCONIC_LIBS) \
+		$(MOZ_DBUS_GLIB_LIBS) \
+		$(NULL)
+endif
+
 ifeq ($(OS_ARCH),AIX)
 EXTRA_DSO_LDOPTS += -lodm -lcfg
 endif

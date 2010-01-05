@@ -1,0 +1,255 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=531585
+-->
+<head>
+  <title>Test for Bug 531585 (transitionend event)</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<style type="text/css">
+
+.bar { margin: 10px; }
+
+#one { -moz-transition-duration: 500ms; -moz-transition-property: all; }
+#two { -moz-transition: margin-left 1s; }
+#three { -moz-transition: margin 0.5s 0.25s; }
+
+#four, #five, #six {
+  -moz-transition: 500ms color;
+  border-color: black; /* don't derive from color */
+}
+
+#four {
+  /* give the reversing transition a long duration; the reversing will
+     still be quick */
+  -moz-transition-duration: 30s;
+  -moz-transition-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+
+</style>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=531585">Mozilla Bug 531585</a>
+<p id="display">
+
+<span id="one" style="color:blue"></span>
+<span id="two"></span>
+<span id="three"></span>
+<span id="four" style="color: blue"></span>
+<span id="five" style="color: blue"></span>
+<span id="six" style="color: blue"></span>
+
+</p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 531585 (transitionend event) **/
+
+SimpleTest.waitForExplicitFinish();
+var gTestCount = 0;
+function started_test() { ++gTestCount; }
+function finished_test() { if (--gTestCount == 0) { SimpleTest.finish(); } }
+
+function $(id) { return document.getElementById(id); }
+function cs(id) { return getComputedStyle($(id), ""); }
+
+var got_one_root = false;
+var got_one_target = false;
+var got_one_target_bordertop = false;
+var got_one_target_borderright = false;
+var got_one_target_borderbottom = false;
+var got_one_target_borderleft = false;
+var got_two_target = false;
+var got_three_top = false;
+var got_three_right = false;
+var got_three_bottom = false;
+var got_three_left = false;
+var got_four_root = false;
+var got_body = false;
+
+document.documentElement.addEventListener("transitionend",
+  function(event) {
+    if (event.target == $("one")) {
+      ok(!got_one_root, "transitionend on one on root");
+      is(event.propertyName, "border-right-color",
+         "propertyName for transitionend on one");
+      is(event.elapsedTime, 0.5,
+         "elapsedTime for transitionend on one");
+      is(cs("one").borderRightColor, "rgb(0, 255, 0)",
+         "computed style for transitionend on one");
+      got_one_root = true;
+      finished_test();
+    } else if (event.target == $("four")) {
+      ok(!got_four_root, "transitionend on four on root");
+      is(event.propertyName, "color",
+         "propertyName for transitionend on four");
+      // Reported time should (really?) be shortened by reversing.
+      ok(event.elapsedTime < 30,
+         "elapsedTime for transitionend on four");
+      is(cs("four").color, "rgb(0, 0, 255)",
+         "computed style for transitionend on four (end of reverse transition)");
+      got_four_root = true;
+      finished_test();
+    } else if (event.target == document.body) {
+      // A synthesized event.
+      ok(!got_body, "transitionend on body on root");
+      is(event.propertyName, "some-unknown-prop",
+         "propertyName for transitionend on body");
+      // Reported time should (really?) be shortened by reversing.
+      is(event.elapsedTime, -4.75,
+         "elapsedTime for transitionend on body");
+      got_body = true;
+      finished_test();
+    } else {
+      ok(false, "unexpected event");
+    }
+  }, false);
+
+$("one").addEventListener("transitionend",
+  function(event) {
+    switch (event.propertyName) {
+      case "color":
+        ok(!got_one_target, "transitionend on one on target");
+        got_one_target = true;
+        event.stopPropagation();
+        break;
+      case "border-top-color":
+        ok(!got_one_target_bordertop, "transitionend on one on target");
+        got_one_target_bordertop = true;
+        event.stopPropagation();
+        break;
+      case "border-right-color":
+        ok(!got_one_target_borderright, "transitionend on one on target");
+        got_one_target_borderright = true;
+        // Let this event through to body
+        break;
+      case "border-bottom-color":
+        ok(!got_one_target_borderbottom, "transitionend on one on target");
+        got_one_target_borderbottom = true;
+        event.stopPropagation();
+        break;
+      case "border-left-color":
+        ok(!got_one_target_borderleft, "transitionend on one on target");
+        got_one_target_borderleft = true;
+        event.stopPropagation();
+        break;
+      default:
+        ok(false, "unexpected property name " + event.propertyName +
+                  " for transitionend on one on target");
+    }
+    is(event.elapsedTime, 0.5,
+       "elapsedTime for transitionend on one");
+    is(cs("one").getPropertyValue(event.propertyName), "rgb(0, 255, 0)",
+       "computed style of " + event.propertyName + " for transitionend on one");
+    got_one_target = true;
+    finished_test();
+  }, false);
+
+started_test();
+started_test();
+started_test();
+started_test();
+started_test();
+started_test();
+$("one").style.color = "lime";
+
+
+$("two").addEventListener("transitionend",
+  function(event) {
+    event.stopPropagation();
+
+    ok(!got_two_target, "transitionend on two on target");
+    is(event.propertyName, "margin-left",
+       "propertyName for transitionend on two");
+    is(event.elapsedTime, 1,
+       "elapsedTime for transitionend on two");
+    is(cs("two").marginLeft, "10px",
+       "computed style for transitionend on two");
+    got_two_target = true;
+    finished_test();
+  }, false);
+
+started_test();
+$("two").className = "bar";
+
+$("three").addEventListener("transitionend",
+  function(event) {
+    event.stopPropagation();
+
+    switch (event.propertyName) {
+      case "margin-top":
+        ok(!got_three_top, "should only get margin-top once");
+        got_three_top = true;
+        break;
+      case "margin-right":
+        ok(!got_three_right, "should only get margin-right once");
+        got_three_right = true;
+        break;
+      case "margin-bottom":
+        ok(!got_three_bottom, "should only get margin-bottom once");
+        got_three_bottom = true;
+        break;
+      case "margin-left":
+        ok(!got_three_left, "should only get margin-left once");
+        got_three_left = true;
+        break;
+      default:
+        ok(false, "unexpected property name " + event.propertyName +
+                  " for transitionend on three");
+    }
+    is(event.elapsedTime, 0.5,
+       "elapsedTime for transitionend on three");
+    is(cs("three").getPropertyValue(event.propertyName), "10px",
+       "computed style for transitionend on three");
+    finished_test();
+  }, true);
+
+started_test();
+started_test();
+started_test();
+started_test();
+$("three").className = "bar";
+
+// We reverse the transition on four, and we should only get an event
+// at the end of the second transition.
+started_test();
+$("four").style.color = "lime";
+
+// We cancel the transition on five by changing 'transition-property',
+// and should thus get no event.
+$("five").style.color = "lime";
+
+// We cancel the transition on six by changing 'transition-duration' and
+// then changing the value, so we should get no event.
+$("six").style.color = "lime";
+
+setTimeout(function() {
+             $("five").style.MozTransitionProperty = "margin-left";
+             $("six").style.MozTransitionDuration = "0s";
+             $("six").style.MozTransitionDelay = "0s";
+             $("six").style.color = "blue";
+           }, 100);
+function poll_start_reversal() {
+  if (cs("four").color != "rgb(0, 0, 255)") {
+    // The forward transition has started.
+    $("four").style.color = "blue";
+  } else {
+    // The forward transition has not started yet.
+    setTimeout(poll_start_reversal, 20);
+  }
+}
+setTimeout(poll_start_reversal, 200);
+
+// And make our own event to dispatch to the body.
+started_test();
+var ev = document.createEvent("TransitionEvent"); // FIXME: un-specified
+ev.initTransitionEvent("transitionend", true, true,
+                       "some-unknown-prop", -4.75);
+document.body.dispatchEvent(ev);
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<bindings
+  xmlns="http://www.mozilla.org/xbl"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:xbl="http://www.mozilla.org/xbl"
+  xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <binding id="qwe">
+    <content>
+      <xul:label style="-moz-binding: url(#xar)" xbl:inherits="xbl:text=label" flex="1"/>
+    </content>
+  </binding>
+
+  <binding id="xar">
+    <content>
+      <html:table><children/></html:table>
+    </content>
+  </binding>
+
+</bindings>
+
+<script type="text/javascript">
+function boom()
+{
+  document.getElementById("b").setAttribute('label', "1 2 3");
+  document.documentElement.offsetHeight;
+  document.getElementById("b").removeAttribute('label');
+}
+</script>
+</head>
+
+<body onload="boom();">
+<div style="width: 0px;"><box id="b" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" style="-moz-binding: url(#qwe);"/></div>
+</body>
+</html>

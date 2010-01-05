@@ -383,13 +383,16 @@ class JSFreePointerListTask : public JSBackgroundTask {
 extern void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str);
 
-#ifdef DEBUG_notme
-#define JS_GCMETER 1
+#if defined JS_GCMETER
+const bool JS_WANT_GC_METER_PRINT = true;
+#elif defined DEBUG
+# define JS_GCMETER 1
+const bool JS_WANT_GC_METER_PRINT = false;
 #endif
 
 #ifdef JS_GCMETER
 
-typedef struct JSGCArenaStats {
+struct JSGCArenaStats {
     uint32  alloc;          /* allocation attempts */
     uint32  localalloc;     /* allocations from local lists */
     uint32  retry;          /* allocation retries after running the GC */
@@ -403,9 +406,9 @@ typedef struct JSGCArenaStats {
     uint32  maxarenas;      /* maximum of allocated arenas */
     uint32  totalarenas;    /* total number of arenas with live things that
                                GC scanned so far */
-} JSGCArenaStats;
+};
 
-typedef struct JSGCStats {
+struct JSGCStats {
     uint32  finalfail;  /* finalizer calls allocator failures */
     uint32  lockborn;   /* things born locked */
     uint32  lock;       /* valid lock calls */
@@ -430,9 +433,9 @@ typedef struct JSGCStats {
     uint32  closelater; /* number of close hooks scheduled to run */
     uint32  maxcloselater; /* max number of close hooks scheduled to run */
 
-    JSGCArenaStats  arenaStats[FINALIZE_LIST_LIMIT];
+    JSGCArenaStats  arenaStats[FINALIZE_LIMIT];
     JSGCArenaStats  doubleArenaStats;
-} JSGCStats;
+};
 
 extern JS_FRIEND_API(void)
 js_DumpGCStats(JSRuntime *rt, FILE *fp);
