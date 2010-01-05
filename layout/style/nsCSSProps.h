@@ -79,6 +79,13 @@
 // list.
 #define CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0          (1<<6)
 
+// This is a property for which the computed value should generally be
+// reported as the computed value of a property of a different name.  In
+// particular, the directional box properties (margin-left-value, etc.)
+// should be reported as being margin-left, etc.  Call
+// nsCSSProps::OtherNameFor to get the other property.
+#define CSS_PROPERTY_REPORT_OTHER_NAME            (1<<7)
+
 /**
  * Types of animatable values.
  */
@@ -151,6 +158,11 @@ public:
   // Given a property enum, get the string value
   static const nsAFlatCString& GetStringValue(nsCSSProperty aProperty);
   static const nsAFlatCString& GetStringValue(nsCSSFontDesc aFontDesc);
+
+  // Get the property to report the computed value of aProperty as being
+  // the computed value of.  aProperty must have the
+  // CSS_PROPERTY_REPORT_OTHER_NAME bit set.
+  static nsCSSProperty OtherNameFor(nsCSSProperty aProperty);
 
   // Given a CSS Property and a Property Enum Value
   // Return back a const nsString& representation of the 

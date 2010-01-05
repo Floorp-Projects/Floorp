@@ -180,6 +180,98 @@ GetLastChildFrame(nsIFrame*       aFrame,
   return nsnull;
 }
 
+//static
+nsIAtom*
+nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
+{
+  nsIAtom*      listName;
+
+  if (aChildFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+    nsIFrame* pif = aChildFrame->GetPrevInFlow();
+    if (pif->GetParent() == aChildFrame->GetParent()) {
+      listName = nsGkAtoms::excessOverflowContainersList;
+    }
+    else {
+      listName = nsGkAtoms::overflowContainersList;
+    }
+  }
+  // See if the frame is moved out of the flow
+  else if (aChildFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+    // Look at the style information to tell
+    const nsStyleDisplay* disp = aChildFrame->GetStyleDisplay();
+
+    if (NS_STYLE_POSITION_ABSOLUTE == disp->mPosition) {
+      listName = nsGkAtoms::absoluteList;
+    } else if (NS_STYLE_POSITION_FIXED == disp->mPosition) {
+      if (nsLayoutUtils::IsReallyFixedPos(aChildFrame)) {
+        listName = nsGkAtoms::fixedList;
+      } else {
+        listName = nsGkAtoms::absoluteList;
+      }
+#ifdef MOZ_XUL
+    } else if (NS_STYLE_DISPLAY_POPUP == disp->mDisplay) {
+      // Out-of-flows that are DISPLAY_POPUP must be kids of the root popup set
+#ifdef DEBUG
+      nsIFrame* parent = aChildFrame->GetParent();
+      NS_ASSERTION(parent && parent->GetType() == nsGkAtoms::popupSetFrame,
+                   "Unexpected parent");
+#endif // DEBUG
+
+      // XXX FIXME: Bug 350740
+      // Return here, because the postcondition for this function actually
+      // fails for this case, since the popups are not in a "real" frame list
+      // in the popup set.
+      return nsGkAtoms::popupList;
+#endif // MOZ_XUL
+    } else {
+      NS_ASSERTION(aChildFrame->GetStyleDisplay()->IsFloating(),
+                   "not a floated frame");
+      listName = nsGkAtoms::floatList;
+    }
+
+  } else {
+    nsIAtom* childType = aChildFrame->GetType();
+    if (nsGkAtoms::menuPopupFrame == childType) {
+      nsIFrame* parent = aChildFrame->GetParent();
+      nsIFrame* firstPopup = (parent)
+                             ? parent->GetFirstChild(nsGkAtoms::popupList)
+                             : nsnull;
+      NS_ASSERTION(!firstPopup || !firstPopup->GetNextSibling(),
+                   "We assume popupList only has one child, but it has more.");
+      listName = (!firstPopup || firstPopup == aChildFrame)
+                 ? nsGkAtoms::popupList
+                 : nsnull;
+    } else if (nsGkAtoms::tableColGroupFrame == childType) {
+      listName = nsGkAtoms::colGroupList;
+    } else if (nsGkAtoms::tableCaptionFrame == aChildFrame->GetType()) {
+      listName = nsGkAtoms::captionList;
+    } else {
+      listName = nsnull;
+    }
+  }
+
+#ifdef NS_DEBUG
+  // Verify that the frame is actually in that child list or in the
+  // corresponding overflow list.
+  nsIFrame* parent = aChildFrame->GetParent();
+  PRBool found = parent->GetChildList(listName).ContainsFrame(aChildFrame);
+  if (!found) {
+    if (!(aChildFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+      found = parent->GetChildList(nsGkAtoms::overflowList)
+                .ContainsFrame(aChildFrame);
+    }
+    else if (aChildFrame->GetStyleDisplay()->IsFloating()) {
+      found = parent->GetChildList(nsGkAtoms::overflowOutOfFlowList)
+                .ContainsFrame(aChildFrame);
+    }
+    // else it's positioned and should have been on the 'listName' child list.
+    NS_POSTCONDITION(found, "not in child list");
+  }
+#endif
+
+  return listName;
+}
+
 // static
 nsIFrame*
 nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame)

@@ -288,7 +288,7 @@
                        tooltiptext="&closeCmd.label;"/>
       </hbox>
       <stack id="allTabs-stack">
-        <box id="allTabs-container"/>
+        <vbox id="allTabs-container"><hbox/></vbox>
         <toolbarbutton id="allTabs-tab-close-button"
                        class="tab-close-button"
                        oncommand="allTabs.closeTab(event);"

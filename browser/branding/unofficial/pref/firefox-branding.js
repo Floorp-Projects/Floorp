@@ -18,5 +18,6 @@ pref("app.releaseNotesURL", "http://www.mozilla.org/projects/%APP%/%VERSION%/rel
 
 // Search codes belong only in builds with official branding
 pref("browser.search.param.yahoo-fr", "");
-pref("browser.search.param.yahoo-fr-cjkt", "");
+pref("browser.search.param.yahoo-fr-cjkt", ""); // now unused
+pref("browser.search.param.yahoo-fr-ja", "");
 pref("browser.search.param.yahoo-f-CN", "");

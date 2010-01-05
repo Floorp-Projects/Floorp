@@ -278,6 +278,9 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           case eCSSUnit_Auto:
             diff = 0;
             break;
+          case eCSSUnit_RectIsAuto:
+            // Standalone "auto" value isn't additive/interpolatable
+            return PR_FALSE;
           default:
             NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
             return PR_FALSE;
@@ -729,6 +732,9 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
             }
             (result->*member).SetAutoValue();
             break;
+          case eCSSUnit_RectIsAuto:
+            // Standalone "auto" value isn't interpolatable
+            return PR_FALSE;
           default:
             NS_ABORT_IF_FALSE(PR_FALSE, "unexpected unit");
             return PR_FALSE;
@@ -1509,35 +1515,34 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
         case eCSSProperty_clip: {
           const nsStyleDisplay *display =
             static_cast<const nsStyleDisplay*>(styleStruct);
-          if (!(display->mClipFlags & NS_STYLE_CLIP_RECT)) {
-            aComputedValue.SetAutoValue();
-            break;
-          }
-
           nsCSSRect *vrect = new nsCSSRect;
           if (!vrect) {
             return PR_FALSE;
           }
-          const nsRect &srect = display->mClip;
-          if (display->mClipFlags & NS_STYLE_CLIP_TOP_AUTO) {
-            vrect->mTop.SetAutoValue();
+          if (!(display->mClipFlags & NS_STYLE_CLIP_RECT)) {
+            vrect->SetAllSidesTo(nsCSSValue(eCSSUnit_RectIsAuto));
           } else {
-            nscoordToCSSValue(srect.y, vrect->mTop);
-          }
-          if (display->mClipFlags & NS_STYLE_CLIP_RIGHT_AUTO) {
-            vrect->mRight.SetAutoValue();
-          } else {
-            nscoordToCSSValue(srect.XMost(), vrect->mRight);
-          }
-          if (display->mClipFlags & NS_STYLE_CLIP_BOTTOM_AUTO) {
-            vrect->mBottom.SetAutoValue();
-          } else {
-            nscoordToCSSValue(srect.YMost(), vrect->mBottom);
-          }
-          if (display->mClipFlags & NS_STYLE_CLIP_LEFT_AUTO) {
-            vrect->mLeft.SetAutoValue();
-          } else {
-            nscoordToCSSValue(srect.x, vrect->mLeft);
+            const nsRect &srect = display->mClip;
+            if (display->mClipFlags & NS_STYLE_CLIP_TOP_AUTO) {
+              vrect->mTop.SetAutoValue();
+            } else {
+              nscoordToCSSValue(srect.y, vrect->mTop);
+            }
+            if (display->mClipFlags & NS_STYLE_CLIP_RIGHT_AUTO) {
+              vrect->mRight.SetAutoValue();
+            } else {
+              nscoordToCSSValue(srect.XMost(), vrect->mRight);
+            }
+            if (display->mClipFlags & NS_STYLE_CLIP_BOTTOM_AUTO) {
+              vrect->mBottom.SetAutoValue();
+            } else {
+              nscoordToCSSValue(srect.YMost(), vrect->mBottom);
+            }
+            if (display->mClipFlags & NS_STYLE_CLIP_LEFT_AUTO) {
+              vrect->mLeft.SetAutoValue();
+            } else {
+              nscoordToCSSValue(srect.x, vrect->mLeft);
+            }
           }
           aComputedValue.SetAndAdoptCSSRectValue(vrect, eUnit_CSSRect);
           break;

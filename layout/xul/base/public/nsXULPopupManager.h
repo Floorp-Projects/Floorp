@@ -310,8 +310,12 @@ public:
   friend class nsXULMenuCommandEvent;
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIROLLUPLISTENER
   NS_DECL_NSITIMERCALLBACK
+
+  // nsIRollupListener
+  NS_IMETHOD Rollup(PRUint32 aCount, nsIContent **aContent);
+  NS_IMETHOD ShouldRollupOnMouseWheelEvent(PRBool *aShould);
+  NS_IMETHOD ShouldRollupOnMouseActivate(PRBool *aShould);
 
   virtual PRUint32 GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain);
   virtual void AdjustPopupsOnWindowChange(void);

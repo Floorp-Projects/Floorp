@@ -100,20 +100,73 @@ namespace nanojit
     //   * If an LIns's reservation names has arIndex==0 then LIns should not
     //     be in 'entry[]'.
     //
-    struct AR
+    class AR
     {
-        LIns*           entry[ NJ_MAX_STACK_ENTRY ];    /* maps to 4B contiguous locations relative to the frame pointer */
-        uint32_t        tos;                            /* current top of stack entry */
-        uint32_t        lowwatermark;                   /* we pre-allocate entries from 0 upto this index-1; so dynamic entries are added above this index */
+    private:
+        uint32_t        _highWaterMark;                 /* index of highest entry used since last clear() */
+        LIns*           _entries[ NJ_MAX_STACK_ENTRY ]; /* maps to 4B contiguous locations relative to the frame pointer.
+                                                            NB: _entries[0] is always unused */
+
+        #ifdef _DEBUG
+        static LIns* const BAD_ENTRY;
+        #endif
+
+        bool isEmptyRange(uint32_t start, uint32_t nStackSlots) const;
+        static uint32_t nStackSlotsFor(LIns* ins);
+
+    public:
+        AR();
+        
+        uint32_t stackSlotsNeeded() const;
+
+        void clear();
+        void freeEntryAt(uint32_t i);
+        uint32_t reserveEntry(LIns* ins); /* return 0 if unable to reserve the entry */
+
+        #ifdef _DEBUG
+        void validateQuick();
+        void validateFull();
+        void validate();
+        bool isValidEntry(uint32_t idx, LIns* ins) const; /* return true iff idx and ins are matched */
+        void checkForResourceConsistency(const RegAlloc& regs);
+        void checkForResourceLeaks() const;
+        #endif
+
+        class Iter
+        {
+        private:
+            const AR& _ar;
+            uint32_t _i;
+        public:
+            inline Iter(const AR& ar) : _ar(ar), _i(1) { }
+            bool next(LIns*& ins, uint32_t& nStackSlots, int32_t& offset);             // get the next one (moves iterator forward)
+        };
     };
 
-	#ifndef AVMPLUS_ALIGN16
-		#ifdef AVMPLUS_WIN32
-			#define AVMPLUS_ALIGN16(type) __declspec(align(16)) type
-		#else
-			#define AVMPLUS_ALIGN16(type) type __attribute__ ((aligned (16)))
-		#endif
-	#endif
+    inline AR::AR()
+    {
+         _entries[0] = NULL; 
+         clear();
+    }
+
+    inline /*static*/ uint32_t AR::nStackSlotsFor(LIns* ins)
+    {
+        return ins->isop(LIR_alloc) ? (ins->size()>>2) : (ins->isQuad() ? 2 : 1);
+    }
+
+    inline uint32_t AR::stackSlotsNeeded() const
+    {
+        // NB: _highWaterMark is an index, not a count
+        return _highWaterMark+1;
+    }
+
+    #ifndef AVMPLUS_ALIGN16
+        #ifdef AVMPLUS_WIN32
+            #define AVMPLUS_ALIGN16(type) __declspec(align(16)) type
+        #else
+            #define AVMPLUS_ALIGN16(type) type __attribute__ ((aligned (16)))
+        #endif
+    #endif
 
     struct Stats
     {
@@ -257,8 +310,8 @@ namespace nanojit
             NIns*       genPrologue();
             NIns*       genEpilogue();
 
-            uint32_t    arReserve(LIns* l);
-            void        arFree(uint32_t idx);
+            uint32_t    arReserve(LIns* ins);
+            void        arFreeIfInUse(LIns* ins);
             void        arReset();
 
             Register    registerAlloc(LIns* ins, RegisterMask allow);
@@ -407,7 +460,7 @@ namespace nanojit
     inline int32_t disp(LIns* ins)
     {
         // even on 64bit cpu's, we allocate stack area in 4byte chunks
-        return stack_direction(4 * int32_t(ins->getArIndex()));
+        return -4 * int32_t(ins->getArIndex());
     }
 }
 #endif // __nanojit_Assembler__

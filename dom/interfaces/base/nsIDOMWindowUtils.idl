@@ -50,7 +50,7 @@ interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 interface nsIDOMEvent;
 
-[scriptable, uuid(4775e623-d596-4364-8637-0968a5ce5e3d)]
+[scriptable, uuid(0e13d9a6-bcd1-4d61-9986-c32f78f99d1a)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -421,4 +421,10 @@ interface nsIDOMWindowUtils : nsISupports {
   boolean dispatchDOMEventViaPresShell(in nsIDOMNode aTarget,
                                        in nsIDOMEvent aEvent,
                                        in boolean aTrusted);
+
+  /**
+   * Returns the real classname (possibly of the mostly-transparent security
+   * wrapper) of aObj.
+   */
+  string getClassName(/*in JSObjectPtr aObj*/);
 };

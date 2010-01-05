@@ -73,6 +73,7 @@ tooltip {
   max-width: 40em;
   color: InfoText;
   font: message-box;
+  cursor: default;
 }
 
 tooltip[titletip="true"] {

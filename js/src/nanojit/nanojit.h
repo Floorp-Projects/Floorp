@@ -152,10 +152,10 @@ namespace nanojit
 
 #ifdef AVMPLUS_VERBOSE
 #ifndef NJ_VERBOSE_DISABLED
-	#define NJ_VERBOSE 1
+    #define NJ_VERBOSE 1
 #endif
 #ifndef NJ_PROFILE_DISABLED
-	#define NJ_PROFILE 1
+    #define NJ_PROFILE 1
 #endif
 #endif
 

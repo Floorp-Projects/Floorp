@@ -210,6 +210,9 @@ function next_test() {
 }
 
 function run_test() {
+  // XXX disabled due to bug 510219
+  return;
+
   // Clean up database from all bookmarks.
   remove_all_bookmarks();
 

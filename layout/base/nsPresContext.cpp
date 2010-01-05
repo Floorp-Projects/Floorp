@@ -259,7 +259,15 @@ nsPresContext::~nsPresContext()
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nsnull);
 
-  delete mTransitionManager;
+  if (mTransitionManager) {
+    mTransitionManager->Disconnect();
+  }
+
+  // Disconnect the refresh driver *after* the transition manager, which
+  // needs it.
+  if (mRefreshDriver) {
+    mRefreshDriver->Disconnect();
+  }
 
   if (mEventManager) {
     // unclear if these are needed, but can't hurt
@@ -873,6 +881,12 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   NS_ADDREF(mEventManager);
 
   mTransitionManager = new nsTransitionManager(this);
+  if (!mTransitionManager)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  mRefreshDriver = new nsRefreshDriver(this);
+  if (!mRefreshDriver)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
 
@@ -1957,6 +1971,25 @@ nsPresContext::UserFontSetUpdated()
   //      reuse of cached data even when no style rules have changed.
 
   PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW);
+}
+
+PRBool
+nsPresContext::EnsureSafeToHandOutCSSRules()
+{
+  nsCSSStyleSheet::EnsureUniqueInnerResult res =
+    mShell->StyleSet()->EnsureUniqueInnerOnCSSSheets();
+  if (res == nsCSSStyleSheet::eUniqueInner_AlreadyUnique) {
+    // Nothing to do.
+    return PR_TRUE;
+  }
+  if (res == nsCSSStyleSheet::eUniqueInner_CloneFailed) {
+    return PR_FALSE;
+  }
+
+  NS_ABORT_IF_FALSE(res == nsCSSStyleSheet::eUniqueInner_ClonedInner,
+                    "unexpected result");
+  RebuildAllStyleData(nsChangeHint(0));
+  return PR_TRUE;
 }
 
 void

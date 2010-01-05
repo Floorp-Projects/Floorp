@@ -46,7 +46,9 @@
 #include "nsAlertsService.h"
 #endif
 
+#ifdef MOZ_ENABLE_GCONF
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGConfService, Init)
+#endif
 #ifdef MOZ_ENABLE_GNOMEVFS
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGnomeVFSService, Init)
 #endif
@@ -58,10 +60,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAlertsService, Init)
 #endif
 
 static const nsModuleComponentInfo components[] = {
+#ifdef MOZ_ENABLE_GCONF
   { "GConf Service",
     NS_GCONFSERVICE_CID,
     NS_GCONFSERVICE_CONTRACTID,
     nsGConfServiceConstructor },
+#endif
 #ifdef MOZ_ENABLE_GNOMEVFS
   { "GnomeVFS Service",
     NS_GNOMEVFSSERVICE_CID,

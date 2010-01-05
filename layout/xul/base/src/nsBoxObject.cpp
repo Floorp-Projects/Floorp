@@ -153,7 +153,12 @@ nsBoxObject::GetFrame(PRBool aFlushLayout)
     shell->FlushPendingNotifications(Flush_Frames);
   }
 
-  return shell->GetPrimaryFrameFor(mContent);
+  // The flush might have killed mContent.
+  if (!mContent) {
+    return nsnull;
+  }
+
+  return mContent->GetPrimaryFrame();
 }
 
 nsIPresShell*

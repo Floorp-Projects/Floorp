@@ -136,11 +136,11 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 }
 
 void
-nsVideoFrame::Destroy()
+nsVideoFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   nsContentUtils::DestroyAnonymousContent(&mVideoControls);
   nsContentUtils::DestroyAnonymousContent(&mPosterImage);
-  nsContainerFrame::Destroy();
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 PRBool

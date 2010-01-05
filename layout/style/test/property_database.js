@@ -613,7 +613,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "default" ],
-		other_values: [ "none" ],
+		other_values: [ "none", "menu", "tooltip", "sheet" ],
 		invalid_values: []
 	},
 	"azimuth": {

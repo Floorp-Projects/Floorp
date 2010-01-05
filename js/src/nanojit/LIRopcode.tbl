@@ -145,8 +145,8 @@ OPDEF(xf,       49, Op2,  Void) // exit if false  (0x31 0011 0001)
 OPDEF(qlo,      50, Op1,  I32)  // get the low  32 bits of a 64-bit value
 OPDEF(qhi,      51, Op1,  I32)  // get the high 32 bits of a 64-bit value
 
-OPDEF(ldcsb,    52, Ld,   Void) // non-volatile  8-bit integer load, sign-extednded to 32-bit
-OPDEF(ldcss,    53, Ld,   Void) // non-volatile 16-bit integer load, sign-extednded to 32-bit
+OPDEF(ldcsb,    52, Ld,   I32)  // non-volatile  8-bit integer load, sign-extended to 32-bit
+OPDEF(ldcss,    53, Ld,   I32)  // non-volatile 16-bit integer load, sign-extended to 32-bit
 
 OPDEF(ov,       54, Op1,  I32)  // test for overflow;  value must have just been computed
 

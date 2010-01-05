@@ -52,6 +52,8 @@
 #include "nsCSSPropertySet.h"
 #include "nsStyleAnimation.h"
 #include "nsCSSDataBlock.h"
+#include "nsEventDispatcher.h"
+#include "nsGUIEvent.h"
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
@@ -334,12 +336,20 @@ nsTransitionManager::nsTransitionManager(nsPresContext *aPresContext)
 
 nsTransitionManager::~nsTransitionManager()
 {
+  NS_ABORT_IF_FALSE(!mPresContext, "Disconnect should have been called");
+}
+
+void
+nsTransitionManager::Disconnect()
+{
   // Content nodes might outlive the transition manager.
   while (!PR_CLIST_IS_EMPTY(&mElementTransitions)) {
     ElementTransitions *head = static_cast<ElementTransitions*>(
                                  PR_LIST_HEAD(&mElementTransitions));
     head->Destroy();
   }
+
+  mPresContext = nsnull;
 }
 
 static PRBool
@@ -781,9 +791,7 @@ nsTransitionManager::AddElementTransitions(ElementTransitions* aElementTransitio
  * nsISupports implementation
  */
 
-NS_IMPL_ADDREF_USING_AGGREGATOR(nsTransitionManager, mPresContext)
-NS_IMPL_RELEASE_USING_AGGREGATOR(nsTransitionManager, mPresContext)
-NS_IMPL_QUERY_INTERFACE1(nsTransitionManager, nsIStyleRuleProcessor)
+NS_IMPL_ISUPPORTS1(nsTransitionManager, nsIStyleRuleProcessor)
 
 /*
  * nsIStyleRuleProcessor implementation
@@ -882,9 +890,38 @@ nsTransitionManager::MediumFeaturesChanged(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+struct TransitionEventInfo {
+  nsCOMPtr<nsIContent> mElement;
+  nsTransitionEvent mEvent;
+
+  TransitionEventInfo(nsIContent *aElement, nsCSSProperty aProperty,
+                      TimeDuration aDuration)
+    : mElement(aElement),
+      mEvent(PR_TRUE, NS_TRANSITION_END,
+             NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty)),
+             aDuration.ToSeconds())
+  {
+  }
+
+  // nsTransitionEvent doesn't support copy-construction, so we need
+  // to ourselves in order to work with nsTArray
+  TransitionEventInfo(const TransitionEventInfo &aOther)
+    : mElement(aOther.mElement),
+      mEvent(PR_TRUE, NS_TRANSITION_END,
+             aOther.mEvent.propertyName, aOther.mEvent.elapsedTime)
+  {
+  }
+};
+
 /* virtual */ void
 nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
 {
+  NS_ABORT_IF_FALSE(mPresContext,
+                    "refresh driver should not notify additional observers "
+                    "after pres context has been destroyed");
+
+  nsTArray<TransitionEventInfo> events;
+
   // Trim transitions that have completed, and post restyle events for
   // frames that are still transitioning.
   {
@@ -905,6 +942,13 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
         ElementPropertyTransition &pt = et->mPropertyTransitions[i];
         if (pt.mStartTime + pt.mDuration <= aTime) {
           // This transition has completed.
+          nsCSSProperty prop = pt.mProperty;
+          if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_REPORT_OTHER_NAME)) {
+            prop = nsCSSProps::OtherNameFor(prop);
+          }
+          events.AppendElement(
+            TransitionEventInfo(et->mElement, prop, pt.mDuration));
+
           et->mPropertyTransitions.RemoveElementAt(i);
         }
       } while (i != 0);
@@ -923,6 +967,15 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
 
   // We might have removed transitions above.
   TransitionsRemoved();
+
+  for (PRUint32 i = 0, i_end = events.Length(); i < i_end; ++i) {
+    TransitionEventInfo &info = events[i];
+    nsEventDispatcher::Dispatch(info.mElement, mPresContext, &info.mEvent);
+
+    if (!mPresContext) {
+      break;
+    }
+  }
 }
 
 void

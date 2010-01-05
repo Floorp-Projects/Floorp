@@ -76,6 +76,13 @@ class nsBlockFrame;
 class nsLayoutUtils
 {
 public:
+
+  /**
+   * Uses heuristics to figure out the appropriate child list name
+   * for aChildFrame.
+   */
+  static nsIAtom* GetChildListNameFor(nsIFrame* aChildFrame);
+
   /**
    * GetBeforeFrame returns the outermost :before frame of the given frame, if
    * one exists.  This is typically O(1).  The frame passed in must be

@@ -122,6 +122,7 @@ function viewSource(url)
 
   gBrowser.addEventListener("pagehide", onUnloadContent, true);
   gBrowser.addEventListener("pageshow", onLoadContent, true);
+  gBrowser.addEventListener("command", onCommandContent, false);
 
   var loadFromURL = true;
 
@@ -268,6 +269,63 @@ function onUnloadContent()
     window.content.getSelection().QueryInterface(Ci.nsISelectionPrivate)
           .removeSelectionListener(gSelectionListener);
     gSelectionListener.attached = false;
+  }
+}
+
+/**
+ * Handle command events bubbling up from error page content
+ */
+function onCommandContent(event) {
+  // Don't trust synthetic events
+  if (!event.isTrusted)
+    return;
+
+  var target = event.originalTarget;
+  var errorDoc = target.ownerDocument;
+  
+  var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
+                    .getService(Ci.nsIURLFormatter);
+
+  if (/^about:blocked/.test(errorDoc.documentURI)) {
+    // The event came from a button on a malware/phishing block page
+    // First check whether it's malware or phishing, so that we can
+    // use the right strings/links
+    var isMalware = /e=malwareBlocked/.test(errorDoc.documentURI);
+    
+    if (target == errorDoc.getElementById('getMeOutButton')) {
+      // Instead of loading some safe page, just close the window
+      window.close();
+    } else if (target == errorDoc.getElementById('reportButton')) {
+      // This is the "Why is this site blocked" button.  For malware,
+      // we can fetch a site-specific report, for phishing, we redirect
+      // to the generic page describing phishing protection.
+
+      if (isMalware) {
+        // Get the stop badware "why is this blocked" report url,
+        // append the current url, and go there.
+        try {
+          let reportURL = formatter.formatURLPref("browser.safebrowsing.malware.reportURL", true);
+          reportURL += errorDoc.location.href.slice(12);
+          openURL(reportURL);
+        } catch (e) {
+          Components.utils.reportError("Couldn't get malware report URL: " + e);
+        }
+      } else { // It's a phishing site, not malware
+        try {
+          var infoURL = formatter.formatURLPref("browser.safebrowsing.warning.infoURL", true);
+          openURL(infoURL);
+        } catch (e) {
+          Components.utils.reportError("Couldn't get phishing info URL: " + e);
+        }
+      }
+    } else if (target == errorDoc.getElementById('ignoreWarningButton')) {
+      // Allow users to override and continue through to the site,
+      // but add a notify bar as a reminder, so that they don't lose
+      // track after, e.g., tab switching.
+      gBrowser.loadURIWithFlags(content.location.href,
+                                Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
+                                null, null, null);
+    }
   }
 }
 

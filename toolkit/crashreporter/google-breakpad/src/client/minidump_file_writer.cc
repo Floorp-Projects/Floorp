@@ -37,6 +37,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "common/linux/linux_syscall_support.h"
+#include "common/linux/linux_libc_support.h"
 #include "client/minidump_file_writer-inl.h"
 #include "common/string_conversion.h"
 
@@ -53,7 +55,11 @@ MinidumpFileWriter::~MinidumpFileWriter() {
 
 bool MinidumpFileWriter::Open(const char *path) {
   assert(file_ == -1);
+#if __linux__
+  file_ = sys_open(path, O_WRONLY | O_CREAT | O_EXCL, 0600);
+#else
   file_ = open(path, O_WRONLY | O_CREAT | O_EXCL, 0600);
+#endif
 
   return file_ != -1;
 }
@@ -63,7 +69,11 @@ bool MinidumpFileWriter::Close() {
 
   if (file_ != -1) {
     ftruncate(file_, position_);
+#if __linux__
+    result = (sys_close(file_) == 0);
+#else
     result = (close(file_) == 0);
+#endif
     file_ = -1;
   }
 
@@ -227,9 +237,16 @@ bool MinidumpFileWriter::Copy(MDRVA position, const void *src, ssize_t size) {
     return false;
 
   // Seek and write the data
-  if (lseek(file_, position, SEEK_SET) == static_cast<off_t>(position))
-    if (write(file_, src, size) == size)
+#if __linux__
+  if (sys_lseek(file_, position, SEEK_SET) == static_cast<off_t>(position)) {
+    if (sys_write(file_, src, size) == size) {
+#else
+  if (lseek(file_, position, SEEK_SET) == static_cast<off_t>(position)) {
+    if (write(file_, src, size) == size) {
+#endif
       return true;
+    }
+  }
 
   return false;
 }

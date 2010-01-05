@@ -49,8 +49,6 @@ LOCAL_INCLUDES 	= -I$(srcdir)/../../..
 
 CPPSRCS	= \
   exception_handler.cc \
-  minidump_generator.cc \
-  linux_thread.cc \
   $(NULL)
 
 # need static lib

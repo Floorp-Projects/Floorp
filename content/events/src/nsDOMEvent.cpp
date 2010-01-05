@@ -96,7 +96,8 @@ static const char* const sEventNames[] = {
   "MozRotateGesture",
   "MozTapGesture",
   "MozPressTapGesture",
-  "MozScrolledAreaChanged"
+  "MozScrolledAreaChanged",
+  "transitionend"
 };
 
 static char *sPopupAllowedEvents;
@@ -709,6 +710,10 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
     else if (atom == nsGkAtoms::onMozTapGesture)
       mEvent->message = NS_SIMPLE_GESTURE_TAP;
   }
+  else if (mEvent->eventStructType == NS_TRANSITION_EVENT) {
+    if (atom == nsGkAtoms::ontransitionend)
+      mEvent->message = NS_TRANSITION_END;
+  }
 
   if (mEvent->message == NS_USER_DEFINED_EVENT)
     mEvent->userType = atom;
@@ -1009,6 +1014,16 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       simpleGestureEvent->direction = oldSimpleGestureEvent->direction;
       simpleGestureEvent->delta = oldSimpleGestureEvent->delta;
       newEvent = simpleGestureEvent;
+      break;
+    }
+    case NS_TRANSITION_EVENT:
+    {
+      nsTransitionEvent* oldTransitionEvent =
+        static_cast<nsTransitionEvent*>(mEvent);
+      newEvent = new nsTransitionEvent(PR_FALSE, msg,
+                                       oldTransitionEvent->propertyName,
+                                       oldTransitionEvent->elapsedTime);
+      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
       break;
     }
     default:
@@ -1499,6 +1514,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_MozPressTapGesture];
   case NS_SCROLLEDAREACHANGED:
     return sEventNames[eDOMEvents_MozScrolledAreaChanged];
+  case NS_TRANSITION_END:
+    return sEventNames[eDOMEvents_transitionend];
   default:
     break;
   }

@@ -55,7 +55,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   nsSplitterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-  virtual void Destroy();
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const {

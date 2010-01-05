@@ -53,6 +53,7 @@
 #include "nsThreadUtils.h"
 #include "nsPageContentFrame.h"
 #include "nsCSSPseudoElements.h"
+#include "nsRefreshDriver.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -72,25 +73,28 @@ class nsICSSAnonBoxPseudo;
 class nsPageContentFrame;
 struct PendingBinding;
 
-struct nsFindFrameHint
-{
-  nsIFrame *mPrimaryFrameForPrevSibling;  // weak ref to the primary frame for the content for which we need a frame
-  nsFindFrameHint() : mPrimaryFrameForPrevSibling(nsnull) { }
-};
-
 typedef void (nsLazyFrameConstructionCallback)
              (nsIContent* aContent, nsIFrame* aFrame, void* aArg);
 
 class nsFrameConstructorState;
 class nsFrameConstructorSaveState;
 
-class nsCSSFrameConstructor
+class nsCSSFrameConstructor : public nsARefreshObserver
 {
 public:
   nsCSSFrameConstructor(nsIDocument *aDocument, nsIPresShell* aPresShell);
   ~nsCSSFrameConstructor(void) {
     NS_ASSERTION(mUpdateCount == 0, "Dying in the middle of our own update?");
   }
+
+  // Matches signature on nsARefreshObserver.  Just like
+  // NS_DECL_ISUPPORTS, but without the QI part.
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+protected:
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+public:
 
   struct RestyleData;
   friend struct RestyleData;
@@ -103,6 +107,7 @@ public:
   static void GetAlternateTextFor(nsIContent*    aContent,
                                   nsIAtom*       aTag,  // content object's tag
                                   nsXPIDLString& aAltText);
+
 private: 
   // These are not supported and are not implemented! 
   nsCSSFrameConstructor(const nsCSSFrameConstructor& aCopy); 
@@ -241,6 +246,9 @@ public:
   {
     PostRestyleEventCommon(aContent, aRestyleHint, aMinChangeHint, PR_TRUE);
   }
+
+  // nsARefreshObserver
+  virtual void WillRefresh(mozilla::TimeStamp aTime);
 private:
   /**
    * Notify the frame constructor that a content node needs to have its
@@ -285,14 +293,6 @@ public:
   // Copy over fixed frames from aParentFrame's prev-in-flow
   nsresult ReplicateFixedFrames(nsPageContentFrame* aParentFrame);
 
-  // Request to find the primary frame associated with a given content object.
-  // This is typically called by the pres shell when there is no mapping in
-  // the pres shell hash table
-  nsresult FindPrimaryFrameFor(nsFrameManager*  aFrameManager,
-                               nsIContent*      aContent,
-                               nsIFrame**       aFrame,
-                               nsFindFrameHint* aHint);
-
   // Get the XBL insertion point for a child
   nsresult GetInsertionPoint(nsIFrame*     aParentFrame,
                              nsIContent*   aChildContent,
@@ -307,8 +307,6 @@ public:
                                 PRBool          aIsAppend,
                                 PRBool          aIsScrollbar,
                                 nsILayoutHistoryState* aFrameState);
-
-  nsresult RemoveMappingsForFrameSubtree(nsIFrame* aRemovedFrame);
 
   // GetInitialContainingBlock() is deprecated in favor of GetRootElementFrame();
   // nsIFrame* GetInitialContainingBlock() { return mRootElementFrame; }
@@ -338,6 +336,7 @@ private:
                              PRInt32         aStateMask);
 
   /* aMinHint is the minimal change that should be made to the element */
+  // XXXbz do we really need the aPrimaryFrame argument here?
   void RestyleElement(nsIContent*     aContent,
                       nsIFrame*       aPrimaryFrame,
                       nsChangeHint    aMinHint);
@@ -452,7 +451,8 @@ private:
   nsresult AppendFrames(nsFrameConstructorState&       aState,
                         nsIFrame*                      aParentFrame,
                         nsFrameItems&                  aFrameList,
-                        nsIFrame*                      aPrevSibling);
+                        nsIFrame*                      aPrevSibling,
+                        PRBool                         aIsRecursiveCall = PR_FALSE);
 
   // BEGIN TABLE SECTION
   /**
@@ -551,7 +551,7 @@ private:
      not the thing that ends up in aFrameItems?  If not, would it be safe to do
      the add into the frame construction state after processing kids?  Look
      into this as a followup!), process children as needed, etc.  It is NOT
-     expected to deal with the primary frame map.
+     expected to deal with setting the frame on the content.
 
      @param aState the frame construction state to use.
      @param aItem the frame construction item to use
@@ -561,7 +561,7 @@ private:
      @param aFrameItems the frame list to add the new frame (or its
                         placeholder) to.
      @param aFrame out param handing out the frame that was constructed.  This
-                   frame is what the caller will add to the primary frame map.
+                   frame is what the caller will set as the frame on the content.
   */
   typedef nsresult
     (nsCSSFrameConstructor::* FrameFullConstructor)(nsFrameConstructorState& aState,
@@ -573,11 +573,11 @@ private:
 
   /* Bits that modify the way a FrameConstructionData is handled */
 
-  /* If the FCDATA_SKIP_FRAMEMAP bit is set, then the frame created should not
-     be added to the primary frame map.  This flag might get ignored when used
-     with FCDATA_MAY_NEED_SCROLLFRAME, since scrollframe construction will add
-     to the frame map. */
-#define FCDATA_SKIP_FRAMEMAP 0x1
+  /* If the FCDATA_SKIP_FRAMESET bit is set, then the frame created should not
+     be set as the primary frame on the content node.  This should only be used
+     in very rare cases when we create more than one frame for a given content
+     node. */
+#define FCDATA_SKIP_FRAMESET 0x1
   /* If the FCDATA_FUNC_IS_DATA_GETTER bit is set, then the mFunc of the
      FrameConstructionData is a getter function that can be used to get the
      actual FrameConstructionData to use. */
@@ -607,9 +607,7 @@ private:
      set. */
 #define FCDATA_SUPPRESS_FRAME 0x40
   /* If FCDATA_MAY_NEED_SCROLLFRAME is set, the new frame should be wrapped in
-     a scrollframe if its overflow type so requires.  This flag might override
-     FCDATA_SKIP_FRAMEMAP, since scrollframe construction will add to the frame
-     map. */
+     a scrollframe if its overflow type so requires. */
 #define FCDATA_MAY_NEED_SCROLLFRAME 0x80
 #ifdef MOZ_XUL
   /* If FCDATA_IS_POPUP is set, the new frame is a XUL popup frame.  These need
@@ -1129,8 +1127,8 @@ private:
     FindObjectData(nsIContent* aContent, nsStyleContext* aStyleContext);
 
   /* Construct a frame from the given FrameConstructionItem.  This function
-     will handle adding the frame to frame lists, processing children, adding
-     it to the primary frame map, and so forth.
+     will handle adding the frame to frame lists, processing children, setting
+     the frame as the primary frame for the item's content, and so forth.
 
      @param aItem the FrameConstructionItem to use.
      @param aState the frame construction state to use.
@@ -1344,7 +1342,6 @@ private:
 
   // Build a scroll frame: 
   //  Calls BeginBuildingScrollFrame, InitAndRestoreFrame, and then FinishBuildingScrollFrame.
-  //  Sets the primary frame for the content to the output aNewFrame.
   // @param aNewFrame the created scrollframe --- output only
   // @param aParentFrame the geometric parent that the scrollframe will have.
   nsresult
@@ -1393,10 +1390,11 @@ private:
   // containing block (either of aFrame or of its parent) due to {ib} splits or
   // table pseudo-frames, recreate the relevant frame subtree.  The return value
   // indicates whether this happened.  If this method returns true, *aResult is
-  // the return value of ReframeContainingBlock or RecreateFramesForContent.
-  // If this method returns false, the value of *aResult is not affected.
-  // aFrame and aResult must not be null.  aFrame must be the result of a
-  // GetPrimaryFrameFor() call (which means its parent is also not null).
+  // the return value of ReframeContainingBlock or RecreateFramesForContent.  If
+  // this method returns false, the value of *aResult is not affected.  aFrame
+  // and aResult must not be null.  aFrame must be the result of a
+  // GetPrimaryFrame() call on a content node (which means its parent is also
+  // not null).
   PRBool MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
                                                nsresult* aResult);
 
@@ -1526,21 +1524,6 @@ private:
 
   nsresult StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint);
 
-  /** Helper function that searches the immediate child frames 
-    * (and their children if the frames are "special")
-    * for a frame that maps the specified content object
-    *
-    * @param aParentFrame   the primary frame for aParentContent
-    * @param aContent       the content node for which we seek a frame
-    * @param aParentContent the parent for aContent 
-    * @param aHint          an optional hint used to make the search for aFrame faster
-    */
-  nsIFrame* FindFrameWithContent(nsFrameManager*  aFrameManager,
-                                 nsIFrame*        aParentFrame,
-                                 nsIContent*      aParentContent,
-                                 nsIContent*      aContent,
-                                 nsFindFrameHint* aHint);
-
   //----------------------------------------
 
   // Methods support :first-letter style
@@ -1585,6 +1568,7 @@ private:
                                    nsIPresShell*    aPresShell,
                                    nsFrameManager*  aFrameManager,
                                    nsIFrame*        aFrame,
+                                   nsIFrame*        aBlockFrame,
                                    PRBool*          aStopLooking);
 
   // Special remove method for those pesky floating first-letter frames
@@ -1698,21 +1682,6 @@ public:
     nsCOMPtr<nsIContent> mContent;
   };
 
-  class RestyleEvent;
-  friend class RestyleEvent;
-
-  class RestyleEvent : public nsRunnable {
-  public:
-    NS_DECL_NSIRUNNABLE
-    RestyleEvent(nsCSSFrameConstructor *aConstructor)
-      : mConstructor(aConstructor) {
-      NS_PRECONDITION(aConstructor, "Must have a constructor!");
-    }
-    void Revoke() { mConstructor = nsnull; }
-  private:
-    nsCSSFrameConstructor *mConstructor;
-  };
-
   friend class nsFrameConstructorState;
 
 private:
@@ -1765,10 +1734,12 @@ private:
   PRPackedBool        mRebuildAllStyleData : 1;
   // This is true if mDocElementContainingBlock supports absolute positioning
   PRPackedBool        mHasRootAbsPosContainingBlock : 1;
+  // True if we're already waiting for a refresh notification
+  PRPackedBool        mObservingRefreshDriver : 1;
+  // True if we're in the middle of a nsRefreshDriver refresh
+  PRPackedBool        mInStyleRefresh : 1;
   PRUint32            mHoverGeneration;
   nsChangeHint        mRebuildAllExtraHint;
-
-  nsRevocableEventPtr<RestyleEvent> mRestyleEvent;
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 

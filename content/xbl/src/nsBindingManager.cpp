@@ -64,10 +64,6 @@
 #include "nsIXBLDocumentInfo.h"
 #include "nsXBLInsertionPoint.h"
 
-#include "nsIStyleSheet.h"
-#include "nsHTMLStyleSheet.h"
-#include "nsIHTMLCSSStyleSheet.h"
-
 #include "nsIStyleRuleProcessor.h"
 #include "nsRuleProcessorData.h"
 #include "nsIWeakReference.h"

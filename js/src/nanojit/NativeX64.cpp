@@ -631,7 +631,7 @@ namespace nanojit
             // To make sure floating point operations stay in FPU registers
             // as much as possible, make sure that only a few opcodes are
             // reserving GPRs.
-            NanoAssert(a->isop(LIR_quad) || a->isop(LIR_ldq) || a->isop(LIR_ldqc)|| a->isop(LIR_ld32f) || a->isop(LIR_ldc32f)|| a->isop(LIR_u2f) || a->isop(LIR_float));
+            NanoAssert(a->isop(LIR_quad) || a->isop(LIR_ldq) || a->isop(LIR_ldqc)|| a->isop(LIR_ld32f) || a->isop(LIR_ldc32f)|| a->isop(LIR_u2f) || a->isop(LIR_float) || a->isop(LIR_fcall));
             allow &= ~rmask(rr);
             ra = findRegFor(a, allow);
         } else {
@@ -1260,7 +1260,7 @@ namespace nanojit
             }
             Register r = prepResultReg(ins, GpRegs); // x64 can use any GPR as setcc target
             MOVZX8(r, r);
-            if (op == LIR_fgt) 
+            if (op == LIR_fgt)
                 SETA(r);
             else
                 SETAE(r);
@@ -1345,6 +1345,7 @@ namespace nanojit
         // Restore RSP from RBP, undoing SUB(RSP,amt) in the prologue
         MR(RSP,FP);
 
+        releaseRegisters();
         assignSavedRegs();
         LIns *value = ins->oprnd1();
         Register r = ins->isop(LIR_ret) ? RAX : XMM0;
@@ -1401,7 +1402,7 @@ namespace nanojit
                 regalloc_load(ins, FpRegs, rr, dr, rb);
                 NanoAssert(IsFpReg(rr));
                 CVTSS2SD(rr, rr);
-                MOVSSRM(rr, dr, rb); 
+                MOVSSRM(rr, dr, rb);
                 break;
             default:
                 NanoAssertMsg(0, "asm_load64 should never receive this LIR opcode");
@@ -1508,9 +1509,9 @@ namespace nanojit
 
     void Assembler::asm_store32(LOpcode op, LIns *value, int d, LIns *base) {
 
-        // quirk of x86-64: reg cannot appear to be ah/bh/ch/dh 
+        // quirk of x86-64: reg cannot appear to be ah/bh/ch/dh
         // for single-byte stores with REX prefix
-        const RegisterMask SrcRegs = 
+        const RegisterMask SrcRegs =
                         (op == LIR_stb) ?
                         (GpRegs & ~(1<<RSP | 1<<RBP | 1<<RSI | 1<<RDI)) :
                         GpRegs;
@@ -1676,7 +1677,7 @@ namespace nanojit
 
     NIns* Assembler::genPrologue() {
         // activation frame is 4 bytes per entry even on 64bit machines
-        uint32_t stackNeeded = max_stk_used + _activation.tos * 4;
+        uint32_t stackNeeded = max_stk_used + _activation.stackSlotsNeeded() * 4;
 
         uint32_t stackPushed =
             sizeof(void*) + // returnaddr

@@ -99,9 +99,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01c.svg objectBoundingBox-and-pattern-01-ref.svg
-# skip the next test on cocoa, since behaviour depends on the -minor- version of the 10.4 OS.
-# See bugs 379610 and 432298.
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg
+fails-if(http.oscpu.match(/Mac\x20OS\x20X\x2010\.4$/)) == opacity-and-gradient-01.svg pass.svg # fails on OS X 10.4 (bug 379610)
 == opacity-and-pattern-01.svg pass.svg
 == path-01.svg path-01-ref.svg
 == pattern-live-01a.svg pattern-live-01-ref.svg
@@ -135,4 +133,5 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weigh
 == text-style-01e.svg text-style-01-ref.svg
 == thin-stroke-01.svg pass.svg
 == userSpaceOnUse-and-pattern-01.svg userSpaceOnUse-and-pattern-01-ref.svg
+== viewBox-and-pattern-01.svg pass.svg
 == viewport-percent-graphic-user-01.svg pass.svg
