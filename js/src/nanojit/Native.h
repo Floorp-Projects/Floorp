@@ -76,6 +76,10 @@
 #  define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
 #endif
 
+#ifndef NJ_USES_QUAD_CONSTANTS
+#  define NJ_USES_QUAD_CONSTANTS 0
+#endif
+
 namespace nanojit {
 
     inline Register nextreg(Register r) {
