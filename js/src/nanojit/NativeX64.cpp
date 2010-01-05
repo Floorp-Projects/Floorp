@@ -631,7 +631,11 @@ namespace nanojit
             // To make sure floating point operations stay in FPU registers
             // as much as possible, make sure that only a few opcodes are
             // reserving GPRs.
-            NanoAssert(a->isop(LIR_quad) || a->isop(LIR_ldq) || a->isop(LIR_ldqc)|| a->isop(LIR_ld32f) || a->isop(LIR_ldc32f)|| a->isop(LIR_u2f) || a->isop(LIR_float) || a->isop(LIR_fcall));
+            NanoAssert(a->isop(LIR_quad) || a->isop(LIR_float) ||
+                       a->isop(LIR_ldf) || a->isop(LIR_ldfc) ||
+                       a->isop(LIR_ldq) || a->isop(LIR_ldqc) ||
+                       a->isop(LIR_ld32f) || a->isop(LIR_ldc32f) ||
+                       a->isop(LIR_u2f) || a->isop(LIR_fcall));
             allow &= ~rmask(rr);
             ra = findRegFor(a, allow);
         } else {
@@ -1387,6 +1391,8 @@ namespace nanojit
         switch (ins->opcode()) {
             case LIR_ldq:
             case LIR_ldqc:
+            case LIR_ldf:
+            case LIR_ldfc:
                 regalloc_load(ins, GpRegs, rr, dr, rb);
                 if (IsGpReg(rr)) {
                     // general 64bit load, 32bit const displacement
@@ -1468,6 +1474,7 @@ namespace nanojit
 
         switch (op) {
             case LIR_stqi:
+            case LIR_stfi:
             {
                 if (IsGpReg(r)) {
                     // gpr store

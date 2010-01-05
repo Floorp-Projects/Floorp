@@ -99,14 +99,13 @@ CLASS(  LOP_F_I,        0,  2)  // 67%  LIR_i2f, LIR_u2f
 CLASS(  LOP_I_F,        0,  2)  // 69%  LIR_qlo, LIR_qhi
 CLASS(  LOP_F_II,       0,  1)  // 70%  LIR_qjoin
 
-    // XXX: "QorF" because the same opcode is used for both 64-bit int and
-    // 64-bit float loads.  Ditto for stores.  That should be fixed, see
-    // bug 520714. 
-CLASS(  LLD_I,          0,  4)  // 74%  LIR_ld
-CLASS(  LLD_QorF,       0,  4)  // 78%  LIR_ldq
+CLASS(  LLD_I,          0,  3)  // 73%  LIR_ld, LIR_ldc, LIR_ld*b, LIR_ld*s
+CLASS(  LLD_Q,          1,  2)  // 75%  LIR_ldq, LIR_ldqc
+CLASS(  LLD_F,          0,  3)  // 78%  LIR_ldf, LIR_ldfc
 
-CLASS(  LST_I,          0,  7)  // 85%  LIR_sti
-CLASS(  LST_QorF,       0,  7)  // 92%  LIR_stqi
+CLASS(  LST_I,          0,  5)  // 83%  LIR_sti
+CLASS(  LST_Q,          1,  4)  // 87%  LIR_stqi
+CLASS(  LST_F,          0,  5)  // 92%  LIR_stfi
 
 CLASS(  LCALL_I_I1,     0,  1)  // 93%  LIR_icall
 CLASS(  LCALL_I_I6,     0,  1)  // 94%  LIR_icall
