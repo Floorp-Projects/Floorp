@@ -178,13 +178,13 @@ OPDEF(__69,     69, None, Void)
 OPDEF(__70,     70, None, Void)
 OPDEF(qaddp,    71, Op2,  I64)  // integer addition for temp pointer calculations (64bit only)
 OPDEF(qparam,   72, P,    I64)  // load a parameter (64bit register or stk location)
-OPDEF(__73,     73, None, Void)
 
-OPDEF(ldq,      74, Ld,   I64)  // 64-bit (quad) load
+OPDEF(ldf,      73, Ld,   F64)  // 64-bit float load
+OPDEF(ldq,      74, Ld,   I64)  // 64-bit integer load
 
 OPDEF(qalloc,   75, I,    I64)  // allocate some stack space (value is 64bit address)
 
-OPDEF(stqi,     76, Sti,  Void) // 64-bit (quad) store
+OPDEF(stqi,     76, Sti,  Void) // 64-bit integer store
 OPDEF(fret,     77, Op1,  Void)
 
 OPDEF(st32f,    78, Sti,  Void) // store 64-bit float as a 32-bit float (dropping precision)
@@ -193,7 +193,8 @@ OPDEF(ld32f,    79, Ld,   F64)  // load 32-bit float and widen to 64-bit float
 OPDEF(fcall,    80, C,    F64)  // subroutine call returning 64-bit (quad) double value
 OPDEF(qcall,    81, C,    I64)  // subroutine call returning 64-bit (quad) integer value
 
-OPDEF(__82,     82, None, Void)
+OPDEF(stfi,     82, Sti,  Void) // 64-bit float store
+
 OPDEF(__83,     83, None, Void)
 OPDEF(__84,     84, None, Void)
 OPDEF(__85,     85, None, Void)
@@ -202,7 +203,7 @@ OPDEF(__87,     87, None, Void)
 
 // All opcodes below this marker are subject to CSE.
 
-OPDEF(quad,     88, N64,  I64)  // 64-bit (quad) constant value
+OPDEF(quad,     88, N64,  I64)  // 64-bit integer constant value
 OPDEF(qcmov,    89, Op3,  I64)  // 64-bit conditional move
 
 OPDEF(i2q,      90, Op1,  I64)  // sign-extend i32 to i64
@@ -213,9 +214,9 @@ OPDEF(u2f,      93, Op1,  F64)  // convert an unsigned 32-bit integer to a float
 OPDEF(__94,     94, None, Void)
 OPDEF(__95,     95, None, Void)
 OPDEF(__96,     96, None, Void)
-OPDEF(__97,     97, None, Void)
 
-OPDEF(ldqc,     98, Ld,   I64)  // non-volatile 64-bit load
+OPDEF(ldfc,     97, Ld,   F64)  // non-volatile 64-bit float load
+OPDEF(ldqc,     98, Ld,   I64)  // non-volatile 64-bit integer load
 
 OPDEF(fneg,     99, Op1,  F64)  // floating-point negation
 OPDEF(fadd,    100, Op2,  F64)  // floating-point addition
@@ -238,7 +239,7 @@ OPDEF(qjoin,   114, Op2,  F64)  // join two 32-bit values (1st arg is low bits, 
 OPDEF(__115,   115, None, Void)
 OPDEF(__116,   116, None, Void)
 OPDEF(__117,   117, None, Void)
-OPDEF(float,   118, N64,  F64)
+OPDEF(float,   118, N64,  F64)  // 64-bit float constant value
 
 // Integer (64-bit) relational operators.
 // NB: These opcodes must remain continuous so that comparison-opcode detection
