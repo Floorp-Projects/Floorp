@@ -99,6 +99,11 @@ LOCAL_INCLUDES = \
     -Ilibffi/include \
     $(NULL)
 
+ifeq ($(OS_ARCH),OS2)
+libffi/.libs/ffi.$(LIB_SUFFIX): libffi/.libs/$(LIB_PREFIX)ffi.a
+	emxomf $<
+endif
+
 SHARED_LIBRARY_LIBS = \
     libffi/.libs/$(LIB_PREFIX)ffi.$(LIB_SUFFIX) \
     $(NULL)
