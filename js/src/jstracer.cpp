@@ -3504,7 +3504,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, JSTraceType t,
     } else {
         JS_ASSERT_IF(t != TT_JSVAL, isNumber(*p) == (t == TT_DOUBLE));
         if (t == TT_DOUBLE) {
-            ins = lir->insLoad(LIR_ldq, base, offset);
+            ins = lir->insLoad(LIR_ldf, base, offset);
         } else if (t == TT_PSEUDOBOOLEAN) {
             ins = lir->insLoad(LIR_ld, base, offset);
         } else {
@@ -3770,7 +3770,7 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing, bool demote)
             x = writeBack(i, lirbuf->sp, nativespOffset(p), demote);
         nativeFrameTracker.set(p, x);
     } else {
-        JS_ASSERT(x->isop(LIR_sti) || x->isop(LIR_stqi));
+        JS_ASSERT(x->isop(LIR_sti) || x->isop(LIR_stqi) || x->isop(LIR_stfi));
 
         int disp;
         LIns *base = x->oprnd2();
@@ -12273,7 +12273,7 @@ LIns* TraceRecorder::stackLoad(LIns* base, uint8 type)
     LOpcode loadOp;
     switch (type) {
       case TT_DOUBLE:
-        loadOp = LIR_ldq;
+        loadOp = LIR_ldf;
         break;
       case TT_OBJECT:
       case TT_STRING:
