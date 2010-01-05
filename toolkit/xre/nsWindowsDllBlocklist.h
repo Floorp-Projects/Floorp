@@ -91,6 +91,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   // of this DLL cause crashes
   {"googledesktopnetwork3.dll", UNVERSIONED},
 
+  // rdolib.dll - Suspected malware
+  {"rdolib.dll", MAKE_VERSION(6,0,88,4)},
+
   // fgjk4wvb.dll - Suspected malware
   {"fgjk4wvb.dll", MAKE_VERSION(8,8,8,8)},
   
