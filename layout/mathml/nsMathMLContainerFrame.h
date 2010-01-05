@@ -193,6 +193,14 @@ public:
                    nsIAtom*        aAttribute,
                    PRInt32         aModType);
 
+  // helper function to apply mirroring to a horizontal coordinate, if needed.
+  nscoord
+  MirrorIfRTL(nscoord aParentWidth, nscoord aChildWidth, nscoord aChildLeading)
+  {
+    return (NS_MATHML_IS_RTL(mPresentationData.flags) ?
+            aParentWidth - aChildWidth - aChildLeading : aChildLeading);
+  }
+
   // --------------------------------------------------------------------------
   // Additional methods 
 

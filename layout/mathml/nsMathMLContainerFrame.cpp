@@ -1193,20 +1193,21 @@ class nsMathMLContainerFrame::RowChildFrameIterator {
 public:
   explicit RowChildFrameIterator(nsMathMLContainerFrame* aParentFrame) :
     mParentFrame(aParentFrame),
-    mChildFrame(aParentFrame->mFrames.FirstChild()),
     mX(0),
     mCarrySpace(0),
-    mFromFrameType(eMathMLFrameType_UNKNOWN)
+    mFromFrameType(eMathMLFrameType_UNKNOWN),
+    mRTL(NS_MATHML_IS_RTL(aParentFrame->mPresentationData.flags))
   {
+    if (!mRTL) {
+      mChildFrame = aParentFrame->mFrames.FirstChild();
+    } else {
+      mChildFrame = aParentFrame->mFrames.LastChild();
+    }
+
     if (!mChildFrame)
       return;
 
     InitMetricsForChild();
-    // Remove left correction in <msqrt> because the sqrt glyph itself is
-    // there first.
-    if (mParentFrame->GetContent()->Tag() == nsGkAtoms::msqrt_) {
-      mX = 0;
-    }
   }
 
   RowChildFrameIterator& operator++()
@@ -1214,7 +1215,12 @@ public:
     // add child size + italic correction
     mX += mSize.mBoundingMetrics.width + mItalicCorrection;
 
-    mChildFrame = mChildFrame->GetNextSibling();
+    if (!mRTL) {
+      mChildFrame = mChildFrame->GetNextSibling();
+    } else {
+      mChildFrame = mChildFrame->GetPrevSibling();
+    }
+
     if (!mChildFrame)
       return *this;
 
@@ -1251,16 +1257,29 @@ private:
   PRInt32 mCarrySpace;
   eMathMLFrameType mFromFrameType;
 
+  bool mRTL;
+
   void InitMetricsForChild()
   {
     GetReflowAndBoundingMetricsFor(mChildFrame, mSize, mSize.mBoundingMetrics,
                                    &mChildFrameType);
-    nscoord leftCorrection;
-    GetItalicCorrection(mSize.mBoundingMetrics, leftCorrection,
-                        mItalicCorrection);
+    nscoord leftCorrection, rightCorrection;
+    GetItalicCorrection(mSize.mBoundingMetrics,
+                        leftCorrection, rightCorrection);
+    if (!mChildFrame->GetPrevSibling() &&
+        mParentFrame->GetContent()->Tag() == nsGkAtoms::msqrt_) {
+      // Remove leading correction in <msqrt> because the sqrt glyph itself is
+      // there first.
+      if (!mRTL) {
+        leftCorrection = 0;
+      } else {
+        rightCorrection = 0;
+      }
+    }
     // add left correction -- this fixes the problem of the italic 'f'
     // e.g., <mo>q</mo> <mi>f</mi> <mo>I</mo> 
     mX += leftCorrection;
+    mItalicCorrection = rightCorrection;
   }
 };
 
