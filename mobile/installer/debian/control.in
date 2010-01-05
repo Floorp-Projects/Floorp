@@ -1,6 +1,6 @@
 #filter substitution
 Source: fennec
-Section: user/internet
+Section: user/network
 Priority: extra
 Maintainer: Mozilla Mobile <mobile@mozilla.com>
 Build-Depends: debhelper (>= 5)
