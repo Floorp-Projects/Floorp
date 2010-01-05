@@ -912,7 +912,15 @@ gfxWindowsPlatform::GetPlatformCMSOutputProfile()
     DWORD size = 1024;
 
     HDC dc = GetDC(nsnull);
-    GetICMProfileW(dc, &size, (LPWSTR)&str);
+    if (!dc)
+        return nsnull;
+
+    __try {
+        GetICMProfileW(dc, &size, (LPWSTR)&str);
+    } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
+        str[0] = 0;
+    }
+
     ReleaseDC(nsnull, dc);
 
     qcms_profile* profile =
