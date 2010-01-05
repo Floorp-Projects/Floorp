@@ -531,6 +531,21 @@
         </body>
       </method>
     </implementation>
+
+#ifdef MOZ_WIDGET_GTK2
+    <handlers>
+      <handler event="DOMMouseScroll">
+      <![CDATA[
+        if (event.detail > 0)
+          this.advanceSelectedTab(1, false);
+        else
+          this.advanceSelectedTab(-1, false);
+
+        event.stopPropagation();
+      ]]>
+      </handler>
+    </handlers>
+#endif
   </binding>
 
   <binding id="tabpanels"
