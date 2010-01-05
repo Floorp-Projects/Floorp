@@ -1785,7 +1785,12 @@ JSFunction::countInterpretedReservedSlots() const
 {
     JS_ASSERT(FUN_INTERPRETED(this));
 
-    return (u.i.nupvars == 0) ? 0 : u.i.script->upvars()->length;
+    uint32 nslots = (u.i.nupvars == 0)
+                    ? 0
+                    : u.i.script->upvars()->length;
+    if (u.i.script->regexpsOffset != 0)
+        nslots += u.i.script->regexps()->length;
+    return nslots;
 }
 
 static uint32
