@@ -40,6 +40,9 @@
 
 #include "nsTitleBarFrame.h"
 
+class nsIBaseWindow;
+class nsMenuPopupFrame;
+
 class nsResizerFrame : public nsTitleBarFrame 
 {
 protected:
@@ -62,12 +65,15 @@ public:
   virtual void MouseClicked(nsPresContext* aPresContext, nsGUIEvent *aEvent);
 
 protected:
+  nsIContent* GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWindow);
+
   Direction GetDirection();
   static void AdjustDimensions(PRInt32* aPos, PRInt32* aSize,
                         PRInt32 aMovement, PRInt8 aResizerDirection);
 
 protected:
-	nsIntRect mWidgetRect;
+	nsIntRect mMouseDownRect;
+	nsIntPoint mMouseDownPoint;
 }; // class nsResizerFrame
 
 #endif /* nsResizerFrame_h___ */

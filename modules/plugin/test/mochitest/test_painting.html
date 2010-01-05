@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for plugin child widgets not being invalidated by scrolling</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    div#container {
+      position: relative;
+      height: 30px;
+      background: blue;
+    }
+    div#clip {
+      overflow:hidden;
+      position:absolute;
+      left: 10.3px;
+      top: 9.7px;
+      width: 10px;
+      height: 0px;
+      background: red;
+    }
+    embed {
+      position:absolute;
+    }
+    embed#paint-waiter {
+      top: 0px;
+      left: 0px;
+      width: 1px;
+      height: 0px;
+    }
+    embed#clipped {
+      left: -5.3px;
+      top: -4.7px;
+      width: 20px;
+      height: 20px;
+    }
+  </style>
+</head>
+<body onload="initialize()">
+<p id="display"></p>
+<div id="container">
+  <embed id="paint-waiter" type="application/x-test"/>
+  <div id="clip">
+    <embed id="clipped" type="application/x-test"
+           drawmode="solid" color="FF808080"/>
+  </div>
+</div>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var paint_waiter;
+var clip;
+var clipped;
+
+function initialize() {
+  paint_waiter = document.getElementById("paint-waiter");
+  clip = document.getElementById("clip");
+  clipped = document.getElementById("clipped");
+
+  is(paint_waiter.getPaintCount(), 0, "zero-sized plugin not painted");
+  waitForPaint(show);
+}
+
+function show() {
+  is(clipped.getPaintCount(), 0, "fully clipped plugin not painted");
+
+  clip.style.height = "10px";
+
+  // Capturing an image (as in a reftest) would force a repaint and use
+  // different paths for the image surface, so instead check the plugin's
+  // paint count.
+  waitForPaint(invalidate);
+}
+
+function invalidate() {
+  is(clipped.getPaintCount(), 1, "partially clipped plugin painted once");
+
+  clipped.setColor("FF00FF00"); // plugin invalidates
+
+  waitForPaint(done);
+}
+
+function done() {
+  is(clipped.getPaintCount(), 2, "painted after invalidate");
+  SimpleTest.finish();  
+}
+
+function waitForPaint(func) {
+  paint_waiter.last_paint_count = paint_waiter.getPaintCount();
+  // Ensure the waiter has been reflowed with zero height, so that this will
+  // change its size and cause a paint.
+  var flush = paint_waiter.offsetHeight;
+  paint_waiter.style.height = "1px";
+  waitForPaintHelper(func);
+}
+
+function waitForPaintHelper(func) {
+  if (paint_waiter.getPaintCount() != paint_waiter.last_paint_count) {
+    // hide the paint waiter
+    paint_waiter.style.height = "0px";
+    setTimeout(func, 0);
+    return;
+  }
+  setTimeout(function() { waitForPaintHelper(func); }, 100);
+}
+
+</script>
+</body>
+</html>

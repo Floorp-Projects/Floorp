@@ -721,6 +721,9 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_SIMPLE_GESTURE_EVENT:
       return NS_NewDOMSimpleGestureEvent(aDOMEvent, aPresContext,
                                          static_cast<nsSimpleGestureEvent*>(aEvent));
+    case NS_TRANSITION_EVENT:
+      return NS_NewDOMTransitionEvent(aDOMEvent, aPresContext,
+                                      static_cast<nsTransitionEvent*>(aEvent));
     }
 
     // For all other types of events, create a vanilla event object.
@@ -789,6 +792,10 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMPageTransitionEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("scrollareaevent"))
     return NS_NewDOMScrollAreaEvent(aDOMEvent, aPresContext, nsnull);
+  // FIXME: Should get spec to say what the right string is here!  This
+  // is probably wrong!
+  if (aEventType.LowerCaseEqualsLiteral("transitionevent"))
+    return NS_NewDOMTransitionEvent(aDOMEvent, aPresContext, nsnull);
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }

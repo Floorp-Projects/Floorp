@@ -98,7 +98,6 @@ public:
 
   //nsIImageMap
   NS_IMETHOD GetBoundsForAreaContent(nsIContent *aContent, 
-                                     nsPresContext* aPresContext, 
                                      nsRect& aBounds);
 
 protected:

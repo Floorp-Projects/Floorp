@@ -2120,9 +2120,9 @@ nsEditor::GetPhonetic(nsAString& aPhonetic)
 
 
 static nsresult
-GetEditorContentWindow(nsIPresShell *aPresShell, nsIDOMElement *aRoot, nsIWidget **aResult)
+GetEditorContentWindow(nsIDOMElement *aRoot, nsIWidget **aResult)
 {
-  if (!aPresShell || !aRoot || !aResult)
+  if (!aRoot || !aResult)
     return NS_ERROR_NULL_POINTER;
 
   *aResult = 0;
@@ -2133,7 +2133,7 @@ GetEditorContentWindow(nsIPresShell *aPresShell, nsIDOMElement *aRoot, nsIWidget
     return NS_ERROR_FAILURE;
 
   // Not ref counted
-  nsIFrame *frame = aPresShell->GetPrimaryFrameFor(content);
+  nsIFrame *frame = content->GetPrimaryFrame();
 
   if (!frame)
     return NS_ERROR_FAILURE;
@@ -2152,17 +2152,9 @@ nsEditor::GetWidget(nsIWidget **aWidget)
   if (!aWidget)
     return NS_ERROR_NULL_POINTER;
   *aWidget = nsnull;
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult res = GetPresShell(getter_AddRefs(shell));
-
-  if (NS_FAILED(res))
-    return res;
-
-  if (!shell)
-    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIWidget> widget;
-  res = GetEditorContentWindow(shell, GetRoot(), getter_AddRefs(widget));
+  nsresult res = GetEditorContentWindow(GetRoot(), getter_AddRefs(widget));
   if (NS_FAILED(res))
     return res;
   if (!widget)
@@ -2222,14 +2214,10 @@ nsEditor::GetPreferredIMEState(PRUint32 *aState)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = GetPresShell(getter_AddRefs(presShell));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIContent> content = do_QueryInterface(GetRoot());
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+  nsIFrame* frame = content->GetPrimaryFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   switch (frame->GetStyleUIReset()->mIMEMode) {
@@ -3807,9 +3795,6 @@ PRBool
 nsEditor::IsEditable(nsIDOMNode *aNode)
 {
   if (!aNode) return PR_FALSE;
-  nsCOMPtr<nsIPresShell> shell;
-  GetPresShell(getter_AddRefs(shell));
-  if (!shell)  return PR_FALSE;
 
   if (IsMozEditorBogusNode(aNode) || !IsModifiableNode(aNode)) return PR_FALSE;
 
@@ -3818,7 +3803,7 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (content)
   {
-    nsIFrame *resultFrame = shell->GetPrimaryFrameFor(content);
+    nsIFrame *resultFrame = content->GetPrimaryFrame();
     if (!resultFrame)   // if it has no frame, it is not editable
       return PR_FALSE;
     NS_ASSERTION(content->IsNodeOfType(nsINode::eTEXT) ||
@@ -4040,12 +4025,16 @@ nsEditor::IsTextNode(nsIDOMNode *aNode)
 PRInt32 
 nsEditor::GetIndexOf(nsIDOMNode *parent, nsIDOMNode *child)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
+  nsCOMPtr<nsINode> parentNode = do_QueryInterface(parent);
+  NS_PRECONDITION(parentNode, "null parentNode in nsEditor::GetIndexOf");
+  NS_PRECONDITION(parentNode->IsNodeOfType(nsINode::eCONTENT) ||
+                    parentNode->IsNodeOfType(nsINode::eDOCUMENT),
+                  "The parent node must be an element node or a document node");
+
   nsCOMPtr<nsIContent> cChild = do_QueryInterface(child);
-  NS_PRECONDITION(content, "null content in nsEditor::GetIndexOf");
   NS_PRECONDITION(cChild, "null content in nsEditor::GetIndexOf");
 
-  return content->IndexOf(cChild);
+  return parentNode->IndexOf(cChild);
 }
   
 
@@ -4156,7 +4145,7 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   
-  nsIFrame *frame = ps->GetPrimaryFrameFor(content);
+  nsIFrame *frame = content->GetPrimaryFrame();
 
   NS_ASSERTION(frame, "no frame, see bug #188946");
   if (!frame)
@@ -5307,12 +5296,7 @@ nsEditor::SwitchTextDirection()
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = GetPresShell(getter_AddRefs(presShell));
-  if (NS_FAILED(rv))
-    return rv;  
-
-  nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
+  nsIFrame *frame = content->GetPrimaryFrame();
   if (!frame)
     return NS_ERROR_FAILURE; 
 

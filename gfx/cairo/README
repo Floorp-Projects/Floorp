@@ -62,6 +62,8 @@ quartz-minimze-gradient-repeat.patch: reduce the number of gradient stop repetit
 
 quartz-first-stop.patch: return the first stop for negative positions on the gradient line of a nonrepeating linear gradient
 
+quartz-glyph-extents.patch: bug 534260; work around incorrect glyph extents returned by quartz for anomalous empty glyphs
+
 ==== pixman patches ====
 
 pixman-neon.patch: add ARM NEON optimized compositing functions

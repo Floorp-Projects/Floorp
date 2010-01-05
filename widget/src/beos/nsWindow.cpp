@@ -92,6 +92,7 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
 // Rollup Listener - static variable defintions
 static nsIRollupListener * gRollupListener           = nsnull;
+static nsIMenuRollup     * gMenuRollup               = nsnull;
 static nsIWidget         * gRollupWidget             = nsnull;
 static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 // Tracking last activated BWindow
@@ -712,7 +713,10 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 //-------------------------------------------------------------------------
 // Capture Roolup Events
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
+NS_METHOD nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
+                                        nsIMenuRollup * aMenuRollup,
+                                        PRBool aDoCapture,
+                                        PRBool aConsumeRollupEvent)
 {
 	if (!mEnabled)
 		return NS_OK;
@@ -724,16 +728,18 @@ NS_METHOD nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aD
 		// assure that remains true.
 		NS_ASSERTION(!gRollupWidget, "rollup widget reassigned before release");
 		gRollupConsumeRollupEvent = aConsumeRollupEvent;
-		NS_IF_RELEASE(gRollupListener);
 		NS_IF_RELEASE(gRollupWidget);
 		gRollupListener = aListener;
-		NS_ADDREF(aListener);
+    NS_IF_RELEASE(gMenuRollup);
+    gMenuRollup = aMenuRollup;
+    NS_IF_ADDREF(aMenuRollup);
 		gRollupWidget = this;
 		NS_ADDREF(this);
 	} 
 	else 
 	{
-		NS_IF_RELEASE(gRollupListener);
+		gRollupListener == nsnull;
+    NS_IF_RELEASE(gMenuRollup);
 		NS_IF_RELEASE(gRollupWidget);
 	}
 
@@ -783,11 +789,10 @@ nsWindow::DealWithPopups(uint32 methodID, nsPoint pos)
 		// want to rollup if the click is in a parent menu of the current submenu.
 		if (rollup) 
 		{
-			nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
-			if ( menuRollup ) 
+			if ( gMenuRollup ) 
 			{
 				nsAutoTArray<nsIWidget*, 5> widgetChain;
-				menuRollup->GetSubmenuWidgetChain(&widgetChain);
+				gMenuRollup->GetSubmenuWidgetChain(&widgetChain);
 
 				for ( PRUint32 i = 0; i < widgetChain.Length(); ++i ) 
 				{

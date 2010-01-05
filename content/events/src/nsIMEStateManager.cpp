@@ -285,8 +285,7 @@ nsTextStateManager::Init(nsIWidget* aWidget,
   // get selection and root content
   nsCOMPtr<nsISelectionController> selCon;
   if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
-    nsIFrame* frame = presShell->GetPrimaryFrameFor(
-                                     static_cast<nsIContent*>(aNode));
+    nsIFrame* frame = static_cast<nsIContent*>(aNode)->GetPrimaryFrame();
     NS_ENSURE_TRUE(frame, NS_ERROR_UNEXPECTED);
 
     frame->GetSelectionController(aPresContext,

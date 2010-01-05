@@ -241,8 +241,10 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
   if (surfaceSize.width <= 0 || surfaceSize.height <= 0)
     return NS_ERROR_FAILURE;
 
-  if (resultOverflows) {
-    // scale down drawing to new pattern surface size
+  if (resultOverflows ||
+      patternWidth != surfaceSize.width ||
+      patternHeight != surfaceSize.height) {
+    // scale drawing to pattern surface size
     nsCOMPtr<nsIDOMSVGMatrix> tempTM, aCTM;
     NS_NewSVGMatrix(getter_AddRefs(tempTM),
                     surfaceSize.width / patternWidth, 0.0f,
@@ -251,7 +253,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
     patternFrame->mCTM->Multiply(tempTM, getter_AddRefs(aCTM));
     aCTM.swap(patternFrame->mCTM);
 
-    // and magnify pattern to compensate
+    // and rescale pattern to compensate
     patternMatrix->Scale(patternWidth / surfaceSize.width,
                          patternHeight / surfaceSize.height);
   }
@@ -532,22 +534,26 @@ nsSVGPatternFrame::ConstructCTM(const gfxRect &callerBBox,
     tCTM.Scale(scale, scale);
   }
 
-  gfxMatrix viewBoxTM;
+  gfxMatrix tm;
   const nsSVGViewBoxRect viewBox = GetViewBox().GetAnimValue();
 
   if (viewBox.height > 0.0f && viewBox.width > 0.0f) {
     nsSVGSVGElement *ctx = aTargetContent->GetCtx();
     float viewportWidth = GetWidth()->GetAnimValue(ctx);
     float viewportHeight = GetHeight()->GetAnimValue(ctx);
+    gfxMatrix viewBoxTM = nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
+                                                          viewBox.x, viewBox.y,
+                                                          viewBox.width, viewBox.height,
+                                                          GetPreserveAspectRatio(),
+                                                          PR_TRUE);
+
     float refX = GetX()->GetAnimValue(ctx);
     float refY = GetY()->GetAnimValue(ctx);
-    viewBoxTM = nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
-                                                viewBox.x + refX, viewBox.y + refY,
-                                                viewBox.width, viewBox.height,
-                                                GetPreserveAspectRatio(),
-                                                PR_TRUE);
+    gfxPoint ref = viewBoxTM.Transform(gfxPoint(refX, refY));
+
+    tm = viewBoxTM * gfxMatrix().Translate(gfxPoint(-ref.x, -ref.y));
   }
-  return viewBoxTM * tCTM;
+  return tm * tCTM;
 }
 
 gfxMatrix

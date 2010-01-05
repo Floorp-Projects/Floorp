@@ -431,7 +431,8 @@ public:
     return mBounds.height;
   }
 
-  static void DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines);
+  static void DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines,
+                             nsIFrame* aDestructRoot);
 
   // search from beginning to end
   // XXX Should switch to API below

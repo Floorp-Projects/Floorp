@@ -100,13 +100,7 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(win);
-  if (!presShell) {
-    // Display:none iframe or something... Bail out
-    return NS_OK;
-  }
-
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+  nsIFrame* frame = content->GetPrimaryFrame();
   if (frame) {
     const nsStyleText* text = frame->GetStyleText();
     *aReturn = !text->WhiteSpaceIsSignificant();
@@ -284,6 +278,12 @@ inDOMUtils::GetRuleNodeForContent(nsIContent* aContent,
 
   nsIPresShell *presShell = doc->GetPrimaryShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_UNEXPECTED);
+
+  nsPresContext *presContext = presShell->GetPresContext();
+  NS_ENSURE_TRUE(presContext, NS_ERROR_UNEXPECTED);
+
+  PRBool safe = presContext->EnsureSafeToHandOutCSSRules();
+  NS_ENSURE_TRUE(safe, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<nsStyleContext> sContext =
     nsComputedDOMStyle::GetStyleContextForContent(aContent, nsnull, presShell);

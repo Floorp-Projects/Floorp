@@ -474,7 +474,7 @@ nsDOMWindowUtils::GetWidgetForElement(nsIDOMElement* aElement)
   nsIPresShell* presShell = doc ? doc->GetPrimaryShell() : nsnull;
 
   if (presShell) {
-    nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+    nsIFrame* frame = content->GetPrimaryFrame();
     if (!frame) {
       frame = presShell->GetRootFrame();
     }
@@ -866,11 +866,7 @@ nsDOMWindowUtils::GetCOWForObject()
       || !hasCap)
     return NS_ERROR_DOM_SECURITY_ERR;
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIXPConnect> xpc = do_GetService("@mozilla.org/js/xpc/XPConnect;1",
-                                             &rv);
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIXPConnect> xpc = nsContentUtils::XPConnect();
 
   // get the xpconnect native call context
   nsAXPCNativeCallContext *cc = nsnull;
@@ -880,7 +876,7 @@ nsDOMWindowUtils::GetCOWForObject()
 
   // Get JSContext of current call
   JSContext* cx;
-  rv = cc->GetJSContext(&cx);
+  nsresult rv = cc->GetJSContext(&cx);
   if(NS_FAILED(rv) || !cx)
     return NS_ERROR_FAILURE;
 
@@ -948,4 +944,45 @@ nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
                                &status);
   *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetClassName(char **aName)
+{
+  if (!nsContentUtils::IsCallerTrustedForRead()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  // get the xpconnect native call context
+  nsAXPCNativeCallContext *cc = nsnull;
+  nsContentUtils::XPConnect()->GetCurrentNativeCallContext(&cc);
+  if(!cc)
+    return NS_ERROR_FAILURE;
+
+  // Get JSContext of current call
+  JSContext* cx;
+  nsresult rv = cc->GetJSContext(&cx);
+  if(NS_FAILED(rv) || !cx)
+    return NS_ERROR_FAILURE;
+
+  // get argc and argv and verify arg count
+  PRUint32 argc;
+  rv = cc->GetArgc(&argc);
+  if(NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  if(argc < 1)
+    return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
+
+  jsval* argv;
+  rv = cc->GetArgvPtr(&argv);
+  if(NS_FAILED(rv) || !argv)
+    return NS_ERROR_FAILURE;
+
+  // Our argument must be a non-null object.
+  if(JSVAL_IS_PRIMITIVE(argv[0]))
+    return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+  *aName = NS_strdup(JS_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[0]))->name);
+  return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }

@@ -799,13 +799,7 @@ _invalidaterect(NPP aNPP,
 {
     _MOZ_LOG(__FUNCTION__);
     AssertPluginThread();
-
-    PluginInstanceChild* actor = InstCast(aNPP);
-    bool sendToParent = actor->InternalInvalidateRect(aInvalidRect);
-
-    if (sendToParent) {
-        actor->SendNPN_InvalidateRect(*aInvalidRect);
-    }
+    InstCast(aNPP)->InvalidateRect(aInvalidRect);
 }
 
 void NP_CALLBACK

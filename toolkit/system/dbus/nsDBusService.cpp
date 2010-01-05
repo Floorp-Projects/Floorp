@@ -136,6 +136,7 @@ static void TimerCallback(nsITimer *aTimer, void *aClosure) {
 
 void nsDBusService::DropConnection() {
   if (mConnection) {
+    dbus_connection_remove_filter(mConnection, dbus_filter, this);
     if (mSingleClient) {
       mSingleClient->UnregisterWithConnection(mConnection);
     }

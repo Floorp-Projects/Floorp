@@ -74,10 +74,7 @@ nsXULSliderAccessible::GetStateInternal(PRUint32 *aState,
   nsCOMPtr<nsIContent> sliderContent(GetSliderNode());
   NS_ENSURE_STATE(sliderContent);
 
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
-  NS_ENSURE_STATE(shell);
-
-  nsIFrame *frame = shell->GetPrimaryFrameFor(sliderContent);
+  nsIFrame *frame = sliderContent->GetPrimaryFrame();
   if (frame && frame->IsFocusable())
     *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
 

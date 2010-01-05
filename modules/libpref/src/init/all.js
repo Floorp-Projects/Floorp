@@ -549,6 +549,9 @@ pref("dom.event.contextmenu.enabled",       true);
 
 pref("javascript.enabled",                  true);
 pref("javascript.options.strict",           false);
+#ifdef DEBUG
+pref("javascript.options.strict.debug",     true);
+#endif
 pref("javascript.options.relimit",          false);
 pref("javascript.options.jit.content",      true);
 pref("javascript.options.jit.chrome",       true);

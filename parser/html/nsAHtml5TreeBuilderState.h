@@ -57,6 +57,8 @@ class nsAHtml5TreeBuilderState {
 
     virtual PRInt32 getOriginalMode() = 0;
 
+    virtual PRBool isFramesetOk() = 0;
+
     virtual PRInt32 getForeignFlag() = 0;
 
     virtual PRBool isNeedToDropLF() = 0;

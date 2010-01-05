@@ -48,11 +48,13 @@ FORCE_SHARED_LIB = 1
 IS_COMPONENT	= 1
 
 
-CPPSRCS = \
-	nsGConfService.cpp \
-	nsGnomeModule.cpp \
-	$(NULL)
+CPPSRCS = nsGnomeModule.cpp
 	
+ifdef MOZ_ENABLE_GCONF
+CPPSRCS += \
+  nsGConfService.cpp \
+  $(NULL)
+endif
 
 ifdef MOZ_ENABLE_GNOMEVFS
 CPPSRCS += \

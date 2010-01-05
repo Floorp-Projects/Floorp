@@ -100,7 +100,7 @@ public:
   
   // nsIFrame overrides - see there for a description
 
-  virtual void Destroy();
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
   
   virtual PRBool IsContainingBlock() const;
 
@@ -263,11 +263,11 @@ protected:
 
   // Get the margin.  aMarginNoAuto is aMargin, but with auto 
   // margins set to 0
-  void GetMargin(nsPresContext*           aPresContext,
-                 const nsHTMLReflowState& aOuterRS,
-                 nsIFrame*                aChildFrame,
-                 nscoord                  aAvailableWidth,
-                 nsMargin&                aMargin);
+  void GetChildMargin(nsPresContext*           aPresContext,
+                      const nsHTMLReflowState& aOuterRS,
+                      nsIFrame*                aChildFrame,
+                      nscoord                  aAvailableWidth,
+                      nsMargin&                aMargin);
 
 private:
   // used to keep track of this frame's children. They are redundant with mFrames, but more convient

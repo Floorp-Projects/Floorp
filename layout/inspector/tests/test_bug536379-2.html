@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=536379
+-->
+<head>
+  <title>Test for Bug 536379</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="data:text/css,@import 'data:text/css,p { color: green }'">
+  <link rel="stylesheet" type="text/css" href="data:text/css,@import &quot;data:text/css,@import 'data:text/css,p { color: green }'&quot;">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=536379">Mozilla Bug 536379</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 536379 **/
+
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+const CI = Components.interfaces;
+const CC = Components.classes;
+
+var domUtils =
+  CC["@mozilla.org/inspector/dom-utils;1"].getService(CI.inIDOMUtils);
+var rules = domUtils.getCSSStyleRules(document.getElementById("display"));
+var firstPRule =
+  rules.GetElementAt(rules.Count() - 2).QueryInterface(CI.nsIDOMCSSStyleRule);
+firstPRule.style.removeProperty("color");
+ok(true, "should not crash");
+
+</script>
+</pre>
+</body>
+</html>

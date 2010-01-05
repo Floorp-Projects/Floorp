@@ -64,7 +64,7 @@ public:
                    nsIFrame*        aParent,
                    nsIFrame*        asPrevInFlow);
 
-  virtual void Destroy();
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,

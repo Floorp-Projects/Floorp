@@ -1385,26 +1385,32 @@ static BOOL DrawingAtWindowTop(CGContextRef cgContext, float viewHeight, float y
   return ctm.ty - yPos >= viewHeight;
 }
 
+static BOOL
+ToolbarCanBeUnified(CGContextRef cgContext, const HIRect& inBoxRect, NSWindow* aWindow)
+{
+  return [aWindow isKindOfClass:[ToolbarWindow class]] &&
+    ![(ToolbarWindow*)aWindow drawsContentsIntoWindowFrame] &&
+    DrawingAtWindowTop(cgContext, [[aWindow contentView] bounds].size.height,
+                       inBoxRect.origin.y);
+}
+
 void
 nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
-                                       nsIFrame *aFrame)
+                                       NSWindow* aWindow)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   float titlebarHeight = 0;
-  NSWindow* win = NativeWindowForFrame(aFrame);
 
-  if ([win isKindOfClass:[ToolbarWindow class]] &&
-      ![(ToolbarWindow*)win drawsContentsIntoWindowFrame] &&
-      DrawingAtWindowTop(cgContext, [[win contentView] bounds].size.height, inBoxRect.origin.y)) {
+  if (ToolbarCanBeUnified(cgContext, inBoxRect, aWindow)) {
     // Consider the titlebar height when calculating the gradient.
-    titlebarHeight = [(ToolbarWindow*)win titlebarHeight];
+    titlebarHeight = [(ToolbarWindow*)aWindow titlebarHeight];
     // Notify the window about the toolbar's height so that it can draw the
     // correct gradient in the titlebar.
-    [(ToolbarWindow*)win setUnifiedToolbarHeight:inBoxRect.size.height];
+    [(ToolbarWindow*)aWindow setUnifiedToolbarHeight:inBoxRect.size.height];
   }
   
-  BOOL isMain = [win isMainWindow] || ![NSView focusView];
+  BOOL isMain = [aWindow isMainWindow] || ![NSView focusView];
 
   // Draw the gradient
   UnifiedGradientInfo info = { titlebarHeight, inBoxRect.size.height, isMain, NO };
@@ -1707,11 +1713,16 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       break;
 
     case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
-      DrawUnifiedToolbar(cgContext, macRect, aFrame);
+      DrawUnifiedToolbar(cgContext, macRect, NativeWindowForFrame(aFrame));
       break;
 
     case NS_THEME_TOOLBAR: {
-      BOOL isMain = [NativeWindowForFrame(aFrame) isMainWindow] || ![NSView focusView];
+      NSWindow* win = NativeWindowForFrame(aFrame);
+      if (ToolbarCanBeUnified(cgContext, macRect, win)) {
+        DrawUnifiedToolbar(cgContext, macRect, win);
+        break;
+      }
+      BOOL isMain = [win isMainWindow] || ![NSView focusView];
       CGRect drawRect = macRect;
 
       // top border

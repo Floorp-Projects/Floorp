@@ -272,9 +272,9 @@ public:
   //nsIPluginInstanceOwner interface
   NS_DECL_NSIPLUGININSTANCEOWNER
 
-  NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData, 
-                    PRUint32 aPostDataLen, void *aHeadersData, 
-                    PRUint32 aHeadersDataLen, PRBool isFile = PR_FALSE);
+  NS_IMETHOD GetURL(const char *aURL, const char *aTarget,
+                    nsIInputStream *aPostStream, 
+                    void *aHeadersData, PRUint32 aHeadersDataLen);
 
   NS_IMETHOD ShowStatus(const PRUnichar *aStatusMsg);
 
@@ -405,6 +405,8 @@ public:
   {
 #ifdef XP_WIN
     return MatchPluginName("Shockwave Flash");
+#elif defined(MOZ_X11)
+    return PR_TRUE;
 #else
     return PR_FALSE;
 #endif
@@ -613,7 +615,7 @@ nsObjectFrame::Init(nsIContent*      aContent,
 }
 
 void
-nsObjectFrame::Destroy()
+nsObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   NS_ASSERTION(!mPreventInstantiation ||
                (mContent && mContent->GetCurrentDoc()->GetDisplayDocument()),
@@ -634,7 +636,7 @@ nsObjectFrame::Destroy()
     mWidget->Destroy();
   }
 
-  nsObjectFrameSuper::Destroy();
+  nsObjectFrameSuper::DestroyFrom(aDestructRoot);
 }
 
 /* virtual */ void
@@ -2606,8 +2608,11 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetInstance(nsIPluginInstance *&aInstance)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarget, void *aPostData, PRUint32 aPostDataLen, void *aHeadersData, 
-                                            PRUint32 aHeadersDataLen, PRBool isFile)
+NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
+                                            const char *aTarget,
+                                            nsIInputStream *aPostStream,
+                                            void *aHeadersData,
+                                            PRUint32 aHeadersDataLen)
 {
   NS_ENSURE_TRUE(mObjectFrame, NS_ERROR_NULL_POINTER);
 
@@ -2632,29 +2637,18 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
 
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIInputStream> postDataStream;
   nsCOMPtr<nsIInputStream> headersDataStream;
+  if (aPostStream && aHeadersData) {
+    if (!aHeadersDataLen)
+      return NS_ERROR_UNEXPECTED;
 
-  // deal with post data, either in a file or raw data, and any headers
-  if (aPostData) {
+    nsCOMPtr<nsIStringInputStream> sis = do_CreateInstance("@mozilla.org/io/string-input-stream;1");
+    if (!sis)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = NS_NewPluginPostDataStream(getter_AddRefs(postDataStream), (const char *)aPostData, aPostDataLen, isFile);
-
-    NS_ASSERTION(NS_SUCCEEDED(rv),"failed in creating plugin post data stream");
-    if (NS_FAILED(rv))
-      return rv;
-
-    if (aHeadersData) {
-      rv = NS_NewPluginPostDataStream(getter_AddRefs(headersDataStream), 
-                                      (const char *) aHeadersData, 
-                                      aHeadersDataLen,
-                                      PR_FALSE,
-                                      PR_TRUE);  // last arg says we are headers, no /r/n/r/n fixup!
-
-      NS_ASSERTION(NS_SUCCEEDED(rv),"failed in creating plugin header data stream");
-      if (NS_FAILED(rv))
-        return rv;
-    }
+    rv = sis->SetData((char *)aHeadersData, aHeadersDataLen);
+    NS_ENSURE_SUCCESS(rv, rv);
+    headersDataStream = do_QueryInterface(sis);
   }
 
   PRInt32 blockPopups =
@@ -2662,7 +2656,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   nsAutoPopupStatePusher popupStatePusher((PopupControlState)blockPopups);
 
   rv = lh->OnLinkClick(mContent, uri, unitarget.get(), 
-                       postDataStream, headersDataStream);
+                       aPostStream, headersDataStream);
 
   return rv;
 }
@@ -4114,6 +4108,12 @@ nsEventStatus nsPluginInstanceOwner::ProcessEventX11Composited(const nsGUIEvent&
           switch (anEvent.message)
             {
             case NS_KEY_DOWN:
+              // Handle NS_KEY_DOWN for modifier key presses
+              // For non-modifiers we get NS_KEY_PRESS
+              if (gdkEvent->is_modifier)
+                event.type = XKeyPress;
+              break;
+            case NS_KEY_PRESS:
               event.type = XKeyPress;
               break;
             case NS_KEY_UP:
@@ -4558,6 +4558,12 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
           switch (anEvent.message)
             {
             case NS_KEY_DOWN:
+              // Handle NS_KEY_DOWN for modifier key presses
+              // For non-modifiers we get NS_KEY_PRESS
+              if (gdkEvent->is_modifier)
+                event.type = XKeyPress;
+              break;
+            case NS_KEY_PRESS:
               event.type = XKeyPress;
               break;
             case NS_KEY_UP:
@@ -4907,19 +4913,8 @@ DepthOfVisual(const Screen* screen, const Visual* visual)
 
 static GdkWindow* GetClosestWindow(nsIDOMElement *element)
 {
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  element->GetOwnerDocument(getter_AddRefs(domDocument));
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDocument);  
-  if (!doc)
-    return nsnull;
-
-  nsIPresShell *presShell = doc->GetPrimaryShell();
-  if (!presShell)
-    return nsnull;
-
   nsCOMPtr<nsIContent> content = do_QueryInterface(element);
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+  nsIFrame* frame = content->GetPrimaryFrame();
   if (!frame)
     return nsnull;
 
@@ -5031,7 +5026,7 @@ nsPluginInstanceOwner::SetupXShm()
 //
 // This method supports the NPImageExpose API which is specific to the
 // HILDON platform.  Basically what it allows us to do is to pass a
-// memory buffer into a plugin (namely flash), and have flase draw
+// memory buffer into a plugin (namely flash), and have flash draw
 // directly into the buffer.
 //
 // It may be faster if the rest of the system used offscreen image
@@ -5066,10 +5061,10 @@ nsPluginInstanceOwner::NativeImageDraw(NPRect* invalidRect)
   if (absPosHeight == 0 || absPosWidth == 0)
     return;
 
-  if (!mSharedXImage ||
-      mPluginSize.width != absPosWidth ||
-      mPluginSize.height != absPosHeight) {
-    
+  PRBool sizeChanged = (mPluginSize.width != absPosWidth ||
+                        mPluginSize.height != absPosHeight);
+
+  if (!mSharedXImage || sizeChanged) {
     mPluginSize = nsIntSize(absPosWidth, absPosHeight);
 
     if (NS_FAILED(SetupXShm()))
@@ -5083,23 +5078,24 @@ nsPluginInstanceOwner::NativeImageDraw(NPRect* invalidRect)
   // setup window such that it knows about the size and clip.  This
   // is to work around a flash clipping bug when using the Image
   // Expose API.
-  
-  NPRect newClipRect;
-  newClipRect.left = 0;
-  newClipRect.top = 0;
-  newClipRect.right = window->width;
-  newClipRect.bottom = window->height;
-  
-  window->clipRect = newClipRect; 
-  window->x = 0;
-  window->y = 0;
+  if (!invalidRect && sizeChanged) {
+    NPRect newClipRect;
+    newClipRect.left = 0;
+    newClipRect.top = 0;
+    newClipRect.right = window->width;
+    newClipRect.bottom = window->height;
     
-  NPSetWindowCallbackStruct* ws_info =
-    static_cast<NPSetWindowCallbackStruct*>(window->ws_info);
-  ws_info->visual = 0;
-  ws_info->colormap = 0;
-  ws_info->depth = 16;
-  mInstance->SetWindow(window);
+    window->clipRect = newClipRect; 
+    window->x = 0;
+    window->y = 0;
+      
+    NPSetWindowCallbackStruct* ws_info =
+      static_cast<NPSetWindowCallbackStruct*>(window->ws_info);
+    ws_info->visual = 0;
+    ws_info->colormap = 0;
+    ws_info->depth = 16;
+    mInstance->SetWindow(window);
+  }
 
   NPEvent pluginEvent;
   NPImageExpose imageExpose;
@@ -5292,8 +5288,13 @@ nsPluginInstanceOwner::Renderer::NativeDraw(QWidget * drawable,
   }
 
 #ifdef MOZ_X11
-  // Translate the dirty rect to drawable coordinates.
-  nsIntRect dirtyRect = mDirtyRect + nsIntPoint(offsetX, offsetY);
+  // Translate the dirty rect to drawable coordinates,
+  // and work around a bug in Flash up to 10.1 d51 at least, where expose
+  // event top left coordinates within the plugin-rect and not at the drawable
+  // origin are misinterpreted.  (We can move the top left coordinate provided
+  // if it is within the clipRect.)
+  nsIntRect dirtyRect(offsetX, offsetY,
+                      mDirtyRect.XMost(), mDirtyRect.YMost());
   // Intersect the dirty rect with the clip rect to ensure that it lies within
   // the drawable.
   if (!dirtyRect.IntersectRect(dirtyRect, clipRect))
@@ -5313,10 +5314,10 @@ nsPluginInstanceOwner::Renderer::NativeDraw(QWidget * drawable,
 #elif defined(MOZ_WIDGET_QT)
       drawable->x11PictureHandle();
 #endif
-    exposeEvent.x = mDirtyRect.x + offsetX;
-    exposeEvent.y = mDirtyRect.y + offsetY;
-    exposeEvent.width  = mDirtyRect.width;
-    exposeEvent.height = mDirtyRect.height;
+    exposeEvent.x = dirtyRect.x;
+    exposeEvent.y = dirtyRect.y;
+    exposeEvent.width  = dirtyRect.width;
+    exposeEvent.height = dirtyRect.height;
     exposeEvent.count = 0;
     // information not set:
     exposeEvent.serial = 0;
@@ -5781,7 +5782,7 @@ nsPluginInstanceOwner::SetAbsoluteScreenPosition(nsIDOMElement* element,
   clip->GetWidth(&width);
   clip->GetHeight(&height);
 
-  mAbsolutePositionClip = gfxRect(left,top, width, height);
+  mAbsolutePositionClip = gfxRect(left, top, width, height);
 
   mBlitParentElement = element;
     

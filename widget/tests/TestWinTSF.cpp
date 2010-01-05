@@ -1424,7 +1424,7 @@ TSFContextImpl::OnLockGranted(DWORD dwLockFlags)
 {
   // If we have a test, run it
   if (mDocMgr->mMgr->mTest &&
-     !(mDocMgr->mMgr->mTestApp->*(mDocMgr->mMgr->mTest))())
+     !((*mDocMgr->mMgr->mTestApp).*(mDocMgr->mMgr->mTest))())
     return S_FALSE;
   return S_OK;
 }
@@ -3070,8 +3070,8 @@ TestApp::GetSelCon(nsISelectionController** aSelCon)
     nsCOMPtr<nsIPresShell> presShell;
     nsr = docShell->GetPresShell(getter_AddRefs(presShell));
     if (NS_SUCCEEDED(nsr) && presShell) {
-      nsIFrame* frame = presShell->GetPrimaryFrameFor(
-          nsCOMPtr<nsIContent>(do_QueryInterface(mCurrentNode)));
+      nsIFrame* frame = 
+        nsCOMPtr<nsIContent>(do_QueryInterface(mCurrentNode))->GetPrimaryFrame();
       if (frame) {
         nsPresContext* presContext = presShell->GetPresContext();
         if (presContext) {

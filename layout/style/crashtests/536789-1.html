@@ -1,0 +1,11 @@
+<!-- Must be in quirks mode -->
+<html>
+  <body>
+  <script>
+    var docEl = document.documentElement;
+    var b = document.body;
+    docEl.removeChild(b);
+    docEl.appendChild(document.createElement("table"));
+    docEl.offsetWidth;
+  </script>
+</html>

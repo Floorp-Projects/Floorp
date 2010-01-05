@@ -72,7 +72,7 @@
 #include "nsContentUtils.h"
 #include "nsIWidget.h"
 #include "mozilla/TimeStamp.h"
-#include "nsRefreshDriver.h"
+#include "nsIContent.h"
 
 class nsImageLoader;
 #ifdef IBMBIDI
@@ -83,7 +83,6 @@ struct nsRect;
 
 class imgIRequest;
 
-class nsIContent;
 class nsIFontMetrics;
 class nsIFrame;
 class nsFrameManager;
@@ -103,6 +102,7 @@ class nsUserFontSet;
 struct nsFontFaceRuleContainer;
 class nsObjectFrame;
 class nsTransitionManager;
+class nsRefreshDriver;
 class imgIContainer;
 
 #ifdef MOZ_REFLOW_PERF
@@ -233,13 +233,7 @@ public:
 
   nsTransitionManager* TransitionManager() { return mTransitionManager; }
 
-  nsRefreshDriver* RefreshDriver() { return &mRefreshDriver; }
-
-  static nsPresContext* FromRefreshDriver(nsRefreshDriver* aRefreshDriver) {
-    return reinterpret_cast<nsPresContext*>(
-             reinterpret_cast<char*>(aRefreshDriver) -
-             offsetof(nsPresContext, mRefreshDriver));
-  }
+  nsRefreshDriver* RefreshDriver() { return mRefreshDriver; }
 #endif
 
   /**
@@ -830,6 +824,12 @@ public:
   // user font set is changed and fonts become unavailable).
   void UserFontSetUpdated();
 
+  // Ensure that it is safe to hand out CSS rules outside the layout
+  // engine by ensuring that all CSS style sheets have unique inners
+  // and, if necessary, synchronously rebuilding all style data.
+  // Returns true on success and false on failure (not safe).
+  PRBool EnsureSafeToHandOutCSSRules();
+
   PRBool MayHavePaintEventListener();
   void NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags);
   void FireDOMPaintEvent();
@@ -910,6 +910,22 @@ public:
    */
   void SMILOverrideStyleChanged(nsIContent* aContent);
 #endif // MOZ_SMIL
+
+  /**
+   * If we have a presshell, and if the given content's current
+   * document is the same as our presshell's document, return the
+   * content's primary frame.  Otherwise, return null.  Only use this
+   * if you care about which presshell the primary frame is in.
+   */
+  nsIFrame* GetPrimaryFrameFor(nsIContent* aContent) {
+    NS_PRECONDITION(aContent, "Don't do that");
+    if (GetPresShell() &&
+        GetPresShell()->GetDocument() == aContent->GetCurrentDoc()) {
+      return aContent->GetPrimaryFrame();
+    }
+    return nsnull;
+  }
+
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();
@@ -957,8 +973,8 @@ protected:
                                         // from gfx back to layout.
   nsIEventStateManager* mEventManager;  // [STRONG]
   nsILookAndFeel*       mLookAndFeel;   // [STRONG]
-  nsRefreshDriver       mRefreshDriver;
-  nsTransitionManager*  mTransitionManager; // owns; it aggregates our refcount
+  nsRefPtr<nsRefreshDriver> mRefreshDriver;
+  nsRefPtr<nsTransitionManager> mTransitionManager;
   nsIAtom*              mMedium;        // initialized by subclass ctors;
                                         // weak pointer to static atom
 

@@ -23,6 +23,7 @@
       window.removeEventListener("load", loadTests, false);
 
       var dir = document.documentElement.getAttribute('directory');
+      var url = "chrome://mochikit/content/" + dir + "/";
       // Find our chrome dir
       var ios = Cc["@mozilla.org/network/io-service;1"].
                   getService(Ci.nsIIOService);
@@ -37,6 +38,33 @@
       chromeDir = chromeDir.parent.QueryInterface(Ci.nsILocalFile);
       chromeDir.appendRelativePath(dir);
 
+      var singleTestPath;
+      if ("testPath" in params && params.testPath) {
+        var extraPath = params.testPath;
+        var pathToCheck = chromeDir.clone().QueryInterface(Ci.nsILocalFile);
+        var pathIsFile = false;
+        try {
+          var pathParts = extraPath.toString().split("/");
+          for each (var part in pathParts) {
+            pathToCheck.append(part);
+          }          
+          if (pathToCheck.isDirectory()) {
+            for each (var part in pathParts) {
+              chromeDir.append(part);
+            }          
+            url += extraPath + "/";
+          }
+          else {
+            pathIsFile = true;
+          }
+        }
+        catch (e) {
+          pathIsFile = true;
+        }
+        if (pathIsFile) {
+          singleTestPath = url + params.testPath;
+        }
+      }
       // load server.js in so we can share template functions
       var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                            getService(Ci.mozIJSSubScriptLoader);
@@ -46,7 +74,6 @@
 
       // generate our test list
       srvScope.makeTags();
-      var url = "chrome://mochikit/content/" + dir + "/";
       var [links, count] = srvScope.list(url, chromeDir, true);
       var tableContent = srvScope.linksToTableRows(links, 0);
       function populate() {
@@ -57,8 +84,8 @@
       hookup();
 
       // if we got passed a test path, just run that single test
-      if ("testPath" in params && params.testPath)
-        window.location.href = url + params.testPath;
+      if (singleTestPath)
+        window.location.href = singleTestPath;
     }
 
     window.addEventListener("load", loadTests, false);

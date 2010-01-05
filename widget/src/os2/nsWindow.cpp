@@ -120,6 +120,7 @@ BOOL nsWindow::sIsRegistered       = FALSE;
 // Rollup Listener - global variable defintions
 ////////////////////////////////////////////////////
 nsIRollupListener * gRollupListener           = nsnull;
+nsIMenuRollup     * gMenuRollup               = nsnull;
 nsIWidget         * gRollupWidget             = nsnull;
 PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 ////////////////////////////////////////////////////
@@ -453,6 +454,7 @@ PRBool nsWindow::DispatchDragDropEvent(PRUint32 aMsg)
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, 
+                                            nsIMenuRollup * aMenuRollup,
                                             PRBool aDoCapture, 
                                             PRBool aConsumeRollupEvent)
 {
@@ -462,15 +464,16 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
        assure that remains true. */
     NS_ASSERTION(!gRollupWidget, "rollup widget reassigned before release");
     gRollupConsumeRollupEvent = aConsumeRollupEvent;
-    NS_IF_RELEASE(gRollupListener);
     NS_IF_RELEASE(gRollupWidget);
     gRollupListener = aListener;
-    NS_ADDREF(aListener);
+    NS_IF_RELEASE(gMenuRollup);
+    gMenuRollup = aMenuRollup;
+    NS_IF_ADDREF(aMenuRollup);
     gRollupWidget = this;
     NS_ADDREF(this);
   } else {
-    NS_IF_RELEASE(gRollupListener);
-    //gRollupListener = nsnull;
+    gRollupListener = nsnull;
+    NS_IF_RELEASE(gMenuRollup);
     NS_IF_RELEASE(gRollupWidget);
   }
 
@@ -539,10 +542,9 @@ nsWindow :: DealWithPopups ( ULONG inMsg, MRESULT* outResult )
       // want to rollup if the click is in a parent menu of the current submenu.
       PRUint32 popupsToRollup = PR_UINT32_MAX;
       if (rollup) {
-        nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
-        if ( menuRollup ) {
+        if ( gMenuRollup ) {
           nsAutoTArray<nsIWidget*, 5> widgetChain;
-          PRUint32 sameTypeCount = menuRollup->GetSubmenuWidgetChain(&widgetChain);
+          PRUint32 sameTypeCount = gMenuRollup->GetSubmenuWidgetChain(&widgetChain);
           for ( PRUint32 i = 0; i < widgetChain.Length(); ++i ) {
             nsIWidget* widget = widgetChain[i];
             if ( nsWindow::EventIsInsideWindow((nsWindow*)widget) ) {
@@ -639,10 +641,9 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
       // If we're dealing with menus, we probably have submenus and we don't
       // want to rollup if the click is in a parent menu of the current submenu.
       if (rollup) {
-        nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
-        if ( menuRollup ) {
+        if ( gMenuRollup ) {
           nsAutoTArray<nsIWidget*, 5> widgetChain;
-          menuRollup->GetSubmenuWidgetChain ( &widgetChain );
+          gMenuRollup->GetSubmenuWidgetChain ( &widgetChain );
           for ( PRUint32 i = 0; i < widgetChain.Length(); ++i ) {
             nsIWidget* widget = widgetChain[i];
             if ( nsWindow::EventIsInsideWindow((nsWindow*)widget) ) {
@@ -972,7 +973,7 @@ NS_METHOD nsWindow::Destroy()
     if (gRollupListener) {
       gRollupListener->Rollup(PR_UINT32_MAX, nsnull);
     }
-    CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
+    CaptureRollupEvents(nsnull, nsnull, PR_FALSE, PR_TRUE);
   }
 
   if (mWnd) {

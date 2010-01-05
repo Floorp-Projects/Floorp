@@ -2713,6 +2713,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // check to see if we need to do a splash screen
   PRBool wantsSplash = PR_TRUE;
   PRBool isNoSplash = (CheckArg("nosplash", PR_FALSE, NULL, PR_FALSE) == ARG_FOUND);
+  isNoSplash |= (PR_GetEnv("NO_SPLASH") != 0);
   PRBool isNoRemote = (CheckArg("no-remote", PR_FALSE, NULL, PR_FALSE) == ARG_FOUND);
 
 #ifdef WINCE

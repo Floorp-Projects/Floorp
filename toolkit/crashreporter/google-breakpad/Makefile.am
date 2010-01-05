@@ -95,6 +95,8 @@ src_libbreakpad_la_SOURCES = \
 	src/processor/stackwalker.cc \
 	src/processor/stackwalker_amd64.cc \
 	src/processor/stackwalker_amd64.h \
+	src/processor/stackwalker_arm.cc \
+	src/processor/stackwalker_arm.h \
 	src/processor/stackwalker_ppc.cc \
 	src/processor/stackwalker_ppc.h \
 	src/processor/stackwalker_sparc.cc \
@@ -115,6 +117,7 @@ check_PROGRAMS = \
 	src/processor/basic_source_line_resolver_unittest \
 	src/processor/contained_range_map_unittest \
 	src/processor/minidump_processor_unittest \
+	src/processor/minidump_unittest \
 	src/processor/pathname_stripper_unittest \
 	src/processor/postfix_evaluator_unittest \
 	src/processor/range_map_unittest
@@ -171,9 +174,25 @@ src_processor_minidump_processor_unittest_LDADD = \
 	src/processor/process_state.lo \
 	src/processor/stackwalker.lo \
 	src/processor/stackwalker_amd64.lo \
+	src/processor/stackwalker_arm.lo \
 	src/processor/stackwalker_ppc.lo \
 	src/processor/stackwalker_sparc.lo \
 	src/processor/stackwalker_x86.lo
+
+src_processor_minidump_unittest_SOURCES = \
+	src/processor/minidump_unittest.cc \
+	src/testing/gtest/src/gtest-all.cc \
+	src/testing/src/gmock-all.cc
+src_processor_minidump_unittest_CPPFLAGS = \
+	-I$(top_srcdir)/src/testing/include \
+        -I$(top_srcdir)/src/testing/gtest/include \
+	-I$(top_srcdir)/src/testing/gtest \
+	-I$(top_srcdir)/src/testing
+src_processor_minidump_unittest_LDADD = \
+	src/processor/basic_code_modules.lo \
+	src/processor/logging.lo \
+	src/processor/minidump.lo \
+	src/processor/pathname_stripper.lo
 
 src_processor_pathname_stripper_unittest_SOURCES = \
 	src/processor/pathname_stripper_unittest.cc
@@ -203,6 +222,7 @@ src_processor_stackwalker_selftest_LDADD = \
 	src/processor/pathname_stripper.lo \
 	src/processor/stackwalker.lo \
 	src/processor/stackwalker_amd64.lo \
+	src/processor/stackwalker_arm.lo \
 	src/processor/stackwalker_ppc.lo \
 	src/processor/stackwalker_sparc.lo \
 	src/processor/stackwalker_x86.lo
@@ -233,6 +253,7 @@ src_processor_minidump_stackwalk_LDADD = \
 	src/processor/simple_symbol_supplier.lo \
 	src/processor/stackwalker.lo \
 	src/processor/stackwalker_amd64.lo \
+	src/processor/stackwalker_arm.lo \
 	src/processor/stackwalker_ppc.lo \
 	src/processor/stackwalker_sparc.lo \
 	src/processor/stackwalker_x86.lo

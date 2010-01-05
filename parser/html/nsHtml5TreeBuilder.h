@@ -75,6 +75,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     static jArray<const char*,PRInt32> QUIRKY_PUBLIC_IDS;
     PRInt32 mode;
     PRInt32 originalMode;
+    PRBool framesetOk;
     PRInt32 foreignFlag;
   protected:
     nsHtml5Tokenizer* tokenizer;
@@ -227,6 +228,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     jArray<nsHtml5StackNode*,PRInt32> getStack();
     PRInt32 getMode();
     PRInt32 getOriginalMode();
+    PRBool isFramesetOk();
     PRInt32 getForeignFlag();
     PRBool isNeedToDropLF();
     PRBool isQuirks();

@@ -104,9 +104,9 @@ nsCanvasFrame::Init(nsIContent*      aContent,
 }
 
 void
-nsCanvasFrame::Destroy()
+nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  mAbsoluteContainer.DestroyFrames(this);
+  mAbsoluteContainer.DestroyFrames(this, aDestructRoot);
 
   nsIScrollableView* scrollingView = nsnull;
   mViewManager->GetRootScrollableView(&scrollingView);
@@ -114,7 +114,7 @@ nsCanvasFrame::Destroy()
     scrollingView->RemoveScrollPositionListener(this);
   }
 
-  nsHTMLContainerFrame::Destroy();
+  nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 NS_IMETHODIMP

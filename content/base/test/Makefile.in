@@ -266,6 +266,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug513194.html \
 		test_bug461735.html \
 		test_bug380418.html \
+		test_bug469304.html \
 		test_bug465767.html \
 		test_bug380418.html^headers^ \
 		test_bug422403-1.html \

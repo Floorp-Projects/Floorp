@@ -53,22 +53,14 @@
  *   is destroyed (so that the placeholder will not point to a destroyed
  *   frame while it's in the frame tree).
  *
- * Therefore the safe order of teardown is to:
+ * Furthermore, some code assumes that placeholders point to something
+ * useful, so placeholders without an associated out-of-flow should not
+ * remain in the tree.
  *
- * 1)  Unregister the placeholder from the frame manager.
- * 2)  Destroy the placeholder
- * 3)  Destroy the out of flow
- *
- * In certain cases it may be possible to replace step (2) with:
- *
- * 2') Null out the mOutOfFlowFrame pointer in the placeholder
- *
- * and add
- *
- * 4) Destroy the placeholder
- *
- * but this is somewhat dangerous, since lots of code assumes that
- * placeholders point to something useful.
+ * The placeholder's Destroy() implementation handles the destruction of
+ * the placeholder and its out-of-flow. To avoid crashes, frame removal
+ * and destruction code that works with placeholders must not assume
+ * that the placeholder points to its out-of-flow.
  */
 
 #ifndef nsPlaceholderFrame_h___
@@ -138,7 +130,7 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
-  virtual void Destroy();
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   // nsIFrame overrides
 #if defined(DEBUG) || (defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF))

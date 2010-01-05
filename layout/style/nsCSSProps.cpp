@@ -370,6 +370,35 @@ nsCSSProps::GetStringValue(nsCSSFontDesc aFontDescID)
   }
 }
 
+nsCSSProperty
+nsCSSProps::OtherNameFor(nsCSSProperty aProperty)
+{
+  switch (aProperty) {
+    case eCSSProperty_border_left_color_value:
+      return eCSSProperty_border_left_color;
+    case eCSSProperty_border_left_style_value:
+      return eCSSProperty_border_left_style;
+    case eCSSProperty_border_left_width_value:
+      return eCSSProperty_border_left_width;
+    case eCSSProperty_border_right_color_value:
+      return eCSSProperty_border_right_color;
+    case eCSSProperty_border_right_style_value:
+      return eCSSProperty_border_right_style;
+    case eCSSProperty_border_right_width_value:
+      return eCSSProperty_border_right_width;
+    case eCSSProperty_margin_left_value:
+      return eCSSProperty_margin_left;
+    case eCSSProperty_margin_right_value:
+      return eCSSProperty_margin_right;
+    case eCSSProperty_padding_left_value:
+      return eCSSProperty_padding_left;
+    case eCSSProperty_padding_right_value:
+      return eCSSProperty_padding_right;
+    default:
+      NS_ABORT_IF_FALSE(PR_FALSE, "bad caller");
+  }
+  return eCSSProperty_UNKNOWN;
+}
 
 /***************************************************************************/
 
@@ -1263,6 +1292,9 @@ const PRInt32 nsCSSProps::kWidthKTable[] = {
 const PRInt32 nsCSSProps::kWindowShadowKTable[] = {
   eCSSKeyword_none, NS_STYLE_WINDOW_SHADOW_NONE,
   eCSSKeyword_default, NS_STYLE_WINDOW_SHADOW_DEFAULT,
+  eCSSKeyword_menu, NS_STYLE_WINDOW_SHADOW_MENU,
+  eCSSKeyword_tooltip, NS_STYLE_WINDOW_SHADOW_TOOLTIP,
+  eCSSKeyword_sheet, NS_STYLE_WINDOW_SHADOW_SHEET,
   eCSSKeyword_UNKNOWN,-1
 };
 

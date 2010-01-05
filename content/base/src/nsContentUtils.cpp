@@ -505,6 +505,8 @@ nsContentUtils::InitializeEventTable() {
     { &nsGkAtoms::onMozRotateGesture,            { NS_SIMPLE_GESTURE_ROTATE, EventNameType_None } },
     { &nsGkAtoms::onMozTapGesture,               { NS_SIMPLE_GESTURE_TAP, EventNameType_None } },
     { &nsGkAtoms::onMozPressTapGesture,          { NS_SIMPLE_GESTURE_PRESSTAP, EventNameType_None } },
+
+    { &nsGkAtoms::ontransitionend,               { NS_TRANSITION_END, EventNameType_None }},
   };
 
   sEventTable = new nsDataHashtable<nsISupportsHashKey, EventNameMapping>;

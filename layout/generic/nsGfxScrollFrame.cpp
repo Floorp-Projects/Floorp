@@ -154,10 +154,10 @@ nsHTMLScrollFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 }
 
 void
-nsHTMLScrollFrame::Destroy()
+nsHTMLScrollFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   mInner.Destroy();
-  nsHTMLContainerFrame::Destroy();
+  nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 NS_IMETHODIMP
@@ -1057,10 +1057,10 @@ nsXULScrollFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
 }
 
 void
-nsXULScrollFrame::Destroy()
+nsXULScrollFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   mInner.Destroy();
-  nsBoxFrame::Destroy();
+  nsBoxFrame::DestroyFrom(aDestructRoot);
 }
 
 NS_IMETHODIMP
@@ -2152,8 +2152,7 @@ nsGfxScrollFrameInner::IsLTR() const
     }
 
     if (root) {
-      nsIFrame *rootsFrame =
-        presContext->PresShell()->GetPrimaryFrameFor(root);
+      nsIFrame *rootsFrame = root->GetPrimaryFrame();
       if (rootsFrame)
         frame = rootsFrame;
     }

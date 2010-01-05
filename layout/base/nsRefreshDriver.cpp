@@ -44,6 +44,7 @@
 #include "nsPresContext.h"
 #include "nsComponentManagerUtils.h"
 #include "prlog.h"
+#include "nsAutoPtr.h"
 
 /*
  * TODO:
@@ -56,7 +57,8 @@
 
 using mozilla::TimeStamp;
 
-nsRefreshDriver::nsRefreshDriver()
+nsRefreshDriver::nsRefreshDriver(nsPresContext *aPresContext)
+  : mPresContext(aPresContext)
 {
 }
 
@@ -92,13 +94,7 @@ nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver *aObserver,
                                        mozFlushType aFlushType)
 {
   ObserverArray& array = ArrayFor(aFlushType);
-  PRBool success = array.RemoveElement(aObserver);
-
-  if (ObserverCount() == 0) {
-    StopTimer();
-  }
-
-  return success;
+  return array.RemoveElement(aObserver);
 }
 
 void
@@ -170,11 +166,7 @@ nsRefreshDriver::ArrayFor(mozFlushType aFlushType)
  * nsISupports implementation
  */
 
-NS_IMPL_ADDREF_USING_AGGREGATOR(nsRefreshDriver,
-                                nsPresContext::FromRefreshDriver(this))
-NS_IMPL_RELEASE_USING_AGGREGATOR(nsRefreshDriver,
-                                 nsPresContext::FromRefreshDriver(this))
-NS_IMPL_QUERY_INTERFACE1(nsRefreshDriver, nsITimerCallback)
+NS_IMPL_ISUPPORTS1(nsRefreshDriver, nsITimerCallback)
 
 /*
  * nsITimerCallback implementation
@@ -185,18 +177,40 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
 {
   UpdateMostRecentRefresh();
 
-  nsPresContext *presContext = nsPresContext::FromRefreshDriver(this);
-  nsCOMPtr<nsIPresShell> presShell = presContext->GetPresShell();
-  if (!presShell) {
+  if (!mPresContext) {
     // Things are being destroyed.
+    NS_ABORT_IF_FALSE(!mTimer, "timer should have been stopped");
+    return NS_OK;
+  }
+  nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
+  if (!presShell || ObserverCount() == 0) {
+    // Things are being destroyed, or we no longer have any observers.
+    // We don't want to stop the timer when observers are initially
+    // removed, because sometimes observers can be added and removed
+    // often depending on what other things are going on and in that
+    // situation we don't want to thrash our timer.  So instead we
+    // wait until we get a Notify() call when we have no observers
+    // before stopping the timer.
     StopTimer();
     return NS_OK;
   }
 
+  /*
+   * The timer holds a reference to |this| while calling |Notify|.
+   * However, implementations of |WillRefresh| are permitted to destroy
+   * the pres context, which will cause our |mPresContext| to become
+   * null.  If this happens, we must stop notifying observers.
+   */
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(mObservers); ++i) {
     ObserverArray::EndLimitedIterator etor(mObservers[i]);
     while (etor.HasMore()) {
-      etor.GetNext()->WillRefresh(mMostRecentRefresh);
+      nsRefPtr<nsARefreshObserver> obs = etor.GetNext();
+      obs->WillRefresh(mMostRecentRefresh);
+      
+      if (!mPresContext || !mPresContext->GetPresShell()) {
+        StopTimer();
+        return NS_OK;
+      }
     }
     if (i == 0) {
       // This is the Flush_Style case.
@@ -209,10 +223,6 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
       // then Flush_InterruptibleLayout).
       presShell->FlushPendingNotifications(Flush_Style);
     }
-  }
-
-  if (ObserverCount() == 0) {
-    StopTimer();
   }
 
   return NS_OK;

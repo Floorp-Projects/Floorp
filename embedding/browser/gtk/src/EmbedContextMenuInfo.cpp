@@ -165,9 +165,10 @@ EmbedContextMenuInfo::GetFormControlType(nsIDOMEvent* aEvent)
     if (!presShell)
       return NS_OK;
     nsCOMPtr<nsIContent> tgContent = do_QueryInterface(mEventTarget);
-	nsIFrame* frame = nsnull;
+    nsIFrame* frame = nsnull;
 #if defined(FIXED_BUG347731) || !defined(MOZ_ENABLE_LIBXUL)
-    frame = presShell->GetPrimaryFrameFor(tgContent);
+    frame = tgContent->GetDocument() == presShell->GetDocument() ?
+      tgContent->GetPrimaryFrame() : nsnull;
     if (frame)
       mFormRect = frame->GetScreenRectExternal();
 #endif
@@ -595,8 +596,8 @@ EmbedContextMenuInfo::UpdateContextData(nsIDOMEvent *aDOMEvent)
 #if defined(FIXED_BUG347731) || !defined(MOZ_ENABLE_LIBXUL)
   if (mEmbedCtxType & GTK_MOZ_EMBED_CTX_RICHEDIT)
     frame = presShell->GetRootFrame();
-  else {
-    frame = presShell->GetPrimaryFrameFor(tgContent);
+  else if (tgContent->GetDocument() == presShell->GetDocument()) {
+    frame = tgContent->GetPrimaryFrame();
   }
   if (frame) {
     mFormRect = frame->GetScreenRectExternal();

@@ -2650,7 +2650,7 @@ nsHTMLEditor::GetCellIndexes(nsIDOMElement *aCell,
   nsCOMPtr<nsIContent> nodeAsContent( do_QueryInterface(aCell) );
   if (!nodeAsContent) return NS_ERROR_FAILURE;
   // frames are not ref counted, so don't use an nsCOMPtr
-  nsIFrame *layoutObject = ps->GetPrimaryFrameFor(nodeAsContent);
+  nsIFrame *layoutObject = nodeAsContent->GetPrimaryFrame();
   if (!layoutObject)  return NS_ERROR_FAILURE;
 
   nsITableCellLayout *cellLayoutObject = do_QueryFrame(layoutObject);
@@ -2670,7 +2670,7 @@ nsHTMLEditor::GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **table
   nsCOMPtr<nsIContent> nodeAsContent( do_QueryInterface(aTable) );
   if (!nodeAsContent) return NS_ERROR_FAILURE;
   // frames are not ref counted, so don't use an nsCOMPtr
-  nsIFrame *layoutObject = ps->GetPrimaryFrameFor(nodeAsContent);
+  nsIFrame *layoutObject = nodeAsContent->GetPrimaryFrame();
   if (!layoutObject)  return NS_ERROR_FAILURE;
 
   *tableLayoutObject = do_QueryFrame(layoutObject);

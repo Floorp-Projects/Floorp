@@ -91,7 +91,7 @@ nsBulletFrame::~nsBulletFrame()
 }
 
 void
-nsBulletFrame::Destroy()
+nsBulletFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Stop image loading first
   if (mImageRequest) {
@@ -103,7 +103,7 @@ nsBulletFrame::Destroy()
     reinterpret_cast<nsBulletListener*>(mListener.get())->SetFrame(nsnull);
 
   // Let base class do the rest
-  nsFrame::Destroy();
+  nsFrame::DestroyFrom(aDestructRoot);
 }
 
 #ifdef NS_DEBUG

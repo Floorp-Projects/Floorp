@@ -375,17 +375,15 @@ upcase(uintN ch)
     return (cu < 128) ? ch : cu;
 }
 
-static JS_ALWAYS_INLINE uintN
-downcase(uintN ch)
+/*
+ * Return the 'canonical' inverse upcase of |ch|. That is the character
+ * |lch| such that |upcase(lch) == ch| and (|lch| is the lower-case form
+ * of |ch| or is |ch|).
+ */
+static inline jschar inverse_upcase(jschar ch)
 {
-    JS_ASSERT((uintN) (jschar) ch == ch);
-    if (ch < 128) {
-        if (ch - (uintN) 'A' <= (uintN) ('Z' - 'A'))
-            ch += (uintN) ('a' - 'A');
-        return ch;
-    }
-
-    return JS_TOLOWER(ch);
+    jschar lch = JS_TOLOWER(ch);
+    return (upcase(lch) == ch) ? lch : ch;       
 }
 
 /* Construct and initialize an RENode, returning NULL for out-of-memory */
@@ -1090,7 +1088,7 @@ lexHex:
                 jschar uch, dch;
 
                 uch = upcase(i);
-                dch = downcase(i);
+                dch = inverse_upcase(i);
                 maxch = JS_MAX(maxch, uch);
                 maxch = JS_MAX(maxch, dch);
             }
@@ -2360,7 +2358,7 @@ class RegExpNativeCompiler {
 
         if (cs->flags & JSREG_FOLD) {
             ch = JS_TOUPPER(ch);
-            jschar lch = JS_TOLOWER(ch);
+            jschar lch = inverse_upcase(ch);
 
             if (ch != lch) {
                 if (L'A' <= ch && ch <= L'Z') {
@@ -3267,7 +3265,7 @@ class RegExpNativeCompiler {
                     js_FragProfiling_FragFinalizer(frag, tm);
                 }
             )
-            js_ResetJIT(cx);
+            js_FlushJITCache(cx);
         } else {
             if (!guard) insertGuard(loopLabel, re_chars, re_length);
             re->flags |= JSREG_NOCOMPILE;
@@ -3884,7 +3882,7 @@ ProcessCharSet(JSContext *cx, JSRegExp *re, RECharSet *charSet)
 
                     AddCharacterToCharSet(charSet, i);
                     uch = upcase(i);
-                    dch = downcase(i);
+                    dch = inverse_upcase(i);
                     if (i != uch)
                         AddCharacterToCharSet(charSet, uch);
                     if (i != dch)
@@ -3897,7 +3895,7 @@ ProcessCharSet(JSContext *cx, JSRegExp *re, RECharSet *charSet)
         } else {
             if (re->flags & JSREG_FOLD) {
                 AddCharacterToCharSet(charSet, upcase(thisCh));
-                AddCharacterToCharSet(charSet, downcase(thisCh));
+                AddCharacterToCharSet(charSet, inverse_upcase(thisCh));
             } else {
                 AddCharacterToCharSet(charSet, thisCh);
             }

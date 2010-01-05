@@ -83,6 +83,7 @@ nsDOMDataTransfer::nsDOMDataTransfer()
 nsDOMDataTransfer::nsDOMDataTransfer(PRUint32 aEventType, PRUint32 aAction)
   : mEventType(aEventType),
     mDropEffect(nsIDragService::DRAGDROP_ACTION_NONE),
+    mCursorState(PR_FALSE),
     mReadOnly(PR_TRUE),
     mIsExternal(PR_TRUE),
     mUserCancelled(PR_FALSE),
@@ -99,6 +100,7 @@ nsDOMDataTransfer::nsDOMDataTransfer(PRUint32 aEventType, PRUint32 aAction)
 
 nsDOMDataTransfer::nsDOMDataTransfer(PRUint32 aEventType,
                                      const PRUint32 aEffectAllowed,
+                                     PRBool aCursorState,
                                      PRBool aIsExternal,
                                      PRBool aUserCancelled,
                                      nsTArray<nsTArray<TransferItem> >& aItems,
@@ -108,6 +110,7 @@ nsDOMDataTransfer::nsDOMDataTransfer(PRUint32 aEventType,
   : mEventType(aEventType),
     mDropEffect(nsIDragService::DRAGDROP_ACTION_NONE),
     mEffectAllowed(aEffectAllowed),
+    mCursorState(aCursorState),
     mReadOnly(PR_TRUE),
     mIsExternal(aIsExternal),
     mUserCancelled(aUserCancelled),
@@ -554,8 +557,9 @@ nsDOMDataTransfer::Clone(PRUint32 aEventType, PRBool aUserCancelled,
                          nsIDOMDataTransfer** aNewDataTransfer)
 {
   nsDOMDataTransfer* newDataTransfer =
-    new nsDOMDataTransfer(aEventType, mEffectAllowed, mIsExternal, aUserCancelled,
-                          mItems, mDragImage, mDragImageX, mDragImageY);
+    new nsDOMDataTransfer(aEventType, mEffectAllowed, mCursorState,
+                          mIsExternal, aUserCancelled, mItems,
+                          mDragImage, mDragImageX, mDragImageY);
   NS_ENSURE_TRUE(newDataTransfer, NS_ERROR_OUT_OF_MEMORY);
 
   *aNewDataTransfer = newDataTransfer;

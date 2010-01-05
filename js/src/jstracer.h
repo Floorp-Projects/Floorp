@@ -1103,6 +1103,7 @@ class TraceRecorder
     JS_REQUIRES_STACK void set(jsval* p, nanojit::LIns* l, bool initializing = false,
                                bool demote = true);
     JS_REQUIRES_STACK nanojit::LIns* get(jsval* p);
+    JS_REQUIRES_STACK nanojit::LIns* attemptImport(jsval* p);
     JS_REQUIRES_STACK nanojit::LIns* addr(jsval* p);
 
     JS_REQUIRES_STACK bool known(jsval* p);
@@ -1479,7 +1480,7 @@ extern bool
 js_OverfullJITCache(JSTraceMonitor* tm);
 
 extern void
-js_ResetJIT(JSContext* cx);
+js_FlushJITCache(JSContext* cx);
 
 extern void
 js_PurgeJITOracle();

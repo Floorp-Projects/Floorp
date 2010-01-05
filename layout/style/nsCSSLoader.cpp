@@ -798,56 +798,73 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     }
   }
 
-  if (aDataStream) {
-    nsCAutoString contentType;
-    if (channel) {
-      channel->GetContentType(contentType);
-    }
-    
-    PRBool validType = contentType.EqualsLiteral("text/css") ||
-      contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE) ||
-      contentType.IsEmpty();
-                                          
-    if (!validType) {
-      nsCAutoString spec;
-      channelURI->GetSpec(spec);
-
-      const nsAFlatString& specUTF16 = NS_ConvertUTF8toUTF16(spec);
-      const nsAFlatString& ctypeUTF16 = NS_ConvertASCIItoUTF16(contentType);
-      const PRUnichar *strings[] = { specUTF16.get(), ctypeUTF16.get() };
-
-      const char *errorMessage;
-      PRUint32 errorFlag;
-
-      if (mLoader->mCompatMode == eCompatibility_NavQuirks) {
-        errorMessage = "MimeNotCssWarn";
-        errorFlag = nsIScriptError::warningFlag;
-      } else {
-        // Drop the data stream so that we do not load it
-        aDataStream = nsnull;
-
-        errorMessage = "MimeNotCss";
-        errorFlag = nsIScriptError::errorFlag;
-      }
-      nsCOMPtr<nsIURI> referrer = GetReferrerURI();
-      nsContentUtils::ReportToConsole(nsContentUtils::eCSS_PROPERTIES,
-                                      errorMessage,
-                                      strings, NS_ARRAY_LENGTH(strings),
-                                      referrer, EmptyString(), 0, 0, errorFlag,
-                                      "CSS Loader");
-    }
-  }
-  
   if (!aDataStream) {
     LOG_WARN(("  No data stream; bailing"));
     mLoader->SheetComplete(this, NS_ERROR_NOT_AVAILABLE);
     return NS_OK;
-  }    
+  }
+
+  nsCAutoString contentType;
+  if (channel) {
+    channel->GetContentType(contentType);
+  }
+
+  // In standards mode, a style sheet must have one of these MIME
+  // types to be processed at all.  In quirks mode, we accept any
+  // MIME type, but only if the style sheet is same-origin with the
+  // requesting document or parent sheet.  See bug 524223.
+
+  PRBool validType = contentType.EqualsLiteral("text/css") ||
+    contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE) ||
+    contentType.IsEmpty();
+
+  if (!validType) {
+    const char *errorMessage;
+    PRUint32 errorFlag;
+    PRBool sameOrigin = PR_TRUE;
+
+    if (mLoaderPrincipal) {
+      PRBool subsumed;
+      result = mLoaderPrincipal->Subsumes(principal, &subsumed);
+      if (NS_FAILED(result) || !subsumed) {
+        sameOrigin = PR_FALSE;
+      }
+    }
+
+    if (sameOrigin && mLoader->mCompatMode == eCompatibility_NavQuirks) {
+      errorMessage = "MimeNotCssWarn";
+      errorFlag = nsIScriptError::warningFlag;
+    } else {
+      errorMessage = "MimeNotCss";
+      errorFlag = nsIScriptError::errorFlag;
+    }
+
+    nsCAutoString spec;
+    channelURI->GetSpec(spec);
+
+    const nsAFlatString& specUTF16 = NS_ConvertUTF8toUTF16(spec);
+    const nsAFlatString& ctypeUTF16 = NS_ConvertASCIItoUTF16(contentType);
+    const PRUnichar *strings[] = { specUTF16.get(), ctypeUTF16.get() };
+
+    nsCOMPtr<nsIURI> referrer = GetReferrerURI();
+    nsContentUtils::ReportToConsole(nsContentUtils::eCSS_PROPERTIES,
+                                    errorMessage,
+                                    strings, NS_ARRAY_LENGTH(strings),
+                                    referrer, EmptyString(), 0, 0, errorFlag,
+                                    "CSS Loader");
+
+    if (errorFlag == nsIScriptError::errorFlag) {
+      LOG_WARN(("  Ignoring sheet with improper MIME type %s",
+                contentType.get()));
+      mLoader->SheetComplete(this, NS_ERROR_NOT_AVAILABLE);
+      return NS_OK;
+    }
+  }
 
   // Enough to set the URIs on mSheet, since any sibling datas we have share
   // the same mInner as mSheet and will thus get the same URI.
   mSheet->SetURIs(channelURI, originalURI, channelURI);
-  
+
   PRBool completed;
   return mLoader->ParseSheet(aDataStream, this, completed);
 }

@@ -38,6 +38,9 @@ SimpleTest.waitForExplicitFinish();
 function flash(doc, name) {
   var d = doc.getElementById(name);
   d.style.backgroundColor = d.style.backgroundColor == "blue" ? "yellow" : "blue";
+  // Now flush out style changes in that document, since our event listeners
+  // seem to assume that things will work that way.
+  d.getBoundingClientRect();
 }
 
 function le(v1, v2, s) {

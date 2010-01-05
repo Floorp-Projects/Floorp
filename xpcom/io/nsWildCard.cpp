@@ -69,7 +69,7 @@ template<class T>
 static int
 alphanumeric(T c)
 {
-    return ('0' <= c && c <= '9') || alpha(c);
+    return ('0' <= c && c <= '9') || ::alpha(c);
 }
 
 template<class T>
@@ -341,12 +341,12 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive,
             start = expr[i++];
             if (start == '\\')
                 start = expr[i++];
-            if (alphanumeric(start) && expr[i++] == '-') {
+            if (::alphanumeric(start) && expr[i++] == '-') {
                 end = expr[i++];
                 if (end == '\\')
                     end = expr[i++];
             }
-            if (alphanumeric(end) && expr[i] == ']') {
+            if (::alphanumeric(end) && expr[i] == ']') {
                 /* This is a range form: a-b */
                 T val = str[x];
                 if (end < start) { /* swap them */
@@ -354,7 +354,7 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive,
                     end = start;
                     start = tmp;
                 }
-                if (case_insensitive && alpha(val)) {
+                if (case_insensitive && ::alpha(val)) {
                     val = ::_is_char_in_range((unsigned char) start,
                                               (unsigned char) end,
                                               (unsigned char) val);
@@ -373,7 +373,7 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive,
                     if (expr[y] == '\\')
                         ++y;
                     if(case_insensitive)
-                        matched |= (upper(str[x]) == upper(expr[y]));
+                        matched |= (::upper(str[x]) == ::upper(expr[y]));
                     else
                         matched |= (str[x] == expr[y]);
                 }
@@ -397,7 +397,7 @@ _shexp_match(const T *str, const T *expr, PRBool case_insensitive,
             /* fall through */
         default:
             if(case_insensitive) {
-                if(upper(str[x]) != upper(expr[y]))
+                if(::upper(str[x]) != ::upper(expr[y]))
                     return NOMATCH;
             }
             else {
@@ -419,7 +419,7 @@ ns_WildCardMatch(const T *str, const T *xp, PRBool case_insensitive)
     int x, ret = MATCH;
 
     if (!nsCharTraits<T>::find(xp, nsCharTraits<T>::length(xp), T('~')))
-        return _shexp_match(str, xp, case_insensitive, 0);
+        return ::_shexp_match(str, xp, case_insensitive, 0);
 
     expr = (T *) NS_Alloc((nsCharTraits<T>::length(xp) + 1) * sizeof(T));
     if(!expr)
@@ -452,7 +452,7 @@ NS_WildCardMatch_(const T *str, const T *expr, PRBool case_insensitive)
         case INVALID_SXP:
             return -1;
         default:
-            return ns_WildCardMatch(str, expr, case_insensitive);
+            return ::ns_WildCardMatch(str, expr, case_insensitive);
     }
 }
 

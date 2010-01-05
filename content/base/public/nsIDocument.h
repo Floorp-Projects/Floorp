@@ -90,7 +90,7 @@ class nsIContentSink;
 class nsIScriptEventManager;
 class nsICSSLoader;
 class nsHTMLStyleSheet;
-class nsIHTMLCSSStyleSheet;
+class nsHTMLCSSStyleSheet;
 class nsILayoutHistoryState;
 class nsIVariant;
 class nsIDOMUserDataHandler;
@@ -559,8 +559,8 @@ public:
    * Get this document's inline style sheet.  May return null if there
    * isn't one
    */
-  virtual nsIHTMLCSSStyleSheet* GetInlineStyleSheet() const = 0;
-  
+  virtual nsHTMLCSSStyleSheet* GetInlineStyleSheet() const = 0;
+
   /**
    * Get/set the object from which a document can get a script context
    * and scope. This is the context within which all scripts (during

@@ -360,7 +360,19 @@ main(PRInt32 argc, char *argv[])
       GetACookie(cookieService, "http://foo.domain.com", nsnull, getter_Copies(cookie));
       rv[10] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      allTestsPassed = PrintResult(rv, 11) && allTestsPassed;
+      SetACookie(cookieService, "http://www.domain.com", nsnull, "test=domain; domain=domain.com.", nsnull);
+      GetACookie(cookieService, "http://foo.domain.com", nsnull, getter_Copies(cookie));
+      rv[11] = CheckResult(cookie.get(), MUST_BE_NULL);
+
+      SetACookie(cookieService, "http://www.domain.com", nsnull, "test=domain; domain=..domain.com", nsnull);
+      GetACookie(cookieService, "http://foo.domain.com", nsnull, getter_Copies(cookie));
+      rv[12] = CheckResult(cookie.get(), MUST_BE_NULL);
+
+      SetACookie(cookieService, "http://www.domain.com", nsnull, "test=domain; domain=..domain.com.", nsnull);
+      GetACookie(cookieService, "http://foo.domain.com", nsnull, getter_Copies(cookie));
+      rv[13] = CheckResult(cookie.get(), MUST_BE_NULL);
+
+      allTestsPassed = PrintResult(rv, 14) && allTestsPassed;
 
 
       // *** path tests

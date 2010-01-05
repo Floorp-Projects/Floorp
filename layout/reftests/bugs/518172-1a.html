@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<title>Testcase, bug 518172</title>
+<style type="text/css">
+
+@font-face {
+  font-family: "MarkA";
+  src: url(../fonts/markA.ttf);
+}
+
+html, body { margin: 0; padding: 0; }
+body { font: 200px/200px MarkA; }
+div#one { width: 200px; height:200px; padding: 100px;
+          -moz-transform: rotate(90deg); }
+
+div.box { background: green; position: absolute; }
+
+</style>
+<div id="one">A</div>
+
+<!-- draw green boxes slightly larger (2px extra) than the area that should
+     be covered by the font -->
+<div class="box" style="top: 118px; left: 118px; width: 44px; height: 264px;"></div>
+<div class="box" style="top: 158px; left: 178px; width: 44px; height: 184px;"></div>
+<div class="box" style="top: 198px; left: 238px; width: 44px; height: 104px;"></div>

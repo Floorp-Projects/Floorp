@@ -63,7 +63,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsStyleConsts.h"
-#include "nsIDOMHTMLDocument.h"
+#include "nsIHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsRuleWalker.h"
@@ -404,13 +404,13 @@ NS_IMPL_ISUPPORTS2(nsHTMLStyleSheet, nsIStyleSheet, nsIStyleRuleProcessor)
 static nsresult GetBodyColor(nsPresContext* aPresContext, nscolor* aColor)
 {
   nsIPresShell *shell = aPresContext->PresShell();
-  nsCOMPtr<nsIDOMHTMLDocument> domdoc = do_QueryInterface(shell->GetDocument());
-  if (!domdoc)
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(shell->GetDocument());
+  if (!htmlDoc)
     return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDOMHTMLElement> body;
-  domdoc->GetBody(getter_AddRefs(body));
-  nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(body);
-  nsIFrame *bodyFrame = shell->GetPrimaryFrameFor(bodyContent);
+  nsIContent* bodyContent = htmlDoc->GetBodyContentExternal();
+  if (!bodyContent)
+    return NS_ERROR_FAILURE;
+  nsIFrame *bodyFrame = bodyContent->GetPrimaryFrame();
   if (!bodyFrame)
     return NS_ERROR_FAILURE;
   *aColor = bodyFrame->GetStyleColor()->mColor;

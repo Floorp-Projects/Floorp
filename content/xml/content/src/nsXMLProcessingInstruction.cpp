@@ -140,13 +140,6 @@ nsXMLProcessingInstruction::IsNodeOfType(PRUint32 aFlags) const
   return !(aFlags & ~(eCONTENT | ePROCESSING_INSTRUCTION | eDATA_NODE));
 }
 
-// virtual
-PRBool
-nsXMLProcessingInstruction::MayHaveFrame() const
-{
-  return PR_FALSE;
-}
-
 NS_IMETHODIMP
 nsXMLProcessingInstruction::GetNodeName(nsAString& aNodeName)
 {

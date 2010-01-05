@@ -400,7 +400,7 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
   nsCOMPtr<nsIDOMNode> node;
   aRange->GetStartContainer(getter_AddRefs(node));
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+  nsIFrame* frame = content->GetPrimaryFrame();
   if (!frame)
       return;
   nsCOMPtr<nsISelectionController> selCon;
@@ -412,7 +412,7 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
   nsITextControlFrame *tcFrame = nsnull;
   for ( ; content; content = content->GetParent()) {
     if (!IsInNativeAnonymousSubtree(content)) {
-      nsIFrame* f = presShell->GetPrimaryFrameFor(content);
+      nsIFrame* f = content->GetPrimaryFrame();
       if (!f)
         return;
       tcFrame = do_QueryFrame(f);
@@ -847,7 +847,7 @@ nsWebBrowserFind::GetFrameSelection(nsIDOMWindow* aWindow,
       fm->GetFocusedElement(getter_AddRefs(focusedElement));
       nsCOMPtr<nsIContent> focusedContent(do_QueryInterface(focusedElement));
       if (focusedContent) {
-        frame = presShell->GetPrimaryFrameFor(focusedContent);
+        frame = focusedContent->GetPrimaryFrame();
         if (frame && frame->PresContext() != presContext)
           frame = nsnull;
       }

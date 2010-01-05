@@ -352,7 +352,7 @@ WrapObject(JSContext *cx, JSObject *parent, jsval *vp, XPCWrappedNative* wn)
   // Our argument should be a wrapped native object, but the caller may have
   // passed it in as an optimization.
   JSObject *wrappedObj;
-  if (!JSVAL_IS_OBJECT(*vp) ||
+  if (JSVAL_IS_PRIMITIVE(*vp) ||
       !(wrappedObj = JSVAL_TO_OBJECT(*vp)) ||
       STOBJ_GET_CLASS(wrappedObj) == &XOWClass.base) {
     return JS_TRUE;
@@ -556,6 +556,17 @@ XPC_XOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   jsval resolving;
   if (!JS_GetReservedSlot(cx, obj, sFlagsSlot, &resolving)) {
     return JS_FALSE;
+  }
+
+  if (!JSVAL_IS_PRIMITIVE(*vp)) {
+    JSObject *addedObj = JSVAL_TO_OBJECT(*vp);
+    if (STOBJ_GET_CLASS(addedObj) == &XOWClass.base &&
+        STOBJ_GET_PARENT(addedObj) != STOBJ_GET_PARENT(obj)) {
+      *vp = OBJECT_TO_JSVAL(GetWrappedObject(cx, addedObj));
+      if (!WrapObject(cx, STOBJ_GET_PARENT(obj), vp, nsnull)) {
+        return JS_FALSE;
+      }
+    }
   }
 
   if (HAS_FLAGS(resolving, FLAG_RESOLVING)) {

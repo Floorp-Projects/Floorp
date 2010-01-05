@@ -1477,6 +1477,12 @@ NS_TraceMallocStartupArgs(int argc, char **argv)
     return argc;
 }
 
+PR_IMPLEMENT(PRBool)
+NS_TraceMallocHasStarted(void)
+{
+    return tmlock ? PR_TRUE : PR_FALSE;
+}
+
 PR_IMPLEMENT(void)
 NS_TraceMallocShutdown(void)
 {

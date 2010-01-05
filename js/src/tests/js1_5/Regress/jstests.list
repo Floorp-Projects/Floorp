@@ -250,6 +250,7 @@ script regress-426827.js
 script regress-428366.js
 script regress-438415-01.js
 script regress-438415-02.js
+script regress-440926.js
 script regress-449627.js
 script regress-449666.js
 script regress-450369.js

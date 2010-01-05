@@ -60,7 +60,7 @@ public:
 
   nsGfxButtonControlFrame(nsStyleContext* aContext);
 
-  virtual void Destroy();
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,

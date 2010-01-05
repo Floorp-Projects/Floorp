@@ -55,11 +55,11 @@ nsFormControlFrame::~nsFormControlFrame()
 }
 
 void
-nsFormControlFrame::Destroy()
+nsFormControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   // Unregister the access key registered in reflow
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), PR_FALSE);
-  nsLeafFrame::Destroy();
+  nsLeafFrame::DestroyFrom(aDestructRoot);
 }
 
 NS_QUERYFRAME_HEAD(nsFormControlFrame)

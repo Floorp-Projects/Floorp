@@ -1410,7 +1410,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 
   if (!weakFrame.GetFrame() || content != weakFrame.GetFrame()->GetContent()) {
     // Frame hint not correct, get true frame, we try to optimize away from this
-    weakFrame = aPresShell->GetRealPrimaryFrameFor(content);
+    weakFrame = content->GetPrimaryFrame();
     if (weakFrame.GetFrame()) {
 #ifdef DEBUG_A11Y_FRAME_OPTIMIZATION
       // Frame hint debugging
@@ -1529,7 +1529,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       // accessibles
       nsIContent *tableContent = content;
       while ((tableContent = tableContent->GetParent()) != nsnull) {
-        nsIFrame *tableFrame = aPresShell->GetPrimaryFrameFor(tableContent);
+        nsIFrame *tableFrame = tableContent->GetPrimaryFrame();
         if (!tableFrame)
           continue;
 
@@ -2137,7 +2137,7 @@ nsAccessibilityService::GetAccessibleForDeckChildren(nsIDOMNode *aNode, nsIAcces
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
 
   if (content) {
-    frame = shell->GetPrimaryFrameFor(content);
+    frame = content->GetPrimaryFrame();
   }
 
   if (frame && (frame->GetType() == nsAccessibilityAtoms::boxFrame ||
