@@ -93,13 +93,13 @@ namespace nanojit
             : "%eax", "%esi", "%ecx", "%edx"
            );
     #elif defined __SUNPRO_C || defined __SUNPRO_CC
-        asm("xchg %%esi, %%ebx\n"
+        asm("push %%ebx\n"
             "mov $0x01, %%eax\n"
             "cpuid\n"
-            "xchg %%esi, %%ebx\n"
+            "pop %%ebx\n"
             : "=d" (features)
             : /* We have no inputs */
-            : "%eax", "%ecx", "esi"
+            : "%eax", "%ecx"
            );
     #endif
         return (features & (1<<26)) != 0;
@@ -320,12 +320,6 @@ namespace nanojit
             btr RegAlloc::free[ecx], eax    // free &= ~rmask(i)
             mov r, eax
         }
-    #elif defined __SUNPRO_C || defined __SUNPRO_CC
-        asm(
-            "bsf    %1, %%edi\n\t"
-            "btr    %%edi, (%2)\n\t"
-            "movl   %%edi, %0\n\t"
-            : "=a"(r) : "d"(set), "c"(&regs.free) : "%edi", "memory" );
     #else
         asm(
             "bsf    %1, %%eax\n\t"
@@ -441,6 +435,12 @@ namespace nanojit
 
         } else if (ins->isconst()) {
             asm_int(r, ins->imm32(), /*canClobberCCs*/false);
+            if (!ins->getArIndex()) {
+                ins->markAsClear();
+            }
+
+        } else if (ins->isconstq()) {
+            asm_quad(r, ins->imm64(), ins->imm64f(), /*canClobberCCs*/false);
             if (!ins->getArIndex()) {
                 ins->markAsClear();
             }
@@ -1294,8 +1294,18 @@ namespace nanojit
     {
         Register rr = prepResultReg(ins, GpRegs);
         LIns *q = ins->oprnd1();
-        int d = findMemFor(q);
-        LD(rr, d+4, FP);
+        if (q->isconstq())
+        {
+            // This should only be possible if ExprFilter isn't in use,
+            // as it will fold qhi(qconst()) properly... still, if it's
+            // disabled, we need this for proper behavior
+            LDi(rr, q->imm64_1());
+        }
+        else
+        {
+            int d = findMemFor(q);
+            LD(rr, d+4, FP);
+        }
     }
 
     void Assembler::asm_param(LInsp ins)
@@ -1339,80 +1349,52 @@ namespace nanojit
             LDi(r, val);
     }
 
+    void Assembler::asm_quad(Register r, uint64_t q, double d, bool canClobberCCs)
+    {
+        // Quads require non-standard handling. There is no load-64-bit-immediate
+        // instruction on i386, so in the general case, we must load it from memory.
+        // This is unlike most other LIR operations which can be computed directly 
+        // in a register. We can special-case 0.0 and various other small ints
+        // (1.0 on x87, any int32_t value on SSE2), but for all other values, we
+        // allocate an 8-byte chunk via dataAlloc and load from there. Note that
+        // this implies that quads never require spill area, since they will always
+        // be rematerialized from const data (or inline instructions in the special cases).
+
+        if (rmask(r) & XmmRegs) {
+            if (q == 0) {
+                // test (int64)0 since -0.0 == 0.0
+                SSE_XORPDr(r, r);
+            } else if (d && d == (int)d && canClobberCCs) {
+                // can fit in 32bits? then use cvt which is faster
+                Register tr = registerAllocTmp(GpRegs);
+                SSE_CVTSI2SD(r, tr);
+                SSE_XORPDr(r, r);   // zero r to ensure no dependency stalls
+                asm_int(tr, (int)d, canClobberCCs);
+            } else {
+                const uint64_t* p = findQuadConstant(q);
+                LDSDm(r, (const double*)p);
+            }
+        } else {
+            NanoAssert(r == FST0);
+            if (q == 0) {
+                // test (int64)0 since -0.0 == 0.0
+                FLDZ();
+            } else if (d == 1.0) {
+                FLD1();
+            } else {
+                const uint64_t* p = findQuadConstant(q);
+                FLDQdm((const double*)p);
+            }
+        }
+    }
+
     void Assembler::asm_quad(LInsp ins)
     {
         Register rr = ins->getReg();
 
-        // Quads require non-standard handling.  Except for rematerializable
-        // values like small integers, we have to do the following to put a
-        // 64-bit immediate in an XMM register:
-        //
-        //  store imm64_0 to address A:     mov -40(ebp), 0
-        //  store imm64_1 to address A+4:   mov -36(ebp), 1074266112
-        //  load address A into XMM reg:    movq xmm2, -40(ebp)
-        //
-        // In other words, putting an immediate in an XMM reg requires loading
-        // it from memory.  This is unlike most other LIR operations which can
-        // be computed directly in a register.
-        //
-        // If we handled this like other cases, when 'ins' is in memory rather
-        // than a register (ie. isKnownReg(rr) is false) we would generate
-        // code to compute it and immediately spill (store) it.  But that
-        // would be stupid in this case, because computing it involved loading
-        // it!  (Via the 'movq' in the example.)  So instead we avoid the
-        // spill and also the load, and just put it directly into the spill
-        // slots.  That's why we don't use prepareResultReg() here like
-        // everywhere else.
-
         if (isKnownReg(rr)) {
             NanoAssert((rmask(rr) & FpRegs) != 0);
-
-            // @todo -- add special-cases for 0 and 1
-            const double d = ins->imm64f();
-            const uint64_t q = ins->imm64();
-            if (rmask(rr) & XmmRegs) {
-                if (q == 0.0) {
-                    // test (int64)0 since -0.0 == 0.0
-                    SSE_XORPDr(rr, rr);
-                } else if (d == 1.0) {
-                    // 1.0 is extremely frequent and worth special-casing!
-                    // Nb: k_ONE is static because we actually load its value
-                    // at runtime.
-                    static const double k_ONE = 1.0;
-                    LDSDm(rr, &k_ONE);
-                } else if (d && d == (int)d) {
-                    // Can it fit in 32bits?  If so, use cvtsi2sd which is faster.
-                    Register rt = registerAllocTmp(GpRegs);
-                    SSE_CVTSI2SD(rr, rt);
-                    SSE_XORPDr(rr,rr);  // zero rr to ensure no dependency stalls
-                    asm_int(rt, (int)d, /*canClobberCCs*/true);
-                } else {
-                    findMemFor(ins);    // get stack space into which we can generate the value
-                    const int d = disp(ins);
-                    SSE_LDQ(rr, d, FP); // load it into a register
-                }
-            } else {
-                if (q == 0.0) {
-                    // test (int64)0 since -0.0 == 0.0
-                    FLDZ();
-                } else if (d == 1.0) {
-                    FLD1();
-                } else {
-                    int d = findMemFor(ins);
-                    FLDQ(d,FP);
-                }
-            }
-        }
-
-        // @todo, if we used xorpd, ldsd, fldz, fld1 above, we don't need mem here
-        // [that's only true if we also rematerialize them in asm_restore();
-        //  otherwise we need to store the value in memory so it can be
-        //  restored later on]
-        int d = disp(ins);
-        if (d)
-        {
-            STi(FP,d+4,ins->imm64_1());
-            STi(FP,d,  ins->imm64_0());
+            asm_quad(rr, ins->imm64(), ins->imm64f(), /*canClobberCCs*/true);
         }
 
         freeResourcesOf(ins);
@@ -1425,8 +1407,18 @@ namespace nanojit
         if (!config.sse2)
         {
             Register rr = prepResultReg(ins, GpRegs);
-            int d = findMemFor(q);
-            LD(rr, d, FP);
+            if (q->isconstq())
+            {
+                // This should only be possible if ExprFilter isn't in use,
+                // as it will fold qlo(qconst()) properly... still, if it's
+                // disabled, we need this for proper behavior
+                LDi(rr, q->imm64_0());
+            }
+            else
+            {
+                int d = findMemFor(q);
+                LD(rr, d, FP);
+            }
         }
         else
         {
@@ -1521,9 +1513,17 @@ namespace nanojit
                 NanoAssert(rmask(r) & FpRegs);
 
                 // arg in specific reg
-                int da = findMemFor(ins);
+                if (ins->isconstq())
+                {
+                    const uint64_t* p = findQuadConstant(ins->imm64());
+                    LDi(r, uint32_t(p));
+                }
+                else
+                {
+                    int da = findMemFor(ins);
 
-                LEA(r, da, FP);
+                    LEA(r, da, FP);
+                }
             }
             else
             {
@@ -1695,26 +1695,51 @@ namespace nanojit
             LIns* lhs = ins->oprnd2();
             Register rr = prepResultReg(ins, rmask(FST0));
 
-            // make sure rhs is in memory
-            int db = findMemFor(rhs);
+            if (rhs->isconstq())
+            {
+                const uint64_t* p = findQuadConstant(rhs->imm64());
 
-            // lhs into reg, prefer same reg as result
+                // lhs into reg, prefer same reg as result
 
-            // last use of lhs in reg, can reuse rr
-            // else, lhs already has a different reg assigned
-            if (lhs->isUnusedOrHasUnknownReg())
-                findSpecificRegForUnallocated(lhs, rr);
+                // last use of lhs in reg, can reuse rr
+                // else, lhs already has a different reg assigned
+                if (lhs->isUnusedOrHasUnknownReg())
+                    findSpecificRegForUnallocated(lhs, rr);
 
-            NanoAssert(lhs->getReg()==FST0);
-            // assume that the lhs is in ST(0) and rhs is on stack
-            if (op == LIR_fadd)
-                { FADD(db, FP); }
-            else if (op == LIR_fsub)
-                { FSUBR(db, FP); }
-            else if (op == LIR_fmul)
-                { FMUL(db, FP); }
-            else if (op == LIR_fdiv)
-                { FDIVR(db, FP); }
+                NanoAssert(lhs->getReg()==FST0);
+                // assume that the lhs is in ST(0) and rhs is on stack
+                if (op == LIR_fadd)
+                    { FADDdm((const double*)p); }
+                else if (op == LIR_fsub)
+                    { FSUBRdm((const double*)p); }
+                else if (op == LIR_fmul)
+                    { FMULdm((const double*)p); }
+                else if (op == LIR_fdiv)
+                    { FDIVRdm((const double*)p); }
+            }
+            else
+            {
+                // make sure rhs is in memory
+                int db = findMemFor(rhs);
+
+                // lhs into reg, prefer same reg as result
+
+                // last use of lhs in reg, can reuse rr
+                // else, lhs already has a different reg assigned
+                if (lhs->isUnusedOrHasUnknownReg())
+                    findSpecificRegForUnallocated(lhs, rr);
+
+                NanoAssert(lhs->getReg()==FST0);
+                // assume that the lhs is in ST(0) and rhs is on stack
+                if (op == LIR_fadd)
+                    { FADD(db, FP); }
+                else if (op == LIR_fsub)
+                    { FSUBR(db, FP); }
+                else if (op == LIR_fmul)
+                    { FMUL(db, FP); }
+                else if (op == LIR_fdiv)
+                    { FDIVR(db, FP); }
+            }
         }
     }
 
@@ -1994,10 +2019,18 @@ namespace nanojit
                     FCOMP();
                 FLDr(FST0); // DUP
             } else {
-                int d = findMemFor(rhs);
                 TEST_AH(mask);
                 FNSTSW_AX();        // requires EAX to be free
-                FCOM((pop?1:0), d, FP);
+                if (rhs->isconstq())
+                {
+                    const uint64_t* p = findQuadConstant(rhs->imm64());
+                    FCOMdm((pop?1:0), (const double*)p);
+                }
+                else
+                {
+                    int d = findMemFor(rhs);
+                    FCOM((pop?1:0), d, FP);
+                }
             }
         }
     }

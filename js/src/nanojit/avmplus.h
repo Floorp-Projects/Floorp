@@ -111,7 +111,7 @@ __declspec(naked) static inline __int64 rdtsc()
         ret;
     }
 }
-#elif defined(__SUNPRO_C) || defined (__SUNPRO_CC)
+#elif defined(SOLARIS)
 static inline unsigned long long rdtsc(void)
 {
     unsigned long long int x;
@@ -129,21 +129,12 @@ static __inline__ unsigned long long rdtsc(void)
 
 #elif defined(__x86_64__)
 
-#if defined(__SUNPRO_C) || defined (__SUNPRO_CC)
-static inline uint64_t rdtsc(void)
-{
-  unsigned hi, lo;
-  asm volatile ("rdtsc" : "=a"(lo), "=d"(hi));
-  return ( (uint64_t)lo)|( ((uint64_t)hi)<<32 );
-}
-#else
 static __inline__ uint64_t rdtsc(void)
 {
   unsigned hi, lo;
   __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
   return ( (uint64_t)lo)|( ((uint64_t)hi)<<32 );
 }
-#endif
 
 #elif defined(_MSC_VER) && defined(_M_AMD64)
 
