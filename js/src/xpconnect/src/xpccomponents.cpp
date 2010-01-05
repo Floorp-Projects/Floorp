@@ -2808,8 +2808,13 @@ nsXPCComponents_Utils::LookupMethod()
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     JSObject* obj = JSVAL_TO_OBJECT(argv[0]);
+    rv = nsXPConnect::GetXPConnect()->GetJSObjectOfWrapper(cx, obj, &obj);
+    if(NS_FAILED(rv))
+        return rv;
 
     OBJ_TO_INNER_OBJECT(cx, obj);
+    if(!obj)
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     // second param must be a string
     if(!JSVAL_IS_STRING(argv[1]))
