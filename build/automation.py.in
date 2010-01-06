@@ -669,7 +669,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         elif self.IS_LINUX:
           stackFixerCommand = "fix-linux-stack.pl"
         if stackFixerCommand is not None:
-          stackFixerProcess = self.Process([PERL, os.path.join(utilityPath, stackFixerCommand)], 
+          stackFixerProcess = self.Process([this.PERL, os.path.join(utilityPath, stackFixerCommand)], 
                                            stdin=logsource, 
                                            stdout=subprocess.PIPE)
           logsource = stackFixerProcess.stdout
