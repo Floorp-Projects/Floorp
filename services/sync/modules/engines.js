@@ -411,7 +411,7 @@ SyncEngine.prototype = {
     // Figure out how many total items to fetch this sync; do less on mobile
     let fetchNum = 1500;
     if (Svc.Prefs.get("client.type") == "mobile")
-      fetchNum /= 10;
+      fetchNum = 50;
 
     // enable cache, and keep only the first few items.  Otherwise (when
     // we have more outgoing items than can fit in the cache), we will
