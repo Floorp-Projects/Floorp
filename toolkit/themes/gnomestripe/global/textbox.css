@@ -56,8 +56,8 @@ textbox {
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   padding: 2px 2px 3px;
   -moz-padding-start: 4px;
-  background-color: -moz-entry;
-  color: -moz-entryText;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
 }
 
 textbox[isempty="true"] {
