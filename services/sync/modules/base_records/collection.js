@@ -158,10 +158,6 @@ Collection.prototype = {
         record.id = record.data.id;
         onRecord(record);
       }
-
-      // Aggressively clean up the objects we created above so that the next set
-      // of records have enough memory to decrypt, reconcile, apply, etc.
-      Cu.forceGC();
     };
   }
 };
