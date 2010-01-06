@@ -1194,41 +1194,35 @@ nsHyperTextAccessible::GetDefaultTextAttributes(nsIPersistentProperties **aAttri
   return textAttrsMgr.GetAttributes(*aAttributes);
 }
 
+PRInt32
+nsHyperTextAccessible::GetLevelInternal()
+{
+  nsCOMPtr<nsIContent> content = nsCoreUtils::GetRoleContent(mDOMNode);
+  NS_ENSURE_TRUE(content, 0);
+
+  nsIAtom *tag = content->Tag();
+  if (tag == nsAccessibilityAtoms::h1)
+    return 1;
+  if (tag == nsAccessibilityAtoms::h2)
+    return 2;
+  if (tag == nsAccessibilityAtoms::h3)
+    return 3;
+  if (tag == nsAccessibilityAtoms::h4)
+    return 4;
+  if (tag == nsAccessibilityAtoms::h5)
+    return 5;
+  if (tag == nsAccessibilityAtoms::h6)
+    return 6;
+
+  return nsAccessibleWrap::GetLevelInternal();
+}
+
 nsresult
 nsHyperTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
 {
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE;  // Node already shut down
-  }
-
   nsresult rv = nsAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContent> content = nsCoreUtils::GetRoleContent(mDOMNode);
-  NS_ENSURE_TRUE(content, NS_ERROR_UNEXPECTED);
-  nsIAtom *tag = content->Tag();
-
-  PRInt32 headLevel = 0;
-  if (tag == nsAccessibilityAtoms::h1)
-    headLevel = 1;
-  else if (tag == nsAccessibilityAtoms::h2)
-    headLevel = 2;
-  else if (tag == nsAccessibilityAtoms::h3)
-    headLevel = 3;
-  else if (tag == nsAccessibilityAtoms::h4)
-    headLevel = 4;
-  else if (tag == nsAccessibilityAtoms::h5)
-    headLevel = 5;
-  else if (tag == nsAccessibilityAtoms::h6)
-    headLevel = 6;
-
-  if (headLevel) {
-    nsAutoString strHeadLevel;
-    strHeadLevel.AppendInt(headLevel);
-    nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::level,
-                           strHeadLevel);
-  }
-  
   // Indicate when the current object uses block-level formatting
   // via formatting: block
   // XXX: 'formatting' attribute is deprecated and will be removed in Mozilla2,

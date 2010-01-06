@@ -24,6 +24,25 @@
       testGroupAttrs("opt2", 2, 2);
 
       //////////////////////////////////////////////////////////////////////////
+      // HTML select with options
+      // XXX bug 469123
+      //testGroupAttrs("select2_optgroup", 1, 3, 1);
+      //testGroupAttrs("select2_opt3", 2, 3, 1);
+      //testGroupAttrs("select2_opt4", 3, 3, 1);
+      //testGroupAttrs("select2_opt1", 1, 2, 2);
+      //testGroupAttrs("select2_opt2", 2, 2, 2);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML input@type="radio" within form
+      testGroupAttrs("radio1", 1, 2);
+      testGroupAttrs("radio2", 2, 2);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML input@type="radio" within document
+      testGroupAttrs("radio3", 1, 2);
+      testGroupAttrs("radio4", 2, 2);
+
+      //////////////////////////////////////////////////////////////////////////
       // HTML ul/ol
       testGroupAttrs("li1", 1, 3);
       testGroupAttrs("li2", 2, 3);
@@ -57,6 +76,28 @@
       testGroupAttrs("n_li12", 3, 3, 2);
 
       //////////////////////////////////////////////////////////////////////////
+      // ARIA menu (menuitem, separator, menuitemradio and menuitemcheckbox)
+      testGroupAttrs("menu_item1", 1, 2);
+      testGroupAttrs("menu_item2", 2, 2);
+      testGroupAttrs("menu_item1.1", 1, 2);
+      testGroupAttrs("menu_item1.2", 2, 2);
+      testGroupAttrs("menu_item1.3", 1, 3);
+      testGroupAttrs("menu_item1.4", 2, 3);
+      testGroupAttrs("menu_item1.5", 3, 3);
+
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA tab
+      testGroupAttrs("tab_1", 1, 3);
+      testGroupAttrs("tab_2", 2, 3);
+      testGroupAttrs("tab_3", 3, 3);
+
+      //////////////////////////////////////////////////////////////////////////
+      // ARIA radio
+      testGroupAttrs("r1", 1, 3);
+      testGroupAttrs("r2", 2, 3);
+      testGroupAttrs("r3", 3, 3);
+
+      //////////////////////////////////////////////////////////////////////////
       // ARIA grid
       testGroupAttrs("grid_row1", 1, 2);
       testGroupAttrs("grid_cell1", 1, 2);
@@ -79,6 +120,15 @@
       testGroupAttrs("treegrid_row3", 3, 3, 1);
       testGroupAttrs("treegrid_cell5", 1, 2);
       testGroupAttrs("treegrid_cell6", 2, 2);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML headings
+      testGroupAttrs("h1", 0, 0, 1);
+      testGroupAttrs("h2", 0, 0, 2);
+      testGroupAttrs("h3", 0, 0, 3);
+      testGroupAttrs("h4", 0, 0, 4);
+      testGroupAttrs("h5", 0, 0, 5);
+      testGroupAttrs("h6", 0, 0, 6);
 
       SimpleTest.finish();
     }
@@ -104,6 +154,23 @@
     <option id="opt1">option1</option>
     <option id="opt2">option2</option>
   </select>
+
+  <select size="4">
+    <optgroup id="select2_optgroup" label="group">
+      <option id="select2_opt1">option1</option>
+      <option id="select2_opt2">option2</option>
+    </optgroup>
+    <option id="select2_opt3">option3</option>
+    <option id="select2_opt4">option4</option>
+  </select>
+
+  <form>
+    <input type="radio" id="radio1" name="group1"/>
+    <input type="radio" id="radio2" name="group1"/>
+  </form>
+
+  <input type="radio" id="radio3" name="group2"/>
+  <input type="radio" id="radio4" name="group2"/>
 
   <ul>
     <li id="li1">Oranges</li>
@@ -141,6 +208,32 @@
     </span>
   </span>
 
+  <ul role="menubar">
+    <li role="menuitem" aria-haspopup="true" id="menu_item1">File
+      <ul role="menu">
+        <li role="menuitem" id="menu_item1.1">New</li>
+        <li role="menuitem" id="menu_item1.2">Open…</li>
+        <li role="separator">-----</li>
+        <li role="menuitem" id="menu_item1.3">Item</li>
+        <li role="menuitemradio" id="menu_item1.4">Radio</li>
+        <li role="menuitemcheckbox" id="menu_item1.5">Checkbox</li>
+      </ul>
+    </li>
+    <li role="menuitem" aria-haspopup="false" id="menu_item2">Help</li>
+  </ul>
+
+  <ul id="tablist_1" role="tablist">
+    <li id="tab_1" role="tab">Crust</li>
+    <li id="tab_2" role="tab">Veges</li>
+    <li id="tab_3" role="tab">Carnivore</li>
+  </ul>
+
+  <ul id="rg1" role="radiogroup">
+    <li id="r1" role="radio" aria-checked="false">Thai</li>
+    <li id="r2" role="radio" aria-checked="false">Subway</li>
+    <li id="r3" role="radio" aria-checked="false">Jimmy Johns</li>
+  </ul>
+
   <table role="grid">
     <tr role="row" id="grid_row1">
       <td role="gridcell" id="grid_cell1">cell1</td>
@@ -166,5 +259,13 @@
       <div role="gridcell" id="treegrid_cell6">cell2</div>
     </div>
   </div>
+
+  <h1 id="h1">heading1</h1>
+  <h2 id="h2">heading2</h2>
+  <h3 id="h3">heading3</h3>
+  <h4 id="h4">heading4</h4>
+  <h5 id="h5">heading5</h5>
+  <h6 id="h6">heading6</h6>
+
 </body>
 </html>
