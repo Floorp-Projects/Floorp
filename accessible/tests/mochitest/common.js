@@ -85,6 +85,7 @@ const EXT_STATE_VERTICAL = nsIAccessibleStates.EXT_STATE_VERTICAL;
 // OS detect
 const MAC = (navigator.platform.indexOf("Mac") != -1)? true : false;
 const LINUX = (navigator.platform.indexOf("Linux") != -1)? true : false;
+const SOLARIS = (navigator.platform.indexOf("SunOS") != -1)? true : false;
 const WIN = (navigator.platform.indexOf("Win") != -1)? true : false;
 
 ////////////////////////////////////////////////////////////////////////////////
