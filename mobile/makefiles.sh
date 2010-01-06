@@ -53,14 +53,7 @@ mobile/locales/Makefile
 mobile/Makefile
 mobile/themes/hildon/Makefile
 mobile/themes/Makefile
-mobile/themes/wince/Makefile
-mobile/installer/debian/changelog
-mobile/installer/debian/compat
-mobile/installer/debian/files
-mobile/installer/debian/menu
-mobile/installer/debian/fennec.preinst
-mobile/installer/debian/fennec.prerm
-mobile/installer/debian/fennec.postinst"
+mobile/themes/wince/Makefile"
 
 if test -n "$MOZ_UPDATE_PACKAGING"; then
    add_makefiles "
