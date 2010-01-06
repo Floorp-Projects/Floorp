@@ -677,7 +677,7 @@ MAKEFILES_xulapp="
   toolkit/crashreporter/google-breakpad/src/common/Makefile
   toolkit/crashreporter/google-breakpad/src/common/linux/Makefile
   toolkit/crashreporter/google-breakpad/src/common/mac/Makefile
-  toolkit/crashreporter/google-breakpad/src/common/mac/dwarf/Makefile
+  toolkit/crashreporter/google-breakpad/src/common/dwarf/Makefile
   toolkit/crashreporter/google-breakpad/src/common/solaris/Makefile
   toolkit/crashreporter/google-breakpad/src/common/windows/Makefile
   toolkit/crashreporter/google-breakpad/src/tools/linux/dump_syms/Makefile
