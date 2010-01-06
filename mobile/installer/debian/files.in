@@ -1,1 +1,2 @@
-@MOZ_APP_NAME@_@MOZ_APP_VERSION@_armel.deb user/internet extra
+#filter substitution
+@MOZ_APP_NAME@_@MOZ_APP_VERSION@_armel.deb user/network extra
