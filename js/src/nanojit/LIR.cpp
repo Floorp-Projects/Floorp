@@ -564,12 +564,16 @@ namespace nanojit
             int32_t c2 = oprnd2->imm32();
             double d;
             int32_t r;
-            uint64_t q;
 
             switch (v) {
-            case LIR_qjoin:
-                q = c1 | uint64_t(c2)<<32;
-                return insImmq(q);
+            case LIR_qjoin: {
+                union {
+                    double d;
+                    uint64_t u64;
+                } u;
+                u.u64 = c1 | uint64_t(c2)<<32;
+                return insImmf(u.d);
+            }
             case LIR_eq:
                 return insImm(c1 == c2);
             case LIR_ov:
