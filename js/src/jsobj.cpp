@@ -2284,7 +2284,7 @@ class AutoDescriptorArray : private JSTempValueRooter
         JS_POP_TEMP_ROOT(cx, this);
     }
 
-    PropertyDescriptor * append() {
+    PropertyDescriptor *append() {
         if (!descriptors.append(PropertyDescriptor()))
             return NULL;
         return &descriptors.back();
