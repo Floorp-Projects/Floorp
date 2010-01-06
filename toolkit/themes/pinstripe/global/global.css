@@ -345,3 +345,32 @@ notification > button > .button-box > .button-text {
 .autoscroller[scrolldir="EW"] {
   background-position: right bottom;
 }
+
+/* autorepeatbuttons in menus */
+
+.popup-internal-box > autorepeatbutton {
+  height: 15px;
+  position: relative;
+  /* Here we're using a little magic.
+   * The arrow button is supposed to overlay the scrollbox, blocking
+   * everything under it from reaching the screen. However, the menu background
+   * is slightly transparent, so how can we block something completely without
+   * messing up the transparency? It's easy: The native theming of the
+   * "menuitem" appearance uses CGContextClearRect before drawing, which
+   * clears everything under it.
+   * Without help from native theming this effect wouldn't be achievable.
+   */
+  -moz-appearance: menuitem;
+}
+
+.popup-internal-box > .autorepeatbutton-up {
+  margin-bottom: -15px;
+}
+
+.popup-internal-box > .autorepeatbutton-down {
+  margin-top: -15px;
+}
+
+.popup-internal-box > autorepeatbutton[disabled="true"] {
+  visibility: collapse;
+}
