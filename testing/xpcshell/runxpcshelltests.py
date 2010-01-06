@@ -282,8 +282,8 @@ class XPCShellTests(object):
       failCount = 1
 
     print """INFO | Result summary:
-INFO | Passed: %d
-INFO | Failed: %d""" % (passCount, failCount)
+    INFO | Passed: %d
+    INFO | Failed: %d""" % (passCount, failCount)
 
     return failCount == 0
 
