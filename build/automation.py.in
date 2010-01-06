@@ -53,25 +53,95 @@ import tempfile
 
 from automationutils import checkForCrashes
 
+"""
+Runs the browser from a script, and provides useful utilities
+for setting up the browser environment.
+"""
 
-#expand _DIST_BIN = __XPC_BIN_PATH__
-#expand _IS_WIN32 = len("__WIN32__") != 0
-#expand _IS_MAC = __IS_MAC__ != 0
-#expand _IS_LINUX = __IS_LINUX__ != 0
+SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
+
+__all__ = [
+           "UNIXISH",
+           "IS_WIN32",
+           "IS_MAC",
+           "log",
+           "runApp",
+           "Process",
+           "addExtraCommonOptions",
+           "initializeProfile",
+           "DIST_BIN",
+           "DEFAULT_APP",
+           "CERTS_SRC_DIR",
+           "environment",
+           "IS_TEST_BUILD",
+           "IS_DEBUG_BUILD",
+           "DEFAULT_TIMEOUT",
+          ]
+
+# timeout, in seconds
+DEFAULT_TIMEOUT = 60.0
+
+# These are generated in mozilla/build/Makefile.in
+#expand DIST_BIN = __XPC_BIN_PATH__
+#expand IS_WIN32 = len("__WIN32__") != 0
+#expand IS_MAC = __IS_MAC__ != 0
+#expand IS_LINUX = __IS_LINUX__ != 0
 #ifdef IS_CYGWIN
-#expand _IS_CYGWIN = __IS_CYGWIN__ == 1
+#expand IS_CYGWIN = __IS_CYGWIN__ == 1
 #else
-_IS_CYGWIN = False
+IS_CYGWIN = False
 #endif
-#expand _IS_CAMINO = __IS_CAMINO__ != 0
-#expand _BIN_SUFFIX = __BIN_SUFFIX__
-#expand _PERL = __PERL__
+#expand IS_CAMINO = __IS_CAMINO__ != 0
+#expand BIN_SUFFIX = __BIN_SUFFIX__
+#expand PERL = __PERL__
 
-#expand _DEFAULT_APP = "./" + __BROWSER_PATH__
-#expand _CERTS_SRC_DIR = __CERTS_SRC_DIR__
-#expand _IS_TEST_BUILD = __IS_TEST_BUILD__
-#expand _IS_DEBUG_BUILD = __IS_DEBUG_BUILD__
-#expand _CRASHREPORTER = __CRASHREPORTER__ == 1
+UNIXISH = not IS_WIN32 and not IS_MAC
+
+#expand DEFAULT_APP = "./" + __BROWSER_PATH__
+#expand CERTS_SRC_DIR = __CERTS_SRC_DIR__
+#expand IS_TEST_BUILD = __IS_TEST_BUILD__
+#expand IS_DEBUG_BUILD = __IS_DEBUG_BUILD__
+#expand CRASHREPORTER = __CRASHREPORTER__ == 1
+
+###########
+# LOGGING #
+###########
+
+# We use the logging system here primarily because it'll handle multiple
+# threads, which is needed to process the output of the server and application
+# processes simultaneously.
+log = logging.getLogger()
+handler = logging.StreamHandler(sys.stdout)
+log.setLevel(logging.INFO)
+log.addHandler(handler)
+
+
+#################
+# SUBPROCESSING #
+#################
+
+class Process(subprocess.Popen):
+  """
+  Represents our view of a subprocess.
+  It adds a kill() method which allows it to be stopped explicitly.
+  """
+
+  def kill(self):
+    if IS_WIN32:
+      import platform
+      pid = "%i" % self.pid
+      if platform.release() == "2000":
+        # Windows 2000 needs 'kill.exe' from the 'Windows 2000 Resource Kit tools'. (See bug 475455.)
+        try:
+          subprocess.Popen(["kill", "-f", pid]).wait()
+        except:
+          log.info("TEST-UNEXPECTED-FAIL | automation.py | Missing 'kill' utility to kill process with pid=%s. Kill it manually!", pid)
+      else:
+        # Windows XP and later.
+        subprocess.Popen(["taskkill", "/F", "/PID", pid]).wait()
+    else:
+      os.kill(self.pid, signal.SIGKILL)
+
 
 #################
 # PROFILE SETUP #
@@ -102,100 +172,19 @@ class Location:
     self.port = port
     self.options = options
 
-class Automation(object):
+
+def readLocations(locationsPath = "server-locations.txt"):
   """
-  Runs the browser from a script, and provides useful utilities
-  for setting up the browser environment.
+  Reads the locations at which the Mochitest HTTP server is available from
+  server-locations.txt.
   """
 
-  DIST_BIN = _DIST_BIN
-  IS_WIN32 = _IS_WIN32
-  IS_MAC = _IS_MAC
-  IS_LINUX = _IS_LINUX
-  IS_CYGWIN = _IS_CYGWIN
-  IS_CAMINO = _IS_CAMINO
-  BIN_SUFFIX = _BIN_SUFFIX
-  PERL = _PERL
+  locationFile = codecs.open(locationsPath, "r", "UTF-8")
 
-  UNIXISH = not IS_WIN32 and not IS_MAC
-
-  DEFAULT_APP = _DEFAULT_APP
-  CERTS_SRC_DIR = _CERTS_SRC_DIR
-  IS_TEST_BUILD = _IS_TEST_BUILD
-  IS_DEBUG_BUILD = _IS_DEBUG_BUILD
-  CRASHREPORTER = _CRASHREPORTER
-
-  SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
-
-  # timeout, in seconds
-  DEFAULT_TIMEOUT = 60.0
-
-  log = logging.getLogger()
-
-  def __init__(self):
-
-    # We use the logging system here primarily because it'll handle multiple
-    # threads, which is needed to process the output of the server and application
-    # processes simultaneously.
-    handler = logging.StreamHandler(sys.stdout)
-    self.log.setLevel(logging.INFO)
-    self.log.addHandler(handler)
-
-  @property
-  def __all__(self):
-    return [
-           "UNIXISH",
-           "IS_WIN32",
-           "IS_MAC",
-           "log",
-           "runApp",
-           "Process",
-           "addCommonOptions",
-           "initializeProfile",
-           "DIST_BIN",
-           "DEFAULT_APP",
-           "CERTS_SRC_DIR",
-           "environment",
-           "IS_TEST_BUILD",
-           "IS_DEBUG_BUILD",
-           "DEFAULT_TIMEOUT",
-          ]
-
-  class Process(subprocess.Popen):
-    """
-    Represents our view of a subprocess.
-    It adds a kill() method which allows it to be stopped explicitly.
-    """
-
-    def kill(self):
-      if Automation().IS_WIN32:
-        import platform
-        pid = "%i" % self.pid
-        if platform.release() == "2000":
-          # Windows 2000 needs 'kill.exe' from the 
-          #'Windows 2000 Resource Kit tools'. (See bug 475455.)
-          try:
-            subprocess.Popen(["kill", "-f", pid]).wait()
-          except:
-            self.log.info("TEST-UNEXPECTED-FAIL | automation.py | Missing 'kill' utility to kill process with pid=%s. Kill it manually!", pid)
-        else:
-          # Windows XP and later.
-          subprocess.Popen(["taskkill", "/F", "/PID", pid]).wait()
-      else:
-        os.kill(self.pid, signal.SIGKILL)
-
-  def readLocations(self, locationsPath = "server-locations.txt"):
-    """
-    Reads the locations at which the Mochitest HTTP server is available from
-    server-locations.txt.
-    """
-
-    locationFile = codecs.open(locationsPath, "r", "UTF-8")
-
-    # Perhaps more detail than necessary, but it's the easiest way to make sure
-    # we get exactly the format we want.  See server-locations.txt for the exact
-    # format guaranteed here.
-    lineRe = re.compile(r"^(?P<scheme>[a-z][-a-z0-9+.]*)"
+  # Perhaps more detail than necessary, but it's the easiest way to make sure
+  # we get exactly the format we want.  See server-locations.txt for the exact
+  # format guaranteed here.
+  lineRe = re.compile(r"^(?P<scheme>[a-z][-a-z0-9+.]*)"
                       r"://"
                       r"(?P<host>"
                         r"\d+\.\d+\.\d+\.\d+"
@@ -209,47 +198,47 @@ class Automation(object):
                       r"\s+"
                       r"(?P<options>\S+(?:,\S+)*)"
                       r")?$")
-    locations = []
-    lineno = 0
-    seenPrimary = False
-    for line in locationFile:
-      lineno += 1
-      if line.startswith("#") or line == "\n":
-        continue
+  locations = []
+  lineno = 0
+  seenPrimary = False
+  for line in locationFile:
+    lineno += 1
+    if line.startswith("#") or line == "\n":
+      continue
       
-      match = lineRe.match(line)
-      if not match:
-        raise SyntaxError(lineno)
+    match = lineRe.match(line)
+    if not match:
+      raise SyntaxError(lineno)
 
-      options = match.group("options")
-      if options:
-        options = options.split(",")
-        if "primary" in options:
-          if seenPrimary:
-            raise SyntaxError(lineno, "multiple primary locations")
-          seenPrimary = True
-      else:
-        options = []
+    options = match.group("options")
+    if options:
+      options = options.split(",")
+      if "primary" in options:
+        if seenPrimary:
+          raise SyntaxError(lineno, "multiple primary locations")
+        seenPrimary = True
+    else:
+      options = []
 
-      locations.append(Location(match.group("scheme"), match.group("host"),
-                                match.group("port"), options))
+    locations.append(Location(match.group("scheme"), match.group("host"),
+                              match.group("port"), options))
 
-    if not seenPrimary:
-      raise SyntaxError(lineno + 1, "missing primary location")
+  if not seenPrimary:
+    raise SyntaxError(lineno + 1, "missing primary location")
 
-    return locations
+  return locations
 
 
-  def initializeProfile(self, profileDir, extraPrefs = []):
-    "Sets up the standard testing profile."
+def initializeProfile(profileDir, extraPrefs = []):
+  "Sets up the standard testing profile."
 
-    # Start with a clean slate.
-    shutil.rmtree(profileDir, True)
-    os.mkdir(profileDir)
+  # Start with a clean slate.
+  shutil.rmtree(profileDir, True)
+  os.mkdir(profileDir)
 
-    prefs = []
+  prefs = []
 
-    part = """\
+  part = """\
 user_pref("browser.dom.window.dump.enabled", true);
 user_pref("dom.allow_scripts_to_close_windows", true);
 user_pref("dom.disable_open_during_load", false);
@@ -288,14 +277,14 @@ user_pref("browser.safebrowsing.provider.0.lookupURL", "http://localhost:8888/sa
 user_pref("browser.safebrowsing.provider.0.updateURL", "http://localhost:8888/safebrowsing-dummy/update");
 """
   
-    prefs.append(part)
+  prefs.append(part)
 
-    locations = self.readLocations()
+  locations = readLocations()
 
-    # Grant God-power to all the privileged servers on which tests run.
-    privileged = filter(lambda loc: "privileged" in loc.options, locations)
-    for (i, l) in itertools.izip(itertools.count(1), privileged):
-      part = """
+  # Grant God-power to all the privileged servers on which tests run.
+  privileged = filter(lambda loc: "privileged" in loc.options, locations)
+  for (i, l) in itertools.izip(itertools.count(1), privileged):
+    part = """
 user_pref("capability.principal.codebase.p%(i)d.granted",
           "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite \
            UniversalPreferencesRead UniversalPreferencesWrite \
@@ -304,14 +293,14 @@ user_pref("capability.principal.codebase.p%(i)d.id", "%(origin)s");
 user_pref("capability.principal.codebase.p%(i)d.subjectName", "");
 """  % { "i": i,
          "origin": (l.scheme + "://" + l.host + ":" + l.port) }
-      prefs.append(part)
+    prefs.append(part)
 
-    # We need to proxy every server but the primary one.
-    origins = ["'%s://%s:%s'" % (l.scheme, l.host, l.port)
-              for l in filter(lambda l: "primary" not in l.options, locations)]
-    origins = ", ".join(origins)
+  # We need to proxy every server but the primary one.
+  origins = ["'%s://%s:%s'" % (l.scheme, l.host, l.port)
+             for l in filter(lambda l: "primary" not in l.options, locations)]
+  origins = ", ".join(origins)
 
-    pacURL = """data:text/plain,
+  pacURL = """data:text/plain,
 function FindProxyForURL(url, host)
 {
   var origins = [%(origins)s];
@@ -340,385 +329,373 @@ function FindProxyForURL(url, host)
     return 'PROXY 127.0.0.1:4443';
   return 'DIRECT';
 }""" % { "origins": origins }
-    pacURL = "".join(pacURL.splitlines())
+  pacURL = "".join(pacURL.splitlines())
 
-    part = """
+  part = """
 user_pref("network.proxy.type", 2);
 user_pref("network.proxy.autoconfig_url", "%(pacURL)s");
 
 user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless to others
 """ % {"pacURL": pacURL}
+  prefs.append(part)
+
+  for v in extraPrefs:
+    thispref = v.split("=")
+    if len(thispref) < 2:
+      print "Error: syntax error in --setpref=" + v
+      sys.exit(1)
+    part = 'user_pref("%s", %s);\n' % (thispref[0], thispref[1])
     prefs.append(part)
 
-    for v in extraPrefs:
-      thispref = v.split("=")
-      if len(thispref) < 2:
-        print "Error: syntax error in --setpref=" + v
-        sys.exit(1)
-      part = 'user_pref("%s", %s);\n' % (thispref[0], thispref[1])
-      prefs.append(part)
+  # write the preferences
+  prefsFile = open(profileDir + "/" + "user.js", "a")
+  prefsFile.write("".join(prefs))
+  prefsFile.close()
 
-    # write the preferences
-    prefsFile = open(profileDir + "/" + "user.js", "a")
-    prefsFile.write("".join(prefs))
-    prefsFile.close()
+def addExtraCommonOptions(parser):
+  "Adds command-line options which are common to mochitest and reftest."
 
-  def addCommonOptions(self, parser):
-    "Adds command-line options which are common to mochitest and reftest."
+  parser.add_option("--setpref",
+                    action = "append", type = "string",
+                    default = [],
+                    dest = "extraPrefs", metavar = "PREF=VALUE",
+                    help = "defines an extra user preference")  
 
-    parser.add_option("--setpref",
-                      action = "append", type = "string",
-                      default = [],
-                      dest = "extraPrefs", metavar = "PREF=VALUE",
-                      help = "defines an extra user preference")  
-
-  def fillCertificateDB(self, profileDir, certPath, utilityPath, xrePath):
-    pwfilePath = os.path.join(profileDir, ".crtdbpw")
+def fillCertificateDB(profileDir, certPath, utilityPath, xrePath):
+  pwfilePath = os.path.join(profileDir, ".crtdbpw")
   
-    pwfile = open(pwfilePath, "w")
-    pwfile.write("\n")
-    pwfile.close()
+  pwfile = open(pwfilePath, "w")
+  pwfile.write("\n")
+  pwfile.close()
 
-    # Create head of the ssltunnel configuration file
-    sslTunnelConfigPath = os.path.join(profileDir, "ssltunnel.cfg")
-    sslTunnelConfig = open(sslTunnelConfigPath, "w")
+  # Create head of the ssltunnel configuration file
+  sslTunnelConfigPath = os.path.join(profileDir, "ssltunnel.cfg")
+  sslTunnelConfig = open(sslTunnelConfigPath, "w")
   
-    sslTunnelConfig.write("httpproxy:1\n")
-    sslTunnelConfig.write("certdbdir:%s\n" % certPath)
-    sslTunnelConfig.write("forward:127.0.0.1:8888\n")
-    sslTunnelConfig.write("listen:*:4443:pgo server certificate\n")
+  sslTunnelConfig.write("httpproxy:1\n")
+  sslTunnelConfig.write("certdbdir:%s\n" % certPath)
+  sslTunnelConfig.write("forward:127.0.0.1:8888\n")
+  sslTunnelConfig.write("listen:*:4443:pgo server certificate\n")
 
-    # Configure automatic certificate and bind custom certificates, client authentication
-    locations = self.readLocations()
-    locations.pop(0)
-    for loc in locations:
-      if loc.scheme == "https" and "nocert" not in loc.options:
-        customCertRE = re.compile("^cert=(?P<nickname>[0-9a-zA-Z_ ]+)")
-        clientAuthRE = re.compile("^clientauth=(?P<clientauth>[a-z]+)")
-        for option in loc.options:
-          match = customCertRE.match(option)
-          if match:
-            customcert = match.group("nickname");
-            sslTunnelConfig.write("listen:%s:%s:4443:%s\n" %
-                      (loc.host, loc.port, customcert))
+  # Configure automatic certificate and bind custom certificates, client authentication
+  locations = readLocations()
+  locations.pop(0)
+  for loc in locations:
+    if loc.scheme == "https" and "nocert" not in loc.options:
+      customCertRE = re.compile("^cert=(?P<nickname>[0-9a-zA-Z_ ]+)")
+      clientAuthRE = re.compile("^clientauth=(?P<clientauth>[a-z]+)")
+      for option in loc.options:
+        match = customCertRE.match(option)
+        if match:
+          customcert = match.group("nickname");
+          sslTunnelConfig.write("listen:%s:%s:4443:%s\n" %
+              (loc.host, loc.port, customcert))
 
-          match = clientAuthRE.match(option)
-          if match:
-            clientauth = match.group("clientauth");
-            sslTunnelConfig.write("clientauth:%s:%s:4443:%s\n" %
-                      (loc.host, loc.port, clientauth))
+        match = clientAuthRE.match(option)
+        if match:
+          clientauth = match.group("clientauth");
+          sslTunnelConfig.write("clientauth:%s:%s:4443:%s\n" %
+              (loc.host, loc.port, clientauth))
 
-    sslTunnelConfig.close()
+  sslTunnelConfig.close()
 
-    # Pre-create the certification database for the profile
-    env = self.environment(xrePath = xrePath)
-    certutil = os.path.join(utilityPath, "certutil" + self.BIN_SUFFIX)
-    pk12util = os.path.join(utilityPath, "pk12util" + self.BIN_SUFFIX)
+  # Pre-create the certification database for the profile
+  env = environment(xrePath = xrePath)
+  certutil = os.path.join(utilityPath, "certutil" + BIN_SUFFIX)
+  pk12util = os.path.join(utilityPath, "pk12util" + BIN_SUFFIX)
 
-    status = self.Process([certutil, "-N", "-d", profileDir, "-f", pwfilePath], env = env).wait()
-    if status != 0:
-      return status
+  status = Process([certutil, "-N", "-d", profileDir, "-f", pwfilePath], env = env).wait()
+  if status != 0:
+    return status
 
-    # Walk the cert directory and add custom CAs and client certs
-    files = os.listdir(certPath)
-    for item in files:
-      root, ext = os.path.splitext(item)
-      if ext == ".ca":
-        trustBits = "CT,,"
-        if root.endswith("-object"):
-          trustBits = "CT,,CT"
-        self.Process([certutil, "-A", "-i", os.path.join(certPath, item),
-                    "-d", profileDir, "-f", pwfilePath, "-n", root, "-t", trustBits],
-                    env = env).wait()
-      if ext == ".client":
-        self.Process([pk12util, "-i", os.path.join(certPath, item), "-w",
-                    pwfilePath, "-d", profileDir], 
-                    env = env).wait()
+  # Walk the cert directory and add custom CAs and client certs
+  files = os.listdir(certPath)
+  for item in files:
+    root, ext = os.path.splitext(item)
+    if ext == ".ca":
+      trustBits = "CT,,"
+      if root.endswith("-object"):
+        trustBits = "CT,,CT"
+      Process([certutil, "-A", "-i", os.path.join(certPath, item),
+        "-d", profileDir, "-f", pwfilePath, "-n", root, "-t", trustBits],
+        env = env).wait()
+    if ext == ".client":
+      Process([pk12util, "-i", os.path.join(certPath, item), "-w",
+        pwfilePath, "-d", profileDir], 
+        env = env).wait()
 
-    os.unlink(pwfilePath)
-    return 0
+  os.unlink(pwfilePath)
+  return 0
 
-  def environment(self, env = None, xrePath = None, crashreporter = True):
-    if xrePath == None:
-      xrePath = self.DIST_BIN
-    if env == None:
-      env = dict(os.environ)
+def environment(env = None, xrePath = DIST_BIN, crashreporter = True):
+  if env == None:
+    env = dict(os.environ)
 
-    ldLibraryPath = os.path.abspath(os.path.join(self.SCRIPT_DIR, xrePath))
-    if self.UNIXISH or self.IS_MAC:
-      envVar = "LD_LIBRARY_PATH"
-      if self.IS_MAC:
-        envVar = "DYLD_LIBRARY_PATH"
-      else: # unixish
-        env['MOZILLA_FIVE_HOME'] = xrePath
-      if envVar in env:
-        ldLibraryPath = ldLibraryPath + ":" + env[envVar]
-      env[envVar] = ldLibraryPath
-    elif self.IS_WIN32:
-      env["PATH"] = env["PATH"] + ";" + ldLibraryPath
+  ldLibraryPath = os.path.abspath(os.path.join(SCRIPT_DIR, xrePath))
+  if UNIXISH or IS_MAC:
+    envVar = "LD_LIBRARY_PATH"
+    if IS_MAC:
+      envVar = "DYLD_LIBRARY_PATH"
+    else: # unixish
+      env['MOZILLA_FIVE_HOME'] = xrePath
+    if envVar in env:
+      ldLibraryPath = ldLibraryPath + ":" + env[envVar]
+    env[envVar] = ldLibraryPath
+  elif IS_WIN32:
+    env["PATH"] = env["PATH"] + ";" + ldLibraryPath
 
-    if crashreporter:
-      env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
-      env['MOZ_CRASHREPORTER'] = '1'
-    else:
-      env['MOZ_CRASHREPORTER_DISABLE'] = '1'
-
-    env['GNOME_DISABLE_CRASH_DIALOG'] = "1"
-    return env
-
-  if IS_WIN32:
-    ctypes = __import__('ctypes')
-    time = __import__('time')
-    msvcrt = __import__('msvcrt')
-    PeekNamedPipe = ctypes.windll.kernel32.PeekNamedPipe
-    GetLastError = ctypes.windll.kernel32.GetLastError
-
-    def readWithTimeout(self, f, timeout):
-      """Try to read a line of output from the file object |f|.
-      |f| must be a  pipe, like the |stdout| member of a subprocess.Popen
-      object created with stdout=PIPE. If no output
-      is received within |timeout| seconds, return a blank line.
-      Returns a tuple (line, did_timeout), where |did_timeout| is True
-      if the read timed out, and False otherwise."""
-      if timeout is None:
-        # shortcut to allow callers to pass in "None" for no timeout.
-        return (f.readline(), False)
-      x = self.msvcrt.get_osfhandle(f.fileno())
-      l = self.ctypes.c_long()
-      done = self.time.time() + timeout
-      while self.time.time() < done:
-        if self.PeekNamedPipe(x, None, 0, None, self.ctypes.byref(l), None) == 0:
-          err = self.GetLastError()
-          if err == 38 or err == 109: # ERROR_HANDLE_EOF || ERROR_BROKEN_PIPE
-            return ('', False)
-          else:
-            log.error("readWithTimeout got error: %d", err)
-        if l > 0:
-          # we're assuming that the output is line-buffered,
-          # which is not unreasonable
-          return (f.readline(), False)
-        self.time.sleep(0.01)
-      return ('', True)
-
-    def isPidAlive(self, pid):
-      STILL_ACTIVE = 259
-      PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
-      pHandle = self.ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid)
-      if not pHandle:
-        return False
-      pExitCode = self.ctypes.wintypes.DWORD()
-      self.ctypes.windll.kernel32.GetExitCodeProcess(pHandle, self.ctypes.byref(pExitCode))
-      self.ctypes.windll.kernel32.CloseHandle(pHandle)
-      if (pExitCode.value == STILL_ACTIVE):
-        return True
-      else:
-        return False
-
-    def killPid(self, pid):
-      PROCESS_TERMINATE = 0x0001
-      pHandle = self.ctypes.windll.kernel32.OpenProcess(PROCESS_TERMINATE, 0, pid)
-      if not pHandle:
-        return
-      success = self.ctypes.windll.kernel32.TerminateProcess(pHandle, 1)
-      self.ctypes.windll.kernel32.CloseHandle(pHandle)
-
+  if crashreporter:
+    env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
+    env['MOZ_CRASHREPORTER'] = '1'
   else:
-    errno = __import__('errno')
+    env['MOZ_CRASHREPORTER_DISABLE'] = '1'
 
-    def readWithTimeout(self, f, timeout):
-      """Try to read a line of output from the file object |f|. If no output
-      is received within |timeout| seconds, return a blank line.
-      Returns a tuple (line, did_timeout), where |did_timeout| is True
-      if the read timed out, and False otherwise."""
-      (r, w, e) = select.select([f], [], [], timeout)
-      if len(r) == 0:
-        return ('', True)
+  env['GNOME_DISABLE_CRASH_DIALOG'] = "1"
+  env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
+  return env
+
+if IS_WIN32:
+  import ctypes, time, msvcrt
+  PeekNamedPipe = ctypes.windll.kernel32.PeekNamedPipe
+  GetLastError = ctypes.windll.kernel32.GetLastError
+
+  def readWithTimeout(f, timeout):
+    """Try to read a line of output from the file object |f|.
+    |f| must be a  pipe, like the |stdout| member of a subprocess.Popen
+    object created with stdout=PIPE. If no output
+    is received within |timeout| seconds, return a blank line.
+    Returns a tuple (line, did_timeout), where |did_timeout| is True
+    if the read timed out, and False otherwise."""
+    if timeout is None:
+      # shortcut to allow callers to pass in "None" for no timeout.
       return (f.readline(), False)
+    x = msvcrt.get_osfhandle(f.fileno())
+    l = ctypes.c_long()
+    done = time.time() + timeout
+    while time.time() < done:
+      if PeekNamedPipe(x, None, 0, None, ctypes.byref(l), None) == 0:
+        err = GetLastError()
+        if err == 38 or err == 109: # ERROR_HANDLE_EOF || ERROR_BROKEN_PIPE
+          return ('', False)
+        else:
+          log.error("readWithTimeout got error: %d", err)
+      if l > 0:
+        # we're assuming that the output is line-buffered,
+        # which is not unreasonable
+        return (f.readline(), False)
+      time.sleep(0.01)
+    return ('', True)
 
-    def isPidAlive(self, pid):
-      try:
-        # kill(pid, 0) checks for a valid PID without actually sending a signal
-        # The method throws OSError if the PID is invalid, which we catch below.
-        os.kill(pid, 0)
+  def isPidAlive(pid):
+    STILL_ACTIVE = 259
+    PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+    pHandle = ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid)
+    if not pHandle:
+      return False
+    pExitCode = ctypes.wintypes.DWORD()
+    ctypes.windll.kernel32.GetExitCodeProcess(pHandle, ctypes.byref(pExitCode))
+    ctypes.windll.kernel32.CloseHandle(pHandle)
+    if (pExitCode.value == STILL_ACTIVE):
+      return True
+    else:
+      return False
 
-        # Wait on it to see if it's a zombie. This can throw OSError.ECHILD if
-        # the process terminates before we get to this point.
-        wpid, wstatus = os.waitpid(pid, os.WNOHANG)
-        if wpid == 0:
-          return True
+  def killPid(pid):
+    PROCESS_TERMINATE = 0x0001
+    pHandle = ctypes.windll.kernel32.OpenProcess(PROCESS_TERMINATE, 0, pid)
+    if not pHandle:
+      return
+    success = ctypes.windll.kernel32.TerminateProcess(pHandle, 1)
+    ctypes.windll.kernel32.CloseHandle(pHandle)
 
+else:
+  import errno
+
+  def readWithTimeout(f, timeout):
+    """Try to read a line of output from the file object |f|. If no output
+    is received within |timeout| seconds, return a blank line.
+    Returns a tuple (line, did_timeout), where |did_timeout| is True
+    if the read timed out, and False otherwise."""
+    (r, w, e) = select.select([f], [], [], timeout)
+    if len(r) == 0:
+      return ('', True)
+    return (f.readline(), False)
+
+  def isPidAlive(pid):
+    try:
+      # kill(pid, 0) checks for a valid PID without actually sending a signal
+      # The method throws OSError if the PID is invalid, which we catch below.
+      os.kill(pid, 0)
+
+      # Wait on it to see if it's a zombie. This can throw OSError.ECHILD if
+      # the process terminates before we get to this point.
+      wpid, wstatus = os.waitpid(pid, os.WNOHANG)
+      if wpid == 0:
+        return True
+
+      return False
+    except OSError, err:
+      # Catch the errors we might expect from os.kill/os.waitpid, 
+      # and re-raise any others
+      if err.errno == errno.ESRCH or err.errno == errno.ECHILD:
         return False
-      except OSError, err:
-        # Catch the errors we might expect from os.kill/os.waitpid, 
-        # and re-raise any others
-        if err.errno == self.errno.ESRCH or err.errno == self.errno.ECHILD:
-          return False
-        raise
+      raise
 
-    def killPid(self, pid):
-      os.kill(pid, signal.SIGKILL)
+  def killPid(pid):
+    os.kill(pid, signal.SIGKILL)
 
-  def triggerBreakpad(self, proc, utilityPath):
-    """Attempt to kill this process in a way that triggers Breakpad crash
-    reporting, if we know how for this platform. Otherwise just .kill() it."""
-    if self.CRASHREPORTER:
-      if self.UNIXISH:
-        # SEGV will get picked up by Breakpad's signal handler
-        os.kill(proc.pid, signal.SIGSEGV)
+def triggerBreakpad(proc, utilityPath):
+  """Attempt to kill this process in a way that triggers Breakpad crash
+  reporting, if we know how for this platform. Otherwise just .kill() it."""
+  if CRASHREPORTER:
+    if UNIXISH:
+      # SEGV will get picked up by Breakpad's signal handler
+      os.kill(proc.pid, signal.SIGSEGV)
+      return
+    elif IS_WIN32:
+      # We should have a "crashinject" program in our utility path
+      crashinject = os.path.normpath(os.path.join(utilityPath, "crashinject.exe"))
+      if os.path.exists(crashinject) and subprocess.Popen([crashinject, str(proc.pid)]).wait() == 0:
         return
-      elif self.IS_WIN32:
-        # We should have a "crashinject" program in our utility path
-        crashinject = os.path.normpath(os.path.join(utilityPath, "crashinject.exe"))
-        if os.path.exists(crashinject) and subprocess.Popen([crashinject, str(proc.pid)]).wait() == 0:
-          return
-    #TODO: kill the process such that it triggers Breakpad on OS X (bug 525296)
-    self.log.info("Can't trigger Breakpad, just killing process")
-    proc.kill()
+  #TODO: kill the process such that it triggers Breakpad on OS X (bug 525296)
+  log.info("Can't trigger Breakpad, just killing process")
+  proc.kill()
 
-  def runApp(self, testURL, env, app, profileDir, extraArgs,
-             runSSLTunnel = False, utilityPath = None,
-             xrePath = None, certPath = None,
-             debuggerInfo = None, symbolsPath = None,
-             timeout = None):
-    "Run the app, log the duration it took to execute, return the status code."
+###############
+# RUN THE APP #
+###############
 
-    if utilityPath == None:
-      utilityPath = self.DIST_BIN
-    if xrePath == None:
-      xrePath = self.DIST_BIN
-    if certPath == None:
-      certPath = self.CERTS_SRC_DIR
-    if timeout == None:
-      timeout = self.DEFAULT_TIMEOUT
+def runApp(testURL, env, app, profileDir, extraArgs,
+           runSSLTunnel = False, utilityPath = DIST_BIN,
+           xrePath = DIST_BIN, certPath = CERTS_SRC_DIR,
+           debuggerInfo = None, symbolsPath = None,
+           timeout = DEFAULT_TIMEOUT):
+  "Run the app, log the duration it took to execute, return the status code."
 
-    # copy env so we don't munge the caller's environment
-    env = dict(env);
-    env["NO_EM_RESTART"] = "1"
-    tmpfd, processLog = tempfile.mkstemp(suffix='pidlog')
-    os.close(tmpfd)
-    env["MOZ_PROCESS_LOG"] = processLog
+  # copy env so we don't munge the caller's environment
+  env = dict(env);
+  env["NO_EM_RESTART"] = "1"
+  tmpfd, processLog = tempfile.mkstemp(suffix='pidlog')
+  os.close(tmpfd)
+  env["MOZ_PROCESS_LOG"] = processLog
 
-    if self.IS_TEST_BUILD and runSSLTunnel:
-      # create certificate database for the profile
-      certificateStatus = self.fillCertificateDB(profileDir, certPath, utilityPath, xrePath)
-      if certificateStatus != 0:
-        self.log.info("TEST-UNEXPECTED FAIL | automation.py | Certificate integration failed")
-        return certificateStatus
+  if IS_TEST_BUILD and runSSLTunnel:
+    # create certificate database for the profile
+    certificateStatus = fillCertificateDB(profileDir, certPath, utilityPath, xrePath)
+    if certificateStatus != 0:
+      log.info("TEST-UNEXPECTED FAIL | automation.py | Certificate integration failed")
+      return certificateStatus
 
-      # start ssltunnel to provide https:// URLs capability
-      ssltunnel = os.path.join(utilityPath, "ssltunnel" + self.BIN_SUFFIX)
-      ssltunnelProcess = self.Process([ssltunnel, 
-                               os.path.join(profileDir, "ssltunnel.cfg")], 
-                               env = self.environment(xrePath = xrePath))
-      self.log.info("INFO | automation.py | SSL tunnel pid: %d", ssltunnelProcess.pid)
+    # start ssltunnel to provide https:// URLs capability
+    ssltunnel = os.path.join(utilityPath, "ssltunnel" + BIN_SUFFIX)
+    ssltunnelProcess = Process([ssltunnel, os.path.join(profileDir, "ssltunnel.cfg")], env = environment(xrePath = xrePath))
+    log.info("INFO | automation.py | SSL tunnel pid: %d", ssltunnelProcess.pid)
 
-    # now run with the profile we created
-    cmd = app
-    if self.IS_MAC and not self.IS_CAMINO and not cmd.endswith("-bin"):
-      cmd += "-bin"
-    cmd = os.path.abspath(cmd)
+  # now run with the profile we created
+  cmd = app
+  if IS_MAC and not IS_CAMINO and not cmd.endswith("-bin"):
+    cmd += "-bin"
+  cmd = os.path.abspath(cmd)
 
-    args = []
+  args = []
 
-    if debuggerInfo:
-      args.extend(debuggerInfo["args"])
-      args.append(cmd)
-      cmd = os.path.abspath(debuggerInfo["path"])
+  if debuggerInfo:
+    args.extend(debuggerInfo["args"])
+    args.append(cmd)
+    cmd = os.path.abspath(debuggerInfo["path"])
 
-    if self.IS_MAC:
-      args.append("-foreground")
+  if IS_MAC:
+    args.append("-foreground")
 
-    if self.IS_CYGWIN:
-      profileDirectory = commands.getoutput("cygpath -w \"" + profileDir + "/\"")
+  if IS_CYGWIN:
+    profileDirectory = commands.getoutput("cygpath -w \"" + profileDir + "/\"")
+  else:
+    profileDirectory = profileDir + "/"
+
+  args.extend(("-no-remote", "-profile", profileDirectory))
+  if testURL is not None:
+    if IS_CAMINO:
+      args.extend(("-url", testURL))
     else:
-      profileDirectory = profileDir + "/"
+      args.append((testURL))
+  args.extend(extraArgs)
 
-    args.extend(("-no-remote", "-profile", profileDirectory))
-    if testURL is not None:
-      if self.IS_CAMINO:
-        args.extend(("-url", testURL))
-      else:
-        args.append((testURL))
-    args.extend(extraArgs)
+  startTime = datetime.now()
 
-    startTime = datetime.now()
+  # Don't redirect stdout and stderr if an interactive debugger is attached
+  if debuggerInfo and debuggerInfo["interactive"]:
+    outputPipe = None
+  else:
+    outputPipe = subprocess.PIPE
 
-    # Don't redirect stdout and stderr if an interactive debugger is attached
-    if debuggerInfo and debuggerInfo["interactive"]:
-      outputPipe = None
-    else:
-      outputPipe = subprocess.PIPE
-
-    proc = self.Process([cmd] + args,
-                 env = self.environment(env, xrePath = xrePath,
+  proc = Process([cmd] + args,
+                 env = environment(env, xrePath = xrePath,
                                    crashreporter = not debuggerInfo),
                  stdout = outputPipe,
                  stderr = subprocess.STDOUT)
-    self.log.info("INFO | automation.py | Application pid: %d", proc.pid)
+  log.info("INFO | automation.py | Application pid: %d", proc.pid)
 
-    stackFixerProcess = None
-    didTimeout = False
-    if outputPipe is None:
-      self.log.info("TEST-INFO: Not logging stdout or stderr due to debugger connection")
-    else:
-      logsource = proc.stdout
-      if self.IS_DEBUG_BUILD:
-        stackFixerCommand = None
-        if self.IS_MAC:
-          stackFixerCommand = "fix-macosx-stack.pl"
-        elif self.IS_LINUX:
-          stackFixerCommand = "fix-linux-stack.pl"
-        if stackFixerCommand is not None:
-          stackFixerProcess = self.Process([PERL, os.path.join(utilityPath, stackFixerCommand)], 
-                                           stdin=logsource, 
-                                           stdout=subprocess.PIPE)
-          logsource = stackFixerProcess.stdout
+  stackFixerProcess = None
+  didTimeout = False
+  if outputPipe is None:
+    log.info("TEST-INFO: Not logging stdout or stderr due to debugger connection")
+  else:
+    logsource = proc.stdout
+    if IS_DEBUG_BUILD:
+      stackFixerCommand = None
+      if IS_MAC:
+        stackFixerCommand = "fix-macosx-stack.pl"
+      elif IS_LINUX:
+        stackFixerCommand = "fix-linux-stack.pl"
+      if stackFixerCommand is not None:
+        stackFixerProcess = Process([PERL, os.path.join(utilityPath, stackFixerCommand)], stdin=logsource, stdout=subprocess.PIPE)
+        logsource = stackFixerProcess.stdout
 
-      (line, didTimeout) = self.readWithTimeout(logsource, timeout)
-      while line != "" and not didTimeout:
-        self.log.info(line.rstrip())
-        (line, didTimeout) = self.readWithTimeout(logsource, timeout)
-      if didTimeout:
-        self.log.info("TEST-UNEXPECTED-FAIL | automation.py | application timed out after %d seconds with no output", int(timeout))
-        self.triggerBreakpad(proc, utilityPath)
+    (line, didTimeout) = readWithTimeout(logsource, timeout)
+    while line != "" and not didTimeout:
+      log.info(line.rstrip())
+      (line, didTimeout) = readWithTimeout(logsource, timeout)
+    if didTimeout:
+      log.info("TEST-UNEXPECTED-FAIL | automation.py | application timed out after %d seconds with no output", int(timeout))
+      triggerBreakpad(proc, utilityPath)
 
-    status = proc.wait()
-    if status != 0 and not didTimeout:
-      self.log.info("TEST-UNEXPECTED-FAIL | automation.py | Exited with code %d during test run", status)
-    if stackFixerProcess is not None:
-      fixerStatus = stackFixerProcess.wait()
-      if fixerStatus != 0 and not didTimeout:
-        self.log.info("TEST-UNEXPECTED-FAIL | automation.py | Stack fixer process exited with code %d during test run", fixerStatus)
-    self.log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
+  status = proc.wait()
+  if status != 0 and not didTimeout:
+    log.info("TEST-UNEXPECTED-FAIL | automation.py | Exited with code %d during test run", status)
+  if stackFixerProcess is not None:
+    fixerStatus = stackFixerProcess.wait()
+    if fixerStatus != 0 and not didTimeout:
+      log.info("TEST-UNEXPECTED-FAIL | automation.py | Stack fixer process exited with code %d during test run", fixerStatus)
+  log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
 
-    # Do a final check for zombie child processes.
-    if not os.path.exists(processLog):
-      self.log.info('INFO | automation.py | PID log not found: %s', processLog)
-    else:
-      self.log.info('INFO | automation.py | Reading PID log: %s', processLog)
-      processList = []
-      pidRE = re.compile(r'launched child process (\d+)$')
-      processLogFD = open(processLog)
-      for line in processLogFD:
-        self.log.info(line.rstrip())
-        m = pidRE.search(line)
-        if m:
-          processList.append(int(m.group(1)))
-      processLogFD.close()
+  # Do a final check for zombie child processes.
+  if not os.path.exists(processLog):
+    log.info('INFO | automation.py | PID log not found: %s', processLog)
+  else:
+    log.info('INFO | automation.py | Reading PID log: %s', processLog)
+    processList = []
+    pidRE = re.compile(r'launched child process (\d+)$')
+    processLogFD = open(processLog)
+    for line in processLogFD:
+      log.info(line.rstrip())
+      m = pidRE.search(line)
+      if m:
+        processList.append(int(m.group(1)))
+    processLogFD.close()
 
-      for processPID in processList:
-        self.log.info("INFO | automation.py | Checking for orphan process with PID: %d", processPID)
-        if self.isPidAlive(processPID):
-          self.log.info("TEST-UNEXPECTED-FAIL | automation.py | child process %d still alive after shutdown", processPID)
-          self.killPid(processPID)
+    for processPID in processList:
+      log.info("INFO | automation.py | Checking for orphan process with PID: %d", processPID)
+      if isPidAlive(processPID):
+        log.info("TEST-UNEXPECTED-FAIL | automation.py | child process %d still alive after shutdown", processPID)
+        killPid(processPID)
 
-    if checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath):
-      status = -1
+  if checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath):
+    status = -1
 
-    if os.path.exists(processLog):
-      os.unlink(processLog)
+  if os.path.exists(processLog):
+    os.unlink(processLog)
 
-    if self.IS_TEST_BUILD and runSSLTunnel:
-      ssltunnelProcess.kill()
+  if IS_TEST_BUILD and runSSLTunnel:
+    ssltunnelProcess.kill()
 
-    return status
+  return status
