@@ -156,7 +156,7 @@ class ResultsSink:
             print 'FAIL' + suffix
 
     def all_passed(self):
-        return not self.groups.get((False, True, False))
+        return 'REGRESSIONS' not in self.groups
 
 def run_tests(tests, results):
     """Run the given tests, sending raw results to the given results accumulator."""
