@@ -2098,6 +2098,14 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (op != JSOP_NAME)
                 return JS_TRUE;
 
+            /*
+             * Generator functions may be resumed from any call stack, which
+             * defeats the display optimization to static link searching used
+             * by JSOP_{GET,CALL}UPVAR.
+             */
+            if (cg->flags & TCF_FUN_IS_GENERATOR)
+                return JS_TRUE;
+
             return MakeUpvarForEval(pn, cg);
         }
         return JS_TRUE;
