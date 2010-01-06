@@ -44,7 +44,7 @@
 #include "nsComputedDOMStyle.h"
 #include "nsStyleAnimation.h"
 #include "nsIContent.h"
-#include "nsPIDOMWindow.h"
+#include "nsIDOMElement.h"
 
 static PRBool
 GetCSSComputedValue(nsIContent* aElem,
@@ -62,11 +62,18 @@ GetCSSComputedValue(nsIContent* aElem,
     return PR_FALSE;
   }
 
-  nsPIDOMWindow* win = doc->GetWindow();
-  NS_ABORT_IF_FALSE(win, "actively animated document w/ no window");
-  nsRefPtr<nsComputedDOMStyle>
-    computedStyle(win->LookupComputedStyleFor(aElem));
-  if (computedStyle) {
+  nsIPresShell* shell = doc->GetPrimaryShell();
+  if (!shell) {
+    NS_WARNING("Unable to look up computed style -- no pres shell");
+    return PR_FALSE;
+  }
+
+  nsRefPtr<nsComputedDOMStyle> computedStyle;
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(aElem));
+  nsresult rv = NS_NewComputedDOMStyle(domElement, EmptyString(), shell,
+                                       getter_AddRefs(computedStyle));
+
+  if (NS_SUCCEEDED(rv) && computedStyle) {
     // NOTE: This will produce an empty string for shorthand values
     computedStyle->GetPropertyValue(aPropID, aResult);
     return PR_TRUE;
