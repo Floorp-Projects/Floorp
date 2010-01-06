@@ -17,6 +17,11 @@ toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
   display: none;
 }
 
+toolbar[mode="icons"] > #reload-button:not([displaystop]) + #stop-button,
+toolbar[mode="icons"] > #reload-button[displaystop] {
+  visibility: collapse;
+}
+
 #main-window:-moz-lwtheme {
   background-repeat: no-repeat;
   background-position: top right;
