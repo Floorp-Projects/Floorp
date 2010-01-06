@@ -9067,8 +9067,8 @@ CSSParserImpl::ParseDasharray()
           eCSSUnit_None    == value.GetUnit())
         break;
 
-      if (!ExpectSymbol(',', PR_TRUE))
-        break;
+       // skip optional commas between elements
+      ExpectSymbol(',', PR_TRUE);
 
       if (!ParseVariant(value,
                         VARIANT_LENGTH | VARIANT_PERCENT | VARIANT_NUMBER,
