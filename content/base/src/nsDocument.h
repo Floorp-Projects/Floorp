@@ -1195,6 +1195,11 @@ protected:
 
   PRPackedBool mInXBLUpdate:1;
 
+  // This flag is only set in nsXMLDocument, for e.g. documents used in XBL. We
+  // don't want animations to play in such documents, so we need to store the
+  // flag here so that we can check it in nsDocument::GetAnimationController.
+  PRPackedBool mLoadedAsInteractiveData:1;
+
   PRUint8 mXMLDeclarationBits;
 
   PRUint8 mDefaultElementType;
