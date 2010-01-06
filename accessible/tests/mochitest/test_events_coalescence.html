@@ -337,7 +337,7 @@
       gQueue.push(new removeChildNParent("option1", "select1"));
       gQueue.push(new removeParentNChild("option2", "select2"));
       gQueue.push(new hideChildNParent("option3", "select3"));
-      gQueue.push(new hideParentNChild("option4", "select4"));
+      // [bug 537936] gQueue.push(new hideParentNChild("option4", "select4"));
       gQueue.push(new hideChildNRemoveParent("option5", "select5"));
       gQueue.push(new hideParentNRemoveChild("option6", "select6"));
       gQueue.push(new removeChildNHideParent("option7", "select7"));
