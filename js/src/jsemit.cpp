@@ -6707,16 +6707,24 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         ok = EmitNumberOp(cx, pn->pn_dval, cg);
         break;
 
-      case TOK_REGEXP:
+      case TOK_REGEXP: {
         /*
-         * If the regexp's script is one-shot, we can avoid the extra
-         * fork-on-exec costs of JSOP_REGEXP by selecting JSOP_OBJECT.
-         * Otherwise, to avoid incorrect proto, parent, and lastIndex
-         * sharing among threads and sequentially across re-execution,
-         * select JSOP_REGEXP.
+         * If the regexp's script is one-shot and the regexp is not used in a
+         * loop, we can avoid the extra fork-on-exec costs of JSOP_REGEXP by
+         * selecting JSOP_OBJECT. Otherwise, to avoid incorrect proto, parent,
+         * and lastIndex sharing, select JSOP_REGEXP.
          */
         JS_ASSERT(pn->pn_op == JSOP_REGEXP);
-        if (cg->flags & TCF_COMPILE_N_GO) {
+        bool singleton = !cg->fun && (cg->flags & TCF_COMPILE_N_GO);
+        if (singleton) {
+            for (JSStmtInfo *stmt = cg->topStmt; stmt; stmt = stmt->down) {
+                if (STMT_IS_LOOP(stmt)) {
+                    singleton = false;
+                    break;
+                }
+            }
+        }
+        if (singleton) {
             ok = EmitObjectOp(cx, pn->pn_objbox, JSOP_OBJECT, cg);
         } else {
             ok = EmitIndexOp(cx, JSOP_REGEXP,
@@ -6724,6 +6732,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                              cg);
         }
         break;
+      }
 
 #if JS_HAS_XML_SUPPORT
       case TOK_ANYNAME:

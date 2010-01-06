@@ -181,13 +181,8 @@ JSStackFrame::assertValidStackDepth(uintN depth)
 static JS_INLINE uintN
 GlobalVarCount(JSStackFrame *fp)
 {
-    uintN n;
-
     JS_ASSERT(!fp->fun);
-    n = fp->script->nfixed;
-    if (fp->script->regexpsOffset != 0)
-        n -= fp->script->regexps()->length;
-    return n;
+    return fp->script->nfixed;
 }
 
 typedef struct JSInlineFrame {

@@ -951,11 +951,11 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
 #endif
 
     /*
-     * Global variables and regexps share the index space with locals. Due to
+     * Global variables (gvars) share the atom index space with locals. Due to
      * incremental code generation we need to patch the bytecode to adjust the
      * local references to skip the globals.
      */
-    scriptGlobals = cg.ngvars + cg.regexpList.length;
+    scriptGlobals = cg.ngvars;
     if (scriptGlobals != 0 || cg.hasSharps()) {
         jsbytecode *code, *end;
         JSOp op;
