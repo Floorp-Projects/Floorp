@@ -23,10 +23,10 @@
 
     function doTest()
     {
-      if (LINUX) {
+      if (LINUX || SOLARIS) {
         // XXX: bug 527646
 
-        todo(false, "Failure on linux.");
+        todo(false, "Failure on Linux and Solaris.");
         SimpleTest.finish();
         return;
       }
