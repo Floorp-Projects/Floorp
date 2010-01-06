@@ -2,15 +2,15 @@
 Source: fennec
 Section: user/network
 Priority: extra
-Maintainer: Mozilla Mobile <mobile@mozilla.com>
-Build-Depends: debhelper (>= 5)
+Maintainer: Mobile Feedback <mobile-feedback@mozilla.com>
+Build-Depends: debhelper (>= 4)
 Standards-Version: 3.7.2
 
 Package: fennec
 Architecture: any
 Depends: ${shlibs:Depends}, xulrunner (>=@GRE_MILESTONE@-@GRE_BUILDID@)
-Description: Mozilla's mobile browser
- This browser is the full rendering engine of Mozilla Firefox combined with a user interface designed to make browsing the web on a mobile device a rich and uncompromised experience.
+Description: Web browser built by the Mozilla community
+ The Firefox Web browser puts you in control of your Web experience with easy navigation, support for add-ons and synchronizes with Firefox on your PC.
 XB-Maemo-Display-Name: @MOZ_APP_DISPLAYNAME@
 XB-Maemo-Icon-26:
 #includesubst @ABS_OBJDIR@/@BASE64_ICON@

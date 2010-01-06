@@ -38,16 +38,9 @@
 MOZ_APP_NAME=fennec
 MOZ_BRANDING_DIRECTORY=mobile/branding/nightly
 MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/branding/official
-# MOZ_APP_DISPLAYNAME is set by branding/configure.sh
 
-case "$target" in
-*-wince*)
-    MOZ_APP_VERSION=1.0a4pre
-    ;;
-*)
-    MOZ_APP_VERSION=1.0
-    ;;
-esac
+# MOZ_APP_DISPLAYNAME is set by branding/configure.sh
+# MOZ_APP_VERSION is set by branding/configure.sh
 
 MOZ_XUL_APP=1
 MOZ_UPDATER=0
