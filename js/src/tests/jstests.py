@@ -196,7 +196,7 @@ if __name__ == '__main__':
                   help='hide progress bar')
     op.add_option('-j', '--worker-count', dest='worker_count', type=int, default=2,
                   help='number of worker threads to run tests on (default 2)')
-    op.add_option('-m', '--manifest', dest='manifest', default='jstests.list',
+    op.add_option('-m', '--manifest', dest='manifest',
                   help='select manifest file')
     op.add_option('-t', '--timeout', dest='timeout', type=float, default=60.0,
                   help='set test timeout in seconds')
@@ -225,6 +225,9 @@ if __name__ == '__main__':
         JS, args = None, []
     else:
         JS, args = args[0], args[1:]
+    # Convert to an absolute path so we can run JS from a different directory.
+    if JS is not None:
+        JS = os.path.abspath(JS)
 
     if OPTIONS.debug:
         if OPTIONS.valgrind:
@@ -252,6 +255,17 @@ if __name__ == '__main__':
     if ((OPTIONS.show_cmd or OPTIONS.show_output) and 
         output_file == sys.stdout or OPTIONS.tinderbox):
         OPTIONS.hide_progress = True
+
+    if OPTIONS.manifest is None:
+        filenames = ('jstests.list', 
+                 os.path.join(os.path.dirname(__file__), 'jstests.list'))
+        for filename in filenames:
+            if os.path.isfile(filename):
+                OPTIONS.manifest = filename
+                break
+        if OPTIONS.manifest is None:
+            print >> sys.stderr, 'no manifest file given and defaults not found'
+            sys.exit(2)
 
     import manifest
     if JS is None:
@@ -306,8 +320,13 @@ if __name__ == '__main__':
     if not test_list:
         print 'no tests selected'
     else:
-        results = ResultsSink()
-        run_tests(test_list, results)
+        curdir = os.getcwd()
+        os.chdir(os.path.dirname(OPTIONS.manifest))
+        try:
+            results = ResultsSink()
+            run_tests(test_list, results)
+        finally:
+            os.chdir(curdir)
 
     if output_file != sys.stdout:
         output_file.close()

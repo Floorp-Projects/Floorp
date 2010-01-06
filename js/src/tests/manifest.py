@@ -84,7 +84,7 @@ class NullXULInfoTester:
     def test(self, cond):
         return False
 
-def parse(filename, xul_tester):
+def parse(filename, xul_tester, reldir = ''):
     ans = []
     comment_re = re.compile(r'#.*')
     dir = os.path.dirname(filename)
@@ -99,7 +99,9 @@ def parse(filename, xul_tester):
         sline = comment_re.sub('', line)
         parts = sline.split()
         if parts[0] == 'include':
-            ans += parse(os.path.join(dir, parts[1]), xul_tester)
+            include_file = parts[1]
+            include_reldir = os.path.join(reldir, os.path.dirname(include_file))
+            ans += parse(os.path.join(dir, include_file), xul_tester, include_reldir)
         elif parts[0] == 'url-prefix':
             # Doesn't apply to shell tests
             pass
@@ -143,6 +145,6 @@ def parse(filename, xul_tester):
                     pos += 1
 
             assert script is not None
-            ans.append(TestCase(os.path.join(dir, script), 
+            ans.append(TestCase(os.path.join(reldir, script), 
                                 enable, expect, random))
     return ans
