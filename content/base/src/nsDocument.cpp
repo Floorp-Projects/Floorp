@@ -7184,17 +7184,11 @@ nsDocument::DispatchPageTransition(nsPIDOMEventTarget* aDispatchTarget,
   }
 }
 
-struct NotifyPageEnumerationArgs {
-  PRBool             mPersisted;
-  nsIDOMEventTarget* mDispatchStartTarget;
-};
-
 static PRBool
 NotifyPageShow(nsIDocument* aDocument, void* aData)
 {
-  NotifyPageEnumerationArgs* args =
-    static_cast<NotifyPageEnumerationArgs*>(aData);
-  aDocument->OnPageShow(args->mPersisted, args->mDispatchStartTarget);
+  const PRBool* aPersistedPtr = static_cast<const PRBool*>(aData);
+  aDocument->OnPageShow(*aPersistedPtr, nsnull);
   return PR_TRUE;
 }
 
@@ -7205,8 +7199,7 @@ nsDocument::OnPageShow(PRBool aPersisted,
   mVisible = PR_TRUE;
 
   EnumerateFreezableElements(NotifyActivityChanged, nsnull);
-  NotifyPageEnumerationArgs pageShowArgs = { aPersisted, aDispatchStartTarget };
-  EnumerateExternalResources(NotifyPageShow, &pageShowArgs);
+  EnumerateExternalResources(NotifyPageShow, &aPersisted);
 
   UpdateLinkMap();
   
@@ -7249,9 +7242,8 @@ nsDocument::OnPageShow(PRBool aPersisted,
 static PRBool
 NotifyPageHide(nsIDocument* aDocument, void* aData)
 {
-  NotifyPageEnumerationArgs* args =
-    static_cast<NotifyPageEnumerationArgs*>(aData);
-  aDocument->OnPageHide(args->mPersisted, args->mDispatchStartTarget);
+  const PRBool* aPersistedPtr = static_cast<const PRBool*>(aData);
+  aDocument->OnPageHide(*aPersistedPtr, nsnull);
   return PR_TRUE;
 }
 
@@ -7298,8 +7290,7 @@ nsDocument::OnPageHide(PRBool aPersisted,
   DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"), aPersisted);
 
   mVisible = PR_FALSE;
-  NotifyPageEnumerationArgs pageHideArgs = { aPersisted, aDispatchStartTarget };
-  EnumerateExternalResources(NotifyPageHide, &pageHideArgs);
+  EnumerateExternalResources(NotifyPageHide, &aPersisted);
   EnumerateFreezableElements(NotifyActivityChanged, nsnull);
 }
 
