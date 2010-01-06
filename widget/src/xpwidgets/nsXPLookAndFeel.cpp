@@ -249,9 +249,7 @@ const char nsXPLookAndFeel::sColorPrefs[][38] =
   "ui.-moz-win-communicationstext",
   "ui.-moz-nativehyperlinktext",
   "ui.-moz-comboboxtext",
-  "ui.-moz-combobox",
-  "ui.-moz-entrytext",
-  "ui.-moz-entry"
+  "ui.-moz-combobox"
 };
 
 PRInt32 nsXPLookAndFeel::sCachedColors[nsILookAndFeel::eColor_LAST_COLOR] = {0};
