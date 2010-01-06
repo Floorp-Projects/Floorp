@@ -22,8 +22,15 @@ ifdef GNU_CC
 	SSE2_FLAGS=-msse2
 else
 ifeq ($(SOLARIS_SUNPRO_CC),1)
+ifneq (64,$(findstring 64,$(OS_TEST)))
 	SSE1_FLAGS=-xarch=sse
 	SSE2_FLAGS=-xarch=sse2
+else
+# Sun Studio doesn't work correctly for x86 intristics
+# with -m64 and without optimization.
+	SSE1_FLAGS= -xO4
+	SSE2_FLAGS= -xO4
+endif
 else
 	SSE1_FLAGS=
 	SSE2_FLAGS=
