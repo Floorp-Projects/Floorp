@@ -64,15 +64,15 @@ private:
 
 protected:
   nsresult ParseOptions(const nsAString& aOptions,
-                           PRBool* useTransparency,
-                           PRBool* skipFirstFrame,
-                           PRUint32* numAnimatedFrames,
-                           PRUint32* numIterations,
-                           PRUint32* frameDispose,
-                           PRUint32* frameBlend,
-                           PRUint32* frameDelay,
-                           PRUint32* offsetX,
-                           PRUint32* offsetY);
+                        PRBool* useTransparency,
+                        PRBool* skipFirstFrame,
+                        PRUint32* numAnimatedFrames,
+                        PRUint32* numIterations,
+                        PRUint32* frameDispose,
+                        PRUint32* frameBlend,
+                        PRUint32* frameDelay,
+                        PRUint32* offsetX,
+                        PRUint32* offsetY);
   void ConvertHostARGBRow(const PRUint8* aSrc, PRUint8* aDest,
                           PRUint32 aPixelWidth, PRBool aUseTransparency);
   void StripAlpha(const PRUint8* aSrc, PRUint8* aDest,

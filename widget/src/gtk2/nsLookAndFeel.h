@@ -78,6 +78,8 @@ protected:
     static nscolor sComboBoxBackground;
     static PRUnichar sInvisibleCharacter;
     static float   sCaretRatio;
+    static nscolor sEntryText;
+    static nscolor sEntryBackground;
 
     static void InitLookAndFeel();
     void InitWidget() {

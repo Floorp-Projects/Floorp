@@ -115,6 +115,15 @@ nsContentEventHandler::Init(nsQueryContentEvent* aEvent)
 
   nsINode* startNode = mFirstSelectedRange->GetStartParent();
   NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
+  nsINode* endNode = mFirstSelectedRange->GetEndParent();
+  NS_ENSURE_TRUE(endNode, NS_ERROR_FAILURE);
+
+  // See bug 537041 comment 5, the range could have removed node.
+  NS_ENSURE_TRUE(startNode->GetCurrentDoc() == mPresShell->GetDocument(),
+                 NS_ERROR_NOT_AVAILABLE);
+  NS_ASSERTION(startNode->GetCurrentDoc() == endNode->GetCurrentDoc(),
+               "mFirstSelectedRange crosses the document boundary");
+
   mRootContent = startNode->GetSelectionRootContent(mPresShell);
   NS_ENSURE_TRUE(mRootContent, NS_ERROR_FAILURE);
 

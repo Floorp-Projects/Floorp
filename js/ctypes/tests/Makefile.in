@@ -45,6 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = jsctypes-test
 LIBRARY_NAME = jsctypes-test
+SHORT_LIBNAME = jscttest
 FORCE_SHARED_LIB = 1
 NO_DIST_INSTALL = 1
 
