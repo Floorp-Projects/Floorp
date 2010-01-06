@@ -5354,7 +5354,7 @@ nsDocument::GetAnimationController()
     return mAnimationController;
   // Refuse to create an Animation Controller if SMIL is disabled, and also
   // for data documents.
-  if (!NS_SMILEnabled() || mLoadedAsData)
+  if (!NS_SMILEnabled() || mLoadedAsData || mLoadedAsInteractiveData)
     return nsnull;
 
   mAnimationController = NS_NewSMILAnimationController(this);
