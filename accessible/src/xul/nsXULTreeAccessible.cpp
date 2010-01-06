@@ -962,10 +962,20 @@ nsXULTreeItemAccessibleBase::Shutdown()
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeItemAccessibleBase: nsAccessible public methods
 
+// nsIAccessible::groupPosition
 nsresult
-nsXULTreeItemAccessibleBase::GetAttributesInternal(nsIPersistentProperties *aAttributes)
+nsXULTreeItemAccessibleBase::GroupPosition(PRInt32 *aGroupLevel,
+                                           PRInt32 *aSimilarItemsInGroup,
+                                           PRInt32 *aPositionInGroup)
 {
-  NS_ENSURE_ARG_POINTER(aAttributes);
+  NS_ENSURE_ARG_POINTER(aGroupLevel);
+  *aGroupLevel = 0;
+
+  NS_ENSURE_ARG_POINTER(aSimilarItemsInGroup);
+  *aSimilarItemsInGroup = 0;
+
+  NS_ENSURE_ARG_POINTER(aPositionInGroup);
+  *aPositionInGroup = 0;
 
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -1005,8 +1015,10 @@ nsXULTreeItemAccessibleBase::GetAttributesInternal(nsIPersistentProperties *aAtt
   PRInt32 setSize = topCount + bottomCount;
   PRInt32 posInSet = topCount;
 
-  // set the group attributes
-  nsAccUtils::SetAccGroupAttrs(aAttributes, level + 1, posInSet, setSize);
+  *aGroupLevel = level + 1;
+  *aSimilarItemsInGroup = setSize;
+  *aPositionInGroup = posInSet;
+
   return NS_OK;
 }
 

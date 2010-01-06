@@ -22,8 +22,8 @@
     {
       //////////////////////////////////////////////////////////////////////////
       // xul:listbox (bug 417317)
-      testGroupAttrs("item1", "1", "2");
-      testGroupAttrs("item2", "2", "2");
+      testGroupAttrs("item1", 1, 2);
+      testGroupAttrs("item2", 2, 2);
 
       //////////////////////////////////////////////////////////////////////////
       // xul:menu (bug 443881)
@@ -35,23 +35,33 @@
         menu2.open = true;
 
         window.setTimeout(function() {
-          testGroupAttrs("menu_item1.1", "1", "1");
-          testGroupAttrs("menu_item1.2", "1", "3");
-          testGroupAttrs("menu_item1.4", "2", "3");
-          testGroupAttrs("menu_item2", "3", "3");
-          testGroupAttrs("menu_item2.1", "1", "2", "1");
-          testGroupAttrs("menu_item2.2", "2", "2", "1");
+          testGroupAttrs("menu_item1.1", 1, 1);
+          testGroupAttrs("menu_item1.2", 1, 3);
+          testGroupAttrs("menu_item1.4", 2, 3);
+          testGroupAttrs("menu_item2", 3, 3);
+          testGroupAttrs("menu_item2.1", 1, 2, 1);
+          testGroupAttrs("menu_item2.2", 2, 2, 1);
 
           SimpleTest.finish();
         }, 200);
       }, 200);
 
       //////////////////////////////////////////////////////////////////////////
+      // xul:tab
+      testGroupAttrs("tab1", 1, 2);
+      testGroupAttrs("tab2", 2, 2);
+
+      //////////////////////////////////////////////////////////////////////////
+      // xul:radio
+      testGroupAttrs("radio1", 1, 2);
+      testGroupAttrs("radio2", 2, 2);
+
+      //////////////////////////////////////////////////////////////////////////
       // ARIA menu (bug 441888)
-      testGroupAttrs("aria-menuitem", "1", "3");
-      testGroupAttrs("aria-menuitemcheckbox", "2", "3");
-      testGroupAttrs("aria-menuitemradio", "3", "3");
-      testGroupAttrs("aria-menuitem2", "1", "1");
+      testGroupAttrs("aria-menuitem", 1, 3);
+      testGroupAttrs("aria-menuitemcheckbox", 2, 3);
+      testGroupAttrs("aria-menuitemradio", 3, 3);
+      testGroupAttrs("aria-menuitem2", 1, 1);
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -105,6 +115,22 @@
       </menupopup>
     </menu>
   </menubar>
+
+  <tabbox>
+    <tabs>
+      <tab id="tab1" label="tab1"/>
+      <tab id="tab2" label="tab3"/>
+    </tabs>
+    <tabpanels>
+      <tabpanel/>
+      <tabpanel/>
+    </tabpanels>
+  </tabbox>
+
+  <radiogroup>
+    <radio id="radio1" label="radio1"/>
+    <radio id="radio2" label="radio2"/>
+  </radiogroup>
 
   <vbox>
     <description role="menuitem" id="aria-menuitem"

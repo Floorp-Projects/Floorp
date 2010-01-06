@@ -31,22 +31,22 @@
 
       var tree = getAccessible(treeNode);
       var treeitem1 = tree.firstChild.nextSibling;
-      testGroupAttrs(treeitem1, "1", "4", "1");
+      testGroupAttrs(treeitem1, 1, 4, 1);
 
       var treeitem2 = treeitem1.nextSibling;
-      testGroupAttrs(treeitem2, "2", "4", "1");
+      testGroupAttrs(treeitem2, 2, 4, 1);
 
       var treeitem3 = treeitem2.nextSibling;
-      testGroupAttrs(treeitem3, "1", "2", "2");
+      testGroupAttrs(treeitem3, 1, 2, 2);
 
       var treeitem4 = treeitem3.nextSibling;
-      testGroupAttrs(treeitem4, "2", "2", "2");
+      testGroupAttrs(treeitem4, 2, 2, 2);
 
       var treeitem5 = treeitem4.nextSibling;
-      testGroupAttrs(treeitem5, "3", "4", "1");
+      testGroupAttrs(treeitem5, 3, 4, 1);
 
       var treeitem6 = treeitem5.nextSibling;
-      testGroupAttrs(treeitem6, "4", "4", "1");
+      testGroupAttrs(treeitem6, 4, 4, 1);
 
       SimpleTest.finish();
     }
