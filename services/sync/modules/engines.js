@@ -642,12 +642,17 @@ SyncEngine.prototype = {
       this._store.cache.enabled = false;
 
       for (let id in this._tracker.changedIDs) {
-        let out = this._createRecord(id);
-        if (this._log.level <= Log4Moz.Level.Trace)
-          this._log.trace("Outgoing: " + out);
+        try {
+          let out = this._createRecord(id);
+          if (this._log.level <= Log4Moz.Level.Trace)
+            this._log.trace("Outgoing: " + out);
 
-        out.encrypt(ID.get("WeaveCryptoID"));
-        up.pushData(out);
+          out.encrypt(ID.get("WeaveCryptoID"));
+          up.pushData(out);
+        }
+        catch(ex) {
+          this._log.warn("Error creating record: " + Utils.exceptionStr(ex));
+        }
 
         // Partial upload
         if ((++count % MAX_UPLOAD_RECORDS) == 0)
