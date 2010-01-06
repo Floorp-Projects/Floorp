@@ -635,6 +635,24 @@ nsApplicationAccessibleWrap::GetNativeInterface(void **aOutAccessible)
     return NS_OK;
 }
 
+struct AtkRootAccessibleAddedEvent {
+  AtkObject *app_accessible;
+  AtkObject *root_accessible;
+  PRUint32 index;
+};
+
+gboolean fireRootAccessibleAddedCB(gpointer data)
+{
+    AtkRootAccessibleAddedEvent* eventData = (AtkRootAccessibleAddedEvent*)data;
+    g_signal_emit_by_name(eventData->app_accessible, "children_changed::add",
+                          eventData->index, eventData->root_accessible, NULL);
+    g_object_unref(eventData->app_accessible);
+    g_object_unref(eventData->root_accessible);
+    free(data);
+    
+    return FALSE;
+}
+
 nsresult
 nsApplicationAccessibleWrap::AddRootAccessible(nsIAccessible *aRootAccWrap)
 {
@@ -648,20 +666,21 @@ nsApplicationAccessibleWrap::AddRootAccessible(nsIAccessible *aRootAccWrap)
     atk_object_set_parent(atkAccessible, mAtkObject);
 
     PRUint32 count = mChildren.Count();
-    g_signal_emit_by_name(mAtkObject, "children_changed::add", count - 1,
-                          atkAccessible, NULL);
 
-#ifdef MAI_LOGGING
-    if (NS_SUCCEEDED(rv)) {
-        MAI_LOG_DEBUG(("\nAdd RootAcc=%p OK, count=%d\n",
-                       (void*)aRootAccWrap, count));
+    // Emit children_changed::add in a timeout
+    // to make sure aRootAccWrap is fully initialized.
+    AtkRootAccessibleAddedEvent* eventData = (AtkRootAccessibleAddedEvent*)
+      malloc(sizeof(AtkRootAccessibleAddedEvent));
+    if (eventData) {
+      eventData->app_accessible = mAtkObject;
+      eventData->root_accessible = atkAccessible;
+      eventData->index = count -1;
+      g_object_ref(mAtkObject);
+      g_object_ref(atkAccessible);
+      g_timeout_add(0, fireRootAccessibleAddedCB, eventData);
     }
-    else
-        MAI_LOG_DEBUG(("\nAdd RootAcc=%p Failed, count=%d\n",
-                       (void*)aRootAccWrap, count));
-#endif
 
-    return rv;
+    return NS_OK;
 }
 
 nsresult
@@ -676,21 +695,7 @@ nsApplicationAccessibleWrap::RemoveRootAccessible(nsIAccessible *aRootAccWrap)
     g_signal_emit_by_name(mAtkObject, "children_changed::remove", index,
                           atkAccessible, NULL);
 
-    nsresult rv = nsApplicationAccessible::RemoveRootAccessible(aRootAccWrap);
-
-#ifdef MAI_LOGGING
-    PRUint32 count = mChildren.Count();
-
-    if (NS_SUCCEEDED(rv)) {
-        MAI_LOG_DEBUG(("\nRemove RootAcc=%p, count=%d\n",
-                       (void*)aRootAccWrap, (count-1)));
-    }
-    else
-        MAI_LOG_DEBUG(("\nFail to Remove RootAcc=%p, count=%d\n",
-                       (void*)aRootAccWrap, count));
-#endif
-
-    return rv;
+    return nsApplicationAccessible::RemoveRootAccessible(aRootAccWrap);
 }
 
 void
