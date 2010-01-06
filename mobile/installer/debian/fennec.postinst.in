@@ -1,4 +1,5 @@
-#! /bin/sh
+#filter substitution
+#literal #! /bin/sh
 # postinst script for fennec
 #
 # see: dh_installdeb(1)
@@ -10,7 +11,7 @@ case "$1" in
         # for faster initial startup
 #ifdef MOZ_PLATFORM_HILDON        
         /bin/su -l user -c "/usr/bin/fennec -silent" > /dev/null 2>&1  || echo -n ""
-#end
+#endif
         # for fennec icons
 	gtk-update-icon-cache -f /usr/share/icons/hicolor
 		
