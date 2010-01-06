@@ -3610,6 +3610,11 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
                  "Script global object must be an inner window!");
   }
 #endif
+  NS_ABORT_IF_FALSE(aScriptGlobalObject || !mAnimationController ||
+                    mAnimationController->IsPausedByType(
+                        nsSMILTimeContainer::PAUSE_PAGEHIDE |
+                        nsSMILTimeContainer::PAUSE_BEGIN),
+                    "Clearing window pointer while animations are unpaused");
 
   if (mScriptGlobalObject && !aScriptGlobalObject) {
     // We're detaching from the window.  We need to grab a pointer to
@@ -7179,12 +7184,23 @@ nsDocument::DispatchPageTransition(nsPIDOMEventTarget* aDispatchTarget,
   }
 }
 
+static PRBool
+NotifyPageShow(nsIDocument* aDocument, void* aData)
+{
+  const PRBool* aPersistedPtr = static_cast<const PRBool*>(aData);
+  aDocument->OnPageShow(*aPersistedPtr, nsnull);
+  return PR_TRUE;
+}
+
 void
-nsDocument::OnPageShow(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarget)
+nsDocument::OnPageShow(PRBool aPersisted,
+                       nsIDOMEventTarget* aDispatchStartTarget)
 {
   mVisible = PR_TRUE;
 
-  EnumerateFreezableElements(NotifyActivityChanged, nsnull); 
+  EnumerateFreezableElements(NotifyActivityChanged, nsnull);
+  EnumerateExternalResources(NotifyPageShow, &aPersisted);
+
   UpdateLinkMap();
   
   nsIContent* root = GetRootContent();
@@ -7223,8 +7239,17 @@ nsDocument::OnPageShow(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarge
   DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"), aPersisted);
 }
 
+static PRBool
+NotifyPageHide(nsIDocument* aDocument, void* aData)
+{
+  const PRBool* aPersistedPtr = static_cast<const PRBool*>(aData);
+  aDocument->OnPageHide(*aPersistedPtr, nsnull);
+  return PR_TRUE;
+}
+
 void
-nsDocument::OnPageHide(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarget)
+nsDocument::OnPageHide(PRBool aPersisted,
+                       nsIDOMEventTarget* aDispatchStartTarget)
 {
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
@@ -7265,6 +7290,7 @@ nsDocument::OnPageHide(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarge
   DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"), aPersisted);
 
   mVisible = PR_FALSE;
+  EnumerateExternalResources(NotifyPageHide, &aPersisted);
   EnumerateFreezableElements(NotifyActivityChanged, nsnull);
 }
 
