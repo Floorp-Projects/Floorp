@@ -92,7 +92,7 @@ _TEST_FILES =\
 	$(warning   test_elm_media.html temporarily disabled) \
 		test_elm_plugin.html \
 		test_events_caretmove.html \
-		test_events_coalescence.html \
+	$(warning	test_events_coalescence.html temporarily disabled) \
 	$(warning	test_events_doc.html temporarily disabled) \
 		test_events_draganddrop.html \
 		test_events_flush.html \
