@@ -15,3 +15,4 @@ script regress-74474-003.js
 script regress-83532-001.js
 script regress-83532-002.js
 script switch-001.js
+script switch-002.js
