@@ -290,6 +290,7 @@ void InstallSignalHandlers(const char *ProgramName)
   struct sigaction sa, osa;
   sa.sa_flags = SA_ONSTACK | SA_RESTART | SA_SIGINFO;
   sa.sa_sigaction = fpehandler;
+  sigemptyset(&sa.sa_mask);
   sigaction(SIGFPE, &sa, &osa);
 
 #if defined(DEBUG) && defined(LINUX)
