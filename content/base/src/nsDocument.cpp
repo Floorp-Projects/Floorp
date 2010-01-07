@@ -2084,9 +2084,8 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     PRBool applicable;
     sheet->GetApplicable(applicable);
     if (applicable) {
-      nsPresShellIterator iter(this);
-      nsCOMPtr<nsIPresShell> shell;
-      while ((shell = iter.GetNextShell())) {
+      nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+      if (shell) {
         shell->StyleSet()->RemoveStyleSheet(nsStyleSet::eAgentSheet, sheet);
       }
     }
@@ -2106,9 +2105,8 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   nsStyleSet::sheetType attrSheetType = GetAttrSheetType();
   if (mAttrStyleSheet) {
     // Remove this sheet from all style sets
-    nsPresShellIterator iter(this);
-    nsCOMPtr<nsIPresShell> shell;
-    while ((shell = iter.GetNextShell())) {
+    nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+    if (shell) {
       shell->StyleSet()->RemoveStyleSheet(attrSheetType, mAttrStyleSheet);
     }
     rv = mAttrStyleSheet->Reset(aURI);
@@ -2123,9 +2121,8 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   
   if (mStyleAttrStyleSheet) {
     // Remove this sheet from all style sets
-    nsPresShellIterator iter(this);
-    nsCOMPtr<nsIPresShell> shell;
-    while ((shell = iter.GetNextShell())) {
+    nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+    if (shell) {
       shell->StyleSet()->
         RemoveStyleSheet(nsStyleSet::eStyleAttrSheet, mStyleAttrStyleSheet);
     }
@@ -2142,9 +2139,8 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   mStyleAttrStyleSheet->SetOwningDocument(this);
 
   // Now set up our style sets
-  nsPresShellIterator iter(this);
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell())) {
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  if (shell) {
     FillStyleSet(shell->StyleSet());
   }
 
@@ -3045,7 +3041,9 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 {
   *aInstancePtrResult = nsnull;
 
-  NS_ENSURE_FALSE(mShellsAreHidden, NS_ERROR_FAILURE);
+  NS_ASSERTION(!mPresShell, "We have a presshell already!");
+
+  NS_ENSURE_FALSE(mShellIsHidden, NS_ERROR_FAILURE);
 
   FillStyleSet(aStyleSet);
   
@@ -3059,27 +3057,11 @@ nsDocument::doCreateShell(nsPresContext* aContext,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Note: we don't hold a ref to the shell (it holds a ref to us)
-  NS_ENSURE_TRUE(mPresShells.AppendElementUnlessExists(shell),
-                 NS_ERROR_OUT_OF_MEMORY);
-
-  NS_WARN_IF_FALSE(mPresShells.Length() == 1, "More than one presshell!");
+  mPresShell = shell;
 
   shell.swap(*aInstancePtrResult);
 
   return NS_OK;
-}
-
-PRBool
-nsDocument::DeleteShell(nsIPresShell* aShell)
-{
-  return mPresShells.RemoveElement(aShell);
-}
-
-
-nsIPresShell *
-nsDocument::GetPrimaryShell() const
-{
-  return mShellsAreHidden ? nsnull : mPresShells.SafeElementAt(0, nsnull);
 }
 
 static void
@@ -3341,9 +3323,8 @@ nsDocument::GetIndexOfStyleSheet(nsIStyleSheet* aSheet) const
 void
 nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
 {
-  nsPresShellIterator iter(this);
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell())) {
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  if (shell) {
     shell->StyleSet()->AddDocStyleSheet(aSheet, this);
   }
 }
@@ -3368,9 +3349,8 @@ nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
 void
 nsDocument::RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet)
 {
-  nsPresShellIterator iter(this);
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell())) {
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  if (shell) {
     shell->StyleSet()->RemoveStyleSheet(nsStyleSet::eDocSheet, aSheet);
   }
 }
@@ -3507,9 +3487,8 @@ nsDocument::AddCatalogStyleSheet(nsIStyleSheet* aSheet)
                                                                                 
   if (applicable) {
     // This is like |AddStyleSheetToStyleSets|, but for an agent sheet.
-    nsPresShellIterator iter(this);
-    nsCOMPtr<nsIPresShell> shell;
-    while ((shell = iter.GetNextShell())) {
+    nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+    if (shell) {
       shell->StyleSet()->AppendStyleSheet(nsStyleSet::eAgentSheet, aSheet);
     }
   }
@@ -5083,18 +5062,15 @@ nsDocument::DoNotifyPossibleTitleChange()
   nsAutoString title;
   GetTitle(title);
 
-  nsPresShellIterator iter(this);
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell())) {
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  if (shell) {
     nsCOMPtr<nsISupports> container = shell->GetPresContext()->GetContainer();
-    if (!container)
-      continue;
-
-    nsCOMPtr<nsIBaseWindow> docShellWin = do_QueryInterface(container);
-    if (!docShellWin)
-      continue;
-
-    docShellWin->SetTitle(PromiseFlatString(title).get());
+    if (container) {
+      nsCOMPtr<nsIBaseWindow> docShellWin = do_QueryInterface(container);
+      if (docShellWin) {
+        docShellWin->SetTitle(PromiseFlatString(title).get());
+      }
+    }
   }
 
   // Fire a DOM event for the title change.
@@ -6361,9 +6337,8 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
     mParentDocument->FlushPendingNotifications(parentType);
   }
 
-  nsPresShellIterator iter(this);
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell())) {
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  if (shell) {
     shell->FlushPendingNotifications(aType);
   }
 }
@@ -6773,10 +6748,8 @@ PRBool
 nsDocument::IsSafeToFlush() const
 {
   PRBool isSafeToFlush = PR_TRUE;
-  nsPresShellIterator iter(const_cast<nsIDocument*>
-                                     (static_cast<const nsIDocument*>(this)));
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell()) && isSafeToFlush) {
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  if (shell) {
     shell->IsSafeToFlush(isSafeToFlush);
   }
   return isSafeToFlush;
@@ -7731,9 +7704,8 @@ FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments,
   for (PRUint32 i = 0; i < aDocuments.Length(); ++i) {
     if (!aDocuments[i]->EventHandlingSuppressed()) {
       fm->FireDelayedEvents(aDocuments[i]);
-      nsPresShellIterator iter(aDocuments[i]);
-      nsCOMPtr<nsIPresShell> shell;
-      while ((shell = iter.GetNextShell())) {
+      nsCOMPtr<nsIPresShell> shell = aDocuments[i]->GetPrimaryShell();
+      if (shell) {
         shell->FireOrClearDelayedEvents(aFireEvents);
       }
     }

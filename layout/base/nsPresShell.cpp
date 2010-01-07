@@ -1814,7 +1814,8 @@ PresShell::Destroy()
   // hierarchy is torn down to avoid finding deleted frames through
   // this presshell while the frames are being torn down
   if (mDocument) {
-    mDocument->DeleteShell(this);
+    NS_ASSERTION(mDocument->GetPrimaryShell() == this, "Wrong shell?");
+    mDocument->DeleteShell();
   }
 
   // Revoke any pending reflow event.  We need to do this and cancel
