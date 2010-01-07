@@ -381,6 +381,12 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
     GetEffectProperty(style->mMarkerEnd, aFrame, nsGkAtoms::marker_end,
                       CreateMarkerProperty);
   }
+
+  nsIFrame *aKid = aFrame->GetFirstChild(nsnull);
+  while (aKid) {
+    UpdateEffects(aKid);
+    aKid = aKid->GetNextSibling();
+  }
 }
 
 nsSVGFilterProperty *
