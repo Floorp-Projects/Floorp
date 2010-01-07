@@ -82,7 +82,7 @@
 
     ok(!p.streamTest("data:malformed?", false, null,
                      function(r, t) {
-                       ok(false, "Shouldn't get callback for invalid data: URI");
+                       todo(false, "Shouldn't get callback for invalid data: URI");
                      }), "streamTest GET bad data: URI");
   }
   </script>
