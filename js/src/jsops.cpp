@@ -2560,7 +2560,7 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
 
     if (!JSVAL_IS_NUMBER(lval) &&
         !JSVAL_IS_STRING(lval) &&
-        !JSVAL_IS_BOOLEAN(lval)) {
+        !JSVAL_IS_SPECIAL(lval)) {
         goto end_lookup_switch;
     }
 
