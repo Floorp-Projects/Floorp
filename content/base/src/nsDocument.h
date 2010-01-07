@@ -106,7 +106,6 @@
 #include "pldhash.h"
 #include "nsAttrAndChildArray.h"
 #include "nsDOMAttributeMap.h"
-#include "nsPresShellIterator.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "nsIDocumentViewer.h"
@@ -666,8 +665,6 @@ public:
                                nsIViewManager* aViewManager,
                                nsStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult);
-  virtual PRBool DeleteShell(nsIPresShell* aShell);
-  virtual nsIPresShell *GetPrimaryShell() const;
 
   virtual nsresult SetSubDocumentFor(nsIContent *aContent,
                                      nsIDocument* aSubDoc);
