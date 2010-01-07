@@ -68,7 +68,7 @@ function isPixel(ctx, x,y, r,g,b,a, d) {
        g-d <= pg && pg <= g+d &&
        b-d <= pb && pb <= b+d &&
        a-d <= pa && pa <= a+d,
-       "pixel "+pos+" is "+pr+","+pg+","+pb+","+pa+"; expected "+colour+" +/- "+d);
+       "pixel "+pos+" of "+ctx.canvas.id+" is "+pr+","+pg+","+pb+","+pa+"; expected "+colour+" +/- "+d);
 }
 
 function test_2d_clearRect_basic() {
@@ -2197,7 +2197,7 @@ ctx.globalCompositeOperation = 'copy';
 ctx.fillStyle = 'rgba(0, 0, 255, 0.75)';
 ctx.translate(0, 25);
 ctx.fillRect(0, 50, 100, 50);
-todo_isPixel(ctx, 50,25, 0,0,0,0, 5);
+isPixel(ctx, 50,25, 0,0,0,0, 5);
 
 
 }
@@ -2330,8 +2330,8 @@ ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
 ctx.fillRect(0, 0, 100, 50);
 ctx.globalCompositeOperation = 'copy';
 ctx.drawImage(document.getElementById('yellow_1.png'), 40, 40, 10, 10, 40, 50, 10, 10);
-todo_isPixel(ctx, 15,15, 0,0,0,0, 5);
-todo_isPixel(ctx, 50,25, 0,0,0,0, 5);
+isPixel(ctx, 15,15, 0,0,0,0, 5);
+isPixel(ctx, 50,25, 0,0,0,0, 5);
 
 
 }
@@ -2466,7 +2466,7 @@ ctx.fillRect(0, 0, 100, 50);
 ctx.globalCompositeOperation = 'copy';
 ctx.fillStyle = ctx.createPattern(document.getElementById('yellow_6.png'), 'no-repeat');
 ctx.fillRect(0, 50, 100, 50);
-todo_isPixel(ctx, 50,25, 0,0,0,0, 5);
+isPixel(ctx, 50,25, 0,0,0,0, 5);
 
 
 }
@@ -21100,7 +21100,12 @@ function runTests() {
  //test_2d_composite_uncovered_pattern_source_out();
  
  //test_2d_path_rect_zero_6();	// This test is bogus according to the spec; see bug 407107
- 
+
+ // These tests are bogus according to the spec: shadows should not be 
+ // drawn if shadowBlur, shadowOffsetX, and shadowOffsetY are all zero, whic
+ // they are in these tests
+ //test_2d_shadow_composite_3();
+ //test_2d_shadow_composite_4();
  try {
   test_2d_canvas_readonly();
  } catch (e) {
@@ -23455,16 +23460,6 @@ function runTests() {
   test_2d_shadow_composite_2();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_shadow_composite_2");
- }
- try {
-  test_2d_shadow_composite_3();
- } catch (e) {
-  ok(false, "unexpected exception thrown in: test_2d_shadow_composite_3");
- }
- try {
-  test_2d_shadow_composite_4();
- } catch (e) {
-  ok(false, "unexpected exception thrown in: test_2d_shadow_composite_4");
  }
  try {
   test_2d_shadow_gradient_alpha();
