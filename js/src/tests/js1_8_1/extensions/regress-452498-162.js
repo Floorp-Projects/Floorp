@@ -51,9 +51,9 @@ printStatus (summary);
 
 jit(true);
 __defineGetter__("x3", Function);
-undefined = x3;
-undefined.prototype = [];
-for (var z = 0; z < 4; ++z) { new undefined() }
+parseInt = x3;
+parseInt.prototype = [];
+for (var z = 0; z < 4; ++z) { new parseInt() }
 jit(false);
 
 reportCompare(expect, actual, summary);
