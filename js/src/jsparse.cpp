@@ -8978,8 +8978,13 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
         /* Propagate inCond through logical connectives. */
         bool cond = inCond && (pn->pn_type == TOK_OR || pn->pn_type == TOK_AND);
 
+        /* Don't fold a parenthesized call expression. See bug 537673. */
+        pn1 = pn2 = pn->pn_head;
+        if ((pn->pn_type == TOK_LP || pn->pn_type == TOK_NEW) && pn2->pn_parens)
+            pn2 = pn2->pn_next;
+
         /* Save the list head in pn1 for later use. */
-        for (pn1 = pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+        for (; pn2; pn2 = pn2->pn_next) {
             if (!js_FoldConstants(cx, pn2, tc, cond))
                 return JS_FALSE;
         }
