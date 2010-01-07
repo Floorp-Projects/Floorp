@@ -13216,7 +13216,11 @@ TraceRecorder::record_JSOP_NEWINIT()
     CHECK_STATUS_A(getClassPrototype(key, proto_ins));
 
     LIns* args[] = { proto_ins, cx_ins };
-    const CallInfo *ci = (key == JSProto_Array) ? &js_NewEmptyArray_ci : &js_Object_tn_ci;
+    const CallInfo *ci = (key == JSProto_Array)
+                         ? &js_NewEmptyArray_ci
+                         : (cx->fp->regs->pc[JSOP_NEWINIT_LENGTH] != JSOP_ENDINIT)
+                         ? &js_NonEmptyObject_ci
+                         : &js_Object_tn_ci;
     LIns* v_ins = lir->insCall(ci, args);
     guard(false, lir->ins_peq0(v_ins), OOM_EXIT);
     stack(0, v_ins);
