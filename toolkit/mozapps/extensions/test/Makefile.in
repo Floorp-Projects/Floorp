@@ -67,8 +67,8 @@ _CHROME_FILES = \
 include $(topsrcdir)/config/rules.mk
 
 # disabled due to potentially breaking other tests
-# libs:: $(_CHROME_FILES)
-# 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+libs:: $(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
 
 libs::
 	rm -rf $(TESTXPI)
