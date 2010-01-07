@@ -103,8 +103,8 @@ def cxxfilt(sym):
                                                       '--format', 'gnu-v3'],
                                                      stdin=subprocess.PIPE,
                                                      stdout=subprocess.PIPE)
-    # strip underscores ourselves (workes better than c++filt's
-    # --strip-underscores
+    # strip underscores ourselves (works better than c++filt's
+    # --strip-underscores)
     cxxfilt_proc.stdin.write(sym[1:] + "\n")
     return cxxfilt_proc.stdout.readline().rstrip("\n")
 
