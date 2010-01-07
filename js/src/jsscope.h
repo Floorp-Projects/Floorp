@@ -257,6 +257,7 @@ struct JSScope : public JSObjectMap
 
     /* Defined in jsscopeinlines.h to avoid including implementation dependencies here. */
     inline void updateShape(JSContext *cx);
+    inline void updateFlags(const JSScopeProperty *sprop);
 
     void initMinimal(JSContext *cx, uint32 newShape);
     bool createTable(JSContext *cx, bool report);

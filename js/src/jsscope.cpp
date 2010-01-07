@@ -1138,6 +1138,7 @@ JSScope::newDictionaryProperty(JSContext *cx, const JSScopeProperty &child,
 
     dprop->childp = NULL;
     insertDictionaryProperty(dprop, childp);
+    updateFlags(dprop);
     return dprop;
 }
 
