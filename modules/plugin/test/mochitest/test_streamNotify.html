@@ -9,12 +9,15 @@
   <script class="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  var pending = 4;
+  var pending = 6;
   function testDone() {
     dump("testDone: " + pending + "\n")
     --pending;
+
+    // Wait for a bit so that any unexpected notifications from the
+    // malformed data or null-post tests are received.
     if (0 == pending)
-      SimpleTest.finish();
+      window.setTimeout(SimpleTest.finish, 2000);
   }
 
   function runTests() {
@@ -79,8 +82,7 @@
 
     ok(!p.streamTest("data:malformed?", false, null,
                      function(r, t) {
-                       is(r, 1, "Shouldn't load invalid data: URI");
-                       testDone();
+                       ok(false, "Shouldn't get callback for invalid data: URI");
                      }), "streamTest GET bad data: URI");
   }
   </script>
