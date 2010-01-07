@@ -3390,10 +3390,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
 
         JS_LOCK_OBJ(cx, obj);
         scope = OBJ_SCOPE(obj);
-        // FIXME: bug 513291 -- uncomment this assertion and remove the
-        //        (!scope->owned()) => js_GetMutableScope code further
-        //        below.
-        // JS_ASSERT(scope->object == obj);
+        JS_ASSERT(scope->object == obj);
         JS_ASSERT(!scope->sealed());
         kshape = scope->shape;
         cache = &JS_PROPERTY_CACHE(cx);
@@ -3422,14 +3419,6 @@ BEGIN_CASE(JSOP_INITMETHOD)
              */
             if (!SPROP_HAS_STUB_SETTER(sprop))
                 goto do_initprop_miss;
-
-            if (!scope->owned()) {
-                scope = js_GetMutableScope(cx, obj);
-                if (!scope) {
-                    JS_UNLOCK_OBJ(cx, obj);
-                    goto error;
-                }
-            }
 
             /*
              * Detect a repeated property name and force a miss to share the

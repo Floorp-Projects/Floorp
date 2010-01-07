@@ -467,6 +467,7 @@ js_dmod(jsdouble a, jsdouble b);
 /* Defined in jsobj.cpp. */
 JS_DECLARE_CALLINFO(js_Object_tn)
 JS_DECLARE_CALLINFO(js_NewInstance)
+JS_DECLARE_CALLINFO(js_NonEmptyObject)
 
 /* Defined in jsarray.cpp. */
 JS_DECLARE_CALLINFO(js_Array_dense_setelem)
