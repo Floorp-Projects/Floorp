@@ -895,7 +895,7 @@ namespace nanojit
         case LTy_I32:   op = LIR_sti;   break;
         case LTy_I64:   op = LIR_stqi;  break;
         case LTy_F64:   op = LIR_stfi;  break;
-        case LTy_Void:  NanoAssert(0);  break; 
+        case LTy_Void:  NanoAssert(0);  break;
         default:        NanoAssert(0);  break;
         }
         return insStore(op, value, base, d);
