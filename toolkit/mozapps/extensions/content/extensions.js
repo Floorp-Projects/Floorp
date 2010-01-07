@@ -139,7 +139,7 @@ Components.utils.import("resource://gre/modules/PluralForm.jsm");
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
 
-var gBranchVersion = /^([^\.]+\.[^a-z\.]+[a-z]?).*/gi;
+var gBranchVersion = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions
