@@ -388,24 +388,6 @@ protected:
     static const PRUint32 kCanvasMaxInvalidateCount = 100;
 
     /**
-     * Returns true iff the the given operator should affect areas of the
-     * destination where the source is transparent. Among other things, this
-     * implies that a fully transparent source would still affect the canvas.
-     */
-    PRBool OperatorAffectsUncoveredAreas(gfxContext::GraphicsOperator op) const
-    {
-        return PR_FALSE;
-        // XXX certain operators cause 2d.composite.uncovered.* tests to fail
-#if 0
-        return op == gfxContext::OPERATOR_IN ||
-               op == gfxContext::OPERATOR_OUT ||
-               op == gfxContext::OPERATOR_DEST_IN ||
-               op == gfxContext::OPERATOR_DEST_ATOP ||
-               op == gfxContext::OPERATOR_SOURCE;
-#endif
-    }
-
-    /**
      * Returns true iff a shadow should be drawn along with a
      * drawing operation.
      */
@@ -413,17 +395,11 @@ protected:
     {
         ContextState& state = CurrentState();
 
-        // special case the default values as a "don't draw shadows" mode
-        PRBool doDraw = state.colorStyles[STYLE_SHADOW] != 0 ||
-                        state.shadowOffset.x != 0 ||
-                        state.shadowOffset.y != 0;
-        PRBool isColor = CurrentState().StyleIsColor(STYLE_SHADOW);
-
-        // if not using one of the cooky operators, can avoid drawing a shadow
-        // if the color is fully transparent
-        return (doDraw || !isColor) && (!isColor ||
-               NS_GET_A(state.colorStyles[STYLE_SHADOW]) != 0 ||
-               OperatorAffectsUncoveredAreas(mThebes->CurrentOperator()));
+        // The spec says we should not draw shadows when the alpha value is 0,
+        // regardless of the operator being used.
+        return state.StyleIsColor(STYLE_SHADOW) &&
+               NS_GET_A(state.colorStyles[STYLE_SHADOW]) > 0 &&
+               (state.shadowOffset != gfxPoint(0, 0) || state.shadowBlur != 0);
     }
 
     /**
@@ -1504,7 +1480,7 @@ nsCanvasRenderingContext2D::DrawPath(Style style, gfxRect *dirtyRect)
     /*
      * Need an intermediate surface when:
      * - globalAlpha != 1 and gradients/patterns are used (need to paint_with_alpha)
-     * - certain operators are used and are not on mac (quartz/cairo composite operators don't quite line up)
+     * - certain operators are used
      */
     PRBool doUseIntermediateSurface = NeedToUseIntermediateSurface() ||
                                       NeedIntermediateSurfaceToHandleGlobalAlpha(style);
