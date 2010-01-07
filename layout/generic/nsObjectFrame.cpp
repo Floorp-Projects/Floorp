@@ -4354,7 +4354,13 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
       case NS_MOUSE_BUTTON_DOWN: {
         static const int downMsgs[] =
           { WM_LBUTTONDOWN, WM_MBUTTONDOWN, WM_RBUTTONDOWN };
-        pluginEvent.event = downMsgs[mouseEvent->button];
+        static const int dblClickMsgs[] =
+          { WM_LBUTTONDBLCLK, WM_MBUTTONDBLCLK, WM_RBUTTONDBLCLK };
+        if (mouseEvent->clickCount == 2) {
+          pluginEvent.event = dblClickMsgs[mouseEvent->button];
+        } else {
+          pluginEvent.event = downMsgs[mouseEvent->button];
+        }
         break;
       }
       case NS_MOUSE_BUTTON_UP: {
@@ -4363,12 +4369,9 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
         pluginEvent.event = upMsgs[mouseEvent->button];
         break;
       }
-      case NS_MOUSE_DOUBLECLICK: {
-        static const int dblClickMsgs[] =
-          { WM_LBUTTONDBLCLK, WM_MBUTTONDBLCLK, WM_RBUTTONDBLCLK };
-        pluginEvent.event = dblClickMsgs[mouseEvent->button];
-        break;
-      }
+      // don't synthesize anything for NS_MOUSE_DOUBLECLICK, since that
+      // is a synthetic event generated on mouse-up, and Windows WM_*DBLCLK
+      // messages are sent on mouse-down
       default:
         break;
       }
