@@ -52,6 +52,8 @@ LINE: while (<>) {
     my $op    = shift(@fields);
     my $cnt   = shift(@fields);
 
+    # for AddRef/Release $cnt is the refcount, for Ctor/Dtor it's the size
+
     if ($op eq 'AddRef' && $cnt == 1) {
         # Example: <nsStringBuffer> 0x01AFD3B8 1 AddRef 1
 
@@ -63,6 +65,18 @@ LINE: while (<>) {
 
         delete($allocs{$obj});
         delete($classes{$obj});
+    }
+    elsif ($op eq 'Ctor') {
+	# Example: <PStreamNotifyParent> 0x08880BD0 8 Ctor (20)
+
+	$allocs{$obj} = ++$counter{$class};
+	$classes{$obj} = $class;
+    }
+    elsif ($op eq 'Dtor') {
+	# Example: <PStreamNotifyParent> 0x08880BD0 8 Dtor (20)
+
+	delete($allocs{$obj});
+	delete($classes{$obj});
     }
 }
 
