@@ -112,6 +112,9 @@ Returns the number of times this plugin instance has processed a paint request.
 This can be used to detect whether painting has happened in a plugin's
 window.
 
+* getWidthAtLastPaint()
+Returns the window width that was current when the plugin last painted.
+
 == Plugin geometry ==
 
 The test plugin supports the following scriptable methods:
