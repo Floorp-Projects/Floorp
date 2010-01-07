@@ -50,6 +50,17 @@ BASE64_ICON = dist/branding/fennec_maemo_icon26.txt
 MOZ_DEB_TIMESTAMP = "$(shell date  +"%a, %d  %b %Y %T %z" )"
 MOZ_APP_BUILDID = "$(shell date  +"%Y%m%d%H%M%S" )"
 
+ifdef MOZ_OFFICIAL_BRANDING
+DEB_PKG_VERSION = $(MOZ_APP_VERSION)
+else
+# strip any "pre" part out of the version for deb
+DEB_PKG_VERSION = $(shell echo $(MOZ_APP_VERSION) | $(PERL) -pe 's/pre//')~$(MOZ_APP_BUILDID)
+endif
+
+DEB_BUILD_ARCH = $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+# package name should match mobile/installer/debian/changelog.in
+DEB_PKG_NAME = $(MOZ_PKG_APPNAME)_$(DEB_PKG_VERSION)_$(DEB_BUILD_ARCH).deb
+
 DEFINES += \
 	-DGRE_MILESTONE=$(GRE_MILESTONE) \
 	-DGRE_BUILDID=$(GRE_BUILDID) \
@@ -61,6 +72,7 @@ DEFINES += \
 	-DABS_OBJDIR=$(ABS_OBJDIR) \
 	-DBASE64_ICON=$(BASE64_ICON) \
 	-DMOZ_DEB_TIMESTAMP=$(MOZ_DEB_TIMESTAMP) \
+	-DDEB_PKG_VERSION=$(DEB_PKG_VERSION) \
 	$(NULL)
 
 NO_PKG_FILES = \
@@ -181,9 +193,5 @@ installer: stage-package package-xulrunner
 
 endif
 
-DEB_BUILD_ARCH = $(shell dpkg-architecture -qDEB_BUILD_ARCH)
-# package name comes from mobile/installer/debian/changelog.in
-DEB_PKG_NAME  = $(MOZ_PKG_APPNAME)_$(MOZ_APP_VERSION)_$(DEB_BUILD_ARCH).deb
 # relative to $(DIST)
 UPLOAD_EXTRA_FILES += ../mobile/$(DEB_PKG_NAME)
-
