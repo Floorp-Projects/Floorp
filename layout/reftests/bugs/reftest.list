@@ -44,6 +44,14 @@
 == 25888-2r.html 25888-2r-ref.html
 == 25888-3l.html 25888-3l-ref.html
 == 25888-3r.html 25888-3r-ref.html
+fails == 25888-1l-block.html 25888-1l-ref.html # Bug 25888
+fails != 25888-1l-block.html 25888-1l-notref.html # Bug 25888
+fails == 25888-1r-block.html 25888-1r-ref.html # Bug 25888
+fails != 25888-1r-block.html 25888-1r-notref.html # Bug 25888
+fails == 25888-2l-block.html 25888-2l-ref.html # Bug 25888
+fails == 25888-2r-block.html 25888-2r-ref.html # Bug 25888
+fails == 25888-3l-block.html 25888-3l-ref.html # Bug 25888
+fails == 25888-3r-block.html 25888-3r-ref.html # Bug 25888
 == 28811-1a.html 28811-1-ref.html
 == 28811-1b.html 28811-1-ref.html
 == 28811-2a.html 28811-2-ref.html
