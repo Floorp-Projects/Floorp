@@ -2558,11 +2558,8 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
     pc2 = regs.pc;
     lval = POP_OPND();
 
-    if (!JSVAL_IS_NUMBER(lval) &&
-        !JSVAL_IS_STRING(lval) &&
-        !JSVAL_IS_SPECIAL(lval)) {
+    if (!JSVAL_IS_PRIMITIVE(lval))
         goto end_lookup_switch;
-    }
 
     pc2 += off;
     npairs = (jsint) GET_UINT16(pc2);
