@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that we flush before painting</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="doIteration()">
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<embed type="application/x-test" id="plugin" drawmode="solid" style="width:200px; height:200px;"></embed>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var iterations = 0;
+var plugin = document.getElementById("plugin");
+var lastPaintCount;
+var expectedWidth;
+
+var toggle = true;
+function invalidationLoop() {
+  toggle = !toggle;
+  var color = toggle ? "8F" : "00";
+  plugin.setColor("FFFFFF" + color);
+  setTimeout(invalidationLoop, 20);
+}
+invalidationLoop();
+
+function doIteration() {
+  lastPaintCount = plugin.getPaintCount();
+
+  var v = 255 - iterations;
+  expectedWidth = 201 + iterations;
+  plugin.style.width = expectedWidth + "px";
+  checkDone();
+}
+
+function checkDone() {
+  if (plugin.getPaintCount() == lastPaintCount) {
+    setTimeout(checkDone, 30);
+    return;
+  }
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                 getInterface(Components.interfaces.nsIDOMWindowUtils);
+  is(plugin.getWidthAtLastPaint(), utils.screenPixelsPerCSSPixel*expectedWidth,
+     "Check that we set width before painting");
+
+  ++iterations;
+  if (iterations < 100) {
+    doIteration();
+  } else {
+    SimpleTest.finish();
+  }
+}
+</script>
+</pre>
+</body>
+</html>
