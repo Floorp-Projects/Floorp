@@ -2367,11 +2367,15 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
     }
   }
 
+  // For background-attachment:fixed backgrounds, we'll limit the area
+  // where the background can be drawn to the viewport.
+  nsRect bgClipRect = aBGClipRect;
+
   // Compute the anchor point.
   //
   // relative to aBorderArea.TopLeft() (which is where the top-left
   // of aForFrame's border-box will be rendered)
-  nsPoint imageTopLeft, anchor, offset;
+  nsPoint imageTopLeft, anchor;
   if (NS_STYLE_BG_ATTACHMENT_FIXED == aLayer.mAttachment) {
     // If it's a fixed background attachment, then the image is placed
     // relative to the viewport, which is the area of the root frame
@@ -2389,8 +2393,9 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
       // else this is an embedded shell and its root frame is what we want
     }
 
-    // Set the background positioning area to the viewport's area.
-    bgPositioningArea.SetRect(nsPoint(0, 0), topFrame->GetSize());
+    // Set the background positioning area to the viewport's area
+    // (relative to aForFrame)
+    bgPositioningArea = nsRect(-aForFrame->GetOffsetTo(topFrame), topFrame->GetSize());
 
     if (!pageContentFrame) {
       // Subtract the size of scrollbars.
@@ -2402,9 +2407,16 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
       }
     }
 
-    offset = bgPositioningArea.TopLeft() - aForFrame->GetOffsetTo(topFrame);
-  } else {
-    offset = bgPositioningArea.TopLeft();
+    if (aRenderingContext.ThebesContext()->GetFlags() &
+        gfxContext::FLAG_DESTINED_FOR_SCREEN) {
+      // Clip background-attachment:fixed backgrounds to the viewport, if we're
+      // painting to the screen. This avoids triggering tiling in common cases,
+      // without affecting output since drawing is always clipped to the viewport
+      // when we draw to the screen. (But it's not a pure optimization since it
+      // can affect the values of pixels at the edge of the viewport ---
+      // whether they're sampled from a putative "next tile" or not.)
+      bgClipRect.IntersectRect(bgClipRect, bgPositioningArea + aBorderArea.TopLeft());
+    }
   }
 
   nsSize imageSize = imageRenderer.ComputeSize(bgPositioningArea.Size());
@@ -2458,8 +2470,8 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   // determined.
   ComputeBackgroundAnchorPoint(aLayer, bgPositioningArea.Size(), imageSize,
                                &imageTopLeft, &anchor);
-  imageTopLeft += offset;
-  anchor += offset;
+  imageTopLeft += bgPositioningArea.TopLeft();
+  anchor += bgPositioningArea.TopLeft();
 
   nsRect destArea(imageTopLeft + aBorderArea.TopLeft(), imageSize);
   nsRect fillArea = destArea;
@@ -2467,14 +2479,14 @@ PaintBackgroundLayer(nsPresContext* aPresContext,
   PR_STATIC_ASSERT(NS_STYLE_BG_REPEAT_XY ==
                    (NS_STYLE_BG_REPEAT_X | NS_STYLE_BG_REPEAT_Y));
   if (repeat & NS_STYLE_BG_REPEAT_X) {
-    fillArea.x = aBGClipRect.x;
-    fillArea.width = aBGClipRect.width;
+    fillArea.x = bgClipRect.x;
+    fillArea.width = bgClipRect.width;
   }
   if (repeat & NS_STYLE_BG_REPEAT_Y) {
-    fillArea.y = aBGClipRect.y;
-    fillArea.height = aBGClipRect.height;
+    fillArea.y = bgClipRect.y;
+    fillArea.height = bgClipRect.height;
   }
-  fillArea.IntersectRect(fillArea, aBGClipRect);
+  fillArea.IntersectRect(fillArea, bgClipRect);
 
   imageRenderer.Draw(aPresContext, aRenderingContext, destArea, fillArea,
                      anchor + aBorderArea.TopLeft(), aDirtyRect);
