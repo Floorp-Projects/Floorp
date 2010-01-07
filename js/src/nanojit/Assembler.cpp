@@ -131,7 +131,7 @@ namespace nanojit
              validateQuick();
          }
      }
- 
+
 #endif
 
      inline void AR::clear()

@@ -1353,7 +1353,7 @@ namespace nanojit
     {
         // Quads require non-standard handling. There is no load-64-bit-immediate
         // instruction on i386, so in the general case, we must load it from memory.
-        // This is unlike most other LIR operations which can be computed directly 
+        // This is unlike most other LIR operations which can be computed directly
         // in a register. We can special-case 0.0 and various other small ints
         // (1.0 on x87, any int32_t value on SSE2), but for all other values, we
         // allocate an 8-byte chunk via dataAlloc and load from there. Note that
