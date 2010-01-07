@@ -64,6 +64,10 @@ class nsCSSStyleSheet;
 
 class nsCSSStyleSheetInner {
 public:
+  friend class nsCSSStyleSheet;
+  friend class nsCSSRuleProcessor;
+  friend nsresult NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult);
+private:
   nsCSSStyleSheetInner(nsICSSStyleSheet* aPrimarySheet);
   nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
                        nsCSSStyleSheet* aPrimarySheet);
