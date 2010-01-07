@@ -56,18 +56,23 @@ JSScope::updateShape(JSContext *cx)
 }
 
 inline void
-JSScope::extend(JSContext *cx, JSScopeProperty *sprop)
+JSScope::updateFlags(const JSScopeProperty *sprop)
 {
-    ++entryCount;
-    setLastProperty(sprop);
-    updateShape(cx);
-
     jsuint index;
     if (js_IdIsIndex(sprop->id, &index))
         setIndexedProperties();
 
     if (sprop->isMethod())
         setMethodBarrier();
+}
+
+inline void
+JSScope::extend(JSContext *cx, JSScopeProperty *sprop)
+{
+    ++entryCount;
+    setLastProperty(sprop);
+    updateShape(cx);
+    updateFlags(sprop);
 }
 
 /*
