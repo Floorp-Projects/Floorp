@@ -1,8 +1,8 @@
 #filter substitution
 #ifdef MOZ_OFFICIAL_BRANDING
-fennec (@MOZ_APP_VERSION@)  stable; urgency=low
+fennec (@DEB_PKG_VERSION@)  stable; urgency=low
 #else
-fennec (@MOZ_APP_VERSION@~@MOZ_APP_BUILDID@)  unstable; urgency=low
+fennec (@DEB_PKG_VERSION@)  unstable; urgency=low
 #endif
 
   * Mozilla Nightly (Closes: #nnnn)  <nnnn is the bug number of your ITP>
