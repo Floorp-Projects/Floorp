@@ -3156,6 +3156,10 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                     pn3->pn_val = JSVAL_FALSE;
                     break;
                 }
+                if (pn4->pn_op == JSOP_NULL) {
+                    pn3->pn_val = JSVAL_NULL;
+                    break;
+                }
                 /* FALL THROUGH */
               default:
                 switchOp = JSOP_CONDSWITCH;
