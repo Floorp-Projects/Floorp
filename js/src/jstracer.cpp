@@ -107,6 +107,7 @@ using namespace nanojit;
 #define JSVAL_IS_BOOLEAN(x) JS_STATIC_ASSERT(0)
 
 JS_STATIC_ASSERT(sizeof(JSTraceType) == 1);
+JS_STATIC_ASSERT(offsetof(TraceNativeStorage, stack_global_buf) % 16 == 0);
 
 /* Map to translate a type tag into a printable representation. */
 static const char typeChar[] = "OIDXSNBF";
@@ -6453,10 +6454,10 @@ JS_ALWAYS_INLINE
 InterpState::InterpState(JSContext* cx, JSTraceMonitor* tm, TreeFragment* f,
                          uintN& inlineCallCount, VMSideExit** innermostNestedGuardp)
   : cx(cx),
-    stackBase(tm->storage.stack()),
+    stackBase(tm->storage->stack()),
     sp(stackBase + f->nativeStackBase / sizeof(double)),
-    eos(tm->storage.global()),
-    callstackBase(tm->storage.callstack()),
+    eos(tm->storage->global()),
+    callstackBase(tm->storage->callstack()),
     sor(callstackBase),
     rp(callstackBase),
     eor(callstackBase + JS_MIN(MAX_CALL_STACK_ENTRIES,
@@ -6493,8 +6494,8 @@ InterpState::InterpState(JSContext* cx, JSTraceMonitor* tm, TreeFragment* f,
      * Cannot 0xCD-fill global frame since it may overwrite a bailed outer
      * ExecuteTree's 0xdeadbeefdeadbeef marker.
      */
-    memset(tm->storage.stack(), 0xCD, MAX_NATIVE_STACK_SLOTS * sizeof(double));
-    memset(tm->storage.callstack(), 0xCD, MAX_CALL_STACK_ENTRIES * sizeof(FrameInfo*));
+    memset(tm->storage->stack(), 0xCD, MAX_NATIVE_STACK_SLOTS * sizeof(double));
+    memset(tm->storage->callstack(), 0xCD, MAX_CALL_STACK_ENTRIES * sizeof(FrameInfo*));
 #endif
 }
 
@@ -6589,8 +6590,8 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
 
     /* Initialize trace state. */
     InterpState state(cx, tm, f, inlineCallCount, innermostNestedGuardp);
-    double* stack = tm->storage.stack();
-    double* global = tm->storage.global();
+    double* stack = tm->storage->stack();
+    double* global = tm->storage->global();
     JSObject* globalObj = f->globalObj;
     unsigned ngslots = f->globalSlots->length();
     uint16* gslots = f->globalSlots->data();
@@ -6608,7 +6609,7 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
                       f->code());
 
     debug_only_stmt(uint32 globalSlots = STOBJ_NSLOTS(globalObj);)
-    debug_only_stmt(*(uint64*)&tm->storage.global()[globalSlots] = 0xdeadbeefdeadbeefLL;)
+    debug_only_stmt(*(uint64*)&tm->storage->global()[globalSlots] = 0xdeadbeefdeadbeefLL;)
 
     /* Execute trace. */
 #ifdef MOZ_TRACEVIS
@@ -6617,7 +6618,7 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
     VMSideExit* lr = ExecuteTrace(cx, f, state);
 #endif
 
-    JS_ASSERT(*(uint64*)&tm->storage.global()[globalSlots] == 0xdeadbeefdeadbeefLL);
+    JS_ASSERT(*(uint64*)&tm->storage->global()[globalSlots] == 0xdeadbeefdeadbeefLL);
     JS_ASSERT_IF(lr->exitType == LOOP_EXIT, !lr->calldepth);
 
     /* Restore interpreter state. */
@@ -7641,6 +7642,7 @@ js_InitJIT(JSTraceMonitor *tm)
     tm->reTempAlloc = new VMAllocator();
     tm->codeAlloc = new CodeAlloc();
     tm->frameCache = new FrameInfoCache(tm->dataAlloc);
+    tm->storage = new TraceNativeStorage();
     tm->flush();
     verbose_only( tm->branches = NULL; )
 
@@ -7771,6 +7773,11 @@ js_FinishJIT(JSTraceMonitor *tm)
     if (tm->reTempAlloc) {
         delete tm->reTempAlloc;
         tm->reTempAlloc = NULL;
+    }
+
+    if (tm->storage) {
+        delete tm->storage;
+        tm->storage = NULL;
     }
 }
 
