@@ -1506,13 +1506,10 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     nsAccUtils::SetAccAttr(attributes, nsAccessibilityAtoms::checkable, NS_LITERAL_STRING("true"));
 
   // Group attributes (level/setsize/posinset)
-  if (!nsAccUtils::HasAccGroupAttrs(attributes)) {
-    // Calculate group attributes based on accessible hierarhy if they weren't
-    // provided by ARIA or by accessible class implementation.
-    PRUint32 role = nsAccUtils::Role(this);
-    rv = ComputeGroupAttributes(role, attributes);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  PRInt32 level = 0, posInSet = 0, setSize = 0;
+  rv = GroupPosition(&level, &setSize, &posInSet);
+  if (NS_SUCCEEDED(rv))
+    nsAccUtils::SetAccGroupAttrs(attributes, level, setSize, posInSet);
 
   // Expose object attributes from ARIA attributes.
   PRUint32 numAttrs = content->GetAttrCount();
@@ -1655,37 +1652,71 @@ nsAccessible::GroupPosition(PRInt32 *aGroupLevel,
                             PRInt32 *aSimilarItemsInGroup,
                             PRInt32 *aPositionInGroup)
 {
-  // Every element exposes level/posinset/sizeset for IAccessdible::attributes
-  // if they make sense for it. These attributes are mapped into groupPosition.
-  // If 'level' attribute doesn't make sense element then it isn't represented
-  // via IAccessible::attributes and groupLevel of groupPosition method is 0.
-  // Elements that expose 'level' attribute only (like html headings elements)
-  // don't support this method and all arguments  are equalled 0.
-
   NS_ENSURE_ARG_POINTER(aGroupLevel);
-  NS_ENSURE_ARG_POINTER(aSimilarItemsInGroup);
-  NS_ENSURE_ARG_POINTER(aPositionInGroup);
-
   *aGroupLevel = 0;
+
+  NS_ENSURE_ARG_POINTER(aSimilarItemsInGroup);
   *aSimilarItemsInGroup = 0;
+
+  NS_ENSURE_ARG_POINTER(aPositionInGroup);
   *aPositionInGroup = 0;
 
-  nsCOMPtr<nsIPersistentProperties> attributes;
-  nsresult rv = GetAttributes(getter_AddRefs(attributes));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!attributes) {
+  if (IsDefunct())
     return NS_ERROR_FAILURE;
-  }
-  PRInt32 level, posInSet, setSize;
-  nsAccUtils::GetAccGroupAttrs(attributes, &level, &posInSet, &setSize);
 
-  if (!posInSet && !setSize)
+  // Get group position from ARIA attributes.
+  nsCOMPtr<nsIContent> content = nsCoreUtils::GetRoleContent(mDOMNode);
+  if (!content)
     return NS_OK;
 
-  *aGroupLevel = level;
+  nsAutoString value;
+  PRInt32 error = NS_OK;
 
-  *aPositionInGroup = posInSet;
-  *aSimilarItemsInGroup = setSize;
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_level, value);
+  if (!value.IsEmpty()) {
+    PRInt32 level = value.ToInteger(&error);
+    if (NS_SUCCEEDED(error))
+      *aGroupLevel = level;
+  }
+
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_posinset, value);
+  if (!value.IsEmpty()) {
+    PRInt32 posInSet = value.ToInteger(&error);
+    if (NS_SUCCEEDED(error))
+      *aPositionInGroup = posInSet;
+  }
+
+  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::aria_setsize, value);
+  if (!value.IsEmpty()) {
+    PRInt32 sizeSet = value.ToInteger(&error);
+    if (NS_SUCCEEDED(error))
+      *aSimilarItemsInGroup = sizeSet;
+  }
+
+  // If ARIA is missed and the accessible is visible then calculate group
+  // position from hierarchy.
+  if (nsAccUtils::State(this) & nsIAccessibleStates::STATE_INVISIBLE)
+    return NS_OK;
+
+  // Calculate group level if ARIA is missed.
+  if (*aGroupLevel == 0) {
+    PRInt32 level = GetLevelInternal();
+    if (level != 0)
+      *aGroupLevel = level;
+  }
+
+  // Calculate position in group and group size if ARIA is missed.
+  if (*aSimilarItemsInGroup == 0 || *aPositionInGroup == 0) {
+    PRInt32 posInSet = 0, setSize = 0;
+    GetPositionAndSizeInternal(&posInSet, &setSize);
+    if (posInSet != 0 && setSize != 0) {
+      if (*aPositionInGroup == 0)
+        *aPositionInGroup = posInSet;
+
+      if (*aSimilarItemsInGroup == 0)
+        *aSimilarItemsInGroup = setSize;
+    }
+  }
 
   return NS_OK;
 }
@@ -3291,40 +3322,29 @@ nsAccessible::GetActionRule(PRUint32 aStates)
   return eNoAction;
 }
 
-nsresult
-nsAccessible::ComputeGroupAttributes(PRUint32 aRole,
-                                     nsIPersistentProperties *aAttributes)
+void
+nsAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet, PRInt32 *aSetSize)
 {
-  // The role of an accessible can be specified by ARIA attribute but ARIA
-  // posinset, level, setsize may be skipped. As well this method is used
-  // for non ARIA accessibles to avoid GetAccessibleInternal() method
-  // implementation in subclasses. For example, it's being used to calculate
-  // group attributes for HTML li elements.
+  PRUint32 role = nsAccUtils::Role(this);
+  if (role != nsIAccessibleRole::ROLE_LISTITEM &&
+      role != nsIAccessibleRole::ROLE_MENUITEM &&
+      role != nsIAccessibleRole::ROLE_CHECK_MENU_ITEM &&
+      role != nsIAccessibleRole::ROLE_RADIO_MENU_ITEM &&
+      role != nsIAccessibleRole::ROLE_RADIOBUTTON &&
+      role != nsIAccessibleRole::ROLE_PAGETAB &&
+      role != nsIAccessibleRole::ROLE_OPTION &&
+      role != nsIAccessibleRole::ROLE_OUTLINEITEM &&
+      role != nsIAccessibleRole::ROLE_ROW &&
+      role != nsIAccessibleRole::ROLE_GRID_CELL)
+    return;
 
-  // If accessible is invisible we don't want to calculate group attributes for
-  // it.
-  if (nsAccUtils::State(this) & nsIAccessibleStates::STATE_INVISIBLE)
-    return NS_OK;
-
-  if (aRole != nsIAccessibleRole::ROLE_LISTITEM &&
-      aRole != nsIAccessibleRole::ROLE_MENUITEM &&
-      aRole != nsIAccessibleRole::ROLE_CHECK_MENU_ITEM &&
-      aRole != nsIAccessibleRole::ROLE_RADIO_MENU_ITEM &&
-      aRole != nsIAccessibleRole::ROLE_RADIOBUTTON &&
-      aRole != nsIAccessibleRole::ROLE_PAGETAB &&
-      aRole != nsIAccessibleRole::ROLE_OPTION &&
-      aRole != nsIAccessibleRole::ROLE_OUTLINEITEM &&
-      aRole != nsIAccessibleRole::ROLE_ROW &&
-      aRole != nsIAccessibleRole::ROLE_GRID_CELL)
-    return NS_OK;
-
-  PRUint32 baseRole = aRole;
-  if (aRole == nsIAccessibleRole::ROLE_CHECK_MENU_ITEM ||
-      aRole == nsIAccessibleRole::ROLE_RADIO_MENU_ITEM)
+  PRUint32 baseRole = role;
+  if (role == nsIAccessibleRole::ROLE_CHECK_MENU_ITEM ||
+      role == nsIAccessibleRole::ROLE_RADIO_MENU_ITEM)
     baseRole = nsIAccessibleRole::ROLE_MENUITEM;
 
   nsCOMPtr<nsIAccessible> parent = GetParent();
-  NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(parent,);
 
   // Compute 'posinset' and 'setsize' attributes.
   PRInt32 positionInGroup = 0;
@@ -3332,7 +3352,7 @@ nsAccessible::ComputeGroupAttributes(PRUint32 aRole,
 
   nsCOMPtr<nsIAccessible> sibling, nextSibling;
   parent->GetFirstChild(getter_AddRefs(sibling));
-  NS_ENSURE_STATE(sibling);
+  NS_ENSURE_TRUE(sibling,);
 
   PRBool foundCurrent = PR_FALSE;
   PRUint32 siblingRole, siblingBaseRole;
@@ -3369,13 +3389,21 @@ nsAccessible::ComputeGroupAttributes(PRUint32 aRole,
     sibling = nextSibling;
   }
 
-  // Compute 'level' attribute.
-  PRInt32 groupLevel = 0;
-  if (aRole == nsIAccessibleRole::ROLE_OUTLINEITEM) {
+  *aPosInSet = positionInGroup;
+  *aSetSize = setSize;
+}
+
+PRInt32
+nsAccessible::GetLevelInternal()
+{
+  PRUint32 role = nsAccUtils::Role(this);
+  nsCOMPtr<nsIAccessible> parent = GetParent();
+
+  if (role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
     // Always expose 'level' attribute for 'outlineitem' accessible. The number
     // of nested 'grouping' accessibles containing 'outlineitem' accessible is
     // its level.
-    groupLevel = 1;
+    PRInt32 level = 1;
     nsCOMPtr<nsIAccessible> nextParent;
     while (parent) {
       PRUint32 parentRole = nsAccUtils::Role(parent);
@@ -3383,24 +3411,30 @@ nsAccessible::ComputeGroupAttributes(PRUint32 aRole,
       if (parentRole == nsIAccessibleRole::ROLE_OUTLINE)
         break;
       if (parentRole == nsIAccessibleRole::ROLE_GROUPING)
-        ++ groupLevel;
+        ++ level;
 
       parent->GetParent(getter_AddRefs(nextParent));
       parent.swap(nextParent);
     }
-  } else if (aRole == nsIAccessibleRole::ROLE_LISTITEM) {
+
+    return level;
+  }
+
+  if (role == nsIAccessibleRole::ROLE_LISTITEM) {
     // Expose 'level' attribute on nested lists. We assume nested list is a last
     // child of listitem of parent list. We don't handle the case when nested
     // lists have more complex structure, for example when there are accessibles
     // between parent listitem and nested list.
 
     // Calculate 'level' attribute based on number of parent listitems.
+    PRInt32 level = 0;
     nsCOMPtr<nsIAccessible> nextParent;
+
     while (parent) {
       PRUint32 parentRole = nsAccUtils::Role(parent);
 
       if (parentRole == nsIAccessibleRole::ROLE_LISTITEM)
-        ++ groupLevel;
+        ++ level;
       else if (parentRole != nsIAccessibleRole::ROLE_LIST)
         break;
 
@@ -3408,35 +3442,36 @@ nsAccessible::ComputeGroupAttributes(PRUint32 aRole,
       parent.swap(nextParent);
     }
 
-    if (groupLevel == 0) {
+    if (level == 0) {
       // If this listitem is on top of nested lists then expose 'level'
       // attribute.
-      nsCOMPtr<nsIAccessible> parent = GetParent();
+      nsCOMPtr<nsIAccessible> parent(GetParent()), sibling, nextSibling;
       parent->GetFirstChild(getter_AddRefs(sibling));
 
       while (sibling) {
         nsCOMPtr<nsIAccessible> siblingChild;
         sibling->GetLastChild(getter_AddRefs(siblingChild));
         if (nsAccUtils::Role(siblingChild) == nsIAccessibleRole::ROLE_LIST) {
-          groupLevel = 1;
+          level = 1;
           break;
         }
 
         sibling->GetNextSibling(getter_AddRefs(nextSibling));
         sibling.swap(nextSibling);
       }
-    } else
-      groupLevel++; // level is 1-index based
+    } else {
+      ++ level; // level is 1-index based
+    }
 
-  } else if (aRole == nsIAccessibleRole::ROLE_ROW &&
-             nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_TREE_TABLE) {
-    // It is a row inside flatten treegrid. Group level is always 1 until it is
-    // overriden by aria-level attribute.
-    groupLevel = 1;
+    return level;
   }
 
-  nsAccUtils::SetAccGroupAttrs(aAttributes, groupLevel, positionInGroup,
-                               setSize);
+  if (role == nsIAccessibleRole::ROLE_ROW &&
+      nsAccUtils::Role(parent) == nsIAccessibleRole::ROLE_TREE_TABLE) {
+    // It is a row inside flatten treegrid. Group level is always 1 until it is
+    // overriden by aria-level attribute.
+    return 1;
+  }
 
-  return NS_OK;
+  return 0;
 }

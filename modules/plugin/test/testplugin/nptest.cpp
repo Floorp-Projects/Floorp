@@ -121,6 +121,7 @@ static bool unscheduleAllTimers(NPObject* npobj, const NPVariant* args, uint32_t
 static bool getLastMouseX(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getLastMouseY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getPaintCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getWidthAtLastPaint(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getError(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool doInternalConsistencyCheck(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool setColor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -130,6 +131,9 @@ static bool convertPointY(NPObject* npobj, const NPVariant* args, uint32_t argCo
 static bool streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool checkObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -151,6 +155,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getLastMouseX",
   "getLastMouseY",
   "getPaintCount",
+  "getWidthAtLastPaint",
   "getError",
   "doInternalConsistencyCheck",
   "setColor",
@@ -160,6 +165,8 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "streamTest",
   "crash",
   "crashOnDestroy",
+  "getObjectValue",
+  "checkObjectValue",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
@@ -182,6 +189,7 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   getLastMouseX,
   getLastMouseY,
   getPaintCount,
+  getWidthAtLastPaint,
   getError,
   doInternalConsistencyCheck,
   setColor,
@@ -191,6 +199,8 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   streamTest,
   crashPlugin,
   crashOnDestroy,
+  getObjectValue,
+  checkObjectValue,
 };
 
 struct URLNotifyData
@@ -650,6 +660,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
 
   instanceData->lastReportedPrivateModeState = false;
   instanceData->lastMouseX = instanceData->lastMouseY = -1;
+  instanceData->widthAtLastPaint = -1;
   instanceData->paintCount = 0;
 
   // do platform-specific initialization
@@ -1900,6 +1911,18 @@ getPaintCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVaria
 }
 
 static bool
+getWidthAtLastPaint(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  INT32_TO_NPVARIANT(id->widthAtLastPaint, *result);
+  return true;
+}
+
+static bool
 getError(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
   if (argCount != 0)
@@ -2103,5 +2126,45 @@ setColor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* r
   NPN_InvalidateRect(npp, &r);
 
   VOID_TO_NPVARIANT(*result);
+  return true;
+}
+
+void notifyDidPaint(InstanceData* instanceData)
+{
+  ++instanceData->paintCount;
+  instanceData->widthAtLastPaint = instanceData->window.width;
+}
+
+static const NPClass kTestSharedNPClass = {
+  NP_CLASS_STRUCT_VERSION,
+  // Everything else is NULL
+};
+
+static bool getObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+
+  NPObject* o = NPN_CreateObject(npp,
+                                 const_cast<NPClass*>(&kTestSharedNPClass));
+  if (!o)
+    return false;
+
+  OBJECT_TO_NPVARIANT(o, *result);
+  return true;
+}
+
+static bool checkObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  VOID_TO_NPVARIANT(*result);
+
+  if (1 != argCount)
+    return false;
+
+  if (!NPVARIANT_IS_OBJECT(args[0]))
+    return false;
+
+  NPObject* o = NPVARIANT_TO_OBJECT(args[0]);
+
+  BOOLEAN_TO_NPVARIANT(o->_class == &kTestSharedNPClass, *result);
   return true;
 }

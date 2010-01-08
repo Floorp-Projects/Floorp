@@ -319,6 +319,12 @@ kern_return_t Inspector::ReadMessages() {
     printf("parameter count = %d\n", info.parameter_count);
 #endif
 
+    // In certain situations where multiple crash requests come
+    // through quickly, we can end up with the mach IPC messages not
+    // coming through correctly.  Since we don't know what parameters
+    // we've missed, we can't do much besides abort the crash dump
+    // situation in this case.
+    unsigned int parameters_read = 0;
     // The initial message contains the number of key value pairs that
     // we are expected to read.
     // Read each key/value pair, one mach message per key/value pair.
@@ -329,12 +335,25 @@ kern_return_t Inspector::ReadMessages() {
       if(result == KERN_SUCCESS) {
         KeyValueMessageData &key_value_data =
           (KeyValueMessageData&)*message.GetData();
+        // If we get a blank key, make sure we don't increment the
+        // parameter count; in some cases (notably on-demand generation
+        // many times in a short period of time) caused the Mach IPC
+        // messages to not come through correctly.
+        if (strlen(key_value_data.key) == 0) {
+          continue;
+        }
+        parameters_read++;
 
         config_params_.SetKeyValue(key_value_data.key, key_value_data.value);
       } else {
         PRINT_MACH_RESULT(result, "Inspector: key/value message");
         break;
       }
+    }
+    if (parameters_read != info.parameter_count) {
+      DEBUGLOG(stderr, "Only read %d parameters instead of %d, aborting crash "
+               "dump generation.", parameters_read, info.parameter_count);
+      return KERN_FAILURE;
     }
   }
 
@@ -379,7 +398,7 @@ bool Inspector::InspectTask() {
   SetCrashTimeParameters();
   // If the client app has not specified a minidump directory,
   // use a default of Library/<kDefaultLibrarySubdirectory>/<Product Name>
-  if (0 == strlen(minidumpDirectory)) {
+  if (!minidumpDirectory || 0 == strlen(minidumpDirectory)) {
     NSArray *libraryDirectories =
       NSSearchPathForDirectoriesInDomains(NSLibraryDirectory,
                                           NSUserDomainMask,

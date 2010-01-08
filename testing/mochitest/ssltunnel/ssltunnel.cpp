@@ -612,6 +612,13 @@ void StartServer(void* data)
     return;
   }
 
+  // In case the socket is still open in the TIME_WAIT state from a previous
+  // instance of ssltunnel we ask to reuse the port.
+  PRSocketOptionData socket_option;
+  socket_option.option = PR_SockOpt_Reuseaddr;
+  socket_option.value.reuse_addr = PR_TRUE;
+  PR_SetSocketOption(listen_socket, &socket_option);
+
   PRNetAddr server_addr;
   PR_InitializeNetAddr(PR_IpAddrAny, si->listen_port, &server_addr);
   if (PR_Bind(listen_socket, &server_addr) != PR_SUCCESS) {

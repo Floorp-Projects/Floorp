@@ -164,7 +164,7 @@ GetABI(JSContext* cx, jsval aCallType, ffi_abi& aResult)
   case ABI_default_abi:
     aResult = FFI_DEFAULT_ABI;
     return true;
-#if defined(_WIN32) && !defined(_WIN64)
+#if (defined(_WIN32) && !defined(_WIN64)) || defined(_OS2)
   case ABI_stdcall_abi:
     aResult = FFI_STDCALL;
     return true;

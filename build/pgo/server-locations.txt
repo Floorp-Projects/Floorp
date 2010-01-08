@@ -113,6 +113,7 @@ https://sub2.test2.example.com:443     privileged
 https://nocert.example.com:443         privileged,nocert
 https://self-signed.example.com:443    privileged,cert=selfsigned
 https://untrusted.example.com:443      privileged,cert=untrusted
+https://expired.example.com:443        privileged,cert=expired
 https://requestclientcert.example.com:443         privileged,clientauth=request
 https://requireclientcert.example.com:443         privileged,clientauth=require
 

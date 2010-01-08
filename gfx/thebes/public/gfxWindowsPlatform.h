@@ -61,13 +61,15 @@ typedef struct FT_LibraryRec_ *FT_Library;
 
 #include <windows.h>
 
-class THEBES_API gfxWindowsPlatform : public gfxPlatform, private gfxFontInfoLoader {
+class THEBES_API gfxWindowsPlatform : public gfxPlatform {
 public:
     gfxWindowsPlatform();
     virtual ~gfxWindowsPlatform();
     static gfxWindowsPlatform *GetPlatform() {
         return (gfxWindowsPlatform*) gfxPlatform::GetPlatform();
     }
+
+    virtual gfxPlatformFontList* CreatePlatformFontList();
 
     already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                          gfxASurface::gfxImageFormat imageFormat);
@@ -104,8 +106,6 @@ public:
 
     nsresult UpdateFontList();
 
-    void GetFontFamilyList(nsTArray<nsRefPtr<FontFamily> >& aFamilyArray);
-
     nsresult ResolveFontName(const nsAString& aFontName,
                              FontResolverCallback aCallback,
                              void *aClosure, PRBool& aAborted);
@@ -134,32 +134,17 @@ public:
      */
     virtual PRBool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags);
 
-    /* Given a string and a font we already have find the font that
-     * supports the most code points and most closely resembles aFont
-     *
-     * this involves looking at the fonts on your machine and seeing which
-     * code points they support as well as looking at things like the font
-     * family, style, weight, etc.
-     */
-    already_AddRefed<gfxFont>
-    FindFontForChar(PRUint32 aCh, gfxFont *aFont);
-
     /* Find a FontFamily/FontEntry object that represents a font on your system given a name */
-    FontFamily *FindFontFamily(const nsAString& aName);
-    FontEntry *FindFontEntry(const nsAString& aName, const gfxFontStyle& aFontStyle);
+    gfxFontFamily *FindFontFamily(const nsAString& aName);
+    gfxFontEntry *FindFontEntry(const nsAString& aName, const gfxFontStyle& aFontStyle);
 
-    PRBool GetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<FontEntry> > *array);
-    void SetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<FontEntry> >& array);
+    PRBool GetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> > *array);
+    void SetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> >& array);
 
     void ClearPrefFonts() { mPrefFonts.Clear(); }
 
-    typedef nsDataHashtable<nsStringHashKey, nsRefPtr<FontFamily> > FontTable;
-
 #ifdef MOZ_FT2_FONTS
     FT_Library GetFTLibrary();
-private:
-    void AppendFacesFromFontFile(const PRUnichar *aFileName);
-    void FindFonts();
 #endif
 
 protected:
@@ -170,59 +155,10 @@ protected:
 private:
     void Init();
 
-    void InitBadUnderlineList();
-
-    static int CALLBACK FontEnumProc(const ENUMLOGFONTEXW *lpelfe,
-                                     const NEWTEXTMETRICEXW *metrics,
-                                     DWORD fontType, LPARAM data);
-    static int CALLBACK FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
-                                            const NEWTEXTMETRICEXW *nmetrics,
-                                            DWORD fontType, LPARAM data);
-
-    static PLDHashOperator FontGetStylesProc(nsStringHashKey::KeyType aKey,
-                                             nsRefPtr<FontFamily>& aFontFamily,
-                                             void* userArg);
-
-    static PLDHashOperator FontGetCMapDataProc(nsStringHashKey::KeyType aKey,
-                                               nsRefPtr<FontFamily>& aFontFamily,
-                                               void* userArg);
-
-    static int CALLBACK FontResolveProc(const ENUMLOGFONTEXW *lpelfe,
-                                        const NEWTEXTMETRICEXW *metrics,
-                                        DWORD fontType, LPARAM data);
-
-    static PLDHashOperator HashEnumFunc(nsStringHashKey::KeyType aKey,
-                                        nsRefPtr<FontFamily>& aData,
-                                        void* userArg);
-
-    static PLDHashOperator FindFontForCharProc(nsStringHashKey::KeyType aKey,
-                                               nsRefPtr<FontFamily>& aFontFamily,
-                                               void* userArg);
-
     virtual qcms_profile* GetPlatformCMSOutputProfile();
 
-    static int PrefChangedCallback(const char*, void*);
-
-    // gfxFontInfoLoader overrides, used to load in font cmaps
-    virtual void InitLoader();
-    virtual PRBool RunLoader();
-    virtual void FinishLoader();
-
-    FontTable mFonts;
-    FontTable mFontAliases;
-    FontTable mFontSubstitutes;
-    nsTArray<nsString> mNonExistingFonts;
-
-    // when system-wide font lookup fails for a character, cache it to skip future searches
-    gfxSparseBitSet mCodepointsWithNoFonts;
-    
-    nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<FontEntry> > > mPrefFonts;
-
-    // data used as part of the font cmap loading process
-    nsTArray<nsRefPtr<FontFamily> > mFontFamilies;
-    PRUint32 mStartIndex;
-    PRUint32 mIncrement;
-    PRUint32 mNumFamilies;
+    // TODO: unify this with mPrefFonts (NB: holds families, not fonts) in gfxPlatformFontList
+    nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<gfxFontEntry> > > mPrefFonts;
 };
 
 #endif /* GFX_WINDOWS_PLATFORM_H */

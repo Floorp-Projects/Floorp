@@ -12,12 +12,16 @@ Thread 0 (crashed)
     eip = 0x0040429e   esp = 0x0012fe84   ebp = 0x0012fe88   ebx = 0x7c80abc1
     esi = 0x00000002   edi = 0x00000a28   eax = 0x00000045   ecx = 0x0012fe94
     edx = 0x0042bc58   efl = 0x00010246
+    Found by: given as instruction pointer in context
  1  test_app.exe!main [test_app.cc : 65 + 0x4]
     eip = 0x00404200   esp = 0x0012fe90   ebp = 0x0012ff70
+    Found by: call frame info
  2  test_app.exe!__tmainCRTStartup [crt0.c : 327 + 0x11]
     eip = 0x004053ec   esp = 0x0012ff78   ebp = 0x0012ffc0
+    Found by: call frame info
  3  kernel32.dll!BaseProcessStart + 0x22
     eip = 0x7c816fd7   esp = 0x0012ffc8   ebp = 0x0012fff0
+    Found by: call frame info
 
 Loaded modules:
 0x00400000 - 0x0042cfff  test_app.exe  ???  (main)

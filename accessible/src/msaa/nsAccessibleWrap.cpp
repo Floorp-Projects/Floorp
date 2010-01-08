@@ -85,7 +85,7 @@ static const PRInt32 kIEnumVariantDisconnected = -1;
 // construction
 //-----------------------------------------------------
 nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference *aShell):
-  nsAccessible(aNode, aShell), mEnumVARIANTPosition(0)
+  nsAccessible(aNode, aShell), mEnumVARIANTPosition(0), mTypeInfo(NULL)
 {
 }
 
@@ -94,6 +94,8 @@ nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference *aShell):
 //-----------------------------------------------------
 nsAccessibleWrap::~nsAccessibleWrap()
 {
+  if (mTypeInfo)
+    mTypeInfo->Release();
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsAccessibleWrap, nsAccessible);
@@ -370,20 +372,11 @@ __try {
 
   nsAutoString description;
 
-  // Try to get group attributes to make a positional description string. We
-  // can't use nsIAccessible::groupPosition because the method isn't supposed
-  // to work with elements exposing 'level' attribute only (like HTML headings).
-  nsCOMPtr<nsIPersistentProperties> attributes;
-  nsresult rv = xpAccessible->GetAttributes(getter_AddRefs(attributes));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!attributes)
-    return NS_ERROR_FAILURE;
-
+  // Try to get group position to make a positional description string.
   PRInt32 groupLevel = 0;
   PRInt32 itemsInGroup = 0;
   PRInt32 positionInGroup = 0;
-  nsAccUtils::GetAccGroupAttrs(attributes, &groupLevel, &positionInGroup,
-                               &itemsInGroup);
+  GroupPosition(&groupLevel, &itemsInGroup, &positionInGroup);
 
   if (positionInGroup > 0) {
     if (groupLevel > 0) {
@@ -1340,18 +1333,22 @@ __try {
   PRInt32 groupLevel = 0;
   PRInt32 similarItemsInGroup = 0;
   PRInt32 positionInGroup = 0;
+
   nsresult rv = GroupPosition(&groupLevel, &similarItemsInGroup,
                               &positionInGroup);
+  if (NS_FAILED(rv))
+    return GetHRESULT(rv);
+
+  // Group information for accessibles having level only (like html headings
+  // elements) isn't exposed by this method. AT should look for 'level' object
+  // attribute.
+  if (!similarItemsInGroup && !positionInGroup)
+    return S_FALSE;
 
   *aGroupLevel = groupLevel;
   *aSimilarItemsInGroup = similarItemsInGroup;
   *aPositionInGroup = positionInGroup;
 
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  if (groupLevel ==0 && similarItemsInGroup == 0 && positionInGroup == 0)
-    return S_FALSE;
   return S_OK;
 
 } __except(nsAccessNodeWrap::FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
@@ -1594,38 +1591,63 @@ __try {
   return E_FAIL;
 }
 
-// For IDispatch support
+////////////////////////////////////////////////////////////////////////////////
+// IDispatch
+
 STDMETHODIMP
-nsAccessibleWrap::GetTypeInfoCount(UINT *p)
+nsAccessibleWrap::GetTypeInfoCount(UINT *pctinfo)
 {
-  *p = 0;
-  return E_NOTIMPL;
+  *pctinfo = 1;
+  return S_OK;
 }
 
-// For IDispatch support
-STDMETHODIMP nsAccessibleWrap::GetTypeInfo(UINT i, LCID lcid, ITypeInfo **ppti)
+STDMETHODIMP
+nsAccessibleWrap::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
 {
-  *ppti = 0;
-  return E_NOTIMPL;
+  *ppTInfo = NULL;
+
+  if (iTInfo != 0)
+    return ResultFromScode(DISP_E_BADINDEX);
+
+  ITypeInfo * typeInfo = GetTI(lcid);
+  if (!typeInfo)
+    return E_FAIL;
+
+  typeInfo->AddRef();
+  *ppTInfo = typeInfo;
+
+  return S_OK;
 }
 
-// For IDispatch support
 STDMETHODIMP
 nsAccessibleWrap::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames,
-                           UINT cNames, LCID lcid, DISPID *rgDispId)
+                                UINT cNames, LCID lcid, DISPID *rgDispId)
 {
-  return E_NOTIMPL;
+  ITypeInfo *typeInfo = GetTI(lcid);
+  if (!typeInfo)
+    return E_FAIL;
+
+  HRESULT hr = DispGetIDsOfNames(typeInfo, rgszNames, cNames, rgDispId);
+  return hr;
 }
 
-// For IDispatch support
-STDMETHODIMP nsAccessibleWrap::Invoke(DISPID dispIdMember, REFIID riid,
-    LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
-    VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+STDMETHODIMP
+nsAccessibleWrap::Invoke(DISPID dispIdMember, REFIID riid,
+                         LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
+                         VARIANT *pVarResult, EXCEPINFO *pExcepInfo,
+                         UINT *puArgErr)
 {
-  return E_NOTIMPL;
+  ITypeInfo *typeInfo = GetTI(lcid);
+  if (!typeInfo)
+    return E_FAIL;
+
+  return typeInfo->Invoke(static_cast<IAccessible*>(this), dispIdMember,
+                          wFlags, pDispParams, pVarResult, pExcepInfo,
+                          puArgErr);
 }
 
 
+// nsIAccessible method
 NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 {
   *aOutAccessible = static_cast<IAccessible*>(this);
@@ -1939,4 +1961,24 @@ void nsAccessibleWrap::UpdateSystemCaret()
     ::SetCaretPos(caretRect.x - windowRect.left, caretRect.y - windowRect.top);
     ::DeleteObject(caretBitMap);
   }
+}
+
+ITypeInfo*
+nsAccessibleWrap::GetTI(LCID lcid)
+{
+  if (mTypeInfo)
+    return mTypeInfo;
+
+  ITypeLib *typeLib = NULL;
+  HRESULT hr = LoadRegTypeLib(LIBID_Accessibility, 1, 0, lcid, &typeLib);
+  if (FAILED(hr))
+    return NULL;
+
+  hr = typeLib->GetTypeInfoOfGuid(IID_IAccessible, &mTypeInfo);
+  typeLib->Release();
+
+  if (FAILED(hr))
+    return NULL;
+
+  return mTypeInfo;
 }

@@ -2084,9 +2084,8 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     PRBool applicable;
     sheet->GetApplicable(applicable);
     if (applicable) {
-      nsPresShellIterator iter(this);
-      nsCOMPtr<nsIPresShell> shell;
-      while ((shell = iter.GetNextShell())) {
+      nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+      if (shell) {
         shell->StyleSet()->RemoveStyleSheet(nsStyleSet::eAgentSheet, sheet);
       }
     }
@@ -2106,9 +2105,8 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   nsStyleSet::sheetType attrSheetType = GetAttrSheetType();
   if (mAttrStyleSheet) {
     // Remove this sheet from all style sets
-    nsPresShellIterator iter(this);
-    nsCOMPtr<nsIPresShell> shell;
-    while ((shell = iter.GetNextShell())) {
+    nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+    if (shell) {
       shell->StyleSet()->RemoveStyleSheet(attrSheetType, mAttrStyleSheet);
     }
     rv = mAttrStyleSheet->Reset(aURI);
@@ -2123,9 +2121,8 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   
   if (mStyleAttrStyleSheet) {
     // Remove this sheet from all style sets
-    nsPresShellIterator iter(this);
-    nsCOMPtr<nsIPresShell> shell;
-    while ((shell = iter.GetNextShell())) {
+    nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+    if (shell) {
       shell->StyleSet()->
         RemoveStyleSheet(nsStyleSet::eStyleAttrSheet, mStyleAttrStyleSheet);
     }
@@ -2142,9 +2139,8 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   mStyleAttrStyleSheet->SetOwningDocument(this);
 
   // Now set up our style sets
-  nsPresShellIterator iter(this);
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell())) {
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  if (shell) {
     FillStyleSet(shell->StyleSet());
   }
 
@@ -3045,7 +3041,9 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 {
   *aInstancePtrResult = nsnull;
 
-  NS_ENSURE_FALSE(mShellsAreHidden, NS_ERROR_FAILURE);
+  NS_ASSERTION(!mPresShell, "We have a presshell already!");
+
+  NS_ENSURE_FALSE(mShellIsHidden, NS_ERROR_FAILURE);
 
   FillStyleSet(aStyleSet);
   
@@ -3059,27 +3057,11 @@ nsDocument::doCreateShell(nsPresContext* aContext,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Note: we don't hold a ref to the shell (it holds a ref to us)
-  NS_ENSURE_TRUE(mPresShells.AppendElementUnlessExists(shell),
-                 NS_ERROR_OUT_OF_MEMORY);
-
-  NS_WARN_IF_FALSE(mPresShells.Length() == 1, "More than one presshell!");
+  mPresShell = shell;
 
   shell.swap(*aInstancePtrResult);
 
   return NS_OK;
-}
-
-PRBool
-nsDocument::DeleteShell(nsIPresShell* aShell)
-{
-  return mPresShells.RemoveElement(aShell);
-}
-
-
-nsIPresShell *
-nsDocument::GetPrimaryShell() const
-{
-  return mShellsAreHidden ? nsnull : mPresShells.SafeElementAt(0, nsnull);
 }
 
 static void
@@ -3341,9 +3323,8 @@ nsDocument::GetIndexOfStyleSheet(nsIStyleSheet* aSheet) const
 void
 nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
 {
-  nsPresShellIterator iter(this);
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell())) {
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  if (shell) {
     shell->StyleSet()->AddDocStyleSheet(aSheet, this);
   }
 }
@@ -3368,9 +3349,8 @@ nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
 void
 nsDocument::RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet)
 {
-  nsPresShellIterator iter(this);
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell())) {
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  if (shell) {
     shell->StyleSet()->RemoveStyleSheet(nsStyleSet::eDocSheet, aSheet);
   }
 }
@@ -3507,9 +3487,8 @@ nsDocument::AddCatalogStyleSheet(nsIStyleSheet* aSheet)
                                                                                 
   if (applicable) {
     // This is like |AddStyleSheetToStyleSets|, but for an agent sheet.
-    nsPresShellIterator iter(this);
-    nsCOMPtr<nsIPresShell> shell;
-    while ((shell = iter.GetNextShell())) {
+    nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+    if (shell) {
       shell->StyleSet()->AppendStyleSheet(nsStyleSet::eAgentSheet, aSheet);
     }
   }
@@ -3610,6 +3589,13 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
                  "Script global object must be an inner window!");
   }
 #endif
+#ifdef MOZ_SMIL
+  NS_ABORT_IF_FALSE(aScriptGlobalObject || !mAnimationController ||
+                    mAnimationController->IsPausedByType(
+                        nsSMILTimeContainer::PAUSE_PAGEHIDE |
+                        nsSMILTimeContainer::PAUSE_BEGIN),
+                    "Clearing window pointer while animations are unpaused");
+#endif // MOZ_SMIL
 
   if (mScriptGlobalObject && !aScriptGlobalObject) {
     // We're detaching from the window.  We need to grab a pointer to
@@ -5076,18 +5062,15 @@ nsDocument::DoNotifyPossibleTitleChange()
   nsAutoString title;
   GetTitle(title);
 
-  nsPresShellIterator iter(this);
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell())) {
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  if (shell) {
     nsCOMPtr<nsISupports> container = shell->GetPresContext()->GetContainer();
-    if (!container)
-      continue;
-
-    nsCOMPtr<nsIBaseWindow> docShellWin = do_QueryInterface(container);
-    if (!docShellWin)
-      continue;
-
-    docShellWin->SetTitle(PromiseFlatString(title).get());
+    if (container) {
+      nsCOMPtr<nsIBaseWindow> docShellWin = do_QueryInterface(container);
+      if (docShellWin) {
+        docShellWin->SetTitle(PromiseFlatString(title).get());
+      }
+    }
   }
 
   // Fire a DOM event for the title change.
@@ -5349,7 +5332,7 @@ nsDocument::GetAnimationController()
     return mAnimationController;
   // Refuse to create an Animation Controller if SMIL is disabled, and also
   // for data documents.
-  if (!NS_SMILEnabled() || mLoadedAsData)
+  if (!NS_SMILEnabled() || mLoadedAsData || mLoadedAsInteractiveData)
     return nsnull;
 
   mAnimationController = NS_NewSMILAnimationController(this);
@@ -6354,9 +6337,8 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
     mParentDocument->FlushPendingNotifications(parentType);
   }
 
-  nsPresShellIterator iter(this);
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell())) {
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  if (shell) {
     shell->FlushPendingNotifications(aType);
   }
 }
@@ -6766,10 +6748,8 @@ PRBool
 nsDocument::IsSafeToFlush() const
 {
   PRBool isSafeToFlush = PR_TRUE;
-  nsPresShellIterator iter(const_cast<nsIDocument*>
-                                     (static_cast<const nsIDocument*>(this)));
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell()) && isSafeToFlush) {
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  if (shell) {
     shell->IsSafeToFlush(isSafeToFlush);
   }
   return isSafeToFlush;
@@ -7179,12 +7159,23 @@ nsDocument::DispatchPageTransition(nsPIDOMEventTarget* aDispatchTarget,
   }
 }
 
+static PRBool
+NotifyPageShow(nsIDocument* aDocument, void* aData)
+{
+  const PRBool* aPersistedPtr = static_cast<const PRBool*>(aData);
+  aDocument->OnPageShow(*aPersistedPtr, nsnull);
+  return PR_TRUE;
+}
+
 void
-nsDocument::OnPageShow(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarget)
+nsDocument::OnPageShow(PRBool aPersisted,
+                       nsIDOMEventTarget* aDispatchStartTarget)
 {
   mVisible = PR_TRUE;
 
-  EnumerateFreezableElements(NotifyActivityChanged, nsnull); 
+  EnumerateFreezableElements(NotifyActivityChanged, nsnull);
+  EnumerateExternalResources(NotifyPageShow, &aPersisted);
+
   UpdateLinkMap();
   
   nsIContent* root = GetRootContent();
@@ -7223,8 +7214,17 @@ nsDocument::OnPageShow(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarge
   DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"), aPersisted);
 }
 
+static PRBool
+NotifyPageHide(nsIDocument* aDocument, void* aData)
+{
+  const PRBool* aPersistedPtr = static_cast<const PRBool*>(aData);
+  aDocument->OnPageHide(*aPersistedPtr, nsnull);
+  return PR_TRUE;
+}
+
 void
-nsDocument::OnPageHide(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarget)
+nsDocument::OnPageHide(PRBool aPersisted,
+                       nsIDOMEventTarget* aDispatchStartTarget)
 {
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
@@ -7265,6 +7265,7 @@ nsDocument::OnPageHide(PRBool aPersisted, nsIDOMEventTarget* aDispatchStartTarge
   DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"), aPersisted);
 
   mVisible = PR_FALSE;
+  EnumerateExternalResources(NotifyPageHide, &aPersisted);
   EnumerateFreezableElements(NotifyActivityChanged, nsnull);
 }
 
@@ -7703,9 +7704,8 @@ FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments,
   for (PRUint32 i = 0; i < aDocuments.Length(); ++i) {
     if (!aDocuments[i]->EventHandlingSuppressed()) {
       fm->FireDelayedEvents(aDocuments[i]);
-      nsPresShellIterator iter(aDocuments[i]);
-      nsCOMPtr<nsIPresShell> shell;
-      while ((shell = iter.GetNextShell())) {
+      nsCOMPtr<nsIPresShell> shell = aDocuments[i]->GetPrimaryShell();
+      if (shell) {
         shell->FireOrClearDelayedEvents(aFireEvents);
       }
     }

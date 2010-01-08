@@ -301,7 +301,7 @@ pref("browser.search.update", true);
 pref("browser.search.update.log", false);
 
 // Check whether we need to perform engine updates every 6 hours
-pref("browser.search.updateinterval", 6);
+pref("browser.search.update.interval", 21600);
 
 // Whether or not microsummary and generator updates are enabled
 pref("browser.microsummary.enabled", true);
@@ -910,7 +910,6 @@ pref("toolbar.customization.usesheet", false);
 #endif
 
 pref("dom.ipc.plugins.enabled", false);
-pref("dom.ipc.tabs.enabled", false);
 
 #ifdef XP_WIN
 #ifndef WINCE

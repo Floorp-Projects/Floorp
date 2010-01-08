@@ -409,7 +409,6 @@ bool Breakpad::ExtractParameters(NSDictionary *parameters) {
   NSString *timeout = [parameters objectForKey:@BREAKPAD_CONFIRM_TIMEOUT];
   NSArray  *logFilePaths = [parameters objectForKey:@BREAKPAD_LOGFILES];
   NSString *logFileTailSize = [parameters objectForKey:@BREAKPAD_LOGFILE_UPLOAD_SIZE];
-  NSString *reportEmail = [parameters objectForKey:@BREAKPAD_EMAIL];
   NSString *requestUserText =
                 [parameters objectForKey:@BREAKPAD_REQUEST_COMMENTS];
   NSString *requestEmail = [parameters objectForKey:@BREAKPAD_REQUEST_EMAIL];
@@ -451,7 +450,7 @@ bool Breakpad::ExtractParameters(NSDictionary *parameters) {
     vendor = @"Vendor not specified";
   }
 
-  // Normalize the values
+  // Normalize the values.
   if (skipConfirm) {
     skipConfirm = [skipConfirm uppercaseString];
 
@@ -504,7 +503,7 @@ bool Breakpad::ExtractParameters(NSDictionary *parameters) {
         [resourcePath stringByAppendingPathComponent:@"Inspector"];
   }
 
-  // Verify that there is an Inspector tool
+  // Verify that there is an Inspector tool.
   if (![[NSFileManager defaultManager] fileExistsAtPath:inspectorPathString]) {
     DEBUGLOG(stderr, "Cannot find Inspector tool\n");
     return false;
@@ -517,7 +516,7 @@ bool Breakpad::ExtractParameters(NSDictionary *parameters) {
     reporterPathString = [[NSBundle bundleWithPath:reporterPathString] executablePath];
   }
 
-  // Verify that there is a Reporter application
+  // Verify that there is a Reporter application.
   if (![[NSFileManager defaultManager]
              fileExistsAtPath:reporterPathString]) {
     DEBUGLOG(stderr, "Cannot find Reporter tool\n");
@@ -588,11 +587,6 @@ bool Breakpad::ExtractParameters(NSDictionary *parameters) {
     }
   }
 
-  if (reportEmail) {
-    dictionary.SetKeyValue(BREAKPAD_EMAIL,
-                           [reportEmail UTF8String]);
-  }
-
   if (serverParameters) {
     // For each key-value pair, call BreakpadAddUploadParameter()
     NSEnumerator *keyEnumerator = [serverParameters keyEnumerator];
@@ -633,7 +627,9 @@ void        Breakpad::RemoveKeyValue(NSString *key) {
 
 //=============================================================================
 void        Breakpad::GenerateAndSendReport() {
+  config_params_->SetKeyValue(BREAKPAD_ON_DEMAND, "YES");
   HandleException(0, 0, 0, mach_thread_self()); 
+  config_params_->SetKeyValue(BREAKPAD_ON_DEMAND, "NO");
 }
 
 //=============================================================================
@@ -751,64 +747,58 @@ BreakpadRef BreakpadCreate(NSDictionary *parameters) {
 
     // Create a mutex for use in accessing the SimpleStringDictionary
     int mutexResult = pthread_mutex_init(&gDictionaryMutex, NULL);
-    if (mutexResult != 0) {
-      throw mutexResult;   // caught down below
-    }
+    if (mutexResult == 0) {
 
-    // With the current compiler, gBreakpadAllocator is allocating 1444 bytes.
-    // Let's round up to the nearest page size.
-    //
-    int breakpad_pool_size = 4096;
+      // With the current compiler, gBreakpadAllocator is allocating 1444 bytes.
+      // Let's round up to the nearest page size.
+      //
+      int breakpad_pool_size = 4096;
 
-    /*
-     sizeof(Breakpad)
-     + sizeof(google_breakpad::ExceptionHandler)
-     + sizeof( STUFF ALLOCATED INSIDE ExceptionHandler )
-     */
+      /*
+       sizeof(Breakpad)
+       + sizeof(google_breakpad::ExceptionHandler)
+       + sizeof( STUFF ALLOCATED INSIDE ExceptionHandler )
+       */
 
-    gBreakpadAllocator =
-      new (gMasterAllocator->Allocate(sizeof(ProtectedMemoryAllocator)))
-        ProtectedMemoryAllocator(breakpad_pool_size);
+      gBreakpadAllocator =
+        new (gMasterAllocator->Allocate(sizeof(ProtectedMemoryAllocator)))
+          ProtectedMemoryAllocator(breakpad_pool_size);
 
-    // Stack-based autorelease pool for Breakpad::Create() obj-c code.
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    Breakpad *breakpad = Breakpad::Create(parameters);
+      // Stack-based autorelease pool for Breakpad::Create() obj-c code.
+      NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+      Breakpad *breakpad = Breakpad::Create(parameters);
 
-    if (breakpad) {
-      // Make read-only to protect against memory smashers
-      gMasterAllocator->Protect();
-      gKeyValueAllocator->Protect();
-      gBreakpadAllocator->Protect();
-    } else {
+      if (breakpad) {
+        // Make read-only to protect against memory smashers
+        gMasterAllocator->Protect();
+        gKeyValueAllocator->Protect();
+        gBreakpadAllocator->Protect();
+        // Can uncomment this line to figure out how much space was actually
+        // allocated using this allocator
+        //     printf("gBreakpadAllocator allocated size = %d\n",
+        //         gBreakpadAllocator->GetAllocatedSize() );
+        [pool release];
+        return (BreakpadRef)breakpad;
+      }
+
       [pool release];
-#ifdef __EXCEPTIONS
-      throw(-1);
-#else
-      return NULL;
-#endif
     }
-
-    // Can uncomment this line to figure out how much space was actually
-    // allocated using this allocator
-    //     printf("gBreakpadAllocator allocated size = %d\n",
-    //         gBreakpadAllocator->GetAllocatedSize() );
-
-    [pool release];
-    return (BreakpadRef)breakpad;
   } catch(...) {    // don't let exceptions leave this C API
-    if (gKeyValueAllocator) {
-      gKeyValueAllocator->~ProtectedMemoryAllocator();
-      gKeyValueAllocator = NULL;
-    }
-
-    if (gBreakpadAllocator) {
-      gBreakpadAllocator->~ProtectedMemoryAllocator();
-      gBreakpadAllocator = NULL;
-    }
-
-    delete gMasterAllocator;
-    gMasterAllocator = NULL;
+    fprintf(stderr, "BreakpadCreate() : error\n");
   }
+
+  if (gKeyValueAllocator) {
+    gKeyValueAllocator->~ProtectedMemoryAllocator();
+    gKeyValueAllocator = NULL;
+  }
+
+  if (gBreakpadAllocator) {
+    gBreakpadAllocator->~ProtectedMemoryAllocator();
+    gBreakpadAllocator = NULL;
+  }
+
+  delete gMasterAllocator;
+  gMasterAllocator = NULL;
 
   return NULL;
 }

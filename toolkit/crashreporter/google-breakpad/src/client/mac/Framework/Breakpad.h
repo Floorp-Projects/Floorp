@@ -89,6 +89,7 @@ extern "C" {
 #define BREAKPAD_PROCESS_CRASH_TIME       "BreakpadProcessCrashTime"
 #define BREAKPAD_LOGFILE_KEY_PREFIX       "BreakpadAppLogFile"
 #define BREAKPAD_SERVER_PARAMETER_PREFIX  "BreakpadServerParameterPrefix_"
+#define BREAKPAD_ON_DEMAND                "BreakpadOnDemand"
 
 // Optional user-defined function to dec to decide if we should handle
 // this crash or forward it along.
@@ -215,7 +216,7 @@ typedef bool (*BreakpadFilterCallback)(int exception_type,
 //=============================================================================
 // The following are NOT user-supplied but are documented here for
 // completeness.  They are calculated by Breakpad during initialization &
-// crash-dump generation.
+// crash-dump generation, or entered in by the user.
 //
 // BREAKPAD_PROCESS_START_TIME       The time the process started.
 //
@@ -242,6 +243,12 @@ typedef bool (*BreakpadFilterCallback)(int exception_type,
 //                                   server without leaking Breakpad's
 //                                   internal values.
 //
+// BREAKPAD_ON_DEMAND                Used internally to indicate to the
+//                                   Reporter that we're sending on-demand,
+//                                   not as result of a crash.
+//
+// BREAKPAD_COMMENTS                 The text the user provided as comments.
+//                                   Only used in crash_report_sender.
 
 // Returns a new BreakpadRef object on success, NULL otherwise.
 BreakpadRef BreakpadCreate(NSDictionary *parameters);
@@ -286,7 +293,7 @@ void BreakpadRemoveKeyValue(BreakpadRef ref, NSString *key);
 // necessary.  Note that as mentioned above there are limits on both
 // the number of keys and their length.
 void BreakpadAddUploadParameter(BreakpadRef ref, NSString *key,
-				NSString *value);
+                                NSString *value);
 
 // This method will remove a previously-added parameter from the
 // upload parameter set.
