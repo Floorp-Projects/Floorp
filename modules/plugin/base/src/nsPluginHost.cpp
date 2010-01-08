@@ -464,7 +464,6 @@ public:
   nsIPluginInstance *GetPluginInstance() { return mInstance; }
 
 private:
-  nsresult SetUpCache(nsIURI* aURL); // todo: see about removing this...
   nsresult SetUpStreamListener(nsIRequest* request, nsIURI* aURL);
   nsresult SetupPluginCacheFile(nsIChannel* channel);
 
@@ -1507,14 +1506,6 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
     mPluginStreamInfo->SetStreamComplete(PR_TRUE);
 
   return NS_OK;
-}
-
-// private methods for nsPluginStreamListenerPeer
-nsresult nsPluginStreamListenerPeer::SetUpCache(nsIURI* aURL)
-{
-  nsPluginCacheListener* cacheListener = new nsPluginCacheListener(this);
-  // XXX: Null LoadGroup?
-  return NS_OpenURI(cacheListener, nsnull, aURL, nsnull);
 }
 
 nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
@@ -5235,7 +5226,7 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
   mPStreamListener->OnStartBinding(mPluginStreamInfo);
   mPluginStreamInfo->SetStreamOffset(0);
 
-  // force the plugin use stream as file
+  // force the plugin to use stream as file
   mStreamType = NP_ASFILE;
 
   // then check it out if browser cache is not available

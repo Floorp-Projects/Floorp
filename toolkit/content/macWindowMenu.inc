@@ -16,7 +16,7 @@
     <menu id="windowMenu"
           label="&windowMenu.label;"
           datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
-          onpopupshowing="checkFocusedWindow();"
+          onpopupshowing="macWindowMenuDidShow();"
           hidden="false">
         <template>
         <rule>

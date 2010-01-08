@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if defined(_M_IA32) || defined(_M_X86) || defined(__i386__) || defined(__amd64__)
+#if defined(_M_IX86) || defined(__i386__) || defined(__amd64__)
 
 /*
  * x87 FPU Control Word:

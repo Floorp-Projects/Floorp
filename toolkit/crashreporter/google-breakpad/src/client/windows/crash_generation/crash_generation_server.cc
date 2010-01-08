@@ -218,12 +218,14 @@ bool CrashGenerationServer::Start() {
   }
 
   // Register a callback with the thread pool for the client connection.
-  RegisterWaitForSingleObject(&pipe_wait_handle_,
-                              overlapped_.hEvent,
-                              OnPipeConnected,
-                              this,
-                              INFINITE,
-                              kPipeIOThreadFlags);
+  if (!RegisterWaitForSingleObject(&pipe_wait_handle_,
+                                   overlapped_.hEvent,
+                                   OnPipeConnected,
+                                   this,
+                                   INFINITE,
+                                   kPipeIOThreadFlags)) {
+    return false;
+  }
 
   pipe_ = CreateNamedPipe(pipe_name_.c_str(),
                           kPipeAttr,

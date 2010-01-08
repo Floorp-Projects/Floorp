@@ -35,6 +35,7 @@
 
 #include <atlcomcli.h>
 
+#include <hash_map>
 #include <string>
 
 struct IDiaEnumLineNumbers;
@@ -44,6 +45,7 @@ struct IDiaSymbol;
 namespace google_breakpad {
 
 using std::wstring;
+using stdext::hash_map;
 
 // A structure that carries information that identifies a pdb file.
 struct PDBModuleInfo {
@@ -111,8 +113,11 @@ class PDBSourceLineWriter {
   bool PrintLines(IDiaEnumLineNumbers *lines);
 
   // Outputs a function address and name, followed by its source line list.
+  // block can be the same object as function, or it can be a reference
+  // to a code block that is lexically part of this function, but
+  // resides at a separate address.
   // Returns true on success.
-  bool PrintFunction(IDiaSymbol *function);
+  bool PrintFunction(IDiaSymbol *function, IDiaSymbol *block);
 
   // Outputs all functions as described above.  Returns true on success.
   bool PrintFunctions();
@@ -134,6 +139,37 @@ class PDBSourceLineWriter {
   // its uuid and age.
   bool PrintPDBInfo();
 
+  // Returns true if this filename has already been seen,
+  // and an ID is stored for it, or false if it has not.
+  bool FileIDIsCached(const wstring &file) {
+    return unique_files_.find(file) != unique_files_.end();
+  };
+
+  // Cache this filename and ID for later reuse.
+  void CacheFileID(const wstring &file, DWORD id) {
+    unique_files_[file] = id;
+  };
+
+  // Store this ID in the cache as a duplicate for this filename.
+  void StoreDuplicateFileID(const wstring &file, DWORD id) {
+    hash_map<wstring, DWORD>::iterator iter = unique_files_.find(file);
+    if (iter != unique_files_.end()) {
+      // map this id to the previously seen one
+      file_ids_[id] = iter->second;
+    }
+  };
+
+  // Given a file's unique ID, return the ID that should be used to
+  // reference it. There may be multiple files with identical filenames
+  // but different unique IDs. The cache attempts to coalesce these into
+  // one ID per unique filename.
+  DWORD GetRealFileID(DWORD id) {
+    hash_map<DWORD, DWORD>::iterator iter = file_ids_.find(id);
+    if (iter == file_ids_.end())
+      return id;
+    return iter->second;
+  };
+
   // Returns the function name for a symbol.  If possible, the name is
   // undecorated.  If the symbol's decorated form indicates the size of
   // parameters on the stack, this information is returned in stack_param_size.
@@ -152,6 +188,13 @@ class PDBSourceLineWriter {
 
   // The current output file for this WriteMap invocation.
   FILE *output_;
+
+  // There may be many duplicate filenames with different IDs.
+  // This maps from the DIA "unique ID" to a single ID per unique
+  // filename.
+  hash_map<DWORD, DWORD> file_ids_;
+  // This maps unique filenames to file IDs.
+  hash_map<wstring, DWORD> unique_files_;
 
   // Disallow copy ctor and operator=
   PDBSourceLineWriter(const PDBSourceLineWriter&);

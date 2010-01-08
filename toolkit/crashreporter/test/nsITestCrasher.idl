@@ -1,7 +1,17 @@
 #include "nsISupports.idl"
 
+interface nsILocalFile;
+
 [scriptable, uuid(95464a04-6949-46cb-b621-d167790704a0)]
 interface nsITestCrasher : nsISupports
 {
   void crash();
+
+  /**
+   * Lock a directory using XRE_LockProfileDirectory.
+   * 
+   * @param directory The directory to lock
+   * @return          An opaque lock object.
+   */
+  nsISupports lockDir(in nsILocalFile directory);
 };

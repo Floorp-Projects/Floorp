@@ -287,15 +287,24 @@ class nsAccessibleWrap : public nsAccessible,
         /* [out] */ IEnumVARIANT __RPC_FAR *__RPC_FAR *ppEnum);
 
         
-  //   ======  Methods for IDispatch - for VisualBasic bindings (not implemented) ======
+  // IDispatch (support of scripting languages like VB)
+  virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
 
-  STDMETHODIMP GetTypeInfoCount(UINT *p);
-  STDMETHODIMP GetTypeInfo(UINT i, LCID lcid, ITypeInfo **ppti);
-  STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames,
-                               UINT cNames, LCID lcid, DISPID *rgDispId);
-  STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid,
-        LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
-        VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+  virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid,
+                                                ITypeInfo **ppTInfo);
+
+  virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid,
+                                                  LPOLESTR *rgszNames,
+                                                  UINT cNames,
+                                                  LCID lcid,
+                                                  DISPID *rgDispId);
+
+  virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid,
+                                           LCID lcid, WORD wFlags,
+                                           DISPPARAMS *pDispParams,
+                                           VARIANT *pVarResult,
+                                           EXCEPINFO *pExcepInfo,
+                                           UINT *puArgErr);
 
   // nsAccessible
   virtual nsresult FireAccessibleEvent(nsIAccessibleEvent *aEvent);
@@ -339,6 +348,14 @@ protected:
   // where we are in the current list of children, with respect to
   // nsIEnumVariant::Reset(), Skip() and Next().
   PRInt32 mEnumVARIANTPosition;
+
+  /**
+   * Creates ITypeInfo for LIBID_Accessibility if it's needed and returns it.
+   */
+  ITypeInfo *GetTI(LCID lcid);
+
+  ITypeInfo *mTypeInfo;
+
 
   enum navRelations {
     NAVRELATION_CONTROLLED_BY = 0x1000,

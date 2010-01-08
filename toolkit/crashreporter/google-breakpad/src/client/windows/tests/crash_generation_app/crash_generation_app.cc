@@ -183,7 +183,7 @@ bool ShowDumpResults(const wchar_t* dump_path,
     delete [] text;
   }
 
-  AppendTextWorker(text);
+  QueueUserWorkItem(AppendTextWorker, text, WT_EXECUTEDEFAULT);
   return succeeded;
 }
 
@@ -467,6 +467,7 @@ int APIENTRY _tWinMain(HINSTANCE instance,
 
   CustomClientInfo custom_info = {kCustomInfoEntries, kCustomInfoCount};
 
+  CrashServerStart();
   // This is needed for CRT to not show dialog for invalid param
   // failures and instead let the code handle it.
   _CrtSetReportMode(_CRT_ASSERT, 0);

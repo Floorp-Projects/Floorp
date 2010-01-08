@@ -290,6 +290,7 @@ void InstallSignalHandlers(const char *ProgramName)
   struct sigaction sa, osa;
   sa.sa_flags = SA_ONSTACK | SA_RESTART | SA_SIGINFO;
   sa.sa_sigaction = fpehandler;
+  sigemptyset(&sa.sa_mask);
   sigaction(SIGFPE, &sa, &osa);
 
 #if defined(DEBUG) && defined(LINUX)
@@ -363,7 +364,7 @@ void InstallSignalHandlers(const char *ProgramName)
 #define MXCSR(ctx) (ctx)->MxCsr
 #endif
 
-#if defined(_M_IA32) || defined(_M_X64)
+#if defined(_M_IX86) || defined(_M_X64)
 
 #define X87CW(ctx) (ctx)->FloatSave.ControlWord
 #define X87SW(ctx) (ctx)->FloatSave.StatusWord
@@ -391,13 +392,13 @@ LONG __stdcall FpeHandler(PEXCEPTION_POINTERS pe)
     case STATUS_FLOAT_MULTIPLE_FAULTS:
     case STATUS_FLOAT_MULTIPLE_TRAPS:
       X87CW(c) |= FPU_EXCEPTION_MASK; /* disable all FPU exceptions */
-      X86SW(c) &= ~FPU_STATUS_FLAGS;  /* clear all pending FPU exceptions */
-#ifdef _M_IA32
+      X87SW(c) &= ~FPU_STATUS_FLAGS;  /* clear all pending FPU exceptions */
+#ifdef _M_IX86
       if (c->ContextFlags & CONTEXT_EXTENDED_REGISTERS) {
 #endif
         MXCSR(c) |= SSE_EXCEPTION_MASK; /* disable all SSE exceptions */
         MXCSR(c) &= ~SSE_STATUS_FLAGS;  /* clear all pending SSE exceptions */
-#ifdef _M_IA32
+#ifdef _M_IX86
       }
 #endif
       return EXCEPTION_CONTINUE_EXECUTION;

@@ -659,9 +659,9 @@ nsXULProgressMeterAccessible::SetCurrentValue(double aValue)
 }
 
 
-/**
-  * XUL Radio Button
-  */
+////////////////////////////////////////////////////////////////////////////////
+// nsXULRadioButtonAccessible
+////////////////////////////////////////////////////////////////////////////////
 
 /** Constructor */
 nsXULRadioButtonAccessible::nsXULRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
@@ -692,19 +692,18 @@ nsXULRadioButtonAccessible::GetStateInternal(PRUint32 *aState,
   return NS_OK;
 }
 
-nsresult
-nsXULRadioButtonAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
+void
+nsXULRadioButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
+                                                       PRInt32 *aSetSize)
 {
-  NS_ENSURE_ARG_POINTER(aAttributes);
-  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
-
-  nsresult rv = nsFormControlAccessible::GetAttributesInternal(aAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAccUtils::SetAccAttrsForXULSelectControlItem(mDOMNode, aAttributes);
-
-  return NS_OK;
+  nsAccUtils::GetPositionAndSizeForXULSelectControlItem(mDOMNode, aPosInSet,
+                                                        aSetSize);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULRadioGroupAccessible
+////////////////////////////////////////////////////////////////////////////////
 
 /**
   * XUL Radio Group
@@ -773,15 +772,10 @@ nsXULButtonAccessible(aNode, aShell)
 {
 }
 
-nsresult
-nsXULToolbarButtonAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
+void
+nsXULToolbarButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
+                                                         PRInt32 *aSetSize)
 {
-  NS_ENSURE_ARG_POINTER(aAttributes);
-  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
-
-  nsresult rv = nsXULButtonAccessible::GetAttributesInternal(aAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIAccessible> parent(GetParent());
   PRInt32 setSize = 0;
   PRInt32 posInSet = 0;
@@ -804,10 +798,9 @@ nsXULToolbarButtonAccessible::GetAttributesInternal(nsIPersistentProperties *aAt
       sibling.swap(tempSibling);
     }
   }
-  
-  nsAccUtils::SetAccGroupAttrs(aAttributes, 0, posInSet, setSize);
 
-  return NS_OK;
+  *aPosInSet = posInSet;
+  *aSetSize = setSize;
 }
 
 PRBool

@@ -113,7 +113,6 @@
 #include "nsIXPConnect.h"
 #include "nsIXULAppInfo.h"
 #include "nsIXULRuntime.h"
-#include "nsPresShellIterator.h"
 
 #define UILOCALE_CMD_LINE_ARG "UILocale"
 
@@ -956,9 +955,8 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow,
     return NS_OK;
 
   // Deal with the agent sheets first.  Have to do all the style sets by hand.
-  nsPresShellIterator iter(document);
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell())) {
+  nsCOMPtr<nsIPresShell> shell = document->GetPrimaryShell();
+  if (shell) {
     // Reload only the chrome URL agent style sheets.
     nsCOMArray<nsIStyleSheet> agentSheets;
     rv = shell->GetAgentStyleSheets(agentSheets);

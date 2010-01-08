@@ -163,16 +163,58 @@ var _pacedTestLists =
                             comp2_3: "rect(20px, 20px, 90px, 6px)",
                             comp1:   "rect(20px, 30px, 130px, 4px)"
                           }),
-    // XXXdholbert Test "inherit" & "auto" as rect values, & test "auto" as
-    // a component value
+    new AnimTestcasePaced("rect(10px, auto, 10px, 10px); " +
+                          "rect(20px, auto, 50px, 8px); " +
+                          "rect(40px, auto, 130px, 4px)",
+                          { comp0:   "rect(10px, auto, 10px, 10px)",
+                            comp1_6: "rect(15px, auto, 30px, 9px)",
+                            comp1_3: "rect(20px, auto, 50px, 8px)",
+                            comp2_3: "rect(30px, auto, 90px, 6px)",
+                            comp1:   "rect(40px, auto, 130px, 4px)"
+                          }),
+    // Paced-mode animation is not supported in these next few cases
+    // (Can't compute subcomponent distance between 'auto' & px-values)
+    new AnimTestcasePaced("rect(10px, 10px, 10px, auto); " +
+                          "rect(20px, 10px, 50px, 8px); " +
+                          "rect(20px, 30px, 130px, 4px)",
+                          { comp0:   "rect(10px, 10px, 10px, auto)",
+                            comp1_6: "rect(10px, 10px, 10px, auto)",
+                            comp1_3: "rect(20px, 10px, 50px, 8px)",
+                            comp2_3: "rect(20px, 30px, 130px, 4px)",
+                            comp1:   "rect(20px, 30px, 130px, 4px)"
+                          }),
+    new AnimTestcasePaced("rect(10px, 10px, 10px, 10px); " +
+                          "rect(20px, 10px, 50px, 8px); " +
+                          "auto",
+                          { comp0:   "rect(10px, 10px, 10px, 10px)",
+                            comp1_6: "rect(10px, 10px, 10px, 10px)",
+                            comp1_3: "rect(20px, 10px, 50px, 8px)",
+                            comp2_3: "auto",
+                            comp1:   "auto"
+                          }),
+    new AnimTestcasePaced("auto; " +
+                          "auto; " +
+                          "rect(20px, 30px, 130px, 4px)",
+                          { comp0:   "auto",
+                            comp1_6: "auto",
+                            comp1_3: "auto",
+                            comp2_3: "rect(20px, 30px, 130px, 4px)",
+                            comp1:   "rect(20px, 30px, 130px, 4px)"
+                          }),
+    new AnimTestcasePaced("auto; auto; auto",
+                          { comp0:   "auto",
+                            comp1_6: "auto",
+                            comp1_3: "auto",
+                            comp2_3: "auto",
+                            comp1:   "auto"
+                          }),
   ],
 };
 
 // TODO: test more properties here.
 var gPacedBundles =
 [
-  new TestcaseBundle(gPropList.clip, _pacedTestLists.rect,
-                    "need support for animating rect-valued properties"),
+  new TestcaseBundle(gPropList.clip,  _pacedTestLists.rect),
   new TestcaseBundle(gPropList.color, _pacedTestLists.color),
   new TestcaseBundle(gPropList.direction, [
     new AnimTestcasePaced("rtl; ltr; rtl")

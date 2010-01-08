@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="-moz-binding:url(#xbl)">
+<bindings xmlns="http://www.mozilla.org/xbl">
+<binding id="xbl" inheritstyle="false">
+<content>
+<svg xmlns="http://www.w3.org/2000/svg">
+<animate attributeName="font-size"/>
+</svg>
+</content>
+</binding>
+</bindings>
+</svg>

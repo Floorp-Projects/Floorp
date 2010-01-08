@@ -705,16 +705,19 @@ nsAttributeCharacteristics nsARIAMap::gWAIUnivAttrMap[] = {
   {&nsAccessibilityAtoms::aria_haspopup,          ATTR_BYPASSOBJ | ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_invalid,           ATTR_BYPASSOBJ | ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_labelledby,        ATTR_BYPASSOBJ                 },
+  {&nsAccessibilityAtoms::aria_level,             ATTR_BYPASSOBJ                 }, /* handled via groupPosition */
   {&nsAccessibilityAtoms::aria_live,                               ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_multiline,         ATTR_BYPASSOBJ | ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_multiselectable,   ATTR_BYPASSOBJ | ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_owns,              ATTR_BYPASSOBJ                 },
   {&nsAccessibilityAtoms::aria_orientation,                        ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_posinset,          ATTR_BYPASSOBJ                 }, /* handled via groupPosition */
   {&nsAccessibilityAtoms::aria_pressed,           ATTR_BYPASSOBJ | ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_readonly,          ATTR_BYPASSOBJ | ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_relevant,          ATTR_BYPASSOBJ                 },
   {&nsAccessibilityAtoms::aria_required,          ATTR_BYPASSOBJ | ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_selected,          ATTR_BYPASSOBJ | ATTR_VALTOKEN },
+  {&nsAccessibilityAtoms::aria_setsize,           ATTR_BYPASSOBJ                 }, /* handled via groupPosition */
   {&nsAccessibilityAtoms::aria_sort,                               ATTR_VALTOKEN },
   {&nsAccessibilityAtoms::aria_valuenow,          ATTR_BYPASSOBJ                 },
   {&nsAccessibilityAtoms::aria_valuemin,          ATTR_BYPASSOBJ                 },

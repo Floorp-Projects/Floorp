@@ -110,7 +110,7 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
-MOZPNG=10217
+MOZPNG=10400
 MOZZLIB=0x1230
 NSPR_VERSION=4
 NSS_VERSION=3
@@ -133,7 +133,7 @@ LIBGNOME_VERSION=2.0
 GIO_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.6.20
+SQLITE_VERSION=3.6.22
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -1531,6 +1531,24 @@ if test "$GNU_CXX"; then
         ])
     if test "$ac_has_wno_variadic_macros" = "yes"; then
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-variadic-macros"
+    fi
+
+    AC_CACHE_CHECK(whether the compiler supports -Werror=return-type,
+                   ac_has_werror_return_type,
+        [
+            AC_LANG_SAVE
+            AC_LANG_CPLUSPLUS
+            _SAVE_CXXFLAGS="$CXXFLAGS"
+            CXXFLAGS="$CXXFLAGS -Werror=return-type"
+            AC_TRY_COMPILE([],
+                           [return(0);],
+                           ac_has_werror_return_type="yes",
+                           ac_has_werror_return_type="no")
+            CXXFLAGS="$_SAVE_CXXFLAGS"
+            AC_LANG_RESTORE
+        ])
+    if test "$ac_has_werror_return_type" = "yes"; then
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=return-type"
     fi
 
 else
@@ -3581,6 +3599,25 @@ AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64 truncate64 statvfs64 setbuf isatty)
 AC_CHECK_FUNCS(flockfile getpagesize)
 AC_CHECK_FUNCS(localtime_r strtok_r)
+
+dnl check for clock_gettime(), the CLOCK_MONOTONIC clock, and -lrt
+_SAVE_LDFLAGS=$LDFLAGS
+LDFLAGS="$LDFLAGS -lrt"
+AC_CACHE_CHECK(for clock_gettime(CLOCK_MONOTONIC) and -lrt,
+               ac_cv_have_clock_monotonic,
+               [AC_TRY_LINK([#include <time.h>],
+                            [ struct timespec ts;
+                              clock_gettime(CLOCK_MONOTONIC, &ts); ],
+                            ac_cv_have_clock_monotonic=yes,
+                            ac_cv_have_clock_monotonic=no)])
+LDFLAGS=$_SAVE_LDFLAGS
+if test "$ac_cv_have_clock_monotonic" = "yes"; then
+    HAVE_CLOCK_MONOTONIC=1
+    REALTIME_LIBS=-lrt
+    AC_DEFINE(HAVE_CLOCK_MONOTONIC)
+    AC_SUBST(HAVE_CLOCK_MONOTONIC)
+    AC_SUBST(REALTIME_LIBS)
+fi
 
 dnl check for wcrtomb/mbrtowc
 dnl =======================================================================

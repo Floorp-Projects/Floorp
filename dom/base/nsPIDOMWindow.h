@@ -53,8 +53,6 @@
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
 
 class nsIPrincipal;
-class nsICSSDeclaration;
-class nsComputedDOMStyle;
 
 // Popup control state enum. The values in this enum must go from most
 // permissive to least permissive so that it's safe to push state in
@@ -80,8 +78,8 @@ class nsXBLPrototypeHandler;
 class nsIArray;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x70c9f57f, 0xf7b3, 0x4a37, \
-  { 0xbe, 0x36, 0xbb, 0xb2, 0xd7, 0xe9, 0x40, 0x13 } }
+{ 0xeee92d9a, 0xae9f, 0x41e5, \
+  { 0x95, 0x5f, 0xaf, 0x1c, 0xe7, 0x66, 0x42, 0xe6 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -250,10 +248,6 @@ public:
 
     return win->mIsHandlingResizeEvent;
   }
-
-  // Convenience method for getting an element's computed style
-  virtual already_AddRefed<nsComputedDOMStyle>
-    LookupComputedStyleFor(nsIContent* aElem) = 0;
 
   // Tell this window who opened it.  This only has an effect if there is
   // either no document currently in the window or if the document is the

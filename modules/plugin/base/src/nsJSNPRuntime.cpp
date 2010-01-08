@@ -1072,7 +1072,8 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
 
     NPObject *npobj = (NPObject *)::JS_GetPrivate(cx, obj);
 
-    return _retainobject(npobj);
+    if (LookupNPP(npobj) == npp)
+      return _retainobject(npobj);
   }
 
   if (!sJSObjWrappers.ops) {
@@ -2027,10 +2028,8 @@ static NPP
 LookupNPP(NPObject *npobj)
 {
   if (npobj->_class == &nsJSObjWrapper::sJSObjWrapperNPClass) {
-    NS_ERROR("NPP requested for NPObject of class "
-             "nsJSObjWrapper::sJSObjWrapperNPClass!\n");
-
-    return nsnull;
+    nsJSObjWrapper* o = static_cast<nsJSObjWrapper*>(npobj);
+    return o->mNpp;
   }
 
   NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>

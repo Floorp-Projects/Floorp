@@ -290,9 +290,6 @@ public:
   virtual NS_HIDDEN_(void) SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler);
   virtual NS_HIDDEN_(nsIFocusController*) GetRootFocusController();
 
-  virtual NS_HIDDEN_(already_AddRefed<nsComputedDOMStyle>)
-    LookupComputedStyleFor(nsIContent* aElem);
-
   virtual NS_HIDDEN_(void) SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal);
   virtual NS_HIDDEN_(nsIPrincipal*) GetOpenerScriptPrincipal();
 
@@ -642,11 +639,6 @@ protected:
   PRBool IsTimeout(PRCList* aList) {
     return aList != &mTimeouts;
   }
-
-  // Helper method for looking up computed style
-  nsresult GetComputedStyle(nsIDOMElement* aElt,
-                            const nsAString& aPseudoElt,
-                            nsComputedDOMStyle** aReturn);
 
   // Convenience functions for the many methods that need to scale
   // from device to CSS pixels or vice versa.  Note: if a presentation
