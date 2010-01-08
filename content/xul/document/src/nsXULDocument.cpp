@@ -949,9 +949,8 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
         // |onbroadcast| event handler
         nsEvent event(PR_TRUE, NS_XUL_BROADCAST);
 
-        nsPresShellIterator iter(this);
-        nsCOMPtr<nsIPresShell> shell;
-        while ((shell = iter.GetNextShell())) {
+        nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+        if (shell) {
 
             nsCOMPtr<nsPresContext> aPresContext = shell->GetPresContext();
 
@@ -2018,9 +2017,8 @@ nsXULDocument::Init()
 nsresult
 nsXULDocument::StartLayout(void)
 {
-    nsPresShellIterator iter(this);
-    nsCOMPtr<nsIPresShell> shell;
-    while ((shell = iter.GetNextShell())) {
+    nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+    if (shell) {
 
         // Resize-reflow this time
         nsPresContext *cx = shell->GetPresContext();
@@ -2064,9 +2062,6 @@ nsXULDocument::StartLayout(void)
         // above can flush reflows, which can cause a parent document to be flushed,
         // calling ResizeReflow on our document which does SetVisibleArea.
         nsRect r = cx->GetVisibleArea();
-        // Make sure we're holding a strong ref to |shell| before we call
-        // InitialReflow()
-        nsCOMPtr<nsIPresShell> shellGrip = shell;
         rv = shell->InitialReflow(r.width, r.height);
         NS_ENSURE_SUCCESS(rv, rv);
     }
