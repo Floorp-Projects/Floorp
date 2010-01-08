@@ -948,7 +948,7 @@ nsIEProfileMigrator::CopyPasswords(PRBool aReplace)
   }
 
   PStoreCreateInstancePtr PStoreCreateInstance = (PStoreCreateInstancePtr)::GetProcAddress(pstoreDLL, "PStoreCreateInstance");
-  IPStorePtr PStore;
+  IPStore* PStore;
   hr = PStoreCreateInstance(&PStore, 0, 0, 0);
 
   rv = GetSignonsListFromPStore(PStore, &signonsFound);
@@ -985,7 +985,7 @@ nsIEProfileMigrator::MigrateSiteAuthSignons(IPStore* aPStore)
     return NS_OK;
 
   GUID mtGuid = {0};
-  IEnumPStoreItemsPtr enumItems = NULL;
+  IEnumPStoreItems* enumItems = NULL;
   hr = aPStore->EnumItems(0, &IEPStoreSiteAuthGUID, &mtGuid, 0, &enumItems);
   if (SUCCEEDED(hr) && enumItems != NULL) {
     LPWSTR itemName = NULL;
@@ -1050,7 +1050,7 @@ nsIEProfileMigrator::GetSignonsListFromPStore(IPStore* aPStore, nsTArray<SignonD
 
   NS_ENSURE_ARG_POINTER(aPStore);
 
-  IEnumPStoreItemsPtr enumItems = NULL;
+  IEnumPStoreItems* enumItems = NULL;
   hr = aPStore->EnumItems(0, &IEPStoreAutocompGUID, &IEPStoreAutocompGUID, 0, &enumItems);
   if (SUCCEEDED(hr) && enumItems != NULL) {
     LPWSTR itemName = NULL;
@@ -1130,7 +1130,7 @@ nsIEProfileMigrator::ResolveAndMigrateSignons(IPStore* aPStore, nsTArray<SignonD
 {
   HRESULT hr;
 
-  IEnumPStoreItemsPtr enumItems = NULL;
+  IEnumPStoreItems* enumItems = NULL;
   hr = aPStore->EnumItems(0, &IEPStoreAutocompGUID, &IEPStoreAutocompGUID, 0, &enumItems);
   if (SUCCEEDED(hr) && enumItems != NULL) {
     LPWSTR itemName = NULL;
@@ -1271,12 +1271,12 @@ nsIEProfileMigrator::CopyFormData(PRBool aReplace)
   }
 
   PStoreCreateInstancePtr PStoreCreateInstance = (PStoreCreateInstancePtr)::GetProcAddress(pstoreDLL, "PStoreCreateInstance");
-  IPStorePtr PStore = NULL;
+  IPStore* PStore = NULL;
   hr = PStoreCreateInstance(&PStore, 0, 0, 0);
   if (FAILED(hr) || PStore == NULL)
     return NS_OK;
 
-  IEnumPStoreItemsPtr enumItems = NULL;
+  IEnumPStoreItems* enumItems = NULL;
   hr = PStore->EnumItems(0, &IEPStoreAutocompGUID, &IEPStoreAutocompGUID, 0, &enumItems);
   if (SUCCEEDED(hr) && enumItems != NULL) {
     LPWSTR itemName = NULL;
