@@ -311,3 +311,10 @@ overridden windowproc.
 * WM_MOUSEACTIVATE events are handled by calling SetFocus on the plugin's
 widget, if the plugin is windowed. If it's not windowed they're passed to
 the overriden windowproc (but hopefully never sent by the browser anyway).
+
+== FPU Control ==
+
+x86-only on some OSes:
+
+* The .enableFPExceptions() method will enable floating-point exceptions,
+  as evil plugins or extensions might do.
