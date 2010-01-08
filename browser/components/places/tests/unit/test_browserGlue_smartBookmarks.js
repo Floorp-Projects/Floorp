@@ -186,6 +186,11 @@ function countFolderChildren(aFolderItemId) {
   var rootNode = hs.executeQuery(query, options).root;
   rootNode.containerOpen = true;
   var cc = rootNode.childCount;
+  // Dump contents.
+  for (var i = 0; i < cc ; i++) {
+    var node = rootNode.getChild(i);
+    print("Found child at " + i + ": " + node.title);
+  }
   rootNode.containerOpen = false;
   return cc;
 }
@@ -201,7 +206,8 @@ var testIndex = 0;
 function next_test() {
   // nsBrowserGlue stops observing topics after first notification,
   // so we add back the observer to test additional runs.
-  os.addObserver(bg, TOPIC_PLACES_INIT_COMPLETE, false);
+  if (testIndex > 0)
+    os.addObserver(bg, TOPIC_PLACES_INIT_COMPLETE, false);
 
   // Execute next test.
   let test = tests.shift();
@@ -210,9 +216,6 @@ function next_test() {
 }
 
 function run_test() {
-  // XXX disabled due to bug 510219
-  return;
-
   // Clean up database from all bookmarks.
   remove_all_bookmarks();
 
