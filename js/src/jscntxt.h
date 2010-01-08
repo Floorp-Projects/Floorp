@@ -214,7 +214,7 @@ struct JSTraceMonitor {
      * traces, we always reuse the outer trace's storage, so never need more
      * than of these.
      */
-    TraceNativeStorage      storage;
+    TraceNativeStorage      *storage;
 
     /*
      * There are 5 allocators here.  This might seem like overkill, but they
