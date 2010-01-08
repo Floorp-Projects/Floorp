@@ -335,8 +335,10 @@ function run_load_system_library()
   var syslib = ctypes.open("libm.dylib");
 #elifdef XP_UNIX
   var syslib = ctypes.open("libm.so");
+#elifdef XP_OS2
+  var syslib = ctypes.open("libc063.dll");
 #else
-  // nothing run this test
+  do_throw("please add a system library for this test")
 #endif
   syslib.close();
   return true;

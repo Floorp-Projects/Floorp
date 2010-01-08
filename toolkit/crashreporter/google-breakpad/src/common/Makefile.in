@@ -47,6 +47,10 @@ HOST_LIBRARY_NAME = host_breakpad_common_s
 
 LOCAL_INCLUDES 	= -I$(srcdir)/..
 
+ifeq ($(OS_ARCH),Darwin)
+DIRS = dwarf
+endif
+
 CPPSRCS	= \
   string_conversion.cc \
   $(NULL)
@@ -65,9 +69,3 @@ FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk
-
-# XXX, bug 417045, make -jN combines badly with -save-temps in
-# CFLAGS/CXXFLAGS (for stabs symbols with XCode3)
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-.NOTPARALLEL:
-endif

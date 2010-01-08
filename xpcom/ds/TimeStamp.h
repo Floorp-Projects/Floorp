@@ -51,11 +51,12 @@ class TimeStamp;
  * Negative durations are allowed, meaning the end is before the start.
  * 
  * Internally the duration is stored as a PRInt64 in units of
- * PR_TicksPerSecond().
- * 
- * This whole class is inline so we don't need any special linkage.
+ * PR_TicksPerSecond() when building with NSPR interval timers, or a
+ * system-dependent unit when building with system clocks.  The
+ * system-dependent unit must be constant, otherwise the semantics of
+ * this class would be broken.
  */
-class TimeDuration {
+class NS_COM TimeDuration {
 public:
   // The default duration is 0.
   TimeDuration() : mValue(0) {}
@@ -67,16 +68,14 @@ public:
   }
   // Default copy-constructor and assignment are OK
 
-  double ToSeconds() const { return double(mValue)/PR_TicksPerSecond(); }
+  double ToSeconds() const;
+  // Return a duration value that includes digits of time we think to
+  // be significant.  This method should be used when displaying a
+  // time to humans.
+  double ToSecondsSigDigits() const;
 
-  static TimeDuration FromSeconds(PRInt32 aSeconds) {
-    // No overflow is possible here
-    return TimeDuration::FromTicks(PRInt64(aSeconds)*PR_TicksPerSecond());
-  }
-  static TimeDuration FromMilliseconds(PRInt32 aMilliseconds) {
-    // No overflow is possible here
-    return TimeDuration::FromTicks(PRInt64(aMilliseconds)*PR_TicksPerSecond()/1000);
-  }
+  static TimeDuration FromSeconds(PRInt32 aSeconds);
+  static TimeDuration FromMilliseconds(PRInt32 aMilliseconds);
 
   TimeDuration operator+(const TimeDuration& aOther) const {
     return TimeDuration::FromTicks(mValue + aOther.mValue);
@@ -106,11 +105,18 @@ public:
     return mValue > aOther.mValue;
   }
 
+  // Return a best guess at the system's current timing resolution,
+  // which might be variable.  TimeDurations below this order of
+  // magnitude are meaningless, and those at the same order of
+  // magnitude or just above are suspect.
+  static TimeDuration Resolution();
+
   // We could define additional operators here:
   // -- convert to/from other time units
   // -- scale duration by a float
   // but let's do that on demand.
-  // Comparing durations for equality should be discouraged.
+  // Comparing durations for equality will only lead to bugs on
+  // platforms with high-resolution timers.
 
 private:
   friend class TimeStamp;
@@ -126,15 +132,16 @@ private:
 };
 
 /**
- * Instances of this class represent moments in time, or a special "null"
- * moment. We do not use the system clock or local time, since they can be
- * reset, causing apparent backward travel in time, which can confuse
- * algorithms. Instead we measure elapsed time according to the system.
- * This time can never go backwards (i.e. it never wraps around, at least
- * not in less than five million years of system elapsed time). It might
- * not advance while the system is sleeping. If TimeStamp::SetNow() is not
- * called at all for hours or days, we might not notice the passage
- * of some of that time.
+ * Instances of this class represent moments in time, or a special
+ * "null" moment. We do not use the non-monotonic system clock or
+ * local time, since they can be reset, causing apparent backward
+ * travel in time, which can confuse algorithms. Instead we measure
+ * elapsed time according to the system.  This time can never go
+ * backwards (i.e. it never wraps around, at least not in less than
+ * five million years of system elapsed time). It might not advance
+ * while the system is sleeping. If TimeStamp::SetNow() is not called
+ * at all for hours or days, we might not notice the passage of some
+ * of that time.
  * 
  * We deliberately do not expose a way to convert TimeStamps to some
  * particular unit. All you can do is compute a difference between two
@@ -142,8 +149,11 @@ private:
  * to a TimeStamp to get a new TimeStamp. You can't do something
  * meaningless like add two TimeStamps.
  *
- * Internally this is implemented as a wrapper around PRIntervalTime.
- * We detect wraparounds of PRIntervalTime and work around them.
+ * Internally this is implemented as either a wrapper around
+ *   - high-resolution, monotonic, system clocks if they exist on this
+ *     platform
+ *   - PRIntervalTime otherwise.  We detect wraparounds of
+ *     PRIntervalTime and work around them.
  */
 class NS_COM TimeStamp {
 public:
@@ -235,15 +245,17 @@ private:
   TimeStamp(PRUint64 aValue) : mValue(aValue) {}
 
   /**
-   * A value of 0 means this instance is "null". Otherwise,
-   * the low 32 bits represent a PRIntervalTime, and the high 32 bits
-   * represent a counter of the number of rollovers of PRIntervalTime
-   * that we've seen. This counter starts at 1 to avoid a real time
-   * colliding with the "null" value.
+   * When built with PRIntervalTime, a value of 0 means this instance
+   * is "null". Otherwise, the low 32 bits represent a PRIntervalTime,
+   * and the high 32 bits represent a counter of the number of
+   * rollovers of PRIntervalTime that we've seen. This counter starts
+   * at 1 to avoid a real time colliding with the "null" value.
    * 
    * PR_INTERVAL_MAX is set at 100,000 ticks per second. So the minimum
    * time to wrap around is about 2^64/100000 seconds, i.e. about
    * 5,849,424 years.
+   *
+   * When using a system clock, a value is system dependent.
    */
   PRUint64 mValue;
 };

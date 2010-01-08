@@ -44,7 +44,6 @@
 #include "nsDisplayList.h"
 #include "nsStubMutationObserver.h"
 #include "gfxContext.h"
-#include "nsPresShellIterator.h"
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
@@ -92,23 +91,19 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument *aDocument,
     return;
   }
 
-  nsPresShellIterator iter(aDocument);
-  nsCOMPtr<nsIPresShell> shell;
-  while ((shell = iter.GetNextShell())) {
-    nsIFrame *frame = aContent->GetPrimaryFrame();
-    if (!frame) {
-      continue;
-    }
-
-    // is the content a child of a text element
-    nsSVGTextContainerFrame *containerFrame = do_QueryFrame(frame);
-    if (containerFrame) {
-      containerFrame->NotifyGlyphMetricsChange();
-      continue;
-    }
-    // if not, are there text elements amongst its descendents
-    UpdateTextFragmentTrees(frame);
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  if (!frame) {
+    return;
   }
+
+  // is the content a child of a text element
+  nsSVGTextContainerFrame* containerFrame = do_QueryFrame(frame);
+  if (containerFrame) {
+    containerFrame->NotifyGlyphMetricsChange();
+    return;
+  }
+  // if not, are there text elements amongst its descendents
+  UpdateTextFragmentTrees(frame);
 }
 
 //----------------------------------------------------------------------

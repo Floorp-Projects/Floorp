@@ -4792,6 +4792,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
     }
 
     PRBool keyPressHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+    // Note: mGeckoChild might have become null here. Don't count on it from here on.
     // Only record the results of dispatching geckoEvent if we're currently
     // processing a keyDown event.
     if (mCurKeyEvent) {
@@ -4803,11 +4804,13 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
     if (!mGeckoChild->IME_IsComposing()) {
       [self sendCompositionEvent:NS_COMPOSITION_START];
       // Note: mGeckoChild might have become null here. Don't count on it from here on.
-      mGeckoChild->IME_OnStartComposition(self);
-      // Note: mGeckoChild might have become null here. Don't count on it from here on.
+      if (mGeckoChild) {
+        mGeckoChild->IME_OnStartComposition(self);
+        // Note: mGeckoChild might have become null here. Don't count on it from here on.
+      }
     }
 
-    if (mGeckoChild->IME_IgnoreCommit()) {
+    if (mGeckoChild && mGeckoChild->IME_IgnoreCommit()) {
       tmpStr = [tmpStr init];
       len = 0;
       bufPtr[0] = PRUnichar('\0');
@@ -4822,7 +4825,10 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
     [self sendCompositionEvent:NS_COMPOSITION_END];
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
-    mGeckoChild->IME_OnEndComposition();
+    if (mGeckoChild) {
+      mGeckoChild->IME_OnEndComposition();
+      // Note: mGeckoChild might have become null here. Don't count on it from here on.
+    }
     mMarkedRange = NSMakeRange(NSNotFound, 0);
   }
 
@@ -4861,6 +4867,9 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   NSLog(@" aString = '%@'", aString);
 #endif
 
+  if (!mGeckoChild)
+    return;
+
 #ifdef NS_LEOPARD_AND_LATER
   if (mGeckoChild->TextInputHandler()->IgnoreIMEComposition())
     return;
@@ -4896,8 +4905,10 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
     mMarkedRange.location = selection.mSucceeded ? selection.mReply.mOffset : 0;
     [self sendCompositionEvent:NS_COMPOSITION_START];
     // Note: mGeckoChild might have become null here. Don't count on it from here on.
-    mGeckoChild->IME_OnStartComposition(self);
-    // Note: mGeckoChild might have become null here. Don't count on it from here on.
+    if (mGeckoChild) {
+      mGeckoChild->IME_OnStartComposition(self);
+      // Note: mGeckoChild might have become null here. Don't count on it from here on.
+    }
   }
 
   if (mGeckoChild->IME_IsComposing()) {
@@ -4912,7 +4923,11 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
     if (commit) {
       [self sendCompositionEvent:NS_COMPOSITION_END];
-      mGeckoChild->IME_OnEndComposition();
+      // Note: mGeckoChild might have become null here. Don't count on it from here on.
+      if (mGeckoChild) {
+        mGeckoChild->IME_OnEndComposition();
+        // Note: mGeckoChild might have become null here. Don't count on it from here on.
+      }
     }
   }
 
@@ -4928,7 +4943,8 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   NSLog(@"****in unmarkText");
   NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
 #endif
-  mGeckoChild->IME_CommitComposition();
+  if (mGeckoChild)
+    mGeckoChild->IME_CommitComposition();
 }
 
 - (BOOL) hasMarkedText

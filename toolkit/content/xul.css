@@ -144,7 +144,8 @@ button[type="menu-button"] {
 
 %ifdef MOZ_WIDGET_GTK2
 /********* detection of system setting to use icons in buttons ***********/
-.button-icon:not(:-moz-system-metric(images-in-buttons)) {
+button[label]:not([label=""]) > .button-box > .button-icon:not(:-moz-system-metric(images-in-buttons)),
+button[label]:not([label=""]) > .button-box > .box-inherit > .button-icon:not(:-moz-system-metric(images-in-buttons)) {
   display: none;
 }
 %endif

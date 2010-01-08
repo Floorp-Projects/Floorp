@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Tim Rowley <tor@cs.brown.edu>
- *                 Glenn Randers-Pehrson <glennrp+bmo at gmail.com>
+ *                 Glenn Randers-Pehrson <glennrp@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -240,13 +240,9 @@
 #define png_get_iCCP                    MOZ_PNG_get_iCCP
 #define png_get_image_height            MOZ_PNG_get_image_h
 #define png_get_image_width             MOZ_PNG_get_image_w
-#define png_get_int_32                  MOZ_PNG_get_int_32
 #define png_get_interlace_type          MOZ_PNG_get_interlace_type
 #define png_get_libpng_ver              MOZ_PNG_get_libpng_ver
 #define png_get_mem_ptr                 MOZ_PNG_get_mem_ptr
-#define png_get_mmx_bitdepth_threshold  MOZ_PNG_get_mmx_bitdepth_thr
-#define png_get_mmx_flagmask            MOZ_PNG_get_mmx_flagmask
-#define png_get_mmx_rowbytes_threshold  MOZ_PNG_get_mmx_rowbytes_thr
 #define png_get_oFFs                    MOZ_PNG_get_oFFs
 #define png_get_pCAL                    MOZ_PNG_get_pCAL
 #define png_get_pHYs                    MOZ_PNG_get_pHYs
@@ -265,8 +261,6 @@
 #define png_get_tIME                    MOZ_PNG_get_tIME
 #define png_get_tRNS                    MOZ_PNG_get_tRNS
 #define png_get_text                    MOZ_PNG_get_text
-#define png_get_uint_16                 MOZ_PNG_get_uint_16
-#define png_get_uint_32                 MOZ_PNG_get_uint_32
 #define png_get_unknown_chunks          MOZ_PNG_get_unk_chunks
 #define png_get_user_chunk_ptr          MOZ_PNG_get_user_chunk_ptr
 #define png_get_user_transform_ptr      MOZ_PNG_get_user_transform_ptr

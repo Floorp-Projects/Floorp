@@ -396,8 +396,8 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
   if (!IsNodeOfType(eCONTENT))
     return nsnull;
 
-  NS_ASSERTION(GetCurrentDoc() == aPresShell->GetDocument(),
-               "Wrong document somewhere");
+  NS_ENSURE_TRUE(GetCurrentDoc() == aPresShell->GetDocument(), nsnull);
+
   nsIFrame* frame = static_cast<nsIContent*>(this)->GetPrimaryFrame();
   if (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) {
     // This node should be a descendant of input/textarea editor.
@@ -3007,9 +3007,8 @@ nsGenericElement::SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
     // be in a document, if we're clearing animation effects on a target node
     // that's been detached since the previous animation sample.)
     if (doc) {
-      nsPresShellIterator iter(doc);
-      nsCOMPtr<nsIPresShell> shell;
-      while (shell = iter.GetNextShell()) {
+      nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
+      if (shell) {
         nsPresContext* presContext = shell->GetPresContext();
         presContext->SMILOverrideStyleChanged(this);
       }

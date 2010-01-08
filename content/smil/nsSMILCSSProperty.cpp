@@ -44,7 +44,7 @@
 #include "nsComputedDOMStyle.h"
 #include "nsStyleAnimation.h"
 #include "nsIContent.h"
-#include "nsPIDOMWindow.h"
+#include "nsIDOMElement.h"
 
 static PRBool
 GetCSSComputedValue(nsIContent* aElem,
@@ -62,11 +62,18 @@ GetCSSComputedValue(nsIContent* aElem,
     return PR_FALSE;
   }
 
-  nsPIDOMWindow* win = doc->GetWindow();
-  NS_ABORT_IF_FALSE(win, "actively animated document w/ no window");
-  nsRefPtr<nsComputedDOMStyle>
-    computedStyle(win->LookupComputedStyleFor(aElem));
-  if (computedStyle) {
+  nsIPresShell* shell = doc->GetPrimaryShell();
+  if (!shell) {
+    NS_WARNING("Unable to look up computed style -- no pres shell");
+    return PR_FALSE;
+  }
+
+  nsRefPtr<nsComputedDOMStyle> computedStyle;
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(aElem));
+  nsresult rv = NS_NewComputedDOMStyle(domElement, EmptyString(), shell,
+                                       getter_AddRefs(computedStyle));
+
+  if (NS_SUCCEEDED(rv) && computedStyle) {
     // NOTE: This will produce an empty string for shorthand values
     computedStyle->GetPropertyValue(aPropID, aResult);
     return PR_TRUE;
@@ -199,17 +206,7 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
   //   writing-mode
 
   switch (aPropID) {
-    // SHORTHAND PROPERTIES
-    case eCSSProperty_font:
-    case eCSSProperty_marker:
-    case eCSSProperty_overflow:
-      return PR_TRUE;
-
-    // PROPERTIES OF TYPE eCSSType_Rect
     case eCSSProperty_clip:
-      // XXXdholbert Rect type not yet supported by nsStyleAnimation
-      return PR_FALSE;
-
     case eCSSProperty_clip_rule:
     case eCSSProperty_clip_path:
     case eCSSProperty_color:
@@ -224,6 +221,7 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     case eCSSProperty_filter:
     case eCSSProperty_flood_color:
     case eCSSProperty_flood_opacity:
+    case eCSSProperty_font:
     case eCSSProperty_font_family:
     case eCSSProperty_font_size:
     case eCSSProperty_font_size_adjust:
@@ -234,11 +232,13 @@ nsSMILCSSProperty::IsPropertyAnimatable(nsCSSProperty aPropID)
     case eCSSProperty_image_rendering:
     case eCSSProperty_letter_spacing:
     case eCSSProperty_lighting_color:
+    case eCSSProperty_marker:
     case eCSSProperty_marker_end:
     case eCSSProperty_marker_mid:
     case eCSSProperty_marker_start:
     case eCSSProperty_mask:
     case eCSSProperty_opacity:
+    case eCSSProperty_overflow:
     case eCSSProperty_pointer_events:
     case eCSSProperty_shape_rendering:
     case eCSSProperty_stop_color:

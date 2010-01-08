@@ -202,7 +202,7 @@ var gDefaultTheme         = "classic/1.0";
  */
 var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
 
-var gBranchVersion = /^([^\.]+\.[^a-z\.]+[a-z]?).*/gi;
+var gBranchVersion = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
 // shared code for suppressing bad cert dialogs
 XPCOMUtils.defineLazyGetter(this, "gCertUtils", function() {

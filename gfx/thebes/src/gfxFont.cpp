@@ -2714,17 +2714,19 @@ gfxTextRun::SanitizeGlyphRuns()
     // to the first "real" character to avoid drawing partial ligature glyphs from wrong font
     // (seen with U+FEFF in reftest 474417-1, as Core Text eliminates the glyph, which makes
     // it appear as if a ligature has been formed)
-    PRInt32 i, last = mGlyphRuns.Length() - 1;
-    for (i = last; i >= 0; --i) {
+    PRInt32 i, lastRunIndex = mGlyphRuns.Length() - 1;
+    for (i = lastRunIndex; i >= 0; --i) {
         GlyphRun& run = mGlyphRuns[i];
         while (mCharacterGlyphs[run.mCharacterOffset].IsLigatureContinuation() &&
                run.mCharacterOffset < mCharacterCount) {
             run.mCharacterOffset++;
         }
         // if the run has become empty, eliminate it
-        if ((i < last && run.mCharacterOffset >= mGlyphRuns[i+1].mCharacterOffset) ||
-            (i == last && run.mCharacterOffset == mCharacterCount)) {
+        if ((i < lastRunIndex &&
+             run.mCharacterOffset >= mGlyphRuns[i+1].mCharacterOffset) ||
+            (i == lastRunIndex && run.mCharacterOffset == mCharacterCount)) {
             mGlyphRuns.RemoveElementAt(i);
+            --lastRunIndex;
         }
     }
 }

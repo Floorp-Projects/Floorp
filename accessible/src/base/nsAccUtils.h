@@ -86,45 +86,32 @@ public:
                          const nsAString& aAttrValue);
 
   /**
-   * Return values of group attributes ('level', 'setsize', 'posinset')
-   */
-  static void GetAccGroupAttrs(nsIPersistentProperties *aAttributes,
-                               PRInt32 *aLevel,
-                               PRInt32 *aPosInSet,
-                               PRInt32 *aSetSize);
-
-  /**
-   * Returns true if there are level, posinset and sizeset attributes.
-   */
-  static PRBool HasAccGroupAttrs(nsIPersistentProperties *aAttributes);
-
-  /**
    * Set group attributes ('level', 'setsize', 'posinset').
    */
   static void SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
-                               PRInt32 aLevel,
-                               PRInt32 aPosInSet,
-                               PRInt32 aSetSize);
+                               PRInt32 aLevel, PRInt32 aSetSize,
+                               PRInt32 aPosInSet);
 
   /**
-   * Set group attributes - 'level', 'setsize', 'posinset'.
-   *
-   * @param aNode - XUL element that implements
-   *                nsIDOMXULSelectControlItemElement interface
-   * @param aAttributes - attributes container
+   * Compute position in group (posinset) and group size (setsize) for
+   * nsIDOMXULSelectControlItemElement node.
    */
-  static void SetAccAttrsForXULSelectControlItem(nsIDOMNode *aNode,
-                                                 nsIPersistentProperties *aAttributes);
+  static void GetPositionAndSizeForXULSelectControlItem(nsIDOMNode *aNode,
+                                                        PRInt32 *aPosInSet,
+                                                        PRInt32 *aSetSize);
 
   /**
-   * Set group attributes - 'level', 'setsize', 'posinset'.
-   *
-   * @param  aNode        XUL element that implements
-   *                      nsIDOMXULContainerItemElement interface
-   * @param  aAttributes  attributes container
+   * Compute group position and group size (posinset and setsize) for
+   * nsIDOMXULContainerItemElement node.
    */
-  static void SetAccAttrsForXULContainerItem(nsIDOMNode *aNode,
-                                             nsIPersistentProperties *aAttributes);
+  static void GetPositionAndSizeForXULContainerItem(nsIDOMNode *aNode,
+                                                    PRInt32 *aPosInSet,
+                                                    PRInt32 *aSetSize);
+
+  /**
+   * Compute group level for nsIDOMXULContainerItemElement node.
+   */
+  static PRInt32 GetLevelForXULContainerItem(nsIDOMNode *aNode);
 
   /**
    * Set container-foo live region attributes for the given node.

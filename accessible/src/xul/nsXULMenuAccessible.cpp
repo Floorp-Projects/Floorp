@@ -502,17 +502,18 @@ nsXULMenuitemAccessible::GetRoleInternal(PRUint32 *aRole)
   return NS_OK;
 }
 
-nsresult
-nsXULMenuitemAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
+PRInt32
+nsXULMenuitemAccessible::GetLevelInternal()
 {
-  NS_ENSURE_ARG_POINTER(aAttributes);
-  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
+  return nsAccUtils::GetLevelForXULContainerItem(mDOMNode);
+}
 
-  nsresult rv = nsAccessible::GetAttributesInternal(aAttributes);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAccUtils::SetAccAttrsForXULContainerItem(mDOMNode, aAttributes);
-  return NS_OK;
+void
+nsXULMenuitemAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
+                                                    PRInt32 *aSetSize)
+{
+  nsAccUtils::GetPositionAndSizeForXULContainerItem(mDOMNode, aPosInSet,
+                                                    aSetSize);
 }
 
 PRBool

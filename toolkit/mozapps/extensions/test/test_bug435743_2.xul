@@ -83,6 +83,14 @@ function addCertOverrides() {
     req.send(null);
   }
   catch (e) { }
+  try {
+    req = new XMLHttpRequest();
+    req.open("GET", "https://expired.example.com/" + xpi, false);
+    req.channel.notificationCallbacks = new badCertListener("expired.example.com",
+                                                            Ci.nsICertOverrideService.ERROR_TIME);
+    req.send(null);
+  }
+  catch (e) { }
 }
 
 function XPIInstaller(urls, nextTest) {
@@ -131,6 +139,7 @@ function run_test_1() {
     { url: "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://expired.example.com/" + xpi, expected: DOWNLOAD_ERROR },
 
     // Tests that redirecting from http to other servers works as expected
     { url: "http://example.com/" + redirect + "http://example.com/" + xpi, expected: SUCCESS },
@@ -138,6 +147,7 @@ function run_test_1() {
     { url: "http://example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "http://example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "http://example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "http://example.com/" + redirect + "https://expired.example.com/" + xpi, expected: DOWNLOAD_ERROR },
 
     // Tests that redirecting from valid https to other servers works as expected
     { url: "https://example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
@@ -145,6 +155,7 @@ function run_test_1() {
     { url: "https://example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://example.com/" + redirect + "https://expired.example.com/" + xpi, expected: DOWNLOAD_ERROR },
 
     // Tests that redirecting from nocert https to other servers works as expected
     { url: "https://nocert.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
@@ -152,6 +163,7 @@ function run_test_1() {
     { url: "https://nocert.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://nocert.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://nocert.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://nocert.example.com/" + redirect + "https://expired.example.com/" + xpi, expected: DOWNLOAD_ERROR },
 
     // Tests that redirecting from self-signed https to other servers works as expected
     { url: "https://self-signed.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
@@ -159,13 +171,23 @@ function run_test_1() {
     { url: "https://self-signed.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://self-signed.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://self-signed.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://self-signed.example.com/" + redirect + "https://expired.example.com/" + xpi, expected: DOWNLOAD_ERROR },
 
     // Tests that redirecting from untrusted https to other servers works as expected
     { url: "https://untrusted.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://untrusted.example.com/" + redirect + "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://untrusted.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://untrusted.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
-    { url: "https://untrusted.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR }
+    { url: "https://untrusted.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://untrusted.example.com/" + redirect + "https://expired.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+
+    // Tests that redirecting from  https to other servers works as expected
+    { url: "https://expired.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://expired.example.com/" + redirect + "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://expired.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://expired.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://expired.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://expired.example.com/" + redirect + "https://expired.example.com/" + xpi, expected: DOWNLOAD_ERROR }
   ];
   new XPIInstaller(urls, run_test_2);
 }
@@ -180,6 +202,7 @@ function run_test_2() {
     { url: "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://expired.example.com/" + xpi, expected: DOWNLOAD_ERROR },
 
     // Tests that redirecting from http to other servers works as expected
     // These should all succeed, the url redirected to isn't any less secure than the original insecure http.
@@ -188,6 +211,7 @@ function run_test_2() {
     { url: "http://example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: SUCCESS },
     { url: "http://example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: SUCCESS },
     { url: "http://example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: SUCCESS },
+    { url: "http://example.com/" + redirect + "https://expired.example.com/" + xpi, expected: SUCCESS },
 
     // Tests that redirecting from valid https to other servers works as expected
     { url: "https://example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
@@ -195,6 +219,7 @@ function run_test_2() {
     { url: "https://example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://example.com/" + redirect + "https://expired.example.com/" + xpi, expected: DOWNLOAD_ERROR },
 
     // Tests that redirecting from nocert https to other servers works as expected
     { url: "https://nocert.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
@@ -202,6 +227,7 @@ function run_test_2() {
     { url: "https://nocert.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://nocert.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://nocert.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://nocert.example.com/" + redirect + "https://expired.example.com/" + xpi, expected: DOWNLOAD_ERROR },
 
     // Tests that redirecting from self-signed https to other servers works as expected
     { url: "https://self-signed.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
@@ -209,13 +235,23 @@ function run_test_2() {
     { url: "https://self-signed.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://self-signed.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://self-signed.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://self-signed.example.com/" + redirect + "https://expired.example.com/" + xpi, expected: DOWNLOAD_ERROR },
 
     // Tests that redirecting from untrusted https to other servers works as expected
     { url: "https://untrusted.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://untrusted.example.com/" + redirect + "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://untrusted.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
     { url: "https://untrusted.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
-    { url: "https://untrusted.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR }
+    { url: "https://untrusted.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://untrusted.example.com/" + redirect + "https://expired.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+
+    // Tests that redirecting from  https to other servers works as expected
+    { url: "https://expired.example.com/" + redirect + "http://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://expired.example.com/" + redirect + "https://example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://expired.example.com/" + redirect + "https://nocert.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://expired.example.com/" + redirect + "https://self-signed.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://expired.example.com/" + redirect + "https://untrusted.example.com/" + xpi, expected: DOWNLOAD_ERROR },
+    { url: "https://expired.example.com/" + redirect + "https://expired.example.com/" + xpi, expected: DOWNLOAD_ERROR }
   ];
   new XPIInstaller(urls, finish);
 }
@@ -226,6 +262,7 @@ function finish() {
   cos.clearValidityOverride("nocert.example.com", -1);
   cos.clearValidityOverride("self-signed.example.com", -1);
   cos.clearValidityOverride("untrusted.example.com", -1);
+  cos.clearValidityOverride("expired.example.com", -1);
 
   SimpleTest.finish();
 }

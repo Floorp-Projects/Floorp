@@ -106,7 +106,6 @@
 #include "pldhash.h"
 #include "nsAttrAndChildArray.h"
 #include "nsDOMAttributeMap.h"
-#include "nsPresShellIterator.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "nsIDocumentViewer.h"
@@ -666,8 +665,6 @@ public:
                                nsIViewManager* aViewManager,
                                nsStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult);
-  virtual PRBool DeleteShell(nsIPresShell* aShell);
-  virtual nsIPresShell *GetPrimaryShell() const;
 
   virtual nsresult SetSubDocumentFor(nsIContent *aContent,
                                      nsIDocument* aSubDoc);
@@ -1194,6 +1191,11 @@ protected:
   PRPackedBool mHaveInputEncoding:1;
 
   PRPackedBool mInXBLUpdate:1;
+
+  // This flag is only set in nsXMLDocument, for e.g. documents used in XBL. We
+  // don't want animations to play in such documents, so we need to store the
+  // flag here so that we can check it in nsDocument::GetAnimationController.
+  PRPackedBool mLoadedAsInteractiveData:1;
 
   PRUint8 mXMLDeclarationBits;
 

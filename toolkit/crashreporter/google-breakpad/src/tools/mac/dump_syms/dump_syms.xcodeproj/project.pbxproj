@@ -45,15 +45,15 @@
 		9BE650440B52F6D800611104 /* macho_id.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_id.h; path = ../../../common/mac/macho_id.h; sourceTree = SOURCE_ROOT; };
 		9BE650450B52F6D800611104 /* macho_walker.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = macho_walker.cc; path = ../../../common/mac/macho_walker.cc; sourceTree = SOURCE_ROOT; };
 		9BE650460B52F6D800611104 /* macho_walker.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_walker.h; path = ../../../common/mac/macho_walker.h; sourceTree = SOURCE_ROOT; };
-		F95B422B0E0E22D100DBDE83 /* bytereader-inl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "bytereader-inl.h"; path = "../../../common/mac/dwarf/bytereader-inl.h"; sourceTree = SOURCE_ROOT; };
-		F95B422C0E0E22D100DBDE83 /* bytereader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bytereader.cc; path = ../../../common/mac/dwarf/bytereader.cc; sourceTree = SOURCE_ROOT; };
-		F95B422D0E0E22D100DBDE83 /* bytereader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bytereader.h; path = ../../../common/mac/dwarf/bytereader.h; sourceTree = SOURCE_ROOT; };
-		F95B422E0E0E22D100DBDE83 /* dwarf2enums.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dwarf2enums.h; path = ../../../common/mac/dwarf/dwarf2enums.h; sourceTree = SOURCE_ROOT; };
-		F95B422F0E0E22D100DBDE83 /* dwarf2reader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dwarf2reader.cc; path = ../../../common/mac/dwarf/dwarf2reader.cc; sourceTree = SOURCE_ROOT; };
-		F95B42300E0E22D100DBDE83 /* dwarf2reader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dwarf2reader.h; path = ../../../common/mac/dwarf/dwarf2reader.h; sourceTree = SOURCE_ROOT; };
-		F95B42310E0E22D100DBDE83 /* line_state_machine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = line_state_machine.h; path = ../../../common/mac/dwarf/line_state_machine.h; sourceTree = SOURCE_ROOT; };
-		F9C7ED420E8AD93000E953AD /* functioninfo.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = functioninfo.cc; path = ../../../common/mac/dwarf/functioninfo.cc; sourceTree = SOURCE_ROOT; };
-		F9F5344D0E7C902C0012363F /* functioninfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = functioninfo.h; path = ../../../common/mac/dwarf/functioninfo.h; sourceTree = SOURCE_ROOT; };
+		F95B422B0E0E22D100DBDE83 /* bytereader-inl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "bytereader-inl.h"; path = "../../../common/dwarf/bytereader-inl.h"; sourceTree = SOURCE_ROOT; };
+		F95B422C0E0E22D100DBDE83 /* bytereader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bytereader.cc; path = ../../../common/dwarf/bytereader.cc; sourceTree = SOURCE_ROOT; };
+		F95B422D0E0E22D100DBDE83 /* bytereader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bytereader.h; path = ../../../common/dwarf/bytereader.h; sourceTree = SOURCE_ROOT; };
+		F95B422E0E0E22D100DBDE83 /* dwarf2enums.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dwarf2enums.h; path = ../../../common/dwarf/dwarf2enums.h; sourceTree = SOURCE_ROOT; };
+		F95B422F0E0E22D100DBDE83 /* dwarf2reader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dwarf2reader.cc; path = ../../../common/dwarf/dwarf2reader.cc; sourceTree = SOURCE_ROOT; };
+		F95B42300E0E22D100DBDE83 /* dwarf2reader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dwarf2reader.h; path = ../../../common/dwarf/dwarf2reader.h; sourceTree = SOURCE_ROOT; };
+		F95B42310E0E22D100DBDE83 /* line_state_machine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = line_state_machine.h; path = ../../../common/dwarf/line_state_machine.h; sourceTree = SOURCE_ROOT; };
+		F9C7ED420E8AD93000E953AD /* functioninfo.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = functioninfo.cc; path = ../../../common/dwarf/functioninfo.cc; sourceTree = SOURCE_ROOT; };
+		F9F5344D0E7C902C0012363F /* functioninfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = functioninfo.h; path = ../../../common/dwarf/functioninfo.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */

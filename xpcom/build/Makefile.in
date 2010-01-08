@@ -175,6 +175,10 @@ EXTRA_DSO_LDOPTS += $(LIBHILDONMIME_LIBS)
 endif
 endif
 
+ifdef HAVE_CLOCK_MONOTONIC
+EXTRA_DSO_LDOPTS += $(REALTIME_LIBS)
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))

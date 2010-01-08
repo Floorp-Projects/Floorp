@@ -103,11 +103,11 @@ private:
 
 
 #define NS_ACCESSIBLE_IMPL_CID                          \
-{  /* 07c5a6d6-4e87-4b57-8613-4c39e1b5150a */           \
-  0x07c5a6d6,                                           \
-  0x4e87,                                               \
-  0x4b57,                                               \
-  { 0x86, 0x13, 0x4c, 0x39, 0xe1, 0xb5, 0x15, 0x0a }    \
+{  /* 81a84b69-de5a-412f-85ff-deb005c5a68d */           \
+  0x81a84b69,                                           \
+  0xde5a,                                               \
+  0x412f,                                               \
+  { 0x85, 0xff, 0xde, 0xb0, 0x05, 0xc5, 0xa6, 0x8d }    \
 }
 
 class nsAccessible : public nsAccessNodeWrap, 
@@ -197,6 +197,21 @@ public:
   virtual nsresult GetChildAtPoint(PRInt32 aX, PRInt32 aY,
                                    PRBool aDeepestChild,
                                    nsIAccessible **aChild);
+
+  /**
+   * Return calculated group level based on accessible hierarchy.
+   */
+  virtual PRInt32 GetLevelInternal();
+
+  /**
+   * Calculate position in group and group size ('posinset' and 'setsize') based
+   * on accessible hierarchy.
+   *
+   * @param  aPosInSet  [out] accessible position in the group
+   * @param  aSetSize   [out] the group size
+   */
+  virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
+                                          PRInt32 *aSetSize);
 
   //////////////////////////////////////////////////////////////////////////////
   // Initializing methods
@@ -427,17 +442,6 @@ protected:
    * @param aStates  [in] states of the accessible
    */
   PRUint32 GetActionRule(PRUint32 aStates);
-
-  /**
-   * Compute group attributes ('posinset', 'setsize' and 'level') based
-   * on accessible hierarchy. Used by GetAttributes() method if group attributes
-   * weren't provided by ARIA or by internal accessible implementation.
-   *
-   * @param  aRole        [in] role of this accessible
-   * @param  aAttributes  [in, out] object attributes
-   */
-  nsresult ComputeGroupAttributes(PRUint32 aRole,
-                                  nsIPersistentProperties *aAttributes);
 
   /**
    * Fires platform accessible event. It's notification method only. It does

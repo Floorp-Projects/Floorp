@@ -388,24 +388,6 @@ protected:
     static const PRUint32 kCanvasMaxInvalidateCount = 100;
 
     /**
-     * Returns true iff the the given operator should affect areas of the
-     * destination where the source is transparent. Among other things, this
-     * implies that a fully transparent source would still affect the canvas.
-     */
-    PRBool OperatorAffectsUncoveredAreas(gfxContext::GraphicsOperator op) const
-    {
-        return PR_FALSE;
-        // XXX certain operators cause 2d.composite.uncovered.* tests to fail
-#if 0
-        return op == gfxContext::OPERATOR_IN ||
-               op == gfxContext::OPERATOR_OUT ||
-               op == gfxContext::OPERATOR_DEST_IN ||
-               op == gfxContext::OPERATOR_DEST_ATOP ||
-               op == gfxContext::OPERATOR_SOURCE;
-#endif
-    }
-
-    /**
      * Returns true iff a shadow should be drawn along with a
      * drawing operation.
      */
@@ -413,34 +395,28 @@ protected:
     {
         ContextState& state = CurrentState();
 
-        // special case the default values as a "don't draw shadows" mode
-        PRBool doDraw = state.colorStyles[STYLE_SHADOW] != 0 ||
-                        state.shadowOffset.x != 0 ||
-                        state.shadowOffset.y != 0;
-        PRBool isColor = CurrentState().StyleIsColor(STYLE_SHADOW);
-
-        // if not using one of the cooky operators, can avoid drawing a shadow
-        // if the color is fully transparent
-        return (doDraw || !isColor) && (!isColor ||
-               NS_GET_A(state.colorStyles[STYLE_SHADOW]) != 0 ||
-               OperatorAffectsUncoveredAreas(mThebes->CurrentOperator()));
+        // The spec says we should not draw shadows when the alpha value is 0,
+        // regardless of the operator being used.
+        return state.StyleIsColor(STYLE_SHADOW) &&
+               NS_GET_A(state.colorStyles[STYLE_SHADOW]) > 0 &&
+               (state.shadowOffset != gfxPoint(0, 0) || state.shadowBlur != 0);
     }
 
     /**
-     * Checks the current state to determine if an intermediate surface would
-     * be necessary to complete a drawing operation. Does not check the
-     * condition pertaining to global alpha and patterns since that does not
-     * pertain to all drawing operations.
+     * If the current operator is "source" then clear the destination before we
+     * draw into it, to simulate the effect of an unbounded source operator.
      */
-    PRBool NeedToUseIntermediateSurface()
+    void ClearSurfaceForUnboundedSource()
     {
-        // certain operators always need an intermediate surface, except
-        // with quartz since quartz does compositing differently than cairo
-        return mThebes->OriginalSurface()->GetType() != gfxASurface::SurfaceTypeQuartz &&
-               OperatorAffectsUncoveredAreas(mThebes->CurrentOperator());
-
-        // XXX there are other unhandled cases but they should be investigated
-        // first to ensure we aren't using an intermediate surface unecessarily
+        gfxContext::GraphicsOperator current = mThebes->CurrentOperator();
+        if (current != gfxContext::OPERATOR_SOURCE)
+            return;
+        mThebes->SetOperator(gfxContext::OPERATOR_CLEAR);
+        // It doesn't really matter what the source is here, since Paint
+        // isn't bounded by the source and the mask covers the entire clip
+        // region.
+        mThebes->Paint();
+        mThebes->SetOperator(current);
     }
 
     /**
@@ -1504,12 +1480,14 @@ nsCanvasRenderingContext2D::DrawPath(Style style, gfxRect *dirtyRect)
     /*
      * Need an intermediate surface when:
      * - globalAlpha != 1 and gradients/patterns are used (need to paint_with_alpha)
-     * - certain operators are used and are not on mac (quartz/cairo composite operators don't quite line up)
+     * - certain operators are used
      */
-    PRBool doUseIntermediateSurface = NeedToUseIntermediateSurface() ||
-                                      NeedIntermediateSurfaceToHandleGlobalAlpha(style);
+    PRBool doUseIntermediateSurface = NeedIntermediateSurfaceToHandleGlobalAlpha(style);
 
     PRBool doDrawShadow = NeedToDrawShadow();
+
+    // Clear the surface if we need to simulate unbounded SOURCE operator
+    ClearSurfaceForUnboundedSource();
 
     if (doDrawShadow) {
         gfxMatrix matrix = mThebes->CurrentMatrix();
@@ -2295,7 +2273,10 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     // don't need to take care of these with stroke since Stroke() does that
     PRBool doDrawShadow = aOp == TEXT_DRAW_OPERATION_FILL && NeedToDrawShadow();
     PRBool doUseIntermediateSurface = aOp == TEXT_DRAW_OPERATION_FILL &&
-        (NeedToUseIntermediateSurface() || NeedIntermediateSurfaceToHandleGlobalAlpha(STYLE_FILL));
+        NeedIntermediateSurfaceToHandleGlobalAlpha(STYLE_FILL);
+
+    // Clear the surface if we need to simulate unbounded SOURCE operator
+    ClearSurfaceForUnboundedSource();
 
     nsCanvasBidiProcessor processor;
 
@@ -3072,6 +3053,9 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
 
     pathSR.Save();
 
+    // Clear the surface if we need to simulate unbounded SOURCE operator
+    ClearSurfaceForUnboundedSource();
+
     {
         gfxContextAutoSaveRestore autoSR(mThebes);
         mThebes->Translate(gfxPoint(dx, dy));
@@ -3095,23 +3079,10 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
             }
         }
 
-        PRBool doUseIntermediateSurface = NeedToUseIntermediateSurface();
-
         mThebes->SetPattern(pattern);
         DirtyAllStyles();
 
-        if (doUseIntermediateSurface) {
-            // draw onto a pushed group
-            mThebes->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
-            mThebes->Clip(clip);
-
-            // don't want operators to be applied twice
-            mThebes->SetOperator(gfxContext::OPERATOR_SOURCE);
-
-            mThebes->Paint();
-            mThebes->PopGroupToSource();
-        } else
-            mThebes->Clip(clip);
+        mThebes->Clip(clip);
 
         dirty = mThebes->UserToDevice(clip);
 

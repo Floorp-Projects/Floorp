@@ -47,18 +47,18 @@ HOST_LIBRARY_NAME = host_breakpad_linux_common_s
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../..
 
-# not compiling http_upload.cc currently
-# since it depends on libcurl
 CPPSRCS	= \
-  dump_symbols.cc \
   file_id.cc \
   guid_creator.cc \
+  http_upload.cc \
   $(NULL)
 
 HOST_CPPSRCS = \
   dump_symbols.cc \
   file_id.cc \
   guid_creator.cc \
+  module.cc \
+  stabs_reader.cc \
   $(NULL)
 
 # need static lib

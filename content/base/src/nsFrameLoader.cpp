@@ -71,7 +71,6 @@
 #include "nsIFrame.h"
 #include "nsIFrameFrame.h"
 #include "nsDOMError.h"
-#include "nsPresShellIterator.h"
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsISHistory.h"
@@ -721,12 +720,6 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
 
   NS_ASSERTION(ourDoc == ourParentDocument, "Unexpected parent document");
   NS_ASSERTION(otherDoc == otherParentDocument, "Unexpected parent document");
-
-  nsPresShellIterator iter1(ourDoc);
-  nsPresShellIterator iter2(otherDoc);
-  if (iter1.HasMoreThanOneShell() || iter2.HasMoreThanOneShell()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
 
   nsIPresShell* ourShell = ourDoc->GetPrimaryShell();
   nsIPresShell* otherShell = otherDoc->GetPrimaryShell();
