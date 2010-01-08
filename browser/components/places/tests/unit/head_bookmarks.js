@@ -125,11 +125,13 @@ function uri(spec) {
 function remove_all_bookmarks() {
   var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
            getService(Ci.nsINavBookmarksService);
-  // Clear all bookmarks
+  // Clear all bookmarks.
   bs.removeFolderChildren(bs.bookmarksMenuFolder);
   bs.removeFolderChildren(bs.toolbarFolder);
   bs.removeFolderChildren(bs.unfiledBookmarksFolder);
-  // Check for correct cleanup
+
+  // Check for correct cleanup.
+  dump_table("moz_bookmarks");
   check_no_bookmarks()
 }
 
@@ -148,7 +150,13 @@ function check_no_bookmarks() {
   var result = hs.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, 0);
+  var cc = root.childCount;
+  // Dump contents if found.
+  for (var i = 0; i < cc ; i++) {
+    var node = root.getChild(i);
+    print("Found unexpected child at " + i + ": " + node.title);
+  }
+  do_check_eq(cc, 0);
   root.containerOpen = false;
 }
 

@@ -106,6 +106,8 @@ function continue_test() {
   let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
            getService(Ci.nsINavBookmarksService);
 
+  dump_table("moz_bookmarks");
+
   // Check the custom bookmarks exist on menu.
   let menuItemId = bs.getIdForItemAt(bs.bookmarksMenuFolder, 0);
   do_check_neq(menuItemId, -1);
