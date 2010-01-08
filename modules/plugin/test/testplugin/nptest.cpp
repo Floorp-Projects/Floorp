@@ -45,6 +45,7 @@
 
 #ifdef XP_WIN
 #include <process.h>
+#include <float.h>
 #define getpid _getpid
 #else
 #include <unistd.h>
@@ -133,7 +134,7 @@ static bool crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCoun
 static bool crashOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool checkObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-
+static bool enableFPExceptions(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -167,6 +168,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "crashOnDestroy",
   "getObjectValue",
   "checkObjectValue",
+  "enableFPExceptions",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
@@ -201,6 +203,7 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   crashOnDestroy,
   getObjectValue,
   checkObjectValue,
+  enableFPExceptions,
 };
 
 struct URLNotifyData
@@ -2167,4 +2170,16 @@ static bool checkObjectValue(NPObject* npobj, const NPVariant* args, uint32_t ar
 
   BOOLEAN_TO_NPVARIANT(o->_class == &kTestSharedNPClass, *result);
   return true;
+}
+
+static bool enableFPExceptions(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  VOID_TO_NPVARIANT(*result);
+
+#if defined(XP_WIN) && defined(_M_IX86)
+  _control87(0, _MCW_EM);
+  return true;
+#else
+  return false;
+#endif
 }
