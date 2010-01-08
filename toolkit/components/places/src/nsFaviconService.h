@@ -41,10 +41,10 @@
 #include "nsIFaviconService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
-#include "mozIStorageConnection.h"
-#include "mozIStorageValueArray.h"
-#include "mozIStorageStatement.h"
+
 #include "nsToolkitCompsCID.h"
+
+#include "mozilla/storage.h"
 
 // Favicons bigger than this size should not be saved to the db to avoid
 // bloating it with large image blobs.
@@ -65,7 +65,7 @@ public:
   /**
    * Obtains the service's object.
    */
-  static nsFaviconService * GetSingleton();
+  static nsFaviconService* GetSingleton();
 
   /**
    * Initializes the service's object.  This should only be called once.
@@ -79,7 +79,7 @@ public:
    * Returns a cached pointer to the favicon service for consumers in the
    * places directory.
    */
-  static nsFaviconService * GetFaviconService()
+  static nsFaviconService* GetFaviconService()
   {
     if (!gFaviconService) {
       nsCOMPtr<nsIFaviconService> serv =
@@ -112,8 +112,8 @@ public:
    *        returned result, the favicon binary data will be at index 0, and the
    *        mime type will be at index 1.
    */
-  nsresult GetFaviconDataAsync(nsIURI *aFaviconURI,
-                               mozIStorageStatementCallback *aCallback);
+  nsresult GetFaviconDataAsync(nsIURI* aFaviconURI,
+                               mozIStorageStatementCallback* aCallback);
 
   /**
    * Checks to see if a favicon's URI has changed, and notifies callers if it
@@ -124,7 +124,7 @@ public:
    * @param aFaviconURI
    *        The URI for the favicon we want to test for on aPageURI.
    */
-  void checkAndNotify(nsIURI *aPageURI, nsIURI *aFaviconURI);
+  void checkAndNotify(nsIURI* aPageURI, nsIURI* aFaviconURI);
 
   /**
    * Finalize all internal statements.
@@ -139,14 +139,21 @@ private:
 
   nsCOMPtr<mozIStorageConnection> mDBConn; // from history service
 
+  /**
+   * Always use this getter and never use directly the statement nsCOMPtr.
+   */
+  mozIStorageStatement* GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt);
   nsCOMPtr<mozIStorageStatement> mDBGetURL; // returns URL, data len given page
   nsCOMPtr<mozIStorageStatement> mDBGetData; // returns actual data given URL
   nsCOMPtr<mozIStorageStatement> mDBGetIconInfo;
   nsCOMPtr<mozIStorageStatement> mDBInsertIcon;
   nsCOMPtr<mozIStorageStatement> mDBUpdateIcon;
   nsCOMPtr<mozIStorageStatement> mDBSetPageFavicon;
+  nsCOMPtr<mozIStorageStatement> mDBRemoveOnDiskReferences;
+  nsCOMPtr<mozIStorageStatement> mDBRemoveTempReferences;
+  nsCOMPtr<mozIStorageStatement> mDBRemoveAllFavicons;
 
-  static nsFaviconService *gFaviconService;
+  static nsFaviconService* gFaviconService;
 
   /**
    * A cached URI for the default icon. We return this a lot, and don't want to
@@ -176,6 +183,8 @@ private:
   void SendFaviconNotifications(nsIURI* aPage, nsIURI* aFaviconURI);
 
   friend class FaviconLoadListener;
+
+  bool mShuttingDown;
 };
 
 #define FAVICON_DEFAULT_URL "chrome://mozapps/skin/places/defaultFavicon.png"

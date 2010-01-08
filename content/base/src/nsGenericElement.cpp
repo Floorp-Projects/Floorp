@@ -396,8 +396,8 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
   if (!IsNodeOfType(eCONTENT))
     return nsnull;
 
-  NS_ASSERTION(GetCurrentDoc() == aPresShell->GetDocument(),
-               "Wrong document somewhere");
+  NS_ENSURE_TRUE(GetCurrentDoc() == aPresShell->GetDocument(), nsnull);
+
   nsIFrame* frame = static_cast<nsIContent*>(this)->GetPrimaryFrame();
   if (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) {
     // This node should be a descendant of input/textarea editor.

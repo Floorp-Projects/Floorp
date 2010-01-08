@@ -57,246 +57,7 @@
 //       exceptions.  use gfxSparseBitSet instead?
 #include <bitset>
 
-/**
- * List of different types of fonts we support on Windows.
- * These can generally be lumped in to 3 categories where we have to
- * do special things:  Really old fonts bitmap and vector fonts (device
- * and raster), Type 1 fonts, and TrueType/OpenType fonts.
- * 
- * This list is sorted in order from least prefered to most prefered.
- * We prefer Type1 fonts over OpenType fonts to avoid falling back to
- * things like Arial (opentype) when you ask for Helvetica (type1)
- **/
-enum gfxWindowsFontType {
-    GFX_FONT_TYPE_UNKNOWN = 0,
-    GFX_FONT_TYPE_DEVICE,
-    GFX_FONT_TYPE_RASTER,
-    GFX_FONT_TYPE_TRUETYPE,
-    GFX_FONT_TYPE_PS_OPENTYPE,
-    GFX_FONT_TYPE_TT_OPENTYPE,
-    GFX_FONT_TYPE_TYPE1
-};
-
-/**
- * FontFamily is a class that describes one of the fonts on the users system.  It holds
- * each FontEntry (maps more directly to a font face) which holds font type, charset info
- * and character map info.
- */
-class FontEntry;
-class FontFamily : public gfxFontFamily
-{
-public:
-    FontFamily(const nsAString& aName) :
-        gfxFontFamily(aName), mIsBadUnderlineFontFamily(PR_FALSE) { }
-
-    FontEntry *FindFontEntry(const gfxFontStyle& aFontStyle);
-
-private:
-    friend class gfxWindowsPlatform;
-
-    void FindStyleVariations();
-
-    static int CALLBACK FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
-                                            const NEWTEXTMETRICEXW *nmetrics,
-                                            DWORD fontType, LPARAM data);
-
-protected:
-    PRBool FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
-                               PRBool anItalic, PRInt16 aStretch);
-
-public:
-    PRPackedBool mIsBadUnderlineFontFamily;
-};
-
-class FontEntry : public gfxFontEntry
-{
-public:
-    FontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
-              PRBool aItalic, PRUint16 aWeight, gfxUserFontData *aUserFontData) : 
-        gfxFontEntry(aFaceName), mFontType(aFontType),
-        mForceGDI(PR_FALSE), mUnknownCMAP(PR_FALSE),
-        mUnicodeFont(PR_FALSE), mSymbolFont(PR_FALSE),
-        mCharset(), mUnicodeRanges()
-    {
-        mUserFontData = aUserFontData;
-        mItalic = aItalic;
-        mWeight = aWeight;
-        if (IsType1())
-            mForceGDI = PR_TRUE;
-        mIsUserFont = aUserFontData != nsnull;
-    }
-
-    FontEntry(const FontEntry& aFontEntry) :
-        gfxFontEntry(aFontEntry),
-        mWindowsFamily(aFontEntry.mWindowsFamily),
-        mWindowsPitch(aFontEntry.mWindowsPitch),
-        mFontType(aFontEntry.mFontType),
-        mForceGDI(aFontEntry.mForceGDI),
-        mUnknownCMAP(aFontEntry.mUnknownCMAP),
-        mUnicodeFont(aFontEntry.mUnicodeFont),
-        mSymbolFont(aFontEntry.mSymbolFont),
-        mCharset(aFontEntry.mCharset),
-        mUnicodeRanges(aFontEntry.mUnicodeRanges)
-    {
-
-    }
-    static void InitializeFontEmbeddingProcs();
-
-    // create a font entry from downloaded font data
-    static FontEntry* LoadFont(const gfxProxyFontEntry &aProxyEntry,
-                               const PRUint8 *aFontData,
-                               PRUint32 aLength);
-
-    // create a font entry for a font with a given name
-    static FontEntry* CreateFontEntry(const nsAString& aName, 
-                                      gfxWindowsFontType aFontType, 
-                                      PRBool aItalic, PRUint16 aWeight, 
-                                      gfxUserFontData* aUserFontData, 
-                                      HDC hdc = 0, LOGFONTW *aLogFont = nsnull);
-
-    // create a font entry for a font referenced by its fullname
-    static FontEntry* LoadLocalFont(const gfxProxyFontEntry &aProxyEntry,
-                                    const nsAString& aFullname);
-
-    static void FillLogFont(LOGFONTW *aLogFont, const nsAString& aName, 
-                            gfxWindowsFontType aFontType, PRBool aItalic, 
-                            PRUint16 aWeight, gfxFloat aSize);
-
-    static gfxWindowsFontType DetermineFontType(const NEWTEXTMETRICW& metrics, 
-                                                DWORD fontType)
-    {
-        gfxWindowsFontType feType;
-        if (metrics.ntmFlags & NTM_TYPE1)
-            feType = GFX_FONT_TYPE_TYPE1;
-        else if (metrics.ntmFlags & NTM_PS_OPENTYPE)
-            feType = GFX_FONT_TYPE_PS_OPENTYPE;
-        else if (metrics.ntmFlags & NTM_TT_OPENTYPE)
-            feType = GFX_FONT_TYPE_TT_OPENTYPE;
-        else if (fontType == TRUETYPE_FONTTYPE)
-            feType = GFX_FONT_TYPE_TRUETYPE;
-        else if (fontType == RASTER_FONTTYPE)
-            feType = GFX_FONT_TYPE_RASTER;
-        else if (fontType == DEVICE_FONTTYPE)
-            feType = GFX_FONT_TYPE_DEVICE;
-        else
-            feType = GFX_FONT_TYPE_UNKNOWN;
-        
-        return feType;
-    }
-
-    PRBool IsType1() const {
-        return (mFontType == GFX_FONT_TYPE_TYPE1);
-    }
-
-    PRBool IsTrueType() const {
-        return (mFontType == GFX_FONT_TYPE_TRUETYPE ||
-                mFontType == GFX_FONT_TYPE_PS_OPENTYPE ||
-                mFontType == GFX_FONT_TYPE_TT_OPENTYPE);
-    }
-
-    PRBool IsCrappyFont() const {
-        /* return if it is a bitmap not a unicode font */
-        return (!mUnicodeFont || mSymbolFont || IsType1());
-    }
-
-    PRBool MatchesGenericFamily(const nsACString& aGeneric) const {
-        if (aGeneric.IsEmpty())
-            return PR_TRUE;
-
-        // Japanese 'Mincho' fonts do not belong to FF_MODERN even if
-        // they are fixed pitch because they have variable stroke width.
-        if (mWindowsFamily == FF_ROMAN && mWindowsPitch & FIXED_PITCH) {
-            return aGeneric.EqualsLiteral("monospace");
-        }
-
-        // Japanese 'Gothic' fonts do not belong to FF_SWISS even if
-        // they are variable pitch because they have constant stroke width.
-        if (mWindowsFamily == FF_MODERN && mWindowsPitch & VARIABLE_PITCH) {
-            return aGeneric.EqualsLiteral("sans-serif");
-        }
-
-        // All other fonts will be grouped correctly using family...
-        switch (mWindowsFamily) {
-        case FF_DONTCARE:
-            return PR_TRUE;
-        case FF_ROMAN:
-            return aGeneric.EqualsLiteral("serif");
-        case FF_SWISS:
-            return aGeneric.EqualsLiteral("sans-serif");
-        case FF_MODERN:
-            return aGeneric.EqualsLiteral("monospace");
-        case FF_SCRIPT:
-            return aGeneric.EqualsLiteral("cursive");
-        case FF_DECORATIVE:
-            return aGeneric.EqualsLiteral("fantasy");
-        }
-
-        return PR_FALSE;
-    }
-
-    PRBool SupportsLangGroup(const nsACString& aLangGroup) const {
-        if (aLangGroup.IsEmpty())
-            return PR_TRUE;
-
-        PRInt16 bit = -1;
-
-        /* map our langgroup names in to Windows charset bits */
-        if (aLangGroup.EqualsLiteral("x-western")) {
-            bit = ANSI_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("ja")) {
-            bit = SHIFTJIS_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("ko")) {
-            bit = HANGEUL_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("ko-XXX")) {
-            bit = JOHAB_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("zh-CN")) {
-            bit = GB2312_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("zh-TW")) {
-            bit = CHINESEBIG5_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("el")) {
-            bit = GREEK_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("tr")) {
-            bit = TURKISH_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("he")) {
-            bit = HEBREW_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("ar")) {
-            bit = ARABIC_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("x-baltic")) {
-            bit = BALTIC_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("x-cyrillic")) {
-            bit = RUSSIAN_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("th")) {
-            bit = THAI_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("x-central-euro")) {
-            bit = EASTEUROPE_CHARSET;
-        } else if (aLangGroup.EqualsLiteral("x-symbol")) {
-            bit = SYMBOL_CHARSET;
-        }
-
-        if (bit != -1)
-            return mCharset[bit];
-
-        return PR_FALSE;
-    }
-
-    PRBool SupportsRange(PRUint8 range) {
-        return mUnicodeRanges[range];
-    }
-
-    PRBool TestCharacterMap(PRUint32 aCh);
-
-    PRUint8 mWindowsFamily;
-    PRUint8 mWindowsPitch;
-
-    gfxWindowsFontType mFontType;
-    PRPackedBool mForceGDI    : 1;
-    PRPackedBool mUnknownCMAP : 1;
-    PRPackedBool mUnicodeFont : 1;
-    PRPackedBool mSymbolFont  : 1;
-
-    std::bitset<256> mCharset;
-    std::bitset<128> mUnicodeRanges;
-};
+class GDIFontEntry;
 
 /**********************************************************************
  *
@@ -306,7 +67,7 @@ public:
 
 class gfxWindowsFont : public gfxFont {
 public:
-    gfxWindowsFont(FontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
+    gfxWindowsFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
                    cairo_antialias_t anAntialiasOption = CAIRO_ANTIALIAS_DEFAULT);
     virtual ~gfxWindowsFont();
 
@@ -336,10 +97,10 @@ public:
     };
 
     PRBool IsValid() { GetMetrics(); return mIsValid; }
-    FontEntry *GetFontEntry();
+    GDIFontEntry *GetFontEntry();
 
     static already_AddRefed<gfxWindowsFont>
-    GetOrMakeFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle,
+    GetOrMakeFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aStyle,
                   PRBool aNeedsBold = PR_FALSE);
 
 protected:
@@ -390,28 +151,26 @@ public:
         return mGenericFamily;
     }
 
-    const nsTArray<nsRefPtr<FontEntry> >& GetFontList() const {
-        return mFontEntries;
-    }
-    PRUint32 FontListLength() const {
-        return mFontEntries.Length();
-    }
-
-    FontEntry *GetFontEntryAt(PRInt32 i) {
-        return mFontEntries[i];
-    }
-
-    virtual gfxWindowsFont *GetFontAt(PRInt32 i);
-
-    void GroupFamilyListToArrayList(nsTArray<nsRefPtr<FontEntry> > *list,
+    void GroupFamilyListToArrayList(nsTArray<nsRefPtr<gfxFontEntry> > *list,
                                     nsTArray<PRPackedBool> *aNeedsBold);
     void FamilyListToArrayList(const nsString& aFamilies,
                                const nsCString& aLangGroup,
-                               nsTArray<nsRefPtr<FontEntry> > *list);
+                               nsTArray<nsRefPtr<gfxFontEntry> > *list);
 
-    void UpdateFontList();
+    virtual void UpdateFontList();
     virtual gfxFloat GetUnderlineOffset();
 
+    gfxWindowsFont* GetFontAt(PRInt32 aFontIndex) {
+        // If it turns out to be hard for all clients that cache font
+        // groups to call UpdateFontList at appropriate times, we could
+        // instead consider just calling UpdateFontList from someplace
+        // more central (such as here).
+        NS_ASSERTION(!mUserFontSet || mCurrGeneration == GetGeneration(),
+                     "Whoever was caching this font group should have "
+                     "called UpdateFontList on it");
+
+        return static_cast<gfxWindowsFont*>(static_cast<gfxFont*>(mFonts[aFontIndex]));
+    }
 
 protected:
     void InitFontList();
@@ -423,14 +182,19 @@ protected:
     already_AddRefed<gfxFont> WhichPrefFontSupportsChar(PRUint32 aCh);
     already_AddRefed<gfxFont> WhichSystemFontSupportsChar(PRUint32 aCh);
 
-    already_AddRefed<gfxWindowsFont> WhichFontSupportsChar(const nsTArray<nsRefPtr<FontEntry> >& fonts, PRUint32 ch);
-    void GetPrefFonts(const char *aLangGroup, nsTArray<nsRefPtr<FontEntry> >& array);
-    void GetCJKPrefFonts(nsTArray<nsRefPtr<FontEntry> >& array);
+    already_AddRefed<gfxWindowsFont> WhichFontSupportsChar(const nsTArray<nsRefPtr<gfxFontEntry> >& fonts, PRUint32 ch);
+    void GetPrefFonts(const char *aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> >& array);
+    void GetCJKPrefFonts(nsTArray<nsRefPtr<gfxFontEntry> >& array);
+
+    static PRBool FindWindowsFont(const nsAString& aName,
+                                  const nsACString& aGenericName,
+                                  void *closure);
+
+    PRBool HasFont(gfxFontEntry *aFontEntry);
 
 private:
 
     nsCString mGenericFamily;
-    nsTArray<nsRefPtr<FontEntry> > mFontEntries;
     nsTArray<PRPackedBool> mFontNeedsBold;
 
     const char *mItemLangGroup;  // used by pref-lang handling code
