@@ -225,7 +225,8 @@ function next_test() {
 
   // nsBrowserGlue stops observing topics after first notification,
   // so we add back the observer to test additional runs.
-  os.addObserver(bg, TOPIC_PLACES_INIT_COMPLETE, false);
+  if (testIndex > 0)
+    os.addObserver(bg, TOPIC_PLACES_INIT_COMPLETE, false);
 
   // Execute next test.
   let test = tests.shift();
