@@ -296,11 +296,12 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
     NS_ENSURE_TRUE(tablelen <= aLength, NS_ERROR_GFX_CMAP_MALFORMED);
     NS_ENSURE_TRUE(tablelen > 16, NS_ERROR_GFX_CMAP_MALFORMED);
     
-    // some buggy fonts on Mac OS report lang = English (e.g. Arial Narrow Bold, v. 1.1 (Tiger))
-#if defined(XP_WIN)
-    NS_ENSURE_TRUE(ReadShortAt(aBuf, OffsetLanguage) == 0, 
+    // This field should normally (except for Mac platform subtables) be zero according to
+    // the OT spec, but some buggy fonts have lang = 1 (which would be English for MacOS).
+    // E.g. Arial Narrow Bold, v. 1.1 (Tiger), Arial Unicode MS (see bug 530614).
+    // So accept either zero or one here; the error should be harmless.
+    NS_ENSURE_TRUE((ReadShortAt(aBuf, OffsetLanguage) & 0xfffe) == 0, 
                    NS_ERROR_GFX_CMAP_MALFORMED);
-#endif
 
     PRUint16 segCountX2 = ReadShortAt(aBuf, OffsetSegCountX2);
     NS_ENSURE_TRUE(tablelen >= 16 + (segCountX2 * 4), 

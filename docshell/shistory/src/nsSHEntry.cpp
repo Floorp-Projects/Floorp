@@ -246,7 +246,7 @@ nsSHEntry::SetContentViewer(nsIContentViewer *aViewer)
     // the contentviewer
     mDocument = do_QueryInterface(domDoc);
     if (mDocument) {
-      mDocument->SetShellsHidden(PR_TRUE);
+      mDocument->SetShellHidden(PR_TRUE);
       mDocument->AddMutationObserver(this);
     }
   }
@@ -685,7 +685,7 @@ nsSHEntry::DropPresentationState()
   nsRefPtr<nsSHEntry> kungFuDeathGrip = this;
 
   if (mDocument) {
-    mDocument->SetShellsHidden(PR_FALSE);
+    mDocument->SetShellHidden(PR_FALSE);
     mDocument->RemoveMutationObserver(this);
     mDocument = nsnull;
   }

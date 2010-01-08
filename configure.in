@@ -133,7 +133,7 @@ LIBGNOME_VERSION=2.0
 GIO_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.6.20
+SQLITE_VERSION=3.6.22
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -3599,6 +3599,25 @@ AC_FUNC_MEMCMP
 AC_CHECK_FUNCS(random strerror lchown fchmod snprintf statvfs memmove rint stat64 lstat64 truncate64 statvfs64 setbuf isatty)
 AC_CHECK_FUNCS(flockfile getpagesize)
 AC_CHECK_FUNCS(localtime_r strtok_r)
+
+dnl check for clock_gettime(), the CLOCK_MONOTONIC clock, and -lrt
+_SAVE_LDFLAGS=$LDFLAGS
+LDFLAGS="$LDFLAGS -lrt"
+AC_CACHE_CHECK(for clock_gettime(CLOCK_MONOTONIC) and -lrt,
+               ac_cv_have_clock_monotonic,
+               [AC_TRY_LINK([#include <time.h>],
+                            [ struct timespec ts;
+                              clock_gettime(CLOCK_MONOTONIC, &ts); ],
+                            ac_cv_have_clock_monotonic=yes,
+                            ac_cv_have_clock_monotonic=no)])
+LDFLAGS=$_SAVE_LDFLAGS
+if test "$ac_cv_have_clock_monotonic" = "yes"; then
+    HAVE_CLOCK_MONOTONIC=1
+    REALTIME_LIBS=-lrt
+    AC_DEFINE(HAVE_CLOCK_MONOTONIC)
+    AC_SUBST(HAVE_CLOCK_MONOTONIC)
+    AC_SUBST(REALTIME_LIBS)
+fi
 
 dnl check for wcrtomb/mbrtowc
 dnl =======================================================================

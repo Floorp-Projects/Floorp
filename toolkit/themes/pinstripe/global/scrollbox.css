@@ -31,13 +31,13 @@
 }
 
 /* Vertical enabled */
-.autorepeatbutton-up {
+.autorepeatbutton-up:not([orient="horizontal"]) {
   list-style-image: url("chrome://global/skin/scrollbox/autorepeat-arrow-up.gif");
   -moz-image-region: auto; /* cut off inheritance */
   padding-bottom: 5px;
 }
 
-.autorepeatbutton-down {
+.autorepeatbutton-down:not([orient="horizontal"]) {
   list-style-image: url("chrome://global/skin/scrollbox/autorepeat-arrow-dn.gif");
   -moz-image-region: auto; /* cut off inheritance */
   padding-top: 5px;
@@ -83,5 +83,4 @@ autorepeatbutton {
   -moz-box-align: center;
   -moz-box-pack: center;
   padding: 1px;
-  margin: 1px 2px;
 }

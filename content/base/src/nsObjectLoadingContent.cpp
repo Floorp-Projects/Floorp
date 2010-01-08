@@ -77,7 +77,6 @@
 #include "nsGkAtoms.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
-#include "nsPresShellIterator.h"
 #include "nsMimeTypes.h"
 #include "nsStyleUtil.h"
 
@@ -761,9 +760,8 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
       return NS_OK;
     }
 
-    nsPresShellIterator iter(doc);
-    nsCOMPtr<nsIPresShell> shell;
-    while ((shell = iter.GetNextShell())) {
+    nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
+    if (shell) {
       shell->RecreateFramesFor(thisContent);
     }
 
@@ -1543,10 +1541,8 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
   } else if (aOldType != mType) {
     // If our state changed, then we already recreated frames
     // Otherwise, need to do that here
-
-    nsPresShellIterator iter(doc);
-    nsCOMPtr<nsIPresShell> shell;
-    while ((shell = iter.GetNextShell())) {
+    nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
+    if (shell) {
       shell->RecreateFramesFor(thisContent);
     }
   }

@@ -38,7 +38,7 @@
 # ***** END LICENSE BLOCK *****
 
 import codecs
-from datetime import datetime
+from datetime import datetime, timedelta
 import itertools
 import logging
 import os
@@ -569,8 +569,11 @@ def runApp(testURL, env, app, profileDir, extraArgs,
            runSSLTunnel = False, utilityPath = DIST_BIN,
            xrePath = DIST_BIN, certPath = CERTS_SRC_DIR,
            debuggerInfo = None, symbolsPath = None,
-           timeout = DEFAULT_TIMEOUT):
-  "Run the app, log the duration it took to execute, return the status code."
+           timeout = DEFAULT_TIMEOUT, maxTime = None):
+  """
+  Run the app, log the duration it took to execute, return the status code.
+  Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing for |timeout| seconds.
+  """
 
   # copy env so we don't munge the caller's environment
   env = dict(env);
@@ -652,19 +655,25 @@ def runApp(testURL, env, app, profileDir, extraArgs,
         logsource = stackFixerProcess.stdout
 
     (line, didTimeout) = readWithTimeout(logsource, timeout)
+    hitMaxTime = False
     while line != "" and not didTimeout:
       log.info(line.rstrip())
       (line, didTimeout) = readWithTimeout(logsource, timeout)
+      if not hitMaxTime and maxTime and datetime.now() - startTime > timedelta(seconds = maxTime):
+        # Kill the application, but continue reading from stack fixer so as not to deadlock on stackFixerProcess.wait().
+        hitMaxTime = True
+        log.info("TEST-UNEXPECTED-FAIL | automation.py | application ran for longer than allowed maximum time of %d seconds", int(maxTime))
+        triggerBreakpad(proc, utilityPath)
     if didTimeout:
       log.info("TEST-UNEXPECTED-FAIL | automation.py | application timed out after %d seconds with no output", int(timeout))
       triggerBreakpad(proc, utilityPath)
 
   status = proc.wait()
-  if status != 0 and not didTimeout:
+  if status != 0 and not didTimeout and not hitMaxTime:
     log.info("TEST-UNEXPECTED-FAIL | automation.py | Exited with code %d during test run", status)
   if stackFixerProcess is not None:
     fixerStatus = stackFixerProcess.wait()
-    if fixerStatus != 0 and not didTimeout:
+    if fixerStatus != 0 and not didTimeout and not hitMaxTime:
       log.info("TEST-UNEXPECTED-FAIL | automation.py | Stack fixer process exited with code %d during test run", fixerStatus)
   log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
 

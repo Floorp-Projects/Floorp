@@ -100,7 +100,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMCrypto.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentView.h"
@@ -1417,16 +1416,6 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument)
 
   // No treeItem: don't reuse the current inner window.
   return PR_FALSE;
-}
-
-already_AddRefed<nsComputedDOMStyle>
-nsGlobalWindow::LookupComputedStyleFor(nsIContent* aElem)
-{
-  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(aElem));
-  nsRefPtr<nsComputedDOMStyle> computedDOMStyle;
-  GetComputedStyle(domElement, EmptyString(),
-                   getter_AddRefs(computedDOMStyle));
-  return computedDOMStyle.forget();
 }
 
 void
@@ -7043,12 +7032,14 @@ nsGlobalWindow::UpdateCanvasFocus(PRBool aFocusChanged, nsIContent* aNewContent)
 // nsGlobalWindow::nsIDOMViewCSS
 //*****************************************************************************
 
-// Helper method for below
-nsresult
+NS_IMETHODIMP
 nsGlobalWindow::GetComputedStyle(nsIDOMElement* aElt,
                                  const nsAString& aPseudoElt,
-                                 nsComputedDOMStyle** aReturn)
+                                 nsIDOMCSSStyleDeclaration** aReturn)
 {
+  FORWARD_TO_OUTER(GetComputedStyle, (aElt, aPseudoElt, aReturn),
+                   NS_ERROR_NOT_INITIALIZED);
+
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
@@ -7067,18 +7058,9 @@ nsGlobalWindow::GetComputedStyle(nsIDOMElement* aElt,
     return NS_OK;
   }
 
-  return NS_NewComputedDOMStyle(aElt, aPseudoElt, presShell,
-                                aReturn);
-}
-NS_IMETHODIMP
-nsGlobalWindow::GetComputedStyle(nsIDOMElement* aElt,
-                                 const nsAString& aPseudoElt,
-                                 nsIDOMCSSStyleDeclaration** aReturn)
-{
-  FORWARD_TO_OUTER(GetComputedStyle, (aElt, aPseudoElt, aReturn),
-                   NS_ERROR_NOT_INITIALIZED);
   nsRefPtr<nsComputedDOMStyle> compStyle;
-  nsresult rv = GetComputedStyle(aElt, aPseudoElt, getter_AddRefs(compStyle));
+  nsresult rv = NS_NewComputedDOMStyle(aElt, aPseudoElt, presShell,
+                                       getter_AddRefs(compStyle));
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aReturn = compStyle.forget().get();
@@ -8479,6 +8461,7 @@ nsGlobalWindow::TimerCallback(nsITimer *aTimer, void *aClosure)
 //*****************************************************************************
 // nsGlobalWindow: Helper Functions
 //*****************************************************************************
+
 nsresult
 nsGlobalWindow::GetTreeOwner(nsIDocShellTreeOwner **aTreeOwner)
 {

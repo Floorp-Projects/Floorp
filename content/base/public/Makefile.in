@@ -75,7 +75,6 @@ nsCopySupport.h \
 nsContentCreatorFunctions.h \
 nsDOMFile.h \
 nsLineBreaker.h \
-nsPresShellIterator.h \
 nsReferencedElement.h \
 nsXMLNameSpaceMap.h \
 $(NULL)

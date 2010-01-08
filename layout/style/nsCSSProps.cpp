@@ -706,8 +706,6 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_nativehyperlinktext, nsILookAndFeel::eColor__moz_nativehyperlinktext,
   eCSSKeyword__moz_comboboxtext, nsILookAndFeel::eColor__moz_comboboxtext,
   eCSSKeyword__moz_combobox, nsILookAndFeel::eColor__moz_combobox,
-  eCSSKeyword__moz_entrytext, nsILookAndFeel::eColor__moz_entrytext,
-  eCSSKeyword__moz_entry, nsILookAndFeel::eColor__moz_entry,
   eCSSKeyword_UNKNOWN,-1
 };
 
