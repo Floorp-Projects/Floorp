@@ -257,13 +257,10 @@ if __name__ == '__main__':
         OPTIONS.hide_progress = True
 
     if OPTIONS.manifest is None:
-        filenames = ('jstests.list', 
-                 os.path.join(os.path.dirname(__file__), 'jstests.list'))
-        for filename in filenames:
-            if os.path.isfile(filename):
-                OPTIONS.manifest = filename
-                break
-        if OPTIONS.manifest is None:
+        filename = os.path.join(os.path.dirname(__file__), 'jstests.list')
+        if os.path.isfile(filename):
+            OPTIONS.manifest = filename
+        else:
             print >> sys.stderr, 'no manifest file given and defaults not found'
             sys.exit(2)
 
@@ -321,7 +318,9 @@ if __name__ == '__main__':
         print 'no tests selected'
     else:
         curdir = os.getcwd()
-        os.chdir(os.path.dirname(OPTIONS.manifest))
+        manifest_dir = os.path.dirname(OPTIONS.manifest)
+        if manifest_dir not in ('', '.'):
+            os.chdir(os.path.dirname(OPTIONS.manifest))
         try:
             results = ResultsSink()
             run_tests(test_list, results)
