@@ -141,10 +141,10 @@ isContextMenuKeyEvent(const QKeyEvent *qe)
 static void
 InitKeyEvent(nsKeyEvent &aEvent, QKeyEvent *aQEvent)
 {
-    aEvent.isShift   = aQEvent->modifiers() & Qt::ShiftModifier;
-    aEvent.isControl = aQEvent->modifiers() & Qt::ControlModifier;
-    aEvent.isAlt     = aQEvent->modifiers() & Qt::AltModifier;
-    aEvent.isMeta    = aQEvent->modifiers() & Qt::MetaModifier;
+    aEvent.isShift   = (aQEvent->modifiers() & Qt::ShiftModifier) ? PR_TRUE : PR_FALSE;
+    aEvent.isControl = (aQEvent->modifiers() & Qt::ControlModifier) ? PR_TRUE : PR_FALSE;
+    aEvent.isAlt     = (aQEvent->modifiers() & Qt::AltModifier) ? PR_TRUE : PR_FALSE;
+    aEvent.isMeta    = (aQEvent->modifiers() & Qt::MetaModifier) ? PR_TRUE : PR_FALSE;
     aEvent.time      = 0;
 
     // The transformations above and in gdk for the keyval are not invertible
