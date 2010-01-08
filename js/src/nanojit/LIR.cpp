@@ -1537,6 +1537,7 @@ namespace nanojit
                 case LIR_stfi:
                 case LIR_stb:
                 case LIR_sts:
+                case LIR_st32f:
                 case LIR_eq:
                 case LIR_lt:
                 case LIR_gt:
