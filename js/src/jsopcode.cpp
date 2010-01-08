@@ -1907,8 +1907,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
  */
 #define PROPAGATE_CALLNESS()                                                  \
     JS_BEGIN_MACRO                                                            \
-        if (ss->opcodes[ss->top - 1] == JSOP_CALL)                            \
+        if (ss->opcodes[ss->top - 1] == JSOP_CALL ||                          \
+            ss->opcodes[ss->top - 1] == JSOP_EVAL ||                          \
+            ss->opcodes[ss->top - 1] == JSOP_APPLY) {                         \
             saveop = JSOP_CALL;                                               \
+        }                                                                     \
     JS_END_MACRO
 
     cx = ss->sprinter.context;
