@@ -227,8 +227,6 @@ namespace nanojit
         LabelState *get(LIns *);
     };
 
-    typedef SeqBuilder<char*> StringList;
-
     /** map tracking the register allocation state at each bailout point
      *  (represented by SideExit*) in a trace fragment. */
     typedef HashMap<SideExit*, RegAlloc*> RegAllocMap;
