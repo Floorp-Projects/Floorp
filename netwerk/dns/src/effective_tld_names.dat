@@ -178,13 +178,14 @@ com.ai
 net.ai
 org.ai
 
-// al : http://www.inima.al/Domains.html
+// al : http://www.ert.gov.al/ert_alb/faq_det.html?Id=31
 al
-gov.al
-edu.al
-org.al
 com.al
+edu.al
+gov.al
+mil.al
 net.al
+org.al
 
 // am : http://en.wikipedia.org/wiki/.am
 am
@@ -226,6 +227,7 @@ aq
 e164.arpa
 in-addr.arpa
 ip6.arpa
+iris.arpa
 uri.arpa
 urn.arpa
 
@@ -239,10 +241,14 @@ asia
 // at : http://en.wikipedia.org/wiki/.at
 // Confirmed by registry <it@nic.at> 2008-06-17
 at
-gv.at
 ac.at
 co.at
+gv.at
 or.at
+
+// http://www.info.at/
+biz.at
+info.at
 
 // priv.at : http://www.nic.priv.at/
 // Submitted by registry <lendl@nic.at> 2008-06-09
@@ -305,11 +311,14 @@ rs.ba
 
 // bb : http://en.wikipedia.org/wiki/.bb
 bb
+biz.bb
 com.bb
 edu.bb
 gov.bb
+info.bb
 net.bb
 org.bb
+store.bb
 
 // bd : http://en.wikipedia.org/wiki/.bd
 *.bd
@@ -381,8 +390,10 @@ org.bi
 biz
 
 // bj : http://en.wikipedia.org/wiki/.bj
-// list of 2nd level tlds ?
 bj
+asso.bj
+barreau.bj
+gouv.bj
 
 // bm : http://www.bermudanic.bm/dnr-text.txt
 bm
@@ -506,6 +517,9 @@ mil.by
 // second-level domain, but it's being used as one (see www.google.com.by and
 // www.yahoo.com.by, for example), so we list it here for safety's sake.
 com.by
+
+// http://hoster.by/
+of.by
 
 // bz : http://en.wikipedia.org/wiki/.bz
 // http://www.belizenic.bz/
@@ -2440,6 +2454,7 @@ coop.mw
 edu.mw
 gov.mw
 int.mw
+museum.mw
 net.mw
 org.mw
 
@@ -2491,6 +2506,7 @@ name
 
 // nc : http://www.cctld.nc/
 nc
+asso.nc
 
 // ne : http://en.wikipedia.org/wiki/.ne
 ne
@@ -3455,7 +3471,6 @@ sr.gov.pl
 po.gov.pl
 pa.gov.pl
 // other functional domains
-med.pl
 ngo.pl
 irc.pl
 usenet.pl
@@ -3545,6 +3560,7 @@ rybnik.pl
 rzeszow.pl
 sanok.pl
 sejny.pl
+siedlce.pl
 slask.pl
 slupsk.pl
 sosnowiec.pl
@@ -3583,6 +3599,7 @@ zgorzelec.pl
 gda.pl
 gdansk.pl
 gdynia.pl
+med.pl
 sopot.pl
 // other geographical domains
 gliwice.pl
@@ -3964,23 +3981,31 @@ sm
 
 // sn : http://en.wikipedia.org/wiki/.sn
 sn
+art.sn
+com.sn
+edu.sn
+gouv.sn
+org.sn
+perso.sn
+univ.sn
 
 // sr : http://en.wikipedia.org/wiki/.sr
 sr
 
 // st : http://www.nic.st/html/policyrules/
 st
-gov.st
-saotome.st
-principe.st
-consulado.st
-org.st
-edu.st
-net.st
-com.st
-store.st
-mil.st
 co.st
+com.st
+consulado.st
+edu.st
+embaixada.st
+gov.st
+mil.st
+net.st
+org.st
+principe.st
+saotome.st
+store.st
 
 // su : http://en.wikipedia.org/wiki/.su
 su
@@ -4038,17 +4063,19 @@ or.th
 tj
 ac.tj
 biz.tj
-com.tj
 co.tj
+com.tj
 edu.tj
+go.tj
+gov.tj
 int.tj
+mil.tj
 name.tj
 net.tj
+nic.tj
 org.tj
+test.tj
 web.tj
-gov.tj
-go.tj
-mil.tj
 
 // tk : http://en.wikipedia.org/wiki/.tk
 tk

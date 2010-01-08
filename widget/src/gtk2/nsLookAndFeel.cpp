@@ -70,8 +70,6 @@ nscolor   nsLookAndFeel::sComboBoxText = 0;
 nscolor   nsLookAndFeel::sComboBoxBackground = 0;
 PRUnichar nsLookAndFeel::sInvisibleCharacter = PRUnichar('*');
 float     nsLookAndFeel::sCaretRatio = 0;
-nscolor   nsLookAndFeel::sEntryText = 0;
-nscolor   nsLookAndFeel::sEntryBackground = 0;
 
 //-------------------------------------------------------------------------
 //
@@ -335,12 +333,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
         break;
     case eColor__moz_menubarhovertext:
         aColor = sMenuBarHoverText;
-        break;
-    case eColor__moz_entrytext:
-        aColor = sEntryText;
-        break;
-    case eColor__moz_entry:
-        aColor = sEntryBackground;
         break;
     default:
         /* default color is BLACK */
@@ -755,7 +747,6 @@ nsLookAndFeel::InitLookAndFeel()
     GtkWidget *treeView = gtk_tree_view_new();
     GtkWidget *linkButton = gtk_link_button_new("http://example.com/");
     GtkWidget *menuBar = gtk_menu_bar_new();
-    GtkWidget *entry = gtk_entry_new();
 
     gtk_container_add(GTK_CONTAINER(button), label);
     gtk_container_add(GTK_CONTAINER(combobox), comboboxLabel);
@@ -764,7 +755,6 @@ nsLookAndFeel::InitLookAndFeel()
     gtk_container_add(GTK_CONTAINER(parent), linkButton);
     gtk_container_add(GTK_CONTAINER(parent), combobox);
     gtk_container_add(GTK_CONTAINER(parent), menuBar);
-    gtk_container_add(GTK_CONTAINER(parent), entry);
     gtk_container_add(GTK_CONTAINER(window), parent);
 
     gtk_widget_set_style(button, NULL);
@@ -774,7 +764,6 @@ nsLookAndFeel::InitLookAndFeel()
     gtk_widget_set_style(combobox, NULL);
     gtk_widget_set_style(comboboxLabel, NULL);
     gtk_widget_set_style(menuBar, NULL);
-    gtk_widget_set_style(entry, NULL);
 
     gtk_widget_realize(button);
     gtk_widget_realize(label);
@@ -783,7 +772,6 @@ nsLookAndFeel::InitLookAndFeel()
     gtk_widget_realize(combobox);
     gtk_widget_realize(comboboxLabel);
     gtk_widget_realize(menuBar);
-    gtk_widget_realize(entry);
 
     style = gtk_widget_get_style(label);
     if (style) {
@@ -803,23 +791,6 @@ nsLookAndFeel::InitLookAndFeel()
     if (style) {
         sMenuBarText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
         sMenuBarHoverText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_SELECTED]);
-    }
-
-    style = gtk_widget_get_style(entry);
-    if (style) {
-        sEntryText = GDK_COLOR_TO_NS_RGB(style->text[GTK_STATE_NORMAL]);
-        GdkColor c;
-        if (gtk_style_lookup_color(style, "ReversedTextColor", &c)) {
-            if (sEntryText == GDK_COLOR_TO_NS_RGB(c)) {
-                if (gtk_style_lookup_color(style, "ReversedBackgroundColor", &c))
-                    sEntryBackground = GDK_COLOR_TO_NS_RGB(c);
-                else
-                    sEntryBackground = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
-            } else {
-                sEntryBackground = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
-            }
-        } else
-            sEntryBackground = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
     }
 
     // GTK's guide to fancy odd row background colors:
@@ -869,7 +840,11 @@ nsLookAndFeel::InitLookAndFeel()
         sNativeHyperLinkText = NS_RGB(0x00,0x00,0xEE);
     }
 
+    gtk_widget_destroy(window);
+
     // invisible character styles
+    GtkWidget *entry = gtk_entry_new();
+    g_object_ref_sink(entry);
     guint value;
     g_object_get (entry, "invisible-char", &value, NULL);
     sInvisibleCharacter = PRUnichar(value);
@@ -879,7 +854,8 @@ nsLookAndFeel::InitLookAndFeel()
                          "cursor-aspect-ratio", &sCaretRatio,
                          NULL);
 
-    gtk_widget_destroy(window);
+    gtk_widget_destroy(entry);
+    g_object_unref(entry);
 }
 
 // virtual

@@ -96,6 +96,7 @@ typedef struct InstanceData {
   uint32_t timerID2;
   int32_t lastMouseX;
   int32_t lastMouseY;
+  int32_t widthAtLastPaint;
   int32_t paintCount;
   int32_t writeCount;
   int32_t writeReadyCount;
@@ -115,5 +116,7 @@ typedef struct InstanceData {
   void* fileBuf;
   bool crashOnDestroy;
 } InstanceData;
+
+void notifyDidPaint(InstanceData* instanceData);
 
 #endif // nptest_h_

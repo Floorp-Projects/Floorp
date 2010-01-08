@@ -910,7 +910,6 @@ pref("toolbar.customization.usesheet", false);
 #endif
 
 pref("dom.ipc.plugins.enabled", false);
-pref("dom.ipc.tabs.enabled", false);
 
 #ifdef XP_WIN
 #ifndef WINCE

@@ -444,8 +444,7 @@ members = [
     'nsIDOMStorage.removeItem',
     'nsIDOMStorage.clear',
     'nsIDOMStorageItem.value',
-    'nsIDOMStorageWindow.sessionStorage',
-    'nsIDOMStorageWindow.globalStorage',
+    'nsIDOMStorageWindow.*',
 
     # dom/interfaces/stylesheets - None.
 

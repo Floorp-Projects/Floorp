@@ -227,7 +227,7 @@ pluginDraw(InstanceData* instanceData)
   if (instanceData->hasWidget)
     ::EndPaint((HWND)instanceData->window.window, &ps);
 
-  ++instanceData->paintCount;
+  notifyDidPaint(instanceData);
 }
 
 /* script interface */

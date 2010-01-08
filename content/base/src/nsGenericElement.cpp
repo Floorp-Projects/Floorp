@@ -3007,9 +3007,8 @@ nsGenericElement::SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
     // be in a document, if we're clearing animation effects on a target node
     // that's been detached since the previous animation sample.)
     if (doc) {
-      nsPresShellIterator iter(doc);
-      nsCOMPtr<nsIPresShell> shell;
-      while (shell = iter.GetNextShell()) {
+      nsCOMPtr<nsIPresShell> shell = doc->GetPrimaryShell();
+      if (shell) {
         nsPresContext* presContext = shell->GetPresContext();
         presContext->SMILOverrideStyleChanged(this);
       }

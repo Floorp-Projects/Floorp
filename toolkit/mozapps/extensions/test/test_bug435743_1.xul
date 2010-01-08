@@ -133,6 +133,14 @@ function addCertOverrides() {
     req.send(null);
   }
   catch (e) { }
+  try {
+    req = new XMLHttpRequest();
+    req.open("GET", "https://expired.example.com/" + updaterdf, false);
+    req.channel.notificationCallbacks = new badCertListener("expired.example.com",
+                                                            Ci.nsICertOverrideService.ERROR_TIME);
+    req.send(null);
+  }
+  catch (e) { }
 }
 
 function makeAddon(id, updateURL) {
@@ -164,6 +172,7 @@ function test() {
     makeAddon("1_3", "https://nocert.example.com/" + updaterdf),
     makeAddon("1_4", "https://self-signed.example.com/" + updaterdf),
     makeAddon("1_5", "https://untrusted.example.com/" + updaterdf),
+    makeAddon("1_6", "https://expired.example.com/" + updaterdf),
 
     // Tests that redirecting from http to other servers works as expected
     makeAddon("2_1", "http://example.com/" + redirect + "http://example.com/" + updaterdf),
@@ -171,6 +180,7 @@ function test() {
     makeAddon("2_3", "http://example.com/" + redirect + "https://nocert.example.com/" + updaterdf),
     makeAddon("2_4", "http://example.com/" + redirect + "https://self-signed.example.com/" + updaterdf),
     makeAddon("2_5", "http://example.com/" + redirect + "https://untrusted.example.com/" + updaterdf),
+    makeAddon("2_6", "http://example.com/" + redirect + "https://expired.example.com/" + updaterdf),
 
     // Tests that redirecting from valid https to other servers works as expected
     makeAddon("3_1", "https://example.com/" + redirect + "http://example.com/" + updaterdf),
@@ -178,6 +188,7 @@ function test() {
     makeAddon("3_3", "https://example.com/" + redirect + "https://nocert.example.com/" + updaterdf),
     makeAddon("3_4", "https://example.com/" + redirect + "https://self-signed.example.com/" + updaterdf),
     makeAddon("3_5", "https://example.com/" + redirect + "https://untrusted.example.com/" + updaterdf),
+    makeAddon("3_6", "https://example.com/" + redirect + "https://expired.example.com/" + updaterdf),
 
     // Tests that redirecting from nocert https to other servers works as expected
     makeAddon("4_1", "https://nocert.example.com/" + redirect + "http://example.com/" + updaterdf),
@@ -185,6 +196,7 @@ function test() {
     makeAddon("4_3", "https://nocert.example.com/" + redirect + "https://nocert.example.com/" + updaterdf),
     makeAddon("4_4", "https://nocert.example.com/" + redirect + "https://self-signed.example.com/" + updaterdf),
     makeAddon("4_5", "https://nocert.example.com/" + redirect + "https://untrusted.example.com/" + updaterdf),
+    makeAddon("4_6", "https://nocert.example.com/" + redirect + "https://expired.example.com/" + updaterdf),
 
     // Tests that redirecting from self-signed https to other servers works as expected
     makeAddon("5_1", "https://self-signed.example.com/" + redirect + "http://example.com/" + updaterdf),
@@ -192,13 +204,23 @@ function test() {
     makeAddon("5_3", "https://self-signed.example.com/" + redirect + "https://nocert.example.com/" + updaterdf),
     makeAddon("5_4", "https://self-signed.example.com/" + redirect + "https://self-signed.example.com/" + updaterdf),
     makeAddon("5_5", "https://self-signed.example.com/" + redirect + "https://untrusted.example.com/" + updaterdf),
+    makeAddon("5_6", "https://self-signed.example.com/" + redirect + "https://expired.example.com/" + updaterdf),
 
     // Tests that redirecting from untrusted https to other servers works as expected
     makeAddon("6_1", "https://untrusted.example.com/" + redirect + "http://example.com/" + updaterdf),
     makeAddon("6_2", "https://untrusted.example.com/" + redirect + "https://example.com/" + updaterdf),
     makeAddon("6_3", "https://untrusted.example.com/" + redirect + "https://nocert.example.com/" + updaterdf),
     makeAddon("6_4", "https://untrusted.example.com/" + redirect + "https://self-signed.example.com/" + updaterdf),
-    makeAddon("6_5", "https://untrusted.example.com/" + redirect + "https://untrusted.example.com/" + updaterdf)
+    makeAddon("6_5", "https://untrusted.example.com/" + redirect + "https://untrusted.example.com/" + updaterdf),
+    makeAddon("6_6", "https://untrusted.example.com/" + redirect + "https://expired.example.com/" + updaterdf),
+
+    // Tests that redirecting from expired https to other servers works as expected
+    makeAddon("7_1", "https://expired.example.com/" + redirect + "http://example.com/" + updaterdf),
+    makeAddon("7_2", "https://expired.example.com/" + redirect + "https://example.com/" + updaterdf),
+    makeAddon("7_3", "https://expired.example.com/" + redirect + "https://nocert.example.com/" + updaterdf),
+    makeAddon("7_4", "https://expired.example.com/" + redirect + "https://self-signed.example.com/" + updaterdf),
+    makeAddon("7_5", "https://expired.example.com/" + redirect + "https://untrusted.example.com/" + updaterdf),
+    makeAddon("7_6", "https://expired.example.com/" + redirect + "https://expired.example.com/" + updaterdf)
   ];
 
   new UpdateRunner(gAddons, check_pt_1);
@@ -217,6 +239,7 @@ function finish() {
   cos.clearValidityOverride("nocert.example.com", -1);
   cos.clearValidityOverride("self-signed.example.com", -1);
   cos.clearValidityOverride("untrusted.example.com", -1);
+  cos.clearValidityOverride("expired.example.com", -1);
 
   SimpleTest.finish();
 }
@@ -232,6 +255,8 @@ function check_pt_1(gResults) {
      "Should have seen a failure for self-signed https update url");
   is(gResults["bug435743_1_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for untrusted https update url");
+  is(gResults["bug435743_1_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for expired https update url");
 
   is(gResults["bug435743_2_1@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_NO_UPDATE,
      "Should have seen no failure for a http to http redirect");
@@ -243,6 +268,8 @@ function check_pt_1(gResults) {
      "Should have seen a failure for a http to self-signed https redirect");
   is(gResults["bug435743_2_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a http to untrusted https update url");
+  is(gResults["bug435743_3_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a http to expired https update url");
 
   is(gResults["bug435743_3_1@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a https to http redirect");
@@ -254,6 +281,8 @@ function check_pt_1(gResults) {
      "Should have seen a failure for a https to self-signed https redirect");
   is(gResults["bug435743_3_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a https to untrusted https redirect");
+  is(gResults["bug435743_3_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a https to expired https redirect");
 
   is(gResults["bug435743_4_1@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a nocert https to http redirect");
@@ -265,6 +294,8 @@ function check_pt_1(gResults) {
      "Should have seen a failure for a nocert https to self-signed https redirect");
   is(gResults["bug435743_4_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a nocert https to untrusted https redirect");
+  is(gResults["bug435743_4_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a nocert https to expired https redirect");
 
   is(gResults["bug435743_5_1@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a self-signed https to http redirect");
@@ -276,6 +307,8 @@ function check_pt_1(gResults) {
      "Should have seen a failure for a self-signed https to self-signed https redirect");
   is(gResults["bug435743_5_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a self-signed https to untrusted https redirect");
+  is(gResults["bug435743_5_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a self-signed https to expired https redirect");
 
   is(gResults["bug435743_6_1@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a untrusted https to http redirect");
@@ -287,6 +320,21 @@ function check_pt_1(gResults) {
      "Should have seen a failure for a untrusted https to self-signed https redirect");
   is(gResults["bug435743_6_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a untrusted https to untrusted https redirect");
+  is(gResults["bug435743_6_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a untrusted https to expired https redirect");
+
+  is(gResults["bug435743_7_1@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a expired https to http redirect");
+  is(gResults["bug435743_7_2@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a expired https to https redirect");
+  is(gResults["bug435743_7_3@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a expired https to nocert https redirect");
+  is(gResults["bug435743_7_4@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a expired https to self-signed https redirect");
+  is(gResults["bug435743_7_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a expired https to untrusted https redirect");
+  is(gResults["bug435743_7_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a expired https to expired https redirect");
 
   addCertOverrides()
 
@@ -304,6 +352,8 @@ function check_pt_2(gResults) {
      "Should have seen a failure for self-signed https update url");
   is(gResults["bug435743_1_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for untrusted https update url");
+  is(gResults["bug435743_1_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for expired https update url");
 
   // Note that redirects from insecure http to broken https with exceptions is
   // allowed. They were insecure to start with so things can't get any worse
@@ -317,6 +367,8 @@ function check_pt_2(gResults) {
      "Should have seen no failure for a http to self-signed https redirect");
   is(gResults["bug435743_2_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_NO_UPDATE,
      "Should have seen no failure for a http to untrusted https update url");
+  is(gResults["bug435743_2_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_NO_UPDATE,
+     "Should have seen no failure for a http to expired https update url");
 
   is(gResults["bug435743_3_1@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a https to http redirect");
@@ -328,6 +380,8 @@ function check_pt_2(gResults) {
      "Should have seen a failure for a https to self-signed https redirect");
   is(gResults["bug435743_3_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a https to untrusted https redirect");
+  is(gResults["bug435743_3_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a https to expired https redirect");
 
   is(gResults["bug435743_4_1@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a nocert https to http redirect");
@@ -339,6 +393,8 @@ function check_pt_2(gResults) {
      "Should have seen a failure for a nocert https to self-signed https redirect");
   is(gResults["bug435743_4_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a nocert https to untrusted https redirect");
+  is(gResults["bug435743_4_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a nocert https to expired https redirect");
 
   is(gResults["bug435743_5_1@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a self-signed https to http redirect");
@@ -350,6 +406,8 @@ function check_pt_2(gResults) {
      "Should have seen a failure for a self-signed https to self-signed https redirect");
   is(gResults["bug435743_5_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a self-signed https to untrusted https redirect");
+  is(gResults["bug435743_5_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a self-signed https to expired https redirect");
 
   is(gResults["bug435743_6_1@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a untrusted https to http redirect");
@@ -361,6 +419,21 @@ function check_pt_2(gResults) {
      "Should have seen a failure for a untrusted https to self-signed https redirect");
   is(gResults["bug435743_6_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
      "Should have seen a failure for a untrusted https to untrusted https redirect");
+  is(gResults["bug435743_6_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a untrusted https to expired https redirect");
+
+  is(gResults["bug435743_7_1@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a expired https to http redirect");
+  is(gResults["bug435743_7_2@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a expired https to https redirect");
+  is(gResults["bug435743_7_3@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a expired https to nocert https redirect");
+  is(gResults["bug435743_7_4@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a expired https to self-signed https redirect");
+  is(gResults["bug435743_7_5@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a expired https to untrusted https redirect");
+  is(gResults["bug435743_7_6@tests.mozilla.org"], Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE,
+     "Should have seen a failure for a expired https to expired https redirect");
 
   finish();
 }

@@ -139,7 +139,6 @@
 #include "nsIProperties.h"
 #include "nsISupportsPrimitives.h"
 #include "nsEventDispatcher.h"
-#include "nsPresShellIterator.h"
 
 #include "nsServiceManagerUtils.h"
 #include "nsITimer.h"
@@ -2751,13 +2750,11 @@ nsEventStateManager::GetParentScrollingView(nsInputEvent *aEvent,
   }
 
   nsIPresShell *pPresShell = nsnull;
-  nsPresShellIterator iter(parentDoc);
-  nsCOMPtr<nsIPresShell> tmpPresShell;
-  while ((tmpPresShell = iter.GetNextShell())) {
+  nsIPresShell *tmpPresShell = parentDoc->GetPrimaryShell();
+  if (tmpPresShell) {
     NS_ENSURE_TRUE(tmpPresShell->GetPresContext(), NS_ERROR_FAILURE);
     if (tmpPresShell->GetPresContext()->Type() == aPresContext->Type()) {
       pPresShell = tmpPresShell;
-      break;
     }
   }
   if (!pPresShell)

@@ -188,7 +188,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsIWebNavigation.h"
 #include "nsWeakPtr.h"
 #include "nsEventDispatcher.h"
-#include "nsPresShellIterator.h"
 
 //paint forcing
 #include "prenv.h"
