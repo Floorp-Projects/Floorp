@@ -8352,7 +8352,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
          * that will inform the oracle and cause a non-demoted trace to be
          * attached that uses floating-point math for this operation.
          */
-        if (!result->isconst() && (!IsOverflowSafe(v, d0) || !IsOverflowSafe(v, d1))) {
+        if (!result->isconst() && result->isop(v) && (!IsOverflowSafe(v, d0) || !IsOverflowSafe(v, d1))) {
             exit = snapshot(OVERFLOW_EXIT);
             guard(false, lir->ins1(LIR_ov, result), exit);
             if (v == LIR_mul) // make sure we don't lose a -0
@@ -10417,7 +10417,7 @@ TraceRecorder::record_JSOP_NEG()
             (!JSVAL_IS_DOUBLE(v) || !JSDOUBLE_IS_NEGZERO(*JSVAL_TO_DOUBLE(v))) &&
             -asNumber(v) == (int)-asNumber(v)) {
             a = lir->ins1(LIR_neg, ::demote(lir, a));
-            if (!a->isconst()) {
+            if (!a->isconst() && a->isop(LIR_neg)) {
                 VMSideExit* exit = snapshot(OVERFLOW_EXIT);
                 guard(false, lir->ins1(LIR_ov, a), exit);
                 guard(false, lir->ins2i(LIR_eq, a, 0), exit);
