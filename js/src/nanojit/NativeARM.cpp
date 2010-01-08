@@ -124,7 +124,7 @@ Assembler::CountLeadingZeroes(uint32_t data)
         :   "=r"    (leading_zeroes)
         :   "r"     (data)
     );
-#elif defined(WINCE)
+#elif defined(UNDER_CE)
     // WinCE can do this with an intrinsic.
     leading_zeroes = _CountLeadingZeros(data);
 #else
