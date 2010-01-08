@@ -5,10 +5,10 @@
 	Originator:		Blake Chaffin	6/18/2007
 */
 
-/* { dg-do run { xfail mips*-*-* arm*-*-* strongarm*-*-* xscale*-*-* } } */
+/* { dg-excess-errors "" { target x86_64-*-mingw* x86_64-*-cygwin* } } */
+/* { dg-do run { xfail strongarm*-*-* xscale*-*-* } } */
 /* { dg-options -mlong-double-128 { target powerpc64*-*-* } } */
-
-#include <stdint.h>
+/* { dg-output "" { xfail x86_64-*-mingw* x86_64-*-cygwin* } } */
 
 #include "ffitest.h"
 
@@ -120,41 +120,41 @@ test_large_fn(
 {
 	BigStruct	retVal	= {
 		ui8_1 + 1, si8_1 + 1, ui16_1 + 1, si16_1 + 1, ui32_1 + 1, si32_1 + 1,
-			ui64_1 + 1, si64_1 + 1, f_1 + 1, d_1 + 1, ld_1 + 1, (char*)((long)p_1 + 1), 
+			ui64_1 + 1, si64_1 + 1, f_1 + 1, d_1 + 1, ld_1 + 1, (char*)((intptr_t)p_1 + 1), 
 		ui8_2 + 2, si8_2 + 2, ui16_2 + 2, si16_2 + 2, ui32_2 + 2, si32_2 + 2,
-			ui64_2 + 2, si64_2 + 2, f_2 + 2, d_2 + 2, ld_2 + 2, (char*)((long)p_2 + 2), 
+			ui64_2 + 2, si64_2 + 2, f_2 + 2, d_2 + 2, ld_2 + 2, (char*)((intptr_t)p_2 + 2), 
 		ui8_3 + 3, si8_3 + 3, ui16_3 + 3, si16_3 + 3, ui32_3 + 3, si32_3 + 3,
-			ui64_3 + 3, si64_3 + 3, f_3 + 3, d_3 + 3, ld_3 + 3, (char*)((long)p_3 + 3), 
+			ui64_3 + 3, si64_3 + 3, f_3 + 3, d_3 + 3, ld_3 + 3, (char*)((intptr_t)p_3 + 3), 
 		ui8_4 + 4, si8_4 + 4, ui16_4 + 4, si16_4 + 4, ui32_4 + 4, si32_4 + 4,
-			ui64_4 + 4, si64_4 + 4, f_4 + 4, d_4 + 4, ld_4 + 4, (char*)((long)p_4 + 4), 
+			ui64_4 + 4, si64_4 + 4, f_4 + 4, d_4 + 4, ld_4 + 4, (char*)((intptr_t)p_4 + 4), 
 		ui8_5 + 5, si8_5 + 5};
 
-	printf("%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p "
-		"%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p "
-		"%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p "
-		"%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p %hhu %hhd: "
-		"%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p "
-		"%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p "
-		"%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p "
-		"%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p %hhu %hhd\n",
-		ui8_1, si8_1, ui16_1, si16_1, ui32_1, si32_1, ui64_1, si64_1, f_1, d_1, ld_1, p_1,
-		ui8_2, si8_2, ui16_2, si16_2, ui32_2, si32_2, ui64_2, si64_2, f_2, d_2, ld_2, p_2,
-		ui8_3, si8_3, ui16_3, si16_3, ui32_3, si32_3, ui64_3, si64_3, f_3, d_3, ld_3, p_3,
-		ui8_4, si8_4, ui16_4, si16_4, ui32_4, si32_4, ui64_4, si64_4, f_4, d_4, ld_4, p_4, ui8_5, si8_5,
+	printf("%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx "
+		"%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx "
+		"%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx "
+		"%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx %hhu %hhd: "
+		"%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx "
+		"%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx "
+		"%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx "
+		"%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx %hhu %hhd\n",
+	       ui8_1, si8_1, ui16_1, si16_1, ui32_1, si32_1, ui64_1, si64_1, f_1, d_1, ld_1, (unsigned long)p_1,
+		ui8_2, si8_2, ui16_2, si16_2, ui32_2, si32_2, ui64_2, si64_2, f_2, d_2, ld_2, (unsigned long)p_2,
+		ui8_3, si8_3, ui16_3, si16_3, ui32_3, si32_3, ui64_3, si64_3, f_3, d_3, ld_3, (unsigned long)p_3,
+		ui8_4, si8_4, ui16_4, si16_4, ui32_4, si32_4, ui64_4, si64_4, f_4, d_4, ld_4, (unsigned long)p_4, ui8_5, si8_5,
 		retVal.a, retVal.b, retVal.c, retVal.d, retVal.e, retVal.f,
-		retVal.g, retVal.h, retVal.i, retVal.j, retVal.k, retVal.l,
+	       retVal.g, retVal.h, retVal.i, retVal.j, retVal.k, (unsigned long)retVal.l,
 		retVal.m, retVal.n, retVal.o, retVal.p, retVal.q, retVal.r,
-		retVal.s, retVal.t, retVal.u, retVal.v, retVal.w, retVal.x,
+	       retVal.s, retVal.t, retVal.u, retVal.v, retVal.w, (unsigned long)retVal.x,
 		retVal.y, retVal.z, retVal.aa, retVal.bb, retVal.cc, retVal.dd,
-		retVal.ee, retVal.ff, retVal.gg, retVal.hh, retVal.ii, retVal.jj,
+	       retVal.ee, retVal.ff, retVal.gg, retVal.hh, retVal.ii, (unsigned long)retVal.jj,
 		retVal.kk, retVal.ll, retVal.mm, retVal.nn, retVal.oo, retVal.pp,
-		retVal.qq, retVal.rr, retVal.ss, retVal.tt, retVal.uu, retVal.vv, retVal.ww, retVal.xx);
+	       retVal.qq, retVal.rr, retVal.ss, retVal.tt, retVal.uu, (unsigned long)retVal.vv, retVal.ww, retVal.xx);
 
 	return	retVal;
 }
 
 static void
-cls_large_fn(ffi_cif* cif, void* resp, void** args, void* userdata)
+cls_large_fn(ffi_cif* cif __UNUSED__, void* resp, void** args, void* userdata __UNUSED__)
 {
 	uint8_t		ui8_1	= *(uint8_t*)args[0];
 	int8_t		si8_1	= *(int8_t*)args[1];
@@ -216,18 +216,10 @@ cls_large_fn(ffi_cif* cif, void* resp, void** args, void* userdata)
 }
 
 int
-main(int argc, const char** argv)
+main(int argc __UNUSED__, const char** argv __UNUSED__)
 {
-#ifndef USING_MMAP
-	static ffi_closure cl;
-#endif
-	ffi_closure *pcl;
-
-#ifdef USING_MMAP
-	pcl = allocate_mmap(sizeof(ffi_closure));
-#else
-	pcl = &cl;
-#endif
+        void *code;
+	ffi_closure *pcl = ffi_closure_alloc(sizeof(ffi_closure), &code);
 
 	ffi_cif		cif;
 	ffi_type*	argTypes[51];
@@ -235,7 +227,9 @@ main(int argc, const char** argv)
 
 	ffi_type	ret_struct_type;
 	ffi_type*	st_fields[51];
-	BigStruct	retVal	= {0};
+	BigStruct	retVal;
+
+	memset (&retVal, 0, sizeof(retVal));
 
 	ret_struct_type.size = 0;
 	ret_struct_type.alignment = 0;
@@ -302,46 +296,46 @@ main(int argc, const char** argv)
 
 	ffi_call(&cif, FFI_FN(test_large_fn), &retVal, argValues);
 	// { dg-output "1 2 3 4 5 6 7 8 9 10 11 0x12345678 1 2 3 4 5 6 7 8 9 10 11 0x12345678 1 2 3 4 5 6 7 8 9 10 11 0x12345678 1 2 3 4 5 6 7 8 9 10 11 0x12345678 1 2: 2 3 4 5 6 7 8 9 10 11 12 0x12345679 3 4 5 6 7 8 9 10 11 12 13 0x1234567a 4 5 6 7 8 9 10 11 12 13 14 0x1234567b 5 6 7 8 9 10 11 12 13 14 15 0x1234567c 6 7" }
-	printf("res: %hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p "
-		"%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p "
-		"%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p "
-		"%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p %hhu %hhd\n",
+	printf("res: %hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx "
+		"%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx "
+		"%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx "
+		"%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx %hhu %hhd\n",
 		retVal.a, retVal.b, retVal.c, retVal.d, retVal.e, retVal.f,
-		retVal.g, retVal.h, retVal.i, retVal.j, retVal.k, retVal.l,
+	       retVal.g, retVal.h, retVal.i, retVal.j, retVal.k, (unsigned long)retVal.l,
 		retVal.m, retVal.n, retVal.o, retVal.p, retVal.q, retVal.r,
-		retVal.s, retVal.t, retVal.u, retVal.v, retVal.w, retVal.x,
+	       retVal.s, retVal.t, retVal.u, retVal.v, retVal.w, (unsigned long)retVal.x,
 		retVal.y, retVal.z, retVal.aa, retVal.bb, retVal.cc, retVal.dd,
-		retVal.ee, retVal.ff, retVal.gg, retVal.hh, retVal.ii, retVal.jj,
+	       retVal.ee, retVal.ff, retVal.gg, retVal.hh, retVal.ii, (unsigned long)retVal.jj,
 		retVal.kk, retVal.ll, retVal.mm, retVal.nn, retVal.oo, retVal.pp,
-		retVal.qq, retVal.rr, retVal.ss, retVal.tt, retVal.uu, retVal.vv, retVal.ww, retVal.xx);
+	       retVal.qq, retVal.rr, retVal.ss, retVal.tt, retVal.uu, (unsigned long)retVal.vv, retVal.ww, retVal.xx);
 	// { dg-output "\nres: 2 3 4 5 6 7 8 9 10 11 12 0x12345679 3 4 5 6 7 8 9 10 11 12 13 0x1234567a 4 5 6 7 8 9 10 11 12 13 14 0x1234567b 5 6 7 8 9 10 11 12 13 14 15 0x1234567c 6 7" }
 
-	CHECK(ffi_prep_closure(pcl, &cif, cls_large_fn, NULL) == FFI_OK);
+	CHECK(ffi_prep_closure_loc(pcl, &cif, cls_large_fn, NULL, code) == FFI_OK);
 
 	retVal	= ((BigStruct(*)(
 		uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t, int64_t, float, double, long double, char*,
 		uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t, int64_t, float, double, long double, char*,
 		uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t, int64_t, float, double, long double, char*,
 		uint8_t, int8_t, uint16_t, int16_t, uint32_t, int32_t, uint64_t, int64_t, float, double, long double, char*,
-		uint8_t, int8_t))(pcl))(
+		uint8_t, int8_t))(code))(
 		ui8, si8, ui16, si16, ui32, si32, ui64, si64, f, d, ld, p,
 		ui8, si8, ui16, si16, ui32, si32, ui64, si64, f, d, ld, p,
 		ui8, si8, ui16, si16, ui32, si32, ui64, si64, f, d, ld, p,
 		ui8, si8, ui16, si16, ui32, si32, ui64, si64, f, d, ld, p,
 		ui8, si8);
 	// { dg-output "\n1 2 3 4 5 6 7 8 9 10 11 0x12345678 1 2 3 4 5 6 7 8 9 10 11 0x12345678 1 2 3 4 5 6 7 8 9 10 11 0x12345678 1 2 3 4 5 6 7 8 9 10 11 0x12345678 1 2: 2 3 4 5 6 7 8 9 10 11 12 0x12345679 3 4 5 6 7 8 9 10 11 12 13 0x1234567a 4 5 6 7 8 9 10 11 12 13 14 0x1234567b 5 6 7 8 9 10 11 12 13 14 15 0x1234567c 6 7" }
-	printf("res: %hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p "
-		"%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p "
-		"%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p "
-		"%hhu %hhd %hu %hd %u %d %llu %lld %.0f %.0f %L.0f %p %hhu %hhd\n",
+	printf("res: %hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx "
+		"%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx "
+		"%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx "
+		"%hhu %hhd %hu %hd %u %d %" PRIu64 " %" PRId64 " %.0f %.0f %.0Lf %#lx %hhu %hhd\n",
 		retVal.a, retVal.b, retVal.c, retVal.d, retVal.e, retVal.f,
-		retVal.g, retVal.h, retVal.i, retVal.j, retVal.k, retVal.l,
+	       retVal.g, retVal.h, retVal.i, retVal.j, retVal.k, (unsigned long)retVal.l,
 		retVal.m, retVal.n, retVal.o, retVal.p, retVal.q, retVal.r,
-		retVal.s, retVal.t, retVal.u, retVal.v, retVal.w, retVal.x,
+	       retVal.s, retVal.t, retVal.u, retVal.v, retVal.w, (unsigned long)retVal.x,
 		retVal.y, retVal.z, retVal.aa, retVal.bb, retVal.cc, retVal.dd,
-		retVal.ee, retVal.ff, retVal.gg, retVal.hh, retVal.ii, retVal.jj,
+	       retVal.ee, retVal.ff, retVal.gg, retVal.hh, retVal.ii, (unsigned long)retVal.jj,
 		retVal.kk, retVal.ll, retVal.mm, retVal.nn, retVal.oo, retVal.pp,
-		retVal.qq, retVal.rr, retVal.ss, retVal.tt, retVal.uu, retVal.vv, retVal.ww, retVal.xx);
+	       retVal.qq, retVal.rr, retVal.ss, retVal.tt, retVal.uu, (unsigned long)retVal.vv, retVal.ww, retVal.xx);
 	// { dg-output "\nres: 2 3 4 5 6 7 8 9 10 11 12 0x12345679 3 4 5 6 7 8 9 10 11 12 13 0x1234567a 4 5 6 7 8 9 10 11 12 13 14 0x1234567b 5 6 7 8 9 10 11 12 13 14 15 0x1234567c 6 7" }
 
     return 0;
