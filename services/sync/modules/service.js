@@ -635,19 +635,42 @@ WeaveSvc.prototype = {
   },
 
   _autoConnect: let (attempts = 0) function _autoConnect() {
-    // Can't autoconnect if we're missing these values
-    if (!this.username || !this.password || !this.passphrase)
-      return;
+    let reason = "";
+    if (this._mpLocked())
+      reason = "master password still locked";
 
-    // Nothing more to do on a successful login
-    if (this.login())
-      return;
+    // Can't autoconnect if we're missing these values
+    if (!reason) {
+      if (!this.username || !this.password || !this.passphrase)
+        return;
+
+      // Nothing more to do on a successful login
+      if (this.login())
+        return;
+    }
 
     // Something failed, so try again some time later
     let interval = this._calculateBackoff(++attempts, 60 * 1000);
-    this._log.debug("Autoconnect failed: " + Status.login + "; retry in " +
-      Math.ceil(interval / 1000) + " sec.");
+    this._log.debug("Autoconnect failed: " + (reason || Status.login) +
+      "; retry in " + Math.ceil(interval / 1000) + " sec.");
     Utils.delay(function() this._autoConnect(), interval, this, "_autoTimer");
+  },
+
+  _mpLocked: function _mpLocked() {
+    let modules = Cc["@mozilla.org/security/pkcs11moduledb;1"].
+                  getService(Ci.nsIPKCS11ModuleDB);
+    let sdrSlot = modules.findSlotByName("");
+    let status  = sdrSlot.status;
+    let slots = Ci.nsIPKCS11Slot;
+
+    if (status == slots.SLOT_READY || status == slots.SLOT_LOGGED_IN)
+      return false;
+
+    if (status == slots.SLOT_NOT_LOGGED_IN)
+      return true;
+
+    this._log.debug("something wacky happened, pretending MP is locked");
+    return true;
   },
 
   persistLogin: function persistLogin() {
