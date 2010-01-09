@@ -192,6 +192,12 @@ def loadIDL(parser, includePath, filename):
     idl.resolve(includePath, parser)
     return idl
 
+def removeStubMember(memberId, member):
+    if member not in member.iface.stubMembers:
+        raise UserError("Trying to remove member %s from interface %s, but it was never added"
+                        % (member.name, member.iface.name))
+    member.iface.stubMembers.remove(member)
+
 def addStubMember(memberId, member, traceable):
     # Check that the member is ok.
     mayTrace = False
@@ -295,7 +301,14 @@ def readConfigFile(filename, includePath, cachedir, traceable):
         return iface
 
     for memberId in conf.members:
+        add = True
         interfaceName, memberName = parseMemberId(memberId)
+
+        # If the interfaceName starts with -, then remove this entry from the list
+        if interfaceName[0] == '-':
+            add = False
+            interfaceName = interfaceName[1:]
+
         iface = getInterface(interfaceName, errorLoc='looking for %r' % memberId)
 
         if not iface.attributes.scriptable:
@@ -303,6 +316,9 @@ def readConfigFile(filename, includePath, cachedir, traceable):
                             "IDL file: %r." % (interfaceName, idlFile))
 
         if memberName == '*':
+            if not add:
+                raise UserError("Can't use negation in stub list with wildcard, in %s.*" % interfaceName)
+
             # Stub all scriptable members of this interface.
             for member in iface.members:
                 if member.kind in ('method', 'attribute') and not member.noscript:
@@ -319,14 +335,17 @@ def readConfigFile(filename, includePath, cachedir, traceable):
             if member in iface.stubMembers:
                 raise UserError("Member %s is specified more than once."
                                 % memberId)
-            mayTrace = True
-            if member.noscript:
-                cmc = conf.customMethodCalls.get(interfaceName + "_" + header.methodNativeName(member), None)
-                if cmc is not None and cmc.get('skipgen', False):
-                    # We're doing magic custom stuff for this, so pretend it's not noscript
-                    member.noscript = False
-                    mayTrace = False
-            addStubMember(memberId, member, traceable and mayTrace)
+            if add:
+                mayTrace = True
+                if member.noscript:
+                    cmc = conf.customMethodCalls.get(interfaceName + "_" + header.methodNativeName(member), None)
+                    if cmc is not None and cmc.get('skipgen', False):
+                        # We're doing magic custom stuff for this, so pretend it's not noscript
+                        member.noscript = False
+                        mayTrace = False
+                addStubMember(memberId, member, traceable and mayTrace)
+            else:
+                removeStubMember(memberId, member)
 
     for iface in conf.customReturnInterfaces:
         # just ensure that it exists so that we can grab it later
