@@ -216,7 +216,7 @@
                     <button class="muteButton"
                             mutelabel="&muteButton.muteLabel;"
                             unmutelabel="&muteButton.unmuteLabel;"/>
-                    <stack class="volumeStack" hidden="true">
+                    <stack class="volumeStack" hidden="true" fadeout="true">
                         <box class="volumeBackgroundBar"/>
                         <scale class="volumeControl" orient="vertical" dir="reverse" movetoclick="true"/>
                     </stack>
@@ -282,6 +282,7 @@
                 debug : false,
                 video : null,
                 videocontrols : null,
+                controlBar : null,
                 playButton : null,
                 muteButton : null,
                 volumeStack    : null,
@@ -291,6 +292,7 @@
                 scrubber       : null,
                 progressBar    : null,
                 bufferBar      : null,
+                statusOverlay  : null,
 
                 randomID : 0,
                 videoEvents : ["play", "pause", "ended", "volumechange", "loadeddata",
@@ -299,49 +301,6 @@
                                "seeking", "seeked", "emptied", "loadedmetadata",
                                "error", "suspend"],
 
-                // controlFader holds the fade state for the control bar.
-                controlFader  : {
-                                    name : "controls", // fader identifier
-                                    element : null,    // the element to fade in/out
-                                    runtime : 0,       // duration of active animation
-                                    fadingIn : false,  // are we fading in, or fading out?
-                                    isVisible : false, // is it at all visible?
-                                    timer : null,      // handle from setInterval()
-                                    delayTimer : null, // handle from setTimeout()
-                                    START_DELAY : 0,   // ms, delay before fading in
-                                    RUNTIME_MAX : 200, // ms
-                                    RUNTIME_STEP : 30  // ms
-                                },
-
-                // statusFader holds the fade state for the status overlay (inc. throbber)
-                statusFader : {
-                                    name : "status",
-                                    element : null,
-                                    runtime : 0,
-                                    fadingIn : false,
-                                    isVisible : false,
-                                    timer : null,
-                                    delayTimer : null,
-                                    START_DELAY : 750,
-                                    RUNTIME_MAX : 300,
-                                    RUNTIME_STEP : 20
-                                },
-
-                // volumeFader holds the fade state for the volume <scale>.
-                volumeFader : {
-                                    name : "volume",
-                                    element : null,
-                                    maxSlide : null, // height when extended, set in init()
-                                    runtime : 0,
-                                    fadingIn : false,
-                                    isVisible : false,
-                                    timer : null,
-                                    delayTimer : null,
-                                    START_DELAY : 0,
-                                    RUNTIME_MAX : 200,
-                                    RUNTIME_STEP : 15
-                                },
-
                 firstFrameShown : false,
                 timeUpdateCount : 0,
                 lastTimeUpdate : 0,
@@ -349,6 +308,7 @@
                 isAudioOnly : false,
 
                 setupStatusFader : function(immediate) {
+                    var show = false;
                     if (this.video.seeking || this.video.error ||
                         (this.video.paused || this.video.ended
                          ? this.video.readyState < this.video.HAVE_CURRENT_DATA
@@ -356,16 +316,15 @@
                         (this.timeUpdateCount <= 1 && !this.video.ended &&
                          this.video.readyState < this.video.HAVE_ENOUGH_DATA &&
                          this.video.networkState >= this.video.NETWORK_LOADING))
-                        this.startFadeIn(this.statusFader, immediate);
-                    else
-                        this.startFadeOut(this.statusFader, immediate);
+                        show = true;
 
-                    this.log("Status fader: seeking=" + this.video.seeking +
+                    this.log("Status overlay: seeking=" + this.video.seeking +
                              " error=" + this.video.error + " readyState=" + this.video.readyState +
                              " paused=" + this.video.paused + " ended=" + this.video.ended +
                              " networkState=" + this.video.networkState +
                              " timeUpdateCount=" + this.timeUpdateCount +
-                             " --> " + (this.statusFader.fadingIn ? "SHOW" : "HIDE"));
+                             " --> " + (show ? "SHOW" : "HIDE"));
+                    this.startFade(this.statusOverlay, show, immediate);
                 },
 
                 /*
@@ -478,7 +437,7 @@
                             if (this.video instanceof HTMLVideoElement &&
                                 (this.video.videoWidth == 0 || this.video.videoHeight == 0)) {
                                 this.isAudioOnly = true;
-                                this.startFadeIn(this.controlFader);
+                                this.startFadeIn(this.controlBar);
                             }
                             break;
                         case "loadeddata":
@@ -519,11 +478,11 @@
                                 this.setPlayButtonState(false);
 
                             this.timeUpdateCount++;
-                            // Whether we show the statusFader sometimes depends
+                            // Whether we show the statusOverlay sometimes depends
                             // on whether we've seen more than one timeupdate
                             // event (if we haven't, there hasn't been any
                             // "playback activity" and we may wish to show the
-                            // statusFader while we wait for HAVE_ENOUGH_DATA).
+                            // statusOverlay while we wait for HAVE_ENOUGH_DATA).
                             // If we've seen more than 2 timeupdate events,
                             // the count is no longer relevant to setupStatusFader.
                             if (this.timeUpdateCount <= 2)
@@ -560,7 +519,7 @@
                             this.setupStatusFader(true);
                             // If video hasn't shown anything yet, disable the controls.
                             if (!this.firstFrameShown)
-                                this.startFadeOut(this.controlFader);
+                                this.startFadeOut(this.controlBar);
                             break;
                         default:
                             this.log("!!! event " + aEvent.type + " not handled!");
@@ -570,15 +529,6 @@
                 terminateEventListeners : function () {
                     for each (var event in this.videoEvents)
                         this.video.removeEventListener(event, this, false);
-
-                    if (this.controlFader.timer)
-                        clearInterval(this.controlFader.timer);
-                    if (this.controlFader.delayTimer)
-                        clearInterval(this.controlFader.delayTimer);
-                    if (this.statusFader.timer)
-                        clearInterval(this.statusFader.timer);
-                    if (this.statusFader.delayTimer)
-                        clearTimeout(this.statusFader.delayTimer);
                     this.log("--- videocontrols terminated ---");
                 },
 
@@ -651,7 +601,7 @@
                     if (this.isEventWithin(event, this.muteButton, this.volumeStack))
                         return;
                     var isMouseOver = (event.type == "mouseover");
-                    this.startFade(this.volumeFader, isMouseOver);
+                    this.startFade(this.volumeStack, isMouseOver);
                 },
 
                 onMouseInOut : function (event) {
@@ -676,114 +626,52 @@
                         !(this.video.autoplay && this.video.mozAutoplayEnabled))
                         return;
 
-                    this.startFade(this.controlFader, isMouseOver);
+                    this.startFade(this.controlBar, isMouseOver);
                 },
 
-                startFadeIn : function (fader, immediate) {
-                    this.startFade(fader, true, immediate);
+                startFadeIn : function (element, immediate) {
+                    this.startFade(element, true, immediate);
                 },
 
-                startFadeOut : function (fader, immediate) {
-                    this.startFade(fader, false, immediate);
+                startFadeOut : function (element, immediate) {
+                    this.startFade(element, false, immediate);
                 },
 
-                startFade : function (fader, fadeIn, immediate) {
-                    // If the fader specifies a start delay, don't immediately fade in...
-                    // Unless there's already a fade underway, in which case we want to be
-                    // able to immediately reverse it (eg, a seeking event right after seeked).
-                    if (fadeIn && fader.START_DELAY && !immediate && !fader.timer) {
-                        function delayedFadeStart(self, fader) {
-                            self.log("Delated start timer fired.");
-                            fader.delayTimer = null;
-                            self.startFade(fader, true, true);
-                        }
-
-                        // If there's already a timer running, let it handle things.
-                        if (fader.delayTimer)
-                            return;
-
-                        this.log("Delaying " + fader.name + " fade-in...");
-                        fader.delayTimer = setTimeout(delayedFadeStart, fader.START_DELAY, this, fader);
-                        return;
-                    }
-
-                    // Cancel any delay timer (eg, if we start fading-out before it fires)
-                    if (fader.delayTimer) {
-                        this.log("Canceling " + fader.name + " fade-in delay...");
-                        clearTimeout(fader.delayTimer);
-                        fader.delayTimer = null;
-                    }
-
-
-                    // If we're already fading towards the desired state (or are
-                    // already there), then we don't need to do anything more.
-                    var directionChange = (fader.fadingIn != fadeIn);
-                    if (!directionChange)
-                        return;
-
-                    fader.fadingIn = fadeIn;
-                    this.log("Fading " + fader.name + (fader.fadingIn ? " in" : " out"));
-
-                    // When switching direction mid-fade, we want the reversed fade
-                    // to complete in the same amount of time as the current fade has
-                    // been running. So we invert the runtime.
-                    //
-                    // For example, if we're 20ms into a 100ms fade-in, then we want to
-                    // fade-out over 20ms. This is done by setting the .runtime to 80ms
-                    // (100-20), so that doFade will only animate for 20ms more.
-                    if (fader.runtime)
-                        fader.runtime = fader.RUNTIME_MAX - fader.runtime;
-
-                    if (!fader.timer) {
-                        fader.timer = setInterval(this.doFade, fader.RUNTIME_STEP, this, fader);
-                        // Perform the first fade step now, notably to make a fade-in
-                        // immediately activate the controls.
-                        this.doFade(this, fader, -(fader.RUNTIME_STEP - 1));
-                    }
-                },
-
-                doFade : function (self, fader, lateness) {
-                    // Update elapsed time, and compute position as a percent
-                    // of total. Last frame could run over, so clamp to 1.
-                    fader.runtime += fader.RUNTIME_STEP + lateness;
-                    var pos = fader.runtime / fader.RUNTIME_MAX;
-                    if (pos > 1)
-                        pos = 1;
-                    
+                startFade : function (element, fadeIn, immediate) {
                     // Bug 493523, the scrubber doesn't call valueChanged while hidden,
                     // so our dependent state (eg, timestamp in the thumb) will be stale.
                     // As a workaround, update it manually when it first becomes unhidden.
-                    if (fader.name == "controls" && fader.fadingIn && fader.element.hidden)
-                        self.scrubber.valueChanged("curpos", self.video.currentTime * 1000, false);
+                    if (element.className == "controlBar" && fadeIn && element.hidden)
+                        this.scrubber.valueChanged("curpos", this.video.currentTime * 1000, false);
 
-                    // Calculate the opacity for our position in the animation.
-                    var opacity;
-                    if (fader.fadingIn)
-                        opacity = Math.pow(pos, 0.5);
+                    if (immediate)
+                        element.setAttribute("immediate", true);
                     else
-                        opacity = Math.pow(1 - pos, 0.5);
-                    fader.isVisible = (opacity ? true : false);
-                    fader.element.style.opacity = opacity;
-                    // Hide the element to ignore mouse clicks and reduce throbber CPU usage.
-                    fader.element.setAttribute("hidden", !fader.isVisible);
+                        element.removeAttribute("immediate");
 
-                    // If this fader also has a slide effect, change the CSS margin-top too.
-                    if (fader.maxSlide) {
-                        var marginTop;
-                        if (fader.fadingIn)
-                            marginTop = Math.round(fader.maxSlide * Math.pow(pos, 0.5));
-                        else
-                            marginTop = Math.round(fader.maxSlide * Math.pow(1 - pos, 0.5));
-
-                        fader.element.style.marginTop = marginTop + "px";
+                    if (fadeIn) {
+                        element.setAttribute("hidden", false);
+                        // force style resolution, so that transition begins
+                        // when we remove the attribute.
+                        getComputedStyle(element, "").display;
+                        element.removeAttribute("fadeout");
+                    } else {
+                        element.setAttribute("fadeout", true);
                     }
+                },
 
-                    // Is the animation done?
-                    if (pos == 1) {
-                        clearInterval(fader.timer);
-                        fader.timer = null;
-                        fader.runtime = 0;
-                    }
+                onTransitionEnd : function (event) {
+                    // Ignore events for things other than opacity changes.
+                    if (event.propertyName != "opacity")
+                        return;
+
+                    var element = event.originalTarget;
+
+                    // Nothing to do when a fade *in* finishes.
+                    if (!element.hasAttribute("fadeout"))
+                        return;
+
+                    element.setAttribute("hidden", true);
                 },
 
                 togglePause : function () {
@@ -946,11 +834,8 @@
                     this.videocontrols = binding;
                     this.isAudioOnly = (this.video instanceof HTMLAudioElement);
 
-                    this.controlFader.element = document.getAnonymousElementByAttribute(binding, "class", "controlBar");
-                    this.statusFader.element  = document.getAnonymousElementByAttribute(binding, "class", "statusOverlay");
-                    this.volumeFader.element  = document.getAnonymousElementByAttribute(binding, "class", "volumeStack");
-
                     this.statusIcon    = document.getAnonymousElementByAttribute(binding, "class", "statusIcon");
+                    this.controlBar    = document.getAnonymousElementByAttribute(binding, "class", "controlBar");
                     this.playButton    = document.getAnonymousElementByAttribute(binding, "class", "playButton");
                     this.muteButton    = document.getAnonymousElementByAttribute(binding, "class", "muteButton");
                     this.volumeControl = document.getAnonymousElementByAttribute(binding, "class", "volumeControl");
@@ -960,6 +845,7 @@
                     this.scrubber      = document.getAnonymousElementByAttribute(binding, "class", "scrubber");
                     this.scrubberThumb = document.getAnonymousElementByAttribute(this.scrubber, "class", "scale-thumb");
                     this.durationLabel = document.getAnonymousElementByAttribute(binding, "class", "durationLabel");
+                    this.statusOverlay = document.getAnonymousElementByAttribute(binding, "class", "statusOverlay");
 
                     this.setupInitialState();
 
@@ -973,21 +859,13 @@
                     // go ahead and reveal the controls now, so they're an obvious user cue.
                     //
                     // (Note: the |controls| attribute is already handled via layout/style/html.css)
-                    if (!(this.video.autoplay && this.video.mozAutoplayEnabled) || !this.dynamicControls) {
-                        var fader = this.controlFader;
-                        fader.element.setAttribute("hidden", "false");
-                        fader.isVisible = true;
-                        fader.fadingIn = true;
-                    }
+                    var shouldShow = (!(this.video.autoplay && this.video.mozAutoplayEnabled) || !this.dynamicControls);
+                    this.startFade(this.controlBar, shouldShow, true);
 
                     // Use the handleEvent() callback for all media events.
                     for each (var event in this.videoEvents)
                         this.video.addEventListener(event, this, false);
 
-                    // Determine the height of the volumeFader when extended (which is controlled by CSS).
-                    // Its .clientHeight seems to be 0 here, so use the theme's initial value. (eg "-70px")
-                    this.volumeFader.maxSlide = parseInt(window.getComputedStyle(this.volumeStack, null)
-                                                               .getPropertyValue("margin-top"));
                     var self = this;
                     this.muteButton.addEventListener("command", function() { self.toggleMute(); }, false);
                     this.playButton.addEventListener("command", function() { self.togglePause(); }, false);
@@ -995,6 +873,8 @@
                     this.muteButton.addEventListener("mouseout",   function(e) { self.onVolumeMouseInOut(e); }, false);
                     this.volumeStack.addEventListener("mouseover", function(e) { self.onVolumeMouseInOut(e); }, false);
                     this.volumeStack.addEventListener("mouseout",  function(e) { self.onVolumeMouseInOut(e); }, false);
+
+                    this.videocontrols.addEventListener("transitionend", function(e) { self.onTransitionEnd(e); }, false);
 
                     // Make the <video> element keyboard accessible.
                     this.video.setAttribute("tabindex", 0);
