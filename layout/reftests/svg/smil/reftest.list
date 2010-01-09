@@ -58,7 +58,7 @@ include pause/reftest.list
 fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-fillopacity-1none.svg anim-standard-ref.svg
 == anim-fillopacity-1css.svg  anim-standard-ref.svg
-fails == anim-fillopacity-1xml.svg  anim-standard-ref.svg # bug 436276
+fails == anim-fillopacity-1xml.svg  anim-standard-ref.svg # bug 534028
 
 == anim-height-done-1a.svg anim-standard-ref.svg
 == anim-height-done-1b.svg anim-standard-ref.svg
@@ -88,7 +88,7 @@ fails == anim-fillopacity-1xml.svg  anim-standard-ref.svg # bug 436276
 == anim-retarget-8.svg anim-standard-ref.svg
 
 fails == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
-fails == anim-strokewidth-1xml.svg anim-standard-ref.svg # bug 436267
+fails == anim-strokewidth-1xml.svg anim-standard-ref.svg # bug 534028
 
 == anim-targethref-1.svg anim-standard-ref.svg
 == anim-targethref-2.svg anim-standard-ref.svg
