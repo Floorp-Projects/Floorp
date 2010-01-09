@@ -369,6 +369,12 @@ def substitute(template, vals):
 
 # From JSData2Native.
 argumentUnboxingTemplates = {
+    'octet':
+        "    uint32 ${name}_u32;\n"
+        "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}_u32))\n"
+        "        return JS_FALSE;\n"
+        "    uint8 ${name} = (uint8) ${name}_u32;\n",
+
     'short':
         "    int32 ${name}_i32;\n"
         "    if (!JS_ValueToECMAInt32(cx, ${argVal}, &${name}_i32))\n"
@@ -562,6 +568,10 @@ resultConvTemplates = {
     'void':
             "    ${jsvalRef} = JSVAL_VOID;\n"
             "    return JS_TRUE;\n",
+
+    'octet':
+        "    ${jsvalRef} = INT_TO_JSVAL((int32) result);\n"
+        "    return JS_TRUE;\n",
 
     'short':
         "    ${jsvalRef} = INT_TO_JSVAL((int32) result);\n"
@@ -907,7 +917,9 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
     if customMethodCall is not None:
         f.write(callTemplate)
 
-traceTypeMap = {
+# Only these types can be returned (note: no strings);
+# if the type isn't one of these, then traceTypeMap['_default'] is used
+traceReturnTypeMap = {
     'void':
         ["jsval ", "JSVAL", "JSVAL_VOID"],
     'boolean':
@@ -924,8 +936,12 @@ traceTypeMap = {
         ["jsdouble ", "DOUBLE", "0"],
     'double':
         ["jsdouble ", "DOUBLE", "0"],
+    }
 
-    # XXX STRING_FAIL can't return a null'd string, ask jorendorff, maybe a JSVAL_FAIL
+# This list extends the above list, but includes types that
+# are valid for arguments only, namely strings.  It also
+# includes the default jsval type.
+traceTypeMap = {
     '[astring]':
         ["JSString *", "STRING", "nsnull"],
     '[domstring]':
@@ -942,16 +958,31 @@ traceTypeMap = {
     }
 
 def getTraceType(type):
-    traceType = traceTypeMap.get(type) or traceTypeMap.get("_default")
+    type = getBuiltinOrNativeTypeName(type)
+    traceType = traceReturnTypeMap.get(type) or traceTypeMap.get(type) or traceTypeMap.get("_default")
+    assert traceType
+    return traceType[0]
+
+def getTraceReturnType(type):
+    type = getBuiltinOrNativeTypeName(type)
+    traceType = traceReturnTypeMap.get(type) or traceTypeMap.get("_default")
     assert traceType
     return traceType[0]
 
 def getTraceInfoType(type):
-    traceType = traceTypeMap.get(type) or traceTypeMap.get("_default")
+    type = getBuiltinOrNativeTypeName(type)
+    traceType = traceReturnTypeMap.get(type) or traceTypeMap.get(type) or traceTypeMap.get("_default")
+    assert traceType
+    return traceType[1]
+
+def getTraceInfoReturnType(type):
+    type = getBuiltinOrNativeTypeName(type)
+    traceType = traceReturnTypeMap.get(type) or traceTypeMap.get("_default")
     assert traceType
     return traceType[1]
 
 def getTraceInfoDefaultReturn(type):
+    type = getBuiltinOrNativeTypeName(type)
     traceType = traceTypeMap.get(type) or traceTypeMap.get("_default")
     assert traceType
     return traceType[2]
@@ -970,6 +1001,8 @@ def writeFailure(f, retval, indent):
     f.write(getFailureString(retval, indent))
 
 traceableArgumentConversionTemplates = {
+    'octet':
+          "    PRUint8 ${name} = (PRUint8) ${argVal};\n",
     'short':
           "    PRint16 ${name} = (PRint16) ${argVal};\n",
     'unsigned short':
@@ -1026,7 +1059,7 @@ def writeTraceableArgumentConversion(f, member, i, name, type, haveCcx,
                 "XPCVariant::newVariant(ccx, ${argVal})));\n"
                 "    if (!${name}) {\n")
             f.write(substitute(template, params))
-            writeFailure(f, getTraceInfoDefaultReturn(member.type), 2)
+            writeFailure(f, getTraceInfoDefaultReturn(member.realtype), 2)
             return rvdeclared
         elif type.name == 'nsIAtom':
             # Should have special atomizing behavior.  Fall through.
@@ -1047,17 +1080,19 @@ def writeTraceableArgumentConversion(f, member, i, name, type, haveCcx,
                 f.write("        xpc_qsThrowBadArgWithDetails(cx, rv, %d, "
                         "\"%s\", \"%s\");\n"
                         % (i, member.iface.name, member.name))
-            writeFailure(f, getTraceInfoDefaultReturn(member.type), 2)
+            writeFailure(f, getTraceInfoDefaultReturn(member.realtype), 2)
             return True
 
     print member
-    warn("Unable to unbox argument of type %s" % type.name)
+    warn("Unable to unbox argument of type %s (for traceable arg)" % type.name)
     f.write("    !; // TODO - Unbox argument %s = arg%d\n" % (name, i))
     return rvdeclared
 
 traceableResultConvTemplates = {
     'void':
         "    return JSVAL_VOID;\n",
+    'octet':
+        "    return uint32(result);\n",
     'short':
         "    return int32(result);\n",
     'unsigned short':
@@ -1068,6 +1103,10 @@ traceableResultConvTemplates = {
         "    return uint32(result);\n",
     'boolean':
         "    return result ? JS_TRUE : JS_FALSE;\n",
+    'float':
+        "    return jsdouble(result);\n",
+    'double':
+        "    return jsdouble(result);\n",
     '[domstring]':
         "    jsval rval;\n"
         "    if (!xpc_qsStringToJsval(cx, result, &rval)) {\n"
@@ -1112,7 +1151,7 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
     assert member.traceable
 
     traceInfo = {
-        'type': getTraceInfoType(member.type) + "_FAIL",
+        'type': getTraceInfoReturnType(member.realtype) + "_FAIL",
         'params': ["CONTEXT", "THIS"]
         }
 
@@ -1124,15 +1163,14 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
         return
 
     # Write the function
-    f.write("static %sFASTCALL\n" % getTraceType(member.type))
+    f.write("static %sFASTCALL\n" % getTraceReturnType(member.realtype))
     f.write("%s(JSContext *cx, JSObject *obj" % (stubName + "_tn"))
     if haveCcx or isInterfaceType(member.realtype):
         f.write(", JSObject *callee")
         traceInfo["params"].append("CALLEE")
     for i, param in enumerate(member.params):
-        type = getBuiltinOrNativeTypeName(param.realtype)
-        f.write(", %s_arg%d" % (getTraceType(type), i))
-        traceInfo["params"].append(getTraceInfoType(type))
+        f.write(", %s_arg%d" % (getTraceType(param.realtype), i))
+        traceInfo["params"].append(getTraceInfoType(param.realtype))
     f.write(")\n{\n");
     f.write("    XPC_QS_ASSERT_CONTEXT_OK(cx);\n")
 
@@ -1159,7 +1197,7 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
     else:
         f.write("    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, "
                 "&vp.array[0], nsnull)) {\n")
-    writeFailure(f, getTraceInfoDefaultReturn(member.type), 2)
+    writeFailure(f, getTraceInfoDefaultReturn(member.realtype), 2)
 
     argNames = []
 
@@ -1206,7 +1244,7 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
             # XXX Replace with a real error message!
             f.write("        xpc_qsThrowMethodFailedWithDetails(cx, rv, "
                     "\"%s\", \"%s\");\n" % (member.iface.name, member.name))
-        writeFailure(f, getTraceInfoDefaultReturn(member.type), 2)
+        writeFailure(f, getTraceInfoDefaultReturn(member.realtype), 2)
 
     # Convert the return value.
     writeTraceableResultConv(f, member.realtype)
