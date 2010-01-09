@@ -162,21 +162,18 @@ pref("extensions.update.url", "https://versioncheck.addons.mozilla.org/update/Ve
 
 /* preferences for the Get Add-ons pane */
 pref("extensions.getAddons.showPane", true);
-pref("extensions.getAddons.browseAddons", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%");
+pref("extensions.getAddons.browseAddons", "https://addons.mozilla.org/%LOCALE%/mobile/");
 pref("extensions.getAddons.maxResults", 5);
-pref("extensions.getAddons.recommended.browseURL", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/recommended");
+pref("extensions.getAddons.recommended.browseURL", "https://addons.mozilla.org/%LOCALE%/mobile/recommended/");
 pref("extensions.getAddons.recommended.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/list/featured/all/10/%OS%/%VERSION%");
-pref("extensions.getAddons.search.browseURL", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/mobile/search?q=%TERMS%");
+pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCALE%/mobile/search?q=%TERMS%");
 pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/mobile/api/%API_VERSION%/search/%TERMS%/all/10/%OS%/%VERSION%");
 
 /* blocklist preferences */
 pref("extensions.blocklist.enabled", true);
 pref("extensions.blocklist.interval", 86400);
 pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/2/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/");
-pref("extensions.blocklist.detailsURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/blocklist/");
-
-/* dictionary download preference */
-pref("browser.dictionaries.download.url", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/firefox/%VERSION%/dictionaries/");
+pref("extensions.blocklist.detailsURL", "https://www.mozilla.com/%LOCALE%/blocklist/");
 
 /* block popups by default, and notify the user about blocked popups */
 pref("dom.disable_open_during_load", true);
@@ -200,7 +197,7 @@ pref("accessibility.browsewithcaret_shortcut.enabled", false);
 pref("app.update.showInstalledUI", false);
 
 // pointer to the default engine name
-pref("browser.search.defaultenginename",      "chrome://browser/locale/region.properties");
+pref("browser.search.defaultenginename", "chrome://browser/locale/region.properties");
 // SSL error page behaviour
 pref("browser.ssl_override_behavior", 2);
 pref("browser.xul.error_pages.expert_bad_cert", false);
@@ -260,7 +257,7 @@ pref("browser.sessionhistory.max_entries", 50);
 pref("browser.history_expire_days", 180);
 pref("browser.history_expire_days_min", 90);
 pref("browser.history_expire_sites", 40000);
-pref("privacy.item.history",     true);
+pref("privacy.item.history", true);
 pref("browser.places.migratePostDataAnnotations", true);
 pref("browser.places.updateRecentTagsUri", true);
 pref("places.frecency.numVisits", 10);
@@ -322,8 +319,8 @@ pref("plugins.enabled", true);
 pref("plugins.force.wmode", "opaque");
 #endif
 
-// URL to the Learn More link XXX this is the firefox one.  Bug XXX fixes this.
-pref("browser.geolocation.warning.infoURL", "http://%LOCALE%.www.mozilla.com/%LOCALE%/firefox/geolocation/");
+// URL to the Learn More link XXX this is the firefox one.  Bug 495578 fixes this.
+pref("browser.geolocation.warning.infoURL", "http://www.mozilla.com/%LOCALE%/firefox/geolocation/");
 
 // base url for the wifi geolocation network provider
 pref("geo.wifi.uri", "https://www.google.com/loc/json");
@@ -364,12 +361,12 @@ pref("plugin.default_plugin_disabled", true);
 
 // product URLs
 // pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
-pref("app.releaseNotesURL", "http://www.mozilla.org/projects/fennec/%VERSION%/releasenotes/");
+pref("app.releaseNotesURL", "http://www.mozilla.org/projects/%APP%/%VERSION%/releasenotes/");
 //pref("app.support.baseURL", "http://support.mozilla.com/1/mobile/%VERSION%/%OS%/%LOCALE%/");
 pref("app.support.baseURL", "http://mobile.support.mozilla.com/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/faq/");
 pref("app.privacyURL", "http://www.mozilla.com/%LOCALE%/legal/privacy/firefox/mobile/");
-pref("app.creditsURL", "http://www.mozilla.com/%LOCALE%/mobile/credits");
+pref("app.creditsURL", "http://www.mozilla.com/%LOCALE%/mobile/credits/");
 
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
