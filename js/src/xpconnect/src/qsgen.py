@@ -264,6 +264,8 @@ class Configuration:
         # optional settings
         self.irregularFilenames = config.get('irregularFilenames', {})
         self.customIncludes = config.get('customIncludes', [])
+        self.customQuickStubs = config.get('customQuickStubs', [])
+        self.customReturnInterfaces = config.get('customReturnInterfaces', [])
         self.customMethodCalls = config.get('customMethodCalls', {})
 
 def readConfigFile(filename, includePath, cachedir, traceable):
@@ -317,7 +319,18 @@ def readConfigFile(filename, includePath, cachedir, traceable):
             if member in iface.stubMembers:
                 raise UserError("Member %s is specified more than once."
                                 % memberId)
-            addStubMember(memberId, member, traceable)
+            mayTrace = True
+            if member.noscript:
+                cmc = conf.customMethodCalls.get(interfaceName + "_" + header.methodNativeName(member), None)
+                if cmc is not None and cmc.get('skipgen', False):
+                    # We're doing magic custom stuff for this, so pretend it's not noscript
+                    member.noscript = False
+                    mayTrace = False
+            addStubMember(memberId, member, traceable and mayTrace)
+
+    for iface in conf.customReturnInterfaces:
+        # just ensure that it exists so that we can grab it later
+        iface = getInterface(iface, errorLoc='looking for %s' % (iface,))
 
     return conf, interfaces
 
@@ -708,6 +721,8 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
                 code = customMethodCall['setter_code']
             stubName = templateName
     else:
+        if customMethodCall.get('skipgen', False):
+            return
         callTemplate = ""
         code = customMethodCall['code']
 
@@ -1105,6 +1120,9 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
 
     customMethodCall = customMethodCalls.get(stubName, None)
 
+    if customMethodCall is not None and customMethodCall.get('skipgen', False):
+        return
+
     # Write the function
     f.write("static %sFASTCALL\n" % getTraceType(member.type))
     f.write("%s(JSContext *cx, JSObject *obj" % (stubName + "_tn"))
@@ -1458,13 +1476,16 @@ def writeStubFile(filename, headerFilename, conf, interfaces):
     try:
         f.write(stubTopTemplate % os.path.basename(headerFilename))
         N = 256
-        for customInclude in conf.customIncludes:
-            f.write('#include "%s"\n' % customInclude)
         resulttypes = []
         for iface in interfaces:
             resulttypes.extend(writeIncludesForInterface(iface))
+        resulttypes.extend(conf.customReturnInterfaces)
+        for customInclude in conf.customIncludes:
+            f.write('#include "%s"\n' % customInclude)
         f.write("\n\n")
         writeResultXPCInterfacesArray(f, conf, frozenset(resulttypes))
+        for customQS in conf.customQuickStubs:
+            f.write('#include "%s"\n' % customQS)
         for iface in interfaces:
             writeStubsForInterface(f, conf.customMethodCalls, iface)
         writeDefiner(f, conf, interfaces)
