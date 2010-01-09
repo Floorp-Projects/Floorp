@@ -1029,137 +1029,7 @@ nsHTMLTableElement::ParseAttribute(PRInt32 aNamespaceID,
                                               aResult);
 }
 
-static void 
-MapTableFrameInto(const nsMappedAttributes* aAttributes,
-                  nsRuleData* aData, PRUint8 aBorderStyle)
-{
-  if (!aData->mMarginData)
-    return;
 
-  // 0 out the sides that we want to hide based on the frame attribute
-  const nsAttrValue* frameValue = aAttributes->GetAttr(nsGkAtoms::frame);
-
-  if (frameValue && frameValue->Type() == nsAttrValue::eEnum) {
-    // adjust the border style based on the value of frame
-    switch (frameValue->GetEnumValue())
-    {
-    case NS_STYLE_TABLE_FRAME_NONE:
-      if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      if (aData->mMarginData->mBorderStyle.mRight.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      if (aData->mMarginData->mBorderStyle.mTop.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      if (aData->mMarginData->mBorderStyle.mBottom.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    case NS_STYLE_TABLE_FRAME_ABOVE:
-      if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      if (aData->mMarginData->mBorderStyle.mRight.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      if (aData->mMarginData->mBorderStyle.mBottom.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    case NS_STYLE_TABLE_FRAME_BELOW: 
-      if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      if (aData->mMarginData->mBorderStyle.mRight.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      if (aData->mMarginData->mBorderStyle.mTop.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    case NS_STYLE_TABLE_FRAME_HSIDES:
-      if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      if (aData->mMarginData->mBorderStyle.mRight.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    case NS_STYLE_TABLE_FRAME_LEFT:
-      if (aData->mMarginData->mBorderStyle.mRight.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mRight.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      if (aData->mMarginData->mBorderStyle.mTop.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      if (aData->mMarginData->mBorderStyle.mBottom.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    case NS_STYLE_TABLE_FRAME_RIGHT:
-      if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mLeft.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      if (aData->mMarginData->mBorderStyle.mTop.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      if (aData->mMarginData->mBorderStyle.mBottom.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    case NS_STYLE_TABLE_FRAME_VSIDES:
-      if (aData->mMarginData->mBorderStyle.mTop.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mTop.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      if (aData->mMarginData->mBorderStyle.mBottom.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderStyle.mBottom.SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
-      break;
-    // BOX and BORDER are ignored, the caller has already set all the border sides
-    // any illegal value is also ignored
-    }
-  }
-
-  // set up defaults
-  if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
-    aData->mMarginData->mBorderStyle.mLeft.SetIntValue(aBorderStyle, eCSSUnit_Enumerated);
-  if (aData->mMarginData->mBorderStyle.mRight.GetUnit() == eCSSUnit_Null)
-    aData->mMarginData->mBorderStyle.mRight.SetIntValue(aBorderStyle, eCSSUnit_Enumerated);
-  if (aData->mMarginData->mBorderStyle.mTop.GetUnit() == eCSSUnit_Null)
-    aData->mMarginData->mBorderStyle.mTop.SetIntValue(aBorderStyle, eCSSUnit_Enumerated);
-  if (aData->mMarginData->mBorderStyle.mBottom.GetUnit() == eCSSUnit_Null)
-    aData->mMarginData->mBorderStyle.mBottom.SetIntValue(aBorderStyle, eCSSUnit_Enumerated);
-
-}
-
-// XXX The two callsites care about the two different halves of this
-// function, so split it, probably by just putting it in inline at the
-// callsites.
-static void 
-MapTableBorderInto(const nsMappedAttributes* aAttributes,
-                   nsRuleData* aData, PRUint8 aBorderStyle)
-{
-  const nsAttrValue* borderValue = aAttributes->GetAttr(nsGkAtoms::border);
-  if (!borderValue && !aAttributes->GetAttr(nsGkAtoms::frame))
-    return;
-
-  // the absence of "border" with the presence of "frame" implies
-  // border = 1 pixel
-  PRInt32 borderThickness = 1;
-
-  if (borderValue && borderValue->Type() == nsAttrValue::eInteger)
-    borderThickness = borderValue->GetIntegerValue();
-
-  if (aData->mTableData) {
-    if (0 != borderThickness) {
-      // border != 0 implies rules=all and frame=border
-      aData->mTableData->mRules.SetIntValue(NS_STYLE_TABLE_RULES_ALL, eCSSUnit_Enumerated);
-      aData->mTableData->mFrame.SetIntValue(NS_STYLE_TABLE_FRAME_BORDER, eCSSUnit_Enumerated);
-    }
-    else {
-      // border = 0 implies rules=none and frame=void
-      aData->mTableData->mRules.SetIntValue(NS_STYLE_TABLE_RULES_NONE, eCSSUnit_Enumerated);
-      aData->mTableData->mFrame.SetIntValue(NS_STYLE_TABLE_FRAME_NONE, eCSSUnit_Enumerated);
-    }
-  }
-
-  if (aData->mMarginData) {
-    // by default, set all border sides to the specified width
-    if (aData->mMarginData->mBorderWidth.mLeft.GetUnit() == eCSSUnit_Null)
-      aData->mMarginData->mBorderWidth.mLeft.SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
-    if (aData->mMarginData->mBorderWidth.mRight.GetUnit() == eCSSUnit_Null)
-      aData->mMarginData->mBorderWidth.mRight.SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
-    if (aData->mMarginData->mBorderWidth.mTop.GetUnit() == eCSSUnit_Null)
-      aData->mMarginData->mBorderWidth.mTop .SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
-    if (aData->mMarginData->mBorderWidth.mBottom.GetUnit() == eCSSUnit_Null)
-      aData->mMarginData->mBorderWidth.mBottom.SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
-
-    // now account for the frame attribute
-    MapTableFrameInto(aAttributes, aData, aBorderStyle);
-  }
-}
 
 static void
 MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
@@ -1201,8 +1071,6 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Table)) {
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
     if (readDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL) {
-      MapTableBorderInto(aAttributes, aData, 0);
-
       const nsAttrValue* value;
       // layout
       if (aData->mTableData->mLayout.GetUnit() == eCSSUnit_Null) {
@@ -1219,11 +1087,6 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         else // COLS had no value, so it refers to all columns
           aData->mTableData->mCols.SetIntValue(NS_STYLE_TABLE_COLS_ALL, eCSSUnit_Enumerated);
       }
-
-      // rules
-      value = aAttributes->GetAttr(nsGkAtoms::rules);
-      if (value && value->Type() == nsAttrValue::eEnum)
-        aData->mTableData->mRules.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) {
@@ -1338,44 +1201,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     const nsStyleTableBorder* tableStyle = aData->mStyleContext->GetStyleTableBorder();
     const nsStyleDisplay* readDisplay = aData->mStyleContext->GetStyleDisplay();
-    if (readDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
-      if (NS_STYLE_BORDER_SEPARATE == tableStyle->mBorderCollapse) {
-        // Set the cell's border from the table in the separate border
-        // model. If there is a border on the table, then the mapping to
-        // rules=all will take care of borders in the collapsing model.
-        // But if rules="none", we don't want to do this.
-        const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::border);
-        const nsAttrValue* rulesValue = aAttributes->GetAttr(nsGkAtoms::rules);
-        if ((!rulesValue || rulesValue->Type() != nsAttrValue::eEnum ||
-             rulesValue->GetEnumValue() != NS_STYLE_TABLE_RULES_NONE) &&
-            value &&
-            ((value->Type() == nsAttrValue::eInteger &&
-              value->GetIntegerValue() > 0) ||
-             value->IsEmptyString())) {
-          if (aData->mMarginData->mBorderWidth.mLeft.GetUnit() == eCSSUnit_Null)
-            aData->mMarginData->mBorderWidth.mLeft.SetFloatValue(1.0f, eCSSUnit_Pixel);
-          if (aData->mMarginData->mBorderWidth.mRight.GetUnit() == eCSSUnit_Null)
-            aData->mMarginData->mBorderWidth.mRight.SetFloatValue(1.0f, eCSSUnit_Pixel);
-          if (aData->mMarginData->mBorderWidth.mTop.GetUnit() == eCSSUnit_Null)
-            aData->mMarginData->mBorderWidth.mTop.SetFloatValue(1.0f, eCSSUnit_Pixel);
-          if (aData->mMarginData->mBorderWidth.mBottom.GetUnit() == eCSSUnit_Null)
-            aData->mMarginData->mBorderWidth.mBottom.SetFloatValue(1.0f, eCSSUnit_Pixel);
-
-          PRUint8 borderStyle = NS_STYLE_BORDER_STYLE_INSET;
-
-          if (aData->mMarginData->mBorderStyle.mLeft.GetUnit() == eCSSUnit_Null)
-            aData->mMarginData->mBorderStyle.mLeft.SetIntValue(borderStyle, eCSSUnit_Enumerated);
-          if (aData->mMarginData->mBorderStyle.mRight.GetUnit() == eCSSUnit_Null)
-            aData->mMarginData->mBorderStyle.mRight.SetIntValue(borderStyle, eCSSUnit_Enumerated);
-          if (aData->mMarginData->mBorderStyle.mTop.GetUnit() == eCSSUnit_Null)
-            aData->mMarginData->mBorderStyle.mTop.SetIntValue(borderStyle, eCSSUnit_Enumerated);
-          if (aData->mMarginData->mBorderStyle.mBottom.GetUnit() == eCSSUnit_Null)
-            aData->mMarginData->mBorderStyle.mBottom.SetIntValue(borderStyle, eCSSUnit_Enumerated);
-        }
-      }
-    }
-    else {
-      PRUint8 borderStyle = NS_STYLE_BORDER_STYLE_OUTSET;
+    if (readDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL) {
       // bordercolor
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::bordercolor);
       nscolor color;
@@ -1389,24 +1215,27 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
           aData->mMarginData->mBorderColor.mTop.SetColorValue(color);
         if (aData->mMarginData->mBorderColor.mBottom.GetUnit() == eCSSUnit_Null)
           aData->mMarginData->mBorderColor.mBottom.SetColorValue(color);
-
-        borderStyle = NS_STYLE_BORDER_STYLE_SOLID; // compat, see bug 349655
-      }
-      else if (NS_STYLE_BORDER_COLLAPSE == tableStyle->mBorderCollapse) {
-        // make the color grey
-        nscolor color = NS_RGB(80, 80, 80);
-        if (aData->mMarginData->mBorderColor.mLeft.GetUnit() == eCSSUnit_Null)
-          aData->mMarginData->mBorderColor.mLeft.SetColorValue(color);
-        if (aData->mMarginData->mBorderColor.mRight.GetUnit() == eCSSUnit_Null)
-          aData->mMarginData->mBorderColor.mRight.SetColorValue(color);
-        if (aData->mMarginData->mBorderColor.mTop.GetUnit() == eCSSUnit_Null)
-          aData->mMarginData->mBorderColor.mTop.SetColorValue(color);
-        if (aData->mMarginData->mBorderColor.mBottom.GetUnit() == eCSSUnit_Null)
-          aData->mMarginData->mBorderColor.mBottom.SetColorValue(color);
       }
 
-      // border and frame
-      MapTableBorderInto(aAttributes, aData, borderStyle);
+      // border
+      const nsAttrValue* borderValue = aAttributes->GetAttr(nsGkAtoms::border);
+      if (borderValue) {
+        // border = 1 pixel default
+        PRInt32 borderThickness = 1;
+
+        if (borderValue->Type() == nsAttrValue::eInteger)
+          borderThickness = borderValue->GetIntegerValue();
+
+        // by default, set all border sides to the specified width
+        if (aData->mMarginData->mBorderWidth.mLeft.GetUnit() == eCSSUnit_Null)
+          aData->mMarginData->mBorderWidth.mLeft.SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
+        if (aData->mMarginData->mBorderWidth.mRight.GetUnit() == eCSSUnit_Null)
+          aData->mMarginData->mBorderWidth.mRight.SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
+        if (aData->mMarginData->mBorderWidth.mTop.GetUnit() == eCSSUnit_Null)
+          aData->mMarginData->mBorderWidth.mTop .SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
+        if (aData->mMarginData->mBorderWidth.mBottom.GetUnit() == eCSSUnit_Null)
+          aData->mMarginData->mBorderWidth.mBottom.SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
+      }
     }
   }
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Background)) {
@@ -1426,7 +1255,6 @@ nsHTMLTableElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     { &nsGkAtoms::cellspacing },
     { &nsGkAtoms::cols },
     { &nsGkAtoms::border },
-    { &nsGkAtoms::frame },
     { &nsGkAtoms::width },
     { &nsGkAtoms::height },
     { &nsGkAtoms::hspace },
@@ -1435,7 +1263,6 @@ nsHTMLTableElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     { &nsGkAtoms::bordercolor },
     
     { &nsGkAtoms::align },
-    { &nsGkAtoms::rules },
     { nsnull }
   };
 

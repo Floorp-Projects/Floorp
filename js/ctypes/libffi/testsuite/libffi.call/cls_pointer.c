@@ -4,15 +4,17 @@
    PR:			none.
    Originator:	Blake Chaffin 6/6/2007	*/
 
-/* { dg-do run { xfail mips*-*-* arm*-*-* strongarm*-*-* xscale*-*-* } } */
+/* { dg-do run { xfail strongarm*-*-* xscale*-*-* } } */
 #include "ffitest.h"
 
 void* cls_pointer_fn(void* a1, void* a2)
 {
-	void*	result	= (void*)((long)a1 + (long)a2);
+	void*	result	= (void*)((intptr_t)a1 + (intptr_t)a2);
 
 	printf("0x%08x 0x%08x: 0x%08x\n", 
-	       (unsigned int) a1, (unsigned int) a2, (unsigned int) result);
+	       (unsigned int)(uintptr_t) a1,
+               (unsigned int)(uintptr_t) a2,
+               (unsigned int)(uintptr_t) result);
 
 	return result;
 }
@@ -30,19 +32,11 @@ cls_pointer_gn(ffi_cif* cif __UNUSED__, void* resp,
 int main (void)
 {
 	ffi_cif	cif;
-#ifndef USING_MMAP
-	static ffi_closure	cl;
-#endif
-	ffi_closure*	pcl;
+        void *code;
+	ffi_closure*	pcl = ffi_closure_alloc(sizeof(ffi_closure), &code);
 	void*			args[3];
 //	ffi_type		cls_pointer_type;
 	ffi_type*		arg_types[3];
-
-#ifdef USING_MMAP
-	pcl = allocate_mmap(sizeof(ffi_closure));
-#else
-	pcl = &cl;
-#endif
 
 /*	cls_pointer_type.size = sizeof(void*);
 	cls_pointer_type.alignment = 0;
@@ -69,9 +63,9 @@ int main (void)
 	printf("res: 0x%08x\n", (unsigned int) res);
 	/* { dg-output "\nres: 0x9be02467" } */
 
-	CHECK(ffi_prep_closure(pcl, &cif, cls_pointer_gn, NULL) == FFI_OK);
+	CHECK(ffi_prep_closure_loc(pcl, &cif, cls_pointer_gn, NULL, code) == FFI_OK);
 
-	res = (ffi_arg)((void*(*)(void*, void*))(pcl))(arg1, arg2);
+	res = (ffi_arg)((void*(*)(void*, void*))(code))(arg1, arg2);
 	/* { dg-output "\n0x12345678 0x89abcdef: 0x9be02467" } */
 	printf("res: 0x%08x\n", (unsigned int) res);
 	/* { dg-output "\nres: 0x9be02467" } */

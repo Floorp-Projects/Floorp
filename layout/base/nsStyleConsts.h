@@ -302,9 +302,6 @@
 #define NS_STYLE_BORDER_STYLE_OUTSET            8
 #define NS_STYLE_BORDER_STYLE_HIDDEN            9
 #define NS_STYLE_BORDER_STYLE_AUTO              10 // for outline-style only
-// a bit ORed onto the style for table border collapsing indicating that the style was 
-// derived from a table with its rules attribute set
-#define NS_STYLE_BORDER_STYLE_RULES_MARKER      0x10  
 
 // See nsStyleBorder mBorderImage
 #define NS_STYLE_BORDER_IMAGE_STRETCH           0
