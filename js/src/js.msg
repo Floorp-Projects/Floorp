@@ -323,3 +323,6 @@ MSG_DEF(JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP, 240, 1, JSEXN_TYPEERR, "can't r
 MSG_DEF(JSMSG_CANT_APPEND_PROPERTIES_TO_UNWRITABLE_LENGTH_ARRAY, 241, 0, JSEXN_TYPEERR, "Can't add elements past the end of an array if its length property is unwritable")
 MSG_DEF(JSMSG_DEFINE_ARRAY_LENGTH_UNSUPPORTED, 242, 0, JSEXN_INTERNALERR, "defining the length property on an array is not currently supported")
 MSG_DEF(JSMSG_CANT_DEFINE_ARRAY_INDEX,243, 0, JSEXN_TYPEERR, "can't define array index property")
+MSG_DEF(JSMSG_TYPED_ARRAY_BAD_INDEX,  244, 0, JSEXN_ERR, "invalid or out-of-range index")
+MSG_DEF(JSMSG_TYPED_ARRAY_NEGATIVE_ARG, 245, 1, JSEXN_ERR, "argument {0} must be >= 0")
+MSG_DEF(JSMSG_TYPED_ARRAY_BAD_ARGS,   246, 0, JSEXN_ERR, "invalid arguments")
