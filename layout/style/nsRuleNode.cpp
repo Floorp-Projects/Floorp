@@ -5248,14 +5248,6 @@ nsRuleNode::ComputeTableData(void* aStartStruct,
               SETDSC_ENUMERATED, parentTable->mLayoutStrategy,
               NS_STYLE_TABLE_LAYOUT_AUTO, 0, 0, 0, 0);
 
-  // rules: enum (not a real CSS prop)
-  if (eCSSUnit_Enumerated == tableData.mRules.GetUnit())
-    table->mRules = tableData.mRules.GetIntValue();
-
-  // frame: enum (not a real CSS prop)
-  if (eCSSUnit_Enumerated == tableData.mFrame.GetUnit())
-    table->mFrame = tableData.mFrame.GetIntValue();
-
   // cols: enum, int (not a real CSS prop)
   if (eCSSUnit_Enumerated == tableData.mCols.GetUnit() ||
       eCSSUnit_Integer == tableData.mCols.GetUnit())
