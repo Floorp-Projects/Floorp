@@ -16,3 +16,33 @@
 .mediaControlsFrame {
     direction: ltr;
 }
+
+/* CSS Transitions
+ *
+ * These are overriden by the default theme; the rules here just 
+ * provide a fallback to drive the required transitionend event
+ * (in case a 3rd party theme does not provide transitions).
+ */
+.controlBar:not([immediate]) {
+    -moz-transition-property: opacity;
+    -moz-transition-duration: 1ms;
+}
+.controlBar[fadeout] {
+    opacity: 0.0;
+}
+.volumeStack:not([immediate]) {
+    -moz-transition-property: opacity, margin-top;
+    -moz-transition-duration: 1ms, 1ms;
+}
+.volumeStack[fadeout] {
+    opacity: 0.0;
+    margin-top: 0px;
+}
+.statusOverlay:not([immediate]) {
+    -moz-transition-property: opacity;
+    -moz-transition-duration: 1ms;
+    -moz-transition-delay: 750ms;
+}
+.statusOverlay[fadeout] {
+    opacity: 0.0;
+}
