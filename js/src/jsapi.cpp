@@ -85,6 +85,7 @@
 #include "prmjtime.h"
 #include "jsstaticcheck.h"
 #include "jsvector.h"
+#include "jstypedarray.h"
 
 #include "jsatominlines.h"
 #include "jsscopeinlines.h"
@@ -1362,6 +1363,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
            js_InitRegExpClass(cx, obj) &&
            js_InitStringClass(cx, obj) &&
            js_InitEval(cx, obj) &&
+           js_InitTypedArrayClasses(cx, obj) &&
 #if JS_HAS_SCRIPT_OBJECT
            js_InitScriptClass(cx, obj) &&
 #endif
@@ -1441,6 +1443,7 @@ static JSStdName standard_class_atoms[] = {
     {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
 #endif
     {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
+    {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::jsclass},
     {NULL,                              0, NULL, NULL}
 };
 
@@ -1493,6 +1496,16 @@ static JSStdName standard_class_names[] = {
     {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Iterator)},
     {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Generator)},
 #endif
+
+    /* Typed Arrays */
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer), NULL},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int8Array), NULL},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8Array), NULL},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int16Array), NULL},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint16Array), NULL},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int32Array), NULL},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint32Array), NULL},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float32Array), NULL},
 
     {NULL,                      0, NULL, NULL}
 };
