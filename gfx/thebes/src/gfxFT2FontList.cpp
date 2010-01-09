@@ -123,6 +123,7 @@ gfxFT2FontList::AppendFacesFromFontFile(const PRUnichar *aFileName)
                     mFontFamilies.Put(name, family);
                 }
                 family->AddFontEntry(fe);
+                fe->SetFamily(family);
                 family->SetHasStyles(PR_TRUE);
 #ifdef PR_LOGGING
                 if (LOG_ENABLED()) {
