@@ -1171,7 +1171,7 @@ var FormHelper = {
       for (let j =0; j < nodes.length; j++) {
         let node = nodes[j];
         if (this._isValidElement(node))
-          elements.push(node.wrappedJSObject || node);
+          elements.push(node);
       }
     }
 
@@ -1257,7 +1257,7 @@ var FormHelper = {
     this._helperSpacer.hidden = false;
 
     this._nodes = this._getAll();
-    this.setCurrentElement(aElement.wrappedJSObject || aElement);
+    this.setCurrentElement(aElement);
     return true;
   },
 
@@ -1340,7 +1340,7 @@ var FormHelper = {
 };
 
 function SelectWrapper(aControl) {
-  this._control = aControl.wrappedJSObject || aControl;
+  this._control = aControl;
 }
 
 SelectWrapper.prototype = {
@@ -1368,7 +1368,7 @@ SelectWrapper.prototype = {
 };
 
 function MenulistWrapper(aControl) {
-  this._control = aControl.wrappedJSObject || aControl;
+  this._control = aControl;
 }
 
 MenulistWrapper.prototype = {
