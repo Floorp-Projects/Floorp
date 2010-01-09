@@ -1244,6 +1244,10 @@ var FormHelper = {
   },
 
   open: function formHelperOpen(aElement) {
+    if (this._open == true && aElement == this._currentElement &&
+        gFocusManager.focusedElement == this._currentElement)
+      return false;
+
     this._open = true;
     window.addEventListener("keypress", this, true);
     let bv = Browser._browserView;
@@ -1254,6 +1258,7 @@ var FormHelper = {
 
     this._nodes = this._getAll();
     this.setCurrentElement(aElement.wrappedJSObject || aElement);
+    return true;
   },
 
   close: function formHelperHide() {
