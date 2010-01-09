@@ -107,6 +107,15 @@ JS_PROTO(Iterator,              26,     js_InitIteratorClasses)
 JS_PROTO(StopIteration,         27,     js_InitIteratorClasses)
 JS_PROTO(File,                  28,     FILE_INIT)
 
+JS_PROTO(ArrayBuffer,           29,     js_InitTypedArrayClasses)
+JS_PROTO(Int8Array,             30,     js_InitTypedArrayClasses)
+JS_PROTO(Uint8Array,            31,     js_InitTypedArrayClasses)
+JS_PROTO(Int16Array,            32,     js_InitTypedArrayClasses)
+JS_PROTO(Uint16Array,           33,     js_InitTypedArrayClasses)
+JS_PROTO(Int32Array,            34,     js_InitTypedArrayClasses)
+JS_PROTO(Uint32Array,           35,     js_InitTypedArrayClasses)
+JS_PROTO(Float32Array,          36,     js_InitTypedArrayClasses)
+
 #undef SCRIPT_INIT
 #undef XML_INIT
 #undef NAMESPACE_INIT
