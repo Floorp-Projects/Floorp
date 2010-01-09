@@ -552,7 +552,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 356774-1.html 356774-1-ref.html # proba
 == 367612-1f.html 367612-1-ref.html
 != 367612-1g.html 367612-1-ref.html
 == 368020-1.html 368020-1-ref.html
-random == 368020-2.html 368020-2-ref.html # bug 368157 (gtk), bug 403181
+random == 368020-2.html 368020-2-ref.html # bug 403181 comment 52 explains why this test is disabled.
 fails == 368020-3.html 368020-3-ref.html # bug 368085
 fails == 368020-4.html 368020-4-ref.html # bug 368085
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-5.html 368020-5-ref.html # bug 388591
@@ -835,7 +835,7 @@ HTTP(..) == 404149-1.xul 404149-1-ref.xul # HTTP for fonts directory access
 == 404301-1.html 404301-1-ref.html
 == 404309-1a.html 404309-1-ref.html
 == 404309-1b.html 404309-1-ref.html
-!= data:application/xml,<foo/> data:text/plain, # bug 404419
+!= data:application/xml,<foo/> data:text/plain, # ensure we pretty-print this XML instead of letting it appear blank (test for bug 404419)
 == 404553-1.html 404553-1-ref.html  # assertion test, also tests that marquee binding is applied correctly
 == 404666-1.html 404666-1-ref.html
 == 404666-2.html 404666-2-ref.html
