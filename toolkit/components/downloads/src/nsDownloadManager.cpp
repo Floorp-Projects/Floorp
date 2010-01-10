@@ -27,8 +27,6 @@
  *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *   Graeme McCutcheon <graememcc_firefox@graeme-online.co.uk>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
- *   Michal Sciubidlo <michal.sciubidlo@gmail.com>
- *   Andrey Ivanov <andrey.v.ivanov@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -66,9 +64,6 @@
 #include "nsDownloadManager.h"
 #include "nsNetUtil.h"
 
-#include "nsIHttpChannel.h"
-#include "nsIFileChannel.h"
-#include "nsIFTPChannel.h"
 #include "mozStorageCID.h"
 #include "nsDocShellCID.h"
 #include "nsEmbedCID.h"
@@ -2202,47 +2197,45 @@ nsDownload::SetState(DownloadState aState)
             }
         }
       }
-
-      nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget);
-      if (fileURL) {
-        nsCOMPtr<nsIFile> file;
-        if (NS_SUCCEEDED(fileURL->GetFile(getter_AddRefs(file))) && file ) {
 #if defined(XP_WIN) && !defined(WINCE)
-          nsAutoString path;
-          if (NS_SUCCEEDED(file->GetPath(path))) {
+      nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget);
+      nsCOMPtr<nsIFile> file;
+      nsAutoString path;
 
-            // On windows, add the download to the system's "recent documents"
-            // list, with a pref to disable.
-            PRBool addToRecentDocs = PR_TRUE;
-            if (pref)
-              pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
+      if (fileURL &&
+          NS_SUCCEEDED(fileURL->GetFile(getter_AddRefs(file))) &&
+          file &&
+          NS_SUCCEEDED(file->GetPath(path))) {
 
-            if (addToRecentDocs)
-              ::SHAddToRecentDocs(SHARD_PATHW, path.get());
-           }
+        // On windows, add the download to the system's "recent documents"
+        // list, with a pref to disable.
+        {
+          PRBool addToRecentDocs = PR_TRUE;
+          if (pref)
+            pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
 
-          // Adjust file attributes so that by default, new files are indexed
-          // by desktop search services. Skip off those that land in the temp
-          // folder.
-          nsCOMPtr<nsIFile> tempDir, fileDir;
-          rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempDir));
-          NS_ENSURE_SUCCESS(rv, rv);
-          (void)file->GetParent(getter_AddRefs(fileDir));
-
-          PRBool isTemp = PR_FALSE;
-          if (fileDir)
-            (void)fileDir->Equals(tempDir, &isTemp);
-
-          nsCOMPtr<nsILocalFileWin> localFileWin(do_QueryInterface(file));
-          if (!isTemp && localFileWin)
-            (void)localFileWin->SetFileAttributesWin(nsILocalFileWin::WFA_SEARCH_INDEXED);
-#endif
-          // After all operations with file, its last modification time needs to
-          // be updated from request
-          (void)file->SetLastModifiedTime(GetLastModifiedTime(mRequest));
+          if (addToRecentDocs)
+            ::SHAddToRecentDocs(SHARD_PATHW, path.get());
         }
       }
 
+      // Adjust file attributes so that by default, new files are indexed
+      // by desktop search services. Skip off those that land in the temp
+      // folder.
+      nsCOMPtr<nsIFile> tempDir, fileDir;
+      rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tempDir));
+      NS_ENSURE_SUCCESS(rv, rv);
+      (void)file->GetParent(getter_AddRefs(fileDir));
+
+      PRBool isTemp = PR_FALSE;
+      if (fileDir)
+        (void)fileDir->Equals(tempDir, &isTemp);
+
+      nsCOMPtr<nsILocalFileWin> localFileWin(do_QueryInterface(file));
+      if (!isTemp && localFileWin)
+        (void)localFileWin->SetFileAttributesWin(nsILocalFileWin::WFA_SEARCH_INDEXED);
+
+#endif
       // Now remove the download if the user's retention policy is "Remove when Done"
       if (mDownloadManager->GetRetentionBehavior() == 0)
         mDownloadManager->RemoveDownload(mID);
@@ -3047,51 +3040,4 @@ nsDownload::FailDownload(nsresult aStatus, const PRUnichar *aMessage)
     do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   return prompter->Alert(dmWindow, title, message);
-}
-
-NS_IMETHODIMP_(PRInt64)
-nsDownload::GetLastModifiedTime(nsIRequest *aRequest)
-{
-  NS_ASSERTION(aRequest, "Must not pass a NULL request in!");
-
-  PRInt64 timeLastModified = 0;
-
-  // HTTP channels may have a Last-Modified header that we'll use to get the
-  // last modified time.
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
-  if (httpChannel) {
-    nsCAutoString refreshHeader;
-    if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Last-Modified"), refreshHeader))) {
-      PRStatus result = PR_ParseTimeString(PromiseFlatCString(refreshHeader).get(), PR_FALSE, &timeLastModified);
-      if (result == PR_SUCCESS)
-        return timeLastModified / PR_USEC_PER_MSEC;
-    }
-    return PR_Now() / PR_USEC_PER_MSEC;
-  }
-
-  // File channels have a lastModifiedTime attribute that we can get the last
-  // modified time from.
-  nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(aRequest);
-  if (fileChannel) {
-    nsCOMPtr<nsIFile> file;
-    fileChannel->GetFile(getter_AddRefs(file));
-    if (file && NS_SUCCEEDED(file->GetLastModifiedTime(&timeLastModified)))
-      return timeLastModified;
-    return PR_Now() / PR_USEC_PER_MSEC;
-  }
-
-  // FTP channels have a lastModifiedTime attribute that we can get the last
-  // modified time from.
-  nsCOMPtr<nsIFTPChannel> ftpChannel = do_QueryInterface(aRequest);
-  if (ftpChannel) {
-    if (NS_SUCCEEDED(ftpChannel->GetLastModifiedTime(&timeLastModified)) &&
-        timeLastModified != 0) {
-      return timeLastModified / PR_USEC_PER_MSEC;
-    }
-    return PR_Now() / PR_USEC_PER_MSEC;
-  }
-
-  // For this request, we do not know how to get the last modified time, so
-  // return the current time.
-  return PR_Now() / PR_USEC_PER_MSEC;
 }
