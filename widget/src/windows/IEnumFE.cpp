@@ -136,7 +136,7 @@ CEnumFormatEtc::Next(ULONG aMaxToFetch, FORMATETC *aResult, ULONG *aNumFetched)
   }
 
   if (aNumFetched)
-      *aNumFetched = idx-1;
+      *aNumFetched = idx;
 
   return S_OK;
 }
