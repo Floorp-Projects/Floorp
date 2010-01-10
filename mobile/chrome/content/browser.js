@@ -644,7 +644,7 @@ var Browser = {
     // in prefs
     if (device == "Nokia N8xx") {
       gPrefService.setBoolPref("plugins.enabled", false);
-      this.setPluginState(true);
+      this.setPluginState(false);
     }
 #endif
     // set up the cache size
