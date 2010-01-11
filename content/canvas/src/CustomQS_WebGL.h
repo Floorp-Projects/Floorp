@@ -68,7 +68,7 @@ nsICanvasRenderingContextWebGL_BufferData(JSContext *cx, uintN argc, jsval *vp)
 
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
-    JSAutoTempValueRooter tvr(cx);
+    js::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
         return JS_FALSE;
 
@@ -134,7 +134,7 @@ nsICanvasRenderingContextWebGL_BufferSubData(JSContext *cx, uintN argc, jsval *v
 
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
-    JSAutoTempValueRooter tvr(cx);
+    js::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
         return JS_FALSE;
 
@@ -204,7 +204,7 @@ nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
 
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
-    JSAutoTempValueRooter tvr(cx);
+    js::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
         return JS_FALSE;
 
@@ -306,7 +306,7 @@ nsICanvasRenderingContextWebGL_TexSubImage2D(JSContext *cx, uintN argc, jsval *v
 
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
-    JSAutoTempValueRooter tvr(cx);
+    js::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
         return JS_FALSE;
 
@@ -407,7 +407,7 @@ helper_nsICanvasRenderingContextWebGL_Uniform_x_iv(JSContext *cx, uintN argc, js
 
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
-    JSAutoTempValueRooter tvr(cx);
+    js::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
         return JS_FALSE;
 
@@ -427,7 +427,7 @@ helper_nsICanvasRenderingContextWebGL_Uniform_x_iv(JSContext *cx, uintN argc, js
 
     JSObject *arg1 = JSVAL_TO_OBJECT(argv[1]);
 
-    JSAutoTempValueRooter obj_tvr(cx);
+    js::AutoValueRooter obj_tvr(cx);
 
     js::TypedArray *wa = 0;
 
@@ -477,7 +477,7 @@ helper_nsICanvasRenderingContextWebGL_Uniform_x_fv(JSContext *cx, uintN argc, js
 
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
-    JSAutoTempValueRooter tvr(cx);
+    js::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
         return JS_FALSE;
 
@@ -497,7 +497,7 @@ helper_nsICanvasRenderingContextWebGL_Uniform_x_fv(JSContext *cx, uintN argc, js
 
     JSObject *arg1 = JSVAL_TO_OBJECT(argv[1]);
 
-    JSAutoTempValueRooter obj_tvr(cx);
+    js::AutoValueRooter obj_tvr(cx);
 
     js::TypedArray *wa = 0;
 
@@ -547,7 +547,7 @@ helper_nsICanvasRenderingContextWebGL_UniformMatrix_x_fv(JSContext *cx, uintN ar
 
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
-    JSAutoTempValueRooter tvr(cx);
+    js::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
         return JS_FALSE;
 
@@ -571,7 +571,7 @@ helper_nsICanvasRenderingContextWebGL_UniformMatrix_x_fv(JSContext *cx, uintN ar
 
     JSObject *arg2 = JSVAL_TO_OBJECT(argv[2]);
 
-    JSAutoTempValueRooter obj_tvr(cx);
+    js::AutoValueRooter obj_tvr(cx);
 
     js::TypedArray *wa = 0;
 
@@ -618,7 +618,7 @@ helper_nsICanvasRenderingContextWebGL_VertexAttrib_x_fv(JSContext *cx, uintN arg
 
     nsICanvasRenderingContextWebGL *self;
     xpc_qsSelfRef selfref;
-    JSAutoTempValueRooter tvr(cx);
+    js::AutoValueRooter tvr(cx);
     if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, &selfref.ptr, tvr.addr(), nsnull))
         return JS_FALSE;
 
@@ -638,7 +638,7 @@ helper_nsICanvasRenderingContextWebGL_VertexAttrib_x_fv(JSContext *cx, uintN arg
 
     JSObject *arg1 = JSVAL_TO_OBJECT(argv[1]);
 
-    JSAutoTempValueRooter obj_tvr(cx);
+    js::AutoValueRooter obj_tvr(cx);
 
     js::TypedArray *wa = 0;
 
@@ -780,7 +780,7 @@ helper_nsICanvasRenderingContextWebGL_Uniform_x_iv_tn(JSContext *cx, JSObject *o
         return JSVAL_VOID;
     }
 
-    JSAutoTempValueRooter obj_tvr(cx);
+    js::AutoValueRooter obj_tvr(cx);
 
     js::TypedArray *wa = 0;
 
@@ -835,7 +835,7 @@ helper_nsICanvasRenderingContextWebGL_Uniform_x_fv_tn(JSContext *cx, JSObject *o
         return JSVAL_VOID;
     }
 
-    JSAutoTempValueRooter obj_tvr(cx);
+    js::AutoValueRooter obj_tvr(cx);
 
     js::TypedArray *wa = 0;
 
@@ -890,7 +890,7 @@ helper_nsICanvasRenderingContextWebGL_UniformMatrix_x_fv_tn(JSContext *cx, JSObj
         return JSVAL_VOID;
     }
 
-    JSAutoTempValueRooter obj_tvr(cx);
+    js::AutoValueRooter obj_tvr(cx);
 
     js::TypedArray *wa = 0;
 

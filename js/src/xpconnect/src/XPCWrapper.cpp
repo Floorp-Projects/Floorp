@@ -153,7 +153,7 @@ IteratorNext(JSContext *cx, uintN argc, jsval *vp)
     }
 
     jsval vec[2] = { STRING_TO_JSVAL(str), v };
-    JSAutoTempValueRooter tvr(cx, 2, vec);
+    js::AutoArrayRooter tvr(cx, 2, vec);
     JSObject *array = JS_NewArrayObject(cx, 2, vec);
     if (!array) {
       return JS_FALSE;
@@ -192,7 +192,7 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
     return nsnull;
   }
 
-  JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(iterObj));
+  js::AutoValueRooter tvr(cx, OBJECT_TO_JSVAL(iterObj));
 
   // Do this sooner rather than later to avoid complications in
   // IteratorFinalize.
@@ -213,7 +213,7 @@ CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
     // call enumerate, and then re-set the prototype. As we do this, we have
     // to protec the temporary wrapper from garbage collection.
 
-    JSAutoTempValueRooter tvr(cx, tempWrapper);
+    js::AutoValueRooter tvr(cx, tempWrapper);
     if (!JS_SetPrototype(cx, iterObj, wrapperObj) ||
         !XPCWrapper::Enumerate(cx, iterObj, wrapperObj) ||
         !JS_SetPrototype(cx, iterObj, tempWrapper)) {
