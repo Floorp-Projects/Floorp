@@ -123,8 +123,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-  { 0xe092e019, 0x1aa2, 0x4f36, \
-    { 0x8c, 0x2e, 0xc6, 0xb0, 0xfe, 0x74, 0x7c, 0x78 } }
+  { 0x20b82adf, 0x1f5c, 0x44f7, \
+    { 0x9b, 0x74, 0xc0, 0xa3, 0x14, 0xd8, 0xcf, 0x91 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -476,7 +476,7 @@ public:
 
   /**
    * Scrolls the view of the document so that the primary frame of the content
-   * is displayed at the top of the window. Layout is flushed before scrolling.
+   * is displayed in the window. Layout is flushed before scrolling.
    *
    * @param aContent  The content object of which primary frame should be
    *                  scrolled into view.
@@ -506,6 +506,32 @@ public:
   NS_IMETHOD ScrollContentIntoView(nsIContent* aContent,
                                    PRIntn      aVPercent,
                                    PRIntn      aHPercent) = 0;
+
+  enum {
+    SCROLL_FIRST_ANCESTOR_ONLY = 0x01,
+    SCROLL_OVERFLOW_HIDDEN = 0x02
+  };
+  /**
+   * Scrolls the view of the document so that the given area of a frame
+   * is visible, if possible. Layout is not flushed before scrolling.
+   * 
+   * @param aRect relative to aFrame
+   * @param aVPercent see ScrollContentIntoView
+   * @param aHPercent see ScrollContentIntoView
+   * @param aFlags if SCROLL_FIRST_ANCESTOR_ONLY is set, only the
+   * nearest scrollable ancestor is scrolled, otherwise all
+   * scrollable ancestors may be scrolled if necessary
+   * if SCROLL_OVERFLOW_HIDDEN is set then we may scroll in a direction
+   * even if overflow:hidden is specified in that direction; otherwise
+   * we will not scroll in that direction when overflow:hidden is
+   * set for that direction
+   * @return true if any scrolling happened, false if no scrolling happened
+   */
+  virtual PRBool ScrollFrameRectIntoView(nsIFrame*     aFrame,
+                                         const nsRect& aRect,
+                                         PRIntn        aVPercent,
+                                         PRIntn        aHPercent,
+                                         PRUint32      aFlags) = 0;
 
   /**
    * Determine if a rectangle specified in the frame's coordinate system 
