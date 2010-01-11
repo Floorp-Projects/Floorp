@@ -376,6 +376,8 @@ void InstallSignalHandlers(const char *ProgramName)
 #define STATUS_FLOAT_MULTIPLE_FAULTS 0xC00002B4
 #define STATUS_FLOAT_MULTIPLE_TRAPS  0xC00002B5
 
+static LPTOP_LEVEL_EXCEPTION_FILTER gFPEPreviousFilter;
+
 LONG __stdcall FpeHandler(PEXCEPTION_POINTERS pe)
 {
   PEXCEPTION_RECORD e = (PEXCEPTION_RECORD)pe->ExceptionRecord;
@@ -403,16 +405,16 @@ LONG __stdcall FpeHandler(PEXCEPTION_POINTERS pe)
 #endif
       return EXCEPTION_CONTINUE_EXECUTION;
   }
-  return EXCEPTION_CONTINUE_SEARCH;
+  LONG action = EXCEPTION_CONTINUE_SEARCH;
+  if (gFPEPreviousFilter)
+    action = gFPEPreviousFilter(pe);
+
+  return action;
 }
 
 void InstallSignalHandlers(const char *ProgramName)
 {
-#if 0
-  // FIXME/bug 538642: disabled because it doesn't play well with
-  // breakpad, and vice versa
-  SetUnhandledExceptionFilter(FpeHandler);
-#endif
+  gFPEPreviousFilter = SetUnhandledExceptionFilter(FpeHandler);
 }
 
 #else
