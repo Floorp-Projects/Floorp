@@ -1933,6 +1933,30 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
   return rv;
 }
 
+NS_IMETHODIMP nsHTMLEditor::PasteTransferable(nsITransferable *aTransferable)
+{
+  ForceCompositionEnd();
+
+  PRBool preventDefault;
+  nsresult rv = FireClipboardEvent(NS_PASTE, &preventDefault);
+  if (NS_FAILED(rv) || preventDefault)
+    return rv;
+
+  // handle transferable hooks
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  GetDocument(getter_AddRefs(domdoc));
+  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nsnull, aTransferable))
+    return NS_OK;
+
+  // Beware! This may flush notifications via synchronous
+  // ScrollSelectionIntoView.
+  nsAutoString contextStr, infoStr;
+  rv = InsertFromTransferable(aTransferable, nsnull, contextStr, infoStr,
+                              nsnull, 0, PR_TRUE);
+
+  return rv;
+}
+
 // 
 // HTML PasteNoFormatting. Ignore any HTML styles and formating in paste source
 //
@@ -1967,6 +1991,14 @@ NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
 }
 
 
+// The following arrays contain the MIME types that we can paste. The arrays
+// are used by CanPaste() and CanPasteTransferable() below.
+
+static const char* textEditorFlavors[] = { kUnicodeMime };
+static const char* textHtmlEditorFlavors[] = { kUnicodeMime, kHTMLMime,
+                                               kJPEGImageMime, kPNGImageMime,
+                                               kGIFImageMime };
+
 NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
 {
   NS_ENSURE_ARG_POINTER(aCanPaste);
@@ -1980,11 +2012,6 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_FAILED(rv)) return rv;
   
-  // the flavors that we can deal with (preferred order selectable for k*ImageMime)
-  const char* textEditorFlavors[] = { kUnicodeMime };
-  const char* textHtmlEditorFlavors[] = { kUnicodeMime, kHTMLMime,
-                                          kJPEGImageMime, kPNGImageMime, kGIFImageMime };
-
   PRUint32 editorFlags;
   GetFlags(&editorFlags);
   
@@ -2003,6 +2030,54 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
   if (NS_FAILED(rv)) return rv;
   
   *aCanPaste = haveFlavors;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLEditor::CanPasteTransferable(nsITransferable *aTransferable, PRBool *aCanPaste)
+{
+  NS_ENSURE_ARG_POINTER(aCanPaste);
+
+  // can't paste if readonly
+  if (!IsModifiable()) {
+    *aCanPaste = PR_FALSE;
+    return NS_OK;
+  }
+
+  // If |aTransferable| is null, assume that a paste will succeed.
+  if (!aTransferable) {
+    *aCanPaste = PR_TRUE;
+    return NS_OK;
+  }
+
+  // Peek in |aTransferable| to see if it contains a supported MIME type.
+
+  PRUint32 editorFlags;
+  GetFlags(&editorFlags);
+  
+  // Use the flavors depending on the current editor mask
+  const char ** flavors;
+  unsigned length;
+  if ((editorFlags & eEditorPlaintextMask)) {
+    flavors = textEditorFlavors;
+    length = NS_ARRAY_LENGTH(textEditorFlavors);
+  } else {
+    flavors = textHtmlEditorFlavors;
+    length = NS_ARRAY_LENGTH(textHtmlEditorFlavors);
+  }
+
+  for (unsigned int i = 0; i < length; i++, flavors++) {
+    nsCOMPtr<nsISupports> data;
+    PRUint32 dataLen;
+    nsresult rv = aTransferable->GetTransferData(*flavors,
+                                                 getter_AddRefs(data),
+                                                 &dataLen);
+    if (NS_SUCCEEDED(rv) && data) {
+      *aCanPaste = PR_TRUE;
+      return NS_OK;
+    }
+  }
+  
+  *aCanPaste = PR_FALSE;
   return NS_OK;
 }
 

@@ -132,6 +132,7 @@ function remove_all_bookmarks() {
 
   // Check for correct cleanup.
   dump_table("moz_bookmarks");
+  dump_table("moz_places");
   check_no_bookmarks()
 }
 

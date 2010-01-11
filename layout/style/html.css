@@ -199,10 +199,123 @@ table[align="right"] {
   text-align: start;
 }
 
-table[rules]:not([rules="none"]) {
+
+/* border collapse rules */
+
+  /* Set hidden if we have 'frame' or 'rules' attribute.
+     Set it on all sides when we do so there's more consistency
+     in what authors should expect */
+
+  /* Put this first so 'border' and 'frame' rules can override it. */
+table[rules] { 
+  border: thin hidden; 
+}
+
+  /* 'border' before 'frame' so 'frame' overrides
+      A border with a given value should, of course, pass that value
+      as the border-width in pixels -> attr mapping */
+
+  /* 'border="0"' suppresses the border */
+table[border]:not([border="0"]) { 
+  border: thin outset; 
+}
+
+  
+table[frame] {
+  border: thin hidden;
+}
+
+/*increased specificity to compete with [border]:not([border="0"]) rule above*/
+table[frame][frame="void"]   { border-style: hidden; }
+table[frame][frame="above"]  { border-style: outset hidden hidden hidden; }
+table[frame][frame="below"]  { border-style: hidden hidden outset hidden; }
+table[frame][frame="lhs"]    { border-style: hidden hidden hidden outset; }
+table[frame][frame="rhs"]    { border-style: hidden outset hidden hidden; }
+table[frame][frame="hsides"] { border-style: outset hidden; }
+table[frame][frame="vsides"] { border-style: hidden outset; }
+table[frame][frame="box"],
+table[frame][frame="border"] { border-style: outset; }
+
+ 
+/* Internal Table Borders */
+
+  /* 'border' cell borders first */
+
+table[border]:not([border="0"])> * > tr > td,
+table[border]:not([border="0"])> * > tr > th,
+table[border]:not([border="0"])> * > td,
+table[border]:not([border="0"])> * > th,
+table[border]:not([border="0"])> td,
+table[border]:not([border="0"])> th
+{
+  border: thin inset;
+}
+
+/* collapse only if rules are really specified */
+table[rules]:not([rules="none"]):not([rules=""]) {
   border-collapse: collapse;
 }
-   
+
+/* only specified rules override 'border' settings  
+  (increased specificity to achieve this) */
+table[rules]:not([rules=""])> tr > td,
+table[rules]:not([rules=""])> * > tr > td,
+table[rules]:not([rules=""])> tr > th,
+table[rules]:not([rules=""])> * > tr > th,
+table[rules]:not([rules=""])> td,
+table[rules]:not([rules=""])> th
+{
+  border: thin none;
+}
+
+
+table[rules][rules="none"]  > tr > td,
+table[rules][rules="none"] > * > tr > td,
+table[rules][rules="none"] > tr > th,
+table[rules][rules="none"] > * > tr > th,
+table[rules][rules="none"] > td,
+table[rules][rules="none"] > th
+{
+  border: thin hidden;
+}
+
+table[rules][rules="all"] > tr > td,
+table[rules][rules="all"] > * > tr > td,
+table[rules][rules="all"] > tr > th,
+table[rules][rules="all"] > * > tr > th,
+table[rules][rules="all"] > td,
+table[rules][rules="all"] > th 
+{
+  border: thin solid ;
+}
+
+table[rules][rules="rows"] > tr,
+table[rules][rules="rows"] > * > tr {
+  border-top: thin solid;
+  border-bottom: thin solid;
+}
+
+
+table[rules][rules="cols"] > tr > td,
+table[rules][rules="cols"] > * > tr > td,
+table[rules][rules="cols"] > tr > th,
+table[rules][rules="cols"] > * > tr > th {
+  border-left: thin solid;
+  border-right: thin solid;
+}
+
+table[rules][rules="groups"] > colgroup {
+  border-left: thin solid;
+  border-right: thin solid;
+}
+table[rules][rules="groups"] > tfoot,
+table[rules][rules="groups"] > thead,
+table[rules][rules="groups"] > tbody {
+  border-top: thin solid;
+  border-bottom: thin solid;
+}
+  
+  
 /* caption inherits from table not table-outer */  
 caption {
   display: table-caption;

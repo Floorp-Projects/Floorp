@@ -232,10 +232,10 @@ nsHyperTextAccessible::CacheChildren()
 
   walker.GetFirstChild();
   while (walker.mState.accessible) {
-    mChildren.AppendObject(walker.mState.accessible);
-
     nsRefPtr<nsAccessible> acc =
       nsAccUtils::QueryObject<nsAccessible>(walker.mState.accessible);
+
+    mChildren.AppendElement(acc);
     acc->SetParent(this);
 
     walker.GetNextSibling();
@@ -859,7 +859,7 @@ nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell,
     hyperTextOffset = 0;
   }  
   else if (aAmount == eSelectBeginLine) {
-    nsIAccessible *firstChild = mChildren.SafeObjectAt(0);
+    nsAccessible *firstChild = mChildren.SafeElementAt(0, nsnull);
     // For line selection with needsStart, set start of line exactly to line break
     if (pos.mContentOffset == 0 && firstChild &&
         nsAccUtils::Role(firstChild) == nsIAccessibleRole::ROLE_STATICTEXT &&

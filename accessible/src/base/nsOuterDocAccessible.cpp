@@ -127,7 +127,7 @@ nsOuterDocAccessible::CacheChildren()
     return;
 
   // Success getting inner document as first child -- now we cache it.
-  mChildren.AppendObject(innerAccessible);
+  mChildren.AppendElement(innerAcc);
   innerAcc->SetParent(this);
 }
 
