@@ -97,9 +97,8 @@ public:
   void CurPosAttributeChanged(nsIContent* aChild);
   void PostScrollEvent();
   void FireScrollEvent();
-  void PostScrolledAreaEvent(nsRect &aScrolledArea);
-  void FireScrolledAreaEvent(nsRect &aScrolledArea);
-
+  void PostScrolledAreaEvent();
+  void FireScrolledAreaEvent();
 
   class ScrollEvent : public nsRunnable {
   public:
@@ -114,6 +113,15 @@ public:
   public:
     NS_DECL_NSIRUNNABLE
     AsyncScrollPortEvent(nsGfxScrollFrameInner *inner) : mInner(inner) {}
+    void Revoke() { mInner = nsnull; }
+  private:
+    nsGfxScrollFrameInner *mInner;
+  };
+
+  class ScrolledAreaEvent : public nsRunnable {
+  public:
+    NS_DECL_NSIRUNNABLE
+    ScrolledAreaEvent(nsGfxScrollFrameInner *inner) : mInner(inner) {}
     void Revoke() { mInner = nsnull; }
   private:
     nsGfxScrollFrameInner *mInner;
@@ -213,6 +221,7 @@ public:
 
   nsRevocableEventPtr<ScrollEvent> mScrollEvent;
   nsRevocableEventPtr<AsyncScrollPortEvent> mAsyncScrollPortEvent;
+  nsRevocableEventPtr<ScrolledAreaEvent> mScrolledAreaEvent;
   nsIBox* mHScrollbarBox;
   nsIBox* mVScrollbarBox;
   nsIFrame* mScrolledFrame;
@@ -264,25 +273,6 @@ public:
   // If true, need to actually update our scrollbar attributes in the
   // reflow callback.
   PRPackedBool mUpdateScrollbarAttributes:1;
-private:
-  class ScrolledAreaEventDispatcher : public nsRunnable {
-  public:
-    NS_DECL_NSIRUNNABLE
-
-    ScrolledAreaEventDispatcher(nsGfxScrollFrameInner *aScrollFrameInner)
-      : mScrollFrameInner(aScrollFrameInner),
-        mScrolledArea(0, 0, 0, 0)
-    {
-    }
-
-    void Revoke() { mScrollFrameInner = nsnull; }
-
-    nsGfxScrollFrameInner *mScrollFrameInner;
-    nsRect mScrolledArea;
-  };
-
-  nsRevocableEventPtr<ScrolledAreaEventDispatcher> mScrolledAreaEventDispatcher;
-
 };
 
 /**
@@ -434,6 +424,10 @@ public:
   virtual void CurPosAttributeChanged(nsIContent* aChild) {
     mInner.CurPosAttributeChanged(aChild);
   }
+  NS_IMETHOD PostScrolledAreaEventForCurrentArea() {
+    mInner.PostScrolledAreaEvent();
+    return NS_OK;
+  }
 
   // nsIStatefulFrame
   NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState) {
@@ -463,13 +457,6 @@ public:
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
-
-  /**
-   * Helper functions and class to dispatch events related to changes in the
-   * scroll frame's scrolled content area.
-   */
-
-  NS_IMETHOD PostScrolledAreaEventForCurrentArea();
 
 protected:
   nsHTMLScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, PRBool aIsRoot);
@@ -659,6 +646,10 @@ public:
   virtual void CurPosAttributeChanged(nsIContent* aChild) {
     mInner.CurPosAttributeChanged(aChild);
   }
+  NS_IMETHOD PostScrolledAreaEventForCurrentArea() {
+    mInner.PostScrolledAreaEvent();
+    return NS_OK;
+  }
 
   // nsIStatefulFrame
   NS_IMETHOD SaveState(SpecialStateID aStateID, nsPresState** aState) {
@@ -686,10 +677,6 @@ public:
       return PR_FALSE;
     return nsBoxFrame::IsFrameOfType(aFlags);
   }
-
-  void PostScrolledAreaEvent(nsRect &aScrolledArea);
-
-  NS_IMETHOD PostScrolledAreaEventForCurrentArea();
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
