@@ -115,11 +115,21 @@ function eventOccured(event)
     }
 
     var eventitem = events[gTestEventIndex].split(" ");
-    var matches = (eventitem[1] == "#tooltip") ?
-                  (event.originalTarget.localName == "tooltip" &&
-                   event.originalTarget.getAttribute("default") == "true") :
-                  (eventitem[0] == event.type && eventitem[1] == event.target.id);
-    ok(matches, test.testname + " " + event.type + " fired");
+    var matches;
+    if (eventitem[1] == "#tooltip") {
+      is(event.originalTarget.localName, "tooltip",
+         test.testname + " event.originalTarget.localName is 'tooltip'");
+      is(event.originalTarget.getAttribute("default"), "true",
+         test.testname + " event.originalTarget default attribute is 'true'");
+      matches = event.originalTarget.localName == "tooltip" &&
+          event.originalTarget.getAttribute("default") == "true";
+    } else {
+      is(event.type, eventitem[0],
+         test.testname + " event type " + event.type + " fired");
+      is(event.target.id, eventitem[1],
+         test.testname + " event target ID " + event.target.id);
+      matches = eventitem[0] == event.type && eventitem[1] == event.target.id;
+    }
 
     var expectedState;
     switch (event.type) {
