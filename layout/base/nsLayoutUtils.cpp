@@ -89,6 +89,7 @@
 #include "imgIContainer.h"
 #include "nsIImageLoadingContent.h"
 #include "nsCOMPtr.h"
+#include "nsListControlFrame.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -3231,6 +3232,38 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
       bg->BottomLayer().mClip != NS_STYLE_BG_CLIP_BORDER)
     return eTransparencyTransparent;
   return eTransparencyOpaque;
+}
+
+/* static */ PRBool
+nsLayoutUtils::IsPopup(nsIFrame* aFrame)
+{
+  nsIAtom* frameType = aFrame->GetType();
+
+  // We're a popup if we're the list control frame dropdown for a combobox.
+  if (frameType == nsGkAtoms::listControlFrame) {
+    nsListControlFrame* listControlFrame = static_cast<nsListControlFrame*>(aFrame);
+      
+    if (listControlFrame) {
+      return listControlFrame->IsInDropDownMode();
+    }
+  }
+
+  // ... or if we're a XUL menupopup frame.
+  return (frameType == nsGkAtoms::menuPopupFrame);
+}
+
+/* static */ nsIFrame*
+nsLayoutUtils::GetDisplayRootFrame(nsIFrame* aFrame)
+{
+  nsIFrame* f = aFrame;
+  for (;;) {
+    if (IsPopup(f))
+      return f;
+    nsIFrame* parent = GetCrossDocParentFrame(f);
+    if (!parent)
+      return f;
+    f = parent;
+  }
 }
 
 static PRBool
