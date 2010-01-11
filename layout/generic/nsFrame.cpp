@@ -55,7 +55,6 @@
 #include "nsStyleContext.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsIScrollableView.h"
 #include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
 #include "nsCRT.h"

@@ -45,7 +45,6 @@
 #include "prinrval.h"
 #include "nsVoidArray.h"
 #include "nsThreadUtils.h"
-#include "nsIScrollableView.h"
 #include "nsIRegion.h"
 #include "nsView.h"
 #include "nsIViewObserver.h"
@@ -108,9 +107,6 @@ public:
   NS_IMETHOD_(nsIView*) CreateView(const nsRect& aBounds,
                                    const nsIView* aParent,
                                    nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
-
-  NS_IMETHOD_(nsIScrollableView*) CreateScrollableView(const nsRect& aBounds,
-                                                       const nsIView* aParent);
 
   NS_IMETHOD  GetRootView(nsIView *&aView);
   NS_IMETHOD  SetRootView(nsIView *aView);

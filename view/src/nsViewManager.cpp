@@ -47,7 +47,6 @@
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsGfxCIID.h"
-#include "nsIScrollableView.h"
 #include "nsView.h"
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
@@ -57,7 +56,6 @@
 #include "nsIPrefService.h"
 #include "nsRegion.h"
 #include "nsInt64.h"
-#include "nsScrollPortView.h"
 #include "nsHashtable.h"
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"
@@ -274,20 +272,6 @@ nsViewManager::CreateView(const nsRect& aBounds,
     v->SetPosition(aBounds.x, aBounds.y);
     nsRect dim(0, 0, aBounds.width, aBounds.height);
     v->SetDimensions(dim, PR_FALSE);
-  }
-  return v;
-}
-
-NS_IMETHODIMP_(nsIScrollableView *)
-nsViewManager::CreateScrollableView(const nsRect& aBounds,
-                                    const nsIView* aParent)
-{
-  nsScrollPortView *v = new nsScrollPortView(this);
-  if (v) {
-    v->SetPosition(aBounds.x, aBounds.y);
-    nsRect dim(0, 0, aBounds.width, aBounds.height);
-    v->SetDimensions(dim, PR_FALSE);
-    v->SetParent(static_cast<nsView*>(const_cast<nsIView*>(aParent)));
   }
   return v;
 }

@@ -45,7 +45,6 @@ class nsIFormControlFrame;
 class nsPresContext;
 class nsIContent;
 class nsIAtom;
-class nsIScrollableView;
 class nsIScrollableFrame;
 class nsIDOMEvent;
 class nsRegion;
@@ -296,14 +295,6 @@ public:
   static nsIFrame* GetFrameFor(nsIView *aView)
   { return static_cast<nsIFrame*>(aView->GetClientData()); }
   
-  /**
-    * GetScrollableFrameFor returns the scrollable frame for a scrollable view
-    * @param aScrollableView is the scrollable view to return the 
-    *        scrollable frame for.
-    * @return the scrollable frame for the scrollable view
-    */
-  static nsIScrollableFrame* GetScrollableFrameFor(nsIScrollableView *aScrollableView);
-
   /**
     * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
     */
