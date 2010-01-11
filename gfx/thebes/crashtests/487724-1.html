@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var w = document.getElementById("w");
+  var q = document.getElementById("q");
+  var e = document.createTextNode("");
+  document.documentElement.appendChild(document.body);
+  w.appendChild(e);
+  document.documentElement.offsetHeight;
+  w.removeChild(q);
+  document.documentElement.offsetHeight;
+  e.data += " x ";
+}
+
+</script>
+</head>
+
+<body onload="boom();"><span id="w">s&#x202E;<span id="q"></span><div></div><span>a</span></span></body>
+</html>
