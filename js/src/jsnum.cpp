@@ -989,11 +989,11 @@ js_ValueToNumber(JSContext *cx, jsval *vp)
          * vp roots obj so we cannot use it as an extra root for
          * obj->defaultValue result when calling the hook.
          */
-        JSAutoTempValueRooter tvr(cx, v);
-        if (!obj->defaultValue(cx, JSTYPE_NUMBER, tvr.addr()))
+        AutoValueRooter gcr(cx, v);
+        if (!obj->defaultValue(cx, JSTYPE_NUMBER, gcr.addr()))
             obj = NULL;
         else
-            v = *vp = tvr.value();
+            v = *vp = gcr.value();
         if (!obj) {
             *vp = JSVAL_NULL;
             return 0.0;

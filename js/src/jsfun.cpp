@@ -351,7 +351,7 @@ WrapEscapingClosure(JSContext *cx, JSStackFrame *fp, JSObject *funobj, JSFunctio
                                                    funobj, scopeChain);
     if (!wfunobj)
         return NULL;
-    JSAutoTempValueRooter tvr(cx, wfunobj);
+    AutoValueRooter tvr(cx, wfunobj);
 
     JSFunction *wfun = (JSFunction *) wfunobj;
     wfunobj->setPrivate(wfun);
@@ -599,7 +599,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
     if (!JS_ValueToId(cx, idval, &id))
         return false;
 
-    JSAutoTempValueRooter tvr(cx);
+    AutoValueRooter tvr(cx);
     return js_DeleteProperty(cx, obj, id, tvr.addr()) &&
            js_SetProperty(cx, obj, id, vp);
 }
@@ -1584,8 +1584,6 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     uintN nargs, nvars, nupvars, n;
     uint32 localsword;          /* word for argument and variable counts */
     uint32 flagsword;           /* word for fun->u.i.nupvars and fun->flags */
-    JSTempValueRooter tvr;
-    JSBool ok;
 
     cx = xdr->cx;
     if (xdr->mode == JSXDR_ENCODE) {
@@ -1594,13 +1592,13 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_NOT_SCRIPTED_FUNCTION,
                                  JS_GetFunctionName(fun));
-            return JS_FALSE;
+            return false;
         }
         if (fun->u.i.wrapper) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_XDR_CLOSURE_WRAPPER,
                                  JS_GetFunctionName(fun));
-            return JS_FALSE;
+            return false;
         }
         JS_ASSERT((fun->u.i.wrapper & ~1U) == 0);
         firstword = (fun->u.i.skipmin << 2) | (fun->u.i.wrapper << 1) | !!fun->atom;
@@ -1612,7 +1610,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     } else {
         fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
         if (!fun)
-            return JS_FALSE;
+            return false;
         FUN_OBJECT(fun)->clearParent();
         FUN_OBJECT(fun)->clearProto();
 #ifdef __GNUC__
@@ -1620,18 +1618,15 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 #endif
     }
 
-    /* From here on, control flow must flow through label out. */
-    MUST_FLOW_THROUGH("out");
-    JS_PUSH_TEMP_ROOT_OBJECT(cx, FUN_OBJECT(fun), &tvr);
-    ok = JS_TRUE;
+    AutoValueRooter tvr(cx, FUN_OBJECT(fun));
 
     if (!JS_XDRUint32(xdr, &firstword))
-        goto bad;
+        return false;
     if ((firstword & 1U) && !js_XDRStringAtom(xdr, &fun->atom))
-        goto bad;
+        return false;
     if (!JS_XDRUint32(xdr, &localsword) ||
         !JS_XDRUint32(xdr, &flagsword)) {
-        goto bad;
+        return false;
     }
 
     if (xdr->mode == JSXDR_DECODE) {
@@ -1655,6 +1650,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         JSAtom *name;
         JSLocalKind localKind;
 
+        bool ok = true;
         mark = JS_ARENA_MARK(&xdr->cx->tempPool);
 
         /*
@@ -1673,13 +1669,13 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
                                bitmapLength * sizeof *bitmap);
         if (!bitmap) {
             js_ReportOutOfScriptQuota(xdr->cx);
-            ok = JS_FALSE;
+            ok = false;
             goto release_mark;
         }
         if (xdr->mode == JSXDR_ENCODE) {
             names = js_GetLocalNameArray(xdr->cx, fun, &xdr->cx->tempPool);
             if (!names) {
-                ok = JS_FALSE;
+                ok = false;
                 goto release_mark;
             }
             memset(bitmap, 0, bitmapLength * sizeof *bitmap);
@@ -1734,19 +1730,18 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
                     goto release_mark;
             }
         }
-        ok = JS_TRUE;
 
       release_mark:
         JS_ARENA_RELEASE(&xdr->cx->tempPool, mark);
         if (!ok)
-            goto out;
+            return false;
 
         if (xdr->mode == JSXDR_DECODE)
             js_FreezeLocalNames(cx, fun);
     }
 
     if (!js_XDRScript(xdr, &fun->u.i.script, false, NULL))
-        goto bad;
+        return false;
 
     if (xdr->mode == JSXDR_DECODE) {
         *objp = FUN_OBJECT(fun);
@@ -1758,13 +1753,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         }
     }
 
-out:
-    JS_POP_TEMP_ROOT(cx, &tvr);
-    return ok;
-
-bad:
-    ok = JS_FALSE;
-    goto out;
+    return true;
 }
 
 #else  /* !JS_HAS_XDR */
@@ -2681,26 +2670,26 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
     JSStackFrame *fp;
     uintN error;
     const char *name, *source;
-    JSTempValueRooter tvr;
 
     for (fp = js_GetTopStackFrame(cx); fp && !fp->regs; fp = fp->down)
         continue;
     name = source = NULL;
-    JS_PUSH_TEMP_ROOT_STRING(cx, NULL, &tvr);
+
+    AutoValueRooter tvr(cx);
     if (flags & JSV2F_ITERATOR) {
         error = JSMSG_BAD_ITERATOR;
         name = js_iterator_str;
         JSString *src = js_ValueToSource(cx, *vp);
         if (!src)
-            goto out;
-        tvr.u.value = STRING_TO_JSVAL(src);
+            return;
+        tvr.setString(src);
         JSString *qsrc = js_QuoteString(cx, src, 0);
         if (!qsrc)
-            goto out;
-        tvr.u.value = STRING_TO_JSVAL(qsrc);
+            return;
+        tvr.setString(qsrc);
         source = js_GetStringBytes(cx, qsrc);
         if (!source)
-            goto out;
+            return;
     } else if (flags & JSV2F_CONSTRUCT) {
         error = JSMSG_NOT_CONSTRUCTOR;
     } else {
@@ -2716,9 +2705,6 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
                          : JSDVG_IGNORE_STACK,
                          *vp, NULL,
                          name, source);
-
-  out:
-    JS_POP_TEMP_ROOT(cx, &tvr);
 }
 
 /*

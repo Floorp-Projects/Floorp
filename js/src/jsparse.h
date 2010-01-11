@@ -832,8 +832,10 @@ struct JSFunctionBoxQueue {
 
 #define NUM_TEMP_FREELISTS      6U      /* 32 to 2048 byte size classes (32 bit) */
 
-struct JSCompiler {
-    JSContext           *context;
+class JSTreeContext;
+
+struct JSCompiler : private js::AutoGCRooter {
+    JSContext           * const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
     JSAtomListElement   *aleFreeList;
     void                *tempFreeList[NUM_TEMP_FREELISTS];
     JSTokenStream       tokenStream;
@@ -843,10 +845,10 @@ struct JSCompiler {
     JSParseNode         *nodeList;      /* list of recyclable parse-node structs */
     uint32              functionCount;  /* number of functions in current unit */
     JSObjectBox         *traceListHead; /* list of parsed object for GC tracing */
-    JSTempValueRooter   tempRoot;       /* root to trace traceListHead */
 
     JSCompiler(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL)
-      : context(cx), aleFreeList(NULL), tokenStream(cx), principals(NULL),
+      : js::AutoGCRooter(cx, COMPILER), context(cx),
+        aleFreeList(NULL), tokenStream(cx), principals(NULL),
         callerFrame(cfp), nodeList(NULL), functionCount(0), traceListHead(NULL)
     {
         memset(tempFreeList, 0, sizeof tempFreeList);
@@ -855,6 +857,9 @@ struct JSCompiler {
     }
 
     ~JSCompiler();
+
+    friend void js::AutoGCRooter::trace(JSTracer *trc);
+    friend class JSTreeContext;
 
     /*
      * Initialize a compiler. Parameters are passed on to init tokenStream.

@@ -79,6 +79,8 @@
 
 #include "jsautooplen.h"
 
+using namespace js;
+
 /*
  * Index limit must stay within 32 bits.
  */
@@ -307,7 +309,7 @@ ToDisassemblySource(JSContext *cx, jsval v)
         }
 
         if (clasp == &js_RegExpClass) {
-            JSAutoTempValueRooter tvr(cx);
+            AutoValueRooter tvr(cx);
             if (!js_regexp_toString(cx, obj, tvr.addr()))
                 return NULL;
             return js_GetStringBytes(cx, JSVAL_TO_STRING(tvr.value()));

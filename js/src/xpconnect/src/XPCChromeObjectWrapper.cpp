@@ -40,7 +40,7 @@
 #include "xpcprivate.h"
 #include "nsDOMError.h"
 #include "jsdbgapi.h"
-#include "jscntxt.h"  // For JSAutoTempValueRooter.
+#include "jscntxt.h"  // For js::AutoValueRooter.
 #include "jsobj.h"
 #include "XPCNativeWrapper.h"
 #include "XPCWrapper.h"
@@ -283,17 +283,16 @@ WrapObject(JSContext *cx, JSObject *parent, jsval v, jsval *vp)
 
   *vp = OBJECT_TO_JSVAL(wrapperObj);
 
-  jsval exposedProps = JSVAL_VOID;
-  JSAutoTempValueRooter tvr(cx, 1, &exposedProps);
+  js::AutoValueRooter exposedProps(cx, JSVAL_VOID);
 
-  if (!GetExposedProperties(cx, JSVAL_TO_OBJECT(v), &exposedProps)) {
+  if (!GetExposedProperties(cx, JSVAL_TO_OBJECT(v), exposedProps.addr())) {
     return JS_FALSE;
   }
 
   if (!JS_SetReservedSlot(cx, wrapperObj, XPCWrapper::sWrappedObjSlot, v) ||
-      !JS_SetReservedSlot(cx, wrapperObj, XPCWrapper::sFlagsSlot,
-                          JSVAL_ZERO) ||
-      !JS_SetReservedSlot(cx, wrapperObj, sExposedPropsSlot, exposedProps)) {
+      !JS_SetReservedSlot(cx, wrapperObj, XPCWrapper::sFlagsSlot, JSVAL_ZERO) ||
+      !JS_SetReservedSlot(cx, wrapperObj, sExposedPropsSlot,
+                          exposedProps.value())) {
     return JS_FALSE;
   }
 
@@ -778,7 +777,7 @@ XPC_COW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     return nsnull;
   }
 
-  JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
+  js::AutoValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
 
   // Initialize our COW.
   jsval v = OBJECT_TO_JSVAL(wrappedObj);
