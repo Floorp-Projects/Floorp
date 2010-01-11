@@ -135,6 +135,10 @@ function TileManager(appendTile, removeTile, browserView, cacheSize) {
 
   /* remember these values to reduce the recenterEvictionQueue cost */
   this._ctr = new Point(0, 0);
+
+  /* create one Image of the checkerboard to be reused */
+  this._checkerboard = new Image();
+  this._checkerboard.src = "chrome://browser/content/checkerboard.png";
 }
 
 TileManager.prototype = {
@@ -410,28 +414,36 @@ TileManager.prototype = {
    * may have.  If we find that we're missing a necessary tile, we fall back on
    * drawWindow() directly to the destination canvas.
    */
-  renderRectToCanvas: function renderRectToCanvas(srcRect, destCanvas, scalex, scaley) {
+  renderRectToCanvas: function renderRectToCanvas(srcRect, destCanvas, scalex, scaley, drawMissing) {
     let tc = this._tileCache;
     let ctx = destCanvas.getContext("2d");
-
+    drawMissing = drawMissing == false ? false : true;
+    if (!drawMissing) {
+      let pat = ctx.createPattern(this._checkerboard, "repeat");
+      ctx.fillStyle = pat;
+      ctx.fillRect(0, 0, destCanvas.width, destCanvas.height);
+    }
+    ctx.save();
+    ctx.scale(scalex, scaley);
+    ctx.translate(-srcRect.left, -srcRect.top);
+    
     let completed = (function breakableLoop() {
       BEGIN_FOREACH_IN_RECT(srcRect, tc, tile)
 
-      if (tile.isDirty())
+      if (drawMissing && tile.isDirty()) {
         return false;
-
-      let dx = Math.round(scalex * (tile.boundRect.left - srcRect.left));
-      let dy = Math.round(scaley * (tile.boundRect.top - srcRect.top));
-
-      ctx.drawImage(tile._canvas, dx, dy,
-                    Math.round(scalex * kTileWidth),
-                    Math.round(scaley * kTileHeight));
-
+      } else if (!tile.isDirty()) {
+        ctx.drawImage(tile._canvas, tile.boundRect.left, tile.boundRect.top,
+                      kTileWidth, kTileHeight);
+      }
+      
       END_FOREACH_IN_RECT
 
       return true;
     })();
 
+    ctx.restore();
+    
     if (!completed) {
       let bv = this._browserView;
 
@@ -442,7 +454,7 @@ TileManager.prototype = {
       bv.browserToViewportCanvasContext(ctx);
       ctx.scale(scalex, scaley);
       ctx.drawWindow(bv._contentWindow,
-                     0, 0, srcRect.width, srcRect.height,
+                     srcRect.left, srcRect.top, srcRect.width, srcRect.height,
                      "white",
                      (ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_CARET));
 

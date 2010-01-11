@@ -316,14 +316,19 @@ BrowserView.prototype = {
     return bvs.zoomLevel;
   },
 
-  beginOffscreenOperation: function beginOffscreenOperation() {
+  beginOffscreenOperation: function beginOffscreenOperation(rect) {
     if (this._offscreenDepth == 0) {
       let vis = this.getVisibleRect();
-      let canvas = document.getElementById("view-buffer");
-      canvas.width = vis.width;
-      canvas.height = vis.height;
-      this.renderToCanvas(canvas, vis.width, vis.height, vis);
-      canvas.style.display = "block";
+      rect = rect || vis;
+      let zoomRatio = vis.width / rect.width;
+      let viewBuffer = Elements.viewBuffer;
+      viewBuffer.width = vis.width;
+      viewBuffer.height = vis.height;
+
+      this._tileManager.renderRectToCanvas(rect, viewBuffer, zoomRatio, zoomRatio, false);
+      viewBuffer.style.display = "block";
+      window.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIDOMWindowUtils).processUpdates();
       this.pauseRendering();
     }
     this._offscreenDepth++;
@@ -333,8 +338,7 @@ BrowserView.prototype = {
     this._offscreenDepth--;
     if (this._offscreenDepth == 0) {
       this.resumeRendering();
-      let canvas = document.getElementById("view-buffer");
-      canvas.style.display = "none";
+      Elements.viewBuffer.style.display = "none";
     }
   },
 

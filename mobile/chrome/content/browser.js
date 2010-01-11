@@ -1084,7 +1084,10 @@ var Browser = {
     return BrowserView.Util.clampZoomLevel(bv.getZoomLevel() * vis.width / (elRect.width + margin * 2));
   },
 
-  /** Find an appropriate zoom rect for an element, if it exists. */
+  /** 
+   * Find an appropriate zoom rect for an element, if it exists.
+   * @return Rect in viewport coordinates
+   * */
   _getZoomRectForElement: function _getZoomRectForElement(element, elementY) {
     let bv = this._browserView;
     let oldZoomLevel = bv.getZoomLevel();
@@ -1104,8 +1107,8 @@ var Browser = {
   },
 
   /**
-   * Find a good zoom rectangle for point specified in browser coordinates.
-   * @return Point in viewport coordinates
+   * Find a good zoom rectangle for point that is specified in browser coordinates.
+   * @return Rect in viewport coordinates
    */
   _getZoomRectForPoint: function _getZoomRectForPoint(x, y, zoomLevel) {
     let bv = this._browserView;
@@ -1134,7 +1137,7 @@ var Browser = {
     // side effects of functions are noted below.
 
     // Hardware scrolling happens immediately when scrollTo is called.  Hide to prevent artifacts.
-    bv.beginOffscreenOperation();
+    bv.beginOffscreenOperation(rect);
 
     // We must scroll to the correct area before TileManager is informed of the change
     // so that only one render is done. Ensures setZoomLevel puts it off.
@@ -1143,6 +1146,7 @@ var Browser = {
     // Critical rect changes when controls are hidden. Must hide before tilemanager viewport.
     this.hideSidebars();
     this.hideTitlebar();
+    
     bv.setZoomLevel(zoomLevel);
 
     // Ensure container is big enough for scroll values.
