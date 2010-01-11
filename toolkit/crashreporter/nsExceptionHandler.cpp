@@ -87,6 +87,10 @@
 #if defined(MOZ_IPC)
 using google_breakpad::CrashGenerationServer;
 using google_breakpad::ClientInfo;
+
+#include "nsThreadUtils.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindow.h"
 #endif
 
 namespace CrashReporter {
@@ -912,6 +916,31 @@ nsresult AppendObjCExceptionInfoToAppNotes(void *inException)
 #if defined(MOZ_IPC)
 //-----------------------------------------------------------------------------
 // Out-of-process crash reporting API wrappers
+class SubmitCrashReport : public nsRunnable
+{
+public:
+  SubmitCrashReport(nsIFile* dumpFile) : mDumpFile(dumpFile) { }
+
+  NS_IMETHOD Run() {
+    char* e = getenv("MOZ_CRASHREPORTER_NO_REPORT");
+    if (e && *e)
+      return NS_OK;
+
+    nsCOMPtr<nsIWindowWatcher> windowWatcher =
+      do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    windowWatcher->OpenWindow(nsnull,
+                              "chrome://global/content/oopcrashdialog.xul",
+                              "_blank",
+                              "centerscreen,chrome,titlebar",
+                              mDumpFile, getter_AddRefs(newWindow));
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIFile> mDumpFile;
+};
+
 static void
 OnChildProcessDumpRequested(void* aContext,
                             const ClientInfo* aClientInfo,
@@ -922,7 +951,16 @@ OnChildProcessDumpRequested(void* aContext,
 #endif
                               aFilePath)
 {
-  printf("CHILD DUMP REQUEST\n");
+  nsCOMPtr<nsILocalFile> lf;
+#ifdef XP_WIN
+  NS_NewLocalFile(nsDependentString(aFilePath->c_str()), PR_FALSE,
+                  getter_AddRefs(lf));
+#else
+  NS_NewNativeLocalFile(nsDependentCString(aFilePath->c_str()), PR_FALSE,
+                        getter_AddRefs(lf));
+#endif
+  nsCOMPtr<nsIRunnable> r = new SubmitCrashReport(lf);
+  NS_DispatchToMainThread(r);
 }
 
 static bool
