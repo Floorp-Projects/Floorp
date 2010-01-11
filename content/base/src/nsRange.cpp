@@ -2119,7 +2119,7 @@ static void CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
   if (iter.IsDone()) {
     // the range is collapsed, only continue if the cursor is in a text node
     nsCOMPtr<nsIContent> content = do_QueryInterface(aStartParent);
-    if (content->IsNodeOfType(nsINode::eTEXT)) {
+    if (content && content->IsNodeOfType(nsINode::eTEXT)) {
       nsIFrame* frame = content->GetPrimaryFrame();
       if (frame && frame->GetType() == nsGkAtoms::textFrame) {
         nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
@@ -2144,6 +2144,8 @@ static void CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
     nsCOMPtr<nsIDOMNode> node(iter.GetCurrentNode());
     iter.Next();
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+    if (!content)
+      continue;
     if (content->IsNodeOfType(nsINode::eTEXT)) {
        if (node == startContainer) {
          PRInt32 offset = startContainer == endContainer ? 
@@ -2152,7 +2154,7 @@ static void CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
          continue;
        } else if (node == endContainer) {
          GetPartialTextRect(aCollector, content, 0, aEndOffset);
-         continue;	 
+         continue;
        }
     }
 
@@ -2167,12 +2169,17 @@ static void CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
 NS_IMETHODIMP
 nsRange::GetBoundingClientRect(nsIDOMClientRect** aResult)
 {
+  *aResult = nsnull;
+
   // Weak ref, since we addref it below
   nsClientRect* rect = new nsClientRect();
   if (!rect)
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*aResult = rect);
+
+  if (!mStartParent)
+    return NS_OK;
 
   nsLayoutUtils::RectAccumulator accumulator;
   
@@ -2189,6 +2196,9 @@ NS_IMETHODIMP
 nsRange::GetClientRects(nsIDOMClientRectList** aResult)
 {
   *aResult = nsnull;
+
+  if (!mStartParent)
+    return NS_OK;
 
   nsRefPtr<nsClientRectList> rectList = new nsClientRectList();
   if (!rectList)

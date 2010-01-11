@@ -1,0 +1,11 @@
+<html contenteditable="true" xmlns="http://www.w3.org/1999/xhtml"><head><script>
+
+function boom()
+{
+  document.execCommand("selectAll", false, "");
+  try { document.execCommand("justifyfull", false, null); } catch(e) { }
+  try { document.execCommand("inserthorizontalrule", false, "false"); } catch(e) { }
+  document.execCommand("delete", false, null);
+}
+
+</script></head>x y z<body onload="boom();"><div/></body></html>
