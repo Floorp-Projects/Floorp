@@ -437,6 +437,73 @@ nsPasteCommand::GetCommandStateParams(const char *aCommandName,
 }
 
 NS_IMETHODIMP
+nsPasteTransferableCommand::IsCommandEnabled(const char *aCommandName,
+                                             nsISupports *aCommandRefCon,
+                                             PRBool *outCmdEnabled)
+{
+  NS_ENSURE_ARG_POINTER(outCmdEnabled);
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
+  if (editor)
+    return editor->CanPasteTransferable(nsnull, outCmdEnabled);
+
+  *outCmdEnabled = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPasteTransferableCommand::DoCommand(const char *aCommandName, nsISupports *aCommandRefCon)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP 
+nsPasteTransferableCommand::DoCommandParams(const char *aCommandName,
+                                            nsICommandParams *aParams,
+                                            nsISupports *aCommandRefCon)
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
+  if (!editor)
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsISupports> supports;
+  aParams->GetISupportsValue("transferable", getter_AddRefs(supports));
+  if (!supports)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsITransferable> trans = do_QueryInterface(supports);
+  if (!trans)
+    return NS_ERROR_FAILURE;
+
+  return editor->PasteTransferable(trans);
+}
+
+NS_IMETHODIMP 
+nsPasteTransferableCommand::GetCommandStateParams(const char *aCommandName,
+                                                  nsICommandParams *aParams,
+                                                  nsISupports *aCommandRefCon)
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
+  if (!editor)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsITransferable> trans;
+
+  nsCOMPtr<nsISupports> supports;
+  aParams->GetISupportsValue("transferable", getter_AddRefs(supports));
+  if (supports) {
+    trans = do_QueryInterface(supports);
+    if (!trans)
+      return NS_ERROR_FAILURE;
+  }
+
+  PRBool canPaste;
+  nsresult rv = editor->CanPasteTransferable(trans, &canPaste);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return aParams->SetBooleanValue(STATE_ENABLED, canPaste);
+}
+
+NS_IMETHODIMP
 nsSwitchTextDirectionCommand::IsCommandEnabled(const char *aCommandName,
                                  nsISupports *aCommandRefCon,
                                  PRBool *outCmdEnabled)
