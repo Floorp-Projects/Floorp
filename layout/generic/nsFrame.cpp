@@ -1422,7 +1422,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(aChild);
     aChild = placeholder->GetOutOfFlowFrame();
     NS_ASSERTION(aChild, "No out of flow frame?");
-    if (!aChild || aChild->GetType() == nsGkAtoms::menuPopupFrame)
+    if (!aChild || nsLayoutUtils::IsPopup(aChild))
       return NS_OK;
     // update for the new child
     disp = aChild->GetStyleDisplay();

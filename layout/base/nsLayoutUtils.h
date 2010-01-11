@@ -1020,6 +1020,18 @@ public:
                                                  nsIFrame* aCSSRootFrame);
 
   /**
+   * A frame is a popup if it has its own floating window. Menus, panels
+   * and combobox dropdowns are popups.
+   */
+  static PRBool IsPopup(nsIFrame* aFrame);
+
+  /**
+   * Find the nearest "display root". This is the nearest enclosing
+   * popup frame or the root prescontext's root frame.
+   */
+  static nsIFrame* GetDisplayRootFrame(nsIFrame* aFrame);
+
+  /**
    * Get textrun construction flags determined by a given style; in particular
    * some combination of:
    * -- TEXT_DISABLE_OPTIONAL_LIGATURES if letter-spacing is in use
