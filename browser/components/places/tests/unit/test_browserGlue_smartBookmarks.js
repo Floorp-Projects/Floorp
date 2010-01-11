@@ -40,6 +40,9 @@
  * Tests that nsBrowserGlue is correctly interpreting the preferences settable
  * by the user or by other components.
  */
+
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 // Initialize browserGlue.
 var bg = Cc["@mozilla.org/browser/browserglue;1"].
          getService(Ci.nsIBrowserGlue);
@@ -56,12 +59,37 @@ var os = Cc["@mozilla.org/observer-service;1"].
          getService(Ci.nsIObserverService);
 var as = Cc["@mozilla.org/browser/annotation-service;1"].
          getService(Ci.nsIAnnotationService);
+
 const PREF_SMART_BOOKMARKS_VERSION = "browser.places.smartBookmarksVersion";
 const PREF_AUTO_EXPORT_HTML = "browser.bookmarks.autoExportHTML";
 const PREF_IMPORT_BOOKMARKS_HTML = "browser.places.importBookmarksHTML";
 const PREF_RESTORE_DEFAULT_BOOKMARKS = "browser.bookmarks.restore_default_bookmarks";
 
 const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
+
+/**
+ * Rebuilds smart bookmarks listening to console output to report any message or
+ * exception generated when calling ensurePlacesDefaultQueriesInitialized().
+ */
+function rebuildSmartBookmarks() {
+  var consoleListener = {
+    observe: function(aMsg) {
+      print("Got console message: " + aMsg.message);
+    },
+
+    QueryInterface: XPCOMUtils.generateQI([
+      Ci.nsIConsoleListener
+    ]),
+  };
+  var console = Cc["@mozilla.org/consoleservice;1"].
+                getService(Ci.nsIConsoleService);
+  console.reset();
+  console.registerListener(consoleListener);
+  bg.ensurePlacesDefaultQueriesInitialized();
+  console.unregisterListener(consoleListener);
+}
+
+
 var tests = [];
 //------------------------------------------------------------------------------
 
@@ -71,9 +99,12 @@ tests.push({
     // Sanity check: we should have default bookmark.
     do_check_neq(bs.getIdForItemAt(bs.toolbarFolder, 0), -1);
     do_check_neq(bs.getIdForItemAt(bs.bookmarksMenuFolder, 0), -1);
+
     // Set preferences.
     ps.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 0);
-    bg.ensurePlacesDefaultQueriesInitialized();
+
+    rebuildSmartBookmarks();
+
     // Count items.
     do_check_eq(countFolderChildren(bs.toolbarFolder),
                 SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
@@ -102,8 +133,6 @@ tests.push({
     do_check_eq(bs.getItemTitle(itemId), "new title");
 
     // Sanity check items.
-    dump_table("moz_bookmarks");
-    dump_table("moz_items_annos");
     do_check_eq(countFolderChildren(bs.toolbarFolder),
                 SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
     do_check_eq(countFolderChildren(bs.bookmarksMenuFolder),
@@ -111,7 +140,9 @@ tests.push({
 
     // Set preferences.
     ps.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
-    bg.ensurePlacesDefaultQueriesInitialized();
+
+    rebuildSmartBookmarks();
+
     // Count items.
     do_check_eq(countFolderChildren(bs.toolbarFolder),
                 SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
@@ -141,8 +172,6 @@ tests.push({
     bs.removeItem(bs.getIdForItemAt(bs.toolbarFolder, 0));
 
     // Sanity check items.
-    dump_table("moz_bookmarks");
-    dump_table("moz_items_annos");
     do_check_eq(countFolderChildren(bs.toolbarFolder),
                 DEFAULT_BOOKMARKS_ON_TOOLBAR);
     do_check_eq(countFolderChildren(bs.bookmarksMenuFolder),
@@ -150,7 +179,9 @@ tests.push({
 
     // Set preferences.
     ps.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
-    bg.ensurePlacesDefaultQueriesInitialized();
+
+    rebuildSmartBookmarks();
+
     // Count items.
     // We should not have recreated the smart bookmark on toolbar.
     do_check_eq(countFolderChildren(bs.toolbarFolder),
@@ -172,8 +203,6 @@ tests.push({
   description: "Even if a smart bookmark has been removed recreate it if version is 0.",
   exec: function() {
     // Sanity check items.
-    dump_table("moz_bookmarks");
-    dump_table("moz_items_annos");
     do_check_eq(countFolderChildren(bs.toolbarFolder),
                 DEFAULT_BOOKMARKS_ON_TOOLBAR);
     do_check_eq(countFolderChildren(bs.bookmarksMenuFolder),
@@ -181,7 +210,9 @@ tests.push({
 
     // Set preferences.
     ps.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 0);
-    bg.ensurePlacesDefaultQueriesInitialized();
+
+    rebuildSmartBookmarks();
+
     // Count items.
     // We should not have recreated the smart bookmark on toolbar.
     do_check_eq(countFolderChildren(bs.toolbarFolder),
