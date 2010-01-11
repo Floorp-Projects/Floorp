@@ -87,6 +87,7 @@
 #include "jsdtracef.h"
 #endif
 
+#include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
 /*
@@ -108,14 +109,6 @@
 #endif
 
 using namespace js;
-
-/*
- * Check JSTempValueUnion has the size of jsval and void * so we can
- * reinterpret jsval as void* GC-thing pointer and use JSTVU_SINGLE for
- * different GC-things.
- */
-JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(jsval));
-JS_STATIC_ASSERT(sizeof(JSTempValueUnion) == sizeof(void *));
 
 /*
  * Check that JSTRACE_XML follows JSTRACE_OBJECT, JSTRACE_DOUBLE and
@@ -2259,19 +2252,20 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
     return JS_DHASH_NEXT;
 }
 
-#define TRACE_JSVALS(trc, len, vec, name)                                     \
-    JS_BEGIN_MACRO                                                            \
-    jsval _v, *_vp, *_end;                                                    \
-                                                                              \
-        for (_vp = vec, _end = _vp + len; _vp < _end; _vp++) {                \
-            _v = *_vp;                                                        \
-            if (JSVAL_IS_TRACEABLE(_v)) {                                     \
-                JS_SET_TRACING_INDEX(trc, name, _vp - (vec));                 \
-                js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(_v),                  \
-                                JSVAL_TRACE_KIND(_v));                        \
-            }                                                                 \
-        }                                                                     \
-    JS_END_MACRO
+namespace js {
+
+void
+TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len)
+{
+    for (uint32 i = 0; i < len; i++) {
+        if (JSObject *obj = vec[i]) {
+            JS_SET_TRACING_INDEX(trc, "vector", i);
+            js_CallGCMarker(trc, obj, JSTRACE_OBJECT);
+        }
+    }
+}
+
+}
 
 void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
@@ -2297,7 +2291,7 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
             } else {
                 nslots = fp->script->nfixed;
             }
-            TRACE_JSVALS(trc, nslots, fp->slots, "slot");
+            js::TraceValues(trc, nslots, fp->slots, "slot");
         }
     } else {
         JS_ASSERT(!fp->slots);
@@ -2322,7 +2316,7 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
             if (fp->fun->flags & JSFRAME_ROOTED_ARGV)
                 skip = 2 + fp->argc;
         }
-        TRACE_JSVALS(trc, 2 + nslots - skip, fp->argv - 2 + skip, "operand");
+        js::TraceValues(trc, 2 + nslots - skip, fp->argv - 2 + skip, "operand");
     }
 
     JS_CALL_VALUE_TRACER(trc, fp->rval, "rval");
@@ -2377,7 +2371,6 @@ JS_REQUIRES_STACK JS_FRIEND_API(void)
 js_TraceContext(JSTracer *trc, JSContext *acx)
 {
     JSStackHeader *sh;
-    JSTempValueRooter *tvr;
 
     /*
      * Trace active and suspended callstacks.
@@ -2427,38 +2420,11 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
     for (sh = acx->stackHeaders; sh; sh = sh->down) {
         METER(trc->context->runtime->gcStats.stackseg++);
         METER(trc->context->runtime->gcStats.segslots += sh->nslots);
-        TRACE_JSVALS(trc, sh->nslots, JS_STACK_SEGMENT(sh), "stack");
+        js::TraceValues(trc, sh->nslots, JS_STACK_SEGMENT(sh), "stack");
     }
 
-    for (tvr = acx->tempValueRooters; tvr; tvr = tvr->down) {
-        switch (tvr->count) {
-          case JSTVU_SINGLE:
-            JS_SET_TRACING_NAME(trc, "tvr->u.value");
-            js_CallValueTracerIfGCThing(trc, tvr->u.value);
-            break;
-          case JSTVU_TRACE:
-            tvr->u.trace(trc, tvr);
-            break;
-          case JSTVU_SPROP:
-            tvr->u.sprop->trace(trc);
-            break;
-          case JSTVU_WEAK_ROOTS:
-            tvr->u.weakRoots->mark(trc);
-            break;
-          case JSTVU_COMPILER:
-            tvr->u.compiler->trace(trc);
-            break;
-          case JSTVU_SCRIPT:
-            js_TraceScript(trc, tvr->u.script);
-            break;
-          case JSTVU_ENUMERATOR:
-            static_cast<JSAutoEnumStateRooter *>(tvr)->mark(trc);
-            break;
-          default:
-            JS_ASSERT(tvr->count >= 0);
-            TRACE_JSVALS(trc, tvr->count, tvr->u.array, "tvr->u.array");
-        }
-    }
+    for (js::AutoGCRooter *gcr = acx->autoGCRooters; gcr; gcr = gcr->down)
+        gcr->trace(trc);
 
     if (acx->sharpObjectMap.depth > 0)
         js_TraceSharpMap(trc, &acx->sharpObjectMap);
@@ -2469,7 +2435,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
     InterpState* state = acx->interpState;
     while (state) {
         if (state->nativeVp)
-            TRACE_JSVALS(trc, state->nativeVpLen, state->nativeVp, "nativeVp");
+            js::TraceValues(trc, state->nativeVpLen, state->nativeVp, "nativeVp");
         state = state->prev;
     }
 #endif
@@ -3365,33 +3331,30 @@ out:
      * interlock mechanism here.
      */
     if (gckind != GC_SET_SLOT_REQUEST && (callback = rt->gcCallback)) {
-        JSWeakRoots savedWeakRoots;
-        JSTempValueRooter tvr;
+        if (!(gckind & GC_KEEP_ATOMS)) {
+            (void) callback(cx, JSGC_END);
 
-        if (gckind & GC_KEEP_ATOMS) {
+            /*
+             * On shutdown iterate until JSGC_END callback stops creating
+             * garbage.
+             */
+            if (gckind == GC_LAST_CONTEXT && rt->gcPoke)
+                goto restart_at_beginning;
+        } else {
             /*
              * We allow JSGC_END implementation to force a full GC or allocate
              * new GC things. Thus we must protect the weak roots from garbage
              * collection and overwrites.
              */
-            savedWeakRoots = cx->weakRoots;
-            JS_PUSH_TEMP_ROOT_WEAK_COPY(cx, &savedWeakRoots, &tvr);
+            AutoSaveWeakRoots save(cx);
+
             JS_KEEP_ATOMS(rt);
             JS_UNLOCK_GC(rt);
-        }
 
-        (void) callback(cx, JSGC_END);
+            (void) callback(cx, JSGC_END);
 
-        if (gckind & GC_KEEP_ATOMS) {
             JS_LOCK_GC(rt);
             JS_UNKEEP_ATOMS(rt);
-            JS_POP_TEMP_ROOT(cx, &tvr);
-        } else if (gckind == GC_LAST_CONTEXT && rt->gcPoke) {
-            /*
-             * On shutdown iterate until JSGC_END callback stops creating
-             * garbage.
-             */
-            goto restart_at_beginning;
         }
     }
 }

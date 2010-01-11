@@ -321,7 +321,7 @@ struct xpc_qsArgValArray
         memset(array, 0, N * sizeof(jsval));
     }
 
-    JSAutoTempValueRooter tvr;
+    js::AutoArrayRooter tvr;
     jsval array[N];
 };
 

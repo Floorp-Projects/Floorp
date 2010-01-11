@@ -40,7 +40,7 @@
 #include "xpcprivate.h"
 #include "nsDOMError.h"
 #include "jsdbgapi.h"
-#include "jscntxt.h"  // For JSAutoTempValueRooter.
+#include "jscntxt.h"  // For js::AutoValueRooter.
 #include "XPCWrapper.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
@@ -830,7 +830,7 @@ GetUXPCObject(JSContext *cx, JSObject *obj)
     return nsnull;
   }
 
-  JSAutoTempValueRooter tvr(cx, uxpco);
+  js::AutoValueRooter tvr(cx, uxpco);
 
   jsval wrappedObj, parentScope;
   if (!JS_GetReservedSlot(cx, obj, sWrappedObjSlot, &wrappedObj) ||
@@ -1206,7 +1206,7 @@ XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
     return nsnull;
   }
 
-  JSAutoTempValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
+  js::AutoValueRooter tvr(cx, OBJECT_TO_JSVAL(wrapperIter));
 
   // Initialize our XOW.
   jsval v = OBJECT_TO_JSVAL(wrappedObj);

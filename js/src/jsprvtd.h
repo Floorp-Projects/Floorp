@@ -281,31 +281,6 @@ typedef struct JSDebugHooks {
     void                *debugErrorHookData;
 } JSDebugHooks;
 
-/*
- * Type definitions for temporary GC roots that register with GC local C
- * variables. See jscntxt.h for details.
- */
-typedef void
-(* JSTempValueTrace)(JSTracer *trc, JSTempValueRooter *tvr);
-
-typedef union JSTempValueUnion {
-    jsval               value;
-    JSObject            *object;
-    JSXML               *xml;
-    JSTempValueTrace    trace;
-    JSScopeProperty     *sprop;
-    JSWeakRoots         *weakRoots;
-    JSCompiler          *compiler;
-    JSScript            *script;
-    jsval               *array;
-} JSTempValueUnion;
-
-struct JSTempValueRooter {
-    JSTempValueRooter   *down;
-    ptrdiff_t           count;
-    JSTempValueUnion    u;
-};
-
 /* JSObjectOps function pointer typedefs. */
 
 /*
