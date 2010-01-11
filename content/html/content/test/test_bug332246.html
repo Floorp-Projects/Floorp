@@ -13,21 +13,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=332246
 <p id="display"></p>
 <div id="content">
 
-<div id="a1" style="height: 100px; width: 100px; overflow: hidden;">
+<div id="a1" style="height: 100px; width: 100px; overflow: hidden; outline:1px dotted black;">
 <div style="height: 100px"></div>
-<a id="a2" href="#">Top<br><br><br><br><br><br><br><br><br><br><br><br>Bottom</a>
+<a id="a2" href="#" style="display:block; background:yellow; height:200px;">Top</a>
 <div style="height: 100px"></div>
 </div>
 
-<div id="b1" style="height: 100px; width: 100px; overflow: hidden;">
+<div id="b1" style="height: 100px; width: 100px; overflow: hidden; outline:1px dotted black;">
 <div style="height: 100px"></div>
-<div id="b2" style="border: 10px solid black; height: 200px;"></div>
+<div id="b2" href="#" style="border:10px solid black; background:yellow; height:200px;"></div>
 <div style="height: 100px"></div>
 </div>
 
 <br>
 
-<div id="c1" style="height: 100px; width: 100px; overflow: hidden; position: relative;">
+<div id="c1" style="height: 100px; width: 100px; overflow: hidden; position: relative; outline:1px dotted black;">
 <div id="c2" style="border: 10px solid black; height: 200px; width: 50px; position: absolute; top: 100px;"></div>
 <div style="height: 100px"></div>
 </div>
@@ -40,31 +40,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=332246
 
 var a1 = document.getElementById('a1');
 var a2 = document.getElementById('a2');
+is(a1.scrollHeight, 400, "Wrong a1.scrollHeight");
+is(a1.offsetHeight, 100, "Wrong a1.offsetHeight");
 a2.scrollIntoView(true);
-//bug 401904 for windows, bug 411297 for the Mac
-if (navigator.platform == "Win32" || navigator.platform.indexOf("Mac") == 0)
-  todo(a1.scrollTop == 100, "Wrong scrollTop value!");
-else
-  ok(a1.scrollTop == 100, "Wrong scrollTop value!");
+is(a1.scrollTop, 100, "Wrong scrollTop value after a2.scrollIntoView(true)");
 a2.scrollIntoView(false);
-if (navigator.platform.indexOf("Mac") == 0) //Mac bug 411297 again
-  todo((a1.scrollHeight - a1.offsetHeight - a1.scrollTop) == 100, "Wrong (scrollHeight - offsetHeight - scrollTop) value!");
-else
-  ok((a1.scrollHeight - a1.offsetHeight - a1.scrollTop) == 100, "Wrong (scrollHeight - offsetHeight - scrollTop) value!");
+is(a1.scrollTop, 200, "Wrong scrollTop value after a2.scrollIntoView(false)");
 
 var b1 = document.getElementById('b1');
 var b2 = document.getElementById('b2');
+is(b1.scrollHeight, 420, "Wrong b1.scrollHeight");
+is(b1.offsetHeight, 100, "Wrong b1.offsetHeight");
 b2.scrollIntoView(true);
-  ok(b1.scrollTop == 100, "Wrong scrollTop value!");
+is(b1.scrollTop, 100, "Wrong scrollTop value after b2.scrollIntoView(true)");
 b2.scrollIntoView(false);
-  ok((b1.scrollHeight - b1.offsetHeight - b1.scrollTop) == 100, "Wrong (scrollHeight - offsetHeight - scrollTop) value!");
+is(b1.scrollTop, 220, "Wrong scrollTop value after b2.scrollIntoView(false)");
 
 var c1 = document.getElementById('c1');
 var c2 = document.getElementById('c2');
+is(c1.scrollHeight, 320, "Wrong c1.scrollHeight");
+is(c1.offsetHeight, 100, "Wrong c1.offsetHeight");
 c2.scrollIntoView(true);
-  ok(c1.scrollTop == 100, "Wrong scrollTop value!");
+is(c1.scrollTop, 100, "Wrong scrollTop value after c2.scrollIntoView(true)");
 c2.scrollIntoView(false);
-  ok((c1.scrollHeight - c1.offsetHeight - c1.scrollTop) == 0, "Wrong (scrollHeight - offsetHeight - scrollTop) value!");
+is(c1.scrollTop, 220, "Wrong scrollTop value after c2.scrollIntoView(false)");
 
 </script>
 </pre>
