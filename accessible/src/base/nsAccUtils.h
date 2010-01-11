@@ -335,6 +335,15 @@ public:
 
     return object;
   }
+  template<class DestinationType, class SourceType> static inline
+  already_AddRefed<DestinationType> QueryObject(nsRefPtr<SourceType>& aObject)
+  {
+    DestinationType* object = nsnull;
+    if (aObject)
+      CallQueryInterface(aObject.get(), &object);
+    
+    return object;
+  }
 
   /**
    * Query nsAccessNode from the given nsIAccessible.

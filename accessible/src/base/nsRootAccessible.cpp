@@ -1062,7 +1062,7 @@ nsRootAccessible::GetRelationByType(PRUint32 aRelationType,
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible
 
-nsIAccessible*
+nsAccessible*
 nsRootAccessible::GetParent()
 {
   // Parent has been setted in nsApplicationAccesible::AddRootAccessible()

@@ -173,8 +173,8 @@ nsHTMLImageAccessible::CacheChildren()
     if (!areaAccessible)
       return;
 
-    mChildren.AppendObject(areaAccessible);
     areaAcc = nsAccUtils::QueryObject<nsAccessible>(areaAccessible);
+    mChildren.AppendElement(areaAcc);
     areaAcc->SetParent(this);
   }
 }

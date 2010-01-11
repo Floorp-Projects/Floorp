@@ -159,43 +159,35 @@ nsXULTabAccessible::GetRelationByType(PRUint32 aRelationType,
   // assume tab and tabpanels are related 1 to 1. We follow algorithm from
   // the setter 'selectedIndex' of tabbox.xml#tabs binding.
 
-  nsCOMPtr<nsIAccessible> tabsAcc = GetParent();
+  nsAccessible* tabsAcc = GetParent();
   NS_ENSURE_TRUE(nsAccUtils::Role(tabsAcc) == nsIAccessibleRole::ROLE_PAGETABLIST,
                  NS_ERROR_FAILURE);
 
   PRInt32 tabIndex = -1;
 
-  nsCOMPtr<nsIAccessible> childAcc;
-  tabsAcc->GetFirstChild(getter_AddRefs(childAcc));
-  while (childAcc) {
+  PRInt32 childCount = tabsAcc->GetChildCount();
+  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessible* childAcc = tabsAcc->GetChildAt(childIdx);
     if (nsAccUtils::Role(childAcc) == nsIAccessibleRole::ROLE_PAGETAB)
       tabIndex++;
 
     if (childAcc == this)
       break;
-
-    nsCOMPtr<nsIAccessible> acc;
-    childAcc->GetNextSibling(getter_AddRefs(acc));
-    childAcc.swap(acc);
   }
 
-  nsCOMPtr<nsIAccessible> tabBoxAcc;
-  tabsAcc->GetParent(getter_AddRefs(tabBoxAcc));
+  nsAccessible* tabBoxAcc = tabsAcc->GetParent();
   NS_ENSURE_TRUE(nsAccUtils::Role(tabBoxAcc) == nsIAccessibleRole::ROLE_PANE,
                  NS_ERROR_FAILURE);
 
-  tabBoxAcc->GetFirstChild(getter_AddRefs(childAcc));
-  while (childAcc) {
+  childCount = tabBoxAcc->GetChildCount();
+  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessible* childAcc = tabBoxAcc->GetChildAt(childIdx);
     if (nsAccUtils::Role(childAcc) == nsIAccessibleRole::ROLE_PROPERTYPAGE) {
       if (tabIndex == 0)
         return nsRelUtils::AddTarget(aRelationType, aRelation, childAcc);
 
       tabIndex--;
     }
-
-    nsCOMPtr<nsIAccessible> acc;
-    childAcc->GetNextSibling(getter_AddRefs(acc));
-    childAcc.swap(acc);
   }
 
   return NS_OK;
