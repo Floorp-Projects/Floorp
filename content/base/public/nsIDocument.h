@@ -56,6 +56,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsIStreamListener.h"
 #include "nsIObserver.h"
+#include "nsGkAtoms.h"
 #include "nsAutoPtr.h"
 #ifdef MOZ_SMIL
 class nsSMILAnimationController;
@@ -105,8 +106,8 @@ class nsIBoxObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x1539ada4, 0x753f, 0x48a9, \
-  { 0x83, 0x11, 0x71, 0xb9, 0xbd, 0xa6, 0x41, 0xc6 } }
+  { 0xb04d9176, 0xf087, 0x4d3c, \
+    { 0x87, 0x11, 0x13, 0x9d, 0x19, 0x95, 0x43, 0x55 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -465,6 +466,23 @@ public:
   }
   virtual nsIContent *GetRootContentInternal() const = 0;
 
+  // Get the root <html> element, or return null if there isn't one (e.g.
+  // if the root isn't <html>)
+  nsIContent* GetHtmlContent();
+  // Returns the first child of GetHtmlContent which has the given tag,
+  // or nsnull if that doesn't exist.
+  nsIContent* GetHtmlChildContent(nsIAtom* aTag);
+  // Get the canonical <body> element, or return null if there isn't one (e.g.
+  // if the root isn't <html> or if the <body> isn't there)
+  nsIContent* GetBodyContent() {
+    return GetHtmlChildContent(nsGkAtoms::body);
+  }
+  // Get the canonical <head> element, or return null if there isn't one (e.g.
+  // if the root isn't <html> or if the <head> isn't there)
+  nsIContent* GetHeadContent() {
+    return GetHtmlChildContent(nsGkAtoms::head);
+  }
+  
   /**
    * Accessors to the collection of stylesheets owned by this document.
    * Style sheets are ordered, most significant last.
