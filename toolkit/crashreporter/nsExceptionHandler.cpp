@@ -315,6 +315,31 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
  return returnValue;
 }
 
+#ifdef XP_WIN
+/**
+ * Filters out floating point exceptions which are handled by nsSigHandlers.cpp
+ * and should not be handled as crashes.
+ */
+static bool FPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
+                      MDRawAssertionInfo* assertion)
+{
+  PEXCEPTION_RECORD e = (PEXCEPTION_RECORD)exinfo->ExceptionRecord;
+  switch (e->ExceptionCode) {
+    case STATUS_FLOAT_DENORMAL_OPERAND:
+    case STATUS_FLOAT_DIVIDE_BY_ZERO:
+    case STATUS_FLOAT_INEXACT_RESULT:
+    case STATUS_FLOAT_INVALID_OPERATION:
+    case STATUS_FLOAT_OVERFLOW:
+    case STATUS_FLOAT_STACK_CHECK:
+    case STATUS_FLOAT_UNDERFLOW:
+    case STATUS_FLOAT_MULTIPLE_FAULTS:
+    case STATUS_FLOAT_MULTIPLE_TRAPS:
+      return false; // Don't write minidump, continue exception search
+  }
+  return true;
+}
+#endif // XP_WIN
+
 nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
                              bool force/*=false*/)
 {
@@ -408,7 +433,11 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   // now set the exception handler
   gExceptionHandler = new google_breakpad::
     ExceptionHandler(tempPath.get(),
+#ifdef XP_WIN
+                     FPEFilter,
+#else
                      nsnull,
+#endif
                      MinidumpCallback,
                      nsnull,
 #if defined(XP_WIN32)
