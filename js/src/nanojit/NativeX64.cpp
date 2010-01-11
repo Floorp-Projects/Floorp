@@ -774,7 +774,7 @@ namespace nanojit
 
         prepResultReg(div, rmask(RAX));
 
-        Register rhsReg = findRegFor(rhs, (GpRegs ^ (rmask(RAX)|rmask(RDX))));
+        Register rhsReg = findRegFor(rhs, GpRegs & ~(rmask(RAX)|rmask(RDX)));
         Register lhsReg = lhs->isUnusedOrHasUnknownReg()
                           ? findSpecificRegForUnallocated(lhs, RAX)
                           : lhs->getReg();
@@ -1385,23 +1385,20 @@ namespace nanojit
     }
 
     void Assembler::asm_load64(LIns *ins) {
-
         Register rr, rb;
         int32_t dr;
         switch (ins->opcode()) {
             case LIR_ldq:
             case LIR_ldqc:
+                regalloc_load(ins, GpRegs, rr, dr, rb);
+                NanoAssert(IsGpReg(rr));
+                MOVQRM(rr, dr, rb);     // general 64bit load, 32bit const displacement
+                break;
             case LIR_ldf:
             case LIR_ldfc:
-                regalloc_load(ins, GpRegs, rr, dr, rb);
-                if (IsGpReg(rr)) {
-                    // general 64bit load, 32bit const displacement
-                    MOVQRM(rr, dr, rb);
-                } else {
-                    NanoAssert(IsFpReg(rr));
-                    // load 64bits into XMM.  don't know if double or int64, assume double.
-                    MOVSDRM(rr, dr, rb);
-                }
+                regalloc_load(ins, FpRegs, rr, dr, rb);
+                NanoAssert(IsFpReg(rr));
+                MOVSDRM(rr, dr, rb);    // load 64bits into XMM
                 break;
             case LIR_ld32f:
             case LIR_ldc32f:
@@ -1454,58 +1451,25 @@ namespace nanojit
         NanoAssert(value->isQuad());
 
         Register b = getBaseReg(base, d, BaseRegs);
-        Register r;
-
-        // if we have to choose a register, use a GPR, but not the base reg
-        if (value->isUnusedOrHasUnknownReg()) {
-            RegisterMask allow;
-            // If op is LIR_st32f and we have no reg, prefer FPR over GPR: saves an instruction later,
-            // and the value is almost certainly going to operated on as FP later anyway.
-            // XXX: isFloat doesn't cover float/fmod!  see bug 520208.
-            if (op == LIR_st32f || value->isFloat() || value->isop(LIR_float) || value->isop(LIR_fmod)) {
-                allow = FpRegs;
-            } else {
-                allow = GpRegs;
-            }
-            r = findRegFor(value, allow & ~rmask(b));
-        } else {
-            r = value->getReg();
-        }
 
         switch (op) {
-            case LIR_stqi:
-            case LIR_stfi:
-            {
-                if (IsGpReg(r)) {
-                    // gpr store
-                    MOVQMR(r, d, b);
-                }
-                else {
-                    // xmm store
-                    MOVSDMR(r, d, b);
-                }
+            case LIR_stqi: {
+                Register r = findRegFor(value, GpRegs & ~rmask(b));
+                MOVQMR(r, d, b);    // gpr store
                 break;
             }
-            case LIR_st32f:
-            {
-                // need a scratch FPR reg
+            case LIR_stfi: {
+                Register r = findRegFor(value, FpRegs);
+                MOVSDMR(r, d, b);   // xmm store
+                break;
+            }
+            case LIR_st32f: {
+                Register r = findRegFor(value, FpRegs);
                 Register t = registerAllocTmp(FpRegs & ~rmask(r));
 
-                // store
-                MOVSSMR(t, d, b);
-
-                // cvt to single-precision
-                if (IsGpReg(r))
-                {
-                    CVTSD2SS(t, t);
-                    MOVQXR(t, r); // xmm <- gpr: use movq xmm, r/m64 (66 REX.W 0F 6E /r)
-                }
-                else
-                {
-                    NanoAssert(IsFpReg(r));
-                    CVTSD2SS(t, r);
-                }
-                XORPS(t); // break dependency chains
+                MOVSSMR(t, d, b);   // store
+                CVTSD2SS(t, r);     // cvt to single-precision
+                XORPS(t);           // break dependency chains
                 break;
             }
             default:
@@ -1516,12 +1480,9 @@ namespace nanojit
 
     void Assembler::asm_store32(LOpcode op, LIns *value, int d, LIns *base) {
 
-        // quirk of x86-64: reg cannot appear to be ah/bh/ch/dh
-        // for single-byte stores with REX prefix
-        const RegisterMask SrcRegs =
-                        (op == LIR_stb) ?
-                        (GpRegs & ~(1<<RSP | 1<<RBP | 1<<RSI | 1<<RDI)) :
-                        GpRegs;
+        // Quirk of x86-64: reg cannot appear to be ah/bh/ch/dh for
+        // single-byte stores with REX prefix.
+        const RegisterMask SrcRegs = (op == LIR_stb) ? SingleByteStoreRegs : GpRegs;
 
         NanoAssert(!value->isQuad());
         Register b = getBaseReg(base, d, BaseRegs);
