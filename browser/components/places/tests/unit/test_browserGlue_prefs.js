@@ -41,9 +41,13 @@
  * by the user or by other components.
  */
 
+/** Bug 539067
+ * Test is disabled due to random failures and timeouts, see run_test.
+ * This is commented out to avoid leaks.
 // Initialize browserGlue.
 let bg = Cc["@mozilla.org/browser/browserglue;1"].
          getService(Ci.nsIBrowserGlue);
+*/
 
 // Initialize Places through Bookmarks Service.
 let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
@@ -253,6 +257,9 @@ function next_test() {
   test.exec();
 }
 function run_test() {
+  // Bug 539067: disabled due to random failures and timeouts.
+  return;
+
   do_test_pending();
   // Enqueue test, so it will consume the default places-init-complete
   // notification created at Places init.
