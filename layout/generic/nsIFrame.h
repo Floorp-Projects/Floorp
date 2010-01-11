@@ -1015,7 +1015,7 @@ public:
                                     PRUint32                aFlags = 0);
 
   /**
-   * Does this frame type always need a view?
+   * Does this frame need a view?
    */
   virtual PRBool NeedsView() { return PR_FALSE; }
 
@@ -1584,13 +1584,6 @@ public:
   nsIView* GetView() const;
   virtual nsIView* GetViewExternal() const;
   nsresult SetView(nsIView* aView);
-
-  /**
-   * This view will be used to parent the views of any children.
-   * This allows us to insert an anonymous inner view to parent
-   * some children.
-   */
-  virtual nsIView* GetParentViewForChildFrame(nsIFrame* aFrame) const;
 
   /**
    * Find the closest view (on |this| or an ancestor).
