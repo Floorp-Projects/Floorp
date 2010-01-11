@@ -4258,16 +4258,6 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsIFrame* aScrollFrame,
 {
   nsFrameList scrolled(aScrolledFrame, aScrolledFrame);
   aScrollFrame->AppendFrames(nsnull, scrolled);
-
-  // force the scrolled frame to have a view. The view will be parented to
-  // the correct anonymous inner view because the scrollframes override
-  // nsIFrame::GetParentViewForChildFrame.
-  nsHTMLContainerFrame::CreateViewForFrame(aScrolledFrame, PR_TRUE);
-
-  // XXXbz what's the point of the code after this in this method?
-  nsIView* view = aScrolledFrame->GetView();
-  if (!view)
-    return;
 }
 
 

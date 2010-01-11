@@ -149,9 +149,6 @@ public:
                                       nsIView*         aView,
                                       PRUint32         aFlags = 0);
 
-  // Returns PR_TRUE if the frame requires a view
-  static PRBool FrameNeedsView(nsIFrame* aFrame);
-  
   // Used by both nsInlineFrame and nsFirstLetterFrame.
   void DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
                               InlineIntrinsicWidthData *aData,
