@@ -43,7 +43,6 @@
 #include "nsEvent.h"
 #include "nsIRenderingContext.h"
 
-class nsIScrollableView;
 class nsIWidget;
 struct nsRect;
 class nsRegion;
@@ -51,8 +50,8 @@ class nsIDeviceContext;
 class nsIViewObserver;
 
 #define NS_IVIEWMANAGER_IID   \
-  { 0x9c2c1a6a, 0x2573, 0x49b1, \
-    { 0xbd, 0x37, 0x8f, 0x57, 0xde, 0x05, 0xc7, 0xb2 } }
+  { 0x6ca2fd1c, 0xa57e, 0x4802, \
+    { 0xad, 0x55, 0x85, 0xf6, 0x6f, 0x4a, 0x2c, 0x04 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -82,19 +81,6 @@ public:
   NS_IMETHOD_(nsIView*) CreateView(const nsRect& aBounds,
                                    const nsIView* aParent,
                                    nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow) = 0;
-
-  /**
-   * Create an scrollable view
-   * @param aBounds initial bounds for view
-   *        XXX We should eliminate this parameter; you can set the bounds after CreateScrollableView
-   * @param aParent intended parent for view. this is not actually set in the
-   *        nsIView through this method. it is only used by the initialization
-   *        code to walk up the view tree, if necessary, to find resources.
-   *        XXX We should eliminate this parameter!
-   * @result The new view
-   */
-  NS_IMETHOD_(nsIScrollableView*) CreateScrollableView(const nsRect& aBounds,
-                                                       const nsIView* aParent) = 0;
 
   /**
    * Get the root of the view tree.

@@ -51,9 +51,6 @@
 #include "nsDisplayList.h"
 #include "nsAbsoluteContainingBlock.h"
 
-// for focus
-#include "nsIScrollableView.h"
-
 /**
  * Root frame class.
  *

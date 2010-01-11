@@ -49,7 +49,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsIView.h"
-#include "nsIScrollableView.h"
 #include "nsPlaceholderFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsCSSFrameConstructor.h"
@@ -666,15 +665,6 @@ nsLayoutUtils::GetScrollableFrameFor(nsIFrame *aScrolledFrame)
   if (!frame) {
     return nsnull;
   }
-  nsIScrollableFrame *sf = do_QueryFrame(frame);
-  return sf;
-}
-
-//static
-nsIScrollableFrame*
-nsLayoutUtils::GetScrollableFrameFor(nsIScrollableView *aScrollableView)
-{
-  nsIFrame *frame = GetFrameFor(aScrollableView->View()->GetParent());
   nsIScrollableFrame *sf = do_QueryFrame(frame);
   return sf;
 }
