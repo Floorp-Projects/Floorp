@@ -51,14 +51,14 @@ import sys
 import threading
 import tempfile
 
-from automationutils import checkForCrashes
-
 """
 Runs the browser from a script, and provides useful utilities
 for setting up the browser environment.
 """
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
+sys.path.insert(0, SCRIPT_DIR);
+from automationutils import checkForCrashes
 
 __all__ = [
            "UNIXISH",
