@@ -329,6 +329,10 @@ namespace nanojit
     static const int NumSavedRegs = 5; // rbx, r12-15
     static const int NumArgRegs = 6;
 #endif
+    // Warning:  when talking about single byte registers, RSP/RBP/RSI/RDI are
+    // actually synonyms for AH/CH/DH/BH.  So this value means "any
+    // single-byte GpReg except AH/CH/DH/BH".
+    static const int SingleByteStoreRegs = GpRegs & ~(1<<RSP | 1<<RBP | 1<<RSI | 1<<RDI);
 
     static inline bool IsFpReg(Register r) {
         return ((1<<r) & FpRegs) != 0;

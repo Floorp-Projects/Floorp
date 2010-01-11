@@ -659,9 +659,9 @@ FragmentAssembler::assemble_call(const string &op)
         size_t argc = mTokens.size();
         for (size_t i = 0; i < argc; ++i) {
             args[i] = ref(mTokens[mTokens.size() - (i+1)]);
-            if      (args[i]->isFloat()) ty = ARGSIZE_F;
-            else if (args[i]->isQuad())  ty = ARGSIZE_Q;
-            else                         ty = ARGSIZE_I;
+            if      (args[i]->isF64()) ty = ARGSIZE_F;
+            else if (args[i]->isI64()) ty = ARGSIZE_Q;
+            else                       ty = ARGSIZE_I;
             // Nb: i+1 because argMask() uses 1-based arg counting.
             ci->_argtypes |= argMask(ty, i+1, argc);
         }

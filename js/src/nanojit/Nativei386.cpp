@@ -589,7 +589,6 @@ namespace nanojit
         }
         else
         {
-
             int dr = disp(ins);
             Register rb;
             if (base->isop(LIR_alloc)) {
