@@ -1687,7 +1687,21 @@ void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
     nearestWidget->Scroll(aPixDelta, blitRects, configurations);
     AdjustViewsAndWidgets(mScrolledFrame, PR_TRUE);
     repaintRegion.MoveBy(-nearestWidgetOffset + offsetToDisplayRoot);
-    vm->UpdateViewAfterScroll(view, repaintRegion);
+
+    {
+      // Block script execution. This suppresses event dispatching in
+      // PresShell::HandleEvent. We need to do this because Windows
+      // is evil and can dispatch WM_MOUSEACTIVATE messages during
+      // our call to ::UpdateWindow (in the presence of out-of-process
+      // plugins, it seems). We are not able to handle event dispatch
+      // here.
+      // No script runners should be added as we paint!
+      nsContentUtils::AddScriptBlockerAndPreventAddingRunners();
+      vm->UpdateViewAfterScroll(view, repaintRegion);
+      nsContentUtils::RemoveScriptBlocker();
+      // Nothing should run here on removing the blocker, since we
+      // prevented the addition of any script runners.
+    }
 
     nsIFrame* presContextRootFrame = presContext->FrameManager()->GetRootFrame();
     if (nearestWidget == presContextRootFrame->GetWindow()) {
