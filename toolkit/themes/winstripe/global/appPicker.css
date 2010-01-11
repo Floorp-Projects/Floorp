@@ -9,12 +9,11 @@
 
 #content-icon,
 .listcell-icon {
-  height: 32px;
+  margin: 5px;
   width: 32px;
+  height: 32px;
 }
 
-#content-icon,
-.listcell-icon,
 .listcell-label {
-  margin: 5px;
+  padding: 5px;
 }
