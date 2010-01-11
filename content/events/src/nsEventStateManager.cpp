@@ -99,6 +99,7 @@
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #endif
+#include "nsFrameManager.h"
 
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
@@ -164,9 +165,6 @@
 #define NS_USER_INTERACTION_INTERVAL 5000 // ms
 
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
-
-//we will use key binding by default now. this wil lbreak viewer for now
-#define NON_KEYBINDING 0
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
@@ -375,7 +373,7 @@ public:
   static PRUint32 GetTimeoutTime();
   static PRInt32 AccelerateWheelDelta(PRInt32 aScrollLines,
                    PRBool aIsHorizontal, PRBool aAllowScrollSpeedOverride,
-                   nsEventStateManager::ScrollQuantity *aScrollQuantity);
+                   nsIScrollableFrame::ScrollUnit *aScrollQuantity);
 
   enum {
     kScrollSeriesTimeout = 80
@@ -393,7 +391,7 @@ protected:
   static PRInt32 ComputeAcceleratedWheelDelta(PRInt32 aDelta, PRInt32 aFactor);
   static PRInt32 LimitToOnePageScroll(PRInt32 aScrollLines,
                    PRBool aIsHorizontal,
-                   nsEventStateManager::ScrollQuantity *aScrollQuantity);
+                   nsIScrollableFrame::ScrollUnit *aScrollQuantity);
 
   static nsWeakFrame sTargetFrame;
   static PRUint32    sTime;        // in milliseconds
@@ -416,15 +414,23 @@ OutOfTime(PRUint32 aBaseTime, PRUint32 aThreshold)
 }
 
 static PRBool
-CanScrollOn(nsIScrollableView* aScrollView, PRInt32 aNumLines,
+CanScrollInRange(nscoord aMin, nscoord aValue, nscoord aMax, PRInt32 aDirection)
+{
+  return aDirection > 0 ? aValue < aMax : aMin < aValue;
+}
+
+static PRBool
+CanScrollOn(nsIScrollableFrame* aScrollFrame, PRInt32 aNumLines,
             PRBool aScrollHorizontal)
 {
-  NS_PRECONDITION(aScrollView, "aScrollView is null");
+  NS_PRECONDITION(aScrollFrame, "aScrollFrame is null");
   NS_PRECONDITION(aNumLines, "aNumLines must be non-zero");
-  PRBool canScroll;
-  nsresult rv =
-    aScrollView->CanScroll(aScrollHorizontal, aNumLines > 0, canScroll);
-  return NS_SUCCEEDED(rv) && canScroll;
+  nsPoint scrollPt = aScrollFrame->GetScrollPosition();
+  nsRect scrollRange = aScrollFrame->GetScrollRange();
+
+  return aScrollHorizontal
+    ? CanScrollInRange(scrollRange.x, scrollPt.x, scrollRange.XMost(), aNumLines)
+    : CanScrollInRange(scrollRange.y, scrollPt.y, scrollRange.YMost(), aNumLines);
 }
 
 void
@@ -445,12 +451,10 @@ PRBool
 nsMouseWheelTransaction::UpdateTransaction(PRInt32 aNumLines,
                                            PRBool aScrollHorizontal)
 {
-  nsIScrollableViewProvider* svp = do_QueryFrame(GetTargetFrame());
-  NS_ENSURE_TRUE(svp, PR_FALSE);
-  nsIScrollableView *scrollView = svp->GetScrollableView();
-  NS_ENSURE_TRUE(scrollView, PR_FALSE);
+  nsIScrollableFrame* sf = GetTargetFrame()->GetScrollTargetFrame();
+  NS_ENSURE_TRUE(sf, PR_FALSE);
 
-  if (!CanScrollOn(scrollView, aNumLines, aScrollHorizontal)) {
+  if (!CanScrollOn(sf, aNumLines, aScrollHorizontal)) {
     OnFailToScrollTarget();
     // We should not modify the transaction state when the view will not be
     // scrolled actually.
@@ -632,7 +636,7 @@ PRInt32
 nsMouseWheelTransaction::AccelerateWheelDelta(PRInt32 aScrollLines,
                            PRBool aIsHorizontal,
                            PRBool aAllowScrollSpeedOverride,
-                           nsEventStateManager::ScrollQuantity *aScrollQuantity)
+                           nsIScrollableFrame::ScrollUnit *aScrollQuantity)
 {
   if (aAllowScrollSpeedOverride) {
     aScrollLines = OverrideSystemScrollSpeed(aScrollLines, aIsHorizontal);
@@ -708,39 +712,35 @@ nsMouseWheelTransaction::OverrideSystemScrollSpeed(PRInt32 aScrollLines,
 PRInt32
 nsMouseWheelTransaction::LimitToOnePageScroll(PRInt32 aScrollLines,
                            PRBool aIsHorizontal,
-                           nsEventStateManager::ScrollQuantity *aScrollQuantity)
+                           nsIScrollableFrame::ScrollUnit *aScrollQuantity)
 {
   NS_ENSURE_TRUE(aScrollQuantity, aScrollLines);
-  NS_PRECONDITION(*aScrollQuantity == nsEventStateManager::eScrollByLine,
+  NS_PRECONDITION(*aScrollQuantity == nsIScrollableFrame::LINES,
                   "aScrollQuantity isn't by line");
 
   NS_ENSURE_TRUE(sTargetFrame, aScrollLines);
-  nsIScrollableViewProvider* svp = do_QueryFrame(sTargetFrame);
-  NS_ENSURE_TRUE(svp, aScrollLines);
-  nsIScrollableView *scrollView = svp->GetScrollableView();
-  NS_ENSURE_TRUE(scrollView, aScrollLines);
+  nsIScrollableFrame* sf = sTargetFrame->GetScrollTargetFrame();
+  NS_ENSURE_TRUE(sf, aScrollLines);
 
   // Limit scrolling to be at most one page, but if possible, try to
   // just adjust the number of scrolled lines.
-  nscoord lineHeight = 0;
-  scrollView->GetLineHeight(&lineHeight);
+  nsSize lineAmount = sf->GetLineScrollAmount();
+  nscoord lineScroll = aIsHorizontal ? lineAmount.width : lineAmount.height;
 
-  if (lineHeight == 0)
+  if (lineScroll == 0)
     return aScrollLines;
 
-  nsSize pageScrollDistances(0, 0);
-  scrollView->GetPageScrollDistances(&pageScrollDistances);
-  nscoord pageScroll = aIsHorizontal ?
-    pageScrollDistances.width : pageScrollDistances.height;
+  nsSize pageAmount = sf->GetPageScrollAmount();
+  nscoord pageScroll = aIsHorizontal ? pageAmount.width : pageAmount.height;
 
-  if (PR_ABS(aScrollLines) * lineHeight < pageScroll)
+  if (PR_ABS(aScrollLines) * lineScroll < pageScroll)
     return aScrollLines;
 
-  nscoord maxLines = (pageScroll / lineHeight);
+  nscoord maxLines = (pageScroll / lineScroll);
   if (maxLines >= 1)
     return ((aScrollLines < 0) ? -1 : 1) * maxLines;
 
-  *aScrollQuantity = nsEventStateManager::eScrollByPage;
+  *aScrollQuantity = nsIScrollableFrame::PAGES;
   return (aScrollLines < 0) ? -1 : 1;
 }
 
@@ -2356,14 +2356,14 @@ nsEventStateManager::DoScrollZoom(nsIFrame *aTargetFrame,
 }
 
 static nsIFrame*
-GetParentFrameToScroll(nsPresContext* aPresContext, nsIFrame* aFrame)
+GetParentFrameToScroll(nsIFrame* aFrame)
 {
-  if (!aPresContext || !aFrame)
+  if (!aFrame)
     return nsnull;
 
   if (aFrame->GetStyleDisplay()->mPosition == NS_STYLE_POSITION_FIXED &&
       nsLayoutUtils::IsReallyFixedPos(aFrame))
-    return aPresContext->GetPresShell()->GetRootScrollFrame();
+    return aFrame->PresContext()->GetPresShell()->GetRootScrollFrame();
 
   return aFrame->GetParent();
 }
@@ -2371,7 +2371,7 @@ GetParentFrameToScroll(nsPresContext* aPresContext, nsIFrame* aFrame)
 static nsIScrollableView*
 GetScrollableViewForFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
-  for (; aFrame; aFrame = GetParentFrameToScroll(aPresContext, aFrame)) {
+  for (; aFrame; aFrame = GetParentFrameToScroll(aFrame)) {
     nsIScrollableViewProvider* svp = do_QueryFrame(aFrame);
     if (svp) {
       nsIScrollableView* scrollView = svp->GetScrollableView();
@@ -2468,13 +2468,12 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
 }
 
 nsresult
-nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
-                                  nsIFrame* aTargetFrame,
+nsEventStateManager::DoScrollText(nsIFrame* aTargetFrame,
                                   nsMouseScrollEvent* aMouseEvent,
-                                  ScrollQuantity aScrollQuantity,
+                                  nsIScrollableFrame::ScrollUnit aScrollQuantity,
                                   PRBool aAllowScrollSpeedOverride)
 {
-  nsIScrollableView* scrollView = nsnull;
+  nsIScrollableFrame* frameToScroll = nsnull;
   nsIFrame* scrollFrame = aTargetFrame;
   PRInt32 numLines = aMouseEvent->delta;
   PRBool isHorizontal = aMouseEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal;
@@ -2490,8 +2489,8 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
   // operation, even if the mouse hasn't moved.
   nsIFrame* lastScrollFrame = nsMouseWheelTransaction::GetTargetFrame();
   if (lastScrollFrame) {
-    nsIScrollableViewProvider* svp = do_QueryFrame(lastScrollFrame);
-    if (svp && (scrollView = svp->GetScrollableView())) {
+    frameToScroll = lastScrollFrame->GetScrollTargetFrame();
+    if (frameToScroll) {
       nsMouseWheelTransaction::UpdateTransaction(numLines, isHorizontal);
       // When the scroll event will not scroll any views, UpdateTransaction
       // fired MozMouseScrollFailed event which is for automated testing.
@@ -2507,30 +2506,23 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
   PRBool passToParent = lastScrollFrame ? PR_FALSE : PR_TRUE;
 
   for (; scrollFrame && passToParent;
-       scrollFrame = GetParentFrameToScroll(aPresContext, scrollFrame)) {
+       scrollFrame = GetParentFrameToScroll(scrollFrame)) {
     // Check whether the frame wants to provide us with a scrollable view.
-    scrollView = nsnull;
-    nsIScrollableViewProvider* svp = do_QueryFrame(scrollFrame);
-    if (svp) {
-      scrollView = svp->GetScrollableView();
-    }
-    if (!scrollView) {
+    frameToScroll = scrollFrame->GetScrollTargetFrame();
+    if (!frameToScroll) {
       continue;
     }
 
-    nsPresContext::ScrollbarStyles ss =
-      nsLayoutUtils::GetScrollableFrameFor(scrollView)->GetScrollbarStyles();
+    nsPresContext::ScrollbarStyles ss = frameToScroll->GetScrollbarStyles();
     if (NS_STYLE_OVERFLOW_HIDDEN ==
         (isHorizontal ? ss.mHorizontal : ss.mVertical)) {
       continue;
     }
 
     // Check if the scrollable view can be scrolled any further.
-    nscoord lineHeight;
-    scrollView->GetLineHeight(&lineHeight);
-
+    nscoord lineHeight = frameToScroll->GetLineScrollAmount().height;
     if (lineHeight != 0) {
-      if (CanScrollOn(scrollView, numLines, isHorizontal)) {
+      if (CanScrollOn(frameToScroll, numLines, isHorizontal)) {
         passToParent = PR_FALSE;
         nsMouseWheelTransaction::BeginTransaction(scrollFrame,
                                                   numLines, isHorizontal);
@@ -2543,7 +2535,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
           // Don't propagate to parent when drop down menu is active.
           if (passToParent) {
             passToParent = PR_FALSE;
-            scrollView = nsnull;
+            frameToScroll = nsnull;
             nsMouseWheelTransaction::EndTransaction();
           }
         } else {
@@ -2557,8 +2549,8 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     }
   }
 
-  if (!passToParent && scrollView) {
-    if (aScrollQuantity == eScrollByLine) {
+  if (!passToParent && frameToScroll) {
+    if (aScrollQuantity == nsIScrollableFrame::LINES) {
       numLines =
         nsMouseWheelTransaction::AccelerateWheelDelta(numLines, isHorizontal,
                                                       aAllowScrollSpeedOverride,
@@ -2574,7 +2566,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     PRInt32 scrollX = 0;
     PRInt32 scrollY = numLines;
 
-    if (aScrollQuantity == eScrollByPage)
+    if (aScrollQuantity == nsIScrollableFrame::PAGES)
       scrollY = (scrollY > 0) ? 1 : -1;
       
     if (isHorizontal) {
@@ -2583,38 +2575,21 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     }
     
     PRBool noDefer = aMouseEvent->scrollFlags & nsMouseScrollEvent::kNoDefer;
-    PRInt32 overflowX = 0, overflowY = 0;
-    
-    if (aScrollQuantity == eScrollByPage) {
-      scrollView->ScrollByPages(scrollX, scrollY,
-        (noDefer ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_SMOOTHSCROLL));
-    }
-    else if (aScrollQuantity == eScrollByPixel) {
-      scrollView->ScrollByPixels(scrollX, scrollY, overflowX, overflowY,
-        (noDefer ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_DEFERRED));
-    }
-    else {
-      scrollView->ScrollByLinesWithOverflow(scrollX, scrollY, overflowX, overflowY,
-        (noDefer ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_SMOOTHSCROLL));
-    }
-    
-    if (isHorizontal)
-      aMouseEvent->scrollOverflow = overflowX;
-    else
-      aMouseEvent->scrollOverflow = overflowY;
-
+    nsIntPoint overflow;
+    frameToScroll->ScrollBy(nsIntPoint(scrollX, scrollY), aScrollQuantity,
+                            noDefer ? nsIScrollableFrame::INSTANT
+                                    : nsIScrollableFrame::SMOOTH,
+                            &overflow);
+    aMouseEvent->scrollOverflow = isHorizontal ? overflow.x : overflow.y;
     return NS_OK;
   }
   
   if (passToParent) {
-    nsresult rv;
-    nsIFrame* newFrame = nsnull;
-    nsCOMPtr<nsPresContext> newPresContext;
-    rv = GetParentScrollingView(aMouseEvent, aPresContext, newFrame,
-                                *getter_AddRefs(newPresContext));
-    if (NS_SUCCEEDED(rv) && newFrame)
-      return DoScrollText(newPresContext, newFrame, aMouseEvent,
-                          aScrollQuantity, aAllowScrollSpeedOverride);
+    nsIFrame* newFrame = nsLayoutUtils::GetCrossDocParentFrame(
+        aTargetFrame->PresContext()->FrameManager()->GetRootFrame());
+    if (newFrame)
+      return DoScrollText(newFrame, aMouseEvent, aScrollQuantity,
+                          aAllowScrollSpeedOverride);
   }
 
   aMouseEvent->scrollOverflow = numLines;
@@ -2729,59 +2704,6 @@ nsEventStateManager::DecideGestureEvent(nsGestureNotifyEvent* aEvent,
   aEvent->displayPanFeedback = displayPanFeedback;
   aEvent->panDirection = panDirection;
 
-}
-
-nsresult
-nsEventStateManager::GetParentScrollingView(nsInputEvent *aEvent,
-                                            nsPresContext* aPresContext,
-                                            nsIFrame* &targetOuterFrame,
-                                            nsPresContext* &presCtxOuter)
-{
-  targetOuterFrame = nsnull;
-
-  if (!aEvent) return NS_ERROR_FAILURE;
-  if (!aPresContext) return NS_ERROR_FAILURE;
-
-  nsIDocument *doc = aPresContext->PresShell()->GetDocument();
-  NS_ASSERTION(doc, "No document in prescontext!");
-
-  nsIDocument *parentDoc = doc->GetParentDocument();
-
-  if (!parentDoc) {
-    return NS_OK;
-  }
-
-  nsIPresShell *pPresShell = nsnull;
-  nsIPresShell *tmpPresShell = parentDoc->GetPrimaryShell();
-  if (tmpPresShell) {
-    NS_ENSURE_TRUE(tmpPresShell->GetPresContext(), NS_ERROR_FAILURE);
-    if (tmpPresShell->GetPresContext()->Type() == aPresContext->Type()) {
-      pPresShell = tmpPresShell;
-    }
-  }
-  if (!pPresShell)
-    return NS_ERROR_FAILURE;
-
-  /* now find the content node in our parent docshell's document that
-     corresponds to our docshell */
-
-  nsIContent *frameContent = parentDoc->FindContentForSubDocument(doc);
-  NS_ENSURE_TRUE(frameContent, NS_ERROR_FAILURE);
-
-  /*
-    get this content node's frame, and use it as the new event target,
-    so the event can be processed in the parent docshell.
-    Note that we don't actually need to translate the event coordinates
-    because they are not used by DoScrollText().
-  */
-
-  nsIFrame* frameFrame = frameContent->GetPrimaryFrame();
-  if (!frameFrame) return NS_ERROR_FAILURE;
-
-  NS_IF_ADDREF(presCtxOuter = pPresShell->GetPresContext());
-  targetOuterFrame = frameFrame;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2990,17 +2912,17 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
         switch (action) {
         case MOUSE_SCROLL_N_LINES:
-          DoScrollText(presContext, aTargetFrame, msEvent, eScrollByLine,
+          DoScrollText(aTargetFrame, msEvent, nsIScrollableFrame::LINES,
                        useSysNumLines);
           break;
 
         case MOUSE_SCROLL_PAGE:
-          DoScrollText(presContext, aTargetFrame, msEvent, eScrollByPage,
+          DoScrollText(aTargetFrame, msEvent, nsIScrollableFrame::PAGES,
                        PR_FALSE);
           break;
 
         case MOUSE_SCROLL_PIXELS:
-          DoScrollText(presContext, aTargetFrame, msEvent, eScrollByPixel,
+          DoScrollText(aTargetFrame, msEvent, nsIScrollableFrame::DEVICE_PIXELS,
                        PR_FALSE);
           break;
 
@@ -3200,85 +3122,6 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             }
             *aStatus = nsEventStatus_eConsumeNoDefault;
             break;
-
-//the problem is that viewer does not have xul so we cannot completely eliminate these
-#if NON_KEYBINDING
-          case NS_VK_PAGE_DOWN:
-          case NS_VK_PAGE_UP:
-            if (!focusedContent) {
-              nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView, nsLayoutUtils::eVertical);
-              if (sv) {
-                nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-                sv->ScrollByPages(0, (keyEvent->keyCode != NS_VK_PAGE_UP) ? 1 : -1,
-                                  NS_VMREFRESH_SMOOTHSCROLL);
-              }
-            }
-            break;
-          case NS_VK_HOME:
-          case NS_VK_END:
-            if (!focusedContent) {
-              nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView, nsLayoutUtils::eVertical);
-              if (sv) {
-                nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-                sv->ScrollByWhole((keyEvent->keyCode != NS_VK_HOME) ? PR_FALSE : PR_TRUE);
-              }
-            }
-            break;
-          case NS_VK_DOWN:
-          case NS_VK_UP:
-            if (!focusedContent) {
-              nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView, nsLayoutUtils::eVertical);
-              if (sv) {
-                nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-                sv->ScrollByLines(0, (keyEvent->keyCode == NS_VK_DOWN) ? 1 : -1,
-                                  NS_VMREFRESH_SMOOTHSCROLL);
-
-                // force the update to happen now, otherwise multiple scrolls can
-                // occur before the update is processed. (bug #7354)
-                nsIViewManager* vm = aView->GetViewManager();
-                if (vm) {
-                  // I'd use Composite here, but it doesn't always work.
-                  // vm->Composite();
-                  vm->ForceUpdate();
-                }
-              }
-            }
-            break;
-          case NS_VK_LEFT:
-          case NS_VK_RIGHT:
-            if (!focusedContent) {
-              nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView, nsLayoutUtils::eHorizontal);
-              if (sv) {
-                nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-                sv->ScrollByLines((keyEvent->keyCode == NS_VK_RIGHT) ? 1 : -1, 0,
-                                  NS_VMREFRESH_SMOOTHSCROLL);
-
-                // force the update to happen now, otherwise multiple scrolls can
-                // occur before the update is processed. (bug #7354)
-                nsIViewManager* vm = aView->GetViewManager();
-                if (vm) {
-                  // I'd use Composite here, but it doesn't always work.
-                  // vm->Composite();
-                  vm->ForceUpdate();
-                }
-              }
-            }
-            break;
-        case 0: /* check charcode since keycode is 0 */
-          {
-          //Spacebar
-            nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-            if (keyEvent->charCode == 0x20) {
-              if (!focusedContent) {
-                nsIScrollableView* sv = nsLayoutUtils::GetNearestScrollingView(aView, nsLayoutUtils::eVertical);
-                if (sv) {
-                  sv->ScrollByPages(0, 1, NS_VMREFRESH_SMOOTHSCROLL);
-                }
-              }
-            }
-          }
-          break;
-#endif //NON_KEYBINDING
         }
       }
     }
