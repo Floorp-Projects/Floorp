@@ -112,6 +112,8 @@
 #include "nsIHTMLDocument.h"
 #include "nsIParserService.h"
 
+#include "nsITransferable.h"
+
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
 
@@ -1259,7 +1261,19 @@ nsEditor::Paste(PRInt32 aSelectionType)
 }
 
 NS_IMETHODIMP
+nsEditor::PasteTransferable(nsITransferable *aTransferable)
+{
+  return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
+NS_IMETHODIMP
 nsEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
+{
+  return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
+NS_IMETHODIMP
+nsEditor::CanPasteTransferable(nsITransferable *aTransferable, PRBool *aCanPaste)
 {
   return NS_ERROR_NOT_IMPLEMENTED; 
 }

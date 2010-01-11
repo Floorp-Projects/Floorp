@@ -319,6 +319,9 @@ public:
   NS_IMETHOD Paste(PRInt32 aSelectionType);
   NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste);
 
+  NS_IMETHOD PasteTransferable(nsITransferable *aTransferable);
+  NS_IMETHOD CanPasteTransferable(nsITransferable *aTransferable, PRBool *aCanPaste);
+
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
 
   /** All editor operations which alter the doc should be prefaced
