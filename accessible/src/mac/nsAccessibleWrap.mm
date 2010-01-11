@@ -309,7 +309,7 @@ nsAccessibleWrap::GetUnignoredParent()
     return parentWrap->GetUnignoredParent();
   
   nsIAccessible *outValue = nsnull;
-  NS_IF_ADDREF(outValue = parent.get());
+  NS_IF_ADDREF(outValue = parentWrap);
   
   return outValue;
 }
