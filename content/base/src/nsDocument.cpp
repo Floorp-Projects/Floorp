@@ -4892,7 +4892,7 @@ nsDocument::GetLocation(nsIDOMLocation **_retval)
 }
 
 nsIContent*
-nsDocument::GetHtmlContent()
+nsIDocument::GetHtmlContent()
 {
   nsIContent* rootContent = GetRootContent();
   if (rootContent && rootContent->Tag() == nsGkAtoms::html &&
@@ -4902,7 +4902,7 @@ nsDocument::GetHtmlContent()
 }
 
 nsIContent*
-nsDocument::GetHtmlChildContent(nsIAtom* aTag)
+nsIDocument::GetHtmlChildContent(nsIAtom* aTag)
 {
   nsIContent* html = GetHtmlContent();
   if (!html)
