@@ -237,12 +237,14 @@ __try {
     }
   }
 
-  nsCOMPtr<nsIAccessible> xpParentAccessible(GetParent());
-  NS_ASSERTION(xpParentAccessible, "No parent accessible where we're not direct child of window");
-  if (!xpParentAccessible) {
+  nsAccessible* xpParentAcc = GetParent();
+  NS_ASSERTION(xpParentAcc,
+               "No parent accessible where we're not direct child of window");
+
+  if (!xpParentAcc)
     return E_UNEXPECTED;
-  }
-  *ppdispParent = NativeAccessible(xpParentAccessible);
+
+  *ppdispParent = NativeAccessible(xpParentAcc);
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return S_OK;
@@ -278,11 +280,10 @@ __try {
     return S_OK;
   }
 
-  nsCOMPtr<nsIAccessible> childAccessible;
   if (!nsAccUtils::MustPrune(this)) {
-    GetChildAt(varChild.lVal - 1, getter_AddRefs(childAccessible));
-    if (childAccessible) {
-      *ppdispChild = NativeAccessible(childAccessible);
+    nsAccessible* child = GetChildAt(varChild.lVal - 1);
+    if (child) {
+      *ppdispChild = NativeAccessible(child);
     }
   }
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
@@ -483,8 +484,7 @@ __try {
   // a ROLE_OUTLINEITEM for consistency and compatibility.
   // We need this because ARIA has a role of "row" for both grid and treegrid
   if (xpRole == nsIAccessibleRole::ROLE_ROW) {
-    nsCOMPtr<nsIAccessible> parent = GetParent();
-    if (nsAccUtils::Role(parent) == nsIAccessibleRole::ROLE_TREE_TABLE)
+    if (nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_TREE_TABLE)
       msaaRole = ROLE_SYSTEM_OUTLINEITEM;
   }
   
@@ -1102,7 +1102,7 @@ __try {
   for (; numElementsFetched < aNumElementsRequested;
        numElementsFetched++, mEnumVARIANTPosition++) {
 
-    nsIAccessible* accessible = GetChildAt(mEnumVARIANTPosition);
+    nsAccessible* accessible = GetChildAt(mEnumVARIANTPosition);
     if (!accessible)
       break;
 
@@ -1286,8 +1286,7 @@ __try {
   // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call
   // the IA2 role a ROLE_OUTLINEITEM.
   if (xpRole == nsIAccessibleRole::ROLE_ROW) {
-    nsCOMPtr<nsIAccessible> parent = GetParent();
-    if (nsAccUtils::Role(parent) == nsIAccessibleRole::ROLE_TREE_TABLE)
+    if (nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_TREE_TABLE)
       *aRole = ROLE_SYSTEM_OUTLINEITEM;
   }
 

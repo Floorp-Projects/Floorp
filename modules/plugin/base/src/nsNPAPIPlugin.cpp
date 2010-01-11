@@ -332,6 +332,16 @@ OOPPluginsEnabled()
     return PR_FALSE;
   }
 
+#ifdef XP_WIN
+  OSVERSIONINFO osVerInfo = {0};
+  osVerInfo.dwOSVersionInfoSize = sizeof(osVerInfo);
+  GetVersionEx(&osVerInfo);
+  // Always disabled on 2K or less. (bug 536303)
+  if (osVerInfo.dwMajorVersion < 5 ||
+      (osVerInfo.dwMajorVersion == 5 && osVerInfo.dwMinorVersion == 0))
+    return PR_FALSE;
+#endif
+
   return PR_TRUE;
 }
 

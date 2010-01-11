@@ -65,4 +65,13 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == bc_borderoffset2.html bc_borderoffset2_
 == frame_vsides_rules_groups.html frame_vsides_rules_groups_ref.html
 == frame_vsides_rules_none.html frame_vsides_rules_none_ref.html
 == frame_vsides_rules_rows.html frame_vsides_rules_rows_ref.html
-
+== borderhandling-1.html borderhandling-ref.html
+== borderhandling-2.html borderhandling-ref.html
+== borderhandling-3.html borderhandling-ref.html
+== borderhandling-4.html borderhandling-ref.html
+== borderhandling-5.xhtml borderhandling-ref.html
+== borderhandling-6.xhtml borderhandling-ref.html
+== borderhandling-7.xhtml borderhandling-ref.html
+== borderhandling-8.html borderhandling-ref.html
+== borderhandling-frame-border.html borderhandling-frame-border-ref.html
+== borderhandling-rules-border.html borderhandling-rules-border-ref.html

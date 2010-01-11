@@ -43,6 +43,16 @@
 
 #endif
 
+
+/* MinGW kludge.  */
+#ifdef _WIN64
+#define PRIdLL "I64d"
+#define PRIuLL "I64u"
+#else
+#define PRIdLL "lld"
+#define PRIuLL "llu"
+#endif
+
 #ifdef USING_MMAP
 static inline void *
 allocate_mmap (size_t size)

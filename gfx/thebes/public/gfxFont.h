@@ -214,6 +214,10 @@ public:
         return PR_TRUE;
     }
 
+    void SetFamily(gfxFontFamily* aFamily) {
+        mFamily = aFamily;
+    }
+
     const nsString& FamilyName();
 
     nsString         mName;

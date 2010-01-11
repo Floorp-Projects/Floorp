@@ -72,7 +72,7 @@ public:
                    const nsRect& aDirtyRect, nsPoint aPt);
                               
   /* get the size of the video's display */
-  nsSize GetIntrinsicSize(nsIRenderingContext *aRenderingContext);
+  nsSize GetVideoIntrinsicSize(nsIRenderingContext *aRenderingContext);
   virtual nsSize GetIntrinsicRatio();
   virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,

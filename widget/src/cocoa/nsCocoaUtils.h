@@ -113,6 +113,11 @@ private:
 // versions of OS X from (at least) 10.2.8 through 10.5.
 - (void)_modalSession:(NSModalSession)aSession sendEvent:(NSEvent *)theEvent;
 
+// Present (and documented) on OS X 10.6 and above.  Not present before 10.6.
+// This declaration needed to avoid compiler warnings when compiling on 10.5
+// and below (or using the 10.5 SDK and below).
+- (void)setHelpMenu:(NSMenu *)helpMenu;
+
 @end
 
 class nsCocoaUtils
