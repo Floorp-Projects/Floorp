@@ -570,12 +570,6 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
 
   nsIViewManager* vm = aView->GetViewManager();
  
-  /* If this frame has a -moz-transform property, tell it to invalidate on a scroll
-   * rather than doing a BitBlt.
-   */
-  if (aFrame->GetStyleDisplay()->HasTransform())
-    aView->SetInvalidateFrameOnScroll();
-
   if (nsnull == aStyleContext) {
     aStyleContext = aFrame->GetStyleContext();
   }
@@ -610,18 +604,6 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
   }
 
   vm->SetViewZIndex(aView, autoZIndex, zIndex, isPositioned);
-}
-
-PRBool
-nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
-{
-  // XXX Check needed because frame construction can't properly figure out when
-  // a frame is the child of a scrollframe
-  if (aFrame->GetStyleContext()->GetPseudo() ==
-      nsCSSAnonBoxes::scrolledContent) {
-    return PR_TRUE;
-  }
-  return aFrame->NeedsView() || aFrame->GetStyleDisplay()->HasTransform();
 }
 
 static nscoord GetCoord(const nsStyleCoord& aCoord, nscoord aIfNotCoord)
