@@ -5589,7 +5589,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
     if (presContext->GetTheme()->
           GetWidgetOverflow(presContext->DeviceContext(), this,
                             disp->mAppearance, &r)) {
-      aOverflowArea->UnionRect(*aOverflowArea, r);
+      aOverflowArea->UnionRectIncludeEmpty(*aOverflowArea, r);
     }
   }
   
@@ -5633,8 +5633,8 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
   }
 
   PRBool overflowChanged;
-  if (*aOverflowArea != nsRect(nsPoint(0, 0), aNewSize)) {
-    overflowChanged = *aOverflowArea != GetOverflowRect();
+  if (!aOverflowArea->IsExactEqual(nsRect(nsPoint(0, 0), aNewSize))) {
+    overflowChanged = !aOverflowArea->IsExactEqual(GetOverflowRect());
     SetOverflowRect(*aOverflowArea);
   }
   else {
