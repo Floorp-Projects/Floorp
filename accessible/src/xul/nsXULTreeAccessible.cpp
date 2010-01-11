@@ -461,7 +461,7 @@ nsXULTreeAccessible::SelectAllSelection(PRBool *aIsMultiSelectable)
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeAccessible: nsAccessible implementation
 
-nsIAccessible*
+nsAccessible*
 nsXULTreeAccessible::GetChildAt(PRUint32 aIndex)
 {
   PRInt32 childCount = nsAccessible::GetChildCount();
@@ -473,7 +473,10 @@ nsXULTreeAccessible::GetChildAt(PRUint32 aIndex)
 
   nsCOMPtr<nsIAccessible> child;
   GetTreeItemAccessible(aIndex - childCount, getter_AddRefs(child));
-  return child;
+
+  nsRefPtr<nsAccessible> childAcc =
+    nsAccUtils::QueryObject<nsAccessible>(child);
+  return childAcc;
 }
 
 PRInt32
@@ -717,7 +720,7 @@ nsXULTreeAccessible::CreateTreeItemAccessible(PRInt32 aRow,
 
 nsXULTreeItemAccessibleBase::
   nsXULTreeItemAccessibleBase(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
-                              nsIAccessible *aParent, nsITreeBoxObject *aTree,
+                              nsAccessible *aParent, nsITreeBoxObject *aTree,
                               nsITreeView *aTreeView, PRInt32 aRow) :
   mTree(aTree), mTreeView(aTreeView), mRow(aRow),
   nsAccessibleWrap(aDOMNode, aShell)
@@ -1082,7 +1085,7 @@ nsXULTreeItemAccessibleBase::GetStateInternal(PRUint32 *aState,
   return NS_OK;
 }
 
-nsIAccessible*
+nsAccessible*
 nsXULTreeItemAccessibleBase::GetParent()
 {
   return IsDefunct() ? nsnull : mParent.get();
@@ -1184,9 +1187,9 @@ nsXULTreeItemAccessibleBase::IsExpandable()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeItemAccessible::
-nsXULTreeItemAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
-                        nsIAccessible *aParent, nsITreeBoxObject *aTree,
-                        nsITreeView *aTreeView, PRInt32 aRow) :
+  nsXULTreeItemAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
+                          nsAccessible *aParent, nsITreeBoxObject *aTree,
+                          nsITreeView *aTreeView, PRInt32 aRow) :
   nsXULTreeItemAccessibleBase(aDOMNode, aShell, aParent, aTree, aTreeView, aRow)
 {
   mColumn = nsCoreUtils::GetFirstSensibleColumn(mTree);

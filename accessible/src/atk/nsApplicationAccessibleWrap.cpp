@@ -665,7 +665,7 @@ nsApplicationAccessibleWrap::AddRootAccessible(nsIAccessible *aRootAccWrap)
     AtkObject *atkAccessible = nsAccessibleWrap::GetAtkObject(aRootAccWrap);
     atk_object_set_parent(atkAccessible, mAtkObject);
 
-    PRUint32 count = mChildren.Count();
+    PRUint32 count = mChildren.Length();
 
     // Emit children_changed::add in a timeout
     // to make sure aRootAccWrap is fully initialized.

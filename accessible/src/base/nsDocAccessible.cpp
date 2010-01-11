@@ -346,9 +346,8 @@ nsDocAccessible::GetARIAState(PRUint32 *aState, PRUint32 *aExtraState)
   nsresult rv = nsAccessible::GetARIAState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<nsAccessible> parent = nsAccUtils::QueryAccessible(mParent);
-  if (parent)  // Allow iframe/frame etc. to have final state override via ARIA
-    return parent->GetARIAState(aState, aExtraState);
+  if (mParent)  // Allow iframe/frame etc. to have final state override via ARIA
+    return mParent->GetARIAState(aState, aExtraState);
 
   return rv;
 }
@@ -554,13 +553,13 @@ NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNod
   // It will assert if not all the children were created
   // when they were first cached, and no invalidation
   // ever corrected parent accessible's child cache.
-  nsCOMPtr<nsIAccessible> accessible = do_QueryInterface(*aAccessNode);
-  nsRefPtr<nsAccessible> acc = nsAccUtils::QueryAccessible(accessible);
+  nsRefPtr<nsAccessible> acc =
+    nsAccUtils::QueryObject<nsAccessible>(*aAccessNode);
+
   if (acc) {
-    nsCOMPtr<nsIAccessible> parent = acc->GetCachedParent();
-    nsRefPtr<nsAccessible> parentAcc(nsAccUtils::QueryAccessible(parent));
-    if (parentAcc)
-      parentAcc->TestChildCache(accessible);
+    nsAccessible* parent(acc->GetCachedParent());
+    if (parent)
+      parent->TestChildCache(acc);
   }
 #endif
   return NS_OK;
@@ -880,7 +879,7 @@ nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
   if (isFinished) {
     // Need to wait until scrollable view is available
     AddScrollListener();
-    nsRefPtr<nsAccessible> acc(nsAccUtils::QueryAccessible(GetParent()));
+    nsRefPtr<nsAccessible> acc(GetParent());
     if (acc) {
       // Make the parent forget about the old document as a child
       acc->InvalidateChildren();
@@ -1421,7 +1420,7 @@ nsDocAccessible::ParentChainChanged(nsIContent *aContent)
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible
 
-nsIAccessible*
+nsAccessible*
 nsDocAccessible::GetParent()
 {
   if (IsDefunct())
@@ -1444,7 +1443,9 @@ nsDocAccessible::GetParent()
       // hierarchy. GetAccessibleFor() is bad because it doesn't support our
       // concept of multiple presshells per doc.
       // It should be changed to use GetAccessibleInWeakShell()
-      accService->GetAccessibleFor(ownerNode, getter_AddRefs(mParent));
+      nsCOMPtr<nsIAccessible> parent;
+      accService->GetAccessibleFor(ownerNode, getter_AddRefs(parent));
+      mParent = nsAccUtils::QueryObject<nsAccessible>(parent);
     }
   }
 
@@ -1931,8 +1932,7 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
 
     // We only need to shutdown the accessibles here if one of them has been
     // created.
-    nsCOMPtr<nsIAccessible> childAccessible = acc->GetCachedFirstChild();
-    if (childAccessible) {
+    if (acc->GetCachedFirstChild()) {
       nsCOMPtr<nsIArray> children;
       // use GetChildren() to fetch children at one time, instead of using
       // GetNextSibling(), because after we shutdown the first child,
