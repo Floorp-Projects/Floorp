@@ -694,15 +694,12 @@ var Browser = {
 
   /** Update viewport to location of browser's scrollbars. */
   scrollContentToBrowser: function scrollContentToBrowser() {
-    let bv = this._browserView;
     let pos = BrowserView.Util.getContentScrollOffset(this.selectedBrowser);
-    pos.map(bv.browserToViewport);
     if (pos.y != 0)
       Browser.hideTitlebar();
-    else
-      Browser.pageScrollboxScroller.scrollTo(0, 0);
+
     Browser.contentScrollboxScroller.scrollTo(pos.x, pos.y);
-    bv.onAfterVisibleMove();
+    this._browserView.onAfterVisibleMove();
   },
 
   hideSidebars: function scrollSidebarsOffscreen() {
@@ -2594,6 +2591,11 @@ ProgressController.prototype = {
       else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
         this._networkStop();
     }
+    else if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+        this._documentStop();
+      }
+    }
   },
 
   /** This method is called to indicate progress changes for the currently loading page. */
@@ -2674,6 +2676,23 @@ ProgressController.prototype = {
 
     if (this.browser.currentURI.spec != "about:blank")
       this._tab.updateThumbnail();
+  },
+
+  _documentStop: function _documentStop() {
+    if (this._tab == Browser.selectedTab) {
+      // XXX Sometimes MozScrollSizeChange has not occurred, so the scroll pane will not
+      // be resized yet. We are assuming this event is on the queue, so scroll the pane
+      // "soon."
+      Util.executeSoon(function() {
+        let scroll = Browser.getScrollboxPosition(Browser.contentScrollboxScroller);
+        if (scroll.isZero())
+          Browser.scrollContentToBrowser();
+      });
+    }
+    else {
+      let scroll = BrowserView.Util.getContentScrollOffset(this._tab.browser);
+      this._tab.scrollOffset = new Point(scroll.x, scroll.y);
+    }
   }
 };
 
@@ -2849,11 +2868,12 @@ Tab.prototype = {
       bv.invalidateEntireView();
 
       this._startResizeAndPaint();
-      if (this == Browser.selectedTab)
+      if (this == Browser.selectedTab) {
         bv.setAggressive(false);
-      // Sync up browser so previous and forward scroll positions are set. This is a good time to do
-      // this because the resulting invalidation is irrelevant.
-      Browser.scrollBrowserToContent();
+        // Sync up browser so previous and forward scroll positions are set. This is a good time to do
+        // this because the resulting invalidation is irrelevant.
+        Browser.scrollBrowserToContent();
+      }
     }
   },
 
@@ -2863,7 +2883,6 @@ Tab.prototype = {
     // Determine at what resolution the browser is rendered based on meta tag
     let browser = this._browser;
     let metaData = Util.contentIsHandheld(browser);
-    let bv = Browser._browserView;
 
     if (metaData.reason == "handheld" || metaData.reason == "doctype") {
       browser.className = "browser-handheld";
@@ -2904,19 +2923,9 @@ Tab.prototype = {
     this._loading = false;
 
     if (this == Browser.selectedTab)
-      bv.setAggressive(true);
+      Browser._browserView.setAggressive(true);
 
-    // Don't render until pane has been scrolled to the correct position.
-    bv.pauseRendering();
     this._stopResizeAndPaint();
-
-    // XXX Sometimes MozScrollSizeChange has not occurred, so the scroll pane will not
-    // be resized yet. We are assuming this event is on the queue, so scroll the pane
-    // "soon."
-    Util.executeSoon(function() {
-      Browser.scrollContentToBrowser();
-      bv.resumeRendering();
-    });
 
     // if this tab was sacrificed previously, restore its state
     this.restoreState();
@@ -2972,7 +2981,8 @@ Tab.prototype = {
     // Attach a separate progress listener to the browser
     let flags = Ci.nsIWebProgress.NOTIFY_LOCATION |
                 Ci.nsIWebProgress.NOTIFY_SECURITY |
-                Ci.nsIWebProgress.NOTIFY_STATE_NETWORK;
+                Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
+                Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT;
     this._listener = new ProgressController(this);
     browser.webProgress.addProgressListener(this._listener, flags);
   },
