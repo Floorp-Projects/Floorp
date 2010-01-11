@@ -46,6 +46,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=472326
       // get broken.
       testRole("p", ROLE_PARAGRAPH);
 
+      // Test dl, dt, dd
+      testRole("definitionlist", ROLE_LIST);
+      testRole("definitionterm", ROLE_LISTITEM);
+      testRole("definitiondescription", ROLE_PARAGRAPH);
+
       SimpleTest.finish();
     }
 
@@ -79,5 +84,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=472326
   <h4 id="head4">A heading level 4</h4>
   <h5 id="head5">A heading level 5</h5>
   <h6 id="head6">A heading level 6</h6>
+
+  <dl id="definitionlist">
+  <dt id="definitionterm">gecko</dt>
+  <dd id="definitiondescription">geckos have sticky toes</dd>
+  </dl>
 </body>
 </html>

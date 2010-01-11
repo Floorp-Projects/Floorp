@@ -555,7 +555,8 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame *aFrame,
   else if (tag == nsAccessibilityAtoms::optgroup) {
     *aAccessible = new nsHTMLSelectOptGroupAccessible(aNode, aWeakShell);
   }
-  else if (tag == nsAccessibilityAtoms::ul || tag == nsAccessibilityAtoms::ol) {
+  else if (tag == nsAccessibilityAtoms::ul || tag == nsAccessibilityAtoms::ol ||
+           tag == nsAccessibilityAtoms::dl) {
     *aAccessible = new nsHTMLListAccessible(aNode, aWeakShell);
   }
   else if (tag == nsAccessibilityAtoms::a) {
@@ -570,17 +571,18 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame *aFrame,
 
     *aAccessible = new nsHTMLLinkAccessible(aNode, aWeakShell);
   }
-  else if (tag == nsAccessibilityAtoms::li && aFrame->GetType() != nsAccessibilityAtoms::blockFrame) {
-    // Normally this is created by the list item frame which knows about the bullet frame
-    // However, in this case the list item must have been styled using display: foo
+  else if (tag == nsAccessibilityAtoms::dt ||
+           (tag == nsAccessibilityAtoms::li && 
+            aFrame->GetType() != nsAccessibilityAtoms::blockFrame)) {
+    // Normally for li, it is created by the list item frame (in nsBlockFrame)
+    // which knows about the bullet frame; however, in this case the list item
+    // must have been styled using display: foo
     *aAccessible = new nsHTMLLIAccessible(aNode, aWeakShell, EmptyString());
   }
   else if (tag == nsAccessibilityAtoms::abbr ||
            tag == nsAccessibilityAtoms::acronym ||
            tag == nsAccessibilityAtoms::blockquote ||
            tag == nsAccessibilityAtoms::dd ||
-           tag == nsAccessibilityAtoms::dl ||
-           tag == nsAccessibilityAtoms::dt ||
            tag == nsAccessibilityAtoms::form ||
            tag == nsAccessibilityAtoms::h1 ||
            tag == nsAccessibilityAtoms::h2 ||
