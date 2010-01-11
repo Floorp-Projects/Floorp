@@ -2821,7 +2821,7 @@ nsGfxScrollFrameInner::SaveState(nsIStatefulFrame::SpecialStateID aStateID)
     return nsnull;
   }
 
-  state->SetScrollState(childRect);
+  state->SetScrollState(childRect.TopLeft());
 
   return state;
 }
@@ -2829,7 +2829,7 @@ nsGfxScrollFrameInner::SaveState(nsIStatefulFrame::SpecialStateID aStateID)
 void
 nsGfxScrollFrameInner::RestoreState(nsPresState* aState)
 {
-  mRestoreRect = aState->GetScrollState();
+  mRestoreRect = nsRect(aState->GetScrollState(), nsSize(0, 0));
   mLastPos.x = -1;
   mLastPos.y = -1;
   mDidHistoryRestore = PR_TRUE;
