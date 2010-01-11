@@ -604,7 +604,7 @@ nsXULTreeGridAccessible::CreateTreeItemAccessible(PRInt32 aRow,
 
 nsXULTreeGridRowAccessible::
   nsXULTreeGridRowAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
-                             nsIAccessible *aTreeAcc, nsITreeBoxObject* aTree,
+                             nsAccessible *aTreeAcc, nsITreeBoxObject* aTree,
                              nsITreeView *aTreeView, PRInt32 aRow) :
   nsXULTreeItemAccessibleBase(aDOMNode, aShell, aTreeAcc, aTree, aTreeView, aRow)
 {
@@ -689,7 +689,7 @@ nsXULTreeGridRowAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   return NS_OK;
 }
 
-nsIAccessible*
+nsAccessible*
 nsXULTreeGridRowAccessible::GetChildAt(PRUint32 aIndex)
 {
   if (IsDefunct())
@@ -702,7 +702,9 @@ nsXULTreeGridRowAccessible::GetChildAt(PRUint32 aIndex)
 
   nsCOMPtr<nsIAccessible> cell;
   GetCellAccessible(column, getter_AddRefs(cell));
-  return cell;
+
+  nsRefPtr<nsAccessible> cellAcc = nsAccUtils::QueryObject<nsAccessible>(cell);
+  return cellAcc;
 }
 
 PRInt32
@@ -994,10 +996,7 @@ nsXULTreeGridCellAccessible::GetTable(nsIAccessibleTable **aTable)
   if (IsDefunct())
     return NS_OK;
 
-  nsCOMPtr<nsIAccessible> accessible;
-  mParent->GetParent(getter_AddRefs(accessible));
-  CallQueryInterface(accessible, aTable);
-
+  CallQueryInterface(mParent->GetParent(), aTable);
   return NS_OK;
 }
 
@@ -1222,7 +1221,7 @@ nsXULTreeGridCellAccessible::GetStateInternal(PRUint32 *aStates,
   return NS_OK;
 }
 
-nsIAccessible*
+nsAccessible*
 nsXULTreeGridCellAccessible::GetParent()
 {
   return IsDefunct() ? nsnull : mParent.get();

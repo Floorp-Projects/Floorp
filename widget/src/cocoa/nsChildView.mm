@@ -2200,8 +2200,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
     // that we can handle.
 
     NSArray *sendTypes = [[NSArray alloc] initWithObjects:NSStringPboardType,NSHTMLPboardType,nil];
-    NSArray *returnTypes = [[NSArray alloc] init];
-
+    NSArray *returnTypes = [[NSArray alloc] initWithObjects:NSStringPboardType,NSHTMLPboardType,nil];
+    
     [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:returnTypes];
 
     [sendTypes release];
@@ -6102,26 +6102,47 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   // returnType is nil if the service will not return any data.
   //
   // The following condition thus triggers when the service expects a string
-  // or HTML from us or no data at all AND when the service will not send back
-  // any data to us.
+  // or HTML from us or no data at all AND when the service will either not
+  // send back any data to us or will send a string or HTML back to us.
 
-  if ((!sendType || [sendType isEqual:NSStringPboardType] ||
-       [sendType isEqual:NSHTMLPboardType]) && !returnType) {
-    // Query the Gecko window to determine if there is a current selection.
+#define IsSupportedType(typeStr) ([typeStr isEqual:NSStringPboardType] || [typeStr isEqual:NSHTMLPboardType])
+
+  id result = nil;
+
+  if ((!sendType || IsSupportedType(sendType)) &&
+      (!returnType || IsSupportedType(returnType))) {
     if (mGeckoChild) {
+      // Assume that this object will be able to handle this request.
+      result = self;
+
+      // Keep the ChildView alive during this operation.
       nsAutoRetainCocoaObject kungFuDeathGrip(self);
+      
+      // Determine if there is a selection (if sending to the service).
+      if (sendType) {
+        nsQueryContentEvent event(PR_TRUE, NS_QUERY_CONTENT_STATE, mGeckoChild);
+        mGeckoChild->DispatchWindowEvent(event);
+        if (!event.mSucceeded || !event.mReply.mHasSelection)
+          result = nil;
+      }
 
-      nsQueryContentEvent event(PR_TRUE, NS_QUERY_CONTENT_STATE, mGeckoChild);
-      mGeckoChild->DispatchWindowEvent(event);
-
-      // Return this object if it can handle the request.
-      if ((!sendType || (event.mSucceeded && event.mReply.mHasSelection)) &&
-          !returnType)
-        return self;
+      // Determine if we can paste (if receiving data from the service).
+      if (returnType) {
+        nsContentCommandEvent command(PR_TRUE, NS_CONTENT_COMMAND_PASTE_TRANSFERABLE, mGeckoChild, PR_TRUE);
+        mGeckoChild->DispatchWindowEvent(command);
+        if (!command.mSucceeded || !command.mIsEnabled)
+          result = nil;
+      }
     }
   }
 
-  return [super validRequestorForSendType:sendType returnType:returnType];
+#undef IsSupportedType
+
+  // Give the superclass a chance if this object will not handle this request.
+  if (!result)
+    result = [super validRequestorForSendType:sendType returnType:returnType];
+
+  return result;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -6185,11 +6206,31 @@ static BOOL keyUpAlreadySentKeyDown = NO;
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
-// Called if the service wants us to replace the current selection. We do
-// not currently support replacing the current selection so just return NO.
+// Called if the service wants us to replace the current selection.
 - (BOOL)readSelectionFromPasteboard:(NSPasteboard *)pboard
 {
-  return NO;
+  nsresult rv;
+  nsCOMPtr<nsITransferable> trans = do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
+  if (NS_FAILED(rv))
+    return NO;
+
+  trans->AddDataFlavor(kUnicodeMime);
+  trans->AddDataFlavor(kHTMLMime);
+
+  rv = nsClipboard::TransferableFromPasteboard(trans, pboard);
+  if (NS_FAILED(rv))
+    return NO;
+
+  if (!mGeckoChild)
+    return NO;
+
+  nsContentCommandEvent command(PR_TRUE,
+                                NS_CONTENT_COMMAND_PASTE_TRANSFERABLE,
+                                mGeckoChild);
+  command.mTransferable = trans;
+  mGeckoChild->DispatchWindowEvent(command);
+  
+  return command.mSucceeded && command.mIsEnabled;
 }
 
 #pragma mark -
