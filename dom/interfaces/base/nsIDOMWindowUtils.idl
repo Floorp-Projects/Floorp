@@ -49,8 +49,9 @@ interface nsIDOMNode;
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 interface nsIDOMEvent;
+interface nsITransferable;
 
-[scriptable, uuid(0e13d9a6-bcd1-4d61-9986-c32f78f99d1a)]
+[scriptable, uuid(5ab44028-20ed-499a-bbe4-1805a1f350c8)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -427,4 +428,19 @@ interface nsIDOMWindowUtils : nsISupports {
    * wrapper) of aObj.
    */
   string getClassName(/*in JSObjectPtr aObj*/);
+
+  /**
+   * Generate a content command event.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
+   * @param aType Type of command content event to send.  Can be one of "cut",
+   *        "copy", "paste", "delete", "undo", "redo", or "pasteTransferable".
+   * @param aTransferable an instance of nsITransferable when aType is
+   *        "pasteTransferable"
+   */
+  void sendContentCommandEvent(in AString aType,
+                               [optional] in nsITransferable aTransferable);
 };
