@@ -1050,8 +1050,8 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
 
   // ensure that anchorRect is on screen
   if (!anchorRect.IntersectRect(anchorRect, screenRect)) {
+    anchorRect.width = anchorRect.height = 0;
     // if the anchor isn't within the screen, move it to the edge of the screen.
-    // IntersectRect will have set both the width and height of anchorRect to 0.
     if (anchorRect.x < screenRect.x)
       anchorRect.x = screenRect.x;
     if (anchorRect.XMost() > screenRect.XMost())

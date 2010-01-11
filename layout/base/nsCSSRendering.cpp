@@ -2021,7 +2021,9 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   // up by drawing tiles into temporary surfaces and copying those to the
   // destination, but after pixel-snapping tiles may not all be the same size.
   nsRect dirty;
-  dirty.IntersectRect(aDirtyRect, aFillArea);
+  if (!dirty.IntersectRect(aDirtyRect, aFillArea))
+    return;
+
   gfxRect areaToFill = RectToGfxRect(aFillArea, appUnitsPerPixel);
   gfxMatrix ctm = ctx->CurrentMatrix();
 
