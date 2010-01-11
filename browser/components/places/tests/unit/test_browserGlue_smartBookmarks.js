@@ -15,7 +15,7 @@
  *
  * The Original Code is Places Unit Test code.
  *
- * The Initial Developer of the Original Code is Mozilla Corp.
+ * The Initial Developer of the Original Code is Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -40,7 +40,6 @@
  * Tests that nsBrowserGlue is correctly interpreting the preferences settable
  * by the user or by other components.
  */
-
 // Initialize browserGlue.
 var bg = Cc["@mozilla.org/browser/browserglue;1"].
          getService(Ci.nsIBrowserGlue);
@@ -50,7 +49,6 @@ var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
          getService(Ci.nsINavHistoryService);
 var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
          getService(Ci.nsINavBookmarksService);
-
 // Get other services.
 var ps = Cc["@mozilla.org/preferences-service;1"].
          getService(Ci.nsIPrefBranch);
@@ -58,36 +56,33 @@ var os = Cc["@mozilla.org/observer-service;1"].
          getService(Ci.nsIObserverService);
 var as = Cc["@mozilla.org/browser/annotation-service;1"].
          getService(Ci.nsIAnnotationService);
-
 const PREF_SMART_BOOKMARKS_VERSION = "browser.places.smartBookmarksVersion";
+const PREF_AUTO_EXPORT_HTML = "browser.bookmarks.autoExportHTML";
+const PREF_IMPORT_BOOKMARKS_HTML = "browser.places.importBookmarksHTML";
+const PREF_RESTORE_DEFAULT_BOOKMARKS = "browser.bookmarks.restore_default_bookmarks";
+
 const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
-
-const TOPIC_PLACES_INIT_COMPLETE = "places-init-complete";
-
 var tests = [];
-
 //------------------------------------------------------------------------------
 
 tests.push({
   description: "All smart bookmarks are created if smart bookmarks version is 0.",
   exec: function() {
-    // Sanity check: we should not have any bookmark on the toolbar.
-    do_check_eq(bs.getIdForItemAt(bs.toolbarFolder, 0), -1);
-    // Sanity check: we should not have any bookmark on the menu.
-    do_check_eq(bs.getIdForItemAt(bs.bookmarksMenuFolder, 0), -1);
-
+    // Sanity check: we should have default bookmark.
+    do_check_neq(bs.getIdForItemAt(bs.toolbarFolder, 0), -1);
+    do_check_neq(bs.getIdForItemAt(bs.bookmarksMenuFolder, 0), -1);
     // Set preferences.
     ps.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 0);
-    // Force nsBrowserGlue::_initPlaces().
-    os.notifyObservers(null, TOPIC_PLACES_INIT_COMPLETE, null);
-
-    // Count items on toolbar.
-    do_check_eq(countFolderChildren(bs.toolbarFolder), SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    // Count items on menu (+1 for the separator).
-    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder), SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+    bg.ensurePlacesDefaultQueriesInitialized();
+    // Count items.
+    do_check_eq(countFolderChildren(bs.toolbarFolder),
+                SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
+    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder),
+                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
     // Check version has been updated.
-    do_check_eq(ps.getIntPref(PREF_SMART_BOOKMARKS_VERSION), SMART_BOOKMARKS_VERSION);
+    do_check_eq(ps.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
+                SMART_BOOKMARKS_VERSION);
 
     next_test();
   }
@@ -102,29 +97,36 @@ tests.push({
     var itemId = bs.getIdForItemAt(bs.toolbarFolder, 0);
     do_check_neq(itemId, -1);
     do_check_true(as.itemHasAnnotation(itemId, SMART_BOOKMARKS_ANNO));
-
     // Change its title.
     bs.setItemTitle(itemId, "new title");
     do_check_eq(bs.getItemTitle(itemId), "new title");
 
+    // Sanity check items.
+    dump_table("moz_bookmarks");
+    dump_table("moz_items_annos");
+    do_check_eq(countFolderChildren(bs.toolbarFolder),
+                SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
+    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder),
+                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+
     // Set preferences.
     ps.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
-    // Force nsBrowserGlue::_initPlaces().
-    os.notifyObservers(null, TOPIC_PLACES_INIT_COMPLETE, null);
+    bg.ensurePlacesDefaultQueriesInitialized();
+    // Count items.
+    do_check_eq(countFolderChildren(bs.toolbarFolder),
+                SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
+    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder),
+                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
-    // Count items on toolbar.
-    do_check_eq(countFolderChildren(bs.toolbarFolder), SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    // Count items on menu (+1 for the separator).
-    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder), SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
-
-    // check smart bookmark has been replaced, itemId has changed.
+    // Check smart bookmark has been replaced, itemId has changed.
     itemId = bs.getIdForItemAt(bs.toolbarFolder, 0);
     do_check_neq(itemId, -1);
     do_check_neq(bs.getItemTitle(itemId), "new title");
     do_check_true(as.itemHasAnnotation(itemId, SMART_BOOKMARKS_ANNO));
 
     // Check version has been updated.
-    do_check_eq(ps.getIntPref(PREF_SMART_BOOKMARKS_VERSION), SMART_BOOKMARKS_VERSION);
+    do_check_eq(ps.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
+                SMART_BOOKMARKS_VERSION);
 
     next_test();
   }
@@ -135,21 +137,30 @@ tests.push({
 tests.push({
   description: "An explicitly removed smart bookmark should not be recreated.",
   exec: function() {   
-    // Set preferences.
-    ps.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
     // Remove toolbar's smart bookmarks
     bs.removeItem(bs.getIdForItemAt(bs.toolbarFolder, 0));
 
-    // Force nsBrowserGlue::_initPlaces().
-    os.notifyObservers(null, TOPIC_PLACES_INIT_COMPLETE, null);
+    // Sanity check items.
+    dump_table("moz_bookmarks");
+    dump_table("moz_items_annos");
+    do_check_eq(countFolderChildren(bs.toolbarFolder),
+                DEFAULT_BOOKMARKS_ON_TOOLBAR);
+    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder),
+                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
-    // Count items on toolbar, we should not have recreated the smart bookmark.
-    do_check_eq(countFolderChildren(bs.toolbarFolder),  DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    // Count items on menu (+1 for the separator).
-    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder), SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+    // Set preferences.
+    ps.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 1);
+    bg.ensurePlacesDefaultQueriesInitialized();
+    // Count items.
+    // We should not have recreated the smart bookmark on toolbar.
+    do_check_eq(countFolderChildren(bs.toolbarFolder),
+                DEFAULT_BOOKMARKS_ON_TOOLBAR);
+    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder),
+                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
     // Check version has been updated.
-    do_check_eq(ps.getIntPref(PREF_SMART_BOOKMARKS_VERSION), SMART_BOOKMARKS_VERSION);
+    do_check_eq(ps.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
+                SMART_BOOKMARKS_VERSION);
 
     next_test();
   }
@@ -159,20 +170,28 @@ tests.push({
 
 tests.push({
   description: "Even if a smart bookmark has been removed recreate it if version is 0.",
-  exec: function() {   
+  exec: function() {
+    // Sanity check items.
+    dump_table("moz_bookmarks");
+    dump_table("moz_items_annos");
+    do_check_eq(countFolderChildren(bs.toolbarFolder),
+                DEFAULT_BOOKMARKS_ON_TOOLBAR);
+    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder),
+                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+
     // Set preferences.
     ps.setIntPref(PREF_SMART_BOOKMARKS_VERSION, 0);
-
-    // Force nsBrowserGlue::_initPlaces().
-    os.notifyObservers(null, TOPIC_PLACES_INIT_COMPLETE, null);
-
-    // Count items on toolbar, we should not have recreated the smart bookmark.
-    do_check_eq(countFolderChildren(bs.toolbarFolder), SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
-    // Count items on menu (+1 for the separator).
-    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder), SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
+    bg.ensurePlacesDefaultQueriesInitialized();
+    // Count items.
+    // We should not have recreated the smart bookmark on toolbar.
+    do_check_eq(countFolderChildren(bs.toolbarFolder),
+                SMART_BOOKMARKS_ON_TOOLBAR + DEFAULT_BOOKMARKS_ON_TOOLBAR);
+    do_check_eq(countFolderChildren(bs.bookmarksMenuFolder),
+                SMART_BOOKMARKS_ON_MENU + DEFAULT_BOOKMARKS_ON_MENU);
 
     // Check version has been updated.
-    do_check_eq(ps.getIntPref(PREF_SMART_BOOKMARKS_VERSION), SMART_BOOKMARKS_VERSION);
+    do_check_eq(ps.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
+                SMART_BOOKMARKS_VERSION);
 
     finish_test();
   }
@@ -201,25 +220,32 @@ function finish_test() {
 
   do_test_finished();
 }
-
 var testIndex = 0;
 function next_test() {
-  // nsBrowserGlue stops observing topics after first notification,
-  // so we add back the observer to test additional runs.
-  if (testIndex > 0)
-    os.addObserver(bg, TOPIC_PLACES_INIT_COMPLETE, false);
-
   // Execute next test.
   let test = tests.shift();
   print("\nTEST " + (++testIndex) + ": " + test.description);
   test.exec();
 }
-
 function run_test() {
-  // Clean up database from all bookmarks.
-  remove_all_bookmarks();
-
-  // Kick-off tests.
   do_test_pending();
+  // Enqueue test, so it will consume the default places-init-complete
+  // notification created at Places init.
+  do_timeout(0, start_tests);
+}
+
+function start_tests() {
+  remove_bookmarks_html();
+  remove_all_JSON_backups();
+
+  // Ensure preferences status.
+  do_check_false(ps.getBoolPref(PREF_AUTO_EXPORT_HTML));
+  try {
+  do_check_false(ps.getBoolPref(PREF_IMPORT_BOOKMARKS_HTML));
+    do_throw("importBookmarksHTML pref should not exist");
+  }
+  catch(ex) {}
+  do_check_false(ps.getBoolPref(PREF_RESTORE_DEFAULT_BOOKMARKS));
+  // Kick-off tests.
   next_test();
 }

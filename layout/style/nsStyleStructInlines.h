@@ -87,8 +87,8 @@ nsStyleBorder::SetSubImage(PRUint8 aIndex, imgIContainer* aSubImage) const
 inline imgIContainer*
 nsStyleBorder::GetSubImage(PRUint8 aIndex) const
 {
-  imgIContainer* subImage = 0;
-  if (0 <= aIndex && mSubImages.Count() > aIndex)
+  imgIContainer* subImage = nsnull;
+  if (aIndex < mSubImages.Count())
     subImage = mSubImages[aIndex];
   return subImage;
 }

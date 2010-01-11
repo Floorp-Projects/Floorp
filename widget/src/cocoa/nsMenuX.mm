@@ -472,6 +472,13 @@ GeckoNSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& menuTitle)
   // overrides our decisions and things get incorrectly enabled/disabled.
   [myMenu setAutoenablesItems:NO];
 
+  // On SnowLeopard and later we must tell the OS which is our Help menu.
+  // Otherwise it will only add Spotlight for Help (the Search item) to our
+  // Help menu if its label/title is "Help" -- i.e. if the menu is in English.
+  // This resolves bug 489196.
+  if (nsToolkit::OnSnowLeopardOrLater() && nsMenuX::IsXULHelpMenu(mContent))
+    [NSApp setHelpMenu:myMenu];
+
   // we used to install Carbon event handlers here, but since NSMenu* doesn't
   // create its underlying MenuRef until just before display, we delay until
   // that happens. Now we install the event handlers when Cocoa notifies
@@ -683,6 +690,18 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
 NSMenuItem* nsMenuX::NativeMenuItem()
 {
   return mNativeMenuItem;
+}
+
+PRBool nsMenuX::IsXULHelpMenu(nsIContent* aMenuContent)
+{
+  PRBool retval = PR_FALSE;
+  if (aMenuContent) {
+    nsAutoString id;
+    aMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::id, id);
+    if (id.Equals(NS_LITERAL_STRING("helpMenu")))
+      retval = PR_TRUE;
+  }
+  return retval;
 }
 
 //

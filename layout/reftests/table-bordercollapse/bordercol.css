@@ -9,15 +9,15 @@ caption {
 td {background-color:LightCyan }
 
 table.topLight {border-top: 1px solid #AFAFAF}
-table.bottom {border-bottom: 1px solid #505050}
+table.bottom {border-bottom: 1px solid black}
 table.bottomDark {border-bottom: 1px solid #444444}
 table.leftLight {border-left: 1px solid #AFAFAF}
-table.right {border-right: 1px solid  #505050}
+table.right {border-right: 1px solid  black}
 table.rightDark {border-right: 1px solid #444444}
-table.top {border-top: 1px solid  #505050}
-table.left {border-left: 1px solid  #505050}
+table.top {border-top: 1px solid  black}
+table.left {border-left: 1px solid  black}
 table.bc {border-collapse:collapse}
-tbody.border{border-top: 1px solid  #505050; border-bottom: 1px solid #505050; }
-tr.border{border-top: 1px solid  #505050; border-bottom: 1px solid  #505050; }
-td.border{border-left:1px solid #505050;}
+tbody.border{border-top: 1px solid  black; border-bottom: 1px solid black; }
+tr.border{border-top: 1px solid black; border-bottom: 1px solid  black; }
+td.border{border-left:1px solid black;}
 

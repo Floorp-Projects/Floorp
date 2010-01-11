@@ -357,7 +357,7 @@ nsSize nsVideoFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
                                      nsSize aPadding,
                                      PRBool aShrinkWrap)
 {
-  nsSize size = GetIntrinsicSize(aRenderingContext);
+  nsSize size = GetVideoIntrinsicSize(aRenderingContext);
 
   IntrinsicSize intrinsicSize;
   intrinsicSize.width.SetCoordValue(size.width);
@@ -377,21 +377,21 @@ nsSize nsVideoFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
 
 nscoord nsVideoFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
-  nscoord result = GetIntrinsicSize(aRenderingContext).width;
+  nscoord result = GetVideoIntrinsicSize(aRenderingContext).width;
   DISPLAY_MIN_WIDTH(this, result);
   return result;
 }
 
 nscoord nsVideoFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 {
-  nscoord result = GetIntrinsicSize(aRenderingContext).width;
+  nscoord result = GetVideoIntrinsicSize(aRenderingContext).width;
   DISPLAY_PREF_WIDTH(this, result);
   return result;
 }
 
 nsSize nsVideoFrame::GetIntrinsicRatio()
 {
-  return GetIntrinsicSize(nsnull);
+  return GetVideoIntrinsicSize(nsnull);
 }
 
 PRBool nsVideoFrame::ShouldDisplayPoster()
@@ -421,7 +421,8 @@ PRBool nsVideoFrame::ShouldDisplayPoster()
   return PR_TRUE;
 }
 
-nsSize nsVideoFrame::GetIntrinsicSize(nsIRenderingContext *aRenderingContext)
+nsSize
+nsVideoFrame::GetVideoIntrinsicSize(nsIRenderingContext *aRenderingContext)
 {
   // Defaulting size to 300x150 if no size given.
   nsIntSize size(300,150);

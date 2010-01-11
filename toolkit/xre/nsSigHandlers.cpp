@@ -408,7 +408,11 @@ LONG __stdcall FpeHandler(PEXCEPTION_POINTERS pe)
 
 void InstallSignalHandlers(const char *ProgramName)
 {
+#if 0
+  // FIXME/bug 538642: disabled because it doesn't play well with
+  // breakpad, and vice versa
   SetUnhandledExceptionFilter(FpeHandler);
+#endif
 }
 
 #else

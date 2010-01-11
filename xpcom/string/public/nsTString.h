@@ -280,7 +280,9 @@ class nsTString_CharT : public nsTSubstring_CharT
          * @return  int rep of string value, and possible (out) error code
          */
       NS_COM PRInt32 ToInteger( PRInt32* aErrorCode, PRUint32 aRadix=kRadix10 ) const;
-      
+      PRInt32 ToInteger( nsresult* aErrorCode, PRUint32 aRadix=kRadix10 ) const {
+        return ToInteger(reinterpret_cast<PRInt32*>(aErrorCode), aRadix);
+      }
 
         /**
          * |Left|, |Mid|, and |Right| are annoying signatures that seem better almost

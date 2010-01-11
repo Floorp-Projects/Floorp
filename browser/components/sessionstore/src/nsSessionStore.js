@@ -559,9 +559,6 @@ SessionStoreService.prototype = {
       case "DOMAutoComplete":
         this.onTabInput(win, aEvent.currentTarget);
         break;
-      case "scroll":
-        this.onTabScroll(win);
-        break;
       case "TabOpen":
       case "TabClose":
         let browser = aEvent.originalTarget.linkedBrowser;
@@ -768,7 +765,6 @@ SessionStoreService.prototype = {
     aBrowser.addEventListener("change", this, true);
     aBrowser.addEventListener("input", this, true);
     aBrowser.addEventListener("DOMAutoComplete", this, true);
-    aBrowser.addEventListener("scroll", this, true);
     
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
@@ -792,7 +788,6 @@ SessionStoreService.prototype = {
     aBrowser.removeEventListener("change", this, true);
     aBrowser.removeEventListener("input", this, true);
     aBrowser.removeEventListener("DOMAutoComplete", this, true);
-    aBrowser.removeEventListener("scroll", this, true);
     
     delete aBrowser.__SS_data;
     
@@ -881,15 +876,6 @@ SessionStoreService.prototype = {
   },
 
   /**
-   * Called when a browser sends a "scroll" notification 
-   * @param aWindow
-   *        Window reference
-   */
-  onTabScroll: function sss_onTabScroll(aWindow) {
-    this.saveStateDelayed(aWindow, 3000);
-  },
-
-  /**
    * When a tab is selected, save session data
    * @param aWindow
    *        Window reference
@@ -897,7 +883,6 @@ SessionStoreService.prototype = {
   onTabSelect: function sss_onTabSelect(aWindow) {
     if (this._loadState == STATE_RUNNING) {
       this._windows[aWindow.__SSi].selected = aWindow.gBrowser.tabContainer.selectedIndex;
-      this.saveStateDelayed(aWindow);
 
       // attempt to update the current URL we send in a crash report
       this._updateCrashReportURL(aWindow);
@@ -3010,8 +2995,12 @@ let XPathHelper = {
     if (!aNode.parentNode)
       return "";
     
-    let prefix = this.namespacePrefixes[aNode.namespaceURI] || null;
-    let tag = (prefix ? prefix + ":" : "") + this.escapeName(aNode.localName);
+    // Access localName, namespaceURI just once per node since it's expensive.
+    let nNamespaceURI = aNode.namespaceURI;
+    let nLocalName = aNode.localName;
+
+    let prefix = this.namespacePrefixes[nNamespaceURI] || null;
+    let tag = (prefix ? prefix + ":" : "") + this.escapeName(nLocalName);
     
     // stop once we've found a tag with an ID
     if (aNode.id)
@@ -3022,7 +3011,7 @@ let XPathHelper = {
     let count = 0;
     let nName = aNode.name || null;
     for (let n = aNode; (n = n.previousSibling); )
-      if (n.localName == aNode.localName && n.namespaceURI == aNode.namespaceURI &&
+      if (n.localName == nLocalName && n.namespaceURI == nNamespaceURI &&
           (!nName || n.name == nName))
         count++;
     

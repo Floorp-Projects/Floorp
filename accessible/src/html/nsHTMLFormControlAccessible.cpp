@@ -673,19 +673,20 @@ nsHTMLLegendAccessible::GetRelationByType(PRUint32 aRelationType,
 
   if (aRelationType == nsIAccessibleRelation::RELATION_LABEL_FOR) {
     // Look for groupbox parent
-    nsCOMPtr<nsIAccessible> groupboxAccessible = GetParent();
-    if (nsAccUtils::Role(groupboxAccessible) == nsIAccessibleRole::ROLE_GROUPING) {
+    nsAccessible* groupbox = GetParent();
+
+    if (nsAccUtils::Role(groupbox) == nsIAccessibleRole::ROLE_GROUPING) {
       // XXX: if group box exposes more than one relation of the given type
       // then we fail.
       nsCOMPtr<nsIAccessible> testLabelAccessible =
-        nsRelUtils::GetRelatedAccessible(groupboxAccessible,
+        nsRelUtils::GetRelatedAccessible(groupbox,
                                          nsIAccessibleRelation::RELATION_LABELLED_BY);
 
       if (testLabelAccessible == this) {
         // We're the first child of the parent groupbox, see
         // nsHTMLGroupboxAccessible::GetRelationByType().
         return nsRelUtils::
-          AddTarget(aRelationType, aRelation, groupboxAccessible);
+          AddTarget(aRelationType, aRelation, groupbox);
       }
     }
   }
