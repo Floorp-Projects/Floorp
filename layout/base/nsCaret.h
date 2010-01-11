@@ -104,6 +104,7 @@ class nsCaret : public nsISelectionListener
       return mReadOnly;
     }
     /** GetCaretCoordinates
+     *  OBSOLETE use GetGeometry instead.
      *  Get the position of the caret in coordinates relative to the typed
      *  specified (aRelativeToType).
      *  This function is virtual so that it can be used by nsCaretAccessible
@@ -117,6 +118,16 @@ class nsCaret : public nsISelectionListener
                                       nsRect* outCoordinates,
                                       PRBool* outIsCollapsed,
                                       nsIView **outView);
+
+    /**
+     * Replaces GetCaretCoordinates.
+     * Gets the position and size of the caret that would be drawn for
+     * the focus node/offset of aSelection (assuming it would be drawn,
+     * i.e., disregarding blink status). The geometry is stored in aRect,
+     * and we return the frame aRect is relative to.
+     */
+    virtual nsIFrame* GetGeometry(nsISelection* aSelection,
+                                  nsRect* aRect);
 
     /** EraseCaret
      *  this will erase the caret if its drawn and reset drawn status
