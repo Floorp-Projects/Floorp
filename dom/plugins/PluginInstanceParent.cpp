@@ -498,6 +498,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
                 if (!CallNPP_HandleEvent(npremoteevent, &handled))
                     return 0;
             }
+            break;
             default:
                 if (!CallNPP_HandleEvent(npremoteevent, &handled))
                     return 0;
