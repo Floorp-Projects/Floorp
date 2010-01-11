@@ -339,7 +339,7 @@ nsHTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset
   if (aLength > maxLength) {
     aLength = maxLength;
   }
-  aText += nsDependentSubstring(mBulletText, aStartOffset, aLength);
+  aText += Substring(mBulletText, aStartOffset, aLength);
   return NS_OK;
 }
 
