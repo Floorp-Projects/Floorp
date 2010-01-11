@@ -89,7 +89,7 @@ public:
                                    PRBool aDeepestChild,
                                    nsIAccessible **aChild);
 
-  virtual nsIAccessible* GetChildAt(PRUint32 aIndex);
+  virtual nsAccessible* GetChildAt(PRUint32 aIndex);
   virtual PRInt32 GetChildCount();
   virtual PRInt32 GetIndexOf(nsIAccessible *aChild);
 
@@ -166,7 +166,7 @@ class nsXULTreeItemAccessibleBase : public nsAccessibleWrap
 {
 public:
   nsXULTreeItemAccessibleBase(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
-                              nsIAccessible *aParent, nsITreeBoxObject *aTree,
+                              nsAccessible *aParent, nsITreeBoxObject *aTree,
                               nsITreeView *aTreeView, PRInt32 aRow);
 
   // nsISupports
@@ -201,7 +201,7 @@ public:
 
   // nsAccessible
   virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
-  virtual nsIAccessible* GetParent();
+  virtual nsAccessible* GetParent();
 
   // nsXULTreeItemAccessibleBase
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_XULTREEITEMBASEACCESSIBLE_IMPL_CID)
@@ -255,7 +255,7 @@ class nsXULTreeItemAccessible : public nsXULTreeItemAccessibleBase
 {
 public:
   nsXULTreeItemAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
-                          nsIAccessible *aParent, nsITreeBoxObject *aTree,
+                          nsAccessible *aParent, nsITreeBoxObject *aTree,
                           nsITreeView *aTreeView, PRInt32 aRow);
 
   NS_IMETHOD GetName(nsAString& aName);

@@ -191,7 +191,8 @@ public:
   virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
                                           PRInt32 *aSetSize);
 
-  static PRBool IsSeparator(nsIAccessible *aAccessible);
+  // nsXULToolbarButtonAccessible
+  static PRBool IsSeparator(nsAccessible *aAccessible);
 };
 
 class nsXULToolbarAccessible : public nsAccessibleWrap

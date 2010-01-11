@@ -300,8 +300,7 @@ nsAccessibleWrap::GetUnignoredChildren(nsTArray<nsRefPtr<nsAccessibleWrap> > &aC
 already_AddRefed<nsIAccessible>
 nsAccessibleWrap::GetUnignoredParent()
 {
-  nsCOMPtr<nsIAccessible> parent(GetParent());
-  nsAccessibleWrap *parentWrap = static_cast<nsAccessibleWrap*>(parent.get());
+  nsAccessibleWrap *parentWrap = static_cast<nsAccessibleWrap*>(GetParent());
   if (!parentWrap)
     return nsnull;
     
