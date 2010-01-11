@@ -80,7 +80,6 @@
 #include "nsIHTMLDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIBaseWindow.h"
-#include "nsIScrollableView.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsISelection.h"
@@ -112,7 +111,6 @@
 #include "nsIObserverService.h"
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsIScrollableViewProvider.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMMouseScrollEvent.h"
@@ -184,7 +182,7 @@ static nscoord gPixelScrollDeltaY = 0;
 static PRUint32 gPixelScrollDeltaTimeout = 0;
 
 static nscoord
-GetScrollableViewLineHeight(nsPresContext* aPresContext, nsIFrame* aTargetFrame);
+GetScrollableLineHeight(nsIFrame* aTargetFrame);
 
 #ifdef DEBUG_DOCSHELL_FOCUS
 static void
@@ -1242,7 +1240,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       // If needed send a line scroll event for pixel scrolls with kNoLines
       if (msEvent->scrollFlags & nsMouseScrollEvent::kNoLines) {
         nscoord pixelHeight = aPresContext->AppUnitsToIntCSSPixels(
-          GetScrollableViewLineHeight(aPresContext, aTargetFrame));
+          GetScrollableLineHeight(aTargetFrame));
 
         if (msEvent->scrollFlags & nsMouseScrollEvent::kIsVertical) {
           gPixelScrollDeltaX += msEvent->delta;
@@ -2368,36 +2366,23 @@ GetParentFrameToScroll(nsIFrame* aFrame)
   return aFrame->GetParent();
 }
 
-static nsIScrollableView*
-GetScrollableViewForFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
-{
-  for (; aFrame; aFrame = GetParentFrameToScroll(aFrame)) {
-    nsIScrollableViewProvider* svp = do_QueryFrame(aFrame);
-    if (svp) {
-      nsIScrollableView* scrollView = svp->GetScrollableView();
-      if (scrollView)
-        return scrollView;
-    }
-  }
-  return nsnull;
-}
-
 static nscoord
-GetScrollableViewLineHeight(nsPresContext* aPresContext, nsIFrame* aTargetFrame)
+GetScrollableLineHeight(nsIFrame* aTargetFrame)
 {
-  nsIScrollableView* scrollView = GetScrollableViewForFrame(aPresContext, aTargetFrame);
-  nscoord lineHeight = 0;
-  if (scrollView) {
-    scrollView->GetLineHeight(&lineHeight);
-  } else {
-    // Fall back to the font height of the target frame.
-    const nsStyleFont* font = aTargetFrame->GetStyleFont();
-    const nsFont& f = font->mFont;
-    nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(f);
-    NS_ASSERTION(fm, "FontMetrics is null!");
-    if (fm)
-      fm->GetHeight(lineHeight);
+  for (nsIFrame* f = aTargetFrame; f; f = GetParentFrameToScroll(f)) {
+    nsIScrollableFrame* sf = f->GetScrollTargetFrame();
+    if (sf)
+      return sf->GetLineScrollAmount().height;
   }
+
+  // Fall back to the font height of the target frame.
+  const nsStyleFont* font = aTargetFrame->GetStyleFont();
+  const nsFont& f = font->mFont;
+  nsCOMPtr<nsIFontMetrics> fm = aTargetFrame->PresContext()->GetMetricsFor(f);
+  NS_ASSERTION(fm, "FontMetrics is null!");
+  nscoord lineHeight = 0;
+  if (fm)
+    fm->GetHeight(lineHeight);
   return lineHeight;
 }
 
@@ -2450,7 +2435,7 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
     targetContent = targetContent->GetParent();
   }
 
-  nscoord lineHeight = GetScrollableViewLineHeight(aPresContext, aTargetFrame);
+  nscoord lineHeight = GetScrollableLineHeight(aTargetFrame);
 
   PRBool isTrusted = (aEvent->flags & NS_EVENT_FLAG_TRUSTED) != 0;
   nsMouseScrollEvent event(isTrusted, NS_MOUSE_PIXEL_SCROLL, nsnull);
@@ -2647,41 +2632,30 @@ nsEventStateManager::DecideGestureEvent(nsGestureNotifyEvent* aEvent,
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(current);
     if (scrollableFrame) {
       if (current->IsFrameOfType(nsIFrame::eXULBox)) {
+        displayPanFeedback = PR_TRUE;
 
-        nsIScrollableView* scrollableView = scrollableFrame->GetScrollableView();
-        if (scrollableView) {
+        nsRect scrollRange = scrollableFrame->GetScrollRange();
+        PRBool canScrollHorizontally = scrollRange.width > 0;
 
-          displayPanFeedback = PR_TRUE;
-
-          PRBool canScrollUp, canScrollDown, canScrollLeft, canScrollRight;
-          scrollableView->CanScroll(PR_FALSE, PR_TRUE,  canScrollDown);
-          scrollableView->CanScroll(PR_FALSE, PR_FALSE, canScrollUp);
-          scrollableView->CanScroll(PR_TRUE,  PR_TRUE,  canScrollRight);
-          scrollableView->CanScroll(PR_TRUE,  PR_FALSE, canScrollLeft);
-
-          if (targetFrame->GetType() == nsGkAtoms::menuFrame) {
-            // menu frames report horizontal scroll when they have submenus
-            // and we don't want that
-            canScrollRight = PR_FALSE;
-            canScrollLeft  = PR_FALSE;
-            displayPanFeedback = PR_FALSE;
-          }
-
-          //Vertical panning has priority over horizontal panning, so
-          //when a vertical movement is detected we can just finish the loop.
-          if (canScrollUp || canScrollDown) {
-            panDirection = nsGestureNotifyEvent::ePanVertical;
-            break;
-          }
-
-          if (canScrollLeft || canScrollRight) {
-            panDirection = nsGestureNotifyEvent::ePanHorizontal;
-            displayPanFeedback = PR_FALSE;
-          }
+        if (targetFrame->GetType() == nsGkAtoms::menuFrame) {
+          // menu frames report horizontal scroll when they have submenus
+          // and we don't want that
+          canScrollHorizontally = PR_FALSE;
+          displayPanFeedback = PR_FALSE;
         }
 
-      } else { //Not a XUL box
+        // Vertical panning has priority over horizontal panning, so
+        // when vertical movement is possible we can just finish the loop.
+        if (scrollRange.height > 0) {
+          panDirection = nsGestureNotifyEvent::ePanVertical;
+          break;
+        }
 
+        if (canScrollHorizontally) {
+          panDirection = nsGestureNotifyEvent::ePanHorizontal;
+          displayPanFeedback = PR_FALSE;
+        }
+      } else { //Not a XUL box
         nsMargin scrollbarSizes = scrollableFrame->GetActualScrollbarSizes();
 
         //Check if we have visible scrollbars
@@ -2695,15 +2669,12 @@ nsEventStateManager::DecideGestureEvent(nsGestureNotifyEvent* aEvent,
           panDirection = nsGestureNotifyEvent::ePanHorizontal;
           displayPanFeedback = PR_TRUE;
         }
-
       }
-
     } //scrollableFrame
   } //ancestor chain
 
   aEvent->displayPanFeedback = displayPanFeedback;
   aEvent->panDirection = panDirection;
-
 }
 
 NS_IMETHODIMP
