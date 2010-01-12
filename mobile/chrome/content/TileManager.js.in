@@ -136,6 +136,9 @@ function TileManager(appendTile, removeTile, browserView, cacheSize) {
   /* remember these values to reduce the recenterEvictionQueue cost */
   this._ctr = new Point(0, 0);
 
+  /* If true, render dirty tiles outside of a viewport on timer. */
+  this._prefetch = false;
+
   /* create one Image of the checkerboard to be reused */
   this._checkerboard = new Image();
   this._checkerboard.src = "chrome://browser/content/checkerboard.png";
@@ -360,6 +363,17 @@ TileManager.prototype = {
       this.criticalRectPaint();
   },
 
+  setPrefetch: function setPrefetch(prefetch) {
+    if (prefetch == this._prefetch)
+      return;
+
+   this._prefetch = prefetch;
+    if (prefetch)
+      this.restartPrefetchCrawl();
+    else
+      this.stopPrefetchCrawl();
+  },
+
   restartPrefetchCrawl: function restartPrefetchCrawl(startRectOrQueue) {
     if (startRectOrQueue instanceof Array) {
       this._crawler = new TileManager.CrawlIterator(this._tileCache);
@@ -371,7 +385,7 @@ TileManager.prototype = {
     } else {
       let cr = this._criticalRect;
       this._crawler = new TileManager.CrawlIterator(this._tileCache,
-                                                    startRectOrQueue || (cr ? cr.clone() : null));
+                                                    startRectOrQueue || (!cr.isEmpty() ? cr.clone() : null));
     }
 
     if (!this._idleTileCrawlerTimeout)
@@ -523,6 +537,7 @@ TileManager.prototype = {
       if (tile.isDirty()) {
         self._renderTile(tile);
       }
+      self._appendTileSafe(tile);
     }
 
     if (comeAgain) {

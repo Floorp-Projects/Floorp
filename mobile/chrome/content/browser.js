@@ -1416,6 +1416,12 @@ Browser.MainDragger.prototype = {
       this.draggedFrame = element.ownerDocument.defaultView;
 
     this.bv.pauseRendering();
+
+    // XXX shouldn't know about observer
+    // adding pause in pauseRendering isn't so great, because tiles will hardly ever prefetch while
+    // loading state is going (and already, the idle timer is bigger during loading so it doesn't fit
+    // into the aggressive flag).
+    this.bv._idleServiceObserver.pause();
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
@@ -1425,6 +1431,9 @@ Browser.MainDragger.prototype = {
     Browser.tryUnfloatToolbar();
 
     this.bv.resumeRendering();
+
+    // XXX shouldn't know about observer
+    this.bv._idleServiceObserver.resume();
   },
 
   dragMove: function dragMove(dx, dy, scroller) {
