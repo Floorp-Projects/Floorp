@@ -56,6 +56,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(ForeignObject)
 NS_IMPL_ADDREF_INHERITED(nsSVGForeignObjectElement,nsSVGForeignObjectElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGForeignObjectElement,nsSVGForeignObjectElementBase)
 
+DOMCI_DATA(SVGForeignObjectElement, nsSVGForeignObjectElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGForeignObjectElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGForeignObjectElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGForeignObjectElement)

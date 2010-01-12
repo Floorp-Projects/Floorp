@@ -59,6 +59,8 @@ nsDOMCommandEvent::~nsDOMCommandEvent()
   }
 }
 
+DOMCI_DATA(CommandEvent, nsDOMCommandEvent)
+
 NS_INTERFACE_MAP_BEGIN(nsDOMCommandEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCommandEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CommandEvent)

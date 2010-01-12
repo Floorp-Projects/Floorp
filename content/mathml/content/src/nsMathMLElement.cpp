@@ -55,6 +55,8 @@
 //----------------------------------------------------------------------
 // nsISupports methods:
 
+DOMCI_DATA(MathMLElement, nsMathMLElement)
+
 NS_INTERFACE_TABLE_HEAD(nsMathMLElement)
   NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsMathMLElement)
     NS_INTERFACE_TABLE_ENTRY(nsMathMLElement, nsIDOMNode)

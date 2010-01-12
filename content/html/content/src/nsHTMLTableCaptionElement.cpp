@@ -93,6 +93,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLTableCaptionElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableCaptionElement, nsGenericElement)
 
 
+DOMCI_DATA(HTMLTableCaptionElement, nsHTMLTableCaptionElement)
+
 // QueryInterface implementation for nsHTMLTableCaptionElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLTableCaptionElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLTableCaptionElement,

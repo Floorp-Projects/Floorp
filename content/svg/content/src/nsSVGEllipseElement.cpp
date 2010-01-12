@@ -94,6 +94,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Ellipse)
 NS_IMPL_ADDREF_INHERITED(nsSVGEllipseElement,nsSVGEllipseElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGEllipseElement,nsSVGEllipseElementBase)
 
+DOMCI_DATA(SVGEllipseElement, nsSVGEllipseElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGEllipseElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGEllipseElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGEllipseElement)

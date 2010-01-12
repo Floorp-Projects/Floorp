@@ -3397,6 +3397,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsTypedSelection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mSelectionListeners)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+DOMCI_DATA(Selection, nsTypedSelection)
+
 // QueryInterface implementation for nsTypedSelection
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTypedSelection)
   NS_INTERFACE_MAP_ENTRY(nsISelection)

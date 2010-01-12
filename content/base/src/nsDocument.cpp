@@ -477,6 +477,8 @@ nsDOMStyleSheetList::~nsDOMStyleSheetList()
   }
 }
 
+DOMCI_DATA(StyleSheetList, nsDOMStyleSheetList)
+
 // XXX couldn't we use the GetIIDs method from CSSStyleSheetList here?
 // QueryInterface implementation for nsDOMStyleSheetList
 NS_INTERFACE_TABLE_HEAD(nsDOMStyleSheetList)
@@ -1268,6 +1270,8 @@ nsDOMImplementation::nsDOMImplementation(nsIScriptGlobalObject* aScriptObject,
 nsDOMImplementation::~nsDOMImplementation()
 {
 }
+
+DOMCI_DATA(DOMImplementation, nsDOMImplementation)
 
 // QueryInterface implementation for nsDOMImplementation
 NS_INTERFACE_MAP_BEGIN(nsDOMImplementation)

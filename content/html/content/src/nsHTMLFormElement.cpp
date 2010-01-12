@@ -301,6 +301,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLFormElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLFormElement, nsHTMLFormElement)
+
 // QueryInterface implementation for nsHTMLFormElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLFormElement)
   NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLFormElement,
@@ -1874,6 +1876,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFormControlList)
   tmp->mNameLookupTable.EnumerateRead(ControlTraverser, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+DOMCI_DATA(HTMLCollection, nsFormControlList)
 
 // XPConnect interface list for nsFormControlList
 NS_INTERFACE_TABLE_HEAD(nsFormControlList)

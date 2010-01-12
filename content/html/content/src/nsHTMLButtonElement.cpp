@@ -161,6 +161,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLButtonElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLButtonElement, nsGenericElement)
 
 
+DOMCI_DATA(HTMLButtonElement, nsHTMLButtonElement)
+
 // QueryInterface implementation for nsHTMLButtonElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLButtonElement)
   NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLButtonElement,

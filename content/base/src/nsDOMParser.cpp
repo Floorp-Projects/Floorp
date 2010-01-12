@@ -116,6 +116,7 @@ nsDOMParser::~nsDOMParser()
   mLoopingForSyncLoad = PR_FALSE;
 }
 
+DOMCI_DATA(DOMParser, nsDOMParser)
 
 // QueryInterface implementation for nsDOMParser
 NS_INTERFACE_MAP_BEGIN(nsDOMParser)

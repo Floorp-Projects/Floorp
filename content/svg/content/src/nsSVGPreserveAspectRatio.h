@@ -131,6 +131,7 @@ private:
   nsresult ToDOMAnimVal(nsIDOMSVGPreserveAspectRatio **aResult,
                         nsSVGElement* aSVGElement);
 
+public:
   struct DOMBaseVal : public nsIDOMSVGPreserveAspectRatio
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
