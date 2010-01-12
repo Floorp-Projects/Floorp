@@ -1814,6 +1814,24 @@ namespace nanojit
         freeResourcesOf(ins);
     }
 
+    void Assembler::asm_f2i(LInsp ins)
+    {
+        // where our result goes
+        Register xr = findRegFor(ins->oprnd1(), FpRegs);
+        if (rmask(xr) & XmmRegs) {
+            Register rr = prepResultReg(ins, GpRegs);
+            SSE_CVTSD2SI(rr, xr);
+        } else {
+            NanoAssert(xr == FST0);
+            Register rr = ins->getReg();
+            if (isKnownReg(rr))
+                evict(ins);
+            int d = findMemFor(ins);
+            FISTP(d, FP);
+            freeRsrcOf(ins, false);
+        }
+    }
+
     void Assembler::asm_nongp_copy(Register rd, Register rs)
     {
         if ((rmask(rd) & XmmRegs) && (rmask(rs) & XmmRegs)) {
