@@ -16,7 +16,7 @@
       from="-20" to="80" dur="10s"
       end="a1.begin+6s" max="2.5s" />
     <animate attributeName="fill" attributeType="CSS"
-      values="orange; green; orange" keyTimes="0; 0.1; 1" dur="10s"
+      values="orange; green; purple" keyTimes="0; 0.1; 1" dur="10s"
       begin="1s" end="a1.end+6s"
       max="7.5s" fill="freeze"/>
   </rect>
