@@ -211,7 +211,7 @@ OPDEF(u2q,      91, Op1,  I64)  // zero-extend u32 to u64
 OPDEF(i2f,      92, Op1,  F64)  // convert a signed 32-bit integer to a float
 OPDEF(u2f,      93, Op1,  F64)  // convert an unsigned 32-bit integer to a float
 
-OPDEF(f2i,      94, Op1,  I32)  // approximate f2i conversion (no exception raised)
+OPDEF(__94,     94, None, Void)
 OPDEF(__95,     95, None, Void)
 OPDEF(__96,     96, None, Void)
 
