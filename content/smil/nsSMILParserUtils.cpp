@@ -39,8 +39,10 @@
 #include "nsISMILAttr.h"
 #include "nsSMILValue.h"
 #include "nsSMILTimeValue.h"
+#include "nsSMILTimeValueSpecParams.h"
 #include "nsSMILTypes.h"
 #include "nsSMILRepeatCount.h"
+#include "nsContentUtils.h"
 #include "nsString.h"
 #include "prdtoa.h"
 #include "nsCRT.h"
@@ -55,6 +57,11 @@ namespace {
 const PRUint32 MSEC_PER_SEC  = 1000;
 const PRUint32 MSEC_PER_MIN  = 1000 * 60;
 const PRUint32 MSEC_PER_HOUR = 1000 * 60 * 60;
+const PRInt32  DECIMAL_BASE  = 10;
+
+#define ACCESSKEY_PREFIX NS_LITERAL_STRING("accesskey(")
+#define REPEAT_PREFIX    NS_LITERAL_STRING("repeat(")
+#define WALLCLOCK_PREFIX NS_LITERAL_STRING("wallclock(")
 
 // NS_IS_SPACE relies on isspace which may return true for \xB and \xC but
 // SMILANIM does not consider these characters to be whitespace.
@@ -66,17 +73,26 @@ IsSpace(const PRUnichar c)
 
 template<class T>
 inline void
-SkipWsp(T& aStart, T aEnd)
+SkipBeginWsp(T& aStart, T aEnd)
 {
   while (aStart != aEnd && IsSpace(*aStart)) {
     ++aStart;
   }
 }
 
+inline void
+SkipBeginEndWsp(const PRUnichar*& aStart, const PRUnichar*& aEnd)
+{
+  SkipBeginWsp(aStart, aEnd);
+  while (aEnd != aStart && IsSpace(*(aEnd - 1))) {
+    --aEnd;
+  }
+}
+
 double
 GetFloat(const char*& aStart, const char* aEnd, nsresult* aErrorCode)
 {
-  char *floatEnd;
+  char* floatEnd;
   double value = PR_strtod(aStart, &floatEnd);
 
   nsresult rv;
@@ -93,6 +109,37 @@ GetFloat(const char*& aStart, const char* aEnd, nsresult* aErrorCode)
   }
 
   return value;
+}
+
+size_t
+GetUnsignedInt(const nsAString& aStr, PRUint32& aResult)
+{
+  NS_ConvertUTF16toUTF8 cstr(aStr);
+  const char* str = cstr.get();
+
+  char* rest;
+  PRInt32 value = strtol(str, &rest, DECIMAL_BASE);
+
+  if (rest == str || value < 0)
+    return 0;
+
+  aResult = static_cast<PRUint32>(value);
+  return rest - str;
+}
+
+PRBool
+GetUnsignedIntAndEndParen(const nsAString& aStr, PRUint32& aResult)
+{
+  size_t intLen = GetUnsignedInt(aStr, aResult);
+
+  const PRUnichar* start = aStr.BeginReading();
+  const PRUnichar* end = aStr.EndReading();
+
+  // Make sure the string is only digit+')'
+  if (intLen == 0 || start + intLen + 1 != end || *(start + intLen) != ')')
+    return PR_FALSE;
+
+  return PR_TRUE;
 }
 
 inline PRBool
@@ -197,6 +244,192 @@ ParseMetricMultiplicand(const char*& aStart,
   return result;
 }
 
+nsresult
+ParseOptionalOffset(const nsAString& aSpec, nsSMILTimeValueSpecParams& aResult)
+{
+  if (aSpec.IsEmpty()) {
+    aResult.mOffset.SetMillis(0);
+    return NS_OK;
+  }
+
+  if (aSpec.First() != '+' && aSpec.First() != '-')
+    return NS_ERROR_FAILURE;
+
+  return nsSMILParserUtils::ParseClockValue(aSpec, &aResult.mOffset, PR_TRUE);
+}
+
+nsresult
+ParseAccessKey(const nsAString& aSpec, nsSMILTimeValueSpecParams& aResult)
+{
+  NS_ABORT_IF_FALSE(StringBeginsWith(aSpec, ACCESSKEY_PREFIX),
+      "Calling ParseAccessKey on non-accesskey-type spec");
+
+  nsSMILTimeValueSpecParams result;
+  result.mType = nsSMILTimeValueSpecParams::ACCESSKEY;
+
+  const PRUnichar* start = aSpec.BeginReading() + ACCESSKEY_PREFIX.Length();
+  const PRUnichar* end = aSpec.EndReading();
+
+  // Expecting at least <accesskey> + ')'
+  if (end - start < 2)
+    return NS_ERROR_FAILURE;
+
+  PRUint32 c = *start++;
+
+  // Process 32-bit codepoints
+  if (NS_IS_HIGH_SURROGATE(c)) {
+    if (end - start < 2) // Expecting at least low-surrogate + ')'
+      return NS_ERROR_FAILURE;
+    PRUint32 lo = *start++;
+    if (!NS_IS_LOW_SURROGATE(lo))
+      return NS_ERROR_FAILURE;
+    c = SURROGATE_TO_UCS4(c, lo);
+  // XML 1.1 says that 0xFFFE and 0xFFFF are not valid characters
+  } else if (NS_IS_LOW_SURROGATE(c) || c == 0xFFFE || c == 0xFFFF) {
+    return NS_ERROR_FAILURE;
+  }
+
+  result.mRepeatIterationOrAccessKey = c;
+
+  if (*start++ != ')')
+    return NS_ERROR_FAILURE;
+
+  SkipBeginWsp(start, end);
+  
+  nsresult rv = ParseOptionalOffset(Substring(start, end), result);
+  if (NS_FAILED(rv))
+    return rv;
+
+  aResult = result;
+
+  return NS_OK;
+}
+
+const PRUnichar*
+GetTokenEnd(const nsAString& aStr, PRBool aBreakOnDot)
+{
+  const PRUnichar* start;
+  const PRUnichar* tokenEnd;
+  start = tokenEnd = aStr.BeginReading();
+  const PRUnichar* const end = aStr.EndReading();
+  PRBool escape = PR_FALSE;
+  while (tokenEnd != end) {
+    PRUnichar c = *tokenEnd;
+    if (IsSpace(c) ||
+       (!escape && (c == '+' || c == '-' || (aBreakOnDot && c == '.')))) {
+      break;
+    }
+    escape = (!escape && c == '\\');
+    ++tokenEnd;
+  }
+  return tokenEnd;
+}
+
+void
+Unescape(nsAString& aStr)
+{
+  const PRUnichar* read = aStr.BeginReading();
+  const PRUnichar* const end = aStr.EndReading();
+  PRUnichar* write = aStr.BeginWriting();
+  PRBool escape = PR_FALSE;
+
+  while (read != end) {
+    NS_ABORT_IF_FALSE(write <= read, "Writing past where we've read");
+    if (!escape && *read == '\\') {
+      escape = PR_TRUE;
+      ++read;
+    } else {
+      *write++ = *read++;
+      escape = PR_FALSE;
+    }
+  }
+
+  aStr.SetLength(write - aStr.BeginReading());
+}
+
+nsresult
+ParseElementBaseTimeValueSpec(const nsAString& aSpec,
+                              nsSMILTimeValueSpecParams& aResult)
+{
+  nsSMILTimeValueSpecParams result;
+
+  //
+  // The spec will probably look something like one of these
+  //
+  // element-name.begin
+  // element-name.event-name
+  // event-name
+  // element-name.repeat(3)
+  // event\.name
+  //
+
+  const PRUnichar* tokenStart = aSpec.BeginReading();
+  const PRUnichar* tokenEnd = GetTokenEnd(aSpec, PR_TRUE);
+  nsAutoString token(Substring(tokenStart, tokenEnd));
+  Unescape(token);
+
+  if (token.IsEmpty())
+    return NS_ERROR_FAILURE;
+
+  // Whether the token is an id-ref or event-symbol it should be a valid NCName
+  if (NS_FAILED(nsContentUtils::CheckQName(token, PR_FALSE)))
+    return NS_ERROR_FAILURE;
+
+  // Parse the second token if there is one
+  if (tokenEnd != aSpec.EndReading() && *tokenEnd == '.') {
+    result.mDependentElemID = do_GetAtom(token);
+
+    tokenStart = ++tokenEnd;
+    tokenEnd = GetTokenEnd(Substring(tokenStart, aSpec.EndReading()), PR_FALSE);
+
+    // Don't unescape the token unless we need to and not until after we've
+    // tested it
+    const nsAString& rawToken2 = Substring(tokenStart, tokenEnd);
+
+    // element-name.begin
+    if (rawToken2.Equals(NS_LITERAL_STRING("begin"))) {
+      result.mType = nsSMILTimeValueSpecParams::SYNCBASE;
+      result.mSyncBegin = PR_TRUE;
+    // element-name.end
+    } else if (rawToken2.Equals(NS_LITERAL_STRING("end"))) {
+      result.mType = nsSMILTimeValueSpecParams::SYNCBASE;
+      result.mSyncBegin = PR_FALSE;
+    // element-name.repeat(digit+)
+    } else if (StringBeginsWith(rawToken2, REPEAT_PREFIX)) {
+      result.mType = nsSMILTimeValueSpecParams::REPEAT;
+      if (!GetUnsignedIntAndEndParen(
+            Substring(tokenStart + REPEAT_PREFIX.Length(), tokenEnd),
+            result.mRepeatIterationOrAccessKey))
+        return NS_ERROR_FAILURE;
+    // element-name.event-symbol
+    } else {
+      nsAutoString token2(rawToken2);
+      Unescape(token2);
+      result.mType = nsSMILTimeValueSpecParams::EVENT;
+      if (token2.IsEmpty() ||
+          NS_FAILED(nsContentUtils::CheckQName(token2, PR_FALSE)))
+        return NS_ERROR_FAILURE;
+      result.mEventSymbol = do_GetAtom(token2);
+    }
+  } else {
+    // event-symbol
+    result.mType = nsSMILTimeValueSpecParams::EVENT;
+    result.mEventSymbol = do_GetAtom(token);
+  }
+
+  // We've reached the end of the token, so we should now be either looking at
+  // a '+', '-', or the end.
+  const PRUnichar* specEnd = aSpec.EndReading();
+  SkipBeginWsp(tokenEnd, specEnd);
+  
+  nsresult rv = ParseOptionalOffset(Substring(tokenEnd, specEnd), result);
+  if (NS_SUCCEEDED(rv)) {
+    aResult = result;
+  }
+
+  return rv;
+}
+
 } // end anonymous namespace block
 
 //------------------------------------------------------------------------------
@@ -212,7 +445,7 @@ nsSMILParserUtils::ParseKeySplines(const nsAString& aSpec,
   const char* start = spec.BeginReading();
   const char* end = spec.EndReading();
 
-  SkipWsp(start, end);
+  SkipBeginWsp(start, end);
 
   int i = 0;
 
@@ -234,7 +467,7 @@ nsSMILParserUtils::ParseKeySplines(const nsAString& aSpec,
 
     ++i;
 
-    SkipWsp(start, end);
+    SkipBeginWsp(start, end);
     if (start == end)
       break;
 
@@ -250,7 +483,7 @@ nsSMILParserUtils::ParseKeySplines(const nsAString& aSpec,
       ++start;
     }
 
-    SkipWsp(start, end);
+    SkipBeginWsp(start, end);
   }
 
   if (i % 4) {
@@ -270,7 +503,7 @@ nsSMILParserUtils::ParseKeyTimes(const nsAString& aSpec,
   const char* start = spec.BeginReading();
   const char* end = spec.EndReading();
 
-  SkipWsp(start, end);
+  SkipBeginWsp(start, end);
 
   double previousValue = -1.0;
 
@@ -290,7 +523,7 @@ nsSMILParserUtils::ParseKeyTimes(const nsAString& aSpec,
     }
     previousValue = value;
 
-    SkipWsp(start, end);
+    SkipBeginWsp(start, end);
     if (start == end)
       break;
 
@@ -299,7 +532,7 @@ nsSMILParserUtils::ParseKeyTimes(const nsAString& aSpec,
       break;
     }
 
-    SkipWsp(start, end);
+    SkipBeginWsp(start, end);
   }
 
   return rv;
@@ -321,7 +554,7 @@ nsSMILParserUtils::ParseValues(const nsAString& aSpec,
   while (start != end) {
     rv = NS_ERROR_FAILURE;
 
-    SkipWsp(start, end);
+    SkipBeginWsp(start, end);
 
     if (start == end || *start == ';')
       break;
@@ -370,7 +603,7 @@ nsSMILParserUtils::ParseRepeatCount(const nsAString& aSpec,
   const char* start = spec.BeginReading();
   const char* end = spec.EndReading();
 
-  SkipWsp(start, end);
+  SkipBeginWsp(start, end);
 
   if (start != end)
   {
@@ -391,7 +624,7 @@ nsSMILParserUtils::ParseRepeatCount(const nsAString& aSpec,
     }
 
     /* Check for trailing junk */
-    SkipWsp(start, end);
+    SkipBeginWsp(start, end);
     if (start != end) {
       rv = NS_ERROR_FAILURE;
     }
@@ -404,6 +637,53 @@ nsSMILParserUtils::ParseRepeatCount(const nsAString& aSpec,
     aResult.Unset();
   }
 
+  return rv;
+}
+
+nsresult
+nsSMILParserUtils::ParseTimeValueSpecParams(const nsAString& aSpec,
+                                            nsSMILTimeValueSpecParams& aResult)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  const PRUnichar* start = aSpec.BeginReading();
+  const PRUnichar* end = aSpec.EndReading();
+
+  SkipBeginEndWsp(start, end);
+  if (start == end)
+    return rv;
+
+  const nsAString &spec = Substring(start, end);
+
+  // offset type
+  if (*start == '+' || *start == '-' || NS_IsAsciiDigit(*start)) {
+    rv = ParseClockValue(spec, &aResult.mOffset, PR_TRUE);
+    if (NS_SUCCEEDED(rv)) {
+      aResult.mType = nsSMILTimeValueSpecParams::OFFSET;
+    }
+  }
+
+  // indefinite
+  else if (spec.Equals(NS_LITERAL_STRING("indefinite"))) {
+    aResult.mType = nsSMILTimeValueSpecParams::INDEFINITE;
+    rv = NS_OK;
+  }
+
+  // wallclock type
+  else if (StringBeginsWith(spec, WALLCLOCK_PREFIX)) {
+    rv = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  // accesskey type
+  else if (StringBeginsWith(spec, ACCESSKEY_PREFIX)) {
+    rv = ParseAccessKey(spec, aResult);
+  }
+
+  // event, syncbase, or repeat
+  else {
+    rv = ParseElementBaseTimeValueSpec(spec, aResult);
+  }
+ 
   return rv;
 }
 
@@ -536,7 +816,7 @@ nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
 
   // Process remainder of string (if any) to ensure it is only trailing
   // whitespace (embedded whitespace is not allowed)
-  SkipWsp(start, end);
+  SkipBeginWsp(start, end);
   if (start != end) {
     isValid = PR_FALSE;
   }
@@ -592,7 +872,7 @@ nsSMILParserUtils::CheckForNegativeNumber(const nsAString& aStr)
   aStr.EndReading(end);
 
   // Skip initial whitespace
-  SkipWsp(start, end);
+  SkipBeginWsp(start, end);
 
   // Check for dash
   if (start != end && *start == '-') {
