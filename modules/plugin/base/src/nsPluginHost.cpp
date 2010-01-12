@@ -5189,6 +5189,7 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin)
         objectContent->PluginCrashed();
       }
 
+      instancetag->mInstance->Stop();
       *pinstancetag = (*pinstancetag)->mNext;
       delete instancetag;
     }
