@@ -1933,19 +1933,28 @@ public:
 // was a big problem when wrappers are reparented to different scopes (and
 // thus different protos (the DOM does this).
 
+struct XPCNativeScriptableSharedJSClass : public JSExtendedClass
+{
+    PRUint32 interfacesBitmap;
+};
+
 class XPCNativeScriptableShared
 {
 public:
     const XPCNativeScriptableFlags& GetFlags() const {return mFlags;}
+    PRUint32                        GetInterfacesBitmap() const
+        {return mJSClass.interfacesBitmap;}
     JSClass*                        GetJSClass() {return &mJSClass.base;}
     JSClass*                        GetSlimJSClass()
         {if(mCanBeSlim) return GetJSClass(); return nsnull;}
 
-    XPCNativeScriptableShared(JSUint32 aFlags = 0, char* aName = nsnull)
+    XPCNativeScriptableShared(JSUint32 aFlags, char* aName,
+                              PRUint32 interfacesBitmap)
         : mFlags(aFlags),
           mCanBeSlim(JS_FALSE)
         {memset(&mJSClass, 0, sizeof(mJSClass));
          mJSClass.base.name = aName;  // take ownership
+         mJSClass.interfacesBitmap = interfacesBitmap;
          MOZ_COUNT_CTOR(XPCNativeScriptableShared);}
 
     ~XPCNativeScriptableShared()
@@ -1964,7 +1973,7 @@ public:
 
 private:
     XPCNativeScriptableFlags mFlags;
-    JSExtendedClass          mJSClass;
+    XPCNativeScriptableSharedJSClass mJSClass;
     JSBool                   mCanBeSlim;
 };
 
@@ -1984,6 +1993,9 @@ public:
 
     const XPCNativeScriptableFlags&
     GetFlags() const      {return mShared->GetFlags();}
+
+    PRUint32
+    GetInterfacesBitmap() const {return mShared->GetInterfacesBitmap();}
 
     JSClass*
     GetJSClass()          {return mShared->GetJSClass();}
@@ -2032,14 +2044,17 @@ class NS_STACK_CLASS XPCNativeScriptableCreateInfo
 public:
 
     XPCNativeScriptableCreateInfo(const XPCNativeScriptableInfo& si)
-        : mCallback(si.GetCallback()), mFlags(si.GetFlags()) {}
+        : mCallback(si.GetCallback()), mFlags(si.GetFlags()),
+          mInterfacesBitmap(si.GetInterfacesBitmap()) {}
 
     XPCNativeScriptableCreateInfo(already_AddRefed<nsIXPCScriptable> callback,
-                                  XPCNativeScriptableFlags flags)
-        : mCallback(callback), mFlags(flags) {}
+                                  XPCNativeScriptableFlags flags,
+                                  PRUint32 interfacesBitmap)
+        : mCallback(callback), mFlags(flags),
+          mInterfacesBitmap(interfacesBitmap) {}
 
     XPCNativeScriptableCreateInfo()
-        : mFlags(0) {}
+        : mFlags(0), mInterfacesBitmap(0) {}
 
 
     nsIXPCScriptable*
@@ -2048,16 +2063,24 @@ public:
     const XPCNativeScriptableFlags&
     GetFlags() const      {return mFlags;}
 
+    PRUint32
+    GetInterfacesBitmap() const     {return mInterfacesBitmap;}
+
     void
     SetCallback(already_AddRefed<nsIXPCScriptable> callback)
-      {mCallback = callback;}
+        {mCallback = callback;}
 
     void
     SetFlags(const XPCNativeScriptableFlags& flags)  {mFlags = flags;}
 
+    void
+    SetInterfacesBitmap(PRUint32 interfacesBitmap)
+        {mInterfacesBitmap = interfacesBitmap;}
+
 private:
     nsCOMPtr<nsIXPCScriptable>  mCallback;
     XPCNativeScriptableFlags    mFlags;
+    PRUint32                    mInterfacesBitmap;
 };
 
 /***********************************************/

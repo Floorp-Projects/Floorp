@@ -493,6 +493,7 @@ customIncludes = [
     'nsIDocument.h',
     'nsINodeList.h',
     'nsCSSPropertiesQS.h',
+    'nsDOMQS.h',
     ]
 
 customQuickStubs = [

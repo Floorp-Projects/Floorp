@@ -404,6 +404,78 @@ xpc_qsUnwrapThis(JSContext *cx,
     return NS_SUCCEEDED(rv) || xpc_qsThrow(cx, rv);
 }
 
+inline nsISupports*
+castNativeFromWrapper(JSContext *cx,
+                      JSObject *obj,
+                      JSObject *callee,
+                      PRUint32 interfaceBit,
+                      nsISupports **pThisRef,
+                      jsval *pThisVal,
+                      XPCLazyCallContext *lccx,
+                      nsresult *rv NS_OUTPARAM)
+{
+    XPCWrappedNative *wrapper;
+    XPCWrappedNativeTearOff *tearoff;
+    JSObject *cur;
+
+    if(!callee && IS_WRAPPER_CLASS(obj->getClass()))
+    {
+        cur = obj;
+        wrapper = IS_WN_WRAPPER_OBJECT(cur) ?
+                  (XPCWrappedNative*)xpc_GetJSPrivate(obj) :
+                  nsnull;
+        tearoff = nsnull;
+    }
+    else
+    {
+        *rv = getWrapper(cx, obj, callee, &wrapper, &cur, &tearoff);
+        if (NS_FAILED(*rv))
+            return nsnull;
+    }
+
+    nsISupports *native;
+    JSObject *thisObj;
+    if(wrapper)
+    {
+        native = wrapper->GetIdentityObject();
+        thisObj = wrapper->GetFlatJSObject();
+    }
+    else
+    {
+        native = cur ?
+                 static_cast<nsISupports*>(xpc_GetJSPrivate(cur)) :
+                 nsnull;
+        thisObj = cur;
+    }
+
+    *rv = NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    if(!native)
+        return nsnull;
+
+    NS_ASSERTION(IS_WRAPPER_CLASS(thisObj->getClass()), "Not a wrapper?");
+
+    XPCNativeScriptableSharedJSClass *clasp =
+      (XPCNativeScriptableSharedJSClass*)thisObj->getClass();
+    if(!(clasp->interfacesBitmap & (1 << interfaceBit)))
+        return nsnull;
+
+    *pThisRef = nsnull;
+    *pThisVal = OBJECT_TO_JSVAL(thisObj);
+
+    if(lccx)
+    {
+        if(wrapper)
+            lccx->SetWrapper(wrapper, tearoff);
+        else
+            lccx->SetWrapper(obj);
+    }
+
+    *rv = NS_OK;
+
+    return native;
+}
+
 JSBool
 xpc_qsUnwrapThisFromCcxImpl(XPCCallContext &ccx,
                             const nsIID &iid,
@@ -429,6 +501,9 @@ xpc_qsUnwrapThisFromCcx(XPCCallContext &ccx,
                                        pThisVal);
 }
 
+JSObject*
+xpc_qsUnwrapObj(jsval v, nsISupports **ppArgRef, nsresult *rv);
+
 nsresult
 xpc_qsUnwrapArgImpl(JSContext *cx, jsval v, const nsIID &iid, void **ppArg,
                     nsISupports **ppArgRef, jsval *vp);
@@ -441,6 +516,21 @@ xpc_qsUnwrapArg(JSContext *cx, jsval v, T **ppArg, nsISupports **ppArgRef,
 {
     return xpc_qsUnwrapArgImpl(cx, v, NS_GET_TEMPLATE_IID(T),
                                reinterpret_cast<void **>(ppArg), ppArgRef, vp);
+}
+
+inline nsISupports*
+castNativeArgFromWrapper(JSContext *cx,
+                         jsval v,
+                         PRUint32 bit,
+                         nsISupports **pArgRef,
+                         jsval *vp,
+                         nsresult *rv NS_OUTPARAM)
+{
+    JSObject *src = xpc_qsUnwrapObj(v, pArgRef, rv);
+    if(!src)
+        return nsnull;
+
+    return castNativeFromWrapper(cx, src, nsnull, bit, pArgRef, vp, nsnull, rv);
 }
 
 inline nsWrapperCache*

@@ -549,7 +549,7 @@ public:
     static XPCNativeScriptableSharedMap* newMap(int size);
 
     JSBool GetNewOrUsed(JSUint32 flags, char* name, PRBool isGlobal,
-                        XPCNativeScriptableInfo* si);
+                        PRUint32 interfacesBitmap, XPCNativeScriptableInfo* si);
 
     inline uint32 Count() {return mTable->entryCount;}
     inline uint32 Enumerate(JSDHashEnumerator f, void *arg)

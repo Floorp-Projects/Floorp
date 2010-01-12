@@ -561,6 +561,7 @@ DOMCI_DATA(Notation, void)
     nsnull,                                                                   \
     _flags,                                                                   \
     PR_TRUE,                                                                  \
+    0,                                                                        \
     NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
   },
 
@@ -1947,6 +1948,7 @@ nsDOMClassInfo::WrapNativeParent(JSContext *cx, JSObject *scope,
     nsDOMClassInfoData &d = sClassInfoData[eDOMClassInfo_##_class##_id];      \
     d.mProtoChainInterface = _ifptr;                                          \
     d.mHasClassInterface = _has_class_if;                                     \
+    d.mInterfacesBitmap = kDOMClassInfo_##_class##_interfaces;                \
     static const nsIID *interface_list[] = {
 
 #define DOM_CLASSINFO_MAP_BEGIN(_class, _interface)                           \

@@ -195,8 +195,8 @@ interface nsIXPCScriptable : nsISupports
 #include "nsAutoPtr.h"
 
 #define NS_XPCCLASSINFO_IID \
-{ 0xc39aa8db, 0x619d, 0x4ee6, \
- { 0xb1, 0x72, 0x5a, 0x83, 0x5d, 0x68, 0xfb, 0xb2 } }
+{ 0x9a5b0342, 0x0f70, 0x4d31, \
+ { 0xb7, 0xd7, 0x29, 0x68, 0xa5, 0x70, 0x4b, 0xd8 } }
 
 class NS_NO_VTABLE nsXPCClassInfo : public nsIClassInfo,
                                     public nsIXPCScriptable
@@ -208,6 +208,8 @@ public:
   NS_IMETHOD_(nsrefcnt) Release() = 0;
 
   virtual void PreserveWrapper(nsISupports *aNative) = 0;
+
+  virtual PRUint32 GetInterfacesBitmap() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCClassInfo, NS_XPCCLASSINFO_IID)
