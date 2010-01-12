@@ -72,12 +72,28 @@ BrowserStreamChild::BrowserStreamChild(PluginInstanceChild* instance,
     mStream.notifyData =
       static_cast<const StreamNotifyChild*>(notifyData)->mClosure;
   mStream.headers = NullableStringGet(mHeaders);
+}
 
-  *rv = mInstance->mPluginIface->newstream(
+NPError
+BrowserStreamChild::StreamConstructed(
+            const nsCString& url,
+            const uint32_t& length,
+            const uint32_t& lastmodified,
+            PStreamNotifyChild* notifyData,
+            const nsCString& headers,
+            const nsCString& mimeType,
+            const bool& seekable,
+            uint16_t* stype)
+{
+  NPError rv = NPERR_NO_ERROR;
+
+  rv = mInstance->mPluginIface->newstream(
     &mInstance->mData, const_cast<char*>(NullableStringGet(mimeType)),
     &mStream, seekable, stype);
-  if (*rv != NPERR_NO_ERROR)
+  if (rv != NPERR_NO_ERROR)
     mClosed = true;
+
+  return rv;
 }
 
 bool

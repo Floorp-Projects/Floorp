@@ -108,6 +108,19 @@ protected:
                         uint16_t *stype);
 
     virtual bool
+    AnswerPBrowserStreamConstructor(
+            PBrowserStreamChild* aActor,
+            const nsCString& url,
+            const uint32_t& length,
+            const uint32_t& lastmodified,
+            PStreamNotifyChild* notifyData,
+            const nsCString& headers,
+            const nsCString& mimeType,
+            const bool& seekable,
+            NPError* rv,
+            uint16_t* stype);
+        
+    virtual bool
     DeallocPBrowserStream(PBrowserStreamChild* stream);
 
     virtual PPluginStreamChild*

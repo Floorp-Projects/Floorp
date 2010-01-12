@@ -925,6 +925,27 @@ PluginInstanceChild::AnswerPPluginScriptableObjectConstructor(
     return true;
 }
 
+bool
+PluginInstanceChild::AnswerPBrowserStreamConstructor(
+    PBrowserStreamChild* aActor,
+    const nsCString& url,
+    const uint32_t& length,
+    const uint32_t& lastmodified,
+    PStreamNotifyChild* notifyData,
+    const nsCString& headers,
+    const nsCString& mimeType,
+    const bool& seekable,
+    NPError* rv,
+    uint16_t* stype)
+{
+    AssertPluginThread();
+    *rv = static_cast<BrowserStreamChild*>(aActor)
+          ->StreamConstructed(url, length, lastmodified,
+                              notifyData, headers, mimeType, seekable,
+                              stype);
+    return true;
+}
+
 PBrowserStreamChild*
 PluginInstanceChild::AllocPBrowserStream(const nsCString& url,
                                          const uint32_t& length,
