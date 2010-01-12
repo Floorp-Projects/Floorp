@@ -36,26 +36,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsGConfService.h"
-#include "nsGnomeVFSService.h"
-#include "nsGIOService.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIGenericFactory.h"
 
-#ifdef MOZ_ENABLE_LIBNOTIFY
-#include "nsAlertsService.h"
-#endif
-
 #ifdef MOZ_ENABLE_GCONF
+#include "nsGConfService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGConfService, Init)
 #endif
 #ifdef MOZ_ENABLE_GNOMEVFS
+#include "nsGnomeVFSService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGnomeVFSService, Init)
 #endif
 #ifdef MOZ_ENABLE_GIO
+#include "nsGIOService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGIOService, Init)
 #endif
 #ifdef MOZ_ENABLE_LIBNOTIFY
+#include "nsAlertsService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAlertsService, Init)
 #endif
 
