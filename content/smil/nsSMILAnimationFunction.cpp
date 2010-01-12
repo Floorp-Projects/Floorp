@@ -42,6 +42,7 @@
 #include "nsSMILParserUtils.h"
 #include "nsSMILNullType.h"
 #include "nsISMILAnimationElement.h"
+#include "nsSMILTimedElement.h"
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
@@ -189,7 +190,7 @@ nsSMILAnimationFunction::SampleAt(nsSMILTime aSampleTime,
                                   PRUint32 aRepeatIteration)
 {
   if (mHasChanged || mLastValue || mSampleTime != aSampleTime ||
-      mSimpleDuration.CompareTo(aSimpleDuration) ||
+      mSimpleDuration != aSimpleDuration ||
       mRepeatIteration != aRepeatIteration) {
     mHasChanged = PR_TRUE;
   }
@@ -249,14 +250,12 @@ nsSMILAnimationFunction::ComposeResult(const nsISMILAttr& aSMILAttr,
   if (mErrorFlags != 0)
     return;
 
-  // If this interval is active, we must have a non-negative
-  // mSampleTime and a resolved or indefinite mSimpleDuration.
-  // (Otherwise, we're probably just frozen.)
-  if (mIsActive) {
-    NS_ENSURE_TRUE(mSampleTime >= 0,);
-    NS_ENSURE_TRUE(mSimpleDuration.IsResolved() ||
-                   mSimpleDuration.IsIndefinite(),);
-  }
+  // If this interval is active, we must have a non-negative mSampleTime
+  NS_ABORT_IF_FALSE(mSampleTime >= 0 || !mIsActive,
+      "Negative sample time for active animation");
+  NS_ABORT_IF_FALSE(mSimpleDuration.IsResolved() ||
+      mSimpleDuration.IsIndefinite() || mLastValue,
+      "Unresolved simple duration for active or frozen animation");
 
   nsSMILValue result(aResult.mType);
 

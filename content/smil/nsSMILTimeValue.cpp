@@ -36,60 +36,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSMILTimeValue.h"
-#include "nsDebug.h"
 
-nsSMILTime nsSMILTimeValue::kUnresolvedSeconds = LL_MAXINT;
-
-//----------------------------------------------------------------------
-// Implementation
-
-// Default constructor creates an unresolved time
-nsSMILTimeValue::nsSMILTimeValue()
-  : mMilliseconds(LL_MAXINT),
-    mState(STATE_UNRESOLVED)
-{
-}
+nsSMILTime nsSMILTimeValue::kUnresolvedMillis = LL_MAXINT;
 
 //----------------------------------------------------------------------
 // nsSMILTimeValue methods:
 
-inline PRInt8
-nsSMILTimeValue::Cmp(PRInt64 aA, PRInt64 aB) const
+static inline PRInt8
+Cmp(PRInt64 aA, PRInt64 aB)
 {
   return aA == aB ? 0 : (aA > aB ? 1 : -1);
-}
-
-void
-nsSMILTimeValue::SetIndefinite()
-{
-  mState = STATE_INDEFINITE;
-  mMilliseconds = LL_MAXINT;
-}
-
-void
-nsSMILTimeValue::SetUnresolved()
-{
-  mState = STATE_UNRESOLVED;
-  mMilliseconds = LL_MAXINT;
-}
-
-nsSMILTime
-nsSMILTimeValue::GetMillis() const
-{
-  NS_ASSERTION(mState == STATE_RESOLVED,
-               "GetMillis() called for unresolved time.");
-
-  if (mState != STATE_RESOLVED)
-      return kUnresolvedSeconds;
-
-  return mMilliseconds;
-}
-
-void
-nsSMILTimeValue::SetMillis(nsSMILTime aMillis)
-{
-  mState = STATE_RESOLVED;
-  mMilliseconds = aMillis;
 }
 
 PRInt8
