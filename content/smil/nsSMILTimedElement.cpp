@@ -126,6 +126,7 @@ nsSMILTimedElement::nsSMILTimedElement()
   mSimpleDur.SetIndefinite();
   mMin.SetMillis(0L);
   mMax.SetIndefinite();
+  mTimeDependents.Init();
 }
 
 void
@@ -840,23 +841,11 @@ nsSMILTimedElement::UnsetFillMode()
 void
 nsSMILTimedElement::AddDependent(nsSMILTimeValueSpec& aDependent)
 {
-  // Insert the dependent so that the array remains sorted.
-  // We could use InsertElementSorted but we want to ensure that we don't end up
-  // with duplicate entries.
-  PRUint32 index;
-  PRBool found = mTimeDependents.GreatestIndexLtEq(&aDependent,
-      nsDefaultComparator<nsSMILTimeValueSpec*, nsSMILTimeValueSpec*>(),
-      &index);
-
   // There's probably no harm in attempting to register a dependent
-  // nsSMILTimeValueSpec twice (as long as we don't add it to the array twice)
-  // but we're not expecting it to happen.
-  NS_ABORT_IF_FALSE(!found,
+  // nsSMILTimeValueSpec twice, but we're not expecting it to happen.
+  NS_ABORT_IF_FALSE(!mTimeDependents.GetEntry(&aDependent),
       "nsSMILTimeValueSpec is already registered as a dependency");
-  if (found)
-    return;
-
-  mTimeDependents.InsertElementAt(index, &aDependent);
+  mTimeDependents.PutEntry(&aDependent);
 
   if (mCurrentInterval.IsSet()) {
     // Not necessary to call SyncPauseTime here as we're dealing with
@@ -866,9 +855,9 @@ nsSMILTimedElement::AddDependent(nsSMILTimeValueSpec& aDependent)
 }
 
 void
-nsSMILTimedElement::RemoveDependent(const nsSMILTimeValueSpec& aDependent)
+nsSMILTimedElement::RemoveDependent(nsSMILTimeValueSpec& aDependent)
 {
-  mTimeDependents.RemoveElementSorted(&aDependent);
+  mTimeDependents.RemoveEntry(&aDependent);
 }
 
 PRBool
@@ -1544,13 +1533,8 @@ nsSMILTimedElement::NotifyNewInterval()
     container->SyncPauseTime();
   }
 
-  PRUint32 count = mTimeDependents.Length();
-  for (PRUint32 i = 0; i < count; ++i) {
-    nsSMILTimeValueSpec* spec = mTimeDependents[i];
-    NS_ABORT_IF_FALSE(spec,
-        "null nsSMILTimeValueSpec in list of time dependents");
-    spec->HandleNewInterval(mCurrentInterval, container);
-  }
+  NotifyTimeDependentsParams params = { &mCurrentInterval, container };
+  mTimeDependents.EnumerateEntries(NotifyNewIntervalCallback, &params);
 }
 
 void
@@ -1565,25 +1549,14 @@ nsSMILTimedElement::NotifyChangedInterval()
     container->SyncPauseTime();
   }
 
-  PRUint32 count = mTimeDependents.Length();
-  for (PRUint32 i = 0; i < count; ++i) {
-    nsSMILTimeValueSpec* spec = mTimeDependents[i];
-    NS_ABORT_IF_FALSE(spec,
-        "null nsSMILTimeValueSpec in list of time dependents");
-    spec->HandleChangedInterval(mCurrentInterval, container);
-  }
+  NotifyTimeDependentsParams params = { &mCurrentInterval, container };
+  mTimeDependents.EnumerateEntries(NotifyChangedIntervalCallback, &params);
 }
 
 void
 nsSMILTimedElement::NotifyDeletedInterval()
 {
-  PRUint32 count = mTimeDependents.Length();
-  for (PRUint32 i = 0; i < count; ++i) {
-    nsSMILTimeValueSpec* spec = mTimeDependents[i];
-    NS_ABORT_IF_FALSE(spec,
-        "null nsSMILTimeValueSpec in list of time dependents");
-    spec->HandleDeletedInterval();
-  }
+  mTimeDependents.EnumerateEntries(NotifyDeletedIntervalCallback, nsnull);
 }
 
 const nsSMILInstanceTime*
@@ -1604,5 +1577,61 @@ nsSMILTimedElement::GetEffectiveBeginInstance() const
   default:
     NS_NOTREACHED("Invalid element state");
     return nsnull;
+  }
+}
+
+//----------------------------------------------------------------------
+// Hashtable callback functions
+
+/* static */ PR_CALLBACK PLDHashOperator
+nsSMILTimedElement::NotifyNewIntervalCallback(TimeValueSpecPtrKey* aKey,
+                                              void* aData)
+{
+  NotifyTimeDependentsParams* params =
+    static_cast<NotifyTimeDependentsParams*>(aData);
+  SanityCheckTimeDependentCallbackArgs(aKey, params, PR_TRUE);
+
+  nsSMILTimeValueSpec* spec = aKey->GetKey();
+  spec->HandleNewInterval(*params->mCurrentInterval, params->mTimeContainer);
+  return PL_DHASH_NEXT;
+}
+
+/* static */ PR_CALLBACK PLDHashOperator
+nsSMILTimedElement::NotifyChangedIntervalCallback(TimeValueSpecPtrKey* aKey,
+                                                  void* aData)
+{
+  NotifyTimeDependentsParams* params =
+    static_cast<NotifyTimeDependentsParams*>(aData);
+  SanityCheckTimeDependentCallbackArgs(aKey, params, PR_TRUE);
+
+  nsSMILTimeValueSpec* spec = aKey->GetKey();
+  spec->HandleChangedInterval(*params->mCurrentInterval,
+                              params->mTimeContainer);
+  return PL_DHASH_NEXT;
+}
+
+/* static */ PR_CALLBACK PLDHashOperator
+nsSMILTimedElement::NotifyDeletedIntervalCallback(TimeValueSpecPtrKey* aKey,
+                                                  void* /* unused */)
+{
+  SanityCheckTimeDependentCallbackArgs(aKey, nsnull, PR_FALSE);
+
+  nsSMILTimeValueSpec* spec = aKey->GetKey();
+  spec->HandleDeletedInterval();
+  return PL_DHASH_NEXT;
+}
+
+/* static */ void
+nsSMILTimedElement::SanityCheckTimeDependentCallbackArgs(
+    TimeValueSpecPtrKey* aKey,
+    NotifyTimeDependentsParams* aParams,
+    PRBool aExpectingParams)
+{
+  NS_ABORT_IF_FALSE(aKey, "Null hash key for time container hash table");
+  NS_ABORT_IF_FALSE(aKey->GetKey(),
+                    "null nsSMILTimeValueSpec in set of time dependents");
+  if (aExpectingParams) {
+    NS_ABORT_IF_FALSE(aParams, "null data ptr while enumerating hashtable");
+    NS_ABORT_IF_FALSE(aParams->mCurrentInterval, "null current-interval ptr");
   }
 }

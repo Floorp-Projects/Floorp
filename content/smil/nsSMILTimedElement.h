@@ -45,6 +45,8 @@
 #include "nsSMILRepeatCount.h"
 #include "nsSMILTypes.h"
 #include "nsTArray.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 #include "nsAutoPtr.h"
 #include "nsAttrValue.h"
 
@@ -271,7 +273,7 @@ public:
    *
    * @param aDependent  The nsSMILTimeValueSpec object to unregister.
    */
-  void RemoveDependent(const nsSMILTimeValueSpec& aDependent);
+  void RemoveDependent(nsSMILTimeValueSpec& aDependent);
 
   /**
    * Determines if this timed element is dependent on the given timed element's
@@ -312,6 +314,8 @@ protected:
   // Typedefs
   typedef nsTArray<nsAutoPtr<nsSMILTimeValueSpec> > TimeValueSpecList;
   typedef nsTArray<nsRefPtr<nsSMILInstanceTime> >   InstanceTimeList;
+  typedef nsPtrHashKey<nsSMILTimeValueSpec> TimeValueSpecPtrKey;
+  typedef nsTHashtable<TimeValueSpecPtrKey> TimeValueSpecHashSet;
 
   // Helper classes
   class InstanceTimeComparator {
@@ -320,6 +324,11 @@ protected:
                     const nsSMILInstanceTime* aElem2) const;
       PRBool LessThan(const nsSMILInstanceTime* aElem1,
                       const nsSMILInstanceTime* aElem2) const;
+  };
+
+  struct NotifyTimeDependentsParams {
+    nsSMILInterval*      mCurrentInterval;
+    nsSMILTimeContainer* mTimeContainer;
   };
 
   //
@@ -404,6 +413,17 @@ protected:
   void              NotifyDeletedInterval();
   const nsSMILInstanceTime* GetEffectiveBeginInstance() const;
 
+  // Hashtable callback methods
+  PR_STATIC_CALLBACK(PLDHashOperator) NotifyNewIntervalCallback(
+      TimeValueSpecPtrKey* aKey, void* aData);
+  PR_STATIC_CALLBACK(PLDHashOperator) NotifyChangedIntervalCallback(
+      TimeValueSpecPtrKey* aKey, void* aData);
+  PR_STATIC_CALLBACK(PLDHashOperator) NotifyDeletedIntervalCallback(
+      TimeValueSpecPtrKey* aKey, void* /* unused */);
+  static inline void SanityCheckTimeDependentCallbackArgs(
+      TimeValueSpecPtrKey* aKey, NotifyTimeDependentsParams* aParams,
+      PRBool aExpectingParams);
+
   //
   // Members
   //
@@ -456,16 +476,12 @@ protected:
   nsSMILMilestone                 mPrevRegisteredMilestone;
   static const nsSMILMilestone    sMaxMilestone;
 
-  // List of dependent time value specs to be notified when creating, updating,
+  // Set of dependent time value specs to be notified when creating, updating,
   // or deleting the current interval.
   //
   // [weak] The nsSMILTimeValueSpec objects register themselves and unregister
   // on destruction. Likewise, we notify them when we are destroyed.
-  //
-  // To avoid worst-case O(n^2) performance when many time dependents want to
-  // unregister, we keep these arrays sorted so we have worst case O(n*logn) for
-  // add and remove.
-  nsTArray<nsSMILTimeValueSpec*>  mTimeDependents;
+  TimeValueSpecHashSet mTimeDependents;
 
   /**
    * The state of the element in its life-cycle. These states are based on the
