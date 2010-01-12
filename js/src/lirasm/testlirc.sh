@@ -16,7 +16,7 @@ do
     # If it has the special name "random.in", replace filename with --random.
     if [ `basename $infile` = "random.in" ]
     then
-        infile="--random 1000"
+        infile="--random 1000000"
     fi
 
     if ./lirasm --execute $infile > testoutput.txt && cmp -s testoutput.txt $outfile
