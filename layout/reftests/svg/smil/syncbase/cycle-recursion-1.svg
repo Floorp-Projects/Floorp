@@ -2,9 +2,10 @@
      xmlns:xlink="http://www.w3.org/1999/xlink"
      class="reftest-wait"
      onload="
+        document.documentElement.pauseAnimations();
         document.documentElement.setCurrentTime(0);
         document.getElementById('c').removeAttribute('dur');
-        setTimeAndSnapshot(2, true)">
+        setTimeAndSnapshot(2, false)">
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <!--
     At first we have:

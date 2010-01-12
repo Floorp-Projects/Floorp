@@ -2,9 +2,10 @@
      xmlns:xlink="http://www.w3.org/1999/xlink"
      class="reftest-wait"
      onload="
+        document.documentElement.pauseAnimations();
         document.documentElement.setCurrentTime(0);
         document.getElementById('a').setAttribute('end', '0s');
-        setTimeAndSnapshot(2, true)">
+        setTimeAndSnapshot(2, false)">
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <!--
     A simple case of a deleting interval.

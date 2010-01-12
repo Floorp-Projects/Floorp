@@ -2,9 +2,10 @@
      xmlns:xlink="http://www.w3.org/1999/xlink"
      class="reftest-wait"
      onload="
+        document.documentElement.pauseAnimations();
         document.documentElement.setCurrentTime(0);
         document.getElementById('a').beginElementAt(1);
-        setTimeAndSnapshot(2, true)">
+        setTimeAndSnapshot(2, false)">
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <!--
     We'll add another begin instance time at t=1s for 'a' by script, causing a
