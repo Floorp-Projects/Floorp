@@ -409,6 +409,17 @@ WrapFunction(JSContext *cx, JSObject *wrapperObj, JSObject *funobj, jsval *v,
 }
 
 /**
+ * Given a potentially-wrapped object, creates a wrapper for it.
+ */
+JSBool
+RewrapObject(JSContext *cx, JSObject *scope, JSObject *obj, WrapperType hint,
+             jsval *vp);
+
+JSBool
+CreateWrapperFromType(JSContext *cx, JSObject *scope, XPCWrappedNative *wn,
+                      WrapperType hint, jsval *vp);
+
+/**
  * Creates an iterator object that walks up the prototype of
  * wrappedObj. This is suitable for for-in loops over a wrapper. If
  * a property is not supposed to be reflected, the resolve hook
