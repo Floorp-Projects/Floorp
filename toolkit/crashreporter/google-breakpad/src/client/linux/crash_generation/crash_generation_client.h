@@ -27,44 +27,43 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <unistd.h>
-#include <sys/syscall.h>
+#ifndef CLIENT_LINUX_CRASH_GENERATION_CRASH_GENERATION_CLIENT_H_
+#define CLIENT_LINUX_CRASH_GENERATION_CRASH_GENERATION_CLIENT_H_
 
-#include "client/linux/handler/exception_handler.h"
-#include "client/linux/minidump_writer/minidump_writer.h"
-#include "common/linux/eintr_wrapper.h"
-#include "breakpad_googletest_includes.h"
+#include <stddef.h>
 
-using namespace google_breakpad;
+namespace google_breakpad {
 
-namespace {
-typedef testing::Test MinidumpWriterTest;
-}
-
-TEST(MinidumpWriterTest, Setup) {
-  int fds[2];
-  ASSERT_NE(-1, pipe(fds));
-
-  const pid_t child = fork();
-  if (child == 0) {
-    close(fds[1]);
-    char b;
-    HANDLE_EINTR(read(fds[0], &b, sizeof(b)));
-    close(fds[0]);
-    syscall(__NR_exit);
+class CrashGenerationClient {
+public:
+  ~CrashGenerationClient()
+  {
   }
-  close(fds[0]);
 
-  ExceptionHandler::CrashContext context;
-  memset(&context, 0, sizeof(context));
+  // Request the crash server to generate a dump.  |blob| is a hack,
+  // see exception_handler.h and minidump_writer.h
+  //
+  // Return true if the dump was successful; false otherwise.
+  bool RequestDump(const void* blob, size_t blob_size);
 
-  char templ[] = "/tmp/minidump-writer-unittest-XXXXXX";
-  mktemp(templ);
-  ASSERT_TRUE(WriteMinidump(templ, child, &context, sizeof(context)));
-  struct stat st;
-  ASSERT_EQ(stat(templ, &st), 0);
-  ASSERT_GT(st.st_size, 0u);
-  unlink(templ);
+  // Return a new CrashGenerationClient if |server_fd| is valid and
+  // connects to a CrashGenerationServer.  Otherwise, return NULL.
+  // The returned CrashGenerationClient* is owned by the caller of
+  // this function.
+  static CrashGenerationClient* TryCreate(int server_fd);
 
-  close(fds[1]);
-}
+private:
+  CrashGenerationClient(int server_fd) : server_fd_(server_fd)
+  {
+  }
+
+  int server_fd_;
+
+  // prevent copy construction and assignment
+  CrashGenerationClient(const CrashGenerationClient&);
+  CrashGenerationClient& operator=(const CrashGenerationClient&);
+};
+
+} // namespace google_breakpad
+
+#endif // CLIENT_LINUX_CRASH_GENERATION_CRASH_GENERATION_CLIENT_H_

@@ -27,44 +27,16 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <unistd.h>
-#include <sys/syscall.h>
+#ifndef CLIENT_LINUX_CRASH_GENERATION_CLIENT_INFO_H_
+#define CLIENT_LINUX_CRASH_GENERATION_CLIENT_INFO_H_
 
-#include "client/linux/handler/exception_handler.h"
-#include "client/linux/minidump_writer/minidump_writer.h"
-#include "common/linux/eintr_wrapper.h"
-#include "breakpad_googletest_includes.h"
+namespace google_breakpad {
 
-using namespace google_breakpad;
+struct ClientInfo {
+  CrashGenerationServer* crash_server_;
+  pid_t pid_;
+};
 
-namespace {
-typedef testing::Test MinidumpWriterTest;
 }
 
-TEST(MinidumpWriterTest, Setup) {
-  int fds[2];
-  ASSERT_NE(-1, pipe(fds));
-
-  const pid_t child = fork();
-  if (child == 0) {
-    close(fds[1]);
-    char b;
-    HANDLE_EINTR(read(fds[0], &b, sizeof(b)));
-    close(fds[0]);
-    syscall(__NR_exit);
-  }
-  close(fds[0]);
-
-  ExceptionHandler::CrashContext context;
-  memset(&context, 0, sizeof(context));
-
-  char templ[] = "/tmp/minidump-writer-unittest-XXXXXX";
-  mktemp(templ);
-  ASSERT_TRUE(WriteMinidump(templ, child, &context, sizeof(context)));
-  struct stat st;
-  ASSERT_EQ(stat(templ, &st), 0);
-  ASSERT_GT(st.st_size, 0u);
-  unlink(templ);
-
-  close(fds[1]);
-}
+#endif // CLIENT_LINUX_CRASH_GENERATION_CLIENT_INFO_H_

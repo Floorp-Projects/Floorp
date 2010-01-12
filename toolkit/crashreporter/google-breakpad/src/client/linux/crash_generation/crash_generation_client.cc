@@ -27,44 +27,62 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <unistd.h>
-#include <sys/syscall.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
-#include "client/linux/handler/exception_handler.h"
-#include "client/linux/minidump_writer/minidump_writer.h"
+#include <algorithm>
+
+#include "client/linux/crash_generation/crash_generation_client.h"
 #include "common/linux/eintr_wrapper.h"
-#include "breakpad_googletest_includes.h"
+#include "common/linux/linux_libc_support.h"
+#include "common/linux/linux_syscall_support.h"
 
-using namespace google_breakpad;
+namespace google_breakpad {
 
-namespace {
-typedef testing::Test MinidumpWriterTest;
+bool
+CrashGenerationClient::RequestDump(const void* blob, size_t blob_size)
+{
+  int fds[2];
+  sys_socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+
+  static const unsigned kControlMsgSize = CMSG_SPACE(sizeof(int));
+
+  struct kernel_msghdr msg;
+  my_memset(&msg, 0, sizeof(struct kernel_msghdr));
+  struct kernel_iovec iov[1];
+  iov[0].iov_base = const_cast<void*>(blob);
+  iov[0].iov_len = blob_size;
+
+  msg.msg_iov = iov;
+  msg.msg_iovlen = sizeof(iov) / sizeof(iov[0]);
+  char cmsg[kControlMsgSize];
+  my_memset(cmsg, 0, kControlMsgSize);
+  msg.msg_control = cmsg;
+  msg.msg_controllen = sizeof(cmsg);
+
+  struct cmsghdr* hdr = CMSG_FIRSTHDR(&msg);
+  hdr->cmsg_level = SOL_SOCKET;
+  hdr->cmsg_type = SCM_RIGHTS;
+  hdr->cmsg_len = CMSG_LEN(sizeof(int));
+  *((int*) CMSG_DATA(hdr)) = fds[1];
+
+  HANDLE_EINTR(sys_sendmsg(server_fd_, &msg, 0));
+  sys_close(fds[1]);
+
+  // wait for an ACK from the server
+  char b;
+  HANDLE_EINTR(sys_read(fds[0], &b, 1));
+
+  return true;
 }
 
-TEST(MinidumpWriterTest, Setup) {
-  int fds[2];
-  ASSERT_NE(-1, pipe(fds));
+//static
+CrashGenerationClient*
+CrashGenerationClient::TryCreate(int server_fd)
+{
+  if (0 > server_fd)
+    return NULL;
+  return new CrashGenerationClient(server_fd);
+}
 
-  const pid_t child = fork();
-  if (child == 0) {
-    close(fds[1]);
-    char b;
-    HANDLE_EINTR(read(fds[0], &b, sizeof(b)));
-    close(fds[0]);
-    syscall(__NR_exit);
-  }
-  close(fds[0]);
-
-  ExceptionHandler::CrashContext context;
-  memset(&context, 0, sizeof(context));
-
-  char templ[] = "/tmp/minidump-writer-unittest-XXXXXX";
-  mktemp(templ);
-  ASSERT_TRUE(WriteMinidump(templ, child, &context, sizeof(context)));
-  struct stat st;
-  ASSERT_EQ(stat(templ, &st), 0);
-  ASSERT_GT(st.st_size, 0u);
-  unlink(templ);
-
-  close(fds[1]);
 }
