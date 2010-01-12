@@ -9751,8 +9751,12 @@ TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideEx
     LIns* class_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, classword));
     class_ins = lir->ins2(LIR_piand, class_ins, INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS));
 
+#ifdef JS_JIT_SPEW
     char namebuf[32];
     JS_snprintf(namebuf, sizeof namebuf, "guard(class is %s)", clasp->name);
+#else
+    static const char namebuf[] = "";
+#endif
     guard(cond, addName(lir->ins2(LIR_peq, class_ins, INS_CONSTPTR(clasp)), namebuf), exit);
     return cond;
 }
