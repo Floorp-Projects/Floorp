@@ -244,6 +244,9 @@ BrowserView.prototype = {
     let cacheSize = kBrowserViewCacheSize;
     try {
       cacheSize = gPrefService.getIntPref("tile.cache.size");
+      // XXX cacheSize still can be -1 even though new profile sets it to a positive value
+      if (cacheSize == -1)
+        cacheSize = kBrowserViewCacheSize;
     } catch(e) {}
     
     this._tileManager = new TileManager(this._appendTile, this._removeTile, this, cacheSize);
@@ -863,35 +866,32 @@ BrowserView.BrowserViewportState.prototype = {
  */
 BrowserView.IdleServiceObserver = function IdleServiceObserver(browserView) {
   this._browserView = browserView;
-  this._crawlStarted = false;
-  this._idleState = false;
+  this._idle = false;
+  this._paused = false;
 };
 
 BrowserView.IdleServiceObserver.prototype = {
-  /** Start prefetching tiles. */
-  _start: function _start() {
-    if (!this._crawlStarted) {
-      let bv = this._browserView;
-      bv._tileManager.restartPrefetchCrawl();
-      this._crawlStarted = true;
-    }
+  /** No matter what idle is, make sure prefetching is not active. */
+  pause: function pause() {
+    this._paused = true;
+    this._updateTileManager();
   },
 
-  /** Stop prefetching tiles. */
-  _stop: function _stop() {
-    if (this._crawlStarted) {
-      let bv = this._browserView;
-      bv._tileManager.stopPrefetchCrawl();
-      this._crawlStarted = false;
-    }
+  /** Prefetch tiles in idle mode. */
+  resume: function resume() {
+    this._paused = false;
+    this._updateTileManager();
   },
 
   /** Idle event handler. */
   observe: function observe(aSubject, aTopic, aUserIdleTime) {
-    this._idleState = (aTopic == "idle") ? true : false;
-    if (this._idleState)
-      this._start();
-    else
-      this._stop();
+    this._idle = (aTopic == "idle") ? true : false;
+    this._updateTileManager();
   },
+
+  _updateTileManager: function _updateTileManager() {
+    let bv = this._browserView;
+    bv._tileManager.setPrefetch(this._idle && !this._paused);
+  }
 };
+
