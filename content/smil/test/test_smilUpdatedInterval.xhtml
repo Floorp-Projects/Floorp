@@ -43,12 +43,13 @@ function main() {
   // Or the end--that is, if we go to t=5.5 we should still be running
   svg.setCurrentTime(5.5);
   try {
+    is(anim.getSimpleDuration(), 4, "Simple duration shouldn't have changed");
     is(anim.getStartTime(), 2, "Start time shouldn't have changed after seek");
   } catch (e) {
     if (e.code != DOMException.INVALID_STATE_ERR)
       throw e;
-    ok(false, "Simple duration of interval was updated even though the begin "
-       + "time didn't change.");
+    ok(false, "Animation ended too early, even though begin time and " +
+      "simple duration didn't change");
   }
 
   SimpleTest.finish();

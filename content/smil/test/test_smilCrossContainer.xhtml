@@ -36,7 +36,7 @@ function main() {
 
   // Create animation and check initial state
   var anim = createAnim();
-  ok(noStart(anim), "Animation has start time before attaching to document.");
+  ok(noStart(anim), "Animation has start time before attaching to document");
 
   // Attach animation to first container
   var circlea = getElement("circlea");
@@ -113,7 +113,7 @@ function noStart(elem) {
   } catch(e) {
     exceptionCaught = true;
     is (e.code, DOMException.INVALID_STATE_ERR,
-        "Unexpected exception code from getStartTime.");
+        "Unexpected exception code from getStartTime");
   }
 
   return exceptionCaught;
