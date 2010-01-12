@@ -352,9 +352,10 @@ pref("dom.max_script_run_time", 20);
 pref("browser.console.showInPanel", false);
 
 // kinetic tweakables
-pref("browser.ui.kinetic.updateInterval", 33);
-pref("browser.ui.kinetic.ema.alphaValue", 8);
-pref("browser.ui.kinetic.decelerationRate", 15);
+pref("browser.ui.kinetic.updateInterval", 30);
+pref("browser.ui.kinetic.decelerationRate", 20);
+pref("browser.ui.kinetic.speedSensitivity", 80);
+pref("browser.ui.kinetic.swipeLength", 160);
 
 // Disable default plugin
 pref("plugin.default_plugin_disabled", true);
