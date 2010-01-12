@@ -451,7 +451,7 @@ XRE_API(GeckoProcessType,
 
 #if defined(MOZ_CRASHREPORTER)
 XRE_API(PRBool,
-        XRE_SetRemoteExceptionHandler, (const char* aPipe=0))
+        XRE_SetRemoteExceptionHandler, (const char* aPipe))
 #endif
 
 XRE_API(nsresult,

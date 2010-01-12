@@ -70,7 +70,7 @@ main(int argc, char* argv[])
     // on POSIX, |crashReporterArg| is "true" if crash reporting is
     // enabled, false otherwise
     if (0 != strcmp("false", crashReporterArg)
-        && !XRE_SetRemoteExceptionHandler())
+        && !XRE_SetRemoteExceptionHandler(NULL))
         return 1;
 #  else
 #    error "OOP crash reporting unsupported on this platform"
