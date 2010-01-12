@@ -95,6 +95,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Rect)
 NS_IMPL_ADDREF_INHERITED(nsSVGRectElement,nsSVGRectElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGRectElement,nsSVGRectElementBase)
 
+DOMCI_DATA(SVGRectElement, nsSVGRectElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGRectElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGRectElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGRectElement)

@@ -78,6 +78,7 @@ private:
   PRPackedBool mIsAnimated;
   PRUint8 mAttrEnum; // element specified tracking for attribute
 
+public:
   struct DOMAnimatedBoolean : public nsIDOMSVGAnimatedBoolean
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS

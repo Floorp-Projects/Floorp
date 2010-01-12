@@ -59,6 +59,8 @@ nsDOMCSSDeclaration::~nsDOMCSSDeclaration()
 {
 }
 
+DOMCI_DATA(CSSStyleDeclaration, nsDOMCSSDeclaration)
+
 NS_INTERFACE_TABLE_HEAD(nsDOMCSSDeclaration)
   NS_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsDOMCSSDeclaration)
     NS_INTERFACE_TABLE_ENTRY(nsDOMCSSDeclaration, nsICSSDeclaration)

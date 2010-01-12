@@ -76,6 +76,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Polygon)
 NS_IMPL_ADDREF_INHERITED(nsSVGPolygonElement,nsSVGPolygonElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGPolygonElement,nsSVGPolygonElementBase)
 
+DOMCI_DATA(SVGPolygonElement, nsSVGPolygonElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGPolygonElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGPolygonElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGPolygonElement)

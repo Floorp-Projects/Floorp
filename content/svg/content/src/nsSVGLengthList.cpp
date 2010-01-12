@@ -119,6 +119,8 @@ nsSVGLengthList::~nsSVGLengthList()
 NS_IMPL_ADDREF(nsSVGLengthList)
 NS_IMPL_RELEASE(nsSVGLengthList)
 
+DOMCI_DATA(SVGLengthList, nsSVGLengthList)
+
 NS_INTERFACE_MAP_BEGIN(nsSVGLengthList)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLengthList)

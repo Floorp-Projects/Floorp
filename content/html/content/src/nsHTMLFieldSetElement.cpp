@@ -95,6 +95,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLFieldSetElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, nsGenericElement)
 
 
+DOMCI_DATA(HTMLFieldSetElement, nsHTMLFieldSetElement)
+
 // QueryInterface implementation for nsHTMLFieldSetElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLFieldSetElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLFieldSetElement,

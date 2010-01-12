@@ -79,6 +79,8 @@ NS_IMPL_CYCLE_COLLECTION_1(nsTreeColumn, mContent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTreeColumn)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTreeColumn)
 
+DOMCI_DATA(TreeColumn, nsTreeColumn)
+
 // QueryInterface implementation for nsTreeColumn
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeColumn)
   NS_INTERFACE_MAP_ENTRY(nsITreeColumn)
@@ -375,6 +377,8 @@ nsTreeColumns::~nsTreeColumns()
 {
   nsTreeColumns::InvalidateColumns();
 }
+
+DOMCI_DATA(TreeColumns, nsTreeColumns)
 
 // QueryInterface implementation for nsTreeColumns
 NS_INTERFACE_MAP_BEGIN(nsTreeColumns)

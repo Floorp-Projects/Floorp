@@ -82,6 +82,8 @@ static PRBool IsUniversalXPConnectCapable()
   return hasCap;
 }
 
+DOMCI_DATA(WindowUtils, nsDOMWindowUtils)
+
 NS_INTERFACE_MAP_BEGIN(nsDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowUtils)

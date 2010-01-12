@@ -137,6 +137,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLLabelElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLLabelElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLLabelElement, nsHTMLLabelElement)
+
 // QueryInterface implementation for nsHTMLLabelElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLLabelElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLLabelElement, nsIDOMHTMLLabelElement)

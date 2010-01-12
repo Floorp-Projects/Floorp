@@ -85,6 +85,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Symbol)
 NS_IMPL_ADDREF_INHERITED(nsSVGSymbolElement,nsSVGSymbolElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGSymbolElement,nsSVGSymbolElementBase)
 
+DOMCI_DATA(SVGSymbolElement, nsSVGSymbolElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGSymbolElement)
   NS_NODE_INTERFACE_TABLE5(nsSVGSymbolElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGFitToViewBox,
