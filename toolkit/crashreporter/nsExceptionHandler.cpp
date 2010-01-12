@@ -43,7 +43,9 @@
 #undef WIN32_LEAN_AND_MEAN
 #endif
 
-#include "client/windows/crash_generation/crash_generation_server.h"
+#if defined(MOZ_IPC)
+#  include "client/windows/crash_generation/crash_generation_server.h"
+#endif
 #include "client/windows/handler/exception_handler.h"
 #include <DbgHelp.h>
 #include <string.h>
@@ -56,7 +58,9 @@
 #include <unistd.h>
 #include "mac_utils.h"
 #elif defined(XP_LINUX)
-#include "client/linux/crash_generation/crash_generation_server.h"
+#if defined(MOZ_IPC)
+#  include "client/linux/crash_generation/crash_generation_server.h"
+#endif
 #include "client/linux/handler/exception_handler.h"
 #include <fcntl.h>
 #include <sys/types.h>
@@ -80,8 +84,10 @@
 #include "nsILocalFile.h"
 #include "nsDataHashtable.h"
 
+#if defined(MOZ_IPC)
 using google_breakpad::CrashGenerationServer;
 using google_breakpad::ClientInfo;
+#endif
 
 namespace CrashReporter {
 
@@ -147,21 +153,22 @@ static nsDataHashtable<nsCStringHashKey,nsCString>* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
 static nsCString* notesField = nsnull;
 
+#if defined(MOZ_IPC)
 // OOP crash reporting
 static CrashGenerationServer* crashServer; // chrome process has this
 
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
 // If crash reporting is disabled, we hand out this "null" pipe to the
 // child process and don't attempt to connect to a parent server.
 static const char kNullNotifyPipe[] = "-";
 static nsCString* childCrashNotifyPipe;
 
-#elif defined(XP_LINUX)
+#  elif defined(XP_LINUX)
 static int serverSocketFd = -1;
 static int clientSocketFd = -1;
 static const int kMagicChildCrashReportFd = 42;
-#endif
-
+#  endif
+#endif  // MOZ_IPC
 
 static XP_CHAR*
 Concat(XP_CHAR* str, const XP_CHAR* toAppend, int* size)
@@ -931,6 +938,7 @@ nsresult AppendObjCExceptionInfoToAppNotes(void *inException)
 }
 #endif
 
+#if defined(MOZ_IPC)
 //-----------------------------------------------------------------------------
 // Out-of-process crash reporting API wrappers
 static void
@@ -1074,8 +1082,8 @@ SetRemoteExceptionHandler()
   return gExceptionHandler->IsOutOfProcess();
 }
 
+#endif  // XP_WIN
 
-#endif
 
 bool
 UnsetRemoteExceptionHandler()
@@ -1084,5 +1092,7 @@ UnsetRemoteExceptionHandler()
   gExceptionHandler = NULL;
   return true;
 }
+
+#endif  // MOZ_IPC
 
 } // namespace CrashReporter
