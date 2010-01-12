@@ -80,6 +80,7 @@ struct nsDOMClassInfoData
   const nsIID **mInterfaces;
   PRUint32 mScriptableFlags : 31; // flags must not use more than 31 bits!
   PRUint32 mHasClassInterface : 1;
+  PRUint32 mInterfacesBitmap;
 #ifdef NS_DEBUG
   PRUint32 mDebugID;
 #endif
@@ -210,6 +211,11 @@ protected:
 
   virtual void PreserveWrapper(nsISupports *aNative)
   {
+  }
+
+  virtual PRUint32 GetInterfacesBitmap()
+  {
+    return mData->mInterfacesBitmap;
   }
 
   static nsresult Init();

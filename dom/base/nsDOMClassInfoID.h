@@ -44,7 +44,7 @@
 #ifndef nsDOMClassInfoID_h__
 #define nsDOMClassInfoID_h__
 
-#define DOMCI_CLASS(_dom_class) \
+#define DOMCI_CLASS(_dom_class)                                               \
   eDOMClassInfo_##_dom_class##_id,
 
 enum nsDOMClassInfoID {
@@ -61,9 +61,67 @@ enum nsDOMClassInfoID {
  * nsIClassInfo helper macros
  */
 
+/**
+ * DOMCI_CASTABLE_INTERFACES contains the list of interfaces that we have a bit
+ * for in nsDOMClassInfo's mInterfacesBitmap. To use it you need to define
+ * DOMCI_CASTABLE_INTERFACE(interface, bit, extra) and then call
+ * DOMCI_CASTABLE_INTERFACES(extra). For every interface there will be one
+ * call to DOMCI_CASTABLE_INTERFACE with the bit that it corresponds to and
+ * the extra argument that was passed in to DOMCI_CASTABLE_INTERFACES.
+ *
+ * WARNING: Be very careful when adding interfaces to this list. Every object
+ *          that implements one of these interfaces must be directly castable
+ *          to that interface from the *canonical* nsISupports!
+ */
+#define DOMCI_CASTABLE_INTERFACES(_extra)                                     \
+DOMCI_CASTABLE_INTERFACE(nsINode, 0, _extra)                                  \
+DOMCI_CASTABLE_INTERFACE(nsIContent, 1, _extra)                               \
+DOMCI_CASTABLE_INTERFACE(nsIDocument, 2, _extra)                              \
+DOMCI_CASTABLE_INTERFACE(nsINodeList, 3, _extra)                              \
+DOMCI_CASTABLE_INTERFACE(nsICSSDeclaration, 4, _extra)
+
+
 #ifdef _IMPL_NS_LAYOUT
 
-#define DOMCI_DATA(_dom_class, _class)
+#define DOMCI_CLASS(_dom_class)                                               \
+  extern const PRUint32 kDOMClassInfo_##_dom_class##_interfaces;
+
+#include "nsDOMClassInfoClasses.h"
+
+#undef DOMCI_CLASS
+
+/**
+ * We define two functions for every interface in DOMCI_CASTABLE_INTERFACES.
+ * One takes a void* and one takes an nsIFoo*. These are used to compute the
+ * bitmap for a given class. If the class doesn't implement the interface then
+ * the void* variant will be called and we'll return 0, otherwise the nsIFoo*
+ * variant will be called and we'll return (1 << bit).
+ */
+#define DOMCI_CASTABLE_INTERFACE(_interface, _bit, _extra)                    \
+class _interface;                                                             \
+inline PRUint32 Implements_##_interface(_interface *foo)                      \
+  { return 1 << _bit; }                                                       \
+inline PRUint32 Implements_##_interface(void *foo)                            \
+  { return 0; }
+
+DOMCI_CASTABLE_INTERFACES()
+
+#undef DOMCI_CASTABLE_INTERFACE
+
+/**
+ * Here we calculate the bitmap for a given class. We'll call the functions
+ * defined above with (_class*)nsnull. If the class implements an interface,
+ * that function will return (1 << bit), if it doesn't the function returns 0.
+ * We just make the sum of all the values returned from the functions to
+ * generate the bitmap.
+ */
+#define DOMCI_CASTABLE_INTERFACE(_interface, _bit, _class)                    \
+  Implements_##_interface((_class*)nsnull) +
+
+#define DOMCI_DATA(_dom_class, _class)                                        \
+const PRUint32 kDOMClassInfo_##_dom_class##_interfaces =                      \
+  DOMCI_CASTABLE_INTERFACES(_class)                                           \
+  0;
 
 class nsIClassInfo;
 class nsXPCClassInfo;

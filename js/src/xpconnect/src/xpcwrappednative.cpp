@@ -944,6 +944,7 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(
 
         sciProto.SetCallback(helper.forget());
         sciProto.SetFlags(flags);
+        sciProto.SetInterfacesBitmap(classInfoHelper->GetInterfacesBitmap());
 
         return;
     }
@@ -3873,8 +3874,9 @@ ConstructSlimWrapper(XPCCallContext &ccx, nsISupports *p, nsWrapperCache *cache,
     }
 
     nsIClassInfo* classInfo = classInfoHelper;
-    XPCNativeScriptableCreateInfo sciProto(classInfoHelper.forget().get(),
-                                           flags);
+    XPCNativeScriptableCreateInfo
+        sciProto(classInfoHelper.forget().get(), flags,
+                 classInfoHelper->GetInterfacesBitmap());
 
     AutoMarkingWrappedNativeProtoPtr xpcproto(ccx);
     JSBool isGlobal = JS_FALSE;
