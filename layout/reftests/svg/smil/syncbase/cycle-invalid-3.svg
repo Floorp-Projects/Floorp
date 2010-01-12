@@ -4,7 +4,8 @@
      onload="setTimeAndSnapshot(2, true)">
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <!--
-    An invalid cycle that propagates backwards. Example 4 from SMIL3.
+    An invalid cycle that propagates backwards.
+    Example 4 from SMIL3 section 5.4.5.
 
     Regarding cycle detection SMIL 3.0 says:
 

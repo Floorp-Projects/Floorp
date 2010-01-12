@@ -8,8 +8,8 @@
         setTimeAndSnapshot(2, false)">
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <!--
-    Based on Example 2 from SMIL3, an invalid cycle, but made valid by a DOM
-    call.
+    Based on Example 2 from SMIL3 section 5.4.5, an invalid cycle,
+    but made valid by a DOM call.
 
     At first we have:
     a: unresolved-unresolved

@@ -17,13 +17,13 @@
       a: -3->17s
       (b): -3.5->-1.5s (instance times: -3.5s, 1.5s)
 
-      At t=1.5s we get an early end on a giving us:
+      At t=1.5s we get an early end on 'a', giving us:
       a: 1.5->21.5s
       (b): 1.0->3.0s (instance times: 1.0s, 1.5s)
 
-      If, at t=1.5s we sample the second animation first we'll start an interval
-      from 1.5s instead of 1.0s. So this is a test that ends are actually
-      sampled first.
+      If, at t=1.5s, we sample the second animation first, we'll start an
+      interval from 1.5s instead of 1.0s. So this is a test that ends are
+      actually sampled first.
      -->
   </rect>
 </svg>

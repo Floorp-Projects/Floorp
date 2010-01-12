@@ -9,7 +9,7 @@
     This chain goes through end and begin specs but SMIL seems to imply that
     it's only when one element's begin time is dependent on another's begin time
     that it affects the chaining because it should act as if the time base begun
-    before the the dependent-so in this case 'c' is (indirectly) dependent on
+    before the the dependent.  So in this case 'c' is (indirectly) dependent on
     'a's end time and so shouldn't be given the higher priority.
    -->
   <rect width="100" height="100" fill="orange">

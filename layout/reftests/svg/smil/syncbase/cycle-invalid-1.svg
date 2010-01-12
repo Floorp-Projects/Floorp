@@ -4,7 +4,7 @@
      onload="setTimeAndSnapshot(2, true)">
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <!--
-    An invalid cycle. Example 1 from SMIL3.
+    An invalid cycle. Example 1 from SMIL3 section 5.4.5.
    -->
   <rect width="100" height="100" fill="green">
     <animate attributeName="y" attributeType="XML" from="0" to="0" id="a"
