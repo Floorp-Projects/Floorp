@@ -2,9 +2,10 @@
      xmlns:xlink="http://www.w3.org/1999/xlink"
      class="reftest-wait"
      onload="
+        document.documentElement.pauseAnimations();
         document.documentElement.setCurrentTime(1.2);
         document.getElementById('a').setAttribute('begin', '0s');
-        setTimeAndSnapshot(2, true)">
+        setTimeAndSnapshot(2, false)">
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <!--
     Changing the begin spec whilst the syncbase element is active should not
