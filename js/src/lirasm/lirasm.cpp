@@ -889,6 +889,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_u2q:
           case LIR_i2f:
           case LIR_u2f:
+          case LIR_f2i:
             need(1);
             ins = mLir->ins1(mOpcode,
                              ref(mTokens[0]));
@@ -1355,6 +1356,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     vector<LOpcode> I_F_ops;
     I_F_ops.push_back(LIR_qlo);
     I_F_ops.push_back(LIR_qhi);
+    I_F_ops.push_back(LIR_f2i);
 
     vector<LOpcode> F_II_ops;
     F_II_ops.push_back(LIR_qjoin);

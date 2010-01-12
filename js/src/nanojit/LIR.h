@@ -139,6 +139,17 @@ namespace nanojit
         uint32_t _count_args(uint32_t mask) const;
         uint32_t get_sizes(ArgSize*) const;
 
+        inline ArgSize returnType() const {
+            return ArgSize(_argtypes & ARGSIZE_MASK_ANY);
+        }
+
+        // Note that this indexes arguments *backwards*, that is to
+        // get the Nth arg, you have to ask for index (numargs - N).
+        // See mozilla bug 525815 for fixing this.
+        inline ArgSize argType(uint32_t arg) const {
+            return ArgSize((_argtypes >> (ARGSIZE_SHIFT * (arg+1))) & ARGSIZE_MASK_ANY);
+        }
+
         inline bool isIndirect() const {
             return _address < 256;
         }

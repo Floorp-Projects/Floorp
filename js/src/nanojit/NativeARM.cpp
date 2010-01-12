@@ -2045,6 +2045,16 @@ Assembler::asm_u2f(LInsp ins)
     FMSR(FpSingleScratch, sr);
 }
 
+void Assembler::asm_f2i(LInsp ins)
+{
+    // where our result goes
+    Register rr = prepResultReg(ins, GpRegs);
+    Register sr = findRegFor(ins->oprnd1(), FpRegs);
+
+    FMRS(rr, S14);
+    FTOSID(S14, sr);
+}
+
 void
 Assembler::asm_fneg(LInsp ins)
 {

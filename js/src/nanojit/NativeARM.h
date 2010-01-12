@@ -948,5 +948,22 @@ enum {
         *(--_nIns) = (NIns)( COND_AL | (0xEB0<<16) | (FpRegNum(_Dd)<<12) | (0xB4<<4) | (FpRegNum(_Dm)) ); \
         asm_output("fcpyd %s,%s", gpn(_Dd), gpn(_Dm));                 \
     } while (0)
-}
+
+#define FMRS(_Rd,_Sn) do {                                              \
+        underrunProtect(4);                                             \
+        NanoAssert(ARM_VFP);                                            \
+        NanoAssert(((_Sn) == FpSingleScratch) && IsGpReg(_Rd));         \
+        *(--_nIns) = (NIns)( COND_AL | (0xE1<<20) | (0x7<<16) | ((_Rd)<<12) | (0xA<<8) | (0<<7) | (0x1<<4) ); \
+        asm_output("fmrs %s,%s", gpn(_Rd), gpn(_Sn));                  \
+    } while (0)
+
+#define FTOSID(_Sd,_Dm) do {                                            \
+        underrunProtect(4);                                             \
+        NanoAssert(ARM_VFP);                                            \
+        NanoAssert(((_Sd) == FpSingleScratch) && IsFpReg(_Dm));         \
+        *(--_nIns) = (NIns)( COND_AL | (0xEBD<<16) | (0x7<<12) | (0xB4<<4) | FpRegNum(_Dm) ); \
+        asm_output("ftosid %s,%s", gpn(_Sd), gpn(_Dm));                \
+    } while (0)
+
+} // namespace nanojit
 #endif // __nanojit_NativeARM__

@@ -1565,6 +1565,13 @@ u2f(jsuint u)
 }
 JS_DEFINE_CALLINFO_1(static, DOUBLE, u2f, UINT32, 1, 1)
 
+static jsint FASTCALL
+f2i(jsdouble d)
+{
+    return jsint(d);
+}
+JS_DEFINE_CALLINFO_1(static, INT32, f2i, DOUBLE, 1, 1)
+
 static int32 FASTCALL
 fcmpeq(jsdouble x, jsdouble y)
 {
@@ -1646,6 +1653,7 @@ static struct SoftFloatOps
         map[LIR_fgt] = &fcmpgt_ci;
         map[LIR_fle] = &fcmple_ci;
         map[LIR_fge] = &fcmpge_ci;
+        map[LIR_f2i] = &f2i_ci;
     }
 } softFloatOps;
 
@@ -1677,6 +1685,11 @@ public:
         return out->ins2(LIR_qjoin, lo, hi);
     }
 
+    LIns *icall1(const CallInfo *call, LIns *a) {
+        LIns *args[] = { split(a) };
+        return out->insCall(call, args);
+    }
+
     LIns *fcall1(const CallInfo *call, LIns *a) {
         LIns *args[] = { split(a) };
         return split(call, args);
@@ -1694,8 +1707,14 @@ public:
 
     LIns *ins1(LOpcode op, LIns *a) {
         const CallInfo *ci = softFloatOps.map[op];
-        if (ci)
-            return fcall1(ci, a);
+        if (ci) {
+            if (ci->returnType() == ARGSIZE_I || ci->returnType() == ARGSIZE_U)
+                return icall1(ci, a);
+            if (ci->returnType() == ARGSIZE_F)
+                return fcall1(ci, a);
+            JS_NOT_REACHED("ins1 softfloat filter with return type other than I/U or F");
+        }
+
         if (op == LIR_fret)
             return out->ins1(op, split(a));
         return out->ins1(op, a);

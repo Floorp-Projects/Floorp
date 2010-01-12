@@ -1009,6 +1009,13 @@ namespace nanojit
         MOVLR(b, b);        // zero extend u32 to int64
     }
 
+    void Assembler::asm_f2i(LIns *ins) {
+        NanoAssert(!ins->isQuad() && ins->oprnd1()->isQuad());
+        Register r = prepResultReg(ins, GpRegs);
+        Register b = findRegFor(ins->oprnd1(), FpRegs);
+        emitprr(X64_cvtsd2si, r, b);
+    }
+
     void Assembler::asm_cmov(LIns *ins) {
         LIns* cond    = ins->oprnd1();
         LIns* iftrue  = ins->oprnd2();
