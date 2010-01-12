@@ -11,7 +11,7 @@
     <animate attributeName="y" attributeType="XML" from="0" to="0" id="a"
       begin="0s; 1s" dur="10s"/>
     <animate attributeName="fill" attributeType="CSS"
-      values="orange; green; orange" fill="remove"
+      values="orange; green; orange"
       begin="3s; a.end" dur="2s"/>
   </rect>
 </svg>

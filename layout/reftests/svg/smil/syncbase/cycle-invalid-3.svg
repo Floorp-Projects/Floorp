@@ -45,9 +45,9 @@
    -->
   <rect y="100" width="100" height="100" fill="red">
     <animate attributeName="y" attributeType="XML" from="-50" to="50" id="a"
-      begin="5s; b.begin-1s" dur="2s" fill="remove"/>
+      begin="5s; b.begin-1s" dur="2s"/>
     <animate attributeName="fill" attributeType="CSS" id="b"
-      values="green; orange" fill="remove"
+      values="green; orange"
       begin="a.begin-1s" dur="2s"/>
   </rect>
 </svg>
