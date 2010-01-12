@@ -2581,6 +2581,18 @@ NS_IMETHODIMP nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
   return rv;
 }
 
+nsPluginTag*
+nsPluginHost::FindTagForPlugin(nsIPlugin* aPlugin)
+{
+  nsPluginTag* pluginTag;
+  for (pluginTag = mPlugins; pluginTag; pluginTag = pluginTag->mNext) {
+    if (pluginTag->mEntryPoint == aPlugin) {
+      return pluginTag;
+    }
+  }
+  return nsnull;
+}
+
 nsresult nsPluginHost::FindStoppedPluginForURL(nsIURI* aURL,
                                                nsIPluginInstanceOwner *aOwner)
 {
@@ -2630,10 +2642,7 @@ nsresult nsPluginHost::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
   // unloading NPAPI dll from memory.
   nsPluginTag * pluginTag = nsnull;
   if (aPlugin) {
-    for (pluginTag = mPlugins; pluginTag != nsnull; pluginTag = pluginTag->mNext) {
-      if (pluginTag->mEntryPoint == aPlugin)
-        break;
-    }
+    pluginTag = FindTagForPlugin(aPlugin);
     NS_ASSERTION(pluginTag, "Plugin tag not found");
   }
 
@@ -5160,13 +5169,7 @@ NS_IMETHODIMP nsPluginHost::Notify(nsITimer* timer)
 void
 nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin)
 {
-  // Find the nsPluginTag corresponding to this plugin
-
-  nsPluginTag* plugin;
-  for (plugin = mPlugins; plugin; plugin = plugin->mNext) {
-    if (plugin->mEntryPoint == aPlugin)
-      break;
-  }
+  nsPluginTag* plugin = FindTagForPlugin(aPlugin);
   if (!plugin) {
     NS_WARNING("nsPluginTag not found in nsPluginHost::PluginCrashed");
     return;
