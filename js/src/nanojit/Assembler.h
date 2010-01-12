@@ -377,6 +377,7 @@ namespace nanojit
             NIns        *exitStart, *exitEnd;   // current exit code chunk
             NIns*       _nIns;                  // current instruction in current normal code chunk
             NIns*       _nExitIns;              // current instruction in current exit code chunk
+                                                // note: _nExitIns == NULL until the first side exit is seen.
         #ifdef NJ_VERBOSE
         public:
             size_t      codeBytes;              // bytes allocated in normal code chunks
