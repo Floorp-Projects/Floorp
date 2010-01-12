@@ -6097,8 +6097,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
         pn2 = pn->pn_kid;
 
-        /* See js_FoldConstants for why this assertion holds true. */
-        JS_ASSERT_IF(op == JSOP_TYPEOF, pn2->pn_type == TOK_NAME);
+        if (op == JSOP_TYPEOF && pn2->pn_type != TOK_NAME)
+            op = JSOP_TYPEOFEXPR;
 
         oldflags = cg->flags;
         cg->flags &= ~TCF_IN_FOR_INIT;
