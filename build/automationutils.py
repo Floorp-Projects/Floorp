@@ -104,7 +104,7 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
   foundCrash = False
   dumps = glob.glob(os.path.join(dumpDir, '*.dmp'))
   for d in dumps:
-    log.info("TEST-UNEXPECTED-FAIL | %s | application crashed (minidump found)", testName)
+    log.info("PROCESS-CRASH | %s | application crashed (minidump found)", testName)
     if symbolsPath and stackwalkPath and os.path.exists(stackwalkPath):
       nullfd = open(os.devnull, 'w')
       # eat minidump_stackwalk errors
