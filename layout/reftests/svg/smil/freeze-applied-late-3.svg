@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="go()">
+  <!-- This test checks for correct behavior when fill="freeze" is applied when
+       the only interval on an animation is entirely before the document begins
+       (before 0). The SMIL Animation spec says that such intervals should be
+       filtered out[1] (ignored).  So, since we have no valid intervals,
+       applying fill="freeze" shouldn't have any effect in this case.
+       [1] http://www.w3.org/TR/2001/REC-smil-animation-20010904/#Timing-BeginEnd-LC-Start
+   -->
+  <script>
+    function go() {
+      var svg = document.documentElement;
+      document.getElementById("anim").setAttribute("fill", "freeze");
+      svg.removeAttribute("class");
+    }
+  </script>
+  <rect id="blueRect" x="15" y="15" width="200" height="200" fill="blue">
+    <animate id="anim" attributeName="height"
+             to="100" begin="-2s" dur="2s"/>
+  </rect>
+</svg>
