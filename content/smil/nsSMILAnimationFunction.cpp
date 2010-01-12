@@ -318,18 +318,26 @@ nsSMILAnimationFunction::CompareTo(const nsSMILAnimationFunction* aOther) const
   if (mBeginTime != aOther->GetBeginTime())
     return mBeginTime > aOther->GetBeginTime() ? 1 : -1;
 
-  // XXX When syncbase timing is implemented, we next need to sort based on
-  // dependencies
+  // Next sort based on syncbase dependencies: the dependent element sorts after
+  // its syncbase
+  const nsSMILTimedElement& thisTimedElement =
+    mAnimationElement->TimedElement();
+  const nsSMILTimedElement& otherTimedElement =
+    aOther->mAnimationElement->TimedElement();
+  if (thisTimedElement.IsTimeDependent(otherTimedElement))
+    return 1;
+  if (otherTimedElement.IsTimeDependent(thisTimedElement))
+    return -1;
 
   // Animations that appear later in the document sort after those earlier in
   // the document
-  nsIContent &thisElement = mAnimationElement->Content();
-  nsIContent &otherElement = aOther->mAnimationElement->Content();
+  nsIContent& thisContent = mAnimationElement->Content();
+  nsIContent& otherContent = aOther->mAnimationElement->Content();
 
-  NS_ASSERTION(&thisElement != &otherElement,
-             "Two animations cannot have the same animation content element!");
+  NS_ABORT_IF_FALSE(&thisContent != &otherContent,
+      "Two animations cannot have the same animation content element!");
 
-  return (nsContentUtils::PositionIsBefore(&thisElement, &otherElement))
+  return (nsContentUtils::PositionIsBefore(&thisContent, &otherContent))
           ? -1 : 1;
 }
 
