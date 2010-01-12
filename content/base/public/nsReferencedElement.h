@@ -88,6 +88,19 @@ public:
    * value, the current element for the ID.
    */
   void Reset(nsIContent* aFrom, nsIURI* aURI, PRBool aWatch = PR_TRUE);
+
+  /**
+   * A variation on Reset() to set up a reference that consists of the ID of
+   * an element in the same document as aFrom.
+   * @param aFrom the source element for context
+   * @param aID the ID of the element
+   * @param aWatch if false, then we do not set up the notifications to track
+   * changes, so ContentChanged won't fire and get() will always return the same
+   * value, the current element for the ID.
+   */
+  void ResetWithID(nsIContent* aFrom, const nsString& aID,
+                   PRBool aWatch = PR_TRUE);
+
   /**
    * Clears the reference. ContentChanged is not triggered. get() will return
    * null.

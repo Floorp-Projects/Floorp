@@ -59,11 +59,13 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGAnimationElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsSVGAnimationElement,
                                                 nsSVGAnimationElementBase)
   tmp->mHrefTarget.Unlink();
+  tmp->mTimedElement.Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsSVGAnimationElement,
                                                   nsSVGAnimationElementBase)
   tmp->mHrefTarget.Traverse(&cb);
+  tmp->mTimedElement.Traverse(&cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 //----------------------------------------------------------------------
@@ -276,7 +278,7 @@ nsSVGAnimationElement::BindToTree(nsIDocument* aDocument,
       UpdateHrefTarget(aParent, hrefStr);
     }
 
-    mTimedElement.BindToTree();
+    mTimedElement.BindToTree(aParent);
   }
 
   AnimationNeedsResample();
@@ -300,6 +302,7 @@ nsSVGAnimationElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   }
 
   mHrefTarget.Unlink();
+  mTimedElement.DissolveReferences();
 
   AnimationNeedsResample();
 
@@ -333,7 +336,8 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
     // ... and if that didn't recognize the attribute, let the timed element
     // try to parse it.
     if (!foundMatch) {
-      foundMatch = mTimedElement.SetAttr(aAttribute, aValue, aResult, &rv);
+      foundMatch =
+        mTimedElement.SetAttr(aAttribute, aValue, aResult, this, &rv);
     }
 
     if (foundMatch) {
