@@ -47,6 +47,7 @@ class nsISMILAnimationElement;
 class nsSMILTimeValue;
 class nsSMILValue;
 class nsSMILRepeatCount;
+class nsSMILTimeValueSpecParams;
 
 /**
  * Common parsing utilities for the SMIL module. There is little re-use here; it
@@ -69,6 +70,10 @@ public:
 
   static nsresult ParseRepeatCount(const nsAString& aSpec,
                                    nsSMILRepeatCount& aResult);
+
+  static nsresult ParseTimeValueSpecParams(const nsAString& aSpec,
+                                           nsSMILTimeValueSpecParams& aResult);
+
 
   // Used with ParseClockValue. Allow + or - before a clock value.
   static const PRInt8 kClockValueAllowSign       = 1;
