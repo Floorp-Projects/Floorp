@@ -43,10 +43,6 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-// Initialize browserGlue.
-var bg = Cc["@mozilla.org/browser/browserglue;1"].
-         getService(Ci.nsIBrowserGlue);
-
 // Initialize Places.
 var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
          getService(Ci.nsINavHistoryService);
@@ -85,6 +81,8 @@ function rebuildSmartBookmarks() {
                 getService(Ci.nsIConsoleService);
   console.reset();
   console.registerListener(consoleListener);
+  var bg = Cc["@mozilla.org/browser/browserglue;1"].
+           getService(Ci.nsIBrowserGlue);
   bg.ensurePlacesDefaultQueriesInitialized();
   console.unregisterListener(consoleListener);
 }
@@ -224,7 +222,7 @@ tests.push({
     do_check_eq(ps.getIntPref(PREF_SMART_BOOKMARKS_VERSION),
                 SMART_BOOKMARKS_VERSION);
 
-    finish_test();
+    next_test();
   }
 });
 //------------------------------------------------------------------------------
@@ -245,38 +243,46 @@ function countFolderChildren(aFolderItemId) {
   return cc;
 }
 
-function finish_test() {
-  // Clean up database from all bookmarks.
-  remove_all_bookmarks();
-
-  do_test_finished();
-}
 var testIndex = 0;
 function next_test() {
-  // Execute next test.
-  let test = tests.shift();
-  print("\nTEST " + (++testIndex) + ": " + test.description);
-  test.exec();
-}
-function run_test() {
-  do_test_pending();
-  // Enqueue test, so it will consume the default places-init-complete
-  // notification created at Places init.
-  do_timeout(0, start_tests);
+  if (tests.length) {
+    // Execute next test.
+    let test = tests.shift();
+    print("\nTEST " + (++testIndex) + ": " + test.description);
+    test.exec();
+  }
+  else {
+    // Clean up database from all bookmarks.
+    remove_all_bookmarks();
+    do_test_finished();
+  }
 }
 
-function start_tests() {
+function run_test() {
+  // Bug 510219.
+  // Disabled on Windows due to almost permanent failure.
+  if ("@mozilla.org/windows-registry-key;1" in Components.classes)
+    return;
+
+  do_test_pending();
+
   remove_bookmarks_html();
   remove_all_JSON_backups();
+
+  // Initialize browserGlue.
+  var bg = Cc["@mozilla.org/browser/browserglue;1"].
+           getService(Ci.nsIBrowserGlue);
+  bg.QueryInterface(Ci.nsIObserver).observe(null, "places-init-complete", null);
 
   // Ensure preferences status.
   do_check_false(ps.getBoolPref(PREF_AUTO_EXPORT_HTML));
   try {
-  do_check_false(ps.getBoolPref(PREF_IMPORT_BOOKMARKS_HTML));
+    do_check_false(ps.getBoolPref(PREF_IMPORT_BOOKMARKS_HTML));
     do_throw("importBookmarksHTML pref should not exist");
   }
   catch(ex) {}
   do_check_false(ps.getBoolPref(PREF_RESTORE_DEFAULT_BOOKMARKS));
+
   // Kick-off tests.
   next_test();
 }
