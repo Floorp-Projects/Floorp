@@ -566,8 +566,13 @@ STDMETHODIMP nsAccessibleWrap::get_accHelp(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszHelp)
 {
+__try {
   *pszHelp = NULL;
   return S_FALSE;
+
+} __except(FilterA11yExceptions(::GetExceptionCode(),
+                                GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP nsAccessibleWrap::get_accHelpTopic(
@@ -575,9 +580,14 @@ STDMETHODIMP nsAccessibleWrap::get_accHelpTopic(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ long __RPC_FAR *pidTopic)
 {
+__try {
   *pszHelpFile = NULL;
   *pidTopic = 0;
-  return E_NOTIMPL;
+  return S_FALSE;
+
+} __except(FilterA11yExceptions(::GetExceptionCode(),
+                                GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP nsAccessibleWrap::get_accKeyboardShortcut(
