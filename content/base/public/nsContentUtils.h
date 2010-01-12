@@ -393,7 +393,7 @@ public:
    * Never call this function with the first node provided by script, it
    * must always be known to be a 'real' node!
    */
-  static nsresult CheckSameOrigin(nsIDOMNode* aTrustedNode,
+  static nsresult CheckSameOrigin(nsINode* aTrustedNode,
                                   nsIDOMNode* aUnTrustedNode);
 
   // Check if the (JS) caller can access aNode.
