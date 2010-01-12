@@ -48,14 +48,15 @@ CPPSRCS = \
 	updater.cpp \
 	bspatch.cpp \
 	archivereader.cpp \
-	readstrings.cpp \
 	$(NULL)
 
 PROGRAM = updater$(BIN_SUFFIX)
 
+LOCAL_INCLUDES += -I$(srcdir)/../../../readstrings
 
 LIBS += \
 	$(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
+	../../../readstrings/$(LIB_PREFIX)readstrings.$(LIB_SUFFIX) \
 	$(BZ2_LIBS) \
 	$(NULL)
 

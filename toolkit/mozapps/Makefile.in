@@ -55,6 +55,7 @@ PARALLEL_DIRS = \
  
 ifeq ($(OS_ARCH),WINCE)
 ifdef WINCE_WINDOWS_MOBILE
+DIRS += readstrings
 DIRS += installer/wince
 endif
 endif
