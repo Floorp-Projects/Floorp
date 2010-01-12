@@ -251,6 +251,13 @@ public:
   static PRBool GetID(nsIContent *aContent, nsAString& aID);
 
   /**
+   * Convert attribute value of the given node to positive integer. If no
+   * attribute or wrong value then false is returned.
+   */
+  static PRBool GetUIntAttr(nsIContent *aContent, nsIAtom *aAttr,
+                            PRInt32 *aUInt);
+
+  /**
    * Check if the given element is XLink.
    *
    * @param aContent  the given element

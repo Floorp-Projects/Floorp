@@ -98,6 +98,17 @@
       testGroupAttrs("r3", 3, 3);
 
       //////////////////////////////////////////////////////////////////////////
+      // ARIA tree
+      testGroupAttrs("ti1", 1, 3, 1);
+      testGroupAttrs("ti2", 1, 2, 2);
+      testGroupAttrs("ti3", 2, 2, 2);
+      testGroupAttrs("ti4", 2, 3, 1);
+      testGroupAttrs("ti5", 1, 3, 2);
+      testGroupAttrs("ti6", 2, 3, 2);
+      testGroupAttrs("ti7", 3, 3, 2);
+      testGroupAttrs("ti8", 3, 3, 1);
+
+      //////////////////////////////////////////////////////////////////////////
       // ARIA grid
       testGroupAttrs("grid_row1", 1, 2);
       testGroupAttrs("grid_cell1", 1, 2);
@@ -109,15 +120,15 @@
 
       //////////////////////////////////////////////////////////////////////////
       // ARIA treegrid
-      testGroupAttrs("treegrid_row1", 1, 3, 1);
+      testGroupAttrs("treegrid_row1", 1, 2, 1);
       testGroupAttrs("treegrid_cell1", 1, 2);
       testGroupAttrs("treegrid_cell2", 2, 2);
 
-      testGroupAttrs("treegrid_row2", 2, 3, 2);
+      testGroupAttrs("treegrid_row2", 1, 1, 2);
       testGroupAttrs("treegrid_cell3", 1, 2);
       testGroupAttrs("treegrid_cell4", 2, 2);
 
-      testGroupAttrs("treegrid_row3", 3, 3, 1);
+      testGroupAttrs("treegrid_row3", 2, 2, 1);
       testGroupAttrs("treegrid_cell5", 1, 2);
       testGroupAttrs("treegrid_cell6", 2, 2);
 
@@ -233,6 +244,35 @@
     <li id="r2" role="radio" aria-checked="false">Subway</li>
     <li id="r3" role="radio" aria-checked="false">Jimmy Johns</li>
   </ul>
+
+  <table role="tree">
+    <tr role="presentation">
+      <td role="treeitem" aria-expanded="true" aria-level="1"
+          id="ti1">vegetables</td>
+    </tr>
+    <tr role="presentation">
+      <td role="treeitem" aria-level="2" id="ti2">cucumber</td>
+    </tr>
+    <tr role="presentation">
+      <td role="treeitem" aria-level="2" id="ti3">carrot</td>
+    </tr>
+    <tr role="presentation">
+      <td role="treeitem" aria-expanded="false" aria-level="1"
+          id="ti4">cars</td>
+    </tr>
+    <tr role="presentation">
+      <td role="treeitem" aria-level="2" id="ti5">mercedes</td>
+    </tr>
+    <tr role="presentation">
+      <td role="treeitem" aria-level="2" id="ti6">BMW</td>
+    </tr>
+    <tr role="presentation">
+      <td role="treeitem" aria-level="2" id="ti7">Audi</td>
+    </tr>
+    <tr role="presentation">
+      <td role="treeitem" aria-level="1" id="ti8">people</td>
+    </tr>
+  </table>
 
   <table role="grid">
     <tr role="row" id="grid_row1">
