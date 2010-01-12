@@ -174,7 +174,10 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += -I$(topsrcdir)/dom/ipc
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/dom/ipc \
+  -I$(topsrcdir)/toolkit/crashreporter \
+  $(NULL)
 
 ifdef BUILD_STATIC_LIBS
 export::
