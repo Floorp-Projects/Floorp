@@ -36,24 +36,83 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSMILInstanceTime.h"
-#include "nsSMILTimeValueSpec.h"
-#include "nsSMILTimeValue.h"
-
-//----------------------------------------------------------------------
-// Implementation
 
 nsSMILInstanceTime::nsSMILInstanceTime(const nsSMILTimeValue& aTime,
-                                       nsSMILTimeValueSpec* /*aCreator*/,
-                                       PRBool aClearOnReset /*=false*/)
-  : mTime(aTime), // Copy the time
-    mClearOnReset(aClearOnReset)
+    const nsSMILInstanceTime* aDependentTime,
+    nsSMILInstanceTimeSource aSource)
+: mTime(aTime),
+  mFlags(0),
+  mSerial(0)
 {
-  // XXX
+  switch (aSource) {
+    case SOURCE_NONE:
+      // No special flags
+      break;
+
+    case SOURCE_DOM:
+      mFlags = kClearOnReset | kFromDOM;
+      break;
+
+    case SOURCE_SYNCBASE:
+      mFlags = kMayUpdate;
+      break;
+
+    case SOURCE_EVENT:
+      mFlags = kClearOnReset;
+      break;
+  }
+
+  SetDependentTime(aDependentTime);
 }
 
-nsSMILInstanceTime::~nsSMILInstanceTime()
+void
+nsSMILInstanceTime::SetDependentTime(const nsSMILInstanceTime* aDependentTime)
 {
-  // XXXdholbert When we add support for syncbase timing, we'll
-  // need to remove this nsSMILInstanceTime from its timebase
-  // here.
+  // We must make the dependent time mutable because our ref-counting isn't
+  // const-correct and BreakPotentialCycle may update dependencies (which should
+  // be considered 'mutable')
+  nsSMILInstanceTime* mutableDependentTime =
+    const_cast<nsSMILInstanceTime*>(aDependentTime);
+
+  // Make sure we don't end up creating a cycle between the dependent time
+  // pointers. (Note that this is not the same as detecting syncbase dependency
+  // cycles. That is done by nsSMILTimeValueSpec. mDependentTime is used ONLY
+  // for ensuring correct ordering within the animation sandwich.)
+  if (aDependentTime) {
+    mutableDependentTime->BreakPotentialCycle(this);
+  }
+
+  mDependentTime = mutableDependentTime;
+}
+
+void
+nsSMILInstanceTime::BreakPotentialCycle(const nsSMILInstanceTime* aNewTail)
+{
+  if (!mDependentTime)
+    return;
+
+  if (mDependentTime == aNewTail) {
+    // Making aNewTail the new tail of the chain would create a cycle so we
+    // prevent this by unlinking the pointer to aNewTail.
+    mDependentTime = nsnull;
+    return;
+  }
+
+  mDependentTime->BreakPotentialCycle(aNewTail);
+}
+
+PRBool
+nsSMILInstanceTime::IsDependent(const nsSMILInstanceTime& aOther,
+                                PRUint32 aRecursionDepth) const
+{
+  NS_ABORT_IF_FALSE(aRecursionDepth < 1000,
+      "We seem to have created a cycle between instance times");
+
+  if (!mDependentTime)
+    return PR_FALSE;
+
+  if (mDependentTime == &aOther)
+    return PR_TRUE;
+
+  return mDependentTime->IsDependent(aOther, ++aRecursionDepth);
 }

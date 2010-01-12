@@ -149,6 +149,14 @@ public:
   nsSMILTimeValue ParentToContainerTime(nsSMILTime aParentTime) const;
 
   /*
+   * If the container is paused, causes the pause time to be updated to the
+   * current parent time. This should be called before updating
+   * cross-container dependencies that will call ContainerToParentTime in order
+   * to provide more intuitive results.
+   */
+  void SyncPauseTime();
+
+  /*
    * Updates the current time of this time container and calls DoSample to
    * perform any sample-operations.
    */
@@ -244,6 +252,12 @@ protected:
    * Implementation helper to update the current time.
    */
   void UpdateCurrentTime();
+ 
+  /*
+   * Implementation helper to notify timed elements with dependencies that the
+   * container time has changed with respect to the document time.
+   */
+  void NotifyTimeChange();
 
   // The parent time container, if any
   nsSMILTimeContainer* mParent;
