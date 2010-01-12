@@ -35,6 +35,11 @@
 
 #include <signal.h>
 
+#include "client/linux/crash_generation/crash_generation_client.h"
+#include "processor/scoped_ptr.h"
+
+struct sigaction;
+
 namespace google_breakpad {
 
 // ExceptionHandler
@@ -116,6 +121,18 @@ class ExceptionHandler {
                    FilterCallback filter, MinidumpCallback callback,
                    void *callback_context,
                    bool install_handler);
+
+  // Creates a new ExceptionHandler instance that can attempt to
+  // perform out-of-process dump generation if server_fd is valid. If
+  // server_fd is invalid, in-process dump generation will be
+  // used. See the above ctor for a description of the other
+  // parameters.
+  ExceptionHandler(const std::string& dump_path,
+                   FilterCallback filter, MinidumpCallback callback,
+                   void* callback_context,
+                   bool install_handler,
+                   const int server_fd);
+
   ~ExceptionHandler();
 
   // Get and set the minidump path.
@@ -149,7 +166,14 @@ class ExceptionHandler {
     struct _libc_fpstate float_state;
   };
 
+  // Returns whether out-of-process dump generation is used or not.
+  bool IsOutOfProcess() const {
+      return crash_generation_client_.get() != NULL;
+  }
+
  private:
+  void Init(const std::string &dump_path,
+            const int server_fd);
   bool InstallHandlers();
   void UninstallHandlers();
   void PreresolveSymbols();
@@ -165,6 +189,8 @@ class ExceptionHandler {
   const FilterCallback filter_;
   const MinidumpCallback callback_;
   void* const callback_context_;
+
+  scoped_ptr<CrashGenerationClient> crash_generation_client_;
 
   std::string dump_path_;
   std::string next_minidump_path_;
@@ -189,9 +215,8 @@ class ExceptionHandler {
   static unsigned handler_stack_index_;
   static pthread_mutex_t handler_stack_mutex_;
 
-  // A vector of the old signal handlers. The void* is a pointer to a newly
-  // allocated sigaction structure to avoid pulling in too many includes.
-  std::vector<std::pair<int, void *> > old_handlers_;
+  // A vector of the old signal handlers.
+  std::vector<std::pair<int, struct sigaction *> > old_handlers_;
 };
 
 }  // namespace google_breakpad

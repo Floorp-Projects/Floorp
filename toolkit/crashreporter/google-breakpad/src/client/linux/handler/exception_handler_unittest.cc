@@ -38,19 +38,10 @@
 
 #include "client/linux/handler//exception_handler.h"
 #include "client/linux/minidump_writer/minidump_writer.h"
+#include "common/linux/eintr_wrapper.h"
 #include "common/linux/linux_libc_support.h"
 #include "common/linux/linux_syscall_support.h"
 #include "breakpad_googletest_includes.h"
-
-// This provides a wrapper around system calls which may be
-// interrupted by a signal and return EINTR. See man 7 signal.
-#define HANDLE_EINTR(x) ({ \
-  typeof(x) __eintr_result__; \
-  do { \
-    __eintr_result__ = x; \
-  } while (__eintr_result__ == -1 && errno == EINTR); \
-  __eintr_result__;\
-})
 
 using namespace google_breakpad;
 
