@@ -62,6 +62,7 @@ struct nsEnumerationData;
 
 class nsICookiePermission;
 class nsIEffectiveTLDService;
+class nsIIDNService;
 class nsIPrefBranch;
 class nsIObserverService;
 class nsIURI;
@@ -168,20 +169,21 @@ class nsCookieService : public nsICookieService
     nsresult                      CreateTable();
     void                          CloseDB();
     nsresult                      Read();
-    nsresult                      GetBaseDomain(nsIURI *aHostURI, nsCString &aBaseDomain, PRBool &aIsIPAddress);
+    nsresult                      NormalizeHost(nsCString &aHost);
+    nsresult                      GetBaseDomain(nsIURI *aHostURI, nsCString &aBaseDomain, PRBool &aRequireHostMatch);
     nsresult                      GetBaseDomainFromHost(const nsACString &aHost, nsCString &aBaseDomain);
     void                          GetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, PRBool aHttpBound, char **aCookie);
     nsresult                      SetCookieStringInternal(nsIURI *aHostURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, PRBool aFromHttp);
-    PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, const nsCString& aBaseDomain, PRBool aIsIPAddress, nsDependentCString &aCookieHeader, PRInt64 aServerTime, PRBool aFromHttp);
+    PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, const nsCString& aBaseDomain, PRBool aRequireHostMatch, nsDependentCString &aCookieHeader, PRInt64 aServerTime, PRBool aFromHttp);
     void                          AddInternal(const nsCString& aBaseDomain, nsCookie *aCookie, PRInt64 aCurrentTimeInUsec, nsIURI *aHostURI, const char *aCookieHeader, PRBool aFromHttp);
     void                          RemoveCookieFromList(const nsListIter &aIter);
     PRBool                        AddCookieToList(const nsCString& aBaseDomain, nsCookie *aCookie, PRBool aWriteToDB = PR_TRUE);
     void                          UpdateCookieInList(nsCookie *aCookie, PRInt64 aLastAccessed);
     static PRBool                 GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, PRBool &aEqualsFound);
     static PRBool                 ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
-    PRBool                        IsForeign(const nsCString &aBaseDomain, PRBool aHostIsIPAddress, nsIURI *aFirstURI);
-    PRUint32                      CheckPrefs(nsIURI *aHostURI, nsIChannel *aChannel, const nsCString &aBaseDomain, PRBool aIsIPAddress, const char *aCookieHeader);
-    PRBool                        CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI, const nsCString &aBaseDomain, PRBool aIsIPAddress);
+    PRBool                        IsForeign(const nsCString &aBaseDomain, PRBool aRequireHostMatch, nsIURI *aFirstURI);
+    PRUint32                      CheckPrefs(nsIURI *aHostURI, nsIChannel *aChannel, const nsCString &aBaseDomain, PRBool aRequireHostMatch, const char *aCookieHeader);
+    PRBool                        CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI, const nsCString &aBaseDomain, PRBool aRequireHostMatch);
     static PRBool                 CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static PRBool                 GetExpiry(nsCookieAttributes &aCookie, PRInt64 aServerTime, PRInt64 aCurrentTime);
     void                          RemoveAllFromMemory();
@@ -196,6 +198,7 @@ class nsCookieService : public nsICookieService
     nsCOMPtr<nsIObserverService>     mObserverService;
     nsCOMPtr<nsICookiePermission>    mPermissionService;
     nsCOMPtr<nsIEffectiveTLDService> mTLDService;
+    nsCOMPtr<nsIIDNService>          mIDNService;
 
     // we have two separate DB states: one for normal browsing and one for
     // private browsing, switching between them as appropriate. this state

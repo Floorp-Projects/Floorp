@@ -54,6 +54,7 @@
 #include "nsIObserverService.h"
 #include "nsILineInputStream.h"
 #include "nsIEffectiveTLDService.h"
+#include "nsIIDNService.h"
 
 #include "nsTArray.h"
 #include "nsCOMArray.h"
@@ -403,6 +404,9 @@ nsCookieService::Init()
 
   nsresult rv;
   mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // init our pref and observer
@@ -810,9 +814,12 @@ nsCookieService::SetCookieStringInternal(nsIURI     *aHostURI,
 
   // get the base domain for the host URI.
   // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
-  PRBool isIPAddress;
+  // file:// URI's (i.e. with an empty host) are allowed, but any other
+  // scheme must have a non-empty host. A trailing dot in the host
+  // is acceptable, and will be stripped.
+  PRBool requireHostMatch;
   nsCAutoString baseDomain;
-  nsresult rv = GetBaseDomain(aHostURI, baseDomain, isIPAddress);
+  nsresult rv = GetBaseDomain(aHostURI, baseDomain, requireHostMatch);
   if (NS_FAILED(rv)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, 
                       "couldn't get base domain from URI");
@@ -821,7 +828,7 @@ nsCookieService::SetCookieStringInternal(nsIURI     *aHostURI,
 
   // check default prefs
   PRUint32 cookieStatus = CheckPrefs(aHostURI, aChannel, baseDomain,
-                                     isIPAddress, aCookieHeader);
+                                     requireHostMatch, aCookieHeader);
   // fire a notification if cookie was rejected (but not if there was an error)
   switch (cookieStatus) {
   case STATUS_REJECTED:
@@ -850,7 +857,7 @@ nsCookieService::SetCookieStringInternal(nsIURI     *aHostURI,
  
   // switch to a nice string type now, and process each cookie in the header
   nsDependentCString cookieHeader(aCookieHeader);
-  while (SetCookieInternal(aHostURI, aChannel, baseDomain, isIPAddress,
+  while (SetCookieInternal(aHostURI, aChannel, baseDomain, requireHostMatch,
                            cookieHeader, serverTime, aFromHttp));
 
   return NS_OK;
@@ -972,7 +979,7 @@ nsCookieService::GetEnumerator(nsISimpleEnumerator **aEnumerator)
 }
 
 NS_IMETHODIMP
-nsCookieService::Add(const nsACString &aDomain,
+nsCookieService::Add(const nsACString &aHost,
                      const nsACString &aPath,
                      const nsACString &aName,
                      const nsACString &aValue,
@@ -981,16 +988,21 @@ nsCookieService::Add(const nsACString &aDomain,
                      PRBool            aIsSession,
                      PRInt64           aExpiry)
 {
+  // first, normalize the hostname, and fail if it contains illegal characters.
+  nsCAutoString host(aHost);
+  nsresult rv = NormalizeHost(host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // get the base domain for the host URI.
   // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
   nsCAutoString baseDomain;
-  nsresult rv = GetBaseDomainFromHost(aDomain, baseDomain);
+  rv = GetBaseDomainFromHost(host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt64 currentTimeInUsec = PR_Now();
 
   nsRefPtr<nsCookie> cookie =
-    nsCookie::Create(aName, aValue, aDomain, aPath,
+    nsCookie::Create(aName, aValue, host, aPath,
                      aExpiry,
                      currentTimeInUsec,
                      currentTimeInUsec,
@@ -1011,13 +1023,18 @@ nsCookieService::Remove(const nsACString &aHost,
                         const nsACString &aPath,
                         PRBool           aBlocked)
 {
+  // first, normalize the hostname, and fail if it contains illegal characters.
+  nsCAutoString host(aHost);
+  nsresult rv = NormalizeHost(host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCAutoString baseDomain;
-  nsresult rv = GetBaseDomainFromHost(aHost, baseDomain);
+  rv = GetBaseDomainFromHost(host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsListIter matchIter;
   if (FindCookie(baseDomain,
-                 PromiseFlatCString(aHost),
+                 host,
                  PromiseFlatCString(aName),
                  PromiseFlatCString(aPath),
                  matchIter,
@@ -1029,13 +1046,11 @@ nsCookieService::Remove(const nsACString &aHost,
 
   // check if we need to add the host to the permissions blacklist.
   if (aBlocked && mPermissionService) {
-    nsCAutoString host(NS_LITERAL_CSTRING("http://"));
-    
     // strip off the domain dot, if necessary
-    if (aHost.First() == '.')
-      host.Append(Substring(aHost, 1, aHost.Length() - 1));
-    else
-      host.Append(aHost);
+    if (!host.IsEmpty() && host.First() == '.')
+      host.Cut(0, 1);
+
+    host.Insert(NS_LITERAL_CSTRING("http://"), 0);
 
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), host);
@@ -1323,23 +1338,27 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
 
   // get the base domain, host, and path from the URI.
   // e.g. for "www.bbc.co.uk", the base domain would be "bbc.co.uk".
-  PRBool isIPAddress;
+  // file:// URI's (i.e. with an empty host) are allowed, but any other
+  // scheme must have a non-empty host. A trailing dot in the host
+  // is acceptable, and will be stripped.
+  PRBool requireHostMatch;
   nsCAutoString baseDomain, hostFromURI, pathFromURI;
-  nsresult rv = GetBaseDomain(aHostURI, baseDomain, isIPAddress);
+  nsresult rv = GetBaseDomain(aHostURI, baseDomain, requireHostMatch);
   if (NS_SUCCEEDED(rv))
     rv = aHostURI->GetAsciiHost(hostFromURI);
   if (NS_SUCCEEDED(rv))
     rv = aHostURI->GetPath(pathFromURI);
-  // trim trailing dots
-  hostFromURI.Trim(".");
-  if (NS_FAILED(rv) || hostFromURI.IsEmpty()) {
+  // trim any trailing dot
+  if (!hostFromURI.IsEmpty() && hostFromURI.Last() == '.')
+    hostFromURI.Truncate(hostFromURI.Length() - 1);
+  if (NS_FAILED(rv)) {
     COOKIE_LOGFAILURE(GET_COOKIE, aHostURI, nsnull, "invalid host/path from URI");
     return;
   }
 
   // check default prefs
   PRUint32 cookieStatus = CheckPrefs(aHostURI, aChannel, baseDomain,
-                                     isIPAddress, nsnull);
+                                     requireHostMatch, nsnull);
   // for GetCookie(), we don't fire rejection notifications.
   switch (cookieStatus) {
   case STATUS_REJECTED:
@@ -1481,7 +1500,7 @@ PRBool
 nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
                                    nsIChannel         *aChannel,
                                    const nsCString    &aBaseDomain,
-                                   PRBool              aIsIPAddress,
+                                   PRBool              aRequireHostMatch,
                                    nsDependentCString &aCookieHeader,
                                    PRInt64             aServerTime,
                                    PRBool              aFromHttp)
@@ -1519,7 +1538,7 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
   }
 
   // domain & path checks
-  if (!CheckDomain(cookieAttributes, aHostURI, aBaseDomain, aIsIPAddress)) {
+  if (!CheckDomain(cookieAttributes, aHostURI, aBaseDomain, aRequireHostMatch)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader, "failed the domain tests");
     return newCookie;
   }
@@ -1920,53 +1939,106 @@ nsCookieService::ParseAttributes(nsDependentCString &aCookieHeader,
  * private domain & permission compliance enforcement functions
  ******************************************************************************/
 
+// Get the base domain for aHostURI; e.g. for "www.bbc.co.uk", this would be
+// "bbc.co.uk". Only properly-formed URI's are tolerated, though a trailing
+// dot may be present (and will be stripped). If aHostURI is an IP address,
+// an alias such as 'localhost', an eTLD such as 'co.uk', or the empty string,
+// aBaseDomain will be the exact host, and aRequireHostMatch will be true to
+// indicate that substring matches should not be performed.
 nsresult
 nsCookieService::GetBaseDomain(nsIURI    *aHostURI,
                                nsCString &aBaseDomain,
-                               PRBool    &aIsIPAddress)
+                               PRBool    &aRequireHostMatch)
 {
-  // get the base domain for the host URI.
-  // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
+  // get the base domain. this will fail if the host contains a leading dot,
+  // more than one trailing dot, or is otherwise malformed.
   nsresult rv = mTLDService->GetBaseDomain(aHostURI, 0, aBaseDomain);
-  aIsIPAddress = rv == NS_ERROR_HOST_IS_IP_ADDRESS;
-  if (rv == NS_ERROR_HOST_IS_IP_ADDRESS ||
-      rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
-    // address is either an IP address or an alias such as 'localhost'.
-    // use the host as a key in such cases.
+  aRequireHostMatch = rv == NS_ERROR_HOST_IS_IP_ADDRESS ||
+                      rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS;
+  if (aRequireHostMatch) {
+    // aHostURI is either an IP address, an alias such as 'localhost', an eTLD
+    // such as 'co.uk', or the empty string. use the host as a key in such
+    // cases.
     rv = aHostURI->GetAsciiHost(aBaseDomain);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // trim trailing dots
-  aBaseDomain.Trim(".");
-  if (aBaseDomain.IsEmpty())
-    return NS_ERROR_INVALID_ARG;
+  // aHost (and thus aBaseDomain) may contain a trailing dot; if so, trim it.
+  if (!aBaseDomain.IsEmpty() && aBaseDomain.Last() == '.')
+    aBaseDomain.Truncate(aBaseDomain.Length() - 1);
 
-  aIsIPAddress = PR_FALSE;
+  // block any URIs without a host that aren't file:// URIs.
+  if (aBaseDomain.IsEmpty()) {
+    PRBool isFileURI = PR_FALSE;
+    aHostURI->SchemeIs("file", &isFileURI);
+    if (!isFileURI)
+      return NS_ERROR_INVALID_ARG;
+  }
+
   return NS_OK;
 }
 
-nsresult 
+// Get the base domain for aHost; e.g. for "www.bbc.co.uk", this would be
+// "bbc.co.uk". This is done differently than GetBaseDomain(): it is assumed
+// that aHost is already normalized, and it may contain a leading dot
+// (indicating that it represents a domain). A trailing dot must not be present.
+// If aHost is an IP address, an alias such as 'localhost', an eTLD such as
+// 'co.uk', or the empty string, aBaseDomain will be the exact host, and a
+// leading dot will be treated as an error.
+nsresult
 nsCookieService::GetBaseDomainFromHost(const nsACString &aHost,
                                        nsCString        &aBaseDomain)
 {
-  // trim leading and trailing dots
-  nsCAutoString host(aHost);
-  host.Trim(".");
-  if (host.IsEmpty())
+  // aHost must not contain a trailing dot, or be the string '.'.
+  if (!aHost.IsEmpty() && aHost.Last() == '.')
     return NS_ERROR_INVALID_ARG;
 
-  // get the base domain for the host.
-  // e.g. for "www.bbc.co.uk", this would be "bbc.co.uk".
+  // aHost may contain a leading dot; if so, strip it now.
+  nsDependentCString host(aHost);
+  PRBool domain = !host.IsEmpty() && host.First() == '.';
+  if (domain)
+    host.Rebind(host.BeginReading() + 1, host.EndReading());
+
+  // get the base domain. this will fail if the host contains a leading dot,
+  // more than one trailing dot, or is otherwise malformed.
   nsresult rv = mTLDService->GetBaseDomainFromHost(host, 0, aBaseDomain);
   if (rv == NS_ERROR_HOST_IS_IP_ADDRESS ||
       rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
-    // address is either an IP address or an alias such as 'localhost'.
-    // use the host as a key in such cases.
+    // aHost is either an IP address, an alias such as 'localhost', an eTLD
+    // such as 'co.uk', or the empty string. use the host as a key in such
+    // cases; however, we reject any such hosts with a leading dot, since it
+    // doesn't make sense for them to be domain cookies.
+    if (domain)
+      return NS_ERROR_INVALID_ARG;
+
     aBaseDomain = host;
     return NS_OK;
   }
   return rv;
+}
+
+// Normalizes the given hostname, component by component. ASCII/ACE
+// components are lower-cased, and UTF-8 components are normalized per
+// RFC 3454 and converted to ACE. Any trailing dot is stripped.
+nsresult
+nsCookieService::NormalizeHost(nsCString &aHost)
+{
+  if (!IsASCII(aHost)) {
+    nsCAutoString host;
+    nsresult rv = mIDNService->ConvertUTF8toACE(aHost, host);
+    if (NS_FAILED(rv))
+      return rv;
+
+    aHost = host;
+  }
+
+  // Only strip the trailing dot if it wouldn't result in the empty string;
+  // in that case, treat it like a leading dot.
+  if (aHost.Length() > 1 && aHost.Last() == '.')
+    aHost.Truncate(aHost.Length() - 1);
+
+  ToLowerCase(aHost);
+  return NS_OK;
 }
 
 // returns PR_TRUE if 'a' is equal to or a subdomain of 'b',
@@ -1982,7 +2054,7 @@ static inline PRBool IsSubdomainOf(const nsCString &a, const nsCString &b)
 
 PRBool
 nsCookieService::IsForeign(const nsCString &aBaseDomain,
-                           PRBool           aHostIsIPAddress,
+                           PRBool           aRequireHostMatch,
                            nsIURI          *aFirstURI)
 {
   nsCAutoString firstHost;
@@ -1990,19 +2062,19 @@ nsCookieService::IsForeign(const nsCString &aBaseDomain,
     // assume foreign
     return PR_TRUE;
   }
-  // trim trailing dots
-  firstHost.Trim(".");
 
-  // if we're dealing with IP addresses, require an exact match. this
-  // eliminates any chance of IP address funkiness (e.g. the alias 127.1
-  // domain-matching 99.54.127.1). note that the base domain parameter will be
-  // equivalent to the host IP in this case.
-  if (aHostIsIPAddress)
+  // trim any trailing dot
+  if (!firstHost.IsEmpty() && firstHost.Last() == '.')
+    firstHost.Truncate(firstHost.Length() - 1);
+
+  // check whether the host is either an IP address, an alias such as
+  // 'localhost', an eTLD such as 'co.uk', or the empty string. in these
+  // cases, require an exact string match for the domain. note that the base
+  // domain parameter will be equivalent to the host in this case.
+  if (aRequireHostMatch)
     return !firstHost.Equals(aBaseDomain);
 
   // ensure the originating domain is also derived from the host's base domain.
-  // note that if the host is an alias such as 'localhost', the base domain
-  // parameter will also be 'localhost', and this comparison will work.
   return !IsSubdomainOf(firstHost, aBaseDomain);
 }
 
@@ -2010,7 +2082,7 @@ PRUint32
 nsCookieService::CheckPrefs(nsIURI          *aHostURI,
                             nsIChannel      *aChannel,
                             const nsCString &aBaseDomain,
-                            PRBool           aIsIPAddress,
+                            PRBool           aRequireHostMatch,
                             const char      *aCookieHeader)
 {
   nsresult rv;
@@ -2057,7 +2129,7 @@ nsCookieService::CheckPrefs(nsIURI          *aHostURI,
     nsCOMPtr<nsIURI> firstURI;
     rv = mPermissionService->GetOriginatingURI(aChannel, getter_AddRefs(firstURI));
 
-    if (NS_FAILED(rv) || IsForeign(aBaseDomain, aIsIPAddress, firstURI)) {
+    if (NS_FAILED(rv) || IsForeign(aBaseDomain, aRequireHostMatch, firstURI)) {
       COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "originating server test failed");
       return STATUS_REJECTED;
     }
@@ -2072,15 +2144,15 @@ PRBool
 nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
                              nsIURI             *aHostURI,
                              const nsCString    &aBaseDomain,
-                             PRBool              aIsIPAddress)
+                             PRBool              aRequireHostMatch)
 {
   // get host from aHostURI
   nsCAutoString hostFromURI;
   aHostURI->GetAsciiHost(hostFromURI);
 
-  // trim trailing dots
-  hostFromURI.Trim(".");
-  NS_ASSERTION(!hostFromURI.IsEmpty(), "empty host");
+  // trim any trailing dot
+  if (!hostFromURI.IsEmpty() && hostFromURI.Last() == '.')
+    hostFromURI.Truncate(hostFromURI.Length() - 1);
 
   // if a domain is given, check the host has permission
   if (!aCookieAttributes.host.IsEmpty()) {
@@ -2091,12 +2163,12 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
     // switch to lowercase now, to avoid case-insensitive compares everywhere
     ToLowerCase(aCookieAttributes.host);
 
-    // check whether the host is an IP address, and leave the cookie as
-    // a non-domain one. this will require an exact host match for the cookie,
-    // so we eliminate any chance of IP address funkiness (e.g. the alias 127.1
-    // domain-matching 99.54.127.1). bug 105917 originally noted the
-    // requirement to deal with IP addresses.
-    if (aIsIPAddress)
+    // check whether the host is either an IP address, an alias such as
+    // 'localhost', an eTLD such as 'co.uk', or the empty string. in these
+    // cases, require an exact string match for the domain, and leave the cookie
+    // as a non-domain one. bug 105917 originally noted the requirement to deal
+    // with IP addresses.
+    if (aRequireHostMatch)
       return hostFromURI.Equals(aCookieAttributes.host);
 
     // ensure the proposed domain is derived from the base domain; and also
@@ -2468,12 +2540,14 @@ NS_IMETHODIMP
 nsCookieService::CountCookiesFromHost(const nsACString &aHost,
                                       PRUint32         *aCountFromHost)
 {
+  // first, normalize the hostname, and fail if it contains illegal characters.
+  nsCAutoString host(aHost);
+  nsresult rv = NormalizeHost(host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCAutoString baseDomain;
-  nsresult rv = GetBaseDomainFromHost(aHost, baseDomain);
-  if (NS_FAILED(rv)) {
-    *aCountFromHost = 0;
-    return NS_OK;
-  }
+  rv = GetBaseDomainFromHost(host, baseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // we don't care about finding the oldest cookie here, so disable the search
   nsEnumerationData data(PR_Now() / PR_USEC_PER_SEC, LL_MININT);
@@ -2487,10 +2561,14 @@ NS_IMETHODIMP
 nsCookieService::GetCookiesFromHost(const nsACString     &aHost,
                                     nsISimpleEnumerator **aEnumerator)
 {
+  // first, normalize the hostname, and fail if it contains illegal characters.
+  nsCAutoString host(aHost);
+  nsresult rv = NormalizeHost(host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCAutoString baseDomain;
-  nsresult rv = GetBaseDomainFromHost(aHost, baseDomain);
-  if (NS_FAILED(rv))
-    return NS_NewEmptyEnumerator(aEnumerator);
+  rv = GetBaseDomainFromHost(host, baseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMArray<nsICookie> cookieList(mMaxCookiesPerHost);
   PRInt64 currentTime = PR_Now() / PR_USEC_PER_SEC;

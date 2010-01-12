@@ -44,17 +44,22 @@ interface nsIFile;
  * Additions to the frozen nsICookieManager
  */
 
-[scriptable, uuid(d1e9e50f-b78b-4e3b-a474-f3cbca59b013)]
+[scriptable, uuid(94628d1d-8b31-4baa-b474-9c872c440f90)]
 interface nsICookieManager2 : nsICookieManager
 {
   /**
    * Add a cookie. nsICookieService is the normal way to do this. This
    * method is something of a backdoor.
    *
-   * @param aDomain
+   * @param aHost
    *        the host or domain for which the cookie is set. presence of a
    *        leading dot indicates a domain cookie; otherwise, the cookie
-   *        is treated as a non-domain cookie. see RFC2109.
+   *        is treated as a non-domain cookie (see RFC2109). The host string
+   *        will be normalized to ASCII or ACE; any trailing dot will be
+   *        stripped. To be a domain cookie, the host must have at least two
+   *        subdomain parts (e.g. '.foo.com', not '.com'), otherwise an
+   *        exception will be thrown. An empty string is acceptable
+   *        (e.g. file:// URI's).
    * @param aPath
    *        path within the domain for which the cookie is valid
    * @param aName
@@ -74,7 +79,7 @@ interface nsICookieManager2 : nsICookieManager
    *        1970 UTC. note that expiry time will also be honored for session cookies;
    *        in this way, the more restrictive of the two will take effect.
    */
-  void add(in AUTF8String aDomain,
+  void add(in AUTF8String aHost,
            in AUTF8String aPath,
            in ACString    aName,
            in ACString    aValue,
@@ -101,13 +106,13 @@ interface nsICookieManager2 : nsICookieManager
    * counted.
    *
    * @param aHost
-   *        the host string to begin from, e.g. "google.com". this should consist
-   *        of only the host portion of a URI, and should not contain a leading
-   *        dot, a port, etc.
+   *        the host string to search for, e.g. "google.com". this should consist
+   *        of only the host portion of a URI. see @add for a description of
+   *        acceptable host strings.
    *
    * @return the number of cookies found.
    */
-  unsigned long countCookiesFromHost(in ACString aHost);
+  unsigned long countCookiesFromHost(in AUTF8String aHost);
 
   /**
    * Returns an enumerator of cookies that exist within the base domain of
@@ -116,15 +121,15 @@ interface nsICookieManager2 : nsICookieManager
    * subdomains would be returned.
    *
    * @param aHost
-   *        the host string to begin from, e.g. "google.com". this should consist
-   *        of only the host portion of a URI, and should not contain a leading
-   *        dot, a port, etc.
+   *        the host string to search for, e.g. "google.com". this should consist
+   *        of only the host portion of a URI. see @add for a description of
+   *        acceptable host strings.
    *
    * @return an nsISimpleEnumerator of nsICookie2 objects.
    *
    * @see countCookiesFromHost
    */
-  nsISimpleEnumerator getCookiesFromHost(in ACString aHost);
+  nsISimpleEnumerator getCookiesFromHost(in AUTF8String aHost);
 
   /**
    * Import an old-style cookie file. Imported cookies will be added to the
