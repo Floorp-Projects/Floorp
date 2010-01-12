@@ -114,28 +114,53 @@ ExceptionHandler::ExceptionHandler(const std::string &dump_path,
                                    MinidumpCallback callback,
                                    void *callback_context,
                                    bool install_handler)
-    : filter_(filter),
-      callback_(callback),
-      callback_context_(callback_context),
-      dump_path_(),
-      handler_installed_(install_handler),
-      crash_handler_(NULL) {
-  set_dump_path(dump_path);
+  : filter_(filter),
+    callback_(callback),
+    callback_context_(callback_context),
+    handler_installed_(install_handler)
+{
+  Init(dump_path, -1);
+}
 
-  if (install_handler) {
-    InstallHandlers();
-
-    pthread_mutex_lock(&handler_stack_mutex_);
-      if (handler_stack_ == NULL)
-        handler_stack_ = new std::vector<ExceptionHandler *>;
-      handler_stack_->push_back(this);
-    pthread_mutex_unlock(&handler_stack_mutex_);
-  }
+ExceptionHandler::ExceptionHandler(const std::string &dump_path,
+                                   FilterCallback filter,
+                                   MinidumpCallback callback,
+                                   void* callback_context,
+                                   bool install_handler,
+                                   const int server_fd)
+  : filter_(filter),
+    callback_(callback),
+    callback_context_(callback_context),
+    handler_installed_(install_handler)
+{
+  Init(dump_path, server_fd);
 }
 
 // Runs before crashing: normal context.
 ExceptionHandler::~ExceptionHandler() {
   UninstallHandlers();
+}
+
+void ExceptionHandler::Init(const std::string &dump_path,
+                            const int server_fd)
+{
+  crash_handler_ = NULL;
+
+  if (0 <= server_fd)
+    crash_generation_client_
+      .reset(CrashGenerationClient::TryCreate(server_fd));
+
+  if (handler_installed_)
+    InstallHandlers();
+
+  if (!IsOutOfProcess())
+    set_dump_path(dump_path);
+
+  pthread_mutex_lock(&handler_stack_mutex_);
+  if (handler_stack_ == NULL)
+    handler_stack_ = new std::vector<ExceptionHandler *>;
+  handler_stack_->push_back(this);
+  pthread_mutex_unlock(&handler_stack_mutex_);
 }
 
 // Runs before crashing: normal context.
@@ -280,6 +305,9 @@ bool ExceptionHandler::HandleSignal(int sig, siginfo_t* info, void* uc) {
 
 // This function may run in a compromised context: see the top of the file.
 bool ExceptionHandler::GenerateDump(CrashContext *context) {
+  if (IsOutOfProcess())
+    return crash_generation_client_->RequestDump(context, sizeof(*context));
+
   static const unsigned kChildStackSize = 8000;
   PageAllocator allocator;
   uint8_t* stack = (uint8_t*) allocator.Alloc(kChildStackSize);
