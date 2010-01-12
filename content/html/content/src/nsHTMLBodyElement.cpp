@@ -296,6 +296,8 @@ nsHTMLBodyElement::~nsHTMLBodyElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLBodyElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLBodyElement, nsGenericElement) 
 
+DOMCI_DATA(HTMLBodyElement, nsHTMLBodyElement)
+
 // QueryInterface implementation for nsHTMLBodyElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLBodyElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLBodyElement, nsIDOMHTMLBodyElement)

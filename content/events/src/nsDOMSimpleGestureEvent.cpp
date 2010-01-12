@@ -66,6 +66,8 @@ nsDOMSimpleGestureEvent::~nsDOMSimpleGestureEvent()
 NS_IMPL_ADDREF_INHERITED(nsDOMSimpleGestureEvent, nsDOMUIEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMSimpleGestureEvent, nsDOMUIEvent)
 
+DOMCI_DATA(SimpleGestureEvent, nsDOMSimpleGestureEvent)
+
 NS_INTERFACE_MAP_BEGIN(nsDOMSimpleGestureEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSimpleGestureEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SimpleGestureEvent)

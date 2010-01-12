@@ -107,6 +107,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(TSpan)
 NS_IMPL_ADDREF_INHERITED(nsSVGTSpanElement,nsSVGTSpanElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGTSpanElement,nsSVGTSpanElementBase)
 
+DOMCI_DATA(SVGTSpanElement, nsSVGTSpanElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGTSpanElement)
   NS_NODE_INTERFACE_TABLE6(nsSVGTSpanElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGTSpanElement,

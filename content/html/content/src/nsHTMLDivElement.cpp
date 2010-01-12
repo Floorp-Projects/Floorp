@@ -92,6 +92,8 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLDivElement, nsGenericElement)
 
 
 
+DOMCI_DATA(HTMLDivElement, nsHTMLDivElement)
+
 // QueryInterface implementation for nsHTMLDivElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLDivElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLDivElement, nsIDOMHTMLDivElement)

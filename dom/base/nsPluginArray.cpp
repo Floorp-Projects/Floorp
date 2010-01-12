@@ -70,6 +70,8 @@ nsPluginArray::~nsPluginArray()
   }
 }
 
+DOMCI_DATA(PluginArray, nsPluginArray)
+
 // QueryInterface implementation for nsPluginArray
 NS_INTERFACE_MAP_BEGIN(nsPluginArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMPluginArray)
@@ -296,6 +298,8 @@ nsPluginElement::~nsPluginElement()
   }
 }
 
+
+DOMCI_DATA(Plugin, nsPluginElement)
 
 // QueryInterface implementation for nsPluginElement
 NS_INTERFACE_MAP_BEGIN(nsPluginElement)

@@ -86,6 +86,8 @@ private:
   PRInt16 mCode;
 };
 
+DOMCI_DATA(GeoPositionError, nsDOMGeoPositionError)
+
 NS_INTERFACE_MAP_BEGIN(nsDOMGeoPositionError)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoPositionError)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoPositionError)
@@ -688,6 +690,8 @@ nsGeolocationService::RemoveLocator(nsGeolocation* aLocator)
 // nsGeolocation
 ////////////////////////////////////////////////////
 
+DOMCI_DATA(GeoGeolocation, nsGeolocation)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGeolocation)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMGeoGeolocation)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGeoGeolocation)
@@ -956,3 +960,8 @@ nsGeolocation::WindowOwnerStillExists()
 
   return PR_TRUE;
 }
+
+#ifndef WINCE_WINDOWS_MOBILE
+DOMCI_DATA(GeoPositionCoords, void)
+DOMCI_DATA(GeoPosition, void)
+#endif

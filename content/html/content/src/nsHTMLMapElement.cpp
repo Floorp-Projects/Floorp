@@ -101,6 +101,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLMapElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLMapElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLMapElement, nsHTMLMapElement)
+
 // QueryInterface implementation for nsHTMLMapElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLMapElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLMapElement, nsIDOMHTMLMapElement)

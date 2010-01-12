@@ -220,6 +220,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasGradient, NS_CANVASGRADIENT_PRIVATE_IID)
 NS_IMPL_ADDREF(nsCanvasGradient)
 NS_IMPL_RELEASE(nsCanvasGradient)
 
+DOMCI_DATA(CanvasGradient, nsCanvasGradient)
+
 NS_INTERFACE_MAP_BEGIN(nsCanvasGradient)
   NS_INTERFACE_MAP_ENTRY(nsCanvasGradient)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCanvasGradient)
@@ -266,6 +268,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasPattern, NS_CANVASPATTERN_PRIVATE_IID)
 NS_IMPL_ADDREF(nsCanvasPattern)
 NS_IMPL_RELEASE(nsCanvasPattern)
 
+DOMCI_DATA(CanvasPattern, nsCanvasPattern)
+
 NS_INTERFACE_MAP_BEGIN(nsCanvasPattern)
   NS_INTERFACE_MAP_ENTRY(nsCanvasPattern)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCanvasPattern)
@@ -302,6 +306,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsTextMetrics, NS_TEXTMETRICS_PRIVATE_IID)
 
 NS_IMPL_ADDREF(nsTextMetrics)
 NS_IMPL_RELEASE(nsTextMetrics)
+
+DOMCI_DATA(TextMetrics, nsTextMetrics)
 
 NS_INTERFACE_MAP_BEGIN(nsTextMetrics)
   NS_INTERFACE_MAP_ENTRY(nsTextMetrics)
@@ -663,6 +669,8 @@ protected:
 
 NS_IMPL_ADDREF(nsCanvasRenderingContext2D)
 NS_IMPL_RELEASE(nsCanvasRenderingContext2D)
+
+DOMCI_DATA(CanvasRenderingContext2D, nsCanvasRenderingContext2D)
 
 NS_INTERFACE_MAP_BEGIN(nsCanvasRenderingContext2D)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCanvasRenderingContext2D)

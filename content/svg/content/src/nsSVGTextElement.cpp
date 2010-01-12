@@ -104,6 +104,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Text)
 NS_IMPL_ADDREF_INHERITED(nsSVGTextElement,nsSVGTextElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGTextElement,nsSVGTextElementBase)
 
+DOMCI_DATA(SVGTextElement, nsSVGTextElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGTextElement)
   NS_NODE_INTERFACE_TABLE6(nsSVGTextElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGTextElement,

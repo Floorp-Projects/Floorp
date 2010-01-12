@@ -146,6 +146,16 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLSharedElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLSharedElement, nsGenericElement)
 
 
+DOMCI_DATA(HTMLParamElement, nsHTMLSharedElement)
+DOMCI_DATA(HTMLWBRElement, nsHTMLSharedElement)
+DOMCI_DATA(HTMLIsIndexElement, nsHTMLSharedElement)
+DOMCI_DATA(HTMLBaseElement, nsHTMLSharedElement)
+DOMCI_DATA(HTMLSpacerElement, nsHTMLSharedElement)
+DOMCI_DATA(HTMLDirectoryElement, nsHTMLSharedElement)
+DOMCI_DATA(HTMLMenuElement, nsHTMLSharedElement)
+DOMCI_DATA(HTMLQuoteElement, nsHTMLSharedElement)
+DOMCI_DATA(HTMLBaseFontElement, nsHTMLSharedElement)
+
 // QueryInterface implementation for nsHTMLSharedElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLSharedElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGUOUS_BEGIN(nsHTMLSharedElement,

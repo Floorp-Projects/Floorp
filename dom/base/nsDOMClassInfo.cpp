@@ -540,6 +540,16 @@ static const char kDOMStringBundleURL[] =
   // nothing
 #endif
 
+DOMCI_DATA(Crypto, void)
+DOMCI_DATA(CRMFObject, void)
+DOMCI_DATA(SmartCardEvent, void)
+
+DOMCI_DATA(DOMPrototype, void)
+DOMCI_DATA(DOMConstructor, void)
+
+DOMCI_DATA(Worker, void)
+
+DOMCI_DATA(Notation, void)
 
 #define NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _name, _helper,            \
                                            _flags)                            \

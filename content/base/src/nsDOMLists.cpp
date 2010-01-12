@@ -56,6 +56,8 @@ nsDOMStringList::~nsDOMStringList()
 {
 }
 
+DOMCI_DATA(DOMStringList, nsDOMStringList)
+
 NS_IMPL_ADDREF(nsDOMStringList)
 NS_IMPL_RELEASE(nsDOMStringList)
 NS_INTERFACE_TABLE_HEAD(nsDOMStringList)
@@ -102,6 +104,7 @@ nsNameList::nsNameList()
 nsNameList::~nsNameList()
 {
 }
+DOMCI_DATA(NameList, nsNameList)
 
 NS_IMPL_ADDREF(nsNameList)
 NS_IMPL_RELEASE(nsNameList)

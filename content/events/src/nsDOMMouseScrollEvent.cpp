@@ -80,6 +80,8 @@ nsDOMMouseScrollEvent::~nsDOMMouseScrollEvent()
 NS_IMPL_ADDREF_INHERITED(nsDOMMouseScrollEvent, nsDOMMouseEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMMouseScrollEvent, nsDOMMouseEvent)
 
+DOMCI_DATA(MouseScrollEvent, nsDOMMouseScrollEvent)
+
 NS_INTERFACE_MAP_BEGIN(nsDOMMouseScrollEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseScrollEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MouseScrollEvent)

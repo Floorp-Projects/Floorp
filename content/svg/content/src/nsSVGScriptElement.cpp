@@ -117,6 +117,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(Script)
 NS_IMPL_ADDREF_INHERITED(nsSVGScriptElement,nsSVGScriptElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGScriptElement,nsSVGScriptElementBase)
 
+DOMCI_DATA(SVGScriptElement, nsSVGScriptElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGScriptElement)
   NS_NODE_INTERFACE_TABLE8(nsSVGScriptElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGScriptElement,

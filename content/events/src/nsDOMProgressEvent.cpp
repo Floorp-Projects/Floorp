@@ -40,6 +40,8 @@
 #include "nsContentUtils.h"
 
 
+DOMCI_DATA(ProgressEvent, nsDOMProgressEvent)
+
 NS_INTERFACE_MAP_BEGIN(nsDOMProgressEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMProgressEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ProgressEvent)

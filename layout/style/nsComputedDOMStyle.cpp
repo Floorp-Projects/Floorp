@@ -156,6 +156,8 @@ nsComputedDOMStyle::Shutdown()
 
 NS_IMPL_CYCLE_COLLECTION_1(nsComputedDOMStyle, mContent)
 
+DOMCI_DATA(ComputedCSSStyleDeclaration, nsComputedDOMStyle)
+
 // QueryInterface implementation for nsComputedDOMStyle
 NS_INTERFACE_TABLE_HEAD(nsComputedDOMStyle)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
