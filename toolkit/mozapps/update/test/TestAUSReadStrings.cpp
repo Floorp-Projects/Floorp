@@ -65,8 +65,8 @@
 
 #include "updater/resource.h"
 #include "updater/progressui.h"
-#include "updater/readstrings.h"
-#include "updater/errors.h"
+#include "../../readstrings/readstrings.h"
+#include "../../readstrings/errors.h"
 
 #ifndef MAXPATHLEN
 # ifdef PATH_MAX
