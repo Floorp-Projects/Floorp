@@ -27,7 +27,7 @@
       values="orange; green; orange"
       begin="a.begin" dur="2s"/>
     <animate attributeName="fill" attributeType="CSS" id="c"
-      values="red; red" fill="remove"
+      values="red; red"
       begin="0" end="b.end"/>
   </rect>
 </svg>
