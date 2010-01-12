@@ -1647,15 +1647,11 @@ Assembler::nativePageSetup()
     NanoAssert(!_inExit);
     if (!_nIns)
         codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
-    if (!_nExitIns)
-        codeAlloc(exitStart, exitEnd, _nExitIns verbose_only(, exitBytes));
 
     // constpool starts at top of page and goes down,
     // code starts at bottom of page and moves up
     if (!_nSlot)
         _nSlot = codeStart;
-    if (!_nExitSlot)
-        _nExitSlot = exitStart;
 }
 
 
@@ -2686,6 +2682,10 @@ Assembler::asm_jtbl(LIns* ins, NIns** table)
 }
 
 void Assembler::swapCodeChunks() {
+    if (!_nExitIns)
+        codeAlloc(exitStart, exitEnd, _nExitIns verbose_only(, exitBytes));
+    if (!_nExitSlot)
+        _nExitSlot = exitStart;
     SWAP(NIns*, _nIns, _nExitIns);
     SWAP(NIns*, _nSlot, _nExitSlot);        // this one is ARM-specific
     SWAP(NIns*, codeStart, exitStart);
