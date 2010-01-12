@@ -43,7 +43,9 @@
 #undef WIN32_LEAN_AND_MEAN
 #endif
 
+#include "client/windows/crash_generation/crash_generation_server.h"
 #include "client/windows/handler/exception_handler.h"
+#include <DbgHelp.h>
 #include <string.h>
 #elif defined(XP_MACOSX)
 #include "client/mac/handler/exception_handler.h"
@@ -54,6 +56,7 @@
 #include <unistd.h>
 #include "mac_utils.h"
 #elif defined(XP_LINUX)
+#include "client/linux/crash_generation/crash_generation_server.h"
 #include "client/linux/handler/exception_handler.h"
 #include <fcntl.h>
 #include <sys/types.h>
@@ -76,6 +79,9 @@
 #include "nsCRT.h"
 #include "nsILocalFile.h"
 #include "nsDataHashtable.h"
+
+using google_breakpad::CrashGenerationServer;
+using google_breakpad::ClientInfo;
 
 namespace CrashReporter {
 
@@ -140,6 +146,22 @@ static const int kTimeSinceLastCrashParameterLen =
 static nsDataHashtable<nsCStringHashKey,nsCString>* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
 static nsCString* notesField = nsnull;
+
+// OOP crash reporting
+static CrashGenerationServer* crashServer; // chrome process has this
+
+#if defined(XP_WIN)
+// If crash reporting is disabled, we hand out this "null" pipe to the
+// child process and don't attempt to connect to a parent server.
+static const char kNullNotifyPipe[] = "-";
+static nsCString* childCrashNotifyPipe;
+
+#elif defined(XP_LINUX)
+static int serverSocketFd = -1;
+static int clientSocketFd = -1;
+static const int kMagicChildCrashReportFd = 42;
+#endif
+
 
 static XP_CHAR*
 Concat(XP_CHAR* str, const XP_CHAR* toAppend, int* size)
@@ -879,5 +901,159 @@ nsresult AppendObjCExceptionInfoToAppNotes(void *inException)
   return NS_OK;
 }
 #endif
+
+//-----------------------------------------------------------------------------
+// Out-of-process crash reporting API wrappers
+static void
+OnChildProcessDumpRequested(void* aContext,
+                            const ClientInfo* aClientInfo,
+#if defined(XP_WIN)
+                            const std::wstring*
+#else
+                            const std::string*
+#endif
+                              aFilePath)
+{
+  printf("CHILD DUMP REQUEST\n");
+}
+
+static bool
+OOPInitialized()
+{
+  return crashServer != NULL;
+}
+
+static void
+OOPInit()
+{
+  NS_ABORT_IF_FALSE(!OOPInitialized(),
+                    "OOP crash reporter initialized more than once!");
+  NS_ABORT_IF_FALSE(gExceptionHandler != NULL,
+                    "attempt to initialize OOP crash reporter before in-process crashreporter!");
+
+#if defined(XP_WIN)
+  // this is a CString to make it more convenient to pass on the
+  // command line
+  childCrashNotifyPipe = 
+    new nsCString("\\\\.\\pipe\\gecko-crash-server-pipe.");
+  long pid = static_cast<long>(::GetCurrentProcessId());
+  childCrashNotifyPipe->AppendInt(pid);
+
+  const std::wstring dumpPath = gExceptionHandler->dump_path();
+  crashServer = new CrashGenerationServer(
+    NS_ConvertASCIItoUTF16(*childCrashNotifyPipe).BeginReading(),
+    NULL,                       // default security attributes
+    NULL, NULL,                 // we don't care about process connect here
+    OnChildProcessDumpRequested, NULL,
+    NULL, NULL,                 // we don't care about process exit here
+    true,                       // automatically generate dumps
+    &dumpPath);
+
+#elif defined(XP_LINUX)
+  if (!CrashGenerationServer::CreateReportChannel(&serverSocketFd,
+                                                  &clientSocketFd))
+    NS_RUNTIMEABORT("can't create crash reporter socketpair()");
+
+  const std::string dumpPath = gExceptionHandler->dump_path();
+  crashServer = new CrashGenerationServer(
+    serverSocketFd,
+    OnChildProcessDumpRequested, NULL,
+    NULL, NULL,                 // we don't care about process exit here
+    true,                       // automatically generate dumps
+    &dumpPath);
+#endif
+
+  if (!crashServer->Start())
+    NS_RUNTIMEABORT("can't start crash reporter server()");
+}
+
+#if defined(XP_WIN)
+// Parent-side API for children
+nsCString
+GetChildNotificationPipe()
+{
+  if (!GetEnabled())
+    return nsDependentCString(kNullNotifyPipe);
+
+  if (!OOPInitialized())
+    OOPInit();
+
+  return *childCrashNotifyPipe;
+}
+
+// Child-side API
+bool
+SetRemoteExceptionHandler(const nsACString& crashPipe)
+{
+  // crash reporting is disabled
+  if (crashPipe.Equals(kNullNotifyPipe))
+    return true;
+
+  NS_ABORT_IF_FALSE(!gExceptionHandler, "crash client already init'd");
+
+  gExceptionHandler = new google_breakpad::
+    ExceptionHandler(L"",
+                     NULL,    // no filter callback
+                     NULL,    // no minidump callback
+                     NULL,    // no callback context
+                     google_breakpad::ExceptionHandler::HANDLER_ALL,
+                     MiniDumpNormal,
+                     NS_ConvertASCIItoUTF16(crashPipe).BeginReading(),
+                     NULL);
+
+  // we either do remote or nothing, no fallback to regular crash reporting
+  return gExceptionHandler->IsOutOfProcess();
+}
+
+//--------------------------------------------------
+#elif defined(XP_UNIX)
+
+// Parent-side API for children
+bool
+CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd)
+{
+  if (!GetEnabled()) {
+    *childCrashFd = -1;
+    *childCrashRemapFd = -1;
+    return true;
+  }
+
+  if (!OOPInitialized())
+    OOPInit();
+
+  *childCrashFd = clientSocketFd;
+  *childCrashRemapFd = kMagicChildCrashReportFd;
+
+  return true;
+}
+
+// Child-side API
+bool
+SetRemoteExceptionHandler()
+{
+  NS_ABORT_IF_FALSE(!gExceptionHandler, "crash client already init'd");
+
+  gExceptionHandler = new google_breakpad::
+    ExceptionHandler("",
+                     NULL,    // no filter callback
+                     NULL,    // no minidump callback
+                     NULL,    // no callback context
+                     true,    // install signal handlers
+                     kMagicChildCrashReportFd);
+
+  // we either do remote or nothing, no fallback to regular crash reporting
+  return gExceptionHandler->IsOutOfProcess();
+}
+
+
+#endif
+
+bool
+UnsetRemoteExceptionHandler()
+{
+  delete gExceptionHandler;
+  gExceptionHandler = NULL;
+  return true;
+}
 
 } // namespace CrashReporter
