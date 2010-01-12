@@ -35,7 +35,3 @@ if (HAVE_TM) {
 } else {
     checkStats = function() {};
 }
-
-var appendToActual = function(s) {
-    actual += s + ',';
-}
