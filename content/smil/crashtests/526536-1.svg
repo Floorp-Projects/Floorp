@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait"
+     onload="setTimeout('boom()', 0)">
+<script type="text/javascript">
+<![CDATA[
+function boom()
+{
+  document.getElementById("anim").setAttribute("fill", "freeze");
+  document.documentElement.removeAttribute("class");
+}
+]]>
+</script>
+  <g transform="translate(50 50)">
+    <circle r="40" style="fill: yellow; stroke: black; stroke-width: 1">
+      <animate id="anim" attributeName="cx" attributeType="XML"
+        values="0; 200" dur="2s" begin="-1s" repeatCount="0.5"/>
+    </circle>
+  </g>
+</svg>
