@@ -287,9 +287,7 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
   if (! aElement)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDOMNode> doc(do_QueryInterface(mDocument));
-
-  nsresult rv = nsContentUtils::CheckSameOrigin(doc, aElement);
+  nsresult rv = nsContentUtils::CheckSameOrigin(mDocument, aElement);
 
   if (NS_FAILED(rv)) {
     return rv;
