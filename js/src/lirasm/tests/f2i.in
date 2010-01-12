@@ -1,0 +1,6 @@
+a = alloc 8
+d = float 5.0
+stqi d a 0
+x = ldf a 0
+i = f2i x
+ret i
