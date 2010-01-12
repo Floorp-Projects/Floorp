@@ -1245,9 +1245,6 @@ namespace nanojit
             codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
             IF_PEDANTIC( pedanticTop = _nIns; )
         }
-        if (!_nExitIns) {
-            codeAlloc(exitStart, exitEnd, _nExitIns verbose_only(, exitBytes));
-        }
     }
 
     void Assembler::nativePageReset()
@@ -1391,6 +1388,9 @@ namespace nanojit
     }
 
     void Assembler::swapCodeChunks() {
+        if (!_nExitIns) {
+            codeAlloc(exitStart, exitEnd, _nExitIns verbose_only(, exitBytes));
+        }
         SWAP(NIns*, _nIns, _nExitIns);
         SWAP(NIns*, codeStart, exitStart);
         SWAP(NIns*, codeEnd, exitEnd);

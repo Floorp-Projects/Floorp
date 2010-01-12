@@ -1046,8 +1046,6 @@ namespace nanojit
         NanoAssert(!_inExit);
         if (!_nIns)
             codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
-        if (!_nExitIns)
-            codeAlloc(exitStart, exitEnd, _nExitIns verbose_only(, exitBytes));
     }
 
     // Increment the 32-bit profiling counter at pCtr, without
@@ -1089,6 +1087,8 @@ namespace nanojit
     }
 
     void Assembler::swapCodeChunks() {
+        if (!_nExitIns)
+            codeAlloc(exitStart, exitEnd, _nExitIns verbose_only(, exitBytes));
         SWAP(NIns*, _nIns, _nExitIns);
         SWAP(NIns*, codeStart, exitStart);
         SWAP(NIns*, codeEnd, exitEnd);
