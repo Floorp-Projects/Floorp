@@ -47,6 +47,7 @@
 #include "nsHashKeys.h"
 #include "nsSMILTimeContainer.h"
 #include "nsSMILCompositorTable.h"
+#include "nsSMILMilestone.h"
 
 class nsISMILAnimationElement;
 class nsIDocument;
@@ -82,14 +83,14 @@ public:
   // Methods for resampling all animations
   // (A resample performs the same operations as a sample but doesn't advance
   // the current time and doesn't check if the container is paused)
-  void Resample();
+  void Resample() { DoSample(PR_FALSE); }
   void SetResampleNeeded() { mResampleNeeded = PR_TRUE; }
   void FlushResampleRequests()
   {
     if (!mResampleNeeded)
       return;
 
-    DoSample(PR_FALSE); // Don't skip unchanged time containers--sample them all
+    Resample();
   }
 
   // Methods for handling page transitions
@@ -119,6 +120,12 @@ protected:
     nsSMILCompositorTable*  mCompositorTable;
   };
 
+  struct GetMilestoneElementsParams
+  {
+    nsTArray<nsRefPtr<nsISMILAnimationElement> > mElements;
+    nsSMILMilestone                              mMilestone;
+  };
+
   // Factory methods
   friend nsSMILAnimationController*
   NS_NewSMILAnimationController(nsIDocument* aDoc);
@@ -136,11 +143,14 @@ protected:
   // Sample-related callbacks and implementation helpers
   virtual void DoSample();
   void DoSample(PRBool aSkipUnchangedContainers);
+  void DoMilestoneSamples();
+  PR_STATIC_CALLBACK(PLDHashOperator) GetNextMilestone(
+      TimeContainerPtrKey* aKey, void* aData);
+  PR_STATIC_CALLBACK(PLDHashOperator) GetMilestoneElements(
+      TimeContainerPtrKey* aKey, void* aData);
   PR_STATIC_CALLBACK(PLDHashOperator) SampleTimeContainer(
       TimeContainerPtrKey* aKey, void* aData);
   PR_STATIC_CALLBACK(PLDHashOperator) SampleAnimation(
-      AnimationElementPtrKey* aKey, void* aData);
-  PR_STATIC_CALLBACK(PLDHashOperator) AddAnimationToCompositorTable(
       AnimationElementPtrKey* aKey, void* aData);
   static void SampleTimedElement(nsISMILAnimationElement* aElement,
                                  TimeContainerHashtable* aActiveContainers);
