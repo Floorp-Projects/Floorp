@@ -176,6 +176,104 @@ static JSClass IteratorClass = {
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+JSBool
+RewrapObject(JSContext *cx, JSObject *scope, JSObject *obj, WrapperType hint,
+             jsval *vp)
+{
+  if (IsSecurityWrapper(obj)) {
+    jsval v;
+    JS_GetReservedSlot(cx, obj, sWrappedObjSlot, &v);
+    NS_ASSERTION(!JSVAL_IS_PRIMITIVE(v), "bad object");
+    obj = JSVAL_TO_OBJECT(v);
+  } else if (XPCNativeWrapper::IsNativeWrapper(obj)) {
+    XPCWrappedNative *wn = XPCNativeWrapper::SafeGetWrappedNative(obj);
+    if (!wn) {
+      *vp = JSVAL_NULL;
+      return JS_TRUE;
+    }
+
+    obj = wn->GetFlatJSObject();
+  }
+
+  XPCWrappedNativeScope *nativescope =
+    XPCWrappedNativeScope::FindInJSObjectScope(cx, scope);
+  XPCWrappedNative *wn;
+  WrapperType answer = nativescope->GetWrapperFor(cx, obj, hint, &wn);
+
+  *vp = OBJECT_TO_JSVAL(obj);
+  if (answer == NONE) {
+    return JS_TRUE;
+  }
+
+
+  return CreateWrapperFromType(cx, scope, wn, answer, vp);
+}
+
+JSBool
+CreateWrapperFromType(JSContext *cx, JSObject *scope, XPCWrappedNative *wn,
+                      WrapperType hint, jsval *vp)
+{
+#ifdef DEBUG
+  NS_ASSERTION(!wn || wn->GetFlatJSObject() == JSVAL_TO_OBJECT(*vp),
+               "bad wrapped native");
+#endif
+
+  JSObject *obj = JSVAL_TO_OBJECT(*vp);
+
+  if ((hint & XPCNW) && !wn) {
+    // We know that this is a WN, otherwise the hint would not be XPCNW.
+    wn = XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, obj);
+    if (!wn) {
+      return JS_FALSE;
+    }
+  }
+
+  if (hint == XOW) {
+    // NB: This morphs.
+    if (!XPCCrossOriginWrapper::WrapObject(cx, scope, vp, wn)) {
+      return JS_FALSE;
+    }
+
+    return JS_TRUE;
+  }
+
+  if (hint == XPCNW_IMPLICIT) {
+    JSObject *wrapper;
+    if (!(wrapper = XPCNativeWrapper::GetNewOrUsed(cx, wn, scope, nsnull))) {
+      return JS_FALSE;
+    }
+
+    *vp = OBJECT_TO_JSVAL(wrapper);
+    return JS_TRUE;
+  }
+
+  if (hint & XPCNW_EXPLICIT) {
+    if (!XPCNativeWrapper::CreateExplicitWrapper(cx, wn, JS_TRUE, vp)) {
+      return JS_FALSE;
+    }
+  } else if (hint & SJOW) {
+    if (!XPCSafeJSObjectWrapper::WrapObject(cx, scope, *vp, vp)) {
+      return JS_FALSE;
+    }
+  } else if (hint & COW) {
+    if (!ChromeObjectWrapper::WrapObject(cx, scope, *vp, vp)) {
+      return JS_FALSE;
+    }
+  }
+
+  if (hint & SOW) {
+    if (OBJECT_TO_JSVAL(obj) == *vp) {
+      if (!SystemOnlyWrapper::WrapObject(cx, scope, *vp, vp)) {
+        return JS_FALSE;
+      }
+    } else {
+      // TODO Write me!
+    }
+  }
+
+  return JS_TRUE;
+}
+
 JSObject *
 CreateIteratorObj(JSContext *cx, JSObject *tempWrapper,
                   JSObject *wrapperObj, JSObject *innerObj,
