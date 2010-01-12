@@ -47,54 +47,45 @@
 #include "nsCOMPtr.h"
 #include "prlong.h"
 
-const PRUint32 nsSMILParserUtils::MSEC_PER_SEC   = 1000;
-const PRUint32 nsSMILParserUtils::MSEC_PER_MIN   = 1000 * 60;
-const PRUint32 nsSMILParserUtils::MSEC_PER_HOUR  = 1000 * 60 * 60;
-
 //------------------------------------------------------------------------------
-// Inlines
+// Helper functions and Constants
+
+namespace {
+
+const PRUint32 MSEC_PER_SEC  = 1000;
+const PRUint32 MSEC_PER_MIN  = 1000 * 60;
+const PRUint32 MSEC_PER_HOUR = 1000 * 60 * 60;
 
 // NS_IS_SPACE relies on isspace which may return true for \xB and \xC but
 // SMILANIM does not consider these characters to be whitespace.
 inline PRBool
-nsSMILParserUtils::IsSpace(const PRUnichar c)
+IsSpace(const PRUnichar c)
 {
   return (c == 0x9 || c == 0xA || c == 0xD || c == 0x20);
 }
 
+template<class T>
 inline void
-nsSMILParserUtils::SkipWsp(nsACString::const_iterator& aIter,
-                           const nsACString::const_iterator& aIterEnd)
+SkipWsp(T& aStart, T aEnd)
 {
-  while (aIter != aIterEnd && IsSpace(*aIter)) {
-    ++aIter;
+  while (aStart != aEnd && IsSpace(*aStart)) {
+    ++aStart;
   }
 }
 
-inline void
-nsSMILParserUtils::SkipWsp(nsAString::const_iterator& aIter,
-                           const nsAString::const_iterator& aIterEnd)
+double
+GetFloat(const char*& aStart, const char* aEnd, nsresult* aErrorCode)
 {
-  while (aIter != aIterEnd && IsSpace(*aIter)) {
-    ++aIter;
-  }
-}
+  char *floatEnd;
+  double value = PR_strtod(aStart, &floatEnd);
 
-inline double
-nsSMILParserUtils::GetFloat(nsACString::const_iterator& aIter,
-                            const nsACString::const_iterator& aIterEnd,
-                            nsresult *aErrorCode)
-{
-  char *end;
-  const char *start = aIter.get();
-  double value = PR_strtod(start, &end);
+  nsresult rv;
 
-  nsresult rv = NS_OK;
-
-  if (end == start || end > aIterEnd.get()) {
+  if (floatEnd == aStart || floatEnd > aEnd) {
     rv = NS_ERROR_FAILURE;
   } else {
-    aIter.advance(end - start);
+    aStart = floatEnd;
+    rv = NS_OK;
   }
 
   if (aErrorCode) {
@@ -105,25 +96,108 @@ nsSMILParserUtils::GetFloat(nsACString::const_iterator& aIter,
 }
 
 inline PRBool
-nsSMILParserUtils::ConsumeSubstring(nsACString::const_iterator& aIter,
-                                    const nsACString::const_iterator& aIterEnd,
-                                    const char *aSubstring)
+ConsumeSubstring(const char*& aStart, const char* aEnd, const char* aSubstring)
 {
   size_t substrLen = PL_strlen(aSubstring);
-  typedef nsACString::const_iterator::difference_type diff_type;
 
-  if (aIterEnd.get() - aIter.get() < static_cast<diff_type>(substrLen))
+  if (static_cast<size_t>(aEnd - aStart) < substrLen)
     return PR_FALSE;
 
   PRBool result = PR_FALSE;
 
-  if (PL_strstr(aIter.get(), aSubstring) == aIter.get()) {
-    aIter.advance(substrLen);
+  if (PL_strstr(aStart, aSubstring) == aStart) {
+    aStart += substrLen;
     result = PR_TRUE;
   }
 
   return result;
 }
+
+PRBool
+ParseClockComponent(const char*& aStart,
+                    const char* aEnd,
+                    double& aResult,
+                    PRBool& aIsReal,
+                    PRBool& aCouldBeMin,
+                    PRBool& aCouldBeSec)
+{
+  nsresult rv;
+  const char* begin = aStart;
+  double value = GetFloat(aStart, aEnd, &rv);
+
+  // Check a number was found
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  // Check that it's not expressed in exponential form
+  size_t len = aStart - begin;
+  PRBool isExp = (PL_strnpbrk(begin, "eE", len) != nsnull);
+  if (isExp)
+    return PR_FALSE;
+
+  // Don't allow real numbers of the form "23."
+  if (*(aStart - 1) == '.')
+    return PR_FALSE;
+
+  // Number looks good
+  aResult = value;
+
+  // Set some flags so we can check this number is valid once we know
+  // whether it's an hour, minute string etc.
+  aIsReal = (PL_strnchr(begin, '.', len) != nsnull);
+  aCouldBeMin = (value < 60.0 && (len == 2));
+  aCouldBeSec = (value < 60.0 ||
+      (value == 60.0 && begin[0] == '5')); // Take care of rounding error
+  aCouldBeSec &= (len >= 2 &&
+      (begin[2] == '\0' || begin[2] == '.' || IsSpace(begin[2])));
+
+  return PR_TRUE;
+}
+
+PRBool
+ParseMetricMultiplicand(const char*& aStart,
+                        const char* aEnd,
+                        PRInt32& multiplicand)
+{
+  PRBool result = PR_FALSE;
+
+  size_t len = aEnd - aStart;
+  const char* cur = aStart;
+
+  if (len) {
+    switch (*cur++)
+    {
+      case 'h':
+        multiplicand = MSEC_PER_HOUR;
+        result = PR_TRUE;
+        break;
+      case 'm':
+        if (len >= 2) {
+          if (*cur == 's') {
+            ++cur;
+            multiplicand = 1;
+            result = PR_TRUE;
+          } else if (len >= 3 && *cur++ == 'i' && *cur++ == 'n') {
+            multiplicand = MSEC_PER_MIN;
+            result = PR_TRUE;
+          }
+        }
+        break;
+      case 's':
+        multiplicand = MSEC_PER_SEC;
+        result = PR_TRUE;
+        break;
+    }
+  }
+
+  if (result) {
+    aStart = cur;
+  }
+
+  return result;
+}
+
+} // end anonymous namespace block
 
 //------------------------------------------------------------------------------
 // Implementation
@@ -135,10 +209,8 @@ nsSMILParserUtils::ParseKeySplines(const nsAString& aSpec,
   nsresult rv = NS_OK;
 
   NS_ConvertUTF16toUTF8 spec(aSpec);
-
-  nsACString::const_iterator start, end;
-  spec.BeginReading(start);
-  spec.EndReading(end);
+  const char* start = spec.BeginReading();
+  const char* end = spec.EndReading();
 
   SkipWsp(start, end);
 
@@ -195,10 +267,8 @@ nsSMILParserUtils::ParseKeyTimes(const nsAString& aSpec,
   nsresult rv = NS_OK;
 
   NS_ConvertUTF16toUTF8 spec(aSpec);
-
-  nsACString::const_iterator start, end;
-  spec.BeginReading(start);
-  spec.EndReading(end);
+  const char* start = spec.BeginReading();
+  const char* end = spec.EndReading();
 
   SkipWsp(start, end);
 
@@ -242,13 +312,11 @@ nsSMILParserUtils::ParseValues(const nsAString& aSpec,
                                nsTArray<nsSMILValue>& aValuesArray)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  nsAString::const_iterator start;
-  nsAString::const_iterator end;
-  nsAString::const_iterator substr_end;
-  nsAString::const_iterator next;
 
-  aSpec.BeginReading(start);
-  aSpec.EndReading(end);
+  const PRUnichar* start = aSpec.BeginReading();
+  const PRUnichar* end = aSpec.EndReading();
+  const PRUnichar* substrEnd = nsnull;
+  const PRUnichar* next = nsnull;
 
   while (start != end) {
     rv = NS_ERROR_FAILURE;
@@ -258,24 +326,24 @@ nsSMILParserUtils::ParseValues(const nsAString& aSpec,
     if (start == end || *start == ';')
       break;
 
-    substr_end = start;
+    substrEnd = start;
 
-    while (substr_end != end && *substr_end != ';') {
-      ++substr_end;
+    while (substrEnd != end && *substrEnd != ';') {
+      ++substrEnd;
     }
 
-    next = substr_end;
-    if (*substr_end == ';') {
+    next = substrEnd;
+    if (*substrEnd == ';') {
       ++next;
       if (next == end)
         break;
     }
 
-    do --substr_end; while (start != substr_end && NS_IS_SPACE(*substr_end));
-    ++substr_end;
+    while (substrEnd != start && NS_IS_SPACE(*(substrEnd-1)))
+      --substrEnd;
 
     nsSMILValue newValue;
-    rv = aAttribute.ValueFromString(Substring(start, substr_end),
+    rv = aAttribute.ValueFromString(Substring(start, substrEnd),
                                     aSrcElement, newValue);
     if (NS_FAILED(rv))
       break;
@@ -299,10 +367,8 @@ nsSMILParserUtils::ParseRepeatCount(const nsAString& aSpec,
   nsresult rv = NS_OK;
 
   NS_ConvertUTF16toUTF8 spec(aSpec);
-
-  nsACString::const_iterator start, end;
-  spec.BeginReading(start);
-  spec.EndReading(end);
+  const char* start = spec.BeginReading();
+  const char* end = spec.EndReading();
 
   SkipWsp(start, end);
 
@@ -369,10 +435,8 @@ nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
   }
 
   NS_ConvertUTF16toUTF8 spec(aSpec);
-
-  nsACString::const_iterator start, end;
-  spec.BeginReading(start);
-  spec.EndReading(end);
+  const char* start = spec.BeginReading();
+  const char* end = spec.EndReading();
 
   while (start != end) {
     if (IsSpace(*start)) {
@@ -516,90 +580,6 @@ nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
   }
 
   return (isValid) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-PRBool
-nsSMILParserUtils::ParseClockComponent(nsACString::const_iterator& aSpec,
-                                       const nsACString::const_iterator& aEnd,
-                                       double& aResult,
-                                       PRBool& aIsReal,
-                                       PRBool& aCouldBeMin,
-                                       PRBool& aCouldBeSec)
-{
-  nsresult rv;
-  char const *begin = aSpec.get();
-  double value = GetFloat(aSpec, aEnd, &rv);
-
-  // Check a number was found
-  if (NS_FAILED(rv))
-    return PR_FALSE;
-
-  // Check it's not expressed in exponential form
-  size_t len = aSpec.get() - begin;
-  PRBool isExp = (PL_strnpbrk(begin, "eE", len) != nsnull);
-  if (isExp)
-    return PR_FALSE;
-
-  // Don't allow real numbers of the form "23."
-  if (*(aSpec.get() - 1) == '.')
-    return PR_FALSE;
-
-  // Number looks good
-  aResult = value;
-
-  // Set some flags so we can check this number is valid once we know
-  // whether it's an hour, minute string etc.
-  aIsReal = (PL_strnchr(begin, '.', len) != nsnull);
-  aCouldBeMin = (value < 60.0 && (len == 2));
-  aCouldBeSec = (value < 60.0 ||
-      (value == 60.0 && begin[0] == '5')); // Take care of rounding error
-  aCouldBeSec &= (len >= 2 &&
-      (begin[2] == '\0' || begin[2] == '.' || IsSpace(begin[2])));
-
-  return PR_TRUE;
-}
-
-inline PRBool
-nsSMILParserUtils::ParseMetricMultiplicand(nsACString::const_iterator& aSpec,
-                                         const nsACString::const_iterator& aEnd,
-                                         PRInt32& multiplicand)
-{
-  PRBool result = PR_FALSE;
-
-  size_t len = aEnd.get() - aSpec.get();
-  nsACString::const_iterator spec(aSpec);
-
-  if (len) {
-    switch (*spec++)
-    {
-      case 'h':
-        multiplicand = MSEC_PER_HOUR;
-        result = PR_TRUE;
-        break;
-      case 'm':
-        if (len >= 2) {
-          if (*spec == 's') {
-            ++spec;
-            multiplicand = 1;
-            result = PR_TRUE;
-          } else if (len >= 3 && *spec++ == 'i' && *spec++ == 'n') {
-            multiplicand = MSEC_PER_MIN;
-            result = PR_TRUE;
-          }
-        }
-        break;
-      case 's':
-        multiplicand = MSEC_PER_SEC;
-        result = PR_TRUE;
-        break;
-    }
-  }
-
-  if (result) {
-    aSpec = spec;
-  }
-
-  return result;
 }
 
 PRInt32
