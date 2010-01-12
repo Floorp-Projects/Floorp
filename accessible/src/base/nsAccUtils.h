@@ -93,6 +93,17 @@ public:
                                PRInt32 aPosInSet);
 
   /**
+   * Get default value of the level for the given accessible.
+   */
+  static PRInt32 GetDefaultLevel(nsAccessible *aAcc);
+
+  /**
+   * Return ARIA level value or the default one if ARIA is missed for the
+   * given accessible.
+   */
+  static PRInt32 GetARIAOrDefaultLevel(nsIAccessible *aAcc);
+
+  /**
    * Compute position in group (posinset) and group size (setsize) for
    * nsIDOMXULSelectControlItemElement node.
    */
