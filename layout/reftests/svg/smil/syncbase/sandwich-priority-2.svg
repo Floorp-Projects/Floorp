@@ -9,10 +9,10 @@
     A longer chain.
    -->
   <rect width="100" height="100" fill="orange">
-    <set attributeName="fill" id="b" to="blue" begin="a.begin-0.5s"/>
+    <set attributeName="fill" to="blue"  begin="a.begin-0.5s" id="b"/>
     <set attributeName="fill" to="green" begin="d.begin"/>
-    <set attributeName="fill" id="d" to="black" begin="c.begin-0.5s"/>
-    <set attributeName="x" id="c" to="0" begin="b.begin+1s"/>
-    <set attributeName="fill" id="a" to="red" begin="1s"/>
+    <set attributeName="fill" to="black" begin="c.begin-0.5s" id="d"/>
+    <set attributeName="x"    to="0"     begin="b.begin+1s"   id="c"/>
+    <set attributeName="fill" to="red"   begin="1s"           id="a"/>
   </rect>
 </svg>

@@ -10,6 +10,6 @@
    -->
   <rect width="100" height="100" fill="orange">
     <set attributeName="fill" id="b" to="green" begin="a.begin"/>
-    <set attributeName="fill" id="a" to="red" begin="0s; b.begin"/>
+    <set attributeName="fill" id="a" to="red"   begin="0s; b.begin"/>
   </rect>
 </svg>

@@ -20,6 +20,6 @@
    -->
   <rect width="100" height="100" fill="orange">
     <set attributeName="fill" to="green" begin="1s" id="b"/>
-    <set attributeName="fill" to="red" begin="1s" id="a"/>
+    <set attributeName="fill" to="red"   begin="1s" id="a"/>
   </rect>
 </svg>

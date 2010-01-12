@@ -13,8 +13,8 @@
     'a's end time and so shouldn't be given the higher priority.
    -->
   <rect width="100" height="100" fill="orange">
-    <set attributeName="fill" id="c" to="red" begin="b.begin-1s"/>
-    <set attributeName="x" id="b" to="0" begin="a.end-1s"/>
-    <set attributeName="fill" id="a" to="green" begin="1s" dur="2s"/>
+    <set attributeName="fill" to="red"   begin="b.begin-1s"  id="c"/>
+    <set attributeName="x"    to="0"     begin="a.end-1s"    id="b"/>
+    <set attributeName="fill" to="green" begin="1s" dur="2s" id="a"/>
   </rect>
 </svg>

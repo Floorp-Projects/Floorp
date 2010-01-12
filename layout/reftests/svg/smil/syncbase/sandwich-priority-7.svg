@@ -19,9 +19,9 @@
     but it's not.
    -->
   <rect width="100" height="100" fill="orange">
-    <set attributeName="fill" to="yellow" begin="1s" dur="2s" id="a"/>
+    <set attributeName="fill" to="yellow" begin="1s"      dur="2s" id="a"/>
     <set attributeName="fill" to="purple" begin="a.begin" dur="2s" id="b"/>
-    <set attributeName="fill" to="red" begin="b.begin" dur="2s" id="c"/>
-    <set attributeName="fill" to="green" begin="a.begin" dur="2s" id="d"/>
+    <set attributeName="fill" to="red"    begin="b.begin" dur="2s" id="c"/>
+    <set attributeName="fill" to="green"  begin="a.begin" dur="2s" id="d"/>
   </rect>
 </svg>
