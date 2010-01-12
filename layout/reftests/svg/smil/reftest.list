@@ -123,3 +123,8 @@ fails == anim-strokewidth-1xml.svg anim-standard-ref.svg # bug 534028
 == anim-y-interp-4.svg anim-y-interp-4-ref.svg
 == anim-y-interp-5.svg anim-y-interp-5-ref.svg
 == anim-y-interp-6.svg anim-y-interp-6-ref.svg
+
+== freeze-applied-late-1.svg anim-standard-ref.svg
+== freeze-applied-late-2.svg anim-standard-ref.svg
+== freeze-applied-late-3.svg anim-standard-ref.svg
+== freeze-applied-late-4.svg anim-standard-ref.svg
