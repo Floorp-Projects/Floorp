@@ -1308,12 +1308,6 @@ namespace nanojit
                     asm_u2f(ins);
                     break;
                 }
-                case LIR_f2i:
-                {
-                    countlir_fpu();
-                    asm_f2i(ins);
-                    break;
-                }
                 case LIR_i2q:
                 case LIR_u2q:
                 {

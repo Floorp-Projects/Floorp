@@ -19,7 +19,7 @@ do
         infile="--random 1000"
     fi
 
-    if ./lirasm --execute $infile | tr -d '\r' > testoutput.txt && cmp -s testoutput.txt $outfile
+    if ./lirasm --execute $infile > testoutput.txt && cmp -s testoutput.txt $outfile
     then
         echo "$0: output correct for $infile"
     else
