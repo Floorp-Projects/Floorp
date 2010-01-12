@@ -5181,6 +5181,7 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin)
     nsPluginInstanceTag* instancetag = *pinstancetag;
     if (instancetag->mPluginTag == plugin) {
       *pinstancetag = (*pinstancetag)->mNext;
+      instancetag->mInstance->Stop();
       delete instancetag;
     }
     else {
