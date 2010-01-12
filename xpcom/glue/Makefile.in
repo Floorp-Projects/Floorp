@@ -119,6 +119,7 @@ EXPORTS_NAMESPACES = mozilla
 
 EXPORTS = \
 		nsThreadUtils.h \
+		nsTPriorityQueue.h \
 		nsProxyRelease.h \
 		nsXPTCUtils.h \
 		$(NULL)

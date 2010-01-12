@@ -105,6 +105,7 @@ CPP_UNIT_TESTS += \
                   TestEncoding.cpp \
                   TestExpirationTracker.cpp \
                   TestPipes.cpp \
+                  TestPriorityQueue.cpp \
                   TestProxies.cpp \
                   TestStorageStream.cpp \
                   TestStrings.cpp \
