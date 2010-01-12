@@ -34,9 +34,9 @@
       begin="c.end" dur="0.5s"/>
     <animate attributeName="fill" attributeType="CSS" id="b"
       values="green; blue"
-      begin="a.begin" dur="1s" additive="replace"/>
+      begin="a.begin" dur="1s"/>
     <animate attributeName="x" attributeType="XML" id="c"
       from="0" to="100" fill="freeze"
-      begin="0" end="b.end" dur="1s" additive="replace"/>
+      begin="0" end="b.end" dur="1s"/>
   </rect>
 </svg>

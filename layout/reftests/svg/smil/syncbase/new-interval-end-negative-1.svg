@@ -9,10 +9,16 @@
 
     This is one of the most important tests in the suite.
 
-    REALLY IMPORTANT: If an interval ends and a new instance time is generated
-    before the end of the last interval it is IGNORED. However, if the instance
-    time is generated BEFORE the interval ends, and restart="always", a new
-    interval will be generated and the animation will restart.
+    REALLY IMPORTANT: Suppose we generate a new instance time, placed at a
+    particular instant during the previous interval. In fact, correct behavior
+    depends on *when* we generate this instance time. If we generate it AFTER
+    the previous interval has ended, then the new instance time will be
+    IGNORED. However, if we generate it BEFORE the previous interval has ended
+    (and if restart="always"), then a new interval will be generated, and the
+    animation will restart.
+    (To be absolutely clear: above, the words "AFTER" and "BEFORE" describe
+    *when the instance time is generated*, as opposed to *where on the timeline
+    the instance time is placed*).
 
     So, if a new instance time is generated at the same time as an interval is
     due to end what should happen? SMIL's endpoint-exclusive timing seems to

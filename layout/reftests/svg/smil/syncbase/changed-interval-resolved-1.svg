@@ -13,6 +13,6 @@
     <animate attributeName="fill" attributeType="CSS"
       values="orange; green; orange"
       begin="a.begin" dur="2s"/>
-    <set attributeName="y" begin="1s" id="b" to="0" fill="freeze"/>
+    <set attributeName="y" begin="1s" id="b" to="0"/>
   </rect>
 </svg>

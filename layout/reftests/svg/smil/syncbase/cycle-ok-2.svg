@@ -4,7 +4,8 @@
      onload="setTimeAndSnapshot(2, true)">
   <script xlink:href="../smil-util.js" type="text/javascript"/>
   <!--
-    A ping-pong cycle that should be allowed. Example 3 from SMIL3.
+    A ping-pong cycle that should be allowed.
+    Example 3 from SMIL3 section 5.4.5.
     We have:
     t=0s --> b: 0s-1s, a: 1s-2s
     t=1s --> a: 1s-2s, b: 1.5s->2.5s

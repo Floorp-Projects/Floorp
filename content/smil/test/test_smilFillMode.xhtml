@@ -27,8 +27,9 @@ SimpleTest.waitForExplicitFinish();
 function createAnim() {
   var anim = document.createElementNS(svgns,'animate');
   anim.setAttribute('attributeName','cx');
-  anim.setAttribute('dur','10s');
+  anim.setAttribute('dur','4s');
   anim.setAttribute('begin','0s');
+  anim.setAttribute('values', '10; 20');
   return circle.appendChild(anim);
 }
 
@@ -56,8 +57,6 @@ function checkSample(time, expectedValue) {
 // Test that we can update the fill mode after an interval has played and it
 // will be updated correctly.
 function testSetLaterA(anim) {
-  anim.setAttribute('dur','4s');
-  anim.setAttribute('values', '10; 20');
   checkSample(5, -100);
   anim.setAttribute('fill', 'freeze');
   is(circle.cx.animVal.value, 20,
@@ -65,15 +64,11 @@ function testSetLaterA(anim) {
 }
 
 function testSetLaterB(anim) {
-  anim.setAttribute('dur','4s');
-  anim.setAttribute('values', '10; 20');
   anim.setAttribute('fill', 'freeze');
   checkSample(5, 20);
 }
 
 function testRemoveLater(anim) {
-  anim.setAttribute('dur','4s');
-  anim.setAttribute('values', '10; 20');
   anim.setAttribute('fill', 'freeze');
   checkSample(5, 20);
   anim.setAttribute('fill', 'remove');
