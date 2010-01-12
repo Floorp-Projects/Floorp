@@ -40,6 +40,7 @@
 
 #include "nsSMILInterval.h"
 #include "nsSMILInstanceTime.h"
+#include "nsSMILMilestone.h"
 #include "nsSMILTimeValueSpec.h"
 #include "nsSMILRepeatCount.h"
 #include "nsSMILTypes.h"
@@ -47,6 +48,7 @@
 #include "nsAutoPtr.h"
 #include "nsAttrValue.h"
 
+class nsISMILAnimationElement;
 class nsSMILAnimationFunction;
 class nsSMILTimeContainer;
 class nsSMILTimeValue;
@@ -60,37 +62,41 @@ class nsSMILTimedElement
 public:
   nsSMILTimedElement();
 
+  /*
+   * Sets the owning animation element which this class uses to convert between
+   * container times and to register timebase elements.
+   */
+  void SetAnimationElement(nsISMILAnimationElement* aElement);
+
+  /*
+   * Returns the time container with which this timed element is associated or
+   * nsnull if it is not associated with a time container.
+   */
+  nsSMILTimeContainer* GetTimeContainer();
+
   /**
    * Methods for supporting the nsIDOMElementTimeControl interface.
    */
 
   /*
-   * Adds a new begin instance time at the current document time (as defined by
-   * aContainer) plus or minus the specified offset.
+   * Adds a new begin instance time at the current container time plus or minus
+   * the specified offset.
    *
    * @param aOffsetSeconds A real number specifying the number of seconds to add
    *                       to the current container time.
-   * @param aContainer The time container with which this timed element is
-   *                   associated and which should be used for determining the
-   *                   current time.
    * @return NS_OK if the operation succeeeded, or an error code otherwise.
    */
-  nsresult BeginElementAt(double aOffsetSeconds,
-                          const nsSMILTimeContainer* aContainer);
+  nsresult BeginElementAt(double aOffsetSeconds);
 
   /*
-   * Adds a new end instance time at the current document time (as defined by
-   * aContainer) plus or minus the specified offset.
+   * Adds a new end instance time at the current container time plus or minus
+   * the specified offset.
    *
    * @param aOffsetSeconds A real number specifying the number of seconds to add
    *                       to the current container time.
-   * @param aContainer The time container with which this timed element is
-   *                   associated and which should be used for determining the
-   *                   current time.
    * @return NS_OK if the operation succeeeded, or an error code otherwise.
    */
-  nsresult EndElementAt(double aOffsetSeconds,
-                        const nsSMILTimeContainer* aContainer);
+  nsresult EndElementAt(double aOffsetSeconds);
 
   /**
    * Methods for supporting the nsSVGAnimationElement interface.
@@ -127,10 +133,9 @@ public:
    *
    * This method is typically called by an nsSMILTimeValueSpec.
    *
-   * @param aInstanceTime   The time to add, expressed in document time.
-   *
-   * @param aIsBegin        True if the time to be added represents a begin time
-   *                        or false if it represents an end time.
+   * @param aInstanceTime   The time to add, expressed in container time.
+   * @param aIsBegin        PR_TRUE if the time to be added represents a begin
+   *                        time or PR_FALSE if it represents an end time.
    */
   void AddInstanceTime(const nsSMILInstanceTime& aInstanceTime,
                        PRBool aIsBegin);
@@ -150,13 +155,27 @@ public:
   void SetTimeClient(nsSMILAnimationFunction* aClient);
 
   /**
-   * Samples the object at the given document time. Timing intervals are updated
-   * and if this element is active at the given time the associated time client
-   * will be sampled with the appropriate simple time.
+   * Samples the object at the given container time. Timing intervals are
+   * updated and if this element is active at the given time the associated time
+   * client will be sampled with the appropriate simple time.
    *
-   * @param aDocumentTime The document time at which to sample.
+   * @param aContainerTime The container time at which to sample.
    */
-  void SampleAt(nsSMILTime aDocumentTime);
+  void SampleAt(nsSMILTime aContainerTime);
+
+  /**
+   * Performs a special sample for the end of an interval. Such a sample should
+   * only advance the timed element (and any dependent elements) to the waiting
+   * or postactive state. It should not cause a transition to the active state.
+   * Transition to the active state is only performed on a regular SampleAt.
+   *
+   * This allows all interval ends at a given time to be processed first and
+   * hence the new interval can be established based on full information of the
+   * available instance times.
+   *
+   * @param aContainerTime The container time at which to sample.
+   */
+  void SampleEndAt(nsSMILTime aContainerTime);
 
   /**
    * Reset the element's internal state. As described in SMILANIM 3.3.7, all
@@ -206,6 +225,11 @@ public:
    */
   PRBool UnsetAttr(nsIAtom* aAttribute);
 
+  /**
+   * Called when the timed element has been bound to the document.
+   */
+  void BindToTree();
+
 protected:
   //
   // Implementation helpers
@@ -232,6 +256,7 @@ protected:
   void              UnsetFillMode();
 
   nsresult          SetBeginOrEndSpec(const nsAString& aSpec, PRBool aIsBegin);
+  void              DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly);
 
   /**
    * Calculates the first acceptable interval for this element.
@@ -243,24 +268,27 @@ protected:
   PRBool            GetNextGreater(const nsTArray<nsSMILInstanceTime>& aList,
                                    const nsSMILTimeValue& aBase,
                                    PRInt32& aPosition,
-                                   nsSMILTimeValue& aResult);
+                                   nsSMILTimeValue& aResult) const;
   PRBool            GetNextGreaterOrEqual(
                                    const nsTArray<nsSMILInstanceTime>& aList,
                                    const nsSMILTimeValue& aBase,
                                    PRInt32& aPosition,
-                                   nsSMILTimeValue& aResult);
+                                   nsSMILTimeValue& aResult) const;
   nsSMILTimeValue   CalcActiveEnd(const nsSMILTimeValue& aBegin,
-                                  const nsSMILTimeValue& aEnd);
-  nsSMILTimeValue   GetRepeatDuration();
-  nsSMILTimeValue   ApplyMinAndMax(const nsSMILTimeValue& aDuration);
+                                  const nsSMILTimeValue& aEnd) const;
+  nsSMILTimeValue   GetRepeatDuration() const;
+  nsSMILTimeValue   ApplyMinAndMax(const nsSMILTimeValue& aDuration) const;
   nsSMILTime        ActiveTimeToSimpleTime(nsSMILTime aActiveTime,
                                            PRUint32& aRepeatIteration);
-  void              CheckForEarlyEnd(const nsSMILTimeValue& aDocumentTime);
+  nsSMILTimeValue   CheckForEarlyEnd(
+                        const nsSMILTimeValue& aContainerTime) const;
   void              UpdateCurrentInterval();
   void              SampleSimpleTime(nsSMILTime aActiveTime);
   void              SampleFillValue();
   void              AddInstanceTimeFromCurrentTime(nsSMILTime aCurrentTime,
                         double aOffsetSeconds, PRBool aIsBegin);
+  void              RegisterMilestone();
+  PRBool            GetNextMilestone(nsSMILMilestone& aNextMilestone) const;
 
   // Typedefs
   typedef nsTArray<nsRefPtr<nsSMILTimeValueSpec> >  SMILTimeValueSpecList;
@@ -268,6 +296,7 @@ protected:
   //
   // Members
   //
+  nsISMILAnimationElement* mAnimationElement; // [weak] won't outlive owner
   SMILTimeValueSpecList mBeginSpecs;
   SMILTimeValueSpecList mEndSpecs;
 
@@ -312,6 +341,8 @@ protected:
   nsSMILAnimationFunction*        mClient;
   nsSMILInterval                  mCurrentInterval;
   nsTArray<nsSMILInterval>        mOldIntervals;
+  nsSMILMilestone                 mPrevRegisteredMilestone;
+  static const nsSMILMilestone    sMaxMilestone;
 
   /**
    * The state of the element in its life-cycle. These states are based on the

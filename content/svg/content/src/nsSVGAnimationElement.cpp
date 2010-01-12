@@ -82,6 +82,7 @@ nsSVGAnimationElement::Init()
   nsresult rv = nsSVGAnimationElementBase::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mTimedElement.SetAnimationElement(this);
   AnimationFunction().SetAnimationElement(this);
   mTimedElement.SetTimeClient(&AnimationFunction());
 
@@ -274,6 +275,8 @@ nsSVGAnimationElement::BindToTree(nsIDocument* aDocument,
       // document yet.
       UpdateHrefTarget(aParent, hrefStr);
     }
+
+    mTimedElement.BindToTree();
   }
 
   AnimationNeedsResample();
@@ -410,10 +413,15 @@ nsSVGAnimationElement::BeginElement(void)
 NS_IMETHODIMP
 nsSVGAnimationElement::BeginElementAt(float offset)
 {
-  nsresult rv = mTimedElement.BeginElementAt(offset, mTimedDocumentRoot);
+  // This will fail if we're not attached to a time container (SVG document
+  // fragment).
+  nsresult rv = mTimedElement.BeginElementAt(offset);
+  if (NS_FAILED(rv))
+    return rv;
+
   AnimationNeedsResample();
 
-  return rv;
+  return NS_OK;
 }
 
 /* void endElement (); */
@@ -427,10 +435,13 @@ nsSVGAnimationElement::EndElement(void)
 NS_IMETHODIMP
 nsSVGAnimationElement::EndElementAt(float offset)
 {
-  nsresult rv = mTimedElement.EndElementAt(offset, mTimedDocumentRoot);
-  AnimationNeedsResample();
+  nsresult rv = mTimedElement.EndElementAt(offset);
+  if (NS_FAILED(rv))
+    return rv;
 
-  return rv;
+  AnimationNeedsResample();
+ 
+  return NS_OK;
 }
 
 void
