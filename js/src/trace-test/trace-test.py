@@ -40,7 +40,7 @@ def _relpath(path, start=None):
 os.path.relpath = _relpath
 
 class Test:
-    def __init__(self, path, slow, allow_oom, tmflags, error, valgrind):
+    def __init__(self, path, slow, allow_oom, tmflags, valgrind):
         """  path        path to test file
              slow        True means the test is slow-running
              allow_oom   True means OOM should not be considered a failure
@@ -49,7 +49,6 @@ class Test:
         self.slow = slow
         self.allow_oom = allow_oom
         self.tmflags = tmflags
-        self.error = error
         self.valgrind = valgrind
 
     COOKIE = '|trace-test|'
@@ -57,7 +56,7 @@ class Test:
     @classmethod
     def from_file(cls, path, options):
         slow = allow_oom = valgrind = False
-        error = tmflags = ''
+        tmflags = ''
 
         line = open(path).readline()
         i = line.find(cls.COOKIE)
@@ -73,8 +72,6 @@ class Test:
                     value = value.strip()
                     if name == 'TMFLAGS':
                         tmflags = value
-                    elif name == 'error':
-                        error = value
                     else:
                         print('warning: unrecognized |trace-test| attribute %s'%part)
                 else:
@@ -87,7 +84,7 @@ class Test:
                     else:
                         print('warning: unrecognized |trace-test| attribute %s'%part)
 
-        return cls(path, slow, allow_oom, tmflags, error, valgrind or options.valgrind_all)
+        return cls(path, slow, allow_oom, tmflags, valgrind or options.valgrind_all)
 
 def find_tests(dir, substring = None):
     ans = []
@@ -144,13 +141,9 @@ def run_test(test, lib_dir):
         sys.stdout.write(err)
     if test.valgrind:
         sys.stdout.write(err)
-    return (check_output(out, err, p.returncode, test.allow_oom, test.error), 
-            out, err)
+    return (check_output(out, err, p.returncode, test.allow_oom), out, err)
 
-def check_output(out, err, rc, allow_oom, expectedError):
-    if expectedError:
-        return expectedError in err
-
+def check_output(out, err, rc, allow_oom):
     for line in out.split('\n'):
         if line.startswith('Trace stats check failed'):
             return False
