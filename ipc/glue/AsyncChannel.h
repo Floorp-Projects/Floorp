@@ -100,7 +100,7 @@ public:
     AsyncChannel(AsyncListener* aListener);
     virtual ~AsyncChannel();
 
-    // Open  from the perspective of the transport layer; the underlying
+    // "Open" from the perspective of the transport layer; the underlying
     // socketpair/pipe should already be created.
     //
     // Returns true iff the transport layer was successfully connected,
