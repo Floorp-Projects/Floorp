@@ -55,10 +55,15 @@
 #include "nsIToolkitChromeRegistry.h"
 #include "nsIToolkitProfile.h"
 
+#if defined(OS_LINUX)
+#  define XP_LINUX
+#endif
+
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
 #include "nsAutoRef.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsExceptionHandler.h"
 #include "nsStaticComponents.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
@@ -252,6 +257,20 @@ GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 }
 
 static MessageLoop* sIOMessageLoop;
+
+#if defined(MOZ_CRASHREPORTER)
+PRBool
+XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
+{
+#if defined(XP_WIN)
+  return CrashReporter::SetRemoteExceptionHandler(nsDependentCString(aPipe));
+#elif defined(OS_LINUX)
+  return CrashReporter::SetRemoteExceptionHandler();
+#else
+#  error "OOP crash reporter unsupported on this platform"
+#endif
+}
+#endif // if defined(MOZ_CRASHREPORTER)
 
 nsresult
 XRE_InitChildProcess(int aArgc,
