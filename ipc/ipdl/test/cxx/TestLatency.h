@@ -39,8 +39,8 @@ protected:
             fail("unexpected destruction!");  
 
         passed("average ping/pong latency: %g sec, average ping5/pong5 latency: %g sec",
-               mPPTimeTotal.ToSeconds() / (double) NR_TRIALS,
-               mPP5TimeTotal.ToSeconds() / (double) NR_TRIALS);
+               mPPTimeTotal.ToSecondsSigDigits() / (double) NR_TRIALS,
+               mPP5TimeTotal.ToSecondsSigDigits() / (double) NR_TRIALS);
 
         QuitParent();
     }
