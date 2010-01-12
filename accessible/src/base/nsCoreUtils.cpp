@@ -582,6 +582,23 @@ nsCoreUtils::GetID(nsIContent *aContent, nsAString& aID)
 }
 
 PRBool
+nsCoreUtils::GetUIntAttr(nsIContent *aContent, nsIAtom *aAttr, PRInt32 *aUInt)
+{
+  nsAutoString value;
+  aContent->GetAttr(kNameSpaceID_None, aAttr, value);
+  if (!value.IsEmpty()) {
+    PRInt32 error = NS_OK;
+    PRInt32 integer = value.ToInteger(&error);
+    if (NS_SUCCEEDED(error) && integer > 0) {
+      *aUInt = integer;
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
+PRBool
 nsCoreUtils::IsXLink(nsIContent *aContent)
 {
   if (!aContent)
