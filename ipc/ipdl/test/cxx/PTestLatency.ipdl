@@ -14,6 +14,12 @@ parent:
     Pong();
     Pong5();
 
+state START:
+    // if the timing resolution is too low, abort the test
+    send __delete__;
+    // otherwise, kick off the ping/pong trials
+    send Ping goto PONG;
+
     // Trial 1: single ping/pong latency
 state PING:
     send Ping goto PONG;
