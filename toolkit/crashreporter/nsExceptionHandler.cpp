@@ -83,6 +83,7 @@
 #include "nsCRT.h"
 #include "nsILocalFile.h"
 #include "nsDataHashtable.h"
+#include "prprf.h"
 
 #if defined(MOZ_IPC)
 using google_breakpad::CrashGenerationServer;
@@ -165,7 +166,7 @@ static CrashGenerationServer* crashServer; // chrome process has this
 // If crash reporting is disabled, we hand out this "null" pipe to the
 // child process and don't attempt to connect to a parent server.
 static const char kNullNotifyPipe[] = "-";
-static nsCString* childCrashNotifyPipe;
+static char* childCrashNotifyPipe;
 
 #  elif defined(XP_LINUX)
 static int serverSocketFd = -1;
@@ -978,16 +979,14 @@ OOPInit()
                     "attempt to initialize OOP crash reporter before in-process crashreporter!");
 
 #if defined(XP_WIN)
-  // this is a CString to make it more convenient to pass on the
-  // command line
-  childCrashNotifyPipe = 
-    new nsCString("\\\\.\\pipe\\gecko-crash-server-pipe.");
-  long pid = static_cast<long>(::GetCurrentProcessId());
-  childCrashNotifyPipe->AppendInt(pid);
+  // This is intentionally leaked, bug 539451
+  childCrashNotifyPipe =
+    PR_smprintf("\\\\.\\pipe\\gecko-crash-server-pipe.%i",
+                static_cast<int>(::GetCurrentProcessId()));
 
   const std::wstring dumpPath = gExceptionHandler->dump_path();
   crashServer = new CrashGenerationServer(
-    NS_ConvertASCIItoUTF16(*childCrashNotifyPipe).BeginReading(),
+    NS_ConvertASCIItoUTF16(childCrashNotifyPipe).get(),
     NULL,                       // default security attributes
     NULL, NULL,                 // we don't care about process connect here
     OnChildProcessDumpRequested, NULL,
@@ -1015,16 +1014,16 @@ OOPInit()
 
 #if defined(XP_WIN)
 // Parent-side API for children
-nsCString
+const char*
 GetChildNotificationPipe()
 {
   if (!GetEnabled())
-    return nsDependentCString(kNullNotifyPipe);
+    return kNullNotifyPipe;
 
   if (!OOPInitialized())
     OOPInit();
 
-  return *childCrashNotifyPipe;
+  return childCrashNotifyPipe;
 }
 
 // Child-side API
