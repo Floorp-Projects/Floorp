@@ -202,6 +202,9 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 + (NSEvent*)makeNewCocoaEventWithType:(NSEventType)type fromEvent:(NSEvent*)theEvent;
 
+- (BOOL)beginMaybeResetUnifiedToolbar:(nsIRegion*)aRegion context:(CGContextRef)aContext;
+- (void)endMaybeResetUnifiedToolbar:(BOOL)aReset;
+
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
  // a context menu (click-hold)
@@ -2504,6 +2507,42 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+// Unified toolbar height resetting
+// This fixes the following problem:
+// The window gets notified about the height of its unified toolbar when the
+// toolbar is drawn. But when the toolbar suddenly vanishes, it's not drawn,
+// and the window is never notified about its absence.
+// So we bracket drawing operations to the pixel strip under the title bar
+// with notifications to the window.
+static BOOL DrawingAtWindowTop(CGContextRef aContext)
+{
+  // Ignore all non-trivial transforms.
+  CGAffineTransform ctm = CGContextGetCTM(aContext);
+  if (ctm.a != 1.0f || ctm.b != 0.0f || ctm.c != 0.0f || ctm.d != -1.0f)
+    return NO;
+
+  // ctm.ty contains the vertical offset from the window's bottom edge.
+  return ctm.ty >= [[[[NSView focusView] window] contentView] bounds].size.height;
+}
+
+- (BOOL)beginMaybeResetUnifiedToolbar:(nsIRegion*)aRegion context:(CGContextRef)aContext
+{
+  if (![[self window] isKindOfClass:[ToolbarWindow class]] ||
+      !DrawingAtWindowTop(aContext) ||
+      !aRegion->ContainsRect(0, 0, (int)[self bounds].size.width, 1))
+    return NO;
+
+  [(ToolbarWindow*)[self window] beginMaybeResetUnifiedToolbar];
+  return YES;
+}
+
+- (void)endMaybeResetUnifiedToolbar:(BOOL)aReset
+{
+  if (aReset) {
+    [(ToolbarWindow*)[self window] endMaybeResetUnifiedToolbar];
+  }
+}
+
 // The display system has told us that a portion of our view is dirty. Tell
 // gecko to paint it
 - (void)drawRect:(NSRect)aRect
@@ -2601,6 +2640,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   paintEvent.rect = &fullRect;
   paintEvent.region = rgn;
 
+  BOOL resetUnifiedToolbar = [self beginMaybeResetUnifiedToolbar:rgn context:aContext];
+
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   PRBool painted = mGeckoChild->DispatchWindowEvent(paintEvent);
   if (!painted && [self isOpaque]) {
@@ -2610,6 +2651,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
     CGContextFillRect(aContext, CGRectMake(aRect.origin.x, aRect.origin.y,
                                            aRect.size.width, aRect.size.height));
   }
+
+  [self endMaybeResetUnifiedToolbar:resetUnifiedToolbar];
+
   if (!mGeckoChild)
     return;
 
