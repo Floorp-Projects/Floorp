@@ -1907,8 +1907,9 @@ DumpSubtree(JSContext *cx, JSScopeProperty *sprop, int level, FILE *fp)
     }
 
     fprintf(fp, " g/s %p/%p slot %u attrs %x flags %x shortid %d\n",
-            (void *) sprop->getterValue(), (void *) sprop->setterValue(), sprop->slot,
-            sprop->attrs, sprop->flags, sprop->shortid);
+            JS_FUNC_TO_DATA_PTR(void *, sprop->getter),
+            JS_FUNC_TO_DATA_PTR(void *, sprop->setter),
+            sprop->slot, sprop->attrs, sprop->flags, sprop->shortid);
     kids = sprop->kids;
     if (kids) {
         ++level;
