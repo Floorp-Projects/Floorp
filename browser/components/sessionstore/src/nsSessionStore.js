@@ -174,7 +174,7 @@ SessionStoreService.prototype = {
   _loadState: STATE_STOPPED,
 
   // minimal interval between two save operations (in milliseconds)
-  _interval: 10000,
+  _interval: 15000,
 
   // when crash recovery is disabled, session data is not written to disk
   _resume_from_crash: true,
