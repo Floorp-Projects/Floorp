@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-from automation import Automation
+import automation
 import os
 import re
 import shutil
@@ -46,8 +46,6 @@ import sys
 #expand BIN_SUFFIX = __BIN_SUFFIX__
 #expand PROFILE_DIR = __PROFILE_DIR__
 #expand CERTS_SRC_DIR = __CERTS_SRC_DIR__
-
-automation = Automation()
 
 dbFiles = [
   re.compile("^cert[0-9]+\.db$"),
