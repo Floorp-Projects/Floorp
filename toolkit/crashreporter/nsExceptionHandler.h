@@ -64,10 +64,33 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
                         const nsACString& aBuildID);
 #ifdef XP_WIN32
   nsresult WriteMinidumpForException(EXCEPTION_POINTERS* aExceptionInfo);
+
+// Parent-side API for children
+const char* GetChildNotificationPipe();
+// Child-side API
+bool SetRemoteExceptionHandler(const nsACString& crashPipe);
 #endif
 #ifdef XP_MACOSX
   nsresult AppendObjCExceptionInfoToAppNotes(void *inException);
 #endif
+#ifdef XP_LINUX
+// Parent-side API for children
+
+// Set the outparams for crash reporter server's fd (|childCrashFd|)
+// and the magic fd number it should be remapped to
+// (|childCrashRemapFd|) before exec() in the child process.
+// |SetRemoteExceptionHandler()| in the child process expects to find
+// the server at |childCrashRemapFd|.  Return true iff successful.
+//
+// If crash reporting is disabled, both outparams will be set to -1
+// and |true| will be returned.
+bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd);
+
+// Child-side API
+bool SetRemoteExceptionHandler();
+#endif
+
+bool UnsetRemoteExceptionHandler();
 }
 
 #endif /* nsExceptionHandler_h__ */
