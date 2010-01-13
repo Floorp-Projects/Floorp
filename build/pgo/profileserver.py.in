@@ -46,7 +46,7 @@ import os
 import sys
 import shutil
 from datetime import datetime
-from automation import Automation
+import automation
 
 PORT = 8888
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
@@ -57,7 +57,6 @@ class EasyServer(SocketServer.TCPServer):
   allow_reuse_address = True
 
 if __name__ == '__main__':
-  automation = Automation()
   httpd = EasyServer(("", PORT), SimpleHTTPServer.SimpleHTTPRequestHandler)
   t = threading.Thread(target=httpd.serve_forever)
   t.setDaemon(True) # don't hang on exit
