@@ -39,8 +39,9 @@
 
 interface nsIDOMWindow;
 interface nsIURI;
+interface nsIFrameLoaderOwner;
 
-[scriptable, uuid(f9691a49-7fb3-4b54-bb11-a4f2e0b6eddb)]
+[scriptable, uuid(3ab89888-eb41-4dc8-b347-115555f47c80)]
 
 /**
  * The C++ source has access to the browser script source through
@@ -103,6 +104,14 @@ interface nsIBrowserDOMWindow : nsISupports
   */
   nsIDOMWindow openURI(in nsIURI aURI, in nsIDOMWindow aOpener,
                        in short aWhere, in short aContext);
+
+  /**
+   * As above, but return the nsIFrameLoaderOwner for the new window.
+   // XXXbz is this the right API? Do we really need the opener here?
+   // See bug 537428
+   */
+  nsIFrameLoaderOwner openURIInFrame(in nsIURI aURI, in nsIDOMWindow aOpener,
+                                     in short aWhere, in short aContext);
 
   /**
    * @param  aWindow the window to test.
