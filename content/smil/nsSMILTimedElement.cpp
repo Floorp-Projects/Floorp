@@ -401,8 +401,21 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly)
         if (mCurrentInterval.Begin()->Time() <= sampleTime) {
           mElementState = STATE_ACTIVE;
           mCurrentInterval.FreezeBegin();
+          if (mPrevInterval.IsSet()) {
+            Reset(); // Apply restart behaviour
+          }
           if (mClient) {
             mClient->Activate(mCurrentInterval.Begin()->Time().GetMillis());
+          }
+          if (mPrevInterval.IsSet()) {
+            // The call to Reset() may mean that the end point of our current
+            // interval should be changed and so we should update the interval
+            // now. However, calling UpdateCurrentInterval could result in the
+            // interval getting deleted (perhaps through some web of syncbase
+            // dependencies) therefore we make updating the interval the last
+            // thing we do. There is no guarantee that mCurrentInterval.IsSet()
+            // is true after this.
+            UpdateCurrentInterval();
           }
           stateChanged = PR_TRUE;
         }
@@ -435,7 +448,6 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, PRBool aEndOnly)
           mCurrentInterval = newInterval;
           // We must update mPrevInterval before calling SampleFillValue
           SampleFillValue();
-          Reset();
           if (mElementState == STATE_WAITING) {
             NotifyNewInterval();
           }
@@ -480,17 +492,16 @@ nsSMILTimedElement::HandleContainerTimeChange()
 void
 nsSMILTimedElement::Reset()
 {
+  // SMIL 3.0 section 5.4.3, 'Resetting element state':
+  //   Any instance times associated with past Event-values, Repeat-values,
+  //   Accesskey-values or added via DOM method calls are removed from the
+  //   dependent begin and end instance times lists. In effect, all events and
+  //   DOM methods calls in the past are cleared. This does not apply to an
+  //   instance time that defines the begin of the current interval.
   PRInt32 count = mBeginInstances.Length();
-
   for (PRInt32 i = count - 1; i >= 0; --i) {
     nsSMILInstanceTime* instance = mBeginInstances[i].get();
     NS_ABORT_IF_FALSE(instance, "NULL instance in begin instances array");
-    // SMIL 3.0 section 5.4.3, 'Resetting element state':
-    //   Any instance times associated with past Event-values, Repeat-values,
-    //   Accesskey-values or added via DOM method calls are removed from the
-    //   dependent begin and end instance times lists. In effect, all events and
-    //   DOM methods calls in the past are cleared. This does not apply to an
-    //   instance time that defines the begin of the current interval.
     if (instance->ClearOnReset() &&
        (!mCurrentInterval.IsSet() || instance != mCurrentInterval.Begin())) {
       mBeginInstances.RemoveElementAt(i);
@@ -498,7 +509,6 @@ nsSMILTimedElement::Reset()
   }
 
   count = mEndInstances.Length();
-
   for (PRInt32 j = count - 1; j >= 0; --j) {
     nsSMILInstanceTime* instance = mEndInstances[j].get();
     NS_ABORT_IF_FALSE(instance, "NULL instance in end instances array");
@@ -602,7 +612,6 @@ nsSMILTimedElement::SetEndSpec(const nsAString& aEndSpec,
                                nsIContent* aContextNode)
 {
   // XXX When implementing events etc., don't forget to ensure
-  // When implementing events etc., don't forget to ensure
   // mEndHasEventConditions is set if the specification contains conditions that
   // describe event-values, repeat-values or accessKey-values.
   return SetBeginOrEndSpec(aEndSpec, aContextNode, PR_FALSE);
@@ -833,8 +842,7 @@ nsSMILTimedElement::UnsetFillMode()
   PRUint16 previousFillMode = mFillMode;
   mFillMode = FILL_REMOVE;
   if ((mElementState == STATE_WAITING || mElementState == STATE_POSTACTIVE) &&
-      previousFillMode == FILL_FREEZE &&
-      mClient)
+      previousFillMode == FILL_FREEZE && mClient && mPrevInterval.IsSet())
     mClient->Inactivate(PR_FALSE);
 }
 
@@ -1013,6 +1021,10 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
     beginAfter = aPrevInterval->End()->Time();
     prevIntervalWasZeroDur
       = aPrevInterval->End()->Time() == aPrevInterval->Begin()->Time();
+    if (aFixedBeginTime) {
+      prevIntervalWasZeroDur &= 
+        aPrevInterval->Begin()->Time() == aFixedBeginTime->Time();
+    }
   } else {
     beginAfter.SetMillis(LL_MININT);
   }
@@ -1021,6 +1033,7 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
   nsRefPtr<nsSMILInstanceTime> tempEnd;
 
   while (PR_TRUE) {
+    // Calculate begin time
     if (aFixedBeginTime) {
       if (aFixedBeginTime->Time() < beginAfter)
         return NS_ERROR_FAILURE;
@@ -1042,13 +1055,8 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
     NS_ABORT_IF_FALSE(tempBegin && tempBegin->Time() >= beginAfter,
         "Got a bad begin time while fetching next interval");
 
-    if (mEndSpecs.IsEmpty() && mEndInstances.IsEmpty()) {
-      nsSMILTimeValue activeEnd =
-        CalcActiveEnd(tempBegin->Time(), nsSMILTimeValue::Indefinite());
-      tempEnd = new nsSMILInstanceTime(activeEnd, nsnull);
-      if (!tempEnd)
-        return NS_ERROR_OUT_OF_MEMORY;
-    } else {
+    // Calculate end time
+    {
       PRInt32 endPos = 0;
       tempEnd = GetNextGreaterOrEqual(mEndInstances, tempBegin->Time(), endPos);
 
@@ -1059,15 +1067,21 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
         tempEnd = GetNextGreater(mEndInstances, tempBegin->Time(), endPos);
       }
 
-      if (!tempEnd && !mEndHasEventConditions && !mEndInstances.IsEmpty()) {
-        //
-        // This is a little counter-intuitive but according to SMILANIM, if
-        // all the ends are before the begin, we _don't_ just assume an
-        // infinite end, it's actually a bad interval. ASV however will just
-        // use an indefinite end.
-        //
-        return NS_ERROR_FAILURE;
-      }
+      // If all the ends are before the beginning we have a bad interval UNLESS:
+      // a) We have end events which leave the interval open-ended, OR
+      // b) We never had any end attribute to begin with (and hence we should
+      //    just use the active duration after allowing for the possibility of
+      //    an end instance provided by a DOM call)
+      // c) We have an end attribute but no end instances--this is a special
+      //    case that is needed for syncbase timing so that animations of the
+      //    following sort: <animate id="a" end="a.begin+1s" ... /> can be
+      //    resolved (see SVGT 1.2 Test Suite animate-elem-221-t.svg) by first
+      //    establishing an interval of unresolved duration.
+      PRBool openEndedIntervalOk = mEndHasEventConditions ||
+          mEndSpecs.IsEmpty() ||
+          mEndInstances.IsEmpty();
+      if (!tempEnd && !openEndedIntervalOk)
+        return NS_ERROR_FAILURE; // Bad interval
 
       nsSMILTimeValue intervalEnd = tempEnd
                                   ? tempEnd->Time() : nsSMILTimeValue();
@@ -1076,7 +1090,6 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
       if (!tempEnd || intervalEnd != activeEnd) {
         tempEnd = new nsSMILInstanceTime(activeEnd, nsnull);
       }
-
       if (!tempEnd)
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1352,7 +1365,10 @@ nsSMILTimedElement::UpdateCurrentInterval(PRBool aForceChangeNotice)
     RegisterMilestone();
   } else {
     if (mElementState == STATE_ACTIVE && mClient) {
-      mClient->Inactivate(PR_FALSE); // Don't apply fill
+      // Only apply a fill if it was already being applied before the (now
+      // deleted) interval was created
+      PRBool applyFill = mPrevInterval.IsSet() && mFillMode == FILL_FREEZE;
+      mClient->Inactivate(applyFill);
     }
 
     if (mElementState == STATE_ACTIVE || mElementState == STATE_WAITING) {
