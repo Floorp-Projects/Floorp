@@ -48,12 +48,22 @@
 
 NS_IMPL_ISUPPORTS1(nsSVGRenderingObserver, nsIMutationObserver)
 
+#ifdef _MSC_VER
+// Disable "warning C4355: 'this' : used in base member initializer list".
+// We can ignore that warning because we know that mElement's constructor 
+// doesn't dereference the pointer passed to it.
+#pragma warning(push)
+#pragma warning(disable:4355)
+#endif
 nsSVGRenderingObserver::nsSVGRenderingObserver(nsIURI *aURI,
                                                nsIFrame *aFrame)
   : mElement(this), mFrame(aFrame),
     mFramePresShell(aFrame->PresContext()->PresShell()),
     mReferencedFrame(nsnull),
     mReferencedFramePresShell(nsnull)
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 {
   // Start watching the target element
   mElement.Reset(aFrame->GetContent(), aURI);
