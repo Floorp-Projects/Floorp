@@ -6566,6 +6566,11 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
                "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
                "explicit by making optional_argc non-zero.");
 
+  if (IsOuterWindow() && mInnerWindow &&
+      !nsContentUtils::CanCallerAccess(mInnerWindow)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
 
