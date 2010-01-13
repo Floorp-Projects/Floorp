@@ -3237,20 +3237,8 @@ PluginObserver.prototype = {
 
   /** Observe listens for plugin change events and maintains an embed cache. */
   observe: function observe(subject, topic, data) {
-    let doc = subject.ownerDocument.defaultView.top.document;
-    if (data == "init") {
-      if (doc.pluginCache === undefined)
-        doc.pluginCache = [];
-      doc.pluginCache.push(subject);
-    } else if (data == "reflow") {
+    if (data == "reflow")
       this.updateCurrentBrowser();
-    } else if (data == "destroy") {
-      if (doc.pluginCache) {
-        let index = doc.pluginCache.indexOf(subject);
-        if (index != -1)
-          doc.pluginCache.splice(index, 1);
-      }
-    }
   },
 
   /** Update flash objects */
@@ -3259,10 +3247,12 @@ PluginObserver.prototype = {
       if (ev.lastTab) {
         let browser = ev.lastTab.browser;
         let oldDoc = browser.contentDocument;
+
+        let plugins = oldDoc.querySelectorAll("embed,object");
+
         browser.removeEventListener("ZoomChanged", this, false);
         browser.removeEventListener("MozAfterPaint", this, false);
-        if (oldDoc.pluginCache)
-          this.updateEmbedRegions(oldDoc.pluginCache, this._emptyRect);
+        this.updateEmbedRegions(plugins, this._emptyRect);
       }
 
       let browser = Browser.selectedBrowser;
@@ -3276,22 +3266,25 @@ PluginObserver.prototype = {
   /** Update the current browser's flash objects. */
   updateCurrentBrowser: function updateCurrentBrowser() {
     let doc = Browser.selectedTab.browser.contentDocument;
-    if (!doc.pluginCache)
-      return;
 
     let rect = this.getCriticalRect();
+    if (rect == this._emptyRect && !this._isRendering)
+      return;
+
+    let plugins = doc.querySelectorAll("embed,object");
+
     if (this._isRendering) {
       // Update immediately if not just starting to render
       if (rect == this._emptyRect)
         this._isRendering = false;
-      this.updateEmbedRegions(doc.pluginCache, rect);
+      this.updateEmbedRegions(plugins, rect);
     } else {
       // Wait a moment so that any chrome redraws occur first.
       let self = this;
       setTimeout(function() {
         self._isRendering = true;
         // Recalculate critical rect so we don't render when we ought not to.
-        self.updateEmbedRegions(doc.pluginCache, self.getCriticalRect());
+        self.updateEmbedRegions(plugins, self.getCriticalRect());
       }, 0);
     }
   },
