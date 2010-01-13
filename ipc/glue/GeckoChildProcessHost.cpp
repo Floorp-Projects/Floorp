@@ -90,7 +90,11 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
   MOZ_COUNT_DTOR(GeckoChildProcessHost);
 
   if (mChildProcessHandle > 0)
-    ProcessWatcher::EnsureProcessTerminated(mChildProcessHandle);
+    ProcessWatcher::EnsureProcessTerminated(mChildProcessHandle
+#if defined(OS_POSIX) && defined(NS_BUILD_REFCNT_LOGGING)
+                                            , false // don't "force"
+#endif
+    );
 }
 
 bool
