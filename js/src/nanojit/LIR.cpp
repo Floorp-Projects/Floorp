@@ -481,6 +481,10 @@ namespace nanojit
             if (i->isconst())
                 return insImmf(i->imm32());
             break;
+        case LIR_f2i:
+            if (i->isconstq())
+                return insImm(int32_t(i->imm64f()));
+            break;
         case LIR_u2f:
             if (i->isconst())
                 return insImmf(uint32_t(i->imm32()));
@@ -1520,6 +1524,7 @@ namespace nanojit
                 case LIR_u2q:
                 case LIR_i2f:
                 case LIR_u2f:
+                case LIR_f2i:
                 case LIR_mod:
                     live.add(ins->oprnd1(), ins);
                     break;
@@ -1845,6 +1850,7 @@ namespace nanojit
             case LIR_mod:
             case LIR_i2q:
             case LIR_u2q:
+            case LIR_f2i:
                 VMPI_sprintf(s, "%s = %s %s", formatRef(i), lirNames[op], formatRef(i->oprnd1()));
                 break;
 
@@ -2392,6 +2398,7 @@ namespace nanojit
             case LIR_fret:
             case LIR_qlo:
             case LIR_qhi:
+            case LIR_f2i:
               NanoAssert(s0->isQuad());
               break;
             case LIR_not:

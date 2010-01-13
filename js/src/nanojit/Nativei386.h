@@ -763,6 +763,12 @@ namespace nanojit
     asm_output("cvtsi2sd %s,%s",gpn(xr),gpn(gr)); \
     } while(0)
 
+ #define SSE_CVTSD2SI(gr,xr) do{ \
+    count_fpu();\
+    SSE(0xf20f2d, (gr)&7, (xr)&7); \
+    asm_output("cvtsd2si %s,%s",gpn(gr),gpn(xr)); \
+    } while(0)
+
 #define SSE_CVTSD2SS(xr,gr) do{ \
     count_fpu();\
     SSE(0xf20f5a, (xr)&7, (gr)&7); \
@@ -934,6 +940,7 @@ namespace nanojit
                          count_ldq(); FPUdm(0xdd00, dm);        asm_output("fldq (%p)",dm); fpu_push();} while(0)
 #define FILDQ(d,b)  do { count_fpuld(); FPUm(0xdf05, d, b);     asm_output("fildq %d(%s)",d,gpn(b)); fpu_push(); } while(0)
 #define FILD(d,b)   do { count_fpuld(); FPUm(0xdb00, d, b);     asm_output("fild %d(%s)",d,gpn(b)); fpu_push(); } while(0)
+#define FIST(p,d,b) do { count_fpu(); FPUm(0xdb02|(p), d, b);   asm_output("fist%s %d(%s)",((p)?"p":""),d,gpn(b)); if(p) fpu_pop(); } while(0)
 #define FADD(d,b)   do { count_fpu(); FPUm(0xdc00, d, b);       asm_output("fadd %d(%s)",d,gpn(b)); } while(0)
 #define FADDdm(m)   do { const double* const dm = m; \
                          count_ldq(); FPUdm(0xdc00, dm);        asm_output("fadd (%p)",dm); } while(0)
