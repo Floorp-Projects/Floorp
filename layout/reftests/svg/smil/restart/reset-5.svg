@@ -1,0 +1,26 @@
+<!--
+  A variation on reset-4.svg. If the added end instance is before the current
+  interval we should not delete it but just ignore it and use the active
+  duration to calculate the end of the interval. This is consistent with the
+  operation of the SMIL pseudocode for getNextInterval when we have end events.
+ -->
+<svg xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  class="reftest-wait"
+  onload="addInstanceTimes()">
+  <script type="text/ecmascript"><![CDATA[
+    function addInstanceTimes() {
+      var svg = document.documentElement;
+      svg.pauseAnimations();
+      svg.setCurrentTime(0.5);
+      var anim = document.getElementById('anim');
+      anim.endElementAt(0);
+      setTimeAndSnapshot(1.5, true);
+    }
+  ]]></script>
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <rect width="100" height="100" fill="red">
+    <set attributeName="fill" attributeType="CSS"
+      to="green" begin="1s" end="2s" dur="1s" fill="remove" id="anim"/>
+  </rect>
+</svg>
