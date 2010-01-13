@@ -365,6 +365,9 @@ nsSVGEffects::EffectProperties::GetMaskFrame(PRBool *aOK)
 void
 nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
 {
+  NS_ASSERTION(aFrame->GetContent()->IsNodeOfType(nsINode::eELEMENT),
+               "aFrame's content should be an element");
+
   aFrame->DeleteProperty(nsGkAtoms::filter);
   aFrame->DeleteProperty(nsGkAtoms::mask);
   aFrame->DeleteProperty(nsGkAtoms::clipPath);
@@ -392,10 +395,12 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
                       CreateMarkerProperty);
   }
 
-  nsIFrame *aKid = aFrame->GetFirstChild(nsnull);
-  while (aKid) {
-    UpdateEffects(aKid);
-    aKid = aKid->GetNextSibling();
+  nsIFrame *kid = aFrame->GetFirstChild(nsnull);
+  while (kid) {
+    if (kid->GetContent()->IsNodeOfType(nsINode::eELEMENT)) {
+      UpdateEffects(kid);
+    }
+    kid = kid->GetNextSibling();
   }
 }
 
