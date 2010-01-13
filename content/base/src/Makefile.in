@@ -79,6 +79,7 @@ CPPSRCS		= \
 		nsContentUtils.cpp \
 		nsCopySupport.cpp \
 		nsCrossSiteListenerProxy.cpp \
+		nsCSPService.cpp \
 		nsDataDocumentContentPolicy.cpp \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \
@@ -141,7 +142,14 @@ GQI_SRCS = contentbase.gqi
 # static lib.
 FORCE_STATIC_LIB = 1
 
-EXTRA_COMPONENTS = $(srcdir)/nsBadCertHandler.js
+EXTRA_COMPONENTS = \
+		$(srcdir)/nsBadCertHandler.js \
+		contentSecurityPolicy.js \
+		$(NULL)
+
+EXTRA_JS_MODULES = \
+		CSPUtils.jsm \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
