@@ -19,6 +19,8 @@ if ($template_type eq "xul") {
   $template_type = "$FindBin::RealBin/static/xul.template.txt";
 } elsif ($template_type eq "xhtml") {
   $template_type = "$FindBin::RealBin/static/xhtml.template.txt";
+} elsif ($template_type eq "chrome") {
+  $template_type = "$FindBin::RealBin/static/chrome.template.txt";
 } else {
   $template_type = "$FindBin::RealBin/static/test.template.txt";
 }
