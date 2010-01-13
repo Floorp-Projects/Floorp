@@ -1283,10 +1283,11 @@ var FormHelper = {
   },
 
   handleEvent: function formHelperHandleEvent(aEvent) {
-    let currentElement = this.getCurrentElement();
-    if (aEvent.type != "keypress")
+    let isChromeFocused = gFocusManager.getFocusedElementForWindow(window, false, {}) == gFocusManager.focusedElement;
+    if (isChromeFocused || aEvent.type != "keypress")
       return;
 
+    let currentElement = this.getCurrentElement();
     let keyCode = aEvent.keyCode || aEvent.charCode;
     switch (keyCode) {
       case aEvent.DOM_VK_DOWN:
@@ -1328,6 +1329,9 @@ var FormHelper = {
   },
 
   canShowUIFor: function(aElement) {
+    if (!aElement)
+      return false;
+
     // Some forms elements are valid in the sense that we want the Form
     // Assistant to stop on it, but we don't want it to display when
     // the user clicks on it
