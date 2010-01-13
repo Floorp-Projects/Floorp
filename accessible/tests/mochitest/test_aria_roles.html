@@ -3,6 +3,7 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=481114
 https://bugzilla.mozilla.org/show_bug.cgi?id=469688
+https://bugzilla.mozilla.org/show_bug.cgi?id=520188
 https://bugzilla.mozilla.org/show_bug.cgi?id=529289
 -->
 <head>
@@ -29,8 +30,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
 
       // weak roles that are forms of "live regions"
       testRole("log_table", ROLE_TABLE);
-      testRole("marquee_h1", ROLE_HEADING);
       testRole("timer_div", ROLE_SECTION);
+
+      // other roles that are forms of "live regions"
+      testRole("marquee_h1", ROLE_ANIMATION);
 
       // strong landmark
       testRole("application", ROLE_APPLICATION);
@@ -64,8 +67,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
       for (a in abstract_roles)
         testRole(abstract_roles[a], ROLE_SECTION);
 
-      // aria scrollbar
+      // misc roles
       testRole("scrollbar", ROLE_SCROLLBAR);
+      testRole("dir", ROLE_LIST);
+
       SimpleTest.finish();
     }
 
@@ -77,6 +82,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
 
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=481114">Mozilla Bug 481114</a>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469688">Mozilla Bug 469688</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469688">Mozilla Bug 520188</a>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=529289">Mozilla Bug 529289</a>
   </a>
   <p id="display"></p>
@@ -139,7 +145,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=529289
   <div role="section" id="section">section</div>
   <div role="sectionhead" id="sectionhead">sectionhead</div>
 
-  <!-- aria scrollbar -->
+  <!-- misc roles -->
   <div role="scrollbar" id="scrollbar">scrollbar</div>
+
+  <div id="dir" role="directory">
+    <div role="listitem">A</div>
+    <div role="listitem">B</div>
+    <div role="listitem">C</div>
+  </div>
 </body>
 </html>
