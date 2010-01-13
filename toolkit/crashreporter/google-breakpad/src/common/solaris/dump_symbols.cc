@@ -651,7 +651,7 @@ bool DumpSymbols::WriteSymbolFile(const std::string &obj_file, int sym_fd) {
     return false;
   void *obj_base = mmap(NULL, st.st_size,
                         PROT_READ, MAP_PRIVATE, obj_fd, 0);
-  if (obj_base == MAP_FAILED))
+  if (obj_base == MAP_FAILED)
     return false;
   MmapWrapper map_wrapper(obj_base, st.st_size);
   GElf_Ehdr elf_header;
