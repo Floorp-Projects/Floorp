@@ -1288,6 +1288,8 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == 488692-1.html 488692-1-ref.html # needs
 == 494667-1.html 494667-1-ref.html
 == 494667-2.html 494667-2-ref.html
 == 495274-1.html 495274-1-ref.html
+== 495354-1a.xhtml 495354-1-ref.xhtml
+== 495354-1b.xhtml 495354-1-ref.xhtml
 == 495385-1a.html 495385-1-ref.html
 == 495385-1b.html 495385-1-ref.html
 == 495385-1c.html 495385-1-ref.html
