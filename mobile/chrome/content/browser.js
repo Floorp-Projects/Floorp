@@ -1361,6 +1361,15 @@ Browser.MainDragger.prototype = {
   isDraggable: function isDraggable(target, scroller) { return true; },
 
   dragStart: function dragStart(clientX, clientY, target, scroller) {
+    // Make sure pausing occurs before any early returns.
+    this.bv.pauseRendering();
+
+    // XXX shouldn't know about observer
+    // adding pause in pauseRendering isn't so great, because tiles will hardly ever prefetch while
+    // loading state is going (and already, the idle timer is bigger during loading so it doesn't fit
+    // into the aggressive flag).
+    this.bv._idleServiceObserver.pause();
+
     let [x, y] = Browser.transformClientToBrowser(clientX, clientY);
     let element = Browser.elementFromPoint(x, y);
 
@@ -1414,14 +1423,6 @@ Browser.MainDragger.prototype = {
 
     if (element)
       this.draggedFrame = element.ownerDocument.defaultView;
-
-    this.bv.pauseRendering();
-
-    // XXX shouldn't know about observer
-    // adding pause in pauseRendering isn't so great, because tiles will hardly ever prefetch while
-    // loading state is going (and already, the idle timer is bigger during loading so it doesn't fit
-    // into the aggressive flag).
-    this.bv._idleServiceObserver.pause();
   },
 
   dragStop: function dragStop(dx, dy, scroller) {
