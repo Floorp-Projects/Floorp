@@ -284,12 +284,10 @@ GetScrollbarMetrics(nsBoxLayoutState& aState, nsIBox* aBox, nsSize* aMin,
   
   if (aMin) {
     *aMin = aBox->GetMinSize(aState);
-    nsBox::AddMargin(aBox, *aMin);
   }
  
   if (aPref) {
     *aPref = aBox->GetPrefSize(aState);
-    nsBox::AddMargin(aBox, *aPref);
   }
 }
 
@@ -932,7 +930,6 @@ nsMargin nsGfxScrollFrameInner::GetDesiredScrollbarSizes(nsBoxLayoutState* aStat
 
   if (mVScrollbarBox) {
     nsSize size = mVScrollbarBox->GetPrefSize(*aState);
-    nsBox::AddMargin(mVScrollbarBox, size);
     if (IsScrollbarOnRight())
       result.left = size.width;
     else
@@ -941,7 +938,6 @@ nsMargin nsGfxScrollFrameInner::GetDesiredScrollbarSizes(nsBoxLayoutState* aStat
 
   if (mHScrollbarBox) {
     nsSize size = mHScrollbarBox->GetPrefSize(*aState);
-    nsBox::AddMargin(mHScrollbarBox, size);
     // We don't currently support any scripts that would require a scrollbar
     // at the top. (Are there any?)
     result.bottom = size.height;
@@ -1075,14 +1071,12 @@ nsXULScrollFrame::GetPrefSize(nsBoxLayoutState& aState)
   if (mInner.mVScrollbarBox &&
       styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
     nsSize vSize = mInner.mVScrollbarBox->GetPrefSize(aState);
-    nsBox::AddMargin(mInner.mVScrollbarBox, vSize);
     pref.width += vSize.width;
   }
    
   if (mInner.mHScrollbarBox &&
       styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL) {
     nsSize hSize = mInner.mHScrollbarBox->GetPrefSize(aState);
-    nsBox::AddMargin(mInner.mHScrollbarBox, hSize);
     pref.height += hSize.height;
   }
 
@@ -1105,7 +1099,6 @@ nsXULScrollFrame::GetMinSize(nsBoxLayoutState& aState)
   if (mInner.mVScrollbarBox &&
       styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
      nsSize vSize = mInner.mVScrollbarBox->GetMinSize(aState);
-     AddMargin(mInner.mVScrollbarBox, vSize);
      min.width += vSize.width;
      if (min.height < vSize.height)
         min.height = vSize.height;
@@ -1114,7 +1107,6 @@ nsXULScrollFrame::GetMinSize(nsBoxLayoutState& aState)
   if (mInner.mHScrollbarBox &&
       styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL) {
      nsSize hSize = mInner.mHScrollbarBox->GetMinSize(aState);
-     AddMargin(mInner.mHScrollbarBox, hSize);
      min.height += hSize.height;
      if (min.width < hSize.width)
         min.width = hSize.width;
@@ -2426,7 +2418,6 @@ nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
        return PR_FALSE;
 
      nsSize hSize = mInner.mHScrollbarBox->GetPrefSize(aState);
-     nsBox::AddMargin(mInner.mHScrollbarBox, hSize);
 
      mInner.SetScrollbarVisibility(mInner.mHScrollbarBox, aAdd);
 
@@ -2445,7 +2436,6 @@ nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
        return PR_FALSE;
 
      nsSize vSize = mInner.mVScrollbarBox->GetPrefSize(aState);
-     nsBox::AddMargin(mInner.mVScrollbarBox, vSize);
 
      mInner.SetScrollbarVisibility(mInner.mVScrollbarBox, aAdd);
 
@@ -2973,9 +2963,11 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nsRect vRect(mScrollPort);
     vRect.width = aContentArea.width - mScrollPort.width;
     vRect.x = IsScrollbarOnRight() ? mScrollPort.XMost() : aContentArea.x;
+#ifdef DEBUG
     nsMargin margin;
     mVScrollbarBox->GetMargin(margin);
-    vRect.Deflate(margin);
+    NS_ASSERTION(margin == nsMargin(0,0,0,0), "Scrollbar margin not supported");
+#endif
     AdjustScrollbarRect(mOuter, presContext, vRect, PR_TRUE);
     LayoutAndInvalidate(aState, mVScrollbarBox, vRect);
   }
@@ -2985,9 +2977,11 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nsRect hRect(mScrollPort);
     hRect.height = aContentArea.height - mScrollPort.height;
     hRect.y = PR_TRUE ? mScrollPort.YMost() : aContentArea.y;
+#ifdef DEBUG
     nsMargin margin;
     mHScrollbarBox->GetMargin(margin);
-    hRect.Deflate(margin);
+    NS_ASSERTION(margin == nsMargin(0,0,0,0), "Scrollbar margin not supported");
+#endif
     AdjustScrollbarRect(mOuter, presContext, hRect, PR_FALSE);
     LayoutAndInvalidate(aState, mHScrollbarBox, hRect);
   }
@@ -3111,12 +3105,20 @@ nsGfxScrollFrameInner::GetScrolledRectInternal(const nsRect& aScrolledFrameOverf
 }
 
 nsMargin
-nsGfxScrollFrameInner::GetActualScrollbarSizes() const {
-  nsRect r = mOuter->GetPaddingRect() - mOuter->GetPosition();
-
-  return nsMargin(mScrollPort.x - r.x, mScrollPort.y - r.y,
-                  r.XMost() - mScrollPort.XMost(),
-                  r.YMost() - mScrollPort.YMost());
+nsGfxScrollFrameInner::GetActualScrollbarSizes() const
+{
+  nsMargin result(0, 0, 0, 0);
+  if (mVScrollbarBox) {
+    if (IsScrollbarOnRight()) {
+      result.right = mVScrollbarBox->GetRect().width;
+    } else {
+      result.left = mVScrollbarBox->GetRect().width;
+    }
+  }
+  if (mHScrollbarBox) {
+    result.bottom = mHScrollbarBox->GetRect().height;
+  }
+  return result;
 }
 
 void
