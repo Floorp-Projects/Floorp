@@ -43,10 +43,10 @@ MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/branding/official
 
 case "$target" in
 *-wince*)
-    MOZ_APP_VERSION=1.0a4pre
+    . ${srcdir}/${MOZ_BUILD_APP}/winmo-version.txt
     ;;
 *)
-    MOZ_APP_VERSION=1.1a1pre
+    . ${srcdir}/${MOZ_BUILD_APP}/default-version.txt
     ;;
 esac
 
