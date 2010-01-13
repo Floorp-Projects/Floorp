@@ -54,6 +54,7 @@ _CHROME_FILES = \
 	test_bug514660.xul \
 	test_printpreview.xul \
 	printpreview_helper.xul \
+	test_bug533845.xul \
     $(NULL)
 
 libs:: $(_CHROME_FILES)
