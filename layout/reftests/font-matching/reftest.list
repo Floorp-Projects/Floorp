@@ -4,3 +4,34 @@
 != synthetic-bold-1.html synthetic-bold-1-ref.html
 != synthetic-bold-2.html synthetic-bold-2-ref.html
 
+# synthetic bold/italic tests
+!= defaultfont-bold.html defaultfont.html
+!= defaultfont-italic.html defaultfont.html 
+!= defaultfont-oblique.html defaultfont.html 
+!= defaultfont-bolditalic.html defaultfont.html 
+!= defaultfont-bolditalic.html defaultfont-bold.html
+
+!= defaultjapanese-bold.html defaultjapanese.html
+!= defaultjapanese-italic.html defaultjapanese.html
+!= defaultjapanese-oblique.html defaultjapanese.html
+!= defaultjapanese-bolditalic.html defaultjapanese.html
+!= defaultjapanese-bolditalic.html defaultjapanese-bold.html
+
+!= impact-bold.html impact.html
+!= impact-italic.html impact.html
+!= impact-oblique.html impact.html
+!= impact-bolditalic.html impact.html
+!= impact-bolditalic.html impact-bold.html
+
+!= arialunicode-bold.html arialunicode.html
+!= arialunicode-italic.html arialunicode.html
+!= arialunicode-oblique.html arialunicode.html
+!= arialunicode-bolditalic.html arialunicode.html
+!= arialunicode-bolditalic.html arialunicode-bold.html
+
+!= lucidaconsole-bold.html lucidaconsole.html
+!= lucidaconsole-italic.html lucidaconsole.html
+!= lucidaconsole-oblique.html lucidaconsole.html
+!= lucidaconsole-bolditalic.html lucidaconsole.html
+!= lucidaconsole-bolditalic.html lucidaconsole-bold.html
+
