@@ -42,6 +42,7 @@
 #include "nsIClassInfo.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMNSEventTarget.h"
 #include "nsIDOMWorkers.h"
 
 #include "nsIProgrammingLanguage.h"
@@ -105,11 +106,13 @@ private:
 };
 
 class nsDOMWorkerMessageHandler : public nsIDOMEventTarget,
+                                  public nsIDOMNSEventTarget,
                                   public nsIClassInfo
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTTARGET
+  NS_DECL_NSIDOMNSEVENTTARGET
   NS_DECL_NSICLASSINFO
 
   virtual nsresult SetOnXListener(const nsAString& aType,
