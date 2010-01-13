@@ -143,6 +143,8 @@ FORCE_STATIC_LIB = 1
 
 EXTRA_COMPONENTS = $(srcdir)/nsBadCertHandler.js
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= \
@@ -158,6 +160,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../dom/base \
 		-I$(srcdir)/../../xml/document/src \
 		-I$(topsrcdir)/xpcom/io \
+		-I$(topsrcdir)/dom/ipc \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

@@ -698,8 +698,7 @@ def runApp(testURL, env, app, profileDir, extraArgs,
         log.info("TEST-UNEXPECTED-FAIL | automation.py | child process %d still alive after shutdown", processPID)
         killPid(processPID)
 
-  if checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath):
-    status = -1
+  checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath)
 
   if os.path.exists(processLog):
     os.unlink(processLog)

@@ -55,10 +55,15 @@
 #include "nsIToolkitChromeRegistry.h"
 #include "nsIToolkitProfile.h"
 
+#if defined(OS_LINUX)
+#  define XP_LINUX
+#endif
+
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
 #include "nsAutoRef.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsExceptionHandler.h"
 #include "nsStaticComponents.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
@@ -78,7 +83,12 @@
 #include "ScopedXREEmbed.h"
 
 #include "mozilla/plugins/PluginThreadChild.h"
+#include "mozilla/dom/ContentProcessThread.h"
+#include "mozilla/dom/ContentProcessParent.h"
+#include "mozilla/dom/ContentProcessChild.h"
 
+#include "mozilla/ipc/TestShellParent.h"
+#include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/Monitor.h"
 
 #ifdef MOZ_IPDL_TESTS
@@ -94,6 +104,12 @@ using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::ScopedXREEmbed;
 
 using mozilla::plugins::PluginThreadChild;
+using mozilla::dom::ContentProcessThread;
+using mozilla::dom::ContentProcessParent;
+using mozilla::dom::ContentProcessChild;
+using mozilla::ipc::TestShellParent;
+using mozilla::ipc::TestShellCommandParent;
+using mozilla::ipc::XPCShellEnvironment;
 
 using mozilla::Monitor;
 using mozilla::MonitorAutoEnter;
@@ -242,6 +258,20 @@ GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 
 static MessageLoop* sIOMessageLoop;
 
+#if defined(MOZ_CRASHREPORTER)
+PRBool
+XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
+{
+#if defined(XP_WIN)
+  return CrashReporter::SetRemoteExceptionHandler(nsDependentCString(aPipe));
+#elif defined(OS_LINUX)
+  return CrashReporter::SetRemoteExceptionHandler();
+#else
+#  error "OOP crash reporter unsupported on this platform"
+#endif
+}
+#endif // if defined(MOZ_CRASHREPORTER)
+
 nsresult
 XRE_InitChildProcess(int aArgc,
                      char* aArgv[],
@@ -304,6 +334,10 @@ XRE_InitChildProcess(int aArgc,
 
     case GeckoProcessType_Plugin:
       mainThread = new PluginThreadChild(parentHandle);
+      break;
+
+    case GeckoProcessType_Content:
+      mainThread = new ContentProcessThread(parentHandle);
       break;
 
     case GeckoProcessType_IPDLUnitTest:
@@ -444,6 +478,13 @@ XRE_RunAppShell()
     return appShell->Run();
 }
 
+template<>
+struct RunnableMethodTraits<ContentProcessChild>
+{
+    static void RetainCallee(ContentProcessChild* obj) { }
+    static void ReleaseCallee(ContentProcessChild* obj) { }
+};
+
 void
 XRE_ShutdownChildProcess()
 {
@@ -453,6 +494,47 @@ XRE_ShutdownChildProcess()
     NS_ABORT_IF_FALSE(!!ioLoop, "Bad shutdown order");
 
     ioLoop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
+}
+
+namespace {
+TestShellParent* gTestShellParent = nsnull;
+}
+
+bool
+XRE_SendTestShellCommand(JSContext* aCx,
+                         JSString* aCommand,
+                         void* aCallback)
+{
+    if (!gTestShellParent) {
+        ContentProcessParent* parent = ContentProcessParent::GetSingleton();
+        NS_ENSURE_TRUE(parent, false);
+
+        gTestShellParent = parent->CreateTestShell();
+        NS_ENSURE_TRUE(gTestShellParent, false);
+    }
+
+    nsDependentString command((PRUnichar*)JS_GetStringChars(aCommand),
+                              JS_GetStringLength(aCommand));
+    if (!aCallback) {
+        return gTestShellParent->SendExecuteCommand(command);
+    }
+
+    TestShellCommandParent* callback = static_cast<TestShellCommandParent*>(
+        gTestShellParent->SendPTestShellCommandConstructor(command));
+    NS_ENSURE_TRUE(callback, false);
+
+    jsval callbackVal = *reinterpret_cast<jsval*>(aCallback);
+    NS_ENSURE_TRUE(callback->SetCallback(aCx, callbackVal), false);
+
+    return true;
+}
+
+bool
+XRE_ShutdownTestShell()
+{
+  if (!gTestShellParent)
+    return true;
+  return ContentProcessParent::GetSingleton()->DestroyTestShell(gTestShellParent);
 }
 
 #endif // MOZ_IPC

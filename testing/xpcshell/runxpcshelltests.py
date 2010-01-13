@@ -249,12 +249,12 @@ def runTests(xpcshell, xrePath=None, symbolsPath=None,
   >>>>>>>
   %s
   <<<<<<<""" % (test, proc.returncode, stdout)
-          checkForCrashes(testdir, symbolsPath, testName=test)
           failCount += 1
         else:
           print "TEST-PASS | %s | test passed" % test
           passCount += 1
 
+        checkForCrashes(testdir, symbolsPath, testName=test)
         dumpLeakLog(leakLogFile, True)
 
         if logfiles and stdout:

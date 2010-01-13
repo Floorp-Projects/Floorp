@@ -37,6 +37,10 @@
 
 #include "necko-config.h"
 
+#ifdef MOZ_IPC
+#include "base/basictypes.h"
+#endif 
+
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
 #include "nsIClassInfoImpl.h"

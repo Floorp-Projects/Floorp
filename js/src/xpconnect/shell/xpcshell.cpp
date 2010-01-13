@@ -45,6 +45,11 @@
 
 /* XPConnect JavaScript interactive shell. */
 
+#ifdef MOZ_IPC
+#include "mozilla/dom/ContentProcessParent.h"
+#include "mozilla/ipc/TestShellParent.h"
+#endif
+
 #include <stdio.h>
 #include "nsXULAppAPI.h"
 #include "nsServiceManagerUtils.h"
@@ -107,6 +112,11 @@
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
+#endif
+
+#ifdef MOZ_IPC
+using mozilla::dom::ContentProcessParent;
+using mozilla::ipc::TestShellParent;
 #endif
 
 class XPCShellDirProvider : public nsIDirectoryServiceProvider2
@@ -650,6 +660,41 @@ Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+#ifdef MOZ_IPC
+
+static JSBool
+SendCommand(JSContext* cx,
+            JSObject* obj,
+            uintN argc,
+            jsval* argv,
+            jsval* rval)
+{
+    if (argc == 0) {
+        JS_ReportError(cx, "Function takes at least one argument!");
+        return JS_FALSE;
+    }
+
+    JSString* str = JS_ValueToString(cx, argv[0]);
+    if (!str) {
+        JS_ReportError(cx, "Could not convert argument 1 to string!");
+        return JS_FALSE;
+    }
+
+    if (argc > 1 && JS_TypeOfValue(cx, argv[1]) != JSTYPE_FUNCTION) {
+        JS_ReportError(cx, "Could not convert argument 2 to function!");
+        return JS_FALSE;
+    }
+
+    if (!XRE_SendTestShellCommand(cx, str, argc > 1 ? &argv[1] : nsnull)) {
+        JS_ReportError(cx, "Couldn't send command!");
+        return JS_FALSE;
+    }
+
+    return JS_TRUE;
+}
+
+#endif // MOZ_IPC
+
 /*
  * JSContext option name to flag map. The option names are in alphabetical
  * order for better reporting.
@@ -762,6 +807,9 @@ static JSFunctionSpec glob_functions[] = {
     {"options",         Options,        0,0,0},
 #ifdef DEBUG
     {"dumpHeap",        DumpHeap,       5,0,0},
+#endif
+#ifdef MOZ_IPC
+    {"sendCommand",     SendCommand,    1,0,0},
 #endif
 #ifdef MOZ_SHARK
     {"startShark",      js_StartShark,      0,0,0},
@@ -1898,6 +1946,11 @@ main(int argc, char **argv)
         JS_GC(cx);
         JS_DestroyContext(cx);
     } // this scopes the nsCOMPtrs
+
+#ifdef MOZ_IPC
+    if (!XRE_ShutdownTestShell())
+        NS_ERROR("problem shutting down testshell");
+#endif
 
 #ifdef MOZ_CRASHREPORTER
     // Get the crashreporter service while XPCOM is still active.

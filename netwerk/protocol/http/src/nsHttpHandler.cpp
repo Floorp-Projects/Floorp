@@ -94,6 +94,11 @@
 #include <os2.h>
 #endif
 
+//-----------------------------------------------------------------------------
+#ifdef MOZ_IPC
+using namespace mozilla::net;
+#endif 
+
 #ifdef DEBUG
 // defined by the socket transport service while active
 extern PRThread *gSocketThread;
@@ -224,6 +229,11 @@ nsHttpHandler::Init()
         NS_WARNING("unable to continue without io service");
         return rv;
     }
+
+#ifdef MOZ_IPC
+    if (IsNeckoChild() && !gNeckoChild)
+        NeckoChild::InitNeckoChild();
+#endif // MOZ_IPC
 
     InitUserAgentComponents();
 
