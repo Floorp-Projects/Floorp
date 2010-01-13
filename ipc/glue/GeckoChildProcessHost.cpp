@@ -237,7 +237,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   cmdLine.AppendLooseValue(UTF8ToWide(childProcessType));
 #if defined(MOZ_CRASHREPORTER)
   cmdLine.AppendLooseValue(
-    UTF8ToWide(CrashReporter::GetChildNotificationPipe().BeginReading()));
+    UTF8ToWide(CrashReporter::GetChildNotificationPipe()));
 #endif
 
   base::LaunchApp(cmdLine, false, false, &process);
