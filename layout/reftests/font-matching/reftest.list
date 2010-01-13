@@ -1,1 +1,6 @@
 == CSS21-t1502-no-inherited-font-family.xhtml CSS21-t1502-no-inherited-font-family-ref.xhtml
+
+# basic tests for bug 538730
+!= synthetic-bold-1.html synthetic-bold-1-ref.html
+!= synthetic-bold-2.html synthetic-bold-2-ref.html
+

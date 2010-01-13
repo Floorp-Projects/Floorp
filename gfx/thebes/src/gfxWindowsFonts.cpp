@@ -346,6 +346,14 @@ gfxWindowsFont::FillLogFont(gfxFloat aSize)
     isItalic = (GetStyle()->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE));
     PRUint16 weight = fe->Weight();
 
+    // determine whether synthetic bolding is needed
+    PRInt8 baseWeight, weightDistance;
+    GetStyle()->ComputeWeightAndOffset(&baseWeight, &weightDistance);
+    if ((weightDistance == 0 && baseWeight >= 6) 
+        || (weightDistance > 0)) {
+        weight = PR_MAX(weight, 700); // synthetic bold this face unless already bold
+    }
+
     // if user font, disable italics/bold if defined to be italics/bold face
     // this avoids unwanted synthetic italics/bold
     if (fe->mIsUserFont) {
@@ -353,14 +361,6 @@ gfxWindowsFont::FillLogFont(gfxFloat aSize)
             isItalic = PR_FALSE; // avoid synthetic italic
         if (fe->IsBold()) {
             weight = 400; // avoid synthetic bold
-        } else {
-            // determine whether synthetic bolding is needed
-            PRInt8 baseWeight, weightDistance;
-            GetStyle()->ComputeWeightAndOffset(&baseWeight, &weightDistance);
-            if ((weightDistance == 0 && baseWeight >= 6) 
-                || (weightDistance > 0)) {
-                weight = 700; // set to get GDI to synthetic bold this face
-            }
         }
     }
 
@@ -472,13 +472,13 @@ gfxWindowsFont::GetOrMakeFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aSty
     // things in the cache so we don't end up with things like 402 in there.
     gfxFontStyle style(*aStyle);
 
-    if (aFontEntry->mIsUserFont && !aFontEntry->IsBold()) {
+    if (!aFontEntry->IsBold()) {
         // determine whether synthetic bolding is needed
         PRInt8 baseWeight, weightDistance;
         aStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
 
         if ((weightDistance == 0 && baseWeight >= 6) || (weightDistance > 0 && aNeedsBold)) {
-            style.weight = 700;  // set to get GDI to synthetic bold this face   
+            style.weight = 700;  // set to get GDI to synthetic bold this face
         } else {
             style.weight = aFontEntry->mWeight;
         }
