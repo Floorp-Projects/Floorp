@@ -46,7 +46,7 @@ interface nsIDOMClientRect;
 /**
  * This interface represents a content node that loads objects.
  */
-[scriptable, uuid(7749d965-92f3-473e-b12d-de1e342acf1c)]
+[scriptable, uuid(1d89f35e-8f4b-4b79-b622-7be812a8babe)]
 interface nsIObjectLoadingContent : nsISupports
 {
   const unsigned long TYPE_LOADING  = 0;
@@ -80,7 +80,6 @@ interface nsIObjectLoadingContent : nsISupports
    * content script must not execute.
    */
   [noscript] readonly attribute nsIPluginInstance pluginInstance;
-
 
   /**
    * Makes sure that a frame for this object exists, and that the plugin is
@@ -124,4 +123,6 @@ interface nsIObjectLoadingContent : nsISupports
    * not in the static clone.
    */
   [noscript] nsIFrame getPrintFrame();
+
+  [noscript] void pluginCrashed();
 };
