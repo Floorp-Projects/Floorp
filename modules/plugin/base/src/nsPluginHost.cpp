@@ -88,6 +88,7 @@
 #include "nsIBlocklistService.h"
 #include "nsVersionComparator.h"
 #include "nsIPrivateBrowsingService.h"
+#include "nsIObjectLoadingContent.h"
 
 #include "nsEnumeratorUtils.h"
 #include "nsXPCOM.h"
@@ -5177,6 +5178,14 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin)
   while (*pinstancetag) {
     nsPluginInstanceTag* instancetag = *pinstancetag;
     if (instancetag->mPluginTag == plugin) {
+      // notify the content node (nsIObjectLoadingContent) that the plugin has crashed
+      nsCOMPtr<nsIDOMElement> domElement;
+      instancetag->mInstance->GetDOMElement(getter_AddRefs(domElement));
+      nsCOMPtr<nsIObjectLoadingContent> objectContent(do_QueryInterface(domElement));
+      if (objectContent) {
+        objectContent->PluginCrashed();
+      }
+
       *pinstancetag = (*pinstancetag)->mNext;
       delete instancetag;
     }
