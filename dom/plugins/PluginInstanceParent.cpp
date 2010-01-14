@@ -151,6 +151,19 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVisOfflineBool(bool* value,
 }
 
 bool
+PluginInstanceParent::AnswerNPN_GetValue_NPNVnetscapeWindow(intptr_t* value,
+                                                           NPError* result)
+{
+#ifdef XP_WIN
+    HWND hwnd;
+    *result = mNPNIface->getvalue(mNPP, NPNVnetscapeWindow, &hwnd);
+    *value = (intptr_t)hwnd;
+    return true;
+#endif
+    return false;
+}
+
+bool
 PluginInstanceParent::InternalGetValueForNPObject(
                                          NPNVariable aVariable,
                                          PPluginScriptableObjectParent** aValue,
@@ -466,7 +479,6 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
     int16_t handled;
 
 #if defined(OS_WIN)
-    RECT rect;
     if (mWindowType == NPWindowTypeDrawable) {
         switch(npevent->event) {
             case WM_PAINT:
@@ -477,34 +489,6 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
                     return 0;
                 if (handled)
                     SharedSurfaceAfterPaint(npevent);
-            }
-            break;
-            case WM_WINDOWPOSCHANGED:
-                SharedSurfaceSetOrigin(npremoteevent);
-                if (!CallNPP_HandleEvent(npremoteevent, &handled))
-                    return 0;
-            break;
-            case WM_MOUSELEAVE:
-            case WM_MOUSEMOVE:
-            case WM_RBUTTONDOWN:
-            case WM_MBUTTONDOWN:
-            case WM_LBUTTONDOWN:
-            case WM_LBUTTONUP:
-            case WM_MBUTTONUP:
-            case WM_RBUTTONUP:
-            case WM_LBUTTONDBLCLK:
-            case WM_MBUTTONDBLCLK:
-            case WM_RBUTTONDBLCLK:
-            {
-                // Received mouse events have an origin at the position of the plugin rect
-                // in the page. However, when rendering to the shared dib, the rect origin
-                // changes to 0,0 via the WM_WINDOWPOSCHANGED event. In this case we need to
-                // translate these coords to the proper location.
-                nsPoint pt(GET_X_LPARAM(npremoteevent.event.lParam), GET_Y_LPARAM(npremoteevent.event.lParam));
-                pt.MoveBy(-mPluginPosOrigin.x, -mPluginPosOrigin.y);
-                npremoteevent.event.lParam = MAKELPARAM(pt.x, pt.y);
-                if (!CallNPP_HandleEvent(npremoteevent, &handled))
-                    return 0;
             }
             break;
             default:
@@ -733,22 +717,7 @@ PluginInstanceParent::AnswerNPN_PopPopupsEnabledState(bool* aSuccess)
  * PluginInstanceParent:
  *
  * painting: mPluginPort (nsIntRect, saved in SetWindow)
- * event translation: mPluginPosOrigin (nsIntPoint, saved in SetOrigin)
  */
-
-void
-PluginInstanceParent::SharedSurfaceSetOrigin(NPRemoteEvent& npremoteevent)
-{
-    WINDOWPOS* winpos = (WINDOWPOS*)npremoteevent.event.lParam;
-
-    // save the origin, we'll use this to translate input coordinates
-    mPluginPosOrigin.x = winpos->x;
-    mPluginPosOrigin.y = winpos->y;
-
-    // Reset to the offscreen dib origin
-    winpos->x  = 0;
-    winpos->y  = 0;
-}
 
 void
 PluginInstanceParent::SharedSurfaceRelease()
