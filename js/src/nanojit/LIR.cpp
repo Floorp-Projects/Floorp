@@ -2383,6 +2383,7 @@ namespace nanojit
         va_start(vargs, format);
         vfprintf(stdout, format, vargs);
         va_end(vargs);
+        fflush(stdout);
     }
 
 #endif // NJ_VERBOSE
