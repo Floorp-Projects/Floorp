@@ -62,6 +62,7 @@ EXTRA_COMPONENTS = \
         PromptService.js \
         BrowserCLH.js \
         ContentDispatchChooser.js \
+        AutoCompleteCache.js \
 	$(NULL)
 
 DIRS = protocols \
