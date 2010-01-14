@@ -607,7 +607,7 @@ struct JSRuntime {
     ptrdiff_t           gcMallocBytes;
 
     /* See comments before DelayMarkingChildren is jsgc.cpp. */
-    JSGCArenaInfo       *gcUnmarkedArenaStackTop;
+    JSGCArena           *gcUnmarkedArenaStackTop;
 #ifdef DEBUG
     size_t              gcMarkLaterCount;
 #endif
