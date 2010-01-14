@@ -750,12 +750,8 @@ MAKEFILES_xulapp="
   toolkit/locales/Makefile
   toolkit/mozapps/Makefile
   toolkit/mozapps/downloads/Makefile
-  toolkit/mozapps/downloads/src/Makefile
   toolkit/mozapps/extensions/Makefile
-  toolkit/mozapps/extensions/public/Makefile
-  toolkit/mozapps/extensions/src/Makefile
   toolkit/mozapps/handling/Makefile
-  toolkit/mozapps/handling/src/Makefile
   toolkit/mozapps/plugins/Makefile
   toolkit/mozapps/update/Makefile
   toolkit/mozapps/update/public/Makefile

@@ -34,17 +34,37 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src
+MODULE = extensions
+
+XPIDLSRCS = \
+  nsIAddonRepository.idl \
+  nsIExtensionManager.idl \
+  $(NULL)
+
+EXTRA_COMPONENTS = nsExtensionManager.js
+GARBAGE += nsExtensionManager.js
+
+EXTRA_PP_COMPONENTS = \
+  nsAddonRepository.js \
+  nsBlocklistService.js \
+  $(NULL)
+
+EXTRA_JS_MODULES = \
+  LightweightThemeManager.jsm \
+  $(NULL)
 
 ifdef ENABLE_TESTS
 DIRS += test
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+nsExtensionManager.js: nsExtensionManager.js.in
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $@ 
