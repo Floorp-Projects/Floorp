@@ -35,18 +35,28 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../../..
+DEPTH     = ../../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
-VPATH   = @srcdir@
+VPATH     = @srcdir@
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = src
+MODULE = helperAppDlg
+
+EXTRA_COMPONENTS = nsHelperAppDlg.js
+GARBAGE += nsHelperAppDlg.js
+
+EXTRA_JS_MODULES = \
+  DownloadLastDir.jsm \
+  DownloadUtils.jsm \
+  $(NULL)
+
 ifdef ENABLE_TESTS
 DIRS += tests
 endif
 
 include $(topsrcdir)/config/rules.mk
 
-
+nsHelperAppDlg.js: nsHelperAppDlg.js.in
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $@ 
