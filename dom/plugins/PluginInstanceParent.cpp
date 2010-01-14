@@ -151,16 +151,20 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVisOfflineBool(bool* value,
 }
 
 bool
-PluginInstanceParent::AnswerNPN_GetValue_NPNVnetscapeWindow(intptr_t* value,
-                                                           NPError* result)
+PluginInstanceParent::AnswerNPN_GetValue_NPNVnetscapeWindow(NativeWindowHandle* value,
+                                                            NPError* result)
 {
 #ifdef XP_WIN
-    HWND hwnd;
-    *result = mNPNIface->getvalue(mNPP, NPNVnetscapeWindow, &hwnd);
-    *value = (intptr_t)hwnd;
-    return true;
-#endif
+    HWND id;
+#elif defined(MOZ_X11)
+    XID id;
+#else
     return false;
+#endif
+
+    *result = mNPNIface->getvalue(mNPP, NPNVnetscapeWindow, &id);
+    *value = id;
+    return true;
 }
 
 bool

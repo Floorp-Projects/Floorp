@@ -210,7 +210,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         if (mWindow.type == NPWindowTypeDrawable) {
             HWND hwnd = NULL;
             NPError result;
-            if (!CallNPN_GetValue_NPNVnetscapeWindow((intptr_t*)&hwnd, &result)) {
+            if (!CallNPN_GetValue_NPNVnetscapeWindow(&hwnd, &result)) {
                 return NPERR_GENERIC_ERROR;
             }
             *static_cast<HWND*>(aValue) = hwnd;
@@ -220,6 +220,10 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
             *static_cast<HWND*>(aValue) = mPluginWindowHWND;
             return NPERR_NO_ERROR;
         }
+#elif defined(MOZ_X11)
+        NPError result;
+        CallNPN_GetValue_NPNVnetscapeWindow(static_cast<XID*>(aValue), &result);
+        return result;
 #else
         return NPERR_GENERIC_ERROR;
 #endif
