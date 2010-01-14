@@ -412,7 +412,7 @@ var Browser = {
 
       // Tell the UI to resize the browser controls before calling  updateSize
       BrowserUI.sizeControls(w, h);
-      
+
       bv.updateDefaultZoom();
       if (bv.isDefaultZoom())
         // XXX this should really only happen on browser startup, not every resize
@@ -561,7 +561,7 @@ var Browser = {
       if (addons.length > 0) {
         let disabledStrings = Elements.browserBundle.getString("alertAddonsDisabled");
         let label = PluralForm.get(addons.length, disabledStrings).replace("#1", addons.length);
-  
+
         let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
         alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
                                      label, false, "", null);
@@ -647,29 +647,6 @@ var Browser = {
       this.setPluginState(false);
     }
 #endif
-    // set up the cache size
-    let cacheSize = -1;
-    try {
-      cacheSize = gPrefService.getIntPref("tile.cache.size");
-    } catch(e) {}
-
-    if (cacheSize == -1) {
-      switch (device) {
-#ifdef MOZ_PLATFORM_HILDON
-        case "Nokia N900":
-          cacheSize = 26;
-          break;
-        case "Nokia N8xx":
-          // N8xx has half the memory of N900 and crashes with higher numbers
-          cacheSize = 10;
-          break;
-#endif
-        default:
-          // Use a minimum number of tiles sice we don't know the device
-          cacheSize = 6;
-      }
-      gPrefService.setIntPref("tile.cache.size", cacheSize);
-    }
   },
 
   get browsers() {
@@ -939,7 +916,7 @@ var Browser = {
           dump("EXCEPTION handle content command: " + e + "\n" );
         }
 
-        // automatically reload after the exception was added  
+        // automatically reload after the exception was added
         errorDoc.location.reload();
       }
       else if (ot == errorDoc.getElementById('getMeOutOfHereButton')) {
@@ -956,7 +933,7 @@ var Browser = {
 
         Browser.selectedBrowser.loadURI(url, null, null, false);
       }
-    } 
+    }
     else if (/^about:neterror\?e=netOffline/.test(errorDoc.documentURI)) {
       if (ot == errorDoc.getElementById("errorTryAgain")) {
         // Make sure we're online before attempting to load
@@ -1081,7 +1058,7 @@ var Browser = {
     return BrowserView.Util.clampZoomLevel(bv.getZoomLevel() * vis.width / (elRect.width + margin * 2));
   },
 
-  /** 
+  /**
    * Find an appropriate zoom rect for an element, if it exists.
    * @return Rect in viewport coordinates
    * */
@@ -1143,7 +1120,7 @@ var Browser = {
     // Critical rect changes when controls are hidden. Must hide before tilemanager viewport.
     this.hideSidebars();
     this.hideTitlebar();
-    
+
     bv.setZoomLevel(zoomLevel);
 
     // Ensure container is big enough for scroll values.
@@ -1180,7 +1157,7 @@ var Browser = {
 
   zoomFromPoint: function zoomFromPoint(cX, cY) {
     let bv = this._browserView;
-    
+
     let zoomLevel = bv.getZoomForPage();
     if (!bv.isDefaultZoom()) {
       let [elementX, elementY] = this.transformClientToBrowser(cX, cY);
@@ -1391,7 +1368,7 @@ Browser.MainDragger.prototype = {
           let cbr = htmlElement.getBoundingClientRect();
           oScroll = (overflow == "scroll") || (overflowX == "scroll") || (overflowY == "scroll");
           oAuto = (overflow == "auto") || (overflowX == "auto") || (overflowY == "auto");
-          
+
           if (oScroll ||
               (oAuto && (cbr.height < target.scrollHeight || cbr.width < target.scrollWidth))) {
             this.contentScrollbox = this._createDivScrollBox(htmlElement);
@@ -1487,12 +1464,12 @@ Browser.MainDragger.prototype = {
        width.value = div.scrollWidth;
        height.value = div.scrollHeight;
      },
-     
+
      getPosition: function(x, y) {
        x.value = div.scrollLeft;
        y.value = div.scrollTop;
      },
-     
+
      scrollBy: function(dx, dy) {
        div.scrollTop += dy;
        div.scrollLeft += dx;
@@ -1516,12 +1493,12 @@ Browser.MainDragger.prototype = {
         width.value = this.rowWidth;
         height.value = this.rowHeight * this.rowCount;
       },
-      
+
       getPosition: function(x, y) {
         x.value = treeBox.horizontalPosition;
         y.value = this.targetY;
       },
-      
+
       scrollBy: function(dx, dy) {
         this.targetY += dy;
         if (this.targetY < 0)
@@ -1537,20 +1514,20 @@ Browser.MainDragger.prototype = {
     }
     return sbo;
   },
-  
+
   /**
    * pans a scrollbox, updating doffset
    */
   _panScrollbox: function(sbo, doffset) {
     let origX = {}, origY = {}, newX = {}, newY = {};
-    
+
     sbo.getPosition(origX, origY);
     sbo.scrollBy(doffset.x, doffset.y);
     sbo.getPosition(newX, newY);
 
     doffset.subtract(newX.value - origX.value, newY.value - origY.value);
   },
-  
+
   /** Return offset that pans controls away from screen. Updates doffset with leftovers. */
   _panControlsAwayOffset: function(doffset) {
     let x = 0, y = 0, rect;
@@ -1703,7 +1680,7 @@ const BrowserSearch = {
   get engines() {
     if (this._engines)
       return this._engines;
-    return this._engines = this.searchService.getVisibleEngines({ });    
+    return this._engines = this.searchService.getVisibleEngines({ });
   },
 
   addPageSearchEngine: function (aEngine, aDocument) {
@@ -1741,7 +1718,7 @@ const BrowserSearch = {
       let button = document.createElement("button");
       button.className = "search-engine-button button-dark";
       button.setAttribute("oncommand", "BrowserSearch.addPermanentSearchEngine(this.engine);this.parentNode.collapsed=true;");
-      
+
       let engine = newEngines[i];
       button.engine = engine.engine;
       button.setAttribute("label", engine.engine.title);
@@ -1811,7 +1788,7 @@ ContentCustomClicker.prototype = {
         return node;
       return null;
     },
- 
+
     /** Stop highlighting current element. */
     _hideCanvas: function _hideCanvas() {
       let overlay = this._overlay;
@@ -1902,7 +1879,7 @@ ContentCustomClicker.prototype = {
       this._hideCanvas();
 
       const kDoubleClickRadius = 32;
-      
+
       let maxRadius = kDoubleClickRadius * Browser._browserView.getZoomLevel();
       let isClickInRadius = (Math.abs(cX1 - cX2) < maxRadius && Math.abs(cY1 - cY2) < maxRadius);
       if (isClickInRadius && !Browser.zoomToPoint(cX1, cY1))
@@ -1998,7 +1975,7 @@ IdentityHandler.prototype = {
     let state = Browser.selectedTab.getIdentityState();
     let location = getBrowser().contentWindow.location;
     let currentStatus = getBrowser().securityUI.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
-    
+
     this._lastStatus = currentStatus;
     this._lastLocation = {};
     try {
@@ -2176,7 +2153,7 @@ IdentityHandler.prototype = {
   hide: function ih_hide() {
     this._identityPopup.hidden = true;
     this._identityBox.removeAttribute("open");
-    
+
     BrowserUI.popPopup();
     BrowserUI.unlockToolbar();
   },
@@ -2407,7 +2384,7 @@ var MemoryObserver = {
   observe: function mo_observe() {
     let memory = Cc["@mozilla.org/xpcom/memory-service;1"].getService(Ci.nsIMemory);
     do {
-      Browser.windowUtils.garbageCollect();      
+      Browser.windowUtils.garbageCollect();
     } while (memory.isLowMemory() && Browser.sacrificeTab());
   }
 };
@@ -2445,7 +2422,7 @@ function importDialog(parent, src, arguments) {
   xhr.send(null);
   if (!xhr.responseXML)
     return null;
-  
+
   let currentNode;
   let nodeIterator = xhr.responseXML.createNodeIterator(xhr.responseXML,
                                                     NodeFilter.SHOW_TEXT,
@@ -2456,27 +2433,27 @@ function importDialog(parent, src, arguments) {
     if (!trimmed.length)
       currentNode.parentNode.removeChild(currentNode);
   }
-            
+
   let doc = xhr.responseXML.documentElement;
- 
+
   var dialog  = null;
-  
+
   // we need to insert before select-container if we want it to show correctly
   let selectContainer = document.getElementById("select-container");
   let parent = selectContainer.parentNode;
-  
+
   // emit DOMWillOpenModalDialog event
   let event = document.createEvent("Events");
   event.initEvent("DOMWillOpenModalDialog", true, false);
   let dispatcher = parent || getBrowser();
   dispatcher.dispatchEvent(event);
 
-  // create a full-screen semi-opaque box as a background 
+  // create a full-screen semi-opaque box as a background
   let back = document.createElement("box");
   back.setAttribute("class", "modal-block");
   dialog = back.appendChild(document.importNode(doc, true));
   parent.insertBefore(back, selectContainer);
-  
+
   dialog.arguments = arguments;
   dialog.parent = parent;
   return dialog;
@@ -2899,7 +2876,7 @@ Tab.prototype = {
     } else if (metaData.reason == "viewport") {
       let screenW = window.innerWidth;
       let screenH = window.innerHeight;
-      let viewportW = metaData.width; 
+      let viewportW = metaData.width;
       let viewportH = metaData.height;
       let validW = viewportW > 0;
       let validH = viewportH > 0;
@@ -3015,7 +2992,7 @@ Tab.prototype = {
 
       Util.executeSoon(function() {
         document.getElementById("browsers").removeChild(browser);
-      });      
+      });
     }
   },
 
@@ -3364,7 +3341,7 @@ PluginObserver.prototype = {
       oprivate = objects[i].QueryInterface(nsIObjectLoadingContent);
       try {
         oprivate.setAbsoluteScreenPosition(Browser.contentScrollbox, dest, clip);
-      } catch(e) {}; 
+      } catch(e) {};
     }
   },
 };
