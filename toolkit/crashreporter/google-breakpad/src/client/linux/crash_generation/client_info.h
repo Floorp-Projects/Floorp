@@ -32,6 +32,8 @@
 
 namespace google_breakpad {
 
+class CrashGenerationServer;
+
 struct ClientInfo {
   CrashGenerationServer* crash_server_;
   pid_t pid_;
