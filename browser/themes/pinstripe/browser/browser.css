@@ -120,11 +120,8 @@
   background-color: #eeeeee;
 }
 
-#main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"]::before {
-  content: "";
-  display: -moz-box;
-  -moz-appearance: -moz-mac-unified-toolbar;
-  height: 2px;
+#main-window[chromehidden~="toolbar"][chromehidden~="location"][chromehidden~="directories"] {
+  border-top: 1px solid rgba(0,0,0,0.65);
 }
 
 /* ----- INACTIVE WINDOW ----- */
