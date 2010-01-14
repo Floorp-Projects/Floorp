@@ -2782,16 +2782,20 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         # OnChannelClose()
         onclose = MethodDefn(MethodDecl('OnChannelClose'))
-        onclose.addstmt(StmtExpr(ExprCall(
-            destroysubtreevar,
-            args=[ _DestroyReason.NormalShutdown ])))
+        onclose.addstmts([
+            StmtExpr(ExprCall(destroysubtreevar,
+                              args=[ _DestroyReason.NormalShutdown ])),
+            StmtExpr(ExprCall(deallocsubtreevar))
+        ])
         self.cls.addstmts([ onclose, Whitespace.NL ])
 
         # OnChannelClose()
         onerror = MethodDefn(MethodDecl('OnChannelError'))
-        onerror.addstmt(StmtExpr(ExprCall(
-            destroysubtreevar,
-            args=[ _DestroyReason.AbnormalShutdown ])))
+        onerror.addstmts([
+            StmtExpr(ExprCall(destroysubtreevar,
+                              args=[ _DestroyReason.AbnormalShutdown ])),
+            StmtExpr(ExprCall(deallocsubtreevar))
+        ])
         self.cls.addstmts([ onerror, Whitespace.NL ])
 
         # FIXME: only manager protocols and non-manager protocols with
@@ -2884,12 +2888,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # finally, destroy "us"
         destroysubtree.addstmt(StmtExpr(
             ExprCall(_destroyMethod(), args=[ whyvar ])))
-
-        # XXX kick off DeallocSubtree() here rather than in a new
-        # event because that may be tricky on shutdown.  revisit if
-        # need be
-        if p.decl.type.isToplevel():
-            destroysubtree.addstmt(StmtExpr(ExprCall(deallocsubtreevar)))
         
         self.cls.addstmts([ destroysubtree, Whitespace.NL ])
 
@@ -3434,10 +3432,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def dtorEpilogue(self, md, actorexpr):
         return (self.unregisterActor(actorexpr)
-                + [ StmtExpr(self.callActorDestroy(actorexpr)) ]
-                + [ StmtExpr(self.callRemoveActor(actorexpr)) ]
-                + [ StmtExpr(self.callDeallocActor(md, actorexpr))
-                ])
+                + [ StmtExpr(self.callActorDestroy(actorexpr)),
+                    StmtExpr(self.callRemoveActor(actorexpr)),
+                    StmtExpr(self.callDeallocSubtree(md, actorexpr)),
+                    StmtExpr(self.callDeallocActor(md, actorexpr))
+                  ])
 
     def genAsyncSendMethod(self, md):
         method = MethodDefn(self.makeSendMethodDecl(md))
@@ -3745,6 +3744,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if actorarray is None:
             actorarray = self.protocol.managerArrayExpr(actorexpr, self.side)
         return _callCxxArrayRemoveSorted(actorarray, actorexpr)
+
+    def callDeallocSubtree(self, md, actorexpr):
+        return ExprCall(ExprSelect(actorexpr, '->', 'DeallocSubtree'))
 
     def callDeallocActor(self, md, actorexpr):
         actor = md.decl.type.constructedType()
