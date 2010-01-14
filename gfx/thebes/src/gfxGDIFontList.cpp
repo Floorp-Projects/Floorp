@@ -416,7 +416,7 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
         if (fe->mWeight == logFont.lfWeight &&
             fe->mItalic == (logFont.lfItalic == 0xFF)) {
             // update the charset bit here since this could be different
-            fe->mCharset[metrics.tmCharSet] = 1;
+            fe->mCharset.set(metrics.tmCharSet);
             return 1; 
         }
     }
@@ -430,7 +430,7 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
     fe->SetFamily(ff);
 
     // mark the charset bit
-    fe->mCharset[metrics.tmCharSet] = 1;
+    fe->mCharset.set(metrics.tmCharSet);
 
     fe->mWindowsFamily = logFont.lfPitchAndFamily & 0xF0;
     fe->mWindowsPitch = logFont.lfPitchAndFamily & 0x0F;
@@ -445,7 +445,7 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
         for (PRUint32 i = 0; i < 4; ++i) {
             DWORD range = nmetrics->ntmFontSig.fsUsb[i];
             for (PRUint32 k = 0; k < 32; ++k) {
-                fe->mUnicodeRanges[x++] = (range & (1 << k)) != 0;
+                fe->mUnicodeRanges.set(x++, (range & (1 << k)) != 0);
             }
         }
     }
@@ -623,7 +623,8 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
     gfxGDIFontList *fontList = PlatformFontList();
 
     if (!fontList->mFontFamilies.GetWeak(name)) {
-        nsRefPtr<gfxFontFamily> family = new GDIFontFamily(nsDependentString(lf.lfFaceName));
+        nsDependentString faceName(lf.lfFaceName);
+        nsRefPtr<gfxFontFamily> family = new GDIFontFamily(faceName);
         fontList->mFontFamilies.Put(name, family);
     }
 

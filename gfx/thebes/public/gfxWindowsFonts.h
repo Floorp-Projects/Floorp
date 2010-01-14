@@ -53,10 +53,6 @@
 #include <usp10.h>
 #include <cairo-win32.h>
 
-// xxx - used in FontEntry.  should be trimmed, moz code doesn't use
-//       exceptions.  use gfxSparseBitSet instead?
-#include <bitset>
-
 class GDIFontEntry;
 
 /**********************************************************************

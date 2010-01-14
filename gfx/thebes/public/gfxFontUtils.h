@@ -85,7 +85,7 @@ public:
                 mBlocks[i] = new Block(*block);
         }
     }
-    PRBool test(PRUint32 aIndex) {
+    PRBool test(PRUint32 aIndex) const {
         NS_ASSERTION(mBlocks.DebugGetHeader(), "mHdr is null, this is bad");
         PRUint32 blockIndex = aIndex/BLOCK_SIZE_BITS;
         if (blockIndex >= mBlocks.Length())
@@ -169,6 +169,13 @@ public:
             mBlocks[blockIndex] = block;
         }
         block->mBits[(aIndex>>3) & (BLOCK_SIZE - 1)] |= 1 << (aIndex & 0x7);
+    }
+
+    void set(PRUint32 aIndex, PRBool aValue) {
+        if (aValue)
+            set(aIndex);
+        else
+            clear(aIndex);
     }
 
     void SetRange(PRUint32 aStart, PRUint32 aEnd) {
