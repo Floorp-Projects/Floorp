@@ -2047,8 +2047,8 @@ void Assembler::asm_f2i(LInsp ins)
     Register rr = prepResultReg(ins, GpRegs);
     Register sr = findRegFor(ins->oprnd1(), FpRegs);
 
-    FMRS(rr, S14);
-    FTOSID(S14, sr);
+    FMRS(rr, FpSingleScratch);
+    FTOSID(FpSingleScratch, sr);
 }
 
 void
