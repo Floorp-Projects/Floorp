@@ -2902,13 +2902,20 @@ static void LayoutAndInvalidate(nsBoxLayoutState& aState,
 {
   // When a child box changes shape of position, the parent
   // is responsible for invalidation; the overflow rect must be invalidated
-  // to make sure to catch any overflow
+  // to make sure to catch any overflow.
+  // We invalidate the parent (i.e. the scrollframe) directly, because
+  // invalidates coming from scrollbars are suppressed by nsHTMLScrollFrame when
+  // mHasVScrollbar/mHasHScrollbar is false, and this is called after those
+  // flags have been set ... if a scrollbar is being hidden, we still need
+  // to invalidate the scrollbar area here.
   PRBool rectChanged = aBox->GetRect() != aRect;
-  if (rectChanged)
-    aBox->Invalidate(aBox->GetOverflowRect());
+  if (rectChanged) {
+    aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
+  }
   nsBoxFrame::LayoutChildAt(aState, aBox, aRect);
-  if (rectChanged)
-    aBox->Invalidate(aBox->GetOverflowRect());
+  if (rectChanged) {
+    aBox->GetParent()->Invalidate(aBox->GetOverflowRect() + aBox->GetPosition());
+  }
 }
 
 static void AdjustScrollbarRect(nsIFrame* aFrame, nsPresContext* aPresContext,

@@ -243,10 +243,7 @@ members = [
     # dom/interfaces/events
     'nsIDOMEventTarget.dispatchEvent',
     'nsIDOMEventTarget.removeEventListener',
-    # Conflicts with nsIDOMNSEventTarget.addEventListener;
-    # the conflict is specially resolved in nsDOMClassInfo.cpp.
-    # (See bug 453331.)
-    #'nsIDOMEventTarget.addEventListener',
+    'nsIDOMNSEventTarget.addEventListener',
     'nsIDOMDocumentEvent.createEvent',
 
     'nsIDOMEvent.*',

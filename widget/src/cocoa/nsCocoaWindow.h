@@ -297,6 +297,8 @@ protected:
                                               nsIToolkit *aToolkit);
   void                 DestroyNativeWindow();
   void                 AdjustWindowShadow();
+  void                 SetUpWindowFilter();
+  void                 CleanUpWindowFilter();
 
   nsIWidget*           mParent;         // if we're a popup, this is our parent [WEAK]
   BaseWindow*          mWindow;         // our cocoa window [STRONG]
@@ -305,6 +307,7 @@ protected:
   NSWindow*            mSheetWindowParent; // if this is a sheet, this is the NSWindow it's attached to
   nsChildView*         mPopupContentView; // if this is a popup, this is its content widget
   PRInt32              mShadowStyle;
+  NSUInteger           mWindowFilter;
 
   PRPackedBool         mIsResizing;     // we originated the resize, prevent infinite recursion
   PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
