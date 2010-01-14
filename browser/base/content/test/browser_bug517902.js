@@ -31,6 +31,8 @@ function test() {
 
   content.location =
     "data:text/html," +
+    "<style type='text/css'>#test-image,#not-test-image {background-image: url('about:logo?c');}</style>" +
+    "<img src='about:logo?b' height=300 width=350 alt=2 id='not-test-image'>" +
     "<img src='about:logo?b' height=300 width=350 alt=2>" +
     "<img src='about:logo?a' height=200 width=250>" +
     "<img src='about:logo?b' height=200 width=250 alt=1>" +

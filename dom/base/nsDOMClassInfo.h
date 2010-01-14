@@ -442,9 +442,6 @@ protected:
     return PR_FALSE;
   }
 
-  static JSBool AddEventListenerHelper(JSContext *cx, JSObject *obj,
-                                       uintN argc, jsval *argv, jsval *rval);
-
   nsresult RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
                                   JSContext *cx, JSObject *obj, jsval id,
                                   PRBool compile, PRBool remove,
@@ -459,13 +456,10 @@ public:
                          PRBool *_retval);
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
-  static nsresult DefineAddEventListener(JSContext *cx, JSObject *obj,
-                                        jsval id, JSObject **objp);
 };
 
-// Adds support for 4th parameter of addEventListener.
 // Simpler than nsEventReceiverSH
-// Makes also sure that the wrapper is preserved if new properties are added.
+// Makes sure that the wrapper is preserved if new properties are added.
 class nsEventTargetSH : public nsDOMGenericSH
 {
 protected:
@@ -479,9 +473,6 @@ protected:
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj);
-  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                        JSObject *obj, jsval id, PRUint32 flags,
-                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 

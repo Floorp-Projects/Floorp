@@ -45,6 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 
+DIRS +=		chrome \
+		$(NULL)
+
 # XXX Yuck.  We can't transfer everything from autoconf to HOST_CFLAGS,
 # but it would be nice to pick up anything affecting nsCSSPropList.h
 # automatically.

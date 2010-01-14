@@ -4425,6 +4425,12 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
     }
   }
 
+  if (pPluginEvent && !pPluginEvent->event) {
+    // Don't send null events to plugins.
+    NS_WARNING("nsObjectFrame ProcessEvent: trying to send null event to plugin.");
+    return rv;
+  }
+
   if (pPluginEvent) {
     PRBool eventHandled = PR_FALSE;
     mInstance->HandleEvent(pPluginEvent, &eventHandled);

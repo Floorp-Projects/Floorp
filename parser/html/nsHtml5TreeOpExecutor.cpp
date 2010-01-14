@@ -104,13 +104,16 @@ nsHtml5TreeOpExecutor::DidBuildModel(PRBool aTerminated)
 {
   NS_PRECONDITION(mStarted, "Bad life cycle.");
 
-  // Break out of update batch if we are in one
-  EndDocUpdate();
-  
-  // If the above caused a call to nsIParser::Terminate(), let that call
-  // win.
-  if (!mParser) {
-    return NS_OK;
+  if (!aTerminated) {
+    // Break out of update batch if we are in one 
+    // and aren't forcibly terminating
+    EndDocUpdate();
+    
+    // If the above caused a call to nsIParser::Terminate(), let that call
+    // win.
+    if (!mParser) {
+      return NS_OK;
+    }
   }
   
   static_cast<nsHtml5Parser*> (mParser.get())->DropStreamParser();
@@ -270,6 +273,7 @@ void
 nsHtml5TreeOpExecutor::Flush()
 {
   if (!mParser) {
+    mOpQueue.Clear(); // clear in order to be able to assert in destructor
     return;
   }
   if (mFlushState != eNotFlushing) {
