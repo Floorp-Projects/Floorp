@@ -6746,7 +6746,7 @@ LeaveTree(InterpState& state, VMSideExit* lr)
             JS_ASSERT(op == JSOP_CALL || op == JSOP_APPLY || op == JSOP_NEW ||
                       op == JSOP_GETPROP || op == JSOP_GETTHISPROP || op == JSOP_GETARGPROP ||
                       op == JSOP_GETLOCALPROP || op == JSOP_LENGTH ||
-                      op == JSOP_GETELEM || op == JSOP_CALLELEM ||
+                      op == JSOP_GETELEM || op == JSOP_CALLELEM || op == JSOP_CALLPROP ||
                       op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETMETHOD ||
                       op == JSOP_SETELEM || op == JSOP_INITELEM || op == JSOP_ENUMELEM ||
                       op == JSOP_INSTANCEOF);
