@@ -75,6 +75,7 @@
 #include "jsvector.h"
 
 #include "jsatominlines.h"
+#include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsstrinlines.h"
@@ -204,7 +205,8 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                 break;
             }
 
-            if (SPROP_HAS_STUB_GETTER(sprop) &&
+            if (!scope->generic() &&
+                SPROP_HAS_STUB_GETTER(sprop) &&
                 SPROP_HAS_VALID_SLOT(sprop, scope)) {
                 v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
                 if (VALUE_IS_FUNCTION(cx, v)) {

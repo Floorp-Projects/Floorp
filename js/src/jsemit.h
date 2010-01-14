@@ -282,18 +282,26 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_NEED_MUTABLE_SCRIPT 0x20000
 
 /*
- * This function/global/eval code body contained a Use Strict
- * Directive.  Treat certain strict warnings as errors, and forbid
- * the use of 'with'.  See also TSF_STRICT_MODE_CODE,
- * JSScript::strictModeCode, and JSREPORT_STRICT_ERROR.
+ * This function/global/eval code body contained a Use Strict Directive. Treat
+ * certain strict warnings as errors, and forbid the use of 'with'. See also
+ * TSF_STRICT_MODE_CODE, JSScript::strictModeCode, and JSREPORT_STRICT_ERROR.
  */
-#define TCF_STRICT_MODE_CODE 0x40000
+#define TCF_STRICT_MODE_CODE    0x40000
 
 /* Function has parameter named 'eval'. */
-#define TCF_FUN_PARAM_EVAL 0x80000
+#define TCF_FUN_PARAM_EVAL      0x80000
 
 /*
- * Flags to propagate out of the blocks.
+ * Flag signifying that the current function seems to be a constructor that
+ * sets this.foo to define "methods", at least one of which can't be a null
+ * closure, so we should avoid over-specializing property cache entries and
+ * trace inlining guards to method function object identity, which will vary
+ * per instance.
+ */
+#define TCF_FUN_UNBRAND_THIS   0x100000
+
+/*
+ * Flags to check for return; vs. return expr; in a function.
  */
 #define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
 
