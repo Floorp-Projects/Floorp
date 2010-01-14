@@ -99,7 +99,6 @@ PluginInstanceChild::Answer__delete__(NPError* rv)
         PluginInstanceDestroyed(this, rv);
 }
 
-
 NPError
 PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
                                   void* aValue)
@@ -204,6 +203,26 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         PluginModuleChild::sBrowserFuncs.retainobject(object);
         *((NPObject**)aValue) = object;
         return NPERR_NO_ERROR;
+    }
+
+    case NPNVnetscapeWindow: {
+#ifdef XP_WIN
+        if (mWindow.type == NPWindowTypeDrawable) {
+            HWND hwnd = NULL;
+            NPError result;
+            if (!CallNPN_GetValue_NPNVnetscapeWindow((intptr_t*)&hwnd, &result)) {
+                return NPERR_GENERIC_ERROR;
+            }
+            *static_cast<HWND*>(aValue) = hwnd;
+            return result;
+        }
+        else {
+            *static_cast<HWND*>(aValue) = mPluginWindowHWND;
+            return NPERR_NO_ERROR;
+        }
+#else
+        return NPERR_GENERIC_ERROR;
+#endif
     }
 
     default:
