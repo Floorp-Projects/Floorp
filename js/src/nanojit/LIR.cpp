@@ -1441,7 +1441,7 @@ namespace nanojit
      * if showLiveRefs == true, also print the set of live expressions next to
      * each instruction
      */
-    void live(LirFilter* in, Allocator& alloc, Fragment *frag, LogControl *logc)
+    void live(LirFilter* in, Allocator& alloc, Fragment *frag, LogControl *logc, bool optimize)
     {
         // traverse backwards to find live exprs and a few other stats.
 
@@ -2119,7 +2119,7 @@ namespace nanojit
         return out->insCall(ci, args);
     }
 
-    void compile(Assembler* assm, Fragment* frag, Allocator& alloc verbose_only(, LabelMap* labels))
+    void compile(Assembler* assm, Fragment* frag, Allocator& alloc, bool optimize verbose_only(, LabelMap* labels))
     {
         verbose_only(
         LogControl *logc = assm->_logc;
@@ -2145,7 +2145,7 @@ namespace nanojit
             logc->printf("===\n");
             LirReader br(frag->lastIns);
             StackFilter sf(&br, alloc, frag->lirbuf, frag->lirbuf->sp, frag->lirbuf->rp);
-            live(&sf, alloc, frag, logc);
+            live(&sf, alloc, frag, logc, optimize);
         })
 
         /* Set up the generic text output cache for the assembler */
@@ -2178,29 +2178,31 @@ namespace nanojit
         LirReader bufreader(frag->lastIns);
 
         // Used to construct the pipeline
-        LirFilter* prev = &bufreader;
+        LirFilter* lir = &bufreader;
 
         // The LIR passes through these filters as listed in this
         // function, viz, top to bottom.
 
         // INITIAL PRINTING
         verbose_only( if (assm->_logc->lcbits & LC_ReadLIR) {
-        pp_init = new (alloc) ReverseLister(prev, alloc, frag->lirbuf->names, assm->_logc,
+        pp_init = new (alloc) ReverseLister(lir, alloc, frag->lirbuf->names, assm->_logc,
                                     "Initial LIR");
-        prev = pp_init;
+        lir = pp_init;
         })
 
         // STACKFILTER
-        StackFilter stackfilter(prev, alloc, frag->lirbuf, frag->lirbuf->sp, frag->lirbuf->rp);
-        prev = &stackfilter;
+        if (optimize) {
+            StackFilter stackfilter(lir, alloc, frag->lirbuf, frag->lirbuf->sp, frag->lirbuf->rp);
+            lir = &stackfilter;
+        }
 
         verbose_only( if (assm->_logc->lcbits & LC_AfterSF) {
-        pp_after_sf = new (alloc) ReverseLister(prev, alloc, frag->lirbuf->names, assm->_logc,
+        pp_after_sf = new (alloc) ReverseLister(lir, alloc, frag->lirbuf->names, assm->_logc,
                                                 "After StackFilter");
-        prev = pp_after_sf;
+        lir = pp_after_sf;
         })
 
-        assm->assemble(frag, prev);
+        assm->assemble(frag, lir);
 
         // If we were accumulating debug info in the various ReverseListers,
         // call finish() to emit whatever contents they have accumulated.
@@ -2383,6 +2385,8 @@ namespace nanojit
         va_start(vargs, format);
         vfprintf(stdout, format, vargs);
         va_end(vargs);
+        // Flush every line immediately so that if crashes occur in generated
+        // code we won't lose any output.
         fflush(stdout);
     }
 

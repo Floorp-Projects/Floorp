@@ -13,10 +13,13 @@ do
         exit 1
     fi
 
-    # If it has the special name "random.in", replace filename with --random.
+    # Treat "random.in" and "random-opt.in" specially.
     if [ `basename $infile` = "random.in" ]
     then
         infile="--random 1000000"
+    elif [ `basename $infile` = "random-opt.in" ]
+    then
+        infile="--random 1000000 --optimize"
     fi
 
     if ./lirasm --execute $infile | tr -d '\r' > testoutput.txt && cmp -s testoutput.txt $outfile
