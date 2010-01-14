@@ -435,19 +435,6 @@ BrowserView.prototype = {
     return (this._renderMode == 0);
   },
 
-  /**
-   * @param dx Guess delta to destination x coordinate
-   * @param dy Guess delta to destination y coordinate
-   */
-  onBeforeVisibleMove: function onBeforeVisibleMove(dx, dy) {
-    let vs = this._browserViewportState;
-    let vr = this.getVisibleRect();
-
-    let destCR = BrowserView.Util.visibleRectToCriticalRect(vr.translate(dx, dy), vs);
-
-    this._tileManager.beginCriticalMove(destCR);
-  },
-
   onAfterVisibleMove: function onAfterVisibleMove() {
     let vs = this._browserViewportState;
     let vr = this.getVisibleRect();
@@ -457,7 +444,7 @@ BrowserView.prototype = {
 
     let cr = BrowserView.Util.visibleRectToCriticalRect(vr, vs);
 
-    this._tileManager.endCriticalMove(cr, this.isRendering());
+    this._tileManager.criticalMove(cr, this.isRendering());
   },
 
   /**

@@ -131,12 +131,12 @@ function TileManager(appendTile, removeTile, browserView, cacheSize) {
   this._idleTileCrawlerTimeout = 0;
 
   /* object that keeps state on our current prefetch crawl */
-  this._crawler = null;
+  this._crawler = new TileManager.CrawlIterator(this._tileCache, new Rect(0, 0, 0, 0));
 
-  /* remember these values to reduce the recenterEvictionQueue cost */
-  this._ctr = new Point(0, 0);
+  /* remember if critical rect was changed so that we only do hard work one time */
+  this._lastCriticalRect = new Rect(0, 0, 0, 0);
 
-  /* If true, render dirty tiles outside of a viewport on timer. */
+  /* if true, fetch offscreen dirty tiles in the "background" */
   this._prefetch = false;
 
   /* create one Image of the checkerboard to be reused */
@@ -162,11 +162,10 @@ TileManager.prototype = {
     let jBound = tc.jBound = Math.ceil(viewportRect.bottom / kTileHeight) - 1;
 
     if (criticalRect.isEmpty() || !criticalRect.equals(this._criticalRect)) {
-      this.beginCriticalMove(criticalRect);
-      this.endCriticalMove(criticalRect, !(dirtyAll || boundsSizeChanged));
+      this.criticalMove(criticalRect, !(dirtyAll || boundsSizeChanged));
     } else {
       // The critical rect hasn't changed, but there are possibly more tiles lounging about offscreen,
-      // waiting to be rendered. Make sure crawler knows about them.
+      // waiting to be rendered. Make sure crawler and eviction knows about them.
       this.recenterCrawler();
     }
 
@@ -255,10 +254,10 @@ TileManager.prototype = {
     let criticalIsDirty = false;
     let criticalRect = this._criticalRect;
     let tc = this._tileCache;
-    let crawler = this._crawler;
 
+    let rect;
     for (let i = rects.length - 1; i >= 0; --i) {
-      let rect = rects[i];
+      rect = rects[i];
 
       BEGIN_FOREACH_IN_RECT(rect, tc, tile)
       tile.clear(rect);
@@ -284,8 +283,7 @@ TileManager.prototype = {
       if (!tile.boundRect.intersects(criticalRect)) {
         // Dirty tile outside of viewport. Just remove and redraw later.
         this._removeTileSafe(tile);
-        if (crawler)
-          crawler.enqueue(tile.i, tile.j);
+        crawler.enqueue(tile.i, tile.j);
         outsideIsDirty = true;
       } else {
         criticalIsDirty = true;
@@ -304,69 +302,30 @@ TileManager.prototype = {
 
   criticalRectPaint: function criticalRectPaint() {
     let cr = this._criticalRect;
+    let lastCr = this._lastCriticalRect;
 
-    //let start = Date.now();
-
-    if (!cr.isEmpty()) {
-      let ctr = cr.center().map(Math.round);
-
-      if (!this._ctr.equals(ctr)) {
-        this._ctr.set(ctr);
-        this.recenterEvictionQueue(ctr);
-        this.recenterCrawler();
-      }
-
-      //let start = Date.now();
-
-      this._renderAppendHoldRect(cr);
-
-      //dump("  render, append, hold: " + (Date.now() - start) + "\n");
-    }
-
-    //dump(" paint: " + (Date.now() - start) + "\n");
-  },
-
-  beginCriticalMove: function beginCriticalMove(destCriticalRect) {
-    if (!destCriticalRect.isEmpty()) {
+    if (!lastCr.isEmpty()) {
+      // This is the first paint since the last critical move.
       let tc = this._tileCache;
-
-      BEGIN_FOREACH_IN_RECT(destCriticalRect, tc, tile)
-
-      if (!tile.isDirty())
-        this._appendTileSafe(tile);
-
+      BEGIN_FOREACH_IN_RECT(lastCr, tc, tile)
+        tc.releaseTile(tile);
       END_FOREACH_IN_RECT
+
+      lastCr.setRect(0, 0, 0, 0);
+
+      this.recenterEvictionQueue(cr.center().map(Math.round));
+      this.recenterCrawler();
     }
+
+    if (!cr.isEmpty())
+      this._renderAppendHoldRect(cr);
   },
 
-  endCriticalMove: function endCriticalMove(destCriticalRect, doCriticalPaint) {
-    let tc = this._tileCache;
+  criticalMove: function criticalMove(destCriticalRect, doCriticalPaint) {
     let cr = this._criticalRect;
-
-    //let start = Date.now();
-
-    if (!cr.isEmpty()) {
-      BEGIN_FOREACH_IN_RECT(cr, tc, tile)
-	    tc.releaseTile(tile);
-      END_FOREACH_IN_RECT
-    }
-
-    //dump(" release: " + (Date.now() - start) + "\n");
-    //start = Date.now();
-
-    // XXX the conjunction with doCriticalPaint may cause tiles to disappear
-    // (be evicted) during a (relatively slow) move as no tiles will be "held"
-    // until a critical paint is requested.  Also, while we have this
-    // && doCriticalPaint then we don't need this loop altogether, as
-    // criticalRectPaint will hold everything for us (called below)
-    //if (destCriticalRect && doCriticalPaint) {
-    //  BEGIN_FOREACH_IN_RECT(destCriticalRect, tc, tile)
-    //  tc.holdTile(tile);
-    //  END_FOREACH_IN_RECT
-    //}
-
-    //dump(" hold: " + (Date.now() - start) + "\n");
-
+    let lastCr = this._lastCriticalRect;
+    if (lastCr.isEmpty() && !cr.equals(destCriticalRect))
+      lastCr.copyFrom(cr);
     cr.copyFrom(destCriticalRect);
 
     if (doCriticalPaint)
@@ -374,15 +333,18 @@ TileManager.prototype = {
   },
 
   setPrefetch: function setPrefetch(prefetch) {
-    this._prefetch = prefetch;
-    if (prefetch)
-      this.restartPrefetchCrawl();
-    else
-      this.stopPrefetchCrawl();
+    if (prefetch != this._prefetch) {
+      this._prefetch = prefetch;
+
+      if (prefetch)
+        this.restartPrefetchCrawl();
+      else
+        this.stopPrefetchCrawl();
+    }
   },
 
   restartPrefetchCrawl: function restartPrefetchCrawl() {
-    if (this._prefetch && !this._idleTileCrawlerTimeout && this._crawler)
+    if (this._prefetch && !this._idleTileCrawlerTimeout)
       this._idleTileCrawlerTimeout = setTimeout(this._idleTileCrawler, kTileCrawlComeAgain, this);
   },
 
@@ -406,7 +368,8 @@ TileManager.prototype = {
   /** Crawler will recalculate the tiles it is supposed to fetch in the background. */
   recenterCrawler: function recenterCrawler() {
     let cr = this._criticalRect;
-    this._crawler = new TileManager.CrawlIterator(this._tileCache, cr.clone());
+    this._crawler.recenter(cr.clone());
+    this.restartPrefetchCrawl();
   },
 
   /**
@@ -463,7 +426,7 @@ TileManager.prototype = {
     }
   },
 
-  _renderTile: function _renderTile(tile) {
+  _showTile: function _showTile(tile) {
     if (tile.isDirty()) {
 /*
       let ctx = tile._canvas.getContext("2d");
@@ -479,6 +442,7 @@ TileManager.prototype = {
  */
       tile.render(this._browserView);
     }
+    this._appendTileSafe(tile);
   },
 
   _appendTileSafe: function _appendTileSafe(tile) {
@@ -498,29 +462,31 @@ TileManager.prototype = {
   _renderAppendHoldRect: function _renderAppendHoldRect(rect) {
     let tc = this._tileCache;
 
+    // XXX this can evict crawl tiles that might just be rerendered later. It would be nice if
+    // getTile understood which tiles had priority so that we don't waste time.
     BEGIN_FORCREATE_IN_RECT(rect, tc, tile)
 
-    this._renderTile(tile);
-    this._appendTileSafe(tile);
+    this._showTile(tile);
     this._tileCache.holdTile(tile);
 
     END_FORCREATE_IN_RECT
   },
 
   _idleTileCrawler: function _idleTileCrawler(self) {
-    if (!self) self = this;
+    if (!self)
+      self = this;
 
     let start = Date.now();
     let comeAgain = true;
 
+    let tile;
     while ((Date.now() - start) <= kTileCrawlTimeCap) {
-      let tile = self._crawler.next();
+      tile = self._crawler.next();
       if (!tile) {
         comeAgain = false;
         break;
       }
-      self._appendTileSafe(tile);
-      self._renderTile(tile);
+      self._showTile(tile);
     }
 
     if (comeAgain) {
@@ -595,35 +561,6 @@ TileManager.TileCache.prototype = {
   },
 
   getCapacity: function getCapacity() { return this._capacity; },
-
-  setCapacity: function setCapacity(newCap, skipEvictionQueueSort) {
-    if (newCap < 0)
-      throw "Cannot set a negative tile cache capacity";
-
-    if (newCap == Infinity) {
-      this._capacity = Infinity;
-      return;
-    } else if (this._capacity == Infinity) {
-      // pretend we had a finite capacity all along and proceed normally
-      this._capacity = this._tilePool.length;
-    }
-
-    if (newCap < this._capacity) {
-      // This case is obnoxious.  We're decreasing our capacity which means
-      // we may have to get rid of tiles.  Note that "throwing out" means the
-      // cache won't keep them, and they'll get GC'ed as soon as all other
-      // refholders let go of their refs to the tile.
-
-      if (!skipEvictionQueueSort)
-        this.sortEvictionQueue();
-
-      let rem = this._tilePool.splice(newCap);
-      for (let k = 0, len = rem.length; k < len; ++k)
-        this._detachTile(rem[k].i, rem[k].j);
-    }
-
-    this._capacity = newCap;
-  },
 
   inBounds: function inBounds(i, j) {
     return (0 <= i && 0 <= j && i <= this.iBound && j <= this.jBound);
@@ -720,9 +657,11 @@ TileManager.TileCache.prototype = {
     let pool = this._tilePool;
     let victim = null;
 
+    let tile;
     for (; k >= 0; --k) {
-      if (pool[k].free && ( !evictionGuard || evictionGuard(pool[k]) )) {
-        victim = pool[k];
+      tile = pool[k];
+      if (!this.inBounds(tile.i, tile.j) || tile.free && ( !evictionGuard || evictionGuard(tile) )) {
+        victim = tile;
         --k;
         break;
       }
@@ -907,148 +846,130 @@ TileManager.Tile.prototype = {
  * FIFO queue, and calls to next() simply dequeue elements, which must be added with
  * enqueue().
  *
- * @param tileCache The TileCache over whose tiles this CrawlIterator will crawl
- * @param startRect [optional] The rectangle that we grow in the first (rectangle
- * expansion) iteration state.
+ * @param tc The TileCache over whose tiles this CrawlIterator will crawl
+ * @param rect The rectangle that we grow in the first (rectangle * expansion)
+ *             iteration state. If empty, doesn't crawl.
  */
-TileManager.CrawlIterator = function CrawlIterator(tileCache, startRect) {
-  this._tileCache = tileCache;
-  this._stepRect = startRect;
+TileManager.CrawlIterator = function CrawlIterator(tc, rect) {
+  this._tileCache = tc;
 
-  // used to remember tiles that we've reused during this crawl
-  this._visited = {};
+  this.recenter(rect);
+};
 
-  // filters the tiles we've already reused once from being considered victims
-  // for reuse when we ask the tile cache to create a new tile
-  let visited = this._visited;
-  this._notVisited = function(tile) { return !visited[tile.toString()]; };
+TileManager.CrawlIterator.prototype = {
+  _generateCrawlQueue: function _generateCrawlQueue(rect) {
+    function add(i, j) {
+      if (tc.inBounds(i, j)) {
+        outOfBounds = false;
+        result.push([i, j]);
+        --index;
+        return true;
+      }
+      return false;
+    }
 
-  // a generator that generates tile indices corresponding to tiles intersecting
-  // the boundary of an expanding rectangle
-  this._crawlIndices = !startRect ? null : (function indicesGenerator(rect, tc) {
-    let outOfBounds = false;
+    let tc = this._tileCache;
+    let capacity = tc.getCapacity();
+    let result = [];
+    let index = capacity;
+    let outOfBounds;
+    let counter;
+    let starti = rect.left  >> kTileExponentWidth;
+    let endi   = rect.right >> kTileExponentWidth;
+    let startj = rect.top    >> kTileExponentHeight;
+    let endj   = rect.bottom >> kTileExponentHeight;
+    let i, j;
     while (!outOfBounds) {
-      rect.left   -= kTileWidth;   // expand the rect
-      rect.right  += kTileWidth;
-      rect.top    -= kTileHeight;
-      rect.bottom += kTileHeight;
-
-      let starti = rect.left  >> kTileExponentWidth;
-      let endi   = rect.right >> kTileExponentWidth;
-      let startj = rect.top    >> kTileExponentHeight;
-      let endj   = rect.bottom >> kTileExponentHeight;
-      let i, j;
-
+      starti -= 1;
+      endi += 1;
+      startj -= 1;
+      endj += 1;
       outOfBounds = true;
 
       // top, bottom rect borders
-      for each (let y in [rect.top, rect.bottom]) {
-        j = y >> kTileExponentHeight;
-
-        for (i = starti; i <= endi; ++i) {
-          if (tc.inBounds(i, j)) {
-            outOfBounds = false;
-            yield [i, j];
-          }
+      for each (j in [startj, endj]) {
+        for (counter = 1, i = Math.floor((starti + endi) / 2); i >= starti && i <= endi;) {
+          if (add(i, j) && index == 0)
+            return result;
+          i += counter;
+          counter = -counter + (counter > 0 ? -1 : 1);
         }
       }
 
       // left, right rect borders
-      for each (let x in [rect.left, rect.right]) {
-        i = x >> kTileExponentWidth;
-
-        for (j = startj; j <= endj; ++j) {
-          if (tc.inBounds(i, j)) {
-            outOfBounds = false;
-            yield [i, j];
-          }
+      for each (i in [starti, endi]) {
+        counter = 1;
+        for (counter = 1, j = Math.floor((startj + endj) / 2); j >= startj && j <= endj;) {
+          if (add(i, j) && index == 0)
+            return result;
+          j += counter;
+          counter = -counter + (counter > 0 ? -1 : 1);
         }
       }
     }
-  })(this._stepRect, this._tileCache),    // instantiate the generator
-
-  // after we finish the rectangle iteration state, we enter the FIFO queue state
-  this._queueState = !startRect;
-  this._queue = [];
-
-  // used to prevent tiles from being enqueued twice --- "patience, we'll get to
-  // it in a moment"
-  this._enqueued = {};
-};
-
-TileManager.CrawlIterator.prototype = {
-  __iterator__: function() {
-    while (true) {
-      let tile = this.next();
-      if (!tile) break;
-      yield tile;
-    }
+    return result;
   },
 
-  becomeQueue: function becomeQueue() {
-    this._queueState = true;
-  },
+  recenter: function recenter(rect) {
+    // Queue should not be very big, so put first priorities last in order to pop quickly.
+    this._crawlQueue = rect.isEmpty() ? [] : this._generateCrawlQueue(rect).reverse();
 
-  unbecomeQueue: function unbecomeQueue() {
-    this._queueState = false;
+    // used to remember tiles that we've reused during this crawl
+    this._visited = {}
+
+    // filters the tiles we've already reused once from being considered victims
+    // for reuse when we ask the tile cache to create a new tile
+    let visited = this._visited;
+    this._notVisited = function(tile) { return !visited[tile.i + "," + tile.j]; };
+
+    // after we finish the rectangle iteration state, we enter the FILO queue state
+    // no need to remember old dirty tiles, if it's important we'll get to it anyways
+    this._queue = [];
+
+    // use a dictionary to prevent tiles from being enqueued twice --- "patience, we'll get to
+    // it in a moment"
+    this._enqueued = {};
   },
 
   next: function next() {
-    if (this._queueState)
-      return this.dequeue();
-
+    // Priority for next goes to the crawl queue, dirty tiles afterwards. Since dirty
+    // tile queue does not really have a necessary order, pop off the top.
+    let coords = this._crawlQueue.pop() || this.dequeue();
     let tile = null;
-
-    if (this._crawlIndices) {
-      try {
-        let [i, j] = this._crawlIndices.next();
-        tile = this._tileCache.getTile(i, j, true, this._notVisited);
-      } catch (e) {
-        if (!(e instanceof StopIteration))
-          throw e;
+    if (coords) {
+      let [i, j] = coords;
+      // getTile will create a tile only if there are any left in our capacity that have not been
+      // visited already by the crawler.
+      tile = this._tileCache.getTile(i, j, true, this._notVisited);
+      if (tile) {
+        this._visited[this._strIndices(i, j)] = true;
+      } else {
+        tile = this.next();
       }
     }
-
-    if (tile) {
-      this._visited[tile.toString()] = true;
-    } else {
-      this.becomeQueue();
-      return this.next();
-    }
-
     return tile;
   },
 
   dequeue: function dequeue() {
-    let tile = null;
-    do {
-      let idx = this._queue.shift();
-      if (!idx)
+    if (this._queue.length) {
+      let [i, j] = this._queue.pop();
+      this._enqueued[this._strIndices(i, j)] = false;
+      return [i, j];
+    } else {
       return null;
-
-      delete this._enqueued[idx];
-      let [i, j]  = this._unstrIndices(idx);
-      tile = this._tileCache.getTile(i, j, false);
-
-    } while (!tile);
-
-    return tile;
+    }
   },
 
   enqueue: function enqueue(i, j) {
-    let idx = this._strIndices(i, j);
-    if (!this._enqueued[idx]) {
-      this._queue.push(idx);
-      this._enqueued[idx] = true;
+    let index = this._strIndices(i, j);
+    let enqueued = this._enqueued;
+    if (!enqueued[index]) {
+      this._queue.push([i, j]);
+      enqueued[index] = true;
     }
   },
 
   _strIndices: function _strIndices(i, j) {
     return i + "," + j;
   },
-
-  _unstrIndices: function _unstrIndices(str) {
-    return str.split(',');
-  }
-
 };

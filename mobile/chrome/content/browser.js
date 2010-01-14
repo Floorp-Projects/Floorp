@@ -170,7 +170,7 @@ function onDebugKeyPress(ev) {
 
   const a = 65;   // debug all critical tiles
   const b = 66;   // dump an ASCII graphic of the tile map
-  const c = 67;   // set tilecache capacity
+  const c = 67;
   const d = 68;  // debug dump
   const e = 69;
   const f = 70;  // free memory by clearing a tab.
@@ -264,11 +264,6 @@ function onDebugKeyPress(ev) {
     break;
   case l:
     bv._tileManager.restartLazyCrawl(bv._tileManager._criticalRect);
-
-    break;
-  case c:
-    let cap = parseInt(window.prompt('new capacity'));
-    bv._tileManager._tileCache.setCapacity(cap);
 
     break;
   case b:
@@ -1418,8 +1413,6 @@ Browser.MainDragger.prototype = {
     let elem = this.draggedFrame;
     let doffset = new Point(dx, dy);
     let render = false;
-
-    this.bv.onBeforeVisibleMove(dx, dy);
 
     // First calculate any panning to take sidebars out of view
     let panOffset = this._panControlsAwayOffset(doffset);

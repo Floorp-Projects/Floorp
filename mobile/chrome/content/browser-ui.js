@@ -1270,7 +1270,7 @@ var FormHelper = {
     this._helperSpacer.hidden = true;
     // give the form spacer area back to the content
     let bv = Browser._browserView;
-    bv.onBeforeVisibleMove(0, 0);
+    Browser.forceChromeReflow();
     Browser.contentScrollboxScroller.scrollBy(0, 0);
     bv.onAfterVisibleMove();
     
