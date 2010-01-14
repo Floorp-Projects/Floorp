@@ -484,6 +484,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
                 if (!CallNPP_HandleEvent(npremoteevent, &handled))
                     return 0;
             break;
+            case WM_MOUSELEAVE:
             case WM_MOUSEMOVE:
             case WM_RBUTTONDOWN:
             case WM_MBUTTONDOWN:
