@@ -164,6 +164,10 @@ TileManager.prototype = {
     if (criticalRect.isEmpty() || !criticalRect.equals(this._criticalRect)) {
       this.beginCriticalMove(criticalRect);
       this.endCriticalMove(criticalRect, !(dirtyAll || boundsSizeChanged));
+    } else {
+      // The critical rect hasn't changed, but there are possibly more tiles lounging about offscreen,
+      // waiting to be rendered. Make sure crawler knows about them.
+      this.recenterCrawler();
     }
 
     if (dirtyAll) {
@@ -266,6 +270,7 @@ TileManager.prototype = {
   },
 
   dirtyRects: function dirtyRects(rects, doCriticalRender) {
+    let outsideIsDirty = false;
     let criticalIsDirty = false;
     let criticalRect = this._criticalRect;
     let tc = this._tileCache;
@@ -276,21 +281,25 @@ TileManager.prototype = {
 
       BEGIN_FOREACH_IN_RECT(rect, tc, tile)
 
-      if (!tile.boundRect.intersects(criticalRect))
+      if (!tile.boundRect.intersects(criticalRect)) {
+        // Dirty tile outside of viewport. Just remove and redraw later.
         this._removeTileSafe(tile);
-      else
+        if (crawler)
+          crawler.enqueue(tile.i, tile.j);
+        outsideIsDirty = true;
+      } else {
         criticalIsDirty = true;
+      }
 
       tile.markDirty(rects[i]);
-
-      if (crawler)
-        crawler.enqueue(tile.i, tile.j);
 
       END_FOREACH_IN_RECT
     }
 
     if (criticalIsDirty && doCriticalRender)
       this.criticalRectPaint();
+    if (outsideIsDirty)
+      this.restartPrefetchCrawl();
   },
 
   criticalRectPaint: function criticalRectPaint() {
@@ -304,6 +313,7 @@ TileManager.prototype = {
       if (!this._ctr.equals(ctr)) {
         this._ctr.set(ctr);
         this.recenterEvictionQueue(ctr);
+        this.recenterCrawler();
       }
 
       //let start = Date.now();
@@ -364,54 +374,25 @@ TileManager.prototype = {
   },
 
   setPrefetch: function setPrefetch(prefetch) {
-    if (prefetch == this._prefetch)
-      return;
-
-   this._prefetch = prefetch;
+    this._prefetch = prefetch;
     if (prefetch)
       this.restartPrefetchCrawl();
     else
       this.stopPrefetchCrawl();
   },
 
-  restartPrefetchCrawl: function restartPrefetchCrawl(startRectOrQueue) {
-    if (startRectOrQueue instanceof Array) {
-      this._crawler = new TileManager.CrawlIterator(this._tileCache);
-
-      if (startRectOrQueue) {
-        for (let k = 0, len = startRectOrQueue.length; k < len; ++k)
-          this._crawler.enqueue(startRectOrQueue[k].i, startRectOrQueue[k].j);
-      }
-    } else {
-      let cr = this._criticalRect;
-      this._crawler = new TileManager.CrawlIterator(this._tileCache,
-                                                    startRectOrQueue || (!cr.isEmpty() ? cr.clone() : null));
-    }
-
-    if (!this._idleTileCrawlerTimeout)
+  restartPrefetchCrawl: function restartPrefetchCrawl() {
+    if (this._prefetch && !this._idleTileCrawlerTimeout && this._crawler)
       this._idleTileCrawlerTimeout = setTimeout(this._idleTileCrawler, kTileCrawlComeAgain, this);
   },
 
-  stopPrefetchCrawl: function stopPrefetchCrawl(skipRecenter) {
+  stopPrefetchCrawl: function stopPrefetchCrawl() {
     if (this._idleTileCrawlerTimeout)
       clearTimeout(this._idleTileCrawlerTimeout);
     delete this._idleTileCrawlerTimeout;
-    this._crawler = null;
-
-    if (!skipRecenter) {
-      let cr = this._criticalRect;
-      if (!cr.isEmpty()) {
-        let ctr = cr.center().map(Math.round);
-        this.recenterEvictionQueue(ctr);
-      }
-    }
   },
 
   recenterEvictionQueue: function recenterEvictionQueue(ctr) {
-    if (this._crawler) {
-      this.restartPrefetchCrawl();
-    }
-
     let ctri = ctr.x >> kTileExponentWidth;
     let ctrj = ctr.y >> kTileExponentHeight;
 
@@ -420,6 +401,12 @@ TileManager.prototype = {
       let distb = Math.max(Math.abs(b.i - ctri), Math.abs(b.j - ctrj));
       return dista - distb;
     });
+  },
+
+  /** Crawler will recalculate the tiles it is supposed to fetch in the background. */
+  recenterCrawler: function recenterCrawler() {
+    let cr = this._criticalRect;
+    this._crawler = new TileManager.CrawlIterator(this._tileCache, cr.clone());
   },
 
   /**
@@ -513,9 +500,7 @@ TileManager.prototype = {
 
     BEGIN_FORCREATE_IN_RECT(rect, tc, tile)
 
-    if (tile.isDirty())
-      this._renderTile(tile);
-
+    this._renderTile(tile);
     this._appendTileSafe(tile);
     this._tileCache.holdTile(tile);
 
@@ -534,10 +519,8 @@ TileManager.prototype = {
         comeAgain = false;
         break;
       }
-      if (tile.isDirty()) {
-        self._renderTile(tile);
-      }
       self._appendTileSafe(tile);
+      self._renderTile(tile);
     }
 
     if (comeAgain) {
