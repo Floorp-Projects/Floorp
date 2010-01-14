@@ -4811,11 +4811,11 @@ nsDocShell::GetScrollbarVisibility(PRBool * verticalVisible,
     nsIScrollableFrame* sf = GetRootScrollFrame();
     NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
-    nsMargin scrollbars = sf->GetActualScrollbarSizes();
+    PRUint32 scrollbarVisibility = sf->GetScrollbarVisibility();
     if (verticalVisible)
-        *verticalVisible = scrollbars.left != 0 || scrollbars.right != 0;
+        *verticalVisible = (scrollbarVisibility & nsIScrollableFrame::VERTICAL) != 0;
     if (horizontalVisible)
-        *horizontalVisible = scrollbars.top != 0 || scrollbars.bottom != 0;
+        *horizontalVisible = (scrollbarVisibility & nsIScrollableFrame::HORIZONTAL) != 0;
 
     return NS_OK;
 }
