@@ -313,7 +313,8 @@ TileManager.prototype = {
 
       lastCr.setRect(0, 0, 0, 0);
 
-      this.recenterEvictionQueue(cr.center().map(Math.round));
+      if (!cr.isEmpty())
+        this.recenterEvictionQueue(cr.center().map(Math.round));
       this.recenterCrawler();
     }
 
