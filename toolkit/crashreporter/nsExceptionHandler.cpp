@@ -59,6 +59,7 @@
 #include "mac_utils.h"
 #elif defined(XP_LINUX)
 #if defined(MOZ_IPC)
+#  include "client/linux/crash_generation/client_info.h"
 #  include "client/linux/crash_generation/crash_generation_server.h"
 #endif
 #include "client/linux/handler/exception_handler.h"
@@ -79,15 +80,21 @@
 #include <prenv.h>
 #include <prio.h>
 #include <prmem.h>
+#include "mozilla/Mutex.h"
 #include "nsDebug.h"
 #include "nsCRT.h"
 #include "nsILocalFile.h"
+#include "nsIFileStreams.h"
 #include "nsDataHashtable.h"
+#include "nsInterfaceHashtable.h"
 #include "prprf.h"
 
 #if defined(MOZ_IPC)
 using google_breakpad::CrashGenerationServer;
 using google_breakpad::ClientInfo;
+
+using mozilla::Mutex;
+using mozilla::MutexAutoLock;
 
 #include "nsThreadUtils.h"
 #include "nsIWindowWatcher.h"
@@ -173,6 +180,12 @@ static int serverSocketFd = -1;
 static int clientSocketFd = -1;
 static const int kMagicChildCrashReportFd = 42;
 #  endif
+
+// |dumpMapLock| must protect all access to |pidToMinidump|.
+static Mutex* dumpMapLock;
+typedef nsInterfaceHashtable<nsUint32HashKey, nsIFile> ChildMinidumpMap;
+static ChildMinidumpMap* pidToMinidump;
+
 #endif  // MOZ_IPC
 
 static XP_CHAR*
@@ -247,7 +260,8 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
                   O_WRONLY | O_CREAT | O_TRUNC,
                   0600);
     if (fd != -1) {
-      write(fd, crashTimeString, crashTimeStringLen);
+      ssize_t ignored = write(fd, crashTimeString, crashTimeStringLen);
+      (void)ignored;
       close(fd);
     }
 #endif
@@ -315,14 +329,17 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
 
     if (fd != -1) {
       // not much we can do in case of error
-      write(fd, crashReporterAPIData->get(), crashReporterAPIData->Length());
-      write(fd, kCrashTimeParameter, kCrashTimeParameterLen);
-      write(fd, crashTimeString, crashTimeStringLen);
-      write(fd, "\n", 1);
+      ssize_t ignored = write(fd, crashReporterAPIData->get(),
+                              crashReporterAPIData->Length());
+      ignored = write(fd, kCrashTimeParameter, kCrashTimeParameterLen);
+      ignored = write(fd, crashTimeString, crashTimeStringLen);
+      ignored = write(fd, "\n", 1);
       if (timeSinceLastCrash != 0) {
-        write(fd, kTimeSinceLastCrashParameter,kTimeSinceLastCrashParameterLen);
-        write(fd, timeSinceLastCrashString, timeSinceLastCrashStringLen);
-        write(fd, "\n", 1);
+        ignored = write(fd, kTimeSinceLastCrashParameter,
+                        kTimeSinceLastCrashParameterLen);
+        ignored = write(fd, timeSinceLastCrashString,
+                        timeSinceLastCrashStringLen);
+        ignored = write(fd, "\n", 1);
       }
       close (fd);
     }
@@ -971,6 +988,37 @@ private:
   nsCOMPtr<nsIFile> mDumpFile;
 };
 
+static PLDHashOperator EnumerateChildAnnotations(const nsACString& key,
+                                                 nsCString entry,
+                                                 void* userData)
+{
+  // blacklist of entries from the parent process that we don't want to
+  // submit with the child process
+  static const char* kBlacklist[] = {
+    "FramePoisonBase",
+    "FramePoisonSize",
+    "StartupTime",
+    "URL"
+  };
+  static const int kBlacklistLength =
+    sizeof(kBlacklist) / sizeof(kBlacklist[0]);
+
+  // skip entries in the blacklist
+  for (int i = 0; i < kBlacklistLength; i++) {
+    if (key.EqualsASCII(kBlacklist[i]))
+      return PL_DHASH_NEXT;
+  }
+
+  nsIFileOutputStream* extraStream =
+    reinterpret_cast<nsIFileOutputStream*>(userData);
+  PRUint32 written;
+  extraStream->Write(key.BeginReading(), key.Length(), &written);
+  extraStream->Write("=", 1, &written);
+  extraStream->Write(entry.BeginReading(), entry.Length(), &written);
+  extraStream->Write("\n", 1, &written);
+  return PL_DHASH_NEXT;
+}
+
 static void
 OnChildProcessDumpRequested(void* aContext,
                             const ClientInfo* aClientInfo,
@@ -982,13 +1030,59 @@ OnChildProcessDumpRequested(void* aContext,
                               aFilePath)
 {
   nsCOMPtr<nsILocalFile> lf;
+  PRUint32 pid;
+
 #ifdef XP_WIN
   NS_NewLocalFile(nsDependentString(aFilePath->c_str()), PR_FALSE,
                   getter_AddRefs(lf));
+  pid = aClientInfo->pid();
 #else
   NS_NewNativeLocalFile(nsDependentCString(aFilePath->c_str()), PR_FALSE,
                         getter_AddRefs(lf));
+  pid = aClientInfo->pid_;
 #endif
+
+  // Get an .extra file with the same base name as the .dmp file
+  nsCOMPtr<nsIFile> extraFile;
+  nsresult rv = lf->Clone(getter_AddRefs(extraFile));
+  if (NS_FAILED(rv))
+    return;
+
+  nsAutoString leafName;
+  rv = extraFile->GetLeafName(leafName);
+  if (NS_FAILED(rv))
+    return;
+
+  leafName.Replace(leafName.Length() - 3, 3,
+                   NS_LITERAL_STRING("extra"));
+  rv = extraFile->SetLeafName(leafName);
+  if (NS_FAILED(rv))
+    return;
+
+  // Now write out the annotations to it
+  nsCOMPtr<nsIFileOutputStream> stream =
+    do_CreateInstance("@mozilla.org/network/file-output-stream;1");
+  rv = stream->Init(extraFile, -1, 0600, 0);
+  if (NS_FAILED(rv))
+    return;
+  crashReporterAPIData_Hash->EnumerateRead(EnumerateChildAnnotations,
+                                           stream.get());
+  // Add CrashTime to extra data
+  time_t crashTime = time(NULL);
+  char crashTimeString[32];
+  XP_TTOA(crashTime, crashTimeString, 10);
+
+  PRUint32 written;
+  stream->Write(kCrashTimeParameter, kCrashTimeParameterLen, &written);
+  stream->Write(crashTimeString, strlen(crashTimeString), &written);
+  stream->Write("\n", 1, &written);
+  stream->Close();
+
+  {
+    MutexAutoLock lock(*dumpMapLock);
+    pidToMinidump->Put(pid, lf);
+  }
+
   nsCOMPtr<nsIRunnable> r = new SubmitCrashReport(lf);
   NS_DispatchToMainThread(r);
 }
@@ -1039,6 +1133,11 @@ OOPInit()
 
   if (!crashServer->Start())
     NS_RUNTIMEABORT("can't start crash reporter server()");
+
+  pidToMinidump = new ChildMinidumpMap();
+  pidToMinidump->Init();
+
+  dumpMapLock = new Mutex("CrashReporter::dumpMapLock");
 }
 
 #if defined(XP_WIN)
@@ -1121,6 +1220,16 @@ SetRemoteExceptionHandler()
 
 #endif  // XP_WIN
 
+
+bool
+GetMinidumpForChild(PRUint32 childPid, nsIFile** dump)
+{
+  if (!GetEnabled())
+    return false;
+
+  MutexAutoLock lock(*dumpMapLock);
+  return pidToMinidump->Get(childPid, dump);
+}
 
 bool
 UnsetRemoteExceptionHandler()
