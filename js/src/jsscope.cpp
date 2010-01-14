@@ -1016,7 +1016,8 @@ JSScope::getChildProperty(JSContext *cx, JSScopeProperty *parent,
         }
         return NULL;
     }
-    
+
+    child.flags &= ~SPROP_IN_DICTIONARY;
     JSScopeProperty *sprop = GetPropertyTreeChild(cx, parent, child);
     if (sprop) {
         JS_ASSERT(sprop->parent == parent);
