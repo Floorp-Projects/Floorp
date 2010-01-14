@@ -106,7 +106,7 @@ function test() {
           gPrefService.clearUserPref(PREF_INTERVAL);
         gBrowser.removeTab(tab);
         finish();
-      }, 2500); // end of sleep after tab selection and scrolling
-    }, 2500); // end of sleep after initial saveStateDelayed()
+      }, 3500); // end of sleep after tab selection and scrolling
+    }, 3500); // end of sleep after initial saveStateDelayed()
   }, true);
 }

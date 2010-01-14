@@ -1179,7 +1179,8 @@ function selectImage() {
 
   var tree = document.getElementById("imagetree");
   for (var i = 0; i < tree.view.rowCount; i++) {
-    if (gImageElement == gImageView.data[i][COL_IMAGE_NODE]) {
+    if (gImageElement == gImageView.data[i][COL_IMAGE_NODE] &&
+        !gImageView.data[i][COL_IMAGE_BG]) {
       tree.view.selection.select(i);
       tree.treeBoxObject.ensureRowIsVisible(i);
       tree.focus();

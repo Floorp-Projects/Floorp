@@ -1211,6 +1211,8 @@ private:
   void PostUnblockOnloadEvent();
   void DoUnblockOnload();
 
+  nsresult InitCSP();
+
   /**
    * See if aDocument is a child of this.  If so, return the frame element in
    * this document that holds currentDoc (or an ancestor).

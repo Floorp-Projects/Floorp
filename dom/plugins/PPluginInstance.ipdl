@@ -93,6 +93,8 @@ parent:
     returns (nullable PPluginScriptableObject value, NPError result);
   rpc NPN_GetValue_NPNVprivateModeBool()
     returns (bool value, NPError result);
+  rpc NPN_GetValue_NPNVnetscapeWindow()
+    returns (intptr_t value, NPError result);
 
   rpc NPN_SetValue_NPPVpluginWindow(bool windowed)
     returns (NPError result);

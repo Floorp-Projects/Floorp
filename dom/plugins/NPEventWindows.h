@@ -112,6 +112,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
             case WM_CLEAR:
             case WM_UNDO:
 
+            case WM_MOUSELEAVE:
             case WM_MOUSEMOVE:
             case WM_LBUTTONDOWN:
             case WM_MBUTTONDOWN:
