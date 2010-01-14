@@ -74,6 +74,13 @@ public:
    */
   virtual ScrollbarStyles GetScrollbarStyles() const = 0;
 
+  enum { HORIZONTAL = 0x01, VERTICAL = 0x02 };
+  /**
+   * Return the scrollbars which are visible. It's OK to call this during reflow
+   * of the scrolled contents, in which case it will reflect the current
+   * assumptions about scrollbar visibility.
+   */
+  virtual PRUint32 GetScrollbarVisibility() const = 0;
   /**
    * Return the actual sizes of all possible scrollbars. Returns 0 for scrollbar
    * positions that don't have a scrollbar or where the scrollbar is not visible.
@@ -83,12 +90,14 @@ public:
   virtual nsMargin GetActualScrollbarSizes() const = 0;
   /**
    * Return the sizes of all scrollbars assuming that any scrollbars that could
-   * be visible due to overflowing content, are.
+   * be visible due to overflowing content, are. This can be called during reflow
+   * of the scrolled contents.
    */
   virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState) = 0;
   /**
    * Return the sizes of all scrollbars assuming that any scrollbars that could
-   * be visible due to overflowing content, are.
+   * be visible due to overflowing content, are. This can be called during reflow
+   * of the scrolled contents.
    */
   virtual nsMargin GetDesiredScrollbarSizes(nsPresContext* aPresContext,
                                             nsIRenderingContext* aRC) = 0;

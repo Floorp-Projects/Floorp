@@ -485,10 +485,21 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   kidReflowState.mComputedMinHeight = computedMinHeight;
   kidReflowState.mComputedMaxHeight = computedMaxHeight;
 
+  // Temporarily set mHasHorizontalScrollbar/mHasVerticalScrollbar to
+  // reflect our assumptions while we reflow the child.
+  PRBool didHaveHorizonalScrollbar = mInner.mHasHorizontalScrollbar;
+  PRBool didHaveVerticalScrollbar = mInner.mHasVerticalScrollbar;
+  mInner.mHasHorizontalScrollbar = aAssumeHScroll;
+  mInner.mHasVerticalScrollbar = aAssumeVScroll;
+
   nsReflowStatus status;
   nsresult rv = ReflowChild(mInner.mScrolledFrame, presContext, *aMetrics,
                             kidReflowState, 0, 0,
                             NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_MOVE_VIEW, status);
+
+  mInner.mHasHorizontalScrollbar = didHaveHorizonalScrollbar;
+  mInner.mHasVerticalScrollbar = didHaveVerticalScrollbar;
+
   // Don't resize or position the view (if any) because we're going to resize
   // it to the correct size anyway in PlaceScrollArea. Allowing it to
   // resize here would size it to the natural height of the frame,
