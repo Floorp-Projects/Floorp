@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<script>
+function doTest() {
+  document.getElementById("inner").style.height = "0";
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</head>
+<body>
+<div style="overflow:auto; width:100px; height:100px;">
+  <div id="inner" style="height:200px;"></div>
+</div>
+</body>
+</html>
