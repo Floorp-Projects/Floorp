@@ -2092,7 +2092,7 @@ JSCompiler::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
                 for (JSParseNode *method = funbox->methods; method; method = method->pn_link) {
                     JS_ASSERT(PN_OP(method) == JSOP_LAMBDA || PN_OP(method) == JSOP_LAMBDA_FC);
                     ++methodSets;
-                    if (!funbox->joinable())
+                    if (!method->pn_funbox->joinable())
                         ++slowMethodSets;
                 }
 
