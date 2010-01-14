@@ -90,5 +90,6 @@ Includes = (
     'nsAutoPtr.h',
     'nsStringGlue.h',
     'nsTArray.h',
+    'nsIFile.h',
     'mozilla/ipc/ProtocolUtils.h',
 )
