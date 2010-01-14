@@ -842,6 +842,10 @@ nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 {
+    // Avoid creating a new surface if the dimensions are not changing
+    if (mWidth == width && mHeight == height)
+        return InitializeWithSurface(NULL, mSurface, width, height);
+
     Destroy();
 
     nsRefPtr<gfxASurface> surface;
@@ -864,8 +868,6 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, PRInt32 width, PRInt32 height) {
-    Destroy();
-
     NS_ASSERTION(!docShell ^ !mCanvasElement, "Cannot set both docshell and canvas element");
     mDocShell = docShell;
 
