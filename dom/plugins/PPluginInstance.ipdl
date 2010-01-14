@@ -49,6 +49,7 @@ using NPError;
 using NPRemoteWindow;
 using NPRemoteEvent;
 using NPRect;
+using mozilla::plugins::NativeWindowHandle;
 
 namespace mozilla {
 namespace plugins {
@@ -94,7 +95,7 @@ parent:
   rpc NPN_GetValue_NPNVprivateModeBool()
     returns (bool value, NPError result);
   rpc NPN_GetValue_NPNVnetscapeWindow()
-    returns (intptr_t value, NPError result);
+    returns (NativeWindowHandle value, NPError result);
 
   rpc NPN_SetValue_NPPVpluginWindow(bool windowed)
     returns (NPError result);
