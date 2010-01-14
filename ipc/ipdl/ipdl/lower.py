@@ -2448,14 +2448,23 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + _includeGuardEnd(hf))
 
         # make the .cpp file
+        cf.addthings([
+            disclaimer,
+            Whitespace.NL,
+            CppDirective(
+                'include',
+                '"'+ _protocolHeaderName(self.protocol, self.side) +'.h"')
+        ])
+             
+        if self.protocol.decl.type.isToplevel():
+            cf.addthings([
+                CppDirective('ifdef', 'MOZ_CRASHREPORTER'),
+                CppDirective('  include', '"nsXULAppAPI.h"'),
+                CppDirective('endif')
+            ])
+
         cf.addthings((
-            [ disclaimer,
-              Whitespace.NL,
-              CppDirective(
-                  'include',
-                  '"'+ _protocolHeaderName(self.protocol, self.side) +'.h"'),
-              Whitespace.NL
-            ]
+            [ Whitespace.NL ]
             + self.protocolCxxIncludes
             + [ Whitespace.NL ]
             + self.standardTypedefs()
@@ -2806,6 +2815,39 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         if p.usesShmem():
             self.cls.addstmts(self.makeShmemIface())
+
+        if p.decl.type.isToplevel() and self.side is 'parent':
+            ## bool GetMinidump(nsIFile** dump)
+            self.cls.addstmt(Label.PROTECTED)
+
+            otherpidvar = ExprVar('OtherSidePID')
+            otherpid = MethodDefn(MethodDecl(
+                otherpidvar.name, params=[ ],
+                ret=Type('base::ProcessId'),
+                const=1))
+            otherpid.addstmts([
+                StmtReturn(ExprCall(
+                    ExprVar('base::GetProcId'),
+                    args=[ p.otherProcessVar() ])),
+            ])
+
+            dumpvar = ExprVar('aDump')
+            getdump = MethodDefn(MethodDecl(
+                'GetMinidump',
+                params=[ Decl(Type('nsIFile', ptrptr=1), dumpvar.name) ],
+                ret=Type.BOOL,
+                const=1))
+            getdump.addstmts([
+                CppDirective('ifdef', 'MOZ_CRASHREPORTER'),
+                StmtReturn(ExprCall(
+                    ExprVar('XRE_GetMinidumpForChild'),
+                    args=[ ExprCall(otherpidvar), dumpvar ])),
+                CppDirective('else'),
+                StmtReturn(ExprLiteral.FALSE),
+                CppDirective('endif')
+            ])
+            self.cls.addstmts([ otherpid, Whitespace.NL,
+                                getdump, Whitespace.NL ])
 
         ## private methods
         self.cls.addstmt(Label.PRIVATE)
