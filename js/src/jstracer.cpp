@@ -77,6 +77,7 @@
 #include "jsxml.h"
 
 #include "jsatominlines.h"
+#include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 
@@ -5353,7 +5354,7 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id)
             jsval v = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
             if (VALUE_IS_FUNCTION(cx, v)) {
                 found = true;
-                if (!scope->branded()) {
+                if (!scope->generic() && !scope->branded()) {
                     scope->brandingShapeChange(cx, sprop->slot, v);
                     scope->setBranded();
                 }
@@ -8400,10 +8401,9 @@ TraceRecorder::f2i(LIns* f)
             if (isPromote(idx)) {
                 LIns* args[] = { demote(lir, idx), fcallarg(f, 0) };
                 return lir->insCall(&js_String_p_charCodeAt_int_int_ci, args);
-            } else {
-                LIns* args[] = { idx, fcallarg(f, 0) };
-                return lir->insCall(&js_String_p_charCodeAt_double_int_ci, args);
             }
+            LIns* args[] = { idx, fcallarg(f, 0) };
+            return lir->insCall(&js_String_p_charCodeAt_double_int_ci, args);
         }
     }
     return lir->insCall(&js_DoubleToInt32_ci, &f);
@@ -12793,7 +12793,6 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
     CHECK_STATUS_A(test_property_cache(obj, obj_ins, obj2, pcval));
 
     /* Check for non-existent property reference, which results in undefined. */
-    const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
     if (PCVAL_IS_NULL(pcval)) {
         if (slotp)
             RETURN_STOP_A("property not found");
@@ -12831,6 +12830,14 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
         return ARECORD_CONTINUE;
     }
 
+    return propTail(obj, obj_ins, obj2, pcval, slotp, v_insp, outp);
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, jsuword pcval,
+                        uint32 *slotp, LIns** v_insp, jsval *outp)
+{
+    const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
     uint32 setflags = (cs.format & (JOF_INCDEC | JOF_FOR));
     JS_ASSERT(!(cs.format & JOF_SET));
 
@@ -12874,14 +12881,21 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
             RETURN_STOP_A("JOF_INCDEC|JOF_FOR opcode hit prototype chain");
 
         /*
-         * We're getting a proto-property. Walk up the prototype chain emitting
-         * proto slot loads, updating obj as we go, leaving obj set to obj2 with
-         * obj_ins the last proto-load.
+         * We're getting a prototype property. Two cases:
+         *
+         * 1. If obj2 is obj's immediate prototype we must walk up from obj,
+         * since direct and immediate-prototype cache hits key on obj's shape,
+         * not its identity.
+         *
+         * 2. Otherwise obj2 is higher up the prototype chain and we've keyed
+         * on obj's identity, and since setting __proto__ reshapes all objects
+         * along the old prototype chain, then provided we shape-guard obj2,
+         * we can "teleport" directly to obj2 by embedding it as a constant
+         * (this constant object instruction will be CSE'ed with the constant
+         * emitted by test_property_cache, whose shape is guarded).
          */
-        do {
-            obj_ins = stobj_get_proto(obj_ins);
-            obj = STOBJ_GET_PROTO(obj);
-        } while (obj != obj2);
+        obj_ins = (obj2 == obj->getProto()) ? stobj_get_proto(obj_ins) : INS_CONSTOBJ(obj2);
+        obj = obj2;
     }
 
     LIns* dslots_ins = NULL;
@@ -13030,7 +13044,9 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::getProp(JSObject* obj, LIns* obj_ins)
 {
-    const JSCodeSpec& cs = js_CodeSpec[*cx->fp->regs->pc];
+    JSOp op = JSOp(*cx->fp->regs->pc);
+    const JSCodeSpec& cs = js_CodeSpec[op];
+
     JS_ASSERT(cs.ndefs == 1);
     return prop(obj, obj_ins, NULL, NULL, &stackval(-cs.nuses));
 }
@@ -14423,18 +14439,30 @@ TraceRecorder::record_JSOP_CALLPROP()
     jsuword pcval;
     CHECK_STATUS_A(test_property_cache(obj, obj_ins, obj2, pcval));
 
-    if (PCVAL_IS_NULL(pcval) || !PCVAL_IS_OBJECT(pcval))
-        RETURN_STOP_A("callee is not an object");
-    JS_ASSERT(HAS_FUNCTION_CLASS(PCVAL_TO_OBJECT(pcval)));
+    if (PCVAL_IS_OBJECT(pcval)) {
+        if (PCVAL_IS_NULL(pcval))
+            RETURN_STOP_A("callprop of missing method");
 
-    if (JSVAL_IS_PRIMITIVE(l)) {
-        JSFunction* fun = GET_FUNCTION_PRIVATE(cx, PCVAL_TO_OBJECT(pcval));
-        if (!PRIMITIVE_THIS_TEST(fun, l))
-            RETURN_STOP_A("callee does not accept primitive |this|");
+        JS_ASSERT(HAS_FUNCTION_CLASS(PCVAL_TO_OBJECT(pcval)));
+
+        if (JSVAL_IS_PRIMITIVE(l)) {
+            JSFunction* fun = GET_FUNCTION_PRIVATE(cx, PCVAL_TO_OBJECT(pcval));
+            if (!PRIMITIVE_THIS_TEST(fun, l))
+                RETURN_STOP_A("callee does not accept primitive |this|");
+        }
+
+        set(&l, INS_CONSTOBJ(PCVAL_TO_OBJECT(pcval)));
+    } else {
+        if (JSVAL_IS_PRIMITIVE(l))
+            RETURN_STOP_A("callprop of primitive method");
+
+        JS_ASSERT_IF(PCVAL_IS_SPROP(pcval), !PCVAL_TO_SPROP(pcval)->isMethod());
+
+        AbortableRecordingStatus status = propTail(obj, obj_ins, obj2, pcval, NULL, NULL, &l);
+        if (status != ARECORD_CONTINUE)
+            return status;
     }
-
     stack(0, this_ins);
-    stack(-1, INS_CONSTOBJ(PCVAL_TO_OBJECT(pcval)));
     return ARECORD_CONTINUE;
 }
 
@@ -15027,6 +15055,23 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_INITMETHOD()
 {
     return record_JSOP_INITPROP();
+}
+
+JSBool FASTCALL
+js_Unbrand(JSContext *cx, JSObject *obj)
+{
+    return obj->unbrand(cx);
+}
+
+JS_DEFINE_CALLINFO_2(extern, BOOL, js_Unbrand, CONTEXT, OBJECT, 0, 0)
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_UNBRAND()
+{
+    LIns* args_ins[] = { stack(-1), cx_ins };
+    LIns* call_ins = lir->insCall(&js_Unbrand_ci, args_ins);
+    guard(true, call_ins, OOM_EXIT);
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus

@@ -406,6 +406,8 @@ struct JSObject {
     inline bool isFunction() const;
     inline bool isRegExp() const;
     inline bool isXML() const;
+
+    inline bool unbrand(JSContext *cx);
 };
 
 /* Compatibility macros. */
