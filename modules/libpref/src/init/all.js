@@ -2827,7 +2827,7 @@ pref("geo.enabled", true);
 
 // Enable/Disable HTML5 parser
 pref("html5.enable", false);
-// Toggle which thread the HTML5 parser uses for streama parsing
+// Toggle which thread the HTML5 parser uses for stream parsing
 pref("html5.offmainthread", true);
 // Time in milliseconds between the start of the network stream and the 
 // first time the flush timer fires in the off-the-main-thread HTML5 parser.
@@ -2838,6 +2838,14 @@ pref("html5.flushtimer.continuedelay", 150);
 // Time in milliseconds between timer firings once the timer has starting 
 // firing.
 pref("html5.flushtimer.interval", 100);
+// Initial max length for number of tree ops in on flush.
+pref("html5.opqueue.initiallengthlimit", 200);
+// Maximum time in milliseconds to spend flushing the tree op queue when not forced to completion
+pref("html5.opqueue.maxtime", 100);
+// Minimun number of tree ops to flush regardless of time (takes precedence over the maxtime pref)
+pref("html5.opqueue.minlength", 100);
+// Maximum number of tree ops to flush regardless of time (takes precedence over the maxtime pref)
+pref("html5.opqueue.maxlength", 4500); // most top sites stay under this value
 
 // Push/Pop/Replace State prefs
 pref("browser.history.allowPushState", true);
