@@ -104,7 +104,8 @@ public:
     virtual bool
     AnswerNPN_GetValue_NPNVisOfflineBool(bool* value, NPError* result);
     virtual bool
-    AnswerNPN_GetValue_NPNVnetscapeWindow(intptr_t* value, NPError* result);
+    AnswerNPN_GetValue_NPNVnetscapeWindow(NativeWindowHandle* value,
+                                          NPError* result);
     virtual bool
     AnswerNPN_GetValue_NPNVWindowNPObject(
                                        PPluginScriptableObjectParent** value,
