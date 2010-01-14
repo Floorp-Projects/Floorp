@@ -247,8 +247,8 @@ public:
     Lirasm(bool verbose);
     ~Lirasm();
 
-    void assemble(istream &in);
-    void assembleRandom(int nIns);
+    void assemble(istream &in, bool optimize);
+    void assembleRandom(int nIns, bool optimize);
     bool lookupFunction(const string &name, CallInfo *&ci);
 
     LirBuffer *mLirbuf;
@@ -273,7 +273,7 @@ private:
 
 class FragmentAssembler {
 public:
-    FragmentAssembler(Lirasm &parent, const string &fragmentName);
+    FragmentAssembler(Lirasm &parent, const string &fragmentName, bool optimize);
     ~FragmentAssembler();
 
     void assembleFragment(LirTokenStream &in,
@@ -293,6 +293,7 @@ private:
     Lirasm &mParent;
     const string mFragName;
     Fragment *mFragment;
+    bool optimize;
     vector<CallInfo*> mCallInfos;
     map<string, LIns*> mLabels;
     LirWriter *mLir;
@@ -482,8 +483,8 @@ dump_srecords(ostream &, Fragment *)
 uint32_t
 FragmentAssembler::sProfId = 0;
 
-FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
-    : mParent(parent), mFragName(fragmentName),
+FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName, bool optimize)
+    : mParent(parent), mFragName(fragmentName), optimize(optimize),
       mBufWriter(NULL), mCseFilter(NULL), mExprFilter(NULL), mVerboseWriter(NULL)
 {
     mFragment = new Fragment(NULL verbose_only(, (mParent.mLogc.lcbits &
@@ -493,8 +494,10 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
     mParent.mFragments[mFragName].fragptr = mFragment;
 
     mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf);
-    mLir = mCseFilter  = new CseFilter(mLir, mParent.mAlloc);
-    mLir = mExprFilter = new ExprFilter(mLir);
+    if (optimize) {
+        mLir = mCseFilter  = new CseFilter(mLir, mParent.mAlloc);
+        mLir = mExprFilter = new ExprFilter(mLir);
+    }
 
 #ifdef DEBUG
     if (mParent.mVerbose) {
@@ -746,7 +749,7 @@ FragmentAssembler::endFragment()
     mFragment->lastIns =
         mLir->insGuard(LIR_x, NULL, createGuardRecord(createSideExit()));
 
-    ::compile(&mParent.mAssm, mFragment, mParent.mAlloc
+    ::compile(&mParent.mAssm, mFragment, mParent.mAlloc, optimize
               verbose_only(, mParent.mLabelMap));
 
     if (mParent.mAssm.error() != nanojit::None) {
@@ -1915,7 +1918,7 @@ Lirasm::lookupFunction(const string &name, CallInfo *&ci)
 }
 
 void
-Lirasm::assemble(istream &in)
+Lirasm::assemble(istream &in, bool optimize)
 {
     LirTokenStream ts(in);
     bool first = true;
@@ -1938,13 +1941,13 @@ Lirasm::assemble(istream &in)
             if (!ts.eat(NEWLINE))
                 bad("extra junk after .begin " + name);
 
-            FragmentAssembler assembler(*this, name);
+            FragmentAssembler assembler(*this, name, optimize);
             assembler.assembleFragment(ts, false, NULL);
             first = false;
         } else if (op == ".end") {
             bad(".end without .begin");
         } else if (first) {
-            FragmentAssembler assembler(*this, "main");
+            FragmentAssembler assembler(*this, "main", optimize);
             assembler.assembleFragment(ts, true, &token);
             break;
         } else {
@@ -1954,10 +1957,10 @@ Lirasm::assemble(istream &in)
 }
 
 void
-Lirasm::assembleRandom(int nIns)
+Lirasm::assembleRandom(int nIns, bool optimize)
 {
     string name = "main";
-    FragmentAssembler assembler(*this, name);
+    FragmentAssembler assembler(*this, name, optimize);
     assembler.assembleRandomFragment(nIns);
 }
 
@@ -1999,7 +2002,8 @@ usageAndQuit(const string& progname)
         "  -h --help        print this message\n"
         "  -v --verbose     print LIR and assembly code\n"
         "  --execute        execute LIR\n"
-        "  --random [N]     generate a random LIR block of size N (default=100)\n"
+        "  --[no-]optimize  enable or disable optimization of the LIR (default=off)\n"
+        "  --random [N]     generate a random LIR block of size N (default=1000)\n"
         " i386-specific options:\n"
         "  --sse            use SSE2 instructions\n"
         " ARM-specific options:\n"
@@ -2020,6 +2024,7 @@ struct CmdLineOptions {
     string  progname;
     bool    verbose;
     bool    execute;
+    bool    optimize;
     int     random;
     string  filename;
 };
@@ -2031,6 +2036,7 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
     opts.verbose  = false;
     opts.execute  = false;
     opts.random   = 0;
+    opts.optimize = false;
 
     // Architecture-specific options.
 #if defined NANOJIT_IA32
@@ -2050,6 +2056,10 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
             opts.verbose = true;
         else if (arg == "--execute")
             opts.execute = true;
+        else if (arg == "--optimize")
+            opts.optimize = true;
+        else if (arg == "--no-optimize")
+            opts.optimize = false;
         else if (arg == "--random") {
             const int defaultSize = 100;
             if (i == argc - 1) {
@@ -2068,6 +2078,7 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
                 }
             }
         }
+
         // Architecture-specific flags.
 #if defined NANOJIT_IA32
         else if (arg == "--sse") {
@@ -2131,12 +2142,12 @@ main(int argc, char **argv)
 
     Lirasm lasm(opts.verbose);
     if (opts.random) {
-        lasm.assembleRandom(opts.random);
+        lasm.assembleRandom(opts.random, opts.optimize);
     } else {
         ifstream in(opts.filename.c_str());
         if (!in)
             errMsgAndQuit(opts.progname, "unable to open file " + opts.filename);
-        lasm.assemble(in);
+        lasm.assemble(in, opts.optimize);
     }
 
     Fragments::const_iterator i;
