@@ -314,4 +314,6 @@ struct ProtectedActorTraits<PluginScriptableObjectChild>
 } /* namespace plugins */
 } /* namespace mozilla */
 
+#include "PluginScriptableObjectUtils-inl.h"
+
 #endif /* dom_plugins_PluginScriptableObjectUtils_h */
