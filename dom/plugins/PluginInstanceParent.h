@@ -161,6 +161,26 @@ public:
     virtual bool
     AnswerNPN_PopPopupsEnabledState(bool* aSuccess);
 
+    NS_OVERRIDE virtual bool
+    AnswerNPN_GetValueForURL(const NPNURLVariable& variable,
+                             const nsCString& url,
+                             nsCString* value, NPError* result);
+
+    NS_OVERRIDE virtual bool
+    AnswerNPN_SetValueForURL(const NPNURLVariable& variable,
+                             const nsCString& url,
+                             const nsCString& value, NPError* result);
+
+    NS_OVERRIDE virtual bool
+    AnswerNPN_GetAuthenticationInfo(const nsCString& protocol,
+                                    const nsCString& host,
+                                    const int32_t& port,
+                                    const nsCString& scheme,
+                                    const nsCString& realm,
+                                    nsCString* username,
+                                    nsCString* password,
+                                    NPError* result);
+
     NPError NPP_SetWindow(const NPWindow* aWindow);
 
     NPError NPP_GetValue(NPPVariable variable, void *ret_value);

@@ -616,6 +616,31 @@ struct ParamTraits<NPNVariable>
   }
 };
 
+template<>
+struct ParamTraits<NPNURLVariable>
+{
+  typedef NPNURLVariable paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, int(aParam));
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    int intval;
+    if (ReadParam(aMsg, aIter, &intval)) {
+      switch (intval) {
+      case NPNURLVCookie:
+      case NPNURLVProxy:
+        *aResult = paramType(intval);
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
 } /* namespace IPC */
 
 

@@ -49,6 +49,7 @@ using NPError;
 using NPRemoteWindow;
 using NPRemoteEvent;
 using NPRect;
+using NPNURLVariable;
 using mozilla::plugins::NativeWindowHandle;
 
 namespace mozilla {
@@ -125,6 +126,18 @@ parent:
 
   rpc NPN_PopPopupsEnabledState()
     returns (bool aSuccess);
+
+  rpc NPN_GetValueForURL(NPNURLVariable variable, nsCString url)
+    returns (nsCString value, NPError result);
+
+  rpc NPN_SetValueForURL(NPNURLVariable variable, nsCString url,
+                         nsCString value)
+    returns (NPError result);
+
+  rpc NPN_GetAuthenticationInfo(nsCString protocol_, nsCString host,
+                                int32_t port, nsCString scheme,
+                                nsCString realm)
+    returns (nsCString username, nsCString password, NPError result);
 
 both:
   rpc PPluginScriptableObject();
