@@ -747,6 +747,61 @@ PluginInstanceParent::AnswerNPN_PopPopupsEnabledState(bool* aSuccess)
     return true;
 }
 
+bool
+PluginInstanceParent::AnswerNPN_GetValueForURL(const NPNURLVariable& variable,
+                                               const nsCString& url,
+                                               nsCString* value,
+                                               NPError* result)
+{
+    char* v;
+    uint32_t len;
+
+    *result = mNPNIface->getvalueforurl(mNPP, (NPNURLVariable) variable,
+                                        url.get(), &v, &len);
+    if (NPERR_NO_ERROR == *result)
+        value->Adopt(v, len);
+
+    return true;
+}
+
+bool
+PluginInstanceParent::AnswerNPN_SetValueForURL(const NPNURLVariable& variable,
+                                               const nsCString& url,
+                                               const nsCString& value,
+                                               NPError* result)
+{
+    *result = mNPNIface->setvalueforurl(mNPP, (NPNURLVariable) variable,
+                                        url.get(), value.get(),
+                                        value.Length());
+    return true;
+}
+
+bool
+PluginInstanceParent::AnswerNPN_GetAuthenticationInfo(const nsCString& protocol,
+                                                      const nsCString& host,
+                                                      const int32_t& port,
+                                                      const nsCString& scheme,
+                                                      const nsCString& realm,
+                                                      nsCString* username,
+                                                      nsCString* password,
+                                                      NPError* result)
+{
+    char* u;
+    uint32_t ulen;
+    char* p;
+    uint32_t plen;
+
+    *result = mNPNIface->getauthenticationinfo(mNPP, protocol.get(),
+                                               host.get(), port,
+                                               scheme.get(), realm.get(),
+                                               &u, &ulen, &p, &plen);
+    if (NPERR_NO_ERROR == result) {
+        username->Adopt(u, ulen);
+        password->Adopt(p, plen);
+    }
+    return true;
+}
+
 #if defined(OS_WIN)
 
 /* windowless drawing helpers */
