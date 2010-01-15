@@ -246,8 +246,6 @@ PluginModuleChild::UnregisterNPObject(NPObject* aObject)
     AssertPluginThread();
     NS_ASSERTION(mObjectMap.IsInitialized(), "Not initialized!");
     NS_ASSERTION(aObject, "Null pointer!");
-    NS_ASSERTION(mObjectMap.Get(aObject, nsnull),
-                 "Unregistering an object that was never added!");
     mObjectMap.Remove(aObject);
 }
 
@@ -286,6 +284,12 @@ ActorSearch(const void* aKey,
 }
 
 } // anonymous namespace
+
+bool
+PluginModuleChild::NPObjectIsRegistered(NPObject* aObject)
+{
+    return !!mObjectMap.Get(aObject, nsnull);
+}
 
 bool
 PluginModuleChild::NPObjectIsRegisteredForActor(
@@ -1476,9 +1480,10 @@ PluginModuleChild::PluginInstanceDestroyed(PluginInstanceChild* aActor,
     PLUGIN_LOG_DEBUG_METHOD;
     AssertPluginThread();
 
-    *rv = mFunctions.destroy(aActor->GetNPP(), 0);
-    aActor->Destroy();
-    aActor->GetNPP()->ndata = 0;
+    NPP npp = aActor->GetNPP();
+
+    *rv = mFunctions.destroy(npp, 0);
+    npp->ndata = 0;
 
     return true;
 }
