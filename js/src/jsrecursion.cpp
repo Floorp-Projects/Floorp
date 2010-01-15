@@ -524,6 +524,10 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     slurpSlot(addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, argsobj)), "argsobj"),
               &fp->argsobj,
               &info);
+    /* scopeChain */
+    slurpSlot(addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, scopeChain)), "scopeChain"),
+              (jsval*) &fp->scopeChain,
+              &info);
     /* vars */
     LIns* slots_ins = addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, slots)),
                               "slots");
@@ -596,7 +600,7 @@ TraceRecorder::downRecursion()
 
     /* Adjust the stack by the budget the down-frame needs. */
     int slots = NativeStackSlots(cx, 1) - NativeStackSlots(cx, 0);
-    JS_ASSERT(unsigned(slots) == NativeStackSlots(cx, 1) - fp->argc - 2 - fp->script->nfixed - 1);
+    JS_ASSERT(unsigned(slots) == NativeStackSlots(cx, 1) - fp->argc - 2 - fp->script->nfixed - 2);
 
     /* Guard that there is enough stack space. */
     JS_ASSERT(tree->maxNativeStackSlots >= tree->nativeStackBase / sizeof(double));

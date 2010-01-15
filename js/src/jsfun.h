@@ -163,6 +163,11 @@ struct JSFunction : public JSObject {
     bool optimizedClosure() const { return FUN_KIND(this) > JSFUN_INTERPRETED; }
     bool needsWrapper()     const { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
 
+    uintN countVars() const { 
+        JS_ASSERT(FUN_INTERPRETED(this));
+        return u.i.nvars; 
+    }
+
     uintN countArgsAndVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
         return nargs + u.i.nvars;
@@ -273,7 +278,7 @@ js_TraceFunction(JSTracer *trc, JSFunction *fun);
 extern void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun);
 
-extern JSObject *
+extern JSObject * JS_FASTCALL
 js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent);
 
 extern JS_REQUIRES_STACK JSObject *
@@ -310,8 +315,15 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags);
 extern JSObject *
 js_GetCallObject(JSContext *cx, JSStackFrame *fp);
 
+extern JSObject * JS_FASTCALL
+js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSObject *scopeChain);
+
 extern void
 js_PutCallObject(JSContext *cx, JSStackFrame *fp);
+
+extern JSBool JS_FASTCALL
+js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs, jsval *argv, 
+                        uint32 nvars, jsval *slots);
 
 extern JSFunction *
 js_GetCallObjectFunction(JSObject *obj);
@@ -358,6 +370,9 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp);
 
 extern void
 js_PutArgsObject(JSContext *cx, JSStackFrame *fp);
+
+inline bool
+js_IsNamedLambda(JSFunction *fun) { return (fun->flags & JSFUN_LAMBDA) && fun->atom; }
 
 /*
  * Reserved slot structure for Arguments objects:

@@ -779,6 +779,17 @@ CalleeGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return CheckForEscapingClosure(cx, obj, vp);
 }
 
+static JSObject *
+NewCallObject(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
+{
+    JSObject *callobj = js_NewObjectWithGivenProto(cx, &js_CallClass, NULL, scopeChain);
+    if (!callobj ||
+        !js_EnsureReservedSlots(cx, callobj, fun->countArgsAndVars())) {
+        return NULL;
+    }
+    return callobj;
+}
+
 JSObject *
 js_GetCallObject(JSContext *cx, JSStackFrame *fp)
 {
@@ -823,11 +834,9 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         }
     }
 
-    callobj = js_NewObjectWithGivenProto(cx, &js_CallClass, NULL, fp->scopeChain);
-    if (!callobj ||
-        !js_EnsureReservedSlots(cx, callobj, fp->fun->countArgsAndVars())) {
+    callobj = NewCallObject(cx, fp->fun, fp->scopeChain);
+    if (!callobj)
         return NULL;
-    }
 
     callobj->setPrivate(fp);
     JS_ASSERT(fp->argv);
@@ -844,6 +853,19 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
     return callobj;
 }
 
+JSObject * JS_FASTCALL
+js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSObject *scopeChain)
+{
+    JS_ASSERT(!js_IsNamedLambda(fun));
+    JSObject *callobj = NewCallObject(cx, fun, scopeChain);
+    if (!callobj)
+        return NULL;
+    STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, OBJECT_TO_JSVAL(callee));
+    return callobj;
+}
+
+JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CreateCallObjectOnTrace, CONTEXT, FUNCTION, OBJECT, OBJECT, 0, 0)
+
 JSFunction *
 js_GetCallObjectFunction(JSObject *obj)
 {
@@ -857,6 +879,13 @@ js_GetCallObjectFunction(JSObject *obj)
     }
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
     return GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v));
+}
+
+inline static void
+CopyValuesToCallObject(JSObject *callobj, int nargs, jsval *argv, int nvars, jsval *slots)
+{
+    memcpy(callobj->dslots, argv, nargs * sizeof(jsval));
+    memcpy(callobj->dslots + nargs, slots, nvars * sizeof(jsval));
 }
 
 void
@@ -885,15 +914,11 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     if (n != 0) {
         JS_ASSERT(STOBJ_NSLOTS(callobj) >= JS_INITIAL_NSLOTS + n);
         n += JS_INITIAL_NSLOTS;
-        JS_LOCK_OBJ(cx, callobj);
-        memcpy(callobj->dslots, fp->argv, fun->nargs * sizeof(jsval));
-        memcpy(callobj->dslots + fun->nargs, fp->slots,
-               fun->u.i.nvars * sizeof(jsval));
-        JS_UNLOCK_OBJ(cx, callobj);
+        CopyValuesToCallObject(callobj, fun->nargs, fp->argv, fun->u.i.nvars, fp->slots);
     }
 
     /* Clear private pointers to fp, which is about to go away (js_Invoke). */
-    if ((fun->flags & JSFUN_LAMBDA) && fun->atom) {
+    if (js_IsNamedLambda(fun)) {
         JSObject *env = STOBJ_GET_PARENT(callobj);
 
         JS_ASSERT(STOBJ_GET_CLASS(env) == &js_DeclEnvClass);
@@ -904,6 +929,22 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     callobj->setPrivate(NULL);
     fp->callobj = NULL;
 }
+
+JSBool JS_FASTCALL
+js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs, jsval *argv,
+                        uint32 nvars, jsval *slots)
+{
+    JS_ASSERT(scopeChain->hasClass(&js_CallClass));
+    JS_ASSERT(!scopeChain->getPrivate());
+
+    uintN n = nargs + nvars;
+    if (n != 0)
+        CopyValuesToCallObject(scopeChain, nargs, argv, nvars, slots);
+
+    return true;
+}
+
+JS_DEFINE_CALLINFO_6(extern, BOOL, js_PutCallObjectOnTrace, CONTEXT, OBJECT, UINT32, JSVALPTR, UINT32, JSVALPTR, 0, 0)
 
 static JSBool
 call_enumerate(JSContext *cx, JSObject *obj)
@@ -2403,7 +2444,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     return fun;
 }
 
-JSObject *
+JSObject * JS_FASTCALL
 js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
 {
     /*
@@ -2416,6 +2457,8 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
     clone->setPrivate(fun);
     return clone;
 }
+
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_CloneFunctionObject, CONTEXT, FUNCTION, OBJECT, 0, 0)
 
 /*
  * Create a new flat closure, but don't initialize the imported upvar
