@@ -524,9 +524,6 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
     ) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
     sele->SetScriptLineNumber(aLineNumber);
-    if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)) {
-      sele->WillCallDoneAddingChildren();
-    }
     mConstrainSize = PR_FALSE;
   }
 
