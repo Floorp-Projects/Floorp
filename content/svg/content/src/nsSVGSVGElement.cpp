@@ -152,28 +152,7 @@ nsSVGElement::EnumInfo nsSVGSVGElement::sEnumInfo[1] =
   }
 };
 
-// From NS_IMPL_NS_NEW_SVG_ELEMENT but with aFromParser
-nsresult
-NS_NewSVGSVGElement(nsIContent **aResult, nsINodeInfo *aNodeInfo,
-                    PRBool aFromParser)
-{
-  nsSVGSVGElement *it = new nsSVGSVGElement(aNodeInfo, aFromParser);
-  if (!it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(it);
-
-  nsresult rv = it->Init();
-
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(it);
-    return rv;
-  }
-
-  *aResult = it;
-
-  return rv;
-}
+NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(SVG)
 
 //----------------------------------------------------------------------
 // nsISupports methods
