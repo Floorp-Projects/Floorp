@@ -5540,6 +5540,16 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     nsresult rv = os->EnumerateObservers(TOPIC_PLACES_INIT_COMPLETE,
                                          getter_AddRefs(e));
     if (NS_SUCCEEDED(rv) && e) {
+      // This covers a special case that can happen in tests, if the test
+      // does never interrupt the main thread we could receive xpcom-shutdown
+      // before we fire any notification, that means that if we notify now
+      // we will init the category cache after xpcom-shutdown, category
+      // observing services will be then initialized and leaked.
+      // We could shutdown earlier (see bug 529821) but also in such a case
+      // we could have async statements trying to notify after xpcom-shutdown,
+      // so, for now, we just avoid to notify from now on.
+      mCanNotify = false;
+
       nsCOMPtr<nsIObserver> observer;
       PRBool loop = PR_TRUE;
       while(NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop)
