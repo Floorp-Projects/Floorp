@@ -3485,6 +3485,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         failif = StmtIf(ExprNot(readok))
         failif.addifstmt(StmtReturn(_Result.PayloadError))
 
+        idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
             + [ failif, Whitespace.NL ]
@@ -3497,8 +3498,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + self.ctorPrologue(md, errfn=_Result.ValuError,
                                 idexpr=_actorHId(actorhandle))
             + [ Whitespace.NL ]
+            + saveIdStmts
             + self.invokeRecvHandler(md)
-            + self.makeReply(md, errfnRecv)
+            + self.makeReply(md, errfnRecv, idvar)
             + [ Whitespace.NL,
                 StmtReturn(_Result.Processed) ])
 
@@ -3513,7 +3515,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         failif = StmtIf(ExprNot(readok))
         failif.addifstmt(StmtReturn(_Result.PayloadError))
 
-        idvar = ExprVar('__id')
+        idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
             + [ failif, Whitespace.NL ]
@@ -3521,8 +3523,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 for r in md.returns ]
             + self.invokeRecvHandler(md, implicit=0)
             + [ Whitespace.NL ]
-            + [ StmtDecl(Decl(_actorIdType(), idvar.name),
-                         self.protocol.routingId()) ]
+            + saveIdStmts
             + self.dtorEpilogue(md, md.actorDecl().var())
             + [ Whitespace.NL ]
             + self.makeReply(md, errfnRecv, routingId=idvar)
@@ -3540,14 +3541,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         failif = StmtIf(ExprNot(readok))
         failif.addifstmt(StmtReturn(_Result.PayloadError))
 
+        idvar, saveIdStmts = self.saveActorId(md)
         case.addstmts(
             stmts
             + [ failif, Whitespace.NL ]
             + [ StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns ]
+            + saveIdStmts
             + self.invokeRecvHandler(md)
             + [ Whitespace.NL ]
-            + self.makeReply(md, errfnRecv)
+            + self.makeReply(md, errfnRecv, routingId=idvar)
             + [ StmtReturn(_Result.Processed) ])
 
         return lbl, case
@@ -3586,9 +3589,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return msgvar, stmts
 
 
-    def makeReply(self, md, errfn, routingId=None):
+    def makeReply(self, md, errfn, routingId):
         # TODO special cases for async ctor/dtor replies
-        if md.decl.type.isAsync():
+        if not md.decl.type.hasReply():
             return [ ]
 
         replyvar = self.replyvar
@@ -3795,6 +3798,17 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprSelect(msgptr, '->', 'Log'),
                 args=[ ExprLiteral.String('['+ actorname +'] '+ pfx),
                        ExprVar('stderr') ])) ])
+
+    def saveActorId(self, md):
+        idvar = ExprVar('__id')
+        if md.decl.type.hasReply():
+            # only save the ID if we're actually going to use it, to
+            # avoid unused-variable warnings
+            saveIdStmts = [ StmtDecl(Decl(_actorIdType(), idvar.name),
+                                     self.protocol.routingId()) ]
+        else:
+            saveIdStmts = [ ]
+        return idvar, saveIdStmts
 
 
 class _GenerateProtocolParentCode(_GenerateProtocolActorCode):
