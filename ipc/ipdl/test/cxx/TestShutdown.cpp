@@ -94,13 +94,19 @@ TestShutdownChild::RecvStart()
         if (!c2s2)
             fail("problem sending ctor");
 
-        PTestShutdownSubsubChild::Send__delete__(c1s1);
-        PTestShutdownSubsubChild::Send__delete__(c1s2);
-        PTestShutdownSubsubChild::Send__delete__(c2s1);
-        PTestShutdownSubsubChild::Send__delete__(c2s2);
+        if (!PTestShutdownSubsubChild::Send__delete__(c1s1))
+            fail("problem sending dtor");
+        if (!PTestShutdownSubsubChild::Send__delete__(c1s2))
+            fail("problem sending dtor");
+        if (!PTestShutdownSubsubChild::Send__delete__(c2s1))
+            fail("problem sending dtor");
+        if (!PTestShutdownSubsubChild::Send__delete__(c2s2))
+            fail("problem sending dtor");
 
-        PTestShutdownSubChild::Send__delete__(c1);
-        PTestShutdownSubChild::Send__delete__(c2);
+        if (!PTestShutdownSubChild::Send__delete__(c1))
+            fail("problem sending dtor");
+        if (!PTestShutdownSubChild::Send__delete__(c2))
+            fail("problem sending dtor");
     }
 
     // test 2: alloc some actors and subactors, delete managers first
@@ -136,8 +142,10 @@ TestShutdownChild::RecvStart()
             fail("problem sending ctor");
 
         // delete parents without deleting kids
-        PTestShutdownSubChild::Send__delete__(c1);
-        PTestShutdownSubChild::Send__delete__(c2);
+        if (!PTestShutdownSubChild::Send__delete__(c1))
+            fail("problem sending dtor");
+        if (!PTestShutdownSubChild::Send__delete__(c2))
+            fail("problem sending dtor");
     }
 
     // test 3: alloc some actors and subactors, then crash
