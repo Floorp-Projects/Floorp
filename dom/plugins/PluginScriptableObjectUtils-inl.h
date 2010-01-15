@@ -39,30 +39,28 @@
 
 #include "PluginScriptableObjectUtils.h"
 
-using namespace mozilla::plugins;
-
 namespace {
 
 template<class InstanceType>
 class VariantTraits;
 
 template<>
-class VariantTraits<PluginInstanceParent>
+class VariantTraits<mozilla::plugins::PluginInstanceParent>
 {
 public:
-  typedef PluginScriptableObjectParent ScriptableObjectType;
+  typedef mozilla::plugins::PluginScriptableObjectParent ScriptableObjectType;
 };
 
 template<>
-class VariantTraits<PluginInstanceChild>
+class VariantTraits<mozilla::plugins::PluginInstanceChild>
 {
 public:
-  typedef PluginScriptableObjectChild ScriptableObjectType;
+  typedef mozilla::plugins::PluginScriptableObjectChild ScriptableObjectType;
 };
 
 } /* anonymous namespace */
 
-bool
+inline bool
 mozilla::plugins::ConvertToVariant(const Variant& aRemoteVariant,
                                    NPVariant& aVariant,
                                    PluginInstanceParent* aInstance)
@@ -195,23 +193,3 @@ mozilla::plugins::ConvertToRemoteVariant(const NPVariant& aVariant,
 
   return true;
 }
-
-namespace {
-
-// This function only exists to get both flavors of the ConvertToRemoteVariant
-// function instantiated and should never be called.
-
-void
-XXXNeverCalled()
-{
-  NS_NOTREACHED("This should never be called!");
-  PluginInstanceParent* parent = nsnull;
-  PluginInstanceChild* child = nsnull;
-  NPVariant variant;
-  VOID_TO_NPVARIANT(variant);
-  Variant remoteVariant;
-  ConvertToRemoteVariant(variant, remoteVariant, parent, false);
-  ConvertToRemoteVariant(variant, remoteVariant, child, false);
-}
-
-} /* anonymous namespace */
