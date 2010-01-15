@@ -76,15 +76,9 @@
                   onchange="document.getElementById('browser.urlbar.autocomplete.enabled').updateElements();"/>
 
       <!-- History -->
-      <preference id="browser.history_expire_days"
-                  name="browser.history_expire_days"
-                  type="int"/>
-      <preference id="browser.history_expire_days.mirror"
-                  name="browser.history_expire_days.mirror"
-                  type="int"/>
-      <preference id="browser.history_expire_days_min"
-                  name="browser.history_expire_days_min"
-                  type="int"/>
+      <preference id="places.history.enabled"
+                  name="places.history.enabled"
+                  type="bool"/>
       <preference id="browser.formfill.enable"
                   name="browser.formfill.enable"
                   type="bool"/>
@@ -184,18 +178,10 @@
 
           <vbox class="indent">
             <vbox class="indent">
-              <hbox align="center">
-                <checkbox id="rememberHistoryDays"
-                          label="&rememberHistory.pre.label;"
-                          accesskey="&rememberHistory.pre.accesskey;"
-                          oncommand="gPrivacyPane.onchangeHistoryDaysCheck();"
-                          aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
-                <textbox id="historyDays" type="number" size="3"
-                         aria-labelledby="rememberHistoryDays historyDays rememberAfter"
-                         onkeyup="gPrivacyPane.onkeyupHistoryDaysText();"
-                         preference="browser.history_expire_days_min"/>
-                <label id="rememberAfter"> &rememberHistory.post.label;</label>
-              </hbox>
+              <checkbox id="rememberHistory"
+                        label="&rememberHistory.label;"
+                        accesskey="&rememberHistory.accesskey;"
+                        preference="places.history.enabled"/>
               <checkbox id="rememberDownloads"
                         label="&rememberDownload.label;"
                         accesskey="&rememberDownload.accesskey;"

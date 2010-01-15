@@ -183,7 +183,7 @@ function run_test() {
   do_check_eq(result.root.childCount, 1);
   do_check_eq(result.root.getChild(0).uri, "http://google.com/");
 
-  // by default, browser.history_expire_days is 9
+  // By default history is enabled.
   do_check_true(!histsvc.historyDisabled);
 
   // test getPageTitle

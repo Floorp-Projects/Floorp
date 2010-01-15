@@ -1459,7 +1459,7 @@ interface nsINavHistoryService : nsISupports
 
   /** 
    * True if history is disabled. currently, 
-   * history is disabled if the browser.history_expire_days pref is 0
+   * history is disabled if the places.history.enabled pref is false.
    */
   readonly attribute boolean historyDisabled;
 
