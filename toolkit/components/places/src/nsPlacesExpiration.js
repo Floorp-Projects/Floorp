@@ -78,6 +78,8 @@ const nsPlacesExpirationFactory = {
 ////////////////////////////////////////////////////////////////////////////////
 //// Constants
 
+const MAX_INT64 = 9223372036854775807;
+
 const TOPIC_XPCOM_SHUTDOWN = "xpcom-shutdown";
 const TOPIC_PREF_CHANGED = "nsPref:changed";
 const TOPIC_DEBUG_START_EXPIRATION = "places-debug-start-expiration";
@@ -244,8 +246,8 @@ const EXPIRATION_QUERIES = {
   },
 
   // Finds orphan URIs in the database.
-  // We don't bother taking into account the temp table here, it will be a
-  // subset of all history most of the time.
+  // Notice we won't notify single removed URIs on removeAllPages, so we don't
+  // run this query in such a case, but just delete URIs.
   QUERY_FIND_URIS_TO_EXPIRE: {
     sql: "SELECT h.url, h.last_visit_date AS visit_date, 1 AS whole_entry, " +
                 ":limit_uris AS expected_results " +
@@ -256,6 +258,7 @@ const EXPIRATION_QUERIES = {
          "WHERE v.id IS NULL " +
            "AND v_t.id IS NULL " +
            "AND b.id IS NULL " +
+           "AND h.id <= :last_place_id " +
            "AND SUBSTR(h.url, 1, 6) <> 'place:' " +
          "UNION ALL " +
          "SELECT h.url, h.last_visit_date AS visit_date, 1 AS whole_entry, " +
@@ -267,10 +270,10 @@ const EXPIRATION_QUERIES = {
          "WHERE v.id IS NULL " +
            "AND v_t.id IS NULL " +
            "AND b.id IS NULL " +
+           "AND h.id <= :last_place_id " +
            "AND SUBSTR(h.url, 1, 6) <> 'place:' " +
          "LIMIT :limit_uris",
-    actions: ACTION.TIMED | ACTION.CLEAR_HISTORY | ACTION.SHUTDOWN |
-             ACTION.IDLE | ACTION.DEBUG
+    actions: ACTION.TIMED | ACTION.SHUTDOWN | ACTION.IDLE | ACTION.DEBUG
   },
 
   // Expire orphan URIs from the database.
@@ -284,6 +287,7 @@ const EXPIRATION_QUERIES = {
            "WHERE v.id IS NULL " +
              "AND v_t.id IS NULL " +
              "AND b.id IS NULL " +
+             "AND h.id <= :last_place_id " +
              "AND SUBSTR(h.url, 1, 6) <> 'place:' " +
            "UNION ALL " +
            "SELECT h.id " +
@@ -294,6 +298,7 @@ const EXPIRATION_QUERIES = {
            "WHERE v.id IS NULL " +
              "AND v_t.id IS NULL " +
              "AND b.id IS NULL " +
+             "AND h.id <= :last_place_id " +
              "AND SUBSTR(h.url, 1, 6) <> 'place:' " +
            "LIMIT :limit_uris " +
          ")",
@@ -801,7 +806,27 @@ nsPlacesExpiration.prototype = {
         break;
       case "QUERY_FIND_URIS_TO_EXPIRE":
       case "QUERY_EXPIRE_URIS":
+        // We could run in the middle of an addVisit for a new page.  In such a
+        // case since we are async and addVisit is sync, we could end up
+        // expiring the page before it actually has any visit.
+        // This is a temporary workaround till addVisit will be async, we don't
+        // want to expire new pages added after this runs.
+        let max_place_id = MAX_INT64;
+        let maxPlaceIdStmt = this._db.createStatement(
+          "SELECT MAX(IFNULL((SELECT MAX(id) FROM moz_places_temp), 0), " +
+                     "IFNULL((SELECT MAX(id) FROM moz_places), 0) " +
+                    ") AS max_place_id");
+        try {
+          maxPlaceIdStmt.executeStep();
+          max_place_id = maxPlaceIdStmt.getInt64(0);
+        }
+        catch(e) {}
+        finally {
+          maxPlaceIdStmt.finalize();
+        }
+
         params.limit_uris = baseLimit;
+        params.last_place_id = max_place_id;
         break;
       case "QUERY_EXPIRE_FAVICONS":
         params.limit_favicons = baseLimit;
