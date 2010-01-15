@@ -303,13 +303,15 @@ function getFrecency(url)
   return frecency;
 }
 
-function prepTest(testIndex, testName)
+function prepTest(testIndex, testName, callback)
 {
   print("Test " + testIndex + ": " + testName);
-  histServ.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
-  dbConn.executeSimpleSQL("DELETE FROM moz_places_view");
-  dbConn.executeSimpleSQL("DELETE FROM moz_bookmarks WHERE id > " +
-                          defaultBookmarksMaxId);
+  waitForClearHistory(function() {
+    dbConn.executeSimpleSQL("DELETE FROM moz_places_view");
+    dbConn.executeSimpleSQL("DELETE FROM moz_bookmarks WHERE id > " +
+                            defaultBookmarksMaxId);
+    callback();
+  });
 }
 
 function visit(uri)
@@ -341,7 +343,6 @@ function run_test()
 
   for (let i= 0; i < tests.length; i++)
   {
-    prepTest(i, tests[i].desc);
-    tests[i].run();
+    prepTest(i, tests[i].desc, tests[i].run);
   }
 }
