@@ -63,8 +63,7 @@ rpc protocol PPluginInstance
   manages PStreamNotify;
 
 child:
-  rpc __delete__()
-    returns (NPError rv);
+  rpc __delete__();
 
   rpc NPP_SetWindow(NPRemoteWindow window)
     returns (NPError rv);
@@ -81,6 +80,9 @@ child:
 
   rpc NPP_HandleEvent(NPRemoteEvent event)
     returns (int16_t handled);
+
+  rpc NPP_Destroy()
+    returns (NPError rv);
 
 parent:
   rpc NPN_GetValue_NPNVjavascriptEnabledBool()
