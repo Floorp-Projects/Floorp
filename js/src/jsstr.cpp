@@ -2880,6 +2880,18 @@ const char *JSString::deflatedIntStringTable[] = {
 #undef L2
 #undef L3
 
+/* Static table for common UTF8 encoding */
+#define U8(c)   char(((c) >> 6) | 0xc0), char(((c) & 0x3f) | 0x80), 0
+#define U(c)    U8(c), U8(c+1), U8(c+2), U8(c+3), U8(c+4), U8(c+5), U8(c+6), U8(c+7)
+
+const char JSString::deflatedUnitStringTable[] = {
+    U(0x80), U(0x88), U(0x90), U(0x98), U(0xa0), U(0xa8), U(0xb0), U(0xb8),
+    U(0xc0), U(0xc8), U(0xd0), U(0xd8), U(0xe0), U(0xe8), U(0xf0), U(0xf8)
+};
+
+#undef U
+#undef U8
+
 #undef C
 
 #undef O0
@@ -3821,11 +3833,14 @@ js_GetStringBytes(JSContext *cx, JSString *str)
     if (JSString::isUnitString(str)) {
 #ifdef IS_LITTLE_ENDIAN
         /* Unit string data is {c, 0, 0, 0} so we can just cast. */
-        return (char *)str->chars();
+        bytes = (char *)str->chars();
 #else
         /* Unit string data is {0, c, 0, 0} so we can point into the middle. */
-        return (char *)str->chars() + 1;
-#endif            
+        bytes = (char *)str->chars() + 1;
+#endif
+        return ((*bytes & 0x80) && js_CStringsAreUTF8)
+               ? JSString::deflatedUnitStringTable + ((*bytes & 0x7f) * 3)
+               : bytes;
     }
 
     if (JSString::isIntString(str)) {
