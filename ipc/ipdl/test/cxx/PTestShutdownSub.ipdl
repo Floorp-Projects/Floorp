@@ -10,7 +10,7 @@ sync protocol PTestShutdownSub {
 
 parent:
     PTestShutdownSubsub(bool expectParentDeleted);
-    __delete__();
+    sync __delete__();
 
 state CREATING:
     recv PTestShutdownSubsub goto CREATING;
