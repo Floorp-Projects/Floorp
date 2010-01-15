@@ -98,6 +98,10 @@ const PREF_BRANCH = "places.history.expiration.";
 const PREF_MAX_URIS = "max_pages";
 const PREF_MAX_URIS_NOTSET = -1; // Use our internally calculated limit.
 
+// We save the current unique URIs limit to this pref, to make it available to
+// other components without having to duplicate the full logic.
+const PREF_READONLY_CALCULATED_MAX_URIS = "transient_current_max_pages";
+
 // Seconds between each expiration step.
 const PREF_INTERVAL_SECONDS = "interval_seconds";
 const PREF_INTERVAL_SECONDS_NOTSET = 3 * 60;
@@ -701,6 +705,9 @@ nsPlacesExpiration.prototype = {
       this._urisLimit = Math.max(MIN_URIS,
                                  parseInt(cachesize / AVG_SIZE_PER_URIENTRY));
     }
+    // Expose the calculated limit to other components.
+    this._prefBranch.setIntPref(PREF_READONLY_CALCULATED_MAX_URIS,
+                                this._urisLimit);
 
     // Get the expiration interval value.
     try {
