@@ -103,10 +103,10 @@ TestShutdownChild::RecvStart()
         if (!PTestShutdownSubsubChild::Send__delete__(c2s2))
             fail("problem sending dtor");
 
-        if (!PTestShutdownSubChild::Send__delete__(c1))
-            fail("problem sending dtor");
-        if (!PTestShutdownSubChild::Send__delete__(c2))
-            fail("problem sending dtor");
+        if (!c1->CallStackFrame())
+            fail("problem creating dummy stack frame");
+        if (!c2->CallStackFrame())
+            fail("problem creating dummy stack frame");
     }
 
     // test 2: alloc some actors and subactors, delete managers first
@@ -142,10 +142,10 @@ TestShutdownChild::RecvStart()
             fail("problem sending ctor");
 
         // delete parents without deleting kids
-        if (!PTestShutdownSubChild::Send__delete__(c1))
-            fail("problem sending dtor");
-        if (!PTestShutdownSubChild::Send__delete__(c2))
-            fail("problem sending dtor");
+        if (!c1->CallStackFrame())
+            fail("problem creating dummy stack frame");
+        if (!c2->CallStackFrame())
+            fail("problem creating dummy stack frame");
     }
 
     // test 3: alloc some actors and subactors, then crash
@@ -195,6 +195,17 @@ void
 TestShutdownChild::ActorDestroy(ActorDestroyReason why)
 {
     fail("hey wait ... we should have crashed!");
+}
+
+bool
+TestShutdownSubChild::AnswerStackFrame()
+{
+    if (!PTestShutdownSubChild::Send__delete__(this))
+        fail("problem sending dtor");
+
+    // WATCH OUT!  |this| has just deleted
+
+    return true;
 }
 
 void
