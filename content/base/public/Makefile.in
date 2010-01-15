@@ -113,7 +113,6 @@ XPIDLSRCS	= \
 		nsIObjectLoadingContent.idl \
 		nsIFrameLoader.idl \
 		nsIXMLHttpRequest.idl \
-		IContentSecurityPolicy.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
