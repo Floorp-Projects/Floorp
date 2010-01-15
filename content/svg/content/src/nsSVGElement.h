@@ -371,26 +371,45 @@ nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
                                  nsINodeInfo *aNodeInfo)                     \
 {                                                                            \
-  nsSVG##_elementName##Element *it =                                         \
+  nsRefPtr<nsSVG##_elementName##Element> it =                                \
     new nsSVG##_elementName##Element(aNodeInfo);                             \
   if (!it)                                                                   \
     return NS_ERROR_OUT_OF_MEMORY;                                           \
                                                                              \
-  NS_ADDREF(it);                                                             \
-                                                                             \
   nsresult rv = it->Init();                                                  \
                                                                              \
   if (NS_FAILED(rv)) {                                                       \
-    NS_RELEASE(it);                                                          \
     return rv;                                                               \
   }                                                                          \
                                                                              \
-  *aResult = it;                                                             \
+  *aResult = it.forget().get();                                              \
                                                                              \
   return rv;                                                                 \
 }
 
-// No unlinking, we'd need to null out the value pointer (the object it
+#define NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(_elementName)                \
+nsresult                                                                     \
+NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
+                                 nsINodeInfo *aNodeInfo,                     \
+                                 PRBool aFromParser)                         \
+{                                                                            \
+  nsRefPtr<nsSVG##_elementName##Element> it =                                \
+    new nsSVG##_elementName##Element(aNodeInfo, aFromParser);                \
+  if (!it)                                                                   \
+    return NS_ERROR_OUT_OF_MEMORY;                                           \
+                                                                             \
+  nsresult rv = it->Init();                                                  \
+                                                                             \
+  if (NS_FAILED(rv)) {                                                       \
+    return rv;                                                               \
+  }                                                                          \
+                                                                             \
+  *aResult = it.forget().get();                                              \
+                                                                             \
+  return rv;                                                                 \
+}
+
+ // No unlinking, we'd need to null out the value pointer (the object it
 // points to is held by the element) and null-check it everywhere.
 #define NS_SVG_VAL_IMPL_CYCLE_COLLECTION(_val, _element)                     \
 NS_IMPL_CYCLE_COLLECTION_CLASS(_val)                                         \
