@@ -81,7 +81,7 @@ Observer.prototype =
   onPageChanged: function(aURI, aWhat, aValue)
   {
   },
-  onPageExpired: function(aURI, aVisitTime, aWholeEntry)
+  onDeleteVisits: function()
   {
   },
   QueryInterface: function(iid) {
