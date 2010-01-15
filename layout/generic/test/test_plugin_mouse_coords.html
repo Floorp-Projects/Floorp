@@ -68,7 +68,7 @@ function doTest() {
 }
 // Need to run 'doTest' after painting is unsuppressed, or we'll set clip
 // regions to empty.
-addLoadEvent(function() { setTimeout(doTest, 0); } );
+addLoadEvent(function() { setTimeout(doTest, 1000); } );
 SimpleTest.waitForExplicitFinish();
 
 </script>
