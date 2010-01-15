@@ -107,7 +107,6 @@
 #include "nsIBrowserGlue.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
-#include "nsCrt.h"
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
@@ -150,6 +149,12 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 // define to get debugging messages on console about import/export
 //#define DEBUG_IMPORT
 //#define DEBUG_EXPORT
+
+#if defined(XP_WIN) || defined(XP_OS2)
+#define NS_LINEBREAK "\015\012"
+#else
+#define NS_LINEBREAK "\012"
+#endif
 
 class nsIOutputStream;
 static const char kWhitespace[] = " \r\n\t\b";
