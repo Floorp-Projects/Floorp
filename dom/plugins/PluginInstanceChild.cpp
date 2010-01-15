@@ -63,40 +63,33 @@ using mozilla::gfx::SharedDIB;
 #endif
 
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface) :
-        mPluginIface(aPluginIface)
+    mPluginIface(aPluginIface)
 #if defined(OS_WIN)
-        , mPluginWindowHWND(0)
-        , mPluginWndProc(0)
-        , mPluginParentHWND(0)
-#endif
-    {
-        memset(&mWindow, 0, sizeof(mWindow));
-        mData.ndata = (void*) this;
+    , mPluginWindowHWND(0)
+    , mPluginWndProc(0)
+    , mPluginParentHWND(0)
+#endif // OS_WIN
+{
+    memset(&mWindow, 0, sizeof(mWindow));
+    mData.ndata = (void*) this;
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
-        mWindow.ws_info = &mWsInfo;
-        memset(&mWsInfo, 0, sizeof(mWsInfo));
-#  ifdef MOZ_WIDGET_GTK2
-        mWsInfo.display = GDK_DISPLAY();
-#  endif
-#endif
+    mWindow.ws_info = &mWsInfo;
+    memset(&mWsInfo, 0, sizeof(mWsInfo));
+#ifdef MOZ_WIDGET_GTK2
+    mWsInfo.display = GDK_DISPLAY();
+#endif // MOZ_WIDGET_GTK2
+#endif // MOZ_X11 && XP_UNIX && !XP_MACOSX
 #if defined(OS_WIN)
     memset(&mAlphaExtract, 0, sizeof(mAlphaExtract));
     mAlphaExtract.doublePassEvent = ::RegisterWindowMessage(NS_OOPP_DOUBLEPASS_MSGID);
-#endif
-    }
+#endif // OS_WIN
+}
 
 PluginInstanceChild::~PluginInstanceChild()
 {
 #if defined(OS_WIN)
   DestroyPluginWindow();
 #endif
-}
-
-bool
-PluginInstanceChild::Answer__delete__(NPError* rv)
-{
-    return static_cast<PluginModuleChild*>(Manager())->
-        PluginInstanceDestroyed(this, rv);
 }
 
 NPError
@@ -174,7 +167,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         NS_ASSERTION(actor, "Null actor!");
 
         NPObject* object =
-            static_cast<PluginScriptableObjectChild*>(actor)->GetObject();
+            static_cast<PluginScriptableObjectChild*>(actor)->GetObject(true);
         NS_ASSERTION(object, "Null object?!");
 
         PluginModuleChild::sBrowserFuncs.retainobject(object);
@@ -197,7 +190,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         NS_ASSERTION(actor, "Null actor!");
 
         NPObject* object =
-            static_cast<PluginScriptableObjectChild*>(actor)->GetObject();
+            static_cast<PluginScriptableObjectChild*>(actor)->GetObject(true);
         NS_ASSERTION(object, "Null object?!");
 
         PluginModuleChild::sBrowserFuncs.retainobject(object);
@@ -527,30 +520,6 @@ bool
 PluginInstanceChild::Initialize()
 {
     return true;
-}
-
-void
-PluginInstanceChild::Destroy()
-{
-    // Copy the actors here so we don't enumerate a mutating array.
-    nsAutoTArray<PluginScriptableObjectChild*, 10> objects;
-    PRUint32 count = mScriptableObjects.Length();
-    for (PRUint32 index = 0; index < count; index++) {
-        objects.AppendElement(mScriptableObjects[index]);
-    }
-
-    count = objects.Length();
-    for (PRUint32 index = 0; index < count; index++) {
-        PluginScriptableObjectChild*& actor = objects[index];
-        NPObject* object = actor->GetObject();
-        if (object->_class == PluginScriptableObjectChild::GetClass()) {
-          PluginScriptableObjectChild::ScriptableInvalidate(object);
-        }
-    }
-
-#if defined(OS_WIN)
-    SharedSurfaceRelease();
-#endif
 }
 
 #if defined(OS_WIN)
@@ -885,15 +854,7 @@ PPluginScriptableObjectChild*
 PluginInstanceChild::AllocPPluginScriptableObject()
 {
     AssertPluginThread();
-
-    nsAutoPtr<PluginScriptableObjectChild>* object =
-        mScriptableObjects.AppendElement();
-    NS_ENSURE_TRUE(object, nsnull);
-
-    *object = new PluginScriptableObjectChild();
-    NS_ENSURE_TRUE(*object, nsnull);
-
-    return object->get();
+    return new PluginScriptableObjectChild(Proxy);
 }
 
 bool
@@ -902,24 +863,16 @@ PluginInstanceChild::DeallocPPluginScriptableObject(
 {
     AssertPluginThread();
 
-    PluginScriptableObjectChild* object =
+    PluginScriptableObjectChild* actor =
         reinterpret_cast<PluginScriptableObjectChild*>(aObject);
 
-    NPObject* npobject = object->GetObject();
-    if (npobject &&
-        npobject->_class != PluginScriptableObjectChild::GetClass()) {
-        PluginModuleChild::current()->UnregisterNPObject(npobject);
+    NPObject* object = actor->GetObject(false);
+    if (object) {
+        PluginModuleChild::current()->UnregisterNPObject(object);
     }
 
-    PRUint32 count = mScriptableObjects.Length();
-    for (PRUint32 index = 0; index < count; index++) {
-        if (mScriptableObjects[index] == object) {
-            mScriptableObjects.RemoveElementAt(index);
-            return true;
-        }
-    }
-    NS_NOTREACHED("An actor we don't know about?!");
-    return false;
+    delete actor;
+    return true;
 }
 
 bool
@@ -931,19 +884,12 @@ PluginInstanceChild::AnswerPPluginScriptableObjectConstructor(
     // This is only called in response to the parent process requesting the
     // creation of an actor. This actor will represent an NPObject that is
     // created by the browser and returned to the plugin.
-    NPClass* npclass =
-        const_cast<NPClass*>(PluginScriptableObjectChild::GetClass());
-
-    ChildNPObject* object = reinterpret_cast<ChildNPObject*>(
-        PluginModuleChild::sBrowserFuncs.createobject(GetNPP(), npclass));
-    if (!object) {
-        NS_WARNING("Failed to create NPObject!");
-        return false;
-    }
-
     PluginScriptableObjectChild* actor =
         static_cast<PluginScriptableObjectChild*>(aActor);
-    actor->Initialize(const_cast<PluginInstanceChild*>(this), object);
+    NS_ASSERTION(!actor->GetObject(false), "Actor already has an object?!");
+
+    actor->InitializeProxy();
+    NS_ASSERTION(actor->GetObject(false), "Actor should have an object!");
 
     return true;
 }
@@ -1053,35 +999,30 @@ PluginScriptableObjectChild*
 PluginInstanceChild::GetActorForNPObject(NPObject* aObject)
 {
     AssertPluginThread();
-  NS_ASSERTION(aObject, "Null pointer!");
+    NS_ASSERTION(aObject, "Null pointer!");
 
-  if (aObject->_class == PluginScriptableObjectChild::GetClass()) {
-      // One of ours! It's a browser-provided object.
-      ChildNPObject* object = static_cast<ChildNPObject*>(aObject);
-      NS_ASSERTION(object->parent, "Null actor!");
-      return object->parent;
-  }
+    if (aObject->_class == PluginScriptableObjectChild::GetClass()) {
+        // One of ours! It's a browser-provided object.
+        ChildNPObject* object = static_cast<ChildNPObject*>(aObject);
+        NS_ASSERTION(object->parent, "Null actor!");
+        return object->parent;
+    }
 
-  PluginScriptableObjectChild* actor =
-      PluginModuleChild::current()->GetActorForNPObject(aObject);
-  if (actor) {
-      // Plugin-provided object that we've previously wrapped.
-      return actor;
-  }
+    PluginScriptableObjectChild* actor =
+        PluginModuleChild::current()->GetActorForNPObject(aObject);
+    if (actor) {
+        // Plugin-provided object that we've previously wrapped.
+        return actor;
+    }
 
-  actor = reinterpret_cast<PluginScriptableObjectChild*>(
-      CallPPluginScriptableObjectConstructor());
-  NS_ENSURE_TRUE(actor, nsnull);
+    actor = new PluginScriptableObjectChild(LocalObject);
+    if (!CallPPluginScriptableObjectConstructor(actor)) {
+        NS_ERROR("Failed to send constructor message!");
+        return nsnull;
+    }
 
-  actor->Initialize(this, aObject);
-
-#ifdef DEBUG
-  bool ok =
-#endif
-  PluginModuleChild::current()->RegisterNPObject(aObject, actor);
-  NS_ASSERTION(ok, "Out of memory?");
-
-  return actor;
+    actor->InitializeLocal(aObject);
+    return actor;
 }
 
 NPError
@@ -1122,4 +1063,17 @@ PluginInstanceChild::InvalidateRect(NPRect* aInvalidRect)
 #endif
 
     SendNPN_InvalidateRect(*aInvalidRect);
+}
+
+bool
+PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
+{
+    PluginModuleChild* module = PluginModuleChild::current();
+    bool retval = module->PluginInstanceDestroyed(this, aResult);
+
+#if defined(OS_WIN)
+    SharedSurfaceRelease();
+#endif
+
+    return retval;
 }
