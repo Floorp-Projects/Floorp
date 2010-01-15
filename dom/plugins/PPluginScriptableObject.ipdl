@@ -72,10 +72,11 @@ parent:
     returns (Variant aResult,
              bool aSuccess);
 
-both:
-  // NPClass methods
+child:
   rpc Invalidate();
 
+both:
+  // NPClass methods
   rpc HasMethod(NPRemoteIdentifier aId)
     returns (bool aHasMethod);
 
@@ -109,6 +110,16 @@ both:
   rpc Construct(Variant[] aArgs)
     returns (Variant aResult,
              bool aSuccess);
+
+  // Objects are initially unprotected, and the Protect and Unprotect functions
+  // only affect protocol objects that represent NPObjects created in the same
+  // process (rather than protocol objects that are a proxy for an NPObject
+  // created in another process). Protocol objects representing local NPObjects
+  // are protected after an NPObject has been associated with the protocol
+  // object. Sending the protocol object as an argument to the other process
+  // temporarily protects the protocol object again for the duration of the call.
+  rpc Protect();
+  rpc Unprotect();
 };
 
 } // namespace plugins
