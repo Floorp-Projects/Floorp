@@ -3514,6 +3514,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         failif = StmtIf(ExprNot(readok))
         failif.addifstmt(StmtReturn(_Result.PayloadError))
 
+        idvar = ExprVar('__id')
         case.addstmts(
             stmts
             + [ failif, Whitespace.NL ]
@@ -3521,8 +3522,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 for r in md.returns ]
             + self.invokeRecvHandler(md, implicit=0)
             + [ Whitespace.NL ]
+            + [ StmtDecl(Decl(_actorIdType(), idvar.name),
+                         self.protocol.routingId()) ]
             + self.dtorEpilogue(md, md.actorDecl().var())
-            + self.makeReply(md, errfnRecv)
+            + [ Whitespace.NL ]
+            + self.makeReply(md, errfnRecv, routingId=idvar)
             + [ Whitespace.NL,
                 StmtReturn(_Result.Processed) ])
         
@@ -3573,16 +3577,17 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             msgCtorArgs.append(arg)
             stmts.extend(sstmts)
 
+        routingId = self.protocol.routingId(fromActor)
         stmts.extend([
             StmtExpr(ExprAssn(
                 msgvar,
                 ExprNew(Type(md.pqMsgClass()), args=msgCtorArgs))) ]
-            + self.setMessageFlags(md, msgvar, reply=0, actor=fromActor))
+            + self.setMessageFlags(md, msgvar, reply=0, routingId=routingId))
 
         return msgvar, stmts
 
 
-    def makeReply(self, md, errfn):
+    def makeReply(self, md, errfn, routingId=None):
         # TODO special cases for async ctor/dtor replies
         if md.decl.type.isAsync():
             return [ ]
@@ -3599,16 +3604,19 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             StmtExpr(ExprAssn(
                 replyvar,
                 ExprNew(Type(md.pqReplyClass()), args=replyCtorArgs))) ]
-            + self.setMessageFlags(md, replyvar, reply=1)
+            + self.setMessageFlags(md, replyvar, reply=1, routingId=routingId)
             +[ self.logMessage(md, md.replyCast(replyvar), 'Sending reply ') ])
         
         return stmts
 
 
-    def setMessageFlags(self, md, var, reply, actor=None):
+    def setMessageFlags(self, md, var, reply, routingId=None):
+        if routingId is None:
+            routingId = self.protocol.routingId()
+        
         stmts = [ StmtExpr(ExprCall(
             ExprSelect(var, '->', 'set_routing_id'),
-            args=[ self.protocol.routingId(actor) ])) ]
+            args=[ routingId ])) ]
 
         if md.decl.type.isSync():
             stmts.append(StmtExpr(ExprCall(
