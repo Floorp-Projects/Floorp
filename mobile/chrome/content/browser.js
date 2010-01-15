@@ -2844,10 +2844,10 @@ Tab.prototype = {
 
     if (!this._loadingTimeout) {
       let bv = Browser._browserView;
-      bv.invalidateEntireView();
 
       this._startResizeAndPaint();
       if (this == Browser.selectedTab) {
+        bv.invalidateEntireView();
         bv.setAggressive(false);
         // Sync up browser so previous and forward scroll positions are set. This is a good time to do
         // this because the resulting invalidation is irrelevant.
