@@ -53,7 +53,6 @@
  * since we are testing to make sure that the unstable sort algorithm used
  * by SQLite is not changing the order of the results on us.
  */
-var current_test = 0;
 
 function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
@@ -118,9 +117,6 @@ function ensure_results(uris, searchTerm)
 
   controller.input = input;
 
-  // Search is asynchronous, so don't let the test finish immediately
-  do_test_pending();
-
   var numSearchesStarted = 0;
   input.onSearchBegin = function() {
     numSearchesStarted++;
@@ -136,12 +132,7 @@ function ensure_results(uris, searchTerm)
       do_check_eq(controller.getValueAt(i), uris[i].spec);
     }
 
-    if (current_test < (tests.length - 1)) {
-      current_test++;
-      tests[current_test]();
-    }
-
-    do_test_finished();
+    next_test();
   };
 
   controller.startSearch(searchTerm);
@@ -172,6 +163,12 @@ function setBookmark(aURI)
   bmksvc.insertBookmark(bmksvc.bookmarksMenuFolder, aURI, -1, "bleh");
 }
 
+function tagURI(aURI, aTags) {
+  bmksvc.insertBookmark(bmksvc.unfiledBookmarksFolder, aURI,
+                        bmksvc.DEFAULT_INDEX, "bleh");
+  tagssvc.tagURI(aURI, aTags);
+}
+
 var uri1 = uri("http://site.tld/1");
 var uri2 = uri("http://site.tld/2");
 var uri3 = uri("http://aaaaaaaaaa/1");
@@ -185,108 +182,126 @@ var d2 = new Date(Date.now() - 1000 * 60 * 60 * 24 * 10) * 1000;
 var c1 = 10;
 var c2 = 1;
 
-function prepTest(desc) {
-  print("Test " + desc);
-  bhist.removeAllPages();
-}
-
 var tests = [
 // test things without a search term
 function() {
-  prepTest("0: same count, different date");
+  print("Test 0: same count, different date");
   setCountDate(uri1, c1, d1);
   setCountDate(uri2, c1, d2);
-  tagssvc.tagURI(uri1, ["site"]);
+  tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "");
 },
 function() {
-  prepTest("1: same count, different date");
+  print("Test 1: same count, different date");
   setCountDate(uri1, c1, d2);
   setCountDate(uri2, c1, d1);
-  tagssvc.tagURI(uri1, ["site"]);
+  tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "");
 },
 function() {
-  prepTest("2: different count, same date");
+  print("Test 2: different count, same date");
   setCountDate(uri1, c1, d1);
   setCountDate(uri2, c2, d1);
-  tagssvc.tagURI(uri1, ["site"]);
+  tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "");
 },
 function() {
-  prepTest("3: different count, same date");
+  print("Test 3: different count, same date");
   setCountDate(uri1, c2, d1);
   setCountDate(uri2, c1, d1);
-  tagssvc.tagURI(uri1, ["site"]);
+  tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "");
 },
 
 // test things with a search term
 function() {
-  prepTest("4: same count, different date");
+  print("Test 4: same count, different date");
   setCountDate(uri1, c1, d1);
   setCountDate(uri2, c1, d2);
-  tagssvc.tagURI(uri1, ["site"]);
+  tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "site");
 },
 function() {
-  prepTest("5: same count, different date");
+  print("Test 5: same count, different date");
   setCountDate(uri1, c1, d2);
   setCountDate(uri2, c1, d1);
-  tagssvc.tagURI(uri1, ["site"]);
+  tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "site");
 },
 function() {
-  prepTest("6: different count, same date");
+  print("Test 6: different count, same date");
   setCountDate(uri1, c1, d1);
   setCountDate(uri2, c2, d1);
-  tagssvc.tagURI(uri1, ["site"]);
+  tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "site");
 },
 function() {
-  prepTest("7: different count, same date");
+  print("Test 7: different count, same date");
   setCountDate(uri1, c2, d1);
   setCountDate(uri2, c1, d1);
-  tagssvc.tagURI(uri1, ["site"]);
+  tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "site");
 },
 // There are multiple tests for 8, hence the multiple functions
 // Bug 426166 section
 function() {
+  print("Test 8.1: same count, same date");  
   setBookmark(uri3);
   setBookmark(uri4);
-  prepTest("8: same count, same date");  
   ensure_results([uri4, uri3], "a");
 },
 function() {
-  prepTest("8: same count, same date");  
+  print("Test 8.1: same count, same date");  
+  setBookmark(uri3);
+  setBookmark(uri4);
   ensure_results([uri4, uri3], "aa");
 },
 function() {
-  prepTest("8: same count, same date");
+  print("Test 8.2: same count, same date");
+  setBookmark(uri3);
+  setBookmark(uri4);
   ensure_results([uri4, uri3], "aaa");
 },
 function() {
-  prepTest("8: same count, same date");
+  print("Test 8.3: same count, same date");
+  setBookmark(uri3);
+  setBookmark(uri4);
   ensure_results([uri4, uri3], "aaaa");
 },
 function() {
-  prepTest("8: same count, same date");
+  print("Test 8.4: same count, same date");
+  setBookmark(uri3);
+  setBookmark(uri4);
   ensure_results([uri4, uri3], "aaa");
 },
 function() {
-  prepTest("8: same count, same date");
+  print("Test 8.5: same count, same date");
+  setBookmark(uri3);
+  setBookmark(uri4);
   ensure_results([uri4, uri3], "aa");
 },
 function() {
-  prepTest("8: same count, same date");
+  print("Test 8.6: same count, same date");
+  setBookmark(uri3);
+  setBookmark(uri4);
   ensure_results([uri4, uri3], "a");
 }
 ];
 
 /**
- * Test history autocomplete
+ * Test adaptive autocomplete
  */
 function run_test() {
-  tests[0]();
+  do_test_pending();
+  next_test();
+}
+
+function next_test() {
+  if (tests.length) {
+    remove_all_bookmarks();
+    let test = tests.shift();
+    waitForClearHistory(test);
+  }
+  else
+    do_test_finished();
 }
