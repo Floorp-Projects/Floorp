@@ -303,6 +303,16 @@ nsSVGFE::GetLengthInfo()
 }
 
 void
+nsSVGFE::DidAnimateLength(PRUint8 aAttrEnum)
+{
+  // nsSVGLeafFrame doesn't implement AttributeChanged.
+  nsIFrame* frame = GetPrimaryFrame();
+  if (frame) {
+    nsSVGEffects::InvalidateRenderingObservers(frame);
+  }
+}
+
+void
 nsSVGFE::DidAnimateNumber(PRUint8 aAttrEnum)
 {
   // nsSVGLeafFrame doesn't implement AttributeChanged.
