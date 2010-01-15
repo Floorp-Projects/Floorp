@@ -6,7 +6,7 @@
   border-style: none;
 }
 
-#print-preview-toolbar {
+#print-preview-toolbar:not(:-moz-lwtheme) {
   -moz-appearance: -moz-win-browsertabbar-toolbox;
 }
 
