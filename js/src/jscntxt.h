@@ -120,6 +120,7 @@ struct TreeFragment;
 struct InterpState;
 template<typename T> class Queue;
 typedef Queue<uint16> SlotList;
+struct TypeMap;
 struct REFragment;
 typedef nanojit::HashMap<REHashKey, REFragment*, REHashFn> REHashMap;
 
@@ -282,6 +283,11 @@ struct JSTraceMonitor {
      * Fragment map for the regular expression compiler.
      */
     REHashMap*              reFragments;
+
+    // Cached temporary typemap to avoid realloc'ing every time we create one. 
+    // This must be used in only one place at a given time. It must be cleared
+    // before use. 
+    TypeMap*                cachedTempTypeMap;
 
 #ifdef DEBUG
     /* Fields needed for fragment/guard profiling. */
