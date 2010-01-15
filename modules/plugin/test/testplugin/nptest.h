@@ -94,6 +94,8 @@ typedef struct InstanceData {
   bool throwOnNextInvoke;
   uint32_t timerID1;
   uint32_t timerID2;
+  int32_t winX;
+  int32_t winY;
   int32_t lastMouseX;
   int32_t lastMouseY;
   int32_t widthAtLastPaint;
