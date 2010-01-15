@@ -104,6 +104,8 @@ using namespace mozilla::places;
 // preference ID strings
 #define PREF_BRANCH_BASE                        "browser."
 
+#define PREF_HISTORY_ENABLED                    "places.history.enabled"
+
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN    "history_expire_days_min"
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX    "history_expire_days"
 #define PREF_BROWSER_HISTORY_EXPIRE_SITES       "history_expire_sites"
@@ -399,6 +401,7 @@ nsNavHistory::nsNavHistory()
 , mExpireDaysMin(0)
 , mExpireDaysMax(0)
 , mExpireSites(0)
+, mHistoryEnabled(PR_TRUE)
 , mNumVisitsForFrecency(10)
 , mTagsFolder(-1)
 , mInPrivateBrowsing(PRIVATEBROWSING_NOTINITED)
@@ -498,6 +501,11 @@ nsNavHistory::Init()
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_SITES, this, PR_FALSE);
   }
+
+  nsCOMPtr<nsIPrefBranch2> prefs =
+    do_GetService("@mozilla.org/preferences-service;1");
+  if (prefs)
+    prefs->AddObserver(PREF_HISTORY_ENABLED, this, PR_FALSE);
 
   nsCOMPtr<nsIObserverService> obsSvc =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
@@ -2049,6 +2057,8 @@ nsNavHistory::LoadPrefs(PRBool aInitializing)
   // get the frecency prefs
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
   if (prefs) {
+    prefs->GetBoolPref(PREF_HISTORY_ENABLED, &mHistoryEnabled);
+
     prefs->GetIntPref(PREF_FRECENCY_NUM_VISITS, 
       &mNumVisitsForFrecency);
     prefs->GetIntPref(PREF_FRECENCY_FIRST_BUCKET_CUTOFF, 
@@ -5534,8 +5544,18 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
     nsCOMPtr<nsIPrefService> prefService =
       do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefService)
+    if (prefService) {
       prefService->SavePrefFile(nsnull);
+      nsCOMPtr<nsIPrefBranch2> prefs = do_QueryInterface(prefService);
+      prefs->RemoveObserver(PREF_HISTORY_ENABLED, this);
+    }
+
+    nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
+    if (pbi) {
+      pbi->RemoveObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, this);
+      pbi->RemoveObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN, this);
+      pbi->RemoveObserver(PREF_BROWSER_HISTORY_EXPIRE_SITES, this);
+    }
 
     // Start shutdown expiration.
     mExpire->OnQuit();
