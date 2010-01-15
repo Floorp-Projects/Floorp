@@ -21,12 +21,12 @@
             <xul:label class="title" xbl:inherits="value=name"/>
             <xul:label class="normal" xbl:inherits="value=version"/>
             <xul:spacer flex="1"/>
-            <xul:label class="normal" crop="end" xbl:inherits="value=typeLabel"/>            
+            <xul:label class="normal" crop="end" xbl:inherits="value=typeLabel"/>
           </xul:hbox>
           <xul:vbox>
             <xul:label class="normal hide-on-select" xbl:inherits="value=description" crop="end" flex="1"/>
             <xul:description class="normal show-on-select" xbl:inherits="xbl:text=description" flex="1"/>
-            <xul:label class="normal-bold" xbl:inherits="value=updateStatus"/>            
+            <xul:label class="normal-bold" xbl:inherits="value=updateStatus"/>
           </xul:vbox>
         </xul:vbox>
       </xul:hbox>
@@ -99,7 +99,7 @@
             xhr.send();
             if (!xhr.responseXML)
               return;
-            
+
             let currentNode;
             let nodeIterator = xhr.responseXML.createNodeIterator(xhr.responseXML,
                                                               NodeFilter.SHOW_TEXT,
@@ -115,7 +115,7 @@
             let prefs = xhr.responseXML.querySelectorAll(":root > setting");
             for (let i = 0; i < prefs.length; i++)
               box.appendChild(prefs.item(i));
-            
+
             // Send an event so add-ons can prepopulate any non-preference based
             // settings
             let event = document.createEvent("Events");
@@ -135,7 +135,7 @@
           <xul:hbox align="center">
             <xul:label class="title" xbl:inherits="value=name"/>
             <xul:spacer flex="1"/>
-            <xul:label class="normal" crop="end" xbl:inherits="value=typeLabel"/>            
+            <xul:label class="normal" crop="end" xbl:inherits="value=typeLabel"/>
           </xul:hbox>
           <xul:vbox>
             <xul:label class="normal hide-on-select" xbl:inherits="value=description" crop="end" flex="1"/>
@@ -155,7 +155,7 @@
                     oncommand="ExtensionsView.cancelUninstall(document.getBindingParent(this));"/>
       </xul:hbox>
     </content>
-    
+
     <implementation>
       <constructor>
         <![CDATA[
@@ -176,11 +176,12 @@
             <xul:label class="title" xbl:inherits="value=name"/>
             <xul:label class="normal" xbl:inherits="value=version"/>
             <xul:spacer flex="1"/>
-            <xul:hbox class="addon-type-or-rating" align="center" xbl:inherits="rating"/> 
+            <xul:hbox class="addon-type-or-rating" align="center" xbl:inherits="rating"/>
           </xul:hbox>
           <xul:vbox>
             <xul:label class="normal hide-on-select" xbl:inherits="value=description" crop="end" flex="1"/>
             <xul:description class="normal show-on-select" xbl:inherits="xbl:text=description" flex="1"/>
+            <xul:label class="normal-bold show-on-error" xbl:inherits="value=error"/>
           </xul:vbox>
         </xul:vbox>
       </xul:hbox>

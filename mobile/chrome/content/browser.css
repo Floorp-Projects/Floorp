@@ -149,6 +149,7 @@ richlistitem[typeName="download"][state="4"] {
 
 /* addons states ----------------------------------------------------------- */
 .hide-on-enable,
+.show-on-error,
 .show-on-uninstall,
 .show-on-install,
 .show-on-restart,
@@ -156,6 +157,7 @@ richlistitem[isDisabled="true"] .hide-on-disable {
   display: none;
 }
 
+richlistitem[error] .show-on-error,
 richlistitem[opType="needs-restart"] .show-on-restart,
 richlistitem[opType="needs-uninstall"] .show-on-uninstall,
 richlistitem[opType="needs-install"] .show-on-install,
