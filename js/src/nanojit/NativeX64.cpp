@@ -1155,7 +1155,7 @@ namespace nanojit
         LIns *a = cond->oprnd1();
         Register ra, rb;
         if (a != b) {
-            findRegFor2(GpRegs, a, ra, b, rb);
+            findRegFor2(GpRegs, a, ra, GpRegs, b, rb);
         } else {
             // optimize-me: this will produce a const result!
             ra = rb = findRegFor(a, GpRegs);
@@ -1287,7 +1287,7 @@ namespace nanojit
 
     void Assembler::fcmp(LIns *a, LIns *b) {
         Register ra, rb;
-        findRegFor2(FpRegs, a, ra, b, rb);
+        findRegFor2(FpRegs, a, ra, FpRegs, b, rb);
         UCOMISD(ra, rb);
     }
 
@@ -1463,20 +1463,21 @@ namespace nanojit
     void Assembler::asm_store64(LOpcode op, LIns *value, int d, LIns *base) {
         NanoAssert(value->isQuad());
 
-        Register b = getBaseReg(base, d, BaseRegs);
-
         switch (op) {
             case LIR_stqi: {
-                Register r = findRegFor(value, GpRegs & ~rmask(b));
+                Register r, b;
+                getBaseReg2(GpRegs, value, r, BaseRegs, base, b, d);
                 MOVQMR(r, d, b);    // gpr store
                 break;
             }
             case LIR_stfi: {
+                Register b = getBaseReg(base, d, BaseRegs);
                 Register r = findRegFor(value, FpRegs);
                 MOVSDMR(r, d, b);   // xmm store
                 break;
             }
             case LIR_st32f: {
+                Register b = getBaseReg(base, d, BaseRegs);
                 Register r = findRegFor(value, FpRegs);
                 Register t = registerAllocTmp(FpRegs & ~rmask(r));
 

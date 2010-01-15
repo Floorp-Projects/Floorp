@@ -334,17 +334,13 @@ namespace nanojit
             {
                 // make sure what is in a register
                 Register ra, rb;
-                if (base->isop(LIR_alloc)) {
-                    rb = FP;
-                    dr += findMemFor(base);
-                    ra = findRegFor(value, GpRegs);
-                } else if (base->isconst()) {
+                if (base->isconst()) {
                     // absolute address
                     dr += base->imm32();
                     ra = findRegFor(value, GpRegs);
                     rb = G0;
                 } else {
-                    findRegFor2(GpRegs, value, ra, base, rb);
+                    getBaseReg2(GpRegs, value, ra, GpRegs, base, rb, dr);
                 }
                 STW32(ra, dr, rb);
             }
@@ -601,7 +597,7 @@ namespace nanojit
         else
             {
                 Register ra, rb;
-                findRegFor2(GpRegs, lhs, ra, rhs, rb);
+                findRegFor2(GpRegs, lhs, ra, GpRegs, rhs, rb);
                 SUBCC(ra, rb, G0);
             }
     }
