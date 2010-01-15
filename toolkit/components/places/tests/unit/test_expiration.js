@@ -72,7 +72,7 @@ var observer = {
   onPageChanged: function(aURI, aWhat, aValue) {
   },
   expiredURI: null,
-  onPageExpired: function(aURI, aVisitTime, aWholeEntry) {
+  onDeleteVisits: function(aURI, aVisitTime) {
     this.expiredURI = aURI.spec;
   },
   QueryInterface: function(iid) {
@@ -502,7 +502,7 @@ steps:
   - kick off incremental expiration
 
 confirmation:
-  - check onPageExpired, confirm nothing was expired
+  - check onDeleteVisits, confirm nothing was expired
   - query for the visit, confirm it's there
 
 */
@@ -561,7 +561,7 @@ steps:
   - kick off incremental expiration
 
 confirmation:
-  - check onPageExpired, confirm that the expirable uri was expired
+  - check onDeleteVisits, confirm that the expirable uri was expired
   - query for the visit, confirm it's there
 */
 function startExpireDaysOnly() {
@@ -624,7 +624,7 @@ steps:
   - kick off incremental expiration
 
 confirmation:
-  - check onPageExpired, confirm our oldest visit was expired
+  - check onDeleteVisits, confirm our oldest visit was expired
   - query for the oldest visit, confirm it's not there
 */
 function startExpireBoth() {
@@ -690,7 +690,7 @@ steps:
   - kick off incremental expiration
 
 confirmation:
-  - check onPageExpired, confirm nothing was expired
+  - check onDeleteVisits, confirm nothing was expired
   - query for the visit, confirm it's there
 
 */
@@ -746,7 +746,7 @@ steps:
   - kick off incremental expiration
 
 confirmation:
-  - check onPageExpired, confirm visit was expired
+  - check onDeleteVisits, confirm visit was expired
   - query for the visit, confirm it's not there
 
 */
@@ -795,7 +795,7 @@ steps:
   - kick off incremental expiration
 
 confirmation:
-  - check onPageExpired, confirm nothing was expired
+  - check onDeleteVisits, confirm nothing was expired
   - query for the visit, confirm it's there
 
 */

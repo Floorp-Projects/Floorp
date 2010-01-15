@@ -85,7 +85,7 @@ os.addObserver(observer, kSyncFinished, false);
 
 // Used to ensure that we do not expire anything.
 var historyObserver = {
-  onPageExpired: function(aURI, aVisitTime, aWholeEntry)
+  onDeleteVisits: function(aURI, aVisitTime)
   {
     do_throw("How did we get called?!");
     observer.notificationReceived = true;

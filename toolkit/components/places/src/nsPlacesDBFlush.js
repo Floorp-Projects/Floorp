@@ -268,13 +268,13 @@ nsPlacesDBFlush.prototype = {
   // the implementations can be found above.
   //onBeginUpdateBatch: function() { },
   //onEndUpdateBatch: function() { },
-  onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID, aTransitionType) { },
-  onTitleChanged: function(aURI, aPageTitle) { },
-  onBeforeDeleteURI: function(aURI) { },
-  onDeleteURI: function(aURI) { },
+  onVisit: function() { },
+  onTitleChanged: function() { },
+  onBeforeDeleteURI: function() { },
+  onDeleteURI: function() { },
   onClearHistory: function() { },
-  onPageChanged: function(aURI, aWhat, aValue) { },
-  onPageExpired: function(aURI, aVisitTime, aWholeEntry) { },
+  onPageChanged: function() { },
+  onDeleteVisits: function() { },
 
   //////////////////////////////////////////////////////////////////////////////
   //// nsITimerCallback

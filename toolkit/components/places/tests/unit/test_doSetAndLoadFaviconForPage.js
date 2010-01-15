@@ -184,7 +184,7 @@ var historyObserver = {
   onBeforeDeleteURI: function() {},
   onDeleteURI: function() {},
   onClearHistory: function() {},
-  onPageExpired: function() {},
+  onDeleteVisits: function() {},
 
   onPageChanged: function historyObserver_onPageChanged(pageURI, what, value) {
     if (what != Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON)
