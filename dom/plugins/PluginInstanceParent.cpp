@@ -43,7 +43,6 @@
 #include "PluginModuleParent.h"
 #include "PluginStreamParent.h"
 #include "StreamNotifyParent.h"
-
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
 
@@ -69,27 +68,40 @@ PluginInstanceParent::~PluginInstanceParent()
         mNPP->pdata = NULL;
 }
 
-void
+bool
+PluginInstanceParent::Init()
+{
+    return !!mScriptableObjects.Init();
+}
+
+namespace {
+
+PLDHashOperator
+ActorCollect(const void* aKey,
+             PluginScriptableObjectParent* aData,
+             void* aUserData)
+{
+    nsTArray<PluginScriptableObjectParent*>* objects =
+        reinterpret_cast<nsTArray<PluginScriptableObjectParent*>*>(aUserData);
+    return objects->AppendElement(aData) ? PL_DHASH_NEXT : PL_DHASH_STOP;
+}
+
+} // anonymous namespace
+
+NPError
 PluginInstanceParent::Destroy()
 {
-    // Copy the actors here so we don't enumerate a mutating array.
-    nsAutoTArray<PluginScriptableObjectParent*, 10> objects;
-    PRUint32 count = mScriptableObjects.Length();
-    for (PRUint32 index = 0; index < count; index++) {
-        objects.AppendElement(mScriptableObjects[index]);
-    }
-
-    count = objects.Length();
-    for (PRUint32 index = 0; index < count; index++) {
-        NPObject* object = objects[index]->GetObject();
-        if (object->_class == PluginScriptableObjectParent::GetClass()) {
-          PluginScriptableObjectParent::ScriptableInvalidate(object);
-        }
+    NPError retval;
+    if (!CallNPP_Destroy(&retval)) {
+        NS_WARNING("Failed to send message!");
+        return NPERR_GENERIC_ERROR;
     }
 
 #if defined(OS_WIN)
     SharedSurfaceRelease();
 #endif
+
+    return retval;
 }
 
 PBrowserStreamParent*
@@ -453,7 +465,7 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
         }
 
         NPObject* object =
-            static_cast<PluginScriptableObjectParent*>(actor)->GetObject();
+            static_cast<PluginScriptableObjectParent*>(actor)->GetObject(true);
         NS_ASSERTION(object, "This shouldn't ever be null!");
 
         (*(NPObject**)_retval) = npn->retainobject(object);
@@ -582,32 +594,57 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
 PPluginScriptableObjectParent*
 PluginInstanceParent::AllocPPluginScriptableObject()
 {
-    nsAutoPtr<PluginScriptableObjectParent>* object =
-        mScriptableObjects.AppendElement();
-    NS_ENSURE_TRUE(object, nsnull);
-
-    *object = new PluginScriptableObjectParent();
-    NS_ENSURE_TRUE(*object, nsnull);
-
-    return object->get();
+    return new PluginScriptableObjectParent(Proxy);
 }
+
+#ifdef DEBUG
+namespace {
+
+struct ActorSearchData
+{
+    PluginScriptableObjectParent* actor;
+    bool found;
+};
+
+PLDHashOperator
+ActorSearch(const void* aKey,
+            PluginScriptableObjectParent* aData,
+            void* aUserData)
+{
+    ActorSearchData* asd = reinterpret_cast<ActorSearchData*>(aUserData);
+    if (asd->actor == aData) {
+        asd->found = true;
+        return PL_DHASH_STOP;
+    }
+    return PL_DHASH_NEXT;
+}
+
+} // anonymous namespace
+#endif // DEBUG
 
 bool
 PluginInstanceParent::DeallocPPluginScriptableObject(
                                          PPluginScriptableObjectParent* aObject)
 {
-    PluginScriptableObjectParent* object =
-        reinterpret_cast<PluginScriptableObjectParent*>(aObject);
+    PluginScriptableObjectParent* actor =
+        static_cast<PluginScriptableObjectParent*>(aObject);
 
-    PRUint32 count = mScriptableObjects.Length();
-    for (PRUint32 index = 0; index < count; index++) {
-        if (mScriptableObjects[index] == object) {
-            mScriptableObjects.RemoveElementAt(index);
-            return true;
-        }
+    NPObject* object = actor->GetObject(false);
+    if (object) {
+        NS_ASSERTION(mScriptableObjects.Get(object, nsnull),
+                     "NPObject not in the hash!");
+        mScriptableObjects.Remove(object);
     }
-    NS_NOTREACHED("An actor we don't know about?!");
-    return false;
+#ifdef DEBUG
+    else {
+        ActorSearchData asd = { actor, false };
+        mScriptableObjects.EnumerateRead(ActorSearch, &asd);
+        NS_ASSERTION(!asd.found, "Actor in the hash with a null NPObject!");
+    }
+#endif
+
+    delete actor;
+    return true;
 }
 
 bool
@@ -617,24 +654,13 @@ PluginInstanceParent::AnswerPPluginScriptableObjectConstructor(
     // This is only called in response to the child process requesting the
     // creation of an actor. This actor will represent an NPObject that is
     // created by the plugin and returned to the browser.
-    const NPNetscapeFuncs* npn = mParent->GetNetscapeFuncs();
-    if (!npn) {
-        NS_WARNING("No netscape function pointers?!");
-        return false;
-    }
+    PluginScriptableObjectParent* actor =
+        static_cast<PluginScriptableObjectParent*>(aActor);
+    NS_ASSERTION(!actor->GetObject(false), "Actor already has an object?!");
 
-    NPClass* npclass =
-        const_cast<NPClass*>(PluginScriptableObjectParent::GetClass());
+    actor->InitializeProxy();
+    NS_ASSERTION(actor->GetObject(false), "Actor should have an object!");
 
-    ParentNPObject* object = reinterpret_cast<ParentNPObject*>(
-        npn->createobject(mNPP, npclass));
-    if (!object) {
-        NS_WARNING("Failed to create NPObject!");
-        return false;
-    }
-
-    static_cast<PluginScriptableObjectParent*>(aActor)->Initialize(
-        const_cast<PluginInstanceParent*>(this), object);
     return true;
 }
 
@@ -650,6 +676,26 @@ PluginInstanceParent::NPP_URLNotify(const char* url, NPReason reason,
     PStreamNotifyParent::Call__delete__(streamNotify, reason);
 }
 
+bool
+PluginInstanceParent::RegisterNPObjectForActor(
+                                           NPObject* aObject,
+                                           PluginScriptableObjectParent* aActor)
+{
+    NS_ASSERTION(aObject && aActor, "Null pointers!");
+    NS_ASSERTION(mScriptableObjects.IsInitialized(), "Hash not initialized!");
+    NS_ASSERTION(!mScriptableObjects.Get(aObject, nsnull), "Duplicate entry!");
+    return !!mScriptableObjects.Put(aObject, aActor);
+}
+
+void
+PluginInstanceParent::UnregisterNPObject(NPObject* aObject)
+{
+    NS_ASSERTION(aObject, "Null pointer!");
+    NS_ASSERTION(mScriptableObjects.IsInitialized(), "Hash not initialized!");
+    NS_ASSERTION(mScriptableObjects.Get(aObject, nsnull), "Unknown entry!");
+    mScriptableObjects.Remove(aObject);
+}
+
 PluginScriptableObjectParent*
 PluginInstanceParent::GetActorForNPObject(NPObject* aObject)
 {
@@ -662,21 +708,23 @@ PluginInstanceParent::GetActorForNPObject(NPObject* aObject)
         return object->parent;
     }
 
-    PRUint32 count = mScriptableObjects.Length();
-    for (PRUint32 index = 0; index < count; index++) {
-        nsAutoPtr<PluginScriptableObjectParent>& actor =
-            mScriptableObjects[index];
-        if (actor->GetObject() == aObject) {
-            return actor;
-        }
+    PluginScriptableObjectParent* actor;
+    if (mScriptableObjects.Get(aObject, &actor)) {
+        return actor;
     }
 
-    PluginScriptableObjectParent* actor =
-        static_cast<PluginScriptableObjectParent*>(
-            CallPPluginScriptableObjectConstructor());
-    NS_ENSURE_TRUE(actor, nsnull);
+    actor = new PluginScriptableObjectParent(LocalObject);
+    if (!actor) {
+        NS_ERROR("Out of memory!");
+        return nsnull;
+    }
 
-    actor->Initialize(const_cast<PluginInstanceParent*>(this), aObject);
+    if (!CallPPluginScriptableObjectConstructor(actor)) {
+        NS_WARNING("Failed to send constructor message!");
+        return nsnull;
+    }
+
+    actor->InitializeLocal(aObject);
     return actor;
 }
 
