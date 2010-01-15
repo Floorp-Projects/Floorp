@@ -78,6 +78,7 @@ EXTRA_COMPONENTS = \
   nsLivemarkService.js \
   nsTaggingService.js \
   nsPlacesDBFlush.js \
+  nsPlacesExpiration.js \
   $(NULL)
 
 ifdef MOZ_XUL
