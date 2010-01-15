@@ -361,8 +361,7 @@ pref("browser.ui.kinetic.swipeLength", 160);
 pref("plugin.default_plugin_disabled", true);
 
 // product URLs
-// pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
-pref("app.releaseNotesURL", "http://www.mozilla.org/projects/%APP%/%VERSION%/releasenotes/");
+pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
 //pref("app.support.baseURL", "http://support.mozilla.com/1/mobile/%VERSION%/%OS%/%LOCALE%/");
 pref("app.support.baseURL", "http://mobile.support.mozilla.com/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/faq/");
