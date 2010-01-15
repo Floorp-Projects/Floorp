@@ -14968,7 +14968,7 @@ TraceRecorder::record_JSOP_LENGTH()
 
         // slot_ins is the value from the slot; right-shift by 2 bits to get
         // the length (see GetArgsLength in jsfun.cpp).
-        LIns* v_ins = lir->ins1(LIR_i2f, lir->ins2i(LIR_rsh, slot_ins, 2));
+        LIns* v_ins = lir->ins1(LIR_i2f, lir->ins2i(LIR_rsh, p2i(slot_ins), 2));
         set(&l, v_ins);
         return ARECORD_CONTINUE;
     }
