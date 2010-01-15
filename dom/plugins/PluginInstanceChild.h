@@ -71,9 +71,6 @@ class PluginInstanceChild : public PPluginInstanceChild
 protected:
     virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window, NPError* rv);
 
-    virtual bool Answer__delete__(NPError* rv);
-
-
     virtual bool
     AnswerNPP_GetValue_NPPVpluginWindow(bool* windowed, NPError* rv);
     virtual bool
@@ -86,6 +83,9 @@ protected:
 
     virtual bool
     AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled);
+
+    virtual bool
+    AnswerNPP_Destroy(NPError* result);
 
     virtual PPluginScriptableObjectChild*
     AllocPPluginScriptableObject();
@@ -146,7 +146,6 @@ public:
     virtual ~PluginInstanceChild();
 
     bool Initialize();
-    void Destroy();
 
     NPP GetNPP()
     {
@@ -191,6 +190,7 @@ private:
     const NPPluginFuncs* mPluginIface;
     NPP_t mData;
     NPWindow mWindow;
+
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     NPSetWindowCallbackStruct mWsInfo;
 #elif defined(OS_WIN)
@@ -198,8 +198,6 @@ private:
     WNDPROC mPluginWndProc;
     HWND mPluginParentHWND;
 #endif
-
-    nsTArray<nsAutoPtr<PluginScriptableObjectChild> > mScriptableObjects;
 
 #if defined(OS_WIN)
 private:
