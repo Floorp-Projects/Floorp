@@ -378,10 +378,6 @@ const regEntry gRegEntries[] = {
     "network.http.proxy.version",
     TranslateDWORDtoHTTPVersion },
 // SecureProtocols
-  { "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Url History",
-    "DaysToKeep",
-    "browser.history_expire_days",
-    TranslateDWORDtoPRInt32 },
   { "Software\\Microsoft\\Internet Explorer\\Settings",
     "Always Use My Colors",            // XXX DWORD
     "browser.display.use_document_colors",
@@ -405,11 +401,7 @@ const regEntry gRegEntries[] = {
   { 0,
     "Always Use My Font Face",    // XXX DWORD
     "browser.display.use_document_fonts",
-    TranslateYNtoFT },
-  { "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Url History",
-    "DaysToKeep",
-    "browser.history_expire_days",
-    TranslateDWORDtoPRInt32 }
+    TranslateYNtoFT }
 };
 
 #if 0
