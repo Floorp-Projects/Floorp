@@ -252,21 +252,6 @@ nsNullPrincipal::GetURI(nsIURI** aURI)
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::GetCsp(IContentSecurityPolicy** aCsp)
-{
-  // CSP on a null principal makes no sense
-  *aCsp = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::SetCsp(IContentSecurityPolicy* aCsp)
-{
-  // CSP on a null principal makes no sense
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
 nsNullPrincipal::GetDomain(nsIURI** aDomain)
 {
   return NS_EnsureSafeToReturn(mURI, aDomain);

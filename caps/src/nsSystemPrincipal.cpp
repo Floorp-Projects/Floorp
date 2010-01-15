@@ -224,20 +224,6 @@ nsSystemPrincipal::GetHasCertificate(PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::GetCsp(IContentSecurityPolicy** aCsp)
-{
-  *aCsp = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::SetCsp(IContentSecurityPolicy* aCsp)
-{
-  // CSP on a null principal makes no sense
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSystemPrincipal::GetDomain(nsIURI** aDomain)
 {
     *aDomain = nsnull;
