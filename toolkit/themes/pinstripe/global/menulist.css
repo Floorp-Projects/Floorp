@@ -51,6 +51,7 @@ menulist {
   margin: 5px 2px 3px;
   min-height: 20px !important;
   color: -moz-DialogText;
+  text-shadow: none;
 }
 
 listbox menulist:not([disabled]) {
