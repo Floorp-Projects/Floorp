@@ -52,6 +52,7 @@ button {
   margin: 5px 6px 3px;
   min-width: 79px;
   color: ButtonText;
+  text-shadow: none;
 }
 
 .button-text {
