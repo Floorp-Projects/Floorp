@@ -11916,6 +11916,15 @@ TraceRecorder::record_JSOP_GETELEM()
                 // value has been written back to the native stack area.
                 idx_ins = makeNumberInt32(idx_ins);
                 if (int_idx >= 0 && int_idx < afp->argc) {
+                    guard(true,
+                          addName(lir->ins2(LIR_ge, idx_ins, INS_CONST(0)),
+                                  "guard(upvar index >= 0)"),
+                          BRANCH_EXIT);
+                    guard(true,
+                          addName(lir->ins2(LIR_lt, idx_ins, INS_CONST(afp->argc)),
+                                  "guard(upvar index in range)"),
+                          BRANCH_EXIT);
+
                     JSTraceType type = getCoercedType(*vp);
 
                     // Guard that the argument has the same type on trace as during recording.
@@ -11936,7 +11945,7 @@ TraceRecorder::record_JSOP_GETELEM()
                         // Note: this relies on the assumption that we abort on setting an element of
                         // an arguments object in any deeper frame.
                         LIns* fip_ins = lir->insLoad(LIR_ldp, lirbuf->rp, (callDepth-depth)*sizeof(FrameInfo*));
-                        typemap_ins = lir->ins2(LIR_add, fip_ins, INS_CONST(sizeof(FrameInfo) + 2/*callee,this*/ * sizeof(JSTraceType)));
+                        typemap_ins = lir->ins2(LIR_piadd, fip_ins, INS_CONSTWORD(sizeof(FrameInfo) + 2/*callee,this*/ * sizeof(JSTraceType)));
                     }
 
                     LIns* typep_ins = lir->ins2(LIR_piadd, typemap_ins,
