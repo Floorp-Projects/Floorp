@@ -64,8 +64,7 @@ PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/mobile-l10n.js) \
 
 # Shouldn't := DEB_BUILD_ARCH despite the $(shell ) as deb isn't everywhere
 DEB_BUILD_ARCH = $(shell dpkg-architecture -qDEB_BUILD_ARCH)
-WGET ?= $(error WGET not installed)
-DEB_PKG_NAME ?= $(shell $(WGET) -q -O - $(EN_US_BINARY_URL)/deb_name.txt)
+DEB_PKG_NAME = fennec_$(MOZ_APP_VERSION)_$(DEB_BUILD_ARCH).deb
 DATASTAGE = $(CURDIR)/data-stage
 
 SEARCH_PLUGINS = $(shell cat \
@@ -167,6 +166,9 @@ ident:
 
 # special targets just to do the debian single locale packages
 wget-deb:
+ifndef WGET
+	$(error Wget not installed)
+endif
 	$(WGET) -nv -N  $(EN_US_BINARY_URL)/$(DEB_PKG_NAME)
 
 $(DATASTAGE): $(DEB_PKG_NAME)
@@ -191,4 +193,4 @@ repackage-deb: $(DATASTAGE)
 
 deb-%: AB_CD=$*
 deb-%: clobber-% langpack-%
-	@$(MAKE) repackage-deb AB_CD=$(AB_CD) DEB_PKG_NAME=$(DEB_PKG_NAME)
+	@$(MAKE) repackage-deb AB_CD=$(AB_CD)
