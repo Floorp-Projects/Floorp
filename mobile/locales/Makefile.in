@@ -64,7 +64,6 @@ PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/mobile-l10n.js) \
 
 # Shouldn't := DEB_BUILD_ARCH despite the $(shell ) as deb isn't everywhere
 DEB_BUILD_ARCH = $(shell dpkg-architecture -qDEB_BUILD_ARCH)
-EN_US_BINARY_URL ?= $(error EN_US_BINARY_URL not defined)
 WGET ?= $(error WGET not installed)
 DEB_PKG_NAME ?= $(shell $(WGET) -q -O - $(EN_US_BINARY_URL)/deb_name.txt)
 DATASTAGE = $(CURDIR)/data-stage
