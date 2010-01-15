@@ -4196,7 +4196,19 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
           if (NS_FAILED(res)) return res;
         }
         else if (useCSS) {
-          RelativeChangeIndentationOfElementNode(curNode, -1);
+          nsCOMPtr<nsIDOMElement> element;
+          nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(curNode);
+          if (textNode) {
+            // We want to outdent the parent of text nodes
+            nsCOMPtr<nsIDOMNode> parent;
+            textNode->GetParentNode(getter_AddRefs(parent));
+            element = do_QueryInterface(parent);
+          } else {
+            element = do_QueryInterface(curNode);
+          }
+          if (element) {
+            RelativeChangeIndentationOfElementNode(element, -1);
+          }
         }
       }
     }
