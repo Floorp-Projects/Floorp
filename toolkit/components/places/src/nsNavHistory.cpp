@@ -5493,12 +5493,16 @@ NS_IMETHODIMP
 nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
                                   PRBool aWholeEntry)
 {
-  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
-                      OnPageExpired(aURI, aVisitTime, aWholeEntry));
   if (aWholeEntry) {
-    // Notify our observers that the URI has been removed.
+    // Notify our observers that the page has been removed.
     ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                         nsINavHistoryObserver, OnDeleteURI(aURI));
+  }
+  else {
+    // Notify our observers that some visits for the page have been removed.
+    ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                        nsINavHistoryObserver,
+                        OnDeleteVisits(aURI, aVisitTime));
   }
 
   return NS_OK;

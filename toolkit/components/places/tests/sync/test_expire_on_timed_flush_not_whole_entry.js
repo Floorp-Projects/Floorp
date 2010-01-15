@@ -87,15 +87,12 @@ os.addObserver(observer, kSyncFinished, false);
 // Used to ensure that we did in fact get notified about our expiration.
 var historyObserver = {
   visitTime: -1,
-  onPageExpired: function(aURI, aVisitTime, aWholeEntry)
+  onDeleteVisits: function(aURI, aVisitTime)
   {
     do_check_true(aURI.equals(uri(TEST_URI)));
 
     // We should have the visit time that was set in the addVisit call.
     do_check_eq(this.visitTime, aVisitTime);
-
-    // This was not the only visit, so aWholeEntry better be false!
-    do_check_false(aWholeEntry);
 
     // We should only be called once.
     do_check_false(observer.notificationReceived);
