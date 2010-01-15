@@ -194,14 +194,14 @@ var ExtensionsView = {
     // if the element is not the selected element, select it
     if (item != this._list.selectedItem)
       this._list.selectedItem = item;
-    
+
     item.showOptions();
   },
 
   hideOptions: function ev_hideOptions() {
     if (!this._list)
       return;
-    
+
     let items = this._list.childNodes;
     for (let i = 0; i < items.length; i++) {
       let item = items[i];
@@ -289,7 +289,7 @@ var ExtensionsView = {
 
     this._extmgr.removeInstallListenerAt(this._observerIndex);
   },
-  
+
   hideOnSelect: function ev_handleEvent(aEvent) {
     // When list selection changes, be sure to close up any open options sections
     if (aEvent.target == this._list)
@@ -323,7 +323,7 @@ var ExtensionsView = {
       listitem.setAttribute("updateable", updateable);
       this._list.insertBefore(listitem, this._repoItem);
     }
-    
+
     // Load the search engines
     let defaults = this._search.getDefaultEngines({ }).map(function (e) e.name);
     function isDefault(aEngine)
@@ -394,7 +394,7 @@ var ExtensionsView = {
       else
         this.hideRestart();
     }
-    
+
     aItem.setAttribute("opType", opType);
   },
 
@@ -430,10 +430,21 @@ var ExtensionsView = {
 
   _installCallback: function ev__installCallback(aItem, aStatus) {
     if (aStatus == -210) {
-      // TODO: User cancelled
+      // User cancelled
+      aItem.removeAttribute("opType");
     }
     else if (aStatus < 0) {
-      // TODO: Some other error
+      // Some other error
+      aItem.removeAttribute("opType");
+      let bundles = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
+      let strings = bundles.createBundle("chrome://global/locale/xpinstall/xpinstall.properties");
+
+      try {
+        var msg = strings.GetStringFromName("error" + aStatus);
+      } catch (ex) {
+        msg = strings.formatStringFromName("unknown.error", [aStatus]);
+      }
+      aItem.setAttribute("error", msg);
     }
     else {
       // Success
@@ -541,7 +552,7 @@ var ExtensionsView = {
       let button = aIsRecommended ? strings.getString("addonsSearchNone.button") :
                                     strings.getString("addonsSearchSuccess2.button");
       let item = this.displaySectionMessage("repo", msg, button, true);
-      
+
       if (aSelectFirstResult)
         this._list.scrollBoxObject.scrollToElement(item);
       return;
@@ -605,7 +616,7 @@ var ExtensionsView = {
     this.searchBox.value = "";
     this.getAddonsFromRepo("");
   },
-  
+
   updateAll: function ev_updateAll() {
     if (!this._isXPInstallEnabled())
       return;
@@ -623,15 +634,15 @@ var ExtensionsView = {
         items.push(this._extmgr.getItemForID(start.getAttribute("addonID")));
       start = start.nextSibling;
     }
-  
+
     if (items.length > 0) {
       let listener = new UpdateCheckListener();
       this._extmgr.update(items, items.length, Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION, listener);
     }
-    
+
     if (this._list.selectedItem)
       this._list.selectedItem.focus();
-  
+
     this._pref.setBoolPref("extensions.update.notifyUser", false);
   }
 };
@@ -757,7 +768,7 @@ XPInstallDownloadManager.prototype = {
       return;
 
     element.setAttribute("status", (Components.isSuccessCode(aStatus) ? "success" : "fail"));
-    
+
     // If we are updating an add-on, change the status
     if (element.hasAttribute("updating")) {
       let strings = Elements.browserBundle;
@@ -853,7 +864,7 @@ UpdateCheckListener.prototype = {
   onAddonUpdateEnded: function ucl_onAddonUpdateEnded(aAddon, aStatus) {
     if (!document)
       return;
-    
+
     let strings = Elements.browserBundle;
     let element = document.getElementById(PREFIX_ITEM_URI + aAddon.id);
     let updateable = false;
@@ -901,4 +912,3 @@ UpdateCheckListener.prototype = {
     return this;
   }
 };
-
