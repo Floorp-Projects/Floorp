@@ -328,6 +328,7 @@ struct JSString {
     static JSString unitStringTable[];
     static JSString intStringTable[];
     static const char *deflatedIntStringTable[];
+    static const char deflatedUnitStringTable[];
 
     static JSString *unitString(jschar c);
     static JSString *getUnitString(JSContext *cx, JSString *str, size_t index);
