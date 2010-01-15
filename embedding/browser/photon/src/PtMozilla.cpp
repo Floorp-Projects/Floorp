@@ -706,8 +706,6 @@ mozilla_set_pref( PtWidget_t *widget, char *option, char *value )
     }
 
 /* Miscellaneous options */
-	else if( !strcmp( option, "History_Expire" ) )
-		pref->SetIntPref( "browser.history_expire_days", atoi( value ) );
 	else if( !strcmp( option, "Page_History_Length" ) )
 		pref->SetIntPref( "browser.sessionhistory.max_entries", atoi( value ) );
 
@@ -958,11 +956,6 @@ static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value ) {
     }
 
 /* Miscellaneous options */
-  else if( !strcmp( option, "History_Expire" ) ) {
-		int n;
-		pref->GetIntPref( "browser.history_expire_days", &n );
-		sprintf( value, "%d", n );
-		}
   else if( !strcmp( option, "Page_History_Length" ) ) {
 		int n;
 		pref->GetIntPref( "browser.sessionhistory.max_entries", &n );
