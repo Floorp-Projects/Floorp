@@ -972,7 +972,7 @@ namespace nanojit
         RegisterMask allow = FpRegs;
         Register rr = prepResultReg(ins, allow);
         Register ra, rb;
-        findRegFor2(allow, lhs, ra, rhs, rb);
+        findRegFor2(allow, lhs, ra, allow, rhs, rb);
         switch (op) {
             case LIR_fadd: FADD(rr, ra, rb); break;
             case LIR_fsub: FSUB(rr, ra, rb); break;

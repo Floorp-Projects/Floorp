@@ -504,17 +504,13 @@ namespace nanojit
                             GpRegs;
 
             Register ra, rb;
-            if (base->isop(LIR_alloc)) {
-                rb = FP;
-                dr += findMemFor(base);
-                ra = findRegFor(value, SrcRegs);
-            } else if (base->isconst()) {
+            if (base->isconst()) {
                 // absolute address
                 rb = UnknownReg;
                 dr += base->imm32();
                 ra = findRegFor(value, SrcRegs);
             } else {
-                findRegFor2(SrcRegs, value, ra, base, rb);
+                getBaseReg2(SrcRegs, value, ra, GpRegs, base, rb, dr);
             }
             switch (op) {
                 case LIR_stb:
@@ -854,7 +850,7 @@ namespace nanojit
 
         } else {
             Register ra, rb;
-            findRegFor2(GpRegs, lhs, ra, rhs, rb);
+            findRegFor2(GpRegs, lhs, ra, GpRegs, rhs, rb);
             CMP(ra, rb);
         }
     }
@@ -1937,7 +1933,7 @@ namespace nanojit
 
                     evictIfActive(EAX);
                     Register ra, rb;
-                    findRegFor2(XmmRegs, lhs, ra, rhs, rb);
+                    findRegFor2(XmmRegs, lhs, ra, XmmRegs, rhs, rb);
 
                     TEST_AH(mask);
                     LAHF();
@@ -1961,7 +1957,7 @@ namespace nanojit
                 //   LESS_THAN     001   SETAE/JAE fails
 
                 Register ra, rb;
-                findRegFor2(XmmRegs, lhs, ra, rhs, rb);
+                findRegFor2(XmmRegs, lhs, ra, XmmRegs, rhs, rb);
                 SSE_UCOMISD(ra, rb);
             }
 

@@ -1219,13 +1219,7 @@ Assembler::asm_store32(LOpcode op, LIns *value, int dr, LIns *base)
     }
 
     Register ra, rb;
-    if (base->isop(LIR_alloc)) {
-        rb = FP;
-        dr += findMemFor(base);
-        ra = findRegFor(value, GpRegs);
-    } else {
-        findRegFor2(GpRegs, value, ra, base, rb);
-    }
+    getBaseReg2(GpRegs, value, ra, GpRegs, base, rb, dr);
 
     if (isU12(-dr) || isU12(dr)) {
         STR(ra, rb, dr);
@@ -2102,7 +2096,7 @@ Assembler::asm_fcmp(LInsp ins)
     NanoAssert(op >= LIR_feq && op <= LIR_fge);
 
     Register ra, rb;
-    findRegFor2(FpRegs, lhs, ra, rhs, rb);
+    findRegFor2(FpRegs, lhs, ra, FpRegs, rhs, rb);
 
     int e_bit = (op != LIR_feq);
 
@@ -2215,7 +2209,7 @@ Assembler::asm_cmp(LIns *cond)
         }
     } else {
         Register ra, rb;
-        findRegFor2(GpRegs, lhs, ra, rhs, rb);
+        findRegFor2(GpRegs, lhs, ra, GpRegs, rhs, rb);
         CMP(ra, rb);
     }
 }
