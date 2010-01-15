@@ -216,8 +216,6 @@ pref("accessibility.typeaheadfind.prefillwithselection", true);
 // use Mac OS X Appearance panel text smoothing setting when rendering text, disabled by default
 pref("gfx.use_text_smoothing_setting", false);
 
-pref("browser.history_expire_days", 9);
-
 // loading and rendering of framesets and iframes
 pref("browser.frames.enabled", true);
 
