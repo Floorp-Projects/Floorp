@@ -371,34 +371,39 @@ namespace nanojit
     }
     #endif /* _DEBUG */
 
-    void Assembler::findRegFor2(RegisterMask allow, LIns* ia, Register& ra, LIns* ib, Register& rb)
+    void Assembler::findRegFor2(RegisterMask allowa, LIns* ia, Register& ra,
+                                RegisterMask allowb, LIns* ib, Register& rb)
     {
+        // There should be some overlap between 'allowa' and 'allowb', else
+        // there's no point calling this function.
+        NanoAssert(allowa & allowb);
+
         if (ia == ib) {
-            ra = rb = findRegFor(ia, allow);
+            ra = rb = findRegFor(ia, allowa & allowb);  // use intersection(allowa, allowb)
         } else {
             // You might think we could just do this:
             //
-            //   ra = findRegFor(ia, allow);
-            //   rb = findRegFor(ib, allow & ~rmask(ra));
+            //   ra = findRegFor(ia, allowa);
+            //   rb = findRegFor(ib, allowb & ~rmask(ra));
             //
             // But if 'ib' was already in an allowed register, the first
             // findRegFor() call could evict it, whereupon the second
             // findRegFor() call would immediately restore it, which is
             // sub-optimal.  What we effectively do instead is this:
             //
-            //   ra = findRegFor(ia, allow & ~rmask(rb));
-            //   rb = findRegFor(ib, allow & ~rmask(ra));
+            //   ra = findRegFor(ia, allowa & ~rmask(rb));
+            //   rb = findRegFor(ib, allowb & ~rmask(ra));
             //
             // but we have to determine what 'rb' initially is to avoid the
             // mutual dependency between the assignments.
-            bool rbDone = !ib->isUnusedOrHasUnknownReg() && (rb = ib->getReg(), allow & rmask(rb));
+            bool rbDone = !ib->isUnusedOrHasUnknownReg() && (rb = ib->getReg(), allowb & rmask(rb));
             if (rbDone) {
-                allow &= ~rmask(rb);    // ib already in an allowable reg, keep that one
+                allowa &= ~rmask(rb);   // ib already in an allowable reg, keep that one
             }
-            ra = findRegFor(ia, allow);
+            ra = findRegFor(ia, allowa);
             if (!rbDone) {
-                allow &= ~rmask(ra);
-                rb = findRegFor(ib, allow);
+                allowb &= ~rmask(ra);
+                rb = findRegFor(ib, allowb);
             }
         }
     }
@@ -430,6 +435,27 @@ namespace nanojit
         (void) d;
     #endif
         return findRegFor(i, allow);
+    }
+
+    // Like findRegFor2(), but used for stores where the base value has the
+    // same type as the stored value, eg. in asm_store32() on 32-bit platforms
+    // and asm_store64() on 64-bit platforms.  Similar to getBaseReg(),
+    // findRegFor2() can be called instead, but this function can optimize the
+    // case where the base value is a LIR_alloc.
+    void Assembler::getBaseReg2(RegisterMask allowValue, LIns* value, Register& rv,
+                                RegisterMask allowBase, LIns* base, Register& rb, int &d)
+    {
+    #if !PEDANTIC
+        if (base->isop(LIR_alloc)) {
+            rb = FP;
+            d += findMemFor(base);
+            rv = findRegFor(value, allowValue);
+            return;
+        }
+    #else
+        (void) d;
+    #endif
+        findRegFor2(allowValue, value, rv, allowBase, base, rb);
     }
 
     // Finds a register in 'allow' to hold the result of 'ins'.  Used when we
