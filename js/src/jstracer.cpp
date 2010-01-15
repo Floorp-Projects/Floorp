@@ -13981,6 +13981,17 @@ TraceRecorder::record_JSOP_ARGSUB()
     RETURN_STOP_A("can't trace JSOP_ARGSUB hard case");
 }
 
+JS_REQUIRES_STACK LIns*
+TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
+{
+    // The following implements js_IsOverriddenArgsLength on trace.
+    // The '2' bit is set if length was overridden.
+    LIns *len_ins = stobj_get_fslot(argsobj_ins, JSSLOT_ARGS_LENGTH);
+    LIns *ovr_ins = lir->ins2(LIR_piand, len_ins, INS_CONSTWORD(2));
+    guard(true, lir->ins_peq0(ovr_ins), snapshot(BRANCH_EXIT));
+    return len_ins;
+}
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ARGCNT()
 {
@@ -13998,13 +14009,7 @@ TraceRecorder::record_JSOP_ARGCNT()
     LIns *a_ins = get(&cx->fp->argsobj);
     if (callDepth == 0) {
         LIns *br = lir->insBranch(LIR_jt, lir->ins_peq0(a_ins), NULL);
-
-        // The following implements js_IsOverriddenArgsLength on trace.
-        // The '2' bit is set if length was overridden.
-        LIns *len_ins = stobj_get_fslot(a_ins, JSSLOT_ARGS_LENGTH);
-        LIns *ovr_ins = lir->ins2(LIR_piand, len_ins, INS_CONSTWORD(2));
-
-        guard(true, lir->ins_peq0(ovr_ins), snapshot(BRANCH_EXIT));
+        guardArgsLengthNotAssigned(a_ins);
         LIns *label = lir->ins0(LIR_label);
         br->setTarget(label);
     }
@@ -14859,7 +14864,15 @@ TraceRecorder::record_JSOP_LENGTH()
         if (!afp)
             RETURN_STOP_A("can't reach arguments object's frame");
 
-        LIns* v_ins = lir->ins1(LIR_i2f, INS_CONST(afp->argc));
+        // We must both check at record time and guard at run time that
+        // arguments.length has not been reassigned, redefined or deleted.
+        if (js_IsOverriddenArgsLength(obj))
+            RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
+        LIns* slot_ins = guardArgsLengthNotAssigned(obj_ins);
+
+        // slot_ins is the value from the slot; right-shift by 2 bits to get
+        // the length (see GetArgsLength in jsfun.cpp).
+        LIns* v_ins = lir->ins1(LIR_i2f, lir->ins2i(LIR_rsh, slot_ins, 2));
         set(&l, v_ins);
         return ARECORD_CONTINUE;
     }
