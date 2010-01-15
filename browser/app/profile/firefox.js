@@ -784,6 +784,9 @@ pref("browser.sessionstore.max_resumed_crashes", 1);
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
 
+// Whether history is enabled or not.
+pref("places.history.enabled", true);
+
 // The percentage of system memory that the Places database can use.  Out of the
 // allowed cache size it will at most use the size of the database file.
 // Changes to this value are effective after an application restart.

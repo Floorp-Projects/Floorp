@@ -213,8 +213,10 @@ public:
                           nsACString& aResult);
   void GetMonthName(PRInt32 aIndex, nsACString& aResult);
 
-  // returns true if history has been disabled
-  PRBool IsHistoryDisabled() { return mExpireDaysMax == 0 || InPrivateBrowsingMode(); }
+  // Returns whether history is enabled or not.
+  PRBool IsHistoryDisabled() {
+    return mExpireDaysMax == 0 || !mHistoryEnabled || InPrivateBrowsingMode();
+  }
 
   // Constants for the columns returned by the above statement.
   static const PRInt32 kGetInfoIndex_PageID;
@@ -659,6 +661,10 @@ protected:
   PRInt32 mExpireDaysMin;
   PRInt32 mExpireDaysMax;
   PRInt32 mExpireSites;
+
+  // Whether history is enabled or not.
+  // Will mimic value of the places.history.enabled preference.
+  PRBool mHistoryEnabled;
 
   // Frecency preferences.
   PRInt32 mNumVisitsForFrecency;
