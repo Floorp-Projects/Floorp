@@ -150,17 +150,6 @@ class nsContentUtils
 public:
   static nsresult Init();
 
-  // You MUST pass the old ownerDocument of aContent in as aOldDocument and the
-  // new one as aNewDocument.  aNewParent is allowed to be null; in that case
-  // aNewDocument will be assumed to be the parent.  Note that at this point
-  // the actual ownerDocument of aContent may not yet be aNewDocument.
-  // XXXbz but then if it gets wrapped after we do this call but before its
-  // ownerDocument actually changes, things will break...
-  static nsresult ReparentContentWrapper(nsIContent *aNode,
-                                         nsIContent *aNewParent,
-                                         nsIDocument *aNewDocument,
-                                         nsIDocument *aOldDocument);
-
   /**
    * Get a scope from aOldDocument and one from aNewDocument. Also get a
    * context through one of the scopes, from the stack or the safe context.
@@ -1523,13 +1512,6 @@ public:
 private:
 
   static PRBool InitializeEventTable();
-
-  static nsresult doReparentContentWrapper(nsIContent *aChild,
-                                           JSContext *cx,
-                                           JSObject *aOldGlobal,
-                                           JSObject *aNewGlobal,
-                                           nsIDocument *aOldDocument,
-                                           nsIDocument *aNewDocument);
 
   static nsresult EnsureStringBundle(PropertiesFile aFile);
 
