@@ -200,10 +200,18 @@ bool ReadConnectRequest(server_info_t* server_info,
     relayBuffer& buffer, PRInt32* result, string& certificate,
     client_auth_option* clientauth, string& host)
 {
-  if (buffer.present() < 4)
+  if (buffer.present() < 4) {
+    printf(" !! only %d bytes present in the buffer", (int)buffer.present());
     return false;
-  if (strncmp(buffer.buffertail-4, "\r\n\r\n", 4))
+  }
+  if (strncmp(buffer.buffertail-4, "\r\n\r\n", 4)) {
+    printf(" !! request is not tailed with CRLFCRLF but with %x %x %x %x", 
+           *(buffer.buffertail-4),
+           *(buffer.buffertail-3),
+           *(buffer.buffertail-2),
+           *(buffer.buffertail-1));
     return false;
+  }
 
   *result = 400;
 
@@ -293,6 +301,7 @@ bool AdjustRequestURI(relayBuffer& buffer, string *host)
   // Cannot use strnchr so add a null char at the end. There is always some space left
   // because we preserve a margin.
   buffer.buffertail[1] = '\0';
+  printf(" incoming request to adjust:\n%s\n", buffer.bufferhead);
 
   char *token, *path;
   path = strchr(buffer.bufferhead, ' ') + 1;
@@ -548,6 +557,9 @@ void HandleConnection(void* data)
           else
           {
             printf(", writen %d bytes", bytesWrite);
+            buffers[s2].buffertail[1] = '\0';
+            printf(" dump:\n%.*s\n", bytesWrite, buffers[s2].bufferhead);
+            
             buffers[s2].bufferhead += bytesWrite;
             if (buffers[s2].present())
             {
