@@ -267,10 +267,6 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "SELECT COUNT(*), "
     "(SELECT id FROM moz_bookmarks WHERE id = ?1) "
     "FROM moz_bookmarks WHERE parent = ?1"));
-
-  RETURN_IF_STMT(mDBGetItemIndex, NS_LITERAL_CSTRING(
-    "SELECT position FROM moz_bookmarks WHERE id = ?1"));
-
   RETURN_IF_STMT(mDBGetChildAt, NS_LITERAL_CSTRING(
     "SELECT id, fk, type FROM moz_bookmarks "
     "WHERE parent = ?1 AND position = ?2"));
@@ -445,7 +441,6 @@ nsNavBookmarks::FinalizeStatements() {
     mDBGetChildren,
     mDBFindURIBookmarks,
     mDBFolderCount,
-    mDBGetItemIndex,
     mDBGetChildAt,
     mDBGetItemProperties,
     mDBGetItemIdForGUID,
@@ -2867,7 +2862,7 @@ nsNavBookmarks::GetItemIndex(PRInt64 aItemId, PRInt32* _index)
 
   *_index = -1;
 
-  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetItemIndex);
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetItemProperties);
   nsresult rv = stmt->BindInt64Parameter(0, aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
   PRBool hasResult;
@@ -2876,7 +2871,7 @@ nsNavBookmarks::GetItemIndex(PRInt64 aItemId, PRInt32* _index)
   if (!hasResult)
     return NS_OK;
 
-  rv = stmt->GetInt32(0, _index);
+  rv = stmt->GetInt32(kGetItemPropertiesIndex_Position, _index);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
