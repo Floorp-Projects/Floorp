@@ -85,6 +85,7 @@ public:
         SurfaceTypeOS2,
         SurfaceTypeWin32Printing,
         SurfaceTypeQuartzImage,
+        SurfaceTypeScript,
         SurfaceTypeQPainter,
         SurfaceTypeDDraw
     } gfxSurfaceType;
