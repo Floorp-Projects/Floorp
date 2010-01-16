@@ -438,6 +438,8 @@ nsContextMenu.prototype = {
 
     // Copy link location depends on whether we're on a non-mailto link.
     this.showItem("context-copylink", this.onLink && !this.onMailtoLink);
+    this.showItem("context-copylinktext",
+                  this.onLink && !this.onImage && !this.isTextSelected);
     this.showItem("context-sep-copylink", this.onLink &&
                   (this.onImage || this.onVideo || this.onAudio));
 
@@ -1176,6 +1178,14 @@ nsContextMenu.prototype = {
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                     getService(Ci.nsIClipboardHelper);
     clipboard.copyString(addresses);
+  },
+
+  copyLinkText: function() {
+    let text = this.linkText();
+
+    let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
+                    getService(Ci.nsIClipboardHelper);
+    clipboard.copyString(text);
   },
 
   ///////////////
