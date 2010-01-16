@@ -50,6 +50,7 @@
 #include "nsPlacesTables.h"
 #include "nsPlacesIndexes.h"
 #include "nsPlacesMacros.h"
+#include "Helpers.h"
 
 #include "mozilla/storage.h"
 
@@ -120,17 +121,6 @@ nsAnnotationService::Init()
 mozIStorageStatement*
 nsAnnotationService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
 {
-#define RETURN_IF_STMT(_stmt, _sql)                                        \
-  PR_BEGIN_MACRO                                                           \
-  if (address_of(_stmt) == address_of(aStmt)) {                            \
-    if (!_stmt) {                                                          \
-      nsresult rv = mDBConn->CreateStatement(_sql, getter_AddRefs(_stmt)); \
-      NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && _stmt, nsnull);                   \
-    }                                                                      \
-    return _stmt.get();                                                    \
-  }                                                                        \
-  PR_END_MACRO
-
   if (mShuttingDown)
     return nsnull;
 
@@ -235,7 +225,6 @@ nsAnnotationService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "WHERE b.id = ?2"));
 
    return nsnull;
-#undef RETURN_IF_STMT
 }
 
 
@@ -1291,10 +1280,7 @@ nsresult
 nsAnnotationService::GetPagesWithAnnotationCOMArray(const nsACString& aName,
                                                     nsCOMArray<nsIURI>* _results)
 {
-  mozIStorageStatement* stmt = GetStatement(mDBGetPagesWithAnnotation);
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetPagesWithAnnotation);
   nsresult rv = stmt->BindUTF8StringParameter(0, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1357,9 +1343,7 @@ nsresult
 nsAnnotationService::GetItemsWithAnnotationTArray(const nsACString& aName,
                                                   nsTArray<PRInt64>* _results)
 {
-  mozIStorageStatement* stmt = GetStatement(mDBGetItemsWithAnnotation);
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetItemsWithAnnotation);
   nsresult rv = stmt->BindUTF8StringParameter(0, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1974,9 +1958,7 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
   bool isItemAnnotation = (aItemId > 0);
 
   // Ensure the annotation name exists.
-  mozIStorageStatement* addNameStmt = GetStatement(mDBAddAnnotationName);
-  NS_ENSURE_STATE(addNameStmt);
-  mozStorageStatementScoper addNameScoper(addNameStmt);
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(addNameStmt, mDBAddAnnotationName);
   nsresult rv = addNameStmt->BindUTF8StringParameter(0, aName);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = addNameStmt->Execute();
