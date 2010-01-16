@@ -69,22 +69,9 @@ const STATE_FAILED            = "failed";
 const SRCEVT_FOREGROUND       = 1;
 const SRCEVT_BACKGROUND       = 2;
 
-__defineGetter__("gConsole", function() {
-  delete this.gConsole;
-  return this.gConsole = CoC["@mozilla.org/consoleservice;1"].
-                         getService(CoI.nsIConsoleService);
-});
-
-__defineGetter__("gPref", function() {
-  delete this.gPref;
-  return this.gPref = CoC["@mozilla.org/preferences-service;1"].
-                      getService(CoI.nsIPrefBranch2);
-});
-
-__defineGetter__("gLogEnabled", function() {
-  delete this.gLogEnabled;
-  return this.gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
-});
+var gConsole    = null;
+var gPref       = null;
+var gLogEnabled = false;
 
 /**
  * Logs a string to the error console.
@@ -314,6 +301,13 @@ var gUpdates = {
    */
   onLoad: function() {
     this.wiz = document.documentElement;
+
+    gPref = CoC["@mozilla.org/preferences-service;1"].
+            getService(CoI.nsIPrefBranch2);
+    gConsole = CoC["@mozilla.org/consoleservice;1"].
+               getService(CoI.nsIConsoleService);
+    gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false)
+
     this.strings = document.getElementById("updateStrings");
     var brandStrings = document.getElementById("brandStrings");
     this.brandName = brandStrings.getString("brandShortName");
@@ -367,7 +361,6 @@ var gUpdates = {
           var patchFailed;
           try {
             patchFailed = this.update.getProperty("patchingFailed");
-            LOG("gUpdates", "get startPage - patchFailed = " + patchFailed);
           }
           catch (e) {
           }
