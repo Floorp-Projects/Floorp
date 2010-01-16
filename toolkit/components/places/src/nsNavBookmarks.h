@@ -136,6 +136,7 @@ private:
 
   nsresult InitRoots();
   nsresult InitDefaults();
+  nsresult InitStatements();
   nsresult CreateRoot(mozIStorageStatement* aGetRootStatement,
                       const nsCString& name,
                       PRInt64* aID,
@@ -281,21 +282,15 @@ private:
   nsresult GetBookmarkIdsForURITArray(nsIURI* aURI,
                                       nsTArray<PRInt64>& aResult);
 
-
-  /**
-   *  You should always use this getter and never use directly the nsCOMPtr.
-   */
-  mozIStorageStatement* GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt);
-
-  nsCOMPtr<mozIStorageStatement> mDBGetChildren;
   // kGetInfoIndex_* results + kGetChildrenIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBGetChildren;
   static const PRInt32 kGetChildrenIndex_Position;
   static const PRInt32 kGetChildrenIndex_Type;
   static const PRInt32 kGetChildrenIndex_PlaceID;
   static const PRInt32 kGetChildrenIndex_FolderTitle;
   static const PRInt32 kGetChildrenIndex_ServiceContractId;
 
-  nsCOMPtr<mozIStorageStatement> mDBFindURIBookmarks;
+  nsCOMPtr<mozIStorageStatement> mDBFindURIBookmarks;  // kFindBookmarksIndex_* results
   static const PRInt32 kFindBookmarksIndex_ID;
   static const PRInt32 kFindBookmarksIndex_Type;
   static const PRInt32 kFindBookmarksIndex_PlaceID;
@@ -303,9 +298,14 @@ private:
   static const PRInt32 kFindBookmarksIndex_Position;
   static const PRInt32 kFindBookmarksIndex_Title;
 
-  nsCOMPtr<mozIStorageStatement> mDBGetItemProperties;
+  nsCOMPtr<mozIStorageStatement> mDBFolderCount;
+
+  nsCOMPtr<mozIStorageStatement> mDBGetItemIndex;
+  nsCOMPtr<mozIStorageStatement> mDBGetChildAt;
+
+  nsCOMPtr<mozIStorageStatement> mDBGetItemProperties; // kGetItemPropertiesIndex_*
   static const PRInt32 kGetItemPropertiesIndex_ID;
-  static const PRInt32 kGetItemPropertiesIndex_URI;
+  static const PRInt32 kGetItemPropertiesIndex_URI; // null for folders and separators
   static const PRInt32 kGetItemPropertiesIndex_Title;
   static const PRInt32 kGetItemPropertiesIndex_Position;
   static const PRInt32 kGetItemPropertiesIndex_PlaceID;
@@ -314,6 +314,9 @@ private:
   static const PRInt32 kGetItemPropertiesIndex_ServiceContractId;
   static const PRInt32 kGetItemPropertiesIndex_DateAdded;
   static const PRInt32 kGetItemPropertiesIndex_LastModified;
+
+  nsCOMPtr<mozIStorageStatement> mDBGetItemIdForGUID;
+  nsCOMPtr<mozIStorageStatement> mDBGetRedirectDestinations;
 
   nsCOMPtr<mozIStorageStatement> mDBInsertBookmark;
   static const PRInt32 kInsertBookmarkIndex_Id;
@@ -326,20 +329,23 @@ private:
   static const PRInt32 kInsertBookmarkIndex_DateAdded;
   static const PRInt32 kInsertBookmarkIndex_LastModified;
 
-  nsCOMPtr<mozIStorageStatement> mDBFolderCount;
-  nsCOMPtr<mozIStorageStatement> mDBGetItemIndex;
-  nsCOMPtr<mozIStorageStatement> mDBGetChildAt;
-  nsCOMPtr<mozIStorageStatement> mDBGetItemIdForGUID;
-  nsCOMPtr<mozIStorageStatement> mDBGetRedirectDestinations;
   nsCOMPtr<mozIStorageStatement> mDBIsBookmarkedInDatabase;
   nsCOMPtr<mozIStorageStatement> mDBIsRealBookmark;
   nsCOMPtr<mozIStorageStatement> mDBGetLastBookmarkID;
   nsCOMPtr<mozIStorageStatement> mDBSetItemDateAdded;
   nsCOMPtr<mozIStorageStatement> mDBSetItemLastModified;
   nsCOMPtr<mozIStorageStatement> mDBSetItemIndex;
+
+  // keywords
   nsCOMPtr<mozIStorageStatement> mDBGetKeywordForURI;
   nsCOMPtr<mozIStorageStatement> mDBGetKeywordForBookmark;
   nsCOMPtr<mozIStorageStatement> mDBGetURIForKeyword;
+
+  /**
+   *  For the next statements you should always use this getter and never use
+   *  directly the statement nsCOMPtr.
+   */
+  mozIStorageStatement* GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt);
   nsCOMPtr<mozIStorageStatement> mDBAdjustPosition;
   nsCOMPtr<mozIStorageStatement> mDBRemoveItem;
   nsCOMPtr<mozIStorageStatement> mDBGetLastChildId;
