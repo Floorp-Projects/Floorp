@@ -2077,8 +2077,6 @@ pref("font.single-face-list", "Osaka-Mono");
 // names are canonical family names (typically English names)
 pref("font.preload-names-list", "Hiragino Kaku Gothic Pro,Hiragino Mincho Pro,STSong");
 
-pref("browser.urlbar.clickAtEndSelects", false);
-
 // Override the Windows settings: no menu key, meta accelerator key. ctrl for general access key in HTML/XUL
 // Use 17 for Ctrl, 18 for Option, 224 for Cmd, 0 for none
 pref("ui.key.menuAccessKey", 0);
