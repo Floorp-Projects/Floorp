@@ -43,7 +43,6 @@
 #include "nsILineIterator.h"
 #include "nsTablePainter.h"
 #include "nsTArray.h"
-#include "nsCSSAnonBoxes.h"
 
 class nsTableFrame;
 class nsTableRowFrame;
@@ -359,13 +358,6 @@ public:
    * decided not to use a cursor or we already have one set up.
    */
   FrameCursorData* SetupRowCursor();
-  
-  PRBool IsScrolled() {
-    // Note that if mOverflowY is CLIP, so is mOverflowX, and we need to clip the background
-    // as if the rowgroup is scrollable.
-    return GetStyleContext()->GetPseudo() == nsCSSAnonBoxes::scrolledContent ||
-           GetStyleDisplay()->mOverflowY == NS_STYLE_OVERFLOW_CLIP;
-  }
 
   virtual nsILineIterator* GetLineIterator() { return this; }
 
