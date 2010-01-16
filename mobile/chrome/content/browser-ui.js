@@ -154,7 +154,7 @@ var BrowserUI = {
       var ownerDoc = link.ownerDocument;
       if (!ownerDoc) // no document, no icon
         return;
-      
+
       let tab = Browser.getTabForDocument(ownerDoc);
       tab.setIcon(link.href);
       // If the link changes after pageloading, update it right away.
@@ -217,11 +217,11 @@ var BrowserUI = {
     if (this._toolbarLocked == 1)
       Browser.forceChromeReflow();
   },
-  
+
   unlockToolbar: function unlockToolbar() {
     if (!this._toolbarLocked)
       return;
-    
+
     this._toolbarLocked--;
     if (!this._toolbarLocked)
       document.getElementById("toolbar-moveable-container").top = "";
@@ -297,7 +297,7 @@ var BrowserUI = {
 
   pushPopup: function pushPopup(aPanel, aElements) {
     this._hidePopup();
-    this._popup =  { "panel": aPanel, 
+    this._popup =  { "panel": aPanel,
                      "elements": (aElements instanceof Array) ? aElements : [aElements] };
     this._dispatchPopupChanged();
   },
@@ -322,7 +322,7 @@ var BrowserUI = {
     if (panel.hide)
       panel.hide();
   },
-  
+
   _isEventInsidePopup: function _isEventInsidePopup(aEvent) {
     if (!this._popup)
       return false;
@@ -349,7 +349,7 @@ var BrowserUI = {
     }
     return this._toolbarH;
   },
-  
+
   get sidebarW() {
     if (!this._sidebarW) {
       let sidebar = document.getElementById("browser-controls");
@@ -357,7 +357,7 @@ var BrowserUI = {
     }
     return this._sidebarW;
   },
-  
+
   get starButton() {
     delete this.starButton;
     return this.starButton = document.getElementById("tool-star");
@@ -401,7 +401,7 @@ var BrowserUI = {
     browsers.addEventListener("DOMTitleChanged", this, true);
     browsers.addEventListener("DOMLinkAdded", this, true);
     browsers.addEventListener("DOMWillOpenModalDialog", this, true);
-    
+
     // listening mousedown for automatically dismiss some popups (e.g. larry)
     window.addEventListener("mousedown", this, true);
 
@@ -526,7 +526,7 @@ var BrowserUI = {
 
     this._edit.showHistoryPopup();
   },
-  
+
   closeAutoComplete: function closeAutoComplete(aResetInput) {
     if (aResetInput)
       this._edit.popup.close();
@@ -568,7 +568,7 @@ var BrowserUI = {
     let tab = Browser.addTab(aURI, true);
 
     this.hidePanel();
-    
+
     if (aURI == "about:blank") {
       // Display awesomebar UI
       this.showToolbar(true);
@@ -643,7 +643,7 @@ var BrowserUI = {
       phone.switchTask();
     } catch(e) { }
   },
-  
+
 #ifdef WINCE
   updateDefaultBrowser: function updateDefaultBrowser(aSet) {
     try {
@@ -655,7 +655,7 @@ var BrowserUI = {
     } catch(e) { }
   },
 #endif
-  
+
   handleEvent: function (aEvent) {
     switch (aEvent.type) {
       // Browser events
@@ -865,7 +865,7 @@ var NewTabPopup = {
     this.box.hidden = true;
     BrowserUI.popPopup();
   },
-  
+
   show: function(aTab) {
     BrowserUI.pushPopup(this, this.box);
 
@@ -905,7 +905,7 @@ var BookmarkPopup = {
     this.box.hidden = true;
     BrowserUI.popPopup();
   },
-  
+
   show : function show(aAutoClose) {
     const margin = 10;
 
@@ -925,7 +925,7 @@ var BookmarkPopup = {
     // include starButton here, so that click-to-dismiss works as expected
     BrowserUI.pushPopup(this, [this.box, BrowserUI.starButton]);
   },
-  
+
   toggle : function toggle(aAutoClose) {
     if (this.box.hidden)
       this.show(aAutoClose);
@@ -978,7 +978,7 @@ var BookmarkHelper = {
   save: function BH_save() {
     this._editor.stopEditing(true);
   },
-  
+
   hide: function BH_hide() {
     BrowserUI.updateStar();
 
@@ -1017,14 +1017,14 @@ var BookmarkList = {
     this._bookmarks.addEventListener("BookmarkRemove", this, true);
     this._bookmarks.manageUI = false;
     this._bookmarks.openFolder();
-    
+
     this._manageButton = document.getElementById("tool-bookmarks-manage");
     this._manageButton.disabled = (this._bookmarks.items.length == 0);
   },
 
   close: function() {
     BrowserUI.updateStar();
-    
+
     this._bookmarks.close();
 
     if (this._bookmarks.manageUI)
@@ -1104,7 +1104,7 @@ var FormHelper = {
   _updateSelect: function(aPreviousElement, aNewElement) {
     let previousIsSelect = this._isValidSelectElement(aPreviousElement);
     let currentIsSelect = this._isValidSelectElement(aNewElement);
-    
+
     if (currentIsSelect && !previousIsSelect) {
       this._selectContainer.height = window.innerHeight / 1.8;
 
@@ -1134,13 +1134,13 @@ var FormHelper = {
 
     if (this._isValidSelectElement(aElement) || aElement instanceof HTMLTextAreaElement)
       return this._isElementVisible(aElement);
-    
+
     if (aElement instanceof HTMLInputElement) {
       let ignoreInputElements = ["checkbox", "radio", "hidden", "reset", "button"];
       let isValidElement = (ignoreInputElements.indexOf(aElement.type) == -1);
       if (!isValidElement)
         return false;
- 
+
       return this._isElementVisible(aElement);
     }
 
@@ -1176,7 +1176,7 @@ var FormHelper = {
     }
 
     function orderByTabIndex(a, b) {
-      // for an explanation on tabbing navigation see 
+      // for an explanation on tabbing navigation see
       // http://www.w3.org/TR/html401/interact/forms.html#h-17.11.1
       // In resume tab index navigation order is 1, 2, 3, ..., 32767, 0
       if (a.tabIndex == 0 || b.tabIndex == 0)
@@ -1225,7 +1225,7 @@ var FormHelper = {
     let previousElement = this._currentElement;
     this._currentElement = aElement;
     this._update(previousElement, aElement);
-    
+
     let containerHeight = this._container.getBoundingClientRect().height;
     this._helperSpacer.setAttribute("height", containerHeight);
 
@@ -1273,7 +1273,7 @@ var FormHelper = {
     Browser.forceChromeReflow();
     Browser.contentScrollboxScroller.scrollBy(0, 0);
     bv.onAfterVisibleMove();
-    
+
     bv.ignorePageScroll(false);
 
     window.removeEventListener("keypress", this, true);
@@ -1288,8 +1288,7 @@ var FormHelper = {
       return;
 
     let currentElement = this.getCurrentElement();
-    let keyCode = aEvent.keyCode || aEvent.charCode;
-    switch (keyCode) {
+    switch (aEvent.keyCode) {
       case aEvent.DOM_VK_DOWN:
         if (currentElement instanceof HTMLTextAreaElement) {
           let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
@@ -1337,7 +1336,7 @@ var FormHelper = {
     // the user clicks on it
     let formExceptions = ["submit", "image", "file"];
     if (aElement instanceof HTMLInputElement && formExceptions.indexOf(aElement.type) != -1)
-      return false;    
+      return false;
 
     return this._isValidElement(aElement);
   }
@@ -1352,7 +1351,7 @@ SelectWrapper.prototype = {
   get multiple() { return this._control.multiple; },
   get options() { return this._control.options; },
   get children() { return this._control.children; },
-  
+
   getText: function(aChild) { return aChild.text; },
   isOption: function(aChild) { return aChild instanceof HTMLOptionElement; },
   isGroup: function(aChild) { return aChild instanceof HTMLOptGroupElement; },
@@ -1367,7 +1366,7 @@ SelectWrapper.prototype = {
     evt.initEvent("change", true, true, window, 0,
                   false, false,
                   false, false, null);
-    control.dispatchEvent(evt); 
+    control.dispatchEvent(evt);
   }
 };
 
@@ -1380,7 +1379,7 @@ MenulistWrapper.prototype = {
   get multiple() { return false; },
   get options() { return this._control.menupopup.children; },
   get children() { return this._control.menupopup.children; },
-  
+
   getText: function(aChild) { return aChild.label; },
   isOption: function(aChild) { return aChild instanceof Ci.nsIDOMXULSelectControlItemElement; },
   isGroup: function(aChild) { return false },
@@ -1394,7 +1393,7 @@ MenulistWrapper.prototype = {
     evt.initCommandEvent("command", true, true, window, 0,
                          false, false,
                          false, false, null);
-    control.dispatchEvent(evt); 
+    control.dispatchEvent(evt);
   }
 };
 
@@ -1529,7 +1528,7 @@ var SelectHelper = {
       }
     }
 
-    if (!isIdentical) 
+    if (!isIdentical)
       this._control.fireOnChange();
   },
 
@@ -1543,7 +1542,7 @@ var SelectHelper = {
   close: function() {
     this._list.removeEventListener("click", this, false);
     this._panel.hidden = true;
-    
+
     this.reset();
   },
 
