@@ -69,9 +69,22 @@ const STATE_FAILED            = "failed";
 const SRCEVT_FOREGROUND       = 1;
 const SRCEVT_BACKGROUND       = 2;
 
-var gConsole    = null;
-var gPref       = null;
-var gLogEnabled = false;
+__defineGetter__("gConsole", function() {
+  delete this.gConsole;
+  return this.gConsole = CoC["@mozilla.org/consoleservice;1"].
+                         getService(CoI.nsIConsoleService);
+});
+
+__defineGetter__("gPref", function() {
+  delete this.gPref;
+  return this.gPref = CoC["@mozilla.org/preferences-service;1"].
+                      getService(CoI.nsIPrefBranch2);
+});
+
+__defineGetter__("gLogEnabled", function() {
+  delete this.gLogEnabled;
+  return this.gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
+});
 
 /**
  * Logs a string to the error console.
@@ -287,12 +300,6 @@ var gUpdates = {
   sourceEvent: SRCEVT_FOREGROUND,
 
   /**
-   * The global error message - the reason the update failed. This is human
-   * readable text, used to initialize the error page.
-   */
-  errorMessage: "",
-
-  /**
    * Helper function for onLoad
    * Saves default button label & accesskey for use by _setButton
    */
@@ -307,13 +314,6 @@ var gUpdates = {
    */
   onLoad: function() {
     this.wiz = document.documentElement;
-
-    gPref = CoC["@mozilla.org/preferences-service;1"].
-            getService(CoI.nsIPrefBranch2);
-    gConsole = CoC["@mozilla.org/consoleservice;1"].
-               getService(CoI.nsIConsoleService);
-    gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false)
-
     this.strings = document.getElementById("updateStrings");
     var brandStrings = document.getElementById("brandStrings");
     this.brandName = brandStrings.getString("brandShortName");
@@ -364,26 +364,25 @@ var gUpdates = {
         var p = this.update.selectedPatch;
         if (p) {
           var state = p.state;
-          if (state == STATE_DOWNLOADING) {
-            var patchFailed = false;
-            try {
-              patchFailed = this.update.getProperty("patchingFailed");
-            }
-            catch (e) {
-            }
-            if (patchFailed == "partial") {
-              // If the system failed to apply the partial patch, show the
-              // screen which best describes this condition, which is triggered
-              // by the |STATE_FAILED| state.
-              state = STATE_FAILED;
-            }
-            else if (patchFailed == "complete") {
-              // Otherwise, if the complete patch failed, which is far less
-              // likely, show the error text held by the update object in the
-              // generic errors page, triggered by the |STATE_DOWNLOAD_FAILED|
-              // state.
-              state = STATE_DOWNLOAD_FAILED;
-            }
+          var patchFailed;
+          try {
+            patchFailed = this.update.getProperty("patchingFailed");
+            LOG("gUpdates", "get startPage - patchFailed = " + patchFailed);
+          }
+          catch (e) {
+          }
+          if (patchFailed == "partial") {
+            // If the system failed to apply the partial patch, show the
+            // screen which best describes this condition, which is triggered
+            // by the |STATE_FAILED| state.
+            state = STATE_FAILED;
+          }
+          else if (patchFailed == "complete") {
+            // Otherwise, if the complete patch failed, which is far less
+            // likely, show the error text held by the update object in the
+            // generic errors page, triggered by the |STATE_DOWNLOAD_FAILED|
+            // state.
+            state = STATE_DOWNLOAD_FAILED;
           }
 
           // Now select the best page to start with, given the current state of
@@ -1163,6 +1162,12 @@ var gDownloadingPage = {
 
     gUpdates.setButtons("hideButton", null, null, false);
     gUpdates.wiz.getButton("extra1").focus();
+  },
+
+  showVerificationError: function() {
+    var verificationError = gUpdates.getAUSString("verificationError",
+                                                  [gUpdates.brandName]);
+    gUpdates.advanceToErrorPage(verificationError);                             
   },
 
   /**
