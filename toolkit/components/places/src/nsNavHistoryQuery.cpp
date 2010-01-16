@@ -708,7 +708,7 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
     // min visits
     } else if (kvp.key.EqualsLiteral(QUERYKEY_MIN_VISITS)) {
-      PRInt32 visits = kvp.value.ToInteger((PRInt32*)&rv);
+      PRInt32 visits = kvp.value.ToInteger(&rv);
       if (NS_SUCCEEDED(rv))
         query->SetMinVisits(visits);
       else
@@ -716,7 +716,7 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
 
     // max visits
     } else if (kvp.key.EqualsLiteral(QUERYKEY_MAX_VISITS)) {
-      PRInt32 visits = kvp.value.ToInteger((PRInt32*)&rv);
+      PRInt32 visits = kvp.value.ToInteger(&rv);
       if (NS_SUCCEEDED(rv))
         query->SetMaxVisits(visits);
       else
