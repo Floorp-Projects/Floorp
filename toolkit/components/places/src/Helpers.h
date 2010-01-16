@@ -66,6 +66,32 @@ public:
   NS_IMETHOD HandleResult(mozIStorageResultSet *); \
   NS_IMETHOD HandleCompletion(PRUint16);
 
+/**
+ * Macros to use for lazy statements initialization in Places services that use
+ * GetStatement() method.
+ */
+#define RETURN_IF_STMT(_stmt, _sql)                                            \
+  PR_BEGIN_MACRO                                                               \
+  if (address_of(_stmt) == address_of(aStmt)) {                                \
+    if (!_stmt) {                                                              \
+      nsresult rv = mDBConn->CreateStatement(_sql, getter_AddRefs(_stmt));     \
+      NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && _stmt, nsnull);                       \
+    }                                                                          \
+    return _stmt.get();                                                        \
+  }                                                                            \
+  PR_END_MACRO
+
+// Async statements don't need to be scoped, they are reset when done.
+// So use this version for statements used async, scoped version for statements
+// used sync.
+#define DECLARE_AND_ASSIGN_LAZY_STMT(_localStmt, _globalStmt)                  \
+  mozIStorageStatement* _localStmt = GetStatement(_globalStmt);                \
+  NS_ENSURE_STATE(_localStmt)
+
+#define DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(_localStmt, _globalStmt)           \
+  DECLARE_AND_ASSIGN_LAZY_STMT(_localStmt, _globalStmt);                       \
+  mozStorageStatementScoper scoper(_localStmt)
+
 } // namespace places
 } // namespace mozilla
 
