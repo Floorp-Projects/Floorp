@@ -805,7 +805,8 @@
         </body>
       </method>
 
-      <method name="updateTitlebar">
+      <method name="getWindowTitleForBrowser">
+        <parameter name="aBrowser"/>
         <body>
           <![CDATA[
             var newTitle = "";
@@ -813,8 +814,8 @@
             var docElement = this.ownerDocument.documentElement;
             var sep = docElement.getAttribute("titlemenuseparator");
 
-            if (this.docShell.contentViewer)
-              docTitle = this.contentTitle;
+            if (aBrowser.docShell.contentViewer)
+              docTitle = aBrowser.contentTitle;
 
             if (!docTitle)
               docTitle = docElement.getAttribute("titledefault");
@@ -834,7 +835,7 @@
             try {
               if (docElement.getAttribute("chromehidden").indexOf("location") != -1) {
                 var uri = this.mURIFixup.createExposableURI(
-                            this.mCurrentBrowser.currentURI);
+                            aBrowser.currentURI);
                 if (uri.scheme == "about")
                   newTitle = uri.spec + sep + newTitle;
                 else
@@ -842,7 +843,15 @@
               }
             } catch (e) {}
 
-            this.ownerDocument.title = newTitle;
+            return newTitle;
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateTitlebar">
+        <body>
+          <![CDATA[
+            this.ownerDocument.title = this.getWindowTitleForBrowser(this.mCurrentBrowser);
           ]]>
         </body>
       </method>
