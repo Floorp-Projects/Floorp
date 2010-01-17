@@ -60,6 +60,8 @@ TaskbarTabPreview::TaskbarTabPreview(ITaskbarList4 *aTaskbar, nsITaskbarPreviewC
     mIcon(NULL),
     mRegistered(PR_FALSE)
 {
+  WindowHook &hook = GetWindowHook();
+  hook.AddMonitor(WM_WINDOWPOSCHANGED, MainWindowHook, this);
 }
 
 TaskbarTabPreview::~TaskbarTabPreview() {
@@ -225,6 +227,8 @@ TaskbarTabPreview::Enable() {
   if (!mProxyWindow)
     return NS_ERROR_INVALID_ARG;
 
+  UpdateProxyWindowStyle();
+
   nsresult rv = TaskbarPreview::Enable();
   nsresult rvUpdate;
   rvUpdate = UpdateTitle();
@@ -257,7 +261,46 @@ void
 TaskbarTabPreview::DetachFromNSWindow(PRBool windowIsAlive) {
   (void) SetVisible(PR_FALSE);
 
+  if (windowIsAlive) {
+    WindowHook &hook = GetWindowHook();
+    hook.RemoveMonitor(WM_WINDOWPOSCHANGED, MainWindowHook, this);
+  }
+
   TaskbarPreview::DetachFromNSWindow(windowIsAlive);
+}
+
+/* static */
+PRBool
+TaskbarTabPreview::MainWindowHook(void *aContext,
+                                  HWND hWnd, UINT nMsg,
+                                  WPARAM wParam, LPARAM lParam,
+                                  LRESULT *aResult) {
+  if (nMsg == WM_WINDOWPOSCHANGED) {
+    TaskbarTabPreview *preview = reinterpret_cast<TaskbarTabPreview*>(aContext);
+    WINDOWPOS *pos = reinterpret_cast<WINDOWPOS*>(lParam);
+    if (SWP_FRAMECHANGED == (pos->flags & SWP_FRAMECHANGED))
+      preview->UpdateProxyWindowStyle();
+  } else {
+    NS_NOTREACHED("Style changed hook fired on non-style changed message");
+  }
+  return PR_FALSE;
+}
+
+void
+TaskbarTabPreview::UpdateProxyWindowStyle() {
+  if (!mProxyWindow)
+    return;
+
+  DWORD minMaxMask = WS_MINIMIZE | WS_MAXIMIZE;
+  DWORD windowStyle = GetWindowLongW(mWnd, GWL_STYLE);
+
+  DWORD proxyStyle = GetWindowLongW(mProxyWindow, GWL_STYLE);
+  proxyStyle &= ~minMaxMask;
+  proxyStyle |= windowStyle & minMaxMask;
+  SetWindowLongW(mProxyWindow, GWL_STYLE, proxyStyle);
+
+  DWORD exStyle = (WS_MAXIMIZE == (windowStyle & WS_MAXIMIZE)) ? WS_EX_TOOLWINDOW : 0;
+  SetWindowLongW(mProxyWindow, GWL_EXSTYLE, exStyle);
 }
 
 nsresult
