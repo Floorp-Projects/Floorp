@@ -70,6 +70,18 @@ private:
   virtual nsresult Enable();
   virtual nsresult Disable();
   virtual void DetachFromNSWindow(PRBool windowIsAlive);
+
+  // WindowHook procedure for hooking mWnd
+  static PRBool MainWindowHook(void *aContext,
+                               HWND hWnd, UINT nMsg,
+                               WPARAM wParam, LPARAM lParam,
+                               LRESULT *aResult);
+
+  // Bug 520807 - we need to update the proxy window style based on the main
+  // window's style to workaround a bug with the way the DWM displays the
+  // previews.
+  void UpdateProxyWindowStyle();
+
   nsresult UpdateTitle();
   nsresult UpdateIcon();
   nsresult UpdateNext();
