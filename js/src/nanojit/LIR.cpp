@@ -732,6 +732,8 @@ namespace nanojit
                 default:
                     ;
                 }
+            } else if (c == 1 && v == LIR_mul) {
+                return oprnd1;
             }
         }
 
