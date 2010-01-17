@@ -3472,7 +3472,8 @@ nsTableFrame::DumpRowGroup(nsIFrame* aKidFrame)
   while (cFrame) {
     nsTableRowFrame *rowFrame = do_QueryFrame(cFrame);
     if (rowFrame) {
-      printf("row(%d)=%p ", rowFrame->GetRowIndex(), rowFrame);
+      printf("row(%d)=%p ", rowFrame->GetRowIndex(),
+             static_cast<void*>(rowFrame));
       nsIFrame* childFrame = cFrame->GetFirstChild(nsnull);
       while (childFrame) {
         nsTableCellFrame *cellFrame = do_QueryFrame(childFrame);
@@ -3523,7 +3524,7 @@ nsTableFrame::Dump(PRBool          aDumpRows,
       if (0 == (colX % 8)) {
         printf("\n");
       }
-      printf ("%d=%p ", colX, colFrame);
+      printf ("%d=%p ", colX, static_cast<void*>(colFrame));
       nsTableColType colType = colFrame->GetColType();
       switch (colType) {
       case eColContent:
