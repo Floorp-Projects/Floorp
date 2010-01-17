@@ -288,8 +288,8 @@ PreviewController.prototype = {
     let self = this;
     this.win.tabbrowser.previewTab(this.tab, function () self.previewTabCallback(ctx));
 
-    // We want a frame drawn around the preview
-    return true;
+    // We must avoid having the frame drawn around the window. See bug 520807
+    return false;
   },
 
   previewTabCallback: function (ctx) {
