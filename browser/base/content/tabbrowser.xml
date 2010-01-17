@@ -939,12 +939,12 @@
                 }
             }
 
-            // Don't switch the fast find - this tab switch is temporary
-            if (!this._previewMode)
+            // Don't switch the fast find or update the titlebar (bug 540248) - this tab switch is temporary
+            if (!this._previewMode) {
               this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
 
-            // Update the window title.
-            this.updateTitlebar();
+              this.updateTitlebar();
+            }
 
             // If the new tab is busy, and our current state is not busy, then
             // we need to fire a start to all progress listeners.
