@@ -1029,6 +1029,10 @@ namespace nanojit
     #endif
     }
 
+    void Assembler::asm_f2i(LInsp) {
+        NanoAssertMsg(0, "NJ_F2I_SUPPORTED not yet supported for this architecture");
+    }
+
     void Assembler::asm_promote(LIns *ins) {
         LOpcode op = ins->opcode();
         Register r = prepResultReg(ins, GpRegs);
