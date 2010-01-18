@@ -242,6 +242,8 @@ public:
 
     virtual ~gfxProxyFontEntry();
 
+    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold);
+
     PRPackedBool                           mIsLoading;
     nsTArray<gfxFontFaceSrc>               mSrcList;
     PRUint32                               mSrcIndex; // index of loading src item

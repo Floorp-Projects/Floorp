@@ -3181,8 +3181,7 @@ nsNavBookmarks::OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::OnPageExpired(nsIURI* aURI, PRTime aVisitTime,
-                              PRBool aWholeEntry)
+nsNavBookmarks::OnDeleteVisits(nsIURI* aURI, PRTime aVisitTime)
 {
   // pages that are bookmarks shouldn't expire, so we don't need to handle it
   return NS_OK;

@@ -91,12 +91,12 @@ var tests = [
   //  go: function go4() {
   //    // disable history
   //    var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  //    prefs.setIntPref("browser.history_expire_days", 0);
+  //    prefs.setBoolPref("places.history.enabled", false);
   //
   //    iconsvc.setAndLoadFaviconForPage(this.pageURI, favicons[0].uri, true);
   //
   //    try {
-  //      prefs.clearUserPref("browser.history_expire_days");
+  //      prefs.clearUserPref("places.history.enabled");
   //    } catch (ex) {}
   //  },
   //  check: function check4() {
@@ -111,7 +111,7 @@ var tests = [
     go: function go5() {
       // disable history
       var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-      prefs.setIntPref("browser.history_expire_days", 0);
+      prefs.setBoolPref("places.history.enabled", false);
 
       // Add as bookmark
       addBookmark(this.pageURI);
@@ -119,7 +119,7 @@ var tests = [
       iconsvc.setAndLoadFaviconForPage(this.pageURI, this.favicon.uri, true);
 
       try {
-        prefs.clearUserPref("browser.history_expire_days");
+        prefs.clearUserPref("places.history.enabled");
       } catch (ex) {}
     },
     check: function check5() {
@@ -184,7 +184,7 @@ var historyObserver = {
   onBeforeDeleteURI: function() {},
   onDeleteURI: function() {},
   onClearHistory: function() {},
-  onPageExpired: function() {},
+  onDeleteVisits: function() {},
 
   onPageChanged: function historyObserver_onPageChanged(pageURI, what, value) {
     if (what != Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON)

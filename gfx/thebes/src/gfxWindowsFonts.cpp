@@ -396,6 +396,15 @@ gfxWindowsFont::GetUniqueName()
 }
 
 void
+gfxWindowsFont::InitTextRun(gfxTextRun *aTextRun,
+                            const PRUnichar *aString,
+                            PRUint32 aRunStart,
+                            PRUint32 aRunLength)
+{
+    NS_NOTREACHED("oops");
+}
+
+void
 gfxWindowsFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                      gfxContext *aContext, PRBool aDrawToPath, gfxPoint *aBaselineOrigin,
                      Spacing *aSpacing)
@@ -421,8 +430,8 @@ gfxWindowsFont::Measure(gfxTextRun *aTextRun,
         // and we won't be putting it in the font cache. So we want to
         // delete it immediately it goes out of scope, not call
         // gfxFont::Release which deals with shared, cached font instances.
-        nsAutoPtr<gfxWindowsFont> tempFont =
-            new gfxWindowsFont(GetFontEntry(), GetStyle(), CAIRO_ANTIALIAS_NONE);
+        nsAutoPtr<gfxWindowsFont> tempFont(
+            new gfxWindowsFont(GetFontEntry(), GetStyle(), CAIRO_ANTIALIAS_NONE));
         if (tempFont) {
             return tempFont->Measure(aTextRun, aStart, aEnd,
                                      TIGHT_HINTED_OUTLINE_EXTENTS,

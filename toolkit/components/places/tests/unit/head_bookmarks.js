@@ -297,6 +297,26 @@ function flush_main_thread_events()
     tm.mainThread.processNextEvent(false);
 }
 
+/**
+ * Clears history invoking callback when done.
+ */
+function waitForClearHistory(aCallback) {
+  const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
+  let os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
+  let observer = {
+    observe: function(aSubject, aTopic, aData) {
+      os.removeObserver(this, TOPIC_EXPIRATION_FINISHED);
+      aCallback();
+    }
+  };
+  os.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
+
+  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+           getService(Ci.nsINavHistoryService);
+  hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
+}
+
 // These tests are known to randomly fail due to bug 507790 when database
 // flushes are active, so we turn off syncing for them.
 let randomFailingSyncTests = [

@@ -55,6 +55,7 @@ button {
   -moz-border-left-colors: transparent ThreeDHighlight ThreeDLightShadow;
   background-color: ThreeDFace;
   color: ButtonText;
+  text-shadow: none;
 }
 
 .button-box {

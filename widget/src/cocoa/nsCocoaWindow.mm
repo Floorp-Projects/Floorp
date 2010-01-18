@@ -1997,6 +1997,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     mBackgroundColor = [NSColor whiteColor];
 
     mUnifiedToolbarHeight = 0.0f;
+    mWaitingForUnifiedToolbarHeight = NO;
 
     // setBottomCornerRounded: is a private API call, so we check to make sure
     // we respond to it just in case.
@@ -2047,6 +2048,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 // unified gradient in the titlebar.
 - (void)setUnifiedToolbarHeight:(float)aToolbarHeight
 {
+  mWaitingForUnifiedToolbarHeight = NO;
   if (mUnifiedToolbarHeight == aToolbarHeight)
     return;
   mUnifiedToolbarHeight = aToolbarHeight;
@@ -2098,6 +2100,19 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 {
   NSRect frameRect = [self frame];
   return frameRect.size.height - [self contentRectForFrameRect:frameRect].size.height;
+}
+
+- (void)beginMaybeResetUnifiedToolbar
+{
+  mWaitingForUnifiedToolbarHeight = YES;
+}
+
+- (void)endMaybeResetUnifiedToolbar
+{
+  if (mWaitingForUnifiedToolbarHeight) {
+    // No toolbar was drawn, so set the height to zero.
+    [self setUnifiedToolbarHeight:0.0f];
+  }
 }
 
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState

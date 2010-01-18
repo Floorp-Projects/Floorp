@@ -80,6 +80,10 @@
 #define PREF_FORMFILL_BRANCH "browser.formfill."
 #define PREF_FORMFILL_ENABLE "enable"
 
+// Default number of days for expiration.  Used if browser.formfill.expire_days
+// is not set.
+#define DEFAULT_EXPIRE_DAYS 180
+
 NS_INTERFACE_MAP_BEGIN(nsFormHistory)
   NS_INTERFACE_MAP_ENTRY(nsIFormHistory2)
   NS_INTERFACE_MAP_ENTRY(nsIFormHistoryPrivate)
@@ -463,16 +467,8 @@ nsFormHistory::ExpireOldEntries()
 
   PRInt32 expireDays;
   rv = prefBranch->GetIntPref("browser.formfill.expire_days", &expireDays);
-  if (NS_FAILED(rv)) {
-    PRInt32 expireDaysMin = 0;
-    rv = prefBranch->GetIntPref("browser.history_expire_days", &expireDays);
-    NS_ENSURE_SUCCESS(rv, rv);
-    prefBranch->GetIntPref("browser.history_expire_days_min", &expireDaysMin);
-    // Make expireDays at least expireDaysMin to prevent expiring entries younger than min
-    // NOTE: if history is disabled in preferences, then browser.history_expire_days == 0
-    if (expireDays && expireDays < expireDaysMin)
-      expireDays = expireDaysMin;
-  }
+  if (NS_FAILED(rv))
+    expireDays = DEFAULT_EXPIRE_DAYS;
   PRInt64 expireTime = PR_Now() - expireDays * 24 * PR_HOURS;
 
 

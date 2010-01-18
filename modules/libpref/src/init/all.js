@@ -216,8 +216,6 @@ pref("accessibility.typeaheadfind.prefillwithselection", true);
 // use Mac OS X Appearance panel text smoothing setting when rendering text, disabled by default
 pref("gfx.use_text_smoothing_setting", false);
 
-pref("browser.history_expire_days", 9);
-
 // loading and rendering of framesets and iframes
 pref("browser.frames.enabled", true);
 
@@ -949,8 +947,6 @@ pref("security.checkloaduri", true);
 pref("security.xpconnect.plugin.unrestricted", true);
 // security-sensitive dialogs should delay button enabling. In milliseconds.
 pref("security.dialog_enable_delay", 2000);
-
-pref("security.csp.enable", true);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.

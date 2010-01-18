@@ -726,7 +726,7 @@ interface nsINavHistoryResult : nsISupports
  * DANGER! If you are in the middle of a batch transaction, there may be a
  * database transaction active. You can still access the DB, but be careful.
  */
-[scriptable, uuid(14065711-8a91-4d96-ba32-59512f5401b6)]
+[scriptable, uuid(0a5ce210-c803-11de-8a39-0800200c9a66)]
 interface nsINavHistoryObserver : nsISupports
 {
   /**
@@ -814,18 +814,20 @@ interface nsINavHistoryObserver : nsISupports
   void onPageChanged(in nsIURI aURI, in unsigned long aWhat, in AString aValue);
 
   /**
-   * Called when a history entry expires. You will receive notifications that
-   * a specific visit has expired with the time of that visit. When the last
-   * visit for a history entry expires, the history entry itself is deleted
-   * and aWholeEntry is set. (If your observer only cares about URLs and not
-   * specific visits, it needs only to listen for aWholeEntry notifications).
+   * Called when some visits of an history entry are expired.
    *
-   * It is possible for a history entry to be deleted that has no visits if
-   * something is out of sync or after a bookmark is deleted that has no
-   * visits (thus freeing the history entry). In these cases, aVisitTime will
-   * be 0.
+   * @param aURI
+   *        The page whose visits have been expired.
+   * @param aVisitTime
+   *        The largest visit time in microseconds that has been expired.  We
+   *        guarantee that we don't have any visit older than this date.
+   *
+   * @note: when all visits for a page are expired and also the full page entry
+   *        is expired, you will only get an onDeleteURI notification.  If a
+   *        page entry is removed, then you can be sure that we don't have
+   *        anymore visits for it.
    */
-  void onPageExpired(in nsIURI aURI, in PRTime aVisitTime, in boolean aWholeEntry);
+  void onDeleteVisits(in nsIURI aURI, in PRTime aVisitTime);
 };
 
 
@@ -1459,7 +1461,7 @@ interface nsINavHistoryService : nsISupports
 
   /** 
    * True if history is disabled. currently, 
-   * history is disabled if the browser.history_expire_days pref is 0
+   * history is disabled if the places.history.enabled pref is false.
    */
   readonly attribute boolean historyDisabled;
 

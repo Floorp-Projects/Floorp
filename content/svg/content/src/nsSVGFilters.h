@@ -113,7 +113,8 @@ protected:
                                const Image *aSource,
                                const Image *aTarget,
                                const nsIntRect& aDataRect,
-                               nsSVGNumber2 *aUnitX, nsSVGNumber2 *aUnitY);
+                               nsSVGNumber2 *aUnitX, nsSVGNumber2 *aUnitY,
+                               nsSVGElement *aElement);
 
   void FinishScalingFilter(ScaleInfo *aScaleInfo);
 
@@ -216,6 +217,8 @@ protected:
 
   // nsSVGElement specializations:
   virtual LengthAttributesInfo GetLengthInfo();
+  virtual void DidAnimateLength(PRUint8 aAttrEnum);
+  virtual void DidAnimateNumber(PRUint8 aAttrEnum);
 
   // nsIDOMSVGFitlerPrimitiveStandardAttributes values
   enum { X, Y, WIDTH, HEIGHT };
