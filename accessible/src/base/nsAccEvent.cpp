@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessibleEventData.h"
+#include "nsAccEvent.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsApplicationAccessibleWrap.h"
 #include "nsCoreUtils.h"

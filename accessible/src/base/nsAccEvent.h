@@ -38,8 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsAccessibleEventData_H_
-#define _nsAccessibleEventData_H_
+#ifndef _nsAccEvent_H_
+#define _nsAccEvent_H_
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
