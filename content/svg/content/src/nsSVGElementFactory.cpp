@@ -91,7 +91,8 @@ NS_NewSVGDefsElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGDescElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
-NS_NewSVGScriptElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+NS_NewSVGScriptElement(nsIContent **aResult, nsINodeInfo *aNodeInfo,
+                       PRBool aFromParser);
 nsresult
 NS_NewSVGUseElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
@@ -229,7 +230,7 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo,
   if (name == nsGkAtoms::desc)
     return NS_NewSVGDescElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::script)
-    return NS_NewSVGScriptElement(aResult, aNodeInfo);
+    return NS_NewSVGScriptElement(aResult, aNodeInfo, aFromParser);
   if (name == nsGkAtoms::use)
     return NS_NewSVGUseElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::symbol)

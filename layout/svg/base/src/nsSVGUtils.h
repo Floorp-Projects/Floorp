@@ -538,7 +538,18 @@ public:
    * another non-foreignObject SVG element.
    */
   static PRBool IsInnerSVG(nsIContent* aContent);
-    
+
+  /**
+   * Parse a string that may contain either a CSS <number> or, if
+   * aAllowPercentages is set to true, a CSS <percentage>, and return the
+   * number as a float.
+   *
+   * This helper returns PR_TRUE if a number was successfully parsed from the
+   * string and no characters were left, else it returns PR_FALSE.
+   */
+  static PRBool NumberFromString(const nsAString& aString, float* aValue,
+                                 PRBool aAllowPercentages = PR_FALSE);
+
 private:
   /* Computational (nil) surfaces */
   static gfxASurface *mThebesComputationalSurface;

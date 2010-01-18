@@ -982,7 +982,6 @@ static void mozilla_set_default_pref( nsIPref *pref )
 	pref->SetBoolPref( "browser.underline_anchors", PR_TRUE );
 	pref->SetIntPref( "font.size.variable.x-western", 14 );
 	pref->SetIntPref( "font.size.fixed.x-western", 12 );
-	pref->SetIntPref( "browser.history_expire_days", 4 );
 	pref->SetIntPref( "browser.sessionhistory.max_entries", 50 );
 //	pref->SetIntPref( "browser.cache.check_doc_frequency", 2 );
 	pref->SetBoolPref( "browser.cache.disk.enable", PR_TRUE );

@@ -52,6 +52,8 @@ let lms = Cc["@mozilla.org/browser/livemark-service;2"].
           getService(Ci.nsILivemarkService);
 
 const kSyncFinished = "places-sync-finished";
+const kExpirationFinished = "places-expiration-finished";
+
 // Number of expected sync notifications, we expect one per bookmark.
 const EXPECTED_SYNCS = 4;
 
@@ -89,43 +91,50 @@ let observer = {
     // check browserHistory returns no entries
     do_check_eq(0, bh.count);
 
-    // Check that frecency for not cleared items (bookmarks) has been converted
-    // to -MAX(visit_count, 1), so we will be able to recalculate frecency
-    // starting from most frecent bookmarks. 
-    // Memory table has been updated, disk table has not
-    stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_places_temp WHERE frecency > 0 LIMIT 1");
-    do_check_false(stmt.executeStep());
-    stmt.finalize();
+    let expirationObserver = {
+      observe: function (aSubject, aTopic, aData) {
+        os.removeObserver(this, kExpirationFinished, false);
+ 
+        // Check that frecency for not cleared items (bookmarks) has been converted
+        // to -MAX(visit_count, 1), so we will be able to recalculate frecency
+        // starting from most frecent bookmarks. 
+        // Memory table has been updated, disk table has not
+        stmt = mDBConn.createStatement(
+          "SELECT id FROM moz_places_temp WHERE frecency > 0 LIMIT 1");
+        do_check_false(stmt.executeStep());
+        stmt.finalize();
 
-    stmt = mDBConn.createStatement(
-      "SELECT h.id FROM moz_places_temp h WHERE h.frecency = -2 " +
-        "AND EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1");
-    do_check_true(stmt.executeStep());
-    stmt.finalize();
+        stmt = mDBConn.createStatement(
+          "SELECT h.id FROM moz_places_temp h WHERE h.frecency = -2 " +
+            "AND EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1");
+        do_check_true(stmt.executeStep());
+        stmt.finalize();
 
-    // Check that all visit_counts have been brought to 0
-    stmt = mDBConn.createStatement(
-      "SELECT id FROM moz_places_temp WHERE visit_count <> 0 LIMIT 1");
-    do_check_false(stmt.executeStep());
-    stmt.finalize();
+        // Check that all visit_counts have been brought to 0
+        stmt = mDBConn.createStatement(
+          "SELECT id FROM moz_places_temp WHERE visit_count <> 0 LIMIT 1");
+        do_check_false(stmt.executeStep());
+        stmt.finalize();
 
-    // Check that history tables are empty
-    stmt = mDBConn.createStatement(
-      "SELECT * FROM (SELECT id FROM moz_historyvisits_temp LIMIT 1) " +
-      "UNION ALL " +
-      "SELECT * FROM (SELECT id FROM moz_historyvisits LIMIT 1)");
-    do_check_false(stmt.executeStep());
-    stmt.finalize();
+        // Check that history tables are empty
+        stmt = mDBConn.createStatement(
+          "SELECT * FROM (SELECT id FROM moz_historyvisits_temp LIMIT 1) " +
+          "UNION ALL " +
+          "SELECT * FROM (SELECT id FROM moz_historyvisits LIMIT 1)");
+        do_check_false(stmt.executeStep());
+        stmt.finalize();
 
-    // force a sync and check again disk tables, insertBookmark will do that
-    bs.insertBookmark(bs.unfiledBookmarksFolder, uri("place:folder=4"),
-                      bs.DEFAULT_INDEX, "shortcut");
+        // force a sync and check again disk tables, insertBookmark will do that
+        bs.insertBookmark(bs.unfiledBookmarksFolder, uri("place:folder=4"),
+                          bs.DEFAULT_INDEX, "shortcut");
+      }
+    }
+    os.addObserver(expirationObserver, kExpirationFinished, false);
   },
 
   onPageChanged: function(aURI, aWhat, aValue) {
   },
-  onPageExpired: function(aURI, aVisitTime, aWholeEntry) {
+  onDeleteVisits: function() {
   },
 
   QueryInterface: function(iid) {
@@ -147,6 +156,7 @@ let syncObserver = {
       bh.removeAllPages();
       return;
     }
+    os.removeObserver(this, kSyncFinished, false);
 
     // Sanity: check that places temp table is empty
     stmt = mDBConn.createStatement(
@@ -173,7 +183,6 @@ let syncObserver = {
       "SELECT id FROM moz_places WHERE visit_count <> 0 LIMIT 1");
     do_check_false(stmt.executeStep());
     stmt.finalize();
-
 
     // Check that all moz_places entries except bookmarks and place: have been removed
     stmt = mDBConn.createStatement(
@@ -225,7 +234,6 @@ let syncObserver = {
   }
 }
 os.addObserver(syncObserver, kSyncFinished, false);
-
 
 // main
 function run_test() {

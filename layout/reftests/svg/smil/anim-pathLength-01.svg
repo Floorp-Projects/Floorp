@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(1, true)">
+  <title>Test animation of the "pathLength" attribute on the "path" element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <path id="path_1" fill="none" d="M 0,50 h 500" pathLength="5000">
+    <animate attributeName="pathLength"
+             calcMode="linear"
+             begin="0s" dur="2s"
+             from="5000" to="95000"
+             fill="freeze"/>
+  </path>
+  <path id="path_2" fill="none" d="M 0,100 h 500" pathLength="5000">
+    <animate attributeName="pathLength"
+             calcMode="linear"
+             begin="0s" dur="1s"
+             from="5000" to="50000"
+             fill="freeze"/>
+  </path>
+
+  <!-- test 50% completed animation -->
+  <text fill="blue">
+    <textPath xlink:href="#path_1" startOffset="2000">
+      Some text
+    </textPath>
+  </text>
+
+  <!-- test 100% completed animation -->
+  <text fill="blue">
+    <textPath xlink:href="#path_2" startOffset="2000">
+      Some text
+    </textPath>
+  </text>
+</svg>

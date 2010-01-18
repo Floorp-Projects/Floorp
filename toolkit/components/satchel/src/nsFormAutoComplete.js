@@ -39,6 +39,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
+const DEFAULT_EXPIRE_DAYS = 180;
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function FormAutoComplete() {
@@ -363,7 +365,7 @@ FormAutoComplete.prototype = {
         if (prefsBranch.prefHasUserValue("browser.formfill.expire_days"))
             return prefsBranch.getIntPref("browser.formfill.expire_days");
         else
-            return prefsBranch.getIntPref("browser.history_expire_days");
+            return DEFAULT_EXPIRE_DAYS;
     },
 
     /*

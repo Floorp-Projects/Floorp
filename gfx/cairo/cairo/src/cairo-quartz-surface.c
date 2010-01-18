@@ -638,7 +638,7 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
  */
 
 static void
-ComputeGradientValue (void *info, const float *in, float *out)
+ComputeGradientValue (void *info, const CGFloat *in, CGFloat *out)
 {
     double fdist = *in;
     const cairo_gradient_pattern_t *grad = (cairo_gradient_pattern_t*) info;
@@ -689,7 +689,7 @@ ComputeGradientValue (void *info, const float *in, float *out)
     }
 }
 
-static const float gradient_output_value_ranges[8] = {
+static const CGFloat gradient_output_value_ranges[8] = {
     0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f
 };
 static const CGFunctionCallbacks gradient_callbacks = {
@@ -715,7 +715,7 @@ static const CGFunctionCallbacks gradient_callbacks = {
    function into an array of fixed size, so if the input range is larger
    than needed, the resolution of the gradient will be unnecessarily low.
 */
-static const float nonrepeating_gradient_input_value_range[2] = { -0.001f, 1.f };
+static const CGFloat nonrepeating_gradient_input_value_range[2] = { -0.001f, 1.f };
 
 static CGFunctionRef
 CreateGradientFunction (const cairo_gradient_pattern_t *gpat)
@@ -777,7 +777,7 @@ CreateRepeatingLinearGradientFunction (cairo_quartz_surface_t *surface,
 				       cairo_rectangle_int_t *extents)
 {
     cairo_pattern_t *pat;
-    float input_value_range[2];
+    CGFloat input_value_range[2];
     double t_min = 0.;
     double t_max = 0.;
     double dx = end->x - start->x;
@@ -887,7 +887,7 @@ CreateRepeatingRadialGradientFunction (cairo_quartz_surface_t *surface,
                                        cairo_rectangle_int_t *extents)
 {
     cairo_pattern_t *pat;
-    float input_value_range[2];
+    CGFloat input_value_range[2];
     CGPoint *inner;
     double *inner_radius;
     CGPoint *outer;
@@ -1525,7 +1525,7 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
     }
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	float patternAlpha = 1.0f;
+	CGFloat patternAlpha = 1.0f;
 	CGColorSpaceRef patternSpace;
 	CGPatternRef pattern;
 	cairo_int_status_t status;
@@ -2160,20 +2160,20 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 
     if (style->dash && style->num_dashes) {
 #define STATIC_DASH 32
-	float sdash[STATIC_DASH];
-	float *fdash = sdash;
+	CGFloat sdash[STATIC_DASH];
+	CGFloat *fdash = sdash;
 	unsigned int max_dashes = style->num_dashes;
 	unsigned int k;
 
 	if (style->num_dashes%2)
 	    max_dashes *= 2;
 	if (max_dashes > STATIC_DASH)
-	    fdash = _cairo_malloc_ab (max_dashes, sizeof (float));
+	    fdash = _cairo_malloc_ab (max_dashes, sizeof (CGFloat));
 	if (fdash == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	for (k = 0; k < max_dashes; k++)
-	    fdash[k] = (float) style->dash[k % style->num_dashes];
+	    fdash[k] = (CGFloat) style->dash[k % style->num_dashes];
 
 	CGContextSetLineDash (surface->cgContext, style->dash_offset, fdash, max_dashes);
 	if (fdash != sdash)

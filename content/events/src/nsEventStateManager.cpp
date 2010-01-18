@@ -3562,7 +3562,6 @@ nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
         // any content) or in print preview dead space
         targetElement = mDocument->GetRootContent();
       }
-      NS_ASSERTION(targetElement, "Mouse move must have some target content");
       if (targetElement) {
         NotifyMouseOver(aEvent, targetElement);
       }
