@@ -1,13 +1,14 @@
-<html xmlns="http://www.w3.org/1999/xhtml">
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=398135
 -->
-<head>
-  <title>Test for Bug 398135</title>
-  <script type="text/javascript" src="/MochiKit/packed.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript">window.log = ""</script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<window title="Mozilla Bug 398135"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/MochiKit/packed.js"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript">window.log = ""</script>
   <bindings xmlns="http://www.mozilla.org/xbl">
     <binding id="ancestor">
       <implementation>
@@ -51,15 +52,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=398135
       </content>
     </binding>
   </bindings>
-</head>
-<body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=398135">Mozilla Bug 398135</a>
-<p id="display" style="-moz-binding: url(#test)"></p>
-<div id="content" style="display: none">
-  
-</div>
-<pre id="test">
-<script class="testbody" type="text/javascript">
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=398135"
+     target="_blank">Mozilla Bug 398135</a>
+  </body>
+
+  <hbox id="display" style="-moz-binding: url(#test)"></hbox>
+
+<script type="application/javascript">
 <![CDATA[
 /** Test for Bug 398135 **/
 SimpleTest.waitForExplicitFinish();
@@ -130,7 +132,5 @@ addLoadEvent(SimpleTest.finish);
 
 ]]>
 </script>
-</pre>
-</body>
-</html>
+</window>
 
