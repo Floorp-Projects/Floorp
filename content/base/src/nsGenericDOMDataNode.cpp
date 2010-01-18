@@ -587,6 +587,8 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     if (mText.IsBidi()) {
       aDocument->SetBidiEnabled();
     }
+    // Clear the lazy frame construction bits.
+    UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
   }
 
   nsNodeUtils::ParentChainChanged(this);
