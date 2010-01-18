@@ -287,8 +287,8 @@ nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent *aTarget)
   }
 
   if (targetAcc)
-    return nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
-                                    targetAcc);
+    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
+                            targetAcc);
 
   return NS_OK;
 }
@@ -297,7 +297,8 @@ NS_IMETHODIMP
 nsAccessibilityService::FireAccessibleEvent(PRUint32 aEvent,
                                             nsIAccessible *aTarget)
 {
-  return nsAccUtils::FireAccEvent(aEvent, aTarget);
+  nsEventShell::FireEvent(aEvent, aTarget);
+  return NS_OK;
 }
 
 void nsAccessibilityService::StartLoadCallback(nsITimer *aTimer, void *aClosure)
