@@ -480,16 +480,11 @@ public:
   virtual void RemoveCell(nsTableCellFrame* aCellFrame,
                           PRInt32           aRowIndex);
 
-  void AppendRows(nsTableRowGroupFrame&       aRowGroupFrame,
+  void AppendRows(nsTableRowGroupFrame*       aRowGroupFrame,
                   PRInt32                     aRowIndex,
                   nsTArray<nsTableRowFrame*>& aRowFrames);
 
-  PRInt32 InsertRow(nsTableRowGroupFrame& aRowGroupFrame,
-                    nsIFrame&             aFrame,
-                    PRInt32               aRowIndex,
-                    PRBool                aConsiderSpans);
-
-  PRInt32 InsertRows(nsTableRowGroupFrame&       aRowGroupFrame,
+  PRInt32 InsertRows(nsTableRowGroupFrame*       aRowGroupFrame,
                      nsTArray<nsTableRowFrame*>& aFrames,
                      PRInt32                     aRowIndex,
                      PRBool                      aConsiderSpans);
@@ -629,13 +624,15 @@ protected:
                   const nsRect&        aOriginalKidOverflowRect);
 
   nsIFrame* GetFirstBodyRowGroupFrame();
+public:
+  typedef nsAutoTPtrArray<nsTableRowGroupFrame, 8> RowGroupArray;
   /**
-   * Push all our child frames from the aFrames array, in order, starting from the
-   * frame at aPushFrom to the end of the array. The frames are put on our overflow
-   * list or moved directly to our next-in-flow if one exists.
+   * Push all our child frames from the aRowGroups array, in order, starting
+   * from the frame at aPushFrom to the end of the array. The frames are put on
+   * our overflow list or moved directly to our next-in-flow if one exists.
    */
-  typedef nsAutoTPtrArray<nsIFrame, 8> FrameArray;
-  void PushChildren(const FrameArray& aFrames, PRInt32 aPushFrom);
+protected:
+  void PushChildren(const RowGroupArray& aRowGroups, PRInt32 aPushFrom);
 
 public:
   // put the children frames in the display order (e.g. thead before tbodies
@@ -643,8 +640,10 @@ public:
   // children, and not append nulls, so the array is guaranteed to contain
   // nsTableRowGroupFrames.  If there are multiple theads or tfoots, all but
   // the first one are treated as tbodies instead.
-  typedef nsAutoTPtrArray<nsTableRowGroupFrame, 8> RowGroupArray;
-  void OrderRowGroups(RowGroupArray& aChildren) const;
+
+  void OrderRowGroups(RowGroupArray& aChildren,
+                      nsTableRowGroupFrame** aHead = nsnull,
+                      nsTableRowGroupFrame** aFoot = nsnull) const;
 
   // Return the thead, if any
   nsTableRowGroupFrame* GetTHead() const;
@@ -652,25 +651,6 @@ public:
   // Return the tfoot, if any
   nsTableRowGroupFrame* GetTFoot() const;
 
-protected:
-  // As above, but does NOT actually call GetRowGroupFrame() on the kids, so
-  // returns an array of nsIFrames.  This is to be used when you really want
-  // the flowable kids of the table, not the rowgroups.  This outputs the thead
-  // and tfoot if they happen to be rowgroups.  All the child nsIFrames of the
-  // table that return null if you call GetRowGroupFrame() on them will appear
-  // at the end of the array, after the tfoot, if any.
-  //
-  // aHead and aFoot must not be null.
-  //
-  // @return the number of frames in aChildren which return non-null if you
-  // call GetRowGroupFrame() on them.
-  //
-  // XXXbz why do we really care about the non-rowgroup kids?
-  PRUint32 OrderRowGroups(FrameArray& aChildren,
-                          nsTableRowGroupFrame** aHead,
-                          nsTableRowGroupFrame** aFoot) const;
-
-public:
   // Returns PR_TRUE if there are any cells above the row at
   // aRowIndex and spanning into the row at aRowIndex, the number of
   // effective columns limits the search up to that column
@@ -742,11 +722,6 @@ public:
 
   nsTArray<nsTableColFrame*>& GetColCache();
 
-  /** Return aFrame's child if aFrame is an nsScrollFrame, otherwise return aFrame
-    */
-  static nsTableRowGroupFrame* GetRowGroupFrame(nsIFrame* aFrame,
-                                                nsIAtom*  aFrameTypeIn = nsnull);
-
 protected:
 
   void SetBorderCollapse(PRBool aValue);
@@ -763,7 +738,7 @@ protected:
 
 public: /* ----- Cell Map public methods ----- */
 
-  PRInt32 GetStartRowIndex(nsTableRowGroupFrame& aRowGroupFrame);
+  PRInt32 GetStartRowIndex(nsTableRowGroupFrame* aRowGroupFrame);
 
   /** returns the number of rows in this table.
     */

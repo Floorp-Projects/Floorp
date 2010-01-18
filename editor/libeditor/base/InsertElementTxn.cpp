@@ -96,8 +96,11 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
     mNode->GetNodeName(namestr);
     char* nodename = ToNewCString(namestr);
     printf("%p Do Insert Element of %p <%s> into parent %p at offset %d\n", 
-           this, nodeAsContent.get(), nodename,
-           parentAsContent.get(), mOffset); 
+           static_cast<void*>(this),
+           static_cast<void*>(nodeAsContent.get()),
+           nodename,
+           static_cast<void*>(parentAsContent.get()),
+           mOffset); 
     nsMemory::Free(nodename);
   }
 #endif
@@ -149,8 +152,14 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
 NS_IMETHODIMP InsertElementTxn::UndoTransaction(void)
 {
 #ifdef NS_DEBUG
-  if (gNoisy) { printf("%p Undo Insert Element of %p into parent %p at offset %d\n", 
-                       this, mNode.get(), mParent.get(), mOffset); }
+  if (gNoisy)
+  {
+    printf("%p Undo Insert Element of %p into parent %p at offset %d\n",
+           static_cast<void*>(this),
+           static_cast<void*>(mNode.get()),
+           static_cast<void*>(mParent.get()),
+           mOffset);
+  }
 #endif
 
   if (!mNode || !mParent) return NS_ERROR_NOT_INITIALIZED;
