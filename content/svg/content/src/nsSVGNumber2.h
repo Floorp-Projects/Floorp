@@ -42,6 +42,12 @@
 #include "nsSVGElement.h"
 #include "nsDOMError.h"
 
+#ifdef MOZ_SMIL
+#include "nsISMILAttr.h"
+class nsSMILValue;
+class nsISMILType;
+#endif // MOZ_SMIL
+
 class nsSVGNumber2
 {
 
@@ -49,6 +55,7 @@ public:
   void Init(PRUint8 aAttrEnum = 0xff, float aValue = 0) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
+    mIsAnimated = PR_FALSE;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
@@ -59,17 +66,28 @@ public:
   void SetBaseValue(float aValue, nsSVGElement *aSVGElement, PRBool aDoSetAttr);
   float GetBaseValue() const
     { return mBaseVal; }
-  float GetAnimValue() const
-    { return mAnimVal; }
+  void SetAnimValue(float aValue, nsSVGElement *aSVGElement);
+  float GetAnimValue(nsSVGElement *aSVGElement) const
+  {
+  #ifdef MOZ_SMIL
+    aSVGElement->FlushAnimations();
+  #endif
+    return mAnimVal;
+  }
 
   nsresult ToDOMAnimatedNumber(nsIDOMSVGAnimatedNumber **aResult,
                                nsSVGElement* aSVGElement);
+#ifdef MOZ_SMIL
+  // Returns a new nsISMILAttr object that the caller must delete
+  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
+#endif // MOZ_SMIL
 
 private:
 
   float mAnimVal;
   float mBaseVal;
   PRUint8 mAttrEnum; // element specified tracking for attribute
+  PRPackedBool mIsAnimated;
 
   struct DOMAnimatedNumber : public nsIDOMSVGAnimatedNumber
   {
@@ -91,9 +109,32 @@ private:
         return NS_OK;
       }
     NS_IMETHOD GetAnimVal(float* aResult)
-      { *aResult = mVal->GetAnimValue(); return NS_OK; }
+      { *aResult = mVal->GetAnimValue(mSVGElement); return NS_OK; }
 
   };
 
+#ifdef MOZ_SMIL
+  struct SMILNumber : public nsISMILAttr
+  {
+  public:
+    SMILNumber(nsSVGNumber2* aVal, nsSVGElement* aSVGElement)
+    : mVal(aVal), mSVGElement(aSVGElement) {}
+
+    // These will stay alive because a nsISMILAttr only lives as long
+    // as the Compositing step, and DOM elements don't get a chance to
+    // die during that.
+    nsSVGNumber2* mVal;
+    nsSVGElement* mSVGElement;
+
+    // nsISMILAttr methods
+    virtual nsresult ValueFromString(const nsAString& aStr,
+                                     const nsISMILAnimationElement* aSrcElement,
+                                     nsSMILValue& aValue) const;
+    virtual nsSMILValue GetBaseValue() const;
+    virtual void ClearAnimValue();
+    virtual nsresult SetAnimValue(const nsSMILValue& aValue);
+  };
+#endif // MOZ_SMIL
 };
+
 #endif //__NS_SVGNUMBER2_H__

@@ -79,7 +79,7 @@ class NS_COM_GLUE nsTArray_base {
     }
 
 #ifdef DEBUG
-    void* DebugGetHeader() {
+    void* DebugGetHeader() const {
       return mHdr;
     }
 #endif

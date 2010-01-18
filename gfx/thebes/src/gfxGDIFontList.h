@@ -45,7 +45,6 @@
 #include "gfxPlatformFontList.h"
 
 #include <windows.h>
-#include <bitset>
 
 class AutoDC // get the global device context, and auto-release it on destruction
 {
@@ -250,13 +249,13 @@ public:
         }
 
         if (bit != -1)
-            return mCharset[bit];
+            return mCharset.test(bit);
 
         return PR_FALSE;
     }
 
     PRBool SupportsRange(PRUint8 range) {
-        return mUnicodeRanges[range];
+        return mUnicodeRanges.test(range);
     }
 
     PRBool TestCharacterMap(PRUint32 aCh);
@@ -279,8 +278,8 @@ public:
     PRPackedBool mUnknownCMAP : 1;
     PRPackedBool mUnicodeFont : 1;
 
-    std::bitset<256> mCharset;
-    std::bitset<128> mUnicodeRanges;
+    gfxSparseBitSet mCharset;
+    gfxSparseBitSet mUnicodeRanges;
 
 protected:
     friend class gfxWindowsFont;
@@ -289,6 +288,8 @@ protected:
                      PRBool aItalic, PRUint16 aWeight, gfxUserFontData *aUserFontData);
 
     void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
+
+    virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold);
 
     virtual nsresult GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer);
 

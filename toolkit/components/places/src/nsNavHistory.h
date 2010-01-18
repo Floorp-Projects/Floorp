@@ -51,6 +51,7 @@
 #include "nsIDownloadHistory.h"
 
 #include "nsIPrefService.h"
+#include "nsIPrefBranch2.h"
 #include "nsIObserverService.h"
 #include "nsICollation.h"
 #include "nsIStringBundle.h"
@@ -64,7 +65,6 @@
 #include "nsINavBookmarksService.h"
 #include "nsIPrivateBrowsingService.h"
 
-#include "nsNavHistoryExpire.h"
 #include "nsNavHistoryResult.h"
 #include "nsNavHistoryQuery.h"
 
@@ -213,8 +213,10 @@ public:
                           nsACString& aResult);
   void GetMonthName(PRInt32 aIndex, nsACString& aResult);
 
-  // returns true if history has been disabled
-  PRBool IsHistoryDisabled() { return mExpireDaysMax == 0 || InPrivateBrowsingMode(); }
+  // Returns whether history is enabled or not.
+  PRBool IsHistoryDisabled() {
+    return !mHistoryEnabled || InPrivateBrowsingMode();
+  }
 
   // Constants for the columns returned by the above statement.
   static const PRInt32 kGetInfoIndex_PageID;
@@ -374,10 +376,8 @@ public:
 
 protected:
 
-  //
-  // Constants
-  //
-  nsCOMPtr<nsIPrefBranch> mPrefBranch; // MAY BE NULL when we are shutting down
+  nsCOMPtr<nsIPrefBranch2> mPrefBranch; // MAY BE NULL when we are shutting down
+
   nsDataHashtable<nsStringHashKey, int> gExpandedItems;
 
   //
@@ -499,13 +499,11 @@ protected:
   PRBool IsURIStringVisited(const nsACString& url);
 
   /**
-   * This loads all of the preferences that we use into member variables.
-   * NOTE:  If mPrefBranch is NULL, this does nothing.
+   * Loads all of the preferences that we use into member variables.
    *
-   * @param aInitializing
-   *        Indicates if the autocomplete queries should be regenerated or not.
+   * @note If mPrefBranch is NULL, this does nothing.
    */
-  nsresult LoadPrefs(PRBool aInitializing);
+  void LoadPrefs();
 
   /**
    * Calculates and returns value for mCachedNow.
@@ -520,10 +518,6 @@ protected:
    * Called when the cached now value is expired and needs renewal.
    */
   static void expireNowTimerCallback(nsITimer* aTimer, void* aClosure);
-
-  // expiration
-  friend class nsNavHistoryExpire;
-  nsNavHistoryExpire *mExpire;
 
 #ifdef LAZY_ADD
   // lazy add committing
@@ -656,9 +650,9 @@ protected:
                                 nsIAutoCompleteController *aController);
 #endif
 
-  PRInt32 mExpireDaysMin;
-  PRInt32 mExpireDaysMax;
-  PRInt32 mExpireSites;
+  // Whether history is enabled or not.
+  // Will mimic value of the places.history.enabled preference.
+  PRBool mHistoryEnabled;
 
   // Frecency preferences.
   PRInt32 mNumVisitsForFrecency;

@@ -52,7 +52,8 @@ interface nsIURI;
 interface nsPIPlacesHistoryListenersNotifier : nsISupports
 {
   /**
-   * Calls onPageExpired on registered listeners with the history service.
+   * Calls onDeleteVisits and onDeleteURI notifications on registered listeners
+   * with the history service.
    *
    * @param aURI
    *        The nsIURI object representing the URI of the page being expired.

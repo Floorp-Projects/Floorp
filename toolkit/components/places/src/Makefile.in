@@ -56,7 +56,6 @@ CPPSRCS = \
           nsAnnotationService.cpp \
           nsFaviconService.cpp \
           nsNavHistory.cpp \
-          nsNavHistoryExpire.cpp \
           nsNavHistoryQuery.cpp \
           nsNavHistoryResult.cpp \
           nsNavBookmarks.cpp \
@@ -79,6 +78,7 @@ EXTRA_COMPONENTS = \
   nsLivemarkService.js \
   nsTaggingService.js \
   nsPlacesDBFlush.js \
+  nsPlacesExpiration.js \
   $(NULL)
 
 ifdef MOZ_XUL

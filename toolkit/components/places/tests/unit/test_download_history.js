@@ -52,7 +52,7 @@ var dh = Cc["@mozilla.org/browser/download-history;1"].
 do_check_true(dh instanceof Ci.nsINavHistoryService);
 
 const NS_LINK_VISITED_EVENT_TOPIC = "link-visited";
-const DISABLE_HISTORY_PREF = "browser.history_expire_days";
+const ENABLE_HISTORY_PREF = "places.history.enabled";
 const PB_KEEP_SESSION_PREF = "browser.privatebrowsing.keep_current_session";
 
 var testURI = uri("http://google.com/");
@@ -115,7 +115,7 @@ function test_dh_privateBrowsing() {
 
 function test_dh_disabledHistory() {
   // Disable history
-  prefs.setIntPref(DISABLE_HISTORY_PREF, 0);
+  prefs.setBoolPref(ENABLE_HISTORY_PREF, false);
 
   dh.addDownload(testURI, referrerURI, Date.now() * 1000);
 
@@ -124,7 +124,7 @@ function test_dh_disabledHistory() {
   uri_in_db(referrerURI, false);
 
   // Cleanup
-  prefs.setIntPref(DISABLE_HISTORY_PREF, 180);
+  prefs.setBoolPref(ENABLE_HISTORY_PREF, true);
 }
 
 var tests = [

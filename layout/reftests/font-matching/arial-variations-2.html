@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Arial Variations</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<style type="text/css">
+
+body {
+  margin: 50px;
+}
+
+p#test1a { font-family: arial, sans-serif; }
+p#test2a { font-family: arial bold, georgia, serif; }
+p#test3a { font-family: arial italic, georgia, serif; }
+p#test4a { font-family: arial bold italic, georgia, serif; }
+
+p#test1a { color: black; }
+p#test2a { color: red; }
+p#test3a { color: red; }
+p#test4a { color: red; }
+
+#tests {
+  font-size: 18pt;
+  margin-left: 0.5em;
+}
+
+</style>
+
+</head>
+<body>
+
+<p>Text in black should appear in Arial and text in red in Georgia or the default serif font:</p>
+
+<div id="tests">
+<p id="test1a">{ font-family: arial, sans-serif; }</p>
+<p id="test2a">{ font-family: arial bold, georgia, serif; }</p>
+<p id="test3a">{ font-family: arial italic, georgia, serif; }</p>
+<p id="test4a">{ font-family: arial bold italic, georgia, serif; }</p>
+</div>
+
+</body>
+</html>

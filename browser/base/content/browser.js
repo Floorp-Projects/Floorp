@@ -1611,7 +1611,7 @@ function gotoHistoryIndex(aEvent)
     var sessionHistory = getWebNavigation().sessionHistory;
     var entry = sessionHistory.getEntryAtIndex(index, false);
     var url = entry.URI.spec;
-    openUILinkIn(url, where);
+    openUILinkIn(url, where, {relatedToCurrent: true});
     return true;
   }
 }
@@ -1631,7 +1631,7 @@ function BrowserForward(aEvent) {
     var currentIndex = sessionHistory.index;
     var entry = sessionHistory.getEntryAtIndex(currentIndex + 1, false);
     var url = entry.URI.spec;
-    openUILinkIn(url, where);
+    openUILinkIn(url, where, {relatedToCurrent: true});
   }
 }
 
@@ -1650,7 +1650,7 @@ function BrowserBack(aEvent) {
     var currentIndex = sessionHistory.index;
     var entry = sessionHistory.getEntryAtIndex(currentIndex - 1, false);
     var url = entry.URI.spec;
-    openUILinkIn(url, where);
+    openUILinkIn(url, where, {relatedToCurrent: true});
   }
 }
 
@@ -1704,7 +1704,8 @@ function BrowserReloadOrDuplicate(aEvent) {
   if (where == "current")
     BrowserReload();
   else
-    openUILinkIn(getWebNavigation().currentURI.spec, where);
+    openUILinkIn(getWebNavigation().currentURI.spec, where,
+                 {relatedToCurrent: true});
 }
 
 function BrowserReload() {
@@ -2719,6 +2720,7 @@ var browserDragAndDrop = {
     if (types.contains("application/x-moz-file") ||
         types.contains("text/x-moz-url") ||
         types.contains("text/uri-list") ||
+        types.contains("text/x-moz-text-internal") ||
         types.contains("text/plain")) {
       aEvent.preventDefault();
 

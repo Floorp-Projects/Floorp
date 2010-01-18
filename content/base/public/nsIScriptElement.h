@@ -47,8 +47,8 @@
 #include "nsIParser.h"
 
 #define NS_ISCRIPTELEMENT_IID \
-{ 0xa9d5732a, 0x8c1f, 0x439d, \
-{ 0x83, 0x75, 0x3d, 0xf6, 0xa9, 0xba, 0xa3, 0x7d } }
+{ 0x6d625b30, 0xfac4, 0x11de, \
+{ 0x8a, 0x39, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
 
 /**
  * Internal interface implemented by script elements
@@ -138,12 +138,6 @@ public:
   void PreventExecution()
   {
     mIsEvaluated = PR_TRUE;
-  }
-
-  void WillCallDoneAddingChildren()
-  {
-    NS_ASSERTION(mDoneAddingChildren, "unexpected, but not fatal");
-    mDoneAddingChildren = PR_FALSE;
   }
 
   void SetCreatorParser(nsIParser* aParser)

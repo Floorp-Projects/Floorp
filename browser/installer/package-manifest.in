@@ -318,6 +318,7 @@
 @BINPATH@/components/nsTaggingService.js
 @BINPATH@/components/nsPlacesDBFlush.js
 @BINPATH@/components/nsPlacesAutoComplete.js
+@BINPATH@/components/nsPlacesExpiration.js
 @BINPATH@/components/PlacesProtocolHandler.js
 @BINPATH@/components/nsDefaultCLH.js
 @BINPATH@/components/nsContentPrefService.js
@@ -326,7 +327,6 @@
 @BINPATH@/components/nsWebHandlerApp.js
 @BINPATH@/components/nsBadCertHandler.js
 @BINPATH@/components/nsFormAutoComplete.js
-@BINPATH@/components/contentSecurityPolicy.js
 #ifdef XP_MACOSX
 @BINPATH@/components/libalerts_s.dylib
 #endif

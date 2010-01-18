@@ -278,4 +278,6 @@ function shutdownPlaces()
   hs.observe(null, TOPIC_XPCOM_SHUTDOWN, null);
   let sync = Cc["@mozilla.org/places/sync;1"].getService(Ci.nsIObserver);
   sync.observe(null, TOPIC_XPCOM_SHUTDOWN, null);
+  let expire = Cc["@mozilla.org/places/expiration;1"].getService(Ci.nsIObserver);
+  expire.observe(null, TOPIC_XPCOM_SHUTDOWN, null);
 }

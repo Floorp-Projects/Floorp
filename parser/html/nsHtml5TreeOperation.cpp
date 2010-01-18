@@ -373,9 +373,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
           ssle->InitStyleLinkElement(PR_FALSE);
           ssle->SetEnableUpdates(PR_FALSE);
         }
-      } else if (NS_UNLIKELY(name == nsHtml5Atoms::script && ns == kNameSpaceID_SVG)) {
-        nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(newContent);
-        sele->WillCallDoneAddingChildren();
       }
 
       if (!attributes) {

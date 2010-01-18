@@ -349,7 +349,6 @@ nsSeamonkeyProfileMigrator::FillProfileDataFromSeamonkeyRegistry()
 static 
 nsSeamonkeyProfileMigrator::PrefTransform gTransforms[] = {
   MAKESAMETYPEPREFTRANSFORM("signon.SignonFileName",                    String),
-  MAKESAMETYPEPREFTRANSFORM("browser.history_expire_days",              Int),
   MAKESAMETYPEPREFTRANSFORM("browser.tabs.autoHide",                    Bool),
   MAKESAMETYPEPREFTRANSFORM("browser.tabs.loadInBackground",            Bool),
   MAKESAMETYPEPREFTRANSFORM("browser.enable_automatic_image_resizing",  Bool),
