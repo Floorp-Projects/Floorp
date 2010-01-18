@@ -1356,7 +1356,7 @@ nsAccessible::GetXULName(nsAString& aLabel)
 }
 
 nsresult
-nsAccessible::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
+nsAccessible::HandleAccEvent(nsAccEvent *aEvent)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
   nsCOMPtr<nsIDOMNode> eventNode;
