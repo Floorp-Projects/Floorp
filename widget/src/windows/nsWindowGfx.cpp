@@ -1028,18 +1028,21 @@ PRBool nsWindow::OnPaintImageDDraw16()
     SetLastError(0); // See http://msdn.microsoft.com/en-us/library/dd145046%28VS.85%29.aspx
     if (MapWindowPoints(mWnd, 0, (LPPOINT)&renderRect, 2) || 0 == (hr = GetLastError()))
       hr = glpDDPrimary->Blt(&renderRect, glpDDSecondary, &r, 0, NULL);
+#ifdef WINCE_WINDOWS_MOBILE
     if (FAILED(hr))
       // add this rect back to the invalidated region so we'll attempt paint it next time around
       mInvalidatedRegion->Union(rects->mRects[i].x, rects->mRects[i].y,
                                 rects->mRects[i].width, rects->mRects[i].height);
+#endif
   }
   result = PR_TRUE;
 
 cleanup:
+#ifdef WINCE_WINDOWS_MOBILE
   // re-invalidate the region if we failed.
   if (!result)
     mInvalidatedRegion->Union(*paintRgnWin.get());
-
+#endif
   ::EndPaint(mWnd, &ps);
   mPaintDC = nsnull;
   mPainting = PR_FALSE;
