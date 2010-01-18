@@ -1656,18 +1656,21 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 // nsAccessible
 
 nsresult
-nsAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
+nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 {
-  nsresult rv = nsAccessible::HandleAccEvent(aEvent);
+  NS_ENSURE_ARG(aEvent);
+
+  nsresult rv = nsAccessible::FireAccessibleEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return FirePlatformEvent(aEvent);
 }
 
 nsresult
-nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
+nsAccessibleWrap::FirePlatformEvent(nsIAccessibleEvent *aEvent)
 {
-  PRUint32 eventType = aEvent->GetEventType();
+  PRUint32 eventType = 0;
+  aEvent->GetEventType(&eventType);
 
   NS_ENSURE_TRUE(eventType > 0 &&
                  eventType < nsIAccessibleEvent::EVENT_LAST_ENTRY,
