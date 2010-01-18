@@ -57,6 +57,9 @@ const PR_UINT32_MAX = Math.pow(2, 32) - 1;
 /** True if debugging output is enabled, false otherwise. */
 var DEBUG = false; // non-const *only* so tweakable in server tests
 
+/** True if debugging output should be timestamped. */
+var DEBUG_TIMESTAMP = false; // non-const so tweakable in server tests
+
 var gGlobalObject = this;
 
 /**
@@ -75,7 +78,7 @@ function NS_ASSERT(cond, msg)
 
     var stack = new Error().stack.split(/\n/);
     dumpn(stack.map(function(val) { return "###!!!   " + val; }).join("\n"));
-    
+
     throw Cr.NS_ERROR_ABORT;
   }
 }
@@ -166,10 +169,26 @@ const SJS_TYPE = "sjs";
 
 
 /** dump(str) with a trailing "\n" -- only outputs if DEBUG */
+var first_stamp = null;
 function dumpn(str)
 {
-  if (DEBUG)
-    dump(str + "\n");
+  if (DEBUG) {
+    var prefix = "|HTTPD|";
+    if (DEBUG_TIMESTAMP) {
+      if (first_stamp === null) {
+        first_stamp = new Date();
+      }
+      var elapsed = (new Date() - first_stamp)/1000; // in decimal seconds
+      var min = Math.floor(elapsed/60);
+      var sec = elapsed - 60*min;
+
+      if (sec < 10)
+        prefix += min + ":0" + sec.toFixed(3) + " ";
+      else
+        prefix += min + ":" + sec.toFixed(3) + " ";
+    }
+    dump(prefix + str + "\n");
+  }
 }
 
 /** Dumps the current JS stack if DEBUG. */
