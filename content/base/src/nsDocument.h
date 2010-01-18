@@ -1028,6 +1028,8 @@ protected:
   nsDocument(const char* aContentType);
   virtual ~nsDocument();
 
+  void EnsureOnloadBlocker();
+
   nsCString mReferrer;
   nsString mLastModified;
 
