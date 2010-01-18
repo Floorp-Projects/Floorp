@@ -348,7 +348,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGRect_id,
   eDOMClassInfo_SVGTransform_id,
   eDOMClassInfo_SVGTransformList_id,
-  eDOMClassInfo_SVGUnitTypes_id,
   eDOMClassInfo_SVGZoomEvent_id,
 #endif // MOZ_SVG
 
@@ -385,8 +384,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_StorageItem_id,
   eDOMClassInfo_StorageEvent_id,
 
-  eDOMClassInfo_WindowRoot_id,
-
   // DOMParser, XMLSerializer
   eDOMClassInfo_DOMParser_id,
   eDOMClassInfo_XMLSerializer_id,
@@ -410,7 +407,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_XULCommandEvent_id,
   eDOMClassInfo_CommandEvent_id,
   eDOMClassInfo_OfflineResourceList_id,
-  eDOMClassInfo_LoadStatus_id,
 
   eDOMClassInfo_FileList_id,
   eDOMClassInfo_File_id,

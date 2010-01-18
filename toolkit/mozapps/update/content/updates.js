@@ -287,12 +287,6 @@ var gUpdates = {
   sourceEvent: SRCEVT_FOREGROUND,
 
   /**
-   * The global error message - the reason the update failed. This is human
-   * readable text, used to initialize the error page.
-   */
-  errorMessage: "",
-
-  /**
    * Helper function for onLoad
    * Saves default button label & accesskey for use by _setButton
    */
@@ -364,26 +358,24 @@ var gUpdates = {
         var p = this.update.selectedPatch;
         if (p) {
           var state = p.state;
-          if (state == STATE_DOWNLOADING) {
-            var patchFailed = false;
-            try {
-              patchFailed = this.update.getProperty("patchingFailed");
-            }
-            catch (e) {
-            }
-            if (patchFailed == "partial") {
-              // If the system failed to apply the partial patch, show the
-              // screen which best describes this condition, which is triggered
-              // by the |STATE_FAILED| state.
-              state = STATE_FAILED;
-            }
-            else if (patchFailed == "complete") {
-              // Otherwise, if the complete patch failed, which is far less
-              // likely, show the error text held by the update object in the
-              // generic errors page, triggered by the |STATE_DOWNLOAD_FAILED|
-              // state.
-              state = STATE_DOWNLOAD_FAILED;
-            }
+          var patchFailed;
+          try {
+            patchFailed = this.update.getProperty("patchingFailed");
+          }
+          catch (e) {
+          }
+          if (patchFailed == "partial") {
+            // If the system failed to apply the partial patch, show the
+            // screen which best describes this condition, which is triggered
+            // by the |STATE_FAILED| state.
+            state = STATE_FAILED;
+          }
+          else if (patchFailed == "complete") {
+            // Otherwise, if the complete patch failed, which is far less
+            // likely, show the error text held by the update object in the
+            // generic errors page, triggered by the |STATE_DOWNLOAD_FAILED|
+            // state.
+            state = STATE_DOWNLOAD_FAILED;
           }
 
           // Now select the best page to start with, given the current state of
@@ -1163,6 +1155,12 @@ var gDownloadingPage = {
 
     gUpdates.setButtons("hideButton", null, null, false);
     gUpdates.wiz.getButton("extra1").focus();
+  },
+
+  showVerificationError: function() {
+    var verificationError = gUpdates.getAUSString("verificationError",
+                                                  [gUpdates.brandName]);
+    gUpdates.advanceToErrorPage(verificationError);                             
   },
 
   /**

@@ -432,20 +432,8 @@ __try {
                               groupLevel);
   }
 
-  if (!description.IsEmpty()) {
-    *pszDescription = ::SysAllocStringLen(description.get(),
-                                          description.Length());
-    return *pszDescription ? S_OK : E_OUTOFMEMORY;
-  }
-
-  xpAccessible->GetDescription(description);
-  if (!description.IsEmpty()) {
-    // Signal to screen readers that this description is speakable
-    // and is not a formatted positional information description
-    // Don't localize the "Description: " part of this string, it will be
-    // parsed out by assistive technologies.
-    description = NS_LITERAL_STRING("Description: ") + description;
-  }
+  if (description.IsEmpty())
+    xpAccessible->GetDescription(description);
 
   *pszDescription = ::SysAllocStringLen(description.get(),
                                         description.Length());
