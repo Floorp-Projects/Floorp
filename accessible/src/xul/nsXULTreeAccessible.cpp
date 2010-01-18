@@ -570,9 +570,9 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
       nsRefPtr<nsAccessible> accessible =
         nsAccUtils::QueryAccessible(accessNode);
 
-      nsCOMPtr<nsIAccessibleEvent> event =
+      nsRefPtr<nsAccEvent> event =
         new nsAccEvent(nsIAccessibleEvent::EVENT_HIDE, accessible, PR_FALSE);
-      FireAccessibleEvent(event);
+      nsEventShell::FireEvent(event);
 
       accessible->Shutdown();
 

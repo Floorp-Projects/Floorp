@@ -105,6 +105,7 @@ public:
   EEventRule GetEventRule() const { return mEventRule; }
   PRBool IsAsync() const { return mIsAsync; }
   PRBool IsFromUserInput() const { return mIsFromUserInput; }
+  nsIAccessible* GetAccessible() const { return mAccessible; }
 
   static void GetLastEventAttributes(nsIDOMNode *aNode,
                                      nsIPersistentProperties *aAttributes);
