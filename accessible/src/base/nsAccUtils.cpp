@@ -42,7 +42,7 @@
 #include "nsIAccessibleStates.h"
 #include "nsIAccessibleTypes.h"
 
-#include "nsAccessibleEventData.h"
+#include "nsAccEvent.h"
 #include "nsHyperTextAccessible.h"
 #include "nsHTMLTableAccessible.h"
 #include "nsDocAccessible.h"

@@ -38,7 +38,7 @@
 
 #include "nsRootAccessible.h"
 #include "nsAccessibilityAtoms.h"
-#include "nsAccessibleEventData.h"
+#include "nsAccEvent.h"
 #include "nsAccessibilityService.h"
 #include "nsIMutableArray.h"
 #include "nsICommandManager.h"

@@ -37,7 +37,7 @@
 
 // NOTE: alphabetically ordered
 #include "nsAccessibilityService.h"
-#include "nsAccessibleEventData.h"
+#include "nsAccEvent.h"
 #include "nsApplicationAccessibleWrap.h"
 
 #include "nsHTMLSelectAccessible.h"
