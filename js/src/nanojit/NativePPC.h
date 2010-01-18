@@ -58,6 +58,7 @@ namespace nanojit
 #define NJ_ALIGN_STACK                  16
 #define NJ_JTBL_SUPPORTED               1
 #define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
+#define NJ_F2I_SUPPORTED                0
 
     enum ConditionRegister {
         CR0 = 0,
