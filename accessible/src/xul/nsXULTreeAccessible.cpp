@@ -1274,7 +1274,7 @@ nsXULTreeItemAccessible::RowInvalidated(PRInt32 aStartColIdx,
   GetName(name);
 
   if (name != mCachedName) {
-    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
+    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
     mCachedName = name;
   }
 }

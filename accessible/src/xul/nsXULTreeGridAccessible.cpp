@@ -1266,7 +1266,7 @@ nsXULTreeGridCellAccessible::CellInvalidated()
 
   mTreeView->GetCellText(mRow, mColumn, textEquiv);
   if (mCachedTextEquiv != textEquiv) {
-    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
+    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
     mCachedTextEquiv = textEquiv;
   }
 }

@@ -811,8 +811,8 @@ void nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibl
   if (!optionAccessible)
     return;
 
-  nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
-                           multiSelect);
+  nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
+                          multiSelect);
 
   PRUint32 state = nsAccUtils::State(optionAccessible);
   PRUint32 eventType;
@@ -823,7 +823,7 @@ void nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibl
     eventType = nsIAccessibleEvent::EVENT_SELECTION_REMOVE;
   }
 
-  nsAccUtils::FireAccEvent(eventType, optionAccessible);
+  nsEventShell::FireEvent(eventType, optionAccessible);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

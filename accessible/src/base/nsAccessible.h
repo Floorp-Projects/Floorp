@@ -42,6 +42,7 @@
 #include "nsAccessNodeWrap.h"
 
 #include "nsARIAMap.h"
+#include "nsEventShell.h"
 #include "nsRelUtils.h"
 #include "nsTextEquivUtils.h"
 
