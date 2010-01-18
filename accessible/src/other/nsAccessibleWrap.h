@@ -53,7 +53,7 @@ class nsAccessibleWrap : public nsAccessible
     virtual ~nsAccessibleWrap();
 
   protected:
-    virtual nsresult FirePlatformEvent(nsAccEvent *aEvent) {
+    virtual nsresult FirePlatformEvent(nsIAccessibleEvent *aEvent) {
       return NS_OK;
     }
 };

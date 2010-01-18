@@ -307,7 +307,7 @@ class nsAccessibleWrap : public nsAccessible,
                                            UINT *puArgErr);
 
   // nsAccessible
-  virtual nsresult HandleAccEvent(nsAccEvent *aEvent);
+  virtual nsresult FireAccessibleEvent(nsIAccessibleEvent *aEvent);
 
   // Helper methods
   static PRInt32 GetChildIDFor(nsIAccessible* aAccessible);
@@ -342,7 +342,7 @@ class nsAccessibleWrap : public nsAccessible,
   void UnattachIEnumVariant();
 
 protected:
-  virtual nsresult FirePlatformEvent(nsAccEvent *aEvent);
+  virtual nsresult FirePlatformEvent(nsIAccessibleEvent *aEvent);
 
   // mEnumVARIANTPosition not the current accessible's position, but a "cursor" of 
   // where we are in the current list of children, with respect to

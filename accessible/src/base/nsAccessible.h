@@ -104,11 +104,11 @@ private:
 
 
 #define NS_ACCESSIBLE_IMPL_CID                          \
-{  /* 133c8bf4-4913-4355-bd50-426bd1d6e1ad */           \
-  0x133c8bf4,                                           \
-  0x4913,                                               \
-  0x4355,                                               \
-  { 0xbd, 0x50, 0x42, 0x6b, 0xd1, 0xd6, 0xe1, 0xad }    \
+{  /* c734df37-7e12-49ec-8983-eea88a186bb8 */           \
+  0xc734df37,                                           \
+  0x7e12,                                               \
+  0x49ec,                                               \
+  { 0x89, 0x83, 0xee, 0xa8, 0x8a, 0x18, 0x6b, 0xb8 }    \
 }
 
 class nsAccessible : public nsAccessNodeWrap, 
@@ -280,10 +280,9 @@ public:
   // Miscellaneous methods
 
   /**
-   * Handle accessible event, i.e. process it, notifies observers and fires
-   * platform specific event.
+   * Fire accessible event.
    */
-  virtual nsresult HandleAccEvent(nsAccEvent *aAccEvent);
+  virtual nsresult FireAccessibleEvent(nsIAccessibleEvent *aAccEvent);
 
   /**
    * Return true if there are accessible children in anonymous content
@@ -447,13 +446,13 @@ protected:
 
   /**
    * Fires platform accessible event. It's notification method only. It does
-   * change nothing on Gecko side. Don't use it until you're sure what you do
-   * (see example in XUL tree accessible), use nsEventShell::FireEvent()
-   * instead. MUST be overridden in wrap classes.
+   * change nothing on Gecko side. Mostly you should use
+   * nsIAccessible::FireAccessibleEvent excepting special cases like we have
+   * in xul:tree accessible to lie to AT. Must be overridden in wrap classes.
    *
    * @param aEvent  the accessible event to fire.
    */
-  virtual nsresult FirePlatformEvent(nsAccEvent *aEvent) = 0;
+  virtual nsresult FirePlatformEvent(nsIAccessibleEvent *aEvent) = 0;
 
   // Data Members
   nsRefPtr<nsAccessible> mParent;

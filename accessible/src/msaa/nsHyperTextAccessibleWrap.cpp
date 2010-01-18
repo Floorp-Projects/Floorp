@@ -49,9 +49,10 @@ IMPL_IUNKNOWN_INHERITED2(nsHyperTextAccessibleWrap,
                          CAccessibleEditableText);
 
 nsresult
-nsHyperTextAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
+nsHyperTextAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 {
-  PRUint32 eventType = aEvent->GetEventType();
+  PRUint32 eventType;
+  aEvent->GetEventType(&eventType);
 
   if (eventType == nsIAccessibleEvent::EVENT_TEXT_REMOVED ||
       eventType == nsIAccessibleEvent::EVENT_TEXT_INSERTED) {
@@ -73,7 +74,7 @@ nsHyperTextAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
     }
   }
 
-  return nsHyperTextAccessible::HandleAccEvent(aEvent);
+  return nsHyperTextAccessible::FireAccessibleEvent(aEvent);
 }
 
 nsresult
