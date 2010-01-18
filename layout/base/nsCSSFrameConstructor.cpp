@@ -1382,6 +1382,7 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
   , mHasRootAbsPosContainingBlock(PR_FALSE)
   , mObservingRefreshDriver(PR_FALSE)
   , mInStyleRefresh(PR_FALSE)
+  , mInLazyFCRefresh(PR_FALSE)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
 {
@@ -2905,6 +2906,11 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
   }
 }
 
+static void
+ClearLazyBitsInChildren(nsIContent* aContent,
+                        PRUint32 aStartIndex = 1,
+                        PRUint32 aEndIndex = 0);
+
 nsresult
 nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
                                             FrameConstructionItem&   aItem,
@@ -3003,6 +3009,8 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
   SetInitialSingleChild(buttonFrame, blockFrame);
 
   if (isLeaf) {
+    ClearLazyBitsInChildren(content);
+
     nsFrameItems  anonymousChildItems;
     // if there are any anonymous children create frames for them.  Note that
     // we're doing this using a different parent frame from the one we pass to
@@ -4992,6 +5000,8 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
                                                  nsIFrame* aParentFrame,
                                                  FrameConstructionItemList& aItems)
 {
+  aContent->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
+
   // don't create a whitespace frame if aParent doesn't want it
   if (!NeedFrameFor(aParentFrame, aContent)) {
     return;
@@ -6099,12 +6109,176 @@ nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aParentContent,
   }
   NS_ASSERTION(!content->GetPrimaryFrame(),
                "Text node has a frame and NS_CREATE_FRAME_IF_NON_WHITESPACE");
-  ContentInserted(aParentContent, content, aContentIndex, nsnull);
+  ContentInserted(aParentContent, content, aContentIndex, nsnull, PR_FALSE);
+}
+
+// For inserts aChild should be valid, for appends it should be null.
+// Returns true if this operation can be lazy, false if not.
+PRBool
+nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
+                                            nsIContent* aContainer,
+                                            nsIContent* aChild,
+                                            PRInt32 aIndex)
+{
+  if (mPresShell->GetPresContext()->IsChrome() || !aContainer ||
+      aContainer->IsInNativeAnonymousSubtree() || aContainer->IsXUL()) {
+    return PR_FALSE;
+  }
+
+  if (aOperation == CONTENTINSERT) {
+    if (aIndex < 0 || aContainer->GetChildAt(aIndex) != aChild ||
+        aChild->IsEditable() || aChild->IsXUL()) {
+      return PR_FALSE;
+    }
+  } else { // CONTENTAPPEND
+    NS_ASSERTION(aOperation == CONTENTAPPEND,
+                 "operation should be either insert or append");
+    PRUint32 containerCount = aContainer->GetChildCount();
+    for (PRUint32 i = aIndex; i < containerCount; i++) {
+      nsIContent* child = aContainer->GetChildAt(i);
+      if (child->IsXUL() || child->IsEditable()) {
+        return PR_FALSE;
+      }
+    }
+  }
+
+  // We can construct lazily; just need to set suitable bits in the content
+  // tree.
+
+  // Walk up the tree setting the NODE_DESCENDANTS_NEED_FRAMES bit as we go.
+  nsIContent* content = aContainer;
+  while (content &&
+         !content->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
+    NS_ASSERTION(content->GetPrimaryFrame() &&
+                 !content->HasFlag(NODE_NEEDS_FRAME),
+                 "Ancestors of nodes with frames to be constructed lazily "
+                 "should have frames and not have NEEDS_FRAME bit set");
+    content->SetFlags(NODE_DESCENDANTS_NEED_FRAMES);
+    content = content->GetFlattenedTreeParent();
+  }
+
+  // Set NODE_NEEDS_FRAME on the new nodes.
+  if (aOperation == CONTENTINSERT) {
+    NS_ASSERTION(!aChild->GetPrimaryFrame(),
+                 "setting NEEDS_FRAME on a node that already has a frame?");
+    aChild->SetFlags(NODE_NEEDS_FRAME);
+  } else { // CONTENTAPPEND
+    PRUint32 containerCount = aContainer->GetChildCount();
+    for (PRUint32 i = aIndex; i < containerCount; i++) {
+      nsIContent* child = aContainer->GetChildAt(i);
+      NS_ASSERTION(!child->GetPrimaryFrame(),
+                   "setting NEEDS_FRAME on a node that already has a frame?");
+      child->SetFlags(NODE_NEEDS_FRAME);
+    }
+  }
+
+  PostRestyleEventInternal(PR_TRUE);
+  return PR_TRUE;
+}
+
+// Clears any lazy bits set in the direct children of aContent. If
+// aEndIndex < aStartIndex (the default) then clear in all children. Otherwise
+// clear in the children at [aStartIndex, aEndIndex). We do this so that when
+// new children are inserted under elements whose frame is a leaf the new
+// children don't cause us to try to construct frames for the existing children
+// again.
+static void
+ClearLazyBitsInChildren(nsIContent* aContent,
+                        PRUint32 aStartIndex /* = 1 */,
+                        PRUint32 aEndIndex /* = 0 */)
+{
+  PRBool allChildren = aEndIndex < aStartIndex;
+  PRUint32 startIndex = allChildren ? 0 : aStartIndex;
+  PRUint32 endIndex = allChildren ? aContent->GetChildCount() : aEndIndex;
+  for (PRUint32 i = startIndex; i < endIndex; i++) {
+    aContent->GetChildAt(i)->
+      UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
+  }
+}
+
+void
+nsCSSFrameConstructor::CreateNeededFrames(nsIContent* aContent)
+{
+  NS_ASSERTION(!aContent->HasFlag(NODE_NEEDS_FRAME),
+    "shouldn't get here with a content node that has needs frame bit set");
+  NS_ASSERTION(aContent->HasFlag(NODE_DESCENDANTS_NEED_FRAMES),
+    "should only get here with a content node that has descendants needing frames");
+
+  aContent->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
+
+  // We could either descend first (on nodes that don't have NODE_NEEDS_FRAME
+  // set) or issue content notifications for our kids first. In absence of
+  // anything definitive either way we'll go with the latter.
+
+  // It might be better to use GetChildArray and scan it completely first and
+  // then issue all notifications. (We have to scan it completely first because
+  // constructing frames can set attributes, which can change the storage of
+  // child lists).
+
+  // Scan the children of aContent to see what operations (if any) we need to
+  // perform.
+  PRUint32 childCount = aContent->GetChildCount();
+  PRUint32 startOfRun = 0;
+  PRBool inRun = PR_FALSE;
+  nsIContent* firstChildInRun = nsnull;
+  for (PRUint32 i = 0; i < childCount; i++) {
+    nsIContent* child = aContent->GetChildAt(i);
+    if (child->HasFlag(NODE_NEEDS_FRAME)) {
+      NS_ASSERTION(!child->GetPrimaryFrame(),
+                   "NEEDS_FRAME set on a node that already has a frame?");
+      if (!inRun) {
+        inRun = PR_TRUE;
+        startOfRun = i;
+        firstChildInRun = child;
+      }
+    } else {
+      if (inRun) {
+        inRun = PR_FALSE;
+        // generate a ContentInserted for each node in [startOfRun,i)
+        for (PRUint32 j = startOfRun; j < i; j++) {
+          ContentInserted(aContent, aContent->GetChildAt(j), j, nsnull,
+                          PR_FALSE);
+        }
+      }
+    }
+  }
+  if (inRun) {
+    ContentAppended(aContent, startOfRun, PR_FALSE);
+  }
+
+  // Now descend.
+  ChildIterator iter, last;
+  for (ChildIterator::Init(aContent, &iter, &last);
+       iter != last;
+       ++iter) {
+    nsIContent* child = *iter;
+    if (child->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
+      CreateNeededFrames(child);
+    }
+  }
+}
+
+void nsCSSFrameConstructor::CreateNeededFrames()
+{
+  NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
+               "Someone forgot a script blocker");
+
+  mInLazyFCRefresh = PR_FALSE;
+
+  nsIContent* rootContent = mDocument->GetRootContent();
+  NS_ASSERTION(!rootContent || !rootContent->HasFlag(NODE_NEEDS_FRAME),
+    "root content should not have frame created lazily");
+  if (rootContent && rootContent->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
+    BeginUpdate();
+    CreateNeededFrames(rootContent);
+    EndUpdate();
+  }
 }
 
 nsresult
 nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
-                                       PRInt32         aNewIndexInContainer)
+                                       PRInt32         aNewIndexInContainer,
+                                       PRBool          aAllowLazyConstruction)
 {
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   NS_PRECONDITION(mUpdateCount != 0,
@@ -6112,8 +6286,10 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
-    printf("nsCSSFrameConstructor::ContentAppended container=%p index=%d\n",
-           static_cast<void*>(aContainer), aNewIndexInContainer);
+    printf("nsCSSFrameConstructor::ContentAppended container=%p index=%d "
+           "lazy=%d\n",
+           static_cast<void*>(aContainer), aNewIndexInContainer,
+           aAllowLazyConstruction);
     if (gReallyNoisyContentUpdates && aContainer) {
       aContainer->List(stdout, 0);
     }
@@ -6139,6 +6315,12 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   nsIFrame* parentFrame = GetFrameFor(aContainer);
   if (! parentFrame)
     return NS_OK;
+
+  if (aAllowLazyConstruction &&
+      MaybeConstructLazily(CONTENTAPPEND, aContainer, nsnull,
+                           aNewIndexInContainer)) {
+    return NS_OK;
+  }
 
   // See if we have an XBL insertion point. If so, then that's our
   // real parent frame; if not, then the frame hasn't been built yet
@@ -6207,7 +6389,8 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
         }
         LAYOUT_PHASE_TEMP_EXIT();
         // Call ContentInserted with this index.
-        ContentInserted(aContainer, content, i, mTempFrameTreeState);
+        ContentInserted(aContainer, content, i, mTempFrameTreeState,
+                        aAllowLazyConstruction);
         LAYOUT_PHASE_TEMP_REENTER();
       }
 
@@ -6233,6 +6416,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   
   if (parentFrame->IsLeaf()) {
     // Nothing to do here; we shouldn't be constructing kids of leaves
+    // Clear lazy bits so we don't try to construct again.
+    ClearLazyBitsInChildren(aContainer, aNewIndexInContainer,
+                            aContainer->GetChildCount());
     return NS_OK;
   }
   
@@ -6324,8 +6510,8 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   for (PRUint32 i = aNewIndexInContainer, count = aContainer->GetChildCount();
        i < count;
        ++i) {
-    AddFrameConstructionItems(state, aContainer->GetChildAt(i), i, parentFrame,
-                              items);
+    nsIContent* child = aContainer->GetChildAt(i);
+    AddFrameConstructionItems(state, child, i, parentFrame, items);
   }
 
   nsIFrame* prevSibling = ::FindAppendPrevSibling(parentFrame, parentAfterFrame);
@@ -6475,7 +6661,8 @@ nsresult
 nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                        nsIContent*            aChild,
                                        PRInt32                aIndexInContainer,
-                                       nsILayoutHistoryState* aFrameState)
+                                       nsILayoutHistoryState* aFrameState,
+                                       PRBool                 aAllowLazyConstruction)
 {
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   NS_PRECONDITION(mUpdateCount != 0,
@@ -6485,10 +6672,12 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   // the :empty pseudo-class?
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
-    printf("nsCSSFrameConstructor::ContentInserted container=%p child=%p index=%d\n",
+    printf("nsCSSFrameConstructor::ContentInserted container=%p child=%p "
+           "index=%d lazy=%d\n",
            static_cast<void*>(aContainer),
            static_cast<void*>(aChild),
-           aIndexInContainer);
+           aIndexInContainer,
+           aAllowLazyConstruction);
     if (gReallyNoisyContentUpdates) {
       (aContainer ? aContainer : aChild)->List(stdout, 0);
     }
@@ -6543,6 +6732,12 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   if (! parentFrame)
     return NS_OK;
 
+  if (aAllowLazyConstruction &&
+      MaybeConstructLazily(CONTENTINSERT, aContainer, aChild,
+                           aIndexInContainer)) {
+    return NS_OK;
+  }
+
   // See if we have an XBL insertion point. If so, then that's our
   // real parent frame; if not, then the frame hasn't been built yet
   // and we just bail.
@@ -6586,6 +6781,8 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 
   // Don't construct kids of leaves
   if (parentFrame->IsLeaf()) {
+    // Clear lazy bits so we don't try to construct again.
+    aChild->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
     return NS_OK;
   }
 
@@ -8621,8 +8818,8 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
       if (aAsyncInsert) {
         PostRestyleEvent(aContent, nsRestyleHint(0), nsChangeHint_ReconstructFrame);
       } else {
-        rv = ContentInserted(container, aContent,
-                             indexInContainer, mTempFrameTreeState);
+        rv = ContentInserted(container, aContent, indexInContainer,
+                             mTempFrameTreeState, PR_FALSE);
       }
     }
   }
@@ -9108,6 +9305,8 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                                  nsCSSPseudoElements::ePseudo_after,
                                  itemsToConstruct);
     }
+  } else {
+    ClearLazyBitsInChildren(aContent);
   }
 
   rv = ConstructFramesFromItemList(aState, itemsToConstruct, aFrame,
@@ -10415,6 +10614,7 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
     // AddFrameConstructionItems.  We know our parent is a non-replaced inline,
     // so there is no need to do the NeedFrameFor check.
     nsIContent* content = *iter;
+    content->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
     if (content->IsNodeOfType(nsINode::eCOMMENT) ||
         content->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
       continue;
@@ -11246,16 +11446,17 @@ nsCSSFrameConstructor::PostRestyleEventCommon(nsIContent* aContent,
 
   restyles.Put(aContent, existingData);
 
-  PostRestyleEventInternal();
+  PostRestyleEventInternal(PR_FALSE);
 }
     
 void
-nsCSSFrameConstructor::PostRestyleEventInternal()
+nsCSSFrameConstructor::PostRestyleEventInternal(PRBool aForLazyConstruction)
 {
   // Make sure we're not in a style refresh; if we are, we still have
   // a call to ProcessPendingRestyles coming and there's no need to
   // add ourselves as a refresh observer until then.
-  if (!mInStyleRefresh && !mObservingRefreshDriver) {
+  PRBool inRefresh = aForLazyConstruction ? mInLazyFCRefresh : mInStyleRefresh;
+  if (!mObservingRefreshDriver && !inRefresh) {
     mObservingRefreshDriver = mPresShell->GetPresContext()->
       RefreshDriver()->AddRefreshObserver(this, Flush_Style);
   }
@@ -11272,6 +11473,7 @@ nsCSSFrameConstructor::WillRefresh(mozilla::TimeStamp aTime)
   mPresShell->GetPresContext()->RefreshDriver()->
     RemoveRefreshObserver(this, Flush_Style);
   mObservingRefreshDriver = PR_FALSE;
+  mInLazyFCRefresh = PR_TRUE;
   mInStyleRefresh = PR_TRUE;
 }
 
@@ -11285,7 +11487,7 @@ nsCSSFrameConstructor::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint)
   mRebuildAllStyleData = PR_TRUE;
   NS_UpdateHint(mRebuildAllExtraHint, aExtraHint);
   // Get a restyle event posted if necessary
-  PostRestyleEventInternal();
+  PostRestyleEventInternal(PR_FALSE);
 }
 
 NS_IMETHODIMP
