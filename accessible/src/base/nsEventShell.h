@@ -39,11 +39,16 @@
 #ifndef _nsEventShell_H_
 #define _nsEventShell_H_
 
-#include "nsIAccessible.h"
+#include "nsAccEvent.h"
 
 class nsEventShell
 {
 public:
+
+  /**
+   * Fire the accessible event.
+   */
+  static void FireEvent(nsAccEvent *aEvent);
 
   /**
    * Fire accessible event of the given type for the given accessible.

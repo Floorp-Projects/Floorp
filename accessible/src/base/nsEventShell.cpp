@@ -39,7 +39,19 @@
 #include "nsEventShell.h"
 
 #include "nsAccessible.h"
-#include "nsAccEvent.h"
+
+void
+nsEventShell::FireEvent(nsAccEvent *aEvent)
+{
+  if (!aEvent)
+    return;
+
+  nsRefPtr<nsAccessible> acc =
+    nsAccUtils::QueryObject<nsAccessible>(aEvent->GetAccessible());
+  NS_ENSURE_TRUE(acc,);
+
+  acc->FireAccessibleEvent(aEvent);
+}
 
 void
 nsEventShell::FireEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
@@ -47,12 +59,8 @@ nsEventShell::FireEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
 {
   NS_ENSURE_TRUE(aAccessible,);
 
-  nsRefPtr<nsAccessible> acc =
-    nsAccUtils::QueryObject<nsAccessible>(aAccessible);
+  nsRefPtr<nsAccEvent> event = new nsAccEvent(aEventType, aAccessible,
+                                              aIsAsynch);
 
-  nsCOMPtr<nsIAccessibleEvent> event =
-    new nsAccEvent(aEventType, aAccessible, aIsAsynch);
-
-  if (event)  
-    acc->FireAccessibleEvent(event);
+  FireEvent(event);
 }
