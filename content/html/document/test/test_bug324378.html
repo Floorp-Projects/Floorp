@@ -67,7 +67,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=324378
   is($("m"), null, "Unexpected node with id=m");
 
   is(html.getAttribute("foo"), "h", "Unexpected 'foo' value on <html>");
-  is(head.getAttribute("foo"), "k", "Unexpected 'foo' value on <head>");
+  // The line below can be uncommented once the HTML5 parser is on by default
+  // is(head.getAttribute("foo"), null, "Unexpected 'foo' value on <head>");
   is(body.getAttribute("foo"), "n", "Unexpected 'foo' value on <body>");
 
 </script>
