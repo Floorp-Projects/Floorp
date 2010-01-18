@@ -55,11 +55,11 @@
 class nsIPresShell;
 
 #define NS_ACCEVENT_IMPL_CID                            \
-{  /* 55b89892-a83d-4252-ba78-cbdf53a86936 */           \
-  0x55b89892,                                           \
-  0xa83d,                                               \
-  0x4252,                                               \
-  { 0xba, 0x78, 0xcb, 0xdf, 0x53, 0xa8, 0x69, 0x36 }    \
+{  /* 39bde096-317e-4294-b23b-4af4a9b283f7 */           \
+  0x39bde096,                                           \
+  0x317e,                                               \
+  0x4294,                                               \
+  { 0xb2, 0x3b, 0x4a, 0xf4, 0xa9, 0xb2, 0x83, 0xf7 }    \
 }
 
 class nsAccEvent: public nsIAccessibleEvent
@@ -100,6 +100,12 @@ public:
 
   NS_DECL_NSIACCESSIBLEEVENT
 
+  // nsAccEvent
+  PRUint32 GetEventType() const { return mEventType; }
+  EEventRule GetEventRule() const { return mEventRule; }
+  PRBool IsAsync() const { return mIsAsync; }
+  PRBool IsFromUserInput() const { return mIsFromUserInput; }
+
   static void GetLastEventAttributes(nsIDOMNode *aNode,
                                      nsIPersistentProperties *aAttributes);
 
@@ -121,27 +127,6 @@ private:
   static nsIDOMNode* gLastEventNodeWeak;
 
 public:
-  static PRUint32 EventType(nsIAccessibleEvent *aAccEvent) {
-    PRUint32 eventType;
-    aAccEvent->GetEventType(&eventType);
-    return eventType;
-  }
-  static EEventRule EventRule(nsIAccessibleEvent *aAccEvent) {
-    nsRefPtr<nsAccEvent> accEvent =
-      nsAccUtils::QueryObject<nsAccEvent>(aAccEvent);
-    return accEvent->mEventRule;
-  }
-  static PRBool IsAsyncEvent(nsIAccessibleEvent *aAccEvent) {
-    nsRefPtr<nsAccEvent> accEvent =
-      nsAccUtils::QueryObject<nsAccEvent>(aAccEvent);
-    return accEvent->mIsAsync;
-  }
-  static PRBool IsFromUserInput(nsIAccessibleEvent *aAccEvent) {
-    PRBool isFromUserInput;
-    aAccEvent->GetIsFromUserInput(&isFromUserInput);
-    return isFromUserInput;
-  }
-
   static void ResetLastInputState()
    {gLastEventFromUserInput = PR_FALSE; gLastEventNodeWeak = nsnull; }
 

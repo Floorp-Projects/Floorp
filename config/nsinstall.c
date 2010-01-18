@@ -258,10 +258,15 @@ copydir( char *from, char *to, mode_t mode, char *group, char *owner,
   sprintf(destdir, "%s%s%s", to, _DIRECTORY_SEPARATOR, base);
   if (mkdirs(destdir, mode) != 0) {
     fail("cannot make directory %s\n", destdir);
+    free(destdir);
     return;
   }
 
-  dir = opendir(from);
+  if (!(dir = opendir(from))) {
+    fail("cannot open directory %s\n", from);
+    free(destdir);
+    return;
+  }
 
   direntry = xmalloc((unsigned int)PATH_MAX);
   destentry = xmalloc((unsigned int)PATH_MAX);
@@ -280,6 +285,7 @@ copydir( char *from, char *to, mode_t mode, char *group, char *owner,
       copyfile( direntry, destentry, mode, group, owner, dotimes, uid, gid );
   }
 
+  free(destdir);
   free(direntry);
   free(destentry);
   closedir(dir);
