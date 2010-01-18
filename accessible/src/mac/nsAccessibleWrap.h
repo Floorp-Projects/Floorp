@@ -77,7 +77,7 @@ class nsAccessibleWrap : public nsAccessible
     virtual nsresult Shutdown ();
     virtual void InvalidateChildren();
 
-    virtual nsresult FireAccessibleEvent(nsAccEvent *aEvent);
+    virtual nsresult FireAccessibleEvent(nsIAccessibleEvent *aEvent);
 
     // ignored means that the accessible might still have children, but is not displayed
     // to the user. it also has no native accessible object represented for it.
@@ -97,7 +97,7 @@ class nsAccessibleWrap : public nsAccessible
     
   protected:
 
-    virtual nsresult FirePlatformEvent(nsAccEvent *aEvent);
+    virtual nsresult FirePlatformEvent(nsIAccessibleEvent *aEvent);
 
     PRBool AncestorIsFlat() {
       // we don't create a native object if we're child of a "flat" accessible; for example, on OS X buttons 
