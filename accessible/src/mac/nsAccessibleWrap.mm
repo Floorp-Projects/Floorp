@@ -160,13 +160,11 @@ nsAccessibleWrap::Shutdown ()
 }
 
 nsresult
-nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
+nsAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NS_ENSURE_ARG_POINTER(aEvent);
-
-  nsresult rv = nsAccessible::FireAccessibleEvent(aEvent);
+  nsresult rv = nsAccessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return FirePlatformEvent(aEvent);
@@ -175,13 +173,11 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 }
 
 nsresult
-nsAccessibleWrap::FirePlatformEvent(nsIAccessibleEvent *aEvent)
+nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  PRUint32 eventType;
-  nsresult rv = aEvent->GetEventType(&eventType);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRUint32 eventType = aEvent->GetEventType();
 
   // ignore everything but focus-changed and value-changed events for now.
   if (eventType != nsIAccessibleEvent::EVENT_FOCUS &&

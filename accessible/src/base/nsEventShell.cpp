@@ -50,7 +50,7 @@ nsEventShell::FireEvent(nsAccEvent *aEvent)
     nsAccUtils::QueryObject<nsAccessible>(aEvent->GetAccessible());
   NS_ENSURE_TRUE(acc,);
 
-  acc->FireAccessibleEvent(aEvent);
+  acc->HandleAccEvent(aEvent);
 }
 
 void
