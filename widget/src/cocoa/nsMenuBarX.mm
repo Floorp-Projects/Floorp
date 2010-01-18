@@ -104,6 +104,8 @@ nsMenuBarX::nsMenuBarX()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  mContentToObserverTable.Init();
+  mCommandToMenuObjectTable.Init();
   mNativeMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -789,20 +791,21 @@ void nsMenuBarX::ParentChainChanged(nsIContent *aContent)
 // strong refs.
 void nsMenuBarX::RegisterForContentChanges(nsIContent *aContent, nsChangeObserver *aMenuObject)
 {
-  nsVoidKey key(aContent);
-  mObserverTable.Put(&key, aMenuObject);
+  mContentToObserverTable.Put(aContent, aMenuObject);
 }
 
 void nsMenuBarX::UnregisterForContentChanges(nsIContent *aContent)
 {
-  nsVoidKey key(aContent);
-  mObserverTable.Remove(&key);
+  mContentToObserverTable.Remove(aContent);
 }
 
 nsChangeObserver* nsMenuBarX::LookupContentChangeObserver(nsIContent* aContent)
 {
-  nsVoidKey key(aContent);
-  return reinterpret_cast<nsChangeObserver*>(mObserverTable.Get(&key));
+  nsChangeObserver * result;
+  if (mContentToObserverTable.Get(aContent, &result))
+    return result;
+  else
+    return nsnull;
 }
 
 // Given a menu item, creates a unique 4-character command ID and
@@ -817,9 +820,7 @@ PRUint32 nsMenuBarX::RegisterForCommand(nsMenuItemX* inMenuItem)
   // make id unique
   ++mCurrentCommandID;
 
-  // put it in the table, set out param for client
-  nsPRUint32Key key(mCurrentCommandID);
-  mObserverTable.Put(&key, inMenuItem);
+  mCommandToMenuObjectTable.Put(mCurrentCommandID, inMenuItem);
 
   return mCurrentCommandID;
 }
@@ -828,14 +829,16 @@ PRUint32 nsMenuBarX::RegisterForCommand(nsMenuItemX* inMenuItem)
 // and its associated menu item.
 void nsMenuBarX::UnregisterCommand(PRUint32 inCommandID)
 {
-  nsPRUint32Key key(inCommandID);
-  mObserverTable.Remove(&key);
+  mCommandToMenuObjectTable.Remove(inCommandID);
 }
 
 nsMenuItemX* nsMenuBarX::GetMenuItemForCommandID(PRUint32 inCommandID)
 {
-  nsPRUint32Key key(inCommandID);
-  return reinterpret_cast<nsMenuItemX*>(mObserverTable.Get(&key));
+  nsMenuItemX * result;
+  if (mCommandToMenuObjectTable.Get(inCommandID, &result))
+    return result;
+  else
+    return nsnull;
 }
 
 //
