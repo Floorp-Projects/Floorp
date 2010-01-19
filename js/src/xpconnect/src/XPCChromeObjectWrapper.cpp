@@ -496,17 +496,31 @@ XPC_COW_RewrapForContent(JSContext *cx, JSObject *wrapperObj, jsval *vp)
 }
 
 static JSBool
+CheckSOW(JSContext *cx, JSObject *wrapperObj, jsval idval)
+{
+  jsval flags;
+  JS_GetReservedSlot(cx, wrapperObj, sFlagsSlot, &flags);
+
+  return HAS_FLAGS(flags, FLAG_SOW)
+         ? SystemOnlyWrapper::AllowedToAct(cx, idval) : JS_TRUE;
+}
+
+static JSBool
 XPC_COW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   obj = GetWrapper(obj);
-  jsval resolving;
-  if (!JS_GetReservedSlot(cx, obj, XPCWrapper::sFlagsSlot, &resolving)) {
+  jsval flags;
+  if (!JS_GetReservedSlot(cx, obj, XPCWrapper::sFlagsSlot, &flags)) {
     return JS_FALSE;
   }
 
-  if (HAS_FLAGS(resolving, FLAG_RESOLVING)) {
+  if (HAS_FLAGS(flags, FLAG_RESOLVING)) {
     // Allow us to define a property on ourselves.
     return JS_TRUE;
+  }
+
+  if (!CheckSOW(cx, obj, id)) {
+    return JS_FALSE;
   }
 
   // Someone's adding a property to us. We need to protect ourselves from
@@ -529,7 +543,8 @@ XPC_COW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
     // Only chrome is allowed to add getters or setters to our object.
-    if (!SystemOnlyWrapper::AllowedToAct(cx, id)) {
+    // NB: We don't have to do this check again if we're already FLAG_SOW'd.
+    if (!HAS_FLAGS(flags, FLAG_SOW) && !SystemOnlyWrapper::AllowedToAct(cx, id)) {
       return JS_FALSE;
     }
   }
@@ -542,6 +557,10 @@ XPC_COW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 XPC_COW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
+  if (!CheckSOW(cx, obj, id)) {
+    return JS_FALSE;
+  }
+
   JSObject *wrappedObj = GetWrappedObject(cx, obj);
   if (!wrappedObj) {
     return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
@@ -579,6 +598,10 @@ XPC_COW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   XPCCallContext ccx(JS_CALLER, cx);
   if (!ccx.IsValid()) {
     return ThrowException(NS_ERROR_FAILURE, cx);
+  }
+
+  if (!CheckSOW(cx, obj, id)) {
+    return JS_FALSE;
   }
 
   AUTO_MARK_JSVAL(ccx, vp);
@@ -645,6 +668,10 @@ XPC_COW_Enumerate(JSContext *cx, JSObject *obj)
     return JS_TRUE;
   }
 
+  if (!CheckSOW(cx, obj, JSVAL_VOID)) {
+    return JS_FALSE;
+  }
+
   XPCCallContext ccx(JS_CALLER, cx);
   if (!ccx.IsValid()) {
     return ThrowException(NS_ERROR_FAILURE, cx);
@@ -658,6 +685,10 @@ XPC_COW_NewResolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
                    JSObject **objp)
 {
   obj = GetWrapper(obj);
+
+  if (!CheckSOW(cx, obj, idval)) {
+    return JS_FALSE;
+  }
 
   JSObject *wrappedObj = GetWrappedObject(cx, obj);
   if (!wrappedObj) {
