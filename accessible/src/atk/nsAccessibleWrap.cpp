@@ -1107,24 +1107,22 @@ nsAccessibleWrap *GetAccessibleWrap(AtkObject *aAtkObj)
 }
 
 nsresult
-nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
+nsAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
 {
-    nsresult rv = nsAccessible::FireAccessibleEvent(aEvent);
+    nsresult rv = nsAccessible::HandleAccEvent(aEvent);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return FirePlatformEvent(aEvent);
 }
 
 nsresult
-nsAccessibleWrap::FirePlatformEvent(nsIAccessibleEvent *aEvent)
+nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
 {
     nsCOMPtr<nsIAccessible> accessible;
     aEvent->GetAccessible(getter_AddRefs(accessible));
     NS_ENSURE_TRUE(accessible, NS_ERROR_FAILURE);
 
-    PRUint32 type = 0;
-    nsresult rv = aEvent->GetEventType(&type);
-    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 type = aEvent->GetEventType();
 
     AtkObject *atkObj = nsAccessibleWrap::GetAtkObject(accessible);
 
