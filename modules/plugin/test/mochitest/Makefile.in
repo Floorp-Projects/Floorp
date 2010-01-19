@@ -68,6 +68,7 @@ _MOCHITEST_FILES = \
 		test_multipleinstanceobjects.html \
 		test_streamNotify.html \
 		test_instantiation.html \
+		test_cookies.html \
 		$(NULL)
 
 #		test_npruntime_npnsetexception.html \ Disabled for e10s
