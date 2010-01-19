@@ -146,9 +146,15 @@ namespace SystemOnlyWrapper {
 JSBool
 WrapObject(JSContext *cx, JSObject *parent, jsval v, jsval *vp);
 
+JSBool
+MakeSOW(JSContext *cx, JSObject *obj);
+
 // Used by UnwrapSOW below.
 JSBool
 AllowedToAct(JSContext *cx, jsval idval);
+
+JSBool
+CheckFilename(JSContext *cx, jsval idval, JSStackFrame *fp);
 
 }
 
@@ -170,6 +176,9 @@ namespace XPCWrapper {
 // the newResolve. It tells the addProperty hook to not worry about
 // what's being defined.
 extern const PRUint32 FLAG_RESOLVING;
+
+// When a wrapper is meant to act like a SOW, this flag will be set.
+extern const PRUint32 FLAG_SOW;
 
 // This is used by individual wrappers as a starting point to stick
 // per-wrapper flags into the flags slot. This is guaranteed to only

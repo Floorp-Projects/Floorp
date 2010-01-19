@@ -398,6 +398,13 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj,
     return JS_TRUE;
   }
 
+  jsval flags;
+
+  JS_GetReservedSlot(cx, obj, sFlagsSlot, &flags);
+  if (HAS_FLAGS(flags, FLAG_SOW) && !SystemOnlyWrapper::CheckFilename(cx, id, fp)) {
+    return JS_FALSE;
+  }
+
   // We're in unprivileged code, ensure that we're allowed to access the
   // underlying object.
   XPCWrappedNative *wn = XPCNativeWrapper::SafeGetWrappedNative(obj);
@@ -428,12 +435,10 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj,
     }
   }
 
+#ifdef DEBUG
   // The underlying object is accessible, but this might be the wrong
   // type of wrapper to access it through.
-  // TODO This should just be an assertion now.
-  jsval flags;
 
-  ::JS_GetReservedSlot(cx, obj, 0, &flags);
   if (HAS_FLAGS(flags, FLAG_EXPLICIT)) {
     // Can't make any assertions about the owner of this wrapper.
     return JS_TRUE;
@@ -454,7 +459,12 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj,
 
   // Otherwise, we're looking at a non-system file with a handle on an
   // implicit wrapper. This is a bug! Deny access.
-  return ThrowException(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
+  NS_ERROR("Implicit native wrapper in content code");
+#else
+  return JS_TRUE;
+#endif
+
+  // NB: Watch for early returns in the ifdef DEBUG code above.
 }
 
 static JSBool
