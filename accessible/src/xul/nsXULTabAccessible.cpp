@@ -44,17 +44,19 @@
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 
-/**
-  * XUL Tab
-  */
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTabAccessible
+////////////////////////////////////////////////////////////////////////////////
 
-/** Constructor */
-nsXULTabAccessible::nsXULTabAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsLeafAccessible(aNode, aShell)
-{ 
+nsXULTabAccessible::
+  nsXULTabAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
+  nsAccessibleWrap(aNode, aShell)
+{
 }
 
-/** Only one action available */
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTabAccessible: nsIAccessible
+
 NS_IMETHODIMP nsXULTabAccessible::GetNumActions(PRUint8 *_retval)
 {
   *_retval = 1;
@@ -86,7 +88,9 @@ NS_IMETHODIMP nsXULTabAccessible::DoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-/** We are a tab */
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTabAccessible: nsAccessible
+
 nsresult
 nsXULTabAccessible::GetRoleInternal(PRUint32 *aRole)
 {
@@ -94,14 +98,13 @@ nsXULTabAccessible::GetRoleInternal(PRUint32 *aRole)
   return NS_OK;
 }
 
-/**
-  * Possible states: focused, focusable, unavailable(disabled), offscreen
-  */
 nsresult
 nsXULTabAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 {
+  // Possible states: focused, focusable, unavailable(disabled), offscreen.
+
   // get focus and disable status from base class
-  nsresult rv = nsLeafAccessible::GetStateInternal(aState, aExtraState);
+  nsresult rv = nsAccessibleWrap::GetStateInternal(aState, aExtraState);
   NS_ENSURE_A11Y_SUCCESS(rv, rv);
 
   // In the past, tabs have been focusable in classic theme
@@ -129,11 +132,12 @@ nsXULTabAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
+// nsIAccessible
 NS_IMETHODIMP
 nsXULTabAccessible::GetRelationByType(PRUint32 aRelationType,
                                       nsIAccessibleRelation **aRelation)
 {
-  nsresult rv = nsLeafAccessible::GetRelationByType(aRelationType,
+  nsresult rv = nsAccessibleWrap::GetRelationByType(aRelationType,
                                                     aRelation);
   NS_ENSURE_SUCCESS(rv, rv);
 
