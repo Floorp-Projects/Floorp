@@ -1365,7 +1365,7 @@ Browser.MainDragger.prototype = {
           oAuto = (overflow == "auto") || (overflowX == "auto") || (overflowY == "auto");
 
           if (oScroll ||
-              (oAuto && (cbr.height < target.scrollHeight || cbr.width < target.scrollWidth))) {
+              (oAuto && (cbr.height < htmlElement.scrollHeight || cbr.width < htmlElement.scrollWidth))) {
             this.contentScrollbox = this._createDivScrollBox(htmlElement);
             return;
           }
