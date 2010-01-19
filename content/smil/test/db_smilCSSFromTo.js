@@ -67,14 +67,14 @@ var _fromToTestLists = {
                              midComp: "rgb(75, 75, 75)" }),
   ],
   colorFromInheritBlack: [
-   new AnimTestcaseFromTo("inherit", "rgb(200, 200, 200)",
-                          { fromComp: "rgb(0, 0, 0)",
-                            midComp: "rgb(100, 100, 100)" }),
+    new AnimTestcaseFromTo("inherit", "rgb(200, 200, 200)",
+                           { fromComp: "rgb(0, 0, 0)",
+                             midComp: "rgb(100, 100, 100)" }),
   ],
   colorFromInheritWhite: [
-  new AnimTestcaseFromTo("inherit", "rgb(205, 205, 205)",
-                         { fromComp: "rgb(255, 255, 255)",
-                           midComp: "rgb(230, 230, 230)" }),
+    new AnimTestcaseFromTo("inherit", "rgb(205, 205, 205)",
+                           { fromComp: "rgb(255, 255, 255)",
+                             midComp: "rgb(230, 230, 230)" }),
   ],
   paintServer: [
     new AnimTestcaseFromTo("none", "none"),
