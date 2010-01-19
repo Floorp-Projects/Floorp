@@ -2255,6 +2255,7 @@ setCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* 
   NPError err = NPN_SetValueForURL(npp, NPNURLVCookie, url, cookie->UTF8Characters, cookie->UTF8Length);
   free(url);
   
+  VOID_TO_NPVARIANT(*result);
   return (err == NPERR_NO_ERROR);
 }
 

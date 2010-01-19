@@ -1365,8 +1365,28 @@ _getvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return NPERR_GENERIC_ERROR;
+
+    if (!url)
+        return NPERR_INVALID_URL;
+
+    if (!npp || !value || !len)
+        return NPERR_INVALID_PARAM;
+
+    switch (variable) {
+    case NPNURLVCookie:
+    case NPNURLVProxy:
+        nsCString v;
+        NPError result;
+        InstCast(npp)->
+            CallNPN_GetValueForURL(variable, nsCString(url), &v, &result);
+        if (NPERR_NO_ERROR == result) {
+            *value = ToNewCString(v);
+            *len = v.Length();
+        }
+        return result;
+    }
+
+    return NPERR_INVALID_PARAM;
 }
 
 NPError NP_CALLBACK
@@ -1375,8 +1395,24 @@ _setvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return NPERR_GENERIC_ERROR;
+
+    if (!value)
+        return NPERR_INVALID_PARAM;
+
+    if (!url)
+        return NPERR_INVALID_URL;
+
+    switch (variable) {
+    case NPNURLVCookie:
+    case NPNURLVProxy:
+        NPError result;
+        InstCast(npp)->CallNPN_SetValueForURL(variable, nsCString(url),
+                                              nsDependentCString(value, len),
+                                              &result);
+        return result;
+    }
+
+    return NPERR_INVALID_PARAM;
 }
 
 NPError NP_CALLBACK
@@ -1388,8 +1424,28 @@ _getauthenticationinfo(NPP npp, const char *protocol,
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return NPERR_GENERIC_ERROR;
+
+    if (!protocol || !host || !scheme || !realm || !username || !ulen ||
+        !password || !plen)
+        return NPERR_INVALID_PARAM;
+
+    nsCString u;
+    nsCString p;
+    NPError result;
+    InstCast(npp)->
+        CallNPN_GetAuthenticationInfo(nsDependentCString(protocol),
+                                      nsDependentCString(host),
+                                      port,
+                                      nsDependentCString(scheme),
+                                      nsDependentCString(realm),
+                                      &u, &p, &result);
+    if (NPERR_NO_ERROR == result) {
+        *username = ToNewCString(u);
+        *ulen = u.Length();
+        *password = ToNewCString(p);
+        *plen = p.Length();
+    }
+    return result;
 }
 
 uint32_t NP_CALLBACK
