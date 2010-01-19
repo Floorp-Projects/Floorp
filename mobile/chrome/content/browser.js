@@ -2588,7 +2588,7 @@ ProgressController.prototype = {
     let location = aLocationURI ? aLocationURI.spec : "";
 
     this._hostChanged = true;
-    
+
     if (location != this.browser.lastSpec) {
       this.browser.lastSpec = this.browser.currentURI.spec;
       Browser.removeTransientNotificationsForTab(this._tab);
@@ -2866,6 +2866,8 @@ Tab.prototype = {
 
     if (metaData.reason == "handheld" || metaData.reason == "doctype") {
       browser.className = "browser-handheld";
+      browser.style.removeProperty("width");
+      browser.style.removeProperty("height");
     } else if (metaData.reason == "viewport") {
       let screenW = window.innerWidth;
       let screenH = window.innerHeight;
@@ -2897,6 +2899,8 @@ Tab.prototype = {
        browser.dispatchEvent(event);
     } else {
       browser.className = "browser";
+      browser.style.removeProperty("width");
+      browser.style.removeProperty("height");
     }
 
     this.setIcon(browser.mIconURL);
