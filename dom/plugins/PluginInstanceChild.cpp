@@ -464,6 +464,17 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
                          &mWsInfo.visual, &mWsInfo.depth))
         return false;
 
+    if (aWindow.type == NPWindowTypeWindow) {
+        if (GdkWindow* socket_window = gdk_window_lookup(aWindow.window)) {
+            // A GdkWindow for the socket already exists.  Need to
+            // workaround https://bugzilla.gnome.org/show_bug.cgi?id=607061
+            // See wrap_gtk_plug_embedded in PluginModuleChild.cpp.
+            g_object_set_data(G_OBJECT(socket_window),
+                              "moz-existed-before-set-window",
+                              GUINT_TO_POINTER(1));
+        }
+    }
+
     *rv = mPluginIface->setwindow(&mData, &mWindow);
 
 #elif defined(OS_WIN)
