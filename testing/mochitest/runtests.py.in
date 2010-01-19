@@ -54,7 +54,7 @@ import urllib2
 import commands
 from automation import Automation
 from automationutils import *
-
+import tempfile
 
 #######################
 # COMMANDLINE OPTIONS #
@@ -212,7 +212,6 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
     self.set_usage(usage)
 
 
-
 #######################
 # HTTP SERVER SUPPORT #
 #######################
@@ -220,12 +219,13 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
 class MochitestServer:
   "Web server used to serve Mochitests, for closer fidelity to the real web."
 
-  def __init__(self, automation, options, profileDir):
+  def __init__(self, automation, options, profileDir, shutdownURL):
     self._automation = automation
     self._closeWhenDone = options.closeWhenDone
     self._utilityPath = options.utilityPath
     self._xrePath = options.xrePath
     self._profileDir = profileDir
+    self.shutdownURL = shutdownURL
 
   def start(self):
     "Run the Mochitest server, returning the process ID of the server."
@@ -266,7 +266,7 @@ class MochitestServer:
 
   def stop(self):
     try:
-      c = urllib2.urlopen(SERVER_SHUTDOWN_URL)
+      c = urllib2.urlopen(self.shutdownURL)
       c.read()
       c.close()
       self._process.wait()
@@ -280,10 +280,8 @@ class Mochitest(object):
   TEST_PATH = "/tests/"
   CHROME_PATH = "/redirect.html";
   A11Y_PATH = "/redirect-a11y.html"
-  TESTS_URL = "http://" + TEST_SERVER_HOST + TEST_PATH
-  CHROMETESTS_URL = "http://" + TEST_SERVER_HOST + CHROME_PATH
-  A11YTESTS_URL = "http://" + TEST_SERVER_HOST + A11Y_PATH
-  SERVER_SHUTDOWN_URL = "http://" + TEST_SERVER_HOST + "/server/shutdown"
+  urlOpts = []
+  runSSLTunnel = True
  
   oldcwd = os.getcwd()
 
@@ -309,11 +307,55 @@ class Mochitest(object):
     "Get an absolute path relative to self.oldcwd."
     return os.path.normpath(os.path.join(self.oldcwd, os.path.expanduser(path)))
 
-  def runTests(self, options):
-    debuggerInfo = getDebuggerInfo(self.oldcwd, options.debugger, options.debuggerArgs,
-                      options.debuggerInteractive);
+  def buildTestPath(self, options):
+    """ build the url path to the specific test harness and test file or directory """
+    testHost = "http://" + self.TEST_SERVER_HOST
+    testURL = testHost + self.TEST_PATH + options.testPath
+    if options.chrome:
+      testURL = testHost + self.CHROME_PATH
+      if options.testPath:
+        self.urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
+    elif options.a11y:
+      testURL = testHost + self.A11Y_PATH
+      if options.testPath:
+        self.urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
+    elif options.browserChrome:
+      testURL = "about:blank"
+    return testURL
 
-    # browser environment
+  def startWebServer(self, options):
+    """ create the webserver and start it up """
+    shutdownURL = "http://" + self.TEST_SERVER_HOST + "/server/shutdown"
+    self.server = MochitestServer(self.automation, options, self.PROFILE_DIRECTORY, shutdownURL)
+    self.server.start()
+
+    # If we're lucky, the server has fully started by now, and all paths are
+    # ready, etc.  However, xpcshell cold start times suck, at least for debug
+    # builds.  We'll try to connect to the server for awhile, and if we fail,
+    # we'll try to kill the server and exit with an error.
+    self.server.ensureReady(self.SERVER_STARTUP_TIMEOUT)
+
+  def stopWebServer(self):
+    """ Server's no longer needed, and perhaps more importantly, anything it might
+        spew to console shouldn't disrupt the leak information table we print next.
+    """
+    self.server.stop()
+
+  def getLogFilePath(self, logFile):
+    """ return the log file path relative to the device we are testing on, in most cases 
+        it will be the full path on the local system
+    """
+    return self.getFullPath(logFile)
+
+  def buildProfile(self, options):
+    """ create the profile and add optional chrome bits and files if requested """
+    self.automation.initializeProfile(self.PROFILE_DIRECTORY, options.extraPrefs)
+    manifest = self.addChromeToProfile(options)
+    self.copyExtraFilesToProfile(options)
+    return manifest
+
+  def buildBrowserEnv(self, options):
+    """ build the environment variables for the specific test and operating system """
     browserEnv = self.automation.environment(xrePath = options.xrePath)
 
     # These variables are necessary for correct application startup; change
@@ -324,82 +366,20 @@ class Mochitest(object):
       ix = v.find("=")
       if ix <= 0:
         print "Error: syntax error in --setenv=" + v
-        return 1
+        return None
       browserEnv[v[:ix]] = v[ix + 1:]
-
-    self.automation.initializeProfile(self.PROFILE_DIRECTORY, options.extraPrefs)
-    manifest = self.addChromeToProfile(options)
-    self.copyExtraFilesToProfile(options)
-    server = MochitestServer(self.automation, options, self.PROFILE_DIRECTORY)
-    server.start()
-
-    # If we're lucky, the server has fully started by now, and all paths are
-    # ready, etc.  However, xpcshell cold start times suck, at least for debug
-    # builds.  We'll try to connect to the server for awhile, and if we fail,
-    # we'll try to kill the server and exit with an error.
-    server.ensureReady(self.SERVER_STARTUP_TIMEOUT)
-
-    # URL parameters to test URL:
-    #
-    # autorun -- kick off tests automatically
-    # closeWhenDone -- runs quit.js after tests
-    # logFile -- logs test run to an absolute path
-    # totalChunks -- how many chunks to split tests into
-    # thisChunk -- which chunk to run
-    # timeout -- per-test timeout in seconds
-    #
-  
-    # consoleLevel, fileLevel: set the logging level of the console and
-    # file logs, if activated.
-    # <http://mochikit.com/doc/html/MochiKit/Logging.html>
-
-    testURL = self.TESTS_URL + options.testPath
-    urlOpts = []
-    if options.chrome:
-      testURL = self.CHROMETESTS_URL
-      if options.testPath:
-        urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
-    elif options.a11y:
-      testURL = self.A11YTESTS_URL
-      if options.testPath:
-        urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
-    elif options.browserChrome:
-      testURL = "about:blank"
-
-    # allow relative paths for logFile
-    if options.logFile:
-      options.logFile = self.getFullPath(options.logFile)
-    if options.browserChrome:
-      self.makeTestConfig(options)
-    else:
-      if options.autorun:
-        urlOpts.append("autorun=1")
-      if options.timeout:
-        urlOpts.append("timeout=%d" % options.timeout)
-      if options.closeWhenDone:
-        urlOpts.append("closeWhenDone=1")
-      if options.logFile:
-        urlOpts.append("logFile=" + encodeURIComponent(options.logFile))
-        urlOpts.append("fileLevel=" + encodeURIComponent(options.fileLevel))
-      if options.consoleLevel:
-        urlOpts.append("consoleLevel=" + encodeURIComponent(options.consoleLevel))
-      if options.totalChunks:
-        urlOpts.append("totalChunks=%d" % options.totalChunks)
-        urlOpts.append("thisChunk=%d" % options.thisChunk)
-      if options.chunkByDir:
-        urlOpts.append("chunkByDir=%d" % options.chunkByDir)
-      if options.shuffle:
-        urlOpts.append("shuffle=1")
-      if len(urlOpts) > 0:
-        testURL += "?" + "&".join(urlOpts)
 
     browserEnv["XPCOM_MEM_BLOAT_LOG"] = self.LEAK_REPORT_FILE
 
     if options.fatalAssertions:
       browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
 
-    # run once with -silent to let the extension manager do its thing
-    # and then exit the app
+    return browserEnv
+
+  def runExtensionRegistration(self, options, browserEnv):
+    """ run once with -silent to let the extension manager do its thing
+        and then exit the app
+    """
     self.automation.log.info("INFO | runtests.py | Performing extension manager registration: start.\n")
     # Don't care about this |status|: |runApp()| reporting it should be enough.
     status = self.automation.runApp(None, browserEnv, options.app,
@@ -409,6 +389,69 @@ class Mochitest(object):
                                 symbolsPath=options.symbolsPath)
     # We don't care to call |processLeakLog()| for this step.
     self.automation.log.info("\nINFO | runtests.py | Performing extension manager registration: end.")
+
+  def buildURLOptions(self, options):
+    """ Add test control options from the command line to the url 
+
+        URL parameters to test URL:
+
+        autorun -- kick off tests automatically
+        closeWhenDone -- runs quit.js after tests
+        logFile -- logs test run to an absolute path
+        totalChunks -- how many chunks to split tests into
+        thisChunk -- which chunk to run
+        timeout -- per-test timeout in seconds
+    """
+  
+    # allow relative paths for logFile
+    if options.logFile:
+      options.logFile = self.getFullPath(options.logFile)
+    if options.browserChrome:
+      self.makeTestConfig(options)
+    else:
+      if options.autorun:
+        self.urlOpts.append("autorun=1")
+      if options.timeout:
+        self.urlOpts.append("timeout=%d" % options.timeout)
+      if options.closeWhenDone:
+        self.urlOpts.append("closeWhenDone=1")
+      if options.logFile:
+        self.urlOpts.append("logFile=" + encodeURIComponent(options.logFile))
+        self.urlOpts.append("fileLevel=" + encodeURIComponent(options.fileLevel))
+      if options.consoleLevel:
+        self.urlOpts.append("consoleLevel=" + encodeURIComponent(options.consoleLevel))
+      if options.totalChunks:
+        self.urlOpts.append("totalChunks=%d" % options.totalChunks)
+        self.urlOpts.append("thisChunk=%d" % options.thisChunk)
+      if options.chunkByDir:
+        self.urlOpts.append("chunkByDir=%d" % options.chunkByDir)
+      if options.shuffle:
+        self.urlOpts.append("shuffle=1")
+
+  def cleanup(self, manifest):
+    """ remove temporary files and profile """
+    os.remove(manifest)
+    shutil.rmtree(self.PROFILE_DIRECTORY)
+
+  def runTests(self, options):
+    """ Prepare, configure, run tests and cleanup """
+    debuggerInfo = getDebuggerInfo(self.oldcwd, options.debugger, options.debuggerArgs,
+                      options.debuggerInteractive);
+
+    browserEnv = self.buildBrowserEnv(options)
+    if (browserEnv == None):
+      return 1
+
+    manifest = self.buildProfile(options)
+    self.startWebServer(options)
+
+
+    testURL = self.buildTestPath(options)
+    self.buildURLOptions(options)
+    if (len(self.urlOpts) > 0):
+      testURL += "?" + "&".join(self.urlOpts)
+
+    self.runExtensionRegistration(options, browserEnv)
 
     # Remove the leak detection file so it can't "leak" to the tests run.
     # The file is not there if leak logging was not enabled in the application build.
@@ -425,7 +468,7 @@ class Mochitest(object):
     self.automation.log.info("INFO | runtests.py | Running tests: start.\n")
     status = self.automation.runApp(testURL, browserEnv, options.app,
                                 self.PROFILE_DIRECTORY, options.browserArgs,
-                                runSSLTunnel = True,
+                                runSSLTunnel = self.runSSLTunnel,
                                 utilityPath = options.utilityPath,
                                 xrePath = options.xrePath,
                                 certPath=options.certPath,
@@ -433,18 +476,11 @@ class Mochitest(object):
                                 symbolsPath=options.symbolsPath,
                                 timeout = timeout)
 
-    # Server's no longer needed, and perhaps more importantly, anything it might
-    # spew to console shouldn't disrupt the leak information table we print next.
-    server.stop()
-
+    self.stopWebServer()
     processLeakLog(self.LEAK_REPORT_FILE, options.leakThreshold)
     self.automation.log.info("\nINFO | runtests.py | Running tests: end.")
 
-    # delete the profile and manifest
-    os.remove(manifest)
-
-    # hanging due to non-halting threads is no fun; assume we hit the errors we
-    # were going to hit already and exit.
+    self.cleanup(manifest)
     return status
 
   def makeTestConfig(self, options):
@@ -500,10 +536,8 @@ toolbar#nav-bar {
     if self.automation.IS_WIN32:
       chrometestDir = "file:///" + chrometestDir.replace("\\", "/")
 
-
-    (path, leaf) = os.path.split(options.app)
-    manifest = os.path.join(path, "chrome", "mochikit.manifest")
-    manifestFile = open(manifest, "w")
+    temp_file = os.path.join(tempfile.mkdtemp(), "mochikit.manifest")
+    manifestFile = open(temp_file, "w")
     manifestFile.write("content mochikit " + chrometestDir + " contentaccessible=yes\n")
 
     if options.browserChrome:
@@ -512,6 +546,13 @@ overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-t
 """)
     manifestFile.close()
 
+    return self.installChromeFile(temp_file, options)
+
+  def installChromeFile(self, filename, options):
+    (p, file) = os.path.split(filename)
+    (path, leaf) = os.path.split(options.app)
+    manifest = os.path.join(path, "chrome", file)
+    shutil.copy(filename, manifest)
     return manifest
 
   def copyExtraFilesToProfile(self, options):

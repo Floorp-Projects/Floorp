@@ -478,7 +478,10 @@ nsHttpServer.prototype =
     {
       var socket = new ServerSocket(this._port,
                                     true, // loopback only
-                                    -1);  // default number of pending connections
+                                    20);  // the listen queue needs to be
+                                          // larger than the browser's max
+                                          // number of concurrent connections
+                                          // (presently 15).
 
       dumpn(">>> listening on port " + socket.port);
       socket.asyncListen(this);

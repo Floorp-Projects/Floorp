@@ -41,12 +41,6 @@
 #//
 #//------------------------------------------------------------------------
 
-!if "$(MOZ_BITS)" == "16"
-!ifndef MOZ_DEBUG
-OPTIMIZER=-Os -UDEBUG -DNDEBUG
-!endif
-!endif
-
 #//------------------------------------------------------------------------
 #//
 #// Specify the depth of the current directory relative to the
@@ -64,7 +58,7 @@ MAKE_OBJ_TYPE=EXE
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-LIBNAME=dbm$(MOZ_BITS)
+LIBNAME=dbm32
 PDBFILE=$(LIBNAME).pdb
 
 #//------------------------------------------------------------------------
