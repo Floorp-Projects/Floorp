@@ -399,8 +399,13 @@ void InstallSignalHandlers(const char *ProgramName)
 
 #if defined(_M_IX86) || defined(_M_X64)
 
+#ifdef _M_X64
+#define X87CW(ctx) (ctx)->FltSave.ControlWord
+#define X87SW(ctx) (ctx)->FltSave.StatusWord
+#else
 #define X87CW(ctx) (ctx)->FloatSave.ControlWord
 #define X87SW(ctx) (ctx)->FloatSave.StatusWord
+#endif
 
 /*
  * SSE traps raise these exception codes, which are defined in internal NT headers

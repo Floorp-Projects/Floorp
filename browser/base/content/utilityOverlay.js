@@ -143,24 +143,19 @@ function whereToOpenLink( e, ignoreButton, ignoreAlt )
   // Don't do anything special with right-mouse clicks.  They're probably clicks on context menu items.
 
 #ifdef XP_MACOSX
-  if (meta || (middle && middleUsesTabs)) {
+  if (meta || (middle && middleUsesTabs))
 #else
-  if (ctrl || (middle && middleUsesTabs)) {
+  if (ctrl || (middle && middleUsesTabs))
 #endif
-    if (shift)
-      return "tabshifted";
-    else
-      return "tab";
-  }
-  else if (alt) {
+    return shift ? "tabshifted" : "tab";
+
+  if (alt)
     return "save";
-  }
-  else if (shift || (middle && !middleUsesTabs)) {
+
+  if (shift || (middle && !middleUsesTabs))
     return "window";
-  }
-  else {
-    return "current";
-  }
+
+  return "current";
 }
 
 /* openUILinkIn opens a URL in a place specified by the parameter |where|.

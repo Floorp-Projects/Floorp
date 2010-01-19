@@ -38,8 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsAccessibleEventData_H_
-#define _nsAccessibleEventData_H_
+#ifndef _nsAccEvent_H_
+#define _nsAccEvent_H_
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -105,6 +105,7 @@ public:
   EEventRule GetEventRule() const { return mEventRule; }
   PRBool IsAsync() const { return mIsAsync; }
   PRBool IsFromUserInput() const { return mIsFromUserInput; }
+  nsIAccessible* GetAccessible() const { return mAccessible; }
 
   static void GetLastEventAttributes(nsIDOMNode *aNode,
                                      nsIPersistentProperties *aAttributes);

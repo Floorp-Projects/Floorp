@@ -6167,7 +6167,9 @@ BCPaintBorderIterator::BCPaintBorderIterator(nsTableFrame* aTable)
 
   // Get the ordered row groups
   mTable->OrderRowGroups(mRowGroups);
-
+  // initialize to a non existing index
+  mRepeatedHeaderRowIndex = -99;
+  
   mTableIsLTR = mTable->GetStyleVisibility()->mDirection ==
                    NS_STYLE_DIRECTION_LTR;
   mColInc = (mTableIsLTR) ? 1 : -1;

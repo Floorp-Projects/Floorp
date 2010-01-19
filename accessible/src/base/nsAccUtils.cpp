@@ -42,7 +42,7 @@
 #include "nsIAccessibleStates.h"
 #include "nsIAccessibleTypes.h"
 
-#include "nsAccessibleEventData.h"
+#include "nsAccEvent.h"
 #include "nsHyperTextAccessible.h"
 #include "nsHTMLTableAccessible.h"
 #include "nsDocAccessible.h"
@@ -346,21 +346,6 @@ nsAccUtils::HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom)
         return PR_FALSE;
   }
   return PR_TRUE;
-}
-
-nsresult
-nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
-                         PRBool aIsAsynch)
-{
-  NS_ENSURE_ARG(aAccessible);
-
-  nsRefPtr<nsAccessible> acc(nsAccUtils::QueryAccessible(aAccessible));
-
-  nsCOMPtr<nsIAccessibleEvent> event =
-    new nsAccEvent(aEventType, aAccessible, aIsAsynch);
-  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-
-  return acc->FireAccessibleEvent(event);
 }
 
 PRBool

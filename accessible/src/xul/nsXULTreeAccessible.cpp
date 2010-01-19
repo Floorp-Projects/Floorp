@@ -570,9 +570,9 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
       nsRefPtr<nsAccessible> accessible =
         nsAccUtils::QueryAccessible(accessNode);
 
-      nsCOMPtr<nsIAccessibleEvent> event =
+      nsRefPtr<nsAccEvent> event =
         new nsAccEvent(nsIAccessibleEvent::EVENT_HIDE, accessible, PR_FALSE);
-      FireAccessibleEvent(event);
+      nsEventShell::FireEvent(event);
 
       accessible->Shutdown();
 
@@ -683,7 +683,7 @@ nsXULTreeAccessible::TreeViewChanged()
   // Fire only notification destroy/create events on accessible tree to lie to
   // AT because it should be expensive to fire destroy events for each tree item
   // in cache.
-  nsCOMPtr<nsIAccessibleEvent> eventDestroy =
+  nsRefPtr<nsAccEvent> eventDestroy =
     new nsAccEvent(nsIAccessibleEvent::EVENT_HIDE, this, PR_FALSE);
   if (!eventDestroy)
     return;
@@ -694,7 +694,7 @@ nsXULTreeAccessible::TreeViewChanged()
 
   mTree->GetView(getter_AddRefs(mTreeView));
 
-  nsCOMPtr<nsIAccessibleEvent> eventCreate =
+  nsRefPtr<nsAccEvent> eventCreate =
     new nsAccEvent(nsIAccessibleEvent::EVENT_SHOW, this, PR_FALSE);
   if (!eventCreate)
     return;
@@ -1274,7 +1274,7 @@ nsXULTreeItemAccessible::RowInvalidated(PRInt32 aStartColIdx,
   GetName(name);
 
   if (name != mCachedName) {
-    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
+    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
     mCachedName = name;
   }
 }

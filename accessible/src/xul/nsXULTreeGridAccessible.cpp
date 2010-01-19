@@ -1252,11 +1252,10 @@ nsXULTreeGridCellAccessible::CellInvalidated()
     mTreeView->GetCellValue(mRow, mColumn, textEquiv);
     if (mCachedTextEquiv != textEquiv) {
       PRBool isEnabled = textEquiv.EqualsLiteral("true");
-      nsCOMPtr<nsIAccessibleEvent> accEvent =
+      nsRefPtr<nsAccEvent> accEvent =
         new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_CHECKED,
                                   PR_FALSE, isEnabled);
-      if (accEvent)
-        FireAccessibleEvent(accEvent);
+      nsEventShell::FireEvent(accEvent);
 
       mCachedTextEquiv = textEquiv;
     }
@@ -1266,7 +1265,7 @@ nsXULTreeGridCellAccessible::CellInvalidated()
 
   mTreeView->GetCellText(mRow, mColumn, textEquiv);
   if (mCachedTextEquiv != textEquiv) {
-    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
+    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
     mCachedTextEquiv = textEquiv;
   }
 }

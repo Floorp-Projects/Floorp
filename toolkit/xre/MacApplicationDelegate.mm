@@ -159,6 +159,8 @@ SetupMacApplicationDelegate()
 
   // Take advantage of the existing "command line" code for Macs.
   nsMacCommandLine& cmdLine = nsMacCommandLine::GetMacCommandLine();
+  // URLWithString expects our string to be a legal URL with percent escapes.
+  filename = [filename stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
   // We don't actually care about Mac filetypes in this context, just pass a placeholder.
   cmdLine.HandleOpenOneDoc((CFURLRef)[NSURL URLWithString:filename], 'abcd');
 

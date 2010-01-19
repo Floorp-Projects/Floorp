@@ -1536,10 +1536,6 @@ var gAutoHideTabbarPrefListener = {
 
 function initializeSanitizer()
 {
-  // Always use the label with ellipsis
-  var label = gNavigatorBundle.getString("sanitizeWithPromptLabel2");
-  document.getElementById("sanitizeItem").setAttribute("label", label);
-
   const kDidSanitizeDomain = "privacy.sanitize.didShutdownSanitize";
   if (gPrefService.prefHasUserValue(kDidSanitizeDomain)) {
     gPrefService.clearUserPref(kDidSanitizeDomain);

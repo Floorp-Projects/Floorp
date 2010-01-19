@@ -679,15 +679,17 @@ nsLayoutUtils::GetNearestScrollableFrameForDirection(nsIFrame* aFrame,
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
     if (scrollableFrame) {
       nsPresContext::ScrollbarStyles ss = scrollableFrame->GetScrollbarStyles();
-      nsMargin scrollbarSizes = scrollableFrame->GetActualScrollbarSizes();
+      PRUint32 scrollbarVisibility = scrollableFrame->GetScrollbarVisibility();
       nsRect scrollRange = scrollableFrame->GetScrollRange();
       // Require visible scrollbars or something to scroll to in
       // the given direction.
       if (aDirection == eVertical ?
           (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN &&
-           (scrollbarSizes.LeftRight() || scrollRange.height > 0)) :
+           ((scrollbarVisibility & nsIScrollableFrame::VERTICAL) ||
+            scrollRange.height > 0)) :
           (ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN &&
-           (scrollbarSizes.TopBottom() || scrollRange.width > 0)))
+           ((scrollbarVisibility & nsIScrollableFrame::HORIZONTAL) ||
+            scrollRange.width > 0)))
         return scrollableFrame;
     }
   }
