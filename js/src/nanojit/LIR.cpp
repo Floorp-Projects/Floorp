@@ -2148,8 +2148,8 @@ namespace nanojit
             LirReader br(frag->lastIns);
             LirFilter* lir = &br;
             if (optimize) {
-                StackFilter sf(lir, alloc, frag->lirbuf, frag->lirbuf->sp, frag->lirbuf->rp);
-                lir = &sf;
+                StackFilter* sf = new (alloc) StackFilter(lir, alloc, frag->lirbuf, frag->lirbuf->sp, frag->lirbuf->rp);
+                lir = sf;
             }
             live(lir, alloc, frag, logc);
         })
@@ -2198,8 +2198,9 @@ namespace nanojit
 
         // STACKFILTER
         if (optimize) {
-            StackFilter stackfilter(lir, alloc, frag->lirbuf, frag->lirbuf->sp, frag->lirbuf->rp);
-            lir = &stackfilter;
+            StackFilter* stackfilter = new (alloc) StackFilter(lir, alloc, frag->lirbuf,
+                                                               frag->lirbuf->sp, frag->lirbuf->rp);
+            lir = stackfilter;
         }
 
         verbose_only( if (assm->_logc->lcbits & LC_AfterSF) {
