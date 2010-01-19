@@ -577,7 +577,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     self.log.info("Can't trigger Breakpad, just killing process")
     proc.kill()
 
-  def waitForFinish(self, proc, utilityPath, timeout, maxTime):
+  def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime):
     """ Look for timeout or crashes and return the status after the process terminates """
     stackFixerProcess = None
     didTimeout = False
@@ -730,7 +730,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
                  stderr = subprocess.STDOUT)
     self.log.info("INFO | automation.py | Application pid: %d", proc.pid)
 
-    status = self.waitForFinish(proc, utilityPath, timeout, maxTime)
+    status = self.waitForFinish(proc, utilityPath, timeout, maxTime, startTime)
     self.log.info("INFO | automation.py | Application ran for: %s", str(datetime.now() - startTime))
 
     # Do a final check for zombie child processes.
