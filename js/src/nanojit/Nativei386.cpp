@@ -312,7 +312,7 @@ namespace nanojit
     {
         Register r;
         RegAlloc &regs = _allocator;
-    #ifdef _MSC_VER
+    #ifdef WIN32
         _asm
         {
             mov ecx, regs
@@ -326,7 +326,7 @@ namespace nanojit
             "btr    %%eax, %2\n\t"
             "movl   %%eax, %0\n\t"
             : "=m"(r) : "m"(set), "m"(regs.free) : "%eax", "memory" );
-    #endif /* _MSC_VER */
+    #endif /* WIN32 */
         return r;
     }
 
