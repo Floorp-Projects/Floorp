@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,16 +15,16 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- *   Mozilla Corp
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Andreas Gal <gal@uci.edu>
+ *   Alexander Surkov <surkov.alexander@gmail.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,37 +36,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || defined(__i386) || defined(__amd64__)
+#include "nsEventShell.h"
 
-/*
- * x87 FPU Control Word:
- *
- * 0 -> IM  Invalid Operation
- * 1 -> DM  Denormalized Operand
- * 2 -> ZM  Zero Divide
- * 3 -> OM  Overflow
- * 4 -> UM  Underflow
- * 5 -> PM  Precision
- */
-#define FPU_EXCEPTION_MASK 0x3f
+#include "nsAccessible.h"
 
-/*
- * x86 FPU Status Word:
- *
- * 0..5  ->      Exception flags  (see x86 FPU Control Word)
- * 6     -> SF   Stack Fault
- * 7     -> ES   Error Summary Status
- */
-#define FPU_STATUS_FLAGS 0xff
+void
+nsEventShell::FireEvent(nsAccEvent *aEvent)
+{
+  if (!aEvent)
+    return;
 
-/*
- * MXCSR Control and Status Register:
- *
- * 0..5  ->      Exception flags (see x86 FPU Control Word)
- * 6     -> DAZ  Denormals Are Zero
- * 7..12 ->      Exception mask (see x86 FPU Control Word)
- */
-#define SSE_STATUS_FLAGS   FPU_EXCEPTION_MASK
-#define SSE_EXCEPTION_MASK (FPU_EXCEPTION_MASK << 7)
+  nsRefPtr<nsAccessible> acc =
+    nsAccUtils::QueryObject<nsAccessible>(aEvent->GetAccessible());
+  NS_ENSURE_TRUE(acc,);
 
-#endif
+  acc->HandleAccEvent(aEvent);
+}
+
+void
+nsEventShell::FireEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
+                        PRBool aIsAsynch)
+{
+  NS_ENSURE_TRUE(aAccessible,);
+
+  nsRefPtr<nsAccEvent> event = new nsAccEvent(aEventType, aAccessible,
+                                              aIsAsynch);
+
+  FireEvent(event);
+}

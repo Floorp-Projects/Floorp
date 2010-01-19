@@ -46,7 +46,7 @@ LIBRARY_NAME	= mozdbm_s
 LIB_IS_C_ONLY	= 1
 
 ifeq ($(OS_ARCH),WINNT)
-LIBRARY_NAME	= dbm$(MOZ_BITS)
+LIBRARY_NAME	= dbm32
 endif
 
 CSRCS		= \

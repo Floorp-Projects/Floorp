@@ -64,6 +64,8 @@ quartz-first-stop.patch: return the first stop for negative positions on the gra
 
 quartz-glyph-extents.patch: bug 534260; work around incorrect glyph extents returned by quartz for anomalous empty glyphs
 
+premultiply-alpha-solid-gradients.patch: bug 539165; multiply the solid color by the alpha component before using it for a solid surface
+
 ==== pixman patches ====
 
 pixman-neon.patch: add ARM NEON optimized compositing functions

@@ -2262,8 +2262,17 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 
 	    if (src->n_stops)
 	    {
+		cairo_color_t color;
+
+		/* multiply by alpha */
+		_cairo_color_init_rgba (&color,
+			src->stops->color.red,
+			src->stops->color.green,
+			src->stops->color.blue,
+			src->stops->color.alpha);
+
 		_cairo_pattern_init_solid (&solid,
-					   &src->stops->color,
+					   &color,
 					   CAIRO_CONTENT_COLOR_ALPHA);
 	    }
 	    else
@@ -2295,9 +2304,17 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 	    }
 	    if (i == src->n_stops) {
 		cairo_solid_pattern_t solid;
+		cairo_color_t color;
+
+		/* multiply by alpha */
+		_cairo_color_init_rgba (&color,
+			src->stops->color.red,
+			src->stops->color.green,
+			src->stops->color.blue,
+			src->stops->color.alpha);
 
 		_cairo_pattern_init_solid (&solid,
-					   &src->stops->color,
+					   &color,
 					   CAIRO_CONTENT_COLOR_ALPHA);
 
 		status =
