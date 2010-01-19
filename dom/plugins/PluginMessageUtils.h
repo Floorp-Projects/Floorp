@@ -46,7 +46,6 @@
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
 #include "nsStringGlue.h"
-#include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"
 
@@ -64,12 +63,6 @@ typedef intptr_t NPRemoteIdentifier;
 } /* namespace ipc */
 
 namespace plugins {
-
-enum ScriptableObjectType
-{
-  LocalObject,
-  Proxy
-};
 
 extern PRLogModuleInfo* gPluginLog;
 
