@@ -166,10 +166,10 @@
     <key id="key_quit" key="q" modifiers="accel" command="cmd_quit"/>
     <key id="key_menu" keycode="VK_F4" command="cmd_menu"/>
     <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
-    <key id="key_zoomin2" keycode="VK_F7" command="cmd_zoomin"/>
-    <key id="key_zoomout2" keycode="VK_F8" command="cmd_zoomout"/>
 #else
     <key id="key_quit" keycode="VK_F4" command="cmd_quit"/>
+    <key id="key_zoomin2" keycode="VK_F1" command="cmd_zoomin"/>
+    <key id="key_zoomout2" keycode="VK_F2" command="cmd_zoomout"/>
 #endif
 
     <!-- tabs -->
