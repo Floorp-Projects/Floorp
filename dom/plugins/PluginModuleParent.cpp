@@ -160,7 +160,7 @@ PluginModuleParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
 
 NPError
 PluginModuleParent::NPP_Destroy(NPP instance,
-                                NPSavedData** /*saved*/)
+                                NPSavedData** save)
 {
     // FIXME/cjones:
     //  (1) send a "destroy" message to the child
@@ -175,14 +175,15 @@ PluginModuleParent::NPP_Destroy(NPP instance,
     if (!parentInstance)
         return NPERR_NO_ERROR;
 
-    NPError retval = parentInstance->Destroy();
+    parentInstance->Destroy();
+
+    NPError prv;
+    if (!PPluginInstanceParent::Call__delete__(parentInstance, &prv)) {
+        prv = NPERR_GENERIC_ERROR;
+    }
     instance->pdata = nsnull;
 
-    if (!PluginInstanceParent::Call__delete__(parentInstance)) {
-        NS_ERROR("Failed to delete instance!");
-    }
-
-    return retval;
+    return prv;
 }
 
 bool
@@ -640,11 +641,6 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
     PluginInstanceParent* parentInstance =
         new PluginInstanceParent(this, instance, mNPNIface);
 
-    if (!parentInstance->Init()) {
-        delete parentInstance;
-        return NS_ERROR_FAILURE;
-    }
-
     instance->pdata = parentInstance;
 
     if (!CallPPluginInstanceConstructor(parentInstance,
@@ -661,8 +657,9 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
     }
 
     if (*error != NPERR_NO_ERROR) {
-        NPP_Destroy(instance, 0);
-        return *error;
+        PPluginInstanceParent::Call__delete__(parentInstance, error);
+        instance->pdata = nsnull;
+        return NS_ERROR_FAILURE;
     }
 
     return NS_OK;

@@ -47,8 +47,7 @@
 
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
-#include "nsDataHashtable.h"
-#include "nsHashKeys.h"
+#include "nsTArray.h"
 #include "nsRect.h"
 
 namespace mozilla {
@@ -70,8 +69,7 @@ public:
 
     virtual ~PluginInstanceParent();
 
-    bool Init();
-    NPError Destroy();
+    void Destroy();
 
     virtual PPluginScriptableObjectParent*
     AllocPPluginScriptableObject();
@@ -192,13 +190,6 @@ public:
         return mNPNIface;
     }
 
-    bool
-    RegisterNPObjectForActor(NPObject* aObject,
-                             PluginScriptableObjectParent* aActor);
-
-    void
-    UnregisterNPObject(NPObject* aObject);
-
     PluginScriptableObjectParent*
     GetActorForNPObject(NPObject* aObject);
 
@@ -219,7 +210,7 @@ private:
     const NPNetscapeFuncs* mNPNIface;
     NPWindowType mWindowType;
 
-    nsDataHashtable<nsVoidPtrHashKey, PluginScriptableObjectParent*> mScriptableObjects;
+    nsTArray<nsAutoPtr<PluginScriptableObjectParent> > mScriptableObjects;
 
 #if defined(OS_WIN)
 private:
