@@ -51,7 +51,8 @@ const PRUint32 sNumSlots = 2;
 JSFastNative sEvalNative = nsnull;
 
 const PRUint32 FLAG_RESOLVING = 0x1;
-const PRUint32 LAST_FLAG = FLAG_RESOLVING;
+const PRUint32 FLAG_SOW = 0x2;
+const PRUint32 LAST_FLAG = FLAG_SOW;
 
 const PRUint32 sSecMgrSetProp = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
 const PRUint32 sSecMgrGetProp = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
@@ -267,7 +268,9 @@ CreateWrapperFromType(JSContext *cx, JSObject *scope, XPCWrappedNative *wn,
         return JS_FALSE;
       }
     } else {
-      // TODO Write me!
+      if (!SystemOnlyWrapper::MakeSOW(cx, JSVAL_TO_OBJECT(*vp))) {
+        return JS_FALSE;
+      }
     }
   }
 
