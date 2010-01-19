@@ -177,12 +177,60 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     return true;
 }
 
+#if defined(OS_LINUX)
+typedef void (*GObjectDisposeFn)(GObject*);
+
+static GObjectDisposeFn real_gtk_plug_dispose;
+
+static void
+undo_bogus_unref(gpointer data, GObject* object, gboolean is_last_ref) {
+    if (!is_last_ref) // recursion in g_object_ref
+        return;
+
+    g_object_ref(object);
+}
+
+static void
+wrap_gtk_plug_dispose(GObject* object) {
+    // Work around Flash Player bug described in bug 538914.
+    //
+    // This function is called during gtk_widget_destroy and/or before
+    // the object's last reference is removed.  A reference to the
+    // object is held during the call so the ref count should not drop
+    // to zero.  However, Flash Player tries to destroy the GtkPlug
+    // using g_object_unref instead of gtk_widget_destroy.  The
+    // reference that Flash is removing actually belongs to the
+    // GtkPlug.  During real_gtk_plug_dispose, the GtkPlug removes its
+    // reference.
+    //
+    // A toggle ref is added to prevent premature deletion of the object
+    // caused by Flash Player's extra unref, and to detect when there are
+    // unexpectedly no other references.
+    g_object_add_toggle_ref(object, undo_bogus_unref, NULL);
+    (*real_gtk_plug_dispose)(object);
+    g_object_remove_toggle_ref(object, undo_bogus_unref, NULL);
+}
+#endif
+
 bool
 PluginModuleChild::InitGraphics()
 {
     // FIXME/cjones: is this the place for this?
 #if defined(OS_LINUX)
     gtk_init(0, 0);
+
+    // GtkPlug is a static class so will leak anyway but this ref makes sure.
+    gpointer gtk_plug_class = g_type_class_ref(GTK_TYPE_PLUG);
+    // The dispose method is a good place to hook into the destruction process
+    // because the reference count should be 1 the last time dispose is
+    // called.  (Toggle references wouldn't detect if the reference count
+    // might be higher.)
+    GObjectDisposeFn* dispose = &G_OBJECT_CLASS(gtk_plug_class)->dispose;
+
+    NS_ABORT_IF_FALSE(*dispose != wrap_gtk_plug_dispose,
+                      "InitGraphics called twice");
+    real_gtk_plug_dispose = *dispose;
+    *dispose = wrap_gtk_plug_dispose;
 #else
     // may not be necessary on all platforms
 #endif
