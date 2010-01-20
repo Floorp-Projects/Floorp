@@ -183,21 +183,14 @@ public:
 
     NPError NPP_SetWindow(const NPWindow* aWindow);
 
-    NPError NPP_GetValue(NPPVariable variable, void *ret_value);
-    NPError NPP_SetValue(NPNVariable variable, void *value)
-    {
-        PLUGIN_LOG_DEBUG_FUNCTION;
-        return 1;
-    }
+    NPError NPP_GetValue(NPPVariable variable, void* retval);
+    NPError NPP_SetValue(NPNVariable variable, void* value);
 
     NPError NPP_NewStream(NPMIMEType type, NPStream* stream,
                           NPBool seekable, uint16_t* stype);
     NPError NPP_DestroyStream(NPStream* stream, NPReason reason);
 
-    void NPP_Print(NPPrint* platformPrint)
-    {
-        PLUGIN_LOG_DEBUG_FUNCTION;
-    }
+    void NPP_Print(NPPrint* platformPrint);
 
     int16_t NPP_HandleEvent(void* event);
 

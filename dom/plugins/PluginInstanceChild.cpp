@@ -355,6 +355,17 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
 }
 
 bool
+PluginInstanceChild::AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value,
+                                                            NPError* result)
+{
+    // Use `long` instead of NPBool because Flash and other plugins read
+    // this as a word-size value instead of the 1-byte NPBool that it is.
+    long v = value;
+    *result = mPluginIface->setvalue(GetNPP(), NPNVprivateModeBool, &v);
+    return true;
+}
+
+bool
 PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
                                            int16_t* handled)
 {
