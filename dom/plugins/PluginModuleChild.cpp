@@ -382,9 +382,6 @@ namespace mozilla {
 namespace plugins {
 namespace child {
 
-// FIXME
-typedef void (*PluginThreadCallback)(void*);
-
 static NPError NP_CALLBACK
 _requestread(NPStream *pstream, NPByteRange *rangeList);
 
@@ -1328,24 +1325,6 @@ _poppopupsenabledstate(NPP aNPP)
     return false;
 }
 
-class AsyncCallRunnable : public nsRunnable
-{
-public:
-    AsyncCallRunnable(PluginThreadCallback aFunc, void* aUserData)
-        : mFunc(aFunc)
-        , mData(aUserData)
-    { }
-
-    NS_IMETHOD Run() {
-        mFunc(mData);
-        return NS_OK;
-    }
-
-private:
-    PluginThreadCallback mFunc;
-    void* mData;
-};
-
 void NP_CALLBACK
 _pluginthreadasynccall(NPP aNPP,
                        PluginThreadCallback aFunc,
@@ -1355,7 +1334,7 @@ _pluginthreadasynccall(NPP aNPP,
     if (!aFunc)
         return;
 
-    nsCOMPtr<nsIRunnable> e(new AsyncCallRunnable(aFunc, aUserData));
+    nsCOMPtr<nsIRunnable> e(new ChildAsyncCall(InstCast(aNPP), aFunc, aUserData));
     NS_DispatchToMainThread(e);
 }
 
@@ -1449,21 +1428,21 @@ _getauthenticationinfo(NPP npp, const char *protocol,
 }
 
 uint32_t NP_CALLBACK
-_scheduletimer(NPP instance, uint32_t interval, NPBool repeat,
+_scheduletimer(NPP npp, uint32_t interval, NPBool repeat,
                void (*timerFunc)(NPP npp, uint32_t timerID))
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
-    NS_NOTYETIMPLEMENTED("Implement me!");
-    return 0;
+
+    return InstCast(npp)->ScheduleTimer(interval, repeat, timerFunc);
 }
 
 void NP_CALLBACK
-_unscheduletimer(NPP instance, uint32_t timerID)
+_unscheduletimer(NPP npp, uint32_t timerID)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
-    NS_NOTYETIMPLEMENTED("Implement me!");
+    InstCast(npp)->UnscheduleTimer(timerID);
 }
 
 NPError NP_CALLBACK
