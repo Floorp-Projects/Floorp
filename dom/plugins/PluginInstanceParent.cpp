@@ -484,6 +484,27 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
     }
 }
 
+NPError
+PluginInstanceParent::NPP_SetValue(NPNVariable variable, void* value)
+{
+    switch (variable) {
+    case NPNVprivateModeBool:
+        NPError result;
+        if (!CallNPP_SetValue_NPNVprivateModeBool(*static_cast<NPBool*>(value),
+                                                  &result))
+            return NPERR_GENERIC_ERROR;
+
+        return result;
+
+    default:
+        NS_ERROR("Unhandled NPNVariable in NPP_SetValue");
+        PR_LOG(gPluginLog, PR_LOG_WARNING,
+               ("In PluginInstanceParent::NPP_SetValue: Unhandled NPNVariable %i (%s)",
+                (int) variable, NPNVariableToString(variable)));
+        return NPERR_GENERIC_ERROR;
+    }
+}
+
 int16_t
 PluginInstanceParent::NPP_HandleEvent(void* event)
 {
@@ -593,6 +614,13 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
         PPluginStreamParent::Call__delete__(sp, reason, false);
         return NPERR_NO_ERROR;
     }
+}
+
+void
+PluginInstanceParent::NPP_Print(NPPrint* platformPrint)
+{
+    // TODO: implement me
+    NS_ERROR("Not implemented");
 }
 
 PPluginScriptableObjectParent*
