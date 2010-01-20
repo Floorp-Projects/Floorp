@@ -42,7 +42,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = accessible
 
-DIRS	= attributes selectable tree
+DIRS	= attributes events selectable tree
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
@@ -91,18 +91,6 @@ _TEST_FILES =\
 		test_elm_listbox.xul \
 	$(warning   test_elm_media.html temporarily disabled) \
 		test_elm_plugin.html \
-		test_events_caretmove.html \
-	$(warning	test_events_coalescence.html temporarily disabled) \
-	$(warning	test_events_doc.html temporarily disabled) \
-		test_events_draganddrop.html \
-		test_events_flush.html \
-		test_events_focus.html \
-		test_events_focus.xul \
-		test_events_focusdoc.html \
-		test_events_mutation.html \
-		test_events_scroll.xul \
-		test_events_tree.xul \
-		test_events_valuechange.html \
 		test_invalidate_accessnode.html \
 		test_name.html \
 		test_name.xul \
