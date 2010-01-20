@@ -84,6 +84,9 @@ protected:
                                                     NPError* result);
 
     virtual bool
+    AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value, NPError* result);
+
+    virtual bool
     AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled);
 
     virtual bool
