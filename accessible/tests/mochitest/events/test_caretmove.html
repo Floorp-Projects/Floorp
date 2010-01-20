@@ -76,7 +76,7 @@
       testCaretOffset("p", -1);
 
       // test caret move events and caret offsets
-      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_TEXT_CARET_MOVED);
+      gQueue = new eventQueue(EVENT_TEXT_CARET_MOVED);
 
       var id = "textbox";
       gQueue.push(new synthFocus(id, new checker(5)));
