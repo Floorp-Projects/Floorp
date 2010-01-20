@@ -61,7 +61,7 @@ nsSVGBoolean::SetBaseValueString(const nsAString &aValueAsString,
   else if (aValueAsString.EqualsLiteral("false"))
     val = PR_FALSE;
   else
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_SYNTAX_ERR;
 
   mBaseVal = mAnimVal = val;
   return NS_OK;
