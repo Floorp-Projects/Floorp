@@ -3466,14 +3466,22 @@ FlushNativeStackFrame(JSContext* cx, unsigned callDepth, const JSTraceType* mp, 
                 JS_ASSERT(HAS_FUNCTION_CLASS(fp->calleeObject()));
                 JS_ASSERT(GET_FUNCTION_PRIVATE(cx, fp->callee()) == fp->fun);
 
-                if (fp->fun->flags & JSFUN_HEAVYWEIGHT) {
-                    // If fp is the trace entry frame, then these variables
-                    // have already been created and should not be changed.
+                if (FUN_INTERPRETED(fp->fun) && 
+                    (fp->fun->flags & JSFUN_HEAVYWEIGHT)) {
+                    // Iff these fields are NULL, then |fp| was synthesized on trace exit, so
+                    // we need to update the frame fields.
                     if (!fp->callobj)
                         fp->callobj = fp->scopeChain;
                     if (!fp->varobj)
                         fp->varobj = fp->scopeChain;
-                    fp->scopeChain->setPrivate(fp);
+
+                    // Iff scope chain's private is NULL, then |fp->scopeChain| was created
+                    // on trace for a call, so we set the private field now. (Call objects
+                    // that correspond to returned frames also have a NULL private, but such
+                    // a call object would not occur as the |scopeChain| member of a frame,
+                    // so we cannot be in that case here.)
+                    if (!fp->scopeChain->getPrivate())
+                        fp->scopeChain->setPrivate(fp);
                 }
                 fp->thisv = fp->argv[-1];
                 if (fp->flags & JSFRAME_CONSTRUCTING) // constructors always compute 'this'
