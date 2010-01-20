@@ -58,6 +58,8 @@ EXPORTS_NAMESPACES = mozilla mozilla/plugins
 EXPORTS_mozilla/plugins = \
   BrowserStreamChild.h \
   BrowserStreamParent.h \
+  ChildAsyncCall.h \
+  ChildTimer.h \
   NPEventOSX.h \
   NPEventWindows.h \
   NPEventX11.h \
@@ -93,6 +95,8 @@ EXPORT_LIBRARY = 1
 ENABLE_CXX_EXCEPTIONS = 1
 
 CPPSRCS = \
+  ChildAsyncCall.cpp \
+  ChildTimer.cpp \
   PluginMessageUtils.cpp \
   PluginInstanceChild.cpp \
   PluginInstanceParent.cpp \
