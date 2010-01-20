@@ -49,6 +49,8 @@
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
+#include "ChildAsyncCall.h"
+#include "ChildTimer.h"
 
 namespace mozilla {
 namespace plugins {
@@ -169,6 +171,9 @@ public:
 
     bool NotifyStream(StreamNotifyChild* notifyData, NPReason reason);
 
+    uint32_t ScheduleTimer(uint32_t interval, bool repeat, TimerFunc func);
+    void UnscheduleTimer(uint32_t id);
+
 private:
 
 #if defined(OS_WIN)
@@ -198,6 +203,10 @@ private:
     WNDPROC mPluginWndProc;
     HWND mPluginParentHWND;
 #endif
+
+    friend class ChildAsyncCall;
+    nsTArray<ChildAsyncCall*> mPendingAsyncCalls;
+    nsTArray<ChildTimer*> mTimers;
 
 #if defined(OS_WIN)
 private:
