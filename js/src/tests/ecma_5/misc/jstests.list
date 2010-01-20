@@ -1,2 +1,3 @@
 url-prefix ../../jsreftest.html?test=ecma_5/misc/
 script global-numeric-properties.js
+script redeclare-var-non-writable-property.js
