@@ -80,6 +80,8 @@ child:
   rpc NPP_GetValue_NPPVpluginScriptableNPObject()
     returns (nullable PPluginScriptableObject value, NPError result);
 
+  rpc NPP_SetValue_NPNVprivateModeBool(bool value) returns (NPError result);
+
   rpc NPP_HandleEvent(NPRemoteEvent event)
     returns (int16_t handled);
 
