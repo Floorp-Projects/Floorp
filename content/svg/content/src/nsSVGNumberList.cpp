@@ -145,7 +145,7 @@ nsSVGNumberList::SetValueString(const nsAString& aValue)
       nsCOMPtr<nsIDOMSVGNumber> number;
       NS_NewSVGNumber(getter_AddRefs(number), val);
       if (!number) {
-        rv = NS_ERROR_FAILURE;
+        rv = NS_ERROR_DOM_SYNTAX_ERR;
         break;
       }
       AppendElement(number);
