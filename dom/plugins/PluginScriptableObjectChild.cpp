@@ -697,6 +697,7 @@ PluginScriptableObjectChild::AnswerInvoke(const NPRemoteIdentifier& aId,
   }
 
   NPVariant result;
+  VOID_TO_NPVARIANT(result);
   bool success = mObject->_class->invoke(mObject, (NPIdentifier)aId,
                                          convertedArgs.Elements(), argCount,
                                          &result);
@@ -765,6 +766,7 @@ PluginScriptableObjectChild::AnswerInvokeDefault(const nsTArray<Variant>& aArgs,
   }
 
   NPVariant result;
+  VOID_TO_NPVARIANT(result);
   bool success = mObject->_class->invokeDefault(mObject,
                                                 convertedArgs.Elements(),
                                                 argCount, &result);
@@ -844,6 +846,7 @@ PluginScriptableObjectChild::AnswerGetProperty(const NPRemoteIdentifier& aId,
   }
 
   NPVariant result;
+  VOID_TO_NPVARIANT(result);
   if (!mObject->_class->getProperty(mObject, (NPIdentifier)aId, &result)) {
     *aResult = void_t();
     *aSuccess = false;
@@ -1001,6 +1004,7 @@ PluginScriptableObjectChild::AnswerConstruct(const nsTArray<Variant>& aArgs,
   }
 
   NPVariant result;
+  VOID_TO_NPVARIANT(result);
   bool success = mObject->_class->construct(mObject, convertedArgs.Elements(),
                                             argCount, &result);
 
