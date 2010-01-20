@@ -2844,8 +2844,17 @@ BEGIN_CASE(JSOP_DEFVAR)
     /* Lookup id in order to check for redeclaration problems. */
     id = ATOM_TO_JSID(atom);
     prop = NULL;
-    if (!js_CheckRedeclaration(cx, obj, id, attrs, &obj2, &prop))
-        goto error;
+    if (op == JSOP_DEFVAR) {
+        /*
+         * Redundant declaration of a |var|, even one for a non-writable
+         * property like |undefined| in ES5, does nothing.
+         */
+        if (!obj->lookupProperty(cx, id, &obj2, &prop))
+            goto error;
+    } else {
+        if (!js_CheckRedeclaration(cx, obj, id, attrs, &obj2, &prop))
+            goto error;
+    }
 
     /* Bind a variable only if it's not yet defined. */
     if (!prop) {
