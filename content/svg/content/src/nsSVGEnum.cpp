@@ -79,7 +79,7 @@ nsSVGEnum::SetBaseValueString(const nsAString& aValue,
 
   // only a warning since authors may mistype attribute values
   NS_WARNING("unknown enumeration key");
-  return NS_ERROR_FAILURE;
+  return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
 void
@@ -112,7 +112,7 @@ nsSVGEnum::SetBaseValue(PRUint16 aValue,
     }
     tmp++;
   }
-  return NS_ERROR_FAILURE;
+  return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
 nsresult
