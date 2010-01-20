@@ -353,9 +353,15 @@ nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
   if (!gHasActions && aAlertTextClickable)
     return NS_ERROR_FAILURE; // No good, fallback to XUL
 
-  mAlertTitle = NS_ConvertUTF16toUTF8(aAlertTitle);
-  mAlertText = NS_ConvertUTF16toUTF8(aAlertText);
+  // Workaround for a libnotify bug - blank titles aren't dealt with
+  // properly so we use a space
+  if (aAlertTitle.IsEmpty()) {
+    mAlertTitle = NS_LITERAL_CSTRING(" ");
+  } else {
+    mAlertTitle = NS_ConvertUTF16toUTF8(aAlertTitle);
+  }
 
+  mAlertText = NS_ConvertUTF16toUTF8(aAlertText);
   mAlertHasAction = aAlertTextClickable;
 
   mAlertListener = aAlertListener;
