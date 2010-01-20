@@ -201,6 +201,7 @@ ACCESSIBILITY_ATOM(value, "value")
   // Alphabetical list of object attributes
 ACCESSIBILITY_ATOM(checkable, "checkable")
 ACCESSIBILITY_ATOM(display, "display")
+ACCESSIBILITY_ATOM(eventFromInput, "event-from-input")
 ACCESSIBILITY_ATOM(textAlign, "text-align")
 ACCESSIBILITY_ATOM(textIndent, "text-indent")
 

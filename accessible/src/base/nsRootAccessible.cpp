@@ -393,7 +393,8 @@ nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
                                            nsIDOMNode *aNode,
                                            nsIDOMEvent *aFocusEvent,
                                            PRBool aForceEvent,
-                                           PRBool aIsAsynch)
+                                           PRBool aIsAsynch,
+                                           EIsFromUserInput aIsFromUserInput)
 {
   if (mCaretAccessible) {
     nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aFocusEvent));
@@ -480,7 +481,8 @@ nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
           menuBarAccessNode->GetDOMNode(getter_AddRefs(mCurrentARIAMenubar));
           if (mCurrentARIAMenubar) {
             nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENU_START,
-                                    menuBarAccessible);
+                                    menuBarAccessible, PR_FALSE,
+                                    aIsFromUserInput);
           }
         }
       }
@@ -489,7 +491,7 @@ nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   else if (mCurrentARIAMenubar) {
     nsCOMPtr<nsIAccessibleEvent> menuEndEvent =
       new nsAccEvent(nsIAccessibleEvent::EVENT_MENU_END, mCurrentARIAMenubar,
-                     PR_FALSE, nsAccEvent::eAllowDupes);
+                     PR_FALSE, aIsFromUserInput, nsAccEvent::eAllowDupes);
     if (menuEndEvent) {
       FireDelayedAccessibleEvent(menuEndEvent);
     }
@@ -535,7 +537,7 @@ nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
 
   FireDelayedAccessibleEvent(nsIAccessibleEvent::EVENT_FOCUS,
                              finalFocusNode, nsAccEvent::eRemoveDupes,
-                             aIsAsynch);
+                             aIsAsynch, aIsFromUserInput);
 
   return PR_TRUE;
 }
@@ -879,19 +881,18 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
       }
     }
     if (fireFocus) {
-      nsAccEvent::PrepareForEvent(aTargetNode, PR_TRUE);  // Always asynch, always from user input
-      FireAccessibleFocusEvent(accessible, aTargetNode, aEvent, PR_TRUE, PR_TRUE);
+      // Always asynch, always from user input.
+      FireAccessibleFocusEvent(accessible, aTargetNode, aEvent, PR_TRUE,
+                               PR_TRUE, eFromUserInput);
     }
   }
   else if (eventType.EqualsLiteral("DOMMenuBarActive")) {  // Always asynch, always from user input
-    nsAccEvent::PrepareForEvent(aTargetNode, PR_TRUE);
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENU_START,
-                            accessible, PR_TRUE);
+                            accessible, PR_TRUE, eFromUserInput);
   }
   else if (eventType.EqualsLiteral("DOMMenuBarInactive")) {  // Always asynch, always from user input
-    nsAccEvent::PrepareForEvent(aTargetNode, PR_TRUE);
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_MENU_END,
-                            accessible, PR_TRUE);
+                            accessible, PR_TRUE, eFromUserInput);
     FireCurrentFocusEvent();
   }
   else if (eventType.EqualsLiteral("ValueChange")) {

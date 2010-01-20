@@ -56,11 +56,11 @@ class nsIScrollableView;
 const PRUint32 kDefaultCacheSize = 256;
 
 #define NS_DOCACCESSIBLE_IMPL_CID                       \
-{  /* 9e97d7af-b20a-4a5a-a8d9-bcae0de0b7a2 */           \
-  0x9e97d7af,                                           \
-  0xb20a,                                               \
-  0x4a5a,                                               \
-  { 0xa8, 0xd9, 0xbc, 0xae, 0x0d, 0xe0, 0xb7, 0xa2 }    \
+{  /* 11d54d4f-f135-4b1b-80e4-6425a64f703c */           \
+  0x11d54d4f,                                           \
+  0xf135,                                               \
+  0x4b1b,                                               \
+  { 0x80, 0xe4, 0x64, 0x25, 0xa6, 0x4f, 0x70, 0x3c }    \
 }
 
 class nsDocAccessible : public nsHyperTextAccessibleWrap,
@@ -127,7 +127,8 @@ public:
    */
   nsresult FireDelayedAccessibleEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
                                       nsAccEvent::EEventRule aAllowDupes = nsAccEvent::eRemoveDupes,
-                                      PRBool aIsAsynch = PR_FALSE);
+                                      PRBool aIsAsynch = PR_FALSE,
+                                      EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
   /**
    * Fire accessible event after timeout.
@@ -236,19 +237,26 @@ protected:
                                     CharacterDataChangeInfo* aInfo,
                                     PRBool aIsInserted);
 
-    /**
-     * Create a text change event for a changed node
-     * @param aContainerAccessible, the first accessible in the container
-     * @param aChangeNode, the node that is being inserted or removed, or shown/hidden
-     * @param aAccessibleForChangeNode, the accessible for that node, or nsnull if none exists
-     * @param aIsInserting, is aChangeNode being created or shown (vs. removed or hidden)
-     */
-    already_AddRefed<nsAccEvent>
+  /**
+   * Create a text change event for a changed node.
+   *
+   * @param  aContainerAccessible  [in] the parent accessible for the node
+   * @param  aNode                 [in] the node that is being inserted or
+   *                                 removed, or shown/hidden
+   * @param  aAccessible           [in] the accessible for that node, or nsnull
+   *                                 if none exists
+   * @param  aIsInserting          [in] is aChangeNode being created or shown
+   *                                 (vs. removed or hidden)
+   * @param  aIsAsync              [in] whether casual change is async
+   * @param  aIsFromUserInput      [in] the event is known to be from user input
+   */
+  already_AddRefed<nsAccEvent>
     CreateTextChangeEventForNode(nsIAccessible *aContainerAccessible,
-                                 nsIDOMNode *aChangeNode,
-                                 nsIAccessible *aAccessibleForNode,
+                                 nsIDOMNode *aNode,
+                                 nsIAccessible *aAccessible,
                                  PRBool aIsInserting,
-                                 PRBool aIsAsynch);
+                                 PRBool aIsAsynch,
+                                 EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
   /**
    * Used to define should the event be fired on a delay.
@@ -262,19 +270,19 @@ protected:
    * Fire show/hide events for either the current node if it has an accessible,
    * or the first-line accessible descendants of the given node.
    *
-   * @param aDOMNode               [in] the given node
-   * @param aAvoidOnThisNode       [in] call with PR_TRUE the first time to
-   *                                prevent event firing on root node for change
-   * @param aEventType             [in] event type to fire an event
-   * @param aDelayedOrNormal       [in] whether to fire the event on a delay
-   * @param aIsAsyncChange         [in] whether casual change is async
-   * @param aForceIsFromUserInput  [in] the event is known to be from user input
+   * @param  aDOMNode          [in] the given node
+   * @param  aAvoidOnThisNode  [in] call with PR_TRUE the first time to
+   *                             prevent event firing on root node for change
+   * @param  aEventType        [in] event type to fire an event
+   * @param  aDelayedOrNormal  [in] whether to fire the event on a delay
+   * @param  aIsAsyncChange    [in] whether casual change is async
+   * @param  aIsFromUserInput  [in] the event is known to be from user input
    */
   nsresult FireShowHideEvents(nsIDOMNode *aDOMNode, PRBool aAvoidOnThisNode,
                               PRUint32 aEventType,
                               EEventFiringType aDelayedOrNormal,
                               PRBool aIsAsyncChange,
-                              PRBool aForceIsFromUserInput);
+                              EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
     /**
      * If the given accessible object is a ROLE_ENTRY, fire a value change event for it
