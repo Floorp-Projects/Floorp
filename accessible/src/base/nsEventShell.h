@@ -59,7 +59,22 @@ public:
    *                        this event is fired owing to is async.
    */
   static void FireEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
-                        PRBool aIsAsynch = PR_FALSE);
+                        PRBool aIsAsynch = PR_FALSE,
+                        EIsFromUserInput aIsFromUserInput = eAutoDetect);
+
+  /**
+   * Append 'event-from-input' object attribute if the accessible event has
+   * been fired just now for the given node.
+   *
+   * @param  aNode        [in] the DOM node
+   * @param  aAttributes  [in, out] the attributes
+   */
+  static void GetEventAttributes(nsIDOMNode *aNode,
+                                 nsIPersistentProperties *aAttributes);
+
+private:
+  static nsCOMPtr<nsIDOMNode> sEventTargetNode;
+  static PRBool sEventFromUserInput;
 };
 
 #endif
