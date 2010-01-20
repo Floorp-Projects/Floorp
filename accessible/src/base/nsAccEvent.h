@@ -54,6 +54,17 @@
 
 class nsIPresShell;
 
+// Constants used to point whether the event is from user input.
+enum EIsFromUserInput
+{
+  // eNoUserInput: event is not from user input
+  eNoUserInput = 0,
+  // eFromUserInput: event is from user input
+  eFromUserInput = 1,
+  // eAutoDetect: the value should be obtained from event state manager
+  eAutoDetect = -1
+};
+
 #define NS_ACCEVENT_IMPL_CID                            \
 {  /* 39bde096-317e-4294-b23b-4af4a9b283f7 */           \
   0x39bde096,                                           \
@@ -73,7 +84,7 @@ public:
      //    This event will always be emitted.
      eAllowDupes,
      // eCoalesceFromSameSubtree : For events of the same type from the same
-     //    subtree or the same node, only the umbrelle event on the ancestor
+     //    subtree or the same node, only the umbrella event on the ancestor
      //    will be emitted.
      eCoalesceFromSameSubtree,
      // eRemoveDupes : For repeat events, only the newest event in queue
@@ -81,17 +92,19 @@ public:
      eRemoveDupes,
      // eDoNotEmit : This event is confirmed as a duplicate, do not emit it.
      eDoNotEmit
-   };
+  };
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCEVENT_IMPL_CID)
 
   // Initialize with an nsIAccessible
   nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
              PRBool aIsAsynch = PR_FALSE,
+             EIsFromUserInput aIsFromUserInput = eAutoDetect,
              EEventRule aEventRule = eRemoveDupes);
   // Initialize with an nsIDOMNode
   nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
              PRBool aIsAsynch = PR_FALSE,
+             EIsFromUserInput aIsFromUserInput = eAutoDetect,
              EEventRule aEventRule = eRemoveDupes);
   virtual ~nsAccEvent() {}
 
@@ -107,13 +120,18 @@ public:
   PRBool IsFromUserInput() const { return mIsFromUserInput; }
   nsIAccessible* GetAccessible() const { return mAccessible; }
 
-  static void GetLastEventAttributes(nsIDOMNode *aNode,
-                                     nsIPersistentProperties *aAttributes);
-
 protected:
+  /**
+   * Get an accessible from event target node.
+   */
   already_AddRefed<nsIAccessible> GetAccessibleByNode();
 
-  void CaptureIsFromUserInput();
+  /**
+   * Determine whether the event is from user input by event state manager if
+   * it's not pointed explicetly.
+   */
+  void CaptureIsFromUserInput(EIsFromUserInput aIsFromUserInput);
+
   PRBool mIsFromUserInput;
 
   PRUint32 mEventType;
@@ -123,33 +141,7 @@ protected:
   nsCOMPtr<nsIDOMNode> mDOMNode;
   nsCOMPtr<nsIAccessibleDocument> mDocAccessible;
 
-private:
-  static PRBool gLastEventFromUserInput;
-  static nsIDOMNode* gLastEventNodeWeak;
-
 public:
-  static void ResetLastInputState()
-   {gLastEventFromUserInput = PR_FALSE; gLastEventNodeWeak = nsnull; }
-
-  /**
-   * Find and cache the last input state. This will be called automatically
-   * for synchronous events. For asynchronous events it should be
-   * called from the synchronous code which is the true source of the event,
-   * before the event is fired.
-   * @param aChangeNode that event will be on
-   * @param aForceIsFromUserInput  PR_TRUE if the caller knows that this event was
-   *                               caused by user input
-   */
-  static void PrepareForEvent(nsIDOMNode *aChangeNode,
-                              PRBool aForceIsFromUserInput = PR_FALSE);
-
-  /**
-   * The input state was previously stored with the nsIAccessibleEvent,
-   * so use that state now -- call this when about to flush an event that 
-   * was waiting in an event queue
-   */
-  static void PrepareForEvent(nsIAccessibleEvent *aEvent,
-                              PRBool aForceIsFromUserInput = PR_FALSE);
 
   /**
    * Apply event rules to pending events, this method is called in
@@ -259,7 +251,8 @@ class nsAccTextChangeEvent: public nsAccEvent,
 {
 public:
   nsAccTextChangeEvent(nsIAccessible *aAccessible, PRInt32 aStart, PRUint32 aLength,
-                       PRBool aIsInserted, PRBool aIsAsynch = PR_FALSE);
+                       PRBool aIsInserted, PRBool aIsAsynch = PR_FALSE,
+                       EIsFromUserInput aIsFromUserInput = eAutoDetect);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLETEXTCHANGEEVENT

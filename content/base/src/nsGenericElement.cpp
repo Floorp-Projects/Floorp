@@ -394,7 +394,9 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
   if (!IsNodeOfType(eCONTENT))
     return nsnull;
 
-  NS_ENSURE_TRUE(GetCurrentDoc() == aPresShell->GetDocument(), nsnull);
+  if (GetCurrentDoc() != aPresShell->GetDocument()) {
+    return nsnull;
+  }
 
   nsIFrame* frame = static_cast<nsIContent*>(this)->GetPrimaryFrame();
   if (frame && frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION) {

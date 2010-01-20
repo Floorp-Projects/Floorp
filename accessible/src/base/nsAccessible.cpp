@@ -1540,7 +1540,7 @@ nsAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
                                    oldValueUnused);
   }
 
-  nsAccEvent::GetLastEventAttributes(mDOMNode, aAttributes);
+  nsEventShell::GetEventAttributes(mDOMNode, aAttributes);
  
   // Expose class because it may have useful microformat information
   // Let the class from an iframe's document be exposed, don't override from <iframe class>
