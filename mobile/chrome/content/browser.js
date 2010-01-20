@@ -3192,7 +3192,7 @@ PluginObserver.prototype = {
     this._contentShowing.addEventListener("broadcast", this, false);
     let browsers = document.getElementById("browsers");
     browsers.addEventListener("RenderStateChanged", this, false);
-    gObserverService.addObserver(this, "plugin-changed-event", false);
+    gObserverService.addObserver(this, "plugin-reflow-event", false);
     Elements.stack.addEventListener("PopupChanged", this, false);
 
     let browser = Browser.selectedBrowser;
@@ -3212,7 +3212,7 @@ PluginObserver.prototype = {
     this._contentShowing.removeEventListener("broadcast", this, false);
     let browsers = document.getElementById("browsers");
     browsers.removeEventListener("RenderStateChanged", this, false);
-    gObserverService.removeObserver(this, "plugin-changed-event");
+    gObserverService.removeObserver(this, "plugin-reflow-event");
     Elements.stack.removeEventListener("PopupChanged", this, false);
 
     let browser = Browser.selectedBrowser;
@@ -3224,8 +3224,7 @@ PluginObserver.prototype = {
 
   /** Observe listens for plugin change events and maintains an embed cache. */
   observe: function observe(subject, topic, data) {
-    if (data == "reflow")
-      this.updateCurrentBrowser();
+    this.updateCurrentBrowser();
   },
 
   /** Update flash objects */
@@ -3258,19 +3257,19 @@ PluginObserver.prototype = {
     if (rect == this._emptyRect && !this._isRendering)
       return;
 
-    let plugins = doc.querySelectorAll("embed,object");
-
     if (this._isRendering) {
       // Update immediately if not just starting to render
       if (rect == this._emptyRect)
         this._isRendering = false;
-      this.updateEmbedRegions(plugins, rect);
+        let plugins = doc.querySelectorAll("embed,object");
+        this.updateEmbedRegions(plugins, rect);
     } else {
       // Wait a moment so that any chrome redraws occur first.
       let self = this;
       setTimeout(function() {
         self._isRendering = true;
         // Recalculate critical rect so we don't render when we ought not to.
+        let plugins = doc.querySelectorAll("embed,object");
         self.updateEmbedRegions(plugins, self.getCriticalRect());
       }, 0);
     }
