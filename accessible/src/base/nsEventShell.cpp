@@ -40,6 +40,10 @@
 
 #include "nsAccessible.h"
 
+////////////////////////////////////////////////////////////////////////////////
+// nsEventShell
+////////////////////////////////////////////////////////////////////////////////
+
 void
 nsEventShell::FireEvent(nsAccEvent *aEvent)
 {
@@ -50,17 +54,44 @@ nsEventShell::FireEvent(nsAccEvent *aEvent)
     nsAccUtils::QueryObject<nsAccessible>(aEvent->GetAccessible());
   NS_ENSURE_TRUE(acc,);
 
+  nsCOMPtr<nsIDOMNode> node;
+  aEvent->GetDOMNode(getter_AddRefs(node));
+  if (node) {
+    sEventTargetNode = node;
+    sEventFromUserInput = aEvent->IsFromUserInput();
+  }
+
   acc->HandleAccEvent(aEvent);
+
+  sEventTargetNode = nsnull;
 }
 
 void
 nsEventShell::FireEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
-                        PRBool aIsAsynch)
+                        PRBool aIsAsynch, EIsFromUserInput aIsFromUserInput)
 {
   NS_ENSURE_TRUE(aAccessible,);
 
   nsRefPtr<nsAccEvent> event = new nsAccEvent(aEventType, aAccessible,
-                                              aIsAsynch);
+                                              aIsAsynch, aIsFromUserInput);
 
   FireEvent(event);
 }
+
+void 
+nsEventShell::GetEventAttributes(nsIDOMNode *aNode,
+                                 nsIPersistentProperties *aAttributes)
+{
+  if (aNode != sEventTargetNode)
+    return;
+
+  nsAccUtils::SetAccAttr(aAttributes, nsAccessibilityAtoms::eventFromInput,
+                         sEventFromUserInput ? NS_LITERAL_STRING("true") :
+                                               NS_LITERAL_STRING("false"));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsEventShell: private
+
+PRBool nsEventShell::sEventFromUserInput = PR_FALSE;
+nsCOMPtr<nsIDOMNode> nsEventShell::sEventTargetNode;
