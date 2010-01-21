@@ -159,6 +159,8 @@ function loaded() {
 }
 
 // Need to run 'loaded' after painting is unsuppressed, or we'll set clip
-// regions to empty.
-window.addEventListener("load", function () { setTimeout(loaded, 0); }, false);
+// regions to empty.  The timeout must be non-zero on X11 so that
+// gtk_container_idle_sizer runs after the GtkSocket gets the plug_window.
+window.addEventListener("load",
+                        function () { setTimeout(loaded, 1000); }, false);
 })();
