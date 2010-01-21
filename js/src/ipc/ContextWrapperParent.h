@@ -43,19 +43,27 @@
 
 #include "mozilla/jsipc/PContextWrapperParent.h"
 #include "mozilla/jsipc/ObjectWrapperParent.h"
+#include "mozilla/jsipc/CPOWTypes.h"
+
+#include "mozilla/dom/ContentProcessParent.h"
 
 #include "jsapi.h"
 #include "nsAutoJSValHolder.h"
 
 namespace mozilla {
 namespace jsipc {
+
+using mozilla::dom::ContentProcessParent;
     
 class ContextWrapperParent
     : public PContextWrapperParent
 {
 public:
 
-    ContextWrapperParent() : mGlobal(NULL) {}
+    ContextWrapperParent(ContentProcessParent* cpp)
+        : mContentProcess(cpp)
+        , mGlobal(NULL)
+    {}
 
     bool GetGlobalJSObject(JSContext* cx, JSObject** globalp) {
         if (!mGlobal)
@@ -69,8 +77,13 @@ public:
         return mGlobal;
     }
 
+    bool RequestRunToCompletion() {
+        return mContentProcess->RequestRunToCompletion();
+    }
+
 private:
 
+    ContentProcessParent* mContentProcess;
     ObjectWrapperParent* mGlobal;
     nsAutoJSValHolder mGlobalHolder;
 
