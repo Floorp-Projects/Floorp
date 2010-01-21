@@ -970,7 +970,7 @@ static JSBool
 array_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                      JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
 {
-    uint32 i;
+    uint32 i = 0;       // init to shut GCC up
     JSBool isIndex;
 
     if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
