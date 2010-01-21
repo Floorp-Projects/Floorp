@@ -1280,6 +1280,18 @@ JSTreeContext::ensureSharpSlots()
     return true;
 }
 
+bool
+JSTreeContext::skipSpansGenerator(unsigned skip)
+{
+    JSTreeContext *tc = this;
+    for (unsigned i = 0; i < skip; ++i, tc = tc->parent) {
+        JS_ASSERT(tc);
+        if (tc->flags & TCF_FUN_IS_GENERATOR)
+            return true;
+    }
+    return false;
+}
+
 void
 js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
                  ptrdiff_t top)
@@ -2235,7 +2247,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * defeats the display optimization to static link searching used
              * by JSOP_{GET,CALL}UPVAR.
              */
-            if (cg->flags & TCF_FUN_IS_GENERATOR)
+            if (cg->skipSpansGenerator(skip))
                 return JS_TRUE;
 
             op = JSOP_GETUPVAR;

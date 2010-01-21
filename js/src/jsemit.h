@@ -236,6 +236,11 @@ struct JSTreeContext {              /* tree context for semantic checks */
      */
     int sharpSlotBase;
     bool ensureSharpSlots();
+
+    // Return true there is a generator function within |skip| lexical scopes
+    // (going upward) from this context's lexical scope. Always return true if
+    // this context is itself a generator.
+    bool skipSpansGenerator(unsigned skip);
 };
 
 #define TCF_COMPILING           0x01 /* JSTreeContext is JSCodeGenerator */
