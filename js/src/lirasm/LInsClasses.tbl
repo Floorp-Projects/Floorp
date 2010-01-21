@@ -82,7 +82,8 @@ CLASS(  LOP_Q_Q,        1,  0)  // 14%  (none)
 CLASS(  LOP_F_F,        0,  2)  // 16%  LIR_fneg
 
 CLASS(  LOP_I_II,       0, 16)  // 32%  LIR_add, LIR_and, LIR_eq, etc.
-CLASS(  LOP_Q_QQ,       1,  9)  // 41%  LIR_qiadd, LIR_qiand, LIR_qeq, etc.
+CLASS(  LOP_Q_QQ,       1,  7)  // 39%  LIR_qiadd, LIR_qiand, LIR_qeq, etc.
+CLASS(  LOP_Q_QI,       1,  2)  // 41%  LIR_qilsh, LIR_qirsh, LIR_qursh
 CLASS(  LOP_F_FF,       0, 10)  // 51%  LIR_fadd, etc.
 
 // cmov has a low weight because is also used with LIR_div/LIR_mod.
