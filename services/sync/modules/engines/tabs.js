@@ -171,7 +171,7 @@ TabStore.prototype = {
       return b.lastUsed - a.lastUsed;
     }).slice(0, 25);
     record.tabs.forEach(function(tab) {
-      this._log.debug("Wrapping tab: " + JSON.stringify(tab));
+      this._log.trace("Wrapping tab: " + JSON.stringify(tab));
     }, this);
 
     record.id = id;
