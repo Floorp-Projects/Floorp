@@ -138,6 +138,31 @@ private:
                               nsIContent* aChild,
                               PRInt32 aIndex);
 
+  // Issues a single ContentInserted for each child of aContainer in the range
+  // [aStartIndexInContainer, aEndIndexInContainer).
+  void IssueSingleInsertNofications(nsIContent* aContainer,
+                                    PRInt32 aStartIndexInContainer,
+                                    PRInt32 aEndIndexInContainer,
+                                    PRBool aAllowLazyConstruction);
+  
+  // Checks if the children of aContainer in the range
+  // [aStartIndexInContainer, aEndIndexInContainer) can be inserted/appended
+  // to one insertion point together. If so, returns that insertion point. If
+  // not, returns null and issues single ContentInserted calls for each child.
+  // aEndIndexInContainer = -1 is a special value that indicates it is an
+  // append and the range includes the last child.
+  nsIFrame* GetRangeInsertionPoint(nsIContent* aContainer,
+                                   nsIFrame* aParentFrame,
+                                   PRInt32 aStartIndexInContainer,
+                                   PRInt32 aEndIndexInContainer,
+                                   PRBool aAllowLazyConstruction);
+
+  // Returns true if parent was recreated due to frameset child, false otherwise.
+  PRBool MaybeRecreateForFrameset(nsIContent* aContainer,
+                                  nsIFrame* aParentFrame,
+                                  PRUint32 aStartIndexInContainer,
+                                  PRUint32 aEndIndexInContainer);
+
 public:
   /**
    * Lazy frame construction is controlled by the aAllowLazyConstruction bool
@@ -172,7 +197,7 @@ public:
    * nodes with NODE_DESCENDANTS_NEED_FRAMES set down the content tree looking
    * for nodes with NODE_NEEDS_FRAME set. It calls ContentAppended for any runs
    * of nodes with NODE_NEEDS_FRAME set that are at the end of their childlist,
-   * and ContentInserted for the others.
+   * and ContentRangeInserted for any other runs that aren't.
    *
    * If a node is removed from the document then we don't bother unsetting any
    * of the lazy bits that might be set on it, its descendants, or any of its
@@ -197,6 +222,21 @@ public:
                            PRInt32                aIndexInContainer,
                            nsILayoutHistoryState* aFrameState,
                            PRBool                 aAllowLazyConstruction);
+
+  // Like ContentInserted but handles inserting the children of aContainer in
+  // the range [aIndexInContainer, aEndIndexInContainer).
+  // aChild must be non-null. For inserting a single node it should be that
+  // node. For inserting more than one node, aChild must be the first child
+  // being inserted.
+  // If aAllowLazyConstruction is true then frame construction of the new
+  // children can be done lazily. It is only allowed to be true when inserting
+  // a single node.
+  nsresult ContentRangeInserted(nsIContent*            aContainer,
+                                nsIContent*            aChild,
+                                PRInt32                aIndexInContainer,
+                                PRInt32                aEndIndexInContainer,
+                                nsILayoutHistoryState* aFrameState,
+                                PRBool                 aAllowLazyConstruction);
 
   enum RemoveFlags { REMOVE_CONTENT, REMOVE_FOR_RECONSTRUCTION };
   nsresult ContentRemoved(nsIContent* aContainer,
@@ -1721,7 +1761,7 @@ private:
   // IsValidSibling as needed; if that returns false it returns null.
   //
   // @param aTargetContentDisplay the CSS display enum for aTargetContent if
-  // already known, UNSET_DISPLAY otherwise.
+  // already known, UNSET_DISPLAY otherwise. It will be filled in if needed.
   nsIFrame* FindFrameForContentSibling(nsIContent* aContent,
                                        nsIContent* aTargetContent,
                                        PRUint8& aTargetContentDisplay,
@@ -1729,26 +1769,43 @@ private:
 
   // Find the ``rightmost'' frame for the content immediately preceding the one
   // aIter points to, following continuations if necessary.  aIter is passed by
-  // value on purpose, so as not to modify the callee's iterator.
+  // value on purpose, so as not to modify the caller's iterator.
   nsIFrame* FindPreviousSibling(const ChildIterator& aFirst,
-                                ChildIterator aIter);
+                                ChildIterator aIter,
+                                PRUint8& aTargetContentDisplay);
 
   // Find the frame for the content node immediately following the one aIter
   // points to, following continuations if necessary.  aIter is passed by value
-  // on purpose, so as not to modify the callee's iterator.
+  // on purpose, so as not to modify the caller's iterator.
   nsIFrame* FindNextSibling(ChildIterator aIter,
-                            const ChildIterator& aLast);
+                            const ChildIterator& aLast,
+                            PRUint8& aTargetContentDisplay);
 
   // Find the right previous sibling for an insertion.  This also updates the
   // parent frame to point to the correct continuation of the parent frame to
   // use, and returns whether this insertion is to be treated as an append.
   // aChild is the child being inserted and aIndexInContainer its index in
   // aContainer (which is aChild's DOM parent).
+  // aIsRangeInsertSafe returns whether it is safe to do a range insert with
+  // aChild being the first child in the range. It is the callers'
+  // responsibility to check whether a range insert is safe with regards to
+  // fieldsets.
+  // The skip parameters are used to ignore a range of children when looking
+  // for a sibling. All nodes starting from aStartSkipChild (which is in
+  // aContainer's regular child list at aStartSkipIndexInContainer) and up to
+  // but not including aEndSkipChild (which is at aEndSkipIndexInContainer in
+  // aContainer) will be skipped over when looking for sibling frames. Skipping
+  // a range can deal with XBL but not when there are multiple insertion points.
   nsIFrame* GetInsertionPrevSibling(nsIFrame*& aParentFrame, /* inout */
                                     nsIContent* aContainer,
                                     nsIContent* aChild,
                                     PRInt32 aIndexInContainer,
-                                    PRBool* aIsAppend);
+                                    PRBool* aIsAppend,
+                                    PRBool* aIsRangeInsertSafe,
+                                    PRInt32 aStartSkipIndexInContainer = -1,
+                                    nsIContent* aStartSkipChild = nsnull,
+                                    PRInt32 aEndSkipIndexInContainer = -1,
+                                    nsIContent *aEndSkipChild = nsnull);
 
   // see if aContent and aSibling are legitimate siblings due to restrictions
   // imposed by table columns
