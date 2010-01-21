@@ -134,7 +134,7 @@ def searchPath(directory, path):
   "Go one step beyond getFullPath and try the various folders in PATH"
   # Try looking in the current working directory first.
   newpath = getFullPath(directory, path)
-  if os.path.exists(newpath):
+  if os.path.isfile(newpath):
     return newpath
 
   # At this point we have to fail if a directory was given (to prevent cases
@@ -142,7 +142,7 @@ def searchPath(directory, path):
   if not os.path.dirname(path):
     for dir in os.environ['PATH'].split(os.pathsep):
       newpath = os.path.join(dir, path)
-      if os.path.exists(newpath):
+      if os.path.isfile(newpath):
         return newpath
   return None
 
