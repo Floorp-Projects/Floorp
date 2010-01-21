@@ -102,7 +102,7 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  * you're aware of all the security implications.  And then think twice about
  * it.
  */
-[scriptable, uuid(ad78bf21-2227-447e-8ed5-824a017c265f)]
+[scriptable, uuid(6bb91106-85f0-4d93-8cb4-e57b3d0624f2)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**
