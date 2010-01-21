@@ -49,7 +49,6 @@ const Cu = Components.utils;
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/distribution.js");
 
 const PREF_EM_NEW_ADDONS_LIST = "extensions.newAddons";
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
@@ -90,6 +89,7 @@ function BrowserGlue() {
                                      "nsIIdleService");
 
   XPCOMUtils.defineLazyGetter(this, "_distributionCustomizer", function() {
+                                Cu.import("resource:///modules/distribution.js");
                                 return new DistributionCustomizer();
                               });
 
