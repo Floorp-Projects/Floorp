@@ -2525,8 +2525,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     break;
 
                   case SRC_HIDDEN:
-                    /* Hide this pop, it's from a goto in a with or for/in. */
+                    /*
+                     * Hide this pop. Don't adjust our stack depth model if
+                     * it's from a goto in a with or for/in.
+                     */
                     todo = -2;
+                    if (lastop == JSOP_UNBRAND)
+                        (void) POP_STR();
                     break;
 
                   case SRC_DECL:
