@@ -730,7 +730,11 @@ void nsDocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
     if (sf) {
       scrollPort = sf->GetScrollPortRect();
     } else {
-      scrollPort = presShell->GetRootFrame()->GetRect();
+      nsIFrame* rootFrame = presShell->GetRootFrame();
+      if (!rootFrame) {
+        return;
+      }
+      scrollPort = rootFrame->GetRect();
     }
 
     if (parentDoc) {  // After first time thru loop
