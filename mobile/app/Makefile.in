@@ -60,6 +60,7 @@ DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) \
            -DAPP_VERSION=$(MOZ_APP_VERSION) \
            -DAPP_UA_NAME_EXTRA=$(MOZ_APP_UA_EXTRA) \
            -DAPP_VERSION_EXTRA=$(FIREFOX_VERSION) \
+           -DMOZ_UPDATER=$(MOZ_UPDATER) \
            $(NULL)
 
 SOURCE_STAMP := $(shell cd $(srcdir)/.. && hg identify 2>/dev/null | cut -f1 -d' ')
