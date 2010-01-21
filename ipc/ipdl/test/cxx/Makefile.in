@@ -62,6 +62,7 @@ IPDLTESTS = \
   TestSanity  \
   TestRPCErrorCleanup \
   TestCrashCleanup \
+  TestSyncWakeup \
   TestLatency \
   TestRPCRaces \
   TestManyChildAllocs  \
