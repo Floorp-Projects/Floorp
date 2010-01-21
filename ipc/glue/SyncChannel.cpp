@@ -93,8 +93,16 @@ SyncChannel::Send(Message* msg, Message* reply)
         FROM_HERE,
         NewRunnableMethod(this, &SyncChannel::OnSend, msg));
 
-    // wait for the next sync message to arrive
-    WaitForNotify();
+    // NB: this is a do-while loop instead of a single wait because if
+    // there's a pending RPC out- or in-call below us, and the sync
+    // message handler on the other side sends us an async message,
+    // the IO thread will Notify() this thread of the async message.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=538239.
+    do {
+        // wait for the next sync message to arrive
+        WaitForNotify();
+    } while(Connected() &&
+            mPendingReply != mRecvd.type() && !mRecvd.is_reply_error());
 
     if (!Connected()) {
         ReportConnectionError("SyncChannel");
@@ -109,11 +117,13 @@ SyncChannel::Send(Message* msg, Message* reply)
 
     // FIXME/cjones: real error handling
     NS_ABORT_IF_FALSE(mRecvd.is_sync() && mRecvd.is_reply() &&
-                      (mPendingReply == mRecvd.type() || mRecvd.is_reply_error()),
+                      (mPendingReply == mRecvd.type() ||
+                       mRecvd.is_reply_error()),
                       "unexpected sync message");
 
     mPendingReply = 0;
     *reply = mRecvd;
+    mRecvd = Message();
 
     return true;
 }
