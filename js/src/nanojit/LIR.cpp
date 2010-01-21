@@ -2404,10 +2404,11 @@ namespace nanojit
     const char* ValidateWriter::type2string(LTy type)
     {
         switch (type) {
-        case LTy_Void: return "void";
-        case LTy_I32:  return "int32";
-        case LTy_I64:  return "int64";
-        case LTy_F64:  return "float64";
+        case LTy_Void:                  return "void";
+        case LTy_I32:                   return "int32";
+        case LTy_I64:                   return "int64";
+        case LTy_F64:                   return "float64";
+        default:       NanoAssert(0);   return "???";
         }
     }
 
@@ -2866,7 +2867,7 @@ namespace nanojit
         LTy formals[MAXARGS];
         LIns* args[MAXARGS];    // in left-to-right order, unlike args0[]
 
-        LOpcode op;
+        LOpcode op = LIR_pcall;
         ArgSize retSize = ArgSize(call->_argtypes & ARGSIZE_MASK_ANY);
         switch (retSize) {
         case ARGSIZE_NONE:  op = LIR_pcall; break;
@@ -2877,6 +2878,7 @@ namespace nanojit
                             checkIs64BitPlatform(op);
                             break;
         default:            NanoAssert(0);
+                            break;
         }
 
         // This loop iterates over the args from right-to-left (because
@@ -2936,7 +2938,7 @@ namespace nanojit
 
     LIns* ValidateWriter::insBranch(LOpcode op, LIns* cond, LIns* to)
     {
-        int nArgs;
+        int nArgs = 0;
         LTy formals[1];
         LIns* args[1];
 
