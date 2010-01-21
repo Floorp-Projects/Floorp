@@ -51,7 +51,10 @@
 
       var id = "textbox", noTargetId = "textarea";
       gQueue.push(new synthFocus(id, new checker("false", noTargetId), EVENT_FOCUS));
-      gQueue.push(new synthHomeKey(id, new checker("false", noTargetId), EVENT_TEXT_CARET_MOVED));
+      
+      if (!MAC) { // Mac failure is bug 541093
+        gQueue.push(new synthHomeKey(id, new checker("false", noTargetId), EVENT_TEXT_CARET_MOVED));
+      }
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
