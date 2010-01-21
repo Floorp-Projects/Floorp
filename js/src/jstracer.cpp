@@ -3293,16 +3293,16 @@ GetFromClosure(JSContext* cx, JSObject* call, const ClosureVarInfo* cv, double* 
         stackOffset -= fi->callerHeight;
         JSObject* callee = *(JSObject**)(&state->stackBase[stackOffset]);
         if (callee == call) {
-            // This is not reachable as long as JSOP_LAMBDA is not traced:
-            // - The upvar is found at this point only if the upvar was defined on a frame that was
-            //   entered on this trace.
-            // - The upvar definition must be (dynamically, and thus on trace) before the definition
-            //   of the function that uses the upvar.
-            // - Therefore, if the upvar is found at this point, the function definition JSOP_LAMBDA
-            //   is on the trace.
+            // This is not reachable as long as the tracer guards on the identity of the callee's
+            // parent when making a call:
+            //
+            // - We can only reach this point if we execute JSOP_LAMBDA on trace, then call the
+            //   function created by the lambda, and then execute a JSOP_NAME on trace.
+            // - Each time we execute JSOP_LAMBDA we get a function with a different parent.
+            // - When we execute the call to the new function, we exit trace because the parent
+            //   is different.
             JS_NOT_REACHED("JSOP_NAME variable found in outer trace");
         }
-        stackOffset -= fi->callerHeight;
     }
 #endif
 
