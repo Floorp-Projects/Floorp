@@ -71,7 +71,7 @@ namespace nanojit
         NULL
     };
 
-    #endif /* NANOJIT_VEBROSE */
+    #endif /* NANOJIT_VERBOSE */
 
     // implementation
 #ifdef NJ_VERBOSE
@@ -548,8 +548,6 @@ namespace nanojit
                 return insImmf(do_join(c1, c2));
             case LIR_eq:
                 return insImm(c1 == c2);
-            case LIR_ov:
-                return insImm((c2 != 0) && ((c1 + c2) <= c1));
             case LIR_lt:
                 return insImm(c1 < c2);
             case LIR_gt:
@@ -865,7 +863,7 @@ namespace nanojit
         // Determine which kind of store should be used for 'value' based on
         // its type.
         LOpcode op = LOpcode(0);
-        switch (retTypes[value->opcode()]) {
+        switch (value->retType()) {
         case LTy_I32:   op = LIR_sti;   break;
         case LTy_I64:   op = LIR_stqi;  break;
         case LTy_F64:   op = LIR_stfi;  break;
@@ -954,9 +952,8 @@ namespace nanojit
 
     using namespace avmplus;
 
-    StackFilter::StackFilter(LirFilter *in, Allocator& alloc, LirBuffer *lirbuf, LInsp sp, LInsp rp)
-        : LirFilter(in), lirbuf(lirbuf), sp(sp), rp(rp), spStk(alloc), rpStk(alloc),
-          spTop(0), rpTop(0)
+    StackFilter::StackFilter(LirFilter *in, Allocator& alloc, LInsp sp, LInsp rp)
+        : LirFilter(in), sp(sp), rp(rp), spStk(alloc), rpStk(alloc), spTop(0), rpTop(0)
     {}
 
     bool StackFilter::ignoreStore(LInsp ins, int top, BitSet* stk)
@@ -1478,8 +1475,6 @@ namespace nanojit
                 case LIR_regfence:
                 case LIR_iparam:
                 case LIR_qparam:
-                case LIR_ialloc:
-                case LIR_qalloc:
                 case LIR_x:
                 case LIR_xbarrier:
                 case LIR_j:
@@ -1487,6 +1482,7 @@ namespace nanojit
                 case LIR_int:
                 case LIR_quad:
                 case LIR_float:
+                case LIR_alloc:
                     // No operands, do nothing.
                     break;
 
@@ -1576,7 +1572,6 @@ namespace nanojit
                 case LIR_fsub:
                 case LIR_fmul:
                 case LIR_fdiv:
-                case LIR_fmod:
                 case LIR_qiadd:
                 case LIR_and:
                 case LIR_or:
@@ -2148,7 +2143,7 @@ namespace nanojit
             LirReader br(frag->lastIns);
             LirFilter* lir = &br;
             if (optimize) {
-                StackFilter* sf = new (alloc) StackFilter(lir, alloc, frag->lirbuf, frag->lirbuf->sp, frag->lirbuf->rp);
+                StackFilter* sf = new (alloc) StackFilter(lir, alloc, frag->lirbuf->sp, frag->lirbuf->rp);
                 lir = sf;
             }
             live(lir, alloc, frag, logc);
@@ -2175,19 +2170,23 @@ namespace nanojit
         })
 
         // Used for debug printing, if needed
+        debug_only(ValidateReader *validate = NULL;)
         verbose_only(
         ReverseLister *pp_init = NULL;
         ReverseLister *pp_after_sf = NULL;
         )
 
-        // set up backwards pipeline: assembler -> StackFilter -> LirReader
-        LirReader bufreader(frag->lastIns);
-
-        // Used to construct the pipeline
-        LirFilter* lir = &bufreader;
-
         // The LIR passes through these filters as listed in this
         // function, viz, top to bottom.
+
+        // set up backwards pipeline: assembler <- StackFilter <- LirReader
+        LirFilter* lir = new (alloc) LirReader(frag->lastIns);
+
+#ifdef DEBUG
+        // VALIDATION
+        validate = new (alloc) ValidateReader(lir);
+        lir = validate;
+#endif
 
         // INITIAL PRINTING
         verbose_only( if (assm->_logc->lcbits & LC_ReadLIR) {
@@ -2198,8 +2197,8 @@ namespace nanojit
 
         // STACKFILTER
         if (optimize) {
-            StackFilter* stackfilter = new (alloc) StackFilter(lir, alloc, frag->lirbuf,
-                                                               frag->lirbuf->sp, frag->lirbuf->rp);
+            StackFilter* stackfilter =
+                new (alloc) StackFilter(lir, alloc, frag->lirbuf->sp, frag->lirbuf->rp);
             lir = stackfilter;
         }
 
@@ -2230,7 +2229,7 @@ namespace nanojit
         )
         assm->endAssembly(frag);
 
-        // reverse output so that assembly is displayed low-to-high
+        // Reverse output so that assembly is displayed low-to-high.
         // Up to this point, assm->_outputCache has been non-NULL, and so
         // has been accumulating output.  Now we set it to NULL, traverse
         // the entire list of stored strings, and hand them a second time
@@ -2402,98 +2401,618 @@ namespace nanojit
 
 #ifdef FEATURE_NANOJIT
 #ifdef DEBUG
-    LIns* SanityFilter::ins1(LOpcode v, LIns* s0)
+    const char* ValidateWriter::type2string(LTy type)
     {
-        switch (v)
-        {
-            case LIR_fneg:
-            case LIR_fret:
-            case LIR_qlo:
-            case LIR_qhi:
-            case LIR_f2i:
-              NanoAssert(s0->isQuad());
-              break;
-            case LIR_not:
-            case LIR_neg:
-            case LIR_u2f:
-            case LIR_i2f:
-            case LIR_i2q: case LIR_u2q:
-              NanoAssert(!s0->isQuad());
-              break;
-            default:
-              break;
+        switch (type) {
+        case LTy_Void: return "void";
+        case LTy_I32:  return "int32";
+        case LTy_I64:  return "int64";
+        case LTy_F64:  return "float64";
         }
-        return out->ins1(v, s0);
     }
 
-    LIns* SanityFilter::ins2(LOpcode v, LIns* s0, LIns* s1)
+#define HOWTO_DEBUG \
+    "  One way to debug this:  change the failing NanoAssertMsgf(0, ...) call to a\n" \
+    "  printf(...) call and rerun with verbose output.  If you're lucky, this error\n" \
+    "  message will appear before the block containing the erroneous instruction.\n\n"
+
+    void ValidateWriter::typeCheckArgs(LOpcode op, int nArgs, LTy formals[], LIns* args[])
     {
-        switch (v) {
-          case LIR_fadd:
-          case LIR_fsub:
-          case LIR_fmul:
-          case LIR_fdiv:
-          case LIR_feq:
-          case LIR_flt:
-          case LIR_fgt:
-          case LIR_fle:
-          case LIR_fge:
-          case LIR_qaddp:
-          case LIR_qior:
-          case LIR_qxor:
-          case LIR_qiand:
-          case LIR_qiadd:
-          case LIR_qeq:
-          case LIR_qlt: case LIR_qult:
-          case LIR_qgt: case LIR_qugt:
-          case LIR_qle: case LIR_quge:
-            NanoAssert(s0->isQuad() && s1->isQuad());
-            break;
-          case LIR_add:
-          case LIR_iaddp:
-          case LIR_sub:
-          case LIR_mul:
-          case LIR_and:
-          case LIR_or:
-          case LIR_xor:
-          case LIR_lsh:
-          case LIR_rsh:
-          case LIR_ush:
-          case LIR_eq:
-          case LIR_lt: case LIR_ult:
-          case LIR_gt: case LIR_ugt:
-          case LIR_le: case LIR_ule:
-          case LIR_ge: case LIR_uge:
-            NanoAssert(!s0->isQuad() && !s1->isQuad());
-            break;
-          case LIR_qilsh:
-          case LIR_qirsh:
-          case LIR_qursh:
-            NanoAssert(s0->isQuad() && !s1->isQuad());
-            break;
-          default:
-            break;
+        // Type-check the arguments.
+        for (int i = 0; i < nArgs; i++) {
+            LTy formal = formals[i];
+            LTy actual = args[i]->retType();
+            if (formal != actual) {
+                // Assert on a type error.  The disadvantage of doing this (as
+                // opposed to printing a message and continuing) is that at
+                // most one type error will be detected per run.  But type
+                // errors should be rare, and assertion failures are certain
+                // to be caught by test suites whereas error messages may not
+                // be.
+                NanoAssertMsgf(0,
+                    "\n\n"
+                    "LIR type error (%s):\n"
+                    "  in instruction with opcode: %s\n"
+                    "  in argument %d with opcode: %s\n"
+                    "  argument has type %s, expected %s\n"
+                    HOWTO_DEBUG,
+                    _whereInPipeline,
+                    lirNames[op],
+                    i+1, lirNames[args[i]->opcode()],
+                    type2string(actual), type2string(formal));
+            }
         }
-        return out->ins2(v, s0, s1);
     }
 
-    LIns* SanityFilter::ins3(LOpcode v, LIns* s0, LIns* s1, LIns* s2)
+    void ValidateWriter::errorStructureShouldBe(LOpcode op, const char* argDesc, int argN,
+                                                LIns* arg, const char* shouldBeDesc)
     {
-        switch (v)
-        {
-          case LIR_cmov:
-            NanoAssert(s0->isCond() || s0->isconst());
-            NanoAssert(!s1->isQuad() && !s2->isQuad());
+        fprintf(stderr,
+            "\n\n"
+            "  LIR structure error (%s):\n"
+            "    in instruction with opcode: %s\n"
+            "    %s %d has opcode: %s\n"
+            "    it should be: %s\n"
+            HOWTO_DEBUG,
+            _whereInPipeline,
+            lirNames[op],
+            argDesc, argN, lirNames[arg->opcode()],
+            shouldBeDesc);
+    }
+
+    void ValidateWriter::errorPlatformShouldBe(LOpcode op, int nBits)
+    {
+        NanoAssertMsgf(0,
+            "\n\n"
+            "  LIR structure error (%s):\n"
+            "    %s should only occur on %d-bit platforms\n"
+            HOWTO_DEBUG,
+            _whereInPipeline,
+            lirNames[op], nBits);
+    }
+
+    void ValidateWriter::checkLInsIsACondOrConst(LOpcode op, int argN, LIns* ins)
+    {
+        // We could introduce a LTy_B32 type in the type system but that's a
+        // bit weird because its representation is identical to LTy_I32.  It's
+        // easier to just do this check structurally.  Also, optimization can
+        // cause the condition to become a LIR_int.
+        if (!ins->isCond() && !ins->isconst())
+            errorStructureShouldBe(op, "argument", argN, ins, "a condition or 32-bit constant");
+    }
+
+    void ValidateWriter::checkLInsIsNull(LOpcode op, int argN, LIns* ins)
+    {
+        if (ins)
+            errorStructureShouldBe(op, "argument", argN, ins, NULL);
+    }
+
+    void ValidateWriter::checkIs32BitPlatform(LOpcode op)
+    {
+        (void)op;
+#if defined NANOJIT_64BIT
+        errorPlatformShouldBe(op, 32);
+#endif
+    }
+
+    void ValidateWriter::checkIs64BitPlatform(LOpcode op)
+    {
+        (void)op;
+#if !defined NANOJIT_64BIT
+        errorPlatformShouldBe(op, 64);
+#endif
+    }
+
+    void ValidateWriter::checkLInsIsOverflowable(LOpcode op, int argN, LIns* ins)
+    {
+        if (!ins->isOverflowable())
+            errorStructureShouldBe(op, "argument", argN, ins,
+                                   "an overflowable 32-bit arithmetic operation");
+    }
+
+    void ValidateWriter::checkOprnd1ImmediatelyPrecedes(LIns* ins)
+    {
+        // The operand must be immediately prior to 'ins' (but there could be
+        // intervening skips).  We find the previous one with a short-lived
+        // LirReader.
+        LIns* oprnd1 = ins->oprnd1();
+        LirReader reader(ins);
+        reader.read();                  // returns 'ins'
+        LIns* prev = reader.read();     // returns the LIns before 'ins'
+        NanoAssert(prev);
+        if (prev != oprnd1) {
+            errorStructureShouldBe(ins->opcode(), "argument", 1, oprnd1, 
+                                   "located immediately prior, but isn't");
+        }
+    }
+
+    void ValidateWriter::checkLInsHasOpcode(LOpcode op, int argN, LIns* ins, LOpcode op2)
+    {
+        if (!ins->isop(op2))
+            errorStructureShouldBe(op, "argument", argN, ins, lirNames[op2]);
+    }
+
+    ValidateWriter::ValidateWriter(LirWriter *out, const char* stageName)
+        : LirWriter(out), _whereInPipeline(stageName)
+    {}
+
+    LIns* ValidateWriter::insLoad(LOpcode op, LIns* base, int32_t d)
+    {
+        int nArgs = 1;
+        LTy formals[1] = { LTy_Ptr };
+        LIns* args[1] = { base };
+
+        switch (op) {
+        case LIR_ldq:
+        case LIR_ldqc:
+            checkIs64BitPlatform(op);
             break;
-          case LIR_qcmov:
-            NanoAssert(s0->isCond() || s0->isconst());
-            NanoAssert(s1->isQuad() && s2->isQuad());
+        case LIR_ld:
+        case LIR_ldc:
+        case LIR_ldf:
+        case LIR_ldfc:
+        case LIR_ldzb:
+        case LIR_ldzs:
+        case LIR_ldcb:
+        case LIR_ldcs:
+        case LIR_ldsb:
+        case LIR_ldss:
+        case LIR_ldcsb:
+        case LIR_ldcss:
+        case LIR_ld32f:
+        case LIR_ldc32f:
             break;
-          default:
+        default:
+            NanoAssert(0);
+        }
+
+        typeCheckArgs(op, nArgs, formals, args);
+
+        return out->insLoad(op, base, d);
+    }
+
+    LIns* ValidateWriter::insStore(LOpcode op, LIns* value, LIns* base, int32_t d)
+    {
+        int nArgs = 2;
+        LTy formals[2] = { LTy_Void, LTy_Ptr };     // LTy_Void is overwritten shortly
+        LIns* args[2] = { value, base };
+
+        switch (op) {
+        case LIR_stb:
+        case LIR_sts:
+        case LIR_sti:
+            formals[0] = LTy_I32;
+            break;
+
+        case LIR_stqi:
+            checkIs64BitPlatform(op);
+            formals[0] = LTy_I64;
+            break;
+
+        case LIR_stfi:
+        case LIR_st32f:
+            formals[0] = LTy_F64;
+            break;
+
+        default:
+            NanoAssert(0);
+        }
+
+        typeCheckArgs(op, nArgs, formals, args);
+
+        return out->insStore(op, value, base, d);
+    }
+
+    LIns* ValidateWriter::ins0(LOpcode op)
+    {
+        switch (op) {
+        case LIR_start:
+        case LIR_regfence:
+        case LIR_label:
+            break;
+        default:
+            NanoAssert(0);
+        }
+    
+        // No args to type-check.
+
+        return out->ins0(op);
+    }
+
+    LIns* ValidateWriter::ins1(LOpcode op, LIns* a)
+    {
+        int nArgs = 1;
+        LTy formals[1];
+        LIns* args[1] = { a };
+        bool is_ov = false;
+
+        switch (op) {
+        case LIR_neg:
+        case LIR_not:
+        case LIR_i2f:
+        case LIR_u2f:
+            formals[0] = LTy_I32;
+            break;
+
+        case LIR_ret:
+            // XXX: LIR_ret is used in TM as if it takes a 32-bit integer
+            // argument, but it is used in TR as if it takes a word-sized
+            // integer argument.  We should split it into LIR_ret and LIR_qret
+            // for clarity and consistency with all the other cases, and have
+            // LIR_pret as a synonym.  Don't type-check for now.
+            nArgs = 0;
+            break;
+
+        case LIR_i2q:
+        case LIR_u2q:
+            checkIs64BitPlatform(op);
+            formals[0] = LTy_I32;
+            break;
+
+        case LIR_mod:       // see LIRopcode.tbl for why 'mod' is unary
+            checkLInsHasOpcode(op, 1, a, LIR_div);
+            formals[0] = LTy_I32;
+            break;
+
+        case LIR_ov:
+            checkLInsIsOverflowable(op, 1, a);
+            // We can only check the position after the LIns is created in a
+            // LirBuffer.
+            is_ov = true;
+            formals[0] = LTy_I32;
+            break;
+
+        case LIR_qlo:
+            // XXX: LIR_qlo currently has two distinct uses.  One is in
+            // combination with LIR_qhi and LIR_qjoin, for splitting/joining
+            // F64s.  The other is for truncating I64s.  Because these have
+            // different operand types we can't check it here.  See bug
+            // 540368.
+            nArgs = 0;
+            break;
+
+        case LIR_qhi:
+            checkIs32BitPlatform(op);
+            formals[0] = LTy_F64;
+            break;
+
+        case LIR_fneg:
+        case LIR_fret:
+        case LIR_flive:
+        case LIR_f2i:
+            formals[0] = LTy_F64;
+            break;
+
+        case LIR_live:
+            // XXX: should be a unary LTy_I32, but LIR_live is currently also
+            // used for LTy_I64 values because we don't have LIR_qlive.  So
+            // we can't check it for now.  See bug 540368.
+            nArgs = 0;
+            break;
+
+        case LIR_callh:
+            checkLInsHasOpcode(op, 1, a, LIR_fcall);
+            formals[0] = LTy_F64;
+            break;
+
+        case LIR_file:
+        case LIR_line:
+            // XXX: not sure about these ones.  Ignore for the moment.
+            nArgs = 0;
+            break;
+
+        default:
+            NanoAssertMsgf(0, "%s\n", lirNames[op]);
+        }
+
+        typeCheckArgs(op, nArgs, formals, args);
+
+        LIns* ins = out->ins1(op, a);
+
+        if (is_ov) {
+            NanoAssert(ins->isop(LIR_ov));
+            checkOprnd1ImmediatelyPrecedes(ins);
+        } else {
+            NanoAssert(!ins->isop(LIR_ov));
+        }
+        return ins;
+    }
+
+    LIns* ValidateWriter::ins2(LOpcode op, LIns* a, LIns* b)
+    {
+        int nArgs = 2;
+        LTy formals[2];
+        LIns* args[2] = { a, b };
+
+        switch (op) {
+        case LIR_add:
+        case LIR_sub:          
+        case LIR_mul:
+        case LIR_div:
+        case LIR_and:
+        case LIR_or:
+        case LIR_xor:
+        case LIR_lsh:
+        case LIR_rsh:
+        case LIR_ush:
+        case LIR_eq:
+        case LIR_lt:
+        case LIR_gt:
+        case LIR_le:
+        case LIR_ge:
+        case LIR_ult:
+        case LIR_ugt:
+        case LIR_ule:
+        case LIR_uge:
+            formals[0] = LTy_I32;
+            formals[1] = LTy_I32;
+            break;
+
+        case LIR_iaddp:
+            checkIs32BitPlatform(op);
+            formals[0] = LTy_I32;
+            formals[1] = LTy_I32;
+            break;
+
+        case LIR_qjoin:
+            checkIs32BitPlatform(op);
+            formals[0] = LTy_I32;
+            formals[1] = LTy_I32;
+            break;
+
+        case LIR_qiand:
+        case LIR_qior:
+        case LIR_qxor:
+        case LIR_qiadd:
+        case LIR_qaddp:
+        case LIR_qeq:
+        case LIR_qlt:
+        case LIR_qgt:
+        case LIR_qle:
+        case LIR_qge:
+        case LIR_qult:
+        case LIR_qugt:
+        case LIR_qule:
+        case LIR_quge:
+            checkIs64BitPlatform(op);
+            formals[0] = LTy_I64;
+            formals[1] = LTy_I64;
+            break;
+
+        case LIR_qilsh:
+        case LIR_qirsh:
+        case LIR_qursh:
+            checkIs64BitPlatform(op);
+            formals[0] = LTy_I64;
+            formals[1] = LTy_I32;
+            break;
+
+        case LIR_fadd:
+        case LIR_fsub:
+        case LIR_fmul:
+        case LIR_fdiv:
+        case LIR_feq:
+        case LIR_fgt:
+        case LIR_flt:
+        case LIR_fle:
+        case LIR_fge:
+            formals[0] = LTy_F64;
+            formals[1] = LTy_F64;
+            break;
+
+        default:
+            NanoAssert(0);
+        }
+
+        typeCheckArgs(op, nArgs, formals, args);
+
+        return out->ins2(op, a, b);
+    }
+
+    LIns* ValidateWriter::ins3(LOpcode op, LIns* a, LIns* b, LIns* c)
+    {
+        int nArgs = 3;
+        LTy formals[3] = { LTy_I32, LTy_Void, LTy_Void };   // LTy_Void gets overwritten
+        LIns* args[3] = { a, b, c };
+
+        switch (op) {
+        case LIR_cmov:
+            checkLInsIsACondOrConst(op, 1, a);
+            formals[1] = LTy_I32;
+            formals[2] = LTy_I32;
+            break;
+
+        case LIR_qcmov:
+            checkLInsIsACondOrConst(op, 1, a);
+            checkIs64BitPlatform(op);
+            formals[1] = LTy_I64;
+            formals[2] = LTy_I64;
+            break;
+
+        default:
+            NanoAssert(0);
+        }
+
+        typeCheckArgs(op, nArgs, formals, args);
+
+        return out->ins3(op, a, b, c);
+    }
+
+    LIns* ValidateWriter::insParam(int32_t arg, int32_t kind)
+    {
+        return out->insParam(arg, kind);
+    }
+
+    LIns* ValidateWriter::insImm(int32_t imm)
+    {
+        return out->insImm(imm);
+    }
+
+    LIns* ValidateWriter::insImmq(uint64_t imm)
+    {
+        checkIs64BitPlatform(LIR_quad);
+        return out->insImmq(imm);
+    }
+
+    LIns* ValidateWriter::insImmf(double d)
+    {
+        return out->insImmf(d);
+    }
+
+    LIns* ValidateWriter::insCall(const CallInfo *call, LIns* args0[])
+    {
+        ArgSize sizes[MAXARGS];
+        uint32_t nArgs = call->get_sizes(sizes);
+        LTy formals[MAXARGS];
+        LIns* args[MAXARGS];    // in left-to-right order, unlike args0[]
+
+        LOpcode op;
+        ArgSize retSize = ArgSize(call->_argtypes & ARGSIZE_MASK_ANY);
+        switch (retSize) {
+        case ARGSIZE_NONE:  op = LIR_pcall; break;
+        case ARGSIZE_I:
+        case ARGSIZE_U:     op = LIR_icall; break;
+        case ARGSIZE_F:     op = LIR_fcall; break;
+        case ARGSIZE_Q:     op = LIR_qcall; 
+                            checkIs64BitPlatform(op);
+                            break;
+        default:            NanoAssert(0);
+        }
+
+        // This loop iterates over the args from right-to-left (because
+        // arg() and get_sizes() use right-to-left order), but puts the
+        // results into formals[] and args[] in left-to-right order so
+        // that arg numbers in error messages make sense to the user.
+        for (uint32_t i = 0; i < nArgs; i++) {
+            uint32_t i2 = nArgs - i - 1;    // converts right-to-left to left-to-right
+            switch (sizes[i]) {
+            case ARGSIZE_I:
+            case ARGSIZE_U:         formals[i2] = LTy_I32;   break;
+            case ARGSIZE_Q:         formals[i2] = LTy_I64;   break;
+            case ARGSIZE_F:         formals[i2] = LTy_F64;   break;
+            default: NanoAssert(0); formals[i2] = LTy_Void;  break;
+            }
+            args[i2] = args0[i];
+        }
+
+        typeCheckArgs(op, nArgs, formals, args);
+
+        return out->insCall(call, args0);
+    }
+
+    LIns* ValidateWriter::insGuard(LOpcode op, LIns *cond, GuardRecord *gr)
+    {
+        int nArgs;
+        LTy formals[1];
+        LIns* args[1];
+
+        switch (op) {
+        case LIR_x:
+        case LIR_xbarrier:
+            checkLInsIsNull(op, 1, cond);
+            nArgs = 0;
+            break;
+
+        case LIR_xt:
+        case LIR_xf:
+            checkLInsIsACondOrConst(op, 1, cond);
+            nArgs = 1;
+            formals[0] = LTy_I32;
+            args[0] = cond;
+            break;
+
+        case LIR_xtbl:
+            nArgs = 1;
+            formals[0] = LTy_I32;   // unlike xt/xf/jt/jf, this is an index, not a condition
+            args[0] = cond;
+            break;
+
+        default:
+            NanoAssert(0);
+        }
+
+        return out->insGuard(op, cond, gr);
+    }
+
+    LIns* ValidateWriter::insBranch(LOpcode op, LIns* cond, LIns* to)
+    {
+        int nArgs;
+        LTy formals[1];
+        LIns* args[1];
+
+        switch (op) {
+        case LIR_j:
+            checkLInsIsNull(op, 1, cond);
+            nArgs = 0;
+            break;
+
+        case LIR_jt:
+        case LIR_jf:
+            checkLInsIsACondOrConst(op, 1, cond);
+            nArgs = 1;
+            formals[0] = LTy_I32;
+            args[0] = cond;
+            break;
+
+        default:
+            NanoAssert(0);
+        }
+
+        // We check that target is a label in ValidateReader because it may
+        // not have been set here.
+
+        typeCheckArgs(op, nArgs, formals, args);
+
+        return out->insBranch(op, cond, to);
+    }
+
+    LIns* ValidateWriter::insAlloc(int32_t size)
+    {
+        return out->insAlloc(size);
+    }
+
+    LIns* ValidateWriter::insJtbl(LIns* index, uint32_t size)
+    {
+        int nArgs = 1;
+        LTy formals[1] = { LTy_I32 };
+        LIns* args[1] = { index };
+
+        typeCheckArgs(LIR_jtbl, nArgs, formals, args);
+
+        // We check that all jump table entries are labels in ValidateReader
+        // because they won't have been set here.
+
+        return out->insJtbl(index, size);
+    }
+
+    ValidateReader::ValidateReader(LirFilter* in) : LirFilter(in)
+        {}
+
+    LIns* ValidateReader::read()
+    {
+        LIns *ins = in->read();
+        switch (ins->opcode()) {
+        case LIR_jt:
+        case LIR_jf:
+        case LIR_j:
+            NanoAssert(ins->getTarget() && ins->oprnd2()->isop(LIR_label));
+            break;
+        case LIR_jtbl: {
+            uint32_t tableSize = ins->getTableSize();
+            NanoAssert(tableSize > 0);
+            for (uint32_t i = 0; i < tableSize; i++) {
+                LIns* target = ins->getTarget();
+                NanoAssert(target);
+                NanoAssert(target->isop(LIR_label));
+            }
             break;
         }
-        return out->ins3(v, s0, s1, s2);
+        default:
+            ;
+        }
+        return ins;
     }
+
 #endif
 #endif
 
