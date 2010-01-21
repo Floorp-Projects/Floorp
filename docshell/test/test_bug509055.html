@@ -29,12 +29,6 @@ function shortWait() {
   setTimeout(function() { gGen.next(); }, 0, false);
 }
 
-function onChildHashchange(e) {
-  // gGen might be undefined when we refresh the page, so we have to check here
-  if(gGen)
-    gGen.next();
-}
-
 function onChildLoad(e) {
   if(gGen)
     gGen.next();
@@ -46,7 +40,6 @@ function runTest() {
   var popup = window.open("file_bug509055.html", "popup 0",
                            "height=200,width=200,location=yes," +
                            "menubar=yes,status=yes,toolbar=yes,dependent=yes");
-  popup.hashchangeCallback = onChildHashchange;
   popup.onload = onChildLoad;
   yield; // wait for load
 
@@ -55,11 +48,10 @@ function runTest() {
   shortWait();
   yield;
 
+  // Both setting location.hash and calling history.back() happen
+  // synchronously, so there's no need to yield here.
   popup.location.hash = "#1";
-  yield; // wait for hashchange
-
   popup.history.back();
-  yield; // wait for hashchange
 
   popup.document.title = "Changed";
 
@@ -68,8 +60,8 @@ function runTest() {
   yield;
 
   var sh = popup.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                 .getInterface(Components.interfaces.nsIWebNavigation)
-                 .sessionHistory;
+                .getInterface(Components.interfaces.nsIWebNavigation)
+                .sessionHistory;
 
   // Get the title of the inner popup's current SHEntry 
   var sheTitle = sh.getEntryAtIndex(sh.index, false).title;

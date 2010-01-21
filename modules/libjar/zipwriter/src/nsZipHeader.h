@@ -68,6 +68,7 @@ public:
         mEAttr(0),
         mOffset(0),
         mFieldLength(0),
+        mLocalFieldLength(0),
         mVersionMade(0x0300 + 23), // Generated on Unix by v2.3 (matches infozip)
         mVersionNeeded(20), // Requires v2.0 to extract
         mFlags(0),
@@ -77,13 +78,15 @@ public:
         mDisk(0),
         mIAttr(0),
         mInited(PR_FALSE),
-        mExtraField(NULL)
+        mExtraField(NULL),
+        mLocalExtraField(NULL)
     {
     }
 
     ~nsZipHeader()
     {
         mExtraField = NULL;
+        mLocalExtraField = NULL;
     }
 
     PRUint32 mCRC;
@@ -92,6 +95,7 @@ public:
     PRUint32 mEAttr;
     PRUint32 mOffset;
     PRUint32 mFieldLength;
+    PRUint32 mLocalFieldLength;
     PRUint16 mVersionMade;
     PRUint16 mVersionNeeded;
     PRUint16 mFlags;
@@ -103,7 +107,8 @@ public:
     PRPackedBool mInited;
     nsCString mName;
     nsCString mComment;
-    nsAutoArrayPtr<char> mExtraField;
+    nsAutoArrayPtr<PRUint8> mExtraField;
+    nsAutoArrayPtr<PRUint8> mLocalExtraField;
 
     void Init(const nsACString & aPath, PRTime aDate, PRUint32 aAttr,
               PRUint32 aOffset);
@@ -112,6 +117,7 @@ public:
     PRUint32 GetCDSHeaderLength();
     nsresult WriteCDSHeader(nsIOutputStream *aStream);
     nsresult ReadCDSHeader(nsIInputStream *aStream);
+    const PRUint8 * GetExtraField(PRUint16 aTag, PRBool aLocal, PRUint16 *aBlockSize);
 };
 
 #endif

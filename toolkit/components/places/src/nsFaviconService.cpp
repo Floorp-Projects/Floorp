@@ -373,17 +373,6 @@ nsFaviconService::Init()
 mozIStorageStatement*
 nsFaviconService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
 {
-#define RETURN_IF_STMT(_stmt, _sql)                                        \
-  PR_BEGIN_MACRO                                                           \
-  if (address_of(_stmt) == address_of(aStmt)) {                            \
-    if (!_stmt) {                                                          \
-      nsresult rv = mDBConn->CreateStatement(_sql, getter_AddRefs(_stmt)); \
-      NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && _stmt, nsnull);                   \
-    }                                                                      \
-    return _stmt.get();                                                    \
-  }                                                                        \
-  PR_END_MACRO
-
   if (mShuttingDown)
     return nsnull;
 
@@ -434,7 +423,6 @@ nsFaviconService::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     ")"));
 
   return nsnull;
-#undef RETURN_IF_STMT
 }
 
 
@@ -554,9 +542,7 @@ nsFaviconService::SetFaviconUrlForPageInternal(nsIURI* aPageURI,
 
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
   {
-    mozIStorageStatement* stmt = GetStatement(mDBGetIconInfo);
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
+    DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetIconInfo);
     rv = BindStatementURI(stmt, 0, aFaviconURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -579,9 +565,7 @@ nsFaviconService::SetFaviconUrlForPageInternal(nsIURI* aPageURI,
     // We did not find any entry, so create a new one
 
     // not-binded params are automatically nullified by mozStorage
-    mozIStorageStatement* stmt = GetStatement(mDBInsertIcon);
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
+    DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBInsertIcon);
     rv = BindStatementURI(stmt, 0, aFaviconURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -589,10 +573,7 @@ nsFaviconService::SetFaviconUrlForPageInternal(nsIURI* aPageURI,
     NS_ENSURE_SUCCESS(rv, rv);
 
     {
-      mozIStorageStatement* getInfoStmt = GetStatement(mDBGetIconInfo);
-      NS_ENSURE_STATE(getInfoStmt);
-      mozStorageStatementScoper scoper(getInfoStmt);
-
+      DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(getInfoStmt, mDBGetIconInfo);
       rv = BindStatementURI(getInfoStmt, 0, aFaviconURI);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -609,9 +590,7 @@ nsFaviconService::SetFaviconUrlForPageInternal(nsIURI* aPageURI,
   rv = historyService->GetUrlIdFor(aPageURI, &pageId, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mozIStorageStatement* stmt = GetStatement(mDBSetPageFavicon);
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBSetPageFavicon);
   rv = stmt->BindInt64Parameter(0, pageId);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt64Parameter(1, iconId);
@@ -794,9 +773,7 @@ nsFaviconService::SetFaviconData(nsIURI* aFaviconURI, const PRUint8* aData,
   {
     // this block forces the scoper to reset our statement: necessary for the
     // next statement
-    mozIStorageStatement* stmt = GetStatement(mDBGetIconInfo);
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
+    DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetIconInfo);
     rv = BindStatementURI(stmt, 0, aFaviconURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -906,9 +883,7 @@ nsFaviconService::GetFaviconData(nsIURI* aFaviconURI, nsACString& aMimeType,
   NS_ENSURE_ARG_POINTER(aDataLen);
   NS_ENSURE_ARG_POINTER(aData);
 
-  mozIStorageStatement* stmt = GetStatement(mDBGetData);
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetData);
   nsresult rv = BindStatementURI(stmt, 0, aFaviconURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -964,9 +939,7 @@ nsFaviconService::GetFaviconForPage(nsIURI* aPageURI, nsIURI** _retval)
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG_POINTER(_retval);
 
-  mozIStorageStatement* stmt = GetStatement(mDBGetURL);
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetURL);
   nsresult rv = BindStatementURI(stmt, 0, aPageURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -988,9 +961,7 @@ nsFaviconService::GetFaviconImageForPage(nsIURI* aPageURI, nsIURI** _retval)
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG_POINTER(_retval);
 
-  mozIStorageStatement* stmt = GetStatement(mDBGetURL);
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
+  DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBGetURL);
   nsresult rv = BindStatementURI(stmt, 0, aPageURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1221,8 +1192,7 @@ nsFaviconService::GetFaviconDataAsync(nsIURI* aFaviconURI,
                                       mozIStorageStatementCallback *aCallback)
 {
   NS_ASSERTION(aCallback, "Doesn't make sense to call this without a callback");
-  mozIStorageStatement* stmt = GetStatement(mDBGetData);
-  NS_ENSURE_STATE(stmt);
+  DECLARE_AND_ASSIGN_LAZY_STMT(stmt, mDBGetData);
   nsresult rv = BindStatementURI(stmt, 0, aFaviconURI);
   NS_ENSURE_SUCCESS(rv, rv);
 

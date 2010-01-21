@@ -151,7 +151,7 @@ nsSVGLengthList::SetValueString(const nsAString& aValue)
     nsCOMPtr<nsISVGLength> length;
     NS_NewSVGLength(getter_AddRefs(length), NS_ConvertASCIItoUTF16(token));
     if (!length) {
-      rv = NS_ERROR_FAILURE;
+      rv = NS_ERROR_DOM_SYNTAX_ERR;
       break;
     }
     AppendElement(length);

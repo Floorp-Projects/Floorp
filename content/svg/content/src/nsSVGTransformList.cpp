@@ -179,7 +179,7 @@ nsSVGTransformList::SetValueString(const nsAString& aValue)
 
   if (NS_FAILED(rv)) {
     // there was a parse error.
-    rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_DOM_SYNTAX_ERR;
   }
   else {
     WillModify();
