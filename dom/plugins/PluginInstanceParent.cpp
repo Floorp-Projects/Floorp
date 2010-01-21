@@ -823,7 +823,7 @@ PluginInstanceParent::AnswerNPN_GetAuthenticationInfo(const nsCString& protocol,
                                                host.get(), port,
                                                scheme.get(), realm.get(),
                                                &u, &ulen, &p, &plen);
-    if (NPERR_NO_ERROR == result) {
+    if (NPERR_NO_ERROR == *result) {
         username->Adopt(u, ulen);
         password->Adopt(p, plen);
     }
