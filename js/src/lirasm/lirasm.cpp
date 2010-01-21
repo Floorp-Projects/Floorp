@@ -301,6 +301,8 @@ private:
     LirWriter *mCseFilter;
     LirWriter *mExprFilter;
     LirWriter *mVerboseWriter;
+    LirWriter *mValidateWriter1;
+    LirWriter *mValidateWriter2;
     multimap<string, LIns *> mFwdJumps;
 
     size_t mLineno;
@@ -485,7 +487,8 @@ FragmentAssembler::sProfId = 0;
 
 FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName, bool optimize)
     : mParent(parent), mFragName(fragmentName), optimize(optimize),
-      mBufWriter(NULL), mCseFilter(NULL), mExprFilter(NULL), mVerboseWriter(NULL)
+      mBufWriter(NULL), mCseFilter(NULL), mExprFilter(NULL), mVerboseWriter(NULL),
+      mValidateWriter1(NULL), mValidateWriter2(NULL)
 {
     mFragment = new Fragment(NULL verbose_only(, (mParent.mLogc.lcbits &
                                                   nanojit::LC_FragProfile) ?
@@ -495,9 +498,15 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
 
     mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf);
     if (optimize) {
+#ifdef DEBUG
+        mLir = mValidateWriter2 = new ValidateWriter(mLir, "end of writer pipeline");
+#endif
         mLir = mCseFilter  = new CseFilter(mLir, mParent.mAlloc);
         mLir = mExprFilter = new ExprFilter(mLir);
     }
+#ifdef DEBUG
+    mLir = mValidateWriter1  = new ValidateWriter(mLir, "start of writer pipeline");
+#endif
 
 #ifdef DEBUG
     if (mParent.mVerbose) {
@@ -517,6 +526,8 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
 
 FragmentAssembler::~FragmentAssembler()
 {
+    delete mValidateWriter1;
+    delete mValidateWriter2;
     delete mVerboseWriter;
     delete mExprFilter;
     delete mCseFilter;
@@ -893,6 +904,9 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_i2f:
           case LIR_u2f:
           case LIR_f2i:
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
+          case LIR_mod:
+#endif
             need(1);
             ins = mLir->ins1(mOpcode,
                              ref(mTokens[0]));
@@ -905,13 +919,11 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_mul:
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
           case LIR_div:
-          case LIR_mod:
 #endif
           case LIR_fadd:
           case LIR_fsub:
           case LIR_fmul:
           case LIR_fdiv:
-          case LIR_fmod:
           case LIR_qiadd:
           case LIR_and:
           case LIR_or:
@@ -1283,7 +1295,9 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 
     vector<LOpcode> I_II_ops;
     I_II_ops.push_back(LIR_add);
+#if !defined NANOJIT_64BIT
     I_II_ops.push_back(LIR_iaddp);
+#endif
     I_II_ops.push_back(LIR_sub);
     I_II_ops.push_back(LIR_mul);
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
@@ -1303,9 +1317,11 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     Q_QQ_ops.push_back(LIR_qiand);
     Q_QQ_ops.push_back(LIR_qior);
     Q_QQ_ops.push_back(LIR_qxor);
-    Q_QQ_ops.push_back(LIR_qilsh);
-    Q_QQ_ops.push_back(LIR_qirsh);
-    Q_QQ_ops.push_back(LIR_qursh);
+
+    vector<LOpcode> Q_QI_ops;
+    Q_QI_ops.push_back(LIR_qilsh);
+    Q_QI_ops.push_back(LIR_qirsh);
+    Q_QI_ops.push_back(LIR_qursh);
 
     vector<LOpcode> F_FF_ops;
     F_FF_ops.push_back(LIR_fadd);
@@ -1357,8 +1373,10 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     F_I_ops.push_back(LIR_u2f);
 
     vector<LOpcode> I_F_ops;
+#if !defined NANOJIT_64BIT
     I_F_ops.push_back(LIR_qlo);
     I_F_ops.push_back(LIR_qhi);
+#endif
     I_F_ops.push_back(LIR_f2i);
 
     vector<LOpcode> F_II_ops;
@@ -1608,6 +1626,14 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LOP_Q_QQ:
             if (!Qs.empty()) {
                 ins = mLir->ins2(rndPick(Q_QQ_ops), rndPick(Qs), rndPick(Qs));
+                addOrReplace(Qs, ins);
+                n++;
+            }
+            break;
+
+        case LOP_Q_QI:
+            if (!Qs.empty() && !Is.empty()) {
+                ins = mLir->ins2(rndPick(Q_QI_ops), rndPick(Qs), rndPick(Is));
                 addOrReplace(Qs, ins);
                 n++;
             }

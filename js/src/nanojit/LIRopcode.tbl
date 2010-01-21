@@ -78,7 +78,7 @@ OPDEF(stb,       9, Sti,  Void) // 8-bit integer store
 OPDEF(ld,       10, Ld,   I32)  // 32-bit integer load
 OPDEF(ialloc,   11, I,    I32)  // alloc some stack space (value is 32bit address)
 OPDEF(sti,      12, Sti,  Void) // 32-bit integer store
-OPDEF(ret,      13, Op1,  Void) // return a word-sized value
+OPDEF(ret,      13, Op1,  Void) // return a 32-bit integer
 OPDEF(live,     14, Op1,  Void) // extend live range of reference
 OPDEF(flive,    15, Op1,  Void) // extend live range of a floating point value reference
 OPDEF(icall,    16, C,    I32)  // subroutine call returning a 32-bit value
@@ -103,7 +103,11 @@ OPDEF(jtbl,     23, Jtbl, Void) // jump to address in table
 
 OPDEF(int,      24, I,    I32)  // constant 32-bit integer
 OPDEF(cmov,     25, Op3,  I32)  // conditional move
-OPDEF(callh,    26, Op1,  I32)  // get the high 32 bits of a call returning a 64-bit value in two 32bit registers
+// LIR_callh is a hack that's only used on 32-bit platforms that use SoftFloat.
+// Its operand is always a LIR_fcall, and it indicates that the 64-bit float
+// return value is being returned via two 32-bit registers.  The result is
+// always used as the first operand of a LIR_qjoin.
+OPDEF(callh,    26, Op1,  I32)
 
 // feq though fge must only be used on float arguments.  They return integers.
 // For all except feq, (op ^ 1) is the op which flips the
@@ -127,7 +131,10 @@ OPDEF(add,      36, Op2,  I32)  // integer addition
 OPDEF(sub,      37, Op2,  I32)  // integer subtraction
 OPDEF(mul,      38, Op2,  I32)  // integer multiplication
 OPDEF(div,      39, Op2,  I32)  // integer division
-OPDEF(mod,      40, Op1,  I32)  // hack: get the modulus from a LIR_div result, for x86 only
+// LIR_mod is a hack.  It's only used on i386/X64.  The operand is the result
+// of a LIR_div because on i386/X64 div and mod results are computed by the
+// same instruction.
+OPDEF(mod,      40, Op1,  I32)  // integer modulus
 
 OPDEF(and,      41, Op2,  I32)  // 32-bit bitwise AND
 OPDEF(or,       42, Op2,  I32)  // 32-bit bitwise OR
@@ -148,7 +155,16 @@ OPDEF(qhi,      51, Op1,  I32)  // get the high 32 bits of a 64-bit value
 OPDEF(ldcsb,    52, Ld,   I32)  // non-volatile  8-bit integer load, sign-extended to 32-bit
 OPDEF(ldcss,    53, Ld,   I32)  // non-volatile 16-bit integer load, sign-extended to 32-bit
 
-OPDEF(ov,       54, Op1,  I32)  // test for overflow;  value must have just been computed
+// This is an overflow test.  The operand is the result of an 32-bit integer
+// operation that may have overflowed (eg. a LIR_add).  It's a nasty hack
+// because this is a lie -- the true operand is not the result of the LIR_add
+// but rather an overflow condition code that is set implicitly as a result of
+// the LIR_add.  But there's no way to model multiple outputs from an
+// instruction in LIR.  So we rely on the LIR_ov always being right after the
+// LIR_add so that the back-ends can generate code in such a way that the
+// machine condition codes can be checked immediately after the addition is
+// performed.
+OPDEF(ov,       54, Op1,  I32)
 
 // Integer (32-bit) relational operators.  (op ^ 1) is the op which flips the
 // left and right sides of the comparison, so (lt ^ 1) == gt, or the operator
@@ -185,7 +201,7 @@ OPDEF(ldq,      74, Ld,   I64)  // 64-bit integer load
 OPDEF(qalloc,   75, I,    I64)  // allocate some stack space (value is 64bit address)
 
 OPDEF(stqi,     76, Sti,  Void) // 64-bit integer store
-OPDEF(fret,     77, Op1,  Void)
+OPDEF(fret,     77, Op1,  Void) // return a 64-bit float
 
 OPDEF(st32f,    78, Sti,  Void) // store 64-bit float as a 32-bit float (dropping precision)
 OPDEF(ld32f,    79, Ld,   F64)  // load 32-bit float and widen to 64-bit float
@@ -223,15 +239,19 @@ OPDEF(fadd,    100, Op2,  F64)  // floating-point addition
 OPDEF(fsub,    101, Op2,  F64)  // floating-point subtraction
 OPDEF(fmul,    102, Op2,  F64)  // floating-point multiplication
 OPDEF(fdiv,    103, Op2,  F64)  // floating-point division
-OPDEF(fmod,    104, Op2,  F64)  // floating-point modulus(?)
+// LIR_fmod is just a place-holder opcode, eg. the back-ends cannot generate
+// code for it.  It's used in TraceMonkey briefly but is always demoted to a
+// LIR_mod or converted to a function call before Nanojit has to do anything
+// serious with it.
+OPDEF(fmod,    104, Op2,  F64)  // floating-point modulus
 
 OPDEF(qiand,   105, Op2,  I64)  // 64-bit bitwise AND
 OPDEF(qior,    106, Op2,  I64)  // 64-bit bitwise OR
 OPDEF(qxor,    107, Op2,  I64)  // 64-bit bitwise XOR
 OPDEF(__108,   108, None, Void)
-OPDEF(qilsh,   109, Op2,  I64)  // 64-bit left shift
-OPDEF(qirsh,   110, Op2,  I64)  // 64-bit signed right shift
-OPDEF(qursh,   111, Op2,  I64)  // 64-bit unsigned right shift
+OPDEF(qilsh,   109, Op2,  I64)  // 64-bit left shift;           2nd operand is a 32-bit integer
+OPDEF(qirsh,   110, Op2,  I64)  // 64-bit signed right shift;   2nd operand is a 32-bit integer
+OPDEF(qursh,   111, Op2,  I64)  // 64-bit unsigned right shift; 2nd operand is a 32-bit integer
 OPDEF(qiadd,   112, Op2,  I64)  // 64-bit bitwise ADD
 
 OPDEF(ldc32f,  113, Ld,   F64)  // non-volatile load 32-bit float and widen to 64-bit float
