@@ -75,7 +75,7 @@ endif
 endif
 endif
 
-ifneq (,$(filter FreeBSD NetBSD OpenBSD BSD_OS,$(OS_ARCH)))
+ifneq (,$(filter NetBSD OpenBSD BSD_OS,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
 endif
@@ -84,7 +84,7 @@ endif
 # New code for Linux, et. al., with gcc
 # Migrate other platforms here after testing
 #
-ifneq (,$(filter Linux GNU_%,$(OS_ARCH)))
+ifneq (,$(filter Linux FreeBSD GNU_%,$(OS_ARCH)))
 # Linux/x86-64
 ifeq (x86_64,$(OS_TEST))
 CPPSRCS		:= xptcinvoke_x86_64_unix.cpp xptcstubs_x86_64_linux.cpp
@@ -106,12 +106,6 @@ endif
 #
 ifeq ($(OS_ARCH)$(OS_TEST),OpenBSDx86_64)
 CPPSRCS		:= xptcinvoke_amd64_openbsd.cpp xptcstubs_amd64_openbsd.cpp
-endif
-#
-# FreeBSD/amd64
-#
-ifeq ($(OS_ARCH)$(OS_TEST),FreeBSDx86_64)
-CPPSRCS		:= xptcinvoke_amd64_linux.cpp xptcstubs_amd64_linux.cpp
 endif
 #
 # BeOS/Intel (uses the same unixish_x86 code)
