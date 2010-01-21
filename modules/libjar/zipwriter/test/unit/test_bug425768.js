@@ -57,6 +57,8 @@ function run_test()
 
   // Adding the directory would have added a fixed amount to the file size.
   // Any difference suggests the CDS was written out incorrectly.
-  var extra = ZIP_FILE_HEADER_SIZE + ZIP_CDS_HEADER_SIZE + (DIRNAME.length * 2);
+  var extra = ZIP_FILE_HEADER_SIZE + ZIP_CDS_HEADER_SIZE +
+              (DIRNAME.length * 2) + (ZIP_EXTENDED_TIMESTAMP_SIZE * 2);
+
   do_check_eq(source.fileSize + extra, tmpFile.fileSize);
 }

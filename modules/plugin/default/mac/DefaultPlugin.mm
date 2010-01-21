@@ -227,7 +227,7 @@ void drawPlugin(NPP instance, NPCocoaEvent* event)
 {
   PluginInstance* currentInstance = (PluginInstance*)(instance->pdata);
   CGContextRef cgContext = event->data.draw.context;
-  if (cgContext)
+  if (!cgContext)
     return;
 
   float windowWidth = currentInstance->window.width;

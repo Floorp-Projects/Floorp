@@ -125,7 +125,7 @@ nsSVGViewBox::SetBaseValueString(const nsAString& aValue,
   }
   if (i!=4 || nsCRT::strtok(rest, delimiters, &rest)!=0) {
     // there was a parse error.
-    rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_DOM_SYNTAX_ERR;
   } else {
     SetBaseValue(vals[0], vals[1], vals[2], vals[3], aSVGElement, aDoSetAttr);
   }
