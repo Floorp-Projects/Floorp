@@ -734,6 +734,8 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
   return NS_OK;
 }
 
+static void OOPDeinit();
+
 nsresult UnsetExceptionHandler()
 {
   delete gExceptionHandler;
@@ -764,6 +766,10 @@ nsresult UnsetExceptionHandler()
     return NS_ERROR_NOT_INITIALIZED;
 
   gExceptionHandler = nsnull;
+
+#ifdef MOZ_IPC
+  OOPDeinit();
+#endif
 
   return NS_OK;
 }
@@ -1102,7 +1108,6 @@ OOPInit()
                     "attempt to initialize OOP crash reporter before in-process crashreporter!");
 
 #if defined(XP_WIN)
-  // This is intentionally leaked, bug 539451
   childCrashNotifyPipe =
     PR_smprintf("\\\\.\\pipe\\gecko-crash-server-pipe.%i",
                 static_cast<int>(::GetCurrentProcessId()));
@@ -1138,6 +1143,29 @@ OOPInit()
   pidToMinidump->Init();
 
   dumpMapLock = new Mutex("CrashReporter::dumpMapLock");
+}
+
+static void
+OOPDeinit()
+{
+  if (!OOPInitialized()) {
+    NS_WARNING("OOPDeinit() without successful OOPInit()");
+    return;
+  }
+
+  delete crashServer;
+  crashServer = NULL;
+
+  delete dumpMapLock;
+  dumpMapLock = NULL;
+
+  delete pidToMinidump;
+  pidToMinidump = NULL;
+
+#if defined(XP_WIN)
+  PR_Free(childCrashNotifyPipe);
+  childCrashNotifyPipe = NULL;
+#endif
 }
 
 #if defined(XP_WIN)
