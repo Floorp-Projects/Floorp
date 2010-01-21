@@ -143,7 +143,14 @@ ObjectWrapperParent::ActorDestroy(ActorDestroyReason)
     if (mObj)
         mObj->setPrivate(NULL);
 }
-    
+
+ContextWrapperParent*
+ObjectWrapperParent::Manager()
+{
+    PContextWrapperParent* pcwp = PObjectWrapperParent::Manager();
+    return static_cast<ContextWrapperParent*>(pcwp);
+}
+
 JSObject*
 ObjectWrapperParent::GetJSObject(JSContext* cx) const
 {
@@ -337,7 +344,8 @@ ObjectWrapperParent::CPOW_AddProperty(JSContext *cx, JSObject *obj, jsval id,
 
     JSBool out_ok;
 
-    return (self->CallAddProperty(in_id,
+    return (self->Manager()->RequestRunToCompletion() &&
+            self->CallAddProperty(in_id,
                                   &out_ok) &&
             out_ok);
 }
@@ -361,7 +369,8 @@ ObjectWrapperParent::CPOW_GetProperty(JSContext *cx, JSObject *obj, jsval id,
     JSBool out_ok;
     JSVariant out_v;
     
-    return (self->CallGetProperty(in_id,
+    return (self->Manager()->RequestRunToCompletion() &&
+            self->CallGetProperty(in_id,
                                   &out_ok, &out_v) &&
             out_ok &&
             self->jsval_from_JSVariant(cx, out_v, vp));
@@ -388,7 +397,8 @@ ObjectWrapperParent::CPOW_SetProperty(JSContext *cx, JSObject *obj, jsval id,
     JSBool out_ok;
     JSVariant out_v;
 
-    return (self->CallSetProperty(in_id, in_v,
+    return (self->Manager()->RequestRunToCompletion() &&
+            self->CallSetProperty(in_id, in_v,
                                   &out_ok, &out_v) &&
             out_ok &&
             self->jsval_from_JSVariant(cx, out_v, vp));
@@ -413,7 +423,8 @@ ObjectWrapperParent::CPOW_DelProperty(JSContext *cx, JSObject *obj, jsval id,
     JSBool out_ok;
     JSVariant out_v;
     
-    return (self->CallDelProperty(in_id,
+    return (self->Manager()->RequestRunToCompletion() &&
+            self->CallDelProperty(in_id,
                                   &out_ok, &out_v) &&
             out_ok &&
             jsval_from_JSVariant(cx, out_v, vp));
@@ -480,6 +491,7 @@ ObjectWrapperParent::CPOW_NewEnumerate(JSContext *cx, JSObject *obj,
 
     switch (enum_op) {
     case JSENUMERATE_INIT:
+        self->Manager()->RequestRunToCompletion();
         return self->NewEnumerateInit(cx, statep, idp);
     case JSENUMERATE_NEXT:
         return self->NewEnumerateNext(cx, statep, idp);
@@ -509,7 +521,8 @@ ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSObject *obj, jsval id,
     JSBool out_ok;
     PObjectWrapperParent* out_pobj;
 
-    if (!self->CallNewResolve(in_id, flags,
+    if (!self->Manager()->RequestRunToCompletion() ||
+        !self->CallNewResolve(in_id, flags,
                               &out_ok, &out_pobj) ||
         !out_ok ||
         !JSObject_from_PObjectWrapperParent(cx, out_pobj, objp))
@@ -579,7 +592,8 @@ ObjectWrapperParent::CPOW_Call(JSContext* cx, JSObject* obj, uintN argc,
     JSBool out_ok;
     JSVariant out_rval;
 
-    return (function->CallCall(receiver, in_argv,
+    return (function->Manager()->RequestRunToCompletion() &&
+            function->CallCall(receiver, in_argv,
                                &out_ok, &out_rval) &&
             out_ok &&
             jsval_from_JSVariant(cx, out_rval, rval));
@@ -604,7 +618,8 @@ ObjectWrapperParent::CPOW_Construct(JSContext *cx, JSObject *obj, uintN argc,
     JSBool out_ok;
     PObjectWrapperParent* out_powp;
 
-    return (constructor->CallConstruct(in_argv,
+    return (constructor->Manager()->RequestRunToCompletion() &&
+            constructor->CallConstruct(in_argv,
                                        &out_ok, &out_powp) &&
             out_ok &&
             jsval_from_PObjectWrapperParent(cx, out_powp, rval));
@@ -629,7 +644,8 @@ ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSObject *obj, jsval v,
 
     JSBool out_ok;
 
-    return (self->CallHasInstance(in_v,
+    return (self->Manager()->RequestRunToCompletion() &&
+            self->CallHasInstance(in_v,
                                   &out_ok, bp) &&
             out_ok);
 }

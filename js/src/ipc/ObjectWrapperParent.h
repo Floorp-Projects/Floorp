@@ -48,6 +48,8 @@
 namespace mozilla {
 namespace jsipc {
 
+class ContextWrapperParent;
+
 class ObjectWrapperParent
     : public PObjectWrapperParent
 {
@@ -68,6 +70,8 @@ public:
 protected:
 
     void ActorDestroy(ActorDestroyReason why);
+
+    ContextWrapperParent* Manager();
 
 private:
 
