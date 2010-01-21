@@ -37,6 +37,18 @@ function setupTest(uri, domain, cookies, loads, headers) {
   gPopup = window.open(uri, 'hai', 'width=100,height=100');
 }
 
+function finishTest()
+{
+  gObs.remove();
+
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  Components.classes["@mozilla.org/preferences-service;1"]
+            .getService(Components.interfaces.nsIPrefBranch)
+            .clearUserPref("network.cookie.cookieBehavior");
+
+  SimpleTest.finish();
+}
+
 // Count headers.
 function obs () {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -79,8 +91,7 @@ function messageReceiver(evt)
     gPopup.close();
     window.removeEventListener("message", messageReceiver, false);
 
-    gObs.remove();
-    SimpleTest.finish();
+    finishTest();
     return;
   }
 
@@ -99,8 +110,6 @@ function runTest() {
   // set a cookie from a domain of "localhost"
   document.cookie = "o=noes";
 
-  gObs.remove();
-
   is(gHeaders, gExpectedHeaders, "number of observed request headers");
 
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -113,5 +122,5 @@ function runTest() {
   is(count, gExpectedCookies, "total number of cookies");
   cs.removeAll();
 
-  SimpleTest.finish();
+  finishTest();
 }
