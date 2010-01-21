@@ -673,16 +673,19 @@ nsDOMDataTransfer::ConvertFromVariant(nsIVariant* aVariant,
   }
 
   PRUnichar* chrs;
-  nsresult rv = aVariant->GetAsWString(&chrs);
+  PRUint32 len = 0;
+  nsresult rv = aVariant->GetAsWStringWithSize(&len, &chrs);
   if (NS_FAILED(rv))
     return PR_FALSE;
+
+  nsAutoString str;
+  str.Adopt(chrs, len);
 
   nsCOMPtr<nsISupportsString>
     strSupports(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   if (!strSupports)
     return PR_FALSE;
 
-  nsAutoString str(chrs);
   strSupports->SetData(str);
 
   *aSupports = strSupports;
