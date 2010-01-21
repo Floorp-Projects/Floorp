@@ -601,12 +601,10 @@ nsObjectFrame::Init(nsIContent*      aContent,
 
   nsresult rv = nsObjectFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
-  if (NS_SUCCEEDED(rv)) {
-    NotifyPluginEventObservers(NS_LITERAL_STRING("init").get());
-  }
 #ifdef XP_WIN
   mDoublePassEvent = 0;
 #endif
+
   return rv;
 }
 
@@ -616,8 +614,6 @@ nsObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
   NS_ASSERTION(!mPreventInstantiation ||
                (mContent && mContent->GetCurrentDoc()->GetDisplayDocument()),
                "about to crash due to bug 136927");
-
-  NotifyPluginEventObservers(NS_LITERAL_STRING("destroy").get());
 
   PresContext()->RootPresContext()->UnregisterPluginForGeometryUpdates(this);
 
@@ -996,7 +992,7 @@ nsObjectFrame::FixupWindow(const nsSize& aSize)
   window->clipRect.bottom = presContext->AppUnitsToDevPixels(aSize.height);
   window->clipRect.right = presContext->AppUnitsToDevPixels(aSize.width);
 #endif
-  NotifyPluginEventObservers(NS_LITERAL_STRING("reflow").get());
+  NotifyPluginReflowObservers();
 }
 
 void
@@ -1235,14 +1231,17 @@ nsObjectFrame::SetAbsoluteScreenPosition(nsIDOMElement* element,
 #endif
 }
 
-void
-nsObjectFrame::NotifyPluginEventObservers(const PRUnichar *eventType)
-{
-  nsCOMPtr<nsIDOMElement> e = do_QueryInterface(mContent);
-  if (!e)
-    return;
+nsresult
+nsObjectFrame::PluginEventNotifier::Run() {
   nsCOMPtr<nsIObserverService> obsSvc = do_GetService("@mozilla.org/observer-service;1");
-  obsSvc->NotifyObservers(e, "plugin-changed-event", eventType);
+  obsSvc->NotifyObservers(nsnull, "plugin-changed-event", mEventType.get());
+  return NS_OK;
+}
+
+void
+nsObjectFrame::NotifyPluginReflowObservers()
+{
+  nsContentUtils::AddScriptRunner(new PluginEventNotifier(NS_LITERAL_STRING("reflow")));
 }
 
 void
