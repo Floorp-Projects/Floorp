@@ -15,4 +15,5 @@ IPDLSRCS =					\
   PTestShutdown.ipdl				\
   PTestShutdownSub.ipdl				\
   PTestShutdownSubsub.ipdl			\
+  PTestSyncWakeup.ipdl				\
   $(NULL)
