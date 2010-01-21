@@ -45,9 +45,39 @@
 #include "mozilla/jsipc/ObjectWrapperChild.h"
 #include "mozilla/jsipc/CPOWTypes.h"
 
+#include "jsapi.h"
+#include "nsAutoPtr.h"
 #include "nsTArray.h"
+#include "nsContentUtils.h"
+#include "nsIJSContextStack.h"
 
 using namespace mozilla::jsipc;
+
+namespace {
+
+    class AutoContextPusher {
+
+        nsCxPusher mStack;
+        JSAutoRequest mRequest;
+        JS_DECL_USE_GUARD_OBJECT_NOTIFIER;
+
+    public:
+
+        AutoContextPusher(JSContext* cx
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+            : mRequest(cx)
+        {
+            JS_GUARD_OBJECT_NOTIFIER_INIT;
+            mStack.Push(cx);
+        }
+
+        ~AutoContextPusher() {
+            mStack.Pop();
+        }
+
+    };
+
+}
 
 ObjectWrapperChild::ObjectWrapperChild(JSContext* cx, JSObject* obj)
     : mObj(obj)
@@ -212,7 +242,8 @@ ObjectWrapperChild::AnswerSomething(/* in-parameters */
                                     /* out-parameters */)
 {
     // initialize out-parameters for failure
-    JSAutoRequest request(Manager()->GetContext());
+    JSContext* cx = Manager()->GetContext();
+    AutoContextPusher acp(cx);
     // validate in-parameters, else return false
     // successfully perform local JS operations, else return true
     // perform out-parameter conversions, else return false
@@ -233,7 +264,7 @@ ObjectWrapperChild::AnswerAddProperty(const nsString& id,
     *ok = JS_FALSE;
 
     JSContext* cx = Manager()->GetContext();
-    JSAutoRequest request(cx);
+    AutoContextPusher acp(cx);
 
     if (!jsid_from_nsString(cx, id, &interned_id))
         return false;
@@ -253,7 +284,7 @@ ObjectWrapperChild::AnswerGetProperty(const nsString& id,
     *ok = JS_FALSE;
 
     JSContext* cx = Manager()->GetContext();
-    JSAutoRequest request(cx);
+    AutoContextPusher acp(cx);
 
     if (!jsid_from_nsString(cx, id, &interned_id))
         return false;
@@ -279,7 +310,7 @@ ObjectWrapperChild::AnswerSetProperty(const nsString& id, const JSVariant& v,
     *vp = v;
 
     JSContext* cx = Manager()->GetContext();
-    JSAutoRequest request(cx);
+    AutoContextPusher acp(cx);
 
     if (!jsid_from_nsString(cx, id, &interned_id) ||
         !jsval_from_JSVariant(cx, v, &val))
@@ -300,7 +331,7 @@ ObjectWrapperChild::AnswerDelProperty(const nsString& id,
     *ok = JS_FALSE;
 
     JSContext* cx = Manager()->GetContext();
-    JSAutoRequest request(cx);
+    AutoContextPusher acp(cx);
 
     if (!jsid_from_nsString(cx, id, &interned_id))
         return false;
@@ -345,7 +376,7 @@ ObjectWrapperChild::AnswerNewEnumerateInit(/* no in-parameters */
     *idp = 0;
 
     JSContext* cx = Manager()->GetContext();
-    JSAutoRequest request(cx);
+    AutoContextPusher acp(cx);
 
     JSClass* clasp = const_cast<JSClass*>(&sCPOW_NewEnumerateState_JSClass);
     JSObject* state = JS_NewObjectWithGivenProto(cx, clasp, NULL, NULL);
@@ -397,7 +428,7 @@ ObjectWrapperChild::AnswerNewEnumerateNext(const JSVariant& in_state,
     idp->Truncate();
     
     JSContext* cx = Manager()->GetContext();
-    JSAutoRequest request(cx);
+    AutoContextPusher acp(cx);
 
     if (!JSObject_from_JSVariant(cx, in_state, &state))
         return false;
@@ -429,7 +460,7 @@ ObjectWrapperChild::RecvNewEnumerateDestroy(const JSVariant& in_state)
     JSObject* state;
 
     JSContext* cx = Manager()->GetContext();
-    JSAutoRequest request(cx);
+    AutoContextPusher acp(cx);
 
     if (!JSObject_from_JSVariant(cx, in_state, &state))
         return false;
@@ -449,7 +480,7 @@ ObjectWrapperChild::AnswerNewResolve(const nsString& id, const int& flags,
     *obj2 = NULL;
 
     JSContext* cx = Manager()->GetContext();
-    JSAutoRequest request(cx);
+    AutoContextPusher acp(cx);
 
     if (!jsid_from_nsString(cx, id, &interned_id))
         return false;
@@ -475,7 +506,7 @@ ObjectWrapperChild::AnswerConvert(const JSType& type,
 {
     jsval v;
     JSContext* cx = Manager()->GetContext();
-    JSAutoRequest request(cx);
+    AutoContextPusher acp(cx);
     *ok = JS_ConvertValue(cx, OBJECT_TO_JSVAL(mObj), type, &v);
     return jsval_to_JSVariant(cx, *ok ? v : JSVAL_VOID, vp);
 }
@@ -490,9 +521,9 @@ ObjectWrapperChild::AnswerCall(PObjectWrapperChild* receiver, const nsTArray<JSV
                                JSBool* ok, JSVariant* rval)
 {
     *ok = JS_FALSE;
-    
+
     JSContext* cx = Manager()->GetContext();
-    JSAutoRequest request(cx);
+    AutoContextPusher acp(cx);
 
     JSObject* obj;
     if (!JSObject_from_PObjectWrapperChild(cx, receiver, &obj))
@@ -523,7 +554,7 @@ ObjectWrapperChild::AnswerConstruct(const nsTArray<JSVariant>& argv,
     *ok = JS_FALSE;
 
     JSContext* cx = Manager()->GetContext();
-    JSAutoRequest request(cx);
+    AutoContextPusher acp(cx);
 
     AutoJSArgs args;
     PRUint32 argc = argv.Length();
@@ -550,7 +581,7 @@ ObjectWrapperChild::AnswerHasInstance(const JSVariant& v,
 {
     jsval candidate;
     JSContext* cx = Manager()->GetContext();
-    JSAutoRequest request(cx);
+    AutoContextPusher acp(cx);
     if (!jsval_from_JSVariant(cx, v, &candidate))
         return false;
     *ok = JS_HasInstance(cx, mObj, candidate, bp);
