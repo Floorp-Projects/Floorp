@@ -64,16 +64,8 @@ namespace nanojit
             for splitting and coalescing blocks. */
         CodeList* lower;
 
-        /** pointer to the heapblock terminal that represents the code chunk containing this block */
-        CodeList* terminator;
-
         /** true if block is free, false otherwise */
         bool isFree;
-
-        /** (only valid for terminator blocks).  Set true just before calling
-         * markCodeChunkExec() and false just after markCodeChunkWrite() */
-        bool isExec;
-
         union {
             // this union is used in leu of pointer punning in code
             // the end of this block is always the address of the next higher block
@@ -150,16 +142,8 @@ namespace nanojit
 
         /** free a block previously allocated by allocCodeMem.  nbytes will
          * match the previous allocCodeMem, but is provided here as well
-         * to mirror the mmap()/munmap() api.  markCodeChunkWrite() will have
-         * been called if necessary, so it is not necessary for freeCodeChunk()
-         * to do it again. */
+         * to mirror the mmap()/munmap() api. */
         void freeCodeChunk(void* addr, size_t nbytes);
-
-        /** make this specific extent ready to execute (might remove write) */
-        void markCodeChunkExec(void* addr, size_t nbytes);
-
-        /** make this extent ready to modify (might remove exec) */
-        void markCodeChunkWrite(void* addr, size_t nbytes);
 
     public:
         CodeAlloc();
@@ -214,12 +198,6 @@ namespace nanojit
 
         /** return any completely empty pages */
         void sweep();
-
-        /** protect all code in this code alloc */
-        void markAllExec();
-
-        /** unprotect the code chunk containing just this one block */
-        void markBlockWrite(CodeList* b);
     };
 }
 
