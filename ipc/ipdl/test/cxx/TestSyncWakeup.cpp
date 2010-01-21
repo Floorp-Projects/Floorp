@@ -1,3 +1,7 @@
+#if defined(OS_POSIX)
+#include <unistd.h>             // sleep()
+#endif
+
 #include "TestSyncWakeup.h"
 
 #include "IPDLUnitTests.h"      // fail etc.
@@ -42,7 +46,12 @@ TestSyncWakeupParent::RecvSync1()
     // XXX ugh ... need to ensure that the async message and sync
     // reply come in "far enough" apart that this test doesn't pass on
     // accident
+#if defined(OS_POSIX)
+    // NB: can't use PR_Sleep (i.e. Sleep() on windows) because it's
+    // only spec'd to block the current thread, not the current
+    // process.  We need the IO thread to sleep as well.
     sleep(5);
+#endif
 
     return true;
 }
@@ -53,8 +62,10 @@ TestSyncWakeupParent::RecvSync2()
     if (!SendNote2())
         fail("sending Note2()");
 
+#if defined(OS_POSIX)
     // see above
     sleep(5);
+#endif
 
     return true;
 }
