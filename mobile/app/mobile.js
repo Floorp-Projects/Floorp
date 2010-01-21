@@ -406,3 +406,27 @@ pref("browser.search.param.yahoo-fr", "moz35");
 pref("browser.search.param.yahoo-fr-cjkt", "moz35");
 pref("browser.search.param.yahoo-fr-ja", "mozff");
 #endif
+
+/* app update prefs */
+#ifdef MOZ_UPDATER
+pref("app.update.auto", true);
+pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
+pref("app.update.timer", 600000);
+pref("app.update.mode", 1);
+pref("app.update.silent", false);
+pref("app.update.url", "https://aus2.mozilla.org/update/3/%APP_ID%/%VERSION%/%GRE_MILESTONE%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
+pref("app.update.nagTimer.restart", 86400);
+pref("app.update.promptWaitTime", 43200);
+pref("app.update.idletime", 60);
+pref("app.update.showInstalledUI", false);
+pref("app.update.incompatible.mode", 0);
+
+#ifdef MOZ_OFFICIAL_BRANDING
+pref("app.update.interval", 86400);
+pref("app.update.download.backgroundInterval", 600);
+pref("app.update.url.manual", "http://www.mozilla.com/%LOCALE%/m/");
+pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/mobile/releases/");
+#else 
+pref("app.update.interval", 28800);
+#endif
+#endif
