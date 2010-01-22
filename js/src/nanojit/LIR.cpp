@@ -2522,7 +2522,7 @@ namespace nanojit
         LIns* prev = reader.read();     // returns the LIns before 'ins'
         NanoAssert(prev);
         if (prev != oprnd1) {
-            errorStructureShouldBe(ins->opcode(), "argument", 1, oprnd1, 
+            errorStructureShouldBe(ins->opcode(), "argument", 1, oprnd1,
                                    "located immediately prior, but isn't");
         }
     }
@@ -2614,7 +2614,7 @@ namespace nanojit
         default:
             NanoAssert(0);
         }
-    
+
         // No args to type-check.
 
         return out->ins0(op);
@@ -2727,7 +2727,7 @@ namespace nanojit
 
         switch (op) {
         case LIR_add:
-        case LIR_sub:          
+        case LIR_sub:
         case LIR_mul:
         case LIR_div:
         case LIR_and:
@@ -2874,7 +2874,7 @@ namespace nanojit
         case ARGSIZE_I:
         case ARGSIZE_U:     op = LIR_icall; break;
         case ARGSIZE_F:     op = LIR_fcall; break;
-        case ARGSIZE_Q:     op = LIR_qcall; 
+        case ARGSIZE_Q:     op = LIR_qcall;
                             checkIs64BitPlatform(op);
                             break;
         default:            NanoAssert(0);
