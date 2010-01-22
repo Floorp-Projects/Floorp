@@ -1075,8 +1075,8 @@ namespace nanojit
 
         InsList pending_lives(alloc);
 
-        for (LInsp ins = reader->read(); !ins->isop(LIR_start) && !error();
-                                         ins = reader->read())
+        NanoAssert(!error());
+        for (LInsp ins = reader->read(); !ins->isop(LIR_start); ins = reader->read())
         {
             /* What's going on here: we're visiting all the LIR instructions
                in the buffer, working strictly backwards in buffer-order, and
