@@ -5173,29 +5173,12 @@ JS_IsRunning(JSContext *cx)
     return cx->fp != NULL;
 }
 
+
+
 JS_PUBLIC_API(JSBool)
 JS_IsConstructing(JSContext *cx)
 {
-#ifdef JS_TRACER
-    if (JS_ON_TRACE(cx)) {
-        JS_ASSERT(cx->bailExit);
-        return *cx->bailExit->pc == JSOP_NEW;
-    }
-#endif
-
-    JSStackFrame *fp = js_GetTopStackFrame(cx);
-    return fp && (fp->flags & JSFRAME_CONSTRUCTING);
-}
-
-JS_FRIEND_API(JSBool)
-JS_IsAssigning(JSContext *cx)
-{
-    JSStackFrame *fp;
-
-    fp = js_GetScriptedCaller(cx, NULL);
-    if (!fp || !fp->regs)
-        return JS_FALSE;
-    return (js_CodeSpec[*fp->regs->pc].format & JOF_ASSIGNING) != 0;
+    return cx->isConstructing();
 }
 
 JS_PUBLIC_API(JSStackFrame *)
