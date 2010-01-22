@@ -691,7 +691,7 @@ static JSBool
 Namespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     return NamespaceHelper(cx,
-                           JS_IsConstructing(cx) ? obj : NULL,
+                           cx->isConstructing() ? obj : NULL,
                            argc, argv, rval);
 }
 
@@ -825,7 +825,7 @@ out:
 static JSBool
 QName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return QNameHelper(cx, JS_IsConstructing(cx) ? obj : NULL,
+    return QNameHelper(cx, cx->isConstructing() ? obj : NULL,
                        &js_QNameClass.base, argc, argv, rval);
 }
 
@@ -833,7 +833,7 @@ static JSBool
 AttributeName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval)
 {
-    return QNameHelper(cx, JS_IsConstructing(cx) ? obj : NULL,
+    return QNameHelper(cx, cx->isConstructing() ? obj : NULL,
                        &js_AttributeNameClass, argc, argv, rval);
 }
 
@@ -7119,7 +7119,7 @@ XML(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     *rval = OBJECT_TO_JSVAL(xobj);
     xml = (JSXML *) xobj->getPrivate();
 
-    if (JS_IsConstructing(cx) && !JSVAL_IS_PRIMITIVE(v)) {
+    if (cx->isConstructing() && !JSVAL_IS_PRIMITIVE(v)) {
         vobj = JSVAL_TO_OBJECT(v);
         clasp = OBJ_GET_CLASS(cx, vobj);
         if (clasp == &js_XMLClass ||
@@ -7147,7 +7147,7 @@ XMLList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v))
         v = STRING_TO_JSVAL(cx->runtime->emptyString);
 
-    if (JS_IsConstructing(cx) && !JSVAL_IS_PRIMITIVE(v)) {
+    if (cx->isConstructing() && !JSVAL_IS_PRIMITIVE(v)) {
         vobj = JSVAL_TO_OBJECT(v);
         if (OBJECT_IS_XML(cx, vobj)) {
             xml = (JSXML *) vobj->getPrivate();
@@ -7272,31 +7272,6 @@ js_FinalizeXML(JSContext *cx, JSXML *xml)
 #ifdef DEBUG_notme
     JS_REMOVE_LINK(&xml->links);
 #endif
-}
-
-JSObject *
-js_ParseNodeToXMLObject(JSCompiler *jsc, JSParseNode *pn)
-{
-    jsval nsval;
-    JSObject *ns;
-    JSXMLArray nsarray;
-    JSXML *xml;
-
-    if (!js_GetDefaultXMLNamespace(jsc->context, &nsval))
-        return NULL;
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(nsval));
-    ns = JSVAL_TO_OBJECT(nsval);
-
-    if (!XMLArrayInit(jsc->context, &nsarray, 1))
-        return NULL;
-
-    XMLARRAY_APPEND(jsc->context, &nsarray, ns);
-    xml = ParseNodeToXML(jsc, pn, &nsarray, XSF_PRECOMPILED_ROOT);
-    XMLArrayFinish(jsc->context, &nsarray);
-    if (!xml)
-        return NULL;
-
-    return xml->object;
 }
 
 JSObject *

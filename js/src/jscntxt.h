@@ -1402,6 +1402,8 @@ struct JSContext {
         this->free(p);
     }
 
+    bool isConstructing();
+
 private:
 
     /*
