@@ -102,6 +102,8 @@
 
 #include "jsautooplen.h"
 
+using namespace js;
+
 #ifdef JS_THREADSAFE
 #define NATIVE_DROP_PROPERTY js_DropProperty
 
@@ -1769,7 +1771,7 @@ Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
     JSProperty *prop;
     if (!js_ValueToStringId(cx, STRING_TO_JSVAL(str), &id) ||
         !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &pobj, &prop)) {
-        js_SetBuiltinError(cx);
+        SetBuiltinError(cx);
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     }
 
@@ -1815,7 +1817,7 @@ Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
     jsval v;
 
     if (!js_PropertyIsEnumerable(cx, obj, id, &v)) {
-        js_SetBuiltinError(cx);
+        SetBuiltinError(cx);
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     }
 
@@ -4380,7 +4382,7 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
                  * the global shape. jstracer.cpp assumes that the global shape
                  * never changes on trace, so we must deep-bail here.
                  */
-                js_LeaveTrace(cx);
+                LeaveTrace(cx);
             }
             return JS_TRUE;
         }
@@ -4501,7 +4503,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     JSBool added;
 
     JS_ASSERT((defineHow & ~(JSDNP_CACHE_RESULT | JSDNP_DONT_PURGE | JSDNP_SET_METHOD)) == 0);
-    js_LeaveTraceIfGlobalObject(cx, obj);
+    LeaveTraceIfGlobalObject(cx, obj);
 
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
@@ -5001,7 +5003,7 @@ JSBool
 js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
              JSScopeProperty *sprop, uintN getHow, jsval *vp)
 {
-    js_LeaveTraceIfGlobalObject(cx, pobj);
+    LeaveTraceIfGlobalObject(cx, pobj);
 
     JSScope *scope;
     uint32 slot;
@@ -5054,7 +5056,7 @@ JSBool
 js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, bool added,
              jsval *vp)
 {
-    js_LeaveTraceIfGlobalObject(cx, obj);
+    LeaveTraceIfGlobalObject(cx, obj);
 
     JSScope *scope;
     uint32 slot;
@@ -5172,7 +5174,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
 
                 /* Do not warn about tests like (obj[prop] == undefined). */
                 if (cx->resolveFlags == JSRESOLVE_INFER) {
-                    js_LeaveTrace(cx);
+                    LeaveTrace(cx);
                     pc += js_CodeSpec[op].length;
                     if (Detecting(cx, pc))
                         return JS_TRUE;

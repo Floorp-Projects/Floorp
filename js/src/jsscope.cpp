@@ -63,6 +63,8 @@
 
 #include "jsscopeinlines.h"
 
+using namespace js;
+
 uint32
 js_GenerateShape(JSContext *cx, bool gcLocked)
 {
@@ -1094,7 +1096,7 @@ JSScope::generateOwnShape(JSContext *cx)
 {
 #ifdef JS_TRACER
     if (object) {
-         js_LeaveTraceIfGlobalObject(cx, object);
+         LeaveTraceIfGlobalObject(cx, object);
 
         /*
          * The JIT must have arranged to re-guard after any unpredictable shape
@@ -1108,7 +1110,7 @@ JSScope::generateOwnShape(JSContext *cx)
          * Any subsequent property operation upon object on the trace currently
          * being recorded will re-guard (and re-memoize).
          */
-        JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+        TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
         if (TraceRecorder *tr = tm->recorder)
             tr->forgetGuardedShapesForObject(object);
     }
@@ -1651,7 +1653,7 @@ JSScope::clear(JSContext *cx)
         js_free(table);
     clearDictionaryMode();
     clearOwnShape();
-    js_LeaveTraceIfGlobalObject(cx, object);
+    LeaveTraceIfGlobalObject(cx, object);
 
     JSClass *clasp = object->getClass();
     JSObject *proto = object->getProto();
