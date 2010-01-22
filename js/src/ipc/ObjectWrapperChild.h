@@ -43,21 +43,27 @@
 
 #include "mozilla/jsipc/PObjectWrapperChild.h"
 
+// For OperationChecker and AutoCheckOperationBase.
+#include "mozilla/jsipc/ObjectWrapperParent.h"
+
 using mozilla::jsipc::JSVariant;
 
 namespace mozilla {
 namespace jsipc {
 
 class ContextWrapperChild;
-  
+
 class ObjectWrapperChild
     : public PObjectWrapperChild
+    , public OperationChecker
 {
 public:
 
     ObjectWrapperChild(JSContext* cx, JSObject* obj);
 
     JSObject* GetJSObject() const { return mObj; }
+
+    void CheckOperation(JSContext* cx, OperationStatus* status);
     
 private:
 
@@ -81,39 +87,39 @@ protected:
     void ActorDestroy(ActorDestroyReason why);
 
     bool AnswerAddProperty(const nsString& id,
-                           JSBool* ok);
+                           OperationStatus* status);
 
     bool AnswerGetProperty(const nsString& id,
-                           JSBool* ok, JSVariant* vp);
+                           OperationStatus* status, JSVariant* vp);
 
     bool AnswerSetProperty(const nsString& id, const JSVariant& v,
-                           JSBool* ok, JSVariant* vp);
+                           OperationStatus* status, JSVariant* vp);
 
     bool AnswerDelProperty(const nsString& id,
-                           JSBool* ok, JSVariant* vp);
+                           OperationStatus* status, JSVariant* vp);
 
     bool AnswerNewEnumerateInit(/* no in-parameters */
-                                JSBool* ok, JSVariant* statep, int* idp);
+                                OperationStatus* status, JSVariant* statep, int* idp);
 
     bool AnswerNewEnumerateNext(const JSVariant& in_state,
-                                JSBool* ok, JSVariant* statep, nsString* idp);
+                                OperationStatus* status, JSVariant* statep, nsString* idp);
 
     bool RecvNewEnumerateDestroy(const JSVariant& in_state);
 
     bool AnswerNewResolve(const nsString& id, const int& flags,
-                          JSBool* ok, PObjectWrapperChild** obj2);
+                          OperationStatus* status, PObjectWrapperChild** obj2);
 
     bool AnswerConvert(const JSType& type,
-                       JSBool* ok, JSVariant* vp);
+                       OperationStatus* status, JSVariant* vp);
 
     bool AnswerCall(PObjectWrapperChild* receiver, const nsTArray<JSVariant>& argv,
-                    JSBool* ok, JSVariant* rval);
+                    OperationStatus* status, JSVariant* rval);
 
     bool AnswerConstruct(const nsTArray<JSVariant>& argv,
-                         JSBool* ok, PObjectWrapperChild** rval);
+                         OperationStatus* status, PObjectWrapperChild** rval);
 
     bool AnswerHasInstance(const JSVariant& v,
-                           JSBool* ok, JSBool* bp);
+                           OperationStatus* status, JSBool* bp);
 };
 
 }}
