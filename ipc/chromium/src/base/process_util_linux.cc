@@ -62,6 +62,12 @@ bool LaunchApp(const std::vector<std::string>& argv,
 #endif
     exit(127);
   } else {
+
+
+      fprintf(stderr, "TEST-UNEXPECTED-FAIL | ==> process %d launched | child process %d\n", GetCurrentProcId(), pid);
+
+
+
     gProcessLog.print("==> process %d launched child process %d\n",
                       GetCurrentProcId(), pid);
     if (wait)

@@ -3592,6 +3592,19 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   XRE_DeinitCommandLine();
 
+
+
+
+
+
+#ifdef OS_LINUX
+  fprintf(stderr, "TEST-UNEXPECTED-FAIL | browser process %d | exiting\n", getpid());
+#endif
+
+
+
+
+
   return NS_FAILED(rv) ? 1 : 0;
 }
 
