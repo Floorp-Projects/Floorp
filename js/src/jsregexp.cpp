@@ -2703,7 +2703,7 @@ class RegExpNativeCompiler {
             LIns *belowBr = lir->insBranch(LIR_jt, belowCnd, NULL);
             LIns *aboveCnd = lir->ins2(LIR_ugt, chr, lir->insImm(0x200A));
             LIns *aboveBr = lir->insBranch(LIR_jt, aboveCnd, NULL);
-            LIns *intervalMatchBr = lir->ins2(LIR_j, NULL, NULL);
+            LIns *intervalMatchBr = lir->insBranch(LIR_j, NULL, NULL);
 
             /* Handle [0xA0,0x2000). */
             LIns *belowLbl = lir->ins0(LIR_label);
@@ -2714,7 +2714,7 @@ class RegExpNativeCompiler {
             LIns *eq2Br = lir->insBranch(LIR_jt, eq2Cnd, NULL);
             LIns *eq3Cnd = lir->ins2(LIR_eq, chr, lir->insImm(0x180E));
             LIns *eq3Br = lir->insBranch(LIR_jt, eq3Cnd, NULL);
-            LIns *belowMissBr = lir->ins2(LIR_j, NULL, NULL);
+            LIns *belowMissBr = lir->insBranch(LIR_j, NULL, NULL);
 
             /* Handle (0x200A, max). */
             LIns *aboveLbl = lir->ins0(LIR_label);
@@ -2729,7 +2729,7 @@ class RegExpNativeCompiler {
             LIns *eq7Br = lir->insBranch(LIR_jt, eq7Cnd, NULL);
             LIns *eq8Cnd = lir->ins2(LIR_eq, chr, lir->insImm(0x3000));
             LIns *eq8Br = lir->insBranch(LIR_jt, eq8Cnd, NULL);
-            LIns *aboveMissBr = lir->ins2(LIR_j, NULL, NULL);
+            LIns *aboveMissBr = lir->insBranch(LIR_j, NULL, NULL);
 
             /* Handle [0,0x20]. */
             LIns *tableLbl = lir->ins0(LIR_label);
@@ -2743,7 +2743,7 @@ class RegExpNativeCompiler {
             asciiMissBr->setTarget(missLbl);
             belowMissBr->setTarget(missLbl);
             aboveMissBr->setTarget(missLbl);
-            LIns *missBr = lir->ins2(LIR_j, NULL, NULL);
+            LIns *missBr = lir->insBranch(LIR_j, NULL, NULL);
             if (node->op == REOP_SPACE) {
                 if (!fails.append(missBr))
                     return NULL;
@@ -2758,7 +2758,7 @@ class RegExpNativeCompiler {
             eq5Br->setTarget(matchLbl); eq6Br->setTarget(matchLbl);
             eq7Br->setTarget(matchLbl); eq8Br->setTarget(matchLbl);
             if (node->op == REOP_NONSPACE) {
-                LIns *matchBr = lir->ins2(LIR_j, NULL, NULL);
+                LIns *matchBr = lir->insBranch(LIR_j, NULL, NULL);
                 if (!fails.append(matchBr))
                     return NULL;
             }
@@ -2829,7 +2829,7 @@ class RegExpNativeCompiler {
          */
         lir->insStorei(branchEnd, state,
                        offsetof(REGlobalData, stateStack));
-        LIns *leftSuccess = lir->ins2(LIR_j, NULL, NULL);
+        LIns *leftSuccess = lir->insBranch(LIR_j, NULL, NULL);
 
         /* Try right branch. */
         targetCurrentPoint(kidFails);
@@ -2946,7 +2946,7 @@ class RegExpNativeCompiler {
 
         /* End iteration: store loop variables, increment, jump */
         lir->insStorei(iterEnd, state, offsetof(REGlobalData, stateStack));
-        lir->ins2(LIR_j, NULL, loopTop);
+        lir->insBranch(LIR_j, NULL, loopTop);
 
         /*
          * Using '+' as branch, the intended control flow is:
