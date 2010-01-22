@@ -1,0 +1,2 @@
+fails == invalid-url-handling.xhtml invalid-url-handling-ref.xhtml # Bug 541434
+== invalid-url-handling-partial.xhtml invalid-url-handling-ref.xhtml
