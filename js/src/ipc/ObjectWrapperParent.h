@@ -50,8 +50,15 @@ namespace jsipc {
 
 class ContextWrapperParent;
 
+class OperationChecker {
+public:
+    virtual void CheckOperation(JSContext* cx,
+                                OperationStatus* status) = 0;
+};
+
 class ObjectWrapperParent
     : public PObjectWrapperParent
+    , public OperationChecker
 {
 public:
 
@@ -64,6 +71,9 @@ public:
     jsval GetJSVal(JSContext* cx) const {
         return OBJECT_TO_JSVAL(GetJSObject(cx));
     }
+
+    void CheckOperation(JSContext* cx,
+                        OperationStatus* status);
 
     static const JSExtendedClass sCPOW_JSClass;
 
@@ -136,6 +146,33 @@ private:
                                     jsval* to);
 };
 
+template <class StatusOwnerPolicy>
+class AutoCheckOperationBase
+    : public StatusOwnerPolicy
+{
+    JSContext* const mContext;
+    OperationChecker* const mChecker;
+
+protected:
+
+    AutoCheckOperationBase(JSContext* cx,
+                           OperationChecker* checker)
+        : mContext(cx)
+        , mChecker(checker)
+    {}
+
+    virtual ~AutoCheckOperationBase() {
+        mChecker->CheckOperation(mContext, StatusOwnerPolicy::StatusPtr());
+    }
+
+public:
+
+    bool Ok() {
+        return (StatusOwnerPolicy::StatusPtr()->type() == OperationStatus::TJSBool &&
+                StatusOwnerPolicy::StatusPtr()->get_JSBool());
+    }
+};
+
 }}
-  
+
 #endif

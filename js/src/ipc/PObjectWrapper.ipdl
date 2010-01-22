@@ -59,6 +59,11 @@ union JSVariant {
           // and IPC::ParamTraits mistakes JSIntn for int.
 };
 
+union OperationStatus {
+    JSBool;
+    JSVariant; // Exception thrown.
+};
+
 rpc protocol PObjectWrapper
 {
     manager PContextWrapper;
@@ -67,28 +72,28 @@ child:
     __delete__(); // unroot
 
     rpc AddProperty(nsString id)
-        returns (JSBool ok);
+        returns (OperationStatus status);
 
     rpc GetProperty(nsString id)
-        returns (JSBool ok,
+        returns (OperationStatus status,
                  JSVariant vp);
 
     rpc SetProperty(nsString id,
                     JSVariant v)
-        returns (JSBool ok,
+        returns (OperationStatus status,
                  JSVariant vp);
 
     rpc DelProperty(nsString id)
-        returns (JSBool ok,
+        returns (OperationStatus status,
                  JSVariant vp);
 
     rpc NewEnumerateInit()
-        returns (JSBool ok,
+        returns (OperationStatus status,
                  JSVariant statep,
                  int idp);
 
     rpc NewEnumerateNext(JSVariant in_state)
-        returns (JSBool ok,
+        returns (OperationStatus status,
                  JSVariant statep,
                  nsString idp);
 
@@ -96,24 +101,24 @@ child:
 
     rpc NewResolve(nsString id,
                    int flags)
-        returns (JSBool ok,
+        returns (OperationStatus status,
                  nullable PObjectWrapper obj2);
 
     rpc Convert(JSType type)
-        returns (JSBool ok,
+        returns (OperationStatus status,
                  JSVariant vp);
 
     rpc Call(PObjectWrapper receiver,
              JSVariant[] argv)
-        returns (JSBool ok,
+        returns (OperationStatus status,
                  JSVariant rval);
 
     rpc Construct(JSVariant[] argv)
-        returns (JSBool ok,
+        returns (OperationStatus status,
                  nullable PObjectWrapper rval);
 
     rpc HasInstance(JSVariant v)
-        returns (JSBool ok,
+        returns (OperationStatus status,
                  JSBool bp);
 };
 
