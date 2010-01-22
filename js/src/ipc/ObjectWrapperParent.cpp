@@ -103,6 +103,69 @@ namespace {
 
     };
 
+    class StatusMemberOwner
+    {
+        OperationStatus mStatus;
+    public:
+        StatusMemberOwner() : mStatus(JS_FALSE) {}
+        OperationStatus* StatusPtr() {
+            return &mStatus;
+        }
+    };
+
+    typedef AutoCheckOperationBase<StatusMemberOwner> ACOBase;
+
+    class AutoCheckOperation : public ACOBase
+    {
+        JS_DECL_USE_GUARD_OBJECT_NOTIFIER;
+    public:
+        AutoCheckOperation(JSContext* cx,
+                           ObjectWrapperParent* owp
+                           JS_GUARD_OBJECT_NOTIFIER_PARAM)
+            : ACOBase(cx, owp)
+        {
+            JS_GUARD_OBJECT_NOTIFIER_INIT;
+        }
+    };
+
+}
+
+void
+ObjectWrapperParent::CheckOperation(JSContext* cx,
+                                    OperationStatus* status)
+{
+    NS_PRECONDITION(status->type() != OperationStatus::T__None,
+                    "Checking an uninitialized operation.");
+
+    switch (status->type()) {
+    case OperationStatus::TJSVariant:
+        {
+            jsval thrown;
+            if (jsval_from_JSVariant(cx, status->get_JSVariant(), &thrown))
+                JS_SetPendingException(cx, thrown);
+            *status = JS_FALSE;
+        }
+        break;
+    case OperationStatus::TJSBool:
+        if (!status->get_JSBool() && !JS_IsExceptionPending(cx)) {
+            NS_WARNING("CPOW operation failed without setting an exception.");
+        }
+        break;
+    default:
+        NS_NOTREACHED("Invalid or uninitialized OperationStatus type.");
+        break;
+    }
+}
+
+template <typename RType>
+static RType
+with_error(JSContext* cx,
+               RType rval,
+               const char* error = NULL)
+{
+    if (!JS_IsExceptionPending(cx))
+        JS_ReportError(cx, error ? error : "Unspecified CPOW error");
+    return rval;
 }
 
 const JSExtendedClass ObjectWrapperParent::sCPOW_JSClass = {
@@ -198,7 +261,7 @@ ObjectWrapperParent::jsval_to_JSVariant(JSContext* cx, jsval from,
         {
             PObjectWrapperParent* powp;
             if (!JSObject_to_PObjectWrapperParent(cx, JSVAL_TO_OBJECT(from), &powp))
-                return false;
+                return with_error(cx, false, "Cannot pass parent-created object to child");
             *to = powp;
         }
         return true;
@@ -217,8 +280,9 @@ ObjectWrapperParent::jsval_to_JSVariant(JSContext* cx, jsval from,
         *to = !!JSVAL_TO_BOOLEAN(from);
         return true;
     case JSTYPE_XML:
+        return with_error(cx, false, "CPOWs currently cannot handle JSTYPE_XML");
     default:
-        return false;
+        return with_error(cx, false, "Bad jsval type");
     }
 }
 
@@ -332,22 +396,22 @@ ObjectWrapperParent::CPOW_AddProperty(JSContext *cx, JSObject *obj, jsval id,
 
     ObjectWrapperParent* self = Unwrap(cx, obj);
     if (!self)
-        return JS_FALSE;
+        return with_error(cx, JS_FALSE, "Unwrapping failed in CPOW_AddProperty");
 
     if (AutoResolveFlag::IsSet(cx, obj))
         return JS_TRUE;
-    
+
+    AutoCheckOperation aco(cx, self);
+
     nsString in_id;
 
     if (!jsval_to_nsString(cx, id, &in_id))
         return JS_FALSE;
 
-    JSBool out_ok;
-
     return (self->Manager()->RequestRunToCompletion() &&
             self->CallAddProperty(in_id,
-                                  &out_ok) &&
-            out_ok);
+                                  aco.StatusPtr()) &&
+            aco.Ok());
 }
 
 /*static*/ JSBool
@@ -359,20 +423,21 @@ ObjectWrapperParent::CPOW_GetProperty(JSContext *cx, JSObject *obj, jsval id,
 
     ObjectWrapperParent* self = Unwrap(cx, obj);
     if (!self)
-        return JS_FALSE;
+        return with_error(cx, JS_FALSE, "Unwrapping failed in CPOW_GetProperty");
+
+    AutoCheckOperation aco(cx, self);
 
     nsString in_id;
 
     if (!jsval_to_nsString(cx, id, &in_id))
         return JS_FALSE;
 
-    JSBool out_ok;
     JSVariant out_v;
     
     return (self->Manager()->RequestRunToCompletion() &&
             self->CallGetProperty(in_id,
-                                  &out_ok, &out_v) &&
-            out_ok &&
+                                  aco.StatusPtr(), &out_v) &&
+            aco.Ok() &&
             self->jsval_from_JSVariant(cx, out_v, vp));
 }
 
@@ -385,7 +450,9 @@ ObjectWrapperParent::CPOW_SetProperty(JSContext *cx, JSObject *obj, jsval id,
 
     ObjectWrapperParent* self = Unwrap(cx, obj);
     if (!self)
-        return JS_FALSE;
+        return with_error(cx, JS_FALSE, "Unwrapping failed in CPOW_SetProperty");
+
+    AutoCheckOperation aco(cx, self);
 
     nsString in_id;
     JSVariant in_v;
@@ -393,14 +460,13 @@ ObjectWrapperParent::CPOW_SetProperty(JSContext *cx, JSObject *obj, jsval id,
     if (!jsval_to_nsString(cx, id, &in_id) ||
         !self->jsval_to_JSVariant(cx, *vp, &in_v))
         return JS_FALSE;
-    
-    JSBool out_ok;
+
     JSVariant out_v;
 
     return (self->Manager()->RequestRunToCompletion() &&
             self->CallSetProperty(in_id, in_v,
-                                  &out_ok, &out_v) &&
-            out_ok &&
+                                  aco.StatusPtr(), &out_v) &&
+            aco.Ok() &&
             self->jsval_from_JSVariant(cx, out_v, vp));
 }    
     
@@ -413,32 +479,34 @@ ObjectWrapperParent::CPOW_DelProperty(JSContext *cx, JSObject *obj, jsval id,
 
     ObjectWrapperParent* self = Unwrap(cx, obj);
     if (!self)
-        return JS_FALSE;
+        return with_error(cx, JS_FALSE, "Unwrapping failed in CPOW_DelProperty");
+
+    AutoCheckOperation aco(cx, self);
 
     nsString in_id;
 
     if (!jsval_to_nsString(cx, id, &in_id))
         return JS_FALSE;
 
-    JSBool out_ok;
     JSVariant out_v;
     
     return (self->Manager()->RequestRunToCompletion() &&
             self->CallDelProperty(in_id,
-                                  &out_ok, &out_v) &&
-            out_ok &&
+                                  aco.StatusPtr(), &out_v) &&
+            aco.Ok() &&
             jsval_from_JSVariant(cx, out_v, vp));
 }
 
 JSBool
 ObjectWrapperParent::NewEnumerateInit(JSContext* cx, jsval* statep, jsid* idp)
 {
-    JSBool out_ok;
+    AutoCheckOperation aco(cx, this);
+
     JSVariant out_state;
     int out_id;
 
-    return (CallNewEnumerateInit(&out_ok, &out_state, &out_id) &&
-            out_ok &&
+    return (CallNewEnumerateInit(aco.StatusPtr(), &out_state, &out_id) &&
+            aco.Ok() &&
             jsval_from_JSVariant(cx, out_state, statep) &&
             (!idp || jsid_from_int(cx, out_id, idp)));
 }
@@ -446,17 +514,19 @@ ObjectWrapperParent::NewEnumerateInit(JSContext* cx, jsval* statep, jsid* idp)
 JSBool
 ObjectWrapperParent::NewEnumerateNext(JSContext* cx, jsval* statep, jsid* idp)
 {
+    AutoCheckOperation aco(cx, this);
+
     JSVariant in_state;
+
     if (!jsval_to_JSVariant(cx, *statep, &in_state))
         return JS_FALSE;
 
-    JSBool out_ok;
     JSVariant out_state;
     nsString out_id;
 
     if (CallNewEnumerateNext(in_state,
-                             &out_ok, &out_state, &out_id) &&
-        out_ok &&
+                             aco.StatusPtr(), &out_state, &out_id) &&
+        aco.Ok() &&
         jsval_from_JSVariant(cx, out_state, statep) &&
         jsid_from_nsString(cx, out_id, idp))
     {
@@ -471,7 +541,10 @@ ObjectWrapperParent::NewEnumerateNext(JSContext* cx, jsval* statep, jsid* idp)
 JSBool
 ObjectWrapperParent::NewEnumerateDestroy(JSContext* cx, jsval state)
 {
+    AutoCheckOperation aco(cx, this);
+
     JSVariant in_state;
+
     if (!jsval_to_JSVariant(cx, state, &in_state))
         return JS_FALSE;
 
@@ -487,7 +560,7 @@ ObjectWrapperParent::CPOW_NewEnumerate(JSContext *cx, JSObject *obj,
 
     ObjectWrapperParent* self = Unwrap(cx, obj);
     if (!self)
-        return JS_FALSE;
+        return with_error(cx, JS_FALSE, "Unwrapping failed in CPOW_NewEnumerate");
 
     switch (enum_op) {
     case JSENUMERATE_INIT:
@@ -499,6 +572,7 @@ ObjectWrapperParent::CPOW_NewEnumerate(JSContext *cx, JSObject *obj,
         return self->NewEnumerateDestroy(cx, *statep);
     }
 
+    NS_NOTREACHED("Unknown enum_op value in CPOW_NewEnumerate");
     return JS_FALSE;
 }
 
@@ -511,20 +585,21 @@ ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSObject *obj, jsval id,
 
     ObjectWrapperParent* self = Unwrap(cx, obj);
     if (!self)
-        return JS_FALSE;
+        return with_error(cx, JS_FALSE, "Unwrapping failed in CPOW_NewResolve");
+
+    AutoCheckOperation aco(cx, self);
 
     nsString in_id;
 
     if (!jsval_to_nsString(cx, id, &in_id))
         return JS_FALSE;
 
-    JSBool out_ok;
     PObjectWrapperParent* out_pobj;
 
     if (!self->Manager()->RequestRunToCompletion() ||
         !self->CallNewResolve(in_id, flags,
-                              &out_ok, &out_pobj) ||
-        !out_ok ||
+                              aco.StatusPtr(), &out_pobj) ||
+        !aco.Ok() ||
         !JSObject_from_PObjectWrapperParent(cx, out_pobj, objp))
         return JS_FALSE;
 
@@ -547,7 +622,7 @@ ObjectWrapperParent::CPOW_Convert(JSContext *cx, JSObject *obj, JSType type,
 
     ObjectWrapperParent* self = Unwrap(cx, obj);
     if (!self)
-        return JS_FALSE;
+        return with_error(cx, JS_FALSE, "Unwrapping failed in CPOW_Convert");
 
     *vp = OBJECT_TO_JSVAL(obj);
 
@@ -573,7 +648,9 @@ ObjectWrapperParent::CPOW_Call(JSContext* cx, JSObject* obj, uintN argc,
     ObjectWrapperParent* function =
         Unwrap(cx, JSVAL_TO_OBJECT(JS_ARGV_CALLEE(argv)));
     if (!function)
-        return JS_FALSE;
+        return with_error(cx, JS_FALSE, "Could not unwrap CPOW function");
+
+    AutoCheckOperation aco(cx, function);
 
     ObjectWrapperParent* receiver = Unwrap(cx, obj);
     if (!receiver) {
@@ -588,14 +665,13 @@ ObjectWrapperParent::CPOW_Call(JSContext* cx, JSObject* obj, uintN argc,
     for (uintN i = 0; i < argc; i++)
         if (!jsval_to_JSVariant(cx, argv[i], in_argv.AppendElement()))
             return JS_FALSE;
-    
-    JSBool out_ok;
+
     JSVariant out_rval;
 
     return (function->Manager()->RequestRunToCompletion() &&
             function->CallCall(receiver, in_argv,
-                               &out_ok, &out_rval) &&
-            out_ok &&
+                               aco.StatusPtr(), &out_rval) &&
+            aco.Ok() &&
             jsval_from_JSVariant(cx, out_rval, rval));
 }
 
@@ -608,20 +684,21 @@ ObjectWrapperParent::CPOW_Construct(JSContext *cx, JSObject *obj, uintN argc,
     ObjectWrapperParent* constructor =
         Unwrap(cx, JSVAL_TO_OBJECT(JS_ARGV_CALLEE(argv)));
     if (!constructor)
-        return JS_FALSE;
+        return with_error(cx, JS_FALSE, "Could not unwrap CPOW constructor function");
+
+    AutoCheckOperation aco(cx, constructor);
 
     nsTArray<JSVariant> in_argv(argc);
     for (uintN i = 0; i < argc; i++)
         if (!jsval_to_JSVariant(cx, argv[i], in_argv.AppendElement()))
             return JS_FALSE;
 
-    JSBool out_ok;
     PObjectWrapperParent* out_powp;
 
     return (constructor->Manager()->RequestRunToCompletion() &&
             constructor->CallConstruct(in_argv,
-                                       &out_ok, &out_powp) &&
-            out_ok &&
+                                       aco.StatusPtr(), &out_powp) &&
+            aco.Ok() &&
             jsval_from_PObjectWrapperParent(cx, out_powp, rval));
 }
 
@@ -635,19 +712,19 @@ ObjectWrapperParent::CPOW_HasInstance(JSContext *cx, JSObject *obj, jsval v,
 
     ObjectWrapperParent* self = Unwrap(cx, obj);
     if (!self)
-        return JS_FALSE;
+        return with_error(cx, JS_FALSE, "Unwrapping failed in CPOW_HasInstance");
+
+    AutoCheckOperation aco(cx, self);
 
     JSVariant in_v;
 
     if (!jsval_to_JSVariant(cx, v, &in_v))
         return JS_FALSE;
 
-    JSBool out_ok;
-
     return (self->Manager()->RequestRunToCompletion() &&
             self->CallHasInstance(in_v,
-                                  &out_ok, bp) &&
-            out_ok);
+                                  aco.StatusPtr(), bp) &&
+            aco.Ok());
 }
 
 /*static*/ JSBool
@@ -660,7 +737,7 @@ ObjectWrapperParent::CPOW_Equality(JSContext *cx, JSObject *obj, jsval v,
     
     ObjectWrapperParent* self = Unwrap(cx, obj);
     if (!self)
-        return JS_FALSE;
+        return with_error(cx, JS_FALSE, "Unwrapping failed in CPOW_Equality");
 
     if (JSVAL_IS_PRIMITIVE(v))
         return JS_TRUE;
