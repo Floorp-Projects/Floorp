@@ -3598,7 +3598,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
 
 #ifdef OS_LINUX
-  fprintf(stderr, "TEST-UNEXPECTED-FAIL | browser process %d | exiting\n", getpid());
+  printf("TEST-UNEXPECTED-FAIL | browser process %d | exiting\n", getpid());
 #endif
 
 
