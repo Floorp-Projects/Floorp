@@ -1067,7 +1067,7 @@ _createobject(NPP aNPP,
     if (newObject) {
         newObject->_class = aClass;
         newObject->referenceCount = 1;
-        NS_LOG_ADDREF(newObject, 1, "ChildNPObject", sizeof(NPObject));
+        NS_LOG_ADDREF(newObject, 1, "NPObject", sizeof(NPObject));
     }
     return newObject;
 }
@@ -1078,7 +1078,7 @@ _retainobject(NPObject* aNPObj)
     AssertPluginThread();
 
     int32_t refCnt = PR_AtomicIncrement((PRInt32*)&aNPObj->referenceCount);
-    NS_LOG_ADDREF(aNPObj, refCnt, "ChildNPObject", sizeof(NPObject));
+    NS_LOG_ADDREF(aNPObj, refCnt, "NPObject", sizeof(NPObject));
 
     return aNPObj;
 }
@@ -1089,7 +1089,7 @@ _releaseobject(NPObject* aNPObj)
     AssertPluginThread();
 
     int32_t refCnt = PR_AtomicDecrement((PRInt32*)&aNPObj->referenceCount);
-    NS_LOG_RELEASE(aNPObj, refCnt, "ChildNPObject");
+    NS_LOG_RELEASE(aNPObj, refCnt, "NPObject");
 
     if (refCnt == 0) {
         if (aNPObj->_class && aNPObj->_class->deallocate) {
