@@ -2408,7 +2408,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     nanojit::LirWriter*& lir = InitConst(this->lir);
     lir = new (tempAlloc()) LirBufWriter(lirbuf);
 #ifdef DEBUG
-    lir = new (tempAlloc()) SanityFilter(lir);
+    lir = new (tempAlloc()) ValidateWriter(lir, "end of writer pipeline");
 #endif
     debug_only_stmt(
         if (js_LogController.lcbits & LC_TMRecorder) {
@@ -2423,7 +2423,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     lir = new (tempAlloc()) ExprFilter(lir);
     lir = new (tempAlloc()) FuncFilter(lir);
 #ifdef DEBUG
-    lir = new (tempAlloc()) SanityFilter(lir);
+    lir = new (tempAlloc()) ValidateWriter(lir, "start of writer pipeline");
 #endif
     lir->ins0(LIR_start);
 
@@ -11663,7 +11663,7 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     br1->setTarget(label1);
     LIns* args[] = {
         box_jsval(v, v_ins),
-        INS_CONST(SPROP_USERID(sprop)),
+        INS_CONSTWORD(SPROP_USERID(sprop)),
         callobj_ins,
         cx_ins
     };

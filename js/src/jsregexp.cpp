@@ -2290,7 +2290,7 @@ class RegExpNativeCompiler {
     Fragment*        fragment;
     LirWriter*       lir;
 #ifdef DEBUG
-    LirWriter*       sanity_filter;
+    LirWriter*       validate_writer;
 #endif
 #ifdef NJ_VERBOSE
     LirWriter*       verbose_filter;
@@ -3187,7 +3187,7 @@ class RegExpNativeCompiler {
         )
 #endif
 #ifdef DEBUG
-        lir = sanity_filter = new SanityFilter(lir);
+        lir = validate_writer = new ValidateWriter(lir, "regexp writer pipeline");
 #endif
 
         /*
@@ -3248,7 +3248,7 @@ class RegExpNativeCompiler {
 
         delete lirBufWriter;
 #ifdef DEBUG
-        delete sanity_filter;
+        delete validate_writer;
 #endif
 #ifdef NJ_VERBOSE
         debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
@@ -3273,7 +3273,7 @@ class RegExpNativeCompiler {
             delete lirBufWriter;
         }
 #ifdef DEBUG
-        delete sanity_filter;
+        delete validate_writer;
 #endif
 #ifdef NJ_VERBOSE
         debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
