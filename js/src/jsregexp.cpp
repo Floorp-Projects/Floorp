@@ -74,6 +74,8 @@ using namespace avmplus;
 using namespace nanojit;
 #endif
 
+using namespace js;
+
 typedef enum REOp {
 #define REOP_DEF(opcode, name) opcode,
 #include "jsreops.tbl"
@@ -1999,6 +2001,8 @@ CompileRegExpToAST(JSContext* cx, JSTokenStream* ts,
 #ifdef JS_TRACER
 typedef js::Vector<LIns *, 4, js::ContextAllocPolicy> LInsList;
 
+namespace js {
+
 struct REFragment : public nanojit::Fragment
 {
     REFragment(const void* _ip verbose_only(, uint32_t profFragID))
@@ -2006,12 +2010,14 @@ struct REFragment : public nanojit::Fragment
     {}
 };
 
+} /* namespace js */
+
 /* Return the cached fragment for the given regexp, or create one. */
 static Fragment*
 LookupNativeRegExp(JSContext* cx, uint16 re_flags,
                    const jschar* re_chars, size_t re_length)
 {
-    JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
     VMAllocator &alloc = *tm->dataAlloc;
     REHashMap &table = *tm->reFragments;
 
@@ -2020,7 +2026,7 @@ LookupNativeRegExp(JSContext* cx, uint16 re_flags,
 
     if (!frag) {
         verbose_only(
-        uint32_t profFragID = (js_LogController.lcbits & LC_FragProfile)
+        uint32_t profFragID = (LogController.lcbits & LC_FragProfile)
                               ? (++(tm->lastFragID)) : 0;
         )
         frag = new (alloc) REFragment(0 verbose_only(, profFragID));
@@ -3138,7 +3144,7 @@ class RegExpNativeCompiler {
     {
         fragment->lirbuf = lirbuf;
 #ifdef DEBUG
-        LabelMap* labels = new (tempAlloc) LabelMap(tempAlloc, &js_LogController);
+        LabelMap* labels = new (tempAlloc) LabelMap(tempAlloc, &LogController);
         lirbuf->names = new (tempAlloc) LirNameMap(tempAlloc, labels);
 #endif
     }
@@ -3153,11 +3159,11 @@ class RegExpNativeCompiler {
         GuardRecord* guard = NULL;
         const jschar* re_chars;
         size_t re_length;
-        JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+        TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
         Assembler *assm = tm->assembler;
         LIns* loopLabel = NULL;
 
-        if (outOfMemory() || js_OverfullJITCache(tm))
+        if (outOfMemory() || OverfullJITCache(tm))
             return JS_FALSE;
 
         re->source->getCharsAndLength(re_chars, re_length);
@@ -3180,9 +3186,9 @@ class RegExpNativeCompiler {
         /* FIXME Use bug 463260 smart pointer when available. */
 #ifdef NJ_VERBOSE
         debug_only_stmt(
-            if (js_LogController.lcbits & LC_TMRegexp) {
+            if (LogController.lcbits & LC_TMRegexp) {
                 lir = verbose_filter = new VerboseWriter(tempAlloc, lir, lirbuf->names,
-                                                         &js_LogController);
+                                                         &LogController);
             }
         )
 #endif
@@ -3210,7 +3216,7 @@ class RegExpNativeCompiler {
         // If profiling, record where the loop label is, so that the
         // assembler can insert a frag-entry-counter increment at that
         // point
-        verbose_only( if (js_LogController.lcbits & LC_FragProfile) {
+        verbose_only( if (LogController.lcbits & LC_FragProfile) {
             NanoAssert(!fragment->loopLabel);
             fragment->loopLabel = loopLabel;
         })
@@ -3251,22 +3257,22 @@ class RegExpNativeCompiler {
         delete validate_writer;
 #endif
 #ifdef NJ_VERBOSE
-        debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
+        debug_only_stmt( if (LogController.lcbits & LC_TMRegexp)
                              delete verbose_filter; )
 #endif
         return JS_TRUE;
     fail:
-        if (outOfMemory() || js_OverfullJITCache(tm)) {
+        if (outOfMemory() || OverfullJITCache(tm)) {
             delete lirBufWriter;
             // recover profiling data from expiring Fragments
             verbose_only(
                 REHashMap::Iter iter(*(tm->reFragments));
                 while (iter.next()) {
                     nanojit::Fragment* frag = iter.value();
-                    js_FragProfiling_FragFinalizer(frag, tm);
+                    FragProfiling_FragFinalizer(frag, tm);
                 }
             )
-            js_FlushJITCache(cx);
+            FlushJITCache(cx);
         } else {
             if (!guard) insertGuard(loopLabel, re_chars, re_length);
             re->flags |= JSREG_NOCOMPILE;
@@ -3276,7 +3282,7 @@ class RegExpNativeCompiler {
         delete validate_writer;
 #endif
 #ifdef NJ_VERBOSE
-        debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
+        debug_only_stmt( if (LogController.lcbits & LC_TMRegexp)
                              delete lir; )
 #endif
         return JS_FALSE;

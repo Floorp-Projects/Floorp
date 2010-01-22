@@ -50,8 +50,7 @@ inline void
 JSScope::updateShape(JSContext *cx)
 {
     JS_ASSERT(object);
-    js_LeaveTraceIfGlobalObject(cx, object);
-
+    js::LeaveTraceIfGlobalObject(cx, object);
     shape = (hasOwnShape() || !lastProp) ? js_GenerateShape(cx, false) : lastProp->shape;
 }
 

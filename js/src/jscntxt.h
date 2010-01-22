@@ -90,15 +90,18 @@ js_PurgeGSNCache(JSGSNCache *cache);
 #define JS_METER_GSN_CACHE(cx,cnt)  GSN_CACHE_METER(&JS_GSN_CACHE(cx), cnt)
 
 /* Forward declarations of nanojit types. */
-namespace nanojit
-{
-    class Assembler;
-    class CodeAlloc;
-    class Fragment;
-    template<typename K> struct DefaultHash;
-    template<typename K, typename V, typename H> class HashMap;
-    template<typename T> class Seq;
-}
+namespace nanojit {
+
+class Assembler;
+class CodeAlloc;
+class Fragment;
+template<typename K> struct DefaultHash;
+template<typename K, typename V, typename H> class HashMap;
+template<typename T> class Seq;
+
+}  /* namespace nanojit */
+
+namespace js {
 
 /* Tracer constants. */
 static const size_t MONITOR_N_GLOBAL_STATES = 4;
@@ -110,7 +113,6 @@ static const size_t GLOBAL_SLOTS_BUFFER_SIZE = MAX_GLOBAL_SLOTS + 1;
 
 /* Forward declarations of tracer types. */
 class VMAllocator;
-class TraceRecorder;
 class FrameInfoCache;
 struct REHashFn;
 struct REHashKey;
@@ -164,7 +166,7 @@ struct InterpState
     uintN          nativeVpLen;
     jsval*         nativeVp;
 
-    InterpState(JSContext *cx, JSTraceMonitor *tm, TreeFragment *ti,
+    InterpState(JSContext *cx, TraceMonitor *tm, TreeFragment *ti,
                 uintN &inlineCallCountp, VMSideExit** innermostNestedGuardp);
     ~InterpState();
 };
@@ -197,7 +199,7 @@ struct GlobalState {
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
  * frequencies for all JavaScript code loaded into that runtime.
  */
-struct JSTraceMonitor {
+struct TraceMonitor {
     /*
      * The context currently executing JIT-compiled code on this thread, or
      * NULL if none. Among other things, this can in certain cases prevent
@@ -255,8 +257,8 @@ struct JSTraceMonitor {
 
     TraceRecorder*          recorder;
 
-    struct GlobalState      globalStates[MONITOR_N_GLOBAL_STATES];
-    struct TreeFragment*    vmfragments[FRAGMENT_TABLE_SIZE];
+    GlobalState             globalStates[MONITOR_N_GLOBAL_STATES];
+    TreeFragment*           vmfragments[FRAGMENT_TABLE_SIZE];
     JSDHashTable            recordAttempts;
 
     /*
@@ -310,7 +312,7 @@ struct JSTraceMonitor {
     bool outOfMemory() const;
 };
 
-typedef struct InterpStruct InterpStruct;
+} /* namespace js */
 
 /*
  * N.B. JS_ON_TRACE(cx) is true if JIT code is on the stack in the current
@@ -408,7 +410,7 @@ struct JSThreadData {
 
 #ifdef JS_TRACER
     /* Trace-tree JIT recorder/interpreter state. */
-    JSTraceMonitor      traceMonitor;
+    js::TraceMonitor    traceMonitor;
 #endif
 
     /* Lock-free hashed lists of scripts created by eval to garbage-collect. */
@@ -1230,8 +1232,8 @@ struct JSContext {
      * called back into native code via a _FAIL builtin and has not yet bailed,
      * else garbage (NULL in debug builds).
      */
-    InterpState         *interpState;
-    VMSideExit          *bailExit;
+    js::InterpState     *interpState;
+    js::VMSideExit      *bailExit;
 
     /*
      * True if traces may be executed. Invariant: The value of jitEnabled is
@@ -1928,6 +1930,8 @@ js_GetCurrentBytecodePC(JSContext* cx);
 extern bool
 js_CurrentPCIsInImacro(JSContext *cx);
 
+namespace js {
+
 #ifdef JS_TRACER
 /*
  * Reconstruct the JS stack and clear cx->tracecx. We must be currently in a
@@ -1937,27 +1941,27 @@ js_CurrentPCIsInImacro(JSContext *cx);
  * Implemented in jstracer.cpp.
  */
 JS_FORCES_STACK JS_FRIEND_API(void)
-js_DeepBail(JSContext *cx);
+DeepBail(JSContext *cx);
 #endif
 
 static JS_FORCES_STACK JS_INLINE void
-js_LeaveTrace(JSContext *cx)
+LeaveTrace(JSContext *cx)
 {
 #ifdef JS_TRACER
     if (JS_ON_TRACE(cx))
-        js_DeepBail(cx);
+        DeepBail(cx);
 #endif
 }
 
 static JS_INLINE void
-js_LeaveTraceIfGlobalObject(JSContext *cx, JSObject *obj)
+LeaveTraceIfGlobalObject(JSContext *cx, JSObject *obj)
 {
     if (!obj->fslots[JSSLOT_PARENT])
-        js_LeaveTrace(cx);
+        LeaveTrace(cx);
 }
 
 static JS_INLINE JSBool
-js_CanLeaveTrace(JSContext *cx)
+CanLeaveTrace(JSContext *cx)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
 #ifdef JS_TRACER
@@ -1966,6 +1970,8 @@ js_CanLeaveTrace(JSContext *cx)
     return JS_FALSE;
 #endif
 }
+
+}       /* namespace js */
 
 /*
  * Get the current cx->fp, first lazily instantiating stack frames if needed.
@@ -1976,7 +1982,7 @@ js_CanLeaveTrace(JSContext *cx)
 static JS_FORCES_STACK JS_INLINE JSStackFrame *
 js_GetTopStackFrame(JSContext *cx)
 {
-    js_LeaveTrace(cx);
+    js::LeaveTrace(cx);
     return cx->fp;
 }
 

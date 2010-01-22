@@ -78,6 +78,8 @@
 #include "jsvector.h"
 #include "jsstrinlines.h"
 
+using namespace js;
+
 #define JSSTRDEP_RECURSION_LIMIT        100
 
 JS_STATIC_ASSERT(size_t(JSString::MAX_LENGTH) <= size_t(JSVAL_INT_MAX));
@@ -1748,7 +1750,7 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
     if (lambda) {
         uintN i, m, n;
 
-        js_LeaveTrace(cx);
+        LeaveTrace(cx);
 
         /*
          * In the lambda case, not only do we find the replacement string's
@@ -3110,10 +3112,10 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
              * If we can't leave the trace, signal OOM condition, otherwise
              * exit from trace before throwing.
              */
-            if (!js_CanLeaveTrace(cx))
+            if (!CanLeaveTrace(cx))
                 return NULL;
 
-            js_LeaveTrace(cx);
+            LeaveTrace(cx);
         }
         js_ReportAllocationOverflow(cx);
         return NULL;

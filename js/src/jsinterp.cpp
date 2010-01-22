@@ -90,6 +90,8 @@
 
 #include "jsautooplen.h"
 
+using namespace js;
+
 /* jsinvoke_cpp___ indicates inclusion from jsinvoke.cpp. */
 #if !JS_LONE_INTERPRET ^ defined jsinvoke_cpp___
 
@@ -732,7 +734,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
     }
 
     /* We don't handle cloning blocks on trace.  */
-    js_LeaveTrace(cx);
+    LeaveTrace(cx);
 
     /*
      * We have one or more lexical scopes to reflect into fp->scopeChain, so
@@ -1429,7 +1431,7 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     void *mark;
     JSBool ok;
 
-    js_LeaveTrace(cx);
+    LeaveTrace(cx);
     invokevp = js_AllocStack(cx, 2 + argc, &mark);
     if (!invokevp)
         return JS_FALSE;
@@ -1467,7 +1469,7 @@ JSBool
 js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
                     JSAccessMode mode, uintN argc, jsval *argv, jsval *rval)
 {
-    js_LeaveTrace(cx);
+    LeaveTrace(cx);
 
     /*
      * js_InternalInvoke could result in another try to get or set the same id
@@ -1494,7 +1496,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         return JS_TRUE;
     }
 
-    js_LeaveTrace(cx);
+    LeaveTrace(cx);
 
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_EXECUTE_START_ENABLED())
@@ -2649,7 +2651,7 @@ JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
 # define ABORT_RECORDING(cx, reason)                                          \
     JS_BEGIN_MACRO                                                            \
         if (TRACE_RECORDER(cx))                                               \
-            js_AbortRecording(cx, reason);                                    \
+            AbortRecording(cx, reason);                                       \
     JS_END_MACRO
 #else
 # define ABORT_RECORDING(cx, reason)    ((void) 0)
@@ -2883,7 +2885,7 @@ js_Interpret(JSContext *cx)
 #define MONITOR_BRANCH(reason)                                                \
     JS_BEGIN_MACRO                                                            \
         if (TRACING_ENABLED(cx)) {                                            \
-            if (js_MonitorLoopEdge(cx, inlineCallCount, reason)) {            \
+            if (MonitorLoopEdge(cx, inlineCallCount, reason)) {               \
                 JS_ASSERT(TRACE_RECORDER(cx));                                \
                 MONITOR_BRANCH_TRACEVIS;                                      \
                 ENABLE_INTERRUPTS();                                          \
@@ -3015,7 +3017,7 @@ js_Interpret(JSContext *cx)
      * after cx->fp->regs is set.
      */
     if (TRACE_RECORDER(cx))
-        js_AbortRecording(cx, "attempt to reenter interpreter while recording");
+        AbortRecording(cx, "attempt to reenter interpreter while recording");
 #endif
 
     /*
@@ -3105,7 +3107,7 @@ js_Interpret(JSContext *cx)
      * For now just bail on any sign of trouble.
      */
     if (TRACE_RECORDER(cx))
-        js_AbortRecording(cx, "error or exception while recording");
+        AbortRecording(cx, "error or exception while recording");
 #endif
 
     if (!cx->throwing) {
@@ -3287,7 +3289,7 @@ js_Interpret(JSContext *cx)
     JS_ASSERT(fp->regs == &regs);
 #ifdef JS_TRACER
     if (TRACE_RECORDER(cx))
-        js_AbortRecording(cx, "recording out of js_Interpret");
+        AbortRecording(cx, "recording out of js_Interpret");
 #endif
 #if JS_HAS_GENERATORS
     if (JS_UNLIKELY(fp->flags & JSFRAME_YIELDING)) {

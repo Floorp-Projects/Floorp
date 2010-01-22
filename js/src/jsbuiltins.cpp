@@ -66,11 +66,12 @@
 
 using namespace avmplus;
 using namespace nanojit;
+using namespace js;
 
 JS_FRIEND_API(void)
 js_SetTraceableNativeFailed(JSContext *cx)
 {
-    js_SetBuiltinError(cx);
+    SetBuiltinError(cx);
 }
 
 /*

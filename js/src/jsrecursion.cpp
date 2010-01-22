@@ -128,10 +128,10 @@ AssertDownFrameIsConsistent(JSContext* cx, VMSideExit* anchor, FrameInfo* fi)
     JS_ASSERT(anchor->recursive_down->callerHeight == fi->callerHeight);
 
     unsigned downPostSlots = fi->callerHeight;
-    JSTraceType* typeMap = fi->get_typemap();
+    TraceType* typeMap = fi->get_typemap();
 
-    js_CaptureStackTypes(cx, 1, typeMap);
-    const JSTraceType* m1 = anchor->recursive_down->get_typemap();
+    CaptureStackTypes(cx, 1, typeMap);
+    const TraceType* m1 = anchor->recursive_down->get_typemap();
     for (unsigned i = 0; i < downPostSlots; i++) {
         if (m1[i] == typeMap[i])
             continue;
@@ -154,15 +154,15 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
     unsigned downPostSlots = downFrame->callerHeight;
     unsigned ngslots = tree->globalSlots->length();
     unsigned exitTypeMapLen = downPostSlots + 1 + ngslots;
-    JSTraceType* exitTypeMap = (JSTraceType*)alloca(sizeof(JSTraceType) * exitTypeMapLen);
-    JSTraceType* typeMap = downFrame->get_typemap();
+    TraceType* exitTypeMap = (TraceType*)alloca(sizeof(TraceType) * exitTypeMapLen);
+    TraceType* typeMap = downFrame->get_typemap();
     for (unsigned i = 0; i < downPostSlots; i++)
         exitTypeMap[i] = typeMap[i];
     exitTypeMap[downPostSlots] = determineSlotType(&stackval(-1));
     determineGlobalTypes(&exitTypeMap[downPostSlots + 1]);
 
     VMSideExit* exit = (VMSideExit*)
-        traceMonitor->traceAlloc->alloc(sizeof(VMSideExit) + sizeof(JSTraceType) * exitTypeMapLen);
+        traceMonitor->traceAlloc->alloc(sizeof(VMSideExit) + sizeof(TraceType) * exitTypeMapLen);
 
     memset(exit, 0, sizeof(VMSideExit));
     exit->from = fragment;
@@ -180,7 +180,7 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
     exit->rp_adj = exit->calldepth * sizeof(FrameInfo*);
     exit->nativeCalleeWord = 0;
     exit->lookupFlags = js_InferFlags(cx, 0);
-    memcpy(exit->fullTypeMap(), exitTypeMap, sizeof(JSTraceType) * exitTypeMapLen);
+    memcpy(exit->fullTypeMap(), exitTypeMap, sizeof(TraceType) * exitTypeMapLen);
 #if defined JS_JIT_SPEW
     TreevisLogExit(cx, exit);
 #endif
@@ -225,7 +225,7 @@ TraceRecorder::upRecursion()
      */
     unsigned totalSlots = NativeStackSlots(cx, 1);
     unsigned downPostSlots = totalSlots - NativeStackSlots(cx, 0);
-    FrameInfo* fi = (FrameInfo*)alloca(sizeof(FrameInfo) + totalSlots * sizeof(JSTraceType));
+    FrameInfo* fi = (FrameInfo*)alloca(sizeof(FrameInfo) + totalSlots * sizeof(TraceType));
     fi->block = cx->fp->blockChain;
     fi->pc = (jsbytecode*)return_pc;
     fi->imacpc = NULL;
@@ -255,11 +255,11 @@ TraceRecorder::upRecursion()
          * Case 1: Guess that down-recursion has to started back out, infer types
          * from the down frame.
          */
-        js_CaptureStackTypes(cx, 1, fi->get_typemap());
+        CaptureStackTypes(cx, 1, fi->get_typemap());
     } else {
         /* Case 2: Guess that up-recursion is backing out, infer types from our Tree. */
         JS_ASSERT(tree->nStackTypes == downPostSlots + 1);
-        JSTraceType* typeMap = fi->get_typemap();
+        TraceType* typeMap = fi->get_typemap();
         for (unsigned i = 0; i < downPostSlots; i++)
             typeMap[i] = tree->typeMap[i];
     }
@@ -300,11 +300,11 @@ TraceRecorder::upRecursion()
                      get(&stackval(-1)) :
                      NULL;
     JS_ASSERT(rval_ins != NULL);
-    JSTraceType returnType = exit->stackTypeMap()[downPostSlots];
+    TraceType returnType = exit->stackTypeMap()[downPostSlots];
     if (returnType == TT_INT32) {
         JS_ASSERT(determineSlotType(&stackval(-1)) == TT_INT32);
         JS_ASSERT(isPromoteInt(rval_ins));
-        rval_ins = ::demote(lir, rval_ins);
+        rval_ins = demote(lir, rval_ins);
     }
 
     UpRecursiveSlotMap slotMap(*this, downPostSlots, rval_ins);
@@ -329,7 +329,7 @@ class SlurpInfo
 {
 public:
     unsigned curSlot;
-    JSTraceType* typeMap;
+    TraceType* typeMap;
     VMSideExit* exit;
     unsigned slurpFailSlot;
 };
@@ -428,7 +428,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     unsigned safeSlots = NativeStackSlots(cx, frameDepth) + 1 + numGlobalSlots;
     jsbytecode* recursive_pc = return_pc + JSOP_CALL_LENGTH;
     VMSideExit* exit = (VMSideExit*)
-        traceMonitor->traceAlloc->alloc(sizeof(VMSideExit) + sizeof(JSTraceType) * safeSlots);
+        traceMonitor->traceAlloc->alloc(sizeof(VMSideExit) + sizeof(TraceType) * safeSlots);
     memset(exit, 0, sizeof(VMSideExit));
     exit->pc = (jsbytecode*)recursive_pc;
     exit->from = fragment;
@@ -442,10 +442,10 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
      * Build the exit typemap. This may capture extra types, but they are
      * thrown away.
      */
-    JSTraceType* typeMap = exit->stackTypeMap();
+    TraceType* typeMap = exit->stackTypeMap();
     jsbytecode* oldpc = cx->fp->regs->pc;
     cx->fp->regs->pc = exit->pc;
-    js_CaptureStackTypes(cx, frameDepth, typeMap);
+    CaptureStackTypes(cx, frameDepth, typeMap);
     cx->fp->regs->pc = oldpc;
     if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT)
         typeMap[downPostSlots] = determineSlotType(&stackval(-1));
@@ -466,13 +466,13 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
      * grabbed safely.
      */
     LIns* rval_ins;
-    JSTraceType returnType = exit->stackTypeMap()[downPostSlots];
+    TraceType returnType = exit->stackTypeMap()[downPostSlots];
     if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
         rval_ins = get(&stackval(-1));
         if (returnType == TT_INT32) {
             JS_ASSERT(determineSlotType(&stackval(-1)) == TT_INT32);
             JS_ASSERT(isPromoteInt(rval_ins));
-            rval_ins = ::demote(lir, rval_ins);
+            rval_ins = demote(lir, rval_ins);
         }
         /*
          * The return value must be written out early, before slurping can fail,

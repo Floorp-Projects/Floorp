@@ -252,14 +252,14 @@ js_IsInternalFunctionObject(JSObject *funobj)
     return funobj == fun && (fun->flags & JSFUN_LAMBDA) && !funobj->getParent();
 }
 
-struct js_ArgsPrivateNative;
+namespace js { struct ArgsPrivateNative; }
 
-inline js_ArgsPrivateNative *
+inline js::ArgsPrivateNative *
 js_GetArgsPrivateNative(JSObject *argsobj)
 {
     JS_ASSERT(STOBJ_GET_CLASS(argsobj) == &js_ArgumentsClass);
     uintptr_t p = (uintptr_t) argsobj->getPrivate();
-    return (js_ArgsPrivateNative *) (p & 2 ? p & ~2 : NULL);
+    return (js::ArgsPrivateNative *) (p & 2 ? p & ~2 : NULL);
 }
 
 extern JSObject *
