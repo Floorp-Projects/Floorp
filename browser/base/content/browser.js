@@ -3339,12 +3339,8 @@ function BrowserCustomizeToolbar()
     else
       sheetFrame.setAttribute("src", customizeURL);
 
-    // XXXmano: there's apparently no better way to get this when the iframe is
-    // hidden
-    var sheetWidth = sheetFrame.style.width.match(/([0-9]+)px/)[1];
     document.getElementById("customizeToolbarSheetPopup")
-            .openPopup(gNavToolbox, "after_start",
-                       (window.innerWidth - sheetWidth) / 2, 0);
+            .openPopup(gNavToolbox, "after_start", 0, 0);
 
     return sheetFrame.contentWindow;
   } else {
