@@ -193,22 +193,16 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
-  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsICachingChannel)
   NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
   NS_INTERFACE_MAP_ENTRY(nsIUploadChannel2)
-  NS_INTERFACE_MAP_ENTRY(nsICacheListener)
   NS_INTERFACE_MAP_ENTRY(nsIEncodedChannel)
   NS_INTERFACE_MAP_ENTRY(nsIResumableChannel)
-  NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
-  NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyCallback)
   NS_INTERFACE_MAP_ENTRY(nsIProxiedChannel)
   NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
   NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheContainer)
   NS_INTERFACE_MAP_ENTRY(nsIApplicationCacheChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIAuthPromptCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 //-----------------------------------------------------------------------------
@@ -785,39 +779,6 @@ HttpChannelChild::SetForceAllowThirdPartyCookie(PRBool force)
   DROP_DEAD();
 }
 
-
-//-----------------------------------------------------------------------------
-// HttpChannelChild::nsIRequestObserver
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-HttpChannelChild::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
-{
-  DROP_DEAD();
-}
-
-NS_IMETHODIMP
-HttpChannelChild::OnStopRequest(nsIRequest *aRequest, 
-                                nsISupports *aContext, 
-                                nsresult aStatusCode)
-{
-  DROP_DEAD();
-}
-
-//-----------------------------------------------------------------------------
-// HttpChannelChild::nsIStreamListener
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-HttpChannelChild::OnDataAvailable(nsIRequest *aRequest, 
-                                  nsISupports *aContext, 
-                                  nsIInputStream *aInputStream, 
-                                  PRUint32 aOffset, 
-                                  PRUint32 aCount)
-{
-  DROP_DEAD();
-}
-
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsICachingChannel
 //-----------------------------------------------------------------------------
@@ -933,18 +894,6 @@ HttpChannelChild::ExplicitSetUploadStream(nsIInputStream *aStream,
 }
 
 //-----------------------------------------------------------------------------
-// HttpChannelChild::nsICacheListener
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-HttpChannelChild::OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor, 
-                                        nsCacheAccessMode accessGranted, 
-                                        nsresult status)
-{
-  DROP_DEAD();
-}
-
-//-----------------------------------------------------------------------------
 // HttpChannelChild::nsIEncodedChannel
 //-----------------------------------------------------------------------------
 
@@ -963,19 +912,6 @@ HttpChannelChild::GetApplyConversion(PRBool *aApplyConversion)
 
 NS_IMETHODIMP
 HttpChannelChild::SetApplyConversion(PRBool aApplyConversion)
-{
-  DROP_DEAD();
-}
-
-//-----------------------------------------------------------------------------
-// HttpChannelChild::nsITransportEventSink
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-HttpChannelChild::OnTransportStatus(nsITransport *aTransport, 
-                                    nsresult aStatus, 
-                                    PRUint64 aProgress, 
-                                    PRUint64 aProgressMax)
 {
   DROP_DEAD();
 }
@@ -1013,19 +949,6 @@ HttpChannelChild::SetPriority(PRInt32 aPriority)
 
 NS_IMETHODIMP
 HttpChannelChild::AdjustPriority(PRInt32 delta)
-{
-  DROP_DEAD();
-}
-
-//-----------------------------------------------------------------------------
-// HttpChannelChild::nsIProtocolProxyCallback
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-HttpChannelChild::OnProxyAvailable(nsICancelable *aRequest, 
-                                   nsIURI *aURI, 
-                                   nsIProxyInfo *aProxyInfo, 
-                                   nsresult aStatus)
 {
   DROP_DEAD();
 }
@@ -1098,23 +1021,6 @@ HttpChannelChild::SetChooseApplicationCache(PRBool aChooseApplicationCache)
 {
   // FIXME: Browser calls this early, so stub OK for now. Fix in bug 536295.  
   return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// HttpChannelChild::nsIAuthPromptCallback
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-HttpChannelChild::OnAuthAvailable(nsISupports *context, 
-                                  nsIAuthInformation *aAuthInfo)
-{
-  DROP_DEAD();
-}
-
-NS_IMETHODIMP
-HttpChannelChild::OnAuthCancelled(nsISupports *aContext, PRBool userCancel)
-{
-  DROP_DEAD();
 }
 
 
