@@ -1951,3 +1951,17 @@ JSContext::checkMallocGCPressure(void *p)
     }
     JS_UNLOCK_GC(runtime);
 }
+
+
+bool
+JSContext::isConstructing()
+{
+#ifdef JS_TRACER
+    if (JS_ON_TRACE(this)) {
+        JS_ASSERT(bailExit);
+        return *bailExit->pc == JSOP_NEW;
+    }
+#endif
+    JSStackFrame *fp = js_GetTopStackFrame(this);
+    return fp && (fp->flags & JSFRAME_CONSTRUCTING);
+}
