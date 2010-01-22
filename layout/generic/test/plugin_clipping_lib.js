@@ -153,9 +153,6 @@ function loaded() {
 
   // Run actual test code
   runTests();
-
-  finish();
-  window.close();
 }
 
 // Need to run 'loaded' after painting is unsuppressed, or we'll set clip
