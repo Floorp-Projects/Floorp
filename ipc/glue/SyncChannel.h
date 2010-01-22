@@ -105,9 +105,17 @@ protected:
         return mPendingReply != 0;
     }
 
+    int32 NextSeqno() {
+        AssertWorkerThread();
+        return mChild ? --mNextSeqno : ++mNextSeqno;
+    }
+
     MessageId mPendingReply;
     bool mProcessingSyncMessage;
     Message mRecvd;
+    // This is only accessed from the worker thread; seqno's are
+    // completely opaque to the IO thread.
+    int32 mNextSeqno;
 
     static bool sIsPumpingMessages;
 };
