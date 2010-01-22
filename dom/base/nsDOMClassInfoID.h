@@ -468,16 +468,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_WebGLFramebuffer_id,
   eDOMClassInfo_WebGLRenderbuffer_id,
 
-  // WebGL Buffers
-  eDOMClassInfo_WebGLArrayBuffer_id,
-  eDOMClassInfo_WebGLFloatArray_id,
-  eDOMClassInfo_WebGLByteArray_id,
-  eDOMClassInfo_WebGLUnsignedByteArray_id,
-  eDOMClassInfo_WebGLShortArray_id,
-  eDOMClassInfo_WebGLUnsignedShortArray_id,
-  eDOMClassInfo_WebGLIntArray_id,
-  eDOMClassInfo_WebGLUnsignedIntArray_id,
-
   eDOMClassInfo_PaintRequest_id,
   eDOMClassInfo_PaintRequestList_id,
 

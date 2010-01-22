@@ -326,8 +326,12 @@ def readConfigFile(filename, includePath, cachedir, traceable):
             # Stub all scriptable members of this interface.
             for member in iface.members:
                 if member.kind in ('method', 'attribute') and not member.noscript:
+                    cmc = conf.customMethodCalls.get(interfaceName + "_" + header.methodNativeName(member), None)
+                    mayTrace = cmc is None or cmc.get('traceable', True)
+
                     addStubMember(iface.name + '.' + member.name, member,
-                                  traceable)
+                                  traceable and mayTrace)
+
                     if member.iface not in stubbedInterfaces:
                         stubbedInterfaces.append(member.iface)
         else:
@@ -342,13 +346,10 @@ def readConfigFile(filename, includePath, cachedir, traceable):
                 if member in iface.stubMembers:
                     raise UserError("Member %s is specified more than once."
                                     % memberId)
-                mayTrace = True
-                if member.noscript:
-                    cmc = conf.customMethodCalls.get(interfaceName + "_" + header.methodNativeName(member), None)
-                    if cmc is not None and cmc.get('skipgen', False):
-                        # We're doing magic custom stuff for this, so pretend it's not noscript
-                        member.noscript = False
-                        mayTrace = False
+
+                cmc = conf.customMethodCalls.get(interfaceName + "_" + header.methodNativeName(member), None)
+                mayTrace = cmc is None or cmc.get('traceable', True)
+
                 addStubMember(memberId, member, traceable and mayTrace)
                 if member.iface not in stubbedInterfaces:
                     stubbedInterfaces.append(member.iface)
