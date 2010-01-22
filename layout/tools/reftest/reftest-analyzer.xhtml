@@ -295,7 +295,9 @@ function show_differences(cb) {
     </form>
     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800px" height="1000px" viewbox="0 0 800 1000" id="svg">
       <defs>
-	<filter id="showDifferences" x="0%" y="0%" width="100%" height="100%">
+	<!-- use sRGB to avoid loss of data -->
+	<filter id="showDifferences" x="0%" y="0%" width="100%" height="100%"
+	        style="color-interpolation-filters: sRGB">
 	  <feImage id="feimage1" result="img1" xlink:href="#image1" />
 	  <feImage id="feimage2" result="img2" xlink:href="#image2" />
 	  <!-- inv1 and inv2 are the images with RGB inverted -->
