@@ -245,10 +245,7 @@ PluginModuleParent::NPP_Destroy(NPP instance,
     NPError retval = parentInstance->Destroy();
     instance->pdata = nsnull;
 
-    if (!PluginInstanceParent::Call__delete__(parentInstance)) {
-        NS_ERROR("Failed to delete instance!");
-    }
-
+    (void) PluginInstanceParent::Call__delete__(parentInstance);
     return retval;
 }
 

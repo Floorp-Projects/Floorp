@@ -168,6 +168,13 @@ public:
   // ResurrectProxyObject).
   void DropNPObject();
 
+  /**
+   * After NPP_Destroy, all NPObjects associated with an instance are
+   * destroyed. We are informed of this destruction. This should only be called
+   * on Local actors.
+   */
+  void NPObjectDestroyed();
+
   bool
   Evaluate(NPString* aScript,
            NPVariant* aResult);
