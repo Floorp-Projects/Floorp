@@ -57,6 +57,7 @@
 #include "nsIPrefService.h"
 #include "nsIClassInfoImpl.h"
 #include "nsDOMError.h"
+#include "nsIContentSecurityPolicy.h"
 
 #include "nsPrincipal.h"
 
@@ -771,6 +772,25 @@ nsPrincipal::GetCertificate(nsISupports** aCertificate)
   else {
     *aCertificate = nsnull;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
+{
+  NS_IF_ADDREF(*aCsp = mCSP);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
+{
+  // If CSP was already set, it should not be destroyed!  Instead, it should
+  // get set anew when a new principal is created.
+  if (mCSP)
+    return NS_ERROR_ALREADY_INITIALIZED;
+
+  mCSP = aCsp;
   return NS_OK;
 }
 
