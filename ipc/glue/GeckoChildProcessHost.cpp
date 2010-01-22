@@ -91,7 +91,7 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
 
   if (mChildProcessHandle > 0)
     ProcessWatcher::EnsureProcessTerminated(mChildProcessHandle
-#if defined(OS_POSIX) && defined(NS_BUILD_REFCNT_LOGGING)
+#if defined(NS_BUILD_REFCNT_LOGGING)
                                             , false // don't "force"
 #endif
     );
