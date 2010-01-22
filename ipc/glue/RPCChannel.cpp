@@ -96,9 +96,10 @@ RPCChannel::Call(Message* msg, Message* reply)
         return false;
     }
 
-    mStack.push(*msg);
+    msg->set_seqno(NextSeqno());
     msg->set_rpc_remote_stack_depth_guess(mRemoteStackDepthGuess);
-    msg->set_rpc_local_stack_depth(StackDepth());
+    msg->set_rpc_local_stack_depth(1 + StackDepth());
+    mStack.push(*msg);
 
     mIOLoop->PostTask(
         FROM_HERE,
@@ -137,7 +138,7 @@ RPCChannel::Call(Message* msg, Message* reply)
             continue;
         }
 
-        NS_ABORT_IF_FALSE(recvd.is_rpc(), "wtf???");
+        RPC_ASSERT(recvd.is_rpc(), "wtf???");
 
         if (recvd.is_reply()) {
             RPC_ASSERT(0 < mStack.size(), "invalid RPC stack");
@@ -146,7 +147,9 @@ RPCChannel::Call(Message* msg, Message* reply)
 
             // FIXME/cjones: handle error
             RPC_ASSERT(
-                recvd.type() == (outcall.type()+1) || recvd.is_reply_error(),
+                recvd.is_reply_error() ||
+                (recvd.type() == (outcall.type()+1) &&
+                 recvd.seqno() == outcall.seqno()),
                 "somebody's misbehavin'", "rpc", true);
 
             // we received a reply to our most recent outstanding
@@ -354,6 +357,8 @@ RPCChannel::DispatchIncall(const Message& call)
         reply->set_reply();
         reply->set_reply_error();
     }
+
+    reply->set_seqno(call.seqno());
 
     mIOLoop->PostTask(
         FROM_HERE,
