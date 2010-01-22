@@ -51,7 +51,7 @@
 #include "npfunctions.h"
 
 #include "nsAutoPtr.h"
-#include "nsDataHashtable.h"
+#include "nsTHashtable.h"
 #include "nsHashKeys.h"
 
 #include "mozilla/plugins/PPluginModuleChild.h"
@@ -91,6 +91,7 @@ namespace mozilla {
 namespace plugins {
 
 class PluginScriptableObjectChild;
+class PluginInstanceChild;
 
 class PluginModuleChild : public PPluginModuleChild
 {
@@ -138,21 +139,33 @@ public:
 
     static PluginModuleChild* current();
 
-    bool RegisterNPObject(NPObject* aObject,
-                          PluginScriptableObjectChild* aActor);
+    bool RegisterActorForNPObject(NPObject* aObject,
+                                  PluginScriptableObjectChild* aActor);
 
-    void UnregisterNPObject(NPObject* aObject);
+    void UnregisterActorForNPObject(NPObject* aObject);
 
     PluginScriptableObjectChild* GetActorForNPObject(NPObject* aObject);
 
 #ifdef DEBUG
     bool NPObjectIsRegistered(NPObject* aObject);
-    bool NPObjectIsRegisteredForActor(PluginScriptableObjectChild* aActor);
 #endif
 
     bool
     PluginInstanceDestroyed(PluginInstanceChild* aActor,
                             NPError* rv);
+
+    /**
+     * The child implementation of NPN_CreateObject.
+     */
+    static NPObject* NP_CALLBACK NPN_CreateObject(NPP aNPP, NPClass* aClass);
+    /**
+     * The child implementation of NPN_RetainObject.
+     */
+    static NPObject* NP_CALLBACK NPN_RetainObject(NPObject* aNPObj);
+    /**
+     * The child implementation of NPN_ReleaseObject.
+     */
+    static void NP_CALLBACK NPN_ReleaseObject(NPObject* aNPObj);
 
 private:
     bool InitGraphics();
@@ -172,7 +185,42 @@ private:
     NPPluginFuncs mFunctions;
     NPSavedData mSavedData;
 
-    nsDataHashtable<nsVoidPtrHashKey, PluginScriptableObjectChild*> mObjectMap;
+    struct NPObjectData : public nsPtrHashKey<NPObject>
+    {
+        NPObjectData(const NPObject* key)
+            : nsPtrHashKey<NPObject>(key)
+            , instance(NULL)
+            , actor(NULL)
+        { }
+
+        // never NULL
+        PluginInstanceChild* instance;
+
+        // sometimes NULL (no actor associated with an NPObject)
+        PluginScriptableObjectChild* actor;
+    };
+    /**
+     * mObjectMap contains all the currently active NPObjects (from NPN_CreateObject until the
+     * final release/dealloc, whether or not an actor is currently associated with the object.
+     */
+    nsTHashtable<NPObjectData> mObjectMap;
+
+    /**
+     * Dealloc an NPObject after last-release or when the associated instance
+     * is destroyed. It is the callers responsibility to remove the object
+     * from mObjectMap.
+     */
+    static void DeallocNPObject(NPObject* o);
+
+    /**
+     * After an instance has been destroyed, dealloc the objects associated
+     * with that instance.
+     */
+    void DeallocNPObjectsForInstance(PluginInstanceChild* instance);
+    /**
+     * Enumeration helper function for DeallocNPObjectsForInstance.
+     */
+    static PLDHashOperator DeallocForInstance(NPObjectData* d, void* userArg);
 };
 
 } /* namespace plugins */
