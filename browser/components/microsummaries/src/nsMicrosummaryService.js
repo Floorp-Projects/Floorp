@@ -266,15 +266,10 @@ MicrosummaryService.prototype = {
    * 
    */
   _cacheLocalGenerators: function MSS__cacheLocalGenerators() {
-    // Load generators from the application directory.
-    var appDir = this._dirs.get("MicsumGens", Ci.nsIFile);
-    if (appDir.exists())
-      this._cacheLocalGeneratorDir(appDir);
-
     // Load generators from the user's profile.
-    var profileDir = this._dirs.get("UsrMicsumGens", Ci.nsIFile);
-    if (profileDir.exists())
-      this._cacheLocalGeneratorDir(profileDir);
+    var msDir = this._dirs.get("UsrMicsumGens", Ci.nsIFile);
+    if (msDir.exists())
+      this._cacheLocalGeneratorDir(msDir);
   },
 
   /**
