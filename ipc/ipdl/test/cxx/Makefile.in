@@ -65,6 +65,7 @@ IPDLTESTS = \
   TestSyncWakeup \
   TestLatency \
   TestRPCRaces \
+  TestRacyRPCReplies  \
   TestManyChildAllocs  \
   TestDesc \
   TestShmem \
