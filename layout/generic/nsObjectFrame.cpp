@@ -5062,6 +5062,10 @@ nsPluginInstanceOwner::NativeImageDraw(NPRect* invalidRect)
   if (absPosHeight == 0 || absPosWidth == 0)
     return;
 
+  // Making X or DOM method calls can cause our frame to go
+  // away, which might kill us...
+  nsCOMPtr<nsIPluginInstanceOwner> kungFuDeathGrip(this);
+
   PRBool sizeChanged = (mPluginSize.width != absPosWidth ||
                         mPluginSize.height != absPosHeight);
 
@@ -5601,6 +5605,7 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
 #if defined(MOZ_PLATFORM_HILDON) && defined(MOZ_WIDGET_GTK2)
 PRBool nsPluginInstanceOwner::UpdateVisibility(PRBool aVisible)
 {
+  // NOTE: Death grip must be held by caller.
   if (!mInstance)
     return PR_TRUE;
 
@@ -5766,6 +5771,10 @@ nsPluginInstanceOwner::SetAbsoluteScreenPosition(nsIDOMElement* element,
   if (!element || !position || !clip)
     return NS_ERROR_FAILURE;
   
+  // Making X or DOM method calls can cause our frame to go
+  // away, which might kill us...
+  nsCOMPtr<nsIPluginInstanceOwner> kungFuDeathGrip(this);
+
   if (!mBlitWindow) {
     mBlitWindow = GDK_WINDOW_XWINDOW(GetClosestWindow(element));
     if (!mBlitWindow)
