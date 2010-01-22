@@ -535,7 +535,7 @@ PluginScriptableObjectChild::CreateProxyObject()
   // own this actor. Set the reference count to 0 here so that when the object
   // dies we will send the destructor message to the child.
   object->referenceCount = 0;
-  NS_LOG_RELEASE(object, 0, "ChildNPObject");
+  NS_LOG_RELEASE(object, 0, "NPObject");
 
   object->parent = const_cast<PluginScriptableObjectChild*>(this);
   return object;
