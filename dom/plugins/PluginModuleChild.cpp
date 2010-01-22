@@ -1588,6 +1588,16 @@ PluginModuleChild::DeallocForInstance(NPObjectData* d, void* userArg)
         if (o->_class && o->_class->invalidate)
             o->_class->invalidate(o);
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+        {
+            int32_t refCnt = o->referenceCount;
+            while (refCnt) {
+                --refCnt;
+                NS_LOG_RELEASE(o, refCnt, "NPObject");
+            }
+        }
+#endif
+
         DeallocNPObject(o);
 
         if (d->actor)
