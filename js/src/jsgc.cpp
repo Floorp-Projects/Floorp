@@ -107,6 +107,8 @@
 # define MAP_ANONYMOUS 0
 #endif
 
+using namespace js;
+
 /*
  * Check JSTempValueUnion has the size of jsval and void * so we can
  * reinterpret jsval as void* GC-thing pointer and use JSTVU_SINGLE for
@@ -3058,7 +3060,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 #endif
 
 #ifdef JS_TRACER
-    js_PurgeJITOracle();
+    PurgeJITOracle();
 #endif
 
   restart:

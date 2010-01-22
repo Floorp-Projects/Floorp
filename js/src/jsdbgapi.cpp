@@ -68,6 +68,8 @@
 
 #include "jsautooplen.h"
 
+using namespace js;
+
 typedef struct JSTrap {
     JSCList         links;
     JSScript        *script;
@@ -367,7 +369,7 @@ LeaveTraceRT(JSRuntime *rt)
     JS_UNLOCK_GC(rt);
 
     if (cx)
-        js_LeaveTrace(cx);
+        LeaveTrace(cx);
 }
 #endif
 
@@ -1835,7 +1837,7 @@ JS_SetContextDebugHooks(JSContext *cx, const JSDebugHooks *hooks)
 {
     JS_ASSERT(hooks);
     if (hooks != &cx->runtime->globalDebugHooks && hooks != &js_NullDebugHooks)
-        js_LeaveTrace(cx);
+        LeaveTrace(cx);
 
 #ifdef JS_TRACER
     JS_LOCK_GC(cx->runtime);

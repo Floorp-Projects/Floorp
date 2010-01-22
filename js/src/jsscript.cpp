@@ -67,6 +67,8 @@
 
 #include "jsscriptinlines.h"
 
+using namespace js;
+
 const uint32 JSSLOT_EXEC_DEPTH          = JSSLOT_PRIVATE + 1;
 const uint32 JSSCRIPT_RESERVED_SLOTS    = 1;
 
@@ -1762,7 +1764,7 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     }
 
 #ifdef JS_TRACER
-    js_PurgeScriptFragments(cx, script);
+    PurgeScriptFragments(cx, script);
 #endif
 
     cx->free(script);

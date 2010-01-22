@@ -58,8 +58,6 @@ JS_BEGIN_EXTERN_C
 #define JSSTRING_BIT(n)             ((size_t)1 << (n))
 #define JSSTRING_BITMASK(n)         (JSSTRING_BIT(n) - 1)
 
-class TraceRecorder;
-
 enum {
     UNIT_STRING_LIMIT        = 256U,
     INT_STRING_LIMIT         = 256U
@@ -100,7 +98,7 @@ JS_STATIC_ASSERT(JS_BITS_PER_WORD >= 32);
  * NB: Always use the length() and chars() accessor methods.
  */
 struct JSString {
-    friend class TraceRecorder;
+    friend class js::TraceRecorder;
 
     friend JSAtom *
     js_AtomizeString(JSContext *cx, JSString *str, uintN flags);

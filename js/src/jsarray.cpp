@@ -104,6 +104,8 @@
 
 #include "jsatominlines.h"
 
+using namespace js;
+
 /* 2^32 - 1 as a number and a string */
 #define MAXINDEX 4294967295u
 #define MAXSTR   "4294967295"
@@ -1765,7 +1767,7 @@ Array_p_join(JSContext* cx, JSObject* obj, JSString *str)
 {
     JSAutoTempValueRooter tvr(cx);
     if (!array_toString_sub(cx, obj, JS_FALSE, str, tvr.addr())) {
-        js_SetBuiltinError(cx);
+        SetBuiltinError(cx);
         return NULL;
     }
     return JSVAL_TO_STRING(tvr.value());
@@ -1776,7 +1778,7 @@ Array_p_toString(JSContext* cx, JSObject* obj)
 {
     JSAutoTempValueRooter tvr(cx);
     if (!array_toString_sub(cx, obj, JS_FALSE, NULL, tvr.addr())) {
-        js_SetBuiltinError(cx);
+        SetBuiltinError(cx);
         return NULL;
     }
     return JSVAL_TO_STRING(tvr.value());
@@ -2305,7 +2307,7 @@ array_sort(JSContext *cx, uintN argc, jsval *vp)
     } else {
         void *mark;
 
-        js_LeaveTrace(cx);
+        LeaveTrace(cx);
 
         ca.context = cx;
         ca.fval = fval;
@@ -2435,7 +2437,7 @@ Array_p_push1(JSContext* cx, JSObject* obj, jsval v)
         : array_push_slowly(cx, obj, 1, tvr.addr(), tvr.addr())) {
         return tvr.value();
     }
-    js_SetBuiltinError(cx);
+    SetBuiltinError(cx);
     return JSVAL_VOID;
 }
 #endif
@@ -2507,7 +2509,7 @@ Array_p_pop(JSContext* cx, JSObject* obj)
         : array_pop_slowly(cx, obj, tvr.addr())) {
         return tvr.value();
     }
-    js_SetBuiltinError(cx);
+    SetBuiltinError(cx);
     return JSVAL_VOID;
 }
 #endif
@@ -3160,7 +3162,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, jsval *vp)
      * For all but REDUCE, we call with 3 args (value, index, array). REDUCE
      * requires 4 args (accum, value, index, array).
      */
-    js_LeaveTrace(cx);
+    LeaveTrace(cx);
     argc = 3 + REDUCE_MODE(mode);
     elemroot = js_AllocStack(cx, 1 + 2 + argc, &mark);
     if (!elemroot)

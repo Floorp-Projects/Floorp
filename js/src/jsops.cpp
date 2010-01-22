@@ -52,7 +52,7 @@
         if (handler) {
 #ifdef JS_TRACER
             if (TRACE_RECORDER(cx))
-                js_AbortRecording(cx, "interrupt handler");
+                AbortRecording(cx, "interrupt handler");
 #endif
             switch (handler(cx, script, regs.pc, &rval,
                             cx->debugHooks->interruptHandlerData)) {
@@ -1037,7 +1037,7 @@ BEGIN_CASE(JSOP_CONCATN)
     if (imacro) {
         argc = GET_ARGC(fp->imacpc);
         if (!recording)
-            js_ConcatPostImacroStackCleanup(argc, regs, NULL);
+            ConcatPostImacroStackCleanup(argc, regs, NULL);
     } else {
 #endif  /* JS_TRACER */
         argc = GET_ARGC(regs.pc);
@@ -2804,7 +2804,7 @@ BEGIN_CASE(JSOP_SETGVAR)
          */
 #ifdef JS_TRACER
         if (TRACE_RECORDER(cx))
-            js_AbortRecording(cx, "SETGVAR with NULL slot");
+            AbortRecording(cx, "SETGVAR with NULL slot");
 #endif
         LOAD_ATOM(0);
         id = ATOM_TO_JSID(atom);
@@ -3119,7 +3119,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
         if (OBJ_GET_PARENT(cx, obj) != parent) {
 #ifdef JS_TRACER
             if (TRACE_RECORDER(cx))
-                js_AbortRecording(cx, "DEFLOCALFUN for closure");
+                AbortRecording(cx, "DEFLOCALFUN for closure");
 #endif
             obj = js_CloneFunctionObject(cx, fun, parent);
             if (!obj)
@@ -4094,7 +4094,7 @@ END_CASE(JSOP_LEAVEBLOCK)
 
 BEGIN_CASE(JSOP_CALLBUILTIN)
 #ifdef JS_TRACER
-    obj = js_GetBuiltinFunction(cx, GET_INDEX(regs.pc));
+    obj = GetBuiltinFunction(cx, GET_INDEX(regs.pc));
     if (!obj)
         goto error;
     rval = FETCH_OPND(-1);

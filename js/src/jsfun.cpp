@@ -81,6 +81,8 @@
 
 #include "jsatominlines.h"
 
+using namespace js;
+
 static inline void
 SetOverriddenArgsLength(JSObject *obj)
 {
@@ -113,7 +115,7 @@ GetArgsLength(JSObject *obj)
 }
 
 static inline void
-SetArgsPrivateNative(JSObject *argsobj, js_ArgsPrivateNative *apn)
+SetArgsPrivateNative(JSObject *argsobj, ArgsPrivateNative *apn)
 {
     JS_ASSERT(STOBJ_GET_CLASS(argsobj) == &js_ArgumentsClass);
     uintptr_t p = (uintptr_t) apn;
@@ -281,7 +283,7 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
 #ifdef JS_TRACER
 JSObject * JS_FASTCALL
 js_Arguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee,
-             double *argv, js_ArgsPrivateNative *apn)
+             double *argv, ArgsPrivateNative *apn)
 {
     JSObject *argsobj = NewArguments(cx, parent, argc, callee);
     if (!argsobj)
@@ -509,11 +511,11 @@ ArgGetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
         uintN arg = uintN(JSVAL_TO_INT(idval));
         if (arg < GetArgsLength(obj)) {
 #ifdef JS_TRACER
-            js_ArgsPrivateNative *argp = js_GetArgsPrivateNative(obj);
+            ArgsPrivateNative *argp = js_GetArgsPrivateNative(obj);
             if (argp) {
-                if (js_NativeToValue(cx, *vp, argp->typemap()[arg], &argp->argv[arg]))
+                if (NativeToValue(cx, *vp, argp->typemap()[arg], &argp->argv[arg]))
                     return true;
-                js_LeaveTrace(cx);
+                LeaveTrace(cx);
                 return false;
             }
 #endif
@@ -562,7 +564,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
     // For simplicity, we just leave trace, since this is presumably not
     // a common operation.
     if (JS_ON_TRACE(cx)) {
-        js_DeepBail(cx);
+        DeepBail(cx);
         return false;
     }
 #endif
@@ -754,7 +756,7 @@ CheckForEscapingClosure(JSContext *cx, JSObject *obj, jsval *vp)
          * still has an active stack frame associated with it.
          */
         if (fun->needsWrapper()) {
-            js_LeaveTrace(cx);
+            LeaveTrace(cx);
 
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
@@ -1937,7 +1939,7 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp)
     void *mark;
     JSBool ok;
 
-    js_LeaveTrace(cx);
+    LeaveTrace(cx);
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj || !obj->defaultValue(cx, JSTYPE_FUNCTION, &vp[1]))
@@ -2005,7 +2007,7 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
         return js_fun_call(cx, argc, vp);
     }
 
-    js_LeaveTrace(cx);
+    LeaveTrace(cx);
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj || !obj->defaultValue(cx, JSTYPE_FUNCTION, &vp[1]))

@@ -72,6 +72,8 @@
 #include "jsxml.h"
 #endif
 
+using namespace js;
+
 JS_STATIC_ASSERT(JSSLOT_ITER_FLAGS < JS_INITIAL_NSLOTS);
 
 #if JS_HAS_GENERATORS
@@ -416,7 +418,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
             if (!InitNativeIterator(cx, iterobj, obj, flags))
                 goto bad;
         } else {
-            js_LeaveTrace(cx);
+            LeaveTrace(cx);
             arg = BOOLEAN_TO_JSVAL((flags & JSITER_FOREACH) == 0);
             if (!js_InternalInvoke(cx, obj, *vp, JSINVOKE_ITERATOR, 1, &arg,
                                    vp)) {
@@ -924,7 +926,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp, uintN argc)
     JSObject *obj;
     jsval arg;
 
-    js_LeaveTrace(cx);
+    LeaveTrace(cx);
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, vp + 2))

@@ -71,6 +71,8 @@
 #include "jsstr.h"
 #include "jstracer.h"
 
+using namespace js;
+
 static void
 FreeContext(JSContext *cx);
 
@@ -86,7 +88,7 @@ JSThreadData::init()
         JS_ASSERT(reinterpret_cast<uint8*>(this)[i] == 0);
 #endif
 #ifdef JS_TRACER
-    js_InitJIT(&traceMonitor);
+    InitJIT(&traceMonitor);
 #endif
     js_InitRandom(this);
 }
@@ -107,7 +109,7 @@ JSThreadData::finish()
     js_FinishGSNCache(&gsnCache);
     js_FinishPropertyCache(&propertyCache);
 #if defined JS_TRACER
-    js_FinishJIT(&traceMonitor);
+    FinishJIT(&traceMonitor);
 #endif
 }
 
@@ -919,7 +921,7 @@ js_DiscountRequestsForGC(JSContext *cx)
 #ifdef JS_TRACER
     if (JS_ON_TRACE(cx)) {
         JS_UNLOCK_GC(cx->runtime);
-        js_LeaveTrace(cx);
+        LeaveTrace(cx);
         JS_LOCK_GC(cx->runtime);
     }
 #endif
