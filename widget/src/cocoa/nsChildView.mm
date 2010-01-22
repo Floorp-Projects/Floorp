@@ -3135,9 +3135,10 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-
   if (!mGeckoChild)
     return;
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
@@ -3149,34 +3150,66 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
   // event type.
+  if (mIsPluginView) {
 #ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-  if (mPluginEventModel == NPEventModelCarbon) {
-    carbonEvent.what = mouseUp;
-    carbonEvent.message = 0;
-    carbonEvent.when = ::TickCount();
-    ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = ::GetCurrentKeyModifiers();
-    geckoEvent.pluginEvent = &carbonEvent;
-  }
+    EventRecord carbonEvent;
+    if (mPluginEventModel == NPEventModelCarbon) {
+      carbonEvent.what = mouseUp;
+      carbonEvent.message = 0;
+      carbonEvent.when = ::TickCount();
+      ::GetGlobalMouse(&carbonEvent.where);
+      carbonEvent.modifiers = ::GetCurrentKeyModifiers();
+      geckoEvent.pluginEvent = &carbonEvent;
+    }
 #endif
-  NPCocoaEvent cocoaEvent;
-  if (mPluginEventModel == NPEventModelCocoa) {
-    InitNPCocoaEvent(&cocoaEvent);
-    NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-    cocoaEvent.type = NPCocoaEventMouseUp;
-    cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
-    cocoaEvent.data.mouse.pluginX = point.x;
-    cocoaEvent.data.mouse.pluginY = point.y;
-    cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
-    cocoaEvent.data.mouse.clickCount = [theEvent clickCount];
-    cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
-    cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
-    cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-    geckoEvent.pluginEvent = &cocoaEvent;
+    NPCocoaEvent cocoaEvent;
+    if (mPluginEventModel == NPEventModelCocoa) {
+      InitNPCocoaEvent(&cocoaEvent);
+      NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+      cocoaEvent.type = NPCocoaEventMouseUp;
+      cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
+      cocoaEvent.data.mouse.pluginX = point.x;
+      cocoaEvent.data.mouse.pluginY = point.y;
+      cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
+      cocoaEvent.data.mouse.clickCount = [theEvent clickCount];
+      cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
+      cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
+      cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
+      geckoEvent.pluginEvent = &cocoaEvent;
+    }
   }
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
+
+  // If our mouse-up event's location is over some other object (as might
+  // happen if it came at the end of a dragging operation), also send our
+  // Gecko frame a mouse-exit event.
+  if (mIsPluginView) {
+#ifndef NP_NO_CARBON
+    if (mPluginEventModel == NPEventModelCocoa)
+#endif
+    {
+      if (ChildViewMouseTracker::ViewForEvent(theEvent) != self) {
+        nsMouseEvent geckoExitEvent(PR_TRUE, NS_MOUSE_EXIT, nsnull, nsMouseEvent::eReal);
+        [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoExitEvent];
+
+        NPCocoaEvent cocoaEvent;
+        InitNPCocoaEvent(&cocoaEvent);
+        NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+        cocoaEvent.type = NPCocoaEventMouseExited;
+        cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
+        cocoaEvent.data.mouse.pluginX = point.x;
+        cocoaEvent.data.mouse.pluginY = point.y;
+        cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
+        cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
+        cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
+        cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
+        geckoExitEvent.pluginEvent = &cocoaEvent;
+
+        mGeckoChild->DispatchWindowEvent(geckoExitEvent);
+      }
+    }
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3296,31 +3329,33 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
   // create event for use by plugins
+  if (mIsPluginView) {
 #ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-  if (mPluginEventModel == NPEventModelCarbon) {
-    carbonEvent.what = NPEventType_AdjustCursorEvent;
-    carbonEvent.message = 0;
-    carbonEvent.when = ::TickCount();
-    ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = btnState | ::GetCurrentKeyModifiers();
-    geckoEvent.pluginEvent = &carbonEvent;
-  }
+    EventRecord carbonEvent;
+    if (mPluginEventModel == NPEventModelCarbon) {
+      carbonEvent.what = NPEventType_AdjustCursorEvent;
+      carbonEvent.message = 0;
+      carbonEvent.when = ::TickCount();
+      ::GetGlobalMouse(&carbonEvent.where);
+      carbonEvent.modifiers = btnState | ::GetCurrentKeyModifiers();
+      geckoEvent.pluginEvent = &carbonEvent;
+    }
 #endif
-  NPCocoaEvent cocoaEvent;
-  if (mPluginEventModel == NPEventModelCocoa) {
-    InitNPCocoaEvent(&cocoaEvent);
-    NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-    cocoaEvent.type = NPCocoaEventMouseDragged;
-    cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
-    cocoaEvent.data.mouse.pluginX = point.x;
-    cocoaEvent.data.mouse.pluginY = point.y;
-    cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
-    cocoaEvent.data.mouse.clickCount = [theEvent clickCount];
-    cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
-    cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
-    cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-    geckoEvent.pluginEvent = &cocoaEvent;
+    NPCocoaEvent cocoaEvent;
+    if (mPluginEventModel == NPEventModelCocoa) {
+      InitNPCocoaEvent(&cocoaEvent);
+      NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+      cocoaEvent.type = NPCocoaEventMouseDragged;
+      cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
+      cocoaEvent.data.mouse.pluginX = point.x;
+      cocoaEvent.data.mouse.pluginY = point.y;
+      cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
+      cocoaEvent.data.mouse.clickCount = [theEvent clickCount];
+      cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
+      cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
+      cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
+      geckoEvent.pluginEvent = &cocoaEvent;
+    }
   }
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -3401,31 +3436,33 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
   geckoEvent.clickCount = [theEvent clickCount];
 
   // create event for use by plugins
+  if (mIsPluginView) {
 #ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-  if (mPluginEventModel == NPEventModelCarbon) {
-    carbonEvent.what = mouseUp;
-    carbonEvent.message = 0;
-    carbonEvent.when = ::TickCount();
-    ::GetGlobalMouse(&carbonEvent.where);
-    carbonEvent.modifiers = controlKey;  // fake a context menu click
-    geckoEvent.pluginEvent = &carbonEvent;
-  }
+    EventRecord carbonEvent;
+    if (mPluginEventModel == NPEventModelCarbon) {
+      carbonEvent.what = mouseUp;
+      carbonEvent.message = 0;
+      carbonEvent.when = ::TickCount();
+      ::GetGlobalMouse(&carbonEvent.where);
+      carbonEvent.modifiers = controlKey;  // fake a context menu click
+      geckoEvent.pluginEvent = &carbonEvent;
+    }
 #endif
-  NPCocoaEvent cocoaEvent;
-  if (mPluginEventModel == NPEventModelCocoa) {
-    InitNPCocoaEvent(&cocoaEvent);
-    NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-    cocoaEvent.type = NPCocoaEventMouseUp;
-    cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
-    cocoaEvent.data.mouse.pluginX = point.x;
-    cocoaEvent.data.mouse.pluginY = point.y;
-    cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
-    cocoaEvent.data.mouse.clickCount = [theEvent clickCount];
-    cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
-    cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
-    cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-    geckoEvent.pluginEvent = &cocoaEvent;
+    NPCocoaEvent cocoaEvent;
+    if (mPluginEventModel == NPEventModelCocoa) {
+      InitNPCocoaEvent(&cocoaEvent);
+      NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
+      cocoaEvent.type = NPCocoaEventMouseUp;
+      cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
+      cocoaEvent.data.mouse.pluginX = point.x;
+      cocoaEvent.data.mouse.pluginY = point.y;
+      cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
+      cocoaEvent.data.mouse.clickCount = [theEvent clickCount];
+      cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
+      cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
+      cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
+      geckoEvent.pluginEvent = &cocoaEvent;
+    }
   }
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);

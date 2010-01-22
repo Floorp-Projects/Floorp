@@ -284,13 +284,13 @@ public:
   static void OnDestroyView(ChildView* aView);
   static BOOL WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent);
   static void ReEvaluateMouseEnterState(NSEvent* aEvent = nil);
+  static ChildView* ViewForEvent(NSEvent* aEvent);
 
   static ChildView* sLastMouseEventView;
 
 private:
 
   static NSWindow* WindowForEvent(NSEvent* aEvent);
-  static ChildView* ViewForEvent(NSEvent* aEvent);
 };
 
 //-------------------------------------------------------------------------
