@@ -55,19 +55,15 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 #include "nsICachingChannel.h"
-#include "nsICacheListener.h"
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsIEncodedChannel.h"
-#include "nsITransport.h"
 #include "nsIUploadChannel.h"
 #include "nsIUploadChannel2.h"
 #include "nsIResumableChannel.h"
 #include "nsISupportsPriority.h"
-#include "nsIProtocolProxyCallback.h"
 #include "nsIProxiedChannel.h"
 #include "nsITraceableChannel.h"
-#include "nsIAuthPromptCallback.h"
 
 
 namespace mozilla {
@@ -87,20 +83,15 @@ class HttpChannelChild : public PHttpChannelChild
                        , public nsIHttpChannel
                        , public nsHashPropertyBag
                        , public nsIHttpChannelInternal
-                       , public nsIStreamListener
                        , public nsICachingChannel
                        , public nsIUploadChannel
                        , public nsIUploadChannel2
-                       , public nsICacheListener
                        , public nsIEncodedChannel
-                       , public nsITransportEventSink
                        , public nsIResumableChannel
                        , public nsISupportsPriority
-                       , public nsIProtocolProxyCallback
                        , public nsIProxiedChannel
                        , public nsITraceableChannel
                        , public nsIApplicationCacheChannel
-                       , public nsIAuthPromptCallback
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -108,22 +99,16 @@ public:
   NS_DECL_NSICHANNEL
   NS_DECL_NSIHTTPCHANNEL
   NS_DECL_NSIHTTPCHANNELINTERNAL
-  NS_DECL_NSIREQUESTOBSERVER
-  NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSICACHINGCHANNEL
   NS_DECL_NSIUPLOADCHANNEL
   NS_DECL_NSIUPLOADCHANNEL2
-  NS_DECL_NSICACHELISTENER
   NS_DECL_NSIENCODEDCHANNEL
-  NS_DECL_NSITRANSPORTEVENTSINK
   NS_DECL_NSIRESUMABLECHANNEL
   NS_DECL_NSISUPPORTSPRIORITY
-  NS_DECL_NSIPROTOCOLPROXYCALLBACK
   NS_DECL_NSIPROXIEDCHANNEL
   NS_DECL_NSITRACEABLECHANNEL
   NS_DECL_NSIAPPLICATIONCACHECONTAINER
   NS_DECL_NSIAPPLICATIONCACHECHANNEL
-  NS_DECL_NSIAUTHPROMPTCALLBACK
 
   HttpChannelChild();
   virtual ~HttpChannelChild();
