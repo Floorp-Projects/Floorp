@@ -941,7 +941,7 @@ namespace nanojit
             // something went wrong, release all allocated code memory
             _codeAlloc.freeAll(codeList);
             if (_nExitIns)
-            	_codeAlloc.free(exitStart, exitEnd);
+                _codeAlloc.free(exitStart, exitEnd);
             _codeAlloc.free(codeStart, codeEnd);
             codeList = NULL;
             return;
@@ -957,15 +957,15 @@ namespace nanojit
 #ifdef NANOJIT_ARM
         // [codeStart, _nSlot) ... gap ... [_nIns, codeEnd)
         if (_nExitIns) {
-			_codeAlloc.addRemainder(codeList, exitStart, exitEnd, _nExitSlot, _nExitIns);
-			verbose_only( exitBytes -= (_nExitIns - _nExitSlot) * sizeof(NIns); )
+            _codeAlloc.addRemainder(codeList, exitStart, exitEnd, _nExitSlot, _nExitIns);
+            verbose_only( exitBytes -= (_nExitIns - _nExitSlot) * sizeof(NIns); )
         }
         _codeAlloc.addRemainder(codeList, codeStart, codeEnd, _nSlot, _nIns);
         verbose_only( codeBytes -= (_nIns - _nSlot) * sizeof(NIns); )
 #else
         // [codeStart ... gap ... [_nIns, codeEnd))
         if (_nExitIns) {
-        	_codeAlloc.addRemainder(codeList, exitStart, exitEnd, exitStart, _nExitIns);
+            _codeAlloc.addRemainder(codeList, exitStart, exitEnd, exitStart, _nExitIns);
             verbose_only( exitBytes -= (_nExitIns - exitStart) * sizeof(NIns); )
         }
         _codeAlloc.addRemainder(codeList, codeStart, codeEnd, codeStart, _nIns);
