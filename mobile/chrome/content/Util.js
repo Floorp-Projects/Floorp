@@ -167,6 +167,26 @@ let Util = {
     return "none";
   },
 
+  /** Recursively find all documents, including root document. */
+  getAllDocuments: function getAllDocuments(doc, resultSoFar) {
+    resultSoFar = resultSoFar || [doc];
+    if (!doc.defaultView)
+      return resultSoFar;
+    let frames = doc.defaultView.frames;
+    if (!frames)
+      return resultSoFar;
+
+    let i;
+    let currentDoc;
+    for (i = 0; i < frames.length; i++) {
+      currentDoc = frames[i].document;
+      resultSoFar.push(currentDoc);
+      this.getAllDocuments(currentDoc, resultSoFar);
+    }
+
+    return resultSoFar;
+  },
+
   // Put the Mozilla networking code into a state that will kick the auto-connection
   // process.
   forceOnline: function forceOnline() {
