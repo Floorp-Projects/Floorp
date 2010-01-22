@@ -198,7 +198,7 @@ public:
 
 
 
-      fprintf(stderr, "TEST-UNEXPECTED-FAIL | process %d reaped | child process (got SIGCHLD, exited normally)\n", getpid());
+      printf("TEST-UNEXPECTED-FAIL | process %d reaped | child process (got SIGCHLD, exited normally)\n", getpid());
 
 
 
@@ -217,7 +217,7 @@ public:
 
 
 
-    fprintf(stderr, "TEST-UNEXPECTED-FAIL | process %d reaped | child process (waitpid() on shutdown)\n", getpid());
+    printf("TEST-UNEXPECTED-FAIL | process %d reaped | child process (waitpid() on shutdown)\n", getpid());
 
 
 
@@ -264,7 +264,7 @@ ProcessWatcher::EnsureProcessTerminated(base::ProcessHandle process,
 
 
 
-    fprintf(stderr, "TEST-UNEXPECTED-FAIL | process %d reaped | child process %d (it was already dead)\n", getpid(), process);
+    printf("TEST-UNEXPECTED-FAIL | process %d reaped | child process %d (it was already dead)\n", getpid(), process);
 
 
 
