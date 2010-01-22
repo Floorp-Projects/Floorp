@@ -2,8 +2,6 @@
 <?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
 <html xmlns="http://www.w3.org/1999/xhtml" title="Test Plugin Clipping">
 <head>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <style>
   embed { width:200px; height:200px; display:block; }
   iframe { border:none; }
@@ -50,6 +48,9 @@ function runTests() {
   checkClipRegion("p3", [[100, 100, 200, 200]]);
   checkClipRegion("p4", [[100, 100, 200, 200]]);
   checkClipRegionForFrame("f1", "p5", [[100, 100, 200, 200]]);
+
+  window.opener.SimpleTest.finish();
+  window.close();
 }
 ]]>
 </script>
