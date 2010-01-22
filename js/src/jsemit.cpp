@@ -1285,7 +1285,8 @@ JSTreeContext::skipSpansGenerator(unsigned skip)
 {
     JSTreeContext *tc = this;
     for (unsigned i = 0; i < skip; ++i, tc = tc->parent) {
-        JS_ASSERT(tc);
+        if (!tc)
+            return false;
         if (tc->flags & TCF_FUN_IS_GENERATOR)
             return true;
     }
@@ -2115,7 +2116,10 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * defeats the display optimization to static link searching used
              * by JSOP_{GET,CALL}UPVAR.
              */
-            if (cg->flags & TCF_FUN_IS_GENERATOR)
+            JSFunction *fun = cg->compiler->callerFrame->fun;
+            JS_ASSERT(cg->staticLevel >= fun->u.i.script->staticLevel);
+            unsigned skip = cg->staticLevel - fun->u.i.script->staticLevel;
+            if (cg->skipSpansGenerator(skip))
                 return JS_TRUE;
 
             return MakeUpvarForEval(pn, cg);
