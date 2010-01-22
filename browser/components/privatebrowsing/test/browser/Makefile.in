@@ -64,6 +64,8 @@ _BROWSER_TEST_FILES =  \
 		browser_privatebrowsing_placestitle.js \
 		browser_privatebrowsing_popupblocker.js \
 		browser_privatebrowsing_popupmode.js \
+		browser_privatebrowsing_protocolhandler.js \
+		browser_privatebrowsing_protocolhandler_page.html \
 		browser_privatebrowsing_searchbar.js \
 		browser_privatebrowsing_sslsite_transition.js \
 		browser_privatebrowsing_theming.js \
