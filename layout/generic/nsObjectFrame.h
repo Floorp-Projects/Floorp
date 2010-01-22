@@ -90,6 +90,12 @@ public:
                           nsGUIEvent* aEvent,
                           nsEventStatus* aEventStatus);
 
+#ifdef XP_MACOSX
+  NS_IMETHOD HandlePress(nsPresContext* aPresContext,
+                         nsGUIEvent*    aEvent,
+                         nsEventStatus* aEventStatus);
+#endif
+
   virtual nsIAtom* GetType() const;
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const

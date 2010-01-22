@@ -1934,6 +1934,19 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
   return nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
 }
 
+#ifdef XP_MACOSX
+// Needed to make the routing of mouse events while dragging conform to
+// standard OS X practice, and to the Cocoa NPAPI spec.  See bug 525078.
+NS_IMETHODIMP
+nsObjectFrame::HandlePress(nsPresContext* aPresContext,
+                           nsGUIEvent*    anEvent,
+                           nsEventStatus* anEventStatus)
+{
+  nsIPresShell::SetCapturingContent(GetContent(), CAPTURE_IGNOREALLOWED);
+  return nsObjectFrameSuper::HandlePress(aPresContext, anEvent, anEventStatus);
+}
+#endif
+
 nsresult
 nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
 {
@@ -4264,6 +4277,16 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
           }
           break;
         case NS_MOUSE_MOVE:
+          {
+            // Ignore mouse-moved events that happen as part of a dragging
+            // operation that started over another frame.  See bug 525078.
+            nsCOMPtr<nsFrameSelection> frameselection = mObjectFrame->GetFrameSelection();
+            if (frameselection->GetMouseDownState() &&
+                (nsIPresShell::GetCapturingContent() != mObjectFrame->GetContent())) {
+              pluginWidget->EndDrawPlugin();
+              return nsEventStatus_eIgnore;
+            }
+          }
 #ifndef NP_NO_CARBON
           if (eventModel == NPEventModelCarbon) {
             synthCarbonEvent.what = osEvt;
@@ -4288,15 +4311,34 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
           }
           break;
         case NS_MOUSE_BUTTON_UP:
+          // If we're in a dragging operation that started over another frame,
+          // either ignore the mouse-up event (in the Carbon Event Model) or
+          // convert it into a mouse-entered event (in the Cocoa Event Model).
+          // See bug 525078.
+          if ((static_cast<const nsMouseEvent&>(anEvent).button == nsMouseEvent::eLeftButton) &&
+              (nsIPresShell::GetCapturingContent() != mObjectFrame->GetContent())) {
 #ifndef NP_NO_CARBON
-          if (eventModel == NPEventModelCarbon) {
-            synthCarbonEvent.what = mouseUp;
-          } else
+            if (eventModel == NPEventModelCarbon) {
+              pluginWidget->EndDrawPlugin();
+              return nsEventStatus_eIgnore;
+            } else
 #endif
-          {
-            synthCocoaEvent.type = NPCocoaEventMouseUp;
-            synthCocoaEvent.data.mouse.pluginX = static_cast<double>(ptPx.x);
-            synthCocoaEvent.data.mouse.pluginY = static_cast<double>(ptPx.y);
+            {
+              synthCocoaEvent.type = NPCocoaEventMouseEntered;
+              synthCocoaEvent.data.mouse.pluginX = static_cast<double>(ptPx.x);
+              synthCocoaEvent.data.mouse.pluginY = static_cast<double>(ptPx.y);
+            }
+          } else {
+#ifndef NP_NO_CARBON
+            if (eventModel == NPEventModelCarbon) {
+              synthCarbonEvent.what = mouseUp;
+            } else
+#endif
+            {
+              synthCocoaEvent.type = NPCocoaEventMouseUp;
+              synthCocoaEvent.data.mouse.pluginX = static_cast<double>(ptPx.x);
+              synthCocoaEvent.data.mouse.pluginY = static_cast<double>(ptPx.y);
+            }
           }
           break;
         default:
