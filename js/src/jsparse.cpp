@@ -147,8 +147,8 @@ static JSMemberParser  MemberExpr;
 static JSPrimaryParser PrimaryExpr;
 static JSParenParser   ParenExpr;
 
-static bool RecognizeDirectivePrologue(JSContext *cx, JSTokenStream *ts,
-                                       JSTreeContext *tc, JSParseNode *pn);
+static bool
+RecognizeDirectivePrologue(JSContext *cx, JSTreeContext *tc, JSParseNode *pn);
 
 /*
  * Insist that the next token be of type tt, or report errno and return null.
@@ -935,7 +935,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
         JS_ASSERT(!cg.blockNode);
 
         if (inDirectivePrologue)
-            inDirectivePrologue = RecognizeDirectivePrologue(cx, &jsc.tokenStream, &cg, pn);
+            inDirectivePrologue = RecognizeDirectivePrologue(cx, &cg, pn);
 
         if (!js_FoldConstants(cx, pn, &cg))
             goto out;
@@ -3081,8 +3081,7 @@ FunctionExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
  * if it can't possibly be a directive, now or in the future.
  */
 static bool
-RecognizeDirectivePrologue(JSContext *cx, JSTokenStream *ts,
-                           JSTreeContext *tc, JSParseNode *pn)
+RecognizeDirectivePrologue(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
 {
     if (!pn->isDirectivePrologueMember())
         return false;
@@ -3090,7 +3089,7 @@ RecognizeDirectivePrologue(JSContext *cx, JSTokenStream *ts,
         JSAtom *directive = pn->pn_kid->pn_atom;
         if (directive == cx->runtime->atomState.useStrictAtom) {
             tc->flags |= TCF_STRICT_MODE_CODE;
-            ts->flags |= TSF_STRICT_MODE_CODE;
+            tc->compiler->tokenStream.flags |= TSF_STRICT_MODE_CODE;
         }
     }
     return true;
@@ -3138,15 +3137,8 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             return NULL;
         }
 
-        if (inDirectivePrologue) {
-            if (RecognizeDirectivePrologue(cx, ts, tc, pn2)) {
-                /* A Directive Prologue member is dead code.  Omit it from the statement list. */
-                RecycleTree(pn2, tc);
-                continue;
-            } else {
-                inDirectivePrologue = false;
-            }
-        }
+        if (inDirectivePrologue)
+            inDirectivePrologue = RecognizeDirectivePrologue(cx, tc, pn2);
 
         if (pn2->pn_type == TOK_FUNCTION) {
             /*

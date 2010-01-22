@@ -491,8 +491,8 @@ struct JSParseNode {
      * we'll need additional flags that we can test here.
      */
     bool isDirectivePrologueMember() const {
-        if (PN_TYPE(this) == TOK_SEMI &&
-            pn_arity == PN_UNARY) {
+        if (PN_TYPE(this) == TOK_SEMI) {
+            JS_ASSERT(pn_arity == PN_UNARY);
             JSParseNode *kid = pn_kid;
             return kid && PN_TYPE(kid) == TOK_STRING && !kid->pn_parens;
         }
