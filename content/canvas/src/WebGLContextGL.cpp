@@ -52,7 +52,6 @@
 
 #include "CanvasUtils.h"
 #include "NativeJSContext.h"
-#include "SimpleBuffer.h"
 
 #include "jstypedarray.h"
 
@@ -2405,7 +2404,7 @@ WebGLContext::ValidateGL()
     // Note: GL_MAX_TEXTURE_UNITS is fixed at 4 for most desktop hardware,
     // even though the hardware supports much more.  The
     // GL_MAX_{COMBINED_}TEXTURE_IMAGE_UNITS value is the accurate
-    // value.  For GLES2, GL_MAX_TEXTURE_UNITS is still correc.t
+    // value.  For GLES2, GL_MAX_TEXTURE_UNITS is still correct.
     gl->fGetIntegerv(LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &val);
     if (val == 0) {
         LogMessage("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS is 0!");
