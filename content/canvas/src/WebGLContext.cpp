@@ -12,8 +12,6 @@
 #include "gfxContext.h"
 #include "gfxPattern.h"
 
-#include "localgl.h"
-
 #include "CanvasUtils.h"
 #include "NativeJSContext.h"
 
