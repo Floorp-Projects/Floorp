@@ -36,9 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined(LOCALGL_H_) && !defined(__gl_h_)
+#if !defined(LOCALGL_H_)
 
 #define LOCALGL_H_
+
+#if !defined(__gl_h_)
 #define __gl_h_
 
 #if defined(__APPLE__XXX)
@@ -78,6 +80,8 @@ typedef PRInt32 GLintptr;
 #  define GLAPI
 # endif
 #endif
+
+#endif /* __gl_h_ */
 
 #define LOCAL_GL_VERSION_1_1 1
 #define LOCAL_GL_ACCUM 0x0100
