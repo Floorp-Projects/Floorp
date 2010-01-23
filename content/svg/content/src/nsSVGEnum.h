@@ -68,7 +68,7 @@ public:
 
   PRUint16 GetBaseValue() const
     { return mBaseVal; }
-  PRUint16 GetAnimValue() const
+  PRUint16 GetAnimValue(nsSVGElement *aSVGElement) const
     { return mAnimVal; }
 
   nsresult ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
@@ -97,7 +97,7 @@ private:
     NS_IMETHOD SetBaseVal(PRUint16 aValue)
       { return mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE); }
     NS_IMETHOD GetAnimVal(PRUint16* aResult)
-      { *aResult = mVal->GetAnimValue(); return NS_OK; }
+      { *aResult = mVal->GetAnimValue(mSVGElement); return NS_OK; }
   };
 };
 
