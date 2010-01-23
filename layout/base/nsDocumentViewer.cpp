@@ -322,7 +322,6 @@ public:
   NS_DECL_NSICONTENTVIEWER
 
   // nsIDocumentViewer interface...
-  NS_IMETHOD GetDocument(nsIDocument** aResult);
   NS_IMETHOD GetPresShell(nsIPresShell** aResult);
   NS_IMETHOD GetPresContext(nsPresContext** aResult);
 
@@ -1316,8 +1315,7 @@ AttachContainerRecurse(nsIDocShell* aShell)
   aShell->GetContentViewer(getter_AddRefs(viewer));
   nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(viewer);
   if (docViewer) {
-    nsCOMPtr<nsIDocument> doc;
-    docViewer->GetDocument(getter_AddRefs(doc));
+    nsIDocument* doc = docViewer->GetDocument();
     if (doc) {
       doc->SetContainer(aShell);
     }
@@ -1445,8 +1443,7 @@ DetachContainerRecurse(nsIDocShell *aShell)
   aShell->GetContentViewer(getter_AddRefs(viewer));
   nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(viewer);
   if (docViewer) {
-    nsCOMPtr<nsIDocument> doc;
-    docViewer->GetDocument(getter_AddRefs(doc));
+    nsIDocument* doc = docViewer->GetDocument();
     if (doc) {
       doc->SetContainer(nsnull);
     }
@@ -1662,6 +1659,12 @@ DocumentViewerImpl::GetDOMDocument(nsIDOMDocument **aResult)
   return CallQueryInterface(mDocument, aResult);
 }
 
+NS_IMETHODIMP_(nsIDocument *)
+DocumentViewerImpl::GetDocument()
+{
+  return mDocument;
+}
+
 NS_IMETHODIMP
 DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 {
@@ -1757,14 +1760,6 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-DocumentViewerImpl::GetDocument(nsIDocument** aResult)
-{
-  NS_IF_ADDREF(*aResult = mDocument);
-
-  return NS_OK;
 }
 
 nsIPresShell*
@@ -3399,12 +3394,8 @@ DocumentViewerImpl::GetPopupNode(nsIDOMNode** aNode)
 {
   NS_ENSURE_ARG_POINTER(aNode);
 
-  nsresult rv;
-
   // get the document
-  nsCOMPtr<nsIDocument> document;
-  rv = GetDocument(getter_AddRefs(document));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIDocument* document = GetDocument();
   NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
 
@@ -3419,7 +3410,7 @@ DocumentViewerImpl::GetPopupNode(nsIDOMNode** aNode)
   // get the popup node
   focusController->GetPopupNode(aNode); // addref happens here
 
-  return rv;
+  return NS_OK;
 }
 
 // GetPopupLinkNode: return popup link node or fail
@@ -3567,8 +3558,7 @@ NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocumen
   // for simple selection changes, but that would be expenseive.
   if (!mGotSelectionState || mSelectionWasCollapsed != selectionCollapsed)
   {
-    nsCOMPtr<nsIDocument> theDoc;
-    mDocViewer->GetDocument(getter_AddRefs(theDoc));
+    nsIDocument* theDoc = mDocViewer->GetDocument();
     if (!theDoc) return NS_ERROR_FAILURE;
 
     nsPIDOMWindow *domWindow = theDoc->GetWindow();
