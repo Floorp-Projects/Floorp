@@ -382,7 +382,7 @@ nsSVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
                                        float aX, float aY, float aAngle)
 {
   float scale = 1.0;
-  if (mEnumAttributes[MARKERUNITS].GetAnimValue() ==
+  if (mEnumAttributes[MARKERUNITS].GetAnimValue(this) ==
       SVG_MARKERUNITS_STROKEWIDTH)
     scale = aStrokeWidth;
 
