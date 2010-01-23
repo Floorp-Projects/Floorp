@@ -93,7 +93,7 @@ interface nsIFastLoadFileControl : nsISupports
     boolean     hasMuxedDocument(in string aURISpec);
 };
 
-[scriptable, uuid(652ecec6-d40b-45b6-afef-641d6c63a35b)]
+[scriptable, uuid(7604429c-6090-40fe-a87b-928221a1ca67)]
 interface nsIFastLoadReadControl : nsIFastLoadFileControl
 {
     /**
@@ -111,7 +111,7 @@ interface nsIFastLoadReadControl : nsIFastLoadFileControl
     readonly attribute nsISimpleEnumerator dependencies;
 };
 
-[scriptable, uuid(2ad6e9e6-1379-4e45-a899-a54b27ff915c)]
+[scriptable, uuid(3dbdca8f-0631-4826-a29c-8aba1deea09d)]
 interface nsIFastLoadWriteControl : nsIFastLoadFileControl
 {
     /**
