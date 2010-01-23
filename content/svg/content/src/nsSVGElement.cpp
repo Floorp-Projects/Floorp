@@ -1454,6 +1454,19 @@ nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr)
           newStr, PR_TRUE);
 }
 
+void
+nsSVGElement::DidAnimateEnum(PRUint8 aAttrEnum)
+{
+  nsIFrame* frame = GetPrimaryFrame();
+
+  if (frame) {
+    EnumAttributesInfo info = GetEnumInfo();
+    frame->AttributeChanged(kNameSpaceID_None,
+                            *info.mEnumInfo[aAttrEnum].mName,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
 nsSVGViewBox *
 nsSVGElement::GetViewBox()
 {
@@ -1699,6 +1712,16 @@ nsSVGElement::GetAnimatedAttr(const nsIAtom* aName)
       // here. The separate properties should then point into the list.
       if (aName == *info.mNumberInfo[i].mName) {
         return info.mNumbers[i].ToSMILAttr(this);
+      }
+    }
+  }
+
+  // Enumerations:
+  {
+    EnumAttributesInfo info = GetEnumInfo();
+    for (PRUint32 i = 0; i < info.mEnumCount; i++) {
+      if (aName == *info.mEnumInfo[i].mName) {
+        return info.mEnums[i].ToSMILAttr(this);
       }
     }
   }

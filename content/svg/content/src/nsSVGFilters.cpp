@@ -302,24 +302,31 @@ nsSVGFE::GetLengthInfo()
                               NS_ARRAY_LENGTH(sLengthInfo));
 }
 
-void
-nsSVGFE::DidAnimateLength(PRUint8 aAttrEnum)
+inline static void DidAnimateAttr(nsSVGFE *aFilterPrimitive)
 {
   // nsSVGLeafFrame doesn't implement AttributeChanged.
-  nsIFrame* frame = GetPrimaryFrame();
+  nsIFrame* frame = aFilterPrimitive->GetPrimaryFrame();
   if (frame) {
     nsSVGEffects::InvalidateRenderingObservers(frame);
   }
 }
 
 void
+nsSVGFE::DidAnimateLength(PRUint8 aAttrEnum)
+{
+  DidAnimateAttr(this);
+}
+
+void
 nsSVGFE::DidAnimateNumber(PRUint8 aAttrEnum)
 {
-  // nsSVGLeafFrame doesn't implement AttributeChanged.
-  nsIFrame* frame = GetPrimaryFrame();
-  if (frame) {
-    nsSVGEffects::InvalidateRenderingObservers(frame);
-  }
+  DidAnimateAttr(this);
+}
+
+void
+nsSVGFE::DidAnimateEnum(PRUint8 aAttrEnum)
+{
+  DidAnimateAttr(this);
 }
 
 //---------------------Gaussian Blur------------------------
