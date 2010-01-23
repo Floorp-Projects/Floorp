@@ -681,17 +681,14 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void getParameter (in GLenum pname);
 
   // Modified: void glGetBufferParameteriv (GLenum target, GLenum pname, GLint* params);
-  GLint getBufferParameteri (in GLenum target, in GLenum pname); // XXX remove
   void getBufferParameter (in GLenum target, in GLenum pname);
 
   GLenum getError ();
 
   // Modified: void glGetFramebufferAttachmentParameteriv (GLenum target, GLenum attachment, GLenum pname, GLint* params);
-  GLint getFramebufferAttachmentParameteri (in GLenum target, in GLenum attachment, in GLenum pname); // XXX remove
   void getFramebufferAttachmentParameter (in GLenum target, in GLenum attachment, in GLenum pname);
 
   // Modified: void glGetProgramiv (nsIWebGLProgram program, GLenum pname, GLint* params);
-  GLint getProgrami (in nsIWebGLProgram program, in GLenum pname); // XXX remove
   void getProgramParameter (in nsIWebGLProgram program, in GLenum pname);
 
   // Modified: void glGetProgramInfoLog (GLuint program, GLsizei bufsize, GLsizei* length, char* infolog);
@@ -699,10 +696,8 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   // Modified: void glGetRenderbufferParameteriv (GLenum target, GLenum pname, GLint* params);
   //nsIWebGLIntArray getRenderbufferParameteriv (in GLenum target, in GLenum pname);
-  GLint getRenderbufferParameteri (in GLenum target, in GLenum pname); // XXX remove
   void getRenderbufferParameter (in GLenum target, in GLenum pname);
 
-  GLint getShaderi (in nsIWebGLShader shader, in GLenum pname); // XXX remove
   void getShaderParameter (in nsIWebGLShader shader, in GLenum pname);
 
   // Modified: void glGetShaderInfoLog (GLuint shader, GLsizei bufsize, GLsizei* length, char* infolog);
@@ -714,8 +709,6 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   DOMString getShaderSource (in nsIWebGLShader shader);
   DOMString getString (in GLenum name);
 
-  GLfloat getTexParameterf (in GLenum target, in GLenum pname);         // XXX remove
-  GLint getTexParameteri (in GLenum target, in GLenum pname);           // XXX remove
   void getTexParameter (in GLenum target, in GLenum pname);
 
   // FIXME: This is problematic. We don't implicitly know how big the returned data buffer

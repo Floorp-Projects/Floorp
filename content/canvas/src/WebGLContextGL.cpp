@@ -1243,34 +1243,6 @@ WebGLContext::GetParameter(PRUint32 pname)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetBufferParameteri(GLenum target, GLenum pname, GLint *retval)
-{
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
-    MakeContextCurrent();
-
-    switch (pname) {
-        case LOCAL_GL_BUFFER_SIZE:
-        case LOCAL_GL_BUFFER_USAGE:
-        case LOCAL_GL_BUFFER_ACCESS:
-        case LOCAL_GL_BUFFER_MAPPED:
-        {
-            PRInt32 iv = 0;
-            gl->fGetBufferParameteriv(target, pname, (GLint*) &iv);
-            js.SetRetVal(iv);
-        }
-            break;
-
-        default:
-            return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 WebGLContext::GetBufferParameter(GLenum target, GLenum pname)
 {
     NativeJSContext js;
@@ -1287,43 +1259,6 @@ WebGLContext::GetBufferParameter(GLenum target, GLenum pname)
         {
             PRInt32 iv = 0;
             gl->fGetBufferParameteriv(target, pname, (GLint*) &iv);
-            js.SetRetVal(iv);
-        }
-            break;
-
-        default:
-            return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-WebGLContext::GetFramebufferAttachmentParameteri(GLenum target, GLenum attachment, GLenum pname, GLint *retval)
-{
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
-    MakeContextCurrent();
-
-    switch (attachment) {
-        case LOCAL_GL_COLOR_ATTACHMENT0:
-        case LOCAL_GL_DEPTH_ATTACHMENT:
-        case LOCAL_GL_STENCIL_ATTACHMENT:
-            break;
-        default:
-            return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    switch (pname) {
-        case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-        case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
-        case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
-        case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
-        {
-            PRInt32 iv = 0;
-            gl->fGetFramebufferAttachmentParameteriv(target, attachment, pname, (GLint*) &iv);
             js.SetRetVal(iv);
         }
             break;
@@ -1361,39 +1296,6 @@ WebGLContext::GetFramebufferAttachmentParameter(GLenum target, GLenum attachment
         {
             PRInt32 iv = 0;
             gl->fGetFramebufferAttachmentParameteriv(target, attachment, pname, (GLint*) &iv);
-            js.SetRetVal(iv);
-        }
-            break;
-
-        default:
-            return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-WebGLContext::GetRenderbufferParameteri(GLenum target, GLenum pname, GLint *retval)
-{
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
-    MakeContextCurrent();
-
-    switch (pname) {
-        case LOCAL_GL_RENDERBUFFER_WIDTH:
-        case LOCAL_GL_RENDERBUFFER_HEIGHT:
-        case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
-        case LOCAL_GL_RENDERBUFFER_RED_SIZE:
-        case LOCAL_GL_RENDERBUFFER_GREEN_SIZE:
-        case LOCAL_GL_RENDERBUFFER_BLUE_SIZE:
-        case LOCAL_GL_RENDERBUFFER_ALPHA_SIZE:
-        case LOCAL_GL_RENDERBUFFER_DEPTH_SIZE:
-        case LOCAL_GL_RENDERBUFFER_STENCIL_SIZE:
-        {
-            PRInt32 iv = 0;
-            gl->fGetRenderbufferParameteriv(target, pname, (GLint*) &iv);
             js.SetRetVal(iv);
         }
             break;
@@ -1481,45 +1383,6 @@ WebGLContext::GetError(GLenum *_retval)
 {
     MakeContextCurrent();
     *_retval = gl->fGetError();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-WebGLContext::GetProgrami(nsIWebGLProgram *prog, PRUint32 pname, GLint *retval)
-{
-    if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
-        return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
-
-    GLuint program = static_cast<WebGLProgram*>(prog)->GLName();
-
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
-    MakeContextCurrent();
-
-    switch (pname) {
-        case LOCAL_GL_CURRENT_PROGRAM:
-        case LOCAL_GL_DELETE_STATUS:
-        case LOCAL_GL_LINK_STATUS:
-        case LOCAL_GL_VALIDATE_STATUS:
-        case LOCAL_GL_ATTACHED_SHADERS:
-        case LOCAL_GL_INFO_LOG_LENGTH:
-        case LOCAL_GL_ACTIVE_UNIFORMS:
-        case LOCAL_GL_ACTIVE_UNIFORM_MAX_LENGTH:
-        case LOCAL_GL_ACTIVE_ATTRIBUTES:
-        case LOCAL_GL_ACTIVE_ATTRIBUTE_MAX_LENGTH:
-        {
-            PRInt32 iv = 0;
-            gl->fGetProgramiv(program, pname, (GLint*) &iv);
-            js.SetRetVal(iv);
-        }
-            break;
-
-        default:
-            return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
     return NS_OK;
 }
 
@@ -1728,66 +1591,6 @@ WebGLContext::TexParameter()
     return NS_OK;
 }
 #endif
-
-/* XXX fix */
-/* void getTexParameter (); */
-
-/* GLfloat getTexParameterf (in GLenum target, in GLenum pname); */
-NS_IMETHODIMP
-WebGLContext::GetTexParameterf(GLenum target, GLenum pname, GLfloat *retval)
-{
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
-    MakeContextCurrent();
-
-    switch (pname) {
-        case LOCAL_GL_TEXTURE_MIN_FILTER:
-        case LOCAL_GL_TEXTURE_MAG_FILTER:
-        case LOCAL_GL_TEXTURE_WRAP_S:
-        case LOCAL_GL_TEXTURE_WRAP_T:
-        {
-            float fv = 0;
-            gl->fGetTexParameterfv(target, pname, (GLfloat*) &fv);
-            js.SetRetVal(fv);
-        }
-            break;
-
-        default:
-            return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-WebGLContext::GetTexParameteri(GLenum target, GLenum pname, GLint *retval)
-{
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
-    MakeContextCurrent();
-
-    switch (pname) {
-        case LOCAL_GL_TEXTURE_MIN_FILTER:
-        case LOCAL_GL_TEXTURE_MAG_FILTER:
-        case LOCAL_GL_TEXTURE_WRAP_S:
-        case LOCAL_GL_TEXTURE_WRAP_T:
-        {
-            PRInt32 iv = 0;
-            gl->fGetTexParameteriv(target, pname, (GLint*) &iv);
-            js.SetRetVal(iv);
-        }
-            break;
-
-        default:
-            return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 WebGLContext::GetTexParameter(GLenum target, GLenum pname)
@@ -2425,40 +2228,6 @@ WebGLContext::CompileShader(nsIWebGLShader *shobj)
     return NS_OK;
 }
 
-
-NS_IMETHODIMP
-WebGLContext::GetShaderi(nsIWebGLShader *shobj, GLenum pname, GLint *_retval)
-{
-    if (!shobj || static_cast<WebGLShader*>(shobj)->Deleted())
-        return ErrorMessage("%s: shader is null or deleted!", __FUNCTION__);
-
-    GLuint shader = static_cast<WebGLShader*>(shobj)->GLName();
-    
-    NativeJSContext js;
-    if (NS_FAILED(js.error))
-        return js.error;
-
-    MakeContextCurrent();
-
-    switch (pname) {
-        case LOCAL_GL_SHADER_TYPE:
-        case LOCAL_GL_DELETE_STATUS:
-        case LOCAL_GL_COMPILE_STATUS:
-        case LOCAL_GL_INFO_LOG_LENGTH:
-        case LOCAL_GL_SHADER_SOURCE_LENGTH:
-        {
-            PRInt32 iv = 0;
-            gl->fGetShaderiv(shader, pname, (GLint*) &iv);
-            js.SetRetVal(iv);
-        }
-            break;
-
-        default:
-            return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 WebGLContext::GetShaderParameter(nsIWebGLShader *shobj, GLenum pname)
