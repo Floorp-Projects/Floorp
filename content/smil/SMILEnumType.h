@@ -12,15 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla SMIL module.
+ * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is Brian Birtles.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * The Initial Developer of the Original Code is the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Robert O'Callahan <roc+moz@cs.cmu.edu>
- *   Brian Birtles <birtles@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,45 +34,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NS_SMILVALUE_H_
-#define NS_SMILVALUE_H_
+#ifndef MOZILLA_SMILENUMTYPE_H_
+#define MOZILLA_SMILENUMTYPE_H_
 
 #include "nsISMILType.h"
-#include "nsSMILNullType.h"
 
-class nsSMILValue
+namespace mozilla {
+
+class SMILEnumType : public nsISMILType
 {
 public:
-  nsSMILValue() : mU(), mType(&nsSMILNullType::sSingleton) { }
-  nsSMILValue(const nsISMILType* aType);
-  nsSMILValue(const nsSMILValue& aVal);
+  virtual nsresult Init(nsSMILValue& aValue) const;
+  virtual void     Destroy(nsSMILValue&) const;
+  virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const;
+  virtual nsresult Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
+                       PRUint32 aCount) const;
+  virtual nsresult ComputeDistance(const nsSMILValue& aFrom,
+                                   const nsSMILValue& aTo,
+                                   double& aDistance) const;
+  virtual nsresult Interpolate(const nsSMILValue& aStartVal,
+                               const nsSMILValue& aEndVal,
+                               double aUnitDistance,
+                               nsSMILValue& aResult) const;
 
-  ~nsSMILValue()
-  {
-    mType->Destroy(*this);
-  }
+  static SMILEnumType sSingleton;
 
-  const nsSMILValue& operator=(const nsSMILValue& aVal);
-
-  PRBool IsNull() const
-  {
-    return (mType == &nsSMILNullType::sSingleton);
-  }
-
-  nsresult Add(const nsSMILValue& aValueToAdd, PRUint32 aCount = 1);
-  nsresult SandwichAdd(const nsSMILValue& aValueToAdd);
-  nsresult ComputeDistance(const nsSMILValue& aTo, double& aDistance) const;
-  nsresult Interpolate(const nsSMILValue& aEndVal,
-                       double aUnitDistance,
-                       nsSMILValue& aResult) const;
-
-  union {
-    PRUint64 mUint;
-    PRInt64 mInt;
-    double mDouble;
-    void* mPtr;
-  } mU;
-  const nsISMILType* mType;
+private:
+  SMILEnumType() {}
 };
 
-#endif  // NS_SMILVALUE_H_
+} // namespace mozilla
+
+#endif // MOZILLA_SMILENUMTYPE_H_
