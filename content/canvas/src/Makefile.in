@@ -92,6 +92,7 @@ CPPSRCS += \
 	glwrap.cpp \
 	nsGLPbuffer.cpp \
 	nsGLPbufferOSMesa.cpp \
+	SimpleBuffer.cpp \
 	$(NULL)
 
 CPPSRCS += nsGLPbuffer$(WEBGL_PLATFORM).cpp
