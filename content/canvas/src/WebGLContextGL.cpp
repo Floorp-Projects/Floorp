@@ -52,6 +52,7 @@
 
 #include "CanvasUtils.h"
 #include "NativeJSContext.h"
+#include "SimpleBuffer.h"
 
 #include "jstypedarray.h"
 
