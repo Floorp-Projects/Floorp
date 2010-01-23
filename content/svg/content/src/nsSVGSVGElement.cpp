@@ -819,7 +819,7 @@ nsSVGSVGElement::GetTransformToElement(nsIDOMSVGElement *element,
 NS_IMETHODIMP
 nsSVGSVGElement::GetZoomAndPan(PRUint16 *aZoomAndPan)
 {
-  *aZoomAndPan = mEnumAttributes[ZOOMANDPAN].GetAnimValue();
+  *aZoomAndPan = mEnumAttributes[ZOOMANDPAN].GetAnimValue(this);
   return NS_OK;
 }
 
