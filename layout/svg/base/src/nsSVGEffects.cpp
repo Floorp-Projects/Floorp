@@ -46,6 +46,22 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsFrameManager.h"
 
+/**
+ * Note that in the current setup there are two separate observer lists.
+ *
+ * In nsSVGRenderingObserver's ctor, the new object adds itself to the mutation
+ * observer list maintained by the referenced *element*. In this way the
+ * nsSVGRenderingObserver is notified if there are any attribute or content
+ * tree changes to the element or any of its *descendants*.
+ *
+ * In nsSVGRenderingObserver::GetReferencedFrame() the nsSVGRenderingObserver
+ * object also adds itself to an nsSVGRenderingObserverList object belonging
+ * to the nsIFrame corresponding to the referenced element.
+ *
+ * XXX: it would be nice to have a clear and concise executive summary of the
+ * benefits/necessity of maintaining a second observer list.
+ */
+
 NS_IMPL_ISUPPORTS1(nsSVGRenderingObserver, nsIMutationObserver)
 
 #ifdef _MSC_VER
@@ -161,6 +177,19 @@ nsSVGRenderingObserver::AttributeChanged(nsIDocument *aDocument,
                                          nsIAtom *aAttribute,
                                          PRInt32 aModType)
 {
+  // An attribute belonging to the element that we are observing *or one of its
+  // descendants* has changed.
+  //
+  // In the case of observing a gradient element, say, we want to know if any
+  // of its 'stop' element children change, but we don't actually want to do
+  // anything for changes to SMIL element children, for example. Maybe it's not
+  // worth having logic to optimize for that, but in most cases it could be a
+  // small check?
+  //
+  // XXXjwatt: do we really want to blindly break the link between our
+  // observers and ourselves for all attribute changes? For non-ID changes
+  // surely that is unnecessary.
+
   DoUpdate();
 }
 
@@ -432,7 +461,10 @@ nsSVGRenderingObserverList::InvalidateAll()
     return;
 
   nsAutoTArray<nsSVGRenderingObserver*,10> observers;
+
+  // The PL_DHASH_REMOVE in GatherEnumerator drops all our observers here:
   mObservers.EnumerateEntries(GatherEnumerator, &observers);
+
   for (PRUint32 i = 0; i < observers.Length(); ++i) {
     observers[i]->InvalidateViaReferencedFrame();
   }
