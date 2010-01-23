@@ -7620,14 +7620,14 @@ InitJIT(TraceMonitor *tm)
 #endif
 #if defined NANOJIT_ARM
 
-        js_disable_debugger_exceptions();
+        disable_debugger_exceptions();
 
-        bool            arm_vfp     = js_arm_check_vfp();
-        bool            arm_thumb   = js_arm_check_thumb();
-        bool            arm_thumb2  = js_arm_check_thumb2();
-        unsigned int    arm_arch    = js_arm_check_arch();
+        bool            arm_vfp     = arm_check_vfp();
+        bool            arm_thumb   = arm_check_thumb();
+        bool            arm_thumb2  = arm_check_thumb2();
+        unsigned int    arm_arch    = arm_check_arch();
 
-        js_enable_debugger_exceptions();
+        enable_debugger_exceptions();
 
         avmplus::AvmCore::config.vfp        = arm_vfp;
         avmplus::AvmCore::config.soft_float = !arm_vfp;
