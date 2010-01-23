@@ -143,6 +143,13 @@ statusbarpanel {
   padding: 0 4px;
 }
 
+statusbarpanel:not(.statusbar-resizerpanel):-moz-lwtheme {
+  -moz-appearance: none;
+  border-top-style: none;
+  border-bottom-style: none;
+  -moz-border-start-style: none;
+}
+
 .statusbar-resizerpanel {
   -moz-box-align: end;
   -moz-box-pack: end;
