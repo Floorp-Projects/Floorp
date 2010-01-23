@@ -270,11 +270,9 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(PRUint32 aLevel)
 
   nsCOMPtr<nsIContentViewer> cv;
   mDocShell->GetContentViewer(getter_AddRefs(cv));
-  nsCOMPtr<nsIDocumentViewer> dv(do_QueryInterface(cv));
-  if (dv) {
-    nsCOMPtr<nsIDocument> doc;
-    dv->GetDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(doc));
+  if (cv) {
+    nsCOMPtr<nsIDOMDocumentEvent> docEvent(
+      do_QueryInterface(cv->GetDocument()));
     if (docEvent) {
       nsCOMPtr<nsIDOMEvent> event;
       docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
@@ -284,7 +282,7 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(PRUint32 aLevel)
         nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
         privateEvent->SetTrusted(PR_TRUE);
 
-        nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(doc));
+        nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(docEvent));
         if (targ) {
           PRBool defaultActionEnabled;
           targ->DispatchEvent(event, &defaultActionEnabled);
@@ -1543,12 +1541,7 @@ NS_IMETHODIMP nsXULWindow::GetWindowDOMElement(nsIDOMElement** aDOMElement)
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   NS_ENSURE_TRUE(cv, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-  NS_ENSURE_TRUE(docv, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocument> doc;
-  docv->GetDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
+  nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(cv->GetDocument()));
   NS_ENSURE_TRUE(domdoc, NS_ERROR_FAILURE);
 
   domdoc->GetDocumentElement(aDOMElement);

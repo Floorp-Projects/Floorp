@@ -79,19 +79,12 @@ nsCOMPtr<nsIDOMNode> GetDOMNodeFromDocShell(nsIDocShell *aShell)
   nsCOMPtr<nsIContentViewer> cv;
   aShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
-    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-    if (docv) {
-      nsCOMPtr<nsIDocument> doc;
-      docv->GetDocument(getter_AddRefs(doc));
-      if (doc) {
-        nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
-        if (domdoc) {
-          nsCOMPtr<nsIDOMElement> element;
-          domdoc->GetDocumentElement(getter_AddRefs(element));
-          if (element)
-            node = do_QueryInterface(element);
-        }
-      }
+    nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(cv->GetDocument()));
+    if (domdoc) {
+      nsCOMPtr<nsIDOMElement> element;
+      domdoc->GetDocumentElement(getter_AddRefs(element));
+      if (element)
+        node = do_QueryInterface(element);
     }
   }
 

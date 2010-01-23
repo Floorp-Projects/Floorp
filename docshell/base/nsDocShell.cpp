@@ -1792,8 +1792,7 @@ nsDocShell::GetChannelIsUnsafe(PRBool *aUnsafe)
 {
     *aUnsafe = PR_FALSE;
 
-    nsCOMPtr<nsIChannel> channel;
-    GetCurrentDocumentChannel(getter_AddRefs(channel));
+    nsIChannel* channel = GetCurrentDocChannel();
     if (!channel) {
         return NS_OK;
     }
@@ -2287,22 +2286,20 @@ nsDocShell::AddSessionStorage(nsIPrincipal* aPrincipal,
 NS_IMETHODIMP
 nsDocShell::GetCurrentDocumentChannel(nsIChannel** aResult)
 {
-    *aResult = nsnull;
-    if (!mContentViewer)
-        return NS_OK;
-
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    nsresult rv = mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-    if (doc) {
-      *aResult = doc->GetChannel();
-      NS_IF_ADDREF(*aResult);
-    }
-  
+    NS_IF_ADDREF(*aResult = GetCurrentDocChannel()); 
     return NS_OK;
+}
+
+nsIChannel*
+nsDocShell::GetCurrentDocChannel()
+{
+    if (mContentViewer) {
+        nsIDocument* doc = mContentViewer->GetDocument();
+        if (doc) {
+            return doc->GetChannel();
+        }
+    }
+    return nsnull;
 }
 
 //*****************************************************************************
@@ -2988,12 +2985,10 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
         return NS_OK;
 
     // get the parent's current charset
-    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(mContentViewer));
-    if (!docv)
+    if (!mContentViewer)
         return NS_OK;
-    nsCOMPtr<nsIDocument> doc;
-    res = docv->GetDocument(getter_AddRefs(doc));
-    if (NS_FAILED(res) || (!doc))
+    nsIDocument* doc = mContentViewer->GetDocument();
+    if (!doc)
         return NS_OK;
     const nsACString &parentCS = doc->GetDocumentCharacterSet();
 
@@ -8050,11 +8045,7 @@ nsDocShell::GetInheritedPrincipal(PRBool aConsiderCurrentDocument)
     nsCOMPtr<nsIDocument> document;
 
     if (aConsiderCurrentDocument && mContentViewer) {
-        nsCOMPtr<nsIDocumentViewer>
-            docViewer(do_QueryInterface(mContentViewer));
-        if (!docViewer)
-            return nsnull;
-        docViewer->GetDocument(getter_AddRefs(document));
+        document = mContentViewer->GetDocument();
     }
 
     if (!document) {
@@ -8076,11 +8067,9 @@ nsDocShell::GetInheritedPrincipal(PRBool aConsiderCurrentDocument)
         EnsureContentViewer();  // If this fails, we'll just get a null
                                 // docViewer and bail.
 
-        nsCOMPtr<nsIDocumentViewer>
-            docViewer(do_QueryInterface(mContentViewer));
-        if (!docViewer)
+        if (!mContentViewer)
             return nsnull;
-        docViewer->GetDocument(getter_AddRefs(document));
+        document = mContentViewer->GetDocument();
     }
 
     //-- Get the document's principal
@@ -8700,12 +8689,8 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
                 
             // Get a document charset
             NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
-            nsCOMPtr<nsIDocumentViewer>
-                docv(do_QueryInterface(mContentViewer));
-            NS_ENSURE_TRUE(docv, NS_ERROR_FAILURE);
-            nsCOMPtr<nsIDocument> doc;
-            rv = docv->GetDocument(getter_AddRefs(doc));
-            NS_ENSURE_SUCCESS(rv, rv);
+            nsIDocument* doc = mContentViewer->GetDocument();
+            NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
             const nsACString &aCharset = doc->GetDocumentCharacterSet();
 
             nsCOMPtr<nsITextToSubURI> textToSubURI =
@@ -10088,7 +10073,6 @@ nsDocShell::SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer)
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIURI> baseURI;
-    nsCOMPtr<nsIDocument> document;
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
 
     if (sURIFixup)
@@ -10097,11 +10081,9 @@ nsDocShell::SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer)
 
     // Get the current document and set the base uri
     if (baseURI) {
-        nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(aContentViewer));
-        if (docViewer) {
-            rv = docViewer->GetDocument(getter_AddRefs(document));
-            if (document)
-                rv = document->SetBaseURI(baseURI);
+        nsIDocument* document = aContentViewer->GetDocument();
+        if (document) {
+            rv = document->SetBaseURI(baseURI);
         }
     }
     return rv;
