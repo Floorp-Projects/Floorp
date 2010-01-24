@@ -48,6 +48,7 @@ public:
   void Init(PRUint8 aAttrEnum = 0xff, PRBool aValue = PR_FALSE) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
+    mIsAnimated = PR_FALSE;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
@@ -58,16 +59,28 @@ public:
   void SetBaseValue(PRBool aValue, nsSVGElement *aSVGElement);
   PRBool GetBaseValue() const
     { return mBaseVal; }
-  PRBool GetAnimValue() const
-    { return mAnimVal; }
+
+  void SetAnimValue(PRBool aValue, nsSVGElement *aSVGElement);
+  PRBool GetAnimValue(nsSVGElement *aSVGElement) const
+  {
+  #ifdef MOZ_SMIL
+    aSVGElement->FlushAnimations();
+  #endif
+    return mAnimVal;
+  }
 
   nsresult ToDOMAnimatedBoolean(nsIDOMSVGAnimatedBoolean **aResult,
                                 nsSVGElement* aSVGElement);
+#ifdef MOZ_SMIL
+  // Returns a new nsISMILAttr object that the caller must delete
+  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
+#endif // MOZ_SMIL
 
 private:
 
   PRPackedBool mAnimVal;
   PRPackedBool mBaseVal;
+  PRPackedBool mIsAnimated;
   PRUint8 mAttrEnum; // element specified tracking for attribute
 
   struct DOMAnimatedBoolean : public nsIDOMSVGAnimatedBoolean
@@ -86,9 +99,31 @@ private:
     NS_IMETHOD SetBaseVal(PRBool aValue)
       { mVal->SetBaseValue(aValue, mSVGElement); return NS_OK; }
     NS_IMETHOD GetAnimVal(PRBool* aResult)
-      { *aResult = mVal->GetAnimValue(); return NS_OK; }
+      { *aResult = mVal->GetAnimValue(mSVGElement); return NS_OK; }
 
   };
 
+#ifdef MOZ_SMIL
+  struct SMILBool : public nsISMILAttr
+  {
+  public:
+    SMILBool(nsSVGBoolean* aVal, nsSVGElement* aSVGElement)
+      : mVal(aVal), mSVGElement(aSVGElement) {}
+    
+    // These will stay alive because a nsISMILAttr only lives as long
+    // as the Compositing step, and DOM elements don't get a chance to
+    // die during that.
+    nsSVGBoolean* mVal;
+    nsSVGElement* mSVGElement;
+    
+    // nsISMILAttr methods
+    virtual nsresult ValueFromString(const nsAString& aStr,
+                                     const nsISMILAnimationElement* aSrcElement,
+                                     nsSMILValue& aValue) const;
+    virtual nsSMILValue GetBaseValue() const;
+    virtual void ClearAnimValue();
+    virtual nsresult SetAnimValue(const nsSMILValue& aValue);
+  };
+#endif // MOZ_SMIL
 };
 #endif //__NS_SVGBOOLEAN_H__
