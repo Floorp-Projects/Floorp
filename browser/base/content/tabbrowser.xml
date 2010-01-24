@@ -1344,7 +1344,8 @@
 
             b.addEventListener("DOMTitleChanged", this.onTitleChanged, true);
 
-            if (this.mStrip.collapsed)
+            if (this.mStrip.collapsed &&
+                this.mTabs.length - this._removingTabs.length > 1)
               this.setStripVisibilityTo(true);
 
             // wire up a progress listener for the new browser object.
