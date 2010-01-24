@@ -2863,7 +2863,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     JSTracer trc;
     JSGCArena *emptyArenas, *a, **ap;
 #ifdef JS_THREADSAFE
-    uint32 requestDebit;
+    size_t requestDebit;
 #endif
 #ifdef JS_GCMETER
     uint32 nlivearenas, nkilledarenas, nthings;
@@ -2951,12 +2951,51 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         METER_UPDATE_MAX(rt->gcStats.maxlevel, rt->gcLevel);
 
         /*
-         * If the GC runs on another thread, temporarily suspend the current
-         * request and wait until the GC is done.
+         * If the GC runs on another thread, temporarily suspend all requests
+         * running on the current thread and wait until the GC is done.
          */
         if (rt->gcThread != cx->thread) {
-            requestDebit = js_DiscountRequestsForGC(cx);
-            js_RecountRequestsAfterGC(rt, requestDebit);
+            requestDebit = js_CountThreadRequests(cx);
+            JS_ASSERT(requestDebit <= rt->requestCount);
+#ifdef JS_TRACER
+            JS_ASSERT_IF(requestDebit == 0, !JS_ON_TRACE(cx));
+#endif
+            if (requestDebit != 0) {
+#ifdef JS_TRACER
+                if (JS_ON_TRACE(cx)) {
+                    /*
+                     * Leave trace before we decrease rt->requestCount and
+                     * notify the GC. Otherwise the GC may start immediately
+                     * after we unlock while this thread is still on trace.
+                     */
+                    JS_UNLOCK_GC(rt);
+                    LeaveTrace(cx);
+                    JS_LOCK_GC(rt);
+                }
+#endif
+                rt->requestCount -= requestDebit;
+
+                if (rt->requestCount == 0)
+                    JS_NOTIFY_REQUEST_DONE(rt);
+
+                /*
+                 * See comments before another call to js_ShareWaitingTitles
+                 * below.
+                 */
+                cx->thread->gcWaiting = true;
+                js_ShareWaitingTitles(cx);
+
+                /*
+                 * Check that we did not release the GC lock above and let the
+                 * GC to finish before we wait.
+                 */
+                JS_ASSERT(rt->gcLevel > 0);
+                do {
+                    JS_AWAIT_GC_DONE(rt);
+                } while (rt->gcLevel > 0);
+                cx->thread->gcWaiting = false;
+                rt->requestCount += requestDebit;
+            }
         }
         if (!(gckind & GC_LOCK_HELD))
             JS_UNLOCK_GC(rt);
@@ -2983,10 +3022,24 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      */
     requestDebit = js_CountThreadRequests(cx);
     JS_ASSERT_IF(cx->requestDepth != 0, requestDebit >= 1);
-    rt->requestCount -= requestDebit;
-    while (rt->requestCount > 0)
-        JS_AWAIT_REQUEST_DONE(rt);
-    rt->requestCount += requestDebit;
+    JS_ASSERT(requestDebit <= rt->requestCount);
+    if (requestDebit != rt->requestCount) {
+        rt->requestCount -= requestDebit;
+
+        /*
+         * Share any title that is owned by the GC thread before we wait, to
+         * avoid a deadlock with ClaimTitle. We also set the gcWaiting flag so
+         * that ClaimTitle can claim the title ownership from the GC thread if
+         * that function is called while the GC is waiting.
+         */
+        cx->thread->gcWaiting = true;
+        js_ShareWaitingTitles(cx);
+        do {
+            JS_AWAIT_REQUEST_DONE(rt);
+        } while (rt->requestCount > 0);
+        cx->thread->gcWaiting = false;
+        rt->requestCount += requestDebit;
+    }
 
 #else  /* !JS_THREADSAFE */
 
