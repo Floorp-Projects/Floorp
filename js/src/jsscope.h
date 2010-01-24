@@ -285,7 +285,7 @@ struct JSScope : public JSObjectMap
     static void destroy(JSContext *cx, JSScope *scope);
 
     inline void hold();
-    inline bool drop(JSContext *cx, JSObject *obj);
+    inline void drop(JSContext *cx, JSObject *obj);
 
     /*
      * Return an immutable, shareable, empty scope with the same ops as this
@@ -295,6 +295,8 @@ struct JSScope : public JSObjectMap
      * used as the scope of a new object whose prototype is |proto|.
      */
     inline JSEmptyScope *getEmptyScope(JSContext *cx, JSClass *clasp);
+
+    inline bool ensureEmptyScope(JSContext *cx, JSClass *clasp);
 
     inline bool canProvideEmptyScope(JSObjectOps *ops, JSClass *clasp);
 
@@ -796,6 +798,22 @@ JSScope::getEmptyScope(JSContext *cx, JSClass *clasp)
     return createEmptyScope(cx, clasp);
 }
 
+inline bool
+JSScope::ensureEmptyScope(JSContext *cx, JSClass *clasp)
+{
+    if (emptyScope) {
+        JS_ASSERT(clasp == emptyScope->clasp);
+        return true;
+    }
+    if (!createEmptyScope(cx, clasp))
+        return false;
+
+    /* We are going to have only single ref to the scope. */
+    JS_ASSERT(emptyScope->nrefs == 2);
+    emptyScope->nrefs = 1;
+    return true;
+}
+
 inline void
 JSScope::hold()
 {
@@ -803,23 +821,23 @@ JSScope::hold()
     JS_ATOMIC_INCREMENT(&nrefs);
 }
 
-inline bool
+inline void
 JSScope::drop(JSContext *cx, JSObject *obj)
 {
 #ifdef JS_THREADSAFE
-    /* We are called from only js_ShareWaitingTitles and js_FinalizeObject. */
-    JS_ASSERT(!obj || CX_THREAD_IS_RUNNING_GC(cx));
+    /*
+     * We are called only from js_FinalizeObject and can avoid the overhead of
+     * JS_ATOMIC_DECREMENT.
+     */
+    JS_ASSERT(CX_THREAD_IS_RUNNING_GC(cx));
 #endif
     JS_ASSERT(nrefs > 0);
     --nrefs;
 
-    if (nrefs == 0) {
+    if (nrefs == 0)
         destroy(cx, this);
-        return false;
-    }
-    if (object == obj)
+    else if (object == obj)
         object = NULL;
-    return true;
 }
 
 inline bool

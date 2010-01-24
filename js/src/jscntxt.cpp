@@ -910,44 +910,6 @@ js_WaitForGC(JSRuntime *rt)
     }
 }
 
-uint32
-js_DiscountRequestsForGC(JSContext *cx)
-{
-    uint32 requestDebit;
-
-    JS_ASSERT(cx->thread);
-    JS_ASSERT(cx->runtime->gcThread != cx->thread);
-
-#ifdef JS_TRACER
-    if (JS_ON_TRACE(cx)) {
-        JS_UNLOCK_GC(cx->runtime);
-        LeaveTrace(cx);
-        JS_LOCK_GC(cx->runtime);
-    }
-#endif
-
-    requestDebit = js_CountThreadRequests(cx);
-    if (requestDebit != 0) {
-        JSRuntime *rt = cx->runtime;
-        JS_ASSERT(requestDebit <= rt->requestCount);
-        rt->requestCount -= requestDebit;
-        if (rt->requestCount == 0)
-            JS_NOTIFY_REQUEST_DONE(rt);
-    }
-    return requestDebit;
-}
-
-void
-js_RecountRequestsAfterGC(JSRuntime *rt, uint32 requestDebit)
-{
-    while (rt->gcLevel > 0) {
-        JS_ASSERT(rt->gcThread);
-        JS_AWAIT_GC_DONE(rt);
-    }
-    if (requestDebit != 0)
-        rt->requestCount += requestDebit;
-}
-
 #endif
 
 static JSDHashNumber

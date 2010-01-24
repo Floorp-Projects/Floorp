@@ -464,6 +464,15 @@ struct JSThread {
     ptrdiff_t           gcThreadMallocBytes;
 
     /*
+     * This thread is inside js_GC, either waiting until it can start GC, or
+     * waiting for GC to finish on another thread. This thread holds no locks;
+     * other threads may steal titles from it.
+     *
+     * Protected by rt->gcLock.
+     */
+    bool                gcWaiting;
+
+    /*
      * Deallocator task for this thread.
      */
     JSFreePointerListTask *deallocatorTask;
@@ -1715,7 +1724,7 @@ js_NextActiveContext(JSRuntime *, JSContext *);
 /*
  * Count the number of contexts entered requests on the current thread.
  */
-uint32
+extern uint32
 js_CountThreadRequests(JSContext *cx);
 
 /*
@@ -1726,24 +1735,6 @@ js_CountThreadRequests(JSContext *cx);
  */
 extern void
 js_WaitForGC(JSRuntime *rt);
-
-/*
- * If we're in one or more requests (possibly on more than one context)
- * running on the current thread, indicate, temporarily, that all these
- * requests are inactive so a possible GC can proceed on another thread.
- * This function returns the number of discounted requests. The number must
- * be passed later to js_ActivateRequestAfterGC to reactivate the requests.
- *
- * This function must be called with the GC lock held.
- */
-uint32
-js_DiscountRequestsForGC(JSContext *cx);
-
-/*
- * This function must be called with the GC lock held.
- */
-void
-js_RecountRequestsAfterGC(JSRuntime *rt, uint32 requestDebit);
 
 #else /* !JS_THREADSAFE */
 
