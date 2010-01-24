@@ -1179,7 +1179,7 @@ Assembler::hint(LIns* ins)
     else if (op == LIR_param) {
         if (ins->paramKind() == 0) {
             if (ins->paramArg() < 4)
-                prefer = rmask(argRegs[i->paramArg()]);
+                prefer = rmask(argRegs[ins->paramArg()]);
         }
     }
     return prefer;
