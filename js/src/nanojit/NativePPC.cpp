@@ -1205,22 +1205,21 @@ namespace nanojit
         asm_branch(false, cond, after);
     }
 
-    RegisterMask Assembler::hint(LIns *i, RegisterMask allow) {
-        LOpcode op = i->opcode();
-        RegisterMask prefer = ~0LL;
+    RegisterMask Assembler::hint(LIns* ins) {
+        LOpcode op = ins->opcode();
+        RegisterMask prefer = 0;
         if (op == LIR_icall || op == LIR_qcall)
             prefer = rmask(R3);
         else if (op == LIR_fcall)
             prefer = rmask(F1);
         else if (op == LIR_param) {
-            if (i->paramArg() < 8) {
-                prefer = rmask(argRegs[i->paramArg()]);
+            if (ins->paramKind() == 0) {
+                if (ins->paramArg() < 8) {
+                    prefer = rmask(argRegs[ins->paramArg()]);
+                }
             }
         }
-        // narrow the allow set to whatever is preferred and also free
-        if (_allocator.free & allow & prefer)
-            allow &= prefer;
-        return allow;
+        return prefer;
     }
 
     void Assembler::asm_neg_not(LIns *ins) {

@@ -1833,8 +1833,8 @@ namespace nanojit
     #endif
     }
 
-    RegisterMask Assembler::hint(LIns *, RegisterMask allow) {
-        return allow;
+    RegisterMask Assembler::hint(LIns* ins) {
+        return 0;
     }
 
     void Assembler::nativePageSetup() {
