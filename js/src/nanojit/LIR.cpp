@@ -907,8 +907,19 @@ namespace nanojit
             iffalse = tmp;
         }
 
-        if (use_cmov)
-            return ins3((iftrue->isQuad() || iffalse->isQuad()) ? LIR_qcmov : LIR_cmov, cond, iftrue, iffalse);
+        if (use_cmov) {
+            LOpcode op = LIR_cmov;
+            if (iftrue->isI32() && iffalse->isI32()) {
+                op = LIR_cmov;
+            } else if (iftrue->isI64() && iffalse->isI64()) {
+                op = LIR_qcmov;
+            } else if (iftrue->isF64() && iffalse->isF64()) {
+                NanoAssertMsg(0, "LIR_fcmov doesn't exist yet, sorry");
+            } else {
+                NanoAssert(0);  // type error
+            }
+            return ins3(op, cond, iftrue, iffalse);
+        }
 
         LInsp ncond = ins1(LIR_neg, cond); // cond ? -1 : 0
         return ins2(LIR_or,
@@ -964,7 +975,8 @@ namespace nanojit
             ignore = true;
         } else {
             d = top - d;
-            if (ins->oprnd1()->isQuad()) {
+            LTy ty = ins->oprnd1()->retType();
+            if (ty == LTy_I64 || ty == LTy_F64) {
                 // storing 8 bytes
                 if (stk->get(d) && stk->get(d-1)) {
                     ignore = true;
@@ -975,6 +987,7 @@ namespace nanojit
             }
             else {
                 // storing 4 bytes
+                NanoAssert(ty == LTy_I32);
                 if (stk->get(d)) {
                     ignore = true;
                 } else {

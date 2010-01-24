@@ -151,7 +151,7 @@ namespace nanojit
 
     inline /*static*/ uint32_t AR::nStackSlotsFor(LIns* ins)
     {
-        return ins->isop(LIR_alloc) ? (ins->size()>>2) : (ins->isQuad() ? 2 : 1);
+        return ins->isop(LIR_alloc) ? (ins->size()>>2) : ((ins->isI64() || ins->isF64()) ? 2 : 1);
     }
 
     inline uint32_t AR::stackSlotsNeeded() const
