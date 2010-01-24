@@ -288,6 +288,7 @@ protected:
   PRBool CheckEndProperty();
   nsSubstring* NextIdent();
   void SkipUntil(PRUnichar aStopSymbol);
+  void SkipUntilStack(nsAutoTArray<PRUnichar, 16> &aStack);
   void SkipUntilOneOf(const PRUnichar* aStopSymbolChars);
   void SkipRuleSet(PRBool aInsideBraces);
   PRBool SkipAtRule();
@@ -1334,10 +1335,25 @@ CSSParserImpl::GetURLInParens(nsString& aURL)
     // in the failure case, we have to match parentheses, as if this
     // weren't treated as a URL token by the tokenization
 
-    // XXX We really need to push aURL back into the buffer before this
-    // SkipUntil, but we won't do it as it will make no difference anyway,
-    // and it will make parsing slower.
-    SkipUntil(')');
+    nsAutoTArray<PRUnichar, 16> stack;
+    stack.AppendElement(')');
+    if (eCSSToken_URL == mToken.mType || eCSSToken_InvalidURL == mToken.mType) {
+      for (PRUint32 i = 0, iEnd = mToken.mIdent.Length(); i < iEnd; ++i) {
+        PRUnichar symbol = mToken.mIdent[i];
+        NS_ASSERTION(symbol != '(' && symbol != ')',
+                     "should not be in eCSSToken_URL");
+        if ('[' == symbol) {
+          stack.AppendElement(']');
+        } else if ('{' == symbol) {
+          stack.AppendElement('}');
+        } else if ((']' == symbol && stack[stack.Length() - 1] == '[') ||
+                   ('}' == symbol && stack[stack.Length() - 1] == '{')) {
+          stack.RemoveElementAt(stack.Length() - 1);
+        }
+      }
+    }
+    SkipUntilStack(stack);
+
     return PR_FALSE;
   }
 
@@ -2224,18 +2240,24 @@ CSSParserImpl::ParsePageRule(RuleAppendFunc aAppendFunc, void* aData)
 void
 CSSParserImpl::SkipUntil(PRUnichar aStopSymbol)
 {
-  nsCSSToken* tk = &mToken;
   nsAutoTArray<PRUnichar, 16> stack;
   stack.AppendElement(aStopSymbol);
+  SkipUntilStack(stack);
+}
+
+void
+CSSParserImpl::SkipUntilStack(nsAutoTArray<PRUnichar, 16>& aStack)
+{
+  nsCSSToken* tk = &mToken;
   for (;;) {
     if (!GetToken(PR_TRUE)) {
       break;
     }
     if (eCSSToken_Symbol == tk->mType) {
       PRUnichar symbol = tk->mSymbol;
-      PRUint32 stackTopIndex = stack.Length() - 1;
-      if (symbol == stack.ElementAt(stackTopIndex)) {
-        stack.RemoveElementAt(stackTopIndex);
+      PRUint32 stackTopIndex = aStack.Length() - 1;
+      if (symbol == aStack.ElementAt(stackTopIndex)) {
+        aStack.RemoveElementAt(stackTopIndex);
         if (stackTopIndex == 0) {
           break;
         }
@@ -2243,11 +2265,11 @@ CSSParserImpl::SkipUntil(PRUnichar aStopSymbol)
         // In this case and the two below, just handle out-of-memory by
         // parsing incorrectly.  It's highly unlikely we're dealing with
         // a legitimate style sheet anyway.
-        stack.AppendElement('}');
+        aStack.AppendElement('}');
       } else if ('[' == symbol) {
-        stack.AppendElement(']');
+        aStack.AppendElement(']');
       } else if ('(' == symbol) {
-        stack.AppendElement(')');
+        aStack.AppendElement(')');
       }
     }
   }
