@@ -143,7 +143,8 @@ namespace nanojit
 
         FirstReg = 0,
         LastReg = 16,
-        UnknownReg = 17
+        deprecated_UnknownReg = 17,        // XXX: remove eventually, see bug 538924
+        UnspecifiedReg = 17
     }
     Register;
 
@@ -223,8 +224,8 @@ namespace nanojit
 
 // underrunProtect(6) is necessary for worst-case
 #define MODRMm(r,d,b) \
-        NanoAssert(unsigned(r)<8 && ((b)==UnknownReg || unsigned(b)<8)); \
-        if ((b) == UnknownReg) {\
+        NanoAssert(unsigned(r)<8 && ((b)==UnspecifiedReg || unsigned(b)<8)); \
+        if ((b) == UnspecifiedReg) {\
             IMM32(d);\
             *(--_nIns) = (uint8_t) (0<<6 | (r)<<3 | 5);\
         } else if ((b) == ESP) { \
@@ -522,17 +523,17 @@ namespace nanojit
     count_st();\
     NanoAssert(((unsigned)reg)<4); \
     ALUm(0x88,reg,disp,base);   \
-    asm_output("mov8 %d(%s),%s",disp,base==UnknownReg?"0":gpn(base),gpn(reg)); } while(0)
+    asm_output("mov8 %d(%s),%s",disp,base==UnspecifiedReg?"0":gpn(base),gpn(reg)); } while(0)
 
 #define ST16(base,disp,reg) do {  \
     count_st();\
     ALUm16(0x89,reg,disp,base);   \
-    asm_output("mov16 %d(%s),%s",disp,base==UnknownReg?"0":gpn(base),gpn(reg)); } while(0)
+    asm_output("mov16 %d(%s),%s",disp,base==UnspecifiedReg?"0":gpn(base),gpn(reg)); } while(0)
 
 #define ST(base,disp,reg) do {  \
     count_st();\
     ALUm(0x89,reg,disp,base);   \
-    asm_output("mov %d(%s),%s",disp,base==UnknownReg?"0":gpn(base),gpn(reg)); } while(0)
+    asm_output("mov %d(%s),%s",disp,base==UnspecifiedReg?"0":gpn(base),gpn(reg)); } while(0)
 
 #define ST8i(base,disp,imm)  do { \
     count_st();\

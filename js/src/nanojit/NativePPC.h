@@ -160,7 +160,7 @@ namespace nanojit
         Rlr  = 8,
         Rctr = 9,
 
-        UnknownReg = 127,
+        deprecated_UnknownReg = 127,
         FirstReg = R0,
         LastReg = F31
     };

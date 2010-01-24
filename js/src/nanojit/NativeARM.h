@@ -129,7 +129,7 @@ typedef enum {
 
     FirstReg = R0,
     LastReg = D6,
-    UnknownReg = 32,
+    deprecated_UnknownReg = 32,
 
     // special value referring to S14
     FpSingleScratch = 24
