@@ -245,9 +245,9 @@ namespace nanojit
         *(uint32_t*)&branch[1] |= (intptr_t)location & 0x3FF;
     }
 
-    RegisterMask Assembler::hint(LIns* i, RegisterMask allow)
+    RegisterMask Assembler::hint(LIns* ins)
     {
-        return allow;
+        return 0;
     }
 
     void Assembler::asm_qjoin(LIns *ins)

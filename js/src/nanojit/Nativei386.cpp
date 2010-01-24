@@ -351,36 +351,39 @@ namespace nanojit
             NanoAssertMsg(0, "Unknown branch type in nPatchBranch");
     }
 
-    RegisterMask Assembler::hint(LIns* i, RegisterMask allow)
+    RegisterMask Assembler::hint(LIns* ins)
     {
-        uint32_t op = i->opcode();
-        int prefer = allow;
+        uint32_t op = ins->opcode();
+        int prefer = 0;
+
         if (op == LIR_icall) {
-            prefer &= rmask(retRegs[0]);
+            prefer = rmask(retRegs[0]);
         }
         else if (op == LIR_fcall) {
-            prefer &= rmask(FST0);
+            prefer = rmask(FST0);
         }
         else if (op == LIR_param) {
-            if (i->paramKind() == 0) {
+            uint8_t arg = ins->paramArg();
+            if (ins->paramKind() == 0) {
                 uint32_t max_regs = max_abi_regs[_thisfrag->lirbuf->abi];
-                if (i->paramArg() < max_regs)
-                    prefer &= rmask(argRegs[i->paramArg()]);
+                if (arg < max_regs)
+                    prefer = rmask(argRegs[arg]);
             } else {
-                if (i->paramArg() < NumSavedRegs)
-                    prefer &= rmask(savedRegs[i->paramArg()]);
+                if (arg < NumSavedRegs)
+                    prefer = rmask(savedRegs[arg]);
             }
         }
-        else if (op == LIR_callh || (op == LIR_rsh && i->oprnd1()->opcode()==LIR_callh)) {
-            prefer &= rmask(retRegs[1]);
+        else if (op == LIR_callh || (op == LIR_rsh && ins->oprnd1()->opcode()==LIR_callh)) {
+            prefer = rmask(retRegs[1]);
         }
-        else if (i->isCmp()) {
-            prefer &= AllowableFlagRegs;
+        else if (ins->isCmp()) {
+            prefer = AllowableFlagRegs;
         }
-        else if (i->isconst()) {
-            prefer &= ScratchRegs;
+        else if (ins->isconst()) {
+            prefer = ScratchRegs;
         }
-        return (_allocator.free & prefer) ? prefer : allow;
+
+        return prefer;
     }
 
     void Assembler::asm_qjoin(LIns *ins)

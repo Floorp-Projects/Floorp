@@ -315,7 +315,7 @@ namespace nanojit
             void        arFreeIfInUse(LIns* ins);
             void        arReset();
 
-            Register    registerAlloc(LIns* ins, RegisterMask allow);
+            Register    registerAlloc(LIns* ins, RegisterMask allow, RegisterMask prefer);
             Register    registerAllocTmp(RegisterMask allow);
             void        registerResetAll();
             void        evictAllActiveRegs();
@@ -345,7 +345,7 @@ namespace nanojit
             void        freeResourcesOf(LIns *ins);
             void        evictIfActive(Register r);
             void        evict(LIns* vic);
-            RegisterMask hint(LIns*i, RegisterMask allow);
+            RegisterMask hint(LIns* ins);   // mask==0 means there's no preferred register(s)
 
             void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip
                                   verbose_only(, size_t &nBytes));
