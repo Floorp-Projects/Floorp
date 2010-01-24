@@ -1168,21 +1168,21 @@ Assembler::nPatchBranch(NIns* branch, NIns* target)
 }
 
 RegisterMask
-Assembler::hint(LIns* i, RegisterMask allow /* = ~0 */)
+Assembler::hint(LIns* ins)
 {
-    uint32_t op = i->opcode();
-    int prefer = ~0;
-    if (op==LIR_icall)
+    uint32_t op = ins->opcode();
+    int prefer = 0;
+    if (op == LIR_icall)
         prefer = rmask(R0);
     else if (op == LIR_callh)
         prefer = rmask(R1);
     else if (op == LIR_param) {
-        if (i->paramArg() < 4)
-            prefer = rmask(argRegs[i->paramArg()]);
+        if (ins->paramKind() == 0) {
+            if (ins->paramArg() < 4)
+                prefer = rmask(argRegs[i->paramArg()]);
+        }
     }
-    if (_allocator.free & allow & prefer)
-        allow &= prefer;
-    return allow;
+    return prefer;
 }
 
 void

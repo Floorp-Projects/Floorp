@@ -185,20 +185,37 @@ namespace nanojit
 #endif
     }
 
-    // Finds a register in 'allow' to store the result of 'ins', evicting one
-    // if necessary.  Doesn't consider the prior state of 'ins' (except that
-    // ins->isUsed() must be true).
-    Register Assembler::registerAlloc(LIns* ins, RegisterMask allow)
+    // Legend for register sets: A = allowed, P = preferred, F = free, S = SavedReg.
+    //
+    // Finds a register in 'setA___' to store the result of 'ins' (one from
+    // 'set_P__' if possible), evicting one if necessary.  Doesn't consider
+    // the prior state of 'ins' (except that ins->isUsed() must be true).
+    //
+    // Nb: 'setA___' comes from the instruction's use, 'set_P__' comes from its def.
+    // Eg. in 'add(call(...), ...)':
+    //     - the call's use means setA___==GpRegs;
+    //     - the call's def means set_P__==rmask(retRegs[0]).
+    //
+    Register Assembler::registerAlloc(LIns* ins, RegisterMask setA___, RegisterMask set_P__)
     {
-        RegisterMask allowedAndFree = allow & _allocator.free;
-        Register r;
         NanoAssert(ins->isUsed());
 
-        if (allowedAndFree) {
-            // At least one usable register is free -- no need to steal.
-            // Pick a preferred one if possible.
-            RegisterMask preferredAndFree = allowedAndFree & SavedRegs;
-            RegisterMask set = ( preferredAndFree ? preferredAndFree : allowedAndFree );
+        Register r;
+        RegisterMask set__F_ = _allocator.free;
+        RegisterMask setA_F_ = setA___ & set__F_;
+
+        if (setA_F_) {
+            RegisterMask set___S = SavedRegs;
+            RegisterMask setA_FS = setA_F_ & set___S;
+            RegisterMask setAPF_ = setA_F_ & set_P__;
+            RegisterMask setAPFS = setA_FS & set_P__;
+            RegisterMask set;
+
+            if      (setAPFS) set = setAPFS;
+            else if (setAPF_) set = setAPF_;
+            else if (setA_FS) set = setA_FS;
+            else              set = setA_F_;
+
             r = nRegisterAllocFromSet(set);
             _allocator.addActive(r, ins);
             ins->setReg(r);
@@ -207,7 +224,7 @@ namespace nanojit
 
             // Nothing free, steal one.
             // LSRA says pick the one with the furthest use.
-            LIns* vic = findVictim(allow);
+            LIns* vic = findVictim(setA___);
             NanoAssert(vic->isUsed());
             r = vic->getReg();
 
@@ -231,7 +248,7 @@ namespace nanojit
     {
         LIns dummyIns;
         dummyIns.markAsUsed();
-        Register r = registerAlloc(&dummyIns, allow);
+        Register r = registerAlloc(&dummyIns, allow, /*prefer*/0);
 
         // Mark r as free, ready for use as a temporary value.
         _allocator.removeActive(r);
@@ -480,13 +497,11 @@ namespace nanojit
             // 'ins' is unused, ie. dead after this point.  Mark it as used
             // and allocate it a register.
             ins->markAsUsed();
-            RegisterMask prefer = hint(ins, allow);
-            r = registerAlloc(ins, prefer);
+            r = registerAlloc(ins, allow, hint(ins));
 
         } else if (!ins->hasKnownReg()) {
             // 'ins' is in a spill slot.  Allocate it a register.
-            RegisterMask prefer = hint(ins, allow);
-            r = registerAlloc(ins, prefer);
+            r = registerAlloc(ins, allow, hint(ins));
 
         } else if (rmask(r = ins->getReg()) & allow) {
             // 'ins' is in an allowed register.
@@ -494,7 +509,6 @@ namespace nanojit
 
         } else {
             // 'ins' is in a register (r) that's not in 'allow'.
-            RegisterMask prefer = hint(ins, allow);
 #ifdef NANOJIT_IA32
             if (((rmask(r)&XmmRegs) && !(allow&XmmRegs)) ||
                 ((rmask(r)&x87Regs) && !(allow&x87Regs)))
@@ -502,14 +516,14 @@ namespace nanojit
                 // x87 <-> xmm copy required
                 //_nvprof("fpu-evict",1);
                 evict(ins);
-                r = registerAlloc(ins, prefer);
+                r = registerAlloc(ins, allow, hint(ins));
             } else
 #elif defined(NANOJIT_PPC)
             if (((rmask(r)&GpRegs) && !(allow&GpRegs)) ||
                 ((rmask(r)&FpRegs) && !(allow&FpRegs)))
             {
                 evict(ins);
-                r = registerAlloc(ins, prefer);
+                r = registerAlloc(ins, allow, hint(ins));
             } else
 #endif
             {
@@ -523,7 +537,7 @@ namespace nanojit
                 //
                 Register s = r;
                 _allocator.retire(r);
-                r = registerAlloc(ins, prefer);
+                r = registerAlloc(ins, allow, hint(ins));
 
                 // 'ins' is in 'allow', in register r (different to the old r);
                 //  s is the old r.
