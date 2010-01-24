@@ -577,9 +577,6 @@ namespace nanojit
         bool isF64() const {
             return retType() == LTy_F64;
         }
-        bool isQuad() const {
-            return isI64() || isF64();
-        }
         bool isPtr() const {
 #ifdef NANOJIT_64BIT
             return isI64();

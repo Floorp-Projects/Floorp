@@ -577,9 +577,7 @@ namespace nanojit
         LInsp lhs = cond->oprnd1();
         LInsp rhs = cond->oprnd2();
 
-        NanoAssert((!lhs->isQuad() && !rhs->isQuad()) || (lhs->isQuad() && rhs->isQuad()));
-
-        NanoAssert(!lhs->isQuad() && !rhs->isQuad());
+        NanoAssert(lhs->isI32() && rhs->isI32());
 
         // ready to issue the compare
         if (rhs->isconst())
@@ -805,7 +803,7 @@ namespace nanojit
         LIns* iffalse = ins->oprnd3();
 
         NanoAssert(condval->isCmp());
-        NanoAssert(op == LIR_qcmov || (!iftrue->isQuad() && !iffalse->isQuad()));
+        NanoAssert(op == LIR_cmov && iftrue->isI32() && iffalse->isI32());
 
         const Register rr = prepResultReg(ins, GpRegs);
 
