@@ -312,7 +312,7 @@ namespace nanojit
             NIns*       genEpilogue();
 
             uint32_t    arReserve(LIns* ins);
-            void        arFreeIfInUse(LIns* ins);
+            void        arFree(LIns* ins);
             void        arReset();
 
             Register    registerAlloc(LIns* ins, RegisterMask allow, RegisterMask prefer);
@@ -339,9 +339,9 @@ namespace nanojit
                                     RegisterMask allowb, LIns *ib, Register &rb);
             Register    findSpecificRegFor(LIns* i, Register r);
             Register    findSpecificRegForUnallocated(LIns* i, Register r);
-            Register    prepResultReg(LIns *i, RegisterMask allow);
+            Register    deprecated_prepResultReg(LIns *i, RegisterMask allow);
             Register    prepareResultReg(LIns *i, RegisterMask allow);
-            void        freeRsrcOf(LIns *i, bool pop);
+            void        deprecated_freeRsrcOf(LIns *i, bool pop);
             void        freeResourcesOf(LIns *ins);
             void        evictIfActive(Register r);
             void        evict(LIns* vic);
@@ -351,8 +351,13 @@ namespace nanojit
                                   verbose_only(, size_t &nBytes));
             bool        canRemat(LIns*);
 
+            // njn
+            // njn
+            // njn
+            // njn
+            // njn
             bool isKnownReg(Register r) {
-                return r != UnknownReg;
+                return r != deprecated_UnknownReg;
             }
 
             Allocator&          alloc;              // for items with same lifetime as this Assembler
@@ -470,10 +475,16 @@ namespace nanojit
             avmplus::Config &config;
     };
 
-    inline int32_t disp(LIns* ins)
+    inline int32_t arDisp(LIns* ins)
     {
         // even on 64bit cpu's, we allocate stack area in 4byte chunks
         return -4 * int32_t(ins->getArIndex());
+    }
+    // XXX: deprecated, use arDisp() instead.  See bug 538924.
+    inline int32_t deprecated_disp(LIns* ins)
+    {
+        // even on 64bit cpu's, we allocate stack area in 4byte chunks
+        return -4 * int32_t(ins->deprecated_getArIndex());
     }
 }
 #endif // __nanojit_Assembler__

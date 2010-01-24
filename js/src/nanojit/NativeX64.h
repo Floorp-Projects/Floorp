@@ -100,9 +100,12 @@ namespace nanojit
         XMM15 = 31, // scratch
 
         FP = RBP,
-        UnknownReg = 32,
+
         FirstReg = RAX,
-        LastReg = XMM15
+        LastReg = XMM15,
+
+        deprecated_UnknownReg = 32,        // XXX: remove eventually, see bug 538924
+        UnspecifiedReg = 32
     };
 
 /*
