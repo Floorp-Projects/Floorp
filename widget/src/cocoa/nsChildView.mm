@@ -631,6 +631,8 @@ nsresult nsChildView::Create(nsIWidget *aParent,
   mView = [CreateCocoaView(r) retain];
   if (!mView) return NS_ERROR_FAILURE;
 
+  [(ChildView*)mView setIsPluginView:(mWindowType == eWindowType_plugin)];
+
   // If this view was created in a Gecko view hierarchy, the initial state
   // is hidden.  If the view is attached only to a native NSView but has
   // no Gecko parent (as in embedding), the initial state is visible.
@@ -793,8 +795,10 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       aDataType = NS_NATIVE_PLUGIN_PORT_CG;
 #endif
       mPluginIsCG = (aDataType == NS_NATIVE_PLUGIN_PORT_CG);
-      if ([mView isKindOfClass:[ChildView class]])
-        [(ChildView*)mView setIsPluginView:YES];
+
+      // The NP_CGContext pointer should always be NULL in the Cocoa event model.
+      if ([(ChildView*)mView pluginEventModel] == NPEventModelCocoa)
+        return nsnull;
 
       UpdatePluginPort();
       if (mPluginIsCG)
@@ -899,11 +903,9 @@ void nsChildView::UpdatePluginPort()
     mPluginCGContext.context = NULL;
     mPluginCGContext.window = NULL;
 #ifndef NP_NO_CARBON
-    if ([(ChildView*)mView pluginEventModel] == NPEventModelCarbon) {
-      if (carbonWindow) {
-        mPluginCGContext.context = (CGContextRef)[[cocoaWindow graphicsContext] graphicsPort];
-        mPluginCGContext.window = carbonWindow;
-      }
+    if (carbonWindow) {
+      mPluginCGContext.context = (CGContextRef)[[cocoaWindow graphicsContext] graphicsPort];
+      mPluginCGContext.window = carbonWindow;
     }
 #endif
   }
@@ -2460,7 +2462,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)viewDidMoveToWindow
 {
-  if ([self window] && [self isPluginView] && mGeckoChild) {
+  if (mPluginEventModel == NPEventModelCocoa &&
+      [self window] && [self isPluginView] && mGeckoChild) {
     mGeckoChild->UpdatePluginPort();
   }
 
