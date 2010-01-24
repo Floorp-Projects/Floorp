@@ -4520,6 +4520,13 @@ nsBrowserAccess.prototype = {
           return null;
         }
 
+        if (isExternal && (!aURI || aURI.spec == "about:blank")) {
+          win.BrowserOpenTab(); // this also focuses the location bar
+          win.focus();
+          newWindow = win.content;
+          break;
+        }
+
         let loadInBackground = gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground");
         let referrer = aOpener ? makeURI(aOpener.location.href) : null;
 
