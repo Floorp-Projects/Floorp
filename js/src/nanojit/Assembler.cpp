@@ -319,7 +319,7 @@ namespace nanojit
                 NanoAssert(arIndex == (uint32_t)n-1);
                 i = n-1;
             }
-            else if (ins->isQuad()) {
+            else if (ins->isI64() || ins->isF64()) {
                 NanoAssert(_entries[i + 1]==ins);
                 i += 1; // skip high word
             }
@@ -664,7 +664,7 @@ namespace nanojit
         verbose_only( if (d && (_logc->lcbits & LC_Assembly)) {
                          setOutputForEOL("  <= spill %s",
                          _thisfrag->lirbuf->names->formatRef(ins)); } )
-        asm_spill(r, d, pop, ins->isQuad());
+        asm_spill(r, d, pop, ins->isI64() || ins->isF64());
     }
 
     // XXX: This function is error-prone and should be phased out; see bug 513615.
@@ -1793,8 +1793,7 @@ namespace nanojit
                     continue;
                 }
 
-                const char* rname = ins->isQuad() ? fpn(r) : gpn(r);
-                VMPI_sprintf(s, " %s(%s)", rname, n);
+                VMPI_sprintf(s, " %s(%s)", gpn(r), n);
                 s += VMPI_strlen(s);
             }
         }

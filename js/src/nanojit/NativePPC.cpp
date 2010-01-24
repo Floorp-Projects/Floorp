@@ -319,7 +319,7 @@ namespace nanojit
     }
 
     void Assembler::asm_store64(LOpcode op, LIns *value, int32_t dr, LIns *base) {
-        NanoAssert(value->isQuad());
+        NanoAssert(value->isI64() || value->isF64());
 
         switch (op) {
             case LIR_stfi:
@@ -662,11 +662,14 @@ namespace nanojit
         else {
             d = findMemFor(i);
             if (IsFpReg(r)) {
-                NanoAssert(i->isQuad());
+                NanoAssert(i->isI64() || i->isF64());
                 LFD(r, d, FP);
-            } else if (i->isQuad()) {
+            } else if (i->isI64() || i->isF64()) {
+                NanoAssert(IsGpReg(r));
                 LD(r, d, FP);
             } else {
+                NanoAssert(i->isI32());
+                NanoAssert(IsGpReg(r));
                 LWZ(r, d, FP);
             }
         }
@@ -799,7 +802,7 @@ namespace nanojit
                         if (p->isop(LIR_alloc)) {
                             NanoAssert(isS16(d));
                             ADDI(r, FP, d);
-                        } else if (p->isQuad()) {
+                        } else if (p->isI64() || p->isF64()) {
                             LD(r, d, FP);
                         } else {
                             LWZ(r, d, FP);
@@ -1183,13 +1186,14 @@ namespace nanojit
     }
 
     void Assembler::asm_cmov(LIns *ins) {
-        NanoAssert(ins->isop(LIR_cmov) || ins->isop(LIR_qcmov));
+        LOpcode op    = ins->opcode();
         LIns* cond    = ins->oprnd1();
         LIns* iftrue  = ins->oprnd2();
         LIns* iffalse = ins->oprnd3();
 
         NanoAssert(cond->isCmp());
-        NanoAssert(iftrue->isQuad() == iffalse->isQuad());
+        NanoAssert((op == LIR_cmov  && iftrue->isI32() && iffalse->isI32()) ||
+                   (op == LIR_qcmov && iftrue->isI64() && iffalse->isI64()));
 
         // fixme: we could handle fpu registers here, too, since we're just branching
         Register rr = prepResultReg(ins, GpRegs);

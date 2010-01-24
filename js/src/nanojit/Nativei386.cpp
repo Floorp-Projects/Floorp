@@ -831,10 +831,7 @@ namespace nanojit
         LInsp lhs = cond->oprnd1();
         LInsp rhs = cond->oprnd2();
 
-        NanoAssert((!lhs->isQuad() && !rhs->isQuad()) || (lhs->isQuad() && rhs->isQuad()));
-
-        // Not supported yet.
-        NanoAssert(!lhs->isQuad() && !rhs->isQuad());
+        NanoAssert(lhs->isI32() && rhs->isI32());
 
         // Ready to issue the compare.
         if (rhs->isconst()) {
@@ -1255,7 +1252,7 @@ namespace nanojit
         LIns* iffalse = ins->oprnd3();
 
         NanoAssert(condval->isCmp());
-        NanoAssert(op == LIR_qcmov || (!iftrue->isQuad() && !iffalse->isQuad()));
+        NanoAssert(op == LIR_cmov && iftrue->isI32() && iffalse->isI32());
 
         const Register rr = prepResultReg(ins, GpRegs);
 
@@ -1609,7 +1606,7 @@ namespace nanojit
 
     void Assembler::asm_farg(LInsp ins, int32_t& stkd)
     {
-        NanoAssert(ins->isQuad());
+        NanoAssert(ins->isF64());
         Register r = findRegFor(ins, FpRegs);
         if (rmask(r) & XmmRegs) {
             SSE_STQ(stkd, SP, r);
@@ -1895,7 +1892,7 @@ namespace nanojit
         NanoAssert(condop >= LIR_feq && condop <= LIR_fge);
         LIns* lhs = cond->oprnd1();
         LIns* rhs = cond->oprnd2();
-        NanoAssert(lhs->isQuad() && rhs->isQuad());
+        NanoAssert(lhs->isF64() && rhs->isF64());
 
         if (config.sse2) {
             // First, we convert (a < b) into (b > a), and (a <= b) into (b >= a).

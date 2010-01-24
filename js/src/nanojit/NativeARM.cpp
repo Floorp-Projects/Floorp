@@ -769,13 +769,13 @@ Assembler::asm_regarg(ArgSize sz, LInsp p, Register r)
 void
 Assembler::asm_stkarg(LInsp arg, int stkd)
 {
-    bool isQuad = arg->isQuad();
+    bool isF64 = arg->isF64();
 
     Register rr;
     if (arg->isUsed() && (rr = arg->getReg(), isKnownReg(rr))) {
         // The argument resides somewhere in registers, so we simply need to
         // push it onto the stack.
-        if (!ARM_VFP || !isQuad) {
+        if (!ARM_VFP || !isF64) {
             NanoAssert(IsGpReg(rr));
 
             STR(rr, SP, stkd);
@@ -800,7 +800,7 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
         // The argument does not reside in registers, so we need to get some
         // memory for it and then copy it onto the stack.
         int d = findMemFor(arg);
-        if (!isQuad) {
+        if (!isF64) {
             STR(IP, SP, stkd);
             if (arg->isop(LIR_alloc)) {
                 asm_add_imm(IP, FP, d);
@@ -1323,7 +1323,7 @@ Assembler::asm_load64(LInsp ins)
             return;
     }
 
-    NanoAssert(ins->isQuad());
+    NanoAssert(ins->isF64());
 
     LIns* base = ins->oprnd1();
     int offset = ins->disp();
@@ -2195,8 +2195,7 @@ Assembler::asm_cmp(LIns *cond)
     LInsp lhs = cond->oprnd1();
     LInsp rhs = cond->oprnd2();
 
-    // Not supported yet.
-    NanoAssert(!lhs->isQuad() && !rhs->isQuad());
+    NanoAssert(lhs->isI32() && rhs->isI32());
 
     // ready to issue the compare
     if (rhs->isconst()) {
@@ -2542,13 +2541,13 @@ Assembler::asm_load32(LInsp ins)
 void
 Assembler::asm_cmov(LInsp ins)
 {
-    NanoAssert(ins->opcode() == LIR_cmov);
+    LOpcode op    = ins->opcode();
     LIns* condval = ins->oprnd1();
     LIns* iftrue  = ins->oprnd2();
     LIns* iffalse = ins->oprnd3();
 
     NanoAssert(condval->isCmp());
-    NanoAssert(!iftrue->isQuad() && !iffalse->isQuad());
+    NanoAssert(op == LIR_cmov && iftrue->isI32() && iffalse->isI32());
 
     const Register rr = prepResultReg(ins, GpRegs);
 
