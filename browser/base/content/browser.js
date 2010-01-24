@@ -5272,8 +5272,10 @@ function stylesheetFillPopup(menuPopup) {
       continue;
 
     // Skip any stylesheets that don't match the screen media type.
-    let (media = currentStyleSheet.media.mediaText.toLowerCase()) {
-      if (media && (media.indexOf("screen") == -1) && (media.indexOf("all") == -1))
+    if (currentStyleSheet.media.length > 0) {
+      let media = currentStyleSheet.media.mediaText.split(", ");
+      if (media.indexOf("screen") == -1 &&
+          media.indexOf("all") == -1)
         continue;
     }
 
