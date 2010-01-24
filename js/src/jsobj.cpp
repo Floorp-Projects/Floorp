@@ -3860,12 +3860,8 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
      *
      * All callers of JSObject::initSharingEmptyScope depend on this.
      */
-    {
-        JSScope *scope = OBJ_SCOPE(proto)->getEmptyScope(cx, clasp);
-        if (!scope)
-            goto bad;
-        scope->drop(cx, NULL);
-    }
+    if (!OBJ_SCOPE(proto)->ensureEmptyScope(cx, clasp))
+        goto bad;
 
     /* If this is a standard class, cache its prototype. */
     if (key != JSProto_Null && !js_SetClassObject(cx, obj, key, ctor))
