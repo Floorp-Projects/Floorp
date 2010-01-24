@@ -154,7 +154,7 @@ namespace nanojit
     void Assembler::asm_call(LInsp ins)
     {
         Register retReg = ( ins->isop(LIR_fcall) ? F0 : retRegs[0] );
-        prepResultReg(ins, rmask(retReg));
+        deprecated_prepResultReg(ins, rmask(retReg));
 
         // Do this after we've handled the call result, so we don't
         // force the call result to be spilled unnecessarily.
@@ -258,7 +258,7 @@ namespace nanojit
         LIns* lo = ins->oprnd1();
         LIns* hi = ins->oprnd2();
 
-        Register rr = ins->getReg();
+        Register rr = ins->deprecated_getReg();
         if (isKnownReg(rr) && (rmask(rr) & FpRegs))
             evict(ins);
 
@@ -279,7 +279,7 @@ namespace nanojit
             STW32(rl, d, FP);
         }
 
-        freeRsrcOf(ins, false);    // if we had a reg in use, emit a ST to flush it to mem
+        deprecated_freeRsrcOf(ins, false);    // if we had a reg in use, emit a ST to flush it to mem
     }
 
 
@@ -288,12 +288,12 @@ namespace nanojit
         underrunProtect(24);
         if (i->isop(LIR_alloc)) {
             ADD(FP, L2, r);
-            int32_t d = disp(i);
+            int32_t d = deprecated_disp(i);
             SET32(d, L2);
         }
         else if (i->isconst()) {
-            if (!i->getArIndex()) {
-                i->markAsClear();
+            if (!i->deprecated_getArIndex()) {
+                i->deprecated_markAsClear();
             }
             int v = i->imm32();
             SET32(v, r);
@@ -380,9 +380,9 @@ namespace nanojit
         underrunProtect(72);
         LIns* base = ins->oprnd1();
         int db = ins->disp();
-        Register rr = ins->getReg();
+        Register rr = ins->deprecated_getReg();
 
-        int dr = disp(ins);
+        int dr = deprecated_disp(ins);
         Register rb;
         if (base->isop(LIR_alloc)) {
             rb = FP;
@@ -390,15 +390,15 @@ namespace nanojit
         } else {
             rb = findRegFor(base, GpRegs);
         }
-        ins->setReg(UnknownReg);
+        ins->clearReg();
 
         // don't use an fpu reg to simply load & store the value.
         if (dr)
             asm_mmq(FP, dr, rb, db);
 
-        freeRsrcOf(ins, false);
+        deprecated_freeRsrcOf(ins, false);
 
-        if (rr != UnknownReg)
+        if (rr != deprecated_UnknownReg)
             {
                 NanoAssert(rmask(rr)&FpRegs);
                 _allocator.retire(rr);
@@ -469,9 +469,9 @@ namespace nanojit
 
         // if value already in a reg, use that, otherwise
         // try to get it into XMM regs before FPU regs.
-        Register rv = ( value->isUnusedOrHasUnknownReg()
+        Register rv = ( !value->isInReg()
                       ? findRegFor(value, FpRegs)
-                      : value->getReg() );
+                      : value->deprecated_getReg() );
 
         STDF32(rv, dr, rb);
     }
@@ -603,7 +603,7 @@ namespace nanojit
     void Assembler::asm_fcond(LInsp ins)
     {
         // only want certain regs
-        Register r = prepResultReg(ins, AllowableFlagRegs);
+        Register r = deprecated_prepResultReg(ins, AllowableFlagRegs);
         underrunProtect(8);
         LOpcode condop = ins->opcode();
         NanoAssert(condop >= LIR_feq && condop <= LIR_fge);
@@ -626,7 +626,7 @@ namespace nanojit
         underrunProtect(8);
         // only want certain regs
         LOpcode op = ins->opcode();
-        Register r = prepResultReg(ins, AllowableFlagRegs);
+        Register r = deprecated_prepResultReg(ins, AllowableFlagRegs);
 
         if (op == LIR_eq)
             MOVEI(1, 1, 0, 0, r);
@@ -659,31 +659,31 @@ namespace nanojit
         LInsp lhs = ins->oprnd1();
         LInsp rhs = ins->oprnd2();
 
-        Register rb = UnknownReg;
+        Register rb = deprecated_UnknownReg;
         RegisterMask allow = GpRegs;
         bool forceReg = (op == LIR_mul || !rhs->isconst());
 
         if (lhs != rhs && forceReg)
             {
-                if ((rb = asm_binop_rhs_reg(ins)) == UnknownReg) {
+                if ((rb = asm_binop_rhs_reg(ins)) == deprecated_UnknownReg) {
                     rb = findRegFor(rhs, allow);
                 }
                 allow &= ~rmask(rb);
             }
         else if ((op == LIR_add||op == LIR_iaddp) && lhs->isop(LIR_alloc) && rhs->isconst()) {
             // add alloc+const, use lea
-            Register rr = prepResultReg(ins, allow);
+            Register rr = deprecated_prepResultReg(ins, allow);
             int d = findMemFor(lhs) + rhs->imm32();
             ADD(FP, L2, rr);
             SET32(d, L2);
         }
 
-        Register rr = prepResultReg(ins, allow);
+        Register rr = deprecated_prepResultReg(ins, allow);
         // if this is last use of lhs in reg, we can re-use result reg
         // else, lhs already has a register assigned.
-        Register ra = ( lhs->isUnusedOrHasUnknownReg()
+        Register ra = ( !lhs->isInReg()
                       ? findSpecificRegFor(lhs, rr)
-                      : lhs->getReg() );
+                      : lhs->deprecated_getReg() );
 
         if (forceReg)
             {
@@ -743,14 +743,14 @@ namespace nanojit
     {
         underrunProtect(8);
         LOpcode op = ins->opcode();
-        Register rr = prepResultReg(ins, GpRegs);
+        Register rr = deprecated_prepResultReg(ins, GpRegs);
 
         LIns* lhs = ins->oprnd1();
         // if this is last use of lhs in reg, we can re-use result reg
         // else, lhs already has a register assigned.
-        Register ra = ( lhs->isUnusedOrHasUnknownReg()
+        Register ra = ( !lhs->isInReg()
                       ? findSpecificRegFor(lhs, rr)
-                      : lhs->getReg() );
+                      : lhs->deprecated_getReg() );
 
         if (op == LIR_not)
             ORN(G0, rr, rr);
@@ -767,7 +767,7 @@ namespace nanojit
         LOpcode op = ins->opcode();
         LIns* base = ins->oprnd1();
         int d = ins->disp();
-        Register rr = prepResultReg(ins, GpRegs);
+        Register rr = deprecated_prepResultReg(ins, GpRegs);
         Register ra = getBaseReg(base, d, GpRegs);
         switch(op) {
             case LIR_ldzb:
@@ -805,7 +805,7 @@ namespace nanojit
         NanoAssert(condval->isCmp());
         NanoAssert(op == LIR_cmov && iftrue->isI32() && iffalse->isI32());
 
-        const Register rr = prepResultReg(ins, GpRegs);
+        const Register rr = deprecated_prepResultReg(ins, GpRegs);
 
         // this code assumes that neither LD nor MR nor MRcc set any of the condition flags.
         // (This is true on Intel, is it true on all architectures?)
@@ -835,7 +835,7 @@ namespace nanojit
     void Assembler::asm_qhi(LInsp ins)
     {
         underrunProtect(12);
-        Register rr = prepResultReg(ins, GpRegs);
+        Register rr = deprecated_prepResultReg(ins, GpRegs);
         LIns *q = ins->oprnd1();
         int d = findMemFor(q);
         LDSW32(FP, d+4, rr);
@@ -845,13 +845,13 @@ namespace nanojit
     {
         uint32_t a = ins->paramArg();
         uint32_t kind = ins->paramKind();
-        prepResultReg(ins, rmask(argRegs[a]));
+        deprecated_prepResultReg(ins, rmask(argRegs[a]));
     }
 
     void Assembler::asm_int(LInsp ins)
     {
         underrunProtect(8);
-        Register rr = prepResultReg(ins, GpRegs);
+        Register rr = deprecated_prepResultReg(ins, GpRegs);
         int32_t val = ins->imm32();
         if (val == 0)
             XOR(rr, rr, rr);
@@ -862,21 +862,21 @@ namespace nanojit
     void Assembler::asm_quad(LInsp ins)
     {
         underrunProtect(64);
-        Register rr = ins->getReg();
-        if (rr != UnknownReg)
+        Register rr = ins->deprecated_getReg();
+        if (rr != deprecated_UnknownReg)
             {
                 // @todo -- add special-cases for 0 and 1
                 _allocator.retire(rr);
-                ins->setReg(UnknownReg);
+                ins->clearReg();
                 NanoAssert((rmask(rr) & FpRegs) != 0);
                 findMemFor(ins);
-                int d = disp(ins);
+                int d = deprecated_disp(ins);
                 LDDF32(FP, d, rr);
             }
 
         // @todo, if we used xor, ldsd, fldz, etc above, we don't need mem here
-        int d = disp(ins);
-        freeRsrcOf(ins, false);
+        int d = deprecated_disp(ins);
+        deprecated_freeRsrcOf(ins, false);
         if (d)
             {
                 STW32(L2, d+4, FP);
@@ -893,13 +893,13 @@ namespace nanojit
     void Assembler::asm_fneg(LInsp ins)
     {
         underrunProtect(4);
-        Register rr = prepResultReg(ins, FpRegs);
+        Register rr = deprecated_prepResultReg(ins, FpRegs);
         LIns* lhs = ins->oprnd1();
 
         // lhs into reg, prefer same reg as result
         // if this is last use of lhs in reg, we can re-use result reg
         // else, lhs already has a different reg assigned
-        Register ra = ( lhs->isUnusedOrHasUnknownReg()
+        Register ra = ( !lhs->isInReg()
                       ? findSpecificRegFor(lhs, rr)
                       : findRegFor(lhs, FpRegs) );
 
@@ -917,7 +917,7 @@ namespace nanojit
         Register ra = findRegFor(lhs, FpRegs);
         Register rb = (rhs == lhs) ? ra : findRegFor(rhs, FpRegs);
 
-        Register rr = prepResultReg(ins, allow);
+        Register rr = deprecated_prepResultReg(ins, allow);
 
         if (op == LIR_fadd)
             FADDD(ra, rb, rr);
@@ -934,7 +934,7 @@ namespace nanojit
     {
         underrunProtect(32);
         // where our result goes
-        Register rr = prepResultReg(ins, FpRegs);
+        Register rr = deprecated_prepResultReg(ins, FpRegs);
         int d = findMemFor(ins->oprnd1());
         FITOD(rr, rr);
         LDDF32(FP, d, rr);
@@ -944,7 +944,7 @@ namespace nanojit
     {
         underrunProtect(72);
         // where our result goes
-        Register rr = prepResultReg(ins, FpRegs);
+        Register rr = deprecated_prepResultReg(ins, FpRegs);
         Register rt = registerAllocTmp(FpRegs & ~(rmask(rr)));
         Register gr = findRegFor(ins->oprnd1(), GpRegs);
         int disp = -8;
@@ -1036,7 +1036,7 @@ namespace nanojit
 
     Register Assembler::asm_binop_rhs_reg(LInsp ins)
     {
-        return UnknownReg;
+        return deprecated_UnknownReg;
     }
 
     void Assembler::nativePageSetup()

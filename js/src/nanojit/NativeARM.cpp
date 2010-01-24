@@ -633,7 +633,7 @@ Assembler::asm_arg_64(LInsp arg, Register& r, int& stkd)
     // is for LIR_qjoin.
     NanoAssert(ARM_VFP || arg->isop(LIR_qjoin));
 
-    Register    fp_reg = UnknownReg;
+    Register    fp_reg = deprecated_UnknownReg;
 
     if (ARM_VFP) {
         fp_reg = findRegFor(arg, FpRegs);
@@ -733,7 +733,7 @@ Assembler::asm_regarg(ArgSize sz, LInsp p, Register r)
             asm_ld_imm(r, p->imm32());
         } else {
             if (p->isUsed()) {
-                if (!p->hasKnownReg()) {
+                if (!p->deprecated_hasKnownReg()) {
                     // load it into the arg reg
                     int d = findMemFor(p);
                     if (p->isop(LIR_alloc)) {
@@ -743,7 +743,7 @@ Assembler::asm_regarg(ArgSize sz, LInsp p, Register r)
                     }
                 } else {
                     // it must be in a saved reg
-                    MOV(r, p->getReg());
+                    MOV(r, p->deprecated_getReg());
                 }
             }
             else {
@@ -772,7 +772,7 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
     bool isF64 = arg->isF64();
 
     Register rr;
-    if (arg->isUsed() && (rr = arg->getReg(), isKnownReg(rr))) {
+    if (arg->isUsed() && (rr = arg->deprecated_getReg(), isKnownReg(rr))) {
         // The argument resides somewhere in registers, so we simply need to
         // push it onto the stack.
         if (!ARM_VFP || !isF64) {
@@ -839,15 +839,15 @@ Assembler::asm_call(LInsp ins)
          *
          * This is not a problem for non-floating point calls, because the
          * restoring of spilled data into R0 is done via a call to
-         * prepResultReg(R0) in the other branch of this if-then-else,
+         * deprecated_prepResultReg(R0) in the other branch of this if-then-else,
          * meaning that evictScratchRegs() will not modify R0. However,
-         * prepResultReg is not aware of the concept of using a register pair
+         * deprecated_prepResultReg is not aware of the concept of using a register pair
          * (R0,R1) for the result of a single operation, so it can only be
          * used here with the ultimate VFP register, and not R0/R1, which
          * potentially allows for R0/R1 to get corrupted as described.
          */
     } else {
-        prepResultReg(ins, rmask(retRegs[0]));
+        deprecated_prepResultReg(ins, rmask(retRegs[0]));
     }
 
     // Do this after we've handled the call result, so we don't
@@ -875,14 +875,14 @@ Assembler::asm_call(LInsp ins)
         // If the result size is a floating-point value, treat the result
         // specially, as described previously.
         if (rsize == ARGSIZE_F) {
-            Register rr = ins->getReg();
+            Register rr = ins->deprecated_getReg();
 
             NanoAssert(ins->opcode() == LIR_fcall);
 
             if (!isKnownReg(rr)) {
-                int d = disp(ins);
+                int d = deprecated_disp(ins);
                 NanoAssert(d != 0);
-                freeRsrcOf(ins, false);
+                deprecated_freeRsrcOf(ins, false);
 
                 // The result doesn't have a register allocated, so store the
                 // result (in R0,R1) directly to its stack slot.
@@ -892,7 +892,7 @@ Assembler::asm_call(LInsp ins)
                 NanoAssert(IsFpReg(rr));
 
                 // Copy the result to the (VFP) result register.
-                prepResultReg(ins, rmask(rr));
+                deprecated_prepResultReg(ins, rmask(rr));
                 FMDRR(rr, R0, R1);
             }
         }
@@ -1199,7 +1199,7 @@ Assembler::asm_qjoin(LIns *ins)
     // okay if r gets recycled.
     r = findRegFor(lo, GpRegs);
     STR(r, FP, d);
-    freeRsrcOf(ins, false); // if we had a reg in use, emit a ST to flush it to mem
+    deprecated_freeRsrcOf(ins, false); // if we had a reg in use, emit a ST to flush it to mem
 }
 
 void
@@ -1233,10 +1233,10 @@ void
 Assembler::asm_restore(LInsp i, Register r)
 {
     if (i->isop(LIR_alloc)) {
-        asm_add_imm(r, FP, disp(i));
+        asm_add_imm(r, FP, deprecated_disp(i));
     } else if (i->isconst()) {
-        if (!i->getArIndex()) {
-            i->markAsClear();
+        if (!i->deprecated_getArIndex()) {
+            i->deprecated_markAsClear();
         }
         asm_ld_imm(r, i->imm32());
     }
@@ -1328,12 +1328,12 @@ Assembler::asm_load64(LInsp ins)
     LIns* base = ins->oprnd1();
     int offset = ins->disp();
 
-    Register rr = ins->getReg();
-    int d = disp(ins);
+    Register rr = ins->deprecated_getReg();
+    int d = deprecated_disp(ins);
 
     Register rb = findRegFor(base, GpRegs);
     NanoAssert(IsGpReg(rb));
-    freeRsrcOf(ins, false);
+    deprecated_freeRsrcOf(ins, false);
 
     //outputf("--- load64: Finished register allocation.");
 
@@ -1464,10 +1464,10 @@ Assembler::asm_quad(LInsp ins)
 {
     //asm_output(">>> asm_quad");
 
-    int d = disp(ins);
-    Register rr = ins->getReg();
+    int d = deprecated_disp(ins);
+    Register rr = ins->deprecated_getReg();
 
-    freeRsrcOf(ins, false);
+    deprecated_freeRsrcOf(ins, false);
 
     if (ARM_VFP && isKnownReg(rr))
     {
@@ -1506,7 +1506,7 @@ Assembler::asm_nongp_copy(Register r, Register s)
 Register
 Assembler::asm_binop_rhs_reg(LInsp)
 {
-    return UnknownReg;
+    return deprecated_UnknownReg;
 }
 
 /**
@@ -1522,9 +1522,9 @@ Assembler::asm_mmq(Register rd, int dd, Register rs, int ds)
 
     // In order to make the operation optimal, we will require two GP
     // registers. We can't allocate a register here because the caller may have
-    // called freeRsrcOf, and allocating a register here may cause something
+    // called deprecated_freeRsrcOf, and allocating a register here may cause something
     // else to spill onto the stack which has just be conveniently freed by
-    // freeRsrcOf (resulting in stack corruption).
+    // deprecated_freeRsrcOf (resulting in stack corruption).
     //
     // Falling back to a single-register implementation of asm_mmq is better
     // than adjusting the callers' behaviour (to allow us to allocate another
@@ -2012,7 +2012,7 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
 void
 Assembler::asm_i2f(LInsp ins)
 {
-    Register rr = prepResultReg(ins, FpRegs);
+    Register rr = deprecated_prepResultReg(ins, FpRegs);
     Register srcr = findRegFor(ins->oprnd1(), GpRegs);
 
     // todo: support int value in memory, as per x86
@@ -2025,7 +2025,7 @@ Assembler::asm_i2f(LInsp ins)
 void
 Assembler::asm_u2f(LInsp ins)
 {
-    Register rr = prepResultReg(ins, FpRegs);
+    Register rr = deprecated_prepResultReg(ins, FpRegs);
     Register sr = findRegFor(ins->oprnd1(), GpRegs);
 
     // todo: support int value in memory, as per x86
@@ -2038,7 +2038,7 @@ Assembler::asm_u2f(LInsp ins)
 void Assembler::asm_f2i(LInsp ins)
 {
     // where our result goes
-    Register rr = prepResultReg(ins, GpRegs);
+    Register rr = deprecated_prepResultReg(ins, GpRegs);
     Register sr = findRegFor(ins->oprnd1(), FpRegs);
 
     FMRS(rr, FpSingleScratch);
@@ -2049,11 +2049,11 @@ void
 Assembler::asm_fneg(LInsp ins)
 {
     LInsp lhs = ins->oprnd1();
-    Register rr = prepResultReg(ins, FpRegs);
+    Register rr = deprecated_prepResultReg(ins, FpRegs);
 
-    Register sr = ( lhs->isUnusedOrHasUnknownReg()
+    Register sr = ( !lhs->isInReg()
                   ? findRegFor(lhs, FpRegs)
-                  : lhs->getReg() );
+                  : lhs->deprecated_getReg() );
 
     FNEGD(rr, sr);
 }
@@ -2069,7 +2069,7 @@ Assembler::asm_fop(LInsp ins)
 
     // rr = ra OP rb
 
-    Register rr = prepResultReg(ins, FpRegs);
+    Register rr = deprecated_prepResultReg(ins, FpRegs);
 
     Register ra = findRegFor(lhs, FpRegs);
     Register rb = (rhs == lhs) ? ra : findRegFor(rhs, FpRegs & ~rmask(ra));
@@ -2239,7 +2239,7 @@ void
 Assembler::asm_fcond(LInsp ins)
 {
     // only want certain regs
-    Register r = prepResultReg(ins, AllowableFlagRegs);
+    Register r = deprecated_prepResultReg(ins, AllowableFlagRegs);
 
     switch (ins->opcode()) {
         case LIR_feq: SETEQ(r); break;
@@ -2256,7 +2256,7 @@ Assembler::asm_fcond(LInsp ins)
 void
 Assembler::asm_cond(LInsp ins)
 {
-    Register r = prepResultReg(ins, AllowableFlagRegs);
+    Register r = deprecated_prepResultReg(ins, AllowableFlagRegs);
     LOpcode op = ins->opcode();
 
     switch(op)
@@ -2296,13 +2296,13 @@ Assembler::asm_arith(LInsp ins)
     RegisterMask    allow = GpRegs;
 
     // We always need the result register and the first operand register.
-    Register        rr = prepResultReg(ins, allow);
+    Register        rr = deprecated_prepResultReg(ins, allow);
 
     // If this is the last use of lhs in reg, we can re-use the result reg.
     // Else, lhs already has a register assigned.
-    Register        ra = ( lhs->isUnusedOrHasUnknownReg()
+    Register        ra = ( !lhs->isInReg()
                          ? findSpecificRegFor(lhs, rr)
-                         : lhs->getReg() );
+                         : lhs->deprecated_getReg() );
 
     // Don't re-use the registers we've already allocated.
     NanoAssert(isKnownReg(rr));
@@ -2326,7 +2326,7 @@ Assembler::asm_arith(LInsp ins)
         if ((op == LIR_add || op == LIR_iaddp) && lhs->isop(LIR_ialloc)) {
             // Add alloc+const. The result should be the address of the
             // allocated space plus a constant.
-            Register    rs = prepResultReg(ins, allow);
+            Register    rs = deprecated_prepResultReg(ins, allow);
             int         d = findMemFor(lhs) + rhs->imm32();
 
             NanoAssert(isKnownReg(rs));
@@ -2468,14 +2468,14 @@ void
 Assembler::asm_neg_not(LInsp ins)
 {
     LOpcode op = ins->opcode();
-    Register rr = prepResultReg(ins, GpRegs);
+    Register rr = deprecated_prepResultReg(ins, GpRegs);
 
     LIns* lhs = ins->oprnd1();
     // If this is the last use of lhs in reg, we can re-use result reg.
     // Else, lhs already has a register assigned.
-    Register ra = ( lhs->isUnusedOrHasUnknownReg()
+    Register ra = ( !lhs->isInReg()
                   ? findSpecificRegFor(lhs, rr)
-                  : lhs->getReg() );
+                  : lhs->deprecated_getReg() );
     NanoAssert(isKnownReg(ra));
 
     if (op == LIR_not)
@@ -2491,7 +2491,7 @@ Assembler::asm_load32(LInsp ins)
     LIns* base = ins->oprnd1();
     int d = ins->disp();
 
-    Register rr = prepResultReg(ins, GpRegs);
+    Register rr = deprecated_prepResultReg(ins, GpRegs);
     Register ra = getBaseReg(base, d, GpRegs);
 
     switch (op) {
@@ -2549,7 +2549,7 @@ Assembler::asm_cmov(LInsp ins)
     NanoAssert(condval->isCmp());
     NanoAssert(op == LIR_cmov && iftrue->isI32() && iffalse->isI32());
 
-    const Register rr = prepResultReg(ins, GpRegs);
+    const Register rr = deprecated_prepResultReg(ins, GpRegs);
 
     // this code assumes that neither LD nor MR nor MRcc set any of the condition flags.
     // (This is true on Intel, is it true on all architectures?)
@@ -2585,7 +2585,7 @@ Assembler::asm_cmov(LInsp ins)
 void
 Assembler::asm_qhi(LInsp ins)
 {
-    Register rr = prepResultReg(ins, GpRegs);
+    Register rr = deprecated_prepResultReg(ins, GpRegs);
     LIns *q = ins->oprnd1();
     int d = findMemFor(q);
     LDR(rr, FP, d+4);
@@ -2594,7 +2594,7 @@ Assembler::asm_qhi(LInsp ins)
 void
 Assembler::asm_qlo(LInsp ins)
 {
-    Register rr = prepResultReg(ins, GpRegs);
+    Register rr = deprecated_prepResultReg(ins, GpRegs);
     LIns *q = ins->oprnd1();
     int d = findMemFor(q);
     LDR(rr, FP, d);
@@ -2611,23 +2611,23 @@ Assembler::asm_param(LInsp ins)
         uint32_t abi_regcount = abi == ABI_CDECL ? 4 : abi == ABI_FASTCALL ? 2 : abi == ABI_THISCALL ? 1 : 0;
         if (a < abi_regcount) {
             // incoming arg in register
-            prepResultReg(ins, rmask(argRegs[a]));
+            deprecated_prepResultReg(ins, rmask(argRegs[a]));
         } else {
             // incoming arg is on stack, and EBP points nearby (see genPrologue)
-            Register r = prepResultReg(ins, GpRegs);
+            Register r = deprecated_prepResultReg(ins, GpRegs);
             int d = (a - abi_regcount) * sizeof(intptr_t) + 8;
             LDR(r, FP, d);
         }
     } else {
         // saved param
-        prepResultReg(ins, rmask(savedRegs[a]));
+        deprecated_prepResultReg(ins, rmask(savedRegs[a]));
     }
 }
 
 void
 Assembler::asm_int(LInsp ins)
 {
-    Register rr = prepResultReg(ins, GpRegs);
+    Register rr = deprecated_prepResultReg(ins, GpRegs);
     asm_ld_imm(rr, ins->imm32());
 }
 

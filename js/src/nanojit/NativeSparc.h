@@ -164,7 +164,7 @@ namespace nanojit
 
             FirstReg = 0,
             LastReg = 29,
-            UnknownReg = 30
+            deprecated_UnknownReg = 30
         }
     Register;
 
