@@ -301,20 +301,27 @@ qcms_profile*
 gfxWindowsPlatform::GetPlatformCMSOutputProfile()
 {
 #ifndef MOZ_FT2_FONTS
-    WCHAR str[1024+1];
-    DWORD size = 1024;
+    WCHAR str[MAX_PATH];
+    DWORD size = MAX_PATH;
+    BOOL res;
 
     HDC dc = GetDC(nsnull);
     if (!dc)
         return nsnull;
 
+#if _MSC_VER
     __try {
-        GetICMProfileW(dc, &size, (LPWSTR)&str);
+        res = GetICMProfileW(dc, &size, (LPWSTR)&str);
     } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
-        str[0] = 0;
+        res = FALSE;
     }
+#else
+    res = GetICMProfileW(dc, &size, (LPWSTR)&str);
+#endif
 
     ReleaseDC(nsnull, dc);
+    if (!res)
+        return nsnull;
 
     qcms_profile* profile =
         qcms_profile_from_path(NS_ConvertUTF16toUTF8(str).get());
