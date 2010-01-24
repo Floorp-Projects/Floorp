@@ -582,11 +582,13 @@ var gCookiesWindow = {
     if (item && seln.count == 1 && item.container && item.open)
       selectedCookieCount += 2;
 
-    var stringKey = selectedCookieCount == 1 ? "removeCookie" : "removeCookies";
-    document.getElementById("removeCookie").label = this._bundle.getString(stringKey);
+    var removeCookie = document.getElementById("removeCookie");
+    var removeCookies = document.getElementById("removeCookies");
+    removeCookie.parentNode.selectedPanel =
+      selectedCookieCount == 1 ? removeCookie : removeCookies;
 
     document.getElementById("removeAllCookies").disabled = this._view._filtered;
-    document.getElementById("removeCookie").disabled = !(seln.count > 0);
+    removeCookie.disabled = removeCookies.disabled = !(seln.count > 0);
   },
 
   deleteCookie: function () {
