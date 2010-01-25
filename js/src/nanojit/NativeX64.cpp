@@ -1828,7 +1828,7 @@ namespace nanojit
     #endif
     }
 
-    RegisterMask Assembler::hint(LIns* ins) {
+    RegisterMask Assembler::hint(LIns* /*ins*/) {
         return 0;
     }
 
