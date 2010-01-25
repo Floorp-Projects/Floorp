@@ -2119,8 +2119,8 @@ nsAccessible::DoAction(PRUint8 aIndex)
     return NS_ERROR_FAILURE;
 
   if (GetActionRule(nsAccUtils::State(this)) != eNoAction) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    return DoCommand(content);
+    DoCommand();
+    return NS_OK;
   }
 
   return NS_ERROR_INVALID_ARG;
@@ -2491,7 +2491,7 @@ NS_IMETHODIMP nsAccessible::GetNativeInterface(void **aOutAccessible)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
+void
 nsAccessible::DoCommand(nsIContent *aContent, PRUint32 aActionIndex)
 {
   nsCOMPtr<nsIContent> content = aContent;
@@ -2500,8 +2500,6 @@ nsAccessible::DoCommand(nsIContent *aContent, PRUint32 aActionIndex)
 
   NS_DISPATCH_RUNNABLEMETHOD_ARG2(DispatchClickEvent, this,
                                   content, aActionIndex)
-
-  return NS_OK;
 }
 
 void
