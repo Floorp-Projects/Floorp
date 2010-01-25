@@ -2305,7 +2305,6 @@ alpha*-*-osf*)
     fi
     ;;
 
-dnl the qsort routine under solaris is faulty
 *-solaris*) 
     AC_DEFINE(SOLARIS)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
