@@ -141,6 +141,10 @@ BookmarksEngine.prototype = {
         let key;
         let id = idForGUID(guid);
         switch (Svc.Bookmark.getItemType(id)) {
+          case Svc.Bookmark.TYPE_BOOKMARK:
+            key = "b" + Svc.Bookmark.getBookmarkURI(id).spec + ":" +
+              Svc.Bookmark.getItemTitle(id);
+            break;
           case Svc.Bookmark.TYPE_FOLDER:
             key = "f" + Svc.Bookmark.getItemTitle(id);
             break;
@@ -166,6 +170,11 @@ BookmarksEngine.prototype = {
         // Figure out if we have something to key with
         let key;
         switch (item.type) {
+          case "bookmark":
+          case "query":
+          case "microsummary":
+            key = "b" + item.bmkUri + ":" + item.title;
+            break;
           case "folder":
           case "livemark":
             key = "f" + item.title;
@@ -178,8 +187,11 @@ BookmarksEngine.prototype = {
         }
 
         // Give the guid if we have the matching pair
+        this._log.trace("Finding mapping: " + item.parentName + ", " + key);
         let parent = lazyMap[item.parentName];
-        return parent && parent[key];
+        let dupe = parent && parent[key];
+        this._log.trace("Mapped dupe: " + dupe);
+        return dupe;
       };
     });
   },
@@ -191,21 +203,7 @@ BookmarksEngine.prototype = {
   },
 
   _findDupe: function _findDupe(item) {
-    switch (item.type) {
-      case "bookmark":
-      case "query":
-      case "microsummary":
-        // Find a bookmark that has the same uri
-        let uri = Utils.makeURI(item.bmkUri);
-        let localId = PlacesUtils.getMostRecentBookmarkForURI(uri);
-        if (localId == -1)
-          return;
-        return GUIDForId(localId);
-      case "folder":
-      case "livemark":
-      case "separator":
-        return this._lazyMap(item);
-    }
+    return this._lazyMap(item);
   },
 
   _handleDupe: function _handleDupe(item, dupeId) {
@@ -762,6 +760,7 @@ BookmarksStore.prototype = {
         record.title = this._bms.getItemTitle(placeId);
       }
 
+      record.parentName = Svc.Bookmark.getItemTitle(parent);
       record.bmkUri = bmkUri;
       record.tags = this._getTags(record.bmkUri);
       record.keyword = this._bms.getKeywordForBookmark(placeId);
