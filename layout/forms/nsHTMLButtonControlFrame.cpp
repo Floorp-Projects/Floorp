@@ -179,8 +179,9 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Put the foreground outline and focus rects on top of the children
   set.Content()->AppendToTop(&onTop);
 
-  // clips to our padding box for <input>s but not <button>s.
-  if (IsInput()) {
+  // clips to our padding box for <input>s but not <button>s, unless
+  // they have non-visible overflow..
+  if (IsInput() || GetStyleDisplay()->mOverflowX != NS_STYLE_OVERFLOW_VISIBLE) {
     nsMargin border = GetStyleBorder()->GetActualBorder();
     nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
     rect.Deflate(border);
