@@ -1205,27 +1205,38 @@ Assembler::asm_qjoin(LIns *ins)
 void
 Assembler::asm_store32(LOpcode op, LIns *value, int dr, LIns *base)
 {
+    Register ra, rb;
+    getBaseReg2(GpRegs, value, ra, GpRegs, base, rb, dr);
+
     switch (op) {
         case LIR_sti:
-            // handled by mainline code below for now
-            break;
+            if (isU12(-dr) || isU12(dr)) {
+                STR(ra, rb, dr);
+            } else {
+                STR(ra, IP, 0);
+                asm_add_imm(IP, rb, dr);
+            }
+            return;
         case LIR_stb:
+            if (isU12(-dr) || isU12(dr)) {
+                STRB(ra, rb, dr);
+            } else {
+                STRB(ra, IP, 0);
+                asm_add_imm(IP, rb, dr);
+            }
+            return;
         case LIR_sts:
-            NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+            // Similar to the sti/stb case, but the max offset is smaller.
+            if (isU8(-dr) || isU8(dr)) {
+                STRH(ra, rb, dr);
+            } else {
+                STRH(ra, IP, 0);
+                asm_add_imm(IP, rb, dr);
+            }
             return;
         default:
             NanoAssertMsg(0, "asm_store32 should never receive this LIR opcode");
             return;
-    }
-
-    Register ra, rb;
-    getBaseReg2(GpRegs, value, ra, GpRegs, base, rb, dr);
-
-    if (isU12(-dr) || isU12(dr)) {
-        STR(ra, rb, dr);
-    } else {
-        STR(ra, IP, 0);
-        asm_add_imm(IP, rb, dr);
     }
 }
 
@@ -1308,21 +1319,6 @@ Assembler::asm_load64(LInsp ins)
 
     //asm_output("<<< load64");
 
-    switch (ins->opcode()) {
-        case LIR_ldf:
-        case LIR_ldfc:
-            // handled by mainline code below for now
-            break;
-
-        case LIR_ld32f:
-        case LIR_ldc32f:
-            NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
-            return;
-        default:
-            NanoAssertMsg(0, "asm_load64 should never receive this LIR opcode");
-            return;
-    }
-
     NanoAssert(ins->isF64());
 
     LIns* base = ins->oprnd1();
@@ -1337,28 +1333,68 @@ Assembler::asm_load64(LInsp ins)
 
     //outputf("--- load64: Finished register allocation.");
 
-    if (ARM_VFP && isKnownReg(rr)) {
-        // VFP is enabled and the result will go into a register.
-        NanoAssert(IsFpReg(rr));
+    switch (ins->opcode()) {
+        case LIR_ldf:
+        case LIR_ldfc:
+            if (ARM_VFP && isKnownReg(rr)) {
+                // VFP is enabled and the result will go into a register.
+                NanoAssert(IsFpReg(rr));
 
-        if (!isS8(offset >> 2) || (offset&3) != 0) {
-            FLDD(rr,IP,0);
-            asm_add_imm(IP, rb, offset);
-        } else {
-            FLDD(rr,rb,offset);
-        }
-    } else {
-        // Either VFP is not available or the result needs to go into memory;
-        // in either case, VFP instructions are not required. Note that the
-        // result will never be loaded into registers if VFP is not available.
-        NanoAssert(!isKnownReg(rr));
-        NanoAssert(d != 0);
+                if (!isS8(offset >> 2) || (offset&3) != 0) {
+                    FLDD(rr,IP,0);
+                    asm_add_imm(IP, rb, offset);
+                } else {
+                    FLDD(rr,rb,offset);
+                }
+            } else {
+                // Either VFP is not available or the result needs to go into memory;
+                // in either case, VFP instructions are not required. Note that the
+                // result will never be loaded into registers if VFP is not available.
+                NanoAssert(!isKnownReg(rr));
+                NanoAssert(d != 0);
 
-        // Check that the offset is 8-byte (64-bit) aligned.
-        NanoAssert((d & 0x7) == 0);
+                // Check that the offset is 8-byte (64-bit) aligned.
+                NanoAssert((d & 0x7) == 0);
 
-        // *(uint64_t*)(FP+d) = *(uint64_t*)(rb+offset)
-        asm_mmq(FP, d, rb, offset);
+                // *(uint64_t*)(FP+d) = *(uint64_t*)(rb+offset)
+                asm_mmq(FP, d, rb, offset);
+            }
+            return;
+
+        case LIR_ld32f:
+        case LIR_ldc32f:
+            if (ARM_VFP) {
+                if (isKnownReg(rr)) {
+                    NanoAssert(IsFpReg(rr));
+                    FCVTDS(rr, S14);
+                } else {
+                    // Normally D7 isn't allowed to be used as an FP reg.
+                    // In this case we make an explicit exception.
+                    if (isS8(d)) {
+                        FSTD_allowD7(D7, FP, d, true);
+                    } else {
+                        FSTD_allowD7(D7, IP, 0, true);
+                        asm_add_imm(IP, FP, d);
+                    }
+                    FCVTDS_allowD7(D7, S14, true);
+                }
+
+                // always load into a VFP reg to do the conversion, and always use
+                // our S14 scratch reg
+                if (!isS8(offset >> 2) || (offset&3) != 0) {
+                    FLDS(S14, IP, 0);
+                    asm_add_imm(IP, rb, offset);
+                } else {
+                    FLDS(S14, rb, offset);
+                }
+            } else {
+                NanoAssertMsg(0, "ld32f not supported with non-VFP, fix me");
+            }
+            return;
+
+        default:
+            NanoAssertMsg(0, "asm_load64 should never receive this LIR opcode");
+            return;
     }
 
     //asm_output(">>> load64");
@@ -1373,63 +1409,104 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
 
     switch (op) {
         case LIR_stfi:
-            // handled by mainline code below for now
-            break;
+            if (ARM_VFP) {
+                Register rb = findRegFor(base, GpRegs);
 
-        case LIR_st32f:
-            NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+                if (value->isconstq()) {
+                    underrunProtect(LD32_size*2 + 8);
+
+                    // XXX use another reg, get rid of dependency
+                    STR(IP, rb, dr);
+                    asm_ld_imm(IP, value->imm64_0(), false);
+                    STR(IP, rb, dr+4);
+                    asm_ld_imm(IP, value->imm64_1(), false);
+
+                    return;
+                }
+
+                Register rv = findRegFor(value, FpRegs);
+
+                NanoAssert(isKnownReg(rb));
+                NanoAssert(isKnownReg(rv));
+
+                Register baseReg = rb;
+                intptr_t baseOffset = dr;
+
+                if (!isS8(dr)) {
+                    baseReg = IP;
+                    baseOffset = 0;
+                }
+
+                FSTD(rv, baseReg, baseOffset);
+
+                if (!isS8(dr)) {
+                    asm_add_imm(IP, rb, dr);
+                }
+
+                // if it's a constant, make sure our baseReg/baseOffset location
+                // has the right value
+                if (value->isconstq()) {
+                    underrunProtect(4*4);
+                    asm_quad_nochk(rv, value->imm64_0(), value->imm64_1());
+                }
+            } else {
+                int da = findMemFor(value);
+                Register rb = findRegFor(base, GpRegs);
+                // *(uint64_t*)(rb+dr) = *(uint64_t*)(FP+da)
+                asm_mmq(rb, dr, FP, da);
+            }
             return;
 
+        case LIR_st32f:
+            if (ARM_VFP) {
+                Register rb = findRegFor(base, GpRegs);
+
+                if (value->isconstq()) {
+                    underrunProtect(LD32_size*2 + 8);
+
+                    // XXX use another reg, get rid of dependency
+                    STR(IP, rb, dr);
+                    asm_ld_imm(IP, value->imm64_0(), false);
+                    STR(IP, rb, dr+4);
+                    asm_ld_imm(IP, value->imm64_1(), false);
+
+                    return;
+                }
+
+                Register rv = findRegFor(value, FpRegs);
+
+                NanoAssert(isKnownReg(rb));
+                NanoAssert(isKnownReg(rv));
+
+                Register baseReg = rb;
+                intptr_t baseOffset = dr;
+
+                if (!isS8(dr)) {
+                    baseReg = IP;
+                    baseOffset = 0;
+                }
+
+                FSTS(S14, baseReg, baseOffset);
+
+                if (!isS8(dr)) {
+                    asm_add_imm(IP, rb, dr);
+                }
+
+                FCVTSD(S14, rv);
+
+                // if it's a constant, make sure our baseReg/baseOffset location
+                // has the right value
+                if (value->isconstq()) {
+                    underrunProtect(4*4);
+                    asm_quad_nochk(rv, value->imm64_0(), value->imm64_1());
+                }
+            } else {
+                NanoAssertMsg(0, "st32f not supported with non-VFP, fix me");
+            }
+            return;
         default:
             NanoAssertMsg(0, "asm_store64 should never receive this LIR opcode");
             return;
-    }
-
-    if (ARM_VFP) {
-        Register rb = findRegFor(base, GpRegs);
-
-        if (value->isconstq()) {
-            underrunProtect(LD32_size*2 + 8);
-
-            // XXX use another reg, get rid of dependency
-            STR(IP, rb, dr);
-            asm_ld_imm(IP, value->imm64_0(), false);
-            STR(IP, rb, dr+4);
-            asm_ld_imm(IP, value->imm64_1(), false);
-
-            return;
-        }
-
-        Register rv = findRegFor(value, FpRegs);
-
-        NanoAssert(isKnownReg(rb));
-        NanoAssert(isKnownReg(rv));
-
-        Register baseReg = rb;
-        intptr_t baseOffset = dr;
-
-        if (!isS8(dr)) {
-            baseReg = IP;
-            baseOffset = 0;
-        }
-
-        FSTD(rv, baseReg, baseOffset);
-
-        if (!isS8(dr)) {
-            asm_add_imm(IP, rb, dr);
-        }
-
-        // if it's a constant, make sure our baseReg/baseOffset location
-        // has the right value
-        if (value->isconstq()) {
-            underrunProtect(4*4);
-            asm_quad_nochk(rv, value->imm64_0(), value->imm64_1());
-        }
-    } else {
-        int da = findMemFor(value);
-        Register rb = findRegFor(base, GpRegs);
-        // *(uint64_t*)(rb+dr) = *(uint64_t*)(FP+da)
-        asm_mmq(rb, dr, FP, da);
     }
 
     //asm_output(">>> store64");
@@ -2018,8 +2095,8 @@ Assembler::asm_i2f(LInsp ins)
     // todo: support int value in memory, as per x86
     NanoAssert(isKnownReg(srcr));
 
-    FSITOD(rr, FpSingleScratch);
-    FMSR(FpSingleScratch, srcr);
+    FSITOD(rr, S14);
+    FMSR(S14, srcr);
 }
 
 void
@@ -2031,8 +2108,8 @@ Assembler::asm_u2f(LInsp ins)
     // todo: support int value in memory, as per x86
     NanoAssert(isKnownReg(sr));
 
-    FUITOD(rr, FpSingleScratch);
-    FMSR(FpSingleScratch, sr);
+    FUITOD(rr, S14);
+    FMSR(S14, sr);
 }
 
 void Assembler::asm_f2i(LInsp ins)
@@ -2041,8 +2118,8 @@ void Assembler::asm_f2i(LInsp ins)
     Register rr = deprecated_prepResultReg(ins, GpRegs);
     Register sr = findRegFor(ins->oprnd1(), FpRegs);
 
-    FMRS(rr, FpSingleScratch);
-    FTOSID(FpSingleScratch, sr);
+    FMRS(rr, S14);
+    FTOSID(S14, sr);
 }
 
 void
@@ -2506,8 +2583,7 @@ Assembler::asm_load32(LInsp ins)
             return;
         case LIR_ldzs:
         case LIR_ldcs:
-            // These are expected to be 2-byte aligned.  (Not all ARM machines
-            // can handle unaligned accesses.)
+            // Some ARM machines require 2-byte alignment here.
             // Similar to the ldcb/ldzb case, but the max offset is smaller.
             if (isU8(-d) || isU8(d)) {
                 LDRH(rr, ra, d);
@@ -2518,7 +2594,7 @@ Assembler::asm_load32(LInsp ins)
             return;
         case LIR_ld:
         case LIR_ldc:
-            // These are expected to be 4-byte aligned.
+            // Some ARM machines require 4-byte alignment here.
             if (isU12(-d) || isU12(d)) {
                 LDR(rr, ra, d);
             } else {
@@ -2527,10 +2603,22 @@ Assembler::asm_load32(LInsp ins)
             }
             return;
         case LIR_ldsb:
-        case LIR_ldss:
         case LIR_ldcsb:
+            if (isU8(-d) || isU8(d)) {
+                LDRSB(rr, ra, d);
+            } else {
+                LDRSB(rr, IP, 0);
+                asm_add_imm(IP, ra, d);
+            }
+            return;
+        case LIR_ldss:
         case LIR_ldcss:
-            NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
+            if (isU8(-d) || isU8(d)) {
+                LDRSH(rr, ra, d);
+            } else {
+                LDRSH(rr, IP, 0);
+                asm_add_imm(IP, ra, d);
+            }
             return;
         default:
             NanoAssertMsg(0, "asm_load32 should never receive this LIR opcode");
