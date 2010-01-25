@@ -2425,6 +2425,7 @@ asyncCallback(void* cookie)
       BOOLEAN_TO_NPVARIANT(id->asyncCallbackResult, arg);
       NPN_Invoke(npp, windowObject, NPN_GetStringIdentifier(id->asyncTestScriptCallback.c_str()), &arg, 1, &rval);
       NPN_ReleaseVariantValue(&arg);
+      NPN_ReleaseObject(windowObject);
       break;
   }
 }
