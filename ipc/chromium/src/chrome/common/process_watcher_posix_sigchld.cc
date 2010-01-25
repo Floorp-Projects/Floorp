@@ -115,7 +115,24 @@ protected:
   void WaitForChildExit()
   {
     DCHECK(process_);
+
+
+
+    printf("TEST-UNEXPECTED-FAIL | process %d busy-waiting on | child process %d\n", getpid(), process_);
+
+
+
+
     HANDLE_EINTR(waitpid(process_, NULL, 0));
+
+
+
+
+    printf("TEST-UNEXPECTED-FAIL | process %d done busy-waiting on | child process %d\n", getpid(), process_);
+
+
+
+
   }
 
   pid_t process_;
