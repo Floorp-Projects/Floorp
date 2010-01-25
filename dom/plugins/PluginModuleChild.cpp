@@ -265,6 +265,16 @@ PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
 {
     AssertPluginThread();
 
+
+
+
+#ifdef OS_LINUX
+    printf("TEST-UNEXPECTED-FAIL | plugin process %d | got NP_Shutdown() %d\n", getpid());
+#endif
+
+
+
+
     // the PluginModuleParent shuts down this process after this RPC
     // call pops off its stack
 
