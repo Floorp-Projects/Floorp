@@ -159,8 +159,7 @@ nsresult gZlibInit(z_stream *zs)
 }
 
 nsZipHandle::nsZipHandle()
-  : mFd(nsnull)
-  , mFileData(nsnull)
+  : mFileData(nsnull)
   , mLen(0)
   , mMap(nsnull)
   , mRefCnt(0)
@@ -195,7 +194,6 @@ nsresult nsZipHandle::Init(PRFileDesc *fd, nsZipHandle **ret)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  handle->mFd = fd;
   handle->mMap = map;
   handle->mLen = (PRUint32) size;
   handle->mFileData = buf;
@@ -212,10 +210,6 @@ nsZipHandle::~nsZipHandle()
     mFileData = nsnull;
     mMap = nsnull;
   }
-  if (mFd) {
-    PR_Close(mFd);
-    mFd = nsnull;
-  }
   MOZ_COUNT_DTOR(nsZipHandle);
 }
 
@@ -227,9 +221,18 @@ nsZipHandle::~nsZipHandle()
 //---------------------------------------------
 //  nsZipArchive::OpenArchive
 //---------------------------------------------
-nsresult nsZipArchive::OpenArchive(PRFileDesc * fd)
+nsresult nsZipArchive::OpenArchive(nsIFile *aZipFile)
 {
-  nsresult rv = nsZipHandle::Init(fd, getter_AddRefs(mFd));
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aZipFile, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  PRFileDesc* fd;
+  rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0000, &fd);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsZipHandle::Init(fd, getter_AddRefs(mFd));
+  PR_Close(fd);
   if (NS_FAILED(rv))
     return rv;
 
@@ -535,6 +538,8 @@ nsresult nsZipArchive::BuildFileList()
 
   //-- Read the central directory headers
   buf = startp + centralOffset;
+  if (endp - buf < sizeof(PRUint32))
+      return NS_ERROR_FILE_CORRUPTED;
   PRUint32 sig = xtolong(buf);
   while (sig == CENTRALSIG) {
     // Make sure there is enough data available.

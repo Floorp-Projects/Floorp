@@ -79,6 +79,7 @@ CPPSRCS		= \
 		nsContentUtils.cpp \
 		nsCopySupport.cpp \
 		nsCrossSiteListenerProxy.cpp \
+		nsCSPService.cpp \
 		nsDataDocumentContentPolicy.cpp \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \

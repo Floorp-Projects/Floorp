@@ -54,6 +54,7 @@ public:
   void Init(PRUint8 aAttrEnum, PRUint16 aValue) {
     mAnimVal = mBaseVal = PRUint8(aValue);
     mAttrEnum = aAttrEnum;
+    mIsAnimated = PR_FALSE;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
@@ -65,19 +66,30 @@ public:
   nsresult SetBaseValue(PRUint16 aValue,
                         nsSVGElement *aSVGElement,
                         PRBool aDoSetAttr);
-
   PRUint16 GetBaseValue() const
     { return mBaseVal; }
-  PRUint16 GetAnimValue() const
-    { return mAnimVal; }
+
+  void SetAnimValue(PRUint16 aValue, nsSVGElement *aSVGElement);
+  PRUint16 GetAnimValue(nsSVGElement *aSVGElement) const
+  {
+  #ifdef MOZ_SMIL
+    aSVGElement->FlushAnimations();
+  #endif
+    return mAnimVal;
+  }
 
   nsresult ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
                              nsSVGElement* aSVGElement);
+#ifdef MOZ_SMIL
+  // Returns a new nsISMILAttr object that the caller must delete
+  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
+#endif // MOZ_SMIL
 
 private:
   nsSVGEnumValue mAnimVal;
   nsSVGEnumValue mBaseVal;
   PRUint8 mAttrEnum; // element specified tracking for attribute
+  PRPackedBool mIsAnimated;
 
   nsSVGEnumMapping *GetMapping(nsSVGElement *aSVGElement);
 
@@ -97,8 +109,31 @@ private:
     NS_IMETHOD SetBaseVal(PRUint16 aValue)
       { return mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE); }
     NS_IMETHOD GetAnimVal(PRUint16* aResult)
-      { *aResult = mVal->GetAnimValue(); return NS_OK; }
+      { *aResult = mVal->GetAnimValue(mSVGElement); return NS_OK; }
   };
+
+#ifdef MOZ_SMIL
+  struct SMILEnum : public nsISMILAttr
+  {
+  public:
+    SMILEnum(nsSVGEnum* aVal, nsSVGElement* aSVGElement)
+      : mVal(aVal), mSVGElement(aSVGElement) {}
+
+    // These will stay alive because a nsISMILAttr only lives as long
+    // as the Compositing step, and DOM elements don't get a chance to
+    // die during that.
+    nsSVGEnum* mVal;
+    nsSVGElement* mSVGElement;
+
+    // nsISMILAttr methods
+    virtual nsresult ValueFromString(const nsAString& aStr,
+                                     const nsISMILAnimationElement* aSrcElement,
+                                     nsSMILValue& aValue) const;
+    virtual nsSMILValue GetBaseValue() const;
+    virtual void ClearAnimValue();
+    virtual nsresult SetAnimValue(const nsSMILValue& aValue);
+  };
+#endif // MOZ_SMIL
 };
 
 #endif //__NS_SVGENUM_H__

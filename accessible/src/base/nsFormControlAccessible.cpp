@@ -74,13 +74,14 @@ NS_IMETHODIMP nsRadioButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& 
   return NS_ERROR_INVALID_ARG;
 }
 
-/** Our only action is to click */
-NS_IMETHODIMP nsRadioButtonAccessible::DoAction(PRUint8 aIndex)
+NS_IMETHODIMP
+nsRadioButtonAccessible::DoAction(PRUint8 aIndex)
 {
-  if (aIndex == eAction_Click) {
-    return DoCommand();
-  }
-  return NS_ERROR_INVALID_ARG;
+  if (aIndex != eAction_Click)
+    return NS_ERROR_INVALID_ARG;
+
+  DoCommand();
+  return NS_OK;
 }
 
 nsresult

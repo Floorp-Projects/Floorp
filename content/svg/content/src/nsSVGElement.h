@@ -157,6 +157,8 @@ public:
 
   virtual void DidAnimateLength(PRUint8 aAttrEnum);
   virtual void DidAnimateNumber(PRUint8 aAttrEnum);
+  virtual void DidAnimateBoolean(PRUint8 aAttrEnum);
+  virtual void DidAnimateEnum(PRUint8 aAttrEnum);
 
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);

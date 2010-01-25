@@ -331,14 +331,26 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
       prevSearchBuf = searchBuf;
       searchBuf = searchBuf->next;
     }
-  }
-  if (searchBuf == mLastBuffer || !aKey) {
-    // key was not found or we have a first-level write after document.open
-    // we'll insert to the head of the queue
-    nsHtml5UTF16Buffer* keyHolder = new nsHtml5UTF16Buffer(aKey);
-    keyHolder->next = mFirstBuffer;
-    buffer->next = keyHolder;
-    mFirstBuffer = buffer;
+    if (searchBuf == mLastBuffer) {
+      // key was not found
+      nsHtml5UTF16Buffer* keyHolder = new nsHtml5UTF16Buffer(aKey);
+      keyHolder->next = mFirstBuffer;
+      buffer->next = keyHolder;
+      mFirstBuffer = buffer;
+    }
+  } else {
+    // we have a first level document.write after document.open()
+    // insert immediately before mLastBuffer
+    while (searchBuf != mLastBuffer) {
+      prevSearchBuf = searchBuf;
+      searchBuf = searchBuf->next;
+    }
+    buffer->next = mLastBuffer;
+    if (prevSearchBuf) {
+      prevSearchBuf->next = buffer;
+    } else {
+      mFirstBuffer = buffer;
+    }
   }
 
   if (!mBlocked) {

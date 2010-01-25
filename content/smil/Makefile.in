@@ -70,6 +70,8 @@ CPPSRCS		+= \
 	nsSMILTimeValue.cpp \
 	nsSMILTimeValueSpec.cpp \
 	nsSMILValue.cpp \
+	SMILBoolType.cpp \
+	SMILEnumType.cpp \
 		$(NULL)
 endif
 

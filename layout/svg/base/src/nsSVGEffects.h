@@ -174,12 +174,13 @@ protected:
 /**
  * A manager for one-shot nsSVGRenderingObserver tracking.
  * nsSVGRenderingObservers can be added or removed. They are not strongly
- * referenced so an observer must be removed before it before it dies.
+ * referenced so an observer must be removed before it dies.
  * When InvalidateAll is called, all outstanding references get
  * InvalidateViaReferencedFrame()
  * called on them and the list is cleared. The intent is that
  * the observer will force repainting of whatever part of the document
- * is needed, and then at paint time the observer will be re-added.
+ * is needed, and then at paint time the observer will do a clean lookup
+ * of the referenced frame and [re-]add itself to the frame's observer list.
  * 
  * InvalidateAll must be called before this object is destroyed, i.e.
  * before the referenced frame is destroyed. This should normally happen
@@ -202,6 +203,11 @@ public:
   { mObservers.PutEntry(aObserver); }
   void Remove(nsSVGRenderingObserver* aObserver)
   { mObservers.RemoveEntry(aObserver); }
+
+  /**
+   * Drop all our observers, and notify them that we have changed and dropped
+   * our reference to them.
+   */
   void InvalidateAll();
 
 private:
@@ -273,13 +279,24 @@ public:
    */
   static void RemoveRenderingObserver(nsIFrame *aFrame, nsSVGRenderingObserver *aObserver);
   /**
-   * This can be called on any first-continuation frame. We walk up to
-   * the nearest observable frame and invalidate its observers.
+   * This can be called on any first-continuation frame. We invalidate aFrame's
+   * observers, if any, or else walk up to the nearest observable SVG parent
+   * frame with observers and invalidate them instead.
+   *
+   * Note that this method is very different to e.g.
+   * nsNodeUtils::AttributeChanged which walks up the content node tree (not
+   * the frame tree) all the way to the root node (not stopping if it
+   * encounters a non-container SVG node) invalidating all mutation observers
+   * (not just nsSVGRenderingObservers) on all nodes along the way (not just
+   * the first node it finds with observers). In other words, by doing all the
+   * things in parentheses in the preceeding sentence, this method uses
+   * knowledge about our implementation and what can be affected by SVG effects
+   * to make invalidation relatively lightweight when an SVG effect changes.
    */
   static void InvalidateRenderingObservers(nsIFrame *aFrame);
   /**
-   * This can be called on any frame. Direct observers
-   * of this frame are all invalidated.
+   * This can be called on any frame. Only direct observers of this frame, if
+   * any, are invalidated.
    */
   static void InvalidateDirectRenderingObservers(nsIFrame *aFrame);
 

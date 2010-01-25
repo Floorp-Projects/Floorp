@@ -60,6 +60,8 @@
         this.inputField.addEventListener("mousedown", this, false);
         this.inputField.addEventListener("mousemove", this, false);
         this.inputField.addEventListener("mouseout", this, false);
+        this.inputField.addEventListener("overflow", this, false);
+        this.inputField.addEventListener("underflow", this, false);
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -69,6 +71,8 @@
         this.inputField.removeEventListener("mousedown", this, false);
         this.inputField.removeEventListener("mousemove", this, false);
         this.inputField.removeEventListener("mouseout", this, false);
+        this.inputField.removeEventListener("overflow", this, false);
+        this.inputField.removeEventListener("underflow", this, false);
       ]]></destructor>
 
       <method name="handleRevert">
@@ -212,9 +216,11 @@
         ]]></body>
       </method>
 
+      <field name="_contentIsCropped">false</field>
+
       <method name="_initURLTooltip">
         <body><![CDATA[
-          if (this.focused || this.value == "")
+          if (this.focused || !this._contentIsCropped)
             return;
           if (this._tooltipTimer)
             clearTimeout(this._tooltipTimer);
@@ -376,6 +382,13 @@
               this._initURLTooltip();
               break;
             case "mouseout":
+              this._hideURLTooltip();
+              break;
+            case "overflow":
+              this._contentIsCropped = true;
+              break;
+            case "underflow":
+              this._contentIsCropped = false;
               this._hideURLTooltip();
               break;
           }

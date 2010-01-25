@@ -1325,10 +1325,13 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   nsDisplayTableItem* item = nsnull;
-  // This background is created if any of the table parts are visible.
+  // This background is created if any of the table parts are visible,
+  // or if we're doing event handling (since DisplayGenericTablePart
+  // needs the item for the |sortEventBackgrounds|-dependent code).
   // Specific visibility decisions are delegated to the table background
   // painter, which handles borders and backgrounds for the table.
-  if (AnyTablePartHasBorderOrBackground(this)) {
+  if (aBuilder->IsForEventDelivery() ||
+      AnyTablePartHasBorderOrBackground(this)) {
     item = new (aBuilder) nsDisplayTableBorderBackground(this);
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
     NS_ENSURE_SUCCESS(rv, rv);

@@ -266,8 +266,7 @@ toolbar[type="menubar"][autohide="true"] {
   overflow: hidden;
 }
 
-toolbar[type="menubar"][autohide="true"]:not([customizable="true"])[inactive="true"],
-toolbox:not([customizing="true"]) > toolbar[type="menubar"][autohide="true"][customizable="true"][inactive="true"]:not([customized="true"]) {
+toolbar[type="menubar"][autohide="true"][inactive="true"] {
   min-height: 0 !important;
   height: 0 !important;
   -moz-appearance: none !important;

@@ -120,7 +120,8 @@ nsXULSliderAccessible::DoAction(PRUint8 aIndex)
   nsCOMPtr<nsIContent> sliderContent(GetSliderNode());
   NS_ENSURE_STATE(sliderContent);
 
-  return DoCommand(sliderContent);
+  DoCommand(sliderContent);
+  return NS_OK;
 }
 
 // nsIAccessibleValue

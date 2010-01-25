@@ -340,7 +340,7 @@ nsSVGPatternFrame::GetPatternUnits()
   // See if we need to get the value from another pattern
   nsSVGPatternElement *patternElement =
     GetPatternWithAttr(nsGkAtoms::patternUnits, mContent);
-  return patternElement->mEnumAttributes[nsSVGPatternElement::PATTERNUNITS].GetAnimValue();
+  return patternElement->mEnumAttributes[nsSVGPatternElement::PATTERNUNITS].GetAnimValue(patternElement);
 }
 
 PRUint16
@@ -348,7 +348,7 @@ nsSVGPatternFrame::GetPatternContentUnits()
 {
   nsSVGPatternElement *patternElement =
     GetPatternWithAttr(nsGkAtoms::patternContentUnits, mContent);
-  return patternElement->mEnumAttributes[nsSVGPatternElement::PATTERNCONTENTUNITS].GetAnimValue();
+  return patternElement->mEnumAttributes[nsSVGPatternElement::PATTERNCONTENTUNITS].GetAnimValue(patternElement);
 }
 
 gfxMatrix

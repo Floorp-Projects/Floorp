@@ -96,10 +96,11 @@ nsXULButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 NS_IMETHODIMP
 nsXULButtonAccessible::DoAction(PRUint8 aIndex)
 {
-  if (aIndex == 0)
-    return DoCommand();
+  if (aIndex != 0)
+    return NS_ERROR_INVALID_ARG;
 
-  return NS_ERROR_INVALID_ARG;
+  DoCommand();
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -419,12 +420,14 @@ NS_IMETHODIMP nsXULCheckboxAccessible::GetActionName(PRUint8 aIndex, nsAString& 
 /**
   * Tell the checkbox to do its only action -- check( or uncheck) itself
   */
-NS_IMETHODIMP nsXULCheckboxAccessible::DoAction(PRUint8 index)
+NS_IMETHODIMP
+nsXULCheckboxAccessible::DoAction(PRUint8 aIndex)
 {
-  if (index == eAction_Click) {
-   return DoCommand();
-  }
-  return NS_ERROR_INVALID_ARG;
+  if (aIndex != eAction_Click)
+    return NS_ERROR_INVALID_ARG;
+
+  DoCommand();
+  return NS_OK;
 }
 
 /**
