@@ -375,20 +375,6 @@ protected:
   // Action helpers
 
   /**
-   * Used to describe click action target. See DoCommand() method.
-   */
-  struct nsCommandClosure
-  {
-    nsCommandClosure(nsAccessible *aAccessible, nsIContent *aContent,
-                     PRUint32 aActionIndex) :
-      accessible(aAccessible), content(aContent), actionIndex(aActionIndex) {}
-
-    nsRefPtr<nsAccessible> accessible;
-    nsCOMPtr<nsIContent> content;
-    PRUint32 actionIndex;
-  };
-
-  /**
    * Prepares click action that will be invoked in timeout.
    *
    * @note  DoCommand() prepares an action in timeout because when action
@@ -403,17 +389,12 @@ protected:
   nsresult DoCommand(nsIContent *aContent = nsnull, PRUint32 aActionIndex = 0);
 
   /**
-   * Dispatch click event to target by calling DispatchClickEvent() method.
-   *
-   * @param  aTimer    [in] timer object
-   * @param  aClosure  [in] nsCommandClosure object describing a target.
-   */
-  static void DoCommandCallback(nsITimer *aTimer, void *aClosure);
-
-  /**
    * Dispatch click event.
    */
   virtual void DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex);
+
+  NS_DECL_RUNNABLEMETHOD_ARG2(nsAccessible, DispatchClickEvent,
+                              nsCOMPtr<nsIContent>, PRUint32)
 
   //////////////////////////////////////////////////////////////////////////////
   // Helpers

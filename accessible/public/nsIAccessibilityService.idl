@@ -39,14 +39,12 @@
 #include "nsISupports.idl"
 #include "nsIAccessibleRetrieval.idl"
 
-interface nsIAccessibleEventListener;
 interface nsIDocument;
 interface nsIFrame;
 interface nsObjectFrame;
 interface nsIContent;
-interface nsITimer;
 
-[uuid(61098f48-4fcc-4b05-9cf3-c11b8efbe682)]
+[uuid(e0498def-1552-4763-8c47-6c6cc36c7aa0)]
 interface nsIAccessibilityService : nsIAccessibleRetrieval
 {
   nsIAccessible createOuterDocAccessible(in nsIDOMNode aNode);
@@ -112,16 +110,6 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
    */
   void invalidateSubtreeFor(in nsIPresShell aPresShell, in nsIContent aContent,
                             in PRUint32 aChangeType);
-
-  /**
-   *  An internal doc load event has occured. Handle the event and remove it from the list.
-   *  @param aTimer      The timer created to handle this doc load event
-   *  @param aClosure    The nsIWebProgress* for the load event
-   *  @param aEventType  The type of load event, one of: nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_START,
-   *                                                     nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE or
-   *                                                     nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED
-   */
-  void processDocLoadEvent(in nsITimer aTimer, in voidPtr aClosure, in PRUint32 aEventType);
 
   /**
    * Notify accessibility that anchor jump has been accomplished to the given
