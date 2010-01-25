@@ -2258,7 +2258,6 @@ static char* URLForInstanceWindow(NPP instance) {
 static bool
 setCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  printf("setCookie(%i)\n", (int) argCount);
   if (argCount != 1)
     return false;
   if (!NPVARIANT_IS_STRING(args[0]))
@@ -2272,8 +2271,6 @@ setCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* 
     return false;
   NPError err = NPN_SetValueForURL(npp, NPNURLVCookie, url, cookie->UTF8Characters, cookie->UTF8Length);
   free(url);
-
-  printf("  setCookie err==%i\n", err);
   
   return (err == NPERR_NO_ERROR);
 }
@@ -2281,7 +2278,6 @@ setCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* 
 static bool
 getCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  printf("getCookie(%i)\n", (int) argCount);
   if (argCount != 0)
     return false;
   
@@ -2294,7 +2290,6 @@ getCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* 
   unsigned int length = 0;
   NPError err = NPN_GetValueForURL(npp, NPNURLVCookie, url, &cookie, &length);
   free(url);
-  printf("  getCookie err==%i cookie==%s\n", err, cookie);
   if (err != NPERR_NO_ERROR || !cookie)
     return false;
   

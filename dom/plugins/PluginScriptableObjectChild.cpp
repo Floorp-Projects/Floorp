@@ -454,6 +454,8 @@ PluginScriptableObjectChild::~PluginScriptableObjectChild()
   AssertPluginThread();
 
   if (mObject) {
+    PluginModuleChild::current()->UnregisterActorForNPObject(mObject);
+
     if (mObject->_class == GetClass()) {
       NS_ASSERTION(mType == Proxy, "Wrong type!");
       static_cast<ChildNPObject*>(mObject)->parent = nsnull;
@@ -463,10 +465,6 @@ PluginScriptableObjectChild::~PluginScriptableObjectChild()
       PluginModuleChild::sBrowserFuncs.releaseobject(mObject);
     }
   }
-
-  NS_ASSERTION(!PluginModuleChild::current()->
-               NPObjectIsRegisteredForActor(this),
-               "NPObjects still registered for this actor!");
 }
 
 void
@@ -483,7 +481,7 @@ PluginScriptableObjectChild::InitializeProxy()
   NPObject* object = CreateProxyObject();
   NS_ASSERTION(object, "Failed to create object!");
 
-  if (!PluginModuleChild::current()->RegisterNPObject(object, this)) {
+  if (!PluginModuleChild::current()->RegisterActorForNPObject(object, this)) {
     NS_ERROR("Out of memory?");
   }
 
@@ -506,7 +504,7 @@ PluginScriptableObjectChild::InitializeLocal(NPObject* aObject)
   NS_ASSERTION(!mProtectCount, "Should be zero!");
   mProtectCount++;
 
-  if (!PluginModuleChild::current()->RegisterNPObject(aObject, this)) {
+  if (!PluginModuleChild::current()->RegisterActorForNPObject(aObject, this)) {
       NS_ERROR("Out of memory?");
   }
 
@@ -535,7 +533,7 @@ PluginScriptableObjectChild::CreateProxyObject()
   // own this actor. Set the reference count to 0 here so that when the object
   // dies we will send the destructor message to the child.
   object->referenceCount = 0;
-  NS_LOG_RELEASE(object, 0, "ChildNPObject");
+  NS_LOG_RELEASE(object, 0, "NPObject");
 
   object->parent = const_cast<PluginScriptableObjectChild*>(this);
   return object;
@@ -604,10 +602,19 @@ PluginScriptableObjectChild::DropNPObject()
 
   // We think we're about to be deleted, but we could be racing with the other
   // process.
-  PluginModuleChild::current()->UnregisterNPObject(mObject);
+  PluginModuleChild::current()->UnregisterActorForNPObject(mObject);
   mObject = nsnull;
 
   CallUnprotect();
+}
+
+void
+PluginScriptableObjectChild::NPObjectDestroyed()
+{
+  NS_ASSERTION(LocalObject == mType,
+               "ScriptableDeallocate should have handled this for proxies");
+  mInvalidated = true;
+  mObject = NULL;
 }
 
 bool
@@ -616,7 +623,6 @@ PluginScriptableObjectChild::AnswerInvalidate()
   AssertPluginThread();
 
   if (mInvalidated) {
-    NS_WARNING("Called invalidate more than once?!");
     return true;
   }
 
@@ -629,7 +635,6 @@ PluginScriptableObjectChild::AnswerInvalidate()
     mObject->_class->invalidate(mObject);
   }
 
-  PluginModuleChild::current()->UnregisterNPObject(mObject);
   Unprotect();
 
   return true;

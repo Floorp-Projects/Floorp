@@ -281,6 +281,15 @@ PluginModuleChild::ActorDestroy(ActorDestroyReason why)
 {
     // doesn't matter why we're being destroyed; it's up to us to
     // initiate (clean) shutdown
+
+
+
+#ifdef OS_LINUX
+    printf("TEST-UNEXPECTED-FAIL | plugin process %d | initiating shutdown\n", getpid());
+#endif
+
+
+
     XRE_ShutdownChildProcess();
 }
 
@@ -299,24 +308,31 @@ PluginModuleChild::GetUserAgent()
 }
 
 bool
-PluginModuleChild::RegisterNPObject(NPObject* aObject,
-                                    PluginScriptableObjectChild* aActor)
+PluginModuleChild::RegisterActorForNPObject(NPObject* aObject,
+                                            PluginScriptableObjectChild* aActor)
 {
     AssertPluginThread();
     NS_ASSERTION(mObjectMap.IsInitialized(), "Not initialized!");
     NS_ASSERTION(aObject && aActor, "Null pointer!");
-    NS_ASSERTION(!mObjectMap.Get(aObject, nsnull),
-                 "Reregistering the same object!");
-    return !!mObjectMap.Put(aObject, aActor);
+
+    NPObjectData* d = mObjectMap.GetEntry(aObject);
+    if (!d) {
+        NS_ERROR("NPObject not in object table");
+        return false;
+    }
+
+    d->actor = aActor;
+    return true;
 }
 
 void
-PluginModuleChild::UnregisterNPObject(NPObject* aObject)
+PluginModuleChild::UnregisterActorForNPObject(NPObject* aObject)
 {
     AssertPluginThread();
     NS_ASSERTION(mObjectMap.IsInitialized(), "Not initialized!");
     NS_ASSERTION(aObject, "Null pointer!");
-    mObjectMap.Remove(aObject);
+
+    mObjectMap.GetEntry(aObject)->actor = NULL;
 }
 
 PluginScriptableObjectChild*
@@ -325,53 +341,21 @@ PluginModuleChild::GetActorForNPObject(NPObject* aObject)
     AssertPluginThread();
     NS_ASSERTION(mObjectMap.IsInitialized(), "Not initialized!");
     NS_ASSERTION(aObject, "Null pointer!");
-    PluginScriptableObjectChild* actor;
-    return mObjectMap.Get(aObject, &actor) ? actor : nsnull;
+
+    NPObjectData* d = mObjectMap.GetEntry(aObject);
+    if (!d) {
+        NS_ERROR("Plugin using object not created with NPN_CreateObject?");
+        return NULL;
+    }
+
+    return d->actor;
 }
 
 #ifdef DEBUG
-namespace {
-
-struct SearchInfo {
-  PluginScriptableObjectChild* target;
-  bool found;
-};
-
-PLDHashOperator
-ActorSearch(const void* aKey,
-            PluginScriptableObjectChild* aData,
-            void* aUserData)
-{
-  SearchInfo* info = reinterpret_cast<SearchInfo*>(aUserData);
-  NS_ASSERTION(info->target && ! info->found, "Bad info ptr!");
-
-  if (aData == info->target) {
-    info->found = true;
-    return PL_DHASH_STOP;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-} // anonymous namespace
-
 bool
 PluginModuleChild::NPObjectIsRegistered(NPObject* aObject)
 {
-    return !!mObjectMap.Get(aObject, nsnull);
-}
-
-bool
-PluginModuleChild::NPObjectIsRegisteredForActor(
-                                            PluginScriptableObjectChild* aActor)
-{
-    AssertPluginThread();
-    NS_ASSERTION(mObjectMap.IsInitialized(), "Not initialized!");
-    NS_ASSERTION(aActor, "Null actor!");
-
-    SearchInfo info = { aActor, false };
-    mObjectMap.EnumerateRead(ActorSearch, &info);
-    return info.found;
+    return !!mObjectMap.GetEntry(aObject);
 }
 #endif
 
@@ -468,15 +452,6 @@ _utf8fromidentifier(NPIdentifier identifier);
 
 static int32_t NP_CALLBACK
 _intfromidentifier(NPIdentifier identifier);
-
-static NPObject* NP_CALLBACK
-_createobject(NPP aNPP, NPClass* aClass);
-
-static NPObject* NP_CALLBACK
-_retainobject(NPObject* npobj);
-
-static void NP_CALLBACK
-_releaseobject(NPObject* npobj);
 
 static bool NP_CALLBACK
 _invoke(NPP aNPP, NPObject* npobj, NPIdentifier method, const NPVariant *args,
@@ -594,9 +569,9 @@ const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
     mozilla::plugins::child::_identifierisstring,
     mozilla::plugins::child::_utf8fromidentifier,
     mozilla::plugins::child::_intfromidentifier,
-    mozilla::plugins::child::_createobject,
-    mozilla::plugins::child::_retainobject,
-    mozilla::plugins::child::_releaseobject,
+    PluginModuleChild::NPN_CreateObject,
+    PluginModuleChild::NPN_RetainObject,
+    PluginModuleChild::NPN_ReleaseObject,
     mozilla::plugins::child::_invoke,
     mozilla::plugins::child::_invokedefault,
     mozilla::plugins::child::_evaluate,
@@ -1049,58 +1024,6 @@ _intfromidentifier(NPIdentifier aIdentifier)
     return (NPERR_NO_ERROR == err) ? val : -1;
 }
 
-NPObject* NP_CALLBACK
-_createobject(NPP aNPP,
-              NPClass* aClass)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    AssertPluginThread();
-
-    NPObject* newObject;
-    if (aClass && aClass->allocate) {
-        newObject = aClass->allocate(aNPP, aClass);
-    }
-    else {
-        newObject = reinterpret_cast<NPObject*>(_memalloc(sizeof(NPObject)));
-    }
-
-    if (newObject) {
-        newObject->_class = aClass;
-        newObject->referenceCount = 1;
-        NS_LOG_ADDREF(newObject, 1, "ChildNPObject", sizeof(NPObject));
-    }
-    return newObject;
-}
-
-NPObject* NP_CALLBACK
-_retainobject(NPObject* aNPObj)
-{
-    AssertPluginThread();
-
-    int32_t refCnt = PR_AtomicIncrement((PRInt32*)&aNPObj->referenceCount);
-    NS_LOG_ADDREF(aNPObj, refCnt, "ChildNPObject", sizeof(NPObject));
-
-    return aNPObj;
-}
-
-void NP_CALLBACK
-_releaseobject(NPObject* aNPObj)
-{
-    AssertPluginThread();
-
-    int32_t refCnt = PR_AtomicDecrement((PRInt32*)&aNPObj->referenceCount);
-    NS_LOG_RELEASE(aNPObj, refCnt, "ChildNPObject");
-
-    if (refCnt == 0) {
-        if (aNPObj->_class && aNPObj->_class->deallocate) {
-            aNPObj->_class->deallocate(aNPObj);
-        } else {
-            _memfree(aNPObj);
-        }
-    }
-    return;
-}
-
 bool NP_CALLBACK
 _invoke(NPP aNPP,
         NPObject* aNPObj,
@@ -1284,7 +1207,7 @@ _releasevariantvalue(NPVariant* aVariant)
     else if (NPVARIANT_IS_OBJECT(*aVariant)) {
         NPObject* object = NPVARIANT_TO_OBJECT(*aVariant);
         if (object) {
-            _releaseobject(object);
+            PluginModuleChild::NPN_ReleaseObject(object);
         }
     }
     VOID_TO_NPVARIANT(*aVariant);
@@ -1590,5 +1513,113 @@ PluginModuleChild::PluginInstanceDestroyed(PluginInstanceChild* aActor,
     *rv = mFunctions.destroy(npp, 0);
     npp->ndata = 0;
 
+    DeallocNPObjectsForInstance(aActor);
+
     return true;
+}
+
+NPObject* NP_CALLBACK
+PluginModuleChild::NPN_CreateObject(NPP aNPP, NPClass* aClass)
+{
+    PLUGIN_LOG_DEBUG_FUNCTION;
+    AssertPluginThread();
+
+    PluginInstanceChild* i = InstCast(aNPP);
+
+    NPObject* newObject;
+    if (aClass && aClass->allocate) {
+        newObject = aClass->allocate(aNPP, aClass);
+    }
+    else {
+        newObject = reinterpret_cast<NPObject*>(child::_memalloc(sizeof(NPObject)));
+    }
+
+    if (newObject) {
+        newObject->_class = aClass;
+        newObject->referenceCount = 1;
+        NS_LOG_ADDREF(newObject, 1, "NPObject", sizeof(NPObject));
+    }
+
+    NPObjectData* d = static_cast<PluginModuleChild*>(i->Manager())
+        ->mObjectMap.PutEntry(newObject);
+    NS_ASSERTION(!d->instance, "New NPObject already mapped?");
+    d->instance = i;
+
+    return newObject;
+}
+
+NPObject* NP_CALLBACK
+PluginModuleChild::NPN_RetainObject(NPObject* aNPObj)
+{
+    AssertPluginThread();
+
+    int32_t refCnt = PR_AtomicIncrement((PRInt32*)&aNPObj->referenceCount);
+    NS_LOG_ADDREF(aNPObj, refCnt, "NPObject", sizeof(NPObject));
+
+    return aNPObj;
+}
+
+void NP_CALLBACK
+PluginModuleChild::NPN_ReleaseObject(NPObject* aNPObj)
+{
+    AssertPluginThread();
+
+    int32_t refCnt = PR_AtomicDecrement((PRInt32*)&aNPObj->referenceCount);
+    NS_LOG_RELEASE(aNPObj, refCnt, "NPObject");
+
+    if (refCnt == 0) {
+        DeallocNPObject(aNPObj);
+#ifdef DEBUG
+        NPObjectData* d = current()->mObjectMap.GetEntry(aNPObj);
+        NS_ASSERTION(d, "NPObject not mapped?");
+        NS_ASSERTION(!d->actor, "NPObject has actor at destruction?");
+#endif
+        current()->mObjectMap.RemoveEntry(aNPObj);
+    }
+    return;
+}
+
+void
+PluginModuleChild::DeallocNPObject(NPObject* aNPObj)
+{
+    if (aNPObj->_class && aNPObj->_class->deallocate) {
+        aNPObj->_class->deallocate(aNPObj);
+    } else {
+        child::_memfree(aNPObj);
+    }
+}
+
+PLDHashOperator
+PluginModuleChild::DeallocForInstance(NPObjectData* d, void* userArg)
+{
+    if (d->instance == static_cast<PluginInstanceChild*>(userArg)) {
+        NPObject* o = d->GetKey();
+        if (o->_class && o->_class->invalidate)
+            o->_class->invalidate(o);
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+        {
+            int32_t refCnt = o->referenceCount;
+            while (refCnt) {
+                --refCnt;
+                NS_LOG_RELEASE(o, refCnt, "NPObject");
+            }
+        }
+#endif
+
+        DeallocNPObject(o);
+
+        if (d->actor)
+            d->actor->NPObjectDestroyed();
+
+        return PL_DHASH_REMOVE;
+    }
+
+    return PL_DHASH_NEXT;
+}
+
+void
+PluginModuleChild::DeallocNPObjectsForInstance(PluginInstanceChild* instance)
+{
+    mObjectMap.EnumerateEntries(DeallocForInstance, instance);
 }

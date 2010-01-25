@@ -67,6 +67,7 @@ RPCChannel::RPCChannel(RPCListener* aListener,
   : SyncChannel(aListener),
     mPending(),
     mStack(),
+    mOutOfTurnReplies(),
     mDeferred(),
     mRemoteStackDepthGuess(0),
     mRacePolicy(aPolicy)
@@ -96,9 +97,10 @@ RPCChannel::Call(Message* msg, Message* reply)
         return false;
     }
 
-    mStack.push(*msg);
+    msg->set_seqno(NextSeqno());
     msg->set_rpc_remote_stack_depth_guess(mRemoteStackDepthGuess);
-    msg->set_rpc_local_stack_depth(StackDepth());
+    msg->set_rpc_local_stack_depth(1 + StackDepth());
+    mStack.push(*msg);
 
     mIOLoop->PostTask(
         FROM_HERE,
@@ -111,7 +113,9 @@ RPCChannel::Call(Message* msg, Message* reply)
 
         // here we're waiting for something to happen. see long
         // comment about the queue in RPCChannel.h
-        while (Connected() && mPending.empty()) {
+        while (Connected() && mPending.empty() &&
+               (mOutOfTurnReplies.empty() ||
+                mOutOfTurnReplies.top().seqno() < mStack.top().seqno())) {
             WaitForNotify();
         }
 
@@ -120,8 +124,16 @@ RPCChannel::Call(Message* msg, Message* reply)
             return false;
         }
 
-        Message recvd = mPending.front();
-        mPending.pop();
+        Message recvd;
+        if (!mOutOfTurnReplies.empty() &&
+            mOutOfTurnReplies.top().seqno() == mStack.top().seqno()) {
+            recvd = mOutOfTurnReplies.top();
+            mOutOfTurnReplies.pop();
+        }
+        else {
+            recvd = mPending.front();
+            mPending.pop();
+        }
 
         if (!recvd.is_sync() && !recvd.is_rpc()) {
             MutexAutoUnlock unlock(mMutex);
@@ -137,16 +149,23 @@ RPCChannel::Call(Message* msg, Message* reply)
             continue;
         }
 
-        NS_ABORT_IF_FALSE(recvd.is_rpc(), "wtf???");
+        RPC_ASSERT(recvd.is_rpc(), "wtf???");
 
         if (recvd.is_reply()) {
             RPC_ASSERT(0 < mStack.size(), "invalid RPC stack");
 
             const Message& outcall = mStack.top();
 
+            if (recvd.seqno() < outcall.seqno()) {
+                mOutOfTurnReplies.push(recvd);
+                continue;
+            }
+
             // FIXME/cjones: handle error
             RPC_ASSERT(
-                recvd.type() == (outcall.type()+1) || recvd.is_reply_error(),
+                recvd.is_reply_error() ||
+                (recvd.type() == (outcall.type()+1) &&
+                 recvd.seqno() == outcall.seqno()),
                 "somebody's misbehavin'", "rpc", true);
 
             // we received a reply to our most recent outstanding
@@ -158,13 +177,20 @@ RPCChannel::Call(Message* msg, Message* reply)
                 *reply = recvd;
             }
 
-            if (0 == StackDepth())
+            if (0 == StackDepth()) {
                 // we may have received new messages while waiting for
                 // our reply.  because we were awaiting a reply,
                 // StackDepth > 0, and the IO thread didn't enqueue
                 // OnMaybeDequeueOne() events for us.  so to avoid
                 // "losing" the new messages, we do that now.
                 EnqueuePendingMessages();
+
+                
+                RPC_ASSERT(
+                    mOutOfTurnReplies.empty(),
+                    "still have pending replies with no pending out-calls",
+                    "rpc", true);
+            }
 
             // finished with this RPC stack frame
             return !isError;
@@ -355,6 +381,8 @@ RPCChannel::DispatchIncall(const Message& call)
         reply->set_reply_error();
     }
 
+    reply->set_seqno(call.seqno());
+
     mIOLoop->PostTask(
         FROM_HERE,
         NewRunnableMethod(this, &RPCChannel::OnSend, reply));
@@ -380,6 +408,8 @@ RPCChannel::DebugAbort(const char* file, int line, const char* cond,
             mRemoteStackDepthGuess);
     fprintf(stderr, "  deferred stack size: %lu\n",
             mDeferred.size());
+    fprintf(stderr, "  out-of-turn RPC replies stack size: %lu\n",
+            mOutOfTurnReplies.size());
     fprintf(stderr, "  Pending queue size: %lu, front to back:\n",
             mPending.size());
     while (!mPending.empty()) {
