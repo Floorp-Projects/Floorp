@@ -86,7 +86,7 @@
       <label id="distributionId"/>
       <description id="copyright">
         <label
-        class="text-link" href="&licenseLink;"
+        class="text-link" href="about:license"
         >&licenseLinkText;</label>&licenseLinkSuffix;&logoTrademark;
       </description>
       <textbox id="userAgent" multiline="true" readonly="true" flex="1"/>
