@@ -386,7 +386,7 @@ protected:
    * @param  aContent      [in, optional] element to click
    * @param  aActionIndex  [in, optional] index of accessible action
    */
-  nsresult DoCommand(nsIContent *aContent = nsnull, PRUint32 aActionIndex = 0);
+  void DoCommand(nsIContent *aContent = nsnull, PRUint32 aActionIndex = 0);
 
   /**
    * Dispatch click event.
