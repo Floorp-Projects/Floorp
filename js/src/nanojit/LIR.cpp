@@ -3016,7 +3016,7 @@ namespace nanojit
             uint32_t tableSize = ins->getTableSize();
             NanoAssert(tableSize > 0);
             for (uint32_t i = 0; i < tableSize; i++) {
-                LIns* target = ins->getTarget();
+                LIns* target = ins->getTarget(i);
                 NanoAssert(target);
                 NanoAssert(target->isop(LIR_label));
             }
