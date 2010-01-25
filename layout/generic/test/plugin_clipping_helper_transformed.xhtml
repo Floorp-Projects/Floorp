@@ -2,8 +2,6 @@
 <?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
 <html xmlns="http://www.w3.org/1999/xhtml" title="Test Plugin Clipping: Plugins in Transforms">
 <head>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <style>
   embed { width:300px; height:200px; display:block; }
   </style>
@@ -33,6 +31,9 @@ function runTests() {
   // p1 and p2 are both in a transformed context so they should be hidden.
   checkClipRegionNoBounds("p1", []);
   checkClipRegionNoBounds("p2", []);
+
+  window.opener.SimpleTest.finish();
+  window.close();
 }
 
 ]]>

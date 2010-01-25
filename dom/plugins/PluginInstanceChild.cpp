@@ -884,16 +884,7 @@ PluginInstanceChild::DeallocPPluginScriptableObject(
     PPluginScriptableObjectChild* aObject)
 {
     AssertPluginThread();
-
-    PluginScriptableObjectChild* actor =
-        reinterpret_cast<PluginScriptableObjectChild*>(aObject);
-
-    NPObject* object = actor->GetObject(false);
-    if (object) {
-        PluginModuleChild::current()->UnregisterNPObject(object);
-    }
-
-    delete actor;
+    delete aObject;
     return true;
 }
 
