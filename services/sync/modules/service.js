@@ -432,10 +432,15 @@ WeaveSvc.prototype = {
   _findCluster: function _findCluster() {
     this._log.debug("Finding cluster for user " + this.username);
 
+    let fail;
     let res = new Resource(this.userAPI + this.username + "/node/weave");
     try {
       let node = res.get();
       switch (node.status) {
+        case 400:
+          Status.login = LOGIN_FAILED_LOGIN_REJECTED;
+          fail = "Find cluster denied: " + this._errorStr(node);
+          break;
         case 404:
           this._log.debug("Using serverURL as data cluster (multi-cluster support disabled)");
           return this.serverURL;
@@ -451,8 +456,9 @@ WeaveSvc.prototype = {
     } catch (e) {
       this._log.debug("Network error on findCluster");
       Status.login = LOGIN_FAILED_NETWORK_ERROR;
-      throw e;
+      fail = e;
     }
+    throw fail;
   },
 
   // gets cluster from central LDAP server and sets this.clusterURL
