@@ -2152,7 +2152,7 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
   RECT rc;
   if (aFullScreen) {
     SetForegroundWindow(mWnd);
-    SHFullScreen(mWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON);
+    SHFullScreen(mWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON | SHFS_HIDESIPBUTTON);
     SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
   }
   else {
@@ -4210,7 +4210,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 #if defined(WINCE_HAVE_SOFTKB)
         if (mIsTopWidgetWindow && sSoftKeyboardState)
           nsWindowCE::ToggleSoftKB(mWnd, fActive);
-        if (nsWindowCE::sShowSIPButton != TRI_TRUE && WA_INACTIVE != fActive) {
+        if (nsWindowCE::sShowSIPButton == TRI_FALSE && WA_INACTIVE != fActive) {
           HWND hWndSIPB = FindWindowW(L"MS_SIPBUTTON", NULL ); 
           if (hWndSIPB)
             ShowWindow(hWndSIPB, SW_HIDE);
@@ -4348,10 +4348,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       getWheelInfo = PR_TRUE;
 #else
       switch (wParam) {
-        case SPI_SIPMOVE:
         case SPI_SETSIPINFO:
         case SPI_SETCURRENTIM:
-          nsWindowCE::NotifySoftKbObservers(mWnd);
+          nsWindowCE::OnSoftKbSettingsChange(mWnd);
           break;
         case SETTINGCHANGE_RESET:
           if (mWindowType == eWindowType_invisible) {
@@ -5956,6 +5955,11 @@ void nsWindow::OnDestroy()
   // Reset transparency
   if (eTransparencyTransparent == mTransparencyMode)
     SetupTranslucentWindowMemoryBitmap(eTransparencyOpaque);
+#endif
+
+#if defined(WINCE_HAVE_SOFTKB)
+  // Revert the changes made for the software keyboard settings
+  nsWindowCE::ResetSoftKB(mWnd);
 #endif
 
   // Clear the main HWND.
