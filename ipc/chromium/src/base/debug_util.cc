@@ -45,6 +45,7 @@ EnvironmentLog::EnvironmentLog(const char* varname)
   : fd_(NULL)
 {
   const char *e = getenv(varname);
+  printf("EnvironmentLog<%p>(%s)\n", (void*) this, e ? e : "(null)");
   if (e && *e) {
     if (!strcmp(e, "-")) {
       fd_ = fdopen(dup(STDOUT_FILENO), "a");
@@ -57,6 +58,7 @@ EnvironmentLog::EnvironmentLog(const char* varname)
 
 EnvironmentLog::~EnvironmentLog()
 {
+  printf("~EnvironmentLog<%p>\n", (void*) this);
   if (fd_)
     fclose(fd_);
 }
