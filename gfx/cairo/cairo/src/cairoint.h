@@ -555,6 +555,12 @@ extern const cairo_private struct _cairo_font_face_backend _cairo_win32_font_fac
 
 #endif
 
+#if CAIRO_HAS_DWRITE_FONT
+
+extern const cairo_private struct _cairo_font_face_backend _cairo_dwrite_font_face_backend;
+
+#endif
+
 #if CAIRO_HAS_QUARTZ_FONT
 
 extern const cairo_private struct _cairo_font_face_backend _cairo_quartz_font_face_backend;
@@ -1008,7 +1014,12 @@ typedef struct _cairo_traps {
 #define CAIRO_FT_FONT_FAMILY_DEFAULT     ""
 #define CAIRO_USER_FONT_FAMILY_DEFAULT     "@cairo:"
 
-#if   CAIRO_HAS_WIN32_FONT
+#if   CAIRO_HAS_DWRITE_FONT
+
+#define CAIRO_FONT_FAMILY_DEFAULT CAIRO_WIN32_FONT_FAMILY_DEFAULT
+#define CAIRO_FONT_FACE_BACKEND_DEFAULT &_cairo_dwrite_font_face_backend
+
+#elif CAIRO_HAS_WIN32_FONT
 
 #define CAIRO_FONT_FAMILY_DEFAULT CAIRO_WIN32_FONT_FAMILY_DEFAULT
 #define CAIRO_FONT_FACE_BACKEND_DEFAULT &_cairo_win32_font_face_backend
@@ -2621,7 +2632,7 @@ cairo_private int
 _cairo_ucs4_to_utf8 (uint32_t    unicode,
 		     char       *utf8);
 
-#if CAIRO_HAS_WIN32_FONT || CAIRO_HAS_QUARTZ_FONT || CAIRO_HAS_PDF_OPERATORS
+#if CAIRO_HAS_WIN32_FONT || CAIRO_HAS_QUARTZ_FONT || CAIRO_HAS_PDF_OPERATORS || CAIRO_HAS_DW_FONT
 # define CAIRO_HAS_UTF8_TO_UTF16 1
 #endif
 #if CAIRO_HAS_UTF8_TO_UTF16

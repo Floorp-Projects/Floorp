@@ -3339,12 +3339,8 @@ function BrowserCustomizeToolbar()
     else
       sheetFrame.setAttribute("src", customizeURL);
 
-    // XXXmano: there's apparently no better way to get this when the iframe is
-    // hidden
-    var sheetWidth = sheetFrame.style.width.match(/([0-9]+)px/)[1];
     document.getElementById("customizeToolbarSheetPopup")
-            .openPopup(gNavToolbox, "after_start",
-                       (window.innerWidth - sheetWidth) / 2, 0);
+            .openPopup(gNavToolbox, "after_start", 0, 0);
 
     return sheetFrame.contentWindow;
   } else {
@@ -4524,6 +4520,13 @@ nsBrowserAccess.prototype = {
           return null;
         }
 
+        if (isExternal && (!aURI || aURI.spec == "about:blank")) {
+          win.BrowserOpenTab(); // this also focuses the location bar
+          win.focus();
+          newWindow = win.content;
+          break;
+        }
+
         let loadInBackground = gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground");
         let referrer = aOpener ? makeURI(aOpener.location.href) : null;
 
@@ -5276,8 +5279,10 @@ function stylesheetFillPopup(menuPopup) {
       continue;
 
     // Skip any stylesheets that don't match the screen media type.
-    let (media = currentStyleSheet.media.mediaText.toLowerCase()) {
-      if (media && (media.indexOf("screen") == -1) && (media.indexOf("all") == -1))
+    if (currentStyleSheet.media.length > 0) {
+      let media = currentStyleSheet.media.mediaText.split(", ");
+      if (media.indexOf("screen") == -1 &&
+          media.indexOf("all") == -1)
         continue;
     }
 

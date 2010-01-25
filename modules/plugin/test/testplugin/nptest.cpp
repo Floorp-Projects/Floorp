@@ -49,6 +49,7 @@
 #define getpid _getpid
 #else
 #include <unistd.h>
+#include <pthread.h>
 #endif
 
  using namespace std;
@@ -95,6 +96,8 @@ static NPClass sNPClass;
 static void
 testplugin_URLNotify(NPP instance, const char* url, NPReason reason,
                      void* notifyData);
+void
+asyncCallback(void* cookie);
 
 //
 // identifiers
@@ -118,7 +121,6 @@ static bool getClipRegionRectEdge(NPObject* npobj, const NPVariant* args, uint32
 static bool startWatchingInstanceCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getInstanceCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool stopWatchingInstanceCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-static bool unscheduleAllTimers(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getLastMouseX(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getLastMouseY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getPaintCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -138,6 +140,7 @@ static bool enableFPExceptions(NPObject* npobj, const NPVariant* args, uint32_t 
 static bool setCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getAuthInfo(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool asyncCallbackTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -155,7 +158,6 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "startWatchingInstanceCount",
   "getInstanceCount",
   "stopWatchingInstanceCount",
-  "unscheduleAllTimers",
   "getLastMouseX",
   "getLastMouseY",
   "getPaintCount",
@@ -175,6 +177,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "setCookie",
   "getCookie",
   "getAuthInfo",
+  "asyncCallbackTest",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
@@ -193,7 +196,6 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   startWatchingInstanceCount,
   getInstanceCount,
   stopWatchingInstanceCount,
-  unscheduleAllTimers,
   getLastMouseX,
   getLastMouseY,
   getPaintCount,
@@ -213,6 +215,7 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   setCookie,
   getCookie,
   getAuthInfo,
+  asyncCallbackTest,
 };
 
 struct URLNotifyData
@@ -233,6 +236,30 @@ static URLNotifyData kNotifyData = {
 static const char* SUCCESS_STRING = "pass";
 
 static bool sIdentifiersInitialized = false;
+
+static uint32_t timerEventCount = 0;
+
+struct timerEvent {
+  int32_t timerIdReceive;
+  int32_t timerIdSchedule;
+  uint32_t timerInterval;
+  bool timerRepeat;
+  int32_t timerIdUnschedule;
+};
+static timerEvent timerEvents[] = {
+  {-1, 0, 200, false, -1},
+  {0, 0, 400, false, -1},
+  {0, 0, 200, true, -1},
+  {0, 1, 100, true, -1},
+  {1, -1, 0, false, -1},
+  {0, -1, 0, false, -1},
+  {1, -1, 0, false, -1},
+  {1, -1, 0, false, -1},
+  {0, -1, 0, false, 0},
+  {1, 2, 600, false, 1},
+  {2, -1, 0, false, 2},
+};
+static uint32_t totalTimerEvents = sizeof(timerEvents) / sizeof(timerEvent);
 
 /**
  * Incremented for every startWatchingInstanceCount.
@@ -1348,6 +1375,12 @@ NPN_GetAuthenticationInfo(NPP instance,
       username, ulen, password, plen);
 }
 
+void
+NPN_PluginThreadAsyncCall(NPP plugin, void (*func)(void*), void* userdata)
+{
+  return sBrowserFuncs->pluginthreadasynccall(plugin, func, userdata);
+}
+
 //
 // npruntime object functions
 //
@@ -1726,49 +1759,6 @@ identifierToStringTest(NPObject* npobj, const NPVariant* args, uint32_t argCount
   return true;
 }
 
-static void timerCallback(NPP npp, uint32_t timerID)
-{
-  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-
-  NPObject* windowObject;
-  NPN_GetValue(npp, NPNVWindowNPObject, &windowObject);
-  if (!windowObject)
-    return;
-
-  NPVariant rval;
-  if (timerID == id->timerID1)
-    NPN_Invoke(npp, windowObject, NPN_GetStringIdentifier("shortTimerFired"), NULL, 0, &rval);
-  else if (timerID == id->timerID2)
-    NPN_Invoke(npp, windowObject, NPN_GetStringIdentifier("longTimerFired"), NULL, 0, &rval);
-
-  NPN_ReleaseObject(windowObject);
-}
-
-static bool
-timerTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
-{
-  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
-  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-
-  NPObject* windowObject;
-  NPN_GetValue(npp, NPNVWindowNPObject, &windowObject);
-  if (!windowObject)
-    return false;
-
-  id->timerID1 = NPN_ScheduleTimer(npp, 50, false, timerCallback);
-  id->timerID2 = NPN_ScheduleTimer(npp, 150, true, timerCallback);
-
-  NPVariant rval;
-  NPVariant uniqueIDArgs[1];
-  BOOLEAN_TO_NPVARIANT((id->timerID1 != id->timerID2), uniqueIDArgs[0]);
-  NPN_Invoke(npp, windowObject, NPN_GetStringIdentifier("uniqueID"), uniqueIDArgs, 1, &rval);
-  NPN_ReleaseVariantValue(&uniqueIDArgs[0]);
-
-  NPN_ReleaseObject(windowObject);
-
-  return true;
-}
-
 static bool
 queryPrivateModeState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
@@ -1895,20 +1885,6 @@ stopWatchingInstanceCount(NPObject* npobj, const NPVariant* args, uint32_t argCo
     return false;
 
   sWatchingInstanceCount = false;
-  return true;
-}
-
-static bool
-unscheduleAllTimers(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
-{
-  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
-  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-
-  NPN_UnscheduleTimer(npp, id->timerID1);
-  id->timerID1 = 0;
-  NPN_UnscheduleTimer(npp, id->timerID2);
-  id->timerID2 = 0;
-
   return true;
 }
 
@@ -2345,6 +2321,128 @@ getAuthInfo(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant
 
   NPN_MemFree(username);
   NPN_MemFree(password);
+  
+  return true;
+}
+
+static void timerCallback(NPP npp, uint32_t timerID)
+{
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  timerEventCount++;
+  timerEvent event = timerEvents[timerEventCount];
+
+  NPObject* windowObject;
+  NPN_GetValue(npp, NPNVWindowNPObject, &windowObject);
+  if (!windowObject)
+    return;
+
+  NPVariant rval;
+  if (timerID != id->timerID[event.timerIdReceive])
+    id->timerTestResult = false;
+
+  if (timerEventCount == totalTimerEvents - 1) {
+    NPVariant arg;
+    BOOLEAN_TO_NPVARIANT(id->timerTestResult, arg);
+    NPN_Invoke(npp, windowObject, NPN_GetStringIdentifier(id->timerTestScriptCallback.c_str()), &arg, 1, &rval);
+    NPN_ReleaseVariantValue(&arg);
+  }
+
+  NPN_ReleaseObject(windowObject);
+  
+  if (event.timerIdSchedule > -1) {
+    id->timerID[event.timerIdSchedule] = NPN_ScheduleTimer(npp, event.timerInterval, event.timerRepeat, timerCallback);
+  }
+  if (event.timerIdUnschedule > -1) {
+    NPN_UnscheduleTimer(npp, id->timerID[event.timerIdUnschedule]);
+  }
+}
+
+static bool
+timerTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  timerEventCount = 0;
+
+  if (argCount < 1 || !NPVARIANT_IS_STRING(args[0]))
+    return false;
+  const NPString* argstr = &NPVARIANT_TO_STRING(args[0]);
+  id->timerTestScriptCallback = argstr->UTF8Characters;
+
+  id->timerTestResult = true;
+  timerEvent event = timerEvents[timerEventCount];
+    
+  id->timerID[event.timerIdSchedule] = NPN_ScheduleTimer(npp, event.timerInterval, event.timerRepeat, timerCallback);
+  
+  return id->timerID[event.timerIdSchedule] != 0;
+}
+
+#ifdef XP_WIN
+void
+ThreadProc(void* cookie)
+#else
+void*
+ThreadProc(void* cookie)
+#endif
+{
+  NPObject* npobj = (NPObject*)cookie;
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  id->asyncTestPhase = 1;
+  NPN_PluginThreadAsyncCall(npp, asyncCallback, (void*)npobj);
+#ifndef XP_WIN
+  return NULL;
+#endif
+}
+
+void
+asyncCallback(void* cookie)
+{
+  NPObject* npobj = (NPObject*)cookie;
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+
+  switch (id->asyncTestPhase) {
+    // async callback triggered from same thread
+    case 0:
+#ifdef XP_WIN
+      if (_beginthread(ThreadProc, 0, (void*)npobj) == -1)
+        id->asyncCallbackResult = false;
+#else
+      pthread_t tid;
+      if (pthread_create(&tid, 0, ThreadProc, (void*)npobj))
+        id->asyncCallbackResult = false;
+#endif
+      break;
+    
+    // async callback triggered from different thread
+    default:
+      NPObject* windowObject;
+      NPN_GetValue(npp, NPNVWindowNPObject, &windowObject);
+      if (!windowObject)
+        return;
+      NPVariant arg, rval;
+      BOOLEAN_TO_NPVARIANT(id->asyncCallbackResult, arg);
+      NPN_Invoke(npp, windowObject, NPN_GetStringIdentifier(id->asyncTestScriptCallback.c_str()), &arg, 1, &rval);
+      NPN_ReleaseVariantValue(&arg);
+      break;
+  }
+}
+
+static bool
+asyncCallbackTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+
+  if (argCount < 1 || !NPVARIANT_IS_STRING(args[0]))
+    return false;
+  const NPString* argstr = &NPVARIANT_TO_STRING(args[0]);
+  id->asyncTestScriptCallback = argstr->UTF8Characters;
+  
+  id->asyncTestPhase = 0;
+  id->asyncCallbackResult = true;
+  NPN_PluginThreadAsyncCall(npp, asyncCallback, (void*)npobj);
   
   return true;
 }

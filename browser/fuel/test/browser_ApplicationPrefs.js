@@ -140,13 +140,13 @@ function test() {
   try {
     prev.value = "test value";
 
-    ok(false, "A locked preference should not be able to be modified.");
+    ok(false, "A locked preference could be modified.");
   } catch(e){
     ok(true, "A locked preference should not be able to be modified.");
   }
 
   pref.locked = false;
-  ok(!pref.locked, "A single preference should not be locked.");
+  ok(!pref.locked, "A single preference is unlocked.");
 
   // check for change event when setting a value
   waitForExplicitFinish();
@@ -155,7 +155,7 @@ function test() {
 }
 
 function onPrefChange(evt) {
-  is(evt.data, testdata.dummy, "Check 'Application.prefs.set' fired a change event");
+  is(evt.data, testdata.dummy, "Check 'Application.prefs.setValue' fired a change event");
   Application.prefs.events.removeListener("change", onPrefChange);
 
   // We are removing the old listener after adding the new listener so we can test that
@@ -168,7 +168,7 @@ function onPrefChange(evt) {
 }
 
 function onPrefChange2(evt) {
-  is(evt.data, testdata.dummy, "Check 'Application.prefs.set' fired a change event for a single preference");
+  is(evt.data, testdata.dummy, "Check 'Application.prefs.setValue' fired a change event for a single preference");
   Application.prefs.events.removeListener("change", onPrefChange2);
 
   finish();

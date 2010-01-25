@@ -2165,7 +2165,11 @@ static PRBool
 NeedFrameFor(nsIFrame*   aParentFrame,
              nsIContent* aChildContent) 
 {
-  NS_PRECONDITION(!aChildContent->GetPrimaryFrame(), "Why did we get called?");
+  // XXX the GetContent() != aChildContent check is needed due to bug 135040.
+  // Remove it once that's fixed.
+  NS_PRECONDITION(!aChildContent->GetPrimaryFrame() ||
+                  aChildContent->GetPrimaryFrame()->GetContent() != aChildContent,
+                  "Why did we get called?");
 
   // don't create a whitespace frame if aParentFrame doesn't want it.
   // always create frames for children in generated content. counter(),

@@ -64,7 +64,6 @@
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
-#include "nsITimer.h"
 #include "nsRootAccessible.h"
 #include "nsFocusManager.h"
 #include "nsIObserverService.h"
@@ -75,7 +74,6 @@
 
 nsIStringBundle *nsAccessNode::gStringBundle = 0;
 nsIStringBundle *nsAccessNode::gKeyStringBundle = 0;
-nsITimer *nsAccessNode::gDoCommandTimer = 0;
 nsIDOMNode *nsAccessNode::gLastFocusedNode = 0;
 #ifdef DEBUG
 PRBool nsAccessNode::gIsAccessibilityActive = PR_FALSE;
@@ -310,7 +308,6 @@ void nsAccessNode::ShutdownXPAccessibility()
 
   NS_IF_RELEASE(gStringBundle);
   NS_IF_RELEASE(gKeyStringBundle);
-  NS_IF_RELEASE(gDoCommandTimer);
   NS_IF_RELEASE(gLastFocusedNode);
 
   nsApplicationAccessibleWrap::Unload();

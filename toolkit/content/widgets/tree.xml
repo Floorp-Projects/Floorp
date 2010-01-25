@@ -1376,7 +1376,7 @@
       <xul:image class="tree-columnpicker-icon"/>
       <xul:menupopup anonid="popup">
         <xul:menuseparator anonid="menuseparator"/>
-        <xul:menuitem anonid="menuitem" label="&restoreNaturalOrder.label;"/>
+        <xul:menuitem anonid="menuitem" label="&restoreColumnOrder.label;"/>
       </xul:menupopup>
     </content>
     

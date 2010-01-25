@@ -86,6 +86,14 @@ NPN_GetAuthenticationInfo().  Returns a string "username|password" for
 the specified auth criteria, or throws an exception if no data is
 available.
 
+* timerTest(callback) - initiates tests of NPN_ScheduleTimer &
+NPN_UnscheduleTimer.  When finished, calls the script callback
+with a boolean value, indicating whether the tests were successful.
+
+* asyncCallbackTest(callback) - initiates tests of
+NPN_PluginThreadAsyncCall.  When finished, calls the script callback
+with a boolean value, indicating whether the tests were successful.
+
 == Private browsing ==
 
 The test plugin object supports the following scriptable methods:

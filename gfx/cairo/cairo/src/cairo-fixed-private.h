@@ -50,6 +50,7 @@
 
 #define CAIRO_FIXED_ONE        ((cairo_fixed_t)(1 << CAIRO_FIXED_FRAC_BITS))
 #define CAIRO_FIXED_ONE_DOUBLE ((double)(1 << CAIRO_FIXED_FRAC_BITS))
+#define CAIRO_FIXED_ONE_FLOAT  ((float)(1 << CAIRO_FIXED_FRAC_BITS))
 #define CAIRO_FIXED_EPSILON    ((cairo_fixed_t)(1))
 
 #define CAIRO_FIXED_FRAC_MASK  (((cairo_fixed_unsigned_t)(-1)) >> (CAIRO_FIXED_BITS - CAIRO_FIXED_FRAC_BITS))
@@ -139,6 +140,12 @@ static inline double
 _cairo_fixed_to_double (cairo_fixed_t f)
 {
     return ((double) f) / CAIRO_FIXED_ONE_DOUBLE;
+}
+
+static inline float
+_cairo_fixed_to_float (cairo_fixed_t f)
+{
+    return ((float) f) / CAIRO_FIXED_ONE_FLOAT;
 }
 
 static inline int

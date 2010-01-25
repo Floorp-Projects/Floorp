@@ -144,9 +144,6 @@ class nsJAR : public nsIZipReader, public nsIJAR
     PRInt64                  mMtime;
     PRInt32                  mTotalItemsInManifest;
     
-    //-- Private functions
-    PRFileDesc* OpenFile();
-
     nsresult ParseManifest();
     void     ReportError(const char* aFilename, PRInt16 errorCode);
     nsresult LoadEntry(const char* aFilename, char** aBuf, 
