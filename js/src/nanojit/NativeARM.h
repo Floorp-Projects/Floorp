@@ -79,7 +79,7 @@ namespace nanojit
 #define NJ_MAX_PARAMETERS               16
 #define NJ_ALIGN_STACK                  8
 #define NJ_JTBL_SUPPORTED               1
-#define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
+#define NJ_EXPANDED_LOADSTORE_SUPPORTED 1
 #define NJ_F2I_SUPPORTED                1
 
 #define NJ_CONSTANT_POOLS
@@ -131,8 +131,7 @@ typedef enum {
     LastReg = D6,
     deprecated_UnknownReg = 32,
 
-    // special value referring to S14
-    FpSingleScratch = 24
+    S14 = 24
 } Register;
 
 /* ARM condition codes */
@@ -621,13 +620,26 @@ enum {
         asm_output("ldrb %s, [%s,#%d]", gpn(_d),gpn(_n),(_off));        \
     } while(0)
 
-// Load and sign-extend a half word (16 bits). The offset range is ±255, and
-// must be aligned to two bytes on some architectures, but we never make
-// unaligned accesses so a simple assertion is sufficient here.
-#define LDRH(_d,_n,_off) do {                                           \
-        /* TODO: This is actually LDRSH. Is this correct? */            \
+// Load a byte (8 bits), sign-extend to 32 bits. The offset range is
+// ±255 (different from LDRB, same as LDRH/LDRSH)
+#define LDRSB(_d,_n,_off) do {                                          \
         NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
-        NanoAssert(((_off) & ~1) == (_off));                            \
+        underrunProtect(4);                                             \
+        if (_off < 0) {                                                 \
+            NanoAssert(isU8(-_off));                                    \
+            *(--_nIns) = (NIns)( COND_AL | (0x15<<20) | ((_n)<<16) | ((_d)<<12) | ((0xD)<<4) | (((-_off)&0xf0)<<4) | ((-_off)&0xf) ); \
+        } else {                                                        \
+            NanoAssert(isU8(_off));                                     \
+            *(--_nIns) = (NIns)( COND_AL | (0x1D<<20) | ((_n)<<16) | ((_d)<<12) | ((0xD)<<4) | (((_off)&0xf0)<<4) | ((_off)&0xf) ); \
+        }                                                               \
+        asm_output("ldrsb %s, [%s,#%d]", gpn(_d),gpn(_n),(_off));       \
+    } while(0)
+
+// Load and sign-extend a half word (16 bits). The offset range is ±255, and
+// must be aligned to two bytes on some architectures (the caller is responsible
+// for ensuring appropriate alignment)
+#define LDRH(_d,_n,_off) do {                                           \
+        NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
         underrunProtect(4);                                             \
         if (_off < 0) {                                                 \
             NanoAssert(isU8(-_off));                                    \
@@ -636,9 +648,26 @@ enum {
             NanoAssert(isU8(_off));                                     \
             *(--_nIns) = (NIns)( COND_AL | (0x1D<<20) | ((_n)<<16) | ((_d)<<12) | ((0xB)<<4) | (((_off)&0xf0)<<4) | ((_off)&0xf) ); \
         }                                                               \
+        asm_output("ldrh %s, [%s,#%d]", gpn(_d),gpn(_n),(_off));       \
+    } while(0)
+
+// Load and sign-extend a half word (16 bits). The offset range is ±255, and
+// must be aligned to two bytes on some architectures (the caller is responsible
+// for ensuring appropriate alignment)
+#define LDRSH(_d,_n,_off) do {                                          \
+        NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
+        underrunProtect(4);                                             \
+        if (_off < 0) {                                                 \
+            NanoAssert(isU8(-_off));                                    \
+            *(--_nIns) = (NIns)( COND_AL | (0x15<<20) | ((_n)<<16) | ((_d)<<12) | ((0xF)<<4) | (((-_off)&0xf0)<<4) | ((-_off)&0xf) ); \
+        } else {                                                        \
+            NanoAssert(isU8(_off));                                     \
+            *(--_nIns) = (NIns)( COND_AL | (0x1D<<20) | ((_n)<<16) | ((_d)<<12) | ((0xF)<<4) | (((_off)&0xf0)<<4) | ((_off)&0xf) ); \
+        }                                                               \
         asm_output("ldrsh %s, [%s,#%d]", gpn(_d),gpn(_n),(_off));       \
     } while(0)
 
+// Valid offset for STR and STRB is +/- 4095, STRH only has +/- 255
 #define STR(_d,_n,_off) do {                                            \
         NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
         NanoAssert(isU12(_off) || isU12(-_off));                        \
@@ -646,6 +675,29 @@ enum {
         if ((_off)<0)   *(--_nIns) = (NIns)( COND_AL | (0x50<<20) | ((_n)<<16) | ((_d)<<12) | ((-(_off))&0xFFF) ); \
         else            *(--_nIns) = (NIns)( COND_AL | (0x58<<20) | ((_n)<<16) | ((_d)<<12) | ((_off)&0xFFF) ); \
         asm_output("str %s, [%s, #%d]", gpn(_d), gpn(_n), (_off)); \
+    } while(0)
+
+#define STRB(_d,_n,_off) do {                                           \
+        NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
+        NanoAssert(isU12(_off) || isU12(-_off));                        \
+        underrunProtect(4);                                             \
+        if ((_off)<0)   *(--_nIns) = (NIns)( COND_AL | (0x54<<20) | ((_n)<<16) | ((_d)<<12) | ((-(_off))&0xFFF) ); \
+        else            *(--_nIns) = (NIns)( COND_AL | (0x5C<<20) | ((_n)<<16) | ((_d)<<12) | ((_off)&0xFFF) ); \
+        asm_output("strb %s, [%s, #%d]", gpn(_d), gpn(_n), (_off)); \
+    } while(0)
+
+// Only +/- 255 range, unlike STRB/STR
+#define STRH(_d,_n,_off) do {                                           \
+        NanoAssert(IsGpReg(_d) && IsGpReg(_n));                         \
+        underrunProtect(4);                                             \
+        if ((_off)<0) {                                                 \
+            NanoAssert(isU8(-_off));                                    \
+            *(--_nIns) = (NIns)( COND_AL | (0x14<<20) | ((_n)<<16) | ((_d)<<12) | (((-(_off))&0xF0)<<4) | (0xB<<4) | ((-(_off))&0xF) ); \
+        } else {                                                        \
+            NanoAssert(isU8(_off));                                     \
+            *(--_nIns) = (NIns)( COND_AL | (0x1C<<20) | ((_n)<<16) | ((_d)<<12) | (((_off)&0xF0)<<4) | (0xB<<4) | ((_off)&0xF) ); \
+        }                                                               \
+        asm_output("strh %s, [%s, #%d]", gpn(_d), gpn(_n), (_off));     \
     } while(0)
 
 // Encode a breakpoint. The ID is not important and is ignored by the
@@ -813,11 +865,11 @@ enum {
         asm_output("fmrdh %s,%s", gpn(_Rd), gpn(_Dn));                  \
     } while (0)
 
-#define FSTD(_Dd,_Rn,_offs) do {                                        \
+#define FSTD_allowD7(_Dd,_Rn,_offs,_allowD7) do {                               \
         underrunProtect(4);                                             \
         NanoAssert(ARM_VFP);                                            \
         NanoAssert((((_offs) & 3) == 0) && isS8((_offs) >> 2));         \
-        NanoAssert(IsFpReg(_Dd) && !IsFpReg(_Rn));                      \
+        NanoAssert((IsFpReg(_Dd) || ((_allowD7) && (_Dd) == D7)) && !IsFpReg(_Rn));     \
         int negflag = 1<<23;                                            \
         intptr_t offs = (_offs);                                        \
         if (_offs < 0) {                                                \
@@ -827,6 +879,9 @@ enum {
         *(--_nIns) = (NIns)( COND_AL | (0xD0<<20) | ((_Rn)<<16) | (FpRegNum(_Dd)<<12) | (0xB<<8) | negflag | ((offs>>2)&0xff) ); \
         asm_output("fstd %s,%s(%d)", gpn(_Dd), gpn(_Rn), _offs);    \
     } while (0)
+
+#define FSTD(_Dd,_Rn,_offs) \
+        FSTD_allowD7(_Dd,_Rn,_offs,0)
 
 #define FLDD_chk(_Dd,_Rn,_offs,_chk) do {                               \
         if(_chk) underrunProtect(4);                                    \
@@ -844,29 +899,12 @@ enum {
     } while (0)
 #define FLDD(_Dd,_Rn,_offs) FLDD_chk(_Dd,_Rn,_offs,1)
 
-#define FSITOD(_Dd,_Sm) do {                                            \
-        underrunProtect(4);                                             \
-        NanoAssert(ARM_VFP);                                            \
-        NanoAssert(IsFpReg(_Dd) && ((_Sm) == FpSingleScratch));         \
-        *(--_nIns) = (NIns)( COND_AL | (0xEB8<<16) | (FpRegNum(_Dd)<<12) | (0x2F<<6) | (0<<5) | (0x7) ); \
-        asm_output("fsitod %s,%s", gpn(_Dd), gpn(_Sm));                \
-    } while (0)
-
-
 #define FUITOD(_Dd,_Sm) do {                                            \
         underrunProtect(4);                                             \
         NanoAssert(ARM_VFP);                                            \
-        NanoAssert(IsFpReg(_Dd) && ((_Sm) == FpSingleScratch));         \
+        NanoAssert(IsFpReg(_Dd) && ((_Sm) == S14));                     \
         *(--_nIns) = (NIns)( COND_AL | (0xEB8<<16) | (FpRegNum(_Dd)<<12) | (0x2D<<6) | (0<<5) | (0x7) ); \
         asm_output("fuitod %s,%s", gpn(_Dd), gpn(_Sm));                \
-    } while (0)
-
-#define FMSR(_Sn,_Rd) do {                                              \
-        underrunProtect(4);                                             \
-        NanoAssert(ARM_VFP);                                            \
-        NanoAssert(((_Sn) == FpSingleScratch) && IsGpReg(_Rd));         \
-        *(--_nIns) = (NIns)( COND_AL | (0xE0<<20) | (0x7<<16) | ((_Rd)<<12) | (0xA<<8) | (0<<7) | (0x1<<4) ); \
-        asm_output("fmsr %s,%s", gpn(_Sn), gpn(_Rd));                  \
     } while (0)
 
 #define FNEGD(_Dd,_Dm) do {                                             \
@@ -936,17 +974,106 @@ enum {
 #define FMRS(_Rd,_Sn) do {                                              \
         underrunProtect(4);                                             \
         NanoAssert(ARM_VFP);                                            \
-        NanoAssert(((_Sn) == FpSingleScratch) && IsGpReg(_Rd));         \
+        NanoAssert(((_Sn) == S14) && IsGpReg(_Rd));                     \
         *(--_nIns) = (NIns)( COND_AL | (0xE1<<20) | (0x7<<16) | ((_Rd)<<12) | (0xA<<8) | (0<<7) | (0x1<<4) ); \
         asm_output("fmrs %s,%s", gpn(_Rd), gpn(_Sn));                  \
     } while (0)
 
-#define FTOSID(_Sd,_Dm) do {                                            \
+/*
+ * The following instructions can only be used with S14 as the
+ * single-precision register; that limitation can be removed if
+ * needed, but we'd have to teach NJ about all the single precision
+ * regs, and their encoding is strange (top 4 bits usually in a block,
+ * low bit elsewhere).
+ */
+
+#define FSITOD(_Dd,_Sm) do {                                            \
         underrunProtect(4);                                             \
         NanoAssert(ARM_VFP);                                            \
-        NanoAssert(((_Sd) == FpSingleScratch) && IsFpReg(_Dm));         \
+        NanoAssert(IsFpReg(_Dd) && ((_Sm) == S14));                     \
+        *(--_nIns) = (NIns)( COND_AL | (0xEB8<<16) | (FpRegNum(_Dd)<<12) | (0x2F<<6) | (0<<5) | (0x7) ); \
+        asm_output("fsitod %s,%s", gpn(_Dd), gpn(_Sm));                \
+    } while (0)
+
+#define FMSR(_Sn,_Rd) do {                                              \
+        underrunProtect(4);                                             \
+        NanoAssert(ARM_VFP);                                            \
+        NanoAssert(((_Sn) == S14) && IsGpReg(_Rd));                     \
+        *(--_nIns) = (NIns)( COND_AL | (0xE0<<20) | (0x7<<16) | ((_Rd)<<12) | (0xA<<8) | (0<<7) | (0x1<<4) ); \
+        asm_output("fmsr %s,%s", gpn(_Sn), gpn(_Rd));                  \
+    } while (0)
+
+#define FMRS(_Rd,_Sn) do {                                              \
+        underrunProtect(4);                                             \
+        NanoAssert(ARM_VFP);                                            \
+        NanoAssert(((_Sn) == S14) && IsGpReg(_Rd));                     \
+        *(--_nIns) = (NIns)( COND_AL | (0xE1<<20) | (0x7<<16) | ((_Rd)<<12) | (0xA<<8) | (0<<7) | (0x1<<4) ); \
+        asm_output("fmrs %s,%s", gpn(_Rd), gpn(_Sn));                  \
+    } while (0)
+
+#define FMSR(_Sn,_Rd) do {                                              \
+        underrunProtect(4);                                             \
+        NanoAssert(ARM_VFP);                                            \
+        NanoAssert(((_Sn) == S14) && IsGpReg(_Rd));                     \
+        *(--_nIns) = (NIns)( COND_AL | (0xE0<<20) | (0x7<<16) | ((_Rd)<<12) | (0xA<<8) | (0<<7) | (0x1<<4) ); \
+        asm_output("fmsr %s,%s", gpn(_Sn), gpn(_Rd));                  \
+    } while (0)
+
+#define FCVTSD(_Sd,_Dm) do {                        \
+        underrunProtect(4);                         \
+        NanoAssert(ARM_VFP);                        \
+        NanoAssert(((_Sd) == S14) && IsFpReg(_Dm)); \
+        *(--_nIns) = (NIns)( COND_AL | (0xEB7<<16) | (0x7<<12) | (0xBC<<4) | (FpRegNum(_Dm)) ); \
+        asm_output("[0x%08x] fcvtsd s14,%s", *_nIns, gpn(_Dm));                          \
+    } while (0)
+
+#define FCVTDS_allowD7(_Dd,_Sm,_allowD7) do {               \
+        underrunProtect(4);                         \
+        NanoAssert(ARM_VFP);                        \
+        NanoAssert(((_Sm) == S14) && (IsFpReg(_Dd) || ((_allowD7) && (_Dd) == D7))); \
+        *(--_nIns) = (NIns)( COND_AL | (0xEB7<<16) | (FpRegNum(_Dd)<<12) | (0xAC<<4) | (0x7) ); \
+        asm_output("[0x%08x] fcvtds %s,s14", *_nIns, gpn(_Dd));      \
+    } while(0)
+
+#define FCVTDS(_Dd,_Sm) \
+    FCVTDS_allowD7(_Dd,_Sm,0)
+
+#define FLDS(_Sd,_Rn,_offs) do {                                \
+        underrunProtect(4);                                     \
+        NanoAssert(ARM_VFP);                                    \
+        NanoAssert(((_Sd) == S14) && !IsFpReg(_Rn));            \
+        NanoAssert((((_offs) & 3) == 0) && isS8((_offs) >> 2)); \
+        int addflag = 1<<23;                                    \
+        intptr_t offs = (_offs);                                \
+        if (offs < 0) {                                         \
+            addflag = 0;                                        \
+            offs = -offs;                                       \
+        }                                                       \
+        *(--_nIns) = (NIns)( COND_AL | (0xD1<<20) | ((_Rn)<<16) | (0x7<<12) | (0xA << 8) | addflag | ((offs>>2)&0xff) ); \
+        asm_output("[0x%08x] flds s14, [%s, #%d]", *_nIns, gpn(_Rn), (_offs)); \
+    } while (0)
+
+#define FSTS(_Sd,_Rn,_offs) do {                \
+        underrunProtect(4);                                     \
+        NanoAssert(ARM_VFP);                                    \
+        NanoAssert(((_Sd) == S14) && !IsFpReg(_Rn));            \
+        NanoAssert((((_offs) & 3) == 0) && isS8((_offs) >> 2)); \
+        int addflag = 1<<23;                                    \
+        intptr_t offs = (_offs);                                \
+        if (offs < 0) {                                         \
+            addflag = 0;                                        \
+            offs = -offs;                                       \
+        }                                                       \
+        *(--_nIns) = (NIns)( COND_AL | (0xD0<<20) | ((_Rn)<<16) | (0x7<<12) | (0xA << 8) | addflag | ((offs>>2)&0xff) ); \
+        asm_output("[0x%08x] fsts s14, [%s, #%d]", *_nIns, gpn(_Rn), (_offs)); \
+    } while (0)
+
+#define FTOSID(_Sd,_Dm) do {                                   \
+        underrunProtect(4);                                    \
+        NanoAssert(ARM_VFP);                                   \
+        NanoAssert(((_Sd) == S14) && IsFpReg(_Dm));            \
         *(--_nIns) = (NIns)( COND_AL | (0xEBD<<16) | (0x7<<12) | (0xB4<<4) | FpRegNum(_Dm) ); \
-        asm_output("ftosid %s,%s", gpn(_Sd), gpn(_Dm));                \
+        asm_output("ftosid s14, %s", gpn(_Dm));                         \
     } while (0)
 
 } // namespace nanojit
