@@ -888,7 +888,6 @@ DIRENT_INO=d_ino
 CYGWIN_WRAPPER=
 WIN_TOP_SRC=
 MOZ_USER_DIR=".mozilla"
-HOST_AR='$(AR)'
 HOST_AR_FLAGS='$(AR_FLAGS)'
 
 MOZ_JS_LIBS='-L$(libdir) -lmozjs'
@@ -2306,7 +2305,6 @@ alpha*-*-osf*)
     fi
     ;;
 
-dnl the qsort routine under solaris is faulty
 *-solaris*) 
     AC_DEFINE(SOLARIS)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'

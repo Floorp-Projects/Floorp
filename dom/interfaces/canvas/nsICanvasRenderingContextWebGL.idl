@@ -38,6 +38,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 
 // XXX should we comment out these typedefs in the C++ header?
@@ -62,113 +63,17 @@ typedef long           GLfixed;
 typedef long  GLsizeiptr;
 
 %{C++
-namespace mozilla {
-    class WebGLArrayBuffer;
+namespace js {
+struct ArrayBuffer;
+struct TypedArray;
 }
+
+/* Avoid conflict with WinAPI */
+#undef NO_ERROR
 %}
-[ptr] native WebGLArrayBufferPtr (mozilla::WebGLArrayBuffer);
-//
-// Array types
-//
-[scriptable, uuid(34b6cf8e-47da-458e-ab42-0451a3533ee5)]
-interface nsIWebGLArrayBuffer : nsISupports
-{
-  readonly attribute unsigned long byteLength;
 
-  [noscript, notxpcom] WebGLArrayBufferPtr GetNativeArrayBuffer();
-  [noscript, notxpcom] voidPtr nativePointer();
-  [noscript, notxpcom] unsigned long nativeSize();
-};
-
-[scriptable, uuid(84ba4e98-8173-7c10-dca0-b5ba7809fcf3)]
-interface nsIWebGLArray : nsISupports
-{
-  readonly attribute nsIWebGLArrayBuffer buffer;
-  readonly attribute unsigned long byteOffset;
-  readonly attribute unsigned long byteLength;
-  readonly attribute unsigned long length;
-
-  // XXX kill this.
-  unsigned long alignedSizeInBytes();
-
-  nsIWebGLArray slice(in unsigned long offset, in unsigned long length);
-
-  [noscript, notxpcom] unsigned long nativeType();
-  [noscript, notxpcom] voidPtr nativePointer();
-  [noscript, notxpcom] unsigned long nativeSize();
-  [noscript, notxpcom] unsigned long nativeElementSize();
-  [noscript, notxpcom] unsigned long nativeCount();
-};
-
-[scriptable, Uuid(0f6d0e7b-bcfc-9305-6a1d-a9653b5e8c80)]
-interface nsIWebGLFloatArray : nsIWebGLArray
-{
-  [IndexGetter] float get(in unsigned long index);
-  //[IndexSetter] void set(in unsigned long index, in float value);
-  //void set(in CanvasFloatArray array, [Optional] in unsigned long offset);
-  //void set(in sequence<float> array, [Optional] in unsigned long offset);
-  void set();
-};
-
-[scriptable, uuid(b29db7cf-fa58-435f-8d45-611cc50979ad)]
-interface nsIWebGLByteArray : nsIWebGLArray
-{
-  [IndexGetter] long get(in unsigned long index);
-  //[IndexSetter] void set(in unsigned long index, in long value);
-  //void set(in nsIWebGLByteArray array, [Optional] in unsigned long offset);
-  //void set(in sequence<long> array, [Optional] in unsigned long offset);
-  void set();
-};
-
-[scriptable, uuid(3daa67fa-e743-2cbd-a212-805c2fc520cc)]
-interface nsIWebGLUnsignedByteArray : nsIWebGLArray
-{
-  [IndexGetter] unsigned long get(in unsigned long index);
-  //[IndexSetter] void set(in unsigned long index, in unsigned long value);
-  //void set(in CanvasUnsignedByteArray array, [Optional] in unsigned long offset);
-  //void set(in sequence<unsigned long> array, [Optional] in unsigned long offset);
-  void set();
-};
-
-[scriptable, uuid(a8a982e3-3977-7364-f012-c497a5ab7681)]
-interface nsIWebGLShortArray : nsIWebGLArray
-{
-  [IndexGetter] long get(in unsigned long index);
-  //[IndexSetter] void set(in unsigned long index, in long value);
-  //void set(in CanvasShortArray array, [Optional] in unsigned long offset);
-  //void set(in sequence<long> array, [Optional] in unsigned long offset);
-  void set();
-};
-
-[scriptable, uuid(8b9c67cc-c7be-a062-84b0-76a910a5c1e6)]
-interface nsIWebGLUnsignedShortArray : nsIWebGLArray
-{
-  [IndexGetter] unsigned long get(in unsigned long index);
-  //[IndexSetter] void set(in unsigned long index, in unsigned long value);
-  //void set(in CanvasUnsignedShortArray array, [Optional] in unsigned long offset);
-  //void set(in sequence<unsigned long> array, [Optional] in unsigned long offset);
-  void set();
-};
-
-[scriptable, uuid(b9b2e861-3a28-4311-993c-799e4f77dcba)]
-interface nsIWebGLIntArray : nsIWebGLArray
-{
-  [IndexGetter] long get(in unsigned long index);
-  //[IndexSetter] void set(in unsigned long index, in long value);
-  //void set(in CanvasIntArray array, [Optional] in unsigned long offset);
-  //void set(in sequence<long> array, [Optional] in unsigned long offset);
-  void set();
-};
-
-[scriptable, uuid(0d6ee3f8-71b6-460d-b05a-d579cc55edbe)]
-interface nsIWebGLUnsignedIntArray : nsIWebGLArray
-{
-  [IndexGetter] unsigned long get(in unsigned long index);
-  //[IndexSetter] void set(in unsigned long index, in unsigned long value);
-  //void set(in CanvasUnsignedIntArray array, [Optional] in unsigned long offset);
-  //void set(in sequence<unsigned long> array, [Optional] in unsigned long offset);
-  void set();
-};
+[ptr] native WebGLArrayBufferPtr (js::ArrayBuffer);
+[ptr] native WebGLArrayPtr (js::TypedArray);
 
 //
 // OpenGL object wrappers
@@ -199,7 +104,8 @@ interface nsIWebGLShader : nsISupports
 };
 
 [scriptable, uuid(beea4b38-3094-4e8d-b6e6-8b21d07e8994)]
-interface nsIWebGLShaderArray {
+interface nsIWebGLShaderArray : nsISupports
+{
     readonly attribute unsigned long length;
     nsIWebGLShader item(in unsigned long index);
 };
@@ -217,7 +123,8 @@ interface nsIWebGLRenderbuffer : nsISupports
 };
 
 [scriptable, uuid(a85d4fd0-5b9f-4cb8-aeee-5a2c5c5bad76)]
-interface nsIWebGLActiveInfo {
+interface nsIWebGLActiveInfo : nsISupports
+{
     readonly attribute GLint size;
     readonly attribute GLenum type;
     readonly attribute DOMString name;
@@ -231,6 +138,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   //  ARRAY CONSTRUCTORS
   //
 
+  /*
   nsIWebGLFloatArray createFloatArray();
   nsIWebGLByteArray createByteArray();
   nsIWebGLUnsignedByteArray createUnsignedByteArray();
@@ -238,6 +146,7 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   nsIWebGLUnsignedShortArray createUnsignedShortArray();
   nsIWebGLIntArray createIntArray();
   nsIWebGLUnsignedIntArray createUnsignedIntArray();
+  */
 
   //
   //  CONSTANTS
@@ -357,10 +266,6 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   const unsigned long SAMPLE_COVERAGE                = 0x80A0;
 
   /* ErrorCode */
-%{C++
-/* Avoid conflict with WinAPI */
-#undef NO_ERROR
-%}
   const unsigned long NO_ERROR                       = 0;
   const unsigned long INVALID_ENUM                   = 0x0500;
   const unsigned long INVALID_VALUE                  = 0x0501;
@@ -695,15 +600,14 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void blendFuncSeparate (in GLenum srcRGB, in GLenum dstRGB, in GLenum srcAlpha, in GLenum dstAlpha);
 
   // Modified: void glBufferData (GLenum target, GLsizeiptr size, const void* data, GLenum usage);
-  // void bufferData (in GLenum target, in GLsizei size, in GLenum usage);
-  // void bufferData (in GLenum target, in nsIWebGLArray data, in GLenum usage);
-  // void bufferData (in GLenum target, in nsIWebGLArrayBuffer data, in GLenum usage);
-  void bufferData (in GLenum target);
+  void bufferData([optional] in long dummy);
+  [noscript] void bufferData_size (in GLenum target, in GLsizei size, in GLenum usage);
+  [noscript] void bufferData_buf (in GLenum target, in WebGLArrayBufferPtr data, in GLenum usage);
+  [noscript] void bufferData_array (in GLenum target, in WebGLArrayPtr data, in GLenum usage);
 
-  // Modified: void glBufferSubData (GLenum target, GLintptr offset, GLsizeiptr size, const void* data);
-  // void bufferSubData (in GLenum target, in GLsizeiptr offset, in nsIWebGLArray data);
-  // void bufferSubData (in GLenum target, in GLsizeiptr offset, in CanvasArrayBuffer data);
-  void bufferSubData (in GLenum target, in GLsizeiptr offset);
+  void bufferSubData([optional] in long dummy);
+  [noscript] void bufferSubData_buf (in GLenum target, in GLsizeiptr offset, in WebGLArrayBufferPtr data);
+  [noscript] void bufferSubData_array (in GLenum target, in GLsizeiptr offset, in WebGLArrayPtr data);
 
   GLenum checkFramebufferStatus (in GLenum target);
   void clear (in GLbitfield mask);
@@ -713,13 +617,10 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void colorMask (in GLboolean red, in GLboolean green, in GLboolean blue, in GLboolean alpha);
   void compileShader (in nsIWebGLShader shader);
 
-  //void glCompressedTexImage2D (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void* data);
-  //void glCompressedTexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void* data);
-
   void copyTexImage2D (in GLenum target, in GLint level, in GLenum internalformat, 
-                         in GLint x, in GLint y, in GLsizei width, in GLsizei height, in GLint border);
+                       in GLint x, in GLint y, in GLsizei width, in GLsizei height, in GLint border);
   void copyTexSubImage2D (in GLenum target, in GLint level, in GLint xoffset, in GLint yoffset, 
-                            in GLint x, in GLint y, in GLsizei width, in GLsizei height);
+                          in GLint x, in GLint y, in GLsizei width, in GLsizei height);
 
   nsIWebGLBuffer createBuffer();
   nsIWebGLProgram createProgram ();
@@ -780,17 +681,14 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void getParameter (in GLenum pname);
 
   // Modified: void glGetBufferParameteriv (GLenum target, GLenum pname, GLint* params);
-  GLint getBufferParameteri (in GLenum target, in GLenum pname); // XXX remove
   void getBufferParameter (in GLenum target, in GLenum pname);
 
   GLenum getError ();
 
   // Modified: void glGetFramebufferAttachmentParameteriv (GLenum target, GLenum attachment, GLenum pname, GLint* params);
-  GLint getFramebufferAttachmentParameteri (in GLenum target, in GLenum attachment, in GLenum pname); // XXX remove
   void getFramebufferAttachmentParameter (in GLenum target, in GLenum attachment, in GLenum pname);
 
   // Modified: void glGetProgramiv (nsIWebGLProgram program, GLenum pname, GLint* params);
-  GLint getProgrami (in nsIWebGLProgram program, in GLenum pname); // XXX remove
   void getProgramParameter (in nsIWebGLProgram program, in GLenum pname);
 
   // Modified: void glGetProgramInfoLog (GLuint program, GLsizei bufsize, GLsizei* length, char* infolog);
@@ -798,10 +696,8 @@ interface nsICanvasRenderingContextWebGL : nsISupports
 
   // Modified: void glGetRenderbufferParameteriv (GLenum target, GLenum pname, GLint* params);
   //nsIWebGLIntArray getRenderbufferParameteriv (in GLenum target, in GLenum pname);
-  GLint getRenderbufferParameteri (in GLenum target, in GLenum pname); // XXX remove
   void getRenderbufferParameter (in GLenum target, in GLenum pname);
 
-  GLint getShaderi (in nsIWebGLShader shader, in GLenum pname); // XXX remove
   void getShaderParameter (in nsIWebGLShader shader, in GLenum pname);
 
   // Modified: void glGetShaderInfoLog (GLuint shader, GLsizei bufsize, GLsizei* length, char* infolog);
@@ -813,8 +709,6 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   DOMString getShaderSource (in nsIWebGLShader shader);
   DOMString getString (in GLenum name);
 
-  GLfloat getTexParameterf (in GLenum target, in GLenum pname);         // XXX remove
-  GLint getTexParameteri (in GLenum target, in GLenum pname);           // XXX remove
   void getTexParameter (in GLenum target, in GLenum pname);
 
   // FIXME: This is problematic. We don't implicitly know how big the returned data buffer
@@ -867,27 +761,35 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void stencilOp (in GLenum fail, in GLenum zfail, in GLenum zpass);
   void stencilOpSeparate (in GLenum face, in GLenum fail, in GLenum zfail, in GLenum zpass);
 
-  // Modified: glTexImage2D (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, 
-  // GLint border, GLenum format, GLenum type, const void* pixels);
-  //void glTexImage2D (in GLenum target, in GLint level, in GLenum internalformat, in GLsizei width, in GLsizei height, in GLint border, in GLenum format, in GLenum type, nsIWebGLArray pixels);
-  //void glTexImage2D (in GLenum target, in GLint level, in HTMLImageElement image);
-  //void glTexImage2D (in GLenum target, in GLint level, in HTMLnsIWebGLElement canvas);
-  //void glTexImage2D (in GLenum target, in GLint level, in HTMLVideoElement video);
-  void texImage2D ();
+  void texImage2D([optional] in long dummy);
+  [noscript] void texImage2D_buf (in GLenum target, in GLint level, in GLenum internalformat,
+                                  in GLsizei width, in GLsizei height,
+                                  in GLint border, in GLenum format, in GLenum type, in WebGLArrayBufferPtr pixels);
+  [noscript] void texImage2D_array (in GLenum target, in GLint level, in GLenum internalformat,
+                                    in GLsizei width, in GLsizei height,
+                                    in GLint border, in GLenum format, in GLenum type, in WebGLArrayPtr pixels);
+  // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
+  [noscript] void texImage2D_dom (in GLenum target, in GLint level, in nsIDOMElement element,
+                                  [optional] in GLboolean premultiply, [optional] in GLboolean asPremultipliedAlpha);
 
+
+  void texSubImage2D([optional] in long dummy);
+  [noscript] void texSubImage2D_buf (in GLenum target, in GLint level,
+                                     in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height,
+                                     in GLenum format, in GLenum type, in WebGLArrayBufferPtr pixels);
+  [noscript] void texSubImage2D_array (in GLenum target, in GLint level,
+                                       in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height,
+                                       in GLenum format, in GLenum type, in WebGLArrayPtr pixels);
+  // HTMLImageElement, HTMLCanvasElement, HTMLVideoElement
+  [noscript] void texSubImage2D_dom (in GLenum target, in GLint level,
+                                     in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height,
+                                     in nsIDOMElement element,
+                                     [optional] in GLboolean premultiply, [optional] in GLboolean asPremultipliedAlpha);
 
   // Modified: This replaces glTexParameterf, glTexParameterfv, glTexParameteri and glTexParameteriv
   void texParameterf (in GLenum target, in GLenum pname, in GLfloat param);
   void texParameteri (in GLenum target, in GLenum pname, in GLint param);
   //void glTexParameter (in GLenum target, in GLenum pname, in nsIWebGLArray params);
-
-  // Modified: void glTexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void* pixels);
-  //void glTexSubImage2D (in GLenum target, in GLint level, in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height, in GLenum format, in GLenum type, nsIWebGLArray pixels);
-  //void glTexSubImage2D (in GLenum target, in GLint level, in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height, in HTMLImageElement image);
-  //void glTexSubImage2D (in GLenum target, in GLint level, in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height, in HTMLnsIWebGLElement canvas);
-  //void glTexSubImage2D (in GLenum target, in GLint level, in GLint xoffset, in GLint yoffset, in GLsizei width, in GLsizei height, in HTMLVideoElement video);
-
-  void texSubImage2D ();
 
   // Modified: All the glUniform*v forms below are modified by replacing 'count' and 'v' with a nsIWebGLArray
   void uniform1f (in GLint location, in GLfloat x);
@@ -899,19 +801,32 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void uniform4f (in GLint location, in GLfloat x, in GLfloat y, in GLfloat z, in GLfloat w);
   void uniform4i (in GLint location, in GLint x, in GLint y, in GLint z, in GLint w);
 
-  void uniform1fv (in GLint location, in nsIWebGLArray v);
-  void uniform1iv (in GLint location, in nsIWebGLArray v);
-  void uniform2fv (in GLint location, in nsIWebGLArray v);
-  void uniform2iv (in GLint location, in nsIWebGLArray v);
-  void uniform3fv (in GLint location, in nsIWebGLArray v);
-  void uniform3iv (in GLint location, in nsIWebGLArray v);
-  void uniform4fv (in GLint location, in nsIWebGLArray v);
-  void uniform4iv (in GLint location, in nsIWebGLArray v);
+  void uniform1fv ([optional] in long dummy);
+  void uniform1iv ([optional] in long dummy);
+  void uniform2fv ([optional] in long dummy);
+  void uniform2iv ([optional] in long dummy);
+  void uniform3fv ([optional] in long dummy);
+  void uniform3iv ([optional] in long dummy);
+  void uniform4fv ([optional] in long dummy);
+  void uniform4iv ([optional] in long dummy);
 
-  // Modified. These are modified by replacing 'count' and 'value' with a nsIWebGLArray
-  void uniformMatrix2fv (in GLint location, in GLboolean transpose, in nsIWebGLArray value);
-  void uniformMatrix3fv (in GLint location, in GLboolean transpose, in nsIWebGLArray value);
-  void uniformMatrix4fv (in GLint location, in GLboolean transpose, in nsIWebGLArray value);
+  [noscript] void uniform1fv_array (in GLint location, in WebGLArrayPtr v);
+  [noscript] void uniform1iv_array (in GLint location, in WebGLArrayPtr v);
+  [noscript] void uniform2fv_array (in GLint location, in WebGLArrayPtr v);
+  [noscript] void uniform2iv_array (in GLint location, in WebGLArrayPtr v);
+  [noscript] void uniform3fv_array (in GLint location, in WebGLArrayPtr v);
+  [noscript] void uniform3iv_array (in GLint location, in WebGLArrayPtr v);
+  [noscript] void uniform4fv_array (in GLint location, in WebGLArrayPtr v);
+  [noscript] void uniform4iv_array (in GLint location, in WebGLArrayPtr v);
+
+  // Modified. These are modified by replacing 'count' and 'value' with a WebGLArrayPtr
+  void uniformMatrix2fv ([optional] in long dummy);
+  void uniformMatrix3fv ([optional] in long dummy);
+  void uniformMatrix4fv ([optional] in long dummy);
+
+  [noscript] void uniformMatrix2fv_array (in GLint location, in GLboolean transpose, in WebGLArrayPtr value);
+  [noscript] void uniformMatrix3fv_array (in GLint location, in GLboolean transpose, in WebGLArrayPtr value);
+  [noscript] void uniformMatrix4fv_array (in GLint location, in GLboolean transpose, in WebGLArrayPtr value);
 
   // Added API using top entry from the passed nsIWebGLMatrixStack
   //ZZ void glUniformMatrix (in GLint location, in GLboolean transpose, in nsIWebGLMatrixStack value);
@@ -919,24 +834,24 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   void useProgram (in nsIWebGLProgram program);
   void validateProgram (in nsIWebGLProgram program);
 
-  // Modified: All the glVertexAttrib*v forms below are modified by replacing 'values' with a nsIWebGLArray
+  // Modified: All the glVertexAttrib*v forms below are modified by replacing 'values' with a WebGLArrayPtr
   void vertexAttrib1f (in GLuint indx, in GLfloat x);
   void vertexAttrib2f (in GLuint indx, in GLfloat x, in GLfloat y);
   void vertexAttrib3f (in GLuint indx, in GLfloat x, in GLfloat y, in GLfloat z);
   void vertexAttrib4f (in GLuint indx, in GLfloat x, in GLfloat y, in GLfloat z, in GLfloat w);
 
-  void vertexAttrib1fv (in GLuint indx, in nsIWebGLArray values);
-  void vertexAttrib2fv (in GLuint indx, in nsIWebGLArray values);
-  void vertexAttrib3fv (in GLuint indx, in nsIWebGLArray values);
-  void vertexAttrib4fv (in GLuint indx, in nsIWebGLArray values);
+  void vertexAttrib1fv ([optional] in long dummy);
+  void vertexAttrib2fv ([optional] in long dummy);
+  void vertexAttrib3fv ([optional] in long dummy);
+  void vertexAttrib4fv ([optional] in long dummy);
 
-  // TBD
-  //void glVertexAttribPointer (in GLuint indx, GLint size, GLenum type, GLboolean normalized, 
-  // GLsizei stride, const void* ptr);
+  [noscript] void vertexAttrib1fv_array (in GLuint indx, in WebGLArrayPtr values);
+  [noscript] void vertexAttrib2fv_array (in GLuint indx, in WebGLArrayPtr values);
+  [noscript] void vertexAttrib3fv_array (in GLuint indx, in WebGLArrayPtr values);
+  [noscript] void vertexAttrib4fv_array (in GLuint indx, in WebGLArrayPtr values);
 
-  // size is number of elements; type must match the bound vbo type; offset is in elements
+  // size is number of elements per attrib; offset, stride are in bytes
   void vertexAttribPointer (in GLuint idx, in GLint size, in GLenum type, in GLboolean normalized, in GLuint stride, in GLuint offset);
 
   void viewport (in GLint x, in GLint y, in GLsizei width, in GLsizei height);
-
 };

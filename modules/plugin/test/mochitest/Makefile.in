@@ -72,6 +72,8 @@ _MOCHITEST_FILES = \
 		test_cookies.html \
 		$(NULL)
 
+#		test_npn_timers.html \ disabled for leaking
+#		test_npn_asynccall.html \ disabled for leaking
 #		test_npruntime_npnsetexception.html \ Disabled for e10s
 
 ifdef MOZ_IPC
@@ -93,7 +95,6 @@ _MOCHICHROME_FILES = \
 		test_npruntime.xul   \
 		test_privatemode.xul \
 		test_wmode.xul \
-		test_npapi_timers.xul \
 		$(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

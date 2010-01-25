@@ -177,6 +177,11 @@ nsNotifyAddrListener::Run()
 
     InitIPHelperLibrary();
 
+    if (!sNotifyAddrChange) {
+        CloseHandle(ev);
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
     overlapped.hEvent = ev;
     while (!shuttingDown) {
         HANDLE h;

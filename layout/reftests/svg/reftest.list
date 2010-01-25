@@ -137,3 +137,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weigh
 == userSpaceOnUse-and-pattern-01.svg userSpaceOnUse-and-pattern-01-ref.svg
 == viewBox-and-pattern-01.svg pass.svg
 == viewport-percent-graphic-user-01.svg pass.svg
+
+== svg-effects-area-unzoomed.xhtml svg-effects-area-unzoomed-ref.xhtml
+fails == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in-ref.xhtml # Bug 541270
+fails == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out-ref.xhtml # Bug 541270

@@ -597,6 +597,12 @@ void
 nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
                                    const char* aCommand)
 {
+  if (mIsRegularHTML && 
+      nsHtml5Module::sEnabled && 
+      aCommand && 
+      !nsCRT::strcmp(aCommand, "view")) {
+    return; // the HTML5 parser uses chardet directly
+  }
   nsCOMPtr <nsIParserFilter> cdetflt;
 
   nsresult rv_detect;
@@ -769,10 +775,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (parent) {
     rv = parent->GetContentViewer(getter_AddRefs(parentContentViewer));
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIDocumentViewer> docViewer =
-      do_QueryInterface(parentContentViewer);
-    if (docViewer) {
-      docViewer->GetDocument(getter_AddRefs(parentDocument));
+    if (parentContentViewer) {
+      parentDocument = parentContentViewer->GetDocument();
     }
   }
 

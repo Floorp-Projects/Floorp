@@ -170,13 +170,7 @@ nsJAR::Open(nsIFile* zipFile)
   mLock = PR_NewLock();
   NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
 
-  PRFileDesc *fd = OpenFile();
-  NS_ENSURE_TRUE(fd, NS_ERROR_FAILURE);
-
-  nsresult rv = mZip.OpenArchive(fd);
-  if (NS_FAILED(rv)) Close();
-
-  return rv;
+  return mZip.OpenArchive(zipFile);
 }
 
 NS_IMETHODIMP
@@ -406,20 +400,6 @@ nsJAR::GetJarPath(nsACString& aResult)
   NS_ENSURE_ARG_POINTER(mZipFile);
 
   return mZipFile->GetNativePath(aResult);
-}
-
-PRFileDesc*
-nsJAR::OpenFile()
-{
-  nsresult rv;
-  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mZipFile, &rv);
-  if (NS_FAILED(rv)) return nsnull;
-
-  PRFileDesc* fd;
-  rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0000, &fd);
-  if (NS_FAILED(rv)) return nsnull;
-
-  return fd;
 }
 
 //----------------------------------------------

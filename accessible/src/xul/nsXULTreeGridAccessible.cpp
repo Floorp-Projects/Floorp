@@ -973,13 +973,17 @@ nsXULTreeGridCellAccessible::DoAction(PRUint8 aIndex)
 
   PRBool isCycler = PR_FALSE;
   mColumn->GetCycler(&isCycler);
-  if (isCycler)
-    return DoCommand();
+  if (isCycler) {
+    DoCommand();
+    return NS_OK;
+  }
 
   PRInt16 type;
   mColumn->GetType(&type);
-  if (type == nsITreeColumn::TYPE_CHECKBOX && IsEditable())
-    return DoCommand();
+  if (type == nsITreeColumn::TYPE_CHECKBOX && IsEditable()) {
+    DoCommand();
+    return NS_OK;
+  }
 
   return NS_ERROR_INVALID_ARG;
 }

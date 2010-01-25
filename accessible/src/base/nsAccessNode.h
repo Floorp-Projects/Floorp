@@ -63,7 +63,6 @@ class nsPresContext;
 class nsIAccessibleDocument;
 class nsIFrame;
 class nsIDOMNodeList;
-class nsITimer;
 class nsRootAccessible;
 class nsApplicationAccessibleWrap;
 class nsIDocShellTreeItem;
@@ -191,7 +190,7 @@ protected:
     // Static data, we do our own refcounting for our static data
     static nsIStringBundle *gStringBundle;
     static nsIStringBundle *gKeyStringBundle;
-    static nsITimer *gDoCommandTimer;
+
 #ifdef DEBUG
     static PRBool gIsAccessibilityActive;
 #endif

@@ -53,14 +53,6 @@ function test_usr_micsum() {
   do_check_true(mdir.exists());
 }
 
-function test_app_micsum() {
-  let mdir = gDirSvc.get("XCurProcD", Ci.nsIFile);
-  mdir.append("microsummary-generators");
-
-  let tmdir = gDirSvc.get("MicsumGens", Ci.nsIFile);
-  do_check_true(tmdir.equals(mdir));
-}
-
 function test_bookmarkhtml() {
   let bmarks = gProfD.clone();
   bmarks.append("bookmarks.html");
@@ -79,7 +71,6 @@ function test_prefoverride() {
 
 function run_test() {
   [test_usr_micsum,
-   test_app_micsum,
    test_bookmarkhtml,
    test_prefoverride
   ].forEach(function(f) {

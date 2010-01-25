@@ -193,7 +193,7 @@ nsSVGGradientFrame::GetSpreadMethod()
   nsSVGGradientElement *element =
     GetGradientWithAttr(nsGkAtoms::spreadMethod, mContent);
 
-  return element->mEnumAttributes[nsSVGGradientElement::SPREADMETHOD].GetAnimValue();
+  return element->mEnumAttributes[nsSVGGradientElement::SPREADMETHOD].GetAnimValue(element);
 }
 
 //----------------------------------------------------------------------
@@ -402,7 +402,7 @@ nsSVGGradientFrame::GetGradientUnits()
 
   nsSVGGradientElement *element =
     GetGradientWithAttr(nsGkAtoms::gradientUnits, mContent);
-  return element->mEnumAttributes[nsSVGGradientElement::GRADIENTUNITS].GetAnimValue();
+  return element->mEnumAttributes[nsSVGGradientElement::GRADIENTUNITS].GetAnimValue(element);
 }
 
 // -------------------------------------------------------------------------

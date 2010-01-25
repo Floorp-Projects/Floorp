@@ -2210,7 +2210,8 @@ nsDownload::SetState(DownloadState aState)
           if (pref)
             pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
 
-          if (addToRecentDocs)
+          if (addToRecentDocs &&
+              !nsDownloadManager::gDownloadManagerService->mInPrivateBrowsing)
             ::SHAddToRecentDocs(SHARD_PATHW, path.get());
         }
       }
