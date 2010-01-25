@@ -1488,11 +1488,6 @@ class JSAutoTempValueRooter
     JSContext *mContext;
 
   private:
-#ifndef AIX
-    static void *operator new(size_t);
-    static void operator delete(void *, size_t);
-#endif
-
     JSTempValueRooter mTvr;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
