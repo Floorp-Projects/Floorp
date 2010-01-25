@@ -830,7 +830,10 @@ namespace nanojit
 
     // binary op with fp registers
     void Assembler::asm_fop(LIns *ins) {
-        Register rr, ra, rb;
+        // NB, rb is always filled in by regalloc_binary, 
+        // but compilers can't always tell that: init to UnspecifiedReg
+        // to avoid a warning.
+        Register rr, ra, rb = UnspecifiedReg;
         regalloc_binary(ins, FpRegs, rr, ra, rb);
         switch (ins->opcode()) {
         default:       TODO(asm_fop);
