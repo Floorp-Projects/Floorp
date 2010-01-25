@@ -70,10 +70,10 @@ _MOCHITEST_FILES = \
 		test_streamNotify.html \
 		test_instantiation.html \
 		test_cookies.html \
+		test_npn_timers.html \
+		test_npn_asynccall.html \
 		$(NULL)
 
-#		test_npn_timers.html \ disabled for leaking
-#		test_npn_asynccall.html \ disabled for leaking
 #		test_npruntime_npnsetexception.html \ Disabled for e10s
 
 ifdef MOZ_IPC
