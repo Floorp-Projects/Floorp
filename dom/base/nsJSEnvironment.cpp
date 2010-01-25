@@ -374,17 +374,13 @@ private:
   void *mPtr;
 };
 
-class AutoFreeJSStack {
+class nsAutoPoolRelease {
 public:
-  AutoFreeJSStack(JSContext *ctx, void *aPtr) : mContext(ctx), mStack(aPtr) {
-  }
-  JS_REQUIRES_STACK ~AutoFreeJSStack() {
-    if (mContext && mStack)
-      js_FreeStack(mContext, mStack);
-  }
+  nsAutoPoolRelease(JSArenaPool *p, void *m) : mPool(p), mMark(m) {}
+  ~nsAutoPoolRelease() { JS_ARENA_RELEASE(mPool, mMark); }
 private:
-  JSContext *mContext;
-  void *mStack;
+  JSArenaPool *mPool;
+  void *mMark;
 };
 
 // A utility function for script languages to call.  Although it looks small,
@@ -2143,9 +2139,11 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
 
   if (NS_SUCCEEDED(rv)) {
     // Convert args to jsvals.
-    void *mark;
     PRUint32 argc = 0;
     jsval *argv = nsnull;
+
+    js::LazilyConstructed<nsAutoPoolRelease> poolRelease;
+    js::LazilyConstructed<JSAutoTempValueRooter> tvr;
 
     // Use |target| as the scope for wrapping the arguments, since aScope is
     // the safe scope in many cases, which isn't very useful.  Wrapping aTarget
@@ -2153,13 +2151,11 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     // right scope anyway, and we want to make sure that the arguments end up
     // in the same scope as aTarget.
     rv = ConvertSupportsTojsvals(aargv, target, &argc,
-                                 reinterpret_cast<void **>(&argv), &mark);
+                                 &argv, poolRelease, tvr);
     if (NS_FAILED(rv)) {
       stack->Pop(nsnull);
       return rv;
     }
-
-    AutoFreeJSStack stackGuard(mContext, mark); // ensure always freed.
 
     jsval funval = OBJECT_TO_JSVAL(static_cast<JSObject *>(aHandler));
     JSAutoRequest ar(mContext);
@@ -2655,15 +2651,16 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
 {
   PRUint32  argc;
   jsval    *argv = nsnull;
-  void *mark;
 
   JSAutoRequest ar(mContext);
 
+  js::LazilyConstructed<nsAutoPoolRelease> poolRelease;
+  js::LazilyConstructed<JSAutoTempValueRooter> tvr;
+
   nsresult rv;
   rv = ConvertSupportsTojsvals(aArgs, GetNativeGlobal(), &argc,
-                               reinterpret_cast<void **>(&argv), &mark);
+                               &argv, poolRelease, tvr);
   NS_ENSURE_SUCCESS(rv, rv);
-  AutoFreeJSStack stackGuard(mContext, mark); // ensure always freed.
 
   jsval vargs;
 
@@ -2690,26 +2687,24 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
 nsresult
 nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
                                      void *aScope,
-                                     PRUint32 *aArgc, void **aArgv,
-                                     void **aMarkp)
+                                     PRUint32 *aArgc,
+                                     jsval **aArgv,
+                                     js::LazilyConstructed<nsAutoPoolRelease> &aPoolRelease,
+                                     js::LazilyConstructed<JSAutoTempValueRooter> &aRooter)
 {
   nsresult rv = NS_OK;
 
-  js::LeaveTrace(mContext);
-
   // If the array implements nsIJSArgArray, just grab the values directly.
   nsCOMPtr<nsIJSArgArray> fastArray = do_QueryInterface(aArgs);
-  if (fastArray != nsnull) {
-    *aMarkp = nsnull;
-    return fastArray->GetArgs(aArgc, aArgv);
-  }
+  if (fastArray != nsnull)
+    return fastArray->GetArgs(aArgc, reinterpret_cast<void **>(aArgv));
+
   // Take the slower path converting each item.
   // Handle only nsIArray and nsIVariant.  nsIArray is only needed for
   // SetProperty('arguments', ...);
 
   *aArgv = nsnull;
   *aArgc = 0;
-  *aMarkp = nsnull;
 
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
   NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
@@ -2730,8 +2725,15 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
     argCount = 1; // the nsISupports which is not an array
   }
 
-  jsval *argv = js_AllocStack(mContext, argCount, aMarkp);
+  void *mark = JS_ARENA_MARK(&mContext->tempPool);
+  jsval *argv;
+  JS_ARENA_ALLOCATE_CAST(argv, jsval *, &mContext->tempPool,
+                         argCount * sizeof(jsval));
   NS_ENSURE_TRUE(argv, NS_ERROR_OUT_OF_MEMORY);
+
+  /* Use the caller's auto guards to release and unroot. */
+  aPoolRelease.construct(&mContext->tempPool, mark);
+  aRooter.construct(mContext, argCount, argv);
 
   if (argsArray) {
     for (argCtr = 0; argCtr < argCount && NS_SUCCEEDED(rv); argCtr++) {
@@ -2781,10 +2783,8 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
       rv = NS_ERROR_UNEXPECTED;
     }
   }
-  if (NS_FAILED(rv)) {
-    js_FreeStack(mContext, *aMarkp);
+  if (NS_FAILED(rv))
     return rv;
-  }
   *aArgv = argv;
   *aArgc = argCount;
   return NS_OK;
