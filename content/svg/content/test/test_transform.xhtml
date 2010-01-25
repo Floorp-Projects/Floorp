@@ -24,14 +24,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=512636
 
 SimpleTest.waitForExplicitFinish();
 
-// We don't want to fail just because of rounding errors
-var tolerance = 1 / 65535;
-      
-function isequal( value, expected, tolerance )
-{
-  ok(Math.abs(value - expected) < tolerance, 'matrix value expected:' +expected + ' actual:' + value);
-}
-
 function run()
 {
   var g, svg, t, m, m2;
@@ -87,49 +79,6 @@ function run()
   is(m.e, 5, 'm.e for matrix');
   is(m.f, 6, 'm.f for matrix');
   is(t.angle, 0, 't.angle for matrix');
-
-  // set the SVGTransform to be a translate() then convert to a matrix
-  t.setTranslate(0, 0);
-  m.a = 2;
-
-  // test that the SVGTransform now reflects the matrix value
-  is(t.type, SVGTransform.SVG_TRANSFORM_MATRIX, 't.type for matrix');
-
-  // set the SVGTransform to be a rotate()
-  t.setRotate(90, 0, 0);
-
-  // test that the SVGTransform now reflects the matrix value
-  is(t.type, SVGTransform.SVG_TRANSFORM_ROTATE, 't.type for rotate');
-  isequal(m.a, Math.cos(Math.PI/2), tolerance);
-  isequal(m.b, Math.sin(Math.PI/2), tolerance);
-  isequal(m.c, -Math.sin(Math.PI/2), tolerance);
-  isequal(m.d, Math.cos(Math.PI/2), tolerance);
-  isequal(m.e, 0, tolerance);
-  isequal(m.f, 0, tolerance);
-
-  // set the SVGTransform to be a skewX()
-  t.setSkewX(45);
-
-  // test that the SVGTransform now reflects the matrix value
-  is(t.type, SVGTransform.SVG_TRANSFORM_SKEWX, 't.type for skewx');
-  isequal(m.a, 1, tolerance);
-  isequal(m.b, 0, tolerance);
-  isequal(m.c, Math.tan(Math.PI/4), tolerance);
-  isequal(m.d, Math.tan(Math.PI/4), tolerance);
-  isequal(m.e, 0, tolerance);
-  isequal(m.f, 0, tolerance);
-
-  // set the SVGTransform to be a skewY()
-  t.setSkewY(45);
-
-  // test that the SVGTransform now reflects the matrix value
-  is(t.type, SVGTransform.SVG_TRANSFORM_SKEWY, 't.type for skewy');
-  isequal(m.a, Math.tan(Math.PI/4), tolerance);
-  isequal(m.b, Math.tan(Math.PI/4), tolerance);
-  isequal(m.c, 0, tolerance);
-  isequal(m.d, 1, tolerance);
-  isequal(m.e, 0, tolerance);
-  isequal(m.f, 0, tolerance);
 
   SimpleTest.finish();
 }
