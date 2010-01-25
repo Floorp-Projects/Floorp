@@ -98,12 +98,14 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetActionName(PRUint8 aIndex, nsAString&
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTMLCheckboxAccessible::DoAction(PRUint8 index)
+NS_IMETHODIMP
+nsHTMLCheckboxAccessible::DoAction(PRUint8 aIndex)
 {
-  if (index == 0) {   // 0 is the magic value for default action
-    return DoCommand();
-  }
-  return NS_ERROR_INVALID_ARG;
+  if (aIndex != 0)
+    return NS_ERROR_INVALID_ARG;
+
+  DoCommand();
+  return NS_OK;
 }
 
 nsresult
@@ -256,12 +258,14 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& a
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::DoAction(PRUint8 index)
+NS_IMETHODIMP
+nsHTMLButtonAccessible::DoAction(PRUint8 aIndex)
 {
-  if (index == eAction_Click) {
-    return DoCommand();
-  }
-  return NS_ERROR_INVALID_ARG;
+  if (aIndex != eAction_Click)
+    return NS_ERROR_INVALID_ARG;
+
+  DoCommand();
+  return NS_OK;
 }
 
 nsresult
@@ -349,12 +353,14 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& 
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTML4ButtonAccessible::DoAction(PRUint8 index)
+NS_IMETHODIMP
+nsHTML4ButtonAccessible::DoAction(PRUint8 aIndex)
 {
-  if (index == 0) {
-    return DoCommand();
-  }
-  return NS_ERROR_INVALID_ARG;
+  if (aIndex != 0)
+    return NS_ERROR_INVALID_ARG;
+
+  DoCommand();
+  return NS_OK;
 }
 
 nsresult
