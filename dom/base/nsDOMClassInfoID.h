@@ -383,6 +383,7 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_StorageList_id,
   eDOMClassInfo_StorageItem_id,
   eDOMClassInfo_StorageEvent_id,
+  eDOMClassInfo_StorageEventObsolete_id,
 
   // DOMParser, XMLSerializer
   eDOMClassInfo_DOMParser_id,

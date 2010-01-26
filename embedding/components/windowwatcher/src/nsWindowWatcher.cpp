@@ -950,7 +950,8 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
 
   if (subjectPrincipal && parentDocShell) {
     nsCOMPtr<nsIDOMStorage> storage;
-    parentDocShell->GetSessionStorageForPrincipal(subjectPrincipal, PR_FALSE,
+    parentDocShell->GetSessionStorageForPrincipal(subjectPrincipal,
+                                                  EmptyString(), PR_FALSE,
                                                   getter_AddRefs(storage));
     nsCOMPtr<nsPIDOMStorage> piStorage =
       do_QueryInterface(storage);
