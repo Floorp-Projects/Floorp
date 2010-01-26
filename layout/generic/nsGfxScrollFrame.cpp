@@ -1598,7 +1598,7 @@ SortBlitRectsForCopy(nsIntPoint aPixDelta, nsTArray<nsIntRect>* aRects)
 static PRBool
 CanScrollWithBlitting(nsIFrame* aFrame)
 {
-  for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
+  for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
     if (f->GetStyleDisplay()->HasTransform()) {
       return PR_FALSE;
     }
