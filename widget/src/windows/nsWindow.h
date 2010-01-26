@@ -446,6 +446,9 @@ protected:
   static PRBool         sJustGotActivate;
   static int            sTrimOnMinimize;
   static PRBool         sTrackPointHack;
+#ifdef MOZ_IPC
+  static PRUint32       sOOPPPluginFocusEvent;
+#endif
 
   // Hook Data Memebers for Dropdowns. sProcessHook Tells the
   // hook methods whether they should be processing the hook

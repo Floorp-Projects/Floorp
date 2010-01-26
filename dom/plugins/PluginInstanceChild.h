@@ -145,6 +145,9 @@ protected:
     NS_OVERRIDE virtual bool
     DeallocPStreamNotify(PStreamNotifyChild* notifyData);
 
+    virtual bool
+    AnswerSetPluginFocus();
+
 public:
     PluginInstanceChild(const NPPluginFuncs* aPluginIface);
 
