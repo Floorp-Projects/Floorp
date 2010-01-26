@@ -4645,8 +4645,10 @@ nsTypedSelection::DoAutoScroll(nsIFrame *aFrame, nsPoint& aPoint)
     result = mAutoScrollTimer->Stop();
 
   nsPresContext* presContext = aFrame->PresContext();
-  nsIFrame* rootmostFrame =
-    presContext->RootPresContext()->PresShell()->FrameManager()->GetRootFrame();
+  nsRootPresContext* rootPC = presContext->GetRootPresContext();
+  if (!rootPC)
+    return NS_OK;
+  nsIFrame* rootmostFrame = rootPC->PresShell()->FrameManager()->GetRootFrame();
   nsPoint globalPoint = aPoint + aFrame->GetOffsetTo(rootmostFrame);
 
   PRBool didScroll = presContext->PresShell()->

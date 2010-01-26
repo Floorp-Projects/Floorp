@@ -1614,7 +1614,11 @@ CanScrollWithBlitting(nsIFrame* aFrame)
 
 void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
 {
-  nsRootPresContext* rootPresContext = mOuter->PresContext()->RootPresContext();
+  nsRootPresContext* rootPresContext =
+    mOuter->PresContext()->GetRootPresContext();
+  if (!rootPresContext) {
+    return;
+  }
 
   nsPoint offsetToView;
   nsPoint offsetToWidget;
