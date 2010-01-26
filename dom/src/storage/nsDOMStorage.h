@@ -323,8 +323,6 @@ private:
   // Needed for the storage event, this is address of the document this storage
   // is bound to
   nsString mDocumentURI;
-
-  friend class nsDOMStorage2;
   nsRefPtr<nsDOMStorage> mStorage;
 };
 
