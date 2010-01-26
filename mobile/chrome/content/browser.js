@@ -3096,8 +3096,8 @@ function PluginObserver(bv) {
   this._started = false;
   this._isRendering = false;
 
-  let enabled = gPrefService.getBoolPref("plugin.load_plugins");
-  if (enabled)
+  let disabled = gPrefService.getBoolPref("plugin.disable");
+  if (!disabled)
     this.start();
 }
 
