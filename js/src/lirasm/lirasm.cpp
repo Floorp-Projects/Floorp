@@ -760,7 +760,7 @@ FragmentAssembler::endFragment()
     mFragment->lastIns =
         mLir->insGuard(LIR_x, NULL, createGuardRecord(createSideExit()));
 
-    ::compile(&mParent.mAssm, mFragment, mParent.mAlloc, optimize
+    mParent.mAssm.compile(mFragment, mParent.mAlloc, optimize
               verbose_only(, mParent.mLabelMap));
 
     if (mParent.mAssm.error() != nanojit::None) {

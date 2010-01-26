@@ -241,11 +241,8 @@ namespace nanojit
     class Assembler
     {
         friend class VerboseBlockReader;
-        public:
             #ifdef NJ_VERBOSE
-            // Log controller object.  Contains what-stuff-should-we-print
-            // bits, and a sink function for debug printing.
-            LogControl* _logc;
+        public:
             // Buffer for holding text as we generate it in reverse order.
             StringList* _outputCache;
 
@@ -254,6 +251,10 @@ namespace nanojit
             void outputf(const char* format, ...);
 
         private:
+            // Log controller object.  Contains what-stuff-should-we-print
+            // bits, and a sink function for debug printing.
+            LogControl* _logc;
+
             // Buffer used in most of the output function.  It must big enough
             // to hold both the output line and the 'outlineEOL' buffer, which
             // is concatenated onto 'outline' just before it is printed.
@@ -281,6 +282,9 @@ namespace nanojit
 
             Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc);
 
+            void        compile(Fragment *frag, Allocator& alloc, bool optimize
+                                verbose_only(, LabelMap*));
+
             void        endAssembly(Fragment* frag);
             void        assemble(Fragment* frag, LirFilter* reader);
             void        beginAssembly(Fragment *frag);
@@ -302,10 +306,10 @@ namespace nanojit
             debug_only( void        resourceConsistencyCheck(); )
             debug_only( void        registerConsistencyCheck(); )
 
-            Stats       _stats;
             CodeList*   codeList;                   // finished blocks of code.
 
         private:
+            Stats       _stats;
 
             void        gen(LirFilter* toCompile);
             NIns*       genPrologue();
@@ -387,12 +391,10 @@ namespace nanojit
             NIns*       _nExitIns;              // current instruction in current exit code chunk
                                                 // note: _nExitIns == NULL until the first side exit is seen.
         #ifdef NJ_VERBOSE
-        public:
             size_t      codeBytes;              // bytes allocated in normal code chunks
             size_t      exitBytes;              // bytes allocated in exit code chunks
         #endif
 
-        private:
             #define     SWAP(t, a, b)   do { t tmp = a; a = b; b = tmp; } while (0)
             void        swapCodeChunks();
 
