@@ -330,6 +330,10 @@ BOOL nsInstallerDlg::CreateShortcut()
     WCHAR sShortcutPath[MAX_PATH];
     _snwprintf(sShortcutPath, MAX_PATH, L"%s\\%s.lnk", sProgramsPath, Strings.GetString(StrID_AppShortName));
 
+    // Delete the old shortcut if it exists
+    if(SetFileAttributes(sShortcutPath, FILE_ATTRIBUTE_NORMAL))
+      DeleteFile(sShortcutPath);
+
     result = SHCreateShortcut(sShortcutPath, sFennecPath);
   }
 
@@ -343,6 +347,9 @@ BOOL nsInstallerDlg::CreateShortcut()
     {
       WCHAR sStartupShortcutPath[MAX_PATH];
       _snwprintf(sStartupShortcutPath, MAX_PATH, L"%s\\%sFastStart.lnk", sStartupPath, Strings.GetString(StrID_AppShortName));
+
+      if(SetFileAttributes(sStartupShortcutPath, FILE_ATTRIBUTE_NORMAL))
+        DeleteFile(sStartupShortcutPath);
 
       result = SHCreateShortcut(sStartupShortcutPath, sFastStartPath) && result;
     }
@@ -389,6 +396,26 @@ BOOL nsInstallerDlg::SilentFirstRun()
     // if FastStart is enabled, so don't wait longer than 10 seconds.
     WaitForSingleObject(pi.hProcess, 10000);
   }
+
+  if (m_bFastStart)
+  {
+    // When the FastStart is enabled, Fennec is being loaded in the background,
+    // user cannot launch it with a shortcut, and the system is busy at the moment,
+    // so we'll just wait here.
+
+    // Class name: appName + "MessageWindow"
+    WCHAR sClassName[MAX_PATH];
+    _snwprintf(sClassName, MAX_PATH, L"%s%s", Strings.GetString(StrID_AppShortName), L"MessageWindow");
+
+    // Wait until the hidden window gets created or for some timeout (~10s seems to be reasonable)
+    HWND handle = NULL;
+    for (int i = 0; i < 20 && !handle; i++)
+    {
+      handle = ::FindWindowW(sClassName, NULL);
+      Sleep(500);
+    }
+  }
+
   SetWindowText(GetDlgItem(m_hDlg, IDC_STATUS_TEXT), L"");
   return bResult;
 }
