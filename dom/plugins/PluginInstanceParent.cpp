@@ -48,6 +48,11 @@
 
 #if defined(OS_WIN)
 #include <windowsx.h>
+
+// Plugin focus event for widget.
+extern const PRUnichar* kOOPPPluginFocusEventId;
+UINT gOOPPPluginFocusEvent =
+    RegisterWindowMessage(kOOPPPluginFocusEventId);
 #endif
 
 using namespace mozilla::plugins;
@@ -55,10 +60,14 @@ using namespace mozilla::plugins;
 PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
                                            NPP npp,
                                            const NPNetscapeFuncs* npniface)
-  : mParent(parent),
-    mNPP(npp),
-    mNPNIface(npniface),
-    mWindowType(NPWindowTypeWindow)
+  : mParent(parent)
+    , mNPP(npp)
+    , mNPNIface(npniface)
+    , mWindowType(NPWindowTypeWindow)
+#if defined(OS_WIN)
+    , mPluginHWND(NULL)
+    , mPluginWndProc(NULL)
+#endif // defined(XP_WIN)
 {
 }
 
@@ -99,6 +108,7 @@ PluginInstanceParent::Destroy()
 
 #if defined(OS_WIN)
     SharedSurfaceRelease();
+    UnsubclassPluginWindow();
 #endif
 
     return retval;
@@ -360,6 +370,8 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
         }
     }
     else {
+        SubclassPluginWindow(reinterpret_cast<HWND>(aWindow->window));
+
         window.window = reinterpret_cast<unsigned long>(aWindow->window);
         window.x = aWindow->x;
         window.y = aWindow->y;
@@ -832,6 +844,86 @@ PluginInstanceParent::AnswerNPN_GetAuthenticationInfo(const nsCString& protocol,
 
 #if defined(OS_WIN)
 
+/*
+  plugin focus changes between processes
+
+  focus from dom -> child:
+    Focs manager calls on widget to set the focus on the window.
+    We pick up the resulting wm_setfocus event here, and forward
+    that over ipc to the child which calls set focus on itself. 
+
+  focus from child -> focus manager:
+    Child picks up the local wm_setfocus and sends it via ipc over
+    here. We then post a custom event to widget/src/windows/nswindow
+    which fires off a gui event letting the browser know.
+*/
+
+static const PRUnichar kPluginInstanceParentProperty[] =
+                         L"PluginInstanceParentProperty";
+
+// static
+LRESULT CALLBACK
+PluginInstanceParent::PluginWindowHookProc(HWND hWnd,
+                                           UINT message,
+                                           WPARAM wParam,
+                                           LPARAM lParam)
+{
+    PluginInstanceParent* self = reinterpret_cast<PluginInstanceParent*>(
+        ::GetPropW(hWnd, kPluginInstanceParentProperty));
+    if (!self) {
+        NS_NOTREACHED("PluginInstanceParent::PluginWindowHookProc null this ptr!");
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+
+    NS_ASSERTION(self->mPluginHWND == hWnd, "Wrong window!");
+
+    switch (message) {
+        case WM_SETFOCUS:
+        self->CallSetPluginFocus();
+        break;
+
+        case WM_CLOSE:
+        self->UnsubclassPluginWindow();
+        break;
+    }
+
+    return ::CallWindowProc(self->mPluginWndProc, hWnd, message, wParam,
+                            lParam);
+}
+
+void
+PluginInstanceParent::SubclassPluginWindow(HWND aWnd)
+{
+    NS_ASSERTION(!(mPluginHWND && aWnd != mPluginHWND),
+      "PluginInstanceParent::SubclassPluginWindow hwnd is not our window!");
+
+    if (!mPluginHWND) {
+        mPluginHWND = aWnd;
+        mPluginWndProc = 
+            (WNDPROC)::SetWindowLongPtrA(mPluginHWND, GWLP_WNDPROC,
+                         reinterpret_cast<LONG>(PluginWindowHookProc));
+        bool bRes = ::SetPropW(mPluginHWND, kPluginInstanceParentProperty, this);
+        NS_ASSERTION(mPluginWndProc,
+          "PluginInstanceParent::SubclassPluginWindow failed to set subclass!");
+        NS_ASSERTION(bRes,
+          "PluginInstanceParent::SubclassPluginWindow failed to set prop!");
+   }
+}
+
+void
+PluginInstanceParent::UnsubclassPluginWindow()
+{
+    if (mPluginHWND && mPluginWndProc) {
+        ::SetWindowLongPtrA(mPluginHWND, GWLP_WNDPROC,
+                            reinterpret_cast<LONG>(mPluginWndProc));
+
+        ::RemovePropW(mPluginHWND, kPluginInstanceParentProperty);
+
+        mPluginWndProc = NULL;
+        mPluginHWND = NULL;
+    }
+}
+
 /* windowless drawing helpers */
 
 /*
@@ -956,3 +1048,21 @@ PluginInstanceParent::SharedSurfaceAfterPaint(NPEvent* npevent)
 }
 
 #endif // defined(OS_WIN)
+
+bool
+PluginInstanceParent::AnswerPluginGotFocus()
+{
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+
+    // Currently only in use on windows - an rpc event we receive from the
+    // child when it's plugin window (or one of it's children) receives keyboard
+    // focus. We forward the event down to widget so the dom/focus manager can
+    // be updated.
+#if defined(OS_WIN)
+    ::SendMessage(mPluginHWND, gOOPPPluginFocusEvent, 0, 0);
+    return true;
+#else
+    NS_NOTREACHED("PluginInstanceParent::AnswerPluginGotFocus not implemented!");
+    return false;
+#endif
+}

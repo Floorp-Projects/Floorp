@@ -684,6 +684,10 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
 
     NS_ASSERTION(self->mPluginWindowHWND == hWnd, "Wrong window!");
 
+    // The plugin received keyboard focus, let the parent know so the dom is up to date.
+    if (message == WM_MOUSEACTIVATE)
+        self->CallPluginGotFocus();
+
     LRESULT res = CallWindowProc(self->mPluginWndProc, hWnd, message, wParam,
                                  lParam);
 
@@ -871,6 +875,23 @@ PluginInstanceChild::SharedSurfacePaint(NPEvent& evcopy)
 }
 
 #endif // OS_WIN
+
+bool
+PluginInstanceChild::AnswerSetPluginFocus()
+{
+    PR_LOG(gPluginLog, PR_LOG_DEBUG, ("%s", FULLFUNCTION));
+
+#if defined(OS_WIN)
+    // Parent is letting us know something set focus to the plugin.
+    if (::GetFocus() == mPluginWindowHWND)
+        return true;
+    ::SetFocus(mPluginWindowHWND);
+    return true;
+#else
+    NS_NOTREACHED("PluginInstanceChild::AnswerSetPluginFocus not implemented!");
+    return false;
+#endif
+}
 
 PPluginScriptableObjectChild*
 PluginInstanceChild::AllocPPluginScriptableObject()
