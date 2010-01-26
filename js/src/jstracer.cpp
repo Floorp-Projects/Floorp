@@ -4433,8 +4433,8 @@ TraceRecorder::compile()
 
     Assembler *assm = traceMonitor->assembler;
     JS_ASSERT(assm->error() == nanojit::None);
-    nanojit::compile(assm, fragment, tempAlloc(), /*optimize*/true
-                     verbose_only(, lirbuf->names->labels));
+    assm->compile(fragment, tempAlloc(), /*optimize*/true
+                  verbose_only(, lirbuf->names->labels));
 
     if (assm->error() != nanojit::None) {
         assm->setError(nanojit::None);
