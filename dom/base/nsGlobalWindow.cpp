@@ -101,7 +101,6 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMCrypto.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOM3Document.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMElement.h"
@@ -114,7 +113,6 @@
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMGeoGeolocation.h"
-#include "nsPIDOMStorage.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
@@ -655,9 +653,9 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
     mJSObject(nsnull),
+    mPendingStorageEvents(nsnull),
     mTimeoutsSuspendDepth(0),
-    mFocusMethod(0),
-    mPendingStorageEventsObsolete(nsnull)
+    mFocusMethod(0)
 #ifdef DEBUG
     , mSetOpenerWindowCalled(PR_FALSE)
 #endif
@@ -689,7 +687,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
         // Watch for dom-storage-changed so we can fire storage
         // events. Use a strong reference.
-        os->AddObserver(mObserver, "dom-storage2-changed", PR_FALSE);
         os->AddObserver(mObserver, "dom-storage-changed", PR_FALSE);
       }
     }
@@ -776,7 +773,6 @@ nsGlobalWindow::~nsGlobalWindow()
       do_GetService("@mozilla.org/observer-service;1");
     if (os) {
       os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
-      os->RemoveObserver(mObserver, "dom-storage2-changed");
       os->RemoveObserver(mObserver, "dom-storage-changed");
     }
 
@@ -830,7 +826,7 @@ nsGlobalWindow::~nsGlobalWindow()
   nsCycleCollector_DEBUG_wasFreed(static_cast<nsIScriptGlobalObject*>(this));
 #endif
 
-  delete mPendingStorageEventsObsolete;
+  delete mPendingStorageEvents;
 
   nsLayoutStatics::Release();
 }
@@ -1734,7 +1730,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   mDocument = do_QueryInterface(aDocument);
   mDoc = aDocument;
   mLocalStorage = nsnull;
-  mSessionStorage = nsnull;
 
 #ifdef DEBUG
   mLastOpenedURI = aDocument->GetDocumentURI();
@@ -7087,6 +7082,8 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
 {
   FORWARD_TO_INNER(GetSessionStorage, (aSessionStorage), NS_ERROR_UNEXPECTED);
 
+  *aSessionStorage = nsnull;
+
   nsIPrincipal *principal = GetPrincipal();
   nsIDocShell* docShell = GetDocShell();
 
@@ -7094,56 +7091,15 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     return NS_OK;
   }
 
-  if (mSessionStorage) {
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
-      PR_LogPrint("nsGlobalWindow %p has %p sessionStorage", this, mSessionStorage.get());
-    }
-#endif
-    nsCOMPtr<nsPIDOMStorage> piStorage = do_QueryInterface(mSessionStorage);
-    if (piStorage) {
-      PRBool canAccess = piStorage->CanAccess(principal);
-      NS_ASSERTION(canAccess,
-                   "window %x owned sessionStorage "
-                   "that could not be accessed!");
-      if (!canAccess) {
-          mSessionStorage = nsnull;
-      }
-    }
+  nsresult rv = docShell->GetSessionStorageForPrincipal(principal,
+                                                        PR_TRUE,
+                                                        aSessionStorage);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!*aSessionStorage) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
-  if (!mSessionStorage) {
-    *aSessionStorage = nsnull;
-
-    nsString documentURI;
-    nsCOMPtr<nsIDOM3Document> document3 = do_QueryInterface(mDoc);
-    if (document3)
-        document3->GetDocumentURI(documentURI);
-
-    nsresult rv = docShell->GetSessionStorageForPrincipal(principal,
-                                                          documentURI,
-                                                          PR_TRUE,
-                                                          getter_AddRefs(mSessionStorage));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
-      PR_LogPrint("nsGlobalWindow %p tried to get a new sessionStorage %p", this, mSessionStorage.get());
-    }
-#endif
-
-    if (!mSessionStorage) {
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-    }
-  }
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
-      PR_LogPrint("nsGlobalWindow %p returns %p sessionStorage", this, mSessionStorage.get());
-    }
-#endif
-
-  NS_ADDREF(*aSessionStorage = mSessionStorage);
   return NS_OK;
 }
 
@@ -7191,14 +7147,7 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
       do_GetService("@mozilla.org/dom/storagemanager;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsString documentURI;
-    nsCOMPtr<nsIDOM3Document> document3 = do_QueryInterface(mDoc);
-    if (document3)
-        document3->GetDocumentURI(documentURI);
-
-    rv = storageManager->GetLocalStorageForPrincipal(principal,
-                                                     documentURI,
-                                                     getter_AddRefs(mLocalStorage));
+    rv = storageManager->GetLocalStorageForPrincipal(principal, getter_AddRefs(mLocalStorage));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -7341,7 +7290,21 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     nsresult rv;
 
     principal = GetPrincipal();
-    if (principal) {
+    if (!aData) {
+      nsIDocShell* docShell = GetDocShell();
+      if (principal && docShell) {
+        nsCOMPtr<nsIDOMStorage> storage;
+        docShell->GetSessionStorageForPrincipal(principal,
+                                                PR_FALSE,
+                                                getter_AddRefs(storage));
+
+        if (!SameCOMIdentity(storage, aSubject)) {
+          // A sessionStorage object changed, but not our session storage
+          // object.
+          return NS_OK;
+        }
+      }
+    } else if (principal) {
       // A global storage object changed, check to see if it's one
       // this window can access.
 
@@ -7375,23 +7338,23 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       // store the domain in which the change happened and fire the
       // events if we're ever thawed.
 
-      if (!mPendingStorageEventsObsolete) {
-        mPendingStorageEventsObsolete = new nsDataHashtable<nsStringHashKey, PRBool>;
-        NS_ENSURE_TRUE(mPendingStorageEventsObsolete, NS_ERROR_OUT_OF_MEMORY);
+      if (!mPendingStorageEvents) {
+        mPendingStorageEvents = new nsDataHashtable<nsStringHashKey, PRBool>;
+        NS_ENSURE_TRUE(mPendingStorageEvents, NS_ERROR_OUT_OF_MEMORY);
 
-        rv = mPendingStorageEventsObsolete->Init();
+        rv = mPendingStorageEvents->Init();
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      mPendingStorageEventsObsolete->Put(domain, PR_TRUE);
+      mPendingStorageEvents->Put(domain, PR_TRUE);
 
       return NS_OK;
     }
 
-    nsRefPtr<nsDOMStorageEventObsolete> event = new nsDOMStorageEventObsolete();
+    nsRefPtr<nsDOMStorageEvent> event = new nsDOMStorageEvent(domain);
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = event->InitStorageEvent(NS_LITERAL_STRING("storage"), PR_FALSE, PR_FALSE, domain);
+    rv = event->Init();
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
@@ -7410,99 +7373,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     PRBool defaultActionEnabled;
-    target->DispatchEvent((nsIDOMStorageEventObsolete *)event, &defaultActionEnabled);
-
-    return NS_OK;
-  }
-
-  if (IsInnerWindow() && !nsCRT::strcmp(aTopic, "dom-storage2-changed")) {
-    nsIPrincipal *principal;
-    nsresult rv;
-
-    nsCOMPtr<nsIDOMStorageEvent> event = do_QueryInterface(aSubject, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDOMStorage> changingStorage;
-    rv = event->GetStorageArea(getter_AddRefs(changingStorage));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(changingStorage);
-    nsPIDOMStorage::nsDOMStorageType storageType = pistorage->StorageType();
-
-    principal = GetPrincipal();
-    switch (storageType)
-    {
-    case nsPIDOMStorage::SessionStorage:
-    {
-      if (SameCOMIdentity(mSessionStorage, changingStorage)) {
-        // Do not fire any events for the same storage object, it's not shared
-        // among windows, see nsGlobalWindow::GetSessionStoarge()
-        return NS_OK;
-      }
-
-      nsCOMPtr<nsIDOMStorage> storage = mSessionStorage;
-      if (!storage) {
-        nsIDocShell* docShell = GetDocShell();
-        if (principal && docShell) {
-          // No need to pass documentURI here, it's only needed when we want
-          // to create a new storage, the third paramater would be PR_TRUE
-          docShell->GetSessionStorageForPrincipal(principal,
-                                                  EmptyString(),
-                                                  PR_FALSE,
-                                                  getter_AddRefs(storage));
-        }
-      }
-
-      if (!pistorage->IsForkOf(storage)) {
-        // This storage event is coming from a different doc shell,
-        // i.e. it is a clone, ignore this event.
-        return NS_OK;
-      }
-
-#ifdef PR_LOGGING
-      if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
-        PR_LogPrint("nsGlobalWindow %p with sessionStorage %p passing event from %p", this, mSessionStorage.get(), pistorage.get());
-      }
-#endif
-
-      break;
-    }
-    case nsPIDOMStorage::LocalStorage:
-    {
-      if (SameCOMIdentity(mLocalStorage, changingStorage)) {
-        // Do not fire any events for the same storage object, it's not shared
-        // among windows, see nsGlobalWindow::GetLocalStoarge()
-        return NS_OK;
-      }
-
-      // Allow event fire only for the same principal storages
-      // XXX We have to use EqualsIgnoreDomain after bug 495337 lands
-      nsIPrincipal *storagePrincipal = pistorage->Principal();
-      PRBool equals;
-
-      rv = storagePrincipal->Equals(principal, &equals);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (!equals)
-        return NS_OK;
-
-      break;
-    }
-    default:
-      return NS_OK;
-    }
-
-    if (IsFrozen()) {
-      // This window is frozen, rather than firing the events here,
-      // store the domain in which the change happened and fire the
-      // events if we're ever thawed.
-
-      mPendingStorageEvents.AppendElement(event);
-      return NS_OK;
-    }
-
-    PRBool defaultActionEnabled;
-    DispatchEvent((nsIDOMStorageEvent *)event, &defaultActionEnabled);
+    target->DispatchEvent((nsIDOMStorageEvent *)event, &defaultActionEnabled);
 
     return NS_OK;
   }
@@ -7532,16 +7403,12 @@ nsGlobalWindow::FireDelayedDOMEvents()
 {
   FORWARD_TO_INNER(FireDelayedDOMEvents, (), NS_ERROR_UNEXPECTED);
 
-  for (PRUint32 i = 0; i < mPendingStorageEvents.Length(); ++i) {
-    Observe(mPendingStorageEvents[i], "dom-storage2-changed", nsnull);
-  }
-
-  if (mPendingStorageEventsObsolete) {
+  if (mPendingStorageEvents) {
     // Fire pending storage events.
-    mPendingStorageEventsObsolete->EnumerateRead(FirePendingStorageEvents, this);
+    mPendingStorageEvents->EnumerateRead(FirePendingStorageEvents, this);
 
-    delete mPendingStorageEventsObsolete;
-    mPendingStorageEventsObsolete = nsnull;
+    delete mPendingStorageEvents;
+    mPendingStorageEvents = nsnull;
   }
 
   if (mApplicationCache) {
