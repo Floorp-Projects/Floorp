@@ -35,10 +35,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../../../..
+DEPTH     = ../../../..
 topsrcdir = @top_srcdir@
-srcdir = @srcdir@
-VPATH = @srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -48,7 +48,7 @@ XPCSHELL_TESTS = \
   unit \
   $(NULL)
 
-TESTROOT	= $(shell cd $(DEPTH) && pwd)/_tests/xpcshell/$(MODULE)
+TESTROOT = $(call core_abspath,$(DEPTH))/_tests/xpcshell/$(MODULE)
 
 CPPSRCS = \
   TestAUSReadStrings.cpp \
@@ -64,7 +64,7 @@ INI_TEST_FILES = \
 
 LOCAL_INCLUDES += \
   -I$(srcdir) \
-  -I$(topsrcdir)/toolkit/mozapps/update/src \
+  -I$(topsrcdir)/toolkit/mozapps/update \
   $(NULL)
 
 MOZ_WINCONSOLE = 1

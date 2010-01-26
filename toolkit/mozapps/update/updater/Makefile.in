@@ -36,37 +36,36 @@
 #
 # ***** END LICENSE BLOCK *****
 
-
-DEPTH		= ../../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS = \
-	updater.cpp \
-	bspatch.cpp \
-	archivereader.cpp \
-	$(NULL)
+  updater.cpp \
+  bspatch.cpp \
+  archivereader.cpp \
+  $(NULL)
 
 PROGRAM = updater$(BIN_SUFFIX)
 
-LOCAL_INCLUDES += -I$(srcdir)/../../../readstrings
+LOCAL_INCLUDES += -I$(srcdir)/../../readstrings
 
 LIBS += \
-	$(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
-	../../../readstrings/$(LIB_PREFIX)readstrings.$(LIB_SUFFIX) \
-	$(BZ2_LIBS) \
-	$(NULL)
+  $(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
+  ../../readstrings/$(LIB_PREFIX)readstrings.$(LIB_SUFFIX) \
+  $(BZ2_LIBS) \
+  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 USE_STATIC_LIBS = 1
 HAVE_PROGRESSUI = 1
 RCINCLUDE = updater.rc
 CPPSRCS += \
-	progressui_win.cpp \
-	$(NULL)
+  progressui_win.cpp \
+  $(NULL)
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
 DEFINES += -DUNICODE -D_UNICODE
 ifndef GNU_CC
@@ -82,9 +81,9 @@ export NO_SHUNT = 1
 USE_STATIC_LIBS = 1
 HAVE_PROGRESSUI = 1
 CPPSRCS += \
-	updater_wince.cpp \
-	progressui_win.cpp \
-	$(NULL)
+  updater_wince.cpp \
+  progressui_win.cpp \
+  $(NULL)
 OS_LIBS += $(call EXPAND_LIBNAME,commctrl ws2)
 ifdef WINCE_WINDOWS_MOBILE
 OS_LIBS += $(call EXPAND_LIBNAME,aygshell)
@@ -101,8 +100,8 @@ endif
 ifneq ($(MOZ_ENABLE_GTK2),)
 HAVE_PROGRESSUI = 1
 CPPSRCS += \
-	progressui_gtk.cpp \
-	$(NULL)
+  progressui_gtk.cpp \
+  $(NULL)
 OS_CXXFLAGS += $(TK_CFLAGS)
 OS_LIBS += $(TK_LIBS)
 endif
