@@ -508,7 +508,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       pHandle = self.ctypes.windll.kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid)
       if not pHandle:
         return False
-      pExitCode = self.wintypes.DWORD()
+      pExitCode = ctypes.wintypes.DWORD()
       self.ctypes.windll.kernel32.GetExitCodeProcess(pHandle, self.ctypes.byref(pExitCode))
       self.ctypes.windll.kernel32.CloseHandle(pHandle)
       if (pExitCode.value == STILL_ACTIVE):
