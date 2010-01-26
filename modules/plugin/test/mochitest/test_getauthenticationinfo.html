@@ -24,12 +24,12 @@ const Cc = Components.classes;
 function iframeLoad() {
   var plugin = iframe.contentDocument.getElementById("embedtest");
   // valid request
-  is(plugin.getAuthInfo("http", "localhost", 8888, "http", "testrealm"), 
+  is(plugin.getAuthInfo("http", "localhost", 8888, "basic", "testrealm"), 
       "user1|password1", 
       "correct user/pass retrieved");
   try {
     // invalid request -- wrong host
-    is(plugin.getAuthInfo("http", "example.com", 8888, "http", "testrealm"), 
+    is(plugin.getAuthInfo("http", "example.com", 8888, "basic", "testrealm"), 
         "user1|password1", 
         "correct user/pass retrieved");
     ok(false, "no exception was thrown");
@@ -39,7 +39,7 @@ function iframeLoad() {
   }
   try {
     // invalid request -- wrong port
-    is(plugin.getAuthInfo("http", "localhost", 90, "http", "testrealm"), 
+    is(plugin.getAuthInfo("http", "localhost", 90, "basic", "testrealm"), 
         "user1|password1", 
         "correct user/pass retrieved");
     ok(false, "no exception was thrown");
@@ -49,7 +49,7 @@ function iframeLoad() {
   }
   try {
     // invalid request -- wrong realm
-    is(plugin.getAuthInfo("http", "localhost", 8888, "http", "wrongrealm"), 
+    is(plugin.getAuthInfo("http", "localhost", 8888, "basic", "wrongrealm"), 
         "user1|password1", 
         "correct user/pass retrieved");
     ok(false, "no exception was thrown");
