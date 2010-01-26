@@ -3115,7 +3115,7 @@ PluginObserver.prototype = {
     this._contentShowing.addEventListener("broadcast", this, false);
     let browsers = document.getElementById("browsers");
     browsers.addEventListener("RenderStateChanged", this, false);
-    gObserverService.addObserver(this, "plugin-reflow-event", false);
+    gObserverService.addObserver(this, "plugin-changed-event", false);
     Elements.stack.addEventListener("PopupChanged", this, false);
 
     let browser = Browser.selectedBrowser;
@@ -3135,7 +3135,7 @@ PluginObserver.prototype = {
     this._contentShowing.removeEventListener("broadcast", this, false);
     let browsers = document.getElementById("browsers");
     browsers.removeEventListener("RenderStateChanged", this, false);
-    gObserverService.removeObserver(this, "plugin-reflow-event");
+    gObserverService.removeObserver(this, "plugin-changed-event");
     Elements.stack.removeEventListener("PopupChanged", this, false);
 
     let browser = Browser.selectedBrowser;
