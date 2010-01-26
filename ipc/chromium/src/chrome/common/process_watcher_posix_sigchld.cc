@@ -81,6 +81,22 @@ IsProcessDead(pid_t process)
   return exited;
 }
 
+bool
+WaitForProcessExitMaxSecs(pid_t process, int maxSecs)
+{
+  bool infiniteWait = (maxSecs < 0);
+  int status;
+  int nWaits = 0;
+
+  do {
+    HANDLE_EINTR(waitpid(process, &status, WNOHANG));
+  } while (!WIFEXITED(status) &&
+           (infiniteWait || nWaits++ < maxSecs) &&
+           0 == HANDLE_EINTR(sleep(1)));
+
+  return WIFEXITED(status);
+}
+
 
 class ChildReaper : public base::MessagePumpLibevent::SignalEvent,
                     public base::MessagePumpLibevent::SignalWatcher
@@ -126,20 +142,16 @@ protected:
     HANDLE_EINTR(waitpid(process_, NULL, 0));
 #else
 
-    const int maxWaits = 30;
-    int waits = 0;
-    while (!IsProcessDead(process_) && ++waits < maxWaits)
-      sleep(1);
+    if (WaitForProcessExitMaxSecs(process_, 30)) {
+      printf("TEST-UNEXPECTED-FAIL | process %d done busy-waiting on | child process %d exited normally\n", getpid(), process_);
+      return;
+    }
 
-    if (waits < maxWaits) {
-      printf("TEST-UNEXPECTED-FAIL | process %d done busy-waiting on | child process %d\n", getpid(), process_);
-    }
-    else {
-      printf("TEST-UNEXPECTED-FAIL | process %d wait on | child process %d timed out!\n", getpid(), process_);
-      // kill the child in such a way that breakpad is triggered
-      kill(process_, SIGSEGV);
-      HANDLE_EINTR(waitpid(process_, NULL, 0));
-    }
+    printf("TEST-UNEXPECTED-FAIL | process %d wait on | child process %d timed out!\n", getpid(), process_);
+    // kill the child in such a way that breakpad is triggered
+    kill(process_, SIGSEGV);
+
+    WaitForProcessExitMaxSecs(process_, -1); // wait "forever"
 #endif
 
 
