@@ -937,12 +937,17 @@ namespace nanojit
         uint32_t argt = ci->_argtypes;
         LOpcode op = k_callmap[argt & ARGSIZE_MASK_ANY];
         NanoAssert(op != LIR_skip); // LIR_skip here is just an error condition
+#ifndef NANOJIT_64BIT
+        NanoAssert(op != LIR_qcall); // qcall should only be possible on 64-bit arch
+#endif
 
         int32_t argc = ci->count_args();
         NanoAssert(argc <= (int)MAXARGS);
 
-        if (!ARM_VFP && (op == LIR_fcall || op == LIR_qcall))
+#if defined(NANOJIT_ARM)
+        if (!_config.arm_vfp && op == LIR_fcall)
             op = LIR_callh;
+#endif
 
         // Allocate space for and copy the arguments.  We use the same
         // allocator as the normal LIR buffers so it has the same lifetime.

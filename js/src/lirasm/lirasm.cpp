@@ -496,7 +496,7 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
     mFragment->lirbuf = mParent.mLirbuf;
     mParent.mFragments[mFragName].fragptr = mFragment;
 
-    mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf);
+    mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf, nanojit::AvmCore::config);
     if (optimize) {
 #ifdef DEBUG
         mLir = mValidateWriter2 = new ValidateWriter(mLir, "end of writer pipeline");
@@ -2151,12 +2151,12 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
     avmplus::AvmCore::config.fixed_esp = true;
 #elif defined NANOJIT_ARM
     // Note that we don't check for sensible configurations here!
-    avmplus::AvmCore::config.arch = arm_arch;
-    avmplus::AvmCore::config.vfp = arm_vfp;
+    avmplus::AvmCore::config.arm_arch = arm_arch;
+    avmplus::AvmCore::config.arm_vfp = arm_vfp;
     avmplus::AvmCore::config.soft_float = !arm_vfp;
     // This doesn't allow us to test ARMv6T2 (which also supports Thumb2), but this shouldn't
     // really matter here.
-    avmplus::AvmCore::config.thumb2 = (arm_arch >= 7);
+    avmplus::AvmCore::config.arm_thumb2 = (arm_arch >= 7);
 #endif
 }
 
