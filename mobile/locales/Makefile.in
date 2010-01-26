@@ -171,7 +171,7 @@ endif
 ifndef EN_US_BINARY_URL
 	$(error EN_US_BINARY_URL not defined)
 endif
-	$(WGET) -q -O - $(EN_US_BINARY_URL)/deb_name.txt
+	@$(WGET) -q -O - $(EN_US_BINARY_URL)/deb_name.txt
 
 wget-deb:
 ifndef WGET
