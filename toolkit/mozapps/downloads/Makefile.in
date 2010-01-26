@@ -44,8 +44,7 @@ include $(topsrcdir)/config/config.mk
 
 MODULE = helperAppDlg
 
-EXTRA_COMPONENTS = nsHelperAppDlg.js
-GARBAGE += nsHelperAppDlg.js
+EXTRA_PP_COMPONENTS = nsHelperAppDlg.js
 
 EXTRA_JS_MODULES = \
   DownloadLastDir.jsm \
@@ -57,6 +56,3 @@ DIRS += tests
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-nsHelperAppDlg.js: nsHelperAppDlg.js.in
-	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $@ 

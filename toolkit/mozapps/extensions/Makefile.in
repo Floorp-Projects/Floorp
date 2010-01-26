@@ -48,12 +48,10 @@ XPIDLSRCS = \
   nsIExtensionManager.idl \
   $(NULL)
 
-EXTRA_COMPONENTS = nsExtensionManager.js
-GARBAGE += nsExtensionManager.js
-
 EXTRA_PP_COMPONENTS = \
   nsAddonRepository.js \
   nsBlocklistService.js \
+  nsExtensionManager.js \
   $(NULL)
 
 EXTRA_JS_MODULES = \
@@ -65,6 +63,3 @@ DIRS += test
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-nsExtensionManager.js: nsExtensionManager.js.in
-	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > $@ 
