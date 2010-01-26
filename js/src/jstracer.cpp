@@ -85,7 +85,7 @@
 #include "jsautooplen.h"        // generated headers last
 #include "imacros.c.out"
 
-#if defined(NANOJIT_ARM) && defined(__GNUCC__) && defined(AVMPLUS_LINUX)
+#if defined(NANOJIT_ARM) && defined(__GNUC__) && defined(AVMPLUS_LINUX)
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
