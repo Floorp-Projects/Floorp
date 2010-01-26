@@ -53,6 +53,12 @@ WCHAR g_sUninstallPath[MAX_PATH];
 const DWORD c_nTempBufSize = MAX_PATH * 2;
 const WCHAR c_sRemoveParam[] = L"remove";
 
+// Retry counter for the file/directory deletion
+int nTotalRetries = 0;
+const int c_nMaxTotalRetries = 10;
+const int c_nMaxOneFileRetries = 6;
+const int c_nRetryDelay = 500; //milliseconds
+
 enum {
   ErrOK = 0,
   ErrCancel = 1,
@@ -189,6 +195,7 @@ BOOL GetInstallPath(WCHAR *sPath)
 
 BOOL DeleteDirectory(const WCHAR* sPathToDelete)
 {
+  BOOL            bResult = TRUE;
   HANDLE          hFile;
   WCHAR           sFilePath[MAX_PATH];
   WCHAR           sPattern[MAX_PATH];
@@ -208,12 +215,8 @@ BOOL DeleteDirectory(const WCHAR* sPathToDelete)
         if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
           // Delete subdirectory
-          BOOL bRet = DeleteDirectory(sFilePath);
-          if (!bRet)
-          {
-            // Just continue
-            //return bRet;
-          }
+          if (!DeleteDirectory(sFilePath))
+            bResult = FALSE;
         }
         else
         {
@@ -221,10 +224,21 @@ BOOL DeleteDirectory(const WCHAR* sPathToDelete)
           if (SetFileAttributes(sFilePath, FILE_ATTRIBUTE_NORMAL))
           {
             // Delete file
-            if (!DeleteFile(sFilePath))
+            if (!DeleteFile(sFilePath) && nTotalRetries < c_nMaxTotalRetries)
             {
-              // Just continue
-              //return FALSE;
+              BOOL bDeleted = FALSE;
+              nTotalRetries++;
+              for (int nRetry = 0; nRetry < c_nMaxOneFileRetries; nRetry++)
+              {
+                Sleep(c_nRetryDelay);
+                if (DeleteFile(sFilePath))
+                {
+                  bDeleted = TRUE;
+                  break;
+                }
+              }
+              if (!bDeleted)
+                bResult = FALSE;
             }
           }
         }
@@ -233,23 +247,31 @@ BOOL DeleteDirectory(const WCHAR* sPathToDelete)
 
     // Close handle
     FindClose(hFile);
+  }
 
-    DWORD dwError = GetLastError();
-    if (dwError != ERROR_NO_MORE_FILES)
-      return FALSE;
-    else
+  // Set directory attributes
+  if (SetFileAttributes(sPathToDelete, FILE_ATTRIBUTE_NORMAL))
+  {
+    // Delete directory
+    if (!RemoveDirectory(sPathToDelete) && nTotalRetries < c_nMaxTotalRetries)
     {
-      // Set directory attributes
-      if (SetFileAttributes(sPathToDelete, FILE_ATTRIBUTE_NORMAL))
+      BOOL bDeleted = FALSE;
+      nTotalRetries++;
+      for (int nRetry = 0; nRetry < c_nMaxOneFileRetries; nRetry++)
       {
-        // Delete directory
-        if (!RemoveDirectory(sPathToDelete))
-          return FALSE;
+        Sleep(c_nRetryDelay);
+        if (RemoveDirectory(sPathToDelete))
+        {
+          bDeleted = TRUE;
+          break;
+        }
       }
+      if (!bDeleted)
+        bResult = FALSE;
     }
   }
 
-  return TRUE;
+  return bResult;
 }
 
 // Deletes shortcuts for Fennec and FastStart service created by the installer.
@@ -351,12 +373,13 @@ BOOL ShutdownFastStartService(const WCHAR *wsInstallPath)
     };
     ::SendMessage(handle, WM_COPYDATA, 0, (LPARAM)&cds);
 
-    // Wait 10 seconds or until it's shut down
+    // Wait until it's shut down or for some timeout
     for (int i = 0; i < 20 && handle; i++)
     {
       Sleep(500);
       handle = ::FindWindowW(sClassName, NULL);
     }
+
     // The window must not exist if the service shut down properly
     result = (handle == NULL);
   }
