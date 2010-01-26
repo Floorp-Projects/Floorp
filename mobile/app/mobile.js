@@ -313,7 +313,7 @@ pref("privacy.item.sessions", true);
 pref("privacy.item.geolocation", true);
 pref("privacy.item.siteSettings", true);
 
-pref("plugins.enabled", true);
+pref("plugin.load_plugins", false);
 
 #ifdef MOZ_PLATFORM_HILDON
 pref("plugins.force.wmode", "opaque");
@@ -426,7 +426,7 @@ pref("app.update.interval", 86400);
 pref("app.update.download.backgroundInterval", 600);
 pref("app.update.url.manual", "http://www.mozilla.com/%LOCALE%/m/");
 pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/mobile/releases/");
-#else 
+#else
 pref("app.update.interval", 28800);
 #endif
 #endif
