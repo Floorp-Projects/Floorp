@@ -825,6 +825,155 @@ namespace nanojit
         return jmpTarget;
     }
 
+    void Assembler::compile(Fragment* frag, Allocator& alloc, bool optimize verbose_only(, LabelMap* labels))
+    {
+        verbose_only(
+        bool anyVerb = (_logc->lcbits & 0xFFFF & ~LC_FragProfile) > 0;
+        bool asmVerb = (_logc->lcbits & 0xFFFF & LC_Assembly) > 0;
+        bool liveVerb = (_logc->lcbits & 0xFFFF & LC_Liveness) > 0;
+        )
+
+        /* BEGIN decorative preamble */
+        verbose_only(
+        if (anyVerb) {
+            _logc->printf("========================================"
+                          "========================================\n");
+            _logc->printf("=== BEGIN LIR::compile(%p, %p)\n",
+                          (void*)this, (void*)frag);
+            _logc->printf("===\n");
+        })
+        /* END decorative preamble */
+
+        verbose_only( if (liveVerb) {
+            _logc->printf("\n");
+            _logc->printf("=== Results of liveness analysis:\n");
+            _logc->printf("===\n");
+            LirReader br(frag->lastIns);
+            LirFilter* lir = &br;
+            if (optimize) {
+                StackFilter* sf = new (alloc) StackFilter(lir, alloc, frag->lirbuf->sp, frag->lirbuf->rp);
+                lir = sf;
+            }
+            live(lir, alloc, frag, _logc);
+        })
+
+        /* Set up the generic text output cache for the assembler */
+        verbose_only( StringList asmOutput(alloc); )
+        verbose_only( _outputCache = &asmOutput; )
+
+        beginAssembly(frag);
+        if (error())
+            return;
+
+        //_logc->printf("recompile trigger %X kind %d\n", (int)frag, frag->kind);
+
+        verbose_only( if (anyVerb) {
+            _logc->printf("=== Translating LIR fragments into assembly:\n");
+        })
+
+        // now the the main trunk
+        verbose_only( if (anyVerb) {
+            _logc->printf("=== -- Compile trunk %s: begin\n",
+                          labels->format(frag));
+        })
+
+        // Used for debug printing, if needed
+        debug_only(ValidateReader *validate = NULL;)
+        verbose_only(
+        ReverseLister *pp_init = NULL;
+        ReverseLister *pp_after_sf = NULL;
+        )
+
+        // The LIR passes through these filters as listed in this
+        // function, viz, top to bottom.
+
+        // set up backwards pipeline: assembler <- StackFilter <- LirReader
+        LirFilter* lir = new (alloc) LirReader(frag->lastIns);
+
+#ifdef DEBUG
+        // VALIDATION
+        validate = new (alloc) ValidateReader(lir);
+        lir = validate;
+#endif
+
+        // INITIAL PRINTING
+        verbose_only( if (_logc->lcbits & LC_ReadLIR) {
+        pp_init = new (alloc) ReverseLister(lir, alloc, frag->lirbuf->names, _logc,
+                                    "Initial LIR");
+        lir = pp_init;
+        })
+
+        // STACKFILTER
+        if (optimize) {
+            StackFilter* stackfilter =
+                new (alloc) StackFilter(lir, alloc, frag->lirbuf->sp, frag->lirbuf->rp);
+            lir = stackfilter;
+        }
+
+        verbose_only( if (_logc->lcbits & LC_AfterSF) {
+        pp_after_sf = new (alloc) ReverseLister(lir, alloc, frag->lirbuf->names, _logc,
+                                                "After StackFilter");
+        lir = pp_after_sf;
+        })
+
+        assemble(frag, lir);
+
+        // If we were accumulating debug info in the various ReverseListers,
+        // call finish() to emit whatever contents they have accumulated.
+        verbose_only(
+        if (pp_init)        pp_init->finish();
+        if (pp_after_sf)    pp_after_sf->finish();
+        )
+
+        verbose_only( if (anyVerb) {
+            _logc->printf("=== -- Compile trunk %s: end\n",
+                         labels->format(frag));
+        })
+
+        verbose_only(
+            if (asmVerb)
+                outputf("## compiling trunk %s", labels->format(frag));
+        )
+        endAssembly(frag);
+
+        // Reverse output so that assembly is displayed low-to-high.
+        // Up to this point, _outputCache has been non-NULL, and so has been
+        // accumulating output.  Now we set it to NULL, traverse the entire
+        // list of stored strings, and hand them a second time to output.
+        // Since _outputCache is now NULL, outputf just hands these strings
+        // directly onwards to _logc->printf.
+        verbose_only( if (anyVerb) {
+            _logc->printf("\n");
+            _logc->printf("=== Aggregated assembly output: BEGIN\n");
+            _logc->printf("===\n");
+            _outputCache = 0;
+            for (Seq<char*>* p = asmOutput.get(); p != NULL; p = p->tail) {
+                char *str = p->head;
+                outputf("  %s", str);
+            }
+            _logc->printf("===\n");
+            _logc->printf("=== Aggregated assembly output: END\n");
+        });
+
+        if (error())
+            frag->fragEntry = 0;
+
+        verbose_only( frag->nCodeBytes += codeBytes; )
+        verbose_only( frag->nExitBytes += exitBytes; )
+
+        /* BEGIN decorative postamble */
+        verbose_only( if (anyVerb) {
+            _logc->printf("\n");
+            _logc->printf("===\n");
+            _logc->printf("=== END LIR::compile(%p, %p)\n",
+                          (void*)this, (void*)frag);
+            _logc->printf("========================================"
+                          "========================================\n");
+            _logc->printf("\n");
+        });
+        /* END decorative postamble */
+    }
+
     void Assembler::beginAssembly(Fragment *frag)
     {
         verbose_only( codeBytes = 0; )
