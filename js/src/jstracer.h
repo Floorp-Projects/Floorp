@@ -1242,8 +1242,11 @@ class TraceRecorder
                                                         uint32 *slotp, nanojit::LIns** v_insp,
                                                         jsval* outp);
     JS_REQUIRES_STACK RecordingStatus denseArrayElement(jsval& oval, jsval& idx, jsval*& vp,
-                                                          nanojit::LIns*& v_ins,
-                                                          nanojit::LIns*& addr_ins);
+                                                        nanojit::LIns*& v_ins,
+                                                        nanojit::LIns*& addr_ins);
+    JS_REQUIRES_STACK AbortableRecordingStatus typedArrayElement(jsval& oval, jsval& idx, jsval*& vp,
+                                                                 nanojit::LIns*& v_ins,
+                                                                 nanojit::LIns*& addr_ins);
     JS_REQUIRES_STACK AbortableRecordingStatus getProp(JSObject* obj, nanojit::LIns* obj_ins);
     JS_REQUIRES_STACK AbortableRecordingStatus getProp(jsval& v);
     JS_REQUIRES_STACK RecordingStatus getThis(nanojit::LIns*& this_ins);

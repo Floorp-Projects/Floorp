@@ -75,6 +75,7 @@
 #include "jsstaticcheck.h"
 #include "jstracer.h"
 #include "jsxml.h"
+#include "jstypedarray.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
@@ -11952,6 +11953,13 @@ TraceRecorder::getPropertyWithNativeGetter(LIns* obj_ins, JSScopeProperty* sprop
     return RECORD_CONTINUE;
 }
 
+// Typed array tracing depends on NJ_EXPANDED_LOADSTORE and LIR_f2i
+#if NJ_EXPANDED_LOADSTORE && NJ_F2I_SUPPORTED
+static bool OkToTraceTypedArrays = true;
+#else
+static bool OkToTraceTypedArrays = false;
+#endif
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETELEM()
 {
@@ -12078,14 +12086,24 @@ TraceRecorder::record_JSOP_GETELEM()
             return ARECORD_CONTINUE;
         }
         RETURN_STOP_A("can't reach arguments object's frame");
-    }
-    if (obj->isDenseArray()) {
+    } else if (obj->isDenseArray()) {
         // Fast path for dense arrays accessed with a integer index.
         jsval* vp;
         LIns* addr_ins;
 
         guardDenseArray(obj, obj_ins, BRANCH_EXIT);
         CHECK_STATUS_A(denseArrayElement(lval, idx, vp, v_ins, addr_ins));
+        set(&lval, v_ins);
+        if (call)
+            set(&idx, obj_ins);
+        return ARECORD_CONTINUE;
+    } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
+        // Fast path for typed arrays accessed with a integer index.
+        jsval* vp;
+        LIns* addr_ins;
+
+        guardClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT));
+        CHECK_STATUS_A(typedArrayElement(lval, idx, vp, v_ins, addr_ins));
         set(&lval, v_ins);
         if (call)
             set(&idx, obj_ins);
@@ -12234,6 +12252,85 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
             RETURN_STOP_A("non-primitive index");
         CHECK_STATUS_A(initOrSetPropertyByName(obj_ins, &idx, &v,
                                              *cx->fp->regs->pc == JSOP_INITELEM));
+    } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
+        // Fast path: assigning to element of typed array.
+
+        // Ensure array is a typed array and is the same type as what was written
+        guardClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT));
+
+        js::TypedArray* tarray = js::TypedArray::fromJSObject(obj);
+
+        LIns* priv_ins = stobj_get_private(obj_ins);
+
+        // The index was on the stack and is therefore a LIR float. Force it to
+        // be an integer.
+        idx_ins = makeNumberInt32(idx_ins);
+
+        // Ensure idx >= 0 && idx < length (by using uint32)
+        LIns *br = lir->insBranch(LIR_jf,
+                                  lir->ins2(LIR_ult,
+                                            idx_ins,
+                                            lir->insLoad(LIR_ld, priv_ins, js::TypedArray::lengthOffset())),
+                                  NULL);
+
+        // We're now ready to store
+        LIns* data_ins = lir->insLoad(LIR_ldp, priv_ins, js::TypedArray::dataOffset());
+        LIns* pidx_ins = lir->ins_u2p(idx_ins);
+        LIns* addr_ins = 0;
+
+        if (isNumber(v)) {
+            if (isPromoteInt(v_ins) &&
+                tarray->type != js::TypedArray::TYPE_FLOAT32) {
+                LIns *v_ins_int = demote(lir, v_ins);
+                switch (tarray->type) {
+                  case js::TypedArray::TYPE_INT8:
+                  case js::TypedArray::TYPE_UINT8:
+                    addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
+                    lir->insStore(LIR_stb, v_ins_int, addr_ins, 0);
+                    break;
+                  case js::TypedArray::TYPE_INT16:
+                  case js::TypedArray::TYPE_UINT16:
+                    addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 1));
+                    lir->insStore(LIR_sts, v_ins_int, addr_ins, 0);
+                    break;
+                  case js::TypedArray::TYPE_INT32:
+                  case js::TypedArray::TYPE_UINT32:
+                    addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
+                    lir->insStore(LIR_sti, v_ins_int, addr_ins, 0);
+                    break;
+                  default:
+                    JS_NOT_REACHED("Unknown typed array in tracer");
+                }
+            } else {
+                switch (tarray->type) {
+                  case js::TypedArray::TYPE_INT8:
+                  case js::TypedArray::TYPE_UINT8:
+                    addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
+                    lir->insStore(LIR_stb, lir->ins1(LIR_f2i, v_ins), addr_ins, 0);
+                    break;
+                  case js::TypedArray::TYPE_INT16:
+                  case js::TypedArray::TYPE_UINT16:
+                    addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 1));
+                    lir->insStore(LIR_sts, lir->ins1(LIR_f2i, v_ins), addr_ins, 0);
+                    break;
+                  case js::TypedArray::TYPE_INT32:
+                  case js::TypedArray::TYPE_UINT32:
+                    addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
+                    lir->insStore(LIR_sti, lir->ins1(LIR_f2i, v_ins), addr_ins, 0);
+                    break;
+                  case js::TypedArray::TYPE_FLOAT32:
+                    addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
+                    lir->insStore(LIR_st32f, v_ins, addr_ins, 0);
+                    break;
+                  default:
+                    JS_NOT_REACHED("Unknown typed array type in tracer");
+                }
+            }
+        } else {
+            return ARECORD_STOP;
+        }
+
+        br->setTarget(lir->ins0(LIR_label));
     } else if (JSVAL_TO_INT(idx) < 0 || !OBJ_IS_DENSE_ARRAY(cx, obj)) {
         CHECK_STATUS_A(initOrSetPropertyByIndex(obj_ins, idx_ins, &v,
                                               *cx->fp->regs->pc == JSOP_INITELEM));
@@ -13144,6 +13241,83 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
         v_ins = lir->ins2i(LIR_and, v_ins, ~(JSVAL_HOLE_FLAG >> JSVAL_TAGBITS));
     }
     return RECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::typedArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_ins,
+                                 LIns*& addr_ins)
+{
+    JS_ASSERT(JSVAL_IS_OBJECT(oval) && JSVAL_IS_INT(ival));
+
+    JSObject* obj = JSVAL_TO_OBJECT(oval);
+    LIns* obj_ins = get(&oval);
+    jsint idx = JSVAL_TO_INT(ival);
+    LIns* idx_ins = makeNumberInt32(get(&ival));
+    LIns* pidx_ins = lir->ins_u2p(idx_ins);
+
+    js::TypedArray* tarray = js::TypedArray::fromJSObject(obj);
+    JS_ASSERT(tarray);
+
+    /* priv_ins will load the TypedArray* */
+    LIns* priv_ins = stobj_get_private(obj_ins);
+
+    /* for out-of-range, just let the interpreter handle it */
+    if ((jsuint) idx >= tarray->length)
+        return ARECORD_STOP;
+
+    /*
+     * Ensure idx < length
+     *
+     * NOTE! mLength is uint32, but it's guaranteed to fit in a jsval
+     * int, so we can treat it as either signed or unsigned.
+     * If the index happens to be negative, when it's treated as
+     * unsigned it'll be a very large int, and thus won't be less than
+     * length.
+     */
+    guard(true,
+          lir->ins2(LIR_ult,
+                    idx_ins,
+                    lir->insLoad(LIR_ldc, priv_ins, js::TypedArray::lengthOffset())),
+          OVERFLOW_EXIT);
+
+    /* We are now ready to load.  Do a different type of load
+     * depending on what type of thing we're loading. */
+    LIns* data_ins = lir->insLoad(LIR_ldp, priv_ins, js::TypedArray::dataOffset());
+
+    switch (tarray->type) {
+      case js::TypedArray::TYPE_INT8:
+        addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
+        v_ins = lir->ins1(LIR_i2f, lir->insLoad(LIR_ldsb, addr_ins, 0));
+        break;
+      case js::TypedArray::TYPE_UINT8:
+        addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
+        v_ins = lir->ins1(LIR_u2f, lir->insLoad(LIR_ldzb, addr_ins, 0));
+        break;
+      case js::TypedArray::TYPE_INT16:
+        addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 1));
+        v_ins = lir->ins1(LIR_i2f, lir->insLoad(LIR_ldss, addr_ins, 0));
+        break;
+      case js::TypedArray::TYPE_UINT16:
+        addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 1));
+        v_ins = lir->ins1(LIR_u2f, lir->insLoad(LIR_ldzs, addr_ins, 0));
+        break;
+      case js::TypedArray::TYPE_INT32:
+        addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
+        v_ins = lir->ins1(LIR_i2f, lir->insLoad(LIR_ld, addr_ins, 0));
+        break;
+      case js::TypedArray::TYPE_UINT32:
+        addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
+        v_ins = lir->ins1(LIR_u2f, lir->insLoad(LIR_ld, addr_ins, 0));
+        break;
+      case js::TypedArray::TYPE_FLOAT32:
+        addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
+        v_ins = lir->insLoad(LIR_ld32f, addr_ins, 0);
+        break;
+      default:
+        JS_NOT_REACHED("Unknown typed array type in tracer");
+    }
+
+    return ARECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
