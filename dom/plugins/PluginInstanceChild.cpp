@@ -688,6 +688,14 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
     if (message == WM_MOUSEACTIVATE)
         self->CallPluginGotFocus();
 
+    // Prevent lockups due to plugins making rpc calls when the parent
+    // is making a synchronous SetFocus api call. (bug 541362) Add more
+    // windowing events as needed for other api.
+    if (message == WM_KILLFOCUS && 
+        ((InSendMessageEx(NULL) & (ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND)) {
+        ReplyMessage(0); // Unblock the caller
+    }
+
     LRESULT res = CallWindowProc(self->mPluginWndProc, hWnd, message, wParam,
                                  lParam);
 
