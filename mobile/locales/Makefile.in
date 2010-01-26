@@ -64,7 +64,6 @@ PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/mobile-l10n.js) \
 
 # Shouldn't := DEB_BUILD_ARCH despite the $(shell ) as deb isn't everywhere
 DEB_BUILD_ARCH = $(shell dpkg-architecture -qDEB_BUILD_ARCH)
-DEB_PKG_NAME = fennec_$(MOZ_APP_VERSION)_$(DEB_BUILD_ARCH).deb
 DATASTAGE = $(CURDIR)/data-stage
 
 SEARCH_PLUGINS = $(shell cat \
@@ -165,9 +164,24 @@ ident:
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App BuildID
 
 # special targets just to do the debian single locale packages
+wget-DEB_PKG_NAME:
+ifndef WGET
+	$(error Wget not installed)
+endif
+ifndef EN_US_BINARY_URL
+	$(error EN_US_BINARY_URL not defined)
+endif
+	$(WGET) -q -O - $(EN_US_BINARY_URL)/deb_name.txt
+
 wget-deb:
 ifndef WGET
 	$(error Wget not installed)
+endif
+ifndef EN_US_BINARY_URL
+	$(error EN_US_BINARY_URL not defined)
+endif
+ifndef DEB_PKG_NAME
+	$(error DEB_PKG_NAME not defined)
 endif
 	$(WGET) -nv -N  $(EN_US_BINARY_URL)/$(DEB_PKG_NAME)
 
@@ -193,4 +207,7 @@ repackage-deb: $(DATASTAGE)
 
 deb-%: AB_CD=$*
 deb-%: clobber-% langpack-%
-	@$(MAKE) repackage-deb AB_CD=$(AB_CD)
+ifndef DEB_PKG_NAME
+	$(error DEB_PKG_NAME not defined)
+endif
+	@$(MAKE) repackage-deb AB_CD=$(AB_CD) DEB_PKG_NAME=$(DEB_PKG_NAME)
