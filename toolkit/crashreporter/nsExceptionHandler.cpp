@@ -1048,6 +1048,15 @@ OnChildProcessDumpRequested(void* aContext,
   pid = aClientInfo->pid_;
 #endif
 
+
+
+#ifdef XP_LINUX
+  printf("TEST-UNEXPECTED-FAIL | got minidump at | %s\n", aFilePath->c_str());
+#endif
+
+
+
+
   // Get an .extra file with the same base name as the .dmp file
   nsCOMPtr<nsIFile> extraFile;
   nsresult rv = lf->Clone(getter_AddRefs(extraFile));
@@ -1068,6 +1077,14 @@ OnChildProcessDumpRequested(void* aContext,
   // Now write out the annotations to it
   nsCOMPtr<nsIFileOutputStream> stream =
     do_CreateInstance("@mozilla.org/network/file-output-stream;1");
+
+
+
+  if (!stream)
+    return;
+
+
+
   rv = stream->Init(extraFile, -1, 0600, 0);
   if (NS_FAILED(rv))
     return;
