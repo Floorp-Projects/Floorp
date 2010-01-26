@@ -70,7 +70,7 @@ interface nsIDOMStorage;
 interface nsIPrincipal;
 interface nsIWebBrowserPrint;
 
-[scriptable, uuid(1067ee1a-08e8-455d-9b12-19eeeee56b8e)]
+[scriptable, uuid(c95eaff1-14e6-4db1-a806-46be97d5a9b6)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -430,17 +430,23 @@ interface nsIDocShell : nsISupports
    * If it doesn't already exist, a new one will be created.
    *
    * @param uri the uri of the storage object to retrieve
+   * @param documentURI new storage will be created with reference to this
+   *                    document.documentURI that will appear in storage event
    */
-  nsIDOMStorage getSessionStorageForURI(in nsIURI uri);
+  nsIDOMStorage getSessionStorageForURI(in nsIURI uri,
+                                        in DOMString documentURI);
 
   /*
    * Retrieves the WebApps session storage object for the supplied principal.
    *
    * @param principal returns a storage for this principal
+   * @param documentURI new storage will be created with reference to this
+   *                    document.documentURI that will appear in storage event
    * @param create If true and a session storage object doesn't
    *               already exist, a new one will be created.
    */
   nsIDOMStorage getSessionStorageForPrincipal(in nsIPrincipal principal,
+                                              in DOMString documentURI,
                                               in boolean create);
 
   /*
