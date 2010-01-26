@@ -70,7 +70,7 @@ using namespace js;
  * access.  It can be created explicitly and passed to a TypedArray, or
  * can be created implicitly by constructing a TypedArray with a size.
  */
-inline ArrayBuffer *
+ArrayBuffer *
 ArrayBuffer::fromJSObject(JSObject *obj)
 {
     JS_ASSERT(obj->getClass() == &ArrayBuffer::jsclass);
@@ -187,7 +187,7 @@ ArrayBuffer::~ArrayBuffer()
  * the subclasses.
  */
 
-inline TypedArray *
+TypedArray *
 TypedArray::fromJSObject(JSObject *obj)
 {
     return reinterpret_cast<TypedArray*>(obj->getPrivate());
