@@ -762,7 +762,7 @@ protected:
   nsCOMPtr<nsIDocument> mDoc;  // For fast access to principals
   JSObject* mJSObject;
 
-  typedef nsTArray<nsCOMPtr<nsIDOMStorageEvent>> nsDOMStorageEventArray;
+  typedef nsTArray<nsCOMPtr<nsIDOMStorageEvent> > nsDOMStorageEventArray;
   nsDOMStorageEventArray mPendingStorageEvents;
   nsDataHashtable<nsStringHashKey, PRBool> *mPendingStorageEventsObsolete;
 
