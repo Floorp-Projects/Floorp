@@ -737,10 +737,10 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     self.checkForZombies(processLog)
     self.automationutils.checkForCrashes(os.path.join(profileDir, "minidumps"), symbolsPath)
 
-    if os.path.exists(processLog):
-      os.unlink(processLog)
-
     if self.IS_TEST_BUILD and runSSLTunnel:
       ssltunnelProcess.kill()
+
+    if os.path.exists(processLog):
+      os.unlink(processLog)
 
     return status
