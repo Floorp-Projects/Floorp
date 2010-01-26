@@ -2858,8 +2858,8 @@ void
 js_GC(JSContext *cx, JSGCInvocationKind gckind)
 {
     JSRuntime *rt;
-    JSBool keepAtoms;
     JSGCCallback callback;
+    bool keepAtoms;
     JSTracer trc;
     JSGCArena *emptyArenas, *a, **ap;
 #ifdef JS_THREADSAFE
@@ -2882,18 +2882,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     /* Avoid deadlock. */
     JS_ASSERT(!JS_IS_RUNTIME_LOCKED(rt));
 #endif
-
-    if (gckind & GC_KEEP_ATOMS) {
-        /*
-         * The set slot request and last ditch GC kinds preserve all atoms and
-         * weak roots.
-         */
-        keepAtoms = JS_TRUE;
-    } else {
-        /* Keep atoms when a suspended compile is running on another context. */
-        keepAtoms = (rt->gcKeepAtoms != 0);
-        JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
-    }
 
     /*
      * Don't collect garbage if the runtime isn't up, and cx is not the last
@@ -2974,7 +2962,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                 }
 #endif
                 rt->requestCount -= requestDebit;
-
                 if (rt->requestCount == 0)
                     JS_NOTIFY_REQUEST_DONE(rt);
 
@@ -2986,6 +2973,13 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                 js_ShareWaitingTitles(cx);
 
                 /*
+                 * Make sure that the GC from another thread respects
+                 * GC_KEEP_ATOMS.
+                 */
+                if (gckind & GC_KEEP_ATOMS)
+                    JS_KEEP_ATOMS(rt);
+
+                /*
                  * Check that we did not release the GC lock above and let the
                  * GC to finish before we wait.
                  */
@@ -2993,7 +2987,10 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                 do {
                     JS_AWAIT_GC_DONE(rt);
                 } while (rt->gcLevel > 0);
+
                 cx->thread->gcWaiting = false;
+                if (gckind & GC_KEEP_ATOMS)
+                    JS_UNKEEP_ATOMS(rt);
                 rt->requestCount += requestDebit;
             }
         }
@@ -3116,11 +3113,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     PurgeJITOracle();
 #endif
 
-  restart:
-    rt->gcNumber++;
-    JS_ASSERT(!rt->gcUnmarkedArenaStackTop);
-    JS_ASSERT(rt->gcMarkLaterCount == 0);
-
     /*
      * Reset the property cache's type id generator so we can compress ids.
      * Same for the protoHazardShape proxy-shape standing in for all object
@@ -3138,12 +3130,33 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     }
 
     js_PurgeThreads(cx);
+
 #ifdef JS_TRACER
     if (gckind == GC_LAST_CONTEXT) {
         /* Clear builtin functions, which are recreated on demand. */
         memset(rt->builtinFunctions, 0, sizeof rt->builtinFunctions);
     }
 #endif
+
+    if (gckind & GC_KEEP_ATOMS) {
+        /*
+         * The set slot request and last ditch GC kinds preserve all atoms and
+         * weak roots.
+         */
+        keepAtoms = true;
+    } else {
+        /*
+         * Query rt->gcKeepAtoms only when we know that all other threads are
+         * suspended, see bug 541790.
+         */
+        keepAtoms = (rt->gcKeepAtoms != 0);
+        JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
+    }
+
+  restart:
+    rt->gcNumber++;
+    JS_ASSERT(!rt->gcUnmarkedArenaStackTop);
+    JS_ASSERT(rt->gcMarkLaterCount == 0);
 
     /*
      * Mark phase.
