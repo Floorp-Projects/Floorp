@@ -51,7 +51,6 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOM3Document.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMStorageObsolete.h"
@@ -2145,7 +2144,6 @@ GetPrincipalDomain(nsIPrincipal* aPrincipal, nsACString& aDomain)
 
 NS_IMETHODIMP
 nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
-                                          const nsAString& aDocumentURI,
                                           PRBool aCreate,
                                           nsIDOMStorage** aStorage)
 {
@@ -2167,9 +2165,7 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
 
     nsDocShell* topDocShell = static_cast<nsDocShell*>(topItem.get());
     if (topDocShell != this)
-        return topDocShell->GetSessionStorageForPrincipal(aPrincipal,
-                                                          aDocumentURI,
-                                                          aCreate,
+        return topDocShell->GetSessionStorageForPrincipal(aPrincipal, aCreate,
                                                           aStorage);
 
     nsCAutoString currentDomain;
@@ -2189,7 +2185,7 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
         nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(newstorage);
         if (!pistorage)
             return NS_ERROR_FAILURE;
-        rv = pistorage->InitAsSessionStorage(aPrincipal, aDocumentURI);
+        rv = pistorage->InitAsSessionStorage(aPrincipal);
         if (NS_FAILED(rv))
             return rv;
 
@@ -2197,58 +2193,19 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
             return NS_ERROR_OUT_OF_MEMORY;
 
         newstorage.swap(*aStorage);
-#if defined(PR_LOGGING) && defined(DEBUG)
-        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
-               ("nsDocShell[%p]: created a new sessionStorage %p",
-                this, *aStorage));
-#endif
-    }
-    else if (*aStorage) {
-      nsCOMPtr<nsPIDOMStorage> piStorage = do_QueryInterface(*aStorage);
-      if (piStorage) {
-          PRBool canAccess = piStorage->CanAccess(aPrincipal);
-          NS_ASSERTION(canAccess,
-                       "GetSessionStorageForPrincipal got a storage "
-                       "that could not be accessed!");
-          if (!canAccess) {
-              NS_RELEASE(*aStorage);
-              return NS_ERROR_DOM_SECURITY_ERR;
-          }
-      }
-
-#if defined(PR_LOGGING) && defined(DEBUG)
-      PR_LOG(gDocShellLog, PR_LOG_DEBUG,
-             ("nsDocShell[%p]: returns existing sessionStorage %p",
-              this, *aStorage));
-#endif
-      return NS_OK;
+        return NS_OK;
     }
 
-    if (aCreate) {
-        // We are asked to create a new storage object. This indicates
-        // that a new windows wants it. At this moment we "fork" the existing
-        // storage object (what it means is described in the paragraph bellow).
-        // We must create a single object per a single window to distinguish
-        // a window originating oparations on the storage object to succesfully
-        // prevent dispatch of a storage event to this same window that ivoked
-        // a change in its storage. We also do this to correctly fill
-        // documentURI property in the storage event.
-        //
-        // The difference between clone and fork is that clone creates
-        // a completelly new and independent storage, but fork only creates
-        // a new object wrapping the storage implementation and data and
-        // the forked storage then behaves completelly the same way as
-        // the storage it has been forked of, all such forked storage objects
-        // shares their state and data and change on one such object affects
-        // all others the same way.
-        nsCOMPtr<nsPIDOMStorage> piStorage = do_QueryInterface(*aStorage);
-        nsCOMPtr<nsIDOMStorage> fork = piStorage->Fork(aDocumentURI);
-#if defined(PR_LOGGING) && defined(DEBUG)
-        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
-               ("nsDocShell[%p]: forked sessionStorage %p to %p",
-                this, *aStorage, fork.get()));
-#endif
-        fork.swap(*aStorage);
+    nsCOMPtr<nsPIDOMStorage> piStorage = do_QueryInterface(*aStorage);
+    if (piStorage) {
+        PRBool canAccess = piStorage->CanAccess(aPrincipal);
+        NS_ASSERTION(canAccess,
+                     "GetSessionStorageForPrincipal got a storage "
+                     "that could not be accessed!");
+        if (!canAccess) {
+            NS_RELEASE(*aStorage);
+            return NS_ERROR_DOM_SECURITY_ERR;
+        }
     }
 
     return NS_OK;
@@ -2256,15 +2213,13 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
 
 NS_IMETHODIMP
 nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
-                                    const nsAString& aDocumentURI,
                                     nsIDOMStorage** aStorage)
 {
-    return GetSessionStorageForURI(aURI, aDocumentURI, PR_TRUE, aStorage);
+    return GetSessionStorageForURI(aURI, PR_TRUE, aStorage);
 }
 
 nsresult
 nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
-                                    const nsSubstring& aDocumentURI,
                                     PRBool aCreate,
                                     nsIDOMStorage** aStorage)
 {
@@ -2285,7 +2240,7 @@ nsDocShell::GetSessionStorageForURI(nsIURI* aURI,
     if (NS_FAILED(rv))
         return rv;
 
-    return GetSessionStorageForPrincipal(principal, aDocumentURI, aCreate, aStorage);
+    return GetSessionStorageForPrincipal(principal, aCreate, aStorage);
 }
 
 nsresult
@@ -2317,11 +2272,6 @@ nsDocShell::AddSessionStorage(nsIPrincipal* aPrincipal,
             if (mStorages.GetWeak(currentDomain))
                 return NS_ERROR_NOT_AVAILABLE;
 
-#if defined(PR_LOGGING) && defined(DEBUG)
-            PR_LOG(gDocShellLog, PR_LOG_DEBUG,
-                   ("nsDocShell[%p]: was added a sessionStorage %p",
-                    this, aStorage));
-#endif
             if (!mStorages.Put(currentDomain, aStorage))
                 return NS_ERROR_OUT_OF_MEMORY;
         }

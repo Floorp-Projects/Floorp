@@ -55,7 +55,6 @@ DIRS	+= \
 	geolocation \
 	localstorage \
 	sessionstorage \
-	storageevent \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
