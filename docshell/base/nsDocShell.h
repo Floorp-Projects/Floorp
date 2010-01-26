@@ -605,7 +605,6 @@ protected:
     void ReattachEditorToWindow(nsISHEntry *aSHEntry);
 
     nsresult GetSessionStorageForURI(nsIURI* aURI,
-                                     const nsSubstring& aDocumentURI,
                                      PRBool create,
                                      nsIDOMStorage** aStorage);
 
