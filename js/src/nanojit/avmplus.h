@@ -38,15 +38,6 @@
 
 #include "VMPI.h"
 
-#ifdef AVMPLUS_ARM
-#define ARM_ARCH   AvmCore::config.arch
-#define ARM_VFP    AvmCore::config.vfp
-#define ARM_THUMB2 AvmCore::config.thumb2
-#else
-#define ARM_VFP    1
-#define ARM_THUMB2 1
-#endif
-
 #if !defined(AVMPLUS_LITTLE_ENDIAN) && !defined(AVMPLUS_BIG_ENDIAN)
 #ifdef IS_BIG_ENDIAN
 #define AVMPLUS_BIG_ENDIAN
@@ -223,32 +214,32 @@ namespace avmplus {
 #if defined (AVMPLUS_ARM)
         // Whether or not to generate VFP instructions.
 # if defined (NJ_FORCE_SOFTFLOAT)
-        static const bool vfp = false;
+        static const bool arm_vfp = false;
 # else
-        bool vfp;
+        bool arm_vfp;
 # endif
 
         // The ARM architecture version.
 # if defined (NJ_FORCE_ARM_ARCH_VERSION)
-        static const unsigned int arch = NJ_FORCE_ARM_ARCH_VERSION;
+        static const unsigned int arm_arch = NJ_FORCE_ARM_ARCH_VERSION;
 # else
-        unsigned int arch;
+        unsigned int arm_arch;
 # endif
 
         // Support for Thumb, even if it isn't used by nanojit. This is used to
         // determine whether or not to generate interworking branches.
 # if defined (NJ_FORCE_NO_ARM_THUMB)
-        static const bool thumb = false;
+        static const bool arm_thumb = false;
 # else
-        bool thumb;
+        bool arm_thumb;
 # endif
 
         // Support for Thumb2, even if it isn't used by nanojit. This is used to
         // determine whether or not to use some of the ARMv6T2 instructions.
 # if defined (NJ_FORCE_NO_ARM_THUMB2)
-        static const bool thumb2 = false;
+        static const bool arm_thumb2 = false;
 # else
-        bool thumb2;
+        bool arm_thumb2;
 # endif
 
 #endif
