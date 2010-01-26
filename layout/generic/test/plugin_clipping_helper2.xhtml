@@ -48,6 +48,7 @@ function runTests() {
 
   zbox.style.zIndex = -1;
 
+  flush();
   // A non-zero timeout is needed on X11 (unless an XSync could be performed)
   // to delay an OOP plugin's X requests enough so that the X server processes
   // them after the parent processes requests (for the changes above).
@@ -59,6 +60,7 @@ function part2() {
 
   sbox.style.background = "";
 
+  flush();
   setTimeout(part3, 1000);
 }
 
@@ -67,6 +69,7 @@ function part3() {
   
   p1.style.zIndex = 1;
 
+  flush();
   setTimeout(part4, 1000);
 }
 
@@ -80,6 +83,7 @@ function part4() {
   zbox.style.top = "50.3px;"
   d2.style.top = "100.3px";
 
+  flush();
   setTimeout(done, 1000);
 }
 
@@ -90,6 +94,14 @@ function done() {
   window.close();
 }
 
+function flush() {
+  // This function is for X11 to flush the Xlib request queue.  It takes
+  // advantage of the current scrolling implementation, which will do this for
+  // us.  Beware though, it does not wait for the X server to process the
+  // events.
+  ++scroll.scrollTop;
+  --scroll.scrollTop;
+}
 ]]>
 </script>
 
