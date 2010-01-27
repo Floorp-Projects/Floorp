@@ -7,7 +7,5 @@
 <!ENTITY aboutVersion               "version">
 <!ENTITY closeCmdGNOME.label        "Close">  
 <!ENTITY closeCmdGNOME.accesskey    "C">
-<!ENTITY copyrightInfo1             "&#169;1998-2010 Contributors. All rights reserved. (">
-<!ENTITY licenseLink                "about:license">
 <!ENTITY licenseLinkText            "Licensing information">
-<!ENTITY copyrightInfo2             ").">
+<!ENTITY licenseLinkSuffix          ".">

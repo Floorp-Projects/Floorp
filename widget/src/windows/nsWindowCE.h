@@ -86,14 +86,17 @@ public:
 #if defined(WINCE_HAVE_SOFTKB)
   static void ToggleSoftKB(HWND wnd, PRBool show);
   static void CreateSoftKeyMenuBar(HWND wnd);
-  static void NotifySoftKbObservers(HWND wnd, LPRECT = NULL);
+  static void OnSoftKbSettingsChange(HWND wnd, LPRECT = NULL);
   static PRBool sSIPInTransition;
   static TriStateBool sShowSIPButton;
   static void CheckKeyboardStatus();
   static TriStateBool GetSliderStateOpen();
+  static void ResetSoftKB(HWND wnd);
 private:
   static TriStateBool sHardKBPresence;
-
+  static HWND sSoftKeyMenuBarHandle;
+  static RECT sDefaultSIPRect;
+  static HWND sMainWindowHandle;
 #endif
 };
 

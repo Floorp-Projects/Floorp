@@ -4562,7 +4562,10 @@ PresShell::UnsuppressAndInvalidate()
       mCaret->CheckCaretDrawingState();
     }
 
-    mPresContext->RootPresContext()->UpdatePluginGeometry(rootFrame);
+    nsRootPresContext* rootPC = mPresContext->GetRootPresContext();
+    if (rootPC) {
+      rootPC->UpdatePluginGeometry(rootFrame);
+    }
   }
 
   // now that painting is unsuppressed, focus may be set on the document
@@ -6118,8 +6121,8 @@ PresShell::HandleEvent(nsIView         *aView,
       return NS_OK;
 
     nsPresContext* framePresContext = frame->PresContext();
-    nsPresContext* rootPresContext = framePresContext->RootPresContext();
-    NS_ASSERTION(rootPresContext == mPresContext->RootPresContext(),
+    nsPresContext* rootPresContext = framePresContext->GetRootPresContext();
+    NS_ASSERTION(rootPresContext == mPresContext->GetRootPresContext(),
                  "How did we end up outside the connected prescontext/viewmanager hierarchy?"); 
     // If we aren't starting our event dispatch from the root frame of the root prescontext,
     // then someone must be capturing the mouse. In that case we don't want to search the popup
@@ -6638,8 +6641,13 @@ PresShell::AdjustContextMenuKeyEvent(nsMouseEvent* aEvent)
   // Use the root view manager's widget since it's most likely to have one,
   // and the coordinates returned by GetCurrentItemAndPositionForElement
   // are relative to the root of the root view manager.
-  mPresContext->RootPresContext()->PresShell()->GetViewManager()->
-    GetRootWidget(getter_AddRefs(aEvent->widget));
+  nsRootPresContext* rootPC = mPresContext->GetRootPresContext();
+  if (rootPC) {
+    rootPC->PresShell()->GetViewManager()->
+      GetRootWidget(getter_AddRefs(aEvent->widget));
+  } else {
+    aEvent->widget = nsnull;
+  }
   aEvent->refPoint.x = 0;
   aEvent->refPoint.y = 0;
 
@@ -7360,7 +7368,10 @@ PresShell::DoReflow(nsIFrame* target, PRBool aInterruptible)
     PostReflowEvent();
   }
 
-  mPresContext->RootPresContext()->UpdatePluginGeometry(target);
+  nsRootPresContext* rootPC = mPresContext->GetRootPresContext();
+  if (rootPC) {
+    rootPC->UpdatePluginGeometry(target);
+  }
 
   return !interrupted;
 }
