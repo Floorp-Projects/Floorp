@@ -138,7 +138,7 @@ protected:
   EEventRule mEventRule;
   PRPackedBool mIsAsync;
   nsCOMPtr<nsIAccessible> mAccessible;
-  nsCOMPtr<nsIDOMNode> mDOMNode;
+  nsCOMPtr<nsINode> mNode;
   nsCOMPtr<nsIAccessibleDocument> mDocAccessible;
 
   friend class nsAccEventQueue;

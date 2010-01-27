@@ -140,19 +140,23 @@ public:
   /**
    * Is the first passed in node an ancestor of the second?
    * Note: A node is not considered to be the ancestor of itself.
-   * @param aPossibleAncestorNode -- node to test for ancestor-ness of aPossibleDescendantNode
-   * @param aPossibleDescendantNode -- node to test for descendant-ness of aPossibleAncestorNode
-   * @return PR_TRUE if aPossibleAncestorNode is an ancestor of aPossibleDescendantNode
+   *
+   * @param  aPossibleAncestorNode   [in] node to test for ancestor-ness of
+   *                                   aPossibleDescendantNode
+   * @param  aPossibleDescendantNode [in] node to test for descendant-ness of
+   *                                   aPossibleAncestorNode
+   * @return PR_TRUE                  if aPossibleAncestorNode is an ancestor of
+   *                                   aPossibleDescendantNode
    */
-   static PRBool IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
-                              nsIDOMNode *aPossibleDescendantNode);
+   static PRBool IsAncestorOf(nsINode *aPossibleAncestorNode,
+                              nsINode *aPossibleDescendantNode);
 
   /**
    * Are the first node and the second siblings?
+   *
    * @return PR_TRUE if aDOMNode1 and aDOMNode2 have same parent
    */
-   static PRBool AreSiblings(nsIDOMNode *aDOMNode1,
-                             nsIDOMNode *aDOMNode2);
+   static PRBool AreSiblings(nsINode *aNode1, nsINode *aNode2);
 
   /**
    * Helper method to scroll range into view, used for implementation of
