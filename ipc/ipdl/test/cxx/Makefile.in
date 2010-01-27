@@ -68,6 +68,7 @@ IPDLTESTS = \
   TestRacyRPCReplies  \
   TestManyChildAllocs  \
   TestDesc \
+  TestMultiMgrs  \
   TestShmem \
   TestShutdown \
   TestArrays \

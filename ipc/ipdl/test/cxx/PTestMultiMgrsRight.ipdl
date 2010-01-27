@@ -1,0 +1,24 @@
+include protocol "PTestMultiMgrs.ipdl";
+include protocol "PTestMultiMgrsBottom.ipdl";
+
+namespace mozilla {
+namespace _ipdltest {
+
+protocol PTestMultiMgrsRight {
+    manager PTestMultiMgrs;
+
+    manages PTestMultiMgrsBottom;
+
+child:
+    PTestMultiMgrsBottom();
+    __delete__();
+
+state START:
+    send PTestMultiMgrsBottom goto DONE;
+
+state DONE:
+    send __delete__;
+};
+
+} // namespace _ipdltest
+} // namespace mozilla
