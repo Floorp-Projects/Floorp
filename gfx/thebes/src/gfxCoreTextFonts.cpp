@@ -585,8 +585,8 @@ gfxCoreTextFont::SetGlyphsFromRun(gfxTextRun *aTextRun,
     // CTRunGetGlyphsPtr fails more often; if this happens, nsAutoTArray<>
     // may become an attractive option.
     glyphs = ::CTRunGetGlyphsPtr(aCTRun);
-    if (glyphs == NULL) {
-        glyphsArray = new CGGlyph[numGlyphs];
+    if (!glyphs) {
+        glyphsArray = new (std::nothrow) CGGlyph[numGlyphs];
         if (!glyphsArray)
             return NS_ERROR_OUT_OF_MEMORY;
         ::CTRunGetGlyphs(aCTRun, ::CFRangeMake(0, 0), glyphsArray.get());
@@ -594,8 +594,8 @@ gfxCoreTextFont::SetGlyphsFromRun(gfxTextRun *aTextRun,
     }
 
     positions = ::CTRunGetPositionsPtr(aCTRun);
-    if (positions == NULL) {
-        positionsArray = new CGPoint[numGlyphs];
+    if (!positions) {
+        positionsArray = new (std::nothrow) CGPoint[numGlyphs];
         if (!positionsArray)
             return NS_ERROR_OUT_OF_MEMORY;
         ::CTRunGetPositions(aCTRun, ::CFRangeMake(0, 0), positionsArray.get());
@@ -605,8 +605,8 @@ gfxCoreTextFont::SetGlyphsFromRun(gfxTextRun *aTextRun,
     // Remember that the glyphToChar indices relate to the CoreText line
     // not to the beginning of the textRun, the font run, or the stringRange of the glyph run
     glyphToChar = ::CTRunGetStringIndicesPtr(aCTRun);
-    if (glyphToChar == NULL) {
-        glyphToCharArray = new CFIndex[numGlyphs];
+    if (!glyphToChar) {
+        glyphToCharArray = new (std::nothrow) CFIndex[numGlyphs];
         if (!glyphToCharArray)
             return NS_ERROR_OUT_OF_MEMORY;
         ::CTRunGetStringIndices(aCTRun, ::CFRangeMake(0, 0), glyphToCharArray.get());
