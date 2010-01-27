@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/ipc/RPCChannel.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
@@ -58,6 +59,33 @@ struct RunnableMethodTraits<mozilla::ipc::RPCChannel>
     static void ReleaseCallee(mozilla::ipc::RPCChannel* obj) { }
 };
 
+
+namespace
+{
+
+// Async (from the sending side's perspective)
+class BlockChildMessage : public IPC::Message
+{
+public:
+    enum { ID = BLOCK_CHILD_MESSAGE_TYPE };
+    BlockChildMessage() :
+        Message(MSG_ROUTING_NONE, ID, IPC::Message::PRIORITY_NORMAL)
+    { }
+};
+
+// Async
+class UnblockChildMessage : public IPC::Message
+{
+public:
+    enum { ID = UNBLOCK_CHILD_MESSAGE_TYPE };
+    UnblockChildMessage() :
+        Message(MSG_ROUTING_NONE, ID, IPC::Message::PRIORITY_NORMAL)
+    { }
+};
+
+} // namespace <anon>
+
+
 namespace mozilla {
 namespace ipc {
 
@@ -69,7 +97,8 @@ RPCChannel::RPCChannel(RPCListener* aListener,
     mOutOfTurnReplies(),
     mDeferred(),
     mRemoteStackDepthGuess(0),
-    mRacePolicy(aPolicy)
+    mRacePolicy(aPolicy),
+    mBlockedOnParent(false)
 {
     MOZ_COUNT_CTOR(RPCChannel);
 }
@@ -387,6 +416,111 @@ RPCChannel::DispatchIncall(const Message& call)
         NewRunnableMethod(this, &RPCChannel::OnSend, reply));
 }
 
+bool
+RPCChannel::BlockChild()
+{
+    AssertWorkerThread();
+
+    if (mChild)
+        NS_RUNTIMEABORT("child tried to block parent");
+    SendSpecialMessage(new BlockChildMessage());
+    return true;
+}
+
+bool
+RPCChannel::UnblockChild()
+{
+    AssertWorkerThread();
+
+    if (mChild)
+        NS_RUNTIMEABORT("child tried to unblock parent");
+    SendSpecialMessage(new UnblockChildMessage());
+    return true;
+}
+
+bool
+RPCChannel::OnSpecialMessage(uint16 id, const Message& msg)
+{
+    AssertWorkerThread();
+
+    switch (id) {
+    case BLOCK_CHILD_MESSAGE_TYPE:
+        BlockOnParent();
+        return true;
+
+    case UNBLOCK_CHILD_MESSAGE_TYPE:
+        UnblockFromParent();
+        return true;
+
+    default:
+        return SyncChannel::OnSpecialMessage(id, msg);
+    }
+}
+
+void
+RPCChannel::BlockOnParent()
+{
+    AssertWorkerThread();
+
+    if (!mChild)
+        NS_RUNTIMEABORT("child tried to block parent");
+
+    MutexAutoLock lock(mMutex);
+
+    if (mBlockedOnParent || AwaitingSyncReply() || 0 < StackDepth())
+        NS_RUNTIMEABORT("attempt to block child when it's already blocked");
+
+    mBlockedOnParent = true;
+    while (1) {
+        // XXX this dispatch loop shares some similarities with the
+        // one in Call(), but the logic is simpler and different
+        // enough IMHO to warrant its own dispatch loop
+        while (Connected() && mPending.empty() && mBlockedOnParent) {
+            WaitForNotify();
+        }
+
+        if (!Connected()) {
+            mBlockedOnParent = false;
+            ReportConnectionError("RPCChannel");
+            break;
+        }
+
+        if (!mPending.empty()) {
+            Message recvd = mPending.front();
+            mPending.pop();
+
+            MutexAutoUnlock unlock(mMutex);
+            if (recvd.is_rpc()) {
+                // stack depth must be 0 here
+                Incall(recvd, 0);
+            }
+            else if (recvd.is_sync()) {
+                SyncChannel::OnDispatchMessage(recvd);
+            }
+            else {
+                AsyncChannel::OnDispatchMessage(recvd);
+            }
+        }
+        
+        // the last message, if async, may have been the one that
+        // unblocks us
+        if (!mBlockedOnParent)
+            break;
+    }
+
+    EnqueuePendingMessages();
+}
+
+void
+RPCChannel::UnblockFromParent()
+{
+    AssertWorkerThread();
+
+    if (!mChild)
+        NS_RUNTIMEABORT("child tried to block parent");
+    MutexAutoLock lock(mMutex);
+    mBlockedOnParent = false;
+}
 
 void
 RPCChannel::DebugAbort(const char* file, int line, const char* cond,
@@ -444,7 +578,7 @@ RPCChannel::OnMessageReceived(const Message& msg)
 
     mPending.push(msg);
 
-    if (0 == StackDepth())
+    if (0 == StackDepth() && !mBlockedOnParent)
         // the worker thread might be idle, make sure it wakes up
         mWorkerLoop->PostTask(
             FROM_HERE,
