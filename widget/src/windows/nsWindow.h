@@ -403,6 +403,8 @@ protected:
   static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc);
 #endif // ACCESSIBILITY
 
+  void                    UpdateWindowInternal(HWND aWnd);
+
 protected:
   nsIntSize             mLastSize;
   nsIntPoint            mLastPoint;
