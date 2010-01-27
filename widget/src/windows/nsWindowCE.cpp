@@ -62,11 +62,13 @@
  **************************************************************/
 
 #if defined(WINCE_HAVE_SOFTKB)
-PRBool          nsWindow::sSoftKeyMenuBar         = PR_FALSE;
 PRBool          nsWindow::sSoftKeyboardState      = PR_FALSE;
 PRBool          nsWindowCE::sSIPInTransition      = PR_FALSE;
 TriStateBool    nsWindowCE::sShowSIPButton        = TRI_UNKNOWN;
 TriStateBool    nsWindowCE::sHardKBPresence       = TRI_UNKNOWN;
+HWND            nsWindowCE::sSoftKeyMenuBarHandle = NULL;
+RECT            nsWindowCE::sDefaultSIPRect       = {0, 0, 0, 0};
+HWND            nsWindowCE::sMainWindowHandle     = NULL;
 #endif
 
 /**************************************************************
@@ -80,7 +82,7 @@ TriStateBool    nsWindowCE::sHardKBPresence       = TRI_UNKNOWN;
  **************************************************************/
 
 #ifdef WINCE_HAVE_SOFTKB
-void nsWindowCE::NotifySoftKbObservers(HWND wnd, LPRECT visRect)
+void nsWindowCE::OnSoftKbSettingsChange(HWND wnd, LPRECT visRect)
 {
   if (!visRect) {
     SIPINFO sipInfo;
@@ -97,11 +99,12 @@ void nsWindowCE::NotifySoftKbObservers(HWND wnd, LPRECT visRect)
     RECT winRect;
     ::GetWindowRect(wndMain, &winRect);
     if (winRect.bottom != visRect->bottom) {
-      if (winRect.bottom < visRect->bottom && sShowSIPButton != TRI_TRUE) {
+      if (winRect.bottom < visRect->bottom) {
         // Soft keyboard has been hidden, have to hide the SIP button as well
-        HWND hWndSIPB = FindWindowW(L"MS_SIPBUTTON", NULL ); 
-        if (hWndSIPB)
-          ShowWindow(hWndSIPB, SW_HIDE);
+        if (sSoftKeyMenuBarHandle)
+          ShowWindow(sSoftKeyMenuBarHandle, SW_HIDE);
+
+        SHFullScreen(wndMain, SHFS_HIDESIPBUTTON);
       }
 
       winRect.bottom = visRect->bottom;
@@ -132,17 +135,14 @@ void nsWindowCE::ToggleSoftKB(HWND wnd, PRBool show)
   }
 
   sSIPInTransition = PR_TRUE;
-  HWND hWndSIP = FindWindowW(L"SipWndClass", NULL );
-  if (hWndSIP)
-    ShowWindow(hWndSIP, show ? SW_SHOW: SW_HIDE);
 
-  HWND hWndSIPB = FindWindowW(L"MS_SIPBUTTON", NULL ); 
-  if (hWndSIPB)
-      ShowWindow(hWndSIPB, show ? SW_SHOW: SW_HIDE);
-
-  SipShowIM(show ? SIPF_ON : SIPF_OFF);
+  SHSipPreference(wnd, show ? SIP_UP : SIP_DOWN);
 
   if (sShowSIPButton == TRI_UNKNOWN) {
+    // Set it to a known value to avoid checking preferences every time
+    // Note: ui.sip.showSIPButton preference change requires browser restart
+    sShowSIPButton = TRI_TRUE;
+
     PRBool tmpBool = PR_FALSE;
     nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
@@ -150,41 +150,52 @@ void nsWindowCE::ToggleSoftKB(HWND wnd, PRBool show)
       prefs->GetBranch(0, getter_AddRefs(prefBranch));
       if (prefBranch) {
         nsresult rv = prefBranch->GetBoolPref("ui.sip.showSIPButton", &tmpBool);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
           sShowSIPButton = tmpBool ? TRI_TRUE : TRI_FALSE;
+
+          if (sShowSIPButton == TRI_FALSE) {
+            // Move the SIP rect to the bottom of the screen
+            SIPINFO sipInfo;
+            memset(&sipInfo, 0, sizeof(SIPINFO));
+            sipInfo.cbSize = sizeof(SIPINFO);
+            if (SipGetInfo(&sipInfo)) {
+              // Store the original rect
+              sDefaultSIPRect = sipInfo.rcSipRect;
+
+              // Move the SIP to the bottom of the screen
+              RECT sipRect = sipInfo.rcSipRect;
+              int sipShift = GetSystemMetrics(SM_CYSCREEN) - sipRect.bottom;
+              sipRect.top += sipShift;
+              sipRect.bottom += sipShift;
+              SipSetDefaultRect(&sipRect);
+
+              // Re-select the IM to apply the change
+              CLSID clsid;
+              if (SipGetCurrentIM(&clsid))
+                SipSetCurrentIM(&clsid);
+            }
+          }
+        }
       }
     }
   }
-  if (sShowSIPButton != TRI_TRUE && hWndSIPB && hWndSIP) {
-    ShowWindow(hWndSIPB, SW_HIDE);
-    int sX = GetSystemMetrics(SM_CXSCREEN);
-    int sY = GetSystemMetrics(SM_CYSCREEN);
-    RECT sipRect;
-    GetWindowRect(hWndSIP, &sipRect);
-    int sipH = sipRect.bottom - sipRect.top;
-    int sipW = sipRect.right - sipRect.left;
-    sipRect.left = (sX - sipW)/2;
-    sipRect.top =  sY - sipH;
-    sipRect.bottom = sY;
-    sipRect.right = sipRect.left + sipW;
-    MoveWindow(hWndSIP, (sX - sipW)/2, sY - sipH, sipW, sipH, TRUE);
-    SIPINFO sipInfo;
-    RECT visRect;
-    visRect.top = 0;
-    visRect.left = 0;
-    visRect.bottom = show ? sipRect.top : sY;
-    visRect.right = sX;
-    sipInfo.cbSize = sizeof(SIPINFO);
-    sipInfo.fdwFlags = SIPF_DOCKED | SIPF_LOCKED | (show ? SIPF_ON : SIPF_OFF);
-    sipInfo.rcSipRect = sipRect;
-    sipInfo.rcVisibleDesktop = visRect;
-    sipInfo.dwImDataSize = 0;
-    sipInfo.pvImData = NULL;
-    SipSetInfo(&sipInfo);
-    NotifySoftKbObservers(wnd, &visRect);
-  } else {
-    NotifySoftKbObservers(wnd);
+
+  PRBool showSIPButton = show;
+  if (sShowSIPButton == TRI_FALSE)
+    showSIPButton = PR_FALSE;
+
+  if (!showSIPButton) {
+    HWND hWndSIPB = FindWindowW(L"MS_SIPBUTTON", NULL);
+    if (hWndSIPB)
+      ShowWindow(hWndSIPB, SW_HIDE);
   }
+
+  if (sSoftKeyMenuBarHandle) {
+    ShowWindow(sSoftKeyMenuBarHandle, showSIPButton ? SW_SHOW: SW_HIDE);
+    if (showSIPButton)
+      SetWindowPos(sSoftKeyMenuBarHandle, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
+  }
+
   sSIPInTransition = PR_FALSE;
 }
 
@@ -192,10 +203,10 @@ void nsWindowCE::CreateSoftKeyMenuBar(HWND wnd)
 {
   if (!wnd)
     return;
+
+  sMainWindowHandle = wnd;
   
-  static HWND sSoftKeyMenuBar = nsnull;
-  
-  if (sSoftKeyMenuBar != nsnull)
+  if (sSoftKeyMenuBarHandle != NULL)
     return;
   
   SHMENUBARINFO mbi;
@@ -207,14 +218,16 @@ void nsWindowCE::CreateSoftKeyMenuBar(HWND wnd)
   //  menubar is empty.  This doesn't work: 
   //  mbi.dwFlags = SHCMBF_EMPTYBAR;
   
-  mbi.nToolBarId = IDC_DUMMY_CE_MENUBAR;
-  mbi.hInstRes   = GetModuleHandle(NULL);
+  HMENU dummyMenu = CreateMenu();
+  AppendMenu(dummyMenu, MF_STRING, 0, L"");
+
+  mbi.nToolBarId = (UINT)dummyMenu;
+  mbi.dwFlags = SHCMBF_HMENU | SHCMBF_HIDDEN;
+  mbi.hInstRes = GetModuleHandle(NULL);
   
   if (!SHCreateMenuBar(&mbi))
     return;
-  
-  SetWindowPos(mbi.hwndMB, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE);
-  
+
   SendMessage(mbi.hwndMB, SHCMBM_OVERRIDEKEY, VK_TBACK,
               MAKELPARAM(SHMBOF_NODEFAULT | SHMBOF_NOTIFY,
                          SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
@@ -226,8 +239,8 @@ void nsWindowCE::CreateSoftKeyMenuBar(HWND wnd)
   SendMessage(mbi.hwndMB, SHCMBM_OVERRIDEKEY, VK_TSOFT2, 
               MAKELPARAM (SHMBOF_NODEFAULT | SHMBOF_NOTIFY, 
                           SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
-  
-  sSoftKeyMenuBar = mbi.hwndMB;
+
+  sSoftKeyMenuBarHandle = mbi.hwndMB;
 }
 
 void nsWindowCE::CheckKeyboardStatus()
@@ -299,6 +312,29 @@ TriStateBool nsWindowCE::GetSliderStateOpen()
   }
     
   return  sliderStateOpen ? TRI_TRUE : TRI_FALSE;
+}
+
+
+void nsWindowCE::ResetSoftKB(HWND wnd)
+{
+  if (!wnd || wnd != sMainWindowHandle)
+    return;
+
+  // Main window is being destroyed - reset all the soft-keyboard settings
+  sMainWindowHandle = NULL;
+  sSoftKeyMenuBarHandle = NULL;
+
+  if (sDefaultSIPRect.top > 0) {
+    SipSetDefaultRect(&sDefaultSIPRect);
+    // Re-select the IM to apply the change
+    CLSID clsid;
+    if (SipGetCurrentIM(&clsid))
+      SipSetCurrentIM(&clsid);
+    ZeroMemory(&sDefaultSIPRect, sizeof(sDefaultSIPRect));
+  }
+
+  // This will make it re-read the pref next time
+  sShowSIPButton = TRI_UNKNOWN;
 }
 
 #endif  //defined(WINCE_HAVE_SOFTKB)
