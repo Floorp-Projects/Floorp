@@ -11953,8 +11953,8 @@ TraceRecorder::getPropertyWithNativeGetter(LIns* obj_ins, JSScopeProperty* sprop
     return RECORD_CONTINUE;
 }
 
-// Typed array tracing depends on NJ_EXPANDED_LOADSTORE and LIR_f2i
-#if NJ_EXPANDED_LOADSTORE && NJ_F2I_SUPPORTED
+// Typed array tracing depends on EXPANDED_LOADSTORE and F2I
+#if NJ_EXPANDED_LOADSTORE_SUPPORTED && NJ_F2I_SUPPORTED
 static bool OkToTraceTypedArrays = true;
 #else
 static bool OkToTraceTypedArrays = false;
@@ -15180,6 +15180,13 @@ TraceRecorder::record_JSOP_LENGTH()
                 RETURN_STOP_A("can't trace length property access on non-array");
         }
         v_ins = lir->ins1(LIR_i2f, p2i(stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)));
+    } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
+        // Ensure array is a typed array and is the same type as what was written
+        guardClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT));
+
+        js::TypedArray* tarray = js::TypedArray::fromJSObject(obj);
+        LIns* priv_ins = stobj_get_private(obj_ins);
+        v_ins = lir->ins1(LIR_i2f, lir->insLoad(LIR_ld, priv_ins, js::TypedArray::lengthOffset()));
     } else {
         if (!OBJ_IS_NATIVE(obj))
             RETURN_STOP_A("can't trace length property access on non-array, non-native object");
