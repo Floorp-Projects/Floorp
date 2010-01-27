@@ -173,16 +173,14 @@ function runTest(testNum) {
                           "context-bookmarklink",  true,
                           "context-savelink",      true,
                           "context-sendlink",      true,
-                          "context-copylink",      true,
-                          "context-copylinktext",  true]);
+                          "context-copylink",      true]);
         closeContextMenu();
         openContextMenuFor(mailto); // Invoke context menu for next test.
         break;
 
     case 4:
         // Context menu for text mailto-link
-        checkContextMenu(["context-copyemail",    true,
-                          "context-copylinktext", true]);
+        checkContextMenu(["context-copyemail", true]);
         closeContextMenu();
         openContextMenuFor(input); // Invoke context menu for next test.
         break;
