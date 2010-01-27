@@ -8,6 +8,10 @@ IPDLSRCS =					\
   PTestLatency.ipdl				\
   PTestManyChildAllocs.ipdl			\
   PTestManyChildAllocsSub.ipdl			\
+  PTestMultiMgrs.ipdl				\
+  PTestMultiMgrsLeft.ipdl			\
+  PTestMultiMgrsRight.ipdl			\
+  PTestMultiMgrsBottom.ipdl			\
   PTestRacyRPCReplies.ipdl			\
   PTestRPCErrorCleanup.ipdl			\
   PTestRPCRaces.ipdl				\
