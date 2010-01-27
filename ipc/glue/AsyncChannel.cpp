@@ -73,15 +73,6 @@ AsyncChannel::AsyncChannel(AsyncListener* aListener)
 AsyncChannel::~AsyncChannel()
 {
     MOZ_COUNT_DTOR(AsyncChannel);
-
-
-
-#ifdef OS_LINUX
-        printf("TEST-UNEXPECTED-FAIL | process %d | ~AsyncChannel()\n", getpid());
-#endif
-
-
-
     Clear();
 }
 
