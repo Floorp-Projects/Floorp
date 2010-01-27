@@ -14533,7 +14533,19 @@ TraceRecorder::record_JSOP_GVARDEC()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_REGEXP()
 {
-    return ARECORD_STOP;
+    JSStackFrame* fp = cx->fp;
+    JSScript* script = fp->script;
+    unsigned index = atoms - script->atomMap.vector + GET_INDEX(fp->regs->pc);
+
+    LIns* args[] = {
+        INS_CONSTOBJ(script->getRegExp(index)),
+        cx_ins
+    };
+    LIns* regex_ins = lir->insCall(&js_CloneRegExpObject_ci, args);
+    guard(false, lir->ins_peq0(regex_ins), OOM_EXIT);
+
+    stack(0, regex_ins);
+    return ARECORD_CONTINUE;
 }
 
 // begin JS_HAS_XML_SUPPORT
