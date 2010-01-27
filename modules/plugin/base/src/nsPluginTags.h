@@ -125,11 +125,10 @@ private:
 
 struct nsPluginInstanceTag
 {
-  nsPluginInstanceTag*   mNext;
   char*                  mURL;
   nsRefPtr<nsPluginTag>  mPluginTag;
   nsNPAPIPluginInstance* mInstance; // this must always be valid
-  PRPackedBool           mDefaultPlugin;
+  PRBool                 mDefaultPlugin;
   // Array holding all opened stream listeners for this entry
   nsCOMPtr <nsISupportsArray> mStreams; 
   
@@ -138,29 +137,6 @@ struct nsPluginInstanceTag
                       const char * url,
                       PRBool aDefaultPlugin);
   ~nsPluginInstanceTag();
-};
-
-class nsPluginInstanceTagList
-{
-public:
-  nsPluginInstanceTag *mFirst;
-  nsPluginInstanceTag *mLast;
-  PRInt32 mCount;
-  
-  nsPluginInstanceTagList();
-  ~nsPluginInstanceTagList();
-  
-  void shutdown();
-  PRBool add(nsPluginInstanceTag *plugin);
-  PRBool remove(nsPluginInstanceTag *plugin);
-  nsPluginInstanceTag *find(nsIPluginInstance *instance);
-  nsPluginInstanceTag *find(const char *mimetype);
-  nsPluginInstanceTag *findStopped(const char *url);
-  PRUint32 getStoppedCount();
-  nsPluginInstanceTag *findOldestStopped();
-  void removeAllStopped();
-  void stopRunning(nsISupportsArray *aReloadDocs, nsPluginTag *aPluginTag);
-  PRBool IsLastInstance(nsPluginInstanceTag *plugin);
 };
 
 #endif // nsPluginTags_h_
