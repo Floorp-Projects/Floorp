@@ -1307,7 +1307,8 @@ class Protocol(ipdl.ast.Protocol):
                     T=Type(self.fqListenerName()))
 
     def _ipdlmgrtype(self):
-        return self.decl.type.manager
+        assert 1 == len(self.decl.type.managers)
+        for mgr in self.decl.type.managers:  return mgr
 
     def managerActorType(self, side, ptr=0):
         return Type(_actorName(self._ipdlmgrtype().name(), side),
@@ -2552,7 +2553,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         friends = _FindFriends().findFriends(p.decl.type)
         if p.decl.type.isManaged():
-            friends.add(p.decl.type.manager)
+            friends.update(p.decl.type.managers)
 
         # |friend| managed actors so that they can call our Dealloc*()
         friends.update(p.decl.type.manages)
@@ -2697,13 +2698,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmts([ closemeth, Whitespace.NL ])
 
         if not p.decl.type.isToplevel():
-            ## manager()
-            managertype = p.managerActorType(self.side, ptr=1)
-            managermeth = MethodDefn(MethodDecl(
-                p.managerMethod().name, ret=managertype))
-            managermeth.addstmt(StmtReturn(p.managerVar()))
+            if 1 == len(p.managers):
+                ## manager()
+                managertype = p.managerActorType(self.side, ptr=1)
+                managermeth = MethodDefn(MethodDecl(
+                    p.managerMethod().name, ret=managertype))
+                managermeth.addstmt(StmtReturn(
+                    ExprCast(p.managerVar(), managertype, static=1)))
 
-            self.cls.addstmts([ managermeth, Whitespace.NL ])
+                self.cls.addstmts([ managermeth, Whitespace.NL ])
 
         ## managed[T]()
         for managed in p.decl.type.manages:
@@ -3015,7 +3018,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         elif p.decl.type.isManaged():
             self.cls.addstmts([
                 StmtDecl(Decl(_actorIdType(), p.idVar().name)),
-                StmtDecl(Decl(p.managerActorType(self.side, ptr=1),
+                StmtDecl(Decl(p.managerInterfaceType(ptr=1),
                               p.managerVar().name))
             ])
         if p.usesShmem():

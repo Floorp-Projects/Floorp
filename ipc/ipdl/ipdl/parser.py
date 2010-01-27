@@ -302,11 +302,11 @@ def p_ComponentTypes(p):
         p[0] = p[1]
 
 def p_ProtocolDefn(p):
-    """ProtocolDefn : OptionalSendSemanticsQual PROTOCOL ID '{' ManagerStmtOpt ManagesStmts OptionalMessageDecls TransitionStmts '}' ';'"""
+    """ProtocolDefn : OptionalSendSemanticsQual PROTOCOL ID '{' ManagersStmtOpt ManagesStmts OptionalMessageDecls TransitionStmts '}' ';'"""
     protocol = Protocol(locFromTok(p, 2))
     protocol.name = p[3]
     protocol.sendSemantics = p[1]
-    protocol.manager = p[5]
+    protocol.managers = p[5]   
     protocol.addManagesStmts(p[6])
     protocol.addMessageDecls(p[7])
     protocol.addTransitionStmts(p[8])
@@ -321,13 +321,22 @@ def p_ManagesStmts(p):
         p[1].append(p[2])
         p[0] = p[1]
 
-def p_ManagerStmtOpt(p):
-    """ManagerStmtOpt : MANAGER ID ';' 
-                      | """
+def p_ManagersStmtOpt(p):
+    """ManagersStmtOpt : MANAGER ManagerList ';'
+                       | """
     if 1 == len(p):
-        p[0] = None
+        p[0] = [ ]
     else:
-        p[0] = ManagerStmt(locFromTok(p, 1), p[2])
+        p[0] = p[2]
+
+def p_ManagerList(p):
+    """ManagerList : ID
+                   | ManagerList OR ID"""
+    if 2 == len(p):
+        p[0] = [ Manager(locFromTok(p, 1), p[1]) ]
+    else:
+        p[1].append(Manager(locFromTok(p, 3), p[3]))
+        p[0] = p[1]
 
 def p_ManagesStmt(p):
     """ManagesStmt : MANAGES ID ';'"""

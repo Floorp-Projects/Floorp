@@ -66,8 +66,8 @@ class Visitor:
     def visitProtocol(self, p):
         for namespace in p.namespaces:
             namespace.accept(self)
-        if p.manager is not None:
-            p.manager.accept(self)
+        for mgr in p.managers:
+            mgr.accept(self)
         for managed in p.managesStmts:
             managed.accept(self)
         for msgDecl in p.messageDecls:
@@ -78,7 +78,7 @@ class Visitor:
     def visitNamespace(self, ns):
         pass
 
-    def visitManagerStmt(self, mgr):
+    def visitManager(self, mgr):
         pass
 
     def visitManagesStmt(self, mgs):
@@ -249,6 +249,7 @@ class Protocol(NamespacedNode):
     def __init__(self, loc):
         NamespacedNode.__init__(self, loc)
         self.sendSemantics = ASYNC
+        self.managers = [ ]
         self.managesStmts = [ ]
         self.messageDecls = [ ]
         self.transitionStmts = [ ]
@@ -268,7 +269,7 @@ class UnionDecl(NamespacedNode):
         NamespacedNode.__init__(self, loc, name)
         self.components = components
 
-class ManagerStmt(Node):
+class Manager(Node):
     def __init__(self, loc, managerName):
         Node.__init__(self, loc)
         self.name = managerName
