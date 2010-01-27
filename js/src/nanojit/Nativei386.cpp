@@ -2088,14 +2088,18 @@ namespace nanojit
         if (ins->isop(LIR_ret)) {
             findSpecificRegFor(val, retRegs[0]);
         } else {
+            NanoAssert(ins->isop(LIR_fret));
             findSpecificRegFor(val, FST0);
             fpu_pop();
         }
     }
 
+    void Assembler::asm_q2i(LIns *) {
+        NanoAssert(0);  // q2i shouldn't occur on 32-bit platforms
+    }
+
     void Assembler::asm_promote(LIns *) {
-        // i2q or u2q
-        TODO(asm_promote);
+        NanoAssert(0);  // i2q and u2q shouldn't occur on 32-bit platforms
     }
 
     void Assembler::swapCodeChunks() {
