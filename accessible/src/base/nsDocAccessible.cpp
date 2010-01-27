@@ -1532,13 +1532,18 @@ nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessibl
     if (!changeAccessible) {
       return nsnull; // No descendant content that represents any text in the hypertext parent
     }
+
+    nsCOMPtr<nsINode> changeNode(do_QueryInterface(aChangeNode));
     nsCOMPtr<nsIAccessible> child = changeAccessible;
     while (PR_TRUE) {
       nsCOMPtr<nsIAccessNode> childAccessNode =
         do_QueryInterface(changeAccessible);
-      nsCOMPtr<nsIDOMNode> childNode;
-      childAccessNode->GetDOMNode(getter_AddRefs(childNode));
-      if (!nsCoreUtils::IsAncestorOf(aChangeNode, childNode)) {
+
+      nsCOMPtr<nsIDOMNode> childDOMNode;
+      childAccessNode->GetDOMNode(getter_AddRefs(childDOMNode));
+
+      nsCOMPtr<nsINode> childNode(do_QueryInterface(childDOMNode));
+      if (!nsCoreUtils::IsAncestorOf(changeNode, childNode)) {
         break;  // We only want accessibles with DOM nodes as children of this node
       }
       length += nsAccUtils::TextLength(child);
