@@ -1050,7 +1050,7 @@ nsPresContext::Observe(nsISupports* aSubject,
 
 // We may want to replace this with something faster, maybe caching the root prescontext
 nsRootPresContext*
-nsPresContext::RootPresContext()
+nsPresContext::GetRootPresContext()
 {
   nsPresContext* pc = this;
   for (;;) {
@@ -1064,7 +1064,7 @@ nsPresContext::RootPresContext()
         }
       }
     }
-    return static_cast<nsRootPresContext*>(pc);
+    return pc->IsRoot() ? static_cast<nsRootPresContext*>(pc) : nsnull;
   }
 }
 

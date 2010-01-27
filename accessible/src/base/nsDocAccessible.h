@@ -56,11 +56,11 @@ class nsIScrollableView;
 const PRUint32 kDefaultCacheSize = 256;
 
 #define NS_DOCACCESSIBLE_IMPL_CID                       \
-{  /* 11d54d4f-f135-4b1b-80e4-6425a64f703c */           \
-  0x11d54d4f,                                           \
-  0xf135,                                               \
-  0x4b1b,                                               \
-  { 0x80, 0xe4, 0x64, 0x25, 0xa6, 0x4f, 0x70, 0x3c }    \
+{  /* 5641921c-a093-4292-9dca-0b51813db57d */           \
+  0x5641921c,                                           \
+  0xa093,                                               \
+  0x4292,                                               \
+  { 0x9d, 0xca, 0x0b, 0x51, 0x81, 0x3d, 0xb5, 0x7d }    \
 }
 
 class nsDocAccessible : public nsHyperTextAccessibleWrap,
@@ -135,7 +135,7 @@ public:
    *
    * @param aEvent  [in] the event to fire
    */
-  nsresult FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent);
+  nsresult FireDelayedAccessibleEvent(nsAccEvent *aEvent);
 
   /**
    * Find the accessible object in the accessibility cache that corresponds to
@@ -172,9 +172,10 @@ public:
   virtual void FireDocLoadEvents(PRUint32 aEventType);
 
   /**
-   * Used to flush pending events, called after timeout. See FlushPendingEvents.
+   * Process the event when the queue of pending events is untwisted. Fire
+   * accessible events as result of the processing.
    */
-  static void FlushEventsCallback(nsITimer *aTimer, void *aClosure);
+  void ProcessPendingEvent(nsAccEvent* aEvent);
 
 protected:
   /**
@@ -213,16 +214,6 @@ protected:
      * @param aAttribute - changed attribute
      */
     void ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute);
-
-  /**
-   * Process delayed (pending) events resulted in normal events firing.
-   */
-  void FlushPendingEvents();
-
-  /**
-   * Start the timer to flush delayed (pending) events.
-   */
-  nsresult PreparePendingEventsFlush();
 
     /**
      * Fire text changed event for character data changed. The method is used
@@ -293,16 +284,13 @@ protected:
     void *mWnd;
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsITimer> mScrollWatchTimer;
-    nsCOMPtr<nsITimer> mFireEventTimer;
     PRUint16 mScrollPositionChangedTicks; // Used for tracking scroll events
     PRPackedBool mIsContentLoaded;
     PRPackedBool mIsLoadCompleteFired;
 
 protected:
 
-  PRBool mInFlushPendingEvents;
-  PRBool mFireEventTimerStarted;
-  nsTArray<nsRefPtr<nsAccEvent> > mEventsToFire;
+  nsRefPtr<nsAccEventQueue> mEventQueue;
 
     static PRUint32 gLastFocusedAccessiblesState;
     static nsIAtom *gLastFocusedFrameType;

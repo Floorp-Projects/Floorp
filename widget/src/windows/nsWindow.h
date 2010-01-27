@@ -502,7 +502,6 @@ protected:
 #endif
 
 #if defined(WINCE_HAVE_SOFTKB)
-  static PRBool         sSoftKeyMenuBar;
   static PRBool         sSoftKeyboardState;
 #endif // defined(WINCE_HAVE_SOFTKB)
 
