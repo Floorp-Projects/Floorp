@@ -1,6 +1,7 @@
 IPDLSRCS =					\
   PTestArrays.ipdl				\
   PTestArraysSub.ipdl				\
+  PTestBlockChild.ipdl				\
   PTestCrashCleanup.ipdl			\
   PTestDesc.ipdl				\
   PTestDescSub.ipdl				\
