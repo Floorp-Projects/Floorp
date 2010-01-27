@@ -2600,8 +2600,13 @@ FinalizeObject(JSContext *cx, JSObject *obj, unsigned thingKind)
         jsdtrace_object_finalize(obj);
 #endif
 
-    if (JS_LIKELY(OBJ_IS_NATIVE(obj)))
-        OBJ_SCOPE(obj)->drop(cx, obj);
+    if (JS_LIKELY(OBJ_IS_NATIVE(obj))) {
+        JSScope *scope = OBJ_SCOPE(obj);
+        if (scope->isSharedEmpty())
+            static_cast<JSEmptyScope *>(scope)->dropFromGC(cx);
+        else
+            scope->destroy(cx);
+    }
     if (obj->hasSlotsArray())
         obj->freeSlotsArray(cx);
 }

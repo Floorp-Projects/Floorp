@@ -97,7 +97,7 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
 
     scope = OBJ_SCOPE(obj);
     JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, scope));
-    if (scope->owned())
+    if (!scope->isSharedEmpty())
         return scope;
 
     /*
@@ -108,7 +108,10 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
     newscope = JSScope::create(cx, scope->ops, obj->getClass(), obj, scope->shape);
     if (!newscope)
         return NULL;
-    JS_LOCK_SCOPE(cx, newscope);
+
+    /* The newly allocated scope is single-threaded and, as such, is locked. */
+    JS_ASSERT(CX_OWNS_SCOPE_TITLE(cx, newscope));
+    JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, newscope));
     obj->map = newscope;
 
     JS_ASSERT(newscope->freeslot == JSSLOT_FREE(STOBJ_GET_CLASS(obj)));
@@ -126,10 +129,8 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
         if (newscope->freeslot < freeslot)
             newscope->freeslot = freeslot;
     }
-    JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope);
-    JS_ATOMIC_DECREMENT(&scope->nrefs);
-    if (scope->nrefs == 0)
-        JSScope::destroy(cx, scope);
+    JS_DROP_ALL_EMPTY_SCOPE_LOCKS(cx, scope);
+    static_cast<JSEmptyScope *>(scope)->drop(cx);
     return newscope;
 }
 
@@ -214,7 +215,6 @@ JSScope::create(JSContext *cx, const JSObjectOps *ops, JSClass *clasp,
     if (!scope)
         return NULL;
 
-    scope->nrefs = 1;
     scope->freeslot = JSSLOT_FREE(clasp);
     scope->flags = cx->runtime->gcRegenShapesScopeFlag;
     scope->initMinimal(cx, shape);
@@ -227,31 +227,24 @@ JSScope::create(JSContext *cx, const JSObjectOps *ops, JSClass *clasp,
     return scope;
 }
 
-JSEmptyScope *
-JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
+JSEmptyScope::JSEmptyScope(JSContext *cx, const JSObjectOps *ops,
+                           JSClass *clasp)
+    : JSScope(ops, NULL), clasp(clasp)
 {
-    JS_ASSERT(!emptyScope);
-
-    JSEmptyScope *scope = cx->create<JSEmptyScope>(ops, clasp);
-    if (!scope)
-        return NULL;
-
     /*
      * This scope holds a reference to the new empty scope. Our only caller,
      * getEmptyScope, also promises to incref on behalf of its caller.
      */
-    scope->nrefs = 2;
-    scope->freeslot = JSSLOT_FREE(clasp);
-    scope->flags = OWN_SHAPE | cx->runtime->gcRegenShapesScopeFlag;
-    scope->initMinimal(cx, js_GenerateShape(cx, false));
+    nrefs = 2;
+    freeslot = JSSLOT_FREE(clasp);
+    flags = OWN_SHAPE | cx->runtime->gcRegenShapesScopeFlag;
+    initMinimal(cx, js_GenerateShape(cx, false));
 
 #ifdef JS_THREADSAFE
-    js_InitTitle(cx, &scope->title);
+    js_InitTitle(cx, &title);
 #endif
     JS_RUNTIME_METER(cx->runtime, liveScopes);
     JS_RUNTIME_METER(cx->runtime, totalScopes);
-    emptyScope = scope;
-    return scope;
 }
 
 #ifdef DEBUG
@@ -262,19 +255,46 @@ JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
 #endif
 
 void
-JSScope::destroy(JSContext *cx, JSScope *scope)
+JSScope::destroy(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    js_FinishTitle(cx, &scope->title);
+    js_FinishTitle(cx, &title);
 #endif
-    if (scope->table)
-        cx->free(scope->table);
-    if (scope->emptyScope)
-        scope->emptyScope->drop(cx, NULL);
+    if (table)
+        cx->free(table);
 
-    LIVE_SCOPE_METER(cx, cx->runtime->liveScopeProps -= scope->entryCount);
+    /*
+     * The scopes containing empty scopes are only destroyed from the GC
+     * thread.
+     */
+    if (emptyScope)
+        emptyScope->dropFromGC(cx);
+
+    LIVE_SCOPE_METER(cx, cx->runtime->liveScopeProps -= entryCount);
     JS_RUNTIME_UNMETER(cx->runtime, liveScopes);
-    cx->free(scope);
+    cx->free(this);
+}
+
+/* static */
+bool
+JSScope::initRuntimeState(JSContext *cx)
+{
+    cx->runtime->emptyBlockScope = cx->create<JSEmptyScope>(cx, &js_ObjectOps,
+                                                            &js_BlockClass);
+    JS_ASSERT(cx->runtime->emptyBlockScope->nrefs == 2);
+    cx->runtime->emptyBlockScope->nrefs = 1;
+    return !!cx->runtime->emptyBlockScope;
+}
+
+/* static */
+void
+JSScope::finishRuntimeState(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+    if (rt->emptyBlockScope) {
+        rt->emptyBlockScope->drop(cx);
+        rt->emptyBlockScope = NULL;
+    }
 }
 
 JS_STATIC_ASSERT(sizeof(JSHashNumber) == 4);

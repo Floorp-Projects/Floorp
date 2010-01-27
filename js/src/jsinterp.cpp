@@ -284,7 +284,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                  * that on the third and subsequent iterations the cache will
                  * be hit because the shape is no longer updated.
                  */
-                JS_ASSERT(scope->owned());
+                JS_ASSERT(!scope->isSharedEmpty());
                 if (sprop->parent) {
                     kshape = sprop->parent->shape;
                 } else {

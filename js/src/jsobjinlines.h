@@ -70,7 +70,7 @@ JSObject::unbrand(JSContext *cx)
     if (OBJ_IS_NATIVE(this)) {
         JS_LOCK_OBJ(cx, this);
         JSScope *scope = OBJ_SCOPE(this);
-        if (!scope->owned()) {
+        if (scope->isSharedEmpty()) {
             scope = js_GetMutableScope(cx, this);
             if (!scope) {
                 JS_UNLOCK_OBJ(cx, this);
