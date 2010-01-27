@@ -489,7 +489,7 @@ nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
     }
   }
   else if (mCurrentARIAMenubar) {
-    nsCOMPtr<nsIAccessibleEvent> menuEndEvent =
+    nsRefPtr<nsAccEvent> menuEndEvent =
       new nsAccEvent(nsIAccessibleEvent::EVENT_MENU_END, mCurrentARIAMenubar,
                      PR_FALSE, aIsFromUserInput, nsAccEvent::eAllowDupes);
     if (menuEndEvent) {

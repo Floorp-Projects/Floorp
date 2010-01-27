@@ -56,11 +56,11 @@ class nsIScrollableView;
 const PRUint32 kDefaultCacheSize = 256;
 
 #define NS_DOCACCESSIBLE_IMPL_CID                       \
-{  /* 5559d4f2-4338-40eb-bfca-0fb7d73e958a */           \
-  0x5559d4f2,                                           \
-  0x4338,                                               \
-  0x40eb,                                               \
-  { 0xbf, 0xca, 0x0f, 0xb7, 0xd7, 0x3e, 0x95, 0x8a }    \
+{  /* 5641921c-a093-4292-9dca-0b51813db57d */           \
+  0x5641921c,                                           \
+  0xa093,                                               \
+  0x4292,                                               \
+  { 0x9d, 0xca, 0x0b, 0x51, 0x81, 0x3d, 0xb5, 0x7d }    \
 }
 
 class nsDocAccessible : public nsHyperTextAccessibleWrap,
@@ -135,7 +135,7 @@ public:
    *
    * @param aEvent  [in] the event to fire
    */
-  nsresult FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent);
+  nsresult FireDelayedAccessibleEvent(nsAccEvent *aEvent);
 
   /**
    * Find the accessible object in the accessibility cache that corresponds to
