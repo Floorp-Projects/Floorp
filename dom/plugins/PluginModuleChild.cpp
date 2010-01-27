@@ -285,7 +285,7 @@ PluginModuleChild::ActorDestroy(ActorDestroyReason why)
 
 
 #ifdef OS_LINUX
-    printf("TEST-UNEXPECTED-FAIL | plugin process %d | initiating shutdown\n", getpid());
+    fprintf(stderr, "TEST-UNEXPECTED-FAIL | plugin process %d | initiating shutdown\n", getpid());
 #endif
 
 
