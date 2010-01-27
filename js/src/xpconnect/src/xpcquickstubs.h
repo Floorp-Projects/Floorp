@@ -348,15 +348,24 @@ xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, PRUnichar **pstr);
 JSBool
 xpc_qsStringToJsval(JSContext *cx, const nsAString &str, jsval *rval);
 
-JSBool
-xpc_qsUnwrapThisImpl(JSContext *cx,
-                     JSObject *obj,
-                     JSObject *callee,
-                     const nsIID &iid,
-                     void **ppThis,
-                     nsISupports **ppThisRef,
-                     jsval *vp,
-                     XPCLazyCallContext *lccx);
+nsresult
+getWrapper(JSContext *cx,
+           JSObject *obj,
+           JSObject *callee,
+           XPCWrappedNative **wrapper,
+           JSObject **cur,
+           XPCWrappedNativeTearOff **tearoff);
+
+nsresult
+castNative(JSContext *cx,
+           XPCWrappedNative *wrapper,
+           JSObject *cur,
+           XPCWrappedNativeTearOff *tearoff,
+           const nsIID &iid,
+           void **ppThis,
+           nsISupports **ppThisRef,
+           jsval *vp,
+           XPCLazyCallContext *lccx);
 
 /**
  * Search @a obj and its prototype chain for an XPCOM object that implements
@@ -384,14 +393,15 @@ xpc_qsUnwrapThis(JSContext *cx,
                  jsval *pThisVal,
                  XPCLazyCallContext *lccx)
 {
-    return xpc_qsUnwrapThisImpl(cx,
-                                obj,
-                                callee,
-                                NS_GET_TEMPLATE_IID(T),
-                                reinterpret_cast<void **>(ppThis),
-                                pThisRef,
-                                pThisVal,
-                                lccx);
+    XPCWrappedNative *wrapper;
+    XPCWrappedNativeTearOff *tearoff;
+    nsresult rv = getWrapper(cx, obj, callee, &wrapper, &obj, &tearoff);
+    if(NS_SUCCEEDED(rv))
+        rv = castNative(cx, wrapper, obj, tearoff, NS_GET_TEMPLATE_IID(T),
+                        reinterpret_cast<void **>(ppThis), pThisRef, pThisVal,
+                        lccx);
+
+    return NS_SUCCEEDED(rv) || xpc_qsThrow(cx, rv);
 }
 
 JSBool
