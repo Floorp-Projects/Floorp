@@ -610,7 +610,7 @@ nsDocAccessible::Init()
 
   // Fire reorder event to notify new accessible document has been created and
   // attached to the tree.
-  nsCOMPtr<nsIAccessibleEvent> reorderEvent =
+  nsRefPtr<nsAccEvent> reorderEvent =
     new nsAccReorderEvent(mParent, PR_FALSE, PR_TRUE, mDOMNode);
   NS_ENSURE_TRUE(reorderEvent, NS_ERROR_OUT_OF_MEMORY);
 
@@ -1088,14 +1088,14 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
     // Note. We use the attribute instead of the disabled state bit because
     // ARIA's aria-disabled does not affect the disabled state bit.
 
-    nsCOMPtr<nsIAccessibleEvent> enabledChangeEvent =
+    nsRefPtr<nsAccEvent> enabledChangeEvent =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::EXT_STATE_ENABLED,
                                 PR_TRUE);
 
     FireDelayedAccessibleEvent(enabledChangeEvent);
 
-    nsCOMPtr<nsIAccessibleEvent> sensitiveChangeEvent =
+    nsRefPtr<nsAccEvent> sensitiveChangeEvent =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::EXT_STATE_SENSITIVE,
                                 PR_TRUE);
@@ -1171,7 +1171,7 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
   }
 
   if (aAttribute == nsAccessibilityAtoms::contenteditable) {
-    nsCOMPtr<nsIAccessibleEvent> editableChangeEvent =
+    nsRefPtr<nsAccEvent> editableChangeEvent =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::EXT_STATE_EDITABLE,
                                 PR_TRUE);
@@ -1189,7 +1189,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
 
   if (aAttribute == nsAccessibilityAtoms::aria_required) {
-    nsCOMPtr<nsIAccessibleEvent> event =
+    nsRefPtr<nsAccEvent> event =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::STATE_REQUIRED,
                                 PR_FALSE);
@@ -1198,7 +1198,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
   }
 
   if (aAttribute == nsAccessibilityAtoms::aria_invalid) {
-    nsCOMPtr<nsIAccessibleEvent> event =
+    nsRefPtr<nsAccEvent> event =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::STATE_INVALID,
                                 PR_FALSE);
@@ -1232,7 +1232,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     const PRUint32 kState = (aAttribute == nsAccessibilityAtoms::aria_checked) ?
                             nsIAccessibleStates::STATE_CHECKED : 
                             nsIAccessibleStates::STATE_PRESSED;
-    nsCOMPtr<nsIAccessibleEvent> event =
+    nsRefPtr<nsAccEvent> event =
       new nsAccStateChangeEvent(targetNode, kState, PR_FALSE);
     FireDelayedAccessibleEvent(event);
     if (targetNode == gLastFocusedNode) {
@@ -1247,7 +1247,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
         PRBool isMixed  =
           (nsAccUtils::State(accessible) & nsIAccessibleStates::STATE_MIXED) != 0;
         if (wasMixed != isMixed) {
-          nsCOMPtr<nsIAccessibleEvent> event =
+          nsRefPtr<nsAccEvent> event =
             new nsAccStateChangeEvent(targetNode,
                                       nsIAccessibleStates::STATE_MIXED,
                                       PR_FALSE, isMixed);
@@ -1259,7 +1259,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
   }
 
   if (aAttribute == nsAccessibilityAtoms::aria_expanded) {
-    nsCOMPtr<nsIAccessibleEvent> event =
+    nsRefPtr<nsAccEvent> event =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::STATE_EXPANDED,
                                 PR_FALSE);
@@ -1268,7 +1268,7 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
   }
 
   if (aAttribute == nsAccessibilityAtoms::aria_readonly) {
-    nsCOMPtr<nsIAccessibleEvent> event =
+    nsRefPtr<nsAccEvent> event =
       new nsAccStateChangeEvent(targetNode,
                                 nsIAccessibleStates::STATE_READONLY,
                                 PR_FALSE);
@@ -1434,10 +1434,10 @@ nsDocAccessible::FireValueChangeForTextFields(nsIAccessible *aPossibleTextFieldA
     return;
 
   // Dependent value change event for text changes in textfields
-  nsCOMPtr<nsIAccessibleEvent> valueChangeEvent =
+  nsRefPtr<nsAccEvent> valueChangeEvent =
     new nsAccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aPossibleTextFieldAccessible,
                    PR_FALSE, eAutoDetect, nsAccEvent::eRemoveDupes);
-  FireDelayedAccessibleEvent(valueChangeEvent );
+  FireDelayedAccessibleEvent(valueChangeEvent);
 }
 
 void
@@ -1588,7 +1588,7 @@ nsDocAccessible::FireDelayedAccessibleEvent(PRUint32 aEventType,
                                             PRBool aIsAsynch,
                                             EIsFromUserInput aIsFromUserInput)
 {
-  nsCOMPtr<nsIAccessibleEvent> event =
+  nsRefPtr<nsAccEvent> event =
     new nsAccEvent(aEventType, aDOMNode, aIsAsynch, aIsFromUserInput, aAllowDupes);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
@@ -1597,13 +1597,12 @@ nsDocAccessible::FireDelayedAccessibleEvent(PRUint32 aEventType,
 
 // nsDocAccessible public member
 nsresult
-nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent)
+nsDocAccessible::FireDelayedAccessibleEvent(nsAccEvent *aEvent)
 {
   NS_ENSURE_ARG(aEvent);
 
-  nsRefPtr<nsAccEvent> accEvent = nsAccUtils::QueryObject<nsAccEvent>(aEvent);
   if (mEventQueue)
-    mEventQueue->Push(accEvent);
+    mEventQueue->Push(aEvent);
 
   return NS_OK;
 }
@@ -2089,7 +2088,7 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   PRBool isUnconditionalEvent = childAccessible ||
     aChild && nsAccUtils::HasAccessibleChildren(childNode);
 
-  nsCOMPtr<nsIAccessibleEvent> reorderEvent =
+  nsRefPtr<nsAccEvent> reorderEvent =
     new nsAccReorderEvent(containerAccessible, isAsynch,
                           isUnconditionalEvent,
                           aChild ? childNode.get() : nsnull);
