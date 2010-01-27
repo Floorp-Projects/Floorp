@@ -51,27 +51,29 @@
     var p = iframe.contentDocument.getElementById('plugin1');
     try {
       p.setColor('FF00FF00');
-      ok(true, "Reloading worked");
+      ok(true, "Reloading after crash-on-new worked");
     }
     catch (e) {
-      ok(false, "Reloading didn't give us a usable plugin");
+      ok(false, "Reloading after crash-on-new didn't give us a usable plugin");
     }
     p.crashOnDestroy();
     // the child crash should happen here
     p.parentNode.removeChild(p);
 
     window.frameLoaded = reloaded2;
-    iframe.contentWindow.location.reload();
+    SimpleTest.executeSoon(function() {
+      iframe.contentWindow.location.reload();
+    });
   }
 
   function reloaded2() {
     var p = iframe.contentDocument.getElementById('plugin1');
     try {
       p.setColor('FF00FF00');
-      ok(true, "Reloading worked");
+      ok(true, "Reloading after crash-on-destroy worked");
     }
     catch (e) {
-      ok(false, "Reloading didn't give us a usable plugin");
+      ok(false, "Reloading after crash-on-destroy didn't give us a usable plugin");
     }
     SimpleTest.finish();
   }
