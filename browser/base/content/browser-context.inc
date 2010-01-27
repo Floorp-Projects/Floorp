@@ -77,10 +77,6 @@
                 label="&copyLinkCmd.label;"
                 accesskey="&copyLinkCmd.accesskey;"
                 oncommand="goDoCommand('cmd_copyLink');"/>
-      <menuitem id="context-copylinktext"
-                label="&copyLinkText2Cmd.label;"
-                accesskey="&copyLinkText2Cmd.accesskey;"
-                oncommand="gContextMenu.copyLinkText();"/>
       <menuseparator id="context-sep-copylink"/>
       <menuitem id="context-media-play"
                 label="&mediaPlay.label;"
