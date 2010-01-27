@@ -84,8 +84,8 @@ IntentionalCrash()
     fprintf(processfd, "==> process %d will purposefully crash\n", getpid());
     fclose(processfd);
   }
-  void (*funcptr)() = NULL;
-  funcptr(); // Crash calling null function pointer
+  int *pi = NULL;
+  *pi = 55; // Crash dereferencing null pointer
   ++gCrashCount;
 }
 
