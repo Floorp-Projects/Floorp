@@ -45,6 +45,7 @@
 #include "nsMenuUtilsX.h"
 #include "nsCocoaUtils.h"
 #include "nsCocoaWindow.h"
+#include "nsToolkit.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -314,6 +315,34 @@ nsMenuX* nsMenuBarX::GetMenuAt(PRUint32 aIndex)
   return mMenuArray[aIndex];
 }
 
+nsMenuX* nsMenuBarX::GetXULHelpMenu()
+{
+  // The Help menu is usually (always?) the last one, so we start there and
+  // count back.
+  for (PRInt32 i = GetMenuCount() - 1; i >= 0; --i) {
+    nsMenuX* aMenu = GetMenuAt(i);
+    if (aMenu && nsMenuX::IsXULHelpMenu(aMenu->Content()))
+      return aMenu;
+  }
+  return nil;
+}
+
+// On SnowLeopard and later we must tell the OS which is our Help menu.
+// Otherwise it will only add Spotlight for Help (the Search item) to our
+// Help menu if its label/title is "Help" -- i.e. if the menu is in English.
+// This resolves bugs 489196 and 539317.
+void nsMenuBarX::SetSystemHelpMenu()
+{
+  if (!nsToolkit::OnSnowLeopardOrLater())
+    return;
+  nsMenuX* xulHelpMenu = GetXULHelpMenu();
+  if (xulHelpMenu) {
+    NSMenu* helpMenu = (NSMenu*)xulHelpMenu->NativeData();
+    if (helpMenu)
+      [NSApp setHelpMenu:helpMenu];
+  }
+}
+
 nsresult nsMenuBarX::Paint()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -334,6 +363,7 @@ nsresult nsMenuBarX::Paint()
 
   // Set menu bar and event target.
   [NSApp setMainMenu:mNativeMenu];
+  SetSystemHelpMenu();
   nsMenuBarX::sLastGeckoMenuBarPainted = this;
 
   gSomeMenuBarPainted = YES;
