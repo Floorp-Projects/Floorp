@@ -52,6 +52,8 @@
 // enum in ipc_channel.h.  They need to be kept in sync.
 namespace {
 enum {
+    UNBLOCK_CHILD_MESSAGE_TYPE = kuint16max - 4,
+    BLOCK_CHILD_MESSAGE_TYPE   = kuint16max - 3,
     SHMEM_CREATED_MESSAGE_TYPE = kuint16max - 2,
     GOODBYE_MESSAGE_TYPE       = kuint16max - 1,
 };
