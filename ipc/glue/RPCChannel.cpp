@@ -471,7 +471,7 @@ RPCChannel::BlockOnParent()
         NS_RUNTIMEABORT("attempt to block child when it's already blocked");
 
     mBlockedOnParent = true;
-    while (1) {
+    do {
         // XXX this dispatch loop shares some similarities with the
         // one in Call(), but the logic is simpler and different
         // enough IMHO to warrant its own dispatch loop
@@ -501,12 +501,7 @@ RPCChannel::BlockOnParent()
                 AsyncChannel::OnDispatchMessage(recvd);
             }
         }
-        
-        // the last message, if async, may have been the one that
-        // unblocks us
-        if (!mBlockedOnParent)
-            break;
-    }
+    } while (mBlockedOnParent);
 
     EnqueuePendingMessages();
 }
