@@ -96,8 +96,8 @@ CLASS(  LOP_B_FF,       0,  3)  // 63%  LIR_feq, LIR_flt, etc
 
 CLASS(  LOP_Q_I,        1,  2)  // 65%  LIR_i2q, LIR_u2q
 CLASS(  LOP_F_I,        0,  2)  // 67%  LIR_i2f, LIR_u2f
-
-CLASS(  LOP_I_F,        0,  2)  // 69%  LIR_qlo, LIR_qhi, LIR_f2i
+CLASS(  LOP_I_Q,        1,  1)  // 68%  LIR_q2i
+CLASS(  LOP_I_F,        0,  1)  // 69%  LIR_qlo, LIR_qhi, LIR_f2i
 CLASS(  LOP_F_II,       0,  1)  // 70%  LIR_qjoin
 
 CLASS(  LLD_I,          0,  3)  // 73%  LIR_ld, LIR_ldc, LIR_ld*b, LIR_ld*s

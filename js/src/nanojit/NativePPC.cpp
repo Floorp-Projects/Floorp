@@ -637,7 +637,7 @@ namespace nanojit
         releaseRegisters();
         assignSavedRegs();
         LIns *value = ins->oprnd1();
-        Register r = ins->isop(LIR_ret) ? R3 : F1;
+        Register r = ins->isop(LIR_fret) ? F1 : R3;
         findSpecificRegFor(value, r);
     }
 
@@ -1034,6 +1034,13 @@ namespace nanojit
 
     void Assembler::asm_f2i(LInsp) {
         NanoAssertMsg(0, "NJ_F2I_SUPPORTED not yet supported for this architecture");
+    }
+
+    // XXX: this is sub-optimal, see https://bugzilla.mozilla.org/show_bug.cgi?id=540368#c7.
+    void Assembler::asm_q2i(LIns *ins) {
+        Register rr = deprecated_prepResultReg(ins, GpRegs);
+        int d = findMemFor(ins->oprnd1());
+        LWZ(rr, d+4, FP);
     }
 
     void Assembler::asm_promote(LIns *ins) {
