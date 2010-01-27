@@ -3313,12 +3313,6 @@ PopStatement(JSTreeContext *tc)
                 continue;
             tc->decls.remove(tc->compiler, atom);
         }
-
-        /*
-         * The block scope will not be modified again. It may be shared. Clear
-         * scope->object to make scope->owned() false.
-         */
-        scope->object = NULL;
     }
     js_PopStatement(tc);
 }

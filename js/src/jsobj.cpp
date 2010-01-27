@@ -2914,7 +2914,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* o
         JS_ASSERT(scope->freeslot >= JSSLOT_PRIVATE);
         if (scope->freeslot > JS_INITIAL_NSLOTS &&
             !AllocSlots(cx, obj, scope->freeslot)) {
-            JSScope::destroy(cx, scope);
+            scope->destroy(cx);
             goto bad;
         }
     }
@@ -3116,7 +3116,7 @@ js_NewInstance(JSContext *cx, JSClass *clasp, JSObject *ctor)
     if (scope->title.ownercx != cx)
         return NULL;
 #endif
-    if (!scope->owned()) {
+    if (scope->isSharedEmpty()) {
         scope = js_GetMutableScope(cx, ctor);
         if (!scope)
             return NULL;
@@ -3428,20 +3428,13 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     if (!clone)
         return NULL;
 
-    JSScope *scope = OBJ_SCOPE(proto);
-    scope->hold();
-    JS_ASSERT(!scope->owned());
-    clone->map = scope;
-
-    clone->classword = jsuword(&js_BlockClass);
-    clone->setProto(proto);
-    clone->setParent(NULL);  // caller's responsibility
-    clone->setPrivate(fp);
+    /* The caller sets parent on its own. */
+    clone->init(&js_BlockClass, proto, NULL, reinterpret_cast<jsval>(fp));
     clone->fslots[JSSLOT_BLOCK_DEPTH] = proto->fslots[JSSLOT_BLOCK_DEPTH];
-    JS_ASSERT(scope->freeslot == JSSLOT_BLOCK_DEPTH + 1);
-    for (uint32 i = JSSLOT_BLOCK_DEPTH + 1; i < JS_INITIAL_NSLOTS; ++i)
-        clone->fslots[i] = JSVAL_VOID;
-    clone->dslots = NULL;
+
+    JS_ASSERT(cx->runtime->emptyBlockScope->freeslot == JSSLOT_BLOCK_DEPTH + 1);
+    clone->map = cx->runtime->emptyBlockScope;
+    cx->runtime->emptyBlockScope->hold();
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(clone));
     return clone;
 }
@@ -3688,11 +3681,6 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
             if (!js_DefineBlockVariable(cx, obj, ATOM_TO_JSID(atom), shortid))
                 return false;
         }
-    }
-
-    if (xdr->mode == JSXDR_DECODE) {
-        /* Do as the parser does and make this block scope shareable. */
-        OBJ_SCOPE(obj)->object = NULL;
     }
     return true;
 }
@@ -3996,7 +3984,7 @@ js_EnsureReservedSlots(JSContext *cx, JSObject *obj, size_t nreserved)
         return false;
 
     JSScope *scope = OBJ_SCOPE(obj);
-    if (scope->owned()) {
+    if (!scope->isSharedEmpty()) {
 #ifdef JS_THREADSAFE
         JS_ASSERT(scope->title.ownercx->thread == cx->thread);
 #endif
@@ -4748,12 +4736,12 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                              * "too bad!" case.
                              */
                             scope = OBJ_SCOPE(obj2);
-                            if (scope->owned())
+                            if (!scope->isSharedEmpty())
                                 sprop = scope->lookup(id);
                         }
                         if (sprop) {
                             JS_ASSERT(scope == OBJ_SCOPE(obj2));
-                            JS_ASSERT(scope->owned());
+                            JS_ASSERT(!scope->isSharedEmpty());
                             obj = obj2;
                         } else if (obj2 != obj) {
                             if (OBJ_IS_NATIVE(obj2))
@@ -4773,7 +4761,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                     JS_LOCK_OBJ(cx, obj);
                     JS_ASSERT(OBJ_IS_NATIVE(obj));
                     scope = OBJ_SCOPE(obj);
-                    if (scope->owned())
+                    if (!scope->isSharedEmpty())
                         sprop = scope->lookup(id);
                 }
 
@@ -4861,11 +4849,11 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
                 JS_ASSERT(OBJ_GET_CLASS(cx, pobj) == clasp);
                 if (clasp == &js_BlockClass) {
                     /*
-                     * Block instances on the scope chain are immutable and
-                     * always share their scope with compile-time prototypes.
+                     * A block instance on the scope chain is immutable and
+                     * the compile-time prototype provides all its properties.
                      */
-                    JS_ASSERT(pobj == obj);
-                    JS_ASSERT(protoIndex == 0);
+                    JS_ASSERT(pobj == obj->getProto());
+                    JS_ASSERT(protoIndex == 1);
                 } else {
                     /* Call and DeclEnvClass objects have no prototypes. */
                     JS_ASSERT(!OBJ_GET_PROTO(cx, obj));
@@ -6612,7 +6600,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
 
     JSContext *cx = trc->context;
     JSScope *scope = OBJ_SCOPE(obj);
-    if (scope->owned() && IS_GC_MARKING_TRACER(trc)) {
+    if (!scope->isSharedEmpty() && IS_GC_MARKING_TRACER(trc)) {
         /*
          * Check whether we should shrink the object's slots. Skip this check
          * if the scope is shared, since for Block objects and flat closures
@@ -6653,7 +6641,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
      * above.
      */
     uint32 nslots = STOBJ_NSLOTS(obj);
-    if (scope->owned() && scope->freeslot < nslots)
+    if (!scope->isSharedEmpty() && scope->freeslot < nslots)
         nslots = scope->freeslot;
     JS_ASSERT(nslots >= JSSLOT_START(clasp));
 
@@ -6679,7 +6667,7 @@ js_Clear(JSContext *cx, JSObject *obj)
      */
     JS_LOCK_OBJ(cx, obj);
     scope = OBJ_SCOPE(obj);
-    if (scope->owned()) {
+    if (!scope->isSharedEmpty()) {
         /* Now that we're done using scope->lastProp/table, clear scope. */
         scope->clear(cx);
 
@@ -6772,7 +6760,7 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
      * use STOBJ_NSLOTS(obj) rather than rely on freeslot.
      */
     JSScope *scope = OBJ_SCOPE(obj);
-    if (scope->owned() && slot >= scope->freeslot)
+    if (!scope->isSharedEmpty() && slot >= scope->freeslot)
         scope->freeslot = slot + 1;
 
     STOBJ_SET_SLOT(obj, slot, v);
@@ -7028,7 +7016,7 @@ js_DumpObject(JSObject *obj)
 
     fprintf(stderr, "slots:\n");
     reservedEnd = i + JSCLASS_RESERVED_SLOTS(clasp);
-    slots = (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->owned())
+    slots = (OBJ_IS_NATIVE(obj) && !OBJ_SCOPE(obj)->isSharedEmpty())
             ? OBJ_SCOPE(obj)->freeslot
             : STOBJ_NSLOTS(obj);
     for (; i < slots; i++) {

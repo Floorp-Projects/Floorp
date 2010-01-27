@@ -1763,7 +1763,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
 
                         /* The cache entry doesn't apply. vshape mismatch. */
                         checkForAdd = false;
-                    } else if (scope->owned()) {
+                    } else if (!scope->isSharedEmpty()) {
                         if (sprop == scope->lastProperty() || scope->hasProperty(sprop)) {
                           fast_set_propcache_hit:
                             PCMETER(cache->pchits++);
@@ -3475,7 +3475,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
                 }
                 JS_ASSERT(sprop2 == sprop);
             } else {
-                JS_ASSERT(scope->owned());
+                JS_ASSERT(!scope->isSharedEmpty());
                 scope->extend(cx, sprop);
             }
 

@@ -813,6 +813,8 @@ struct JSRuntime {
     JSBackgroundThread    *deallocatorThread;
 #endif
 
+    JSEmptyScope          *emptyBlockScope;
+
     /*
      * Various metering fields are defined at the end of JSRuntime. In this
      * way there is no need to recompile all the code that refers to other

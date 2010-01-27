@@ -531,6 +531,9 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
             ok = js_InitRuntimeNumberState(cx);
         if (ok)
             ok = js_InitRuntimeStringState(cx);
+        if (ok)
+            ok = JSScope::initRuntimeState(cx);
+
 #ifdef JS_THREADSAFE
         JS_EndRequest(cx);
 #endif
@@ -733,7 +736,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
                 JS_BeginRequest(cx);
 #endif
 
-            /* Unlock and clear GC things held by runtime pointers. */
+            JSScope::finishRuntimeState(cx);
             js_FinishRuntimeNumberState(cx);
             js_FinishRuntimeStringState(cx);
 

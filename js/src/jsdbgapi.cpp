@@ -1674,7 +1674,7 @@ JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
     }
     if (OBJ_IS_NATIVE(obj)) {
         scope = OBJ_SCOPE(obj);
-        if (scope->owned()) {
+        if (!scope->isSharedEmpty()) {
             nbytes += sizeof *scope;
             nbytes += SCOPE_CAPACITY(scope) * sizeof(JSScopeProperty *);
         }

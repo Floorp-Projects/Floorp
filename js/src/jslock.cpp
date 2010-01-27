@@ -1268,17 +1268,18 @@ js_UnlockTitle(JSContext *cx, JSTitle *title)
  * dropped the last reference to oldtitle.
  */
 void
-js_TransferTitle(JSContext *cx, JSTitle *oldtitle, JSTitle *newtitle)
+js_DropAllEmptyScopeLocks(JSContext *cx, JSScope *scope)
 {
-    JS_ASSERT(JS_IS_TITLE_LOCKED(cx, newtitle));
+    JS_ASSERT(!CX_OWNS_SCOPE_TITLE(cx,scope));
+    JS_ASSERT(scope->isSharedEmpty());
+    JS_ASSERT(JS_IS_TITLE_LOCKED(cx, &scope->title));
 
     /*
-     * If the last reference to oldtitle went away, newtitle needs no lock
-     * state update.
+     * Shared empty scope cannot be sealed so we do not need to deal with
+     * cx->lockedSealedTitle.
      */
-    if (!oldtitle)
-        return;
-    JS_ASSERT(JS_IS_TITLE_LOCKED(cx, oldtitle));
+    JS_ASSERT(!scope->sealed());
+    JS_ASSERT(cx->lockedSealedTitle != &scope->title);
 
     /*
      * Special case in js_LockTitle and js_UnlockTitle for the GC calling
@@ -1289,46 +1290,9 @@ js_TransferTitle(JSContext *cx, JSTitle *oldtitle, JSTitle *newtitle)
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return;
 
-    /*
-     * Special case in js_LockObj and js_UnlockTitle for locking the sealed
-     * scope of an object that owns that scope (the prototype or mutated obj
-     * for which OBJ_SCOPE(obj)->object == obj), and unlocking it.
-     */
-    JS_ASSERT(cx->lockedSealedTitle != newtitle);
-    if (cx->lockedSealedTitle == oldtitle) {
-        JS_ASSERT(newtitle->ownercx == cx ||
-                  (!newtitle->ownercx && newtitle->u.count == 1));
-        cx->lockedSealedTitle = NULL;
-        return;
-    }
-
-    /*
-     * If oldtitle is single-threaded, there's nothing to do.
-     */
-    if (oldtitle->ownercx) {
-        JS_ASSERT(oldtitle->ownercx == cx);
-        JS_ASSERT(newtitle->ownercx == cx ||
-                  (!newtitle->ownercx && newtitle->u.count == 1));
-        return;
-    }
-
-    /*
-     * We transfer oldtitle->u.count only if newtitle is not single-threaded.
-     * Flow unwinds from here through some number of JS_UNLOCK_TITLE and/or
-     * JS_UNLOCK_OBJ macro calls, which will decrement newtitle->u.count only
-     * if they find newtitle->ownercx != cx.
-     */
-    if (newtitle->ownercx != cx) {
-        JS_ASSERT(!newtitle->ownercx);
-        newtitle->u.count = oldtitle->u.count;
-    }
-
-    /*
-     * Reset oldtitle's lock state so that it is completely unlocked.
-     */
-    LOGIT(oldtitle, '0');
-    oldtitle->u.count = 0;
-    ThinUnlock(&oldtitle->lock, CX_THINLOCK_ID(cx));
+    LOGIT(&scope->title, '0');
+    scope->title.u.count = 0;
+    ThinUnlock(&scope->title.lock, CX_THINLOCK_ID(cx));
 }
 
 void
