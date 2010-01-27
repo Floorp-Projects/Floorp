@@ -86,6 +86,7 @@ public:
     virtual int32 RegisterID(ListenerT*, int32) = 0;
     virtual ListenerT* Lookup(int32) = 0;
     virtual void Unregister(int32) = 0;
+    virtual void RemoveManagee(int32, ListenerT*) = 0;
     // XXX odd duck, acknowledged
     virtual ProcessHandle OtherProcess() const = 0;
 };

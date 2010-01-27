@@ -715,6 +715,7 @@ class StmtSwitch(Block):
 
     def addcase(self, case, block):
         '''NOTE: |case| is not checked for uniqueness'''
+        assert not isinstance(case, str)
         assert (isinstance(block, StmtBreak)
                 or isinstance(block, StmtReturn)
                 or (hasattr(block, 'stmts')
