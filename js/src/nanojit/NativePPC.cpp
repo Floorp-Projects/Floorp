@@ -1186,14 +1186,13 @@ namespace nanojit
     }
 
     void Assembler::asm_cmov(LIns *ins) {
-        LOpcode op    = ins->opcode();
         LIns* cond    = ins->oprnd1();
         LIns* iftrue  = ins->oprnd2();
         LIns* iffalse = ins->oprnd3();
 
         NanoAssert(cond->isCmp());
-        NanoAssert((op == LIR_cmov  && iftrue->isI32() && iffalse->isI32()) ||
-                   (op == LIR_qcmov && iftrue->isI64() && iffalse->isI64()));
+        NanoAssert((ins->opcode() == LIR_cmov  && iftrue->isI32() && iffalse->isI32()) ||
+                   (ins->opcode() == LIR_qcmov && iftrue->isI64() && iffalse->isI64()));
 
         // fixme: we could handle fpu registers here, too, since we're just branching
         Register rr = deprecated_prepResultReg(ins, GpRegs);
