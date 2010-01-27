@@ -1345,7 +1345,7 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
     return JS_TRUE;
 
   out_bad:
-    JSScope::destroy(cx, scope);
+    scope->destroy(cx);
     return JS_FALSE;
 }
 

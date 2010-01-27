@@ -240,12 +240,12 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
         goto exit_trace;
     JS_ASSERT(sprop->parent == scope->lastProperty());
 
-    if (scope->owned()) {
-        JS_ASSERT(!scope->hasProperty(sprop));
-    } else {
+    if (scope->isSharedEmpty()) {
         scope = js_GetMutableScope(cx, obj);
         if (!scope)
             goto exit_trace;
+    } else {
+        JS_ASSERT(!scope->hasProperty(sprop));
     }
 
     if (!scope->table) {

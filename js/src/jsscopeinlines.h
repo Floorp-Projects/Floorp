@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -45,6 +45,41 @@
 #include "jsfun.h"
 #include "jsobj.h"
 #include "jsscope.h"
+
+inline JSEmptyScope *
+JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
+{
+    JS_ASSERT(!emptyScope);
+    emptyScope = cx->create<JSEmptyScope>(cx, ops, clasp);
+    return emptyScope;
+}
+
+inline JSEmptyScope *
+JSScope::getEmptyScope(JSContext *cx, JSClass *clasp)
+{
+    if (emptyScope) {
+        JS_ASSERT(clasp == emptyScope->clasp);
+        emptyScope->hold();
+        return emptyScope;
+    }
+    return createEmptyScope(cx, clasp);
+}
+
+inline bool
+JSScope::ensureEmptyScope(JSContext *cx, JSClass *clasp)
+{
+    if (emptyScope) {
+        JS_ASSERT(clasp == emptyScope->clasp);
+        return true;
+    }
+    if (!createEmptyScope(cx, clasp))
+        return false;
+
+    /* We are going to have only single ref to the scope. */
+    JS_ASSERT(emptyScope->nrefs == 2);
+    emptyScope->nrefs = 1;
+    return true;
+}
 
 inline void
 JSScope::updateShape(JSContext *cx)
