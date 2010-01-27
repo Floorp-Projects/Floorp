@@ -91,6 +91,7 @@ AsyncChannel::AsyncChannel(AsyncListener* aListener)
     mCvar(mMutex, "mozilla.ipc.AsyncChannel.mCvar"),
     mIOLoop(),
     mWorkerLoop(),
+    mChild(false),
     mChannelErrorTask(NULL)
 {
     MOZ_COUNT_CTOR(AsyncChannel);
