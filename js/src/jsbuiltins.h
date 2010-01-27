@@ -517,6 +517,9 @@ JS_DECLARE_CALLINFO(js_Object_tn)
 JS_DECLARE_CALLINFO(js_NewInstance)
 JS_DECLARE_CALLINFO(js_NonEmptyObject)
 
+/* Defined in jsregexp.cpp. */
+JS_DECLARE_CALLINFO(js_CloneRegExpObject)
+
 /* Defined in jsstr.cpp. */
 JS_DECLARE_CALLINFO(js_String_tn)
 JS_DECLARE_CALLINFO(js_CompareStrings)
