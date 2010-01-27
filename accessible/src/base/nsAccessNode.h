@@ -202,9 +202,6 @@ protected:
     static nsIStringBundle *gStringBundle;
     static nsIStringBundle *gKeyStringBundle;
 
-#ifdef DEBUG
-    static PRBool gIsAccessibilityActive;
-#endif
     static PRBool gIsCacheDisabled;
     static PRBool gIsFormFillEnabled;
 
