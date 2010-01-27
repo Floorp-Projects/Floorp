@@ -43,6 +43,7 @@ namespace mozilla {
 
 EnvironmentLog::EnvironmentLog(const char* varname)
 {
+  const char *e = getenv(varname);
   if (e && *e)
     fname_ = e;
 }
