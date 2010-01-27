@@ -1041,7 +1041,10 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
       (strncmp(relativeURL, "ftp:", 4) != 0)) {
     nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
 
-    const char *name = nsPluginHost::GetPluginName(inst);
+    
+    const char *name;
+    nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
+    host->GetPluginName(inst, &name);
 
     if (name && strstr(name, "Adobe") && strstr(name, "Acrobat")) {
       return NPERR_NO_ERROR;

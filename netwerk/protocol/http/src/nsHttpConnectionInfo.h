@@ -97,6 +97,8 @@ public:
     {
         SetOriginServer(nsDependentCString(host), port);
     }
+    
+    nsHttpConnectionInfo* Clone() const;
 
     const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host().get() : nsnull; }
     PRInt32     ProxyPort() const { return mProxyInfo ? mProxyInfo->Port() : -1; }
@@ -120,7 +122,8 @@ public:
     PRBool        UsingHttpProxy() const { return mUsingHttpProxy; }
     PRBool        UsingSSL() const       { return mUsingSSL; }
     PRInt32       DefaultPort() const    { return mUsingSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT; }
-    void          SetAnonymous()         { mHashKey.SetCharAt('A', 2); }
+    void          SetAnonymous(PRBool anon)         
+                                         { mHashKey.SetCharAt(anon ? 'A' : '.', 2); }
             
 private:
     nsrefcnt               mRef;

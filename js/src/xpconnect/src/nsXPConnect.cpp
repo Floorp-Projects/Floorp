@@ -1074,7 +1074,10 @@ InitWebGLTypes(JSContext *aJSContext, JSObject *aGlobalJSObj)
         "WebGLFloatArray"
     };
 
-    for(int i = 0; i < NS_ARRAY_LENGTH(webglTypes); ++i) {
+    for(size_t i = 0;
+        i < NS_ARRAY_LENGTH(webglTypes);
+        ++i)
+    {
         if(!JS_GetProperty(aJSContext, aGlobalJSObj, js::TypedArray::slowClasses[webglTypes[i]].name, &v) ||
            !JS_DefineProperty(aJSContext, aGlobalJSObj, webglNames[i], v,
                               NULL, NULL, JSPROP_PERMANENT | JSPROP_ENUMERATE))

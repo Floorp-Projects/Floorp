@@ -100,11 +100,11 @@ NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x22)
   PR_END_MACRO
 
 #define NS_ACCESSNODE_IMPL_CID                          \
-{  /* 13555f6e-0c0f-4002-84f6-558d47b8208e */           \
-  0x13555f6e,                                           \
-  0xc0f,                                                \
-  0x4002,                                               \
-  { 0x84, 0xf6, 0x55, 0x8d, 0x47, 0xb8, 0x20, 0x8e }    \
+{  /* 2b07e3d7-00b3-4379-aa0b-ea22e2c8ffda */           \
+  0x2b07e3d7,                                           \
+  0x00b3,                                               \
+  0x4379,                                               \
+  { 0xaa, 0x0b, 0xea, 0x22, 0xe2, 0xc8, 0xff, 0xda }    \
 }
 
 class nsAccessNode: public nsIAccessNode
@@ -168,9 +168,20 @@ class nsAccessNode: public nsIAccessNode
      */
     virtual nsIFrame* GetFrame();
 
+  /**
+   * Return the corresponding press shell for this accessible.
+   */
+  already_AddRefed<nsIPresShell> GetPresShell();
+
+  /**
+   * Return true if the accessible still has presentation shell. Light-weight
+   * version of IsDefunct() method.
+   */
+  PRBool HasWeakShell() const { return !!mWeakShell; }
+
 protected:
     nsresult MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode);
-    already_AddRefed<nsIPresShell> GetPresShell();
+
     nsPresContext* GetPresContext();
     already_AddRefed<nsIAccessibleDocument> GetDocAccessible();
     void LastRelease();
@@ -191,9 +202,6 @@ protected:
     static nsIStringBundle *gStringBundle;
     static nsIStringBundle *gKeyStringBundle;
 
-#ifdef DEBUG
-    static PRBool gIsAccessibilityActive;
-#endif
     static PRBool gIsCacheDisabled;
     static PRBool gIsFormFillEnabled;
 

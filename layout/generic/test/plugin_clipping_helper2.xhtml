@@ -33,12 +33,12 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 var scroll = document.getElementById("scroll");
+var zbox = document.getElementById("zbox");
+var sbox = document.getElementById("sbox");
+var p1 = document.getElementById("p1");
+var d2 = document.getElementById("d2");
 
 function runTests() {
-  var zbox = document.getElementById("zbox");
-  var sbox = document.getElementById("sbox");
-  var p1 = document.getElementById("p1");
-  var d2 = document.getElementById("d2");
 
   checkClipRegion("p1", [[0, 0, 200, 100]]);
   checkClipRegion("p2", [[0, 0, 200, 50], [0, 50, 50, 150], [150, 50, 200, 150], [0, 150, 200, 200]]);
@@ -47,15 +47,33 @@ function runTests() {
   checkClipRegion("p2", [[0, 0, 200, 50], [0, 50, 50, 200], [150, 50, 200, 200]]);
 
   zbox.style.zIndex = -1;
+
   flush();
+  // A non-zero timeout is needed on X11 (unless an XSync could be performed)
+  // to delay an OOP plugin's X requests enough so that the X server processes
+  // them after the parent processes requests (for the changes above).
+  setTimeout(part2, 1000);
+}
+
+function part2() {
   checkClipRegion("p2", [[0, 0, 200, 100], [0, 100, 50, 200], [150, 100, 200, 200]]);
 
   sbox.style.background = "";
+
   flush();
+  setTimeout(part3, 1000);
+}
+
+function part3() {
   checkClipRegion("p2", [[0, 0, 200, 200]]);
   
   p1.style.zIndex = 1;
+
   flush();
+  setTimeout(part4, 1000);
+}
+
+function part4() {
   checkClipRegion("p1", [[0, 0, 200, 200]]);
   checkClipRegion("p2", [[0, 100, 200, 200]]);
 
@@ -64,8 +82,16 @@ function runTests() {
   zbox.style.zIndex = 1;
   zbox.style.top = "50.3px;"
   d2.style.top = "100.3px";
+
   flush();
+  setTimeout(done, 1000);
+}
+
+function done() {
   checkClipRegionNoBounds("p2", [[0, 0, 200, 50], [0, 50, 50, 150], [150, 50, 200, 150], [0, 150, 200, 200]]);
+
+  window.opener.SimpleTest.finish();
+  window.close();
 }
 
 function flush() {

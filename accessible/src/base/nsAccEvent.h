@@ -138,48 +138,10 @@ protected:
   EEventRule mEventRule;
   PRPackedBool mIsAsync;
   nsCOMPtr<nsIAccessible> mAccessible;
-  nsCOMPtr<nsIDOMNode> mDOMNode;
+  nsCOMPtr<nsINode> mNode;
   nsCOMPtr<nsIAccessibleDocument> mDocAccessible;
 
-public:
-
-  /**
-   * Apply event rules to pending events, this method is called in
-   * FlushingPendingEvents().
-   * Result of this method:
-   *   Event rule of filtered events will be set to eDoNotEmit.
-   *   Events with other event rule are good to emit.
-   */
-  static void ApplyEventRules(nsTArray<nsRefPtr<nsAccEvent> > &aEventsToFire);
-
-private:
-  /**
-   * Apply aEventRule to same type event that from sibling nodes of aDOMNode.
-   * @param aEventsToFire    array of pending events
-   * @param aStart           start index of pending events to be scanned
-   * @param aEnd             end index to be scanned (not included)
-   * @param aEventType       target event type
-   * @param aDOMNode         target are siblings of this node
-   * @param aEventRule       the event rule to be applied
-   *                         (should be eDoNotEmit or eAllowDupes)
-   */
-  static void ApplyToSiblings(nsTArray<nsRefPtr<nsAccEvent> > &aEventsToFire,
-                              PRUint32 aStart, PRUint32 aEnd,
-                              PRUint32 aEventType, nsIDOMNode* aDOMNode,
-                              EEventRule aEventRule);
-
-  /**
-   * Do not emit one of two given reorder events fired for the same DOM node.
-   */
-  static void CoalesceReorderEventsFromSameSource(nsAccEvent *aAccEvent1,
-                                                  nsAccEvent *aAccEvent2);
-
-  /**
-   * Do not emit one of two given reorder events fired for DOM nodes in the case
-   * when one DOM node is in parent chain of second one.
-   */
-  static void CoalesceReorderEventsFromSameTree(nsAccEvent *aAccEvent,
-                                                nsAccEvent *aDescendantAccEvent);
+  friend class nsAccEventQueue;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAccEvent, NS_ACCEVENT_IMPL_CID)
