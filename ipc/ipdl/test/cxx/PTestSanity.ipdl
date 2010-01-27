@@ -6,11 +6,11 @@ namespace _ipdltest {
 protocol PTestSanity {
 
 child:
-    Ping(int zero, float zeroPtFive);
+    Ping(int zero, float zeroPtFive, PRInt8 dummy);
     __delete__();
 
 parent:
-    Pong(int one, float zeroPtTwoFive);
+    Pong(int one, float zeroPtTwoFive, PRUint8 dummy);
 
 
 state PING:

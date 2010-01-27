@@ -85,10 +85,9 @@
       <label id="distribution"/>
       <label id="distributionId"/>
       <description id="copyright">
-        &copyrightInfo1;<label 
-        class="text-link" href="&licenseLink;"
-        >&licenseLinkText;</label>&copyrightInfo2;
-        &logoCopyright;
+        <label
+        class="text-link" href="about:license"
+        >&licenseLinkText;</label>&licenseLinkSuffix;&logoTrademark;
       </description>
       <textbox id="userAgent" multiline="true" readonly="true" flex="1"/>
     </vbox>

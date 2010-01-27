@@ -62,7 +62,7 @@ nsMenuItemX::nsMenuItemX()
   mType           = eRegularMenuItemType;
   mNativeMenuItem = nil;
   mMenuParent     = nsnull;
-  mMenuBar        = nsnull;
+  mMenuGroupOwner = nsnull;
   mIsChecked      = PR_FALSE;
 
   MOZ_COUNT_CTOR(nsMenuItemX);
@@ -81,9 +81,9 @@ nsMenuItemX::~nsMenuItemX()
   [mNativeMenuItem autorelease];
 
   if (mContent)
-    mMenuBar->UnregisterForContentChanges(mContent);
+    mMenuGroupOwner->UnregisterForContentChanges(mContent);
   if (mCommandContent)
-    mMenuBar->UnregisterForContentChanges(mCommandContent);
+    mMenuGroupOwner->UnregisterForContentChanges(mCommandContent);
 
   MOZ_COUNT_DTOR(nsMenuItemX);
 
@@ -91,7 +91,7 @@ nsMenuItemX::~nsMenuItemX()
 }
 
 nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
-                             nsMenuBarX* aMenuBar, nsIContent* aNode)
+                             nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -99,10 +99,10 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
   mMenuParent = aParent;
   mContent = aNode;
 
-  mMenuBar = aMenuBar;
-  NS_ASSERTION(mMenuBar, "No menu bar given, must have one!");
+  mMenuGroupOwner = aMenuGroupOwner;
+  NS_ASSERTION(mMenuGroupOwner, "No menu owner given, must have one!");
 
-  mMenuBar->RegisterForContentChanges(mContent, this);
+  mMenuGroupOwner->RegisterForContentChanges(mContent, this);
 
   nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mContent->GetCurrentDoc()));
 
@@ -119,7 +119,7 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
       if (commandElement) {
         mCommandContent = do_QueryInterface(commandElement);
         // register to observe the command DOM element
-        mMenuBar->RegisterForContentChanges(mCommandContent, this);
+        mMenuGroupOwner->RegisterForContentChanges(mCommandContent, this);
       }
     }
   }
@@ -375,7 +375,7 @@ nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConten
 void nsMenuItemX::ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
 {
   if (aChild == mCommandContent) {
-    mMenuBar->UnregisterForContentChanges(mCommandContent);
+    mMenuGroupOwner->UnregisterForContentChanges(mCommandContent);
     mCommandContent = nsnull;
   }
 

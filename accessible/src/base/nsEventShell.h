@@ -39,8 +39,12 @@
 #ifndef _nsEventShell_H_
 #define _nsEventShell_H_
 
+#include "nsCoreUtils.h"
 #include "nsAccEvent.h"
 
+/**
+ * Used for everything about events.
+ */
 class nsEventShell
 {
 public:
@@ -75,6 +79,81 @@ public:
 private:
   static nsCOMPtr<nsIDOMNode> sEventTargetNode;
   static PRBool sEventFromUserInput;
+};
+
+
+/**
+ * Event queue.
+ */
+class nsAccEventQueue : public nsISupports
+{
+public:
+  nsAccEventQueue(nsDocAccessible *aDocument);
+  ~nsAccEventQueue();
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsAccEventQueue)
+
+  /**
+   * Push event to queue, coalesce it if necessary. Start pending processing.
+   */
+  void Push(nsAccEvent *aEvent);
+
+  /**
+   * Shutdown the queue.
+   */
+  void Shutdown();
+
+private:
+
+  /**
+   * Start pending events procesing asyncroniously.
+   */
+  void PrepareFlush();
+  
+  /**
+   * Process pending events. It calls nsDocAccessible::ProcessPendingEvent()
+   * where the real event processing is happen.
+   */
+  void Flush();
+
+  NS_DECL_RUNNABLEMETHOD(nsAccEventQueue, Flush)
+
+  /**
+   * Coalesce redurant events from the queue.
+   */
+  void CoalesceEvents();
+
+  /**
+   * Apply aEventRule to same type event that from sibling nodes of aDOMNode.
+   * @param aEventsToFire    array of pending events
+   * @param aStart           start index of pending events to be scanned
+   * @param aEnd             end index to be scanned (not included)
+   * @param aEventType       target event type
+   * @param aDOMNode         target are siblings of this node
+   * @param aEventRule       the event rule to be applied
+   *                         (should be eDoNotEmit or eAllowDupes)
+   */
+  void ApplyToSiblings(PRUint32 aStart, PRUint32 aEnd,
+                       PRUint32 aEventType, nsINode* aNode,
+                       nsAccEvent::EEventRule aEventRule);
+
+  /**
+   * Do not emit one of two given reorder events fired for the same DOM node.
+   */
+  void CoalesceReorderEventsFromSameSource(nsAccEvent *aAccEvent1,
+                                           nsAccEvent *aAccEvent2);
+
+  /**
+   * Do not emit one of two given reorder events fired for DOM nodes in the case
+   * when one DOM node is in parent chain of second one.
+   */
+  void CoalesceReorderEventsFromSameTree(nsAccEvent *aAccEvent,
+                                         nsAccEvent *aDescendantAccEvent);
+
+  PRBool mProcessingStarted;
+  nsRefPtr<nsDocAccessible> mDocument;
+  nsTArray<nsRefPtr<nsAccEvent> > mEvents;
 };
 
 #endif

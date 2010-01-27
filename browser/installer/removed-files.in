@@ -804,7 +804,6 @@ greprefs/security-prefs.js
 greprefs/xpinstall.js
 run-mozilla.sh
 firefox
-dependentlibs.list
 components/nsProgressDialog.js
 libwidget.rsrc
 #endif

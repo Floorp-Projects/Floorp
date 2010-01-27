@@ -2377,8 +2377,11 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       break;
     default:
       // try variant string
-      rv = aBody->GetAsWString(getter_Copies(serial));
+      PRUnichar* data = nsnull;
+      PRUint32 len = 0;
+      rv = aBody->GetAsWStringWithSize(&len, &data);
       NS_ENSURE_SUCCESS(rv, rv);
+      serial.Adopt(data, len);
       break;
     }
 

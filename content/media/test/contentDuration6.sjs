@@ -16,7 +16,7 @@ function handleRequest(request, response)
   bis.setInputStream(fis);
   var bytes = bis.readBytes(bis.available());
   response.setStatusLine(request.httpVersion, 200, "Content Follows");
-  response.setHeader("X-Content-Duration", "Invalid Float Value", false);
+  response.setHeader("Content-Duration", "Invalid Float Value", false);
   response.setHeader("Content-Length", ""+bytes.length, false);
   response.setHeader("Content-Type", "video/ogg", false);
   response.write(bytes, bytes.length);

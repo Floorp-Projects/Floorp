@@ -495,7 +495,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
             return ('', False)
           else:
             log.error("readWithTimeout got error: %d", err)
-        if l > 0:
+        if l.value > 0:
           # we're assuming that the output is line-buffered,
           # which is not unreasonable
           return (f.readline(), False)

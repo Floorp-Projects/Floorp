@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
+ *   Thomas K. Dyas <tom.dyas@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -59,8 +60,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 
-NS_IMPL_ISUPPORTS1(nsMenuBarX, nsIMutationObserver)
-
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
 nsMenuBarX* nsMenuBarX::sLastGeckoMenuBarPainted = nsnull;
 NSMenu* sApplicationMenu = nil;
@@ -73,16 +72,6 @@ BOOL gSomeMenuBarPainted = NO;
 static nsIContent* sAboutItemContent = nsnull;
 static nsIContent* sPrefItemContent  = nsnull;
 static nsIContent* sQuitItemContent  = nsnull;
-
-// Special command IDs that we know Mac OS X does not use for anything else. We use
-// these in place of carbon's IDs for these commands in order to stop Carbon from
-// messing with our event handlers. See bug 346883.
-enum {
-  eCommand_ID_About = 1,
-  eCommand_ID_Prefs = 2,
-  eCommand_ID_Quit  = 3,
-  eCommand_ID_Last  = 4
-};
 
 NS_IMPL_ISUPPORTS1(nsNativeMenuServiceX, nsINativeMenuService)
 
@@ -98,14 +87,10 @@ NS_IMETHODIMP nsNativeMenuServiceX::CreateNativeMenuBar(nsIWidget* aParent, nsIC
 }
 
 nsMenuBarX::nsMenuBarX()
-: mParentWindow(nsnull),
-  mCurrentCommandID(eCommand_ID_Last),
-  mDocument(nsnull)
+: nsMenuGroupOwnerX(), mParentWindow(nsnull)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  mContentToObserverTable.Init();
-  mCommandToMenuObjectTable.Init();
   mNativeMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -152,11 +137,9 @@ nsresult nsMenuBarX::Create(nsIWidget* aParent, nsIContent* aContent)
 
   AquifyMenuBar();
 
-  nsIDocument* doc = aContent->GetOwnerDoc();
-  if (!doc)
-    return NS_ERROR_FAILURE;
-  doc->AddMutationObserver(this);
-  mDocument = doc;
+  nsresult rv = nsMenuGroupOwnerX::Create(aContent);
+  if (NS_FAILED(rv))
+    return rv;
 
   ConstructNativeMenus();
 
@@ -513,6 +496,10 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
   [newMenuItem setTag:tag];
   [newMenuItem setTarget:target];
   [newMenuItem setKeyEquivalentModifierMask:macKeyModifiers];
+
+  MenuItemInfo * info = [[MenuItemInfo alloc] initWithMenuGroupOwner:this];
+  [newMenuItem setRepresentedObject:info];
+  [info release];
   
   return newMenuItem;
 
@@ -677,169 +664,6 @@ void nsMenuBarX::SetParent(nsIWidget* aParent)
   mParentWindow = aParent;
 }
 
-//
-// nsIMutationObserver
-//
-
-void nsMenuBarX::CharacterDataWillChange(nsIDocument* aDocument,
-                                         nsIContent* aContent,
-                                         CharacterDataChangeInfo* aInfo)
-{
-}
-
-void nsMenuBarX::CharacterDataChanged(nsIDocument* aDocument,
-                                      nsIContent* aContent,
-                                      CharacterDataChangeInfo* aInfo)
-{
-}
-
-void nsMenuBarX::ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
-                                 PRInt32 aNewIndexInContainer)
-{
-  PRUint32 childCount = aContainer->GetChildCount();
-  while ((PRUint32)aNewIndexInContainer < childCount) {
-    nsIContent *child = aContainer->GetChildAt(aNewIndexInContainer);
-    ContentInserted(aDocument, aContainer, child, aNewIndexInContainer);
-    aNewIndexInContainer++;
-  }
-}
-
-void nsMenuBarX::NodeWillBeDestroyed(const nsINode * aNode)
-{
-  // our menu bar node is being destroyed
-  mDocument = nsnull;
-}
-
-void nsMenuBarX::AttributeWillChange(nsIDocument* aDocument,
-                                     nsIContent* aContent, PRInt32 aNameSpaceID,
-                                     nsIAtom* aAttribute, PRInt32 aModType)
-{
-}
-
-void nsMenuBarX::AttributeChanged(nsIDocument * aDocument, nsIContent * aContent,
-                                  PRInt32 aNameSpaceID, nsIAtom * aAttribute,
-                                  PRInt32 aModType)
-{
-  nsChangeObserver* obs = LookupContentChangeObserver(aContent);
-  if (obs)
-    obs->ObserveAttributeChanged(aDocument, aContent, aAttribute);
-}
-
-void nsMenuBarX::ContentRemoved(nsIDocument * aDocument, nsIContent * aContainer,
-                                nsIContent * aChild, PRInt32 aIndexInContainer)
-{
-  if (aContainer == mContent) {
-    RemoveMenuAtIndex(aIndexInContainer);
-  }
-  else {
-    nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
-    if (obs) {
-      obs->ObserveContentRemoved(aDocument, aChild, aIndexInContainer);
-    }
-    else {
-      // We do a lookup on the parent container in case things were removed
-      // under a "menupopup" item. That is basically a wrapper for the contents
-      // of a "menu" node.
-      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
-      if (parent) {
-        obs = LookupContentChangeObserver(parent);
-        if (obs)
-          obs->ObserveContentRemoved(aDocument, aChild, aIndexInContainer);
-      }
-    }
-  }
-}
-
-void nsMenuBarX::ContentInserted(nsIDocument * aDocument, nsIContent * aContainer,
-                                 nsIContent * aChild, PRInt32 aIndexInContainer)
-{
-  if (aContainer == mContent) {
-    nsMenuX* newMenu = new nsMenuX();
-    if (newMenu) {
-      nsresult rv = newMenu->Create(this, this, aChild);
-      if (NS_SUCCEEDED(rv))
-        InsertMenuAtIndex(newMenu, aIndexInContainer);
-      else
-        delete newMenu;
-    }
-  }
-  else {
-    nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
-    if (obs)
-      obs->ObserveContentInserted(aDocument, aChild, aIndexInContainer);
-    else {
-      // We do a lookup on the parent container in case things were removed
-      // under a "menupopup" item. That is basically a wrapper for the contents
-      // of a "menu" node.
-      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
-      if (parent) {
-        obs = LookupContentChangeObserver(parent);
-        if (obs)
-          obs->ObserveContentInserted(aDocument, aChild, aIndexInContainer);
-      }
-    }
-  }
-}
-
-void nsMenuBarX::ParentChainChanged(nsIContent *aContent)
-{
-}
-
-// For change management, we don't use a |nsSupportsHashtable| because we know that the
-// lifetime of all these items is bounded by the lifetime of the menubar. No need to add
-// any more strong refs to the picture because the containment hierarchy already uses
-// strong refs.
-void nsMenuBarX::RegisterForContentChanges(nsIContent *aContent, nsChangeObserver *aMenuObject)
-{
-  mContentToObserverTable.Put(aContent, aMenuObject);
-}
-
-void nsMenuBarX::UnregisterForContentChanges(nsIContent *aContent)
-{
-  mContentToObserverTable.Remove(aContent);
-}
-
-nsChangeObserver* nsMenuBarX::LookupContentChangeObserver(nsIContent* aContent)
-{
-  nsChangeObserver * result;
-  if (mContentToObserverTable.Get(aContent, &result))
-    return result;
-  else
-    return nsnull;
-}
-
-// Given a menu item, creates a unique 4-character command ID and
-// maps it to the item. Returns the id for use by the client.
-PRUint32 nsMenuBarX::RegisterForCommand(nsMenuItemX* inMenuItem)
-{
-  // no real need to check for uniqueness. We always start afresh with each
-  // window at 1. Even if we did get close to the reserved Apple command id's,
-  // those don't start until at least '    ', which is integer 538976288. If
-  // we have that many menu items in one window, I think we have other problems.
-
-  // make id unique
-  ++mCurrentCommandID;
-
-  mCommandToMenuObjectTable.Put(mCurrentCommandID, inMenuItem);
-
-  return mCurrentCommandID;
-}
-
-// Removes the mapping between the given 4-character command ID
-// and its associated menu item.
-void nsMenuBarX::UnregisterCommand(PRUint32 inCommandID)
-{
-  mCommandToMenuObjectTable.Remove(inCommandID);
-}
-
-nsMenuItemX* nsMenuBarX::GetMenuItemForCommandID(PRUint32 inCommandID)
-{
-  nsMenuItemX * result;
-  if (mCommandToMenuObjectTable.Get(inCommandID, &result))
-    return result;
-  else
-    return nsnull;
-}
 
 //
 // Objective-C class used to allow us to have keyboard commands
@@ -907,9 +731,18 @@ static BOOL gActOnSpecialCommands = YES;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   int tag = [sender tag];
-  nsMenuBarX* menuBar = nsMenuBarX::sLastGeckoMenuBarPainted;
-  if (!menuBar)
+
+  MenuItemInfo* info = [sender representedObject];
+  if (!info)
     return;
+
+  nsMenuGroupOwnerX* menuGroupOwner = [info menuGroupOwner];
+  if (!menuGroupOwner)
+    return;
+
+  nsMenuBarX* menuBar = nsnull;
+  if (menuGroupOwner->MenuObjectType() == eMenuBarObjectType)
+    menuBar = static_cast<nsMenuBarX*>(menuGroupOwner);
 
   // We want to avoid processing app-global commands when we are asked to
   // perform native menu effects only. This avoids sending events twice,
@@ -946,7 +779,7 @@ static BOOL gActOnSpecialCommands = YES;
     // Quit now if the "active" menu bar has changed (as the result of
     // processing an app-global command above).  This resolves bmo bug
     // 430506.
-    if (menuBar != nsMenuBarX::sLastGeckoMenuBarPainted)
+    if (menuBar != nsnull && menuBar != nsMenuBarX::sLastGeckoMenuBarPainted)
       return;
   }
 
@@ -960,8 +793,8 @@ static BOOL gActOnSpecialCommands = YES;
 
   // given the commandID, look it up in our hashtable and dispatch to
   // that menu item.
-  if (menuBar) {
-    nsMenuItemX* menuItem = menuBar->GetMenuItemForCommandID(static_cast<PRUint32>(tag));
+  if (menuGroupOwner) {
+    nsMenuItemX* menuItem = menuGroupOwner->GetMenuItemForCommandID(static_cast<PRUint32>(tag));
     if (menuItem)
       menuItem->DoCommand();
   }

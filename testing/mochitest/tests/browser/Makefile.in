@@ -44,7 +44,10 @@ relativesrcdir  = testing/mochitest/tests/browser
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-_BROWSER_TEST_FILES = 	  browser_pass.js \
+_BROWSER_TEST_FILES = \
+	                  head.js \
+	                  browser_head.js \
+	                  browser_pass.js \
 	                  browser_async.js \
 	                  browser_privileges.js \
 # Disabled, these are only good for testing the harness' failure reporting
@@ -55,6 +58,8 @@ _BROWSER_TEST_FILES = 	  browser_pass.js \
 #	                  browser_fail_pf.js \
 #	                  browser_fail_throw.js \
 #	                  browser_fail_timeout.js \
+# Disabled because it would take too long, useful to check functionality though.
+#	                  browser_requestLongerTimeout.js \
 	                  $(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

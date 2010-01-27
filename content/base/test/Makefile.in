@@ -337,6 +337,8 @@ _TEST_FILES = 	test_bug5141.html \
 		file_CSP.sjs \
 		file_CSP_main.html \
 		file_CSP_main.js \
+		test_bug540854.html \
+		bug540854.sjs \
 		$(NULL)
 
 # Disabled; see bug 492181

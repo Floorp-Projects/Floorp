@@ -223,11 +223,11 @@ nsSVGAngle::GetUnitScaleFactor() const
   switch (mSpecifiedUnitType) {
   case nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED:
   case nsIDOMSVGAngle::SVG_ANGLETYPE_DEG:
-    return static_cast<float>(180.0 / M_PI);
-  case nsIDOMSVGAngle::SVG_ANGLETYPE_RAD:
     return 1;
+  case nsIDOMSVGAngle::SVG_ANGLETYPE_RAD:
+    return static_cast<float>(M_PI / 180.0);
   case nsIDOMSVGAngle::SVG_ANGLETYPE_GRAD:
-    return static_cast<float>(100.0 / M_PI);
+    return 100.0f / 180.0f;
   default:
     NS_NOTREACHED("Unknown unit type");
     return 0;

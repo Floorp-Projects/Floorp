@@ -143,6 +143,16 @@ Tester.prototype = {
   },
 
   nextTest: function Tester_nextTest() {
+    if (this.currentTest) {
+      // Run cleanup functions for the current test before moving on to the
+      // next one.
+      let testScope = this.currentTest.scope;
+      while (testScope.__cleanupFunctions.length > 0) {
+        let func = testScope.__cleanupFunctions.shift();
+        func.apply(testScope);
+      };
+    }
+
     // Check the window state for the current test before moving to the next one.
     // This also causes us to check before starting any tests, since nextTest()
     // is invoked to start the tests.
@@ -169,6 +179,15 @@ Tester.prototype = {
     this.currentTest.scope.EventUtils = this.EventUtils;
     this.currentTest.scope.SimpleTest = this.SimpleTest;
 
+    // Import head.js script if it exists.
+    var currentTestDirPath =
+      this.currentTest.path.substr(0, this.currentTest.path.lastIndexOf("/"));
+    var headPath = currentTestDirPath + "/head.js";
+    try {
+      this._scriptLoader.loadSubScript(headPath, this.currentTest.scope);
+    } catch (ex) { /* no head */ }
+
+    // Import the test script.
     try {
       this._scriptLoader.loadSubScript(this.currentTest.path,
                                        this.currentTest.scope);
@@ -188,6 +207,15 @@ Tester.prototype = {
     else {
       var self = this;
       this.currentTest.scope.__waitTimer = setTimeout(function() {
+        if (--self.currentTest.scope.__timeoutFactor > 0) {
+          // We were asked to wait a bit longer.
+          self.currentTest.scope.info(
+            "Longer timeout required, waiting longer...  Remaining timeouts: " +
+            self.currentTest.scope.__timeoutFactor);
+          self.currentTest.scope.__waitTimer =
+            setTimeout(arguments.callee, TIMEOUT_SECONDS * 1000);
+          return;
+        }
         self.currentTest.addResult(new testResult(false, "Timed out", "", false));
         self.currentTest.scope.__waitTimer = null;
         self.nextTest();
@@ -276,12 +304,20 @@ function testScope(aTester, aTest) {
     }, Ci.nsIThread.DISPATCH_NORMAL);
   };
 
-  this.waitForExplicitFinish = function test_WFEF() {
+  this.waitForExplicitFinish = function test_waitForExplicitFinish() {
     self.__done = false;
   };
 
-  this.waitForFocus = function (callback, targetWindow) {
+  this.waitForFocus = function test_waitForFocus(callback, targetWindow) {
     self.SimpleTest.waitForFocus(callback, targetWindow);
+  };
+
+  this.registerCleanupFunction = function test_registerCleanupFunction(aFunction) {
+    self.__cleanupFunctions.push(aFunction);
+  };
+
+  this.requestLongerTimeout = function test_requestLongerTimeout(aFactor) {
+    self.__timeoutFactor = aFactor;
   };
 
   this.finish = function test_finish() {
@@ -300,6 +336,8 @@ function testScope(aTester, aTest) {
 testScope.prototype = {
   __done: true,
   __waitTimer: null,
+  __cleanupFunctions: [],
+  __timeoutFactor: 1,
 
   EventUtils: {},
   SimpleTest: {}
