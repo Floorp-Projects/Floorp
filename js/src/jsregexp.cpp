@@ -3181,7 +3181,7 @@ class RegExpNativeCompiler {
         if (outOfMemory())
             goto fail;
         /* FIXME Use bug 463260 smart pointer when available. */
-        lir = lirBufWriter = new LirBufWriter(lirbuf);
+        lir = lirBufWriter = new LirBufWriter(lirbuf, nanojit::AvmCore::config);
 
         /* FIXME Use bug 463260 smart pointer when available. */
 #ifdef NJ_VERBOSE
