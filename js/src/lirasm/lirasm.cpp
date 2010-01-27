@@ -892,12 +892,14 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             break;
 
           case LIR_live:
+          case LIR_qlive:
           case LIR_flive:
           case LIR_neg:
           case LIR_fneg:
           case LIR_not:
           case LIR_qlo:
           case LIR_qhi:
+          case LIR_q2i:
           case LIR_ov:
           case LIR_i2q:
           case LIR_u2q:
@@ -1086,6 +1088,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_line:
           case LIR_xtbl:
           case LIR_jtbl:
+          case LIR_qret:
             nyi(op);
             break;
 
@@ -1260,19 +1263,20 @@ const CallInfo ci_N_IQF = CI(f_N_IQF, argMask(I32, 1, 3) |
 //   sufficiently big that it's spread across multiple chunks.
 //
 // The following instructions aren't generated yet:
-// - iparam/qparam (hard to test beyond what is auto-generated in fragment
+// - LIR_iparam/LIR_qparam (hard to test beyond what is auto-generated in fragment
 //   prologues)
-// - live/flive
-// - callh
-// - x/xt/xf/xtbl (hard to test without having multiple fragments;  when we
-//   only have one fragment we don't really want to leave it early)
-// - ret/fret (hard to test without having multiple fragments)
-// - j/jt/jf/ji/label (ji is not implemented in NJ)
-// - ov (takes an arithmetic (int or FP) value as operand, and must
+// - LIR_live/LIR_qlive/LIR_flive
+// - LIR_callh
+// - LIR_x/LIR_xt/LIR_xf/LIR_xtbl (hard to test without having multiple
+//   fragments;  when we only have one fragment we don't really want to leave
+//   it early)
+// - LIR_ret/LIR_qret/LIR_fret (hard to test without having multiple fragments)
+// - LIR_j/LIR_jt/LIR_jf/LIR_jtbl/LIR_label
+// - LIR_ov (takes an arithmetic (int or FP) value as operand, and must
 //   immediately follow it to be safe... not that that really matters in
 //   randomly generated code)
-// - file/line (#ifdef VTUNE only)
-// - fmod (not implemented in NJ)
+// - LIR_file/LIR_line (#ifdef VTUNE only)
+// - LIR_fmod (not implemented in NJ backends)
 //
 void
 FragmentAssembler::assembleRandomFragment(int nIns)
@@ -1367,6 +1371,9 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     vector<LOpcode> Q_I_ops;
     Q_I_ops.push_back(LIR_i2q);
     Q_I_ops.push_back(LIR_u2q);
+
+    vector<LOpcode> I_Q_ops;
+    I_Q_ops.push_back(LIR_q2i);
 
     vector<LOpcode> F_I_ops;
     F_I_ops.push_back(LIR_i2f);
@@ -1703,6 +1710,14 @@ FragmentAssembler::assembleRandomFragment(int nIns)
             if (!Is.empty()) {
                 ins = mLir->ins1(rndPick(F_I_ops), rndPick(Is));
                 addOrReplace(Fs, ins);
+                n++;
+            }
+            break;
+
+        case LOP_I_Q:
+            if (!Qs.empty()) {
+                ins = mLir->ins1(rndPick(I_Q_ops), rndPick(Qs));
+                addOrReplace(Is, ins);
                 n++;
             }
             break;

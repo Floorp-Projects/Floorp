@@ -79,8 +79,8 @@ OPDEF(ld,       10, Ld,   I32)  // 32-bit integer load
 OPDEF(ialloc,   11, I,    I32)  // alloc some stack space (value is 32bit address)
 OPDEF(sti,      12, Sti,  Void) // 32-bit integer store
 OPDEF(ret,      13, Op1,  Void) // return a 32-bit integer
-OPDEF(live,     14, Op1,  Void) // extend live range of reference
-OPDEF(flive,    15, Op1,  Void) // extend live range of a floating point value reference
+OPDEF(live,     14, Op1,  Void) // extend live range of a 32-bit integer
+OPDEF(flive,    15, Op1,  Void) // extend live range of a 64-bit float
 OPDEF(icall,    16, C,    I32)  // subroutine call returning a 32-bit value
 OPDEF(sts,      17, Sti,  Void) // 16-bit integer store
 
@@ -190,7 +190,7 @@ OPDEF(line,     66, Op1,  Void) // source line number for debug symbols
 OPDEF(xbarrier, 67, Op2,  Void) // memory barrier;  doesn't exit, but flushes all values to the stack
 OPDEF(xtbl,     68, Op2,  Void) // exit via indirect jump
 
-OPDEF(__69,     69, None, Void)
+OPDEF(qlive,    69, Op1,  Void) // extend live range of a 64-bit integer
 OPDEF(__70,     70, None, Void)
 OPDEF(qaddp,    71, Op2,  I64)  // integer addition for temp pointer calculations (64bit only)
 OPDEF(qparam,   72, P,    I64)  // load a parameter (64bit register or stk location)
@@ -201,17 +201,17 @@ OPDEF(ldq,      74, Ld,   I64)  // 64-bit integer load
 OPDEF(qalloc,   75, I,    I64)  // allocate some stack space (value is 64bit address)
 
 OPDEF(stqi,     76, Sti,  Void) // 64-bit integer store
-OPDEF(fret,     77, Op1,  Void) // return a 64-bit float
 
-OPDEF(st32f,    78, Sti,  Void) // store 64-bit float as a 32-bit float (dropping precision)
-OPDEF(ld32f,    79, Ld,   F64)  // load 32-bit float and widen to 64-bit float
+OPDEF(st32f,    77, Sti,  Void) // store 64-bit float as a 32-bit float (dropping precision)
+OPDEF(ld32f,    78, Ld,   F64)  // load 32-bit float and widen to 64-bit float
 
-OPDEF(fcall,    80, C,    F64)  // subroutine call returning 64-bit (quad) double value
-OPDEF(qcall,    81, C,    I64)  // subroutine call returning 64-bit (quad) integer value
+OPDEF(fcall,    79, C,    F64)  // subroutine call returning 64-bit (quad) double value
+OPDEF(qcall,    80, C,    I64)  // subroutine call returning 64-bit (quad) integer value
 
-OPDEF(stfi,     82, Sti,  Void) // 64-bit float store
+OPDEF(stfi,     81, Sti,  Void) // 64-bit float store
 
-OPDEF(__83,     83, None, Void)
+OPDEF(fret,     82, Op1,  Void) // return a 64-bit float
+OPDEF(qret,     83, Op1,  Void) // return a 64-bit integer
 OPDEF(__84,     84, None, Void)
 OPDEF(__85,     85, None, Void)
 OPDEF(__86,     86, None, Void)
@@ -256,7 +256,7 @@ OPDEF(qiadd,   112, Op2,  I64)  // 64-bit bitwise ADD
 
 OPDEF(ldc32f,  113, Ld,   F64)  // non-volatile load 32-bit float and widen to 64-bit float
 OPDEF(qjoin,   114, Op2,  F64)  // join two 32-bit values (1st arg is low bits, 2nd is high)
-OPDEF(__115,   115, None, Void)
+OPDEF(q2i,     115, Op1,  I32)  // truncate i64 to i32
 OPDEF(__116,   116, None, Void)
 OPDEF(__117,   117, None, Void)
 OPDEF(float,   118, N64,  F64)  // 64-bit float constant value

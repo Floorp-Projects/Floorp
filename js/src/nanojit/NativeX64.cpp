@@ -61,8 +61,6 @@ better code
 - stack based LIR_param
 
 tracing
-- asm_qjoin
-- asm_qhi
 - nFragExit
 
 */
@@ -979,6 +977,13 @@ namespace nanojit
         }
     }
 
+    void Assembler::asm_q2i(LIns *ins) {
+        Register rr, ra;
+        regalloc_unary(ins, GpRegs, rr, ra);
+        NanoAssert(IsGpReg(ra));
+        MOVLR(rr, ra);  // 32bit mov zeros the upper 32bits of the target
+    }
+
     void Assembler::asm_promote(LIns *ins) {
         Register rr, ra;
         regalloc_unary(ins, GpRegs, rr, ra);
@@ -1366,7 +1371,7 @@ namespace nanojit
         releaseRegisters();
         assignSavedRegs();
         LIns *value = ins->oprnd1();
-        Register r = ins->isop(LIR_ret) ? RAX : XMM0;
+        Register r = ins->isop(LIR_fret) ? XMM0 : RAX;
         findSpecificRegFor(value, r);
     }
 
@@ -1567,7 +1572,7 @@ namespace nanojit
     }
 
     void Assembler::asm_qjoin(LIns*) {
-        TODO(asm_qjoin);
+        NanoAssert(0);  // qjoin shouldn't occur on non-SoftFloat platforms
     }
 
     void Assembler::asm_param(LIns *ins) {
@@ -1633,14 +1638,11 @@ namespace nanojit
     }
 
     void Assembler::asm_qhi(LIns*) {
-        TODO(asm_qhi);
+        NanoAssert(0);  // qhi shouldn't occur on non-SoftFloat platforms
     }
 
-    void Assembler::asm_qlo(LIns *ins) {
-        Register rr, ra;
-        regalloc_unary(ins, GpRegs, rr, ra);
-        NanoAssert(IsGpReg(ra));
-        MOVLR(rr, ra);  // 32bit mov zeros the upper 32bits of the target
+    void Assembler::asm_qlo(LIns *) {
+        NanoAssert(0);  // qlo shouldn't occur on non-SoftFloat platforms
     }
 
     void Assembler::asm_spill(Register rr, int d, bool /*pop*/, bool quad) {

@@ -2754,13 +2754,15 @@ Assembler::asm_ret(LIns *ins)
 }
 
 void
-Assembler::asm_promote(LIns *ins)
+Assembler::asm_q2i(LIns *)
 {
-    /* The LIR opcodes that result in a call to asm_promote are only generated
-     * if NANOJIT_64BIT is #define'd, which it never is for ARM.
-     */
-    (void)ins;
-    NanoAssert(0);
+    NanoAssert(0);  // q2i shouldn't occur on 32-bit platforms
+}
+
+void
+Assembler::asm_promote(LIns *)
+{
+    NanoAssert(0);  // i2q and u2q shouldn't occur on 32-bit platforms
 }
 
 void

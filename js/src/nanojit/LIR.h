@@ -84,7 +84,9 @@ namespace nanojit
         LIR_puge    = PTR_SIZE(LIR_uge,    LIR_quge),
         LIR_alloc   = PTR_SIZE(LIR_ialloc, LIR_qalloc),
         LIR_pcall   = PTR_SIZE(LIR_icall,  LIR_qcall),
-        LIR_param   = PTR_SIZE(LIR_iparam, LIR_qparam)
+        LIR_param   = PTR_SIZE(LIR_iparam, LIR_qparam),
+        LIR_plive   = PTR_SIZE(LIR_live,   LIR_qlive),
+        LIR_pret    = PTR_SIZE(LIR_ret,    LIR_qret)
     };
 
     struct GuardRecord;
@@ -172,7 +174,7 @@ namespace nanojit
                (op >= LIR_quad && op <= LIR_quge);
     }
     inline bool isRetOpcode(LOpcode op) {
-        return op == LIR_ret || op == LIR_fret;
+        return op == LIR_ret || op == LIR_qret || op == LIR_fret;
     }
     LOpcode f64arith_to_i32arith(LOpcode op);
     LOpcode i32cmp_to_i64cmp(LOpcode op);
