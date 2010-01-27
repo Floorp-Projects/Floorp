@@ -131,6 +131,8 @@ public:
   PRUint32          GetMenuCount();
   bool              MenuContainsAppMenu();
   nsMenuX*          GetMenuAt(PRUint32 aIndex);
+  nsMenuX*          GetXULHelpMenu();
+  void              SetSystemHelpMenu();
   nsresult          Paint();
   void              ForceUpdateNativeMenuAt(const nsAString& indexString);
   void              ForceNativeMenuReload(); // used for testing
