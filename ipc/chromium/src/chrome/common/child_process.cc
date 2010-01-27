@@ -29,8 +29,27 @@ ChildProcess::~ChildProcess() {
   // notice shutdown before the render process begins waiting for them to exit.
   shutdown_event_.Signal();
 
-  if (child_thread_.get())
+  if (child_thread_.get()) {
+
+
+#ifdef OS_LINUX
+      printf("TEST-UNEXPECTED-FAIL | plugin process %d | IO thread is Stop()ing XPCOM thread\n", getpid());
+#endif
+
+
+
     child_thread_->Stop();
+
+
+
+#ifdef OS_LINUX
+      printf("TEST-UNEXPECTED-FAIL | plugin process %d | XPCOM thread has been Stop()d\n", getpid());
+#endif
+
+
+
+
+  }
 
   child_process_ = NULL;
 }
