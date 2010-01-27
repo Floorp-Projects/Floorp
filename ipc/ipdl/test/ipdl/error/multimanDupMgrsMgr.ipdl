@@ -1,0 +1,9 @@
+include protocol "multimanDupMgrs.ipdl";
+
+protocol multimanDupMgrsMgr {
+    manages multimanDupMgrs;
+
+child:
+    multimanDupMgrs();
+    __delete__();
+};

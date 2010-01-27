@@ -1,0 +1,9 @@
+include protocol "multiManager1.ipdl";
+include protocol "multiManager2.ipdl";
+
+protocol multiManaged {
+    manager multiManager1 or multiManager2;
+
+child:
+    __delete__();
+};
