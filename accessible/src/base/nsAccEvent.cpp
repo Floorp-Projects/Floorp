@@ -90,7 +90,7 @@ nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
                        PRBool aIsAsync, EIsFromUserInput aIsFromUserInput,
                        EEventRule aEventRule) :
   mEventType(aEventType), mEventRule(aEventRule), mIsAsync(aIsAsync),
-  mDOMNode(aDOMNode)
+  mNode(do_QueryInterface(aDOMNode))
 {
   CaptureIsFromUserInput(aIsFromUserInput);
 }
@@ -138,13 +138,19 @@ nsAccEvent::GetDOMNode(nsIDOMNode **aDOMNode)
   NS_ENSURE_ARG_POINTER(aDOMNode);
   *aDOMNode = nsnull;
 
-  if (!mDOMNode) {
+  if (!mNode) {
     nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(mAccessible));
     NS_ENSURE_TRUE(accessNode, NS_ERROR_FAILURE);
-    accessNode->GetDOMNode(getter_AddRefs(mDOMNode));
+
+    nsCOMPtr<nsIDOMNode> DOMNode;
+    accessNode->GetDOMNode(getter_AddRefs(DOMNode));
+
+    mNode = do_QueryInterface(DOMNode);
   }
 
-  NS_IF_ADDREF(*aDOMNode = mDOMNode);
+  if (mNode)
+    CallQueryInterface(mNode, aDOMNode);
+
   return NS_OK;
 }
 
@@ -175,7 +181,7 @@ nsAccEvent::GetAccessibleDocument(nsIAccessibleDocument **aDocAccessible)
 already_AddRefed<nsIAccessible>
 nsAccEvent::GetAccessibleByNode()
 {
-  if (!mDOMNode)
+  if (!mNode)
     return nsnull;
 
   nsCOMPtr<nsIAccessibilityService> accService = 
@@ -183,19 +189,23 @@ nsAccEvent::GetAccessibleByNode()
   if (!accService)
     return nsnull;
 
+  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mNode));
+
   nsCOMPtr<nsIAccessible> accessible;
-  accService->GetAccessibleFor(mDOMNode, getter_AddRefs(accessible));
+  accService->GetAccessibleFor(DOMNode, getter_AddRefs(accessible));
 
 #ifdef MOZ_XUL
   // hack for xul tree table. We need a better way for firing delayed event
   // against xul tree table. see bug 386821.
   // There will be problem if some day we want to fire delayed event against
   // the xul tree itself or an unselected treeitem.
-  nsAutoString localName;
-  mDOMNode->GetLocalName(localName);
-  if (localName.EqualsLiteral("tree")) {
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mNode));
+  if (content && content->NodeInfo()->Equals(nsAccessibilityAtoms::tree,
+                                             kNameSpaceID_XUL)) {
+
     nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
-      do_QueryInterface(mDOMNode);
+      do_QueryInterface(mNode);
+
     if (multiSelect) {
       PRInt32 treeIndex = -1;
       multiSelect->GetCurrentIndex(&treeIndex);

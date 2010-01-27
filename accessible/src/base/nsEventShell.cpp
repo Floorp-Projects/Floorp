@@ -243,7 +243,7 @@ nsAccEventQueue::CoalesceEvents()
             thisEvent->mEventRule == nsAccEvent::eDoNotEmit)
           continue; //  Do not need to check
 
-        if (thisEvent->mDOMNode == tailEvent->mDOMNode) {
+        if (thisEvent->mNode == tailEvent->mNode) {
           if (thisEvent->mEventType == nsIAccessibleEvent::EVENT_REORDER) {
             CoalesceReorderEventsFromSameSource(thisEvent, tailEvent);
             continue;
@@ -253,8 +253,7 @@ nsAccEventQueue::CoalesceEvents()
           thisEvent->mEventRule = nsAccEvent::eDoNotEmit;
           continue;
         }
-        if (nsCoreUtils::IsAncestorOf(tailEvent->mDOMNode,
-                                      thisEvent->mDOMNode)) {
+        if (nsCoreUtils::IsAncestorOf(tailEvent->mNode, thisEvent->mNode)) {
           // thisDOMNode is a descendant of tailDOMNode
           if (thisEvent->mEventType == nsIAccessibleEvent::EVENT_REORDER) {
             CoalesceReorderEventsFromSameTree(tailEvent, thisEvent);
@@ -265,11 +264,10 @@ nsAccEventQueue::CoalesceEvents()
           // nodes of thisDOMNode.
           thisEvent->mEventRule = nsAccEvent::eDoNotEmit;
           ApplyToSiblings(0, index, thisEvent->mEventType,
-                          thisEvent->mDOMNode, nsAccEvent::eDoNotEmit);
+                          thisEvent->mNode, nsAccEvent::eDoNotEmit);
           continue;
         }
-        if (nsCoreUtils::IsAncestorOf(thisEvent->mDOMNode,
-                                      tailEvent->mDOMNode)) {
+        if (nsCoreUtils::IsAncestorOf(thisEvent->mNode, tailEvent->mNode)) {
           // tailDOMNode is a descendant of thisDOMNode
           if (thisEvent->mEventType == nsIAccessibleEvent::EVENT_REORDER) {
             CoalesceReorderEventsFromSameTree(thisEvent, tailEvent);
@@ -280,7 +278,7 @@ nsAccEventQueue::CoalesceEvents()
           // nodes of tailDOMNode.
           tailEvent->mEventRule = nsAccEvent::eDoNotEmit;
           ApplyToSiblings(0, tail, tailEvent->mEventType,
-                          tailEvent->mDOMNode, nsAccEvent::eDoNotEmit);
+                          tailEvent->mNode, nsAccEvent::eDoNotEmit);
           break;
         }
       } // for (index)
@@ -291,7 +289,7 @@ nsAccEventQueue::CoalesceEvents()
         // This event should be emitted
         // Apply this result to sibling nodes of tailDOMNode
         ApplyToSiblings(0, tail, tailEvent->mEventType,
-                        tailEvent->mDOMNode, nsAccEvent::eAllowDupes);
+                        tailEvent->mNode, nsAccEvent::eAllowDupes);
       }
     } break; // case eCoalesceFromSameSubtree
 
@@ -302,7 +300,7 @@ nsAccEventQueue::CoalesceEvents()
         nsAccEvent* accEvent = mEvents[index];
         if (accEvent->mEventType == tailEvent->mEventType &&
             accEvent->mEventRule == tailEvent->mEventRule &&
-            accEvent->mDOMNode == tailEvent->mDOMNode) {
+            accEvent->mNode == tailEvent->mNode) {
           accEvent->mEventRule = nsAccEvent::eDoNotEmit;
         }
       }
@@ -315,14 +313,14 @@ nsAccEventQueue::CoalesceEvents()
 
 void
 nsAccEventQueue::ApplyToSiblings(PRUint32 aStart, PRUint32 aEnd,
-                                 PRUint32 aEventType, nsIDOMNode* aDOMNode,
+                                 PRUint32 aEventType, nsINode* aNode,
                                  nsAccEvent::EEventRule aEventRule)
 {
   for (PRUint32 index = aStart; index < aEnd; index ++) {
     nsAccEvent* accEvent = mEvents[index];
     if (accEvent->mEventType == aEventType &&
         accEvent->mEventRule != nsAccEvent::eDoNotEmit &&
-        nsCoreUtils::AreSiblings(accEvent->mDOMNode, aDOMNode)) {
+        nsCoreUtils::AreSiblings(accEvent->mNode, aNode)) {
       accEvent->mEventRule = aEventRule;
     }
   }

@@ -135,7 +135,7 @@ private:
    *                         (should be eDoNotEmit or eAllowDupes)
    */
   void ApplyToSiblings(PRUint32 aStart, PRUint32 aEnd,
-                       PRUint32 aEventType, nsIDOMNode* aDOMNode,
+                       PRUint32 aEventType, nsINode* aNode,
                        nsAccEvent::EEventRule aEventRule);
 
   /**
