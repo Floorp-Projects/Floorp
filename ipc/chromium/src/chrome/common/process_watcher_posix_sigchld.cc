@@ -122,25 +122,14 @@ protected:
 
 
 
-#if 0
+
     HANDLE_EINTR(waitpid(process_, NULL, 0));
-#else
 
-    const int maxWaits = 30;
-    int waits = 0;
-    while (!IsProcessDead(process_) && ++waits < maxWaits)
-      sleep(1);
 
-    if (waits < maxWaits) {
-      printf("TEST-UNEXPECTED-FAIL | process %d done busy-waiting on | child process %d\n", getpid(), process_);
-    }
-    else {
-      printf("TEST-UNEXPECTED-FAIL | process %d wait on | child process %d timed out!\n", getpid(), process_);
-      // kill the child in such a way that breakpad is triggered
-      kill(process_, SIGSEGV);
-      HANDLE_EINTR(waitpid(process_, NULL, 0));
-    }
-#endif
+
+
+    printf("TEST-UNEXPECTED-FAIL | process %d done busy-waiting on | child process %d\n", getpid(), process_);
+
 
 
 
