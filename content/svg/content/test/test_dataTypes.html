@@ -78,19 +78,19 @@ function runTests()
 
   // angle attribute
 
-  marker.setAttribute("orient", "0.5rad");
-  is(marker.orientAngle.baseVal.value, 0.5, "angle baseVal");
-  is(marker.orientAngle.animVal.value, 0.5, "angle animVal");
-  
+  marker.setAttribute("orient", "90deg");
+  is(marker.orientAngle.baseVal.value, 90, "angle baseVal");
+  is(marker.orientAngle.animVal.value, 90, "angle animVal");
+
   var baseAngle = marker.orientAngle.baseVal;
   var animAngle = marker.orientAngle.animVal;
-  marker.setAttribute("orient", "0.75rad");
-  is(baseAngle.value, 0.75, "angle baseVal");
-  is(animAngle.value, 0.75, "angle animVal");
+  marker.setAttribute("orient", "45deg");
+  is(baseAngle.value, 45, "angle baseVal");
+  is(animAngle.value, 45, "angle animVal");
 
-  marker.orientAngle.baseVal.value = 0.25;
-  is(marker.orientAngle.animVal.value, 0.25, "angle animVal");
-  is(marker.getAttribute("orient"), "0.25rad", "angle attribute");
+  marker.orientAngle.baseVal.value = 30;
+  is(marker.orientAngle.animVal.value, 30, "angle animVal");
+  is(marker.getAttribute("orient"), "30deg", "angle attribute");
 
   // boolean attribute
 
@@ -133,7 +133,7 @@ function runTests()
   is(marker.preserveAspectRatio.animVal.align, 3, "preserveAspectRatio animVal");
   is(marker.preserveAspectRatio.animVal.meetOrSlice, 1, "preserveAspectRatio.meetOrSlice animVal");
   is(marker.getAttribute("preserveAspectRatio"), "xMidYMin meet", "preserveAspectRatio attribute");
-  
+
   var basePreserveAspectRatio = marker.preserveAspectRatio.baseVal;
   var animPreserveAspectRatio = marker.preserveAspectRatio.animVal;
   marker.setAttribute("preserveAspectRatio", "xMaxYMid slice");
