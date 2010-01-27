@@ -81,10 +81,38 @@ public:
     // Make an RPC to the other side of the channel
     bool Call(Message* msg, Message* reply);
 
+    // Asynchronously, send the child a message that puts it in such a
+    // state that it can't send messages to the parent unless the
+    // parent sends a message to it first.  The child stays in this
+    // state until the parent calls |UnblockChild()|.
+    //
+    // It is an error to
+    //  - call this on the child side of the channel.
+    //  - nest |BlockChild()| calls
+    //  - call this when the child is already blocked on a sync or RPC
+    //    in-/out- message/call
+    //
+    // Return true iff successful.
+    bool BlockChild();
+
+    // Asynchronously undo |BlockChild()|.
+    //
+    // It is an error to
+    //  - call this on the child side of the channel
+    //  - call this without a matching |BlockChild()|
+    //
+    // Return true iff successful.
+    bool UnblockChild();
+
+    NS_OVERRIDE
+    virtual bool OnSpecialMessage(uint16 id, const Message& msg);
+
     // Override the SyncChannel handler so we can dispatch RPC
     // messages.  Called on the IO thread only.
-    NS_OVERRIDE virtual void OnMessageReceived(const Message& msg);
-    NS_OVERRIDE virtual void OnChannelError();
+    NS_OVERRIDE
+    virtual void OnMessageReceived(const Message& msg);
+    NS_OVERRIDE
+    virtual void OnChannelError();
 
 private:
     // Called on worker thread only
@@ -95,6 +123,9 @@ private:
     void OnMaybeDequeueOne();
     void Incall(const Message& call, size_t stackDepth);
     void DispatchIncall(const Message& call);
+
+    void BlockOnParent();
+    void UnblockFromParent();
 
     // Called from both threads
     size_t StackDepth() {
@@ -197,6 +228,9 @@ private:
     //
     size_t mRemoteStackDepthGuess;
     RacyRPCPolicy mRacePolicy;
+
+    // True iff the parent has put us in a |BlockChild()| state.
+    bool mBlockedOnParent;
 };
 
 

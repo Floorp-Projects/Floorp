@@ -93,6 +93,14 @@ protected:
     }
 
     void OnDispatchMessage(const Message& aMsg);
+
+    NS_OVERRIDE
+    bool OnSpecialMessage(uint16 id, const Message& msg)
+    {
+        // SyncChannel doesn't care about any special messages yet
+        return AsyncChannel::OnSpecialMessage(id, msg);
+    }
+
     void WaitForNotify();
 
     // Executed on the IO thread.
