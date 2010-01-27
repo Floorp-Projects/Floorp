@@ -901,6 +901,21 @@ PluginInstanceChild::AnswerSetPluginFocus()
 #endif
 }
 
+bool
+PluginInstanceChild::AnswerUpdateWindow()
+{
+    PR_LOG(gPluginLog, PR_LOG_DEBUG, ("%s", FULLFUNCTION));
+
+#if defined(OS_WIN)
+    if (mPluginWindowHWND)
+      UpdateWindow(mPluginWindowHWND);
+    return true;
+#else
+    NS_NOTREACHED("PluginInstanceChild::AnswerUpdateWindow not implemented!");
+    return false;
+#endif
+}
+
 PPluginScriptableObjectChild*
 PluginInstanceChild::AllocPPluginScriptableObject()
 {
