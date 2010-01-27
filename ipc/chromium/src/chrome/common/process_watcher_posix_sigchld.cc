@@ -54,12 +54,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-
-
-#include <stdio.h>
-
-
-
 #include "base/eintr_wrapper.h"
 #include "base/message_loop.h"
 #include "base/process_util.h"
@@ -195,14 +189,6 @@ public:
     ChildReaper::OnSignal(sig);
 
     if (!process_) {
-
-
-
-      fprintf(stderr, "TEST-UNEXPECTED-FAIL | process %d reaped | child process (got SIGCHLD, exited normally)\n", getpid());
-
-
-
-
       MessageLoop::current()->RemoveDestructionObserver(this);
       delete this;
     }
@@ -214,13 +200,6 @@ public:
     DCHECK(process_);
 
     WaitForChildExit();
-
-
-
-    fprintf(stderr, "TEST-UNEXPECTED-FAIL | process %d reaped | child process (waitpid() on shutdown)\n", getpid());
-
-
-
     process_ = 0;
 
     // XXX don't think this is necessary, since destruction can only
@@ -260,16 +239,8 @@ ProcessWatcher::EnsureProcessTerminated(base::ProcessHandle process,
   DCHECK(process != base::GetCurrentProcId());
   DCHECK(process > 0);
 
-  if (IsProcessDead(process)) {
-
-
-
-    fprintf(stderr, "TEST-UNEXPECTED-FAIL | process %d reaped | child process %d (it was already dead)\n", getpid(), process);
-
-
-
+  if (IsProcessDead(process))
     return;
-  }
 
   MessageLoopForIO* loop = MessageLoopForIO::current();
   if (force) {
