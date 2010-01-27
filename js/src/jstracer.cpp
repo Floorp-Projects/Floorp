@@ -2696,7 +2696,7 @@ inline LIns*
 TraceRecorder::p2i(nanojit::LIns* ins)
 {
 #ifdef NANOJIT_64BIT
-    return lir->ins1(LIR_qlo, ins);
+    return lir->ins1(LIR_q2i, ins);
 #else
     return ins;
 #endif
@@ -4855,7 +4855,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
         JS_ASSERT((fragment == fragment->root) == !!loopLabel);
         if (loopLabel) {
             lir->insBranch(LIR_j, NULL, loopLabel);
-            lir->ins1(LIR_live, lirbuf->state);
+            lir->ins1(LIR_plive, lirbuf->state);
         }
 
         exit->target = fragment->root;
