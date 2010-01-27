@@ -368,14 +368,6 @@ XRE_InitChildProcess(int aArgc,
 
     sIOMessageLoop->Run();
 
-
-
-#ifdef OS_LINUX
-    printf("TEST-UNEXPECTED-FAIL | plugin process %d | broke out of IO event loop\n", getpid());
-#endif
-
-
-
     sIOMessageLoop = nsnull;
   }
 

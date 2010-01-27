@@ -102,21 +102,8 @@ void Thread::Stop() {
   DCHECK_NE(thread_id_, PlatformThread::CurrentId());
 
   // StopSoon may have already been called.
-  if (message_loop_) {
-
-
-
-
-#ifdef OS_LINUX
-      printf("TEST-UNEXPECTED-FAIL | process %d | posted quit task to other thread\n", getpid());
-#endif
-
-
-
-
-
+  if (message_loop_)
     message_loop_->PostTask(FROM_HERE, new ThreadQuitTask());
-  }
 
   // Wait for the thread to exit.  It should already have terminated but make
   // sure this assumption is valid.
@@ -124,28 +111,7 @@ void Thread::Stop() {
   // TODO(darin): Unfortunately, we need to keep message_loop_ around until
   // the thread exits.  Some consumers are abusing the API.  Make them stop.
   //
-
-
-
-
-#ifdef OS_LINUX
-  printf("TEST-UNEXPECTED-FAIL | process %d | joining other thread\n", getpid());
-#endif
-
-
-
-
   PlatformThread::Join(thread_);
-
-
-
-
-#ifdef OS_LINUX
-  printf("TEST-UNEXPECTED-FAIL | process %d | other thread joined\n", getpid());
-#endif
-
-
-
 
   // The thread can't receive messages anymore.
   message_loop_ = NULL;
