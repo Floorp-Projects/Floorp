@@ -2446,6 +2446,7 @@ Assembler::asm_arith(LInsp ins)
     }
     NanoAssert(isKnownReg(rb));
 
+    const Register SBZ = (Register)0;
     switch (op)
     {
         case LIR_iaddp: ADDs(rr, ra, rb, 0);    break;
@@ -2472,7 +2473,7 @@ Assembler::asm_arith(LInsp ins)
                 //   CMP    ip, rr, ASR #31
                 // An explanation can be found in bug 521161. This sets Z if we did
                 // _not_ overflow, and clears it if we did.
-                ALUr_shi(AL, cmp, 1, IP, IP, rr, ASR_imm, 31);
+                ALUr_shi(AL, cmp, 1, SBZ, IP, rr, ASR_imm, 31);
                 SMULL(rr, IP, rb, ra);
             } else {
                 // config.arm_arch is ARMv5 (or below) and rr == rb, so we must
@@ -2484,7 +2485,7 @@ Assembler::asm_arith(LInsp ins)
                     // rX = rY * rX.
                     // Other than swapping ra and rb, this works in the same as
                     // as the ARMv6+ case, above.
-                    ALUr_shi(AL, cmp, 1, IP, IP, rr, ASR_imm, 31);
+                    ALUr_shi(AL, cmp, 1, SBZ, IP, rr, ASR_imm, 31);
                     SMULL(rr, IP, ra, rb);
                 } else {
                     // We're trying to do rX = rX * rX, but we also need to
@@ -2511,8 +2512,8 @@ Assembler::asm_arith(LInsp ins)
 
                     NanoAssert(rr != IP);
 
-                    ALUr_shi(AL, cmp, 1, IP, rr, rr, ASR_imm, 31);
-                    ALUr_shi(AL, mov, 1, IP, IP, IP, LSR_imm, 16);
+                    ALUr_shi(AL, cmp, 1, SBZ, rr, rr, ASR_imm, 31);
+                    ALUr_shi(AL, mov, 1, IP, SBZ, IP, LSR_imm, 16);
                     MUL(rr, IP, IP);
                     ALUi(MI, rsb, 0, IP, IP, 0);
                     ALUr(AL, mov, 1, IP, ra, ra);
