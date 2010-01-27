@@ -222,6 +222,9 @@ public:
       return mNPP;
     }
 
+    virtual bool
+    AnswerPluginGotFocus();
+
 private:
     bool InternalGetValueForNPObject(NPNVariable aVariable,
                                      PPluginScriptableObjectParent** aValue,
@@ -242,11 +245,18 @@ private:
     void SharedSurfaceBeforePaint(RECT &rect, NPRemoteEvent& npremoteevent);
     void SharedSurfaceAfterPaint(NPEvent* npevent);
     void SharedSurfaceRelease();
+    // Used in handling parent/child forwarding of events.
+    static LRESULT CALLBACK PluginWindowHookProc(HWND hWnd, UINT message,
+                                                 WPARAM wParam, LPARAM lParam);
+    void SubclassPluginWindow(HWND aWnd);
+    void UnsubclassPluginWindow();
 
 private:
     gfx::SharedDIBWin  mSharedSurfaceDib;
     nsIntRect          mPluginPort;
     nsIntRect          mSharedSize;
+    HWND               mPluginHWND;
+    WNDPROC            mPluginWndProc;
 #endif // defined(XP_WIN)
 };
 

@@ -161,6 +161,12 @@ parent:
   rpc PPluginStream(nsCString mimeType,
                     nsCString target)
     returns (NPError result);
+
+parent:
+  rpc PluginGotFocus();
+child:
+  rpc SetPluginFocus();
+  rpc UpdateWindow();
 };
 
 } // namespace plugins

@@ -802,7 +802,7 @@ class TypedArrayTemplate
         NativeType *dest = static_cast<NativeType*>(data);
 
         if (ar->isDenseArray()) {
-            JS_ASSERT(ar->fslots[JSSLOT_ARRAY_LENGTH] == len);
+            JS_ASSERT(ar->fslots[JSSLOT_ARRAY_LENGTH] == (jsval)len);
 
             jsval *src = ar->dslots;
 
@@ -1215,6 +1215,7 @@ TypedArrayConstruct(JSContext *cx, jsint atype, uintN argc, jsval *argv, jsval *
 
       default:
         JS_NOT_REACHED("shouldn't have gotten here");
+        return false;
     }
 }
 

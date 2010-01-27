@@ -195,17 +195,22 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
     PRBool acceptsRanges = ranges.EqualsLiteral("bytes");
 
     if (mOffset == 0) {
-      // Look for duration headers from known Ogg content systems. In the case
-      // of multiple options for obtaining the duration the order of precedence is;
+      // Look for duration headers from known Ogg content systems.
+      // In the case of multiple options for obtaining the duration
+      // the order of precedence is:
       // 1) The Media resource metadata if possible (done by the decoder itself).
-      // 2) X-Content-Duration.
-      // 3) x-amz-meta-content-duration.
-      // 4) Perform a seek in the decoder to find the value.
+      // 2) Content-Duration message header.
+      // 3) X-AMZ-Meta-Content-Duration.
+      // 4) X-Content-Duration.
+      // 5) Perform a seek in the decoder to find the value.
       nsCAutoString durationText;
       PRInt32 ec = 0;
-      rv = hc->GetResponseHeader(NS_LITERAL_CSTRING("X-Content-Duration"), durationText);
+      rv = hc->GetResponseHeader(NS_LITERAL_CSTRING("Content-Duration"), durationText);
       if (NS_FAILED(rv)) {
         rv = hc->GetResponseHeader(NS_LITERAL_CSTRING("X-AMZ-Meta-Content-Duration"), durationText);
+      }
+      if (NS_FAILED(rv)) {
+        rv = hc->GetResponseHeader(NS_LITERAL_CSTRING("X-Content-Duration"), durationText);
       }
 
       if (NS_SUCCEEDED(rv)) {

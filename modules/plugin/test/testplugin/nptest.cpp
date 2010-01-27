@@ -64,8 +64,10 @@
 // Intentional crash
 //
 
-static void
-Crash()
+int gCrashCount = 0;
+
+void
+IntentionalCrash()
 {
   char* bloatLog = getenv("XPCOM_MEM_BLOAT_LOG");
   if (bloatLog) {
@@ -82,8 +84,9 @@ Crash()
     fprintf(processfd, "==> process %d will purposefully crash\n", getpid());
     fclose(processfd);
   }
-  void (*funcptr)() = NULL;
-  funcptr(); // Crash calling null function pointer
+  int *pi = NULL;
+  *pi = 55; // Crash dereferencing null pointer
+  ++gCrashCount;
 }
 
 //
@@ -675,7 +678,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
       instanceData->npnNewStream = true;
     }
     if (strcmp(argn[i], "newcrash") == 0) {
-      Crash();
+      IntentionalCrash();
     }
   }
 
@@ -758,7 +761,7 @@ NPP_Destroy(NPP instance, NPSavedData** save)
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
 
   if (instanceData->crashOnDestroy)
-    Crash();
+    IntentionalCrash();
 
   if (instanceData->streamBuf) {
     free(instanceData->streamBuf);
@@ -2101,7 +2104,7 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
 static bool
 crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  Crash();
+  IntentionalCrash();
   VOID_TO_NPVARIANT(*result);
   return true;
 }
@@ -2425,6 +2428,7 @@ asyncCallback(void* cookie)
       BOOLEAN_TO_NPVARIANT(id->asyncCallbackResult, arg);
       NPN_Invoke(npp, windowObject, NPN_GetStringIdentifier(id->asyncTestScriptCallback.c_str()), &arg, 1, &rval);
       NPN_ReleaseVariantValue(&arg);
+      NPN_ReleaseObject(windowObject);
       break;
   }
 }
