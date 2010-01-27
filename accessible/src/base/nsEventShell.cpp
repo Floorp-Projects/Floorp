@@ -253,41 +253,77 @@ nsAccEventQueue::CoalesceEvents()
           thisEvent->mEventRule = nsAccEvent::eDoNotEmit;
           continue;
         }
-        if (nsCoreUtils::IsAncestorOf(tailEvent->mNode, thisEvent->mNode)) {
-          // thisDOMNode is a descendant of tailDOMNode
+
+        // More older show event target (thisNode) can't be contained by recent
+        // show event target (tailNode), i.e be a descendant of tailNode.
+        // XXX: target of older show event caused by DOM node appending can be
+        // contained by target of recent show event caused by style change.
+        // XXX: target of older show event caused by style change can be
+        // contained by target of recent show event caused by style change.
+        PRBool thisCanBeDescendantOfTail =
+          tailEvent->mEventType != nsIAccessibleEvent::EVENT_SHOW ||
+          tailEvent->mIsAsync;
+
+        if (thisCanBeDescendantOfTail &&
+            nsCoreUtils::IsAncestorOf(tailEvent->mNode, thisEvent->mNode)) {
+          // thisNode is a descendant of tailNode.
+
           if (thisEvent->mEventType == nsIAccessibleEvent::EVENT_REORDER) {
             CoalesceReorderEventsFromSameTree(tailEvent, thisEvent);
             continue;
           }
 
-          // Do not emit thisEvent, also apply this result to sibling
-          // nodes of thisDOMNode.
+          // Do not emit thisEvent, also apply this result to sibling nodes of
+          // thisNode.
           thisEvent->mEventRule = nsAccEvent::eDoNotEmit;
           ApplyToSiblings(0, index, thisEvent->mEventType,
                           thisEvent->mNode, nsAccEvent::eDoNotEmit);
           continue;
         }
-        if (nsCoreUtils::IsAncestorOf(thisEvent->mNode, tailEvent->mNode)) {
-          // tailDOMNode is a descendant of thisDOMNode
+
+#ifdef DEBUG
+        if (!thisCanBeDescendantOfTail &&
+            nsCoreUtils::IsAncestorOf(tailEvent->mNode, thisEvent->mNode)) {
+          NS_NOTREACHED("Older event target is a descendant of recent event target!");
+        }
+#endif
+
+        // More older hide event target (thisNode) can't contain recent hide
+        // event target (tailNode), i.e. be ancestor of tailNode.
+        if (tailEvent->mEventType != nsIAccessibleEvent::EVENT_HIDE &&
+            nsCoreUtils::IsAncestorOf(thisEvent->mNode, tailEvent->mNode)) {
+          // tailNode is a descendant of thisNode
+
           if (thisEvent->mEventType == nsIAccessibleEvent::EVENT_REORDER) {
             CoalesceReorderEventsFromSameTree(thisEvent, tailEvent);
             continue;
           }
 
-          // Do not emit tailEvent, also apply this result to sibling
-          // nodes of tailDOMNode.
+          // Do not emit tailEvent, also apply this result to sibling nodes of
+          // tailNode.
           tailEvent->mEventRule = nsAccEvent::eDoNotEmit;
           ApplyToSiblings(0, tail, tailEvent->mEventType,
                           tailEvent->mNode, nsAccEvent::eDoNotEmit);
           break;
         }
+
+#ifdef DEBUG
+        if (tailEvent->mEventType == nsIAccessibleEvent::EVENT_HIDE &&
+            nsCoreUtils::IsAncestorOf(thisEvent->mNode, tailEvent->mNode)) {
+          NS_NOTREACHED("More older hide event target is an ancestor of recent hide event target!");
+        }
+#endif
+
       } // for (index)
 
       if (tailEvent->mEventRule != nsAccEvent::eDoNotEmit) {
-        // Not in another event node's subtree, and no other event is in
-        // this event node's subtree.
-        // This event should be emitted
-        // Apply this result to sibling nodes of tailDOMNode
+        // Not in another event node's subtree, and no other event is in this
+        // event node's subtree. This event should be emitted. Apply this result
+        // to sibling nodes of tailNode.
+
+        // We should do this in all cases even when tailEvent is hide event and
+        // it's caused by DOM node removal because the rule can applied for
+        // sibling event targets caused by style changes.
         ApplyToSiblings(0, tail, tailEvent->mEventType,
                         tailEvent->mNode, nsAccEvent::eAllowDupes);
       }
