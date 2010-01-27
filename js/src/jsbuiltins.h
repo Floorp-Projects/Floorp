@@ -464,11 +464,6 @@ js_dmod(jsdouble a, jsdouble b);
 
 #endif /* !JS_TRACER */
 
-/* Defined in jsobj.cpp. */
-JS_DECLARE_CALLINFO(js_Object_tn)
-JS_DECLARE_CALLINFO(js_NewInstance)
-JS_DECLARE_CALLINFO(js_NonEmptyObject)
-
 /* Defined in jsarray.cpp. */
 JS_DECLARE_CALLINFO(js_Array_dense_setelem)
 JS_DECLARE_CALLINFO(js_Array_dense_setelem_int)
@@ -478,17 +473,49 @@ JS_DECLARE_CALLINFO(js_NewEmptyArrayWithLength)
 JS_DECLARE_CALLINFO(js_NewArrayWithSlots)
 JS_DECLARE_CALLINFO(js_ArrayCompPush)
 
+/* Defined in jsbuiltins.cpp. */
+JS_DECLARE_CALLINFO(js_BoxDouble)
+JS_DECLARE_CALLINFO(js_BoxInt32)
+JS_DECLARE_CALLINFO(js_UnboxDouble)
+JS_DECLARE_CALLINFO(js_UnboxInt32)
+JS_DECLARE_CALLINFO(js_TryUnboxInt32)
+JS_DECLARE_CALLINFO(js_dmod)
+JS_DECLARE_CALLINFO(js_imod)
+JS_DECLARE_CALLINFO(js_DoubleToInt32)
+JS_DECLARE_CALLINFO(js_DoubleToUint32)
+JS_DECLARE_CALLINFO(js_StringToNumber)
+JS_DECLARE_CALLINFO(js_StringToInt32)
+JS_DECLARE_CALLINFO(js_AddProperty)
+JS_DECLARE_CALLINFO(js_HasNamedProperty)
+JS_DECLARE_CALLINFO(js_HasNamedPropertyInt32)
+JS_DECLARE_CALLINFO(js_TypeOfObject)
+JS_DECLARE_CALLINFO(js_TypeOfBoolean)
+JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToNumber)
+JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToString)
+JS_DECLARE_CALLINFO(js_NewNullClosure)
+JS_DECLARE_CALLINFO(js_PopInterpFrame)
+JS_DECLARE_CALLINFO(js_ConcatN)
+
 /* Defined in jsfun.cpp. */
 JS_DECLARE_CALLINFO(js_AllocFlatClosure)
 JS_DECLARE_CALLINFO(js_PutArguments)
 JS_DECLARE_CALLINFO(js_PutCallObjectOnTrace)
-
-/* Defined in jsfun.cpp. */
 JS_DECLARE_CALLINFO(js_SetCallVar)
 JS_DECLARE_CALLINFO(js_SetCallArg)
+JS_DECLARE_CALLINFO(js_CloneFunctionObject)
+JS_DECLARE_CALLINFO(js_CreateCallObjectOnTrace)
+JS_DECLARE_CALLINFO(js_Arguments)
+
+/* Defined in jsiter.cpp. */
+JS_DECLARE_CALLINFO(js_CloseIterator)
 
 /* Defined in jsnum.cpp. */
 JS_DECLARE_CALLINFO(js_NumberToString)
+
+/* Defined in jsobj.cpp. */
+JS_DECLARE_CALLINFO(js_Object_tn)
+JS_DECLARE_CALLINFO(js_NewInstance)
+JS_DECLARE_CALLINFO(js_NonEmptyObject)
 
 /* Defined in jsstr.cpp. */
 JS_DECLARE_CALLINFO(js_String_tn)
@@ -501,34 +528,5 @@ JS_DECLARE_CALLINFO(js_String_p_charCodeAt0)
 JS_DECLARE_CALLINFO(js_String_p_charCodeAt0_int)
 JS_DECLARE_CALLINFO(js_String_p_charCodeAt_double_int)
 JS_DECLARE_CALLINFO(js_String_p_charCodeAt_int_int)
-
-/* Defined in jsbuiltins.cpp. */
-JS_DECLARE_CALLINFO(js_BoxDouble)
-JS_DECLARE_CALLINFO(js_BoxInt32)
-JS_DECLARE_CALLINFO(js_UnboxDouble)
-JS_DECLARE_CALLINFO(js_UnboxInt32)
-JS_DECLARE_CALLINFO(js_TryUnboxInt32)
-JS_DECLARE_CALLINFO(js_dmod)
-JS_DECLARE_CALLINFO(js_imod)
-JS_DECLARE_CALLINFO(js_DoubleToInt32)
-JS_DECLARE_CALLINFO(js_DoubleToUint32)
-
-JS_DECLARE_CALLINFO(js_StringToNumber)
-JS_DECLARE_CALLINFO(js_StringToInt32)
-JS_DECLARE_CALLINFO(js_CloseIterator)
-JS_DECLARE_CALLINFO(js_CallTree)
-JS_DECLARE_CALLINFO(js_AddProperty)
-JS_DECLARE_CALLINFO(js_HasNamedProperty)
-JS_DECLARE_CALLINFO(js_HasNamedPropertyInt32)
-JS_DECLARE_CALLINFO(js_TypeOfObject)
-JS_DECLARE_CALLINFO(js_TypeOfBoolean)
-JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToNumber)
-JS_DECLARE_CALLINFO(js_BooleanOrUndefinedToString)
-JS_DECLARE_CALLINFO(js_Arguments)
-JS_DECLARE_CALLINFO(js_NewNullClosure)
-JS_DECLARE_CALLINFO(js_CloneFunctionObject)
-JS_DECLARE_CALLINFO(js_ConcatN)
-JS_DECLARE_CALLINFO(js_PopInterpFrame)
-JS_DECLARE_CALLINFO(js_CreateCallObjectOnTrace)
 
 #endif /* jsbuiltins_h___ */
