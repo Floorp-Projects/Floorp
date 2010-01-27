@@ -7133,7 +7133,6 @@ void nsWindow::UpdateWindowInternal(HWND aWnd)
       if (instance) {
         if (!instance->CallUpdateWindow())
           NS_ERROR("Failed to send message!");
-        ValidateWindow(aWnd, NULL);
         return;
       }
     }
