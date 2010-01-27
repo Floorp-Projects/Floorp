@@ -158,28 +158,8 @@ AsyncChannel::Close()
         mIOLoop->PostTask(
             FROM_HERE, NewRunnableMethod(this, &AsyncChannel::OnCloseChannel));
 
-
-
-#ifdef OS_LINUX
-        printf("TEST-UNEXPECTED-FAIL | process %d | posted OnCloseChannel, awaiting notify\n", getpid());
-#endif
-
-
-
         while (ChannelClosing == mChannelState)
             mCvar.Wait();
-
-
-
-
-#ifdef OS_LINUX
-        printf("TEST-UNEXPECTED-FAIL | process %d | received notify\n", getpid());
-#endif
-
-
-
-
-
 
         // TODO sort out Close() on this side racing with Close() on the
         // other side
@@ -428,18 +408,6 @@ AsyncChannel::OnChannelError()
 {
     AssertIOThread();
 
-
-
-
-#ifdef OS_LINUX
-        printf("TEST-UNEXPECTED-FAIL | process %d | channel error detected\n", getpid());
-#endif
-
-
-
-
-
-
     MutexAutoLock lock(mMutex);
 
     // NB: this can race with the `Goodbye' event being processed by
@@ -469,28 +437,9 @@ AsyncChannel::OnCloseChannel()
 
     mTransport->Close();
 
-
-
-#ifdef OS_LINUX
-        printf("TEST-UNEXPECTED-FAIL | process %d | OnCloseChannel: closing\n", getpid());
-#endif
-
-
-
-
-
     MutexAutoLock lock(mMutex);
     mChannelState = ChannelClosed;
     mCvar.Notify();
-
-
-
-#ifdef OS_LINUX
-        printf("TEST-UNEXPECTED-FAIL | process %d | OnCloseChannel: notified worker\n", getpid());
-#endif
-
-
-
 }
 
 
