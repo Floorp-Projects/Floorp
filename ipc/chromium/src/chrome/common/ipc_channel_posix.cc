@@ -238,6 +238,20 @@ bool ClientConnectToFifo(const std::string &pipe_name, int* client_socket) {
   return true;
 }
 
+#if defined(CHROMIUM_MOZILLA_BUILD)
+bool SetCloseOnExec(int fd) {
+  int flags = fcntl(fd, F_GETFD);
+  if (flags == -1)
+    return false;
+
+  flags |= FD_CLOEXEC;
+  if (fcntl(fd, F_SETFD, flags) == -1)
+    return false;
+
+  return true;
+}
+#endif
+
 }  // namespace
 //------------------------------------------------------------------------------
 
@@ -298,6 +312,16 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
         HANDLE_EINTR(close(pipe_fds[1]));
         return false;
       }
+
+#if defined(CHROMIUM_MOZILLA_BUILD)
+      if (!SetCloseOnExec(pipe_fds[0]) ||
+          !SetCloseOnExec(pipe_fds[1])) {
+        HANDLE_EINTR(close(pipe_fds[0]));
+        HANDLE_EINTR(close(pipe_fds[1]));
+        return false;
+      }
+#endif
+
       pipe_ = pipe_fds[0];
       client_pipe_ = pipe_fds[1];
 
