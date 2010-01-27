@@ -2453,7 +2453,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
 #endif
 
     nanojit::LirWriter*& lir = InitConst(this->lir);
-    lir = new (tempAlloc()) LirBufWriter(lirbuf);
+    lir = new (tempAlloc()) LirBufWriter(lirbuf, nanojit::AvmCore::config);
 #ifdef DEBUG
     lir = new (tempAlloc()) ValidateWriter(lir, "end of writer pipeline");
 #endif
@@ -7630,11 +7630,11 @@ InitJIT(TraceMonitor *tm)
 
         enable_debugger_exceptions();
 
-        avmplus::AvmCore::config.vfp        = arm_vfp;
-        avmplus::AvmCore::config.soft_float = !arm_vfp;
-        avmplus::AvmCore::config.thumb      = arm_thumb;
-        avmplus::AvmCore::config.thumb2     = arm_thumb2;
-        avmplus::AvmCore::config.arch       = arm_arch;
+        avmplus::AvmCore::config.arm_vfp        = arm_vfp;
+        avmplus::AvmCore::config.soft_float     = !arm_vfp;
+        avmplus::AvmCore::config.arm_thumb      = arm_thumb;
+        avmplus::AvmCore::config.arm_thumb2     = arm_thumb2;
+        avmplus::AvmCore::config.arm_arch       = arm_arch;
 
         // Sanity-check the configuration detection.
         //  * We don't understand architectures prior to ARMv4.
