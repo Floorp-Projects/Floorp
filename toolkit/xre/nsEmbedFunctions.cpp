@@ -371,13 +371,6 @@ XRE_InitChildProcess(int aArgc,
     sIOMessageLoop = nsnull;
   }
 
-
-#ifdef OS_LINUX
-  fprintf(stderr, "TEST-UNEXPECTED-FAIL | plugin process %d | IO thread joined XPCOM thread, exiting\n", getpid());
-#endif
-
-
-
   NS_LogTerm();
   return XRE_DeinitCommandLine();
 }
@@ -510,15 +503,6 @@ XRE_ShutdownChildProcess()
     NS_ABORT_IF_FALSE(!!ioLoop, "Bad shutdown order");
 
     ioLoop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
-
-
-
-#ifdef OS_LINUX
-    fprintf(stderr, "TEST-UNEXPECTED-FAIL | plugin process %d | posted quit task to IO thread\n", getpid());
-#endif
-
-
-
 }
 
 namespace {
