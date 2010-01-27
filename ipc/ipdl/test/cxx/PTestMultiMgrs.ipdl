@@ -1,0 +1,34 @@
+include protocol "PTestMultiMgrsLeft.ipdl";
+include protocol "PTestMultiMgrsRight.ipdl";
+
+namespace mozilla {
+namespace _ipdltest {
+
+protocol PTestMultiMgrs {
+    manages PTestMultiMgrsLeft;
+    manages PTestMultiMgrsRight;
+
+parent:
+    OK();
+
+child:
+    PTestMultiMgrsLeft();
+    PTestMultiMgrsRight();
+    Check();
+    __delete__();
+
+state START:
+    send PTestMultiMgrsLeft goto CONSTRUCT_RIGHT;
+state CONSTRUCT_RIGHT:
+    send PTestMultiMgrsRight goto CHILD_CHECK;
+state CHILD_CHECK:
+    send Check goto CHILD_ACK;
+state CHILD_ACK:
+    recv OK goto DONE;
+
+state DONE:
+    send __delete__;
+};
+
+} // namespace _ipdltest
+} // namespace mozilla
