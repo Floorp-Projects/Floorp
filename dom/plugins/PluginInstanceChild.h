@@ -148,6 +148,9 @@ protected:
     virtual bool
     AnswerSetPluginFocus();
 
+    virtual bool
+    AnswerUpdateWindow();
+
 public:
     PluginInstanceChild(const NPPluginFuncs* aPluginIface);
 
