@@ -373,7 +373,7 @@ XRE_InitChildProcess(int aArgc,
 
 
 #ifdef OS_LINUX
-  printf("TEST-UNEXPECTED-FAIL | plugin process %d | IO thread joined XPCOM thread, exiting\n", getpid());
+  fprintf(stderr, "TEST-UNEXPECTED-FAIL | plugin process %d | IO thread joined XPCOM thread, exiting\n", getpid());
 #endif
 
 
@@ -514,7 +514,7 @@ XRE_ShutdownChildProcess()
 
 
 #ifdef OS_LINUX
-    printf("TEST-UNEXPECTED-FAIL | plugin process %d | posted quit task to IO thread\n", getpid());
+    fprintf(stderr, "TEST-UNEXPECTED-FAIL | plugin process %d | posted quit task to IO thread\n", getpid());
 #endif
 
 
