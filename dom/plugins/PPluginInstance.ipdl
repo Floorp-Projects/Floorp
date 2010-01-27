@@ -166,6 +166,7 @@ parent:
   rpc PluginGotFocus();
 child:
   rpc SetPluginFocus();
+  rpc UpdateWindow();
 };
 
 } // namespace plugins
