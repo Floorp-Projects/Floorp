@@ -138,8 +138,8 @@ protected:
     // commonly used fonts for which the name table should be loaded at startup
     virtual void PreloadNamesList();
 
-    // initialize the bad underline blacklist from pref.
-    virtual void InitBadUnderlineList();
+    // load the bad underline blacklist from pref.
+    void LoadBadUnderlineList();
 
     // explicitly set fixed-pitch flag for all faces
     void SetFixedPitch(const nsAString& aFamilyName);
@@ -180,6 +180,8 @@ protected:
 
     // flag set after InitOtherFamilyNames is called upon first name lookup miss
     PRPackedBool mOtherFamilyNamesInitialized;
+
+    nsTHashtable<nsStringHashKey> mBadUnderlineFamilyNames;
 
     // data used as part of the font cmap loading process
     nsTArray<nsRefPtr<gfxFontFamily> > mFontFamiliesToLoad;

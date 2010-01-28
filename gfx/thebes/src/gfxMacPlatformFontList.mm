@@ -648,6 +648,10 @@ gfxMacPlatformFontList::InitFontList()
         // add the family entry to the hash table
         ToLowerCase(availableFamilyName);
         mFontFamilies.Put(availableFamilyName, familyEntry);
+
+        // check the bad underline blacklist
+        if (mBadUnderlineFamilyNames.GetEntry(availableFamilyName))
+            familyEntry->SetBadUnderlineFamily();
     }
 
     InitSingleFaceList();
@@ -669,8 +673,6 @@ gfxMacPlatformFontList::InitFontList()
         SetFixedPitch(NS_LITERAL_STRING("Courier"));
         SetFixedPitch(NS_LITERAL_STRING("Monaco"));
     }
-
-    InitBadUnderlineList();
 
     // start the delayed cmap loader
     StartLoader(kDelayBeforeLoadingCmaps, kIntervalBetweenLoadingCmaps);
