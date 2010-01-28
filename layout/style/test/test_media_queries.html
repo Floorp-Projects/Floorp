@@ -590,6 +590,11 @@ function run() {
   should_apply("[badsyntax],all");
   should_not_apply("badmedium,[badsyntax]");
   should_not_apply("[badsyntax],badmedium");
+  // bug 528096
+  should_not_apply_unbalanced("((resolution),all");
+  should_not_apply_unbalanced("(resolution(),all");
+  should_not_apply_unbalanced("(resolution (),all");
+  should_not_apply_unbalanced("(resolution:(),all");
 
   handle_posted_items();
 }
