@@ -39,7 +39,7 @@
 
 #include "mozilla/plugins/PluginModuleChild.h"
 
-#ifdef OS_LINUX
+#ifdef MOZ_WIDGET_GTK2
 #include <gtk/gtk.h>
 #endif
 
@@ -234,7 +234,7 @@ bool
 PluginModuleChild::InitGraphics()
 {
     // FIXME/cjones: is this the place for this?
-#if defined(OS_LINUX)
+#if defined(MOZ_WIDGET_GTK2)
     gtk_init(0, 0);
 
     // GtkPlug is a static class so will leak anyway but this ref makes sure.
