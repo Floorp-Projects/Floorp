@@ -549,7 +549,10 @@ nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
   // Out of process plugins must not have the WS_CLIPCHILDREN style set on their
   // parent windows or else synchronous paints (via UpdateWindow() and others)
   // will cause deadlocks.
-  style &= ~WS_CLIPCHILDREN;
+  if (::GetPropW(hWnd, L"PluginInstanceParentProperty"))
+    style &= ~WS_CLIPCHILDREN;
+  else
+    style |= WS_CLIPCHILDREN;
 #else
   style |= WS_CLIPCHILDREN;
 #endif
