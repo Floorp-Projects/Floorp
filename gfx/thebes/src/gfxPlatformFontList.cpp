@@ -111,6 +111,9 @@ gfxPlatformFontList::gfxPlatformFontList()
     mOtherFamilyNamesInitialized = PR_FALSE;
     mPrefFonts.Init(10);
 
+    mBadUnderlineFamilyNames.Init(10);
+    LoadBadUnderlineList();
+
     // pref changes notification setup
     gfxFontListPrefObserver *observer = new gfxFontListPrefObserver();
     if (observer) {
@@ -202,19 +205,15 @@ gfxPlatformFontList::SetFixedPitch(const nsAString& aFamilyName)
 }
 
 void
-gfxPlatformFontList::InitBadUnderlineList()
+gfxPlatformFontList::LoadBadUnderlineList()
 {
     nsAutoTArray<nsString, 10> blacklist;
     gfxFontUtils::GetPrefsFontList("font.blacklist.underline_offset", blacklist);
     PRUint32 numFonts = blacklist.Length();
     for (PRUint32 i = 0; i < numFonts; i++) {
-        PRBool found;
         nsAutoString key;
         GenerateFontListKey(blacklist[i], key);
-
-        gfxFontFamily *familyEntry = mFontFamilies.GetWeak(key, &found);
-        if (familyEntry)
-            familyEntry->SetBadUnderlineFamily();
+        mBadUnderlineFamilyNames.PutEntry(key);
     }
 }
 
@@ -433,6 +432,8 @@ gfxPlatformFontList::AddOtherFamilyName(gfxFontFamily *aFamilyEntry, nsAString& 
         PR_LOG(gFontListLog, PR_LOG_DEBUG, ("(fontlist-otherfamily) canonical family: %s, other family: %s\n", 
                                             NS_ConvertUTF16toUTF8(aFamilyEntry->Name()).get(), 
                                             NS_ConvertUTF16toUTF8(aOtherFamilyName).get()));
+        if (mBadUnderlineFamilyNames.GetEntry(key))
+            aFamilyEntry->SetBadUnderlineFamily();
     }
 }
 

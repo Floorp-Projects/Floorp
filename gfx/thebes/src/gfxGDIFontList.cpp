@@ -617,8 +617,6 @@ gfxGDIFontList::InitFontList()
 
     GetFontSubstitutes();
 
-    InitBadUnderlineList();
-
     StartLoader(kDelayBeforeLoadingFonts, kIntervalBetweenLoadingFonts);
 }
     
@@ -643,6 +641,8 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
         nsDependentString faceName(lf.lfFaceName);
         nsRefPtr<gfxFontFamily> family = new GDIFontFamily(faceName);
         fontList->mFontFamilies.Put(name, family);
+        if (fontList->mBadUnderlineFamilyNames.GetEntry(name))
+            family->SetBadUnderlineFamily();
     }
 
     return 1;
