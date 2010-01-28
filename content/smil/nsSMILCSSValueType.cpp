@@ -276,7 +276,7 @@ nsSMILCSSValueType::Interpolate(const nsSMILValue& aStartVal,
     // No zero value for this unit --> doesn't support interpolation.
     return NS_ERROR_FAILURE;
   }
-  
+
   nsStyleAnimation::Value resultValue;
   if (nsStyleAnimation::Interpolate(endWrapper->mPropID, *startCSSValue,
                                     endWrapper->mCSSValue, aUnitDistance,
