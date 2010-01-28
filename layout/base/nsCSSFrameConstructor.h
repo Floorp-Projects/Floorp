@@ -1538,6 +1538,7 @@ private:
                                  nsFrameItems&            aResult);
 
   nsresult CreateLetterFrame(nsIFrame*                aBlockFrame,
+                             nsIFrame*                aBlockContinuation,
                              nsIContent*              aTextContent,
                              nsIFrame*                aParentFrame,
                              nsFrameItems&            aResult);
@@ -1546,13 +1547,36 @@ private:
                                         nsIFrame*     aBlockFrame,
                                         nsFrameItems& aBlockFrames);
 
+  /**
+   * Looks in the block aBlockFrame for a text frame that contains the
+   * first-letter of the block and creates the necessary first-letter frames
+   * and returns them in aLetterFrames.
+   *
+   * @param aBlockFrame the (first-continuation of) the block we are creating a
+   *                    first-letter frame for
+   * @param aBlockContinuation the current continuation of the block that we
+   *                           are looking in for a textframe with suitable
+   *                           contents for first-letter
+   * @param aParentFrame the current frame whose children we are looking at for
+   *                     a suitable first-letter textframe
+   * @param aParentFrameList the first child of aParentFrame
+   * @param aModifiedParent returns the parent of the textframe that contains
+   *                        the first-letter
+   * @param aTextFrame returns the textframe that had the first-letter
+   * @param aPrevFrame returns the previous sibling of aTextFrame
+   * @param aLetterFrames returns the frames that were created
+   * @param aStopLooking returns whether we should stop looking for a
+   *                     first-letter either because it was found or won't be
+   *                     found
+   */
   nsresult WrapFramesInFirstLetterFrame(nsIFrame*     aBlockFrame,
+                                        nsIFrame*     aBlockContinuation,
                                         nsIFrame*     aParentFrame,
                                         nsIFrame*     aParentFrameList,
                                         nsIFrame**    aModifiedParent,
                                         nsIFrame**    aTextFrame,
                                         nsIFrame**    aPrevFrame,
-                                        nsFrameItems& aLetterFrame,
+                                        nsFrameItems& aLetterFrames,
                                         PRBool*       aStopLooking);
 
   nsresult RecoverLetterFrames(nsIFrame* aBlockFrame);
