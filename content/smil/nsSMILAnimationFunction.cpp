@@ -305,7 +305,7 @@ nsSMILAnimationFunction::CompareTo(const nsSMILAnimationFunction* aOther) const
 {
   NS_ENSURE_TRUE(aOther, 0);
 
-  NS_ASSERTION(aOther != this, "Trying to compare to self.");
+  NS_ASSERTION(aOther != this, "Trying to compare to self");
 
   // Inactive animations sort first
   if (!IsActiveOrFrozen() && aOther->IsActiveOrFrozen())
@@ -376,13 +376,13 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
   NS_ABORT_IF_FALSE(dur >= 0.0f, "Simple duration should not be negative");
 
   if (mSampleTime >= dur || mSampleTime < 0.0f) {
-    NS_ERROR("Animation sampled outside interval.");
+    NS_ERROR("Animation sampled outside interval");
     return NS_ERROR_FAILURE;
   }
 
   if ((!IsToAnimation() && aValues.Length() < 2) ||
       (IsToAnimation()  && aValues.Length() != 1)) {
-    NS_ERROR("Unexpected number of values.");
+    NS_ERROR("Unexpected number of values");
     return NS_ERROR_FAILURE;
   }
   // End Sanity Checks
@@ -444,8 +444,8 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
       }
     }
     if (NS_SUCCEEDED(rv)) {
-      NS_ABORT_IF_FALSE(from, "NULL from-value during interpolation.");
-      NS_ABORT_IF_FALSE(to, "NULL to-value during interpolation.");
+      NS_ABORT_IF_FALSE(from, "NULL from-value during interpolation");
+      NS_ABORT_IF_FALSE(to, "NULL to-value during interpolation");
       NS_ABORT_IF_FALSE(0.0f <= intervalProgress && intervalProgress < 1.0f,
                       "Interval progress should be in the range [0, 1)");
       rv = from->Interpolate(*to, intervalProgress, aResult);
@@ -502,7 +502,7 @@ nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
                                               const nsSMILValue*& aTo)
 {
   NS_ASSERTION(0.0f <= aSimpleProgress && aSimpleProgress < 1.0f,
-               "aSimpleProgress is out of bounds.");
+               "aSimpleProgress is out of bounds");
   NS_ASSERTION(GetCalcMode() == CALC_PACED,
                "Calling paced-specific function, but not in paced mode");
 
@@ -558,7 +558,7 @@ nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
   }
 
   NS_NOTREACHED("shouldn't complete loop & get here -- if we do, "
-                "then aSimpleProgress was probably out of bounds.");
+                "then aSimpleProgress was probably out of bounds");
   return NS_ERROR_FAILURE;
 }
 
@@ -640,8 +640,8 @@ nsSMILAnimationFunction::ScaleIntervalProgress(double& aProgress,
     return;
 
   NS_ASSERTION(aIntervalIndex < (PRUint32)mKeySplines.Length(),
-               "Invalid interval index.");
-  NS_ASSERTION(aNumIntervals >= 1, "Invalid number of intervals.");
+               "Invalid interval index");
+  NS_ASSERTION(aNumIntervals >= 1, "Invalid number of intervals");
 
   if (aIntervalIndex >= (PRUint32)mKeySplines.Length() ||
       aNumIntervals < 1)
