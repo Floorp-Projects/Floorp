@@ -279,9 +279,9 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
 
-  SetupErrorHandling(aArgv[0]);
-
   sChildProcessType = aProcess;
+
+  SetupErrorHandling(aArgv[0]);
   
 #if defined(MOZ_WIDGET_GTK2)
   g_thread_init(NULL);
