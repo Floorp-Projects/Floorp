@@ -879,7 +879,7 @@ check_for_rollup(double aMouseX, double aMouseY,
     } else {
         gRollupWindow = nsnull;
         gRollupListener = nsnull;
-        gMenuRollup = nsnull;
+        NS_IF_RELEASE(gMenuRollup);
     }
 
     return retVal;
