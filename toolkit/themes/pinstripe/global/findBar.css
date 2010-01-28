@@ -1,8 +1,6 @@
 %include shared.inc
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: find toolbar ::::: */
-
 findbar {
   background: @scopeBarBackground@;
   border-top: @scopeBarSeparatorBorder@;

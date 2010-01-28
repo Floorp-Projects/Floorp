@@ -37,13 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ===== listbox.css =======================================================
-  == Styles used by XUL listbox-related elements.
-  ======================================================================= */
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-/* ::::: listbox ::::: */
 
 listbox {
   -moz-appearance: listbox;
@@ -63,9 +57,6 @@ listbox {
 
 listitem {
   border: 1px solid transparent;
-}
-
-listbox:focus > listitem[selected="true"][current="true"] {
 }
 
 listitem[selected="true"] {
