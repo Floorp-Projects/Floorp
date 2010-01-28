@@ -224,7 +224,7 @@ protected:
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
-#endif // MOZ_SMIL   
+#endif // MOZ_SMIL
 
   // implementation helpers:
 
