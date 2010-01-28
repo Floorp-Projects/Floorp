@@ -1947,7 +1947,10 @@ Assembler::asm_ld_imm(Register d, int32_t imm, bool chk /* = true */)
     // immediate. If this isn't possible, load it from memory.
     //  - We cannot use MOV(W|T) on cores older than the introduction of
     //    Thumb-2 or if the target register is the PC.
-    if (config.arm_thumb2 && (d != PC)) {
+    // (Note that use Thumb2 if arm_arch is ARMv7 or later; the only earlier
+    // ARM core that provided Thumb2 is ARMv6T2/ARM1156, which is a real-time
+    // core that nanojit is unlikely to ever target.)
+    if (config.arm_arch >= 7 && (d != PC)) {
         // ARMv6T2 and above have MOVW and MOVT.
         uint32_t    high_h = (uint32_t)imm >> 16;
         uint32_t    low_h = imm & 0xffff;
