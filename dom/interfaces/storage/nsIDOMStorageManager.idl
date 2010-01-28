@@ -40,7 +40,7 @@
 interface nsIDOMStorage;
 interface nsIPrincipal;
 
-[scriptable, uuid(c8e54beb-48f3-4538-a0ce-d6229f4d8f45)]
+[scriptable, uuid(fd91ec36-7da8-43bb-b8f2-4b57a862a467)]
 interface nsIDOMStorageManager : nsISupports
 {
   /**
@@ -64,5 +64,6 @@ interface nsIDOMStorageManager : nsISupports
    * This method ensures there is always only a single instance
    * for a single origin.
    */
-  nsIDOMStorage getLocalStorageForPrincipal(in nsIPrincipal aPrincipal);
+  nsIDOMStorage getLocalStorageForPrincipal(in nsIPrincipal aPrincipal,
+                                            in DOMString aDocumentURI);
 };

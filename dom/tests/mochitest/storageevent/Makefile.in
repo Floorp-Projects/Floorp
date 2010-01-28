@@ -15,11 +15,12 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-#   Neil Deakin <enndeakin@sympatico.ca>
-# Portions created by the Initial Developer are Copyright (C) 2006
+# Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Jan Bambas <honzab@firemni.cz>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,34 +36,36 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH          = ../../..
-topsrcdir      = @top_srcdir@
-srcdir         = @srcdir@
-VPATH          = @srcdir@
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir	= dom/tests/mochitest/storageevent
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE         = dom
-XPIDL_MODULE   = dom_storage
-GRE_MODULE     = 1
-
-EXPORTS =                                      \
-       nsPIDOMStorage.h                        \
-       $(NULL)
-
-XPIDLSRCS =                                    \
-       nsIDOMToString.idl                      \
-       nsIDOMStorageManager.idl                \
-       $(NULL)
-
-SDK_XPIDLSRCS =                      \
-        nsIDOMStorage.idl        \
-        nsIDOMStorageObsolete.idl\
-        nsIDOMStorageEvent.idl   \
-        nsIDOMStorageEventObsolete.idl \
-        nsIDOMStorageItem.idl    \
-        nsIDOMStorageList.idl    \
-        nsIDOMStorageWindow.idl  \
-       $(NULL)
-
 include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES	= \
+    frameGlobalStorageMaster.html \
+    frameGlobalStorageSlaveEqual.html \
+    frameGlobalStorageSlaveNotEqual.html \
+    frameLocalStorageMaster.html \
+    frameLocalStorageSlaveEqual.html \
+    frameLocalStorageSlaveNotEqual.html \
+    frameSessionStorageMasterEqual.html \
+    frameSessionStorageMasterNotEqual.html \
+    frameSessionStorageSlaveEqual.html \
+    frameSessionStorageSlaveNotEqual.html \
+    test_storageGlobalStorageEventCheckNoPropagation.html \
+    test_storageGlobalStorageEventCheckPropagation.html \
+    test_storageLocalStorageEventCheckNoPropagation.html \
+    test_storageLocalStorageEventCheckPropagation.html \
+    test_storageSessionStorageEventCheckPropagation.html \
+    test_storageSessionStorageEventCheckNoPropagation.html \
+    interOriginFrame.js \
+    interOriginTest2.js \
+    $(NULL)
+
+libs::	$(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
