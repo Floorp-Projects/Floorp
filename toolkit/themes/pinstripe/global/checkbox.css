@@ -35,13 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ===== checkbox.css ===================================================
-  == Styles used by the XUL checkbox element.
-  ======================================================================= */
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-/* ::::: checkbox ::::: */
 
 checkbox {
   -moz-appearance: checkbox-container;
