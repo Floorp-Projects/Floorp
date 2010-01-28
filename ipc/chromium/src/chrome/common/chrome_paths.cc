@@ -32,6 +32,7 @@ bool GetGearsPluginPathFromCommandLine(FilePath* path) {
 }
 
 bool PathProvider(int key, FilePath* result) {
+#ifndef CHROMIUM_MOZILLA_BUILD
   // Some keys are just aliases...
   switch (key) {
     case chrome::DIR_APP:
@@ -211,6 +212,7 @@ bool PathProvider(int key, FilePath* result) {
     return false;
 
   *result = cur;
+#endif
   return true;
 }
 

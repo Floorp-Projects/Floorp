@@ -246,14 +246,8 @@ CPPSRCS += \
   file_util_linux.cc \
   file_version_info_linux.cc \
   idle_timer_none.cc \
-  message_pump_glib.cc \
   process_util_linux.cc \
   time_posix.cc \
-  chrome_paths_linux.cc \
-  owned_widget_gtk.cc \
-  platform_util_linux.cc \
-  transport_dib_linux.cc \
-  x11_util.cc \
   $(NULL)
 
 endif # } OS_LINUX
