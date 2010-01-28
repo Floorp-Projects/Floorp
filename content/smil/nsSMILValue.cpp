@@ -47,7 +47,7 @@ nsSMILValue::nsSMILValue(const nsISMILType* aType)
 
   nsresult rv = aType->Init(*this);
   NS_POSTCONDITION(mType == aType || (NS_FAILED(rv) && IsNull()),
-    "Post-condition of Init failed. nsSMILValue is invalid.");
+    "Post-condition of Init failed. nsSMILValue is invalid");
 }
 
 nsSMILValue::nsSMILValue(const nsSMILValue& aVal)
@@ -57,7 +57,7 @@ nsSMILValue::nsSMILValue(const nsSMILValue& aVal)
 {
   nsresult rv = aVal.mType->Init(*this);
   NS_POSTCONDITION(mType == aVal.mType || (NS_FAILED(rv) && IsNull()),
-    "Post-condition of Init failed. nsSMILValue is invalid.");
+    "Post-condition of Init failed. nsSMILValue is invalid");
   if (NS_FAILED(rv)) return;
   mType->Assign(*this, aVal);
 }
@@ -73,7 +73,7 @@ nsSMILValue::operator=(const nsSMILValue& aVal)
     NS_POSTCONDITION(IsNull(), "nsSMILValue not null after destroying");
     nsresult rv = aVal.mType->Init(*this);
     NS_POSTCONDITION(mType == aVal.mType || (NS_FAILED(rv) && IsNull()),
-      "Post-condition of Init failed. nsSMILValue is invalid.");
+      "Post-condition of Init failed. nsSMILValue is invalid");
     if (NS_FAILED(rv)) return *this;
   }
 
@@ -88,7 +88,7 @@ nsSMILValue::Add(const nsSMILValue& aValueToAdd, PRUint32 aCount)
   if (aValueToAdd.IsNull()) return NS_OK;
 
   if (aValueToAdd.mType != mType) {
-    NS_ERROR("Trying to add incompatible types.");
+    NS_ERROR("Trying to add incompatible types");
     return NS_ERROR_FAILURE;
   }
 
@@ -102,7 +102,7 @@ nsSMILValue::SandwichAdd(const nsSMILValue& aValueToAdd)
     return NS_OK;
 
   if (aValueToAdd.mType != mType) {
-    NS_ERROR("Trying to add incompatible types.");
+    NS_ERROR("Trying to add incompatible types");
     return NS_ERROR_FAILURE;
   }
 
@@ -113,7 +113,7 @@ nsresult
 nsSMILValue::ComputeDistance(const nsSMILValue& aTo, double& aDistance) const
 {
   if (aTo.mType != mType) {
-    NS_ERROR("Trying to calculate distance between incompatible types.");
+    NS_ERROR("Trying to calculate distance between incompatible types");
     return NS_ERROR_FAILURE;
   }
 
@@ -126,7 +126,7 @@ nsSMILValue::Interpolate(const nsSMILValue& aEndVal,
                          nsSMILValue& aResult) const
 {
   if (aEndVal.mType != mType) {
-    NS_ERROR("Trying to interpolate between incompatible types.");
+    NS_ERROR("Trying to interpolate between incompatible types");
     return NS_ERROR_FAILURE;
   }
 
@@ -136,7 +136,7 @@ nsSMILValue::Interpolate(const nsSMILValue& aEndVal,
     nsresult rv = mType->Init(aResult);
     NS_POSTCONDITION(aResult.mType == mType
       || (NS_FAILED(rv) && aResult.IsNull()),
-      "Post-condition of Init failed. nsSMILValue is invalid.");
+      "Post-condition of Init failed. nsSMILValue is invalid");
     if (NS_FAILED(rv)) return rv;
   }
 

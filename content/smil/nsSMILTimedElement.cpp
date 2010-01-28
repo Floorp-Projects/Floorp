@@ -1166,10 +1166,10 @@ nsSMILTimedElement::CalcActiveEnd(const nsSMILTimeValue& aBegin,
   nsSMILTimeValue result;
 
   NS_ASSERTION(mSimpleDur.IsResolved() || mSimpleDur.IsIndefinite(),
-    "Unresolved simple duration in CalcActiveEnd.");
+    "Unresolved simple duration in CalcActiveEnd");
 
   if (!aBegin.IsResolved() && !aBegin.IsIndefinite()) {
-    NS_ERROR("Unresolved begin time passed to CalcActiveEnd.");
+    NS_ERROR("Unresolved begin time passed to CalcActiveEnd");
     result.SetIndefinite();
     return result;
   }
