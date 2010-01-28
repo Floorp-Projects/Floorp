@@ -1397,7 +1397,7 @@ SessionStoreService.prototype = {
         // sessionStorage object for the page earlier than the page really
         // requires it. It was causing problems while accessing a storage when
         // a page later changed its domain.
-        storage = aDocShell.getSessionStorageForPrincipal(principal, false);
+        storage = aDocShell.getSessionStorageForPrincipal(principal, "", false);
         if (storage)
           storageItemCount = storage.length;
       }
@@ -2254,7 +2254,7 @@ SessionStoreService.prototype = {
   _deserializeSessionStorage: function sss_deserializeSessionStorage(aStorageData, aDocShell) {
     for (let url in aStorageData) {
       let uri = IOSvc.newURI(url, null, null);
-      let storage = aDocShell.getSessionStorageForURI(uri);
+      let storage = aDocShell.getSessionStorageForURI(uri, "");
       for (let key in aStorageData[url]) {
         try {
           storage.setItem(key, aStorageData[url][key]);
