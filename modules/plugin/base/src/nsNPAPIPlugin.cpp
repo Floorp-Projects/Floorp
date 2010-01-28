@@ -314,21 +314,9 @@ namespace {
 #ifdef MOZ_IPC
 
 inline PRBool
-OOPPluginsEnabled()
+OOPPluginsEnabled(const char* aFilePath)
 {
   if (PR_GetEnv("MOZ_DISABLE_OOP_PLUGINS")) {
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (!prefs) {
-    return PR_FALSE;
-  }
-
-  PRBool oopPluginsEnabled = PR_FALSE;
-  prefs->GetBoolPref("dom.ipc.plugins.enabled", &oopPluginsEnabled);
-
-  if (!oopPluginsEnabled) {
     return PR_FALSE;
   }
 
@@ -342,7 +330,31 @@ OOPPluginsEnabled()
     return PR_FALSE;
 #endif
 
-  return PR_TRUE;
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefs) {
+    return PR_FALSE;
+  }
+
+  // Get per-library whitelist/blacklist pref string
+  // "dom.ipc.plugins.enabled.filename.dll" and fall back to the default value
+  // of "dom.ipc.plugins.enabled"
+
+  nsCAutoString pluginLibPref(aFilePath);
+  PRInt32 slashPos = pluginLibPref.RFindCharInSet("/\\");
+  if (kNotFound == slashPos)
+    return PR_FALSE;
+  pluginLibPref.Cut(0, slashPos + 1);
+  ToLowerCase(pluginLibPref);
+  pluginLibPref.Insert("dom.ipc.plugins.enabled.", 0);
+
+  PRBool oopPluginsEnabled = PR_FALSE;
+  if (NS_SUCCEEDED(prefs->GetBoolPref(pluginLibPref.get(),
+                                      &oopPluginsEnabled)))
+    return oopPluginsEnabled;
+
+  oopPluginsEnabled = PR_FALSE;
+  prefs->GetBoolPref("dom.ipc.plugins.enabled", &oopPluginsEnabled);
+  return oopPluginsEnabled;
 }
 
 #endif // MOZ_IPC
@@ -352,7 +364,7 @@ GetNewPluginLibrary(const char* aFilePath,
                     PRLibrary* aLibrary)
 {
 #ifdef MOZ_IPC
-  if (aFilePath && OOPPluginsEnabled()) {
+  if (aFilePath && OOPPluginsEnabled(aFilePath)) {
     return PluginModuleParent::LoadModule(aFilePath);
   }
 #endif
