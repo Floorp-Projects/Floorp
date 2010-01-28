@@ -163,6 +163,10 @@
 	      "src: url(\"/fonts/Cat\") format(\"Cat\"; src: local(Rat); )"),
       d: { "src" : "url(\"/fonts/Mouse\")" },
       noncanonical: true },
+    { rule: _("src: url(\"/fonts/Mouse\"); " +
+	      "src: url(\"/fonts/Cat\") format((); src: local(Rat); )"),
+      d: { "src" : "url(\"/fonts/Mouse\")" },
+      noncanonical: true },
 
     // Correct unicode-range:
     { rule: _("unicode-range: U+00A5;"), d: { "unicode-range" : "U+00A5" } },

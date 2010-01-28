@@ -293,7 +293,6 @@ protected:
   void SkipRuleSet(PRBool aInsideBraces);
   PRBool SkipAtRule();
   PRBool SkipDeclaration(PRBool aCheckForBraces);
-  PRBool GetNonCloseParenToken(PRBool aSkipWS);
 
   PRBool PushGroup(nsICSSGroupRule* aRule);
   void PopGroup(void);
@@ -1737,6 +1736,7 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
   }
   if (eCSSToken_Ident != mToken.mType) {
     REPORT_UNEXPECTED_TOKEN(PEMQExpectedFeatureName);
+    UngetToken();
     SkipUntil(')');
     return PR_FALSE;
   }
@@ -1791,6 +1791,7 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
 
   if (!mToken.IsSymbol(':')) {
     REPORT_UNEXPECTED_TOKEN(PEMQExpectedFeatureNameEnd);
+    UngetToken();
     SkipUntil(')');
     return PR_FALSE;
   }
@@ -1831,19 +1832,24 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
       }
       break;
     case nsMediaFeature::eResolution:
-      rv = GetToken(PR_TRUE) && mToken.mType == eCSSToken_Dimension &&
+      rv = GetToken(PR_TRUE);
+      if (!rv)
+        break;
+      rv = mToken.mType == eCSSToken_Dimension &&
            mToken.mIntegerValid && mToken.mNumber > 0.0f;
-      if (rv) {
-        // No worries about whether unitless zero is allowed, since the
-        // value must be positive (and we checked that above).
-        NS_ASSERTION(!mToken.mIdent.IsEmpty(), "unit lied");
-        if (mToken.mIdent.LowerCaseEqualsLiteral("dpi")) {
-          expr->mValue.SetFloatValue(mToken.mNumber, eCSSUnit_Inch);
-        } else if (mToken.mIdent.LowerCaseEqualsLiteral("dpcm")) {
-          expr->mValue.SetFloatValue(mToken.mNumber, eCSSUnit_Centimeter);
-        } else {
-          rv = PR_FALSE;
-        }
+      if (!rv) {
+        UngetToken();
+        break;
+      }
+      // No worries about whether unitless zero is allowed, since the
+      // value must be positive (and we checked that above).
+      NS_ASSERTION(!mToken.mIdent.IsEmpty(), "unit lied");
+      if (mToken.mIdent.LowerCaseEqualsLiteral("dpi")) {
+        expr->mValue.SetFloatValue(mToken.mNumber, eCSSUnit_Inch);
+      } else if (mToken.mIdent.LowerCaseEqualsLiteral("dpcm")) {
+        expr->mValue.SetFloatValue(mToken.mNumber, eCSSUnit_Centimeter);
+      } else {
+        rv = PR_FALSE;
       }
       break;
     case nsMediaFeature::eEnumerated:
@@ -2300,18 +2306,6 @@ CSSParserImpl::SkipUntilOneOf(const PRUnichar* aStopSymbolChars)
       SkipUntil(')');
     }
   }
-}
-
-PRBool
-CSSParserImpl::GetNonCloseParenToken(PRBool aSkipWS)
-{
-  if (!GetToken(aSkipWS))
-    return PR_FALSE;
-  if (mToken.mType == eCSSToken_Symbol && mToken.mSymbol == ')') {
-    UngetToken();
-    return PR_FALSE;
-  }
-  return PR_TRUE;
 }
 
 PRBool
@@ -3926,6 +3920,7 @@ CSSParserImpl::ParseTreePseudoElement(nsPseudoClassList **aPseudoElementArgs)
                                   nsCSSPseudoClasses::ePseudoClass_NotPseudoClass);
     }
     else if (!mToken.IsSymbol(',')) {
+      UngetToken();
       SkipUntil(')');
       return PR_FALSE;
     }
@@ -4642,59 +4637,67 @@ CSSParserImpl::ParseCounter(nsCSSValue& aValue)
   nsCSSUnit unit = (mToken.mIdent.LowerCaseEqualsLiteral("counter") ?
                     eCSSUnit_Counter : eCSSUnit_Counters);
 
-  if (!GetNonCloseParenToken(PR_TRUE) ||
-      eCSSToken_Ident != mToken.mType) {
-    SkipUntil(')');
-    return PR_FALSE;
-  }
-
-  nsRefPtr<nsCSSValue::Array> val =
-    nsCSSValue::Array::Create(unit == eCSSUnit_Counter ? 2 : 3);
-  if (!val) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return PR_FALSE;
-  }
-
-  val->Item(0).SetStringValue(mToken.mIdent, eCSSUnit_Ident);
-
-  if (eCSSUnit_Counters == unit) {
-    // get mandatory separator string
-    if (!ExpectSymbol(',', PR_TRUE) ||
-        !(GetNonCloseParenToken(PR_TRUE) &&
-          eCSSToken_String == mToken.mType)) {
-      SkipUntil(')');
-      return PR_FALSE;
+  // A non-iterative for loop to break out when an error occurs.
+  for (;;) {
+    if (!GetToken(PR_TRUE)) {
+      break;
     }
-    val->Item(1).SetStringValue(mToken.mIdent, eCSSUnit_String);
-  }
-
-  // get optional type
-  PRInt32 type = NS_STYLE_LIST_STYLE_DECIMAL;
-  if (ExpectSymbol(',', PR_TRUE)) {
-    nsCSSKeyword keyword;
-    PRBool success = GetNonCloseParenToken(PR_TRUE) &&
-                     eCSSToken_Ident == mToken.mType &&
-                     (keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent)) !=
-                      eCSSKeyword_UNKNOWN;
-    if (success) {
-      success = nsCSSProps::FindKeyword(keyword,
-                                        nsCSSProps::kListStyleKTable, type);
+    if (eCSSToken_Ident != mToken.mType) {
+      UngetToken();
+      break;
     }
-    if (!success) {
-      SkipUntil(')');
-      return PR_FALSE;
+
+    nsRefPtr<nsCSSValue::Array> val =
+      nsCSSValue::Array::Create(unit == eCSSUnit_Counter ? 2 : 3);
+    if (!val) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      break;
     }
-  }
-  PRInt32 typeItem = eCSSUnit_Counters == unit ? 2 : 1;
-  val->Item(typeItem).SetIntValue(type, eCSSUnit_Enumerated);
 
-  if (!ExpectSymbol(')', PR_TRUE)) {
-    SkipUntil(')');
-    return PR_FALSE;
+    val->Item(0).SetStringValue(mToken.mIdent, eCSSUnit_Ident);
+
+    if (eCSSUnit_Counters == unit) {
+      // must have a comma and then a separator string
+      if (!ExpectSymbol(',', PR_TRUE) || !GetToken(PR_TRUE)) {
+        break;
+      }
+      if (eCSSToken_String != mToken.mType) {
+        UngetToken();
+        break;
+      }
+      val->Item(1).SetStringValue(mToken.mIdent, eCSSUnit_String);
+    }
+
+    // get optional type
+    PRInt32 type = NS_STYLE_LIST_STYLE_DECIMAL;
+    if (ExpectSymbol(',', PR_TRUE)) {
+      if (!GetToken(PR_TRUE)) {
+        break;
+      }
+      nsCSSKeyword keyword;
+      if (eCSSToken_Ident != mToken.mType ||
+          (keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent)) ==
+            eCSSKeyword_UNKNOWN ||
+          !nsCSSProps::FindKeyword(keyword, nsCSSProps::kListStyleKTable,
+                                   type)) {
+        UngetToken();
+        break;
+      }
+    }
+
+    PRInt32 typeItem = eCSSUnit_Counters == unit ? 2 : 1;
+    val->Item(typeItem).SetIntValue(type, eCSSUnit_Enumerated);
+
+    if (!ExpectSymbol(')', PR_TRUE)) {
+      break;
+    }
+
+    aValue.SetArrayValue(val, unit);
+    return PR_TRUE;
   }
 
-  aValue.SetArrayValue(val, unit);
-  return PR_TRUE;
+  SkipUntil(')');
+  return PR_FALSE;
 }
 
 PRBool
@@ -4839,6 +4842,7 @@ CSSParserImpl::ParseImageRect(nsCSSValue& aImage)
       if (!ParseURL(url))
         break;
     } else {
+      UngetToken();
       break;
     }
     if (!ExpectSymbol(',', PR_TRUE))
