@@ -1,13 +1,11 @@
-/* ===== tabbox.css =====================================================
-  == Styles used by the XUL tabbox element
-   
+/*
     The default style of these tabs is that of an NSTabView with tabs at
     the top in the "regular" size. These tabs can be used with or without
     a tabbox element.
     For bottom tabs you should use the "tabs-bottom" class on the tabbox
     or the tabs element. Bottom tabs use a style that's similar to the
     one used in Adium.
-  ======================================================================= */
+*/
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
