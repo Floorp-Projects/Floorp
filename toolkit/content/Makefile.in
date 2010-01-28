@@ -79,6 +79,7 @@ DIRS += tests
 endif
 
 EXTRA_JS_MODULES = \
+  Services.jsm \
   InlineSpellChecker.jsm \
   WindowDraggingUtils.jsm \
   $(NULL)
