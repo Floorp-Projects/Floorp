@@ -381,7 +381,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mHas3DBorder          = PR_FALSE;
   mIsInMouseCapture     = PR_FALSE;
   mIsTopWidgetWindow    = PR_FALSE;
-  mInScrollProcessing   = PR_FALSE;
   mUnicodeWidget        = PR_TRUE;
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
@@ -6051,6 +6050,11 @@ PRBool nsWindow::HandleScrollingPlugins(UINT aMsg, WPARAM aWParam,
   point.x = GET_X_LPARAM(dwPoints);
   point.y = GET_Y_LPARAM(dwPoints);
 
+  static PRBool sIsProcessing = PR_FALSE;
+  if (sIsProcessing) {
+    return PR_TRUE;  // the caller should handle this.
+  }
+
   static PRBool sMayBeUsingLogitechMouse = PR_FALSE;
   if (aMsg == WM_MOUSEHWHEEL) {
     // Logitech (Logicool) mouse driver (confirmed with 4.82.11 and MX-1100)
@@ -6115,20 +6119,15 @@ PRBool nsWindow::HandleScrollingPlugins(UINT aMsg, WPARAM aWParam,
         // message themselves, some will forward directly back to us, while 
         // others will call DefWndProc, which itself still forwards back to us.
         // So if we have sent it once, we need to handle it ourself.
-        if (mInScrollProcessing) {
-          destWnd = parentWnd;
-          destWindow = parentWindow;
-        } else {
-          // First time we have seen this message.
-          // Call the child - either it will consume it, or
-          // it will wind it's way back to us,triggering the destWnd case above
-          // either way,when the call returns,we are all done with the message,
-          mInScrollProcessing = PR_TRUE;
-          if (0 == ::SendMessageW(destWnd, aMsg, aWParam, aLParam))
-            aHandled = PR_TRUE;
-          destWnd = nsnull;
-          mInScrollProcessing = PR_FALSE;
-        }
+
+        // First time we have seen this message.
+        // Call the child - either it will consume it, or
+        // it will wind it's way back to us,triggering the destWnd case above
+        // either way,when the call returns,we are all done with the message,
+        sIsProcessing = PR_TRUE;
+        if (0 == ::SendMessageW(destWnd, aMsg, aWParam, aLParam))
+          aHandled = PR_TRUE;
+        sIsProcessing = PR_FALSE;
         return PR_FALSE; // break, but continue processing
       }
       parentWnd = ::GetParent(parentWnd);
@@ -6138,7 +6137,9 @@ PRBool nsWindow::HandleScrollingPlugins(UINT aMsg, WPARAM aWParam,
     return PR_FALSE;
   if (destWnd != mWnd) {
     if (destWindow) {
+      sIsProcessing = PR_TRUE;
       aHandled = destWindow->ProcessMessage(aMsg, aWParam, aLParam, aRetValue);
+      sIsProcessing = PR_FALSE;
       aQuitProcessing = PR_TRUE;
       return PR_FALSE; // break, and stop processing
     }
