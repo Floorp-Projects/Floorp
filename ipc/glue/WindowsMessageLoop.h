@@ -145,8 +145,8 @@ class DeferredWindowPosMessage : public DeferredMessage
 public:
   DeferredWindowPosMessage(HWND aHWnd,
                            LPARAM aLParam,
-                           bool aUseCustomFlags = false,
-                           UINT aFlags = 0);
+                           bool aForCalcSize = false,
+                           WPARAM aWParam = 0);
 
   virtual void Run();
 

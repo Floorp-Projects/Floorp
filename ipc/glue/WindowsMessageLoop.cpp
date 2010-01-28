@@ -241,10 +241,7 @@ ProcessOrDeferMessage(HWND hwnd,
       break;
     }
     case WM_NCCALCSIZE: {
-      UINT flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE |
-                   SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER |
-                   SWP_DEFERERASE | SWP_NOSENDCHANGING;
-      deferred = new DeferredWindowPosMessage(hwnd, lParam, true, flags);
+      deferred = new DeferredWindowPosMessage(hwnd, lParam, true, wParam);
       break;
     }
 
@@ -663,16 +660,38 @@ DeferredSettingChangeMessage::~DeferredSettingChangeMessage()
 
 DeferredWindowPosMessage::DeferredWindowPosMessage(HWND aHWnd,
                                                    LPARAM aLParam,
-                                                   bool aUseCustomFlags,
-                                                   UINT aFlags)
+                                                   bool aForCalcSize,
+                                                   WPARAM aWParam)
 {
-  WINDOWPOS* source = reinterpret_cast<WINDOWPOS*>(aLParam);
-  memcpy(&windowPos, source, sizeof(windowPos));
-  NS_ASSERTION(aHWnd == source->hwnd, "Mismatched hwnds!");
-  if (aUseCustomFlags) {
-    windowPos.flags = aFlags;
+  if (aForCalcSize) {
+    if (aWParam) {
+      NCCALCSIZE_PARAMS* arg = reinterpret_cast<NCCALCSIZE_PARAMS*>(aLParam);
+      memcpy(&windowPos, arg->lppos, sizeof(windowPos));
+
+      NS_ASSERTION(aHWnd == windowPos.hwnd, "Mismatched hwnds!");
+    }
+    else {
+      RECT* arg = reinterpret_cast<RECT*>(aLParam);
+      windowPos.hwnd = aHWnd;
+      windowPos.hwndInsertAfter = NULL;
+      windowPos.x = arg->left;
+      windowPos.y = arg->top;
+      windowPos.cx = arg->right - arg->left;
+      windowPos.cy = arg->bottom - arg->top;
+
+      NS_ASSERTION(arg->right >= arg->left && arg->bottom >= arg->top,
+                   "Negative width or height!");
+    }
+    windowPos.flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOOWNERZORDER |
+                      SWP_NOZORDER | SWP_DEFERERASE | SWP_NOSENDCHANGING;
   }
   else {
+    // Not for WM_NCCALCSIZE
+    WINDOWPOS* arg = reinterpret_cast<WINDOWPOS*>(aLParam);
+    memcpy(&windowPos, arg, sizeof(windowPos));
+
+    NS_ASSERTION(aHWnd == windowPos.hwnd, "Mismatched hwnds!");
+
     // Windows sends in some private flags sometimes that we can't simply copy.
     // Filter here.
     UINT mask = SWP_ASYNCWINDOWPOS | SWP_DEFERERASE | SWP_DRAWFRAME |
