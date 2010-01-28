@@ -78,7 +78,7 @@ static const nsStyleAnimation::Value*
 GetZeroValueForUnit(nsStyleAnimation::Unit aUnit)
 {
   NS_ABORT_IF_FALSE(aUnit != nsStyleAnimation::eUnit_Null,
-                    "Need non-null unit for a zero value.");
+                    "Need non-null unit for a zero value");
   switch (aUnit) {
     case nsStyleAnimation::eUnit_Coord:
       return &sZeroCoord;
