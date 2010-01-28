@@ -730,9 +730,9 @@ NS_METHOD nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 		gRollupConsumeRollupEvent = aConsumeRollupEvent;
 		NS_IF_RELEASE(gRollupWidget);
 		gRollupListener = aListener;
-    NS_IF_RELEASE(gMenuRollup);
-    gMenuRollup = aMenuRollup;
-    NS_IF_ADDREF(aMenuRollup);
+		NS_IF_RELEASE(gMenuRollup);
+		gMenuRollup = aMenuRollup;
+		NS_IF_ADDREF(aMenuRollup);
 		gRollupWidget = this;
 		NS_ADDREF(this);
 	} 
