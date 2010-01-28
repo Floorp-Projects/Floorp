@@ -359,20 +359,29 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (f) {
     presShell = f->PresContext()->PresShell();
   } else {
-    // If we don't have a frame we use this roundabout way to get the pres shell.
-    if (!mFrameLoader)
-      return NS_OK;
-    nsCOMPtr<nsIDocShell> docShell;
-    mFrameLoader->GetDocShell(getter_AddRefs(docShell));
-    if (!docShell)
-      return NS_OK;
-    docShell->GetPresShell(getter_AddRefs(presShell));
-    if (!presShell)
-      return NS_OK;
+    // During page transition mInnerView will sometimes have two children, the
+    // first being the new page that may not have any frame, and the second
+    // being the old page that will probably have a frame.
+    nsIView* nextView = subdocView->GetNextSibling();
+    if (nextView) {
+      f = static_cast<nsIFrame*>(nextView->GetClientData());
+    }
+    if (f) {
+      subdocView = nextView;
+      presShell = f->PresContext()->PresShell();
+    } else {
+      // If we don't have a frame we use this roundabout way to get the pres shell.
+      if (!mFrameLoader)
+        return NS_OK;
+      nsCOMPtr<nsIDocShell> docShell;
+      mFrameLoader->GetDocShell(getter_AddRefs(docShell));
+      if (!docShell)
+        return NS_OK;
+      docShell->GetPresShell(getter_AddRefs(presShell));
+      if (!presShell)
+        return NS_OK;
+    }
   }
-
-  PRBool suppressed = PR_TRUE;
-  presShell->IsPaintingSuppressed(&suppressed);
 
   nsDisplayList childItems;
 
