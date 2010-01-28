@@ -5518,6 +5518,33 @@ public:
   nsRefPtr<nsGlobalWindow> mWindow;
 };
 
+PRBool
+nsGlobalWindow::CanClose()
+{
+  if (!mDocShell)
+    return PR_TRUE;
+
+  // Ask the content viewer whether the toplevel window can close.
+  // If the content viewer returns false, it is responsible for calling
+  // Close() as soon as it is possible for the window to close.
+  // This allows us to not close the window while printing is happening.
+
+  nsCOMPtr<nsIContentViewer> cv;
+  mDocShell->GetContentViewer(getter_AddRefs(cv));
+  if (cv) {
+    PRBool canClose;
+    nsresult rv = cv->PermitUnload(PR_FALSE, &canClose);
+    if (NS_SUCCEEDED(rv) && !canClose)
+      return PR_FALSE;
+
+    rv = cv->RequestWindowClose(&canClose);
+    if (NS_SUCCEEDED(rv) && !canClose)
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::Close()
 {
@@ -5547,7 +5574,6 @@ nsGlobalWindow::Close()
 
   // Don't allow scripts from content to close windows
   // that were not opened by script
-  nsresult rv = NS_OK;
   if (!mHadOriginalOpener && !nsContentUtils::IsCallerTrustedForWrite()) {
     PRBool allowClose =
       nsContentUtils::GetBoolPref("dom.allow_scripts_to_close_windows",
@@ -5569,24 +5595,8 @@ nsGlobalWindow::Close()
     }
   }
 
-  // Ask the content viewer whether the toplevel window can close.
-  // If the content viewer returns false, it is responsible for calling
-  // Close() as soon as it is possible for the window to close.
-  // This allows us to not close the window while printing is happening.
-
-  nsCOMPtr<nsIContentViewer> cv;
-  mDocShell->GetContentViewer(getter_AddRefs(cv));
-  if (!mInClose && !mIsClosed && cv) {
-    PRBool canClose;
-
-    rv = cv->PermitUnload(PR_FALSE, &canClose);
-    if (NS_SUCCEEDED(rv) && !canClose)
-      return NS_OK;
-
-    rv = cv->RequestWindowClose(&canClose);
-    if (NS_SUCCEEDED(rv) && !canClose)
-      return NS_OK;
-  }
+  if (!mInClose && !mIsClosed && !CanClose())
+    return NS_OK;
 
   // Fire a DOM event notifying listeners that this window is about to
   // be closed. The tab UI code may choose to cancel the default
@@ -5606,6 +5616,36 @@ nsGlobalWindow::Close()
     return NS_OK;
   }
 
+  return FinalClose();
+}
+
+nsresult
+nsGlobalWindow::ForceClose()
+{
+  if (IsFrame() || !mDocShell) {
+    // This may be a frame in a frameset, or a window that's already closed.
+    // Ignore such calls.
+
+    return NS_OK;
+  }
+
+  if (mHavePendingClose) {
+    // We're going to be closed anyway; do nothing since we don't want
+    // to double-close
+    return NS_OK;
+  }
+
+  mInClose = PR_TRUE;
+
+  DispatchCustomEvent("DOMWindowClose");
+
+  return FinalClose();
+}
+
+nsresult
+nsGlobalWindow::FinalClose()
+{
+  nsresult rv;
   // Flag that we were closed.
   mIsClosed = PR_TRUE;
 

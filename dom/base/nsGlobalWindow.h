@@ -345,6 +345,9 @@ public:
   virtual NS_HIDDEN_(void) EnterModalState();
   virtual NS_HIDDEN_(void) LeaveModalState();
 
+  virtual NS_HIDDEN_(PRBool) CanClose();
+  virtual NS_HIDDEN_(nsresult) ForceClose();
+
   virtual NS_HIDDEN_(void) SetHasOrientationEventListener();
 
   // nsIDOMViewCSS
@@ -454,6 +457,7 @@ protected:
   virtual ~nsGlobalWindow();
   void CleanUp();
   void ClearControllers();
+  nsresult FinalClose();
 
   void FreeInnerObjects(PRBool aClearScope);
   nsGlobalWindow *CallerInnerWindow();
