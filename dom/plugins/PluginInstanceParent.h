@@ -73,6 +73,8 @@ public:
     bool Init();
     NPError Destroy();
 
+    NS_OVERRIDE virtual void ActorDestroy(ActorDestroyReason why);
+
     virtual PPluginScriptableObjectParent*
     AllocPPluginScriptableObject();
 
