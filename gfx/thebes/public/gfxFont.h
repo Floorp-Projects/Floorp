@@ -354,6 +354,8 @@ public:
         }
     }
 
+    PRBool IsBadUnderlineFamily() const { return mIsBadUnderlineFamily; }
+
     // sort available fonts to put preferred (standard) faces towards the end
     void SortAvailableFonts();
 

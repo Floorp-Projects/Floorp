@@ -121,10 +121,14 @@ gfxFT2FontList::AppendFacesFromFontFile(const PRUnichar *aFileName)
                 if (!family) {
                     family = new gfxFontFamily(name);
                     mFontFamilies.Put(name, family);
+                    if (mBadUnderlineFamilyNames.GetEntry(name))
+                        family->SetBadUnderlineFamily();
                 }
                 family->AddFontEntry(fe);
                 fe->SetFamily(family);
                 family->SetHasStyles(PR_TRUE);
+                if (family->IsBadUnderlineFamily())
+                    fe->mIsBadUnderlineFont = PR_TRUE;
 #ifdef PR_LOGGING
                 if (LOG_ENABLED()) {
                     LOG(("(fontinit) added (%s) to family (%s)"
@@ -203,8 +207,6 @@ gfxFT2FontList::InitFontList()
     mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
 
     FindFonts();
-
-    InitBadUnderlineList();
 }
 
 struct FullFontNameSearch {
