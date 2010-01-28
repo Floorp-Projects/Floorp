@@ -205,6 +205,7 @@ namespace nanojit
         X64_imul    = 0xC0AF0F4000000004LL, // 32bit signed mul r *= b
         X64_imuli   = 0xC069400000000003LL, // 32bit signed mul r = b * imm32
         X64_imul8   = 0x00C06B4000000004LL, // 32bit signed mul r = b * imm8
+        X64_jmpi    = 0x0000000025FF0006LL, // jump *0(rip)  
         X64_jmp     = 0x00000000E9000005LL, // jump near rel32
         X64_jmp8    = 0x00EB000000000002LL, // jump near rel8
         X64_jo      = 0x00000000800F0006LL, // jump near if overflow
@@ -367,6 +368,7 @@ namespace nanojit
         void emit8(uint64_t op, int64_t val);\
         void emit_target8(size_t underrun, uint64_t op, NIns* target);\
         void emit_target32(size_t underrun, uint64_t op, NIns* target);\
+        void emit_target64(size_t underrun, uint64_t op, NIns* target); \
         void emitrr(uint64_t op, Register r, Register b);\
         void emitrxb(uint64_t op, Register r, Register x, Register b);\
         void emitxb(uint64_t op, Register x, Register b) { emitrxb(op, (Register)0, x, b); }\
@@ -528,6 +530,7 @@ namespace nanojit
         void MOVSSRM(Register r, int d, Register b);\
         void JMP8(size_t n, NIns* t);\
         void JMP32(size_t n, NIns* t);\
+        void JMP64(size_t n, NIns* t);\
         void JMPX(Register indexreg, NIns** table);\
         void JMPXB(Register indexreg, Register tablereg);\
         void JO(size_t n, NIns* t);\

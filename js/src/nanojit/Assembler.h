@@ -193,6 +193,7 @@ namespace nanojit
          None = 0
         ,StackFull
         ,UnknownBranch
+        ,ConditionalBranchTooFar
     };
 
     typedef SeqBuilder<NIns*> NInsList;
