@@ -68,7 +68,7 @@ public:
     WALLCLOCK,
     INDEFINITE
   } mType;
- 
+
   // A clock value that is added to:
   // - type OFFSET: the document begin
   // - type SYNCBASE: the timebase's begin or end time
