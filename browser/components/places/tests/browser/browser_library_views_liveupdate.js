@@ -46,6 +46,10 @@ var gLibrary = null;
 
 function test() {
   waitForExplicitFinish();
+  // This test takes quite some time, and timeouts frequently, so we require
+  // more time to run.
+  // See Bug 525610.
+  requestLongerTimeout(2);
 
   // Sanity checks.
   ok(PlacesUtils, "PlacesUtils in context");
