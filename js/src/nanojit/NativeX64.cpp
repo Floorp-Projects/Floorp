@@ -223,6 +223,16 @@ namespace nanojit
         emit(op | uint64_t(uint32_t(offset))<<32);
     }
 
+    void Assembler::emit_target64(size_t underrun, uint64_t op, NIns* target) {
+        NanoAssert(underrun >= 16);
+        underrunProtect(underrun); // must do this before calculating offset
+        // Nb: at this point in time, _nIns points to the most recently
+        // written instruction, ie. the jump's successor.
+        ((uint64_t*)_nIns)[-1] = (uint64_t) target;
+        _nIns -= 8;
+        emit(op);
+    }
+
     // 3-register modrm32+sib form
     void Assembler::emitrxb(uint64_t op, Register r, Register x, Register b) {
         emit(rexrxb(mod_rxb(op, r, x, b), r, x, b));
@@ -514,6 +524,7 @@ namespace nanojit
     void Assembler::JMP8( S n, NIns* t)    { emit_target8(n, X64_jmp8,t); asm_output("jmp %p", t); }
 
     void Assembler::JMP32(S n, NIns* t)    { emit_target32(n,X64_jmp, t); asm_output("jmp %p", t); }
+    void Assembler::JMP64(S n, NIns* t)    { emit_target64(n,X64_jmpi, t); asm_output("jmp %p", t); }
 
     void Assembler::JMPX(R indexreg, NIns** table)  { emitrxb_imm(X64_jmpx, (R)0, indexreg, (Register)5, (int32_t)(uintptr_t)table); asm_output("jmpq [%s*8 + %p]", RQ(indexreg), (void*)table); }
 
@@ -605,7 +616,7 @@ namespace nanojit
                 JMP32(8, target);
             }
         } else {
-            TODO(jmp64);
+            JMP64(16, target);
         }
     }
 
@@ -1077,6 +1088,10 @@ namespace nanojit
     }
 
     NIns* Assembler::asm_branch(bool onFalse, LIns *cond, NIns *target) {
+        if (target && !isTargetWithinS32(target)) {
+            setError(ConditionalBranchTooFar);
+            NanoAssert(0);
+        }
         NanoAssert(cond->isCond());
         LOpcode condop = cond->opcode();
         if (condop >= LIR_feq && condop <= LIR_fge)
@@ -1714,6 +1729,11 @@ namespace nanojit
         } else if (patch[0] == 0x0F && (patch[1] & 0xF0) == 0x80) {
             // jcc disp32
             next = patch+6;
+        } else if ((patch[0] == 0xFF) && (patch[1] == 0x25)) {
+            // jmp 64bit target
+            next = patch+6;
+            ((int64_t*)next)[0] = int64_t(target);
+            return;
         } else {
             next = 0;
             TODO(unknown_patch);
