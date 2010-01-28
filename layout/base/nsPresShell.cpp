@@ -6280,7 +6280,8 @@ PresShell::HandleEvent(nsIView         *aView,
       mCurrentEventFrame = nsnull;
 
         
-      if (!mCurrentEventContent || InZombieDocument(mCurrentEventContent)) {
+      if (!mCurrentEventContent || !GetCurrentEventFrame() ||
+          InZombieDocument(mCurrentEventContent)) {
         rv = RetargetEventToParent(aEvent, aEventStatus);
         PopCurrentEventInfo();
         return rv;
