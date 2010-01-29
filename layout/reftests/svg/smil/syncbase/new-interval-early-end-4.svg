@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, true)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Test an early end where two times could be chosen for the following
+    interval.
+    (As before but with a negative offset and with the second animation getting
+    overlapping intervals from a's begin times, with one such interval being
+    rejected since it overlaps an already-completed interval when it's
+    created.)
+
+    Details: At time t=1.75, we generate an interval starting at 1.35 for the
+    second animation.  However, this overlaps that animation's already-complete
+    previous interval from 0.4s to 1.4s (which is "already complete" because
+    we're at t=1.75, past its end at 1.4s). So, the new interval is rejected.
+    -->
+  <rect width="100" height="100" fill="green">
+    <animate attributeName="y" attributeType="XML" from="0" to="0" id="a"
+      begin="0s; 1.75s" dur="4s"/>
+    <animate attributeName="fill" attributeType="CSS"
+      values="red"
+      begin="a.begin-0.4s; a.begin+0.4s" dur="1s"/>
+  </rect>
+</svg>

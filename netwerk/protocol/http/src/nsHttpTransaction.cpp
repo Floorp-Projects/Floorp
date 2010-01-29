@@ -180,26 +180,32 @@ nsHttpTransaction::Init(PRUint8 caps,
     NS_ASSERTION(requestHead, "ouch");
     NS_ASSERTION(target, "ouch");
 
-    // create transport event sink proxy that coalesces all events
-    rv = net_NewTransportEventSinkProxy(getter_AddRefs(mTransportSink),
-                                        eventsink, target, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-
     mActivityDistributor = do_GetService(NS_HTTPACTIVITYDISTRIBUTOR_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    PRBool active;
-    rv = mActivityDistributor->GetIsActive(&active);
-    if (NS_SUCCEEDED(rv) && active) {
+    PRBool activityDistributorActive;
+    rv = mActivityDistributor->GetIsActive(&activityDistributorActive);
+    if (NS_SUCCEEDED(rv) && activityDistributorActive) {
         // there are some observers registered at activity distributor, gather
         // nsISupports for the channel that called Init()
         mChannel = do_QueryInterface(eventsink);
         LOG(("nsHttpTransaction::Init() " \
              "mActivityDistributor is active " \
              "this=%x", this));
-    } else
+    } else {
         // there is no observer, so don't use it
+        activityDistributorActive = PR_FALSE;
         mActivityDistributor = nsnull;
+    }
+
+    // create transport event sink proxy. it coalesces all events if and only 
+    // if the activity observer is not active. when the observer is active
+    // we need not to coalesce any events to get all expected notifications
+    // of the transaction state, necessary for correct debugging and logging.
+    rv = net_NewTransportEventSinkProxy(getter_AddRefs(mTransportSink),
+                                        eventsink, target,
+                                        !activityDistributorActive);
+    if (NS_FAILED(rv)) return rv;
 
     NS_ADDREF(mConnInfo = cinfo);
     mCallbacks = callbacks;

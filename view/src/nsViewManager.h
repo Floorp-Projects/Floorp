@@ -45,7 +45,6 @@
 #include "prinrval.h"
 #include "nsVoidArray.h"
 #include "nsThreadUtils.h"
-#include "nsIScrollableView.h"
 #include "nsIRegion.h"
 #include "nsView.h"
 #include "nsIViewObserver.h"
@@ -109,9 +108,6 @@ public:
                                    const nsIView* aParent,
                                    nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
-  NS_IMETHOD_(nsIScrollableView*) CreateScrollableView(const nsRect& aBounds,
-                                                       const nsIView* aParent);
-
   NS_IMETHOD  GetRootView(nsIView *&aView);
   NS_IMETHOD  SetRootView(nsIView *aView);
 
@@ -159,9 +155,6 @@ public:
   virtual nsIViewManager* BeginUpdateViewBatch(void);
   NS_IMETHOD  EndUpdateViewBatch(PRUint32 aUpdateFlags);
 
-  NS_IMETHOD  SetRootScrollableView(nsIScrollableView *aScrollable);
-  NS_IMETHOD  GetRootScrollableView(nsIScrollableView **aScrollable);
-
   NS_IMETHOD GetRootWidget(nsIWidget **aWidget);
   NS_IMETHOD ForceUpdate();
  
@@ -169,20 +162,6 @@ public:
   NS_IMETHOD GetLastUserEventTime(PRUint32& aTime);
   void ProcessInvalidateEvent();
   static PRUint32 gLastUserEventTime;
-
-  /**
-   * Determine if a rectangle specified in the view's coordinate system 
-   * is completely, or partially visible.
-   * @param aView view that aRect coordinates are specified relative to
-   * @param aRect rectangle in twips to test for visibility 
-   * @param aMinTwips is the min. pixel rows or cols at edge of screen 
-   *                  needed for object to be counted visible
-   * @param aRectVisibility returns eVisible if the rect is visible, 
-   *                        otherwise it returns an enum indicating why not
-   */
-  NS_IMETHOD GetRectVisibility(nsIView *aView, const nsRect &aRect, 
-                               nscoord aMinTwips,
-                               nsRectVisibility *aRectVisibility);
 
   NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll);
   void ProcessSynthMouseMoveEvent(PRBool aFromScroll);
@@ -235,26 +214,6 @@ private:
    * of aView.
    */
   nsIntRect ViewToWidget(nsView *aView, nsView* aWidgetView, const nsRect &aRect) const;
-
-  /**
-   * Transforms a rectangle from specified view's coordinate system to
-   * an absolute coordinate rectangle which can be compared against the
-   * rectangle returned by GetVisibleRect to determine visibility.
-   * @param aView view that aRect coordinates are specified relative to
-   * @param aRect rectangle in twips to convert to absolute coordinates
-   * @param aAbsRect rectangle in absolute coorindates.
-   * @returns NS_OK if successful otherwise, NS_ERROR_FAILURE 
-   */
-
-  nsresult GetAbsoluteRect(nsView *aView, const nsRect &aRect, 
-                           nsRect& aAbsRect);
-  /**
-   * Determine the visible rect 
-   * @param aVisibleRect visible rectangle in twips
-   * @returns NS_OK if successful, otherwise NS_ERROR_FAILURE.
-   */
-
-  nsresult GetVisibleRect(nsRect& aVisibleRect);
 
   void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
   {
@@ -310,52 +269,10 @@ public: // NOT in nsIViewManager, so private to the view module
 
   nsEventStatus HandleEvent(nsView* aView, nsPoint aPoint, nsGUIEvent* aEvent);
 
-  /**
-   * Called to inform the view manager that a view is about to bit-blit.
-   * @param aView the view that will bit-blit
-   * @param aScrollAmount how much aView will scroll by
-   * @return always returns NS_OK
-   * @note
-   * This method used to return void, but MSVC 6.0 SP5 (without the
-   * Processor Pack) and SP6, and the MS eMbedded Visual C++ 4.0 SP4
-   * (for WINCE) hit an internal compiler error when compiling this
-   * method:
-   *
-   * @par
-@verbatim
-       fatal error C1001: INTERNAL COMPILER ERROR
-                   (compiler file 'E:\8966\vc98\p2\src\P2\main.c', line 494)
-@endverbatim
-   *
-   * @par
-   * Making the method return nsresult worked around the internal
-   * compiler error.  See Bugzilla bug 281158.  (The WINCE internal
-   * compiler error was addressed by the patch in bug 291229 comment
-   * 14 although the bug report did not mention the problem.)
-   */
-  nsresult WillBitBlit(nsView* aView, nsPoint aScrollAmount);
-  
-  /**
-   * Called to inform the view manager that a view has scrolled via a
-   * bitblit.
-   * The view manager will invalidate any widgets which may need
-   * to be rerendered.
-   * @param aView view to paint. should be the nsScrollPortView that
-   * got scrolled.
-   * @param aBlitRegion the region that was blitted; this is just so
-   * we can notify our view observer
-   * @param aUpdateRegion ensure that this part of the view is repainted
-   */
-  void UpdateViewAfterScroll(nsView *aView, const nsRegion& aBlitRegion,
-                             const nsRegion& aUpdateRegion);
-
-  /**
-   * Given that the view aView has being moved by scrolling by aDelta
-   * (so we want to blit pixels by -aDelta), compute the regions that
-   * must be blitted and repainted to correctly update the screen.
-   */
-  void GetRegionsForBlit(nsView* aView, nsPoint aDelta,
-                         nsRegion* aBlitRegion, nsRegion* aRepaintRegion);
+  virtual nsresult WillBitBlit(nsIView* aView, const nsRect& aRect,
+                               nsPoint aScrollAmount);
+  virtual void UpdateViewAfterScroll(nsIView *aView,
+                                     const nsRegion& aUpdateRegion);
 
   nsresult CreateRegion(nsIRegion* *result);
 
@@ -369,7 +286,6 @@ public: // NOT in nsIViewManager, so private to the view module
 private:
   nsCOMPtr<nsIDeviceContext> mContext;
   nsIViewObserver   *mObserver;
-  nsIScrollableView *mRootScrollable;
   nsIntPoint        mMouseLocation; // device units, relative to mRootView
 
   // The size for a resize that we delayed until the root view becomes

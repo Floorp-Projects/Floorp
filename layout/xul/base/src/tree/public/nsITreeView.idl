@@ -239,7 +239,7 @@ interface nsITreeView : nsISupports
  * Native treeviews implement it, and we use this to check whether a treeview
  * is native (and therefore suitable for use by untrusted content).
  */
-[uuid(38e0b44d-fa08-458c-83fb-3e10b12aeb45)]
+[uuid(46c90265-6553-41ae-8d39-7022e7d09145)]
 interface nsINativeTreeView : nsITreeView
 {
   [noscript] void ensureNative();

@@ -39,6 +39,7 @@
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/plugins/BrowserStreamParent.h"
 
+#include "nsCRT.h"
 #include "nsNPAPIPlugin.h"
 
 using mozilla::PluginLibrary;
@@ -53,7 +54,7 @@ PR_STATIC_ASSERT(sizeof(NPIdentifier) == sizeof(void*));
 PluginLibrary*
 PluginModuleParent::LoadModule(const char* aFilePath)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_FUNCTION;
 
     // Block on the child process being launched and initialized.
     PluginModuleParent* parent = new PluginModuleParent(aFilePath);
@@ -70,6 +71,7 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
     , mShutdown(false)
     , mNPNIface(NULL)
     , mPlugin(NULL)
+    , mProcessStartTime(time(NULL))
 {
     NS_ASSERTION(mSubprocess, "Out of memory!");
 
@@ -94,10 +96,75 @@ PluginModuleParent::~PluginModuleParent()
 }
 
 void
+PluginModuleParent::WriteExtraDataEntry(nsIFileOutputStream* stream,
+                                        const char* key,
+                                        const char* value)
+{
+    PRUint32 written;
+    stream->Write(key, strlen(key), &written);
+    stream->Write("=", 1, &written);
+    stream->Write(value, strlen(value), &written);
+    stream->Write("\n", 1, &written);
+}
+
+void
+PluginModuleParent::WriteExtraDataForMinidump(nsIFile* dumpFile)
+{
+    // get a reference to the extra file, and add some more entries
+    nsCOMPtr<nsIFile> extraFile;
+    nsresult rv = dumpFile->Clone(getter_AddRefs(extraFile));
+    if (NS_FAILED(rv))
+        return;
+
+    nsAutoString leafName;
+    rv = extraFile->GetLeafName(leafName);
+    if (NS_FAILED(rv))
+        return;
+
+    leafName.Replace(leafName.Length() - 3, 3,
+                     NS_LITERAL_STRING("extra"));
+    rv = extraFile->SetLeafName(leafName);
+    if (NS_FAILED(rv))
+        return;
+
+    nsCOMPtr<nsIFileOutputStream> stream =
+        do_CreateInstance("@mozilla.org/network/file-output-stream;1");
+    // PR_WRONLY | PR_APPEND
+    rv = stream->Init(extraFile, 0x12, 0600, 0);
+    if (NS_FAILED(rv))
+        return;
+    WriteExtraDataEntry(stream, "ProcessType", "plugin");
+    char startTime[32];
+    sprintf(startTime, "%lld", static_cast<PRInt64>(mProcessStartTime));
+    WriteExtraDataEntry(stream, "StartupTime", startTime);
+
+    // Get the plugin filename, try to get just the file leafname
+    const std::string& pluginFile = mSubprocess->GetPluginFilePath();
+    size_t filePos = pluginFile.rfind(FILE_PATH_SEPARATOR);
+    if (filePos == std::string::npos)
+        filePos = 0;
+    else
+        filePos++;
+    WriteExtraDataEntry(stream, "PluginFilename",
+                        pluginFile.substr(filePos).c_str());
+    //TODO: add plugin name and version: bug 539841
+    // (as PluginName, PluginVersion)
+    stream->Close();
+}
+
+void
 PluginModuleParent::ActorDestroy(ActorDestroyReason why)
 {
     switch (why) {
-    case AbnormalShutdown:
+    case AbnormalShutdown: {
+        nsCOMPtr<nsIFile> dump;
+        if (GetMinidump(getter_AddRefs(dump))) {
+            WriteExtraDataForMinidump(dump);
+        }
+        else {
+            NS_WARNING("[PluginModuleParent::ActorDestroy] abnormal shutdown without minidump!");
+        }
+
         mShutdown = true;
         // Defer the PluginCrashed method so that we don't re-enter
         // and potentially modify the actor child list while enumerating it.
@@ -108,7 +175,7 @@ PluginModuleParent::ActorDestroy(ActorDestroyReason why)
             NS_DispatchToMainThread(r);
         }
         break;
-
+    }
     case NormalShutdown:
         mShutdown = true;
         break;
@@ -132,7 +199,7 @@ PluginModuleParent::AllocPPluginInstance(const nsCString& aMimeType,
 bool
 PluginModuleParent::DeallocPPluginInstance(PPluginInstanceParent* aActor)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_METHOD;
     delete aActor;
     return true;
 }
@@ -160,14 +227,14 @@ PluginModuleParent::SetPluginFuncs(NPPluginFuncs* aFuncs)
 
 NPError
 PluginModuleParent::NPP_Destroy(NPP instance,
-                                NPSavedData** save)
+                                NPSavedData** /*saved*/)
 {
     // FIXME/cjones:
     //  (1) send a "destroy" message to the child
     //  (2) the child shuts down its instance
     //  (3) remove both parent and child IDs from map
     //  (4) free parent
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_FUNCTION;
 
     PluginInstanceParent* parentInstance =
         static_cast<PluginInstanceParent*>(instance->pdata);
@@ -175,15 +242,11 @@ PluginModuleParent::NPP_Destroy(NPP instance,
     if (!parentInstance)
         return NPERR_NO_ERROR;
 
-    parentInstance->Destroy();
-
-    NPError prv;
-    if (!PPluginInstanceParent::Call__delete__(parentInstance, &prv)) {
-        prv = NPERR_GENERIC_ERROR;
-    }
+    NPError retval = parentInstance->Destroy();
     instance->pdata = nsnull;
 
-    return prv;
+    (void) PluginInstanceParent::Call__delete__(parentInstance);
+    return retval;
 }
 
 bool
@@ -523,7 +586,7 @@ PluginModuleParent::HasRequiredFunctions()
 nsresult
 PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_METHOD;
 
     mNPNIface = bFuncs;
 
@@ -546,7 +609,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs
 nsresult
 PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_METHOD;
 
     mNPNIface = bFuncs;
 
@@ -565,7 +628,7 @@ PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
 nsresult
 PluginModuleParent::NP_Shutdown(NPError* error)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_METHOD;
 
     if (mShutdown) {
         *error = NPERR_GENERIC_ERROR;
@@ -586,7 +649,7 @@ PluginModuleParent::NP_Shutdown(NPError* error)
 nsresult
 PluginModuleParent::NP_GetMIMEDescription(char** mimeDesc)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_METHOD;
 
     *mimeDesc = (char*)"application/x-foobar";
     return NS_OK;
@@ -596,11 +659,10 @@ nsresult
 PluginModuleParent::NP_GetValue(void *future, NPPVariable aVariable,
                                    void *aValue, NPError* error)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PR_LOG(gPluginLog, PR_LOG_WARNING, ("%s Not implemented, requested variable %i", __FUNCTION__,
+                                        (int) aVariable));
 
     //TODO: implement this correctly
-    printf("[%s] Not yet implemented\n", __FUNCTION__);
-
     *error = NPERR_GENERIC_ERROR;
     return NS_OK;
 }
@@ -623,7 +685,7 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
                             char* argv[], NPSavedData* saved,
                             NPError* error)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_METHOD;
 
     if (mShutdown) {
         *error = NPERR_GENERIC_ERROR;
@@ -642,6 +704,11 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
     PluginInstanceParent* parentInstance =
         new PluginInstanceParent(this, instance, mNPNIface);
 
+    if (!parentInstance->Init()) {
+        delete parentInstance;
+        return NS_ERROR_FAILURE;
+    }
+
     instance->pdata = parentInstance;
 
     if (!CallPPluginInstanceConstructor(parentInstance,
@@ -657,13 +724,9 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
         return NS_ERROR_FAILURE;
     }
 
-    printf ("[PluginModuleParent] %s: got return value %hd\n", __FUNCTION__,
-            *error);
-
     if (*error != NPERR_NO_ERROR) {
-        PPluginInstanceParent::Call__delete__(parentInstance, error);
-        instance->pdata = nsnull;
-        return NS_ERROR_FAILURE;
+        NPP_Destroy(instance, 0);
+        return *error;
     }
 
     return NS_OK;

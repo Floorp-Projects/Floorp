@@ -275,7 +275,7 @@ class File(Node):
 
 class CppDirective(Node):
     '''represents |#[directive] [rest]|, where |rest| is any string'''
-    def __init__(self, directive, rest):
+    def __init__(self, directive, rest=''):
         Node.__init__(self)
         self.directive = directive
         self.rest = rest

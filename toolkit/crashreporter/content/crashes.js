@@ -144,17 +144,22 @@ function submitSuccess(ret, link, dump, extra) {
     // report an error? not much the user can do here.
   }
 
-  // reset the link to point at our new crash report. this way, if the
-  // user clicks "Back", the link will be correct.
-  let CrashID = ret.CrashID;
-  link.firstChild.textContent = CrashID;
-  link.setAttribute("id", CrashID);
-  link.removeEventListener("click", submitPendingReport, true);
+  if (link) {
+    // reset the link to point at our new crash report. this way, if the
+    // user clicks "Back", the link will be correct.
+    let CrashID = ret.CrashID;
+    link.firstChild.textContent = CrashID;
+    link.setAttribute("id", CrashID);
+    link.removeEventListener("click", submitPendingReport, true);
 
-  if (reportURL) {
-    link.setAttribute("href", reportURL + CrashID);
-    // redirect the user to their brand new crash report
-    window.location.href = reportURL + CrashID;
+    if (reportURL) {
+      link.setAttribute("href", reportURL + CrashID);
+      // redirect the user to their brand new crash report
+      window.location.href = reportURL + CrashID;
+    }
+  }
+  else {
+    window.close();
   }
 }
 
@@ -194,7 +199,8 @@ function submitForm(iframe, dump, extra, link)
       if(aFlag & STATE_STOP) {
         iframe.docShell.removeProgressListener(myListener);
         myListener = null;
-        link.className = "";
+	if (link)
+          link.className = "";
 
         //XXX: give some indication of failure?
         // check general request status first
@@ -233,12 +239,15 @@ function createAndSubmitForm(id, link) {
     return false;
   let iframe = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "iframe");
   iframe.setAttribute("type", "content");
-  iframe.onload = function() {
+
+  function loadHandler() {
     if (iframe.contentWindow.location == "about:blank")
       return;
-    iframe.onload = null;
+    iframe.removeEventListener("load", loadHandler, true);
     submitForm(iframe, dump, extra, link);
-  };
+  }      
+
+  iframe.addEventListener("load", loadHandler, true);
   document.body.appendChild(iframe);
   iframe.webNavigation.loadURI("chrome://global/content/crash-submit-form.xhtml", 0, null, null, null);
   return true;

@@ -373,6 +373,7 @@ nsHTMLTextAreaElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, AccessKey, accesskey)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, Cols, cols)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Disabled, disabled)
+NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, ReadOnly, readonly)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, Rows, rows)
@@ -523,6 +524,9 @@ nsHTMLTextAreaElement::ParseAttribute(PRInt32 aNamespaceID,
                                       nsAttrValue& aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::maxlength) {
+      return aResult.ParseIntWithBounds(aValue, 0);
+    }
     if (aAttribute == nsGkAtoms::cols) {
       return aResult.ParseIntWithBounds(aValue, 0);
     }

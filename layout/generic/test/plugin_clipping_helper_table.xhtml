@@ -2,8 +2,6 @@
 <?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
 <html xmlns="http://www.w3.org/1999/xhtml" title="Test Plugin Clipping: Plugins and Tables">
 <head>
-  <script type="application/javascript" src="/MochiKit/packed.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <style>
   embed { width:300px; height:200px; display:block; }
   </style>
@@ -34,6 +32,9 @@ function runTests() {
   checkClipRegion("p1", [[0, 0, 300, 100]]);
   // p2 is partially covered by a table with an opaque background
   checkClipRegion("p2", [[0, 0, 300, 100]]);
+
+  window.opener.SimpleTest.finish();
+  window.close();
 }
 
 ]]>

@@ -60,7 +60,7 @@ include $(topsrcdir)/build/automation-build.mk
 _SERV_FILES = 	\
 		runtests.py \
 		automation.py \
-		$(CURDIR)/automationutils.py \
+		$(topsrcdir)/build/automationutils.py \
 		gen_template.pl \
 		server.js \
 		harness-a11y.xul \

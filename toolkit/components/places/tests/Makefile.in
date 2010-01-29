@@ -48,6 +48,7 @@ MODULE		= test_places
 
 XPCSHELL_TESTS = \
 	autocomplete \
+	expiration \
 	sync \
 	bookmarks \
 	queries \

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Steffen Wilberg <steffen.wilberg@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,6 +64,12 @@ interface nsIAboutModule : nsISupports
      * given about: URI even if it's disabled in general.
      */
     const unsigned long ALLOW_SCRIPT = (1 << 1);
+
+    /**
+     * A flag that indicates whether this about: URI doesn't want to be listed
+     * in about:about, especially if it's not useful without a query string.
+     */
+    const unsigned long HIDE_FROM_ABOUTABOUT = (1 << 2);
 
     /**
      * A method to get the flags that apply to a given about: URI.  The URI

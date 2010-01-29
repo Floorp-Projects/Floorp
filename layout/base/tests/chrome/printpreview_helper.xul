@@ -181,8 +181,7 @@ function runTest3() {
     return;
   }
 
-  SimpleTest.finish();
-  window.close();
+  setTimeout(runTest4, 0)
 }
 
 function compareFormElementPrint(el1, el2, equals) {
@@ -202,6 +201,21 @@ function compareFormElementPrint(el1, el2, equals) {
      "Comparing print preview didn't succeed [" + el1 + " : " + el2 + "]");
   setTimeout(runTest3, 100);
 }
+
+// This is a crash test for bug 539060.
+function runTest4() {
+  window.frames[0].document.body.innerHTML =
+    "<iframe style='display: none;' src='data:text/html,<iframe>'></iframe>";
+  setTimeout(runTest4end, 500);
+}
+
+function runTest4end() {
+  printpreview();
+  exitprintpreview();
+  SimpleTest.finish();
+  window.close();
+}
+
 ]]></script>
 <table style="border: 1px solid black;" xmlns="http://www.w3.org/1999/xhtml">
 <tr><th>Print preview canvas 1</th><th>Print preview canvas 2</th></tr>

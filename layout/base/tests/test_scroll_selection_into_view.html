@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for scrolling selection into view</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<p id="display"></p>
+<div id="c1" style="overflow-y:scroll; width:200px; height:200px; position:absolute; top:200px; left:0;">
+  <div style="height:400px;"></div>
+  <div><span id="target1"
+        style="display:inline-block; vertical-align:top; height:20px;">target</span>
+  </div>
+  <div style="height:400px;"></div>
+</div>
+<div id="c2" style="overflow:hidden; width:200px; height:200px; position:absolute; top:200px; left:200px;">
+  <div style="height:400px;"></div>
+  <div><span id="target2"
+        style="display:inline-block; vertical-align:top; height:20px;">target2</span>
+  </div>
+  <div style="height:400px;"></div>
+</div>
+<div id="c3" style="overflow-y:scroll; width:200px; height:200px; position:absolute; top:200px; left:400px;">
+  <div style="height:400px;"></div>
+  <div><span id="target3"
+        style="display:inline-block; vertical-align:top; height:300px;">target3</span>
+  </div>
+  <div style="height:400px;"></div>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var ANCHOR = 0;
+var FOCUS = 1;
+
+function testCollapsed(id, vPercent, startAt, expected) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var selection = window.getSelection().QueryInterface(Components.interfaces.nsISelection2);
+
+  var c = document.getElementById("c" + id);
+  var target = document.getElementById("target" + id);
+  selection.collapse(target.parentNode, 0);
+  c.scrollTop = startAt;
+  selection.scrollIntoView(FOCUS, true, vPercent, 0);
+  is(c.scrollTop, expected, "Scrolling " + target.id +
+     " into view with vPercent " + vPercent + ", starting at " + startAt);
+}
+
+function doTest() {
+  // Test scrolling an element smaller than the scrollport
+  testCollapsed("1", 0, 0, 400);
+  testCollapsed("1", 100, 0, 220);
+  testCollapsed("1", -1, 0, 220);
+  testCollapsed("1", 0, 500, 400);
+  testCollapsed("1", 100, 500, 220);
+  testCollapsed("1", -1, 500, 400);
+
+  // overflow:hidden elements should not be scrolled by selection
+  // scrolling-into-view
+  testCollapsed("2", 0, 0, 0);
+  testCollapsed("2", 100, 0, 0);
+  testCollapsed("2", -1, 0, 0);
+  testCollapsed("2", 0, 500, 500);
+  testCollapsed("2", 100, 500, 500);
+  testCollapsed("2", -1, 500, 500);
+
+  // Test scrolling an element larger than the scrollport
+  testCollapsed("3", 0, 0, 400);
+  testCollapsed("3", 100, 0, 500);
+  testCollapsed("3", -1, 0, 400);
+  testCollapsed("3", 0, 1000, 400);
+  testCollapsed("3", 100, 1000, 500);
+  // If the element can't be completely visible, we make the top edge
+  // visible.
+  testCollapsed("3", -1, 1000, 400);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(doTest);
+</script>
+</pre>
+</body>
+
+</html>

@@ -130,8 +130,17 @@ AsyncChannel::Close()
     {
         MutexAutoLock lock(mMutex);
 
-        if (ChannelError == mChannelState)
+        if (ChannelError == mChannelState) {
+            // See bug 538586: if the listener gets deleted while the
+            // IO thread's NotifyChannelError event is still enqueued
+            // and subsequently deletes us, then the error event will
+            // also be deleted and the listener will never be notified
+            // of the channel error.
+            if (mListener) {
+                NotifyMaybeChannelError();
+            }
             return;
+        }
 
         if (ChannelConnected != mChannelState)
             // XXX be strict about this until there's a compelling reason

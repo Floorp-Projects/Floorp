@@ -144,30 +144,14 @@ class DeferredWindowPosMessage : public DeferredMessage
 {
 public:
   DeferredWindowPosMessage(HWND aHWnd,
-                           UINT aFlags)
-   : hWnd(aHWnd),
-     flags(aFlags)
-  { }
+                           LPARAM aLParam,
+                           bool aForCalcSize = false,
+                           WPARAM aWParam = 0);
 
   virtual void Run();
 
 private:
-  HWND hWnd;
-  UINT flags;
-};
-
-class DeferredNCActivateMessage : public DeferredSendMessage
-{
-public:
-  DeferredNCActivateMessage(HWND aHWnd,
-                            UINT aMessage,
-                            WPARAM aWParam,
-                            LPARAM aLParam);
-
-  ~DeferredNCActivateMessage();
-
-private:
-  HRGN region;
+  WINDOWPOS windowPos;
 };
 
 } /* namespace windows */

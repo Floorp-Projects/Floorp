@@ -51,7 +51,6 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsIContent;
-class nsIScrollableView;
  
 class nsDOMEvent : public nsIDOMEvent,
                    public nsIDOMNSEvent,
@@ -59,7 +58,7 @@ class nsDOMEvent : public nsIDOMEvent,
 {
 public:
 
-  // Note: this enum must be kept in sync with mEventNames in nsDOMEvent.cpp
+  // Note: this enum must be kept in sync with sEventNames in nsDOMEvent.cpp
   enum nsDOMEvents {
     eDOMEvents_mousedown=0,
     eDOMEvents_mouseup,
@@ -75,6 +74,7 @@ public:
     eDOMEvents_focus,
     eDOMEvents_blur,
     eDOMEvents_load,
+    eDOMEvents_popstate,
     eDOMEvents_beforeunload,
     eDOMEvents_unload,
     eDOMEvents_hashchange,

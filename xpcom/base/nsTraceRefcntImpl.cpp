@@ -620,6 +620,12 @@ static PRBool LogThisObj(PRInt32 aSerialNumber)
   return nsnull != PL_HashTableLookup(gObjectsToLog, (const void*)(aSerialNumber));
 }
 
+#ifdef XP_WIN
+#define FOPEN_NO_INHERIT "N"
+#else
+#define FOPEN_NO_INHERIT
+#endif
+
 static PRBool InitLog(const char* envVar, const char* msg, FILE* *result)
 {
   const char* value = getenv(envVar);
@@ -653,7 +659,7 @@ static PRBool InitLog(const char* envVar, const char* msg, FILE* *result)
           fname.AppendLiteral(".log");
       }
 #endif
-      stream = ::fopen(fname.get(), "w");
+      stream = ::fopen(fname.get(), "w" FOPEN_NO_INHERIT);
       if (stream != NULL) {
         *result = stream;
         fprintf(stdout, "### %s defined -- logging %s to %s\n",

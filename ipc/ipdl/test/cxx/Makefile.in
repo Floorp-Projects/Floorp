@@ -61,8 +61,11 @@ EXPORT_LIBRARY = 1
 IPDLTESTS = \
   TestSanity  \
   TestRPCErrorCleanup \
+  TestCrashCleanup \
+  TestSyncWakeup \
   TestLatency \
   TestRPCRaces \
+  TestRacyRPCReplies  \
   TestManyChildAllocs  \
   TestDesc \
   TestShmem \
@@ -103,6 +106,6 @@ check-valgrind::
 	@$(EXIT_ON_ERROR)  \
 	for test in $(IPDLTESTS); do  \
 		 $(RUN_TEST_PROGRAM) -g -d \
-                   valgrind -a '--leak-check=full --error-exitcode=1 --trace-children=yes -q' \
+                   valgrind -a '--leak-check=full --trace-children=yes -q' \
                    $(IPDLUNITTEST_BIN) $$test ;  \
 	done

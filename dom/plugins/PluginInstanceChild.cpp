@@ -63,27 +63,27 @@ using mozilla::gfx::SharedDIB;
 #endif
 
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface) :
-        mPluginIface(aPluginIface)
+    mPluginIface(aPluginIface)
 #if defined(OS_WIN)
-        , mPluginWindowHWND(0)
-        , mPluginWndProc(0)
-        , mPluginParentHWND(0)
-#endif
-    {
-        memset(&mWindow, 0, sizeof(mWindow));
-        mData.ndata = (void*) this;
+    , mPluginWindowHWND(0)
+    , mPluginWndProc(0)
+    , mPluginParentHWND(0)
+#endif // OS_WIN
+{
+    memset(&mWindow, 0, sizeof(mWindow));
+    mData.ndata = (void*) this;
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
-        mWindow.ws_info = &mWsInfo;
-        memset(&mWsInfo, 0, sizeof(mWsInfo));
-#  ifdef MOZ_WIDGET_GTK2
-        mWsInfo.display = GDK_DISPLAY();
-#  endif
-#endif
+    mWindow.ws_info = &mWsInfo;
+    memset(&mWsInfo, 0, sizeof(mWsInfo));
+#ifdef MOZ_WIDGET_GTK2
+    mWsInfo.display = GDK_DISPLAY();
+#endif // MOZ_WIDGET_GTK2
+#endif // MOZ_X11 && XP_UNIX && !XP_MACOSX
 #if defined(OS_WIN)
     memset(&mAlphaExtract, 0, sizeof(mAlphaExtract));
     mAlphaExtract.doublePassEvent = ::RegisterWindowMessage(NS_OOPP_DOUBLEPASS_MSGID);
-#endif
-    }
+#endif // OS_WIN
+}
 
 PluginInstanceChild::~PluginInstanceChild()
 {
@@ -92,20 +92,11 @@ PluginInstanceChild::~PluginInstanceChild()
 #endif
 }
 
-bool
-PluginInstanceChild::Answer__delete__(NPError* rv)
-{
-    return static_cast<PluginModuleChild*>(Manager())->
-        PluginInstanceDestroyed(this, rv);
-}
-
-
 NPError
 PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
                                   void* aValue)
 {
-    printf ("[PluginInstanceChild] NPN_GetValue(%s)\n",
-            NPNVariableToString(aVar));
+    PLUGIN_LOG_DEBUG(("%s (aVar=%i)", FULLFUNCTION, (int) aVar));
     AssertPluginThread();
 
     switch(aVar) {
@@ -176,7 +167,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         NS_ASSERTION(actor, "Null actor!");
 
         NPObject* object =
-            static_cast<PluginScriptableObjectChild*>(actor)->GetObject();
+            static_cast<PluginScriptableObjectChild*>(actor)->GetObject(true);
         NS_ASSERTION(object, "Null object?!");
 
         PluginModuleChild::sBrowserFuncs.retainobject(object);
@@ -199,7 +190,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         NS_ASSERTION(actor, "Null actor!");
 
         NPObject* object =
-            static_cast<PluginScriptableObjectChild*>(actor)->GetObject();
+            static_cast<PluginScriptableObjectChild*>(actor)->GetObject(true);
         NS_ASSERTION(object, "Null object?!");
 
         PluginModuleChild::sBrowserFuncs.retainobject(object);
@@ -207,8 +198,34 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
         return NPERR_NO_ERROR;
     }
 
+    case NPNVnetscapeWindow: {
+#ifdef XP_WIN
+        if (mWindow.type == NPWindowTypeDrawable) {
+            HWND hwnd = NULL;
+            NPError result;
+            if (!CallNPN_GetValue_NPNVnetscapeWindow(&hwnd, &result)) {
+                return NPERR_GENERIC_ERROR;
+            }
+            *static_cast<HWND*>(aValue) = hwnd;
+            return result;
+        }
+        else {
+            *static_cast<HWND*>(aValue) = mPluginWindowHWND;
+            return NPERR_NO_ERROR;
+        }
+#elif defined(MOZ_X11)
+        NPError result;
+        CallNPN_GetValue_NPNVnetscapeWindow(static_cast<XID*>(aValue), &result);
+        return result;
+#else
+        return NPERR_GENERIC_ERROR;
+#endif
+    }
+
     default:
-        printf("  unhandled var %s\n", NPNVariableToString(aVar));
+        PR_LOG(gPluginLog, PR_LOG_WARNING,
+               ("In PluginInstanceChild::NPN_GetValue: Unhandled NPNVariable %i (%s)",
+                (int) aVar, NPNVariableToString(aVar)));
         return NPERR_GENERIC_ERROR;
     }
 
@@ -218,8 +235,9 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
 NPError
 PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 {
-    printf ("[PluginInstanceChild] NPN_SetValue(%s, %ld)\n",
-            NPPVariableToString(aVar), reinterpret_cast<intptr_t>(aValue));
+    PR_LOG(gPluginLog, PR_LOG_DEBUG, ("%s (aVar=%i, aValue=%p)",
+                                      FULLFUNCTION, (int) aVar, aValue));
+
     AssertPluginThread();
 
     switch (aVar) {
@@ -244,7 +262,9 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
     }
 
     default:
-        printf("  unhandled var %s\n", NPPVariableToString(aVar));
+        PR_LOG(gPluginLog, PR_LOG_WARNING,
+               ("In PluginInstanceChild::NPN_SetValue: Unhandled NPPVariable %i (%s)",
+                (int) aVar, NPPVariableToString(aVar)));
         return NPERR_GENERIC_ERROR;
     }
 }
@@ -335,10 +355,21 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
 }
 
 bool
+PluginInstanceChild::AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value,
+                                                            NPError* result)
+{
+    // Use `long` instead of NPBool because Flash and other plugins read
+    // this as a word-size value instead of the 1-byte NPBool that it is.
+    long v = value;
+    *result = mPluginIface->setvalue(GetNPP(), NPNVprivateModeBool, &v);
+    return true;
+}
+
+bool
 PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
                                            int16_t* handled)
 {
-    _MOZ_LOG(__FUNCTION__);
+    PLUGIN_LOG_DEBUG_FUNCTION;
     AssertPluginThread();
 
 #if defined(OS_LINUX) && defined(DEBUG)
@@ -420,10 +451,11 @@ bool
 PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
                                          NPError* rv)
 {
-    printf("[PluginInstanceChild] NPP_SetWindow(0x%lx, %d, %d, %d x %d)\n",
-           aWindow.window,
-           aWindow.x, aWindow.y,
-           aWindow.width, aWindow.height);
+    PLUGIN_LOG_DEBUG(("%s (aWindow=<window: 0x%lx, x: %d, y: %d, width: %d, height: %d>)",
+                      FULLFUNCTION,
+                      aWindow.window,
+                      aWindow.x, aWindow.y,
+                      aWindow.width, aWindow.height));
     AssertPluginThread();
 
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
@@ -442,6 +474,19 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow,
     if (!XVisualIDToInfo(mWsInfo.display, aWindow.visualID,
                          &mWsInfo.visual, &mWsInfo.depth))
         return false;
+
+    if (aWindow.type == NPWindowTypeWindow) {
+#ifdef MOZ_WIDGET_GTK2
+        if (GdkWindow* socket_window = gdk_window_lookup(aWindow.window)) {
+            // A GdkWindow for the socket already exists.  Need to
+            // workaround https://bugzilla.gnome.org/show_bug.cgi?id=607061
+            // See wrap_gtk_plug_embedded in PluginModuleChild.cpp.
+            g_object_set_data(G_OBJECT(socket_window),
+                              "moz-existed-before-set-window",
+                              GUINT_TO_POINTER(1));
+        }
+#endif
+    }
 
     *rv = mPluginIface->setwindow(&mData, &mWindow);
 
@@ -499,30 +544,6 @@ bool
 PluginInstanceChild::Initialize()
 {
     return true;
-}
-
-void
-PluginInstanceChild::Destroy()
-{
-    // Copy the actors here so we don't enumerate a mutating array.
-    nsAutoTArray<PluginScriptableObjectChild*, 10> objects;
-    PRUint32 count = mScriptableObjects.Length();
-    for (PRUint32 index = 0; index < count; index++) {
-        objects.AppendElement(mScriptableObjects[index]);
-    }
-
-    count = objects.Length();
-    for (PRUint32 index = 0; index < count; index++) {
-        PluginScriptableObjectChild*& actor = objects[index];
-        NPObject* object = actor->GetObject();
-        if (object->_class == PluginScriptableObjectChild::GetClass()) {
-          PluginScriptableObjectChild::ScriptableInvalidate(object);
-        }
-    }
-
-#if defined(OS_WIN)
-    SharedSurfaceRelease();
-#endif
 }
 
 #if defined(OS_WIN)
@@ -664,6 +685,18 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
     }
 
     NS_ASSERTION(self->mPluginWindowHWND == hWnd, "Wrong window!");
+
+    // The plugin received keyboard focus, let the parent know so the dom is up to date.
+    if (message == WM_MOUSEACTIVATE)
+        self->CallPluginGotFocus();
+
+    // Prevent lockups due to plugins making rpc calls when the parent
+    // is making a synchronous SetFocus api call. (bug 541362) Add more
+    // windowing events as needed for other api.
+    if (message == WM_KILLFOCUS && 
+        ((InSendMessageEx(NULL) & (ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND)) {
+        ReplyMessage(0); // Unblock the caller
+    }
 
     LRESULT res = CallWindowProc(self->mPluginWndProc, hWnd, message, wParam,
                                  lParam);
@@ -853,19 +886,43 @@ PluginInstanceChild::SharedSurfacePaint(NPEvent& evcopy)
 
 #endif // OS_WIN
 
+bool
+PluginInstanceChild::AnswerSetPluginFocus()
+{
+    PR_LOG(gPluginLog, PR_LOG_DEBUG, ("%s", FULLFUNCTION));
+
+#if defined(OS_WIN)
+    // Parent is letting us know something set focus to the plugin.
+    if (::GetFocus() == mPluginWindowHWND)
+        return true;
+    ::SetFocus(mPluginWindowHWND);
+    return true;
+#else
+    NS_NOTREACHED("PluginInstanceChild::AnswerSetPluginFocus not implemented!");
+    return false;
+#endif
+}
+
+bool
+PluginInstanceChild::AnswerUpdateWindow()
+{
+    PR_LOG(gPluginLog, PR_LOG_DEBUG, ("%s", FULLFUNCTION));
+
+#if defined(OS_WIN)
+    if (mPluginWindowHWND)
+      UpdateWindow(mPluginWindowHWND);
+    return true;
+#else
+    NS_NOTREACHED("PluginInstanceChild::AnswerUpdateWindow not implemented!");
+    return false;
+#endif
+}
+
 PPluginScriptableObjectChild*
 PluginInstanceChild::AllocPPluginScriptableObject()
 {
     AssertPluginThread();
-
-    nsAutoPtr<PluginScriptableObjectChild>* object =
-        mScriptableObjects.AppendElement();
-    NS_ENSURE_TRUE(object, nsnull);
-
-    *object = new PluginScriptableObjectChild();
-    NS_ENSURE_TRUE(*object, nsnull);
-
-    return object->get();
+    return new PluginScriptableObjectChild(Proxy);
 }
 
 bool
@@ -873,25 +930,8 @@ PluginInstanceChild::DeallocPPluginScriptableObject(
     PPluginScriptableObjectChild* aObject)
 {
     AssertPluginThread();
-
-    PluginScriptableObjectChild* object =
-        reinterpret_cast<PluginScriptableObjectChild*>(aObject);
-
-    NPObject* npobject = object->GetObject();
-    if (npobject &&
-        npobject->_class != PluginScriptableObjectChild::GetClass()) {
-        PluginModuleChild::current()->UnregisterNPObject(npobject);
-    }
-
-    PRUint32 count = mScriptableObjects.Length();
-    for (PRUint32 index = 0; index < count; index++) {
-        if (mScriptableObjects[index] == object) {
-            mScriptableObjects.RemoveElementAt(index);
-            return true;
-        }
-    }
-    NS_NOTREACHED("An actor we don't know about?!");
-    return false;
+    delete aObject;
+    return true;
 }
 
 bool
@@ -903,20 +943,34 @@ PluginInstanceChild::AnswerPPluginScriptableObjectConstructor(
     // This is only called in response to the parent process requesting the
     // creation of an actor. This actor will represent an NPObject that is
     // created by the browser and returned to the plugin.
-    NPClass* npclass =
-        const_cast<NPClass*>(PluginScriptableObjectChild::GetClass());
-
-    ChildNPObject* object = reinterpret_cast<ChildNPObject*>(
-        PluginModuleChild::sBrowserFuncs.createobject(GetNPP(), npclass));
-    if (!object) {
-        NS_WARNING("Failed to create NPObject!");
-        return false;
-    }
-
     PluginScriptableObjectChild* actor =
         static_cast<PluginScriptableObjectChild*>(aActor);
-    actor->Initialize(const_cast<PluginInstanceChild*>(this), object);
+    NS_ASSERTION(!actor->GetObject(false), "Actor already has an object?!");
 
+    actor->InitializeProxy();
+    NS_ASSERTION(actor->GetObject(false), "Actor should have an object!");
+
+    return true;
+}
+
+bool
+PluginInstanceChild::AnswerPBrowserStreamConstructor(
+    PBrowserStreamChild* aActor,
+    const nsCString& url,
+    const uint32_t& length,
+    const uint32_t& lastmodified,
+    PStreamNotifyChild* notifyData,
+    const nsCString& headers,
+    const nsCString& mimeType,
+    const bool& seekable,
+    NPError* rv,
+    uint16_t* stype)
+{
+    AssertPluginThread();
+    *rv = static_cast<BrowserStreamChild*>(aActor)
+          ->StreamConstructed(url, length, lastmodified,
+                              notifyData, headers, mimeType, seekable,
+                              stype);
     return true;
 }
 
@@ -1004,35 +1058,30 @@ PluginScriptableObjectChild*
 PluginInstanceChild::GetActorForNPObject(NPObject* aObject)
 {
     AssertPluginThread();
-  NS_ASSERTION(aObject, "Null pointer!");
+    NS_ASSERTION(aObject, "Null pointer!");
 
-  if (aObject->_class == PluginScriptableObjectChild::GetClass()) {
-      // One of ours! It's a browser-provided object.
-      ChildNPObject* object = static_cast<ChildNPObject*>(aObject);
-      NS_ASSERTION(object->parent, "Null actor!");
-      return object->parent;
-  }
+    if (aObject->_class == PluginScriptableObjectChild::GetClass()) {
+        // One of ours! It's a browser-provided object.
+        ChildNPObject* object = static_cast<ChildNPObject*>(aObject);
+        NS_ASSERTION(object->parent, "Null actor!");
+        return object->parent;
+    }
 
-  PluginScriptableObjectChild* actor =
-      PluginModuleChild::current()->GetActorForNPObject(aObject);
-  if (actor) {
-      // Plugin-provided object that we've previously wrapped.
-      return actor;
-  }
+    PluginScriptableObjectChild* actor =
+        PluginModuleChild::current()->GetActorForNPObject(aObject);
+    if (actor) {
+        // Plugin-provided object that we've previously wrapped.
+        return actor;
+    }
 
-  actor = reinterpret_cast<PluginScriptableObjectChild*>(
-      CallPPluginScriptableObjectConstructor());
-  NS_ENSURE_TRUE(actor, nsnull);
+    actor = new PluginScriptableObjectChild(LocalObject);
+    if (!CallPPluginScriptableObjectConstructor(actor)) {
+        NS_ERROR("Failed to send constructor message!");
+        return nsnull;
+    }
 
-  actor->Initialize(this, aObject);
-
-#ifdef DEBUG
-  bool ok =
-#endif
-  PluginModuleChild::current()->RegisterNPObject(aObject, actor);
-  NS_ASSERTION(ok, "Out of memory?");
-
-  return actor;
+    actor->InitializeLocal(aObject);
+    return actor;
 }
 
 NPError
@@ -1073,4 +1122,53 @@ PluginInstanceChild::InvalidateRect(NPRect* aInvalidRect)
 #endif
 
     SendNPN_InvalidateRect(*aInvalidRect);
+}
+
+uint32_t
+PluginInstanceChild::ScheduleTimer(uint32_t interval, bool repeat,
+                                   TimerFunc func)
+{
+    ChildTimer* t = new ChildTimer(this, interval, repeat, func);
+    if (0 == t->ID()) {
+        delete t;
+        return 0;
+    }
+
+    mTimers.AppendElement(t);
+    return t->ID();
+}
+
+void
+PluginInstanceChild::UnscheduleTimer(uint32_t id)
+{
+    if (0 == id)
+        return;
+
+    PRUint32 i = mTimers.IndexOf(id, 0, ChildTimer::IDComparator());
+    if (nsTArray<ChildTimer*>::NoIndex == i)
+        return;
+
+    mTimers.ElementAt(i)->Destroy();
+    mTimers.RemoveElementAt(i);
+}
+
+bool
+PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
+{
+    for (PRUint32 i = 0; i < mPendingAsyncCalls.Length(); ++i)
+        mPendingAsyncCalls[i]->Cancel();
+    mPendingAsyncCalls.TruncateLength(0);
+
+    for (PRUint32 i = 0; i < mTimers.Length(); ++i)
+        mTimers[i]->Destroy();
+    mTimers.TruncateLength(0);
+
+    PluginModuleChild* module = PluginModuleChild::current();
+    bool retval = module->PluginInstanceDestroyed(this, aResult);
+
+#if defined(OS_WIN)
+    SharedSurfaceRelease();
+#endif
+
+    return retval;
 }

@@ -103,21 +103,25 @@ endif
 CSRCS	= \
 	pixman-access.c \
 	pixman-access-accessors.c \
+	pixman-bits-image.c \
+	pixman.c \
 	pixman-combine32.c \
 	pixman-combine64.c \
-	pixman-compose.c \
-	pixman-compose-accessors.c \
-	pixman-compute-region.c \
+	pixman-conical-gradient.c \
+	pixman-cpu.c \
 	pixman-edge.c \
 	pixman-edge-accessors.c \
+	pixman-fast-path.c \
+	pixman-general.c \
+	pixman-gradient-walker.c \
 	pixman-image.c \
+	pixman-implementation.c \
+	pixman-linear-gradient.c \
 	pixman-matrix.c \
-	pixman-pict.c \
+	pixman-radial-gradient.c \
 	pixman-region16.c \
 	pixman-region32.c \
-	pixman-source.c \
-	pixman-transformed.c \
-	pixman-transformed-accessors.c \
+	pixman-solid-fill.c \
 	pixman-trap.c \
 	pixman-utils.c \
 	$(NULL)
@@ -138,7 +142,7 @@ DEFINES += -DUSE_VMX
 endif
 
 ifdef USE_ARM_SIMD_GCC
-CSRCS += pixman-arm-simd.c
+CSRCS += pixman-arm-simd.c pixman-arm-simd-asm.c
 DEFINES += -DUSE_ARM_SIMD
 endif
 
@@ -150,6 +154,7 @@ endif
 
 ifdef USE_ARM_SIMD_MSVC
 ASFILES += pixman-arm-detect-win32.asm pixman-wce-arm-simd.asm
+CSRCS += pixman-arm-simd.c
 DEFINES += -DUSE_ARM_SIMD
 AS_DASH_C_FLAG = 
 endif
@@ -170,7 +175,7 @@ ifdef GNU_CC
 # files, so pixman.h needs to be included before
 # "#pragma GCC visibility -push(hidden)".
 ifdef WRAP_SYSTEM_INCLUDES
-MY_VISIBILITY_FLAGS := -include pixman.h $(VISIBILITY_FLAGS)
+MY_VISIBILITY_FLAGS := -DPIXMAN_USE_INTERNAL_API -include pixman.h $(VISIBILITY_FLAGS)
 COMPILE_CFLAGS += $(MY_VISIBILITY_FLAGS)
 endif # WRAP_SYSTEM_INCLUDES
 endif # GNU_CC

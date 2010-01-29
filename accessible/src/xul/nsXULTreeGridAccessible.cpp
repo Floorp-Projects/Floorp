@@ -604,7 +604,7 @@ nsXULTreeGridAccessible::CreateTreeItemAccessible(PRInt32 aRow,
 
 nsXULTreeGridRowAccessible::
   nsXULTreeGridRowAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
-                             nsIAccessible *aTreeAcc, nsITreeBoxObject* aTree,
+                             nsAccessible *aTreeAcc, nsITreeBoxObject* aTree,
                              nsITreeView *aTreeView, PRInt32 aRow) :
   nsXULTreeItemAccessibleBase(aDOMNode, aShell, aTreeAcc, aTree, aTreeView, aRow)
 {
@@ -689,7 +689,7 @@ nsXULTreeGridRowAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   return NS_OK;
 }
 
-nsIAccessible*
+nsAccessible*
 nsXULTreeGridRowAccessible::GetChildAt(PRUint32 aIndex)
 {
   if (IsDefunct())
@@ -702,7 +702,9 @@ nsXULTreeGridRowAccessible::GetChildAt(PRUint32 aIndex)
 
   nsCOMPtr<nsIAccessible> cell;
   GetCellAccessible(column, getter_AddRefs(cell));
-  return cell;
+
+  nsRefPtr<nsAccessible> cellAcc = nsAccUtils::QueryObject<nsAccessible>(cell);
+  return cellAcc;
 }
 
 PRInt32
@@ -971,13 +973,17 @@ nsXULTreeGridCellAccessible::DoAction(PRUint8 aIndex)
 
   PRBool isCycler = PR_FALSE;
   mColumn->GetCycler(&isCycler);
-  if (isCycler)
-    return DoCommand();
+  if (isCycler) {
+    DoCommand();
+    return NS_OK;
+  }
 
   PRInt16 type;
   mColumn->GetType(&type);
-  if (type == nsITreeColumn::TYPE_CHECKBOX && IsEditable())
-    return DoCommand();
+  if (type == nsITreeColumn::TYPE_CHECKBOX && IsEditable()) {
+    DoCommand();
+    return NS_OK;
+  }
 
   return NS_ERROR_INVALID_ARG;
 }
@@ -994,10 +1000,7 @@ nsXULTreeGridCellAccessible::GetTable(nsIAccessibleTable **aTable)
   if (IsDefunct())
     return NS_OK;
 
-  nsCOMPtr<nsIAccessible> accessible;
-  mParent->GetParent(getter_AddRefs(accessible));
-  CallQueryInterface(accessible, aTable);
-
+  CallQueryInterface(mParent->GetParent(), aTable);
   return NS_OK;
 }
 
@@ -1222,7 +1225,7 @@ nsXULTreeGridCellAccessible::GetStateInternal(PRUint32 *aStates,
   return NS_OK;
 }
 
-nsIAccessible*
+nsAccessible*
 nsXULTreeGridCellAccessible::GetParent()
 {
   return IsDefunct() ? nsnull : mParent.get();
@@ -1253,11 +1256,10 @@ nsXULTreeGridCellAccessible::CellInvalidated()
     mTreeView->GetCellValue(mRow, mColumn, textEquiv);
     if (mCachedTextEquiv != textEquiv) {
       PRBool isEnabled = textEquiv.EqualsLiteral("true");
-      nsCOMPtr<nsIAccessibleEvent> accEvent =
+      nsRefPtr<nsAccEvent> accEvent =
         new nsAccStateChangeEvent(this, nsIAccessibleStates::STATE_CHECKED,
                                   PR_FALSE, isEnabled);
-      if (accEvent)
-        FireAccessibleEvent(accEvent);
+      nsEventShell::FireEvent(accEvent);
 
       mCachedTextEquiv = textEquiv;
     }
@@ -1267,7 +1269,7 @@ nsXULTreeGridCellAccessible::CellInvalidated()
 
   mTreeView->GetCellText(mRow, mColumn, textEquiv);
   if (mCachedTextEquiv != textEquiv) {
-    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
+    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
     mCachedTextEquiv = textEquiv;
   }
 }

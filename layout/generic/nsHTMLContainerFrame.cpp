@@ -58,7 +58,6 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIDOMEvent.h"
-#include "nsIScrollableView.h"
 #include "nsWidgetsCID.h"
 #include "nsCOMPtr.h"
 #include "nsIDeviceContext.h"
@@ -756,12 +755,12 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
   }
 
   // If we don't yet have a view, see if we need a view
-  if (!(aForce || FrameNeedsView(aFrame))) {
+  if (!aForce && !aFrame->NeedsView()) {
     // don't need a view
     return NS_OK;
   }
 
-  nsIView* parentView = aFrame->GetParent()->GetParentViewForChildFrame(aFrame);
+  nsIView* parentView = aFrame->GetParent()->GetClosestView();
   NS_ASSERTION(parentView, "no parent with view");
 
   nsIViewManager* viewManager = parentView->GetViewManager();
@@ -774,18 +773,11 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
 
   SyncFrameViewProperties(aFrame->PresContext(), aFrame, nsnull, view);
 
-  // Insert the view into the view hierarchy. If the parent view is a
-  // scrolling view we need to do this differently
-  nsIScrollableView*  scrollingView = parentView->ToScrollableView();
-  if (scrollingView) {
-    scrollingView->SetScrolledView(view);
-  } else {
-    nsIView* insertBefore = nsLayoutUtils::FindSiblingViewFor(parentView, aFrame);
-    // we insert this view 'above' the insertBefore view, unless insertBefore is null,
-    // in which case we want to call with aAbove == PR_FALSE to insert at the beginning
-    // in document order
-    viewManager->InsertChild(parentView, view, insertBefore, insertBefore != nsnull);
-  }
+  nsIView* insertBefore = nsLayoutUtils::FindSiblingViewFor(parentView, aFrame);
+  // we insert this view 'above' the insertBefore view, unless insertBefore is null,
+  // in which case we want to call with aAbove == PR_FALSE to insert at the beginning
+  // in document order
+  viewManager->InsertChild(parentView, view, insertBefore, insertBefore != nsnull);
 
   // REVIEW: Don't create a widget for fixed-pos elements anymore.
   // ComputeRepaintRegionForCopy will calculate the right area to repaint

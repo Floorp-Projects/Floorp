@@ -91,10 +91,7 @@ function check_iframe(ifr) {
 
 SimpleTest.waitForExplicitFinish();
 window.onload = function() {
-    // The quirks-mode tests are inexplicably failing intermittently
-    // on Mac (bug 536603), so disable them for now.
-    if (navigator.platform.substring(0,3) != "Mac")
-        check_iframe(document.getElementById("quirks"));
+    check_iframe(document.getElementById("quirks"));
     check_iframe(document.getElementById("standards"));
     SimpleTest.finish();
 };

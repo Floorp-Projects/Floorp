@@ -56,6 +56,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsIStreamListener.h"
 #include "nsIObserver.h"
+#include "nsGkAtoms.h"
 #include "nsAutoPtr.h"
 #ifdef MOZ_SMIL
 class nsSMILAnimationController;
@@ -105,8 +106,8 @@ class nsIBoxObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x1539ada4, 0x753f, 0x48a9, \
-  { 0x83, 0x11, 0x71, 0xb9, 0xbd, 0xa6, 0x41, 0xc6 } }
+{ 0x6b2f1996, 0x95d4, 0x48db, \
+  {0xaf, 0xd1, 0xfd, 0xaa, 0x75, 0x4c, 0x79, 0x92 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -465,6 +466,23 @@ public:
   }
   virtual nsIContent *GetRootContentInternal() const = 0;
 
+  // Get the root <html> element, or return null if there isn't one (e.g.
+  // if the root isn't <html>)
+  nsIContent* GetHtmlContent();
+  // Returns the first child of GetHtmlContent which has the given tag,
+  // or nsnull if that doesn't exist.
+  nsIContent* GetHtmlChildContent(nsIAtom* aTag);
+  // Get the canonical <body> element, or return null if there isn't one (e.g.
+  // if the root isn't <html> or if the <body> isn't there)
+  nsIContent* GetBodyContent() {
+    return GetHtmlChildContent(nsGkAtoms::body);
+  }
+  // Get the canonical <head> element, or return null if there isn't one (e.g.
+  // if the root isn't <html> or if the <head> isn't there)
+  nsIContent* GetHeadContent() {
+    return GetHtmlChildContent(nsGkAtoms::head);
+  }
+  
   /**
    * Accessors to the collection of stylesheets owned by this document.
    * Style sheets are ordered, most significant last.
@@ -1208,6 +1226,28 @@ public:
   };
 
   /**
+   * Returns the document's pending state object (serialized to JSON), or the
+   * empty string if one doesn't exist.
+   *
+   * This field serves as a waiting place for the history entry's state object:
+   * We set the field's value to the history entry's state object early on in
+   * the load, then after we fire onload we deserialize the field's value and
+   * fire a popstate event containing the resulting object.
+   */
+  nsAString& GetPendingStateObject()
+  {
+    return mPendingStateObject;
+  }
+
+  /**
+   * Set the document's pending state object (as serialized to JSON).
+   */
+  void SetPendingStateObject(nsAString &obj)
+  {
+    mPendingStateObject.Assign(obj);
+  }
+
+  /**
    * Returns Doc_Theme_None if there is no lightweight theme specified,
    * Doc_Theme_Dark for a dark theme, Doc_Theme_Bright for a light theme, and
    * Doc_Theme_Neutral for any other theme. This is used to determine the state
@@ -1370,6 +1410,8 @@ protected:
   nsCOMPtr<nsIDocument> mDisplayDocument;
 
   PRUint32 mEventsSuppressed;
+
+  nsString mPendingStateObject;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

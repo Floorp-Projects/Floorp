@@ -754,7 +754,13 @@ NS_IMETHODIMP
 nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
                      nsIWebProgressListener* aWebProgressListener)
 {
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(mDocument);
+  // If we have a print preview document, use that instead of the original
+  // mDocument. That way animated images etc. get printed using the same state
+  // as in print preview.
+  nsCOMPtr<nsIDOMDocument> doc =
+    do_QueryInterface(mPrtPreview && mPrtPreview->mPrintObject ?
+                        mPrtPreview->mPrintObject->mDocument : mDocument);
+
   return CommonPrint(PR_FALSE, aPrintSettings, aWebProgressListener, doc);
 }
 
@@ -1887,7 +1893,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
     // Without a frame, this document can't be displayed; therefore, there is no
     // point to reflowing it
     if (!frame) {
-      aPO->mDontPrint = PR_TRUE;
+      SetPrintPO(aPO, PR_FALSE);
       return NS_OK;
     }
 

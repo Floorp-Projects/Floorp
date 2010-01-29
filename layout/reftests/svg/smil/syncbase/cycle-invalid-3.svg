@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, true)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    An invalid cycle that propagates backwards.
+    Example 4 from SMIL3 section 5.4.5.
+
+    Regarding cycle detection SMIL 3.0 says:
+
+    "When a cycle is detected, the change propagation is ignored. The element
+    that detected the second visit ignores the second change notice, and so
+    breaks the cycle."
+
+    So we are only concerned with cycles amongst CHANGE notices. We understand
+    this as follows:
+
+    a: 5s-7s
+    new -> b: 4s-6s
+    new -> a: 3s-5s
+    change -> b: 2s-4s
+    change -> a: 1s-3s
+    change -> b: second change notice, break cycle!
+
+    Thus giving us:
+    a: 1s-3s; 3s-5s; 5s-7s
+    b: 2s-4s; 4s-6s
+
+    Opera gives us:
+    a: -1s-1s; 1s-3s; 3s-5s; 5s-7s
+    b: 0s-2s; 2s-4s; 4s-6s
+
+    Safari gives us:
+    a: 3s-5s; 5s-7s
+    b: 2s-4s; 4s-6s
+
+    Batik 1.7 gives:
+    a: 5s-7s
+    b: 4s-6s
+
+    Currently we have the result described above, i.e.
+    a: 1s-3s; 3s-5s; 5s-7s
+    b: 2s-4s; 4s-6s
+
+   -->
+  <rect y="100" width="100" height="100" fill="red">
+    <animate attributeName="y" attributeType="XML" from="-50" to="50" id="a"
+      begin="5s; b.begin-1s" dur="2s"/>
+    <animate attributeName="fill" attributeType="CSS" id="b"
+      values="green; orange"
+      begin="a.begin-1s" dur="2s"/>
+  </rect>
+</svg>

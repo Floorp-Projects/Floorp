@@ -4,16 +4,25 @@ include protocol "PTestShutdownSubsub.ipdl";
 namespace mozilla {
 namespace _ipdltest {
 
-sync protocol PTestShutdownSub {
+rpc protocol PTestShutdownSub {
     manager PTestShutdown;
     manages PTestShutdownSubsub;
 
+both:
+    rpc StackFrame();
+
 parent:
     PTestShutdownSubsub(bool expectParentDeleted);
-    __delete__();
+    sync __delete__();
 
 state CREATING:
     recv PTestShutdownSubsub goto CREATING;
+    answer StackFrame goto DUMMYFRAME;
+
+state DUMMYFRAME:
+    call StackFrame goto DEAD;
+
+state DEAD:
     recv __delete__;
 };
 

@@ -43,25 +43,15 @@
 #include "nsEvent.h"
 #include "nsIRenderingContext.h"
 
-class nsIScrollableView;
 class nsIWidget;
 struct nsRect;
 class nsRegion;
 class nsIDeviceContext;
 class nsIViewObserver;
 
-enum nsRectVisibility { 
-  nsRectVisibility_kVisible, 
-  nsRectVisibility_kAboveViewport, 
-  nsRectVisibility_kBelowViewport, 
-  nsRectVisibility_kLeftOfViewport, 
-  nsRectVisibility_kRightOfViewport, 
-  nsRectVisibility_kZeroAreaRect
-}; 
-
 #define NS_IVIEWMANAGER_IID   \
-  { 0xe1f3095c, 0x65cd, 0x46e1, \
-    { 0x9d, 0x70, 0x88, 0xcf, 0x54, 0x19, 0x9d, 0x05 } }
+  { 0x6ca2fd1c, 0xa57e, 0x4802, \
+    { 0xad, 0x55, 0x85, 0xf6, 0x6f, 0x4a, 0x2c, 0x04 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -91,19 +81,6 @@ public:
   NS_IMETHOD_(nsIView*) CreateView(const nsRect& aBounds,
                                    const nsIView* aParent,
                                    nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow) = 0;
-
-  /**
-   * Create an scrollable view
-   * @param aBounds initial bounds for view
-   *        XXX We should eliminate this parameter; you can set the bounds after CreateScrollableView
-   * @param aParent intended parent for view. this is not actually set in the
-   *        nsIView through this method. it is only used by the initialization
-   *        code to walk up the view tree, if necessary, to find resources.
-   *        XXX We should eliminate this parameter!
-   * @result The new view
-   */
-  NS_IMETHOD_(nsIScrollableView*) CreateScrollableView(const nsRect& aBounds,
-                                                       const nsIView* aParent) = 0;
 
   /**
    * Get the root of the view tree.
@@ -389,23 +366,6 @@ private:
   NS_IMETHOD EndUpdateViewBatch(PRUint32 aUpdateFlags) = 0;
 
 public:
-
-  /**
-   * set the view that is is considered to be the root scrollable
-   * view for the document.
-   * @param aScrollable root scrollable view
-   * @return error status
-   */
-  NS_IMETHOD SetRootScrollableView(nsIScrollableView *aScrollable) = 0;
-
-  /**
-   * get the view that is is considered to be the root scrollable
-   * view for the document.
-   * @param aScrollable out parameter for root scrollable view
-   * @return error status
-   */
-  NS_IMETHOD GetRootScrollableView(nsIScrollableView **aScrollable) = 0;
-
   /**
    * Retrieve the widget at the root of the nearest enclosing
    * view manager whose root view has a widget.
@@ -440,26 +400,47 @@ public:
   NS_IMETHOD GetLastUserEventTime(PRUint32& aTime)=0;
 
   /**
-   * Determine if a rectangle specified in the view's coordinate system 
-   * is completely, or partially visible.
-   * @param aView view that aRect coordinates are specified relative to
-   * @param aRect rectangle in twips to test for visibility 
-   * @param aMinTwips is the min. pixel rows or cols at edge of screen 
-   *                  needed for object to be counted visible
-   * @param aRectVisibility returns eVisible if the rect is visible, 
-   *                        otherwise it returns an enum indicating why not
-   */
-  NS_IMETHOD GetRectVisibility(nsIView *aView, const nsRect &aRect, 
-                               nscoord aMinTwips,
-                               nsRectVisibility *aRectVisibility)=0;
-
-  /**
    * Dispatch a mouse move event based on the most recent mouse
    * position.  This is used when the contents of the page moved
    * (aFromScroll is false) or scrolled (aFromScroll is true).
    */
   NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll)=0;
 
+  /**
+   * Called to inform the view manager that a view is about to bit-blit.
+   * @param aView the view that will bit-blit
+   * @param aScrollAmount how much aView will scroll by
+   * @return always returns NS_OK
+   * @note
+   * This method used to return void, but MSVC 6.0 SP5 (without the
+   * Processor Pack) and SP6, and the MS eMbedded Visual C++ 4.0 SP4
+   * (for WINCE) hit an internal compiler error when compiling this
+   * method:
+   *
+   * @par
+@verbatim
+       fatal error C1001: INTERNAL COMPILER ERROR
+                   (compiler file 'E:\8966\vc98\p2\src\P2\main.c', line 494)
+@endverbatim
+   *
+   * @par
+   * Making the method return nsresult worked around the internal
+   * compiler error.  See Bugzilla bug 281158.  (The WINCE internal
+   * compiler error was addressed by the patch in bug 291229 comment
+   * 14 although the bug report did not mention the problem.)
+   */
+  virtual nsresult WillBitBlit(nsIView* aView, const nsRect& aRect,
+                               nsPoint aScrollAmount) = 0;
+  
+  /**
+   * Called to inform the view manager that a view has scrolled via a
+   * bitblit.
+   * The view manager will invalidate any widgets which may need
+   * to be rerendered.
+   * @param aView view to paint
+   * @param aUpdateRegion ensure that this part of the view is repainted
+   */
+  virtual void UpdateViewAfterScroll(nsIView *aView, const nsRegion& aUpdateRegion) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)

@@ -1164,22 +1164,6 @@ nsChromeRegistry::CheckForNewChrome()
   mStyleHash.Clear();
   mOverrideTable.Clear();
 
-  nsCOMPtr<nsIURI> manifestURI;
-  rv = NS_NewURI(getter_AddRefs(manifestURI),
-                 NS_LITERAL_CSTRING("resource:///chrome/app-chrome.manifest"));
-
-  nsCOMPtr<nsIFileURL> manifestFileURL (do_QueryInterface(manifestURI));
-  NS_ASSERTION(manifestFileURL, "Not a nsIFileURL!");
-  NS_ENSURE_TRUE(manifestFileURL, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIFile> manifest;
-  manifestFileURL->GetFile(getter_AddRefs(manifest));
-  NS_ENSURE_TRUE(manifest, NS_ERROR_FAILURE);
-
-  PRBool exists;
-  rv = manifest->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIProperties> dirSvc (do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
   NS_ENSURE_TRUE(dirSvc, NS_ERROR_FAILURE);
 
@@ -1199,6 +1183,7 @@ nsChromeRegistry::CheckForNewChrome()
       return rv;
   }
 
+  PRBool exists;
   nsCOMPtr<nsISupports> next;
   while (NS_SUCCEEDED(chromeML->HasMoreElements(&exists)) && exists) {
     chromeML->GetNext(getter_AddRefs(next));

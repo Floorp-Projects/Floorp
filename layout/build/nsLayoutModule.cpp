@@ -268,6 +268,7 @@ static void Shutdown();
 #endif
 
 #include "nsGeolocation.h"
+#include "nsCSPService.h"
 
 // Transformiix
 /* {0C351177-0159-4500-86B0-A219DFDE4258} */
@@ -847,6 +848,60 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGeolocation, Init)
   { 0x404d02a, 0x1CA, 0xAAAB, { 0x47, 0x62, 0x94, 0x4b, 0x1b, 0xf2, 0xf7, 0xb5 } }
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsGeolocationService, nsGeolocationService::GetGeolocationService)
+
+static NS_METHOD
+CSPServiceRegistration(nsIComponentManager *aCompMgr,
+                       nsIFile *aPath,
+                       const char *registryLocation,
+                       const char *componentType,
+                       const nsModuleComponentInfo *info)
+{
+  nsresult rv;
+  nsCOMPtr<nsIServiceManager> servman = do_QueryInterface((nsISupports*)aCompMgr, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsICategoryManager> catman;
+  rv = servman->GetServiceByContractID(NS_CATEGORYMANAGER_CONTRACTID,
+                                       NS_GET_IID(nsICategoryManager),
+                                       getter_AddRefs(catman));
+  if (NS_FAILED(rv))
+    return rv;
+  
+  nsXPIDLCString previous;
+  rv = catman->AddCategoryEntry("content-policy",
+                                "CSPService",
+                                CSPSERVICE_CONTRACTID,
+                                PR_TRUE,
+                                PR_TRUE,
+                                getter_Copies(previous));
+  return rv;
+}
+
+static NS_METHOD
+CSPServiceUnregistration(nsIComponentManager *aCompMgr,
+                         nsIFile *aPath,
+                         const char *registryLocation,
+                         const nsModuleComponentInfo *info){
+  nsresult rv;
+
+  nsCOMPtr<nsIServiceManager> servman = do_QueryInterface((nsISupports*)aCompMgr, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsICategoryManager> catman;
+  rv = servman->GetServiceByContractID(NS_CATEGORYMANAGER_CONTRACTID,
+                                       NS_GET_IID(nsICategoryManager),
+                                       getter_AddRefs(catman));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = catman->DeleteCategoryEntry("content-policy",
+                                   "CSPService",
+                                   PR_TRUE);
+
+  return rv;
+}
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(CSPService)
 
 // The list of components we register
 static const nsModuleComponentInfo gComponents[] = {
@@ -1453,6 +1508,12 @@ static const nsModuleComponentInfo gComponents[] = {
       "@mozilla.org/focus-manager;1",
       CreateFocusManager },
 
+    { "Content Security Policy Service",
+      CSPSERVICE_CID,
+      CSPSERVICE_CONTRACTID,
+      CSPServiceConstructor,
+      CSPServiceRegistration,
+      CSPServiceUnregistration },
 
     { "Event Listener Service",
       NS_EVENTLISTENERSERVICE_CID,

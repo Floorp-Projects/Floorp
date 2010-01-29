@@ -37,6 +37,7 @@
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsSVGFilterElement.h"
+#include "nsSVGEffects.h"
 
 nsSVGElement::LengthInfo nsSVGFilterElement::sLengthInfo[4] =
 {
@@ -235,4 +236,24 @@ nsSVGFilterElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               NS_ARRAY_LENGTH(sStringInfo));
+}
+
+void
+nsSVGFilterElement::DidAnimateLength(PRUint8 aAttrEnum)
+{
+  // nsSVGFilterFrame does not implement a useful AttributeChanged
+  nsIFrame* frame = GetPrimaryFrame();
+  if (frame) {
+    nsSVGEffects::InvalidateRenderingObservers(frame);
+  }
+}
+
+void
+nsSVGFilterElement::DidAnimateEnum(PRUint8 aAttrEnum)
+{
+  // nsSVGFilterFrame does not implement a useful AttributeChanged
+  nsIFrame* frame = GetPrimaryFrame();
+  if (frame) {
+    nsSVGEffects::InvalidateRenderingObservers(frame);
+  }
 }

@@ -3441,11 +3441,6 @@ public:
         return GetDataImpl(cx);
     }
 
-    static inline JSBool IsMainThreadContext(JSContext *cx)
-    {
-        return cx->thread == sMainJSThread;
-    }
-
     static void CleanupAllThreads();
 
     ~XPCPerThreadData();
@@ -4203,6 +4198,10 @@ public:
 
     static XPCVariant* newVariant(XPCCallContext& ccx, jsval aJSVal);
 
+    /**
+     * nsIVariant exposes a GetAsJSVal() method, which also returns mJSVal.
+     * But if you can, you should call this one, since it can be inlined.
+     */
     jsval GetJSVal() const {return mJSVal;}
 
     XPCVariant(XPCCallContext& ccx, jsval aJSVal);

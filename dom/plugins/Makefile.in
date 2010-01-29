@@ -58,6 +58,8 @@ EXPORTS_NAMESPACES = mozilla mozilla/plugins
 EXPORTS_mozilla/plugins = \
   BrowserStreamChild.h \
   BrowserStreamParent.h \
+  ChildAsyncCall.h \
+  ChildTimer.h \
   NPEventOSX.h \
   NPEventWindows.h \
   NPEventX11.h \
@@ -69,6 +71,8 @@ EXPORTS_mozilla/plugins = \
   PluginProcessParent.h \
   PluginScriptableObjectChild.h \
   PluginScriptableObjectParent.h \
+  PluginScriptableObjectUtils.h \
+  PluginScriptableObjectUtils-inl.h \
   PluginInstanceChild.h \
   PluginInstanceParent.h \
   AStream.h \
@@ -91,6 +95,8 @@ EXPORT_LIBRARY = 1
 ENABLE_CXX_EXCEPTIONS = 1
 
 CPPSRCS = \
+  ChildAsyncCall.cpp \
+  ChildTimer.cpp \
   PluginMessageUtils.cpp \
   PluginInstanceChild.cpp \
   PluginInstanceParent.cpp \
@@ -116,3 +122,7 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS += $(TK_CFLAGS)
+
+DEFINES += -DFORCE_PR_LOG

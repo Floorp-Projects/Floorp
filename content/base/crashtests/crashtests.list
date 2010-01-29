@@ -19,6 +19,7 @@ load 338391-1.xhtml
 load 340733-1.html
 load 343730-1.xhtml
 load 343850-1.xhtml
+load 343889-1.html
 load 344434-1.xhtml
 load 348049-1.xhtml
 load 344882-1.html
@@ -36,7 +37,7 @@ load 386794-1.html
 load 387460-1.html
 load 395469-1.xhtml
 load 395469-2.xhtml
-load 399712-1.html
+skip load 399712-1.html # sporadically times out (bug 473680)
 load 398088-1.xul
 load 400763-1.html
 load 401993-1.html
@@ -50,7 +51,7 @@ load 426987-1.html
 load 443538-1.svg
 load 450383-1.html
 load 450385-1.html
-skip load 458637-1.html # sporadically fails -- see bug 473680
+skip load 458637-1.html # sporadically times out (bug 473680)
 load 472593-1.html
 load 474041-1.svg
 load 483818-1.html
@@ -58,3 +59,4 @@ load 493281-1.html
 load 493281-2.html
 load 490760-1.xhtml
 load 494810-1.html
+load 529670.html

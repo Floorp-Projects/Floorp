@@ -58,6 +58,7 @@
 #include "nsIServiceManager.h"
 #include "nsTextFormatter.h"
 #include "nsIView.h"
+#include "nsIViewManager.h"
 #include "nsRoleMap.h"
 #include "nsEventMap.h"
 #include "nsArrayUtils.h"
@@ -237,12 +238,14 @@ __try {
     }
   }
 
-  nsCOMPtr<nsIAccessible> xpParentAccessible(GetParent());
-  NS_ASSERTION(xpParentAccessible, "No parent accessible where we're not direct child of window");
-  if (!xpParentAccessible) {
+  nsAccessible* xpParentAcc = GetParent();
+  NS_ASSERTION(xpParentAcc,
+               "No parent accessible where we're not direct child of window");
+
+  if (!xpParentAcc)
     return E_UNEXPECTED;
-  }
-  *ppdispParent = NativeAccessible(xpParentAccessible);
+
+  *ppdispParent = NativeAccessible(xpParentAcc);
 
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return S_OK;
@@ -278,11 +281,10 @@ __try {
     return S_OK;
   }
 
-  nsCOMPtr<nsIAccessible> childAccessible;
   if (!nsAccUtils::MustPrune(this)) {
-    GetChildAt(varChild.lVal - 1, getter_AddRefs(childAccessible));
-    if (childAccessible) {
-      *ppdispChild = NativeAccessible(childAccessible);
+    nsAccessible* child = GetChildAt(varChild.lVal - 1);
+    if (child) {
+      *ppdispChild = NativeAccessible(child);
     }
   }
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
@@ -430,20 +432,8 @@ __try {
                               groupLevel);
   }
 
-  if (!description.IsEmpty()) {
-    *pszDescription = ::SysAllocStringLen(description.get(),
-                                          description.Length());
-    return *pszDescription ? S_OK : E_OUTOFMEMORY;
-  }
-
-  xpAccessible->GetDescription(description);
-  if (!description.IsEmpty()) {
-    // Signal to screen readers that this description is speakable
-    // and is not a formatted positional information description
-    // Don't localize the "Description: " part of this string, it will be
-    // parsed out by assistive technologies.
-    description = NS_LITERAL_STRING("Description: ") + description;
-  }
+  if (description.IsEmpty())
+    xpAccessible->GetDescription(description);
 
   *pszDescription = ::SysAllocStringLen(description.get(),
                                         description.Length());
@@ -483,8 +473,7 @@ __try {
   // a ROLE_OUTLINEITEM for consistency and compatibility.
   // We need this because ARIA has a role of "row" for both grid and treegrid
   if (xpRole == nsIAccessibleRole::ROLE_ROW) {
-    nsCOMPtr<nsIAccessible> parent = GetParent();
-    if (nsAccUtils::Role(parent) == nsIAccessibleRole::ROLE_TREE_TABLE)
+    if (nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_TREE_TABLE)
       msaaRole = ROLE_SYSTEM_OUTLINEITEM;
   }
   
@@ -565,8 +554,13 @@ STDMETHODIMP nsAccessibleWrap::get_accHelp(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszHelp)
 {
+__try {
   *pszHelp = NULL;
   return S_FALSE;
+
+} __except(FilterA11yExceptions(::GetExceptionCode(),
+                                GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP nsAccessibleWrap::get_accHelpTopic(
@@ -574,9 +568,14 @@ STDMETHODIMP nsAccessibleWrap::get_accHelpTopic(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ long __RPC_FAR *pidTopic)
 {
+__try {
   *pszHelpFile = NULL;
   *pidTopic = 0;
-  return E_NOTIMPL;
+  return S_FALSE;
+
+} __except(FilterA11yExceptions(::GetExceptionCode(),
+                                GetExceptionInformation())) { }
+  return E_FAIL;
 }
 
 STDMETHODIMP nsAccessibleWrap::get_accKeyboardShortcut(
@@ -1102,7 +1101,7 @@ __try {
   for (; numElementsFetched < aNumElementsRequested;
        numElementsFetched++, mEnumVARIANTPosition++) {
 
-    nsIAccessible* accessible = GetChildAt(mEnumVARIANTPosition);
+    nsAccessible* accessible = GetChildAt(mEnumVARIANTPosition);
     if (!accessible)
       break;
 
@@ -1286,8 +1285,7 @@ __try {
   // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call
   // the IA2 role a ROLE_OUTLINEITEM.
   if (xpRole == nsIAccessibleRole::ROLE_ROW) {
-    nsCOMPtr<nsIAccessible> parent = GetParent();
-    if (nsAccUtils::Role(parent) == nsIAccessibleRole::ROLE_TREE_TABLE)
+    if (nsAccUtils::Role(GetParent()) == nsIAccessibleRole::ROLE_TREE_TABLE)
       *aRole = ROLE_SYSTEM_OUTLINEITEM;
   }
 
@@ -1658,21 +1656,18 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 // nsAccessible
 
 nsresult
-nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
+nsAccessibleWrap::HandleAccEvent(nsAccEvent *aEvent)
 {
-  NS_ENSURE_ARG(aEvent);
-
-  nsresult rv = nsAccessible::FireAccessibleEvent(aEvent);
+  nsresult rv = nsAccessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return FirePlatformEvent(aEvent);
 }
 
 nsresult
-nsAccessibleWrap::FirePlatformEvent(nsIAccessibleEvent *aEvent)
+nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
 {
-  PRUint32 eventType = 0;
-  aEvent->GetEventType(&eventType);
+  PRUint32 eventType = aEvent->GetEventType();
 
   NS_ENSURE_TRUE(eventType > 0 &&
                  eventType < nsIAccessibleEvent::EVENT_LAST_ENTRY,

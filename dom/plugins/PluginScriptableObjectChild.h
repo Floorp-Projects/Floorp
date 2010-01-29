@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 et :
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et :
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -51,6 +51,19 @@ class PluginScriptableObjectChild;
 
 struct ChildNPObject : NPObject
 {
+  ChildNPObject()
+    : NPObject(), parent(NULL), invalidated(false)
+  {
+    MOZ_COUNT_CTOR(ChildNPObject);
+  }
+
+  ~ChildNPObject()
+  {
+    MOZ_COUNT_DTOR(ChildNPObject);
+  }
+
+  // |parent| is always valid as long as the actor is alive. Once the actor is
+  // destroyed this will be set to null.
   PluginScriptableObjectChild* parent;
   bool invalidated;
 };
@@ -60,8 +73,15 @@ class PluginScriptableObjectChild : public PPluginScriptableObjectChild
   friend class PluginInstanceChild;
 
 public:
-  PluginScriptableObjectChild();
+  PluginScriptableObjectChild(ScriptableObjectType aType);
   virtual ~PluginScriptableObjectChild();
+
+  void
+  InitializeProxy();
+
+  void
+  InitializeLocal(NPObject* aObject);
+
 
   virtual bool
   AnswerInvalidate();
@@ -108,15 +128,14 @@ public:
                   Variant* aResult,
                   bool* aSuccess);
 
-  void
-  Initialize(PluginInstanceChild* aInstance,
-             NPObject* aObject);
+  virtual bool
+  AnswerProtect();
+
+  virtual bool
+  AnswerUnprotect();
 
   NPObject*
-  GetObject()
-  {
-    return mObject;
-  }
+  GetObject(bool aCanResurrect);
 
   static const NPClass*
   GetClass()
@@ -125,14 +144,45 @@ public:
   }
 
   PluginInstanceChild*
-  GetInstance()
+  GetInstance() const
   {
     return mInstance;
   }
 
+  // Protect only affects LocalObject actors. It is called by the
+  // ProtectedVariant/Actor helper classes before the actor is used as an
+  // argument to an IPC call and when the parent process resurrects a
+  // proxy object to the NPObject associated with this actor.
+  void Protect();
+
+  // Unprotect only affects LocalObject actors. It is called by the
+  // ProtectedVariant/Actor helper classes after the actor is used as an
+  // argument to an IPC call and when the parent process is no longer using
+  // this actor.
+  void Unprotect();
+
+  // DropNPObject is only used for Proxy actors and is called when the child
+  // process is no longer using the NPObject associated with this actor. The
+  // parent process may subsequently use this actor again in which case a new
+  // NPObject will be created and associated with this actor (see
+  // ResurrectProxyObject).
+  void DropNPObject();
+
+  /**
+   * After NPP_Destroy, all NPObjects associated with an instance are
+   * destroyed. We are informed of this destruction. This should only be called
+   * on Local actors.
+   */
+  void NPObjectDestroyed();
+
   bool
   Evaluate(NPString* aScript,
            NPVariant* aResult);
+
+  ScriptableObjectType
+  Type() const {
+    return mType;
+  }
 
 private:
   static NPObject*
@@ -191,9 +241,21 @@ private:
                       uint32_t aArgCount,
                       NPVariant* aResult);
 
+  NPObject*
+  CreateProxyObject();
+
+  // ResurrectProxyObject is only used with Proxy actors. It is called when the
+  // parent process uses an actor whose NPObject was deleted by the child
+  // process.
+  bool ResurrectProxyObject();
+
 private:
   PluginInstanceChild* mInstance;
   NPObject* mObject;
+  bool mInvalidated;
+  int mProtectCount;
+
+  ScriptableObjectType mType;
 
   static const NPClass sNPClass;
 };

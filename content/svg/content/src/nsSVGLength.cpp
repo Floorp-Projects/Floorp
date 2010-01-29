@@ -396,12 +396,12 @@ nsSVGLength::SetValueAsString(const nsAString & aValueAsString)
         DidModify();
       } else { // parse error
         // not a valid unit type
-        rv = NS_ERROR_FAILURE;
+        rv = NS_ERROR_DOM_SYNTAX_ERR;
       }
     }
     else { // parse error
       // no number
-      rv = NS_ERROR_FAILURE;
+      rv = NS_ERROR_DOM_SYNTAX_ERR;
     }
   }
 
@@ -417,7 +417,7 @@ nsSVGLength::NewValueSpecifiedUnits(PRUint16 unitType, float valueInSpecifiedUni
   NS_ENSURE_FINITE(valueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
 
   if (!IsValidUnitType(unitType))
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
   WillModify();
   mValueInSpecifiedUnits = valueInSpecifiedUnits;
@@ -432,7 +432,7 @@ NS_IMETHODIMP
 nsSVGLength::ConvertToSpecifiedUnits(PRUint16 unitType)
 {
   if (!IsValidUnitType(unitType))
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
   WillModify();
   float valueInUserUnits;

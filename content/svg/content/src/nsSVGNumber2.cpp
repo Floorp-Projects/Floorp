@@ -35,8 +35,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGNumber2.h"
+#include "nsSVGUtils.h"
 #include "nsTextFormatter.h"
 #include "prdtoa.h"
+#ifdef MOZ_SMIL
+#include "nsSMILValue.h"
+#include "nsSMILFloatType.h"
+#endif // MOZ_SMIL
 
 class DOMSVGNumber : public nsIDOMSVGNumber
 {
@@ -88,15 +93,24 @@ nsSVGNumber2::SetBaseValueString(const nsAString &aValueAsString,
   const char *str = value.get();
 
   if (NS_IsAsciiWhitespace(*str))
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_SYNTAX_ERR;
   
   char *rest;
   float val = float(PR_strtod(str, &rest));
   if (rest == str || *rest != '\0' || !NS_FloatIsFinite(val)) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
   mBaseVal = mAnimVal = val;
+
+  // XXX shouldn't we be calling DidChangeNumber here???
+
+#ifdef MOZ_SMIL
+  if (mIsAnimated) {
+    aSVGElement->AnimationNeedsResample();
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -115,6 +129,19 @@ nsSVGNumber2::SetBaseValue(float aValue,
 {
   mAnimVal = mBaseVal = aValue;
   aSVGElement->DidChangeNumber(mAttrEnum, aDoSetAttr);
+#ifdef MOZ_SMIL
+  if (mIsAnimated) {
+    aSVGElement->AnimationNeedsResample();
+  }
+#endif
+}
+
+void
+nsSVGNumber2::SetAnimValue(float aValue, nsSVGElement *aSVGElement)
+{
+  mAnimVal = aValue;
+  mIsAnimated = PR_TRUE;
+  aSVGElement->DidAnimateNumber(mAttrEnum);
 }
 
 nsresult
@@ -129,3 +156,57 @@ nsSVGNumber2::ToDOMAnimatedNumber(nsIDOMSVGAnimatedNumber **aResult,
   return NS_OK;
 }
 
+#ifdef MOZ_SMIL
+nsISMILAttr*
+nsSVGNumber2::ToSMILAttr(nsSVGElement *aSVGElement)
+{
+  return new SMILNumber(this, aSVGElement);
+}
+
+nsresult
+nsSVGNumber2::SMILNumber::ValueFromString(const nsAString& aStr,
+                                          const nsISMILAnimationElement* /*aSrcElement*/,
+                                          nsSMILValue& aValue) const
+{
+  float value;
+
+  PRBool ok = nsSVGUtils::NumberFromString(aStr, &value);
+  if (!ok) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsSMILValue val(&nsSMILFloatType::sSingleton);
+  val.mU.mDouble = value;
+  aValue = val;
+
+  return NS_OK;
+}
+
+nsSMILValue
+nsSVGNumber2::SMILNumber::GetBaseValue() const
+{
+  nsSMILValue val(&nsSMILFloatType::sSingleton);
+  val.mU.mDouble = mVal->mBaseVal;
+  return val;
+}
+
+void
+nsSVGNumber2::SMILNumber::ClearAnimValue()
+{
+  if (mVal->mIsAnimated) {
+    mVal->SetAnimValue(mVal->mBaseVal, mSVGElement);
+    mVal->mIsAnimated = PR_FALSE;
+  }
+}
+
+nsresult
+nsSVGNumber2::SMILNumber::SetAnimValue(const nsSMILValue& aValue)
+{
+  NS_ASSERTION(aValue.mType == &nsSMILFloatType::sSingleton,
+               "Unexpected type to assign animated value");
+  if (aValue.mType == &nsSMILFloatType::sSingleton) {
+    mVal->SetAnimValue(float(aValue.mU.mDouble), mSVGElement);
+  }
+  return NS_OK;
+}
+#endif // MOZ_SMIL

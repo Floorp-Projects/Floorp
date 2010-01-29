@@ -70,7 +70,7 @@ public:
   }
   void SetCount(double aCount)
   {
-    NS_ASSERTION(aCount > 0.0, "Negative or zero repeat count.");
+    NS_ASSERTION(aCount > 0.0, "Negative or zero repeat count");
     mCount = aCount > 0.0 ? aCount : kNotSet;
   }
   void SetIndefinite() { mCount = kIndefinite; }

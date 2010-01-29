@@ -1048,7 +1048,6 @@ DIRENT_INO=d_ino
 CYGWIN_WRAPPER=
 WIN_TOP_SRC=
 MOZ_USER_DIR=".mozilla"
-HOST_AR='$(AR)'
 HOST_AR_FLAGS='$(AR_FLAGS)'
 
 MOZ_JPEG_CFLAGS=
@@ -2240,7 +2239,7 @@ case "$target" in
             fi
         fi
     fi
-    MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,jpeg$(MOZ_BITS)$(VERSION_NUMBER),$(DEPTH)/jpeg)'
+    MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,jpeg32$(VERSION_NUMBER),$(DEPTH)/jpeg)'
     MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,png,$(DEPTH)/modules/libimg/png)'
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
@@ -2618,7 +2617,6 @@ alpha*-*-osf*)
     fi
     ;;
 
-dnl the qsort routine under solaris is faulty
 *-solaris*) 
     AC_DEFINE(SOLARIS)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
@@ -6441,7 +6439,7 @@ AC_SUBST(LIBOSSO_LIBS)
 
 PKG_CHECK_MODULES(LIBHILDONFM,hildon-fm-2,
                   NS_HILDONFM=1,
-                  NS_HILDONFM)
+                  NS_HILDONFM=)
 AC_SUBST(LIBHILDONFM_CFLAGS)
 AC_SUBST(LIBHILDONFM_LIBS)
 
@@ -7685,8 +7683,19 @@ if test "$MOZ_TREE_CAIRO"; then
         WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
         if test -z "$WINCE"; then
             WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
+            if test "$MOZ_WINSDK_TARGETVER" -ge "06010000"; then
+                WIN32_DWRITE_FONT_FEATURE="#define CAIRO_HAS_DWRITE_FONT 1"
+                WIN32_D2D_SURFACE_FEATURE="#define CAIRO_HAS_D2D_SURFACE 1"
+                MOZ_ENABLE_D2D_SURFACE=1
+                MOZ_ENABLE_DWRITE_FONT=1
+            else
+                WIN32_DWRITE_FONT_FEATURE=
+                WIN32_D2D_SURFACE_FEATURE=
+            fi
         else
             WIN32_FONT_FEATURE=
+            WIN32_DWRITE_FONT_FEATURE=
+            WIN32_D2D_SURFACE_FEATURE=
         fi
 
         AC_TRY_COMPILE([#include <ddraw.h>], [int foo = DDLOCK_WAITNOTBUSY;], HAS_DDRAW=1, HAS_DDRAW=)
@@ -7734,6 +7743,8 @@ if test "$MOZ_TREE_CAIRO"; then
         FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
     fi
     AC_SUBST(MOZ_ENABLE_CAIRO_FT)
+    AC_SUBST(MOZ_ENABLE_DWRITE_FONT)
+    AC_SUBST(MOZ_ENABLE_D2D_SURFACE)
     AC_SUBST(CAIRO_FT_CFLAGS)
     AC_SUBST(HAS_OGLES)
 
@@ -7762,6 +7773,8 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(FT_FONT_FEATURE)
     AC_SUBST(FC_FONT_FEATURE)
     AC_SUBST(WIN32_FONT_FEATURE)
+    AC_SUBST(WIN32_DWRITE_FONT_FEATURE)
+    AC_SUBST(WIN32_D2D_SURFACE_FEATURE)
     AC_SUBST(QUARTZ_FONT_FEATURE)
     AC_SUBST(PNG_FUNCTIONS_FEATURE)
     AC_SUBST(QT_SURFACE_FEATURE)

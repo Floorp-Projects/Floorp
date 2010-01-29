@@ -44,7 +44,6 @@
 #include "nsIDOMNSMouseEvent.h"
 
 class nsIContent;
-class nsIScrollableView;
 class nsEvent;
 
 class nsDOMMouseEvent : public nsDOMUIEvent,

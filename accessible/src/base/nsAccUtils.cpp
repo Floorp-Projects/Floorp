@@ -42,7 +42,7 @@
 #include "nsIAccessibleStates.h"
 #include "nsIAccessibleTypes.h"
 
-#include "nsAccessibleEventData.h"
+#include "nsAccEvent.h"
 #include "nsHyperTextAccessible.h"
 #include "nsHTMLTableAccessible.h"
 #include "nsDocAccessible.h"
@@ -101,6 +101,46 @@ nsAccUtils::SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
     value.AppendInt(aSetSize);
     SetAccAttr(aAttributes, nsAccessibilityAtoms::setsize, value);
   }
+}
+
+PRInt32
+nsAccUtils::GetDefaultLevel(nsAccessible *aAcc)
+{
+  PRUint32 role = nsAccUtils::Role(aAcc);
+
+  if (role == nsIAccessibleRole::ROLE_OUTLINEITEM)
+    return 1;
+
+  if (role == nsIAccessibleRole::ROLE_ROW) {
+    nsCOMPtr<nsIAccessible> parent = aAcc->GetParent();
+    if (Role(parent) == nsIAccessibleRole::ROLE_TREE_TABLE) {
+      // It is a row inside flatten treegrid. Group level is always 1 until it
+      // is overriden by aria-level attribute.
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+PRInt32
+nsAccUtils::GetARIAOrDefaultLevel(nsIAccessible *aAcc)
+{
+  nsRefPtr<nsAccessible> acc = nsAccUtils::QueryObject<nsAccessible>(aAcc);
+  NS_ENSURE_TRUE(acc, 0);
+
+  nsCOMPtr<nsIDOMNode> node;
+  acc->GetDOMNode(getter_AddRefs(node));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+  NS_ENSURE_TRUE(content, 0);
+
+  PRInt32 level = 0;
+  nsCoreUtils::GetUIntAttr(content, nsAccessibilityAtoms::aria_level, &level);
+
+  if (level != 0)
+    return level;
+
+  return GetDefaultLevel(acc);
 }
 
 void
@@ -306,21 +346,6 @@ nsAccUtils::HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom)
         return PR_FALSE;
   }
   return PR_TRUE;
-}
-
-nsresult
-nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
-                         PRBool aIsAsynch)
-{
-  NS_ENSURE_ARG(aAccessible);
-
-  nsRefPtr<nsAccessible> acc(nsAccUtils::QueryAccessible(aAccessible));
-
-  nsCOMPtr<nsIAccessibleEvent> event =
-    new nsAccEvent(aEventType, aAccessible, aIsAsynch);
-  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-
-  return acc->FireAccessibleEvent(event);
 }
 
 PRBool

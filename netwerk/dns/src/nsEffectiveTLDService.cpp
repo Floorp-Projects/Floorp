@@ -169,12 +169,17 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
                                              nsACString &aBaseDomain)
 {
   if (aHostname.IsEmpty())
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS;
 
   // chomp any trailing dot, and keep track of it for later
   PRBool trailingDot = aHostname.Last() == '.';
   if (trailingDot)
     aHostname.Truncate(aHostname.Length() - 1);
+
+  // check the edge cases of the host being '.' or having a second trailing '.',
+  // since subsequent checks won't catch it.
+  if (aHostname.IsEmpty() || aHostname.Last() == '.')
+    return NS_ERROR_INVALID_ARG;
 
   // Check if we're dealing with an IPv4/IPv6 hostname, and return
   PRNetAddr addr;
@@ -191,6 +196,13 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
   const char *end = currDomain + aHostname.Length();
   const char *eTLD = currDomain;
   while (1) {
+    // sanity check the string we're about to look up: it should not begin with
+    // a '.'; this would mean the hostname began with a '.' or had an
+    // embedded '..' sequence.
+    if (*currDomain == '.')
+      return NS_ERROR_INVALID_ARG;
+
+    // perform the hash lookup.
     nsDomainEntry *entry = mHash.GetEntry(currDomain);
     if (entry) {
       if (entry->IsWild() && prevDomain) {

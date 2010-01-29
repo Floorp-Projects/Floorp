@@ -81,17 +81,17 @@ WebGLContext::ValidateBuffers(PRUint32 count)
 
       // is this a problem?
       if (!vd.enabled)
-	continue;
+          continue;
 
       if (vd.buf == nsnull) {
-	LogMessage("No VBO bound to index %d (or it's been deleted)!", i);
-	return PR_FALSE;
+          LogMessage("No VBO bound to index %d (or it's been deleted)!", i);
+          return PR_FALSE;
       }
 
       GLuint needed = vd.offset + (vd.stride ? vd.stride : vd.size) * count;
-      if (vd.buf->Count() < needed) {
-	LogMessage("VBO too small for bound attrib index %d: need at least %d elements, but have only %d", i, needed, vd.buf->Count());
-	return PR_FALSE;
+      if (vd.buf->ByteLength() < needed) {
+          LogMessage("VBO too small for bound attrib index %d: need at least %d bytes, but have only %d", i, needed, vd.buf->ByteLength());
+          return PR_FALSE;
       }
     }
 

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="
+        document.documentElement.pauseAnimations();
+        document.documentElement.setCurrentTime(0);
+        document.getElementById('c').setAttribute('dur', '1s');
+        setTimeAndSnapshot(2, false)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Based on Example 2 from SMIL3 section 5.4.5, an invalid cycle,
+    but made valid by a DOM call.
+
+    At first we have:
+    a: unresolved-unresolved
+    b: unresolved-unresolved
+    c: 0s-unresolved
+
+    Then we set dur on c=1s, giving us
+    a: 1s-1.5s
+    b: 1s-3s
+    c: 0s-1s
+   -->
+  <rect width="100" height="100" fill="blue">
+    <animate attributeName="y" attributeType="XML" from="0" to="0" id="a"
+      begin="c.end" dur="0.5s"/>
+    <animate attributeName="fill" attributeType="CSS" id="b"
+      values="orange; green; purple"
+      begin="a.begin" dur="2s"/>
+    <animate attributeName="fill" attributeType="CSS" id="c"
+      values="red; red"
+      begin="0" end="b.end"/>
+  </rect>
+</svg>

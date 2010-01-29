@@ -64,6 +64,16 @@ public:
 
   NS_OVERRIDE virtual bool IsBrowserStream() { return true; }
 
+  NPError StreamConstructed(
+            const nsCString& url,
+            const uint32_t& length,
+            const uint32_t& lastmodified,
+            PStreamNotifyChild* notifyData,
+            const nsCString& headers,
+            const nsCString& mimeType,
+            const bool& seekable,
+            uint16_t* stype);
+
   virtual bool AnswerNPP_WriteReady(const int32_t& newlength,
                                         int32_t *size);
   virtual bool AnswerNPP_Write(const int32_t& offset,

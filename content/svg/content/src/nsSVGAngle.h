@@ -85,9 +85,9 @@ private:
   
   float GetUnitScaleFactor() const;
   void SetBaseValueInSpecifiedUnits(float aValue, nsSVGElement *aSVGElement);
-  void NewValueSpecifiedUnits(PRUint16 aUnitType, float aValue,
-                              nsSVGElement *aSVGElement);
-  void ConvertToSpecifiedUnits(PRUint16 aUnitType, nsSVGElement *aSVGElement);
+  nsresult NewValueSpecifiedUnits(PRUint16 aUnitType, float aValue,
+                                  nsSVGElement *aSVGElement);
+  nsresult ConvertToSpecifiedUnits(PRUint16 aUnitType, nsSVGElement *aSVGElement);
   nsresult ToDOMBaseVal(nsIDOMSVGAngle **aResult, nsSVGElement* aSVGElement);
   nsresult ToDOMAnimVal(nsIDOMSVGAngle **aResult, nsSVGElement* aSVGElement);
 
@@ -123,12 +123,11 @@ private:
 
     NS_IMETHOD NewValueSpecifiedUnits(PRUint16 unitType,
                                       float valueInSpecifiedUnits)
-      { mVal->NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits,
-                                     mSVGElement); 
-        return NS_OK; }
+      { return mVal->NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits,
+                                     mSVGElement); }
 
     NS_IMETHOD ConvertToSpecifiedUnits(PRUint16 unitType)
-      { mVal->ConvertToSpecifiedUnits(unitType, mSVGElement); return NS_OK; }
+      { return mVal->ConvertToSpecifiedUnits(unitType, mSVGElement); }
   };
 
   struct DOMAnimVal : public nsIDOMSVGAngle

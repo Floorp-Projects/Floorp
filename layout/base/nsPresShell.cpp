@@ -108,7 +108,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIXPointer.h"
 #include "nsIDOMXMLDocument.h"
-#include "nsIScrollableView.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsFrameSelection.h"
@@ -717,6 +716,14 @@ public:
   NS_IMETHOD ScrollContentIntoView(nsIContent* aContent,
                                    PRIntn      aVPercent,
                                    PRIntn      aHPercent);
+  virtual PRBool ScrollFrameRectIntoView(nsIFrame*     aFrame,
+                                         const nsRect& aRect,
+                                         PRIntn        aVPercent,
+                                         PRIntn        aHPercent,
+                                         PRUint32      aFlags);
+  virtual nsRectVisibility GetRectVisibility(nsIFrame *aFrame,
+                                             const nsRect &aRect, 
+                                             nscoord aMinTwips);
 
   NS_IMETHOD SetIgnoreFrameDestruction(PRBool aIgnore);
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame);
@@ -795,9 +802,6 @@ public:
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD_(PRBool) IsVisible();
   NS_IMETHOD_(void) WillPaint();
-  NS_IMETHOD_(void) InvalidateFrameForScrolledView(nsIView *view);
-  NS_IMETHOD_(void) NotifyInvalidateForScrolledView(const nsRegion& aBlitRegion,
-                                                    const nsRegion& aInvalidateRegion);
   NS_IMETHOD_(void) DispatchSynthMouseMove(nsGUIEvent *aEvent,
                                            PRBool aFlushOnHoverChange);
   NS_IMETHOD_(void) ClearMouseCapture(nsIView* aView);
@@ -960,8 +964,7 @@ protected:
     PresShell *mPresShell;
   };
 
-  // Utility to find which view to scroll.
-  nsIScrollableView* GetViewToScroll(nsLayoutUtils::Direction aDirection);
+  nsIScrollableFrame* GetFrameToScroll(nsLayoutUtils::Direction aDirection);
 
   PRBool mCaretEnabled;
 #ifdef NS_DEBUG
@@ -2745,6 +2748,8 @@ NS_IMETHODIMP
 PresShell::NotifyDestroyingFrame(nsIFrame* aFrame)
 {
   if (!mIgnoreFrameDestruction) {
+    mPresContext->StopImagesFor(aFrame);
+
     mFrameConstructor->NotifyDestroyingFrame(aFrame);
 
     for (PRInt32 idx = mDirtyRoots.Length(); idx; ) {
@@ -2926,14 +2931,11 @@ PresShell::IntraLineMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP 
 PresShell::PageMove(PRBool aForward, PRBool aExtend)
 {
-  nsresult result;
-  nsIScrollableView *scrollableView = GetViewToScroll(nsLayoutUtils::eVertical);
-  if (!scrollableView)
-    return NS_ERROR_UNEXPECTED;
+  nsIScrollableFrame *scrollableFrame = GetFrameToScroll(nsLayoutUtils::eVertical);
+  if (!scrollableFrame)
+    return NS_OK;
 
-  nsIView *scrolledView;
-  result = scrollableView->GetScrolledView(scrolledView);
-  mSelection->CommonPageMove(aForward, aExtend, scrollableView);
+  mSelection->CommonPageMove(aForward, aExtend, scrollableFrame);
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
   return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
@@ -2944,9 +2946,11 @@ PresShell::PageMove(PRBool aForward, PRBool aExtend)
 NS_IMETHODIMP 
 PresShell::ScrollPage(PRBool aForward)
 {
-  nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eVertical);
-  if (scrollView) {
-    scrollView->ScrollByPages(0, aForward ? 1 : -1, NS_VMREFRESH_SMOOTHSCROLL);
+  nsIScrollableFrame* scrollFrame = GetFrameToScroll(nsLayoutUtils::eVertical);
+  if (scrollFrame) {
+    scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
+                          nsIScrollableFrame::PAGES,
+                          nsIScrollableFrame::SMOOTH);
   }
   return NS_OK;
 }
@@ -2954,15 +2958,17 @@ PresShell::ScrollPage(PRBool aForward)
 NS_IMETHODIMP
 PresShell::ScrollLine(PRBool aForward)
 {
-  nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eVertical);
-  if (scrollView) {
+  nsIScrollableFrame* scrollFrame = GetFrameToScroll(nsLayoutUtils::eVertical);
+  if (scrollFrame) {
+    PRInt32 lineCount = 1;
 #ifdef MOZ_WIDGET_COCOA
     // Emulate the Mac IE behavior of scrolling a minimum of 2 lines
     // rather than 1.  This vastly improves scrolling speed.
-    scrollView->ScrollByLines(0, aForward ? 2 : -2, NS_VMREFRESH_SMOOTHSCROLL);
-#else
-    scrollView->ScrollByLines(0, aForward ? 1 : -1, NS_VMREFRESH_SMOOTHSCROLL);
+    lineCount = 2;
 #endif
+    scrollFrame->ScrollBy(nsIntPoint(0, aForward ? lineCount : -lineCount),
+                          nsIScrollableFrame::LINES,
+                          nsIScrollableFrame::SMOOTH);
       
 //NEW FOR LINES    
     // force the update to happen now, otherwise multiple scrolls can
@@ -2981,9 +2987,11 @@ PresShell::ScrollLine(PRBool aForward)
 NS_IMETHODIMP
 PresShell::ScrollHorizontal(PRBool aLeft)
 {
-  nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eHorizontal);
-  if (scrollView) {
-    scrollView->ScrollByLines(aLeft ? -1 : 1, 0, NS_VMREFRESH_SMOOTHSCROLL);
+  nsIScrollableFrame* scrollFrame = GetFrameToScroll(nsLayoutUtils::eHorizontal);
+  if (scrollFrame) {
+    scrollFrame->ScrollBy(nsIntPoint(aLeft ? -1 : 1, 0),
+                          nsIScrollableFrame::LINES,
+                          nsIScrollableFrame::SMOOTH);
 //NEW FOR LINES    
     // force the update to happen now, otherwise multiple scrolls can
     // occur before the update is processed. (bug #7354)
@@ -3001,9 +3009,11 @@ PresShell::ScrollHorizontal(PRBool aLeft)
 NS_IMETHODIMP
 PresShell::CompleteScroll(PRBool aForward)
 {
-  nsIScrollableView* scrollView = GetViewToScroll(nsLayoutUtils::eVertical);
-  if (scrollView) {
-    scrollView->ScrollByWhole(!aForward);//TRUE = top, aForward TRUE=bottom
+  nsIScrollableFrame* scrollFrame = GetFrameToScroll(nsLayoutUtils::eVertical);
+  if (scrollFrame) {
+    scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
+                          nsIScrollableFrame::WHOLE,
+                          nsIScrollableFrame::INSTANT);
   }
   return NS_OK;
 }
@@ -3425,10 +3435,10 @@ PresShell::FrameNeedsToContinueReflow(nsIFrame *aFrame)
   mFramesToDirty.PutEntry(aFrame);
 }
 
-nsIScrollableView*
-PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
+nsIScrollableFrame*
+PresShell::GetFrameToScroll(nsLayoutUtils::Direction aDirection)
 {
-  nsIScrollableView* scrollView = nsnull;
+  nsIScrollableFrame* scrollFrame = nsnull;
 
   nsCOMPtr<nsIContent> focusedContent;
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -3451,25 +3461,18 @@ PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
   if (focusedContent) {
     nsIFrame* startFrame = focusedContent->GetPrimaryFrame();
     if (startFrame) {
-      nsIScrollableViewProvider* svp = do_QueryFrame(startFrame);
-      // If this very frame provides a scroll view, start there instead of frame's
-      // closest view, because the scroll view may be inside a child frame.
-      // For example, this happens in the case of overflow:scroll.
-      // In that case we still use GetNearestScrollingView() because
-      // we need a scrolling view that matches aDirection.
-      nsIScrollableView* sv;
-      nsIView* startView = svp && (sv = svp->GetScrollableView()) ? sv->View() : startFrame->GetClosestView();
-      NS_ASSERTION(startView, "No view to start searching for scrollable view from");
-      scrollView = nsLayoutUtils::GetNearestScrollingView(startView, aDirection);
+      scrollFrame = startFrame->GetScrollTargetFrame();
+      if (scrollFrame) {
+        startFrame = scrollFrame->GetScrolledFrame();
+      }
+      scrollFrame =
+        nsLayoutUtils::GetNearestScrollableFrameForDirection(startFrame, aDirection);
     }
   }
-  if (!scrollView) {
-    nsIViewManager* viewManager = GetViewManager();
-    if (viewManager) {
-      viewManager->GetRootScrollableView(&scrollView);
-    }
+  if (!scrollFrame) {
+    scrollFrame = GetRootScrollFrameAsScrollable();
   }
-  return scrollView;
+  return scrollFrame;
 }
 
 NS_IMETHODIMP
@@ -3847,16 +3850,12 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
     if ((NS_LossyConvertUTF16toASCII(aAnchorName).LowerCaseEqualsLiteral("top")) &&
         (mPresContext->CompatibilityMode() == eCompatibility_NavQuirks)) {
       rv = NS_OK;
+      nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable();
       // Check |aScroll| after setting |rv| so we set |rv| to the same
       // thing whether or not |aScroll| is true.
-      if (aScroll && mViewManager) {
-        // Get the viewport scroller
-        nsIScrollableView* scrollingView;
-        mViewManager->GetRootScrollableView(&scrollingView);
-        if (scrollingView) {
-          // Scroll to the top of the page
-          scrollingView->ScrollTo(0, 0, 0);
-        }
+      if (aScroll && sf) {
+        // Scroll to the top of the page
+        sf->ScrollTo(nsPoint(0, 0), nsIScrollableFrame::INSTANT);
       }
     }
   }
@@ -3893,31 +3892,27 @@ PresShell::ScrollToAnchor()
 /*
  * Helper (per-continuation) for ScrollContentIntoView.
  *
+ * @param aContainerFrame [in] the frame which aRect is relative to
  * @param aFrame [in] Frame whose bounds should be unioned
- * @param aVPercent [in] same as for ScrollContentIntoView
+ * @param aUseWholeLineHeightForInlines [in] if true, then for inline frames
+ * we should include the top of the line in the added rectangle
  * @param aRect [inout] rect into which its bounds should be unioned
  * @param aHaveRect [inout] whether aRect contains data yet
- * @param aClosestScrolledView [inout] the view to which aRect is relative.
- *   If null, should be filled in appropriately.  If non-null, the function
- *   will no-op if the closest scrolling view doesn't match.
  */
 static void
-UnionRectForClosestScrolledView(nsIFrame* aFrame,
-                                PRIntn aVPercent,
-                                nsRect& aRect,
-                                PRBool& aHaveRect,
-                                nsIView*& aClosestScrolledView)
+AccumulateFrameBounds(nsIFrame* aContainerFrame,
+                      nsIFrame* aFrame,
+                      PRBool aUseWholeLineHeightForInlines,
+                      nsRect& aRect,
+                      PRBool& aHaveRect)
 {
-  nsRect  frameBounds = aFrame->GetRect();
-  nsPoint offset;
-  nsIView* closestView;
-  aFrame->GetOffsetFromView(offset, &closestView);
-  frameBounds.MoveTo(offset);
+  nsRect frameBounds = aFrame->GetRect() +
+    aFrame->GetParent()->GetOffsetTo(aContainerFrame);
 
   // If this is an inline frame and either the bounds height is 0 (quirks
-  // layout model) or aVPercent is not NS_PRESSHELL_SCROLL_ANYWHERE, we need to
+  // layout model) or aUseWholeLineHeightForInlines is set, we need to
   // change the top of the bounds to include the whole line.
-  if (frameBounds.height == 0 || aVPercent != NS_PRESSHELL_SCROLL_ANYWHERE) {
+  if (frameBounds.height == 0 || aUseWholeLineHeightForInlines) {
     nsIAtom* frameType = NULL;
     nsIFrame *prevFrame = aFrame;
     nsIFrame *f = aFrame;
@@ -3943,16 +3938,10 @@ UnionRectForClosestScrolledView(nsIFrame* aFrame,
 
           if (NS_SUCCEEDED(lines->GetLine(index, &trash1, &trash2,
                                           lineBounds, &trash3))) {
-            nsPoint blockOffset;
-            nsIView* blockView;
-            f->GetOffsetFromView(blockOffset, &blockView);
-
-            if (blockView == closestView) {
-              // XXX If views not equal, this is hard.  Do we want to bother?
-              nscoord newoffset = lineBounds.y + blockOffset.y;
-
-              if (newoffset < frameBounds.y)
-                frameBounds.y = newoffset;
+            lineBounds += f->GetOffsetTo(aContainerFrame);
+            if (lineBounds.y < frameBounds.y) {
+              frameBounds.height = frameBounds.YMost() - lineBounds.y;
+              frameBounds.y = lineBounds.y;
             }
           }
         }
@@ -3960,138 +3949,119 @@ UnionRectForClosestScrolledView(nsIFrame* aFrame,
     }
   }
 
-  NS_ASSERTION(closestView && !closestView->ToScrollableView(),
-               "What happened to the scrolled view?  "
-               "The frame should not be directly in the scrolling view!");
-  
-  // Walk up the view hierarchy.  Make sure to add the view's position
-  // _after_ we get the parent and see whether it's scrollable.  We want to
-  // make sure to get the scrolled view's position after it has been scrolled.
-  while (closestView) {
-    nsIView* parent = closestView->GetParent();
-    if (parent && parent->ToScrollableView())
-      break;
-    frameBounds += closestView->GetPosition();
-    closestView = parent;
-  }
-
-  if (!aClosestScrolledView)
-    aClosestScrolledView = closestView;
-
-  if (aClosestScrolledView == closestView) {
-    if (aHaveRect) {
-      // We can't use nsRect::UnionRect since it drops empty rects on
-      // the floor, and we need to include them.  (Thus we need
-      // aHaveRect to know when to drop the initial value on the floor.)
-      aRect.UnionRectIncludeEmpty(aRect, frameBounds);
-    } else {
-      aHaveRect = PR_TRUE;
-      aRect = frameBounds;
-    }
+  if (aHaveRect) {
+    // We can't use nsRect::UnionRect since it drops empty rects on
+    // the floor, and we need to include them.  (Thus we need
+    // aHaveRect to know when to drop the initial value on the floor.)
+    aRect.UnionRectIncludeEmpty(aRect, frameBounds);
+  } else {
+    aHaveRect = PR_TRUE;
+    aRect = frameBounds;
   }
 }
 
 /**
- * This function takes a scrolling view, a rect, and a scroll position and
- * attempts to scroll that rect to that position in that view.  The rect
- * should be in the coordinate system of the _scrolled_ view.
+ * This function takes a scrollable frame, a rect in the coordinate system
+ * of the scrolled frame, and a desired percentage-based scroll
+ * position and attempts to scroll the rect to that position in the
+ * scrollport.
+ * 
+ * This needs to work even if aRect has a width or height of zero.
  */
-static void ScrollViewToShowRect(nsIScrollableView* aScrollingView,
-                                 nsRect &           aRect,
-                                 PRIntn             aVPercent,
-                                 PRIntn             aHPercent)
+static void ScrollToShowRect(nsIScrollableFrame* aScrollFrame,
+                             const nsRect&       aRect,
+                             PRIntn              aVPercent,
+                             PRIntn              aHPercent,
+                             PRUint32            aFlags)
 {
-  // Determine the visible rect in the scrolling view's coordinate space.
-  // The size of the visible area is the clip view size
-  nsRect visibleRect = aScrollingView->View()->GetBounds(); // get width and height
-  aScrollingView->GetScrollPosition(visibleRect.x, visibleRect.y);
+  nsPoint scrollPt = aScrollFrame->GetScrollPosition();
+  nsRect visibleRect(scrollPt, aScrollFrame->GetScrollPortRect().Size());
+  nsSize lineSize = aScrollFrame->GetLineScrollAmount();
+  nsPresContext::ScrollbarStyles ss = aScrollFrame->GetScrollbarStyles();
 
-  // The actual scroll offsets
-  nscoord scrollOffsetX = visibleRect.x;
-  nscoord scrollOffsetY = visibleRect.y;
-
-  nscoord lineHeight;
-  aScrollingView->GetLineHeight(&lineHeight);
-  
-  // See how the rect should be positioned vertically
-  if (NS_PRESSHELL_SCROLL_ANYWHERE == aVPercent ||
-      (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aVPercent &&
-       aRect.height < lineHeight)) {
-    // The caller doesn't care where the frame is positioned vertically,
-    // so long as it's fully visible
-    if (aRect.y < visibleRect.y) {
-      // Scroll up so the frame's top edge is visible
-      scrollOffsetY = aRect.y;
-    } else if (aRect.YMost() > visibleRect.YMost()) {
-      // Scroll down so the frame's bottom edge is visible. Make sure the
-      // frame's top edge is still visible
-      scrollOffsetY += aRect.YMost() - visibleRect.YMost();
-      if (scrollOffsetY > aRect.y) {
-        scrollOffsetY = aRect.y;
+  if ((aFlags & nsIPresShell::SCROLL_OVERFLOW_HIDDEN) ||
+      ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN) {
+    // See how the rect should be positioned vertically
+    if (NS_PRESSHELL_SCROLL_ANYWHERE == aVPercent ||
+        (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aVPercent &&
+         aRect.height < lineSize.height)) {
+      // The caller doesn't care where the frame is positioned vertically,
+      // so long as it's fully visible
+      if (aRect.y < visibleRect.y) {
+        // Scroll up so the frame's top edge is visible
+        scrollPt.y = aRect.y;
+      } else if (aRect.YMost() > visibleRect.YMost()) {
+        // Scroll down so the frame's bottom edge is visible. Make sure the
+        // frame's top edge is still visible
+        scrollPt.y += aRect.YMost() - visibleRect.YMost();
+        if (scrollPt.y > aRect.y) {
+          scrollPt.y = aRect.y;
+        }
       }
-    }
-  } else if (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aVPercent) {
-    // Scroll only if no part of the frame is visible in this view
-    if (aRect.YMost() - lineHeight < visibleRect.y) {
-      // Scroll up so the frame's top edge is visible
-      scrollOffsetY = aRect.y;
-    }  else if (aRect.y + lineHeight > visibleRect.YMost()) {
-      // Scroll down so the frame's bottom edge is visible. Make sure the
-      // frame's top edge is still visible
-      scrollOffsetY += aRect.YMost() - visibleRect.YMost();
-      if (scrollOffsetY > aRect.y) {
-        scrollOffsetY = aRect.y;
+    } else if (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aVPercent) {
+      // Scroll only if no part of the frame is visible in this view
+      if (aRect.YMost() - lineSize.height < visibleRect.y) {
+        // Scroll up so the frame's top edge is visible
+        scrollPt.y = aRect.y;
+      }  else if (aRect.y + lineSize.height > visibleRect.YMost()) {
+        // Scroll down so the frame's bottom edge is visible. Make sure the
+        // frame's top edge is still visible
+        scrollPt.y += aRect.YMost() - visibleRect.YMost();
+        if (scrollPt.y > aRect.y) {
+          scrollPt.y = aRect.y;
+        }
       }
+    } else {
+      // Align the frame edge according to the specified percentage
+      nscoord frameAlignY =
+        NSToCoordRound(aRect.y + aRect.height * (aVPercent / 100.0f));
+      scrollPt.y =
+        NSToCoordRound(frameAlignY - visibleRect.height * (aVPercent / 100.0f));
     }
-  } else {
-    // Align the frame edge according to the specified percentage
-    nscoord frameAlignY =
-      NSToCoordRound(aRect.y + aRect.height * (aVPercent / 100.0f));
-    scrollOffsetY =
-      NSToCoordRound(frameAlignY - visibleRect.height * (aVPercent / 100.0f));
   }
 
-  // See how the frame should be positioned horizontally
-  if (NS_PRESSHELL_SCROLL_ANYWHERE == aHPercent ||
-      (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aHPercent &&
-       aRect.width < lineHeight)) {
-    // The caller doesn't care where the frame is positioned horizontally,
-    // so long as it's fully visible
-    if (aRect.x < visibleRect.x) {
-      // Scroll left so the frame's left edge is visible
-      scrollOffsetX = aRect.x;
-    } else if (aRect.XMost() > visibleRect.XMost()) {
-      // Scroll right so the frame's right edge is visible. Make sure the
-      // frame's left edge is still visible
-      scrollOffsetX += aRect.XMost() - visibleRect.XMost();
-      if (scrollOffsetX > aRect.x) {
-        scrollOffsetX = aRect.x;
+  if ((aFlags & nsIPresShell::SCROLL_OVERFLOW_HIDDEN) ||
+      ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN) {
+    // See how the frame should be positioned horizontally
+    if (NS_PRESSHELL_SCROLL_ANYWHERE == aHPercent ||
+        (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aHPercent &&
+         aRect.width < lineSize.width)) {
+      // The caller doesn't care where the frame is positioned horizontally,
+      // so long as it's fully visible
+      if (aRect.x < visibleRect.x) {
+        // Scroll left so the frame's left edge is visible
+        scrollPt.x = aRect.x;
+      } else if (aRect.XMost() > visibleRect.XMost()) {
+        // Scroll right so the frame's right edge is visible. Make sure the
+        // frame's left edge is still visible
+        scrollPt.x += aRect.XMost() - visibleRect.XMost();
+        if (scrollPt.x > aRect.x) {
+          scrollPt.x = aRect.x;
+        }
       }
-    }
-  } else if (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aHPercent) {
-    // Scroll only if no part of the frame is visible in this view
-    // XXXbz using the line height here is odd, but there are no
-    // natural dimensions to use here, really....
-    if (aRect.XMost() - lineHeight < visibleRect.x) {
-      // Scroll left so the frame's left edge is visible
-      scrollOffsetX = aRect.x;
-    }  else if (aRect.x + lineHeight > visibleRect.XMost()) {
-      // Scroll right so the frame's right edge is visible. Make sure the
-      // frame's left edge is still visible
-      scrollOffsetX += aRect.XMost() - visibleRect.XMost();
-      if (scrollOffsetX > aRect.x) {
-        scrollOffsetX = aRect.x;
+    } else if (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aHPercent) {
+      // Scroll only if no part of the frame is visible in this view
+      if (aRect.XMost() - lineSize.width < visibleRect.x) {
+        // Scroll left so the frame's left edge is visible
+        scrollPt.x = aRect.x;
+      }  else if (aRect.x + lineSize.width > visibleRect.XMost()) {
+        // Scroll right so the frame's right edge is visible. Make sure the
+        // frame's left edge is still visible
+        scrollPt.x += aRect.XMost() - visibleRect.XMost();
+        if (scrollPt.x > aRect.x) {
+          scrollPt.x = aRect.x;
+        }
       }
+    } else {
+      // Align the frame edge according to the specified percentage
+      nscoord frameAlignX =
+        NSToCoordRound(aRect.x + (aRect.width) * (aHPercent / 100.0f));
+      scrollPt.x =
+        NSToCoordRound(frameAlignX - visibleRect.width * (aHPercent / 100.0f));
     }
-  } else {
-    // Align the frame edge according to the specified percentage
-    nscoord frameAlignX =
-      NSToCoordRound(aRect.x + (aRect.width) * (aHPercent / 100.0f));
-    scrollOffsetX =
-      NSToCoordRound(frameAlignX - visibleRect.width * (aHPercent / 100.0f));
   }
 
-  aScrollingView->ScrollTo(scrollOffsetX, scrollOffsetY, 0);
+  aScrollFrame->ScrollTo(scrollPt, nsIScrollableFrame::INSTANT);
 }
 
 NS_IMETHODIMP
@@ -4143,36 +4113,120 @@ PresShell::DoScrollContentIntoView(nsIContent* aContent,
     return;
   }
 
+  nsIFrame* container =
+    nsLayoutUtils::GetClosestFrameOfType(frame, nsGkAtoms::scrollFrame);
+  if (!container) {
+    // nothing can be scrolled
+    return;
+  }
+
   // This is a two-step process.
   // Step 1: Find the bounds of the rect we want to scroll into view.  For
   //         example, for an inline frame we may want to scroll in the whole
-  //         line.
-  // Step 2: Walk the views that are parents of the frame and scroll them
+  //         line, or we may want to scroll multiple lines into view.
+  // Step 2: Walk container frame and its ancestors and scroll them
   //         appropriately.
-  
-  nsIView *closestView = nsnull;
+  // frameBounds is relative to container. We're assuming
+  // that scrollframes don't split so every continuation of frame will
+  // be a descendant of container. (Things would still mostly work
+  // even if that assumption was false.)
   nsRect frameBounds;
   PRBool haveRect = PR_FALSE;
+  PRBool useWholeLineHeightForInlines = aVPercent != NS_PRESSHELL_SCROLL_ANYWHERE;
   do {
-    UnionRectForClosestScrolledView(frame, aVPercent, frameBounds, haveRect,
-                                    closestView);
+    AccumulateFrameBounds(container, frame, useWholeLineHeightForInlines,
+                          frameBounds, haveRect);
   } while ((frame = frame->GetNextContinuation()));
 
-  // Walk up the view hierarchy.  Make sure to add the view's position
-  // _after_ we get the parent and see whether it's scrollable.  We want to
-  // make sure to get the scrolled view's position after it has been scrolled.
-  nsIScrollableView* scrollingView = nsnull;
-  while (closestView) {
-    nsIView* parent = closestView->GetParent();
-    if (parent) {
-      scrollingView = parent->ToScrollableView();
-      if (scrollingView) {
-        ScrollViewToShowRect(scrollingView, frameBounds, aVPercent, aHPercent);
+  ScrollFrameRectIntoView(container, frameBounds, aVPercent, aHPercent,
+                          SCROLL_OVERFLOW_HIDDEN);
+}
+
+PRBool
+PresShell::ScrollFrameRectIntoView(nsIFrame*     aFrame,
+                                   const nsRect& aRect,
+                                   PRIntn        aVPercent,
+                                   PRIntn        aHPercent,
+                                   PRUint32      aFlags)
+{
+  PRBool didScroll = PR_FALSE;
+  // This function needs to work even if rect has a width or height of 0.
+  nsRect rect = aRect;
+  nsIFrame* container = aFrame;
+  // Walk up the frame hierarchy scrolling the rect into view and
+  // keeping rect relative to container
+  do {
+    nsIScrollableFrame* sf = do_QueryFrame(container);
+    if (sf) {
+      nsPoint oldPosition = sf->GetScrollPosition();
+      ScrollToShowRect(sf, rect - sf->GetScrolledFrame()->GetPosition(),
+                       aVPercent, aHPercent, aFlags);
+      nsPoint newPosition = sf->GetScrollPosition();
+      rect += newPosition - oldPosition;
+
+      if (oldPosition != newPosition) {
+        didScroll = PR_TRUE;
       }
+
+      nsRect scrollPort = sf->GetScrollPortRect();
+      if (rect.XMost() < scrollPort.x ||
+          rect.x > scrollPort.XMost() ||
+          rect.YMost() < scrollPort.y ||
+          rect.y > scrollPort.YMost()) {
+        // We tried to show the rectangle, but none of it is visible,
+        // not even an edge.
+        // Stop trying to scroll ancestors into view.
+        break;
+      }
+
+      // Restrict rect to the area that is actually visible through
+      // the scrollport. We don't want to try to scroll some clipped-out
+      // part of 'rect' into view in some ancestor.
+      rect.IntersectRect(rect, sf->GetScrollPortRect());
     }
-    frameBounds += closestView->GetPosition();
-    closestView = parent;
+    rect += container->GetPosition();
+    container = container->GetParent();
+  } while (container && !(aFlags & SCROLL_FIRST_ANCESTOR_ONLY));
+
+  return didScroll;
+}
+
+nsRectVisibility
+PresShell::GetRectVisibility(nsIFrame* aFrame,
+                             const nsRect &aRect, 
+                             nscoord aMinTwips)
+{
+  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
+  NS_ASSERTION(rootFrame,
+               "How can someone have a frame for this presshell when there's no root?");
+  nsIScrollableFrame* sf = GetRootScrollFrameAsScrollable();
+  nsRect scrollPortRect;
+  if (sf) {
+    scrollPortRect = sf->GetScrollPortRect();
+    nsIFrame* f = do_QueryFrame(sf);
+    scrollPortRect += f->GetOffsetTo(rootFrame);
+  } else {
+    scrollPortRect = nsRect(nsPoint(0,0), rootFrame->GetSize());
   }
+
+  nsRect r = aRect + aFrame->GetOffsetTo(rootFrame);
+  // If aRect is entirely visible then we don't need to ensure that
+  // at least aMinTwips of it is visible
+  if (scrollPortRect.Contains(r))
+    return nsRectVisibility_kVisible;
+
+  nsRect insetRect = scrollPortRect;
+  insetRect.Deflate(aMinTwips, aMinTwips);
+  if (r.YMost() <= insetRect.y)
+    return nsRectVisibility_kAboveViewport;
+  if (r.y >= insetRect.YMost())
+    return nsRectVisibility_kBelowViewport;
+  if (r.XMost() <= insetRect.x)
+    return nsRectVisibility_kLeftOfViewport;
+  if (r.x >= insetRect.XMost())
+    return nsRectVisibility_kRightOfViewport;
+
+  return nsRectVisibility_kVisible;
 }
 
 // GetLinkLocation: copy link location to clipboard
@@ -4305,54 +4359,6 @@ PresShell::GetSelectionForCopy(nsISelection** outSelection)
   *outSelection = sel;
   NS_IF_ADDREF(*outSelection);
   return rv;
-}
-
-void
-PresShell::InvalidateFrameForScrolledView(nsIView *aView)
-{
-  nsIFrame* frame = nsLayoutUtils::GetFrameFor(aView);
-  if (!frame)
-    return;
-  frame->InvalidateWithFlags(frame->GetOverflowRect(),
-                             nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT);
-}
-
-static void
-NotifyInvalidateRegion(nsPresContext* aPresContext, const nsRegion& aRegion,
-                       nsPoint aOffset, PRUint32 aFlags)
-{
-  const nsRect* r;
-  for (nsRegionRectIterator iter(aRegion); (r = iter.Next());) {
-    aPresContext->NotifyInvalidation(*r + aOffset, aFlags);
-  }
-}
-
-void
-PresShell::NotifyInvalidateForScrolledView(const nsRegion& aBlitRegion,
-                                           const nsRegion& aInvalidateRegion)
-{
-  nsPresContext* pc = GetPresContext();
-  PRUint32 crossDocFlags = 0;
-  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
-  nsPoint offset(0,0);
-  while (pc) {
-    if (pc->MayHavePaintEventListener()) {
-      NotifyInvalidateRegion(pc, aBlitRegion, offset,
-                             nsIFrame::INVALIDATE_REASON_SCROLL_BLIT | crossDocFlags);
-      NotifyInvalidateRegion(pc, aInvalidateRegion, offset,
-                             nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT | crossDocFlags);
-    }
-    crossDocFlags = nsIFrame::INVALIDATE_CROSS_DOC;
-
-    nsIFrame* rootParentFrame = nsLayoutUtils::GetCrossDocParentFrame(rootFrame);
-    if (!rootParentFrame)
-      break;
-
-    pc = rootParentFrame->PresContext();
-    nsIFrame* nextRootFrame = pc->PresShell()->FrameManager()->GetRootFrame();
-    offset += rootFrame->GetOffsetTo(nextRootFrame);
-    rootFrame = nextRootFrame;
-  }
 }
 
 NS_IMETHODIMP_(void)
@@ -4556,7 +4562,10 @@ PresShell::UnsuppressAndInvalidate()
       mCaret->CheckCaretDrawingState();
     }
 
-    mPresContext->RootPresContext()->UpdatePluginGeometry(rootFrame);
+    nsRootPresContext* rootPC = mPresContext->GetRootPresContext();
+    if (rootPC) {
+      rootPC->UpdatePluginGeometry(rootFrame);
+    }
   }
 
   // now that painting is unsuppressed, focus may be set on the document
@@ -6112,8 +6121,8 @@ PresShell::HandleEvent(nsIView         *aView,
       return NS_OK;
 
     nsPresContext* framePresContext = frame->PresContext();
-    nsPresContext* rootPresContext = framePresContext->RootPresContext();
-    NS_ASSERTION(rootPresContext == mPresContext->RootPresContext(),
+    nsPresContext* rootPresContext = framePresContext->GetRootPresContext();
+    NS_ASSERTION(rootPresContext == mPresContext->GetRootPresContext(),
                  "How did we end up outside the connected prescontext/viewmanager hierarchy?"); 
     // If we aren't starting our event dispatch from the root frame of the root prescontext,
     // then someone must be capturing the mouse. In that case we don't want to search the popup
@@ -6127,10 +6136,13 @@ PresShell::HandleEvent(nsIView         *aView,
         nsTArray<nsIFrame*> popups = pm->GetVisiblePopups();
         PRUint32 i;
         // Search from top to bottom
+        nsIDocument* doc = frame->PresContext()->GetPresShell()->GetDocument();
         for (i = 0; i < popups.Length(); i++) {
           nsIFrame* popup = popups[i];
           if (popup->GetOverflowRect().Contains(
-              nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, popup))) {
+              nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, popup)) &&
+              !nsContentUtils::ContentIsCrossDocDescendantOf(
+                 doc, popup->GetContent())) {
             // The event should target the popup
             frame = popup;
             break;
@@ -6629,8 +6641,13 @@ PresShell::AdjustContextMenuKeyEvent(nsMouseEvent* aEvent)
   // Use the root view manager's widget since it's most likely to have one,
   // and the coordinates returned by GetCurrentItemAndPositionForElement
   // are relative to the root of the root view manager.
-  mPresContext->RootPresContext()->PresShell()->GetViewManager()->
-    GetRootWidget(getter_AddRefs(aEvent->widget));
+  nsRootPresContext* rootPC = mPresContext->GetRootPresContext();
+  if (rootPC) {
+    rootPC->PresShell()->GetViewManager()->
+      GetRootWidget(getter_AddRefs(aEvent->widget));
+  } else {
+    aEvent->widget = nsnull;
+  }
   aEvent->refPoint.x = 0;
   aEvent->refPoint.y = 0;
 
@@ -6776,6 +6793,10 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
   aTargetPt.x = presContext->AppUnitsToDevPixels(viewDelta.x + caretCoords.x + caretCoords.width);
   aTargetPt.y = presContext->AppUnitsToDevPixels(viewDelta.y + caretCoords.y + caretCoords.height);
 
+  // make sure rounding doesn't return a pixel which is outside the caret
+  // (e.g. one line lower)
+  aTargetPt.y -= 1;
+
   return PR_TRUE;
 }
 
@@ -6887,13 +6908,13 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
     if (!istree) {
       extra = frame->GetSize().height;
       if (checkLineHeight) {
-        nsIScrollableView *scrollView =
-          nsLayoutUtils::GetNearestScrollingView(view, nsLayoutUtils::eEither);
-        if (scrollView) {
-          nscoord scrollViewLineHeight;
-          scrollView->GetLineHeight(&scrollViewLineHeight);
-          if (extra > scrollViewLineHeight) {
-            extra = scrollViewLineHeight; 
+        nsIScrollableFrame *scrollFrame =
+          nsLayoutUtils::GetNearestScrollableFrame(frame);
+        if (scrollFrame) {
+          nscoord scrollFrameLineHeight =
+            scrollFrame->GetLineScrollAmount().height;
+          if (extra > scrollFrameLineHeight) {
+            extra = scrollFrameLineHeight; 
           }
         }
       }
@@ -7347,7 +7368,10 @@ PresShell::DoReflow(nsIFrame* target, PRBool aInterruptible)
     PostReflowEvent();
   }
 
-  mPresContext->RootPresContext()->UpdatePluginGeometry(target);
+  nsRootPresContext* rootPC = mPresContext->GetRootPresContext();
+  if (rootPC) {
+    rootPC->UpdatePluginGeometry(target);
+  }
 
   return !interrupted;
 }

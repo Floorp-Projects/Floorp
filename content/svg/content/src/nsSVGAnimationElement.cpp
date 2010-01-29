@@ -59,20 +59,32 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsSVGAnimationElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsSVGAnimationElement,
                                                 nsSVGAnimationElementBase)
   tmp->mHrefTarget.Unlink();
+  tmp->mTimedElement.Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsSVGAnimationElement,
                                                   nsSVGAnimationElementBase)
   tmp->mHrefTarget.Traverse(&cb);
+  tmp->mTimedElement.Traverse(&cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 //----------------------------------------------------------------------
 // Implementation
 
+#ifdef _MSC_VER
+// Disable "warning C4355: 'this' : used in base member initializer list".
+// We can ignore that warning because we know that mHrefTarget's constructor 
+// doesn't dereference the pointer passed to it.
+#pragma warning(push)
+#pragma warning(disable:4355)
+#endif
 nsSVGAnimationElement::nsSVGAnimationElement(nsINodeInfo *aNodeInfo)
   : nsSVGAnimationElementBase(aNodeInfo),
     mHrefTarget(this),
     mTimedDocumentRoot(nsnull)
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 {
 }
 
@@ -82,6 +94,7 @@ nsSVGAnimationElement::Init()
   nsresult rv = nsSVGAnimationElementBase::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mTimedElement.SetAnimationElement(this);
   AnimationFunction().SetAnimationElement(this);
   mTimedElement.SetTimeClient(&AnimationFunction());
 
@@ -274,6 +287,8 @@ nsSVGAnimationElement::BindToTree(nsIDocument* aDocument,
       // document yet.
       UpdateHrefTarget(aParent, hrefStr);
     }
+
+    mTimedElement.BindToTree(aParent);
   }
 
   AnimationNeedsResample();
@@ -297,6 +312,7 @@ nsSVGAnimationElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   }
 
   mHrefTarget.Unlink();
+  mTimedElement.DissolveReferences();
 
   AnimationNeedsResample();
 
@@ -330,7 +346,8 @@ nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
     // ... and if that didn't recognize the attribute, let the timed element
     // try to parse it.
     if (!foundMatch) {
-      foundMatch = mTimedElement.SetAttr(aAttribute, aValue, aResult, &rv);
+      foundMatch =
+        mTimedElement.SetAttr(aAttribute, aValue, aResult, this, &rv);
     }
 
     if (foundMatch) {
@@ -410,10 +427,15 @@ nsSVGAnimationElement::BeginElement(void)
 NS_IMETHODIMP
 nsSVGAnimationElement::BeginElementAt(float offset)
 {
-  nsresult rv = mTimedElement.BeginElementAt(offset, mTimedDocumentRoot);
+  // This will fail if we're not attached to a time container (SVG document
+  // fragment).
+  nsresult rv = mTimedElement.BeginElementAt(offset);
+  if (NS_FAILED(rv))
+    return rv;
+
   AnimationNeedsResample();
 
-  return rv;
+  return NS_OK;
 }
 
 /* void endElement (); */
@@ -427,10 +449,13 @@ nsSVGAnimationElement::EndElement(void)
 NS_IMETHODIMP
 nsSVGAnimationElement::EndElementAt(float offset)
 {
-  nsresult rv = mTimedElement.EndElementAt(offset, mTimedDocumentRoot);
-  AnimationNeedsResample();
+  nsresult rv = mTimedElement.EndElementAt(offset);
+  if (NS_FAILED(rv))
+    return rv;
 
-  return rv;
+  AnimationNeedsResample();
+ 
+  return NS_OK;
 }
 
 void

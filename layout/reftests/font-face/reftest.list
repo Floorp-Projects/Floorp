@@ -5,7 +5,7 @@
 HTTP(..) != download-1.html download-1-notref.html
 HTTP(..) == download-2.html download-2-ref.html
 HTTP(..) != download-2.html about:blank
-fails-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == download-2-big.html download-2-big-otf.html # bug 470713
+random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == download-2-big.html download-2-big-otf.html # bug 470713
 HTTP(..) != download-2-big-otf.html about:blank
 HTTP(..) != download-3-notref.html download-3.html
 HTTP(..) == download-3-ref.html download-3.html
@@ -17,7 +17,7 @@ HTTP(..) == multiple-descriptor-1.html multiple-descriptor-1-ref.html
 HTTP(..) != multiple-descriptor-1.html multiple-descriptor-1-notref.html
 HTTP(..) == src-list-1.html src-list-1-ref.html
 HTTP(..) == src-list-2.html src-list-2-ref.html
-fails-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == src-list-2-big-otf.html src-list-2-big-ref.html # bug 470713
+random-if(MOZ_WIDGET_TOOLKIT=="windows") HTTP(..) == src-list-2-big-otf.html src-list-2-big-ref.html # bug 470713
 HTTP(..) == src-list-format-1.html src-list-format-1-ref.html
 HTTP(..) == src-list-format-2.html src-list-format-2-ref.html
 HTTP(..) == src-list-format-3.html src-list-format-3-ref.html
@@ -34,8 +34,9 @@ HTTP(..) == src-list-local-fallback.html src-list-local-fallback-ref.html
 # localized full fontnames should *not* match, only English ones (need locale-invariant key)
 skip HTTP(..) == src-list-local-localized.html src-list-local-localized-ref.html # 486787, 486497
 
-# Postscript name lookup only supported on MacOS currently
-random-if(MOZ_WIDGET_TOOLKIT!="cocoa") == src-list-local-ps.html src-list-local-full-ref.html
+# Postscript name lookup only supported on MacOS/Windows currently
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == src-list-local-ps.html src-list-local-full-ref.html
+# Mac-specific test of 100 weight faces
 random-if(MOZ_WIDGET_TOOLKIT!="cocoa") == helveticaneue-ultra.html helveticaneue-ultra-ref.html
 
 # FIXME: The behavior here is neither mandated nor specified by the spec, but

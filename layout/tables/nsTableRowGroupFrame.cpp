@@ -102,7 +102,7 @@ PRInt32 nsTableRowGroupFrame::GetStartRowIndex()
   if (-1 == result) {
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (tableFrame) {
-      return tableFrame->GetStartRowIndex(*this);
+      return tableFrame->GetStartRowIndex(this);
     }
   }
       
@@ -253,7 +253,7 @@ nsTableRowGroupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleInSelection(aBuilder))
     return NS_OK;
 
-  PRBool isRoot = aBuilder->IsAtRootOfPseudoStackingContext() || IsScrolled();
+  PRBool isRoot = aBuilder->IsAtRootOfPseudoStackingContext();
   nsDisplayTableItem* item = nsnull;
   if (isRoot) {
     // This background is created regardless of whether this frame is
@@ -1409,7 +1409,7 @@ nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
   if (rows.Length() > 0) {
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (tableFrame) {
-      tableFrame->AppendRows(*this, rowIndex, rows);
+      tableFrame->AppendRows(this, rowIndex, rows);
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                          NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -1463,7 +1463,7 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
   if (numRows > 0) {
     nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, nsGkAtoms::tableRowFrame);
     PRInt32 rowIndex = (prevRow) ? prevRow->GetRowIndex() + 1 : startRowIndex;
-    tableFrame->InsertRows(*this, rows, rowIndex, PR_TRUE);
+    tableFrame->InsertRows(this, rows, rowIndex, PR_TRUE);
 
     PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange,

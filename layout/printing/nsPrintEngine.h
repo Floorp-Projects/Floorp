@@ -197,7 +197,7 @@ public:
 
   nsIWidget* GetPrintPreviewWindow() {return mPrtPreview->mPrintObject->mWindow;}
 
-  nsIViewManager* GetPrintPreviewViewManager() {return mPrtPreview->mPrintObject->mViewManager;}
+  nsIPresShell* GetPrintPreviewPresShell() {return mPrtPreview->mPrintObject->mPresShell;}
 
   float GetPrintPreviewScale() { return mPrtPreview->mPrintObject->
                                         mPresContext->GetPrintPreviewScale(); }

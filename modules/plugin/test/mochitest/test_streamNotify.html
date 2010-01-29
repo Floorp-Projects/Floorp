@@ -9,12 +9,15 @@
   <script class="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
 
-  var pending = 4;
+  var pending = 6;
   function testDone() {
     dump("testDone: " + pending + "\n")
     --pending;
+
+    // Wait for a bit so that any unexpected notifications from the
+    // malformed data or null-post tests are received.
     if (0 == pending)
-      SimpleTest.finish();
+      window.setTimeout(SimpleTest.finish, 2000);
   }
 
   function runTests() {
@@ -51,5 +54,40 @@
                       is(r, 1, "Shouldn't load invalid URI");
                       testDone();
                     }), "streamTest GET invalid URL");
+
+    ok(p.streamTest("javascript:'Hello';", false, null,
+                    function(r, t) {
+                      is(r, 0, "GET javascript: URI");
+                      is(t, "Hello", "GET javascript: URI correct");
+                      testDone();
+                    }), "streamTest GET javascript: URI");
+
+/*
+ * XXX/cjones: disabled for now because it appears to be hard to make
+ * mochitest ignore the malformed javascript
+
+    ok(!p.streamTest("javascript:syntax##$&*@error-*", false, null,
+                     function(r, t) {
+                       is(r, 1, "Shouldn't load invalid javascript: URI");
+                       testDone();
+                     }), "streamTest GET bad javascript: URI");
+*/
+
+    ok(p.streamTest("data:text/plain,World", false, null,
+                    function(r, t) {
+                      is(r, 0, "GET data: URI");
+                      is(t, "World", "GET data: URI correct");
+                      testDone();
+                    }), "streamTest GET data: URI");
+
+/*
+ * XXX/bsmedberg: disable this test as well, since the pluginhost is broken
+ * and the testplugin is double-deleting the urlnotify context.
+
+    ok(!p.streamTest("data:malformed?", false, null,
+                     function(r, t) {
+                       todo(false, "Shouldn't get callback for invalid data: URI");
+                     }), "streamTest GET bad data: URI");
+ */
   }
   </script>

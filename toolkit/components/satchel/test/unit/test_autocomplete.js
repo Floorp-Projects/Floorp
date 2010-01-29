@@ -40,6 +40,8 @@ var fh;
 var fac;
 var prefs;
 
+const DEFAULT_EXPIRE_DAYS = 180;
+
 function countAllEntries() {
     let stmt = fh.DBConnection.createStatement("SELECT COUNT(*) as numEntries FROM moz_formhistory");
     do_check_true(stmt.executeStep());
@@ -59,7 +61,7 @@ function getFormExpiryDays () {
     if (prefs.prefHasUserValue("browser.formfill.expire_days"))
         return prefs.getIntPref("browser.formfill.expire_days");
     else
-        return prefs.getIntPref("browser.history_expire_days");
+        return DEFAULT_EXPIRE_DAYS;
 }
 
 function run_test() {

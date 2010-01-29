@@ -51,22 +51,27 @@ _TEST_FILES = \
 	  db_smilCSSPropertyList.js \
 	  smilTestUtils.js \
 	  smilXHR_helper.svg \
+	  test_smilCrossContainer.xhtml \
 	  test_smilCSSFontStretchRelative.xhtml \
 	  test_smilCSSFromBy.xhtml \
 	  test_smilCSSFromTo.xhtml \
 	  test_smilCSSInherit.xhtml \
 	  test_smilCSSInvalidValues.xhtml \
 	  test_smilCSSPaced.xhtml \
+	  test_smilReset.xhtml \
 	  test_smilRestart.xhtml \
+	  test_smilFillMode.xhtml \
 	  test_smilGetStartTime.xhtml \
 	  test_smilGetSimpleDuration.xhtml \
 	  test_smilKeySplines.xhtml \
 	  test_smilSetCurrentTime.xhtml \
 	  test_smilSync.xhtml \
+	  test_smilSyncbaseTarget.xhtml \
 	  test_smilSyncTransform.xhtml \
 	  test_smilTextZoom.xhtml \
 	  test_smilTiming.xhtml \
 	  test_smilTimingZeroIntervals.xhtml \
+	  test_smilUpdatedInterval.xhtml \
 	  test_smilXHR.xhtml \
 		$(NULL)
 

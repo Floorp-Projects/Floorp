@@ -82,7 +82,7 @@ nsSMILAnimationController::~nsSMILAnimationController()
 
   NS_ASSERTION(mAnimationElementTable.Count() == 0,
                "Animation controller shouldn't be tracking any animation"
-               " elements when it dies.");
+               " elements when it dies");
 }
 
 nsSMILAnimationController* NS_NewSMILAnimationController(nsIDocument* aDoc)
@@ -166,15 +166,6 @@ nsSMILAnimationController::UnregisterAnimationElement(
 }
 
 //----------------------------------------------------------------------
-// Resampling methods
-
-void
-nsSMILAnimationController::Resample()
-{
-  DoSample(PR_FALSE);
-}
-
-//----------------------------------------------------------------------
 // Page show/hide
 
 void
@@ -238,7 +229,7 @@ nsresult
 nsSMILAnimationController::StartTimer()
 {
   NS_ENSURE_TRUE(mTimer, NS_ERROR_FAILURE);
-  NS_ASSERTION(mPauseState == 0, "Starting timer but controller is paused.");
+  NS_ASSERTION(mPauseState == 0, "Starting timer but controller is paused");
 
   // Run the first sample manually
   Sample();
@@ -296,14 +287,16 @@ nsSMILAnimationController::DoSample()
   DoSample(PR_TRUE); // Skip unchanged time containers
 }
 
-
 void
 nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
 {
   // Reset resample flag
   mResampleNeeded = PR_FALSE;
 
-  // STEP 1: Sample the child time containers
+  // STEP 1: Bring model up to date
+  DoMilestoneSamples();
+
+  // STEP 2: Sample the child time containers
   //
   // When we sample the child time containers they will simply record the sample
   // time in document time.
@@ -313,7 +306,7 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
                                          aSkipUnchangedContainers };
   mChildContainerTable.EnumerateEntries(SampleTimeContainer, &tcParams);
 
-  // STEP 2: (i)  Sample the timed elements AND
+  // STEP 3: (i)  Sample the timed elements AND
   //         (ii) Create a table of compositors
   //
   // (i) Here we sample the timed elements (fetched from the
@@ -349,7 +342,7 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
   }
   activeContainers.Clear();
 
-  // STEP 3: Remove animation effects from any no-longer-animated elems/attrs
+  // STEP 4: Remove animation effects from any no-longer-animated elems/attrs
   if (mLastCompositorTable) {
     // * For each compositor in current sample's hash table, remove entry from
     // prev sample's hash table -- we don't need to clear animation
@@ -362,7 +355,7 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
     mLastCompositorTable->EnumerateEntries(DoClearAnimationEffects, nsnull);
   }
 
-  // STEP 4: Compose currently-animated attributes.
+  // STEP 5: Compose currently-animated attributes.
   // XXXdholbert: This step traverses our animation targets in an effectively
   // random order. For animation from/to 'inherit' values to work correctly
   // when the inherited value is *also* being animated, we really should be
@@ -373,6 +366,130 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
   mLastCompositorTable = currentCompositorTable.forget();
 
   NS_ASSERTION(!mResampleNeeded, "Resample dirty flag set during sample!");
+}
+
+void
+nsSMILAnimationController::DoMilestoneSamples()
+{
+  // We need to sample the timing model but because SMIL operates independently
+  // of the frame-rate, we can get one sample at t=0s and the next at t=10min.
+  //
+  // In between those two sample times a whole string of significant events
+  // might be expected to take place: events firing, new interdependencies
+  // between animations resolved and dissolved, etc.
+  //
+  // Furthermore, at any given time, we want to sample all the intervals that
+  // end at that time BEFORE any that begin. This behaviour is implied by SMIL's
+  // endpoint-exclusive timing model.
+  //
+  // So we have the animations (specifically the timed elements) register the
+  // next significant moment (called a milestone) in their lifetime and then we
+  // step through the model at each of these moments and sample those animations
+  // registered for those times. This way events can fire in the correct order,
+  // dependencies can be resolved etc.
+
+  nsSMILTime sampleTime = LL_MININT;
+
+  while (PR_TRUE) {
+    // We want to find any milestones AT OR BEFORE the current sample time so we
+    // initialise the next milestone to the moment after (1ms after, to be
+    // precise) the current sample time and see if there are any milestones
+    // before that. Any other milestones will be dealt with in a subsequent
+    // sample.
+    nsSMILMilestone nextMilestone(GetCurrentTime() + 1, PR_TRUE);
+    mChildContainerTable.EnumerateEntries(GetNextMilestone, &nextMilestone);
+
+    if (nextMilestone.mTime > GetCurrentTime()) {
+      break;
+    }
+
+    GetMilestoneElementsParams params;
+    params.mMilestone = nextMilestone;
+    mChildContainerTable.EnumerateEntries(GetMilestoneElements, &params);
+    PRUint32 length = params.mElements.Length();
+
+    // During the course of a sampling we don't want to actually go backwards.
+    // Due to negative offsets, early ends and the like, a timed element might
+    // register a milestone that is actually in the past. That's fine, but it's
+    // still only going to get *sampled* with whatever time we're up to and no
+    // earlier.
+    //
+    // Because we're only performing this clamping at the last moment, the
+    // animations will still all get sampled in the correct order and
+    // dependencies will be appropriately resolved.
+    sampleTime = PR_MAX(nextMilestone.mTime, sampleTime);
+
+    for (PRUint32 i = 0; i < length; ++i) {
+      nsISMILAnimationElement* elem = params.mElements[i].get();
+      NS_ABORT_IF_FALSE(elem, "NULL animation element in list");
+      nsSMILTimeContainer* container = elem->GetTimeContainer();
+      if (!container)
+        // The container may be nsnull if the element has been detached from its
+        // parent since registering a milestone.
+        continue;
+
+      nsSMILTimeValue containerTimeValue =
+        container->ParentToContainerTime(sampleTime);
+      if (!containerTimeValue.IsResolved())
+        continue;
+
+      // Clamp the converted container time to non-negative values.
+      nsSMILTime containerTime = PR_MAX(0, containerTimeValue.GetMillis());
+
+      if (nextMilestone.mIsEnd) {
+        elem->TimedElement().SampleEndAt(containerTime);
+      } else {
+        elem->TimedElement().SampleAt(containerTime);
+      }
+    }
+  }
+}
+
+/*static*/ PR_CALLBACK PLDHashOperator
+nsSMILAnimationController::GetNextMilestone(TimeContainerPtrKey* aKey,
+                                            void* aData)
+{
+  NS_ABORT_IF_FALSE(aKey, "Null hash key for time container hash table");
+  NS_ABORT_IF_FALSE(aKey->GetKey(), "Null time container key in hash table");
+  NS_ABORT_IF_FALSE(aData,
+      "Null data pointer during time container enumeration");
+
+  nsSMILMilestone* nextMilestone = static_cast<nsSMILMilestone*>(aData);
+
+  nsSMILTimeContainer* container = aKey->GetKey();
+  if (container->IsPausedByType(nsSMILTimeContainer::PAUSE_BEGIN))
+    return PL_DHASH_NEXT;
+
+  nsSMILMilestone thisMilestone;
+  PRBool didGetMilestone =
+    container->GetNextMilestoneInParentTime(thisMilestone);
+  if (didGetMilestone && thisMilestone < *nextMilestone) {
+    *nextMilestone = thisMilestone;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+/*static*/ PR_CALLBACK PLDHashOperator
+nsSMILAnimationController::GetMilestoneElements(TimeContainerPtrKey* aKey,
+                                                void* aData)
+{
+  NS_ABORT_IF_FALSE(aKey, "Null hash key for time container hash table");
+  NS_ABORT_IF_FALSE(aKey->GetKey(), "Null time container key in hash table");
+  NS_ABORT_IF_FALSE(aData,
+      "Null data pointer during time container enumeration");
+
+  GetMilestoneElementsParams* params =
+    static_cast<GetMilestoneElementsParams*>(aData);
+
+  nsSMILTimeContainer* container = aKey->GetKey();
+  if (container->IsPausedByType(nsSMILTimeContainer::PAUSE_BEGIN))
+    return PL_DHASH_NEXT;
+
+  container->PopMilestoneElementsAtMilestone(params->mMilestone,
+                                             params->mElements);
+
+  return PL_DHASH_NEXT;
 }
 
 /*static*/ PR_CALLBACK PLDHashOperator
@@ -387,7 +504,9 @@ nsSMILAnimationController::SampleTimeContainer(TimeContainerPtrKey* aKey,
     static_cast<SampleTimeContainerParams*>(aData);
 
   nsSMILTimeContainer* container = aKey->GetKey();
-  if (container->NeedsSample() || !params->mSkipUnchangedContainers) {
+  if (!container->IsPausedByType(nsSMILTimeContainer::PAUSE_BEGIN) &&
+      (container->NeedsSample() || !params->mSkipUnchangedContainers)) {
+    container->ClearMilestones();
     container->Sample();
     params->mActiveContainers->PutEntry(container);
   }

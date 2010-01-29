@@ -79,6 +79,7 @@
 #include "nsCycleCollector.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsDOMThreadService.h"
+#include "nsAutoJSValHolder.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"
@@ -101,6 +102,7 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMCrypto.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOM3Document.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMElement.h"
@@ -111,8 +113,10 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMessageEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
+#include "nsIDOMPopStateEvent.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMGeoGeolocation.h"
+#include "nsPIDOMStorage.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
@@ -129,7 +133,7 @@
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIScrollableView.h"
+#include "nsIScrollableFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsISelectionController.h"
@@ -167,6 +171,7 @@
 #include "nsIXULAppInfo.h"
 #include "nsNetUtil.h"
 #include "nsFocusManager.h"
+#include "nsIJSON.h"
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #include "nsIDOMXULControlElement.h"
@@ -358,6 +363,8 @@ static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 
 static const char kCryptoContractID[] = NS_CRYPTO_CONTRACTID;
 static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
+
+static const char sPopStatePrefStr[] = "browser.history.allowPopState";
 
 static PRBool
 IsAboutBlank(nsIURI* aURI)
@@ -653,9 +660,9 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
     mJSObject(nsnull),
-    mPendingStorageEvents(nsnull),
     mTimeoutsSuspendDepth(0),
-    mFocusMethod(0)
+    mFocusMethod(0),
+    mPendingStorageEventsObsolete(nsnull)
 #ifdef DEBUG
     , mSetOpenerWindowCalled(PR_FALSE)
 #endif
@@ -687,6 +694,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
         // Watch for dom-storage-changed so we can fire storage
         // events. Use a strong reference.
+        os->AddObserver(mObserver, "dom-storage2-changed", PR_FALSE);
         os->AddObserver(mObserver, "dom-storage-changed", PR_FALSE);
       }
     }
@@ -773,6 +781,7 @@ nsGlobalWindow::~nsGlobalWindow()
       do_GetService("@mozilla.org/observer-service;1");
     if (os) {
       os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
+      os->RemoveObserver(mObserver, "dom-storage2-changed");
       os->RemoveObserver(mObserver, "dom-storage-changed");
     }
 
@@ -826,7 +835,7 @@ nsGlobalWindow::~nsGlobalWindow()
   nsCycleCollector_DEBUG_wasFreed(static_cast<nsIScriptGlobalObject*>(this));
 #endif
 
-  delete mPendingStorageEvents;
+  delete mPendingStorageEventsObsolete;
 
   nsLayoutStatics::Release();
 }
@@ -1730,6 +1739,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   mDocument = do_QueryInterface(aDocument);
   mDoc = aDocument;
   mLocalStorage = nsnull;
+  mSessionStorage = nsnull;
 
 #ifdef DEBUG
   mLastOpenedURI = aDocument->GetDocumentURI();
@@ -3730,26 +3740,19 @@ nsGlobalWindow::GetScrollMaxXY(PRInt32* aScrollMaxX, PRInt32* aScrollMaxY)
   FORWARD_TO_OUTER(GetScrollMaxXY, (aScrollMaxX, aScrollMaxY),
                    NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv;
-  nsIScrollableView *view = nsnull;      // no addref/release for views
-
   FlushPendingNotifications(Flush_Layout);
-  GetScrollInfo(&view);
-  if (!view)
-    return NS_OK;      // bug 230965 changed from NS_ERROR_FAILURE
+  nsIScrollableFrame *sf = GetScrollFrame();
+  if (!sf)
+    return NS_OK;
 
-  nsSize scrolledSize;
-  rv = view->GetContainerSize(&scrolledSize.width, &scrolledSize.height);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRect portRect = view->View()->GetBounds();
+  nsRect scrollRange = sf->GetScrollRange();
 
   if (aScrollMaxX)
     *aScrollMaxX = PR_MAX(0,
-      (PRInt32)floor(nsPresContext::AppUnitsToFloatCSSPixels(scrolledSize.width - portRect.width)));
+      (PRInt32)floor(nsPresContext::AppUnitsToFloatCSSPixels(scrollRange.XMost())));
   if (aScrollMaxY)
     *aScrollMaxY = PR_MAX(0,
-      (PRInt32)floor(nsPresContext::AppUnitsToFloatCSSPixels(scrolledSize.height - portRect.height)));
+      (PRInt32)floor(nsPresContext::AppUnitsToFloatCSSPixels(scrollRange.YMost())));
 
   return NS_OK;
 }
@@ -3777,34 +3780,28 @@ nsGlobalWindow::GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY,
   FORWARD_TO_OUTER(GetScrollXY, (aScrollX, aScrollY, aDoFlush),
                    NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv;
-  nsIScrollableView *view = nsnull;      // no addref/release for views
-
   if (aDoFlush) {
     FlushPendingNotifications(Flush_Layout);
   } else {
     EnsureSizeUpToDate();
   }
-  
-  GetScrollInfo(&view);
-  if (!view)
-    return NS_OK;      // bug 202206 changed from NS_ERROR_FAILURE
 
-  nscoord xPos, yPos;
-  rv = view->GetScrollPosition(xPos, yPos);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIScrollableFrame *sf = GetScrollFrame();
+  if (!sf)
+    return NS_OK;
 
-  if ((xPos != 0 || yPos != 0) && !aDoFlush) {
+  nsPoint scrollPos = sf->GetScrollPosition();
+  if (scrollPos != nsPoint(0,0) && !aDoFlush) {
     // Oh, well.  This is the expensive case -- the window is scrolled and we
     // didn't actually flush yet.  Repeat, but with a flush, since the content
     // may get shorter and hence our scroll position may decrease.
     return GetScrollXY(aScrollX, aScrollY, PR_TRUE);
   }
-  
+
   if (aScrollX)
-    *aScrollX = nsPresContext::AppUnitsToIntCSSPixels(xPos);
+    *aScrollX = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.x);
   if (aScrollY)
-    *aScrollY = nsPresContext::AppUnitsToIntCSSPixels(yPos);
+    *aScrollY = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.y);
 
   return NS_OK;
 }
@@ -4801,13 +4798,10 @@ nsGlobalWindow::Scroll(PRInt32 aXScroll, PRInt32 aYScroll)
 NS_IMETHODIMP
 nsGlobalWindow::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
 {
-  nsresult result;
-  nsIScrollableView *view = nsnull;      // no addref/release for views
-
   FlushPendingNotifications(Flush_Layout);
-  result = GetScrollInfo(&view);
+  nsIScrollableFrame *sf = GetScrollFrame();
 
-  if (view) {
+  if (sf) {
     // Here we calculate what the max pixel value is that we can
     // scroll to, we do this by dividing maxint with the pixel to
     // twips conversion factor, and substracting 4, the 4 comes from
@@ -4822,64 +4816,62 @@ nsGlobalWindow::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
     if (aYScroll > maxpx) {
       aYScroll = maxpx;
     }
-
-    result = view->ScrollTo(nsPresContext::CSSPixelsToAppUnits(aXScroll),
-                            nsPresContext::CSSPixelsToAppUnits(aYScroll),
-                            0);
+    sf->ScrollTo(nsPoint(nsPresContext::CSSPixelsToAppUnits(aXScroll),
+                         nsPresContext::CSSPixelsToAppUnits(aYScroll)),
+                 nsIScrollableFrame::INSTANT);
   }
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif)
 {
-  nsresult result;
-  nsIScrollableView *view = nsnull;      // no addref/release for views
-
   FlushPendingNotifications(Flush_Layout);
-  result = GetScrollInfo(&view);
+  nsIScrollableFrame *sf = GetScrollFrame();
 
-  if (view) {
-    nscoord xPos, yPos;
-    result = view->GetScrollPosition(xPos, yPos);
-    if (NS_SUCCEEDED(result)) {
-      result = ScrollTo(nsPresContext::AppUnitsToIntCSSPixels(xPos) + aXScrollDif,
-                        nsPresContext::AppUnitsToIntCSSPixels(yPos) + aYScrollDif);
-    }
+  if (sf) {
+    nsPoint scrollPos = sf->GetScrollPosition();
+    // It seems like it would make more sense for ScrollBy to use
+    // SMOOTH mode, but tests seem to depend on the synchronous behaviour.
+    // Perhaps Web content does too.
+    return ScrollTo(nsPresContext::AppUnitsToIntCSSPixels(scrollPos.x) + aXScrollDif,
+                    nsPresContext::AppUnitsToIntCSSPixels(scrollPos.y) + aYScrollDif);
   }
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::ScrollByLines(PRInt32 numLines)
 {
-  nsresult result;
-  nsIScrollableView *view = nsnull;   // no addref/release for views
-
   FlushPendingNotifications(Flush_Layout);
-  result = GetScrollInfo(&view);
-  if (view) {
-    result = view->ScrollByLines(0, numLines);
+  nsIScrollableFrame *sf = GetScrollFrame();
+  if (sf) {
+    // It seems like it would make more sense for ScrollByLines to use
+    // SMOOTH mode, but tests seem to depend on the synchronous behaviour.
+    // Perhaps Web content does too.
+    sf->ScrollBy(nsIntPoint(0, numLines), nsIScrollableFrame::LINES,
+                 nsIScrollableFrame::INSTANT);
   }
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::ScrollByPages(PRInt32 numPages)
 {
-  nsresult result;
-  nsIScrollableView *view = nsnull;   // no addref/release for views
-
   FlushPendingNotifications(Flush_Layout);
-  result = GetScrollInfo(&view);
-  if (view) {
-    result = view->ScrollByPages(0, numPages);
+  nsIScrollableFrame *sf = GetScrollFrame();
+  if (sf) {
+    // It seems like it would make more sense for ScrollByPages to use
+    // SMOOTH mode, but tests seem to depend on the synchronous behaviour.
+    // Perhaps Web content does too.
+    sf->ScrollBy(nsIntPoint(0, numPages), nsIScrollableFrame::PAGES,
+                 nsIScrollableFrame::INSTANT);
   }
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5531,6 +5523,33 @@ public:
   nsRefPtr<nsGlobalWindow> mWindow;
 };
 
+PRBool
+nsGlobalWindow::CanClose()
+{
+  if (!mDocShell)
+    return PR_TRUE;
+
+  // Ask the content viewer whether the toplevel window can close.
+  // If the content viewer returns false, it is responsible for calling
+  // Close() as soon as it is possible for the window to close.
+  // This allows us to not close the window while printing is happening.
+
+  nsCOMPtr<nsIContentViewer> cv;
+  mDocShell->GetContentViewer(getter_AddRefs(cv));
+  if (cv) {
+    PRBool canClose;
+    nsresult rv = cv->PermitUnload(PR_FALSE, &canClose);
+    if (NS_SUCCEEDED(rv) && !canClose)
+      return PR_FALSE;
+
+    rv = cv->RequestWindowClose(&canClose);
+    if (NS_SUCCEEDED(rv) && !canClose)
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::Close()
 {
@@ -5560,7 +5579,6 @@ nsGlobalWindow::Close()
 
   // Don't allow scripts from content to close windows
   // that were not opened by script
-  nsresult rv = NS_OK;
   if (!mHadOriginalOpener && !nsContentUtils::IsCallerTrustedForWrite()) {
     PRBool allowClose =
       nsContentUtils::GetBoolPref("dom.allow_scripts_to_close_windows",
@@ -5582,24 +5600,8 @@ nsGlobalWindow::Close()
     }
   }
 
-  // Ask the content viewer whether the toplevel window can close.
-  // If the content viewer returns false, it is responsible for calling
-  // Close() as soon as it is possible for the window to close.
-  // This allows us to not close the window while printing is happening.
-
-  nsCOMPtr<nsIContentViewer> cv;
-  mDocShell->GetContentViewer(getter_AddRefs(cv));
-  if (!mInClose && !mIsClosed && cv) {
-    PRBool canClose;
-
-    rv = cv->PermitUnload(PR_FALSE, &canClose);
-    if (NS_SUCCEEDED(rv) && !canClose)
-      return NS_OK;
-
-    rv = cv->RequestWindowClose(&canClose);
-    if (NS_SUCCEEDED(rv) && !canClose)
-      return NS_OK;
-  }
+  if (!mInClose && !mIsClosed && !CanClose())
+    return NS_OK;
 
   // Fire a DOM event notifying listeners that this window is about to
   // be closed. The tab UI code may choose to cancel the default
@@ -5619,6 +5621,36 @@ nsGlobalWindow::Close()
     return NS_OK;
   }
 
+  return FinalClose();
+}
+
+nsresult
+nsGlobalWindow::ForceClose()
+{
+  if (IsFrame() || !mDocShell) {
+    // This may be a frame in a frameset, or a window that's already closed.
+    // Ignore such calls.
+
+    return NS_OK;
+  }
+
+  if (mHavePendingClose) {
+    // We're going to be closed anyway; do nothing since we don't want
+    // to double-close
+    return NS_OK;
+  }
+
+  mInClose = PR_TRUE;
+
+  DispatchCustomEvent("DOMWindowClose");
+
+  return FinalClose();
+}
+
+nsresult
+nsGlobalWindow::FinalClose()
+{
+  nsresult rv;
   // Flag that we were closed.
   mIsClosed = PR_TRUE;
 
@@ -6484,8 +6516,7 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
   FORWARD_TO_INNER_CREATE(AddEventListener, (aType, aListener, aUseCapture),
                           NS_ERROR_NOT_AVAILABLE);
 
-  return AddEventListener(aType, aListener, aUseCapture,
-                          !nsContentUtils::IsChromeDoc(mDoc));
+  return AddEventListener(aType, aListener, aUseCapture, PR_FALSE, 0);
 }
 
 NS_IMETHODIMP
@@ -6577,14 +6608,26 @@ nsGlobalWindow::IsRegisteredHere(const nsAString & type, PRBool *_retval)
 NS_IMETHODIMP
 nsGlobalWindow::AddEventListener(const nsAString& aType,
                                  nsIDOMEventListener *aListener,
-                                 PRBool aUseCapture, PRBool aWantsUntrusted)
+                                 PRBool aUseCapture, PRBool aWantsUntrusted,
+                                 PRUint8 optional_argc)
 {
+  NS_ASSERTION(!aWantsUntrusted || optional_argc > 0,
+               "Won't check if this is chrome, you want to set "
+               "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
+               "explicit by making optional_argc non-zero.");
+
+  if (IsOuterWindow() && mInnerWindow &&
+      !nsContentUtils::CanCallerAccess(mInnerWindow)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   nsIEventListenerManager* manager = GetListenerManager(PR_TRUE);
   NS_ENSURE_STATE(manager);
 
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
-  if (aWantsUntrusted) {
+  if (aWantsUntrusted ||
+      (optional_argc == 0 && !nsContentUtils::IsChromeDoc(mDoc))) {
     flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
   }
 
@@ -6932,24 +6975,15 @@ nsGlobalWindow::PageHidden()
 }
 
 nsresult
-nsGlobalWindow::DispatchAsyncHashchange()
+nsGlobalWindow::DispatchSyncHashchange()
 {
-  FORWARD_TO_INNER(DispatchAsyncHashchange, (), NS_OK);
-
-  nsCOMPtr<nsIRunnable> event =
-    NS_NEW_RUNNABLE_METHOD(nsGlobalWindow, this, FireHashchange);
-   
-  return NS_DispatchToCurrentThread(event);
-}
-
-nsresult
-nsGlobalWindow::FireHashchange()
-{
-  NS_ENSURE_TRUE(IsInnerWindow(), NS_ERROR_FAILURE);
+  FORWARD_TO_INNER(DispatchSyncHashchange, (), NS_OK);
+  NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
+               "Must be safe to run script here.");
 
   // Don't do anything if the window is frozen.
   if (IsFrozen())
-      return NS_OK;
+    return NS_OK;
 
   // Dispatch the hashchange event, which doesn't bubble and isn't cancelable,
   // to the outer window.
@@ -6958,7 +6992,119 @@ nsGlobalWindow::FireHashchange()
                                               PR_FALSE, PR_FALSE);
 }
 
-// Find an nsCanvasFrame under aFrame.  Only search the principal
+nsresult
+nsGlobalWindow::DispatchSyncPopState()
+{
+  FORWARD_TO_INNER(DispatchSyncPopState, (), NS_OK);
+
+  NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
+               "Must be safe to run script here.");
+
+  // Check that PopState hasn't been pref'ed off.
+  if (!nsContentUtils::GetBoolPref(sPopStatePrefStr, PR_FALSE))
+    return NS_OK;
+
+  nsresult rv = NS_OK;
+
+  // Bail if the window is frozen.
+  if (IsFrozen()) {
+    return NS_OK;
+  }
+
+  // Bail if there's no document or the document's readystate isn't "complete".
+  if (!mDoc) {
+    return NS_OK;
+  }
+
+  nsIDocument::ReadyState readyState = mDoc->GetReadyStateEnum();
+  if (readyState != nsIDocument::READYSTATE_COMPLETE) {
+    return NS_OK;
+  }
+
+  // Get the document's pending state object -- it contains the data we're
+  // going to send along with the popstate event.  The object is serialized as
+  // JSON.
+  nsAString& stateObjJSON = mDoc->GetPendingStateObject();
+
+  nsCOMPtr<nsIVariant> stateObj;
+  // Parse the JSON, if there's any to parse.
+  if (!stateObjJSON.IsEmpty()) {
+    // Get the JSContext associated with our document. We need this for
+    // deserialization.
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(mDocument);
+    NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
+
+    // Get the JSContext from the document, like we do in
+    // nsContentUtils::GetContextFromDocument().
+    nsIScriptGlobalObject *sgo = document->GetScopeObject();
+    NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
+
+    nsIScriptContext *scx = sgo->GetContext();
+    NS_ENSURE_TRUE(scx, NS_ERROR_FAILURE);
+
+    JSContext *cx = (JSContext*) scx->GetNativeContext();
+
+    // If our json call triggers a JS-to-C++ call, we want that call to use cx
+    // as the context.  So we push cx onto the context stack.
+    nsCxPusher cxPusher;
+
+    jsval jsStateObj = JSVAL_NULL;
+    // Root the container which will hold our decoded state object.
+    nsAutoGCRoot(&jsStateObj, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Deserialize the state object into an nsIVariant.
+    nsCOMPtr<nsIJSON> json = do_GetService("@mozilla.org/dom/json;1");
+    NS_ENSURE_TRUE(cxPusher.Push(cx), NS_ERROR_FAILURE);
+    rv = json->DecodeToJSVal(stateObjJSON, cx, &jsStateObj);
+    NS_ENSURE_SUCCESS(rv, rv);
+    cxPusher.Pop();
+
+    nsCOMPtr<nsIXPConnect> xpconnect = do_GetService(nsIXPConnect::GetCID());
+    NS_ENSURE_TRUE(xpconnect, NS_ERROR_FAILURE);
+    rv = xpconnect->JSValToVariant(cx, &jsStateObj, getter_AddRefs(stateObj));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Obtain a presentation shell for use in creating a popstate event.
+  nsIPresShell *shell = mDoc->GetPrimaryShell();
+  nsCOMPtr<nsPresContext> presContext;
+  if (shell) {
+    presContext = shell->GetPresContext();
+  }
+
+  // Create a new popstate event
+  nsCOMPtr<nsIDOMEvent> domEvent;
+  rv = nsEventDispatcher::CreateEvent(presContext, nsnull,
+                                      NS_LITERAL_STRING("popstateevent"),
+                                      getter_AddRefs(domEvent));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
+  NS_ENSURE_TRUE(privateEvent, NS_ERROR_FAILURE);
+
+  // Initialize the popstate event, which does bubble but isn't cancellable.
+  nsCOMPtr<nsIDOMPopStateEvent> popstateEvent = do_QueryInterface(domEvent);
+  rv = popstateEvent->InitPopStateEvent(NS_LITERAL_STRING("popstate"),
+                                        PR_TRUE, PR_FALSE,
+                                        stateObj);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = privateEvent->SetTrusted(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMEventTarget> outerWindow =
+    do_QueryInterface(GetOuterWindow());
+  NS_ENSURE_TRUE(outerWindow, NS_ERROR_UNEXPECTED);
+
+  rv = privateEvent->SetTarget(outerWindow);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool dummy; // default action
+  return DispatchEvent(popstateEvent, &dummy);
+}
+
+// Find an nsICanvasFrame under aFrame.  Only search the principal
 // child lists.  aFrame must be non-null.
 static nsCanvasFrame* FindCanvasFrame(nsIFrame* aFrame)
 {
@@ -7098,8 +7244,6 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
 {
   FORWARD_TO_INNER(GetSessionStorage, (aSessionStorage), NS_ERROR_UNEXPECTED);
 
-  *aSessionStorage = nsnull;
-
   nsIPrincipal *principal = GetPrincipal();
   nsIDocShell* docShell = GetDocShell();
 
@@ -7107,15 +7251,56 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     return NS_OK;
   }
 
-  nsresult rv = docShell->GetSessionStorageForPrincipal(principal,
-                                                        PR_TRUE,
-                                                        aSessionStorage);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!*aSessionStorage) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  if (mSessionStorage) {
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+      PR_LogPrint("nsGlobalWindow %p has %p sessionStorage", this, mSessionStorage.get());
+    }
+#endif
+    nsCOMPtr<nsPIDOMStorage> piStorage = do_QueryInterface(mSessionStorage);
+    if (piStorage) {
+      PRBool canAccess = piStorage->CanAccess(principal);
+      NS_ASSERTION(canAccess,
+                   "window %x owned sessionStorage "
+                   "that could not be accessed!");
+      if (!canAccess) {
+          mSessionStorage = nsnull;
+      }
+    }
   }
 
+  if (!mSessionStorage) {
+    *aSessionStorage = nsnull;
+
+    nsString documentURI;
+    nsCOMPtr<nsIDOM3Document> document3 = do_QueryInterface(mDoc);
+    if (document3)
+        document3->GetDocumentURI(documentURI);
+
+    nsresult rv = docShell->GetSessionStorageForPrincipal(principal,
+                                                          documentURI,
+                                                          PR_TRUE,
+                                                          getter_AddRefs(mSessionStorage));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+      PR_LogPrint("nsGlobalWindow %p tried to get a new sessionStorage %p", this, mSessionStorage.get());
+    }
+#endif
+
+    if (!mSessionStorage) {
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+  }
+
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+      PR_LogPrint("nsGlobalWindow %p returns %p sessionStorage", this, mSessionStorage.get());
+    }
+#endif
+
+  NS_ADDREF(*aSessionStorage = mSessionStorage);
   return NS_OK;
 }
 
@@ -7163,7 +7348,14 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
       do_GetService("@mozilla.org/dom/storagemanager;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = storageManager->GetLocalStorageForPrincipal(principal, getter_AddRefs(mLocalStorage));
+    nsString documentURI;
+    nsCOMPtr<nsIDOM3Document> document3 = do_QueryInterface(mDoc);
+    if (document3)
+        document3->GetDocumentURI(documentURI);
+
+    rv = storageManager->GetLocalStorageForPrincipal(principal,
+                                                     documentURI,
+                                                     getter_AddRefs(mLocalStorage));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -7306,21 +7498,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     nsresult rv;
 
     principal = GetPrincipal();
-    if (!aData) {
-      nsIDocShell* docShell = GetDocShell();
-      if (principal && docShell) {
-        nsCOMPtr<nsIDOMStorage> storage;
-        docShell->GetSessionStorageForPrincipal(principal,
-                                                PR_FALSE,
-                                                getter_AddRefs(storage));
-
-        if (!SameCOMIdentity(storage, aSubject)) {
-          // A sessionStorage object changed, but not our session storage
-          // object.
-          return NS_OK;
-        }
-      }
-    } else if (principal) {
+    if (principal) {
       // A global storage object changed, check to see if it's one
       // this window can access.
 
@@ -7354,23 +7532,23 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       // store the domain in which the change happened and fire the
       // events if we're ever thawed.
 
-      if (!mPendingStorageEvents) {
-        mPendingStorageEvents = new nsDataHashtable<nsStringHashKey, PRBool>;
-        NS_ENSURE_TRUE(mPendingStorageEvents, NS_ERROR_OUT_OF_MEMORY);
+      if (!mPendingStorageEventsObsolete) {
+        mPendingStorageEventsObsolete = new nsDataHashtable<nsStringHashKey, PRBool>;
+        NS_ENSURE_TRUE(mPendingStorageEventsObsolete, NS_ERROR_OUT_OF_MEMORY);
 
-        rv = mPendingStorageEvents->Init();
+        rv = mPendingStorageEventsObsolete->Init();
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      mPendingStorageEvents->Put(domain, PR_TRUE);
+      mPendingStorageEventsObsolete->Put(domain, PR_TRUE);
 
       return NS_OK;
     }
 
-    nsRefPtr<nsDOMStorageEvent> event = new nsDOMStorageEvent(domain);
+    nsRefPtr<nsDOMStorageEventObsolete> event = new nsDOMStorageEventObsolete();
     NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = event->Init();
+    rv = event->InitStorageEvent(NS_LITERAL_STRING("storage"), PR_FALSE, PR_FALSE, domain);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
@@ -7389,7 +7567,99 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     PRBool defaultActionEnabled;
-    target->DispatchEvent((nsIDOMStorageEvent *)event, &defaultActionEnabled);
+    target->DispatchEvent((nsIDOMStorageEventObsolete *)event, &defaultActionEnabled);
+
+    return NS_OK;
+  }
+
+  if (IsInnerWindow() && !nsCRT::strcmp(aTopic, "dom-storage2-changed")) {
+    nsIPrincipal *principal;
+    nsresult rv;
+
+    nsCOMPtr<nsIDOMStorageEvent> event = do_QueryInterface(aSubject, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMStorage> changingStorage;
+    rv = event->GetStorageArea(getter_AddRefs(changingStorage));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsPIDOMStorage> pistorage = do_QueryInterface(changingStorage);
+    nsPIDOMStorage::nsDOMStorageType storageType = pistorage->StorageType();
+
+    principal = GetPrincipal();
+    switch (storageType)
+    {
+    case nsPIDOMStorage::SessionStorage:
+    {
+      if (SameCOMIdentity(mSessionStorage, changingStorage)) {
+        // Do not fire any events for the same storage object, it's not shared
+        // among windows, see nsGlobalWindow::GetSessionStoarge()
+        return NS_OK;
+      }
+
+      nsCOMPtr<nsIDOMStorage> storage = mSessionStorage;
+      if (!storage) {
+        nsIDocShell* docShell = GetDocShell();
+        if (principal && docShell) {
+          // No need to pass documentURI here, it's only needed when we want
+          // to create a new storage, the third paramater would be PR_TRUE
+          docShell->GetSessionStorageForPrincipal(principal,
+                                                  EmptyString(),
+                                                  PR_FALSE,
+                                                  getter_AddRefs(storage));
+        }
+      }
+
+      if (!pistorage->IsForkOf(storage)) {
+        // This storage event is coming from a different doc shell,
+        // i.e. it is a clone, ignore this event.
+        return NS_OK;
+      }
+
+#ifdef PR_LOGGING
+      if (PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+        PR_LogPrint("nsGlobalWindow %p with sessionStorage %p passing event from %p", this, mSessionStorage.get(), pistorage.get());
+      }
+#endif
+
+      break;
+    }
+    case nsPIDOMStorage::LocalStorage:
+    {
+      if (SameCOMIdentity(mLocalStorage, changingStorage)) {
+        // Do not fire any events for the same storage object, it's not shared
+        // among windows, see nsGlobalWindow::GetLocalStoarge()
+        return NS_OK;
+      }
+
+      // Allow event fire only for the same principal storages
+      // XXX We have to use EqualsIgnoreDomain after bug 495337 lands
+      nsIPrincipal *storagePrincipal = pistorage->Principal();
+      PRBool equals;
+
+      rv = storagePrincipal->Equals(principal, &equals);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (!equals)
+        return NS_OK;
+
+      break;
+    }
+    default:
+      return NS_OK;
+    }
+
+    if (IsFrozen()) {
+      // This window is frozen, rather than firing the events here,
+      // store the domain in which the change happened and fire the
+      // events if we're ever thawed.
+
+      mPendingStorageEvents.AppendElement(event);
+      return NS_OK;
+    }
+
+    PRBool defaultActionEnabled;
+    DispatchEvent((nsIDOMStorageEvent *)event, &defaultActionEnabled);
 
     return NS_OK;
   }
@@ -7419,12 +7689,16 @@ nsGlobalWindow::FireDelayedDOMEvents()
 {
   FORWARD_TO_INNER(FireDelayedDOMEvents, (), NS_ERROR_UNEXPECTED);
 
-  if (mPendingStorageEvents) {
-    // Fire pending storage events.
-    mPendingStorageEvents->EnumerateRead(FirePendingStorageEvents, this);
+  for (PRUint32 i = 0; i < mPendingStorageEvents.Length(); ++i) {
+    Observe(mPendingStorageEvents[i], "dom-storage2-changed", nsnull);
+  }
 
-    delete mPendingStorageEvents;
-    mPendingStorageEvents = nsnull;
+  if (mPendingStorageEventsObsolete) {
+    // Fire pending storage events.
+    mPendingStorageEventsObsolete->EnumerateRead(FirePendingStorageEvents, this);
+
+    delete mPendingStorageEventsObsolete;
+    mPendingStorageEventsObsolete = nsnull;
   }
 
   if (mApplicationCache) {
@@ -8516,26 +8790,21 @@ nsGlobalWindow::GetWebBrowserChrome(nsIWebBrowserChrome **aBrowserChrome)
   return NS_OK;
 }
 
-nsresult
-nsGlobalWindow::GetScrollInfo(nsIScrollableView **aScrollableView)
+nsIScrollableFrame *
+nsGlobalWindow::GetScrollFrame()
 {
-  FORWARD_TO_OUTER(GetScrollInfo, (aScrollableView),
-                   NS_ERROR_NOT_INITIALIZED);
-
-  *aScrollableView = nsnull;
+  FORWARD_TO_OUTER(GetScrollFrame, (), nsnull);
 
   if (!mDocShell) {
-    return NS_OK;
+    return nsnull;
   }
 
   nsCOMPtr<nsIPresShell> presShell;
   mDocShell->GetPresShell(getter_AddRefs(presShell));
   if (presShell) {
-    nsIViewManager* vm = presShell->GetViewManager();
-    if (vm)
-      return vm->GetRootScrollableView(aScrollableView);
+    return presShell->GetRootScrollFrameAsScrollable();
   }
-  return NS_OK;
+  return nsnull;
 }
 
 nsresult

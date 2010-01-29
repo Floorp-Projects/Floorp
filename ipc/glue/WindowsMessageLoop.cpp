@@ -173,12 +173,15 @@ ProcessOrDeferMessage(HWND hwnd,
     // their wParam or lParam arguments!
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
+    case WM_CANCELMODE:
     case WM_CAPTURECHANGED:
     case WM_CHILDACTIVATE:
     case WM_DESTROY:
+    case WM_ENABLE:
     case WM_IME_NOTIFY:
     case WM_IME_SETCONTEXT:
     case WM_KILLFOCUS:
+    case WM_MOUSEWHEEL:
     case WM_NCDESTROY:
     case WM_PARENTNOTIFY:
     case WM_SETFOCUS:
@@ -188,16 +191,12 @@ ProcessOrDeferMessage(HWND hwnd,
       break;
     }
 
+    case WM_DEVICECHANGE:
+    case WM_NCACTIVATE: // Intentional fall-through.
     case WM_SETCURSOR: {
       // Friggin unconventional return value...
       res = TRUE;
       deferred = new DeferredSendMessage(hwnd, uMsg, wParam, lParam);
-      break;
-    }
-
-    case WM_NCACTIVATE: {
-      res = TRUE;
-      deferred = new DeferredNCActivateMessage(hwnd, uMsg, wParam, lParam);
       break;
     }
 
@@ -237,18 +236,12 @@ ProcessOrDeferMessage(HWND hwnd,
     }
 
     // These messages are faked via a call to SetWindowPos.
-    case WM_WINDOWPOSCHANGED: // Intentional fall-through.
-    case WM_WINDOWPOSCHANGING: {
-      UINT flags = SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE |
-                   SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_DEFERERASE;
-      deferred = new DeferredWindowPosMessage(hwnd, flags);
+    case WM_WINDOWPOSCHANGED: {
+      deferred = new DeferredWindowPosMessage(hwnd, lParam);
       break;
     }
     case WM_NCCALCSIZE: {
-      UINT flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE |
-                   SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER |
-                   SWP_DEFERERASE | SWP_NOSENDCHANGING;
-      deferred = new DeferredWindowPosMessage(hwnd, flags);
+      deferred = new DeferredWindowPosMessage(hwnd, lParam, true, wParam);
       break;
     }
 
@@ -257,8 +250,9 @@ ProcessOrDeferMessage(HWND hwnd,
     case WM_GETMINMAXINFO:
     case WM_GETTEXT:
     case WM_NCHITTEST:
-    case WM_SETICON: // Intentional fall-through.
-    case WM_SYNCPAINT: {
+    case WM_SETICON:
+    case WM_SYNCPAINT: // Intentional fall-through.
+    case WM_WINDOWPOSCHANGING: {
       return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 
@@ -664,66 +658,70 @@ DeferredSettingChangeMessage::~DeferredSettingChangeMessage()
   }
 }
 
+DeferredWindowPosMessage::DeferredWindowPosMessage(HWND aHWnd,
+                                                   LPARAM aLParam,
+                                                   bool aForCalcSize,
+                                                   WPARAM aWParam)
+{
+  if (aForCalcSize) {
+    if (aWParam) {
+      NCCALCSIZE_PARAMS* arg = reinterpret_cast<NCCALCSIZE_PARAMS*>(aLParam);
+      memcpy(&windowPos, arg->lppos, sizeof(windowPos));
+
+      NS_ASSERTION(aHWnd == windowPos.hwnd, "Mismatched hwnds!");
+    }
+    else {
+      RECT* arg = reinterpret_cast<RECT*>(aLParam);
+      windowPos.hwnd = aHWnd;
+      windowPos.hwndInsertAfter = NULL;
+      windowPos.x = arg->left;
+      windowPos.y = arg->top;
+      windowPos.cx = arg->right - arg->left;
+      windowPos.cy = arg->bottom - arg->top;
+
+      NS_ASSERTION(arg->right >= arg->left && arg->bottom >= arg->top,
+                   "Negative width or height!");
+    }
+    windowPos.flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOOWNERZORDER |
+                      SWP_NOZORDER | SWP_DEFERERASE | SWP_NOSENDCHANGING;
+  }
+  else {
+    // Not for WM_NCCALCSIZE
+    WINDOWPOS* arg = reinterpret_cast<WINDOWPOS*>(aLParam);
+    memcpy(&windowPos, arg, sizeof(windowPos));
+
+    NS_ASSERTION(aHWnd == windowPos.hwnd, "Mismatched hwnds!");
+
+    // Windows sends in some private flags sometimes that we can't simply copy.
+    // Filter here.
+    UINT mask = SWP_ASYNCWINDOWPOS | SWP_DEFERERASE | SWP_DRAWFRAME |
+                SWP_FRAMECHANGED | SWP_HIDEWINDOW | SWP_NOACTIVATE |
+                SWP_NOCOPYBITS | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOREDRAW |
+                SWP_NOREPOSITION | SWP_NOSENDCHANGING | SWP_NOSIZE |
+                SWP_NOZORDER | SWP_SHOWWINDOW;
+    windowPos.flags &= mask;
+  }
+}
+
 void
 DeferredWindowPosMessage::Run()
 {
-  AssertWindowIsNotNeutered(hWnd);
-  if (!IsWindow(hWnd)) {
+  AssertWindowIsNotNeutered(windowPos.hwnd);
+  if (!IsWindow(windowPos.hwnd)) {
     NS_ERROR("Invalid window!");
     return;
+  }
+
+  if (!IsWindow(windowPos.hwndInsertAfter)) {
+    NS_WARNING("ZOrder change cannot be honored");
+    windowPos.hwndInsertAfter = 0;
+    windowPos.flags |= SWP_NOZORDER;
   }
 
 #ifdef DEBUG
   BOOL ret = 
 #endif
-  SetWindowPos(hWnd, 0, 0, 0, 0, 0, flags);
+  SetWindowPos(windowPos.hwnd, windowPos.hwndInsertAfter, windowPos.x,
+               windowPos.y, windowPos.cx, windowPos.cy, windowPos.flags);
   NS_ASSERTION(ret, "SetWindowPos failed!");
-}
-
-DeferredNCActivateMessage::DeferredNCActivateMessage(HWND aHWnd,
-                                                     UINT aMessage,
-                                                     WPARAM aWParam,
-                                                     LPARAM aLParam)
-: DeferredSendMessage(aHWnd, aMessage, aWParam, aLParam),
-  region(NULL)
-{
-  NS_ASSERTION(aMessage == WM_NCACTIVATE, "Wrong message!");
-  if (aLParam) {
-    // This is a window that doesn't have a visual style and so lParam is a
-    // handle to an update region. We need to duplicate it.
-    HRGN source = reinterpret_cast<HRGN>(aLParam);
-
-    DWORD dataSize = GetRegionData(source, 0, NULL);
-    if (!dataSize) {
-      NS_ERROR("GetRegionData failed!");
-      return;
-    }
-
-    nsAutoArrayPtr<char> buffer = new char[dataSize];
-    NS_ASSERTION(buffer, "Out of memory!");
-
-    RGNDATA* data = reinterpret_cast<RGNDATA*>(buffer.get());
-
-    dataSize = GetRegionData(source, dataSize, data);
-    if (!dataSize) {
-      NS_ERROR("GetRegionData failed!");
-      return;
-    }
-
-    HRGN tempRegion = ExtCreateRegion(NULL, dataSize, data);
-    if (!tempRegion) {
-      NS_ERROR("ExtCreateRegion failed!");
-      return;
-    }
-
-    region = tempRegion;
-    lParam = reinterpret_cast<LPARAM>(region);
-  }
-}
-
-DeferredNCActivateMessage::~DeferredNCActivateMessage()
-{
-  if (region) {
-    DeleteObject(region);
-  }
 }

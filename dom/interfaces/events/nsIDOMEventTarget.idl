@@ -77,7 +77,7 @@ interface nsIDOMEventTarget : nsISupports
    *                     through the tree will not trigger an 
    *                     EventListener designated to use capture.
    */
-  void                     addEventListener(in DOMString type,
+  [noscript] void          addEventListener(in DOMString type,
                                             in nsIDOMEventListener listener,
                                             in boolean useCapture);
 

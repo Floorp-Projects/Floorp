@@ -47,11 +47,12 @@ struct JSPrincipals;
 %}
 
 interface nsIURI;
+interface nsIContentSecurityPolicy;
 
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-[scriptable, uuid(b8268b9a-2403-44ed-81e3-614075c92034)]
+[scriptable, uuid(799ab95c-0038-4e0f-b705-74c21f185bb5)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -241,4 +242,9 @@ interface nsIPrincipal : nsISerializable
      * one, this will return null.  Getting this attribute never throws.
      */
     readonly attribute nsISupports certificate;
+
+    /**
+     * A Content Security Policy associated with this principal.
+     */
+    [noscript] attribute nsIContentSecurityPolicy csp;
 };

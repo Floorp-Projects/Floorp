@@ -104,8 +104,8 @@ static const PRUint32 kMaxNameLength = PATH_MAX; /* Maximum name length */
 static const PRUint16 kSyntheticTime = 0;
 static const PRUint16 kSyntheticDate = (1 + (1 << 5) + (0 << 9));
 
-static PRUint16 xtoint(const unsigned char *ii);
-static PRUint32 xtolong(const unsigned char *ll);
+static PRUint16 xtoint(const PRUint8 *ii);
+static PRUint32 xtolong(const PRUint8 *ll);
 static PRUint32 HashName(const char* aName, PRUint16 nameLen);
 #if defined(XP_UNIX) || defined(XP_BEOS)
 static nsresult ResolveSymlink(const char *path);
@@ -159,8 +159,7 @@ nsresult gZlibInit(z_stream *zs)
 }
 
 nsZipHandle::nsZipHandle()
-  : mFd(nsnull)
-  , mFileData(nsnull)
+  : mFileData(nsnull)
   , mLen(0)
   , mMap(nsnull)
   , mRefCnt(0)
@@ -195,7 +194,6 @@ nsresult nsZipHandle::Init(PRFileDesc *fd, nsZipHandle **ret)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  handle->mFd = fd;
   handle->mMap = map;
   handle->mLen = (PRUint32) size;
   handle->mFileData = buf;
@@ -212,10 +210,6 @@ nsZipHandle::~nsZipHandle()
     mFileData = nsnull;
     mMap = nsnull;
   }
-  if (mFd) {
-    PR_Close(mFd);
-    mFd = nsnull;
-  }
   MOZ_COUNT_DTOR(nsZipHandle);
 }
 
@@ -227,9 +221,18 @@ nsZipHandle::~nsZipHandle()
 //---------------------------------------------
 //  nsZipArchive::OpenArchive
 //---------------------------------------------
-nsresult nsZipArchive::OpenArchive(PRFileDesc * fd)
+nsresult nsZipArchive::OpenArchive(nsIFile *aZipFile)
 {
-  nsresult rv = nsZipHandle::Init(fd, getter_AddRefs(mFd));
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aZipFile, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  PRFileDesc* fd;
+  rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0000, &fd);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsZipHandle::Init(fd, getter_AddRefs(mFd));
+  PR_Close(fd);
   if (NS_FAILED(rv))
     return rv;
 
@@ -535,6 +538,8 @@ nsresult nsZipArchive::BuildFileList()
 
   //-- Read the central directory headers
   buf = startp + centralOffset;
+  if (endp - buf < PRInt32(sizeof(PRUint32)))
+      return NS_ERROR_FILE_CORRUPTED;
   PRUint32 sig = xtolong(buf);
   while (sig == CENTRALSIG) {
     // Make sure there is enough data available.
@@ -848,7 +853,7 @@ static PRUint32 HashName(const char* aName, PRUint16 len)
  *  Converts a two byte ugly endianed integer
  *  to our platform's integer.
  */
-static PRUint16 xtoint (const unsigned char *ii)
+static PRUint16 xtoint (const PRUint8 *ii)
 {
   return (PRUint16) ((ii [0]) | (ii [1] << 8));
 }
@@ -859,7 +864,7 @@ static PRUint16 xtoint (const unsigned char *ii)
  *  Converts a four byte ugly endianed integer
  *  to our platform's integer.
  */
-static PRUint32 xtolong (const unsigned char *ll)
+static PRUint32 xtolong (const PRUint8 *ll)
 {
   return (PRUint32)( (ll [0] <<  0) |
                      (ll [1] <<  8) |
@@ -867,56 +872,129 @@ static PRUint32 xtolong (const unsigned char *ll)
                      (ll [3] << 24) );
 }
 
-PRUint32 const nsZipItem::LocalOffset()
+/*
+ * GetModTime
+ *
+ * returns last modification time in microseconds
+ */
+static PRTime GetModTime(PRUint16 aDate, PRUint16 aTime)
+{
+  // Note that on DST shift we can't handle correctly the hour that is valid
+  // in both DST zones
+  PRExplodedTime time;
+
+  time.tm_usec = 0;
+
+  time.tm_hour = (aTime >> 11) & 0x1F;
+  time.tm_min = (aTime >> 5) & 0x3F;
+  time.tm_sec = (aTime & 0x1F) * 2;
+
+  time.tm_year = (aDate >> 9) + 1980;
+  time.tm_month = ((aDate >> 5) & 0x0F) - 1;
+  time.tm_mday = aDate & 0x1F;
+
+  time.tm_params.tp_gmt_offset = 0;
+  time.tm_params.tp_dst_offset = 0;
+
+  PR_NormalizeTime(&time, PR_GMTParameters);
+  time.tm_params.tp_gmt_offset = PR_LocalTimeParameters(&time).tp_gmt_offset;
+  PR_NormalizeTime(&time, PR_GMTParameters);
+  time.tm_params.tp_dst_offset = PR_LocalTimeParameters(&time).tp_dst_offset;
+
+  return PR_ImplodeTime(&time);
+}
+
+PRUint32 nsZipItem::LocalOffset()
 {
   return xtolong(central->localhdr_offset);
 }
 
-PRUint32 const nsZipItem::Size()
+PRUint32 nsZipItem::Size()
 {
   return isSynthetic ? 0 : xtolong(central->size);
 }
 
-PRUint32 const nsZipItem::RealSize()
+PRUint32 nsZipItem::RealSize()
 {
   return isSynthetic ? 0 : xtolong(central->orglen);
 }
 
-PRUint32 const nsZipItem::CRC32()
+PRUint32 nsZipItem::CRC32()
 {
   return isSynthetic ? 0 : xtolong(central->crc32);
 }
 
-PRUint16 const nsZipItem::Date()
+PRUint16 nsZipItem::Date()
 {
   return isSynthetic ? kSyntheticDate : xtoint(central->date);
 }
 
-PRUint16 const nsZipItem::Time()
+PRUint16 nsZipItem::Time()
 {
   return isSynthetic ? kSyntheticTime : xtoint(central->time);
 }
 
-PRUint16 const nsZipItem::Compression()
+PRUint16 nsZipItem::Compression()
 {
   return isSynthetic ? STORED : xtoint(central->method);
 }
 
-bool const nsZipItem::IsDirectory()
+bool nsZipItem::IsDirectory()
 {
   return isSynthetic || ((nameLength > 0) && ('/' == Name()[nameLength - 1]));
 }
 
-PRUint16 const nsZipItem::Mode()
+PRUint16 nsZipItem::Mode()
 {
   if (isSynthetic) return 0755;
   return ((PRUint16)(central->external_attributes[2]) | 0x100);
 }
 
+const PRUint8 * nsZipItem::GetExtraField(PRUint16 aTag, PRUint16 *aBlockSize)
+{
+  if (isSynthetic) return NULL;
+
+  const unsigned char *buf = ((const unsigned char*)central) + ZIPCENTRAL_SIZE +
+                             nameLength;
+  PRUint32 buflen = (PRUint32)xtoint(central->extrafield_len);
+  PRUint32 pos = 0;
+  PRUint16 tag, blocksize;
+
+  while (buf && (pos + 4) <= buflen) {
+    tag = xtoint(buf + pos);
+    blocksize = xtoint(buf + pos + 2);
+
+    if (aTag == tag && (pos + 4 + blocksize) <= buflen) {
+      *aBlockSize = blocksize;
+      return buf + pos;
+    }
+
+    pos += blocksize + 4;
+  }
+
+  return NULL;
+}
+
+
+PRTime nsZipItem::LastModTime()
+{
+  if (isSynthetic) return GetModTime(kSyntheticDate, kSyntheticTime);
+
+  // Try to read timestamp from extra field
+  PRUint16 blocksize;
+  const PRUint8 *tsField = GetExtraField(EXTENDED_TIMESTAMP_FIELD, &blocksize);
+  if (tsField && blocksize >= 5 && tsField[4] & EXTENDED_TIMESTAMP_MODTIME) {
+    return (PRTime)(xtolong(tsField + 5)) * PR_USEC_PER_SEC;
+  }
+
+  return GetModTime(Date(), Time());
+}
+
 #if defined(XP_UNIX) || defined(XP_BEOS)
-bool const nsZipItem::IsSymlink()
+bool nsZipItem::IsSymlink()
 {
   if (isSynthetic) return false;
   return (xtoint(central->external_attributes+2) & S_IFMT) == S_IFLNK;
 }
 #endif
+

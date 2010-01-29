@@ -136,8 +136,8 @@ nsXFormsAccessible::CacheSelectChildren(nsIDOMNode *aContainerNode)
     if (!accessible)
       continue;
 
-    mChildren.AppendObject(accessible);
     acc = nsAccUtils::QueryObject<nsAccessible>(accessible);
+    mChildren.AppendElement(acc);
     acc->SetParent(this);
   }
 }
@@ -626,7 +626,8 @@ nsXFormsSelectableItemAccessible::DoAction(PRUint8 aIndex)
   if (aIndex != eAction_Click)
     return NS_ERROR_INVALID_ARG;
 
-  return DoCommand();
+  DoCommand();
+  return NS_OK;
 }
 
 PRBool

@@ -88,47 +88,16 @@ members = [
     # dom/interfaces/canvas
     #
     # nsIDOMCanvasRenderingContext2D
+    'nsIDOMCanvasRenderingContext2D.*',
     # NOTE: attributes strokeStyle and fillStyle are nsIVariant
-    # NOTE: getImageData(), and putImageData() use
+    # NOTE: createImageDate(), getImageData(), and putImageData() use
     #       GetCurrentNativeCallContext
-    'nsIDOMCanvasRenderingContext2D.canvas',
-    'nsIDOMCanvasRenderingContext2D.save',
-    'nsIDOMCanvasRenderingContext2D.restore',
-    'nsIDOMCanvasRenderingContext2D.scale',
-    'nsIDOMCanvasRenderingContext2D.rotate',
-    'nsIDOMCanvasRenderingContext2D.translate',
-    'nsIDOMCanvasRenderingContext2D.transform',
-    'nsIDOMCanvasRenderingContext2D.setTransform',
-    'nsIDOMCanvasRenderingContext2D.globalAlpha',
-    'nsIDOMCanvasRenderingContext2D.globalCompositeOperation',
-    'nsIDOMCanvasRenderingContext2D.lineWidth',
-    'nsIDOMCanvasRenderingContext2D.lineCap',
-    'nsIDOMCanvasRenderingContext2D.lineJoin',
-    'nsIDOMCanvasRenderingContext2D.miterLimit',
-    'nsIDOMCanvasRenderingContext2D.clearRect',
-    'nsIDOMCanvasRenderingContext2D.fillRect',
-    'nsIDOMCanvasRenderingContext2D.strokeRect',
-    'nsIDOMCanvasRenderingContext2D.beginPath',
-    'nsIDOMCanvasRenderingContext2D.closePath',
-    'nsIDOMCanvasRenderingContext2D.moveTo',
-    'nsIDOMCanvasRenderingContext2D.lineTo',
-    'nsIDOMCanvasRenderingContext2D.quadraticCurveTo',
-    'nsIDOMCanvasRenderingContext2D.bezierCurveTo',
-    'nsIDOMCanvasRenderingContext2D.arcTo',
-    'nsIDOMCanvasRenderingContext2D.arc',
-    'nsIDOMCanvasRenderingContext2D.rect',
-    'nsIDOMCanvasRenderingContext2D.fill',
-    'nsIDOMCanvasRenderingContext2D.stroke',
-    'nsIDOMCanvasRenderingContext2D.clip',
-    'nsIDOMCanvasRenderingContext2D.font',
-    'nsIDOMCanvasRenderingContext2D.textAlign',
-    'nsIDOMCanvasRenderingContext2D.textBaseline',
-    'nsIDOMCanvasRenderingContext2D.fillText',
-    'nsIDOMCanvasRenderingContext2D.strokeText',
-    'nsIDOMCanvasRenderingContext2D.measureText',
-    'nsIDOMCanvasRenderingContext2D.drawImage',
-    'nsIDOMCanvasRenderingContext2D.isPointInPath',
-    'nsIDOMTextMetrics.width',
+    '-nsIDOMCanvasRenderingContext2D.strokeStyle',
+    '-nsIDOMCanvasRenderingContext2D.fillStyle',
+    '-nsIDOMCanvasRenderingContext2D.createImageData',
+    '-nsIDOMCanvasRenderingContext2D.getImageData',
+    '-nsIDOMCanvasRenderingContext2D.putImageData',
+    'nsIDOMTextMetrics.*',
 
     # dom/interfaces/core
     'nsIDOMCharacterData.data',
@@ -243,10 +212,7 @@ members = [
     # dom/interfaces/events
     'nsIDOMEventTarget.dispatchEvent',
     'nsIDOMEventTarget.removeEventListener',
-    # Conflicts with nsIDOMNSEventTarget.addEventListener;
-    # the conflict is specially resolved in nsDOMClassInfo.cpp.
-    # (See bug 453331.)
-    #'nsIDOMEventTarget.addEventListener',
+    'nsIDOMNSEventTarget.addEventListener',
     'nsIDOMDocumentEvent.createEvent',
 
     'nsIDOMEvent.*',
@@ -478,6 +444,24 @@ members = [
     'nsIDOMNSXPathExpression.evaluateWithContext',
 
     # dom/interfaces/xul - None.
+
+    # webgl
+    'nsICanvasRenderingContextWebGL.*',
+    # These all use GetCurrentNativeCallContext and should be
+    # custom-quickstubbed.
+    '-nsICanvasRenderingContextWebGL.getActiveAttrib',
+    '-nsICanvasRenderingContextWebGL.getActiveUniform',
+    '-nsICanvasRenderingContextWebGL.getParameter',
+    '-nsICanvasRenderingContextWebGL.getBufferParameter',
+    '-nsICanvasRenderingContextWebGL.getFramebufferAttachmentParameter',
+    '-nsICanvasRenderingContextWebGL.getRenderbufferParameter',
+    '-nsICanvasRenderingContextWebGL.getProgramParameter',
+    '-nsICanvasRenderingContextWebGL.texParameterf',
+    '-nsICanvasRenderingContextWebGL.texParameteri',
+    '-nsICanvasRenderingContextWebGL.getUniform',
+    '-nsICanvasRenderingContextWebGL.getVertexAttrib',
+    '-nsICanvasRenderingContextWebGL.readPixels',
+    '-nsICanvasRenderingContextWebGL.getShaderParameter',
     ]
 
 # Most interfaces can be found by searching the includePath; to find
@@ -493,7 +477,18 @@ irregularFilenames = {
 
     # stowaways
     'nsIDOMTextMetrics': 'nsIDOMCanvasRenderingContext2D',
+    'nsIDOMCanvasGradient': 'nsIDOMCanvasRenderingContext2D',
+    'nsIDOMCanvasPattern': 'nsIDOMCanvasRenderingContext2D',
     'nsIXPointerResult': 'nsIXPointer',
+
+    'nsIWebGLTexture': 'nsICanvasRenderingContextWebGL',
+    'nsIWebGLBuffer': 'nsICanvasRenderingContextWebGL',
+    'nsIWebGLProgram': 'nsICanvasRenderingContextWebGL',
+    'nsIWebGLShader': 'nsICanvasRenderingContextWebGL',
+    'nsIWebGLShaderArray': 'nsICanvasRenderingContextWebGL',
+    'nsIWebGLFramebuffer': 'nsICanvasRenderingContextWebGL',
+    'nsIWebGLRenderbuffer': 'nsICanvasRenderingContextWebGL',
+    'nsIWebGLActiveInfo': 'nsICanvasRenderingContextWebGL',
     }
 
 customIncludes = [
@@ -501,7 +496,11 @@ customIncludes = [
     'nsIContent.h',
     'nsIDocument.h',
     'nsINodeList.h',
-    'nsCSSPropertiesQS.h'
+    'nsCSSPropertiesQS.h',
+    ]
+
+customQuickStubs = [
+    'CustomQS_WebGL.h'
     ]
 
 nsIDOMNode_GetChildNodes_customMethodCallCode = """
@@ -538,6 +537,16 @@ CSS2Properties_ = {
                    '    rv = self->GetPropertyValue(prop, result);',
     'setter_code': '    rv = self->SetPropertyValue(prop, arg0);',
     'canFail': True
+}
+
+CUSTOM_QS = {
+    'skipgen': True,
+    'traceable': False
+}
+
+CUSTOM_QS_TN = {
+    'skipgen': True,
+    'traceable': True
 }
 
 customMethodCalls = {
@@ -586,6 +595,26 @@ customMethodCalls = {
         'code': nsIDOMStorage_Clear_customMethodCallCode
        }, 
     'nsIDOMCSS2Properties_': CSS2Properties_,
-    'nsIDOMNSCSS2Properties_': CSS2Properties_
+    'nsIDOMNSCSS2Properties_': CSS2Properties_,
+    # WebGL
+    'nsICanvasRenderingContextWebGL_BufferData': CUSTOM_QS,
+    'nsICanvasRenderingContextWebGL_BufferSubData': CUSTOM_QS,
+    'nsICanvasRenderingContextWebGL_TexImage2D': CUSTOM_QS,
+    'nsICanvasRenderingContextWebGL_TexSubImage2D': CUSTOM_QS,
+    'nsICanvasRenderingContextWebGL_Uniform1iv': CUSTOM_QS_TN,
+    'nsICanvasRenderingContextWebGL_Uniform2iv': CUSTOM_QS_TN,
+    'nsICanvasRenderingContextWebGL_Uniform3iv': CUSTOM_QS_TN,
+    'nsICanvasRenderingContextWebGL_Uniform4iv': CUSTOM_QS_TN,
+    'nsICanvasRenderingContextWebGL_Uniform1fv': CUSTOM_QS_TN,
+    'nsICanvasRenderingContextWebGL_Uniform2fv': CUSTOM_QS_TN,
+    'nsICanvasRenderingContextWebGL_Uniform3fv': CUSTOM_QS_TN,
+    'nsICanvasRenderingContextWebGL_Uniform4fv': CUSTOM_QS_TN,
+    'nsICanvasRenderingContextWebGL_UniformMatrix2fv': CUSTOM_QS_TN,
+    'nsICanvasRenderingContextWebGL_UniformMatrix3fv': CUSTOM_QS_TN,
+    'nsICanvasRenderingContextWebGL_UniformMatrix4fv': CUSTOM_QS_TN,
+    'nsICanvasRenderingContextWebGL_VertexAttrib1fv': CUSTOM_QS,
+    'nsICanvasRenderingContextWebGL_VertexAttrib2fv': CUSTOM_QS,
+    'nsICanvasRenderingContextWebGL_VertexAttrib3fv': CUSTOM_QS,
+    'nsICanvasRenderingContextWebGL_VertexAttrib4fv': CUSTOM_QS
     }
 

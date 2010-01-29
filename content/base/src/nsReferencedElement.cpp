@@ -184,6 +184,26 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI, PRBool aWatch
 }
 
 void
+nsReferencedElement::ResetWithID(nsIContent* aFromContent, const nsString& aID,
+                                 PRBool aWatch)
+{
+  nsIDocument *doc = aFromContent->GetCurrentDoc();
+  if (!doc)
+    return;
+
+  // XXX Need to take care of XBL/XBL2
+
+  if (aWatch) {
+    nsCOMPtr<nsIAtom> atom = do_GetAtom(aID);
+    if (!atom)
+      return;
+    atom.swap(mWatchID);
+  }
+
+  HaveNewDocument(doc, aWatch, aID);
+}
+
+void
 nsReferencedElement::HaveNewDocument(nsIDocument* aDocument, PRBool aWatch,
                                      const nsString& aRef)
 {

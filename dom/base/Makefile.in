@@ -112,8 +112,6 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_X11
-ifdef MOZ_ENABLE_GTK2
 CXXFLAGS += $(TK_CFLAGS)
 LDFLAGS += $(TK_LIBS)
-endif
 endif

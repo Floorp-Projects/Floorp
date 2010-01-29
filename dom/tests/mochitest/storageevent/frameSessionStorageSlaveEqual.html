@@ -1,0 +1,59 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>slave for storage event propagation</title>
+
+<script type="text/javascript" src="interOriginFrame.js"></script>
+<script type="text/javascript">
+
+var currentStep = 2;
+
+var events = [];
+
+window.addEventListener("storage", function(event)
+{
+  events.push(event);
+}, false);
+
+function doStep()
+{
+  function checkEvent(expectedKey, expectedOldValue, expectedNewValue)
+  {
+    var event = events.shift();
+    ok(event, "Event is present");
+    if (!event)
+      return;
+
+    is(event.key, expectedKey, "key name check");
+    is(event.oldValue, expectedOldValue, "old value check");
+    is(event.newValue, expectedNewValue, "new value check");
+    is(event.url, "http://example.com/tests/dom/tests/mochitest/storageevent/frameSessionStorageMasterEqual.html");
+    ok(event.storageArea);
+  }
+
+  switch (currentStep)
+  {
+    case 10:
+      is(events.length, 5, "Expected 5 events");
+      checkEvent("X", null, "1");
+      checkEvent("X", "1", "2");
+      checkEvent("X", "2", null);
+      checkEvent("X", null, "2");
+      checkEvent(null, null, null);
+      break;
+  }
+
+  // Increase by two to distinguish each test step order
+  // in both master doStep and slave doStep functions.
+  ++currentStep;
+  ++currentStep;
+
+  return true;
+}
+
+</script>
+
+</head>
+
+<body onload="postMsg('frame loaded');">
+</body>
+</html>

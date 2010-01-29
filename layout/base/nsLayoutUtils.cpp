@@ -49,7 +49,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsIView.h"
-#include "nsIScrollableView.h"
 #include "nsPlaceholderFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsCSSFrameConstructor.h"
@@ -89,6 +88,7 @@
 #include "imgIContainer.h"
 #include "nsIImageLoadingContent.h"
 #include "nsCOMPtr.h"
+#include "nsListControlFrame.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -669,63 +669,48 @@ nsLayoutUtils::GetScrollableFrameFor(nsIFrame *aScrolledFrame)
   return sf;
 }
 
-//static
+// static
 nsIScrollableFrame*
-nsLayoutUtils::GetScrollableFrameFor(nsIScrollableView *aScrollableView)
+nsLayoutUtils::GetNearestScrollableFrameForDirection(nsIFrame* aFrame,
+                                                     Direction aDirection)
 {
-  nsIFrame *frame = GetFrameFor(aScrollableView->View()->GetParent());
-  nsIScrollableFrame *sf = do_QueryFrame(frame);
-  return sf;
-}
-
-//static
-nsPresContext::ScrollbarStyles
-nsLayoutUtils::ScrollbarStylesOfView(nsIScrollableView *aScrollableView)
-{
-  nsIScrollableFrame *sf = GetScrollableFrameFor(aScrollableView);
-  return sf ? sf->GetScrollbarStyles() :
-              nsPresContext::ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
-                                             NS_STYLE_OVERFLOW_HIDDEN);
+  NS_ASSERTION(aFrame, "GetNearestScrollableFrameForDirection expects a non-null frame");
+  for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
+    if (scrollableFrame) {
+      nsPresContext::ScrollbarStyles ss = scrollableFrame->GetScrollbarStyles();
+      PRUint32 scrollbarVisibility = scrollableFrame->GetScrollbarVisibility();
+      nsRect scrollRange = scrollableFrame->GetScrollRange();
+      // Require visible scrollbars or something to scroll to in
+      // the given direction.
+      if (aDirection == eVertical ?
+          (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN &&
+           ((scrollbarVisibility & nsIScrollableFrame::VERTICAL) ||
+            scrollRange.height > 0)) :
+          (ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN &&
+           ((scrollbarVisibility & nsIScrollableFrame::HORIZONTAL) ||
+            scrollRange.width > 0)))
+        return scrollableFrame;
+    }
+  }
+  return nsnull;
 }
 
 // static
-nsIScrollableView*
-nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
+nsIScrollableFrame*
+nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame)
 {
-  // If aDirection is eEither, find first view with a scrolllable frame.
-  // Otherwise, find the first view that has a scrollable frame whose
-  // ScrollbarStyles is not NS_STYLE_OVERFLOW_HIDDEN in aDirection
-  // and where there is something currently not visible
-  // that can be scrolled to in aDirection.
-  NS_ASSERTION(aView, "GetNearestScrollingView expects a non-null view");
-  nsIScrollableView* scrollableView = nsnull;
-  for (; aView; aView = aView->GetParent()) {
-    scrollableView = aView->ToScrollableView();
-    if (scrollableView) {
-      nsPresContext::ScrollbarStyles ss =
-        nsLayoutUtils::ScrollbarStylesOfView(scrollableView);
-      nsIScrollableFrame *scrollableFrame = GetScrollableFrameFor(scrollableView);
-      NS_ASSERTION(scrollableFrame, "Must have scrollable frame for view!");
-      nsMargin margin = scrollableFrame->GetActualScrollbarSizes();
-      // Get size of total scrollable area
-      nscoord totalWidth, totalHeight;
-      scrollableView->GetContainerSize(&totalWidth, &totalHeight);
-      // Get size of currently visible area
-      nsSize visibleSize = aView->GetBounds().Size();
-      // aDirection can be eHorizontal, eVertical, or eEither
-      // If scrolling in a specific direction, require visible scrollbars or
-      // something to scroll to in that direction.
-      if (aDirection != eHorizontal &&
-          ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN &&
-          (aDirection == eEither || totalHeight > visibleSize.height || margin.LeftRight()))
-        break;
-      if (aDirection != eVertical &&
-          ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN &&
-          (aDirection == eEither || totalWidth > visibleSize.width || margin.TopBottom()))
-        break;
+  NS_ASSERTION(aFrame, "GetNearestScrollableFrame expects a non-null frame");
+  for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+    nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
+    if (scrollableFrame) {
+      nsPresContext::ScrollbarStyles ss = scrollableFrame->GetScrollbarStyles();
+      if (ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN ||
+          ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN)
+        return scrollableFrame;
     }
   }
-  return scrollableView;
+  return nsnull;
 }
 
 nsPoint
@@ -907,30 +892,6 @@ nsLayoutUtils::InvertTransformsToRoot(nsIFrame *aFrame,
 
   /* Otherwise, invert the CTM and use it to transform the point. */
   return MatrixTransformPoint(aPoint, ctm.Invert(), aFrame->PresContext()->AppUnitsPerDevPixel());
-}
-
-nsPoint
-nsLayoutUtils::GetEventCoordinatesForNearestView(nsEvent* aEvent,
-                                                 nsIFrame* aFrame,
-                                                 nsIView** aView)
-{
-  if (!aEvent || (aEvent->eventStructType != NS_MOUSE_EVENT && 
-                  aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
-                  aEvent->eventStructType != NS_DRAG_EVENT))
-    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-
-  nsGUIEvent* GUIEvent = static_cast<nsGUIEvent*>(aEvent);
-  if (!GUIEvent->widget)
-    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-
-  nsPoint viewToFrame;
-  nsIView* frameView;
-  aFrame->GetOffsetFromView(viewToFrame, &frameView);
-  if (aView)
-    *aView = frameView;
-
-  return TranslateWidgetToView(aFrame->PresContext(), GUIEvent->widget,
-                               GUIEvent->refPoint, frameView);
 }
 
 static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
@@ -2230,7 +2191,8 @@ nsLayoutUtils::ComputeWidthDependentValue(
     return aCoord.GetCoordValue();
   }
   if (eStyleUnit_Percent == aCoord.GetUnit()) {
-    return NSToCoordFloor(aContainingBlockWidth * aCoord.GetPercentValue());
+    return NSToCoordFloorClamped(aContainingBlockWidth *
+                                 aCoord.GetPercentValue());
   }
   NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
                aCoord.GetUnit() == eStyleUnit_Auto,
@@ -2263,7 +2225,8 @@ nsLayoutUtils::ComputeWidthValue(
     result -= aContentEdgeToBoxSizing;
   } else if (eStyleUnit_Percent == aCoord.GetUnit()) {
     NS_ASSERTION(aCoord.GetPercentValue() >= 0.0f, "width less than zero");
-    result = NSToCoordFloor(aContainingBlockWidth * aCoord.GetPercentValue()) -
+    result = NSToCoordFloorClamped(aContainingBlockWidth *
+                                   aCoord.GetPercentValue()) -
              aContentEdgeToBoxSizing;
   } else if (eStyleUnit_Enumerated == aCoord.GetUnit()) {
     PRInt32 val = aCoord.GetIntValue();
@@ -2320,7 +2283,8 @@ nsLayoutUtils::ComputeHeightDependentValue(
                     "unexpected 'containing block height'");
 
     if (NS_AUTOHEIGHT != aContainingBlockHeight) {
-      return NSToCoordFloor(aContainingBlockHeight * aCoord.GetPercentValue());
+      return NSToCoordFloorClamped(aContainingBlockHeight *
+                                   aCoord.GetPercentValue());
     }
   }
   NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
@@ -3263,6 +3227,38 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
       bg->BottomLayer().mClip != NS_STYLE_BG_CLIP_BORDER)
     return eTransparencyTransparent;
   return eTransparencyOpaque;
+}
+
+/* static */ PRBool
+nsLayoutUtils::IsPopup(nsIFrame* aFrame)
+{
+  nsIAtom* frameType = aFrame->GetType();
+
+  // We're a popup if we're the list control frame dropdown for a combobox.
+  if (frameType == nsGkAtoms::listControlFrame) {
+    nsListControlFrame* listControlFrame = static_cast<nsListControlFrame*>(aFrame);
+      
+    if (listControlFrame) {
+      return listControlFrame->IsInDropDownMode();
+    }
+  }
+
+  // ... or if we're a XUL menupopup frame.
+  return (frameType == nsGkAtoms::menuPopupFrame);
+}
+
+/* static */ nsIFrame*
+nsLayoutUtils::GetDisplayRootFrame(nsIFrame* aFrame)
+{
+  nsIFrame* f = aFrame;
+  for (;;) {
+    if (IsPopup(f))
+      return f;
+    nsIFrame* parent = GetCrossDocParentFrame(f);
+    if (!parent)
+      return f;
+    f = parent;
+  }
 }
 
 static PRBool

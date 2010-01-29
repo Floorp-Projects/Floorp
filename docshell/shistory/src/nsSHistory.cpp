@@ -478,7 +478,7 @@ nsSHistory::PrintHistory()
     nsCOMPtr<nsILayoutHistoryState> layoutHistoryState;
     nsCOMPtr<nsIURI>  uri;
     nsXPIDLString title;
-              
+
     entry->GetLayoutHistoryState(getter_AddRefs(layoutHistoryState));
     nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(entry));
     if (hEntry) {
@@ -492,11 +492,12 @@ nsSHistory::PrintHistory()
      uri->GetSpec(url);
 
     printf("**** SH Transaction #%d, Entry = %x\n", index, entry.get());
-    printf("\t\t URL = %s\n", url);
+    printf("\t\t URL = %s\n", url.get());
+
     printf("\t\t Title = %s\n", NS_LossyConvertUTF16toASCII(title).get());
-    printf("\t\t layout History Data = %x\n", layoutHistoryState);
+    printf("\t\t layout History Data = %x\n", layoutHistoryState.get());
 #endif
-      
+
     nsCOMPtr<nsISHTransaction> next;
     rv = txn->GetNext(getter_AddRefs(next));
     if (NS_SUCCEEDED(rv) && next) {
@@ -864,7 +865,7 @@ nsSHistory::EvictContentViewersInRange(PRInt32 aStart, PRInt32 aEnd)
     if (viewer) {
       NS_ASSERTION(ownerEntry,
                    "ContentViewer exists but its SHEntry is null");
-#ifdef DEBUG_PAGE_CACHE 
+#ifdef DEBUG_PAGE_CACHE
       nsCOMPtr<nsIURI> uri;
       ownerEntry->GetURI(getter_AddRefs(uri));
       nsCAutoString spec;
@@ -1149,23 +1150,23 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 aHistCmd)
   mRequestedIndex = aIndex;
 
   nsCOMPtr<nsISHEntry> prevEntry;
-  GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(prevEntry));  
-   
-  nsCOMPtr<nsISHEntry> nextEntry;   
+  GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(prevEntry));
+
+  nsCOMPtr<nsISHEntry> nextEntry;
   GetEntryAtIndex(mRequestedIndex, PR_FALSE, getter_AddRefs(nextEntry));
   nsCOMPtr<nsIHistoryEntry> nHEntry(do_QueryInterface(nextEntry));
-  if (!nextEntry || !prevEntry || !nHEntry) {    
+  if (!nextEntry || !prevEntry || !nHEntry) {
     mRequestedIndex = -1;
     return NS_ERROR_FAILURE;
   }
-  
+
   // Send appropriate listener notifications
   PRBool canNavigate = PR_TRUE;
   // Get the uri for the entry we are about to visit
   nsCOMPtr<nsIURI> nextURI;
   nHEntry->GetURI(getter_AddRefs(nextURI));
- 
-  if(mListener) {    
+
+  if(mListener) {
     nsCOMPtr<nsISHistoryListener> listener(do_QueryReferent(mListener));
     if (listener) {
       if (aHistCmd == HIST_CMD_BACK) {
@@ -1222,7 +1223,6 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 aHistCmd)
     else
       docShell = mRootDocShell;
     }
-  
 
   if (!docShell) {
     // we did not successfully go to the proper index.
@@ -1234,8 +1234,6 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 aHistCmd)
   // Start the load on the appropriate docshell
   return InitiateLoad(nextEntry, docShell, aLoadType);
 }
-
-
 
 nsresult
 nsSHistory::CompareFrames(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsIDocShell * aParent, long aLoadType, PRBool * aIsFrameFound)

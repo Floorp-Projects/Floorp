@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, true)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Test that ends are sampled first.
+   -->
+  <rect width="100" height="100" fill="red">
+    <animate attributeName="y" attributeType="XML" from="0" to="0" id="a"
+      begin="-3s; 1.5s" dur="20s"/>
+    <animate attributeName="fill" attributeType="CSS"
+      values="orange; green; purple"
+      begin="a.begin-0.5s; 1.5s" dur="2s" restart="whenNotActive"/>
+    <!--
+      So initially we have:
+      a: -3->17s
+      (b): -3.5->-1.5s (instance times: -3.5s, 1.5s)
+
+      At t=1.5s we get an early end on 'a', giving us:
+      a: 1.5->21.5s
+      (b): 1.0->3.0s (instance times: 1.0s, 1.5s)
+
+      If, at t=1.5s, we sample the second animation first, we'll start an
+      interval from 1.5s instead of 1.0s. So this is a test that ends are
+      actually sampled first.
+     -->
+  </rect>
+</svg>

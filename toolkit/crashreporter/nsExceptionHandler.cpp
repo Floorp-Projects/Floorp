@@ -43,7 +43,11 @@
 #undef WIN32_LEAN_AND_MEAN
 #endif
 
+#if defined(MOZ_IPC)
+#  include "client/windows/crash_generation/crash_generation_server.h"
+#endif
 #include "client/windows/handler/exception_handler.h"
+#include <DbgHelp.h>
 #include <string.h>
 #elif defined(XP_MACOSX)
 #include "client/mac/handler/exception_handler.h"
@@ -54,6 +58,10 @@
 #include <unistd.h>
 #include "mac_utils.h"
 #elif defined(XP_LINUX)
+#if defined(MOZ_IPC)
+#  include "client/linux/crash_generation/client_info.h"
+#  include "client/linux/crash_generation/crash_generation_server.h"
+#endif
 #include "client/linux/handler/exception_handler.h"
 #include <fcntl.h>
 #include <sys/types.h>
@@ -72,10 +80,26 @@
 #include <prenv.h>
 #include <prio.h>
 #include <prmem.h>
+#include "mozilla/Mutex.h"
 #include "nsDebug.h"
 #include "nsCRT.h"
 #include "nsILocalFile.h"
+#include "nsIFileStreams.h"
 #include "nsDataHashtable.h"
+#include "nsInterfaceHashtable.h"
+#include "prprf.h"
+
+#if defined(MOZ_IPC)
+using google_breakpad::CrashGenerationServer;
+using google_breakpad::ClientInfo;
+
+using mozilla::Mutex;
+using mozilla::MutexAutoLock;
+
+#include "nsThreadUtils.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindow.h"
+#endif
 
 namespace CrashReporter {
 
@@ -140,6 +164,29 @@ static const int kTimeSinceLastCrashParameterLen =
 static nsDataHashtable<nsCStringHashKey,nsCString>* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
 static nsCString* notesField = nsnull;
+
+#if defined(MOZ_IPC)
+// OOP crash reporting
+static CrashGenerationServer* crashServer; // chrome process has this
+
+#  if defined(XP_WIN)
+// If crash reporting is disabled, we hand out this "null" pipe to the
+// child process and don't attempt to connect to a parent server.
+static const char kNullNotifyPipe[] = "-";
+static char* childCrashNotifyPipe;
+
+#  elif defined(XP_LINUX)
+static int serverSocketFd = -1;
+static int clientSocketFd = -1;
+static const int kMagicChildCrashReportFd = 42;
+#  endif
+
+// |dumpMapLock| must protect all access to |pidToMinidump|.
+static Mutex* dumpMapLock;
+typedef nsInterfaceHashtable<nsUint32HashKey, nsIFile> ChildMinidumpMap;
+static ChildMinidumpMap* pidToMinidump;
+
+#endif  // MOZ_IPC
 
 static XP_CHAR*
 Concat(XP_CHAR* str, const XP_CHAR* toAppend, int* size)
@@ -213,7 +260,8 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
                   O_WRONLY | O_CREAT | O_TRUNC,
                   0600);
     if (fd != -1) {
-      write(fd, crashTimeString, crashTimeStringLen);
+      ssize_t ignored = write(fd, crashTimeString, crashTimeStringLen);
+      (void)ignored;
       close(fd);
     }
 #endif
@@ -281,14 +329,17 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
 
     if (fd != -1) {
       // not much we can do in case of error
-      write(fd, crashReporterAPIData->get(), crashReporterAPIData->Length());
-      write(fd, kCrashTimeParameter, kCrashTimeParameterLen);
-      write(fd, crashTimeString, crashTimeStringLen);
-      write(fd, "\n", 1);
+      ssize_t ignored = write(fd, crashReporterAPIData->get(),
+                              crashReporterAPIData->Length());
+      ignored = write(fd, kCrashTimeParameter, kCrashTimeParameterLen);
+      ignored = write(fd, crashTimeString, crashTimeStringLen);
+      ignored = write(fd, "\n", 1);
       if (timeSinceLastCrash != 0) {
-        write(fd, kTimeSinceLastCrashParameter,kTimeSinceLastCrashParameterLen);
-        write(fd, timeSinceLastCrashString, timeSinceLastCrashStringLen);
-        write(fd, "\n", 1);
+        ignored = write(fd, kTimeSinceLastCrashParameter,
+                        kTimeSinceLastCrashParameterLen);
+        ignored = write(fd, timeSinceLastCrashString,
+                        timeSinceLastCrashStringLen);
+        ignored = write(fd, "\n", 1);
       }
       close (fd);
     }
@@ -314,6 +365,31 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
 
  return returnValue;
 }
+
+#ifdef XP_WIN
+/**
+ * Filters out floating point exceptions which are handled by nsSigHandlers.cpp
+ * and should not be handled as crashes.
+ */
+static bool FPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
+                      MDRawAssertionInfo* assertion)
+{
+  PEXCEPTION_RECORD e = (PEXCEPTION_RECORD)exinfo->ExceptionRecord;
+  switch (e->ExceptionCode) {
+    case STATUS_FLOAT_DENORMAL_OPERAND:
+    case STATUS_FLOAT_DIVIDE_BY_ZERO:
+    case STATUS_FLOAT_INEXACT_RESULT:
+    case STATUS_FLOAT_INVALID_OPERATION:
+    case STATUS_FLOAT_OVERFLOW:
+    case STATUS_FLOAT_STACK_CHECK:
+    case STATUS_FLOAT_UNDERFLOW:
+    case STATUS_FLOAT_MULTIPLE_FAULTS:
+    case STATUS_FLOAT_MULTIPLE_TRAPS:
+      return false; // Don't write minidump, continue exception search
+  }
+  return true;
+}
+#endif // XP_WIN
 
 nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
                              bool force/*=false*/)
@@ -408,7 +484,11 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   // now set the exception handler
   gExceptionHandler = new google_breakpad::
     ExceptionHandler(tempPath.get(),
+#ifdef XP_WIN
+                     FPEFilter,
+#else
                      nsnull,
+#endif
                      MinidumpCallback,
                      nsnull,
 #if defined(XP_WIN32)
@@ -654,6 +734,8 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
   return NS_OK;
 }
 
+static void OOPDeinit();
+
 nsresult UnsetExceptionHandler()
 {
   delete gExceptionHandler;
@@ -684,6 +766,10 @@ nsresult UnsetExceptionHandler()
     return NS_ERROR_NOT_INITIALIZED;
 
   gExceptionHandler = nsnull;
+
+#ifdef MOZ_IPC
+  OOPDeinit();
+#endif
 
   return NS_OK;
 }
@@ -879,5 +965,308 @@ nsresult AppendObjCExceptionInfoToAppNotes(void *inException)
   return NS_OK;
 }
 #endif
+
+#if defined(MOZ_IPC)
+//-----------------------------------------------------------------------------
+// Out-of-process crash reporting API wrappers
+class SubmitCrashReport : public nsRunnable
+{
+public:
+  SubmitCrashReport(nsIFile* dumpFile) : mDumpFile(dumpFile) { }
+
+  NS_IMETHOD Run() {
+    char* e = getenv("MOZ_CRASHREPORTER_NO_REPORT");
+    if (e && *e)
+      return NS_OK;
+
+    nsCOMPtr<nsIWindowWatcher> windowWatcher =
+      do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    windowWatcher->OpenWindow(nsnull,
+                              "chrome://global/content/oopcrashdialog.xul",
+                              "_blank",
+                              "centerscreen,chrome,titlebar",
+                              mDumpFile, getter_AddRefs(newWindow));
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIFile> mDumpFile;
+};
+
+static PLDHashOperator EnumerateChildAnnotations(const nsACString& key,
+                                                 nsCString entry,
+                                                 void* userData)
+{
+  // blacklist of entries from the parent process that we don't want to
+  // submit with the child process
+  static const char* kBlacklist[] = {
+    "FramePoisonBase",
+    "FramePoisonSize",
+    "StartupTime",
+    "URL"
+  };
+  static const int kBlacklistLength =
+    sizeof(kBlacklist) / sizeof(kBlacklist[0]);
+
+  // skip entries in the blacklist
+  for (int i = 0; i < kBlacklistLength; i++) {
+    if (key.EqualsASCII(kBlacklist[i]))
+      return PL_DHASH_NEXT;
+  }
+
+  nsIFileOutputStream* extraStream =
+    reinterpret_cast<nsIFileOutputStream*>(userData);
+  PRUint32 written;
+  extraStream->Write(key.BeginReading(), key.Length(), &written);
+  extraStream->Write("=", 1, &written);
+  extraStream->Write(entry.BeginReading(), entry.Length(), &written);
+  extraStream->Write("\n", 1, &written);
+  return PL_DHASH_NEXT;
+}
+
+static void
+OnChildProcessDumpRequested(void* aContext,
+                            const ClientInfo* aClientInfo,
+#if defined(XP_WIN)
+                            const std::wstring*
+#else
+                            const std::string*
+#endif
+                              aFilePath)
+{
+  nsCOMPtr<nsILocalFile> lf;
+  PRUint32 pid;
+
+#ifdef XP_WIN
+  NS_NewLocalFile(nsDependentString(aFilePath->c_str()), PR_FALSE,
+                  getter_AddRefs(lf));
+  pid = aClientInfo->pid();
+#else
+  NS_NewNativeLocalFile(nsDependentCString(aFilePath->c_str()), PR_FALSE,
+                        getter_AddRefs(lf));
+  pid = aClientInfo->pid_;
+#endif
+
+  // Get an .extra file with the same base name as the .dmp file
+  nsCOMPtr<nsIFile> extraFile;
+  nsresult rv = lf->Clone(getter_AddRefs(extraFile));
+  if (NS_FAILED(rv))
+    return;
+
+  nsAutoString leafName;
+  rv = extraFile->GetLeafName(leafName);
+  if (NS_FAILED(rv))
+    return;
+
+  leafName.Replace(leafName.Length() - 3, 3,
+                   NS_LITERAL_STRING("extra"));
+  rv = extraFile->SetLeafName(leafName);
+  if (NS_FAILED(rv))
+    return;
+
+  // Now write out the annotations to it
+  nsCOMPtr<nsIFileOutputStream> stream =
+    do_CreateInstance("@mozilla.org/network/file-output-stream;1");
+  rv = stream->Init(extraFile, -1, 0600, 0);
+  if (NS_FAILED(rv))
+    return;
+  crashReporterAPIData_Hash->EnumerateRead(EnumerateChildAnnotations,
+                                           stream.get());
+  // Add CrashTime to extra data
+  time_t crashTime = time(NULL);
+  char crashTimeString[32];
+  XP_TTOA(crashTime, crashTimeString, 10);
+
+  PRUint32 written;
+  stream->Write(kCrashTimeParameter, kCrashTimeParameterLen, &written);
+  stream->Write(crashTimeString, strlen(crashTimeString), &written);
+  stream->Write("\n", 1, &written);
+  stream->Close();
+
+  {
+    MutexAutoLock lock(*dumpMapLock);
+    pidToMinidump->Put(pid, lf);
+  }
+
+  nsCOMPtr<nsIRunnable> r = new SubmitCrashReport(lf);
+  NS_DispatchToMainThread(r);
+}
+
+static bool
+OOPInitialized()
+{
+  return crashServer != NULL;
+}
+
+static void
+OOPInit()
+{
+  NS_ABORT_IF_FALSE(!OOPInitialized(),
+                    "OOP crash reporter initialized more than once!");
+  NS_ABORT_IF_FALSE(gExceptionHandler != NULL,
+                    "attempt to initialize OOP crash reporter before in-process crashreporter!");
+
+#if defined(XP_WIN)
+  childCrashNotifyPipe =
+    PR_smprintf("\\\\.\\pipe\\gecko-crash-server-pipe.%i",
+                static_cast<int>(::GetCurrentProcessId()));
+
+  const std::wstring dumpPath = gExceptionHandler->dump_path();
+  crashServer = new CrashGenerationServer(
+    NS_ConvertASCIItoUTF16(childCrashNotifyPipe).get(),
+    NULL,                       // default security attributes
+    NULL, NULL,                 // we don't care about process connect here
+    OnChildProcessDumpRequested, NULL,
+    NULL, NULL,                 // we don't care about process exit here
+    true,                       // automatically generate dumps
+    &dumpPath);
+
+#elif defined(XP_LINUX)
+  if (!CrashGenerationServer::CreateReportChannel(&serverSocketFd,
+                                                  &clientSocketFd))
+    NS_RUNTIMEABORT("can't create crash reporter socketpair()");
+
+  const std::string dumpPath = gExceptionHandler->dump_path();
+  crashServer = new CrashGenerationServer(
+    serverSocketFd,
+    OnChildProcessDumpRequested, NULL,
+    NULL, NULL,                 // we don't care about process exit here
+    true,                       // automatically generate dumps
+    &dumpPath);
+#endif
+
+  if (!crashServer->Start())
+    NS_RUNTIMEABORT("can't start crash reporter server()");
+
+  pidToMinidump = new ChildMinidumpMap();
+  pidToMinidump->Init();
+
+  dumpMapLock = new Mutex("CrashReporter::dumpMapLock");
+}
+
+static void
+OOPDeinit()
+{
+  if (!OOPInitialized()) {
+    NS_WARNING("OOPDeinit() without successful OOPInit()");
+    return;
+  }
+
+  delete crashServer;
+  crashServer = NULL;
+
+  delete dumpMapLock;
+  dumpMapLock = NULL;
+
+  delete pidToMinidump;
+  pidToMinidump = NULL;
+
+#if defined(XP_WIN)
+  PR_Free(childCrashNotifyPipe);
+  childCrashNotifyPipe = NULL;
+#endif
+}
+
+#if defined(XP_WIN)
+// Parent-side API for children
+const char*
+GetChildNotificationPipe()
+{
+  if (!GetEnabled())
+    return kNullNotifyPipe;
+
+  if (!OOPInitialized())
+    OOPInit();
+
+  return childCrashNotifyPipe;
+}
+
+// Child-side API
+bool
+SetRemoteExceptionHandler(const nsACString& crashPipe)
+{
+  // crash reporting is disabled
+  if (crashPipe.Equals(kNullNotifyPipe))
+    return true;
+
+  NS_ABORT_IF_FALSE(!gExceptionHandler, "crash client already init'd");
+
+  gExceptionHandler = new google_breakpad::
+    ExceptionHandler(L"",
+                     NULL,    // no filter callback
+                     NULL,    // no minidump callback
+                     NULL,    // no callback context
+                     google_breakpad::ExceptionHandler::HANDLER_ALL,
+                     MiniDumpNormal,
+                     NS_ConvertASCIItoUTF16(crashPipe).BeginReading(),
+                     NULL);
+
+  // we either do remote or nothing, no fallback to regular crash reporting
+  return gExceptionHandler->IsOutOfProcess();
+}
+
+//--------------------------------------------------
+#elif defined(XP_UNIX)
+
+// Parent-side API for children
+bool
+CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd)
+{
+  if (!GetEnabled()) {
+    *childCrashFd = -1;
+    *childCrashRemapFd = -1;
+    return true;
+  }
+
+  if (!OOPInitialized())
+    OOPInit();
+
+  *childCrashFd = clientSocketFd;
+  *childCrashRemapFd = kMagicChildCrashReportFd;
+
+  return true;
+}
+
+// Child-side API
+bool
+SetRemoteExceptionHandler()
+{
+  NS_ABORT_IF_FALSE(!gExceptionHandler, "crash client already init'd");
+
+  gExceptionHandler = new google_breakpad::
+    ExceptionHandler("",
+                     NULL,    // no filter callback
+                     NULL,    // no minidump callback
+                     NULL,    // no callback context
+                     true,    // install signal handlers
+                     kMagicChildCrashReportFd);
+
+  // we either do remote or nothing, no fallback to regular crash reporting
+  return gExceptionHandler->IsOutOfProcess();
+}
+
+#endif  // XP_WIN
+
+
+bool
+GetMinidumpForChild(PRUint32 childPid, nsIFile** dump)
+{
+  if (!GetEnabled())
+    return false;
+
+  MutexAutoLock lock(*dumpMapLock);
+  return pidToMinidump->Get(childPid, dump);
+}
+
+bool
+UnsetRemoteExceptionHandler()
+{
+  delete gExceptionHandler;
+  gExceptionHandler = NULL;
+  return true;
+}
+
+#endif  // MOZ_IPC
 
 } // namespace CrashReporter
