@@ -103,12 +103,20 @@ gfxFontListPrefObserver::Observe(nsISupports     *aSubject,
 }
 
 
-gfxPlatformFontList::gfxPlatformFontList()
-    : mStartIndex(0), mIncrement(kNumFontsPerSlice), mNumFamilies(0)
+gfxPlatformFontList::gfxPlatformFontList(PRBool aNeedFullnamePostscriptNames)
+    : mNeedFullnamePostscriptNames(aNeedFullnamePostscriptNames),
+      mStartIndex(0), mIncrement(kNumFontsPerSlice), mNumFamilies(0)
 {
     mFontFamilies.Init(100);
     mOtherFamilyNames.Init(30);
     mOtherFamilyNamesInitialized = PR_FALSE;
+
+    if (mNeedFullnamePostscriptNames) {
+        mFullnames.Init(100);
+        mPostscriptNames.Init(100);
+    }
+    mFaceNamesInitialized = PR_FALSE;
+
     mPrefFonts.Init(10);
 
     mBadUnderlineFamilyNames.Init(10);
@@ -126,6 +134,26 @@ gfxPlatformFontList::gfxPlatformFontList()
             delete observer;
         }
     }
+}
+
+void
+gfxPlatformFontList::InitFontList()
+{
+    mFontFamilies.Clear();
+    mOtherFamilyNames.Clear();
+    mOtherFamilyNamesInitialized = PR_FALSE;
+    if (mNeedFullnamePostscriptNames) {
+        mFullnames.Clear();
+        mPostscriptNames.Clear();
+    }
+    mFaceNamesInitialized = PR_FALSE;
+    mPrefFonts.Clear();
+    CancelLoader();
+
+    // initialize ranges of characters for which system-wide font search should be skipped
+    mCodepointsWithNoFonts.reset();
+    mCodepointsWithNoFonts.SetRange(0,0x1f);     // C0 controls
+    mCodepointsWithNoFonts.SetRange(0x7f,0x9f);  // C1 controls
 }
 
 void
@@ -150,20 +178,27 @@ gfxPlatformFontList::InitOtherFamilyNamesProc(nsStringHashKey::KeyType aKey,
                                               void* userArg)
 {
     gfxPlatformFontList *fc = static_cast<gfxPlatformFontList*>(userArg);
-    AddOtherFamilyNameFunctor addOtherNames(fc);
-    aFamilyEntry->ReadOtherFamilyNames(addOtherNames);
+    aFamilyEntry->ReadOtherFamilyNames(fc);
     return PL_DHASH_NEXT;
 }
 
 void
-gfxPlatformFontList::ReadOtherFamilyNamesForFamily(const nsAString& aFamilyName)
+gfxPlatformFontList::InitFaceNameLists()
 {
-    gfxFontFamily *familyEntry = FindFamily(aFamilyName);
+    mFaceNamesInitialized = PR_TRUE;
 
-    if (familyEntry) {
-        AddOtherFamilyNameFunctor addOtherNames(this);
-        familyEntry->ReadOtherFamilyNames(addOtherNames);
-    }
+    // iterate over all font families and read in other family names
+    mFontFamilies.Enumerate(gfxPlatformFontList::InitFaceNameListsProc, this);
+}
+
+PLDHashOperator PR_CALLBACK
+gfxPlatformFontList::InitFaceNameListsProc(nsStringHashKey::KeyType aKey,
+                                           nsRefPtr<gfxFontFamily>& aFamilyEntry,
+                                           void* userArg)
+{
+    gfxPlatformFontList *fc = static_cast<gfxPlatformFontList*>(userArg);
+    aFamilyEntry->ReadFaceNames(fc, fc->NeedFullnamePostscriptNames());
+    return PL_DHASH_NEXT;
 }
 
 void
@@ -181,8 +216,7 @@ gfxPlatformFontList::PreloadNamesList()
         // only search canonical names!
         gfxFontFamily *familyEntry = mFontFamilies.GetWeak(key, &found);
         if (familyEntry) {
-            AddOtherFamilyNameFunctor addOtherNames(this);
-            familyEntry->ReadOtherFamilyNames(addOtherNames);
+            familyEntry->ReadOtherFamilyNames(this);
         }
     }
 
@@ -437,6 +471,32 @@ gfxPlatformFontList::AddOtherFamilyName(gfxFontFamily *aFamilyEntry, nsAString& 
     }
 }
 
+void
+gfxPlatformFontList::AddFullname(gfxFontEntry *aFontEntry, nsAString& aFullname)
+{
+    PRBool found;
+
+    if (!mFullnames.GetWeak(aFullname, &found)) {
+        mFullnames.Put(aFullname, aFontEntry);
+        PR_LOG(gFontListLog, PR_LOG_DEBUG, ("(fontlist-fullname) name: %s, fullname: %s\n", 
+                                            NS_ConvertUTF16toUTF8(aFontEntry->Name()).get(), 
+                                            NS_ConvertUTF16toUTF8(aFullname).get()));
+    }
+}
+
+void
+gfxPlatformFontList::AddPostscriptName(gfxFontEntry *aFontEntry, nsAString& aPostscriptName)
+{
+    PRBool found;
+
+    if (!mPostscriptNames.GetWeak(aPostscriptName, &found)) {
+        mPostscriptNames.Put(aPostscriptName, aFontEntry);
+        PR_LOG(gFontListLog, PR_LOG_DEBUG, ("(fontlist-postscript) name: %s, psname: %s\n", 
+                                            NS_ConvertUTF16toUTF8(aFontEntry->Name()).get(), 
+                                            NS_ConvertUTF16toUTF8(aPostscriptName).get()));
+    }
+}
+
 PRBool
 gfxPlatformFontList::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
 {
@@ -459,7 +519,6 @@ gfxPlatformFontList::RunLoader()
     PRUint32 i, endIndex = (mStartIndex + mIncrement < mNumFamilies ? mStartIndex + mIncrement : mNumFamilies);
 
     // for each font family, load in various font info
-    AddOtherFamilyNameFunctor addOtherNames(this);
     for (i = mStartIndex; i < endIndex; i++) {
         gfxFontFamily* familyEntry = mFontFamiliesToLoad[i];
 
@@ -469,8 +528,8 @@ gfxPlatformFontList::RunLoader()
         // load the cmaps
         familyEntry->ReadCMAP();
 
-        // read in other family names
-        familyEntry->ReadOtherFamilyNames(addOtherNames);
+        // read in face names
+        familyEntry->ReadFaceNames(this, mNeedFullnamePostscriptNames);
 
         // check whether the family can be considered "simple" for style matching
         familyEntry->CheckForSimpleFamily();
