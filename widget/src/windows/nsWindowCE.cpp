@@ -111,15 +111,6 @@ void nsWindowCE::OnSoftKbSettingsChange(HWND wnd, LPRECT visRect)
       MoveWindow(wndMain, winRect.left, winRect.top, winRect.right - winRect.left, winRect.bottom - winRect.top, TRUE);
     }
   }
-  
-  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
-  if (observerService) {
-    wchar_t rectBuf[256];
-    _snwprintf(rectBuf, 256, L"{\"left\": %d, \"top\": %d,"
-               L" \"right\": %d, \"bottom\": %d}", 
-               visRect->left, visRect->top, visRect->right, visRect->bottom);
-    observerService->NotifyObservers(nsnull, "softkb-change", rectBuf);
-  }
 }
 
 void nsWindowCE::ToggleSoftKB(HWND wnd, PRBool show)
