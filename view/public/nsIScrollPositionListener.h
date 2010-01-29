@@ -40,34 +40,18 @@
 #ifndef nsIScrollPositionListener_h___
 #define nsIScrollPositionListener_h___
 
-#include "nsISupports.h"
 #include "nsCoord.h"
-#include "nsTArray.h"
-#include "nsIWidget.h"
-
-// IID for the nsIScrollPositionListener interface
-#define NS_ISCROLLPOSITIONLISTENER_IID \
-{ 0x20b82adf, 0x1f5c, 0x44f7, \
-  { 0x9b, 0x74, 0xc0, 0xa3, 0x14, 0xd8, 0xcf, 0x91 } }
 
 /**
  * Provides a way for a client of an nsIScrollableView to learn about scroll position
  * changes.
  */
-class nsIScrollPositionListener : public nsISupports {
+class nsIScrollPositionListener {
 public:
-	NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCROLLPOSITIONLISTENER_IID)
 
-	NS_IMETHOD ScrollPositionWillChange(nscoord aX, nscoord aY) = 0;
-	// The scrollframe implementation of this method appends a list of widget
-	// configuration requests to aConfigurations. No other implementor
-	// should touch it. No longer gets called!!!
-	virtual void ViewPositionDidChange(nsTArray<nsIWidget::Configuration>* aConfigurations) = 0;
-	NS_IMETHOD ScrollPositionDidChange(nscoord aX, nscoord aY) = 0;
+	virtual void ScrollPositionWillChange(nscoord aX, nscoord aY) = 0;
+	virtual void ScrollPositionDidChange(nscoord aX, nscoord aY) = 0;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIScrollPositionListener,
-                              NS_ISCROLLPOSITIONLISTENER_IID)
 
 #endif /* nsIScrollPositionListener_h___ */
 
