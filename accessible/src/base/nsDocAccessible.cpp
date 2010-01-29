@@ -166,7 +166,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDocAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessibleDocument)
@@ -955,12 +954,7 @@ void nsDocAccessible::RemoveScrollListener()
 ////////////////////////////////////////////////////////////////////////////////
 // nsIScrollPositionListener
 
-NS_IMETHODIMP nsDocAccessible::ScrollPositionWillChange(nscoord aX, nscoord aY)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocAccessible::ScrollPositionDidChange(nscoord aX, nscoord aY)
+void nsDocAccessible::ScrollPositionDidChange(nscoord aX, nscoord aY)
 {
   // Start new timer, if the timer cycles at least 1 full cycle without more scroll position changes,
   // then the ::Notify() method will fire the accessibility event for scroll position changes
@@ -978,7 +972,6 @@ NS_IMETHODIMP nsDocAccessible::ScrollPositionDidChange(nscoord aX, nscoord aY)
     }
   }
   mScrollPositionChangedTicks = 1;
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

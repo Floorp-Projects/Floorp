@@ -1772,7 +1772,7 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt)
                "curPos.y not a multiple of device pixels");
 
   // notify the listeners.
-  for (PRInt32 i = 0; i < mListeners.Count(); i++) {
+  for (PRInt32 i = 0; i < mListeners.Length(); i++) {
     mListeners[i]->ScrollPositionWillChange(pt.x, pt.y);
   }
   
@@ -1787,7 +1787,7 @@ nsGfxScrollFrameInner::ScrollToImpl(nsPoint aPt)
   PostScrollEvent();
 
   // notify the listeners.
-  for (PRInt32 i = 0; i < mListeners.Count(); i++) {
+  for (PRInt32 i = 0; i < mListeners.Length(); i++) {
     mListeners[i]->ScrollPositionDidChange(pt.x, pt.y);
   }
 }
