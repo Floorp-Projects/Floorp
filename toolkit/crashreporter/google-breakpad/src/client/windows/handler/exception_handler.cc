@@ -284,7 +284,7 @@ ExceptionHandler::~ExceptionHandler() {
     ReleaseSemaphore(handler_start_semaphore_, 1, NULL);
     WaitForSingleObject(handler_thread_, kWaitForHandlerThreadMs);
 #else
-    TerminateThread(handler_thread_, 44);
+    TerminateThread(handler_thread_, 1);
 #endif  // BREAKPAD_NO_TERMINATE_THREAD
 
     CloseHandle(handler_thread_);
