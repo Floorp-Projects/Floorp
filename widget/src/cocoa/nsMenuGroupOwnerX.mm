@@ -163,24 +163,18 @@ void nsMenuGroupOwnerX::ContentRemoved(nsIDocument * aDocument,
                                        nsIContent * aChild,
                                        PRInt32 aIndexInContainer)
 {
-  if (aContainer == mContent) {
-    RemoveMenuAtIndex(aIndexInContainer);
-  }
-  else {
-    nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
-    if (obs) {
-      obs->ObserveContentRemoved(aDocument, aChild, aIndexInContainer);
-    }
-    else {
-      // We do a lookup on the parent container in case things were removed
-      // under a "menupopup" item. That is basically a wrapper for the contents
-      // of a "menu" node.
-      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
-      if (parent) {
-        obs = LookupContentChangeObserver(parent);
-        if (obs)
-          obs->ObserveContentRemoved(aDocument, aChild, aIndexInContainer);
-      }
+  nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
+  if (obs)
+    obs->ObserveContentRemoved(aDocument, aChild, aIndexInContainer);
+  else if (aContainer != mContent) {
+    // We do a lookup on the parent container in case things were removed
+    // under a "menupopup" item. That is basically a wrapper for the contents
+    // of a "menu" node.
+    nsCOMPtr<nsIContent> parent = aContainer->GetParent();
+    if (parent) {
+      obs = LookupContentChangeObserver(parent);
+      if (obs)
+        obs->ObserveContentRemoved(aDocument, aChild, aIndexInContainer);
     }
   }
 }
@@ -191,30 +185,18 @@ void nsMenuGroupOwnerX::ContentInserted(nsIDocument * aDocument,
                                         nsIContent * aChild,
                                         PRInt32 aIndexInContainer)
 {
-  if (aContainer == mContent) {
-    nsMenuX* newMenu = new nsMenuX();
-    if (newMenu) {
-      nsresult rv = newMenu->Create(this, this, aChild);
-      if (NS_SUCCEEDED(rv))
-        InsertMenuAtIndex(newMenu, aIndexInContainer);
-      else
-        delete newMenu;
-    }
-  }
-  else {
-    nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
-    if (obs)
-      obs->ObserveContentInserted(aDocument, aChild, aIndexInContainer);
-    else {
-      // We do a lookup on the parent container in case things were removed
-      // under a "menupopup" item. That is basically a wrapper for the contents
-      // of a "menu" node.
-      nsCOMPtr<nsIContent> parent = aContainer->GetParent();
-      if (parent) {
-        obs = LookupContentChangeObserver(parent);
-        if (obs)
-          obs->ObserveContentInserted(aDocument, aChild, aIndexInContainer);
-      }
+  nsChangeObserver* obs = LookupContentChangeObserver(aContainer);
+  if (obs)
+    obs->ObserveContentInserted(aDocument, aChild, aIndexInContainer);
+  else if (aContainer != mContent) {
+    // We do a lookup on the parent container in case things were removed
+    // under a "menupopup" item. That is basically a wrapper for the contents
+    // of a "menu" node.
+    nsCOMPtr<nsIContent> parent = aContainer->GetParent();
+    if (parent) {
+      obs = LookupContentChangeObserver(parent);
+      if (obs)
+        obs->ObserveContentInserted(aDocument, aChild, aIndexInContainer);
     }
   }
 }
@@ -286,13 +268,4 @@ nsMenuItemX* nsMenuGroupOwnerX::GetMenuItemForCommandID(PRUint32 inCommandID)
     return result;
   else
     return nsnull;
-}
-
-nsresult nsMenuGroupOwnerX::InsertMenuAtIndex(nsMenuX* aMenu, PRUint32 aIndex)
-{
-  return NS_OK;
-}
-
-void nsMenuGroupOwnerX::RemoveMenuAtIndex(PRUint32 aIndex)
-{
 }
