@@ -663,7 +663,7 @@ nsNPAPIPlugin::Shutdown(void)
 nsresult
 nsNPAPIPlugin::GetMIMEDescription(const char* *resultingDesc)
 {
-  nsresult gmdResult = fLibrary->NP_GetMIMEDescription((char**)resultingDesc);
+  nsresult gmdResult = fLibrary->NP_GetMIMEDescription(resultingDesc);
   if (gmdResult != NS_OK) {
     return gmdResult;
   }
