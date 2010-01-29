@@ -5532,7 +5532,7 @@ nsresult nsPluginInstanceOwner::Init(nsPresContext* aPresContext,
   for (nsIFrame* f = mObjectFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
     nsIScrollableFrame* sf = do_QueryFrame(f);
     if (sf) {
-      sf->RemoveScrollPositionListener(this);
+      sf->AddScrollPositionListener(this);
     }
   }
 
