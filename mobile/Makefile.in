@@ -45,6 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS       = chrome locales components themes app
 
+ifndef LIBXUL_SDK
+PARALLEL_DIRS += $(DEPTH)/xulrunner/tools/redit
+endif
+
 ifdef WINCE
 DIRS += installer/wince
 endif

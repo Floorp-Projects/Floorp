@@ -73,6 +73,7 @@ NO_PKG_FILES = \
 	$(MOZ_APP_NAME)-config \
 	$(MOZ_APP_NAME)-bin.elf \
 	xulrunner-config \
+	$(MOZ_APP_NAME)-bin$(BIN_SUFFIX) \
 	nspr-config \
 	regchrome* \
 	regxpcom* \
@@ -81,7 +82,6 @@ NO_PKG_FILES = \
 	xpt_dump* \
 	xpt_link* \
 	bloaturls.txt \
-	run-mozilla.sh \
 	nsinstall \
 	*Test* \
 	*test* \
@@ -128,6 +128,7 @@ include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 DEBDESTDIR=debian/$(MOZ_APP_NAME)
 
 package-xulrunner:
+ifdef LIBXUL_SDK
 ifndef SYSTEM_LIBXUL
 	@echo "Packaging xulrunner..."
 	@rm -rf $(LIBXUL_DIST)/xulrunner*
@@ -137,6 +138,7 @@ ifndef SYSTEM_LIBXUL
 	@cd $(DIST)/$(MOZ_PKG_DIR)/xulrunner; rm -rf $(NO_PKG_FILES)
 else
 	@echo "Using system xulrunner..."
+endif
 endif
 
 ifeq ($(OS_TARGET),Linux)
