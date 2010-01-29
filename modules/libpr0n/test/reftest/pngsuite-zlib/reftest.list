@@ -1,13 +1,3 @@
-# If you mark a test as failing or random, you MUST file a bug report in
-# bugzilla and note the bug number as a comment on the line with the
-# failing test.
-#
-# For example:
-# ...
-# fails == foo bar # bug 12345
-#
-# See /mozilla/layout/tools/reftest/README.txt for more information.
-
 # z00n2c08 - color, no interlacing, compression level 0 (none)
 == z00n2c08.png z00n2c08.html
 # z03n2c08 - color, no interlacing, compression level 3
