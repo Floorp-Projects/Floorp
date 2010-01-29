@@ -705,7 +705,7 @@ fails == 386147-1.html 386147-1-ref.html # bug 447460
 == 387201-3.html about:blank  # Really an assertion test rather than a rendering test
 == 387227-1.html 387227-1-ref.html
 == 387227-2.html 387227-2-ref.html
-fails == 387344-1.html 387344-1-ref.html # scrolling rowgroups removed bug 28800
+fails == 387344-1.html 387344-1-ref.html # scrolling rowgroups were removed in bug 28800
 == 387876-1.html 387876-1-ref.html
 random == 387876-2.html 387876-2-ref.html # bug 471630
 == 387876-3a.html 387876-3-ref.html
@@ -959,7 +959,7 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabl
 == 423385-1.html 423385-1-ref.html
 == 423599-1.html 423599-1-ref.html
 == 423676-1.html 423676-1-ref.html
-fails == 423823-1.html 423823-1-ref.html # scrolling rowgroups removed bug 28800
+fails == 423823-1.html 423823-1-ref.html # scrolling rowgroups were removed in bug 28800
 == 424074-1.xul 424074-1-ref.xul
 != 424074-1.xul 424074-1-ref2.xul
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
