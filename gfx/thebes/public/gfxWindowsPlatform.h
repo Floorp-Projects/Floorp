@@ -134,6 +134,10 @@ public:
      */
     virtual PRBool IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlags);
 
+#ifndef MOZ_FT2_FONTS
+    virtual void SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString);
+#endif
+
     /* Find a FontFamily/FontEntry object that represents a font on your system given a name */
     gfxFontFamily *FindFontFamily(const nsAString& aName);
     gfxFontEntry *FindFontEntry(const nsAString& aName, const gfxFontStyle& aFontStyle);

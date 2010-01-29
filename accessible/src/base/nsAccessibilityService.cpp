@@ -161,19 +161,6 @@ nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
     if (progress)
       progress->RemoveProgressListener(static_cast<nsIWebProgressListener*>(this));
 
-    // Cancel and release load timers.
-    while (mLoadTimers.Count() > 0 ) {
-      nsCOMPtr<nsITimer> timer = mLoadTimers.ObjectAt(0);
-      void *closure = nsnull;
-      timer->GetClosure(&closure);
-      if (closure) {
-        nsIWebProgress *webProgress = static_cast<nsIWebProgress*>(closure);
-        NS_RELEASE(webProgress);  // Release nsIWebProgress for timer
-      }
-      timer->Cancel();
-      mLoadTimers.RemoveObjectAt(0);
-    }
-
     // Application is going to be closed, shutdown accessibility and mark
     // accessibility service as shutdown to prevent calls of its methods.
     // Don't null accessibility service static member at this point to be safe
@@ -206,38 +193,36 @@ NS_IMETHODIMP nsAccessibilityService::OnStateChange(nsIWebProgress *aWebProgress
 
   if (NS_FAILED(aStatus) && (aStateFlags & STATE_START))
     return NS_OK;
- 
-  nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
-  if (!timer)
-    return NS_OK;
-  mLoadTimers.AppendObject(timer);
-  NS_ADDREF(aWebProgress);
 
-  if (aStateFlags & STATE_START)
-    timer->InitWithFuncCallback(StartLoadCallback, aWebProgress, 0,
-                                nsITimer::TYPE_ONE_SHOT);
-  else if (NS_SUCCEEDED(aStatus)) 
-    timer->InitWithFuncCallback(EndLoadCallback, aWebProgress, 0,
-                                nsITimer::TYPE_ONE_SHOT);
-  else // Failed end load
-    timer->InitWithFuncCallback(FailedLoadCallback, aWebProgress, 0,
-                                nsITimer::TYPE_ONE_SHOT);
+  if (aStateFlags & STATE_START) {
+    NS_DISPATCH_RUNNABLEMETHOD_ARG2(ProcessDocLoadEvent, this, aWebProgress,
+                                    nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_START)
+  } else if (NS_SUCCEEDED(aStatus)) {
+    NS_DISPATCH_RUNNABLEMETHOD_ARG2(ProcessDocLoadEvent, this, aWebProgress,
+                                    nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE)
+  } else { // Failed end load
+    NS_DISPATCH_RUNNABLEMETHOD_ARG2(ProcessDocLoadEvent, this, aWebProgress,
+                                    nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED)
+  }
+
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessibilityService::ProcessDocLoadEvent(nsITimer *aTimer, void *aClosure, PRUint32 aEventType)
+void
+nsAccessibilityService::ProcessDocLoadEvent(nsIWebProgress *aWebProgress,
+                                            PRUint32 aEventType)
 {
+  if (gIsShutdown)
+    return;
+
   nsCOMPtr<nsIDOMWindow> domWindow;
-  nsIWebProgress *webProgress = static_cast<nsIWebProgress*>(aClosure);
-  webProgress->GetDOMWindow(getter_AddRefs(domWindow));
-  NS_RELEASE(webProgress);
-  mLoadTimers.RemoveObject(aTimer);
-  NS_ENSURE_STATE(domWindow);
+  aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+  NS_ENSURE_TRUE(domWindow,);
 
   if (aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_START) {
     nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(domWindow));
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webNav));
-    NS_ENSURE_STATE(docShell);
+    NS_ENSURE_TRUE(docShell,);
     PRUint32 loadType;
     docShell->GetLoadType(&loadType);
     if (loadType == LOAD_RELOAD_NORMAL ||
@@ -251,17 +236,15 @@ NS_IMETHODIMP nsAccessibilityService::ProcessDocLoadEvent(nsITimer *aTimer, void
   nsCOMPtr<nsIDOMDocument> domDoc;
   domWindow->GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDOMNode> docNode = do_QueryInterface(domDoc);
-  NS_ENSURE_STATE(docNode);
+  NS_ENSURE_TRUE(docNode,);
 
   nsCOMPtr<nsIAccessible> accessible;
   GetAccessibleFor(docNode, getter_AddRefs(accessible));
   nsRefPtr<nsDocAccessible> docAcc =
     nsAccUtils::QueryAccessibleDocument(accessible);
-  NS_ENSURE_STATE(docAcc);
+  NS_ENSURE_TRUE(docAcc,);
 
   docAcc->FireDocLoadEvents(aEventType);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -287,8 +270,8 @@ nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent *aTarget)
   }
 
   if (targetAcc)
-    return nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
-                                    targetAcc);
+    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
+                            targetAcc);
 
   return NS_OK;
 }
@@ -297,31 +280,8 @@ NS_IMETHODIMP
 nsAccessibilityService::FireAccessibleEvent(PRUint32 aEvent,
                                             nsIAccessible *aTarget)
 {
-  return nsAccUtils::FireAccEvent(aEvent, aTarget);
-}
-
-void nsAccessibilityService::StartLoadCallback(nsITimer *aTimer, void *aClosure)
-{
-  if (gAccessibilityService)
-    gAccessibilityService->
-      ProcessDocLoadEvent(aTimer, aClosure,
-                          nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_START);
-}
-
-void nsAccessibilityService::EndLoadCallback(nsITimer *aTimer, void *aClosure)
-{
-  if (gAccessibilityService)
-    gAccessibilityService->
-      ProcessDocLoadEvent(aTimer, aClosure,
-                          nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE);
-}
-
-void nsAccessibilityService::FailedLoadCallback(nsITimer *aTimer, void *aClosure)
-{
-  if (gAccessibilityService)
-    gAccessibilityService->
-      ProcessDocLoadEvent(aTimer, aClosure,
-                          nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED);
+  nsEventShell::FireEvent(aEvent, aTarget);
+  return NS_OK;
 }
 
 /* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
@@ -555,7 +515,8 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame *aFrame,
   else if (tag == nsAccessibilityAtoms::optgroup) {
     *aAccessible = new nsHTMLSelectOptGroupAccessible(aNode, aWeakShell);
   }
-  else if (tag == nsAccessibilityAtoms::ul || tag == nsAccessibilityAtoms::ol) {
+  else if (tag == nsAccessibilityAtoms::ul || tag == nsAccessibilityAtoms::ol ||
+           tag == nsAccessibilityAtoms::dl) {
     *aAccessible = new nsHTMLListAccessible(aNode, aWeakShell);
   }
   else if (tag == nsAccessibilityAtoms::a) {
@@ -570,17 +531,18 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame *aFrame,
 
     *aAccessible = new nsHTMLLinkAccessible(aNode, aWeakShell);
   }
-  else if (tag == nsAccessibilityAtoms::li && aFrame->GetType() != nsAccessibilityAtoms::blockFrame) {
-    // Normally this is created by the list item frame which knows about the bullet frame
-    // However, in this case the list item must have been styled using display: foo
+  else if (tag == nsAccessibilityAtoms::dt ||
+           (tag == nsAccessibilityAtoms::li && 
+            aFrame->GetType() != nsAccessibilityAtoms::blockFrame)) {
+    // Normally for li, it is created by the list item frame (in nsBlockFrame)
+    // which knows about the bullet frame; however, in this case the list item
+    // must have been styled using display: foo
     *aAccessible = new nsHTMLLIAccessible(aNode, aWeakShell, EmptyString());
   }
   else if (tag == nsAccessibilityAtoms::abbr ||
            tag == nsAccessibilityAtoms::acronym ||
            tag == nsAccessibilityAtoms::blockquote ||
            tag == nsAccessibilityAtoms::dd ||
-           tag == nsAccessibilityAtoms::dl ||
-           tag == nsAccessibilityAtoms::dt ||
            tag == nsAccessibilityAtoms::form ||
            tag == nsAccessibilityAtoms::h1 ||
            tag == nsAccessibilityAtoms::h2 ||

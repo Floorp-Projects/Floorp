@@ -1536,10 +1536,6 @@ var gAutoHideTabbarPrefListener = {
 
 function initializeSanitizer()
 {
-  // Always use the label with ellipsis
-  var label = gNavigatorBundle.getString("sanitizeWithPromptLabel2");
-  document.getElementById("sanitizeItem").setAttribute("label", label);
-
   const kDidSanitizeDomain = "privacy.sanitize.didShutdownSanitize";
   if (gPrefService.prefHasUserValue(kDidSanitizeDomain)) {
     gPrefService.clearUserPref(kDidSanitizeDomain);
@@ -1611,7 +1607,7 @@ function gotoHistoryIndex(aEvent)
     var sessionHistory = getWebNavigation().sessionHistory;
     var entry = sessionHistory.getEntryAtIndex(index, false);
     var url = entry.URI.spec;
-    openUILinkIn(url, where);
+    openUILinkIn(url, where, {relatedToCurrent: true});
     return true;
   }
 }
@@ -1631,7 +1627,7 @@ function BrowserForward(aEvent) {
     var currentIndex = sessionHistory.index;
     var entry = sessionHistory.getEntryAtIndex(currentIndex + 1, false);
     var url = entry.URI.spec;
-    openUILinkIn(url, where);
+    openUILinkIn(url, where, {relatedToCurrent: true});
   }
 }
 
@@ -1650,7 +1646,7 @@ function BrowserBack(aEvent) {
     var currentIndex = sessionHistory.index;
     var entry = sessionHistory.getEntryAtIndex(currentIndex - 1, false);
     var url = entry.URI.spec;
-    openUILinkIn(url, where);
+    openUILinkIn(url, where, {relatedToCurrent: true});
   }
 }
 
@@ -1704,7 +1700,8 @@ function BrowserReloadOrDuplicate(aEvent) {
   if (where == "current")
     BrowserReload();
   else
-    openUILinkIn(getWebNavigation().currentURI.spec, where);
+    openUILinkIn(getWebNavigation().currentURI.spec, where,
+                 {relatedToCurrent: true});
 }
 
 function BrowserReload() {
@@ -2719,6 +2716,7 @@ var browserDragAndDrop = {
     if (types.contains("application/x-moz-file") ||
         types.contains("text/x-moz-url") ||
         types.contains("text/uri-list") ||
+        types.contains("text/x-moz-text-internal") ||
         types.contains("text/plain")) {
       aEvent.preventDefault();
 
@@ -3341,12 +3339,8 @@ function BrowserCustomizeToolbar()
     else
       sheetFrame.setAttribute("src", customizeURL);
 
-    // XXXmano: there's apparently no better way to get this when the iframe is
-    // hidden
-    var sheetWidth = sheetFrame.style.width.match(/([0-9]+)px/)[1];
     document.getElementById("customizeToolbarSheetPopup")
-            .openPopup(gNavToolbox, "after_start",
-                       (window.innerWidth - sheetWidth) / 2, 0);
+            .openPopup(gNavToolbox, "after_start", 0, 0);
 
     return sheetFrame.contentWindow;
   } else {
@@ -4526,6 +4520,13 @@ nsBrowserAccess.prototype = {
           return null;
         }
 
+        if (isExternal && (!aURI || aURI.spec == "about:blank")) {
+          win.BrowserOpenTab(); // this also focuses the location bar
+          win.focus();
+          newWindow = win.content;
+          break;
+        }
+
         let loadInBackground = gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground");
         let referrer = aOpener ? makeURI(aOpener.location.href) : null;
 
@@ -5278,8 +5279,10 @@ function stylesheetFillPopup(menuPopup) {
       continue;
 
     // Skip any stylesheets that don't match the screen media type.
-    let (media = currentStyleSheet.media.mediaText.toLowerCase()) {
-      if (media && (media.indexOf("screen") == -1) && (media.indexOf("all") == -1))
+    if (currentStyleSheet.media.length > 0) {
+      let media = currentStyleSheet.media.mediaText.split(", ");
+      if (media.indexOf("screen") == -1 &&
+          media.indexOf("all") == -1)
         continue;
     }
 

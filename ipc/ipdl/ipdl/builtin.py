@@ -62,7 +62,7 @@ Types = (
 
     # NSPR types
     'PRBool',
-    'PRPackedBool'
+    'PRPackedBool',
     'PRInt8',
     'PRUint8',
     'PRInt16',
@@ -90,5 +90,6 @@ Includes = (
     'nsAutoPtr.h',
     'nsStringGlue.h',
     'nsTArray.h',
+    'nsIFile.h',
     'mozilla/ipc/ProtocolUtils.h',
 )

@@ -1,0 +1,131 @@
+<html>
+
+<head>
+  <title>Accessible caret move events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+
+  <script type="application/javascript">
+    /**
+     * Generic checker.
+     */
+    function checker(aCaretOffset)
+    {
+      this.check = function checker_check(aEvent)
+      {
+        is(aEvent.QueryInterface(nsIAccessibleCaretMoveEvent).caretOffset,
+           aCaretOffset,
+           "Wrong caret offset for " + prettyName(aEvent.target));
+      }
+    }
+
+    /**
+     * Click checker.
+     */
+    function clickChecker(aCaretOffset, aExtraNodeOrID, aExtraCaretOffset)
+    {
+      this.__proto__ = new checker(aCaretOffset);
+
+      this.extraNode = getNode(aExtraNodeOrID);
+
+      this.check = function clickChecker_check(aEvent)
+      {
+        this.__proto__.check(aEvent);
+
+        if (this.extraNode) {
+          var acc = getAccessible(this.extraNode, [nsIAccessibleText]);
+          is(acc.caretOffset, aExtraCaretOffset,
+             "Wrong caret offset for " + aExtraNodeOrID);
+        }
+      }
+    }
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+
+    function testCaretOffset(aAccOrElmOrID, aCaretOffset)
+    {
+      var acc = getAccessible(aAccOrElmOrID, [nsIAccessibleText]);
+      is(acc.caretOffset, aCaretOffset,
+         "Wrong caret offset for " + aAccOrElmOrID);
+    }
+
+    function doTests()
+    {
+      todo(false, "enable commented tests Bug 510128 is fixed");
+      // test no focused accessibles
+      //testCaretOffset("textbox", -1);
+      //testCaretOffset("textarea", -1);
+      testCaretOffset("p", -1);
+
+      // test caret move events and caret offsets
+      gQueue = new eventQueue(EVENT_TEXT_CARET_MOVED);
+
+      var id = "textbox";
+      gQueue.push(new synthFocus(id, new checker(5)));
+      gQueue.push(new synthSelectAll(id, new checker(5)));
+      gQueue.push(new synthClick(id, new checker(0)));
+      gQueue.push(new synthRightKey(id, new checker(1)));
+
+      id = "textarea";
+      gQueue.push(new synthClick(id, new checker(0)));
+      gQueue.push(new synthRightKey(id, new checker(1)));
+      gQueue.push(new synthDownKey(id, new checker(12)));
+
+      id = "p";
+      gQueue.push(new synthClick(id, new checker(0)));
+      gQueue.push(new synthRightKey(id, new checker(1)));
+      gQueue.push(new synthDownKey(id, new checker(6)));
+
+      gQueue.push(new synthClick("p1_in_div",
+                                 new clickChecker(0, "p2_in_div", -1)));
+
+      gQueue.push(new synthShiftTab("p", new checker(0)));
+      gQueue.push(new synthShiftTab("textarea", new checker(12)));
+      gQueue.push(new synthTab("p", new checker(0)));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=454377"
+     title="Accessible caret move events testing">
+    Mozilla Bug 454377
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="textbox" value="hello"/>
+  <textarea id="textarea">text<br>text</textarea>
+  <p id="p" contentEditable="true"><span>text</span><br/>text</p>
+  <div id="div" contentEditable="true"><p id="p1_in_div">text</p><p id="p2_in_div">text</p></div>
+
+  <div id="eventdump"></div>
+</body>
+</html>

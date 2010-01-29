@@ -82,7 +82,7 @@ nsTableCellMap::nsTableCellMap(nsTableFrame&   aTableFrame,
   nsTableRowGroupFrame* prior = nsnull;
   for (PRUint32 rgX = 0; rgX < orderedRowGroups.Length(); rgX++) {
     nsTableRowGroupFrame* rgFrame = orderedRowGroups[rgX];
-    InsertGroupCellMap(*rgFrame, prior);
+    InsertGroupCellMap(rgFrame, prior);
     prior = rgFrame;
   }
   if (aBorderCollapse) {
@@ -165,7 +165,7 @@ nsTableCellMap::InsertGroupCellMap(nsCellMap* aPrevMap,
   aNewMap.SetNextSibling(next);
 }
 
-void nsTableCellMap::InsertGroupCellMap(nsTableRowGroupFrame&  aNewGroup,
+void nsTableCellMap::InsertGroupCellMap(nsTableRowGroupFrame*  aNewGroup,
                                         nsTableRowGroupFrame*& aPrevGroup)
 {
   nsCellMap* newMap = new nsCellMap(aNewGroup, mBCInfo != nsnull);
@@ -471,7 +471,7 @@ nsTableCellMap::ClearCols()
     mBCInfo->mBottomBorders.Clear();
 }
 void
-nsTableCellMap::InsertRows(nsTableRowGroupFrame&       aParent,
+nsTableCellMap::InsertRows(nsTableRowGroupFrame*       aParent,
                            nsTArray<nsTableRowFrame*>& aRows,
                            PRInt32                     aFirstRowIndex,
                            PRBool                      aConsiderSpans,
@@ -484,7 +484,7 @@ nsTableCellMap::InsertRows(nsTableRowGroupFrame&       aParent,
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
     nsTableRowGroupFrame* rg = cellMap->GetRowGroup();
-    if (rg == &aParent) {
+    if (rg == aParent) {
       cellMap->InsertRows(*this, aRows, rowIndex, aConsiderSpans, aDamageArea);
       aDamageArea.y = NS_MIN(aFirstRowIndex, aDamageArea.y);
       aDamageArea.height = NS_MAX(0, GetRowCount() - aDamageArea.y);
@@ -1175,10 +1175,10 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
   else NS_ERROR("program error: Corner not found");
 }
 
-nsCellMap::nsCellMap(nsTableRowGroupFrame& aRowGroup, PRBool aIsBC)
-  : mRows(8), mContentRowCount(0), mRowGroupFrame(&aRowGroup),
+nsCellMap::nsCellMap(nsTableRowGroupFrame* aRowGroup, PRBool aIsBC)
+  : mRows(8), mContentRowCount(0), mRowGroupFrame(aRowGroup),
     mNextSibling(nsnull), mIsBC(aIsBC),
-    mPresContext(aRowGroup.PresContext())
+    mPresContext(aRowGroup->PresContext())
 {
   MOZ_COUNT_CTOR(nsCellMap);
   NS_ASSERTION(mPresContext, "Must have prescontext");

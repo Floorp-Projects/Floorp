@@ -67,6 +67,8 @@ _TEST_FILES = \
 		switch-helper.svg \
 		test_text.html \
 		text-helper.svg \
+		test_transform.xhtml \
+		test_valueAsString.xhtml \
 		test_valueLeaks.xhtml \
 		viewport-helper.svg \
 		test_viewport.html \

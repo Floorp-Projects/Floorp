@@ -314,25 +314,47 @@ namespace {
 #ifdef MOZ_IPC
 
 inline PRBool
-OOPPluginsEnabled()
+OOPPluginsEnabled(const char* aFilePath)
 {
   if (PR_GetEnv("MOZ_DISABLE_OOP_PLUGINS")) {
     return PR_FALSE;
   }
+
+#ifdef XP_WIN
+  OSVERSIONINFO osVerInfo = {0};
+  osVerInfo.dwOSVersionInfoSize = sizeof(osVerInfo);
+  GetVersionEx(&osVerInfo);
+  // Always disabled on 2K or less. (bug 536303)
+  if (osVerInfo.dwMajorVersion < 5 ||
+      (osVerInfo.dwMajorVersion == 5 && osVerInfo.dwMinorVersion == 0))
+    return PR_FALSE;
+#endif
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (!prefs) {
     return PR_FALSE;
   }
 
-  PRBool oopPluginsEnabled = PR_FALSE;
-  prefs->GetBoolPref("dom.ipc.plugins.enabled", &oopPluginsEnabled);
+  // Get per-library whitelist/blacklist pref string
+  // "dom.ipc.plugins.enabled.filename.dll" and fall back to the default value
+  // of "dom.ipc.plugins.enabled"
 
-  if (!oopPluginsEnabled) {
+  nsCAutoString pluginLibPref(aFilePath);
+  PRInt32 slashPos = pluginLibPref.RFindCharInSet("/\\");
+  if (kNotFound == slashPos)
     return PR_FALSE;
-  }
+  pluginLibPref.Cut(0, slashPos + 1);
+  ToLowerCase(pluginLibPref);
+  pluginLibPref.Insert("dom.ipc.plugins.enabled.", 0);
 
-  return PR_TRUE;
+  PRBool oopPluginsEnabled = PR_FALSE;
+  if (NS_SUCCEEDED(prefs->GetBoolPref(pluginLibPref.get(),
+                                      &oopPluginsEnabled)))
+    return oopPluginsEnabled;
+
+  oopPluginsEnabled = PR_FALSE;
+  prefs->GetBoolPref("dom.ipc.plugins.enabled", &oopPluginsEnabled);
+  return oopPluginsEnabled;
 }
 
 #endif // MOZ_IPC
@@ -342,7 +364,7 @@ GetNewPluginLibrary(const char* aFilePath,
                     PRLibrary* aLibrary)
 {
 #ifdef MOZ_IPC
-  if (aFilePath && OOPPluginsEnabled()) {
+  if (aFilePath && OOPPluginsEnabled(aFilePath)) {
     return PluginModuleParent::LoadModule(aFilePath);
   }
 #endif
@@ -1031,7 +1053,10 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
       (strncmp(relativeURL, "ftp:", 4) != 0)) {
     nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
 
-    const char *name = nsPluginHost::GetPluginName(inst);
+    
+    const char *name;
+    nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
+    host->GetPluginName(inst, &name);
 
     if (name && strstr(name, "Adobe") && strstr(name, "Acrobat")) {
       return NPERR_NO_ERROR;

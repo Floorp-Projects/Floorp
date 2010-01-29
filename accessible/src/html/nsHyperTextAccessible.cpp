@@ -232,10 +232,10 @@ nsHyperTextAccessible::CacheChildren()
 
   walker.GetFirstChild();
   while (walker.mState.accessible) {
-    mChildren.AppendObject(walker.mState.accessible);
-
     nsRefPtr<nsAccessible> acc =
       nsAccUtils::QueryObject<nsAccessible>(walker.mState.accessible);
+
+    mChildren.AppendElement(acc);
     acc->SetParent(this);
 
     walker.GetNextSibling();
@@ -859,7 +859,7 @@ nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell,
     hyperTextOffset = 0;
   }  
   else if (aAmount == eSelectBeginLine) {
-    nsIAccessible *firstChild = mChildren.SafeObjectAt(0);
+    nsAccessible *firstChild = mChildren.SafeElementAt(0, nsnull);
     // For line selection with needsStart, set start of line exactly to line break
     if (pos.mContentOffset == 0 && firstChild &&
         nsAccUtils::Role(firstChild) == nsIAccessibleRole::ROLE_STATICTEXT &&
@@ -1602,11 +1602,13 @@ nsHyperTextAccessible::GetCaretOffset(PRInt32 *aCaretOffset)
 
   // No caret if the focused node is not inside this DOM node and this DOM node
   // is not inside of focused node.
+  nsCOMPtr<nsINode> thisNode(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsINode> lastFocusedNode(do_QueryInterface(gLastFocusedNode));
   PRBool isInsideOfFocusedNode =
-    nsCoreUtils::IsAncestorOf(gLastFocusedNode, mDOMNode);
+    nsCoreUtils::IsAncestorOf(lastFocusedNode, thisNode);
 
   if (!isInsideOfFocusedNode && mDOMNode != gLastFocusedNode &&
-      !nsCoreUtils::IsAncestorOf(mDOMNode, gLastFocusedNode))
+      !nsCoreUtils::IsAncestorOf(thisNode, lastFocusedNode))
     return NS_OK;
 
   // Turn the focus node and offset of the selection into caret hypretext
@@ -1627,10 +1629,12 @@ nsHyperTextAccessible::GetCaretOffset(PRInt32 *aCaretOffset)
   // No caret if this DOM node is inside of focused node but the selection's
   // focus point is not inside of this DOM node.
   if (isInsideOfFocusedNode) {
-    nsCOMPtr<nsIDOMNode> resultNode =
+    nsCOMPtr<nsIDOMNode> resultDOMNode =
       nsCoreUtils::GetDOMNodeFromDOMPoint(focusNode, focusOffset);
-    if (resultNode != mDOMNode &&
-        !nsCoreUtils::IsAncestorOf(mDOMNode, resultNode))
+
+    nsCOMPtr<nsINode> resultNode(do_QueryInterface(resultDOMNode));
+    if (resultNode != thisNode &&
+        !nsCoreUtils::IsAncestorOf(thisNode, resultNode))
       return NS_OK;
   }
 
@@ -1653,7 +1657,8 @@ PRInt32 nsHyperTextAccessible::GetCaretLineNumber()
   nsCOMPtr<nsIDOMNode> caretNode;
   domSel->GetFocusNode(getter_AddRefs(caretNode));
   nsCOMPtr<nsIContent> caretContent = do_QueryInterface(caretNode);
-  if (!caretContent || !nsCoreUtils::IsAncestorOf(mDOMNode, caretNode)) {
+  nsCOMPtr<nsINode> thisNode(do_QueryInterface(mDOMNode));
+  if (!caretContent || !nsCoreUtils::IsAncestorOf(thisNode, caretContent)) {
     return -1;
   }
 

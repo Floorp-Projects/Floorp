@@ -47,26 +47,23 @@
 #include "nsITextControlFrame.h"
 #include "nsIFontMetrics.h"
 #include "nsWeakReference.h" //for service and presshell pointers
-#include "nsIScrollableViewProvider.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
+#include "nsIScrollableFrame.h"
 
 class nsIEditor;
 class nsISelectionController;
 class nsTextInputSelectionImpl;
 class nsTextInputListener;
 class nsIDOMCharacterData;
-class nsIScrollableView;
 #ifdef ACCESSIBILITY
 class nsIAccessible;
 #endif
-
+class nsTextInputSelectionImpl;
 
 class nsTextControlFrame : public nsStackFrame,
                            public nsIAnonymousContentCreator,
-                           public nsITextControlFrame,
-                           public nsIScrollableViewProvider
-
+                           public nsITextControlFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -75,6 +72,12 @@ public:
   virtual ~nsTextControlFrame();
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
+
+  virtual nsIScrollableFrame* GetScrollTargetFrame() {
+    if (!IsScrollable())
+      return nsnull;
+    return do_QueryFrame(GetFirstChild(nsnull));
+  }
 
   virtual nscoord GetMinWidth(nsIRenderingContext* aRenderingContext);
   virtual nsSize ComputeAutoSize(nsIRenderingContext *aRenderingContext,
@@ -148,8 +151,7 @@ public:
   NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd);
   NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd);
   NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
-  virtual nsISelectionController* GetOwnedSelectionController()
-    { return mSelCon; }
+  virtual nsISelectionController* GetOwnedSelectionController();
   virtual nsFrameSelection* GetOwnedFrameSelection()
     { return mFrameSel; }
 
@@ -307,9 +309,6 @@ protected:
   nsresult CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
                              nsSize&              aIntrinsicSize);
 
-  // nsIScrollableViewProvider
-  virtual nsIScrollableView* GetScrollableView();
-
 private:
   //helper methods
   nsresult SetSelectionInternal(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
@@ -332,7 +331,7 @@ private:
   PRPackedBool mFireChangeEventState;
   PRPackedBool mInSecureKeyboardInputMode;
 
-  nsCOMPtr<nsISelectionController> mSelCon;
+  nsRefPtr<nsTextInputSelectionImpl> mSelCon;
   nsCOMPtr<nsFrameSelection> mFrameSel;
   nsTextInputListener* mTextListener;
   nsString mFocusedValue;

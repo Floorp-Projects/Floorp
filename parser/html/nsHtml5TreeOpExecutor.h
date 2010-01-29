@@ -78,14 +78,19 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
 
+    static void InitializeStatics();
+
   private:
-#ifdef DEBUG_hsivonen
-    static PRUint32    sInsertionBatchMaxLength;
+#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
+    static PRUint32    sOpQueueMaxLength;
     static PRUint32    sAppendBatchMaxSize;
     static PRUint32    sAppendBatchSlotsExamined;
     static PRUint32    sAppendBatchExaminations;
 #endif
-    static PRUint32                      sTreeOpQueueMaxLength;
+    static PRInt32                      sTreeOpQueueLengthLimit;
+    static PRInt32                      sTreeOpQueueMaxTime;
+    static PRInt32                      sTreeOpQueueMinLength;
+    static PRInt32                      sTreeOpQueueMaxLength;
 
     /**
      * Whether EOF needs to be suppressed
@@ -228,13 +233,11 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     }
 
     inline void EndDocUpdate() {
-      if (mFlushState >= eInDocUpdate) {
+      NS_PRECONDITION(mFlushState != eNotifying, "mFlushState out of sync");
+      if (mFlushState == eInDocUpdate) {
         FlushPendingAppendNotifications();
-        if (NS_UNLIKELY(!mParser)) {
-          return;
-        }
-        mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
         mFlushState = eInFlush;
+        mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
       }
     }
 
@@ -243,7 +246,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       const nsIContentPtr* first = mElementsSeenInThisAppendBatch.Elements();
       const nsIContentPtr* last = first + mElementsSeenInThisAppendBatch.Length() - 1;
       for (const nsIContentPtr* iter = last; iter >= first; --iter) {
-#ifdef DEBUG_hsivonen
+#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
         sAppendBatchSlotsExamined++;
 #endif
         if (*iter == aParent) {
@@ -258,38 +261,27 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       if (newParent) {
         mPendingNotifications.AppendElement(aParent);
       }
-#ifdef DEBUG_hsivonen
+#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
       sAppendBatchExaminations++;
 #endif
     }
 
     void FlushPendingAppendNotifications() {
-      if (NS_UNLIKELY(mFlushState == eNotifying)) {
-        // nsIParser::Terminate() was called in response to iter->Fire below
-        // earlier in the call stack.
-        return;
-      }
       NS_PRECONDITION(mFlushState == eInDocUpdate, "Notifications flushed outside update");
       mFlushState = eNotifying;
       const nsHtml5PendingNotification* start = mPendingNotifications.Elements();
       const nsHtml5PendingNotification* end = start + mPendingNotifications.Length();
       for (nsHtml5PendingNotification* iter = (nsHtml5PendingNotification*)start; iter < end; ++iter) {
-        if (NS_UNLIKELY(!mParser)) {
-          // nsIParser::Terminate() was called in response to a notification
-          // this most likely means that the page is being navigated away from
-          // so just dropping the rest of the notifications on the floor
-          // instead of doing something fancy.
-          break;
-        }
         iter->Fire();
       }
       mPendingNotifications.Clear();
-#ifdef DEBUG_hsivonen
+#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
       if (mElementsSeenInThisAppendBatch.Length() > sAppendBatchMaxSize) {
         sAppendBatchMaxSize = mElementsSeenInThisAppendBatch.Length();
       }
 #endif
       mElementsSeenInThisAppendBatch.Clear();
+      NS_ASSERTION(mFlushState == eNotifying, "mFlushState out of sync");
       mFlushState = eInDocUpdate;
     }
     
@@ -324,7 +316,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     nsresult Init(nsIDocument* aDoc, nsIURI* aURI,
                   nsISupports* aContainer, nsIChannel* aChannel);
                   
-    void Flush();
+    void Flush(PRBool aForceWholeQueue);
 
     void MaybeSuspend();
 

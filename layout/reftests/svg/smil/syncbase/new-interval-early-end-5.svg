@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, true)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Test two early ends where one generates an earlier time for the other.
+
+    So both restart at 1.5s, and both old intervals should be ended off. Hence
+    the syncbase time should be ignored.
+   -->
+  <rect width="100" height="100" fill="red">
+    <animate attributeName="y" attributeType="XML" from="0" to="0" id="a"
+      begin="0.5s; 1.5s" dur="4s"/>
+    <animate attributeName="fill" attributeType="CSS"
+      values="orange; green; purple"
+      begin="0.75s; 1.5s; a.begin-0.5s" dur="1s"/>
+  </rect>
+</svg>

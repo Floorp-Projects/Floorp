@@ -23,7 +23,11 @@ class ProcessWatcher {
   // NOTE: The process handle must have been opened with the PROCESS_TERMINATE
   // and SYNCHRONIZE permissions.
   //
-  static void EnsureProcessTerminated(base::ProcessHandle process_handle);
+  static void EnsureProcessTerminated(base::ProcessHandle process_handle
+#if defined(CHROMIUM_MOZILLA_BUILD)
+                                      , bool force=true
+#endif
+  );
 
  private:
   // Do not instantiate this class.

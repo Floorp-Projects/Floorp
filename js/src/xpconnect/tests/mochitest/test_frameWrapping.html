@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+No bug.
+-->
+<head>
+  <title>Test for Bug </title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** No bug for this test  **/
+
+function go() {
+    var win = frames[0];
+    (function() {
+        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+        var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                          .getInterface(Components.interfaces.nsIDOMWindowUtils);
+        is(utils.getClassName(win), "XPCCrossOriginWrapper", "correctly wrap frame elements");
+     })()
+    SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+<iframe id="ifr" src="inner.html" onload="go()"></iframe>
+</body>
+</html>

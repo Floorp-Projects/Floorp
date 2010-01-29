@@ -47,25 +47,41 @@ class nsIDOMStorageObsolete;
 class nsIURI;
 class nsIPrincipal;
 
+// {BAFFCEB1-FD40-4ea9-8378-3509DD79204A}
 #define NS_PIDOMSTORAGE_IID                                 \
-  { 0x5ffbee8d, 0x9a86, 0x4a57,                           \
-      { 0x8c, 0x63, 0x76, 0x56, 0x18, 0x9c, 0xb2, 0xbc } }
+  { 0xbaffceb1, 0xfd40, 0x4ea9,  \
+    { 0x83, 0x78, 0x35, 0x9, 0xdd, 0x79, 0x20, 0x4a } }
 
 class nsPIDOMStorage : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMSTORAGE_IID)
 
-  virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal) = 0;
-  virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal) = 0;
+  typedef enum {
+    Unknown = 0,
+    GlobalStorage = 1,
+    LocalStorage = 2,
+    SessionStorage = 3
+  } nsDOMStorageType;
+
+  virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI) = 0;
+  virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI) = 0;
   virtual nsresult InitAsGlobalStorage(const nsACString &aDomainDemanded) = 0;
 
   virtual already_AddRefed<nsIDOMStorage> Clone() = 0;
+  virtual already_AddRefed<nsIDOMStorage> Fork(const nsSubstring &aDocumentURI) = 0;
+  virtual PRBool IsForkOf(nsIDOMStorage* aThat) = 0;
 
   virtual nsTArray<nsString> *GetKeys() = 0;
 
   virtual nsIPrincipal* Principal() = 0;
   virtual PRBool CanAccess(nsIPrincipal *aPrincipal) = 0;
+
+  virtual nsDOMStorageType StorageType() = 0;
+
+  virtual void BroadcastChangeNotification(const nsSubstring &aKey,
+                                           const nsSubstring &aOldValue,
+                                           const nsSubstring &aNewValue) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMStorage, NS_PIDOMSTORAGE_IID)

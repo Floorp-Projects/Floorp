@@ -95,8 +95,18 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGUseElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
+#ifdef _MSC_VER
+// Disable "warning C4355: 'this' : used in base member initializer list".
+// We can ignore that warning because we know that mSource's constructor 
+// doesn't dereference the pointer passed to it.
+#pragma warning(push)
+#pragma warning(disable:4355)
+#endif
 nsSVGUseElement::nsSVGUseElement(nsINodeInfo *aNodeInfo)
   : nsSVGUseElementBase(aNodeInfo), mSource(this)
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 {
 }
 

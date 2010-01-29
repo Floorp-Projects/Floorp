@@ -68,8 +68,6 @@
 #include "nsEscape.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
-#include "nsIScrollableView.h"
-#include "nsIScrollableViewProvider.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsRange.h"

@@ -66,6 +66,7 @@ CMMSRCS = \
 		nsMenuItemX.mm \
 		nsMenuItemIconX.mm \
 		nsMenuUtilsX.mm \
+		nsMenuGroupOwnerX.mm \
 		nsFilePicker.mm \
 		nsDragService.mm \
 		nsToolkit.mm \

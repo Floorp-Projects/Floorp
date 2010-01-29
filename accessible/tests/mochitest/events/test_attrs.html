@@ -1,0 +1,84 @@
+<html>
+
+<head>
+  <title>Event object attributes tests</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/attributes.js"></script>
+
+  <script type="application/javascript">
+
+    /**
+     * Test "event-from-input" object attribute.
+     */
+    function checker(aValue, aNoTargetID)
+    {
+      this.noTarget = getNode(aNoTargetID);
+
+      this.check = function checker_check(aEvent)
+      {
+        testAttrs(aEvent.accessible, { "event-from-input": aValue }, true);
+
+        var accessible = getAccessible(this.noTarget);
+        testAbsentAttrs(accessible, { "event-from-input": "" });
+      }
+    }
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      var id = "textbox", noTargetId = "textarea";
+      gQueue.push(new synthFocus(id, new checker("false", noTargetId), EVENT_FOCUS));
+      
+      if (!MAC) { // Mac failure is bug 541093
+        gQueue.push(new synthHomeKey(id, new checker("false", noTargetId), EVENT_TEXT_CARET_MOVED));
+      }
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=540285"
+     title="Event object attributes testing">
+    Mozilla Bug 540285
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <input id="textbox" value="hello">
+  <textarea id="textarea"></textarea>
+
+  <div id="eventdump"></div>
+</body>
+</html>

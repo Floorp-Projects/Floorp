@@ -80,6 +80,19 @@ arguments passed to the method.
   the object is passed to the same plugin instance, and false when passed
   to other plugin instances, see bug 532246 and
   test_multipleinstanceobjects.html.
+  
+* getAuthInfo(protocol, host, port, scheme, realm) - a wrapper for 
+NPN_GetAuthenticationInfo().  Returns a string "username|password" for
+the specified auth criteria, or throws an exception if no data is
+available.
+
+* timerTest(callback) - initiates tests of NPN_ScheduleTimer &
+NPN_UnscheduleTimer.  When finished, calls the script callback
+with a boolean value, indicating whether the tests were successful.
+
+* asyncCallbackTest(callback) - initiates tests of
+NPN_PluginThreadAsyncCall.  When finished, calls the script callback
+with a boolean value, indicating whether the tests were successful.
 
 == Private browsing ==
 
@@ -311,3 +324,18 @@ overridden windowproc.
 * WM_MOUSEACTIVATE events are handled by calling SetFocus on the plugin's
 widget, if the plugin is windowed. If it's not windowed they're passed to
 the overriden windowproc (but hopefully never sent by the browser anyway).
+
+== Getting and Setting Cookies ==
+
+* setCookie(string)
+Sets the given string as the cookie for window's URL.
+
+* getCookie()
+Returns the cookie string for the window's URL, the cookie set by setCookie.
+
+== FPU Control ==
+
+x86-only on some OSes:
+
+* The .enableFPExceptions() method will enable floating-point exceptions,
+  as evil plugins or extensions might do.

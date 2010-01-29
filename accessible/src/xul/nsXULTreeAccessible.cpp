@@ -461,7 +461,7 @@ nsXULTreeAccessible::SelectAllSelection(PRBool *aIsMultiSelectable)
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeAccessible: nsAccessible implementation
 
-nsIAccessible*
+nsAccessible*
 nsXULTreeAccessible::GetChildAt(PRUint32 aIndex)
 {
   PRInt32 childCount = nsAccessible::GetChildCount();
@@ -473,7 +473,10 @@ nsXULTreeAccessible::GetChildAt(PRUint32 aIndex)
 
   nsCOMPtr<nsIAccessible> child;
   GetTreeItemAccessible(aIndex - childCount, getter_AddRefs(child));
-  return child;
+
+  nsRefPtr<nsAccessible> childAcc =
+    nsAccUtils::QueryObject<nsAccessible>(child);
+  return childAcc;
 }
 
 PRInt32
@@ -567,9 +570,9 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
       nsRefPtr<nsAccessible> accessible =
         nsAccUtils::QueryAccessible(accessNode);
 
-      nsCOMPtr<nsIAccessibleEvent> event =
+      nsRefPtr<nsAccEvent> event =
         new nsAccEvent(nsIAccessibleEvent::EVENT_HIDE, accessible, PR_FALSE);
-      FireAccessibleEvent(event);
+      nsEventShell::FireEvent(event);
 
       accessible->Shutdown();
 
@@ -680,7 +683,7 @@ nsXULTreeAccessible::TreeViewChanged()
   // Fire only notification destroy/create events on accessible tree to lie to
   // AT because it should be expensive to fire destroy events for each tree item
   // in cache.
-  nsCOMPtr<nsIAccessibleEvent> eventDestroy =
+  nsRefPtr<nsAccEvent> eventDestroy =
     new nsAccEvent(nsIAccessibleEvent::EVENT_HIDE, this, PR_FALSE);
   if (!eventDestroy)
     return;
@@ -691,7 +694,7 @@ nsXULTreeAccessible::TreeViewChanged()
 
   mTree->GetView(getter_AddRefs(mTreeView));
 
-  nsCOMPtr<nsIAccessibleEvent> eventCreate =
+  nsRefPtr<nsAccEvent> eventCreate =
     new nsAccEvent(nsIAccessibleEvent::EVENT_SHOW, this, PR_FALSE);
   if (!eventCreate)
     return;
@@ -717,7 +720,7 @@ nsXULTreeAccessible::CreateTreeItemAccessible(PRInt32 aRow,
 
 nsXULTreeItemAccessibleBase::
   nsXULTreeItemAccessibleBase(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
-                              nsIAccessible *aParent, nsITreeBoxObject *aTree,
+                              nsAccessible *aParent, nsITreeBoxObject *aTree,
                               nsITreeView *aTreeView, PRInt32 aRow) :
   mTree(aTree), mTreeView(aTreeView), mRow(aRow),
   nsAccessibleWrap(aDOMNode, aShell)
@@ -932,7 +935,8 @@ nsXULTreeItemAccessibleBase::DoAction(PRUint8 aIndex)
       (aIndex != eAction_Expand || !IsExpandable()))
     return NS_ERROR_INVALID_ARG;
 
-  return DoCommand(nsnull, aIndex);
+  DoCommand(nsnull, aIndex);
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1082,7 +1086,7 @@ nsXULTreeItemAccessibleBase::GetStateInternal(PRUint32 *aState,
   return NS_OK;
 }
 
-nsIAccessible*
+nsAccessible*
 nsXULTreeItemAccessibleBase::GetParent()
 {
   return IsDefunct() ? nsnull : mParent.get();
@@ -1184,9 +1188,9 @@ nsXULTreeItemAccessibleBase::IsExpandable()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeItemAccessible::
-nsXULTreeItemAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
-                        nsIAccessible *aParent, nsITreeBoxObject *aTree,
-                        nsITreeView *aTreeView, PRInt32 aRow) :
+  nsXULTreeItemAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell,
+                          nsAccessible *aParent, nsITreeBoxObject *aTree,
+                          nsITreeView *aTreeView, PRInt32 aRow) :
   nsXULTreeItemAccessibleBase(aDOMNode, aShell, aParent, aTree, aTreeView, aRow)
 {
   mColumn = nsCoreUtils::GetFirstSensibleColumn(mTree);
@@ -1271,7 +1275,7 @@ nsXULTreeItemAccessible::RowInvalidated(PRInt32 aStartColIdx,
   GetName(name);
 
   if (name != mCachedName) {
-    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
+    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
     mCachedName = name;
   }
 }

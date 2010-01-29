@@ -50,9 +50,6 @@
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
-#undef _MOZ_LOG
-#define _MOZ_LOG(s) printf("[PluginProcessParent] %s\n", s)
-
 namespace mozilla {
 namespace plugins {
 //-----------------------------------------------------------------------------
@@ -74,6 +71,8 @@ public:
     {
         return true;
     }
+
+    const std::string& GetPluginFilePath() { return mPluginFilePath; }
 
     using mozilla::ipc::GeckoChildProcessHost::GetShutDownEvent;
     using mozilla::ipc::GeckoChildProcessHost::GetChannel;

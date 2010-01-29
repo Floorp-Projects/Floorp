@@ -77,6 +77,11 @@ interface nsIDataType : nsISupports
     const PRUint16 VTYPE_EMPTY               = 255;
 };
 
+%{ C++
+#include "jspubtd.h"
+%}
+
+native JSVal(jsval);
 
 /**
  * XPConnect has magic to transparently convert between nsIVariant and JS types.
@@ -86,7 +91,7 @@ interface nsIDataType : nsISupports
  * JS type anyway.
  */
 
-[scriptable, uuid(6c9eb060-8c6a-11d5-90f3-0010a4e73d9a)]
+[scriptable, uuid(81e4c2de-acac-4ad6-901a-b5fb1b851a0d)]
 interface nsIVariant : nsISupports
 {
     [noscript] readonly attribute PRUint16     dataType;
@@ -112,6 +117,7 @@ interface nsIVariant : nsISupports
     [noscript] string       getAsString();
     [noscript] wstring      getAsWString();
     [noscript] nsISupports  getAsISupports();
+    [noscript] JSVal        getAsJSVal();
 
     [noscript] void getAsInterface(out nsIIDPtr iid, 
                                    [iid_is(iid), retval] out nsQIResult iface);

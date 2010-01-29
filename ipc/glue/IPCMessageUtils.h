@@ -45,7 +45,53 @@
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 
+#ifdef _MSC_VER
+#pragma warning( disable : 4800 )
+#endif
+
 namespace IPC {
+
+template<>
+struct ParamTraits<PRInt8>
+{
+  typedef PRInt8 paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    aMsg->WriteBytes(&aParam, sizeof(aParam));
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    const char* outp;
+    if (!aMsg->ReadBytes(aIter, &outp, sizeof(*aResult)))
+      return false;
+
+    *aResult = *reinterpret_cast<const paramType*>(outp);
+    return true;
+  }
+};
+
+template<>
+struct ParamTraits<PRUint8>
+{
+  typedef PRUint8 paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    aMsg->WriteBytes(&aParam, sizeof(aParam));
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    const char* outp;
+    if (!aMsg->ReadBytes(aIter, &outp, sizeof(*aResult)))
+      return false;
+
+    *aResult = *reinterpret_cast<const paramType*>(outp);
+    return true;
+  }
+};
 
 template <>
 struct ParamTraits<nsACString>

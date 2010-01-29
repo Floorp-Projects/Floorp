@@ -3,7 +3,7 @@ include protocol "PTestShutdownSub.ipdl";
 namespace mozilla {
 namespace _ipdltest {
 
-sync protocol PTestShutdown {
+rpc protocol PTestShutdown {
     manages PTestShutdownSub;
 
 child:
@@ -15,7 +15,7 @@ parent:
     // tests check shutdown semantics
     PTestShutdownSub(bool expectCrash);
 
-    // Used to synchronize between parent and child, to avoid racies
+    // Used to synchronize between parent and child, to avoid races
     // around flushing socket write queues
     sync Sync();
 

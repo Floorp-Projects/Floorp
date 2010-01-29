@@ -53,6 +53,10 @@
  * 
  **************************************************************/
 
+// A magic APP message that can be sent to quit, sort of like a QUERYENDSESSION/ENDSESSION,
+// but without the query.
+#define MOZ_WM_APP_QUIT                   (WM_APP+0x0300)
+
 // GetWindowsVersion constants
 #define WIN2K_VERSION                     0x500
 #define WINXP_VERSION                     0x501
@@ -72,6 +76,10 @@
 
 #ifndef WM_MOUSEHWHEEL
 #define WM_MOUSEHWHEEL                    0x020E
+#endif
+
+#ifndef WM_MOUSELEAVE
+#define WM_MOUSELEAVE                     0x02A3
 #endif
 
 #ifndef SPI_GETWHEELSCROLLCHARS

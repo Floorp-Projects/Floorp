@@ -1,0 +1,63 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>master frame for event storage propagation</title>
+
+<script type="text/javascript" src="interOriginFrame.js"></script>
+<script type="text/javascript">
+
+var currentStep = 1;
+var gotEvent = false;
+
+window.addEventListener("storage", function(event)
+{
+  gotEvent = true;
+}, false);
+
+function doStep()
+{
+  switch (currentStep)
+  {
+    case 1:
+      // Must not fire (storage must be clear!)
+      localStorage.clear();
+      // Must fire X:null->'1'
+      localStorage.setItem("X", "1");
+      // Must fire X:'1'->'2'
+      localStorage.setItem("X", "2");
+      // Must not fire
+      localStorage.setItem("X", "2");
+      // Must fire X:'2'->null
+      localStorage.removeItem("X");
+      // Must not fire
+      localStorage.removeItem("X");
+      // Must not fire
+      localStorage.removeItem("Y");
+      // Must fire X:null->'2' (we need something in the storage)
+      localStorage.setItem("X", "2");
+      // Must fire null:null->null (one item has been erased)
+      localStorage.clear();
+      // Must not fire
+      localStorage.clear();
+      break;
+
+    // Wait some time to let the async event be propagated
+    case 11:
+      is(gotEvent, false, "Expected no events");
+      return finishTest();
+  }
+
+  // Increase by two to distinguish each test step order
+  // in both master doStep and slave doStep functions.
+  ++currentStep;
+  ++currentStep;
+
+  return true;
+}
+
+</script>
+
+</head>
+
+<body onload="postMsg('frame loaded');">
+</body>
+</html>

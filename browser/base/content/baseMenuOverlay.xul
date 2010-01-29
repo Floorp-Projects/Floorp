@@ -78,6 +78,7 @@
       <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
         <menuitem id="menu_openHelp"
                   oncommand="openHelpLink('firefox-help')"
+                  onclick="checkForMiddleClick(this, event);"
                   label="&productHelp.label;"
                   accesskey="&productHelp.accesskey;"
 #ifdef XP_MACOSX
@@ -89,7 +90,8 @@
 #ifdef XP_WIN
         <menuitem label="&helpForIEUsers.label;"
                   accesskey="&helpForIEUsers.accesskey;"
-                  oncommand="openHelpLink('ieusers');"/>
+                  oncommand="openHelpLink('ieusers');"
+                  onclick="checkForMiddleClick(this, event);"/>
 #endif
         <menuitem id="troubleShooting"
                   accesskey="&helpTroubleshootingInfo.accesskey;"

@@ -37,13 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ===== toolbarbutton.css =====================================================
-  == Styles used by the XUL button element.
-  ======================================================================= */
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-/* ::::: toolbarbutton ::::: */
 
 toolbarbutton {
   -moz-box-align: center;
@@ -80,7 +74,7 @@ toolbarbutton[open="true"][buttonstyle="text"] {
 
 toolbarbutton[disabled="true"],
 toolbarbutton[disabled="true"]:hover,
-toolbarbutton[disabled="true"]:hover:active
+toolbarbutton[disabled="true"]:hover:active,
 toolbarbutton[disabled="true"][open="true"] {
   color: -moz-mac-disabledtoolbartext !important;
 }

@@ -178,7 +178,7 @@ public:
     nsIScrollbarFrame*   mHScrollbar;
     nsCOMPtr<nsIContent> mHScrollbarContent;
     nsIFrame*            mColumnsFrame;
-    nsIScrollableView*   mColumnsScrollableView;
+    nsIScrollableFrame*  mColumnsScrollFrame;
   };
 
   void PaintTreeBody(nsIRenderingContext& aRenderingContext,

@@ -42,35 +42,36 @@ const void *const *StackTrace::Addresses(size_t* count) {
 namespace mozilla {
 
 EnvironmentLog::EnvironmentLog(const char* varname)
-  : fd_(NULL)
 {
   const char *e = getenv(varname);
-  if (e && *e) {
-    if (!strcmp(e, "-")) {
-      fd_ = fdopen(dup(STDOUT_FILENO), "a");
-    }
-    else {
-      fd_ = fopen(e, "a");
-    }
-  }
+  if (e && *e)
+    fname_ = e;
 }
 
 EnvironmentLog::~EnvironmentLog()
 {
-  if (fd_)
-    fclose(fd_);
 }
 
 void
 EnvironmentLog::print(const char* format, ...)
 {
+  if (!fname_.size())
+    return;
+
+  FILE* f;
+  if (fname_.compare("-") == 0)
+    f = fdopen(dup(STDOUT_FILENO), "a");
+  else
+    f = fopen(fname_.c_str(), "a");
+
+  if (!f)
+    return;
+
   va_list a;
   va_start(a, format);
-  if (fd_) {
-    vfprintf(fd_, format, a);
-    fflush(fd_);
-  }
+  vfprintf(f, format, a);
   va_end(a);
+  fclose(f);
 }
 
 } // namespace mozilla

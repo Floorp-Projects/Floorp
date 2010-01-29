@@ -61,7 +61,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsAccessible
-  virtual nsresult FireAccessibleEvent(nsIAccessibleEvent *aEvent);
+  virtual nsresult HandleAccEvent(nsAccEvent *aEvent);
 
 protected:
   virtual nsresult GetModifiedText(PRBool aGetInsertedText, nsAString& aText,

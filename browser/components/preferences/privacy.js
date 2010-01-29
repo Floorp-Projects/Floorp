@@ -56,7 +56,6 @@ var gPrivacyPane = {
    */
   init: function ()
   {
-    this._updateHistoryDaysUI();
     this._updateSanitizeSettingsButton();
     this.initializeHistoryMode();
     this.updateHistoryModePane();
@@ -78,8 +77,7 @@ var gPrivacyPane = {
    * Extensions adding their own preferences can append their IDs to this array if needed.
    */
   prefsForDefault: [
-    "browser.history_expire_days",
-    "browser.history_expire_days_min",
+    "places.history.enabled",
     "browser.download.manager.retention",
     "browser.formfill.enable",
     "network.cookie.cookieBehavior",
@@ -95,8 +93,7 @@ var gPrivacyPane = {
    * Extensions adding their own controls can append their IDs to this array if needed.
    */
   dependentControls: [
-    "rememberHistoryDays",
-    "rememberAfter",
+    "rememberHistory",
     "rememberDownloads",
     "rememberForms",
     "keepUntil",
@@ -174,11 +171,9 @@ var gPrivacyPane = {
       pref.value = false;
 
       // select the remember history option if needed
-      let rememberHistoryCheckbox = document.getElementById("rememberHistoryDays");
-      if (!rememberHistoryCheckbox.checked) {
+      let rememberHistoryCheckbox = document.getElementById("rememberHistory");
+      if (!rememberHistoryCheckbox.checked)
         rememberHistoryCheckbox.checked = true;
-        this.onchangeHistoryDaysCheck();
-      }
 
       // select the remember downloads option if needed
       if (!document.getElementById("rememberDownloads").checked)
@@ -224,9 +219,8 @@ var gPrivacyPane = {
         document.getElementById("privacy.sanitize.sanitizeOnShutdown").value;
 
       // adjust the checked state of the remember history checkboxes
-      document.getElementById("rememberHistoryDays").checked = disabled ? false :
-        document.getElementById("browser.history_expire_days").value > 0;
-      this.onchangeHistoryDaysCheck();
+      document.getElementById("rememberHistory").checked = disabled ? false :
+        document.getElementById("places.history.enabled").value;
       document.getElementById("rememberDownloads").checked = disabled ? false :
         this.readDownloadRetention();
       document.getElementById("rememberForms").checked = disabled ? false :
@@ -319,20 +313,8 @@ var gPrivacyPane = {
   /*
    * Preferences:
    *
-   * NOTE: These first two are no longer shown in the UI. They're controlled
-   *       via the checkbox, which uses the zero state of the pref to turn
-   *       history off.
-   * browser.history_expire_days
-   * - the number of days of history to remember
-   * browser.history_expire_days.mirror
-   * - a preference whose value mirrors that of browser.history_expire_days, to
-   *   make the "days of history" checkbox easier to code
-   *
-   * browser.history_expire_days_min
-   * - the mininum number of days of history to remember
-   * browser.history_expire_days_min.mirror
-   * - a preference whose value mirrors that of browser.history_expire_days_min
-   *   to make the "days of history" checkbox easier to code
+   * places.history.enabled
+   * - whether history is enabled or not
    * browser.formfill.enable
    * - true if entries in forms and the search bar should be saved, false
    *   otherwise
@@ -344,58 +326,6 @@ var gPrivacyPane = {
    *     1 means downloads will be removed when the browser quits
    *     2 means never remove downloads
    */
-
-  /**
-   * Initializes the days-of-history mirror preference and connects it to the
-   * days-of-history checkbox so that updates to the textbox are transmitted to
-   * the real days-of-history preference.
-   */
-  _updateHistoryDaysUI: function ()
-  {
-    var pref = document.getElementById("browser.history_expire_days");
-    var mirror = document.getElementById("browser.history_expire_days.mirror");
-    var pref_min = document.getElementById("browser.history_expire_days_min");
-    var textbox = document.getElementById("historyDays");
-    var checkbox = document.getElementById("rememberHistoryDays");
-
-    // handle mirror non-existence or mirror/pref unsync
-    if (mirror.value === null || mirror.value != pref.value || 
-        (mirror.value == pref.value && mirror.value == 0) )
-      mirror.value = pref.value ? pref.value : pref.defaultValue;
-
-    checkbox.checked = (pref.value > 0);
-    textbox.disabled = !checkbox.checked;
-  },
-
-  /**
-   * Responds to the checking or unchecking of the days-of-history UI, storing
-   * the appropriate value to the days-of-history preference and enabling or
-   * disabling the number textbox as appropriate.
-   */
-  onchangeHistoryDaysCheck: function ()
-  {
-    var pref = document.getElementById("browser.history_expire_days");
-    var mirror = document.getElementById("browser.history_expire_days.mirror");
-    var textbox = document.getElementById("historyDays");
-    var checkbox = document.getElementById("rememberHistoryDays");
-
-    if (!this._autoStartPrivateBrowsing)
-      pref.value = checkbox.checked ? mirror.value : 0;
-    textbox.disabled = !checkbox.checked;
-  },
-
-  /**
-   * Responds to changes in the days-of-history textbox,
-   * unchecking the history-enabled checkbox if the days
-   * value is zero.
-   */
-  onkeyupHistoryDaysText: function ()
-  {
-    var textbox = document.getElementById("historyDays");
-    var checkbox = document.getElementById("rememberHistoryDays");
-    
-    checkbox.checked = textbox.value != 0;
-  },
 
   /**
    * Converts the value of the browser.download.manager.retention preference

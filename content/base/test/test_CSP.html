@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Content Security Policy Connections</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+  
+</div>
+
+<iframe style="width:200px;height:200px;" id='cspframe'></iframe>
+<script class="testbody" type="text/javascript">
+
+var path = "/tests/content/base/test/";
+
+// These are test results: -1 means it hasn't run, 
+// true/false is the pass/fail result.
+window.tests = {
+  img_good: -1,
+  img_bad: -1,
+  style_good: -1,
+  style_bad: -1,
+  frame_good: -1,
+  frame_bad: -1,
+  script_good: -1,
+  script_bad: -1,
+  xhr_good: -1,
+  xhr_bad: -1,
+  media_good: -1,
+  media_bad: -1,
+  font_good: -1,
+  font_bad: -1,
+  object_good: -1,
+  object_bad: -1,
+};
+
+
+// This is used to watch the blocked data bounce off CSP and allowed data 
+// get sent out to the wire.
+function examiner() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var obsvc = Components.classes['@mozilla.org/observer-service;1']
+                        .getService(Components.interfaces.nsIObserverService);
+  obsvc.addObserver(this, "csp-on-violate-policy", false);
+  obsvc.addObserver(this, "http-on-modify-request", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    // subject should be an nsURI, and should be either allowed or blocked.
+    if(!subject.QueryInterface)
+      return;
+      
+    var testpat = new RegExp("testid=([a-z0-9_]+)");
+
+    //_good things better be allowed!
+    //_bad things better be stopped!
+
+    if (topic === "http-on-modify-request") {
+      //these things were allowed by CSP
+      var uri = subject.QueryInterface(Components.interfaces.nsIHttpChannel).URI;
+      if (!testpat.test(uri.asciiSpec)) return;
+      var testid = testpat.exec(uri.asciiSpec)[1];
+      window.testResult(testid,
+                        /_good/.test(testid),
+                        uri.asciiSpec + " allowed by csp");
+
+    }
+
+    if(topic === "csp-on-violate-policy") {
+      //these were blocked... record that they were blocked
+      var uri = subject.QueryInterface(Components.interfaces.nsIURI);
+      if (!testpat.test(uri.asciiSpec)) return;
+      var testid = testpat.exec(uri.asciiSpec)[1];
+      window.testResult(testid,
+                        /_bad/.test(testid),
+                        uri.asciiSpec + " blocked by \"" + data + "\"");
+    }
+  },
+
+  // must eventually call this to remove the listener, 
+  // or mochitests might get borked.
+  remove: function() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var obsvc = Components.classes['@mozilla.org/observer-service;1']
+                          .getService(Components.interfaces.nsIObserverService);
+    obsvc.removeObserver(this, "csp-on-violate-policy");
+    obsvc.removeObserver(this, "http-on-modify-request");
+  }
+}
+
+window.examiner = new examiner();
+
+window.testResult = function(testname, result, msg) {
+
+  //test already complete.... forget it... remember the first result.
+  if (window.tests[testname] != -1)
+    return;
+
+  window.tests[testname] = result;
+  is(result, true, testname + ' test: ' + msg);
+
+  // if any test is incomplete, keep waiting
+  for (var v in window.tests)
+    if(tests[v] == -1)
+      return;
+
+  // ... otherwise, finish
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// save this for last so that our listeners are registered.
+// ... this loads the testbed of good and bad requests.
+document.getElementById('cspframe').src = 'file_CSP.sjs?main=1';
+
+</script>
+</pre>
+</body>
+</html>

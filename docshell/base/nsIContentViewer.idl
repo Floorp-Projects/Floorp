@@ -7,13 +7,15 @@ interface nsIPrintSettings;
 
 %{ C++
 class nsIWidget;
+class nsIDocument;
 struct nsIntRect;
 %}
 
 [ptr] native nsIWidgetPtr(nsIWidget);
+[ptr] native nsIDocumentPtr(nsIDocument);
 [ref] native nsIntRectRef(nsIntRect);
 
-[scriptable, uuid(08665a60-b398-11de-8a39-0800200c9a66)]
+[scriptable, uuid(c824ac5e-3d86-4ae5-9ccc-9433bdc43004)]
 interface nsIContentViewer : nsISupports
 {
 
@@ -74,6 +76,11 @@ interface nsIContentViewer : nsISupports
   void stop();
 
   attribute nsIDOMDocument DOMDocument;
+
+  /**
+   * Returns DOMDocument as nsIDocument and without addrefing.
+   */
+  [noscript,notxpcom] nsIDocumentPtr getDocument();
 
   [noscript] void getBounds(in nsIntRectRef aBounds);
   [noscript] void setBounds([const] in nsIntRectRef aBounds);

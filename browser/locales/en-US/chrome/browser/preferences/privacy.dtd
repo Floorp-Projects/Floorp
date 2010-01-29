@@ -60,15 +60,8 @@
 <!ENTITY  privateBrowsingPermanent.label "Permanent Private Browsing mode">
 <!ENTITY  privateBrowsingPermanent.accesskey "P">
 
-<!-- LOCALIZATION NOTE:
-  The entities rememberHistory.pre.label and rememberHistory.post.label appear on a single
-  line in preferences as follows:
-
-  &rememberHistory.pre.label  [ textbox for number of days ]  &rememberHistory.post.label;
--->
-<!ENTITY  rememberHistory.pre.label      "Remember my browsing history for at least">
-<!ENTITY  rememberHistory.pre.accesskey  "b">
-<!ENTITY  rememberHistory.post.label     "days">
+<!ENTITY  rememberHistory.label      "Remember my browsing history">
+<!ENTITY  rememberHistory.accesskey  "b">
 
 <!ENTITY  rememberDownload.label         "Remember download history">
 <!ENTITY  rememberDownload.accesskey     "d">

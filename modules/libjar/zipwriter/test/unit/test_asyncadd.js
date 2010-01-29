@@ -77,11 +77,8 @@ var observer = {
       do_check_eq(entry.realSize, TESTS[i].size);
       do_check_eq(entry.size, TESTS[i].size);
       do_check_eq(entry.CRC32, TESTS[i].crc);
-
-      var diff = Math.abs((entry.lastModifiedTime/PR_USEC_PER_MSEC) -
-                          source.lastModifiedTime);
-      if (diff > TIME_RESOLUTION)
-        do_throw(diff);
+      do_check_eq(entry.lastModifiedTime / PR_USEC_PER_MSEC,
+                  source.lastModifiedTime);
 
       zipR.test(TESTS[i].name);
     }
@@ -100,6 +97,7 @@ function run_test()
     zipW.addEntryFile(TESTS[i].name, Ci.nsIZipWriter.COMPRESSION_NONE, source,
                       true);
     size += ZIP_FILE_HEADER_SIZE + ZIP_CDS_HEADER_SIZE +
+            (ZIP_EXTENDED_TIMESTAMP_SIZE * 2) +
             (TESTS[i].name.length*2) + TESTS[i].size;
   }
   do_test_pending();

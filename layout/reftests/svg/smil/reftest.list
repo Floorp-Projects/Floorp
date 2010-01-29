@@ -44,6 +44,9 @@ include restart/reftest.list
 # pause tests
 include pause/reftest.list
 
+# syncbase tests
+include syncbase/reftest.list
+
 # General tests
 == anim-discrete-values-1.svg      anim-standard-ref.svg
 == anim-discrete-replace-sum-1.svg anim-standard-ref.svg
@@ -68,6 +71,22 @@ fails == anim-fillopacity-1xml.svg  anim-standard-ref.svg # bug 534028
 == anim-height-interp-4.svg anim-height-interp-4-ref.svg
 == anim-height-interp-5.svg anim-height-interp-5-ref.svg
 == anim-height-interp-6.svg anim-height-interp-6-ref.svg
+
+# animate some <length> attributes:
+== anim-filter-primitive-size-01.svg lime.svg
+== anim-filter-size-01.svg lime.svg
+
+# animate some <number> attributes:
+== anim-feOffset-01.svg lime.svg
+== anim-offset-01.svg lime.svg
+== anim-pathLength-01.svg anim-pathLength-01-ref.svg
+
+# animate some enumeration attributes:
+== anim-feComposite-operator-01.svg lime.svg
+== anim-filter-filterUnits-01.svg lime.svg
+
+# animate some boolean attributes:
+== anim-feConvolveMatrix-preserveAlpha-01.svg lime.svg
 
 == anim-remove-1.svg anim-standard-ref.svg
 == anim-remove-2.svg anim-standard-ref.svg
@@ -120,3 +139,8 @@ fails == anim-strokewidth-1xml.svg anim-standard-ref.svg # bug 534028
 == anim-y-interp-4.svg anim-y-interp-4-ref.svg
 == anim-y-interp-5.svg anim-y-interp-5-ref.svg
 == anim-y-interp-6.svg anim-y-interp-6-ref.svg
+
+== freeze-applied-late-1.svg anim-standard-ref.svg
+== freeze-applied-late-2.svg anim-standard-ref.svg
+== freeze-applied-late-3.svg anim-standard-ref.svg
+== freeze-applied-late-4.svg anim-standard-ref.svg

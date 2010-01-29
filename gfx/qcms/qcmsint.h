@@ -60,7 +60,12 @@ struct XYZNumber {
 
 struct curveType {
 	uint32_t count;
+/* Using the C99 flexible array member syntax with IBM compiler */
+#if defined (__IBMC__) || defined (__IBMCPP__)
+	uInt16Number data[];
+#else
 	uInt16Number data[0];
+#endif
 };
 
 struct lutType {

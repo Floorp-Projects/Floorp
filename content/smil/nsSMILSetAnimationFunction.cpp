@@ -109,11 +109,11 @@ nsSMILSetAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
   NS_ABORT_IF_FALSE(IsToAnimation(), "Set element only supports to-animation");
 
   if (mSampleTime >= dur || mSampleTime < 0) {
-    NS_ERROR("Animation sampled outside interval.");
+    NS_ERROR("Animation sampled outside interval");
     return NS_ERROR_FAILURE;
   }
   if (aValues.Length() != 1) {
-    NS_ERROR("Unexpected number of values.");
+    NS_ERROR("Unexpected number of values");
     return NS_ERROR_FAILURE;
   }
   // End Sanity Checks

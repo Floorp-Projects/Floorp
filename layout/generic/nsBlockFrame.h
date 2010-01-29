@@ -621,16 +621,31 @@ protected:
                      nsIFrame* aFrame,
                      LineReflowStatus* aLineReflowStatus);
 
-  nsresult PullFrame(nsBlockReflowState& aState,
-                     line_iterator aLine,
-                     nsIFrame*& aFrameResult);
+  /**
+   * Pull a frame from the next available location (one of our lines or
+   * one of our next-in-flows lines).
+   * @return the pulled frame or nsnull
+   */
+  nsIFrame* PullFrame(nsBlockReflowState& aState,
+                      line_iterator       aLine);
 
-  PRBool PullFrameFrom(nsBlockReflowState& aState,
-                       nsLineBox* aLine,
-                       nsBlockFrame* aFromContainer,
-                       PRBool aFromOverflowLine,
-                       nsLineList::iterator aFromLine,
-                       nsIFrame*& aFrameResult);
+  /**
+   * Try to pull a frame out of a line pointed at by aFromLine.
+   *
+   * Note: pulling a frame from a line that is a place-holder frame
+   * doesn't automatically remove the corresponding float from the
+   * line's float array. This happens indirectly: either the line gets
+   * emptied (and destroyed) or the line gets reflowed (because we mark
+   * it dirty) and the code at the top of ReflowLine empties the
+   * array. So eventually, it will be removed, just not right away.
+   *
+   * @return the pulled frame or nsnull
+   */
+  nsIFrame* PullFrameFrom(nsBlockReflowState&  aState,
+                          nsLineBox*           aLine,
+                          nsBlockFrame*        aFromContainer,
+                          PRBool               aFromOverflowLine,
+                          nsLineList::iterator aFromLine);
 
   void PushLines(nsBlockReflowState& aState,
                  nsLineList::iterator aLineBefore);

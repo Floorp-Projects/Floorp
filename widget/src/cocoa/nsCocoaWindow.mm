@@ -98,8 +98,14 @@ extern "C" {
   // CGSPrivate.h
   typedef NSInteger CGSConnection;
   typedef NSInteger CGSWindow;
+  typedef NSUInteger CGSWindowFilterRef;
   extern CGSConnection _CGSDefaultConnection(void);
   extern CGError CGSSetWindowShadowAndRimParameters(const CGSConnection cid, CGSWindow wid, float standardDeviation, float density, int offsetX, int offsetY, unsigned int flags);
+  extern CGError CGSNewCIFilterByName(CGSConnection cid, CFStringRef filterName, CGSWindowFilterRef *outFilter);
+  extern CGError CGSSetCIFilterValuesFromDictionary(CGSConnection cid, CGSWindowFilterRef filter, CFDictionaryRef filterValues);
+  extern CGError CGSAddWindowFilter(CGSConnection cid, CGSWindow wid, CGSWindowFilterRef filter, NSInteger flags);
+  extern CGError CGSRemoveWindowFilter(CGSConnection cid, CGSWindow wid, CGSWindowFilterRef filter);
+  extern CGError CGSReleaseCIFilter(CGSConnection cid, CGSWindowFilterRef filter);
 }
 
 #define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
@@ -125,6 +131,7 @@ nsCocoaWindow::nsCocoaWindow()
 , mSheetWindowParent(nil)
 , mPopupContentView(nil)
 , mShadowStyle(NS_STYLE_WINDOW_SHADOW_DEFAULT)
+, mWindowFilter(0)
 , mIsResizing(PR_FALSE)
 , mWindowMadeHere(PR_FALSE)
 , mSheetNeedsShow(PR_FALSE)
@@ -139,6 +146,7 @@ void nsCocoaWindow::DestroyNativeWindow()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  CleanUpWindowFilter();
   // We want to unhook the delegate here because we don't want events
   // sent to it after this object has been destroyed.
   [mWindow setDelegate:nil];
@@ -659,6 +667,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       NS_OBJC_END_TRY_LOGONLY_BLOCK;
       SendSetZLevelEvent();
       AdjustWindowShadow();
+      SetUpWindowFilter();
       // If our popup window is a non-native context menu, tell the OS (and
       // other programs) that a menu has opened.  This is how the OS knows to
       // close other programs' context menus when ours open.
@@ -761,6 +770,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
       if (mWindowType == eWindowType_popup && nativeParentWindow)
         [nativeParentWindow removeChildWindow:mWindow];
 
+      CleanUpWindowFilter();
       [mWindow orderOut:nil];
       // Unless it's explicitly removed from NSApp's "window cache", a popup
       // window will keep receiving mouse-moved events even after it's been
@@ -837,6 +847,46 @@ nsCocoaWindow::AdjustWindowShadow()
                                      params.flags);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void
+nsCocoaWindow::SetUpWindowFilter()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (![mWindow isVisible] || [mWindow windowNumber] == -1)
+    return;
+
+  CleanUpWindowFilter();
+
+  // Only blur the background of menus and fake sheets.
+  if (mShadowStyle != NS_STYLE_WINDOW_SHADOW_MENU &&
+      mShadowStyle != NS_STYLE_WINDOW_SHADOW_SHEET)
+    return;
+
+  // Create a CoreImage filter and set it up
+  CGSConnection cid = _CGSDefaultConnection();
+  CGSNewCIFilterByName(cid, (CFStringRef)@"CIGaussianBlur", &mWindowFilter);
+  NSDictionary *options = [NSDictionary dictionaryWithObject:[NSNumber numberWithFloat:2.0] forKey:@"inputRadius"];
+  CGSSetCIFilterValuesFromDictionary(cid, mWindowFilter, (CFDictionaryRef)options);
+
+  // Now apply the filter to the window
+  NSInteger compositingType = 1 << 0; // Under the window
+  CGSAddWindowFilter(cid, [mWindow windowNumber], mWindowFilter, compositingType);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void
+nsCocoaWindow::CleanUpWindowFilter()
+{
+  if (!mWindowFilter || [mWindow windowNumber] == -1)
+    return;
+
+  CGSConnection cid = _CGSDefaultConnection();
+  CGSRemoveWindowFilter(cid, [mWindow windowNumber], mWindowFilter);
+  CGSReleaseCIFilter(cid, mWindowFilter);
+  mWindowFilter = 0;
 }
 
 nsresult
@@ -1022,11 +1072,13 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(PRBool aFullScreen)
   NS_ASSERTION(mFullScreen != aFullScreen, "Unnecessary MakeFullScreen call");
 
   NSDisableScreenUpdates();
+  // The order here matters. When we exit full screen mode, we need to show the
+  // Dock first, otherwise the newly-created window won't have its minimize
+  // button enabled. See bug 526282.
+  nsCocoaUtils::HideOSChromeOnScreen(aFullScreen, [mWindow screen]);
   nsresult rv = nsBaseWidget::MakeFullScreen(aFullScreen);
   NSEnableScreenUpdates();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCocoaUtils::HideOSChromeOnScreen(aFullScreen, [mWindow screen]);
 
   mFullScreen = aFullScreen;
 
@@ -1414,6 +1466,7 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(PRInt32 aStyle)
   mShadowStyle = aStyle;
   [mWindow setHasShadow:(aStyle != NS_STYLE_WINDOW_SHADOW_NONE)];
   AdjustWindowShadow();
+  SetUpWindowFilter();
 
   return NS_OK;
 
@@ -1944,6 +1997,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     mBackgroundColor = [NSColor whiteColor];
 
     mUnifiedToolbarHeight = 0.0f;
+    mWaitingForUnifiedToolbarHeight = NO;
 
     // setBottomCornerRounded: is a private API call, so we check to make sure
     // we respond to it just in case.
@@ -1994,6 +2048,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 // unified gradient in the titlebar.
 - (void)setUnifiedToolbarHeight:(float)aToolbarHeight
 {
+  mWaitingForUnifiedToolbarHeight = NO;
   if (mUnifiedToolbarHeight == aToolbarHeight)
     return;
   mUnifiedToolbarHeight = aToolbarHeight;
@@ -2045,6 +2100,19 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 {
   NSRect frameRect = [self frame];
   return frameRect.size.height - [self contentRectForFrameRect:frameRect].size.height;
+}
+
+- (void)beginMaybeResetUnifiedToolbar
+{
+  mWaitingForUnifiedToolbarHeight = YES;
+}
+
+- (void)endMaybeResetUnifiedToolbar
+{
+  if (mWaitingForUnifiedToolbarHeight) {
+    // No toolbar was drawn, so set the height to zero.
+    [self setUnifiedToolbarHeight:0.0f];
+  }
 }
 
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState

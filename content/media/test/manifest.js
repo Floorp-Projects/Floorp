@@ -13,7 +13,7 @@ var gSmallTests = [
 // Used by test_mozLoadFrom.  Need one test file per decoder backend, plus
 // anything for testing clone-specific bugs.
 var gCloneTests = gSmallTests.concat([
-  // Actual duration is ~200ms, we have X-Content-Duration lie about it.
+  // Actual duration is ~200ms, we have Content-Duration lie about it.
   { name:"bug520908.ogv", type:"video/ogg", duration:9000 },
 ]);
 

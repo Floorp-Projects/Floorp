@@ -55,10 +55,15 @@
 #include "nsIToolkitChromeRegistry.h"
 #include "nsIToolkitProfile.h"
 
+#if defined(OS_LINUX)
+#  define XP_LINUX
+#endif
+
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
 #include "nsAutoRef.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsExceptionHandler.h"
 #include "nsStaticComponents.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
@@ -242,6 +247,29 @@ GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 
 static MessageLoop* sIOMessageLoop;
 
+#if defined(MOZ_CRASHREPORTER)
+// FIXME/bug 539522: this out-of-place function is stuck here because
+// IPDL wants access to this crashreporter interface, and
+// crashreporter is built in such a way to make that awkward
+PRBool
+XRE_GetMinidumpForChild(PRUint32 aChildPid, nsIFile** aDump)
+{
+  return CrashReporter::GetMinidumpForChild(aChildPid, aDump);
+}
+
+PRBool
+XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
+{
+#if defined(XP_WIN)
+  return CrashReporter::SetRemoteExceptionHandler(nsDependentCString(aPipe));
+#elif defined(OS_LINUX)
+  return CrashReporter::SetRemoteExceptionHandler();
+#else
+#  error "OOP crash reporter unsupported on this platform"
+#endif
+}
+#endif // if defined(MOZ_CRASHREPORTER)
+
 nsresult
 XRE_InitChildProcess(int aArgc,
                      char* aArgv[],
@@ -251,9 +279,12 @@ XRE_InitChildProcess(int aArgc,
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
 
-  SetupErrorHandling(aArgv[0]);
-
   sChildProcessType = aProcess;
+
+  gArgv = aArgv;
+  gArgc = aArgc;
+
+  SetupErrorHandling(aArgv[0]);
   
 #if defined(MOZ_WIDGET_GTK2)
   g_thread_init(NULL);

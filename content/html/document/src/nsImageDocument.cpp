@@ -55,8 +55,6 @@
 #include "nsStubImageDecoderObserver.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsIScrollableView.h"
-#include "nsIViewManager.h"
 #include "nsStyleContext.h"
 #include "nsAutoPtr.h"
 #include "nsMediaDocument.h"
@@ -74,6 +72,7 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsThreadUtils.h"
+#include "nsIScrollableFrame.h"
 
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
 #define CLICK_IMAGE_RESIZING_PREF "browser.enable_click_image_resizing"
@@ -510,24 +509,15 @@ nsImageDocument::ScrollImageTo(PRInt32 aX, PRInt32 aY, PRBool restoreImage)
   nsIPresShell *shell = GetPrimaryShell();
   if (!shell)
     return NS_OK;
-  
-  nsIViewManager* vm = shell->GetViewManager();
-  if (!vm)
+
+  nsIScrollableFrame* sf = shell->GetRootScrollFrameAsScrollable();
+  if (!sf)
     return NS_OK;
 
-  nsIScrollableView* view;
-  vm->GetRootScrollableView(&view);
-  if (!view)
-    return NS_OK;
-
-  nsSize scrolledSize;
-  if (NS_FAILED(view->GetContainerSize(&scrolledSize.width, &scrolledSize.height)))
-    return NS_OK;
-
-  nsRect portRect = view->View()->GetBounds();
-  view->ScrollTo(nsPresContext::CSSPixelsToAppUnits(aX/ratio) - portRect.width/2,
-                 nsPresContext::CSSPixelsToAppUnits(aY/ratio) - portRect.height/2,
-                 0);
+  nsRect portRect = sf->GetScrollPortRect();
+  sf->ScrollTo(nsPoint(nsPresContext::CSSPixelsToAppUnits(aX/ratio) - portRect.width/2,
+                       nsPresContext::CSSPixelsToAppUnits(aY/ratio) - portRect.height/2),
+               nsIScrollableFrame::INSTANT);
   return NS_OK;
 }
 

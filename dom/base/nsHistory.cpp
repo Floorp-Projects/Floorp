@@ -57,6 +57,13 @@
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsContentUtils.h"
+#include "nsIDOMNSDocument.h"
+#include "nsISHistoryInternal.h"
+
+static const char* sAllowPushStatePrefStr  =
+  "browser.history.allowPushState";
+static const char* sAllowReplaceStatePrefStr =
+  "browser.history.allowReplaceState";
 
 //
 //  History class implementation 
@@ -258,7 +265,7 @@ nsHistory::Go(PRInt32 aDelta)
 
   PRInt32 curIndex=-1;
   PRInt32 len = 0;
-  nsresult rv = session_history->GetIndex(&curIndex);  
+  nsresult rv = session_history->GetIndex(&curIndex);
   rv = session_history->GetCount(&len);
 
   PRInt32 index = curIndex + aDelta;
@@ -270,6 +277,47 @@ nsHistory::Go(PRInt32 aDelta)
   // of history length
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHistory::PushState(nsIVariant *aData, const nsAString& aTitle,
+                     const nsAString& aURL)
+{
+  // Check that PushState hasn't been pref'ed off.
+  if (!nsContentUtils::GetBoolPref(sAllowPushStatePrefStr, PR_FALSE))
+    return NS_OK;
+
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+
+  // AddState might run scripts, so we need to hold a strong reference to the
+  // docShell here to keep it from going away.
+  nsCOMPtr<nsIDocShell> docShell = mDocShell;
+
+  // PR_FALSE tells the docshell to add a new history entry instead of
+  // modifying the current one.
+  nsresult rv = mDocShell->AddState(aData, aTitle, aURL, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHistory::ReplaceState(nsIVariant *aData, const nsAString& aTitle,
+                        const nsAString& aURL)
+{
+  // Check that ReplaceState hasn't been pref'ed off
+  if (!nsContentUtils::GetBoolPref(sAllowReplaceStatePrefStr, PR_FALSE))
+    return NS_OK;
+
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+
+  // As in PushState(), we need to keep a strong reference to the docShell
+  // here.
+  nsCOMPtr<nsIDocShell> docShell = mDocShell;
+
+  // PR_TRUE tells the docshell to modify the current SHEntry, rather than
+  // create a new one.
+  return mDocShell->AddState(aData, aTitle, aURL, PR_TRUE);
 }
 
 NS_IMETHODIMP

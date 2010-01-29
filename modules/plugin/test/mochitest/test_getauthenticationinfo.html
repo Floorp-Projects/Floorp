@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Login Manager</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Test for NPN_GetAuthenticationInfo
+<p id="display"></p>
+
+<div id="content">
+  <iframe id="iframe"></iframe>
+</div>
+
+<script class="testbody" type="text/javascript">
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+
+function iframeLoad() {
+  var plugin = iframe.contentDocument.getElementById("embedtest");
+  // valid request
+  is(plugin.getAuthInfo("http", "localhost", 8888, "basic", "testrealm"), 
+      "user1|password1", 
+      "correct user/pass retrieved");
+  try {
+    // invalid request -- wrong host
+    is(plugin.getAuthInfo("http", "example.com", 8888, "basic", "testrealm"), 
+        "user1|password1", 
+        "correct user/pass retrieved");
+    ok(false, "no exception was thrown");
+  }
+  catch (err) {
+    ok(true, "expected exception caught");
+  }
+  try {
+    // invalid request -- wrong port
+    is(plugin.getAuthInfo("http", "localhost", 90, "basic", "testrealm"), 
+        "user1|password1", 
+        "correct user/pass retrieved");
+    ok(false, "no exception was thrown");
+  }
+  catch (err) {
+    ok(true, "expected exception caught");
+  }
+  try {
+    // invalid request -- wrong realm
+    is(plugin.getAuthInfo("http", "localhost", 8888, "basic", "wrongrealm"), 
+        "user1|password1", 
+        "correct user/pass retrieved");
+    ok(false, "no exception was thrown");
+  }
+  catch (err) {
+    ok(true, "expected exception caught");
+  }
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+var iframe = document.getElementById("iframe");
+var am = Cc["@mozilla.org/network/http-auth-manager;1"].
+         getService(Ci.nsIHttpAuthManager);
+am.setAuthIdentity("http", "localhost", 8888, "basic", "testrealm", "", 
+    "localhost", "user1", "password1");
+iframe.onload = iframeLoad;
+iframe.src = "http://localhost:8888/tests/toolkit/components/passwordmgr/" +
+    "test/authenticate.sjs?user=user1&pass=password1&realm=testrealm&plugin=1";
+
+</script>
+</body>
+</html>

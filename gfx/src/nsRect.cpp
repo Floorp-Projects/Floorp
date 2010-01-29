@@ -78,20 +78,20 @@ PRBool nsRect::IntersectRect(const nsRect &aRect1, const nsRect &aRect2)
   // Compute the destination width
   temp = PR_MIN(xmost1, xmost2);
   if (temp <= x) {
-    Empty();
-    return PR_FALSE;
+    width = 0;
+  } else {
+    width = temp - x;
   }
-  width = temp - x;
 
   // Compute the destination height
   temp = PR_MIN(ymost1, ymost2);
   if (temp <= y) {
-    Empty();
-    return PR_FALSE;
+    height = 0;
+  } else {
+    height = temp - y;
   }
-  height = temp - y;
 
-  return PR_TRUE;
+  return !IsEmpty();
 }
 
 // Computes the smallest rectangle that contains both aRect1 and aRect2 and

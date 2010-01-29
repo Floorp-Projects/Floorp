@@ -58,13 +58,10 @@
 #include "SimpleBuffer.h"
 #include "nsGLPbuffer.h"
 
-#include "WebGLArrays.h"
-
 class nsIDocShell;
 
 namespace mozilla {
 
-class WebGLArray;
 class WebGLTexture;
 class WebGLBuffer;
 class WebGLProgram;
@@ -264,9 +261,20 @@ protected:
 
     void MakeContextCurrent() { mGLPbuffer->MakeContextCurrent(); }
 
-    nsresult TexImageElementBase(nsIDOMHTMLElement *imageOrCanvas,
-                                 gfxImageSurface **imageOut,
-                                 PRBool flipY, PRBool premultiplyAlpha);
+    // helpers
+    nsresult TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
+                             GLsizei width, GLsizei height, GLint border,
+                             GLenum format, GLenum type,
+                             void *data, PRUint32 byteLength);
+    nsresult TexSubImage2D_base(GLenum target, GLint level,
+                                GLint xoffset, GLint yoffset,
+                                GLsizei width, GLsizei height,
+                                GLenum format, GLenum type,
+                                void *pixels, PRUint32 byteLength);
+
+    nsresult DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
+                                      gfxImageSurface **imageOut,
+                                      PRBool flipY, PRBool premultiplyAlpha);
 
     GLuint mActiveTexture;
 
@@ -343,42 +351,32 @@ class WebGLBuffer :
 {
 public:
     WebGLBuffer(GLuint name)
-        : mName(name), mDeleted(PR_FALSE), mGLType(0)
+        : mName(name), mDeleted(PR_FALSE), mByteLength(0)
     { }
 
     void Delete() {
         if (mDeleted)
             return;
         ZeroOwners();
+
         mDeleted = PR_TRUE;
+        mByteLength = 0;
     }
+
     PRBool Deleted() { return mDeleted; }
     GLuint GLName() { return mName; }
+    PRUint32 ByteLength() { return mByteLength; }
 
-    void Set(nsIWebGLArray *na) {
-        mGLType = na->NativeType();
-        mElementSize = na->NativeElementSize();
-        mCount = na->NativeCount();
+    void SetByteLength(GLuint len) {
+        mByteLength = len;
     }
-
-    void SetCount(GLuint count) {
-        mCount = count;
-    }
-
-    GLenum GLType() { return mGLType; }
-    PRUint32 ByteCount() { return mElementSize * mCount; }
-    PRUint32 Count() { return mCount; }
-    PRUint32 ElementSize() { return mElementSize; }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLBUFFER
 protected:
     GLuint mName;
     PRBool mDeleted;
-
-    GLenum mGLType;
-    PRUint32 mElementSize;
-    PRUint32 mCount;
+    PRUint32 mByteLength;
 };
 
 class WebGLTexture :

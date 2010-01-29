@@ -137,7 +137,7 @@ nsScrollbarFrame::AttributeChanged(PRInt32 aNameSpaceID,
   if (!scrollable)
     return rv;
 
-  scrollable->CurPosAttributeChanged(mContent, aModType);
+  scrollable->CurPosAttributeChanged(mContent);
   return rv;
 }
 

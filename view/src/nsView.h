@@ -136,6 +136,8 @@ public:
   }
   nsRegion* GetDirtyRegion() {
     if (!mDirtyRegion) {
+      NS_ASSERTION(!mParent || GetFloating(),
+                   "Only display roots should have dirty regions");
       mDirtyRegion = new nsRegion();
       NS_ASSERTION(mDirtyRegion, "Out of memory!");
     }

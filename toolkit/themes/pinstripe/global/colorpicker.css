@@ -35,15 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ===== colorpicker.css ================================================
-  == Styles used by the XUL colorpicker element.
-  ======================================================================= */
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* ::::: colorpicker button ::::: */
- 
-/* colorpicker button */
 
 colorpicker[type="button"] {
   width: 38px;

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, true)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Test that we don't apply an early end too soon.
+
+    Although the second animation will have an interval from 2s-6s, it shouldn't
+    be informed about this until the early end happens, at t=3s. Until that time
+    it should be expecting to start at t=4s.
+
+    If the second animation is started at t=2s it means the early end has been
+    applied too soon.
+   -->
+  <rect width="100" height="100" fill="green">
+    <set attributeName="y" attributeType="XML" to="0" id="a"
+      begin="0s; 3s" dur="5s"/>
+    <set attributeName="fill" attributeType="CSS"
+      to="red" begin="a.end-1s" dur="4s"/>
+  </rect>
+</svg>

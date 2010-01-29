@@ -211,15 +211,10 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
-ifdef MOZ_ENABLE_GTK2
-EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) \
-		    -lXrender \
-		    $(NULL)
-endif
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
 
-ifdef MOZ_ENABLE_QT
-EXTRA_DSO_LDOPTS += $(MOZ_QT_LIBS) \
-		    $(NULL)
+ifdef MOZ_ENABLE_GTK2
+EXTRA_DSO_LDOPTS += -lXrender
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

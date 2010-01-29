@@ -1141,7 +1141,7 @@ nsNPAPIPluginInstance::InitializePlugin()
   
   PRInt32       mode;
   const char*   mimetype;
-  NPError       error;
+  NPError       error = NPERR_GENERIC_ERROR;
 
   GetMode(&mode);
   GetMIMEType(&mimetype);

@@ -42,6 +42,7 @@
 #include "nsSMILParserUtils.h"
 #include "nsSMILNullType.h"
 #include "nsISMILAnimationElement.h"
+#include "nsSMILTimedElement.h"
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
@@ -189,7 +190,7 @@ nsSMILAnimationFunction::SampleAt(nsSMILTime aSampleTime,
                                   PRUint32 aRepeatIteration)
 {
   if (mHasChanged || mLastValue || mSampleTime != aSampleTime ||
-      mSimpleDuration.CompareTo(aSimpleDuration) ||
+      mSimpleDuration != aSimpleDuration ||
       mRepeatIteration != aRepeatIteration) {
     mHasChanged = PR_TRUE;
   }
@@ -249,14 +250,12 @@ nsSMILAnimationFunction::ComposeResult(const nsISMILAttr& aSMILAttr,
   if (mErrorFlags != 0)
     return;
 
-  // If this interval is active, we must have a non-negative
-  // mSampleTime and a resolved or indefinite mSimpleDuration.
-  // (Otherwise, we're probably just frozen.)
-  if (mIsActive) {
-    NS_ENSURE_TRUE(mSampleTime >= 0,);
-    NS_ENSURE_TRUE(mSimpleDuration.IsResolved() ||
-                   mSimpleDuration.IsIndefinite(),);
-  }
+  // If this interval is active, we must have a non-negative mSampleTime
+  NS_ABORT_IF_FALSE(mSampleTime >= 0 || !mIsActive,
+      "Negative sample time for active animation");
+  NS_ABORT_IF_FALSE(mSimpleDuration.IsResolved() ||
+      mSimpleDuration.IsIndefinite() || mLastValue,
+      "Unresolved simple duration for active or frozen animation");
 
   nsSMILValue result(aResult.mType);
 
@@ -306,7 +305,7 @@ nsSMILAnimationFunction::CompareTo(const nsSMILAnimationFunction* aOther) const
 {
   NS_ENSURE_TRUE(aOther, 0);
 
-  NS_ASSERTION(aOther != this, "Trying to compare to self.");
+  NS_ASSERTION(aOther != this, "Trying to compare to self");
 
   // Inactive animations sort first
   if (!IsActiveOrFrozen() && aOther->IsActiveOrFrozen())
@@ -319,18 +318,26 @@ nsSMILAnimationFunction::CompareTo(const nsSMILAnimationFunction* aOther) const
   if (mBeginTime != aOther->GetBeginTime())
     return mBeginTime > aOther->GetBeginTime() ? 1 : -1;
 
-  // XXX When syncbase timing is implemented, we next need to sort based on
-  // dependencies
+  // Next sort based on syncbase dependencies: the dependent element sorts after
+  // its syncbase
+  const nsSMILTimedElement& thisTimedElement =
+    mAnimationElement->TimedElement();
+  const nsSMILTimedElement& otherTimedElement =
+    aOther->mAnimationElement->TimedElement();
+  if (thisTimedElement.IsTimeDependent(otherTimedElement))
+    return 1;
+  if (otherTimedElement.IsTimeDependent(thisTimedElement))
+    return -1;
 
   // Animations that appear later in the document sort after those earlier in
   // the document
-  nsIContent &thisElement = mAnimationElement->Content();
-  nsIContent &otherElement = aOther->mAnimationElement->Content();
+  nsIContent& thisContent = mAnimationElement->Content();
+  nsIContent& otherContent = aOther->mAnimationElement->Content();
 
-  NS_ASSERTION(&thisElement != &otherElement,
-             "Two animations cannot have the same animation content element!");
+  NS_ABORT_IF_FALSE(&thisContent != &otherContent,
+      "Two animations cannot have the same animation content element!");
 
-  return (nsContentUtils::PositionIsBefore(&thisElement, &otherElement))
+  return (nsContentUtils::PositionIsBefore(&thisContent, &otherContent))
           ? -1 : 1;
 }
 
@@ -369,13 +376,13 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
   NS_ABORT_IF_FALSE(dur >= 0.0f, "Simple duration should not be negative");
 
   if (mSampleTime >= dur || mSampleTime < 0.0f) {
-    NS_ERROR("Animation sampled outside interval.");
+    NS_ERROR("Animation sampled outside interval");
     return NS_ERROR_FAILURE;
   }
 
   if ((!IsToAnimation() && aValues.Length() < 2) ||
       (IsToAnimation()  && aValues.Length() != 1)) {
-    NS_ERROR("Unexpected number of values.");
+    NS_ERROR("Unexpected number of values");
     return NS_ERROR_FAILURE;
   }
   // End Sanity Checks
@@ -437,8 +444,8 @@ nsSMILAnimationFunction::InterpolateResult(const nsSMILValueArray& aValues,
       }
     }
     if (NS_SUCCEEDED(rv)) {
-      NS_ABORT_IF_FALSE(from, "NULL from-value during interpolation.");
-      NS_ABORT_IF_FALSE(to, "NULL to-value during interpolation.");
+      NS_ABORT_IF_FALSE(from, "NULL from-value during interpolation");
+      NS_ABORT_IF_FALSE(to, "NULL to-value during interpolation");
       NS_ABORT_IF_FALSE(0.0f <= intervalProgress && intervalProgress < 1.0f,
                       "Interval progress should be in the range [0, 1)");
       rv = from->Interpolate(*to, intervalProgress, aResult);
@@ -495,7 +502,7 @@ nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
                                               const nsSMILValue*& aTo)
 {
   NS_ASSERTION(0.0f <= aSimpleProgress && aSimpleProgress < 1.0f,
-               "aSimpleProgress is out of bounds.");
+               "aSimpleProgress is out of bounds");
   NS_ASSERTION(GetCalcMode() == CALC_PACED,
                "Calling paced-specific function, but not in paced mode");
 
@@ -551,7 +558,7 @@ nsSMILAnimationFunction::ComputePacedPosition(const nsSMILValueArray& aValues,
   }
 
   NS_NOTREACHED("shouldn't complete loop & get here -- if we do, "
-                "then aSimpleProgress was probably out of bounds.");
+                "then aSimpleProgress was probably out of bounds");
   return NS_ERROR_FAILURE;
 }
 
@@ -633,8 +640,8 @@ nsSMILAnimationFunction::ScaleIntervalProgress(double& aProgress,
     return;
 
   NS_ASSERTION(aIntervalIndex < (PRUint32)mKeySplines.Length(),
-               "Invalid interval index.");
-  NS_ASSERTION(aNumIntervals >= 1, "Invalid number of intervals.");
+               "Invalid interval index");
+  NS_ASSERTION(aNumIntervals >= 1, "Invalid number of intervals");
 
   if (aIntervalIndex >= (PRUint32)mKeySplines.Length() ||
       aNumIntervals < 1)

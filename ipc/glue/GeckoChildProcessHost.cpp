@@ -46,6 +46,11 @@
 
 #include "prprf.h"
 
+#if defined(OS_LINUX)
+#  define XP_LINUX 1
+#endif
+#include "nsExceptionHandler.h"
+
 #include "mozilla/ipc/GeckoThread.h"
 
 using mozilla::MonitorAutoEnter;
@@ -85,7 +90,11 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
   MOZ_COUNT_DTOR(GeckoChildProcessHost);
 
   if (mChildProcessHandle > 0)
-    ProcessWatcher::EnsureProcessTerminated(mChildProcessHandle);
+    ProcessWatcher::EnsureProcessTerminated(mChildProcessHandle
+#if defined(NS_BUILD_REFCNT_LOGGING)
+                                            , false // don't "force"
+#endif
+    );
 }
 
 bool
@@ -179,7 +188,7 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   int srcChannelFd, dstChannelFd;
   channel().GetClientFileDescriptorMapping(&srcChannelFd, &dstChannelFd);
   mFileMap.push_back(std::pair<int,int>(srcChannelFd, dstChannelFd));
-  
+
   // no need for kProcessChannelID, the child process inherits the
   // other end of the socketpair() from us
 
@@ -191,6 +200,22 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
 
   childArgv.push_back(pidstring);
   childArgv.push_back(childProcessType);
+
+#if defined(MOZ_CRASHREPORTER)
+  int childCrashFd, childCrashRemapFd;
+  if (!CrashReporter::CreateNotificationPipeForChild(
+        &childCrashFd, &childCrashRemapFd))
+    return false;
+  if (0 <= childCrashFd) {
+    mFileMap.push_back(std::pair<int,int>(childCrashFd, childCrashRemapFd));
+    // "true" == crash reporting enabled
+    childArgv.push_back("true");
+  }
+  else {
+    // "false" == crash reporting disabled
+    childArgv.push_back("false");
+  }
+#endif
 
   base::LaunchApp(childArgv, mFileMap, false, &process);
 
@@ -214,6 +239,10 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
 
   cmdLine.AppendLooseValue(UTF8ToWide(pidstring));
   cmdLine.AppendLooseValue(UTF8ToWide(childProcessType));
+#if defined(MOZ_CRASHREPORTER)
+  cmdLine.AppendLooseValue(
+    UTF8ToWide(CrashReporter::GetChildNotificationPipe()));
+#endif
 
   base::LaunchApp(cmdLine, false, false, &process);
 

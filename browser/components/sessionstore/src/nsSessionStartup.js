@@ -69,7 +69,8 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+const Cu = Components.utils;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const STATE_RUNNING_STR = "running";
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 megabytes
@@ -132,8 +133,8 @@ SessionStartup.prototype = {
     
     try {
       // parse the session state into JS objects
-      var s = new Components.utils.Sandbox("about:blank");
-      var initialState = Components.utils.evalInSandbox("(" + this._iniString + ")", s);
+      var s = new Cu.Sandbox("about:blank");
+      var initialState = Cu.evalInSandbox("(" + this._iniString + ")", s);
     }
     catch (ex) { debug("The session file is invalid: " + ex); } 
     
@@ -294,7 +295,7 @@ SessionStartup.prototype = {
 
       return content.replace(/\r\n?/g, "\n");
     }
-    catch (ex) { Components.utils.reportError(ex); }
+    catch (ex) { Cu.reportError(ex); }
 
     return null;
   },

@@ -93,6 +93,17 @@ public:
                                PRInt32 aPosInSet);
 
   /**
+   * Get default value of the level for the given accessible.
+   */
+  static PRInt32 GetDefaultLevel(nsAccessible *aAcc);
+
+  /**
+   * Return ARIA level value or the default one if ARIA is missed for the
+   * given accessible.
+   */
+  static PRInt32 GetARIAOrDefaultLevel(nsIAccessible *aAcc);
+
+  /**
    * Compute position in group (posinset) and group size (setsize) for
    * nsIDOMXULSelectControlItemElement node.
    */
@@ -132,12 +143,6 @@ public:
    * Return PR_TRUE if the ARIA property is defined, otherwise PR_FALSE
    */
   static PRBool HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom);
-
-  /**
-   * Fire accessible event of the given type for the given accessible.
-   */
-  static nsresult FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
-                               PRBool aIsAsynch = PR_FALSE);
 
   /**
    * Return true if the given DOM node contains accessible children.
@@ -333,6 +338,15 @@ public:
     if (aObject)
       CallQueryInterface(aObject, &object);
 
+    return object;
+  }
+  template<class DestinationType, class SourceType> static inline
+  already_AddRefed<DestinationType> QueryObject(nsRefPtr<SourceType>& aObject)
+  {
+    DestinationType* object = nsnull;
+    if (aObject)
+      CallQueryInterface(aObject.get(), &object);
+    
     return object;
   }
 

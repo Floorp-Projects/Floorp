@@ -85,7 +85,7 @@ public:
                 mBlocks[i] = new Block(*block);
         }
     }
-    PRBool test(PRUint32 aIndex) {
+    PRBool test(PRUint32 aIndex) const {
         NS_ASSERTION(mBlocks.DebugGetHeader(), "mHdr is null, this is bad");
         PRUint32 blockIndex = aIndex/BLOCK_SIZE_BITS;
         if (blockIndex >= mBlocks.Length())
@@ -169,6 +169,13 @@ public:
             mBlocks[blockIndex] = block;
         }
         block->mBits[(aIndex>>3) & (BLOCK_SIZE - 1)] |= 1 << (aIndex & 0x7);
+    }
+
+    void set(PRUint32 aIndex, PRBool aValue) {
+        if (aValue)
+            set(aIndex);
+        else
+            clear(aIndex);
     }
 
     void SetRange(PRUint32 aStart, PRUint32 aEnd) {
@@ -548,6 +555,43 @@ public:
 
     static inline bool IsInvalid(PRUint32 ch) {
         return (ch == 0xFFFD);
+    }
+
+    // Font code may want to know if there is the potential for bidi behavior
+    // to be triggered by any of the characters in a text run; this can be
+    // used to test that possibility.
+    enum {
+        kUnicodeBidiScriptsStart = 0x0590,
+        kUnicodeBidiScriptsEnd = 0x08FF,
+        kUnicodeBidiPresentationStart = 0xFB1D,
+        kUnicodeBidiPresentationEnd = 0xFEFC,
+        kUnicodeFirstHighSurrogateBlock = 0xD800,
+        kUnicodeRLM = 0x200F,
+        kUnicodeRLE = 0x202B,
+        kUnicodeRLO = 0x202E
+    };
+
+    static inline PRBool PotentialRTLChar(PRUnichar aCh) {
+        if (aCh >= kUnicodeBidiScriptsStart && aCh <= kUnicodeBidiScriptsEnd)
+            // bidi scripts Hebrew, Arabic, Syriac, Thaana, N'Ko are all encoded together
+            return PR_TRUE;
+
+        if (aCh == kUnicodeRLM || aCh == kUnicodeRLE || aCh == kUnicodeRLO)
+            // directional controls that trigger bidi layout
+            return PR_TRUE;
+
+        if (aCh >= kUnicodeBidiPresentationStart &&
+            aCh <= kUnicodeBidiPresentationEnd)
+            // presentation forms of Arabic and Hebrew letters
+            return PR_TRUE;
+
+        if ((aCh & 0xFF00) == kUnicodeFirstHighSurrogateBlock)
+            // surrogate that could be part of a bidi supplementary char
+            // (Cypriot, Aramaic, Phoenecian, etc)
+            return PR_TRUE;
+
+        // otherwise we know this char cannot trigger bidi reordering
+        return PR_FALSE;
     }
 
     static PRUint8 CharRangeBit(PRUint32 ch);

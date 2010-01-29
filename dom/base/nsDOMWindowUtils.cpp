@@ -47,7 +47,7 @@
 #include "nsFocusManager.h"
 #include "nsIEventStateManager.h"
 
-#include "nsIScrollableView.h"
+#include "nsIScrollableFrame.h"
 
 #include "nsContentUtils.h"
 
@@ -789,23 +789,17 @@ nsDOMWindowUtils::GetScrollXY(PRBool aFlushLayout, PRInt32* aScrollX, PRInt32* a
     doc->FlushPendingNotifications(Flush_Layout);
   }
 
-  nscoord xPos = 0, yPos = 0;
-
+  nsPoint scrollPos(0,0);
   nsIPresShell *presShell = doc->GetPrimaryShell();
   if (presShell) {
-    nsIViewManager *viewManager = presShell->GetViewManager();
-    if (viewManager) {
-      nsIScrollableView *view = nsnull;
-      viewManager->GetRootScrollableView(&view);
-      if (view) {
-        nsresult rv = view->GetScrollPosition(xPos, yPos);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+    nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
+    if (sf) {
+      scrollPos = sf->GetScrollPosition();
     }
   }
 
-  *aScrollX = nsPresContext::AppUnitsToIntCSSPixels(xPos);
-  *aScrollY = nsPresContext::AppUnitsToIntCSSPixels(yPos);
+  *aScrollX = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.x);
+  *aScrollY = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.y);
 
   return NS_OK;
 }
@@ -944,6 +938,47 @@ nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
                                &status);
   *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
+                                          nsITransferable * aTransferable)
+{
+  PRBool hasCap = PR_FALSE;
+  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
+      || !hasCap)
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  // get the widget to send the event to
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 msg;
+  if (aType.EqualsLiteral("cut"))
+    msg = NS_CONTENT_COMMAND_CUT;
+  else if (aType.EqualsLiteral("copy"))
+    msg = NS_CONTENT_COMMAND_COPY;
+  else if (aType.EqualsLiteral("paste"))
+    msg = NS_CONTENT_COMMAND_PASTE;
+  else if (aType.EqualsLiteral("delete"))
+    msg = NS_CONTENT_COMMAND_DELETE;
+  else if (aType.EqualsLiteral("undo"))
+    msg = NS_CONTENT_COMMAND_UNDO;
+  else if (aType.EqualsLiteral("redo"))
+    msg = NS_CONTENT_COMMAND_REDO;
+  else if (aType.EqualsLiteral("pasteTransferable"))
+    msg = NS_CONTENT_COMMAND_PASTE_TRANSFERABLE;
+  else
+    return NS_ERROR_FAILURE;
+ 
+  nsContentCommandEvent event(PR_TRUE, msg, widget);
+  if (msg == NS_CONTENT_COMMAND_PASTE_TRANSFERABLE) {
+    event.mTransferable = aTransferable;
+  }
+
+  nsEventStatus status;
+  return widget->DispatchEvent(&event, status);
 }
 
 NS_IMETHODIMP

@@ -36,10 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ===== splitter.css ===================================================
-  == Styles used by the XUL splitter element.
-  ======================================================================= */
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* ::::: splitter (vertical) ::::: */

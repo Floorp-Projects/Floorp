@@ -171,7 +171,7 @@ gfxAtsuiFont::gfxAtsuiFont(MacOSFontEntry *aFontEntry,
 
 ATSFontRef gfxAtsuiFont::GetATSFontRef()
 {
-    return GetFontEntry()->GetFontRef();
+    return static_cast<MacOSFontEntry*>(GetFontEntry())->GetFontRef();
 }
 
 static void
@@ -364,7 +364,8 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
     fprintf (stderr, "    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics.maxAscent, mMetrics.maxDescent, mMetrics.maxAdvance);
     fprintf (stderr, "    internalLeading: %f externalLeading: %f\n", mMetrics.internalLeading, mMetrics.externalLeading);
     fprintf (stderr, "    spaceWidth: %f aveCharWidth: %f xHeight: %f\n", mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.xHeight);
-    fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f suOff: %f suSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize, mMetrics.superscriptOffset, mMetrics.subscriptOffset);
+    fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f suOff: %f suSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize,
+                              mMetrics.strikeoutOffset, mMetrics.strikeoutSize, mMetrics.superscriptOffset, mMetrics.subscriptOffset);
 #endif
 }
 
@@ -500,441 +501,6 @@ gfxAtsuiFont::HasMirroringInfo()
     return mHasMirroring;
 }
 
-PRBool gfxAtsuiFont::TestCharacterMap(PRUint32 aCh) {
-    if (!mIsValid) return PR_FALSE;
-    return GetFontEntry()->TestCharacterMap(aCh);
-}
-
-MacOSFontEntry*
-gfxAtsuiFont::GetFontEntry()
-{
-    return static_cast<MacOSFontEntry*> (mFontEntry.get());
-}
-
-/**
- * Look up the font in the gfxFont cache. If we don't find it, create one.
- * In either case, add a ref and return it ---
- * except for OOM in which case we do nothing and return null.
- */
- 
-static already_AddRefed<gfxAtsuiFont>
-GetOrMakeFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aStyle, PRBool aNeedsBold)
-{
-    // the font entry name is the psname, not the family name
-    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry->Name(), aStyle);
-    if (!font) {
-        gfxAtsuiFont *newFont = new gfxAtsuiFont(aFontEntry, aStyle, aNeedsBold);
-        if (!newFont)
-            return nsnull;
-        if (!newFont->Valid()) {
-            delete newFont;
-            return nsnull;
-        }
-        font = newFont;
-        gfxFontCache::GetCache()->AddNew(font);
-    }
-    gfxFont *f = nsnull;
-    font.swap(f);
-    return static_cast<gfxAtsuiFont *>(f);
-}
-
-
-gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
-                                     const gfxFontStyle *aStyle,
-                                     gfxUserFontSet *aUserFontSet)
-    : gfxFontGroup(families, aStyle, aUserFontSet)
-{
-    mPageLang = gfxPlatform::GetFontPrefLangFor(mStyle.langGroup.get());
-
-    InitFontList();
-}
-
-PRBool
-gfxAtsuiFontGroup::FindATSFont(const nsAString& aName,
-                               const nsACString& aGenericName,
-                               void *aClosure)
-{
-    gfxAtsuiFontGroup *fontGroup = static_cast<gfxAtsuiFontGroup*>(aClosure);
-    const gfxFontStyle *fontStyle = fontGroup->GetStyle();
-
-
-    PRBool needsBold;
-    MacOSFontEntry *fe = nsnull;
-    
-    // first, look up in the user font set
-    gfxUserFontSet *fs = fontGroup->GetUserFontSet();
-    gfxFontEntry *gfe;
-    if (fs && (gfe = fs->FindFontEntry(aName, *fontStyle, needsBold))) {
-        // assume for now platform font if not SVG
-        fe = static_cast<MacOSFontEntry*> (gfe);
-    }
-    
-    // nothing in the user font set ==> check system fonts
-    if (!fe) {
-        fe = static_cast<MacOSFontEntry*>
-            (gfxMacPlatformFontList::PlatformFontList()->FindFontForFamily(aName, fontStyle, needsBold));
-    }
-
-    if (fe && !fontGroup->HasFont(fe->GetFontRef())) {
-        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(fe, fontStyle, needsBold);
-        if (font) {
-            fontGroup->mFonts.AppendElement(font);
-        }
-    }
-
-    return PR_TRUE;
-}
-
-gfxFontGroup *
-gfxAtsuiFontGroup::Copy(const gfxFontStyle *aStyle)
-{
-    return new gfxAtsuiFontGroup(mFamilies, aStyle, mUserFontSet);
-}
-
-#define UNICODE_LRO 0x202d
-#define UNICODE_RLO 0x202e
-#define UNICODE_PDF 0x202c
-
-static void
-AppendDirectionalIndicatorStart(PRUint32 aFlags, nsAString& aString)
-{
-    static const PRUnichar overrides[2] = { UNICODE_LRO, UNICODE_RLO };
-    aString.Append(overrides[(aFlags & gfxTextRunFactory::TEXT_IS_RTL) != 0]);
-}
-
-// Returns the number of trailing characters that should be part of the
-// layout but should be ignored
-static PRUint32
-AppendDirectionalIndicatorEnd(PRBool aNeedDirection, nsAString& aString)
-{
-    // Ensure that we compute the full advance width for the last character
-    // in the string --- we don't want that character to form a kerning
-    // pair (or a ligature) with the '.' we may append next,
-    // so we append a space now.
-    // Even if the character is the last character in the layout,
-    // we want its width to be determined as if it had a space after it,
-    // for consistency with the bidi path and during textrun caching etc.
-    aString.Append(' ');
-    if (!aNeedDirection)
-        return 1;
-
-    // Ensure that none of the whitespace in the run is considered "trailing"
-    // by ATSUI's bidi algorithm
-    aString.Append('.');
-    aString.Append(UNICODE_PDF);
-    return 2;
-}
-
-/**
- * Given a textrun and an offset into that textrun, we need to choose a length
- * for the substring of the textrun that we should analyze next. The length
- * should be <= aMaxLength if possible. It must always end at a cluster
- * boundary and it should end at the end of the textrun or at the
- * boundary of a space if possible.
- */
-static PRUint32
-FindTextRunSegmentLength(gfxTextRun *aTextRun, PRUint32 aOffset, PRUint32 aMaxLength)
-{
-    if (aOffset + aMaxLength >= aTextRun->GetLength()) {
-        // The remaining part of the textrun fits within the max length,
-        // so just use it.
-        return aTextRun->GetLength() - aOffset;
-    }
-
-    // Try to end the segment before or after a space, since spaces don't kern
-    // or ligate.
-    PRUint32 end;
-    for (end = aOffset + aMaxLength; end > aOffset; --end) {
-        if (aTextRun->IsClusterStart(end) &&
-            (aTextRun->GetChar(end) == ' ' || aTextRun->GetChar(end - 1) == ' '))
-            return end - aOffset;
-    }
-
-    // Try to end the segment at the last cluster boundary.
-    for (end = aOffset + aMaxLength; end > aOffset; --end) {
-        if (aTextRun->IsClusterStart(end))
-            return end - aOffset;
-    }
-
-    // I guess we just have to return a segment that's the entire cluster
-    // starting at aOffset.
-    for (end = aOffset + 1; end < aTextRun->GetLength(); ++end) {
-        if (aTextRun->IsClusterStart(end))
-            return end - aOffset;
-    }
-    return aTextRun->GetLength() - aOffset;
-}
-
-PRUint32
-gfxAtsuiFontGroup::GuessMaximumStringLength()
-{
-    // ATSUI can't handle offsets of more than 32K pixels. This function
-    // guesses a string length that ATSUI will be able to handle. We want to
-    // get the right answer most of the time, but if we're wrong in either
-    // direction, we won't break things: if we guess too large, our glyph
-    // processing will detect ATSUI's failure and retry with a smaller limit.
-    // If we guess too small, we'll just break the string into more pieces
-    // than we strictly needed to.
-    // The basic calculation is just 32k pixels divided by the font max-advance,
-    // but we need to be a bit careful to avoid math errors.
-    PRUint32 maxAdvance = PRUint32(GetFontAt(0)->GetMetrics().maxAdvance);
-    PRUint32 chars = 0x7FFF/PR_MAX(1, maxAdvance);
-    
-    PRUint32 realGuessMax = PR_MAX(1, chars);
-    
-    // bug 436663 - ATSUI crashes on 10.5.3 with certain character sequences 
-    // at around 512 characters, so for safety sake max out at 500 characters
-    // bug 480134 - Do this for all OSX versions now, because there may be
-    // other related bugs on 10.4.
-    realGuessMax = PR_MIN(500, realGuessMax);
-
-    return realGuessMax;
-}
-
-/*
- * ATSUI can't handle more than 32K pixels of text. We can easily have
- * textruns longer than that. Our strategy here is to divide the textrun up
- * into pieces each of which is less than 32K pixels wide. We pick a number
- * of characters 'maxLen' such that the first font's max-advance times that
- * number of characters is less than 32K pixels; then we try glyph conversion
- * of the string broken up into chunks each with no more than 'maxLen'
- * characters. That could fail (e.g. if fallback fonts are used); if it does,
- * we retry with a smaller maxLen. When breaking up the string into chunks
- * we prefer to break at space boundaries because spaces don't kern or ligate
- * with other characters, usually. We insist on breaking at cluster boundaries.
- * If the font size is incredibly huge and/or clusters are very large, this
- * could mean that we actually put more than 'maxLen' characters in a chunk.
- */
-
-gfxTextRun *
-gfxAtsuiFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
-                               const Parameters *aParams, PRUint32 aFlags)
-{
-    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
-    if (!textRun)
-        return nsnull;
-
-    gfxPlatformMac::SetupClusterBoundaries(textRun, aString);
-
-    PRUint32 maxLen;
-    nsAutoString utf16;
-    for (maxLen = GuessMaximumStringLength(); maxLen > 0; maxLen /= 2) {
-        PRUint32 start = 0;
-        while (start < aLength) {
-            PRUint32 len = FindTextRunSegmentLength(textRun, start, maxLen);
-
-            utf16.Truncate();
-            AppendDirectionalIndicatorStart(aFlags, utf16);
-            PRUint32 layoutStart = utf16.Length();
-            utf16.Append(aString + start, len);
-            // Ensure that none of the whitespace in the run is considered "trailing"
-            // by ATSUI's bidi algorithm
-            PRUint32 trailingCharsToIgnore =
-                AppendDirectionalIndicatorEnd(PR_TRUE, utf16);
-            PRUint32 layoutLength = len + trailingCharsToIgnore;
-            if (!InitTextRun(textRun, utf16.get(), utf16.Length(),
-                             layoutStart, layoutLength,
-                             start, len) && maxLen > 1)
-                break;
-            start += len;
-        }
-        if (start == aLength)
-            break;
-        textRun->ResetGlyphRuns();
-    }
-
-    textRun->FetchGlyphExtents(aParams->mContext);
-
-    return textRun;
-}
-
-gfxTextRun *
-gfxAtsuiFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
-                               const Parameters *aParams, PRUint32 aFlags)
-{
-    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
-    NS_ASSERTION(aFlags & TEXT_IS_8BIT, "should be marked 8bit");
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
-    if (!textRun)
-        return nsnull;
-
-    PRUint32 maxLen;
-    nsAutoString utf16;
-    for (maxLen = GuessMaximumStringLength(); maxLen > 0; maxLen /= 2) {
-        PRUint32 start = 0;
-        while (start < aLength) {
-            PRUint32 len = FindTextRunSegmentLength(textRun, start, maxLen);
-
-            nsDependentCSubstring cString(reinterpret_cast<const char*>(aString + start),
-                                          reinterpret_cast<const char*>(aString + start + len));
-            utf16.Truncate();
-            PRBool wrapBidi = (aFlags & TEXT_IS_RTL) != 0;
-            if (wrapBidi) {
-                AppendDirectionalIndicatorStart(aFlags, utf16);
-            }
-            PRUint32 layoutStart = utf16.Length();
-            AppendASCIItoUTF16(cString, utf16);
-            PRUint32 trailingCharsToIgnore =
-                AppendDirectionalIndicatorEnd(wrapBidi, utf16);
-            PRUint32 layoutLength = len + trailingCharsToIgnore;
-            if (!InitTextRun(textRun, utf16.get(), utf16.Length(),
-                             layoutStart, layoutLength,
-                             start, len) && maxLen > 1)
-                break;
-            start += len;
-        }
-        if (start == aLength)
-            break;
-        textRun->ResetGlyphRuns();
-    }
-
-    textRun->FetchGlyphExtents(aParams->mContext);
-
-    return textRun;
-}
-
-PRBool
-gfxAtsuiFontGroup::HasFont(ATSFontRef aFontRef)
-{
-    for (PRUint32 i = 0; i < mFonts.Length(); ++i) {
-        if (aFontRef == static_cast<gfxAtsuiFont *>(mFonts.ElementAt(i).get())->GetATSFontRef())
-            return PR_TRUE;
-    }
-    return PR_FALSE;
-}
-
-struct PrefFontCallbackData {
-    PrefFontCallbackData(nsTArray<nsRefPtr<gfxFontFamily> >& aFamiliesArray) 
-        : mPrefFamilies(aFamiliesArray)
-    {}
-
-    nsTArray<nsRefPtr<gfxFontFamily> >& mPrefFamilies;
-
-    static PRBool AddFontFamilyEntry(eFontPrefLang aLang, const nsAString& aName, void *aClosure)
-    {
-        PrefFontCallbackData *prefFontData = static_cast<PrefFontCallbackData*>(aClosure);
-        
-        gfxFontFamily *family = gfxMacPlatformFontList::PlatformFontList()->FindFamily(aName);
-        if (family) {
-            prefFontData->mPrefFamilies.AppendElement(family);
-        }
-        return PR_TRUE;
-    }
-};
-
-
-already_AddRefed<gfxFont>
-gfxAtsuiFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
-{
-    gfxFont *font;
-
-    // FindCharUnicodeRange only supports BMP character points and there are no non-BMP fonts in prefs
-    if (aCh > 0xFFFF)
-        return nsnull;
-
-    // get the pref font list if it hasn't been set up already
-    PRUint32 unicodeRange = FindCharUnicodeRange(aCh);
-    eFontPrefLang charLang = gfxPlatformMac::GetFontPrefLangFor(unicodeRange);
-
-    // if the last pref font was the first family in the pref list, no need to recheck through a list of families
-    if (mLastPrefFont && charLang == mLastPrefLang && mLastPrefFirstFont && mLastPrefFont->TestCharacterMap(aCh)) {
-        font = mLastPrefFont;
-        NS_ADDREF(font);
-        return font;
-    }
-
-    // based on char lang and page lang, set up list of pref lang fonts to check
-    eFontPrefLang prefLangs[kMaxLenPrefLangList];
-    PRUint32 i, numLangs = 0;
-
-    gfxPlatformMac *macPlatform = gfxPlatformMac::GetPlatform();
-    macPlatform->GetLangPrefs(prefLangs, numLangs, charLang, mPageLang);
-
-    for (i = 0; i < numLangs; i++) {
-        nsAutoTArray<nsRefPtr<gfxFontFamily>, 5> families;
-        eFontPrefLang currentLang = prefLangs[i];
-        
-        gfxMacPlatformFontList *fc = gfxMacPlatformFontList::PlatformFontList();
-
-        // get the pref families for a single pref lang
-        if (!fc->GetPrefFontFamilyEntries(currentLang, &families)) {
-            eFontPrefLang prefLangsToSearch[1] = { currentLang };
-            PrefFontCallbackData prefFontData(families);
-            gfxPlatform::ForEachPrefFont(prefLangsToSearch, 1, PrefFontCallbackData::AddFontFamilyEntry,
-                                           &prefFontData);
-            fc->SetPrefFontFamilyEntries(currentLang, families);
-        }
-
-        // find the first pref font that includes the character
-        PRUint32  i, numPrefs;
-        numPrefs = families.Length();
-        for (i = 0; i < numPrefs; i++) {
-            // look up the appropriate face
-            gfxFontFamily *family = families[i];
-            if (!family) continue;
-            
-            // if a pref font is used, it's likely to be used again in the same text run.
-            // the style doesn't change so the face lookup can be cached rather than calling
-            // GetOrMakeFont repeatedly.  speeds up FindFontForChar lookup times for subsequent
-            // pref font lookups
-            if (family == mLastPrefFamily && mLastPrefFont->TestCharacterMap(aCh)) {
-                font = mLastPrefFont;
-                NS_ADDREF(font);
-                return font;
-            }
-            
-            PRBool needsBold;
-            MacOSFontEntry *fe =
-                static_cast<MacOSFontEntry*>(family->FindFontForStyle(mStyle, needsBold));
-            // if ch in cmap, create and return a gfxFont
-            if (fe && fe->TestCharacterMap(aCh)) {
-                nsRefPtr<gfxAtsuiFont> prefFont = GetOrMakeFont(fe, &mStyle, needsBold);
-                if (!prefFont) continue;
-                mLastPrefFamily = family;
-                mLastPrefFont = prefFont;
-                mLastPrefLang = charLang;
-                mLastPrefFirstFont = (i == 0);
-                nsRefPtr<gfxFont> font2 = prefFont.get();
-                return font2.forget();
-            }
-
-        }
-    }
-
-    return nsnull;
-}
-
-already_AddRefed<gfxFont> 
-gfxAtsuiFontGroup::WhichSystemFontSupportsChar(PRUint32 aCh)
-{
-    MacOSFontEntry *fe;
-
-    fe = static_cast<MacOSFontEntry*>
-        (gfxMacPlatformFontList::PlatformFontList()->FindFontForChar(aCh, GetFontAt(0)));
-    if (fe) {
-        nsRefPtr<gfxAtsuiFont> atsuiFont = GetOrMakeFont(fe, &mStyle, PR_FALSE); // ignore bolder considerations in system fallback case...
-        nsRefPtr<gfxFont> font = atsuiFont.get(); 
-        return font.forget();
-    }
-
-    return nsnull;
-}
-
-void
-gfxAtsuiFontGroup::UpdateFontList()
-{
-    // if user font set is set, check to see if font list needs updating
-    if (mUserFontSet && mCurrGeneration != GetGeneration()) {
-        // xxx - can probably improve this to detect when all fonts were found, so no need to update list
-        mFonts.Clear();
-        mUnderlineOffset = UNDERLINE_OFFSET_NOT_SET;
-        InitFontList();
-        mCurrGeneration = GetGeneration();
-    }
-}
-
-
 /**
  * Simple wrapper for ATSU "direct data arrays"
  */
@@ -977,9 +543,8 @@ private:
  */
 static PRBool
 PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aTextRun,
-                   const PRUnichar *aString, PRInt32 aLayoutLength,
-                   PRInt32 aOffsetInTextRun, PRInt32 aLengthInTextRun,
-                   const PRPackedBool *aUnmatched)
+                   const PRUnichar *aString, PRInt32 aStartOffset,
+                   PRInt32 aRunStart, PRInt32 aRunLength)
 {
     AutoLayoutDataArrayPtr baselineDeltasArray(aLine, kATSUDirectDataBaselineDeltaFixedArray);
     Fixed *baselineDeltas = static_cast<Fixed *>(baselineDeltasArray.mArray);
@@ -1001,23 +566,6 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aTextRun,
 
     PRBool isLTR = !aTextRun->IsRightToLeft();
 
-    PRUint32 trailingCharactersToIgnore = aLayoutLength - aLengthInTextRun;
-    if (trailingCharactersToIgnore > 0) {
-        // The glyph array includes a glyph for the artificial trailing
-        // non-whitespace character. Strip that glyph from the array now.
-        if (isLTR) {
-            NS_ASSERTION((PRInt32)glyphRecords[numGlyphs - trailingCharactersToIgnore].originalOffset == aLengthInTextRun*2,
-                         "Couldn't find glyph for trailing marker");
-        } else {
-            NS_ASSERTION((PRInt32)glyphRecords[trailingCharactersToIgnore - 1].originalOffset == aLengthInTextRun*2,
-                         "Couldn't find glyph for trailing marker");
-            glyphRecords += trailingCharactersToIgnore;
-        }
-        numGlyphs -= trailingCharactersToIgnore;
-        if (numGlyphs == 0)
-            return PR_FALSE;
-    }
-
     PRUint32 allFlags = 0;
     PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
 
@@ -1028,17 +576,20 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aTextRun,
 
     static const PRInt32 NO_GLYPH = -1;
     nsAutoTArray<PRInt32,128> charToGlyphArray;
-    if (!charToGlyphArray.SetLength(aLengthInTextRun))
+    if (!charToGlyphArray.SetLength(aRunLength))
         return NS_ERROR_OUT_OF_MEMORY;
 
     PRInt32 *charToGlyph = charToGlyphArray.Elements();
-    for (PRInt32 offset = 0; offset < aLengthInTextRun; ++offset) {
+    for (PRInt32 offset = 0; offset < aRunLength; ++offset) {
         charToGlyph[offset] = NO_GLYPH;
     }
     for (PRInt32 g = 0; g < numGlyphs; ++g) {
         // Note that ATSUI's "originalOffset" is measured in bytes, hence the use of
         // originalOffset/2 throughout this function
-        charToGlyph[glyphRecords[g].originalOffset/2] = g;
+        PRInt32 loc = glyphRecords[g].originalOffset/2;
+        if (loc >= 0 && loc < aRunLength) {
+            charToGlyph[loc] = g;
+        }
     }
 
     // Find character and glyph clumps that correspond, allowing for ligatures,
@@ -1058,15 +609,15 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aTextRun,
     // so we won't necessarily use everything we find here.
 
     PRInt32 glyphStart = 0; // looking for a clump that starts at this glyph index
-    PRInt32 charStart = isLTR ? 0 : aLengthInTextRun-1; // and this char index
+    PRInt32 charStart = isLTR ? 0 : aRunLength-1; // and this char index
     PRInt32 direction = isLTR ? 1 : -1; // increment to use for iterating through characters
 
     while (glyphStart < numGlyphs) { // keep finding groups until all glyphs are accounted for
 
-        PRInt32 charEnd = (PRInt32)glyphRecords[glyphStart].originalOffset/2;
-        PRInt32 charLimit = isLTR ? aLengthInTextRun : -1;
-        PRInt32 glyphEnd = glyphStart;
         PRBool inOrder = PR_TRUE;
+        PRInt32 charEnd = (PRInt32)glyphRecords[glyphStart].originalOffset/2;
+        PRInt32 glyphEnd = glyphStart;
+        PRInt32 charLimit = isLTR ? aRunLength : -1;
         do {
             // This is normally executed once for each iteration of the outer loop,
             // but in unusual cases where the character/glyph association is complex,
@@ -1120,6 +671,11 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aTextRun,
                 break;
             }
 
+            if (glyphEnd == glyphStart) {
+                // no glyphs, try to extend the clump
+                continue;
+            }
+
             // check whether all glyphs in the range are associated with the characters
             // in our clump; if not, we have a discontinuous range, and should extend it
             // unless we've reached the end of the text
@@ -1160,15 +716,15 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aTextRun,
         // and endCharIndex to the limit (position beyond the last char).
         PRInt32 baseCharIndex, endCharIndex;
         if (isLTR) {
-            baseCharIndex = charStart;
-            endCharIndex = charEnd;
+            baseCharIndex = charStart + aRunStart;
+            endCharIndex = charEnd + aRunStart;
         } else {
-            baseCharIndex = charEnd + 1;
-            endCharIndex = charStart + 1;
+            baseCharIndex = charEnd + aRunStart + 1;
+            endCharIndex = charStart + aRunStart + 1;
         }
 
         // Check if the clump falls outside our range; if so, just go to the next.
-        if (baseCharIndex >= aLayoutLength || endCharIndex <= 0) {
+        if (baseCharIndex >= aRunStart + aRunLength || endCharIndex <= aRunStart) {
             glyphStart = glyphEnd;
             charStart = charEnd;
             continue;
@@ -1176,27 +732,8 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aTextRun,
 
         // charIndex might be < 0 if we had a leading combining mark, for example,
         // that got ligated with the space that was prefixed to the string
-        baseCharIndex = PR_MAX(baseCharIndex, 0);
-        endCharIndex = PR_MIN(endCharIndex, aLayoutLength);
-
-        // record missing glyphs in the textRun
-        if (aUnmatched && aUnmatched[baseCharIndex]) {
-            for (PRInt32 i = baseCharIndex; i < endCharIndex; ++i) {
-                if (NS_IS_HIGH_SURROGATE(aString[i]) &&
-                    i + 1 < aLayoutLength &&
-                    NS_IS_LOW_SURROGATE(aString[i + 1])) {
-                    aTextRun->SetMissingGlyph(aOffsetInTextRun + i,
-                                              SURROGATE_TO_UCS4(aString[i],
-                                                                aString[i + 1]));
-                    ++i;
-                } else {
-                    aTextRun->SetMissingGlyph(aOffsetInTextRun + i, aString[i]);
-                }
-            }
-            glyphStart = glyphEnd;
-            charStart = charEnd;
-            continue;
-        }
+        baseCharIndex = PR_MAX(baseCharIndex, aRunStart);
+        endCharIndex = PR_MIN(endCharIndex, aRunStart + aRunLength);
 
         // Now we're ready to set the glyph info in the textRun; measure the glyph width
         // of the first (perhaps only) glyph, to see if it is "Simple"
@@ -1209,11 +746,6 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aTextRun,
                                        glyphRecords[glyphStart].realPos);
         }
         PRInt32 advance = PRInt32(toNextGlyph * appUnitsPerDevUnit);
-
-        // update base- and endCharIndex to be absolute within the textRun/
-        // for setting glyph info
-        baseCharIndex += aOffsetInTextRun;
-        endCharIndex += aOffsetInTextRun;
 
         // Check if it's a simple one-to-one mapping
         PRInt32 glyphsInClump = glyphEnd - glyphStart;
@@ -1274,12 +806,9 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aTextRun,
 struct PostLayoutCallbackClosure {
     gfxTextRun                  *mTextRun;
     const PRUnichar             *mString;
-    PRUint32                     mLayoutLength;
+    PRUint32                     mStartOffset;
     PRUint32                     mOffsetInTextRun;
     PRUint32                     mLengthInTextRun;
-    // Either null or an array of stringlength booleans set to true for
-    // each character that did not match any fonts
-    nsAutoArrayPtr<PRPackedBool> mUnmatchedChars;
     // The callback *sets* this to indicate whether there were overrunning glyphs
     PRPackedBool                 mOverrunningGlyphs;
 };
@@ -1297,133 +826,126 @@ PostLayoutOperationCallback(ATSULayoutOperationSelector iCurrentOperation,
     gCallbackClosure->mOverrunningGlyphs =
         PostLayoutCallback(iLineRef, gCallbackClosure->mTextRun,
                            gCallbackClosure->mString,
-                           gCallbackClosure->mLayoutLength,
+                           gCallbackClosure->mStartOffset,
                            gCallbackClosure->mOffsetInTextRun,
-                           gCallbackClosure->mLengthInTextRun,
-                           gCallbackClosure->mUnmatchedChars);
+                           gCallbackClosure->mLengthInTextRun);
     *oCallbackStatus = kATSULayoutOperationCallbackStatusContinue;
     return noErr;
 }
 
-// 361695 - ATSUI only does glyph mirroring when the font contains a 'prop' table
-// with glyph mirroring info, the character mirroring has to be done manually in the 
-// fallback case.  Only used for RTL text runs.  The autoptr for the mirrored copy
-// is owned by the calling routine.
-
-// MirrorSubstring - Do Unicode mirroring on characters within a substring.  If mirroring 
-// needs to be done, copy the original string and change the ATSUI layout to use the mirrored copy.
-//
-//   @param layout      ATSUI layout for the entire text run
-//   @param mirrorStr   container used for mirror string, null until a mirrored character is found
-//   @param aString     original string
-//   @param aLength     length of the original string
-//   @param runStart    start offset of substring to be mirrored
-//   @param runLength   length of substring to be mirrored
-
-static void MirrorSubstring(ATSUTextLayout layout, nsAutoArrayPtr<PRUnichar>& mirroredStr,
-                            const PRUnichar *aString, PRUint32 aLength,
-                            UniCharArrayOffset runStart, UniCharCount runLength)
+void
+gfxAtsuiFont::InitTextRun(gfxTextRun *aTextRun,
+                          const PRUnichar *aString,
+                          PRUint32 aRunStart,
+                          PRUint32 aRunLength)
 {
-    UniCharArrayOffset  off;
+    // TODO: limit length of text we pass to ATSUI
+    // But is it worth doing, as ATSUI will be going away?
+    // This code is doomed, as soon as we officially pull the plug
+    // on 10.4 support on trunk.
 
-    // do the mirroring manually!!
-    for (off = runStart; off < runStart + runLength; off++) {
-        PRUnichar  mirroredChar;
-        
-        mirroredChar = (PRUnichar) SymmSwap(aString[off]);
-        if (mirroredChar != aString[off]) {
-            // string contains characters that need to be mirrored
-            if (mirroredStr == NULL) {
-            
-                // copy the string
-                mirroredStr = new PRUnichar[aLength];
-                memcpy(mirroredStr, aString, sizeof(PRUnichar) * aLength);
-                
-                // adjust the layout
-                ATSUTextMoved(layout, mirroredStr);
-                
+    PRBool isRTL = aTextRun->IsRightToLeft();
+
+    // we need to bidi-wrap the text if the run is RTL,
+    // or if it is an LTR run but may contain (overridden) RTL chars
+    PRBool bidiWrap = isRTL;
+    if (!bidiWrap && (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) == 0) {
+        PRUint32 i;
+        for (i = aRunStart; i < aRunStart + aRunLength; ++i) {
+            if (gfxFontUtils::PotentialRTLChar(aString[i])) {
+                bidiWrap = PR_TRUE;
+                break;
             }
-            mirroredStr[off] = mirroredChar;
         }
     }
-}
 
+    // If there's a possibility of any bidi, we wrap the text with direction overrides
+    // to ensure neutrals or characters that were bidi-overridden in HTML behave properly.
+    const UniChar beginLTR[]    = { 0x202d };
+    const UniChar beginRTL[]    = { 0x202e };
+    const UniChar endBidiWrap[] = { 0x202c };
 
+    const UniChar *textPtr;
+    PRUint32 startOffset;
+    nsAutoArrayPtr<UniChar> textBuffer;
+    if (bidiWrap) {
+        startOffset = isRTL ?
+            sizeof(beginRTL) / sizeof(beginRTL[0]) : sizeof(beginLTR) / sizeof(beginLTR[0]);
+        UniCharCount len = startOffset + aRunLength + sizeof(endBidiWrap) / sizeof(endBidiWrap[0]);
+        textBuffer = new UniChar[len];
+        ::memcpy(textBuffer.get(), isRTL ? beginRTL : beginLTR, startOffset * sizeof(UniChar));
+        if (isRTL && !HasMirroringInfo()) {
+            // 361695 - ATSUI only does glyph mirroring when the font contains a 'prop' table
+            // with glyph mirroring info, the character mirroring has to be done manually in the 
+            // fallback case.  Only used for RTL text runs.
+            PRUint32 i;
+            for (i = 0; i < aRunLength; ++i) {
+                textBuffer[startOffset + i] = SymmSwap(aString[aRunStart + i]);
+            }
+        } else {
+            ::memcpy(textBuffer.get() + startOffset, aString + aRunStart, aRunLength * sizeof(UniChar));
+        }
+        ::memcpy(textBuffer.get() + startOffset + aRunLength, endBidiWrap, sizeof(endBidiWrap));
+        textPtr = textBuffer.get();
+    } else {
+        startOffset = 0;
+        textPtr = aString + aRunStart;
+    }
 
-static ATSUStyle
-SetLayoutRangeToFont(ATSUTextLayout layout, ATSUStyle mainStyle, UniCharArrayOffset offset,
-                      UniCharCount length, ATSUFontID fontID)
-{
-    ATSUStyle subStyle;
-    ATSUCreateStyle (&subStyle);
-    ATSUCopyAttributes (mainStyle, subStyle);
-
-    ATSUAttributeTag fontTags[] = { kATSUFontTag };
-    ByteCount fontArgSizes[] = { sizeof(ATSUFontID) };
-    ATSUAttributeValuePtr fontArgs[] = { &fontID };
-
-    ATSUSetAttributes (subStyle, 1, fontTags, fontArgSizes, fontArgs);
-
-    // apply the new style to the layout for the changed substring
-    ATSUSetRunStyle (layout, subStyle, offset, length);
-
-    return subStyle;
-}
-
-PRBool
-gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
-                               const PRUnichar *aString, PRUint32 aLength,
-                               PRUint32 aLayoutStart, PRUint32 aLayoutLength,
-                               PRUint32 aOffsetInTextRun, PRUint32 aLengthInTextRun)
-{
     OSStatus status;
-    gfxAtsuiFont *firstFont = GetFontAt(0);
-    ATSUStyle mainStyle = firstFont->GetATSUStyle();
-    nsTArray<ATSUStyle> stylesToDispose;
-    const PRUnichar *layoutString = aString + aLayoutStart;
+    ATSUStyle atsuStyle = GetATSUStyle();
 
-#ifdef DUMP_TEXT_RUNS
-    NS_ConvertUTF16toUTF8 str(layoutString, aLengthInTextRun);
-    NS_ConvertUTF16toUTF8 families(mFamilies);
-    PR_LOG(gAtsuiTextRunLog, PR_LOG_DEBUG,\
-           ("InitTextRun %p fontgroup %p (%s) lang: %s len %d TEXTRUN \"%s\" ENDTEXTRUN\n",
-            aRun, this, families.get(), mStyle.langGroup.get(), aLengthInTextRun, str.get()) );
-//    PR_LOG(gAtsuiTextRunLog, PR_LOG_DEBUG,
-//           ("InitTextRun font: %s user font set: %p (%8.8x)\n",
-//            NS_ConvertUTF16toUTF8(firstFont->GetUniqueName()).get(), mUserFontSet, PRUint32(mCurrGeneration)) );
-#endif
-
-    if (aRun->GetFlags() & TEXT_DISABLE_OPTIONAL_LIGATURES) {
-        status = ATSUCreateAndCopyStyle(mainStyle, &mainStyle);
+    if (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES) {
+        status = ::ATSUCreateAndCopyStyle(atsuStyle, &atsuStyle);
         if (status == noErr) {
-            stylesToDispose.AppendElement(mainStyle);
-            DisableCommonLigatures(mainStyle);
+            DisableCommonLigatures(atsuStyle);
+        } else {
+            // out of memory? we're probably going to die anyway....!
+            atsuStyle = GetATSUStyle();
         }
     }
 
-    UniCharCount runLengths = aLengthInTextRun;
+    // Bug 532346: Work around rendering failure with Apple LiGothic font on 10.6,
+    // triggered by U+775B.
+    // We record the offset(s) in the text where this character occurs, and replace
+    // them with U+775C, which has the same metrics but doesn't disrupt ATSUI layout.
+    // Then after layout is complete, we poke the correct glyph for U+775B into the
+    // text run at the recorded positions.
+    nsTArray<PRUint32> hackForLiGothic;
+
+    MacOSFontEntry *fe = static_cast<MacOSFontEntry*>(GetFontEntry());
+    if (fe->UseLiGothicAtsuiHack()) {
+        PRUnichar *text = const_cast<PRUnichar*>(textPtr);
+        for (PRUint32 i = startOffset; i < startOffset + aRunLength; ++i) {
+            if (text[i] == kLiGothicBadCharUnicode) {
+                hackForLiGothic.AppendElement(i);
+                text[i] = kLiGothicBadCharUnicode + 1;
+            }
+        }
+    }
+
     ATSUTextLayout layout;
     // Create the text layout for the whole string, but only produce glyphs
     // for the text inside LRO/RLO - PDF, if present. For wrapped strings
     // we do need to produce glyphs for the trailing non-whitespace
     // character to ensure that ATSUI treats all whitespace as non-trailing.
-    status = ATSUCreateTextLayoutWithTextPtr
-        (aString,
-         aLayoutStart,
-         aLayoutLength,
-         aLength,
-         1,
-         &runLengths,
-         &mainStyle,
-         &layout);
+    UniCharCount runLength = aRunLength;
+    status = ::ATSUCreateTextLayoutWithTextPtr(textPtr,
+                                               startOffset,
+                                               aRunLength,
+                                               startOffset + aRunLength,
+                                               1,
+                                               &runLength,
+                                               &atsuStyle,
+                                               &layout);
     // XXX error check here?
 
     PostLayoutCallbackClosure closure;
-    closure.mTextRun = aRun;
-    closure.mString = layoutString;
-    closure.mLayoutLength = aLayoutLength;
-    closure.mOffsetInTextRun = aOffsetInTextRun;
-    closure.mLengthInTextRun = aLengthInTextRun;
+    closure.mTextRun = aTextRun;
+    closure.mString = textPtr;
+    closure.mStartOffset = startOffset;
+    closure.mOffsetInTextRun = aRunStart;
+    closure.mLengthInTextRun = aRunLength;
     NS_ASSERTION(!gCallbackClosure, "Reentering InitTextRun? Expect disaster!");
     gCallbackClosure = &closure;
 
@@ -1433,195 +955,55 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
 
     // Set up our layout attributes
     ATSLineLayoutOptions lineLayoutOptions = kATSLineKeepSpacesOutOfMargin | kATSLineHasNoHangers;
+    Boolean lineDirection = isRTL ? kATSURightToLeftBaseDirection : kATSULeftToRightBaseDirection;
 
     static ATSUAttributeTag layoutTags[] = {
         kATSULineLayoutOptionsTag,
-        kATSULayoutOperationOverrideTag
+        kATSULayoutOperationOverrideTag,
+        kATSULineDirectionTag
     };
     static ByteCount layoutArgSizes[] = {
         sizeof(ATSLineLayoutOptions),
-        sizeof(ATSULayoutOperationOverrideSpecifier)
+        sizeof(ATSULayoutOperationOverrideSpecifier),
+        sizeof(Boolean)
     };
 
     ATSUAttributeValuePtr layoutArgs[] = {
         &lineLayoutOptions,
-        &override
+        &override,
+        &lineDirection
     };
-    ATSUSetLayoutControls(layout,
-                          NS_ARRAY_LENGTH(layoutTags),
-                          layoutTags,
-                          layoutArgSizes,
-                          layoutArgs);
-
-    /* Now go through and update the styles for the text, based on font matching. */
-
-    nsAutoArrayPtr<PRUnichar> mirroredStr;
-
-    UniCharArrayOffset runStart = aLayoutStart;
-    UniCharCount runLength = aLengthInTextRun;
-
-    /// ---- match fonts using cmap info instead of ATSUI ----
-
-    nsTArray<gfxTextRange> fontRanges;
-
-    ComputeRanges(fontRanges, aString, runStart, runStart + runLength);
-
-    PRUint32 r, numRanges = fontRanges.Length();
-
-    // Bug 532346: Work around rendering failure with Apple LiGothic font on 10.6,
-    // triggered by U+775B.
-    // We record the offset(s) in layoutString where this character occurs, and replace
-    // them with U+775C, which has the same metrics but doesn't disrupt ATSUI layout.
-    // Then after layout is complete, we poke the correct glyph for U+775B into the
-    // text run at the recorded positions.
-    nsTArray<PRUint32> hackForLiGothic;
-
-    for (r = 0; r < numRanges; r++) {
-        const gfxTextRange& range = fontRanges[r];
-   
-        gfxAtsuiFont *matchedFont;
-        UniCharCount  matchedLength;
-        
-        // match a range of text
-        matchedLength = range.Length();
-        matchedFont = static_cast<gfxAtsuiFont*> (range.font ? range.font.get() : nsnull);
-
-#ifdef DUMP_TEXT_RUNS
-        PR_LOG(gAtsuiTextRunLog, PR_LOG_DEBUG, ("InitTextRun %p fontgroup %p font %p match %s (%d-%d)", aRun, this, matchedFont, (matchedFont ? NS_ConvertUTF16toUTF8(matchedFont->GetUniqueName()).get() : "<null>"), runStart, matchedLength));
-#endif
-        //printf("Matched: %s [%d, %d)\n", (matchedFont ? NS_ConvertUTF16toUTF8(matchedFont->GetUniqueName()).get() : "<null>"), runStart, runStart + matchedLength);
-        
-        // in the RTL case, handle fallback mirroring
-        if (aRun->IsRightToLeft() && matchedFont && !matchedFont->HasMirroringInfo()) {
-            MirrorSubstring(layout, mirroredStr, aString, aLength, runStart, runLength);
-        }       
-
-        // if no matched font, mark as unmatched
-        if (!matchedFont) {
-        
-            aRun->AddGlyphRun(firstFont, aOffsetInTextRun + runStart - aLayoutStart, PR_TRUE);
-            
-            if (!closure.mUnmatchedChars) {
-                closure.mUnmatchedChars = new PRPackedBool[aLength];
-                if (closure.mUnmatchedChars) {
-                    //printf("initializing %d\n", aLength);
-                    memset(closure.mUnmatchedChars.get(), PR_FALSE, aLength);
-                }
-            }
-
-            if (closure.mUnmatchedChars) {
-                //printf("setting %d unmatched from %d\n", matchedLength, runStart - headerChars);
-                memset(closure.mUnmatchedChars.get() + runStart - aLayoutStart,
-                       PR_TRUE, matchedLength);
-            }
-            
-        } else {
-        
-            if (matchedFont != firstFont) {
-                // create a new sub-style and add it to the layout
-                ATSUStyle subStyle = SetLayoutRangeToFont(layout, mainStyle, runStart,
-                                                          matchedLength, matchedFont->GetATSFontRef());
-                stylesToDispose.AppendElement(subStyle);
-            }
-
-            // add a glyph run for the matched substring
-            aRun->AddGlyphRun(matchedFont, aOffsetInTextRun + runStart - aLayoutStart, PR_TRUE);
-
-            if (matchedFont->GetFontEntry()->UseLiGothicAtsuiHack()) {
-                PRUnichar *text = const_cast<PRUnichar*>(layoutString);
-                for (PRUint32 i = 0; i < matchedLength; ++i) {
-                    if (text[aOffsetInTextRun + runStart + i] ==
-                        kLiGothicBadCharUnicode) {
-                        hackForLiGothic.AppendElement(aOffsetInTextRun +
-                                                      runStart + i);
-                        text[aOffsetInTextRun + runStart + i] =
-                            kLiGothicBadCharUnicode + 1;
-                    }
-                }
-            }
-        }
-        
-        runStart += matchedLength;
-        runLength -= matchedLength;    
-    }
-
-
-    /// -------------------------------------------------
-
-    // xxx - for some reason, this call appears to be needed to avoid assertions about glyph runs not being coalesced properly
-    //       this appears to occur when there are unmatched characters in the text run
-    aRun->SortGlyphRuns();
+    ::ATSUSetLayoutControls(layout,
+                            NS_ARRAY_LENGTH(layoutTags),
+                            layoutTags,
+                            layoutArgSizes,
+                            layoutArgs);
 
     // Trigger layout so that our callback fires. We don't actually care about
     // the result of this call.
     ATSTrapezoid trap;
     ItemCount trapCount;
-    ATSUGetGlyphBounds(layout, 0, 0, aLayoutStart, aLengthInTextRun,
-                       kATSUseFractionalOrigins, 1, &trap, &trapCount); 
+    ::ATSUGetGlyphBounds(layout, 0, 0, startOffset, aRunLength,
+                         kATSUseFractionalOrigins, 1, &trap, &trapCount); 
 
-    ATSUDisposeTextLayout(layout);
+    ::ATSUDisposeTextLayout(layout);
 
-    aRun->AdjustAdvancesForSyntheticBold(aOffsetInTextRun, aLengthInTextRun);
+    aTextRun->AdjustAdvancesForSyntheticBold(aRunStart, aRunLength);
 
     for (PRUint32 i = 0; i < hackForLiGothic.Length(); ++i) {
         gfxTextRun::CompressedGlyph glyph =
-            aRun->GetCharacterGlyphs()[hackForLiGothic[i]];
+            aTextRun->GetCharacterGlyphs()[aRunStart + hackForLiGothic[i]];
         if (glyph.IsSimpleGlyph()) {
-            aRun->SetSimpleGlyph(hackForLiGothic[i],
+            aTextRun->SetSimpleGlyph(aRunStart + hackForLiGothic[i],
                                  glyph.SetSimpleGlyph(glyph.GetSimpleAdvance(),
                                                       kLiGothicBadCharGlyph));
         }
     }
 
-    PRUint32 i;
-    for (i = 0; i < stylesToDispose.Length(); ++i) {
-        ATSUDisposeStyle(stylesToDispose[i]);
+    if (atsuStyle != GetATSUStyle()) {
+        ::ATSUDisposeStyle(atsuStyle);
     }
     gCallbackClosure = nsnull;
-    return !closure.mOverrunningGlyphs;
-}
-
-void
-gfxAtsuiFontGroup::InitFontList()
-{
-    ForEachFont(FindATSFont, this);
-
-    if (mFonts.Length() == 0) {
-        // XXX this will generate a list of the lang groups for which we have no
-        // default fonts for on the mac; we should fix this!
-        // Known:
-        // ja x-beng x-devanagari x-tamil x-geor x-ethi x-gujr x-mlym x-armn
-        // x-orya x-telu x-knda x-sinh
-
-        //fprintf (stderr, "gfxAtsuiFontGroup: %s [%s] -> %d fonts found\n", NS_ConvertUTF16toUTF8(families).get(), mStyle.langGroup.get(), mFonts.Length());
-
-        // If we get here, we most likely didn't have a default font for
-        // a specific langGroup.  Let's just pick the default OSX
-        // user font.
-
-        PRBool needsBold;
-        MacOSFontEntry *defaultFont = static_cast<MacOSFontEntry*>
-            (gfxMacPlatformFontList::PlatformFontList()->GetDefaultFont(&mStyle, needsBold));
-        NS_ASSERTION(defaultFont, "invalid default font returned by GetDefaultFont");
-
-        nsRefPtr<gfxAtsuiFont> font = GetOrMakeFont(defaultFont, &mStyle, needsBold);
-
-        if (font) {
-            mFonts.AppendElement(font);
-        }
-    }
-
-    if (!mStyle.systemFont) {
-        for (PRUint32 i = 0; i < mFonts.Length(); ++i) {
-            gfxAtsuiFont* font = static_cast<gfxAtsuiFont*>(mFonts[i].get());
-            if (font->GetFontEntry()->mIsBadUnderlineFont) {
-                gfxFloat first = mFonts[0]->GetMetrics().underlineOffset;
-                gfxFloat bad = font->GetMetrics().underlineOffset;
-                mUnderlineOffset = PR_MIN(first, bad);
-                break;
-            }
-        }
-    }
 }
 
 #endif /* not __LP64__ */

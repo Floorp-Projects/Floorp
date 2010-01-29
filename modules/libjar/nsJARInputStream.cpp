@@ -346,7 +346,7 @@ nsJARInputStream::ReadDirectory(char* aBuffer, PRUint32 aCount, PRUint32 *aBytes
 
             // Last Modified Time
             PRExplodedTime tm;
-            PR_ExplodeTime(GetModTime(ze->Date(), ze->Time()), PR_GMTParameters, &tm);
+            PR_ExplodeTime(ze->LastModTime(), PR_GMTParameters, &tm);
             char itemLastModTime[65];
             PR_FormatTimeUSEnglish(itemLastModTime,
                                    sizeof(itemLastModTime),

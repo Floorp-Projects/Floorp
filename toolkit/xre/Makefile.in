@@ -147,6 +147,7 @@ endif
 
 ifeq ($(OS_ARCH),Linux)
 SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/linux/crash_generation/$(LIB_PREFIX)crash_generation_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/linux/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/linux/minidump_writer/$(LIB_PREFIX)minidump_writer_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
@@ -173,7 +174,10 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += -I$(topsrcdir)/dom/ipc
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/dom/ipc \
+  -I$(topsrcdir)/toolkit/crashreporter \
+  $(NULL)
 
 ifdef BUILD_STATIC_LIBS
 export::

@@ -1,0 +1,41 @@
+namespace mozilla {
+namespace _ipdltest {
+
+rpc protocol PTestSyncWakeup {
+both:
+    rpc StackFrame();
+
+child:
+    async Start();
+    async Note1();
+    async Note2();
+
+parent:
+    sync Sync1();
+    sync Sync2();
+    async __delete__();
+
+
+state START:
+    send Start goto TEST1;
+
+state TEST1:
+    recv Sync1 goto TEST1_P2;
+state TEST1_P2:
+    send Note1 goto TEST2;
+
+state TEST2:
+    answer StackFrame goto TEST2_P2;
+state TEST2_P2:
+    call StackFrame goto TEST2_P3;
+state TEST2_P3:
+    recv Sync2 goto TEST2_P4;
+state TEST2_P4:
+    send Note2 goto DONE;
+
+state DONE:
+    recv __delete__;
+};
+
+} // namespace _ipdltest
+} // namespace mozilla
