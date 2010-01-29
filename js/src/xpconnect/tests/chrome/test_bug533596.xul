@@ -3,9 +3,9 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=500931
+https://bugzilla.mozilla.org/show_bug.cgi?id=533596
 -->
-<window title="Mozilla Bug 500931"
+<window title="Mozilla Bug 533596"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript"
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
@@ -34,6 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
     var win = $('ifr').contentWindow;
     var utils = window.getInterface(Components.interfaces.nsIDOMWindowUtils);
     is(utils.getClassName(win), "XPCNativeWrapper", "win is an XPCNW");
+    ok("x" in XPCNativeWrapper.unwrap(win), "actually unwrapped");
     is(utils.getClassName(XPCNativeWrapper.unwrap(win)), "XPCSafeJSObjectWrapper",
        "unwrap on an NW returns the same object");
     is(utils.getClassName(XPCNativeWrapper.unwrap(new XPCNativeWrapper(win))), "XPCSafeJSObjectWrapper",

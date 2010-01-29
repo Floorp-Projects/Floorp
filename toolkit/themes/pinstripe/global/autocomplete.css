@@ -37,14 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ===== autocomplete.css =================================================
-  == Styles used by the autocomplete widget.
-  ======================================================================= */
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
-
-/* ::::: autocomplete ::::: */
 
 /* .padded is used by autocomplete widgets that don't have an icon. Gross. -dwh */
 textbox:not(.padded) {

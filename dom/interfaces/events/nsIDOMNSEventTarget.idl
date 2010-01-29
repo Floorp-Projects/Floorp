@@ -44,7 +44,7 @@
  * the Document Object Model.
  */
 
-[scriptable, uuid(37CA0054-C715-42df-83C7-35C69E24A632)]
+[scriptable, uuid(c8b658d5-d583-472a-a7ec-cbc2e79f75dd)]
 interface nsIDOMNSEventTarget : nsISupports
 {
   /**
@@ -64,10 +64,10 @@ interface nsIDOMNSEventTarget : nsISupports
    *                         listener will receive events whether or not
    *                         they're trusted
    */
-  void                     addEventListener(in DOMString type,
-                                            in nsIDOMEventListener listener,
-                                            in boolean useCapture,
-                                            in boolean wantsUntrusted);
+  [optional_argc] void addEventListener(in DOMString type,
+                                        in nsIDOMEventListener listener,
+                                        in boolean useCapture,
+                                        [optional] in boolean wantsUntrusted);
 
   /**
    * The default script type (language) for events firing on this target.
@@ -79,5 +79,5 @@ interface nsIDOMNSEventTarget : nsISupports
    * script targets must support changing it - ie, some targets may only
    * support event handlers written in their default language.
    */
-  attribute PRUint32       scriptTypeID;
+  [noscript] attribute PRUint32 scriptTypeID;
 };

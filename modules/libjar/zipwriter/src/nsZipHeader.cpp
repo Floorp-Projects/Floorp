@@ -47,6 +47,9 @@
 
 #define FLAGS_IS_UTF8 0x800
 
+#define ZIP_EXTENDED_TIMESTAMP_FIELD 0x5455
+#define ZIP_EXTENDED_TIMESTAMP_MODTIME 0x01
+
 /**
  * nsZipHeader represents an entry from a zip file.
  */
@@ -105,11 +108,28 @@ NS_IMETHODIMP nsZipHeader::GetLastModifiedTime(PRTime *aLastModifiedTime)
 {
     NS_ASSERTION(mInited, "Not initalised");
 
+    // Try to read timestamp from extra field
+    PRUint16 blocksize;
+    const PRUint8 *tsField = GetExtraField(ZIP_EXTENDED_TIMESTAMP_FIELD, PR_FALSE, &blocksize);
+    if (tsField && blocksize >= 5) {
+        PRUint32 pos = 4;
+        PRUint8 flags;
+        flags = READ8(tsField, &pos);
+        if (flags & ZIP_EXTENDED_TIMESTAMP_MODTIME) {
+            *aLastModifiedTime = (PRTime)(READ32(tsField, &pos))
+                                 * PR_USEC_PER_SEC;
+            return NS_OK;
+        }
+    }
+
+    // Use DOS date/time fields
+    // Note that on DST shift we can't handle correctly the hour that is valid
+    // in both DST zones
     PRExplodedTime time;
 
     time.tm_usec = 0;
 
-    time.tm_hour = mTime >> 11;
+    time.tm_hour = (mTime >> 11) & 0x1F;
     time.tm_min = (mTime >> 5) & 0x3F;
     time.tm_sec = (mTime & 0x1F) * 2;
 
@@ -121,7 +141,9 @@ NS_IMETHODIMP nsZipHeader::GetLastModifiedTime(PRTime *aLastModifiedTime)
     time.tm_params.tp_dst_offset = 0;
 
     PR_NormalizeTime(&time, PR_GMTParameters);
-    time.tm_params = PR_LocalTimeParameters(&time);
+    time.tm_params.tp_gmt_offset = PR_LocalTimeParameters(&time).tp_gmt_offset;
+    PR_NormalizeTime(&time, PR_GMTParameters);
+    time.tm_params.tp_dst_offset = PR_LocalTimeParameters(&time).tp_dst_offset;
 
     *aLastModifiedTime = PR_ImplodeTime(&time);
 
@@ -149,6 +171,27 @@ void nsZipHeader::Init(const nsACString & aPath, PRTime aDate, PRUint32 aAttr,
     mDate = time.tm_mday + ((time.tm_month + 1) << 5) +
             ((time.tm_year - 1980) << 9);
 
+    // Store modification timestamp as extra field
+    // First fill CDS extra field
+    mFieldLength = 9;
+    mExtraField = new PRUint8[mFieldLength];
+    if (!mExtraField) {
+        mFieldLength = 0;
+    } else {
+        PRUint32 pos = 0;
+        WRITE16(mExtraField.get(), &pos, ZIP_EXTENDED_TIMESTAMP_FIELD);
+        WRITE16(mExtraField.get(), &pos, 5);
+        WRITE8(mExtraField.get(), &pos, ZIP_EXTENDED_TIMESTAMP_MODTIME);
+        WRITE32(mExtraField.get(), &pos, aDate / PR_USEC_PER_SEC);
+
+        // Fill local extra field
+        mLocalExtraField = new PRUint8[mFieldLength];
+        if (mLocalExtraField) {
+            mLocalFieldLength = mFieldLength;
+            memcpy(mLocalExtraField.get(), mExtraField.get(), mLocalFieldLength);
+        }
+    }
+
     mEAttr = aAttr;
     mOffset = aOffset;
     mName = aPath;
@@ -160,14 +203,14 @@ void nsZipHeader::Init(const nsACString & aPath, PRTime aDate, PRUint32 aAttr,
 
 PRUint32 nsZipHeader::GetFileHeaderLength()
 {
-    return ZIP_FILE_HEADER_SIZE + mName.Length();
+    return ZIP_FILE_HEADER_SIZE + mName.Length() + mLocalFieldLength;
 }
 
 nsresult nsZipHeader::WriteFileHeader(nsIOutputStream *aStream)
 {
     NS_ASSERTION(mInited, "Not initalised");
 
-    char buf[ZIP_FILE_HEADER_SIZE];
+    PRUint8 buf[ZIP_FILE_HEADER_SIZE];
     PRUint32 pos = 0;
     WRITE32(buf, &pos, ZIP_FILE_HEADER_SIGNATURE);
     WRITE16(buf, &pos, mVersionNeeded);
@@ -179,12 +222,21 @@ nsresult nsZipHeader::WriteFileHeader(nsIOutputStream *aStream)
     WRITE32(buf, &pos, mCSize);
     WRITE32(buf, &pos, mUSize);
     WRITE16(buf, &pos, mName.Length());
-    WRITE16(buf, &pos, 0);
+    WRITE16(buf, &pos, mLocalFieldLength);
 
-    nsresult rv = ZW_WriteData(aStream, buf, pos);
+    nsresult rv = ZW_WriteData(aStream, (const char *)buf, pos);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return ZW_WriteData(aStream, mName.get(), mName.Length());
+    rv = ZW_WriteData(aStream, mName.get(), mName.Length());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (mLocalFieldLength)
+    {
+      rv = ZW_WriteData(aStream, (const char *)mLocalExtraField.get(), mLocalFieldLength);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
 }
 
 PRUint32 nsZipHeader::GetCDSHeaderLength()
@@ -197,7 +249,7 @@ nsresult nsZipHeader::WriteCDSHeader(nsIOutputStream *aStream)
 {
     NS_ASSERTION(mInited, "Not initalised");
 
-    char buf[ZIP_CDS_HEADER_SIZE];
+    PRUint8 buf[ZIP_CDS_HEADER_SIZE];
     PRUint32 pos = 0;
     WRITE32(buf, &pos, ZIP_CDS_HEADER_SIGNATURE);
     WRITE16(buf, &pos, mVersionMade);
@@ -217,13 +269,13 @@ nsresult nsZipHeader::WriteCDSHeader(nsIOutputStream *aStream)
     WRITE32(buf, &pos, mEAttr);
     WRITE32(buf, &pos, mOffset);
 
-    nsresult rv = ZW_WriteData(aStream, buf, pos);
+    nsresult rv = ZW_WriteData(aStream, (const char *)buf, pos);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = ZW_WriteData(aStream, mName.get(), mName.Length());
     NS_ENSURE_SUCCESS(rv, rv);
     if (mExtraField) {
-        rv = ZW_WriteData(aStream, mExtraField, mFieldLength);
+        rv = ZW_WriteData(aStream, (const char *)mExtraField.get(), mFieldLength);
         NS_ENSURE_SUCCESS(rv, rv);
     }
     return ZW_WriteData(aStream, mComment.get(), mComment.Length());
@@ -233,9 +285,9 @@ nsresult nsZipHeader::ReadCDSHeader(nsIInputStream *stream)
 {
     NS_ASSERTION(!mInited, "Already initalised");
 
-    char buf[ZIP_CDS_HEADER_SIZE];
+    PRUint8 buf[ZIP_CDS_HEADER_SIZE];
 
-    nsresult rv = ZW_ReadData(stream, buf, ZIP_CDS_HEADER_SIZE);
+    nsresult rv = ZW_ReadData(stream, (char *)buf, ZIP_CDS_HEADER_SIZE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRUint32 pos = 0;
@@ -271,9 +323,9 @@ nsresult nsZipHeader::ReadCDSHeader(nsIInputStream *stream)
         mName = NS_LITERAL_CSTRING("");
 
     if (mFieldLength > 0) {
-        mExtraField = new char[mFieldLength];
+        mExtraField = new PRUint8[mFieldLength];
         NS_ENSURE_TRUE(mExtraField, NS_ERROR_OUT_OF_MEMORY);
-        rv = ZW_ReadData(stream, mExtraField.get(), mFieldLength);
+        rv = ZW_ReadData(stream, (char *)mExtraField.get(), mFieldLength);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -289,4 +341,26 @@ nsresult nsZipHeader::ReadCDSHeader(nsIInputStream *stream)
 
     mInited = PR_TRUE;
     return NS_OK;
+}
+
+const PRUint8 * nsZipHeader::GetExtraField(PRUint16 aTag, PRBool aLocal, PRUint16 *aBlockSize)
+{
+    const PRUint8 *buf = aLocal ? mLocalExtraField : mExtraField;
+    PRUint32 buflen = aLocal ? mLocalFieldLength : mFieldLength;
+    PRUint32 pos = 0;
+    PRUint16 tag, blocksize;
+
+    while (buf && (pos + 4) <= buflen) {
+      tag = READ16(buf, &pos);
+      blocksize = READ16(buf, &pos);
+
+      if (aTag == tag && (pos + blocksize) <= buflen) {
+        *aBlockSize = blocksize;
+        return buf + pos - 4;
+      }
+
+      pos += blocksize;
+    }
+
+    return NULL;
 }

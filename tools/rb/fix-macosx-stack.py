@@ -50,7 +50,36 @@
 import subprocess
 import sys
 import re
-import os.path
+import os
+import pty
+import termios
+
+class unbufferedLineConverter:
+    """
+    Wrap a child process that responds to each line of input with one line of
+    output.  Uses pty to trick the child into providing unbuffered output.
+    """
+    def __init__(self, command, args = []):
+        pid, fd = pty.fork()
+        if pid == 0:
+            # We're the child.  Transfer control to command.
+            os.execvp(command, [command] + args)
+        else:
+            # Disable echoing.
+            attr = termios.tcgetattr(fd)
+            attr[3] = attr[3] & ~termios.ECHO
+            termios.tcsetattr(fd, termios.TCSANOW, attr)
+            # Set up a file()-like interface to the child process
+            self.r = os.fdopen(fd, "r", 1)
+            self.w = os.fdopen(os.dup(fd), "w", 1)
+    def convert(self, line):
+        self.w.write(line + "\n")
+        return self.r.readline().rstrip("\r\n")
+    @staticmethod
+    def test():
+        assert unbufferedLineConverter("rev").convert("123") == "321"
+        assert unbufferedLineConverter("cut", ["-c3"]).convert("abcde") == "c"
+        print "Pass"
 
 def separate_debug_file_for(file):
     return None
@@ -79,21 +108,16 @@ def address_adjustment(file):
 
     return address_adjustments[file]
 
-# Return a Popen object for an atos process that gives symbol
-# information for a file.
 atoses = {}
-def atos_proc(file):
-    pipe = None
+def addressToSymbol(file, address):
+    converter = None
     if not file in atoses:
         debug_file = separate_debug_file_for(file) or file
-        pipe = subprocess.Popen(['/usr/bin/atos', '-o', debug_file],
-                                stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE)
-        # COMMENTED OUT DUE TO BUFFERING PROBLEMS
-        #atoses[file] = pipe
+        converter = unbufferedLineConverter('/usr/bin/atos', ['-o', debug_file])
+        atoses[file] = converter
     else:
-        pipe = atoses[file]
-    return pipe
+        converter = atoses[file]
+    return converter.convert("0x%X" % address)
 
 cxxfilt_proc = None
 def cxxfilt(sym):
@@ -119,15 +143,8 @@ for line in sys.stdin:
         address = int(address, 16)
 
         if os.path.exists(file) and os.path.isfile(file):
-            atos = atos_proc(file)
             address += address_adjustment(file)
-
-            atos.stdin.write("0x%X\n" % address)
-            atos.stdin.flush()
-            # close() TO WORK AROUND BUFFERING PROBLEMS
-            # (SEE COMMENTED OUT CACHING ABOVE)
-            atos.stdin.close()
-            info = atos.stdout.readline().rstrip("\n")
+            info = addressToSymbol(file, address)
 
             # atos output seems to have three forms:
             #   address

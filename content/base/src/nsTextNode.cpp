@@ -233,7 +233,7 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  fprintf(out, "Text@%p", this);
+  fprintf(out, "Text@%p", static_cast<const void*>(this));
   fprintf(out, " intrinsicstate=[%08x]", IntrinsicState());
   fprintf(out, " refcount=%d<", mRefCnt.get());
 

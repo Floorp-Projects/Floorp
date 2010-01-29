@@ -378,16 +378,6 @@
         }
       })]]></field>
 
-      <method name="currentSetChanged">
-        <parameter name="aCurrentSet"/>
-        <body><![CDATA[
-          if (this.hasCustomInteractiveItems(aCurrentSet))
-            this.setAttribute("customized", "true");
-          else
-            this.removeAttribute("customized");
-        ]]></body>
-      </method>
-
       <method name="_setInactive">
         <body><![CDATA[
           this.setAttribute("inactive", "true");

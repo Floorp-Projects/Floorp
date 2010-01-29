@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Inner frame for testing bug 500328.
+https://bugzilla.mozilla.org/show_bug.cgi?id=500328
+-->
+<head>
+<title>test 1</title>
+</head>
+<body onload="load();" onpopstate="popstate(event);">
+<script type="application/javascript">
+  function load() {
+    if(parent && parent.onChildLoad)
+      parent.onChildLoad();
+    if(opener && opener.onChildLoad)
+      opener.onChildLoad();
+  }
+
+  function popstate(e) {
+    if(parent && parent.onChildLoad)
+      parent.onChildPopState(e);
+    if(opener && opener.onChildLoad)
+      opener.onChildPopState(e);
+  }
+
+  function navigateTo(loc) {
+    location = loc;
+  }
+</script>
+
+<a id="link-anchor1", href="#1">Link Anchor1</a>
+<a id="link-self" href="file_bug500328_1.html">Self</a>
+</body>
+</html>

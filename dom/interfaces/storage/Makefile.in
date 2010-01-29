@@ -59,6 +59,7 @@ SDK_XPIDLSRCS =                      \
         nsIDOMStorage.idl        \
         nsIDOMStorageObsolete.idl\
         nsIDOMStorageEvent.idl   \
+        nsIDOMStorageEventObsolete.idl \
         nsIDOMStorageItem.idl    \
         nsIDOMStorageList.idl    \
         nsIDOMStorageWindow.idl  \

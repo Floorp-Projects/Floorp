@@ -140,6 +140,9 @@ public:
 
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
+#ifdef MOZ_SMIL
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsSVGSVGElement, nsSVGSVGElementBase)
+#endif // MOZ_SMIL
   NS_DECL_NSIDOMSVGSVGELEMENT
   NS_DECL_NSIDOMSVGFITTOVIEWBOX
   NS_DECL_NSIDOMSVGLOCATABLE
@@ -221,7 +224,7 @@ protected:
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
-#endif // MOZ_SMIL   
+#endif // MOZ_SMIL
 
   // implementation helpers:
 

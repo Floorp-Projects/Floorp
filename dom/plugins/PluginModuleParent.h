@@ -58,9 +58,7 @@
 #include "nsAutoPtr.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
-
-#undef _MOZ_LOG
-#define _MOZ_LOG(s) printf("[PluginModuleParent] %s\n", s)
+#include "nsIFileStreams.h"
 
 namespace mozilla {
 namespace plugins {
@@ -213,11 +211,16 @@ private:
                              char* argv[], NPSavedData* saved,
                              NPError* error);
 private:
+    void WriteExtraDataForMinidump(nsIFile* dumpFile);
+    void WriteExtraDataEntry(nsIFileOutputStream* stream,
+                             const char* key,
+                             const char* value);
     PluginProcessParent* mSubprocess;
     bool mShutdown;
     const NPNetscapeFuncs* mNPNIface;
     nsTHashtable<nsVoidPtrHashKey> mValidIdentifiers;
     nsNPAPIPlugin* mPlugin;
+    time_t mProcessStartTime;
 };
 
 } // namespace plugins

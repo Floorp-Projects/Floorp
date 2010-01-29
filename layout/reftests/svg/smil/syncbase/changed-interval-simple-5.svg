@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="
+        document.documentElement.pauseAnimations();
+        document.documentElement.setCurrentTime(0);
+        document.getElementById('a').removeAttribute('begin');
+        setTimeAndSnapshot(2, false)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Changing the begin attribute by script should cause a change notice to be
+    generated.
+   -->
+  <rect width="100" height="100" fill="green">
+    <animate attributeName="y" attributeType="XML" from="0" to="0" id="a"
+      begin="1s" dur="10s"/>
+    <animate attributeName="fill" attributeType="CSS"
+      values="red; red"
+      begin="a.begin" dur="2s"/>
+  </rect>
+</svg>

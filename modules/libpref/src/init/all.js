@@ -216,8 +216,6 @@ pref("accessibility.typeaheadfind.prefillwithselection", true);
 // use Mac OS X Appearance panel text smoothing setting when rendering text, disabled by default
 pref("gfx.use_text_smoothing_setting", false);
 
-pref("browser.history_expire_days", 9);
-
 // loading and rendering of framesets and iframes
 pref("browser.frames.enabled", true);
 
@@ -862,16 +860,7 @@ pref("network.ntlm.send-lm-response", false);
 
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
 
-#ifndef XP_MACOSX
-#ifdef XP_UNIX
 pref("network.proxy.type",                  5);
-#else
-pref("network.proxy.type",                  0);
-#endif
-#else
-pref("network.proxy.type",                  0);
-#endif
-
 pref("network.proxy.ftp",                   "");
 pref("network.proxy.ftp_port",              0);
 pref("network.proxy.gopher",                "");
@@ -949,6 +938,8 @@ pref("security.checkloaduri", true);
 pref("security.xpconnect.plugin.unrestricted", true);
 // security-sensitive dialogs should delay button enabling. In milliseconds.
 pref("security.dialog_enable_delay", 2000);
+
+pref("security.csp.enable", true);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
@@ -2836,7 +2827,7 @@ pref("geo.enabled", true);
 
 // Enable/Disable HTML5 parser
 pref("html5.enable", false);
-// Toggle which thread the HTML5 parser uses for streama parsing
+// Toggle which thread the HTML5 parser uses for stream parsing
 pref("html5.offmainthread", true);
 // Time in milliseconds between the start of the network stream and the 
 // first time the flush timer fires in the off-the-main-thread HTML5 parser.
@@ -2847,3 +2838,17 @@ pref("html5.flushtimer.continuedelay", 150);
 // Time in milliseconds between timer firings once the timer has starting 
 // firing.
 pref("html5.flushtimer.interval", 100);
+// Initial max length for number of tree ops in on flush.
+pref("html5.opqueue.initiallengthlimit", 200);
+// Maximum time in milliseconds to spend flushing the tree op queue when not forced to completion
+pref("html5.opqueue.maxtime", 100);
+// Minimun number of tree ops to flush regardless of time (takes precedence over the maxtime pref)
+pref("html5.opqueue.minlength", 100);
+// Maximum number of tree ops to flush regardless of time (takes precedence over the maxtime pref)
+pref("html5.opqueue.maxlength", 4500); // most top sites stay under this value
+
+// Push/Pop/Replace State prefs
+pref("browser.history.allowPushState", true);
+pref("browser.history.allowReplaceState", true);
+pref("browser.history.allowPopState", true);
+pref("browser.history.maxStateObjectSize", 655360);

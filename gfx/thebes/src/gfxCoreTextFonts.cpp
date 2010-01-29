@@ -135,12 +135,12 @@ gfxCoreTextFont::gfxCoreTextFont(MacOSFontEntry *aFontEntry,
 
     // Set up the default attribute dictionary that we will need each time we create a CFAttributedString
     mAttributesDict =
-        CFDictionaryCreate(kCFAllocatorDefault,
-                           (const void**) &kCTFontAttributeName,
-                           (const void**) &mCTFont,
-                           1, // count of attributes
-                           &kCFTypeDictionaryKeyCallBacks,
-                           &kCFTypeDictionaryValueCallBacks);
+        ::CFDictionaryCreate(kCFAllocatorDefault,
+                             (const void**) &kCTFontAttributeName,
+                             (const void**) &mCTFont,
+                             1, // count of attributes
+                             &kCFTypeDictionaryKeyCallBacks,
+                             &kCFTypeDictionaryValueCallBacks);
 
     // Remaining initialization is largely based on CommonInit() in the gfxAtsuiFont code
     CGFontRef cgFont = ::CGFontCreateWithPlatformFont(&mATSFont);
@@ -231,13 +231,13 @@ gfxCoreTextFont::GetCharWidth(PRUnichar aUniChar, PRUint32 *aGlyphID)
 {
     UniChar c = aUniChar;
     CGGlyph glyph;
-    if (CTFontGetGlyphsForCharacters(mCTFont, &c, &glyph, 1)) {
+    if (::CTFontGetGlyphsForCharacters(mCTFont, &c, &glyph, 1)) {
         CGSize advance;
-        CTFontGetAdvancesForGlyphs(mCTFont,
-                                   kCTFontHorizontalOrientation,
-                                   &glyph,
-                                   &advance,
-                                   1);
+        ::CTFontGetAdvancesForGlyphs(mCTFont,
+                                     kCTFontHorizontalOrientation,
+                                     &glyph,
+                                     &advance,
+                                     1);
         if (aGlyphID != nsnull)
             *aGlyphID = glyph;
         return advance.width;
@@ -254,13 +254,13 @@ gfxCoreTextFont::GetCharHeight(PRUnichar aUniChar)
 {
     UniChar c = aUniChar;
     CGGlyph glyph;
-    if (CTFontGetGlyphsForCharacters(mCTFont, &c, &glyph, 1)) {
+    if (::CTFontGetGlyphsForCharacters(mCTFont, &c, &glyph, 1)) {
         CGRect boundingRect;
-        CTFontGetBoundingRectsForGlyphs(mCTFont,
-                                        kCTFontHorizontalOrientation,
-                                        &glyph,
-                                        &boundingRect,
-                                        1);
+        ::CTFontGetBoundingRectsForGlyphs(mCTFont,
+                                          kCTFontHorizontalOrientation,
+                                          &glyph,
+                                          &boundingRect,
+                                          1);
         return boundingRect.size.height;
     }
 
@@ -276,9 +276,9 @@ gfxCoreTextFont::~gfxCoreTextFont()
         cairo_font_face_destroy(mFontFace);
 
     if (mAttributesDict)
-        CFRelease(mAttributesDict);
+        ::CFRelease(mAttributesDict);
     if (mCTFont)
-        CFRelease(mCTFont);
+        ::CFRelease(mCTFont);
 }
 
 MacOSFontEntry*
@@ -303,15 +303,15 @@ gfxCoreTextFont::InitMetrics()
         PR_MAX(((mAdjustedSize != 0.0f) ? mAdjustedSize : GetStyle()->size), 1.0f);
 
     if (mCTFont != NULL) {
-        CFRelease(mCTFont);
+        ::CFRelease(mCTFont);
         mCTFont = NULL;
     }
 
     ATSFontMetrics atsMetrics;
     OSStatus err;
 
-    err = ATSFontGetHorizontalMetrics(mATSFont, kATSOptionFlagsDefault,
-                                      &atsMetrics);
+    err = ::ATSFontGetHorizontalMetrics(mATSFont, kATSOptionFlagsDefault,
+                                        &atsMetrics);
     if (err != noErr) {
         mIsValid = PR_FALSE;
 
@@ -329,8 +329,8 @@ gfxCoreTextFont::InitMetrics()
     if (atsMetrics.xHeight > 0) {
         mMetrics.xHeight = atsMetrics.xHeight * size;
     } else {
-        mCTFont = CTFontCreateWithPlatformFont(mATSFont, size, NULL, GetDefaultFeaturesDescriptor());
-        mMetrics.xHeight = CTFontGetXHeight(mCTFont);
+        mCTFont = ::CTFontCreateWithPlatformFont(mATSFont, size, NULL, GetDefaultFeaturesDescriptor());
+        mMetrics.xHeight = ::CTFontGetXHeight(mCTFont);
     }
 
     if (mAdjustedSize == 0.0f) {
@@ -348,16 +348,16 @@ gfxCoreTextFont::InitMetrics()
 
     // create the CTFontRef if we didn't already do so above
     if (mCTFont == NULL)
-        mCTFont = CTFontCreateWithPlatformFont(mATSFont, size, NULL, GetDefaultFeaturesDescriptor());
+        mCTFont = ::CTFontCreateWithPlatformFont(mATSFont, size, NULL, GetDefaultFeaturesDescriptor());
 
     mMetrics.superscriptOffset = mMetrics.xHeight;
     mMetrics.subscriptOffset = mMetrics.xHeight;
-    mMetrics.underlineSize = CTFontGetUnderlineThickness(mCTFont);
-    mMetrics.underlineOffset = CTFontGetUnderlinePosition(mCTFont);
+    mMetrics.underlineSize = ::CTFontGetUnderlineThickness(mCTFont);
+    mMetrics.underlineOffset = ::CTFontGetUnderlinePosition(mCTFont);
     mMetrics.strikeoutSize = mMetrics.underlineSize;
     mMetrics.strikeoutOffset = mMetrics.xHeight / 2;
 
-    mMetrics.externalLeading = CTFontGetLeading(mCTFont);
+    mMetrics.externalLeading = ::CTFontGetLeading(mCTFont);
     mMetrics.emHeight = size;
 //    mMetrics.maxAscent = CTFontGetAscent(mCTFont);
 //    mMetrics.maxDescent = CTFontGetDescent(mCTFont);
@@ -414,569 +414,158 @@ gfxCoreTextFont::InitMetrics()
     fprintf (stderr, "    maxAscent: %f maxDescent: %f maxAdvance: %f\n", mMetrics.maxAscent, mMetrics.maxDescent, mMetrics.maxAdvance);
     fprintf (stderr, "    internalLeading: %f externalLeading: %f\n", mMetrics.internalLeading, mMetrics.externalLeading);
     fprintf (stderr, "    spaceWidth: %f aveCharWidth: %f xHeight: %f\n", mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.xHeight);
-    fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f suOff: %f suSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize, mMetrics.superscriptOffset, mMetrics.subscriptOffset);
+    fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f suOff: %f suSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize,
+                              mMetrics.strikeoutOffset, mMetrics.strikeoutSize, mMetrics.superscriptOffset, mMetrics.subscriptOffset);
 #endif
 }
 
-// Construct the font attribute descriptor that we'll apply by default when creating a CTFontRef.
-// This will turn off line-edge swashes by default, because we don't know the actual line breaks
-// when doing glyph shaping.
 void
-gfxCoreTextFont::CreateDefaultFeaturesDescriptor()
+gfxCoreTextFont::InitTextRun(gfxTextRun *aTextRun,
+                             const PRUnichar *aString,
+                             PRUint32 aRunStart,
+                             PRUint32 aRunLength)
 {
-    if (sDefaultFeaturesDescriptor != NULL)
-        return;
+    // aRunStart and aRunLength define the section of the textRun and of aString
+    // that is to be drawn with this particular font
 
-    SInt16 val = kSmartSwashType;
-    CFNumberRef swashesType =
-        CFNumberCreate(kCFAllocatorDefault,
-                       kCFNumberSInt16Type,
-                       &val);
-    val = kLineInitialSwashesOffSelector;
-    CFNumberRef lineInitialsOffSelector =
-        CFNumberCreate(kCFAllocatorDefault,
-                       kCFNumberSInt16Type,
-                       &val);
+    PRBool disableLigatures = (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES) != 0;
 
-    CFTypeRef keys[]   = { kCTFontFeatureTypeIdentifierKey,
-                           kCTFontFeatureSelectorIdentifierKey };
-    CFTypeRef values[] = { swashesType,
-                           lineInitialsOffSelector };
-    CFDictionaryRef featureSettings[2];
-    featureSettings[0] =
-        CFDictionaryCreate(kCFAllocatorDefault,
-                           (const void **) keys,
-                           (const void **) values,
-                           NS_ARRAY_LENGTH(keys),
-                           &kCFTypeDictionaryKeyCallBacks,
-                           &kCFTypeDictionaryValueCallBacks);
-    CFRelease(lineInitialsOffSelector);
+    // Create a CFAttributedString with text and style info, so we can use CoreText to lay it out.
 
-    val = kLineFinalSwashesOffSelector;
-    CFNumberRef lineFinalsOffSelector =
-        CFNumberCreate(kCFAllocatorDefault,
-                       kCFNumberSInt16Type,
-                       &val);
-    values[1] = lineFinalsOffSelector;
-    featureSettings[1] =
-        CFDictionaryCreate(kCFAllocatorDefault,
-                           (const void **) keys,
-                           (const void **) values,
-                           NS_ARRAY_LENGTH(keys),
-                           &kCFTypeDictionaryKeyCallBacks,
-                           &kCFTypeDictionaryValueCallBacks);
-    CFRelease(lineFinalsOffSelector);
-    CFRelease(swashesType);
+    PRBool isRTL = aTextRun->IsRightToLeft();
 
-    CFArrayRef featuresArray =
-        CFArrayCreate(kCFAllocatorDefault,
-                      (const void **) featureSettings,
-                      NS_ARRAY_LENGTH(featureSettings),
-                      &kCFTypeArrayCallBacks);
-    CFRelease(featureSettings[0]);
-    CFRelease(featureSettings[1]);
-
-    const CFTypeRef attrKeys[]   = { kCTFontFeatureSettingsAttribute };
-    const CFTypeRef attrValues[] = { featuresArray };
-    CFDictionaryRef attributesDict =
-        CFDictionaryCreate(kCFAllocatorDefault,
-                           (const void **) attrKeys,
-                           (const void **) attrValues,
-                           NS_ARRAY_LENGTH(attrKeys),
-                           &kCFTypeDictionaryKeyCallBacks,
-                           &kCFTypeDictionaryValueCallBacks);
-    CFRelease(featuresArray);
-
-    sDefaultFeaturesDescriptor =
-        CTFontDescriptorCreateWithAttributes(attributesDict);
-    CFRelease(attributesDict);
-}
-
-// Create a CTFontRef for an ATS font ref, with the Common Ligatures feature disabled [static]
-CTFontRef
-gfxCoreTextFont::CreateCTFontWithDisabledLigatures(ATSFontRef aFontRef, CGFloat aSize)
-{
-    if (sDisableLigaturesDescriptor == NULL) {
-        // initialize cached descriptor to turn off the Common Ligatures feature
-        SInt16 val = kLigaturesType;
-        CFNumberRef ligaturesType =
-            CFNumberCreate(kCFAllocatorDefault,
-                           kCFNumberSInt16Type,
-                           &val);
-        val = kCommonLigaturesOffSelector;
-        CFNumberRef commonLigaturesOffSelector =
-            CFNumberCreate(kCFAllocatorDefault,
-                           kCFNumberSInt16Type,
-                           &val);
-
-        const CFTypeRef keys[]   = { kCTFontFeatureTypeIdentifierKey,
-                                     kCTFontFeatureSelectorIdentifierKey };
-        const CFTypeRef values[] = { ligaturesType,
-                                     commonLigaturesOffSelector };
-        CFDictionaryRef featureSettingDict =
-            CFDictionaryCreate(kCFAllocatorDefault,
-                               (const void **) keys,
-                               (const void **) values,
-                               NS_ARRAY_LENGTH(keys),
-                               &kCFTypeDictionaryKeyCallBacks,
-                               &kCFTypeDictionaryValueCallBacks);
-        CFRelease(ligaturesType);
-        CFRelease(commonLigaturesOffSelector);
-
-        CFArrayRef featuresArray =
-            CFArrayCreate(kCFAllocatorDefault,
-                          (const void **) &featureSettingDict,
-                          1,
-                          &kCFTypeArrayCallBacks);
-        CFRelease(featureSettingDict);
-
-        CFDictionaryRef attributesDict =
-            CFDictionaryCreate(kCFAllocatorDefault,
-                               (const void **) &kCTFontFeatureSettingsAttribute,
-                               (const void **) &featuresArray,
-                               1, // count of keys & values
-                               &kCFTypeDictionaryKeyCallBacks,
-                               &kCFTypeDictionaryValueCallBacks);
-        CFRelease(featuresArray);
-
-        sDisableLigaturesDescriptor =
-            CTFontDescriptorCreateCopyWithAttributes(GetDefaultFeaturesDescriptor(), attributesDict);
-        CFRelease(attributesDict);
-    }
-
-    return CTFontCreateWithPlatformFont(aFontRef, aSize, NULL, sDisableLigaturesDescriptor);
-}
-
-void
-gfxCoreTextFont::Shutdown() // [static]
-{
-    if (sDisableLigaturesDescriptor != NULL) {
-        CFRelease(sDisableLigaturesDescriptor);
-        sDisableLigaturesDescriptor = NULL;
-    }        
-    if (sDefaultFeaturesDescriptor != NULL) {
-        CFRelease(sDefaultFeaturesDescriptor);
-        sDefaultFeaturesDescriptor = NULL;
-    }
-}
-
-
-/**
- * Look up the font in the gfxFont cache. If we don't find it, create one.
- * In either case, add a ref and return it ---
- * except for OOM in which case we do nothing and return null.
- */
-
-static already_AddRefed<gfxCoreTextFont>
-GetOrMakeCTFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aStyle, PRBool aNeedsBold)
-{
-    // the font entry name is the psname, not the family name
-    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry->Name(), aStyle);
-    if (!font) {
-        gfxCoreTextFont *newFont = new gfxCoreTextFont(aFontEntry, aStyle, aNeedsBold);
-        if (!newFont)
-            return nsnull;
-        if (!newFont->Valid()) {
-            delete newFont;
-            return nsnull;
-        }
-        font = newFont;
-        gfxFontCache::GetCache()->AddNew(font);
-    }
-    gfxFont *f = nsnull;
-    font.swap(f);
-    return static_cast<gfxCoreTextFont *>(f);
-}
-
-
-gfxCoreTextFontGroup::gfxCoreTextFontGroup(const nsAString& families,
-                                           const gfxFontStyle *aStyle,
-                                           gfxUserFontSet *aUserFontSet)
-    : gfxFontGroup(families, aStyle, aUserFontSet)
-{
-    ForEachFont(FindCTFont, this);
-
-    if (mFonts.Length() == 0) {
-        // XXX this will generate a list of the lang groups for which we have no
-        // default fonts for on the mac; we should fix this!
-        // Known:
-        // ja x-beng x-devanagari x-tamil x-geor x-ethi x-gujr x-mlym x-armn
-        // x-orya x-telu x-knda x-sinh
-
-        //fprintf (stderr, "gfxCoreTextFontGroup: %s [%s] -> %d fonts found\n", NS_ConvertUTF16toUTF8(families).get(), aStyle->langGroup.get(), mFonts.Length());
-
-        // If we get here, we most likely didn't have a default font for
-        // a specific langGroup.  Let's just pick the default OSX
-        // user font.
-
-        PRBool needsBold;
-        MacOSFontEntry *defaultFont = static_cast<MacOSFontEntry*>
-            (gfxMacPlatformFontList::PlatformFontList()->GetDefaultFont(aStyle, needsBold));
-        NS_ASSERTION(defaultFont, "invalid default font returned by GetDefaultFont");
-
-        nsRefPtr<gfxCoreTextFont> font = GetOrMakeCTFont(defaultFont, aStyle, needsBold);
-        if (font) {
-            mFonts.AppendElement(font);
-        }
-    }
-
-    mPageLang = gfxPlatform::GetFontPrefLangFor(mStyle.langGroup.get());
-
-    if (!mStyle.systemFont) {
-        for (PRUint32 i = 0; i < mFonts.Length(); ++i) {
-            gfxCoreTextFont* font = static_cast<gfxCoreTextFont*>(mFonts[i].get());
-            if (font->GetFontEntry()->mIsBadUnderlineFont) {
-                gfxFloat first = mFonts[0]->GetMetrics().underlineOffset;
-                gfxFloat bad = font->GetMetrics().underlineOffset;
-                mUnderlineOffset = PR_MIN(first, bad);
+    // we need to bidi-wrap the text if the run is RTL,
+    // or if it is an LTR run but may contain (overridden) RTL chars
+    PRBool bidiWrap = isRTL;
+    if (!bidiWrap && (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) == 0) {
+        PRUint32 i;
+        for (i = aRunStart; i < aRunStart + aRunLength; ++i) {
+            if (gfxFontUtils::PotentialRTLChar(aString[i])) {
+                bidiWrap = PR_TRUE;
                 break;
             }
         }
     }
-}
 
-PRBool
-gfxCoreTextFontGroup::FindCTFont(const nsAString& aName,
-                                 const nsACString& aGenericName,
-                                 void *aClosure)
-{
-    gfxCoreTextFontGroup *fontGroup = static_cast<gfxCoreTextFontGroup*>(aClosure);
-    const gfxFontStyle *fontStyle = fontGroup->GetStyle();
+    // If there's a possibility of any bidi, we wrap the text with direction overrides
+    // to ensure neutrals or characters that were bidi-overridden in HTML behave properly.
+    const UniChar beginLTR[]    = { 0x202d, 0x20 };
+    const UniChar beginRTL[]    = { 0x202e, 0x20 };
+    const UniChar endBidiWrap[] = { 0x20, 0x202c };
 
-
-    PRBool needsBold;
-    MacOSFontEntry *fe = nsnull;
-
-    // first, look up in the user font set
-    gfxUserFontSet *fs = fontGroup->GetUserFontSet();
-    gfxFontEntry *gfe;
-    if (fs && (gfe = fs->FindFontEntry(aName, *fontStyle, needsBold))) {
-        // assume for now platform font if not SVG
-        fe = static_cast<MacOSFontEntry*> (gfe);
+    PRUint32 startOffset;
+    CFStringRef stringObj;
+    if (bidiWrap) {
+        startOffset = isRTL ?
+            sizeof(beginRTL) / sizeof(beginRTL[0]) : sizeof(beginLTR) / sizeof(beginLTR[0]);
+        CFMutableStringRef mutableString =
+            ::CFStringCreateMutable(kCFAllocatorDefault,
+                                    aRunLength + startOffset +
+                                    sizeof(endBidiWrap) / sizeof(endBidiWrap[0]));
+        ::CFStringAppendCharacters(mutableString,
+                                   isRTL ? beginRTL : beginLTR,
+                                   startOffset);
+        ::CFStringAppendCharacters(mutableString,
+                                   aString + aRunStart, aRunLength);
+        ::CFStringAppendCharacters(mutableString,
+                                   endBidiWrap,
+                                   sizeof(endBidiWrap) / sizeof(endBidiWrap[0]));
+        stringObj = mutableString;
+    } else {
+        startOffset = 0;
+        stringObj = ::CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault,
+                                                         aString + aRunStart,
+                                                         aRunLength,
+                                                         kCFAllocatorNull);
     }
-
-    // nothing in the user font set ==> check system fonts
-    if (!fe) {
-        fe = static_cast<MacOSFontEntry*>
-            (gfxMacPlatformFontList::PlatformFontList()->FindFontForFamily(aName, fontStyle, needsBold));
-    }
-
-    if (fe && !fontGroup->HasFont(fe->GetFontRef())) {
-        nsRefPtr<gfxCoreTextFont> font = GetOrMakeCTFont(fe, fontStyle, needsBold);
-        if (font) {
-            fontGroup->mFonts.AppendElement(font);
-        }
-    }
-
-    return PR_TRUE;
-}
-
-gfxFontGroup *
-gfxCoreTextFontGroup::Copy(const gfxFontStyle *aStyle)
-{
-    return new gfxCoreTextFontGroup(mFamilies, aStyle, mUserFontSet);
-}
-
-#define UNICODE_LRO 0x202d
-#define UNICODE_RLO 0x202e
-#define UNICODE_PDF 0x202c
-
-inline void
-AppendDirectionalIndicatorStart(PRUint32 aFlags, nsAString& aString)
-{
-    static const PRUnichar overrides[2] = { UNICODE_LRO, UNICODE_RLO };
-    aString.Append(overrides[(aFlags & gfxTextRunFactory::TEXT_IS_RTL) != 0]);    
-    aString.Append(' ');
-}
-
-inline void
-AppendDirectionalIndicatorEnd(PRBool aNeedDirection, nsAString& aString)
-{
-    // append a space (always, for consistent treatment of last char,
-    // and a direction control if required (we skip this for 8-bit text,
-    // which is known to be unidirectional LTR, unless the direction was
-    // forced RTL via overrides)
-    aString.Append(' ');
-    if (!aNeedDirection)
-        return;
-
-    aString.Append('.');
-    aString.Append(UNICODE_PDF);
-}
-
-gfxTextRun *
-gfxCoreTextFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
-                                  const Parameters *aParams, PRUint32 aFlags)
-{
-    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
-    NS_ASSERTION(aFlags & TEXT_IS_8BIT, "should be marked 8bit");
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
-    if (!textRun)
-        return nsnull;
-
-    nsDependentCSubstring cString(reinterpret_cast<const char*>(aString),
-                                  reinterpret_cast<const char*>(aString) + aLength);
-
-    nsAutoString utf16;
-    PRBool wrapBidi = (aFlags & TEXT_IS_RTL) != 0;
-    if (wrapBidi)
-        AppendDirectionalIndicatorStart(aFlags, utf16);
-    PRUint32 startOffset = utf16.Length();
-    AppendASCIItoUTF16(cString, utf16);
-    AppendDirectionalIndicatorEnd(wrapBidi, utf16);
-
-    InitTextRun(textRun, utf16.get(), utf16.Length(), startOffset, aLength);
-
-    textRun->FetchGlyphExtents(aParams->mContext);
-
-    return textRun;
-}
-
-gfxTextRun *
-gfxCoreTextFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
-                                  const Parameters *aParams, PRUint32 aFlags)
-{
-    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
-    if (!textRun)
-        return nsnull;
-
-    gfxPlatformMac::SetupClusterBoundaries(textRun, aString);
-
-    nsAutoString utf16;
-    AppendDirectionalIndicatorStart(aFlags, utf16);
-    PRUint32 startOffset = utf16.Length();
-    utf16.Append(aString, aLength);
-    // Ensure that none of the whitespace in the run is considered "trailing"
-    // by CoreText's bidi algorithm
-    AppendDirectionalIndicatorEnd(PR_TRUE, utf16);
-
-    InitTextRun(textRun, utf16.get(), utf16.Length(), startOffset, aLength);
-
-    textRun->FetchGlyphExtents(aParams->mContext);
-
-    return textRun;
-}
-
-#define SMALL_GLYPH_RUN 128 // preallocated size of our auto arrays for per-glyph data;
-                            // some testing indicates that 90%+ of glyph runs will fit
-                            // without requiring a separate allocation
-
-void
-gfxCoreTextFontGroup::InitTextRun(gfxTextRun *aTextRun,
-                                  const PRUnichar *aString,
-                                  PRUint32 aTotalLength,
-                                  PRUint32 aLayoutStart,
-                                  PRUint32 aLayoutLength)
-{
-    PRBool disableLigatures = (aTextRun->GetFlags() & TEXT_DISABLE_OPTIONAL_LIGATURES) != 0;
-
-    gfxCoreTextFont *mainFont = static_cast<gfxCoreTextFont*>(mFonts[0].get());
-
-#ifdef DUMP_TEXT_RUNS
-    NS_ConvertUTF16toUTF8 str(aString, aTotalLength);
-    NS_ConvertUTF16toUTF8 families(mFamilies);
-    PR_LOG(gCoreTextTextRunLog, PR_LOG_DEBUG,\
-           ("MakeTextRun %p fontgroup %p (%s) lang: %s len %d TEXTRUN \"%s\" ENDTEXTRUN\n",
-            aTextRun, this, families.get(), mStyle.langGroup.get(), aTotalLength, str.get()));
-#endif
-
-    // This is awfully verbose, but the idea is simply to create a CFAttributedString
-    // with our text and style info, then we can use CoreText to do layout with it
-    CFStringRef stringObj =
-        CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault,
-                                           aString,
-                                           aTotalLength,
-                                           kCFAllocatorNull);
 
     CFDictionaryRef attrObj;
     if (disableLigatures) {
         // For letterspacing (or maybe other situations) we need to make a copy of the CTFont
         // with the ligature feature disabled
         CTFontRef ctFont =
-            gfxCoreTextFont::CreateCTFontWithDisabledLigatures(mainFont->GetATSFont(),
-                                                               CTFontGetSize(mainFont->GetCTFont()));
+            gfxCoreTextFont::CreateCTFontWithDisabledLigatures(GetATSFont(),
+                                                               ::CTFontGetSize(GetCTFont()));
 
-        // Set up the initial font, for the (common) case of a monostyled textRun
         attrObj =
-            CFDictionaryCreate(kCFAllocatorDefault,
-                               (const void**) &kCTFontAttributeName,
-                               (const void**) &ctFont,
-                               1, // count of attributes
-                               &kCFTypeDictionaryKeyCallBacks,
-                               &kCFTypeDictionaryValueCallBacks);
+            ::CFDictionaryCreate(kCFAllocatorDefault,
+                                 (const void**) &kCTFontAttributeName,
+                                 (const void**) &ctFont,
+                                 1, // count of attributes
+                                 &kCFTypeDictionaryKeyCallBacks,
+                                 &kCFTypeDictionaryValueCallBacks);
         // Having created the dict, we're finished with our ligature-disabled CTFontRef
-        CFRelease(ctFont);
+        ::CFRelease(ctFont);
     } else {
-        attrObj = mainFont->GetAttributesDictionary();
-        CFRetain(attrObj);
+        attrObj = GetAttributesDictionary();
+        ::CFRetain(attrObj);
     }
 
     // Now we can create an attributed string
     CFAttributedStringRef attrStringObj =
-        CFAttributedStringCreate(kCFAllocatorDefault, stringObj, attrObj);
-    CFRelease(stringObj);
-    CFRelease(attrObj);
-
-    // Note that the attributed string is currently not mutable;
-    // if we need to change attributes of a range, we'll first make a mutable copy
-    CFMutableAttributedStringRef mutableStringObj = NULL;
-
-    PRUint32 runStart = aLayoutStart;
-    nsAutoTArray<gfxTextRange,3> fontRanges;
-    ComputeRanges(fontRanges, aString, runStart, runStart + aLayoutLength);
-    PRUint32 numRanges = fontRanges.Length();
-
-    nsAutoTArray<PRPackedBool,SMALL_GLYPH_RUN> unmatchedArray;
-    PRPackedBool *unmatched = NULL;
-
-    for (PRUint32 r = 0; r < numRanges; r++) {
-        const gfxTextRange& range = fontRanges[r];
-        UniCharCount matchedLength = range.Length();
-        gfxCoreTextFont *matchedFont =
-            static_cast<gfxCoreTextFont*> (range.font ? range.font.get() : nsnull);
-
-#ifdef DUMP_TEXT_RUNS
-        PR_LOG(gCoreTextTextRunLog, PR_LOG_DEBUG,
-               ("InitTextRun %p fontgroup %p font %p match %s (%d-%d)", aTextRun, this, matchedFont,
-                   (matchedFont ? NS_ConvertUTF16toUTF8(matchedFont->GetUniqueName()).get() : "<null>"),
-                   runStart, matchedLength));
-#endif
-
-        if (matchedFont) {
-            // apply the appropriate font to the run, if it's not the primary font that was already set
-            if (matchedFont != mainFont) {
-                CTFontRef matchedCTFont = matchedFont->GetCTFont();
-                if (disableLigatures)
-                    matchedCTFont = gfxCoreTextFont::CreateCTFontWithDisabledLigatures(matchedFont->GetATSFont(),
-                                                                                       CTFontGetSize(matchedCTFont));
-                // if necessary, make a mutable copy of the string
-                if (!mutableStringObj) {
-                    mutableStringObj =
-                        CFAttributedStringCreateMutableCopy(kCFAllocatorDefault,
-                                                            0,
-                                                            attrStringObj);
-                    CFRelease(attrStringObj);
-                }
-                CFAttributedStringSetAttribute(mutableStringObj,
-                                               CFRangeMake(runStart, matchedLength),
-                                               kCTFontAttributeName,
-                                               matchedCTFont);
-                if (disableLigatures)
-                    CFRelease(matchedCTFont);
-            }
-
-            aTextRun->AddGlyphRun(matchedFont, runStart-aLayoutStart, (matchedLength > 0));
-
-        } else {
-            // no font available, so record missing glyph info instead
-            if (unmatched == NULL) {
-                if (unmatchedArray.SetLength(aTotalLength)) {
-                    unmatched = unmatchedArray.Elements();
-                    memset(unmatched, PR_FALSE, aTotalLength*sizeof(PRPackedBool));
-                }
-            }
-
-            // create the glyph run before calling SetMissing Glyph
-            aTextRun->AddGlyphRun(mainFont, runStart-aLayoutStart, matchedLength);
-
-            for (PRUint32 index = runStart; index < runStart + matchedLength; index++) {
-                // Record the char code so we can draw a box with the Unicode value; also need to
-                // replace char(s) in the string with SPACE because CoreText crashes on missing chars :(
-                if (!mutableStringObj) {
-                    mutableStringObj =
-                        CFAttributedStringCreateMutableCopy(kCFAllocatorDefault,
-                                                            0,
-                                                            attrStringObj);
-                    CFRelease(attrStringObj);
-                }
-
-                if (NS_IS_HIGH_SURROGATE(aString[index]) &&
-                    index + 1 < aTotalLength &&
-                    NS_IS_LOW_SURROGATE(aString[index+1])) {
-                    aTextRun->SetMissingGlyph(index-aLayoutStart,
-                                              SURROGATE_TO_UCS4(aString[index],
-                                                                aString[index+1]));
-                    CFAttributedStringReplaceString(mutableStringObj,
-                                                    CFRangeMake(index, 2),
-                                                    CFSTR("  "));
-                    index++;
-                } else {
-                    aTextRun->SetMissingGlyph(index-aLayoutStart, aString[index]);
-                    CFAttributedStringReplaceString(mutableStringObj,
-                                                    CFRangeMake(index, 1),
-                                                    CFSTR(" "));
-                }
-            }
-
-            // We have to remember the indices of unmatched chars to avoid overwriting
-            // their glyph (actually char code) data with the space glyph later,
-            // while we're retrieving actual glyph data from CoreText runs.
-            if (unmatched)
-                memset(unmatched + runStart, PR_TRUE, matchedLength);
-        }
-
-        runStart += matchedLength;
-    }
+        ::CFAttributedStringCreate(kCFAllocatorDefault, stringObj, attrObj);
+    ::CFRelease(stringObj);
+    ::CFRelease(attrObj);
 
     // Create the CoreText line from our string, then we're done with it
-    CTLineRef line;
-    if (mutableStringObj) {
-        line = CTLineCreateWithAttributedString(mutableStringObj);
-        CFRelease(mutableStringObj);
-    } else {
-        line = CTLineCreateWithAttributedString(attrStringObj);
-        CFRelease(attrStringObj);
-    }
+    CTLineRef line = ::CTLineCreateWithAttributedString(attrStringObj);
+    ::CFRelease(attrStringObj);
 
     // and finally retrieve the glyph data and store into the gfxTextRun
-    CFArrayRef glyphRuns = CTLineGetGlyphRuns(line);
-    PRUint32 numRuns = CFArrayGetCount(glyphRuns);
+    CFArrayRef glyphRuns = ::CTLineGetGlyphRuns(line);
+    PRUint32 numRuns = ::CFArrayGetCount(glyphRuns);
 
-    // Iterate through the glyph runs. Note that they may extend into the wrapper
-    // area, so we have to be careful not to include the extra glyphs from there
+    // Iterate through the glyph runs.
+    // Note that this includes the bidi wrapper, so we have to be careful
+    // not to include the extra glyphs from there
     for (PRUint32 runIndex = 0; runIndex < numRuns; runIndex++) {
-        CTRunRef aCTRun = (CTRunRef)CFArrayGetValueAtIndex(glyphRuns, runIndex);
-        if (SetGlyphsFromRun(aTextRun, aCTRun, unmatched, aLayoutStart, aLayoutLength) != NS_OK)
+        CTRunRef aCTRun = (CTRunRef)::CFArrayGetValueAtIndex(glyphRuns, runIndex);
+        if (SetGlyphsFromRun(aTextRun, aCTRun, startOffset, aRunStart, aRunLength) != NS_OK)
             break;
-    } // end loop over each CTRun in the CTLine
+    }
 
-    CFRelease(line);
-
-    // It's possible for CoreText to omit glyph runs if it decides they contain
-    // only invisibles (e.g., U+FEFF, see reftest 474417-1). In this case, we
-    // need to eliminate them from the glyph run array to avoid drawing "partial
-    // ligatures" with the wrong font.
-    aTextRun->SanitizeGlyphRuns();
-
-    // Is this actually necessary? Without it, gfxTextRun::CopyGlyphDataFrom may assert
-    // "Glyphruns not coalesced", but does that matter?
-    aTextRun->SortGlyphRuns();
+    ::CFRelease(line);
 }
 
+#define SMALL_GLYPH_RUN 128 // preallocated size of our auto arrays for per-glyph data;
+                            // some testing indicates that 90%+ of glyph runs will fit
+                            // without requiring a separate allocation
+
 nsresult
-gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
-                                       CTRunRef aCTRun,
-                                       const PRPackedBool *aUnmatched,
-                                       PRInt32 aLayoutStart,
-                                       PRInt32 aLayoutLength)
+gfxCoreTextFont::SetGlyphsFromRun(gfxTextRun *aTextRun,
+                                  CTRunRef aCTRun,
+                                  PRInt32 aStringOffset, // offset in the string used to build the CTLine
+                                  PRInt32 aRunStart,     // starting offset of this font run in the gfxTextRun
+                                  PRInt32 aRunLength)    // length of this font run in characters
 {
-    // The textRun has been bidi-wrapped (if necessary);
-    // aLayoutStart and aLayoutLength define the range of characters
+    // The textRun has been bidi-wrapped; aStringOffset is the number
+    // of chars at the beginning of the CTLine that we should skip.
+    // aRunStart and aRunLength define the range of characters
     // within the textRun that are "real" data we need to handle.
     // aCTRun is a glyph run from the CoreText layout process.
 
     PRBool isLTR = !aTextRun->IsRightToLeft();
     PRInt32 direction = isLTR ? 1 : -1;
 
-    PRInt32 numGlyphs = CTRunGetGlyphCount(aCTRun);
+    PRInt32 numGlyphs = ::CTRunGetGlyphCount(aCTRun);
     if (numGlyphs == 0)
         return NS_OK;
 
-    // skip the run if it is entirely outside the real text range
-    CFRange stringRange = CTRunGetStringRange(aCTRun);
-    if (stringRange.location >= aLayoutStart + aLayoutLength ||
-        stringRange.location + stringRange.length <= aLayoutStart)
+    // character offsets get really confusing here, as we have to keep track of
+    // (a) the text in the actual textRun we're constructing
+    // (b) the "font run" being rendered with the current font, defined by aRunStart and aRunLength
+    //     parameters to InitTextRun
+    // (c) the string that was handed to CoreText, which contains the text of the font run
+    //     plus directional-override padding
+    // (d) the CTRun currently being processed, which may be a sub-run of the CoreText line
+    //     (but may extend beyond the actual font run into the bidi wrapping text).
+    //     aStringOffset tells us how many initial characters of the line to ignore.
+
+    // get the source string range within the CTLine's text
+    CFRange stringRange = ::CTRunGetStringRange(aCTRun);
+    // skip the run if it is entirely outside the actual range of the font run
+    if (stringRange.location - aStringOffset + stringRange.length <= 0 ||
+        stringRange.location - aStringOffset >= aRunLength)
         return NS_OK;
 
     // retrieve the laid-out glyph data from the CTRun
@@ -995,35 +584,36 @@ gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
     // It's possible that some future change to CoreText will mean that
     // CTRunGetGlyphsPtr fails more often; if this happens, nsAutoTArray<>
     // may become an attractive option.
-    glyphs = CTRunGetGlyphsPtr(aCTRun);
-    if (glyphs == NULL) {
-        glyphsArray = new CGGlyph[numGlyphs];
+    glyphs = ::CTRunGetGlyphsPtr(aCTRun);
+    if (!glyphs) {
+        glyphsArray = new (std::nothrow) CGGlyph[numGlyphs];
         if (!glyphsArray)
             return NS_ERROR_OUT_OF_MEMORY;
-        CTRunGetGlyphs(aCTRun, CFRangeMake(0, 0), glyphsArray.get());
+        ::CTRunGetGlyphs(aCTRun, ::CFRangeMake(0, 0), glyphsArray.get());
         glyphs = glyphsArray.get();
     }
 
-    positions = CTRunGetPositionsPtr(aCTRun);
-    if (positions == NULL) {
-        positionsArray = new CGPoint[numGlyphs];
+    positions = ::CTRunGetPositionsPtr(aCTRun);
+    if (!positions) {
+        positionsArray = new (std::nothrow) CGPoint[numGlyphs];
         if (!positionsArray)
             return NS_ERROR_OUT_OF_MEMORY;
-        CTRunGetPositions(aCTRun, CFRangeMake(0, 0), positionsArray.get());
+        ::CTRunGetPositions(aCTRun, ::CFRangeMake(0, 0), positionsArray.get());
         positions = positionsArray.get();
     }
 
-    // String indices from CoreText are relative to the line, not the current run
-    glyphToChar = CTRunGetStringIndicesPtr(aCTRun);
-    if (glyphToChar == NULL) {
-        glyphToCharArray = new CFIndex[numGlyphs];
+    // Remember that the glyphToChar indices relate to the CoreText line
+    // not to the beginning of the textRun, the font run, or the stringRange of the glyph run
+    glyphToChar = ::CTRunGetStringIndicesPtr(aCTRun);
+    if (!glyphToChar) {
+        glyphToCharArray = new (std::nothrow) CFIndex[numGlyphs];
         if (!glyphToCharArray)
             return NS_ERROR_OUT_OF_MEMORY;
-        CTRunGetStringIndices(aCTRun, CFRangeMake(0, 0), glyphToCharArray.get());
+        ::CTRunGetStringIndices(aCTRun, ::CFRangeMake(0, 0), glyphToCharArray.get());
         glyphToChar = glyphToCharArray.get();
     }
 
-    double runWidth = CTRunGetTypographicBounds(aCTRun, CFRangeMake(0, 0), NULL, NULL, NULL);
+    double runWidth = ::CTRunGetTypographicBounds(aCTRun, ::CFRangeMake(0, 0), NULL, NULL, NULL);
 
     nsAutoTArray<gfxTextRun::DetailedGlyph,1> detailedGlyphs;
     gfxTextRun::CompressedGlyph g;
@@ -1036,8 +626,9 @@ gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
     // We set the glyph index to NO_GLYPH for chars that have no associated glyph, and we
     // record the last glyph index for cases where the char maps to several glyphs,
     // so that our clumping will include all the glyph fragments for the character.
-    // The charToGlyph array is indexed by char position within the stringRange of the run.
-    
+
+    // The charToGlyph array is indexed by char position within the stringRange of the glyph run.
+
     static const PRInt32 NO_GLYPH = -1;
     nsAutoTArray<PRInt32,SMALL_GLYPH_RUN> charToGlyphArray;
     if (!charToGlyphArray.SetLength(stringRange.length))
@@ -1045,9 +636,12 @@ gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
     PRInt32 *charToGlyph = charToGlyphArray.Elements();
     for (PRInt32 offset = 0; offset < stringRange.length; ++offset)
         charToGlyph[offset] = NO_GLYPH;
-    for (PRInt32 g = 0; g < numGlyphs; ++g)
-        // charToGlyph array is indexed by char position within the run, not the whole line
-        charToGlyph[glyphToChar[g]-stringRange.location] = g;
+    for (PRInt32 g = 0; g < numGlyphs; ++g) {
+        PRInt32 loc = glyphToChar[g] - stringRange.location;
+        if (loc >= 0 && loc < stringRange.length) {
+            charToGlyph[loc] = g;
+        }
+    }
 
     // Find character and glyph clumps that correspond, allowing for ligatures,
     // indic reordering, split glyphs, etc.
@@ -1061,12 +655,12 @@ gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
     //
     // NB: In the case of RTL layouts, we iterate over the stringRange in reverse.
     //
-    // This may find characters that fall outside the range aLayoutStart:aLayoutLength,
+    // This may find characters that fall outside the range aRunStart:aRunLength,
     // so we won't necessarily use everything we find here.
 
     PRInt32 glyphStart = 0; // looking for a clump that starts at this glyph index
     PRInt32 charStart = isLTR ?
-        0 : stringRange.length-1; // and this char index (relative to stringRange.location)
+        0 : stringRange.length-1; // and this char index (in the stringRange of the glyph run)
 
     while (glyphStart < numGlyphs) { // keep finding groups until all glyphs are accounted for
 
@@ -1081,7 +675,7 @@ gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
             // glyph range with "holes" in it. If so, we will repeat this loop to
             // extend the character range until we have a contiguous glyph sequence.
             charEnd += direction;
-            while (charEnd != charLimit && charToGlyph[charEnd] == NO_GLYPH) {
+            while (charEnd != charLimit && charToGlyph[charEnd - stringRange.location] == NO_GLYPH) {
                 charEnd += direction;
             }
 
@@ -1139,36 +733,30 @@ gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
 
         // Now charStart..charEnd is a ligature clump, corresponding to glyphStart..glyphEnd;
         // Set baseCharIndex to the char we'll actually attach the glyphs to (1st of ligature),
-        // and endCharIndex to the limit (position beyond the last char).
+        // and endCharIndex to the limit (position beyond the last char),
+        // adjusting for the offset of the stringRange relative to the textRun.
         PRInt32 baseCharIndex, endCharIndex;
         if (isLTR) {
             while (charEnd < stringRange.length && charToGlyph[charEnd] == NO_GLYPH)
                 charEnd++;
-            baseCharIndex = charStart + stringRange.location;
-            endCharIndex = charEnd + stringRange.location;
+            baseCharIndex = charStart + stringRange.location - aStringOffset + aRunStart;
+            endCharIndex = charEnd + stringRange.location - aStringOffset + aRunStart;
         } else {
             while (charEnd >= 0 && charToGlyph[charEnd] == NO_GLYPH)
                 charEnd--;
-            baseCharIndex = charEnd + stringRange.location + 1;
-            endCharIndex = charStart + stringRange.location + 1;
+            baseCharIndex = charEnd + stringRange.location - aStringOffset + aRunStart + 1;
+            endCharIndex = charStart + stringRange.location - aStringOffset + aRunStart + 1;
         }
 
         // Then we check if the clump falls outside our actual string range; if so, just go to the next.
-        if (endCharIndex <= aLayoutStart || baseCharIndex >= aLayoutStart + aLayoutLength) {
+        if (endCharIndex <= aRunStart || baseCharIndex >= aRunStart + aRunLength) {
             glyphStart = glyphEnd;
             charStart = charEnd;
             continue;
         }
         // Ensure we won't try to go beyond the valid length of the textRun's text
-        baseCharIndex = PR_MAX(baseCharIndex, aLayoutStart);
-        endCharIndex = PR_MIN(endCharIndex, aLayoutStart + aLayoutLength);
-
-        // for missing glyphs, we already recorded the info in the textRun
-        if (aUnmatched && aUnmatched[baseCharIndex]) {
-            glyphStart = glyphEnd;
-            charStart = charEnd;
-            continue;
-        }
+        baseCharIndex = PR_MAX(baseCharIndex, aRunStart);
+        endCharIndex = PR_MIN(endCharIndex, aRunStart + aRunLength);
 
         // Now we're ready to set the glyph info in the textRun; measure the glyph width
         // of the first (perhaps only) glyph, to see if it is "Simple"
@@ -1184,10 +772,10 @@ gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
         if (glyphsInClump == 1 &&
             gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyphs[glyphStart]) &&
             gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
-            aTextRun->IsClusterStart(baseCharIndex - aLayoutStart) &&
+            aTextRun->IsClusterStart(baseCharIndex) &&
             positions[glyphStart].y == 0.0)
         {
-            aTextRun->SetSimpleGlyph(baseCharIndex - aLayoutStart,
+            aTextRun->SetSimpleGlyph(baseCharIndex,
                                      g.SetSimpleGlyph(advance, glyphs[glyphStart]));
         } else {
             // collect all glyphs in a list to be assigned to the first char;
@@ -1209,19 +797,18 @@ gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
             }
 
             gfxTextRun::CompressedGlyph g;
-            g.SetComplex(aTextRun->IsClusterStart(baseCharIndex - aLayoutStart),
+            g.SetComplex(aTextRun->IsClusterStart(baseCharIndex),
                          PR_TRUE, detailedGlyphs.Length());
-            aTextRun->SetGlyphs(baseCharIndex - aLayoutStart, g, detailedGlyphs.Elements());
+            aTextRun->SetGlyphs(baseCharIndex, g, detailedGlyphs.Elements());
 
             detailedGlyphs.Clear();
         }
 
         // the rest of the chars in the group are ligature continuations, no associated glyphs
-        while (++baseCharIndex != endCharIndex &&
-            (baseCharIndex - aLayoutStart) < aLayoutLength) {
-            g.SetComplex(inOrder && aTextRun->IsClusterStart(baseCharIndex - aLayoutStart),
+        while (++baseCharIndex != endCharIndex && baseCharIndex < aRunStart + aRunLength) {
+            g.SetComplex(inOrder && aTextRun->IsClusterStart(baseCharIndex),
                          PR_FALSE, 0);
-            aTextRun->SetGlyphs(baseCharIndex - aLayoutStart, g, nsnull);
+            aTextRun->SetGlyphs(baseCharIndex, g, nsnull);
         }
 
         glyphStart = glyphEnd;
@@ -1231,141 +818,144 @@ gfxCoreTextFontGroup::SetGlyphsFromRun(gfxTextRun *aTextRun,
     return NS_OK;
 }
 
-PRBool
-gfxCoreTextFontGroup::HasFont(ATSFontRef aFontRef)
+// Construct the font attribute descriptor that we'll apply by default when creating a CTFontRef.
+// This will turn off line-edge swashes by default, because we don't know the actual line breaks
+// when doing glyph shaping.
+void
+gfxCoreTextFont::CreateDefaultFeaturesDescriptor()
 {
-    for (PRUint32 i = 0; i < mFonts.Length(); ++i) {
-        if (aFontRef == static_cast<gfxCoreTextFont *>(mFonts.ElementAt(i).get())->GetATSFont())
-            return PR_TRUE;
-    }
-    return PR_FALSE;
+    if (sDefaultFeaturesDescriptor != NULL)
+        return;
+
+    SInt16 val = kSmartSwashType;
+    CFNumberRef swashesType =
+        ::CFNumberCreate(kCFAllocatorDefault,
+                         kCFNumberSInt16Type,
+                         &val);
+    val = kLineInitialSwashesOffSelector;
+    CFNumberRef lineInitialsOffSelector =
+        ::CFNumberCreate(kCFAllocatorDefault,
+                         kCFNumberSInt16Type,
+                         &val);
+
+    CFTypeRef keys[]   = { kCTFontFeatureTypeIdentifierKey,
+                           kCTFontFeatureSelectorIdentifierKey };
+    CFTypeRef values[] = { swashesType,
+                           lineInitialsOffSelector };
+    CFDictionaryRef featureSettings[2];
+    featureSettings[0] =
+        ::CFDictionaryCreate(kCFAllocatorDefault,
+                             (const void **) keys,
+                             (const void **) values,
+                             NS_ARRAY_LENGTH(keys),
+                             &kCFTypeDictionaryKeyCallBacks,
+                             &kCFTypeDictionaryValueCallBacks);
+    ::CFRelease(lineInitialsOffSelector);
+
+    val = kLineFinalSwashesOffSelector;
+    CFNumberRef lineFinalsOffSelector =
+        ::CFNumberCreate(kCFAllocatorDefault,
+                         kCFNumberSInt16Type,
+                         &val);
+    values[1] = lineFinalsOffSelector;
+    featureSettings[1] =
+        ::CFDictionaryCreate(kCFAllocatorDefault,
+                             (const void **) keys,
+                             (const void **) values,
+                             NS_ARRAY_LENGTH(keys),
+                             &kCFTypeDictionaryKeyCallBacks,
+                             &kCFTypeDictionaryValueCallBacks);
+    ::CFRelease(lineFinalsOffSelector);
+    ::CFRelease(swashesType);
+
+    CFArrayRef featuresArray =
+        ::CFArrayCreate(kCFAllocatorDefault,
+                        (const void **) featureSettings,
+                        NS_ARRAY_LENGTH(featureSettings),
+                        &kCFTypeArrayCallBacks);
+    ::CFRelease(featureSettings[0]);
+    ::CFRelease(featureSettings[1]);
+
+    const CFTypeRef attrKeys[]   = { kCTFontFeatureSettingsAttribute };
+    const CFTypeRef attrValues[] = { featuresArray };
+    CFDictionaryRef attributesDict =
+        ::CFDictionaryCreate(kCFAllocatorDefault,
+                             (const void **) attrKeys,
+                             (const void **) attrValues,
+                             NS_ARRAY_LENGTH(attrKeys),
+                             &kCFTypeDictionaryKeyCallBacks,
+                             &kCFTypeDictionaryValueCallBacks);
+    ::CFRelease(featuresArray);
+
+    sDefaultFeaturesDescriptor =
+        ::CTFontDescriptorCreateWithAttributes(attributesDict);
+    ::CFRelease(attributesDict);
 }
 
-struct PrefFontCallbackData {
-    PrefFontCallbackData(nsTArray<nsRefPtr<gfxFontFamily> >& aFamiliesArray)
-        : mPrefFamilies(aFamiliesArray)
-    {}
-
-    nsTArray<nsRefPtr<gfxFontFamily> >& mPrefFamilies;
-
-    static PRBool AddFontFamilyEntry(eFontPrefLang aLang, const nsAString& aName, void *aClosure)
-    {
-        PrefFontCallbackData *prefFontData = static_cast<PrefFontCallbackData*>(aClosure);
-
-        gfxFontFamily *family = gfxMacPlatformFontList::PlatformFontList()->FindFamily(aName);
-        if (family) {
-            prefFontData->mPrefFamilies.AppendElement(family);
-        }
-        return PR_TRUE;
-    }
-};
-
-
-already_AddRefed<gfxFont>
-gfxCoreTextFontGroup::WhichPrefFontSupportsChar(PRUint32 aCh)
+// Create a CTFontRef, with the Common Ligatures feature disabled [static]
+CTFontRef
+gfxCoreTextFont::CreateCTFontWithDisabledLigatures(ATSFontRef aFontRef, CGFloat aSize)
 {
-    gfxFont *font;
+    if (sDisableLigaturesDescriptor == NULL) {
+        // initialize cached descriptor to turn off the Common Ligatures feature
+        SInt16 val = kLigaturesType;
+        CFNumberRef ligaturesType =
+            ::CFNumberCreate(kCFAllocatorDefault,
+                             kCFNumberSInt16Type,
+                             &val);
+        val = kCommonLigaturesOffSelector;
+        CFNumberRef commonLigaturesOffSelector =
+            ::CFNumberCreate(kCFAllocatorDefault,
+                             kCFNumberSInt16Type,
+                             &val);
 
-    // FindCharUnicodeRange only supports BMP character points and there are no non-BMP fonts in prefs
-    if (aCh > 0xFFFF)
-        return nsnull;
+        const CFTypeRef keys[]   = { kCTFontFeatureTypeIdentifierKey,
+                                     kCTFontFeatureSelectorIdentifierKey };
+        const CFTypeRef values[] = { ligaturesType,
+                                     commonLigaturesOffSelector };
+        CFDictionaryRef featureSettingDict =
+            ::CFDictionaryCreate(kCFAllocatorDefault,
+                                 (const void **) keys,
+                                 (const void **) values,
+                                 NS_ARRAY_LENGTH(keys),
+                                 &kCFTypeDictionaryKeyCallBacks,
+                                 &kCFTypeDictionaryValueCallBacks);
+        ::CFRelease(ligaturesType);
+        ::CFRelease(commonLigaturesOffSelector);
 
-    // get the pref font list if it hasn't been set up already
-    PRUint32 unicodeRange = FindCharUnicodeRange(aCh);
-    eFontPrefLang charLang = gfxPlatformMac::GetFontPrefLangFor(unicodeRange);
+        CFArrayRef featuresArray =
+            ::CFArrayCreate(kCFAllocatorDefault,
+                            (const void **) &featureSettingDict,
+                            1,
+                            &kCFTypeArrayCallBacks);
+        ::CFRelease(featureSettingDict);
 
-    // if the last pref font was the first family in the pref list, no need to recheck through a list of families
-    if (mLastPrefFont && charLang == mLastPrefLang &&
-        mLastPrefFirstFont && mLastPrefFont->TestCharacterMap(aCh)) {
-        font = mLastPrefFont;
-        NS_ADDREF(font);
-        return font;
+        CFDictionaryRef attributesDict =
+            ::CFDictionaryCreate(kCFAllocatorDefault,
+                                 (const void **) &kCTFontFeatureSettingsAttribute,
+                                 (const void **) &featuresArray,
+                                 1, // count of keys & values
+                                 &kCFTypeDictionaryKeyCallBacks,
+                                 &kCFTypeDictionaryValueCallBacks);
+        ::CFRelease(featuresArray);
+
+        sDisableLigaturesDescriptor =
+            ::CTFontDescriptorCreateCopyWithAttributes(GetDefaultFeaturesDescriptor(), attributesDict);
+        ::CFRelease(attributesDict);
     }
-
-    // based on char lang and page lang, set up list of pref lang fonts to check
-    eFontPrefLang prefLangs[kMaxLenPrefLangList];
-    PRUint32 i, numLangs = 0;
-
-    gfxPlatformMac *macPlatform = gfxPlatformMac::GetPlatform();
-    macPlatform->GetLangPrefs(prefLangs, numLangs, charLang, mPageLang);
-
-    for (i = 0; i < numLangs; i++) {
-        nsAutoTArray<nsRefPtr<gfxFontFamily>, 5> families;
-        eFontPrefLang currentLang = prefLangs[i];
-
-        gfxMacPlatformFontList *fc = gfxMacPlatformFontList::PlatformFontList();
-
-        // get the pref families for a single pref lang
-        if (!fc->GetPrefFontFamilyEntries(currentLang, &families)) {
-            eFontPrefLang prefLangsToSearch[1] = { currentLang };
-            PrefFontCallbackData prefFontData(families);
-            gfxPlatform::ForEachPrefFont(prefLangsToSearch, 1, PrefFontCallbackData::AddFontFamilyEntry,
-                                           &prefFontData);
-            fc->SetPrefFontFamilyEntries(currentLang, families);
-        }
-
-        // find the first pref font that includes the character
-        PRUint32  i, numPrefs;
-        numPrefs = families.Length();
-        for (i = 0; i < numPrefs; i++) {
-            // look up the appropriate face
-            gfxFontFamily *family = families[i];
-            if (!family) continue;
-
-            // if a pref font is used, it's likely to be used again in the same text run.
-            // the style doesn't change so the face lookup can be cached rather than calling
-            // GetOrMakeCTFont repeatedly.  speeds up FindFontForChar lookup times for subsequent
-            // pref font lookups
-            if (family == mLastPrefFamily && mLastPrefFont->TestCharacterMap(aCh)) {
-                font = mLastPrefFont;
-                NS_ADDREF(font);
-                return font;
-            }
-
-            PRBool needsBold;
-            MacOSFontEntry *fe =
-                static_cast<MacOSFontEntry*>(family->FindFontForStyle(mStyle, needsBold));
-            // if ch in cmap, create and return a gfxFont
-            if (fe && fe->TestCharacterMap(aCh)) {
-                nsRefPtr<gfxCoreTextFont> prefFont = GetOrMakeCTFont(fe, &mStyle, needsBold);
-                if (!prefFont) continue;
-                mLastPrefFamily = family;
-                mLastPrefFont = prefFont;
-                mLastPrefLang = charLang;
-                mLastPrefFirstFont = (i == 0);
-                nsRefPtr<gfxFont> font2 = prefFont.get();
-                return font2.forget();
-            }
-
-        }
-    }
-
-    return nsnull;
-}
-
-already_AddRefed<gfxFont>
-gfxCoreTextFontGroup::WhichSystemFontSupportsChar(PRUint32 aCh)
-{
-    MacOSFontEntry *fe = static_cast<MacOSFontEntry*>
-        (gfxMacPlatformFontList::PlatformFontList()->FindFontForChar(aCh, GetFontAt(0)));
-    if (fe) {
-        nsRefPtr<gfxCoreTextFont> ctFont = GetOrMakeCTFont(fe, &mStyle, PR_FALSE); // ignore bolder considerations in system fallback case...
-        nsRefPtr<gfxFont> font = ctFont.get();
-        return font.forget();
-    }
-
-    return nsnull;
+    
+    return ::CTFontCreateWithPlatformFont(aFontRef, aSize, NULL, sDisableLigaturesDescriptor);
 }
 
 void
-gfxCoreTextFontGroup::UpdateFontList()
+gfxCoreTextFont::Shutdown() // [static]
 {
-    // if user font set is set, check to see if font list needs updating
-    if (mUserFontSet && mCurrGeneration != GetGeneration()) {
-        // xxx - can probably improve this to detect when all fonts were found, so no need to update list
-        mFonts.Clear();
-        mUnderlineOffset = UNDERLINE_OFFSET_NOT_SET;
-        ForEachFont(FindCTFont, this);
-        mCurrGeneration = GetGeneration();
+    if (sDisableLigaturesDescriptor != NULL) {
+        ::CFRelease(sDisableLigaturesDescriptor);
+        sDisableLigaturesDescriptor = NULL;
+    }        
+    if (sDefaultFeaturesDescriptor != NULL) {
+        ::CFRelease(sDefaultFeaturesDescriptor);
+        sDefaultFeaturesDescriptor = NULL;
     }
 }

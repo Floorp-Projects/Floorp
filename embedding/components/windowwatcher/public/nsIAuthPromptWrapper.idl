@@ -50,7 +50,7 @@ interface nsIPrompt;
  * @status
  */
 
-[scriptable, uuid(6228d644-17fe-11d4-8cee-0060b0fc14a3)]
+[scriptable, uuid(7708b352-35e0-47f6-a1c2-ccdd3319d0ab)]
 interface nsIAuthPromptWrapper : nsIAuthPrompt
 {
     /**

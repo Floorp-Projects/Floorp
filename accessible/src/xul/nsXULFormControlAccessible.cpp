@@ -96,10 +96,11 @@ nsXULButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 NS_IMETHODIMP
 nsXULButtonAccessible::DoAction(PRUint8 aIndex)
 {
-  if (aIndex == 0)
-    return DoCommand();
+  if (aIndex != 0)
+    return NS_ERROR_INVALID_ARG;
 
-  return NS_ERROR_INVALID_ARG;
+  DoCommand();
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -229,17 +230,17 @@ nsXULButtonAccessible::CacheChildren()
   if (!menupopupAccessible)
     return;
 
-  mChildren.AppendObject(menupopupAccessible);
-
   nsRefPtr<nsAccessible> menupopupAcc =
     nsAccUtils::QueryObject<nsAccessible>(menupopupAccessible);
+
+  mChildren.AppendElement(menupopupAcc);
   menupopupAcc->SetParent(this);
 
   if (buttonAccessible) {
-    mChildren.AppendObject(buttonAccessible);
-
     nsRefPtr<nsAccessible> buttonAcc =
       nsAccUtils::QueryObject<nsAccessible>(buttonAccessible);
+
+    mChildren.AppendElement(buttonAcc);
     buttonAcc->SetParent(this);
   }
 }
@@ -419,12 +420,14 @@ NS_IMETHODIMP nsXULCheckboxAccessible::GetActionName(PRUint8 aIndex, nsAString& 
 /**
   * Tell the checkbox to do its only action -- check( or uncheck) itself
   */
-NS_IMETHODIMP nsXULCheckboxAccessible::DoAction(PRUint8 index)
+NS_IMETHODIMP
+nsXULCheckboxAccessible::DoAction(PRUint8 aIndex)
 {
-  if (index == eAction_Click) {
-   return DoCommand();
-  }
-  return NS_ERROR_INVALID_ARG;
+  if (aIndex != eAction_Click)
+    return NS_ERROR_INVALID_ARG;
+
+  DoCommand();
+  return NS_OK;
 }
 
 /**
@@ -776,26 +779,26 @@ void
 nsXULToolbarButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
                                                          PRInt32 *aSetSize)
 {
-  nsCOMPtr<nsIAccessible> parent(GetParent());
   PRInt32 setSize = 0;
   PRInt32 posInSet = 0;
 
-  if (parent) {
-    nsCOMPtr<nsIAccessible> sibling;
-    nsCOMPtr<nsIAccessible> tempSibling;
-    parent->GetFirstChild(getter_AddRefs(sibling));
-    while (sibling) {
-      if (IsSeparator(sibling)) { // end of a group of buttons
-        if (posInSet)
-          break; // we've found our group, so we're done
-        setSize = 0; // not our group, so start a new group
-      } else {
-        setSize++; // another button in the group
-        if (sibling == this)
-          posInSet = setSize; // we've found our button
-      }
-      sibling->GetNextSibling(getter_AddRefs(tempSibling));
-      sibling.swap(tempSibling);
+  nsAccessible* parent(GetParent());
+  NS_ENSURE_TRUE(parent,);
+
+  PRInt32 childCount = parent->GetChildCount();
+  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessible* child = parent->GetChildAt(childIdx);
+    if (IsSeparator(child)) { // end of a group of buttons
+      if (posInSet)
+        break; // we've found our group, so we're done
+
+      setSize = 0; // not our group, so start a new group
+
+    } else {
+      setSize++; // another button in the group
+
+      if (child == this)
+        posInSet = setSize; // we've found our button
     }
   }
 
@@ -804,11 +807,10 @@ nsXULToolbarButtonAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
 }
 
 PRBool
-nsXULToolbarButtonAccessible::IsSeparator(nsIAccessible *aAccessible)
+nsXULToolbarButtonAccessible::IsSeparator(nsAccessible *aAccessible)
 {
   nsCOMPtr<nsIDOMNode> domNode;
-  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
-  accessNode->GetDOMNode(getter_AddRefs(domNode));
+  aAccessible->GetDOMNode(getter_AddRefs(domNode));
   nsCOMPtr<nsIContent> contentDomNode(do_QueryInterface(domNode));
 
   if (!contentDomNode)

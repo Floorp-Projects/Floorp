@@ -49,6 +49,8 @@ using NPError;
 using NPRemoteWindow;
 using NPRemoteEvent;
 using NPRect;
+using NPNURLVariable;
+using mozilla::plugins::NativeWindowHandle;
 
 namespace mozilla {
 namespace plugins {
@@ -63,8 +65,7 @@ rpc protocol PPluginInstance
   manages PStreamNotify;
 
 child:
-  rpc __delete__()
-    returns (NPError rv);
+  rpc __delete__();
 
   rpc NPP_SetWindow(NPRemoteWindow window)
     returns (NPError rv);
@@ -79,8 +80,13 @@ child:
   rpc NPP_GetValue_NPPVpluginScriptableNPObject()
     returns (nullable PPluginScriptableObject value, NPError result);
 
+  rpc NPP_SetValue_NPNVprivateModeBool(bool value) returns (NPError result);
+
   rpc NPP_HandleEvent(NPRemoteEvent event)
     returns (int16_t handled);
+
+  rpc NPP_Destroy()
+    returns (NPError rv);
 
 parent:
   rpc NPN_GetValue_NPNVjavascriptEnabledBool()
@@ -93,6 +99,8 @@ parent:
     returns (nullable PPluginScriptableObject value, NPError result);
   rpc NPN_GetValue_NPNVprivateModeBool()
     returns (bool value, NPError result);
+  rpc NPN_GetValue_NPNVnetscapeWindow()
+    returns (NativeWindowHandle value, NPError result);
 
   rpc NPN_SetValue_NPPVpluginWindow(bool windowed)
     returns (NPError result);
@@ -121,6 +129,18 @@ parent:
   rpc NPN_PopPopupsEnabledState()
     returns (bool aSuccess);
 
+  rpc NPN_GetValueForURL(NPNURLVariable variable, nsCString url)
+    returns (nsCString value, NPError result);
+
+  rpc NPN_SetValueForURL(NPNURLVariable variable, nsCString url,
+                         nsCString value)
+    returns (NPError result);
+
+  rpc NPN_GetAuthenticationInfo(nsCString protocol_, nsCString host,
+                                int32_t port, nsCString scheme,
+                                nsCString realm)
+    returns (nsCString username, nsCString password, NPError result);
+
 both:
   rpc PPluginScriptableObject();
 
@@ -141,6 +161,12 @@ parent:
   rpc PPluginStream(nsCString mimeType,
                     nsCString target)
     returns (NPError result);
+
+parent:
+  rpc PluginGotFocus();
+child:
+  rpc SetPluginFocus();
+  rpc UpdateWindow();
 };
 
 } // namespace plugins

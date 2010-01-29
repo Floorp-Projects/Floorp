@@ -46,7 +46,9 @@ MODULE		= content
 LIBRARY_NAME	= gkconcvs_s
 LIBXUL_LIBRARY  = 1
 
-
+EXPORTS = \
+	CustomQS_WebGL.h \
+	$(NULL)
 
 CPPSRCS	= \
 	CanvasUtils.cpp \
@@ -82,7 +84,6 @@ WEBGL_PLATFORM = CGL
 endif
 
 CPPSRCS += \
-	WebGLArrays.cpp \
 	WebGLContext.cpp \
 	WebGLContextGL.cpp \
 	WebGLContextUtils.cpp \

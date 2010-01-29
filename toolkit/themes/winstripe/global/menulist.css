@@ -55,6 +55,7 @@ menulist {
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   background-color: -moz-Field;
   color: -moz-FieldText;
+  text-shadow: none;
 }
 
 .menulist-label-box {

@@ -60,7 +60,6 @@
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsIView.h"
-#include "nsIScrollableView.h"
 #include "nsIViewManager.h"
 #include "nsPresContext.h"
 #include "nsILookAndFeel.h"
@@ -368,6 +367,48 @@ nsresult nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType,
   outCoordinates->width = ComputeMetrics(theFrame, theFrameOffset, outCoordinates->height).mCaretWidth;
   
   return NS_OK;
+}
+
+nsIFrame* nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect)
+{
+  nsCOMPtr<nsIDOMNode> focusNode;
+  nsresult rv = aSelection->GetFocusNode(getter_AddRefs(focusNode));
+  if (NS_FAILED(rv) || !focusNode)
+    return nsnull;
+
+  PRInt32 focusOffset;
+  rv = aSelection->GetFocusOffset(&focusOffset);
+  if (NS_FAILED(rv))
+    return nsnull;
+    
+  nsCOMPtr<nsIContent> contentNode = do_QueryInterface(focusNode);
+  if (!contentNode)
+    return nsnull;
+
+  // find the frame that contains the content node that has focus
+  nsIFrame* theFrame = nsnull;
+  PRInt32   theFrameOffset = 0;
+
+  nsCOMPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+  if (!frameSelection)
+    return nsnull;
+  PRUint8 bidiLevel = frameSelection->GetCaretBidiLevel();
+  rv = GetCaretFrameForNodeOffset(contentNode, focusOffset,
+                                  frameSelection->GetHint(), bidiLevel,
+                                  &theFrame, &theFrameOffset);
+  if (NS_FAILED(rv) || !theFrame)
+    return nsnull;
+  
+  nsPoint framePos(0, 0);
+  rv = theFrame->GetPointFromOffset(theFrameOffset, &framePos);
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  // now add the frame offset to the view offset, and we're done
+  nscoord height = theFrame->GetSize().height;
+  nscoord width = ComputeMetrics(theFrame, theFrameOffset, height).mCaretWidth;
+  *aRect = nsRect(framePos.x, 0, width, height);
+  return theFrame;
 }
 
 void nsCaret::DrawCaretAfterBriefDelay()
@@ -950,10 +991,13 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame,
     if (outRelativeView && coordType == eTopLevelWindowCoordinates) {
       nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
       if (presShell) {
-        nsIViewManager* vm =
-          presShell->GetPresContext()->RootPresContext()->PresShell()->GetViewManager();
-        if (vm) {
-          vm->GetRootView(*outRelativeView);
+        nsRootPresContext* rootPC =
+          presShell->GetPresContext()->GetRootPresContext();
+        if (rootPC) {
+          nsIViewManager* vm = rootPC->PresShell()->GetViewManager();
+          if (vm) {
+            vm->GetRootView(*outRelativeView);
+          }
         }
       }
     }
@@ -1216,22 +1260,14 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   if (scrollFrame)
   {
     // First, use the scrollFrame to get at the scrollable view that we're in.
-    nsIScrollableFrame *scrollable = do_QueryFrame(scrollFrame);
-    nsIScrollableView *scrollView = scrollable->GetScrollableView();
-    nsIView *view;
-    scrollView->GetScrolledView(view);
-
-    // Compute the caret's coordinates in the enclosing view's coordinate
-    // space. To do so, we need to correct for both the original frame's
-    // offset from the scrollframe, and the scrollable view's offset from the
-    // scrolled frame's view.
-    nsPoint toScroll = aFrame->GetOffsetTo(scrollFrame) -
-      view->GetOffsetTo(scrollFrame->GetView());
-    nsRect caretInScroll = mCaretRect + toScroll;
+    nsIScrollableFrame *sf = do_QueryFrame(scrollFrame);
+    nsIFrame *scrolled = sf->GetScrolledFrame();
+    nsRect caretInScroll = mCaretRect + aFrame->GetOffsetTo(scrolled);
 
     // Now see if thet caret extends beyond the view's bounds. If it does,
     // then snap it back, put it as close to the edge as it can.
-    nscoord overflow = caretInScroll.XMost() - view->GetBounds().width;
+    nscoord overflow = caretInScroll.XMost() -
+      scrolled->GetOverflowRectRelativeToSelf().width;
     if (overflow > 0)
       mCaretRect.x -= overflow;
   }

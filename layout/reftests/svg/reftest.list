@@ -101,6 +101,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01c.svg objectBoundingBox-and-pattern-01-ref.svg
 fails-if(http.oscpu.match(/Mac\x20OS\x20X\x2010\.4$/)) == opacity-and-gradient-01.svg pass.svg # fails on OS X 10.4 (bug 379610)
+== opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
 == path-01.svg path-01-ref.svg
 == pattern-live-01a.svg pattern-live-01-ref.svg
@@ -136,3 +137,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weigh
 == userSpaceOnUse-and-pattern-01.svg userSpaceOnUse-and-pattern-01-ref.svg
 == viewBox-and-pattern-01.svg pass.svg
 == viewport-percent-graphic-user-01.svg pass.svg
+
+== svg-effects-area-unzoomed.xhtml svg-effects-area-unzoomed-ref.xhtml
+fails == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in-ref.xhtml # Bug 541270
+fails == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out-ref.xhtml # Bug 541270

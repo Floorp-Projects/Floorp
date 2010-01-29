@@ -220,4 +220,19 @@ inline BOOL ModifyWorldTransform(HDC hdc, CONST XFORM * lpxf, DWORD mode) { retu
 
 #endif
 
+#ifdef CAIRO_HAS_DWRITE_FONT
+CAIRO_BEGIN_DECLS
+
+cairo_public cairo_int_status_t
+cairo_dwrite_show_glyphs_on_surface(void			*surface,
+				    cairo_operator_t	 op,
+				    const cairo_pattern_t	*source,
+				    cairo_glyph_t		*glyphs,
+				    int			 num_glyphs,
+				    cairo_scaled_font_t	*scaled_font,
+				    cairo_rectangle_int_t	*extents);
+
+
+CAIRO_END_DECLS
+#endif /* CAIRO_HAS_DWRITE_FONT */
 #endif /* CAIRO_WIN32_PRIVATE_H */

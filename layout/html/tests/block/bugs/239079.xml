@@ -2,6 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
  <head>
   <title>CSS 2.1 Test Suite: ID selectors starting with number</title>
+  <link rel="author" title="Boris Zbarsky" href="mailto:bzbarsky@mit.edu" />
   <link rel="help" href="http://www.w3.org/TR/CSS21/selector.html#id-selectors"/>
   <style type="text/css">
     #div { color: green }

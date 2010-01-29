@@ -1536,6 +1536,11 @@ RemoveChildFromInsertionPoint(nsAnonymousContentList* aInsertionPointList,
   // when we've hit it, but just trying to remove from all the pseudo or
   // non-pseudo insertion points, depending on the value of
   // aRemoveFromPseudoPoints, should work.
+
+  // XXXbz nsXBLInsertionPoint::RemoveChild could return whether it
+  // removed something.  Wouldn't that let us short-circuit the walk?
+  // Or can a child be in multiple insertion points?  I wouldn't think
+  // so...
   PRInt32 count = aInsertionPointList->GetInsertionPointCount();
   for (PRInt32 i = 0; i < count; i++) {
     nsXBLInsertionPoint* point =
@@ -1570,6 +1575,21 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
                                       aChild,
                                       PR_FALSE);
         SetInsertionParent(aChild, nsnull);
+      }
+
+      // Also remove from the list in mContentListTable, if any.
+      if (mContentListTable.ops) {
+        nsCOMPtr<nsIDOMNodeList> otherNodeList =
+          static_cast<nsAnonymousContentList*>
+                     (LookupObject(mContentListTable, point));
+        if (otherNodeList && otherNodeList != nodeList) {
+          // otherNodeList is always anonymous
+          RemoveChildFromInsertionPoint(static_cast<nsAnonymousContentList*>
+                                        (static_cast<nsIDOMNodeList*>
+                                                    (otherNodeList)),
+                                        aChild,
+                                        PR_FALSE);
+        }
       }
     }
 

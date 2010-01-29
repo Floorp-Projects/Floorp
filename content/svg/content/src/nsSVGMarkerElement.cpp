@@ -114,7 +114,7 @@ nsSVGOrientType::SetBaseValue(PRUint16 aValue,
       PR_TRUE);
     return NS_OK;
   }
-  return NS_ERROR_FAILURE;
+  return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
 nsresult
@@ -382,7 +382,7 @@ nsSVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
                                        float aX, float aY, float aAngle)
 {
   float scale = 1.0;
-  if (mEnumAttributes[MARKERUNITS].GetAnimValue() ==
+  if (mEnumAttributes[MARKERUNITS].GetAnimValue(this) ==
       SVG_MARKERUNITS_STROKEWIDTH)
     scale = aStrokeWidth;
 

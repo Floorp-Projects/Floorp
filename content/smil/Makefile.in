@@ -70,6 +70,8 @@ CPPSRCS		+= \
 	nsSMILTimeValue.cpp \
 	nsSMILTimeValueSpec.cpp \
 	nsSMILValue.cpp \
+	SMILBoolType.cpp \
+	SMILEnumType.cpp \
 		$(NULL)
 endif
 
@@ -89,6 +91,7 @@ EXPORTS		+= \
 	  nsSMILAnimationController.h \
 	  nsSMILCompositorTable.h \
 	  nsSMILKeySpline.h \
+	  nsSMILMilestone.h \
 	  nsSMILTimeContainer.h \
 	  nsSMILTypes.h \
 	  $(NULL)

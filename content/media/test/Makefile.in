@@ -193,6 +193,7 @@ _TEST_FILES += \
 		test_contentDuration4.html \
 		test_contentDuration5.html \
 		test_contentDuration6.html \
+		test_contentDuration7.html \
 		test_delay_load.html \
 		test_duration1.html \
 		test_ended1.html \
@@ -217,6 +218,7 @@ _TEST_FILES += \
 		contentDuration4.sjs \
 		contentDuration5.sjs \
 		contentDuration6.sjs \
+		contentDuration7.sjs \
 		$(NULL)
 # These tests disabled until we figure out random failures.
 # Bug 492821:

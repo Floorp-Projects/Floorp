@@ -155,6 +155,13 @@ private:
     std::stack<Message> mStack;
 
     //
+    // Stack of replies received "out of turn", because of RPC
+    // in-calls racing with replies to outstanding in-calls.  See
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=521929.
+    //
+    std::stack<Message> mOutOfTurnReplies;
+
+    //
     // Stack of RPC in-calls that were deferred because of race
     // conditions.
     //

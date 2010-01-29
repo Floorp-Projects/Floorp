@@ -165,12 +165,12 @@ nsSVGPreserveAspectRatio::SetBaseValueString(const nsAString &aValueAsString,
 {
   if (aValueAsString.IsEmpty() ||
       NS_IsAsciiWhitespace(aValueAsString[0])) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
   nsWhitespaceTokenizer tokenizer(aValueAsString);
   if (!tokenizer.hasMoreTokens()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
   const nsAString &token = tokenizer.nextToken();
 
@@ -181,24 +181,28 @@ nsSVGPreserveAspectRatio::SetBaseValueString(const nsAString &aValueAsString,
 
   if (val.mDefer) {
     if (!tokenizer.hasMoreTokens()) {
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_DOM_SYNTAX_ERR;
     }
     rv = val.SetAlign(GetAlignForString(tokenizer.nextToken()));
   } else {
     rv = val.SetAlign(GetAlignForString(token));
   }
 
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
+  }
 
   if (tokenizer.hasMoreTokens()) {
     rv = val.SetMeetOrSlice(GetMeetOrSliceForString(tokenizer.nextToken()));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_DOM_SYNTAX_ERR;
+    }
   } else {
     val.mMeetOrSlice = nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET;
   }
 
   if (tokenizer.hasMoreTokens()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
   mAnimVal = mBaseVal = val;

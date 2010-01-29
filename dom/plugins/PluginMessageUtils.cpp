@@ -40,6 +40,11 @@
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 
+#include "PluginInstanceParent.h"
+#include "PluginInstanceChild.h"
+#include "PluginScriptableObjectParent.h"
+#include "PluginScriptableObjectChild.h"
+
 namespace {
 
 class DeferNPObjectReleaseRunnable : public nsRunnable
@@ -70,6 +75,8 @@ DeferNPObjectReleaseRunnable::Run()
 
 namespace mozilla {
 namespace plugins {
+
+PRLogModuleInfo* gPluginLog = PR_NewLogModule("IPCPlugins");
 
 void
 DeferNPObjectLastRelease(const NPNetscapeFuncs* f, NPObject* o)

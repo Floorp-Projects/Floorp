@@ -140,19 +140,23 @@ public:
   /**
    * Is the first passed in node an ancestor of the second?
    * Note: A node is not considered to be the ancestor of itself.
-   * @param aPossibleAncestorNode -- node to test for ancestor-ness of aPossibleDescendantNode
-   * @param aPossibleDescendantNode -- node to test for descendant-ness of aPossibleAncestorNode
-   * @return PR_TRUE if aPossibleAncestorNode is an ancestor of aPossibleDescendantNode
+   *
+   * @param  aPossibleAncestorNode   [in] node to test for ancestor-ness of
+   *                                   aPossibleDescendantNode
+   * @param  aPossibleDescendantNode [in] node to test for descendant-ness of
+   *                                   aPossibleAncestorNode
+   * @return PR_TRUE                  if aPossibleAncestorNode is an ancestor of
+   *                                   aPossibleDescendantNode
    */
-   static PRBool IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
-                              nsIDOMNode *aPossibleDescendantNode);
+   static PRBool IsAncestorOf(nsINode *aPossibleAncestorNode,
+                              nsINode *aPossibleDescendantNode);
 
   /**
    * Are the first node and the second siblings?
+   *
    * @return PR_TRUE if aDOMNode1 and aDOMNode2 have same parent
    */
-   static PRBool AreSiblings(nsIDOMNode *aDOMNode1,
-                             nsIDOMNode *aDOMNode2);
+   static PRBool AreSiblings(nsINode *aNode1, nsINode *aNode2);
 
   /**
    * Helper method to scroll range into view, used for implementation of
@@ -249,6 +253,13 @@ public:
    * @return          PR_TRUE if there is an ID set for this node
    */
   static PRBool GetID(nsIContent *aContent, nsAString& aID);
+
+  /**
+   * Convert attribute value of the given node to positive integer. If no
+   * attribute or wrong value then false is returned.
+   */
+  static PRBool GetUIntAttr(nsIContent *aContent, nsIAtom *aAttr,
+                            PRInt32 *aUInt);
 
   /**
    * Check if the given element is XLink.
@@ -456,6 +467,133 @@ public:
    */
   static void GeneratePopupTree(nsIDOMNode *aNode, PRBool aIsAnon = PR_FALSE);
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// nsRunnable helpers
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Use NS_DECL_RUNNABLEMETHOD_ macros to declare a runnable class for the given
+ * method of the given class. There are three macros:
+ *  NS_DECL_RUNNABLEMETHOD(Class, Method)
+ *  NS_DECL_RUNNABLEMETHOD_ARG1(Class, Method, Arg1Type)
+ *  NS_DECL_RUNNABLEMETHOD_ARG2(Class, Method, Arg1Type, Arg2Type)
+ * Note Arg1Type and Arg2Type must be types which keeps the objects alive.
+ *
+ * Use NS_DISPATCH_RUNNABLEMETHOD_ macros to create an instance of declared
+ * runnable class and dispatch it to main thread. Availabe macros are:
+ *  NS_DISPATCH_RUNNABLEMETHOD(Method, Object)
+ *  NS_DISPATCH_RUNNABLEMETHOD_ARG1(Method, Object, Arg1)
+ *  NS_DISPATCH_RUNNABLEMETHOD_ARG2(Method, Object, Arg1, Arg2)
+ */
+
+#define NS_DECL_RUNNABLEMETHOD_HELPER(ClassType, Method)                       \
+  void Revoke()                                                                \
+  {                                                                            \
+    NS_IF_RELEASE(mObj);                                                       \
+  }                                                                            \
+                                                                               \
+protected:                                                                     \
+  virtual ~nsRunnableMethod_##Method()                                         \
+  {                                                                            \
+    NS_IF_RELEASE(mObj);                                                       \
+  }                                                                            \
+                                                                               \
+private:                                                                       \
+  ClassType *mObj;                                                             \
+
+
+#define NS_DECL_RUNNABLEMETHOD(ClassType, Method)                              \
+class nsRunnableMethod_##Method : public nsRunnable                            \
+{                                                                              \
+public:                                                                        \
+  nsRunnableMethod_##Method(ClassType *aObj) : mObj(aObj)                      \
+  {                                                                            \
+    NS_IF_ADDREF(mObj);                                                        \
+  }                                                                            \
+                                                                               \
+  NS_IMETHODIMP Run()                                                          \
+  {                                                                            \
+    if (!mObj)                                                                 \
+      return NS_OK;                                                            \
+    (mObj-> Method)();                                                         \
+    return NS_OK;                                                              \
+  }                                                                            \
+                                                                               \
+  NS_DECL_RUNNABLEMETHOD_HELPER(ClassType, Method)                             \
+                                                                               \
+};
+
+#define NS_DECL_RUNNABLEMETHOD_ARG1(ClassType, Method, Arg1Type)               \
+class nsRunnableMethod_##Method : public nsRunnable                            \
+{                                                                              \
+public:                                                                        \
+  nsRunnableMethod_##Method(ClassType *aObj, Arg1Type aArg1) :                 \
+    mObj(aObj), mArg1(aArg1)                                                   \
+  {                                                                            \
+    NS_IF_ADDREF(mObj);                                                        \
+  }                                                                            \
+                                                                               \
+  NS_IMETHODIMP Run()                                                          \
+  {                                                                            \
+    if (!mObj)                                                                 \
+      return NS_OK;                                                            \
+    (mObj-> Method)(mArg1);                                                    \
+    return NS_OK;                                                              \
+  }                                                                            \
+                                                                               \
+  NS_DECL_RUNNABLEMETHOD_HELPER(ClassType, Method)                             \
+  Arg1Type mArg1;                                                              \
+};
+
+#define NS_DECL_RUNNABLEMETHOD_ARG2(ClassType, Method, Arg1Type, Arg2Type)     \
+class nsRunnableMethod_##Method : public nsRunnable                            \
+{                                                                              \
+public:                                                                        \
+                                                                               \
+  nsRunnableMethod_##Method(ClassType *aObj,                                   \
+                            Arg1Type aArg1, Arg2Type aArg2) :                  \
+    mObj(aObj), mArg1(aArg1), mArg2(aArg2)                                     \
+  {                                                                            \
+    NS_IF_ADDREF(mObj);                                                        \
+  }                                                                            \
+                                                                               \
+  NS_IMETHODIMP Run()                                                          \
+  {                                                                            \
+    if (!mObj)                                                                 \
+      return NS_OK;                                                            \
+    (mObj-> Method)(mArg1, mArg2);                                             \
+    return NS_OK;                                                              \
+  }                                                                            \
+                                                                               \
+  NS_DECL_RUNNABLEMETHOD_HELPER(ClassType, Method)                             \
+  Arg1Type mArg1;                                                              \
+  Arg2Type mArg2;                                                              \
+};
+
+#define NS_DISPATCH_RUNNABLEMETHOD(Method, Obj)                                \
+{                                                                              \
+  nsCOMPtr<nsIRunnable> runnable =                                             \
+    new nsRunnableMethod_##Method(Obj);                                        \
+  if (runnable)                                                                \
+    NS_DispatchToMainThread(runnable);                                         \
+}
+
+#define NS_DISPATCH_RUNNABLEMETHOD_ARG1(Method, Obj, Arg1)                     \
+{                                                                              \
+  nsCOMPtr<nsIRunnable> runnable =                                             \
+    new nsRunnableMethod_##Method(Obj, Arg1);                                  \
+  if (runnable)                                                                \
+    NS_DispatchToMainThread(runnable);                                         \
+}
+
+#define NS_DISPATCH_RUNNABLEMETHOD_ARG2(Method, Obj, Arg1, Arg2)               \
+{                                                                              \
+  nsCOMPtr<nsIRunnable> runnable =                                             \
+    new nsRunnableMethod_##Method(Obj, Arg1, Arg2);                            \
+  if (runnable)                                                                \
+    NS_DispatchToMainThread(runnable);                                         \
+}
 
 #endif
 

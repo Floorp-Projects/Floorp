@@ -76,6 +76,10 @@
 #endif
 #endif
 
+#ifdef XP_MACOSX
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://mozapps/locale/downloads/downloads.properties"
 #define DOWNLOAD_MANAGER_ALERT_ICON "chrome://mozapps/skin/downloads/downloadIcon.png"
 #define PREF_BDM_SHOWALERTONCOMPLETE "browser.download.manager.showAlertOnComplete"
@@ -1851,14 +1855,10 @@ nsDownloadManager::OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
 }
 
 NS_IMETHODIMP
-nsDownloadManager::OnPageExpired(nsIURI *aURI, PRTime aVisitTime,
-                                 PRBool aWholeEntry)
+nsDownloadManager::OnDeleteVisits(nsIURI *aURI, PRTime aVisitTime)
 {
-  // Don't bother removing downloads if there are still recent visits
-  if (!aWholeEntry)
-    return NS_OK;
-
-  return RemoveDownloadsForURI(aURI);
+  // Don't bother removing downloads until the page is removed.
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2197,7 +2197,7 @@ nsDownload::SetState(DownloadState aState)
             }
         }
       }
-#if defined(XP_WIN) && !defined(WINCE)
+#if (defined(XP_WIN) && !defined(WINCE)) || defined(XP_MACOSX)
       nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget);
       nsCOMPtr<nsIFile> file;
       nsAutoString path;
@@ -2207,6 +2207,7 @@ nsDownload::SetState(DownloadState aState)
           file &&
           NS_SUCCEEDED(file->GetPath(path))) {
 
+#ifdef XP_WIN
         // On windows, add the download to the system's "recent documents"
         // list, with a pref to disable.
         {
@@ -2214,11 +2215,24 @@ nsDownload::SetState(DownloadState aState)
           if (pref)
             pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
 
-          if (addToRecentDocs)
+          if (addToRecentDocs &&
+              !nsDownloadManager::gDownloadManagerService->mInPrivateBrowsing)
             ::SHAddToRecentDocs(SHARD_PATHW, path.get());
         }
+#endif
+#ifdef XP_MACOSX
+        // On OS X, make the downloads stack bounce.
+        CFStringRef observedObject = ::CFStringCreateWithCString(kCFAllocatorDefault,
+                                             NS_ConvertUTF16toUTF8(path).get(),
+                                             kCFStringEncodingUTF8);
+        CFNotificationCenterRef center = ::CFNotificationCenterGetDistributedCenter();
+        ::CFNotificationCenterPostNotification(center, CFSTR("com.apple.DownloadFileFinished"),
+                                               observedObject, NULL, TRUE);
+        ::CFRelease(observedObject);
+#endif
       }
 
+#ifdef XP_WIN
       // Adjust file attributes so that by default, new files are indexed
       // by desktop search services. Skip off those that land in the temp
       // folder.
@@ -2235,6 +2249,7 @@ nsDownload::SetState(DownloadState aState)
       if (!isTemp && localFileWin)
         (void)localFileWin->SetFileAttributesWin(nsILocalFileWin::WFA_SEARCH_INDEXED);
 
+#endif
 #endif
       // Now remove the download if the user's retention policy is "Remove when Done"
       if (mDownloadManager->GetRetentionBehavior() == 0)

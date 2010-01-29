@@ -40,6 +40,7 @@
 #endif
 
 [xpcom]
+@BINPATH@/dependentlibs.list
 @BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@plc4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@plds4@DLL_SUFFIX@
@@ -318,6 +319,7 @@
 @BINPATH@/components/nsTaggingService.js
 @BINPATH@/components/nsPlacesDBFlush.js
 @BINPATH@/components/nsPlacesAutoComplete.js
+@BINPATH@/components/nsPlacesExpiration.js
 @BINPATH@/components/PlacesProtocolHandler.js
 @BINPATH@/components/nsDefaultCLH.js
 @BINPATH@/components/nsContentPrefService.js
@@ -326,6 +328,7 @@
 @BINPATH@/components/nsWebHandlerApp.js
 @BINPATH@/components/nsBadCertHandler.js
 @BINPATH@/components/nsFormAutoComplete.js
+@BINPATH@/components/contentSecurityPolicy.js
 #ifdef XP_MACOSX
 @BINPATH@/components/libalerts_s.dylib
 #endif

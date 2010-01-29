@@ -79,8 +79,7 @@
 == background-image-width-left-6.html background-image-width-6.html
 
 
-# These all fail due to bug 155955, and maybe also bug 371180, plus a
-# bunch of other bugs that ought to be filed.
+# These all fail due bug 371180, plus a bunch of other bugs that ought to be filed.
 fails == collapsed-border-height-4.html border-base-ref.html
 fails == collapsed-border-height-5.html border-height-10-ref.html
 fails == collapsed-border-height-6.html border-height-10-ref.html

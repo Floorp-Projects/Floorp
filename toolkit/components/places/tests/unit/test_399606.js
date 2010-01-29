@@ -66,7 +66,7 @@ var observer = {
   onDeleteURI: function(aURI) {},
   onClearHistory: function() {},
   onPageChanged: function(aURI, aWhat, aValue) {},
-  onPageExpired: function(aURI, aVisitTime, aWholeEntry) {},
+  onDeleteVisits: function() {},
   QueryInterface: function(iid) {
     if (iid.equals(Ci.nsINavHistoryObserver) ||
         iid.equals(Ci.nsISupports)) {

@@ -76,13 +76,11 @@ public:
   NS_IMETHOD NewValueSpecifiedUnits(PRUint16 unitType,
                                     float valueInSpecifiedUnits)
     {
-      NS_ENSURE_FINITE(valueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
-      mVal.NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits, nsnull);
-      return NS_OK;
+      return mVal.NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits, nsnull);
     }
 
   NS_IMETHOD ConvertToSpecifiedUnits(PRUint16 unitType)
-    { mVal.ConvertToSpecifiedUnits(unitType, nsnull); return NS_OK; }
+    { return mVal.ConvertToSpecifiedUnits(unitType, nsnull); }
 
 private:
   nsSVGAngle mVal;
@@ -205,7 +203,7 @@ GetValueFromString(const nsAString &aValueAsString,
   const char *str = value.get();
 
   if (NS_IsAsciiWhitespace(*str))
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_SYNTAX_ERR;
   
   char *rest;
   *aValue = float(PR_strtod(str, &rest));
@@ -216,7 +214,7 @@ GetValueFromString(const nsAString &aValueAsString,
     }
   }
   
-  return NS_ERROR_FAILURE;
+  return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
 float
@@ -225,11 +223,11 @@ nsSVGAngle::GetUnitScaleFactor() const
   switch (mSpecifiedUnitType) {
   case nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED:
   case nsIDOMSVGAngle::SVG_ANGLETYPE_DEG:
-    return static_cast<float>(180.0 / M_PI);
-  case nsIDOMSVGAngle::SVG_ANGLETYPE_RAD:
     return 1;
+  case nsIDOMSVGAngle::SVG_ANGLETYPE_RAD:
+    return static_cast<float>(M_PI / 180.0);
   case nsIDOMSVGAngle::SVG_ANGLETYPE_GRAD:
-    return static_cast<float>(100.0 / M_PI);
+    return 100.0f / 180.0f;
   default:
     NS_NOTREACHED("Unknown unit type");
     return 0;
@@ -244,31 +242,35 @@ nsSVGAngle::SetBaseValueInSpecifiedUnits(float aValue,
   aSVGElement->DidChangeAngle(mAttrEnum, PR_TRUE);
 }
 
-void
+nsresult
 nsSVGAngle::ConvertToSpecifiedUnits(PRUint16 unitType,
                                     nsSVGElement *aSVGElement)
 {
   if (!IsValidUnitType(unitType))
-    return;
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
   float valueInUserUnits = mBaseVal / GetUnitScaleFactor();
   mSpecifiedUnitType = PRUint8(unitType);
   SetBaseValue(valueInUserUnits, aSVGElement);
+  return NS_OK;
 }
 
-void
+nsresult
 nsSVGAngle::NewValueSpecifiedUnits(PRUint16 unitType,
                                    float valueInSpecifiedUnits,
                                    nsSVGElement *aSVGElement)
 {
+  NS_ENSURE_FINITE(valueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
+
   if (!IsValidUnitType(unitType))
-    return;
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
   mBaseVal = mAnimVal = valueInSpecifiedUnits;
   mSpecifiedUnitType = PRUint8(unitType);
   if (aSVGElement) {
     aSVGElement->DidChangeAngle(mAttrEnum, PR_TRUE);
   }
+  return NS_OK;
 }
 
 nsresult

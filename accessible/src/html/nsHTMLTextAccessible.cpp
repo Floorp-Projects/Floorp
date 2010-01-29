@@ -270,7 +270,7 @@ void
 nsHTMLLIAccessible::CacheChildren()
 {
   if (mBulletAccessible) {
-    mChildren.AppendObject(mBulletAccessible);
+    mChildren.AppendElement(mBulletAccessible);
     mBulletAccessible->SetParent(this);
   }
 
@@ -339,11 +339,11 @@ nsHTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset
   if (aLength > maxLength) {
     aLength = maxLength;
   }
-  aText += nsDependentSubstring(mBulletText, aStartOffset, aLength);
+  aText += Substring(mBulletText, aStartOffset, aLength);
   return NS_OK;
 }
 
-nsIAccessible*
+nsAccessible*
 nsHTMLListBulletAccessible::GetParent()
 {
   return mParent;

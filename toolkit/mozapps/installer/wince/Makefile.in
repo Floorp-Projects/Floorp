@@ -55,16 +55,17 @@ CPPSRCS = \
 	nsArchiveExtractor.cpp \
 	ns7zipExtractor.cpp \
 	nsSetupStrings.cpp \
-	$(srcdir)/../../update/src/updater/readstrings.cpp \
 	$(NULL)
 
-LOCAL_INCLUDES += -I$(srcdir)/../../update/src/updater
+LOCAL_INCLUDES += -I$(srcdir)/../../readstrings
 
 RCINCLUDE = nsInstallerppc.rc
 
 DEFINES += -D_UNICODE
 
-LIBS += $(DIST)/lib/7z.lib
+LIBS += $(DEPTH)/toolkit/mozapps/readstrings/$(LIB_PREFIX)readstrings.$(LIB_SUFFIX) \
+  $(DIST)/lib/7z.lib \
+  $(NULL)
 
 OS_LIBS += aygshell.lib commctrl.lib note_prj.lib oleaut32.lib ole32.lib libcmt.lib coredll.lib corelibc.lib
 

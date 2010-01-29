@@ -331,14 +331,26 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
       prevSearchBuf = searchBuf;
       searchBuf = searchBuf->next;
     }
-  }
-  if (searchBuf == mLastBuffer || !aKey) {
-    // key was not found or we have a first-level write after document.open
-    // we'll insert to the head of the queue
-    nsHtml5UTF16Buffer* keyHolder = new nsHtml5UTF16Buffer(aKey);
-    keyHolder->next = mFirstBuffer;
-    buffer->next = keyHolder;
-    mFirstBuffer = buffer;
+    if (searchBuf == mLastBuffer) {
+      // key was not found
+      nsHtml5UTF16Buffer* keyHolder = new nsHtml5UTF16Buffer(aKey);
+      keyHolder->next = mFirstBuffer;
+      buffer->next = keyHolder;
+      mFirstBuffer = buffer;
+    }
+  } else {
+    // we have a first level document.write after document.open()
+    // insert immediately before mLastBuffer
+    while (searchBuf != mLastBuffer) {
+      prevSearchBuf = searchBuf;
+      searchBuf = searchBuf->next;
+    }
+    buffer->next = mLastBuffer;
+    if (prevSearchBuf) {
+      prevSearchBuf->next = buffer;
+    } else {
+      mFirstBuffer = buffer;
+    }
   }
 
   if (!mBlocked) {
@@ -369,7 +381,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
         if (mTreeBuilder->HasScript()) {
           // No need to flush characters, because an end tag was tokenized last
           mTreeBuilder->Flush(); // Move ops to the executor
-          mExecutor->Flush(); // run the ops    
+          mExecutor->Flush(PR_TRUE); // run the ops    
         }
         if (mBlocked) {
           // mExecutor->WillInterrupt();
@@ -385,7 +397,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     // Scripting semantics require a forced tree builder flush here
     mTreeBuilder->flushCharacters(); // Flush trailing characters
     mTreeBuilder->Flush(); // Move ops to the executor
-    mExecutor->Flush(); // run the ops    
+    mExecutor->Flush(PR_TRUE); // run the ops    
   }
 
   return NS_OK;
@@ -480,7 +492,7 @@ nsHtml5Parser::ParseFragment(const nsAString& aSourceBuffer,
   mTokenizer->eof();
   mTreeBuilder->StreamEnded();
   mTreeBuilder->Flush();
-  mExecutor->Flush();
+  mExecutor->Flush(PR_TRUE);
   mTokenizer->end();
   mExecutor->DropParserAndPerfHint();
   mAtomTable.Clear();
@@ -588,7 +600,7 @@ nsHtml5Parser::ParseUntilBlocked()
           mTokenizer->eof();
           mTreeBuilder->StreamEnded();
           mTreeBuilder->Flush();
-          mExecutor->Flush();
+          mExecutor->Flush(PR_TRUE);
           mTokenizer->end();
           return;            
         } else {
@@ -633,7 +645,7 @@ nsHtml5Parser::ParseUntilBlocked()
       }
       if (mTreeBuilder->HasScript()) {
         mTreeBuilder->Flush();
-        mExecutor->Flush();   
+        mExecutor->Flush(PR_TRUE);
       }
       if (mBlocked) {
         // mExecutor->WillInterrupt();

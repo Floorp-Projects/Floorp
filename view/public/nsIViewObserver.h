@@ -47,8 +47,8 @@ class nsIRenderingContext;
 class nsGUIEvent;
 
 #define NS_IVIEWOBSERVER_IID  \
-  { 0xc85d474d, 0x316e, 0x491c, \
-    { 0x8b, 0xc5, 0x24, 0xba, 0xb7, 0xbb, 0x68, 0x9e } }
+  { 0xba1357b6, 0xe3c7, 0x426a, \
+    { 0xb3, 0x68, 0xfe, 0xe8, 0x24, 0x8c, 0x08, 0x38 } }
 
 class nsIViewObserver : public nsISupports
 {
@@ -90,16 +90,6 @@ public:
                                     nsIRenderingContext* aRenderingContext,
                                     const nsRect&        aDirtyRect) = 0;
 
-  /**
-   * @see nsLayoutUtils::ComputeRepaintRegionForCopy
-   */
-  NS_IMETHOD ComputeRepaintRegionForCopy(nsIView*      aRootView,
-                                         nsIView*      aMovingView,
-                                         nsPoint       aDelta,
-                                         const nsRect& aUpdateRect,
-                                         nsRegion*     aBlitRegion,
-                                         nsRegion*     aRepaintRegion) = 0;
-
   /* called when the observer needs to handle an event
    * @param aView  - where to start processing the event; the root view,
    * or the view that's currently capturing this sort of event; must be a view
@@ -135,20 +125,6 @@ public:
    * and geometry changes if it wants to.
    */
   NS_IMETHOD_(void) WillPaint() = 0;
-
-  /**
-   * Notify the observer that it should invalidate the frame bounds for
-   * the frame associated with this view, due to scrolling.
-   */
-  NS_IMETHOD_(void) InvalidateFrameForScrolledView(nsIView *aView) = 0;
-
-  /**
-   * Notify the observer that some areas of the root view have been
-   * invalidated/blitted due to scrolling. A bitblit-scroll occurred
-   * so we can be sure that rootView->NeedsInvalidateFrameOnScroll is false.
-   */
-  NS_IMETHOD_(void) NotifyInvalidateForScrolledView(const nsRegion& aBlitRegion,
-                                                    const nsRegion& aInvalidateRegion) = 0;
 
   /**
    * Dispatch the given synthesized mouse move event, and if

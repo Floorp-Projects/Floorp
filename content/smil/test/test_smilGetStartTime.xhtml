@@ -51,6 +51,16 @@ function main() {
   anim.setAttribute("begin", "-0.5s");
   is(anim.getStartTime(), -0.5, "Unexpected start time with begin=-0.5s");
 
+  // Once the animation has begun, the begin time is fixed so we need to end the
+  // element (or advance the timeline) to override the previous start time
+  anim.endElement();
+
+  // However, now we have an end instance, and the SMIL model dictates that if
+  // we have end instances and no end event conditions and all end instances are
+  // before our next begin, there's no valid interval. To overcome this we add
+  // an indefinite end.
+  anim.setAttribute("end", "indefinite");
+
   // Now test over the lifetime of the animation when there are multiple
   // intervals
   anim.setAttribute("begin", "1s; 3s");

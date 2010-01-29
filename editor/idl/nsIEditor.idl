@@ -53,6 +53,7 @@ interface nsITransaction;
 interface nsIEditorObserver;
 interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
+interface nsITransferable;
 
 %{C++
 class nsIPresShell;
@@ -61,7 +62,7 @@ typedef short EDirection;
 
 [ptr] native nsIPresShellPtr(nsIPresShell);
 
-[scriptable, uuid(96b60ba0-634a-41e4-928e-78ab0b3c4b46)]
+[scriptable, uuid(63084019-4cd0-45f8-8b10-d9f0231b2f63)]
 
 interface nsIEditor  : nsISupports
 {
@@ -339,10 +340,22 @@ interface nsIEditor  : nsISupports
     */
   void paste(in long aSelectionType);
 
+  /** Paste the text in |aTransferable| at the cursor position, replacing the
+    * selected text (if any).
+    */
+  void pasteTransferable(in nsITransferable aTransferable);
+
   /** Can we paste? True if the doc is modifiable, and we have
     * pasteable data in the clipboard.
     */
   boolean canPaste(in long aSelectionType);
+
+  /** Can we paste |aTransferable| or, if |aTransferable| is null, will a call
+    * to pasteTransferable later possibly succeed if given an instance of
+    * nsITransferable then? True if the doc is modifiable, and, if
+    * |aTransfeable| is non-null, we have pasteable data in |aTransfeable|.
+    */
+  boolean canPasteTransferable([optional] in nsITransferable aTransferable);
 
   /* ------------ Selection methods -------------- */
 

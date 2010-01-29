@@ -315,6 +315,8 @@ NS_IMETHODIMP nsSVGMatrix::SkewX(float angle, nsIDOMSVGMatrix **_retval)
 
   double ta = tan( angle*radPerDegree );
 
+  NS_ENSURE_FINITE(ta, NS_ERROR_DOM_SVG_INVALID_VALUE_ERR);
+
   return NS_NewSVGMatrix(_retval,
                          mA,                    mB,
                          (float) ( mC + mA*ta), (float) ( mD + mB*ta),
@@ -327,6 +329,8 @@ NS_IMETHODIMP nsSVGMatrix::SkewY(float angle, nsIDOMSVGMatrix **_retval)
   NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
 
   double ta = tan( angle*radPerDegree );
+
+  NS_ENSURE_FINITE(ta, NS_ERROR_DOM_SVG_INVALID_VALUE_ERR);
 
   return NS_NewSVGMatrix(_retval,
                          (float) (mA + mC*ta), (float) (mB + mD*ta),

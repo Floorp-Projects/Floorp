@@ -4095,7 +4095,7 @@ nsHTMLEditor::SelectAll()
 
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   nsIContent *rootContent = anchorContent->GetSelectionRootContent(ps);
-  NS_ASSERTION(rootContent, "GetSelectionRootContent failed");
+  NS_ENSURE_TRUE(rootContent, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIDOMNode> rootElement = do_QueryInterface(rootContent, &rv);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, true)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+     If we don't detect the cycle here, we'll keep doing reverse propagation for
+     a very long time. Probably long enough for something to go really wrong.
+   -->
+  <rect width="100" height="100" fill="green">
+    <animate attributeName="y" attributeType="XML" from="100" to="100" id="a"
+      begin="20h; b.begin-1s" dur="4s"/>
+    <animate attributeName="fill" attributeType="CSS" id="b"
+      values="red; red"
+      begin="a.begin-1s" dur="2s"/>
+  </rect>
+</svg>

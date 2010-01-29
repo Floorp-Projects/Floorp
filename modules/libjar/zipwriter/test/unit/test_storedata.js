@@ -56,9 +56,7 @@ function testpass(source)
   // Should be stored
   do_check_eq(entry.compression, ZIP_METHOD_STORE);
 
-  var diff = Math.abs((entry.lastModifiedTime / PR_USEC_PER_MSEC) - time);
-  if (diff > TIME_RESOLUTION)
-    do_throw(diff);
+  do_check_eq(entry.lastModifiedTime / PR_USEC_PER_MSEC, time);
 
   // File size should match our data size.
   do_check_eq(entry.realSize, DATA.length);
@@ -90,6 +88,7 @@ function run_test()
 
   do_check_eq(tmpFile.fileSize,
               DATA.length + ZIP_FILE_HEADER_SIZE + ZIP_CDS_HEADER_SIZE +
+              (ZIP_EXTENDED_TIMESTAMP_SIZE * 2) +
               (FILENAME.length * 2) + ZIP_EOCDR_HEADER_SIZE);
 
   // Check to see if we get the same results loading afresh.

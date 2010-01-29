@@ -879,7 +879,8 @@ CSSImportantRule::List(FILE* out, PRInt32 aIndent) const
   // Indent
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  fprintf(out, "! Important rule block=%p\n", mImportantBlock.get());
+  fprintf(out, "! Important rule block=%p\n",
+          static_cast<void*>(mImportantBlock.get()));
   return NS_OK;
 }
 #endif

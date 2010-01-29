@@ -45,15 +45,26 @@ class TestShutdownSubParent :
     public PTestShutdownSubParent
 {
 public:
-    TestShutdownSubParent(bool expectCrash) : mExpectCrash(expectCrash)
+    TestShutdownSubParent(bool expectCrash) :
+        mExpectCrash(expectCrash),
+        mDeletedCount(0)
     {
     }
 
     virtual ~TestShutdownSubParent()
     {
+        if (2 != mDeletedCount)
+            fail("managees outliving manager!");
     }
 
 protected:
+    NS_OVERRIDE
+    virtual bool
+    AnswerStackFrame()
+    {
+        return CallStackFrame();
+    }
+
     NS_OVERRIDE
     virtual PTestShutdownSubsubParent*
     AllocPTestShutdownSubsub(const bool& expectParentDelete)
@@ -66,6 +77,7 @@ protected:
     DeallocPTestShutdownSubsub(PTestShutdownSubsubParent* actor)
     {
         delete actor;
+        ++mDeletedCount;
         return true;
     }
 
@@ -75,6 +87,7 @@ protected:
 
 private:
     bool mExpectCrash;
+    int mDeletedCount;
 };
 
 
@@ -153,6 +166,9 @@ public:
     }
 
 protected:
+    NS_OVERRIDE
+    virtual bool AnswerStackFrame();
+
     NS_OVERRIDE
     virtual PTestShutdownSubsubChild*
     AllocPTestShutdownSubsub(const bool& expectParentDelete)

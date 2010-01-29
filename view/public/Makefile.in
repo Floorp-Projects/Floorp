@@ -47,7 +47,6 @@ MODULE		= view
 EXPORTS		= \
 		nsIView.h \
 		nsIViewManager.h \
-		nsIScrollableView.h \
 		nsViewsCID.h \
 		nsIViewObserver.h \
 		nsIScrollPositionListener.h \

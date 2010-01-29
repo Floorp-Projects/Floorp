@@ -311,14 +311,6 @@ pref("browser.microsummary.updateGenerators", true);
 pref("browser.search.suggest.enabled", true);
 
 pref("browser.sessionhistory.max_entries", 50);
-#ifndef WINCE
-pref("browser.history_expire_days", 180);
-pref("browser.history_expire_days_min", 90);
-#else
-pref("browser.history_expire_days", 90);
-pref("browser.history_expire_days_min", 45);
-#endif
-pref("browser.history_expire_sites", 40000);
 
 // handle links targeting new windows
 // 0=default window, 1=current window/tab, 2=new window, 3=new tab in most recent window
@@ -784,6 +776,9 @@ pref("browser.sessionstore.max_resumed_crashes", 1);
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
 
+// Whether history is enabled or not.
+pref("places.history.enabled", true);
+
 // The percentage of system memory that the Places database can use.  Out of the
 // allowed cache size it will at most use the size of the database file.
 // Changes to this value are effective after an application restart.
@@ -909,7 +904,7 @@ pref("toolbar.customization.usesheet", true);
 pref("toolbar.customization.usesheet", false);
 #endif
 
-pref("dom.ipc.plugins.enabled", false);
+pref("dom.ipc.plugins.enabled", true);
 
 #ifdef XP_WIN
 #ifndef WINCE

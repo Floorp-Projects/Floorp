@@ -582,6 +582,8 @@ class nsDocument : public nsIDocument,
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
+  using nsINode::GetScriptTypeID;
+
   virtual void Reset(nsIChannel *aChannel, nsILoadGroup *aLoadGroup);
   virtual void ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
                           nsIPrincipal* aPrincipal);
@@ -1047,23 +1049,6 @@ protected:
   nsIContent* GetFirstBaseNodeWithHref();
   nsresult SetFirstBaseNodeWithHref(nsIContent *node);
 
-  // Get the root <html> element, or return null if there isn't one (e.g.
-  // if the root isn't <html>)
-  nsIContent* GetHtmlContent();
-  // Returns the first child of GetHtmlContent which has the given tag,
-  // or nsnull if that doesn't exist.
-  nsIContent* GetHtmlChildContent(nsIAtom* aTag);
-  // Get the canonical <body> element, or return null if there isn't one (e.g.
-  // if the root isn't <html> or if the <body> isn't there)
-  nsIContent* GetBodyContent() {
-    return GetHtmlChildContent(nsGkAtoms::body);
-  }
-  // Get the canonical <head> element, or return null if there isn't one (e.g.
-  // if the root isn't <html> or if the <head> isn't there)
-  nsIContent* GetHeadContent() {
-    return GetHtmlChildContent(nsGkAtoms::head);
-  }
-
   // Get the first <title> element with the given IsNodeOfType type, or
   // return null if there isn't one
   nsIContent* GetTitleContent(PRUint32 aNodeType);
@@ -1227,6 +1212,8 @@ private:
 
   void PostUnblockOnloadEvent();
   void DoUnblockOnload();
+
+  nsresult InitCSP();
 
   /**
    * See if aDocument is a child of this.  If so, return the frame element in

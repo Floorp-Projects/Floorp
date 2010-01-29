@@ -2,6 +2,7 @@
 // Role constants
 
 const ROLE_ALERT = nsIAccessibleRole.ROLE_ALERT;
+const ROLE_ANIMATION = nsIAccessibleRole.ROLE_ANIMATION;
 const ROLE_APPLICATION = nsIAccessibleRole.ROLE_APPLICATION;
 const ROLE_APP_ROOT = nsIAccessibleRole.ROLE_APP_ROOT;
 const ROLE_AUTOCOMPLETE = nsIAccessibleRole.ROLE_AUTOCOMPLETE;
@@ -36,10 +37,14 @@ const ROLE_NOTHING = nsIAccessibleRole.ROLE_NOTHING;
 const ROLE_OPTION = nsIAccessibleRole.ROLE_OPTION;
 const ROLE_OUTLINE = nsIAccessibleRole.ROLE_OUTLINE;
 const ROLE_OUTLINEITEM = nsIAccessibleRole.ROLE_OUTLINEITEM;
+const ROLE_PAGETAB = nsIAccessibleRole.ROLE_PAGETAB;
+const ROLE_PAGETABLIST = nsIAccessibleRole.ROLE_PAGETABLIST;
+const ROLE_PANE = nsIAccessibleRole.ROLE_PANE;
 const ROLE_PARAGRAPH = nsIAccessibleRole.ROLE_PARAGRAPH;
 const ROLE_PARENT_MENUITEM = nsIAccessibleRole.ROLE_PARENT_MENUITEM;
 const ROLE_PASSWORD_TEXT = nsIAccessibleRole.ROLE_PASSWORD_TEXT;
 const ROLE_PROGRESSBAR = nsIAccessibleRole.ROLE_PROGRESSBAR;
+const ROLE_PROPERTYPAGE = nsIAccessibleRole.ROLE_PROPERTYPAGE;
 const ROLE_PUSHBUTTON = nsIAccessibleRole.ROLE_PUSHBUTTON;
 const ROLE_RADIOBUTTON = nsIAccessibleRole.ROLE_RADIOBUTTON;
 const ROLE_ROW = nsIAccessibleRole.ROLE_ROW;
@@ -53,6 +58,7 @@ const ROLE_TABLE = nsIAccessibleRole.ROLE_TABLE;
 const ROLE_TEXT_CONTAINER = nsIAccessibleRole.ROLE_TEXT_CONTAINER;
 const ROLE_TEXT_LEAF = nsIAccessibleRole.ROLE_TEXT_LEAF;
 const ROLE_TOGGLE_BUTTON = nsIAccessibleRole.ROLE_TOGGLE_BUTTON;
+const ROLE_TOOLTIP = nsIAccessibleRole.ROLE_TOOLTIP;
 const ROLE_TREE_TABLE = nsIAccessibleRole.ROLE_TREE_TABLE;
 const ROLE_WHITESPACE = nsIAccessibleRole.ROLE_WHITESPACE;
 

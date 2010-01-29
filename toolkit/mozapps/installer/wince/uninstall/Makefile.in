@@ -47,10 +47,11 @@ PROGRAM   = uninstall$(BIN_SUFFIX)
 CPPSRCS = \
 	Uninstall.cpp \
 	../nsSetupStrings.cpp \
-	$(srcdir)/../../../update/src/updater/readstrings.cpp \
 	$(NULL)
 
-LOCAL_INCLUDES += -I$(srcdir)/.. -I$(srcdir)/../../../update/src/updater
+LIBS += $(DEPTH)/toolkit/mozapps/readstrings/$(LIB_PREFIX)readstrings.$(LIB_SUFFIX)
+
+LOCAL_INCLUDES += -I$(srcdir)/.. -I$(srcdir)/../../../readstrings
 
 # Statically link the CRT when possible
 USE_STATIC_LIBS = 1

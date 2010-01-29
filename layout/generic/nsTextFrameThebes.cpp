@@ -2102,7 +2102,7 @@ static PRBool IsJustifiableCharacter(const nsTextFragment* aFrag, PRInt32 aPos,
   PRUnichar ch = aFrag->CharAt(aPos);
   if (ch == '\n' || ch == '\t')
     return PR_TRUE;
-  if (ch == ' ') {
+  if (ch == ' ' || ch == CH_NBSP) {
     // Don't justify spaces that are combined with diacriticals
     if (!aFrag->Is2b())
       return PR_TRUE;

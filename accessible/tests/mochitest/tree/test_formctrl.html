@@ -43,6 +43,9 @@
 
       testAccessibleTree("btn1", accTree);
 
+      testAccessibleTree("submit", accTree);
+      testAccessibleTree("image_submit", accTree);
+
       // button
       accTree = {
         role: ROLE_PUSHBUTTON,
@@ -69,6 +72,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=342045">
     Mozilla Bug 342045
   </a>
+  <a target="_blank"
+    title="add test for role of input type='image'"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=524521">
+     Mozilla Bug 524521
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -79,5 +87,7 @@
   <input type="button" value="button" id="btn1">
   <button id="btn2">button</button>
 
+  <input type="submit" id="submit">
+  <input type="image" id="image_submit">
 </body>
 </html>

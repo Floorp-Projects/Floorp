@@ -80,8 +80,10 @@ public:
     FontFamily *FindFontFamily(const nsAString& aName);
     FontEntry *FindFontEntry(const nsAString& aFamilyName, const gfxFontStyle& aFontStyle);
     already_AddRefed<gfxFont> FindFontForChar(PRUint32 aCh, gfxFont *aFont);
-    PRBool GetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<FontEntry> > *aFontEntryList);
-    void SetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<FontEntry> >& aFontEntryList);
+    PRBool GetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> > *aFontEntryList);
+    void SetPrefFontEntries(const nsCString& aLangGroup, nsTArray<nsRefPtr<gfxFontEntry> >& aFontEntryList);
+
+    void ClearPrefFonts() { mPrefFonts.Clear(); }
 
     FT_Library GetFTLibrary();
 
@@ -90,6 +92,10 @@ protected:
 
 private:
     virtual qcms_profile *GetPlatformCMSOutputProfile();
+
+    // TODO: unify this with mPrefFonts (NB: holds families, not fonts) in gfxPlatformFontList
+    nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<gfxFontEntry> > > mPrefFonts;
+
 };
 
 #endif /* GFX_PLATFORM_QT_H */

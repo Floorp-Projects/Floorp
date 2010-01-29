@@ -89,6 +89,9 @@ interface nsICookieService : nsISupports
    *
    * @param aURI
    *        the URI of the document for which cookies are being queried.
+   *        file:// URI's (i.e. with an empty host) are allowed, but any other
+   *        scheme must have a non-empty host. A trailing dot in the host
+   *        is acceptable, and will be stripped.
    * @param aChannel
    *        the channel used to load the document.  this parameter should not
    *        be null, otherwise the cookies will not be returned if third-party
@@ -108,6 +111,9 @@ interface nsICookieService : nsISupports
    *
    * @param aURI
    *        the URI of the document for which cookies are being queried.
+   *        file:// URI's (i.e. with an empty host) are allowed, but any other
+   *        scheme must have a non-empty host. A trailing dot in the host
+   *        is acceptable, and will be stripped.
    * @param aFirstURI
    *        the URI that the user originally typed in or clicked on to initiate
    *        the load of the document referenced by aURI.
@@ -127,6 +133,9 @@ interface nsICookieService : nsISupports
    *
    * @param aURI
    *        the URI of the document for which cookies are being set.
+   *        file:// URI's (i.e. with an empty host) are allowed, but any other
+   *        scheme must have a non-empty host. A trailing dot in the host
+   *        is acceptable, and will be stripped.
    * @param aPrompt
    *        the prompt to use for all user-level cookie notifications.
    * @param aCookie
@@ -151,6 +160,9 @@ interface nsICookieService : nsISupports
    *
    * @param aURI
    *        the URI of the document for which cookies are being set.
+   *        file:// URI's (i.e. with an empty host) are allowed, but any other
+   *        scheme must have a non-empty host. A trailing dot in the host
+   *        is acceptable, and will be stripped.
    * @param aFirstURI
    *        the URI that the user originally typed in or clicked on to initiate
    *        the load of the document referenced by aURI.

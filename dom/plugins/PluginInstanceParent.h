@@ -47,11 +47,9 @@
 
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
-#include "nsTArray.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
 #include "nsRect.h"
-
-#undef _MOZ_LOG
-#define _MOZ_LOG(s) printf("[PluginInstanceParent] %s\n", s)
 
 namespace mozilla {
 namespace plugins {
@@ -72,7 +70,10 @@ public:
 
     virtual ~PluginInstanceParent();
 
-    void Destroy();
+    bool Init();
+    NPError Destroy();
+
+    NS_OVERRIDE virtual void ActorDestroy(ActorDestroyReason why);
 
     virtual PPluginScriptableObjectParent*
     AllocPPluginScriptableObject();
@@ -106,6 +107,9 @@ public:
     AnswerNPN_GetValue_NPNVjavascriptEnabledBool(bool* value, NPError* result);
     virtual bool
     AnswerNPN_GetValue_NPNVisOfflineBool(bool* value, NPError* result);
+    virtual bool
+    AnswerNPN_GetValue_NPNVnetscapeWindow(NativeWindowHandle* value,
+                                          NPError* result);
     virtual bool
     AnswerNPN_GetValue_NPNVWindowNPObject(
                                        PPluginScriptableObjectParent** value,
@@ -159,23 +163,36 @@ public:
     virtual bool
     AnswerNPN_PopPopupsEnabledState(bool* aSuccess);
 
+    NS_OVERRIDE virtual bool
+    AnswerNPN_GetValueForURL(const NPNURLVariable& variable,
+                             const nsCString& url,
+                             nsCString* value, NPError* result);
+
+    NS_OVERRIDE virtual bool
+    AnswerNPN_SetValueForURL(const NPNURLVariable& variable,
+                             const nsCString& url,
+                             const nsCString& value, NPError* result);
+
+    NS_OVERRIDE virtual bool
+    AnswerNPN_GetAuthenticationInfo(const nsCString& protocol,
+                                    const nsCString& host,
+                                    const int32_t& port,
+                                    const nsCString& scheme,
+                                    const nsCString& realm,
+                                    nsCString* username,
+                                    nsCString* password,
+                                    NPError* result);
+
     NPError NPP_SetWindow(const NPWindow* aWindow);
 
-    NPError NPP_GetValue(NPPVariable variable, void *ret_value);
-    NPError NPP_SetValue(NPNVariable variable, void *value)
-    {
-        _MOZ_LOG(__FUNCTION__);
-        return 1;
-    }
+    NPError NPP_GetValue(NPPVariable variable, void* retval);
+    NPError NPP_SetValue(NPNVariable variable, void* value);
 
     NPError NPP_NewStream(NPMIMEType type, NPStream* stream,
                           NPBool seekable, uint16_t* stype);
     NPError NPP_DestroyStream(NPStream* stream, NPReason reason);
 
-    void NPP_Print(NPPrint* platformPrint)
-    {
-        _MOZ_LOG(__FUNCTION__);
-    }
+    void NPP_Print(NPPrint* platformPrint);
 
     int16_t NPP_HandleEvent(void* event);
 
@@ -191,6 +208,13 @@ public:
         return mNPNIface;
     }
 
+    bool
+    RegisterNPObjectForActor(NPObject* aObject,
+                             PluginScriptableObjectParent* aActor);
+
+    void
+    UnregisterNPObject(NPObject* aObject);
+
     PluginScriptableObjectParent*
     GetActorForNPObject(NPObject* aObject);
 
@@ -199,6 +223,9 @@ public:
     {
       return mNPP;
     }
+
+    virtual bool
+    AnswerPluginGotFocus();
 
 private:
     bool InternalGetValueForNPObject(NPNVariable aVariable,
@@ -211,7 +238,7 @@ private:
     const NPNetscapeFuncs* mNPNIface;
     NPWindowType mWindowType;
 
-    nsTArray<nsAutoPtr<PluginScriptableObjectParent> > mScriptableObjects;
+    nsDataHashtable<nsVoidPtrHashKey, PluginScriptableObjectParent*> mScriptableObjects;
 
 #if defined(OS_WIN)
 private:
@@ -219,14 +246,19 @@ private:
     bool SharedSurfaceSetWindow(const NPWindow* aWindow, NPRemoteWindow& aRemoteWindow);
     void SharedSurfaceBeforePaint(RECT &rect, NPRemoteEvent& npremoteevent);
     void SharedSurfaceAfterPaint(NPEvent* npevent);
-    void SharedSurfaceSetOrigin(NPRemoteEvent& npremoteevent);
     void SharedSurfaceRelease();
+    // Used in handling parent/child forwarding of events.
+    static LRESULT CALLBACK PluginWindowHookProc(HWND hWnd, UINT message,
+                                                 WPARAM wParam, LPARAM lParam);
+    void SubclassPluginWindow(HWND aWnd);
+    void UnsubclassPluginWindow();
 
 private:
     gfx::SharedDIBWin  mSharedSurfaceDib;
     nsIntRect          mPluginPort;
     nsIntRect          mSharedSize;
-    nsIntPoint         mPluginPosOrigin;
+    HWND               mPluginHWND;
+    WNDPROC            mPluginWndProc;
 #endif // defined(XP_WIN)
 };
 

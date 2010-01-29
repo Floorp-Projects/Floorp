@@ -28,7 +28,7 @@
     overflow: auto;
     display: block;
     width: 100px;
-    height: 100px;
+    height: 100.5px;
     font-size: 16px;
   }
 </style>

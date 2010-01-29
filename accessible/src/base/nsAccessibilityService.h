@@ -40,9 +40,11 @@
 #define __nsAccessibilityService_h__
 
 #include "nsIAccessibilityService.h"
+
+#include "nsCoreUtils.h"
+
 #include "nsCOMArray.h"
 #include "nsIObserver.h"
-#include "nsITimer.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
@@ -157,10 +159,19 @@ private:
    */
   PRBool HasUniversalAriaProperty(nsIContent *aContent, nsIWeakReference *aWeakShell);
 
-  static void StartLoadCallback(nsITimer *aTimer, void *aClosure);
-  static void EndLoadCallback(nsITimer *aTimer, void *aClosure);
-  static void FailedLoadCallback(nsITimer *aTimer, void *aClosure);
-  nsCOMArray<nsITimer> mLoadTimers;
+  /**
+   *  Process the internal doc load event.
+   *
+   *  @param  aWebProgress  [in] the nsIWebProgress object for the load event
+   *  @param  aEventType    [in] the type of load event, one of:
+   *                          nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_START,
+   *                          nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE,
+   *                          nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_STOPPED
+   */
+  void ProcessDocLoadEvent(nsIWebProgress *aWebProgress, PRUint32 aEventType);
+
+  NS_DECL_RUNNABLEMETHOD_ARG2(nsAccessibilityService, ProcessDocLoadEvent,
+                              nsCOMPtr<nsIWebProgress>, PRUint32)
 };
 
 /**

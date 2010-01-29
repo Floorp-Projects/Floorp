@@ -47,7 +47,6 @@
 #include "nsWidgetInitData.h"
 
 class nsIViewManager;
-class nsIScrollableView;
 class nsViewManager;
 class nsView;
 class nsWeakView;
@@ -64,8 +63,8 @@ enum nsViewVisibility {
 
 // IID for the nsIView interface
 #define NS_IVIEW_IID    \
-  { 0x18b5f32a, 0x921a, 0x4772, \
-    { 0xa4, 0x3d, 0xf3, 0x04, 0x5c, 0xb9, 0xc2, 0x59 } }
+  { 0x4435167c, 0xb627, 0x4073, \
+    { 0x9c, 0x92, 0xbc, 0x34, 0x39, 0xd9, 0xf8, 0xd2 } }
 
 // Public view flags are defined in this file
 #define NS_VIEW_FLAGS_PUBLIC              0x00FF
@@ -85,11 +84,6 @@ enum nsViewVisibility {
 // displayed above z-index:auto views if this view 
 // is z-index:auto also
 #define NS_VIEW_FLAG_TOPMOST              0x0010
-
-// If set, the view should always invalidate its frame
-// during a scroll instead of doing a BitBlt.  This bit
-// is propagated down to children.
-#define NS_VIEW_FLAG_INVALIDATE_ON_SCROLL  0x0020
 
 struct nsViewZIndex {
   PRBool mIsAuto;
@@ -119,12 +113,6 @@ class nsIView
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IVIEW_IID)
-
-  /**
-   * See if this view is scrollable.
-   * @result an nsIScrollableView* if the view is scrollable, or nsnull if not.
-   */
-  virtual nsIScrollableView* ToScrollableView() { return nsnull; }
 
   /**
    * Find the view for the given widget, if there is one.
@@ -168,6 +156,12 @@ public:
                  "root views should always have explicit position of (0,0)");
     return nsPoint(mPosX, mPosY);
   }
+
+  /**
+   * Set the position of a view. This does not cause any invalidation. It
+   * does reposition any widgets in this view or its descendants.
+   */
+  virtual void SetPosition(nscoord aX, nscoord aY) = 0;
   
   /**
    * Called to get the dimensions and position of the view's bounds.
@@ -321,22 +315,6 @@ public:
    * Stop aWidget directing its events to this view.
    */
   void DetachWidgetEventHandler(nsIWidget* aWidget);
-
-  /**
-   * If called, will make the view invalidate its frame instead of BitBlitting
-   * it when there's a scroll.
-   */
-  void SetInvalidateFrameOnScroll()
-  {
-    mVFlags |= NS_VIEW_FLAG_INVALIDATE_ON_SCROLL;
-  }
-
-  /**
-   * Returns whether or not we should automatically fail to BitBlt when scrolling.
-   * This is true if either we're marked to have invalidate on scroll or if some
-   * ancestor does.
-   */
-  PRBool NeedsInvalidateFrameOnScroll() const;
 
 #ifdef DEBUG
   /**

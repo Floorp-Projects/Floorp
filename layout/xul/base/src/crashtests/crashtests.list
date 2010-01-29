@@ -5,6 +5,7 @@ load 151826-1.xul
 load 168724-1.xul
 load 189814-1.xul
 load 237787-1.xul
+load 265161-1.xul
 load 289410-1.xul
 load 291702-1.xul
 load 291702-2.xul
@@ -67,4 +68,6 @@ load 488210-1.xhtml
 load 495728-1.xul
 load 508927-1.xul
 load 508927-2.xul
+load 514300-1.xul
 load 536931-1.xhtml
+load menulist-focused.xhtml

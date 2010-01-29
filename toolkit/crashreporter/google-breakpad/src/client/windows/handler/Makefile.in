@@ -46,7 +46,7 @@ LIBRARY_NAME	= exception_handler_s
 XPI_NAME 	= crashreporter
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../../..
-DEFINES += -DUNICODE -D_UNICODE
+DEFINES += -DUNICODE -D_UNICODE -DBREAKPAD_NO_TERMINATE_THREAD
 
 CPPSRCS		= \
 		exception_handler.cc \

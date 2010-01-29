@@ -374,6 +374,9 @@ public:
   virtual void EnterModalState() = 0;
   virtual void LeaveModalState() = 0;
 
+  virtual PRBool CanClose() = 0;
+  virtual nsresult ForceClose() = 0;
+
   void SetModalContentWindow(PRBool aIsModalContentWindow)
   {
     mIsModalContentWindow = aIsModalContentWindow;
@@ -454,11 +457,14 @@ public:
   virtual void PageHidden() = 0;
 
   /**
-   * Instructs this window to asynchronously dispatch a hashchange event.  This
-   * method must be called on an inner window.
+   * Instructs this window to synchronously dispatch a hashchange event.
    */
-  virtual nsresult DispatchAsyncHashchange() = 0;
+  virtual nsresult DispatchSyncHashchange() = 0;
 
+  /**
+   * Instructs this window to synchronously dispatch a popState event.
+   */
+  virtual nsresult DispatchSyncPopState() = 0;
 
   /**
    * Tell this window that there is an observer for orientation changes

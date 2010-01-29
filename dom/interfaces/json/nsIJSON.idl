@@ -42,10 +42,18 @@ interface nsIInputStream;
 interface nsIOutputStream;
 interface nsIScriptGlobalObject;
 
+%{ C++
+#include "jspubtd.h"
+%}
+
+      native JSVal(jsval);
+[ptr] native JSValPtr(jsval);
+[ptr] native JSContext(JSContext);
+
 /**
  * Encode and decode JSON text.
  */
-[scriptable, uuid(45464c36-efde-4cb5-8e00-07480533ff35)]
+[scriptable, uuid(6fcf09ee-87d0-42ec-a72a-8d60114e974f)]
 interface nsIJSON : nsISupports
 {
   AString encode(/* in JSObject value */);
@@ -59,4 +67,9 @@ interface nsIJSON : nsISupports
 
   void /* JSObject */ decodeFromStream(in nsIInputStream stream,
                                        in long contentLength);
+
+  [noscript] AString  encodeFromJSVal(in JSValPtr value, in JSContext cx);
+
+  // Make sure you GCroot the result of this function before using it.
+  [noscript] JSVal    decodeToJSVal(in AString str, in JSContext cx);
 };

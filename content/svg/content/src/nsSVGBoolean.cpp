@@ -35,6 +35,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGBoolean.h"
+#ifdef MOZ_SMIL
+#include "nsSMILValue.h"
+#include "SMILBoolType.h"
+#endif // MOZ_SMIL
+
+using namespace mozilla;
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION(nsSVGBoolean::DOMAnimatedBoolean, mSVGElement)
 
@@ -61,9 +67,14 @@ nsSVGBoolean::SetBaseValueString(const nsAString &aValueAsString,
   else if (aValueAsString.EqualsLiteral("false"))
     val = PR_FALSE;
   else
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_SYNTAX_ERR;
 
   mBaseVal = mAnimVal = val;
+#ifdef MOZ_SMIL
+  if (mIsAnimated) {
+    aSVGElement->AnimationNeedsResample();
+  }
+#endif
   return NS_OK;
 }
 
@@ -81,8 +92,23 @@ nsSVGBoolean::SetBaseValue(PRBool aValue,
 {
   NS_PRECONDITION(aValue == PR_TRUE || aValue == PR_FALSE, "Boolean out of range");
 
-  mAnimVal = mBaseVal = aValue;
-  aSVGElement->DidChangeBoolean(mAttrEnum, PR_TRUE);
+  if (aValue != mBaseVal) {
+    mAnimVal = mBaseVal = aValue;
+    aSVGElement->DidChangeBoolean(mAttrEnum, PR_TRUE);
+#ifdef MOZ_SMIL
+    if (mIsAnimated) {
+      aSVGElement->AnimationNeedsResample();
+    }
+#endif
+  }
+}
+
+void
+nsSVGBoolean::SetAnimValue(PRBool aValue, nsSVGElement *aSVGElement)
+{
+  mAnimVal = aValue;
+  mIsAnimated = PR_TRUE;
+  aSVGElement->DidAnimateBoolean(mAttrEnum);
 }
 
 nsresult
@@ -96,3 +122,57 @@ nsSVGBoolean::ToDOMAnimatedBoolean(nsIDOMSVGAnimatedBoolean **aResult,
   NS_ADDREF(*aResult);
   return NS_OK;
 }
+
+#ifdef MOZ_SMIL
+nsISMILAttr*
+nsSVGBoolean::ToSMILAttr(nsSVGElement *aSVGElement)
+{
+  return new SMILBool(this, aSVGElement);
+}
+
+nsresult
+nsSVGBoolean::SMILBool::ValueFromString(const nsAString& aStr,
+                                        const nsISMILAnimationElement* /*aSrcElement*/,
+                                        nsSMILValue& aValue) const
+{
+  nsSMILValue val(&SMILBoolType::sSingleton);
+
+  if (aStr.EqualsLiteral("true"))
+    val.mU.mBool = PR_TRUE;
+  else if (aStr.EqualsLiteral("false"))
+    val.mU.mBool = PR_FALSE;
+  else
+    return NS_ERROR_FAILURE;
+
+  aValue = val;
+  return NS_OK;
+}
+
+nsSMILValue
+nsSVGBoolean::SMILBool::GetBaseValue() const
+{
+  nsSMILValue val(&SMILBoolType::sSingleton);
+  val.mU.mBool = mVal->mBaseVal;
+  return val;
+}
+
+void
+nsSVGBoolean::SMILBool::ClearAnimValue()
+{
+  if (mVal->mIsAnimated) {
+    mVal->SetAnimValue(mVal->mBaseVal, mSVGElement);
+    mVal->mIsAnimated = PR_FALSE;
+  }
+}
+
+nsresult
+nsSVGBoolean::SMILBool::SetAnimValue(const nsSMILValue& aValue)
+{
+  NS_ASSERTION(aValue.mType == &SMILBoolType::sSingleton,
+               "Unexpected type to assign animated value");
+  if (aValue.mType == &SMILBoolType::sSingleton) {
+    mVal->SetAnimValue(PRUint16(aValue.mU.mBool), mSVGElement);
+  }
+  return NS_OK;
+}
+#endif // MOZ_SMIL

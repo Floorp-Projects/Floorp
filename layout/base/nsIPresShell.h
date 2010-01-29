@@ -122,10 +122,9 @@ typedef struct CapturingContentInfo {
     mAllowed(PR_FALSE), mRetargetToElement(PR_FALSE), mContent(nsnull) { }
 } CapturingContentInfo;
 
-// 06AA90C2-5234-4F1C-81D7-773B5E4CBB8B
 #define NS_IPRESSHELL_IID     \
-{ 0x06aa90c2, 0x5234, 0x4f1c, \
- { 0x81, 0xd7, 0x77, 0x3b, 0x5e, 0x4c, 0xbb, 0x8b } }
+  { 0x20b82adf, 0x1f5c, 0x44f7, \
+    { 0x9b, 0x74, 0xc0, 0xa3, 0x14, 0xd8, 0xcf, 0x91 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -146,6 +145,14 @@ typedef struct CapturingContentInfo {
 #define VERIFY_REFLOW_DURING_RESIZE_REFLOW  0x40
 
 #undef NOISY_INTERRUPTIBLE_REFLOW
+
+enum nsRectVisibility { 
+  nsRectVisibility_kVisible, 
+  nsRectVisibility_kAboveViewport, 
+  nsRectVisibility_kBelowViewport, 
+  nsRectVisibility_kLeftOfViewport, 
+  nsRectVisibility_kRightOfViewport
+}; 
 
 /**
  * Presentation shell interface. Presentation shells are the
@@ -469,7 +476,7 @@ public:
 
   /**
    * Scrolls the view of the document so that the primary frame of the content
-   * is displayed at the top of the window. Layout is flushed before scrolling.
+   * is displayed in the window. Layout is flushed before scrolling.
    *
    * @param aContent  The content object of which primary frame should be
    *                  scrolled into view.
@@ -499,6 +506,50 @@ public:
   NS_IMETHOD ScrollContentIntoView(nsIContent* aContent,
                                    PRIntn      aVPercent,
                                    PRIntn      aHPercent) = 0;
+
+  enum {
+    SCROLL_FIRST_ANCESTOR_ONLY = 0x01,
+    SCROLL_OVERFLOW_HIDDEN = 0x02
+  };
+  /**
+   * Scrolls the view of the document so that the given area of a frame
+   * is visible, if possible. Layout is not flushed before scrolling.
+   * 
+   * @param aRect relative to aFrame
+   * @param aVPercent see ScrollContentIntoView
+   * @param aHPercent see ScrollContentIntoView
+   * @param aFlags if SCROLL_FIRST_ANCESTOR_ONLY is set, only the
+   * nearest scrollable ancestor is scrolled, otherwise all
+   * scrollable ancestors may be scrolled if necessary
+   * if SCROLL_OVERFLOW_HIDDEN is set then we may scroll in a direction
+   * even if overflow:hidden is specified in that direction; otherwise
+   * we will not scroll in that direction when overflow:hidden is
+   * set for that direction
+   * @return true if any scrolling happened, false if no scrolling happened
+   */
+  virtual PRBool ScrollFrameRectIntoView(nsIFrame*     aFrame,
+                                         const nsRect& aRect,
+                                         PRIntn        aVPercent,
+                                         PRIntn        aHPercent,
+                                         PRUint32      aFlags) = 0;
+
+  /**
+   * Determine if a rectangle specified in the frame's coordinate system 
+   * intersects the viewport "enough" to be considered visible.
+   * @param aFrame frame that aRect coordinates are specified relative to
+   * @param aRect rectangle in twips to test for visibility 
+   * @param aMinTwips is the minimum distance in from the edge of the viewport
+   *                  that an object must be to be counted visible
+   * @return nsRectVisibility_kVisible if the rect is visible
+   *         nsRectVisibility_kAboveViewport
+   *         nsRectVisibility_kBelowViewport 
+   *         nsRectVisibility_kLeftOfViewport 
+   *         nsRectVisibility_kRightOfViewport rectangle is outside the viewport
+   *         in the specified direction 
+   */
+  virtual nsRectVisibility GetRectVisibility(nsIFrame *aFrame,
+                                             const nsRect &aRect, 
+                                             nscoord aMinTwips) = 0;
 
   /**
    * Suppress notification of the frame manager that frames are

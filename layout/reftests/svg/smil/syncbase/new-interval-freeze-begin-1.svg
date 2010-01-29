@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="
+        document.documentElement.pauseAnimations();
+        document.documentElement.setCurrentTime(1.5);
+        document.getElementById('a').setAttribute('begin', '3s');
+        setTimeAndSnapshot(2, false)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Tests that when we create an interval we freeze the begin time once it has
+    started.
+
+    So we have:
+
+    a: begin: 2s
+    b: begin: a.begin-1s
+
+    at t=1s, b begins
+    at t=1.5s, a's begin time is updated to 3s which will create a change notice
+
+    However, b should not then restart at t=2s regardless of the restart mode
+    because once the interval has started the begin time is fixed.
+   -->
+  <rect width="100" height="100" fill="red">
+    <set attributeName="y" attributeType="XML" to="0" id="a" begin="2s"/>
+    <animate attributeName="fill" attributeType="CSS"
+      values="orange; green; purple"
+      begin="a.begin-1s" dur="2s"/>
+  </rect>
+</svg>

@@ -213,9 +213,13 @@ public:
 
   nsIPresShell* GetPresShell() const { return mShell; }
 
-  // Find the prescontext for the root of the view manager hierarchy that contains
-  // this prescontext.
-  nsRootPresContext* RootPresContext();
+  /**
+   * Return the presentation context for the root of the view manager
+   * hierarchy that contains this presentation context, or nsnull if it can't
+   * be found (e.g. it's detached).
+   */
+  nsRootPresContext* GetRootPresContext();
+  virtual PRBool IsRoot() { return PR_FALSE; }
 
   nsIDocument* Document() const
   {
@@ -637,6 +641,12 @@ public:
     PRUint8 mHorizontal, mVertical;
     ScrollbarStyles(PRUint8 h, PRUint8 v) : mHorizontal(h), mVertical(v) {}
     ScrollbarStyles() {}
+    PRBool operator==(const ScrollbarStyles& aStyles) const {
+      return aStyles.mHorizontal == mHorizontal && aStyles.mVertical == mVertical;
+    }
+    PRBool operator!=(const ScrollbarStyles& aStyles) const {
+      return aStyles.mHorizontal != mHorizontal || aStyles.mVertical != mVertical;
+    }
   };
   void SetViewportOverflowOverride(PRUint8 aX, PRUint8 aY)
   {
@@ -830,8 +840,9 @@ public:
   // Returns true on success and false on failure (not safe).
   PRBool EnsureSafeToHandOutCSSRules();
 
-  PRBool MayHavePaintEventListener();
   void NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags);
+  void NotifyInvalidateForScrolling(const nsRegion& aBlitRegion,
+                                    const nsRegion& aInvalidateRegion);
   void FireDOMPaintEvent();
   PRBool IsDOMPaintEventPending() {
     return !mInvalidateRequests.mRequests.IsEmpty();
@@ -948,6 +959,10 @@ protected:
   NS_HIDDEN_(void) GetFontPreferences();
 
   NS_HIDDEN_(void) UpdateCharSet(const nsAFlatCString& aCharSet);
+
+  PRBool MayHavePaintEventListener();
+  void NotifyInvalidateRegion(const nsRegion& aRegion, nsPoint aOffset,
+                              PRUint32 aFlags);
 
   void HandleRebuildUserFontSet() {
     mPostedFlushUserFontSet = PR_FALSE;
@@ -1163,6 +1178,8 @@ public:
    * have been updated.
    */
   void DidApplyPluginGeometryUpdates();
+
+  virtual PRBool IsRoot() { return PR_TRUE; }
 
 private:
   nsTHashtable<nsPtrHashKey<nsObjectFrame> > mRegisteredPlugins;

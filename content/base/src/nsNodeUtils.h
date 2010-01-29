@@ -205,9 +205,9 @@ public:
    *
    * @param aNode canonical nsINode pointer of the node to add aData to
    * @param aKey the key to associate the object to
-   * @param aData the object to associate to aKey on aNode (may be nulll)
+   * @param aData the object to associate to aKey on aNode (may be null)
    * @param aHandler the UserDataHandler to call when the node is
-   *                 cloned/deleted/imported/renamed (may be nulll)
+   *                 cloned/deleted/imported/renamed (may be null)
    * @param aResult [out] the previously registered object for aKey on aNode, if
    *                      any
    * @return whether adding the object and UserDataHandler succeeded

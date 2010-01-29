@@ -38,6 +38,22 @@
 #include "nsRegion.h"
 #include "nsISupportsImpl.h"
 
+/*
+ * The SENTINEL values below guaranties that a < or >
+ * comparison with it will be false for all values of the
+ * underlying nscoord type.  E.g. this is always false:
+ *   aCoord > NS_COORD_GREATER_SENTINEL
+ * Setting the mRectListHead dummy rectangle to these values
+ * allows us to loop without checking for the list end.
+ */
+#ifdef NS_COORD_IS_FLOAT
+#define NS_COORD_LESS_SENTINEL nscoord_MIN
+#define NS_COORD_GREATER_SENTINEL nscoord_MAX
+#else
+#define NS_COORD_LESS_SENTINEL PR_INT32_MIN
+#define NS_COORD_GREATER_SENTINEL PR_INT32_MAX
+#endif
+
 // Fast inline analogues of nsRect methods for nsRegion::nsRectFast.
 // Check for emptiness is not required - it is guaranteed by caller.
 
@@ -349,11 +365,11 @@ void nsRegion::InsertInPlace (RgnRect* aRect, PRBool aOptimizeOnFly)
   {
     if (aRect->y > mCurRect->y)
     {
-      mRectListHead.y = PR_INT32_MAX;
-
+      mRectListHead.y = NS_COORD_GREATER_SENTINEL;
       while (aRect->y > mCurRect->next->y)
         mCurRect = mCurRect->next;
 
+      mRectListHead.x = NS_COORD_GREATER_SENTINEL;
       while (aRect->y == mCurRect->next->y && aRect->x > mCurRect->next->x)
         mCurRect = mCurRect->next;
 
@@ -361,11 +377,11 @@ void nsRegion::InsertInPlace (RgnRect* aRect, PRBool aOptimizeOnFly)
     } else
     if (aRect->y < mCurRect->y)
     {
-      mRectListHead.y = PR_INT32_MIN;
-
+      mRectListHead.y = NS_COORD_LESS_SENTINEL;
       while (aRect->y < mCurRect->prev->y)
         mCurRect = mCurRect->prev;
 
+      mRectListHead.x = NS_COORD_LESS_SENTINEL;
       while (aRect->y == mCurRect->prev->y && aRect->x < mCurRect->prev->x)
         mCurRect = mCurRect->prev;
 
@@ -374,16 +390,14 @@ void nsRegion::InsertInPlace (RgnRect* aRect, PRBool aOptimizeOnFly)
     {
       if (aRect->x > mCurRect->x)
       {
-        mRectListHead.y = PR_INT32_MAX;
-
+        mRectListHead.x = NS_COORD_GREATER_SENTINEL;
         while (aRect->y == mCurRect->next->y && aRect->x > mCurRect->next->x)
           mCurRect = mCurRect->next;
 
         InsertAfter (aRect, mCurRect);
       } else
       {
-        mRectListHead.y = PR_INT32_MIN;
-
+        mRectListHead.x = NS_COORD_LESS_SENTINEL;
         while (aRect->y == mCurRect->prev->y && aRect->x < mCurRect->prev->x)
           mCurRect = mCurRect->prev;
 
@@ -671,8 +685,8 @@ nsRegion& nsRegion::And (const nsRegion& aRgn1, const nsRegion& aRgn2)
           SetToElements (0);
           pSrcRgn2->SaveLinkChain ();
 
-          pSrcRgn1->mRectListHead.y = PR_INT32_MAX;
-          pSrcRgn2->mRectListHead.y = PR_INT32_MAX;
+          pSrcRgn1->mRectListHead.y = NS_COORD_GREATER_SENTINEL;
+          pSrcRgn2->mRectListHead.y = NS_COORD_GREATER_SENTINEL;
 
           for (RgnRect* pSrcRect1 = pSrcRgn1->mRectListHead.next ;
                pSrcRect1->y < pSrcRgn2->mBoundRect.YMost () ; pSrcRect1 = pSrcRect1->next)
@@ -751,7 +765,7 @@ nsRegion& nsRegion::And (const nsRegion& aRegion, const nsRect& aRect)
           }
 
           SetToElements (0);
-          pSrcRegion->mRectListHead.y = PR_INT32_MAX;
+          pSrcRegion->mRectListHead.y = NS_COORD_GREATER_SENTINEL;
 
           for (const RgnRect* pSrcRect = pSrcRegion->mRectListHead.next ;
                pSrcRect->y < aRectFast.YMost () ; pSrcRect = pSrcRect->next)
@@ -1076,7 +1090,7 @@ void nsRegion::SubRect (const nsRectFast& aRect, nsRegion& aResult, nsRegion& aC
 
   aResult.SetToElements (0);
 
-  (const_cast<nsRegion*>(pSrcRegion))->mRectListHead.y = PR_INT32_MAX;
+  const_cast<nsRegion*>(pSrcRegion)->mRectListHead.y = NS_COORD_GREATER_SENTINEL;
   const RgnRect* pSrcRect = pSrcRegion->mRectListHead.next;
 
   for ( ; pSrcRect->y < aRect.YMost () ; pSrcRect = pSrcRect->next)

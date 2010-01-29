@@ -159,7 +159,7 @@ struct JS_FRIEND_API(TypedArray) {
 
 JS_BEGIN_EXTERN_C
 
-JSObject *
+JS_FRIEND_API(JSObject *)
 js_InitTypedArrayClasses(JSContext *cx, JSObject *obj);
 
 JS_FRIEND_API(JSBool)

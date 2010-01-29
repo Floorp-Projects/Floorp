@@ -106,7 +106,6 @@ CPPSRCS		= \
 		nsPresArena.cpp \
 		nsPresContext.cpp \
 		nsPresShell.cpp \
-		nsPresState.cpp \
 		nsQuoteList.cpp \
 		nsRefreshDriver.cpp \
 		nsStyleChangeList.cpp \

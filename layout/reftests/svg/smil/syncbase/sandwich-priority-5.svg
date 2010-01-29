@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, true)">
+  <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <!--
+    Test of animation sandwich priority based on syncbase dependencies.
+
+    This case includes many cycles.
+
+    c is dependent on a.
+    b is dependent on c.
+    So b is the most dependent and should be on top.
+   -->
+  <rect width="100" height="100" fill="purple">
+    <set attributeName="fill" id="c" to="orange" begin="a.begin; b.begin"/>
+    <set attributeName="fill" id="b" to="green"  begin="c.begin; b.begin"/>
+    <set attributeName="fill" id="a" to="red"    begin="1s; b.begin; c.begin"/>
+  </rect>
+</svg>

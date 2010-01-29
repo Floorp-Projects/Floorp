@@ -102,36 +102,34 @@ using namespace mozilla::places;
 #define RECENT_EVENT_QUEUE_MAX_LENGTH 128
 
 // preference ID strings
-#define PREF_BRANCH_BASE                        "browser."
+#define PREF_PLACES_BRANCH_BASE                 "places."
 
-#define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN    "history_expire_days_min"
-#define PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX    "history_expire_days"
-#define PREF_BROWSER_HISTORY_EXPIRE_SITES       "history_expire_sites"
+#define PREF_HISTORY_ENABLED                    "history.enabled"
 
-#define PREF_FRECENCY_NUM_VISITS                "places.frecency.numVisits"
-#define PREF_FRECENCY_FIRST_BUCKET_CUTOFF       "places.frecency.firstBucketCutoff"
-#define PREF_FRECENCY_SECOND_BUCKET_CUTOFF      "places.frecency.secondBucketCutoff"
-#define PREF_FRECENCY_THIRD_BUCKET_CUTOFF       "places.frecency.thirdBucketCutoff"
-#define PREF_FRECENCY_FOURTH_BUCKET_CUTOFF      "places.frecency.fourthBucketCutoff"
-#define PREF_FRECENCY_FIRST_BUCKET_WEIGHT       "places.frecency.firstBucketWeight"
-#define PREF_FRECENCY_SECOND_BUCKET_WEIGHT      "places.frecency.secondBucketWeight"
-#define PREF_FRECENCY_THIRD_BUCKET_WEIGHT       "places.frecency.thirdBucketWeight"
-#define PREF_FRECENCY_FOURTH_BUCKET_WEIGHT      "places.frecency.fourthBucketWeight"
-#define PREF_FRECENCY_DEFAULT_BUCKET_WEIGHT     "places.frecency.defaultBucketWeight"
-#define PREF_FRECENCY_EMBED_VISIT_BONUS         "places.frecency.embedVisitBonus"
-#define PREF_FRECENCY_LINK_VISIT_BONUS          "places.frecency.linkVisitBonus"
-#define PREF_FRECENCY_TYPED_VISIT_BONUS         "places.frecency.typedVisitBonus"
-#define PREF_FRECENCY_BOOKMARK_VISIT_BONUS      "places.frecency.bookmarkVisitBonus"
-#define PREF_FRECENCY_DOWNLOAD_VISIT_BONUS      "places.frecency.downloadVisitBonus"
-#define PREF_FRECENCY_PERM_REDIRECT_VISIT_BONUS "places.frecency.permRedirectVisitBonus"
-#define PREF_FRECENCY_TEMP_REDIRECT_VISIT_BONUS "places.frecency.tempRedirectVisitBonus"
-#define PREF_FRECENCY_DEFAULT_VISIT_BONUS       "places.frecency.defaultVisitBonus"
-#define PREF_FRECENCY_UNVISITED_BOOKMARK_BONUS  "places.frecency.unvisitedBookmarkBonus"
-#define PREF_FRECENCY_UNVISITED_TYPED_BONUS     "places.frecency.unvisitedTypedBonus"
+#define PREF_FRECENCY_NUM_VISITS                "frecency.numVisits"
+#define PREF_FRECENCY_FIRST_BUCKET_CUTOFF       "frecency.firstBucketCutoff"
+#define PREF_FRECENCY_SECOND_BUCKET_CUTOFF      "frecency.secondBucketCutoff"
+#define PREF_FRECENCY_THIRD_BUCKET_CUTOFF       "frecency.thirdBucketCutoff"
+#define PREF_FRECENCY_FOURTH_BUCKET_CUTOFF      "frecency.fourthBucketCutoff"
+#define PREF_FRECENCY_FIRST_BUCKET_WEIGHT       "frecency.firstBucketWeight"
+#define PREF_FRECENCY_SECOND_BUCKET_WEIGHT      "frecency.secondBucketWeight"
+#define PREF_FRECENCY_THIRD_BUCKET_WEIGHT       "frecency.thirdBucketWeight"
+#define PREF_FRECENCY_FOURTH_BUCKET_WEIGHT      "frecency.fourthBucketWeight"
+#define PREF_FRECENCY_DEFAULT_BUCKET_WEIGHT     "frecency.defaultBucketWeight"
+#define PREF_FRECENCY_EMBED_VISIT_BONUS         "frecency.embedVisitBonus"
+#define PREF_FRECENCY_LINK_VISIT_BONUS          "frecency.linkVisitBonus"
+#define PREF_FRECENCY_TYPED_VISIT_BONUS         "frecency.typedVisitBonus"
+#define PREF_FRECENCY_BOOKMARK_VISIT_BONUS      "frecency.bookmarkVisitBonus"
+#define PREF_FRECENCY_DOWNLOAD_VISIT_BONUS      "frecency.downloadVisitBonus"
+#define PREF_FRECENCY_PERM_REDIRECT_VISIT_BONUS "frecency.permRedirectVisitBonus"
+#define PREF_FRECENCY_TEMP_REDIRECT_VISIT_BONUS "frecency.tempRedirectVisitBonus"
+#define PREF_FRECENCY_DEFAULT_VISIT_BONUS       "frecency.defaultVisitBonus"
+#define PREF_FRECENCY_UNVISITED_BOOKMARK_BONUS  "frecency.unvisitedBookmarkBonus"
+#define PREF_FRECENCY_UNVISITED_TYPED_BONUS     "frecency.unvisitedTypedBonus"
 
-#define PREF_LAST_VACUUM                        "places.last_vacuum"
+#define PREF_LAST_VACUUM                        "last_vacuum"
 
-#define PREF_CACHE_TO_MEMORY_PERCENTAGE         "places.database.cache_to_memory_percentage"
+#define PREF_CACHE_TO_MEMORY_PERCENTAGE         "database.cache_to_memory_percentage"
 
 // Default integer value for PREF_CACHE_TO_MEMORY_PERCENTAGE.
 // This is 6% of machine memory, giving 15MB for a user with 256MB of memory.
@@ -186,9 +184,6 @@ static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 #define MAX_LAZY_TIMER_DEFERMENTS 2
 
 #endif // LAZY_ADD
-
-// Limit the number of items in the history for performance reasons
-#define EXPIRATION_CAP_SITES 40000
 
 // character-set annotation
 #define CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
@@ -396,9 +391,7 @@ nsNavHistory::nsNavHistory()
 , mCachedNow(0)
 , mExpireNowTimer(nsnull)
 , mLastSessionID(0)
-, mExpireDaysMin(0)
-, mExpireDaysMax(0)
-, mExpireSites(0)
+, mHistoryEnabled(PR_TRUE)
 , mNumVisitsForFrecency(10)
 , mTagsFolder(-1)
 , mInPrivateBrowsing(PRIVATEBROWSING_NOTINITED)
@@ -430,17 +423,15 @@ nsNavHistory::~nsNavHistory()
 nsresult
 nsNavHistory::Init()
 {
-  nsresult rv;
-
-  // prefs (must be before DB init, which uses the pref service)
   nsCOMPtr<nsIPrefService> prefService =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIPrefBranch> placesBranch;
+  NS_ENSURE_TRUE(prefService, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv = prefService->GetBranch(PREF_PLACES_BRANCH_BASE,
+                                       getter_AddRefs(placesBranch));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = prefService->GetBranch(PREF_BRANCH_BASE, getter_AddRefs(mPrefBranch));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // prefs
-  LoadPrefs(PR_TRUE);
+  mPrefBranch = do_QueryInterface(placesBranch);
+  LoadPrefs();
 
   // Init the database file.  If we won't be able to connect to the database it
   // is most likely corrupt, so we will backup it and create a new one.
@@ -467,10 +458,6 @@ nsNavHistory::Init()
   rv = InitAdditionalDBItems();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Initialize expiration.  There's no need to do this before, since just now
-  // we have a valid database and a working connection.
-  mExpire = new nsNavHistoryExpire();
-
   // Notify we have finished database initialization.
   // Enqueue the notification, so if we init another service that requires
   // nsNavHistoryService we don't recursive try to get it.
@@ -492,12 +479,9 @@ nsNavHistory::Init()
    *** by the observer service and the preference service. 
    ****************************************************************************/
 
-  nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
-  if (pbi) {
-    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, this, PR_FALSE);
-    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN, this, PR_FALSE);
-    pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_SITES, this, PR_FALSE);
-  }
+  // Observe preferences branch for changes.
+  if (mPrefBranch)
+    mPrefBranch->AddObserver("", this, PR_FALSE);
 
   nsCOMPtr<nsIObserverService> obsSvc =
     do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
@@ -698,12 +682,9 @@ nsNavHistory::InitDB()
   // Compute the size of the database cache using the device's memory size.
   // We don't use PRAGMA default_cache_size, since the database could be moved
   // among different devices and the value would adapt accordingly.
-  nsCOMPtr<nsIPrefBranch> prefs =
-    do_GetService("@mozilla.org/preferences-service;1");
-  NS_WARN_IF_FALSE(prefs, "Unable to get the preferences service");
   PRInt32 cachePercentage;
-  if (!prefs || NS_FAILED(prefs->GetIntPref(PREF_CACHE_TO_MEMORY_PERCENTAGE,
-                                            &cachePercentage)))
+  if (NS_FAILED(mPrefBranch->GetIntPref(PREF_CACHE_TO_MEMORY_PERCENTAGE,
+                                        &cachePercentage)))
     cachePercentage = DATABASE_DEFAULT_CACHE_TO_MEMORY_PERCENTAGE;
   // Sanity checks, we allow values between 0 (disable cache) and 50%.
   if (cachePercentage > 50)
@@ -2030,67 +2011,71 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
 }
 
 
-nsresult
-nsNavHistory::LoadPrefs(PRBool aInitializing)
+void
+nsNavHistory::LoadPrefs()
 {
-  if (! mPrefBranch)
-    return NS_OK;
+  if (!mPrefBranch)
+    return;
 
-  mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MAX, &mExpireDaysMax);
-  mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS_MIN, &mExpireDaysMin);
-  // Cap max days to min days to prevent expiring pages younger than min
-  // NOTE: if history is disabled in preferences, then mExpireDaysMax == 0
-  if (mExpireDaysMax && mExpireDaysMax < mExpireDaysMin)
-    mExpireDaysMax = mExpireDaysMin;
-  if (NS_FAILED(mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_SITES,
-                                        &mExpireSites)))
-    mExpireSites = EXPIRATION_CAP_SITES;
-
-  // get the frecency prefs
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService("@mozilla.org/preferences-service;1"));
-  if (prefs) {
-    prefs->GetIntPref(PREF_FRECENCY_NUM_VISITS, 
-      &mNumVisitsForFrecency);
-    prefs->GetIntPref(PREF_FRECENCY_FIRST_BUCKET_CUTOFF, 
-      &mFirstBucketCutoffInDays);
-    prefs->GetIntPref(PREF_FRECENCY_SECOND_BUCKET_CUTOFF,
-      &mSecondBucketCutoffInDays);
-    prefs->GetIntPref(PREF_FRECENCY_THIRD_BUCKET_CUTOFF, 
-      &mThirdBucketCutoffInDays);
-    prefs->GetIntPref(PREF_FRECENCY_FOURTH_BUCKET_CUTOFF, 
-      &mFourthBucketCutoffInDays);
-    prefs->GetIntPref(PREF_FRECENCY_EMBED_VISIT_BONUS, 
-      &mEmbedVisitBonus);
-    prefs->GetIntPref(PREF_FRECENCY_LINK_VISIT_BONUS, 
-      &mLinkVisitBonus);
-    prefs->GetIntPref(PREF_FRECENCY_TYPED_VISIT_BONUS, 
-      &mTypedVisitBonus);
-    prefs->GetIntPref(PREF_FRECENCY_BOOKMARK_VISIT_BONUS, 
-      &mBookmarkVisitBonus);
-    prefs->GetIntPref(PREF_FRECENCY_DOWNLOAD_VISIT_BONUS, 
-      &mDownloadVisitBonus);
-    prefs->GetIntPref(PREF_FRECENCY_PERM_REDIRECT_VISIT_BONUS, 
-      &mPermRedirectVisitBonus);
-    prefs->GetIntPref(PREF_FRECENCY_TEMP_REDIRECT_VISIT_BONUS, 
-      &mTempRedirectVisitBonus);
-    prefs->GetIntPref(PREF_FRECENCY_DEFAULT_VISIT_BONUS, 
-      &mDefaultVisitBonus);
-    prefs->GetIntPref(PREF_FRECENCY_UNVISITED_BOOKMARK_BONUS, 
-      &mUnvisitedBookmarkBonus);
-    prefs->GetIntPref(PREF_FRECENCY_UNVISITED_TYPED_BONUS,
-      &mUnvisitedTypedBonus);
-    prefs->GetIntPref(PREF_FRECENCY_FIRST_BUCKET_WEIGHT, 
-      &mFirstBucketWeight);
-    prefs->GetIntPref(PREF_FRECENCY_SECOND_BUCKET_WEIGHT, 
-      &mSecondBucketWeight);
-    prefs->GetIntPref(PREF_FRECENCY_THIRD_BUCKET_WEIGHT, 
-      &mThirdBucketWeight);
-    prefs->GetIntPref(PREF_FRECENCY_FOURTH_BUCKET_WEIGHT, 
-      &mFourthBucketWeight);
-    prefs->GetIntPref(PREF_FRECENCY_DEFAULT_BUCKET_WEIGHT, 
-      &mDefaultWeight);
+  // History preferences.
+  // Check the old preference and migrate disabled state.
+  nsCOMPtr<nsIPrefBranch> prefSvc = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  PRInt32 oldDaysPref = 0;
+  if (prefSvc &&
+      NS_SUCCEEDED(prefSvc->GetIntPref("browser.history_expire_days",
+                                       &oldDaysPref))) {
+    if (!oldDaysPref) {
+      // Preserve history disabled state, for privacy reasons.
+      mPrefBranch->SetBoolPref(PREF_HISTORY_ENABLED, PR_FALSE);
+      mHistoryEnabled = PR_FALSE;
+    }
+    // Clear the old pref, otherwise we will keep using it.
+    prefSvc->ClearUserPref("browser.history_expire_days");
   }
-  return NS_OK;
+  else
+    mPrefBranch->GetBoolPref(PREF_HISTORY_ENABLED, &mHistoryEnabled);
+
+  // Frecency preferences.
+  mPrefBranch->GetIntPref(PREF_FRECENCY_NUM_VISITS,
+    &mNumVisitsForFrecency);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_FIRST_BUCKET_CUTOFF,
+    &mFirstBucketCutoffInDays);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_SECOND_BUCKET_CUTOFF,
+    &mSecondBucketCutoffInDays);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_THIRD_BUCKET_CUTOFF,
+    &mThirdBucketCutoffInDays);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_FOURTH_BUCKET_CUTOFF,
+    &mFourthBucketCutoffInDays);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_EMBED_VISIT_BONUS,
+    &mEmbedVisitBonus);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_LINK_VISIT_BONUS,
+    &mLinkVisitBonus);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_TYPED_VISIT_BONUS,
+    &mTypedVisitBonus);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_BOOKMARK_VISIT_BONUS,
+    &mBookmarkVisitBonus);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_DOWNLOAD_VISIT_BONUS,
+    &mDownloadVisitBonus);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_PERM_REDIRECT_VISIT_BONUS,
+    &mPermRedirectVisitBonus);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_TEMP_REDIRECT_VISIT_BONUS,
+    &mTempRedirectVisitBonus);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_DEFAULT_VISIT_BONUS,
+    &mDefaultVisitBonus);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_UNVISITED_BOOKMARK_BONUS,
+    &mUnvisitedBookmarkBonus);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_UNVISITED_TYPED_BONUS,
+    &mUnvisitedTypedBonus);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_FIRST_BUCKET_WEIGHT,
+    &mFirstBucketWeight);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_SECOND_BUCKET_WEIGHT,
+    &mSecondBucketWeight);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_THIRD_BUCKET_WEIGHT,
+    &mThirdBucketWeight);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_FOURTH_BUCKET_WEIGHT,
+    &mFourthBucketWeight);
+  mPrefBranch->GetIntPref(PREF_FRECENCY_DEFAULT_BUCKET_WEIGHT,
+    &mDefaultWeight);
 }
 
 
@@ -2797,9 +2782,10 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, nsIURI* aReferringURI,
   PRUint32 added = 0;
   if (!hidden && aTransitionType != TRANSITION_EMBED &&
                  aTransitionType != TRANSITION_DOWNLOAD) {
-    ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
-                        OnVisit(aURI, *aVisitID, aTime, aSessionID,
-                                referringVisitID, aTransitionType, &added));
+    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                     nsINavHistoryObserver,
+                     OnVisit(aURI, *aVisitID, aTime, aSessionID,
+                             referringVisitID, aTransitionType, &added));
   }
 
   // Normally docshell sends the link visited observer notification for us (this
@@ -4234,8 +4220,8 @@ nsNavHistory::BeginUpdateBatch()
     if (mBatchHasTransaction)
       mDBConn->BeginTransaction();
 
-    ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
-                        OnBeginUpdateBatch());
+    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                     nsINavHistoryObserver, OnBeginUpdateBatch());
   }
   return NS_OK;
 }
@@ -4248,8 +4234,8 @@ nsNavHistory::EndUpdateBatch()
     if (mBatchHasTransaction)
       mDBConn->CommitTransaction();
     mBatchHasTransaction = PR_FALSE;
-    ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
-                        OnEndUpdateBatch());
+    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                     nsINavHistoryObserver, OnEndUpdateBatch());
   }
   return NS_OK;
 }
@@ -4475,10 +4461,6 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
   if (aPlaceIdsQueryString.IsEmpty())
     return NS_OK;
 
-  // now that visits have been removed, run annotation expiration.
-  // this will remove all expire-able annotations for these URIs.
-  (void)mExpire->OnDeleteVisits();
-
   // if the entry is not bookmarked and is not a place: uri
   // then we can remove it from moz_places.
   // Note that we do NOT delete favicons. Any unreferenced favicons will be
@@ -4566,16 +4548,16 @@ nsNavHistory::RemovePage(nsIURI *aURI)
   NS_ENSURE_ARG(aURI);
 
   // Before we remove, we have to notify our observers!
-  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                      nsINavHistoryObserver, OnBeforeDeleteURI(aURI));
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                   nsINavHistoryObserver, OnBeforeDeleteURI(aURI));
 
   nsIURI** URIs = &aURI;
   nsresult rv = RemovePages(URIs, 1, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Notify our observers that the URI has been removed.
-  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                      nsINavHistoryObserver, OnDeleteURI(aURI));
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                   nsINavHistoryObserver, OnDeleteURI(aURI));
   return NS_OK;
 }
 
@@ -4859,18 +4841,52 @@ nsNavHistory::RemoveAllPages()
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+
 #ifdef LAZY_ADD
   // We must ensure to remove pages from the lazy messages queue too.
   CommitLazyMessages();
 #endif
 
-  // expire everything
-  mExpire->ClearHistory();
+  // reset frecency for all items that will _not_ be deleted
+  // Note, we set frecency to -visit_count since we use that value in our
+  // idle query to figure out which places to recalcuate frecency first.
+  // We must do this before deleting visits.
+  nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_places_view SET frecency = -MAX(visit_count, 1) "
+    "WHERE id IN("
+      "SELECT h.id FROM moz_places_temp h "
+      "WHERE EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) "
+      "UNION ALL "
+      "SELECT h.id FROM moz_places h "
+      "WHERE EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) "
+    ")"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Expire visits, then let the paranoid functions do the cleanup for us.
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_historyvisits_view"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Some of the remaining places could be place: urls or
+  // unvisited livemark items, so setting the frecency to -1
+  // will cause them to show up in the url bar autocomplete
+  // call FixInvalidFrecenciesForExcludedPlaces to handle that scenario.
+  rv = FixInvalidFrecenciesForExcludedPlaces();
+  if (NS_FAILED(rv))
+    NS_WARNING("failed to fix invalid frecencies");
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Expiration will take care of orphans.
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                   nsINavHistoryObserver, OnClearHistory());
 
   // privacy cleanup, if there's an old history.dat around, just delete it
   nsCOMPtr<nsIFile> oldHistoryFile;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
-                                       getter_AddRefs(oldHistoryFile));
+  rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
+                              getter_AddRefs(oldHistoryFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool fileExists;
@@ -5483,12 +5499,15 @@ NS_IMETHODIMP
 nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
                                   PRBool aWholeEntry)
 {
-  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
-                      OnPageExpired(aURI, aVisitTime, aWholeEntry));
   if (aWholeEntry) {
-    // Notify our observers that the URI has been removed.
-    ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
-                        nsINavHistoryObserver, OnDeleteURI(aURI));
+    // Notify our observers that the page has been removed.
+    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                     nsINavHistoryObserver, OnDeleteURI(aURI));
+  }
+  else {
+    // Notify our observers that some visits for the page have been removed.
+    NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                     nsINavHistoryObserver, OnDeleteVisits(aURI, aVisitTime));
   }
 
   return NS_OK;
@@ -5521,6 +5540,16 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     nsresult rv = os->EnumerateObservers(TOPIC_PLACES_INIT_COMPLETE,
                                          getter_AddRefs(e));
     if (NS_SUCCEEDED(rv) && e) {
+      // This covers a special case that can happen in tests, if the test
+      // does never interrupt the main thread we could receive xpcom-shutdown
+      // before we fire any notification, that means that if we notify now
+      // we will init the category cache after xpcom-shutdown, category
+      // observing services will be then initialized and leaked.
+      // We could shutdown earlier (see bug 529821) but also in such a case
+      // we could have async statements trying to notify after xpcom-shutdown,
+      // so, for now, we just avoid to notify from now on.
+      mCanNotify = false;
+
       nsCOMPtr<nsIObserver> observer;
       PRBool loop = PR_TRUE;
       while(NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop)
@@ -5532,13 +5561,14 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
       }
     }
 
-    nsCOMPtr<nsIPrefService> prefService =
-      do_GetService(NS_PREFSERVICE_CONTRACTID);
+    // Stop observing preferences changes.
+    if (mPrefBranch)
+      mPrefBranch->RemoveObserver("", this);
+
+    // Force a preferences save.
+    nsCOMPtr<nsIPrefService> prefService = do_QueryInterface(mPrefBranch);
     if (prefService)
       prefService->SavePrefFile(nsnull);
-
-    // Start shutdown expiration.
-    mExpire->OnQuit();
 
 #ifdef LAZY_ADD
     // Commit all pending lazy messages.
@@ -5594,13 +5624,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
   }
 #endif
   else if (strcmp(aTopic, TOPIC_PREF_CHANGED) == 0) {
-    PRInt32 oldDaysMin = mExpireDaysMin;
-    PRInt32 oldDaysMax = mExpireDaysMax;
-    PRInt32 oldVisits = mExpireSites;
-    LoadPrefs(PR_FALSE);
-    if (oldDaysMin != mExpireDaysMin || oldDaysMax != mExpireDaysMax ||
-        oldVisits != mExpireSites)
-      mExpire->OnExpirationChanged();
+    LoadPrefs();
   }
   else if (strcmp(aTopic, TOPIC_IDLE_DAILY) == 0) {
     // Ensure our connection is still alive.  The idle-daily observer is removed
@@ -5665,10 +5689,8 @@ nsNavHistory::VacuumDatabase()
 
   PRInt32 lastVacuumPref;
   PRInt64 lastVacuumTime = 0;
-  nsCOMPtr<nsIPrefBranch> prefSvc =
-    do_GetService("@mozilla.org/preferences-service;1");
-  NS_ENSURE_TRUE(prefSvc, NS_ERROR_OUT_OF_MEMORY);
-  if (NS_SUCCEEDED(prefSvc->GetIntPref(PREF_LAST_VACUUM, &lastVacuumPref))) {
+  if (mPrefBranch &&
+      NS_SUCCEEDED(mPrefBranch->GetIntPref(PREF_LAST_VACUUM, &lastVacuumPref))) {
     // Value are seconds till epoch, convert it to microseconds.
     lastVacuumTime = (PRInt64)lastVacuumPref * PR_USEC_PER_SEC;
   }
@@ -5751,13 +5773,15 @@ nsNavHistory::VacuumDatabase()
                                getter_AddRefs(ps));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = prefSvc->SetIntPref(PREF_LAST_VACUUM,
-                             (PRInt32)(PR_Now() / PR_USEC_PER_SEC));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (mPrefBranch) {
+      (void)mPrefBranch->SetIntPref(PREF_LAST_VACUUM,
+                                    (PRInt32)(PR_Now() / PR_USEC_PER_SEC));
+    }
   }
 
   return NS_OK;
 }
+
 
 nsresult
 nsNavHistory::DecayFrecency()
@@ -6915,8 +6939,8 @@ void
 nsNavHistory::SendPageChangedNotification(nsIURI* aURI, PRUint32 aWhat,
                                           const nsAString& aValue)
 {
-  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
-                      OnPageChanged(aURI, aWhat, aValue));
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                   nsINavHistoryObserver, OnPageChanged(aURI, aWhat, aValue));
 }
 
 // nsNavHistory::TitleForDomain
@@ -7048,8 +7072,8 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // observers (have to check first if it's bookmarked)
-  ENUMERATE_OBSERVERS(mCanNotify, mCacheObservers, mObservers, nsINavHistoryObserver,
-                      OnTitleChanged(aURI, aTitle));
+  NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
+                   nsINavHistoryObserver, OnTitleChanged(aURI, aTitle));
 
   return NS_OK;
 }

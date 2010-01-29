@@ -44,8 +44,6 @@
 #include "nsCSSRendering.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
 #include "nsIRenderingContext.h"
 #include "nsGUIEvent.h"
 #include "nsStyleConsts.h"
@@ -57,11 +55,11 @@
 #include "nsDisplayList.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsFrameManager.h"
 
 // for focus
 #include "nsIDOMWindowInternal.h"
 #include "nsIScrollableFrame.h"
-#include "nsIScrollableView.h"
 #include "nsIDocShell.h"
 
 #ifdef DEBUG_rods
@@ -92,12 +90,10 @@ nsCanvasFrame::Init(nsIContent*      aContent,
 {
   nsresult rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  mViewManager = PresContext()->GetPresShell()->GetViewManager();
-
-  nsIScrollableView* scrollingView = nsnull;
-  mViewManager->GetRootScrollableView(&scrollingView);
-  if (scrollingView) {
-    scrollingView->AddScrollPositionListener(this);
+  nsIScrollableFrame* sf =
+    PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
+  if (sf) {
+    sf->AddScrollPositionListener(this);
   }
 
   return rv;
@@ -108,45 +104,27 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   mAbsoluteContainer.DestroyFrames(this, aDestructRoot);
 
-  nsIScrollableView* scrollingView = nsnull;
-  mViewManager->GetRootScrollableView(&scrollingView);
-  if (scrollingView) {
-    scrollingView->RemoveScrollPositionListener(this);
+  nsIScrollableFrame* sf =
+    PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
+  if (sf) {
+    sf->RemoveScrollPositionListener(this);
   }
 
   nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 NS_IMETHODIMP
-nsCanvasFrame::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
+nsCanvasFrame::ScrollPositionWillChange(nscoord aX, nscoord aY)
 {
-#ifdef DEBUG_CANVAS_FOCUS
-  {
-    PRBool hasFocus = PR_FALSE;
-    nsCOMPtr<nsIViewObserver> observer;
-    mViewManager->GetViewObserver(*getter_AddRefs(observer));
-    nsCOMPtr<nsIPresShell> shell = do_QueryInterface(observer);
-    nsCOMPtr<nsPresContext> context;
-    shell->GetPresContext(getter_AddRefs(context));
-    nsCOMPtr<nsISupports> container;
-    context->GetContainer(getter_AddRefs(container));
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-    if (docShell) {
-      docShell->GetHasFocus(&hasFocus);
-    }
-    printf("SPWC: %p  HF: %s  mDoPaintFocus: %s\n", docShell.get(), hasFocus?"Y":"N", mDoPaintFocus?"Y":"N");
-  }
-#endif
-
   if (mDoPaintFocus) {
     mDoPaintFocus = PR_FALSE;
-    mViewManager->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
+    PresContext()->FrameManager()->GetRootFrame()->InvalidateOverflowRect();
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCanvasFrame::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
+nsCanvasFrame::ScrollPositionDidChange(nscoord aX, nscoord aY)
 {
   return NS_OK;
 }
@@ -156,7 +134,7 @@ nsCanvasFrame::SetHasFocus(PRBool aHasFocus)
 {
   if (mDoPaintFocus != aHasFocus) {
     mDoPaintFocus = aHasFocus;
-    mViewManager->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
+    PresContext()->FrameManager()->GetRootFrame()->InvalidateOverflowRect();
   }
   return NS_OK;
 }
@@ -291,9 +269,8 @@ nsRect nsCanvasFrame::CanvasArea() const
 
   nsIScrollableFrame *scrollableFrame = do_QueryFrame(GetParent());
   if (scrollableFrame) {
-    nsIScrollableView* scrollableView = scrollableFrame->GetScrollableView();
-    nsRect vcr = scrollableView->View()->GetBounds();
-    result.UnionRect(result, nsRect(nsPoint(0, 0), vcr.Size()));
+    nsRect portRect = scrollableFrame->GetScrollPortRect();
+    result.UnionRect(result, nsRect(nsPoint(0, 0), portRect.Size()));
   }
   return result;
 }
@@ -431,14 +408,10 @@ nsCanvasFrame::PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt)
 
   nsIScrollableFrame *scrollableFrame = do_QueryFrame(GetParent());
   if (scrollableFrame) {
-    nsIScrollableView* scrollableView = scrollableFrame->GetScrollableView();
-    nsRect vcr = scrollableView->View()->GetBounds();
-    focusRect.width = vcr.width;
-    focusRect.height = vcr.height;
-    nscoord x,y;
-    scrollableView->GetScrollPosition(x, y);
-    focusRect.x += x;
-    focusRect.y += y;
+    nsRect portRect = scrollableFrame->GetScrollPortRect();
+    focusRect.width = portRect.width;
+    focusRect.height = portRect.height;
+    focusRect.MoveBy(scrollableFrame->GetScrollPosition());
   }
 
  // XXX use the root frame foreground color, but should we find BODY frame

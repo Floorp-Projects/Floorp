@@ -1,1 +1,44 @@
 == CSS21-t1502-no-inherited-font-family.xhtml CSS21-t1502-no-inherited-font-family-ref.xhtml
+
+# basic tests for bug 538730
+!= synthetic-bold-1.html synthetic-bold-1-ref.html
+!= synthetic-bold-2.html synthetic-bold-2-ref.html
+
+# synthetic bold/italic tests
+!= defaultfont-bold.html defaultfont.html
+!= defaultfont-italic.html defaultfont.html 
+!= defaultfont-oblique.html defaultfont.html 
+!= defaultfont-bolditalic.html defaultfont.html 
+!= defaultfont-bolditalic.html defaultfont-bold.html
+
+!= defaultjapanese-bold.html defaultjapanese.html
+!= defaultjapanese-italic.html defaultjapanese.html
+!= defaultjapanese-oblique.html defaultjapanese.html
+!= defaultjapanese-bolditalic.html defaultjapanese.html
+!= defaultjapanese-bolditalic.html defaultjapanese-bold.html
+
+random-if(MOZ_WIDGET_TOOLKIT=="cocoa") != impact-bold.html impact.html # bug 539418
+!= impact-italic.html impact.html
+!= impact-oblique.html impact.html
+!= impact-bolditalic.html impact.html
+!= impact-bolditalic.html impact-bold.html
+
+!= arialunicode-bold.html arialunicode.html
+!= arialunicode-italic.html arialunicode.html
+!= arialunicode-oblique.html arialunicode.html
+!= arialunicode-bolditalic.html arialunicode.html
+!= arialunicode-bolditalic.html arialunicode-bold.html
+
+!= lucidaconsole-bold.html lucidaconsole.html
+!= lucidaconsole-italic.html lucidaconsole.html
+!= lucidaconsole-oblique.html lucidaconsole.html
+!= lucidaconsole-bolditalic.html lucidaconsole.html
+!= lucidaconsole-bolditalic.html lucidaconsole-bold.html
+
+# checking that we don't match fullnames, psnames (see bug 538103)
+== arial-variations-1.html arial-variations-1-ref.html
+== arial-variations-2.html arial-variations-2-ref.html
+== arial-variations-3.html arial-variations-3-ref.html
+== arial-variations-4.html arial-variations-4-ref.html
+== arial-variations-5.html arial-variations-5-ref.html
+== arial-variations-6.html arial-variations-6-ref.html

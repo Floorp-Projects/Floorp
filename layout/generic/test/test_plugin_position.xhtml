@@ -72,7 +72,7 @@ function runTests() {
 // or sized as expected.
 // So call runTests after the load event has finished, when painting will
 // be unsuppressed.
-addLoadEvent(function() { setTimeout(runTests, 0); });
+addLoadEvent(function() { setTimeout(runTests, 1000); });
 SimpleTest.waitForExplicitFinish();
 
 ]]>

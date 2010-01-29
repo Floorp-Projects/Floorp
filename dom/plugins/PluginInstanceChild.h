@@ -49,9 +49,8 @@
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
-
-#undef _MOZ_LOG
-#define _MOZ_LOG(s) printf("[PluginInstanceChild] %s\n", s)
+#include "ChildAsyncCall.h"
+#include "ChildTimer.h"
 
 namespace mozilla {
 namespace plugins {
@@ -74,9 +73,6 @@ class PluginInstanceChild : public PPluginInstanceChild
 protected:
     virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window, NPError* rv);
 
-    virtual bool Answer__delete__(NPError* rv);
-
-
     virtual bool
     AnswerNPP_GetValue_NPPVpluginWindow(bool* windowed, NPError* rv);
     virtual bool
@@ -88,7 +84,13 @@ protected:
                                                     NPError* result);
 
     virtual bool
+    AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value, NPError* result);
+
+    virtual bool
     AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled);
+
+    virtual bool
+    AnswerNPP_Destroy(NPError* result);
 
     virtual PPluginScriptableObjectChild*
     AllocPPluginScriptableObject();
@@ -111,6 +113,19 @@ protected:
                         uint16_t *stype);
 
     virtual bool
+    AnswerPBrowserStreamConstructor(
+            PBrowserStreamChild* aActor,
+            const nsCString& url,
+            const uint32_t& length,
+            const uint32_t& lastmodified,
+            PStreamNotifyChild* notifyData,
+            const nsCString& headers,
+            const nsCString& mimeType,
+            const bool& seekable,
+            NPError* rv,
+            uint16_t* stype);
+        
+    virtual bool
     DeallocPBrowserStream(PBrowserStreamChild* stream);
 
     virtual PPluginStreamChild*
@@ -130,13 +145,18 @@ protected:
     NS_OVERRIDE virtual bool
     DeallocPStreamNotify(PStreamNotifyChild* notifyData);
 
+    virtual bool
+    AnswerSetPluginFocus();
+
+    virtual bool
+    AnswerUpdateWindow();
+
 public:
     PluginInstanceChild(const NPPluginFuncs* aPluginIface);
 
     virtual ~PluginInstanceChild();
 
     bool Initialize();
-    void Destroy();
 
     NPP GetNPP()
     {
@@ -160,6 +180,9 @@ public:
 
     bool NotifyStream(StreamNotifyChild* notifyData, NPReason reason);
 
+    uint32_t ScheduleTimer(uint32_t interval, bool repeat, TimerFunc func);
+    void UnscheduleTimer(uint32_t id);
+
 private:
 
 #if defined(OS_WIN)
@@ -181,6 +204,7 @@ private:
     const NPPluginFuncs* mPluginIface;
     NPP_t mData;
     NPWindow mWindow;
+
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     NPSetWindowCallbackStruct mWsInfo;
 #elif defined(OS_WIN)
@@ -189,7 +213,9 @@ private:
     HWND mPluginParentHWND;
 #endif
 
-    nsTArray<nsAutoPtr<PluginScriptableObjectChild> > mScriptableObjects;
+    friend class ChildAsyncCall;
+    nsTArray<ChildAsyncCall*> mPendingAsyncCalls;
+    nsTArray<ChildTimer*> mTimers;
 
 #if defined(OS_WIN)
 private:

@@ -269,7 +269,7 @@ nsCaretAccessible::NormalSelectionChanged(nsIDOMDocument *aDoc,
   mLastCaretOffset = caretOffset;
   mLastTextAccessible = textAcc;
 
-  nsCOMPtr<nsIAccessibleEvent> event =
+  nsRefPtr<nsAccEvent> event =
     new nsAccCaretMoveEvent(textNode);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
@@ -292,12 +292,12 @@ nsCaretAccessible::SpellcheckSelectionChanged(nsIDOMDocument *aDoc,
 
   nsCOMPtr<nsIAccessible> acc(do_QueryInterface(textAcc));
 
-  nsCOMPtr<nsIAccessibleEvent> event =
+  nsRefPtr<nsAccEvent> event =
     new nsAccEvent(nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED,
                    acc, nsnull);
-  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
-  return mRootAccessible->FireAccessibleEvent(event);
+  nsEventShell::FireEvent(event);
+  return NS_OK;
 }
 
 nsIntRect

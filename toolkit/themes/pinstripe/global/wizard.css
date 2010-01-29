@@ -1,6 +1,5 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-
 wizard {
 	padding: 14px;
 }
@@ -8,6 +7,7 @@ wizard {
 #header { 
 	display: inline !important;
 }
+
 .wizard-header {
 	-moz-appearance: dialog;
 }
@@ -52,5 +52,4 @@ wizard[branded="true"] .wizard-header-icon {
 .wizard-button {
   font: menu !important;
 }
-
 

@@ -64,9 +64,6 @@ static void notify_closed_marshal(GClosure* closure,
 {
   NS_ABORT_IF_FALSE(n_param_values >= 1, "No object in params");
 
-  gpointer notification = g_value_peek_pointer(param_values);
-  g_object_unref(notification);
-
   nsAlertsIconListener* alert =
     static_cast<nsAlertsIconListener*>(closure->data);
   alert->SendClosed();
@@ -243,7 +240,7 @@ nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf)
   // with a floating reference, which gets sunk by g_signal_connect_closure().
   GClosure* closure = g_closure_new_simple(sizeof(GClosure), this);
   g_closure_set_marshal(closure, notify_closed_marshal);
-  g_signal_connect_closure(mNotification, "closed", closure, FALSE);
+  mClosureHandler = g_signal_connect_closure(mNotification, "closed", closure, FALSE);
   gboolean result = notify_notification_show(mNotification, NULL);
 
   return result ? NS_OK : NS_ERROR_FAILURE;
@@ -282,7 +279,10 @@ nsAlertsIconListener::SendCallback()
 void
 nsAlertsIconListener::SendClosed()
 {
-  mNotification = NULL;
+  if (mNotification) {
+    g_object_unref(mNotification);
+    mNotification = NULL;
+  }
   if (mAlertListener)
     mAlertListener->Observe(NULL, "alertfinished", mAlertCookie.get());
 }
@@ -293,8 +293,11 @@ nsAlertsIconListener::Observe(nsISupports *aSubject, const char *aTopic,
   // We need to close any open notifications upon application exit, otherwise
   // we will leak since libnotify holds a ref for us.
   if (!nsCRT::strcmp(aTopic, "quit-application") && mNotification) {
-    notify_notification_close(mNotification, NULL);
+    g_signal_handler_disconnect(mNotification, mClosureHandler);
+    g_object_unref(mNotification);
+    mNotification = NULL;
     mHasQuit = PR_TRUE;
+    Release(); // equivalent to NS_RELEASE(this)
   }
   return NS_OK;
 }
@@ -350,9 +353,15 @@ nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
   if (!gHasActions && aAlertTextClickable)
     return NS_ERROR_FAILURE; // No good, fallback to XUL
 
-  mAlertTitle = NS_ConvertUTF16toUTF8(aAlertTitle);
-  mAlertText = NS_ConvertUTF16toUTF8(aAlertText);
+  // Workaround for a libnotify bug - blank titles aren't dealt with
+  // properly so we use a space
+  if (aAlertTitle.IsEmpty()) {
+    mAlertTitle = NS_LITERAL_CSTRING(" ");
+  } else {
+    mAlertTitle = NS_ConvertUTF16toUTF8(aAlertTitle);
+  }
 
+  mAlertText = NS_ConvertUTF16toUTF8(aAlertText);
   mAlertHasAction = aAlertTextClickable;
 
   mAlertListener = aAlertListener;

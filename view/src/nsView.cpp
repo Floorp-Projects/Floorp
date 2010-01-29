@@ -41,7 +41,6 @@
 #include "nsGUIEvent.h"
 #include "nsIDeviceContext.h"
 #include "nsIComponentManager.h"
-#include "nsIScrollableView.h"
 #include "nsGfxCIID.h"
 #include "nsIRegion.h"
 #include "nsIInterfaceRequestor.h"
@@ -53,10 +52,9 @@ static nsEventStatus HandleEvent(nsGUIEvent *aEvent);
 
 //#define SHOW_VIEW_BORDERS
 
-// {34297A07-A8FD-d811-87C6-000244212BCB}
 #define VIEW_WRAPPER_IID \
-{ 0x34297a07, 0xa8fd, 0xd811, { 0x87, 0xc6, 0x0, 0x2, 0x44, 0x21, 0x2b, 0xcb } }
-
+  { 0xbf4e1841, 0xe9ec, 0x47f2, \
+    { 0xb4, 0x77, 0x0f, 0xf6, 0x0f, 0x5a, 0xac, 0xbd } }
 
 /**
  * nsISupports-derived helper class that allows to store and get a view
@@ -87,8 +85,7 @@ NS_IMETHODIMP ViewWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtr);
 
-  NS_ASSERTION(!aIID.Equals(NS_GET_IID(nsIView)) &&
-               !aIID.Equals(NS_GET_IID(nsIScrollableView)),
+  NS_ASSERTION(!aIID.Equals(NS_GET_IID(nsIView)),
                "Someone expects a viewwrapper to be a view!");
   
   *aInstancePtr = nsnull;
@@ -115,10 +112,6 @@ NS_IMETHODIMP ViewWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 NS_IMETHODIMP ViewWrapper::GetInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (aIID.Equals(NS_GET_IID(nsIScrollableView))) {
-    *aInstancePtr = mView->ToScrollableView();
-    return NS_OK;
-  }
   if (aIID.Equals(NS_GET_IID(nsIView))) {
     *aInstancePtr = mView;
     return NS_OK;
@@ -880,16 +873,4 @@ nsIView::SetDeletionObserver(nsWeakView* aDeletionObserver)
     aDeletionObserver->SetPrevious(mDeletionObserver);
   }
   mDeletionObserver = aDeletionObserver;
-}
-
-/* We invalidate the frame on a scroll iff this frame is marked as such or if
- * some parent is.
- */
-PRBool nsIView::NeedsInvalidateFrameOnScroll() const
-{
-  for (const nsIView *currView = this; currView != nsnull; currView = currView->GetParent())
-    if (currView->mVFlags & NS_VIEW_FLAG_INVALIDATE_ON_SCROLL)
-      return PR_TRUE;
-  
-  return PR_FALSE;
 }

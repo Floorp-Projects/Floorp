@@ -47,6 +47,7 @@ class nsISMILAnimationElement;
 class nsSMILTimeValue;
 class nsSMILValue;
 class nsSMILRepeatCount;
+class nsSMILTimeValueSpecParams;
 
 /**
  * Common parsing utilities for the SMIL module. There is little re-use here; it
@@ -69,6 +70,10 @@ public:
 
   static nsresult ParseRepeatCount(const nsAString& aSpec,
                                    nsSMILRepeatCount& aResult);
+
+  static nsresult ParseTimeValueSpecParams(const nsAString& aSpec,
+                                           nsSMILTimeValueSpecParams& aResult);
+
 
   // Used with ParseClockValue. Allow + or - before a clock value.
   static const PRInt8 kClockValueAllowSign       = 1;
@@ -114,32 +119,6 @@ public:
    * (i.e. the index of the absolute value).  If not, this method returns -1.
    */
   static PRInt32 CheckForNegativeNumber(const nsAString& aStr);
-
-private:
-  static void   SkipWsp(nsACString::const_iterator& aIter,
-                        const nsACString::const_iterator& aIterEnd);
-  static void   SkipWsp(nsAString::const_iterator& aIter,
-                        const nsAString::const_iterator& aIterEnd);
-  static double GetFloat(nsACString::const_iterator& aIter,
-                         const nsACString::const_iterator& aIterEnd,
-                         nsresult *aErrorCode = nsnull);
-  static PRBool IsSpace(const PRUnichar c);
-  static PRBool ConsumeSubstring(nsACString::const_iterator& aIter,
-                                 const nsACString::const_iterator& aIterEnd,
-                                 const char *aSubstring);
-  static PRBool ParseClockComponent(nsACString::const_iterator& aSpec,
-                                    const nsACString::const_iterator& aEnd,
-                                    double& aResult,
-                                    PRBool& aIsReal,
-                                    PRBool& aCouldBeMin,
-                                    PRBool& aCouldBeSec);
-  static PRBool ParseMetricMultiplicand(nsACString::const_iterator& aSpec,
-                                        const nsACString::const_iterator& aEnd,
-                                        PRInt32& multiplicand);
-
-  static const PRUint32 MSEC_PER_SEC;
-  static const PRUint32 MSEC_PER_MIN;
-  static const PRUint32 MSEC_PER_HOUR;
 };
 
 #endif // NS_SMILPARSERUTILS_H_

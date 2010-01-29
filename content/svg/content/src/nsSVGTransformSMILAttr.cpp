@@ -63,7 +63,7 @@ nsSVGTransformSMILAttr::ValueFromString(const nsAString& aStr,
 {
   NS_ENSURE_TRUE(aSrcElement, NS_ERROR_FAILURE);
   NS_ASSERTION(aValue.IsNull(),
-    "aValue should have been cleared before calling ValueFromString.");
+    "aValue should have been cleared before calling ValueFromString");
 
   nsSMILValue val(&nsSVGTransformSMILType::sSingleton);
   if (val.IsNull())
@@ -157,7 +157,7 @@ nsSVGTransformSMILAttr::ParseValue(const nsAString& aSpec,
   nsSVGTransformSMILType* type = &nsSVGTransformSMILType::sSingleton;
   NS_ASSERTION(
       type == static_cast<nsSVGTransformSMILType const *>(aResult.mType),
-      "Unexpected type for SMIL value result.");
+      "Unexpected type for SMIL value result");
 
   // Reset the result so we can just append to it
   nsresult rv = type->Init(aResult);
@@ -338,7 +338,7 @@ nsSVGTransformSMILAttr::AppendSVGTransformToSMILValue(
       return NS_OK;
 
     default:
-      NS_WARNING("Trying to convert unrecognised SVG transform type.");
+      NS_WARNING("Trying to convert unrecognised SVG transform type");
       return NS_ERROR_FAILURE;
   }
 

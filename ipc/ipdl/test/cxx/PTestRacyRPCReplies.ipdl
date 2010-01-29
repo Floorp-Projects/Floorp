@@ -1,0 +1,27 @@
+namespace mozilla {
+namespace _ipdltest {
+
+rpc protocol PTestRacyRPCReplies {
+child:
+    rpc R() returns (int replyNum);
+    async __delete__();
+
+parent:
+    async A();
+
+
+state START:
+    call R goto S1;
+
+state S1:
+    recv A goto S2;
+
+state S2:
+    call R goto DYING;
+
+state DYING:
+    send __delete__;
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

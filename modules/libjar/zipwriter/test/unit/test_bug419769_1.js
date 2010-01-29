@@ -55,9 +55,7 @@ function testpass(source)
   // Should be stored
   do_check_eq(entry.compression, ZIP_METHOD_DEFLATE);
 
-  var diff = Math.abs((entry.lastModifiedTime / PR_USEC_PER_MSEC) - time);
-  if (diff > TIME_RESOLUTION)
-    do_throw(diff);
+  do_check_eq(entry.lastModifiedTime / PR_USEC_PER_MSEC, time);
 
   // File size should match our data size.
   do_check_eq(entry.realSize, DATA.length);
