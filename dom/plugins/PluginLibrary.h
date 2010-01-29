@@ -66,7 +66,7 @@ public:
   virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error) = 0;
 #endif
   virtual nsresult NP_Shutdown(NPError* error) = 0;
-  virtual nsresult NP_GetMIMEDescription(char** mimeDesc) = 0;
+  virtual nsresult NP_GetMIMEDescription(const char** mimeDesc) = 0;
   virtual nsresult NP_GetValue(void *future, NPPVariable aVariable,
                                void *aValue, NPError* error) = 0;
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
