@@ -206,11 +206,12 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
   if (!kid)
     return NS_OK;
 
-  gfxMatrix matrix = GetCanvasTMForChildren();
+  gfxMatrix matrixForChildren = GetCanvasTMForChildren();
+  gfxMatrix matrix = GetCanvasTM();
 
   nsIRenderingContext *ctx = aContext->GetRenderingContext(this);
 
-  if (!ctx || matrix.IsSingular()) {
+  if (!ctx || matrixForChildren.IsSingular()) {
     NS_WARNING("Can't render foreignObject element!");
     return NS_ERROR_FAILURE;
   }
@@ -233,12 +234,31 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
 
     gfxRect clipRect =
       nsSVGUtils::GetClipRectForFrame(this, 0.0f, 0.0f, width, height);
-    nsSVGUtils::SetClipRect(gfx, GetCanvasTM(), clipRect);
+    nsSVGUtils::SetClipRect(gfx, matrix, clipRect);
   }
 
-  gfx->Multiply(matrix);
+  gfx->Multiply(matrixForChildren);
 
-  nsresult rv = nsLayoutUtils::PaintFrame(ctx, kid, nsRegion(kid->GetRect()),
+  // Transform the dirty rect into the rectangle containing the
+  // transformed dirty rect.
+  gfxMatrix invmatrix = matrix.Invert();
+  NS_ASSERTION(!invmatrix.IsSingular(),
+               "inverse of non-singular matrix should be non-singular");
+
+  gfxRect transDirtyRect = gfxRect(aDirtyRect->x, aDirtyRect->y,
+                                   aDirtyRect->width, aDirtyRect->height);
+  transDirtyRect = invmatrix.TransformBounds(transDirtyRect);
+
+  transDirtyRect.Scale(nsPresContext::AppUnitsPerCSSPixel());
+  nsPoint tl(NSToCoordFloor(transDirtyRect.X()),
+             NSToCoordFloor(transDirtyRect.Y()));
+  nsPoint br(NSToCoordCeil(transDirtyRect.XMost()),
+             NSToCoordCeil(transDirtyRect.YMost()));
+  nsRect kidDirtyRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+
+  kidDirtyRect.IntersectRect(kidDirtyRect, kid->GetRect());
+
+  nsresult rv = nsLayoutUtils::PaintFrame(ctx, kid, nsRegion(kidDirtyRect),
                                           NS_RGBA(0,0,0,0),
                                           nsLayoutUtils::PAINT_IN_TRANSFORM);
 
