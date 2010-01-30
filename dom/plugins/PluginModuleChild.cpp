@@ -177,7 +177,7 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     return true;
 }
 
-#if defined(OS_LINUX)
+#if defined(MOZ_WIDGET_GTK2)
 typedef void (*GObjectDisposeFn)(GObject*);
 typedef void (*GtkPlugEmbeddedFn)(GtkPlug*);
 
@@ -253,6 +253,7 @@ PluginModuleChild::InitGraphics()
     GtkPlugEmbeddedFn* embedded = &GTK_PLUG_CLASS(gtk_plug_class)->embedded;
     real_gtk_plug_embedded = *embedded;
     *embedded = wrap_gtk_plug_embedded;
+#elif defined(MOZ_WIDGET_QT)
 #else
     // may not be necessary on all platforms
 #endif
