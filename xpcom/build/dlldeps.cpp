@@ -38,8 +38,12 @@
 // Force references to all of the symbols that we want exported from
 // the dll that are located in the .lib files we link with
 
-#ifndef XP_OS2
+#ifdef XP_WIN
 #include <windows.h>
+#include "nsWindowsRegKey.h"
+#ifdef DEBUG
+#include "pure.h"
+#endif
 #endif
 #include "nsXPCOMGlue.h"
 #include "nsVoidArray.h"
@@ -79,9 +83,6 @@
 #include "nsStringEnumerator.h"
 #include "nsIInputStreamTee.h"
 #include "nsCheapSets.h"
-#if defined(DEBUG) && !defined(XP_OS2)
-#include "pure.h"
-#endif
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
 #include "pldhash.h"
@@ -102,10 +103,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/CondVar.h"
-
-#if !defined(XP_OS2)
-#include "nsWindowsRegKey.h"
-#endif
 
 using namespace mozilla;
 
@@ -179,9 +176,6 @@ void XXXNeverCalled()
     NS_ProxyRelease(nsnull, nsnull, PR_FALSE);
     XPT_DoString(nsnull, nsnull, nsnull);
     XPT_DoHeader(nsnull, nsnull, nsnull);
-#if defined (DEBUG) && !defined (WINCE) && !defined(XP_OS2)
-    PurePrintf(0);
-#endif
     NS_InvokeByIndex(nsnull, 0, 0, nsnull);
     NS_NewGenericFactory(nsnull, nsnull);
     NS_NewGenericModule2(nsnull, nsnull);
@@ -286,11 +280,13 @@ void XXXNeverCalled()
 
     nsXPCOMCycleCollectionParticipant();
     nsCycleCollector_collect();
+#ifdef XP_WIN
     sXPCOMHasLoadedNewDLLs = !sXPCOMHasLoadedNewDLLs;
     NS_SetHasLoadedNewDLLs();
-
-#if !defined(XP_OS2)
     NS_NewWindowsRegKey(nsnull);
+#if defined (DEBUG) && !defined (WINCE)
+    PurePrintf(0);
+#endif
 #endif
 
     NS_NewThread(nsnull, nsnull);
