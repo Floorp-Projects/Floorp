@@ -436,6 +436,10 @@ nsFormHistory::Notify(nsIDOMHTMLFormElement* formElt, nsIDOMWindowInternal* aWin
           if (value.Equals(defaultValue))
             continue;
 
+          // We do not want to store credit card numbers (bug #188285)
+          if (IsValidCCNumber(value))
+            continue;
+
           nsAutoString name;
           inputElt->GetName(name);
           if (name.IsEmpty())
@@ -455,6 +459,33 @@ nsFormHistory::Notify(nsIDOMHTMLFormElement* formElt, nsIDOMWindowInternal* aWin
   }
 
   return transaction.Commit();
+}
+
+// Implements the Luhn checksum algorithm as described at
+// http://wikipedia.org/wiki/Luhn_algorithm
+bool
+nsFormHistory::IsValidCCNumber(const nsAString &aString)
+{
+  nsAutoString ccNumber(aString);
+  ccNumber.StripChars("-");
+  ccNumber.StripWhitespace();
+  
+  PRUint32 length = ccNumber.Length();
+  if (length != 9 && length != 15 && length != 16)
+    return false;
+  
+  PRUint32 total = 0;
+  for (PRUint32 i = 0; i < length; i++) {
+    PRUnichar ch = ccNumber[length - i - 1];
+    if (ch < '0' || ch > '9')
+      return false;
+    ch -= '0';
+    if (i % 2 == 0)
+      total += ch;
+    else
+      total += (ch * 2 / 10) + (ch * 2 % 10);
+  }
+  return total % 10 == 0;
 }
 
 nsresult
