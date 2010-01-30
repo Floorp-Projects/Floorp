@@ -1,0 +1,31 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<box id="a" style="display: list-item;">
+&amp;c&amp;m&amp;q
+<box id="b"/>
+</box>
+
+<style xmlns="http://www.w3.org/1999/xhtml">
+#a::first-letter {float: right; color: red;}
+</style>
+
+<script xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
+function run() {
+  for (var i = 0; i < 20; i++) {
+    document.documentElement.offsetWidth;
+    doe();
+    document.documentElement.offsetWidth;
+    undoe();
+  }
+}
+function doe() {
+  document.getElementById('a').style.direction = 'rtl';
+  document.getElementById('b').style.direction = 'ltr';
+}
+function undoe() {
+  document.getElementById('a').style.direction = 'ltr';
+  document.getElementById('b').style.direction = 'rtl';
+}
+setTimeout(run, 100);
+]]></script>
+</window>
