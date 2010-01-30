@@ -195,6 +195,107 @@ struct GlobalState {
 };
 
 /*
+ * A callstack contains a set of stack frames linked by fp->down. A callstack
+ * is a member of a JSContext and all of a JSContext's callstacks are kept in a
+ * list starting at cx->currentCallStack. A callstack may be active or
+ * suspended. There are zero or one active callstacks for a context and any
+ * number of suspended contexts. If there is an active context, it is the first
+ * in the currentCallStack list, |cx->fp != NULL| and the callstack's newest
+ * (top) stack frame is |cx->fp|. For all other (suspended) callstacks, the
+ * newest frame is pointed to by suspendedFrame.
+ *
+ * While all frames in a callstack are down-linked, not all down-linked frames
+ * are in the same callstack (e.g., calling js_Execute with |down != cx->fp|
+ * will create a new frame in a new active callstack).
+ */
+class CallStack
+{
+#ifdef DEBUG
+    /* The context to which this callstack belongs. */
+    JSContext           *cx;
+#endif
+
+    /* If this callstack is suspended, the top of the callstack. */
+    JSStackFrame        *suspendedFrame;
+
+    /* This callstack was suspended by JS_SaveFrameChain. */
+    bool                saved;
+
+    /* Links members of the JSContext::currentCallStack list. */
+    CallStack           *previous;
+
+    /* The varobj on entry to initialFrame. */
+    JSObject            *initialVarObj;
+
+    /* The first frame executed in this callstack. */
+    JSStackFrame        *initialFrame;
+
+  public:
+    CallStack(JSContext *cx)
+      :
+#ifdef DEBUG
+        cx(cx),
+#endif
+        suspendedFrame(NULL), saved(false), previous(NULL),
+        initialVarObj(NULL), initialFrame(NULL)
+    {}
+
+#ifdef DEBUG
+    bool contains(JSStackFrame *fp);
+#endif
+
+    void suspend(JSStackFrame *fp) {
+        JS_ASSERT(fp && !isSuspended() && contains(fp));
+        suspendedFrame = fp;
+    }
+
+    void resume() {
+        JS_ASSERT(suspendedFrame);
+        suspendedFrame = NULL;
+    }
+
+    JSStackFrame *getSuspendedFrame() const {
+        JS_ASSERT(suspendedFrame);
+        return suspendedFrame;
+    }
+
+    bool isSuspended() const { return suspendedFrame; }
+
+    void setPrevious(CallStack *cs) { previous = cs; }
+    CallStack *getPrevious() const  { return previous; }
+
+    void setInitialVarObj(JSObject *o) { initialVarObj = o; }
+    JSObject *getInitialVarObj() const { return initialVarObj; }
+
+    void setInitialFrame(JSStackFrame *f) { initialFrame = f; }
+    JSStackFrame *getInitialFrame() const { return initialFrame; }
+
+    /*
+     * Saving and restoring is a special case of suspending and resuming
+     * whereby the active callstack becomes suspended without pushing a new
+     * active callstack. This means that if a callstack c1 is pushed on top of a
+     * saved callstack c2, when c1 is popped, c2 must not be made active. In
+     * the normal case, where c2 is not saved, when c1 is popped, c2 is made
+     * active. This distinction is indicated by the |saved| flag.
+     */
+
+    void save(JSStackFrame *fp) {
+        suspend(fp);
+        saved = true;
+    }
+
+    void restore() {
+        saved = false;
+        resume();
+    }
+
+    bool isSaved() const {
+        JS_ASSERT_IF(saved, isSuspended());
+        return saved;
+    }
+};
+
+/*
  * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
  * frequencies for all JavaScript code loaded into that runtime.
@@ -1087,6 +1188,16 @@ typedef struct JSResolvingEntry {
 
 extern const JSDebugHooks js_NullDebugHooks;  /* defined in jsdbgapi.cpp */
 
+/*
+ * Wraps a stack frame which has been temporarily popped from its call stack
+ * and needs to be GC-reachable. See JSContext::{push,pop}GCReachableFrame.
+ */
+struct JSGCReachableFrame
+{
+    JSGCReachableFrame  *next;
+    JSStackFrame        *frame;
+};
+
 struct JSContext {
     /*
      * If this flag is set, we were asked to call back the operation callback
@@ -1204,8 +1315,67 @@ struct JSContext {
     void                *data;
     void                *data2;
 
-    /* GC and thread-safe state. */
-    JSStackFrame        *dormantFrameChain; /* dormant stack frame to scan */
+    /* Linked list of frames temporarily popped from their chain. */
+    JSGCReachableFrame  *reachableFrames;
+
+    void pushGCReachableFrame(JSGCReachableFrame &gcrf, JSStackFrame *f) {
+        gcrf.next = reachableFrames;
+        gcrf.frame = f;
+        reachableFrames = &gcrf;
+    }
+
+    void popGCReachableFrame() {
+        reachableFrames = reachableFrames->next;
+    }
+
+  private:
+    friend void js_TraceContext(JSTracer *, JSContext *);
+
+    /* Linked list of callstacks. See CallStack. */
+    js::CallStack       *currentCallStack;
+
+  public:
+    /* Assuming there is an active callstack, return it. */
+    js::CallStack *activeCallStack() const {
+        JS_ASSERT(currentCallStack && !currentCallStack->isSaved());
+        return currentCallStack;
+    }
+
+    /* Add the given callstack to the list as the new active callstack. */
+    void pushCallStack(js::CallStack *newcs) {
+        if (fp)
+            currentCallStack->suspend(fp);
+        else
+            JS_ASSERT_IF(currentCallStack, currentCallStack->isSaved());
+        newcs->setPrevious(currentCallStack);
+        currentCallStack = newcs;
+        JS_ASSERT(!newcs->isSuspended() && !newcs->isSaved());
+    }
+
+    /* Remove the active callstack and make the next callstack active. */
+    void popCallStack() {
+        JS_ASSERT(!currentCallStack->isSuspended() && !currentCallStack->isSaved());
+        currentCallStack = currentCallStack->getPrevious();
+        if (currentCallStack && !currentCallStack->isSaved()) {
+            JS_ASSERT(fp);
+            currentCallStack->resume();
+        }
+    }
+
+    /* Mark the top callstack as suspended, without pushing a new one. */
+    void saveActiveCallStack() {
+        JS_ASSERT(fp && currentCallStack && !currentCallStack->isSuspended());
+        currentCallStack->save(fp);
+        fp = NULL;
+    }
+
+    /* Undoes calls to suspendTopCallStack. */
+    void restoreCallStack() {
+        JS_ASSERT(!fp && currentCallStack && currentCallStack->isSuspended());
+        fp = currentCallStack->getSuspendedFrame();
+        currentCallStack->restore();
+    }
+
 #ifdef JS_THREADSAFE
     JSThread            *thread;
     jsrefcount          requestDepth;
@@ -1427,6 +1597,20 @@ private:
      */
     void checkMallocGCPressure(void *p);
 };
+
+JS_ALWAYS_INLINE JSObject *
+JSStackFrame::varobj(js::CallStack *cs)
+{
+    JS_ASSERT(cs->contains(this));
+    return fun ? callobj : cs->getInitialVarObj();
+}
+
+JS_ALWAYS_INLINE JSObject *
+JSStackFrame::varobj(JSContext *cx)
+{
+    JS_ASSERT(cx->activeCallStack()->contains(this));
+    return fun ? callobj : cx->activeCallStack()->getInitialVarObj();
+}
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)

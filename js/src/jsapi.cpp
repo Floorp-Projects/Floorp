@@ -5186,16 +5186,10 @@ JS_IsConstructing(JSContext *cx)
 JS_PUBLIC_API(JSStackFrame *)
 JS_SaveFrameChain(JSContext *cx)
 {
-    JSStackFrame *fp;
-
-    fp = js_GetTopStackFrame(cx);
+    JSStackFrame *fp = js_GetTopStackFrame(cx);
     if (!fp)
-        return fp;
-
-    JS_ASSERT(!fp->dormantNext);
-    fp->dormantNext = cx->dormantFrameChain;
-    cx->dormantFrameChain = fp;
-    cx->fp = NULL;
+        return NULL;
+    cx->saveActiveCallStack();
     return fp;
 }
 
@@ -5206,11 +5200,7 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
     JS_ASSERT(!cx->fp);
     if (!fp)
         return;
-
-    JS_ASSERT(fp == cx->dormantFrameChain);
-    cx->fp = fp;
-    cx->dormantFrameChain = fp->dormantNext;
-    fp->dormantNext = NULL;
+    cx->restoreCallStack();
 }
 
 /************************************************************************/

@@ -2282,8 +2282,6 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call");
     if (fp->argsobj)
         JS_CALL_OBJECT_TRACER(trc, JSVAL_TO_OBJECT(fp->argsobj), "arguments");
-    if (fp->varobj)
-        JS_CALL_OBJECT_TRACER(trc, fp->varobj, "variables");
     if (fp->script) {
         js_TraceScript(trc, fp->script);
 
@@ -2367,10 +2365,17 @@ JSWeakRoots::mark(JSTracer *trc)
     js_CallValueTracerIfGCThing(trc, lastInternalResult);
 }
 
+static void inline
+TraceFrameChain(JSTracer *trc, JSStackFrame *fp)
+{
+    do {
+        js_TraceStackFrame(trc, fp);
+    } while ((fp = fp->down) != NULL);
+}
+
 JS_REQUIRES_STACK JS_FRIEND_API(void)
 js_TraceContext(JSTracer *trc, JSContext *acx)
 {
-    JSStackFrame *fp, *nextChain;
     JSStackHeader *sh;
     JSTempValueRooter *tvr;
 
@@ -2403,9 +2408,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
     }
 
     /*
-     * Iterate frame chain and dormant chains.
-     *
-     * (NB: see comment on this whole "dormant" thing in js_Execute.)
+     * Trace active and suspended callstacks.
      *
      * Since js_GetTopStackFrame needs to dereference cx->thread to check for
      * JIT frames, we check for non-null thread here and avoid null checks
@@ -2415,25 +2418,28 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
     if (acx->thread)
 #endif
     {
-        fp = js_GetTopStackFrame(acx);
-        nextChain = acx->dormantFrameChain;
-        if (!fp)
-            goto next_chain;
+        /* If |cx->fp|, the active callstack has newest (top) frame |cx->fp|. */
+        JSStackFrame *fp = js_GetTopStackFrame(acx);
+        if (fp) {
+            JS_ASSERT(!acx->activeCallStack()->isSuspended());
+            TraceFrameChain(trc, fp);
+            if (JSObject *o = acx->activeCallStack()->getInitialVarObj())
+                JS_CALL_OBJECT_TRACER(trc, o, "variables");
+        }
 
-        /* The top frame must not be dormant. */
-        JS_ASSERT(!fp->dormantNext);
-        for (;;) {
-            do {
-                js_TraceStackFrame(trc, fp);
-            } while ((fp = fp->down) != NULL);
-
-          next_chain:
-            if (!nextChain)
-                break;
-            fp = nextChain;
-            nextChain = nextChain->dormantNext;
+        /* Trace suspended frames. */
+        CallStack *cur = acx->currentCallStack;
+        CallStack *cs = fp ? cur->getPrevious() : cur;
+        for (; cs; cs = cs->getPrevious()) {
+            TraceFrameChain(trc, cs->getSuspendedFrame());
+            if (cs->getInitialVarObj())
+                JS_CALL_OBJECT_TRACER(trc, cs->getInitialVarObj(), "var env");
         }
     }
+
+    /* Trace frames that have been temporarily removed but need to be marked. */
+    for (JSGCReachableFrame *rf = acx->reachableFrames; rf; rf = rf->next)
+        TraceFrameChain(trc, rf->frame);
 
     /* Mark other roots-by-definition in acx. */
     if (acx->globalObject && !JS_HAS_OPTION(acx, JSOPTION_UNROOTED_GLOBAL))

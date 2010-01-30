@@ -79,6 +79,27 @@ FreeContext(JSContext *cx);
 static void
 MarkLocalRoots(JSTracer *trc, JSLocalRootStack *lrs);
 
+#ifdef DEBUG
+bool
+CallStack::contains(JSStackFrame *fp)
+{
+    JSStackFrame *start;
+    JSStackFrame *stop;
+    if (isSuspended()) {
+        start = suspendedFrame;
+        stop = initialFrame->down;
+    } else {
+        start = cx->fp;
+        stop = cx->activeCallStack()->initialFrame->down;
+    }
+    for (JSStackFrame *f = start; f != stop; f = f->down) {
+        if (f == fp)
+            return true;
+    }
+    return false;
+}
+#endif
+
 void
 JSThreadData::init()
 {
