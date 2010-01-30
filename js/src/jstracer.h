@@ -1215,6 +1215,7 @@ class TraceRecorder
     void stobj_set_slot(nanojit::LIns* obj_ins, unsigned slot, nanojit::LIns*& dslots_ins,
                         nanojit::LIns* v_ins);
 
+    nanojit::LIns* stobj_get_const_fslot(nanojit::LIns* obj_ins, unsigned slot);
     nanojit::LIns* stobj_get_fslot(nanojit::LIns* obj_ins, unsigned slot);
     nanojit::LIns* stobj_get_dslot(nanojit::LIns* obj_ins, unsigned index,
                                    nanojit::LIns*& dslots_ins);
@@ -1288,6 +1289,8 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* unbox_jsval(jsval v, nanojit::LIns* v_ins, VMSideExit* exit);
     JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
                                       VMSideExit* exit);
+    JS_REQUIRES_STACK bool guardConstClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
+                                           VMSideExit* exit);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
                                            ExitType exitType = MISMATCH_EXIT);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
