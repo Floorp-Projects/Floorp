@@ -50,6 +50,11 @@ const timeValue = 1000000000 * 1000; //Sun, 09 Sep 2001 01:46:40 GMT in miliseco
 
 function run_test()
 {
+  // Disable this test on windows due to bug 377307
+  var isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
+  if (isWindows)
+    return;
+
   // Start the http server with any data.
   var data = "test_178506";
   var httpserv = new nsHttpServer();
