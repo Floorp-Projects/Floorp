@@ -94,6 +94,7 @@ public:
 
  private:
   ~nsFormHistory();
+  bool IsValidCCNumber(const nsAString &aString);
 
  protected:
   // Database I/O
