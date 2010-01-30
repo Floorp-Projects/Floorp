@@ -178,8 +178,7 @@
   <richlistbox id="downloadView" seltype="multiple" flex="1"
                context="downloadContextMenu"
                ondblclick="onDownloadDblClick(event);"
-               ondragstart="gDownloadDNDObserver.onDragStart(event);"
-               ondragover="gDownloadDNDObserver.onDragOver(event);event.stopPropagation();"
+               ondragover="gDownloadDNDObserver.onDragOver(event)"
                ondrop="gDownloadDNDObserver.onDrop(event)">
   </richlistbox>
 
