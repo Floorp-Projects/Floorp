@@ -9604,6 +9604,13 @@ TraceRecorder::stobj_get_fslot(LIns* obj_ins, unsigned slot)
 }
 
 LIns*
+TraceRecorder::stobj_get_const_fslot(LIns* obj_ins, unsigned slot)
+{
+    JS_ASSERT(slot < JS_INITIAL_NSLOTS);
+    return lir->insLoad(LIR_ldcp, obj_ins, offsetof(JSObject, fslots) + slot * sizeof(jsval));
+}
+
+LIns*
 TraceRecorder::stobj_get_dslot(LIns* obj_ins, unsigned index, LIns*& dslots_ins)
 {
     if (!dslots_ins)
@@ -9791,6 +9798,24 @@ TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideEx
     bool cond = STOBJ_GET_CLASS(obj) == clasp;
 
     LIns* class_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, classword));
+    class_ins = lir->ins2(LIR_piand, class_ins, INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS));
+
+#ifdef JS_JIT_SPEW
+    char namebuf[32];
+    JS_snprintf(namebuf, sizeof namebuf, "guard(class is %s)", clasp->name);
+#else
+    static const char namebuf[] = "";
+#endif
+    guard(cond, addName(lir->ins2(LIR_peq, class_ins, INS_CONSTPTR(clasp)), namebuf), exit);
+    return cond;
+}
+
+JS_REQUIRES_STACK bool
+TraceRecorder::guardConstClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideExit* exit)
+{
+    bool cond = STOBJ_GET_CLASS(obj) == clasp;
+
+    LIns* class_ins = lir->insLoad(LIR_ldcp, obj_ins, offsetof(JSObject, classword));
     class_ins = lir->ins2(LIR_piand, class_ins, INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS));
 
 #ifdef JS_JIT_SPEW
@@ -12102,7 +12127,7 @@ TraceRecorder::record_JSOP_GETELEM()
         jsval* vp;
         LIns* addr_ins;
 
-        guardClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT));
+        guardConstClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT));
         CHECK_STATUS_A(typedArrayElement(lval, idx, vp, v_ins, addr_ins));
         set(&lval, v_ins);
         if (call)
@@ -12256,25 +12281,25 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         // Fast path: assigning to element of typed array.
 
         // Ensure array is a typed array and is the same type as what was written
-        guardClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT));
+        guardConstClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT));
 
         js::TypedArray* tarray = js::TypedArray::fromJSObject(obj);
 
-        LIns* priv_ins = stobj_get_private(obj_ins);
+        LIns* priv_ins = stobj_get_const_fslot(obj_ins, JSSLOT_PRIVATE);
 
         // The index was on the stack and is therefore a LIR float. Force it to
         // be an integer.
         idx_ins = makeNumberInt32(idx_ins);
 
         // Ensure idx >= 0 && idx < length (by using uint32)
-        LIns *br = lir->insBranch(LIR_jf,
-                                  lir->ins2(LIR_ult,
-                                            idx_ins,
-                                            lir->insLoad(LIR_ld, priv_ins, js::TypedArray::lengthOffset())),
-                                  NULL);
+        lir->insGuard(LIR_xf,
+                      lir->ins2(LIR_ult,
+                                idx_ins,
+                                lir->insLoad(LIR_ldc, priv_ins, js::TypedArray::lengthOffset())),
+                      createGuardRecord(snapshot(OVERFLOW_EXIT)));
 
         // We're now ready to store
-        LIns* data_ins = lir->insLoad(LIR_ldp, priv_ins, js::TypedArray::dataOffset());
+        LIns* data_ins = lir->insLoad(LIR_ldcp, priv_ins, js::TypedArray::dataOffset());
         LIns* pidx_ins = lir->ins_u2p(idx_ins);
         LIns* addr_ins = 0;
 
@@ -12329,8 +12354,6 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         } else {
             return ARECORD_STOP;
         }
-
-        br->setTarget(lir->ins0(LIR_label));
     } else if (JSVAL_TO_INT(idx) < 0 || !OBJ_IS_DENSE_ARRAY(cx, obj)) {
         CHECK_STATUS_A(initOrSetPropertyByIndex(obj_ins, idx_ins, &v,
                                               *cx->fp->regs->pc == JSOP_INITELEM));
@@ -13259,7 +13282,7 @@ TraceRecorder::typedArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
     JS_ASSERT(tarray);
 
     /* priv_ins will load the TypedArray* */
-    LIns* priv_ins = stobj_get_private(obj_ins);
+    LIns* priv_ins = stobj_get_const_fslot(obj_ins, JSSLOT_PRIVATE);
 
     /* for out-of-range, just let the interpreter handle it */
     if ((jsuint) idx >= tarray->length)
@@ -13282,7 +13305,7 @@ TraceRecorder::typedArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
 
     /* We are now ready to load.  Do a different type of load
      * depending on what type of thing we're loading. */
-    LIns* data_ins = lir->insLoad(LIR_ldp, priv_ins, js::TypedArray::dataOffset());
+    LIns* data_ins = lir->insLoad(LIR_ldcp, priv_ins, js::TypedArray::dataOffset());
 
     switch (tarray->type) {
       case js::TypedArray::TYPE_INT8:
@@ -15182,11 +15205,10 @@ TraceRecorder::record_JSOP_LENGTH()
         v_ins = lir->ins1(LIR_i2f, p2i(stobj_get_fslot(obj_ins, JSSLOT_ARRAY_LENGTH)));
     } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
         // Ensure array is a typed array and is the same type as what was written
-        guardClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT));
-
-        js::TypedArray* tarray = js::TypedArray::fromJSObject(obj);
-        LIns* priv_ins = stobj_get_private(obj_ins);
-        v_ins = lir->ins1(LIR_i2f, lir->insLoad(LIR_ld, priv_ins, js::TypedArray::lengthOffset()));
+        guardConstClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT));
+        v_ins = lir->ins1(LIR_i2f, lir->insLoad(LIR_ldc,
+                                                stobj_get_const_fslot(obj_ins, JSSLOT_PRIVATE),
+                                                js::TypedArray::lengthOffset()));
     } else {
         if (!OBJ_IS_NATIVE(obj))
             RETURN_STOP_A("can't trace length property access on non-array, non-native object");
