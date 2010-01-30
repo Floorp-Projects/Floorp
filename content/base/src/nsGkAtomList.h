@@ -650,7 +650,6 @@ GK_ATOM(onkeypress, "onkeypress")
 GK_ATOM(onkeyup, "onkeyup")
 GK_ATOM(onLoad, "onLoad")
 GK_ATOM(onload, "onload")
-GK_ATOM(onpopstate, "onpopstate")
 GK_ATOM(only, "only")               // this one is not an event
 GK_ATOM(onmousedown, "onmousedown")
 GK_ATOM(onmousemove, "onmousemove")

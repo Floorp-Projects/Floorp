@@ -75,7 +75,6 @@ protected:
 
 static HistoryTracker *gHistoryTracker = nsnull;
 static PRUint32 gEntryID = 0;
-static PRUint64 gEntryDocIdentifier = 0;
 
 nsresult nsSHEntry::Startup()
 {
@@ -105,7 +104,6 @@ nsSHEntry::nsSHEntry()
   : mLoadType(0)
   , mID(gEntryID++)
   , mPageIdentifier(mID)
-  , mDocIdentifier(gEntryDocIdentifier++)
   , mScrollPositionX(0)
   , mScrollPositionY(0)
   , mIsFrameNavigation(PR_FALSE)
@@ -127,7 +125,6 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   , mLoadType(0)         // XXX why not copy?
   , mID(other.mID)
   , mPageIdentifier(other.mPageIdentifier)
-  , mDocIdentifier(other.mDocIdentifier)
   , mScrollPositionX(0)  // XXX why not copy?
   , mScrollPositionY(0)  // XXX why not copy?
   , mIsFrameNavigation(other.mIsFrameNavigation)
@@ -396,30 +393,6 @@ NS_IMETHODIMP nsSHEntry::SetPageIdentifier(PRUint32 aPageIdentifier)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetDocIdentifier(PRUint64 * aResult)
-{
-  *aResult = mDocIdentifier;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSHEntry::SetDocIdentifier(PRUint64 aDocIdentifier)
-{
-  // This ensures that after a session restore, gEntryDocIdentifier is greater
-  // than all SHEntries' docIdentifiers, which ensures that we'll never repeat
-  // a doc identifier.
-  if (aDocIdentifier >= gEntryDocIdentifier)
-    gEntryDocIdentifier = aDocIdentifier + 1;
-
-  mDocIdentifier = aDocIdentifier;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSHEntry::SetUniqueDocIdentifier()
-{
-  mDocIdentifier = gEntryDocIdentifier++;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsSHEntry::GetIsSubFrame(PRBool * aFlag)
 {
   *aFlag = mIsFrameNavigation;
@@ -497,7 +470,7 @@ nsSHEntry::Create(nsIURI * aURI, const nsAString &aTitle,
   mCacheKey = aCacheKey;
   mContentType = aContentType;
   mOwner = aOwner;
-
+    
   // Set the LoadType by default to loadHistory during creation
   mLoadType = (PRUint32) nsIDocShellLoadInfo::loadHistory;
 
@@ -891,19 +864,5 @@ PRBool
 nsSHEntry::HasDetachedEditor()
 {
   return mEditorData != nsnull;
-}
-
-NS_IMETHODIMP
-nsSHEntry::GetStateData(nsAString &aStateData)
-{
-  aStateData.Assign(mStateData);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHEntry::SetStateData(const nsAString &aDataStr)
-{
-  mStateData.Assign(aDataStr);
-  return NS_OK;
 }
 
