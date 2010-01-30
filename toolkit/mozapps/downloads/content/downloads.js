@@ -688,6 +688,20 @@ function buildContextMenu(aEvent)
 
 var gDownloadDNDObserver =
 {
+  onDragStart: function (aEvent)
+  {
+    if (!gDownloadsView.selectedItem)
+      return;
+    let dl = gDownloadsView.selectedItem;
+    let f = getLocalFileFromNativePathOrUrl(dl.getAttribute("file"));
+    if (!f.exists())
+      return;
+
+    let dt = aEvent.dataTransfer;
+    dt.mozSetDataAt("application/x-moz-file", f, 0);
+    dt.effectAllowed = "copyMove";
+  },
+
   onDragOver: function (aEvent)
   {
     var types = aEvent.dataTransfer.types;

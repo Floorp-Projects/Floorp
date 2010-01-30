@@ -7,10 +7,14 @@ function test()
   var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
 
   var expected = [ [
-    "text/x-moz-url: " + urlString,
-    "text/uri-list: " + value,
-    "text/plain: " + value,
-    "text/html: " + htmlString
+    { type  : "text/x-moz-url",
+      data  : urlString },
+    { type  : "text/uri-list",
+      data  : value },
+    { type  : "text/plain",
+      data  : value },
+    { type  : "text/html",
+      data  : htmlString }
   ] ];
 
   // set the valid attribute so dropping is allowed
