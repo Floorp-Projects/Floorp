@@ -251,12 +251,5 @@ Variant_base::GetAsWStringWithSize(PRUint32 *,
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
-inline
-NS_IMETHODIMP
-Variant_base::GetAsJSVal(jsval *)
-{
-  return NS_ERROR_CANNOT_CONVERT_DATA;
-}
-
 } // namespace storage
 } // namespace mozilla
