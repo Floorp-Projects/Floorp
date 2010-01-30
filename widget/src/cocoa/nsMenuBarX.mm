@@ -113,9 +113,8 @@ nsMenuBarX::~nsMenuBarX()
   if (sPrefItemContent == mPrefItemContent)
     sPrefItemContent = nsnull;
 
-  // make sure we unregister ourselves as a document observer
-  if (mDocument)
-    mDocument->RemoveMutationObserver(this);
+  // make sure we unregister ourselves as a content observer
+  UnregisterForContentChanges(mContent);
 
   // We have to manually clear the array here because clearing causes menu items
   // to call back into the menu bar to unregister themselves. We don't want to
@@ -141,6 +140,8 @@ nsresult nsMenuBarX::Create(nsIWidget* aParent, nsIContent* aContent)
   nsresult rv = nsMenuGroupOwnerX::Create(aContent);
   if (NS_FAILED(rv))
     return rv;
+
+  RegisterForContentChanges(aContent, this);
 
   ConstructNativeMenus();
 
@@ -236,6 +237,33 @@ void nsMenuBarX::RemoveMenuAtIndex(PRUint32 aIndex)
   mMenuArray.RemoveElementAt(aIndex);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void nsMenuBarX::ObserveAttributeChanged(nsIDocument* aDocument,
+                                         nsIContent* aContent,
+                                         nsIAtom* aAttribute)
+{
+}
+
+void nsMenuBarX::ObserveContentRemoved(nsIDocument* aDocument,
+                                       nsIContent* aChild, 
+                                       PRInt32 aIndexInContainer)
+{
+  RemoveMenuAtIndex(aIndexInContainer);
+}
+
+void nsMenuBarX::ObserveContentInserted(nsIDocument* aDocument,
+                                        nsIContent* aChild, 
+                                        PRInt32 aIndexInContainer)
+{
+  nsMenuX* newMenu = new nsMenuX();
+  if (newMenu) {
+    nsresult rv = newMenu->Create(this, this, aChild);
+    if (NS_SUCCEEDED(rv))
+      InsertMenuAtIndex(newMenu, aIndexInContainer);
+    else
+      delete newMenu;
+  }
 }
 
 void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString)

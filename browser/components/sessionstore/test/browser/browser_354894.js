@@ -128,6 +128,9 @@ function test() {
   browserWindowsCount(1, "Only one browser window should be open initially");
 
   waitForExplicitFinish();
+  // This test takes some time to run, and it could timeout randomly.
+  // So we require a longer timeout. See bug 528219.
+  requestLongerTimeout(2);
 
   // Some urls that might be opened in tabs and/or popups
   // Do not use about:blank:

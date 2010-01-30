@@ -106,8 +106,6 @@
 
 #ifdef MOZ_IPC
 #include "mozilla/ipc/SyncChannel.h"
-#include "mozilla/plugins/PluginInstanceParent.h"
-using mozilla::plugins::PluginInstanceParent;
 #endif
 
 #include "nsWindow.h"
@@ -405,11 +403,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mBackground           = ::GetSysColor(COLOR_BTNFACE);
   mBrush                = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
   mForeground           = ::GetSysColor(COLOR_WINDOWTEXT);
-
-#ifdef WINCE_WINDOWS_MOBILE
-  mInvalidatedRegion = do_CreateInstance(kRegionCID);
-  mInvalidatedRegion->Init();
-#endif
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
   mTaskbarPreview = nsnull;
@@ -2099,16 +2092,11 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
                          nsCAutoString("noname"),
                          (PRInt32) mWnd);
 #endif // WIDGET_DEBUG_OUTPUT
-#ifdef WINCE_WINDOWS_MOBILE
-    // We need to keep track of our own invalidated region for Windows CE
-    RECT r;
-    GetClientRect(mWnd, &r);
-    AddRECTToRegion(r, mInvalidatedRegion);
-#endif
+
     VERIFY(::InvalidateRect(mWnd, NULL, FALSE));
 
     if (aIsSynchronous) {
-      UpdateWindowInternal(mWnd);
+      VERIFY(::UpdateWindow(mWnd));
     }
   }
   return NS_OK;
@@ -2135,14 +2123,10 @@ NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect, PRBool aIsSynchronous)
     rect.right  = aRect.x + aRect.width;
     rect.bottom = aRect.y + aRect.height;
 
-#ifdef WINCE_WINDOWS_MOBILE
-    // We need to keep track of our own invalidated region for Windows CE
-    AddRECTToRegion(rect, mInvalidatedRegion);
-#endif
     VERIFY(::InvalidateRect(mWnd, &rect, FALSE));
 
     if (aIsSynchronous) {
-      UpdateWindowInternal(mWnd);
+      VERIFY(::UpdateWindow(mWnd));
     }
   }
   return NS_OK;
@@ -2186,7 +2170,7 @@ NS_IMETHODIMP nsWindow::Update()
   // updates can come through for windows no longer holding an mWnd during
   // deletes triggered by JavaScript in buttons with mouse feedback
   if (mWnd)
-    UpdateWindowInternal(mWnd);
+    VERIFY(::UpdateWindow(mWnd));
 
   return rv;
 }
@@ -3146,14 +3130,8 @@ BOOL CALLBACK nsWindow::DispatchStarvedPaints(HWND aWnd, LPARAM aMsg)
     // its one of our windows so check to see if it has a
     // invalidated rect. If it does. Dispatch a synchronous
     // paint.
-    if (GetUpdateRect(aWnd, NULL, FALSE)) {
-      nsWindow* win = GetNSWindowPtr(aWnd);
-      if (win)
-        win->UpdateWindowInternal(aWnd);
-      else
-        // Bad, this could hang a plugin process. Is this possible?
-        VERIFY(::UpdateWindow(aWnd));
-    }
+    if (GetUpdateRect(aWnd, NULL, FALSE))
+      VERIFY(::UpdateWindow(aWnd));
   }
   return TRUE;
 }
@@ -6207,11 +6185,6 @@ HBRUSH nsWindow::OnControlColor()
 // Can be overriden. Controls auto-erase of background.
 PRBool nsWindow::AutoErase(HDC dc)
 {
-#ifdef WINCE_WINDOWS_MOBILE
-  RECT wrect;
-  GetClipBox(dc, &wrect);
-  AddRECTToRegion(wrect, mInvalidatedRegion);
-#endif
   return PR_FALSE;
 }
 
@@ -7116,30 +7089,6 @@ LPARAM nsWindow::lParamToClient(LPARAM lParam)
   pt.y = GET_Y_LPARAM(lParam);
   ::ScreenToClient(mWnd, &pt);
   return MAKELPARAM(pt.x, pt.y);
-}
-
-// If this window hosts a plugin window from another process then we cannot use
-// the windows UpdateWindow function to update it. Doing so sends a synchronous
-// WM_PAINT message to the plugin process which may call back to this process
-// in response. As this process is waiting for the UpdateWindow call to return
-// we deadlock. To work around this we issue an IPC call to the plugin process
-// to force the redraw since the IPC call handles reentrancy properly.
-void nsWindow::UpdateWindowInternal(HWND aWnd)
-{
-  if (aWnd) {
-#ifdef MOZ_IPC
-    if (mWindowType == eWindowType_plugin) {
-      PluginInstanceParent* instance = reinterpret_cast<PluginInstanceParent*>(
-        ::GetPropW(aWnd, L"PluginInstanceParentProperty"));
-      if (instance) {
-        if (!instance->CallUpdateWindow())
-          NS_ERROR("Failed to send message!");
-        return;
-      }
-    }
-#endif
-    VERIFY(::UpdateWindow(aWnd));
-  }
 }
 
 /**************************************************************

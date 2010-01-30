@@ -69,6 +69,7 @@ TriStateBool    nsWindowCE::sHardKBPresence       = TRI_UNKNOWN;
 HWND            nsWindowCE::sSoftKeyMenuBarHandle = NULL;
 RECT            nsWindowCE::sDefaultSIPRect       = {0, 0, 0, 0};
 HWND            nsWindowCE::sMainWindowHandle     = NULL;
+PRBool          nsWindowCE::sMenuBarShown         = PR_FALSE;
 #endif
 
 /**************************************************************
@@ -98,27 +99,18 @@ void nsWindowCE::OnSoftKbSettingsChange(HWND wnd, LPRECT visRect)
     HWND wndMain = nsWindow::GetTopLevelHWND(wnd);
     RECT winRect;
     ::GetWindowRect(wndMain, &winRect);
+    if (sMenuBarShown && visRect->bottom == GetSystemMetrics(SM_CYSCREEN)) {
+      RECT menuBarRect;
+      if (GetWindowRect(sSoftKeyMenuBarHandle, &menuBarRect) && menuBarRect.top < visRect->bottom)
+        visRect->bottom = menuBarRect.top;
+    }
     if (winRect.bottom != visRect->bottom) {
-      if (winRect.bottom < visRect->bottom) {
-        // Soft keyboard has been hidden, have to hide the SIP button as well
-        if (sSoftKeyMenuBarHandle)
-          ShowWindow(sSoftKeyMenuBarHandle, SW_HIDE);
-
+      if (!sMenuBarShown && winRect.bottom < visRect->bottom) {
         SHFullScreen(wndMain, SHFS_HIDESIPBUTTON);
       }
-
       winRect.bottom = visRect->bottom;
       MoveWindow(wndMain, winRect.left, winRect.top, winRect.right - winRect.left, winRect.bottom - winRect.top, TRUE);
     }
-  }
-  
-  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
-  if (observerService) {
-    wchar_t rectBuf[256];
-    _snwprintf(rectBuf, 256, L"{\"left\": %d, \"top\": %d,"
-               L" \"right\": %d, \"bottom\": %d}", 
-               visRect->left, visRect->top, visRect->right, visRect->bottom);
-    observerService->NotifyObservers(nsnull, "softkb-change", rectBuf);
   }
 }
 
@@ -194,6 +186,9 @@ void nsWindowCE::ToggleSoftKB(HWND wnd, PRBool show)
     ShowWindow(sSoftKeyMenuBarHandle, showSIPButton ? SW_SHOW: SW_HIDE);
     if (showSIPButton)
       SetWindowPos(sSoftKeyMenuBarHandle, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
+    SHFullScreen(wnd, showSIPButton ? SHFS_SHOWSIPBUTTON : SHFS_HIDESIPBUTTON);
+    sMenuBarShown = showSIPButton;
+    OnSoftKbSettingsChange(wnd, nsnull);
   }
 
   sSIPInTransition = PR_FALSE;

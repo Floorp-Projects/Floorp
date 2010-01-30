@@ -281,6 +281,9 @@ XRE_InitChildProcess(int aArgc,
 
   sChildProcessType = aProcess;
 
+  gArgv = aArgv;
+  gArgc = aArgc;
+
   SetupErrorHandling(aArgv[0]);
   
 #if defined(MOZ_WIDGET_GTK2)
