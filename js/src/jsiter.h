@@ -117,7 +117,7 @@ struct JSGenerator {
     ((JSGenerator *) ((uint8 *)(fp) - offsetof(JSGenerator, frame)))
 
 extern JSObject *
-js_NewGenerator(JSContext *cx, JSStackFrame *fp);
+js_NewGenerator(JSContext *cx);
 
 #endif
 

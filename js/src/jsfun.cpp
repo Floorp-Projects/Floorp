@@ -229,7 +229,9 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
      * We must be in a function activation; the function must be lightweight
      * or else fp must have a variable object.
      */
-    JS_ASSERT(fp->fun && (!(fp->fun->flags & JSFUN_HEAVYWEIGHT) || fp->varobj));
+    JS_ASSERT(fp->fun);
+    JS_ASSERT_IF(fp->fun->flags & JSFUN_HEAVYWEIGHT,
+                 fp->varobj(js_ContainingCallStack(cx, fp)));
 
     /* Skip eval and debugger frames. */
     while (fp->flags & JSFRAME_SPECIAL)
@@ -851,7 +853,6 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
      * variables object.
      */
     fp->scopeChain = callobj;
-    fp->varobj = callobj;
     return callobj;
 }
 

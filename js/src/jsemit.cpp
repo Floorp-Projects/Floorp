@@ -2099,7 +2099,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JSObject *scopeobj = (cg->flags & TCF_IN_FUNCTION)
                                  ? STOBJ_GET_PARENT(FUN_OBJECT(cg->fun))
                                  : cg->scopeChain;
-            if (scopeobj != caller->varobj)
+            if (scopeobj != caller->varobj(cx))
                 return JS_TRUE;
 
             /*
@@ -2194,7 +2194,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         JSCodeGenerator *evalcg = (JSCodeGenerator *) tc;
         JS_ASSERT(evalcg->flags & TCF_COMPILE_N_GO);
-        JS_ASSERT(caller->fun && caller->varobj == evalcg->scopeChain);
+        JS_ASSERT(caller->fun && caller->varobj(cx) == evalcg->scopeChain);
 
         /*
          * Don't generate upvars on the left side of a for loop. See

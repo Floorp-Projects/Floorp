@@ -7506,8 +7506,8 @@ js_GetFunctionNamespace(JSContext *cx, jsval *vp)
  * Note the asymmetry between js_GetDefaultXMLNamespace and js_SetDefaultXML-
  * Namespace.  Get searches fp->scopeChain for JS_DEFAULT_XML_NAMESPACE_ID,
  * while Set sets JS_DEFAULT_XML_NAMESPACE_ID in fp->varobj. There's no
- * requirement that fp->varobj lie directly on fp->scopeChain, although it
- * should be reachable using the prototype chain from a scope object (cf.
+ * requirement that fp->varobj lie directly on fp->scopeChain, although
+ * it should be reachable using the prototype chain from a scope object (cf.
  * JSOPTION_VAROBJFIX in jsapi.h).
  *
  * If Get can't find JS_DEFAULT_XML_NAMESPACE_ID along the scope chain, it
@@ -7567,9 +7567,10 @@ js_SetDefaultXMLNamespace(JSContext *cx, jsval v)
     v = OBJECT_TO_JSVAL(ns);
 
     fp = js_GetTopStackFrame(cx);
-    varobj = fp->varobj;
+    varobj = fp->varobj(cx);
     if (!varobj->defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, v,
-                                JS_PropertyStub, JS_PropertyStub, JSPROP_PERMANENT)) {
+                                JS_PropertyStub, JS_PropertyStub,
+                                JSPROP_PERMANENT)) {
         return JS_FALSE;
     }
     return JS_TRUE;

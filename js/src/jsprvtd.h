@@ -148,6 +148,7 @@ namespace js {
 
 class TraceRecorder;
 class TraceMonitor;
+class CallStack;
 
 class ContextAllocPolicy;
 class SystemAllocPolicy;
