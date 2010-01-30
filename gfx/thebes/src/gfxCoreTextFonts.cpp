@@ -636,10 +636,10 @@ gfxCoreTextFont::SetGlyphsFromRun(gfxTextRun *aTextRun,
     PRInt32 *charToGlyph = charToGlyphArray.Elements();
     for (PRInt32 offset = 0; offset < stringRange.length; ++offset)
         charToGlyph[offset] = NO_GLYPH;
-    for (PRInt32 g = 0; g < numGlyphs; ++g) {
-        PRInt32 loc = glyphToChar[g] - stringRange.location;
+    for (PRInt32 i = 0; i < numGlyphs; ++i) {
+        PRInt32 loc = glyphToChar[i] - stringRange.location;
         if (loc >= 0 && loc < stringRange.length) {
-            charToGlyph[loc] = g;
+            charToGlyph[loc] = i;
         }
     }
 
@@ -666,6 +666,8 @@ gfxCoreTextFont::SetGlyphsFromRun(gfxTextRun *aTextRun,
 
         PRBool inOrder = PR_TRUE;
         PRInt32 charEnd = glyphToChar[glyphStart] - stringRange.location;
+        NS_ASSERTION(charEnd >= 0 && charEnd < stringRange.length,
+                     "glyph-to-char mapping points outside string range");
         PRInt32 glyphEnd = glyphStart;
         PRInt32 charLimit = isLTR ? stringRange.length : -1;
         do {
@@ -674,8 +676,11 @@ gfxCoreTextFont::SetGlyphsFromRun(gfxTextRun *aTextRun,
             // the initial character range might correspond to a non-contiguous
             // glyph range with "holes" in it. If so, we will repeat this loop to
             // extend the character range until we have a contiguous glyph sequence.
+            NS_ASSERTION((direction > 0 && charEnd < charLimit) ||
+                         (direction < 0 && charEnd > charLimit),
+                         "no characters left in range?");
             charEnd += direction;
-            while (charEnd != charLimit && charToGlyph[charEnd - stringRange.location] == NO_GLYPH) {
+            while (charEnd != charLimit && charToGlyph[charEnd] == NO_GLYPH) {
                 charEnd += direction;
             }
 
