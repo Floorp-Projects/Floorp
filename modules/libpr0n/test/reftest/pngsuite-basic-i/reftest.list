@@ -1,14 +1,3 @@
-# If you mark a test as failing or random, you MUST file a bug report in
-# bugzilla and note the bug number as a comment on the line with the
-# failing test.
-#
-# For example:
-# ...
-# fails == foo bar # bug 12345
-#
-# See /mozilla/layout/tools/reftest/README.txt for more information.
-
-
 # PngSuite - Basic formats (interlaced)
 
 

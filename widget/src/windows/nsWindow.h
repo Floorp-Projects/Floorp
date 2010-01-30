@@ -403,8 +403,6 @@ protected:
   static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc);
 #endif // ACCESSIBILITY
 
-  void                    UpdateWindowInternal(HWND aWnd);
-
 protected:
   nsIntSize             mLastSize;
   nsIntPoint            mLastPoint;
@@ -431,9 +429,6 @@ protected:
   nsPopupType           mPopupType;
   PRPackedBool          mDisplayPanFeedback;
   WindowHook            mWindowHook;
-#ifdef WINCE_WINDOWS_MOBILE
-  nsCOMPtr<nsIRegion>   mInvalidatedRegion; 
-#endif
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;
   static nsWindow*      sCurrentWindow;

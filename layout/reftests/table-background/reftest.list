@@ -54,4 +54,4 @@ fails == border-separate-opacity-table-column.html border-separate-opacity-table
 != scrollable-rowgroup-collapse-background.html scrollable-rowgroup-collapse-notref.html 
 != scrollable-rowgroup-collapse-border.html scrollable-rowgroup-collapse-notref.html     
 != scrollable-rowgroup-separate-background.html scrollable-rowgroup-separate-notref.html
-== scrollable-rowgroup-separate-border.html scrollable-rowgroup-separate-notref.html # bug 28800
+== scrollable-rowgroup-separate-border.html scrollable-rowgroup-separate-notref.html # scrolling rowgroups were removed in bug 28800

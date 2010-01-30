@@ -184,6 +184,17 @@ function dumpStack()
 /** The XPCOM thread manager. */
 var gThreadManager = null;
 
+/** The XPCOM prefs service. */
+var gRootPrefBranch = null;
+function getRootPrefBranch()
+{
+  if (!gRootPrefBranch)
+  {
+    gRootPrefBranch = Cc["@mozilla.org/preferences-service;1"]
+                        .getService(Ci.nsIPrefBranch);
+  }
+  return gRootPrefBranch;
+}
 
 /**
  * JavaScript constructors for commonly-used classes; precreating these is a
@@ -474,16 +485,21 @@ nsHttpServer.prototype =
     this._port = port;
     this._doQuit = this._socketClosed = false;
 
+    // The listen queue needs to be long enough to handle
+    // network.http.max-connections-per-server concurrent connections,
+    // plus a safety margin in case some other process is talking to
+    // the server as well.
+    var prefs = getRootPrefBranch();
+    var maxConnections =
+      prefs.getIntPref("network.http.max-connections-per-server") + 5;
+
     try
     {
       var socket = new ServerSocket(this._port,
                                     true, // loopback only
-                                    20);  // the listen queue needs to be
-                                          // larger than the browser's max
-                                          // number of concurrent connections
-                                          // (presently 15).
-
-      dumpn(">>> listening on port " + socket.port);
+                                    maxConnections);
+      dumpn(">>> listening on port " + socket.port + ", " + maxConnections +
+            " pending connections");
       socket.asyncListen(this);
       this._identity._initialize(port, true);
       this._socket = socket;

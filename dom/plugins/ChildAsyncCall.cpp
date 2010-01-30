@@ -64,8 +64,8 @@ NS_IMETHODIMP
 ChildAsyncCall::Run()
 {
   if (mFunc) {
-    mFunc(mData);
     mInstance->mPendingAsyncCalls.RemoveElement(this);
+    mFunc(mData);
   }
   return NS_OK;
 }
