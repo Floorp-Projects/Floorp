@@ -72,6 +72,8 @@
 #include "jsxml.h"
 #endif
 
+using namespace js;
+
 JS_STATIC_ASSERT(JSSLOT_ITER_FLAGS < JS_INITIAL_NSLOTS);
 
 #if JS_HAS_GENERATORS
@@ -416,7 +418,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
             if (!InitNativeIterator(cx, iterobj, obj, flags))
                 goto bad;
         } else {
-            js_LeaveTrace(cx);
+            LeaveTrace(cx);
             arg = BOOLEAN_TO_JSVAL((flags & JSITER_FOREACH) == 0);
             if (!js_InternalInvoke(cx, obj, *vp, JSINVOKE_ITERATOR, 1, &arg,
                                    vp)) {
@@ -712,8 +714,8 @@ JS_FRIEND_DATA(JSClass) js_GeneratorClass = {
  * from the activation in fp, so we can steal away fp->callobj and fp->argsobj
  * if they are non-null.
  */
-JSObject *
-js_NewGenerator(JSContext *cx, JSStackFrame *fp)
+JS_REQUIRES_STACK JSObject *
+js_NewGenerator(JSContext *cx)
 {
     JSObject *obj;
     uintN argc, nargs, nslots;
@@ -725,6 +727,7 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
         return NULL;
 
     /* Load and compute stack slot counts. */
+    JSStackFrame *fp = cx->fp;
     argc = fp->argc;
     nargs = JS_MAX(argc, fp->fun->nargs);
     nslots = 2 + nargs + fp->script->nslots;
@@ -750,7 +753,6 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     }
 
     /* These two references can be shared with fp until it goes away. */
-    gen->frame.varobj = fp->varobj;
     gen->frame.thisv = fp->thisv;
 
     /* Copy call-invariant script and function references. */
@@ -784,7 +786,6 @@ js_NewGenerator(JSContext *cx, JSStackFrame *fp)
     gen->frame.regs = &gen->savedRegs;
 
     gen->frame.flags = (fp->flags & ~JSFRAME_ROOTED_ARGV) | JSFRAME_GENERATOR;
-    gen->frame.dormantNext = NULL;
 
     /* JSOP_GENERATOR appears in the prologue, outside all blocks.  */
     JS_ASSERT(!fp->blockChain);
@@ -924,7 +925,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp, uintN argc)
     JSObject *obj;
     jsval arg;
 
-    js_LeaveTrace(cx);
+    LeaveTrace(cx);
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_GeneratorClass, vp + 2))

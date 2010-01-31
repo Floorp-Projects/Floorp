@@ -74,6 +74,8 @@ using namespace avmplus;
 using namespace nanojit;
 #endif
 
+using namespace js;
+
 typedef enum REOp {
 #define REOP_DEF(opcode, name) opcode,
 #include "jsreops.tbl"
@@ -1999,6 +2001,8 @@ CompileRegExpToAST(JSContext* cx, JSTokenStream* ts,
 #ifdef JS_TRACER
 typedef js::Vector<LIns *, 4, js::ContextAllocPolicy> LInsList;
 
+namespace js {
+
 struct REFragment : public nanojit::Fragment
 {
     REFragment(const void* _ip verbose_only(, uint32_t profFragID))
@@ -2006,12 +2010,14 @@ struct REFragment : public nanojit::Fragment
     {}
 };
 
+} /* namespace js */
+
 /* Return the cached fragment for the given regexp, or create one. */
 static Fragment*
 LookupNativeRegExp(JSContext* cx, uint16 re_flags,
                    const jschar* re_chars, size_t re_length)
 {
-    JSTraceMonitor *tm = &JS_TRACE_MONITOR(cx);
+    TraceMonitor *tm = &JS_TRACE_MONITOR(cx);
     VMAllocator &alloc = *tm->dataAlloc;
     REHashMap &table = *tm->reFragments;
 
@@ -2020,7 +2026,7 @@ LookupNativeRegExp(JSContext* cx, uint16 re_flags,
 
     if (!frag) {
         verbose_only(
-        uint32_t profFragID = (js_LogController.lcbits & LC_FragProfile)
+        uint32_t profFragID = (LogController.lcbits & LC_FragProfile)
                               ? (++(tm->lastFragID)) : 0;
         )
         frag = new (alloc) REFragment(0 verbose_only(, profFragID));
@@ -2290,7 +2296,7 @@ class RegExpNativeCompiler {
     Fragment*        fragment;
     LirWriter*       lir;
 #ifdef DEBUG
-    LirWriter*       sanity_filter;
+    LirWriter*       validate_writer;
 #endif
 #ifdef NJ_VERBOSE
     LirWriter*       verbose_filter;
@@ -2703,7 +2709,7 @@ class RegExpNativeCompiler {
             LIns *belowBr = lir->insBranch(LIR_jt, belowCnd, NULL);
             LIns *aboveCnd = lir->ins2(LIR_ugt, chr, lir->insImm(0x200A));
             LIns *aboveBr = lir->insBranch(LIR_jt, aboveCnd, NULL);
-            LIns *intervalMatchBr = lir->ins2(LIR_j, NULL, NULL);
+            LIns *intervalMatchBr = lir->insBranch(LIR_j, NULL, NULL);
 
             /* Handle [0xA0,0x2000). */
             LIns *belowLbl = lir->ins0(LIR_label);
@@ -2714,7 +2720,7 @@ class RegExpNativeCompiler {
             LIns *eq2Br = lir->insBranch(LIR_jt, eq2Cnd, NULL);
             LIns *eq3Cnd = lir->ins2(LIR_eq, chr, lir->insImm(0x180E));
             LIns *eq3Br = lir->insBranch(LIR_jt, eq3Cnd, NULL);
-            LIns *belowMissBr = lir->ins2(LIR_j, NULL, NULL);
+            LIns *belowMissBr = lir->insBranch(LIR_j, NULL, NULL);
 
             /* Handle (0x200A, max). */
             LIns *aboveLbl = lir->ins0(LIR_label);
@@ -2729,7 +2735,7 @@ class RegExpNativeCompiler {
             LIns *eq7Br = lir->insBranch(LIR_jt, eq7Cnd, NULL);
             LIns *eq8Cnd = lir->ins2(LIR_eq, chr, lir->insImm(0x3000));
             LIns *eq8Br = lir->insBranch(LIR_jt, eq8Cnd, NULL);
-            LIns *aboveMissBr = lir->ins2(LIR_j, NULL, NULL);
+            LIns *aboveMissBr = lir->insBranch(LIR_j, NULL, NULL);
 
             /* Handle [0,0x20]. */
             LIns *tableLbl = lir->ins0(LIR_label);
@@ -2743,7 +2749,7 @@ class RegExpNativeCompiler {
             asciiMissBr->setTarget(missLbl);
             belowMissBr->setTarget(missLbl);
             aboveMissBr->setTarget(missLbl);
-            LIns *missBr = lir->ins2(LIR_j, NULL, NULL);
+            LIns *missBr = lir->insBranch(LIR_j, NULL, NULL);
             if (node->op == REOP_SPACE) {
                 if (!fails.append(missBr))
                     return NULL;
@@ -2758,7 +2764,7 @@ class RegExpNativeCompiler {
             eq5Br->setTarget(matchLbl); eq6Br->setTarget(matchLbl);
             eq7Br->setTarget(matchLbl); eq8Br->setTarget(matchLbl);
             if (node->op == REOP_NONSPACE) {
-                LIns *matchBr = lir->ins2(LIR_j, NULL, NULL);
+                LIns *matchBr = lir->insBranch(LIR_j, NULL, NULL);
                 if (!fails.append(matchBr))
                     return NULL;
             }
@@ -2829,7 +2835,7 @@ class RegExpNativeCompiler {
          */
         lir->insStorei(branchEnd, state,
                        offsetof(REGlobalData, stateStack));
-        LIns *leftSuccess = lir->ins2(LIR_j, NULL, NULL);
+        LIns *leftSuccess = lir->insBranch(LIR_j, NULL, NULL);
 
         /* Try right branch. */
         targetCurrentPoint(kidFails);
@@ -2946,7 +2952,7 @@ class RegExpNativeCompiler {
 
         /* End iteration: store loop variables, increment, jump */
         lir->insStorei(iterEnd, state, offsetof(REGlobalData, stateStack));
-        lir->ins2(LIR_j, NULL, loopTop);
+        lir->insBranch(LIR_j, NULL, loopTop);
 
         /*
          * Using '+' as branch, the intended control flow is:
@@ -2974,9 +2980,9 @@ class RegExpNativeCompiler {
          * conditionally executed, and we (currently) don't have real phi
          * nodes, we need only consider insns defined in A and used in E.
          */
-        lir->ins1(LIR_live, state);
-        lir->ins1(LIR_live, cpend);
-        lir->ins1(LIR_live, start);
+        lir->ins1(LIR_plive, state);
+        lir->ins1(LIR_plive, cpend);
+        lir->ins1(LIR_plive, start);
 
         /* After the loop: reload 'pos' from memory and continue. */
         targetCurrentPoint(kidFails);
@@ -3106,8 +3112,8 @@ class RegExpNativeCompiler {
         if (loopLabel) {
             lir->insBranch(LIR_j, NULL, loopLabel);
             LirBuffer* lirbuf = fragment->lirbuf;
-            lir->ins1(LIR_live, lirbuf->state);
-            lir->ins1(LIR_live, lirbuf->param1);
+            lir->ins1(LIR_plive, lirbuf->state);
+            lir->ins1(LIR_plive, lirbuf->param1);
         }
 
         Allocator &alloc = *JS_TRACE_MONITOR(cx).dataAlloc;
@@ -3138,7 +3144,7 @@ class RegExpNativeCompiler {
     {
         fragment->lirbuf = lirbuf;
 #ifdef DEBUG
-        LabelMap* labels = new (tempAlloc) LabelMap(tempAlloc, &js_LogController);
+        LabelMap* labels = new (tempAlloc) LabelMap(tempAlloc, &LogController);
         lirbuf->names = new (tempAlloc) LirNameMap(tempAlloc, labels);
 #endif
     }
@@ -3153,11 +3159,11 @@ class RegExpNativeCompiler {
         GuardRecord* guard = NULL;
         const jschar* re_chars;
         size_t re_length;
-        JSTraceMonitor* tm = &JS_TRACE_MONITOR(cx);
+        TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
         Assembler *assm = tm->assembler;
         LIns* loopLabel = NULL;
 
-        if (outOfMemory() || js_OverfullJITCache(tm))
+        if (outOfMemory() || OverfullJITCache(tm))
             return JS_FALSE;
 
         re->source->getCharsAndLength(re_chars, re_length);
@@ -3175,19 +3181,19 @@ class RegExpNativeCompiler {
         if (outOfMemory())
             goto fail;
         /* FIXME Use bug 463260 smart pointer when available. */
-        lir = lirBufWriter = new LirBufWriter(lirbuf);
+        lir = lirBufWriter = new LirBufWriter(lirbuf, nanojit::AvmCore::config);
 
         /* FIXME Use bug 463260 smart pointer when available. */
 #ifdef NJ_VERBOSE
         debug_only_stmt(
-            if (js_LogController.lcbits & LC_TMRegexp) {
+            if (LogController.lcbits & LC_TMRegexp) {
                 lir = verbose_filter = new VerboseWriter(tempAlloc, lir, lirbuf->names,
-                                                         &js_LogController);
+                                                         &LogController);
             }
         )
 #endif
 #ifdef DEBUG
-        lir = sanity_filter = new SanityFilter(lir);
+        lir = validate_writer = new ValidateWriter(lir, "regexp writer pipeline");
 #endif
 
         /*
@@ -3210,7 +3216,7 @@ class RegExpNativeCompiler {
         // If profiling, record where the loop label is, so that the
         // assembler can insert a frag-entry-counter increment at that
         // point
-        verbose_only( if (js_LogController.lcbits & LC_FragProfile) {
+        verbose_only( if (LogController.lcbits & LC_FragProfile) {
             NanoAssert(!fragment->loopLabel);
             fragment->loopLabel = loopLabel;
         })
@@ -3241,41 +3247,42 @@ class RegExpNativeCompiler {
          */
         JS_ASSERT(!lirbuf->sp && !lirbuf->rp);
 
-        ::compile(assm, fragment, tempAlloc verbose_only(, lirbuf->names->labels));
+        assm->compile(fragment, tempAlloc, /*optimize*/true
+                      verbose_only(, lirbuf->names->labels));
         if (assm->error() != nanojit::None)
             goto fail;
 
         delete lirBufWriter;
 #ifdef DEBUG
-        delete sanity_filter;
+        delete validate_writer;
 #endif
 #ifdef NJ_VERBOSE
-        debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
+        debug_only_stmt( if (LogController.lcbits & LC_TMRegexp)
                              delete verbose_filter; )
 #endif
         return JS_TRUE;
     fail:
-        if (outOfMemory() || js_OverfullJITCache(tm)) {
+        if (outOfMemory() || OverfullJITCache(tm)) {
             delete lirBufWriter;
             // recover profiling data from expiring Fragments
             verbose_only(
                 REHashMap::Iter iter(*(tm->reFragments));
                 while (iter.next()) {
                     nanojit::Fragment* frag = iter.value();
-                    js_FragProfiling_FragFinalizer(frag, tm);
+                    FragProfiling_FragFinalizer(frag, tm);
                 }
             )
-            js_FlushJITCache(cx);
+            FlushJITCache(cx);
         } else {
             if (!guard) insertGuard(loopLabel, re_chars, re_length);
             re->flags |= JSREG_NOCOMPILE;
             delete lirBufWriter;
         }
 #ifdef DEBUG
-        delete sanity_filter;
+        delete validate_writer;
 #endif
 #ifdef NJ_VERBOSE
-        debug_only_stmt( if (js_LogController.lcbits & LC_TMRegexp)
+        debug_only_stmt( if (LogController.lcbits & LC_TMRegexp)
                              delete lir; )
 #endif
         return JS_FALSE;

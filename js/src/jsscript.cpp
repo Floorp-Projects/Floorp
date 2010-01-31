@@ -67,6 +67,8 @@
 
 #include "jsscriptinlines.h"
 
+using namespace js;
+
 const uint32 JSSLOT_EXEC_DEPTH          = JSSLOT_PRIVATE + 1;
 const uint32 JSSCRIPT_RESERVED_SLOTS    = 1;
 
@@ -328,12 +330,12 @@ script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      *
      * Unlike eval, which the compiler detects, Script.prototype.exec may be
      * called from a lightweight function, or even from native code (in which
-     * case fp->varobj and fp->scopeChain are null).  If exec is called from
-     * a lightweight function, we will need to get a Call object representing
-     * its frame, to act as the var object and scope chain head.
+     * fp->scopeChain is null).  If exec is called from a lightweight function,
+     * we will need to get a Call object representing its frame, to act as the
+     * var object and scope chain head.
      */
     caller = js_GetScriptedCaller(cx, NULL);
-    if (caller && !caller->varobj) {
+    if (caller && !caller->varobj(cx)) {
         /* Called from a lightweight function. */
         JS_ASSERT(caller->fun && !JSFUN_HEAVYWEIGHT_TEST(caller->fun->flags));
 
@@ -347,7 +349,7 @@ script_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         if (caller) {
             /*
              * Load caller->scopeChain after the conditional js_GetCallObject
-             * call above, which resets scopeChain as well as varobj.
+             * call above, which resets scopeChain as well as the callobj.
              */
             scopeobj = js_GetScopeChain(cx, caller);
             if (!scopeobj)
@@ -1762,7 +1764,7 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     }
 
 #ifdef JS_TRACER
-    js_PurgeScriptFragments(cx, script);
+    PurgeScriptFragments(cx, script);
 #endif
 
     cx->free(script);

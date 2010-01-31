@@ -2366,14 +2366,6 @@ extern JS_PUBLIC_API(JSBool)
 JS_IsConstructing(JSContext *cx);
 
 /*
- * Returns true if a script is executing and its current bytecode is a set
- * (assignment) operation, even if there are native (no script) stack frames
- * between the script and the caller to JS_IsAssigning.
- */
-extern JS_FRIEND_API(JSBool)
-JS_IsAssigning(JSContext *cx);
-
-/*
  * Saving and restoring frame chains.
  *
  * These two functions are used to set aside cx's call stack while that stack

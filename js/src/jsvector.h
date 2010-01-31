@@ -40,8 +40,6 @@
 #ifndef jsvector_h_
 #define jsvector_h_
 
-#include <new>
-
 #include "jstl.h"
 
 namespace js {

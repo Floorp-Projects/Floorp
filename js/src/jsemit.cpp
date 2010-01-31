@@ -1280,6 +1280,19 @@ JSTreeContext::ensureSharpSlots()
     return true;
 }
 
+bool
+JSTreeContext::skipSpansGenerator(unsigned skip)
+{
+    JSTreeContext *tc = this;
+    for (unsigned i = 0; i < skip; ++i, tc = tc->parent) {
+        if (!tc)
+            return false;
+        if (tc->flags & TCF_FUN_IS_GENERATOR)
+            return true;
+    }
+    return false;
+}
+
 void
 js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
                  ptrdiff_t top)
@@ -2086,7 +2099,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JSObject *scopeobj = (cg->flags & TCF_IN_FUNCTION)
                                  ? STOBJ_GET_PARENT(FUN_OBJECT(cg->fun))
                                  : cg->scopeChain;
-            if (scopeobj != caller->varobj)
+            if (scopeobj != caller->varobj(cx))
                 return JS_TRUE;
 
             /*
@@ -2103,7 +2116,10 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * defeats the display optimization to static link searching used
              * by JSOP_{GET,CALL}UPVAR.
              */
-            if (cg->flags & TCF_FUN_IS_GENERATOR)
+            JSFunction *fun = cg->compiler->callerFrame->fun;
+            JS_ASSERT(cg->staticLevel >= fun->u.i.script->staticLevel);
+            unsigned skip = cg->staticLevel - fun->u.i.script->staticLevel;
+            if (cg->skipSpansGenerator(skip))
                 return JS_TRUE;
 
             return MakeUpvarForEval(pn, cg);
@@ -2178,7 +2194,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
         JSCodeGenerator *evalcg = (JSCodeGenerator *) tc;
         JS_ASSERT(evalcg->flags & TCF_COMPILE_N_GO);
-        JS_ASSERT(caller->fun && caller->varobj == evalcg->scopeChain);
+        JS_ASSERT(caller->fun && caller->varobj(cx) == evalcg->scopeChain);
 
         /*
          * Don't generate upvars on the left side of a for loop. See
@@ -2235,7 +2251,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * defeats the display optimization to static link searching used
              * by JSOP_{GET,CALL}UPVAR.
              */
-            if (cg->flags & TCF_FUN_IS_GENERATOR)
+            if (cg->skipSpansGenerator(skip))
                 return JS_TRUE;
 
             op = JSOP_GETUPVAR;
@@ -3156,6 +3172,10 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                     pn3->pn_val = JSVAL_FALSE;
                     break;
                 }
+                if (pn4->pn_op == JSOP_NULL) {
+                    pn3->pn_val = JSVAL_NULL;
+                    break;
+                }
                 /* FALL THROUGH */
               default:
                 switchOp = JSOP_CONDSWITCH;
@@ -3550,7 +3570,7 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
         CG_SWITCH_TO_PROLOG(cg);
         JS_ASSERT(CG_NEXT(cg) == CG_BASE(cg));
         if (js_Emit1(cx, cg, JSOP_GENERATOR) < 0)
-            return JS_FALSE;
+            return false;
         CG_SWITCH_TO_MAIN(cg);
     } else {
         /*
@@ -3558,7 +3578,18 @@ js_EmitFunctionScript(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body)
          * are not yet traced and both want to be the first instruction.
          */
         if (js_Emit1(cx, cg, JSOP_TRACE) < 0)
-            return JS_FALSE;
+            return false;
+    }
+
+    if (cg->flags & TCF_FUN_UNBRAND_THIS) {
+        if (js_Emit1(cx, cg, JSOP_THIS) < 0)
+            return false;
+        if (js_Emit1(cx, cg, JSOP_UNBRAND) < 0)
+            return false;
+        if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
+            return false;
+        if (js_Emit1(cx, cg, JSOP_POP) < 0)
+            return false;
     }
 
     return js_EmitTree(cx, cg, body) &&
@@ -5616,6 +5647,21 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 }
 #endif
                 if (op != JSOP_NOP) {
+                    /*
+                     * Specialize JSOP_SETPROP to JSOP_SETMETHOD to defer or
+                     * avoid null closure cloning. Do this only for assignment
+                     * statements that are not completion values wanted by a
+                     * script evaluator, to ensure that the joined function
+                     * can't escape directly.
+                     */
+                    if (!wantval &&
+                        PN_TYPE(pn2) == TOK_ASSIGN &&
+                        PN_OP(pn2) == JSOP_NOP &&
+                        PN_OP(pn2->pn_left) == JSOP_SETPROP &&
+                        PN_OP(pn2->pn_right) == JSOP_LAMBDA &&
+                        pn2->pn_right->pn_funbox->joinable()) {
+                        pn2->pn_left->pn_op = JSOP_SETMETHOD;
+                    }
                     if (!js_EmitTree(cx, cg, pn2))
                         return JS_FALSE;
                     if (js_Emit1(cx, cg, op) < 0)
@@ -6097,8 +6143,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
         pn2 = pn->pn_kid;
 
-        /* See js_FoldConstants for why this assertion holds true. */
-        JS_ASSERT_IF(op == JSOP_TYPEOF, pn2->pn_type == TOK_NAME);
+        if (op == JSOP_TYPEOF && pn2->pn_type != TOK_NAME)
+            op = JSOP_TYPEOFEXPR;
 
         oldflags = cg->flags;
         cg->flags &= ~TCF_IN_FOR_INIT;
@@ -6583,7 +6629,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         EMIT_UINT16_IMM_OP(JSOP_NEWARRAY, atomIndex);
         break;
 
-      case TOK_RC:
+      case TOK_RC: {
 #if JS_HAS_SHARP_VARS
         sharpnum = -1;
       do_emit_object:
@@ -6606,6 +6652,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (!EmitNewInit(cx, cg, JSProto_Object, pn, sharpnum))
             return JS_FALSE;
 
+        uintN methodInits = 0, slowMethodInits = 0;
         for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
             /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
             pn3 = pn2->pn_left;
@@ -6638,22 +6685,40 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (!ale)
                     return JS_FALSE;
 
-                JSOp initOp = (PN_OP(pn2->pn_right) == JSOP_LAMBDA &&
-                               !(pn2->pn_right->pn_funbox->tcflags
-                                 & (TCF_FUN_USES_ARGUMENTS | TCF_FUN_USES_OWN_NAME))
+                /* Check whether we can optimize to JSOP_INITMETHOD. */
+                JSParseNode *init = pn2->pn_right;
+                bool lambda = PN_OP(init) == JSOP_LAMBDA;
+                if (lambda)
+                    ++methodInits;
+                if (
 #if JS_HAS_GETTER_SETTER
-                               && op != JSOP_GETTER && op != JSOP_SETTER
+                    op == JSOP_INITPROP &&
+#else
+                    JS_ASSERT(op == JSOP_INITPROP),
 #endif
-                               )
-                              ? JSOP_INITMETHOD
-                              : JSOP_INITPROP;
-                EMIT_INDEX_OP(initOp, ALE_INDEX(ale));
+                    lambda &&
+                    init->pn_funbox->joinable())
+                {
+                    op = JSOP_INITMETHOD;
+                    pn2->pn_op = uint8(op);
+                } else {
+                    op = JSOP_INITPROP;
+                    if (lambda)
+                        ++slowMethodInits;
+                }
+
+                EMIT_INDEX_OP(op, ALE_INDEX(ale));
             }
         }
 
+        if (cg->funbox && cg->funbox->shouldUnbrand(methodInits, slowMethodInits)) {
+            if (js_Emit1(cx, cg, JSOP_UNBRAND) < 0)
+                return JS_FALSE;
+        }
         if (!EmitEndInit(cx, cg, pn->pn_count))
             return JS_FALSE;
         break;
+      }
 
 #if JS_HAS_SHARP_VARS
       case TOK_DEFSHARP:

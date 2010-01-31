@@ -66,6 +66,9 @@ namespace nanojit
         , _branchStateMap(alloc)
         , _patches(alloc)
         , _labels(alloc)
+    #if NJ_USES_QUAD_CONSTANTS
+        , _quadConstants(alloc)
+    #endif
         , _epilogue(NULL)
         , _err(None)
     #if PEDANTIC
@@ -128,7 +131,7 @@ namespace nanojit
              validateQuick();
          }
      }
- 
+
 #endif
 
      inline void AR::clear()
@@ -165,6 +168,9 @@ namespace nanojit
         _branchStateMap.clear();
         _patches.clear();
         _labels.clear();
+    #if NJ_USES_QUAD_CONSTANTS
+        _quadConstants.clear();
+    #endif
     }
 
     void Assembler::registerResetAll()
@@ -179,20 +185,35 @@ namespace nanojit
 #endif
     }
 
-    // Finds a register in 'allow' to store the result of 'ins', evicting one
-    // if necessary.  Doesn't consider the prior state of 'ins' (except that
-    // ins->isUsed() must be true).
-    Register Assembler::registerAlloc(LIns* ins, RegisterMask allow)
+    // Legend for register sets: A = allowed, P = preferred, F = free, S = SavedReg.
+    //
+    // Finds a register in 'setA___' to store the result of 'ins' (one from
+    // 'set_P__' if possible), evicting one if necessary.  Doesn't consider
+    // the prior state of 'ins'.
+    //
+    // Nb: 'setA___' comes from the instruction's use, 'set_P__' comes from its def.
+    // Eg. in 'add(call(...), ...)':
+    //     - the call's use means setA___==GpRegs;
+    //     - the call's def means set_P__==rmask(retRegs[0]).
+    //
+    Register Assembler::registerAlloc(LIns* ins, RegisterMask setA___, RegisterMask set_P__)
     {
-        RegisterMask allowedAndFree = allow & _allocator.free;
         Register r;
-        NanoAssert(ins->isUsed());
+        RegisterMask set__F_ = _allocator.free;
+        RegisterMask setA_F_ = setA___ & set__F_;
 
-        if (allowedAndFree) {
-            // At least one usable register is free -- no need to steal.
-            // Pick a preferred one if possible.
-            RegisterMask preferredAndFree = allowedAndFree & SavedRegs;
-            RegisterMask set = ( preferredAndFree ? preferredAndFree : allowedAndFree );
+        if (setA_F_) {
+            RegisterMask set___S = SavedRegs;
+            RegisterMask setA_FS = setA_F_ & set___S;
+            RegisterMask setAPF_ = setA_F_ & set_P__;
+            RegisterMask setAPFS = setA_FS & set_P__;
+            RegisterMask set;
+
+            if      (setAPFS) set = setAPFS;
+            else if (setAPF_) set = setAPF_;
+            else if (setA_FS) set = setA_FS;
+            else              set = setA_F_;
+
             r = nRegisterAllocFromSet(set);
             _allocator.addActive(r, ins);
             ins->setReg(r);
@@ -201,8 +222,8 @@ namespace nanojit
 
             // Nothing free, steal one.
             // LSRA says pick the one with the furthest use.
-            LIns* vic = findVictim(allow);
-            NanoAssert(vic->isUsed());
+            LIns* vic = findVictim(setA___);
+            NanoAssert(vic->isInReg());
             r = vic->getReg();
 
             evict(vic);
@@ -224,8 +245,7 @@ namespace nanojit
     Register Assembler::registerAllocTmp(RegisterMask allow)
     {
         LIns dummyIns;
-        dummyIns.markAsUsed();
-        Register r = registerAlloc(&dummyIns, allow);
+        Register r = registerAlloc(&dummyIns, allow, /*prefer*/0);
 
         // Mark r as free, ready for use as a temporary value.
         _allocator.removeActive(r);
@@ -302,7 +322,6 @@ namespace nanojit
             LIns* ins = _entries[i];
             if (!ins)
                 continue;
-            Register r = ins->getReg();
             uint32_t arIndex = ins->getArIndex();
             NanoAssert(arIndex != 0);
             if (ins->isop(LIR_alloc)) {
@@ -313,14 +332,15 @@ namespace nanojit
                 NanoAssert(arIndex == (uint32_t)n-1);
                 i = n-1;
             }
-            else if (ins->isQuad()) {
+            else if (ins->isI64() || ins->isF64()) {
                 NanoAssert(_entries[i + 1]==ins);
                 i += 1; // skip high word
             }
             else {
                 NanoAssertMsg(arIndex == i, "Stack record index mismatch");
             }
-            NanoAssertMsg(r == UnknownReg || regs.isConsistent(r, ins), "Register record mismatch");
+            NanoAssertMsg(!ins->isInReg() || regs.isConsistent(ins->getReg(), ins),
+                          "Register record mismatch");
         }
     }
 
@@ -365,35 +385,25 @@ namespace nanojit
     }
     #endif /* _DEBUG */
 
-    void Assembler::findRegFor2(RegisterMask allow, LIns* ia, Register& ra, LIns* ib, Register& rb)
+    void Assembler::findRegFor2(RegisterMask allowa, LIns* ia, Register& ra,
+                                RegisterMask allowb, LIns* ib, Register& rb)
     {
+        // There should be some overlap between 'allowa' and 'allowb', else
+        // there's no point calling this function.
+        NanoAssert(allowa & allowb);
+
         if (ia == ib) {
-            ra = rb = findRegFor(ia, allow);
+            ra = rb = findRegFor(ia, allowa & allowb);  // use intersection(allowa, allowb)
+
+        } else if (ib->isInRegMask(allowb)) {
+            // 'ib' is already in an allowable reg -- don't let it get evicted
+            // when finding 'ra'.
+            rb = ib->getReg();
+            ra = findRegFor(ia, allowa & ~rmask(rb));
+
         } else {
-            // You might think we could just do this:
-            //
-            //   ra = findRegFor(ia, allow);
-            //   rb = findRegFor(ib, allow & ~rmask(ra));
-            //
-            // But if 'ib' was already in an allowed register, the first
-            // findRegFor() call could evict it, whereupon the second
-            // findRegFor() call would immediately restore it, which is
-            // sub-optimal.  What we effectively do instead is this:
-            //
-            //   ra = findRegFor(ia, allow & ~rmask(rb));
-            //   rb = findRegFor(ib, allow & ~rmask(ra));
-            //
-            // but we have to determine what 'rb' initially is to avoid the
-            // mutual dependency between the assignments.
-            bool rbDone = !ib->isUnusedOrHasUnknownReg() && (rb = ib->getReg(), allow & rmask(rb));
-            if (rbDone) {
-                allow &= ~rmask(rb);    // ib already in an allowable reg, keep that one
-            }
-            ra = findRegFor(ia, allow);
-            if (!rbDone) {
-                allow &= ~rmask(ra);
-                rb = findRegFor(ib, allow);
-            }
+            ra = findRegFor(ia, allowa);
+            rb = findRegFor(ib, allowb & ~rmask(ra));
         }
     }
 
@@ -426,6 +436,27 @@ namespace nanojit
         return findRegFor(i, allow);
     }
 
+    // Like findRegFor2(), but used for stores where the base value has the
+    // same type as the stored value, eg. in asm_store32() on 32-bit platforms
+    // and asm_store64() on 64-bit platforms.  Similar to getBaseReg(),
+    // findRegFor2() can be called instead, but this function can optimize the
+    // case where the base value is a LIR_alloc.
+    void Assembler::getBaseReg2(RegisterMask allowValue, LIns* value, Register& rv,
+                                RegisterMask allowBase, LIns* base, Register& rb, int &d)
+    {
+    #if !PEDANTIC
+        if (base->isop(LIR_alloc)) {
+            rb = FP;
+            d += findMemFor(base);
+            rv = findRegFor(value, allowValue);
+            return;
+        }
+    #else
+        (void) d;
+    #endif
+        findRegFor2(allowValue, value, rv, allowBase, base, rb);
+    }
+
     // Finds a register in 'allow' to hold the result of 'ins'.  Used when we
     // encounter a use of 'ins'.  The actions depend on the prior regstate of
     // 'ins':
@@ -444,17 +475,9 @@ namespace nanojit
 
         Register r;
 
-        if (!ins->isUsed()) {
-            // 'ins' is unused, ie. dead after this point.  Mark it as used
-            // and allocate it a register.
-            ins->markAsUsed();
-            RegisterMask prefer = hint(ins, allow);
-            r = registerAlloc(ins, prefer);
-
-        } else if (!ins->hasKnownReg()) {
-            // 'ins' is in a spill slot.  Allocate it a register.
-            RegisterMask prefer = hint(ins, allow);
-            r = registerAlloc(ins, prefer);
+        if (!ins->isInReg()) {
+            // 'ins' isn't in a register (must be in a spill slot or nowhere).
+            r = registerAlloc(ins, allow, hint(ins));
 
         } else if (rmask(r = ins->getReg()) & allow) {
             // 'ins' is in an allowed register.
@@ -462,7 +485,6 @@ namespace nanojit
 
         } else {
             // 'ins' is in a register (r) that's not in 'allow'.
-            RegisterMask prefer = hint(ins, allow);
 #ifdef NANOJIT_IA32
             if (((rmask(r)&XmmRegs) && !(allow&XmmRegs)) ||
                 ((rmask(r)&x87Regs) && !(allow&x87Regs)))
@@ -470,14 +492,14 @@ namespace nanojit
                 // x87 <-> xmm copy required
                 //_nvprof("fpu-evict",1);
                 evict(ins);
-                r = registerAlloc(ins, prefer);
+                r = registerAlloc(ins, allow, hint(ins));
             } else
 #elif defined(NANOJIT_PPC)
             if (((rmask(r)&GpRegs) && !(allow&GpRegs)) ||
                 ((rmask(r)&FpRegs) && !(allow&FpRegs)))
             {
                 evict(ins);
-                r = registerAlloc(ins, prefer);
+                r = registerAlloc(ins, allow, hint(ins));
             } else
 #endif
             {
@@ -491,7 +513,7 @@ namespace nanojit
                 //
                 Register s = r;
                 _allocator.retire(r);
-                r = registerAlloc(ins, prefer);
+                r = registerAlloc(ins, allow, hint(ins));
 
                 // 'ins' is in 'allow', in register r (different to the old r);
                 //  s is the old r.
@@ -518,11 +540,9 @@ namespace nanojit
             findMemFor(ins);
         }
 
-        NanoAssert(ins->isUnusedOrHasUnknownReg());
+        NanoAssert(!ins->isInReg());
         NanoAssert(_allocator.free & rmask(r));
 
-        if (!ins->isUsed())
-            ins->markAsUsed();
         ins->setReg(r);
         _allocator.removeFree(r);
         _allocator.addActive(r, ins);
@@ -530,31 +550,46 @@ namespace nanojit
         return r;
     }
 
+#if NJ_USES_QUAD_CONSTANTS
+    const uint64_t* Assembler::findQuadConstant(uint64_t q)
+    {
+        uint64_t* p = _quadConstants.get(q);
+        if (!p)
+        {
+            p = new (_dataAlloc) uint64_t;
+            *p = q;
+            _quadConstants.put(q, p);
+        }
+        return p;
+    }
+#endif
+
     int Assembler::findMemFor(LIns *ins)
     {
-        if (!ins->isUsed())
-            ins->markAsUsed();
-        if (!ins->getArIndex()) {
+#if NJ_USES_QUAD_CONSTANTS
+        NanoAssert(!ins->isconstq());
+#endif
+        if (!ins->isInAr()) {
             uint32_t const arIndex = arReserve(ins);
             ins->setArIndex(arIndex);
             NanoAssert(_activation.isValidEntry(ins->getArIndex(), ins) == (arIndex != 0));
         }
-        return disp(ins);
+        return arDisp(ins);
     }
 
     // XXX: this function is dangerous and should be phased out;
     // See bug 513615.  Calls to it should replaced it with a
     // prepareResultReg() / generate code / freeResourcesOf() sequence.
-    Register Assembler::prepResultReg(LIns *ins, RegisterMask allow)
+    Register Assembler::deprecated_prepResultReg(LIns *ins, RegisterMask allow)
     {
 #ifdef NANOJIT_IA32
         const bool pop = (allow & rmask(FST0)) &&
-                         (ins->isUnusedOrHasUnknownReg() || ins->getReg() != FST0);
+                         (!ins->isInReg() || ins->getReg() != FST0);
 #else
         const bool pop = false;
 #endif
         Register r = findRegFor(ins, allow);
-        freeRsrcOf(ins, pop);
+        deprecated_freeRsrcOf(ins, pop);
         return r;
     }
 
@@ -599,7 +634,7 @@ namespace nanojit
         // a spill slot, or 'ins' is in an XMM register.
 #ifdef NANOJIT_IA32
         const bool pop = (allow & rmask(FST0)) &&
-                         (ins->isUnusedOrHasUnknownReg() || ins->getReg() != FST0);
+                         (!ins->isInReg() || ins->getReg() != FST0);
 #else
         const bool pop = false;
 #endif
@@ -610,35 +645,39 @@ namespace nanojit
 
     void Assembler::asm_spilli(LInsp ins, bool pop)
     {
-        int d = disp(ins);
+        int d = ins->isInAr() ? arDisp(ins) : 0;
         Register r = ins->getReg();
         verbose_only( if (d && (_logc->lcbits & LC_Assembly)) {
                          setOutputForEOL("  <= spill %s",
                          _thisfrag->lirbuf->names->formatRef(ins)); } )
-        asm_spill(r, d, pop, ins->isQuad());
+        asm_spill(r, d, pop, ins->isI64() || ins->isF64());
     }
 
     // XXX: This function is error-prone and should be phased out; see bug 513615.
-    void Assembler::freeRsrcOf(LIns *ins, bool pop)
+    void Assembler::deprecated_freeRsrcOf(LIns *ins, bool pop)
     {
-        Register r = ins->getReg();
-        if (isKnownReg(r)) {
+        if (ins->isInReg()) {
             asm_spilli(ins, pop);
-            _allocator.retire(r);   // free any register associated with entry
+            _allocator.retire(ins->getReg());   // free any register associated with entry
+            ins->clearReg();
         }
-        arFreeIfInUse(ins);        // free any stack stack space associated with entry
-        ins->markAsClear();
+        if (ins->isInAr()) {
+            arFree(ins);                        // free any AR space associated with entry
+            ins->clearArIndex();
+        }
     }
 
     // Frees all record of registers and spill slots used by 'ins'.
     void Assembler::freeResourcesOf(LIns *ins)
     {
-        Register r = ins->getReg();
-        if (isKnownReg(r)) {
-            _allocator.retire(r);   // free any register associated with entry
+        if (ins->isInReg()) {
+            _allocator.retire(ins->getReg());   // free any register associated with entry
+            ins->clearReg();
         }
-        arFreeIfInUse(ins);        // free any stack stack space associated with entry
-        ins->markAsClear();
+        if (ins->isInAr()) {
+            arFree(ins);                        // free any AR space associated with entry
+            ins->clearArIndex();
+        }
     }
 
     // Frees 'r' in the RegAlloc regstate, if it's not already free.
@@ -677,8 +716,7 @@ namespace nanojit
         asm_restore(vic, r);
 
         _allocator.retire(r);
-        if (vic->isUsed())
-            vic->setReg(UnknownReg);
+        vic->clearReg();
 
         // At this point 'vic' is unused (if rematerializable), or in a spill
         // slot (if not).
@@ -787,6 +825,155 @@ namespace nanojit
         return jmpTarget;
     }
 
+    void Assembler::compile(Fragment* frag, Allocator& alloc, bool optimize verbose_only(, LabelMap* labels))
+    {
+        verbose_only(
+        bool anyVerb = (_logc->lcbits & 0xFFFF & ~LC_FragProfile) > 0;
+        bool asmVerb = (_logc->lcbits & 0xFFFF & LC_Assembly) > 0;
+        bool liveVerb = (_logc->lcbits & 0xFFFF & LC_Liveness) > 0;
+        )
+
+        /* BEGIN decorative preamble */
+        verbose_only(
+        if (anyVerb) {
+            _logc->printf("========================================"
+                          "========================================\n");
+            _logc->printf("=== BEGIN LIR::compile(%p, %p)\n",
+                          (void*)this, (void*)frag);
+            _logc->printf("===\n");
+        })
+        /* END decorative preamble */
+
+        verbose_only( if (liveVerb) {
+            _logc->printf("\n");
+            _logc->printf("=== Results of liveness analysis:\n");
+            _logc->printf("===\n");
+            LirReader br(frag->lastIns);
+            LirFilter* lir = &br;
+            if (optimize) {
+                StackFilter* sf = new (alloc) StackFilter(lir, alloc, frag->lirbuf->sp, frag->lirbuf->rp);
+                lir = sf;
+            }
+            live(lir, alloc, frag, _logc);
+        })
+
+        /* Set up the generic text output cache for the assembler */
+        verbose_only( StringList asmOutput(alloc); )
+        verbose_only( _outputCache = &asmOutput; )
+
+        beginAssembly(frag);
+        if (error())
+            return;
+
+        //_logc->printf("recompile trigger %X kind %d\n", (int)frag, frag->kind);
+
+        verbose_only( if (anyVerb) {
+            _logc->printf("=== Translating LIR fragments into assembly:\n");
+        })
+
+        // now the the main trunk
+        verbose_only( if (anyVerb) {
+            _logc->printf("=== -- Compile trunk %s: begin\n",
+                          labels->format(frag));
+        })
+
+        // Used for debug printing, if needed
+        debug_only(ValidateReader *validate = NULL;)
+        verbose_only(
+        ReverseLister *pp_init = NULL;
+        ReverseLister *pp_after_sf = NULL;
+        )
+
+        // The LIR passes through these filters as listed in this
+        // function, viz, top to bottom.
+
+        // set up backwards pipeline: assembler <- StackFilter <- LirReader
+        LirFilter* lir = new (alloc) LirReader(frag->lastIns);
+
+#ifdef DEBUG
+        // VALIDATION
+        validate = new (alloc) ValidateReader(lir);
+        lir = validate;
+#endif
+
+        // INITIAL PRINTING
+        verbose_only( if (_logc->lcbits & LC_ReadLIR) {
+        pp_init = new (alloc) ReverseLister(lir, alloc, frag->lirbuf->names, _logc,
+                                    "Initial LIR");
+        lir = pp_init;
+        })
+
+        // STACKFILTER
+        if (optimize) {
+            StackFilter* stackfilter =
+                new (alloc) StackFilter(lir, alloc, frag->lirbuf->sp, frag->lirbuf->rp);
+            lir = stackfilter;
+        }
+
+        verbose_only( if (_logc->lcbits & LC_AfterSF) {
+        pp_after_sf = new (alloc) ReverseLister(lir, alloc, frag->lirbuf->names, _logc,
+                                                "After StackFilter");
+        lir = pp_after_sf;
+        })
+
+        assemble(frag, lir);
+
+        // If we were accumulating debug info in the various ReverseListers,
+        // call finish() to emit whatever contents they have accumulated.
+        verbose_only(
+        if (pp_init)        pp_init->finish();
+        if (pp_after_sf)    pp_after_sf->finish();
+        )
+
+        verbose_only( if (anyVerb) {
+            _logc->printf("=== -- Compile trunk %s: end\n",
+                         labels->format(frag));
+        })
+
+        verbose_only(
+            if (asmVerb)
+                outputf("## compiling trunk %s", labels->format(frag));
+        )
+        endAssembly(frag);
+
+        // Reverse output so that assembly is displayed low-to-high.
+        // Up to this point, _outputCache has been non-NULL, and so has been
+        // accumulating output.  Now we set it to NULL, traverse the entire
+        // list of stored strings, and hand them a second time to output.
+        // Since _outputCache is now NULL, outputf just hands these strings
+        // directly onwards to _logc->printf.
+        verbose_only( if (anyVerb) {
+            _logc->printf("\n");
+            _logc->printf("=== Aggregated assembly output: BEGIN\n");
+            _logc->printf("===\n");
+            _outputCache = 0;
+            for (Seq<char*>* p = asmOutput.get(); p != NULL; p = p->tail) {
+                char *str = p->head;
+                outputf("  %s", str);
+            }
+            _logc->printf("===\n");
+            _logc->printf("=== Aggregated assembly output: END\n");
+        });
+
+        if (error())
+            frag->fragEntry = 0;
+
+        verbose_only( frag->nCodeBytes += codeBytes; )
+        verbose_only( frag->nExitBytes += exitBytes; )
+
+        /* BEGIN decorative postamble */
+        verbose_only( if (anyVerb) {
+            _logc->printf("\n");
+            _logc->printf("===\n");
+            _logc->printf("=== END LIR::compile(%p, %p)\n",
+                          (void*)this, (void*)frag);
+            _logc->printf("========================================"
+                          "========================================\n");
+            _logc->printf("\n");
+        });
+        /* END decorative postamble */
+    }
+
     void Assembler::beginAssembly(Fragment *frag)
     {
         verbose_only( codeBytes = 0; )
@@ -891,8 +1078,10 @@ namespace nanojit
         if (error()) {
             // something went wrong, release all allocated code memory
             _codeAlloc.freeAll(codeList);
-            _codeAlloc.free(exitStart, exitEnd);
+            if (_nExitIns)
+                _codeAlloc.free(exitStart, exitEnd);
             _codeAlloc.free(codeStart, codeEnd);
+            codeList = NULL;
             return;
         }
 
@@ -905,15 +1094,19 @@ namespace nanojit
         // save used parts of current block on fragment's code list, free the rest
 #ifdef NANOJIT_ARM
         // [codeStart, _nSlot) ... gap ... [_nIns, codeEnd)
-        _codeAlloc.addRemainder(codeList, exitStart, exitEnd, _nExitSlot, _nExitIns);
+        if (_nExitIns) {
+            _codeAlloc.addRemainder(codeList, exitStart, exitEnd, _nExitSlot, _nExitIns);
+            verbose_only( exitBytes -= (_nExitIns - _nExitSlot) * sizeof(NIns); )
+        }
         _codeAlloc.addRemainder(codeList, codeStart, codeEnd, _nSlot, _nIns);
-        verbose_only( exitBytes -= (_nExitIns - _nExitSlot) * sizeof(NIns); )
         verbose_only( codeBytes -= (_nIns - _nSlot) * sizeof(NIns); )
 #else
         // [codeStart ... gap ... [_nIns, codeEnd))
-        _codeAlloc.addRemainder(codeList, exitStart, exitEnd, exitStart, _nExitIns);
+        if (_nExitIns) {
+            _codeAlloc.addRemainder(codeList, exitStart, exitEnd, exitStart, _nExitIns);
+            verbose_only( exitBytes -= (_nExitIns - exitStart) * sizeof(NIns); )
+        }
         _codeAlloc.addRemainder(codeList, codeStart, codeEnd, codeStart, _nIns);
-        verbose_only( exitBytes -= (_nExitIns - exitStart) * sizeof(NIns); )
         verbose_only( codeBytes -= (_nIns - codeStart) * sizeof(NIns); )
 #endif
 
@@ -943,11 +1136,7 @@ namespace nanojit
                 // Clear reg allocation, preserve stack allocation.
                 _allocator.retire(r);
                 NanoAssert(r == ins->getReg());
-                ins->setReg(UnknownReg);
-
-                if (!ins->getArIndex()) {
-                    ins->markAsClear();
-                }
+                ins->clearReg();
             }
         }
     }
@@ -1010,18 +1199,20 @@ namespace nanojit
     {
         NanoAssert(_thisfrag->nStaticExits == 0);
 
-        // trace must end with LIR_x, LIR_[f]ret, LIR_xtbl, or LIR_[f]live
-        NanoAssert(reader->pos()->isop(LIR_x) ||
-                   reader->pos()->isop(LIR_ret) ||
-                   reader->pos()->isop(LIR_fret) ||
-                   reader->pos()->isop(LIR_xtbl) ||
-                   reader->pos()->isop(LIR_flive) ||
-                   reader->pos()->isop(LIR_live));
+        // The trace must end with one of these opcodes.
+        NanoAssert(reader->pos()->isop(LIR_x)     ||
+                   reader->pos()->isop(LIR_xtbl)  ||
+                   reader->pos()->isop(LIR_ret)   ||
+                   reader->pos()->isop(LIR_qret)  ||
+                   reader->pos()->isop(LIR_fret)  ||
+                   reader->pos()->isop(LIR_live)  ||
+                   reader->pos()->isop(LIR_qlive) ||
+                   reader->pos()->isop(LIR_flive));
 
         InsList pending_lives(alloc);
 
-        for (LInsp ins = reader->read(); !ins->isop(LIR_start) && !error();
-                                         ins = reader->read())
+        NanoAssert(!error());
+        for (LInsp ins = reader->read(); !ins->isop(LIR_start); ins = reader->read())
         {
             /* What's going on here: we're visiting all the LIR instructions
                in the buffer, working strictly backwards in buffer-order, and
@@ -1097,8 +1288,9 @@ namespace nanojit
                     evictAllActiveRegs();
                     break;
 
-                case LIR_flive:
-                case LIR_live: {
+                case LIR_live:
+                case LIR_qlive:
+                case LIR_flive: {
                     countlir_live();
                     LInsp op1 = ins->oprnd1();
                     // alloca's are meant to live until the point of the LIR_live instruction, marking
@@ -1116,8 +1308,9 @@ namespace nanojit
                     break;
                 }
 
-                case LIR_fret:
-                case LIR_ret:  {
+                case LIR_ret:
+                case LIR_qret:
+                case LIR_fret: {
                     countlir_ret();
                     asm_ret(ins);
                     break;
@@ -1127,12 +1320,12 @@ namespace nanojit
                 // is the address of the stack space.
                 case LIR_alloc: {
                     countlir_alloc();
-                    NanoAssert(ins->getArIndex() != 0);
-                    Register r = ins->getReg();
-                    if (isKnownReg(r)) {
+                    NanoAssert(ins->isInAr());
+                    if (ins->isInReg()) {
+                        Register r = ins->getReg();
                         asm_restore(ins, r);
                         _allocator.retire(r);
-                        ins->setReg(UnknownReg);
+                        ins->clearReg();
                     }
                     freeResourcesOf(ins);
                     break;
@@ -1154,7 +1347,7 @@ namespace nanojit
                 case LIR_callh:
                 {
                     // return result of quad-call in register
-                    prepResultReg(ins, rmask(retRegs[1]));
+                    deprecated_prepResultReg(ins, rmask(retRegs[1]));
                     // if hi half was used, we must use the call to ensure it happens
                     findSpecificRegFor(ins->oprnd1(), retRegs[0]);
                     break;
@@ -1164,6 +1357,12 @@ namespace nanojit
                 {
                     countlir_param();
                     asm_param(ins);
+                    break;
+                }
+                case LIR_q2i:
+                {
+                    countlir_alu();
+                    asm_q2i(ins);
                     break;
                 }
                 case LIR_qlo:
@@ -1283,6 +1482,12 @@ namespace nanojit
                 {
                     countlir_fpu();
                     asm_u2f(ins);
+                    break;
+                }
+                case LIR_f2i:
+                {
+                    countlir_fpu();
+                    asm_f2i(ins);
                     break;
                 }
                 case LIR_i2q:
@@ -1649,10 +1854,10 @@ namespace nanojit
     void Assembler::reserveSavedRegs()
     {
         LirBuffer *b = _thisfrag->lirbuf;
-        for (int i=0, n = NumSavedRegs; i < n; i++) {
-            LIns *p = b->savedRegs[i];
-            if (p)
-                findMemFor(p);
+        for (int i = 0, n = NumSavedRegs; i < n; i++) {
+            LIns *ins = b->savedRegs[i];
+            if (ins)
+                findMemFor(ins);
         }
     }
 
@@ -1671,15 +1876,22 @@ namespace nanojit
         // ensure that exprs spanning the loop are marked live at the end of the loop
         reserveSavedRegs();
         for (Seq<LIns*> *p = pending_lives.get(); p != NULL; p = p->tail) {
-            LIns *i = p->head;
-            NanoAssert(i->isop(LIR_live) || i->isop(LIR_flive));
-            LIns *op1 = i->oprnd1();
+            LIns *ins = p->head;
+            NanoAssert(ins->isop(LIR_live) || ins->isop(LIR_qlive) || ins->isop(LIR_flive));
+            LIns *op1 = ins->oprnd1();
             // must findMemFor even if we're going to findRegFor; loop-carried
             // operands may spill on another edge, and we need them to always
             // spill to the same place.
-            findMemFor(op1);
+#if NJ_USES_QUAD_CONSTANTS
+            // exception: if quad constants are true constants, we should
+            // never call findMemFor on those ops
+            if (!op1->isconstq())
+#endif
+            {
+                findMemFor(op1);
+            }
             if (! (op1->isconst() || op1->isconstf() || op1->isconstq()))
-                findRegFor(op1, i->isop(LIR_flive) ? FpRegs : GpRegs);
+                findRegFor(op1, ins->isop(LIR_flive) ? FpRegs : GpRegs);
         }
 
         // clear this list since we have now dealt with those lifetimes.  extending
@@ -1725,8 +1937,7 @@ namespace nanojit
                     continue;
                 }
 
-                const char* rname = ins->isQuad() ? fpn(r) : gpn(r);
-                VMPI_sprintf(s, " %s(%s)", rname, n);
+                VMPI_sprintf(s, " %s(%s)", gpn(r), n);
                 s += VMPI_strlen(s);
             }
         }
@@ -1851,13 +2062,13 @@ namespace nanojit
         return i;
     }
 
-    void Assembler::arFreeIfInUse(LIns* ins)
+    void Assembler::arFree(LIns* ins)
     {
+        NanoAssert(ins->isInAr());
         uint32_t arIndex = ins->getArIndex();
-        if (arIndex) {
-            NanoAssert(_activation.isValidEntry(arIndex, ins));
-            _activation.freeEntryAt(arIndex);        // free any stack stack space associated with entry
-        }
+        NanoAssert(arIndex);
+        NanoAssert(_activation.isValidEntry(arIndex, ins));
+        _activation.freeEntryAt(arIndex);        // free any stack stack space associated with entry
     }
 
     /**

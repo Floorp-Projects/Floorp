@@ -234,6 +234,10 @@ struct JSObject {
         return (JSClass *) (classword & ~JSSLOT_CLASS_MASK_BITS);
     }
 
+    bool hasClass(const JSClass *clasp) const {
+        return clasp == getClass();
+    }
+
     bool isDelegate() const {
         return (classword & jsuword(1)) != jsuword(0);
     }
@@ -406,6 +410,8 @@ struct JSObject {
     inline bool isFunction() const;
     inline bool isRegExp() const;
     inline bool isXML() const;
+
+    inline bool unbrand(JSContext *cx);
 };
 
 /* Compatibility macros. */
@@ -602,7 +608,7 @@ extern JSBool
 js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index);
 
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
-    (OBJ_SCOPE(obj)->entryCount)
+    (OBJ_SCOPE(OBJ_IS_CLONED_BLOCK(obj) ? obj->getProto() : obj)->entryCount)
 #define OBJ_BLOCK_DEPTH(cx,obj)                                               \
     JSVAL_TO_INT(STOBJ_GET_SLOT(obj, JSSLOT_BLOCK_DEPTH))
 #define OBJ_SET_BLOCK_DEPTH(cx,obj,depth)                                     \

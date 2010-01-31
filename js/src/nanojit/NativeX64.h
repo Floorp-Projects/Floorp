@@ -62,6 +62,7 @@ namespace nanojit
 #define NJ_ALIGN_STACK                  16
 #define NJ_JTBL_SUPPORTED               1
 #define NJ_EXPANDED_LOADSTORE_SUPPORTED 1
+#define NJ_F2I_SUPPORTED                1
 
     enum Register {
         RAX = 0, // 1st int return, # of sse varargs
@@ -99,9 +100,12 @@ namespace nanojit
         XMM15 = 31, // scratch
 
         FP = RBP,
-        UnknownReg = 32,
+
         FirstReg = RAX,
-        LastReg = XMM15
+        LastReg = XMM15,
+
+        deprecated_UnknownReg = 32,        // XXX: remove eventually, see bug 538924
+        UnspecifiedReg = 32
     };
 
 /*
@@ -193,6 +197,7 @@ namespace nanojit
         X64_cvtsq2sd= 0xC02A0F48F2000005LL, // convert int64 to double r = (double) b
         X64_cvtss2sd= 0xC05A0F40F3000005LL, // convert float to double r = (double) b
         X64_cvtsd2ss= 0xC05A0F40F2000005LL, // convert double to float r = (float) b
+        X64_cvtsd2si= 0xC02D0F40F2000005LL, // convert double to int32 r = (int32) b
         X64_divsd   = 0xC05E0F40F2000005LL, // divide scalar double r /= b
         X64_mulsd   = 0xC0590F40F2000005LL, // multiply scalar double r *= b
         X64_addsd   = 0xC0580F40F2000005LL, // add scalar double r += b
@@ -329,6 +334,10 @@ namespace nanojit
     static const int NumSavedRegs = 5; // rbx, r12-15
     static const int NumArgRegs = 6;
 #endif
+    // Warning:  when talking about single byte registers, RSP/RBP/RSI/RDI are
+    // actually synonyms for AH/CH/DH/BH.  So this value means "any
+    // single-byte GpReg except AH/CH/DH/BH".
+    static const int SingleByteStoreRegs = GpRegs & ~(1<<RSP | 1<<RBP | 1<<RSI | 1<<RDI);
 
     static inline bool IsFpReg(Register r) {
         return ((1<<r) & FpRegs) != 0;
@@ -469,6 +478,7 @@ namespace nanojit
         void CVTSI2SD(Register l, Register r);\
         void CVTSS2SD(Register l, Register r);\
         void CVTSD2SS(Register l, Register r);\
+        void CVTSD2SI(Register l, Register r);\
         void UCOMISD(Register l, Register r);\
         void MOVQRX(Register l, Register r);\
         void MOVQXR(Register l, Register r);\

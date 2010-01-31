@@ -102,6 +102,8 @@
 
 #include "jsautooplen.h"
 
+using namespace js;
+
 #ifdef JS_THREADSAFE
 #define NATIVE_DROP_PROPERTY js_DropProperty
 
@@ -1254,11 +1256,11 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSBool ok;
     JSScript **bucket = NULL;   /* avoid GCC warning with early decl&init */
 #if JS_HAS_EVAL_THIS_SCOPE
-    JSObject *callerScopeChain = NULL, *callerVarObj = NULL;
-    JSObject *withObject = NULL;
-    JSBool setCallerScopeChain = JS_FALSE, setCallerVarObj = JS_FALSE;
-    JSTempValueRooter scopetvr, varobjtvr;
+    JSObject *callerScopeChain = NULL;
+    JSBool setCallerScopeChain = JS_FALSE;
+    JSTempValueRooter scopetvr;
 #endif
+    JSObject *withObject = NULL;
 
     fp = js_GetTopStackFrame(cx);
     caller = js_GetScriptedCaller(cx, fp);
@@ -1310,7 +1312,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * object, then we need to provide one for the compiler to stick any
      * declared (var) variables into.
      */
-    if (!caller->varobj && !js_GetCallObject(cx, caller))
+    if (caller->fun && !caller->callobj && !js_GetCallObject(cx, caller))
         return JS_FALSE;
 
     /* Accept an optional trailing argument that overrides the scope object. */
@@ -1359,22 +1361,11 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
             /* NB: We know obj is a global object here. */
             JS_ASSERT(!OBJ_GET_PARENT(cx, obj));
-            scopeobj = obj;
-
-            /* Set fp->scopeChain too, for the compiler. */
-            caller->scopeChain = fp->scopeChain = scopeobj;
+            caller->scopeChain = scopeobj = obj;
 
             /* Remember scopeobj so we can null its private when done. */
             setCallerScopeChain = JS_TRUE;
             JS_PUSH_TEMP_ROOT_OBJECT(cx, callerScopeChain, &scopetvr);
-
-            callerVarObj = caller->varobj;
-            if (obj != callerVarObj) {
-                /* Set fp->varobj too, for the compiler. */
-                caller->varobj = fp->varobj = obj;
-                setCallerVarObj = JS_TRUE;
-                JS_PUSH_TEMP_ROOT_OBJECT(cx, callerVarObj, &varobjtvr);
-            }
         } else {
             /*
              * Compile using the caller's current scope object.
@@ -1551,17 +1542,13 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 out:
 #if JS_HAS_EVAL_THIS_SCOPE
     /* Restore OBJ_GET_PARENT(scopeobj) not callerScopeChain in case of Call. */
-    if (setCallerVarObj) {
-        caller->varobj = callerVarObj;
-        JS_POP_TEMP_ROOT(cx, &varobjtvr);
-    }
     if (setCallerScopeChain) {
         caller->scopeChain = callerScopeChain;
         JS_POP_TEMP_ROOT(cx, &scopetvr);
     }
+#endif
     if (withObject)
         withObject->setPrivate(NULL);
-#endif
     return ok;
 }
 
@@ -1769,7 +1756,7 @@ Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
     JSProperty *prop;
     if (!js_ValueToStringId(cx, STRING_TO_JSVAL(str), &id) ||
         !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &pobj, &prop)) {
-        js_SetBuiltinError(cx);
+        SetBuiltinError(cx);
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     }
 
@@ -1815,7 +1802,7 @@ Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
     jsval v;
 
     if (!js_PropertyIsEnumerable(cx, obj, id, &v)) {
-        js_SetBuiltinError(cx);
+        SetBuiltinError(cx);
         return JSVAL_TO_BOOLEAN(JSVAL_VOID);
     }
 
@@ -2912,7 +2899,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* o
         JS_ASSERT(scope->freeslot >= JSSLOT_PRIVATE);
         if (scope->freeslot > JS_INITIAL_NSLOTS &&
             !AllocSlots(cx, obj, scope->freeslot)) {
-            JSScope::destroy(cx, scope);
+            scope->destroy(cx);
             goto bad;
         }
     }
@@ -3114,7 +3101,7 @@ js_NewInstance(JSContext *cx, JSClass *clasp, JSObject *ctor)
     if (scope->title.ownercx != cx)
         return NULL;
 #endif
-    if (!scope->owned()) {
+    if (scope->isSharedEmpty()) {
         scope = js_GetMutableScope(cx, ctor);
         if (!scope)
             return NULL;
@@ -3426,20 +3413,13 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     if (!clone)
         return NULL;
 
-    JSScope *scope = OBJ_SCOPE(proto);
-    scope->hold();
-    JS_ASSERT(!scope->owned());
-    clone->map = scope;
-
-    clone->classword = jsuword(&js_BlockClass);
-    clone->setProto(proto);
-    clone->setParent(NULL);  // caller's responsibility
-    clone->setPrivate(fp);
+    /* The caller sets parent on its own. */
+    clone->init(&js_BlockClass, proto, NULL, reinterpret_cast<jsval>(fp));
     clone->fslots[JSSLOT_BLOCK_DEPTH] = proto->fslots[JSSLOT_BLOCK_DEPTH];
-    JS_ASSERT(scope->freeslot == JSSLOT_BLOCK_DEPTH + 1);
-    for (uint32 i = JSSLOT_BLOCK_DEPTH + 1; i < JS_INITIAL_NSLOTS; ++i)
-        clone->fslots[i] = JSVAL_VOID;
-    clone->dslots = NULL;
+
+    JS_ASSERT(cx->runtime->emptyBlockScope->freeslot == JSSLOT_BLOCK_DEPTH + 1);
+    clone->map = cx->runtime->emptyBlockScope;
+    cx->runtime->emptyBlockScope->hold();
     JS_ASSERT(OBJ_IS_CLONED_BLOCK(clone));
     return clone;
 }
@@ -3687,11 +3667,6 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
                 return false;
         }
     }
-
-    if (xdr->mode == JSXDR_DECODE) {
-        /* Do as the parser does and make this block scope shareable. */
-        OBJ_SCOPE(obj)->object = NULL;
-    }
     return true;
 }
 
@@ -3858,12 +3833,8 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
      *
      * All callers of JSObject::initSharingEmptyScope depend on this.
      */
-    {
-        JSScope *scope = OBJ_SCOPE(proto)->getEmptyScope(cx, clasp);
-        if (!scope)
-            goto bad;
-        scope->drop(cx, NULL);
-    }
+    if (!OBJ_SCOPE(proto)->ensureEmptyScope(cx, clasp))
+        goto bad;
 
     /* If this is a standard class, cache its prototype. */
     if (key != JSProto_Null && !js_SetClassObject(cx, obj, key, ctor))
@@ -3998,7 +3969,7 @@ js_EnsureReservedSlots(JSContext *cx, JSObject *obj, size_t nreserved)
         return false;
 
     JSScope *scope = OBJ_SCOPE(obj);
-    if (scope->owned()) {
+    if (!scope->isSharedEmpty()) {
 #ifdef JS_THREADSAFE
         JS_ASSERT(scope->title.ownercx->thread == cx->thread);
 #endif
@@ -4380,7 +4351,7 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
                  * the global shape. jstracer.cpp assumes that the global shape
                  * never changes on trace, so we must deep-bail here.
                  */
-                js_LeaveTrace(cx);
+                LeaveTrace(cx);
             }
             return JS_TRUE;
         }
@@ -4501,7 +4472,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     JSBool added;
 
     JS_ASSERT((defineHow & ~(JSDNP_CACHE_RESULT | JSDNP_DONT_PURGE | JSDNP_SET_METHOD)) == 0);
-    js_LeaveTraceIfGlobalObject(cx, obj);
+    LeaveTraceIfGlobalObject(cx, obj);
 
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
@@ -4750,12 +4721,12 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                              * "too bad!" case.
                              */
                             scope = OBJ_SCOPE(obj2);
-                            if (scope->owned())
+                            if (!scope->isSharedEmpty())
                                 sprop = scope->lookup(id);
                         }
                         if (sprop) {
                             JS_ASSERT(scope == OBJ_SCOPE(obj2));
-                            JS_ASSERT(scope->owned());
+                            JS_ASSERT(!scope->isSharedEmpty());
                             obj = obj2;
                         } else if (obj2 != obj) {
                             if (OBJ_IS_NATIVE(obj2))
@@ -4775,7 +4746,7 @@ js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                     JS_LOCK_OBJ(cx, obj);
                     JS_ASSERT(OBJ_IS_NATIVE(obj));
                     scope = OBJ_SCOPE(obj);
-                    if (scope->owned())
+                    if (!scope->isSharedEmpty())
                         sprop = scope->lookup(id);
                 }
 
@@ -4863,11 +4834,11 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
                 JS_ASSERT(OBJ_GET_CLASS(cx, pobj) == clasp);
                 if (clasp == &js_BlockClass) {
                     /*
-                     * Block instances on the scope chain are immutable and
-                     * always share their scope with compile-time prototypes.
+                     * A block instance on the scope chain is immutable and
+                     * the compile-time prototype provides all its properties.
                      */
-                    JS_ASSERT(pobj == obj);
-                    JS_ASSERT(protoIndex == 0);
+                    JS_ASSERT(pobj == obj->getProto());
+                    JS_ASSERT(protoIndex == 1);
                 } else {
                     /* Call and DeclEnvClass objects have no prototypes. */
                     JS_ASSERT(!OBJ_GET_PROTO(cx, obj));
@@ -5001,7 +4972,7 @@ JSBool
 js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
              JSScopeProperty *sprop, uintN getHow, jsval *vp)
 {
-    js_LeaveTraceIfGlobalObject(cx, pobj);
+    LeaveTraceIfGlobalObject(cx, pobj);
 
     JSScope *scope;
     uint32 slot;
@@ -5054,7 +5025,7 @@ JSBool
 js_NativeSet(JSContext *cx, JSObject *obj, JSScopeProperty *sprop, bool added,
              jsval *vp)
 {
-    js_LeaveTraceIfGlobalObject(cx, obj);
+    LeaveTraceIfGlobalObject(cx, obj);
 
     JSScope *scope;
     uint32 slot;
@@ -5172,7 +5143,7 @@ js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN getHow,
 
                 /* Do not warn about tests like (obj[prop] == undefined). */
                 if (cx->resolveFlags == JSRESOLVE_INFER) {
-                    js_LeaveTrace(cx);
+                    LeaveTrace(cx);
                     pc += js_CodeSpec[op].length;
                     if (Detecting(cx, pc))
                         return JS_TRUE;
@@ -6614,7 +6585,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
 
     JSContext *cx = trc->context;
     JSScope *scope = OBJ_SCOPE(obj);
-    if (scope->owned() && IS_GC_MARKING_TRACER(trc)) {
+    if (!scope->isSharedEmpty() && IS_GC_MARKING_TRACER(trc)) {
         /*
          * Check whether we should shrink the object's slots. Skip this check
          * if the scope is shared, since for Block objects and flat closures
@@ -6655,7 +6626,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
      * above.
      */
     uint32 nslots = STOBJ_NSLOTS(obj);
-    if (scope->owned() && scope->freeslot < nslots)
+    if (!scope->isSharedEmpty() && scope->freeslot < nslots)
         nslots = scope->freeslot;
     JS_ASSERT(nslots >= JSSLOT_START(clasp));
 
@@ -6681,7 +6652,7 @@ js_Clear(JSContext *cx, JSObject *obj)
      */
     JS_LOCK_OBJ(cx, obj);
     scope = OBJ_SCOPE(obj);
-    if (scope->owned()) {
+    if (!scope->isSharedEmpty()) {
         /* Now that we're done using scope->lastProp/table, clear scope. */
         scope->clear(cx);
 
@@ -6774,7 +6745,7 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
      * use STOBJ_NSLOTS(obj) rather than rely on freeslot.
      */
     JSScope *scope = OBJ_SCOPE(obj);
-    if (scope->owned() && slot >= scope->freeslot)
+    if (!scope->isSharedEmpty() && slot >= scope->freeslot)
         scope->freeslot = slot + 1;
 
     STOBJ_SET_SLOT(obj, slot, v);
@@ -7030,7 +7001,7 @@ js_DumpObject(JSObject *obj)
 
     fprintf(stderr, "slots:\n");
     reservedEnd = i + JSCLASS_RESERVED_SLOTS(clasp);
-    slots = (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->owned())
+    slots = (OBJ_IS_NATIVE(obj) && !OBJ_SCOPE(obj)->isSharedEmpty())
             ? OBJ_SCOPE(obj)->freeslot
             : STOBJ_NSLOTS(obj);
     for (; i < slots; i++) {
@@ -7117,7 +7088,6 @@ js_DumpStackFrame(JSStackFrame *fp)
         fprintf(stderr, "  argv:  %p (argc: %u)\n", (void *) fp->argv, (unsigned) fp->argc);
         MaybeDumpObject("callobj", fp->callobj);
         MaybeDumpObject("argsobj", JSVAL_TO_OBJECT(fp->argsobj));
-        MaybeDumpObject("varobj", fp->varobj);
         MaybeDumpValue("this", fp->thisv);
         fprintf(stderr, "  rval: ");
         dumpValue(fp->rval);
@@ -7153,8 +7123,6 @@ js_DumpStackFrame(JSStackFrame *fp)
         if (fp->blockChain)
             fprintf(stderr, "  blockChain: (JSObject *) %p\n", (void *) fp->blockChain);
 
-        if (fp->dormantNext)
-            fprintf(stderr, "  dormantNext: (JSStackFrame *) %p\n", (void *) fp->dormantNext);
         if (fp->displaySave)
             fprintf(stderr, "  displaySave: (JSStackFrame *) %p\n", (void *) fp->displaySave);
 
