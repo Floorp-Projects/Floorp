@@ -138,9 +138,25 @@ TimerManager.prototype = {
    * See nsIObserver.idl
    */
   observe: function TM_observe(aSubject, aTopic, aData) {
+    // Prevent setting the timer interval to a value of less than 60 seconds.
+    var minInterval = 60000;
     switch (aTopic) {
+    case "utm-test-init":
+      // Enforce a minimum timer interval of 500 ms for tests and fall through
+      // to profile-after-change to initialize the timer.
+      minInterval = 500;
     case "profile-after-change":
-      this._start();
+      // Cancel the timer if it has already been initialized. This is primarily
+      // for tests.
+      if (this._timer) {
+        this._timer.cancel();
+        this._timer = null;
+      }
+      this._timerInterval = Math.max(getPref("getIntPref", PREF_APP_UPDATE_TIMER, 600000),
+                                     minInterval);
+      this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      this._timer.initWithCallback(this, this._timerInterval,
+                                   Ci.nsITimer.TYPE_REPEATING_SLACK);
       break;
     case "xpcom-shutdown":
       let os = getObserverService();
@@ -158,12 +174,6 @@ TimerManager.prototype = {
     }
   },
 
-  _start: function TM__start() {
-    this._timerInterval = getPref("getIntPref", "app.update.timer", 600000);
-    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this._timer.initWithCallback(this, this._timerInterval,
-                                 Ci.nsITimer.TYPE_REPEATING_SLACK);
-  },
   /**
 #    Called when the checking timer fires.
 #    @param   timer
