@@ -143,6 +143,12 @@ var gUpdates = {
   wiz: null,
 
   /**
+   * Whether to run the unload handler. This will be set to false when the user
+   * exits the wizard via onWizardCancel or onWizardFinish.
+   */
+  _runUnload: true,
+
+  /**
    * Helper function for setButtons
    * Resets button to original label & accesskey if string is null.
    */
@@ -244,6 +250,7 @@ var gUpdates = {
    * the function call to the selected page.
    */
   onWizardFinish: function() {
+    this._runUnload = false;
     var pageid = document.documentElement.currentPage.pageid;
     if ("onWizardFinish" in this._pages[pageid])
       this._pages[pageid].onWizardFinish();
@@ -254,6 +261,7 @@ var gUpdates = {
    * the function call to the selected page.
    */
   onWizardCancel: function() {
+    this._runUnload = false;
     var pageid = document.documentElement.currentPage.pageid;
     if ("onWizardCancel" in this._pages[pageid])
       this._pages[pageid].onWizardCancel();
@@ -331,6 +339,17 @@ var gUpdates = {
     var startPage = this.startPage;
     LOG("gUpdates", "onLoad - setting current page to startpage " + startPage.id);
     gUpdates.wiz.currentPage = startPage;
+  },
+
+  /**
+   * Called when the wizard UI is unloaded.
+   */
+  onUnload: function() {
+    if (this._runUnload) {
+      var cp = gUpdates.wiz.currentPage;
+      if (cp.pageid != "finished" && cp.pageid != "finishedBackground")
+        this.onWizardCancel();
+    }
   },
 
   /**
@@ -1283,7 +1302,7 @@ var gDownloadingPage = {
       var ps = CoC["@mozilla.org/embedcomp/prompt-service;1"].
                getService(CoI.nsIPromptService);
       var flags = ps.STD_YES_NO_BUTTONS;
-      // Focus the software update wizard before prompting. Tthis will raise
+      // Focus the software update wizard before prompting. This will raise
       // the software update wizard if it is minimized making it more obvious
       // what the prompt is for and will solve the problem of windows
       // obscuring the prompt. See bug #350299 for more details.
@@ -1631,17 +1650,6 @@ var gInstalledPage = {
     gUpdates.wiz.getButton("finish").focus();
   }
 };
-
-/**
- * Called as the application shuts down due to being quit from the File->Quit
- * menu item.
- */
-function tryToClose() {
-  var cp = gUpdates.wiz.currentPage;
-  if (cp.pageid != "finished" && cp.pageid != "finishedBackground")
-    gUpdates.onWizardCancel();
-  return true;
-}
 
 /**
  * Callback for the Update Prompt to set the current page if an Update Wizard
