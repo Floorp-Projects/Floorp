@@ -81,6 +81,8 @@
 
 #include "jsatominlines.h"
 
+using namespace js;
+
 static inline void
 SetOverriddenArgsLength(JSObject *obj)
 {
@@ -113,7 +115,7 @@ GetArgsLength(JSObject *obj)
 }
 
 static inline void
-SetArgsPrivateNative(JSObject *argsobj, js_ArgsPrivateNative *apn)
+SetArgsPrivateNative(JSObject *argsobj, ArgsPrivateNative *apn)
 {
     JS_ASSERT(STOBJ_GET_CLASS(argsobj) == &js_ArgumentsClass);
     uintptr_t p = (uintptr_t) apn;
@@ -227,7 +229,9 @@ js_GetArgsObject(JSContext *cx, JSStackFrame *fp)
      * We must be in a function activation; the function must be lightweight
      * or else fp must have a variable object.
      */
-    JS_ASSERT(fp->fun && (!(fp->fun->flags & JSFUN_HEAVYWEIGHT) || fp->varobj));
+    JS_ASSERT(fp->fun);
+    JS_ASSERT_IF(fp->fun->flags & JSFUN_HEAVYWEIGHT,
+                 fp->varobj(js_ContainingCallStack(cx, fp)));
 
     /* Skip eval and debugger frames. */
     while (fp->flags & JSFRAME_SPECIAL)
@@ -281,7 +285,7 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
 #ifdef JS_TRACER
 JSObject * JS_FASTCALL
 js_Arguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee,
-             double *argv, js_ArgsPrivateNative *apn)
+             double *argv, ArgsPrivateNative *apn)
 {
     JSObject *argsobj = NewArguments(cx, parent, argc, callee);
     if (!argsobj)
@@ -509,11 +513,11 @@ ArgGetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
         uintN arg = uintN(JSVAL_TO_INT(idval));
         if (arg < GetArgsLength(obj)) {
 #ifdef JS_TRACER
-            js_ArgsPrivateNative *argp = js_GetArgsPrivateNative(obj);
+            ArgsPrivateNative *argp = js_GetArgsPrivateNative(obj);
             if (argp) {
-                if (js_NativeToValue(cx, *vp, argp->typemap()[arg], &argp->argv[arg]))
+                if (NativeToValue(cx, *vp, argp->typemap()[arg], &argp->argv[arg]))
                     return true;
-                js_LeaveTrace(cx);
+                LeaveTrace(cx);
                 return false;
             }
 #endif
@@ -562,7 +566,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
     // For simplicity, we just leave trace, since this is presumably not
     // a common operation.
     if (JS_ON_TRACE(cx)) {
-        js_DeepBail(cx);
+        DeepBail(cx);
         return false;
     }
 #endif
@@ -754,7 +758,7 @@ CheckForEscapingClosure(JSContext *cx, JSObject *obj, jsval *vp)
          * still has an active stack frame associated with it.
          */
         if (fun->needsWrapper()) {
-            js_LeaveTrace(cx);
+            LeaveTrace(cx);
 
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
@@ -777,6 +781,17 @@ static JSBool
 CalleeGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     return CheckForEscapingClosure(cx, obj, vp);
+}
+
+static JSObject *
+NewCallObject(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
+{
+    JSObject *callobj = js_NewObjectWithGivenProto(cx, &js_CallClass, NULL, scopeChain);
+    if (!callobj ||
+        !js_EnsureReservedSlots(cx, callobj, fun->countArgsAndVars())) {
+        return NULL;
+    }
+    return callobj;
 }
 
 JSObject *
@@ -823,11 +838,9 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         }
     }
 
-    callobj = js_NewObjectWithGivenProto(cx, &js_CallClass, NULL, fp->scopeChain);
-    if (!callobj ||
-        !js_EnsureReservedSlots(cx, callobj, fp->fun->countArgsAndVars())) {
+    callobj = NewCallObject(cx, fp->fun, fp->scopeChain);
+    if (!callobj)
         return NULL;
-    }
 
     callobj->setPrivate(fp);
     JS_ASSERT(fp->argv);
@@ -840,9 +853,21 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
      * variables object.
      */
     fp->scopeChain = callobj;
-    fp->varobj = callobj;
     return callobj;
 }
+
+JSObject * JS_FASTCALL
+js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSObject *scopeChain)
+{
+    JS_ASSERT(!js_IsNamedLambda(fun));
+    JSObject *callobj = NewCallObject(cx, fun, scopeChain);
+    if (!callobj)
+        return NULL;
+    STOBJ_SET_SLOT(callobj, JSSLOT_CALLEE, OBJECT_TO_JSVAL(callee));
+    return callobj;
+}
+
+JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CreateCallObjectOnTrace, CONTEXT, FUNCTION, OBJECT, OBJECT, 0, 0)
 
 JSFunction *
 js_GetCallObjectFunction(JSObject *obj)
@@ -857,6 +882,13 @@ js_GetCallObjectFunction(JSObject *obj)
     }
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
     return GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(v));
+}
+
+inline static void
+CopyValuesToCallObject(JSObject *callobj, int nargs, jsval *argv, int nvars, jsval *slots)
+{
+    memcpy(callobj->dslots, argv, nargs * sizeof(jsval));
+    memcpy(callobj->dslots + nargs, slots, nvars * sizeof(jsval));
 }
 
 void
@@ -885,15 +917,11 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     if (n != 0) {
         JS_ASSERT(STOBJ_NSLOTS(callobj) >= JS_INITIAL_NSLOTS + n);
         n += JS_INITIAL_NSLOTS;
-        JS_LOCK_OBJ(cx, callobj);
-        memcpy(callobj->dslots, fp->argv, fun->nargs * sizeof(jsval));
-        memcpy(callobj->dslots + fun->nargs, fp->slots,
-               fun->u.i.nvars * sizeof(jsval));
-        JS_UNLOCK_OBJ(cx, callobj);
+        CopyValuesToCallObject(callobj, fun->nargs, fp->argv, fun->u.i.nvars, fp->slots);
     }
 
     /* Clear private pointers to fp, which is about to go away (js_Invoke). */
-    if ((fun->flags & JSFUN_LAMBDA) && fun->atom) {
+    if (js_IsNamedLambda(fun)) {
         JSObject *env = STOBJ_GET_PARENT(callobj);
 
         JS_ASSERT(STOBJ_GET_CLASS(env) == &js_DeclEnvClass);
@@ -904,6 +932,22 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     callobj->setPrivate(NULL);
     fp->callobj = NULL;
 }
+
+JSBool JS_FASTCALL
+js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs, jsval *argv,
+                        uint32 nvars, jsval *slots)
+{
+    JS_ASSERT(scopeChain->hasClass(&js_CallClass));
+    JS_ASSERT(!scopeChain->getPrivate());
+
+    uintN n = nargs + nvars;
+    if (n != 0)
+        CopyValuesToCallObject(scopeChain, nargs, argv, nvars, slots);
+
+    return true;
+}
+
+JS_DEFINE_CALLINFO_6(extern, BOOL, js_PutCallObjectOnTrace, CONTEXT, OBJECT, UINT32, JSVALPTR, UINT32, JSVALPTR, 0, 0)
 
 static JSBool
 call_enumerate(JSContext *cx, JSObject *obj)
@@ -1896,7 +1940,7 @@ js_fun_call(JSContext *cx, uintN argc, jsval *vp)
     void *mark;
     JSBool ok;
 
-    js_LeaveTrace(cx);
+    LeaveTrace(cx);
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj || !obj->defaultValue(cx, JSTYPE_FUNCTION, &vp[1]))
@@ -1964,7 +2008,7 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
         return js_fun_call(cx, argc, vp);
     }
 
-    js_LeaveTrace(cx);
+    LeaveTrace(cx);
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!obj || !obj->defaultValue(cx, JSTYPE_FUNCTION, &vp[1]))
@@ -2403,7 +2447,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     return fun;
 }
 
-JSObject *
+JSObject * JS_FASTCALL
 js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
 {
     /*
@@ -2416,6 +2460,8 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
     clone->setPrivate(fun);
     return clone;
 }
+
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_CloneFunctionObject, CONTEXT, FUNCTION, OBJECT, 0, 0)
 
 /*
  * Create a new flat closure, but don't initialize the imported upvar

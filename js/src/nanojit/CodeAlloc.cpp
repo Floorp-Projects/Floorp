@@ -70,14 +70,14 @@ namespace nanojit
     void CodeAlloc::reset() {
         // give all memory back to gcheap.  Assumption is that all
         // code is done being used by now.
-        for (CodeList* b = heapblocks; b != 0; ) {
+        for (CodeList* hb = heapblocks; hb != 0; ) {
             _nvprof("free page",1);
-            CodeList* next = b->next;
-            void *mem = firstBlock(b);
-            VMPI_setPageProtection(mem, bytesPerAlloc, false /* executable */, true /* writable */);
-            freeCodeChunk(mem, bytesPerAlloc);
+            CodeList* next = hb->next;
+            CodeList* fb = firstBlock(hb);
+            markBlockWrite(fb);
+            freeCodeChunk(fb, bytesPerAlloc);
             totalAllocated -= bytesPerAlloc;
-            b = next;
+            hb = next;
         }
         NanoAssert(!totalAllocated);
         heapblocks = availblocks = 0;
@@ -89,9 +89,10 @@ namespace nanojit
         return (CodeList*) (end - (uintptr_t)bytesPerAlloc);
     }
 
-    int round(size_t x) {
+    static int round(size_t x) {
         return (int)((x + 512) >> 10);
     }
+
     void CodeAlloc::logStats() {
         size_t total = 0;
         size_t frag_size = 0;
@@ -112,9 +113,19 @@ namespace nanojit
             round(total), round(free_size), frag_size);
     }
 
+    inline void CodeAlloc::markBlockWrite(CodeList* b) {
+        NanoAssert(b->terminator != NULL);
+        CodeList* term = b->terminator;
+        if (term->isExec) {
+            markCodeChunkWrite(firstBlock(term), bytesPerAlloc);
+            term->isExec = false;
+        }
+    }
+
     void CodeAlloc::alloc(NIns* &start, NIns* &end) {
         //  Reuse a block if possible.
         if (availblocks) {
+            markBlockWrite(availblocks);
             CodeList* b = removeBlock(availblocks);
             b->isFree = false;
             start = b->start();
@@ -128,7 +139,6 @@ namespace nanojit
         totalAllocated += bytesPerAlloc;
         NanoAssert(mem != NULL); // see allocCodeChunk contract in CodeAlloc.h
         _nvprof("alloc page", uintptr_t(mem)>>12);
-        VMPI_setPageProtection(mem, bytesPerAlloc, true/*executable*/, true/*writable*/);
         CodeList* b = addMem(mem, bytesPerAlloc);
         b->isFree = false;
         start = b->start();
@@ -225,7 +235,7 @@ namespace nanojit
                 void* mem = hb->lower;
                 *prev = hb->next;
                 _nvprof("free page",1);
-                VMPI_setPageProtection(mem, bytesPerAlloc, false /* executable */, true /* writable */);
+                markBlockWrite(firstBlock(hb));
                 freeCodeChunk(mem, bytesPerAlloc);
                 totalAllocated -= bytesPerAlloc;
             } else {
@@ -347,9 +357,12 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
         // create a tiny terminator block, add to fragmented list, this way
         // all other blocks have a valid block at b->higher
         CodeList* terminator = b->higher;
+        b->terminator = terminator;
         terminator->lower = b;
         terminator->end = 0; // this is how we identify the terminator
         terminator->isFree = false;
+        terminator->isExec = false;
+        terminator->terminator = 0;
         debug_only(sanity_check();)
 
         // add terminator to heapblocks list so we can track whole blocks
@@ -365,7 +378,7 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
 
     CodeList* CodeAlloc::removeBlock(CodeList* &blocks) {
         CodeList* b = blocks;
-        NanoAssert(b);
+        NanoAssert(b != NULL);
         blocks = b->next;
         b->next = 0;
         return b;
@@ -399,6 +412,7 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
             // b1 b2
             CodeList* b1 = getBlock(start, end);
             CodeList* b2 = (CodeList*) (uintptr_t(holeEnd) - offsetof(CodeList, code));
+            b2->terminator = b1->terminator;
             b2->isFree = false;
             b2->next = 0;
             b2->higher = b1->higher;
@@ -421,10 +435,12 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
             b2->lower = b1;
             b2->higher = b3;
             b2->isFree = false; // redundant, since we're about to free, but good hygiene
+            b2->terminator = b1->terminator;
             b3->lower = b2;
             b3->end = end;
             b3->isFree = false;
             b3->higher->lower = b3;
+            b3->terminator = b1->terminator;
             b2->next = 0;
             b3->next = 0;
             debug_only(sanity_check();)
@@ -518,5 +534,14 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
         #endif /* CROSS_CHECK_FREE_LIST */
     }
     #endif
+
+    void CodeAlloc::markAllExec() {
+        for (CodeList* hb = heapblocks; hb != NULL; hb = hb->next) {
+            if (!hb->isExec) {
+                hb->isExec = true;
+                markCodeChunkExec(firstBlock(hb), bytesPerAlloc);
+            }
+        }
+    }
 }
 #endif // FEATURE_NANOJIT

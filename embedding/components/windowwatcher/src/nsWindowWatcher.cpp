@@ -95,8 +95,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 
-#include "jsinterp.h" // for js_AllocStack() and js_FreeStack()
-
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
 #endif
