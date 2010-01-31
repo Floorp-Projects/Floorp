@@ -427,6 +427,10 @@ JS_GetGlobalDebugHooks(JSRuntime *rt);
 extern JS_PUBLIC_API(JSDebugHooks *)
 JS_SetContextDebugHooks(JSContext *cx, const JSDebugHooks *hooks);
 
+/* Disable debug hooks for this context. */
+extern JS_PUBLIC_API(JSDebugHooks *)
+JS_ClearContextDebugHooks(JSContext *cx);
+
 #ifdef MOZ_SHARK
 
 extern JS_PUBLIC_API(JSBool)

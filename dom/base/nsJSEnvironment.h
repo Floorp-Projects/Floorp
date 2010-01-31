@@ -48,6 +48,9 @@
 #include "nsScriptNameSpaceManager.h"
 
 class nsIXPConnectJSObjectHolder;
+class nsAutoPoolRelease;
+class JSAutoTempValueRooter;
+namespace js { template <class> class LazilyConstructed; }
 
 class nsJSContext : public nsIScriptContext,
                     public nsIXPCScriptNotify
@@ -207,11 +210,12 @@ protected:
   nsresult InitializeExternalClasses();
 
   // Helper to convert xpcom datatypes to jsvals.
-  JS_FORCES_STACK nsresult ConvertSupportsTojsvals(nsISupports *aArgs,
-                                                   void *aScope,
-                                                   PRUint32 *aArgc,
-                                                   void **aArgv,
-                                                   void **aMarkp);
+  nsresult ConvertSupportsTojsvals(nsISupports *aArgs,
+                                   void *aScope,
+                                   PRUint32 *aArgc,
+                                   jsval **aArgv,
+                                   js::LazilyConstructed<nsAutoPoolRelease> &aPoolRelease,
+                                   js::LazilyConstructed<JSAutoTempValueRooter> &aRooter);
 
   nsresult AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv);
 

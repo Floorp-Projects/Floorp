@@ -247,8 +247,8 @@ public:
     Lirasm(bool verbose);
     ~Lirasm();
 
-    void assemble(istream &in);
-    void assembleRandom(int nIns);
+    void assemble(istream &in, bool optimize);
+    void assembleRandom(int nIns, bool optimize);
     bool lookupFunction(const string &name, CallInfo *&ci);
 
     LirBuffer *mLirbuf;
@@ -273,7 +273,7 @@ private:
 
 class FragmentAssembler {
 public:
-    FragmentAssembler(Lirasm &parent, const string &fragmentName);
+    FragmentAssembler(Lirasm &parent, const string &fragmentName, bool optimize);
     ~FragmentAssembler();
 
     void assembleFragment(LirTokenStream &in,
@@ -293,6 +293,7 @@ private:
     Lirasm &mParent;
     const string mFragName;
     Fragment *mFragment;
+    bool optimize;
     vector<CallInfo*> mCallInfos;
     map<string, LIns*> mLabels;
     LirWriter *mLir;
@@ -300,6 +301,8 @@ private:
     LirWriter *mCseFilter;
     LirWriter *mExprFilter;
     LirWriter *mVerboseWriter;
+    LirWriter *mValidateWriter1;
+    LirWriter *mValidateWriter2;
     multimap<string, LIns *> mFwdJumps;
 
     size_t mLineno;
@@ -482,9 +485,10 @@ dump_srecords(ostream &, Fragment *)
 uint32_t
 FragmentAssembler::sProfId = 0;
 
-FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
-    : mParent(parent), mFragName(fragmentName),
-      mBufWriter(NULL), mCseFilter(NULL), mExprFilter(NULL), mVerboseWriter(NULL)
+FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName, bool optimize)
+    : mParent(parent), mFragName(fragmentName), optimize(optimize),
+      mBufWriter(NULL), mCseFilter(NULL), mExprFilter(NULL), mVerboseWriter(NULL),
+      mValidateWriter1(NULL), mValidateWriter2(NULL)
 {
     mFragment = new Fragment(NULL verbose_only(, (mParent.mLogc.lcbits &
                                                   nanojit::LC_FragProfile) ?
@@ -492,9 +496,17 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
     mFragment->lirbuf = mParent.mLirbuf;
     mParent.mFragments[mFragName].fragptr = mFragment;
 
-    mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf);
-    mLir = mCseFilter  = new CseFilter(mLir, mParent.mAlloc);
-    mLir = mExprFilter = new ExprFilter(mLir);
+    mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf, nanojit::AvmCore::config);
+    if (optimize) {
+#ifdef DEBUG
+        mLir = mValidateWriter2 = new ValidateWriter(mLir, "end of writer pipeline");
+#endif
+        mLir = mCseFilter  = new CseFilter(mLir, mParent.mAlloc);
+        mLir = mExprFilter = new ExprFilter(mLir);
+    }
+#ifdef DEBUG
+    mLir = mValidateWriter1  = new ValidateWriter(mLir, "start of writer pipeline");
+#endif
 
 #ifdef DEBUG
     if (mParent.mVerbose) {
@@ -514,6 +526,8 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName)
 
 FragmentAssembler::~FragmentAssembler()
 {
+    delete mValidateWriter1;
+    delete mValidateWriter2;
     delete mVerboseWriter;
     delete mExprFilter;
     delete mCseFilter;
@@ -659,9 +673,9 @@ FragmentAssembler::assemble_call(const string &op)
         size_t argc = mTokens.size();
         for (size_t i = 0; i < argc; ++i) {
             args[i] = ref(mTokens[mTokens.size() - (i+1)]);
-            if      (args[i]->isFloat()) ty = ARGSIZE_F;
-            else if (args[i]->isQuad())  ty = ARGSIZE_Q;
-            else                         ty = ARGSIZE_I;
+            if      (args[i]->isF64()) ty = ARGSIZE_F;
+            else if (args[i]->isI64()) ty = ARGSIZE_Q;
+            else                       ty = ARGSIZE_I;
             // Nb: i+1 because argMask() uses 1-based arg counting.
             ci->_argtypes |= argMask(ty, i+1, argc);
         }
@@ -746,7 +760,7 @@ FragmentAssembler::endFragment()
     mFragment->lastIns =
         mLir->insGuard(LIR_x, NULL, createGuardRecord(createSideExit()));
 
-    ::compile(&mParent.mAssm, mFragment, mParent.mAlloc
+    mParent.mAssm.compile(mFragment, mParent.mAlloc, optimize
               verbose_only(, mParent.mLabelMap));
 
     if (mParent.mAssm.error() != nanojit::None) {
@@ -878,17 +892,23 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             break;
 
           case LIR_live:
+          case LIR_qlive:
           case LIR_flive:
           case LIR_neg:
           case LIR_fneg:
           case LIR_not:
           case LIR_qlo:
           case LIR_qhi:
+          case LIR_q2i:
           case LIR_ov:
           case LIR_i2q:
           case LIR_u2q:
           case LIR_i2f:
           case LIR_u2f:
+          case LIR_f2i:
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
+          case LIR_mod:
+#endif
             need(1);
             ins = mLir->ins1(mOpcode,
                              ref(mTokens[0]));
@@ -901,13 +921,11 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_mul:
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
           case LIR_div:
-          case LIR_mod:
 #endif
           case LIR_fadd:
           case LIR_fsub:
           case LIR_fmul:
           case LIR_fdiv:
-          case LIR_fmod:
           case LIR_qiadd:
           case LIR_and:
           case LIR_or:
@@ -1070,6 +1088,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           case LIR_line:
           case LIR_xtbl:
           case LIR_jtbl:
+          case LIR_qret:
             nyi(op);
             break;
 
@@ -1244,19 +1263,20 @@ const CallInfo ci_N_IQF = CI(f_N_IQF, argMask(I32, 1, 3) |
 //   sufficiently big that it's spread across multiple chunks.
 //
 // The following instructions aren't generated yet:
-// - iparam/qparam (hard to test beyond what is auto-generated in fragment
+// - LIR_iparam/LIR_qparam (hard to test beyond what is auto-generated in fragment
 //   prologues)
-// - live/flive
-// - callh
-// - x/xt/xf/xtbl (hard to test without having multiple fragments;  when we
-//   only have one fragment we don't really want to leave it early)
-// - ret/fret (hard to test without having multiple fragments)
-// - j/jt/jf/ji/label (ji is not implemented in NJ)
-// - ov (takes an arithmetic (int or FP) value as operand, and must
+// - LIR_live/LIR_qlive/LIR_flive
+// - LIR_callh
+// - LIR_x/LIR_xt/LIR_xf/LIR_xtbl (hard to test without having multiple
+//   fragments;  when we only have one fragment we don't really want to leave
+//   it early)
+// - LIR_ret/LIR_qret/LIR_fret (hard to test without having multiple fragments)
+// - LIR_j/LIR_jt/LIR_jf/LIR_jtbl/LIR_label
+// - LIR_ov (takes an arithmetic (int or FP) value as operand, and must
 //   immediately follow it to be safe... not that that really matters in
 //   randomly generated code)
-// - file/line (#ifdef VTUNE only)
-// - fmod (not implemented in NJ)
+// - LIR_file/LIR_line (#ifdef VTUNE only)
+// - LIR_fmod (not implemented in NJ backends)
 //
 void
 FragmentAssembler::assembleRandomFragment(int nIns)
@@ -1279,7 +1299,9 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 
     vector<LOpcode> I_II_ops;
     I_II_ops.push_back(LIR_add);
+#if !defined NANOJIT_64BIT
     I_II_ops.push_back(LIR_iaddp);
+#endif
     I_II_ops.push_back(LIR_sub);
     I_II_ops.push_back(LIR_mul);
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
@@ -1299,9 +1321,11 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     Q_QQ_ops.push_back(LIR_qiand);
     Q_QQ_ops.push_back(LIR_qior);
     Q_QQ_ops.push_back(LIR_qxor);
-    Q_QQ_ops.push_back(LIR_qilsh);
-    Q_QQ_ops.push_back(LIR_qirsh);
-    Q_QQ_ops.push_back(LIR_qursh);
+
+    vector<LOpcode> Q_QI_ops;
+    Q_QI_ops.push_back(LIR_qilsh);
+    Q_QI_ops.push_back(LIR_qirsh);
+    Q_QI_ops.push_back(LIR_qursh);
 
     vector<LOpcode> F_FF_ops;
     F_FF_ops.push_back(LIR_fadd);
@@ -1348,13 +1372,19 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     Q_I_ops.push_back(LIR_i2q);
     Q_I_ops.push_back(LIR_u2q);
 
+    vector<LOpcode> I_Q_ops;
+    I_Q_ops.push_back(LIR_q2i);
+
     vector<LOpcode> F_I_ops;
     F_I_ops.push_back(LIR_i2f);
     F_I_ops.push_back(LIR_u2f);
 
     vector<LOpcode> I_F_ops;
+#if !defined NANOJIT_64BIT
     I_F_ops.push_back(LIR_qlo);
     I_F_ops.push_back(LIR_qhi);
+#endif
+    I_F_ops.push_back(LIR_f2i);
 
     vector<LOpcode> F_II_ops;
     F_II_ops.push_back(LIR_qjoin);
@@ -1608,6 +1638,14 @@ FragmentAssembler::assembleRandomFragment(int nIns)
             }
             break;
 
+        case LOP_Q_QI:
+            if (!Qs.empty() && !Is.empty()) {
+                ins = mLir->ins2(rndPick(Q_QI_ops), rndPick(Qs), rndPick(Is));
+                addOrReplace(Qs, ins);
+                n++;
+            }
+            break;
+
         case LOP_F_FF:
             if (!Fs.empty()) {
                 ins = mLir->ins2(rndPick(F_FF_ops), rndPick(Fs), rndPick(Fs));
@@ -1672,6 +1710,14 @@ FragmentAssembler::assembleRandomFragment(int nIns)
             if (!Is.empty()) {
                 ins = mLir->ins1(rndPick(F_I_ops), rndPick(Is));
                 addOrReplace(Fs, ins);
+                n++;
+            }
+            break;
+
+        case LOP_I_Q:
+            if (!Qs.empty()) {
+                ins = mLir->ins1(rndPick(I_Q_ops), rndPick(Qs));
+                addOrReplace(Is, ins);
                 n++;
             }
             break;
@@ -1913,7 +1959,7 @@ Lirasm::lookupFunction(const string &name, CallInfo *&ci)
 }
 
 void
-Lirasm::assemble(istream &in)
+Lirasm::assemble(istream &in, bool optimize)
 {
     LirTokenStream ts(in);
     bool first = true;
@@ -1936,13 +1982,13 @@ Lirasm::assemble(istream &in)
             if (!ts.eat(NEWLINE))
                 bad("extra junk after .begin " + name);
 
-            FragmentAssembler assembler(*this, name);
+            FragmentAssembler assembler(*this, name, optimize);
             assembler.assembleFragment(ts, false, NULL);
             first = false;
         } else if (op == ".end") {
             bad(".end without .begin");
         } else if (first) {
-            FragmentAssembler assembler(*this, "main");
+            FragmentAssembler assembler(*this, "main", optimize);
             assembler.assembleFragment(ts, true, &token);
             break;
         } else {
@@ -1952,10 +1998,10 @@ Lirasm::assemble(istream &in)
 }
 
 void
-Lirasm::assembleRandom(int nIns)
+Lirasm::assembleRandom(int nIns, bool optimize)
 {
     string name = "main";
-    FragmentAssembler assembler(*this, name);
+    FragmentAssembler assembler(*this, name, optimize);
     assembler.assembleRandomFragment(nIns);
 }
 
@@ -1997,7 +2043,8 @@ usageAndQuit(const string& progname)
         "  -h --help        print this message\n"
         "  -v --verbose     print LIR and assembly code\n"
         "  --execute        execute LIR\n"
-        "  --random [N]     generate a random LIR block of size N (default=100)\n"
+        "  --[no-]optimize  enable or disable optimization of the LIR (default=off)\n"
+        "  --random [N]     generate a random LIR block of size N (default=1000)\n"
         " i386-specific options:\n"
         "  --sse            use SSE2 instructions\n"
         " ARM-specific options:\n"
@@ -2018,6 +2065,7 @@ struct CmdLineOptions {
     string  progname;
     bool    verbose;
     bool    execute;
+    bool    optimize;
     int     random;
     string  filename;
 };
@@ -2029,6 +2077,7 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
     opts.verbose  = false;
     opts.execute  = false;
     opts.random   = 0;
+    opts.optimize = false;
 
     // Architecture-specific options.
 #if defined NANOJIT_IA32
@@ -2048,6 +2097,10 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
             opts.verbose = true;
         else if (arg == "--execute")
             opts.execute = true;
+        else if (arg == "--optimize")
+            opts.optimize = true;
+        else if (arg == "--no-optimize")
+            opts.optimize = false;
         else if (arg == "--random") {
             const int defaultSize = 100;
             if (i == argc - 1) {
@@ -2066,6 +2119,7 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
                 }
             }
         }
+
         // Architecture-specific flags.
 #if defined NANOJIT_IA32
         else if (arg == "--sse") {
@@ -2112,12 +2166,12 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
     avmplus::AvmCore::config.fixed_esp = true;
 #elif defined NANOJIT_ARM
     // Note that we don't check for sensible configurations here!
-    avmplus::AvmCore::config.arch = arm_arch;
-    avmplus::AvmCore::config.vfp = arm_vfp;
+    avmplus::AvmCore::config.arm_arch = arm_arch;
+    avmplus::AvmCore::config.arm_vfp = arm_vfp;
     avmplus::AvmCore::config.soft_float = !arm_vfp;
     // This doesn't allow us to test ARMv6T2 (which also supports Thumb2), but this shouldn't
     // really matter here.
-    avmplus::AvmCore::config.thumb2 = (arm_arch >= 7);
+    avmplus::AvmCore::config.arm_thumb2 = (arm_arch >= 7);
 #endif
 }
 
@@ -2129,12 +2183,12 @@ main(int argc, char **argv)
 
     Lirasm lasm(opts.verbose);
     if (opts.random) {
-        lasm.assembleRandom(opts.random);
+        lasm.assembleRandom(opts.random, opts.optimize);
     } else {
         ifstream in(opts.filename.c_str());
         if (!in)
             errMsgAndQuit(opts.progname, "unable to open file " + opts.filename);
-        lasm.assemble(in);
+        lasm.assemble(in, opts.optimize);
     }
 
     Fragments::const_iterator i;

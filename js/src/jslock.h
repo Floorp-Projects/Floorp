@@ -154,11 +154,13 @@ struct JSTitle {
  * are for optimizations above the JSObjectOps layer, under which object locks
  * normally hide.
  */
-#define JS_LOCK_OBJ(cx,obj)       ((OBJ_SCOPE(obj)->title.ownercx == (cx))    \
+#define CX_OWNS_SCOPE_TITLE(cx,scope)   ((scope)->title.ownercx == (cx))
+
+#define JS_LOCK_OBJ(cx,obj)       (CX_OWNS_SCOPE_TITLE(cx, OBJ_SCOPE(obj))    \
                                    ? (void)0                                  \
                                    : (js_LockObj(cx, obj),                    \
                                       JS_SET_OBJ_INFO(obj,__FILE__,__LINE__)))
-#define JS_UNLOCK_OBJ(cx,obj)     ((OBJ_SCOPE(obj)->title.ownercx == (cx))    \
+#define JS_UNLOCK_OBJ(cx,obj)     (CX_OWNS_SCOPE_TITLE(cx, OBJ_SCOPE(obj))    \
                                    ? (void)0 : js_UnlockObj(cx, obj))
 
 /*
@@ -182,9 +184,12 @@ struct JSTitle {
 #define JS_LOCK_SCOPE(cx,scope)   JS_LOCK_TITLE(cx,&(scope)->title)
 #define JS_UNLOCK_SCOPE(cx,scope) JS_UNLOCK_TITLE(cx,&(scope)->title)
 
-#define JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope)                           \
-    js_TransferTitle(cx, &scope->title, &newscope->title)
-
+#define JS_DROP_ALL_EMPTY_SCOPE_LOCKS(cx,scope)                               \
+    JS_BEGIN_MACRO                                                            \
+        JS_ASSERT((scope)->isSharedEmpty());                                  \
+        if (!CX_OWNS_SCOPE_TITLE(cx, scope))                                  \
+            js_DropAllEmptyScopeLocks(cx, scope);                             \
+    JS_END_MACRO
 
 extern void js_Lock(JSContext *cx, JSThinLock *tl);
 extern void js_Unlock(JSContext *cx, JSThinLock *tl);
@@ -199,7 +204,7 @@ extern void js_LockTitle(JSContext *cx, JSTitle *title);
 extern void js_UnlockTitle(JSContext *cx, JSTitle *title);
 extern int js_SetupLocks(int,int);
 extern void js_CleanupLocks();
-extern void js_TransferTitle(JSContext *, JSTitle *, JSTitle *);
+extern void js_DropAllEmptyScopeLocks(JSContext *cx, JSScope *scope);
 extern JS_FRIEND_API(jsval)
 js_GetSlotThreadSafe(JSContext *, JSObject *, uint32);
 extern void js_SetSlotThreadSafe(JSContext *, JSObject *, uint32, jsval);
@@ -259,6 +264,7 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
 
 #define JS_LOCK_RUNTIME(rt)         ((void)0)
 #define JS_UNLOCK_RUNTIME(rt)       ((void)0)
+#define CX_OWNS_SCOPE_TITLE(cx,obj) true
 #define JS_LOCK_OBJ(cx,obj)         ((void)0)
 #define JS_UNLOCK_OBJ(cx,obj)       ((void)0)
 #define JS_LOCK_OBJ_IF_SHAPE(cx,obj,shape) (OBJ_SHAPE(obj) == (shape))
@@ -266,7 +272,7 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
 #define JS_LOCK_OBJ_VOID(cx,obj,e)  (e)
 #define JS_LOCK_SCOPE(cx,scope)     ((void)0)
 #define JS_UNLOCK_SCOPE(cx,scope)   ((void)0)
-#define JS_TRANSFER_SCOPE_LOCK(c,o,n) ((void)0)
+#define JS_DROP_ALL_EMPTY_SCOPE_LOCKS(cx,scope) ((void)0)
 
 #define JS_IS_RUNTIME_LOCKED(rt)        1
 #define JS_IS_OBJ_LOCKED(cx,obj)        1

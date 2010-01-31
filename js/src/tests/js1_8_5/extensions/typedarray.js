@@ -58,16 +58,16 @@ function test()
             TestPassCount++;
         } else {
             TestFailCount++;
-        }
 
-        var ex = new Error;
-        print ("=== FAILED ===");
-        print (ex.stack);
-        if (thrown) {
-            print ("    threw exception:");
-            print (thrown);
+            var ex = new Error;
+            print ("=== FAILED ===");
+            print (ex.stack);
+            if (thrown) {
+                print ("    threw exception:");
+                print (thrown);
+            }
+            print ("==============");
         }
-        print ("==============");
     }
 
     function checkThrows(fun, todo) {
@@ -180,7 +180,7 @@ function test()
 
     print ("done");
 
-    checkSuccess(TestFailCount, 0, "typed array test failures");
+    reportCompare(0, TestFailCount, "typed array test failures");
 
     exitFunc ('test');
 }

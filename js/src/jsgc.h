@@ -303,20 +303,20 @@ js_NewGCXML(JSContext *cx)
 }
 #endif
 
-struct JSGCArenaInfo;
+struct JSGCArena;
 struct JSGCChunkInfo;
 
 struct JSGCArenaList {
-    JSGCArenaInfo   *head;          /* list start */
-    JSGCArenaInfo   *cursor;        /* arena with free things */
+    JSGCArena       *head;          /* list start */
+    JSGCArena       *cursor;        /* arena with free things */
     uint32          thingKind;      /* one of JSFinalizeGCThingKind */
     uint32          thingSize;      /* size of things to allocate on this list
                                      */
 };
 
 struct JSGCDoubleArenaList {
-    JSGCArenaInfo   *head;          /* list start */
-    JSGCArenaInfo   *cursor;        /* next arena with free cells */
+    JSGCArena       *head;          /* list start */
+    JSGCArena       *cursor;        /* next arena with free cells */
 };
 
 struct JSGCFreeLists {
