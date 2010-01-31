@@ -1594,7 +1594,7 @@ UpdateService.prototype = {
           "it is for an earlier or same application version and build ID.\n" +
           "current application version: " + gApp.version + "\n" +
           "update application version : " + update.extensionVersion + "\n" +
-          "current build ID: " + gApp.buildID + "\n" +
+          "current build ID: " + gApp.appBuildID + "\n" +
           "update build ID : " + update.buildID);
       cleanupActiveUpdate();
       return STATE_NONE;
