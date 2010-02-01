@@ -5519,6 +5519,9 @@ NS_IMETHODIMP
 nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
                                   PRBool aWholeEntry)
 {
+  // Invalidate the cached value for whether there's history or not.
+  mHasHistoryEntries = -1;
+
   if (aWholeEntry) {
     // Notify our observers that the page has been removed.
     NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
@@ -5529,9 +5532,6 @@ nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
     NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                      nsINavHistoryObserver, OnDeleteVisits(aURI, aVisitTime));
   }
-
-  // Invalidate the cached value for whether there's history or not.
-  mHasHistoryEntries = -1;
 
   return NS_OK;
 }
