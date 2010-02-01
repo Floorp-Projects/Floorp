@@ -61,6 +61,52 @@ class nsINameSpaceManager;
 class nsIDateTimeFormat;
 class nsICollation;
 
+// errors to pass to LogTemplateError
+#define ERROR_TEMPLATE_INVALID_QUERYPROCESSOR                           \
+        "querytype attribute doesn't specify a valid query processor"
+#define ERROR_TEMPLATE_INVALID_QUERYSET                                 \
+        "unexpected <queryset> element"
+#define ERROR_TEMPLATE_NO_MEMBERVAR                                     \
+        "no member variable found. Action body should have an element with uri attribute"
+#define ERROR_TEMPLATE_WHERE_NO_SUBJECT                                 \
+        "<where> element is missing a subject attribute"
+#define ERROR_TEMPLATE_WHERE_NO_RELATION                                \
+        "<where> element is missing a rel attribute"
+#define ERROR_TEMPLATE_WHERE_NO_VALUE                                   \
+        "<where> element is missing a value attribute"
+#define ERROR_TEMPLATE_WHERE_NO_VAR                                     \
+        "<where> element must have at least one variable as a subject or value"
+#define ERROR_TEMPLATE_BINDING_BAD_SUBJECT                              \
+        "<binding> requires a variable for its subject attribute"
+#define ERROR_TEMPLATE_BINDING_BAD_PREDICATE                            \
+        "<binding> element is missing a predicate attribute"
+#define ERROR_TEMPLATE_BINDING_BAD_OBJECT                               \
+        "<binding> requires a variable for its object attribute"
+#define ERROR_TEMPLATE_CONTENT_NOT_FIRST                                \
+        "expected <content> to be first"
+#define ERROR_TEMPLATE_MEMBER_NOCONTAINERVAR                            \
+        "<member> requires a variable for its container attribute"
+#define ERROR_TEMPLATE_MEMBER_NOCHILDVAR                                \
+        "<member> requires a variable for its child attribute"
+#define ERROR_TEMPLATE_TRIPLE_NO_VAR                                    \
+        "<triple> should have at least one variable as a subject or object"
+#define ERROR_TEMPLATE_TRIPLE_BAD_SUBJECT                               \
+        "<triple> requires a variable for its subject attribute"
+#define ERROR_TEMPLATE_TRIPLE_BAD_PREDICATE                             \
+        "<triple> should have a non-variable value as a predicate"
+#define ERROR_TEMPLATE_TRIPLE_BAD_OBJECT                                \
+        "<triple> requires a variable for its object attribute"
+#define ERROR_TEMPLATE_MEMBER_UNBOUND                                   \
+        "neither container or child variables of <member> has a value"
+#define ERROR_TEMPLATE_TRIPLE_UNBOUND                                   \
+        "neither subject or object variables of <triple> has a value"
+#define ERROR_TEMPLATE_BAD_XPATH                                        \
+        "XPath expression in query could not be parsed"
+#define ERROR_TEMPLATE_BAD_ASSIGN_XPATH                                 \
+        "XPath expression in <assign> could not be parsed"
+#define ERROR_TEMPLATE_BAD_BINDING_XPATH                                \
+        "XPath expression in <binding> could not be parsed"
+
 class nsXULContentUtils
 {
 protected:
@@ -124,7 +170,13 @@ public:
 
     static nsresult
     SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement);
-    
+
+    /**
+     * Log a message to the error console
+     */
+    static void
+    LogTemplateError(const char* aMsg);
+
     static nsIRDFService*
     RDFService()
     {
