@@ -50,7 +50,8 @@ WindowDraggingElement.prototype = {
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "mousedown":
-        if (aEvent.button != 0 || !this.mouseDownCheck.call(this._elem, aEvent))
+        if (aEvent.button != 0 || !this.mouseDownCheck.call(this._elem, aEvent) ||
+            aEvent.getPreventDefault())
           return;
 
         let target = aEvent.originalTarget, parent = aEvent.originalTarget;
