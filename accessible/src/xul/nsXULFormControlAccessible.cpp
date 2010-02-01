@@ -872,9 +872,9 @@ nsXULToolbarSeparatorAccessible::GetStateInternal(PRUint32 *aState,
   return NS_OK;
 }
 
-/**
-  * XUL Textfield
-  */
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTextFieldAccessible
+////////////////////////////////////////////////////////////////////////////////
 
 nsXULTextFieldAccessible::nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
  nsHyperTextAccessibleWrap(aNode, aShell)
@@ -882,6 +882,9 @@ nsXULTextFieldAccessible::nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakRef
 }
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXULTextFieldAccessible, nsAccessible, nsHyperTextAccessible, nsIAccessibleText, nsIAccessibleEditableText)
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTextFieldAccessible: nsIAccessible
 
 NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
 {
@@ -903,6 +906,7 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
   return NS_ERROR_FAILURE;
 }
 
+// nsXULTextFieldAccessible protected
 already_AddRefed<nsIDOMNode> nsXULTextFieldAccessible::GetInputField()
 {
   nsIDOMNode *inputField = nsnull;
@@ -1061,4 +1065,33 @@ NS_IMETHODIMP nsXULTextFieldAccessible::GetAssociatedEditor(nsIEditor **aEditor)
   nsCOMPtr<nsIDOMNSEditableElement> editableElt(do_QueryInterface(inputField));
   NS_ENSURE_TRUE(editableElt, NS_ERROR_FAILURE);
   return editableElt->GetEditor(aEditor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTextFieldAccessible: nsAccessible protected
+
+void
+nsXULTextFieldAccessible::CacheChildren()
+{
+  // Create child accessibles for native anonymous content of underlying HTML
+  // input element.
+  nsCOMPtr<nsIDOMNode> inputNode(GetInputField());
+  nsCOMPtr<nsIContent> inputContent(do_QueryInterface(inputNode));
+  if (!inputContent)
+    return;
+
+  nsAccessibleTreeWalker walker(mWeakShell, inputNode, PR_FALSE);
+  walker.mState.frame = inputContent->GetPrimaryFrame();
+
+  walker.GetFirstChild();
+  while (walker.mState.accessible) {
+    nsRefPtr<nsAccessible> acc =
+      nsAccUtils::QueryObject<nsAccessible>(walker.mState.accessible);
+
+    mChildren.AppendElement(acc);
+
+    acc->SetParent(this);
+
+    walker.GetNextSibling();
+  }
 }
