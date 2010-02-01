@@ -61,27 +61,27 @@
   <script type="application/javascript" src="chrome://global/content/finddialog.js"/>
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
 
-  <hbox flex="1">
-    <vbox flex="1">
-      <hbox flex="1">
+  <hbox>
+    <vbox>
+      <hbox align="center">
         <label value="&findField.label;" accesskey="&findField.accesskey;" control="dialog.findKey"/>
         <textbox id="dialog.findKey" flex="1" oninput="doEnabling();"/>
       </hbox>
-      <hbox flex="1">
-        <vbox pack="center" flex="1">
+      <hbox align="center">
+        <vbox>
           <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;" accesskey="&caseSensitiveCheckbox.accesskey;"/>
           <checkbox id="dialog.wrap" label="&wrapCheckbox.label;" accesskey="&wrapCheckbox.accesskey;" checked="true"/>
         </vbox>
-        <groupbox orient="horizontal" flex="1">
+        <groupbox orient="horizontal">
           <caption label="&direction.label;"/>
-          <radiogroup orient="horizontal" flex="1">
+          <radiogroup orient="horizontal">
             <radio id="radioUp" label="&up.label;" accesskey="&up.accesskey;"/>
             <radio id="radioDown" label="&down.label;" accesskey="&down.accesskey;" selected="true"/>
           </radiogroup>
         </groupbox>
       </hbox>
     </vbox>
-    <vbox flex="1">
+    <vbox>
       <button id="btnFind" label="&findButton.label;" accesskey="&findButton.accesskey;"
               dlgtype="accept" icon="find"/>
 #ifdef XP_UNIX

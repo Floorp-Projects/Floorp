@@ -121,7 +121,7 @@ var expectedOutput =
         <treecell/>
       </treerow>
     </treeitem>
-    <treeitem step="4" id="http://www.some-fictitious-zoo.com/crustaceans" container="true" empty="false" open="true">
+    <treeitem step="5" id="http://www.some-fictitious-zoo.com/crustaceans" container="true" empty="false" open="true">
       <treerow>
         <treecell label="Crustaceans"/>
         <treecell/>
@@ -131,6 +131,12 @@ var expectedOutput =
           <treerow>
             <treecell/>
             <treecell label="Is this cool: Lobster?"/>
+          </treerow>
+        </treeitem>
+        <treeitem id="http://www.some-fictitious-zoo.com/crustaceans/crayfish">
+          <treerow>
+            <treecell label="Crayfish"/>
+            <treecell/>
           </treerow>
         </treeitem>
       </treechildren>
@@ -149,6 +155,22 @@ var changes = [
   function(targetds, root) {
     if (root.view && 1 < root.view.rowCount  && root.view.isContainer(1))
     root.view.toggleOpenState(1);
+    expectConsoleMessage(ZOO_NS + 'mammals', ZOO_NS + 'mammals/lion', true, true,
+                         '1 matching rule 1');
+    expectConsoleMessage(ZOO_NS + 'mammals', ZOO_NS + 'mammals/hippopotamus', true, true,
+                         '1 matching rule 2');
+    expectConsoleMessage(ZOO_NS + 'mammals', ZOO_NS + 'mammals/africanelephant', true, true,
+                         '1 matching rule 1');
+    expectConsoleMessage(ZOO_NS + 'mammals', ZOO_NS + 'mammals/llama', true, true,
+                         '1 matching rule 1');
+    expectConsoleMessage(ZOO_NS + 'mammals', ZOO_NS + 'mammals/polarbear', true, true,
+                         '1 matching rule 1');
+    expectConsoleMessage(ZOO_NS + 'mammals', ZOO_NS + 'mammals/aardvark', true, true,
+                         '1 matching rule 2');
+    expectConsoleMessage(ZOO_NS + 'mammals', ZOO_NS + 'mammals/ninebandedarmadillo', true, true,
+                         '1 matching rule 1');
+    expectConsoleMessage(ZOO_NS + 'mammals', ZOO_NS + 'mammals/gorilla', true, true,
+                         '1 matching rule 1');
   },
   // step 2
   function(targetds, root) {
@@ -158,6 +180,8 @@ var changes = [
     var container = ContainerUtils.MakeSeq(targetds,
                       RDF.GetResource(ZOO_NS + 'mammals'));
     container.InsertElementAt(newnode, '4', true);
+    expectConsoleMessage(ZOO_NS + 'mammals', ZOO_NS + 'mammals/koala', true, true,
+                         '1 matching rule 1');
   },
   // step 3
   function(targetds, root) {
@@ -170,15 +194,28 @@ var changes = [
   },
   // step 4
   function(targetds, root) {
-    if (root.view && 11 < root.view.rowCount  && root.view.isContainer(11))
-    root.view.toggleOpenState(11);
+    var newnode = RDF.GetResource(ZOO_NS + 'crustaceans/crayfish');
+    targetds.Assert(newnode, RDF.GetResource(ZOO_NS + 'rdf#name'),
+                    RDF.GetLiteral('Crayfish'), true);
+    var container = ContainerUtils.MakeSeq(targetds,
+                      RDF.GetResource(ZOO_NS + 'crustaceans'));
+    container.AppendElement(newnode);
   },
   // step 5
   function(targetds, root) {
     if (root.view && 11 < root.view.rowCount  && root.view.isContainer(11))
     root.view.toggleOpenState(11);
+    expectConsoleMessage(ZOO_NS + 'crustaceans', ZOO_NS + 'crustaceans/lobster', true, true,
+                         '1 matching rule 1');
+    expectConsoleMessage(ZOO_NS + 'crustaceans', ZOO_NS + 'crustaceans/crayfish', true, true,
+                         '1 matching rule 2');
   },
   // step 6
+  function(targetds, root) {
+    if (root.view && 11 < root.view.rowCount  && root.view.isContainer(11))
+    root.view.toggleOpenState(11);
+  },
+  // step 7
   function(targetds, root) {
     if (root.view && 1 < root.view.rowCount  && root.view.isContainer(1))
     root.view.toggleOpenState(1);
@@ -187,7 +224,8 @@ var changes = [
 ]]>
 </script>
 
-<tree xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" hidevscroll="true" hidehscroll="true" datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/marked" id="root">
+<tree xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" hidevscroll="true" hidehscroll="true"
+      flags="logging" datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/marked" id="root">
 <treecols orient="horizontal" id="treecols">
 <treecol id="treecol" primary="true" label="Name"/>
 <treecol label="Species"/>

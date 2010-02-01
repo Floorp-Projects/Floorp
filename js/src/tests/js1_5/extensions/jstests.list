@@ -117,7 +117,7 @@ script regress-361558.js
 script regress-361571.js
 script regress-361856.js
 skip-if(!xulRuntime.shell) script regress-361964.js # alert is not dismissed.
-random-if(xulRuntime.OS=="WINNT") script regress-363258.js # bug 524788
+random script regress-363258.js # bug 524788
 script regress-363988.js
 script regress-365527.js
 script regress-365692.js

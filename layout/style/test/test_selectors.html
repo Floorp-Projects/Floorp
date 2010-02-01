@@ -754,6 +754,16 @@ function run() {
                           bodychildset([0, 1, 2, 3, 4, 11]),
                           bodychildset([5, 6, 7, 8, 9, 10]));
 
+    // bug 528096 (tree pseudos)
+    test_selector_in_html(":-moz-tree-column((){} a", single_a,
+                          empty_set, set_single, html_default_ns);
+    test_selector_in_html(":-moz-tree-column(x(){} a", single_a,
+                          empty_set, set_single, html_default_ns);
+    test_selector_in_html(":-moz-tree-column(a b (){} a", single_a,
+                          empty_set, set_single, html_default_ns);
+    test_selector_in_html(":-moz-tree-column(a, b (){} a", single_a,
+                          empty_set, set_single, html_default_ns);
+
     run_deferred_tests();
 }
 

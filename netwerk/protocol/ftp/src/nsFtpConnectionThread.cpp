@@ -1036,6 +1036,34 @@ nsFtpState::R_mdtm() {
             NS_ASSERTION(mResponseMsg.Length() == 14, "Unknown MDTM response");
         } else {
             mModTime = mResponseMsg;
+
+            // Save lastModified time for downloaded files.
+            nsCAutoString timeString;
+            PRInt32 error;
+            PRExplodedTime exTime;
+
+            mResponseMsg.Mid(timeString, 0, 4);
+            exTime.tm_year  = timeString.ToInteger(&error, 10);
+            mResponseMsg.Mid(timeString, 4, 2);
+            exTime.tm_month = timeString.ToInteger(&error, 10) - 1; //january = 0
+            mResponseMsg.Mid(timeString, 6, 2);
+            exTime.tm_mday  = timeString.ToInteger(&error, 10);
+            mResponseMsg.Mid(timeString, 8, 2);
+            exTime.tm_hour  = timeString.ToInteger(&error, 10);
+            mResponseMsg.Mid(timeString, 10, 2);
+            exTime.tm_min   = timeString.ToInteger(&error, 10);
+            mResponseMsg.Mid(timeString, 12, 2);
+            exTime.tm_sec   = timeString.ToInteger(&error, 10);
+            exTime.tm_usec  = 0;
+
+            exTime.tm_params.tp_gmt_offset = 0;
+            exTime.tm_params.tp_dst_offset = 0;
+
+            PR_NormalizeTime(&exTime, PR_GMTParameters);
+            exTime.tm_params = PR_LocalTimeParameters(&exTime);
+
+            PRTime time = PR_ImplodeTime(&exTime);
+            (void)mChannel->SetLastModifiedTime(time);
         }
     }
 

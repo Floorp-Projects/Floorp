@@ -75,9 +75,7 @@
 nsIStringBundle *nsAccessNode::gStringBundle = 0;
 nsIStringBundle *nsAccessNode::gKeyStringBundle = 0;
 nsIDOMNode *nsAccessNode::gLastFocusedNode = 0;
-#ifdef DEBUG
-PRBool nsAccessNode::gIsAccessibilityActive = PR_FALSE;
-#endif
+
 PRBool nsAccessNode::gIsCacheDisabled = PR_FALSE;
 PRBool nsAccessNode::gIsFormFillEnabled = PR_FALSE;
 nsAccessNodeHashtable nsAccessNode::gGlobalDocAccessibleCache;
@@ -230,7 +228,8 @@ NS_IMETHODIMP nsAccessNode::GetOwnerWindow(void **aWindow)
 already_AddRefed<nsApplicationAccessibleWrap>
 nsAccessNode::GetApplicationAccessible()
 {
-  NS_ASSERTION(gIsAccessibilityActive, "Accessibility wasn't initialized!");
+  NS_ASSERTION(!nsAccessibilityService::gIsShutdown,
+               "Accessibility wasn't initialized!");
 
   if (!gApplicationAccessible) {
     nsApplicationAccessibleWrap::PreCreate();
@@ -256,9 +255,6 @@ nsAccessNode::GetApplicationAccessible()
 
 void nsAccessNode::InitXPAccessibility()
 {
-  NS_ASSERTION(!gIsAccessibilityActive,
-               "Accessibility was initialized already!");
-
   nsCOMPtr<nsIStringBundleService> stringBundleService =
     do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   if (stringBundleService) {
@@ -279,9 +275,6 @@ void nsAccessNode::InitXPAccessibility()
     prefBranch->GetBoolPref("browser.formfill.enable", &gIsFormFillEnabled);
   }
 
-#ifdef DEBUG
-  gIsAccessibilityActive = PR_TRUE;
-#endif
   NotifyA11yInitOrShutdown(PR_TRUE);
 }
 
@@ -304,8 +297,6 @@ void nsAccessNode::ShutdownXPAccessibility()
   // which happens when xpcom is shutting down
   // at exit of program
 
-  NS_ASSERTION(gIsAccessibilityActive, "Accessibility was shutdown already!");
-
   NS_IF_RELEASE(gStringBundle);
   NS_IF_RELEASE(gKeyStringBundle);
   NS_IF_RELEASE(gLastFocusedNode);
@@ -318,9 +309,6 @@ void nsAccessNode::ShutdownXPAccessibility()
   NS_IF_RELEASE(gApplicationAccessible);
   gApplicationAccessible = nsnull;  
 
-#ifdef DEBUG
-  gIsAccessibilityActive = PR_FALSE;
-#endif
   NotifyA11yInitOrShutdown(PR_FALSE);
 }
 

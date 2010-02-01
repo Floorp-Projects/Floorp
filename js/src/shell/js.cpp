@@ -382,6 +382,10 @@ SetContextOptions(JSContext *cx)
     JS_SetOperationCallback(cx, ShellOperationCallback);
 }
 
+#ifdef WINCE
+int errno;
+#endif
+
 static void
 Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 {
@@ -412,7 +416,9 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 
 #ifndef WINCE
     /* windows mobile (and possibly other os's) does not have a TTY */
-    if (!forceTTY && !isatty(fileno(file))) {
+    if (!forceTTY && !isatty(fileno(file)))
+#endif
+    {
         /*
          * It's not interactive - just execute it.
          *
@@ -444,7 +450,6 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             fclose(file);
         return;
     }
-#endif /* WINCE */
 
     /* It's an interactive filehandle; drop into read-eval-print loop. */
     lineno = 1;
@@ -614,6 +619,13 @@ MapContextOptionNameToFlag(JSContext* cx, const char* name)
 
 extern JSClass global_class;
 
+#if defined(JS_TRACER) && defined(DEBUG)
+namespace js {
+    extern struct JSClass jitstats_class;
+    void InitJITStatsClass(JSContext *cx, JSObject *glob);
+}
+#endif
+
 static int
 ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 {
@@ -723,11 +735,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             enableJit = !enableJit;
             JS_ToggleOptions(cx, JSOPTION_JIT);
 #if defined(JS_TRACER) && defined(DEBUG)
-extern struct JSClass jitstats_class;
-extern void js_InitJITStatsClass(JSContext *cx, JSObject *glob);
-            js_InitJITStatsClass(cx, JS_GetGlobalObject(cx));
+            js::InitJITStatsClass(cx, JS_GetGlobalObject(cx));
             JS_DefineObject(cx, JS_GetGlobalObject(cx), "tracemonkey",
-                            &jitstats_class, NULL, 0);
+                            &js::jitstats_class, NULL, 0);
 #endif
             break;
 

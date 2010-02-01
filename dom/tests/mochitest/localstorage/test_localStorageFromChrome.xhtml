@@ -20,7 +20,7 @@ function startTest()
 
   var uri = ios.newURI(url, "", null);
   var principal = ssm.getCodebasePrincipal(uri);
-  var storage = dsm.getLocalStorageForPrincipal(principal);
+  var storage = dsm.getLocalStorageForPrincipal(principal, "");
   
   storage.setItem("chromekey", "chromevalue");
   

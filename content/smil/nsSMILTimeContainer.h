@@ -252,7 +252,7 @@ protected:
    * Implementation helper to update the current time.
    */
   void UpdateCurrentTime();
- 
+
   /*
    * Implementation helper to notify timed elements with dependencies that the
    * container time has changed with respect to the document time.

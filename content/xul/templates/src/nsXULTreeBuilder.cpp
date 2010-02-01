@@ -1678,6 +1678,10 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
 
                 ++count;
             }
+
+            if (mFlags & eLoggingEnabled)
+                OutputMatchToLog(resultid, newmatch, PR_TRUE);
+
         }
 
         if (prevmatch) {

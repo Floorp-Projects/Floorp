@@ -414,7 +414,6 @@ protected:
   PRPackedBool          mInDtor;
   PRPackedBool          mIsVisible;
   PRPackedBool          mIsInMouseCapture;
-  PRPackedBool          mInScrollProcessing;
   PRPackedBool          mUnicodeWidget;
   PRPackedBool          mPainting;
   char                  mLeadByte;
@@ -430,9 +429,6 @@ protected:
   nsPopupType           mPopupType;
   PRPackedBool          mDisplayPanFeedback;
   WindowHook            mWindowHook;
-#ifdef WINCE_WINDOWS_MOBILE
-  nsCOMPtr<nsIRegion>   mInvalidatedRegion; 
-#endif
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;
   static nsWindow*      sCurrentWindow;

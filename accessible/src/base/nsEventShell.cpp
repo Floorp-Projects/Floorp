@@ -108,7 +108,7 @@ nsAccEventQueue::nsAccEventQueue(nsDocAccessible *aDocument):
 
 nsAccEventQueue::~nsAccEventQueue()
 {
-  NS_ASSERTION(mDocument, "Queue wasn't shut down!");
+  NS_ASSERTION(!mDocument, "Queue wasn't shut down!");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1678,6 +1678,7 @@ function safeInstallOperation(itemID, installLocation, file) {
           continue;
 
         zipReader.extract(entryName, target);
+        LOG("Extracted file " + entryName + " with permissions " + target.permissions.toString(8));
         target.permissions |= FileUtils.PERMS_FILE;
       }
     }

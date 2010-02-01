@@ -1,0 +1,10 @@
+== newline-1.html newline-ref.html
+== newline-2.html newline-ref.html
+== newline-3.html newline-ref.html
+== dynamic-1.html dynamic-ref.html
+== passwd-1.html passwd-ref.html
+!= passwd-2.html passwd-ref.html
+== passwd-3.html passwd-ref.html
+== passwd-4.html passwd-ref.html
+== emptypasswd-1.html emptypasswd-ref.html
+== emptypasswd-2.html emptypasswd-ref.html

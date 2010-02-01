@@ -55,6 +55,7 @@
 #include "nsIDOMToString.h"
 #include "nsDOMEvent.h"
 #include "nsIDOMStorageEvent.h"
+#include "nsIDOMStorageEventObsolete.h"
 #include "nsIDOMStorageManager.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -145,13 +146,19 @@ public:
   nsresult Clear();
 
   // nsPIDOMStorage
-  virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal);
-  virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal);
+  virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI);
+  virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI);
   virtual nsresult InitAsGlobalStorage(const nsACString &aDomainDemanded);
   virtual already_AddRefed<nsIDOMStorage> Clone();
+  virtual already_AddRefed<nsIDOMStorage> Fork(const nsSubstring &aDocumentURI);
+  virtual PRBool IsForkOf(nsIDOMStorage* aThat);
   virtual nsTArray<nsString> *GetKeys();
   virtual nsIPrincipal* Principal();
   virtual PRBool CanAccess(nsIPrincipal *aPrincipal);
+  virtual nsDOMStorageType StorageType();
+  virtual void BroadcastChangeNotification(const nsSubstring &aKey,
+                                           const nsSubstring &aOldValue,
+                                           const nsSubstring &aNewValue);
 
   // If true, the contents of the storage should be stored in the
   // database, otherwise this storage should act like a session
@@ -218,12 +225,16 @@ protected:
   // cache the keys from the database for faster lookup
   nsresult CacheKeysFromDB();
 
-  void BroadcastChangeNotification();
-
   PRBool CanAccessSystem(nsIPrincipal *aPrincipal);
 
   // true if the storage database should be used for values
   PRPackedBool mUseDB;
+
+  // domain this store is associated with
+  nsCString mDomain;
+
+  // document URI of the document this storage is bound to
+  nsString mDocumentURI;
 
   // true if the preferences indicates that this storage should be
   // session only. This member is updated by
@@ -236,13 +247,10 @@ protected:
   // objects are scoped to scheme/host/port in the database, while globalStorage
   // objects are scoped just to host.  this flag also tells the manager to map
   // this storage also in mLocalStorages hash table.
-  PRPackedBool mLocalStorage;
+  nsDOMStorageType mStorageType;
 
   // true if items from the database are cached
   PRPackedBool mItemsCached;
-
-  // domain this store is associated with
-  nsCString mDomain;
 
   // the key->value item pairs
   nsTHashtable<nsSessionStorageEntry> mItems;
@@ -255,6 +263,7 @@ protected:
 
   friend class nsIDOMStorage2;
   nsPIDOMStorage* mSecurityChecker;
+  nsPIDOMStorage* mEventBroadcaster;
 
 public:
   // e.g. "moc.rab.oof.:" or "moc.rab.oof.:http:80" depending
@@ -288,19 +297,32 @@ public:
   NS_DECL_NSIDOMSTORAGE
 
   // nsPIDOMStorage
-  virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal);
-  virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal);
+  virtual nsresult InitAsSessionStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI);
+  virtual nsresult InitAsLocalStorage(nsIPrincipal *aPrincipal, const nsSubstring &aDocumentURI);
   virtual nsresult InitAsGlobalStorage(const nsACString &aDomainDemanded);
   virtual already_AddRefed<nsIDOMStorage> Clone();
+  virtual already_AddRefed<nsIDOMStorage> Fork(const nsSubstring &aDocumentURI);
+  virtual PRBool IsForkOf(nsIDOMStorage* aThat);
   virtual nsTArray<nsString> *GetKeys();
   virtual nsIPrincipal* Principal();
   virtual PRBool CanAccess(nsIPrincipal *aPrincipal);
+  virtual nsDOMStorageType StorageType();
+  virtual void BroadcastChangeNotification(const nsSubstring &aKey,
+                                           const nsSubstring &aOldValue,
+                                           const nsSubstring &aNewValue);
+
+  nsresult InitAsSessionStorageFork(nsIPrincipal *aPrincipal,
+                                    const nsSubstring &aDocumentURI,
+                                    nsIDOMStorageObsolete* aStorage);
 
 private:
   // storages bound to an origin hold the principal to
   // make security checks against it
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
+  // Needed for the storage event, this is address of the document this storage
+  // is bound to
+  nsString mDocumentURI;
   nsRefPtr<nsDOMStorage> mStorage;
 };
 
@@ -422,15 +444,9 @@ class nsDOMStorageEvent : public nsDOMEvent,
                           public nsIDOMStorageEvent
 {
 public:
-  nsDOMStorageEvent(const nsAString& aDomain)
-    : nsDOMEvent(nsnull, nsnull), mDomain(aDomain)
+  nsDOMStorageEvent()
+    : nsDOMEvent(nsnull, nsnull)
   {
-    if (aDomain.IsEmpty()) {
-      // An empty domain means this event is for a session sotrage
-      // object change. Store #session as the domain.
-
-      mDomain = NS_LITERAL_STRING("#session");
-    }
   }
 
   virtual ~nsDOMStorageEvent()
@@ -441,6 +457,31 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMSTORAGEEVENT
+  NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
+
+protected:
+  nsString mKey;
+  nsString mOldValue;
+  nsString mNewValue;
+  nsString mUrl;
+  nsCOMPtr<nsIDOMStorage> mStorageArea;
+};
+
+class nsDOMStorageEventObsolete : public nsDOMEvent,
+                          public nsIDOMStorageEventObsolete
+{
+public:
+  nsDOMStorageEventObsolete()
+    : nsDOMEvent(nsnull, nsnull)
+  {
+  }
+
+  virtual ~nsDOMStorageEventObsolete()
+  {
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMSTORAGEEVENTOBSOLETE
   NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
 
 protected:

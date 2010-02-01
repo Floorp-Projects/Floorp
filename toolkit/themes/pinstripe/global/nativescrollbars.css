@@ -36,14 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ===== nativescrollbars.css ===========================================
-  == Styles used by native scrollbar-related elements.
-  ======================================================================= */
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
-
-/* ::::: scrollbar ::::: */
 
 scrollbar {
   -moz-appearance: scrollbar;
@@ -107,9 +101,7 @@ scrollcorner {
   background-color: white;
 }
 
-/* :::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
 /* ::::::::::::::::::::: MEDIA PRINT :::::::::::::::::::::: */
-/* :::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
 @media print {
   html|div scrollbar {
     -moz-appearance: scrollbar;

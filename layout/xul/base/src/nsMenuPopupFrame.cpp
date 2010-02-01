@@ -905,7 +905,7 @@ nsMenuPopupFrame::FlipOrResize(nscoord& aScreenPoint, nscoord aSize,
 }
 
 nsresult
-nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
+nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
 {
   if (!mShouldAutoPosition)
     return NS_OK;
@@ -1043,6 +1043,12 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
 
     // screen positioned popups can be flipped vertically but never horizontally
     vFlip = PR_TRUE;
+  }
+
+  // if a panel is being moved, don't flip it. But always do this for content
+  // shells, so that the popup doesn't extend outside the containing frame.
+  if (aIsMove && mPopupType == ePopupTypePanel && !mInContentShell) {
+    hFlip = vFlip = PR_FALSE;
   }
 
   nsRect screenRect = GetConstraintRect(anchorRect.TopLeft(), rootScreenRect);
@@ -1583,7 +1589,7 @@ nsMenuPopupFrame::MoveTo(PRInt32 aLeft, PRInt32 aTop, PRBool aUpdateAttrs)
   mScreenXPos = aLeft;
   mScreenYPos = aTop;
 
-  SetPopupPosition(nsnull);
+  SetPopupPosition(nsnull, PR_TRUE);
 
   nsCOMPtr<nsIContent> popup = mContent;
   if (aUpdateAttrs && (popup->HasAttr(kNameSpaceID_None, nsGkAtoms::left) ||

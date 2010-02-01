@@ -197,6 +197,8 @@ nsCSSToken::AppendToString(nsString& aBuffer)
     case eCSSToken_HTMLComment:
     case eCSSToken_URange:
       aBuffer.Append(mIdent);
+      if (mType == eCSSToken_Function)
+        aBuffer.Append(PRUnichar('('));
       break;
     case eCSSToken_Number:
       if (mIntegerValid) {
@@ -1082,7 +1084,8 @@ nsCSSScanner::ParseIdent(PRInt32 aChar, nsCSSToken& aToken)
 
   nsCSSTokenType tokenType = eCSSToken_Ident;
   // look for functions (ie: "ident(")
-  if (PRUnichar('(') == PRUnichar(Peek())) { // this is a function definition
+  if (Peek() == PRUnichar('(')) {
+    Read();
     tokenType = eCSSToken_Function;
   }
 

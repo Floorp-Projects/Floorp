@@ -45,6 +45,7 @@
 #include "nsMenuUtilsX.h"
 #include "nsCocoaUtils.h"
 #include "nsCocoaWindow.h"
+#include "nsToolkit.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -112,9 +113,8 @@ nsMenuBarX::~nsMenuBarX()
   if (sPrefItemContent == mPrefItemContent)
     sPrefItemContent = nsnull;
 
-  // make sure we unregister ourselves as a document observer
-  if (mDocument)
-    mDocument->RemoveMutationObserver(this);
+  // make sure we unregister ourselves as a content observer
+  UnregisterForContentChanges(mContent);
 
   // We have to manually clear the array here because clearing causes menu items
   // to call back into the menu bar to unregister themselves. We don't want to
@@ -140,6 +140,8 @@ nsresult nsMenuBarX::Create(nsIWidget* aParent, nsIContent* aContent)
   nsresult rv = nsMenuGroupOwnerX::Create(aContent);
   if (NS_FAILED(rv))
     return rv;
+
+  RegisterForContentChanges(aContent, this);
 
   ConstructNativeMenus();
 
@@ -237,6 +239,33 @@ void nsMenuBarX::RemoveMenuAtIndex(PRUint32 aIndex)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+void nsMenuBarX::ObserveAttributeChanged(nsIDocument* aDocument,
+                                         nsIContent* aContent,
+                                         nsIAtom* aAttribute)
+{
+}
+
+void nsMenuBarX::ObserveContentRemoved(nsIDocument* aDocument,
+                                       nsIContent* aChild, 
+                                       PRInt32 aIndexInContainer)
+{
+  RemoveMenuAtIndex(aIndexInContainer);
+}
+
+void nsMenuBarX::ObserveContentInserted(nsIDocument* aDocument,
+                                        nsIContent* aChild, 
+                                        PRInt32 aIndexInContainer)
+{
+  nsMenuX* newMenu = new nsMenuX();
+  if (newMenu) {
+    nsresult rv = newMenu->Create(this, this, aChild);
+    if (NS_SUCCEEDED(rv))
+      InsertMenuAtIndex(newMenu, aIndexInContainer);
+    else
+      delete newMenu;
+  }
+}
+
 void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString)
 {
   NSString* locationString = [NSString stringWithCharacters:indexString.BeginReading() length:indexString.Length()];
@@ -314,6 +343,34 @@ nsMenuX* nsMenuBarX::GetMenuAt(PRUint32 aIndex)
   return mMenuArray[aIndex];
 }
 
+nsMenuX* nsMenuBarX::GetXULHelpMenu()
+{
+  // The Help menu is usually (always?) the last one, so we start there and
+  // count back.
+  for (PRInt32 i = GetMenuCount() - 1; i >= 0; --i) {
+    nsMenuX* aMenu = GetMenuAt(i);
+    if (aMenu && nsMenuX::IsXULHelpMenu(aMenu->Content()))
+      return aMenu;
+  }
+  return nil;
+}
+
+// On SnowLeopard and later we must tell the OS which is our Help menu.
+// Otherwise it will only add Spotlight for Help (the Search item) to our
+// Help menu if its label/title is "Help" -- i.e. if the menu is in English.
+// This resolves bugs 489196 and 539317.
+void nsMenuBarX::SetSystemHelpMenu()
+{
+  if (!nsToolkit::OnSnowLeopardOrLater())
+    return;
+  nsMenuX* xulHelpMenu = GetXULHelpMenu();
+  if (xulHelpMenu) {
+    NSMenu* helpMenu = (NSMenu*)xulHelpMenu->NativeData();
+    if (helpMenu)
+      [NSApp setHelpMenu:helpMenu];
+  }
+}
+
 nsresult nsMenuBarX::Paint()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -334,6 +391,7 @@ nsresult nsMenuBarX::Paint()
 
   // Set menu bar and event target.
   [NSApp setMainMenu:mNativeMenu];
+  SetSystemHelpMenu();
   nsMenuBarX::sLastGeckoMenuBarPainted = this;
 
   gSomeMenuBarPainted = YES;

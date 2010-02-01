@@ -97,6 +97,7 @@ private:
   static HWND sSoftKeyMenuBarHandle;
   static RECT sDefaultSIPRect;
   static HWND sMainWindowHandle;
+  static PRBool sMenuBarShown;
 #endif
 };
 

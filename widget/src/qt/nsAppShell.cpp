@@ -51,6 +51,13 @@
 #include "prlog.h"
 #endif
 
+#ifdef MOZ_IPC
+#include <QApplication>
+static QApplication *sQApp = nsnull;
+extern int    gArgc;
+extern char **gArgv;
+#endif
+
 #ifdef PR_LOGGING
 PRLogModuleInfo *gWidgetLog = nsnull;
 PRLogModuleInfo *gWidgetFocusLog = nsnull;
@@ -62,6 +69,11 @@ static int sPokeEvent;
 
 nsAppShell::~nsAppShell()
 {
+#ifdef MOZ_IPC
+    if (sQApp)
+        delete sQApp;
+    sQApp = nsnull;
+#endif
 }
 
 nsresult
@@ -82,6 +94,13 @@ nsAppShell::Init()
 #else
     sPokeEvent = QEvent::User+5000;
 #endif
+
+#ifdef MOZ_IPC
+    if (!qApp) {
+      sQApp = new QApplication(gArgc, (char**)gArgv);
+    }
+#endif
+
     return nsBaseAppShell::Init();
 }
 
@@ -96,18 +115,16 @@ nsAppShell::ScheduleNativeEventCallback()
 PRBool
 nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 {
-   QEventLoop::ProcessEventsFlags flags = QEventLoop::AllEvents;
-     
-     if (mayWait)
-         flags |= QEventLoop::WaitForMoreEvents;
-     
-     
-     QAbstractEventDispatcher *dispatcher =  QAbstractEventDispatcher::instance(qApp->thread());
-     if (!dispatcher)
-         return PR_FALSE ;
-     
-     return dispatcher->processEvents(flags)?PR_TRUE:PR_FALSE;
+    QEventLoop::ProcessEventsFlags flags = QEventLoop::AllEvents;
 
+    if (mayWait)
+        flags |= QEventLoop::WaitForMoreEvents;
+
+    QAbstractEventDispatcher *dispatcher =  QAbstractEventDispatcher::instance(qApp->thread());
+    if (!dispatcher)
+        return PR_FALSE;
+
+    return dispatcher->processEvents(flags) ? PR_TRUE : PR_FALSE;
 }
 
 bool

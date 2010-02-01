@@ -95,8 +95,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 
-#include "jsinterp.h" // for js_AllocStack() and js_FreeStack()
-
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
 #endif
@@ -950,7 +948,8 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
 
   if (subjectPrincipal && parentDocShell) {
     nsCOMPtr<nsIDOMStorage> storage;
-    parentDocShell->GetSessionStorageForPrincipal(subjectPrincipal, PR_FALSE,
+    parentDocShell->GetSessionStorageForPrincipal(subjectPrincipal,
+                                                  EmptyString(), PR_FALSE,
                                                   getter_AddRefs(storage));
     nsCOMPtr<nsPIDOMStorage> piStorage =
       do_QueryInterface(storage);

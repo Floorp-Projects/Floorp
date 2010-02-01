@@ -82,7 +82,7 @@ nsSMILAnimationController::~nsSMILAnimationController()
 
   NS_ASSERTION(mAnimationElementTable.Count() == 0,
                "Animation controller shouldn't be tracking any animation"
-               " elements when it dies.");
+               " elements when it dies");
 }
 
 nsSMILAnimationController* NS_NewSMILAnimationController(nsIDocument* aDoc)
@@ -229,7 +229,7 @@ nsresult
 nsSMILAnimationController::StartTimer()
 {
   NS_ENSURE_TRUE(mTimer, NS_ERROR_FAILURE);
-  NS_ASSERTION(mPauseState == 0, "Starting timer but controller is paused.");
+  NS_ASSERTION(mPauseState == 0, "Starting timer but controller is paused");
 
   // Run the first sample manually
   Sample();

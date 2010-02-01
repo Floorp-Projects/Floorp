@@ -295,7 +295,7 @@ ParseAccessKey(const nsAString& aSpec, nsSMILTimeValueSpecParams& aResult)
     return NS_ERROR_FAILURE;
 
   SkipBeginWsp(start, end);
-  
+
   nsresult rv = ParseOptionalOffset(Substring(start, end), result);
   if (NS_FAILED(rv))
     return rv;
@@ -421,7 +421,7 @@ ParseElementBaseTimeValueSpec(const nsAString& aSpec,
   // a '+', '-', or the end.
   const PRUnichar* specEnd = aSpec.EndReading();
   SkipBeginWsp(tokenEnd, specEnd);
-  
+
   nsresult rv = ParseOptionalOffset(Substring(tokenEnd, specEnd), result);
   if (NS_SUCCEEDED(rv)) {
     aResult = result;
@@ -683,7 +683,7 @@ nsSMILParserUtils::ParseTimeValueSpecParams(const nsAString& aSpec,
   else {
     rv = ParseElementBaseTimeValueSpec(spec, aResult);
   }
- 
+
   return rv;
 }
 

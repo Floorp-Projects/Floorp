@@ -555,6 +555,75 @@ GetTextNode(nsISelection *selection, nsEditor *editor) {
 #define ASSERT_PASSWORD_LENGTHS_EQUAL()
 #endif
 
+// static
+void
+nsTextEditRules::HandleNewLines(nsString &aString,
+                                PRInt32 aNewlineHandling)
+{
+  if (aNewlineHandling < 0) {
+    PRInt32 caretStyle;
+    nsPlaintextEditor::GetDefaultEditorPrefs(aNewlineHandling, caretStyle);
+  }
+
+  switch(aNewlineHandling)
+  {
+  case nsIPlaintextEditor::eNewlinesReplaceWithSpaces:
+    // Strip trailing newlines first so we don't wind up with trailing spaces
+    aString.Trim(CRLF, PR_FALSE, PR_TRUE);
+    aString.ReplaceChar(CRLF, ' ');
+    break;
+  case nsIPlaintextEditor::eNewlinesStrip:
+    aString.StripChars(CRLF);
+    break;
+  case nsIPlaintextEditor::eNewlinesPasteToFirst:
+  default:
+    {
+      PRInt32 firstCRLF = aString.FindCharInSet(CRLF);
+
+      // we get first *non-empty* line.
+      PRInt32 offset = 0;
+      while (firstCRLF == offset)
+      {
+        offset++;
+        firstCRLF = aString.FindCharInSet(CRLF, offset);
+      }
+      if (firstCRLF > 0)
+        aString.Truncate(firstCRLF);
+      if (offset > 0)
+        aString.Cut(0, offset);
+    }
+    break;
+  case nsIPlaintextEditor::eNewlinesReplaceWithCommas:
+    aString.Trim(CRLF, PR_TRUE, PR_TRUE);
+    aString.ReplaceChar(CRLF, ',');
+    break;
+  case nsIPlaintextEditor::eNewlinesStripSurroundingWhitespace:
+    {
+      // find each newline, and strip all the whitespace before
+      // and after it
+      PRInt32 firstCRLF = aString.FindCharInSet(CRLF);
+      while (firstCRLF >= 0)
+      {
+        PRUint32 wsBegin = firstCRLF, wsEnd = firstCRLF + 1;
+        // look backwards for the first non-whitespace char
+        while (wsBegin > 0 && NS_IS_SPACE(aString[wsBegin - 1]))
+          --wsBegin;
+        while (wsEnd < aString.Length() && NS_IS_SPACE(aString[wsEnd]))
+          ++wsEnd;
+        // now cut this range out of the string
+        aString.Cut(wsBegin, wsEnd - wsBegin);
+        // look for another CR or LF
+        firstCRLF = aString.FindCharInSet(CRLF);
+      }
+    }
+    break;
+  case nsIPlaintextEditor::eNewlinesPasteIntact:
+    // even if we're pasting newlines, don't paste leading/trailing ones
+    aString.Trim(CRLF, PR_TRUE, PR_TRUE);
+    break;
+  }
+}
+
 nsresult
 nsTextEditRules::WillInsertText(PRInt32          aAction,
                                 nsISelection *aSelection, 
@@ -639,63 +708,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   {
     nsAutoString tString(*outString);
 
-    switch(mEditor->mNewlineHandling)
-    {
-    case nsIPlaintextEditor::eNewlinesReplaceWithSpaces:
-      // Strip trailing newlines first so we don't wind up with trailing spaces
-      tString.Trim(CRLF, PR_FALSE, PR_TRUE);
-      tString.ReplaceChar(CRLF, ' ');
-      break;
-    case nsIPlaintextEditor::eNewlinesStrip:
-      tString.StripChars(CRLF);
-      break;
-    case nsIPlaintextEditor::eNewlinesPasteToFirst:
-    default:
-      {
-        PRInt32 firstCRLF = tString.FindCharInSet(CRLF);
-
-        // we get first *non-empty* line.
-        PRInt32 offset = 0;
-        while (firstCRLF == offset)
-        {
-          offset++;
-          firstCRLF = tString.FindCharInSet(CRLF, offset);
-        }
-        if (firstCRLF > 0)
-          tString.Truncate(firstCRLF);
-        if (offset > 0)
-          tString.Cut(0, offset);
-      }
-      break;
-    case nsIPlaintextEditor::eNewlinesReplaceWithCommas:
-      tString.Trim(CRLF, PR_TRUE, PR_TRUE);
-      tString.ReplaceChar(CRLF, ',');
-      break;
-    case nsIPlaintextEditor::eNewlinesStripSurroundingWhitespace:
-      {
-        // find each newline, and strip all the whitespace before
-        // and after it
-        PRInt32 firstCRLF = tString.FindCharInSet(CRLF);
-        while (firstCRLF >= 0)
-        {
-          PRUint32 wsBegin = firstCRLF, wsEnd = firstCRLF + 1;
-          // look backwards for the first non-whitespace char
-          while (wsBegin > 0 && NS_IS_SPACE(tString[wsBegin - 1]))
-            --wsBegin;
-          while (wsEnd < tString.Length() && NS_IS_SPACE(tString[wsEnd]))
-            ++wsEnd;
-          // now cut this range out of the string
-          tString.Cut(wsBegin, wsEnd - wsBegin);
-          // look for another CR or LF
-          firstCRLF = tString.FindCharInSet(CRLF);
-        }
-      }
-      break;
-    case nsIPlaintextEditor::eNewlinesPasteIntact:
-      // even if we're pasting newlines, don't paste leading/trailing ones
-      tString.Trim(CRLF, PR_TRUE, PR_TRUE);
-      break;
-    }
+    HandleNewLines(tString, mEditor->mNewlineHandling);
 
     outString->Assign(tString);
   }
@@ -1485,6 +1498,7 @@ nsresult nsTextEditRules::HideLastPWInput() {
   return NS_OK;
 }
 
+// static
 nsresult
 nsTextEditRules::FillBufWithPWChars(nsAString *aOutString, PRInt32 aLength)
 {

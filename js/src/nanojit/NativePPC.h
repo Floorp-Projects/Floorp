@@ -58,6 +58,7 @@ namespace nanojit
 #define NJ_ALIGN_STACK                  16
 #define NJ_JTBL_SUPPORTED               1
 #define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
+#define NJ_F2I_SUPPORTED                0
 
     enum ConditionRegister {
         CR0 = 0,
@@ -159,7 +160,7 @@ namespace nanojit
         Rlr  = 8,
         Rctr = 9,
 
-        UnknownReg = 127,
+        deprecated_UnknownReg = 127,
         FirstReg = R0,
         LastReg = F31
     };
@@ -258,6 +259,9 @@ namespace nanojit
     static const int NumSavedRegs = 18; // R13-R30
 #endif
 
+    static inline bool IsGpReg(Register r) {
+        return r <= R31;
+    }
     static inline bool IsFpReg(Register r) {
         return r >= F0;
     }

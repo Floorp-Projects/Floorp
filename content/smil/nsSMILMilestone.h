@@ -95,7 +95,7 @@ public:
   {
     return *this == aOther || *this < aOther;
   }
-  
+
   PRBool operator>=(const nsSMILMilestone& aOther) const
   {
     return !(*this < aOther);

@@ -58,10 +58,8 @@ function run_test() {
   // support NTFS permissions so we don't need to test there. OSX's isExecutable
   // only tests if the file is an application so it is better to just check the
   // raw permission bits
-  if (!("nsIWindowsRegKey" in Components.interfaces)) {
-    if ((file.permissions & 0111) == 0)
-      do_throw("File should have been executable, permissions were " + file.permissions.toString(8));
-  }
+  if (!("nsIWindowsRegKey" in Components.interfaces))
+    do_check_true((file.permissions & 0100) == 0100);
 
   gEM.uninstallItem("bug541420@tests.mozilla.org");
 

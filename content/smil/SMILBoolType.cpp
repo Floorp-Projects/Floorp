@@ -56,7 +56,7 @@ SMILBoolType::Init(nsSMILValue& aValue) const
 void
 SMILBoolType::Destroy(nsSMILValue& aValue) const
 {
-  NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value.");
+  NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value");
   aValue.mU.mBool = PR_FALSE;
   aValue.mType = &nsSMILNullType::sSingleton;
 }
@@ -64,8 +64,8 @@ SMILBoolType::Destroy(nsSMILValue& aValue) const
 nsresult
 SMILBoolType::Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const
 {
-  NS_PRECONDITION(aDest.mType == aSrc.mType, "Incompatible SMIL types.");
-  NS_PRECONDITION(aDest.mType == this, "Unexpected SMIL value.");
+  NS_PRECONDITION(aDest.mType == aSrc.mType, "Incompatible SMIL types");
+  NS_PRECONDITION(aDest.mType == this, "Unexpected SMIL value");
   aDest.mU.mBool = aSrc.mU.mBool;
   return NS_OK;
 }
@@ -99,8 +99,8 @@ SMILBoolType::Interpolate(const nsSMILValue& aStartVal,
   NS_PRECONDITION(aStartVal.mType == aEndVal.mType,
       "Trying to interpolate different types");
   NS_PRECONDITION(aStartVal.mType == this,
-      "Unexpected types for interpolation.");
-  NS_PRECONDITION(aResult.mType   == this, "Unexpected result type.");
+      "Unexpected types for interpolation");
+  NS_PRECONDITION(aResult.mType   == this, "Unexpected result type");
   return NS_ERROR_FAILURE; // bool values do not interpolate
 }
 

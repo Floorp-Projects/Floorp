@@ -154,8 +154,7 @@ gfxFontFamily::HasOtherFamilyNames()
 {
     // need to read in other family names to determine this
     if (!mOtherFamilyNamesInitialized) {
-        AddOtherFamilyNameFunctor addOtherNames(gfxPlatformFontList::PlatformFontList());
-        ReadOtherFamilyNames(addOtherNames);  // sets mHasOtherFamilyNames
+        ReadOtherFamilyNames(gfxPlatformFontList::PlatformFontList());  // sets mHasOtherFamilyNames
     }
     return mHasOtherFamilyNames;
 }
@@ -500,21 +499,14 @@ gfxFontFamily::FindFontForChar(FontSearch *aMatchData)
     }
 }
 
-
 // returns true if other names were found, false otherwise
 PRBool
-gfxFontFamily::ReadOtherFamilyNamesForFace(AddOtherFamilyNameFunctor& aOtherFamilyFunctor,
-                                           gfxFontEntry *aFontEntry,
+gfxFontFamily::ReadOtherFamilyNamesForFace(gfxPlatformFontList *aPlatformFontList,
+                                           nsTArray<PRUint8>& aNameTable,
                                            PRBool useFullName)
 {
-    const PRUint32 kNAME = TRUETYPE_TAG('n','a','m','e');
-
-    nsAutoTArray<PRUint8,8192> buffer;
-    if (aFontEntry->GetFontTable(kNAME, buffer) != NS_OK)
-        return PR_FALSE;
-
-    const PRUint8 *nameData = buffer.Elements();
-    PRUint32 dataLength = buffer.Length();
+    const PRUint8 *nameData = aNameTable.Elements();
+    PRUint32 dataLength = aNameTable.Length();
     const gfxFontUtils::NameHeader *nameHeader =
         reinterpret_cast<const gfxFontUtils::NameHeader*>(nameData);
 
@@ -551,7 +543,7 @@ gfxFontFamily::ReadOtherFamilyNamesForFace(AddOtherFamilyNameFunctor& aOtherFami
                                                      otherFamilyName);
             // add if not same as canonical family name
             if (ok && otherFamilyName != mName) {
-                aOtherFamilyFunctor(this, otherFamilyName);
+                aPlatformFontList->AddOtherFamilyName(this, otherFamilyName);
                 foundNames = PR_TRUE;
             }
         }
@@ -562,7 +554,7 @@ gfxFontFamily::ReadOtherFamilyNamesForFace(AddOtherFamilyNameFunctor& aOtherFami
 
 
 void
-gfxFontFamily::ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFunctor)
+gfxFontFamily::ReadOtherFamilyNames(gfxPlatformFontList *aPlatformFontList)
 {
     if (mOtherFamilyNamesInitialized) 
         return;
@@ -571,28 +563,102 @@ gfxFontFamily::ReadOtherFamilyNames(AddOtherFamilyNameFunctor& aOtherFamilyFunct
     FindStyleVariations();
 
     // read in other family names for the first face in the list
-    PRUint32 numFonts = mAvailableFonts.Length();
-    PRUint32 i;
+    PRUint32 i, numFonts = mAvailableFonts.Length();
+    const PRUint32 kNAME = TRUETYPE_TAG('n','a','m','e');
+    nsAutoTArray<PRUint8,8192> buffer;
+
     for (i = 0; i < numFonts; ++i) {
-        if (!mAvailableFonts[i])
+        gfxFontEntry *fe = mAvailableFonts[i];
+        if (!fe)
             continue;
-        mHasOtherFamilyNames = ReadOtherFamilyNamesForFace(aOtherFamilyFunctor,
-                                                           mAvailableFonts[i].get());
+
+        if (fe->GetFontTable(kNAME, buffer) != NS_OK)
+            continue;
+
+        mHasOtherFamilyNames = ReadOtherFamilyNamesForFace(aPlatformFontList,
+                                                           buffer);
         break;
     }
 
     // read in other names for the first face in the list with the assumption
     // that if extra names don't exist in that face then they don't exist in
     // other faces for the same font
-    if (mHasOtherFamilyNames) {
-        // read in names for all faces, needed to catch cases where fonts have
-        // family names for individual weights (e.g. Hiragino Kaku Gothic Pro W6)
-        for ( ; i < numFonts; i++) {
-            if (!mAvailableFonts[i])
-                continue;
-            ReadOtherFamilyNamesForFace(aOtherFamilyFunctor, mAvailableFonts[i].get());
-        }
+    if (!mHasOtherFamilyNames) 
+        return;
+
+    // read in names for all faces, needed to catch cases where fonts have
+    // family names for individual weights (e.g. Hiragino Kaku Gothic Pro W6)
+    for ( ; i < numFonts; i++) {
+        gfxFontEntry *fe = mAvailableFonts[i];
+        if (!fe)
+            continue;
+
+        if (fe->GetFontTable(kNAME, buffer) != NS_OK)
+            continue;
+
+        ReadOtherFamilyNamesForFace(aPlatformFontList, buffer);
     }
+}
+
+void
+gfxFontFamily::ReadFaceNames(gfxPlatformFontList *aPlatformFontList, 
+                             PRBool aNeedFullnamePostscriptNames)
+{
+    // if all needed names have already been read, skip
+    if (mOtherFamilyNamesInitialized &&
+        (mFaceNamesInitialized || !aNeedFullnamePostscriptNames))
+        return;
+
+    FindStyleVariations();
+
+    PRUint32 i, numFonts = mAvailableFonts.Length();
+    const PRUint32 kNAME = TRUETYPE_TAG('n','a','m','e');
+    nsAutoTArray<PRUint8,8192> buffer;
+    nsAutoString fullname, psname;
+
+    PRBool firstTime = PR_TRUE, readAllFaces = PR_FALSE;
+    for (i = 0; i < numFonts; ++i) {
+        gfxFontEntry *fe = mAvailableFonts[i];
+        if (!fe)
+            continue;
+
+        if (fe->GetFontTable(kNAME, buffer) != NS_OK)
+            continue;
+
+        if (aNeedFullnamePostscriptNames) {
+            if (gfxFontUtils::ReadCanonicalName(
+                    buffer, gfxFontUtils::NAME_ID_FULL, fullname) == NS_OK)
+            {
+                aPlatformFontList->AddFullname(fe, fullname);
+            }
+
+            if (gfxFontUtils::ReadCanonicalName(
+                    buffer, gfxFontUtils::NAME_ID_POSTSCRIPT, psname) == NS_OK)
+            {
+                aPlatformFontList->AddPostscriptName(fe, psname);
+            }
+        }
+
+       if (!mOtherFamilyNamesInitialized && (firstTime || readAllFaces)) {
+           PRBool foundOtherName = ReadOtherFamilyNamesForFace(aPlatformFontList,
+                                                               buffer);
+
+           // if the first face has a different name, scan all faces, otherwise
+           // assume the family doesn't have other names
+           if (firstTime && foundOtherName) {
+               mHasOtherFamilyNames = PR_TRUE;
+               readAllFaces = PR_TRUE;
+           }
+           firstTime = PR_FALSE;
+       }
+
+       // if not reading in any more names, skip other faces
+       if (!readAllFaces && !aNeedFullnamePostscriptNames)
+           break;
+    }
+
+    mFaceNamesInitialized = PR_TRUE;
+    mOtherFamilyNamesInitialized = PR_TRUE;
 }
 
 
@@ -3250,13 +3316,20 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
         PRUint32 end = iter.GetStringEnd();
 #endif
         PRUint32 start = iter.GetStringStart();
-        // These assertions are probably not needed; it's possible for us to assign
+
+        // These used to be NS_ASSERTION()s, but WARNING is more appropriate.
+        // Although it's unusual (and not desirable), it's possible for us to assign
         // different fonts to a base character and a following diacritic.
-        // View http://www.alanwood.net/unicode/cyrillic.html on OS X 10.5 for an example.
-        NS_ASSERTION(aSource->IsClusterStart(start),
-                     "Started word in the middle of a cluster...");
-        NS_ASSERTION(end == aSource->GetLength() || aSource->IsClusterStart(end),
-                     "Ended word in the middle of a cluster...");
+        // Example on OSX 10.5/10.6 with default fonts installed:
+        //     data:text/html,<p style="font-family:helvetica, arial, sans-serif;">
+        //                    &#x043E;&#x0486;&#x20;&#x043E;&#x0486;
+        // This means the rendering of the cluster will probably not be very good,
+        // but it's the best we can do for now if the specified font only covered the
+        // initial base character and not its applied marks.
+        NS_WARN_IF_FALSE(aSource->IsClusterStart(start),
+                         "Started font run in the middle of a cluster");
+        NS_WARN_IF_FALSE(end == aSource->GetLength() || aSource->IsClusterStart(end),
+                         "Ended font run in the middle of a cluster");
 
         nsresult rv = AddGlyphRun(font, start - aStart + aDest);
         if (NS_FAILED(rv))

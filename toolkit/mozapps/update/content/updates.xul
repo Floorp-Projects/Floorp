@@ -60,7 +60,8 @@
         onwizardfinish="gUpdates.onWizardFinish();"
         onwizardcancel="gUpdates.onWizardCancel();"
         onwizardnext="gUpdates.onWizardNext();"
-        onload="gUpdates.onLoad();">
+        onload="gUpdates.onLoad();"
+        onunload="gUpdates.onUnload();">
 
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/javascript" src="chrome://mozapps/content/update/updates.js"/>

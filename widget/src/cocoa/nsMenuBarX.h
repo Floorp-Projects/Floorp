@@ -43,13 +43,13 @@
 
 #include "nsMenuBaseX.h"
 #include "nsMenuGroupOwnerX.h"
+#include "nsChangeObserver.h"
 #include "nsINativeMenuService.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
 class nsMenuX;
 class nsMenuItemX;
-class nsChangeObserver;
 class nsIWidget;
 class nsIContent;
 class nsIDocument;
@@ -106,7 +106,7 @@ public:
 
 // Once instantiated, this object lives until its DOM node or its parent window is destroyed.
 // Do not hold references to this, they can become invalid any time the DOM node can be destroyed.
-class nsMenuBarX : public nsMenuGroupOwnerX
+class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver
 {
 public:
   nsMenuBarX();
@@ -121,6 +121,9 @@ public:
   nsCOMPtr<nsIContent> mPrefItemContent;
   nsCOMPtr<nsIContent> mQuitItemContent;
 
+  // nsChangeObserver
+  NS_DECL_CHANGEOBSERVER
+
   // nsMenuObjectX
   void*             NativeData()     {return (void*)mNativeMenu;}
   nsMenuObjectTypeX MenuObjectType() {return eMenuBarObjectType;}
@@ -131,6 +134,8 @@ public:
   PRUint32          GetMenuCount();
   bool              MenuContainsAppMenu();
   nsMenuX*          GetMenuAt(PRUint32 aIndex);
+  nsMenuX*          GetXULHelpMenu();
+  void              SetSystemHelpMenu();
   nsresult          Paint();
   void              ForceUpdateNativeMenuAt(const nsAString& indexString);
   void              ForceNativeMenuReload(); // used for testing

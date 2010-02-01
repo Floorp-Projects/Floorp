@@ -90,15 +90,18 @@ js_PurgeGSNCache(JSGSNCache *cache);
 #define JS_METER_GSN_CACHE(cx,cnt)  GSN_CACHE_METER(&JS_GSN_CACHE(cx), cnt)
 
 /* Forward declarations of nanojit types. */
-namespace nanojit
-{
-    class Assembler;
-    class CodeAlloc;
-    class Fragment;
-    template<typename K> struct DefaultHash;
-    template<typename K, typename V, typename H> class HashMap;
-    template<typename T> class Seq;
-}
+namespace nanojit {
+
+class Assembler;
+class CodeAlloc;
+class Fragment;
+template<typename K> struct DefaultHash;
+template<typename K, typename V, typename H> class HashMap;
+template<typename T> class Seq;
+
+}  /* namespace nanojit */
+
+namespace js {
 
 /* Tracer constants. */
 static const size_t MONITOR_N_GLOBAL_STATES = 4;
@@ -110,7 +113,6 @@ static const size_t GLOBAL_SLOTS_BUFFER_SIZE = MAX_GLOBAL_SLOTS + 1;
 
 /* Forward declarations of tracer types. */
 class VMAllocator;
-class TraceRecorder;
 class FrameInfoCache;
 struct REHashFn;
 struct REHashKey;
@@ -120,6 +122,7 @@ struct TreeFragment;
 struct InterpState;
 template<typename T> class Queue;
 typedef Queue<uint16> SlotList;
+struct TypeMap;
 struct REFragment;
 typedef nanojit::HashMap<REHashKey, REFragment*, REHashFn> REHashMap;
 
@@ -163,7 +166,7 @@ struct InterpState
     uintN          nativeVpLen;
     jsval*         nativeVp;
 
-    InterpState(JSContext *cx, JSTraceMonitor *tm, TreeFragment *ti,
+    InterpState(JSContext *cx, TraceMonitor *tm, TreeFragment *ti,
                 uintN &inlineCallCountp, VMSideExit** innermostNestedGuardp);
     ~InterpState();
 };
@@ -192,11 +195,112 @@ struct GlobalState {
 };
 
 /*
+ * A callstack contains a set of stack frames linked by fp->down. A callstack
+ * is a member of a JSContext and all of a JSContext's callstacks are kept in a
+ * list starting at cx->currentCallStack. A callstack may be active or
+ * suspended. There are zero or one active callstacks for a context and any
+ * number of suspended contexts. If there is an active context, it is the first
+ * in the currentCallStack list, |cx->fp != NULL| and the callstack's newest
+ * (top) stack frame is |cx->fp|. For all other (suspended) callstacks, the
+ * newest frame is pointed to by suspendedFrame.
+ *
+ * While all frames in a callstack are down-linked, not all down-linked frames
+ * are in the same callstack (e.g., calling js_Execute with |down != cx->fp|
+ * will create a new frame in a new active callstack).
+ */
+class CallStack
+{
+#ifdef DEBUG
+    /* The context to which this callstack belongs. */
+    JSContext           *cx;
+#endif
+
+    /* If this callstack is suspended, the top of the callstack. */
+    JSStackFrame        *suspendedFrame;
+
+    /* This callstack was suspended by JS_SaveFrameChain. */
+    bool                saved;
+
+    /* Links members of the JSContext::currentCallStack list. */
+    CallStack           *previous;
+
+    /* The varobj on entry to initialFrame. */
+    JSObject            *initialVarObj;
+
+    /* The first frame executed in this callstack. */
+    JSStackFrame        *initialFrame;
+
+  public:
+    CallStack(JSContext *cx)
+      :
+#ifdef DEBUG
+        cx(cx),
+#endif
+        suspendedFrame(NULL), saved(false), previous(NULL),
+        initialVarObj(NULL), initialFrame(NULL)
+    {}
+
+#ifdef DEBUG
+    bool contains(JSStackFrame *fp);
+#endif
+
+    void suspend(JSStackFrame *fp) {
+        JS_ASSERT(fp && !isSuspended() && contains(fp));
+        suspendedFrame = fp;
+    }
+
+    void resume() {
+        JS_ASSERT(suspendedFrame);
+        suspendedFrame = NULL;
+    }
+
+    JSStackFrame *getSuspendedFrame() const {
+        JS_ASSERT(suspendedFrame);
+        return suspendedFrame;
+    }
+
+    bool isSuspended() const { return suspendedFrame; }
+
+    void setPrevious(CallStack *cs) { previous = cs; }
+    CallStack *getPrevious() const  { return previous; }
+
+    void setInitialVarObj(JSObject *o) { initialVarObj = o; }
+    JSObject *getInitialVarObj() const { return initialVarObj; }
+
+    void setInitialFrame(JSStackFrame *f) { initialFrame = f; }
+    JSStackFrame *getInitialFrame() const { return initialFrame; }
+
+    /*
+     * Saving and restoring is a special case of suspending and resuming
+     * whereby the active callstack becomes suspended without pushing a new
+     * active callstack. This means that if a callstack c1 is pushed on top of a
+     * saved callstack c2, when c1 is popped, c2 must not be made active. In
+     * the normal case, where c2 is not saved, when c1 is popped, c2 is made
+     * active. This distinction is indicated by the |saved| flag.
+     */
+
+    void save(JSStackFrame *fp) {
+        suspend(fp);
+        saved = true;
+    }
+
+    void restore() {
+        saved = false;
+        resume();
+    }
+
+    bool isSaved() const {
+        JS_ASSERT_IF(saved, isSuspended());
+        return saved;
+    }
+};
+
+/*
  * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
  * frequencies for all JavaScript code loaded into that runtime.
  */
-struct JSTraceMonitor {
+struct TraceMonitor {
     /*
      * The context currently executing JIT-compiled code on this thread, or
      * NULL if none. Among other things, this can in certain cases prevent
@@ -254,8 +358,8 @@ struct JSTraceMonitor {
 
     TraceRecorder*          recorder;
 
-    struct GlobalState      globalStates[MONITOR_N_GLOBAL_STATES];
-    struct TreeFragment*    vmfragments[FRAGMENT_TABLE_SIZE];
+    GlobalState             globalStates[MONITOR_N_GLOBAL_STATES];
+    TreeFragment*           vmfragments[FRAGMENT_TABLE_SIZE];
     JSDHashTable            recordAttempts;
 
     /*
@@ -283,6 +387,11 @@ struct JSTraceMonitor {
      */
     REHashMap*              reFragments;
 
+    // Cached temporary typemap to avoid realloc'ing every time we create one. 
+    // This must be used in only one place at a given time. It must be cleared
+    // before use. 
+    TypeMap*                cachedTempTypeMap;
+
 #ifdef DEBUG
     /* Fields needed for fragment/guard profiling. */
     nanojit::Seq<nanojit::Fragment*>* branches;
@@ -304,7 +413,7 @@ struct JSTraceMonitor {
     bool outOfMemory() const;
 };
 
-typedef struct InterpStruct InterpStruct;
+} /* namespace js */
 
 /*
  * N.B. JS_ON_TRACE(cx) is true if JIT code is on the stack in the current
@@ -402,7 +511,7 @@ struct JSThreadData {
 
 #ifdef JS_TRACER
     /* Trace-tree JIT recorder/interpreter state. */
-    JSTraceMonitor      traceMonitor;
+    js::TraceMonitor    traceMonitor;
 #endif
 
     /* Lock-free hashed lists of scripts created by eval to garbage-collect. */
@@ -454,6 +563,15 @@ struct JSThread {
      * locks on each JS_malloc.
      */
     ptrdiff_t           gcThreadMallocBytes;
+
+    /*
+     * This thread is inside js_GC, either waiting until it can start GC, or
+     * waiting for GC to finish on another thread. This thread holds no locks;
+     * other threads may steal titles from it.
+     *
+     * Protected by rt->gcLock.
+     */
+    bool                gcWaiting;
 
     /*
      * Deallocator task for this thread.
@@ -607,7 +725,7 @@ struct JSRuntime {
     ptrdiff_t           gcMallocBytes;
 
     /* See comments before DelayMarkingChildren is jsgc.cpp. */
-    JSGCArenaInfo       *gcUnmarkedArenaStackTop;
+    JSGCArena           *gcUnmarkedArenaStackTop;
 #ifdef DEBUG
     size_t              gcMarkLaterCount;
 #endif
@@ -795,6 +913,8 @@ struct JSRuntime {
 #ifdef JS_THREADSAFE
     JSBackgroundThread    *deallocatorThread;
 #endif
+
+    JSEmptyScope          *emptyBlockScope;
 
     /*
      * Various metering fields are defined at the end of JSRuntime. In this
@@ -1066,6 +1186,18 @@ typedef struct JSResolvingEntry {
 
 #define JSRESOLVE_INFER         0xffff  /* infer bits from current bytecode */
 
+extern const JSDebugHooks js_NullDebugHooks;  /* defined in jsdbgapi.cpp */
+
+/*
+ * Wraps a stack frame which has been temporarily popped from its call stack
+ * and needs to be GC-reachable. See JSContext::{push,pop}GCReachableFrame.
+ */
+struct JSGCReachableFrame
+{
+    JSGCReachableFrame  *next;
+    JSStackFrame        *frame;
+};
+
 struct JSContext {
     /*
      * If this flag is set, we were asked to call back the operation callback
@@ -1183,8 +1315,67 @@ struct JSContext {
     void                *data;
     void                *data2;
 
-    /* GC and thread-safe state. */
-    JSStackFrame        *dormantFrameChain; /* dormant stack frame to scan */
+    /* Linked list of frames temporarily popped from their chain. */
+    JSGCReachableFrame  *reachableFrames;
+
+    void pushGCReachableFrame(JSGCReachableFrame &gcrf, JSStackFrame *f) {
+        gcrf.next = reachableFrames;
+        gcrf.frame = f;
+        reachableFrames = &gcrf;
+    }
+
+    void popGCReachableFrame() {
+        reachableFrames = reachableFrames->next;
+    }
+
+  private:
+    friend void js_TraceContext(JSTracer *, JSContext *);
+
+    /* Linked list of callstacks. See CallStack. */
+    js::CallStack       *currentCallStack;
+
+  public:
+    /* Assuming there is an active callstack, return it. */
+    js::CallStack *activeCallStack() const {
+        JS_ASSERT(currentCallStack && !currentCallStack->isSaved());
+        return currentCallStack;
+    }
+
+    /* Add the given callstack to the list as the new active callstack. */
+    void pushCallStack(js::CallStack *newcs) {
+        if (fp)
+            currentCallStack->suspend(fp);
+        else
+            JS_ASSERT_IF(currentCallStack, currentCallStack->isSaved());
+        newcs->setPrevious(currentCallStack);
+        currentCallStack = newcs;
+        JS_ASSERT(!newcs->isSuspended() && !newcs->isSaved());
+    }
+
+    /* Remove the active callstack and make the next callstack active. */
+    void popCallStack() {
+        JS_ASSERT(!currentCallStack->isSuspended() && !currentCallStack->isSaved());
+        currentCallStack = currentCallStack->getPrevious();
+        if (currentCallStack && !currentCallStack->isSaved()) {
+            JS_ASSERT(fp);
+            currentCallStack->resume();
+        }
+    }
+
+    /* Mark the top callstack as suspended, without pushing a new one. */
+    void saveActiveCallStack() {
+        JS_ASSERT(fp && currentCallStack && !currentCallStack->isSuspended());
+        currentCallStack->save(fp);
+        fp = NULL;
+    }
+
+    /* Undoes calls to suspendTopCallStack. */
+    void restoreCallStack() {
+        JS_ASSERT(!fp && currentCallStack && currentCallStack->isSuspended());
+        fp = currentCallStack->getSuspendedFrame();
+        currentCallStack->restore();
+    }
+
 #ifdef JS_THREADSAFE
     JSThread            *thread;
     jsrefcount          requestDepth;
@@ -1222,8 +1413,8 @@ struct JSContext {
      * called back into native code via a _FAIL builtin and has not yet bailed,
      * else garbage (NULL in debug builds).
      */
-    InterpState         *interpState;
-    VMSideExit          *bailExit;
+    js::InterpState     *interpState;
+    js::VMSideExit      *bailExit;
 
     /*
      * True if traces may be executed. Invariant: The value of jitEnabled is
@@ -1242,8 +1433,9 @@ struct JSContext {
     void updateJITEnabled() {
 #ifdef JS_TRACER
         jitEnabled = ((options & JSOPTION_JIT) &&
-                      !runtime->debuggerInhibitsJIT() &&
-                      debugHooks == &runtime->globalDebugHooks);
+                      (debugHooks == &js_NullDebugHooks ||
+                       (debugHooks == &runtime->globalDebugHooks &&
+                        !runtime->debuggerInhibitsJIT())));
 #endif
     }
 
@@ -1393,6 +1585,8 @@ struct JSContext {
         this->free(p);
     }
 
+    bool isConstructing();
+
 private:
 
     /*
@@ -1403,6 +1597,20 @@ private:
      */
     void checkMallocGCPressure(void *p);
 };
+
+JS_ALWAYS_INLINE JSObject *
+JSStackFrame::varobj(js::CallStack *cs)
+{
+    JS_ASSERT(cs->contains(this));
+    return fun ? callobj : cs->getInitialVarObj();
+}
+
+JS_ALWAYS_INLINE JSObject *
+JSStackFrame::varobj(JSContext *cx)
+{
+    JS_ASSERT(cx->activeCallStack()->contains(this));
+    return fun ? callobj : cx->activeCallStack()->getInitialVarObj();
+}
 
 #ifdef JS_THREADSAFE
 # define JS_THREAD_ID(cx)       ((cx)->thread ? (cx)->thread->id : 0)
@@ -1464,11 +1672,6 @@ class JSAutoTempValueRooter
     JSContext *mContext;
 
   private:
-#ifndef AIX
-    static void *operator new(size_t);
-    static void operator delete(void *, size_t);
-#endif
-
     JSTempValueRooter mTvr;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -1702,7 +1905,7 @@ js_NextActiveContext(JSRuntime *, JSContext *);
 /*
  * Count the number of contexts entered requests on the current thread.
  */
-uint32
+extern uint32
 js_CountThreadRequests(JSContext *cx);
 
 /*
@@ -1713,24 +1916,6 @@ js_CountThreadRequests(JSContext *cx);
  */
 extern void
 js_WaitForGC(JSRuntime *rt);
-
-/*
- * If we're in one or more requests (possibly on more than one context)
- * running on the current thread, indicate, temporarily, that all these
- * requests are inactive so a possible GC can proceed on another thread.
- * This function returns the number of discounted requests. The number must
- * be passed later to js_ActivateRequestAfterGC to reactivate the requests.
- *
- * This function must be called with the GC lock held.
- */
-uint32
-js_DiscountRequestsForGC(JSContext *cx);
-
-/*
- * This function must be called with the GC lock held.
- */
-void
-js_RecountRequestsAfterGC(JSRuntime *rt, uint32 requestDebit);
 
 #else /* !JS_THREADSAFE */
 
@@ -1917,6 +2102,8 @@ js_GetCurrentBytecodePC(JSContext* cx);
 extern bool
 js_CurrentPCIsInImacro(JSContext *cx);
 
+namespace js {
+
 #ifdef JS_TRACER
 /*
  * Reconstruct the JS stack and clear cx->tracecx. We must be currently in a
@@ -1926,27 +2113,27 @@ js_CurrentPCIsInImacro(JSContext *cx);
  * Implemented in jstracer.cpp.
  */
 JS_FORCES_STACK JS_FRIEND_API(void)
-js_DeepBail(JSContext *cx);
+DeepBail(JSContext *cx);
 #endif
 
 static JS_FORCES_STACK JS_INLINE void
-js_LeaveTrace(JSContext *cx)
+LeaveTrace(JSContext *cx)
 {
 #ifdef JS_TRACER
     if (JS_ON_TRACE(cx))
-        js_DeepBail(cx);
+        DeepBail(cx);
 #endif
 }
 
 static JS_INLINE void
-js_LeaveTraceIfGlobalObject(JSContext *cx, JSObject *obj)
+LeaveTraceIfGlobalObject(JSContext *cx, JSObject *obj)
 {
     if (!obj->fslots[JSSLOT_PARENT])
-        js_LeaveTrace(cx);
+        LeaveTrace(cx);
 }
 
 static JS_INLINE JSBool
-js_CanLeaveTrace(JSContext *cx)
+CanLeaveTrace(JSContext *cx)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
 #ifdef JS_TRACER
@@ -1955,6 +2142,8 @@ js_CanLeaveTrace(JSContext *cx)
     return JS_FALSE;
 #endif
 }
+
+}       /* namespace js */
 
 /*
  * Get the current cx->fp, first lazily instantiating stack frames if needed.
@@ -1965,7 +2154,7 @@ js_CanLeaveTrace(JSContext *cx)
 static JS_FORCES_STACK JS_INLINE JSStackFrame *
 js_GetTopStackFrame(JSContext *cx)
 {
-    js_LeaveTrace(cx);
+    js::LeaveTrace(cx);
     return cx->fp;
 }
 
