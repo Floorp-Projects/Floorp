@@ -1288,9 +1288,10 @@ class TraceRecorder
     JS_REQUIRES_STACK nanojit::LIns* box_jsval(jsval v, nanojit::LIns* v_ins);
     JS_REQUIRES_STACK nanojit::LIns* unbox_jsval(jsval v, nanojit::LIns* v_ins, VMSideExit* exit);
     JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
-                                      VMSideExit* exit);
-    JS_REQUIRES_STACK bool guardConstClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
-                                           VMSideExit* exit);
+                                      VMSideExit* exit, nanojit::LOpcode loadOp = nanojit::LIR_ldp);
+    bool guardConstClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp, VMSideExit* exit) {
+        return guardClass(obj, obj_ins, clasp, exit, nanojit::LIR_ldcp);
+    }
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
                                            ExitType exitType = MISMATCH_EXIT);
     JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
