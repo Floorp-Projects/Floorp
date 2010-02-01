@@ -2793,7 +2793,7 @@ ValueToNative(JSContext* cx, jsval v, TraceType type, double* slot)
                           "object<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
                           JSVAL_IS_NULL(v)
                           ? "null"
-                          : STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);
+                          : JSVAL_TO_OBJECT(v)->getClass()->name);
         return;
 
       case TT_INT32:
@@ -2967,7 +2967,7 @@ NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot)
                           "object<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
                           JSVAL_IS_NULL(v)
                           ? "null"
-                          : STOBJ_GET_CLASS(JSVAL_TO_OBJECT(v))->name);
+                          : JSVAL_TO_OBJECT(v)->getClass()->name);
         break;
 
       case TT_INT32:
@@ -8347,7 +8347,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
         }
         result = lir->ins2(v = LIR_div, d0, d1);
 
-        /* As long the modulus is zero, the result is an integer. */
+        /* As long as the modulus is zero, the result is an integer. */
         guard(true, lir->ins_eq0(lir->ins1(LIR_mod, result)), exit);
 
         /* Don't lose a -0. */
@@ -9757,7 +9757,7 @@ TraceRecorder::getThis(LIns*& this_ins)
      */
     JSClass* clasp = NULL;;
     if (JSVAL_IS_NULL(original) ||
-        (((clasp = STOBJ_GET_CLASS(JSVAL_TO_OBJECT(original))) == &js_CallClass) ||
+        (((clasp = JSVAL_TO_OBJECT(original)->getClass()) == &js_CallClass) ||
          (clasp == &js_BlockClass))) {
         if (clasp)
             guardClass(JSVAL_TO_OBJECT(original), get(&thisv), clasp, snapshot(BRANCH_EXIT));
@@ -9787,29 +9787,12 @@ TraceRecorder::getThis(LIns*& this_ins)
 
 
 JS_REQUIRES_STACK bool
-TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideExit* exit)
+TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideExit* exit,
+                          LOpcode loadOp)
 {
-    bool cond = STOBJ_GET_CLASS(obj) == clasp;
+    bool cond = obj->getClass() == clasp;
 
-    LIns* class_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, classword));
-    class_ins = lir->ins2(LIR_piand, class_ins, INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS));
-
-#ifdef JS_JIT_SPEW
-    char namebuf[32];
-    JS_snprintf(namebuf, sizeof namebuf, "guard(class is %s)", clasp->name);
-#else
-    static const char namebuf[] = "";
-#endif
-    guard(cond, addName(lir->ins2(LIR_peq, class_ins, INS_CONSTPTR(clasp)), namebuf), exit);
-    return cond;
-}
-
-JS_REQUIRES_STACK bool
-TraceRecorder::guardConstClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideExit* exit)
-{
-    bool cond = STOBJ_GET_CLASS(obj) == clasp;
-
-    LIns* class_ins = lir->insLoad(LIR_ldcp, obj_ins, offsetof(JSObject, classword));
+    LIns* class_ins = lir->insLoad(loadOp, obj_ins, offsetof(JSObject, classword));
     class_ins = lir->ins2(LIR_piand, class_ins, INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS));
 
 #ifdef JS_JIT_SPEW
@@ -11103,7 +11086,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             } else if (!JSVAL_IS_OBJECT(vp[1])) {
                 RETURN_STOP("slow native(primitive, args)");
             } else {
-                if (guardClass(JSVAL_TO_OBJECT(vp[1]), this_ins, &js_WithClass, snapshot(MISMATCH_EXIT)))
+                if (guardConstClass(JSVAL_TO_OBJECT(vp[1]), this_ins, &js_WithClass, snapshot(MISMATCH_EXIT)))
                     RETURN_STOP("can't trace slow native invocation on With object");
 
                 this_ins = lir->ins_choose(lir->ins_peq0(stobj_get_parent(this_ins)),
@@ -11941,7 +11924,7 @@ GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, JSScopeProperty* sprop
     // JSScopeProperty::get contains a special case for With objects. We can
     // elide it here because With objects are, we claim, never on the operand
     // stack while recording.
-    JS_ASSERT(STOBJ_GET_CLASS(obj) != &js_WithClass);
+    JS_ASSERT(obj->getClass() != &js_WithClass);
 
     *vp = JSVAL_VOID;
     if (!sprop->getter(cx, obj, SPROP_USERID(sprop), vp)) {
@@ -12022,7 +12005,7 @@ TraceRecorder::record_JSOP_GETELEM()
         return InjectStatus(getPropertyByName(obj_ins, &idx, &lval));
     }
 
-    if (STOBJ_GET_CLASS(obj) == &js_ArgumentsClass) {
+    if (obj->getClass() == &js_ArgumentsClass) {
         unsigned depth;
         JSStackFrame *afp = guardArguments(obj, obj_ins, &depth);
         if (afp) {
@@ -12105,7 +12088,9 @@ TraceRecorder::record_JSOP_GETELEM()
             return ARECORD_CONTINUE;
         }
         RETURN_STOP_A("can't reach arguments object's frame");
-    } else if (obj->isDenseArray()) {
+    }
+
+    if (obj->isDenseArray()) {
         // Fast path for dense arrays accessed with a integer index.
         jsval* vp;
         LIns* addr_ins;
@@ -12116,7 +12101,9 @@ TraceRecorder::record_JSOP_GETELEM()
         if (call)
             set(&idx, obj_ins);
         return ARECORD_CONTINUE;
-    } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
+    }
+
+    if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
         // Fast path for typed arrays accessed with a integer index.
         jsval* vp;
         LIns* addr_ins;
@@ -12346,11 +12333,11 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                 }
             }
         } else {
-            return ARECORD_STOP;
+            RETURN_STOP_A("can't trace setting typed array element to non-number value");
         }
     } else if (JSVAL_TO_INT(idx) < 0 || !OBJ_IS_DENSE_ARRAY(cx, obj)) {
         CHECK_STATUS_A(initOrSetPropertyByIndex(obj_ins, idx_ins, &v,
-                                              *cx->fp->regs->pc == JSOP_INITELEM));
+                                                *cx->fp->regs->pc == JSOP_INITELEM));
     } else {
         // Fast path: assigning to element of dense array.
 
@@ -12615,14 +12602,14 @@ TraceRecorder::guardCallee(jsval& callee)
 JS_REQUIRES_STACK JSStackFrame *
 TraceRecorder::guardArguments(JSObject *obj, LIns* obj_ins, unsigned *depthp)
 {
-    JS_ASSERT(STOBJ_GET_CLASS(obj) == &js_ArgumentsClass);
+    JS_ASSERT(obj->getClass() == &js_ArgumentsClass);
 
     JSStackFrame *afp = frameIfInRange(obj, depthp);
     if (!afp)
         return NULL;
 
     VMSideExit *exit = snapshot(MISMATCH_EXIT);
-    guardClass(obj, obj_ins, &js_ArgumentsClass, exit);
+    guardConstClass(obj, obj_ins, &js_ArgumentsClass, exit);
 
     LIns* args_ins = get(&afp->argsobj);
     LIns* cmp = lir->ins2(LIR_peq, args_ins, obj_ins);
@@ -13022,7 +13009,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
          */
         if (OBJ_GET_CLASS(cx, obj)->getProperty != JS_PropertyStub) {
             RETURN_STOP_A("can't trace through access to undefined property if "
-                                 "JSClass.getProperty hook isn't stubbed");
+                          "JSClass.getProperty hook isn't stubbed");
         }
         guardClass(obj, obj_ins, OBJ_GET_CLASS(cx, obj), snapshot(MISMATCH_EXIT));
 
@@ -13672,7 +13659,7 @@ TraceRecorder::record_JSOP_NEXTITER()
         RETURN_STOP_A("for-in on a primitive value");
     RETURN_IF_XML_A(iterobj_val);
     JSObject* iterobj = JSVAL_TO_OBJECT(iterobj_val);
-    JSClass* clasp = STOBJ_GET_CLASS(iterobj);
+    JSClass* clasp = iterobj->getClass();
     LIns* iterobj_ins = get(&iterobj_val);
     guardClass(iterobj, iterobj_ins, clasp, snapshot(BRANCH_EXIT));
     if (clasp == &js_IteratorClass || clasp == &js_GeneratorClass)
@@ -13773,7 +13760,7 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
 
     for (;;) {
         if (searchObj != globalObj) {
-            JSClass* cls = STOBJ_GET_CLASS(searchObj);
+            JSClass* cls = searchObj->getClass();
             if (cls == &js_BlockClass) {
                 foundBlockObj = true;
             } else if (cls == &js_CallClass &&
@@ -13808,7 +13795,7 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
             // We must guard on the shape of all call objects for heavyweight functions
             // that we traverse on the scope chain: if the shape changes, a variable with
             // the same name may have been inserted in the scope chain.
-            if (STOBJ_GET_CLASS(obj) == &js_CallClass &&
+            if (obj->getClass() == &js_CallClass &&
                 JSFUN_HEAVYWEIGHT_TEST(js_GetCallObjectFunction(obj)->flags)) {
                 LIns* map_ins = map(obj_ins);
                 LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape)),
@@ -13821,7 +13808,7 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
             }
         }
 
-        JS_ASSERT(STOBJ_GET_CLASS(obj) != &js_BlockClass);
+        JS_ASSERT(obj->getClass() != &js_BlockClass);
 
         if (obj == targetObj)
             break;
@@ -13888,7 +13875,7 @@ TraceRecorder::record_JSOP_BINDNAME()
     JSAtom *atom = atoms[GET_INDEX(cx->fp->regs->pc)];
     jsid id = ATOM_TO_JSID(atom);
     JSObject *obj2 = js_FindIdentifierBase(cx, fp->scopeChain, id);
-    if (obj2 != globalObj && STOBJ_GET_CLASS(obj2) != &js_CallClass)
+    if (obj2 != globalObj && obj2->getClass() != &js_CallClass)
         RETURN_STOP_A("BINDNAME on non-global, non-call object");
 
     // Generate LIR to get to the target object from the start object.
@@ -15166,7 +15153,7 @@ TraceRecorder::record_JSOP_LENGTH()
     JSObject* obj = JSVAL_TO_OBJECT(l);
     LIns* obj_ins = get(&l);
 
-    if (STOBJ_GET_CLASS(obj) == &js_ArgumentsClass) {
+    if (obj->getClass() == &js_ArgumentsClass) {
         unsigned depth;
         JSStackFrame *afp = guardArguments(obj, obj_ins, &depth);
         if (!afp)
