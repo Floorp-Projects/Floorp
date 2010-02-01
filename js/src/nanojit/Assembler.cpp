@@ -494,7 +494,7 @@ namespace nanojit
                 evict(ins);
                 r = registerAlloc(ins, allow, hint(ins));
             } else
-#elif defined(NANOJIT_PPC)
+#elif defined(NANOJIT_PPC) || defined(NANOJIT_MIPS)
             if (((rmask(r)&GpRegs) && !(allow&GpRegs)) ||
                 ((rmask(r)&FpRegs) && !(allow&FpRegs)))
             {
@@ -1092,7 +1092,7 @@ namespace nanojit
 
         NanoAssert(!_inExit);
         // save used parts of current block on fragment's code list, free the rest
-#ifdef NANOJIT_ARM
+#if defined(NANOJIT_ARM) || defined(NANOJIT_MIPS)
         // [codeStart, _nSlot) ... gap ... [_nIns, codeEnd)
         if (_nExitIns) {
             _codeAlloc.addRemainder(codeList, exitStart, exitEnd, _nExitSlot, _nExitIns);
