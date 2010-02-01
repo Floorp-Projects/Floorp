@@ -37,13 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ===== button.css =====================================================
-  == Styles used by the XUL button element.
-  ======================================================================= */
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-/* :::::::::: button :::::::::: */
 
 button {
   -moz-appearance: button;

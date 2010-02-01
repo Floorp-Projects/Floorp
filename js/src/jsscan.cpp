@@ -145,15 +145,6 @@ js_CheckKeyword(const jschar *str, size_t length)
     return kw ? kw->tokentype : TOK_EOF;
 }
 
-JS_FRIEND_API(void)
-js_MapKeywords(JSMapKeywordFun mapfun)
-{
-    size_t i;
-
-    for (i = 0; i != KEYWORD_COUNT; ++i)
-        mapfun(keyword_defs[i].chars);
-}
-
 JSBool
 js_IsIdentifier(JSString *str)
 {

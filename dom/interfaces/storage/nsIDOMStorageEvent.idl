@@ -40,26 +40,57 @@
 
 /**
  * Interface for a client side storage. See
- * http://www.whatwg.org/specs/web-apps/current-work/#scs-client-side
+ * http://dev.w3.org/html5/webstorage/#the-storage-event
  * for more information.
  *
  * Event sent to a window when a storage area changes.
  */
 
-[scriptable, uuid(8c021c75-f6b6-493c-914e-0b6c57ccc88d)]
+interface nsIDOMStorage;
+
+[scriptable, uuid(AE0CB688-68B3-4fb3-9A11-2DA8E620E808)]
 interface nsIDOMStorageEvent : nsIDOMEvent
 {
   /**
-   * Domain of the storage area which changed, or #session for
-   * session storage.
+   * Attribute represents the key being changed. The key attribute is null
+   * when change has been invoked by the storage clear() method.
    */
-  readonly attribute DOMString domain;
+  readonly attribute DOMString key;
 
   /**
-   * Initialize a storage event.
+   * The original value of the key. The oldValue is null when the change
+   * has been invoked by storage clear() method or the key has been newly
+   * added and therefor doesn't have any previous value.
+   */
+  readonly attribute DOMString oldValue;
+
+  /**
+   * The new value of the key. The newValue is null when the change
+   * has been invoked by storage clear() method or the key has been removed
+   * from the storage.
+   */
+  readonly attribute DOMString newValue;
+
+  /**
+   * Represents the address of the document whose key changed.
+   */
+  readonly attribute DOMString url;
+
+  /**
+   * Represents the Storage object that was affected.
+   */
+  readonly attribute nsIDOMStorage storageArea;
+
+  /**
+   * Initialize the event in a manner analogous to the similarly-named method
+   * in the DOM Events interfaces.
    */
   void initStorageEvent(in DOMString typeArg, 
                         in boolean canBubbleArg, 
                         in boolean cancelableArg, 
-                        in DOMString domainArg);
+                        in DOMString keyArg,
+                        in DOMString oldValueArg,
+                        in DOMString newValueArg,
+                        in DOMString urlArg,
+                        in nsIDOMStorage storageAreaArg);
 };

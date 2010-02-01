@@ -371,9 +371,6 @@ js_CheckKeyword(const jschar *chars, size_t length);
  */
 typedef void (*JSMapKeywordFun)(const char *);
 
-extern JS_FRIEND_API(void)
-js_MapKeywords(JSMapKeywordFun mapfun);
-
 /*
  * Check that str forms a valid JS identifier name. The function does not
  * check if str is a JS keyword.

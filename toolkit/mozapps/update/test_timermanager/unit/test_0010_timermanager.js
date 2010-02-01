@@ -150,7 +150,7 @@ function run_test() {
   gUTM = Cc["@mozilla.org/updates/timer-manager;1"].
          getService(Ci.nsIUpdateTimerManager).
          QueryInterface(Ci.nsIObserver);
-  gUTM.observe(null, "profile-after-change", "");
+  gUTM.observe(null, "utm-test-init", "");
 
   do_execute_soon(run_test1thru6);
 }
