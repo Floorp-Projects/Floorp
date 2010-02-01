@@ -51,7 +51,7 @@
 #endif
 #include "nsExceptionHandler.h"
 
-#include "mozilla/ipc/GeckoThread.h"
+#include "mozilla/ipc/BrowserProcessSubThread.h"
 
 using mozilla::MonitorAutoEnter;
 using mozilla::ipc::GeckoChildProcessHost;

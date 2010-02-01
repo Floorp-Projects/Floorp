@@ -46,13 +46,13 @@
 #include "chrome/common/child_process.h"
 #include "chrome/common/chrome_switches.h"
 
-using mozilla::ipc::GeckoThread;
+using mozilla::ipc::MozillaChildThread;
 
 namespace mozilla {
 namespace dom {
 
 ContentProcessThread::ContentProcessThread(ProcessHandle mParentHandle) :
-    GeckoThread(mParentHandle),
+    MozillaChildThread(mParentHandle, MessageLoop::TYPE_MOZILLA_UI),
     mContentProcess()
 {
 }
@@ -64,7 +64,8 @@ ContentProcessThread::~ContentProcessThread()
 void
 ContentProcessThread::Init()
 {
-    GeckoThread::Init();
+    MozillaChildThread::Init();
+    mXREEmbed.Start();
 
     // FIXME/cjones: set up channel stuff, etc.
     
@@ -75,7 +76,8 @@ ContentProcessThread::Init()
 void
 ContentProcessThread::CleanUp()
 {
-    GeckoThread::CleanUp();
+    mXREEmbed.Stop();
+    MozillaChildThread::CleanUp();
 }
 
 } // namespace tabs

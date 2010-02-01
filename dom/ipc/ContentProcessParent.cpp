@@ -38,8 +38,6 @@
 
 #include "ContentProcessParent.h"
 
-#include "mozilla/ipc/GeckoThread.h"
-
 #include "TabParent.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/net/NeckoParent.h"

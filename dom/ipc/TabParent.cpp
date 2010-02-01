@@ -38,7 +38,6 @@
 
 #include "TabParent.h"
 
-#include "mozilla/ipc/GeckoThread.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
 
 #include "nsIURI.h"
@@ -52,7 +51,6 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsFrameLoader.h"
 
-using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::DocumentRendererParent;
 
 namespace mozilla {

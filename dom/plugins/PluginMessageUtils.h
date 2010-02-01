@@ -40,6 +40,7 @@
 #define DOM_PLUGINS_PLUGINMESSAGEUTILS_H
 
 #include "IPC/IPCMessageUtils.h"
+#include "base/message_loop.h"
 
 #include "npapi.h"
 #include "npruntime.h"
@@ -197,7 +198,8 @@ NPNVariableToString(NPNVariable aVar)
 
 inline void AssertPluginThread()
 {
-  NS_ASSERTION(NS_IsMainThread(), "should be on the plugin's main thread!");
+  NS_ASSERTION(MessageLoopForUI::current(),
+               "should be on the plugin's main thread!");
 }
 
 void DeferNPObjectLastRelease(const NPNetscapeFuncs* f, NPObject* o);

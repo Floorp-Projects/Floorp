@@ -19,7 +19,7 @@
 #if defined(OS_POSIX)
 #include "base/message_pump_libevent.h"
 #endif
-#if defined(OS_LINUX) && !defined(CHROMIUM_MOZILLA_BUILD)
+#if defined(OS_LINUX)
 #include "base/message_pump_glib.h"
 #endif
 
@@ -89,7 +89,7 @@ MessageLoop::MessageLoop(Type type)
   lazy_tls_ptr.Pointer()->Set(this);
 
 #ifdef CHROMIUM_MOZILLA_BUILD
-  if (type_ == TYPE_UI) {
+  if (type_ == TYPE_MOZILLA_UI) {
     pump_ = new mozilla::ipc::MessagePump();
     return;
   }
@@ -112,7 +112,7 @@ MessageLoop::MessageLoop(Type type)
   if (type_ == TYPE_UI) {
 #if defined(OS_MACOSX)
     pump_ = base::MessagePumpMac::Create();
-#elif defined(OS_LINUX) && !defined(CHROMIUM_MOZILLA_BUILD)
+#elif defined(OS_LINUX)
     pump_ = new base::MessagePumpForUI();
 #endif  // OS_LINUX
   } else if (type_ == TYPE_IO) {

@@ -246,6 +246,7 @@ CPPSRCS += \
   file_util_linux.cc \
   file_version_info_linux.cc \
   idle_timer_none.cc \
+  message_pump_glib.cc \
   process_util_linux.cc \
   time_posix.cc \
   $(NULL)
