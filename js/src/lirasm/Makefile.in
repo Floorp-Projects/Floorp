@@ -73,6 +73,6 @@ CFLAGS += -EHsc
 CXXFLAGS += -EHsc
 endif
 
-check::
-	$(srcdir)/testlirc.sh
+check:: $(PROGRAM)
+	$(srcdir)/testlirc.sh $(PROGRAM)
 

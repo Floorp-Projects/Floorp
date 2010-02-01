@@ -97,6 +97,8 @@ namespace nanojit
     #define NJ_MAX_PARAMETERS 1
     #define NJ_JTBL_SUPPORTED 1
     #define NJ_EXPANDED_LOADSTORE_SUPPORTED 1
+    #define NJ_USES_QUAD_CONSTANTS 1
+    #define NJ_F2I_SUPPORTED                1
 
         // Preserve a 16-byte stack alignment, to support the use of
         // SSE instructions like MOVDQA (if not by Tamarin itself,
@@ -141,7 +143,8 @@ namespace nanojit
 
         FirstReg = 0,
         LastReg = 16,
-        UnknownReg = 17
+        deprecated_UnknownReg = 17,        // XXX: remove eventually, see bug 538924
+        UnspecifiedReg = 17
     }
     Register;
 
@@ -184,7 +187,8 @@ namespace nanojit
         NIns* asm_fbranch(bool, LIns*, NIns*);\
         void asm_cmp(LIns *cond); \
         void asm_div_mod(LIns *cond); \
-        void asm_load(int d, Register r);
+        void asm_load(int d, Register r); \
+        void asm_quad(Register r, uint64_t q, double d, bool canClobberCCs);
 
  #define IMM8(i)    \
      _nIns -= 1;     \
@@ -220,8 +224,8 @@ namespace nanojit
 
 // underrunProtect(6) is necessary for worst-case
 #define MODRMm(r,d,b) \
-        NanoAssert(unsigned(r)<8 && ((b)==UnknownReg || unsigned(b)<8)); \
-        if ((b) == UnknownReg) {\
+        NanoAssert(unsigned(r)<8 && ((b)==UnspecifiedReg || unsigned(b)<8)); \
+        if ((b) == UnspecifiedReg) {\
             IMM32(d);\
             *(--_nIns) = (uint8_t) (0<<6 | (r)<<3 | 5);\
         } else if ((b) == ESP) { \
@@ -519,17 +523,17 @@ namespace nanojit
     count_st();\
     NanoAssert(((unsigned)reg)<4); \
     ALUm(0x88,reg,disp,base);   \
-    asm_output("mov8 %d(%s),%s",disp,base==UnknownReg?"0":gpn(base),gpn(reg)); } while(0)
+    asm_output("mov8 %d(%s),%s",disp,base==UnspecifiedReg?"0":gpn(base),gpn(reg)); } while(0)
 
 #define ST16(base,disp,reg) do {  \
     count_st();\
     ALUm16(0x89,reg,disp,base);   \
-    asm_output("mov16 %d(%s),%s",disp,base==UnknownReg?"0":gpn(base),gpn(reg)); } while(0)
+    asm_output("mov16 %d(%s),%s",disp,base==UnspecifiedReg?"0":gpn(base),gpn(reg)); } while(0)
 
 #define ST(base,disp,reg) do {  \
     count_st();\
     ALUm(0x89,reg,disp,base);   \
-    asm_output("mov %d(%s),%s",disp,base==UnknownReg?"0":gpn(base),gpn(reg)); } while(0)
+    asm_output("mov %d(%s),%s",disp,base==UnspecifiedReg?"0":gpn(base),gpn(reg)); } while(0)
 
 #define ST8i(base,disp,imm)  do { \
     count_st();\
@@ -722,7 +726,7 @@ namespace nanojit
     *(--_nIns) = 0x10;\
     *(--_nIns) = 0x0f;\
     *(--_nIns) = 0xf2;\
-    asm_output("movsd %s,(#%p) // =%f",gpn(r),(void*)daddr,*daddr); \
+    asm_output("movsd %s,(%p) // =%f",gpn(r),(void*)daddr,*daddr); \
     } while(0)
 
 #define STSD(d,b,r)do {     \
@@ -759,6 +763,12 @@ namespace nanojit
     count_fpu();\
     SSE(0xf20f2a, (xr)&7, (gr)&7); \
     asm_output("cvtsi2sd %s,%s",gpn(xr),gpn(gr)); \
+    } while(0)
+
+ #define SSE_CVTSD2SI(gr,xr) do{ \
+    count_fpu();\
+    SSE(0xf20f2d, (gr)&7, (xr)&7); \
+    asm_output("cvtsd2si %s,%s",gpn(gr),gpn(xr)); \
     } while(0)
 
 #define SSE_CVTSD2SS(xr,gr) do{ \
@@ -892,6 +902,11 @@ namespace nanojit
         MODRMm((uint8_t)(o), d, b);         \
         *(--_nIns) = (uint8_t)((o)>>8)
 
+#define FPUdm(o, m)                         \
+        underrunProtect(6);                 \
+        MODRMdm((uint8_t)(o), m);         \
+        *(--_nIns) = (uint8_t)((o)>>8)
+
 #define TEST_AH(i) do {                             \
         count_alu();\
         underrunProtect(3);                 \
@@ -914,26 +929,39 @@ namespace nanojit
 #define FCHS()      do { count_fpu(); FPUc(0xd9e0);             asm_output("fchs"); } while(0)
 #define FLD1()      do { count_fpu(); FPUc(0xd9e8);             asm_output("fld1"); fpu_push(); } while(0)
 #define FLDZ()      do { count_fpu(); FPUc(0xd9ee);             asm_output("fldz"); fpu_push(); } while(0)
-#define FFREE(r)    do { count_fpu(); FPU(0xddc0, r);           asm_output("ffree %s",fpn(r)); } while(0)
+#define FFREE(r)    do { count_fpu(); FPU(0xddc0, r);           asm_output("ffree %s",gpn(r)); } while(0)
 #define FST32(p,d,b) do { count_stq(); FPUm(0xd902|(p), d, b);   asm_output("fst%s32 %d(%s)",((p)?"p":""),d,gpn(b)); if (p) fpu_pop(); } while(0)
 #define FSTQ(p,d,b) do { count_stq(); FPUm(0xdd02|(p), d, b);   asm_output("fst%sq %d(%s)",((p)?"p":""),d,gpn(b)); if (p) fpu_pop(); } while(0)
 #define FSTPQ(d,b)  FSTQ(1,d,b)
 #define FCOM(p,d,b) do { count_fpuld(); FPUm(0xdc02|(p), d, b); asm_output("fcom%s %d(%s)",((p)?"p":""),d,gpn(b)); if (p) fpu_pop(); } while(0)
+#define FCOMdm(p,m) do { const double* const dm = m; \
+                         count_fpuld(); FPUdm(0xdc02|(p), dm);   asm_output("fcom%s (%p)",((p)?"p":""),(void*)dm); if (p) fpu_pop(); } while(0)
 #define FLD32(d,b)  do { count_ldq(); FPUm(0xd900, d, b);       asm_output("fld32 %d(%s)",d,gpn(b)); fpu_push();} while(0)
 #define FLDQ(d,b)   do { count_ldq(); FPUm(0xdd00, d, b);       asm_output("fldq %d(%s)",d,gpn(b)); fpu_push();} while(0)
+#define FLDQdm(m)   do { const double* const dm = m; \
+                         count_ldq(); FPUdm(0xdd00, dm);        asm_output("fldq (%p)",(void*)dm); fpu_push();} while(0)
 #define FILDQ(d,b)  do { count_fpuld(); FPUm(0xdf05, d, b);     asm_output("fildq %d(%s)",d,gpn(b)); fpu_push(); } while(0)
 #define FILD(d,b)   do { count_fpuld(); FPUm(0xdb00, d, b);     asm_output("fild %d(%s)",d,gpn(b)); fpu_push(); } while(0)
+#define FIST(p,d,b) do { count_fpu(); FPUm(0xdb02|(p), d, b);   asm_output("fist%s %d(%s)",((p)?"p":""),d,gpn(b)); if(p) fpu_pop(); } while(0)
 #define FADD(d,b)   do { count_fpu(); FPUm(0xdc00, d, b);       asm_output("fadd %d(%s)",d,gpn(b)); } while(0)
+#define FADDdm(m)   do { const double* const dm = m; \
+                         count_ldq(); FPUdm(0xdc00, dm);        asm_output("fadd (%p)",(void*)dm); } while(0)
 #define FSUB(d,b)   do { count_fpu(); FPUm(0xdc04, d, b);       asm_output("fsub %d(%s)",d,gpn(b)); } while(0)
 #define FSUBR(d,b)  do { count_fpu(); FPUm(0xdc05, d, b);       asm_output("fsubr %d(%s)",d,gpn(b)); } while(0)
+#define FSUBRdm(m)  do { const double* const dm = m; \
+                         count_ldq(); FPUdm(0xdc05, dm);        asm_output("fsubr (%p)",(void*)dm); } while(0)
 #define FMUL(d,b)   do { count_fpu(); FPUm(0xdc01, d, b);       asm_output("fmul %d(%s)",d,gpn(b)); } while(0)
+#define FMULdm(m)   do { const double* const dm = m; \
+                         count_ldq(); FPUdm(0xdc01, dm);        asm_output("fmul (%p)",(void*)dm); } while(0)
 #define FDIV(d,b)   do { count_fpu(); FPUm(0xdc06, d, b);       asm_output("fdiv %d(%s)",d,gpn(b)); } while(0)
 #define FDIVR(d,b)  do { count_fpu(); FPUm(0xdc07, d, b);       asm_output("fdivr %d(%s)",d,gpn(b)); } while(0)
+#define FDIVRdm(m)  do { const double* const dm = m; \
+                         count_ldq(); FPUdm(0xdc07, dm);        asm_output("fdivr (%p)",(void*)dm); } while(0)
 #define FINCSTP()   do { count_fpu(); FPUc(0xd9f7);             asm_output("fincstp"); } while(0)
-#define FSTP(r)     do { count_fpu(); FPU(0xddd8, r&7);         asm_output("fstp %s",fpn(r)); fpu_pop();} while(0)
+#define FSTP(r)     do { count_fpu(); FPU(0xddd8, r&7);         asm_output("fstp %s",gpn(r)); fpu_pop();} while(0)
 #define FCOMP()     do { count_fpu(); FPUc(0xD8D9);             asm_output("fcomp"); fpu_pop();} while(0)
 #define FCOMPP()    do { count_fpu(); FPUc(0xDED9);             asm_output("fcompp"); fpu_pop();fpu_pop();} while(0)
-#define FLDr(r)     do { count_ldq(); FPU(0xd9c0,r);            asm_output("fld %s",fpn(r)); fpu_push(); } while(0)
+#define FLDr(r)     do { count_ldq(); FPU(0xd9c0,r);            asm_output("fld %s",gpn(r)); fpu_push(); } while(0)
 #define EMMS()      do { count_fpu(); FPUc(0x0f77);             asm_output("emms"); } while (0)
 
 // standard direct call
@@ -955,7 +983,6 @@ namespace nanojit
   verbose_only(asm_output("call %s",gpn(r));) \
   debug_only(if ((c->_argtypes & ARGSIZE_MASK_ANY)==ARGSIZE_F) fpu_push();)\
 } while (0)
-
 
 }
 #endif // __nanojit_Nativei386__

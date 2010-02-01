@@ -43,10 +43,10 @@
 #include "nsIServiceManager.h"
 #include "nsResourceSet.h"
 #include "nsString.h"
+#include "nsXULContentUtils.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
-#include "nsXULContentUtils.h"
 extern PRLogModuleInfo* gXULTemplateLog;
 #endif
 
@@ -474,6 +474,7 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
         if (! hasContainerBinding && ! hasMemberBinding) {
             // Neither container nor member assignment!
             if (!aCantHandleYet) {
+                nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_MEMBER_UNBOUND);
                 return NS_ERROR_UNEXPECTED;
             }
 

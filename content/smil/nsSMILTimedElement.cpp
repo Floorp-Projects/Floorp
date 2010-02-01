@@ -1022,7 +1022,7 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
     prevIntervalWasZeroDur
       = aPrevInterval->End()->Time() == aPrevInterval->Begin()->Time();
     if (aFixedBeginTime) {
-      prevIntervalWasZeroDur &= 
+      prevIntervalWasZeroDur &=
         aPrevInterval->Begin()->Time() == aFixedBeginTime->Time();
     }
   } else {
@@ -1113,7 +1113,7 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
       aResult.Set(*tempBegin, *tempEnd);
       return NS_OK;
     }
-    
+
     if (mRestartMode == RESTART_NEVER) {
       // tempEnd <= 0 so we're going to loop which effectively means restarting
       return NS_ERROR_FAILURE;
@@ -1166,10 +1166,10 @@ nsSMILTimedElement::CalcActiveEnd(const nsSMILTimeValue& aBegin,
   nsSMILTimeValue result;
 
   NS_ASSERTION(mSimpleDur.IsResolved() || mSimpleDur.IsIndefinite(),
-    "Unresolved simple duration in CalcActiveEnd.");
+    "Unresolved simple duration in CalcActiveEnd");
 
   if (!aBegin.IsResolved() && !aBegin.IsIndefinite()) {
-    NS_ERROR("Unresolved begin time passed to CalcActiveEnd.");
+    NS_ERROR("Unresolved begin time passed to CalcActiveEnd");
     result.SetIndefinite();
     return result;
   }

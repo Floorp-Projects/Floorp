@@ -68,4 +68,8 @@ CSRCS		= \
 		vorbis_bitrate.c \
 		$(NULL)
 
+ifeq ($(OS_ARCH),AIX)
+DEFINES += -Dalloca=__alloca
+endif
+
 include $(topsrcdir)/config/rules.mk

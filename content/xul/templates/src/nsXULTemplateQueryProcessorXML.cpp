@@ -56,6 +56,7 @@
 #include "nsContentUtils.h"
 #include "nsArrayUtils.h"
 #include "nsPIDOMWindow.h"
+#include "nsXULContentUtils.h"
 
 #include "nsXULTemplateBuilder.h"
 #include "nsXULTemplateQueryProcessorXML.h"
@@ -274,7 +275,10 @@ nsXULTemplateQueryProcessorXML::CompileQuery(nsIXULTemplateBuilder* aBuilder,
 
     nsCOMPtr<nsIDOMXPathExpression> compiledexpr;
     rv = CreateExpression(expr, aQueryNode, getter_AddRefs(compiledexpr));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+        nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_BAD_XPATH);
+        return rv;
+    }
 
     nsRefPtr<nsXMLQuery> query =
         new nsXMLQuery(this, aMemberVariable, compiledexpr);
@@ -297,7 +301,10 @@ nsXULTemplateQueryProcessorXML::CompileQuery(nsIXULTemplateBuilder* aBuilder,
                     do_QueryInterface(condition);
                 rv = CreateExpression(expr, conditionNode,
                                       getter_AddRefs(compiledexpr));
-                NS_ENSURE_SUCCESS(rv, rv);
+                if (NS_FAILED(rv)) {
+                    nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_BAD_ASSIGN_XPATH);
+                    return rv;
+                }
 
                 nsCOMPtr<nsIAtom> varatom = do_GetAtom(var);
 
@@ -378,7 +385,10 @@ nsXULTemplateQueryProcessorXML::AddBinding(nsIDOMNode* aRuleNode,
     nsCOMPtr<nsIDOMXPathExpression> compiledexpr;
     nsresult rv =
         CreateExpression(aExpr, aRuleNode, getter_AddRefs(compiledexpr));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+        nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_BAD_BINDING_XPATH);
+        return NS_OK;
+    }
 
     // aRef isn't currently used for XML query processors
     return bindings->AddBinding(aVar, compiledexpr);

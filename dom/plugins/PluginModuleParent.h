@@ -200,7 +200,7 @@ private:
     virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error);
 #endif
     virtual nsresult NP_Shutdown(NPError* error);
-    virtual nsresult NP_GetMIMEDescription(char** mimeDesc);
+    virtual nsresult NP_GetMIMEDescription(const char** mimeDesc);
     virtual nsresult NP_GetValue(void *future, NPPVariable aVariable,
                                  void *aValue, NPError* error);
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)

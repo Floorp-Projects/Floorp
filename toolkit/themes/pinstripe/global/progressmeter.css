@@ -36,13 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* ===== progressmeter.css ==============================================
-  == Styles used by the XUL progressmeter element.
-  ======================================================================= */
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-/* ::::: progressmeter ::::: */
 
 progressmeter {
   -moz-appearance: progressbar;
@@ -55,8 +49,6 @@ progressmeter {
   background-image: none !important;
   -moz-appearance: none;
 }
-
-/* ::::: statusbar progressmeter ::::: */
 
 .progressmeter-statusbar {
   margin: 0;

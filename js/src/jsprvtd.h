@@ -101,6 +101,7 @@ typedef struct JSParseNode          JSParseNode;
 typedef struct JSPropCacheEntry     JSPropCacheEntry;
 typedef struct JSProperty           JSProperty;
 typedef struct JSSharpObjectMap     JSSharpObjectMap;
+typedef struct JSEmptyScope         JSEmptyScope;
 typedef struct JSTempValueRooter    JSTempValueRooter;
 typedef struct JSThread             JSThread;
 typedef struct JSThreadData         JSThreadData;
@@ -108,7 +109,6 @@ typedef struct JSToken              JSToken;
 typedef struct JSTokenPos           JSTokenPos;
 typedef struct JSTokenPtr           JSTokenPtr;
 typedef struct JSTokenStream        JSTokenStream;
-typedef struct JSTraceMonitor       JSTraceMonitor;
 typedef struct JSTreeContext        JSTreeContext;
 typedef struct JSTryNote            JSTryNote;
 typedef struct JSWeakRoots          JSWeakRoots;
@@ -145,6 +145,10 @@ typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
 extern "C++" {
 
 namespace js {
+
+class TraceRecorder;
+class TraceMonitor;
+class CallStack;
 
 class ContextAllocPolicy;
 class SystemAllocPolicy;

@@ -51,20 +51,15 @@ printStatus (summary);
 var N = 100*1000;
 
 function build(N) {
-  // We used to exploit the fact that regexp literals were shared between
-  // function invocations, but ES5 fixes this design flaw, so we have to
-  // make a regexp for each new function f, and store it as a property of f.
-  // Thus we build the following chain:
-  //
-  //   chainTop: function->regexp->function->regexp....->null
-  //
+  // Exploit the fact that (in ES3), regexp literals are shared between
+  // function invocations. Thus we build the following chain:
+  // chainTop: function->regexp->function->regexp....->null
   // to check how GC would deal with this chain.
 
   var chainTop = null;
   for (var i = 0; i != N; ++i) {
-    var f = Function('some_arg'+i, ' return some_arg'+i+'.re;');
-    var re = /test/;
-    f.re = re;
+    var f = Function('some_arg'+i, ' return /test/;');
+    var re = f();
     re.previous = chainTop;
     chainTop = f;
   }
@@ -73,7 +68,7 @@ function build(N) {
 
 function check(chainTop, N) {
   for (var i = 0; i != N; ++i) {
-    var re = chainTop(chainTop);
+    var re = chainTop();
     chainTop = re.previous;
   }
   if (chainTop !== null)

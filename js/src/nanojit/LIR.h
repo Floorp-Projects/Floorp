@@ -40,15 +40,6 @@
 #ifndef __nanojit_LIR__
 #define __nanojit_LIR__
 
-/**
- * Fundamentally, the arguments to the various operands can be grouped along
- * two dimensions.  One dimension is size: can the arguments fit into a 32-bit
- * register, or not?  The other dimension is whether the argument is an integer
- * (including pointers) or a floating-point value.  In all comments below,
- * "integer" means integer of any size, including 64-bit, unless otherwise
- * specified.  All floating-point values are always 64-bit.  Below, "quad" is
- * used for a 64-bit value that might be either integer or floating-point.
- */
 namespace nanojit
 {
     enum LOpcode
@@ -93,7 +84,9 @@ namespace nanojit
         LIR_puge    = PTR_SIZE(LIR_uge,    LIR_quge),
         LIR_alloc   = PTR_SIZE(LIR_ialloc, LIR_qalloc),
         LIR_pcall   = PTR_SIZE(LIR_icall,  LIR_qcall),
-        LIR_param   = PTR_SIZE(LIR_iparam, LIR_qparam)
+        LIR_param   = PTR_SIZE(LIR_iparam, LIR_qparam),
+        LIR_plive   = PTR_SIZE(LIR_live,   LIR_qlive),
+        LIR_pret    = PTR_SIZE(LIR_ret,    LIR_qret)
     };
 
     struct GuardRecord;
@@ -137,7 +130,19 @@ namespace nanojit
         verbose_only ( const char* _name; )
 
         uint32_t _count_args(uint32_t mask) const;
-        uint32_t get_sizes(ArgSize*) const;
+        // Nb: uses right-to-left order, eg. sizes[0] is the size of the right-most arg.
+        uint32_t get_sizes(ArgSize* sizes) const;
+
+        inline ArgSize returnType() const {
+            return ArgSize(_argtypes & ARGSIZE_MASK_ANY);
+        }
+
+        // Note that this indexes arguments *backwards*, that is to
+        // get the Nth arg, you have to ask for index (numargs - N).
+        // See mozilla bug 525815 for fixing this.
+        inline ArgSize argType(uint32_t arg) const {
+            return ArgSize((_argtypes >> (ARGSIZE_SHIFT * (arg+1))) & ARGSIZE_MASK_ANY);
+        }
 
         inline bool isIndirect() const {
             return _address < 256;
@@ -169,7 +174,7 @@ namespace nanojit
                (op >= LIR_quad && op <= LIR_quge);
     }
     inline bool isRetOpcode(LOpcode op) {
-        return op == LIR_ret || op == LIR_fret;
+        return op == LIR_ret || op == LIR_qret || op == LIR_fret;
     }
     LOpcode f64arith_to_i32arith(LOpcode op);
     LOpcode i32cmp_to_i64cmp(LOpcode op);
@@ -177,15 +182,22 @@ namespace nanojit
     // Array holding the 'repKind' field from LIRopcode.tbl.
     extern const uint8_t repKinds[];
 
-    enum LTy {
-        LTy_Void,        // no value/no type
-        LTy_I32,         // 32-bit integer
-        LTy_I64,         // 64-bit integer
-        LTy_F64          // 64-bit float
+    enum LTy {          // Nb: enum values must be 0..n for typeStrings[] to work.
+        LTy_Void = 0,   // no value/no type
+        LTy_I32  = 1,   // 32-bit integer
+        LTy_I64  = 2,   // 64-bit integer
+        LTy_F64  = 3,   // 64-bit float
+
+        LTy_Ptr  = PTR_SIZE(LTy_I32, LTy_I64)   // word-sized integer
     };
 
     // Array holding the 'retType' field from LIRopcode.tbl.
     extern const LTy retTypes[];
+
+    inline RegisterMask rmask(Register r)
+    {
+        return RegisterMask(1) << r;
+    }
 
     //-----------------------------------------------------------------------
     // Low-level instructions.  This is a bit complicated, because we have a
@@ -291,14 +303,18 @@ namespace nanojit
     class LIns
     {
     private:
-        // LastWord: fields shared by all LIns kinds.  The .arIndex, .reg and
-        // .used fields form a "reservation" that is used temporarily during
-        // assembly to record information relating to register allocation.
-        // See class RegAlloc for more details.
+        // LastWord: fields shared by all LIns kinds.  The .inReg, .reg,
+        // .inAr and .arIndex fields form a "reservation" that is used
+        // temporarily during assembly to record information relating to
+        // register allocation.  See class RegAlloc for more details.
+        //
+        // Note: all combinations of .inReg/.inAr are possible, ie. 0/0, 0/1,
+        // 1/0, 1/1.
         struct LastWord {
-            uint32_t arIndex:16;    // index into stack frame.  displ is -4*arIndex
-            Register reg:7;         // register UnknownReg implies not in register
-            uint32_t used:1;        // when set, the reservation is active
+            uint32_t inReg:1;       // if 1, 'reg' is active
+            Register reg:7;
+            uint32_t inAr:1;        // if 1, 'arIndex' is active
+            uint32_t arIndex:15;    // index into stack frame;  displ is -4*arIndex
 
             LOpcode  opcode:8;      // instruction's opcode
         };
@@ -346,39 +362,63 @@ namespace nanojit
 
         LOpcode opcode() const { return lastWord.opcode; }
 
-        void markAsUsed() {
-            lastWord.reg = UnknownReg;
-            lastWord.arIndex = 0;
-            lastWord.used = 1;
+        // XXX: old reservation manipulating functions.  See bug 538924.
+        // Replacement strategy:
+        // - deprecated_markAsClear() --> clearReg() and/or clearArIndex()
+        // - deprecated_hasKnownReg() --> isInReg()
+        // - deprecated_getReg() --> getReg() after checking isInReg()
+        //
+        void deprecated_markAsClear() {
+            lastWord.inReg = 0;
+            lastWord.inAr = 0;
         }
-        void markAsClear() {
-            lastWord.used = 0;
-        }
-        bool isUsed() {
-            return lastWord.used;
-        }
-        bool hasKnownReg() {
+        bool deprecated_hasKnownReg() {
             NanoAssert(isUsed());
-            return getReg() != UnknownReg;
+            return isInReg();
+        }
+        Register deprecated_getReg() {
+            NanoAssert(isUsed());
+            return ( isInReg() ? lastWord.reg : deprecated_UnknownReg );
+        }
+        uint32_t deprecated_getArIndex() {
+            NanoAssert(isUsed());
+            return ( isInAr() ? lastWord.arIndex : 0 );
+        }
+
+        // Reservation manipulation.
+        bool isUsed() {
+            return isInReg() || isInAr();
+        }
+        bool isInReg() {
+            return lastWord.inReg;
+        }
+        bool isInRegMask(RegisterMask allow) {
+            return isInReg() && (rmask(getReg()) & allow);
         }
         Register getReg() {
-            NanoAssert(isUsed());
+            NanoAssert(isInReg());
             return lastWord.reg;
         }
         void setReg(Register r) {
-            NanoAssert(isUsed());
+            lastWord.inReg = 1;
             lastWord.reg = r;
         }
+        void clearReg() {
+            lastWord.inReg = 0;
+        }
+        bool isInAr() {
+            return lastWord.inAr;
+        }
         uint32_t getArIndex() {
-            NanoAssert(isUsed());
+            NanoAssert(isInAr());
             return lastWord.arIndex;
         }
         void setArIndex(uint32_t arIndex) {
-            NanoAssert(isUsed());
+            lastWord.inAr = 1;
             lastWord.arIndex = arIndex;
         }
-        bool isUnusedOrHasUnknownReg() {
-            return !isUsed() || !hasKnownReg();
+        void clearArIndex() {
+            lastWord.inAr = 0;
         }
 
         // For various instruction kinds.
@@ -417,7 +457,7 @@ namespace nanojit
         inline void     setSize(int32_t nbytes);
 
         // For LInsC.
-        inline LIns*    arg(uint32_t i)         const;
+        inline LIns*    arg(uint32_t i)         const;  // right-to-left-order: arg(0) is rightmost
         inline uint32_t argc()                  const;
         inline LIns*    callArgN(uint32_t n)    const;
         inline const CallInfo* callInfo()       const;
@@ -492,14 +532,12 @@ namespace nanojit
         bool isop(LOpcode o) const {
             return opcode() == o;
         }
-        bool isQuad() const {
-            LTy ty = retTypes[opcode()];
-            return ty == LTy_I64 || ty == LTy_F64;
-        }
         bool isCond() const {
-            return (isop(LIR_ov)) || isCmp();
+            return isop(LIR_ov) || isCmp();
         }
-        bool isFloat() const;   // not inlined because it contains a switch
+        bool isOverflowable() const {
+            return isop(LIR_neg) || isop(LIR_add) || isop(LIR_sub) || isop(LIR_mul);
+        }
         bool isCmp() const {
             LOpcode op = opcode();
             return (op >= LIR_eq  && op <= LIR_uge) ||
@@ -550,11 +588,26 @@ namespace nanojit
             return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j) || isop(LIR_jtbl);
         }
 
-        bool isPtr() {
+        LTy retType() const {
+            return retTypes[opcode()];
+        }
+        bool isVoid() const {
+            return retType() == LTy_Void;
+        }
+        bool isI32() const {
+            return retType() == LTy_I32;
+        }
+        bool isI64() const {
+            return retType() == LTy_I64;
+        }
+        bool isF64() const {
+            return retType() == LTy_F64;
+        }
+        bool isPtr() const {
 #ifdef NANOJIT_64BIT
-            return retTypes[opcode()] == LTy_I64;
+            return isI64();
 #else
-            return retTypes[opcode()] == LTy_I32;
+            return isI32();
 #endif
         }
 
@@ -571,7 +624,7 @@ namespace nanojit
             if (isCall())
                 return !isCse();
             else
-                return retTypes[opcode()] == LTy_Void;
+                return isVoid();
         }
 
         inline void* constvalp() const
@@ -586,6 +639,7 @@ namespace nanojit
 
     typedef LIns* LInsp;
     typedef SeqBuilder<LIns*> InsList;
+    typedef SeqBuilder<char*> StringList;
 
 
     // 0-operand form.  Used for LIR_start and LIR_label.
@@ -717,7 +771,7 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
-    // Used for LIR_iparam.
+    // Used for LIR_iparam, LIR_qparam.
     class LInsP
     {
     private:
@@ -762,8 +816,9 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
-    // Used for LIR_jtbl.  oprnd_1 must be a uint32_t index in
+    // Used for LIR_jtbl.  'oprnd_1' must be a uint32_t index in
     // the range 0 <= index < size; no range check is performed.
+    // 'table' is an array of labels.
     class LInsJtbl
     {
     private:
@@ -799,25 +854,29 @@ namespace nanojit
     LInsJtbl*LIns::toLInsJtbl()const { return (LInsJtbl*)(uintptr_t(this+1) - sizeof(LInsJtbl)); }
 
     void LIns::initLInsOp0(LOpcode opcode) {
-        markAsClear();
+        clearReg();
+        clearArIndex();
         lastWord.opcode = opcode;
         NanoAssert(isLInsOp0());
     }
     void LIns::initLInsOp1(LOpcode opcode, LIns* oprnd1) {
-        markAsClear();
+        clearReg();
+        clearArIndex();
         lastWord.opcode = opcode;
         toLInsOp1()->oprnd_1 = oprnd1;
         NanoAssert(isLInsOp1());
     }
     void LIns::initLInsOp2(LOpcode opcode, LIns* oprnd1, LIns* oprnd2) {
-        markAsClear();
+        clearReg();
+        clearArIndex();
         lastWord.opcode = opcode;
         toLInsOp2()->oprnd_1 = oprnd1;
         toLInsOp2()->oprnd_2 = oprnd2;
         NanoAssert(isLInsOp2());
     }
     void LIns::initLInsOp3(LOpcode opcode, LIns* oprnd1, LIns* oprnd2, LIns* oprnd3) {
-        markAsClear();
+        clearReg();
+        clearArIndex();
         lastWord.opcode = opcode;
         toLInsOp3()->oprnd_1 = oprnd1;
         toLInsOp3()->oprnd_2 = oprnd2;
@@ -825,14 +884,16 @@ namespace nanojit
         NanoAssert(isLInsOp3());
     }
     void LIns::initLInsLd(LOpcode opcode, LIns* val, int32_t d) {
-        markAsClear();
+        clearReg();
+        clearArIndex();
         lastWord.opcode = opcode;
         toLInsLd()->oprnd_1 = val;
         toLInsLd()->disp = d;
         NanoAssert(isLInsLd());
     }
     void LIns::initLInsSti(LOpcode opcode, LIns* val, LIns* base, int32_t d) {
-        markAsClear();
+        clearReg();
+        clearArIndex();
         lastWord.opcode = opcode;
         toLInsSti()->oprnd_1 = val;
         toLInsSti()->oprnd_2 = base;
@@ -840,20 +901,23 @@ namespace nanojit
         NanoAssert(isLInsSti());
     }
     void LIns::initLInsSk(LIns* prevLIns) {
-        markAsClear();
+        clearReg();
+        clearArIndex();
         lastWord.opcode = LIR_skip;
         toLInsSk()->prevLIns = prevLIns;
         NanoAssert(isLInsSk());
     }
     void LIns::initLInsC(LOpcode opcode, LIns** args, const CallInfo* ci) {
-        markAsClear();
+        clearReg();
+        clearArIndex();
         lastWord.opcode = opcode;
         toLInsC()->args = args;
         toLInsC()->ci = ci;
         NanoAssert(isLInsC());
     }
     void LIns::initLInsP(int32_t arg, int32_t kind) {
-        markAsClear();
+        clearReg();
+        clearArIndex();
         lastWord.opcode = LIR_param;
         NanoAssert(isU8(arg) && isU8(kind));
         toLInsP()->arg = arg;
@@ -861,20 +925,23 @@ namespace nanojit
         NanoAssert(isLInsP());
     }
     void LIns::initLInsI(LOpcode opcode, int32_t imm32) {
-        markAsClear();
+        clearReg();
+        clearArIndex();
         lastWord.opcode = opcode;
         toLInsI()->imm32 = imm32;
         NanoAssert(isLInsI());
     }
     void LIns::initLInsN64(LOpcode opcode, int64_t imm64) {
-        markAsClear();
+        clearReg();
+        clearArIndex();
         lastWord.opcode = opcode;
         toLInsN64()->imm64_0 = int32_t(imm64);
         toLInsN64()->imm64_1 = int32_t(imm64 >> 32);
         NanoAssert(isLInsN64());
     }
     void LIns::initLInsJtbl(LIns* index, uint32_t size, LIns** table) {
-        markAsClear();
+        clearReg();
+        clearArIndex();
         lastWord.opcode = LIR_jtbl;
         toLInsJtbl()->oprnd_1 = index;
         toLInsJtbl()->table = table;
@@ -1163,15 +1230,20 @@ namespace nanojit
         InsList code;
         LirNameMap* names;
         LogControl* logc;
+        const char* const prefix;
+        bool const always_flush;
     public:
         VerboseWriter(Allocator& alloc, LirWriter *out,
-                      LirNameMap* names, LogControl* logc)
-            : LirWriter(out), code(alloc), names(names), logc(logc)
+                      LirNameMap* names, LogControl* logc, const char* prefix = "", bool always_flush = false)
+            : LirWriter(out), code(alloc), names(names), logc(logc), prefix(prefix), always_flush(always_flush)
         {}
 
         LInsp add(LInsp i) {
-            if (i)
+            if (i) {
                 code.add(i);
+                if (always_flush)
+                    flush();
+            }
             return i;
         }
 
@@ -1186,7 +1258,7 @@ namespace nanojit
             if (!code.isEmpty()) {
                 int32_t count = 0;
                 for (Seq<LIns*>* p = code.get(); p != NULL; p = p->tail) {
-                    logc->printf("    %s\n",names->formatIns(p->head));
+                    logc->printf("%s    %s\n",prefix,names->formatIns(p->head));
                     count++;
                 }
                 code.clear();
@@ -1406,11 +1478,12 @@ namespace nanojit
 
     class LirBufWriter : public LirWriter
     {
-        LirBuffer*    _buf;        // underlying buffer housing the instructions
+        LirBuffer*              _buf;        // underlying buffer housing the instructions
+        const avmplus::Config&  _config;
 
         public:
-            LirBufWriter(LirBuffer* buf)
-                : LirWriter(0), _buf(buf) {
+            LirBufWriter(LirBuffer* buf, const avmplus::Config& config)
+                : LirWriter(0), _buf(buf), _config(config) {
             }
 
             // LirWriter interface
@@ -1475,14 +1548,10 @@ namespace nanojit
         }
     };
 
-    class Assembler;
-
-    void compile(Assembler *assm, Fragment *frag, Allocator& alloc verbose_only(, LabelMap*));
-    verbose_only(void live(Allocator& alloc, Fragment* frag, LogControl*);)
+    verbose_only(void live(LirFilter* in, Allocator& alloc, Fragment* frag, LogControl*);)
 
     class StackFilter: public LirFilter
     {
-        LirBuffer *lirbuf;
         LInsp sp;
         LInsp rp;
         BitSet spStk;
@@ -1492,7 +1561,7 @@ namespace nanojit
         void getTops(LInsp br, int& spTop, int& rpTop);
 
     public:
-        StackFilter(LirFilter *in, Allocator& alloc, LirBuffer *lirbuf, LInsp sp, LInsp rp);
+        StackFilter(LirFilter *in, Allocator& alloc, LInsp sp, LInsp rp);
         bool ignoreStore(LInsp ins, int top, BitSet* stk);
         LInsp read();
     };
@@ -1529,16 +1598,92 @@ namespace nanojit
     };
 
 #ifdef DEBUG
-    class SanityFilter : public LirWriter
+    // This class does thorough checking of LIR.  It checks *implicit* LIR
+    // instructions, ie. LIR instructions specified via arguments -- to
+    // methods like insLoad() -- that have not yet been converted into
+    // *explicit* LIns objects in a LirBuffer.  The reason for this is that if
+    // we wait until the LIR instructions are explicit, they will have gone
+    // through the entire writer pipeline and been optimised.  By checking
+    // implicit LIR instructions we can check the LIR code at the start of the
+    // writer pipeline, exactly as it is generated by the compiler front-end.
+    //
+    // A general note about the errors produced by this class:  for
+    // TraceMonkey, they won't include special names for instructions that
+    // have them unless TMFLAGS is specified.
+    class ValidateWriter : public LirWriter
     {
+    private:
+        const char* _whereInPipeline;
+
+        const char* type2string(LTy type);
+        void typeCheckArgs(LOpcode op, int nArgs, LTy formals[], LIns* args[]);
+        void errorStructureShouldBe(LOpcode op, const char* argDesc, int argN, LIns* arg,
+                                    const char* shouldBeDesc);
+        void errorPlatformShouldBe(LOpcode op, int nBits);
+        void checkLInsHasOpcode(LOpcode op, int argN, LIns* ins, LOpcode op2);
+        void checkLInsIsACondOrConst(LOpcode op, int argN, LIns* ins);
+        void checkLInsIsNull(LOpcode op, int argN, LIns* ins);
+        void checkLInsIsOverflowable(LOpcode op, int argN, LIns* ins);
+        void checkIs32BitPlatform(LOpcode op);
+        void checkIs64BitPlatform(LOpcode op);
+        void checkOprnd1ImmediatelyPrecedes(LIns* ins);
+
     public:
-        SanityFilter(LirWriter* out) : LirWriter(out)
-        { }
+        ValidateWriter(LirWriter* out, const char* stageName);
+        LIns* insLoad(LOpcode op, LIns* base, int32_t d);
+        LIns* insStore(LOpcode op, LIns* value, LIns* base, int32_t d);
+        LIns* ins0(LOpcode v);
+        LIns* ins1(LOpcode v, LIns* a);
+        LIns* ins2(LOpcode v, LIns* a, LIns* b);
+        LIns* ins3(LOpcode v, LIns* a, LIns* b, LIns* c);
+        LIns* insParam(int32_t arg, int32_t kind);
+        LIns* insImm(int32_t imm);
+        LIns* insImmq(uint64_t imm);
+        LIns* insImmf(double d);
+        LIns* insCall(const CallInfo *call, LIns* args[]);
+        LIns* insGuard(LOpcode v, LIns *c, GuardRecord *gr);
+        LIns* insBranch(LOpcode v, LIns* condition, LIns* to);
+        LIns* insAlloc(int32_t size);
+        LIns* insJtbl(LIns* index, uint32_t size);
+    };
+
+    // This just checks things that aren't possible to check in
+    // ValidateWriter, eg. whether all branch targets are set and are labels.
+    class ValidateReader: public LirFilter {
     public:
-        LIns* ins1(LOpcode v, LIns* s0);
-        LIns* ins2(LOpcode v, LIns* s0, LIns* s1);
-        LIns* ins3(LOpcode v, LIns* s0, LIns* s1, LIns* s2);
+        ValidateReader(LirFilter* in);
+        LIns* read();
     };
 #endif
+
+#ifdef NJ_VERBOSE
+    /* A listing filter for LIR, going through backwards.  It merely
+       passes its input to its output, but notes it down too.  When
+       finish() is called, prints out what went through.  Is intended to be
+       used to print arbitrary intermediate transformation stages of
+       LIR. */
+    class ReverseLister : public LirFilter
+    {
+        Allocator&   _alloc;
+        LirNameMap*  _names;
+        const char*  _title;
+        StringList   _strs;
+        LogControl*  _logc;
+    public:
+        ReverseLister(LirFilter* in, Allocator& alloc,
+                      LirNameMap* names, LogControl* logc, const char* title)
+            : LirFilter(in)
+            , _alloc(alloc)
+            , _names(names)
+            , _title(title)
+            , _strs(alloc)
+            , _logc(logc)
+        { }
+
+        void finish();
+        LInsp read();
+    };
+#endif
+
 }
 #endif // __nanojit_LIR__

@@ -71,11 +71,34 @@
 #include "jsstr.h"
 #include "jstracer.h"
 
+using namespace js;
+
 static void
 FreeContext(JSContext *cx);
 
 static void
 MarkLocalRoots(JSTracer *trc, JSLocalRootStack *lrs);
+
+#ifdef DEBUG
+bool
+CallStack::contains(JSStackFrame *fp)
+{
+    JSStackFrame *start;
+    JSStackFrame *stop;
+    if (isSuspended()) {
+        start = suspendedFrame;
+        stop = initialFrame->down;
+    } else {
+        start = cx->fp;
+        stop = cx->activeCallStack()->initialFrame->down;
+    }
+    for (JSStackFrame *f = start; f != stop; f = f->down) {
+        if (f == fp)
+            return true;
+    }
+    return false;
+}
+#endif
 
 void
 JSThreadData::init()
@@ -86,7 +109,7 @@ JSThreadData::init()
         JS_ASSERT(reinterpret_cast<uint8*>(this)[i] == 0);
 #endif
 #ifdef JS_TRACER
-    js_InitJIT(&traceMonitor);
+    InitJIT(&traceMonitor);
 #endif
     js_InitRandom(this);
 }
@@ -107,7 +130,7 @@ JSThreadData::finish()
     js_FinishGSNCache(&gsnCache);
     js_FinishPropertyCache(&propertyCache);
 #if defined JS_TRACER
-    js_FinishJIT(&traceMonitor);
+    FinishJIT(&traceMonitor);
 #endif
 }
 
@@ -529,6 +552,9 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
             ok = js_InitRuntimeNumberState(cx);
         if (ok)
             ok = js_InitRuntimeStringState(cx);
+        if (ok)
+            ok = JSScope::initRuntimeState(cx);
+
 #ifdef JS_THREADSAFE
         JS_EndRequest(cx);
 #endif
@@ -731,7 +757,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
                 JS_BeginRequest(cx);
 #endif
 
-            /* Unlock and clear GC things held by runtime pointers. */
+            JSScope::finishRuntimeState(cx);
             js_FinishRuntimeNumberState(cx);
             js_FinishRuntimeStringState(cx);
 
@@ -906,44 +932,6 @@ js_WaitForGC(JSRuntime *rt)
             JS_AWAIT_GC_DONE(rt);
         } while (rt->gcRunning);
     }
-}
-
-uint32
-js_DiscountRequestsForGC(JSContext *cx)
-{
-    uint32 requestDebit;
-
-    JS_ASSERT(cx->thread);
-    JS_ASSERT(cx->runtime->gcThread != cx->thread);
-
-#ifdef JS_TRACER
-    if (JS_ON_TRACE(cx)) {
-        JS_UNLOCK_GC(cx->runtime);
-        js_LeaveTrace(cx);
-        JS_LOCK_GC(cx->runtime);
-    }
-#endif
-
-    requestDebit = js_CountThreadRequests(cx);
-    if (requestDebit != 0) {
-        JSRuntime *rt = cx->runtime;
-        JS_ASSERT(requestDebit <= rt->requestCount);
-        rt->requestCount -= requestDebit;
-        if (rt->requestCount == 0)
-            JS_NOTIFY_REQUEST_DONE(rt);
-    }
-    return requestDebit;
-}
-
-void
-js_RecountRequestsAfterGC(JSRuntime *rt, uint32 requestDebit)
-{
-    while (rt->gcLevel > 0) {
-        JS_ASSERT(rt->gcThread);
-        JS_AWAIT_GC_DONE(rt);
-    }
-    if (requestDebit != 0)
-        rt->requestCount += requestDebit;
 }
 
 #endif
@@ -1950,4 +1938,18 @@ JSContext::checkMallocGCPressure(void *p)
         js_TriggerGC(this, true);
     }
     JS_UNLOCK_GC(runtime);
+}
+
+
+bool
+JSContext::isConstructing()
+{
+#ifdef JS_TRACER
+    if (JS_ON_TRACE(this)) {
+        JS_ASSERT(bailExit);
+        return *bailExit->pc == JSOP_NEW;
+    }
+#endif
+    JSStackFrame *fp = js_GetTopStackFrame(this);
+    return fp && (fp->flags & JSFRAME_CONSTRUCTING);
 }

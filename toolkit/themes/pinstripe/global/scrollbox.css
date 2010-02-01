@@ -1,8 +1,4 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-/*
- * Scroll arrows
- */
  
 /* Horizontal enabled */
 .autorepeatbutton-up[orient="horizontal"],

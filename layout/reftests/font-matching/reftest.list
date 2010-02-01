@@ -35,7 +35,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") != impact-bold.html impact.html # bug 539
 != lucidaconsole-bolditalic.html lucidaconsole.html
 != lucidaconsole-bolditalic.html lucidaconsole-bold.html
 
-# checking that we don't match fullnames, psnames (bug 538103)
+# checking that we don't match fullnames, psnames (see bug 538103)
 == arial-variations-1.html arial-variations-1-ref.html
 == arial-variations-2.html arial-variations-2-ref.html
 == arial-variations-3.html arial-variations-3-ref.html

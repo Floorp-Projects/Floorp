@@ -1,7 +1,8 @@
+; See bug 541232 for why the params are commented out.
 .begin avg
-p1 = param 0 0
-p2 = param 1 0
-sum = add p1 p2
+oneh = int 100          ; should be: p1 = param 0 0
+twoh = int 200          ; should be: p2 = param 1 0
+sum = add oneh twoh     ; should be: sum = add p1 p2
 one = int 1
 avg = rsh sum one
 ret avg

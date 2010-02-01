@@ -44,11 +44,6 @@
 
 namespace nanojit
 {
-    inline RegisterMask rmask(Register r)
-    {
-        return RegisterMask(1) << r;
-    }
-
     class RegAlloc
     {
     public:
@@ -64,7 +59,7 @@ namespace nanojit
 
         bool isFree(Register r) const
         {
-            NanoAssert(r != UnknownReg);
+            NanoAssert(r != deprecated_UnknownReg);
             return (free & rmask(r)) != 0;
         }
 
@@ -84,7 +79,7 @@ namespace nanojit
         {
             //  Count++;
             NanoAssert(v);
-            NanoAssert(r != UnknownReg);
+            NanoAssert(r != deprecated_UnknownReg);
             NanoAssert(active[r] == NULL);
             active[r] = v;
             useActive(r);
@@ -92,7 +87,7 @@ namespace nanojit
 
         void useActive(Register r)
         {
-            NanoAssert(r != UnknownReg);
+            NanoAssert(r != deprecated_UnknownReg);
             NanoAssert(active[r] != NULL);
             usepri[r] = priority++;
         }
@@ -100,7 +95,7 @@ namespace nanojit
         void removeActive(Register r)
         {
             //registerReleaseCount++;
-            NanoAssert(r != UnknownReg);
+            NanoAssert(r != deprecated_UnknownReg);
             NanoAssert(active[r] != NULL);
 
             // remove the given register from the active list
@@ -109,19 +104,19 @@ namespace nanojit
 
         void retire(Register r)
         {
-            NanoAssert(r != UnknownReg);
+            NanoAssert(r != deprecated_UnknownReg);
             NanoAssert(active[r] != NULL);
             active[r] = NULL;
             free |= rmask(r);
         }
 
         int32_t getPriority(Register r) {
-            NanoAssert(r != UnknownReg && active[r]);
+            NanoAssert(r != deprecated_UnknownReg && active[r]);
             return usepri[r];
         }
 
         LIns* getActive(Register r) const {
-            NanoAssert(r != UnknownReg);
+            NanoAssert(r != deprecated_UnknownReg);
             return active[r];
         }
 
@@ -171,7 +166,7 @@ namespace nanojit
         //   * And vice versa:  an LIns with an in-use reservation that
         //     names R must be named by 'active[R]'.
         //
-        //   * If an LIns's reservation names 'UnknownReg' then LIns
+        //   * If an LIns's reservation names 'deprecated_UnknownReg' then LIns
         //     should not be in 'active'.
         //
         LIns*           active[LastReg + 1];    // active[r] = LIns that defines r

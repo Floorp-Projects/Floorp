@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL textbox and textarea hierarchy tests">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    function doTest()
+    {
+      // textbox
+      var accTree = {
+        role: ROLE_ENTRY,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF,
+            children: []
+          }
+        ]
+      };
+      testAccessibleTree("txc1", accTree);
+
+      // number textbox
+      testAccessibleTree("txc2", accTree);
+
+      // search textbox
+      testAccessibleTree("txc3", accTree);
+
+      // timed textbox
+      testAccessibleTree("txc4", accTree);
+
+      // password textbox
+      accTree = {
+        role: ROLE_PASSWORD_TEXT,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF,
+            children: []
+          }
+        ]
+      };
+
+      testAccessibleTree("txc5", accTree);
+
+      // multiline textbox
+      accTree = {
+        role: ROLE_ENTRY,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF,
+            children: []
+          },
+          {
+            role: ROLE_WHITESPACE,
+            children: []
+          }
+        ]
+      };
+
+      testAccessibleTree("txc6", accTree);
+
+      // autocomplete textbox
+      accTree = {
+        role: ROLE_AUTOCOMPLETE,
+        children: [
+          {
+            role: ROLE_ENTRY,
+            children: [
+              {
+                role: ROLE_TEXT_LEAF,
+                children: []
+              }
+            ]
+          },
+          {
+            role: ROLE_COMBOBOX_LIST,
+            children: []
+          }
+        ]
+      };
+
+      testAccessibleTree("txc7", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=542824"
+         title="Create child accessibles for text controls from native anonymous content">
+        Mozilla Bug 542824
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <textbox id="txc1" value="hello"/>
+      <textbox id="txc2" type="number" value="44"/>
+      <textbox id="txc3" type="search" value="hello"/>
+      <textbox id="txc4" type="timed" value="hello"/>
+      <textbox id="txc5" type="password" value="hello"/>
+      <textbox id="txc6" multiline="true" value="hello"/>
+      <textbox id="txc7" type="autocomplete" value="hello"/>
+    </vbox>
+  </hbox>
+
+</window>
+

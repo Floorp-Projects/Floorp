@@ -45,6 +45,38 @@
       testAccessibleTree("menulist", accTree);
 
       //////////////////////////////////////////////////////////////////////////
+      // editable menulist
+
+      accTree = {
+        role: ROLE_COMBOBOX,
+        children: [
+          {
+            role: ROLE_ENTRY,
+            children: []
+          },
+          {
+            role: ROLE_COMBOBOX_LIST, // context menu
+            children: []
+          },
+          {
+            role: ROLE_PUSHBUTTON, // dropmarker
+          },
+          {
+            role: ROLE_COMBOBOX_LIST, // option list
+            children: [
+              {
+                role: ROLE_COMBOBOX_OPTION
+              },
+              {
+                role: ROLE_COMBOBOX_OPTION
+              }
+            ]
+          }
+        ]
+      };
+      testAccessibleTree("menulist2", accTree);
+
+      //////////////////////////////////////////////////////////////////////////
       // textbox@type=autocomplete #1 (history)
 
       accTree = {
@@ -116,6 +148,13 @@
 
     <vbox flex="1">
       <menulist id="menulist">
+        <menupopup>
+          <menuitem label="item"/>
+          <menuitem label="item"/>
+        </menupopup>
+      </menulist>
+
+      <menulist id="menulist2" editable="true">
         <menupopup>
           <menuitem label="item"/>
           <menuitem label="item"/>
