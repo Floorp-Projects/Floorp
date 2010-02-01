@@ -205,8 +205,9 @@ public:
   // set the position of the popup either relative to the anchor aAnchorFrame
   // (or the frame for mAnchorContent if aAnchorFrame is null) or at a specific
   // point if a screen position (mScreenXPos and mScreenYPos) are set. The popup
-  // will be adjusted so that it is on screen.
-  nsresult SetPopupPosition(nsIFrame* aAnchorFrame);
+  // will be adjusted so that it is on screen. If aIsMove is true, then the popup
+  // is being moved, and should not be flipped.
+  nsresult SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove);
 
   PRBool HasGeneratedChildren() { return mGeneratedChildren; }
   void SetGeneratedChildren() { mGeneratedChildren = PR_TRUE; }
