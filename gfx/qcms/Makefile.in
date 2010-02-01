@@ -16,6 +16,9 @@ EXPORTS      = qcms.h qcmstypes.h
 CSRCS = iccread.c transform.c
 
 ifeq (86,$(findstring 86,$(OS_TEST)))
+ifeq ($(OS_ARCH)_$(OS_TEST),WINNT_x86_64)
+	CSRCS += transform-sse2.c
+else
 	CSRCS += transform-sse2.c transform-sse1.c
 ifdef GNU_CC
 	SSE1_FLAGS=-msse
@@ -34,6 +37,7 @@ endif
 else
 	SSE1_FLAGS=
 	SSE2_FLAGS=
+endif
 endif
 endif
 endif
