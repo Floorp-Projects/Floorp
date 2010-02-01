@@ -38,12 +38,12 @@
 
 #include "nsRDFPropertyTestNode.h"
 #include "nsString.h"
+#include "nsXULContentUtils.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gXULTemplateLog;
 #include "nsIRDFLiteral.h"
-#include "nsXULContentUtils.h"
 #endif
 
 nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
@@ -336,6 +336,7 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
         }
         else {
             if (!aCantHandleYet) {
+                nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_TRIPLE_UNBOUND);
                 // Neither source nor target assignment!
                 return NS_ERROR_UNEXPECTED;
             }
