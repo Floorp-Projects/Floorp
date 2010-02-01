@@ -951,6 +951,26 @@ class GatherDecls(TcheckVisitor):
 
 ##-----------------------------------------------------------------------------
 
+def checkcycles(p, stack=None):
+    cycles = []
+
+    if stack is None:
+        stack = []
+
+    for cp in p.manages:
+        if cp in stack:
+            return [stack + [p, cp]]
+        cycles += checkcycles(cp, stack + [p])
+
+    return cycles
+
+def formatcycles(cycles):
+    r = []
+    for cycle in cycles:
+        s = " -> ".join([ptype.name() for ptype in cycle])
+        r.append("`%s'" % s)
+    return ", ".join(r)
+
 class CheckTypes(TcheckVisitor):
     def __init__(self, errors):
         # don't need the symbol table, we just want the error reporting
@@ -984,6 +1004,13 @@ class CheckTypes(TcheckVisitor):
                     p.decl.loc,
                    "managed protocol `%s' requires a `delete()' message to be declared",
                     p.name)
+        else:
+            cycles = checkcycles(p.decl.type)
+            if cycles:
+                self.error(
+                    p.decl.loc,
+                    "cycle(s) detected in manager/manages heirarchy: %s",
+                    formatcycles(cycles))
 
         if 1 == len(ptype.managers) and ptype is ptype.manager():
             self.error(
