@@ -1133,7 +1133,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     KillClickHoldTimer();
     break;
 #endif
-  case NS_DRAGDROP_DROP:
   case NS_DRAGDROP_OVER:
     // NS_DRAGDROP_DROP is fired before NS_DRAGDROP_DRAGDROP so send
     // the enter/exit events before NS_DRAGDROP_DROP.
@@ -3629,7 +3628,6 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
     }
     break;
 
-  case NS_DRAGDROP_DROP:
   case NS_DRAGDROP_EXIT:
     {
       //This is actually the window mouse exit event.

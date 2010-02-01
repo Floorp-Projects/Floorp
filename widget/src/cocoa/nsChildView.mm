@@ -5941,6 +5941,8 @@ static BOOL keyUpAlreadySentKeyDown = NO;
       // the |canDrop| property of the Drag Session.
       PRBool canDrop = PR_FALSE;
       if (!NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) || !canDrop) {
+        [self doDragAction:NS_DRAGDROP_EXIT sender:aSender];
+
         nsCOMPtr<nsIDOMNode> sourceNode;
         dragSession->GetSourceNode(getter_AddRefs(sourceNode));
         if (!sourceNode) {
