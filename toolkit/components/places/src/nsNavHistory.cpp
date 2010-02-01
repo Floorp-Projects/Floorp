@@ -398,6 +398,7 @@ nsNavHistory::nsNavHistory()
 , mDatabaseStatus(DATABASE_STATUS_OK)
 , mCanNotify(true)
 , mCacheObservers("history-observers")
+, mHasHistoryEntries(-1)
 {
 #ifdef LAZY_ADD
   mLazyTimerSet = PR_TRUE;
@@ -2470,6 +2471,12 @@ nsNavHistory::GetHasHistoryEntries(PRBool* aHasEntries)
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG_POINTER(aHasEntries);
 
+  // Use cached value if it's been set
+  if (mHasHistoryEntries != -1) {
+    *aHasEntries = (mHasHistoryEntries == 1);
+    return NS_OK;
+  }
+
   nsCOMPtr<mozIStorageStatement> dbSelectStatement;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT 1 "
@@ -2477,7 +2484,11 @@ nsNavHistory::GetHasHistoryEntries(PRBool* aHasEntries)
         "OR EXISTS (SELECT id FROM moz_historyvisits LIMIT 1)"),
     getter_AddRefs(dbSelectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
-  return dbSelectStatement->ExecuteStep(aHasEntries);
+  rv = dbSelectStatement->ExecuteStep(aHasEntries);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mHasHistoryEntries = *aHasEntries ? 1 : 0;
+  return NS_OK;
 }
 
 nsresult
@@ -4370,7 +4381,7 @@ nsNavHistory::GetCount(PRUint32 *aCount)
 nsresult
 nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
 {
-  // early return if there is nothing to delete
+  // Return early if there is nothing to delete.
   if (aPlaceIdsQueryString.IsEmpty())
     return NS_OK;
 
@@ -4379,7 +4390,7 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
   nsresult rv = PreparePlacesForVisitsDelete(aPlaceIdsQueryString);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // delete all visits
+  // Delete all visits for the specified place ids.
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "DELETE FROM moz_historyvisits_view WHERE place_id IN (") +
         aPlaceIdsQueryString +
@@ -4388,6 +4399,9 @@ nsNavHistory::RemovePagesInternal(const nsCString& aPlaceIdsQueryString)
 
   rv = CleanupPlacesOnVisitsDelete(aPlaceIdsQueryString);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Invalidate the cached value for whether there's history or not.
+  mHasHistoryEntries = -1;
 
   return transaction.Commit();
 }
@@ -4828,6 +4842,9 @@ nsNavHistory::RemoveVisitsByTimeframe(PRTime aBeginTime, PRTime aEndTime)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Invalidate the cached value for whether there's history or not.
+  mHasHistoryEntries = -1;
+
   return NS_OK;
 }
 
@@ -4878,6 +4895,9 @@ nsNavHistory::RemoveAllPages()
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Invalidate the cached value for whether there's history or not.
+  mHasHistoryEntries = -1;
 
   // Expiration will take care of orphans.
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
@@ -5509,6 +5529,9 @@ nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
     NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                      nsINavHistoryObserver, OnDeleteVisits(aURI, aVisitTime));
   }
+
+  // Invalidate the cached value for whether there's history or not.
+  mHasHistoryEntries = -1;
 
   return NS_OK;
 }
