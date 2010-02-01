@@ -55,6 +55,7 @@
 #include "mozilla/plugins/StreamNotifyChild.h"
 #include "mozilla/plugins/BrowserStreamChild.h"
 #include "mozilla/plugins/PluginStreamChild.h"
+#include "mozilla/plugins/PluginThreadChild.h"
 
 #include "nsNPAPIPlugin.h"
 
@@ -1253,8 +1254,9 @@ _pluginthreadasynccall(NPP aNPP,
     if (!aFunc)
         return;
 
-    nsCOMPtr<nsIRunnable> e(new ChildAsyncCall(InstCast(aNPP), aFunc, aUserData));
-    NS_DispatchToMainThread(e);
+    PluginThreadChild::current()->message_loop()
+        ->PostTask(FROM_HERE, new ChildAsyncCall(InstCast(aNPP), aFunc,
+                                                 aUserData));
 }
 
 NPError NP_CALLBACK
