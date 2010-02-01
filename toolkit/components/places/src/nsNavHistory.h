@@ -687,6 +687,8 @@ protected:
 
   PRUint16 mDatabaseStatus;
 
+  PRInt8 mHasHistoryEntries;
+
   // Used to enable and disable the observer notifications
   bool mCanNotify;
   nsCategoryCache<nsINavHistoryObserver> mCacheObservers;
