@@ -66,6 +66,7 @@ _TEST_FILES =\
 		test_tree.xul \
 		test_txtcntr.html \
 		test_txtctrl.html \
+		test_txtctrl.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
