@@ -40,7 +40,7 @@
 #include "mozilla/plugins/PluginProcessParent.h"
 
 #include "base/string_util.h"
-#include "mozilla/ipc/GeckoThread.h"
+#include "mozilla/ipc/BrowserProcessSubThread.h"
 
 using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::GeckoChildProcessHost;

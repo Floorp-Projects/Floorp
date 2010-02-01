@@ -59,6 +59,10 @@
 #  define XP_LINUX
 #endif
 
+#ifdef XP_WIN
+#include <process.h>
+#endif
+
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
 #include "nsAutoRef.h"
@@ -79,7 +83,7 @@
 #include "chrome/common/child_process.h"
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
-#include "mozilla/ipc/GeckoThread.h"
+#include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "ScopedXREEmbed.h"
 
 #include "mozilla/plugins/PluginThreadChild.h"
@@ -99,7 +103,6 @@ using mozilla::_ipdltest::IPDLUnitTestThreadChild;
 #endif  // ifdef MOZ_IPDL_TESTS
 
 using mozilla::ipc::GeckoChildProcessHost;
-using mozilla::ipc::GeckoThread;
 using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::ScopedXREEmbed;
 
@@ -306,6 +309,7 @@ XRE_InitChildProcess(int aArgc,
       printf("\n\nCHILDCHILDCHILDCHILD\n  debug me @%d\n\n", getpid());
       sleep(30);
 #elif defined(OS_WIN)
+      printf("\n\nCHILDCHILDCHILDCHILD\n  debug me @%d\n\n", _getpid());
       Sleep(30000);
 #endif
   }
@@ -341,7 +345,7 @@ XRE_InitChildProcess(int aArgc,
 
     switch (aProcess) {
     case GeckoProcessType_Default:
-      mainThread = new GeckoThread(parentHandle);
+      NS_RUNTIMEABORT("This makes no sense");
       break;
 
     case GeckoProcessType_Plugin:
@@ -500,12 +504,12 @@ struct RunnableMethodTraits<ContentProcessChild>
 void
 XRE_ShutdownChildProcess()
 {
-    NS_ABORT_IF_FALSE(NS_IsMainThread(), "Wrong thread!");
+  NS_ABORT_IF_FALSE(MessageLoopForUI::current(), "Wrong thread!");
 
-    MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-    NS_ABORT_IF_FALSE(!!ioLoop, "Bad shutdown order");
+  MessageLoop* ioLoop = XRE_GetIOMessageLoop();
+  NS_ABORT_IF_FALSE(!!ioLoop, "Bad shutdown order");
 
-    ioLoop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
+  ioLoop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
 }
 
 namespace {

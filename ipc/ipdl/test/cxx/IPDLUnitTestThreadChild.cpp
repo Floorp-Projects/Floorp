@@ -40,13 +40,13 @@
 
 #include "IPDLUnitTests.h"
 
-using mozilla::ipc::GeckoThread;
+using mozilla::ipc::MozillaChildThread;
 
 namespace mozilla {
 namespace _ipdltest {
 
 IPDLUnitTestThreadChild::IPDLUnitTestThreadChild(ProcessHandle aParentHandle) :
-    GeckoThread(aParentHandle)
+    MozillaChildThread(aParentHandle)
 {
 }
 
@@ -57,14 +57,8 @@ IPDLUnitTestThreadChild::~IPDLUnitTestThreadChild()
 void
 IPDLUnitTestThreadChild::Init()
 {
-    GeckoThread::Init();
+    MozillaChildThread::Init();
     IPDLUnitTestChildInit(channel(), GetParentProcessHandle(), owner_loop());
-}
-
-void
-IPDLUnitTestThreadChild::CleanUp()
-{
-    GeckoThread::CleanUp();
 }
 
 } // namespace _ipdltest

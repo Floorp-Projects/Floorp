@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/ipc/SyncChannel.h"
-#include "mozilla/ipc/GeckoThread.h"
 
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"

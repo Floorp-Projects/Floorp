@@ -43,7 +43,8 @@
 #include "chrome/common/child_thread.h"
 #include "base/file_path.h"
 
-#include "mozilla/ipc/GeckoThread.h"
+#include "mozilla/ipc/MozillaChildThread.h"
+#include "mozilla/ipc/ScopedXREEmbed.h"
 #include "ContentProcessChild.h"
 
 #undef _MOZ_LOG
@@ -56,7 +57,7 @@ namespace dom {
  * ContentProcessThread is a singleton on the content process which represents
  * a background thread where tab instances live.
  */
-class ContentProcessThread : public mozilla::ipc::GeckoThread
+class ContentProcessThread : public mozilla::ipc::MozillaChildThread
 {
 public:
     ContentProcessThread(ProcessHandle mParentHandle);
@@ -69,6 +70,7 @@ private:
 
     ContentProcessChild mContentProcess;
     IPC::Channel* mChannel;
+    mozilla::ipc::ScopedXREEmbed mXREEmbed;
 
     DISALLOW_EVIL_CONSTRUCTORS(ContentProcessThread);
 };

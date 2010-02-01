@@ -11,7 +11,7 @@
 #include "base/singleton.h"
 #include "base/waitable_event.h"
 #ifdef CHROMIUM_MOZILLA_BUILD
-#include "mozilla/ipc/GeckoThread.h"
+#include "mozilla/ipc/BrowserProcessSubThread.h"
 typedef mozilla::ipc::BrowserProcessSubThread ChromeThread;
 #else
 #include "chrome/browser/chrome_thread.h"
