@@ -207,15 +207,18 @@ static JSBool
 DelayedReleaseGCCallback(JSContext* cx, JSGCStatus status)
 {
   if (JSGC_END == status) {
-    if (sDelayedReleases) {
-      for (PRInt32 i = 0; i < sDelayedReleases->Length(); ++i) {
-        NPObject* obj = (*sDelayedReleases)[i];
+    // Take ownership of sDelayedReleases and null it out now. The
+    // _releaseobject call below can reenter GC and double-free these objects.
+    nsAutoPtr<nsTArray<NPObject*> > delayedReleases(sDelayedReleases);
+    sDelayedReleases = nsnull;
+
+    if (delayedReleases) {
+      for (PRUint32 i = 0; i < delayedReleases->Length(); ++i) {
+        NPObject* obj = (*delayedReleases)[i];
         if (obj)
           _releaseobject(obj);
         OnWrapperDestroyed();
       }
-      delete sDelayedReleases;
-      sDelayedReleases = NULL;
     }
   }
   return JS_TRUE;
