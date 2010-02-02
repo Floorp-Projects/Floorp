@@ -2634,13 +2634,12 @@ Assembler::asm_load32(LInsp ins)
 void
 Assembler::asm_cmov(LInsp ins)
 {
-    LOpcode op    = ins->opcode();
     LIns* condval = ins->oprnd1();
     LIns* iftrue  = ins->oprnd2();
     LIns* iffalse = ins->oprnd3();
 
     NanoAssert(condval->isCmp());
-    NanoAssert(op == LIR_cmov && iftrue->isI32() && iffalse->isI32());
+    NanoAssert(ins->opcode() == LIR_cmov && iftrue->isI32() && iffalse->isI32());
 
     const Register rr = deprecated_prepResultReg(ins, GpRegs);
 
