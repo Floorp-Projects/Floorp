@@ -73,8 +73,7 @@ toolbarbutton.tabbable {
   -moz-user-focus: normal !important;
 }
 
-toolbarbutton:hover,
-toolbarbutton[buttonover="true"] {
+toolbarbutton:hover {
   border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
   color: -moz-buttonhovertext;
 }
