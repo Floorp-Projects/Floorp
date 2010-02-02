@@ -46,11 +46,11 @@
 #include "nsIContent.h"
 #include "nsIDOMXULElement.h"
 #include "nsIPresShell.h"
+#include "nsAccessibilityService.h"
 #include "nsWeakReference.h"
 
 nsAccessibleTreeWalker::nsAccessibleTreeWalker(nsIWeakReference* aPresShell, nsIDOMNode* aNode, PRBool aWalkAnonContent): 
-  mWeakShell(aPresShell), 
-  mAccService(do_GetService("@mozilla.org/accessibilityService;1")),
+  mWeakShell(aPresShell),
   mWalkAnonContent(aWalkAnonContent)
 {
   mState.domNode = aNode;
@@ -294,16 +294,12 @@ nsAccessibleTreeWalker::WalkFrames()
  */
 PRBool nsAccessibleTreeWalker::GetAccessible()
 {
-  if (!mAccService) {
-    return PR_FALSE;
-  }
-
   mState.accessible = nsnull;
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
 
-  mAccService->GetAccessible(mState.domNode, presShell, mWeakShell,
-                             mState.frame.GetFrame(), &mState.isHidden,
-                             getter_AddRefs(mState.accessible));
+  GetAccService()->GetAccessible(mState.domNode, presShell, mWeakShell,
+                                 mState.frame.GetFrame(), &mState.isHidden,
+                                 getter_AddRefs(mState.accessible));
 
   return mState.accessible ? PR_TRUE : PR_FALSE;
 }
