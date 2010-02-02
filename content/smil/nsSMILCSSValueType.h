@@ -54,6 +54,10 @@ class nsAString;
 class nsSMILCSSValueType : public nsISMILType
 {
 public:
+  // Singleton for nsSMILValue objects to hold onto.
+  static nsSMILCSSValueType sSingleton;
+
+protected:
   // nsISMILType Methods
   // -------------------
   NS_OVERRIDE virtual nsresult Init(nsSMILValue& aValue) const;
@@ -71,7 +75,9 @@ public:
                                            double aUnitDistance,
                                            nsSMILValue& aResult) const;
 
-  /* ---------- Helper methods, not inherited from nsISMILType ---------- */
+public:
+  // Helper Methods
+  // --------------
   /**
    * Sets up the given nsSMILValue to represent the given string value.  The
    * string is interpreted as a value for the given property on the given
@@ -107,11 +113,11 @@ public:
    */
   static PRBool ValueToString(const nsSMILValue& aValue, nsAString& aString);
 
-  // Singleton for nsSMILValue objects to hold onto.
-  static nsSMILCSSValueType sSingleton;
-
 private:
-  nsSMILCSSValueType() {}
+  // Private constructor & destructor: prevent instances beyond my singleton,
+  // and prevent others from deleting my singleton.
+  nsSMILCSSValueType()  {}
+  ~nsSMILCSSValueType() {}
 };
 
 #endif // NS_SMILCSSVALUETYPE_H_

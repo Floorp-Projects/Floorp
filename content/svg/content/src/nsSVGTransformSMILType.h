@@ -106,7 +106,12 @@ class nsSMILValue;
 class nsSVGTransformSMILType : public nsISMILType
 {
 public:
-  // nsISMILType
+  // Singleton for nsSMILValue objects to hold onto.
+  static nsSVGTransformSMILType sSingleton;
+
+protected:
+  // nsISMILType Methods
+  // -------------------
   virtual nsresult Init(nsSMILValue& aValue) const;
   virtual void     Destroy(nsSMILValue& aValue) const;
   virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const;
@@ -123,7 +128,9 @@ public:
                                double aUnitDistance,
                                nsSMILValue& aResult) const;
 
+public:
   // Transform array accessors
+  // -------------------------
   static PRUint32 GetNumTransforms(const nsSMILValue& aValue);
   static const nsSVGSMILTransform* GetTransformAt(PRUint32 aIndex,
                                                   const nsSMILValue& aValue);
@@ -131,10 +138,11 @@ public:
                                   nsSMILValue& aValue);
 
 
-  static nsSVGTransformSMILType sSingleton;
-
 private:
-  nsSVGTransformSMILType() {}
+  // Private constructor & destructor: prevent instances beyond my singleton,
+  // and prevent others from deleting my singleton.
+  nsSVGTransformSMILType()  {}
+  ~nsSVGTransformSMILType() {}
 };
 
 #endif // NS_SVGTRANSFORMSMILTYPE_H_
