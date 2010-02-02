@@ -417,6 +417,12 @@ protected:
    */
   nsresult UpdateFileList();
 
+  /**
+   * Determine whether the editor needs to be initialized explicitly for
+   * a particular event.
+   */
+  PRBool NeedToInitializeEditorForEvent(nsEventChainPreVisitor& aVisitor) const;
+
   nsCOMPtr<nsIControllers> mControllers;
 
   /**
@@ -1559,6 +1565,32 @@ nsHTMLInputElement::Click()
   return NS_OK;
 }
 
+PRBool
+nsHTMLInputElement::NeedToInitializeEditorForEvent(nsEventChainPreVisitor& aVisitor) const
+{
+  // We only need to initialize the editor for text input controls because they
+  // are lazily initialized.  We don't need to initialize the control for
+  // certain types of events, because we know that those events are safe to be
+  // handled without the editor being initialized.  These events include:
+  // mousein/move/out, and DOM mutation events.
+  if ((mType == NS_FORM_INPUT_TEXT ||
+       mType == NS_FORM_INPUT_PASSWORD) &&
+      aVisitor.mEvent->eventStructType != NS_MUTATION_EVENT) {
+
+    switch (aVisitor.mEvent->message) {
+    case NS_MOUSE_MOVE:
+    case NS_MOUSE_ENTER:
+    case NS_MOUSE_EXIT:
+    case NS_MOUSE_ENTER_SYNTH:
+    case NS_MOUSE_EXIT_SYNTH:
+      return PR_FALSE;
+      break;
+    }
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
 nsresult
 nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
@@ -1583,6 +1615,13 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
         return NS_OK;
       }
     }
+  }
+
+  // Initialize the editor if needed.
+  if (NeedToInitializeEditorForEvent(aVisitor)) {
+    nsITextControlFrame* textControlFrame = do_QueryFrame(GetPrimaryFrame());
+    if (textControlFrame)
+      textControlFrame->EnsureEditorInitialized();
   }
 
   //FIXME Allow submission etc. also when there is no prescontext, Bug 329509.
