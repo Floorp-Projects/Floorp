@@ -3096,13 +3096,13 @@ nsAccessible::GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError)
 already_AddRefed<nsIAccessible>
 nsAccessible::GetFirstAvailableAccessible(nsIDOMNode *aStartNode)
 {
-  nsIAccessibilityService *accService = GetAccService();
   nsCOMPtr<nsIAccessible> accessible;
   nsCOMPtr<nsIDOMTreeWalker> walker; 
   nsCOMPtr<nsIDOMNode> currentNode(aStartNode);
 
   while (currentNode) {
-    accService->GetAccessibleInWeakShell(currentNode, mWeakShell, getter_AddRefs(accessible)); // AddRef'd
+    GetAccService()->GetAccessibleInWeakShell(currentNode, mWeakShell,
+                                              getter_AddRefs(accessible));
     if (accessible)
       return accessible.forget();
 

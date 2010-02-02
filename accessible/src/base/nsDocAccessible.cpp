@@ -2113,9 +2113,6 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
   nsCOMPtr<nsIDOMNode> currentNode(aNode), parentNode;
   nsCOMPtr<nsIAccessNode> accessNode;
 
-  nsIAccessibilityService *accService = GetAccService();
-  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
-
   do {
     currentNode->GetParentNode(getter_AddRefs(parentNode));
     currentNode = parentNode;
@@ -2126,11 +2123,12 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
     }
 
     nsCOMPtr<nsIDOMNode> relevantNode;
-    if (NS_SUCCEEDED(accService->GetRelevantContentNodeFor(currentNode, getter_AddRefs(relevantNode))) && relevantNode) {
+    if (NS_SUCCEEDED(GetAccService()->GetRelevantContentNodeFor(currentNode, getter_AddRefs(relevantNode))) && relevantNode) {
       currentNode = relevantNode;
     }
     if (aCanCreate) {
-      accService->GetAccessibleInWeakShell(currentNode, mWeakShell, aAccessible);
+      GetAccService()->GetAccessibleInWeakShell(currentNode, mWeakShell, 
+                                                aAccessible);
     }
     else { // Only return cached accessibles, don't create anything
       nsCOMPtr<nsIAccessNode> accessNode;

@@ -56,7 +56,7 @@ interface nsIDOMDOMStringList;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(244e4c67-a1d3-44f2-9cab-cdaa31b68046)]
+[scriptable, uuid(7eb49afb-6298-4ce6-816f-9615936540f4)]
 interface nsIAccessibleRetrieval : nsISupports
 {
   /**
@@ -91,16 +91,6 @@ interface nsIAccessibleRetrieval : nsISupports
    * @return - the DOM node for parent attached accessible
    */
   nsIDOMNode getRelevantContentNodeFor(in nsIDOMNode aNode);
-
-  /**
-   * Return an nsIAccessible for a DOM node in the given weak shell.
-   * Create a new accessible of the appropriate type if necessary,
-   * or use one from the accessibility cache if it already exists.
-   * @param aNode      The DOM node to get an accessible for.
-   * @param aPresShell The presentation shell which contains layout info for the DOM node.
-   * @return The nsIAccessible for the given DOM node.
-   */
-  nsIAccessible getAccessibleInWeakShell(in nsIDOMNode aNode, in nsIWeakReference aPresShell);
 
   /**
    * Return an nsIAccessible for a DOM node in the given pres shell.
