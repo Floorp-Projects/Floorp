@@ -113,31 +113,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
       testThis("nonLinkedImage", null, "moz.png", 89, 38);
 
       // Test linked image
-      testThis("linkedImage", null, "moz.png", 93, 42);
+      testThis("linkedImage", null, "moz.png", 89, 38);
 
       // Test non-linked image with alt attribute
       testThis("nonLinkedImageWithAlt", "MoFo", "moz.png", 89, 38);
 
       // Test linked image with alt attribute
-      testThis("linkedImageWithAlt", "MoFo link", "moz.png", 93, 42);
+      testThis("linkedImageWithAlt", "MoFo link", "moz.png", 89, 38);
 
       // Test non-linked image with title attribute
       testThis("nonLinkedImageWithTitle", "MoFo logo", "moz.png", 89, 38);
 
       // Test linked image with title attribute
-      testThis("linkedImageWithTitle", "Link to MoFo", "moz.png", 93, 42);
+      testThis("linkedImageWithTitle", "Link to MoFo", "moz.png", 89, 38);
 
       // Test simple image with empty alt attribute
       testThis("nonLinkedImageEmptyAlt", "", "moz.png", 89, 38);
 
       // Test linked image with empty alt attribute
-      testThis("linkedImageEmptyAlt", "", "moz.png", 93, 42);
+      testThis("linkedImageEmptyAlt", "", "moz.png", 89, 38);
 
       // Test simple image with empty alt attribute and title
       testThis("nonLinkedImageEmptyAltAndTitle", "MozillaFoundation", "moz.png", 89, 38);
 
       // Test linked image with empty alt attribute and title
-      testThis("linkedImageEmptyAltAndTitle", "Link to Mozilla Foundation", "moz.png", 93, 42);
+      testThis("linkedImageEmptyAltAndTitle", "Link to Mozilla Foundation", "moz.png", 89, 38);
 
       // Image with long desc
       var actionNamesArray = new Array("showlongdesc");
