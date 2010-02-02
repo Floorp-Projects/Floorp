@@ -122,17 +122,16 @@ public:
                                const nsSMILValue& aEndVal,
                                double aUnitDistance,
                                nsSMILValue& aResult) const;
+
   // Transform array accessors
-  PRUint32 GetNumTransforms(const nsSMILValue& aValue) const;
-  const nsSVGSMILTransform* GetTransformAt(PRUint32 aIndex,
-                                           const nsSMILValue& aValue) const;
-  nsresult AppendTransform(const nsSVGSMILTransform& aTransform,
-                           nsSMILValue& aValue) const;
+  static PRUint32 GetNumTransforms(const nsSMILValue& aValue);
+  static const nsSVGSMILTransform* GetTransformAt(PRUint32 aIndex,
+                                                  const nsSMILValue& aValue);
+  static nsresult AppendTransform(const nsSVGSMILTransform& aTransform,
+                                  nsSMILValue& aValue);
+
 
   static nsSVGTransformSMILType sSingleton;
-
-protected:
-  typedef nsTArray<nsSVGSMILTransform> TransformArray;
 
 private:
   nsSVGTransformSMILType() {}
