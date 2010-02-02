@@ -78,9 +78,32 @@ ContentProcessParent::GetSingleton()
                     gSingleton = parent;
                 }
             }
+            nsCOMPtr<nsIThreadInternal>
+                threadInt(do_QueryInterface(NS_GetCurrentThread()));
+            if (threadInt) {
+                threadInt->GetObserver(getter_AddRefs(parent->mOldObserver));
+                threadInt->SetObserver(parent);
+            }
         }
     }
     return gSingleton;
+}
+
+void
+ContentProcessParent::ActorDestroy(ActorDestroyReason why)
+{
+    nsCOMPtr<nsIThreadObserver>
+        kungFuDeathGrip(static_cast<nsIThreadObserver*>(this));
+    nsCOMPtr<nsIObserverService>
+        obs(do_GetService("@mozilla.org/observer-service;1"));
+    if (obs)
+        obs->RemoveObserver(static_cast<nsIObserver*>(this), "xpcom-shutdown");
+    nsCOMPtr<nsIThreadInternal>
+        threadInt(do_QueryInterface(NS_GetCurrentThread()));
+    if (threadInt)
+        threadInt->SetObserver(mOldObserver);
+    if (mRunToCompletionDepth)
+        mRunToCompletionDepth = 0;
 }
 
 TabParent*
@@ -103,6 +126,7 @@ ContentProcessParent::DestroyTestShell(TestShellParent* aTestShell)
 
 ContentProcessParent::ContentProcessParent()
     : mMonitor("ContentProcessParent::mMonitor")
+    , mRunToCompletionDepth(0)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content);
@@ -118,7 +142,9 @@ ContentProcessParent::~ContentProcessParent()
     gSingleton = nsnull;
 }
 
-NS_IMPL_ISUPPORTS1(ContentProcessParent, nsIObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS2(ContentProcessParent,
+                              nsIObserver,
+                              nsIThreadObserver)
 
 namespace {
 void
@@ -182,5 +208,63 @@ ContentProcessParent::DeallocPNecko(PNeckoParent* necko)
     return true;
 }
 
+bool
+ContentProcessParent::RequestRunToCompletion()
+{
+    if (!mRunToCompletionDepth &&
+        BlockChild()) {
+#ifdef DEBUG
+        printf("Running to completion...\n");
+#endif
+        mRunToCompletionDepth = 1;
+    }
+
+    return !!mRunToCompletionDepth;
+}
+
+/* void onDispatchedEvent (in nsIThreadInternal thread); */
+NS_IMETHODIMP
+ContentProcessParent::OnDispatchedEvent(nsIThreadInternal *thread)
+{
+    if (mOldObserver)
+        return mOldObserver->OnDispatchedEvent(thread);
+
+    return NS_OK;
+}
+
+/* void onProcessNextEvent (in nsIThreadInternal thread, in boolean mayWait, in unsigned long recursionDepth); */
+NS_IMETHODIMP
+ContentProcessParent::OnProcessNextEvent(nsIThreadInternal *thread,
+                                         PRBool mayWait,
+                                         PRUint32 recursionDepth)
+{
+    if (mRunToCompletionDepth)
+        ++mRunToCompletionDepth;
+
+    if (mOldObserver)
+        return mOldObserver->OnProcessNextEvent(thread, mayWait, recursionDepth);
+
+    return NS_OK;
+}
+
+/* void afterProcessNextEvent (in nsIThreadInternal thread, in unsigned long recursionDepth); */
+NS_IMETHODIMP
+ContentProcessParent::AfterProcessNextEvent(nsIThreadInternal *thread,
+                                            PRUint32 recursionDepth)
+{
+    if (mRunToCompletionDepth &&
+        !--mRunToCompletionDepth) {
+#ifdef DEBUG
+            printf("... ran to completion.\n");
+#endif
+            UnblockChild();
+    }
+
+    if (mOldObserver)
+        return mOldObserver->AfterProcessNextEvent(thread, recursionDepth);
+
+    return NS_OK;
+}
+    
 } // namespace dom
 } // namespace mozilla
