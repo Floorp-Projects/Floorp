@@ -7,7 +7,7 @@
 -->
 
 <window title="XUL Template Tests" width="500" height="600"
-        onload="expectLoggedMessages(); test_template();"
+        onload="test_template();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript"
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
@@ -37,7 +37,7 @@ var expectedOutput =
 Components.classes["@mozilla.org/consoleservice;1"].
            getService(Components.interfaces.nsIConsoleService).reset();
 
-function expectLoggedMessages()
+expectLoggedMessages = function()
 {
   // check log to ensure that two rows have been added
   var initialNumber = Number(document.getElementById("root").firstChild.nextSibling.id.substring(3));
