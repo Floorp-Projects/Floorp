@@ -65,13 +65,6 @@ toolbarbutton:not([disabled="true"]):active:hover {
   vertical-align: middle;
 }
 
-toolbarbutton:hover:active[buttonstyle="text"],
-toolbarbutton[open="true"][buttonstyle="text"] {
-  color: #2c498c;
-}
-
-
-
 toolbarbutton[disabled="true"],
 toolbarbutton[disabled="true"]:hover,
 toolbarbutton[disabled="true"]:hover:active,
