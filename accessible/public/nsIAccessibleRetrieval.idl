@@ -93,16 +93,6 @@ interface nsIAccessibleRetrieval : nsISupports
   nsIDOMNode getRelevantContentNodeFor(in nsIDOMNode aNode);
 
   /**
-   * Return an nsIAccessible for a DOM node in pres shell for this DOM window.
-   * Create a new accessible of the appropriate type if necessary,
-   * or use one from the accessibility cache if it already exists.
-   * @param aNode   The DOM node to get an accessible for.
-   * @param aDOMWin The DOM window containing the node.
-   * @return The nsIAccessible for the given DOM node.
-   */
-  nsIAccessible getAccessibleInWindow(in nsIDOMNode aNode, in nsIDOMWindow aDOMWin);
-
-  /**
    * Return an nsIAccessible for a DOM node in the given weak shell.
    * Create a new accessible of the appropriate type if necessary,
    * or use one from the accessibility cache if it already exists.
