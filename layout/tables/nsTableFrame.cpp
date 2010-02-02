@@ -3479,7 +3479,7 @@ nsTableFrame::DumpRowGroup(nsIFrame* aKidFrame)
         if (cellFrame) {
           PRInt32 colIndex;
           cellFrame->GetColIndex(colIndex);
-          printf("cell(%d)=%p ", colIndex, childFrame);
+          printf("cell(%d)=%p ", colIndex, static_cast<void*>(childFrame));
         }
         childFrame = childFrame->GetNextSibling();
       }
