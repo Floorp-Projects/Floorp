@@ -41,6 +41,7 @@
 #include "nsIContent.h"
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5HtmlAttributes.h"
+#include "nsXPCOMStrings.h"
 
 class nsHtml5TreeOpExecutor;
 class nsHtml5StateSnapshot;
@@ -263,6 +264,15 @@ class nsHtml5TreeOperation {
       mOne.charPtr = str;
     }
 
+    inline void Init(eHtml5TreeOperation aOpCode, const nsAString& aString) {
+      NS_PRECONDITION(mOpCode == eTreeOpUninitialized,
+        "Op code must be uninitialized when initializing.");
+
+      PRUnichar* str = NS_StringCloneData(aString);
+      mOpCode = aOpCode;
+      mOne.unicharPtr = str;
+    }
+    
     inline void Init(eHtml5TreeOperation aOpCode,
                      nsIContent** aNode,
                      PRInt32 aInt) {

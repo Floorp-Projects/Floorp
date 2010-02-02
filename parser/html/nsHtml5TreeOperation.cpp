@@ -119,6 +119,9 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
     case eTreeOpNeedsCharsetSwitchTo:
       delete[] mOne.charPtr;
       break;
+    case eTreeOpProcessOfflineManifest:
+      nsMemory::Free(mOne.unicharPtr);
+      break;
     default: // keep the compiler happy
       break;
   }
@@ -554,8 +557,9 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return rv;
     }
     case eTreeOpProcessOfflineManifest: {
-      nsIContent* node = *(mOne.node);
-      aBuilder->ProcessOfflineManifest(node);
+      PRUnichar* str = mOne.unicharPtr;
+      nsDependentString dependentString(str);
+      aBuilder->ProcessOfflineManifest(dependentString);
       return rv;
     }
     case eTreeOpMarkMalformedIfScript: {

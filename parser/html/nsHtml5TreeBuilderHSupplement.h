@@ -60,7 +60,8 @@
     
   public:
 
-    nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink);
+    nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink, 
+                       nsHtml5SpeculativeLoader* aSpeculativeLoader);
 
     ~nsHtml5TreeBuilder();
     
@@ -76,8 +77,10 @@
       mOpQueue.Clear();
     }
     
-    void SetSpeculativeLoaderWithDocument(nsIDocument* aDocument);
-
+    PRBool HasSpeculativeLoader() {
+      return !!mSpeculativeLoader;
+    }
+    
     void DropSpeculativeLoader();
 
     PRBool Flush();

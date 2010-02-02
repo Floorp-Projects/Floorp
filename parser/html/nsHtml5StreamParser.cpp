@@ -50,6 +50,7 @@
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5Module.h"
 #include "nsHtml5RefPtr.h"
+#include "nsHtml5SpeculativeLoader.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
@@ -91,7 +92,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHtml5StreamParser)
   tmp->mOwner = nsnull;
   tmp->mExecutorFlusher = nsnull;
   tmp->mExecutor = nsnull;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChardet)
   tmp->mTreeBuilder->DropSpeculativeLoader();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -108,7 +108,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExecutorFlusher->mExecutor");
     cb.NoteXPCOMChild(static_cast<nsIContentSink*> (tmp->mExecutor));
   }
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
   // hack: count self if held by mChardet
   if (tmp->mChardet) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, 
@@ -116,10 +115,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsHtml5StreamParser)
     cb.NoteXPCOMChild(static_cast<nsIStreamListener*>(tmp));
   }
   // hack: count the strongly owned edge wrapped in the speculative loader
-  if (tmp->mDocument) {
+  if (tmp->mTreeBuilder->HasSpeculativeLoader()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, 
-      "mTreeBuilder->mSpeculativeLoader->mDocument");
-    cb.NoteXPCOMChild(tmp->mDocument);    
+      "mTreeBuilder->mSpeculativeLoader->mExecutor");
+    cb.NoteXPCOMChild(static_cast<nsIContentSink*> (tmp->mExecutor));
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -143,7 +142,8 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   : mFirstBuffer(new nsHtml5UTF16Buffer(NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE))
   , mLastBuffer(mFirstBuffer)
   , mExecutor(aExecutor)
-  , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor->GetStage()))
+  , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor->GetStage(), 
+                                        new nsHtml5SpeculativeLoader(mExecutor)))
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder))
   , mTokenizerMutex("nsHtml5StreamParser mTokenizerMutex")
   , mOwner(aOwner)
@@ -197,13 +197,6 @@ nsHtml5StreamParser::~nsHtml5StreamParser()
     mFlushTimer->Cancel();
     mFlushTimer = nsnull;
   }
-}
-
-void
-nsHtml5StreamParser::SetSpeculativeLoaderWithDocument(nsIDocument* aDocument) {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  mDocument = aDocument;
-  mTreeBuilder->SetSpeculativeLoaderWithDocument(aDocument);
 }
 
 nsresult
@@ -1039,7 +1032,7 @@ nsHtml5StreamParser::PostTimerFlush()
                                     sTimerInterval, 
                                     nsITimer::TYPE_ONE_SHOT);
 
-  // TODO: (If mDocument isn't in the frontmost tab or If the user isn't 
+  // TODO: (If the document isn't in the frontmost tab or If the user isn't 
   // interacting with the browser) and this isn't every nth timer flush, return
 
   nsCOMPtr<nsIRunnable> event = new nsHtml5StreamParserTimerFlusher(this);
