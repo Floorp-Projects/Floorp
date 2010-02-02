@@ -378,6 +378,12 @@ nsAnnotationService::SetPageAnnotation(nsIURI* aURI,
 }
 
 
+
+// XXX for some reason, this next block of code seems to kill MSVC (bug 543034)
+#ifdef _MSC_VER
+#pragma optimize("", off)
+#endif
+
 NS_IMETHODIMP
 nsAnnotationService::SetItemAnnotation(PRInt64 aItemId,
                                        const nsACString& aName,
@@ -456,6 +462,10 @@ nsAnnotationService::SetItemAnnotation(PRInt64 aItemId,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// End workaround for bug 543034
+#ifdef _MSC_VER
+#pragma optimize("", on)
+#endif
 
 NS_IMETHODIMP
 nsAnnotationService::SetPageAnnotationString(nsIURI* aURI,
