@@ -45,6 +45,7 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 #include "nsIObserver.h"
+#include "nsIThreadInternal.h"
 #include "mozilla/Monitor.h"
 
 namespace mozilla {
@@ -57,8 +58,9 @@ namespace dom {
 
 class TabParent;
 
-class ContentProcessParent : public PContentProcessParent,
-                             public nsIObserver
+class ContentProcessParent : public PContentProcessParent
+                           , public nsIObserver
+                           , public nsIThreadObserver
 {
 private:
     typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
@@ -74,11 +76,17 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
+    NS_DECL_NSITHREADOBSERVER
 
     TabParent* CreateTab();
 
     TestShellParent* CreateTestShell();
     bool DestroyTestShell(TestShellParent* aTestShell);
+
+    bool RequestRunToCompletion();
+
+protected:
+    virtual void ActorDestroy(ActorDestroyReason why);
 
 private:
     static ContentProcessParent* gSingleton;
@@ -103,6 +111,10 @@ private:
     mozilla::Monitor mMonitor;
 
     GeckoChildProcessHost* mSubprocess;
+
+    int mRunToCompletionDepth;
+    nsCOMPtr<nsIThreadObserver> mOldObserver;
+
 };
 
 } // namespace dom
