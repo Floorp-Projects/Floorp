@@ -4628,12 +4628,9 @@ nsCSSFrameConstructor::FindMathMLData(nsIContent* aContent,
   if (aNameSpaceID != kNameSpaceID_MathML) 
     return nsnull;
 
-  const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
-
   // Handle <math> specially, because it sometimes produces inlines
   if (aTag == nsGkAtoms::math) {
-    if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK ||
-        display->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK) {
+    if (aStyleContext->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
       static const FrameConstructionData sBlockMathData =
         FCDATA_DECL(FCDATA_FORCE_NULL_ABSPOS_CONTAINER |
                     FCDATA_WRAP_KIDS_IN_BLOCKS,
