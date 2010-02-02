@@ -78,8 +78,7 @@ toolbarbutton:focus
   outline-offset: -2px;
 }
 
-toolbarbutton:hover:not([disabled="true"]),
-toolbarbutton[buttonover="true"] {
+toolbarbutton:hover:not([disabled="true"]) {
   border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
 }
 
