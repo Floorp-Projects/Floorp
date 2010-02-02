@@ -363,8 +363,7 @@ nsPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
     // Codebases are equal if they have the same origin.
     *aResult =
       NS_SUCCEEDED(nsScriptSecurityManager::CheckSameOriginPrincipal(this,
-                                                                     aOther,
-                                                                     PR_FALSE));
+                                                                     aOther));
     return NS_OK;
   }
 
