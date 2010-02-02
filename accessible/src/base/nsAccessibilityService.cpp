@@ -1173,26 +1173,6 @@ nsAccessibilityService::GetAttachedAccessibleFor(nsIDOMNode *aNode,
   return GetAccessibleFor(aNode, aAccessible);
 }
 
-NS_IMETHODIMP nsAccessibilityService::GetAccessibleInWindow(nsIDOMNode *aNode, 
-                                                            nsIDOMWindow *aWin,
-                                                            nsIAccessible **aAccessible)
-{
-  NS_ENSURE_ARG_POINTER(aAccessible);
-  *aAccessible = nsnull;
-
-  NS_ENSURE_ARG(aNode);
-  NS_ENSURE_ARG(aWin);
-
-  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(aWin));
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webNav));
-  if (!docShell)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
-  return GetAccessibleInShell(aNode, presShell, aAccessible);
-}
-
 NS_IMETHODIMP nsAccessibilityService::GetAccessibleInShell(nsIDOMNode *aNode, 
                                                            nsIPresShell *aPresShell,
                                                            nsIAccessible **aAccessible) 
