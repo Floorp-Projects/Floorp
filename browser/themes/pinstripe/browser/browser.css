@@ -1591,10 +1591,6 @@ tabbrowser > tabbox {
   display: none;
 }
 
-tabbrowser > tabbox > tabpanels {
-  -moz-appearance: none !important;
-}
-
 /**
  * Tab Drag and Drop
  */
@@ -1780,10 +1776,6 @@ tabbrowser > tabbox > tabpanels {
 
 .tabs-closebutton:hover:active {
   list-style-image: url("chrome://global/skin/icons/closetab-active.png");
-}
-
-tabpanels.plain {
-	background-color: #fff !important;
 }
 
 /* Bookmarks toolbar */
