@@ -85,7 +85,7 @@ nsHtml5Parser::nsHtml5Parser()
   : mFirstBuffer(new nsHtml5UTF16Buffer(0))
   , mLastBuffer(mFirstBuffer)
   , mExecutor(new nsHtml5TreeOpExecutor())
-  , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor))
+  , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor, nsnull))
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder))
   , mRootContextLineNumber(1)
 {
@@ -662,9 +662,6 @@ nsHtml5Parser::Initialize(nsIDocument* aDoc,
                           nsISupports* aContainer,
                           nsIChannel* aChannel)
 {
-  if (mStreamParser && aDoc) {
-    mStreamParser->SetSpeculativeLoaderWithDocument(aDoc);
-  }
   return mExecutor->Init(aDoc, aURI, aContainer, aChannel);
 }
 
