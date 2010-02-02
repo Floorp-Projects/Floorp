@@ -118,6 +118,7 @@
 #include "nsINativeKeyBindings.h"
 #include "nsIJSContextStack.h"
 #include "nsFocusManager.h"
+#include "nsTextEditRules.h"
 
 #define DEFAULT_COLUMN_WIDTH 20
 
@@ -1331,7 +1332,8 @@ nsTextControlFrame::EnsureEditorInitialized()
   // to display wrong values.  Additionally, calling this every time
   // a text frame control is instantiated means that we're effectively
   // instantiating the editor for all text fields, even if they
-  // never get used.
+  // never get used.  So, now this method is being called lazily only
+  // when we actually need an editor.
 
   // Check if this method has been called already.
   // If so, just return early.
@@ -1411,6 +1413,9 @@ nsTextControlFrame::EnsureEditorInitialized()
   nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(shell->GetDocument());
   if (!domdoc)
     return NS_ERROR_FAILURE;
+
+  // Make sure we clear out the non-breaking space before we initialize the editor
+  UpdateValueDisplay(PR_FALSE, PR_TRUE);
 
   rv = mEditor->Init(domdoc, shell, mValueDiv, mSelCon, editorFlags);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1619,6 +1624,9 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   if (!aElements.AppendElement(mValueDiv))
     return NS_ERROR_OUT_OF_MEMORY;
 
+  rv = UpdateValueDisplay(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Create selection
 
   mFrameSel = do_CreateInstance(kFrameSelectionCID, &rv);
@@ -1659,11 +1667,14 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
                                              (mTextListener));
   }
 
-  NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
-               "Someone forgot a script blocker?");
+  if (!IsSingleLineTextControl()) {
+    // textareas are eagerly initialized
+    NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
+                 "Someone forgot a script blocker?");
 
-  if (!nsContentUtils::AddScriptRunner(new EditorInitializer(this))) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    if (!nsContentUtils::AddScriptRunner(new EditorInitializer(this))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   // Now create the placeholder anonymous content
@@ -2456,7 +2467,7 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
     { // unset disabled
       flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
       mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_HIDDEN);
-    }    
+    }
     mEditor->SetFlags(flags);
   }
   else if (nsGkAtoms::placeholder == aAttribute)
@@ -2464,6 +2475,9 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
     nsWeakFrame weakFrame(this);
     UpdatePlaceholderText(PR_TRUE);
     NS_ENSURE_STATE(weakFrame.IsAlive());
+  }
+  else if (!mUseEditor && nsGkAtoms::value == aAttribute) {
+    UpdateValueDisplay(PR_TRUE);
   }
   // Allow the base class to handle common attributes supported
   // by all form elements... 
@@ -2809,6 +2823,12 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
     {
       textControl->TakeTextFrameValue(aValue);
     }
+    // The only time mEditor is non-null but mUseEditor is false is when the
+    // frame is being torn down.  If that's what's going on, don't bother with
+    // updating the display.
+    if (!mEditor) {
+      UpdateValueDisplay(PR_TRUE, PR_FALSE, &aValue);
+    }
   }
   return NS_OK;
 }
@@ -2874,6 +2894,103 @@ nsTextControlFrame::SetValueChanged(PRBool aValueChanged)
     elem->SetValueChanged(aValueChanged);
   }
 }
+
+
+nsresult
+nsTextControlFrame::UpdateValueDisplay(PRBool aNotify,
+                                       PRBool aBeforeEditorInit,
+                                       const nsAString *aValue)
+{
+  if (!IsSingleLineTextControl()) // textareas don't use this
+    return NS_OK;
+
+  NS_PRECONDITION(mValueDiv, "Must have a div content\n");
+  NS_PRECONDITION(!mUseEditor,
+                  "Do not call this after editor has been initialized");
+  NS_ASSERTION(mValueDiv->GetChildCount() <= 1,
+               "Cannot have more than one child node");
+
+  enum {
+    NO_NODE,
+    TXT_NODE,
+    BR_NODE
+  } childNodeType = NO_NODE;
+  nsIContent* childNode = mValueDiv->GetChildAt(0);
+#ifdef NS_DEBUG
+  if (aBeforeEditorInit)
+    NS_ASSERTION(childNode, "A child node should exist before initializing the editor");
+#endif
+
+  if (childNode) {
+    if (childNode->IsNodeOfType(nsINode::eELEMENT))
+      childNodeType = BR_NODE;
+    else if (childNode->IsNodeOfType(nsINode::eTEXT))
+      childNodeType = TXT_NODE;
+#ifdef NS_DEBUG
+    else
+      NS_NOTREACHED("Invalid child node found");
+#endif
+  }
+
+  // Get the current value of the textfield from the content.
+  nsAutoString value;
+  if (aValue) {
+    value = *aValue;
+  } else {
+    GetValue(value, PR_TRUE);
+  }
+
+  if (aBeforeEditorInit && value.IsEmpty()) {
+    mValueDiv->RemoveChildAt(0, PR_TRUE, PR_FALSE);
+    return NS_OK;
+  }
+
+  nsTextEditRules::HandleNewLines(value, -1);
+  nsresult rv;
+  if (value.IsEmpty()) {
+    if (childNodeType != BR_NODE) {
+      nsCOMPtr<nsINodeInfo> nodeInfo;
+      nodeInfo = mContent->NodeInfo()
+                         ->NodeInfoManager()
+                         ->GetNodeInfo(nsGkAtoms::br, nsnull,
+                                       kNameSpaceID_XHTML);
+      NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
+
+      nsCOMPtr<nsIContent> brNode;
+      rv = NS_NewHTMLElement(getter_AddRefs(brNode), nodeInfo, PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIDOMElement> brElement = do_QueryInterface(brNode);
+      NS_ENSURE_TRUE(brElement, NS_ERROR_UNEXPECTED);
+      brElement->SetAttribute(kMOZEditorBogusNodeAttr, kMOZEditorBogusNodeValue);
+
+      mValueDiv->RemoveChildAt(0, aNotify, PR_FALSE);
+      mValueDiv->AppendChildTo(brNode, aNotify);
+    }
+  } else {
+    if (IsPasswordTextControl())
+      nsTextEditRules::FillBufWithPWChars(&value, value.Length());
+
+    // Set up a textnode with our value
+    nsCOMPtr<nsIContent> textNode;
+    if (childNodeType != TXT_NODE) {
+      rv = NS_NewTextNode(getter_AddRefs(textNode),
+                          mContent->NodeInfo()->NodeInfoManager());
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      NS_ASSERTION(textNode, "Must have textcontent!\n");
+
+      mValueDiv->RemoveChildAt(0, aNotify, PR_FALSE);
+      mValueDiv->AppendChildTo(textNode, aNotify);
+    } else {
+      textNode = childNode;
+    }
+
+    textNode->SetText(value, aNotify);
+  }
+  return NS_OK;
+}
+
 
 /* static */ void
 nsTextControlFrame::ShutDown()
