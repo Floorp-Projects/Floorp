@@ -1128,9 +1128,8 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
       // value yet (per OwnsValue()), it will turn around and call
       // TakeTextFrameValue() on us, but will update its display with the new
       // value if needed.
-      formControlFrame->SetFormProperty(
+      return formControlFrame->SetFormProperty(
         aUserInput ? nsGkAtoms::userInput : nsGkAtoms::value, aValue);
-      return NS_OK;
     }
 
     SetValueChanged(PR_TRUE);
