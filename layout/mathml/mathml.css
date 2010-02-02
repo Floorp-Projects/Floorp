@@ -51,7 +51,7 @@
 math {
   direction: ltr;
   unicode-bidi: embed;
-  display: inline;
+  display: inline-block;
   font-size: inherit;
   font-style: normal;
   font-family: STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
@@ -63,7 +63,7 @@ math[mode="display"], math[display="block"] {
   text-align: -moz-center;
 }
 math[display="inline"] {
-  display: inline;
+  display: inline-block;
 }
 
 /**************************************************************************/
