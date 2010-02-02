@@ -349,8 +349,8 @@ nsXULMenuitemAccessible::GetStateInternal(PRUint32 *aState,
         grandParentAcc->GetState(&grandParentState, &grandParentExtState);
         *aState &= ~(nsIAccessibleStates::STATE_OFFSCREEN |
                      nsIAccessibleStates::STATE_INVISIBLE);
-        *aState |= grandParentState & nsIAccessibleStates::STATE_OFFSCREEN |
-                   grandParentState & nsIAccessibleStates::STATE_INVISIBLE;
+        *aState |= (grandParentState & nsIAccessibleStates::STATE_OFFSCREEN) |
+                   (grandParentState & nsIAccessibleStates::STATE_INVISIBLE);
         if (aExtraState) {
           *aExtraState |=
             grandParentExtState & nsIAccessibleStates::EXT_STATE_OPAQUE;
