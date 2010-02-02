@@ -5858,10 +5858,10 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
 }
 
 JSObject * JS_FASTCALL
-js_CloneRegExpObject(JSContext *cx, JSObject *obj)
+js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
 {
     JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_RegExpClass);
-    JSObject *clone = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
+    JSObject *clone = js_NewObject(cx, &js_RegExpClass, proto, NULL);
     if (!clone)
         return NULL;
     JSRegExp *re = static_cast<JSRegExp *>(obj->getPrivate());
@@ -5872,7 +5872,7 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj)
 }
 
 #ifdef JS_TRACER
-JS_DEFINE_CALLINFO_2(extern, OBJECT, js_CloneRegExpObject, CONTEXT, OBJECT, 0, 0)
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_CloneRegExpObject, CONTEXT, OBJECT, OBJECT, 0, 0)
 #endif
 
 bool

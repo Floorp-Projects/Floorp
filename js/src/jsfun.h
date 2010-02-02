@@ -279,7 +279,7 @@ extern void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun);
 
 extern JSObject * JS_FASTCALL
-js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent);
+js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent, JSObject *proto = NULL);
 
 extern JS_REQUIRES_STACK JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun);
