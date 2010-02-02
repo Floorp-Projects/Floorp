@@ -39,7 +39,6 @@
 #include "nsAccessNodeWrap.h"
 #include "ISimpleDOMNode_i.c"
 #include "nsAccessibilityAtoms.h"
-#include "nsIAccessibilityService.h"
 #include "nsIAccessible.h"
 #include "nsAttrName.h"
 #include "nsIDocument.h"
@@ -411,13 +410,10 @@ ISimpleDOMNode* nsAccessNodeWrap::MakeAccessNode(nsIDOMNode *node)
   if (!doc)
     return NULL;
 
-  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-  if (!accService)
-    return NULL;
-
   ISimpleDOMNode *iNode = NULL;
   nsCOMPtr<nsIAccessible> nsAcc;
-  accService->GetAccessibleInWeakShell(node, mWeakShell, getter_AddRefs(nsAcc));
+  GetAccService()->GetAccessibleInWeakShell(node, mWeakShell, 
+                                            getter_AddRefs(nsAcc));
   if (nsAcc) {
     nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(nsAcc));
     NS_ASSERTION(accessNode, "nsIAccessible impl does not inherit from nsIAccessNode");
