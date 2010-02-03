@@ -128,6 +128,11 @@ PluginScriptableObjectParent::ScriptableDeallocate(NPObject* aObject)
   }
 
   ParentNPObject* object = reinterpret_cast<ParentNPObject*>(aObject);
+  if (!object->invalidated) {
+    ScriptableInvalidate(aObject);
+  }
+  NS_ASSERTION(object->invalidated, "Should have invalidated already!");
+
   PluginScriptableObjectParent* actor = object->parent;
   if (actor) {
     NS_ASSERTION(actor->Type() == Proxy, "Bad type!");
@@ -725,7 +730,9 @@ PluginScriptableObjectParent::DropNPObject()
   instance->UnregisterNPObject(mObject);
   mObject = nsnull;
 
-  CallUnprotect();
+  if (!CallUnprotect()) {
+    NS_WARNING("Failed to send message!");
+  }
 }
 
 bool
