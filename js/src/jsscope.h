@@ -521,7 +521,7 @@ JS_IS_SCOPE_LOCKED(JSContext *cx, JSScope *scope)
 inline JSScope *
 OBJ_SCOPE(JSObject *obj)
 {
-    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    JS_ASSERT(obj->isNative());
     return (JSScope *) obj->map;
 }
 
