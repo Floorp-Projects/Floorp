@@ -154,6 +154,20 @@ private:
   WINDOWPOS windowPos;
 };
 
+// This class duplicates a data buffer for a WM_COPYDATA message.
+class DeferredCopyDataMessage : public DeferredSendMessage
+{
+public:
+  DeferredCopyDataMessage(HWND aHWnd,
+                          UINT aMessage,
+                          WPARAM aWParam,
+                          LPARAM aLParam);
+
+  ~DeferredCopyDataMessage();
+private:
+  COPYDATASTRUCT copyData;
+};
+
 } /* namespace windows */
 } /* namespace ipc */
 } /* namespace mozilla */
