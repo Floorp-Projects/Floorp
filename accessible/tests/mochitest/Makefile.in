@@ -42,7 +42,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = accessible
 
-DIRS	= attributes events selectable tree
+DIRS	= actions attributes events selectable states tree
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
@@ -71,13 +71,6 @@ _TEST_FILES =\
 		states.js \
 		table.js \
 		value.js \
-		test_actions.html \
-		test_actions.xul \
-		test_actions_anchors.html \
-		test_actions_aria.html \
-		test_actions_inputs.html \
-		test_actions_tree.xul \
-		test_actions_treegrid.xul \
 		test_aria_activedescendant.html \
 		test_aria_role_article.html \
 		test_aria_role_equation.html \
@@ -114,14 +107,6 @@ _TEST_FILES =\
 		test_relations.xul \
 		test_relations_tree.xul \
 		test_role_nsHyperTextAcc.html \
-		test_role_table_cells.html \
-		test_states.html \
-		test_states_doc.html \
-		test_states_docarticle.html \
-		test_states_editablebody.html \
-		test_states_frames.html \
-		test_states_popup.xul \
-		test_states_tree.xul \
 		test_table_1.html \
 		test_table_4.html \
 		test_table_headers.html \
@@ -149,10 +134,6 @@ _TEST_FILES =\
 		testTextboxes.js \
 		treeview.css \
 		treeview.js \
-		z_states_frame.html \
-		z_states_framearticle.html \
-		z_states_framecheckbox.html \
-		z_states_frametextbox.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
