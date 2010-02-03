@@ -5819,6 +5819,7 @@ nsIPresShell::SetCapturingContent(nsIContent* aContent, PRUint8 aFlags)
       NS_ADDREF(gCaptureInfo.mContent = aContent);
     }
     gCaptureInfo.mRetargetToElement = (aFlags & CAPTURE_RETARGETTOELEMENT) != 0;
+    gCaptureInfo.mPreventDrag = (aFlags & CAPTURE_PREVENTDRAG) != 0;
   }
 }
 
