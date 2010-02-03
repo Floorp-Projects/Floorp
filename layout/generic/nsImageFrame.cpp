@@ -1418,6 +1418,16 @@ nsImageFrame::GetContentForEvent(nsPresContext* aPresContext,
     return f->GetContentForEvent(aPresContext, aEvent, aContent);
   }
 
+  // XXX We need to make this special check for area element's capturing the
+  // mouse due to bug 135040. Remove it once that's fixed.
+  nsIContent* capturingContent =
+    NS_IS_MOUSE_EVENT(aEvent) ? nsIPresShell::GetCapturingContent() : nsnull;
+  if (capturingContent && capturingContent->GetPrimaryFrame() == this) {
+    *aContent = capturingContent;
+    NS_IF_ADDREF(*aContent);
+    return NS_OK;
+  }
+
   nsImageMap* map;
   map = GetImageMap(aPresContext);
 
