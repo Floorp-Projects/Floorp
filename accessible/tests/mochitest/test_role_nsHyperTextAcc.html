@@ -1,10 +1,7 @@
 <!DOCTYPE html>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=472326
--->
 <head>
-  <title>test nsHyperTextAccessible roles</title>
+  <title>test nsHyperTextAccessible accesible objects creation and their roles</title>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
   <script type="application/javascript"
@@ -51,6 +48,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=472326
       testRole("definitionterm", ROLE_LISTITEM);
       testRole("definitiondescription", ROLE_PARAGRAPH);
 
+      // Has click, mousedown or mouseup listeners.
+      testRole("span1", ROLE_TEXT_CONTAINER);
+      testRole("span2", ROLE_TEXT_CONTAINER);
+      testRole("span3", ROLE_TEXT_CONTAINER);
+
       SimpleTest.finish();
     }
 
@@ -62,10 +64,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=472326
 
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=472326"
      title="html:input of type "file" no longer rendered to screen readers">
-     Mozilla Bug 472326</a>
+    Mozilla Bug 472326
+  </a><br>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=474261"
       title="Test remaining implementations in nsHypertextAccessible::GetRole">
-      bug 474261</a>
+    bug 474261
+  </a><br>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=423409"
+     title="Expose click action if mouseup and mousedown are registered">
+    Mozilla Bug 423409
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -89,5 +97,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=472326
   <dt id="definitionterm">gecko</dt>
   <dd id="definitiondescription">geckos have sticky toes</dd>
   </dl>
+
+  <span id="span1" onclick="">clickable span</span>
+  <span id="span2" onmousedown="">clickable span</span>
+  <span id="span3" onmouseup="">clickable span</span>
 </body>
 </html>
