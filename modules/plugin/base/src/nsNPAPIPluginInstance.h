@@ -49,9 +49,6 @@
 #include "nsIPluginInstanceOwner.h"
 #include "nsITimer.h"
 #include "mozilla/TimeStamp.h"
-#include "nsPluginTags.h"
-#include "nsIStreamListener.h"
-#include "nsIURI.h"
 
 #include "npfunctions.h"
 #include "mozilla/PluginLibrary.h"
@@ -109,7 +106,7 @@ public:
                            PRBool aCallNotify,
                            const char * aURL);
 
-  nsNPAPIPluginInstance(nsNPAPIPlugin* plugin, NPPluginFuncs* callbacks, PluginLibrary* aLibrary);
+  nsNPAPIPluginInstance(NPPluginFuncs* callbacks, PluginLibrary* aLibrary);
 
   // Use Release() to destroy this
   virtual ~nsNPAPIPluginInstance();
@@ -134,11 +131,6 @@ public:
   void          UnscheduleTimer(uint32_t timerID);
   NPError       PopUpContextMenu(NPMenu* menu);
   NPBool        ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace);
-
-  nsNPAPIPlugin* Plugin();
-  void SetURI(nsIURI* uri);
-  nsIURI* GetURI();
-  nsTArray< nsRefPtr<nsIStreamListener> > *StreamListeners();
 protected:
   nsresult InitializePlugin();
 
@@ -194,10 +186,6 @@ private:
   // Timestamp for the last time this plugin was stopped.
   // This is only valid when the plugin is actually stopped!
   mozilla::TimeStamp mStopTime;
-
-  nsNPAPIPlugin* mPlugin;
-  nsCOMPtr<nsIURI> mURI;
-  nsTArray< nsRefPtr<nsIStreamListener> > mStreamListeners;
 };
 
 #endif // nsNPAPIPluginInstance_h_

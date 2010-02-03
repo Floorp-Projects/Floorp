@@ -45,7 +45,8 @@
 #include "nsCOMPtr.h"
 #include "nsIPluginTag.h"
 #include "nsIPlugin.h"
-#include "nsString.h"
+#include "nsNPAPIPluginInstance.h"
+#include "nsISupportsArray.h"
 
 class nsPluginHost;
 struct PRLibrary;
@@ -120,6 +121,22 @@ private:
   PRUint32      mFlags;
   
   nsresult EnsureMembersAreUTF8();
+};
+
+struct nsPluginInstanceTag
+{
+  char*                  mURL;
+  nsRefPtr<nsPluginTag>  mPluginTag;
+  nsNPAPIPluginInstance* mInstance; // this must always be valid
+  PRBool                 mDefaultPlugin;
+  // Array holding all opened stream listeners for this entry
+  nsCOMPtr <nsISupportsArray> mStreams; 
+  
+  nsPluginInstanceTag(nsPluginTag* aPluginTag,
+                      nsIPluginInstance* aInstance, 
+                      const char * url,
+                      PRBool aDefaultPlugin);
+  ~nsPluginInstanceTag();
 };
 
 #endif // nsPluginTags_h_
