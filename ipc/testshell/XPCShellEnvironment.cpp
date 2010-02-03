@@ -752,15 +752,6 @@ FullTrustSecMan::CheckPropertyAccess(JSContext * aJSContext,
 }
 
 NS_IMETHODIMP
-FullTrustSecMan::CheckConnect(JSContext * aJSContext,
-                              nsIURI *aTargetURI,
-                              const char *aClassName,
-                              const char *aProperty)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 FullTrustSecMan::CheckLoadURIFromScript(JSContext * cx,
                                         nsIURI *uri)
 {
