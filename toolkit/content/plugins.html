@@ -129,30 +129,21 @@
       document.writeln("<tr><th class=\"type\">" + pluginsbundle.GetStringFromName("mimetype_label") + "<\/th>");
       document.writeln("<th class=\"desc\">" + pluginsbundle.GetStringFromName("description_label") + "<\/th>");
       document.writeln("<th class=\"suff\">" + pluginsbundle.GetStringFromName("suffixes_label") + "<\/th>");
-      document.writeln("<th class=\"enabled\">" + pluginsbundle.GetStringFromName("enabled_label") + "<\/th><\/tr>");
-      document.writeln("<\/thead>");
+      document.writeln("<\/tr><\/thead>");
       document.writeln("<tbody>");
 
       var numTypes = plugin.length;
       var mimetype;
-      var enabled;
-      var enabledPlugin;
       for (var j = 0; j < numTypes; j++)
       {
         mimetype = plugin[j];
 
         if (mimetype)
         {
-          enabled = pluginsbundle.GetStringFromName("no_label");
-          enabledPlugin = mimetype.enabledPlugin;
-          if (enabledPlugin && (enabledPlugin.filename == plugin.filename))
-            enabled = pluginsbundle.GetStringFromName("yes_label");
-
           document.writeln("<tr>");
           document.writeln("<td>" + mimetype.type + "<\/td>");
           document.writeln("<td>" + mimetype.description + "<\/td>");
           document.writeln("<td>" + mimetype.suffixes + "<\/td>");
-          document.writeln("<td>" + enabled + "<\/td>");
           document.writeln("<\/tr>");
         }
       }
