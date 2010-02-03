@@ -2984,10 +2984,10 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                 js_ShareWaitingTitles(cx);
 
                 /*
-                 * Make sure that the last-ditch GC call on this thread keeps
-                 * atoms even if another thread runs a full GC.
+                 * Make sure that the GC from another thread respects
+                 * GC_KEEP_ATOMS.
                  */
-                if (gckind == GC_LAST_DITCH)
+                if (gckind & GC_KEEP_ATOMS)
                     JS_KEEP_ATOMS(rt);
 
                 /*
@@ -3000,7 +3000,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                 } while (rt->gcLevel > 0);
 
                 cx->thread->gcWaiting = false;
-                if (gckind == GC_LAST_DITCH)
+                if (gckind & GC_KEEP_ATOMS)
                     JS_UNKEEP_ATOMS(rt);
                 rt->requestCount += requestDebit;
             }
@@ -3149,9 +3149,20 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     }
 #endif
 
-    /* The last-ditch GC preserves weak roots. */
-    if (gckind != GC_LAST_DITCH)
+    if (gckind & GC_KEEP_ATOMS) {
+        /*
+         * The set slot request and last ditch GC kinds preserve all atoms and
+         * weak roots.
+         */
+        keepAtoms = true;
+    } else {
+        /*
+         * Query rt->gcKeepAtoms only when we know that all other threads are
+         * suspended, see bug 541790.
+         */
+        keepAtoms = (rt->gcKeepAtoms != 0);
         JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
+    }
 
   restart:
     rt->gcNumber++;
@@ -3170,12 +3181,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         JS_ASSERT(!a->info.hasMarkedDoubles);
 #endif
 
-    /*
-     * Do not collect atoms if explicitly requested or during the last-ditch
-     * GC. We query rt->gcKeepAtoms only when we know that all other threads
-     * are suspended, see bug 541790.
-     */
-    keepAtoms = (gckind == GC_LAST_DITCH) || (rt->gcKeepAtoms != 0);
     js_TraceRuntime(&trc, keepAtoms);
     js_MarkScriptFilenames(rt, keepAtoms);
 
@@ -3390,7 +3395,7 @@ out:
         JSWeakRoots savedWeakRoots;
         JSTempValueRooter tvr;
 
-        if (gckind == GC_LAST_DITCH) {
+        if (gckind & GC_KEEP_ATOMS) {
             /*
              * We allow JSGC_END implementation to force a full GC or allocate
              * new GC things. Thus we must protect the weak roots from garbage
@@ -3404,7 +3409,7 @@ out:
 
         (void) callback(cx, JSGC_END);
 
-        if (gckind == GC_LAST_DITCH) {
+        if (gckind & GC_KEEP_ATOMS) {
             JS_LOCK_GC(rt);
             JS_UNKEEP_ATOMS(rt);
             JS_POP_TEMP_ROOT(cx, &tvr);
