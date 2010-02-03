@@ -208,11 +208,8 @@ typedef enum JSGCInvocationKind {
 
     /*
      * Flag bit telling js_GC that the caller has already acquired rt->gcLock.
-     * Currently, this flag is set for the invocation kinds that also preserve
-     * atoms and weak roots, so we don't need another bit for GC_KEEP_ATOMS.
      */
     GC_LOCK_HELD        = 0x10,
-    GC_KEEP_ATOMS       = GC_LOCK_HELD,
 
     /*
      * Called from js_SetProtoOrParent with a request to set an object's proto

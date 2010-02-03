@@ -75,6 +75,7 @@
 #include "jsvector.h"
 
 #include "jsatominlines.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
@@ -460,7 +461,7 @@ js_FullTestPropertyCache(JSContext *cx, jsbytecode *pc,
         --vcap;
     }
 
-    if (JS_LOCK_OBJ_IF_SHAPE(cx, pobj, PCVCAP_SHAPE(vcap))) {
+    if (js_MatchPropertyCacheShape(cx, pobj, PCVCAP_SHAPE(vcap))) {
 #ifdef DEBUG
         jsid id = ATOM_TO_JSID(atom);
 
