@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,46 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/ipc/GeckoThread.h"
-
+#include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "chrome/common/notification_service.h"
-
-#include "nsXPCOM.h"
 
 #if defined(OS_WIN)
 #include <objbase.h>
 #endif
 
-using mozilla::ipc::GeckoThread;
-using mozilla::ipc::BrowserProcessSubThread;
-
-void
-GeckoThread::OnControlMessageReceived(const IPC::Message& aMessage) {
-  /*
-  IPC_BEGIN_MESSAGE_MAP(GeckoThread, aMessage)
-  IPC_END_MESSAGE_MAP()
-  */
-}
-
-void
-GeckoThread::Init()
-{
-  ChildThread::Init();
-
-  // Certain plugins, such as flash, steal the unhandled exception filter
-  // thus we never get crash reports when they fault. This call fixes it.
-  message_loop()->set_exception_restoration(true);
-
-  NS_LogInit();
-  mXREEmbed.Start();
-}
-
-void
-GeckoThread::CleanUp()
-{
-  mXREEmbed.Stop();
-  NS_LogTerm();
-}
+namespace mozilla {
+namespace ipc {
 
 //
 // BrowserProcessSubThread
@@ -102,22 +74,22 @@ BrowserProcessSubThread* BrowserProcessSubThread::sBrowserThreads[ID_COUNT] = {
 };
 
 BrowserProcessSubThread::BrowserProcessSubThread(ID aId) :
-    base::Thread(kBrowserThreadNames[aId]),
-    mIdentifier(aId),
-    mNotificationService(NULL)
+  base::Thread(kBrowserThreadNames[aId]),
+  mIdentifier(aId),
+  mNotificationService(NULL)
 {
-    AutoLock lock(sLock);
-    DCHECK(aId >= 0 && aId < ID_COUNT);
-    DCHECK(sBrowserThreads[aId] == NULL);
-    sBrowserThreads[aId] = this;
+  AutoLock lock(sLock);
+  DCHECK(aId >= 0 && aId < ID_COUNT);
+  DCHECK(sBrowserThreads[aId] == NULL);
+  sBrowserThreads[aId] = this;
 }
 
 BrowserProcessSubThread::~BrowserProcessSubThread()
 {
-    Stop();
-    {AutoLock lock(sLock);
-        sBrowserThreads[mIdentifier] = NULL;
-    }
+  Stop();
+  {AutoLock lock(sLock);
+    sBrowserThreads[mIdentifier] = NULL;
+  }
 
 }
 
@@ -146,7 +118,8 @@ BrowserProcessSubThread::CleanUp()
 
 // static
 MessageLoop*
-BrowserProcessSubThread::GetMessageLoop(ID aId) {
+BrowserProcessSubThread::GetMessageLoop(ID aId)
+{
   AutoLock lock(sLock);
   DCHECK(aId >= 0 && aId < ID_COUNT);
 
@@ -155,3 +128,6 @@ BrowserProcessSubThread::GetMessageLoop(ID aId) {
 
   return NULL;
 }
+
+} // namespace ipc
+} // namespace mozilla

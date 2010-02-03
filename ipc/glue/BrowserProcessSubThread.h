@@ -1,3 +1,6 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,61 +37,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __IPC_GLUE_GECKOTHREAD_H__
-#define __IPC_GLUE_GECKOTHREAD_H__
+#ifndef mozilla_ipc_BrowserProcessSubThread_h
+#define mozilla_ipc_BrowserProcessSubThread_h
 
 #include "base/thread.h"
 #include "base/lock.h"
-#include "base/process.h"
-
-#include "chrome/common/child_thread.h"
 
 #include "nsDebug.h"
-
-#include "mozilla/ipc/ScopedXREEmbed.h"
 
 class NotificationService;
 
 namespace mozilla {
 namespace ipc {
-
-inline void AssertIOThread()
-{
-    NS_ASSERTION(MessageLoop::TYPE_IO == MessageLoop::current()->type(),
-                 "should be on the IO thread!");
-}
-
-class GeckoThread : public ChildThread
-{
-public:
-  typedef base::ProcessHandle ProcessHandle;
-
-  GeckoThread(ProcessHandle aParentProcessHandle)
-  : ChildThread(base::Thread::Options(
-                    MessageLoop::TYPE_MOZILLA_CHILD, // message loop type
-                    0,                               // stack size
-                    false)),                         // wait for Init()?
-    mParentProcessHandle(aParentProcessHandle)
-  { }
-
-protected:
-  virtual void OnControlMessageReceived(const IPC::Message& aMessage);
-
-  ProcessHandle GetParentProcessHandle() {
-    return mParentProcessHandle;
-  }
-
-  // Thread implementation:
-  virtual void Init();
-  virtual void CleanUp();
-
-  ScopedXREEmbed mXREEmbed;
-
-private:
-  ProcessHandle mParentProcessHandle;
-
-  DISALLOW_EVIL_CONSTRUCTORS(GeckoThread);
-};
 
 // Copied from browser_process_impl.cc, modified slightly.
 class BrowserProcessSubThread : public base::Thread
@@ -143,7 +103,13 @@ private:
   static BrowserProcessSubThread* sBrowserThreads[ID_COUNT];
 };
 
-} /* namespace ipc */
-} /* namespace mozilla */
+inline void AssertIOThread()
+{
+  NS_ASSERTION(MessageLoop::TYPE_IO == MessageLoop::current()->type(),
+	       "should be on the IO thread!");
+}
 
-#endif /* __IPC_GLUE_GECKOTHREAD_H__ */
+} // namespace ipc
+} // namespace mozilla
+
+#endif // mozilla_ipc_BrowserProcessSubThread_h
