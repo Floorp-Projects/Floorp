@@ -86,11 +86,11 @@ var Utilities = {
   },
 
   free : function() {
-    this.bookmarks = null;
-    this.livemarks = null;
-    this.annotations = null;
-    this.history = null;
-    this.windowMediator = null;
+    delete this.bookmarks;
+    delete this.livemarks
+    delete this.annotations;
+    delete this.history;
+    delete this.windowMediator;
   }
 };
 
