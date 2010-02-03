@@ -468,7 +468,10 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     return env
 
   if IS_WIN32:
-    import ctypes, ctypes.wintypes, time, msvcrt
+    ctypes = __import__('ctypes')
+    wintypes = __import__('ctypes.wintypes')
+    time = __import__('time')
+    msvcrt = __import__('msvcrt')
     PeekNamedPipe = ctypes.windll.kernel32.PeekNamedPipe
     GetLastError = ctypes.windll.kernel32.GetLastError
 
