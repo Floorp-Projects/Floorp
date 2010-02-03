@@ -876,12 +876,9 @@ WeaveSvc.prototype = {
       return false;
 
     } else if (meta.payload.syncID != Clients.syncID) {
-      this._log.warn("Meta.payload.syncID is " + meta.payload.syncID +
-                     ", Clients.syncID is " + Clients.syncID);
-      this.resetClient();
-      this._log.info("Reset client because of syncID mismatch.");
+      this.resetService();
       Clients.syncID = meta.payload.syncID;
-      this._log.info("Reset the client after a server/client sync ID mismatch");
+      this._log.debug("Clear cached values and take syncId: " + Clients.syncID);
       this._updateRemoteVersion(meta);
 
       // XXX Bug 531005 Wait long enough to allow potentially another concurrent
