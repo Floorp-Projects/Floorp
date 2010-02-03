@@ -2402,9 +2402,13 @@ WebGLContext::ValidateGL()
 
     //fprintf(stderr, "GL_MAX_VERTEX_ATTRIBS: %d\n", val);
 
-    gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_UNITS, &val);
+    // Note: GL_MAX_TEXTURE_UNITS is fixed at 4 for most desktop hardware,
+    // even though the hardware supports much more.  The
+    // GL_MAX_{COMBINED_}TEXTURE_IMAGE_UNITS value is the accurate
+    // value.  For GLES2, GL_MAX_TEXTURE_UNITS is still correc.t
+    gl->fGetIntegerv(LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &val);
     if (val == 0) {
-        LogMessage("GL_MAX_TEXTURE_UNITS is 0!");
+        LogMessage("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS is 0!");
         return PR_FALSE;
     }
 

@@ -221,7 +221,7 @@ sidebarheader:-moz-lwtheme {
   border-bottom-color: ThreeDHighlight;
   margin: 0 5px 5px;
 }
-  
+
 .outset {
   border: 1px solid ThreeDShadow;
   border-left-color: ThreeDHighlight;
@@ -238,7 +238,7 @@ separator[orient="vertical"] {
 
 separator.thin:not([orient="vertical"]) {
   height: 0.5em;
-}  
+}
 separator.thin[orient="vertical"] {
   width: 0.5em;
 }
@@ -261,7 +261,7 @@ separator.groove[orient="vertical"] {
 .small-margin {
   margin: 1px 2px;
 }
-    
+
 .plain {
   -moz-appearance: none;
   margin: 0 !important;
@@ -325,7 +325,7 @@ label[disabled="true"]:-moz-system-metric(windows-classic) {
   border: 1px solid transparent;
   cursor: pointer;
 }
-  
+
 .text-link:focus {
   border: 1px dotted -moz-DialogText;
 }

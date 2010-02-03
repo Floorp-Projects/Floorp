@@ -149,6 +149,8 @@ PluginModuleParent::WriteExtraDataForMinidump(nsIFile* dumpFile)
                         pluginFile.substr(filePos).c_str());
     //TODO: add plugin name and version: bug 539841
     // (as PluginName, PluginVersion)
+    WriteExtraDataEntry(stream, "PluginName", "");
+    WriteExtraDataEntry(stream, "PluginVersion", "");
     stream->Close();
 }
 

@@ -1008,25 +1008,29 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
   PRBool useExistingCacheFile = PR_FALSE;
 
   nsRefPtr<nsPluginHost> pluginHost = dont_AddRef(nsPluginHost::GetInst());
-  nsTArray< nsRefPtr<nsNPAPIPluginInstance> > *instances = pluginHost->InstanceArray();
-  for (PRUint32 i = 0; i < instances->Length(); i++) {
-    nsNPAPIPluginInstance *instance = (*instances)[i];
-    nsTArray< nsRefPtr<nsIStreamListener> > *streamListeners = instance->StreamListeners();
-    // most recent streams are at the end of list
-    PRInt32 cnt = streamListeners->Length();
-    while (--cnt >= 0) {
-      nsPluginStreamListenerPeer *lp = static_cast<nsPluginStreamListenerPeer*>(streamListeners->ElementAt(cnt).get());
-      if (lp && lp->mLocalCachedFile && lp->mPluginStreamInfo) {
-        useExistingCacheFile = lp->mPluginStreamInfo->UseExistingPluginCacheFile(mPluginStreamInfo);
-        if (useExistingCacheFile) {
-          mLocalCachedFile = lp->mLocalCachedFile;
-          NS_ADDREF(mLocalCachedFile);
-          break;
+  nsTArray< nsAutoPtr<nsPluginInstanceTag> > *instanceTags = pluginHost->InstanceTagArray();
+  for (PRUint32 i = 0; i < instanceTags->Length(); i++) {
+    nsPluginInstanceTag *instanceTag = (*instanceTags)[i];
+    if (instanceTag->mStreams) {
+      // most recent streams are at the end of list
+      PRInt32 cnt;
+      instanceTag->mStreams->Count((PRUint32*)&cnt);
+      while (--cnt >= 0) {
+        nsPluginStreamListenerPeer *lp =
+          reinterpret_cast<nsPluginStreamListenerPeer*>(instanceTag->mStreams->ElementAt(cnt));
+        if (lp && lp->mLocalCachedFile && lp->mPluginStreamInfo) {
+          useExistingCacheFile = lp->mPluginStreamInfo->UseExistingPluginCacheFile(mPluginStreamInfo);
+          if (useExistingCacheFile) {
+            mLocalCachedFile = lp->mLocalCachedFile;
+            NS_ADDREF(mLocalCachedFile);
+            break;
+          }
+          NS_RELEASE(lp);
         }
       }
+      if (useExistingCacheFile)
+        break;
     }
-    if (useExistingCacheFile)
-      break;
   }
 
   if (!useExistingCacheFile) {
@@ -1077,8 +1081,16 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
   // add this listenerPeer to list of stream peers for this instance
   // it'll delay release of listenerPeer until nsPluginInstanceTag::~nsPluginInstanceTag
   // and the temp file is going to stay alive until then
-  nsNPAPIPluginInstance* instance = static_cast<nsNPAPIPluginInstance*>(mInstance);
-  instance->StreamListeners()->AppendElement(static_cast<nsIStreamListener*>(this));
+  nsPluginInstanceTag *instanceTag = pluginHost->FindInstanceTag(mInstance);
+  if (instanceTag) {
+    if (!instanceTag->mStreams &&
+        (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(instanceTag->mStreams))))) {
+      return rv;
+    }
+
+    nsISupports* supports = static_cast<nsISupports*>((static_cast<nsIStreamListener*>(this)));
+    instanceTag->mStreams->AppendElement(supports);
+  }
 
   return rv;
 }
@@ -1761,8 +1773,8 @@ PRBool nsPluginHost::IsRunningPlugin(nsPluginTag * plugin)
     return PR_FALSE;
 
   for (int i = 0; i < plugin->mVariants; i++) {
-    nsNPAPIPluginInstance *instance = FindInstance(plugin->mMimeTypeArray[i]);
-    if (instance && instance->IsRunning())
+    nsPluginInstanceTag *instanceTag = FindInstanceTag(plugin->mMimeTypeArray[i]);
+    if (instanceTag && instanceTag->mInstance->IsRunning())
       return PR_TRUE;
   }
 
@@ -1773,7 +1785,7 @@ nsresult nsPluginHost::ReloadPlugins(PRBool reloadPages)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsPluginHost::ReloadPlugins Begin reloadPages=%d, active_instance_count=%d\n",
-  reloadPages, mInstances.Length()));
+  reloadPages, mInstanceTags.Length()));
 
   nsresult rv = NS_OK;
 
@@ -1854,7 +1866,7 @@ nsresult nsPluginHost::ReloadPlugins(PRBool reloadPages)
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("nsPluginHost::ReloadPlugins End active_instance_count=%d\n",
-  mInstances.Length()));
+  mInstanceTags.Length()));
 
   return rv;
 }
@@ -2221,8 +2233,8 @@ void nsPluginHost::UnloadUnusedLibraries()
 void nsPluginHost::OnPluginInstanceDestroyed(nsPluginTag* aPluginTag)
 {
   PRBool hasInstance = PR_FALSE;
-  for (PRUint32 i = 0; i < mInstances.Length(); i++) {
-    if (TagForPlugin(mInstances[i]->Plugin()) == aPluginTag) {
+  for (PRUint32 i = 0; i < mInstanceTags.Length(); i++) {
+    if (mInstanceTags[i]->mPluginTag == aPluginTag) {
       hasInstance = PR_TRUE;
       break;
     }
@@ -2569,7 +2581,7 @@ NS_IMETHODIMP nsPluginHost::InstantiateFullPagePlugin(const char *aMimeType,
 }
 
 nsPluginTag*
-nsPluginHost::TagForPlugin(nsNPAPIPlugin* aPlugin)
+nsPluginHost::FindTagForPlugin(nsIPlugin* aPlugin)
 {
   nsPluginTag* pluginTag;
   for (pluginTag = mPlugins; pluginTag; pluginTag = pluginTag->mNext) {
@@ -2589,11 +2601,13 @@ nsresult nsPluginHost::FindStoppedPluginForURL(nsIURI* aURL,
 
   aURL->GetAsciiSpec(url);
 
-  nsNPAPIPluginInstance *instance = FindStoppedInstance(url.get());
-  if (instance && !instance->IsRunning()) {
+  nsPluginInstanceTag *instanceTag = FindStoppedInstanceTag(url.get());
+
+  if (instanceTag && !instanceTag->mInstance->IsRunning()) {
     NPWindow* window = nsnull;
     aOwner->GetWindow(window);
 
+    nsIPluginInstance* instance = static_cast<nsIPluginInstance*>(instanceTag->mInstance);
     aOwner->SetInstance(instance);
     instance->SetOwner(aOwner);
 
@@ -2609,6 +2623,34 @@ nsresult nsPluginHost::FindStoppedPluginForURL(nsIURI* aURL,
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
+}
+
+nsresult nsPluginHost::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
+                                               nsIPluginInstance* aInstance,
+                                               nsIURI* aURL,
+                                               PRBool aDefaultPlugin)
+{
+  nsCAutoString url;
+  // It's OK to not have a URL here, as is the case with the dummy
+  // Java plugin. In that case simply use an empty string...
+  if (aURL)
+    aURL->GetSpec(url);
+
+  // Let's find the corresponding plugin tag by matching nsIPlugin pointer.
+  // It is going to be used later when we decide whether or not we should delay
+  // unloading NPAPI dll from memory.
+  nsPluginTag * pluginTag = nsnull;
+  if (aPlugin) {
+    pluginTag = FindTagForPlugin(aPlugin);
+    NS_ASSERTION(pluginTag, "Plugin tag not found");
+  }
+
+  nsPluginInstanceTag *instanceTag = new nsPluginInstanceTag(pluginTag, aInstance, url.get(), aDefaultPlugin);
+  if (!instanceTag)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  mInstanceTags.AppendElement(instanceTag);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginHost::SetUpPluginInstance(const char *aMimeType,
@@ -2730,8 +2772,6 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
   if (NS_FAILED(result))
     return result;
 
-  static_cast<nsNPAPIPluginInstance*>(instance.get())->SetURI(aURL);
-
   // it is adreffed here
   aOwner->SetInstance(instance);
 
@@ -2744,7 +2784,8 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
     return result;
   }
 
-  mInstances.AppendElement(static_cast<nsNPAPIPluginInstance*>(instance.get()));
+  // instance and peer will be addreffed here
+  result = AddInstanceToActiveList(plugin, instance, aURL, PR_FALSE);
 
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec2;
@@ -2786,9 +2827,6 @@ nsPluginHost::SetUpDefaultPluginInstance(const char *aMimeType,
   if (NS_FAILED(result))
     return result;
 
-  static_cast<nsNPAPIPlugin*>(plugin.get())->SetIsDefaultPlugin();
-  static_cast<nsNPAPIPluginInstance*>(instance.get())->SetURI(aURL);
-
   // it is adreffed here
   aOwner->SetInstance(instance);
 
@@ -2812,7 +2850,7 @@ nsPluginHost::SetUpDefaultPluginInstance(const char *aMimeType,
   }
 
   // instance will be addreffed here
-  mInstances.AppendElement(static_cast<nsNPAPIPluginInstance*>(instance.get()));
+  result = AddInstanceToActiveList(plugin, instance, aURL, PR_TRUE);
 
   return result;
 }
@@ -4503,64 +4541,65 @@ nsPluginHost::StopPluginInstance(nsIPluginInstance* aInstance)
 
   aInstance->Stop();
 
-  nsNPAPIPluginInstance* instance = static_cast<nsNPAPIPluginInstance*>(aInstance);
-
-  // if the plugin does not want to be 'cached' just remove it
-  PRBool doCache = PR_TRUE;
-  aInstance->ShouldCache(&doCache);
-  if (doCache) {
-    // try to get the max cached plugins from a pref or use default
-    PRUint32 cachedPluginLimit;
-    nsresult rv = NS_ERROR_FAILURE;
-    if (mPrefService)
-      rv = mPrefService->GetIntPref(NS_PREF_MAX_NUM_CACHED_PLUGINS, (int*)&cachedPluginLimit);
-    if (NS_FAILED(rv))
-      cachedPluginLimit = DEFAULT_NUMBER_OF_STOPPED_PLUGINS;
-    
-    if (StoppedInstanceCount() >= cachedPluginLimit) {
-      nsNPAPIPluginInstance *oldestInstance = FindOldestStoppedInstance();
-      if (oldestInstance) {
-        nsPluginTag* pluginTag = TagForPlugin(oldestInstance->Plugin());
-        mInstances.RemoveElement(oldestInstance);
-        OnPluginInstanceDestroyed(pluginTag);
+  nsPluginInstanceTag * instanceTag = FindInstanceTag(aInstance);
+  if (instanceTag) {
+    // if the plugin does not want to be 'cached' just remove it
+    PRBool doCache = PR_TRUE;
+    aInstance->ShouldCache(&doCache);
+    if (doCache) {
+      // try to get the max cached plugins from a pref or use default
+      PRUint32 cachedPluginLimit;
+      nsresult rv = NS_ERROR_FAILURE;
+      if (mPrefService)
+        rv = mPrefService->GetIntPref(NS_PREF_MAX_NUM_CACHED_PLUGINS, (int*)&cachedPluginLimit);
+      if (NS_FAILED(rv))
+        cachedPluginLimit = DEFAULT_NUMBER_OF_STOPPED_PLUGINS;
+      
+      if (StoppedInstanceTagCount() >= cachedPluginLimit) {
+        nsPluginInstanceTag * oldestInstanceTag = FindOldestStoppedInstanceTag();
+        if (oldestInstanceTag) {
+          nsPluginTag* pluginTag = oldestInstanceTag->mPluginTag;
+          mInstanceTags.RemoveElement(oldestInstanceTag);
+          OnPluginInstanceDestroyed(pluginTag);
+        }
       }
+    } else {
+      nsPluginTag* pluginTag = instanceTag->mPluginTag;
+      mInstanceTags.RemoveElement(instanceTag);
+      OnPluginInstanceDestroyed(pluginTag);
     }
-  } else {
-    nsPluginTag* pluginTag = TagForPlugin(instance->Plugin());
-    mInstances.RemoveElement(instance);
-    OnPluginInstanceDestroyed(pluginTag);
   }
 
   return NS_OK;
 }
 
-nsNPAPIPluginInstance*
-nsPluginHost::FindOldestStoppedInstance()
+nsPluginInstanceTag*
+nsPluginHost::FindOldestStoppedInstanceTag()
 {
-  nsNPAPIPluginInstance *oldestInstance = nsnull;
+  nsPluginInstanceTag *oldestInstanceTag = nsnull;
   TimeStamp oldestTime = TimeStamp::Now();
-  for (PRUint32 i = 0; i < mInstances.Length(); i++) {
-    nsNPAPIPluginInstance *instance = mInstances[i];
-    if (instance->IsRunning())
+  for (PRUint32 i = 0; i < mInstanceTags.Length(); i++) {
+    nsPluginInstanceTag *instanceTag = mInstanceTags[i];
+    if (instanceTag->mInstance->IsRunning())
       continue;
 
-    TimeStamp time = instance->LastStopTime();
+    TimeStamp time = instanceTag->mInstance->LastStopTime();
     if (time < oldestTime) {
       oldestTime = time;
-      oldestInstance = instance;
+      oldestInstanceTag = instanceTag;
     }
   }
 
-  return oldestInstance;
+  return oldestInstanceTag;
 }
 
 PRUint32
-nsPluginHost::StoppedInstanceCount()
+nsPluginHost::StoppedInstanceTagCount()
 {
   PRUint32 stoppedCount = 0;
-  for (PRUint32 i = 0; i < mInstances.Length(); i++) {
-    nsNPAPIPluginInstance *instance = mInstances[i];
-    if (!instance->IsRunning())
+  for (PRUint32 i = 0; i < mInstanceTags.Length(); i++) {
+    nsPluginInstanceTag *instanceTag = mInstanceTags[i];
+    if (!instanceTag->mInstance->IsRunning())
       stoppedCount++;
   }
   return stoppedCount;
@@ -4648,8 +4687,12 @@ nsresult nsPluginHost::NewFullPagePluginStream(nsIStreamListener *&aStreamListen
   NS_ADDREF(listener);
 
   // add peer to list of stream peers for this instance
-  nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(aInstance);
-  instance->StreamListeners()->AppendElement(aStreamListener);
+  nsPluginInstanceTag * p = FindInstanceTag(aInstance);
+  if (p) {
+    if (!p->mStreams && (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(p->mStreams)))))
+      return rv;
+    p->mStreams->AppendElement(aStreamListener);
+  }
 
   return rv;
 }
@@ -4666,8 +4709,9 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
   }
   if (!nsCRT::strcmp(NS_PRIVATE_BROWSING_SWITCH_TOPIC, aTopic)) {
     // inform all active plugins of changed private mode state
-    for (PRUint32 i = 0; i < mInstances.Length(); i++) {
-      mInstances[i]->PrivateModeStateChanged();
+    for (PRUint32 i = 0; i < mInstanceTags.Length(); i++) {
+      nsNPAPIPluginInstance* pi = static_cast<nsNPAPIPluginInstance*>(mInstanceTags[i]->mInstance);
+      pi->PrivateModeStateChanged();
     }
   }
   return NS_OK;
@@ -4728,12 +4772,16 @@ nsPluginHost::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInstance)
 
     // add plugin name to the message
     nsCString pluginname;
-    nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(aInstance);
-    nsPluginTag *tag = TagForPlugin(instance->Plugin());
-    if (!tag->mName.IsEmpty())
-      pluginname = tag->mName;
-    else
-      pluginname = tag->mFileName;
+    nsPluginInstanceTag * p = FindInstanceTag(aInstance);
+    if (p) {
+      nsPluginTag * tag = p->mPluginTag;
+      if (tag) {
+        if (!tag->mName.IsEmpty())
+          pluginname = tag->mName;
+        else
+          pluginname = tag->mFileName;
+      }
+    }
 
     NS_ConvertUTF8toUTF16 msg(pluginname);
     msg.AppendLiteral("\n\n");
@@ -5050,11 +5098,11 @@ NS_IMETHODIMP
 nsPluginHost::GetPluginName(nsIPluginInstance *aPluginInstance,
                             const char** aPluginName)
 {
-  nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(aPluginInstance);
-  if (!instance)
+  nsPluginInstanceTag *instanceTag = FindInstanceTag(aPluginInstance);
+  if (!instanceTag || !instanceTag->mPluginTag)
     return NS_ERROR_FAILURE;
 
-  *aPluginName = TagForPlugin(instance->Plugin())->mName.get();
+  *aPluginName = instanceTag->mPluginTag->mName.get();
 
   return NS_OK;
 }
@@ -5066,10 +5114,12 @@ nsPluginHost::GetPluginTagForInstance(nsIPluginInstance *aPluginInstance,
   NS_ENSURE_ARG_POINTER(aPluginInstance);
   NS_ENSURE_ARG_POINTER(aPluginTag);
 
-  nsNPAPIPluginInstance *instance = static_cast<nsNPAPIPluginInstance*>(aPluginInstance);
-  *aPluginTag = TagForPlugin(instance->Plugin());
-  NS_ADDREF(*aPluginTag);
+  nsPluginInstanceTag *instanceTag = FindInstanceTag(aPluginInstance);
 
+  NS_ENSURE_TRUE(instanceTag && instanceTag->mPluginTag, NS_ERROR_FAILURE);
+  
+  *aPluginTag = instanceTag->mPluginTag;
+  NS_ADDREF(*aPluginTag);
   return NS_OK;
 }
 
@@ -5155,7 +5205,7 @@ NS_IMETHODIMP nsPluginHost::Notify(nsITimer* timer)
 void
 nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin)
 {
-  nsPluginTag* pluginTag = TagForPlugin(aPlugin);
+  nsPluginTag* pluginTag = FindTagForPlugin(aPlugin);
   if (!pluginTag) {
     NS_WARNING("nsPluginTag not found in nsPluginHost::PluginCrashed");
     return;
@@ -5163,21 +5213,21 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin)
 
   // Invalidate each nsPluginInstanceTag for the crashed plugin
 
-  for (PRUint32 i = mInstances.Length(); i > 0; i--) {
-    nsNPAPIPluginInstance* instance = mInstances[i - 1];
-    if (TagForPlugin(instance->Plugin()) == pluginTag) {
+  for (PRUint32 i = mInstanceTags.Length(); i > 0; i--) {
+    nsPluginInstanceTag* instanceTag = mInstanceTags[i - 1];
+    if (instanceTag->mPluginTag == pluginTag) {
       // notify the content node (nsIObjectLoadingContent) that the plugin has crashed
       nsCOMPtr<nsIDOMElement> domElement;
-      instance->GetDOMElement(getter_AddRefs(domElement));
+      instanceTag->mInstance->GetDOMElement(getter_AddRefs(domElement));
       nsCOMPtr<nsIObjectLoadingContent> objectContent(do_QueryInterface(domElement));
       if (objectContent) {
         objectContent->PluginCrashed();
       }
+      
+      instanceTag->mInstance->Stop();
 
-      instance->Stop();
-
-      nsPluginTag* pluginTag = TagForPlugin(instance->Plugin());
-      mInstances.RemoveElement(instance);
+      nsPluginTag* pluginTag = instanceTag->mPluginTag;
+      mInstanceTags.RemoveElement(instanceTag);
       OnPluginInstanceDestroyed(pluginTag);
     }
   }
@@ -5190,41 +5240,50 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin)
 }
 #endif
 
-nsNPAPIPluginInstance*
-nsPluginHost::FindInstance(const char *mimetype)
+nsPluginInstanceTag*
+nsPluginHost::FindInstanceTag(nsIPluginInstance *instance)
 {
-  PRBool defaultplugin = (PL_strcmp(mimetype, "*") == 0);
-  
-  for (PRUint32 i = 0; i < mInstances.Length(); i++) {
-    nsNPAPIPluginInstance* instance = mInstances[i];
-    // give it some special treatment for the default plugin first
-    // because we cannot tell the default plugin by asking instance for a mime type
-    if (defaultplugin && instance->Plugin()->IsDefaultPlugin())
-      return instance;
-    
-    const char* mt;
-    nsresult rv = instance->GetMIMEType(&mt);
-    if (NS_FAILED(rv))
-      continue;
-
-    if (PL_strcasecmp(mt, mimetype) == 0)
-      return instance;
+  for (PRUint32 i = 0; i < mInstanceTags.Length(); i++) {
+    nsPluginInstanceTag *instanceTag = mInstanceTags[i];
+    if (instanceTag->mInstance == instance)
+      return instanceTag;
   }
   return nsnull;
 }
 
-nsNPAPIPluginInstance*
-nsPluginHost::FindStoppedInstance(const char * url)
+nsPluginInstanceTag*
+nsPluginHost::FindInstanceTag(const char *mimetype)
 {
-  for (PRUint32 i = 0; i < mInstances.Length(); i++) {
-    nsNPAPIPluginInstance *instance = mInstances[i];
-    nsIURI *uri = instance->GetURI();
-    if (!uri)
+  PRBool defaultplugin = (PL_strcmp(mimetype, "*") == 0);
+  
+  for (PRUint32 i = 0; i < mInstanceTags.Length(); i++) {
+    nsPluginInstanceTag* instanceTag = mInstanceTags[i];
+    // give it some special treatment for the default plugin first
+    // because we cannot tell the default plugin by asking instance for a mime type
+    if (defaultplugin && instanceTag->mDefaultPlugin)
+      return instanceTag;
+    
+    if (!instanceTag->mInstance)
       continue;
-    nsCAutoString spec;
-    uri->GetSpec(spec);
-    if (!PL_strcmp(url, spec.get()) && !instance->IsRunning())
-      return instance;
+    
+    const char* mt;
+    nsresult rv = instanceTag->mInstance->GetMIMEType(&mt);
+    if (NS_FAILED(rv))
+      continue;
+    
+    if (PL_strcasecmp(mt, mimetype) == 0)
+      return instanceTag;
+  }
+  return nsnull;
+}
+
+nsPluginInstanceTag*
+nsPluginHost::FindStoppedInstanceTag(const char * url)
+{
+  for (PRUint32 i = 0; i < mInstanceTags.Length(); i++) {
+    nsPluginInstanceTag *instanceTag = mInstanceTags[i];
+    if (!PL_strcmp(url, instanceTag->mURL) && !instanceTag->mInstance->IsRunning())
+      return instanceTag;
   }
   return nsnull;
 }
@@ -5232,9 +5291,10 @@ nsPluginHost::FindStoppedInstance(const char * url)
 void 
 nsPluginHost::StopRunningInstances(nsISupportsArray* aReloadDocs, nsPluginTag* aPluginTag)
 {
-  for (PRInt32 i = mInstances.Length(); i > 0; i--) {
-    nsNPAPIPluginInstance *instance = mInstances[i - 1];
-    if (instance->IsRunning() && (!aPluginTag || aPluginTag == TagForPlugin(instance->Plugin()))) {
+  for (PRInt32 i = mInstanceTags.Length(); i > 0; i--) {
+    nsPluginInstanceTag *instanceTag = mInstanceTags[i - 1];
+    nsNPAPIPluginInstance* instance = instanceTag->mInstance;
+    if (instance->IsRunning() && (!aPluginTag || aPluginTag == instanceTag->mPluginTag)) {
       instance->SetWindow(nsnull);
       instance->Stop();
 
@@ -5252,17 +5312,17 @@ nsPluginHost::StopRunningInstances(nsISupportsArray* aReloadDocs, nsPluginTag* a
         }
       }
 
-      nsPluginTag* pluginTag = TagForPlugin(instance->Plugin());
-      mInstances.RemoveElement(instance);
+      nsPluginTag* pluginTag = instanceTag->mPluginTag;
+      mInstanceTags.RemoveElement(instanceTag);
       OnPluginInstanceDestroyed(pluginTag);
     }
   }
 }
 
-nsTArray< nsRefPtr<nsNPAPIPluginInstance> >*
-nsPluginHost::InstanceArray()
+nsTArray< nsAutoPtr<nsPluginInstanceTag> >*
+nsPluginHost::InstanceTagArray()
 {
-  return &mInstances;
+  return &mInstanceTags;
 }
 
 nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,

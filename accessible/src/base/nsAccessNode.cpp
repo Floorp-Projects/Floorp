@@ -82,12 +82,6 @@ nsAccessNodeHashtable nsAccessNode::gGlobalDocAccessibleCache;
 
 nsApplicationAccessibleWrap *nsAccessNode::gApplicationAccessible = nsnull;
 
-nsIAccessibilityService*
-nsAccessNode::GetAccService()
-{
-  return nsAccessibilityService::GetAccessibilityService();
-}
-
 /*
  * Class nsAccessNode
  */
@@ -157,13 +151,10 @@ nsAccessNode::Init()
     if (presShell) {
       nsCOMPtr<nsIDOMNode> docNode(do_QueryInterface(presShell->GetDocument()));
       if (docNode) {
-        nsIAccessibilityService *accService = GetAccService();
-        if (accService) {
-          nsCOMPtr<nsIAccessible> accessible;
-          accService->GetAccessibleInShell(docNode, presShell,
-                                           getter_AddRefs(accessible));
-          docAccessible = do_QueryInterface(accessible);
-        }
+        nsCOMPtr<nsIAccessible> accessible;
+        GetAccService()->GetAccessibleInShell(docNode, presShell,
+                                              getter_AddRefs(accessible));
+        docAccessible = do_QueryInterface(accessible);
       }
     }
     NS_ASSERTION(docAccessible, "Cannot cache new nsAccessNode");
@@ -473,16 +464,14 @@ nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
 {
   *aAccessNode = nsnull;
   
-  nsIAccessibilityService *accService = GetAccService();
-  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
-
   nsCOMPtr<nsIAccessNode> accessNode;
-  accService->GetCachedAccessNode(aNode, mWeakShell, getter_AddRefs(accessNode));
+  GetAccService()->GetCachedAccessNode(aNode, mWeakShell,
+                                       getter_AddRefs(accessNode));
 
   if (!accessNode) {
     nsCOMPtr<nsIAccessible> accessible;
-    accService->GetAccessibleInWeakShell(aNode, mWeakShell,
-                                         getter_AddRefs(accessible));
+    GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell,
+                                              getter_AddRefs(accessible));
 
     accessNode = do_QueryInterface(accessible);
   }

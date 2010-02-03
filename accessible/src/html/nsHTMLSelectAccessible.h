@@ -45,7 +45,6 @@
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMNode.h"
-#include "nsIAccessibilityService.h"
 #include "nsAccessibleTreeWalker.h"
 
 class nsIMutableArray;
@@ -104,10 +103,10 @@ protected:
 
     void CalcSelectionCount(PRInt32 *aSelectionCount);
     void Select(PRBool aSelect);
-    void AddAccessibleIfSelected(nsIAccessibilityService *aAccService, 
-                                 nsIMutableArray *aSelectedAccessibles, 
+    void AddAccessibleIfSelected(nsIMutableArray *aSelectedAccessibles, 
                                  nsPresContext *aContext);
-    PRBool GetAccessibleIfSelected(PRInt32 aIndex, nsIAccessibilityService *aAccService, nsPresContext *aContext, nsIAccessible **_retval);
+    PRBool GetAccessibleIfSelected(PRInt32 aIndex, nsPresContext *aContext,
+                                   nsIAccessible **aAccessible);
 
     PRBool Advance();
   };

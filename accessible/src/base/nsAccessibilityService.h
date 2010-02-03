@@ -82,19 +82,33 @@ public:
                                    nsIWeakReference **weakShell);
 
   /**
-   * Return accessibility service (static instance of this class).
-   */
-  static nsresult GetAccessibilityService(nsIAccessibilityService** aResult);
-
-  /**
-   * Return cached accessibility service.
-   */
-  static nsIAccessibilityService* GetAccessibilityService();
-
-  /**
    * Indicates whether accessibility service was shutdown.
    */
   static PRBool gIsShutdown;
+
+  /**
+   * Return an accessible for the given DOM node.
+   *
+   * @param  aNode       [in] the given node
+   * @param  aPresShell  [in] the pres shell of the node
+   * @param  aWeakShell  [in] the weak shell for the pres shell
+   * @param  aFrameHint  [in] the frame of the given node
+   * @param  aIsHidden   [out] indicates whether the node's frame is hidden
+   */
+  nsresult GetAccessible(nsIDOMNode *aNode, nsIPresShell *aPresShell,
+                         nsIWeakReference *aWeakShell, nsIFrame *aFrameHint,
+                         PRBool *aIsHidden, nsIAccessible **aAccessible);
+
+  /**
+   * Return an accessible for a DOM node in the given pres shell.
+   * 
+   * @param aNode       [in] the given node.
+   * @param aPresShell  [in] the presentation shell of the given node.
+   * @param aAccessible [out] the nsIAccessible for the given node.
+   */
+  nsresult GetAccessibleInWeakShell(nsIDOMNode *aNode,
+                                    nsIWeakReference *aPresShell,
+                                    nsIAccessible **aAccessible);
 
 private:
   /**
@@ -170,9 +184,23 @@ private:
    */
   void ProcessDocLoadEvent(nsIWebProgress *aWebProgress, PRUint32 aEventType);
 
+  friend nsAccessibilityService* GetAccService();
+
+  friend nsresult  NS_GetAccessibilityService(nsIAccessibilityService** aResult);
+
+  
   NS_DECL_RUNNABLEMETHOD_ARG2(nsAccessibilityService, ProcessDocLoadEvent,
                               nsCOMPtr<nsIWebProgress>, PRUint32)
 };
+
+/**
+ * Return the accessibility service instance. (Handy global function)
+ */
+inline nsAccessibilityService*
+GetAccService()
+{
+  return nsAccessibilityService::gAccessibilityService;
+}
 
 /**
  * Map nsIAccessibleRole constants to strings. Used by
