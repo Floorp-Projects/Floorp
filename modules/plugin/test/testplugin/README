@@ -94,6 +94,10 @@ with a boolean value, indicating whether the tests were successful.
 NPN_PluginThreadAsyncCall.  When finished, calls the script callback
 with a boolean value, indicating whether the tests were successful.
 
+* checkGCRace(callback) - return a function NPObject which may be called
+  with the number '35'. Immediately after returning, sleep for 5 seconds, then
+  call "callback" with the same NPObject.
+
 == Private browsing ==
 
 The test plugin object supports the following scriptable methods:
