@@ -208,7 +208,7 @@ JSScope *
 JSScope::create(JSContext *cx, const JSObjectOps *ops, JSClass *clasp,
                 JSObject *obj, uint32 shape)
 {
-    JS_ASSERT(ops->isNative());
+    JS_ASSERT(OPS_IS_NATIVE(ops));
     JS_ASSERT(obj);
 
     JSScope *scope = cx->create<JSScope>(ops, obj);
