@@ -109,6 +109,16 @@ nsDOMFile::GetName(nsAString &aFileName)
 }
 
 NS_IMETHODIMP
+nsDOMFile::GetMozFullPath(nsAString &aFileName)
+{
+  if (nsContentUtils::IsCallerTrustedForCapability("UniversalFileRead")) {
+    return mFile->GetPath(aFileName);
+  }
+  aFileName.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMFile::GetSize(PRUint64 *aFileSize)
 {
   PRInt64 fileSize;

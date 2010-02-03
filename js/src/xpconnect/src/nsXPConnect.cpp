@@ -1051,7 +1051,7 @@ InitWebGLTypes(JSContext *aJSContext, JSObject *aGlobalJSObj)
     // Alias WebGLArrayBuffer -> ArrayBuffer
     if(!JS_GetProperty(aJSContext, aGlobalJSObj, "ArrayBuffer", &v) ||
        !JS_DefineProperty(aJSContext, aGlobalJSObj, "WebGLArrayBuffer", v,
-                          NULL, NULL, JSPROP_PERMANENT | JSPROP_ENUMERATE))
+                          NULL, NULL, JSPROP_PERMANENT))
         return PR_FALSE;
 
     const int webglTypes[] = {
@@ -1080,7 +1080,7 @@ InitWebGLTypes(JSContext *aJSContext, JSObject *aGlobalJSObj)
     {
         if(!JS_GetProperty(aJSContext, aGlobalJSObj, js::TypedArray::slowClasses[webglTypes[i]].name, &v) ||
            !JS_DefineProperty(aJSContext, aGlobalJSObj, webglNames[i], v,
-                              NULL, NULL, JSPROP_PERMANENT | JSPROP_ENUMERATE))
+                              NULL, NULL, JSPROP_PERMANENT))
             return PR_FALSE;
     }
 
@@ -1367,6 +1367,25 @@ nsXPConnect::WrapJS(JSContext * aJSContext,
     if(!XPCConvert::JSObject2NativeInterface(ccx, result, aJSObj,
                                              &aIID, nsnull, &rv))
         return rv;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPConnect::JSValToVariant(JSContext *cx,
+                            jsval *aJSVal,
+                            nsIVariant ** aResult)
+{
+    NS_PRECONDITION(aJSVal, "bad param");
+    NS_PRECONDITION(aResult, "bad param");
+    *aResult = nsnull;
+
+    XPCCallContext ccx(NATIVE_CALLER, cx);
+    if(!ccx.IsValid())
+      return NS_ERROR_FAILURE;
+
+    *aResult = XPCVariant::newVariant(ccx, *aJSVal);
+    NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+
     return NS_OK;
 }
 

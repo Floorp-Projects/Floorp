@@ -56,7 +56,7 @@
 #include "nsIStringBundle.h"
 #include "nsWeakReference.h"
 #include "nsInterfaceHashtable.h"
-#include "nsIAccessibilityService.h"
+#include "nsAccessibilityService.h"
 
 class nsIPresShell;
 class nsPresContext;
@@ -145,7 +145,7 @@ class nsAccessNode: public nsIAccessNode
     already_AddRefed<nsRootAccessible> GetRootAccessible();
 
     static nsIDOMNode *gLastFocusedNode;
-    static nsIAccessibilityService* GetAccService();
+
     already_AddRefed<nsIDOMNode> GetCurrentFocus();
 
     /**

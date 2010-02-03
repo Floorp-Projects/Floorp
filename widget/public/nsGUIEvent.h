@@ -56,6 +56,7 @@
 #include "nsTArray.h"
 #include "nsTraceRefcnt.h"
 #include "nsITransferable.h"
+#include "nsIVariant.h"
 
 class nsIRenderingContext;
 class nsIRegion;
@@ -246,6 +247,7 @@ class nsHashKey;
 #define NS_HASHCHANGE                   (NS_STREAM_EVENT_START + 2)
 #define NS_IMAGE_ABORT                  (NS_STREAM_EVENT_START + 3)
 #define NS_LOAD_ERROR                   (NS_STREAM_EVENT_START + 4)
+#define NS_POPSTATE                     (NS_STREAM_EVENT_START + 5)
 #define NS_BEFORE_PAGE_UNLOAD           (NS_STREAM_EVENT_START + 6)
 #define NS_PAGE_RESTORE                 (NS_STREAM_EVENT_START + 7)
  

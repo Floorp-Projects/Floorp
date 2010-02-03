@@ -42,28 +42,20 @@
 
 /*static*/ nsSVGTransformSMILType nsSVGTransformSMILType::sSingleton;
 
+typedef nsTArray<nsSVGSMILTransform> TransformArray;
+
 //----------------------------------------------------------------------
 // nsISMILType implementation
 
 nsresult
 nsSVGTransformSMILType::Init(nsSMILValue &aValue) const
 {
-  NS_PRECONDITION(aValue.mType == this || aValue.IsNull(),
-                  "Unexpected value type");
-  NS_ASSERTION(aValue.mType != this || aValue.mU.mPtr,
-               "Invalid nsSMILValue of SVG transform type: NULL data member");
+  NS_PRECONDITION(aValue.IsNull(), "Unexpected value type");
 
-  if (aValue.mType != this || !aValue.mU.mPtr) {
-    // Different type, or no data member: allocate memory and set type
-    TransformArray* transforms = new TransformArray(1);
-    NS_ENSURE_TRUE(transforms, NS_ERROR_OUT_OF_MEMORY);
-    aValue.mU.mPtr = transforms;
-    aValue.mType = this;
-  } else {
-    // Same type, just set clear
-    TransformArray* transforms = static_cast<TransformArray*>(aValue.mU.mPtr);
-    transforms->Clear();
-  }
+  TransformArray* transforms = new TransformArray(1);
+  NS_ENSURE_TRUE(transforms, NS_ERROR_OUT_OF_MEMORY);
+  aValue.mU.mPtr = transforms;
+  aValue.mType = this;
 
   return NS_OK;
 }
@@ -313,10 +305,11 @@ nsSVGTransformSMILType::Interpolate(const nsSMILValue& aStartVal,
 //----------------------------------------------------------------------
 // Transform array accessors
 
+// static
 PRUint32
-nsSVGTransformSMILType::GetNumTransforms(const nsSMILValue& aValue) const
+nsSVGTransformSMILType::GetNumTransforms(const nsSMILValue& aValue)
 {
-  NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value");
+  NS_PRECONDITION(aValue.mType == &sSingleton, "Unexpected SMIL value type");
 
   const TransformArray& transforms =
     *static_cast<const TransformArray*>(aValue.mU.mPtr);
@@ -324,11 +317,12 @@ nsSVGTransformSMILType::GetNumTransforms(const nsSMILValue& aValue) const
   return transforms.Length();
 }
 
+// static
 const nsSVGSMILTransform*
 nsSVGTransformSMILType::GetTransformAt(PRUint32 aIndex,
-                                       const nsSMILValue& aValue) const
+                                       const nsSMILValue& aValue)
 {
-  NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value");
+  NS_PRECONDITION(aValue.mType == &sSingleton, "Unexpected SMIL value type");
 
   const TransformArray& transforms =
     *static_cast<const TransformArray*>(aValue.mU.mPtr);
@@ -341,16 +335,14 @@ nsSVGTransformSMILType::GetTransformAt(PRUint32 aIndex,
   return &transforms[aIndex];
 }
 
+// static
 nsresult
 nsSVGTransformSMILType::AppendTransform(const nsSVGSMILTransform& aTransform,
-                                        nsSMILValue& aValue) const
+                                        nsSMILValue& aValue)
 {
-  NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value");
+  NS_PRECONDITION(aValue.mType == &sSingleton, "Unexpected SMIL value type");
 
   TransformArray& transforms = *static_cast<TransformArray*>(aValue.mU.mPtr);
-
-  nsSVGSMILTransform* transform = transforms.AppendElement(aTransform);
-  NS_ENSURE_TRUE(transform,NS_ERROR_OUT_OF_MEMORY);
-
-  return NS_OK;
+  return transforms.AppendElement(aTransform) ?
+    NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }

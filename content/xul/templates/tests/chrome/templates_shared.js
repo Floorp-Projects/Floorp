@@ -52,6 +52,7 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const debug = false;
 
 var expectedConsoleMessages = [];
+var expectLoggedMessages = null;
 
 try {
   const RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].
@@ -87,6 +88,9 @@ function test_template()
   // open menus if necessary
   if (needsOpen)
     root.open = true;
+
+  if (expectLoggedMessages)
+    expectLoggedMessages();
 
   checkResults(root, 0);
 
