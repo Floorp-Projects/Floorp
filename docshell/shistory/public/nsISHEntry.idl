@@ -58,7 +58,7 @@ class nsDocShellEditorData;
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 
 
-[scriptable, uuid(09fecea6-5453-43ba-bf91-3ff32618f037)]
+[scriptable, uuid(62b0603f-57ca-439e-a0fb-6f6978500755)]
 interface nsISHEntry : nsIHistoryEntry
 {
     /** URI for the document */
@@ -149,6 +149,21 @@ interface nsISHEntry : nsIHistoryEntry
      */
     attribute unsigned long pageIdentifier;
 
+    /**
+     * docIdentifier is an integer that should be the same for two entries
+     * attached to the same docshell if and only if the two entries are entries
+     * for the same document.  In practice, two entries A and B will have the
+     * same docIdentifier if they have the same pageIdentifier or if B was
+     * created by A calling history.pushState().
+     */
+    attribute unsigned long long docIdentifier;
+
+    /**
+     * Changes this entry's doc identifier to a new value which is unique
+     * among those of all other entries.
+     */
+    void setUniqueDocIdentifier();
+
     /** attribute to set and get the cache key for the entry */
     attribute nsISupports cacheKey;
 
@@ -191,6 +206,12 @@ interface nsISHEntry : nsIHistoryEntry
      * came from.
      */
     attribute nsISupports owner;
+
+    /**
+     * Get/set data associated with this history state via a pushState() call,
+     * encoded as JSON.
+     **/
+    attribute AString stateData;
 
     /**
      * Gets the owning pointer to the editor data assosicated with

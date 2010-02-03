@@ -205,6 +205,19 @@ function createMochitestServer(serverBasePath)
   server.registerContentType("oga", "audio/ogg");
   server.setIndexHandler(defaultDirHandler);
 
+  var serverRoot =
+    {
+      getFile: function getFile(path)
+      {
+        var file = serverBasePath.clone().QueryInterface(Ci.nsILocalFile);
+        file.appendRelativePath(path);
+        return file;
+      },
+      QueryInterface: function(aIID) { return this; }
+    };
+
+  server.setObjectState("SERVER_ROOT", serverRoot);
+
   processLocations(server);
 
   return server;

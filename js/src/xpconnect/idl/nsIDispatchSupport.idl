@@ -57,7 +57,6 @@
 
 native COMVARIANT(VARIANT);
 [ptr] native COMVARIANTPtr(VARIANT);
-native JSVal(jsval);
 [ptr] native JSContextPtr(JSContext);
 
 interface IDispatch;

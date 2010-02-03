@@ -163,16 +163,16 @@ public:
   void PluginCrashed(nsNPAPIPlugin* plugin);
 #endif
 
-  nsNPAPIPluginInstance *FindInstance(const char *mimetype);
-  nsNPAPIPluginInstance *FindStoppedInstance(const char * url);
-  nsNPAPIPluginInstance *FindOldestStoppedInstance();
-  PRUint32 StoppedInstanceCount();
+  nsPluginInstanceTag *FindInstanceTag(nsIPluginInstance *instance);
+  nsPluginInstanceTag *FindInstanceTag(const char *mimetype);
+  nsPluginInstanceTag *FindStoppedInstanceTag(const char * url);
+  nsPluginInstanceTag *FindOldestStoppedInstanceTag();
+  PRUint32 StoppedInstanceTagCount();
 
   void StopRunningInstances(nsISupportsArray* aReloadDocs, nsPluginTag* aPluginTag);
 
-  nsTArray< nsRefPtr<nsNPAPIPluginInstance> > *InstanceArray();
+  nsTArray< nsAutoPtr<nsPluginInstanceTag> > *InstanceTagArray();
 
-  nsPluginTag* TagForPlugin(nsNPAPIPlugin* aPlugin);
 private:
   nsresult
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
@@ -196,11 +196,20 @@ private:
   nsPluginTag*
   FindPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
 
+  // Return the tag for |plugin| if found, nsnull if not.
+  nsPluginTag*
+  FindTagForPlugin(nsIPlugin* aPlugin);
+
   nsresult
   FindStoppedPluginForURL(nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
 
   nsresult
   SetUpDefaultPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
+
+  nsresult
+  AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
+                          nsIPluginInstance* aInstance,
+                          nsIURI* aURL, PRBool aDefaultPlugin);
 
   nsresult
   FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsChanged);
@@ -264,7 +273,7 @@ private:
   // set by pref plugin.disable
   PRPackedBool mPluginsDisabled;
 
-  nsTArray< nsRefPtr<nsNPAPIPluginInstance> > mInstances;
+  nsTArray< nsAutoPtr<nsPluginInstanceTag> > mInstanceTags;
 
   nsTArray<PRLibrary*> mUnusedLibraries;
 

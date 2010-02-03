@@ -108,16 +108,12 @@ NS_IMETHODIMP nsSmartCardEvent::SetTarget(nsIDOMEventTarget *aTarget)
 
 NS_IMETHODIMP_(PRBool ) nsSmartCardEvent::IsDispatchStopped()
 {
-  PRBool  isDispatchPrevented = nsnull;
-  PRBool * aIsDispatchPrevented = &isDispatchPrevented;
   NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
   return mPrivate->IsDispatchStopped();
 }
 
 NS_IMETHODIMP_(nsEvent*) nsSmartCardEvent::GetInternalNSEvent()
 {
-  nsEvent* nSEvent = nsnull;
-  nsEvent** aNSEvent = &nSEvent;
   NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
   return mPrivate->GetInternalNSEvent();
 }

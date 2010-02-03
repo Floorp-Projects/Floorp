@@ -66,7 +66,7 @@ class nsSHistory: public PRCList,
                   public nsIWebNavigation
 {
 public:
-	nsSHistory();
+  nsSHistory();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHISTORY
@@ -94,7 +94,7 @@ protected:
    nsresult InitiateLoad(nsISHEntry * aFrameEntry, nsIDocShell * aFrameDS, long aLoadType);
 
    NS_IMETHOD LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 histCmd);
-	
+
 #ifdef DEBUG
    nsresult PrintHistory();
 #endif

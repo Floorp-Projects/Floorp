@@ -1760,6 +1760,22 @@ void nsChildView::Scroll(const nsIntPoint& aDelta,
       }
     }
 #endif // NS_LEOPARD_AND_LATER
+    // Invalidate the area that was scrolled into view from outside the window
+    // First, compute the destination region whose source was outside the
+    // window. We do this by subtracting from destRegion the window bounds,
+    // translated by the scroll amount.
+    NSView* rootView = [[mView window] contentView];
+    NSRect rootViewRect = [mView convertRect:[rootView bounds] fromView: rootView];
+    nsIntRect windowBounds;
+    NSRectToGeckoRect(rootViewRect, windowBounds);
+    destRegion.Sub(destRegion, windowBounds + aDelta);
+    nsIntRegionRectIterator iter(destRegion);
+    const nsIntRect* invalidate;
+    while ((invalidate = iter.Next()) != nsnull) {
+      NSRect rect;
+      GeckoRectToNSRect(*invalidate, rect);
+      [mView setNeedsDisplayInRect:rect];
+    }
 
     // Leopard, at least, has a nasty bug where calling scrollRect:by: doesn't
     // actually trigger a window update. A window update is only triggered

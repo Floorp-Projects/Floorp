@@ -564,34 +564,6 @@ nsScriptSecurityManager::CheckPropertyAccess(JSContext* cx,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CheckConnect(JSContext* cx,
-                                      nsIURI* aTargetURI,
-                                      const char* aClassName,
-                                      const char* aPropertyName)
-{
-    // Get a context if necessary
-    if (!cx)
-    {
-        cx = GetCurrentJSContext();
-        if (!cx)
-            return NS_OK; // No JS context, so allow the load
-    }
-
-    nsresult rv = CheckLoadURIFromScript(cx, aTargetURI);
-    if (NS_FAILED(rv)) return rv;
-
-    JSAutoRequest ar(cx);
-
-    JSString* propertyName = ::JS_InternString(cx, aPropertyName);
-    if (!propertyName)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    return CheckPropertyAccessImpl(nsIXPCSecurityManager::ACCESS_CALL_METHOD, nsnull,
-                                   cx, nsnull, nsnull, aTargetURI,
-                                   nsnull, aClassName, STRING_TO_JSVAL(propertyName), nsnull);
-}
-
-NS_IMETHODIMP
 nsScriptSecurityManager::CheckSameOrigin(JSContext* cx,
                                          nsIURI* aTargetURI)
 {
@@ -750,7 +722,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                 }
                 if(NS_SUCCEEDED(rv))
                     rv = CheckSameOriginDOMProp(subjectPrincipal, objectPrincipal,
-                                                aAction, aTargetURI != nsnull);
+                                                aAction);
                 break;
             }
         default:
@@ -943,8 +915,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 /* static */
 nsresult
 nsScriptSecurityManager::CheckSameOriginPrincipal(nsIPrincipal* aSubject,
-                                                  nsIPrincipal* aObject,
-                                                  PRBool aIsCheckConnect)
+                                                  nsIPrincipal* aObject)
 {
     /*
     ** Get origin of subject and object and compare.
@@ -952,36 +923,25 @@ nsScriptSecurityManager::CheckSameOriginPrincipal(nsIPrincipal* aSubject,
     if (aSubject == aObject)
         return NS_OK;
 
-    // These booleans are only used when !aIsCheckConnect.  Default
-    // them to false, and change if that turns out wrong.
+    // Default to false, and change if that turns out wrong.
     PRBool subjectSetDomain = PR_FALSE;
     PRBool objectSetDomain = PR_FALSE;
     
     nsCOMPtr<nsIURI> subjectURI;
     nsCOMPtr<nsIURI> objectURI;
 
-    if (aIsCheckConnect)
-    {
-        // Don't use domain for CheckConnect calls, since that's called for
-        // data-only load checks like XMLHTTPRequest (bug 290100).
+    aSubject->GetDomain(getter_AddRefs(subjectURI));
+    if (!subjectURI) {
         aSubject->GetURI(getter_AddRefs(subjectURI));
-        aObject->GetURI(getter_AddRefs(objectURI));
+    } else {
+        subjectSetDomain = PR_TRUE;
     }
-    else
-    {
-        aSubject->GetDomain(getter_AddRefs(subjectURI));
-        if (!subjectURI) {
-            aSubject->GetURI(getter_AddRefs(subjectURI));
-        } else {
-            subjectSetDomain = PR_TRUE;
-        }
 
-        aObject->GetDomain(getter_AddRefs(objectURI));
-        if (!objectURI) {
-            aObject->GetURI(getter_AddRefs(objectURI));
-        } else {
-            objectSetDomain = PR_TRUE;
-        }
+    aObject->GetDomain(getter_AddRefs(objectURI));
+    if (!objectURI) {
+        aObject->GetURI(getter_AddRefs(objectURI));
+    } else {
+        objectSetDomain = PR_TRUE;
     }
 
     if (SecurityCompareURIs(subjectURI, objectURI))
@@ -989,12 +949,6 @@ nsScriptSecurityManager::CheckSameOriginPrincipal(nsIPrincipal* aSubject,
         // explicitly setting document.domain then the other must also have
         // done so in order to be considered the same origin. This prevents
         // DNS spoofing based on document.domain (154930)
-
-        // But this restriction does not apply to CheckConnect calls, since
-        // that's called for data-only load checks like XMLHTTPRequest where
-        // we ignore domain (bug 290100).
-        if (aIsCheckConnect)
-            return NS_OK;
 
         // If both or neither explicitly set their domain, allow the access
         if (subjectSetDomain == objectSetDomain)
@@ -1009,7 +963,7 @@ nsScriptSecurityManager::CheckSameOriginPrincipal(nsIPrincipal* aSubject,
 
 // It's important that
 //
-//   CheckSameOriginPrincipal(A, B, PR_FALSE) == NS_OK
+//   CheckSameOriginPrincipal(A, B) == NS_OK
 //
 // imply
 //
@@ -1032,21 +986,13 @@ nsScriptSecurityManager::HashPrincipalByOrigin(nsIPrincipal* aPrincipal)
 nsresult
 nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
                                                 nsIPrincipal* aObject,
-                                                PRUint32 aAction,
-                                                PRBool aIsCheckConnect)
+                                                PRUint32 aAction)
 {
     nsresult rv;
-    if (aIsCheckConnect) {
-        // Don't do equality compares, just do a same-origin compare,
-        // since the object principal isn't a real principal, just a
-        // GetCodebasePrincipal() on whatever URI we started with.
-        rv = CheckSameOriginPrincipal(aSubject, aObject, aIsCheckConnect);
-    } else {
-        PRBool subsumes;
-        rv = aSubject->Subsumes(aObject, &subsumes);
-        if (NS_SUCCEEDED(rv) && !subsumes) {
-            rv = NS_ERROR_DOM_PROP_ACCESS_DENIED;
-        }
+    PRBool subsumes;
+    rv = aSubject->Subsumes(aObject, &subsumes);
+    if (NS_SUCCEEDED(rv) && !subsumes) {
+        rv = NS_ERROR_DOM_PROP_ACCESS_DENIED;
     }
     
     if (NS_SUCCEEDED(rv))

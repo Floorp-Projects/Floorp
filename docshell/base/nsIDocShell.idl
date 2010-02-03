@@ -69,8 +69,9 @@ interface nsISecureBrowserUI;
 interface nsIDOMStorage;
 interface nsIPrincipal;
 interface nsIWebBrowserPrint;
+interface nsIVariant;
 
-[scriptable, uuid(c95eaff1-14e6-4db1-a806-46be97d5a9b6)]
+[scriptable, uuid(3adde256-05a9-43a7-a190-f8fe75eecfd6)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -168,6 +169,13 @@ interface nsIDocShell : nsISupports
                               in boolean firstParty,
                               out nsIDocShell aDocShell,
                               out nsIRequest aRequest);
+
+  /**
+   * Do either a history.pushState() or history.replaceState() operation,
+   * depending on the value of aReplace.
+   */
+  void addState(in nsIVariant aData, in DOMString aTitle,
+                in DOMString aURL, in boolean aReplace);
 
   /**
    * Creates a DocShellLoadInfo object that you can manipulate and then pass
@@ -339,9 +347,10 @@ interface nsIDocShell : nsISupports
   /**
    * Load commands for the document 
    */
-  const unsigned long LOAD_CMD_NORMAL  = 0x1; // Normal load
-  const unsigned long LOAD_CMD_RELOAD  = 0x2; // Reload
-  const unsigned long LOAD_CMD_HISTORY = 0x4; // Load from history
+  const unsigned long LOAD_CMD_NORMAL  = 0x1;   // Normal load
+  const unsigned long LOAD_CMD_RELOAD  = 0x2;   // Reload
+  const unsigned long LOAD_CMD_HISTORY = 0x4;   // Load from history
+  const unsigned long LOAD_CMD_PUSHSTATE = 0x8; // History.pushState()
 
   readonly attribute unsigned long busyFlags;
 

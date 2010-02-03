@@ -235,6 +235,10 @@ PluginModuleChild::InitGraphics()
 {
     // FIXME/cjones: is this the place for this?
 #if defined(MOZ_WIDGET_GTK2)
+    // Work around plugins that don't interact well with GDK
+    // client-side windows.
+    PR_SetEnv("GDK_NATIVE_WINDOWS=1");
+
     gtk_init(0, 0);
 
     // GtkPlug is a static class so will leak anyway but this ref makes sure.

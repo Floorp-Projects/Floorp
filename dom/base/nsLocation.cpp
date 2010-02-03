@@ -194,7 +194,6 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISupports> owner;
-  nsCOMPtr<nsIURI> sourceURI;
 
   if (cx) {
     // No cx means that there's no JS running, or at least no JS that
@@ -222,7 +221,6 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
         !principal)
       return NS_ERROR_FAILURE;
     owner = do_QueryInterface(principal);
-    principal->GetURI(getter_AddRefs(sourceURI));
   }
 
   // Create load info
@@ -232,10 +230,12 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 
   loadInfo->SetOwner(owner);
 
-  // now set the referrer on the loadinfo
-  if (sourceURI) {
+  // Now set the referrer on the loadinfo.  We need to do this in order to get
+  // the correct referrer URI from a document which was pushStated.
+  nsCOMPtr<nsIURI> sourceURI;
+  result = GetURI(getter_AddRefs(sourceURI));
+  if (NS_SUCCEEDED(result))
     loadInfo->SetReferrer(sourceURI);
-  }
 
   loadInfo.swap(*aLoadInfo);
 

@@ -48,6 +48,7 @@
 #include "nsFixedSizeAllocator.h"
 #include "nsINode.h"
 #include "nsPIDOMWindow.h"
+#include "nsDOMPopStateEvent.h"
 
 #define NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH  (1 << 0)
 #define NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT (1 << 1)
@@ -796,6 +797,8 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
   // is probably wrong!
   if (aEventType.LowerCaseEqualsLiteral("transitionevent"))
     return NS_NewDOMTransitionEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("popstateevent"))
+    return NS_NewDOMPopStateEvent(aDOMEvent, aPresContext, nsnull);
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }

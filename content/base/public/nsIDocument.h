@@ -106,8 +106,8 @@ class nsIBoxObject;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-  { 0xb04d9176, 0xf087, 0x4d3c, \
-    { 0x87, 0x11, 0x13, 0x9d, 0x19, 0x95, 0x43, 0x55 } }
+{ 0x6b2f1996, 0x95d4, 0x48db, \
+  {0xaf, 0xd1, 0xfd, 0xaa, 0x75, 0x4c, 0x79, 0x92 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1226,6 +1226,28 @@ public:
   };
 
   /**
+   * Returns the document's pending state object (serialized to JSON), or the
+   * empty string if one doesn't exist.
+   *
+   * This field serves as a waiting place for the history entry's state object:
+   * We set the field's value to the history entry's state object early on in
+   * the load, then after we fire onload we deserialize the field's value and
+   * fire a popstate event containing the resulting object.
+   */
+  nsAString& GetPendingStateObject()
+  {
+    return mPendingStateObject;
+  }
+
+  /**
+   * Set the document's pending state object (as serialized to JSON).
+   */
+  void SetPendingStateObject(nsAString &obj)
+  {
+    mPendingStateObject.Assign(obj);
+  }
+
+  /**
    * Returns Doc_Theme_None if there is no lightweight theme specified,
    * Doc_Theme_Dark for a dark theme, Doc_Theme_Bright for a light theme, and
    * Doc_Theme_Neutral for any other theme. This is used to determine the state
@@ -1388,6 +1410,8 @@ protected:
   nsCOMPtr<nsIDocument> mDisplayDocument;
 
   PRUint32 mEventsSuppressed;
+
+  nsString mPendingStateObject;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

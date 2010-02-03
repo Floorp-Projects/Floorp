@@ -77,6 +77,9 @@ _TEST_FILES	= \
 		postMessage.jar \
 		postMessage.jar^headers^ \
 		test_bug477323.html \
+		test_bug500328.html \
+		file_bug500328_1.html \
+		file_bug500328_2.html \
 		$(NULL)
 
 _CHROME_FILES	= \

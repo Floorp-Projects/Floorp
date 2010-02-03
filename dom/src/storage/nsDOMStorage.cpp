@@ -550,8 +550,8 @@ NS_NewDOMStorage2(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 nsDOMStorage::nsDOMStorage()
   : mUseDB(PR_FALSE)
   , mSessionOnly(PR_TRUE)
-  , mItemsCached(PR_FALSE)
   , mStorageType(nsPIDOMStorage::Unknown)
+  , mItemsCached(PR_FALSE)
   , mEventBroadcaster(nsnull)
 {
   mSecurityChecker = this;
@@ -562,10 +562,10 @@ nsDOMStorage::nsDOMStorage()
 
 nsDOMStorage::nsDOMStorage(nsDOMStorage& aThat)
   : mUseDB(PR_FALSE) // Any clone is not using the database
-  , mSessionOnly(PR_TRUE)
-  , mItemsCached(PR_FALSE)
   , mDomain(aThat.mDomain)
+  , mSessionOnly(PR_TRUE)
   , mStorageType(aThat.mStorageType)
+  , mItemsCached(PR_FALSE)
 #ifdef MOZ_STORAGE
   , mScopeDBKey(aThat.mScopeDBKey)
 #endif

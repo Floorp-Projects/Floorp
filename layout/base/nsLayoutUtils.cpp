@@ -1297,7 +1297,7 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
           nsRegion clippedOutDestination;
           clippedOutDestination.Sub(aUpdateRect, clip);
  #ifdef DEBUG
-          PrintAddedRegion("Adding region for clipped out source frame %p",
+          PrintAddedRegion("Adding region for clipped out destination frame %p",
                            clipFrame, clippedOutDestination);
  #endif
           aRegion->Or(*aRegion, clippedOutDestination);

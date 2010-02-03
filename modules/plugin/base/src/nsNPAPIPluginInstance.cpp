@@ -877,8 +877,7 @@ nsInstanceStream::~nsInstanceStream()
 
 NS_IMPL_ISUPPORTS1(nsNPAPIPluginInstance, nsIPluginInstance)
 
-nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin,
-                                             NPPluginFuncs* callbacks,
+nsNPAPIPluginInstance::nsNPAPIPluginInstance(NPPluginFuncs* callbacks,
                                              PluginLibrary* aLibrary)
   : mCallbacks(callbacks),
 #ifdef XP_MACOSX
@@ -899,11 +898,9 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin,
     mStreams(nsnull),
     mMIMEType(nsnull),
     mOwner(nsnull),
-    mCurrentPluginEvent(nsnull),
-    mPlugin(plugin)
+    mCurrentPluginEvent(nsnull)
 {
-  NS_ASSERTION(mCallbacks != nsnull, "null callbacks");
-  NS_ASSERTION(mPlugin != nsnull, "null plugin");
+  NS_ASSERTION(mCallbacks != NULL, "null callbacks");
 
   // Initialize the NPP structure.
 
@@ -1792,30 +1789,6 @@ nsNPAPIPluginInstance::ConvertPoint(double sourceX, double sourceY, NPCoordinate
     return mOwner->ConvertPoint(sourceX, sourceY, sourceSpace, destX, destY, destSpace);
 
   return PR_FALSE;
-}
-
-nsNPAPIPlugin*
-nsNPAPIPluginInstance::Plugin()
-{
-  return mPlugin;
-}
-
-void
-nsNPAPIPluginInstance::SetURI(nsIURI* uri)
-{
-  mURI = uri;
-}
-
-nsIURI*
-nsNPAPIPluginInstance::GetURI()
-{
-  return mURI.get();
-}
-
-nsTArray< nsRefPtr<nsIStreamListener> >*
-nsNPAPIPluginInstance::StreamListeners()
-{
-  return &mStreamListeners;
 }
 
 nsresult

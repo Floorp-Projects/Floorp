@@ -82,6 +82,7 @@
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
+#include "nsIDOMPopStateEvent.h"
 #include "nsContentUtils.h"
 #include "nsDOMWindowUtils.h"
 
@@ -1330,13 +1331,15 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(ScrollAreaEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(PopStateEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(EventListenerInfo, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TransitionEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
-// Objects that shuld be constructable through |new Name();|
+// Objects that should be constructable through |new Name();|
 struct nsContractIDMapData
 {
   PRInt32 mDOMClassInfoID;
@@ -1420,6 +1423,7 @@ jsval nsDOMClassInfo::sOnreset_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnchange_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnselect_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnload_id          = JSVAL_VOID;
+jsval nsDOMClassInfo::sOnpopstate_id      = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnbeforeunload_id  = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnunload_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnhashchange_id    = JSVAL_VOID;
@@ -1614,6 +1618,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sOnchange_id,        cx, "onchange");
   SET_JSVAL_TO_STRING(sOnselect_id,        cx, "onselect");
   SET_JSVAL_TO_STRING(sOnload_id,          cx, "onload");
+  SET_JSVAL_TO_STRING(sOnpopstate_id,      cx, "onpopstate");
   SET_JSVAL_TO_STRING(sOnbeforeunload_id,  cx, "onbeforeunload");
   SET_JSVAL_TO_STRING(sOnunload_id,        cx, "onunload");
   SET_JSVAL_TO_STRING(sOnhashchange_id,    cx, "onhashchange");
@@ -2230,6 +2235,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSMouseEvent)
     DOM_CLASSINFO_UI_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(PopStateEvent, nsIDOMPopStateEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPopStateEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLDocument, nsIDOMHTMLDocument)
@@ -7327,7 +7337,8 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
     return (id == sOnpaint_id        ||
             id == sOnpageshow_id     ||
             id == sOnpagehide_id     ||
-            id == sOnpaste_id);
+            id == sOnpaste_id        ||
+            id == sOnpopstate_id);
   case 'k' :
     return (id == sOnkeydown_id      ||
             id == sOnkeypress_id     ||

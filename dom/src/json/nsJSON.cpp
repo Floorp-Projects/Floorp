@@ -195,6 +195,27 @@ WriteCallback(const jschar *buf, uint32 len, void *data)
   return JS_TRUE;
 }
 
+NS_IMETHODIMP
+nsJSON::EncodeFromJSVal(jsval *value, JSContext *cx, nsAString &result)
+{
+  result.Truncate();
+
+  // Begin a new request
+  JSAutoRequest ar(cx);
+
+  nsJSONWriter writer;
+  JSBool ok = JS_Stringify(cx, value, NULL, JSVAL_NULL,
+                           WriteCallback, &writer);
+  if (!ok) {
+    return NS_ERROR_XPC_BAD_CONVERT_JS;
+  }
+
+  NS_ENSURE_TRUE(writer.DidWrite(), NS_ERROR_UNEXPECTED);
+  writer.FlushBuffer();
+  result.Assign(writer.mOutputString);
+  return NS_OK;
+}
+
 nsresult
 nsJSON::EncodeInternal(nsJSONWriter *writer)
 {
@@ -380,6 +401,30 @@ NS_IMETHODIMP
 nsJSON::DecodeFromStream(nsIInputStream *aStream, PRInt32 aContentLength)
 {
   return DecodeInternal(aStream, aContentLength, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
+{
+  JSAutoRequest ar(cx);
+
+  JSONParser *parser = JS_BeginJSONParse(cx, result);
+  NS_ENSURE_TRUE(parser, NS_ERROR_UNEXPECTED);
+
+  JSBool ok = JS_ConsumeJSONText(cx, parser,
+                                 (jschar*)PromiseFlatString(str).get(),
+                                 (uint32)str.Length());
+
+  // Since we've called JS_BeginJSONParse, we have to call JS_FinishJSONParse,
+  // even if JS_ConsumeJSONText fails.  But if either fails, we'll report an
+  // error.
+  ok = ok && JS_FinishJSONParse(cx, parser, JSVAL_NULL);
+
+  if (!ok) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
 }
 
 nsresult

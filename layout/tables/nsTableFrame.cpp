@@ -1273,28 +1273,23 @@ IsFrameAllowedInTable(nsIAtom* aType)
 #endif
 
 static PRBool
-AnyTablePartHasBorderOrBackground(nsIFrame* aFrame)
+AnyTablePartHasBorderOrBackground(const nsFrameList& aFrames)
 {
-  NS_ASSERTION(IsFrameAllowedInTable(aFrame->GetType()), "unexpected frame type");
+  for (nsFrameList::Enumerator e(aFrames); !e.AtEnd(); e.Next()) {
+    nsIFrame* f = e.get();
+    NS_ASSERTION(IsFrameAllowedInTable(f->GetType()), "unexpected frame type");
 
-  nsIScrollableFrame *scrollFrame = do_QueryFrame(aFrame);
-  if (scrollFrame) {
-    return AnyTablePartHasBorderOrBackground(scrollFrame->GetScrolledFrame());
-  }
+    if (f->GetStyleVisibility()->IsVisible() &&
+        (!f->GetStyleBackground()->IsTransparent() ||
+         f->GetStyleDisplay()->mAppearance ||
+         f->HasBorder()))
+      return PR_TRUE;
 
-  if (aFrame->GetStyleVisibility()->IsVisible() &&
-      (!aFrame->GetStyleBackground()->IsTransparent() ||
-       aFrame->GetStyleDisplay()->mAppearance ||
-       aFrame->HasBorder()))
-    return PR_TRUE;
+    nsTableCellFrame *cellFrame = do_QueryFrame(f);
+    if (cellFrame)
+      continue;
 
-  nsTableCellFrame *cellFrame = do_QueryFrame(aFrame);
-  if (cellFrame)
-    return PR_FALSE;
-
-  nsFrameList children = aFrame->GetChildList(nsnull);
-  for (nsIFrame* f = children.FirstChild(); f; f = f->GetNextSibling()) {
-    if (AnyTablePartHasBorderOrBackground(f))
+    if (AnyTablePartHasBorderOrBackground(f->GetChildList(nsnull)))
       return PR_TRUE;
   }
 
@@ -1331,7 +1326,8 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Specific visibility decisions are delegated to the table background
   // painter, which handles borders and backgrounds for the table.
   if (aBuilder->IsForEventDelivery() ||
-      AnyTablePartHasBorderOrBackground(this)) {
+      AnyTablePartHasBorderOrBackground(nsFrameList(this, GetNextSibling())) ||
+      AnyTablePartHasBorderOrBackground(mColGroups)) {
     item = new (aBuilder) nsDisplayTableBorderBackground(this);
     nsresult rv = aLists.BorderBackground()->AppendNewToTop(item);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3483,7 +3479,7 @@ nsTableFrame::DumpRowGroup(nsIFrame* aKidFrame)
         if (cellFrame) {
           PRInt32 colIndex;
           cellFrame->GetColIndex(colIndex);
-          printf("cell(%d)=%p ", colIndex, childFrame);
+          printf("cell(%d)=%p ", colIndex, static_cast<void*>(childFrame));
         }
         childFrame = childFrame->GetNextSibling();
       }

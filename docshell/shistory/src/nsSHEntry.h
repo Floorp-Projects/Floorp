@@ -96,9 +96,10 @@ private:
   nsCOMPtr<nsIInputStream>        mPostData;
   nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
   nsCOMArray<nsISHEntry>          mChildren;
-  PRUint32                        mLoadType;  
+  PRUint32                        mLoadType;
   PRUint32                        mID;
   PRUint32                        mPageIdentifier;
+  PRInt64                         mDocIdentifier;
   PRInt32                         mScrollPositionX;
   PRInt32                         mScrollPositionY;
   PRPackedBool                    mIsFrameNavigation;
@@ -115,6 +116,7 @@ private:
   nsCOMPtr<nsISupports>           mOwner;
   nsExpirationState               mExpirationState;
   nsAutoPtr<nsDocShellEditorData> mEditorData;
+  nsString                        mStateData;
 };
 
 #endif /* nsSHEntry_h */

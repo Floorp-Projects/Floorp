@@ -39,7 +39,9 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(896d1d20-b4c4-11d2-bd93-00805f8ae3f4)]
+interface nsIVariant;
+
+[scriptable, uuid(208f2af7-9f2e-497c-8a53-9e7803280898)]
 interface nsIDOMHistory : nsISupports
 {
   readonly attribute long             length;
@@ -52,4 +54,10 @@ interface nsIDOMHistory : nsISupports
 
   void                       go([optional] in long aDelta);
   DOMString                  item(in unsigned long index);
+  void                       pushState(in nsIVariant aData,
+                                       in DOMString aTitle,
+                                       [optional] in DOMString aURL);
+  void                       replaceState(in nsIVariant aData,
+                                          in DOMString aTitle,
+                                          [optional] in DOMString aURL);
 };

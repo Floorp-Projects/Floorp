@@ -125,7 +125,6 @@ nsXFormsAccessible::CacheSelectChildren(nsIDOMNode *aContainerNode)
   nsCOMPtr<nsIAccessible> accessible;
   nsRefPtr<nsAccessible> acc;
 
-  PRUint32 childLength = 0;
   for (PRUint32 index = 0; index < length; index++) {
     nsCOMPtr<nsIDOMNode> child;
     children->Item(index, getter_AddRefs(child));

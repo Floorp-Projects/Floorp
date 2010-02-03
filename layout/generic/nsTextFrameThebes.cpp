@@ -6126,7 +6126,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   // Restrict preformatted text to the nearest newline
   PRInt32 newLineOffset = -1; // this will be -1 or a content offset
   // Pointer to the nsGkAtoms::newline set on this frame's element
-  NewlineProperty* cachedNewlineOffset;
+  NewlineProperty* cachedNewlineOffset = nsnull;
   if (textStyle->NewlineIsSignificant()) {
     cachedNewlineOffset =
       static_cast<NewlineProperty*>(mContent->GetProperty(nsGkAtoms::newline));
