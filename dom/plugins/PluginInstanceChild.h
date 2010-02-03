@@ -215,7 +215,7 @@ private:
 
     friend class ChildAsyncCall;
     nsTArray<ChildAsyncCall*> mPendingAsyncCalls;
-    nsTArray<ChildTimer*> mTimers;
+    nsTArray<nsAutoPtr<ChildTimer> > mTimers;
 
 #if defined(OS_WIN)
 private:

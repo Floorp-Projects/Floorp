@@ -196,12 +196,21 @@ public:
   //   This type of ML also supports asynchronous IO.  See also
   //   MessageLoopForIO.
   //
+  // TYPE_MOZILLA_CHILD
+  //   This type of ML is used in Mozilla child processes which initialize
+  //   XPCOM and use the gecko event loop.
+  //
+  // TYPE_MOZILLA_UI
+  //   This type of ML is used in Mozilla parent processes which initialize
+  //   XPCOM and use the gecko event loop.
+  //
   enum Type {
     TYPE_DEFAULT,
     TYPE_UI,
     TYPE_IO
 #ifdef CHROMIUM_MOZILLA_BUILD
     , TYPE_MOZILLA_CHILD
+    , TYPE_MOZILLA_UI
 #endif
   };
 
@@ -421,15 +430,17 @@ public:
 //
 class MessageLoopForUI : public MessageLoop {
  public:
-  MessageLoopForUI() : MessageLoop(TYPE_UI) {
+  MessageLoopForUI(Type type=TYPE_UI) : MessageLoop(type) {
   }
 
+#ifndef CHROMIUM_MOZILLA_BUILD
   // Returns the MessageLoopForUI of the current thread.
   static MessageLoopForUI* current() {
     MessageLoop* loop = MessageLoop::current();
     DCHECK_EQ(MessageLoop::TYPE_UI, loop->type());
     return static_cast<MessageLoopForUI*>(loop);
   }
+#endif
 
 #if defined(OS_WIN)
   typedef base::MessagePumpWin::Dispatcher Dispatcher;
