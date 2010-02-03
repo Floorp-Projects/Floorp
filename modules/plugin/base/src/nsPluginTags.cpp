@@ -559,3 +559,36 @@ void nsPluginTag::TryUnloadPlugin()
     RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginUnregister);
   }
 }
+
+/* nsPluginInstanceTag */
+
+nsPluginInstanceTag::nsPluginInstanceTag(nsPluginTag* aPluginTag,
+                                         nsIPluginInstance* aInstance,
+                                         const char * url,
+                                         PRBool aDefaultPlugin)
+{
+  NS_ASSERTION(aInstance, "Must have a valid plugin instance when creating an nsPluginInstanceTag");
+  NS_ADDREF(aInstance);
+  mInstance = static_cast<nsNPAPIPluginInstance*>(aInstance);
+
+  mPluginTag = aPluginTag;
+  
+  mURL = PL_strdup(url);
+
+  mDefaultPlugin = aDefaultPlugin;
+}
+
+nsPluginInstanceTag::~nsPluginInstanceTag()
+{
+  mPluginTag = nsnull;
+
+  nsCOMPtr<nsIPluginInstanceOwner> owner;
+  mInstance->GetOwner(getter_AddRefs(owner));
+  if (owner)
+    owner->SetInstance(nsnull);
+  mInstance->InvalidateOwner();
+
+  NS_RELEASE(mInstance);
+
+  PL_strfree(mURL);
+}
