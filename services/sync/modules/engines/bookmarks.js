@@ -1150,6 +1150,10 @@ BookmarksTracker.prototype = {
     let oldSucc = Svc.Bookmark.getIdForItemAt(oldParent, oldIndex);
     if (oldSucc != -1)
       this._addId(oldSucc);
+
+    // Remove any position annotations now that the user moved the item
+    Svc.Annos.removeItemAnnotation(itemId, PARENT_ANNO);
+    Svc.Annos.removeItemAnnotation(itemId, PREDECESSOR_ANNO);
   },
 
   onBeginUpdateBatch: function BMT_onBeginUpdateBatch() {},
