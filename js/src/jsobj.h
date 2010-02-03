@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -163,7 +163,22 @@ struct JSObjectOps {
     JSHasInstanceOp     hasInstance;
     JSTraceOp           trace;
     JSFinalizeOp        clear;
+
+    bool inline isNative() const;
 };
+
+extern JS_FRIEND_DATA(JSObjectOps) js_ObjectOps;
+extern JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps;
+
+/*
+ * Test whether the ops is native. FIXME bug 492938: consider how it would
+ * affect the performance to do just the !objectMap check.
+ */
+inline bool
+JSObjectOps::isNative() const
+{
+    return JS_LIKELY(this == &js_ObjectOps) || !objectMap;
+}
 
 struct JSObjectMap {
     const JSObjectOps * const   ops;    /* high level object operation vtable */
@@ -229,6 +244,8 @@ struct JSObject {
     jsuword     classword;                  /* JSClass ptr | bits, see above */
     jsval       fslots[JS_INITIAL_NSLOTS];  /* small number of fixed slots */
     jsval       *dslots;                    /* dynamically allocated slots */
+
+    bool isNative() const { return map->ops->isNative(); }
 
     JSClass *getClass() const {
         return (JSClass *) (classword & ~JSSLOT_CLASS_MASK_BITS);
@@ -415,6 +432,8 @@ struct JSObject {
 };
 
 /* Compatibility macros. */
+#define OBJ_IS_NATIVE(obj)              ((obj)->isNative())
+
 #define STOBJ_GET_PROTO(obj)            ((obj)->getProto())
 #define STOBJ_SET_PROTO(obj,proto)      ((obj)->setProto(proto))
 #define STOBJ_CLEAR_PROTO(obj)          ((obj)->clearProto())
@@ -482,7 +501,7 @@ STOBJ_GET_CLASS(const JSObject* obj)
 }
 
 #define OBJ_CHECK_SLOT(obj,slot)                                              \
-    (JS_ASSERT(OBJ_IS_NATIVE(obj)), JS_ASSERT(slot < OBJ_SCOPE(obj)->freeslot))
+    (JS_ASSERT(obj->isNative()), JS_ASSERT(slot < OBJ_SCOPE(obj)->freeslot))
 
 #define LOCKED_OBJ_GET_SLOT(obj,slot)                                         \
     (OBJ_CHECK_SLOT(obj, slot), STOBJ_GET_SLOT(obj, slot))
@@ -538,15 +557,6 @@ STOBJ_GET_CLASS(const JSObject* obj)
  */
 #define OBJ_GET_CLASS(cx,obj)           STOBJ_GET_CLASS(obj)
 
-/*
- * Test whether the object is native. FIXME bug 492938: consider how it would
- * affect the performance to do just the !ops->objectMap check.
- */
-#define OPS_IS_NATIVE(ops)                                                    \
-    JS_LIKELY((ops) == &js_ObjectOps || !(ops)->objectMap)
-
-#define OBJ_IS_NATIVE(obj)  OPS_IS_NATIVE((obj)->map->ops)
-
 #ifdef __cplusplus
 inline void
 OBJ_TO_INNER_OBJECT(JSContext *cx, JSObject *&obj)
@@ -575,8 +585,6 @@ OBJ_TO_OUTER_OBJECT(JSContext *cx, JSObject *&obj)
 }
 #endif
 
-extern JS_FRIEND_DATA(JSObjectOps) js_ObjectOps;
-extern JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps;
 extern JSClass  js_ObjectClass;
 extern JSClass  js_WithClass;
 extern JSClass  js_BlockClass;

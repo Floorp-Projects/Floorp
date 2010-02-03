@@ -2868,7 +2868,7 @@ AllocSlots(JSContext *cx, JSObject *obj, size_t nslots);
 static inline bool
 InitScopeForObject(JSContext* cx, JSObject* obj, JSObject* proto, JSObjectOps* ops)
 {
-    JS_ASSERT(OPS_IS_NATIVE(ops));
+    JS_ASSERT(ops->isNative());
     JS_ASSERT(proto == OBJ_GET_PROTO(cx, obj));
 
     /* Share proto's emptyScope only if obj is similar to proto. */
@@ -2959,7 +2959,7 @@ js_NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
               (!parent && proto) ? proto->getParent() : parent,
               JSObject::defaultPrivate(clasp));
 
-    if (OPS_IS_NATIVE(ops)) {
+    if (ops->isNative()) {
         if (!InitScopeForObject(cx, obj, proto, ops)) {
             obj = NULL;
             goto out;
