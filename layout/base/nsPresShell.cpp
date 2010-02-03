@@ -7032,6 +7032,11 @@ PresShell::Freeze()
 
   if (mDocument)
     mDocument->EnumerateSubDocuments(FreezeSubDocument, nsnull);
+
+  nsPresContext* presContext = GetPresContext();
+  if (presContext) {
+    presContext->RefreshDriver()->Freeze();
+  }
 }
 
 void
@@ -7081,6 +7086,11 @@ ThawSubDocument(nsIDocument *aDocument, void *aData)
 void
 PresShell::Thaw()
 {
+  nsPresContext* presContext = GetPresContext();
+  if (presContext) {
+    presContext->RefreshDriver()->Thaw();
+  }
+
   mDocument->EnumerateFreezableElements(ThawElement, this);
 
   if (mDocument)
