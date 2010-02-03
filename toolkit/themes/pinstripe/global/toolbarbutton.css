@@ -55,7 +55,7 @@ toolbarbutton:not([disabled="true"]):active:hover {
 }
 
 .toolbarbutton-icon {
-	padding: 1px 0px 1px 0px;
+  padding: 1px 0;
 }
 
 .toolbarbutton-text {
@@ -81,7 +81,7 @@ toolbarbutton[checked="true"] {
     border-left: 1px solid #b9b9b9;
     color: ButtonText !important;
 }
-    
+
 /* ::::: toolbarbutton menu ::::: */
 
 .toolbarbutton-menu-dropmarker {
@@ -121,7 +121,6 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   -moz-box-orient: vertical;
 }
 
-
 /* .......... dropmarker .......... */
 
 .toolbarbutton-menubutton-dropmarker {
@@ -141,4 +140,3 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
 toolbarbutton.tabbable {
   -moz-user-focus: normal !important;
 }
-
