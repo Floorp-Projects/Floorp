@@ -140,7 +140,7 @@ Events.prototype = {
   },
 
   dispatch : function evts_dispatch(aEvent, aEventItem) {
-    eventItem = new EventItem(aEvent, aEventItem);
+    var eventItem = new EventItem(aEvent, aEventItem);
 
     this._listeners.forEach(function(key){
       if (key.event == aEvent) {
