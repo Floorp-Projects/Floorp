@@ -691,6 +691,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     mCompatMode = eCompatibility_FullStandards;
     loadAsHtml5 = PR_FALSE;
   }
+#ifdef DEBUG
+  else {
+    NS_ASSERTION(mIsRegularHTML,
+                 "Hey, someone forgot to reset mIsRegularHTML!!!");
+  }
+#endif
   
   if (loadAsHtml5 && 
       !(contentType.EqualsLiteral("text/html") && 
@@ -716,13 +722,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   }
   
-#ifdef DEBUG
-  else {
-    NS_ASSERTION(mIsRegularHTML,
-                 "Hey, someone forgot to reset mIsRegularHTML!!!");
-  }
-#endif
-
   CSSLoader()->SetCompatibilityMode(mCompatMode);
   
   PRBool needsParser = PR_TRUE;
