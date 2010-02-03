@@ -245,6 +245,12 @@ ProcessOrDeferMessage(HWND hwnd,
       break;
     }
 
+    case WM_COPYDATA: {
+      deferred = new DeferredCopyDataMessage(hwnd, uMsg, wParam, lParam);
+      res = TRUE;
+      break;
+    }
+
     // Messages that are safe to pass to DefWindowProc go here.
     case WM_GETICON:
     case WM_GETMINMAXINFO:
@@ -724,4 +730,40 @@ DeferredWindowPosMessage::Run()
   SetWindowPos(windowPos.hwnd, windowPos.hwndInsertAfter, windowPos.x,
                windowPos.y, windowPos.cx, windowPos.cy, windowPos.flags);
   NS_ASSERTION(ret, "SetWindowPos failed!");
+}
+
+DeferredCopyDataMessage::DeferredCopyDataMessage(HWND aHWnd,
+                                                 UINT aMessage,
+                                                 WPARAM aWParam,
+                                                 LPARAM aLParam)
+: DeferredSendMessage(aHWnd, aMessage, aWParam, aLParam)
+{
+  NS_ASSERTION(IsWindow(reinterpret_cast<HWND>(aWParam)), "Bad window!");
+
+  COPYDATASTRUCT* source = reinterpret_cast<COPYDATASTRUCT*>(aLParam);
+  NS_ASSERTION(source, "Should never be null!");
+
+  copyData.dwData = source->dwData;
+  copyData.cbData = source->cbData;
+
+  if (source->cbData) {
+    copyData.lpData = malloc(source->cbData);
+    if (copyData.lpData) {
+      memcpy(copyData.lpData, source->lpData, source->cbData);
+    }
+    else {
+      NS_ERROR("Out of memory?!");
+      copyData.cbData = 0;
+    }
+  }
+  else {
+    copyData.lpData = NULL;
+  }
+
+  lParam = reinterpret_cast<LPARAM>(&copyData);
+}
+
+DeferredCopyDataMessage::~DeferredCopyDataMessage()
+{
+  free(copyData.lpData);
 }
