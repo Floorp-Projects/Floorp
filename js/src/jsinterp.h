@@ -368,9 +368,6 @@ typedef struct JSPropertyCache {
 #define PCVAL_TO_SPROP(v)       ((JSScopeProperty *) PCVAL_CLRTAG(v))
 #define SPROP_TO_PCVAL(sprop)   PCVAL_SETTAG(sprop, PCVAL_SPROP)
 
-inline bool
-js_MatchPropertyCacheShape(JSContext *cx, JSObject *obj, uint32 shape);
-
 /*
  * Fill property cache entry for key cx->fp->pc, optimized value word computed
  * from obj and sprop, and entry capability forged from 24-bit OBJ_SHAPE(obj),
@@ -417,7 +414,7 @@ js_FillPropertyCache(JSContext *cx, JSObject *obj,
                 pobj = tmp_;                                                  \
             }                                                                 \
                                                                               \
-            if (js_MatchPropertyCacheShape(cx,pobj,PCVCAP_SHAPE(entry->vcap))){\
+            if (JS_LOCK_OBJ_IF_SHAPE(cx, pobj, PCVCAP_SHAPE(entry->vcap))) {  \
                 PCMETER(cache_->pchits++);                                    \
                 PCMETER(!PCVCAP_TAG(entry->vcap) || cache_->protopchits++);   \
                 atom = NULL;                                                  \
