@@ -163,16 +163,6 @@ struct JSTitle {
 #define JS_UNLOCK_OBJ(cx,obj)     (CX_OWNS_SCOPE_TITLE(cx, OBJ_SCOPE(obj))    \
                                    ? (void)0 : js_UnlockObj(cx, obj))
 
-/*
- * Lock object only if its scope has the given shape.
- */
-#define JS_LOCK_OBJ_IF_SHAPE(cx,obj,shape)                                    \
-    (OBJ_SHAPE(obj) == (shape)                                                \
-     ? (OBJ_SCOPE(obj)->title.ownercx == (cx)                                 \
-        ? true                                                                \
-        : js_LockObjIfShape(cx, obj, shape))                                  \
-     : false)
-
 #define JS_LOCK_TITLE(cx,title)                                               \
     ((title)->ownercx == (cx) ? (void)0                                       \
      : (js_LockTitle(cx, (title)),                                            \
@@ -197,7 +187,6 @@ extern void js_LockRuntime(JSRuntime *rt);
 extern void js_UnlockRuntime(JSRuntime *rt);
 extern void js_LockObj(JSContext *cx, JSObject *obj);
 extern void js_UnlockObj(JSContext *cx, JSObject *obj);
-extern bool js_LockObjIfShape(JSContext *cx, JSObject *obj, uint32 shape);
 extern void js_InitTitle(JSContext *cx, JSTitle *title);
 extern void js_FinishTitle(JSContext *cx, JSTitle *title);
 extern void js_LockTitle(JSContext *cx, JSTitle *title);
@@ -267,9 +256,7 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
 #define CX_OWNS_SCOPE_TITLE(cx,obj) true
 #define JS_LOCK_OBJ(cx,obj)         ((void)0)
 #define JS_UNLOCK_OBJ(cx,obj)       ((void)0)
-#define JS_LOCK_OBJ_IF_SHAPE(cx,obj,shape) (OBJ_SHAPE(obj) == (shape))
 
-#define JS_LOCK_OBJ_VOID(cx,obj,e)  (e)
 #define JS_LOCK_SCOPE(cx,scope)     ((void)0)
 #define JS_UNLOCK_SCOPE(cx,scope)   ((void)0)
 #define JS_DROP_ALL_EMPTY_SCOPE_LOCKS(cx,scope) ((void)0)
@@ -294,6 +281,8 @@ extern void js_SetScopeInfo(JSScope *scope, const char *file, int line);
 #define JS_AWAIT_REQUEST_DONE(rt)   JS_WAIT_CONDVAR((rt)->requestDone,        \
                                                     JS_NO_TIMEOUT)
 #define JS_NOTIFY_REQUEST_DONE(rt)  JS_NOTIFY_CONDVAR((rt)->requestDone)
+
+#define CX_OWNS_OBJECT_TITLE(cx,obj) CX_OWNS_SCOPE_TITLE(cx, OBJ_SCOPE(obj))
 
 #ifndef JS_SET_OBJ_INFO
 #define JS_SET_OBJ_INFO(obj,f,l)        ((void)0)
