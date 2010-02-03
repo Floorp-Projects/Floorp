@@ -72,6 +72,7 @@ _MOCHITEST_FILES = \
 		test_cookies.html \
 		test_npn_timers.html \
 		test_npn_asynccall.html \
+		test_GCrace.html \
 		$(NULL)
 
 #		test_npruntime_npnsetexception.html \ Disabled for e10s
