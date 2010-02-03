@@ -1,6 +1,7 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 et :
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -21,7 +22,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,46 +37,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef dom_plugins_PluginThreadChild_h
-#define dom_plugins_PluginThreadChild_h 1
-
-#include "base/basictypes.h"
-
 #include "mozilla/ipc/MozillaChildThread.h"
-#include "base/file_path.h"
-#include "base/process.h"
 
-#include "mozilla/plugins/PluginModuleChild.h"
+#include "nsXPCOM.h"
 
 namespace mozilla {
-namespace plugins {
-//-----------------------------------------------------------------------------
+namespace ipc {
 
-// The PluginThreadChild class represents a background thread where plugin instances
-// live.
-class PluginThreadChild : public mozilla::ipc::MozillaChildThread {
-public:
-    PluginThreadChild(ProcessHandle aParentHandle);
-    ~PluginThreadChild();
+void
+MozillaChildThread::OnControlMessageReceived(const IPC::Message& aMessage) {
+  /*
+  IPC_BEGIN_MESSAGE_MAP(MozillaChildThread, aMessage)
+  IPC_END_MESSAGE_MAP()
+  */
+}
 
-    static PluginThreadChild* current() {
-        return gInstance;
-    }
+void
+MozillaChildThread::Init()
+{
+  ChildThread::Init();
 
-private:
-    static PluginThreadChild* gInstance;
+  // Certain plugins, such as flash, steal the unhandled exception filter
+  // thus we never get crash reports when they fault. This call fixes it.
+  message_loop()->set_exception_restoration(true);
 
-    // Thread implementation:
-    virtual void Init();
-    virtual void CleanUp();
+  NS_LogInit();
+}
 
-    PluginModuleChild mPlugin;
-    IPC::Channel* mChannel;
+void
+MozillaChildThread::CleanUp()
+{
+  NS_LogTerm();
+}
 
-    DISALLOW_EVIL_CONSTRUCTORS(PluginThreadChild);
-};
-
-}  // namespace plugins
-}  // namespace mozilla
-
-#endif  // ifndef dom_plugins_PluginThreadChild_h
+} // namespace ipc
+} // namespace mozilla
