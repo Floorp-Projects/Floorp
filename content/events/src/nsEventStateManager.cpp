@@ -1891,6 +1891,12 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       }
     }
 
+    // If non-native code is capturing the mouse don't start a drag.
+    if (nsIPresShell::IsMouseCapturePreventingDrag()) {
+      StopTrackingDragGesture();
+      return;
+    }
+
     static PRInt32 pixelThresholdX = 0;
     static PRInt32 pixelThresholdY = 0;
 
