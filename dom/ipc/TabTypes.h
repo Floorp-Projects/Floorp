@@ -15,6 +15,10 @@ typedef HWND MagicWindowHandle;
 
 typedef XID MagicWindowHandle;
 
+#elif defined(MOZ_WIDGET_QT)
+
+typedef unsigned long MagicWindowHandle;
+
 #elif defined(XP_MACOSX)
 #  warning This is a placeholder
 typedef long MagicWindowHandle;
