@@ -74,10 +74,6 @@ protected:
     virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window, NPError* rv);
 
     virtual bool
-    AnswerNPP_GetValue_NPPVpluginWindow(bool* windowed, NPError* rv);
-    virtual bool
-    AnswerNPP_GetValue_NPPVpluginTransparent(bool* transparent, NPError* rv);
-    virtual bool
     AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(bool* needs, NPError* rv);
     virtual bool
     AnswerNPP_GetValue_NPPVpluginScriptableNPObject(PPluginScriptableObjectChild** value,

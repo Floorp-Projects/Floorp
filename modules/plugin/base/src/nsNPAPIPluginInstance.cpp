@@ -1400,7 +1400,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::GetValueFromPlugin(NPPVariable variable, vo
     return NS_OK;
   }
 #endif
-  nsresult  res = NS_OK;
+  nsresult  res = NS_ERROR_FAILURE;
   if (mCallbacks->getvalue && mRunning) {
     PluginDestructionGuard guard(this);
 

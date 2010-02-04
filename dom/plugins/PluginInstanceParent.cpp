@@ -444,39 +444,7 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
 {
     switch (aVariable) {
 
-    case NPPVpluginWindowBool: {
-        bool windowed;
-        NPError rv;
-
-        if (!CallNPP_GetValue_NPPVpluginWindow(&windowed, &rv)) {
-            return NPERR_GENERIC_ERROR;
-        }
-
-        if (NPERR_NO_ERROR != rv) {
-            return rv;
-        }
-
-        (*(NPBool*)_retval) = windowed;
-        return NPERR_NO_ERROR;
-    }
-
-    case NPPVpluginTransparentBool: {
-        bool transparent;
-        NPError rv;
-
-        if (!CallNPP_GetValue_NPPVpluginTransparent(&transparent, &rv)) {
-            return NPERR_GENERIC_ERROR;
-        }
-
-        if (NPERR_NO_ERROR != rv) {
-            return rv;
-        }
-
-        (*(NPBool*)_retval) = transparent;
-        return NPERR_NO_ERROR;
-    }
-
-#ifdef OS_LINUX
+#ifdef MOZ_X11
     case NPPVpluginNeedsXEmbed: {
         bool needsXEmbed;
         NPError rv;

@@ -291,54 +291,34 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
     }
 }
 
-
-bool
-PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginWindow(
-    bool* windowed, NPError* rv)
-{
-    AssertPluginThread();
-
-    NPBool isWindowed;
-    *rv = mPluginIface->getvalue(GetNPP(), NPPVpluginWindowBool,
-                                 reinterpret_cast<void*>(&isWindowed));
-    *windowed = isWindowed;
-    return true;
-}
-
-bool
-PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginTransparent(
-    bool* transparent, NPError* rv)
-{
-    AssertPluginThread();
-
-    NPBool isTransparent;
-    *rv = mPluginIface->getvalue(GetNPP(), NPPVpluginTransparentBool,
-                                 reinterpret_cast<void*>(&isTransparent));
-    *transparent = isTransparent;
-    return true;
-}
-
 bool
 PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(
     bool* needs, NPError* rv)
 {
     AssertPluginThread();
 
-#ifdef OS_LINUX
-
+#ifdef MOZ_X11
+    // The documentation on the types for many variables in NP(N|P)_GetValue
+    // is vague.  Often boolean values are NPBool (1 byte), but
+    // https://developer.mozilla.org/en/XEmbed_Extension_for_Mozilla_Plugins
+    // treats NPPVpluginNeedsXEmbed as PRBool (int), and
     // on x86/32-bit, flash stores to this using |movl 0x1,&needsXEmbed|.
-    // thus we can't NPBool for needsXEmbed, or the three bytes above
-    // it on the stack would get clobbered. so protect with unsigned
-    // long.
-    unsigned long needsXEmbed = 0;
-    *rv = mPluginIface->getvalue(GetNPP(), NPPVpluginNeedsXEmbed,
-                                 reinterpret_cast<void*>(&needsXEmbed));
+    // thus we can't use NPBool for needsXEmbed, or the three bytes above
+    // it on the stack would get clobbered. so protect with the larger PRBool.
+    PRBool needsXEmbed = 0;
+    if (!mPluginIface->getvalue) {
+        *rv = NPERR_GENERIC_ERROR;
+    }
+    else {
+        *rv = mPluginIface->getvalue(GetNPP(), NPPVpluginNeedsXEmbed,
+                                     &needsXEmbed);
+    }
     *needs = needsXEmbed;
     return true;
 
 #else
 
-    NS_RUNTIMEABORT("shouldn't be called on non-linux platforms");
+    NS_RUNTIMEABORT("shouldn't be called on non-X11 platforms");
     return false;               // not reached
 
 #endif
@@ -352,9 +332,11 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
     AssertPluginThread();
 
     NPObject* object;
-    NPError result = mPluginIface->getvalue(GetNPP(),
-                                            NPPVpluginScriptableNPObject,
-                                            &object);
+    NPError result = NPERR_GENERIC_ERROR;
+    if (mPluginIface->getvalue) {
+        result = mPluginIface->getvalue(GetNPP(), NPPVpluginScriptableNPObject,
+                                        &object);
+    }
     if (result == NPERR_NO_ERROR && object) {
         PluginScriptableObjectChild* actor = GetActorForNPObject(object);
 
