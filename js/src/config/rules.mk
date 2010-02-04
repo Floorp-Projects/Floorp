@@ -2094,12 +2094,6 @@ endif
 -include $(MY_RULES)
 
 #
-# This speeds up gmake's processing if these files don't exist.
-#
-$(MY_CONFIG) $(MY_RULES):
-	@touch $@
-
-#
 # Generate Emacs tags in a file named TAGS if ETAGS was set in $(MY_CONFIG)
 # or in $(MY_RULES)
 #
