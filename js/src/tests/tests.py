@@ -14,7 +14,9 @@ def do_run_cmd(cmd):
 
 def th_run_cmd(cmd, l):
     t0 = datetime.datetime.now()
-    p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+    # close_fds is not supported on Windows and will cause a ValueError.
+    close_fds = sys.platform != 'win32'
+    p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=close_fds)
     l[0] = p
     out, err = p.communicate()
     t1 = datetime.datetime.now()
