@@ -13,3 +13,4 @@
 == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
 HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic-ref.xul
 == boxshadow-onecorner.html boxshadow-onecorner-ref.html
+== boxshadow-skiprect.html boxshadow-skiprect-ref.html
