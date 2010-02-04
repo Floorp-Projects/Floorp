@@ -125,8 +125,6 @@ import sys
 
 # === Preliminaries
 
-MAX_TRACEABLE_NATIVE_ARGS = 8
-
 # --makedepend-output support.
 make_dependencies = []
 make_targets = []
@@ -203,16 +201,8 @@ def removeStubMember(memberId, member):
 def addStubMember(memberId, member, traceable):
     mayTrace = False
     if member.kind == 'method':
-        # This code MUST match writeTraceableQuickStub
-        haveCallee = memberNeedsCallee(member)
-        # Traceable natives support up to MAX_TRACEABLE_NATIVE_ARGS
-        # total arguments.  We always have two prefix arguments
-        # (CONTEXT and THIS) and when haveCallee is true also have
-        # CALLEE.  We can only output a traceable native if our number
-        # of arguments is no bigger than can be handled.
-        mayTrace = ((haveCallee and
-                     len(member.params) <= MAX_TRACEABLE_NATIVE_ARGS - 3) or
-                    len(member.params) <= MAX_TRACEABLE_NATIVE_ARGS - 2)
+        if len(member.params) <= 3:
+            mayTrace = True
 
         for param in member.params:
             for attrname, value in vars(param).items():
@@ -695,12 +685,6 @@ def anyParamRequiresCcx(member):
             return True
     return False
 
-def memberNeedsCcx(member):
-    return member.kind == 'method' and anyParamRequiresCcx(member)
-
-def memberNeedsCallee(member):
-    return memberNeedsCcx(member) or isInterfaceType(member.realtype)
-
 def validateParam(member, param):
     def pfail(msg):
         raise UserError(
@@ -803,7 +787,7 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
                 "        return JS_FALSE;\n")
 
     # Create ccx if needed.
-    haveCcx = memberNeedsCcx(member)
+    haveCcx = isMethod and anyParamRequiresCcx(member)
     if haveCcx:
         f.write("    XPCCallContext ccx(JS_CALLER, cx, obj, "
                 "JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));\n")
@@ -1204,7 +1188,7 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
         'params': ["CONTEXT", "THIS"]
         }
 
-    haveCcx = memberNeedsCcx(member)
+    haveCcx = (member.kind == 'method') and anyParamRequiresCcx(member)
 
     customMethodCall = customMethodCalls.get(stubName, None)
 
@@ -1214,8 +1198,7 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
     # Write the function
     f.write("static %sFASTCALL\n" % getTraceReturnType(member.realtype))
     f.write("%s(JSContext *cx, JSObject *obj" % (stubName + "_tn"))
-    # This code MUST match the arguments length check in addStubMember
-    if memberNeedsCallee(member):
+    if haveCcx or isInterfaceType(member.realtype):
         f.write(", JSObject *callee")
         traceInfo["params"].append("CALLEE")
     for i, param in enumerate(member.params):
