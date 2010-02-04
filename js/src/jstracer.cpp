@@ -12282,7 +12282,8 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
 
         if (isNumber(v)) {
             if (isPromoteInt(v_ins) &&
-                tarray->type != js::TypedArray::TYPE_FLOAT32) {
+                tarray->type != js::TypedArray::TYPE_FLOAT32 &&
+                tarray->type != js::TypedArray::TYPE_FLOAT64) {
                 LIns *v_ins_int = demote(lir, v_ins);
                 switch (tarray->type) {
                   case js::TypedArray::TYPE_INT8:
@@ -12300,6 +12301,8 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                     addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
                     lir->insStore(LIR_sti, v_ins_int, addr_ins, 0);
                     break;
+                  case js::TypedArray::TYPE_FLOAT32:
+                  case js::TypedArray::TYPE_FLOAT64:
                   default:
                     JS_NOT_REACHED("Unknown typed array in tracer");
                 }
@@ -12323,6 +12326,10 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                   case js::TypedArray::TYPE_FLOAT32:
                     addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
                     lir->insStore(LIR_st32f, v_ins, addr_ins, 0);
+                    break;
+                  case js::TypedArray::TYPE_FLOAT64:
+                    addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 3));
+                    lir->insStore(LIR_stfi, v_ins, addr_ins, 0);
                     break;
                   default:
                     JS_NOT_REACHED("Unknown typed array type in tracer");
@@ -13312,6 +13319,10 @@ TraceRecorder::typedArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
       case js::TypedArray::TYPE_FLOAT32:
         addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
         v_ins = lir->insLoad(LIR_ld32f, addr_ins, 0);
+        break;
+      case js::TypedArray::TYPE_FLOAT64:
+        addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 3));
+        v_ins = lir->insLoad(LIR_ldf, addr_ins, 0);
         break;
       default:
         JS_NOT_REACHED("Unknown typed array type in tracer");
