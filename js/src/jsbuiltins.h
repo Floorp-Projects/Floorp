@@ -336,6 +336,7 @@ struct ClosureVarInfo;
                         (_JS_CTYPE_ARGSIZE(at4) << (1*nanojit::ARGSIZE_SHIFT)) |                  \
                         _JS_CTYPE_RETSIZE(rt),                                                    \
                         cse, fold)
+
 #define JS_DEFINE_CALLINFO_6(linkage, rt, op, at0, at1, at2, at3, at4, at5, cse, fold)            \
     _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE_TYPE(rt),                                          \
                         (_JS_CTYPE_TYPE(at0), _JS_CTYPE_TYPE(at1), _JS_CTYPE_TYPE(at2),           \
@@ -346,33 +347,6 @@ struct ClosureVarInfo;
                         (_JS_CTYPE_ARGSIZE(at3) << (3*nanojit::ARGSIZE_SHIFT)) |                  \
                         (_JS_CTYPE_ARGSIZE(at4) << (2*nanojit::ARGSIZE_SHIFT)) |                  \
                         (_JS_CTYPE_ARGSIZE(at5) << (1*nanojit::ARGSIZE_SHIFT)) |                  \
-                        _JS_CTYPE_RETSIZE(rt), cse, fold)
-#define JS_DEFINE_CALLINFO_7(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, cse, fold)       \
-    _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE_TYPE(rt),                                          \
-                        (_JS_CTYPE_TYPE(at0), _JS_CTYPE_TYPE(at1), _JS_CTYPE_TYPE(at2),           \
-                         _JS_CTYPE_TYPE(at3), _JS_CTYPE_TYPE(at4), _JS_CTYPE_TYPE(at5),           \
-                         _JS_CTYPE_TYPE(at6)),                                                    \
-                        (_JS_CTYPE_ARGSIZE(at0) << (7*nanojit::ARGSIZE_SHIFT)) |                  \
-                        (_JS_CTYPE_ARGSIZE(at1) << (6*nanojit::ARGSIZE_SHIFT)) |                  \
-                        (_JS_CTYPE_ARGSIZE(at2) << (5*nanojit::ARGSIZE_SHIFT)) |                  \
-                        (_JS_CTYPE_ARGSIZE(at3) << (4*nanojit::ARGSIZE_SHIFT)) |                  \
-                        (_JS_CTYPE_ARGSIZE(at4) << (3*nanojit::ARGSIZE_SHIFT)) |                  \
-                        (_JS_CTYPE_ARGSIZE(at5) << (2*nanojit::ARGSIZE_SHIFT)) |                  \
-                        (_JS_CTYPE_ARGSIZE(at6) << (1*nanojit::ARGSIZE_SHIFT)) |                  \
-                        _JS_CTYPE_RETSIZE(rt), cse, fold)
-#define JS_DEFINE_CALLINFO_8(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, at7, cse, fold)  \
-    _JS_DEFINE_CALLINFO(linkage, op, _JS_CTYPE_TYPE(rt),                                          \
-                        (_JS_CTYPE_TYPE(at0), _JS_CTYPE_TYPE(at1), _JS_CTYPE_TYPE(at2),           \
-                         _JS_CTYPE_TYPE(at3), _JS_CTYPE_TYPE(at4), _JS_CTYPE_TYPE(at5),           \
-                         _JS_CTYPE_TYPE(at6), _JS_CTYPE_TYPE(at7)),                               \
-                        (_JS_CTYPE_ARGSIZE(at0) << (8*nanojit::ARGSIZE_SHIFT)) |                  \
-                        (_JS_CTYPE_ARGSIZE(at1) << (7*nanojit::ARGSIZE_SHIFT)) |                  \
-                        (_JS_CTYPE_ARGSIZE(at2) << (6*nanojit::ARGSIZE_SHIFT)) |                  \
-                        (_JS_CTYPE_ARGSIZE(at3) << (5*nanojit::ARGSIZE_SHIFT)) |                  \
-                        (_JS_CTYPE_ARGSIZE(at4) << (4*nanojit::ARGSIZE_SHIFT)) |                  \
-                        (_JS_CTYPE_ARGSIZE(at5) << (3*nanojit::ARGSIZE_SHIFT)) |                  \
-                        (_JS_CTYPE_ARGSIZE(at6) << (2*nanojit::ARGSIZE_SHIFT)) |                  \
-                        (_JS_CTYPE_ARGSIZE(at7) << (1*nanojit::ARGSIZE_SHIFT)) |                  \
                         _JS_CTYPE_RETSIZE(rt), cse, fold)
 
 #define JS_DECLARE_CALLINFO(name)  extern const nanojit::CallInfo _JS_CALLINFO(name);
@@ -417,22 +391,6 @@ struct ClosureVarInfo;
         _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                                                    \
     _JS_CTYPE_ACH(at5) _JS_CTYPE_ACH(at4) _JS_CTYPE_ACH(at3) _JS_CTYPE_ACH(at2)                   \
         _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                                                    \
-    _JS_CTYPE_FLAGS(rt)
-
-#define _JS_TN_INIT_HELPER_7(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, cse, fold)       \
-    &_JS_CALLINFO(op),                                                                            \
-    _JS_CTYPE_PCH(at6) _JS_CTYPE_PCH(at5) _JS_CTYPE_PCH(at4) _JS_CTYPE_PCH(at3)                   \
-        _JS_CTYPE_PCH(at2)  _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),                                \
-    _JS_CTYPE_ACH(at6) _JS_CTYPE_ACH(at5) _JS_CTYPE_ACH(at4) _JS_CTYPE_ACH(at3)                   \
-        _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),                                 \
-    _JS_CTYPE_FLAGS(rt)
-
-#define _JS_TN_INIT_HELPER_8(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, at7, cse, fold)  \
-    &_JS_CALLINFO(op),                                                                            \
-    _JS_CTYPE_PCH(at7) _JS_CTYPE_PCH(at6) _JS_CTYPE_PCH(at5) _JS_CTYPE_PCH(at4)                   \
-        _JS_CTYPE_PCH(at3) _JS_CTYPE_PCH(at2)  _JS_CTYPE_PCH(at1) _JS_CTYPE_PCH(at0),             \
-    _JS_CTYPE_ACH(at7) _JS_CTYPE_ACH(at6) _JS_CTYPE_ACH(at5) _JS_CTYPE_ACH(at4)                   \
-        _JS_CTYPE_ACH(at3) _JS_CTYPE_ACH(at2) _JS_CTYPE_ACH(at1) _JS_CTYPE_ACH(at0),              \
     _JS_CTYPE_FLAGS(rt)
 
 #define JS_DEFINE_TRCINFO_1(name, tn0)                                                            \
@@ -498,8 +456,6 @@ js_dmod(jsdouble a, jsdouble b);
 #define JS_DEFINE_CALLINFO_4(linkage, rt, op, at0, at1, at2, at3, cse, fold)
 #define JS_DEFINE_CALLINFO_5(linkage, rt, op, at0, at1, at2, at3, at4, cse, fold)
 #define JS_DEFINE_CALLINFO_6(linkage, rt, op, at0, at1, at2, at3, at4, at5, cse, fold)
-#define JS_DEFINE_CALLINFO_7(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, cse, fold)
-#define JS_DEFINE_CALLINFO_8(linkage, rt, op, at0, at1, at2, at3, at4, at5, at6, at7, cse, fold)
 #define JS_DECLARE_CALLINFO(name)
 #define JS_DEFINE_TRCINFO_1(name, tn0)
 #define JS_DEFINE_TRCINFO_2(name, tn0, tn1)
