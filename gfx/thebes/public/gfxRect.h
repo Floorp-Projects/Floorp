@@ -150,10 +150,6 @@ struct THEBES_API gfxRect {
     void Round();
     
     // Snap the rectangle edges to integer coordinates, such that the
-    // original rectangle contains the resulting rectangle.
-    void RoundIn();
-    
-    // Snap the rectangle edges to integer coordinates, such that the
     // resulting rectangle contains the original rectangle.
     void RoundOut();
 
