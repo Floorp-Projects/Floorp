@@ -42,7 +42,6 @@
 #include "gfxImageSurface.h"
 #include "gfxRect.h"
 #include "gfxTypes.h"
-#include "nsRect.h"
 
 /**
  * Implementation of a box blur approximation of a Gaussian blur.
@@ -70,15 +69,10 @@ public:
      *
      * @param aDirtyRect A pointer to a dirty rect, measured in device units, if available.
      *  This will be used for optimizing the blur operation. It is safe to pass NULL here.
-     *
-     * @param aSkipRect A pointer to a rect, measured in device units, that represents an area
-     *  where blurring is unnecessary and shouldn't be done for speed reasons. It is safe to
-     *  pass NULL here.
      */
     gfxContext* Init(const gfxRect& aRect,
                      const gfxIntSize& aBlurRadius,
-                     const gfxRect* aDirtyRect,
-                     gfxRect* aSkipRect);
+                     const gfxRect* aDirtyRect);
 
     /**
      * Returns the context that should be drawn to supply the alpha mask to be
@@ -132,15 +126,7 @@ protected:
      * mHasDirtyRect is TRUE.
      */
     gfxRect mDirtyRect;
-    /**
-     * A rect indicating the area where blurring is unnecessary, and the blur
-     * algorithm should skip over it. This will only be valid if mHasSkipRect
-     * is TRUE.
-     */
-    nsIntRect mSkipRect;
-
-    PRPackedBool mHasDirtyRect;
-    PRPackedBool mHasSkipRect;
+    PRBool mHasDirtyRect;
 };
 
 #endif /* GFX_BLUR_H */
