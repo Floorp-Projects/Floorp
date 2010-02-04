@@ -528,6 +528,48 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
         break;
       }
     }
+
+    // If we detect a change on margin, padding or border, we store the old
+    // values on the frame itself between now and reflow, so if someone
+    // calls GetUsed(Margin|Border|Padding)() before the next reflow, we
+    // can give an accurate answer.
+    // We don't want to set the property if one already exists.
+    nsMargin oldValue(0, 0, 0, 0);
+    nsMargin newValue(0, 0, 0, 0);
+    const nsStyleMargin* oldMargin = static_cast<const nsStyleMargin*>
+                            (aOldStyleContext->PeekStyleData(eStyleStruct_Margin));
+    if (oldMargin && oldMargin->GetMargin(oldValue)) {
+      if ((!GetStyleMargin()->GetMargin(newValue) || oldValue != newValue) &&
+          !GetProperty(nsGkAtoms::usedMarginProperty)) {
+        SetProperty(nsGkAtoms::usedMarginProperty,
+                    new nsMargin(oldValue),
+                    nsCSSOffsetState::DestroyMarginFunc);
+      }
+    }
+
+    const nsStylePadding* oldPadding = static_cast<const nsStylePadding*>
+                             (aOldStyleContext->PeekStyleData(eStyleStruct_Padding));
+    if (oldPadding && oldPadding->GetPadding(oldValue)) {
+      if ((!GetStylePadding()->GetPadding(newValue) || oldValue != newValue) &&
+          !GetProperty(nsGkAtoms::usedPaddingProperty)) {
+        SetProperty(nsGkAtoms::usedPaddingProperty,
+                    new nsMargin(oldValue),
+                    nsCSSOffsetState::DestroyMarginFunc);
+      }
+    }
+
+    const nsStyleBorder* oldBorder = static_cast<const nsStyleBorder*>
+                            (aOldStyleContext->PeekStyleData(eStyleStruct_Border));
+    if (oldBorder) {
+      oldValue = oldBorder->GetActualBorder();
+      newValue = GetStyleBorder()->GetActualBorder();
+      if (oldValue != newValue &&
+          !GetProperty(nsGkAtoms::usedBorderProperty)) {
+        SetProperty(nsGkAtoms::usedBorderProperty,
+                    new nsMargin(oldValue),
+                    nsCSSOffsetState::DestroyMarginFunc);
+      }
+    }
   }
 
   imgIRequest *oldBorderImage = aOldStyleContext
@@ -563,20 +605,21 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 /* virtual */ nsMargin
 nsIFrame::GetUsedMargin() const
 {
-  NS_ASSERTION(nsLayoutUtils::sDisableGetUsedXAssertions ||
-               !NS_SUBTREE_DIRTY(this) ||
-               (GetStateBits() & NS_FRAME_IN_REFLOW),
-               "cannot call GetUsedMargin on a dirty frame not currently "
-               "being reflowed");
-
   nsMargin margin(0, 0, 0, 0);
-  if (!GetStyleMargin()->GetMargin(margin)) {
-    nsMargin *m = static_cast<nsMargin*>
-                             (GetProperty(nsGkAtoms::usedMarginProperty));
-    NS_ASSERTION(m, "used margin property missing (out of memory?)");
-    if (m) {
-      margin = *m;
-    }
+  if ((mState & NS_FRAME_FIRST_REFLOW) &&
+      !(mState & NS_FRAME_IN_REFLOW))
+    return margin;
+
+  nsMargin *m = static_cast<nsMargin*>
+                           (GetProperty(nsGkAtoms::usedMarginProperty));
+  if (m) {
+    margin = *m;
+  } else {
+#ifdef DEBUG
+    PRBool hasMargin = 
+#endif
+    GetStyleMargin()->GetMargin(margin);
+    NS_ASSERTION(hasMargin, "We should have a margin here! (out of memory?)");
   }
   return margin;
 }
@@ -584,11 +627,10 @@ nsIFrame::GetUsedMargin() const
 /* virtual */ nsMargin
 nsIFrame::GetUsedBorder() const
 {
-  NS_ASSERTION(nsLayoutUtils::sDisableGetUsedXAssertions ||
-               !NS_SUBTREE_DIRTY(this) ||
-               (GetStateBits() & NS_FRAME_IN_REFLOW),
-               "cannot call GetUsedBorder on a dirty frame not currently "
-               "being reflowed");
+  nsMargin border(0, 0, 0, 0);
+  if ((mState & NS_FRAME_FIRST_REFLOW) &&
+      !(mState & NS_FRAME_IN_REFLOW))
+    return border;
 
   // Theme methods don't use const-ness.
   nsIFrame *mutable_this = const_cast<nsIFrame*>(this);
@@ -600,25 +642,30 @@ nsIFrame::GetUsedBorder() const
     presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
                                              mutable_this, disp->mAppearance,
                                              &result);
-    return nsMargin(presContext->DevPixelsToAppUnits(result.left),
-                    presContext->DevPixelsToAppUnits(result.top),
-                    presContext->DevPixelsToAppUnits(result.right),
-                    presContext->DevPixelsToAppUnits(result.bottom));
+    border.left = presContext->DevPixelsToAppUnits(result.left);
+    border.top = presContext->DevPixelsToAppUnits(result.top);
+    border.right = presContext->DevPixelsToAppUnits(result.right);
+    border.bottom = presContext->DevPixelsToAppUnits(result.bottom);
+    return border;
   }
 
-  return GetStyleBorder()->GetActualBorder();
+  nsMargin *b = static_cast<nsMargin*>
+                           (GetProperty(nsGkAtoms::usedBorderProperty));
+  if (b) {
+    border = *b;
+  } else {
+    border = GetStyleBorder()->GetActualBorder();
+  }
+  return border;
 }
 
 /* virtual */ nsMargin
 nsIFrame::GetUsedPadding() const
 {
-  NS_ASSERTION(nsLayoutUtils::sDisableGetUsedXAssertions ||
-               !NS_SUBTREE_DIRTY(this) ||
-               (GetStateBits() & NS_FRAME_IN_REFLOW),
-               "cannot call GetUsedPadding on a dirty frame not currently "
-               "being reflowed");
-
   nsMargin padding(0, 0, 0, 0);
+  if ((mState & NS_FRAME_FIRST_REFLOW) &&
+      !(mState & NS_FRAME_IN_REFLOW))
+    return padding;
 
   // Theme methods don't use const-ness.
   nsIFrame *mutable_this = const_cast<nsIFrame*>(this);
@@ -638,13 +685,17 @@ nsIFrame::GetUsedPadding() const
       return padding;
     }
   }
-  if (!GetStylePadding()->GetPadding(padding)) {
-    nsMargin *p = static_cast<nsMargin*>
-                             (GetProperty(nsGkAtoms::usedPaddingProperty));
-    NS_ASSERTION(p, "used padding property missing (out of memory?)");
-    if (p) {
-      padding = *p;
-    }
+
+  nsMargin *p = static_cast<nsMargin*>
+                           (GetProperty(nsGkAtoms::usedPaddingProperty));
+  if (p) {
+    padding = *p;
+  } else {
+#ifdef DEBUG
+    PRBool hasPadding = 
+#endif
+    GetStylePadding()->GetPadding(padding);
+    NS_ASSERTION(hasPadding, "We should have padding here! (out of memory?)");
   }
   return padding;
 }
