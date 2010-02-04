@@ -101,6 +101,7 @@ struct JS_FRIEND_API(TypedArray) {
         TYPE_INT32,
         TYPE_UINT32,
         TYPE_FLOAT32,
+        TYPE_FLOAT64,
         TYPE_MAX
     };
 

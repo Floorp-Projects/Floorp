@@ -312,6 +312,7 @@ template<> inline const int TypeIDOfType<uint16>() { return TypedArray::TYPE_UIN
 template<> inline const int TypeIDOfType<int32>() { return TypedArray::TYPE_INT32; }
 template<> inline const int TypeIDOfType<uint32>() { return TypedArray::TYPE_UINT32; }
 template<> inline const int TypeIDOfType<float>() { return TypedArray::TYPE_FLOAT32; }
+template<> inline const int TypeIDOfType<double>() { return TypedArray::TYPE_FLOAT64; }
 
 template<typename NativeType> class TypedArrayTemplate;
 
@@ -322,6 +323,7 @@ typedef TypedArrayTemplate<uint16> Uint16Array;
 typedef TypedArrayTemplate<int32> Int32Array;
 typedef TypedArrayTemplate<uint32> Uint32Array;
 typedef TypedArrayTemplate<float> Float32Array;
+typedef TypedArrayTemplate<double> Float64Array;
 
 template<typename NativeType>
 class TypedArrayTemplate
@@ -896,6 +898,12 @@ class TypedArrayTemplate
                 *dest++ = NativeType(*src++);
             break;
           }
+          case TypedArray::TYPE_FLOAT64: {
+            double *src = static_cast<double*>(tarray->data);
+            for (uintN i = 0; i < length; ++i)
+                *dest++ = NativeType(*src++);
+            break;
+          }
           default:
             JS_NOT_REACHED("copyFrom with a TypedArray of unknown type");
             break;
@@ -990,6 +998,15 @@ void
 TypedArrayTemplate<float>::copyIndexToValue(JSContext *cx, uint32 index, jsval *vp)
 {
     float val = getIndex(index);
+    if (!js_NewWeaklyRootedNumber(cx, jsdouble(val), vp))
+        *vp = JSVAL_VOID;
+}
+
+template<>
+void
+TypedArrayTemplate<double>::copyIndexToValue(JSContext *cx, uint32 index, jsval *vp)
+{
+    double val = getIndex(index);
     if (!js_NewWeaklyRootedNumber(cx, jsdouble(val), vp))
         *vp = JSVAL_VOID;
 }
@@ -1108,6 +1125,7 @@ IMPL_TYPED_ARRAY_STATICS(Uint16Array);
 IMPL_TYPED_ARRAY_STATICS(Int32Array);
 IMPL_TYPED_ARRAY_STATICS(Uint32Array);
 IMPL_TYPED_ARRAY_STATICS(Float32Array);
+IMPL_TYPED_ARRAY_STATICS(Float64Array);
 
 JSClass TypedArray::fastClasses[TYPE_MAX] = {
     IMPL_TYPED_ARRAY_FAST_CLASS(Int8Array),
@@ -1116,7 +1134,8 @@ JSClass TypedArray::fastClasses[TYPE_MAX] = {
     IMPL_TYPED_ARRAY_FAST_CLASS(Uint16Array),
     IMPL_TYPED_ARRAY_FAST_CLASS(Int32Array),
     IMPL_TYPED_ARRAY_FAST_CLASS(Uint32Array),
-    IMPL_TYPED_ARRAY_FAST_CLASS(Float32Array)
+    IMPL_TYPED_ARRAY_FAST_CLASS(Float32Array),
+    IMPL_TYPED_ARRAY_FAST_CLASS(Float64Array)
 };
 
 JSClass TypedArray::slowClasses[TYPE_MAX] = {
@@ -1126,7 +1145,8 @@ JSClass TypedArray::slowClasses[TYPE_MAX] = {
     IMPL_TYPED_ARRAY_SLOW_CLASS(Uint16Array),
     IMPL_TYPED_ARRAY_SLOW_CLASS(Int32Array),
     IMPL_TYPED_ARRAY_SLOW_CLASS(Uint32Array),
-    IMPL_TYPED_ARRAY_SLOW_CLASS(Float32Array)
+    IMPL_TYPED_ARRAY_SLOW_CLASS(Float32Array),
+    IMPL_TYPED_ARRAY_SLOW_CLASS(Float64Array)
 };
 
 JS_FRIEND_API(JSObject *)
@@ -1148,6 +1168,7 @@ js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
     INIT_TYPED_ARRAY_CLASS(Int32Array,TYPE_INT32);
     INIT_TYPED_ARRAY_CLASS(Uint32Array,TYPE_UINT32);
     INIT_TYPED_ARRAY_CLASS(Float32Array,TYPE_FLOAT32);
+    INIT_TYPED_ARRAY_CLASS(Float64Array,TYPE_FLOAT64);
 
     proto = js_InitClass(cx, obj, NULL, &ArrayBuffer::jsclass,
                          ArrayBuffer::class_constructor, 1,
@@ -1212,6 +1233,9 @@ TypedArrayConstruct(JSContext *cx, jsint atype, uintN argc, jsval *argv, jsval *
 
       case TypedArray::TYPE_FLOAT32:
         return Float32Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
+
+      case TypedArray::TYPE_FLOAT64:
+        return Float64Array::class_constructor(cx, cx->globalObject, argc, argv, rv);
 
       default:
         JS_NOT_REACHED("shouldn't have gotten here");

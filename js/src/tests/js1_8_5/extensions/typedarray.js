@@ -81,7 +81,7 @@ function test()
         check(function() thrown, todo);
     }
 
-    var buf;
+    var buf, buf2;
 
     buf = new ArrayBuffer(100);
     check(function() buf);
@@ -132,6 +132,9 @@ function test()
     check(function() (new Int32Array(buf)).length == 1);
     check(function() (new Uint32Array(buf)).length == 1);
     check(function() (new Float32Array(buf)).length == 1);
+    checkThrows(function() (new Float64Array(buf)));
+    buf2 = new ArrayBuffer(8);
+    check(function() (new Float64Array(buf2)).length == 1);
 
     buf = new ArrayBuffer(5);
     check(function() buf);
@@ -180,7 +183,7 @@ function test()
 
     print ("done");
 
-    reportCompare(0, TestFailCount, "typed array test failures");
+    reportCompare(0, TestFailCount, "typed array tests");
 
     exitFunc ('test');
 }

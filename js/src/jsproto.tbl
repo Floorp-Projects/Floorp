@@ -115,6 +115,7 @@ JS_PROTO(Uint16Array,           33,     js_InitTypedArrayClasses)
 JS_PROTO(Int32Array,            34,     js_InitTypedArrayClasses)
 JS_PROTO(Uint32Array,           35,     js_InitTypedArrayClasses)
 JS_PROTO(Float32Array,          36,     js_InitTypedArrayClasses)
+JS_PROTO(Float64Array,          37,     js_InitTypedArrayClasses)
 
 #undef SCRIPT_INIT
 #undef XML_INIT
