@@ -6191,6 +6191,7 @@ PresShell::HandleEvent(nsIView         *aView,
       nsPoint eventPoint
           = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
       {
+        nsAutoDisableGetUsedXAssertions disableAssert;
         PRBool ignoreRootScrollFrame = PR_FALSE;
         if (aEvent->eventStructType == NS_MOUSE_EVENT) {
           ignoreRootScrollFrame = static_cast<nsMouseEvent*>(aEvent)->ignoreRootScrollFrame;
