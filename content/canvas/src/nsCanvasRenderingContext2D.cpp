@@ -1452,7 +1452,7 @@ nsCanvasRenderingContext2D::ShadowInitialize(const gfxRect& extents, gfxAlphaBox
                        blurRadius.height, blurRadius.width);
     drawExtents = drawExtents.Intersect(clipExtents - CurrentState().shadowOffset);
 
-    gfxContext* ctx = blur.Init(drawExtents, blurRadius, nsnull);
+    gfxContext* ctx = blur.Init(drawExtents, blurRadius, nsnull, nsnull);
 
     if (!ctx)
         return nsnull;

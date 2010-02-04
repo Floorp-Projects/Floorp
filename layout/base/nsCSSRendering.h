@@ -417,6 +417,9 @@ public:
    * @param aDirtyRect           The absolute dirty rect in app units. Used to
    *                             optimize the temporary surface size and speed up blur.
    *
+   * @param aSkipRect            An area in device pixels (NOT app units!) to avoid
+   *                             blurring over, to prevent unnecessary work.
+   *
    * @return            A blank 8-bit alpha-channel-only graphics context to
    *                    draw on, or null on error. Must not be freed. The
    *                    context has a device offset applied to it given by
@@ -432,7 +435,7 @@ public:
    */
   gfxContext* Init(const nsRect& aRect, nscoord aBlurRadius,
                    PRInt32 aAppUnitsPerDevPixel, gfxContext* aDestinationCtx,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect, gfxRect* aSkipRect);
 
   /**
    * Does the actual blurring and mask applying. Users of this object *must*
