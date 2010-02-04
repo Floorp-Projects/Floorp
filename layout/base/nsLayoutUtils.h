@@ -1059,12 +1059,6 @@ public:
   static PRBool IsReallyFixedPos(nsIFrame* aFrame);
 
   /**
-   * Indicates if the nsIFrame::GetUsedXXX assertions in nsFrame.cpp should
-   * disabled.
-   */
-  static PRBool sDisableGetUsedXAssertions;
-
-  /**
    * Return true if aFrame is in an {ib} split and is NOT one of the
    * continuations of the first inline in it.
    */
@@ -1125,23 +1119,6 @@ public:
 
   static SurfaceFromElementResult SurfaceFromElement(nsIDOMElement *aElement,
                                                      PRUint32 aSurfaceFlags = 0);
-};
-
-class nsAutoDisableGetUsedXAssertions
-{
-public:
-  nsAutoDisableGetUsedXAssertions()
-    : mOldValue(nsLayoutUtils::sDisableGetUsedXAssertions)
-  {
-    nsLayoutUtils::sDisableGetUsedXAssertions = PR_TRUE;
-  }
-  ~nsAutoDisableGetUsedXAssertions()
-  {
-    nsLayoutUtils::sDisableGetUsedXAssertions = mOldValue;
-  }
-
-private:
-  PRBool mOldValue;
 };
 
 class nsSetAttrRunnable : public nsRunnable
