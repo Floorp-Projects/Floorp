@@ -15,7 +15,7 @@
  *
  * The Original Code is Places Unit Test code.
  *
- * The Initial Developer of the Original Code is Mozilla Corp.
+ * The Initial Developer of the Original Code is Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -41,49 +41,23 @@
  * is corrupt but a JSON backup is not available.
  */
 
-const NS_PLACES_INIT_COMPLETE_TOPIC = "places-init-complete";
-
-// Create an observer for the Places notifications
-var os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
-var observer = {
-  observe: function thn_observe(aSubject, aTopic, aData) {
-    if (aTopic == NS_PLACES_INIT_COMPLETE_TOPIC) {
-        os.removeObserver(this, NS_PLACES_INIT_COMPLETE_TOPIC);
-        var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-                 getService(Ci.nsINavHistoryService);
-      // Check the database was corrupt.
-      // nsBrowserGlue uses databaseStatus to manage initialization.
-      do_check_eq(hs.databaseStatus, hs.DATABASE_STATUS_CORRUPT);
-
-      // Enqueue next part of the test.
-      var tm = Cc["@mozilla.org/thread-manager;1"].
-               getService(Ci.nsIThreadManager);
-      tm.mainThread.dispatch({
-        run: function() {
-          continue_test();
-        }
-      }, Ci.nsIThread.DISPATCH_NORMAL);
-    }
-  }
-};
-os.addObserver(observer, NS_PLACES_INIT_COMPLETE_TOPIC, false);
-
 function run_test() {
+  do_test_pending();
+
   // Create bookmarks.html in the profile.
   create_bookmarks_html("bookmarks.glue.html");
   // Remove JSON backup from profile.
   remove_all_JSON_backups();
 
   // Remove current database file.
-  var db = gProfD.clone();
+  let db = gProfD.clone();
   db.append("places.sqlite");
   if (db.exists()) {
     db.remove(false);
     do_check_false(db.exists());
   }
   // Create a corrupt database.
-  var corruptDB = gTestDir.clone();
+  let corruptDB = gTestDir.clone();
   corruptDB.append("corruptDB.sqlite");
   corruptDB.copyTo(gProfD, "places.sqlite");
   do_check_true(db.exists());
@@ -92,20 +66,39 @@ function run_test() {
   Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIBrowserGlue);
 
   // Initialize Places through the History Service.
-  var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
            getService(Ci.nsINavHistoryService);
+  // Check the database was corrupt.
+  // nsBrowserGlue uses databaseStatus to manage initialization.
+  do_check_eq(hs.databaseStatus, hs.DATABASE_STATUS_CORRUPT);
 
-  // Wait for init-complete notification before going on.
-  do_test_pending();
+  // Wait for restore to finish.
+  let os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
+  let observer = {
+    observe: function(aSubject, aTopic, aData) {
+      os.removeObserver(observer, "bookmarks-restore-success");
+      os.removeObserver(observer, "bookmarks-restore-failed");
+      do_check_eq(aTopic, "bookmarks-restore-success");
+      do_check_eq(aData, "html-initial");
+      continue_test();
+    }
+  }
+  os.addObserver(observer, "bookmarks-restore-success", false);
+  os.addObserver(observer, "bookmarks-restore-failed", false);
 }
 
 function continue_test() {
-  var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+  let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
            getService(Ci.nsINavBookmarksService);
 
-  var itemId = bs.getIdForItemAt(bs.toolbarFolder, SMART_BOOKMARKS_ON_TOOLBAR);
+  // Check that bookmarks html has been restored.
+  // Notice restore from HTML notification is fired after smart bookmarks creation.
+  let itemId = bs.getIdForItemAt(bs.toolbarFolder, SMART_BOOKMARKS_ON_TOOLBAR);
   do_check_neq(itemId, -1);
   do_check_eq(bs.getItemTitle(itemId), "example");
+
+  remove_bookmarks_html();
 
   do_test_finished();
 }
