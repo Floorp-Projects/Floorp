@@ -83,7 +83,7 @@ include $(topsrcdir)/config/config.mk
 
 GARBAGE_DIRS += dist _javagen _profile _tests staticlib
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
-   dependencies.beos config/autoconf.mk config/myrules.mk config/myconfig.mk \
+   dependencies.beos config/autoconf.mk \
    unallmakefiles mozilla-config.h \
    netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out
