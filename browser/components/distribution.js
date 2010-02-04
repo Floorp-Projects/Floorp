@@ -138,6 +138,7 @@ DistributionCustomizer.prototype = {
       let m = /^item\.(\d+)\.(\w+)\.?(\w*)/.exec(keys[i]);
       if (m) {
         let [foo, iid, iprop, ilocale] = m;
+        iid = parseInt(iid);
 
         if (ilocale)
           continue;
