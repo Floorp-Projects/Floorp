@@ -558,6 +558,63 @@ void nsStyleUtil::AppendEscapedCSSString(const nsString& aString,
 }
 
 /* static */ void
+nsStyleUtil::AppendEscapedCSSIdent(const nsString& aIdent, nsAString& aReturn)
+{
+  // The relevant parts of the CSS grammar are:
+  //   ident    [-]?{nmstart}{nmchar}*
+  //   nmstart  [_a-z]|{nonascii}|{escape}
+  //   nmchar   [_a-z0-9-]|{nonascii}|{escape}
+  //   nonascii [^\0-\177]
+  //   escape   {unicode}|\\[^\n\r\f0-9a-f]
+  //   unicode  \\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?
+  // from http://www.w3.org/TR/CSS21/syndata.html#tokenization
+
+  const nsString::char_type* in = aIdent.get();
+  const nsString::char_type* const end = in + aIdent.Length();
+
+  // Deal with the leading dash separately so we don't need to
+  // unnecessarily escape digits.
+  if (in != end && *in == '-') {
+    aReturn.Append(PRUnichar('-'));
+    ++in;
+  }
+
+  PRBool first = PR_TRUE;
+  for (; in != end; ++in, first = PR_FALSE)
+  {
+    if (*in < 0x20 || (first && '0' <= *in && *in <= '9'))
+    {
+      // Escape all characters below 0x20, and digits at the start
+      // (including after a dash), numerically.  If we didn't escape
+      // digits numerically, they'd get interpreted as a numeric escape
+      // for the wrong character.
+
+      /*
+       This is the buffer into which snprintf should write. As the hex.
+       value is, for numbers below 0x7F, max. 2 characters long, we
+       don't need more than 5 characters ("\XX "+NUL).
+      */
+      PRUnichar buf[5];
+      nsTextFormatter::snprintf(buf, NS_ARRAY_LENGTH(buf),
+                                NS_LITERAL_STRING("\\%hX ").get(), *in);
+      aReturn.Append(buf);
+    } else {
+      PRUnichar ch = *in;
+      if (!((ch == PRUnichar('_')) ||
+            (PRUnichar('A') <= ch && ch <= PRUnichar('Z')) ||
+            (PRUnichar('a') <= ch && ch <= PRUnichar('z')) ||
+            PRUnichar(0x80) <= ch ||
+            (!first && ch == PRUnichar('-')) ||
+            (PRUnichar('0') <= ch && ch <= PRUnichar('9')))) {
+        // Character needs to be escaped
+        aReturn.Append(PRUnichar('\\'));
+      }
+      aReturn.Append(ch);
+    }
+  }
+}
+
+/* static */ void
 nsStyleUtil::AppendBitmaskCSSValue(nsCSSProperty aProperty,
                                    PRInt32 aMaskedValue,
                                    PRInt32 aFirstMask,
