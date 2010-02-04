@@ -99,6 +99,10 @@
 
 #include "nsIDOMChromeWindow.h"
 
+#ifdef MOZ_WIDGET_QT
+#include <QtGui/QX11EmbedWidget>
+#endif
+
 #ifdef MOZ_WIDGET_GTK2
 #include "mozcontainer.h"
 
@@ -684,6 +688,13 @@ nsFrameLoader::ShowRemoteFrame(nsIFrameFrame* frame, nsIView* view)
   gtk_widget_show(mRemoteSocket);
   GdkNativeWindow id = gtk_socket_get_id(GTK_SOCKET(mRemoteSocket));
   mChildProcess->SendcreateWidget(id);
+#elif defined(MOZ_WIDGET_QT)
+  QWidget* parent_win = static_cast<QWidget*>(w->GetNativeData(NS_NATIVE_WINDOW));
+  mRemoteSocket = new QX11EmbedContainer(parent_win);
+  NS_ENSURE_TRUE(mRemoteSocket, false);
+  mRemoteSocket->show();
+  mRemoteSocket->resize(size.width, size.height);
+  mChildProcess->SendcreateWidget(mRemoteSocket->winId());
 #elif defined(XP_MACOSX)
 #  warning IMPLEMENT ME
 
@@ -1346,6 +1357,9 @@ nsFrameLoader::UpdatePositionAndSize(nsIFrame *aIFrame)
         GtkAllocation alloc = {0, 0, size.width, size.height };
         gtk_widget_size_allocate(mRemoteSocket, &alloc);
       }
+#elif defined(MOZ_WIDGET_QT)
+      if (mRemoteSocket)
+        mRemoteSocket->resize(size.width, size.height);
 #endif
 
       mChildProcess->Move(0, 0, size.width, size.height);

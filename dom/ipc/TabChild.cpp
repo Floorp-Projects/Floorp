@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_WIDGET_QT
+#include <QtGui/QX11EmbedWidget>
+#endif
 #include "TabChild.h"
 
 #include "nsIWebBrowser.h"
@@ -287,6 +290,11 @@ TabChild::RecvcreateWidget(const MagicWindowHandle& parentWidget)
 #ifdef MOZ_WIDGET_GTK2
     GtkWidget* win = gtk_plug_new((GdkNativeWindow)parentWidget);
     gtk_widget_show(win);
+#elif defined(MOZ_WIDGET_QT)
+    QX11EmbedWidget *win = new QX11EmbedWidget();
+    NS_ENSURE_TRUE(win, true);
+    win->embedInto(parentWidget);
+    win->show();
 #elif defined(XP_WIN)
     HWND win = parentWidget;
 #elif defined(XP_MACOSX)

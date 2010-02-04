@@ -67,6 +67,9 @@ namespace mozilla {
 #ifdef MOZ_WIDGET_GTK2
 typedef struct _GtkWidget GtkWidget;
 #endif
+#ifdef MOZ_WIDGET_QT
+class QX11EmbedContainer;
+#endif
 #endif
 
 class nsFrameLoader : public nsIFrameLoader
@@ -180,6 +183,8 @@ private:
 
 #ifdef MOZ_WIDGET_GTK2
   GtkWidget* mRemoteSocket;
+#elif defined(MOZ_WIDGET_QT)
+  QX11EmbedContainer* mRemoteSocket;
 #endif
 #endif
 };
