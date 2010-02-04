@@ -1329,7 +1329,13 @@ struct JSContext {
     }
 
   private:
+#ifdef __GNUC__
+# pragma GCC visibility push(default)
+#endif
     friend void js_TraceContext(JSTracer *, JSContext *);
+#ifdef __GNUC__
+# pragma GCC visibility pop
+#endif
 
     /* Linked list of callstacks. See CallStack. */
     js::CallStack       *currentCallStack;
