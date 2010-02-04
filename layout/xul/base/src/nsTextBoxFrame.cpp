@@ -579,7 +579,7 @@ void nsTextBoxFrame::PaintOneShadow(gfxContext*      aCtx,
   nsContextBoxBlur contextBoxBlur;
   gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, blurRadius,
                                                   PresContext()->AppUnitsPerDevPixel(),
-                                                  aCtx, aDirtyRect);
+                                                  aCtx, aDirtyRect, nsnull);
 
   if (!shadowContext)
     return;
