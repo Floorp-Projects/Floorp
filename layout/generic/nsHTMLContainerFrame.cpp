@@ -264,7 +264,7 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
   nsContextBoxBlur contextBoxBlur;
   gfxContext* shadowCtx = contextBoxBlur.Init(shadowRect, mBlurRadius,
                                               presContext->AppUnitsPerDevPixel(),
-                                              thebesCtx, mVisibleRect, nsnull);
+                                              thebesCtx, mVisibleRect);
   if (!shadowCtx)
     return;
 
