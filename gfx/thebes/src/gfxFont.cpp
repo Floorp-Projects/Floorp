@@ -3316,13 +3316,20 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
         PRUint32 end = iter.GetStringEnd();
 #endif
         PRUint32 start = iter.GetStringStart();
-        // These assertions are probably not needed; it's possible for us to assign
+
+        // These used to be NS_ASSERTION()s, but WARNING is more appropriate.
+        // Although it's unusual (and not desirable), it's possible for us to assign
         // different fonts to a base character and a following diacritic.
-        // View http://www.alanwood.net/unicode/cyrillic.html on OS X 10.5 for an example.
-        NS_ASSERTION(aSource->IsClusterStart(start),
-                     "Started word in the middle of a cluster...");
-        NS_ASSERTION(end == aSource->GetLength() || aSource->IsClusterStart(end),
-                     "Ended word in the middle of a cluster...");
+        // Example on OSX 10.5/10.6 with default fonts installed:
+        //     data:text/html,<p style="font-family:helvetica, arial, sans-serif;">
+        //                    &#x043E;&#x0486;&#x20;&#x043E;&#x0486;
+        // This means the rendering of the cluster will probably not be very good,
+        // but it's the best we can do for now if the specified font only covered the
+        // initial base character and not its applied marks.
+        NS_WARN_IF_FALSE(aSource->IsClusterStart(start),
+                         "Started font run in the middle of a cluster");
+        NS_WARN_IF_FALSE(end == aSource->GetLength() || aSource->IsClusterStart(end),
+                         "Ended font run in the middle of a cluster");
 
         nsresult rv = AddGlyphRun(font, start - aStart + aDest);
         if (NS_FAILED(rv))

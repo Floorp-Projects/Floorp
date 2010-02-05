@@ -1,0 +1,22 @@
+<html class="reftest-wait">
+<head>
+<script>
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+function doTest() {
+  var one = document.getElementById("one");
+  var two = document.getElementById("two");
+  one.style.display = "none";
+  two.style.display = "";
+  window.location.href = "#two";
+  document.documentElement.className = "";
+}
+</script>
+</head>
+<body>
+<div style="height: 200px;">spacer</div>
+<div id="one" style="background: blue; width: 200px; height: 200px;">div one</div>
+<div id="two" style="background:  red; width: 200px; height: 200px; display: none;">div two</div>
+<div style="height: 10000px;">spacer</div>
+</body>
+</html>

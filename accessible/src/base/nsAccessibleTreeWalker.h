@@ -48,7 +48,6 @@
 #include "nsIAccessible.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsIAccessibilityService.h"
 #include "nsIWeakReference.h"
 #include "nsIFrame.h"
 
@@ -132,7 +131,6 @@ protected:
   void GetNextDOMNode();
 
   nsCOMPtr<nsIWeakReference> mWeakShell;
-  nsCOMPtr<nsIAccessibilityService> mAccService;
   PRBool mWalkAnonContent;
 };
 

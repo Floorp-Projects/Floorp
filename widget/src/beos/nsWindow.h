@@ -109,7 +109,7 @@ public:
 	NS_IMETHOD              Show(PRBool bState);
  	NS_IMETHOD              CaptureMouse(PRBool aCapture);
 	NS_IMETHOD              CaptureRollupEvents(nsIRollupListener *aListener,
-                                              nsIMenuRollup *aMenuRollup,
+	                                            nsIMenuRollup *aMenuRollup,
 	                                            PRBool aDoCapture,
 	                                            PRBool aConsumeRollupEvent);
 	NS_IMETHOD              IsVisible(PRBool & aState);

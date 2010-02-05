@@ -691,17 +691,37 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     mCompatMode = eCompatibility_FullStandards;
     loadAsHtml5 = PR_FALSE;
   }
-  
-  if (!(contentType.EqualsLiteral("text/html") && aCommand && !nsCRT::strcmp(aCommand, "view"))) {
-    loadAsHtml5 = PR_FALSE;
-  }
 #ifdef DEBUG
   else {
     NS_ASSERTION(mIsRegularHTML,
                  "Hey, someone forgot to reset mIsRegularHTML!!!");
   }
 #endif
-
+  
+  if (loadAsHtml5 && 
+      !(contentType.EqualsLiteral("text/html") && 
+        aCommand && 
+        !nsCRT::strcmp(aCommand, "view"))) {
+    loadAsHtml5 = PR_FALSE;
+  }
+  
+  // TODO: Proper about:blank treatment is bug 543435
+  if (loadAsHtml5) {
+    // mDocumentURI hasn't been set, yet, so get the URI from the channel
+    nsCOMPtr<nsIURI> uri;
+    aChannel->GetOriginalURI(getter_AddRefs(uri));
+    // Adapted from nsDocShell:
+    // GetSpec can be expensive for some URIs, so check the scheme first.
+    PRBool isAbout = PR_FALSE;
+    if (uri && NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout) {
+      nsCAutoString str;
+      uri->GetSpec(str);
+      if (str.EqualsLiteral("about:blank")) {
+        loadAsHtml5 = PR_FALSE;    
+      }
+    }
+  }
+  
   CSSLoader()->SetCompatibilityMode(mCompatMode);
   
   PRBool needsParser = PR_TRUE;

@@ -180,7 +180,5 @@ button[type="disclosure"] {
 }
 
 button[type="disclosure"][open="true"] {
-  list-style-image: url("chrome://global/skin/tree/twisty-open.png"); 
+  list-style-image: url("chrome://global/skin/tree/twisty-open.png");
 }
-
-

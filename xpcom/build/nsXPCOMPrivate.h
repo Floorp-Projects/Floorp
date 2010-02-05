@@ -224,6 +224,11 @@ namespace mozilla {
 nsresult
 ShutdownXPCOM(nsIServiceManager* servMgr);
 
+/**
+ * C++ namespaced version of NS_LogTerm.
+ */
+void LogTerm();
+
 } // namespace mozilla
 
 

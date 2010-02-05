@@ -92,44 +92,40 @@
 
 /* Style the back dropmark */
 
-#help-back-button .toolbarbutton-menubutton-dropmarker {
+#help-back-button > .toolbarbutton-menubutton-dropmarker {
   margin-top: 3px;
   list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png");
   -moz-image-region: rect(0px, 14px, 24px, 0px);
 }
 
-#help-back-button:hover .toolbarbutton-menubutton-dropmarker, 
-#help-back-button[buttonover="true"] > .toolbarbutton-menubutton-dropmarker {
+#help-back-button:hover > .toolbarbutton-menubutton-dropmarker {
   -moz-image-region: rect(24px, 14px, 48px, 0px);
 }
 
-#help-back-button[disabled="true"] .toolbarbutton-menubutton-dropmarker {
+#help-back-button[disabled="true"] > .toolbarbutton-menubutton-dropmarker {
   list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png") !important;
   -moz-image-region: rect(48px, 14px, 72px, 0px) !important;
 }
 
-#help-back-button:hover:active .toolbarbutton-menubutton-dropmarker, 
-#help-back-button[buttondown="true"] > .toolbarbutton-menubutton-dropmarker {
+#help-back-button:hover:active > .toolbarbutton-menubutton-dropmarker {
   -moz-image-region: rect(72px, 14px, 96px, 0px);
 }
 
 /* Style the forward dropmark */
 
-#help-forward-button .toolbarbutton-menubutton-dropmarker {
+#help-forward-button > .toolbarbutton-menubutton-dropmarker {
   margin-top: 3px;
   list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png");
   -moz-image-region: rect(0px, 14px, 24px, 0px);
 }
-#help-forward-button:hover .toolbarbutton-menubutton-dropmarker, 
-#help-forward-button[buttonover="true"] > .toolbarbutton-menubutton-dropmarker {
+#help-forward-button:hover > .toolbarbutton-menubutton-dropmarker {
   -moz-image-region: rect(24px, 14px, 48px, 0px);
 }
-#help-forward-button[disabled="true"] .toolbarbutton-menubutton-dropmarker {
+#help-forward-button[disabled="true"] > .toolbarbutton-menubutton-dropmarker {
   list-style-image: url("chrome://global/skin/toolbar/dropmark-nav.png") !important;
   -moz-image-region: rect(48px, 14px, 72px, 0px) !important;
 }
-#help-forward-button:hover:active .toolbarbutton-menubutton-dropmarker, 
-#help-forward-button[buttondown="true"] > .toolbarbutton-menubutton-dropmarker {
+#help-forward-button:hover:active > .toolbarbutton-menubutton-dropmarker {
   -moz-image-region: rect(72px, 14px, 96px, 0px);
 }
 

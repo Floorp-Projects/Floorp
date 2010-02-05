@@ -1124,7 +1124,8 @@ nsNSElementTearoff::SetCapture(PRBool aRetargetToElement)
   if (node)
     return NS_OK;
 
-  nsIPresShell::SetCapturingContent(mContent, aRetargetToElement ? CAPTURE_RETARGETTOELEMENT : 0);
+  nsIPresShell::SetCapturingContent(mContent, CAPTURE_PREVENTDRAG |
+    (aRetargetToElement ? CAPTURE_RETARGETTOELEMENT : 0));
   return NS_OK;
 }
 

@@ -161,20 +161,36 @@ NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc,
 
   // check the "single line editor newline handling"
   // and "caret behaviour in selection" prefs
+  GetDefaultEditorPrefs(mNewlineHandling, mCaretStyle);
+
+  if (NS_FAILED(rulesRes)) return rulesRes;
+  return res;
+}
+
+// static
+void
+nsPlaintextEditor::GetDefaultEditorPrefs(PRInt32 &aNewlineHandling,
+                                         PRInt32 &aCaretStyle)
+{
+  // set default values
+  aNewlineHandling = nsIPlaintextEditor::eNewlinesPasteToFirst;
+#ifdef XP_WIN
+  aCaretStyle = 1;
+#else
+  aCaretStyle = 0;
+#endif
+
   nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefBranch)
   {
     prefBranch->GetIntPref("editor.singleLine.pasteNewlines",
-                           &mNewlineHandling);
-    prefBranch->GetIntPref("layout.selection.caret_style", &mCaretStyle);
+                           &aNewlineHandling);
+    prefBranch->GetIntPref("layout.selection.caret_style", &aCaretStyle);
 #ifdef XP_WIN
-    if (mCaretStyle == 0)
-      mCaretStyle = 1;
+    if (aCaretStyle == 0)
+      aCaretStyle = 1;
 #endif
   }
-
-  if (NS_FAILED(rulesRes)) return rulesRes;
-  return res;
 }
 
 void 

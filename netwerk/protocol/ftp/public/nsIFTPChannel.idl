@@ -40,9 +40,10 @@
 /**
  * This interface may be used to determine if a channel is a FTP channel.
  */
-[scriptable, uuid(2315d831-8b40-446a-9138-fe09ebb1b720)]
+[scriptable, uuid(07f0d5cd-1fd5-4aa3-b6fc-665bdc5dbf9f)]
 interface nsIFTPChannel : nsISupports
 {
+    attribute PRTime lastModifiedTime;
 };
 
 /**

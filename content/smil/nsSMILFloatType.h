@@ -44,6 +44,12 @@
 class nsSMILFloatType : public nsISMILType
 {
 public:
+  // Singleton for nsSMILValue objects to hold onto.
+  static nsSMILFloatType sSingleton;
+
+protected:
+  // nsISMILType Methods
+  // -------------------
   virtual nsresult Init(nsSMILValue& aValue) const;
   virtual void     Destroy(nsSMILValue&) const;
   virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const;
@@ -57,10 +63,11 @@ public:
                                double aUnitDistance,
                                nsSMILValue& aResult) const;
 
-  static nsSMILFloatType sSingleton;
-
 private:
-  nsSMILFloatType() {}
+  // Private constructor & destructor: prevent instances beyond my singleton,
+  // and prevent others from deleting my singleton.
+  nsSMILFloatType()  {}
+  ~nsSMILFloatType() {}
 };
 
 #endif // NS_SMILFLOATTYPE_H_

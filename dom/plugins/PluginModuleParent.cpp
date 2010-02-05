@@ -149,6 +149,8 @@ PluginModuleParent::WriteExtraDataForMinidump(nsIFile* dumpFile)
                         pluginFile.substr(filePos).c_str());
     //TODO: add plugin name and version: bug 539841
     // (as PluginName, PluginVersion)
+    WriteExtraDataEntry(stream, "PluginName", "");
+    WriteExtraDataEntry(stream, "PluginVersion", "");
     stream->Close();
 }
 
@@ -647,11 +649,11 @@ PluginModuleParent::NP_Shutdown(NPError* error)
 }
 
 nsresult
-PluginModuleParent::NP_GetMIMEDescription(char** mimeDesc)
+PluginModuleParent::NP_GetMIMEDescription(const char** mimeDesc)
 {
     PLUGIN_LOG_DEBUG_METHOD;
 
-    *mimeDesc = (char*)"application/x-foobar";
+    *mimeDesc = "application/x-foobar";
     return NS_OK;
 }
 

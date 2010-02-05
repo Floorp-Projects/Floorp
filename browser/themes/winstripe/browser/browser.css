@@ -1177,10 +1177,6 @@ statusbarpanel#statusbar-display {
   border-bottom: 1px solid threedshadow;
 }
 
-tabpanels {
-  -moz-appearance: none;
-}
-
 /* tabbrowser-tab focus ring */
 .tabbrowser-tab > .tab-text {
   border: 1px dotted transparent;

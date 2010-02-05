@@ -269,7 +269,7 @@ nsXULPopupManager::AdjustPopupsOnWindowChange()
   while (item) {
     // if the auto positioning has been disabled, don't move the popup
     if (item->Frame()->GetAutoPosition())
-      item->Frame()->SetPopupPosition(nsnull);
+      item->Frame()->SetPopupPosition(nsnull, PR_TRUE);
     item = item->GetParent();
   }
 }

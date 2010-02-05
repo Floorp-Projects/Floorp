@@ -3609,6 +3609,36 @@ nsWindow::ThemeChanged()
     }
 }
 
+void
+nsWindow::CheckNeedDragLeaveEnter(nsWindow* aInnerMostWidget,
+                                  nsIDragService* aDragService,
+                                  GdkDragContext *aDragContext,
+                                  nscoord aX, nscoord aY)
+{
+    // check to see if there was a drag motion window already in place
+    if (mLastDragMotionWindow) {
+        // same as the last window so no need for dragenter and dragleave events
+        if (mLastDragMotionWindow == aInnerMostWidget) {
+            UpdateDragStatus(aDragContext, aDragService);
+            return;
+        }
+
+        // send a dragleave event to the last window that got a motion event
+        nsRefPtr<nsWindow> kungFuDeathGrip = mLastDragMotionWindow;
+        mLastDragMotionWindow->OnDragLeave();
+    }
+
+    // Make sure that the drag service knows we're now dragging
+    aDragService->StartDragSession();
+
+    // update our drag status and send a dragenter event to the window
+    UpdateDragStatus(aDragContext, aDragService);
+    aInnerMostWidget->OnDragEnter(aX, aY);
+
+    // set the last window to the innerMostWidget
+    mLastDragMotionWindow = aInnerMostWidget;
+}
+
 gboolean
 nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
                             GdkDragContext *aDragContext,
@@ -3657,29 +3687,17 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
     if (!innerMostWidget)
         innerMostWidget = this;
 
-    // check to see if there was a drag motion window already in place
-    if (mLastDragMotionWindow) {
-        // if it wasn't this
-        if (mLastDragMotionWindow != innerMostWidget) {
-            // send a drag event to the last window that got a motion event
-            nsRefPtr<nsWindow> kungFuDeathGrip = mLastDragMotionWindow;
-            mLastDragMotionWindow->OnDragLeave();
-            // and enter on the new one
-            innerMostWidget->OnDragEnter(retx, rety);
-        }
-    }
-    else {
-        // if there was no other motion window, then we're starting a
-        // drag. Send an enter event to initiate the drag.
-
-        innerMostWidget->OnDragEnter(retx, rety);
-    }
-
-    // set the last window to the innerMostWidget
-    mLastDragMotionWindow = innerMostWidget;
-
     // update the drag context
     dragSessionGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
+
+    // clear any drag leave timer that might be pending so that it
+    // doesn't get processed when we actually go out to get data.
+    if (mDragLeaveTimer) {
+        mDragLeaveTimer->Cancel();
+        mDragLeaveTimer = nsnull;
+    }
+
+    CheckNeedDragLeaveEnter(innerMostWidget, dragService, aDragContext, retx, rety);
 
     // notify the drag service that we are starting a drag motion.
     dragSessionGTK->TargetStartDragMotion();
@@ -3689,9 +3707,6 @@ nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
     nsDragEvent event(PR_TRUE, NS_DRAGDROP_OVER, innerMostWidget);
 
     InitDragEvent(event);
-
-    // now that we have initialized the event update our drag status
-    UpdateDragStatus(event, aDragContext, dragService);
 
     event.refPoint.x = retx;
     event.refPoint.y = rety;
@@ -3761,28 +3776,11 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
                                                   &retx, &rety);
     nsRefPtr<nsWindow> innerMostWidget = get_window_for_gdk_window(innerWindow);
 
-    // set this now before any of the drag enter or leave events happen
-    dragSessionGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
-
     if (!innerMostWidget)
         innerMostWidget = this;
 
-    // check to see if there was a drag motion window already in place
-    if (mLastDragMotionWindow) {
-        // if it wasn't this
-        if (mLastDragMotionWindow != innerMostWidget) {
-            // send a drag event to the last window that got a motion event
-            nsRefPtr<nsWindow> kungFuDeathGrip = mLastDragMotionWindow;
-            mLastDragMotionWindow->OnDragLeave();
-            // and enter on the new one
-            innerMostWidget->OnDragEnter(retx, rety);
-        }
-    }
-    else {
-        // if there was no other motion window, send an enter event to
-        // initiate the drag session.
-        innerMostWidget->OnDragEnter(retx, rety);
-    }
+    // set this now before any of the drag enter or leave events happen
+    dragSessionGTK->TargetSetLastContext(aWidget, aDragContext, aTime);
 
     // clear any drag leave timer that might be pending so that it
     // doesn't get processed when we actually go out to get data.
@@ -3791,8 +3789,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
         mDragLeaveTimer = nsnull;
     }
 
-    // set the last window to this
-    mLastDragMotionWindow = innerMostWidget;
+    CheckNeedDragLeaveEnter(innerMostWidget, dragService, aDragContext, retx, rety);
 
     // What we do here is dispatch a new drag motion event to
     // re-validate the drag target and then we do the drop.  The events
@@ -3801,9 +3798,6 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     nsDragEvent event(PR_TRUE, NS_DRAGDROP_OVER, innerMostWidget);
 
     InitDragEvent(event);
-
-    // now that we have initialized the event update our drag status
-    UpdateDragStatus(event, aDragContext, dragService);
 
     event.refPoint.x = retx;
     event.refPoint.y = rety;
@@ -3908,13 +3902,6 @@ nsWindow::OnDragEnter(nscoord aX, nscoord aY)
     // XXX Do we want to pass this on only if the event's subwindow is null?
 
     LOGDRAG(("nsWindow::OnDragEnter(%p)\n", (void*)this));
-
-    nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
-
-    if (dragService) {
-        // Make sure that the drag service knows we're now dragging.
-        dragService->StartDragSession();
-    }
 
     nsDragEvent event(PR_TRUE, NS_DRAGDROP_ENTER, this);
 
@@ -6103,8 +6090,7 @@ nsWindow::InitDragEvent(nsDragEvent &aEvent)
 // and what the source is offering.
 
 void
-nsWindow::UpdateDragStatus(nsDragEvent   &aEvent,
-                           GdkDragContext *aDragContext,
+nsWindow::UpdateDragStatus(GdkDragContext *aDragContext,
                            nsIDragService *aDragService)
 {
     // default is to do nothing

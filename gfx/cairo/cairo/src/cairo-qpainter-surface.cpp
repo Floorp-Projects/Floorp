@@ -1540,18 +1540,6 @@ _cairo_qpainter_surface_composite (cairo_operator_t op,
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
-static cairo_status_t
-_cairo_qpainter_surface_flush (void *abstract_surface)
-{
-    cairo_qpainter_surface_t *qs = (cairo_qpainter_surface_t *) abstract_surface;
-    
-    QPaintDevice * dev = qs->p->device();
-    qs->p->end();
-    qs->p->begin(dev);
-    
-    return CAIRO_STATUS_SUCCESS;
-}
-
 /**
  ** Backend struct
  **/
@@ -1578,7 +1566,7 @@ static const cairo_surface_backend_t cairo_qpainter_surface_backend = {
     _cairo_qpainter_surface_get_extents,
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
-    _cairo_qpainter_surface_flush,
+    NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
     NULL, /* scaled_font_fini */
     NULL, /* scaled_glyph_fini */

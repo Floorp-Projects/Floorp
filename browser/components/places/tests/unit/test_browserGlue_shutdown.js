@@ -15,7 +15,7 @@
  *
  * The Original Code is Places Unit Test code.
  *
- * The Initial Developer of the Original Code is Mozilla Corp.
+ * The Initial Developer of the Original Code is Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -41,7 +41,7 @@
  * and creating bookmarks backup if one does not exist for today.
  */
 
-// Initialize nsBrowserGlue.
+// Initialize nsBrowserGlue after Places.
 let bg = Cc["@mozilla.org/browser/browserglue;1"].
          getService(Ci.nsIBrowserGlue);
 
@@ -68,10 +68,19 @@ tests.push({
   exec: function() {
     // Sanity check: we should have bookmarks on the toolbar.
     do_check_true(bs.getIdForItemAt(bs.toolbarFolder, 0) > 0);
+
     // Set preferences.
     ps.setBoolPref(PREF_AUTO_EXPORT_HTML, true);
+
     // Force nsBrowserGlue::_shutdownPlaces().
-    os.notifyObservers(null, TOPIC_QUIT_APPLICATION_GRANTED, null);
+    try {
+      bg.QueryInterface(Ci.nsIObserver).observe(null,
+                                                TOPIC_QUIT_APPLICATION_GRANTED,
+                                                null);
+    }
+    catch(ex) {
+      // This throws due to idle observer, we can ignore that.
+    }
 
     // Check bookmarks.html has been created.
     check_bookmarks_html();
@@ -94,15 +103,25 @@ tests.push({
   exec: function() {
     // Sanity check: we should have bookmarks on the toolbar.
     do_check_true(bs.getIdForItemAt(bs.toolbarFolder, 0) > 0);
-    // Setpreferences.
+
+    // Set preferences.
     ps.setBoolPref(PREF_AUTO_EXPORT_HTML, true);
+
     // Create a bookmarks.html in the profile.
     let profileBookmarksHTMLFile = create_bookmarks_html("bookmarks.glue.html");
     // Get file lastModified and size.
     let lastMod = profileBookmarksHTMLFile.lastModifiedTime;
     let fileSize = profileBookmarksHTMLFile.fileSize;
+
     // Force nsBrowserGlue::_shutdownPlaces().
-    os.notifyObservers(null, TOPIC_QUIT_APPLICATION_GRANTED, null);
+    try {
+      bg.QueryInterface(Ci.nsIObserver).observe(null,
+                                                TOPIC_QUIT_APPLICATION_GRANTED,
+                                                null);
+    }
+    catch(ex) {
+      // This throws due to idle observer, we can ignore that.
+    }
 
     // Check a new bookmarks.html has been created.
     let profileBookmarksHTMLFile = check_bookmarks_html();
@@ -126,13 +145,22 @@ tests.push({
   exec: function() {
     // Sanity check: we should have bookmarks on the toolbar.
     do_check_true(bs.getIdForItemAt(bs.toolbarFolder, 0) > 0);
+
     // Create a JSON backup in the profile.
     let profileBookmarksJSONFile = create_JSON_backup("bookmarks.glue.json");
     // Get file lastModified and size.
     let lastMod = profileBookmarksJSONFile.lastModifiedTime;
     let fileSize = profileBookmarksJSONFile.fileSize;
+
     // Force nsBrowserGlue::_shutdownPlaces().
-    os.notifyObservers(null, TOPIC_QUIT_APPLICATION_GRANTED, null);
+    try {
+      bg.QueryInterface(Ci.nsIObserver).observe(null,
+                                                TOPIC_QUIT_APPLICATION_GRANTED,
+                                                null);
+    }
+    catch(ex) {
+      // This throws due to idle observer, we can ignore that.
+    }
 
     // Check a new JSON backup has not been created.
     do_check_true(profileBookmarksJSONFile.exists());
@@ -163,6 +191,8 @@ function next_test() {
 }
 
 function run_test() {
+  do_test_pending();
+
   // Clean up bookmarks.
   remove_all_bookmarks();
 
@@ -173,6 +203,5 @@ function run_test() {
                     bs.DEFAULT_INDEX, "bookmark-on-toolbar");
 
   // Kick-off tests.
-  do_test_pending();
   next_test();
 }
