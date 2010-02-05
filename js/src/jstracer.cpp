@@ -9442,13 +9442,25 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
     // Check for first-level cache hit and guard on kshape if possible.
     // Otherwise guard on key object exact match.
     if (PCVCAP_TAG(entry->vcap) <= 1) {
-        if (aobj != globalObj)
-            CHECK_STATUS(guardShape(obj_ins, aobj, entry->kshape, "guard_kshape", map_ins, exit));
-
-        if (entry->adding()) {
-            if (aobj == globalObj)
+        // Special case for the global object, which may be aliased to get a property value.
+        // To catch cross-global property accesses we must check against globalObj identity.
+        // But a JOF_NAME mode opcode needs no guard, as we ensure the global object's shape
+        // never changes, and name ops can't reach across a global object ('with' aborts).
+        if (aobj == globalObj) {
+            if (entry->adding())
                 RETURN_STOP("adding a property to the global object");
 
+            JSOp op = js_GetOpcode(cx, cx->fp->script, cx->fp->regs->pc);
+            if (JOF_OPMODE(op) != JOF_NAME) {
+                guard(true,
+                      addName(lir->ins2(LIR_peq, obj_ins, INS_CONSTOBJ(globalObj)), "guard_global"),
+                      exit);
+            }
+        } else {
+            CHECK_STATUS(guardShape(obj_ins, aobj, entry->kshape, "guard_kshape", map_ins, exit));
+        }
+
+        if (entry->adding()) {
             LIns *vshape_ins = addName(
                 lir->insLoad(LIR_ld,
                              addName(lir->insLoad(LIR_ldcp, cx_ins, offsetof(JSContext, runtime)),
@@ -9460,8 +9472,9 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
                   MISMATCH_EXIT);
         }
     } else {
-#ifdef DEBUG
         JSOp op = js_GetOpcode(cx, cx->fp->script, cx->fp->regs->pc);
+
+#ifdef DEBUG
         JSAtom *pcatom;
         if (op == JSOP_LENGTH) {
             pcatom = cx->runtime->atomState.lengthAtom;
@@ -9472,7 +9485,9 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
         JS_ASSERT(entry->kpc == (jsbytecode *) pcatom);
         JS_ASSERT(entry->kshape == jsuword(aobj));
 #endif
-        if (aobj != globalObj && !obj_ins->isconstp()) {
+
+        // See above comment about globalObj and JOF_NAME.
+        if (!obj_ins->isconstp() && (aobj != globalObj || JOF_OPMODE(op) != JOF_NAME)) {
             guard(true,
                   addName(lir->ins2(LIR_peq, obj_ins, INS_CONSTOBJ(aobj)), "guard_kobj"),
                   exit);
@@ -9483,6 +9498,8 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
     // guard on the shape of the object containing the property.
     if (PCVCAP_TAG(entry->vcap) >= 1) {
         JS_ASSERT(OBJ_SHAPE(obj2) == vshape);
+        if (obj2 == globalObj)
+            RETURN_STOP("hitting the global object via a prototype chain");
 
         LIns* obj2_ins;
         if (PCVCAP_TAG(entry->vcap) == 1) {
