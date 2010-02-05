@@ -3849,7 +3849,7 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing, bool demote)
 JS_REQUIRES_STACK LIns*
 TraceRecorder::attemptImport(jsval* p)
 {
-    if (LIns* i = tracker.get(p))
+    if (LIns* i = getFromTracker(p))
         return i;
 
     /* If the variable was not known, it could require a lazy import. */
@@ -3862,11 +3862,17 @@ TraceRecorder::attemptImport(jsval* p)
     return NULL;
 }
 
+nanojit::LIns*
+TraceRecorder::getFromTracker(jsval* p)
+{
+    checkForGlobalObjectReallocation();
+    return tracker.get(p);
+}
+
 JS_REQUIRES_STACK LIns*
 TraceRecorder::get(jsval* p)
 {
-    checkForGlobalObjectReallocation();
-    LIns* x = tracker.get(p);
+    LIns* x = getFromTracker(p);
     if (x)
         return x;
     if (isGlobal(p)) {
@@ -4054,7 +4060,7 @@ TraceRecorder::determineSlotType(jsval* vp)
 {
     TraceType m;
     if (isNumber(*vp)) {
-        LIns* i = tracker.get(vp);
+        LIns* i = getFromTracker(vp);
         if (i) {
             m = isPromoteInt(i) ? TT_INT32 : TT_DOUBLE;
         } else if (isGlobal(vp)) {
@@ -4571,7 +4577,7 @@ class SlotMap : public SlotVisitorBase
     {
         bool promoteInt = false;
         if (isNumber(*vp)) {
-            if (LIns* i = mRecorder.tracker.get(vp)) {
+            if (LIns* i = mRecorder.getFromTracker(vp)) {
                 promoteInt = isPromoteInt(i);
             } else if (mRecorder.isGlobal(vp)) {
                 int offset = mRecorder.tree->globalSlots->offsetOf(mRecorder.nativeGlobalSlot(vp));
