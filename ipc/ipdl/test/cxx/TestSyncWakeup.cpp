@@ -50,6 +50,7 @@ TestSyncWakeupParent::RecvSync1()
     // NB: can't use PR_Sleep (i.e. Sleep() on windows) because it's
     // only spec'd to block the current thread, not the current
     // process.  We need the IO thread to sleep as well.
+    puts(" (sleeping for 5 seconds. sorry!)");
     sleep(5);
 #endif
 
@@ -65,6 +66,7 @@ TestSyncWakeupParent::RecvSync2()
 #if defined(OS_POSIX)
     // see above
     sleep(5);
+    puts(" (sleeping for 5 seconds. sorry!)");
 #endif
 
     return true;
