@@ -1104,6 +1104,7 @@ class TraceRecorder
                              bool demote);
     JS_REQUIRES_STACK void set(jsval* p, nanojit::LIns* l, bool initializing = false,
                                bool demote = true);
+    nanojit::LIns* getFromTracker(jsval* p);
     JS_REQUIRES_STACK nanojit::LIns* get(jsval* p);
     JS_REQUIRES_STACK nanojit::LIns* attemptImport(jsval* p);
     JS_REQUIRES_STACK nanojit::LIns* addr(jsval* p);
