@@ -55,7 +55,7 @@
 
 const WCHAR c_sInstallPathTemplate[] = L"%s\\%s";
 const WCHAR c_sExtractCardPathTemplate[] = L"\\%s%s\\%s";
-const WCHAR c_sAppRegKeyTemplate[] = L"Software\\%s";
+const WCHAR c_sAppRegKeyTemplate[] = L"Software\\Mozilla\\%s";
 const WCHAR c_sFastStartTemplate[] = L"%s\\%sfaststart.exe";
 
 // Message handler for the dialog
@@ -294,6 +294,8 @@ BOOL nsInstallerDlg::PostExtract()
 
   RUN_AND_CHECK(SilentFirstRun)
 
+  RUN_AND_CHECK(RunSetupCab)
+
   return bResult;
 }
 
@@ -417,6 +419,28 @@ BOOL nsInstallerDlg::SilentFirstRun()
   }
 
   SetWindowText(GetDlgItem(m_hDlg, IDC_STATUS_TEXT), L"");
+  return bResult;
+}
+
+BOOL nsInstallerDlg::RunSetupCab()
+{
+  BOOL bResult = FALSE;
+
+  WCHAR sCabPath[MAX_PATH];
+  WCHAR sParams[MAX_PATH + 20];
+  _snwprintf(sCabPath, MAX_PATH, L"%s\\setup.cab", m_sInstallPath);
+
+  // Run "wceload.exe /noui Fennec.cab"
+  _snwprintf(sParams, MAX_PATH, L"/noui \"%s\"", sCabPath);
+  PROCESS_INFORMATION pi;
+  bResult = CreateProcess(L"\\Windows\\wceload.exe",
+                          sParams, NULL, NULL, FALSE, 0, NULL, NULL, NULL, &pi);
+  if (bResult)
+  {
+    // Wait for it to finish
+    WaitForSingleObject(pi.hProcess, INFINITE);
+  }
+
   return bResult;
 }
 
