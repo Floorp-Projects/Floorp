@@ -7355,38 +7355,10 @@ CheckForSSE2()
 #if defined(_MSC_VER) && defined(WINCE)
 
 // these come in from jswince.asm
-extern "C" int js_arm_try_thumb_op();
-extern "C" int js_arm_try_armv6t2_op();
 extern "C" int js_arm_try_armv5_op();
 extern "C" int js_arm_try_armv6_op();
 extern "C" int js_arm_try_armv7_op();
 extern "C" int js_arm_try_vfp_op();
-
-static bool
-arm_check_thumb()
-{
-    bool ret = false;
-    __try {
-        js_arm_try_thumb_op();
-        ret = true;
-    } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
-        ret = false;
-    }
-    return ret;
-}
-
-static bool
-arm_check_thumb2()
-{
-    bool ret = false;
-    __try {
-        js_arm_try_armv6t2_op();
-        ret = true;
-    } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
-        ret = false;
-    }
-    return ret;
-}
 
 static unsigned int
 arm_check_arch()
@@ -7450,7 +7422,6 @@ enable_debugger_exceptions()
 
 // Assume ARMv4 by default.
 static unsigned int arm_arch = 4;
-static bool arm_has_thumb = false;
 static bool arm_has_vfp = false;
 static bool arm_has_neon = false;
 static bool arm_has_iwmmxt = false;
@@ -7471,7 +7442,6 @@ arm_read_auxv()
                     hwcap = strtoul(getenv("ARM_FORCE_HWCAP"), NULL, 0);
                 // hardcode these values to avoid depending on specific versions
                 // of the hwcap header, e.g. HWCAP_NEON
-                arm_has_thumb = (hwcap & 4) != 0;
                 arm_has_vfp = (hwcap & 64) != 0;
                 arm_has_iwmmxt = (hwcap & 512) != 0;
                 // this flag is only present on kernel 2.6.29
@@ -7512,27 +7482,6 @@ arm_read_auxv()
     arm_tests_initialized = true;
 }
 
-static bool
-arm_check_thumb()
-{
-    if (!arm_tests_initialized)
-        arm_read_auxv();
-
-    return arm_has_thumb;
-}
-
-static bool
-arm_check_thumb2()
-{
-    if (!arm_tests_initialized)
-        arm_read_auxv();
-
-    // ARMv6T2 also supports Thumb2, but Linux doesn't provide an easy way to test for this as
-    // there is no associated bit in auxv. ARMv7 always supports Thumb2, and future architectures
-    // are assumed to be backwards-compatible.
-    return (arm_arch >= 7);
-}
-
 static unsigned int
 arm_check_arch()
 {
@@ -7553,10 +7502,6 @@ arm_check_vfp()
 
 #else
 #warning Not sure how to check for architecture variant on your platform. Assuming ARMv4.
-static bool
-arm_check_thumb() { return false; }
-static bool
-arm_check_thumb2() { return false; }
 static unsigned int
 arm_check_arch() { return 4; }
 static bool
@@ -7619,27 +7564,17 @@ InitJIT(TraceMonitor *tm)
         disable_debugger_exceptions();
 
         bool            arm_vfp     = arm_check_vfp();
-        bool            arm_thumb   = arm_check_thumb();
-        bool            arm_thumb2  = arm_check_thumb2();
         unsigned int    arm_arch    = arm_check_arch();
 
         enable_debugger_exceptions();
 
         avmplus::AvmCore::config.arm_vfp        = arm_vfp;
         avmplus::AvmCore::config.soft_float     = !arm_vfp;
-        avmplus::AvmCore::config.arm_thumb      = arm_thumb;
-        avmplus::AvmCore::config.arm_thumb2     = arm_thumb2;
         avmplus::AvmCore::config.arm_arch       = arm_arch;
 
         // Sanity-check the configuration detection.
         //  * We don't understand architectures prior to ARMv4.
         JS_ASSERT(arm_arch >= 4);
-        //  * All architectures support Thumb with the possible exception of ARMv4.
-        JS_ASSERT((arm_thumb) || (arm_arch == 4));
-        //  * Only ARMv6T2 and ARMv7(+) support Thumb2, but ARMv6 does not.
-        JS_ASSERT((arm_thumb2) || (arm_arch <= 6));
-        //  * All architectures that support Thumb2 also support Thumb.
-        JS_ASSERT((arm_thumb2 && arm_thumb) || (!arm_thumb2));
 #endif
         did_we_check_processor_features = true;
     }
@@ -12282,11 +12217,25 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
 
         if (isNumber(v)) {
             if (isPromoteInt(v_ins) &&
-                tarray->type != js::TypedArray::TYPE_FLOAT32) {
+                tarray->type != js::TypedArray::TYPE_FLOAT32 &&
+                tarray->type != js::TypedArray::TYPE_FLOAT64) {
                 LIns *v_ins_int = demote(lir, v_ins);
+
+                if (tarray->type == js::TypedArray::TYPE_UINT8_CLAMPED) {
+                    /* Wrap v_ins_int in some magic to clamp it */
+                    v_ins_int = lir->ins_choose(lir->ins2i(LIR_lt, v_ins_int, 0),
+                                                lir->insImm(0),
+                                                lir->ins_choose(lir->ins2i(LIR_gt, v_ins_int, 0xff),
+                                                                lir->insImm(0xff),
+                                                                v_ins_int,
+                                                                avmplus::AvmCore::use_cmov()),
+                                                avmplus::AvmCore::use_cmov());
+                }
+
                 switch (tarray->type) {
                   case js::TypedArray::TYPE_INT8:
                   case js::TypedArray::TYPE_UINT8:
+                  case js::TypedArray::TYPE_UINT8_CLAMPED:
                     addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
                     lir->insStore(LIR_stb, v_ins_int, addr_ins, 0);
                     break;
@@ -12300,6 +12249,8 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                     addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
                     lir->insStore(LIR_sti, v_ins_int, addr_ins, 0);
                     break;
+                  case js::TypedArray::TYPE_FLOAT32:
+                  case js::TypedArray::TYPE_FLOAT64:
                   default:
                     JS_NOT_REACHED("Unknown typed array in tracer");
                 }
@@ -12324,6 +12275,13 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                     addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
                     lir->insStore(LIR_st32f, v_ins, addr_ins, 0);
                     break;
+                  case js::TypedArray::TYPE_FLOAT64:
+                    addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 3));
+                    lir->insStore(LIR_stfi, v_ins, addr_ins, 0);
+                    break;
+                  case js::TypedArray::TYPE_UINT8_CLAMPED:
+                    addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
+                    lir->insStore(LIR_stb, lir->insCall(&js_TypedArray_uint8_clamp_double_ci, &v_ins), addr_ins, 0);
                   default:
                     JS_NOT_REACHED("Unknown typed array type in tracer");
                 }
@@ -13290,6 +13248,7 @@ TraceRecorder::typedArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
         v_ins = lir->ins1(LIR_i2f, lir->insLoad(LIR_ldsb, addr_ins, 0));
         break;
       case js::TypedArray::TYPE_UINT8:
+      case js::TypedArray::TYPE_UINT8_CLAMPED:
         addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
         v_ins = lir->ins1(LIR_u2f, lir->insLoad(LIR_ldzb, addr_ins, 0));
         break;
@@ -13312,6 +13271,10 @@ TraceRecorder::typedArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
       case js::TypedArray::TYPE_FLOAT32:
         addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 2));
         v_ins = lir->insLoad(LIR_ld32f, addr_ins, 0);
+        break;
+      case js::TypedArray::TYPE_FLOAT64:
+        addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 3));
+        v_ins = lir->insLoad(LIR_ldf, addr_ins, 0);
         break;
       default:
         JS_NOT_REACHED("Unknown typed array type in tracer");

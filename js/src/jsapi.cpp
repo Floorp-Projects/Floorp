@@ -1508,6 +1508,8 @@ static JSStdName standard_class_names[] = {
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int32Array), NULL},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint32Array), NULL},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float32Array), NULL},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float64Array), NULL},
+    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray), NULL},
 
     {NULL,                      0, NULL, NULL}
 };
