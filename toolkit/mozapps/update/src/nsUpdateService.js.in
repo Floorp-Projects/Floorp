@@ -125,6 +125,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gConsole",
                                    "@mozilla.org/consoleservice;1",
                                    "nsIConsoleService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gVC",
+                                   "@mozilla.org/xpcom/version-comparator;1",
+                                   "nsIVersionComparator");
+
 XPCOMUtils.defineLazyGetter(this, "gApp", function aus_gApp() {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).
          QueryInterface(Ci.nsIXULRuntime);
@@ -1252,17 +1256,15 @@ UpdateService.prototype = {
     var majorUpdate = null, minorUpdate = null;
     var newestMinor = updates[0], newestMajor = updates[0];
 
-    var vc = Cc["@mozilla.org/xpcom/version-comparator;1"].
-             getService(Ci.nsIVersionComparator);
     for (var i = 0; i < updates.length; ++i) {
       // Ignore updates for older versions of the application
-      if (vc.compare(updates[i].extensionVersion, gApp.version) < 0)
+      if (gVC.compare(updates[i].extensionVersion, gApp.version) < 0)
         continue;
       if (updates[i].type == "major" &&
-          vc.compare(newestMajor.version, updates[i].version) <= 0)
+          gVC.compare(newestMajor.version, updates[i].version) <= 0)
         majorUpdate = newestMajor = updates[i];
       if (updates[i].type == "minor" &&
-          vc.compare(newestMinor.version, updates[i].version) <= 0)
+          gVC.compare(newestMinor.version, updates[i].version) <= 0)
         minorUpdate = newestMinor = updates[i];
     }
 
@@ -1390,12 +1392,9 @@ UpdateService.prototype = {
       return;
     }
 
-    var ai = Cc["@mozilla.org/xre/app-info;1"].
-             getService(Ci.nsIXULAppInfo);
-    var vc = Cc["@mozilla.org/xpcom/version-comparator;1"].
-             getService(Ci.nsIVersionComparator);
+    // Only check add-on compatibility when the version changes.
     if (update.extensionVersion &&
-        vc.compare(update.extensionVersion, ai.version) != 0) {
+        gVC.compare(update.extensionVersion, gApp.version) != 0) {
       this._update = update;
       this._checkAddonCompatibility();
     }
@@ -1583,16 +1582,20 @@ UpdateService.prototype = {
     if (!update)
       throw Cr.NS_ERROR_NULL_POINTER;
 
-    let ai = Cc["@mozilla.org/xre/app-info;1"].
-             getService(Ci.nsIXULAppInfo);
-    let vc = Cc["@mozilla.org/xpcom/version-comparator;1"].
-             getService(Ci.nsIVersionComparator);
     // Don't download the update if the update's version is less than the
-    // current application's version.
+    // current application's version or the update's version is the same as the
+    // application's version and the build ID is the same as the application's
+    // build ID.
     if (update.extensionVersion &&
-        vc.compare(update.extensionVersion, ai.version) < 0) {
-      LOG("UpdateService:downloadUpdate - removing update for previous " +
-          "application version " + update.extensionVersion);
+        (gVC.compare(update.extensionVersion, gApp.version) < 0 ||
+         update.buildID && update.buildID == gApp.appBuildID &&
+         update.extensionVersion == gApp.version)) {
+      LOG("UpdateService:downloadUpdate - canceling download of update since " +
+          "it is for an earlier or same application version and build ID.\n" +
+          "current application version: " + gApp.version + "\n" +
+          "update application version : " + update.extensionVersion + "\n" +
+          "current build ID: " + gApp.appBuildID + "\n" +
+          "update build ID : " + update.buildID);
       cleanupActiveUpdate();
       return STATE_NONE;
     }

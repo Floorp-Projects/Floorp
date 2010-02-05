@@ -8430,6 +8430,14 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
     return PR_TRUE;
   }
 
+  nsIContent* content = aFrame->GetContent();
+  if (content && content->IsRootOfNativeAnonymousSubtree()) {
+    // We can't handle reconstructing the root of a native anonymous subtree,
+    // so reconstruct the parent.
+    *aResult = RecreateFramesForContent(content->GetParent(), PR_FALSE);
+    return PR_TRUE;
+  }
+
   // Now check for possibly needing to reconstruct due to a pseudo parent
   nsIFrame* inFlowFrame =
     (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) ?
@@ -9500,10 +9508,10 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   // its primary frame to be a text frame).  So use its parent for the
   // first-letter.
   nsIContent* letterContent = aTextContent->GetParent();
-  InitAndRestoreFrame(aState, letterContent,
-                      aState.GetGeometricParent(aStyleContext->GetStyleDisplay(),
-                                                aParentFrame),
-                      nsnull, letterFrame);
+  nsIFrame* containingBlock = aState.GetGeometricParent(
+    aStyleContext->GetStyleDisplay(), aParentFrame);
+  InitAndRestoreFrame(aState, letterContent, containingBlock, nsnull,
+                      letterFrame);
 
   // Init the text frame to refer to the letter frame. Make sure we
   // get a proper style context for it (the one passed in is for the
@@ -9541,10 +9549,11 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   }
 
   NS_ASSERTION(aResult.IsEmpty(), "aResult should be an empty nsFrameItems!");
-  // Put the new float before any of the floats in the block we're
-  // doing first-letter for, that is, before any floats whose parent is aBlockFrame
+  // Put the new float before any of the floats in the block we're doing
+  // first-letter for, that is, before any floats whose parent is
+  // containingBlock.
   nsFrameList::FrameLinkEnumerator link(aState.mFloatedItems);
-  while (!link.AtEnd() && link.NextFrame()->GetParent() != aBlockFrame) {
+  while (!link.AtEnd() && link.NextFrame()->GetParent() != containingBlock) {
     link.Next();
   }
 
@@ -9567,6 +9576,7 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
  */
 nsresult
 nsCSSFrameConstructor::CreateLetterFrame(nsIFrame* aBlockFrame,
+                                         nsIFrame* aBlockContinuation,
                                          nsIContent* aTextContent,
                                          nsIFrame* aParentFrame,
                                          nsFrameItems& aResult)
@@ -9603,20 +9613,18 @@ nsCSSFrameConstructor::CreateLetterFrame(nsIFrame* aBlockFrame,
     aTextContent->SetPrimaryFrame(nsnull);
     nsIFrame* textFrame = NS_NewTextFrame(mPresShell, textSC);
 
-    NS_ASSERTION(aBlockFrame == GetFloatContainingBlock(aParentFrame)->
-                   GetFirstContinuation(),
+    NS_ASSERTION(aBlockContinuation == GetFloatContainingBlock(aParentFrame),
                  "Containing block is confused");
     nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                   GetAbsoluteContainingBlock(aParentFrame),
-                                  aBlockFrame);
+                                  aBlockContinuation);
 
     // Create the right type of first-letter frame
     const nsStyleDisplay* display = sc->GetStyleDisplay();
     if (display->IsFloating()) {
       // Make a floating first-letter frame
       CreateFloatingLetterFrame(state, aBlockFrame, aTextContent, textFrame,
-                                blockContent, aParentFrame,
-                                sc, aResult);
+                                blockContent, aParentFrame, sc, aResult);
     }
     else {
       // Make an inflow first-letter frame
@@ -9661,7 +9669,7 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   nsIFrame* prevFrame = nsnull;
   nsFrameItems letterFrames;
   PRBool stopLooking = PR_FALSE;
-  rv = WrapFramesInFirstLetterFrame(aBlockFrame, aBlockFrame,
+  rv = WrapFramesInFirstLetterFrame(aBlockFrame, aBlockFrame, aBlockFrame,
                                     aBlockFrames.FirstChild(),
                                     &parentFrame, &textFrame, &prevFrame,
                                     letterFrames, &stopLooking);
@@ -9690,6 +9698,7 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
 nsresult
 nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   nsIFrame*                aBlockFrame,
+  nsIFrame*                aBlockContinuation,
   nsIFrame*                aParentFrame,
   nsIFrame*                aParentFrameList,
   nsIFrame**               aModifiedParent,
@@ -9712,7 +9721,7 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
       nsIContent* textContent = frame->GetContent();
       if (IsFirstLetterContent(textContent)) {
         // Create letter frame to wrap up the text
-        rv = CreateLetterFrame(aBlockFrame, textContent,
+        rv = CreateLetterFrame(aBlockFrame, aBlockContinuation, textContent,
                                aParentFrame, aLetterFrames);
         if (NS_FAILED(rv)) {
           return rv;
@@ -9728,8 +9737,8 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
     }
     else if (IsInlineFrame(frame) && frameType != nsGkAtoms::brFrame) {
       nsIFrame* kids = frame->GetFirstChild(nsnull);
-      WrapFramesInFirstLetterFrame(aBlockFrame, frame, kids,
-                                   aModifiedParent, aTextFrame,
+      WrapFramesInFirstLetterFrame(aBlockFrame, aBlockContinuation, frame,
+                                   kids, aModifiedParent, aTextFrame,
                                    aPrevFrame, aLetterFrames, aStopLooking);
       if (*aStopLooking) {
         return NS_OK;
@@ -9961,7 +9970,7 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsIFrame* aBlockFrame)
   do {
     // XXX shouldn't this bit be set already (bug 408493), assert instead?
     continuation->AddStateBits(NS_BLOCK_HAS_FIRST_LETTER_STYLE);
-    rv = WrapFramesInFirstLetterFrame(aBlockFrame, continuation,
+    rv = WrapFramesInFirstLetterFrame(aBlockFrame, continuation, continuation,
                                       continuation->GetFirstChild(nsnull),
                                       &parentFrame, &textFrame, &prevFrame,
                                       letterFrames, &stopLooking);

@@ -1051,7 +1051,7 @@ InitWebGLTypes(JSContext *aJSContext, JSObject *aGlobalJSObj)
     // Alias WebGLArrayBuffer -> ArrayBuffer
     if(!JS_GetProperty(aJSContext, aGlobalJSObj, "ArrayBuffer", &v) ||
        !JS_DefineProperty(aJSContext, aGlobalJSObj, "WebGLArrayBuffer", v,
-                          NULL, NULL, JSPROP_PERMANENT | JSPROP_ENUMERATE))
+                          NULL, NULL, JSPROP_PERMANENT))
         return PR_FALSE;
 
     const int webglTypes[] = {
@@ -1080,7 +1080,7 @@ InitWebGLTypes(JSContext *aJSContext, JSObject *aGlobalJSObj)
     {
         if(!JS_GetProperty(aJSContext, aGlobalJSObj, js::TypedArray::slowClasses[webglTypes[i]].name, &v) ||
            !JS_DefineProperty(aJSContext, aGlobalJSObj, webglNames[i], v,
-                              NULL, NULL, JSPROP_PERMANENT | JSPROP_ENUMERATE))
+                              NULL, NULL, JSPROP_PERMANENT))
             return PR_FALSE;
     }
 

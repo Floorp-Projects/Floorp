@@ -1,0 +1,99 @@
+<html>
+
+<head>
+  <title>nsIAccessible actions testing on HTML links (HTML:a)</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/events.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/actions.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      var actionsArray = [
+        {
+          ID: "link1",
+          actionName: "jump",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "img1",
+          actionName: "click",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "link2",
+          actionName: "click",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "img2",
+          actionName: "click",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "link3",
+          actionName: "click",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "img3",
+          actionName: "click",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "link4",
+          actionName: "click",
+          events: CLICK_EVENTS
+        },
+        {
+          ID: "img4",
+          actionName: "click",
+          events: CLICK_EVENTS
+        }
+      ];
+      testActions(actionsArray);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=423409"
+     title="Expose click action if mouseup and mousedown are registered">
+    Mozilla Bug 423409
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <a href="http://mozilla.org" id="link1">
+    <img src="chrome://mochikit/content/a11y/accessible/moz.png" id="img1">
+  </a>
+  <a id="link2" onmousedown="">
+    <img src="chrome://mochikit/content/a11y/accessible/moz.png" id="img2">
+  </a>
+  <a id="link3" onclick="">
+    <img src="chrome://mochikit/content/a11y/accessible/moz.png" id="img3">
+  </a>
+  <a id="link4" onmouseup="">
+    <img src="chrome://mochikit/content/a11y/accessible/moz.png" id="img4">
+  </a>
+</body>
+</html>

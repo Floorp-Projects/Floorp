@@ -94,7 +94,7 @@ include(xptcstubsdef.inc)
     addi    r7,sp,144       # fprData
                             # r3 has the 'self' pointer already
     mr      r4,r12          # methodIndex selector (it is now LATER)
-    addi    r5,sp,328       # pointer to callers args area, beyond r3-r10
+    addi    r5,sp,360       # pointer to callers args area, beyond r3-r10
                             # mapped range
     bl      .PrepareAndDispatch
     nop

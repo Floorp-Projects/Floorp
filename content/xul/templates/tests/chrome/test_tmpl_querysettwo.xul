@@ -47,6 +47,8 @@ var changes = [
     var container = ContainerUtils.MakeSeq(targetds,
                       RDF.GetResource(ZOO_NS + 'birds'));
     container.AppendElement(newnode);
+    expectConsoleMessage(ZOO_NS + 'birds', ZOO_NS + 'birds/emperorpenguin', true, true,
+                         '2 matching rule 1');
   },
   // step 2
   function(targetds, root) {
@@ -56,6 +58,8 @@ var changes = [
     var container = ContainerUtils.MakeSeq(targetds,
                       RDF.GetResource(ZOO_NS + 'birds'));
     container.InsertElementAt(newnode, '4', true);
+    expectConsoleMessage(ZOO_NS + 'birds', ZOO_NS + 'birds/archaeopteryx', true, true,
+                         '2 matching rule 1');
   },
   // step 3
   function(targetds, root) {
@@ -65,6 +69,8 @@ var changes = [
     var container = ContainerUtils.MakeSeq(targetds,
                       RDF.GetResource(ZOO_NS + 'birds'));
     container.InsertElementAt(newnode, '1', true);
+    expectConsoleMessage(ZOO_NS + 'birds', ZOO_NS + 'birds/wren', true, true,
+                         '2 matching rule 1');
   },
   // step 4
   function(targetds, root) {
@@ -73,12 +79,17 @@ var changes = [
     var removednode = container.RemoveElementAt('3', true);
     targetds.Unassert(removednode, RDF.GetResource(ZOO_NS + 'rdf#name'),
                       RDF.GetLiteral('Barn Owl'), true);
+    expectConsoleMessage(ZOO_NS + 'birds', ZOO_NS + 'birds/barnowl', false, false,
+                         '2 (active query is 1)');
+    expectConsoleMessage(ZOO_NS + 'birds', ZOO_NS + 'birds/barnowl', false, true,
+                         '1 (no new active query)');
   }
 ];
 ]]>
 </script>
 
-<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/birds">
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" flags="logging"
+      datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/birds">
 <template>
 <queryset>
 <query>

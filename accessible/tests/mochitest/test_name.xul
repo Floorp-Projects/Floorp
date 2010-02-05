@@ -147,10 +147,10 @@
       var textboxAcc = testName("toolbaritem_textbox", "ooospspss");
 
       // Element from anonymous content of direct child of toolbaritem.
-      var dropmarkerAcc = textboxAcc.lastChild;
-      testRole(dropmarkerAcc, ROLE_PUSHBUTTON);
-      is(dropmarkerAcc.name, "ooospspss",
-         "Wrong name for dropmarker of autocomplete textbox 'toolbaritem_textbox'.");
+      var entryAcc = textboxAcc.firstChild;
+      testRole(entryAcc, ROLE_ENTRY);
+      is(entryAcc.name, "ooospspss",
+         "Wrong name for text entry of autocomplete textbox 'toolbaritem_textbox'.");
 
       // Child from subtree of toolbaritem.
       testName("toolbaritem_hboxbutton", "ooospspss");
@@ -336,26 +336,26 @@
     </hbox>
   </vbox>
 
-  </vbox>
-  </hbox>
-
   <!-- bug 441991; create name from other menuitem label listitem's own label -->
   <hbox>
-  <listbox>
-  <listitem id="li_labelledby"
-            label="The moment the event starts"
-            aria-labelledby="menuitem-DISPLAY li_labelledby"/>
-  </listbox>
-  <menulist>
-    <menupopup>
-      <menuitem id="menuitem-DISPLAY"
-                value="DISPLAY"
-                label="Show an Alert"/>
-      <menuitem id="menuitem-EMAIL"
-                value="EMAIL"
-                label="Send an E-mail"/>
-    </menupopup>
-  </menulist>
-  </hbox>  
+    <listbox>
+    <listitem id="li_labelledby"
+              label="The moment the event starts"
+              aria-labelledby="menuitem-DISPLAY li_labelledby"/>
+    </listbox>
+    <menulist>
+      <menupopup>
+        <menuitem id="menuitem-DISPLAY"
+                  value="DISPLAY"
+                  label="Show an Alert"/>
+        <menuitem id="menuitem-EMAIL"
+                  value="EMAIL"
+                  label="Send an E-mail"/>
+      </menupopup>
+    </menulist>
+  </hbox>
+
+  </vbox> <!-- close tests area -->
+  </hbox> <!-- close main area -->
 </window>
 

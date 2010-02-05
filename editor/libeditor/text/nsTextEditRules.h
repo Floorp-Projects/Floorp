@@ -113,6 +113,42 @@ public:
 public:
   nsresult ResetIMETextPWBuf();
 
+  /**
+   * Handles the newline characters either according to aNewLineHandling
+   * or to the default system prefs if aNewLineHandling is negative.
+   *
+   * @param aString the string to be modified in place.
+   * @param aNewLineHandling determine the desired type of newline handling:
+   *        * negative values:
+   *          handle newlines according to platform defaults.
+   *        * nsIPlaintextEditor::eNewlinesReplaceWithSpaces:
+   *          replace newlines with spaces.
+   *        * nsIPlaintextEditor::eNewlinesStrip:
+   *          remove newlines from the string.
+   *        * nsIPlaintextEditor::eNewlinesReplaceWithCommas:
+   *          replace newlines with commas.
+   *        * nsIPlaintextEditor::eNewlinesStripSurroundingWhitespace:
+   *          collapse newlines and surrounding whitespace characters and
+   *          remove them from the string.
+   *        * nsIPlaintextEditor::eNewlinesPasteIntact:
+   *          only remove the leading and trailing newlines.
+   *        * nsIPlaintextEditor::eNewlinesPasteToFirst or any other value:
+   *          remove the first newline and all characters following it.
+   */
+  static void HandleNewLines(nsString &aString, PRInt32 aNewLineHandling);
+
+  /**
+   * Prepare a string buffer for being displayed as the contents of a password
+   * field.  This function uses the platform-specific character for representing
+   * characters entered into password fields.
+   *
+   * @param aOutString the output string.  When this function returns,
+   *        aOutString will contain aLength password characters.
+   * @param aLength the number of password characters that aOutString should
+   *        contain.
+   */
+  static nsresult FillBufWithPWChars(nsAString *aOutString, PRInt32 aLength);
+
 protected:
 
   // nsTextEditRules implementation methods
@@ -185,10 +221,6 @@ protected:
                                      const nsAString          *aInString,
                                      nsAString                *aOutString,
                                      PRInt32                   aMaxLength);
-  
-  /** Echo's the insertion text into the password buffer, and converts
-      insertion text to '*'s */                                        
-  nsresult FillBufWithPWChars(nsAString *aOutString, PRInt32 aLength);
 
   /** Remove IME composition text from password buffer */
   nsresult RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString);

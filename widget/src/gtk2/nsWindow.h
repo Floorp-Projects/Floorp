@@ -296,6 +296,11 @@ public:
 
     void               ThemeChanged(void);
 
+    void CheckNeedDragLeaveEnter(nsWindow* aInnerMostWidget,
+                                 nsIDragService* aDragService,
+                                 GdkDragContext *aDragContext,
+                                 nscoord aX, nscoord aY);
+
 #ifdef MOZ_X11
     Window             mOldFocusWindow;
 #endif /* MOZ_X11 */
@@ -499,8 +504,7 @@ private:
     // this is the last window that had a drag event happen on it.
     static nsWindow    *mLastDragMotionWindow;
     void   InitDragEvent         (nsDragEvent &aEvent);
-    void   UpdateDragStatus      (nsDragEvent &aEvent,
-                                  GdkDragContext *aDragContext,
+    void   UpdateDragStatus      (GdkDragContext *aDragContext,
                                   nsIDragService *aDragService);
 
     // this is everything we need to be able to fire motion events

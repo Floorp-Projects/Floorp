@@ -43,8 +43,6 @@
 #include "base/process.h"
 #include "chrome/common/ipc_channel.h"
 
-#include "mozilla/ipc/GeckoThread.h"
-
 #include "nsIAppShell.h"
 
 #include "nsCOMPtr.h"

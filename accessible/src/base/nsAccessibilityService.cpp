@@ -1173,26 +1173,6 @@ nsAccessibilityService::GetAttachedAccessibleFor(nsIDOMNode *aNode,
   return GetAccessibleFor(aNode, aAccessible);
 }
 
-NS_IMETHODIMP nsAccessibilityService::GetAccessibleInWindow(nsIDOMNode *aNode, 
-                                                            nsIDOMWindow *aWin,
-                                                            nsIAccessible **aAccessible)
-{
-  NS_ENSURE_ARG_POINTER(aAccessible);
-  *aAccessible = nsnull;
-
-  NS_ENSURE_ARG(aNode);
-  NS_ENSURE_ARG(aWin);
-
-  nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(aWin));
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webNav));
-  if (!docShell)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIPresShell> presShell;
-  docShell->GetPresShell(getter_AddRefs(presShell));
-  return GetAccessibleInShell(aNode, presShell, aAccessible);
-}
-
 NS_IMETHODIMP nsAccessibilityService::GetAccessibleInShell(nsIDOMNode *aNode, 
                                                            nsIPresShell *aPresShell,
                                                            nsIAccessible **aAccessible) 
@@ -1209,9 +1189,10 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleInShell(nsIDOMNode *aNode,
                        nsnull, &isHiddenUnused, aAccessible);
 }
 
-NS_IMETHODIMP nsAccessibilityService::GetAccessibleInWeakShell(nsIDOMNode *aNode, 
-                                                               nsIWeakReference *aWeakShell,
-                                                               nsIAccessible **aAccessible) 
+nsresult
+nsAccessibilityService::GetAccessibleInWeakShell(nsIDOMNode *aNode, 
+                                                 nsIWeakReference *aWeakShell,
+                                                 nsIAccessible **aAccessible) 
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nsnull;
@@ -1272,12 +1253,13 @@ static PRBool HasRelatedContent(nsIContent *aContent)
   return PR_FALSE;
 }
 
-NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
-                                                    nsIPresShell *aPresShell,
-                                                    nsIWeakReference *aWeakShell,
-                                                    nsIFrame *aFrameHint,
-                                                    PRBool *aIsHidden,
-                                                    nsIAccessible **aAccessible)
+nsresult
+nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
+                                      nsIPresShell *aPresShell,
+                                      nsIWeakReference *aWeakShell,
+                                      nsIFrame *aFrameHint,
+                                      PRBool *aIsHidden,
+                                      nsIAccessible **aAccessible)
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nsnull;
@@ -1631,7 +1613,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // correspond to the doc accessible and will be created in any case
   if (!newAcc && content->Tag() != nsAccessibilityAtoms::body && content->GetParent() && 
       ((weakFrame.GetFrame() && weakFrame.GetFrame()->IsFocusable()) ||
-       (isHTML && nsCoreUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
+       (isHTML && nsCoreUtils::HasClickListener(content)) ||
        HasUniversalAriaProperty(content, aWeakShell) || roleMapEntry ||
        HasRelatedContent(content) || nsCoreUtils::IsXLink(content))) {
     // This content is focusable or has an interesting dynamic content accessibility property.
@@ -2054,35 +2036,24 @@ nsAccessibilityService::InvalidateSubtreeFor(nsIPresShell *aShell,
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-nsresult 
-nsAccessibilityService::GetAccessibilityService(nsIAccessibilityService** aResult)
-{
-  NS_ENSURE_TRUE(aResult, NS_ERROR_NULL_POINTER);
-  *aResult = nsnull;
-
-  if (!gAccessibilityService) {
-    gAccessibilityService = new nsAccessibilityService();
-    NS_ENSURE_TRUE(gAccessibilityService, NS_ERROR_OUT_OF_MEMORY);
-
-    gIsShutdown = PR_FALSE;
-  }
-
-  NS_ADDREF(*aResult = gAccessibilityService);
-  return NS_OK;
-}
-
-nsIAccessibilityService*
-nsAccessibilityService::GetAccessibilityService()
-{
-  NS_ASSERTION(!gIsShutdown,
-               "Going to deal with shutdown accessibility service!");
-  return gAccessibilityService;
-}
-
+/**
+ * Return accessibility service; creating one if necessary.
+ */
 nsresult
 NS_GetAccessibilityService(nsIAccessibilityService** aResult)
 {
-  return nsAccessibilityService::GetAccessibilityService(aResult);
+   NS_ENSURE_TRUE(aResult, NS_ERROR_NULL_POINTER);
+   *aResult = nsnull;
+ 
+  if (!nsAccessibilityService::gAccessibilityService) {
+    nsAccessibilityService::gAccessibilityService = new nsAccessibilityService();
+    NS_ENSURE_TRUE(nsAccessibilityService::gAccessibilityService, NS_ERROR_OUT_OF_MEMORY);
+ 
+    nsAccessibilityService::gIsShutdown = PR_FALSE;
+   }
+ 
+  NS_ADDREF(*aResult = nsAccessibilityService::gAccessibilityService);
+  return NS_OK;
 }
 
 nsresult

@@ -1133,7 +1133,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     KillClickHoldTimer();
     break;
 #endif
-  case NS_DRAGDROP_DROP:
   case NS_DRAGDROP_OVER:
     // NS_DRAGDROP_DROP is fired before NS_DRAGDROP_DRAGDROP so send
     // the enter/exit events before NS_DRAGDROP_DROP.
@@ -1890,6 +1889,12 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
         StopTrackingDragGesture();
         return;
       }
+    }
+
+    // If non-native code is capturing the mouse don't start a drag.
+    if (nsIPresShell::IsMouseCapturePreventingDrag()) {
+      StopTrackingDragGesture();
+      return;
     }
 
     static PRInt32 pixelThresholdX = 0;
@@ -3629,7 +3634,6 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
     }
     break;
 
-  case NS_DRAGDROP_DROP:
   case NS_DRAGDROP_EXIT:
     {
       //This is actually the window mouse exit event.

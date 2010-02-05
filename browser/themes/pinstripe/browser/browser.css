@@ -399,7 +399,6 @@ menubutton:not([disabled="true"]):hover:active {
   -moz-image-region: rect(23px, 36px, 46px, 0px);
 }
 #back-button:hover:active:not([disabled]),
-#back-button[buttondown="true"]:not([disabled]),
 #back-button[open="true"] {
   -moz-image-region: rect(46px, 36px, 69px, 0px);
 }
@@ -414,7 +413,6 @@ menubutton:not([disabled="true"]):hover:active {
   -moz-image-region: rect(23px, 72px, 46px, 36px);
 }
 #forward-button:hover:active:not([disabled]),
-#forward-button[buttondown="true"]:not([disabled]),
 #forward-button[open="true"] {
   -moz-image-region: rect(46px, 72px, 69px, 36px);
 }
@@ -1591,10 +1589,6 @@ tabbrowser > tabbox {
   display: none;
 }
 
-tabbrowser > tabbox > tabpanels {
-  -moz-appearance: none !important;
-}
-
 /**
  * Tab Drag and Drop
  */
@@ -1763,10 +1757,6 @@ tabbrowser > tabbox > tabpanels {
   list-style-image: url("chrome://global/skin/tree/item.png");
 }
 
-.alltabs-item[selected="true"] {
-  font-weight: bold;
-}
-
 .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
   list-style-image: url("chrome://global/skin/icons/loading_16.png") !important;
 }
@@ -1780,10 +1770,6 @@ tabbrowser > tabbox > tabpanels {
 
 .tabs-closebutton:hover:active {
   list-style-image: url("chrome://global/skin/icons/closetab-active.png");
-}
-
-tabpanels.plain {
-	background-color: #fff !important;
 }
 
 /* Bookmarks toolbar */

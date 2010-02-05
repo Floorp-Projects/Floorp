@@ -1002,8 +1002,8 @@ void ScrollRectIterBase::Move(ScrollRect** aUnmovedLink)
   // which adds an O(n^2) cost to this algorithm (where n is the number of
   // rectangles across x).  The reverse-x ordering from InitialSortComparator
   // avoids this for the case when rectangles are aligned in y.
-  for (ScrollRect** nextLink = aUnmovedLink;
-       ScrollRect* otherRect = *nextLink; ) {
+  for (ScrollRect** nextLink = aUnmovedLink; *nextLink; ) {
+    ScrollRect* otherRect = *nextLink;
     NS_ASSERTION(otherRect->y >= rect->y, "Scroll rectangles out of order");
     if (otherRect->y >= rect->YMost()) // doesn't overlap vertically
       break;

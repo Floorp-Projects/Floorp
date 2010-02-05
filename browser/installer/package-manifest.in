@@ -91,7 +91,11 @@
 #elifdef XP_OS2
 @BINPATH@/plugins/npnulos2.dll
 #endif
+#ifndef XP_OS2
 @BINPATH@/@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
+#else
+@BINPATH@/mozsqlt3@DLL_SUFFIX@
+#endif
 @BINPATH@/README.txt
 @BINPATH@/LICENSE
 @BINPATH@/blocklist.xml

@@ -417,7 +417,10 @@ void HandleConnection(void* data)
   client_auth_option clientAuth;
   string fullHost;
 
-  printf("SSLTUNNEL(%p): incoming connection csock(0)=%p, ssock(1)=%p\n", data, ci->client_sock, (PRFileDesc*)other_sock);
+  printf("SSLTUNNEL(%p): incoming connection csock(0)=%p, ssock(1)=%p\n",
+         static_cast<void*>(data),
+         static_cast<void*>(ci->client_sock),
+         static_cast<void*>(other_sock));
   if (other_sock) 
   {
     PRInt32 numberOfSockets = 1;
@@ -445,15 +448,17 @@ void HandleConnection(void* data)
     {
       sockets[0].in_flags |= PR_POLL_EXCEPT;
       sockets[1].in_flags |= PR_POLL_EXCEPT;
-      printf("SSLTUNNEL(%p): polling flags csock(0)=%c%c, ssock(1)=%c%c\n", data, 
-		sockets[0].in_flags & PR_POLL_READ  ? 'R' : '-', 
-		sockets[0].in_flags & PR_POLL_WRITE ? 'W' : '-',
-		sockets[1].in_flags & PR_POLL_READ  ? 'R' : '-', 
-		sockets[1].in_flags & PR_POLL_WRITE ? 'W' : '-');
+      printf("SSLTUNNEL(%p): polling flags csock(0)=%c%c, ssock(1)=%c%c\n",
+             static_cast<void*>(data),
+             sockets[0].in_flags & PR_POLL_READ  ? 'R' : '-',
+             sockets[0].in_flags & PR_POLL_WRITE ? 'W' : '-',
+             sockets[1].in_flags & PR_POLL_READ  ? 'R' : '-',
+             sockets[1].in_flags & PR_POLL_WRITE ? 'W' : '-');
       PRInt32 pollStatus = PR_Poll(sockets, numberOfSockets, PR_MillisecondsToInterval(1000));
       if (pollStatus < 0)
       {
-        printf("SSLTUNNEL(%p): pollStatus=%d, exiting\n", data, pollStatus);
+        printf("SSLTUNNEL(%p): pollStatus=%d, exiting\n",
+               static_cast<void*>(data), pollStatus);
         client_error = true;
         break;
       }
@@ -461,7 +466,8 @@ void HandleConnection(void* data)
       if (pollStatus == 0)
       {
         // timeout
-        printf("SSLTUNNEL(%p): poll timeout, looping\n", data);
+        printf("SSLTUNNEL(%p): poll timeout, looping\n",
+               static_cast<void*>(data));
         continue;
       }
 
@@ -473,7 +479,12 @@ void HandleConnection(void* data)
         PRInt16 &in_flags2 = sockets[s2].in_flags;
         sockets[s].out_flags = 0;
 
-        printf("SSLTUNNEL(%p): %csock(%d)=%p out_flags=%d", data, s==0?'c':'s', s, sockets[s].fd, out_flags);
+        printf("SSLTUNNEL(%p): %csock(%d)=%p out_flags=%d",
+               static_cast<void*>(data),
+               s == 0 ? 'c' : 's',
+               s,
+               static_cast<void*>(sockets[s].fd),
+               out_flags);
         if (out_flags & (PR_POLL_EXCEPT | PR_POLL_ERR | PR_POLL_HUP))
         {
           printf(" :exception\n");
@@ -489,7 +500,7 @@ void HandleConnection(void* data)
         if (out_flags & PR_POLL_READ && !buffers[s].free())
         {
            printf(" no place in read buffer but got read flag, dropping it now!");
-	   in_flags &= ~PR_POLL_READ;
+           in_flags &= ~PR_POLL_READ;
         }
 
         if (out_flags & PR_POLL_READ && buffers[s].free())
@@ -650,7 +661,10 @@ void HandleConnection(void* data)
   else
     client_error = true;
 
-  printf("SSLTUNNEL(%p): exiting root function for csock=%p, ssock=%p\n", data, ci->client_sock, (PRFileDesc*)other_sock);
+  printf("SSLTUNNEL(%p): exiting root function for csock=%p, ssock=%p\n",
+         static_cast<void*>(data),
+         static_cast<void*>(ci->client_sock),
+         static_cast<void*>(other_sock));
   if (!client_error)
     PR_Shutdown(ci->client_sock, PR_SHUTDOWN_SEND);
   PR_Close(ci->client_sock);

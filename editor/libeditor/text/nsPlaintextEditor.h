@@ -176,6 +176,9 @@ public:
   nsresult ExtendSelectionForDelete(nsISelection* aSelection,
                                     nsIEditor::EDirection *aAction);
 
+  static void GetDefaultEditorPrefs(PRInt32 &aNewLineHandling,
+                                    PRInt32 &aCaretStyle);
+
 protected:
 
   NS_IMETHOD  InitRules();
