@@ -305,6 +305,13 @@ function ReadManifest(aURL)
         }
     }
 
+    // Set a flag on sandbox if the windows default theme is active
+    var box = document.createElement("box");
+    box.setAttribute("id", "_box_windowsDefaultTheme");
+    document.documentElement.appendChild(box);
+    sandbox.windowsDefaultTheme = (getComputedStyle(box, null).display == "none");
+    document.documentElement.removeChild(box);
+
     var line = {value:null};
     var lineNo = 0;
     var urlprefix = "";
