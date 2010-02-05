@@ -936,6 +936,12 @@ void nsOggDecodeStateMachine::PlayFrame() {
         time = hwtime < 0.0 ?
           (TimeStamp::Now() - mPlayStartTime - mPauseDuration).ToSeconds() :
           hwtime;
+        // Resynchronize the system clock against the audio clock.
+        if (hwtime >= 0.0) {
+          mPlayStartTime = TimeStamp::Now();
+          mPlayStartTime -= TimeDuration::FromMilliseconds(hwtime * 1000.0);
+          mPauseDuration = TimeDuration(0);
+        }
         // Is it time for the next frame?  Using an integer here avoids f.p.
         // rounding errors that can cause multiple 0ms waits (Bug 495352)
         PRInt64 wait = PRInt64((frame->mTime - time)*1000);
