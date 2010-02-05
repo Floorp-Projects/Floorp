@@ -1,1 +1,1 @@
-MOZ_APP_DISPLAYNAME="Namoroka"
+MOZ_APP_DISPLAYNAME="MozillaDeveloperPreview"
