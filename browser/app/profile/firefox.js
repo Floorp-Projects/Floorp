@@ -904,7 +904,7 @@ pref("toolbar.customization.usesheet", true);
 pref("toolbar.customization.usesheet", false);
 #endif
 
-pref("dom.ipc.plugins.enabled", true);
+pref("dom.ipc.plugins.enabled", false);
 
 #ifdef XP_WIN
 #ifndef WINCE
