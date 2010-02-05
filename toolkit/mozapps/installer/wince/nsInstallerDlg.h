@@ -65,6 +65,7 @@ private:
   BOOL CreateShortcut();
   BOOL MoveSetupStrings();
   BOOL SilentFirstRun();
+  BOOL RunSetupCab();
 
   BOOL GetInstallPath(WCHAR *sPath);
   BOOL RunUninstall(BOOL *pbCancelled);
