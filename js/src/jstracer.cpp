@@ -12285,9 +12285,22 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                 tarray->type != js::TypedArray::TYPE_FLOAT32 &&
                 tarray->type != js::TypedArray::TYPE_FLOAT64) {
                 LIns *v_ins_int = demote(lir, v_ins);
+
+                if (tarray->type == js::TypedArray::TYPE_UINT8_CLAMPED) {
+                    /* Wrap v_ins_int in some magic to clamp it */
+                    v_ins_int = lir->ins_choose(lir->ins2i(LIR_lt, v_ins_int, 0),
+                                                lir->insImm(0),
+                                                lir->ins_choose(lir->ins2i(LIR_gt, v_ins_int, 0xff),
+                                                                lir->insImm(0xff),
+                                                                v_ins_int,
+                                                                avmplus::AvmCore::use_cmov()),
+                                                avmplus::AvmCore::use_cmov());
+                }
+
                 switch (tarray->type) {
                   case js::TypedArray::TYPE_INT8:
                   case js::TypedArray::TYPE_UINT8:
+                  case js::TypedArray::TYPE_UINT8_CLAMPED:
                     addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
                     lir->insStore(LIR_stb, v_ins_int, addr_ins, 0);
                     break;
@@ -12331,6 +12344,9 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                     addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2i(LIR_pilsh, pidx_ins, 3));
                     lir->insStore(LIR_stfi, v_ins, addr_ins, 0);
                     break;
+                  case js::TypedArray::TYPE_UINT8_CLAMPED:
+                    addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
+                    lir->insStore(LIR_stb, lir->insCall(&js_TypedArray_uint8_clamp_double_ci, &v_ins), addr_ins, 0);
                   default:
                     JS_NOT_REACHED("Unknown typed array type in tracer");
                 }
@@ -13297,6 +13313,7 @@ TraceRecorder::typedArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
         v_ins = lir->ins1(LIR_i2f, lir->insLoad(LIR_ldsb, addr_ins, 0));
         break;
       case js::TypedArray::TYPE_UINT8:
+      case js::TypedArray::TYPE_UINT8_CLAMPED:
         addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
         v_ins = lir->ins1(LIR_u2f, lir->insLoad(LIR_ldzb, addr_ins, 0));
         break;
