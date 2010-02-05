@@ -102,6 +102,13 @@ struct JS_FRIEND_API(TypedArray) {
         TYPE_UINT32,
         TYPE_FLOAT32,
         TYPE_FLOAT64,
+
+        /*
+         * Special type that's a uint8, but assignments are clamped to 0 .. 255.
+         * Treat the raw data type as a uint8.
+         */
+        TYPE_UINT8_CLAMPED,
+
         TYPE_MAX
     };
 
