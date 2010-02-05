@@ -719,6 +719,12 @@ namespace nanojit
     asm_output("movcc %d, %s", simm11, gpn(rd)); \
     } while (0)
 
+#define MOVCSI(simm11, cc2, cc1, cc0, rd) \
+    do { \
+    Format_4_2I(rd, 0x2c, cc2, 0x5, cc1, cc0, simm11); \
+    asm_output("movcs %d, %s", simm11, gpn(rd)); \
+    } while (0)
+
 #define MOVVSI(simm11, cc2, cc1, cc0, rd) \
     do { \
     Format_4_2I(rd, 0x2c, cc2, 7, cc1, cc0, simm11); \
