@@ -26,6 +26,8 @@
  *   Srirang G Doddihal <brahmana@doddihal.com>
  *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+ *   Michal Sciubidlo <michal.sciubidlo@gmail.com>
+ *   Andrey Ivanov <andrey.v.ivanov@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -400,6 +402,19 @@ protected:
    * (uriloader/exthandler/nsExternalHelperAppService.cpp).
    */
   nsresult OpenWithApplication();
+
+  /**
+   * Funciton extracts last modification time from passed request. If request 
+   * does not support last modification time then current time is returned.
+   * If request does not have information about last modification time then
+   * current time is returned as well.
+   *
+   * @param aRequest 
+   *        The request to extract last modification time.
+   * @return Last modification time for file. The value is milliseconds since 
+   *         midnight (00:00:00), January 1, 1970 Greenwich Mean Time (GMT).
+   */
+  NS_IMETHOD_(PRInt64) GetLastModifiedTime(nsIRequest *aRequest);
 
   nsDownloadManager *mDownloadManager;
   nsCOMPtr<nsIURI> mTarget;

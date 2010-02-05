@@ -80,10 +80,6 @@
 #include "nsThreadManager.h"
 #include "nsThreadPool.h"
 
-#ifdef DEBUG
-#include "BlockingResourceBase.h"
-#endif // ifdef DEBUG
-
 #include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"  // access to the impl of nsProxyObjectManager for the generic factory registration.
 
@@ -152,7 +148,7 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 #include "base/command_line.h"
 #include "base/message_loop.h"
 
-#include "mozilla/ipc/GeckoThread.h"
+#include "mozilla/ipc/BrowserProcessSubThread.h"
 
 using base::AtExitManager;
 using mozilla::ipc::BrowserProcessSubThread;
@@ -502,7 +498,7 @@ NS_InitXPCOM3(nsIServiceManager* *result,
     }
 
     if (!MessageLoop::current()) {
-        sMessageLoop = new MessageLoopForUI();
+        sMessageLoop = new MessageLoopForUI(MessageLoop::TYPE_MOZILLA_UI);
         NS_ENSURE_STATE(sMessageLoop);
     }
 
@@ -890,22 +886,6 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 
     TimeStamp::Shutdown();
 
-#ifdef DEBUG
-    /* FIXME bug 491977: This is only going to operate on the
-     * BlockingResourceBase which is compiled into
-     * libxul/libxpcom_core.so. Anyone using external linkage will
-     * have their own copy of BlockingResourceBase statics which will
-     * not be freed by this method.
-     *
-     * It sounds like what we really want is to be able to register a
-     * callback function to call at XPCOM shutdown.  Note that with
-     * this solution, however, we need to guarantee that
-     * BlockingResourceBase::Shutdown() runs after all other shutdown
-     * functions.
-     */
-    BlockingResourceBase::Shutdown();
-#endif
-    
     NS_LogTerm();
 
 #ifdef MOZ_IPC

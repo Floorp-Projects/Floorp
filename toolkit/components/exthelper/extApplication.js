@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 //=================================================
 // Shutdown - used to store cleanup functions which will
 //            be called on Application shutdown
@@ -103,14 +105,19 @@ EventItem.prototype = {
 
 //=================================================
 // Events constructor
-function Events() {
+function Events(notifier) {
   this._listeners = [];
+  this._notifier = notifier;
 }
 
 //=================================================
 // Events implementation
 Events.prototype = {
   addListener : function evts_al(aEvent, aListener) {
+    function hasFilter(element) {
+      return element.event == aEvent && element.listener == aListener;
+    }
+
     if (this._listeners.some(hasFilter))
       return;
 
@@ -119,21 +126,21 @@ Events.prototype = {
       listener: aListener
     });
 
-    function hasFilter(element) {
-      return element.event == aEvent && element.listener == aListener;
+    if (this._notifier) {
+      this._notifier(aEvent, aListener);
     }
   },
 
   removeListener : function evts_rl(aEvent, aListener) {
-    this._listeners = this._listeners.filter(hasFilter);
-
     function hasFilter(element) {
       return (element.event != aEvent) || (element.listener != aListener);
     }
+
+    this._listeners = this._listeners.filter(hasFilter);
   },
 
   dispatch : function evts_dispatch(aEvent, aEventItem) {
-    eventItem = new EventItem(aEvent, aEventItem);
+    var eventItem = new EventItem(aEvent, aEventItem);
 
     this._listeners.forEach(function(key){
       if (key.event == aEvent) {
@@ -490,8 +497,9 @@ Extension.prototype = {
 //=================================================
 // Extensions constructor
 function Extensions() {
-  this._extmgr = Components.classes["@mozilla.org/extensions/manager;1"]
-                           .getService(Ci.nsIExtensionManager);
+  XPCOMUtils.defineLazyServiceGetter(this, "_extmgr",
+                                     "@mozilla.org/extensions/manager;1",
+                                     "nsIExtensionManager");
 
   this._cache = {};
 
@@ -560,28 +568,22 @@ function extApplication() {
 // extApplication implementation
 extApplication.prototype = {
   initToolkitHelpers: function extApp_initToolkitHelpers() {
-    this._console = null;
-    this._storage = null;
-    this._prefs = null;
-    this._extensions = null;
-    this._events = null;
+    XPCOMUtils.defineLazyServiceGetter(this, "_info",
+                                       "@mozilla.org/xre/app-info;1",
+                                       "nsIXULAppInfo");
 
-    this._info = Components.classes["@mozilla.org/xre/app-info;1"]
-                           .getService(Ci.nsIXULAppInfo);
-
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Ci.nsIObserverService);
-
-    os.addObserver(this, "final-ui-startup", false);
-    os.addObserver(this, "quit-application-requested", false);
-    os.addObserver(this, "xpcom-shutdown", false);
+    // While the other event listeners are loaded only if needed,
+    // FUEL *must* listen for shutdown in order to clean up it's
+    // references to various services, and to remove itself as
+    // observer of any other notifications.
+    this._obs = Cc["@mozilla.org/observer-service;1"].
+                getService(Ci.nsIObserverService);
+    this._obs.addObserver(this, "xpcom-shutdown", false);
+    this._registered = {"unload": true};
   },
 
   // get this contractID registered for certain categories via XPCOMUtils
   _xpcom_categories: [
-    // make Application a startup observer
-    { category: "app-startup", service: true },
-
     // add Application as a global property for easy access
     { category: "JavaScript global privileged property" }
   ],
@@ -636,64 +638,64 @@ extApplication.prototype = {
       }
 
       // release our observers
-      var os = Components.classes["@mozilla.org/observer-service;1"]
-                         .getService(Ci.nsIObserverService);
-
-      os.removeObserver(this, "final-ui-startup");
-      os.removeObserver(this, "quit-application-requested");
-      os.removeObserver(this, "xpcom-shutdown");
-
-      this._info = null;
-      this._console = null;
-      this._prefs = null;
-      this._storage = null;
-      this._events = null;
-      this._extensions = null;
+      this._obs.removeObserver(this, "app-startup");
+      this._obs.removeObserver(this, "final-ui-startup");
+      this._obs.removeObserver(this, "quit-application-requested");
+      this._obs.removeObserver(this, "xpcom-shutdown");
     }
   },
 
   get console() {
-    if (this._console == null)
-        this._console = new Console();
-
-    return this._console;
+    let console = new Console();
+    this.__defineGetter__("console", function() console);
+    return this.console;
   },
 
   get storage() {
-    if (this._storage == null)
-        this._storage = new SessionStorage();
-
-    return this._storage;
+    let storage = new SessionStorage();
+    this.__defineGetter__("storage", function() storage);
+    return this.storage;
   },
 
   get prefs() {
-    if (this._prefs == null)
-        this._prefs = new PreferenceBranch("");
-
-    return this._prefs;
+    let prefs = new PreferenceBranch("");
+    this.__defineGetter__("prefs", function() prefs);
+    return this.prefs;
   },
 
   get extensions() {
-    if (this._extensions == null)
-      this._extensions = new Extensions();
-
-    return this._extensions;
+    let extensions = new Extensions();
+    this.__defineGetter__("extensions", function() extensions);
+    return this.extensions;
   },
 
   get events() {
-    if (this._events == null)
-        this._events = new Events();
 
-    return this._events;
+    // This ensures that FUEL only registers for notifications as needed
+    // by callers. Note that the unload (xpcom-shutdown) event is listened
+    // for by default, as it's needed for cleanup purposes.
+    var self = this;
+    function registerCheck(aEvent) {
+      var rmap = { "load": "app-startup",
+                   "ready": "final-ui-startup",
+                   "quit": "quit-application-requested"};
+      if (!(aEvent in rmap) || aEvent in self._registered)
+        return;
+
+      self._obs.addObserver(self, rmap[aEvent]);
+      self._registered[aEvent] = true;
+    }
+
+    let events = new Events(registerCheck);
+    this.__defineGetter__("events", function() events);
+    return this.events;
   },
 
   // helper method for correct quitting/restarting
   _quitWithFlags: function app__quitWithFlags(aFlags) {
-    let os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
     let cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
                                .createInstance(Components.interfaces.nsISupportsPRBool);
-    os.notifyObservers(cancelQuit, "quit-application-requested", null);
+    this._obs.notifyObservers(cancelQuit, "quit-application-requested", null);
     if (cancelQuit.data)
       return false; // somebody canceled our quit request
 

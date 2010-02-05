@@ -165,7 +165,7 @@ public:
         return NS_OK;
     }
 
-    virtual nsresult NP_GetMIMEDescription(char** mimeDesc) {
+    virtual nsresult NP_GetMIMEDescription(const char** mimeDesc) {
         if (mNP_GetMIMEDescription) {
             *mimeDesc = mNP_GetMIMEDescription();
         }

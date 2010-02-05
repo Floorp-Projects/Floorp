@@ -762,7 +762,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
     // the popup. The flag that the popup checks in the HasOpenChanged
     // method will get cleared in AdjustView which is called below.
     if (IsOpen() && (sizeChanged || mPopupFrame->HasOpenChanged()))
-      mPopupFrame->SetPopupPosition(this);
+      mPopupFrame->SetPopupPosition(this, PR_FALSE);
 
     // is the new size too small? Make sure we handle scrollbars correctly
     nsIBox* child = mPopupFrame->GetChildBox();

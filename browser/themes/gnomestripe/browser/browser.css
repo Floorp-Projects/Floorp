@@ -1111,11 +1111,6 @@ statusbarpanel#statusbar-display {
   list-style-image: url("chrome://global/skin/icons/notloading_16.png");
 }
 
-
-tabpanels {
-  -moz-appearance: none;
-}
-
 /* Tabs */
 .tabbrowser-tab {
   border: none !important;

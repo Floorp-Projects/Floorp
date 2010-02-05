@@ -34,11 +34,23 @@ var expectedOutput =
   <label anyid="true" container="true" empty="true" value="Class Birds"/>
 </output>;
 
+Components.classes["@mozilla.org/consoleservice;1"].
+           getService(Components.interfaces.nsIConsoleService).reset();
+
+expectLoggedMessages = function()
+{
+  // check log to ensure that two rows have been added
+  var initialNumber = Number(document.getElementById("root").firstChild.nextSibling.id.substring(3));
+  expectConsoleMessage('', 'row' + initialNumber, true, true, '1 matching rule 1');
+  expectConsoleMessage('', 'row' + (initialNumber + 1), true, true, '1 matching rule 1');
+}
+
 var changes = [];
 ]]>
 </script>
 
-<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root" datasources="animals.xml" querytype="xml" ref=".">
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="root"
+      flags="logging" datasources="animals.xml" querytype="xml" ref=".">
 <template>
 <query expr="class/name"/>
 <rule id="rule">

@@ -51,6 +51,9 @@ const ZOO_NS = "http://www.some-fictitious-zoo.com/";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const debug = false;
 
+var expectedConsoleMessages = [];
+var expectLoggedMessages = null;
+
 try {
   const RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].
                 getService(Components.interfaces.nsIRDFService);
@@ -86,6 +89,9 @@ function test_template()
   if (needsOpen)
     root.open = true;
 
+  if (expectLoggedMessages)
+    expectLoggedMessages();
+
   checkResults(root, 0);
 
   if (changes.length) {
@@ -102,12 +108,17 @@ function test_template()
   else {
     if (needsOpen)
       root.open = false;
+    if (expectedConsoleMessages.length)
+      compareConsoleMessages();
     SimpleTest.finish();
   }
 }
 
 function iterateChanged(root, ds)
 {
+  Components.classes["@mozilla.org/consoleservice;1"].
+             getService(Components.interfaces.nsIConsoleService).reset();
+
   for (var c = 0; c < changes.length; c++) {
     changes[c](ds, root);
     checkResults(root, c + 1);
@@ -115,6 +126,7 @@ function iterateChanged(root, ds)
 
   if (needsOpen)
     root.open = false;
+  compareConsoleMessages();
   SimpleTest.finish();
 }
 
@@ -397,4 +409,26 @@ function treeViewToDOMInner(columns, treechildren, view, builder, start, level)
   }
 
   return i;
+}
+
+function expectConsoleMessage(ref, id, isNew, isActive, extra)
+{
+  var message = "In template with id root" +
+                (ref ? " using ref " + ref : "") + "\n    " +
+                (isNew ? "New " : "Removed ") + (isActive ? "active" : "inactive") +
+                " result for query " + extra + ": " + id;
+  expectedConsoleMessages.push(message);
+}
+
+function compareConsoleMessages()
+{
+   var consoleService = Components.classes["@mozilla.org/consoleservice;1"].
+                          getService(Components.interfaces.nsIConsoleService);
+   var out = {};
+   consoleService.getMessageArray(out, {});
+   var messages = out.value || [];
+   is(messages.length, expectedConsoleMessages.length, "correct number of logged messages");
+   for (var m = 0; m < messages.length; m++) {
+     is(messages[m].message, expectedConsoleMessages.shift(), "logged message " + (m + 1));
+   }
 }

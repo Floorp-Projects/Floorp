@@ -358,6 +358,11 @@ bool
 PluginInstanceChild::AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value,
                                                             NPError* result)
 {
+    if (!mPluginIface->setvalue) {
+        *result = NPERR_GENERIC_ERROR;
+        return true;
+    }
+
     // Use `long` instead of NPBool because Flash and other plugins read
     // this as a word-size value instead of the 1-byte NPBool that it is.
     long v = value;
@@ -1144,12 +1149,7 @@ PluginInstanceChild::UnscheduleTimer(uint32_t id)
     if (0 == id)
         return;
 
-    PRUint32 i = mTimers.IndexOf(id, 0, ChildTimer::IDComparator());
-    if (nsTArray<ChildTimer*>::NoIndex == i)
-        return;
-
-    mTimers.ElementAt(i)->Destroy();
-    mTimers.RemoveElementAt(i);
+    mTimers.RemoveElement(id, ChildTimer::IDComparator());
 }
 
 bool
@@ -1159,9 +1159,7 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
         mPendingAsyncCalls[i]->Cancel();
     mPendingAsyncCalls.TruncateLength(0);
 
-    for (PRUint32 i = 0; i < mTimers.Length(); ++i)
-        mTimers[i]->Destroy();
-    mTimers.TruncateLength(0);
+    mTimers.Clear();
 
     PluginModuleChild* module = PluginModuleChild::current();
     bool retval = module->PluginInstanceDestroyed(this, aResult);

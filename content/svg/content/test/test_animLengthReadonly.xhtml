@@ -34,6 +34,10 @@ var circle = document.getElementById('circle');
 SimpleTest.waitForExplicitFinish();
 
 function main() {
+  // Start out paused at beginning of timeline
+  svg.pauseAnimations();
+  svg.setCurrentTime(0);
+
   // Sanity check: check initial values
   is(circle.cx.baseVal.value, -100);
   is(circle.cx.animVal.value, -100);
@@ -47,7 +51,6 @@ function main() {
     "(1) animVal cy is editable when not animated");
 
   // Skip to mid-way through the animation
-  svg.pauseAnimations();
   svg.setCurrentTime(4);
 
   // (2): Check that whilst animations are active the animVal's are readonly

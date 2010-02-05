@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/ipc/RPCChannel.h"
-#include "mozilla/ipc/GeckoThread.h"
 
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"

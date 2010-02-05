@@ -516,14 +516,25 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
   // Some HTML nodes need DoneAddingChildren() called to initialize
   // properly (e.g. form state restoration).
   // XXX expose ElementName group here and do switch
-  if (aName == nsHtml5Atoms::select ||
-        aName == nsHtml5Atoms::textarea ||
-#ifdef MOZ_MEDIA
-        aName == nsHtml5Atoms::video ||
-        aName == nsHtml5Atoms::audio ||
-#endif
-        aName == nsHtml5Atoms::object ||
-        aName == nsHtml5Atoms::applet) {
+  if (aName == nsHtml5Atoms::video ||
+      aName == nsHtml5Atoms::audio ||
+      aName == nsHtml5Atoms::object ||
+      aName == nsHtml5Atoms::applet) {
+    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+    NS_ASSERTION(treeOp, "Tree op allocation failed.");
+    treeOp->Init(eTreeOpDoneAddingChildren, aElement);
+    return;
+  }
+  if (aName == nsHtml5Atoms::select || 
+      aName == nsHtml5Atoms::textarea) {
+    if (!formPointer) {
+      // If form inputs don't belong to a form, their state preservation
+      // won't work right without an append notification flush at this 
+      // point. See bug 497861 and bug 539895.
+      nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+      NS_ASSERTION(treeOp, "Tree op allocation failed.");
+      treeOp->Init(eTreeOpFlushPendingAppendNotifications);
+    }
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     NS_ASSERTION(treeOp, "Tree op allocation failed.");
     treeOp->Init(eTreeOpDoneAddingChildren, aElement);

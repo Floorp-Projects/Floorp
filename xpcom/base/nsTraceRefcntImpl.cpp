@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsTraceRefcntImpl.h"
+#include "nsXPCOMPrivate.h"
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsTArray.h"
@@ -64,6 +65,8 @@
 #ifdef NS_TRACE_MALLOC
 #include "nsTraceMalloc.h"
 #endif
+
+#include "mozilla/BlockingResourceBase.h"
 
 #ifdef HAVE_LIBDL
 #include <dlfcn.h>
@@ -922,10 +925,33 @@ NS_LogInit()
 EXPORT_XPCOM_API(void)
 NS_LogTerm()
 {
+  mozilla::LogTerm();
+}
+
+namespace mozilla {
+void
+LogTerm()
+{
   NS_ASSERTION(gInitCount > 0,
                "NS_LogTerm without matching NS_LogInit");
 
   if (--gInitCount == 0) {
+#ifdef DEBUG
+    /* FIXME bug 491977: This is only going to operate on the
+     * BlockingResourceBase which is compiled into
+     * libxul/libxpcom_core.so. Anyone using external linkage will
+     * have their own copy of BlockingResourceBase statics which will
+     * not be freed by this method.
+     *
+     * It sounds like what we really want is to be able to register a
+     * callback function to call at XPCOM shutdown.  Note that with
+     * this solution, however, we need to guarantee that
+     * BlockingResourceBase::Shutdown() runs after all other shutdown
+     * functions.
+     */
+    BlockingResourceBase::Shutdown();
+#endif
+    
     if (gInitialized) {
       nsTraceRefcntImpl::DumpStatistics();
       nsTraceRefcntImpl::ResetStatistics();
@@ -937,6 +963,8 @@ NS_LogTerm()
 #endif
   }
 }
+
+} // namespace mozilla
 
 EXPORT_XPCOM_API(void)
 NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,

@@ -201,47 +201,6 @@ nsHyperTextAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-void
-nsHyperTextAccessible::CacheChildren()
-{
-  PRUint32 role;
-  GetRoleInternal(&role);
-  if (role != nsIAccessibleRole::ROLE_ENTRY &&
-      role != nsIAccessibleRole::ROLE_PASSWORD_TEXT) {
-    nsAccessible::CacheChildren();
-    return;
-  }
-
-  nsCOMPtr<nsIEditor> editor;
-  GetAssociatedEditor(getter_AddRefs(editor));
-  if (!editor) {
-    nsAccessible::CacheChildren();
-    return;
-  }
-
-  // Special case for text entry fields, go directly to editor's root for
-  // children.
-
-  nsCOMPtr<nsIDOMElement> editorRoot;
-  editor->GetRootElement(getter_AddRefs(editorRoot));
-  nsCOMPtr<nsIDOMNode> editorRootDOMNode = do_QueryInterface(editorRoot);
-  if (!editorRootDOMNode)
-    return;
-
-  nsAccessibleTreeWalker walker(mWeakShell, editorRootDOMNode, PR_TRUE);
-
-  walker.GetFirstChild();
-  while (walker.mState.accessible) {
-    nsRefPtr<nsAccessible> acc =
-      nsAccUtils::QueryObject<nsAccessible>(walker.mState.accessible);
-
-    mChildren.AppendElement(acc);
-    acc->SetParent(this);
-
-    walker.GetNextSibling();
-  }
-}
-
 // Substring must be entirely within the same text node
 nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRUint32 aStartRenderedOffset,
                                                     PRUint32 aEndRenderedOffset)

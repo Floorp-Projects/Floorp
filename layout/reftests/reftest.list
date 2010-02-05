@@ -71,6 +71,9 @@ include ../../content/test/reftest/reftest.list
 # counters/
 include counters/reftest.list
 
+# editor/
+include editor/reftest.list
+
 # generated-content/
 include generated-content/reftest.list
 

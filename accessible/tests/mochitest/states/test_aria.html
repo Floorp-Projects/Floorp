@@ -1,0 +1,196 @@
+<html>
+
+<head>
+  <title>ARIA based nsIAccessible states testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <style type="text/css">
+    .offscreen {
+      position: absolute;
+      left: -5000px;
+      top: -5000px;
+      height: 100px;
+      width: 100px;
+    }
+  </style>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/states.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // aria_autocomplete
+      testStates("textbox_autocomplete_inline", 0, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("textbox_autocomplete_list", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("textbox_autocomplete_both", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("combobox_autocomplete_inline", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("combobox_autocomplete_list", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+      testStates("combobox_autocomplete_both", STATE_HASPOPUP, EXT_STATE_SUPPORTS_AUTOCOMPLETION);
+
+      // aria-busy
+      testStates("textbox_busy_false", 0, 0, STATE_BUSY);
+      testStates("textbox_busy_true", STATE_BUSY);
+      testStates("textbox_busy_error", STATE_INVALID);
+
+      // aria-expanded
+      testStates("combobox", STATE_COLLAPSED);
+      testStates("combobox_expanded", STATE_EXPANDED);
+
+      // tri-state checkbox
+      var checkboxElem = getNode("check1");
+      if (checkboxElem) {
+        testStates(checkboxElem, STATE_CHECKED);
+        checkboxElem.checked = false;
+        testStates(checkboxElem, 0, 0, STATE_CHECKED);
+        checkboxElem.indeterminate = true;
+        testStates(checkboxElem, STATE_MIXED, 0);
+      }
+
+      // aria-checked
+      testStates("aria_checked_checkbox", STATE_CHECKED);
+      testStates("aria_mixed_checkbox", STATE_MIXED);
+
+      // test disabled group and all its descendants to see if they are
+      // disabled, too. See bug 429285.
+      testStatesInSubtree("group", STATE_UNAVAILABLE);
+
+      // offscreen test
+      testStates("aria_offscreen_textbox", STATE_OFFSCREEN);
+
+      //
+      // This section tests aria roles on links/anchors for underlying
+      // nsHTMLLinkAccessible creation. (see closed bug 494807)
+      //
+
+      // strong roles
+      testStates("aria_menuitem_link", 0, 0, STATE_LINKED);
+      testStates("aria_button_link", 0, 0, STATE_LINKED);
+      testStates("aria_checkbox_link", 0, 0, STATE_LINKED);
+
+      // strong landmark
+      testStates("aria_application_link", 0, 0, STATE_LINKED);
+      testStates("aria_application_anchor", 0, 0, STATE_SELECTABLE);
+
+      // strange cases
+      testStates("aria_link_link", STATE_LINKED);
+      testStates("aria_link_anchor", STATE_SELECTABLE);
+
+      // some weak landmarks
+      testStates("aria_main_link", STATE_LINKED);
+      testStates("aria_navigation_link", STATE_LINKED);
+      testStates("aria_main_anchor", STATE_SELECTABLE);
+      testStates("aria_navigation_anchor", STATE_SELECTABLE);
+
+      // scrollbar
+      testStates("aria_scrollbar", 0, EXT_STATE_VERTICAL);
+      testStates("aria_hscrollbar", 0, EXT_STATE_HORIZONTAL);
+      testStates("aria_vscrollbar", 0, EXT_STATE_VERTICAL);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=457219"
+     title="nsIAccessible states testing">
+    Mozilla Bug 457219
+  </a><br />
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=429285"
+     title="Propagate aria-disabled to descendants">
+    Mozilla Bug 429285
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=499653"
+     title="Unify ARIA state attributes mapping rules">
+    Mozilla Bug 499653
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="textbox_autocomplete_inline" role="textbox" aria-autocomplete="inline"></div>
+  <div id="textbox_autocomplete_list" role="textbox" aria-autocomplete="list"></div>
+  <div id="textbox_autocomplete_both" role="textbox" aria-autocomplete="both"></div>
+  <div id="combobox_autocomplete_inline" role="combobox" aria-autocomplete="inline"></div>
+  <div id="combobox_autocomplete_list" role="combobox" aria-autocomplete="list"></div>
+  <div id="combobox_autocomplete_both" role="combobox" aria-autocomplete="both"></div>
+
+  <div id="textbox_busy_false" role="textbox" aria-busy="false"></div>
+  <div id="textbox_busy_true" role="textbox" aria-busy="true"></div>
+  <div id="textbox_busy_error" role="textbox" aria-busy="error"></div>
+
+  <div id="combobox" role="combobox">combobox</div>
+  <div id="combobox_expanded" role="combobox"
+       aria-expanded="true">combobox</div>
+
+  <input type="checkbox" id="check1" value="I agree" checked="true"/>
+
+  <div id="aria_checked_checkbox" role="checkbox" aria-checked="true">
+    I agree
+  </div>
+
+  <div id="aria_mixed_checkbox" role="checkbox" aria-checked="mixed">
+    I might agree
+  </div>
+
+  <!-- Test that aria-disabled state gets propagated to all descendants -->
+  <div id="group" role="group" aria-disabled="true">
+    <button>hi</button>
+    <div tabindex="0" role="listbox" aria-activedescendant="item1">
+      <div role="option" id="item1">Item 1</div>
+      <div role="option" id="item2">Item 2</div>
+      <div role="option" id="item3">Item 3</div>
+      <div role="option" id="item4">Item 4</div>
+    </div>
+    <div role="slider" tabindex="0">A slider</div>
+  </div>
+  
+  <div id="offscreen_log" role="log" class="offscreen">
+    <div id="aria_offscreen_textbox" role="textbox" aria-readonly="true">This text should be offscreen</div>
+  </div>
+
+  <a id="aria_menuitem_link" role="menuitem" href="foo">menuitem</a>
+  <a id="aria_button_link" role="button" href="foo">button</a>
+  <a id="aria_checkbox_link" role="checkbox" href="foo">checkbox</a>
+
+  <!-- strange edge case: please don't do this in the wild -->
+  <a id="aria_link_link" role="link" href="foo">link</a>
+  <a id="aria_link_anchor" role="link" name="link_anchor">link</a>
+
+  <!-- landmarks: links -->
+  <a id="aria_application_link" role="application" href="foo">app</a>
+  <a id="aria_main_link" role="main" href="foo">main</a>
+  <a id="aria_navigation_link" role="navigation" href="foo">nav</a>
+  
+  <!-- landmarks: anchors -->
+  <a id="aria_application_anchor" role="application" name="app_anchor">app</a>
+  <a id="aria_main_anchor" role="main" name="main_anchor">main</a>
+  <a id="aria_navigation_anchor" role="navigation" name="nav_anchor">nav</a>
+
+  <!-- scrollbar -->
+  <div id="aria_scrollbar" role="scrollbar">scrollbar</a>
+  <div id="aria_hscrollbar" role="scrollbar" aria-orientation="horizontal">horizontal scrollbar</a>
+  <div id="aria_vscrollbar" role="scrollbar" aria-orientation="vertical">vertical scrollbar</a>
+</body>
+</html>

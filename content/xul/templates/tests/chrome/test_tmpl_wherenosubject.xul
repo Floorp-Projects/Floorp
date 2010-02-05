@@ -22,6 +22,10 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
+Components.classes["@mozilla.org/consoleservice;1"].
+           getService(Components.interfaces.nsIConsoleService).reset();
+expectedConsoleMessages.push("Error parsing template: <where> element is missing a subject attribute");
+
 var testid ="where - no subject";
 var queryType = "rdf";
 var isTreeBuilder = false;

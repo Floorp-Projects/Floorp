@@ -44,11 +44,7 @@ function runTests() {
   checkClipRegion("p2", [[0, 0, 200, 50], [0, 50, 50, 150], [150, 50, 200, 150], [0, 150, 200, 200]]);
 
   scroll.scrollTop = 150;
-  checkClipRegion("p2", [[0, 0, 200, 50], [0, 50, 50, 200], [150, 50, 200, 200]]);
 
-  zbox.style.zIndex = -1;
-
-  flush();
   // A non-zero timeout is needed on X11 (unless an XSync could be performed)
   // to delay an OOP plugin's X requests enough so that the X server processes
   // them after the parent processes requests (for the changes above).
@@ -56,24 +52,30 @@ function runTests() {
 }
 
 function part2() {
-  checkClipRegion("p2", [[0, 0, 200, 100], [0, 100, 50, 200], [150, 100, 200, 200]]);
+  checkClipRegion("p2", [[0, 0, 200, 50], [0, 50, 50, 200], [150, 50, 200, 200]]);
 
-  sbox.style.background = "";
+  zbox.style.zIndex = -1;
 
-  flush();
   setTimeout(part3, 1000);
 }
 
 function part3() {
-  checkClipRegion("p2", [[0, 0, 200, 200]]);
-  
-  p1.style.zIndex = 1;
+  checkClipRegion("p2", [[0, 0, 200, 100], [0, 100, 50, 200], [150, 100, 200, 200]]);
 
-  flush();
+  sbox.style.background = "";
+
   setTimeout(part4, 1000);
 }
 
 function part4() {
+  checkClipRegion("p2", [[0, 0, 200, 200]]);
+  
+  p1.style.zIndex = 1;
+
+  setTimeout(part5, 1000);
+}
+
+function part5() {
   checkClipRegion("p1", [[0, 0, 200, 200]]);
   checkClipRegion("p2", [[0, 100, 200, 200]]);
 
@@ -83,7 +85,6 @@ function part4() {
   zbox.style.top = "50.3px;"
   d2.style.top = "100.3px";
 
-  flush();
   setTimeout(done, 1000);
 }
 
@@ -94,14 +95,6 @@ function done() {
   window.close();
 }
 
-function flush() {
-  // This function is for X11 to flush the Xlib request queue.  It takes
-  // advantage of the current scrolling implementation, which will do this for
-  // us.  Beware though, it does not wait for the X server to process the
-  // events.
-  ++scroll.scrollTop;
-  --scroll.scrollTop;
-}
 ]]>
 </script>
 

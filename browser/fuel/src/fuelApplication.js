@@ -43,49 +43,39 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 //=================================================
 // Singleton that holds services and utilities
 var Utilities = {
-  _bookmarks : null,
   get bookmarks() {
-    if (!this._bookmarks) {
-      this._bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                        getService(Ci.nsINavBookmarksService);
-    }
-    return this._bookmarks;
+    let bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                    getService(Ci.nsINavBookmarksService);
+    this.__defineGetter__("bookmarks", function() bookmarks);
+    return this.bookmarks;
   },
 
-  _livemarks : null,
   get livemarks() {
-    if (!this._livemarks) {
-      this._livemarks = Cc["@mozilla.org/browser/livemark-service;2"].
-                        getService(Ci.nsILivemarkService);
-    }
-    return this._livemarks;
+    let livemarks = Cc["@mozilla.org/browser/livemark-service;2"].
+                    getService(Ci.nsILivemarkService);
+    this.__defineGetter__("livemarks", function() livemarks);
+    return this.livemarks;
   },
 
-  _annotations : null,
   get annotations() {
-    if (!this._annotations) {
-      this._annotations = Cc["@mozilla.org/browser/annotation-service;1"].
-                          getService(Ci.nsIAnnotationService);
-    }
-    return this._annotations;
+    let annotations = Cc["@mozilla.org/browser/annotation-service;1"].
+                      getService(Ci.nsIAnnotationService);
+    this.__defineGetter__("annotations", function() annotations);
+    return this.annotations;
   },
 
-  _history : null,
   get history() {
-    if (!this._history) {
-      this._history = Cc["@mozilla.org/browser/nav-history-service;1"].
-                      getService(Ci.nsINavHistoryService);
-    }
-    return this._history;
+    let history = Cc["@mozilla.org/browser/nav-history-service;1"].
+                  getService(Ci.nsINavHistoryService);
+    this.__defineGetter__("history", function() history);
+    return this.history;
   },
 
-  _windowMediator : null,
   get windowMediator() {
-    if (!this._windowMediator) {
-      this._windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
-                             getService(Ci.nsIWindowMediator);
-    }
-    return this._windowMediator;
+    let windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
+                         getService(Ci.nsIWindowMediator);
+    this.__defineGetter__("windowMediator", function() windowMediator);
+    return this.windowMediator;
   },
 
   makeURI : function(aSpec) {
@@ -96,11 +86,11 @@ var Utilities = {
   },
 
   free : function() {
-    this._bookmarks = null;
-    this._livemarks = null;
-    this._annotations = null;
-    this._history = null;
-    this._windowMediator = null;
+    delete this.bookmarks;
+    delete this.livemarks
+    delete this.annotations;
+    delete this.history;
+    delete this.windowMediator;
   }
 };
 
@@ -687,10 +677,12 @@ Application.prototype = {
   _xpcom_factory: ApplicationFactory,
 
   // for nsISupports
-  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIApplication, Ci.extIApplication, Ci.nsIObserver, Ci.nsIClassInfo]),
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIApplication, Ci.extIApplication,
+                                          Ci.nsIObserver, Ci.nsIClassInfo]),
 
   getInterfaces : function app_gi(aCount) {
-    var interfaces = [Ci.fuelIApplication, Ci.extIApplication, Ci.nsIObserver, Ci.nsIClassInfo];
+    var interfaces = [Ci.fuelIApplication, Ci.extIApplication, Ci.nsIObserver,
+                      Ci.nsIClassInfo];
     aCount.value = interfaces.length;
     return interfaces;
   },
@@ -700,16 +692,16 @@ Application.prototype = {
     // Call the extApplication version of this function first
     this.__proto__.__proto__.observe.call(this, aSubject, aTopic, aData);
     if (aTopic == "xpcom-shutdown") {
+      this._obs.removeObserver(this, "xpcom-shutdown");
       this._bookmarks = null;
       Utilities.free();
     }
   },
 
   get bookmarks() {
-    if (this._bookmarks == null)
-      this._bookmarks = new BookmarkRoots();
-
-    return this._bookmarks;
+    let bookmarks = new BookmarkRoots();
+    this.__defineGetter__("bookmarks", function() bookmarks);
+    return this.bookmarks;
   },
 
   get windows() {

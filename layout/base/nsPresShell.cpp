@@ -5819,6 +5819,7 @@ nsIPresShell::SetCapturingContent(nsIContent* aContent, PRUint8 aFlags)
       NS_ADDREF(gCaptureInfo.mContent = aContent);
     }
     gCaptureInfo.mRetargetToElement = (aFlags & CAPTURE_RETARGETTOELEMENT) != 0;
+    gCaptureInfo.mPreventDrag = (aFlags & CAPTURE_PREVENTDRAG) != 0;
   }
 }
 
@@ -6280,7 +6281,8 @@ PresShell::HandleEvent(nsIView         *aView,
       mCurrentEventFrame = nsnull;
 
         
-      if (!mCurrentEventContent || InZombieDocument(mCurrentEventContent)) {
+      if (!mCurrentEventContent || !GetCurrentEventFrame() ||
+          InZombieDocument(mCurrentEventContent)) {
         rv = RetargetEventToParent(aEvent, aEventStatus);
         PopCurrentEventInfo();
         return rv;
@@ -7030,6 +7032,11 @@ PresShell::Freeze()
 
   if (mDocument)
     mDocument->EnumerateSubDocuments(FreezeSubDocument, nsnull);
+
+  nsPresContext* presContext = GetPresContext();
+  if (presContext) {
+    presContext->RefreshDriver()->Freeze();
+  }
 }
 
 void
@@ -7079,6 +7086,11 @@ ThawSubDocument(nsIDocument *aDocument, void *aData)
 void
 PresShell::Thaw()
 {
+  nsPresContext* presContext = GetPresContext();
+  if (presContext) {
+    presContext->RefreshDriver()->Thaw();
+  }
+
   mDocument->EnumerateFreezableElements(ThawElement, this);
 
   if (mDocument)
