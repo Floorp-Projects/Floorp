@@ -68,7 +68,10 @@ function runTests()
                      getInterface(Components.interfaces.nsIDOMWindowUtils);
   utils.processUpdates();
 
+  setTimeout(finishTests, 0);
+}
 
+function finishTests() {
   // test that setCapture works on an area element (bug 517737)
   var area = document.getElementById("area");
   synthesizeMouse(area, 5, 5, { type: "mousedown" });
