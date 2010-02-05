@@ -181,6 +181,19 @@ function test()
     checkThrows(function() a[-10] = 0);
     check(function() (a[0] = "10") && (a[0] == 10));
 
+
+    // check Uint8ClampedArray, which is an extension to this extension
+    a = new Uint8ClampedArray(4);
+    a[0] = 128;
+    a[1] = 512;
+    a[2] = -123.723;
+    a[3] = "foopy";
+
+    check(function() a[0] == 128);
+    check(function() a[1] == 255);
+    check(function() a[2] == 0);
+    check(function() a[3] == 0);
+
     print ("done");
 
     reportCompare(0, TestFailCount, "typed array tests");
