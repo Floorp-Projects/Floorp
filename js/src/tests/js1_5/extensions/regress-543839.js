@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/
@@ -25,9 +25,15 @@ function test()
     return 1;
 }
 
-test();
-test();
-test();
-actual = evalcx("test()", this);
+if (typeof evalcx == 'undefined')
+{
+    print('Skipping. This test requires evalcx.');
+    actual = expect;
+} else {
+    test();
+    test();
+    test();
+    actual = evalcx("test()", this);
+}
 
 reportCompare(expect, actual, summary);
