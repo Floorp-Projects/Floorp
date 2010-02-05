@@ -2959,7 +2959,7 @@ sandbox_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
 static JSClass sandbox_class = {
     "sandbox",
-    JSCLASS_NEW_RESOLVE,
+    JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,   JS_PropertyStub,
     JS_PropertyStub,   JS_PropertyStub,
     sandbox_enumerate, (JSResolveOp)sandbox_resolve,
