@@ -51,7 +51,11 @@ CPPSRCS = \
 
 LIBS += $(DEPTH)/toolkit/mozapps/readstrings/$(LIB_PREFIX)readstrings.$(LIB_SUFFIX)
 
+OS_LIBS += aygshell.lib commctrl.lib
+
 LOCAL_INCLUDES += -I$(srcdir)/.. -I$(srcdir)/../../../readstrings
+
+RCINCLUDE = Uninstall.rc
 
 # Statically link the CRT when possible
 USE_STATIC_LIBS = 1

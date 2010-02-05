@@ -1,4 +1,3 @@
-/* -*- Mode: C++; c-basic-offset: 2; tab-width: 8; indent-tabs-mode: nil; -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is The Mozilla Foundation.
  *
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -36,49 +35,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#pragma once
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
 
-/**
- * nsInstallerDlg dialog
- */
-class nsInstallerDlg : public nsExtractorProgress
-{
-public:
-  static nsInstallerDlg* GetInstance();
-  void Init(HINSTANCE hInst);
-  int DoModal();
-  virtual void Progress(int n); // gets progress notifications
-  INT_PTR DlgMain(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-  const WCHAR* GetExtractPath() { return m_sInstallPath; }
+#define APSTUDIO_READONLY_SYMBOLS
+#include "resdefce.h"
 
-private:
-  nsInstallerDlg();
-  BOOL OnInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam);
-  void FindMemCards();
-  BOOL OnDialogCreated(HWND hDlg);
-  BOOL OnBtnExtract();
-  LRESULT SendMessageToControl(int nCtlID, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
-  void SetControlWindowText(int nCtlID, const WCHAR *sText);
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
 
-  BOOL PostExtract();
-  BOOL StoreInstallPath();
-  BOOL CreateShortcut();
-  BOOL MoveSetupStrings();
-  BOOL SilentFirstRun();
+/////////////////////////////////////////////////////////////////////////////
+// Dialog
 
-  BOOL GetInstallPath(WCHAR *sPath);
-  BOOL RunUninstall(BOOL *pbCancelled);
+IDD_MAIN DIALOG  0, 0, 120, 77
+STYLE DS_CENTER | DS_SETFONT | DS_SETFOREGROUND | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION
+EXSTYLE 0x80000000L
+CAPTION "Uninstall"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_STATIC_TEXT,6,6,108,24,SS_NOPREFIX
+    LTEXT           "Uninstall?",IDC_QUESTION_TEXT,6,32,132,11,SS_NOPREFIX
+    PUSHBUTTON      "Uninstall",IDC_BTN_UNINSTALL,15,50,40,20
+    PUSHBUTTON      "Cancel",IDCANCEL,65,50,40,20
+    PUSHBUTTON      "OK",IDOK,35,50,50,20
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,4,52,110,9
+END
 
-  void AddErrorMsg(WCHAR* sErr);
-  BOOL FastStartFileExists();
+HI_RES_AWARE CEUX {1}	// turn off the emulation layer
 
-  static const int c_nMaxErrorLen = 2048;
-
-  HINSTANCE m_hInst;
-  HWND m_hDlg;
-  BOOL m_bFastStart;
-  WCHAR m_sProgramFiles[MAX_PATH];
-  WCHAR m_sExtractPath[MAX_PATH];
-  WCHAR m_sInstallPath[MAX_PATH];
-  WCHAR m_sErrorMsg[c_nMaxErrorLen];
-};
+#undef APSTUDIO_READONLY_SYMBOLS
