@@ -641,7 +641,7 @@ namespace nanojit
         else if (op == LIR_ge)
             MOVGEI(1, 1, 0, 0, r);
         else if (op == LIR_ult)
-            MOVEI(1, 1, 0, 0, r);
+            MOVCSI(1, 1, 0, 0, r);
         else if (op == LIR_ule)
             MOVLEUI(1, 1, 0, 0, r);
         else if (op == LIR_ugt)
