@@ -2290,11 +2290,6 @@ namespace nanojit
         }
     }
 
-#define HOWTO_DEBUG \
-    "  One way to debug this:  change the failing NanoAssertMsgf(0, ...) call to a\n" \
-    "  printf(...) call and rerun with verbose output.  If you're lucky, this error\n" \
-    "  message will appear before the block containing the erroneous instruction.\n\n"
-
     void ValidateWriter::typeCheckArgs(LOpcode op, int nArgs, LTy formals[], LIns* args[])
     {
         // Type-check the arguments.
@@ -2309,15 +2304,10 @@ namespace nanojit
                 // to be caught by test suites whereas error messages may not
                 // be.
                 NanoAssertMsgf(0,
-                    "\n\n"
-                    "LIR type error (%s):\n"
-                    "  in instruction with opcode: %s\n"
-                    "  in argument %d with opcode: %s\n"
-                    "  argument has type %s, expected %s\n"
-                    HOWTO_DEBUG,
-                    _whereInPipeline,
-                    lirNames[op],
-                    i+1, lirNames[args[i]->opcode()],
+                    "LIR type error (%s): arg %d of '%s' is '%s' "
+                    "which has type %s (expected %s)",
+                    _whereInPipeline, i+1, lirNames[op],
+                    lirNames[args[i]->opcode()],
                     type2string(actual), type2string(formal));
             }
         }
@@ -2327,27 +2317,16 @@ namespace nanojit
                                                 LIns* arg, const char* shouldBeDesc)
     {
         NanoAssertMsgf(0,
-            "\n\n"
-            "  LIR structure error (%s):\n"
-            "    in instruction with opcode: %s\n"
-            "    %s %d has opcode: %s\n"
-            "    it should be: %s\n"
-            HOWTO_DEBUG,
-            _whereInPipeline,
-            lirNames[op],
-            argDesc, argN, lirNames[arg->opcode()],
-            shouldBeDesc);
+            "LIR structure error (%s): %s %d of '%s' is '%s' (expected %s)",
+            _whereInPipeline, argDesc, argN, 
+            lirNames[op], lirNames[arg->opcode()], shouldBeDesc);
     }
 
     void ValidateWriter::errorPlatformShouldBe(LOpcode op, int nBits)
     {
         NanoAssertMsgf(0,
-            "\n\n"
-            "  LIR structure error (%s):\n"
-            "    %s should only occur on %d-bit platforms\n"
-            HOWTO_DEBUG,
-            _whereInPipeline,
-            lirNames[op], nBits);
+            "LIR platform error (%s): '%s' should only occur on %d-bit platforms",
+            _whereInPipeline, lirNames[op], nBits);
     }
 
     void ValidateWriter::checkLInsIsACondOrConst(LOpcode op, int argN, LIns* ins)

@@ -766,9 +766,11 @@ FragmentAssembler::endFragment()
     if (mParent.mAssm.error() != nanojit::None) {
         cerr << "error during assembly: ";
         switch (mParent.mAssm.error()) {
+          case nanojit::ConditionalBranchTooFar: cerr << "ConditionalBranchTooFar"; break;
           case nanojit::StackFull: cerr << "StackFull"; break;
           case nanojit::UnknownBranch: cerr << "UnknownBranch"; break;
           case nanojit::None: cerr << "None"; break;
+          default: NanoAssert(0); break;
         }
         cerr << endl;
         std::exit(1);
@@ -2169,9 +2171,6 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
     avmplus::AvmCore::config.arm_arch = arm_arch;
     avmplus::AvmCore::config.arm_vfp = arm_vfp;
     avmplus::AvmCore::config.soft_float = !arm_vfp;
-    // This doesn't allow us to test ARMv6T2 (which also supports Thumb2), but this shouldn't
-    // really matter here.
-    avmplus::AvmCore::config.arm_thumb2 = (arm_arch >= 7);
 #endif
 }
 

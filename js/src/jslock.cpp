@@ -1294,6 +1294,12 @@ js_DropAllEmptyScopeLocks(JSContext *cx, JSScope *scope)
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return;
 
+    /*
+     * The title cannot be owned at this point by another cx on this or
+     * another thread as that would imply a missing JS_LOCK_OBJ call.
+     */
+    JS_ASSERT(!scope->title.ownercx);
+
     LOGIT(&scope->title, '0');
     scope->title.u.count = 0;
     ThinUnlock(&scope->title.lock, CX_THINLOCK_ID(cx));

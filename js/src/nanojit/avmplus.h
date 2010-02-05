@@ -226,22 +226,6 @@ namespace avmplus {
         unsigned int arm_arch;
 # endif
 
-        // Support for Thumb, even if it isn't used by nanojit. This is used to
-        // determine whether or not to generate interworking branches.
-# if defined (NJ_FORCE_NO_ARM_THUMB)
-        static const bool arm_thumb = false;
-# else
-        bool arm_thumb;
-# endif
-
-        // Support for Thumb2, even if it isn't used by nanojit. This is used to
-        // determine whether or not to use some of the ARMv6T2 instructions.
-# if defined (NJ_FORCE_NO_ARM_THUMB2)
-        static const bool arm_thumb2 = false;
-# else
-        bool arm_thumb2;
-# endif
-
 #endif
 
 #if defined (NJ_FORCE_SOFTFLOAT)
