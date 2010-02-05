@@ -211,7 +211,7 @@ ifeq ($(OS_ARCH),OS2)
 RESFILE=splashos2.res
 RCFLAGS += -DMOZ_PHOENIX
 ifdef BUILD_STATIC_LIBS
-RCFLAGS += -DMOZ_STATIC_BUILD -i $(DIST)/include/widget
+RCFLAGS += -DMOZ_STATIC_BUILD -i $(DIST)/include
 endif
 ifdef DEBUG
 RCFLAGS += -DDEBUG
