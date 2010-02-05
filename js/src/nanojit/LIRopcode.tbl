@@ -104,9 +104,10 @@ OPDEF(jtbl,     23, Jtbl, Void) // jump to address in table
 OPDEF(int,      24, I,    I32)  // constant 32-bit integer
 OPDEF(cmov,     25, Op3,  I32)  // conditional move
 // LIR_callh is a hack that's only used on 32-bit platforms that use SoftFloat.
-// Its operand is always a LIR_fcall, and it indicates that the 64-bit float
-// return value is being returned via two 32-bit registers.  The result is
-// always used as the first operand of a LIR_qjoin.
+// Its operand is always a LIR_icall, but one that specifies a function that
+// returns a 64-bit float.  It indicates that the 64-bit float return value is
+// being returned via two 32-bit integer registers.  The result is always used
+// as the second operand of a LIR_qjoin.
 OPDEF(callh,    26, Op1,  I32)
 
 // feq though fge must only be used on float arguments.  They return integers.
