@@ -44,6 +44,7 @@
 
 #include <windows.h>
 #include <aygshell.h>
+#include <cfgmgrapi.h>
 
 #include "nsSetupStrings.h"
 #include "resource.h"
@@ -53,12 +54,17 @@
 const WCHAR c_sStringsFile[] = L"setup.ini";
 nsSetupStrings Strings;
 
+BOOL g_bRunFromSetupDll = FALSE;
+
 WCHAR g_sInstallPath[MAX_PATH];
 WCHAR g_sUninstallPath[MAX_PATH];
 HWND g_hDlg = NULL;
 
+const WCHAR c_sAppRegKeyTemplate[] = L"Software\\Mozilla\\%s";
+
 const DWORD c_nTempBufSize = MAX_PATH * 2;
 const WCHAR c_sRemoveParam[] = L"[remove]";
+const WCHAR c_sSetupParam[] = L"[setup]";   // means executed by Setup.dll
 
 // Retry counter for the file/directory deletion
 int nTotalRetries = 0;
@@ -88,6 +94,7 @@ BOOL DeleteDirectory(const WCHAR* sPathToDelete);
 BOOL DeleteRegistryKey();
 BOOL CopyAndLaunch();
 BOOL ShutdownFastStartService(const WCHAR *sInstallPath);
+BOOL RunSystemUninstall();
 
 BOOL CALLBACK DlgUninstall(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 BOOL OnDialogInit(HWND hDlg);
@@ -108,6 +115,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
   WCHAR *sCommandLine = GetCommandLine();
   WCHAR *sRemoveParam = wcsstr(sCommandLine, c_sRemoveParam);
+  WCHAR g_bRunFromSetupDll = (wcsstr(sCommandLine, c_sSetupParam) != NULL);
   if (sRemoveParam != NULL)
   {
     // Launched from a temp directory with parameters "[remove] \Program Files\Fennec\"
@@ -151,6 +159,9 @@ int Uninstall(HWND hWnd)
   DeleteDirectory(g_sInstallPath);
   DeleteShortcut(hWnd);
   DeleteRegistryKey();
+
+  if (!g_bRunFromSetupDll)
+    RunSystemUninstall();
 
   // TODO: May probably handle errors during deletion (such as locked directories)
   // and notify user. Right now just return OK.
@@ -295,7 +306,7 @@ BOOL GetInstallPath(WCHAR *sPath)
 {
   HKEY hKey;
   WCHAR sRegFennecKey[MAX_PATH];
-  _snwprintf(sRegFennecKey, MAX_PATH, L"Software\\%s", Strings.GetString(StrID_AppShortName));
+  _snwprintf(sRegFennecKey, MAX_PATH, c_sAppRegKeyTemplate, Strings.GetString(StrID_AppShortName));
 
   LONG result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, sRegFennecKey, 0, KEY_ALL_ACCESS, &hKey);
   if (result == ERROR_SUCCESS)
@@ -428,7 +439,8 @@ BOOL DeleteShortcut(HWND hwndParent)
 BOOL DeleteRegistryKey()
 {
   WCHAR sRegFennecKey[MAX_PATH];
-  _snwprintf(sRegFennecKey, MAX_PATH, L"Software\\%s", Strings.GetString(StrID_AppShortName));
+  _snwprintf(sRegFennecKey, MAX_PATH, c_sAppRegKeyTemplate, Strings.GetString(StrID_AppShortName));
+
   LONG result = RegDeleteKey(HKEY_LOCAL_MACHINE, sRegFennecKey);
   return (result == ERROR_SUCCESS);
 }
@@ -444,7 +456,10 @@ BOOL CopyAndLaunch()
   {
     PROCESS_INFORMATION pi;
     WCHAR sParam[c_nTempBufSize];
-    _snwprintf(sParam, c_nTempBufSize, L"%s %s", c_sRemoveParam, g_sUninstallPath);
+    if (g_bRunFromSetupDll)
+      _snwprintf(sParam, c_nTempBufSize, L"%s %s %s", c_sSetupParam, c_sRemoveParam, g_sUninstallPath);
+    else
+      _snwprintf(sParam, c_nTempBufSize, L"%s %s", c_sRemoveParam, g_sUninstallPath);
 
     // Launch "\Temp\uninstall.exe remove \Program Files\Fennec\"
     return CreateProcess(sNewName, sParam, NULL, NULL, FALSE, 0, NULL, NULL, NULL, &pi);
@@ -503,4 +518,26 @@ BOOL ShutdownFastStartService(const WCHAR *wsInstallPath)
     result = (handle == NULL);
   }
   return result;
+}
+
+// Remove the part installed from the CAB
+BOOL RunSystemUninstall()
+{
+  WCHAR sXML[c_nTempBufSize];
+  LPWSTR sXMLOut = NULL;
+
+  _snwprintf(sXML, c_nTempBufSize,
+             L"<wap-provisioningdoc>"
+             L"  <characteristic type=\"UnInstall\">"
+             L"    <characteristic type=\"%s\">"
+             L"      <parm name=\"uninstall\" value=\"1\" />"
+             L"    </characteristic>"
+             L"  </characteristic>"
+             L"</wap-provisioningdoc>",
+             Strings.GetString(StrID_AppLongName));
+
+  HRESULT hr = DMProcessConfigXML(sXML, CFGFLAG_PROCESS, &sXMLOut);
+  delete[] sXMLOut;
+
+  return hr == S_OK;
 }
