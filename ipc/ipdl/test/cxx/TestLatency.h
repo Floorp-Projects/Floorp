@@ -38,9 +38,12 @@ protected:
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
 
-        passed("average ping/pong latency: %g sec, average ping5/pong5 latency: %g sec",
+        passed("average ping/pong latency: %g sec, "
+               "average ping5/pong5 latency: %g sec, "
+               "average RPC call/answer: %g sec",
                mPPTimeTotal.ToSecondsSigDigits() / (double) NR_TRIALS,
-               mPP5TimeTotal.ToSecondsSigDigits() / (double) NR_TRIALS);
+               mPP5TimeTotal.ToSecondsSigDigits() / (double) NR_TRIALS,
+               mRpcTimeTotal.ToSecondsSigDigits() / (double) NR_TRIALS);
 
         QuitParent();
     }
@@ -48,11 +51,13 @@ protected:
 private:
     void PingPongTrial();
     void Ping5Pong5Trial();
+    void RpcTrials();
     void Exit();
 
     TimeStamp mStart;
     TimeDuration mPPTimeTotal;
     TimeDuration mPP5TimeTotal;
+    TimeDuration mRpcTimeTotal;
 
     int mPPTrialsToGo;
     int mPP5TrialsToGo;
@@ -74,6 +79,8 @@ protected:
     virtual bool RecvPing();
     NS_OVERRIDE
     virtual bool RecvPing5();
+    NS_OVERRIDE
+    virtual bool AnswerRpc();
 
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why)
