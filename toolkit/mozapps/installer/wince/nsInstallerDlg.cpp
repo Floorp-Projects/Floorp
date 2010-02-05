@@ -45,13 +45,13 @@
 #include <windows.h>
 #include <projects.h>
 #include <aygshell.h>
-#include <DeviceResolutionAware.h>
-#define SHELL_AYGSHELL
 
 #include "nsSetupStrings.h"
 #include "nsInstaller.h"
 #include "ns7zipExtractor.h"
 #include "nsInstallerDlg.h"
+
+#define WM_DIALOGCREATED (WM_USER + 1)
 
 const WCHAR c_sInstallPathTemplate[] = L"%s\\%s";
 const WCHAR c_sExtractCardPathTemplate[] = L"\\%s%s\\%s";
@@ -59,7 +59,7 @@ const WCHAR c_sAppRegKeyTemplate[] = L"Software\\%s";
 const WCHAR c_sFastStartTemplate[] = L"%s\\%sfaststart.exe";
 
 // Message handler for the dialog
-INT_PTR CALLBACK DlgMain(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+BOOL CALLBACK DlgMain(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
   return nsInstallerDlg::GetInstance()->DlgMain(hDlg, message, wParam, lParam);
 }
@@ -97,61 +97,46 @@ int nsInstallerDlg::DoModal()
   return (int)DialogBox(m_hInst, (LPCTSTR)IDD_MAIN, 0, ::DlgMain);
 }
 
-INT_PTR CALLBACK nsInstallerDlg::DlgMain(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+BOOL CALLBACK nsInstallerDlg::DlgMain(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message)
   {
     case WM_INITDIALOG:
       return OnInitDialog(hDlg, wParam, lParam);
 
+    case WM_DIALOGCREATED:
+      return OnDialogCreated(hDlg);
+
     case WM_COMMAND:
       switch (LOWORD(wParam))
       {
         case IDOK:
-          {
-            EndDialog(hDlg, LOWORD(wParam));
-            return (INT_PTR)TRUE;
-          }
-
         case IDCANCEL:
-          {
-            EndDialog(hDlg, LOWORD(wParam));
-            return (INT_PTR)FALSE;
-          }
+          EndDialog(hDlg, LOWORD(wParam));
+          return TRUE;
 
         case IDC_BTN_INSTALL:
-          {
-            if (OnBtnExtract())
-            {
-              EndDialog(hDlg, IDOK);
-              return (INT_PTR)TRUE;
-            }
-            else
-              return (INT_PTR)FALSE;
-          }
-        }
-        break;
+          if (OnBtnExtract())
+            EndDialog(hDlg, IDOK);
+          return TRUE;
+      }
+      break;
 
     case WM_CLOSE:
       EndDialog(hDlg, message);
-      return (INT_PTR)TRUE;
-
+      return TRUE;
   }
-  return (INT_PTR)FALSE;
+  return FALSE;
 }
 
 BOOL nsInstallerDlg::OnInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam)
 {
-#ifdef SHELL_AYGSHELL
-  {
-    // Create a Done button and size it.  
-    SHINITDLGINFO shidi;
-    shidi.dwMask = SHIDIM_FLAGS;
-    shidi.dwFlags = SHIDIF_DONEBUTTON | SHIDIF_SIPDOWN | SHIDIF_SIZEDLGFULLSCREEN | SHIDIF_EMPTYMENU;
-    shidi.hDlg = hDlg;
-    SHInitDialog(&shidi);
-  }
-#endif // SHELL_AYGSHELL
+  // Create a Done button and size it.  
+  SHINITDLGINFO shidi;
+  shidi.dwMask = SHIDIM_FLAGS;
+  shidi.dwFlags = SHIDIF_DONEBUTTON | SHIDIF_SIPDOWN | SHIDIF_SIZEDLGFULLSCREEN | SHIDIF_EMPTYMENU;
+  shidi.hDlg = hDlg;
+  SHInitDialog(&shidi);
 
   m_hDlg = hDlg;
 
@@ -168,14 +153,14 @@ BOOL nsInstallerDlg::OnInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam)
              m_sProgramFiles, Strings.GetString(StrID_AppShortName));
 
   SendMessageToControl(IDC_CMB_PATH, CB_ADDSTRING, 0, (LPARAM)(m_sInstallPath));
-
   FindMemCards();
+  SendMessageToControl(IDC_CMB_PATH, CB_SETCURSEL, 0, 0);
 
-  SendMessageToControl(IDC_CMB_PATH, CB_SETCURSEL, 0, 0 );
+  EnableWindow(GetDlgItem(m_hDlg, IDC_BTN_INSTALL), FALSE);
 
-  RunUninstall();
+  PostMessage(m_hDlg, WM_DIALOGCREATED, 0, 0);
 
-  return (INT_PTR)TRUE;
+  return TRUE;
 }
 
 void nsInstallerDlg::FindMemCards()
@@ -197,12 +182,29 @@ void nsInstallerDlg::FindMemCards()
   }
 }
 
+BOOL nsInstallerDlg::OnDialogCreated(HWND hDlg)
+{
+  BOOL bUninstallCancelled = FALSE;
+  if (RunUninstall(&bUninstallCancelled) && bUninstallCancelled)
+  {
+    // Cancel installation
+    PostMessage(hDlg, WM_CLOSE, 0, 0);
+  }
+  else
+    EnableWindow(GetDlgItem(m_hDlg, IDC_BTN_INSTALL), TRUE);
+
+  return TRUE;
+}
+
 BOOL nsInstallerDlg::OnBtnExtract()
 {
   BOOL bResult = FALSE;
 
+  EnableWindow(GetDlgItem(m_hDlg, IDC_BTN_INSTALL), FALSE);
+  EnableWindow(GetDlgItem(m_hDlg, IDCANCEL), FALSE);
+
   int nPathIndex = SendMessageToControl(IDC_CMB_PATH, CB_GETCURSEL, 0, 0);
-  if (nPathIndex >=0 )
+  if (nPathIndex >= 0)
     SendMessageToControl(IDC_CMB_PATH, CB_GETLBTEXT, nPathIndex, (LPARAM)(m_sInstallPath));
 
   wcscpy(m_sExtractPath, m_sInstallPath);
@@ -223,6 +225,9 @@ BOOL nsInstallerDlg::OnBtnExtract()
     Progress(100); // 100%
     bResult = PostExtract();
   }
+
+  EnableWindow(GetDlgItem(m_hDlg, IDC_BTN_INSTALL), TRUE);
+  EnableWindow(GetDlgItem(m_hDlg, IDCANCEL), TRUE);
 
   if (bResult)
   {
@@ -245,7 +250,7 @@ BOOL nsInstallerDlg::OnBtnExtract()
 
 LRESULT nsInstallerDlg::SendMessageToControl(int nCtlID, UINT Msg, WPARAM wParam /*= 0*/, LPARAM lParam /*= 0*/)
 {
-  return SendMessage( GetDlgItem(m_hDlg, nCtlID), Msg, wParam, lParam);
+  return SendMessage(GetDlgItem(m_hDlg, nCtlID), Msg, wParam, lParam);
 }
 
 void nsInstallerDlg::SetControlWindowText(int nCtlID, const WCHAR *sText)
@@ -260,7 +265,7 @@ void nsInstallerDlg::SetControlWindowText(int nCtlID, const WCHAR *sText)
 ///////////////////////////////////////////////////////////////////////////////
 void nsInstallerDlg::Progress(int n)
 {
-  SendMessageToControl( IDC_PROGRESS, PBM_SETPOS, (WPARAM)n, 0);
+  SendMessageToControl(IDC_PROGRESS, PBM_SETPOS, (WPARAM)n, 0);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -268,31 +273,26 @@ void nsInstallerDlg::Progress(int n)
 // PostExtract - additional step after extraction
 //
 //////////////////////////////////////////////////////////////////////////
+
+#define RUN_AND_CHECK(fn) \
+  if (!fn()) { \
+    bResult = FALSE; \
+    AddErrorMsg(L ## #fn ## L" failed"); \
+  }
+
 BOOL nsInstallerDlg::PostExtract()
 {
   BOOL bResult = TRUE;
 
   m_bFastStart = FastStartFileExists();
 
-  if (!CreateShortcut())
-  {
-    bResult = FALSE;
-    AddErrorMsg(L"CreateShortcut failed");
-  }
+  RUN_AND_CHECK(CreateShortcut)
 
-  if (!StoreInstallPath())
-  {
-    bResult = FALSE;
-    AddErrorMsg(L"StoreInstallPath failed");
-  }
+  RUN_AND_CHECK(StoreInstallPath)
 
   MoveSetupStrings();
 
-  if (!SilentFirstRun())
-  {
-    bResult = FALSE;
-    AddErrorMsg(L"SilentFirstRun failed");
-  }
+  RUN_AND_CHECK(SilentFirstRun)
 
   return bResult;
 }
@@ -452,8 +452,9 @@ BOOL nsInstallerDlg::GetInstallPath(WCHAR *sPath)
   return (result == ERROR_SUCCESS);
 }
 
-void nsInstallerDlg::RunUninstall()
+BOOL nsInstallerDlg::RunUninstall(BOOL *pbCancelled)
 {
+  BOOL bResult = FALSE;
   WCHAR sUninstallPath[MAX_PATH];
   if (GetInstallPath(sUninstallPath))
   {
@@ -461,19 +462,27 @@ void nsInstallerDlg::RunUninstall()
       wcscat(sUninstallPath, L"\\");
 
     WCHAR sParam[MAX_PATH+10];
-    _snwprintf(sParam, MAX_PATH+9, L"remove %s", sUninstallPath);
+    _snwprintf(sParam, MAX_PATH+9, L"[remove] %s", sUninstallPath);
 
     wcscat(sUninstallPath, L"uninstall.exe");
 
     PROCESS_INFORMATION pi;
-    BOOL bResult = CreateProcess(sUninstallPath, sParam,
-                                 NULL, NULL, FALSE, 0, NULL, NULL, NULL, &pi);
+    bResult = CreateProcess(sUninstallPath, sParam,
+                            NULL, NULL, FALSE, 0, NULL, NULL, NULL, &pi);
     if (bResult)
     {
       // Wait for it to finish
       WaitForSingleObject(pi.hProcess, INFINITE);
+
+      if (pbCancelled != NULL)
+      {
+        DWORD dwExitCode = 0;
+        GetExitCodeProcess(pi.hProcess, &dwExitCode);
+        *pbCancelled = (dwExitCode == IDCANCEL);
+      }
     }
   }
+  return bResult;
 }
 
 //////////////////////////////////////////////////////////////////////////
