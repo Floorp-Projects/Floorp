@@ -41,6 +41,7 @@
 /* API tests for XPConnect - use xpcshell for JS tests. */
 
 #include <stdio.h>
+#include <ctype.h>
 
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -59,6 +60,7 @@
 #include "nsEmbedString.h"
 
 #include "jsapi.h"
+#include "jscntxt.h"
 
 #include "xpctest.h"
 
@@ -447,6 +449,71 @@ sm_test_done:
 /***************************************************************************/
 // arg formatter test...
 
+// A bit of history: JS_PushArguments/JS_PushArgumentsVA used to be part of the
+// JS public (friend, really) API using js_AllocStack to obtain the rooted
+// output array. js_AllocStack was removed and, to preserve the ability to test
+// JS_ConvertArguments, these functions were moved here and hacked down to
+// size.
+
+static JSBool
+TryArgumentFormatter(JSContext *cx, const char **formatp, JSBool fromJS,
+                     jsval **vpp, va_list *app)
+{
+    const char *format;
+    JSArgumentFormatMap *map;
+
+    format = *formatp;
+    for (map = cx->argumentFormatMap; map; map = map->next) {
+        if (!strncmp(format, map->format, map->length)) {
+            *formatp = format + map->length;
+            return map->formatter(cx, format, fromJS, vpp, app);
+        }
+    }
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CHAR, format);
+    return JS_FALSE;
+}
+
+static bool
+PushArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format, va_list ap)
+{
+    char c;
+    JSString *str;
+
+    jsval *sp = argv;
+
+    while ((c = *format++) != '\0') {
+        if (isspace(c) || c == '*')
+            continue;
+        switch (c) {
+          case 's':
+            str = JS_NewStringCopyZ(cx, va_arg(ap, char *));
+            if (!str)
+                return false;
+            *sp = STRING_TO_JSVAL(str);
+            break;
+          default:
+            format--;
+            if (!TryArgumentFormatter(cx, &format, JS_FALSE, &sp, &ap))
+                return false;
+            /* NB: the formatter already updated sp, so we continue here. */
+            continue;
+        }
+        sp++;
+    }
+
+    return true;
+}
+
+static bool
+PushArguments(JSContext *cx, uintN argc, jsval *argv, const char *format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    bool ret = PushArgumentsVA(cx, argc, argv, format, ap);
+    va_end(ap);
+    return ret;
+}
+
 #define TAF_CHECK(cond, msg) \
     if (!cond) {       \
         printf(msg);   \
@@ -487,19 +554,23 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 
     do {
         JSAutoRequest ar(jscontext);
-        argv = JS_PushArguments(jscontext, &mark, "s %ip %iv %is s",
-                                a_in, 
-                                &NS_GET_IID(nsITestXPCFoo2), b_in.get(), 
-                                c_in.get(),
-                                static_cast<const nsAString*>(&d_in), 
-                                e_in);
-    
-        if(!argv)
+
+        // Prepare an array of arguments for JS_ConvertArguments
+        jsval argv[5];
+        JSAutoTempValueRooter tvr(jscontext, 5, argv);
+
+        if (!PushArguments(jscontext, 5, argv,
+                           "s %ip %iv %is s",
+                           a_in,
+                           &NS_GET_IID(nsITestXPCFoo2), b_in.get(),
+                           c_in.get(),
+                           static_cast<const nsAString*>(&d_in),
+                           e_in))
         {
             printf(" could not convert from native to JS -- FAILED!\n");
             return;
         }
-    
+
         ok = JS_ConvertArguments(jscontext, 5, argv, "s %ip %iv %is s",
                                 &a_out, 
                                 static_cast<nsISupports**>(getter_AddRefs(b_out)), 
@@ -518,16 +589,12 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
         TAF_CHECK(d_in.Equals(d_out), " JS to native for %%is returned the wrong value -- FAILED!\n");
     } while (0);
     if (!ok)
-        goto out;
+        return;
 
     if(!strcmp(a_in, a_out) && !strcmp(e_in, e_out))
         printf("passed\n");
     else
         printf(" conversion OK, but surrounding was mangled -- FAILED!\n");
-
-out:
-    JSAutoRequest ar(jscontext);
-    JS_PopArguments(jscontext, mark);
 }
 
 /***************************************************************************/
