@@ -623,9 +623,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
             JS_LOCK_OBJ(cx, obj);
             propid = ID_TO_VALUE(sprop->id);
-            userid = (sprop->flags & SPROP_HAS_SHORTID)
-                     ? INT_TO_JSVAL(sprop->shortid)
-                     : propid;
+            userid = SPROP_USERID(sprop);
             scope = OBJ_SCOPE(obj);
             JS_UNLOCK_OBJ(cx, obj);
 
@@ -880,7 +878,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
             getter = sprop->getter;
             setter = sprop->setter;
             attrs = sprop->attrs;
-            flags = sprop->flags;
+            flags = sprop->getFlags();
             shortid = sprop->shortid;
         } else {
             if (!pobj->getProperty(cx, propid, &value) ||

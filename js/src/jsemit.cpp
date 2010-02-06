@@ -1590,7 +1590,7 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
         scope = OBJ_SCOPE(obj);
         sprop = scope->lookup(ATOM_TO_JSID(atom));
         if (sprop) {
-            JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+            JS_ASSERT(sprop->hasShortID());
 
             if (slotp) {
                 JS_ASSERT(JSVAL_IS_INT(obj->fslots[JSSLOT_BLOCK_DEPTH]));

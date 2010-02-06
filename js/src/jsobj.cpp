@@ -3555,7 +3555,7 @@ js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index)
     return js_DefineNativeProperty(cx, obj, id, JSVAL_VOID,
                                    block_getProperty, block_setProperty,
                                    JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_SHARED,
-                                   SPROP_HAS_SHORTID, index, NULL);
+                                   JSScopeProperty::HAS_SHORTID, index, NULL);
 }
 
 #if JS_HAS_XDR
@@ -3658,7 +3658,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
             do {
                 /* If sprop is NULL, this is the first property. */
                 sprop = sprop ? sprop->parent : OBJ_SCOPE(obj)->lastProperty();
-            } while (!(sprop->flags & SPROP_HAS_SHORTID));
+            } while (!sprop->hasShortID());
 
             JS_ASSERT(sprop->getter == block_getProperty);
             propid = sprop->id;
@@ -4401,7 +4401,7 @@ js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
     JSScope *scope;
     JSScopeProperty *sprop;
 
-    JS_ASSERT(!(flags & SPROP_IS_METHOD));
+    JS_ASSERT(!(flags & JSScopeProperty::METHOD));
 
     /*
      * Purge the property cache of now-shadowed id in obj's scope chain. Do
@@ -4582,7 +4582,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
 
             JSObject *funobj = JSVAL_TO_OBJECT(value);
             if (FUN_OBJECT(GET_FUNCTION_PRIVATE(cx, funobj)) == funobj) {
-                flags |= SPROP_IS_METHOD;
+                flags |= JSScopeProperty::METHOD;
                 getter = js_CastAsPropertyOp(funobj);
             }
         }
@@ -5398,8 +5398,8 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
              * shortid, not id, when they are called on the shadow we are
              * about to create in obj's scope.
              */
-            if (sprop->flags & SPROP_HAS_SHORTID) {
-                flags = SPROP_HAS_SHORTID;
+            if (sprop->hasShortID()) {
+                flags = JSScopeProperty::HAS_SHORTID;
                 shortid = sprop->shortid;
                 getter = sprop->getter;
                 setter = sprop->setter;
@@ -5447,7 +5447,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
 
             JSObject *funobj = JSVAL_TO_OBJECT(*vp);
             if (FUN_OBJECT(GET_FUNCTION_PRIVATE(cx, funobj)) == funobj) {
-                flags |= SPROP_IS_METHOD;
+                flags |= JSScopeProperty::METHOD;
                 getter = js_CastAsPropertyOp(funobj);
             }
         }
@@ -5852,10 +5852,8 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             JSScope *scope = OBJ_SCOPE(obj);
             length = 0;
             for (JSScopeProperty *sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
-                if ((sprop->attrs & JSPROP_ENUMERATE) &&
-                    !(sprop->flags & SPROP_IS_ALIAS)) {
+                if (sprop->enumerable() && !sprop->isAlias())
                     length++;
-                }
             }
             if (length == 0) {
                /*
@@ -5885,8 +5883,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
             jsid *ids = ne->ids;
             for (JSScopeProperty *sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
-                if ((sprop->attrs & JSPROP_ENUMERATE) &&
-                    !(sprop->flags & SPROP_IS_ALIAS)) {
+                if (sprop->enumerable() && !sprop->isAlias()) {
                     JS_ASSERT(ids < ne->ids + length);
                     *ids++ = sprop->id;
                 }
@@ -6947,7 +6944,7 @@ dumpScopeProp(JSScopeProperty *sprop)
     if (attrs & JSPROP_GETTER) fprintf(stderr, "getter ");
     if (attrs & JSPROP_SETTER) fprintf(stderr, "setter ");
     if (attrs & JSPROP_SHARED) fprintf(stderr, "shared ");
-    if (sprop->flags & SPROP_IS_ALIAS) fprintf(stderr, "alias ");
+    if (sprop->isAlias()) fprintf(stderr, "alias ");
     if (JSID_IS_ATOM(id))
         dumpString(JSVAL_TO_STRING(ID_TO_VALUE(id)));
     else if (JSID_IS_INT(id))

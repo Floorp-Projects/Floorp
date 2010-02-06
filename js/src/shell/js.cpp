@@ -2013,42 +2013,10 @@ Tracing(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static void
 DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
 {
-    uintN i;
-    JSScopeProperty *sprop;
-    jsval v;
-    JSString *str;
-
-    i = 0;
-    sprop = NULL;
-    while (JS_PropertyIterator(obj, &sprop)) {
-        fprintf(fp, "%3u %p ", i, (void *)sprop);
-
-        v = ID_TO_VALUE(sprop->id);
-        if (JSID_IS_INT(sprop->id)) {
-            fprintf(fp, "[%ld]", (long)JSVAL_TO_INT(v));
-        } else {
-            if (JSID_IS_ATOM(sprop->id)) {
-                str = JSVAL_TO_STRING(v);
-            } else {
-                JS_ASSERT(JSID_IS_OBJECT(sprop->id));
-                str = js_ValueToString(cx, v);
-                fputs("object ", fp);
-            }
-            if (!str)
-                fputs("<error>", fp);
-            else
-                js_FileEscapedString(fp, str, '"');
-        }
-#define DUMP_ATTR(name) if (sprop->attrs & JSPROP_##name) fputs(" " #name, fp)
-        DUMP_ATTR(ENUMERATE);
-        DUMP_ATTR(READONLY);
-        DUMP_ATTR(PERMANENT);
-        DUMP_ATTR(GETTER);
-        DUMP_ATTR(SETTER);
-#undef  DUMP_ATTR
-
-        fprintf(fp, " slot %lu flags %x shortid %d\n",
-                (unsigned long)sprop->slot, sprop->flags, sprop->shortid);
+    uintN i = 0;
+    for (JSScopeProperty *sprop = NULL; JS_PropertyIterator(obj, &sprop);) {
+        fprintf(fp, "%3u %p ", i++, (void *) sprop);
+        sprop->dump(cx, fp);
     }
 }
 

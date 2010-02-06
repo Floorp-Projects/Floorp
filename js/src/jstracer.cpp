@@ -7883,7 +7883,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
         }
 
         // Now assert that our use of sprop->shortid was in fact kosher.
-        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+        JS_ASSERT(sprop->hasShortID());
 
         if (frameIfInRange(obj)) {
             // At this point we are guaranteed to be looking at an active call oject
@@ -7932,7 +7932,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
         }
 
         // Now assert that our use of sprop->shortid was in fact kosher.
-        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+        JS_ASSERT(sprop->hasShortID());
 
         LIns* base = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots));
         LIns* val_ins = lir->insLoad(LIR_ldp, base, dslot_index * sizeof(jsval));
@@ -7962,7 +7962,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
         }
 
         // Now assert that our use of sprop->shortid was in fact kosher.
-        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+        JS_ASSERT(sprop->hasShortID());
 
         call_ins = lir->insCall(ci, args);
 
@@ -11346,14 +11346,14 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     JSStackFrame *fp = frameIfInRange(callobj);
     if (fp) {
         if (sprop->setter == SetCallArg) {
-            JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+            JS_ASSERT(sprop->hasShortID());
             uintN slot = uint16(sprop->shortid);
             jsval *vp2 = &fp->argv[slot];
             set(vp2, v_ins);
             return RECORD_CONTINUE;
         }
         if (sprop->setter == SetCallVar) {
-            JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+            JS_ASSERT(sprop->hasShortID());
             uintN slot = uint16(sprop->shortid);
             jsval *vp2 = &fp->slots[slot];
             set(vp2, v_ins);
@@ -11382,7 +11382,7 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
         // Now assert that the shortid get we did above was ok. Have to do it
         // after the RETURN_STOP above, since in that case we may in fact not
         // have a valid shortid; but we don't use it in that case anyway.
-        JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
+        JS_ASSERT(sprop->hasShortID());
 
         LIns* base = lir->insLoad(LIR_ldp, callobj_ins, offsetof(JSObject, dslots));
         lir->insStorei(box_jsval(v, v_ins), base, dslot_index * sizeof(jsval));
