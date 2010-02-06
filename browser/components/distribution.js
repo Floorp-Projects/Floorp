@@ -154,7 +154,7 @@ DistributionCustomizer.prototype = {
         if (iprop == "type" && items[iid]["type"] == "default")
           defaultItemId = iid;
 
-        if (maxItemId < parseInt(iid))
+        if (maxItemId < iid)
           maxItemId = iid;
       } else {
         dump("Key did not match: " + keys[i] + "\n");
