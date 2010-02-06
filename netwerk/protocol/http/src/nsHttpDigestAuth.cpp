@@ -205,12 +205,15 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
                                       const PRUnichar *password,
                                       nsISupports **sessionState,
                                       nsISupports **continuationState,
+                                      PRUint32 *aFlags,
                                       char **creds)
 
 {
   LOG(("nsHttpDigestAuth::GenerateCredentials [challenge=%s]\n", challenge));
 
   NS_ENSURE_ARG_POINTER(creds);
+
+  *aFlags = 0;
 
   PRBool isDigestAuth = !PL_strncasecmp(challenge, "digest ", 7);
   NS_ENSURE_TRUE(isDigestAuth, NS_ERROR_UNEXPECTED);

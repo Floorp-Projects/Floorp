@@ -127,7 +127,7 @@ private:
                     const char *realm,
                     const char *creds,
                     const char *challenge,
-                    const nsHttpAuthIdentity &ident,
+                    const nsHttpAuthIdentity *ident,
                     nsISupports *metadata)
         : mRoot(nsnull)
         , mTail(nsnull)
@@ -141,7 +141,7 @@ private:
                  const char *realm,
                  const char *creds,
                  const char *challenge,
-                 const nsHttpAuthIdentity &ident,
+                 const nsHttpAuthIdentity *ident,
                  nsISupports *metadata);
 
     nsHttpAuthIdentity mIdent;
@@ -181,7 +181,7 @@ private:
                           const char *realm,
                           const char *credentials,
                           const char *challenge,
-                          const nsHttpAuthIdentity &ident,
+                          const nsHttpAuthIdentity *ident,
                           nsISupports *metadata);
 
     void ClearAuthEntry(const char *realm);
@@ -237,7 +237,7 @@ public:
                           const char *realm,
                           const char *credentials,
                           const char *challenge,
-                          const nsHttpAuthIdentity &ident,
+                          const nsHttpAuthIdentity *ident,
                           nsISupports *metadata);
 
     void ClearAuthEntry(const char *scheme,
