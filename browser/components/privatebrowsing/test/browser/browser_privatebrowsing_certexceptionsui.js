@@ -65,19 +65,17 @@ function test() {
     function testCheckbox() {
       let obsSvc = Cc["@mozilla.org/observer-service;1"].
                    getService(Ci.nsIObserverService);
-      obsSvc.addObserver({
-        observe: function(aSubject, aTopic, aData) {
-          obsSvc.removeObserver(this, "cert-exception-ui-ready", false);
-          ok(win.gCert, "The certificate information should be available now");
+      obsSvc.addObserver(function (aSubject, aTopic, aData) {
+        obsSvc.removeObserver(arguments.callee, "cert-exception-ui-ready", false);
+        ok(win.gCert, "The certificate information should be available now");
 
-          let checkbox = win.document.getElementById("permanent");
-          ok(checkbox.hasAttribute("disabled"),
-            "the permanent checkbox should be disabled when handling the private browsing mode");
-          ok(!checkbox.hasAttribute("checked"),
-            "the permanent checkbox should not be checked when handling the private browsing mode");
-          win.close();
-          step2();
-        }
+        let checkbox = win.document.getElementById("permanent");
+        ok(checkbox.hasAttribute("disabled"),
+          "the permanent checkbox should be disabled when handling the private browsing mode");
+        ok(!checkbox.hasAttribute("checked"),
+          "the permanent checkbox should not be checked when handling the private browsing mode");
+        win.close();
+        step2();
       }, "cert-exception-ui-ready", false);
     }
     var win = openDialog(EXCEPTIONS_DLG_URL, "", EXCEPTIONS_DLG_FEATURES, params);
@@ -94,19 +92,17 @@ function test() {
     function testCheckbox() {
       let obsSvc = Cc["@mozilla.org/observer-service;1"].
                    getService(Ci.nsIObserverService);
-      obsSvc.addObserver({
-        observe: function(aSubject, aTopic, aData) {
-          obsSvc.removeObserver(this, "cert-exception-ui-ready", false);
-          ok(win.gCert, "The certificate information should be available now");
+      obsSvc.addObserver(function (aSubject, aTopic, aData) {
+        obsSvc.removeObserver(arguments.callee, "cert-exception-ui-ready", false);
+        ok(win.gCert, "The certificate information should be available now");
 
-          let checkbox = win.document.getElementById("permanent");
-          ok(!checkbox.hasAttribute("disabled"),
-            "the permanent checkbox should not be disabled when not handling the private browsing mode");
-          ok(checkbox.hasAttribute("checked"),
-            "the permanent checkbox should be checked when not handling the private browsing mode");
-          win.close();
-          cleanup();
-        }
+        let checkbox = win.document.getElementById("permanent");
+        ok(!checkbox.hasAttribute("disabled"),
+          "the permanent checkbox should not be disabled when not handling the private browsing mode");
+        ok(checkbox.hasAttribute("checked"),
+          "the permanent checkbox should be checked when not handling the private browsing mode");
+        win.close();
+        cleanup();
       }, "cert-exception-ui-ready", false);
     }
     var win = openDialog(EXCEPTIONS_DLG_URL, "", EXCEPTIONS_DLG_FEATURES, params);

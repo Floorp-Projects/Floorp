@@ -58,18 +58,16 @@ function test() {
   // Open Library, we will check the left pane.
   var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
            getService(Ci.nsIWindowWatcher);
-  var windowObserver = {
-    observe: function(aSubject, aTopic, aData) {
-      if (aTopic === "domwindowopened") {
-        ww.unregisterNotification(this);
-        gLibrary = aSubject.QueryInterface(Ci.nsIDOMWindow);
-        gLibrary.addEventListener("load", function onLoad(event) {
-          gLibrary.removeEventListener("load", onLoad, false);
-          executeSoon(startTest);
-        }, false);
-      }
-    }
-  };
+  function windowObserver(aSubject, aTopic, aData) {
+    if (aTopic != "domwindowopened")
+      return;
+    ww.unregisterNotification(windowObserver);
+    gLibrary = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    gLibrary.addEventListener("load", function onLoad(event) {
+      gLibrary.removeEventListener("load", onLoad, false);
+      executeSoon(startTest);
+    }, false);
+  }
   ww.registerNotification(windowObserver);
   ww.openWindow(null,
                 "chrome://browser/content/places/places.xul",

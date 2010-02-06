@@ -124,24 +124,22 @@ function test() {
         if (preFunc)
           preFunc();
 
-        let observer = {
-          observe: function(aSubject, aTopic, aData) {
-            if (aTopic === "domwindowopened") {
-              ww.unregisterNotification(this);
-              let alertDialog = aSubject.QueryInterface(Ci.nsIDOMWindow);
-              alertDialog.addEventListener("load", function() {
-                alertDialog.removeEventListener("load", arguments.callee, false);
-                info("alert dialog observed as expected");
-                executeSoon(function() {
-                  alertDialog.close();
-                  toggleSidebar(currentTest.sidebarName);
-                  currentTest.cleanup();
-                  postFunc();
-                });
-              }, false);
-            }
-          }
-        };
+        function observer(aSubject, aTopic, aData) {
+          if (aTopic != "domwindowopened")
+            return;
+          ww.unregisterNotification(observer);
+          let alertDialog = aSubject.QueryInterface(Ci.nsIDOMWindow);
+          alertDialog.addEventListener("load", function () {
+            alertDialog.removeEventListener("load", arguments.callee, false);
+            info("alert dialog observed as expected");
+            executeSoon(function () {
+              alertDialog.close();
+              toggleSidebar(currentTest.sidebarName);
+              currentTest.cleanup();
+              postFunc();
+            });
+          }, false);
+        }
         ww.registerNotification(observer);
 
         // Select the inserted places item.

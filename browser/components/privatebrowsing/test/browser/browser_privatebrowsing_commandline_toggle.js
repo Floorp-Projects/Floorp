@@ -117,11 +117,9 @@ function test() {
     }
   }
 
-  let observer = {
-    observe: function (aSubject, aTopic, aData) {
-      isnot(aTopic, "domwindowopened", "The -private-toggle argument should be silent");
-    }
-  };
+  function observer(aSubject, aTopic, aData) {
+    isnot(aTopic, "domwindowopened", "The -private-toggle argument should be silent");
+  }
   ww.registerNotification(observer);
 
   let tab = gBrowser.selectedTab;

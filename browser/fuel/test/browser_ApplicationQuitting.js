@@ -1,16 +1,13 @@
 function test() {
-  let quitRequestObserver = {
-    observe: function(aSubject, aTopic, aData) {
-      ok(aTopic == "quit-application-requested" &&
-         aSubject instanceof Components.interfaces.nsISupportsPRBool,
-         "Received a quit request we're going to deny");
-      aSubject.data = true;
-    }
-  };
+  function quitRequestObserver(aSubject, aTopic, aData) {
+    ok(aTopic == "quit-application-requested" &&
+       aSubject instanceof Components.interfaces.nsISupportsPRBool,
+       "Received a quit request we're going to deny");
+    aSubject.data = true;
+  }
   
   // ensure that we don't accidentally quit
-  let os = Components.classes["@mozilla.org/observer-service;1"]
-                     .getService(Components.interfaces.nsIObserverService);
+  let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
   os.addObserver(quitRequestObserver, "quit-application-requested", false);
   
   ok(!Application.quit(),    "Tried to quit - and didn't succeed");

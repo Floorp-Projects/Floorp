@@ -618,30 +618,29 @@ function ensureHistoryClearedState(aURIs, aShouldBeCleared) {
  *        A function that will be called once the dialog has loaded
  */
 function openWindow(aOnloadCallback) {
-  let windowObserver = {
-    observe: function(aSubject, aTopic, aData) {
-      if (aTopic === "domwindowopened") {
-        winWatch.unregisterNotification(this);
-        let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-        win.addEventListener("load", function onload(event) {
-          win.removeEventListener("load", onload, false);
-          executeSoon(function () {
-            // Some exceptions that reach here don't reach the test harness, but
-            // ok()/is() do...
-            try {
-              aOnloadCallback(win);
-              doNextTest();
-            }
-            catch (exc) {
-              win.close();
-              ok(false, "Unexpected exception: " + exc + "\n" + exc.stack);
-              finish();
-            }
-          });
-        }, false);
-      }
-    }
-  };
+  function windowObserver(aSubject, aTopic, aData) {
+    if (aTopic != "domwindowopened")
+      return;
+
+    winWatch.unregisterNotification(windowObserver);
+    let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    win.addEventListener("load", function onload(event) {
+      win.removeEventListener("load", onload, false);
+      executeSoon(function () {
+        // Some exceptions that reach here don't reach the test harness, but
+        // ok()/is() do...
+        try {
+          aOnloadCallback(win);
+          doNextTest();
+        }
+        catch (exc) {
+          win.close();
+          ok(false, "Unexpected exception: " + exc + "\n" + exc.stack);
+          finish();
+        }
+      });
+    }, false);
+  }
   winWatch.registerNotification(windowObserver);
   winWatch.openWindow(null,
                       "chrome://browser/content/sanitize.xul",

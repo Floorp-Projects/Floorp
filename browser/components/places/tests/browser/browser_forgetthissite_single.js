@@ -55,54 +55,52 @@ function test() {
   });
 
   function testForgetThisSiteVisibility(selectionCount, funcNext) {
-    let observer = {
-      observe: function(aSubject, aTopic, aData) {
-        if (aTopic === "domwindowopened") {
-          ww.unregisterNotification(this);
-          let organizer = aSubject.QueryInterface(Ci.nsIDOMWindow);
-          organizer.addEventListener("load", function onLoad(event) {
-            organizer.removeEventListener("load", onLoad, false);
-            executeSoon(function () {
-              // Select History in the left pane.
-              organizer.PlacesOrganizer.selectLeftPaneQuery('History');
-              let PO = organizer.PlacesOrganizer;
-              let histContainer = PO._places.selectedNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-              histContainer.containerOpen = true;
-              PO._places.selectNode(histContainer.getChild(0));
-              // Select the first history entry.
-              let doc = organizer.document;
-              let tree = PO._content;
-              let selection = tree.view.selection;
-              selection.clearSelection();
-              selection.rangedSelect(0, selectionCount - 1, true);
-              is(selection.count, selectionCount,
-                "The selected range is as big as expected");
-              // Open the context menu
-              let contextmenu = doc.getElementById("placesContext");
-              contextmenu.addEventListener("popupshown", function() {
-                contextmenu.removeEventListener("popupshown", arguments.callee, false);
-                let forgetThisSite = doc.getElementById("placesContext_deleteHost");
-                let hideForgetThisSite = (selectionCount != 1);
-                is(forgetThisSite.hidden, hideForgetThisSite,
-                  "The Forget this site menu item should " + (hideForgetThisSite ? "" : "not ") +
-                  "be hidden with " + selectionCount + " items selected");
-                // Close the context menu
-                contextmenu.hidePopup();
-                // Close Library window.
-                organizer.close();
-                // Proceed
-                funcNext();
-              }, false);
-              let event = document.createEvent("MouseEvents");
-              event.initMouseEvent("contextmenu", true, true, organizer, 0,
-                                   0, 0, 0, 0, false, false, false, false,
-                                   0, null);
-              tree.dispatchEvent(event);
-            });
+    function observer(aSubject, aTopic, aData) {
+      if (aTopic != "domwindowopened")
+        return;
+      ww.unregisterNotification(observer);
+      let organizer = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      organizer.addEventListener("load", function onLoad(event) {
+        organizer.removeEventListener("load", onLoad, false);
+        executeSoon(function () {
+          // Select History in the left pane.
+          organizer.PlacesOrganizer.selectLeftPaneQuery('History');
+          let PO = organizer.PlacesOrganizer;
+          let histContainer = PO._places.selectedNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
+          histContainer.containerOpen = true;
+          PO._places.selectNode(histContainer.getChild(0));
+          // Select the first history entry.
+          let doc = organizer.document;
+          let tree = PO._content;
+          let selection = tree.view.selection;
+          selection.clearSelection();
+          selection.rangedSelect(0, selectionCount - 1, true);
+          is(selection.count, selectionCount,
+            "The selected range is as big as expected");
+          // Open the context menu
+          let contextmenu = doc.getElementById("placesContext");
+          contextmenu.addEventListener("popupshown", function() {
+            contextmenu.removeEventListener("popupshown", arguments.callee, false);
+            let forgetThisSite = doc.getElementById("placesContext_deleteHost");
+            let hideForgetThisSite = (selectionCount != 1);
+            is(forgetThisSite.hidden, hideForgetThisSite,
+              "The Forget this site menu item should " + (hideForgetThisSite ? "" : "not ") +
+              "be hidden with " + selectionCount + " items selected");
+            // Close the context menu
+            contextmenu.hidePopup();
+            // Close Library window.
+            organizer.close();
+            // Proceed
+            funcNext();
           }, false);
-        }
-      }
-    };
+          let event = document.createEvent("MouseEvents");
+          event.initMouseEvent("contextmenu", true, true, organizer, 0,
+                               0, 0, 0, 0, false, false, false, false,
+                               0, null);
+          tree.dispatchEvent(event);
+        });
+      }, false);
+    }
 
     ww.registerNotification(observer);
     ww.openWindow(null,
