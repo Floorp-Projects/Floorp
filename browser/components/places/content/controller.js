@@ -459,7 +459,7 @@ PlacesController.prototype = {
 
       // We don't use the nodeIs* methods here to avoid going through the type
       // property way too often
-      switch(nodeType) {
+      switch (nodeType) {
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY:
           nodeData["query"] = true;
           if (node.parent) {
