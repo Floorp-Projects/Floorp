@@ -1207,7 +1207,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
             }
         }
         if (!js_DefineNativeProperty(cx, obj, id, JSVAL_VOID, getter, setter,
-                                     attrs, SPROP_HAS_SHORTID, (int16) slot,
+                                     attrs, JSScopeProperty::HAS_SHORTID, (int16) slot,
                                      NULL, JSDNP_DONT_PURGE)) {
             return JS_FALSE;
         }
@@ -1506,7 +1506,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             if (!js_DefineNativeProperty(cx, obj,
                                          ATOM_TO_JSID(atom), JSVAL_VOID,
                                          fun_getProperty, JS_PropertyStub,
-                                         lfp->attrs, SPROP_HAS_SHORTID,
+                                         lfp->attrs, JSScopeProperty::HAS_SHORTID,
                                          lfp->tinyid, NULL)) {
                 return JS_FALSE;
             }

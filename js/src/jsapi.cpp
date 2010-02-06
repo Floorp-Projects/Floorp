@@ -2964,7 +2964,7 @@ JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps)
     for (ok = JS_TRUE; ps->name; ps++) {
         ok = DefineProperty(cx, obj, ps->name, JSVAL_VOID,
                             ps->getter, ps->setter, ps->flags,
-                            SPROP_HAS_SHORTID, ps->tinyid);
+                            JSScopeProperty::HAS_SHORTID, ps->tinyid);
         if (!ok)
             break;
     }
@@ -2995,7 +2995,7 @@ JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
 {
     CHECK_REQUEST(cx);
     return DefineProperty(cx, obj, name, value, getter, setter, attrs,
-                          SPROP_HAS_SHORTID, tinyid);
+                          JSScopeProperty::HAS_SHORTID, tinyid);
 }
 
 static JSBool
@@ -3062,7 +3062,7 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
         sprop = (JSScopeProperty *)prop;
         ok = (js_AddNativeProperty(cx, obj, ATOM_TO_JSID(atom),
                                    sprop->getter, sprop->setter, sprop->slot,
-                                   sprop->attrs, sprop->flags | SPROP_IS_ALIAS,
+                                   sprop->attrs, sprop->getFlags() | JSScopeProperty::ALIAS,
                                    sprop->shortid)
               != NULL);
     }
@@ -3564,7 +3564,7 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
 {
     CHECK_REQUEST(cx);
     return DefineUCProperty(cx, obj, name, namelen, value, getter, setter,
-                            attrs, SPROP_HAS_SHORTID, tinyid);
+                            attrs, JSScopeProperty::HAS_SHORTID, tinyid);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3735,7 +3735,7 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
     sprop = (JSScopeProperty *)prop;
     ok = (js_AddNativeProperty(cx, obj, INT_TO_JSID(alias),
                                sprop->getter, sprop->setter, sprop->slot,
-                               sprop->attrs, sprop->flags | SPROP_IS_ALIAS,
+                               sprop->attrs, sprop->getFlags() | JSScopeProperty::ALIAS,
                                sprop->shortid)
           != NULL);
     obj->dropProperty(cx, prop);
@@ -4008,11 +4008,8 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
          * line is not enumerable, or it's an alias, skip it and keep on trying
          * to find an enumerable property that is still in scope.
          */
-        while (sprop &&
-               (!(sprop->attrs & JSPROP_ENUMERATE) ||
-                (sprop->flags & SPROP_IS_ALIAS))) {
+        while (sprop && (!sprop->enumerable() || sprop->isAlias()))
             sprop = sprop->parent;
-        }
 
         if (!sprop) {
             *idp = JSVAL_VOID;

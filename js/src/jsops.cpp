@@ -1837,7 +1837,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                                 scope->putProperty(cx, sprop->id,
                                                    sprop->getter, sprop->setter,
                                                    slot, sprop->attrs,
-                                                   sprop->flags, sprop->shortid);
+                                                   sprop->getFlags(), sprop->shortid);
                             if (!sprop2) {
                                 js_FreeSlot(cx, obj, slot);
                                 goto error;
@@ -3474,7 +3474,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
             if (scope->table) {
                 JSScopeProperty *sprop2 =
                     scope->addProperty(cx, sprop->id, sprop->getter, sprop->setter, slot,
-                                       sprop->attrs, sprop->flags, sprop->shortid);
+                                       sprop->attrs, sprop->getFlags(), sprop->shortid);
                 if (!sprop2) {
                     js_FreeSlot(cx, obj, slot);
                     goto error;
