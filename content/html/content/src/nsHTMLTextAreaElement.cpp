@@ -378,6 +378,7 @@ NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, ReadOnly, readonly)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, Rows, rows)
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTextAreaElement, TabIndex, tabindex, 0)
+NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, Wrap, wrap)
   
 
 NS_IMETHODIMP 
@@ -555,6 +556,8 @@ nsHTMLTextAreaElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
   if (aAttribute == nsGkAtoms::rows ||
       aAttribute == nsGkAtoms::cols) {
     NS_UpdateHint(retval, NS_STYLE_HINT_REFLOW);
+  } else if (aAttribute == nsGkAtoms::wrap) {
+    NS_UpdateHint(retval, nsChangeHint_ReconstructFrame);
   }
   return retval;
 }
