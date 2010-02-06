@@ -266,7 +266,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     } else {
         JSScopeProperty *sprop2 =
             scope->addProperty(cx, sprop->id, sprop->getter, sprop->setter, SPROP_INVALID_SLOT,
-                               sprop->attrs, sprop->flags, sprop->shortid);
+                               sprop->attrs, sprop->getFlags(), sprop->shortid);
         if (sprop2 != sprop)
             goto exit_trace;
     }

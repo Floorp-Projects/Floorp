@@ -836,8 +836,8 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
 const uintN JSDNP_CACHE_RESULT = 1; /* an interpreter call from JSOP_INITPROP */
 const uintN JSDNP_DONT_PURGE   = 2; /* suppress js_PurgeScopeChain */
 const uintN JSDNP_SET_METHOD   = 4; /* js_{DefineNativeProperty,SetPropertyHelper}
-                                       must pass the SPROP_IS_METHOD flag on to
-                                       js_AddScopeProperty */
+                                       must pass the JSScopeProperty::METHOD
+                                       flag on to js_AddScopeProperty */
 
 /*
  * On error, return false.  On success, if propp is non-null, return true with
