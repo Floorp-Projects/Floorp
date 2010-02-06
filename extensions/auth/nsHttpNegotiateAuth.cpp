@@ -221,11 +221,14 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
                                          const PRUnichar *password,
                                          nsISupports **sessionState,
                                          nsISupports **continuationState,
+                                         PRUint32 *flags,
                                          char **creds)
 {
     // ChallengeReceived must have been called previously.
     nsIAuthModule *module = (nsIAuthModule *) *continuationState;
     NS_ENSURE_TRUE(module, NS_ERROR_NOT_INITIALIZED);
+
+    *flags = USING_INTERNAL_IDENTITY;
 
     LOG(("nsHttpNegotiateAuth::GenerateCredentials() [challenge=%s]\n", challenge));
 
