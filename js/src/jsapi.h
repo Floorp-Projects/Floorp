@@ -396,27 +396,6 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
                       const char *format, va_list ap);
 #endif
 
-/*
- * Inverse of JS_ConvertArguments: scan format and convert trailing arguments
- * into jsvals, GC-rooted if necessary by the JS stack.  Return null on error,
- * and a pointer to the new argument vector on success.  Also return a stack
- * mark on success via *markp, in which case the caller must eventually clean
- * up by calling JS_PopArguments.
- *
- * Note that the number of actual arguments supplied is specified exclusively
- * by format, so there is no argc parameter.
- */
-extern JS_PUBLIC_API(jsval *)
-JS_PushArguments(JSContext *cx, void **markp, const char *format, ...);
-
-#ifdef va_start
-extern JS_PUBLIC_API(jsval *)
-JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap);
-#endif
-
-extern JS_PUBLIC_API(void)
-JS_PopArguments(JSContext *cx, void *mark);
-
 #ifdef JS_ARGUMENT_FORMATTER_DEFINED
 
 /*
