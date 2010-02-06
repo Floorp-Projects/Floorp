@@ -100,45 +100,15 @@ typedef GnomeProgram * (*_gnome_program_init_fn)(const char *, const char *,
 typedef GnomeProgram * (*_gnome_program_get_fn)(void);
 typedef const GnomeModuleInfo * (*_libgnomeui_module_info_get_fn)();
 typedef GnomeClient * (*_gnome_master_client_fn)(void);
-typedef void (*GnomeInteractFunction)(GnomeClient *, gint, GnomeDialogType,
-                                      gpointer);
-typedef void (*_gnome_client_request_interaction_fn)(GnomeClient *,
-                                                     GnomeDialogType,
-                                                     GnomeInteractFunction,
-                                                     gpointer);
-typedef void (*_gnome_interaction_key_return_fn)(gint, gboolean);
 typedef void (*_gnome_client_set_restart_command_fn)(GnomeClient*, gint, gchar*[]);
 
-static _gnome_client_request_interaction_fn gnome_client_request_interaction;
-static _gnome_interaction_key_return_fn gnome_interaction_key_return;
 static _gnome_client_set_restart_command_fn gnome_client_set_restart_command;
-
-void interact_cb(GnomeClient *client, gint key,
-                 GnomeDialogType type, gpointer data)
-{
-  nsCOMPtr<nsIObserverService> obsServ =
-    do_GetService("@mozilla.org/observer-service;1");
-  nsCOMPtr<nsISupportsPRBool> cancelQuit =
-    do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
-
-  cancelQuit->SetData(PR_FALSE);
-
-  obsServ->NotifyObservers(cancelQuit, "quit-application-requested", nsnull);
-
-  PRBool abortQuit;
-  cancelQuit->GetData(&abortQuit);
-
-  gnome_interaction_key_return(key, abortQuit);
-}
 
 gboolean save_yourself_cb(GnomeClient *client, gint phase,
                           GnomeSaveStyle style, gboolean shutdown,
                           GnomeInteractStyle interact, gboolean fast,
                           gpointer user_data)
 {
-  if (!shutdown)
-    return TRUE;
-
   nsCOMPtr<nsIObserverService> obsServ =
     do_GetService("@mozilla.org/observer-service;1");
 
@@ -148,50 +118,24 @@ gboolean save_yourself_cb(GnomeClient *client, gint phase,
   if (!obsServ || !didSaveSession)
     return TRUE; // OOM
 
+  // Notify observers to save the session state
   didSaveSession->SetData(PR_FALSE);
   obsServ->NotifyObservers(didSaveSession, "session-save", nsnull);
 
   PRBool status;
   didSaveSession->GetData(&status);
 
-  // Didn't save, or no way of saving. So signal for quit-application.
-  if (!status) {
-    if (interact == GNOME_INTERACT_ANY)
-      gnome_client_request_interaction(client, GNOME_DIALOG_NORMAL,
-                                       interact_cb, nsnull);
-    return TRUE;
-  }
-  
-  // Is there a request to suppress default binary launcher? 
-  char* argv1 = getenv("MOZ_APP_LAUNCHER");
+  // If there was no session saved and the save_yourself request is
+  // caused by upcoming shutdown we like to prepare for it
+  if (!status && shutdown) {
+    nsCOMPtr<nsISupportsPRBool> cancelQuit =
+      do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
 
-  if(!argv1) {
-    // Tell GNOME the command for restarting us so that we can be part of XSMP session restore
-    NS_ASSERTION(gDirServiceProvider, "gDirServiceProvider is NULL! This shouldn't happen!");
-    nsCOMPtr<nsIFile> executablePath;
-    nsresult rv;
+    cancelQuit->SetData(PR_FALSE);
+    obsServ->NotifyObservers(cancelQuit, "quit-application-requested", nsnull);
 
-    PRBool dummy;
-    rv = gDirServiceProvider->GetFile(XRE_EXECUTABLE_FILE, &dummy, getter_AddRefs(executablePath));
-
-    if (NS_SUCCEEDED(rv)) {
-      nsCAutoString path;
-
-      // Strip off the -bin suffix to get the shell script we should run; this is what Breakpad does
-      nsCAutoString leafName;
-      rv = executablePath->GetNativeLeafName(leafName);
-      if (NS_SUCCEEDED(rv) && StringEndsWith(leafName, NS_LITERAL_CSTRING("-bin"))) {
-        leafName.SetLength(leafName.Length() - strlen("-bin"));
-        executablePath->SetNativeLeafName(leafName);
-      }
-  
-      executablePath->GetNativePath(path);
-      argv1 = (char*)(path.get());
-    }
-  }
-
-  if(argv1) {
-    gnome_client_set_restart_command(client, 1, &argv1);
+    PRBool abortQuit;
+    cancelQuit->GetData(&abortQuit);
   }
 
   return TRUE;
@@ -456,10 +400,6 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
   // crashes will occur if these libraries are unloaded.
 
 #ifdef MOZ_X11
-  gnome_client_request_interaction = (_gnome_client_request_interaction_fn)
-    PR_FindFunctionSymbol(gnomeuiLib, "gnome_client_request_interaction");
-  gnome_interaction_key_return = (_gnome_interaction_key_return_fn)
-    PR_FindFunctionSymbol(gnomeuiLib, "gnome_interaction_key_return");
   gnome_client_set_restart_command = (_gnome_client_set_restart_command_fn)
     PR_FindFunctionSymbol(gnomeuiLib, "gnome_client_set_restart_command");
 
@@ -469,6 +409,40 @@ nsNativeAppSupportUnix::Start(PRBool *aRetVal)
   GnomeClient *client = gnome_master_client();
   g_signal_connect(client, "save-yourself", G_CALLBACK(save_yourself_cb), NULL);
   g_signal_connect(client, "die", G_CALLBACK(die_cb), NULL);
+
+  // Set the correct/requested restart command in any case.
+
+  // Is there a request to suppress default binary launcher?
+  char* argv1 = getenv("MOZ_APP_LAUNCHER");
+
+  if(!argv1) {
+    // Tell the desktop the command for restarting us so that we can be part of XSMP session restore
+    NS_ASSERTION(gDirServiceProvider, "gDirServiceProvider is NULL! This shouldn't happen!");
+    nsCOMPtr<nsIFile> executablePath;
+    nsresult rv;
+
+    PRBool dummy;
+    rv = gDirServiceProvider->GetFile(XRE_EXECUTABLE_FILE, &dummy, getter_AddRefs(executablePath));
+
+    if (NS_SUCCEEDED(rv)) {
+      nsCAutoString path;
+
+      // Strip off the -bin suffix to get the shell script we should run; this is what Breakpad does
+      nsCAutoString leafName;
+      rv = executablePath->GetNativeLeafName(leafName);
+      if (NS_SUCCEEDED(rv) && StringEndsWith(leafName, NS_LITERAL_CSTRING("-bin"))) {
+        leafName.SetLength(leafName.Length() - strlen("-bin"));
+        executablePath->SetNativeLeafName(leafName);
+      }
+
+      executablePath->GetNativePath(path);
+      argv1 = (char*)(path.get());
+    }
+  }
+
+  if (argv1) {
+    gnome_client_set_restart_command(client, 1, &argv1);
+  }
 #endif /* MOZ_X11 */
 
   return NS_OK;
