@@ -1467,20 +1467,6 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
 }
 #endif
 
-static JSHashNumber
-js_hash_array(const void *key)
-{
-    return (JSHashNumber)JS_PTR_TO_UINT32(key) >> JSVAL_TAGBITS;
-}
-
-bool
-js_InitContextBusyArrayTable(JSContext *cx)
-{
-    cx->busyArrayTable = JS_NewHashTable(4, js_hash_array, JS_CompareValues,
-                                         JS_CompareValues, NULL, NULL);
-    return cx->busyArrayTable != NULL;
-}
-
 static JSBool
 array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
                    JSString *sepstr, jsval *rval)
@@ -1488,25 +1474,19 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
     JS_CHECK_RECURSION(cx, return false);
 
     /*
-     * This hash table is shared between toString invocations and must be empty
-     * after the root invocation completes.
-     */
-    JSHashTable *table = cx->busyArrayTable;
-
-    /*
      * Use HashTable entry as the cycle indicator. On first visit, create the
      * entry, and, when leaving, remove the entry.
      */
-    JSHashNumber hash = js_hash_array(obj);
-    JSHashEntry **hep = JS_HashTableRawLookup(table, hash, obj);
-    JSHashEntry *he = *hep;
-    if (!he) {
+    typedef js::HashSet<JSObject *> ObjSet;
+    ObjSet::AddPtr hashp = cx->busyArrays.lookupForAdd(obj);
+    uint32 genBefore;
+    if (!hashp) {
         /* Not in hash table, so not a cycle. */
-        he = JS_HashTableRawAdd(table, hep, hash, obj, NULL);
-        if (!he) {
+        if (!cx->busyArrays.add(hashp, obj)) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
+        genBefore = cx->busyArrays.generation();
     } else {
         /* Cycle, so return empty string. */
         *rval = ATOM_KEY(cx->runtime->atomState.emptyAtom);
@@ -1580,11 +1560,10 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
     ok = true;
 
   out:
-    /*
-     * It is possible that 'hep' may have been invalidated by subsequent
-     * RawAdd/Remove. Hence, 'RawRemove' must not be used.
-     */
-    JS_HashTableRemove(table, obj);
+    if (genBefore == cx->busyArrays.generation())
+        cx->busyArrays.remove(hashp);
+    else
+        cx->busyArrays.remove(obj);
     return ok;
 }
 
