@@ -85,6 +85,8 @@ _BROWSER_FILES = \
                  browser_alltabslistener.js \
                  browser_bug304198.js \
                  browser_bug321000.js \
+                 title_test.svg \
+                 browser_bug329212.js \
                  browser_bug356571.js \
                  browser_bug386835.js \
                  browser_bug405137.js \
