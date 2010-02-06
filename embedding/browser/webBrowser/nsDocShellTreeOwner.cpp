@@ -68,6 +68,10 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
+#ifdef MOZ_SVG
+#include "nsIDOMSVGElement.h"
+#include "nsIDOMSVGTitleElement.h"
+#endif
 #include "nsIDOMEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNSUIEvent.h"
@@ -1010,6 +1014,29 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode *aNode, PRUnichar **aText,
             currElement->GetAttributeNS(NS_LITERAL_STRING("http://www.w3.org/1999/xlink"), NS_LITERAL_STRING("title"), outText);
             if ( outText.Length() )
               found = PR_TRUE;
+#ifdef MOZ_SVG
+            else {
+              nsCOMPtr<nsIDOMSVGElement> svgContent(do_QueryInterface(currElement));
+              if (svgContent) {
+                nsCOMPtr<nsIDOMNodeList>childNodes;
+                aNode->GetChildNodes(getter_AddRefs(childNodes));
+                PRUint32 childNodeCount;
+                childNodes->GetLength(&childNodeCount);
+                for (PRUint32 i = 0; i < childNodeCount; i++) {
+                  nsCOMPtr<nsIDOMNode>childNode;
+                  childNodes->Item(i, getter_AddRefs(childNode));
+                  nsCOMPtr<nsIDOMSVGTitleElement> titleElement(do_QueryInterface(childNode));
+                  if (titleElement) {
+                    nsCOMPtr<nsIDOM3Node> titleContent(do_QueryInterface(titleElement));
+                    titleContent->GetTextContent(outText);
+                    if ( outText.Length() )
+                      found = PR_TRUE;
+                    break;
+                  }
+                }
+              }
+            }
+#endif
           }
         }
       }
