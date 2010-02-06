@@ -293,7 +293,7 @@ class Vector : AllocPolicy
 
 #ifdef DEBUG
     friend class ReentrancyGuard;
-    bool mEntered;
+    bool entered;
 #endif
 
     Vector(const Vector &);
@@ -318,42 +318,42 @@ class Vector : AllocPolicy
     }
 
     T *begin() {
-        JS_ASSERT(!mEntered);
+        JS_ASSERT(!entered);
         return usingInlineStorage() ? inlineBegin() : heapBegin();
     }
 
     const T *begin() const {
-        JS_ASSERT(!mEntered);
+        JS_ASSERT(!entered);
         return usingInlineStorage() ? inlineBegin() : heapBegin();
     }
 
     T *end() {
-        JS_ASSERT(!mEntered);
+        JS_ASSERT(!entered);
         return usingInlineStorage() ? inlineEnd() : heapEnd();
     }
 
     const T *end() const {
-        JS_ASSERT(!mEntered);
+        JS_ASSERT(!entered);
         return usingInlineStorage() ? inlineEnd() : heapEnd();
     }
 
     T &operator[](size_t i) {
-        JS_ASSERT(!mEntered && i < length());
+        JS_ASSERT(!entered && i < length());
         return begin()[i];
     }
 
     const T &operator[](size_t i) const {
-        JS_ASSERT(!mEntered && i < length());
+        JS_ASSERT(!entered && i < length());
         return begin()[i];
     }
 
     T &back() {
-        JS_ASSERT(!mEntered && !empty());
+        JS_ASSERT(!entered && !empty());
         return *(end() - 1);
     }
 
     const T &back() const {
-        JS_ASSERT(!mEntered && !empty());
+        JS_ASSERT(!entered && !empty());
         return *(end() - 1);
     }
 
@@ -424,7 +424,7 @@ inline
 Vector<T,N,AllocPolicy>::Vector(AllocPolicy ap)
   : AllocPolicy(ap), mLengthOrCapacity(0)
 #ifdef DEBUG
-    , mEntered(false)
+  , entered(false)
 #endif
 {}
 
