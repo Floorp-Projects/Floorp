@@ -618,7 +618,7 @@ function open_properties_dialog() {
     ww.registerNotification(windowObserver);
 
     var command = null;
-    switch(gCurrentTest.action) {
+    switch (gCurrentTest.action) {
       case ACTION_EDIT:
         command = "placesCmd_show:info";
         break;
