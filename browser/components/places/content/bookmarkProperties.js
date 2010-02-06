@@ -196,7 +196,7 @@ var BookmarkPropertiesPanel = {
                              PlacesUtils.bookmarks.DEFAULT_INDEX,
                              Ci.nsITreeView.DROP_ON);
 
-      switch(dialogInfo.type) {
+      switch (dialogInfo.type) {
         case "bookmark":
           this._itemType = BOOKMARK_ITEM;
           if ("uri" in dialogInfo) {
