@@ -42,6 +42,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -525,8 +526,6 @@ static void
 TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 {
     JSBool ok = JS_TRUE;
-    jsval* argv;
-    void* mark;
 
     const char*                  a_in = "some string";
     nsCOMPtr<nsITestXPCFoo>      b_in = new nsTestXPCFoo();
