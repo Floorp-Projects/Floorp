@@ -300,18 +300,16 @@ function test() {
   var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
            getService(Ci.nsIWindowWatcher);
 
-  var windowObserver = {
-    observe: function(aSubject, aTopic, aData) {
-      if (aTopic === "domwindowopened") {
-        ww.unregisterNotification(this);
-        var win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-        win.addEventListener("load", function onLoad(event) {
-          win.removeEventListener("load", onLoad, false);
-          executeSoon(function () testHelper(win));
-        }, false);
-      }
-    }
-  };
+  function windowObserver(aSubject, aTopic, aData) {
+    if (aTopic != "domwindowopened")
+      return;
+    ww.unregisterNotification(windowObserver);
+    var win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    win.addEventListener("load", function onLoad(event) {
+      win.removeEventListener("load", onLoad, false);
+      executeSoon(function () testHelper(win));
+    }, false);
+  }
 
   ww.registerNotification(windowObserver);
   ww.openWindow(null,
