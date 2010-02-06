@@ -907,6 +907,8 @@ enum TypeConsensus
     TypeConsensus_Bad           /* Typemaps are not compatible */
 };
 
+typedef HashMap<nanojit::LIns*, JSObject*> GuardedShapeTable;
+
 #ifdef DEBUG
 # define AbortRecording(cx, reason) AbortRecordingImpl(cx, reason)
 #else
@@ -1001,6 +1003,9 @@ class TraceRecorder
 
     /* A list of trees to trash at the end of the recording session. */
     Queue<TreeFragment*>            whichTreesToTrash;
+
+    /* The set of objects whose shapes already have been guarded. */
+    GuardedShapeTable               guardedShapeTable;
 
     /***************************************** Temporal state hoisted into the recording session */
 
@@ -1186,8 +1191,6 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus guardShape(nanojit::LIns* obj_ins, JSObject* obj,
                                                  uint32 shape, const char* name,
                                                  nanojit::LIns* map_ins, VMSideExit* exit);
-
-    JSDHashTable guardedShapeTable;
 
 #if defined DEBUG_notme && defined XP_UNIX
     void dumpGuardedShapes(const char* prefix);
