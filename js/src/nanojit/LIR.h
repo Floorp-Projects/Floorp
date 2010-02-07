@@ -1597,6 +1597,33 @@ namespace nanojit
         LInsp insCall(const CallInfo *call, LInsp args[]);
     };
 
+    struct SoftFloatOps
+    {
+        const CallInfo* opmap[LIR_sentinel];
+        SoftFloatOps();
+    };
+
+    extern const SoftFloatOps softFloatOps;
+
+    // Replaces fpu ops with function calls, for platforms lacking float
+    // hardware (eg. some ARM machines).
+    class SoftFloatFilter: public LirWriter
+    {
+    public:
+        static const CallInfo* opmap[LIR_sentinel];
+
+        SoftFloatFilter(LirWriter *out);
+        LIns *split(LIns *a);
+        LIns *split(const CallInfo *call, LInsp args[]);
+        LIns *fcall1(const CallInfo *call, LIns *a);
+        LIns *fcall2(const CallInfo *call, LIns *a, LIns *b);
+        LIns *fcmp(const CallInfo *call, LIns *a, LIns *b);
+        LIns *ins1(LOpcode op, LIns *a);
+        LIns *ins2(LOpcode op, LIns *a, LIns *b);
+        LIns *insCall(const CallInfo *ci, LInsp args[]);
+    };
+
+
 #ifdef DEBUG
     // This class does thorough checking of LIR.  It checks *implicit* LIR
     // instructions, ie. LIR instructions specified via arguments -- to
