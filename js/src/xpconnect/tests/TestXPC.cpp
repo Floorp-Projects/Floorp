@@ -456,6 +456,12 @@ sm_test_done:
 // JS_ConvertArguments, these functions were moved here and hacked down to
 // size.
 
+#ifdef HAVE_VA_LIST_AS_ARRAY
+#define JS_ADDRESSOF_VA_LIST(ap) ((va_list *)(ap))
+#else
+#define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
+#endif
+
 static JSBool
 TryArgumentFormatter(JSContext *cx, const char **formatp, JSBool fromJS,
                      jsval **vpp, va_list *app)
@@ -494,7 +500,7 @@ PushArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format, va_l
             break;
           default:
             format--;
-            if (!TryArgumentFormatter(cx, &format, JS_FALSE, &sp, &ap))
+            if (!TryArgumentFormatter(cx, &format, JS_FALSE, &sp, JS_ADDRESSOF_VA_LIST(ap)))
                 return false;
             /* NB: the formatter already updated sp, so we continue here. */
             continue;
