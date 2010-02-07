@@ -12,16 +12,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla code.
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Mozilla Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2008
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
-#   Edward Lee <edward.lee@engineering.uiuc.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,50 +35,15 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH          = ../../../../..
-topsrcdir      = @top_srcdir@
-srcdir         = @srcdir@
-VPATH          = @srcdir@
-relativesrcdir = toolkit/mozapps/downloads/tests/chrome
-
+DEPTH		= ../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir  = testing/mochitest/tests/SimpleTest/tests
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
-
-# temporarily disabled test (bug 483200)
-#  test_retention_is_0_closes.xul \
-
-_CHROME_FILES = \
-  test_basic_functionality.xul \
-  test_cleanup_search.xul \
-  test_clear_button_disabled.xul \
-  test_close_download_manager.xul \
-  test_delete_key_removes.xul \
-  test_esc_key_closes_clears.xul \
-  test_multi_select.xul \
-  test_multiword_search.xul \
-  test_pause_button_state.xul \
-  test_removeDownload_updates_ui.xul \
-  test_search_clearlist.xul \
-  test_search_keys.xul \
-  test_select_all.xul \
-  test_space_key_pauses_resumes.xul \
-  test_privatebrowsing_title.xul \
-  test_ui_stays_open_on_alert_clickback.xul \
-  test_unkownContentType_dialog_layout.xul \
-  test_bug_412360.xul \
-  test_bug_429247.xul \
-  test_bug_462172.xul \
-  unknownContentType_dialog_layout_data.txt \
-  unknownContentType_dialog_layout_data.txt^headers^ \
-  unknownContentType_dialog_layout_data.pif \
-  unknownContentType_dialog_layout_data.pif^headers^ \
-  utils.js \
-  $(NULL)
-ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
-_CHROME_FILES += \
-  test_backspace_key_removes.xul \
-  $(NULL)
-endif
-
+_CHROME_FILES =	test_synthesizeDragStart.xul \
+                test_synthesizeDrop.xul \
+			$(NULL)
 libs:: $(_CHROME_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
