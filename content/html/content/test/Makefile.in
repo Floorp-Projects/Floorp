@@ -140,6 +140,7 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug500885.html \
 		test_bug514856.html \
 		bug514856_iframe.html \
+		test_bug518122.html \
 		test_bug519987.html \
 		test_bug523771.html \
 		form_submit_server.sjs \

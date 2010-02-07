@@ -50,6 +50,7 @@
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
 #include "nsIScrollableFrame.h"
+#include "nsStubMutationObserver.h"
 
 class nsIEditor;
 class nsISelectionController;
@@ -60,6 +61,22 @@ class nsIDOMCharacterData;
 class nsIAccessible;
 #endif
 class nsTextInputSelectionImpl;
+class nsTextControlFrame;
+
+class nsAnonDivObserver : public nsStubMutationObserver
+{
+public:
+  nsAnonDivObserver(nsTextControlFrame* aTextControl)
+  : mTextControl(aTextControl) {}
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
+
+private:
+  nsTextControlFrame* mTextControl;
+};
 
 class nsTextControlFrame : public nsStackFrame,
                            public nsIAnonymousContentCreator,
@@ -166,7 +183,7 @@ public:
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
 
-  NS_IMETHOD GetText(nsString* aText);
+  nsresult GetText(nsString& aText);
 
   NS_DECL_QUERYFRAME
 
@@ -213,6 +230,7 @@ public: //for methods who access nsTextControlFrame directly
   nsresult MaybeBeginSecureKeyboardInput();
   void MaybeEndSecureKeyboardInput();
 
+  void ClearValueCache() { mCachedValue.Truncate(); }
 protected:
   class EditorInitializer;
   friend class EditorInitializer;
@@ -313,7 +331,7 @@ private:
   //helper methods
   nsresult SetSelectionInternal(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
                                 nsIDOMNode *aEndNode, PRInt32 aEndOffset);
-  nsresult SelectAllContents();
+  nsresult SelectAllOrCollapseToEndOfText(PRBool aSelect);
   nsresult SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd);
   
 private:
@@ -335,6 +353,8 @@ private:
   nsCOMPtr<nsFrameSelection> mFrameSel;
   nsTextInputListener* mTextListener;
   nsString mFocusedValue;
+  nsString mCachedValue; // Caches non-hard-wrapped value on a multiline control.
+  nsRefPtr<nsAnonDivObserver> mMutationObserver;
 };
 
 #endif
