@@ -387,11 +387,7 @@ public:
   static void Shutdown();
 
   /**
-   * Checks whether two nodes come from the same origin. aTrustedNode is
-   * considered 'safe' in that a user can operate on it and that it isn't
-   * a js-object that implements nsIDOMNode.
-   * Never call this function with the first node provided by script, it
-   * must always be known to be a 'real' node!
+   * Checks whether two nodes come from the same origin.
    */
   static nsresult CheckSameOrigin(nsINode* aTrustedNode,
                                   nsIDOMNode* aUnTrustedNode);
