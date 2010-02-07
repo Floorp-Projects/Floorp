@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: compress.c,v 1.5 2005/07/20 20:32:42 wtchang%redhat.com Exp $ */
+/* @(#) $Id: compress.c,v 1.5 2009/11/07 01:13:10 wtchang%redhat.com Exp $ */
 
 #define ZLIB_INTERNAL
 #include "zlib.h"

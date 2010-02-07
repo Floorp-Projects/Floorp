@@ -121,8 +121,10 @@ endif
 ARCH		= darwin
 
 DSO_CFLAGS	= -fPIC
+# May override this with different compatibility and current version numbers.
+DARWIN_DYLIB_VERSIONS = -compatibility_version 1 -current_version 1
 # May override this with -bundle to create a loadable module.
-DSO_LDOPTS	= -dynamiclib -compatibility_version 1 -current_version 1 -install_name @executable_path/$(notdir $@) -headerpad_max_install_names
+DSO_LDOPTS	= -dynamiclib $(DARWIN_DYLIB_VERSIONS) -install_name @executable_path/$(notdir $@) -headerpad_max_install_names
 
 MKSHLIB		= $(CC) $(DSO_LDOPTS) $(DARWIN_SDK_SHLIBFLAGS)
 DLL_SUFFIX	= dylib
