@@ -143,7 +143,7 @@ sa_stream_open(sa_stream_t *s) {
                          s->n_channels,
                          s->rate,
                          1,
-                         500000) < 0) {
+                         250000) < 0) {
     snd_pcm_close(s->output_unit);
     s->output_unit = NULL;
     return SA_ERROR_NOT_SUPPORTED;
