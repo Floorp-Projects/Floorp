@@ -366,7 +366,7 @@ nsresult nsGeolocationService::Init()
 
   GeoEnabledChangedCallback("geo.enabled", nsnull);
 
-  if (sGeoEnabled == PR_FALSE)
+  if (!sGeoEnabled)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIGeolocationProvider> provider = do_GetService(NS_GEOLOCATION_PROVIDER_CONTRACTID);
@@ -580,7 +580,7 @@ nsGeolocationService::HasGeolocationProvider()
 nsresult
 nsGeolocationService::StartDevice()
 {
-  if (sGeoEnabled == PR_FALSE)
+  if (!sGeoEnabled)
     return NS_ERROR_NOT_AVAILABLE;
 
   if (!HasGeolocationProvider())
@@ -830,7 +830,7 @@ nsGeolocation::GetCurrentPosition(nsIDOMGeoPositionCallback *callback,
 {
   NS_ENSURE_ARG_POINTER(callback);
 
-  if (sGeoEnabled == PR_FALSE)
+  if (!sGeoEnabled)
     return NS_ERROR_NOT_AVAILABLE;
 
   if (mPendingCallbacks.Length() > MAX_GEO_REQUESTS_PER_WINDOW)
@@ -874,7 +874,7 @@ nsGeolocation::WatchPosition(nsIDOMGeoPositionCallback *callback,
 
   NS_ENSURE_ARG_POINTER(callback);
 
-  if (sGeoEnabled == PR_FALSE)
+  if (!sGeoEnabled)
     return NS_ERROR_NOT_AVAILABLE;
 
   if (mPendingCallbacks.Length() > MAX_GEO_REQUESTS_PER_WINDOW)

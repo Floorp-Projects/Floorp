@@ -295,7 +295,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     }
 #endif
   
-    if (result == PR_TRUE) {
+    if (result) {
       // Remember what filter type the user selected
       mSelectedType = (PRInt16)ofn.nFilterIndex;
 
