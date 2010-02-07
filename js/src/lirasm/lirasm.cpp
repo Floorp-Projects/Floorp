@@ -300,6 +300,7 @@ private:
     LirBufWriter *mBufWriter;
     LirWriter *mCseFilter;
     LirWriter *mExprFilter;
+    LirWriter *mSoftFloatFilter;
     LirWriter *mVerboseWriter;
     LirWriter *mValidateWriter1;
     LirWriter *mValidateWriter2;
@@ -487,7 +488,7 @@ FragmentAssembler::sProfId = 0;
 
 FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName, bool optimize)
     : mParent(parent), mFragName(fragmentName), optimize(optimize),
-      mBufWriter(NULL), mCseFilter(NULL), mExprFilter(NULL), mVerboseWriter(NULL),
+      mBufWriter(NULL), mCseFilter(NULL), mExprFilter(NULL), mSoftFloatFilter(NULL), mVerboseWriter(NULL),
       mValidateWriter1(NULL), mValidateWriter2(NULL)
 {
     mFragment = new Fragment(NULL verbose_only(, (mParent.mLogc.lcbits &
@@ -501,11 +502,18 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
 #ifdef DEBUG
         mLir = mValidateWriter2 = new ValidateWriter(mLir, "end of writer pipeline");
 #endif
-        mLir = mCseFilter  = new CseFilter(mLir, mParent.mAlloc);
+        mLir = mCseFilter = new CseFilter(mLir, mParent.mAlloc);
+    }
+#ifdef NANOJIT_ARM
+    if (avmplus::AvmCore::config.soft_float) {
+        mLir = new SoftFloatFilter(mLir);
+    }
+#endif
+    if (optimize) {
         mLir = mExprFilter = new ExprFilter(mLir);
     }
 #ifdef DEBUG
-    mLir = mValidateWriter1  = new ValidateWriter(mLir, "start of writer pipeline");
+    mLir = mValidateWriter1 = new ValidateWriter(mLir, "start of writer pipeline");
 #endif
 
 #ifdef DEBUG
@@ -530,6 +538,7 @@ FragmentAssembler::~FragmentAssembler()
     delete mValidateWriter2;
     delete mVerboseWriter;
     delete mExprFilter;
+    delete mSoftFloatFilter;
     delete mCseFilter;
     delete mBufWriter;
 }
