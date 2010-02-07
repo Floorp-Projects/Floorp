@@ -51,7 +51,7 @@ PROGRAM		= lots$(BIN_SUFFIX)
 CSRCS		= lots.c
 
 ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LIBS	= dbm32
+EXTRA_DSO_LIBS	= dbm$(MOZ_BITS)
 else
 EXTRA_DSO_LIBS	= mozdbm_s
 endif

@@ -91,6 +91,7 @@ CSRCS = \
 	secasn1e.c \
 	secasn1u.c \
 	secitem.c \
+	secload.c \
 	secoid.c \
 	sectime.c \
 	secport.c \

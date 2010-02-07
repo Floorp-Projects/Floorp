@@ -39,7 +39,7 @@
  * Encoding Rules).  The routines are found in and used extensively by the
  * security library, but exported for other use.
  *
- * $Id: secasn1.h,v 1.16 2008/06/14 14:20:38 wtc%google.com Exp $
+ * $Id: secasn1.h,v 1.17 2009/09/19 00:03:17 wtc%google.com Exp $
  */
 
 #ifndef _SECASN1_H_
@@ -149,6 +149,12 @@ extern SECStatus SEC_ASN1Encode(const void *src, const SEC_ASN1Template *t,
 				SEC_ASN1WriteProc output_proc,
 				void *output_arg);
 
+/*
+ * If both pool and dest are NULL, the caller should free the returned SECItem
+ * with a SECITEM_FreeItem(..., PR_TRUE) call.  If pool is NULL but dest is
+ * not NULL, the caller should free the data buffer pointed to by dest with a
+ * SECITEM_FreeItem(dest, PR_FALSE) or PORT_Free(dest->data) call.
+ */
 extern SECItem * SEC_ASN1EncodeItem(PLArenaPool *pool, SECItem *dest,
 				    const void *src, const SEC_ASN1Template *t);
 

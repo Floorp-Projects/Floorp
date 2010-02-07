@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -17,7 +17,7 @@
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1994-2000
+# Portions created by the Initial Developer are Copyright (C) 1994-2009
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -906,6 +906,11 @@ cert_ssl()
   echo "$SCRIPTNAME: Creating Server CA Issued Certificate for \\"
   echo "             ${HOSTADDR} ------------------------------------"
   cert_create_cert ${SERVERDIR} "${HOSTADDR}" 100 ${D_SERVER}
+  echo "$SCRIPTNAME: Creating Server CA Issued Certificate for \\"
+  echo "             ${HOSTADDR}-sni --------------------------------"
+  CERTSERIAL=101
+  CERTNAME="${HOST}-sni${sniCertCount}.${DOMSUF}"
+  cert_add_cert 
   CU_ACTION="Modify trust attributes of Root CA -t TC,TC,TC"
   certu -M -n "TestCA" -t "TC,TC,TC" -d ${PROFILEDIR} -f "${R_PWFILE}"
   if [ -n "$NSS_ENABLE_ECC" ] ; then
