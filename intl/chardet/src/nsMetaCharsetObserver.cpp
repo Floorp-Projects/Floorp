@@ -402,7 +402,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
 {
   nsresult rv = NS_OK;
 
-  if (bMetaCharsetObserverStarted == PR_FALSE)  {
+  if (!bMetaCharsetObserverStarted)  {
     bMetaCharsetObserverStarted = PR_TRUE;
 
     nsCOMPtr<nsIParserService> parserService(do_GetService(NS_PARSERSERVICE_CONTRACTID, &rv));
@@ -421,7 +421,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
 NS_IMETHODIMP nsMetaCharsetObserver::End() 
 {
   nsresult rv = NS_OK;
-  if (bMetaCharsetObserverStarted == PR_TRUE)  {
+  if (bMetaCharsetObserverStarted)  {
     bMetaCharsetObserverStarted = PR_FALSE;
 
     nsCOMPtr<nsIParserService> parserService(do_GetService(NS_PARSERSERVICE_CONTRACTID, &rv));

@@ -1487,7 +1487,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool mov
     {
         PRBool isDir;
         newParentDir->IsDirectory(&isDir);
-        if (isDir == PR_FALSE)
+        if (!isDir)
         {
             return NS_ERROR_FILE_DESTINATION_NOT_DIR;
         }

@@ -757,7 +757,7 @@ walkTree(STCategoryNode * root, STCategoryNodeProcessor func,
     while (begin != end) {
         node = nodes[begin];
         ret = (*func) (inRequest, inOptions, inContext, clientData, node);
-        if (ret == PR_FALSE) {
+        if (!ret) {
             /* Abort */
             break;
         }

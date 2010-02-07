@@ -321,7 +321,7 @@ void nsXMLEventsManager::AddListeners(nsIDocument* aDocument)
   for (int i = 0; i < mIncomplete.Count(); ++i) {
     cur = mIncomplete[i];
     //If this succeeds, the object will be removed from mIncomplete
-    if (nsXMLEventsListener::InitXMLEventsListener(aDocument, this, cur) == PR_TRUE)
+    if (nsXMLEventsListener::InitXMLEventsListener(aDocument, this, cur))
       --i;
   }
 }
