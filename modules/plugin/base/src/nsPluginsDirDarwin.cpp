@@ -101,32 +101,6 @@ static nsresult toCFURLRef(nsIFile* file, CFURLRef& outURL)
   return rv;
 }
 
-// function to test whether or not this is a loadable plugin
-static PRBool IsLoadablePlugin(CFURLRef aURL)
-{
-  if (!aURL)
-    return PR_FALSE;
-  
-  PRBool isLoadable = PR_FALSE;
-  char path[PATH_MAX];
-  if (CFURLGetFileSystemRepresentation(aURL, TRUE, (UInt8*)path, sizeof(path))) {
-    UInt32 magic;
-    int f = open(path, O_RDONLY);
-    if (f != -1) {
-      // Mach-O headers use the byte ordering of the architecture on which
-      // they run, so test against the magic number in the byte order
-      // we're compiling for. Fat headers are always big-endian, so swap
-      // them to host before comparing to host representation of the magic
-      if (read(f, &magic, sizeof(magic)) == sizeof(magic)) {
-        if ((magic == MH_MAGIC) || (PR_ntohl(magic) == FAT_MAGIC))
-          isLoadable = PR_TRUE;
-      }
-      close(f);
-    }
-  }
-  return isLoadable;
-}
-
 PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
   nsCString temp;
@@ -145,32 +119,17 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
     return PR_FALSE;
   
   PRBool isPluginFile = PR_FALSE;
-  
-  CFBundleRef pluginBundle = CFBundleCreate(kCFAllocatorDefault, pluginURL);
+
+  CFBundleRef pluginBundle = ::CFBundleCreate(kCFAllocatorDefault, pluginURL);
   if (pluginBundle) {
     UInt32 packageType, packageCreator;
-    CFBundleGetPackageInfo(pluginBundle, &packageType, &packageCreator);
+    ::CFBundleGetPackageInfo(pluginBundle, &packageType, &packageCreator);
     if (packageType == 'BRPL' || packageType == 'IEPL' || packageType == 'NSPL') {
-      CFURLRef executableURL = CFBundleCopyExecutableURL(pluginBundle);
-      if (executableURL) {
-        isPluginFile = IsLoadablePlugin(executableURL);
-        ::CFRelease(executableURL);
-      }
+      isPluginFile = !!::CFBundlePreflightExecutable(pluginBundle, NULL);
     }
     ::CFRelease(pluginBundle);
   }
-  else {
-    LSItemInfoRecord info;
-    if (LSCopyItemInfoForURL(pluginURL, kLSRequestTypeCreator, &info) == noErr) {
-      if ((info.filetype == 'shlb' && info.creator == 'MOSS') ||
-          info.filetype == 'NSPL' ||
-          info.filetype == 'BRPL' ||
-          info.filetype == 'IEPL') {
-        isPluginFile = IsLoadablePlugin(pluginURL);
-      }
-    }
-  }
-  
+
   ::CFRelease(pluginURL);
   return isPluginFile;
 }
