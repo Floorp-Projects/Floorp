@@ -1099,6 +1099,9 @@ nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (!mDidPreDestroy) {
     PreDestroy();
   }
+  if (mAnonymousDiv && mMutationObserver) {
+    mAnonymousDiv->RemoveMutationObserver(mMutationObserver);
+  }
   nsContentUtils::DestroyAnonymousContent(&mAnonymousDiv);
   nsBoxFrame::DestroyFrom(aDestructRoot);
 }
@@ -1605,6 +1608,10 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
         disp->mOverflowX != NS_STYLE_OVERFLOW_CLIP) {
       classValue.AppendLiteral(" inherit-overflow");
     }
+
+    mMutationObserver = new nsAnonDivObserver(this);
+    NS_ENSURE_TRUE(mMutationObserver, NS_ERROR_OUT_OF_MEMORY);
+    mAnonymousDiv->AddMutationObserver(mMutationObserver);
   }
   rv = mAnonymousDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                               classValue, PR_FALSE);
@@ -1882,7 +1889,7 @@ nsresult nsTextControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aV
       //      of select all which merely builds a range that selects
       //      all of the content and adds that to the selection.
 
-      SelectAllContents();
+      SelectAllOrCollapseToEndOfText(PR_TRUE);
     }
     mIsProcessing = PR_FALSE;
   }
@@ -1964,7 +1971,7 @@ nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
 }
 
 nsresult
-nsTextControlFrame::SelectAllContents()
+nsTextControlFrame::SelectAllOrCollapseToEndOfText(PRBool aSelect)
 {
   if (!mEditor)
     return NS_OK;
@@ -1974,6 +1981,7 @@ nsTextControlFrame::SelectAllContents()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> rootContent = do_QueryInterface(rootElement);
+  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
   PRInt32 numChildren = rootContent->GetChildCount();
 
   if (numChildren > 0) {
@@ -1984,11 +1992,18 @@ nsTextControlFrame::SelectAllContents()
       if (child->Tag() == nsGkAtoms::br)
         --numChildren;
     }
+    if (!aSelect && numChildren) {
+      child = rootContent->GetChildAt(numChildren - 1);
+      if (child && child->IsNodeOfType(nsINode::eTEXT)) {
+        rootNode = do_QueryInterface(child);
+        const nsTextFragment* fragment = child->GetText();
+        numChildren = fragment ? fragment->GetLength() : 0;
+      }
+    }
   }
 
-  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
-
-  return SetSelectionInternal(rootNode, 0, rootNode, numChildren);
+  return SetSelectionInternal(rootNode, aSelect ? 0 : numChildren,
+                              rootNode, numChildren);
 }
 
 nsresult
@@ -2394,18 +2409,18 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 
-NS_IMETHODIMP
-nsTextControlFrame::GetText(nsString* aText)
+nsresult
+nsTextControlFrame::GetText(nsString& aText)
 {
   nsresult rv = NS_OK;
   if (IsSingleLineTextControl()) {
     // If we're going to remove newlines anyway, ignore the wrap property
-    GetValue(*aText, PR_TRUE);
-    RemoveNewlines(*aText);
+    GetValue(aText, PR_TRUE);
+    RemoveNewlines(aText);
   } else {
     nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(mContent);
     if (textArea) {
-      rv = textArea->GetValue(*aText);
+      rv = textArea->GetValue(aText);
     }
   }
   return rv;
@@ -2475,14 +2490,14 @@ nsTextControlFrame::FireOnInput()
 nsresult
 nsTextControlFrame::InitFocusedValue()
 {
-  return GetText(&mFocusedValue);
+  return GetText(mFocusedValue);
 }
 
 NS_IMETHODIMP
 nsTextControlFrame::CheckFireOnChange()
 {
   nsString value;
-  GetText(&value);
+  GetText(value);
   if (!mFocusedValue.Equals(value))
   {
     mFocusedValue = value;
@@ -2506,6 +2521,12 @@ nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap) const
   
   if (mEditor && mUseEditor) 
   {
+    PRBool canCache = aIgnoreWrap && !IsSingleLineTextControl();
+    if (canCache && !mCachedValue.IsEmpty()) {
+      aValue = mCachedValue;
+      return NS_OK;
+    }
+
     PRUint32 flags = (nsIDocumentEncoder::OutputLFLineBreak |
                       nsIDocumentEncoder::OutputPreformatted |
                       nsIDocumentEncoder::OutputPersistNBSP);
@@ -2541,6 +2562,11 @@ nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap) const
       
       rv = mEditor->OutputToString(NS_LITERAL_STRING("text/plain"), flags,
                                    aValue);
+    }
+    if (canCache) {
+      const_cast<nsTextControlFrame*>(this)->mCachedValue = aValue;
+    } else {
+      const_cast<nsTextControlFrame*>(this)->mCachedValue.Truncate();
     }
   }
   else
@@ -2580,19 +2606,16 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
     // restores it afterwards (ie. we want 'change' events for those changes).
     // Focused value must be updated to prevent incorrect 'change' events,
     // but only if user hasn't changed the value.
-    nsString val;
-    GetText(&val);
+
+    // GetText removes newlines from single line control.
+    nsString currentValue;
+    GetText(currentValue);
     PRBool focusValueInit = !mFireChangeEventState &&
-      mFocusedValue.Equals(val);
+      mFocusedValue.Equals(currentValue);
 
     nsCOMPtr<nsIEditor> editor = mEditor;
     nsWeakFrame weakFrame(this);
-    nsAutoString currentValue;
-    GetValue(currentValue, PR_FALSE);
-    if (IsSingleLineTextControl())
-    {
-      RemoveNewlines(currentValue); 
-    }
+
     // this is necessary to avoid infinite recursion
     if (!currentValue.Equals(aValue))
     {
@@ -2600,12 +2623,13 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       // so convert windows and mac platform linebreaks to \n:
       // Unfortunately aValue is declared const, so we have to copy
       // in order to do this substitution.
-      currentValue.Assign(aValue);
-      ::PlatformToDOMLineBreaks(currentValue);
+      nsString newValue(aValue);
+      if (aValue.FindChar(PRUnichar('\r')) != -1) {
+        ::PlatformToDOMLineBreaks(newValue);
+      }
 
-      nsCOMPtr<nsIDOMDocument>domDoc;
-      nsresult rv = editor->GetDocument(getter_AddRefs(domDoc));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      editor->GetDocument(getter_AddRefs(domDoc));
       NS_ENSURE_STATE(domDoc);
 
       PRBool outerTransaction;
@@ -2628,7 +2652,19 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
         }
 
         nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon.get();
-        mSelCon->SelectAll();
+        PRUint32 currentLength = currentValue.Length();
+        PRUint32 newlength = newValue.Length();
+        if (!currentLength ||
+            !StringBeginsWith(newValue, currentValue)) {
+          // Replace the whole text.
+          currentLength = 0;
+          mSelCon->SelectAll();
+        } else {
+          // Collapse selection to the end so that we can append data.
+          SelectAllOrCollapseToEndOfText(PR_FALSE);
+        }
+        const nsAString& insertValue =
+          StringTail(newValue, newlength - currentLength);
         nsCOMPtr<nsIPlaintextEditor> plaintextEditor = do_QueryInterface(editor);
         if (!plaintextEditor || !weakFrame.IsAlive()) {
           NS_WARNING("Somehow not a plaintext editor?");
@@ -2662,11 +2698,14 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
         plaintextEditor->GetMaxTextLength(&savedMaxLength);
         plaintextEditor->SetMaxTextLength(-1);
 
-        if (currentValue.Length() < 1)
+        if (insertValue.IsEmpty()) {
           editor->DeleteSelection(nsIEditor::eNone);
-        else {
-          if (plaintextEditor)
-            plaintextEditor->InsertText(currentValue);
+        } else {
+          plaintextEditor->InsertText(insertValue);
+        }
+
+        if (!IsSingleLineTextControl()) {
+          mCachedValue = newValue;
         }
 
         plaintextEditor->SetMaxTextLength(savedMaxLength);
@@ -2762,3 +2801,40 @@ nsTextControlFrame::ShutDown()
   NS_IF_RELEASE(sNativeTextAreaBindings);
   NS_IF_RELEASE(sNativeInputBindings);
 }
+
+NS_IMPL_ISUPPORTS1(nsAnonDivObserver, nsIMutationObserver)
+
+void
+nsAnonDivObserver::CharacterDataChanged(nsIDocument*             aDocument,
+                                        nsIContent*              aContent,
+                                        CharacterDataChangeInfo* aInfo)
+{
+  mTextControl->ClearValueCache();
+}
+
+void
+nsAnonDivObserver::ContentAppended(nsIDocument* aDocument,
+                                   nsIContent*  aContainer,
+                                   PRInt32      aNewIndexInContainer)
+{
+  mTextControl->ClearValueCache();
+}
+
+void
+nsAnonDivObserver::ContentInserted(nsIDocument* aDocument,
+                                   nsIContent*  aContainer,
+                                   nsIContent*  aChild,
+                                   PRInt32      aIndexInContainer)
+{
+  mTextControl->ClearValueCache();
+}
+
+void
+nsAnonDivObserver::ContentRemoved(nsIDocument* aDocument,
+                                  nsIContent*  aContainer,
+                                  nsIContent*  aChild,
+                                  PRInt32      aIndexInContainer)
+{
+  mTextControl->ClearValueCache();
+}
+

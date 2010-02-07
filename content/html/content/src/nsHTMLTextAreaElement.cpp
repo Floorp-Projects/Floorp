@@ -799,6 +799,9 @@ nsHTMLTextAreaElement::Reset()
   // If the frame is there, we have to set the value so that it will show up.
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
   if (formControlFrame) {
+    // To get the initial spellchecking, reset value to
+    // empty string before setting the default value.
+    SetValue(EmptyString());
     nsAutoString resetVal;
     GetDefaultValue(resetVal);
     rv = SetValue(resetVal);
