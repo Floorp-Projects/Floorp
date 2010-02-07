@@ -18,7 +18,6 @@ LIBRARY sqlite3 ;-
 EXPORTS ;-
 sqlite3_aggregate_context;
 sqlite3_aggregate_count;
-sqlite3_apis;
 sqlite3_auto_extension;
 sqlite3_bind_blob;
 sqlite3_bind_double;
@@ -88,6 +87,7 @@ sqlite3_malloc;
 sqlite3_mprintf;
 sqlite3_open;
 sqlite3_open16;
+sqlite3_open_v2;
 sqlite3_overload_function;
 sqlite3_prepare;
 sqlite3_prepare16;

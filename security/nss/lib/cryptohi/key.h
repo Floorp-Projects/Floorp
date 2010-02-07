@@ -33,7 +33,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: key.h,v 1.4 2004/04/27 23:04:35 gerv%gerv.net Exp $ */
+/* $Id: key.h,v 1.5 2009/10/15 23:58:13 wtc%google.com Exp $ */
+
+/* This header is deprecated.  Please include keyhi.h instead. */
 
 #ifndef _KEY_H_
 #define _KEY_H_

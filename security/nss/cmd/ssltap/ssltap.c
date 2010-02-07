@@ -66,7 +66,7 @@
 #include "cert.h"
 #include "sslproto.h"
 
-#define VERSIONSTRING "$Revision: 1.13 $ ($Date: 2009/03/13 02:24:07 $) $Author: nelson%bolyard.com $"
+#define VERSIONSTRING "$Revision: 1.17 $ ($Date: 2010/01/28 06:19:11 $) $Author: nelson%bolyard.com $"
 
 
 struct _DataBufferList;
@@ -365,6 +365,10 @@ const char * V2CipherString(int cs_int)
   case 0x000039:    cs_str = "TLS/DHE-RSA/AES256-CBC/SHA";	break;
   case 0x00003A:    cs_str = "TLS/DH-ANON/AES256-CBC/SHA";	break;
 
+  case 0x00003C:    cs_str = "TLS/RSA/AES128-CBC/SHA256";  	break;
+  case 0x00003D:    cs_str = "TLS/RSA/AES256-CBC/SHA256";  	break;
+  case 0x000040:    cs_str = "TLS/DHE-DSS/AES128-CBC/SHA256";	break;
+
   case 0x000041:    cs_str = "TLS/RSA/CAMELLIA128-CBC/SHA";	break;
   case 0x000042:    cs_str = "TLS/DH-DSS/CAMELLIA128-CBC/SHA";	break;
   case 0x000043:    cs_str = "TLS/DH-RSA/CAMELLIA128-CBC/SHA";	break;
@@ -379,6 +383,8 @@ const char * V2CipherString(int cs_int)
   case 0x000063:    cs_str = "TLS/DHE-DSS_EXPORT1024/DES56-CBC/SHA"; break;
   case 0x000065:    cs_str = "TLS/DHE-DSS_EXPORT1024/RC4-56/SHA";  break;
   case 0x000066:    cs_str = "TLS/DHE-DSS/RC4-128/SHA";		   break;
+
+  case 0x00006A:    cs_str = "TLS/DHE-DSS/AES256-CBC/SHA256";	break;
 
   case 0x000072:    cs_str = "TLS/DHE-DSS/3DESEDE-CBC/RMD160"; break;
   case 0x000073:    cs_str = "TLS/DHE-DSS/AES128-CBC/RMD160";  break;
@@ -420,6 +426,8 @@ const char * V2CipherString(int cs_int)
   case 0x00009A:    cs_str = "TLS/DHE-RSA/SEED-CBC/SHA";	break;     
   case 0x00009B:    cs_str = "TLS/DH-ANON/SEED-CBC/SHA";	break;     
 
+  case 0x0000FF:    cs_str = "TLS_RENEGO_PROTECTION_REQUEST";	break;
+
   case 0x00C001:    cs_str = "TLS/ECDH-ECDSA/NULL/SHA";         break;
   case 0x00C002:    cs_str = "TLS/ECDH-ECDSA/RC4-128/SHA";      break;
   case 0x00C003:    cs_str = "TLS/ECDH-ECDSA/3DES-EDE-CBC/SHA"; break;
@@ -446,16 +454,37 @@ const char * V2CipherString(int cs_int)
   case 0x00C018:    cs_str = "TLS/ECDH-anon/AES128-CBC/SHA";    break;
   case 0x00C019:    cs_str = "TLS/ECDH-anon/AES256-CBC/SHA";    break;
 
-  case 0x00feff:    cs_str = "SSL3/RSA-FIPS/3DESEDE-CBC/SHA";	break;
-  case 0x00fefe:    cs_str = "SSL3/RSA-FIPS/DES-CBC/SHA";	break;
-  case 0x00ffe1:    cs_str = "SSL3/RSA-FIPS/DES56-CBC/SHA";     break;
-  case 0x00ffe0:    cs_str = "SSL3/RSA-FIPS/3DES192EDE-CBC/SHA";break;
+  case 0x00C023:    cs_str = "TLS/ECDHE-ECDSA/AES128-CBC/SHA256"; break;
+  case 0x00C024:    cs_str = "TLS/ECDHE-ECDSA/AES256-CBC/SHA384"; break;
+  case 0x00C027:    cs_str = "TLS/ECDHE-RSA/AES128-CBC/SHA256"; break;
+  case 0x00C028:    cs_str = "TLS/ECDHE-RSA/AES256-CBC/SHA384"; break;
+  case 0x00C02B:    cs_str = "TLS/ECDHE-ECDSA/AES128-GCM/SHA256"; break;
+  case 0x00C02C:    cs_str = "TLS/ECDHE-ECDSA/AES256-GCM/SHA384"; break;
+
+  case 0x00FEFF:    cs_str = "SSL3/RSA-FIPS/3DESEDE-CBC/SHA";	break;
+  case 0x00FEFE:    cs_str = "SSL3/RSA-FIPS/DES-CBC/SHA";	break;
+  case 0x00FFE1:    cs_str = "SSL3/RSA-FIPS/DES56-CBC/SHA";     break;
+  case 0x00FFE0:    cs_str = "SSL3/RSA-FIPS/3DES192EDE-CBC/SHA";break;
 
   /* the string literal is broken up to avoid trigraphs */
   default:          cs_str = "????" "/????????" "/?????????" "/???"; break;
   }
 
   return cs_str;
+}
+
+const char * CompressionMethodString(int cm_int) 
+{
+  char *cm_str;
+  cm_str = NULL;
+  switch (cm_int) {
+  case  0: cm_str = "NULL";     break;
+  case  1: cm_str = "DEFLATE";  break;  /* RFC 3749 */
+  case 64: cm_str = "LZS";      break;  /* RFC 3943 */
+  default: cm_str = "???";      break;
+  }
+
+  return cm_str;
 }
 
 const char * helloExtensionNameString(int ex_num) 
@@ -472,7 +501,9 @@ const char * helloExtensionNameString(int ex_num)
   case  5: ex_name = "status_request";                 break;
   case 10: ex_name = "elliptic_curves";                break;
   case 11: ex_name = "ec_point_formats";               break;
+  case 13: ex_name = "signature_algorithms";           break;
   case 35: ex_name = "session_ticket";                 break;
+  case 0xff01: ex_name = "renegotiation_info";         break;
   default: sprintf(buf, "%d", ex_num);  ex_name = (const char *)buf; break;
   }
 
@@ -554,10 +585,8 @@ void print_sslv2(DataBufferList *s, unsigned char *recordBuf, unsigned int recor
 	       (PRUint32)(GET_SHORT((chv2->rndlength))));
     PR_fprintf(PR_STDOUT,"           cipher-suites = { \n");
     for (p=0;p<GET_SHORT((chv2->cslength));p+=3) {
-      const char *cs_str=NULL;
-      PRUint32 cs_int=0;
-      cs_int = GET_24((&chv2->csuites[p]));
-      cs_str = V2CipherString(cs_int);
+      PRUint32 cs_int    = GET_24((&chv2->csuites[p]));
+      const char *cs_str = V2CipherString(cs_int);
 
       PR_fprintf(PR_STDOUT,"                (0x%06x) %s\n",
 		  cs_int, cs_str);
@@ -641,10 +670,8 @@ void print_sslv2(DataBufferList *s, unsigned char *recordBuf, unsigned int recor
     PR_fprintf(PR_STDOUT,"           cipher-suites = { ");
     len = GET_SHORT((shv2->cslength));
     for (p = 0; p < len; p += 3) {
-      const char *cs_str=NULL;
-      PRUint32 cs_int=0;
-      cs_int = GET_24((pos+p));
-      cs_str = V2CipherString(cs_int);
+      PRUint32 cs_int    = GET_24((pos+p));
+      const char *cs_str = V2CipherString(cs_int);
       PR_fprintf(PR_STDOUT,"\n              ");
       PR_fprintf(PR_STDOUT,"(0x%06x) %s", cs_int, cs_str);
     }
@@ -727,7 +754,11 @@ unsigned int print_hello_extension(unsigned char *  hsdata,
   return pos;
 }
 
-
+/* In the case of renegotiation, handshakes that occur in an already MAC'ed 
+ * channel, by the time of this call, the caller has already removed the MAC 
+ * from input recordLen. The only MAC'ed record that will get here with its 
+ * MAC intact (not removed) is the first Finished message on the connection.
+ */
 void print_ssl3_handshake(unsigned char *recordBuf, 
                           unsigned int   recordLen,
                           SSLRecord *    sr,
@@ -757,10 +788,10 @@ void print_ssl3_handshake(unsigned char *recordBuf,
     recordLen = s->msgBufOffset;
     recordBuf = s->msgBuf;
   }
-  while (offset + 4 + s->hMACsize <= recordLen) {
+  while (offset + 4 <= recordLen) {
     sslh.type = recordBuf[offset]; 
     sslh.length = GET_24(recordBuf+offset+1);
-    if (offset + 4 + sslh.length + s->hMACsize > recordLen)
+    if (offset + 4 + sslh.length > recordLen)
       break;
     /* finally have a complete message */
     if (sslhexparse) 
@@ -816,17 +847,15 @@ void print_ssl3_handshake(unsigned char *recordBuf,
 	  /* pretty print cipher suites */
 	  {
 	    int csuitelength = GET_SHORT((hsdata+pos));
-	    PR_fprintf(PR_STDOUT,"            cipher_suites[%d] = { \n",
+	    PR_fprintf(PR_STDOUT,"            cipher_suites[%d] = {\n",
 		       csuitelength/2);
 	    if (csuitelength % 2) {
 	      PR_fprintf(PR_STDOUT,
 		 "*error in protocol - csuitelength shouldn't be odd*\n");
 	    }
 	    for (w=0; w<csuitelength; w+=2) {
-	      const char *cs_str=NULL;
-	      PRUint32 cs_int=0;
-	      cs_int = GET_SHORT((hsdata+pos+2+w));
-	      cs_str = V2CipherString(cs_int);
+	      PRUint32 cs_int    = GET_SHORT((hsdata+pos+2+w));
+	      const char *cs_str = V2CipherString(cs_int);
 	      PR_fprintf(PR_STDOUT,
 		"                (0x%04x) %s\n", cs_int, cs_str);
 	    }
@@ -837,13 +866,16 @@ void print_ssl3_handshake(unsigned char *recordBuf,
 	  /* pretty print compression methods */
 	  {
 	    int complength = hsdata[pos];
-	    PR_fprintf(PR_STDOUT,"            compression[%d] = {",
+	    PR_fprintf(PR_STDOUT,"            compression[%d] = {\n",
 	               complength);
 	    for (w=0; w < complength; w++) {
-	      PR_fprintf(PR_STDOUT, " %02x", hsdata[pos+1+w]);
+	      PRUint32 cm_int    = hsdata[pos+1+w];
+	      const char *cm_str = CompressionMethodString(cm_int);
+	      PR_fprintf(PR_STDOUT,
+		"                (%02x) %s\n", cm_int, cm_str);
 	    }
 	    pos += 1 + complength;
-	    PR_fprintf(PR_STDOUT," }\n");
+	    PR_fprintf(PR_STDOUT,"            }\n");
 	  }
 
 	  /* pretty print extensions, if any */
@@ -887,8 +919,13 @@ void print_ssl3_handshake(unsigned char *recordBuf,
 	  currentcipher = cs_int;
 	  pos += 2;
 	}
-	PR_fprintf(PR_STDOUT,  "            compression method = %02x\n", 
-		   hsdata[pos++]);
+	/* pretty print chosen compression method */
+	{
+	  PRUint32 cm_int    = hsdata[pos++];
+	  const char *cm_str = CompressionMethodString(cm_int);
+	  PR_fprintf(PR_STDOUT,"            compression method = (%02x) %s\n",
+		     cm_int, cm_str);
+	}
 
 	/* pretty print extensions, if any */
 	pos = print_hello_extension(hsdata, sslh.length, pos);
@@ -1057,10 +1094,18 @@ void print_ssl3_handshake(unsigned char *recordBuf,
       PR_fprintf(PR_STDOUT,"         }\n");
 
       if (!isNULLmac(currentcipher) && !s->hMACsize) {
-          /* To calculate the size of MAC, we subtract the number
-           * of known bytes of message from the number of remaining
-           * bytes in the record. */
+          /* To calculate the size of MAC, we subtract the number of known 
+	   * bytes of message from the number of remaining bytes in the 
+	   * record. This assumes that this is the first record on the 
+	   * connection to have a MAC, and that the sender has not put another 
+	   * message after the finished message in the handshake record. 
+	   * This is only correct for the first transition from unMACed to 
+	   * MACed. If the connection switches from one cipher suite to 
+	   * another one with a different MAC, this logic will not track that 
+	   * change correctly.
+	   */
           s->hMACsize = recordLen - (sslh.length + 4);
+	  sslh.length += s->hMACsize;  /* skip over the MAC data */
       }
       break;
 
@@ -1075,8 +1120,8 @@ void print_ssl3_handshake(unsigned char *recordBuf,
     }  /* end of switch sslh.type */
     offset += sslh.length + 4; 
   } /* while */
-  if (offset + s->hMACsize < recordLen) { /* stuff left over */
-    int newMsgLen = recordLen - (offset + s->hMACsize);
+  if (offset < recordLen) { /* stuff left over */
+    int newMsgLen = recordLen - offset;
     if (!s->msgBuf) {
       s->msgBuf = PORT_Alloc(newMsgLen);
       if (!s->msgBuf) {

@@ -47,7 +47,7 @@
  *
  */
 
-/* @(#) $Id: deflate.c,v 1.5 2005/07/20 20:32:42 wtchang%redhat.com Exp $ */
+/* @(#) $Id: deflate.c,v 1.5 2009/11/07 01:13:10 wtchang%redhat.com Exp $ */
 
 #include "deflate.h"
 
