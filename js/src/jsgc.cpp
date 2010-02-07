@@ -2870,7 +2870,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 {
     JSRuntime *rt;
     JSGCCallback callback;
-    bool keepAtoms;
     JSTracer trc;
     JSGCArena *emptyArenas, *a, **ap;
 #ifdef JS_THREADSAFE
@@ -3149,20 +3148,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     }
 #endif
 
-    if (gckind & GC_KEEP_ATOMS) {
-        /*
-         * The set slot request and last ditch GC kinds preserve all atoms and
-         * weak roots.
-         */
-        keepAtoms = true;
-    } else {
-        /*
-         * Query rt->gcKeepAtoms only when we know that all other threads are
-         * suspended, see bug 541790.
-         */
-        keepAtoms = (rt->gcKeepAtoms != 0);
+    /* The last ditch GC preserves weak roots. */
+    if (!(gckind & GC_KEEP_ATOMS))
         JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
-    }
 
   restart:
     rt->gcNumber++;
@@ -3181,8 +3169,15 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         JS_ASSERT(!a->info.hasMarkedDoubles);
 #endif
 
-    js_TraceRuntime(&trc, keepAtoms);
-    js_MarkScriptFilenames(rt, keepAtoms);
+    {
+        /*
+         * Query rt->gcKeepAtoms only when we know that all other threads are
+         * suspended, see bug 541790.
+         */
+        bool keepAtoms = (gckind & GC_KEEP_ATOMS) || rt->gcKeepAtoms != 0;
+        js_TraceRuntime(&trc, keepAtoms);
+        js_MarkScriptFilenames(rt, keepAtoms);
+    }
 
     /*
      * Mark children of things that caused too deep recursion during the above
