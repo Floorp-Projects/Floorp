@@ -2536,34 +2536,11 @@ function BrowserReloadWithFlags(reloadFlags) {
 }
 
 var PrintPreviewListener = {
-  _printPreviewTab: null,
-  _tabBeforePrintPreview: null,
-
-  getPrintPreviewBrowser: function () {
-    if (!this._printPreviewTab) {
-      this._tabBeforePrintPreview = gBrowser.selectedTab;
-      this._printPreviewTab = gBrowser.loadOneTab("about:blank",
-                                                  { inBackground: false });
-      gBrowser.selectedTab = this._printPreviewTab;
-    }
-    return gBrowser.getBrowserForTab(this._printPreviewTab);
-  },
-  getSourceBrowser: function () {
-    return this._tabBeforePrintPreview ?
-      this._tabBeforePrintPreview.linkedBrowser : gBrowser.selectedBrowser;
-  },
-  getNavToolbox: function () {
-    return gNavToolbox;
-  },
   onEnter: function () {
     gInPrintPreviewMode = true;
     this._toggleAffectedChrome();
   },
   onExit: function () {
-    gBrowser.selectedTab = this._tabBeforePrintPreview;
-    this._tabBeforePrintPreview = null;
-    gBrowser.removeTab(this._printPreviewTab);
-    this._printPreviewTab = null;
     gInPrintPreviewMode = false;
     this._toggleAffectedChrome();
   },
@@ -2595,7 +2572,8 @@ var PrintPreviewListener = {
     this._chromeState.sidebarOpen = !sidebar.hidden;
     this._sidebarCommand = sidebar.getAttribute("sidebarcommand");
 
-    gBrowser.mStrip.setAttribute("moz-collapsed", "true");
+    this._chromeState.hadTabStrip = gBrowser.getStripVisibility();
+    gBrowser.setStripVisibilityTo(false);
 
     var notificationBox = gBrowser.getNotificationBox();
     this._chromeState.notificationsOpen = !notificationBox.notificationsHidden;
@@ -2610,7 +2588,8 @@ var PrintPreviewListener = {
     gFindBar.close();
   },
   _showChrome: function () {
-    gBrowser.mStrip.removeAttribute("moz-collapsed");
+    if (this._chromeState.hadTabStrip)
+      gBrowser.setStripVisibilityTo(true);
 
     if (this._chromeState.notificationsOpen)
       gBrowser.getNotificationBox().notificationsHidden = false;
@@ -2621,6 +2600,11 @@ var PrintPreviewListener = {
     if (this._chromeState.findOpen)
       gFindBar.open();
   }
+}
+
+function getPPBrowser()
+{
+  return gBrowser;
 }
 
 function getMarkupDocumentViewer()
