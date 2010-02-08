@@ -383,34 +383,26 @@ function ViewSourceSavePage()
   saveURL(window.content.location.href.substring(12), null, "SaveLinkTitle");
 }
 
-var PrintPreviewListener = {
-  getPrintPreviewBrowser: function () {
-    var browser = document.getElementById("ppBrowser");
-    if (!browser) {
-      browser = document.createElement("browser");
-      browser.setAttribute("id", "ppBrowser");
-      browser.setAttribute("flex", "1");
-      document.getElementById("appcontent").
-        insertBefore(browser, document.getElementById("FindToolbar"));
-    }
-    return browser;
-  },
-  getSourceBrowser: function () {
-    return gBrowser;
-  },
-  getNavToolbox: function () {
-    return document.getElementById("appcontent");
-  },
-  onEnter: function () {
-    var toolbox = document.getElementById("viewSource-toolbox");
-    toolbox.hidden = true;
-    gBrowser.collapsed = true;
-  },
-  onExit: function () {
-    document.getElementById("ppBrowser").collapsed = true;
-    gBrowser.collapsed = false;
-    document.getElementById("viewSource-toolbox").hidden = false;
-  }
+function onEnterPP()
+{
+  var toolbox = document.getElementById("viewSource-toolbox");
+  toolbox.hidden = true;
+}
+
+function onExitPP()
+{
+  var toolbox = document.getElementById("viewSource-toolbox");
+  toolbox.hidden = false;
+}
+
+function getPPBrowser() {
+  return gBrowser;
+}
+
+// printUtils.js uses this
+function getNavToolbox()
+{
+  return document.getElementById("appcontent");
 }
 
 function getWebNavigation()
