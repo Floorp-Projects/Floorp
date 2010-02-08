@@ -75,7 +75,7 @@ namespace nanojit
 #define NJ_MAX_PARAMETERS               1
 #define NJ_JTBL_SUPPORTED               0
 #define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
-#define NJ_F2I_SUPPORTED                0
+#define NJ_F2I_SUPPORTED                1
 
     const int NJ_ALIGN_STACK = 16;
 
@@ -485,6 +485,12 @@ namespace nanojit
     asm_output("fmuld %s, %s, %s", gpn(rs1+32), gpn(rs2+32), gpn(rd+32)); \
     } while (0)
 
+#define FDTOI(rs2, rd) \
+    do { \
+    Format_3_8(2, rd, 0x34, 0, 0xd2, rs2); \
+    asm_output("fdtoi %s, %s", gpn(rs2+32), gpn(rd+32)); \
+    } while (0)
+
 #define FDIVD(rs1, rs2, rd) \
     do { \
     Format_3_8(2, rd, 0x34, rs1, 0x4e, rs2); \
@@ -882,6 +888,14 @@ namespace nanojit
     } else { \
       STF(rd+1, L0, rs1); \
       SET32(imm32+4, L0); \
+      STF(rd, L0, rs1); \
+      SET32(imm32, L0); \
+    }
+
+#define STF32(rd, imm32, rs1) \
+    if(isIMM13(imm32+4)) { \
+      STFI(rd, imm32, rs1); \
+    } else { \
       STF(rd, L0, rs1); \
       SET32(imm32, L0); \
     }
