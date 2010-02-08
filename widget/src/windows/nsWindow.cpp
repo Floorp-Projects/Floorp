@@ -2855,16 +2855,18 @@ nsWindow::OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
   // on the document of SystemParametersInfo in MSDN.
   const PRInt32 kSystemDefaultScrollingSpeed = 3;
 
+  PRInt32 absOriginDelta = PR_ABS(aOriginalDelta);
+
   // Compute the simple overridden speed.
-  PRInt32 computedOverriddenDelta;
+  PRInt32 absComputedOverriddenDelta;
   nsresult rv =
-    nsBaseWidget::OverrideSystemMouseScrollSpeed(aOriginalDelta, aIsHorizontal,
-                                                 computedOverriddenDelta);
+    nsBaseWidget::OverrideSystemMouseScrollSpeed(absOriginDelta, aIsHorizontal,
+                                                 absComputedOverriddenDelta);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aOverriddenDelta = aOriginalDelta;
 
-  if (computedOverriddenDelta == aOriginalDelta) {
+  if (absComputedOverriddenDelta == absOriginDelta) {
     // We don't override now.
     return NS_OK;
   }
@@ -2898,14 +2900,23 @@ nsWindow::OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
   // driver might accelerate the scrolling speed already.  If so, we shouldn't
   // override the scrolling speed for preventing the unexpected high speed
   // scrolling.
-  PRInt32 deltaLimit;
+  PRInt32 absDeltaLimit;
   rv =
     nsBaseWidget::OverrideSystemMouseScrollSpeed(kSystemDefaultScrollingSpeed,
-                                                 aIsHorizontal, deltaLimit);
+                                                 aIsHorizontal, absDeltaLimit);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aOverriddenDelta = PR_MIN(computedOverriddenDelta, deltaLimit);
+  // If the given delta is larger than our computed limitation value, the delta
+  // was accelerated by the mouse driver.  So, we should do nothing here.
+  if (absDeltaLimit <= absOriginDelta) {
+    return NS_OK;
+  }
 
+  absComputedOverriddenDelta =
+    PR_MIN(absComputedOverriddenDelta, absDeltaLimit);
+
+  aOverriddenDelta = (aOriginalDelta > 0) ? absComputedOverriddenDelta :
+                                            -absComputedOverriddenDelta;
   return NS_OK;
 }
 
