@@ -158,20 +158,6 @@ template <class T,
           class AllocPolicy = ContextAllocPolicy>
 class Vector;
 
-template <class>
-struct DefaultHasher;
-
-template <class Key,
-          class Value,
-          class HashPolicy = DefaultHasher<Key>,
-          class AllocPolicy = ContextAllocPolicy>
-class HashMap;
-
-template <class T,
-          class HashPolicy = DefaultHasher<T>,
-          class AllocPolicy = ContextAllocPolicy>
-class HashSet;
-
 } /* namespace js */
 
 /* Common instantiations. */

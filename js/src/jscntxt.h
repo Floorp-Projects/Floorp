@@ -59,7 +59,6 @@
 #include "jsarray.h"
 #include "jstask.h"
 #include "jsvector.h"
-#include "jshashtable.h"
 
 /*
  * js_GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
@@ -131,27 +130,6 @@ typedef nanojit::HashMap<REHashKey, REFragment*, REHashFn> REHashMap;
 struct FragPI;
 typedef nanojit::HashMap<uint32, FragPI, nanojit::DefaultHash<uint32> > FragStatsMap;
 #endif
-
-/*
- * Allocation policy that calls JSContext memory functions and reports errors
- * to the context. Since the JSContext given on construction is stored for
- * the lifetime of the container, this policy may only be used for containers
- * whose lifetime is a shorter than the given JSContext.
- */
-class ContextAllocPolicy
-{
-    JSContext *cx;
-
-  public:
-    ContextAllocPolicy(JSContext *cx) : cx(cx) {}
-    JSContext *context() const { return cx; }
-
-    /* Inline definitions below. */
-    void *malloc(size_t bytes);
-    void free(void *p);
-    void *realloc(void *p, size_t bytes);
-    void reportAllocOverflow() const;
-};
 
 /* Holds the execution state during trace execution. */
 struct InterpState
@@ -317,12 +295,6 @@ class CallStack
     }
 };
 
-/* Holds the number of recording attemps for an address. */
-typedef HashMap<jsbytecode*,
-                size_t,
-                DefaultHasher<jsbytecode*>,
-                SystemAllocPolicy> RecordAttemptMap;
-
 /*
  * Trace monitor. Every JSThread (if JS_THREADSAFE) or JSRuntime (if not
  * JS_THREADSAFE) has an associated trace monitor that keeps track of loop
@@ -388,7 +360,7 @@ struct TraceMonitor {
 
     GlobalState             globalStates[MONITOR_N_GLOBAL_STATES];
     TreeFragment*           vmfragments[FRAGMENT_TABLE_SIZE];
-    RecordAttemptMap*       recordAttempts;
+    JSDHashTable            recordAttempts;
 
     /*
      * Maximum size of the code cache before we start flushing. 1/16 of this
@@ -1226,10 +1198,7 @@ struct JSGCReachableFrame
     JSStackFrame        *frame;
 };
 
-struct JSContext
-{
-    explicit JSContext(JSRuntime *rt) : runtime(rt), busyArrays(this) {}
-
+struct JSContext {
     /*
      * If this flag is set, we were asked to call back the operation callback
      * as soon as possible.
@@ -1298,6 +1267,8 @@ struct JSContext
     /* Data shared by threads in an address space. */
     JSRuntime * const   runtime;
 
+    explicit JSContext(JSRuntime *rt) : runtime(rt) {}
+
     /* Stack arena pool and frame pointer register. */
     JS_REQUIRES_STACK
     JSArenaPool         stackPool;
@@ -1319,7 +1290,7 @@ struct JSContext
 
     /* State for object and array toSource conversion. */
     JSSharpObjectMap    sharpObjectMap;
-    js::HashSet<JSObject *> busyArrays;
+    JSHashTable         *busyArrayTable;
 
     /* Argument formatter support for JS_{Convert,Push}Arguments{,VA}. */
     JSArgumentFormatMap *argumentFormatMap;
@@ -2218,29 +2189,25 @@ js_RegenerateShapeForGC(JSContext *cx)
 
 namespace js {
 
-inline void *
-ContextAllocPolicy::malloc(size_t bytes)
+/*
+ * Policy that calls JSContext:: memory functions and reports errors to the
+ * context.  Since the JSContext* given on construction is stored for the
+ * lifetime of the container, this policy may only be used for containers whose
+ * lifetime is a shorter than the given JSContext.
+ */
+class ContextAllocPolicy
 {
-    return cx->malloc(bytes);
-}
+    JSContext *mCx;
 
-inline void
-ContextAllocPolicy::free(void *p)
-{
-    cx->free(p);
-}
+  public:
+    ContextAllocPolicy(JSContext *cx) : mCx(cx) {}
+    JSContext *context() const { return mCx; }
 
-inline void *
-ContextAllocPolicy::realloc(void *p, size_t bytes)
-{
-    return cx->realloc(p, bytes);
-}
-
-inline void
-ContextAllocPolicy::reportAllocOverflow() const
-{
-    js_ReportAllocationOverflow(cx);
-}
+    void *malloc(size_t bytes) { return mCx->malloc(bytes); }
+    void free(void *p) { mCx->free(p); }
+    void *realloc(void *p, size_t bytes) { return mCx->realloc(p, bytes); }
+    void reportAllocOverflow() const { js_ReportAllocationOverflow(mCx); }
+};
 
 }
 
