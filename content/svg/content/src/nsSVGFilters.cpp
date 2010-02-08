@@ -4831,6 +4831,7 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
                                                   lightPos + 1,
                                                   lightPos + 2,
                                                   nsnull);
+    instance->ConvertLocation(lightPos);
   }
   if (spotLight) {
     float limitingConeAngle;
@@ -4844,6 +4845,9 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
                                                  &specularExponent,
                                                  &limitingConeAngle,
                                                  nsnull);
+    instance->ConvertLocation(lightPos);
+    instance->ConvertLocation(pointsAt);
+
     nsCOMPtr<nsIContent> spot = do_QueryInterface(spotLight);
     if (spot->HasAttr(kNameSpaceID_None, nsGkAtoms::limitingConeAngle)) {
       cosConeAngle = NS_MAX<double>(cos(limitingConeAngle * radPerDeg), 0.0);
