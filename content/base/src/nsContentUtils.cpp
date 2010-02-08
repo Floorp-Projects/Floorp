@@ -48,7 +48,7 @@
 #include "nsPrintfCString.h"
 #include "nsUnicharUtils.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIScriptGlobalObject.h"
@@ -198,8 +198,7 @@ nsIIOService *nsContentUtils::sIOService;
 #ifdef MOZ_XTF
 nsIXTFService *nsContentUtils::sXTFService = nsnull;
 #endif
-nsIPrefBranch *nsContentUtils::sPrefBranch = nsnull;
-nsIPref *nsContentUtils::sPref = nsnull;
+nsIPrefBranch2 *nsContentUtils::sPrefBranch = nsnull;
 imgILoader *nsContentUtils::sImgLoader;
 imgICache *nsContentUtils::sImgCache;
 nsIConsoleService *nsContentUtils::sConsoleService;
@@ -230,6 +229,8 @@ nsIJSRuntimeService *nsAutoGCRoot::sJSRuntimeService;
 JSRuntime *nsAutoGCRoot::sJSScriptRuntime;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
+
+nsCOMArray<nsPrefOldCallback> *nsContentUtils::sPrefCallbackList = nsnull;
 
 static PLDHashTable sEventListenerManagersHash;
 
@@ -280,6 +281,43 @@ class nsSameOriginChecker : public nsIChannelEventSink,
   NS_DECL_NSIINTERFACEREQUESTOR
 };
 
+// For nsContentUtils::RegisterPrefCallback/UnregisterPrefCallback
+class nsPrefOldCallback : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+public:
+  nsPrefOldCallback(const char *aPref, PrefChangedFunc aCallback, void *aClosure) : mPref(aPref), mCallback(aCallback), mClosure(aClosure) {
+  }
+
+  PRBool IsEqual(const char *aPref, PrefChangedFunc aCallback, void *aClosure) {
+    return aCallback == mCallback &&
+           aClosure == mClosure &&
+           mPref.Equals(aPref);
+  }
+
+public:
+  nsCString       mPref;
+  PrefChangedFunc mCallback;
+  void            *mClosure;
+};
+
+NS_IMPL_ISUPPORTS1(nsPrefOldCallback, nsIObserver)
+
+NS_IMETHODIMP
+nsPrefOldCallback::Observe(nsISupports   *aSubject,
+                         const char      *aTopic,
+                         const PRUnichar *aData)
+{
+  NS_ASSERTION(!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID),
+               "invalid topic");
+  mCallback(NS_LossyConvertUTF16toASCII(aData).get(), mClosure);
+
+  return NS_OK;
+}
+
 // static
 nsresult
 nsContentUtils::Init()
@@ -296,9 +334,6 @@ nsContentUtils::Init()
 
   // It's ok to not have a pref service.
   CallGetService(NS_PREFSERVICE_CONTRACTID, &sPrefBranch);
-
-  // It's ok to not have prefs too.
-  CallGetService(NS_PREF_CONTRACTID, &sPref);
 
   rv = NS_GetNameSpaceManager(&sNameSpaceManager);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -886,6 +921,20 @@ nsContentUtils::Shutdown()
   PRUint32 i;
   for (i = 0; i < PropertiesFile_COUNT; ++i)
     NS_IF_RELEASE(sStringBundles[i]);
+
+  // Clean up c-style's observer 
+  if (sPrefCallbackList) {
+    while (sPrefCallbackList->Count() > 0) {
+      nsCOMPtr<nsPrefOldCallback> callback = (*sPrefCallbackList)[0];
+      NS_ABORT_IF_FALSE(callback, "Invalid c-style callback is appended");
+      if (sPrefBranch)
+        sPrefBranch->RemoveObserver(callback->mPref.get(), callback);
+      sPrefCallbackList->RemoveObject(callback);
+    }
+    delete sPrefCallbackList;
+    sPrefCallbackList = nsnull;
+  }
+
   NS_IF_RELEASE(sStringBundleService);
   NS_IF_RELEASE(sConsoleService);
   NS_IF_RELEASE(sDOMScriptObjectFactory);
@@ -906,7 +955,6 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sImgLoader);
   NS_IF_RELEASE(sImgCache);
   NS_IF_RELEASE(sPrefBranch);
-  NS_IF_RELEASE(sPref);
 #ifdef IBMBIDI
   NS_IF_RELEASE(sBidiKeyboard);
 #endif
@@ -2578,14 +2626,32 @@ nsContentUtils::GetStringPref(const char *aPref)
   return result;
 }
 
+// RegisterPrefCallback/UnregisterPrefCallback are backward compatiblity for
+// c-style observer.
+
 // static
 void
 nsContentUtils::RegisterPrefCallback(const char *aPref,
                                      PrefChangedFunc aCallback,
                                      void * aClosure)
 {
-  if (sPref)
-    sPref->RegisterCallback(aPref, aCallback, aClosure);
+  if (sPrefBranch) {
+    if (!sPrefCallbackList) {
+      sPrefCallbackList = new nsCOMArray<nsPrefOldCallback> ();
+      if (!sPrefCallbackList)
+        return;
+    }
+
+    nsPrefOldCallback *callback = new nsPrefOldCallback(aPref, aCallback, aClosure);
+    if (callback) {
+      if (NS_SUCCEEDED(sPrefBranch->AddObserver(aPref, callback, PR_FALSE))) {
+        sPrefCallbackList->AppendObject(callback);
+        return;
+      }
+      // error to get/add nsIPrefBranch2.  Destroy callback information
+      delete callback;
+    }
+  }
 }
 
 // static
@@ -2594,8 +2660,20 @@ nsContentUtils::UnregisterPrefCallback(const char *aPref,
                                        PrefChangedFunc aCallback,
                                        void * aClosure)
 {
-  if (sPref)
-    sPref->UnregisterCallback(aPref, aCallback, aClosure);
+  if (sPrefBranch) {
+    if (!sPrefCallbackList)
+      return;
+
+    int i;
+    for (i = 0; i < sPrefCallbackList->Count(); i++) {
+      nsCOMPtr<nsPrefOldCallback> callback = (*sPrefCallbackList)[i];
+      if (callback && callback->IsEqual(aPref, aCallback, aClosure)) {
+        sPrefBranch->RemoveObserver(aPref, callback);
+        sPrefCallbackList->RemoveObject(callback);
+        return;
+      }
+    }
+  }
 }
 
 static int
