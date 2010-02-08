@@ -220,28 +220,44 @@ nsPluginFile::nsPluginFile(nsIFile *spec)
 
 nsPluginFile::~nsPluginFile() {}
 
-/**
- * Loads the plugin into memory using NSPR's shared-library loading
- * mechanism. Handles platform differences in loading shared libraries.
- */
 nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 {
-  const char* path;
-
   if (!mPlugin)
     return NS_ERROR_NULL_POINTER;
 
-  nsCAutoString temp;
-  mPlugin->GetNativePath(temp);
-  path = temp.get();
+  char executablePath[PATH_MAX];
+  executablePath[0] = '\0';
 
-  outLibrary = PR_LoadLibrary(path);
+  // We store the path to the plugin bundle, we need the executable path here.
+  // 64-bit NSPR does not support bundles.
+  nsCAutoString bundlePath;
+  mPlugin->GetNativePath(bundlePath);
+  CFStringRef pathRef = ::CFStringCreateWithCString(NULL, bundlePath.get(), kCFStringEncodingUTF8);
+  if (pathRef) {
+    CFURLRef bundleURL = ::CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLPOSIXPathStyle, true);
+    if (bundleURL) {
+      CFBundleRef bundle = ::CFBundleCreate(NULL, bundleURL);
+      if (bundle) {
+        CFURLRef executableURL = ::CFBundleCopyExecutableURL(bundle);
+        if (executableURL) {
+          if (!::CFURLGetFileSystemRepresentation(executableURL, true, (UInt8*)&executablePath, PATH_MAX))
+            executablePath[0] = '\0';
+          ::CFRelease(executableURL);
+        }
+        ::CFRelease(bundle);
+      }
+      ::CFRelease(bundleURL);
+    }
+    ::CFRelease(pathRef); 
+  }
+
+  outLibrary = PR_LoadLibrary(executablePath);
   pLibrary = outLibrary;
   if (!outLibrary) {
     return NS_ERROR_FAILURE;
   }
 #ifdef DEBUG
-  printf("[loaded plugin %s]\n", path);
+  printf("[loaded plugin %s]\n", bundlePath.get());
 #endif
   return NS_OK;
 }
