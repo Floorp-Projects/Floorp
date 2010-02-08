@@ -473,7 +473,11 @@ TabWindow.prototype = {
   },
 
   updateTabOrdering: function () {
-    for (let i = 0; i < this.previews.length; i++) {
+    // Since the internal taskbar array has not yet been updated we must force
+    // on it the sorting order of our local array.  To do so we must walk
+    // the local array backwards, otherwise we would send move requests in the
+    // wrong order.  See bug 522610 for details.
+    for (let i = this.previews.length - 1; i >= 0; i--) {
       let p = this.previews[i];
       let next = i == this.previews.length - 1 ? null : this.previews[i+1];
       p.move(next);
