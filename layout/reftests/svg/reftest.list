@@ -96,6 +96,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 # == mask-transformed-01.svg mask-transformed-01-ref.svg
 == nested-viewBox-01.svg pass.svg
 == objectBoundingBox-and-clipPath.svg pass.svg
+== objectBoundingBox-and-fePointLight-01.svg objectBoundingBox-and-fePointLight-01-ref.svg
 == objectBoundingBox-and-mask.svg pass.svg
 == objectBoundingBox-and-pattern-01a.svg objectBoundingBox-and-pattern-01-ref.svg
 == objectBoundingBox-and-pattern-01b.svg objectBoundingBox-and-pattern-01-ref.svg
