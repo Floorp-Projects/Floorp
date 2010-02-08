@@ -210,7 +210,7 @@ def addStubMember(memberId, member, traceable):
         # (CONTEXT and THIS) and when haveCallee is true also have
         # CALLEE.  We can only output a traceable native if our number
         # of arguments is no bigger than can be handled.
-        prefixArgCount = 3 if haveCallee else 2
+        prefixArgCount = 2 + int(haveCallee);
         mayTrace = (len(member.params) <= MAX_TRACEABLE_NATIVE_ARGS - prefixArgCount)
 
         for param in member.params:
