@@ -586,16 +586,14 @@ nsresult nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode* aNode, PRI
   if (findNode) {
     nsCOMPtr<nsIContent> findContent = do_QueryInterface(findNode);
     if (findContent->IsHTML() && 
-        findContent->NodeInfo()->Equals(nsAccessibilityAtoms::br)) {
-      nsIContent *parent = findContent->GetParent();
-      if (parent &&
-          parent->IsRootOfNativeAnonymousSubtree() &&
-          parent->GetChildCount() == 1) {
-        // This <br> is the only node in a text control, therefore it is the hacky
-        // "bogus node" used when there is no text in a control
-        *aHyperTextOffset = 0;
-        return NS_OK;
-      }
+        findContent->NodeInfo()->Equals(nsAccessibilityAtoms::br) &&
+        findContent->AttrValueIs(kNameSpaceID_None,
+                                 nsAccessibilityAtoms::mozeditorbogusnode,
+                                 nsAccessibilityAtoms::_true,
+                                 eIgnoreCase)) {
+      // This <br> is the hacky "bogus node" used when there is no text in a control
+      *aHyperTextOffset = 0;
+      return NS_OK;
     }
     descendantAccessible = GetFirstAvailableAccessible(findNode);
   }
