@@ -959,8 +959,14 @@ namespace nanojit
         SETHI(0x43300000, G1);
     }
 
-    void Assembler::asm_f2i(LInsp) {
-        NanoAssertMsg(0, "NJ_F2I_SUPPORTED not yet supported for this architecture");
+    void Assembler::asm_f2i(LInsp ins) {
+        LIns *lhs = ins->oprnd1();
+        Register rr = prepareResultReg(ins, GpRegs);
+        Register ra = findRegFor(lhs, FpRegs);
+        int d = findMemFor(ins);
+        LDSW32(FP, d, rr);
+        STF32(ra, d, FP);
+        FDTOI(ra, ra);
     }
 
     void Assembler::asm_nongp_copy(Register r, Register s)
