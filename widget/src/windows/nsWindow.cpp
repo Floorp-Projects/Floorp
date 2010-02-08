@@ -2139,20 +2139,45 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
   RECT rc;
   if (aFullScreen) {
     SetForegroundWindow(mWnd);
-    SHFullScreen(mWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON | SHFS_HIDESIPBUTTON);
-    SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    if (nsWindowCE::sMenuBarShown) {
+      SIPINFO sipInfo;
+      memset(&sipInfo, 0, sizeof(SIPINFO));
+      sipInfo.cbSize = sizeof(SIPINFO);
+      if (SipGetInfo(&sipInfo))
+        SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXSCREEN), 
+                sipInfo.rcVisibleDesktop.bottom);
+      else
+        SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXSCREEN), 
+                GetSystemMetrics(SM_CYSCREEN));
+      RECT menuBarRect;
+      if (GetWindowRect(nsWindowCE::sSoftKeyMenuBarHandle, &menuBarRect) && 
+          menuBarRect.top < rc.bottom)
+        rc.bottom = menuBarRect.top;
+      SHFullScreen(mWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON | SHFS_SHOWSIPBUTTON);
+    } else {
+      
+      SHFullScreen(mWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON | SHFS_HIDESIPBUTTON);
+      SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    }
   }
   else {
     SHFullScreen(mWnd, SHFS_SHOWTASKBAR | SHFS_SHOWSTARTICON);
     SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, FALSE);
   }
-  MoveWindow(mWnd, rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top, TRUE);
 
   if (aFullScreen)
     mSizeMode = nsSizeMode_Fullscreen;
-#endif
+
+  // nsBaseWidget hides the chrome and resizes the window, replicate that here
+  HideWindowChrome(aFullScreen);
+  Resize(rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top, PR_TRUE);
+
+  return NS_OK;
+
+#else
 
   return nsBaseWidget::MakeFullScreen(aFullScreen);
+#endif
 }
 
 /**************************************************************
