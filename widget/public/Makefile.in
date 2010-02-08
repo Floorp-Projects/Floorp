@@ -124,6 +124,12 @@ XPIDLSRCS	+= nsIPrintSettingsWin.idl \
 		$(NULL)
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+XPIDLSRCS +=	nsIMacDockSupport.idl \
+		nsIStandaloneNativeMenu.idl \
+		$(NULL)
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 XPIDLSRCS	+= nsIRwsService.idl
 endif

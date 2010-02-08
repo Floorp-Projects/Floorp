@@ -42,6 +42,7 @@
 #include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
 #include "nsMenuItemIconX.h"
+#include "nsStandaloneNativeMenu.h"
 
 #include "nsObjCExceptions.h"
 
@@ -203,8 +204,8 @@ nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOw
   mParent = aParent;
   // our parent could be either a menu bar (if we're toplevel) or a menu (if we're a submenu)
   nsMenuObjectTypeX parentType = mParent->MenuObjectType();
-  NS_ASSERTION((parentType == eMenuBarObjectType || parentType == eSubmenuObjectType),
-               "Menu parent not a menu bar or menu!");
+  NS_ASSERTION((parentType == eMenuBarObjectType || parentType == eSubmenuObjectType || parentType == eStandaloneNativeMenuObjectType),
+               "Menu parent not a menu bar, menu, or native menu!");
 
   if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent))
     mVisible = PR_FALSE;
@@ -707,6 +708,20 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
   nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1", &rv);
   if (!xblService)
     return;
+
+  // Check to see if we are a "menupopup" node (if we are a native menu).
+  {
+    PRInt32 dummy;
+    nsCOMPtr<nsIAtom> tag;
+    xblService->ResolveTag(mContent, &dummy, getter_AddRefs(tag));
+    if (tag == nsWidgetAtoms::menupopup) {
+      *aResult = mContent;
+      NS_ADDREF(*aResult);
+      return;
+    }
+  }
+
+  // Otherwise check our child nodes.
   
   PRUint32 count = mContent->GetChildCount();
 
@@ -771,9 +786,12 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
       NSString *newCocoaLabelString = nsMenuUtilsX::GetTruncatedCocoaLabel(mLabel);
       [mNativeMenu setTitle:newCocoaLabelString];
     }
-    else {
+    else if (parentType == eSubmenuObjectType) {
       static_cast<nsMenuX*>(mParent)->SetRebuild(PR_TRUE);
     }    
+    else if (parentType == eStandaloneNativeMenuObjectType) {
+      static_cast<nsStandaloneNativeMenu*>(mParent)->GetMenuXObject()->SetRebuild(PR_TRUE);
+    }
   }
   else if (aAttribute == nsWidgetAtoms::hidden || aAttribute == nsWidgetAtoms::collapsed) {
     SetRebuild(PR_TRUE);
@@ -785,7 +803,9 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
       return;
 
     if (contentIsHiddenOrCollapsed) {
-      if (parentType == eMenuBarObjectType || parentType == eSubmenuObjectType) {
+      if (parentType == eMenuBarObjectType ||
+          parentType == eSubmenuObjectType ||
+          parentType == eStandaloneNativeMenuObjectType) {
         NSMenu* parentMenu = (NSMenu*)mParent->NativeData();
         // An exception will get thrown if we try to remove an item that isn't
         // in the menu.
@@ -795,7 +815,9 @@ void nsMenuX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConte
       }
     }
     else {
-      if (parentType == eMenuBarObjectType || parentType == eSubmenuObjectType) {
+      if (parentType == eMenuBarObjectType ||
+          parentType == eSubmenuObjectType ||
+          parentType == eStandaloneNativeMenuObjectType) {
         int insertionIndex = nsMenuUtilsX::CalculateNativeInsertionPoint(mParent, this);
         if (parentType == eMenuBarObjectType) {
           // Before inserting we need to figure out if we should take the native

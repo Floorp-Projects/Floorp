@@ -95,6 +95,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #include "nsNativeThemeCocoa.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeCocoa)
 
+#include "nsMacDockSupport.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacDockSupport)
+
+#include "nsStandaloneNativeMenu.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStandaloneNativeMenu)
+
 static const nsModuleComponentInfo gComponents[] =
 {
   { "nsWindow",
@@ -189,6 +195,14 @@ static const nsModuleComponentInfo gComponents[] =
     NS_NATIVEMENUSERVICE_CID,
     "@mozilla.org/widget/nativemenuservice;1",
     nsNativeMenuServiceXConstructor },
+  { "Mac Dock Support Service",
+    NS_MACDOCKSUPPORT_CID,
+    "@mozilla.org/widget/macdocksupport;1",
+    nsMacDockSupportConstructor },
+  { "Standalone Native Menu",
+    NS_STANDALONENATIVEMENU_CID,
+    "@mozilla.org/widget/standalonenativemenu;1",
+    nsStandaloneNativeMenuConstructor },
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsWidgetMacModule, gComponents,
