@@ -174,7 +174,7 @@ class ReentrancyGuard
     template <class T>
     ReentrancyGuard(T &obj)
 #ifdef DEBUG
-      : entered(obj.entered)
+      : entered(obj.mEntered)
 #endif
     {
 #ifdef DEBUG

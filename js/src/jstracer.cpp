@@ -521,6 +521,9 @@ struct FragPI {
     uint32_t largestGuardID; // that exists in .guards
 };
 
+/* A mapping of Fragment.profFragID to FragPI */
+typedef HashMap<uint32,FragPI> FragStatsMap;
+
 void
 FragProfiling_FragFinalizer(Fragment* f, TraceMonitor* tm)
 {
@@ -1237,53 +1240,94 @@ IsSlotUndemotable(JSContext* cx, LinkableFragment* f, unsigned slot)
 
 class FrameInfoCache
 {
-    struct HashPolicy
+    struct Entry : public JSDHashEntryHdr
     {
-        typedef FrameInfo *Lookup;
-        static HashNumber hash(const FrameInfo* fi) {
-            size_t len = sizeof(FrameInfo) + fi->callerHeight * sizeof(TraceType);
-            HashNumber h = 0;
-            const unsigned char *s = (const unsigned char*)fi;
-            for (size_t i = 0; i < len; i++, s++)
-                h = JS_ROTATE_LEFT32(h, 4) ^ *s;
-            return h;
-        }
-
-        static bool match(const FrameInfo* fi1, const FrameInfo* fi2) {
-            if (memcmp(fi1, fi2, sizeof(FrameInfo)) != 0)
-                return false;
-            return memcmp(fi1->get_typemap(), fi2->get_typemap(),
-                          fi1->callerHeight * sizeof(TraceType)) == 0;
-        }
+        FrameInfo *fi;
     };
 
-    typedef HashSet<FrameInfo *, HashPolicy, SystemAllocPolicy> FrameSet;
+    static JSBool
+    MatchFrameInfo(JSDHashTable *table, const JSDHashEntryHdr *entry, const void *key) {
+        const FrameInfo* fi1 = ((const Entry*)entry)->fi;
+        const FrameInfo* fi2 = (const FrameInfo*)key;
+        if (memcmp(fi1, fi2, sizeof(FrameInfo)) != 0)
+            return JS_FALSE;
+        return memcmp(fi1->get_typemap(), fi2->get_typemap(),
+                      fi1->callerHeight * sizeof(TraceType)) == 0;
+    }
 
-    FrameSet set;
+    static JSDHashNumber
+    HashFrameInfo(JSDHashTable *table, const void *key) {
+        FrameInfo* fi = (FrameInfo*)key;
+        size_t len = sizeof(FrameInfo) + fi->callerHeight * sizeof(TraceType);
+
+        JSDHashNumber h = 0;
+        const unsigned char *s = (const unsigned char*)fi;
+        for (size_t i = 0; i < len; i++, s++)
+            h = JS_ROTATE_LEFT32(h, 4) ^ *s;
+        return h;
+    }
+
+    static const JSDHashTableOps FrameCacheOps;
+
+    JSDHashTable *table;
     VMAllocator *allocator;
 
   public:
     FrameInfoCache(VMAllocator *allocator) : allocator(allocator) {
-        if (!set.init())
-            OutOfMemoryAbort();
+        init();
     }
 
-    void reset() {
-        set.clear();
+    ~FrameInfoCache() {
+        clear();
     }
 
-    FrameInfo *memoize(FrameInfo *fi) {
-        FrameSet::AddPtr p = set.lookupForAdd(fi);
-        if (!p) {
+    void clear() {
+        if (table) {
+            JS_DHashTableDestroy(table);
+            table = NULL;
+        }
+    }
+
+    bool reset() {
+        clear();
+        return init();
+    }
+
+    bool init() {
+        table = JS_NewDHashTable(&FrameCacheOps, NULL, sizeof(Entry),
+                                 JS_DHASH_DEFAULT_CAPACITY(32));
+        return table != NULL;
+    }
+
+    FrameInfo *memoize(const FrameInfo *fi) {
+        Entry *entry = (Entry*)JS_DHashTableOperate(table, fi, JS_DHASH_ADD);
+        if (!entry)
+            return NULL;
+        if (!entry->fi) {
             FrameInfo* n = (FrameInfo*)
                 allocator->alloc(sizeof(FrameInfo) + fi->callerHeight * sizeof(TraceType));
             memcpy(n, fi, sizeof(FrameInfo) + fi->callerHeight * sizeof(TraceType));
-            if (!set.add(p, n))
-                return NULL;
+            entry->fi = n;
         }
-
-        return *p;
+        return entry->fi;
     }
+};
+
+const JSDHashTableOps FrameInfoCache::FrameCacheOps =
+{
+    JS_DHashAllocTable,
+    JS_DHashFreeTable,
+    FrameInfoCache::HashFrameInfo,
+    FrameInfoCache::MatchFrameInfo,
+    JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub,
+    JS_DHashFinalizeStub,
+    NULL
+};
+
+
+struct PCHashEntry : public JSDHashEntryStub {
+    size_t          count;
 };
 
 #define PC_HASH_COUNT 1024
@@ -1316,15 +1360,24 @@ static void
 Backoff(JSContext *cx, jsbytecode* pc, Fragment* tree = NULL)
 {
     /* N.B. This code path cannot assume the recorder is/is not alive. */
-    RecordAttemptMap &table = *JS_TRACE_MONITOR(cx).recordAttempts;
-    if (RecordAttemptMap::AddPtr p = table.lookupForAdd(pc)) {
-        if (p->value++ > (BL_ATTEMPTS * MAXPEERS)) {
-            p->value = 0;
-            Blacklist(pc);
-            return;
+    JSDHashTable *table = &JS_TRACE_MONITOR(cx).recordAttempts;
+
+    if (table->ops) {
+        PCHashEntry *entry = (PCHashEntry *)
+            JS_DHashTableOperate(table, pc, JS_DHASH_ADD);
+
+        if (entry) {
+            if (!entry->key) {
+                entry->key = pc;
+                JS_ASSERT(entry->count == 0);
+            }
+            JS_ASSERT(JS_DHASH_ENTRY_IS_LIVE(&(entry->hdr)));
+            if (entry->count++ > (BL_ATTEMPTS * MAXPEERS)) {
+                entry->count = 0;
+                Blacklist(pc);
+                return;
+            }
         }
-    } else {
-        table.add(p, pc, 0);
     }
 
     if (tree) {
@@ -1344,9 +1397,16 @@ Backoff(JSContext *cx, jsbytecode* pc, Fragment* tree = NULL)
 static void
 ResetRecordingAttempts(JSContext *cx, jsbytecode* pc)
 {
-    RecordAttemptMap &table = *JS_TRACE_MONITOR(cx).recordAttempts;
-    if (RecordAttemptMap::Ptr p = table.lookup(pc))
-        p->value = 0;
+    JSDHashTable *table = &JS_TRACE_MONITOR(cx).recordAttempts;
+    if (table->ops) {
+        PCHashEntry *entry = (PCHashEntry *)
+            JS_DHashTableOperate(table, pc, JS_DHASH_LOOKUP);
+
+        if (JS_DHASH_ENTRY_IS_FREE(&(entry->hdr)))
+            return;
+        JS_ASSERT(JS_DHASH_ENTRY_IS_LIVE(&(entry->hdr)));
+        entry->count = 0;
+    }
 }
 
 static inline size_t
@@ -2339,7 +2399,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     cfgMerges(&tempAlloc()),
     trashSelf(false),
     whichTreesToTrash(&tempAlloc()),
-    guardedShapeTable(cx),
     rval_ins(NULL),
     native_rval_ins(NULL),
     newobj_ins(NULL),
@@ -2380,8 +2439,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
      * Fragment is set up (for profiling purposes), we can't change it.
      */
 
-    if (!guardedShapeTable.init())
-        abort();
+    guardedShapeTable.ops = NULL;
 
 #ifdef JS_JIT_SPEW
     debug_only_print0(LC_TMMinimal, "\n");
@@ -7530,9 +7588,11 @@ InitJIT(TraceMonitor *tm)
     /* Set the default size for the code cache to 16MB. */
     tm->maxCodeCacheBytes = 16 M;
 
-    tm->recordAttempts = new RecordAttemptMap;
-    if (!tm->recordAttempts->init(PC_HASH_COUNT))
-        abort();
+    if (!tm->recordAttempts.ops) {
+        JS_DHashTableInit(&tm->recordAttempts, JS_DHashGetStubOps(),
+                          NULL, sizeof(PCHashEntry),
+                          JS_DHASH_DEFAULT_CAPACITY(PC_HASH_COUNT));
+    }
 
     JS_ASSERT(!tm->dataAlloc && !tm->traceAlloc && !tm->codeAlloc);
     tm->dataAlloc = new VMAllocator();
@@ -7611,7 +7671,8 @@ FinishJIT(TraceMonitor *tm)
     }
 #endif
 
-    delete tm->recordAttempts;
+    if (tm->recordAttempts.ops)
+        JS_DHashTableFinish(&tm->recordAttempts);
 
 #ifdef DEBUG
     // Recover profiling data from expiring Fragments, and display
@@ -7689,6 +7750,19 @@ PurgeJITOracle()
     oracle.clear();
 }
 
+static JSDHashOperator
+PurgeScriptRecordingAttempts(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number, void *arg)
+{
+    PCHashEntry *e = (PCHashEntry *)hdr;
+    JSScript *script = (JSScript *)arg;
+    jsbytecode *pc = (jsbytecode *)e->key;
+
+    if (JS_UPTRDIFF(pc, script->code) < script->length)
+        return JS_DHASH_REMOVE;
+    return JS_DHASH_NEXT;
+}
+
+
 JS_REQUIRES_STACK void
 PurgeScriptFragments(JSContext* cx, JSScript* script)
 {
@@ -7721,11 +7795,7 @@ PurgeScriptFragments(JSContext* cx, JSScript* script)
         }
     }
 
-    RecordAttemptMap &table = *tm->recordAttempts;
-    for (RecordAttemptMap::Enum e(table.enumerate()); !e.empty(); e.popFront()) {
-        if (JS_UPTRDIFF(e.front().key, script->code) < script->length)
-            e.removeFront();
-    }
+    JS_DHashTableEnumerate(&tm->recordAttempts, PurgeScriptRecordingAttempts, script);
 }
 
 bool
@@ -9072,6 +9142,11 @@ TraceRecorder::binary(LOpcode op)
     return RECORD_STOP;
 }
 
+struct GuardedShapeEntry : public JSDHashEntryStub
+{
+    JSObject* obj;
+};
+
 #if defined DEBUG_notme && defined XP_UNIX
 #include <stdio.h>
 
@@ -9103,11 +9178,21 @@ DumpShape(JSObject* obj, const char* prefix)
     fflush(shapefp);
 }
 
+static JSDHashOperator
+DumpShapeEnumerator(JSDHashTable* table, JSDHashEntryHdr* hdr, uint32 number, void* arg)
+{
+    GuardedShapeEntry* entry = (GuardedShapeEntry*) hdr;
+    const char* prefix = (const char*) arg;
+
+    DumpShape(entry->obj, prefix);
+    return JS_DHASH_NEXT;
+}
+
 void
 TraceRecorder::dumpGuardedShapes(const char* prefix)
 {
-    for (GuardedShapeTable::Range r = guardedShapeTable.all(); !r.empty(); r.popFront())
-        DumpShape(r.front().value, prefix);
+    if (guardedShapeTable.ops)
+        JS_DHashTableEnumerate(&guardedShapeTable, DumpShapeEnumerator, (void*) prefix);
 }
 #endif /* DEBUG_notme && XP_UNIX */
 
@@ -9115,15 +9200,29 @@ JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::guardShape(LIns* obj_ins, JSObject* obj, uint32 shape, const char* guardName,
                           LIns* map_ins, VMSideExit* exit)
 {
-    // Test (with add if missing) for a remembered guard for (obj_ins, obj).
-    GuardedShapeTable::AddPtr p = guardedShapeTable.lookupForAdd(obj_ins);
-    if (p) {
-        JS_ASSERT(p->value == obj);
-        return RECORD_CONTINUE;
-    } else {
-        if (!guardedShapeTable.add(p, obj_ins, obj))
-            return RECORD_ERROR;
+    if (!guardedShapeTable.ops) {
+        JS_DHashTableInit(&guardedShapeTable, JS_DHashGetStubOps(), NULL,
+                          sizeof(GuardedShapeEntry), JS_DHASH_MIN_SIZE);
     }
+
+    // Test (with add if missing) for a remembered guard for (obj_ins, obj).
+    GuardedShapeEntry* entry = (GuardedShapeEntry*)
+        JS_DHashTableOperate(&guardedShapeTable, obj_ins, JS_DHASH_ADD);
+    if (!entry) {
+        JS_ReportOutOfMemory(cx);
+        return RECORD_ERROR;
+    }
+
+    // If already guarded, check that the shape matches.
+    if (entry->key) {
+        JS_ASSERT(entry->key == obj_ins);
+        JS_ASSERT(entry->obj == obj);
+        return RECORD_CONTINUE;
+    }
+
+    // Not yet guarded. Remember obj_ins along with obj (for invalidation).
+    entry->key = obj_ins;
+    entry->obj = obj;
 
 #if defined DEBUG_notme && defined XP_UNIX
     DumpShape(obj, "guard");
@@ -9138,26 +9237,36 @@ TraceRecorder::guardShape(LIns* obj_ins, JSObject* obj, uint32 shape, const char
     return RECORD_CONTINUE;
 }
 
+static JSDHashOperator
+ForgetGuardedShapesForObject(JSDHashTable* table, JSDHashEntryHdr* hdr, uint32 number, void* arg)
+{
+    GuardedShapeEntry* entry = (GuardedShapeEntry*) hdr;
+    if (entry->obj == arg) {
+#if defined DEBUG_notme && defined XP_UNIX
+        DumpShape(entry->obj, "forget");
+#endif
+        return JS_DHASH_REMOVE;
+    }
+    return JS_DHASH_NEXT;
+}
+
 void
 TraceRecorder::forgetGuardedShapesForObject(JSObject* obj)
 {
-    for (GuardedShapeTable::Enum e(guardedShapeTable.enumerate()); !e.empty(); e.popFront()) {
-        if (e.front().value == obj) {
-#if defined DEBUG_notme && defined XP_UNIX
-            DumpShape(entry->obj, "forget");
-#endif
-            e.removeFront();
-        }
-    }
+    if (guardedShapeTable.ops)
+        JS_DHashTableEnumerate(&guardedShapeTable, ForgetGuardedShapesForObject, obj);
 }
 
 void
 TraceRecorder::forgetGuardedShapes()
 {
+    if (guardedShapeTable.ops) {
 #if defined DEBUG_notme && defined XP_UNIX
-    dumpGuardedShapes("forget-all");
+        dumpGuardedShapes("forget-all");
 #endif
-    guardedShapeTable.clear();
+        JS_DHashTableFinish(&guardedShapeTable);
+        guardedShapeTable.ops = NULL;
+    }
 }
 
 JS_STATIC_ASSERT(offsetof(JSObjectOps, objectMap) == 0);
