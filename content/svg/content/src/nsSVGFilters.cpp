@@ -330,6 +330,12 @@ nsSVGFE::DidAnimateEnum(PRUint8 aAttrEnum)
 }
 
 void
+nsSVGFE::DidAnimatePreserveAspectRatio(PRUint8 aAttrEnum)
+{
+  DidAnimateAttr(this);
+}
+
+void
 nsSVGFE::DidAnimateBoolean(PRUint8 aAttrEnum)
 {
   DidAnimateAttr(this);
@@ -5459,7 +5465,8 @@ nsSVGFEImageElement::Filter(nsSVGFilterInstance *instance,
     const gfxRect& filterSubregion = aTarget->mFilterPrimitiveSubregion;
 
     gfxMatrix viewBoxTM =
-      nsSVGUtils::GetViewBoxTransform(filterSubregion.Width(), filterSubregion.Height(),
+      nsSVGUtils::GetViewBoxTransform(this,
+                                      filterSubregion.Width(), filterSubregion.Height(),
                                       0,0, nativeWidth, nativeHeight,
                                       mPreserveAspectRatio);
 
