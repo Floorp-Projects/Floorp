@@ -47,7 +47,8 @@
 enum nsMenuObjectTypeX {
   eMenuBarObjectType,
   eSubmenuObjectType,
-  eMenuItemObjectType
+  eMenuItemObjectType,
+  eStandaloneNativeMenuObjectType,
 };
 
 // All menu objects subclass this.

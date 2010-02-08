@@ -40,6 +40,7 @@
 #include "nsMenuBarX.h"
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
+#include "nsStandaloneNativeMenu.h"
 #include "nsObjCExceptions.h"
 #include "nsCocoaUtils.h"
 #include "nsCocoaWindow.h"
@@ -237,8 +238,14 @@ int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent,
         insertionPoint++;
     }
   }
-  else if (parentType == eSubmenuObjectType) {
-    nsMenuX* menuParent = static_cast<nsMenuX*>(aParent);
+  else if (parentType == eSubmenuObjectType ||
+           parentType == eStandaloneNativeMenuObjectType) {
+    nsMenuX* menuParent;
+    if (parentType == eSubmenuObjectType)
+      menuParent = static_cast<nsMenuX*>(aParent);
+    else
+      menuParent = static_cast<nsStandaloneNativeMenu*>(aParent)->GetMenuXObject();
+
     PRUint32 numItems = menuParent->GetItemCount();
     for (PRUint32 i = 0; i < numItems; i++) {
       // Using GetItemAt instead of GetVisibleItemAt to avoid O(N^2)
