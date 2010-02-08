@@ -82,6 +82,7 @@ _TEST_FILES = \
 
 _BROWSER_FILES = \
                  browser_NetworkPrioritizer.js \
+                 browser_allTabsPanel.js \
                  browser_alltabslistener.js \
                  browser_bug304198.js \
                  browser_bug321000.js \
