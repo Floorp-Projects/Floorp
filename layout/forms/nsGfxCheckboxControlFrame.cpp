@@ -119,11 +119,6 @@ nsGfxCheckboxControlFrame::~nsGfxCheckboxControlFrame()
 {
 }
 
-
-NS_QUERYFRAME_HEAD(nsGfxCheckboxControlFrame)
-  NS_QUERYFRAME_ENTRY(nsICheckboxControlFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsFormControlFrame)
-
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP
 nsGfxCheckboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
@@ -139,15 +134,6 @@ nsGfxCheckboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
   return NS_ERROR_FAILURE;
 }
 #endif
-
-//------------------------------------------------------------
-NS_IMETHODIMP
-nsGfxCheckboxControlFrame::OnChecked(nsPresContext* aPresContext,
-                                     PRBool aChecked)
-{
-  InvalidateOverflowRect();
-  return NS_OK;
-}
 
 //------------------------------------------------------------
 NS_IMETHODIMP
