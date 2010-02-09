@@ -77,7 +77,9 @@
 #ifdef _PR_INET6
 #define _PR_HAVE_INET_NTOP
 #define _PR_HAVE_GETHOSTBYNAME2
+#ifdef _AIX51 /* AIX 4.3.3 does not have AI_NUMERICHOST. */
 #define _PR_HAVE_GETADDRINFO
+#endif
 #endif
 #define _PR_HAVE_SYSV_SEMAPHORES
 #define PR_HAVE_SYSV_NAMED_SHARED_MEMORY
