@@ -49,7 +49,7 @@
 #include <gdk/gdkx.h>
 #include <gdk/gdk.h>
 
-#ifdef MOZ_PLATFORM_HILDON
+#if (MOZ_PLATFORM_MAEMO == 5)
 #define MOZ_COMPOSITED_PLUGINS
 #endif
 
