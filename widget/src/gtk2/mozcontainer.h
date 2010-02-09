@@ -84,7 +84,7 @@ extern "C" {
 #define MOZ_CONAINTER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), MOZ_CONTAINER_TYPE, MozContainerClass))
 
 #if (GTK_CHECK_VERSION(2, 12, 0) || \
-    (GTK_CHECK_VERSION(2, 10, 0) && defined(MOZ_PLATFORM_HILDON)))
+    (GTK_CHECK_VERSION(2, 10, 0) && defined(MOZ_PLATFORM_MAEMO)))
 #define HAVE_GTK_MOTION_HINTS
 #endif
 

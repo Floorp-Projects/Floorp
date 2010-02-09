@@ -1170,7 +1170,7 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
     }
   }
 #elif defined(XP_UNIX)
-#if defined(NS_OSSO)
+#if defined(MOZ_PLATFORM_MAEMO)
     // As maemo does not follow the XDG "standard" (as usually desktop
     // Linux distros do) neither has a working $HOME/Desktop folder
     // for us to fallback into, "$HOME/MyDocs/.documents/" is the folder
