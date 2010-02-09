@@ -4901,10 +4901,10 @@ cairo-cocoa)
     AC_DEFINE(XP_MACOSX)
     TK_LIBS='-framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook'
     TK_CFLAGS="-DNO_X11"
-    LDFLAGS="$LDFLAGS -framework Cocoa"
+    LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
-    LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL -lobjc'
+    LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL'
     MOZ_FS_LAYOUT=bundle
     MOZ_WEBGL=1
     ;;
