@@ -72,7 +72,7 @@ inline FILE *TS_tfopen (const char *path, const char *mode)
 #endif
 
 // Stack based FILE wrapper to ensure that fclose is called, copied from
-// toolkit/mozapps/update/src/updater/readstrings.cpp
+// toolkit/mozapps/update/updater/readstrings.cpp
 
 class AutoFILE {
 public:

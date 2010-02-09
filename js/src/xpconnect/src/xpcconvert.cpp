@@ -1352,7 +1352,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
 
                         destObj =
                             XPCNativeWrapper::GetNewOrUsed(ccx, wrapper,
-                                                           objPrincipal);
+                                                           scope, objPrincipal);
                         triedWrapping = JS_TRUE;
                     }
                     else if (flags & JSFILENAME_SYSTEM)
@@ -1362,7 +1362,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
                                "XPCSafeJSObjectWrapper\n");
 #endif
 
-                        if(XPCSafeJSObjectWrapper::WrapObject(ccx, nsnull, v, &v))
+                        if(XPCSafeJSObjectWrapper::WrapObject(ccx, scope, v, &v))
                             destObj = JSVAL_TO_OBJECT(v);
                         triedWrapping = JS_TRUE;
                     }

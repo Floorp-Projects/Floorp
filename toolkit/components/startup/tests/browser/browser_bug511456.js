@@ -104,13 +104,15 @@ function test() {
         return;
       gBrowser.removeEventListener("load", arguments.callee, false);
       Watcher.seen = false;
-      goQuitApplication();
+      var appStartup = Cc['@mozilla.org/toolkit/app-startup;1'].
+                       getService(Ci.nsIAppStartup);
+      appStartup.quit(Ci.nsIAppStartup.eAttemptQuit);
       Watcher.allowClose = true;
       ok(Watcher.seen, "Should have seen a prompt dialog");
       ok(!win2.closed, "Shouldn't have closed the additional window");
       win2.close();
       gBrowser.removeTab(gBrowser.selectedTab);
-      finish_test();
+      executeSoon(finish_test);
     }, false);
   }, false);
 }

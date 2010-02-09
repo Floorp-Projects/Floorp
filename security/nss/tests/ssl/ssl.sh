@@ -17,7 +17,7 @@
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1994-2000
+# Portions created by the Initial Developer are Copyright (C) 1994-2009
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -315,7 +315,7 @@ ssl_cov()
           echo "$SCRIPTNAME: skipping  $testname (ECC only)"
       elif [ "$SERVER_MODE" = "fips" -o "$CLIENT_MODE" = "fips" ] && [ "$SSL2" -eq 0 -o "$EXP" -eq 0 ] ; then
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
-      elif [ "$ectype" != "#" ] ; then
+      elif [ "`echo $ectype | cut -b 1`" != "#" ] ; then
           echo "$SCRIPTNAME: running $testname ----------------------------"
           TLS_FLAG=-T
           if [ "$tls" = "TLS" ]; then
@@ -379,15 +379,22 @@ ssl_auth()
   exec < ${SSLAUTH}
   while read ectype value sparam cparam testname
   do
+      [ -z "$ectype" ] && continue
       echo "${testname}" | grep "don't require client auth" > /dev/null
       CAUTH=$?
 
       if [ "${CLIENT_MODE}" = "fips" -a "${CAUTH}" -eq 0 ] ; then
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
+      elif [ "$ectype" = "SNI" -a "$NORM_EXT" = "Extended Test" ] ; then
+          echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
       elif [ "$ectype" = "ECC" -a  -z "$NSS_ENABLE_ECC" ] ; then
           echo "$SCRIPTNAME: skipping  $testname (ECC only)"
-      elif [ "$ectype" != "#" ]; then
+      elif [ "`echo $ectype | cut -b 1`" != "#" ]; then
           cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
+          if [ "$ectype" = "SNI" ]; then
+              cparam=`echo $cparam | sed -e "s/Host/$HOST/g" -e "s/Dom/$DOMSUF/g" `
+              sparam=`echo $sparam | sed -e "s/Host/$HOST/g" -e "s/Dom/$DOMSUF/g" `
+          fi
           start_selfserv
 
           echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} -v ${CLIENT_OPTIONS} \\"
@@ -436,14 +443,20 @@ ssl_stress()
 
       if [ "${SSL2}" -eq 0 -a "$NORM_EXT" = "Extended Test" ] ; then
           echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
+      elif [ "$ectype" = "SNI" -a "$NORM_EXT" = "Extended Test" ] ; then
+          echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
       elif [ "$ectype" = "ECC" -a  -z "$NSS_ENABLE_ECC" ] ; then
           echo "$SCRIPTNAME: skipping  $testname (ECC only)"
       elif [ "${SERVER_MODE}" = "fips" -o "${CLIENT_MODE}" = "fips" ] && [ "${SSL2}" -eq 0 ] ; then
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
       elif [ "${CLIENT_MODE}" = "fips" -a "${CAUTH}" -ne 0 ] ; then
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
-      elif [ "$ectype" != "#" ]; then
+      elif [ "`echo $ectype | cut -b 1`" != "#" ]; then
           cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
+          if [ "$ectype" = "SNI" ]; then
+              cparam=`echo $cparam | sed -e "s/Host/$HOST/g" -e "s/Dom/$DOMSUF/g" `
+              sparam=`echo $sparam | sed -e "s/Host/$HOST/g" -e "s/Dom/$DOMSUF/g" `
+          fi
 
 # These tests need the mixed cert 
 # Stress TLS ECDH-RSA AES 128 CBC with SHA (no reuse)
@@ -497,9 +510,12 @@ ssl_crl_ssl()
   exec < ${SSLAUTH}
   while read ectype value sparam cparam testname
   do
+    [ "$ectype" = "" ] && continue
     if [ "$ectype" = "ECC" -a  -z "$NSS_ENABLE_ECC" ] ; then
         echo "$SCRIPTNAME: skipping $testname (ECC only)"
-    elif [ "$ectype" != "#" ]; then
+    elif [ "$ectype" = "SNI" ]; then
+        continue
+    elif [ "`echo $ectype | cut -b 1`" != "#" ]; then
 	servarg=`echo $sparam | awk '{r=split($0,a,"-r") - 1;print r;}'`
 	pwd=`echo $cparam | grep nss`
 	user=`echo $cparam | grep TestUser`
@@ -625,13 +641,13 @@ load_group_crl() {
         echo "================= Reloading ${eccomment}CRL for group $grpBegin - $grpEnd ============="
 
         echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${R_CLIENTDIR} -v \\"
-        echo "          -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix}"
+        echo "          -2 -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix}"
         echo "Request:"
         echo "GET crl://${SERVERDIR}/root.crl_${grpBegin}-${grpEnd}${ecsuffix}"
         echo ""
         echo "RELOAD time $i"
         ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -f  \
-            -d ${R_CLIENTDIR} -v -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix} \
+            -d ${R_CLIENTDIR} -v -2 -w nss -n TestUser${UNREVOKED_CERT_GRP_1}${ecsuffix} \
 	    >${OUTFILE_TMP}  2>&1 <<_EOF_REQUEST_
 GET crl://${SERVERDIR}/root.crl_${grpBegin}-${grpEnd}${ecsuffix}
 
@@ -682,8 +698,11 @@ ssl_crl_cache()
     exec < ${SSLAUTH_TMP}
     while read ectype value sparam cparam testname
       do
+      [ "$ectype" = "" ] && continue
       if [ "$ectype" = "ECC" -a  -z "$NSS_ENABLE_ECC" ] ; then
         echo "$SCRIPTNAME: skipping  $testname (ECC only)"
+      elif [ "$ectype" = "SNI" ]; then
+          continue
       else
         servarg=`echo $sparam | awk '{r=split($0,a,"-r") - 1;print r;}'`
         pwd=`echo $cparam | grep nss`
@@ -767,7 +786,7 @@ ssl_crl_cache()
     kill_selfserv
     SERV_ARG="${SERV_ARG}_-r"
     rm -f ${SSLAUTH_TMP}
-    grep -- " $SERV_ARG " ${SSLAUTH} | grep -v none | grep -v bogus  > ${SSLAUTH_TMP}
+    grep -- " $SERV_ARG " ${SSLAUTH} | grep -v "^#" | grep -v none | grep -v bogus  > ${SSLAUTH_TMP}
   done
   TEMPFILES=${SSLAUTH_TMP}
   html "</TABLE><BR>"

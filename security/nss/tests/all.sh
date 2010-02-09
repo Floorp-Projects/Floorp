@@ -106,7 +106,7 @@
 #                  - this list can be reduced for individual test cycles
 #
 #   NSS_SSL_TESTS  - list of ssl tests to run (see ssl.sh)
-#   NSS_SSL_RUN    - list of sss sub-tests to run (see ssl.sh)
+#   NSS_SSL_RUN    - list of ssl sub-tests to run (see ssl.sh)
 #
 # Testing schema:
 # ---------------
@@ -188,7 +188,7 @@ run_cycle_pkix()
     export NSS_ENABLE_PKIX_VERIFY
 
     TESTS="${ALL_TESTS}"
-    TESTS_SKIP="cipher dbtests sdr crmf smime merge"
+    TESTS_SKIP="cipher dbtests sdr crmf smime merge multinit"
 
     echo "${NSS_SSL_TESTS}" | grep "_" > /dev/null
     RET=$?

@@ -2984,7 +2984,7 @@ nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
 void
 nsHTMLDocument::MaybeEditingStateChanged()
 {
-  if (mUpdateNestLevel == 0 && mContentEditableCount > 0 != IsEditingOn()) {
+  if (mUpdateNestLevel == 0 && (mContentEditableCount > 0) != IsEditingOn()) {
     if (nsContentUtils::IsSafeToRunScript()) {
       EditingStateChanged();
     } else if (!mInDestructor) {
@@ -3012,7 +3012,7 @@ nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
   mContentEditableCount += aChange;
 
   if (mParser ||
-      (mUpdateNestLevel > 0 && mContentEditableCount > 0 != IsEditingOn())) {
+      (mUpdateNestLevel > 0 && (mContentEditableCount > 0) != IsEditingOn())) {
     return NS_OK;
   }
 

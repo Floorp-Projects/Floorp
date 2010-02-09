@@ -122,7 +122,8 @@ int ssl3CipherSuites[] = {
 
 unsigned long __cmp_umuls;
 PRBool verbose;
-int renegotiate = 0;
+int renegotiationsToDo = 0;
+int renegotiationsDone = 0;
 
 static char *progName;
 
@@ -149,9 +150,11 @@ void printSecurityInfo(PRFileDesc *fd)
 	       suite.effectiveKeyBits, suite.symCipherName, 
 	       suite.macBits, suite.macAlgorithmName);
 	    FPRINTF(stderr, 
-	    "tstclnt: Server Auth: %d-bit %s, Key Exchange: %d-bit %s\n",
+	    "tstclnt: Server Auth: %d-bit %s, Key Exchange: %d-bit %s\n"
+	    "         Compression: %s\n",
 	       channel.authKeyBits, suite.authAlgorithmName,
-	       channel.keaKeyBits,  suite.keaTypeName);
+	       channel.keaKeyBits,  suite.keaTypeName,
+	       channel.compressionMethodName);
     	}
     }
     cert = SSL_RevealCert(fd);
@@ -179,18 +182,27 @@ void printSecurityInfo(PRFileDesc *fd)
 void
 handshakeCallback(PRFileDesc *fd, void *client_data)
 {
+    const char *secondHandshakeName = (char *)client_data;
+    if (secondHandshakeName) {
+        SSL_SetURL(fd, secondHandshakeName);
+    }
     printSecurityInfo(fd);
-    if (renegotiate > 0) {
-	renegotiate--;
-	SSL_ReHandshake(fd, PR_FALSE);
+    if (renegotiationsDone < renegotiationsToDo) {
+	SSL_ReHandshake(fd, (renegotiationsToDo < 2));
+	++renegotiationsDone;
     }
 }
 
 static void Usage(const char *progName)
 {
     fprintf(stderr, 
-"Usage:  %s -h host [-p port] [-d certdir] [-n nickname] [-23BTfosvxr] \n"
-"                   [-c ciphers] [-w passwd] [-W pwfile] [-q]\n", progName);
+"Usage:  %s -h host [-a 1st_hs_name ] [-a 2nd_hs_name ] [-p port]\n"
+                    "[-d certdir] [-n nickname] [-23BTafosvx] [-c ciphers]\n"
+                    "[-r N] [-w passwd] [-W pwfile] [-q]\n", progName);
+    fprintf(stderr, "%-20s Send different SNI name. 1st_hs_name - at first\n"
+                    "%-20s handshake, 2nd_hs_name - at second handshake.\n"
+                    "%-20s Defualt is host from the -h argument.\n", "-a name",
+                    "", "");
     fprintf(stderr, "%-20s Hostname to connect with\n", "-h host");
     fprintf(stderr, "%-20s Port number for SSL server\n", "-p port");
     fprintf(stderr, 
@@ -210,8 +222,9 @@ static void Usage(const char *progName)
     fprintf(stderr, "%-20s Verbose progress reporting.\n", "-v");
     fprintf(stderr, "%-20s Use export policy.\n", "-x");
     fprintf(stderr, "%-20s Ping the server and then exit.\n", "-q");
-    fprintf(stderr, "%-20s Renegotiate with session resumption.\n", "-r");
+    fprintf(stderr, "%-20s Renegotiate N times (resuming session if N>1).\n", "-r N");
     fprintf(stderr, "%-20s Enable the session ticket extension.\n", "-u");
+    fprintf(stderr, "%-20s Enable compression.\n", "-z");
     fprintf(stderr, "%-20s Letter(s) chosen from the following list\n", 
                     "-c ciphers");
     fprintf(stderr, 
@@ -507,6 +520,7 @@ int main(int argc, char **argv)
     int                disableLocking = 0;
     int                useExportPolicy = 0;
     int                enableSessionTickets = 0;
+    int                enableCompression = 0;
     PRSocketOptionData opt;
     PRNetAddr          addr;
     PRPollDesc         pollset[2];
@@ -517,6 +531,8 @@ int main(int argc, char **argv)
     int                headerSeparatorPtrnId = 0;
     int                error = 0;
     PRUint16           portno = 443;
+    char *             hs1SniHostName = NULL;
+    char *             hs2SniHostName = NULL;
     PLOptState *optstate;
     PLOptStatus optstatus;
     PRStatus prStatus;
@@ -534,7 +550,8 @@ int main(int argc, char **argv)
        }
     }
 
-    optstate = PL_CreateOptState(argc, argv, "23BTSfc:h:p:d:m:n:oqr:suvw:xW:");
+    optstate = PL_CreateOptState(argc, argv,
+                                 "23BSTW:a:c:d:fh:m:n:op:qr:suvw:xz");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
@@ -546,17 +563,26 @@ int main(int argc, char **argv)
 
           case 'B': bypassPKCS11 = 1; 			break;
 
+          case 'S': skipProtoHeader = PR_TRUE;                 break;
+
           case 'T': disableTLS  = 1; 			break;
 
-          case 'S': skipProtoHeader = PR_TRUE;                 break;
+          case 'a': if (!hs1SniHostName) {
+                        hs1SniHostName = PORT_Strdup(optstate->value);
+                    } else if (!hs2SniHostName) {
+                        hs2SniHostName =  PORT_Strdup(optstate->value);
+                    } else {
+                        Usage(progName);
+                    }
+                    break;
 
           case 'c': cipherString = PORT_Strdup(optstate->value); break;
 
-          case 'h': host = PORT_Strdup(optstate->value);	break;
-
-          case 'f':  clientSpeaksFirst = PR_TRUE;       break;
-
           case 'd': certDir = PORT_Strdup(optstate->value);   break;
+
+          case 'f': clientSpeaksFirst = PR_TRUE;        break;
+
+          case 'h': host = PORT_Strdup(optstate->value);	break;
 
 	  case 'm':
 	    multiplier = atoi(optstate->value);
@@ -578,7 +604,7 @@ int main(int argc, char **argv)
 
 	  case 'v': verbose++;	 			break;
 
-	  case 'r': renegotiate = atoi(optstate->value);	break;
+	  case 'r': renegotiationsToDo = atoi(optstate->value);	break;
 
           case 'w':
                 pwdata.source = PW_PLAINTEXT;
@@ -591,6 +617,8 @@ int main(int argc, char **argv)
                 break;
 
 	  case 'x': useExportPolicy = 1; 		break;
+
+	  case 'z': enableCompression = 1;		break;
 	}
     }
 
@@ -829,6 +857,13 @@ int main(int argc, char **argv)
 	return 1;
     }
 
+    /* enable compression. */
+    rv = SSL_OptionSet(s, SSL_ENABLE_DEFLATE, enableCompression);
+    if (rv != SECSuccess) {
+	SECU_PrintError(progName, "error enabling compression");
+	return 1;
+    }
+               
     SSL_SetPKCS11PinArg(s, &pwdata);
 
     SSL_AuthCertificateHook(s, SSL_AuthCertificate, (void *)handle);
@@ -836,8 +871,12 @@ int main(int argc, char **argv)
 	SSL_BadCertHook(s, ownBadCertHandler, NULL);
     }
     SSL_GetClientAuthDataHook(s, own_GetClientAuthData, (void *)nickname);
-    SSL_HandshakeCallback(s, handshakeCallback, NULL);
-    SSL_SetURL(s, host);
+    SSL_HandshakeCallback(s, handshakeCallback, hs2SniHostName);
+    if (hs1SniHostName) {
+        SSL_SetURL(s, hs1SniHostName);
+    } else {
+        SSL_SetURL(s, host);
+    }
 
     /* Try to connect to the server */
     status = PR_Connect(s, &addr, PR_INTERVAL_NO_TIMEOUT);
@@ -1045,6 +1084,12 @@ int main(int argc, char **argv)
     }
 
   done:
+    if (hs1SniHostName) {
+        PORT_Free(hs1SniHostName);
+    }
+    if (hs2SniHostName) {
+        PORT_Free(hs2SniHostName);
+    }
     if (nickname) {
         PORT_Free(nickname);
     }

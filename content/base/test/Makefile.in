@@ -337,6 +337,10 @@ _TEST_FILES = 	test_bug5141.html \
 		file_CSP.sjs \
 		file_CSP_main.html \
 		file_CSP_main.js \
+ 		test_CSP_frameancestors.html \
+ 		file_CSP_frameancestors.sjs \
+ 		file_CSP_frameancestors_main.html \
+ 		file_CSP_frameancestors_main.js \
 		test_bug540854.html \
 		bug540854.sjs \
 		$(NULL)

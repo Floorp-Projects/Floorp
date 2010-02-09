@@ -87,7 +87,6 @@ PROCESS_MAP_FILE = cp $< $@
 BUILD_UNIX_PLUGINS  = 1
 #DSO_LDOPTS         += -b elf -G -z defs
 DSO_LDOPTS         += -b elf -G
-DSO_LDFLAGS        += -nostdlib -L/lib -L/usr/lib -lXm -lXt -lX11 -lgen
 
 # Used for Java compiler
 EXPORT_FLAGS += -W l,-Bexport

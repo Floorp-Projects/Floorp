@@ -99,6 +99,10 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   
   // radhslib.dll - Naomi internet filter - unmaintained since 2006
   {"radhslib.dll", UNVERSIONED},
+
+  // Music download filter for vkontakte.ru - old instances
+  // of this DLL cause crashes
+  {"vksaver.dll", MAKE_VERSION(1,0,0,1)},
   
   // leave these two in always for tests
   { "mozdllblockingtest.dll", ALL_VERSIONS },
