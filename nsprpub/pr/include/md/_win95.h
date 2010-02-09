@@ -52,11 +52,11 @@
 #define _PR_SI_SYSNAME        "WIN95"
 #if defined(_M_IX86) || defined(_X86_)
 #define _PR_SI_ARCHITECTURE   "x86"
-#elif defined(_AMD64_)
+#elif defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)
 #define _PR_SI_ARCHITECTURE   "x86-64"
-#elif defined(_IA64_)
+#elif defined(_M_IA64) || defined(_IA64_)
 #define _PR_SI_ARCHITECTURE   "ia64"
-#elif defined(_ARM_)
+#elif defined(_M_ARM) || defined(_ARM_)
 #define _PR_SI_ARCHITECTURE   "arm"
 #else
 #error unknown processor architecture

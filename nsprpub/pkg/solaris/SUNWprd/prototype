@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident  "$Id: prototype,v 1.5 2008/10/20 22:38:46 christophe.ravel.bugs%sun.com Exp $"
+#ident  "$Id: prototype,v 1.6 2010/01/27 22:20:40 wtc%google.com Exp $"
 #
 # This required package information file contains a list of package contents.
 # The 'pkgmk' command uses this file to identify the contents of a package
@@ -118,5 +118,4 @@ f none usr/include/mps/plbase64.h 0644 root bin
 f none usr/include/mps/plerror.h 0644 root bin
 f none usr/include/mps/plgetopt.h 0644 root bin
 f none usr/include/mps/plhash.h 0644 root bin
-f none usr/include/mps/plresolv.h 0644 root bin
 f none usr/include/mps/plstr.h 0644 root bin
