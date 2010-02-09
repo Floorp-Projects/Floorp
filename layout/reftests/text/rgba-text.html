@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html>
+<body style="background: #000">
+	<div style="color: rgba(255, 255, 255, 0.2); font-size:48px;">_</div>
+	<!-- the red box should totally obscure the drawn portion of the text
+	     however if the text is painted as a box instead of an underscore it
+	     will show above the top of the red box.
+	     This test would have caught bug 484954
+	     -->
+	<div style="background: red; position:absolute; top:30px; left:0px; padding:50px"></div>
+</body>
+</html>
