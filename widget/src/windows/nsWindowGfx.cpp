@@ -330,18 +330,10 @@ EnsureSharedSurfaceSize(gfxIntSize size)
 
 PRBool nsWindow::OnPaint(HDC aDC)
 {
-#ifdef MOZ_IPC
   if (mWindowType == eWindowType_plugin) {
-    PluginInstanceParent* instance = reinterpret_cast<PluginInstanceParent*>(
-      ::GetPropW(mWnd, L"PluginInstanceParentProperty"));
-    if (instance) {
-      if (!instance->CallUpdateWindow())
-        NS_ERROR("Failed to send message!");
-      ValidateRect(mWnd, NULL);
-      return PR_TRUE;
-    }
+    ValidateRect(mWnd, NULL);
+    return PR_TRUE;
   }
-#endif
 
   nsPaintEvent willPaintEvent(PR_TRUE, NS_WILL_PAINT, this);
   DispatchWindowEvent(&willPaintEvent);
