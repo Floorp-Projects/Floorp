@@ -22,7 +22,7 @@
  *
  * Contributor(s):
  *   Dan Rosen <dr@netscape.com>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -256,6 +256,7 @@ static FrameCtorDebugFlags gFlags[] = {
 
 #ifdef MOZ_XUL
 #include "nsMenuFrame.h"
+#include "nsMenuPopupFrame.h"
 #include "nsPopupSetFrame.h"
 #include "nsTreeColFrame.h"
 #include "nsIBoxObject.h"
