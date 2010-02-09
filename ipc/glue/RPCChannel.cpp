@@ -109,8 +109,10 @@ RPCChannel::~RPCChannel()
     // FIXME/cjones: impl
 }
 
+#ifdef OS_WIN
 // static
 int RPCChannel::sInnerEventLoopDepth = 0;
+#endif
 
 bool
 RPCChannel::Call(Message* msg, Message* reply)
