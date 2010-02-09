@@ -386,6 +386,7 @@ members = [
     'nsIDOMNSHTMLTextAreaElement.selectionStart',
     'nsIDOMNSHTMLTextAreaElement.selectionEnd',
     'nsIDOMNSHTMLTextAreaElement.textLength',
+    'nsIDOMNSHTMLTextAreaElement.wrap',
 
     # dom/interfaces/json - None.
     # All 4 methods of nsIJSON call GetCurrentNativeCallContext.

@@ -3622,6 +3622,11 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         formatStrCount = 1;
         error.AssignLiteral("netTimeout");
     }
+    else if (NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION == aError) {
+        // CSP error
+        cssClass.AssignLiteral("neterror");
+        error.AssignLiteral("cspFrameAncestorBlocked");
+    }
     else if (NS_ERROR_GET_MODULE(aError) == NS_ERROR_MODULE_SECURITY) {
         nsCOMPtr<nsINSSErrorsService> nsserr =
             do_GetService(NS_NSS_ERRORS_SERVICE_CONTRACTID);
@@ -6242,7 +6247,7 @@ nsDocShell::CanSavePresentation(PRUint32 aLoadType,
     // then we should not cache the presentation.
     PRBool canSaveState;
     mOSHE->GetSaveLayoutStateFlag(&canSaveState);
-    if (canSaveState == PR_FALSE)
+    if (!canSaveState)
         return PR_FALSE;
 
     // If the document is not done loading, don't cache it.
@@ -9511,7 +9516,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
          
         }
     }
-    if (expired == PR_TRUE)
+    if (expired)
         entry->SetExpirationStatus(PR_TRUE);
 
 

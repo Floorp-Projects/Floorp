@@ -67,49 +67,47 @@ function test() {
                             curClosedWindowCount + 1);
 
     var origWin;
-    let windowObserver = {
-      observe: function(aSubject, aTopic, aData) {
-        let theWin = aSubject.QueryInterface(Ci.nsIDOMWindow);
-        if (origWin && theWin != origWin)
-          return;
+    function windowObserver(aSubject, aTopic, aData) {
+      let theWin = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      if (origWin && theWin != origWin)
+        return;
 
-        switch (aTopic) {
-          case "domwindowopened":
-            origWin = theWin;
-            theWin.addEventListener("load", function () {
-              theWin.removeEventListener("load", arguments.callee, false);
-              executeSoon(function() {
-                // Close the window as soon as the first tab loads, or
-                // immediately if there are no tabs.
-                if (aState.windowState.windows[0].tabs[0].entries.length) {
-                  theWin.gBrowser.addEventListener("load", function() {
-                    theWin.gBrowser.removeEventListener("load",
-                                                        arguments.callee, true);
-                    theWin.close();
-                  }, true);
-                } else {
-                  executeSoon(function() {
-                    theWin.close();
-                  });
-                }
-                ss.setWindowState(theWin, JSON.stringify(aState.windowState),
-                                  true);
-              });
-            }, false);
-            break;
-
-          case "domwindowclosed":
-            ww.unregisterNotification(this);
-            // Use executeSoon to ensure this happens after SS observer.
-            executeSoon(function() {
-              is(ss.getClosedWindowCount(),
-                 curClosedWindowCount + (aState.shouldBeAdded ? 1 : 0),
-                 "That window should " + (aState.shouldBeAdded ? "" : "not ") +
-                 "be restorable");
-              executeSoon(runNextTest);
+      switch (aTopic) {
+        case "domwindowopened":
+          origWin = theWin;
+          theWin.addEventListener("load", function () {
+            theWin.removeEventListener("load", arguments.callee, false);
+            executeSoon(function () {
+              // Close the window as soon as the first tab loads, or
+              // immediately if there are no tabs.
+              if (aState.windowState.windows[0].tabs[0].entries.length) {
+                theWin.gBrowser.addEventListener("load", function() {
+                  theWin.gBrowser.removeEventListener("load",
+                                                      arguments.callee, true);
+                  theWin.close();
+                }, true);
+              } else {
+                executeSoon(function () {
+                  theWin.close();
+                });
+              }
+              ss.setWindowState(theWin, JSON.stringify(aState.windowState),
+                                true);
             });
-            break;
-        }
+          }, false);
+          break;
+
+        case "domwindowclosed":
+          ww.unregisterNotification(windowObserver);
+          // Use executeSoon to ensure this happens after SS observer.
+          executeSoon(function () {
+            is(ss.getClosedWindowCount(),
+               curClosedWindowCount + (aState.shouldBeAdded ? 1 : 0),
+               "That window should " + (aState.shouldBeAdded ? "" : "not ") +
+               "be restorable");
+            executeSoon(runNextTest);
+          });
+          break;
       }
     }
     ww.registerNotification(windowObserver);

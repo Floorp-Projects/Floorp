@@ -251,8 +251,10 @@ RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
 
     XPCWrappedNative* wrappedNative =
       XPCWrappedNative::GetAndMorphWrappedNativeOfJSObject(cx, nativeObj);
-    if (!wrappedNative)
-      return XPCSafeJSObjectWrapper::WrapObject(cx, nsnull, v, rval);
+    if (!wrappedNative) {
+      return XPCSafeJSObjectWrapper::WrapObject(cx, JS_GetScopeChain(cx),
+                                                v, rval);
+    }
 
     if (HAS_FLAGS(flags, FLAG_EXPLICIT)) {
 #ifdef DEBUG_XPCNativeWrapper
@@ -278,6 +280,7 @@ RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
     // GetWrappedNativeOfJSObject will give the right thing -- the unique deep
     // implicit wrapper associated with wrappedNative.
     JSObject* wrapperObj = XPCNativeWrapper::GetNewOrUsed(cx, wrappedNative,
+                                                          JS_GetScopeChain(cx),
                                                           nsnull);
     if (!wrapperObj) {
       return JS_FALSE;
@@ -912,7 +915,8 @@ MirrorWrappedNativeParent(JSContext *cx, XPCWrappedNative *wrapper,
     // scope. In that case, the best we can do is just use the
     // non-native-wrapped sandbox global object for our parent.
     if (parent_wrapper) {
-      *result = XPCNativeWrapper::GetNewOrUsed(cx, parent_wrapper, nsnull);
+      *result = XPCNativeWrapper::GetNewOrUsed(cx, parent_wrapper, nsnull,
+                                               nsnull);
       if (!*result)
         return JS_FALSE;
     } else {
@@ -1230,7 +1234,7 @@ XPCNativeWrapper::AttachNewConstructorObject(XPCCallContext &ccx,
 // static
 JSObject *
 XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper,
-                               nsIPrincipal *aObjectPrincipal)
+                               JSObject *scope, nsIPrincipal *aObjectPrincipal)
 {
   if (aObjectPrincipal) {
     nsIScriptSecurityManager *ssm = GetSecurityManager();
@@ -1259,7 +1263,7 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper,
     // Make sure v doesn't get collected while we're re-wrapping it.
     AUTO_MARK_JSVAL(ccx, v);
 
-    if (XPCSafeJSObjectWrapper::WrapObject(cx, nsnull, v, &v))
+    if (XPCSafeJSObjectWrapper::WrapObject(cx, scope, v, &v))
         return JSVAL_TO_OBJECT(v);
 
     return nsnull;

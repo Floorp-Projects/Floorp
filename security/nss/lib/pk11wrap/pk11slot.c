@@ -1129,6 +1129,8 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
 							PR_TRUE : PR_FALSE);
     slot->readOnly = ((tokenInfo.flags & CKF_WRITE_PROTECTED) ? 
 							PR_TRUE : PR_FALSE);
+	
+	 
     slot->hasRandom = ((tokenInfo.flags & CKF_RNG) ? PR_TRUE : PR_FALSE);
     slot->protectedAuthPath =
     		((tokenInfo.flags & CKF_PROTECTED_AUTHENTICATION_PATH) 
@@ -1248,7 +1250,33 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
 	    PK11_FreeSlot(int_slot);
 	}
     }
+    /* work around a problem in softoken where it incorrectly
+     * reports databases opened read only as read/write. */
+    if (slot->isInternal && !slot->readOnly) {
+	CK_SESSION_HANDLE session = CK_INVALID_SESSION;
 
+	/* try to open a R/W session */
+	crv =PK11_GETTAB(slot)->C_OpenSession(slot->slotID,
+	      CKF_RW_SESSION|CKF_SERIAL_SESSION, slot, pk11_notify ,&session);
+	/* what a well behaved token should return if you open 
+	 * a RW session on a read only token */
+	if (crv == CKR_TOKEN_WRITE_PROTECTED) {
+	    slot->readOnly = PR_TRUE;
+	} else if (crv == CKR_OK) {
+	    CK_SESSION_INFO sessionInfo;
+
+	    /* Because of a second bug in softoken, which silently returns
+	     * a RO session, we need to check what type of session we got. */
+	    crv = PK11_GETTAB(slot)->C_GetSessionInfo(session, &sessionInfo);
+	    if (crv == CKR_OK) {
+		if ((sessionInfo.flags & CKF_RW_SESSION) == 0) {
+		    /* session was readonly, so this softoken slot must be 			     * readonly */
+		    slot->readOnly = PR_TRUE;
+		}
+	    }
+	    PK11_GETTAB(slot)->C_CloseSession(session);
+	}
+    }
 	
     return SECSuccess;
 }
@@ -1697,12 +1725,29 @@ PK11_NeedUserInit(PK11SlotInfo *slot)
     return (PRBool)((slot->flags & CKF_USER_PIN_INITIALIZED) == 0);
 }
 
+static PK11SlotInfo *pk11InternalKeySlot = NULL;
+void
+pk11_SetInternalKeySlot(PK11SlotInfo *slot)
+{
+   if (pk11InternalKeySlot) {
+	PK11_FreeSlot(pk11InternalKeySlot);
+   }
+   pk11InternalKeySlot = slot ? PK11_ReferenceSlot(slot) : NULL;
+}
+
+
 /* get the internal key slot. FIPS has only one slot for both key slots and
  * default slots */
 PK11SlotInfo *
 PK11_GetInternalKeySlot(void)
 {
-    SECMODModule *mod = SECMOD_GetInternalModule();
+    SECMODModule *mod;
+
+    if (pk11InternalKeySlot) {
+	return PK11_ReferenceSlot(pk11InternalKeySlot);
+    }
+
+    mod = SECMOD_GetInternalModule();
     PORT_Assert(mod != NULL);
     if (!mod) {
 	PORT_SetError( SEC_ERROR_NO_MODULE );
@@ -1720,6 +1765,9 @@ PK11_GetInternalSlot(void)
     if (!mod) {
 	PORT_SetError( SEC_ERROR_NO_MODULE );
 	return NULL;
+    }
+    if (mod->isFIPS) {
+	return PK11_GetInternalKeySlot();
     }
     return PK11_ReferenceSlot(mod->slots[0]);
 }

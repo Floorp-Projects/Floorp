@@ -478,7 +478,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID,PRInt32 &aMetric)
 
     case eMetric_TouchEnabled:
 #ifdef MOZ_PLATFORM_MAEMO
-      // All Hildon devices are touch-enabled
+      // All known Maemo devices are touch enabled.
       aMetric = 1;
 #else
       aMetric = 0;

@@ -90,6 +90,8 @@ CMMSRCS = \
 		nsIdleServiceX.mm \
 		nsAccelerometerX.mm \
 		nsCocoaTextInputHandler.mm \
+		nsMacDockSupport.mm \
+		nsStandaloneNativeMenu.mm \
 		$(NULL)
 
 XPIDLSRCS	+= \

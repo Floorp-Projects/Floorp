@@ -286,7 +286,13 @@ public:
   static nsCStringHashSet *mTLSIntolerantSites;
   static nsCStringHashSet *mTLSTolerantSites;
   static nsPSMRememberCertErrorsTable* mHostsWithCertErrors;
-  
+
+  static nsCStringHashSet *mRenegoUnrestrictedSites;
+  static PRBool mTreatUnsafeNegotiationAsBroken;
+
+  static void setTreatUnsafeNegotiationAsBroken(PRBool broken);
+  static PRBool treatUnsafeNegotiationAsBroken();
+
   static void getSiteKey(nsNSSSocketInfo *socketInfo, nsCSubstring &key);
   static PRBool rememberPossibleTLSProblemSite(PRFileDesc* fd, nsNSSSocketInfo *socketInfo);
   static void rememberTolerantSite(PRFileDesc* ssl_layer_fd, nsNSSSocketInfo *socketInfo);
@@ -294,7 +300,10 @@ public:
   static void addIntolerantSite(const nsCString &str);
   static void removeIntolerantSite(const nsCString &str);
   static PRBool isKnownAsIntolerantSite(const nsCString &str);
-  
+
+  static void setRenegoUnrestrictedSites(const nsCString &str);
+  static PRBool isRenegoUnrestrictedSite(const nsCString &str);
+
   static PRFileDesc *mSharedPollableEvent;
   static nsNSSSocketInfo *mSocketOwningPollableEvent;
   

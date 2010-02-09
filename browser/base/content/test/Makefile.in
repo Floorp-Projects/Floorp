@@ -81,14 +81,23 @@ _TEST_FILES = \
 # 480169)
 
 _BROWSER_FILES = \
+                 browser_NetworkPrioritizer.js \
+                 browser_allTabsPanel.js \
+                 browser_alltabslistener.js \
+                 browser_bug304198.js \
                  browser_bug321000.js \
-                 browser_sanitize-timespans.js \
+                 title_test.svg \
+                 browser_bug329212.js \
+                 browser_bug356571.js \
+                 browser_bug386835.js \
                  browser_bug405137.js \
                  browser_bug409481.js \
                  browser_bug413915.js \
+                 browser_bug416661.js \
                  browser_bug417483.js \
                  browser_bug419612.js \
                  browser_bug420160.js \
+                 browser_bug422590.js \
                  browser_bug424101.js \
                  browser_bug427559.js \
                  browser_bug432599.js \
@@ -96,56 +105,50 @@ _BROWSER_FILES = \
                  browser_bug441778.js \
                  browser_bug455852.js \
                  browser_bug462673.js \
+                 browser_bug477014.js \
+                 browser_bug479408.js \
+                 browser_bug479408_sample.html \
                  browser_bug481560.js \
                  browser_bug484315.js \
-                 browser_bug477014.js \
+                 browser_bug491431.js \
                  browser_bug495058.js \
                  browser_bug517902.js \
                  browser_bug520538.js \
                  browser_bug521216.js \
                  browser_bug537474.js \
+                 browser_contextSearchTabPosition.js \
+                 browser_ctrlTab.js \
                  browser_discovery.js \
+                 browser_drag.js \
+                 browser_gestureSupport.js \
+                 browser_getshortcutoruri.js \
+                 browser_overflowScroll.js \
+                 browser_pageInfo.js \
+                 browser_page_style_menu.js \
+                 browser_plainTextLinks.js \
+                 browser_pluginnotification.js \
+                 browser_relatedTabs.js \
+                 browser_sanitize-passwordDisabledHosts.js \
+                 browser_sanitize-sitepermissions.js \
+                 browser_sanitize-timespans.js \
+                 browser_sanitizeDialog.js \
+                 browser_scope.js \
+                 browser_selectTabAtIndex.js \
                  browser_tabfocus.js \
+                 browser_tabs_owner.js \
                  discovery.html \
                  moz.png \
                  test_bug435035.html \
                  test_bug462673.html \
-                 browser_getshortcutoruri.js \
-                 browser_page_style_menu.js \
                  page_style_sample.html \
-                 browser_ctrlTab.js \
-                 browser_selectTabAtIndex.js \
-                 browser_gestureSupport.js \
-                 browser_pageInfo.js \
                  feed_tab.html \
-                 browser_pluginnotification.js \
                  plugin_unknown.html \
                  plugin_test.html \
                  plugin_both.html \
                  plugin_both2.html \
-                 browser_alltabslistener.js \
                  alltabslistener.html \
                  zoom_test.html \
-                 browser_bug416661.js \
-                 browser_bug386835.js \
                  dummy_page.html \
-                 browser_bug422590.js \
-                 browser_sanitize-sitepermissions.js \
-                 browser_bug356571.js \
-                 browser_sanitize-passwordDisabledHosts.js \
-                 browser_bug479408.js \
-                 browser_bug479408_sample.html \
-                 browser_scope.js \
-                 browser_overflowScroll.js \
-                 browser_sanitizeDialog.js \
-                 browser_tabs_owner.js \
-                 browser_bug491431.js \
-                 browser_bug304198.js \
-                 browser_drag.js \
-                 browser_relatedTabs.js \
-                 browser_plainTextLinks.js \
-                 browser_contextSearchTabPosition.js \
-                 browser_NetworkPrioritizer.js \
     $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))

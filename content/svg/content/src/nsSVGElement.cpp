@@ -1526,6 +1526,18 @@ nsSVGElement::DidChangePreserveAspectRatio(PRBool aDoSetAttr)
           newStr, PR_TRUE);
 }
 
+void
+nsSVGElement::DidAnimatePreserveAspectRatio()
+{
+  nsIFrame* frame = GetPrimaryFrame();
+  
+  if (frame) {
+    frame->AttributeChanged(kNameSpaceID_None,
+                            nsGkAtoms::preserveAspectRatio,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
 nsSVGElement::StringAttributesInfo
 nsSVGElement::GetStringInfo()
 {
@@ -1747,6 +1759,12 @@ nsSVGElement::GetAnimatedAttr(const nsIAtom* aName)
         return info.mBooleans[i].ToSMILAttr(this);
       }
     }
+  }
+
+  // preserveAspectRatio:
+  if (aName == nsGkAtoms::preserveAspectRatio) {
+    nsSVGPreserveAspectRatio *preserveAspectRatio = GetPreserveAspectRatio();
+    return preserveAspectRatio ? preserveAspectRatio->ToSMILAttr(this) : nsnull;
   }
 
   return nsnull;

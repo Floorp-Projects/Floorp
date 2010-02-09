@@ -140,6 +140,7 @@ oggz_stream_reset (void * data)
 static void
 oggz_reset_streams (OGGZ * oggz)
 {
+  oggz_dlist_deliter(oggz->packet_buffer, oggz_read_free_pbuffers);
   oggz_vector_foreach (oggz->streams, oggz_stream_reset);
 }
 

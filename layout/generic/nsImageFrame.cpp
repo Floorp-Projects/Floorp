@@ -1758,8 +1758,7 @@ static const char kIconLoadPrefs[][40] = {
 
 nsImageFrame::IconLoad::IconLoad()
 {
-  nsCOMPtr<nsIPrefBranch2> prefBranch =
-    do_QueryInterface(nsContentUtils::GetPrefBranch());
+  nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
 
   // register observers
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kIconLoadPrefs); ++i)

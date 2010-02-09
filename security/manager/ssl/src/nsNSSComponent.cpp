@@ -1693,6 +1693,15 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
       mPrefBranch->GetBoolPref("security.enable_tls_session_tickets", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, enabled);
 
+      mPrefBranch->GetBoolPref("security.ssl.require_safe_negotiation", &enabled);
+      SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION, enabled);
+
+      mPrefBranch->GetBoolPref(
+        "security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref", 
+        &enabled);
+      SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION, 
+        enabled ? SSL_RENEGOTIATE_UNRESTRICTED : SSL_RENEGOTIATE_REQUIRES_XTN);
+
       // Disable any ciphers that NSS might have enabled by default
       for (PRUint16 i = 0; i < SSL_NumImplementedCiphers; ++i)
       {
@@ -1853,7 +1862,18 @@ nsNSSComponent::Init()
   }
 
   nsSSLIOLayerHelpers::Init();
+  char *unrestricted_hosts=nsnull;
+  mPrefBranch->GetCharPref("security.ssl.renego_unrestricted_hosts", &unrestricted_hosts);
+  if (unrestricted_hosts) {
+    nsSSLIOLayerHelpers::setRenegoUnrestrictedSites(nsDependentCString(unrestricted_hosts));
+    nsMemory::Free(unrestricted_hosts);
+    unrestricted_hosts=nsnull;
+  }
 
+  PRBool enabled = PR_FALSE;
+  mPrefBranch->GetBoolPref("security.ssl.treat_unsafe_negotiation_as_broken", &enabled);
+  nsSSLIOLayerHelpers::setTreatUnsafeNegotiationAsBroken(enabled);
+  
   mClientAuthRememberService = new nsClientAuthRememberService;
   if (mClientAuthRememberService)
     mClientAuthRememberService->Init();
@@ -2184,6 +2204,23 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     } else if (prefName.Equals("security.enable_tls_session_tickets")) {
       mPrefBranch->GetBoolPref("security.enable_tls_session_tickets", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, enabled);
+    } else if (prefName.Equals("security.ssl.require_safe_negotiation")) {
+      mPrefBranch->GetBoolPref("security.ssl.require_safe_negotiation", &enabled);
+      SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION, enabled);
+    } else if (prefName.Equals("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref")) {
+      mPrefBranch->GetBoolPref("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref", &enabled);
+      SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION, 
+        enabled ? SSL_RENEGOTIATE_UNRESTRICTED : SSL_RENEGOTIATE_REQUIRES_XTN);
+    } else if (prefName.Equals("security.ssl.renego_unrestricted_hosts")) {
+      char *unrestricted_hosts=nsnull;
+      mPrefBranch->GetCharPref("security.ssl.renego_unrestricted_hosts", &unrestricted_hosts);
+      if (unrestricted_hosts) {
+        nsSSLIOLayerHelpers::setRenegoUnrestrictedSites(nsDependentCString(unrestricted_hosts));
+        nsMemory::Free(unrestricted_hosts);
+      }
+    } else if (prefName.Equals("security.ssl.treat_unsafe_negotiation_as_broken")) {
+      mPrefBranch->GetBoolPref("security.ssl.treat_unsafe_negotiation_as_broken", &enabled);
+      nsSSLIOLayerHelpers::setTreatUnsafeNegotiationAsBroken(enabled);
     } else if (prefName.Equals("security.OCSP.enabled")
                || prefName.Equals("security.OCSP.require")) {
       setOCSPOptions(mPrefBranch);
