@@ -34,6 +34,9 @@
 #include <map>
 #include <queue>
 #include <vector>
+#include <limits.h>
+#include <stdio.h>
+#include <memory>
 
 #include "common/dwarf/functioninfo.h"
 
