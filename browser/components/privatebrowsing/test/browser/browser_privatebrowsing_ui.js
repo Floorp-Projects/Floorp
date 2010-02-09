@@ -43,13 +43,11 @@ function test() {
   gPrefService.setBoolPref("browser.privatebrowsing.keep_current_session", true);
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
-  let observer = {
-    observe: function (aSubject, aTopic, aData) {
-      if (aTopic == "private-browsing")
-        this.data = aData;
-    },
-    data: null
-  };
+  let observerData;
+  function observer(aSubject, aTopic, aData) {
+    if (aTopic == "private-browsing")
+      observerData = aData;
+  }
   let os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
   os.addObserver(observer, "private-browsing", false);
@@ -68,13 +66,13 @@ function test() {
   is(pb.privateBrowsingEnabled, true, "The private browsing mode should be started");
   is(gPrivateBrowsingUI.privateBrowsingEnabled, true, "gPrivateBrowsingUI should expose the correct private browsing status");
   // check to see if the Private Browsing mode was activated successfully
-  is(observer.data, "enter", "Private Browsing mode was activated using the gPrivateBrowsingUI object");
+  is(observerData, "enter", "Private Browsing mode was activated using the gPrivateBrowsingUI object");
   is(pbMenuItem.getAttribute("label"), pbMenuItem.getAttribute("stoplabel"), "The Private Browsing menu item should read \"Stop Private Browsing\"");
   gPrivateBrowsingUI.toggleMode()
   is(pb.privateBrowsingEnabled, false, "The private browsing mode should not be started");
   is(gPrivateBrowsingUI.privateBrowsingEnabled, false, "gPrivateBrowsingUI should expose the correct private browsing status");
   // check to see if the Private Browsing mode was deactivated successfully
-  is(observer.data, "exit", "Private Browsing mode was deactivated using the gPrivateBrowsingUI object");
+  is(observerData, "exit", "Private Browsing mode was deactivated using the gPrivateBrowsingUI object");
   is(pbMenuItem.getAttribute("label"), pbMenuItem.getAttribute("startlabel"), "The Private Browsing menu item should read \"Start Private Browsing\"");
 
   // now, test using the <command> object
@@ -83,12 +81,12 @@ function test() {
   var func = new Function("", cmd.getAttribute("oncommand"));
   func.call(cmd);
   // check to see if the Private Browsing mode was activated successfully
-  is(observer.data, "enter", "Private Browsing mode was activated using the command object");
+  is(observerData, "enter", "Private Browsing mode was activated using the command object");
   // check to see that the window title has been changed correctly
   isnot(document.title, originalTitle, "Private browsing mode has correctly changed the title");
   func.call(cmd);
   // check to see if the Private Browsing mode was deactivated successfully
-  is(observer.data, "exit", "Private Browsing mode was deactivated using the command object");
+  is(observerData, "exit", "Private Browsing mode was deactivated using the command object");
   // check to see that the window title has been restored correctly
   is(document.title, originalTitle, "Private browsing mode has correctly restored the title");
 

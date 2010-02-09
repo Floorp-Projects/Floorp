@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.97 $ $Date: 2009/07/30 22:43:32 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.98 $ $Date: 2009/10/01 17:14:02 $";
 #endif /* DEBUG */
 
 /*
@@ -101,6 +101,11 @@ STAN_InitTokenForSlotInfo(NSSTrustDomain *td, PK11SlotInfo *slot)
     NSSToken *token;
     if (!td) {
 	td = g_default_trust_domain;
+	if (!td) {
+	    /* we're called while still initting. slot will get added
+	     * appropriately through normal init processes */
+	    return PR_SUCCESS;
+	}
     }
     token = nssToken_CreateFromPK11SlotInfo(td, slot);
     PK11Slot_SetNSSToken(slot, token);
@@ -118,6 +123,11 @@ STAN_ResetTokenInterator(NSSTrustDomain *td)
 {
     if (!td) {
 	td = g_default_trust_domain;
+	if (!td) {
+	    /* we're called while still initting. slot will get added
+	     * appropriately through normal init processes */
+	    return PR_SUCCESS;
+	}
     }
     NSSRWLock_LockWrite(td->tokensLock);
     nssListIterator_Destroy(td->tokens);

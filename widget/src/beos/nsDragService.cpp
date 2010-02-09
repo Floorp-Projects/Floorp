@@ -347,7 +347,7 @@ NS_IMETHODIMP
 nsDragService::SetCanDrop(PRBool aCanDrop)
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::SetCanDrop(%s)",
-                                  aCanDrop == PR_TRUE?"TRUE":"FALSE"));
+                                   aCanDrop ? "TRUE" : "FALSE"));
     return nsBaseDragService::SetCanDrop(aCanDrop);
 }
 
@@ -650,7 +650,7 @@ nsDragService::CreateDragMessage()
     }
     returnMsg->PrintToStream();
     // If we did not add a type, we can't drag
-    NS_ASSERTION(addedType == PR_TRUE, "No flavor/mime in the drag message!");
+    NS_ASSERTION(addedType, "No flavor/mime in the drag message!");
     return returnMsg;
 }
 

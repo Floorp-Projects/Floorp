@@ -1124,7 +1124,8 @@ nsNSElementTearoff::SetCapture(PRBool aRetargetToElement)
   if (node)
     return NS_OK;
 
-  nsIPresShell::SetCapturingContent(mContent, aRetargetToElement ? CAPTURE_RETARGETTOELEMENT : 0);
+  nsIPresShell::SetCapturingContent(mContent, CAPTURE_PREVENTDRAG |
+    (aRetargetToElement ? CAPTURE_RETARGETTOELEMENT : 0));
   return NS_OK;
 }
 
@@ -3920,11 +3921,10 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
       }
     }
 
-    if (!newContent->IsXUL()) {
-      nsContentUtils::ReparentContentWrapper(newContent, aParent,
-                                             container->GetOwnerDoc(),
-                                             container->GetOwnerDoc());
-    }
+    // FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=544654
+    //       We need to reparent here for nodes for which the parent of their
+    //       wrapper is not the wrapper for their ownerDocument (XUL elements,
+    //       form controls, ...).
 
     res = container->InsertChildAt(newContent, insPos, PR_TRUE);
     NS_ENSURE_SUCCESS(res, res);

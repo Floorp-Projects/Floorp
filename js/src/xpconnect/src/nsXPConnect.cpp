@@ -1095,10 +1095,11 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     NS_ASSERTION(aJSContext, "bad param");
     NS_ASSERTION(aGlobalJSObj, "bad param");
 
-    SaveFrame sf(aJSContext);
+    // Nest frame chain save/restore in request created by XPCCallContext.
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
     if(!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
+    SaveFrame sf(aJSContext);
 
     if(!xpc_InitJSxIDClassObjects())
         return UnexpectedFailure(NS_ERROR_FAILURE);
@@ -1135,10 +1136,11 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
 /* void initClassesForOuterObject (in JSContextPtr aJSContext, in JSObjectPtr aGlobalJSObj); */
 NS_IMETHODIMP nsXPConnect::InitClassesForOuterObject(JSContext * aJSContext, JSObject * aGlobalJSObj)
 {
-    SaveFrame sf(aJSContext);
+    // Nest frame chain save/restore in request created by XPCCallContext.
     XPCCallContext ccx(NATIVE_CALLER, aJSContext);
     if(!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
+    SaveFrame sf(aJSContext);
 
     XPCWrappedNativeScope* scope =
         XPCWrappedNativeScope::GetNewOrUsed(ccx, aGlobalJSObj);
@@ -1254,6 +1256,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     }
 
     if(!(aFlags & nsIXPConnect::OMIT_COMPONENTS_OBJECT)) {
+        // XPCCallContext gives us an active request needed to save/restore.
         SaveFrame sf(ccx);
         if(!nsXPCComponents::AttachNewComponentsObject(ccx, scope, globalJSObj))
             return UnexpectedFailure(NS_ERROR_FAILURE);
@@ -2566,12 +2569,12 @@ nsXPConnect::GetWrapperForObject(JSContext* aJSContext,
         }
 
         wrappedObj = XPCNativeWrapper::GetNewOrUsed(aJSContext, wrapper,
-                                                    aPrincipal);
+                                                    aScope, aPrincipal);
     }
     else if(aFilenameFlags & JSFILENAME_SYSTEM)
     {
         jsval val = OBJECT_TO_JSVAL(aObject);
-        if(XPCSafeJSObjectWrapper::WrapObject(aJSContext, nsnull, val, &val))
+        if(XPCSafeJSObjectWrapper::WrapObject(aJSContext, aScope, val, &val))
             wrappedObj = JSVAL_TO_OBJECT(val);
     }
     else

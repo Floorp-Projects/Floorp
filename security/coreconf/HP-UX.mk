@@ -88,10 +88,9 @@ RPATH			= +b '$$ORIGIN'
 ifneq ($(OS_TEST),ia64)
 # pa-risc
 ifndef USE_64
-RPATH   =
+RPATH			=
 endif
 endif
-DSO_LDFLAGS		=
 
 # +Z generates position independent code for use in shared libraries.
 DSO_CFLAGS = +Z

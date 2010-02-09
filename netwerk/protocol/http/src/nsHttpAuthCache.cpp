@@ -146,7 +146,7 @@ nsHttpAuthCache::SetAuthEntry(const char *scheme,
                               const char *realm,
                               const char *creds,
                               const char *challenge,
-                              const nsHttpAuthIdentity &ident,
+                              const nsHttpAuthIdentity *ident,
                               nsISupports *metadata)
 {
     nsresult rv;
@@ -387,7 +387,7 @@ nsHttpAuthEntry::Set(const char *path,
                      const char *realm,
                      const char *creds,
                      const char *chall,
-                     const nsHttpAuthIdentity &ident,
+                     const nsHttpAuthIdentity *ident,
                      nsISupports *metadata)
 {
     char *newRealm, *newCreds, *newChall;
@@ -415,7 +415,17 @@ nsHttpAuthEntry::Set(const char *path,
         memcpy(newChall, chall, challLen);
     newChall[challLen] = 0;
 
-    nsresult rv = mIdent.Set(ident);
+    nsresult rv;
+    if (ident) {
+        rv = mIdent.Set(*ident);
+    } 
+    else if (mIdent.IsEmpty()) {
+        // If we are not given an identity and our cached identity has not been
+        // initialized yet (so is currently empty), initialize it now by
+        // filling it with nulls.  We need to do that because consumers expect
+        // that mIdent is initialized after this function returns.
+        rv = mIdent.Set(nsnull, nsnull, nsnull);
+    }
     if (NS_FAILED(rv)) {
         free(newRealm);
         return rv;
@@ -512,7 +522,7 @@ nsHttpAuthNode::SetAuthEntry(const char *path,
                              const char *realm,
                              const char *creds,
                              const char *challenge,
-                             const nsHttpAuthIdentity &ident,
+                             const nsHttpAuthIdentity *ident,
                              nsISupports *metadata)
 {
     // look for an entry with a matching realm

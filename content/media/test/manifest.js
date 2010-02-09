@@ -17,6 +17,12 @@ var gCloneTests = gSmallTests.concat([
   { name:"bug520908.ogv", type:"video/ogg", duration:9000 },
 ]);
 
+// Used by test_play_twice.  Need one test file per decoder backend, plus
+// anything for testing bugs that occur when replying a played file.
+var gReplayTests = gSmallTests.concat([
+  { name:"bug533822.ogg", type:"audio/ogg" },
+]);
+
 // These are files that we want to make sure we can play through.  We can
 // also check metadata.  Put files of the same type together in this list so if
 // something crashes we have some idea of which backend is responsible.

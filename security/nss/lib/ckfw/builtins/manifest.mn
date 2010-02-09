@@ -34,7 +34,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.10 $ $Date: 2005/01/20 02:25:46 $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.11 $ $Date: 2009/12/17 22:00:48 $"
 
 CORE_DEPTH = ../../../..
 
@@ -61,5 +61,3 @@ CSRCS =			\
 REQUIRES = nspr
 
 LIBRARY_NAME = nssckbi
-
-#EXTRA_SHARED_LIBS = -L$(DIST)/lib -lnssckfw -lnssb -lplc4 -lplds4

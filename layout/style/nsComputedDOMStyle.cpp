@@ -168,6 +168,8 @@ NS_INTERFACE_TABLE_HEAD(nsComputedDOMStyle)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsComputedDOMStyle)
   NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMCSS2Properties,
                                     new CSS2PropertiesTearoff(this))
+  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMSVGCSS2Properties,
+                                    new CSS2PropertiesTearoff(this))
   NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMNSCSS2Properties,
                                     new CSS2PropertiesTearoff(this))
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ComputedCSSStyleDeclaration)
@@ -828,8 +830,12 @@ nsComputedDOMStyle::GetContent(nsIDOMCSSValue** aValue)
         }
         break;
       case eStyleContentType_Attr:
-        val->SetString(nsDependentString(data.mContent.mString),
-                       nsIDOMCSSPrimitiveValue::CSS_ATTR);
+        {
+          nsAutoString str;
+          nsStyleUtil::AppendEscapedCSSIdent(
+            nsDependentString(data.mContent.mString), str);
+          val->SetString(str, nsIDOMCSSPrimitiveValue::CSS_ATTR);
+        }
         break;
       case eStyleContentType_Counter:
       case eStyleContentType_Counters:
@@ -845,7 +851,8 @@ nsComputedDOMStyle::GetContent(nsIDOMCSSValue** aValue)
           // WRITE ME
           nsCSSValue::Array *a = data.mContent.mCounters;
 
-          str.Append(a->Item(0).GetStringBufferValue());
+          nsStyleUtil::AppendEscapedCSSIdent(
+            nsDependentString(a->Item(0).GetStringBufferValue()), str);
           PRInt32 typeItem = 1;
           if (data.mType == eStyleContentType_Counters) {
             typeItem = 2;
@@ -920,7 +927,9 @@ nsComputedDOMStyle::GetCounterIncrement(nsIDOMCSSValue** aValue)
     }
 
     const nsStyleCounterData *data = content->GetCounterIncrementAt(i);
-    name->SetString(data->mCounter);
+    nsAutoString escaped;
+    nsStyleUtil::AppendEscapedCSSIdent(data->mCounter, escaped);
+    name->SetString(escaped);
     value->SetNumber(data->mValue); // XXX This should really be integer
   }
 
@@ -1072,7 +1081,9 @@ nsComputedDOMStyle::GetCounterReset(nsIDOMCSSValue** aValue)
     }
 
     const nsStyleCounterData *data = content->GetCounterResetAt(i);
-    name->SetString(data->mCounter);
+    nsAutoString escaped;
+    nsStyleUtil::AppendEscapedCSSIdent(data->mCounter, escaped);
+    name->SetString(escaped);
     value->SetNumber(data->mValue); // XXX This should really be integer
   }
 
@@ -4285,7 +4296,9 @@ nsComputedDOMStyle::GetTransitionProperty(nsIDOMCSSValue** aValue)
     {
       const char *str;
       transition->GetUnknownProperty()->GetUTF8String(&str);
-      property->SetString(nsDependentCString(str)); // really want SetIdent
+      nsAutoString escaped;
+      nsStyleUtil::AppendEscapedCSSIdent(NS_ConvertUTF8toUTF16(str), escaped);
+      property->SetString(escaped); // really want SetIdent
     }
     else
       property->SetString(nsCSSProps::GetStringValue(cssprop));

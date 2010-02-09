@@ -395,7 +395,10 @@ pkix_hash(
         PKIX_UInt32 hash;
 
         PKIX_ENTER(OBJECT, "pkix_hash");
-        PKIX_NULLCHECK_TWO(bytes, pHash);
+        if (length != 0) {
+                PKIX_NULLCHECK_ONE(bytes);
+        }
+        PKIX_NULLCHECK_ONE(pHash);
 
         hash = 0;
         for (i = 0; i < length; i++) {

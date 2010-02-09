@@ -1,0 +1,18 @@
+<!DOCTYPE HTML><html><head></head>
+<body>
+<div contentEditable="true" id="div"><p id="p">ABC</p></div>
+<script>
+  // Position the caret after the "A"
+  var div = document.getElementById('div');
+  var p = document.getElementById('p');
+  div.focus();
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  var range = document.createRange();
+  range.setStart(p.firstChild, 1)
+  range.setEnd(p.firstChild, 1);
+  sel.addRange(range);
+</script>
+
+</body>
+</html>

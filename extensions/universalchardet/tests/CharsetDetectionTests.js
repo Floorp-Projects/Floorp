@@ -17,7 +17,6 @@ function CharsetDetectionTests(aTestFile, aExpectedCharset, aDetectorList)
 
 function InitDetectorTests()
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var prefService = Components.classes["@mozilla.org/preferences-service;1"]
 	.getService(Components.interfaces.nsIPrefBranch);
     var str =  Components.classes["@mozilla.org/supports-string;1"]
@@ -37,7 +36,6 @@ function InitDetectorTests()
 
 function SetDetectorPref(aPrefValue)
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var prefService = Components.classes["@mozilla.org/preferences-service;1"]
 	           .getService(Components.interfaces.nsIPrefBranch);
     var str =  Components.classes["@mozilla.org/supports-string;1"]

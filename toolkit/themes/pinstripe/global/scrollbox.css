@@ -28,15 +28,19 @@
 
 /* Vertical enabled */
 .autorepeatbutton-up:not([orient="horizontal"]) {
-  list-style-image: url("chrome://global/skin/scrollbox/autorepeat-arrow-up.gif");
-  -moz-image-region: auto; /* cut off inheritance */
   padding-bottom: 5px;
 }
 
 .autorepeatbutton-down:not([orient="horizontal"]) {
-  list-style-image: url("chrome://global/skin/scrollbox/autorepeat-arrow-dn.gif");
-  -moz-image-region: auto; /* cut off inheritance */
   padding-top: 5px;
+}
+
+.autorepeatbutton-up:not([orient="horizontal"]) > .autorepeatbutton-icon {
+  -moz-transform: rotate(-90deg);
+}
+
+.autorepeatbutton-down:not([orient="horizontal"]) > .autorepeatbutton-icon {
+  -moz-transform: rotate(90deg);
 }
 
 .scrollbutton-up {
@@ -50,14 +54,9 @@
 }
 
 /* Vertical disabled */
-.autorepeatbutton-up[disabled="true"] {
-  list-style-image: url("chrome://global/skin/scrollbox/autorepeat-arrow-up-dis.gif");
-  -moz-image-region: auto; /* cut off inheritance */
-}
-
-.autorepeatbutton-down[disabled="true"] {
-  list-style-image: url("chrome://global/skin/scrollbox/autorepeat-arrow-dn-dis.gif");
-  -moz-image-region: auto; /* cut off inheritance */
+.autorepeatbutton-up[disabled="true"]:not([orient="horizontal"]),
+.autorepeatbutton-down[disabled="true"]:not([orient="horizontal"]) {
+  -moz-image-region: rect(0, 24px, 10px, 16px);
 }
 
 .scrollbutton-up[disabled="true"] {
@@ -76,6 +75,8 @@
 }
 
 autorepeatbutton {
+  list-style-image: url("chrome://global/skin/menu/menu-arrow.png");
+  -moz-image-region: rect(0, 8px, 10px, 0);
   -moz-box-align: center;
   -moz-box-pack: center;
   padding: 1px;

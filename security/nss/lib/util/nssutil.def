@@ -241,3 +241,10 @@ UTIL_SetForkState;
 ;+    local:
 ;+       *;
 ;+};
+;+NSSUTIL_3.12.5 {       # NSS Utilities 3.12.5 release
+;+    global:
+NSS_SecureMemcmp;
+PORT_LoadLibraryFromOrigin;
+;+    local:
+;+       *;
+;+};

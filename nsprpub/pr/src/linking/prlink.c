@@ -74,6 +74,9 @@
 #endif
 #ifdef AIX
 #include <sys/ldr.h>
+#ifndef L_IGNOREUNLOAD /* AIX 4.3.3 does not have L_IGNOREUNLOAD. */
+#define L_IGNOREUNLOAD 0x10000000
+#endif
 #endif
 #ifdef OSF1
 #include <loader.h>

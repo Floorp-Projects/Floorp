@@ -844,7 +844,7 @@ nsPresContext::UpdateAfterPreferencesChanged()
 nsresult
 nsPresContext::Init(nsIDeviceContext* aDeviceContext)
 {
-  NS_ASSERTION(!(mInitialized == PR_TRUE), "attempt to reinit pres context");
+  NS_ASSERTION(!mInitialized, "attempt to reinit pres context");
   NS_ENSURE_ARG(aDeviceContext);
 
   mDeviceContext = aDeviceContext;
@@ -1257,7 +1257,7 @@ nsPresContext::SetFullZoom(float aZoom)
     mDeviceContext->FlushFontCache();
   }
 
-  NS_ASSERTION(mSupressResizeReflow == PR_FALSE, "two zooms happening at the same time? impossible!");
+  NS_ASSERTION(!mSupressResizeReflow, "two zooms happening at the same time? impossible!");
   mSupressResizeReflow = PR_TRUE;
 
   mFullZoom = aZoom;

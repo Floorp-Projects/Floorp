@@ -43,6 +43,13 @@ ifdef NSS_SURVIVE_DOUBLE_BYPASS_FAILURE
 DEFINES += -DNSS_SURVIVE_DOUBLE_BYPASS_FAILURE
 endif
 
+# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+CRYPTOLIB=$(SOFTOKEN_LIB_DIR)/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
+
+EXTRA_LIBS += \
+	$(CRYPTOLIB) \
+	$(NULL)
+
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
 # don't want the 32 in the shared library name
@@ -73,22 +80,7 @@ EXTRA_SHARED_LIBS += \
 	$(NULL)
 endif # NS_USE_GCC
 
-# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
-CRYPTOLIB=$(SOFTOKEN_LIB_DIR)/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
-
-EXTRA_LIBS += \
-	$(CRYPTOLIB) \
-	$(NULL)
-
 else
-
-# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
-CRYPTOLIB=$(SOFTOKEN_LIB_DIR)/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
-
-EXTRA_LIBS += \
-	$(CRYPTOLIB) \
-	$(NULL)
-
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.

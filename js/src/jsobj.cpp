@@ -3069,8 +3069,20 @@ js_NonEmptyObject(JSContext* cx, JSObject* proto)
 {
     JS_ASSERT(!(js_ObjectClass.flags & JSCLASS_HAS_PRIVATE));
     JSObject *obj = js_NewObjectWithClassProto(cx, &js_ObjectClass, proto, JSVAL_VOID);
-    if (obj && !js_GetMutableScope(cx, obj))
-        obj = NULL;
+    if (!obj)
+        return NULL;
+    JS_LOCK_OBJ(cx, obj);
+    JSScope *scope = js_GetMutableScope(cx, obj);
+    if (!scope) {
+        JS_UNLOCK_OBJ(cx, obj);
+        return NULL;
+    }
+
+    /*
+     * See comments in the JSOP_NEWINIT case of jsops.cpp why we cannot
+     * assume that cx owns the scope and skip the unlock call.
+     */
+    JS_UNLOCK_SCOPE(cx, scope);
     return obj;
 }
 

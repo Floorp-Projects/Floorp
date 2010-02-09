@@ -156,7 +156,7 @@ private:
   PRBool mIsTooSmall;
   PRBool mIsDestroying;
 	static nsIRollupListener *gRollupListener;
-  static nsIMenuRollup* gMenuRollup;
+	static nsIMenuRollup* gMenuRollup;
 	static nsIWidget *gRollupWidget;
 };
 

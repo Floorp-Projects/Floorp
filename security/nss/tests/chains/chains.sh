@@ -16,7 +16,7 @@
 # The Original Code is the Network Security Services (NSS)
 #
 # The Initial Developer of the Original Code is Sun Microsystems, Inc.
-# Portions created by the Initial Developer are Copyright (C) 2008
+# Portions created by the Initial Developer are Copyright (C) 2008-2009
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -74,8 +74,8 @@ chains_init()
     CERT_SN_CNT=$(date '+%m%d%H%M%S' | sed "s/^0*//")
     CERT_SN_FIX=$(expr ${CERT_SN_CNT} - 1000)
 
-    PK7_NONCE=$CERT_SN_CNT
-    SCEN_CNT=0
+    PK7_NONCE=${CERT_SN_CNT}
+    SCEN_CNT=${CERT_SN_CNT}
 
     AIA_FILES="${HOSTDIR}/aiafiles"
 
@@ -624,6 +624,8 @@ create_crl()
     CRL=${ISSUER}.crl
 
     DATE=$(date -u '+%Y%m%d%H%M%SZ')
+    DATE_LAST="${DATE}"
+
     UPDATE=$(expr $(date -u '+%Y') + 1)$(date -u '+%m%d%H%M%SZ')
 
     echo "update=${DATE}" > ${CRL_DATA}
@@ -648,8 +650,13 @@ revoke_cert()
 
     set_cert_sn
 
-    sleep 1
     DATE=$(date -u '+%Y%m%d%H%M%SZ')
+    while [ "${DATE}" = "${DATE_LAST}" ]; do
+        sleep 1
+        DATE=$(date -u '+%Y%m%d%H%M%SZ')
+    done
+    DATE_LAST="${DATE}"
+
     echo "update=${DATE}" > ${CRL_DATA}
     echo "addcert ${CERT_SN} ${DATE}" >> ${CRL_DATA}
 
@@ -1052,6 +1059,8 @@ chains_main()
 {
     while read LINE 
     do
+        [ `echo ${LINE} | cut -b 1` == "#" ] && continue
+
         > ${AIA_FILES}
 
         parse_config < "${QADIR}/chains/scenarios/${LINE}"

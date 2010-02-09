@@ -613,6 +613,9 @@ make_cert_request(char *subject, SECKEYPublicKey *pubk)
 	exit (ERRX);
     }
 
+    SECKEY_DestroySubjectPublicKeyInfo(spki);
+    CERT_DestroyName(subj);
+
     if (verbosity >= 0) {
 	PR_fprintf(outputFD, "certificate request generated\n");
     }

@@ -110,7 +110,7 @@ int ProcessArgs(nsIComponentRegistrar* registrar, int argc, char *argv[])
       }
       i++;
     } else {
-      if (gUnreg == PR_TRUE) {
+      if (gUnreg) {
         res = Unregister(argv[i]);
         if (NS_SUCCEEDED(res)) {
           cout << "Successfully unregistered: " << argv[i] << "\n";

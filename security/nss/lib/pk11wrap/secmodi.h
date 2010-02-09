@@ -58,7 +58,8 @@ void nss_DumpModuleLog(void);
 extern int secmod_PrivateModuleCount;
 
 extern void SECMOD_Init(void);
-SECStatus secmod_ModuleInit(SECMODModule *mod, PRBool* alreadyLoaded);
+SECStatus secmod_ModuleInit(SECMODModule *mod, SECMODModule **oldModule,
+			    PRBool* alreadyLoaded);
 
 /* list managment */
 extern SECStatus SECMOD_AddModuleToList(SECMODModule *newModule);
@@ -73,6 +74,7 @@ extern void SECMOD_ReleaseWriteLock(SECMODListLock *);
 
 /* Operate on modules by name */
 extern SECMODModule *SECMOD_FindModuleByID(SECMODModuleID);
+extern SECMODModule *secmod_FindModuleByFuncPtr(void *funcPtr);
 
 /* database/memory management */
 extern SECMODModuleList *SECMOD_NewModuleListElement(void);
@@ -84,9 +86,37 @@ extern unsigned long SECMOD_InternaltoPubMechFlags(unsigned long internalFlags);
 extern unsigned long SECMOD_InternaltoPubCipherFlags(unsigned long internalFlags);
 
 /* Library functions */
-SECStatus SECMOD_LoadPKCS11Module(SECMODModule *);
+SECStatus secmod_LoadPKCS11Module(SECMODModule *, SECMODModule **oldModule);
 SECStatus SECMOD_UnloadModule(SECMODModule *);
 void SECMOD_SetInternalModule(SECMODModule *);
+PRBool secmod_IsInternalKeySlot(SECMODModule *);
+
+/* tools for checking if we are loading the same database twice */
+typedef struct SECMODConfigListStr SECMODConfigList;
+/* collect all the databases in a given spec */
+SECMODConfigList *secmod_GetConfigList(PRBool isFIPS, char *spec, int *count);
+/* see is a spec matches a database on the list */
+PRBool secmod_MatchConfigList(char *spec, 
+			      SECMODConfigList *conflist, int count);
+/* free our list of databases */
+void secmod_FreeConfigList(SECMODConfigList *conflist, int count);
+
+/* parsing parameters */
+/* returned char * must be freed by caller with PORT_Free */
+/* children and ids are null terminated arrays which must be freed with
+ * secmod_FreeChildren */
+char *secmod_ParseModuleSpecForTokens(PRBool convert,
+				      PRBool isFIPS,
+				      char *moduleSpec,
+				      char ***children, 
+				      CK_SLOT_ID **ids);
+void secmod_FreeChildren(char **children, CK_SLOT_ID *ids);
+char *secmod_MkAppendTokensList(PRArenaPool *arena, char *origModuleSpec, 
+				char *newModuleSpec, CK_SLOT_ID newID,
+				char **children, CK_SLOT_ID *ids);
+char *secmod_DoubleEscape(const char *string, char quote1, char quote2);
+
+
 
 void SECMOD_SlotDestroyModule(SECMODModule *module, PRBool fromSlot);
 CK_RV pk11_notify(CK_SESSION_HANDLE session, CK_NOTIFICATION event,

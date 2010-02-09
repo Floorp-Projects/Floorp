@@ -46,7 +46,6 @@
 #include "jsnum.h"
 #include "nsAString.h"
 #include "nsIStatefulFrame.h"
-#include "nsIPref.h"
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentList.h"
@@ -60,6 +59,7 @@
 #include "nsTArray.h"
 #include "nsTextFragment.h"
 #include "nsReadableUtils.h"
+#include "nsIPrefBranch2.h"
 
 struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
@@ -84,7 +84,7 @@ class imgIDecoderObserver;
 class imgIRequest;
 class imgILoader;
 class imgICache;
-class nsIPrefBranch;
+class nsIPrefBranch2;
 class nsIImageLoadingContent;
 class nsIDOMHTMLFormElement;
 class nsIDOMDocument;
@@ -100,7 +100,6 @@ class nsIScriptContext;
 class nsIRunnable;
 class nsIInterfaceRequestor;
 template<class E> class nsCOMArray;
-class nsIPref;
 struct JSRuntime;
 class nsICaseConversion;
 class nsIUGenCategory;
@@ -110,6 +109,7 @@ class nsPIDOMWindow;
 class nsPIDOMEventTarget;
 class nsIPresShell;
 class nsIXPConnectJSObjectHolder;
+class nsPrefOldCallback;
 #ifdef MOZ_XTF
 class nsIXTFService;
 #endif
@@ -117,6 +117,11 @@ class nsIXTFService;
 class nsIBidiKeyboard;
 #endif
 class nsIMIMEHeaderParam;
+
+#ifndef have_PrefChangedFunc_typedef
+typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
+#define have_PrefChangedFunc_typedef
+#endif
 
 extern const char kLoadAsData[];
 
@@ -149,17 +154,6 @@ class nsContentUtils
 {
 public:
   static nsresult Init();
-
-  // You MUST pass the old ownerDocument of aContent in as aOldDocument and the
-  // new one as aNewDocument.  aNewParent is allowed to be null; in that case
-  // aNewDocument will be assumed to be the parent.  Note that at this point
-  // the actual ownerDocument of aContent may not yet be aNewDocument.
-  // XXXbz but then if it gets wrapped after we do this call but before its
-  // ownerDocument actually changes, things will break...
-  static nsresult ReparentContentWrapper(nsIContent *aNode,
-                                         nsIContent *aNewParent,
-                                         nsIDocument *aNewDocument,
-                                         nsIDocument *aOldDocument);
 
   /**
    * Get a scope from aOldDocument and one from aNewDocument. Also get a
@@ -398,13 +392,9 @@ public:
   static void Shutdown();
 
   /**
-   * Checks whether two nodes come from the same origin. aTrustedNode is
-   * considered 'safe' in that a user can operate on it and that it isn't
-   * a js-object that implements nsIDOMNode.
-   * Never call this function with the first node provided by script, it
-   * must always be known to be a 'real' node!
+   * Checks whether two nodes come from the same origin.
    */
-  static nsresult CheckSameOrigin(nsIDOMNode* aTrustedNode,
+  static nsresult CheckSameOrigin(nsINode* aTrustedNode,
                                   nsIDOMNode* aUnTrustedNode);
 
   // Check if the (JS) caller can access aNode.
@@ -574,7 +564,7 @@ public:
                                      void * aClosure);
   static void AddBoolPrefVarCache(const char* aPref, PRBool* aVariable);
   static void AddIntPrefVarCache(const char* aPref, PRInt32* aVariable);
-  static nsIPrefBranch *GetPrefBranch()
+  static nsIPrefBranch2 *GetPrefBranch()
   {
     return sPrefBranch;
   }
@@ -1524,13 +1514,6 @@ private:
 
   static PRBool InitializeEventTable();
 
-  static nsresult doReparentContentWrapper(nsIContent *aChild,
-                                           JSContext *cx,
-                                           JSObject *aOldGlobal,
-                                           JSObject *aNewGlobal,
-                                           nsIDocument *aOldDocument,
-                                           nsIDocument *aNewDocument);
-
   static nsresult EnsureStringBundle(PropertiesFile aFile);
 
   static nsIDOMScriptObjectFactory *GetDOMScriptObjectFactory();
@@ -1559,9 +1542,9 @@ private:
   static nsIXTFService *sXTFService;
 #endif
 
-  static nsIPrefBranch *sPrefBranch;
-
-  static nsIPref *sPref;
+  static nsIPrefBranch2 *sPrefBranch;
+  // For old compatibility of RegisterPrefCallback
+  static nsCOMArray<nsPrefOldCallback> *sPrefCallbackList;
 
   static imgILoader* sImgLoader;
   static imgICache* sImgCache;

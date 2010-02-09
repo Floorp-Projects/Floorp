@@ -5,6 +5,11 @@ pref("security.enable_ssl3",             true);
 pref("security.enable_tls",		 true);
 pref("security.enable_tls_session_tickets", true);
 
+pref("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref", false);
+pref("security.ssl.renego_unrestricted_hosts", "");
+pref("security.ssl.treat_unsafe_negotiation_as_broken", false);
+pref("security.ssl.require_safe_negotiation",  false);
+
 pref("security.ssl2.rc4_128", false);
 pref("security.ssl2.rc2_128", false);
 pref("security.ssl2.des_ede3_192", false);

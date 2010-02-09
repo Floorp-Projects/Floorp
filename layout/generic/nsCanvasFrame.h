@@ -70,8 +70,6 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  // nsISupports (nsIScrollPositionListener)
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -116,12 +114,8 @@ public:
   void PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt);
 
   // nsIScrollPositionListener
-  NS_IMETHOD ScrollPositionWillChange(nscoord aX, nscoord aY);
-  // The scrollframe implementation of this method appends a list of widget
-  // configuration requests to aConfigurations. No other implementor
-  // should touch it. No longer gets called!!!
-  virtual void ViewPositionDidChange(nsTArray<nsIWidget::Configuration>* aConfigurations) {}
-  NS_IMETHOD ScrollPositionDidChange(nscoord aX, nscoord aY);
+  virtual void ScrollPositionWillChange(nscoord aX, nscoord aY);
+  virtual void ScrollPositionDidChange(nscoord aX, nscoord aY) {}
 
   /**
    * Get the "type" of the frame
@@ -160,10 +154,6 @@ protected:
   // Data members
   PRPackedBool              mDoPaintFocus;
   nsAbsoluteContainingBlock mAbsoluteContainer;
-
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 };
 
 #endif /* nsCanvasFrame_h___ */

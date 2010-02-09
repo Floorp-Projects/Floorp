@@ -40,16 +40,15 @@ include $(CORE_DEPTH)/coreconf/UNIX.mk
 
 LIB_SUFFIX  = a
 DLL_SUFFIX  = so
-AR          = ar cr $@ 
+AR          = ar cr $@
 LDOPTS     += -L$(SOURCE_LIB_DIR)
 MKSHLIB     = $(CC) $(DSO_LDOPTS) -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so)
 
-OS_RELEASE =
-OS_TARGET  = RISCOS
+OS_RELEASE  =
+OS_TARGET   = RISCOS
 
-DSO_CFLAGS              = -fPIC
-DSO_LDOPTS              = -shared
-DSO_LDFLAGS             =
+DSO_CFLAGS  = -fPIC
+DSO_LDOPTS  = -shared
 
 ifdef BUILD_OPT
 	OPTIMIZER = -O3

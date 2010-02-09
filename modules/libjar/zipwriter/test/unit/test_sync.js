@@ -80,8 +80,8 @@ function run_test()
     do_check_eq(entry.realSize, TESTS[i].size);
     do_check_eq(entry.size, TESTS[i].size);
     do_check_eq(entry.CRC32, TESTS[i].crc);
-    do_check_eq(entry.lastModifiedTime / PR_USEC_PER_MSEC,
-                source.lastModifiedTime);
+    do_check_eq(Math.floor(entry.lastModifiedTime / PR_USEC_PER_SEC),
+                Math.floor(source.lastModifiedTime / PR_MSEC_PER_SEC));
 
     zipR.test(TESTS[i].name);
   }

@@ -291,17 +291,11 @@ PK11_ImportAndReturnPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk,
     CK_ATTRIBUTE theTemplate[20];
     int templateCount = 0;
     SECStatus rv = SECFailure;
-    PRArenaPool *arena;
     CK_ATTRIBUTE *attrs;
     CK_ATTRIBUTE *signedattr = NULL;
     int signedcount = 0;
     CK_ATTRIBUTE *ap;
     SECItem *ck_id = NULL;
-
-    arena = PORT_NewArena(2048);
-    if(!arena) {
-	return SECFailure;
-    }
 
     attrs = theTemplate;
 

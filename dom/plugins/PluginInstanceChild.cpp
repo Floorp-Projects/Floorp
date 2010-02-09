@@ -358,6 +358,11 @@ bool
 PluginInstanceChild::AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value,
                                                             NPError* result)
 {
+    if (!mPluginIface->setvalue) {
+        *result = NPERR_GENERIC_ERROR;
+        return true;
+    }
+
     // Use `long` instead of NPBool because Flash and other plugins read
     // this as a word-size value instead of the 1-byte NPBool that it is.
     long v = value;

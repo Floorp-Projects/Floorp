@@ -247,7 +247,15 @@ function runTest()
       root.setAttribute("datasources", "animals.xml");
       $("binding").setAttribute("predicate", "[name]");
 
-      setTimeout(runTest, 0);
+      function waitForDatasource() {
+        // wait for the datasource to be available before continuing the test
+        if (root.builder.datasource instanceof XMLDocument)
+          runTest();
+        else
+          setTimeout(waitForDatasource, 100);
+      }
+
+      setTimeout(waitForDatasource, 0);
       return;
     }
   }

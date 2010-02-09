@@ -162,20 +162,17 @@ function test() {
   /**
    * Helper: Will observe and handle the notifications for us
    */
-  let observer = {
-    hitCount: 0,
+  let hitCount = 0;
+  function observer(aCancel, aTopic, aData) {
+    // count so that we later may compare
+    observing[aTopic]++;
 
-    observe: function(aCancel, aTopic, aData) {
-      // count so that we later may compare
-      observing[aTopic]++;
-
-      // handle some tests
-      if (++this.hitCount == 1) {
-        // Test 6
-        aCancel.QueryInterface(Ci.nsISupportsPRBool).data = true;
-      }
+    // handle some tests
+    if (++hitCount == 1) {
+      // Test 6
+      aCancel.QueryInterface(Ci.nsISupportsPRBool).data = true;
     }
-  };
+  }
   let observerService = Cc["@mozilla.org/observer-service;1"].
                         getService(Ci.nsIObserverService);
 
@@ -197,9 +194,8 @@ function test() {
    */
   function setupTestsuite(testFn) {
     // Register our observers
-    for (let o in observing) {
+    for (let o in observing)
       observerService.addObserver(observer, o, false);
-    }
 
     // Make the main test window not count as a browser window any longer
     oldWinType = document.documentElement.getAttribute("windowtype");
@@ -211,18 +207,17 @@ function test() {
    */
   function cleanupTestsuite(callback) {
     // Finally remove observers again
-    for (let o in observing) {
+    for (let o in observing)
       observerService.removeObserver(observer, o, false);
-    }
+
     // Reset the prefs we touched
-    for each (let pref in [
+    [
       "browser.startup.page",
       "browser.privatebrowsing.keep_current_session"
-    ]) {
-      if (gPrefService.prefHasUserValue(pref)) {
+    ].forEach(function (pref) {
+      if (gPrefService.prefHasUserValue(pref))
         gPrefService.clearUserPref(pref);
-      }
-    }
+    });
     gPrefService.setBoolPref("browser.tabs.warnOnClose", oldWarnTabsOnClose);
 
     // Reset the window type

@@ -271,32 +271,30 @@ function test() {
   let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
            getService(Ci.nsIWindowWatcher);
 
-  let windowObserver = {
-    observe: function(aSubject, aTopic, aData) {
-      if (aTopic === "domwindowopened") {
-        ww.unregisterNotification(this);
-        let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-        win.addEventListener("load", function onLoad(event) {
-          win.removeEventListener("load", onLoad, false);
-          executeSoon(function () {
-            let tree = win.document.getElementById("placeContent");
-            isnot(tree, null, "sanity check: placeContent tree should exist");
-            // Run the tests.
-            testSortByColAndDir(win, tree, true);
-            testSortByColAndDir(win, tree, false);
-            testSortByDir(win, tree, true);
-            testSortByDir(win, tree, false);
-            testInvalid(win, tree);
-            // Reset the sort to SORT_BY_NONE.
-            setSort(win, tree, false, false);
-            // Close the window and finish.
-            win.close();
-            finish();
-          });
-        }, false);
-      }
-    }
-  };
+  function windowObserver(aSubject, aTopic, aData) {
+    if (aTopic != "domwindowopened")
+      return;
+    ww.unregisterNotification(windowObserver);
+    let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    win.addEventListener("load", function onLoad(event) {
+      win.removeEventListener("load", onLoad, false);
+      executeSoon(function () {
+        let tree = win.document.getElementById("placeContent");
+        isnot(tree, null, "sanity check: placeContent tree should exist");
+        // Run the tests.
+        testSortByColAndDir(win, tree, true);
+        testSortByColAndDir(win, tree, false);
+        testSortByDir(win, tree, true);
+        testSortByDir(win, tree, false);
+        testInvalid(win, tree);
+        // Reset the sort to SORT_BY_NONE.
+        setSort(win, tree, false, false);
+        // Close the window and finish.
+        win.close();
+        finish();
+      });
+    }, false);
+  }
 
   ww.registerNotification(windowObserver);
   ww.openWindow(null,

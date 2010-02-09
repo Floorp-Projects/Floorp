@@ -1,0 +1,21 @@
+diff --git a/media/liboggz/src/liboggz/oggz_seek.c b/media/liboggz/src/liboggz/oggz_seek.c
+--- a/media/liboggz/src/liboggz/oggz_seek.c
++++ b/media/liboggz/src/liboggz/oggz_seek.c
+@@ -135,16 +135,17 @@ oggz_stream_reset (void * data)
+   }
+ 
+   return 0;
+ }
+ 
+ static void
+ oggz_reset_streams (OGGZ * oggz)
+ {
++  oggz_dlist_deliter(oggz->packet_buffer, oggz_read_free_pbuffers);
+   oggz_vector_foreach (oggz->streams, oggz_stream_reset);
+ }
+ 
+ static long
+ oggz_reset_seek (OGGZ * oggz, oggz_off_t offset, ogg_int64_t unit, int whence)
+ {
+   OggzReader * reader = &oggz->x.reader;
+ 

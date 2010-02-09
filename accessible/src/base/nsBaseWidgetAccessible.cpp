@@ -251,8 +251,7 @@ void
 nsLinkableAccessible::CacheActionContent()
 {
   nsCOMPtr<nsIContent> walkUpContent(do_QueryInterface(mDOMNode));
-  PRBool isOnclick = nsCoreUtils::HasListener(walkUpContent,
-                                              NS_LITERAL_STRING("click"));
+  PRBool isOnclick = nsCoreUtils::HasClickListener(walkUpContent);
 
   if (isOnclick) {
     mActionContent = walkUpContent;
@@ -261,8 +260,7 @@ nsLinkableAccessible::CacheActionContent()
   }
 
   while ((walkUpContent = walkUpContent->GetParent())) {
-    isOnclick = nsCoreUtils::HasListener(walkUpContent,
-                                         NS_LITERAL_STRING("click"));
+    isOnclick = nsCoreUtils::HasClickListener(walkUpContent);
   
     nsCOMPtr<nsIDOMNode> walkUpNode(do_QueryInterface(walkUpContent));
 
