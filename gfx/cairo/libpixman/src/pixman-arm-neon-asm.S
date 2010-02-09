@@ -817,8 +817,8 @@ generate_composite_function \
     vsli.u64    d0, d0, #8
     vsli.u64    d0, d0, #16
     vsli.u64    d0, d0, #32
-    vorr        d1, d0, d0
-    vorr        q1, q0, q0
+    vmov        d1, d0
+    vmov        q1, q0
 .endm
 
 .macro pixman_composite_src_n_8_cleanup
@@ -856,8 +856,8 @@ generate_composite_function \
     vld1.32     {d0[0]}, [DUMMY]
     vsli.u64    d0, d0, #16
     vsli.u64    d0, d0, #32
-    vorr        d1, d0, d0
-    vorr        q1, q0, q0
+    vmov        d1, d0
+    vmov        q1, q0
 .endm
 
 .macro pixman_composite_src_n_0565_cleanup
@@ -894,8 +894,8 @@ generate_composite_function \
     add         DUMMY, sp, #ARGS_STACK_OFFSET
     vld1.32     {d0[0]}, [DUMMY]
     vsli.u64    d0, d0, #32
-    vorr        d1, d0, d0
-    vorr        q1, q0, q0
+    vmov        d1, d0
+    vmov        q1, q0
 .endm
 
 .macro pixman_composite_src_n_8888_cleanup
