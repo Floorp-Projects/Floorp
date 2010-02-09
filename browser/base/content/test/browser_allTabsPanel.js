@@ -144,11 +144,11 @@ function openTab() {
 function moveTab() {
   if (gBrowser.browsers.length == 1)
     return false;
-  var currentIndex = rand(0, gBrowser.browsers.length - 1);
+  var [tab, currentIndex] = pickOneTab();
   do {
-    var newIndex = rand(0, gBrowser.browsers.length - 1);
+    var [, newIndex] = pickOneTab();
   } while (newIndex == currentIndex);
-  gBrowser.moveTabTo(gBrowser.tabContainer.childNodes[currentIndex], newIndex);
+  gBrowser.moveTabTo(tab, newIndex);
   next();
   return currentIndex + "->" + newIndex;
 }
