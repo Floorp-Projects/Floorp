@@ -338,7 +338,7 @@ typedef enum {
   , NPPVpluginEventModel = 1001
 #endif
 
-#ifdef MOZ_PLATFORM_HILDON
+#if (MOZ_PLATFORM_MAEMO == 5)
   , NPPVpluginWindowlessLocalBool = 2002
 #endif
 } NPPVariable;
@@ -383,7 +383,7 @@ typedef enum {
 #endif
   , NPNVsupportsCocoaBool = 3001 /* TRUE if the browser supports the Cocoa event model */
 #endif
-#ifdef MOZ_PLATFORM_HILDON
+#if (MOZ_PLATFORM_MAEMO == 5)
   , NPNVSupportsWindowlessLocal = 2002
 #endif
 } NPNVariable;

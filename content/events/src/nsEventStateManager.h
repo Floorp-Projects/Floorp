@@ -63,9 +63,9 @@ class imgIContainer;
 class nsDOMDataTransfer;
 
 // mac uses click-hold context menus, a holdover from 4.x
-// touch screens (like hildon) could use this also, 
+// touch screens (like maemo) could use this also, 
 // perhaps we should move to NS_TOUCHSCREEN
-#if defined(XP_MACOSX) || defined(MOZ_PLATFORM_HILDON)
+#if defined(XP_MACOSX) || defined(MOZ_PLATFORM_MAEMO)
 #define CLICK_HOLD_CONTEXT_MENUS 1
 #endif
 

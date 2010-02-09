@@ -1392,7 +1392,7 @@ NS_IMETHODIMP nsNPAPIPluginInstance::HandleEvent(void* event, PRBool* handled)
 
 NS_IMETHODIMP nsNPAPIPluginInstance::GetValueFromPlugin(NPPVariable variable, void* value)
 {
-#ifdef MOZ_PLATFORM_HILDON
+#if (MOZ_PLATFORM_MAEMO == 5)
   // The maemo flash plugin does not remember this.  It sets the
   // value, but doesn't support the get value.
   if (variable == NPPVpluginWindowlessLocalBool) {

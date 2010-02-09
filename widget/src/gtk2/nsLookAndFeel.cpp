@@ -43,7 +43,7 @@
 
 #include "gtkdrawing.h"
 
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
 #include "nsIServiceManager.h"
 #include "nsIPropertyBag2.h"
 #include "nsLiteralString.h"
@@ -582,7 +582,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         res = NS_ERROR_NOT_IMPLEMENTED;
         break;
     case eMetric_TouchEnabled:
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
         // All Hildon devices are touch-enabled
         aMetric = 1;
 #else
@@ -591,7 +591,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 #endif
         break;
     case eMetric_MaemoClassic:
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
         {
             aMetric = 0;
             nsCOMPtr<nsIPropertyBag2> infoService(do_GetService("@mozilla.org/system-info;1"));
