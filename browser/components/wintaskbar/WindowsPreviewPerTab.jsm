@@ -419,7 +419,7 @@ TabWindow.prototype = {
   // Invoked when the given tab is added to this window
   newTab: function (tab) {
     let controller = new PreviewController(this, tab);
-    let preview = AeroPeek.taskbar.createTaskbarTabPreview(this.tabbrowser.docShell, controller);
+    let preview = AeroPeek.taskbar.createTaskbarTabPreview(tab.linkedBrowser.docShell, controller);
     preview.title = tab.label;
     preview.tooltip = tab.label;
     preview.visible = AeroPeek.enabled;
