@@ -248,6 +248,7 @@ public:
   //   Otherwise, it will get executed right after task #1 completes at "thread
   //   message loop level".
   void SetNestableTasksAllowed(bool allowed);
+  void ScheduleWork();
   bool NestableTasksAllowed() const;
 
   // Enables or disables the restoration during an exception of the unhandled

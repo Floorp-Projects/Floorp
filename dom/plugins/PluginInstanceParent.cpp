@@ -53,6 +53,10 @@
 extern const PRUnichar* kOOPPPluginFocusEventId;
 UINT gOOPPPluginFocusEvent =
     RegisterWindowMessage(kOOPPPluginFocusEventId);
+UINT gOOPPSpinNativeLoopEvent =
+    RegisterWindowMessage(L"SyncChannel Spin Inner Loop Message");
+UINT gOOPPStopNativeLoopEvent =
+    RegisterWindowMessage(L"SyncChannel Stop Inner Loop Message");
 #endif
 
 using namespace mozilla::plugins;
@@ -111,6 +115,14 @@ PluginInstanceParent::ActorDestroy(ActorDestroyReason why)
         // chance we get to destroy resources.
         SharedSurfaceRelease();
         UnsubclassPluginWindow();
+        // If we crashed in a modal loop in the child, reset
+        // the rpc event spin loop state.
+        if (mNestedEventState) {
+            mNestedEventState = false;
+            PostThreadMessage(GetCurrentThreadId(),
+                              gOOPPStopNativeLoopEvent,
+                              0, 0);
+        }
     }
 #endif
 }
@@ -127,6 +139,12 @@ PluginInstanceParent::Destroy()
 #if defined(OS_WIN)
     SharedSurfaceRelease();
     UnsubclassPluginWindow();
+    if (mNestedEventState) {
+        mNestedEventState = false;
+        PostThreadMessage(GetCurrentThreadId(),
+                          gOOPPStopNativeLoopEvent,
+                          0, 0);
+    }
 #endif
 
     return retval;
@@ -1085,6 +1103,22 @@ PluginInstanceParent::AnswerPluginGotFocus()
     return true;
 #else
     NS_NOTREACHED("PluginInstanceParent::AnswerPluginGotFocus not implemented!");
+    return false;
+#endif
+}
+
+bool
+PluginInstanceParent::RecvSetNestedEventState(const bool& aState)
+{
+    PLUGIN_LOG_DEBUG(("%s state=%i", FULLFUNCTION, (int)aState));
+#if defined(OS_WIN)
+    PostThreadMessage(GetCurrentThreadId(), aState ?
+        gOOPPSpinNativeLoopEvent : gOOPPStopNativeLoopEvent, 0, 0);
+    mNestedEventState = aState;
+    return true;
+#else
+    NS_NOTREACHED(
+        "PluginInstanceParent::AnswerSetNestedEventState not implemented!");
     return false;
 #endif
 }

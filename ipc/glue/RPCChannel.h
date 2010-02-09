@@ -114,7 +114,28 @@ public:
     NS_OVERRIDE
     virtual void OnChannelError();
 
-private:
+#ifdef OS_WIN
+    static bool IsSpinLoopActive() {
+        return (sInnerEventLoopDepth > 0);
+    }
+
+protected:
+    void WaitForNotify();
+    bool IsMessagePending();
+    bool SpinInternalEventLoop();
+    static void EnterModalLoop() {
+        sInnerEventLoopDepth++;
+    }
+    static void ExitModalLoop() {
+        sInnerEventLoopDepth--;
+        NS_ASSERTION(sInnerEventLoopDepth >= 0,
+            "sInnerEventLoopDepth dropped below zero!");
+    }
+
+    static int sInnerEventLoopDepth;
+#endif
+
+  private:
     // Called on worker thread only
 
     void MaybeProcessDeferredIncall();
@@ -186,11 +207,12 @@ private:
     std::stack<Message> mStack;
 
     //
-    // Stack of replies received "out of turn", because of RPC
+    // Map of replies received "out of turn", because of RPC
     // in-calls racing with replies to outstanding in-calls.  See
     // https://bugzilla.mozilla.org/show_bug.cgi?id=521929.
     //
-    std::stack<Message> mOutOfTurnReplies;
+    typedef std::map<size_t, Message> MessageMap;
+    MessageMap mOutOfTurnReplies;
 
     //
     // Stack of RPC in-calls that were deferred because of race
