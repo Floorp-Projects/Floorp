@@ -25,7 +25,7 @@
  *   Håkan Waara <hwaara@chello.se>
  *   Dan Rosen <dr@netscape.com>
  *   Daniel Glazman <glazman@netscape.com>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -3023,52 +3023,19 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
 {
   // Beware! This may flush notifications via synchronous
   // ScrollSelectionIntoView.
-
-  nsIContent* root = mSelection->GetAncestorLimiter();
-  nsIDocument* doc;
-  if (root && (doc = root->GetOwnerDoc()) && doc->GetRootContent() != root) {
-    // Make the caret be either at the very beginning (0) or the very end of
-    // root. Only do this when not moving to the beginning or end of the
-    // document (root is null or root is the documentElement), that's handled
-    // below by moving to beginning or end of the scrollable view.
-    nsIContent* node = root;
-    PRInt32 offset = 0;
-    nsFrameSelection::HINT hint = nsFrameSelection::HINTLEFT;
-    if (aForward) {
-      nsIContent* next = node;
-      PRUint32 count;
-      while ((count = next->GetChildCount()) > 0) {
-        node = next;
-        offset = count;
-        next = next->GetChildAt(count - 1);
-      }
-
-      if (offset > 0 && node->GetChildAt(offset - 1)->Tag() == nsGkAtoms::br) {
-        --offset;
-        hint = nsFrameSelection::HINTRIGHT; // for bug 106855
-      }
-    }
-
-    mSelection->HandleClick(node, offset, offset, aExtend, PR_FALSE, hint);
-
-    // HandleClick resets ancestorLimiter, so set it again.
-    mSelection->SetAncestorLimiter(root);
-
-    // After ScrollSelectionIntoView(), the pending notifications might be
-    // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
-    return
-      ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, 
-                              nsISelectionController::SELECTION_FOCUS_REGION,
-                              PR_TRUE);
-  }
-
-  nsIFrame *frame = FrameConstructor()->GetRootElementFrame();
+  nsIContent* limiter = mSelection->GetAncestorLimiter();
+  nsIFrame* frame = limiter ? limiter->GetPrimaryFrame()
+                            : FrameConstructor()->GetRootElementFrame();
   if (!frame)
     return NS_ERROR_FAILURE;
   nsPeekOffsetStruct pos = frame->GetExtremeCaretPosition(!aForward);
-
-  mSelection->HandleClick(pos.mResultContent ,pos.mContentOffset ,pos.mContentOffset/*End*/ ,aExtend, PR_FALSE, aForward);
-
+  mSelection->HandleClick(pos.mResultContent, pos.mContentOffset,
+                          pos.mContentOffset, aExtend, PR_FALSE, aForward);
+  if (limiter) {
+    // HandleClick resets ancestorLimiter, so set it again.
+    mSelection->SetAncestorLimiter(limiter);
+  }
+    
   // After ScrollSelectionIntoView(), the pending notifications might be
   // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
   return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, 

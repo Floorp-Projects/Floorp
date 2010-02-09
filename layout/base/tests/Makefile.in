@@ -91,6 +91,16 @@ _TEST_FILES =	\
 		test_bug435293-interaction.html \
 		test_bug435293-skew.html \
 		test_bug495648.xul \
+		test_reftests_with_caret.html \
+		     bug106855-1.html \
+		     bug106855-2.html \
+		     bug106855-1-ref.html \
+		     bug482484.html \
+		     bug482484-ref.html \
+		     bug512295-1.html \
+		     bug512295-1-ref.html \
+		     bug512295-2.html \
+		     bug512295-2-ref.html \
 		test_bug514127.html \
 		test_bug518777.html \
 		test_flush_on_paint.html \
