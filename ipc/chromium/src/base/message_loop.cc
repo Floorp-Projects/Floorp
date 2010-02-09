@@ -311,6 +311,11 @@ void MessageLoop::SetNestableTasksAllowed(bool allowed) {
   }
 }
 
+void MessageLoop::ScheduleWork() {
+  // Start the native pump if we are not already pumping.
+  pump_->ScheduleWork();
+}
+
 bool MessageLoop::NestableTasksAllowed() const {
   return nestable_tasks_allowed_;
 }

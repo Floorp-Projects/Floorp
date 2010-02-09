@@ -164,6 +164,7 @@ parent:
 
 parent:
   rpc PluginGotFocus();
+  sync SetNestedEventState(bool aState);
 child:
   rpc SetPluginFocus();
   rpc UpdateWindow();

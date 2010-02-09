@@ -22,6 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,7 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "WindowsMessageLoop.h"
-#include "SyncChannel.h"
+#include "RPCChannel.h"
 
 #include "nsAutoPtr.h"
 #include "nsServiceManagerUtils.h"
@@ -48,6 +49,7 @@
 #include "mozilla/Mutex.h"
 
 using mozilla::ipc::SyncChannel;
+using mozilla::ipc::RPCChannel;
 using mozilla::MutexAutoUnlock;
 
 using namespace mozilla::ipc::windows;
@@ -85,17 +87,30 @@ using namespace mozilla::ipc::windows;
  * messages or risk deadlock. Given our architecture the only way to meet
  * Windows' requirement and allow for synchronous IPC messages is to pump a
  * miniature message loop during a sync IPC call. We avoid processing any
- * queued messages during the loop, but "nonqueued" messages (see
+ * queued messages during the loop (with one exception, see below), but 
+ * "nonqueued" messages (see 
  * http://msdn.microsoft.com/en-us/library/ms644927(VS.85).aspx under the
  * section "Nonqueued messages") cannot be avoided. Those messages are trapped
  * in a special window procedure where we can either ignore the message or
  * process it in some fashion.
+ *
+ * Queued and "non-queued" messages will be processed during RPC calls if
+ * modal UI related api calls block an RPC in-call in the child. To prevent
+ * windows from freezing, and to allow concurrent processing of critical
+ * events (such as painting), we spin a native event dispatch loop while
+ * these in-calls are blocked.
  */
 
 namespace {
 
 UINT gEventLoopMessage =
     RegisterWindowMessage(L"SyncChannel Windows Message Loop Message");
+
+UINT gOOPPSpinNativeLoopEvent =
+    RegisterWindowMessage(L"SyncChannel Spin Inner Loop Message");
+
+UINT gOOPPStopNativeLoopEvent =
+    RegisterWindowMessage(L"SyncChannel Stop Inner Loop Message");
 
 const wchar_t kOldWndProcProp[] = L"MozillaIPCOldWndProc";
 
@@ -114,7 +129,6 @@ HHOOK gDeferredGetMsgHook = NULL;
 HHOOK gDeferredCallWndProcHook = NULL;
 
 DWORD gUIThreadId = 0;
-int gEventLoopDepth = 0;
 
 LRESULT CALLBACK
 DeferredMessageHook(int nCode,
@@ -155,6 +169,23 @@ DeferredMessageHook(int nCode,
 
   // Always call the next hook.
   return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+void
+ScheduleDeferredMessageRun()
+{
+  if (gDeferredMessages &&
+      !(gDeferredGetMsgHook && gDeferredCallWndProcHook)) {
+    NS_ASSERTION(gDeferredMessages->Length(), "No deferred messages?!");
+
+    gDeferredGetMsgHook = ::SetWindowsHookEx(WH_GETMESSAGE, DeferredMessageHook,
+                                             NULL, gUIThreadId);
+    gDeferredCallWndProcHook = ::SetWindowsHookEx(WH_CALLWNDPROC,
+                                                  DeferredMessageHook, NULL,
+                                                  gUIThreadId);
+    NS_ASSERTION(gDeferredGetMsgHook && gDeferredCallWndProcHook,
+                 "Failed to set hooks!");
+  }
 }
 
 LRESULT
@@ -252,6 +283,7 @@ ProcessOrDeferMessage(HWND hwnd,
     }
 
     // Messages that are safe to pass to DefWindowProc go here.
+    case WM_ENTERIDLE:
     case WM_GETICON:
     case WM_GETMINMAXINFO:
     case WM_GETTEXT:
@@ -459,43 +491,156 @@ AssertWindowIsNotNeutered(HWND hWnd)
 #endif
 }
 
+void
+UnhookNeuteredWindows()
+{
+  if (!gNeuteredWindows)
+    return;
+  PRUint32 count = gNeuteredWindows->Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    RestoreWindowProcedure(gNeuteredWindows->ElementAt(index));
+  }
+  gNeuteredWindows->Clear();
+}
+
+void
+Init()
+{
+  // If we aren't setup before a call to NotifyWorkerThread, we'll hang
+  // on startup.
+  if (!gUIThreadId) {
+    gUIThreadId = GetCurrentThreadId();
+  }
+  NS_ASSERTION(gUIThreadId, "ThreadId should not be 0!");
+  NS_ASSERTION(gUIThreadId == GetCurrentThreadId(),
+               "Running on different threads!");
+
+  if (!gNeuteredWindows) {
+    gNeuteredWindows = new nsAutoTArray<HWND, 20>();
+  }
+  NS_ASSERTION(gNeuteredWindows, "Out of memory!");
+}
+
 } // anonymous namespace
+
+bool
+RPCChannel::SpinInternalEventLoop()
+{
+  // Nested windows event loop that's triggered when the child enters into modal
+  // event procedures.
+  do {
+    MSG msg = { 0 };
+
+    // Don't get wrapped up in here if the child connection dies.
+    {
+      MutexAutoLock lock(mMutex);
+      if (!Connected()) {
+        RPCChannel::ExitModalLoop();
+        return false;
+      }
+    }
+
+    if (!RPCChannel::IsSpinLoopActive()) {
+      return false;
+    }
+
+    // If a modal loop in the child has exited, we want to disable the spin
+    // loop. However, we must continue to wait for a response from the last
+    // rpc call. Returning false here will cause the thread to drop down
+    // into deferred message processing.
+    if (PeekMessageW(&msg, (HWND)-1, gOOPPStopNativeLoopEvent,
+                     gOOPPStopNativeLoopEvent, PM_REMOVE)) {
+      RPCChannel::ExitModalLoop();
+      return false;
+    }
+
+    // At whatever depth we currently sit, a reply to the rpc call we were
+    // waiting for has been received. Exit out of here and respond to it.
+    // Returning true here causes the WaitForNotify() to return.
+    if (PeekMessageW(&msg, (HWND)-1, gEventLoopMessage, gEventLoopMessage,
+                     PM_REMOVE)) {
+      return true;
+    }
+
+    // Retrieve window or thread messages
+    if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
+      if (msg.message == gOOPPStopNativeLoopEvent) {
+        RPCChannel::ExitModalLoop();
+        return false;
+      }
+      else if (msg.message == gOOPPSpinNativeLoopEvent) {
+        // Keep the spin loop counter accurate, multiple plugins can show ui.
+        RPCChannel::EnterModalLoop();
+        continue;
+      }
+      else if (msg.message == gEventLoopMessage) {
+        return true;
+      }
+
+      // The child UI should have been destroyed before the app is closed, in
+      // which case, we should never get this here.
+      if (msg.message == WM_QUIT) {
+          NS_ERROR("WM_QUIT received in SpinInternalEventLoop!");
+      } else {
+          TranslateMessage(&msg);
+          DispatchMessageW(&msg);
+      }
+    } else {
+      // Block and wait for any posted application messages
+      WaitMessage();
+    }
+  } while (true);
+}
+
+bool
+RPCChannel::IsMessagePending()
+{
+  MutexAutoLock lock(mMutex);
+  if (mStack.empty())
+    return true;
+
+  MessageMap::iterator it = mOutOfTurnReplies.find(mStack.top().seqno());
+  if (!mOutOfTurnReplies.empty() && 
+      it != mOutOfTurnReplies.end() &&
+      it->first == mStack.top().seqno())
+    return true;
+
+  if (!mPending.empty() &&
+      mPending.front().seqno() == mStack.top().seqno())
+    return true;
+
+  return false;
+}
 
 void
 SyncChannel::WaitForNotify()
 {
   mMutex.AssertCurrentThreadOwns();
 
-  NS_ASSERTION(gEventLoopDepth >= 0, "Event loop depth mismatch!");
+  MutexAutoUnlock unlock(mMutex);
 
-  HHOOK windowHook = NULL;
+  // Initialize global objects used in deferred messaging.
+  Init();
 
-  nsAutoTArray<HWND, 20> neuteredWindows;
-
-  if (++gEventLoopDepth == 1) {
-    NS_ASSERTION(!SyncChannel::IsPumpingMessages(),
-                 "Shouldn't be pumping already!");
-    SyncChannel::SetIsPumpingMessages(true);
-
-    if (!gUIThreadId) {
-      gUIThreadId = GetCurrentThreadId();
-    }
-    NS_ASSERTION(gUIThreadId, "ThreadId should not be 0!");
-    NS_ASSERTION(gUIThreadId == GetCurrentThreadId(),
-                 "Running on different threads!");
-
-    NS_ASSERTION(!gNeuteredWindows, "Should only set this once!");
-    gNeuteredWindows = &neuteredWindows;
-
-    windowHook = SetWindowsHookEx(WH_CALLWNDPROC, CallWindowProcedureHook,
-                                  NULL, gUIThreadId);
-    NS_ASSERTION(windowHook, "Failed to set hook!");
-  }
+  // Setup deferred processing of native events while we wait for a response.
+  NS_ASSERTION(!SyncChannel::IsPumpingMessages(),
+               "Shouldn't be pumping already!");
+  SyncChannel::SetIsPumpingMessages(true);
+  HHOOK windowHook = SetWindowsHookEx(WH_CALLWNDPROC, CallWindowProcedureHook,
+                                      NULL, gUIThreadId);
+  NS_ASSERTION(windowHook, "Failed to set hook!");
 
   {
-    MutexAutoUnlock unlock(mMutex);
-
     while (1) {
+      MSG msg = { 0 };
+      // Don't get wrapped up in here if the child connection dies.
+      {
+        MutexAutoLock lock(mMutex);
+        if (!Connected()) {
+          return;
+        }
+      }
+
       // Wait until we have a message in the queue. MSDN docs are a bit unclear
       // but it seems that windows from two different threads (and it should be
       // noted that a thread in another process counts as a "different thread")
@@ -527,7 +672,6 @@ SyncChannel::WaitForNotify()
 
       // We check first to see if we should break out of the loop by looking for
       // the special message from the IO thread. We pull it out of the queue.
-      MSG msg = { 0 };
       if (PeekMessageW(&msg, (HWND)-1, gEventLoopMessage, gEventLoopMessage,
                        PM_REMOVE)) {
         break;
@@ -546,40 +690,167 @@ SyncChannel::WaitForNotify()
     }
   }
 
-  NS_ASSERTION(gEventLoopDepth > 0, "Event loop depth mismatch!");
+  // Unhook the neutered window procedure hook.
+  UnhookWindowsHookEx(windowHook);
 
-  if (--gEventLoopDepth == 0) {
-    if (windowHook) {
-      UnhookWindowsHookEx(windowHook);
+  // Unhook any neutered windows procedures so messages can be delivered
+  // normally.
+  UnhookNeuteredWindows();
+
+  // Before returning we need to set a hook to run any deferred messages that
+  // we received during the IPC call. The hook will unset itself as soon as
+  // someone else calls GetMessage, PeekMessage, or runs code that generates
+  // a "nonqueued" message.
+  ScheduleDeferredMessageRun();
+
+  SyncChannel::SetIsPumpingMessages(false);
+}
+
+void
+RPCChannel::WaitForNotify()
+{
+  mMutex.AssertCurrentThreadOwns();
+
+  if (!StackDepth()) {
+    NS_ASSERTION(!StackDepth(),
+        "StackDepth() is 0 in a call to RPCChannel::WaitForNotify?");
+    return;
+  }
+
+  MutexAutoUnlock unlock(mMutex);
+
+  // Initialize global objects used in deferred messaging.
+  Init();
+
+  // IsSpinLoopActive indicates modal UI is being displayed in a plugin. Drop
+  // down into the spin loop until all modal loops end. If SpinInternalEventLoop
+  // returns true, the out-call response we were waiting on arrived, or we
+  // received an in-call request from child, so return from WaitForNotify.
+  // We'll step back down into the spin loop on the next WaitForNotify call.
+  // If the spin loop returns false, the child's modal loop has ended, so
+  // drop down into "normal" deferred processing until the next reply is
+  // received. Note, spin loop can cause reentrant race conditions, which
+  // is expected.
+  if (RPCChannel::IsSpinLoopActive()) {
+    if (SpinInternalEventLoop()) {
+      return;
     }
 
-    NS_ASSERTION(gNeuteredWindows == &neuteredWindows, "Bad pointer!");
-    gNeuteredWindows = nsnull;
-
-    PRUint32 count = neuteredWindows.Length();
-    for (PRUint32 index = 0; index < count; index++) {
-      RestoreWindowProcedure(neuteredWindows[index]);
-    }
-
-    SyncChannel::SetIsPumpingMessages(false);
-
-    // Before returning we need to set a hook to run any deferred messages that
-    // we received during the IPC call. The hook will unset itself as soon as
-    // someone else calls GetMessage, PeekMessage, or runs code that generates a
-    // "nonqueued" message.
-    if (gDeferredMessages &&
-        !(gDeferredGetMsgHook && gDeferredCallWndProcHook)) {
-      NS_ASSERTION(gDeferredMessages->Length(), "No deferred messages?!");
-
-      gDeferredGetMsgHook = SetWindowsHookEx(WH_GETMESSAGE, DeferredMessageHook,
-                                             NULL, gUIThreadId);
-      gDeferredCallWndProcHook = SetWindowsHookEx(WH_CALLWNDPROC,
-                                                  DeferredMessageHook, NULL,
-                                                  gUIThreadId);
-      NS_ASSERTION(gDeferredGetMsgHook && gDeferredCallWndProcHook,
-                   "Failed to set hooks!");
+    // Coming out of spin loop after a modal loop ends, we can't drop into
+    // deferred processing on the assumption that MsgWaitForMultipleObjects
+    // will get signaled with gEventLoopMessage - messages may have already
+    // been received and stored in mPending & mOutOfTurnReplies. So we check
+    // various stacks to figure out if we should fall through or just return.
+    if (IsMessagePending()) {
+      return;
     }
   }
+  
+  // Setup deferred processing of native events while we wait for a response.
+  NS_ASSERTION(!SyncChannel::IsPumpingMessages(),
+               "Shouldn't be pumping already!");
+  SyncChannel::SetIsPumpingMessages(true);
+  HHOOK windowHook = SetWindowsHookEx(WH_CALLWNDPROC, CallWindowProcedureHook,
+                                      NULL, gUIThreadId);
+  NS_ASSERTION(windowHook, "Failed to set hook!");
+
+  {
+    while (1) {
+      MSG msg = { 0 };
+
+      // Don't get wrapped up in here if the child connection dies.
+      {
+        MutexAutoLock lock(mMutex);
+        if (!Connected())
+          break;
+      }
+
+      DWORD result = MsgWaitForMultipleObjects(0, NULL, FALSE, INFINITE,
+                                               QS_ALLINPUT);
+      if (result != WAIT_OBJECT_0) {
+        NS_ERROR("Wait failed!");
+        break;
+      }
+
+      // See SyncChannel's WaitForNotify for details.
+      bool haveSentMessagesPending =
+        (HIWORD(GetQueueStatus(QS_SENDMESSAGE)) & QS_SENDMESSAGE) != 0;
+
+      // This message is received from PluginInstanceParent when the child is
+      // about to drop into a modal event loop. Deferred "nonqueued" events and
+      // backed up queued events must be delivered before this happens, and
+      // normal event processing must resume, otherwise UI lockups can result.
+      // Unhook deferred processing, purge deferred events, and drop down into
+      // our local event dispatch loop.
+      if (PeekMessageW(&msg, (HWND)-1, gOOPPSpinNativeLoopEvent,
+                       gOOPPSpinNativeLoopEvent, PM_REMOVE)) {
+        // Unhook the neutered window procedure hook.
+        UnhookWindowsHookEx(windowHook);
+        windowHook = NULL;
+
+        // Used by widget to assert on incoming native events.
+        SyncChannel::SetIsPumpingMessages(false);
+
+        // Unhook any neutered windows procedures so messages can be delivered
+        // normally.
+        UnhookNeuteredWindows();
+
+        // Send all deferred "nonqueued" messages to the intended receiver.
+        // We're dropping into SpinInternalEventLoop so we should be fairly
+        // certain these will get deliverd soon.
+        ScheduleDeferredMessageRun();
+        
+        // Spin the internal dispatch message loop during calls to WaitForNotify
+        // until the child process tells us the modal loop has closed. A return
+        // of true indicates gEventLoopMessage was received, exit out of
+        // WaitForNotify so we can deal with it in RPCChannel.
+        RPCChannel::EnterModalLoop();
+        if (SpinInternalEventLoop())
+          return;
+
+        // See comments above - never assume MsgWaitForMultipleObjects will
+        // get signaled.
+        if (IsMessagePending())
+          return;
+
+        // We drop out of our inner event loop after the plugin has relinquished
+        // control back to the shim, but the ipdl call has yet to return, so reset
+        // our hook in case and continue waiting on gEventLoopMessage.
+        windowHook = SetWindowsHookEx(WH_CALLWNDPROC, CallWindowProcedureHook,
+                                      NULL, gUIThreadId);
+        NS_ASSERTION(windowHook, "Failed to set proc hook on the rebound!");
+
+        SyncChannel::SetIsPumpingMessages(true);
+        continue;
+      }
+
+      if (PeekMessageW(&msg, (HWND)-1, gEventLoopMessage, gEventLoopMessage,
+                       PM_REMOVE)) {
+        break;
+      }
+
+      if (!PeekMessageW(&msg, NULL, 0, 0, PM_NOREMOVE) &&
+          !haveSentMessagesPending) {
+        // Message was for child, we should wait a bit.
+        SwitchToThread();
+      }
+    }
+  }
+
+  // Unhook the neutered window procedure hook.
+  UnhookWindowsHookEx(windowHook);
+
+  // Unhook any neutered windows procedures so messages can be delivered
+  // normally.
+  UnhookNeuteredWindows();
+
+  // Before returning we need to set a hook to run any deferred messages that
+  // we received during the IPC call. The hook will unset itself as soon as
+  // someone else calls GetMessage, PeekMessage, or runs code that generates
+  // a "nonqueued" message.
+  ScheduleDeferredMessageRun();
+
+  SyncChannel::SetIsPumpingMessages(false);
 }
 
 void

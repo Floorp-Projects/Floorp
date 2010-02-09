@@ -103,7 +103,7 @@ SyncChannel::Send(Message* msg, Message* reply)
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=538239.
     do {
         // wait for the next sync message to arrive
-        WaitForNotify();
+        SyncChannel::WaitForNotify();
     } while(Connected() &&
             mPendingReply != mRecvd.type() && !mRecvd.is_reply_error());
 

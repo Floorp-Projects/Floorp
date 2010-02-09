@@ -385,6 +385,11 @@ private:
 protected:
 #endif // MOZ_XUL
 
+#ifdef MOZ_IPC
+  static bool             IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult);
+  static void             IPCWindowProcHandler(HWND& hWnd, UINT& msg, WPARAM& wParam, LPARAM& lParam);
+#endif // MOZ_IPC
+
   /**
    * Misc.
    */

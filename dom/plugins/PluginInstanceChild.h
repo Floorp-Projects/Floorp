@@ -191,6 +191,12 @@ private:
     void DestroyPluginWindow();
     void ReparentPluginWindow(HWND hWndParent);
     void SizePluginWindow(int width, int height);
+    int16_t WinlessHandleEvent(NPEvent& event);
+    void SetNestedInputEventHook();
+    void ResetNestedEventHook();
+    void SetNestedInputPumpHook();
+    void ResetPumpHooks();
+    void InternalCallSetNestedEventState(bool aState);
     static LRESULT CALLBACK DummyWindowProc(HWND hWnd,
                                             UINT message,
                                             WPARAM wParam,
@@ -199,6 +205,16 @@ private:
                                              UINT message,
                                              WPARAM wParam,
                                              LPARAM lParam);
+    static VOID CALLBACK PumpTimerProc(HWND hwnd,
+                                       UINT uMsg,
+                                       UINT_PTR idEvent,
+                                       DWORD dwTime);
+    static LRESULT CALLBACK NestedInputEventHook(int code,
+                                                 WPARAM wParam,
+                                                 LPARAM lParam);
+    static LRESULT CALLBACK NestedInputPumpHook(int code,
+                                                WPARAM wParam,
+                                                LPARAM lParam);
 #endif
 
     const NPPluginFuncs* mPluginIface;
@@ -211,6 +227,12 @@ private:
     HWND mPluginWindowHWND;
     WNDPROC mPluginWndProc;
     HWND mPluginParentHWND;
+    HHOOK mNestedEventHook;
+    HHOOK mNestedPumpHook;
+    int mNestedEventLevelDepth;
+    bool mNestedEventState;
+    HWND mCachedWinlessPluginHWND;
+    UINT_PTR mEventPumpTimer;
 #endif
 
     friend class ChildAsyncCall;
