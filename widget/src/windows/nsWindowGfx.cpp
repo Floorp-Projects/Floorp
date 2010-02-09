@@ -355,6 +355,15 @@ PRBool nsWindow::OnPaint(HDC aDC)
   }
 #endif
 
+#ifdef MOZ_IPC
+  // We never have reentrant paint events, except when we're running our RPC
+  // windows event spin loop. If we don't trap for this, we'll try to paint,
+  // but view manager will refuse to paint the surface, resulting is black
+  // flashes on the plugin rendering surface.
+  if (mozilla::ipc::RPCChannel::IsSpinLoopActive() && mPainting)
+    return PR_FALSE;
+#endif
+
   nsPaintEvent willPaintEvent(PR_TRUE, NS_WILL_PAINT, this);
   DispatchWindowEvent(&willPaintEvent);
 
