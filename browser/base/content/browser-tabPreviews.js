@@ -576,7 +576,7 @@ var allTabs = {
     if (this._initiated)
       return;
     this._initiated = true;
-	
+
     Array.forEach(gBrowser.mTabs, function (tab) {
       this._addPreview(tab);
     }, this);

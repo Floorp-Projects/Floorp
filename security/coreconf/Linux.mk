@@ -53,48 +53,41 @@ RANLIB			= ranlib
 DEFAULT_COMPILER = gcc
 
 ifeq ($(OS_TEST),ppc64)
-	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH	= ppc
 ifeq ($(USE_64),1)
 	ARCHFLAG	= -m64
 endif
 else
 ifeq ($(OS_TEST),alpha)
-        OS_REL_CFLAGS   = -D_ALPHA_ -DLINUX1_2 -D_XOPEN_SOURCE
+        OS_REL_CFLAGS   = -D_ALPHA_
 	CPU_ARCH	= alpha
 else
 ifeq ($(OS_TEST),x86_64)
 ifeq ($(USE_64),1)
-	OS_REL_CFLAGS	= -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH	= x86_64
 else
-	OS_REL_CFLAGS	= -DLINUX1_2 -Di386 -D_XOPEN_SOURCE
+	OS_REL_CFLAGS	= -Di386
 	CPU_ARCH	= x86
 	ARCHFLAG	= -m32
 endif
 else
 ifeq ($(OS_TEST),sparc64)
-	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH        = sparc
 else
 ifeq (,$(filter-out arm% sa110,$(OS_TEST)))
-	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH        = arm
 else
 ifeq (,$(filter-out parisc%,$(OS_TEST)))
-	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH        = hppa
 else
 ifeq (,$(filter-out i%86,$(OS_TEST)))
-	OS_REL_CFLAGS	= -DLINUX1_2 -Di386 -D_XOPEN_SOURCE
+	OS_REL_CFLAGS	= -Di386
 	CPU_ARCH	= x86
 else
 ifeq ($(OS_TEST),sh4a)
-	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH        = sh4
 else
 # $(OS_TEST) == m68k, ppc, ia64, sparc, s390, s390x, mips, sh3, sh4
-	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH	= $(OS_TEST)
 endif
 endif
@@ -134,7 +127,12 @@ ifeq ($(USE_PTHREADS),1)
 OS_PTHREAD = -lpthread 
 endif
 
-OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) $(ARCHFLAG) -ansi -Wall -Werror-implicit-function-declaration -Wno-switch -pipe -DLINUX -Dlinux -D_POSIX_SOURCE -D_BSD_SOURCE -DHAVE_STRERROR
+# See bug 537829, in particular comment 23.
+# Place -ansi and *_SOURCE before $(DSO_CFLAGS) so DSO_CFLAGS can override
+# -ansi on platforms like Android where the system headers are C99 and do
+# not build with -ansi.
+STANDARDS_CFLAGS	= -ansi -D_POSIX_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE
+OS_CFLAGS		= $(STANDARDS_CFLAGS) $(DSO_CFLAGS) $(OS_REL_CFLAGS) $(ARCHFLAG) -Wall -Werror-implicit-function-declaration -Wno-switch -pipe -DLINUX -Dlinux -DHAVE_STRERROR
 OS_LIBS			= $(OS_PTHREAD) -ldl -lc
 
 ifdef USE_PTHREADS
@@ -150,7 +148,6 @@ DSO_LDOPTS		= -shared $(ARCHFLAG)
 # we don't use -z defs there.
 ZDEFS_FLAG		= -Wl,-z,defs
 DSO_LDOPTS		+= $(if $(findstring 2.11.90.0.8,$(shell ld -v)),,$(ZDEFS_FLAG))
-DSO_LDFLAGS		=
 LDFLAGS			+= $(ARCHFLAG)
 
 # INCLUDES += -I/usr/include -Y/usr/include/linux

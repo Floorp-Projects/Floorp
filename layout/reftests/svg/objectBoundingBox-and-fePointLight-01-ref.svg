@@ -1,0 +1,22 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/licenses/publicdomain/
+-->
+<svg width="100%" height="100%"
+  viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Reference for objectBoundingBox with fePointLight</title>
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=544742 -->
+
+  <defs>
+    <filter id="light" primitiveUnits="userSpaceOnUse">
+      <feSpecularLighting lighting-color="blue" surfaceScale="5" specularConstant="10" specularExponent="6">
+        <fePointLight x="30" y="30" z="-5"/>
+      </feSpecularLighting>
+      <feComposite operator="in" in2="SourceGraphic"/>
+    </filter>
+  </defs>
+
+  <rect x="20" y="20" width="40" height="20" filter="url(#light)" fill="black" />
+
+</svg>
+

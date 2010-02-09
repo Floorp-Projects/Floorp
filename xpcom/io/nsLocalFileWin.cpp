@@ -1540,7 +1540,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, PRBool foll
     {
         PRBool isDir;
         newParentDir->IsDirectory(&isDir);
-        if (isDir == PR_FALSE)
+        if (!isDir)
         {
             if (followSymlinks)
             {

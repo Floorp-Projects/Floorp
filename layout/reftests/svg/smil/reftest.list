@@ -88,6 +88,9 @@ fails == anim-fillopacity-1xml.svg  anim-standard-ref.svg # bug 534028
 # animate some boolean attributes:
 == anim-feConvolveMatrix-preserveAlpha-01.svg lime.svg
 
+# animate some preserveAspectRatio attributes
+== anim-svg-preserveAspectRatio-01.svg lime.svg
+
 == anim-remove-1.svg anim-standard-ref.svg
 == anim-remove-2.svg anim-standard-ref.svg
 == anim-remove-3.svg anim-standard-ref.svg

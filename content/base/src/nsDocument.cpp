@@ -2345,6 +2345,25 @@ nsDocument::InitCSP()
 #endif
     }
 
+    // Check for frame-ancestor violation
+    nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
+    if (docShell) {
+        PRBool safeAncestry = false;
+
+        // PermitsAncestry sends violation reports when necessary
+        rv = mCSP->PermitsAncestry(docShell, &safeAncestry);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (!safeAncestry) {
+#ifdef PR_LOGGING
+            PR_LOG(gCspPRLog, PR_LOG_DEBUG, 
+                   ("CSP doesn't like frame's ancestry, not loading."));
+#endif
+            // stop!  ERROR page!
+            mChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
+        }
+    }
+
     //Copy into principal
     nsIPrincipal* principal = GetPrincipal();
 

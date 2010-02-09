@@ -69,6 +69,17 @@ nsSVGFilterInstance::GetPrimitiveLength(nsSVGLength2 *aLength) const
   }
 }
 
+void
+nsSVGFilterInstance::ConvertLocation(float aValues[3]) const
+{
+  if (mPrimitiveUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
+    aValues[0] *= mTargetBBox.Width();
+    aValues[1] *= mTargetBBox.Height();
+    aValues[2] *= nsSVGUtils::ComputeNormalizedHypotenuse(
+                    mTargetBBox.Width(), mTargetBBox.Height());
+  }
+}
+
 already_AddRefed<gfxImageSurface>
 nsSVGFilterInstance::CreateImage()
 {

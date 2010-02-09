@@ -651,6 +651,14 @@ _getvalue(NPP aNPP,
     AssertPluginThread();
 
     switch (aVariable) {
+        // Copied from nsNPAPIPlugin.cpp
+        case NPNVToolkit:
+#ifdef MOZ_WIDGET_GTK2
+            *static_cast<NPNToolkitType*>(aValue) = NPNVGtk2;
+            return NPERR_NO_ERROR;
+#endif
+            return NPERR_GENERIC_ERROR;
+
         case NPNVjavascriptEnabledBool: // Intentional fall-through
         case NPNVasdEnabledBool: // Intentional fall-through
         case NPNVisOfflineBool: // Intentional fall-through

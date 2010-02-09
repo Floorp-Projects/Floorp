@@ -59,7 +59,7 @@ nsXBLProtoImplField::nsXBLProtoImplField(const PRUnichar* aName, const PRUnichar
   
   mJSAttributes = JSPROP_ENUMERATE;
   if (aReadOnly) {
-    nsAutoString readOnly; readOnly.Assign(*aReadOnly);
+    nsAutoString readOnly; readOnly.Assign(aReadOnly);
     if (readOnly.LowerCaseEqualsLiteral("true"))
       mJSAttributes |= JSPROP_READONLY;
   }

@@ -47,9 +47,8 @@ function test() {
   waitForExplicitFinish();
 
   function openLocation(url, autofilled, callback) {
-    let observer = {
-      observe: function(aSubject, aTopic, aData) {
-        switch (aTopic) {
+    function observer(aSubject, aTopic, aData) {
+      switch (aTopic) {
         case "domwindowopened":
           let dialog = aSubject.QueryInterface(Ci.nsIDOMWindow);
           dialog.addEventListener("load", function () {
@@ -76,11 +75,10 @@ function test() {
           break;
 
         case "domwindowclosed":
-          ww.unregisterNotification(this);
+          ww.unregisterNotification(arguments.callee);
           break;
-        }
       }
-    };
+    }
 
     ww.registerNotification(observer);
     gPrefService.setIntPref("general.open_location.last_window_choice", 0);

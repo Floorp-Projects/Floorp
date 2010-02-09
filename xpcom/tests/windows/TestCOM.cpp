@@ -114,7 +114,7 @@ public:
 
   NS_IMETHOD LockFactory(PRBool aLock) {
     printf("nsTestComFactory: ");
-    printf("%s", (aLock == PR_TRUE ? "Locking server" : "Unlocking server"));
+    printf("%s", (aLock ? "Locking server" : "Unlocking server"));
     printf("\n");
     return S_OK;
   }

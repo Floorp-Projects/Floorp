@@ -210,6 +210,9 @@ dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
 
+dnl AR_FLAGS set here so HOST_AR_FLAGS can be set correctly (see bug 538269)
+AR_FLAGS='cr $@'
+
 if test "$COMPILE_ENVIRONMENT"; then
 
 if test "$target" != "$host"; then
@@ -240,6 +243,9 @@ if test "$target" != "$host"; then
     fi
     if test -z "$HOST_LDFLAGS"; then
         HOST_LDFLAGS="$LDFLAGS"
+    fi
+    if test -z "$HOST_AR_FLAGS"; then
+        HOST_AR_FLAGS="$AR_FLAGS"
     fi
     AC_CHECK_PROGS(HOST_RANLIB, $HOST_RANLIB ranlib, ranlib, :)
     AC_CHECK_PROGS(HOST_AR, $HOST_AR ar, ar, :)
@@ -370,7 +376,10 @@ else
         HOST_RANLIB="$RANLIB"
     fi
     if test -z "$HOST_AR"; then
-       HOST_AR="$AR"
+        HOST_AR="$AR"
+    fi
+    if test -z "$HOST_AR_FLAGS"; then
+        HOST_AR_FLAGS="$AR_FLAGS"
     fi
 fi
 
@@ -870,7 +879,6 @@ dnl ========================================================
 dnl set the defaults first
 dnl ========================================================
 AS_BIN=$AS
-AR_FLAGS='cr $@'
 AR_LIST='$(AR) t'
 AR_EXTRACT='$(AR) x'
 AR_DELETE='$(AR) d'
@@ -888,7 +896,6 @@ DIRENT_INO=d_ino
 CYGWIN_WRAPPER=
 WIN_TOP_SRC=
 MOZ_USER_DIR=".mozilla"
-HOST_AR_FLAGS='$(AR_FLAGS)'
 
 MOZ_JS_LIBS='-L$(libdir) -lmozjs'
 MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(PREFIX)/lib'
@@ -2218,7 +2225,7 @@ case "$target" in
     MOZ_DEBUG_FLAGS="-g -fno-inline"
     MOZ_OPTIMIZE_FLAGS="-O2"
     MOZ_OPTIMIZE_LDFLAGS="-s -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
-    DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcomcor.lib'
+    DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib'
     LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib'
     TARGET_MD_ARCH=os2
     _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"

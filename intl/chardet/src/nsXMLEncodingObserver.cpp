@@ -68,7 +68,7 @@ nsXMLEncodingObserver::nsXMLEncodingObserver()
 nsXMLEncodingObserver::~nsXMLEncodingObserver()
 {
   // call to end the ObserverService
-  if (bXMLEncodingObserverStarted == PR_TRUE) {
+  if (bXMLEncodingObserverStarted) {
     End();
   }
 }
@@ -200,7 +200,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Start()
 {
     nsresult res = NS_OK;
 
-    if (bXMLEncodingObserverStarted == PR_TRUE) 
+    if (bXMLEncodingObserverStarted) 
       return res;
 
     nsCOMPtr<nsIObserverService> anObserverService = do_GetService("@mozilla.org/observer-service;1", &res);
@@ -218,7 +218,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::End()
 {
     nsresult res = NS_OK;
     
-    if (bXMLEncodingObserverStarted == PR_FALSE) 
+    if (!bXMLEncodingObserverStarted)
       return res;
 
     nsCOMPtr<nsIObserverService> anObserverService = do_GetService("@mozilla.org/observer-service;1", &res);

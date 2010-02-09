@@ -64,6 +64,9 @@ HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(HOST_CPPSRCS:.cpp=$(HOST_BIN_SUFFIX)
 
 include $(topsrcdir)/config/rules.mk
 
+# FIXME: We don't seem to do auto-generated dependencies here.
+host_ListCSSProperties.$(OBJ_SUFFIX): $(srcdir)/../nsCSSPropList.h
+
 css_properties.js: host_ListCSSProperties$(HOST_BIN_SUFFIX) css_properties_like_longhand.js Makefile
 	$(RM) $@
 	./host_ListCSSProperties$(HOST_BIN_SUFFIX) > $@
@@ -119,6 +122,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_font_face_parser.html \
 		test_garbage_at_end_of_declarations.html \
 		test_hover.html \
+		test_ident_escaping.html \
 		test_inherit_computation.html \
 		test_inherit_storage.html \
 		test_initial_computation.html \

@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nss.h,v 1.69 2009/08/13 18:11:22 christophe.ravel.bugs%sun.com Exp $ */
+/* $Id: nss.h,v 1.74 2009/11/20 20:15:05 christophe.ravel.bugs%sun.com Exp $ */
 
 #ifndef __nss_h_
 #define __nss_h_
@@ -60,21 +60,96 @@
 #endif
 
 /*
- * NSS's major version, minor version, patch level, and whether
+ * NSS's major version, minor version, patch level, build number, and whether
  * this is a beta release.
  *
  * The format of the version string should be
- *     "<major version>.<minor version>[.<patch level>][ <ECC>][ <Beta>]"
+ *     "<major version>.<minor version>[.<patch level>[.<build number>]][ <ECC>][ <Beta>]"
  */
-#define NSS_VERSION  "3.12.4.5" _NSS_ECC_STRING _NSS_CUSTOMIZED
+#define NSS_VERSION  "3.12.6.0" _NSS_ECC_STRING _NSS_CUSTOMIZED " Beta"
 #define NSS_VMAJOR   3
 #define NSS_VMINOR   12
-#define NSS_VPATCH   4
-#define NSS_BETA     PR_FALSE
+#define NSS_VPATCH   6
+#define NSS_VBUILD   0
+#define NSS_BETA     PR_TRUE
 
 #ifndef RC_INVOKED
 
 #include "seccomon.h"
+
+typedef struct NSSInitParametersStr NSSInitParameters;
+
+/*
+ * parameters used to initialize softoken. Mostly strings used to 
+ * internationalize softoken. Memory for the strings are owned by the caller,
+ * who is free to free them once NSS_ContextInit returns. If the string 
+ * parameter is NULL (as opposed to empty, zero length), then the softoken
+ * default is used. These are equivalent to the parameters for 
+ * PK11_ConfigurePKCS11().
+ *
+ * field names match their equivalent parameter names for softoken strings 
+ * documented at https://developer.mozilla.org/en/PKCS11_Module_Specs.
+ * 
+ * minPWLen 
+ *     Minimum password length in bytes. 
+ * manufacturerID 
+ *     Override the default manufactureID value for the module returned in 
+ *     the CK_INFO, CK_SLOT_INFO, and CK_TOKEN_INFO structures with an 
+ *     internationalize string (UTF8). This value will be truncated at 32 
+ *     bytes (not including the trailing NULL, partial UTF8 characters will be
+ *     dropped). 
+ * libraryDescription 
+ *     Override the default libraryDescription value for the module returned in
+ *     the CK_INFO structure with an internationalize string (UTF8). This value
+ *     will be truncated at 32 bytes(not including the trailing NULL, partial 
+ *     UTF8 characters will be dropped). 
+ * cryptoTokenDescription 
+ *     Override the default label value for the internal crypto token returned
+ *     in the CK_TOKEN_INFO structure with an internationalize string (UTF8).
+ *     This value will be truncated at 32 bytes (not including the trailing
+ *     NULL, partial UTF8 characters will be dropped). 
+ * dbTokenDescription 
+ *     Override the default label value for the internal DB token returned in 
+ *     the CK_TOKEN_INFO structure with an internationalize string (UTF8). This
+ *     value will be truncated at 32 bytes (not including the trailing NULL,
+ *     partial UTF8 characters will be dropped). 
+ * FIPSTokenDescription 
+ *     Override the default label value for the internal FIPS token returned in
+ *     the CK_TOKEN_INFO structure with an internationalize string (UTF8). This
+ *     value will be truncated at 32 bytes (not including the trailing NULL,
+ *     partial UTF8 characters will be dropped). 
+ * cryptoSlotDescription 
+ *     Override the default slotDescription value for the internal crypto token
+ *     returned in the CK_SLOT_INFO structure with an internationalize string
+ *     (UTF8). This value will be truncated at 64 bytes (not including the
+ *     trailing NULL, partial UTF8 characters will be dropped). 
+ * dbSlotDescription 
+ *     Override the default slotDescription value for the internal DB token 
+ *     returned in the CK_SLOT_INFO structure with an internationalize string 
+ *     (UTF8). This value will be truncated at 64 bytes (not including the
+ *     trailing NULL, partial UTF8 characters will be dropped). 
+ * FIPSSlotDescription 
+ *     Override the default slotDecription value for the internal FIPS token
+ *     returned in the CK_SLOT_INFO structure with an internationalize string
+ *     (UTF8). This value will be truncated at 64 bytes (not including the
+ *     trailing NULL, partial UTF8 characters will be dropped). 
+ *
+ */
+struct NSSInitParametersStr {
+   unsigned int	  length;      /* allow this structure to grow in the future,
+				* must be set */
+   PRBool passwordRequired;
+   int    minPWLen;
+   char * manufactureID;           /* variable names for strings match the */
+   char * libraryDescription;      /*   parameter name in softoken */
+   char * cryptoTokenDescription;
+   char * dbTokenDescription;
+   char * FIPSTokenDescription;
+   char * cryptoSlotDescription;
+   char * dbSlotDescription;
+   char * FIPSSlotDescription;
+};
+   
 
 SEC_BEGIN_PROTOS
 
@@ -194,9 +269,18 @@ extern SECStatus NSS_InitReadWrite(const char *configdir);
 #define SECMOD_DB "secmod.db"
 #endif
 
+typedef struct NSSInitContextStr NSSInitContext;
+
+
 extern SECStatus NSS_Initialize(const char *configdir, 
 	const char *certPrefix, const char *keyPrefix, 
 	const char *secmodName, PRUint32 flags);
+
+extern NSSInitContext *NSS_InitContext(const char *configdir, 
+	const char *certPrefix, const char *keyPrefix, 
+	const char *secmodName, NSSInitParameters *initParams, PRUint32 flags);
+
+extern SECStatus NSS_ShutdownContext(NSSInitContext *);
 
 /*
  * same as NSS_Init, but checks to see if we need to merge an
@@ -251,9 +335,9 @@ extern SECStatus NSS_Shutdown(void);
 /*
  * set the PKCS #11 strings for the internal token.
  */
-void PK11_ConfigurePKCS11(const char *man, const char *libdes, 
-	const char *tokdes, const char *ptokdes, const char *slotdes, 
-	const char *pslotdes, const char *fslotdes, const char *fpslotdes,
+void PK11_ConfigurePKCS11(const char *man, const char *libdesc, 
+	const char *tokdesc, const char *ptokdesc, const char *slotdesc, 
+	const char *pslotdesc, const char *fslotdesc, const char *fpslotdesc,
         int minPwd, int pwRequired);
 
 /*

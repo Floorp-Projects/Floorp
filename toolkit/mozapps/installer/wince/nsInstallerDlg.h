@@ -55,6 +55,7 @@ private:
   nsInstallerDlg();
   BOOL OnInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam);
   void FindMemCards();
+  BOOL OnDialogCreated(HWND hDlg);
   BOOL OnBtnExtract();
   LRESULT SendMessageToControl(int nCtlID, UINT Msg, WPARAM wParam = 0, LPARAM lParam = 0);
   void SetControlWindowText(int nCtlID, const WCHAR *sText);
@@ -64,9 +65,10 @@ private:
   BOOL CreateShortcut();
   BOOL MoveSetupStrings();
   BOOL SilentFirstRun();
+  BOOL RunSetupCab();
 
   BOOL GetInstallPath(WCHAR *sPath);
-  void RunUninstall();
+  BOOL RunUninstall(BOOL *pbCancelled);
 
   void AddErrorMsg(WCHAR* sErr);
   BOOL FastStartFileExists();

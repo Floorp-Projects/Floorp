@@ -238,7 +238,7 @@ function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
  *
  * If the axis is specified, it must be one of "horizontal" or "vertical". If not specified,
  * "vertical" is used.
- * 
+ *
  * 'delta' is the amount to scroll by (can be positive or negative). It must
  * be specified.
  *
@@ -415,106 +415,121 @@ function synthesizeKeyExpectEvent(key, aEvent, aExpectedTarget, aExpectedEvent,
   synthesizeKey(key, aEvent, aWindow);
   _checkExpectedEvent(aExpectedTarget, aExpectedEvent, eventHandler, aTestName);
 }
-
 /**
  * Emulate a dragstart event.
  *  element - element to fire the dragstart event on
  *  expectedDragData - the data you expect the data transfer to contain afterwards
- *                     This data is in the format:
- *                       [ [ "type: data", "type: data" ], ... ]
- * Returns the expected data in the same format if it is not correct. Returns null
- * if successful.
+ *                      This data is in the format:
+ *                         [ [ {type: value, data: value, test: function}, ... ], ... ]
+ *                     can be null
+ *  aWindow - optional; defaults to the current window object.
+ * Returns null if data matches.
+ * Returns the event.dataTransfer if data does not match
+ *
+ * eqTest is an optional function if comparison can't be done with x == y;
+ *   function (actualData, expectedData) {return boolean}
+ *   @param actualData from dataTransfer
+ *   @param expectedData from expectedDragData
+ * see bug 462172 for example of use
+ *
  */
-function synthesizeDragStart(element, expectedDragData)
-{
-  var failed = null;
 
+function synthesizeDragStart(element, expectedDragData, aWindow)
+{
+  if (!aWindow)
+    aWindow = window;
+
+  var result = "trapDrag was not called";
   var trapDrag = function(event) {
     try {
       var dataTransfer = event.dataTransfer;
-      if (dataTransfer.mozItemCount != expectedDragData.length)
-        throw "Failed";
-
-      for (var t = 0; t < dataTransfer.mozItemCount; t++) {
-        var types = dataTransfer.mozTypesAt(t);
-        var expecteditem = expectedDragData[t];
-        if (types.length != expecteditem.length)
-          throw "Failed";
-
-        for (var f = 0; f < types.length; f++) {
-          if (types[f] != expecteditem[f].substring(0, types[f].length) ||
-              dataTransfer.mozGetDataAt(types[f], t) != expecteditem[f].substring(types[f].length + 2))
-          throw "Failed";
+      result = null;
+      if (!dataTransfer)
+        throw  "no dataTransfer";
+      if (dataTransfer.mozItemCount != expectedDragData.length ||
+          expectedDragData == null)
+        throw dataTransfer;
+      for (var i = 0; i < dataTransfer.mozItemCount; i++) {
+        var dtTypes = dataTransfer.mozTypesAt(i);
+        if (dtTypes.length != expectedDragData[i].length)
+          throw dataTransfer;
+        for (var j = 0; j < dtTypes.length; j++) {
+          if (dtTypes[j] != expectedDragData[i][j].type)
+            throw dataTransfer;
+          var dtData = dataTransfer.mozGetDataAt(dtTypes[j],i);
+          if (expectedDragData[i][j].eqTest) {
+            if (!expectedDragData[i][j].eqTest(dtData, expectedDragData[i][j].data))
+              throw dataTransfer;
+          }
+          else if (expectedDragData[i][j].data != dtData)
+            throw dataTransfer;
         }
       }
     } catch(ex) {
-      failed = dataTransfer;
+      result = ex;
     }
-
     event.preventDefault();
     event.stopPropagation();
   }
-
-  window.addEventListener("dragstart", trapDrag, false);
-  synthesizeMouse(element, 2, 2, { type: "mousedown" });
-  synthesizeMouse(element, 9, 9, { type: "mousemove" });
-  synthesizeMouse(element, 10, 10, { type: "mousemove" });
-  window.removeEventListener("dragstart", trapDrag, false);
-  synthesizeMouse(element, 10, 10, { type: "mouseup" });
-
-  return failed;
+  aWindow.addEventListener("dragstart", trapDrag, false);
+  synthesizeMouse(element, 2, 2, { type: "mousedown" }, aWindow);
+  synthesizeMouse(element, 11, 11, { type: "mousemove" }, aWindow);
+  synthesizeMouse(element, 20, 20, { type: "mousemove" }, aWindow);
+  aWindow.removeEventListener("dragstart", trapDrag, false);
+  synthesizeMouse(element, 20, 20, { type: "mouseup" }, aWindow);
+  return result;
 }
-
 /**
- * Emulate a drop by firing a dragover, dragexit and a drop event.
- *  element - the element to fire the dragover, dragexit and drop events on
+ * Emulate a drop by emulating a dragstart and firing events dragenter, dragover, and drop.
+ *  element - the element to fire the dragover, dragleave and drop events
  *  dragData - the data to supply for the data transfer
  *                     This data is in the format:
- *                       [ [ "type: data", "type: data" ], ... ]
- * effectAllowed - the allowed effects that the dragstart event would have set
+ *                       [ [ {type: value, data: value}, ...], ... ]
  *
  * Returns the drop effect that was desired.
  */
-function synthesizeDrop(element, dragData, effectAllowed)
+function synthesizeDrop(element, dragData, aWindow)
 {
+  if (!aWindow)
+    aWindow = window;
+
   var dataTransfer;
   var trapDrag = function(event) {
     dataTransfer = event.dataTransfer;
-    for (var t = 0; t < dragData.length; t++) {
-      var item = dragData[t];
-      for (var v = 0; v < item.length; v++) {
-        var idx = item[v].indexOf(":");
-        dataTransfer.mozSetDataAt(item[v].substring(0, idx), item[v].substring(idx + 2), t);
+    for (var i = 0; i < dragData.length; i++) {
+      var item = dragData[i];
+      for (var j = 0; j < item.length; j++) {
+        dataTransfer.mozSetDataAt(item[j].type, item[j].data, i);
       }
     }
-
-    dataTransfer.dropEffect = "move";
     event.preventDefault();
     event.stopPropagation();
   }
 
-  // need to use a real 
-  window.addEventListener("dragstart", trapDrag, true);
-  synthesizeMouse(element, 2, 2, { type: "mousedown" });
-  synthesizeMouse(element, 9, 9, { type: "mousemove" });
-  synthesizeMouse(element, 10, 10, { type: "mousemove" });
-  window.removeEventListener("dragstart", trapDrag, true);
-  synthesizeMouse(element, 10, 10, { type: "mouseup" });
+  // need to use real mouse action
+  aWindow.addEventListener("dragstart", trapDrag, true);
+  synthesizeMouse(element, 2, 2, { type: "mousedown" }, aWindow);
+  synthesizeMouse(element, 11, 11, { type: "mousemove" }, aWindow);
+  synthesizeMouse(element, 20, 20, { type: "mousemove" }, aWindow);
+  aWindow.removeEventListener("dragstart", trapDrag, true);
 
-  var event = document.createEvent("DragEvents");
-  event.initDragEvent("dragover", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
-  if (element.dispatchEvent(event))
-    return "none";
-
-  event = document.createEvent("DragEvents");
-  event.initDragEvent("dragexit", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+  event = aWindow.document.createEvent("DragEvents");
+  event.initDragEvent("dragenter", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
   element.dispatchEvent(event);
 
+  var event = aWindow.document.createEvent("DragEvents");
+  event.initDragEvent("dragover", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+  if (element.dispatchEvent(event)) {
+    synthesizeMouse(element, 20, 20, { type: "mouseup" }, aWindow);
+    return "none";
+  }
+
   if (dataTransfer.dropEffect != "none") {
-    event = document.createEvent("DragEvents");
-    event.initDragEvent("drop", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
+    event = aWindow.document.createEvent("DragEvents");
+    event.initDragEvent("drop", true, true, aWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null, dataTransfer);
     element.dispatchEvent(event);
   }
+  synthesizeMouse(element, 20, 20, { type: "mouseup" }, aWindow);
 
   return dataTransfer.dropEffect;
 }

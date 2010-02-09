@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: cryptohi.h,v 1.12 2008/06/14 14:20:00 wtc%google.com Exp $ */
+/* $Id: cryptohi.h,v 1.13 2009/09/23 22:51:56 wtc%google.com Exp $ */
 
 #ifndef _CRYPTOHI_H_
 #define _CRYPTOHI_H_
@@ -114,7 +114,7 @@ extern SECStatus SGN_Begin(SGNContext *cx);
 **	"input" the input data to sign
 **	"inputLen" the length of the input data
 */
-extern SECStatus SGN_Update(SGNContext *cx, unsigned char *input,
+extern SECStatus SGN_Update(SGNContext *cx, const unsigned char *input,
 			   unsigned int inputLen);
 
 /*

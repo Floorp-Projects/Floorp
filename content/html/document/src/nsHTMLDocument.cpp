@@ -691,6 +691,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     mCompatMode = eCompatibility_FullStandards;
     loadAsHtml5 = PR_FALSE;
   }
+#ifdef DEBUG
+  else {
+    NS_ASSERTION(mIsRegularHTML,
+                 "Hey, someone forgot to reset mIsRegularHTML!!!");
+  }
+#endif
   
   if (loadAsHtml5 && 
       !(contentType.EqualsLiteral("text/html") && 
@@ -716,13 +722,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   }
   
-#ifdef DEBUG
-  else {
-    NS_ASSERTION(mIsRegularHTML,
-                 "Hey, someone forgot to reset mIsRegularHTML!!!");
-  }
-#endif
-
   CSSLoader()->SetCompatibilityMode(mCompatMode);
   
   PRBool needsParser = PR_TRUE;
@@ -2985,7 +2984,7 @@ nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
 void
 nsHTMLDocument::MaybeEditingStateChanged()
 {
-  if (mUpdateNestLevel == 0 && mContentEditableCount > 0 != IsEditingOn()) {
+  if (mUpdateNestLevel == 0 && (mContentEditableCount > 0) != IsEditingOn()) {
     if (nsContentUtils::IsSafeToRunScript()) {
       EditingStateChanged();
     } else if (!mInDestructor) {
@@ -3013,7 +3012,7 @@ nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
   mContentEditableCount += aChange;
 
   if (mParser ||
-      (mUpdateNestLevel > 0 && mContentEditableCount > 0 != IsEditingOn())) {
+      (mUpdateNestLevel > 0 && (mContentEditableCount > 0) != IsEditingOn())) {
     return NS_OK;
   }
 

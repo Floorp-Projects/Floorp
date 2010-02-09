@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslreveal.c,v 1.4 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: sslreveal.c,v 1.7 2010/02/04 03:21:11 wtc%google.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -82,7 +82,7 @@ SSL_RevealPinArg(PRFileDesc * fd)
 
 
 /* given PRFileDesc, returns a pointer to the URL associated with the socket
- * the caller should free url when done  
+ * the caller should free url when done
  */
 char * 
 SSL_RevealURL(PRFileDesc * fd)
@@ -98,3 +98,41 @@ SSL_RevealURL(PRFileDesc * fd)
   return url;
 }
 
+
+/* given PRFileDesc, returns status information related to extensions 
+ * negotiated with peer during the handshake.
+ */
+
+SECStatus
+SSL_HandshakeNegotiatedExtension(PRFileDesc * socket, 
+                                 SSLExtensionType extId,
+                                 PRBool *pYes)
+{
+  /* some decisions derived from SSL_GetChannelInfo */
+  sslSocket * sslsocket = NULL;
+  SECStatus rv = SECFailure;
+
+  if (!pYes)
+    return rv;
+
+  sslsocket = ssl_FindSocket(socket);
+
+  /* according to public API SSL_GetChannelInfo, this doesn't need a lock */
+  if (sslsocket && sslsocket->opt.useSecurity && sslsocket->firstHsDone) {
+    if (sslsocket->ssl3.initialized) { /* SSL3 and TLS */
+      /* now we know this socket went through ssl3_InitState() and
+       * ss->xtnData got initialized, which is the only member accessed by
+       * ssl3_ExtensionNegotiated();
+       * Member xtnData appears to get accessed in functions that handle
+       * the handshake (hello messages and extension sending),
+       * therefore the handshake lock should be sufficient.
+       */
+      ssl_GetSSL3HandshakeLock(sslsocket);
+      *pYes = ssl3_ExtensionNegotiated(sslsocket, extId);
+      ssl_ReleaseSSL3HandshakeLock(sslsocket);
+      rv = SECSuccess;
+    }
+  }
+
+  return rv;
+}

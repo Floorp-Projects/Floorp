@@ -541,7 +541,7 @@ RDFContainerImpl::Renumber(PRInt32 aStartIndex, PRInt32 aIncrement)
     }
 
     PRBool  err = PR_FALSE;
-    while ((err == PR_FALSE) && ((aIncrement < 0) ? (i <= count) : (i >= aStartIndex)))
+    while (!err && ((aIncrement < 0) ? (i <= count) : (i >= aStartIndex)))
     {
         nsCOMPtr<nsIRDFResource> oldOrdinal;
         rv = gRDFContainerUtils->IndexToOrdinalResource(i, getter_AddRefs(oldOrdinal));
@@ -620,7 +620,7 @@ RDFContainerImpl::Renumber(PRInt32 aStartIndex, PRInt32 aIncrement)
         i -= aIncrement;
     }
 
-    if ((err == PR_FALSE) && (aIncrement < 0))
+    if (!err && (aIncrement < 0))
     {
         // Update the container's nextVal to reflect the
         // renumbering. We do this now if aIncrement < 0 because, up
@@ -638,7 +638,7 @@ RDFContainerImpl::Renumber(PRInt32 aStartIndex, PRInt32 aIncrement)
         propagatable->SetPropagateChanges(PR_TRUE);
     }
 
-    if (err == PR_TRUE) return(rv);
+    if (err) return(rv);
 
     return NS_OK;
 }

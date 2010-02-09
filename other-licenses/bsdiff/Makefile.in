@@ -36,10 +36,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -53,7 +53,7 @@ ifeq (WINNT,$(OS_ARCH))
 HOST_EXTRA_LIBS += $(call EXPAND_LIBNAME,Ws2_32)
 endif
 
-LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/mozapps/update/src/updater
+LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/mozapps/update/updater
 
 include $(topsrcdir)/config/rules.mk
 

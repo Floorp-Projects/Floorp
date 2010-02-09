@@ -45,17 +45,17 @@ include $(DEPTH)/config/autoconf.mk
 export NO_SHUNT = 1
 USE_STATIC_LIBS = 1
 
-PROGRAM   = xulrunner-stub-installer.sfx
+PROGRAM = xulrunner-stub-installer.sfx
 
-REQUIRES  = lib7z
+REQUIRES = lib7z
 
 CPPSRCS = \
-	nsInstaller.cpp \
-	nsInstallerDlg.cpp \
-	nsArchiveExtractor.cpp \
-	ns7zipExtractor.cpp \
-	nsSetupStrings.cpp \
-	$(NULL)
+  nsInstaller.cpp \
+  nsInstallerDlg.cpp \
+  nsArchiveExtractor.cpp \
+  ns7zipExtractor.cpp \
+  nsSetupStrings.cpp \
+  $(NULL)
 
 LOCAL_INCLUDES += -I$(srcdir)/../../readstrings
 
@@ -74,4 +74,3 @@ WIN32_EXE_LDFLAGS += -ENTRY:WinMain
 DIRS += uninstall
 
 include $(topsrcdir)/config/rules.mk
-

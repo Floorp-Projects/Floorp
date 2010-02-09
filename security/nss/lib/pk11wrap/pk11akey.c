@@ -1894,25 +1894,7 @@ PK11_ExportEncryptedPrivateKeyInfo(
 SECItem*
 PK11_DEREncodePublicKey(SECKEYPublicKey *pubk)
 {
-    CERTSubjectPublicKeyInfo *spki=NULL;
-    SECItem *spkiDER = NULL;
-
-    if( pubk == NULL ) {
-        return NULL;
-    }
-
-    /* get the subjectpublickeyinfo */
-    spki = SECKEY_CreateSubjectPublicKeyInfo(pubk);
-    if( spki == NULL ) {
-        goto finish;
-    }
-
-    /* DER-encode the subjectpublickeyinfo */
-    spkiDER = SEC_ASN1EncodeItem(NULL /*arena*/, NULL/*dest*/, spki,
-                    CERT_SubjectPublicKeyInfoTemplate);
-
-finish:
-    return spkiDER;
+    return SECKEY_EncodeDERSubjectPublicKeyInfo(pubk);
 }
 
 char *

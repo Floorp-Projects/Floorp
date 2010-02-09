@@ -69,13 +69,13 @@ _CHROME_FILES = \
   test_unkownContentType_dialog_layout.xul \
   test_bug_412360.xul \
   test_bug_429247.xul \
+  test_bug_462172.xul \
   unknownContentType_dialog_layout_data.txt \
   unknownContentType_dialog_layout_data.txt^headers^ \
   unknownContentType_dialog_layout_data.pif \
   unknownContentType_dialog_layout_data.pif^headers^ \
   utils.js \
   $(NULL)
-
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
 _CHROME_FILES += \
   test_backspace_key_removes.xul \

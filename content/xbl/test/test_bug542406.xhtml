@@ -1,0 +1,45 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=542406
+-->
+<head>
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="foo">
+      <content><children/></content>
+      <implementation>
+        <field name="one" readonly="true">1</field>
+        <field name="three">3</field>
+      </implementation>
+    </binding>
+  </bindings>
+  <title>Test for Bug 542406</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=542406">Mozilla Bug 542406</a>
+<p id="display" style="-moz-binding: url(#foo)"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 542406 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  is($("display").one, 1, "Field one not installed?");
+  $("display").one = 2;
+  is($("display").one, 1, "Field one not readonly");
+  is($("display").three, 3, "Field three not installed?");
+  $("display").three = 4;
+  is($("display").three, 4, "Field three readonly?");
+  SimpleTest.finish();
+});
+]]>
+</script>
+</pre>
+</body>
+</html>

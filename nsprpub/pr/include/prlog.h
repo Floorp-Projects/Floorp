@@ -189,6 +189,8 @@ NSPR_API(void) PR_LogPrint(const char *fmt, ...);
 */
 NSPR_API(void) PR_LogFlush(void);
 
+NSPR_API(void) PR_Assert(const char *s, const char *file, PRIntn ln);
+
 #if defined(DEBUG) || defined(FORCE_PR_LOG)
 #define PR_LOGGING 1
 
@@ -233,7 +235,6 @@ NSPR_API(void) PR_LogFlush(void);
 
 #if defined(DEBUG) || defined(FORCE_PR_ASSERT)
 
-NSPR_API(void) PR_Assert(const char *s, const char *file, PRIntn ln);
 #define PR_ASSERT(_expr) \
     ((_expr)?((void)0):PR_Assert(# _expr,__FILE__,__LINE__))
 

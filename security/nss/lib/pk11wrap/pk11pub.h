@@ -574,6 +574,10 @@ SECKEYPrivateKey *PK11_UnwrapPrivKey(PK11SlotInfo *slot,
 SECStatus PK11_WrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
 			   SECKEYPrivateKey *privKey, CK_MECHANISM_TYPE wrapType,
 			   SECItem *param, SECItem *wrappedKey, void *wincx);
+/*
+ * The caller of PK11_DEREncodePublicKey should free the returned SECItem with
+ * a SECITEM_FreeItem(..., PR_TRUE) call.
+ */
 SECItem* PK11_DEREncodePublicKey(SECKEYPublicKey *pubk);
 PK11SymKey* PK11_CopySymKeyForSigning(PK11SymKey *originalKey,
 	CK_MECHANISM_TYPE mech);
@@ -791,6 +795,11 @@ PK11GenericObject *PK11_CreateGenericObject(PK11SlotInfo *slot,
  *
  *  All other types are considered invalid. If type does not match the object
  *  passed, unpredictable results will occur.
+ *
+ * PK11_ReadRawAttribute allocates the buffer for returning the attribute
+ * value.  The caller of PK11_ReadRawAttribute should free the data buffer
+ * pointed to by item using a SECITEM_FreeItem(item, PR_FALSE) or
+ * PORT_Free(item->data) call.
  */
 SECStatus PK11_ReadRawAttribute(PK11ObjectType type, void *object, 
 				CK_ATTRIBUTE_TYPE attr, SECItem *item);

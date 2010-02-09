@@ -747,7 +747,7 @@ void
 nsDiskCacheStreamIO::DeleteBuffer()
 {
     if (mBuffer) {
-        NS_ASSERTION(mBufDirty == PR_FALSE, "deleting dirty buffer");
+        NS_ASSERTION(!mBufDirty, "deleting dirty buffer");
         free(mBuffer);
         mBuffer = nsnull;
         mBufPos = 0;

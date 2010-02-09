@@ -618,6 +618,54 @@ CollectDistNames( CERTCertificate *cert, SECItem *k, void *data)
  * Return all of the CAs that are "trusted" for SSL.
  */
 CERTDistNames *
+CERT_DupDistNames(CERTDistNames *orig)
+{
+    PRArenaPool *arena;
+    CERTDistNames *names;
+    int i;
+    SECStatus rv;
+    
+    /* allocate an arena to use */
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	return(NULL);
+    }
+    
+    /* allocate the header structure */
+    names = (CERTDistNames *)PORT_ArenaAlloc(arena, sizeof(CERTDistNames));
+    if (names == NULL) {
+	goto loser;
+    }
+
+    /* initialize the header struct */
+    names->arena = arena;
+    names->head = NULL;
+    names->nnames = orig->nnames;
+    names->names = NULL;
+    
+    /* construct the array from the list */
+    if (orig->nnames) {
+	names->names = (SECItem*)PORT_ArenaNewArray(arena, SECItem,
+                                                    orig->nnames);
+	if (names->names == NULL) {
+	    goto loser;
+	}
+	for (i = 0; i < orig->nnames; i++) {
+            rv = SECITEM_CopyItem(arena, &names->names[i], &orig->names[i]);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+        }
+    }
+    return(names);
+    
+loser:
+    PORT_FreeArena(arena, PR_FALSE);
+    return(NULL);
+}
+
+CERTDistNames *
 CERT_GetSSLCACerts(CERTCertDBHandle *handle)
 {
     PRArenaPool *arena;
@@ -676,6 +724,53 @@ CERT_GetSSLCACerts(CERTCertDBHandle *handle)
 loser:
     PORT_FreeArena(arena, PR_FALSE);
     return(NULL);
+}
+
+CERTDistNames *
+CERT_DistNamesFromCertList(CERTCertList *certList)
+{
+    CERTDistNames *   dnames = NULL;
+    PRArenaPool *     arena;
+    CERTCertListNode *node = NULL;
+    SECItem *         names = NULL;
+    int               listLen = 0, i = 0;
+
+    if (certList == NULL) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
+    node = CERT_LIST_HEAD(certList);
+    while ( ! CERT_LIST_END(node, certList) ) {
+        listLen += 1;
+        node = CERT_LIST_NEXT(node);
+    }
+    
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) goto loser;
+    dnames = PORT_ArenaZNew(arena, CERTDistNames);
+    if (dnames == NULL) goto loser;
+
+    dnames->arena = arena;
+    dnames->nnames = listLen;
+    dnames->names = names = PORT_ArenaZNewArray(arena, SECItem, listLen);
+    if (names == NULL) goto loser;
+
+    node = CERT_LIST_HEAD(certList);
+    while ( ! CERT_LIST_END(node, certList) ) {
+        CERTCertificate *cert = node->cert;
+        SECStatus rv = SECITEM_CopyItem(arena, &names[i++], &cert->derSubject);
+        if (rv == SECFailure) {
+            goto loser;
+        }
+        node = CERT_LIST_NEXT(node);
+    }
+    return dnames;
+loser:
+    if (arena) {
+        PORT_FreeArena(arena, PR_FALSE);
+    }
+    return NULL;
 }
 
 CERTDistNames *

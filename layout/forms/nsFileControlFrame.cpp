@@ -447,7 +447,7 @@ nsFileControlFrame::FetchLastUsedDirectory(nsIURI* aURI, nsILocalFile* aFile)
   PRBool hasPref;
   if (NS_SUCCEEDED(contentPrefService->HasPref(uri, prefName, &hasPref)) && hasPref) {
     nsCOMPtr<nsIVariant> pref;
-    contentPrefService->GetPref(uri, prefName, getter_AddRefs(pref));
+    contentPrefService->GetPref(uri, prefName, nsnull, getter_AddRefs(pref));
     nsString prefStr;
     pref->GetAsAString(prefStr);
     return aFile->InitWithPath(prefStr);

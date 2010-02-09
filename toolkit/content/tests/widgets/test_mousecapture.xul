@@ -130,6 +130,14 @@ function runTests()
                              $("leftbox"), "mousemove", "setCapture only works on elements in documents");
   synthesizeMouse(custom6, 2, 2, { type: "mouseup" });
 
+  // test that mousedown on an image with setCapture followed by a big enough
+  // mouse move does not start a drag (bug 517737)
+  var image = document.getElementById("image");
+  synthesizeMouse(image, 2, 2, { type: "mousedown" });
+  synthesizeMouseExpectEvent($("leftbox"), 2, 2, { type: "mousemove" },
+                             image, "mousemove", "setCapture works on images");
+  synthesizeMouse(image, 2, 2, { type: "mouseup" });
+
   var b = frames[0].document.getElementById("b");
   runCaptureTest(b, selectionCallback);
 
@@ -273,6 +281,13 @@ SimpleTest.waitForFocus(runTests);
     <option id="option9">Nine</option>
     <option id="option10">Ten</option>
   </select>
+</hbox>
+
+<hbox>
+  <img id="image" xmlns="http://www.w3.org/1999/xhtml"
+       onmousedown="this.setCapture();" onmouseup="this.releaseCapture();"
+       ondragstart="ok(false, 'should not get a drag when a setCapture is active');"
+       src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAG0lEQVR42mP8z0A%2BYKJA76jmUc2jmkc1U0EzACKcASfOgGoMAAAAAElFTkSuQmCC"/>
 </hbox>
 
 <body id="body" xmlns="http://www.w3.org/1999/xhtml">

@@ -34,7 +34,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.19 $ $Date: 2007/05/09 00:09:38 $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.20 $ $Date: 2009/12/17 22:00:47 $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -49,7 +49,7 @@ EXTRA_LIBS = \
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
 ifdef NS_USE_GCC
-EXTRA_LIBS += \
+EXTRA_SHARED_LIBS += \
 	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
 	-lplds4 \
@@ -64,7 +64,7 @@ EXTRA_SHARED_LIBS += \
 endif # NS_USE_GCC
 else
 
-EXTRA_LIBS += \
+EXTRA_SHARED_LIBS += \
 	-L$(NSPR_LIB_DIR) \
 	-lplc4 \
 	-lplds4 \
@@ -78,25 +78,3 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # Generate certdata.c.
 generate:
 	$(PERL) certdata.perl < certdata.txt
-
-# This'll need some help from a build person.
-
-
-ifeq ($(OS_TARGET)$(OS_RELEASE), AIX4.1)
-DSO_LDOPTS              = -bM:SRE -bh:4 -bnoentry
-EXTRA_DSO_LDOPTS        = -lc
-MKSHLIB                 = xlC $(DSO_LDOPTS)
-
-$(SHARED_LIBRARY): $(OBJS)
-	@$(MAKE_OBJDIR)
-	rm -f $@
-	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(EXTRA_DSO_LDOPTS)
-	chmod +x $@
-
-endif
-
-ifeq ($(OS_TARGET)$(OS_RELEASE), AIX4.2)
-LD      += -G
-endif 
-
-
