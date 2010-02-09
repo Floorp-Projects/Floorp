@@ -9886,7 +9886,7 @@ TraceRecorder::putActivationObjects()
     if (!have_args && !have_call)
         return;
 
-    int nargs = have_args ? cx->fp->argc : cx->fp->fun->nargs;
+    int nargs = have_args ? argSlots(cx->fp) : cx->fp->fun->nargs;
 
     LIns* args_ins;
     if (nargs) {
@@ -9919,7 +9919,8 @@ TraceRecorder::putActivationObjects()
         }
 
         LIns* scopeChain_ins = get((jsval*) &cx->fp->scopeChain);
-        LIns* args[] = { slots_ins, INS_CONST(nslots), args_ins, INS_CONST(nargs), scopeChain_ins, cx_ins };
+        LIns* args[] = { slots_ins, INS_CONST(nslots), args_ins, 
+                         INS_CONST(cx->fp->fun->nargs), scopeChain_ins, cx_ins };
         lir->insCall(&js_PutCallObjectOnTrace_ci, args);
     }
 }

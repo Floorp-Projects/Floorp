@@ -754,9 +754,7 @@ MAKEFILES_xulapp="
   toolkit/mozapps/handling/Makefile
   toolkit/mozapps/plugins/Makefile
   toolkit/mozapps/update/Makefile
-  toolkit/mozapps/update/public/Makefile
-  toolkit/mozapps/update/src/Makefile
-  toolkit/mozapps/update/src/updater/Makefile
+  toolkit/mozapps/update/updater/Makefile
   toolkit/mozapps/xpinstall/Makefile
   toolkit/profile/Makefile
   toolkit/profile/public/Makefile

@@ -1,0 +1,6 @@
+This is SQLite 3.6.22.
+
+Local changes:
+
+1. Allow System V one-argument version of gettimeofday when compiled with
+-D_SVID_GETTOD on Solaris.  See CVS revision 1.6.

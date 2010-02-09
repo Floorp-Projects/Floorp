@@ -58,7 +58,6 @@ HINSTANCE g_hInst;
 WCHAR     g_sSourcePath[MAX_PATH];
 WCHAR     g_sExeFullFileName[MAX_PATH];
 WCHAR     g_sExeFileName[MAX_PATH];
-WCHAR     g_sInstallDir[MAX_PATH];
 DWORD     g_dwExeSize;
 
 // Forward declarations of functions included in this code module:
@@ -84,8 +83,6 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
   nsInstallerDlg::GetInstance()->Init(g_hInst);
   nResult = nsInstallerDlg::GetInstance()->DoModal();
-  if (nResult == IDOK)
-    wcscpy(g_sInstallDir, nsInstallerDlg::GetInstance()->GetExtractPath());
 
   return nResult;
 }
@@ -101,7 +98,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
   InitCommonControls();
 
-  g_sInstallDir[0] = L'\0';
   g_sExeFileName[0] = L'\0';
   if (GetModuleFileName(NULL, g_sExeFullFileName, MAX_PATH) == 0)
     return FALSE;

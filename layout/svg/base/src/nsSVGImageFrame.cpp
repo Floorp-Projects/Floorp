@@ -202,7 +202,8 @@ nsSVGImageFrame::GetImageTransform()
   mImageContainer->GetHeight(&nativeHeight);
 
   gfxMatrix viewBoxTM =
-    nsSVGUtils::GetViewBoxTransform(width, height,
+    nsSVGUtils::GetViewBoxTransform(element,
+                                    width, height,
                                     0, 0, nativeWidth, nativeHeight,
                                     element->mPreserveAspectRatio);
 

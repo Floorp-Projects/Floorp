@@ -72,7 +72,7 @@ typedef enum _WSA_COMPATIBILITY_BEHAVIOR_ID {
 } WSA_COMPATIBILITY_BEHAVIOR_ID, *PWSA_COMPATIBILITY_BEHAVIOR_ID;
 
 /* from sdkddkver.h */
-#define NTDDI_LONGHORN                      0x06000000
+#define NTDDI_WIN6              0x06000000  /* Windows Vista */
 
 /* from winsock2.h */
 #define WSAEVENT                HANDLE
@@ -175,7 +175,7 @@ _PR_MD_SOCKET(int af, int type, int flags)
         int ret_dummy;
 
         mode.BehaviorId = WsaBehaviorAutoTuning;
-        mode.TargetOsVersion = NTDDI_LONGHORN;
+        mode.TargetOsVersion = NTDDI_WIN6;
         if (wsaioctlProc(sock, SIO_SET_COMPATIBILITY_MODE,  
                          (char *)&mode, sizeof(mode),
                          dummy, 4, &ret_dummy, 0, NULL) == SOCKET_ERROR)

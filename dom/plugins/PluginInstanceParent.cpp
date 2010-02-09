@@ -552,10 +552,8 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
             {
                 RECT rect;
                 SharedSurfaceBeforePaint(rect, npremoteevent);
-                if (!CallNPP_HandleEvent(npremoteevent, &handled))
-                    return 0;
-                if (handled)
-                    SharedSurfaceAfterPaint(npevent);
+                CallNPP_HandleEvent(npremoteevent, &handled);
+                SharedSurfaceAfterPaint(npevent);
             }
             break;
             default:

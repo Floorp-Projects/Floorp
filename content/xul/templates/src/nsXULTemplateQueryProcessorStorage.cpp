@@ -96,7 +96,7 @@ nsXULTemplateResultSetStorage::HasMoreElements(PRBool *aResult)
     // Because the nsXULTemplateResultSetStorage is owned by many nsXULTemplateResultStorage objects,
     // it could live longer than it needed to get results.
     // So we destroy the statement to free resources when all results are fetched
-    if (*aResult == PR_FALSE) {
+    if (!*aResult) {
         mStatement = nsnull;
     }
     return NS_OK;

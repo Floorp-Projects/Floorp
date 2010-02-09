@@ -5052,6 +5052,7 @@ JS_IsConstructing(JSContext *cx)
 JS_PUBLIC_API(JSStackFrame *)
 JS_SaveFrameChain(JSContext *cx)
 {
+    CHECK_REQUEST(cx);
     JSStackFrame *fp = js_GetTopStackFrame(cx);
     if (!fp)
         return NULL;
@@ -5062,6 +5063,7 @@ JS_SaveFrameChain(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
 {
+    CHECK_REQUEST(cx);
     JS_ASSERT_NOT_ON_TRACE(cx);
     JS_ASSERT(!cx->fp);
     if (!fp)

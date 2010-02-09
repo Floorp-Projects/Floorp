@@ -13,7 +13,7 @@
  *
  * The Original Code is Mozilla Application Update.
  * This file is based on code originally located at
- * mozilla/toolkit/mozapps/update/src/updater/updater.cpp
+ * mozilla/toolkit/mozapps/update/updater/updater.cpp
  *
  * The Initial Developer of the Original Code is
  * Benjamin Smedberg <benjamin@smedbergs.us>

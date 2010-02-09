@@ -208,9 +208,9 @@ var FullZoom = {
   // nsIObserver
 
   observe: function (aSubject, aTopic, aData) {
-    switch(aTopic) {
+    switch (aTopic) {
       case "nsPref:changed":
-        switch(aData) {
+        switch (aData) {
           case "browser.zoom.siteSpecific":
             this._siteSpecificPref =
               this._prefBranch.getBoolPref("browser.zoom.siteSpecific");

@@ -77,35 +77,33 @@ function test() {
     selectedWindow: 1
   };
 
-  let observer = {
-    pass: 1,
-    observe: function(aSubject, aTopic, aData) {
-      is(aTopic, "sessionstore-browser-state-restored",
-         "The sessionstore-browser-state-restored notification was observed");
+  let pass = 1;
+  function observer(aSubject, aTopic, aData) {
+    is(aTopic, "sessionstore-browser-state-restored",
+       "The sessionstore-browser-state-restored notification was observed");
 
-      if (this.pass++ == 1) {
-        browserWindowsCount(2);
+    if (pass++ == 1) {
+      browserWindowsCount(2);
 
-        // let the first window be focused (see above)
-        function pollMostRecentWindow() {
-          if (wm.getMostRecentWindow("navigator:browser") == window) {
-            ss.setBrowserState(oldState);
-          } else {
-            info("waiting for the current window to become active");
-            setTimeout(pollMostRecentWindow, 0);
-            window.focus(); //XXX Why is this needed?
-          }
+      // let the first window be focused (see above)
+      function pollMostRecentWindow() {
+        if (wm.getMostRecentWindow("navigator:browser") == window) {
+          ss.setBrowserState(oldState);
+        } else {
+          info("waiting for the current window to become active");
+          setTimeout(pollMostRecentWindow, 0);
+          window.focus(); //XXX Why is this needed?
         }
-        pollMostRecentWindow();
       }
-      else {
-        browserWindowsCount(1);
-        ok(!window.closed, "Restoring the old state should have left this window open");
-        os.removeObserver(this, "sessionstore-browser-state-restored");
-        finish();
-      }
+      pollMostRecentWindow();
     }
-  };
+    else {
+      browserWindowsCount(1);
+      ok(!window.closed, "Restoring the old state should have left this window open");
+      os.removeObserver(observer, "sessionstore-browser-state-restored");
+      finish();
+    }
+  }
   os.addObserver(observer, "sessionstore-browser-state-restored", false);
 
   // set browser to test state

@@ -267,19 +267,17 @@ function test() {
   // Window watcher for Library window.
   var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
            getService(Ci.nsIWindowWatcher);
-  var windowObserver = {
-    observe: function(aSubject, aTopic, aData) {
-      if (aTopic === "domwindowopened") {
-        ww.unregisterNotification(this);
-        gLibrary = aSubject.QueryInterface(Ci.nsIDOMWindow);
-        gLibrary.addEventListener("load", function onLoad(event) {
-          gLibrary.removeEventListener("load", onLoad, false);
-          // Kick off tests.
-          setTimeout(runNextTest, 0);
-        }, false);
-      }
-    }
-  };
+  function windowObserver(aSubject, aTopic, aData) {
+    if (aTopic != "domwindowopened")
+      return;
+    ww.unregisterNotification(windowObserver);
+    gLibrary = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    gLibrary.addEventListener("load", function onLoad(event) {
+      gLibrary.removeEventListener("load", onLoad, false);
+      // Kick off tests.
+      setTimeout(runNextTest, 0);
+    }, false);
+  }
 
   // Open Library window.
   ww.registerNotification(windowObserver);

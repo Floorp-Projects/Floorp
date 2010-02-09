@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Stan Shebs <shebs@mozilla.com>
+ *   Thomas K. Dyas <tom.dyas@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,6 +64,8 @@
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICommandLineRunner.h"
+#include "nsIMacDockSupport.h"
+#include "nsIStandaloneNativeMenu.h"
 
 @interface MacApplicationDelegate : NSObject
 {
@@ -238,8 +241,11 @@ static NSWindow* GetCocoaWindowForXULWindow(nsISupports *aXULWindow)
   rv = wm->GetXULWindowEnumerator(nsnull, getter_AddRefs(windowList));
   NS_ENSURE_SUCCESS(rv, nil);
 
-  // Iterate through our list of windows to create our menu
+  // Create the NSMenu that will contain the dock menu items.
   NSMenu *menu = [[[NSMenu alloc] initWithTitle:@""] autorelease];
+  [menu setAutoenablesItems:NO];
+
+  // Iterate through our list of windows to create our menu
   PRBool more;
   while (NS_SUCCEEDED(windowList->HasMoreElements(&more)) && more) {
     // Get our native window
@@ -267,6 +273,45 @@ static NSWindow* GetCocoaWindowForXULWindow(nsISupports *aXULWindow)
     [menu addItem:menuItem];
     [menuItem release];
   }
+
+  // Add application-specific dock menu items. On error, do not insert the
+  // dock menu items.
+  nsCOMPtr<nsIMacDockSupport> dockSupport = do_GetService("@mozilla.org/widget/macdocksupport;1", &rv);
+  if (NS_FAILED(rv) || !dockSupport)
+    return menu;
+
+  nsCOMPtr<nsIStandaloneNativeMenu> dockMenu;
+  rv = dockSupport->GetDockMenu(getter_AddRefs(dockMenu));
+  if (NS_FAILED(rv) || !dockMenu)
+    return menu;
+
+  // Determine if the dock menu items should be displayed. This also gives
+  // the menu the opportunity to update itself before display.
+  PRBool shouldShowItems;
+  rv = dockMenu->MenuWillOpen(&shouldShowItems);
+  if (NS_FAILED(rv) || !shouldShowItems)
+    return menu;
+
+  // Obtain a copy of the native menu.
+  NSMenu * nativeDockMenu;
+  rv = dockMenu->GetNativeMenu(reinterpret_cast<void **>(&nativeDockMenu));
+  if (NS_FAILED(rv) || !nativeDockMenu)
+    return menu;
+
+  // Loop through the application-specific dock menu and insert its
+  // contents into the dock menu that we are building for Cocoa.
+  int numDockMenuItems = [nativeDockMenu numberOfItems];
+  if (numDockMenuItems > 0) {
+    if ([menu numberOfItems] > 0)
+      [menu addItem:[NSMenuItem separatorItem]];
+
+    for (int i = 0; i < numDockMenuItems; i++) {
+      NSMenuItem * itemCopy = [[nativeDockMenu itemAtIndex:i] copy];
+      [menu addItem:itemCopy];
+      [itemCopy release];
+    }
+  }
+
   return menu;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;

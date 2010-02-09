@@ -92,13 +92,15 @@ public:
   static void CheckKeyboardStatus();
   static TriStateBool GetSliderStateOpen();
   static void ResetSoftKB(HWND wnd);
+protected:
+  static PRBool sMenuBarShown;
+  static HWND sSoftKeyMenuBarHandle;
 private:
   static TriStateBool sHardKBPresence;
-  static HWND sSoftKeyMenuBarHandle;
   static RECT sDefaultSIPRect;
   static HWND sMainWindowHandle;
-  static PRBool sMenuBarShown;
 #endif
+  friend class nsWindow;
 };
 
 #endif /* WINCE */

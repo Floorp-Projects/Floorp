@@ -6,7 +6,7 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOZILLA_INTERNAL_API = 1
-
+NEED_MDDEPDIR = 1
 
 include $(topsrcdir)/config/rules.mk
 

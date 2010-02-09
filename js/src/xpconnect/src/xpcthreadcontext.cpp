@@ -100,18 +100,21 @@ XPCJSContextStack::Pop(JSContext * *_retval)
     if(idx > 0)
     {
         --idx; // Advance to new top of the stack
+
         XPCJSContextInfo & e = mStack[idx];
         NS_ASSERTION(!e.frame || e.cx, "Shouldn't have frame without a cx!");
-        if(e.cx && e.frame)
-        {
-            JS_RestoreFrameChain(e.cx, e.frame);
-            e.frame = nsnull;
-        }
-
         if(e.requestDepth)
             JS_ResumeRequest(e.cx, e.requestDepth);
 
         e.requestDepth = 0;
+
+        if(e.cx && e.frame)
+        {
+            // Pop() can be called outside any request for e.cx.
+            JSAutoRequest ar(e.cx);
+            JS_RestoreFrameChain(e.cx, e.frame);
+            e.frame = nsnull;
+        }
     }
     return NS_OK;
 }
@@ -161,7 +164,11 @@ XPCJSContextStack::Push(JSContext * cx)
                 }
             }
 
-            e.frame = JS_SaveFrameChain(e.cx);
+            {
+                // Push() can be called outside any request for e.cx.
+                JSAutoRequest ar(e.cx);
+                e.frame = JS_SaveFrameChain(e.cx);
+            }
 
             if(e.cx != cx && JS_GetContextThread(e.cx))
                 e.requestDepth = JS_SuspendRequest(e.cx);
