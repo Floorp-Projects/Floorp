@@ -331,9 +331,8 @@ public:
   void SendIdleEvent();
 
   // nsIScrollPositionListener interface
-  NS_IMETHOD ScrollPositionWillChange(nscoord aX, nscoord aY);
-  virtual void ViewPositionDidChange(nsTArray<nsIWidget::Configuration>* aConfigurations) {}
-  NS_IMETHOD ScrollPositionDidChange(nscoord aX, nscoord aY);
+  virtual void ScrollPositionWillChange(nscoord aX, nscoord aY);
+  virtual void ScrollPositionDidChange(nscoord aX, nscoord aY);
 
   //locals
 
@@ -2545,7 +2544,6 @@ NS_INTERFACE_MAP_BEGIN(nsPluginInstanceOwner)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseMotionListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
-  NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPluginInstanceOwner)
 NS_INTERFACE_MAP_END
@@ -3580,11 +3578,11 @@ nsPluginInstanceOwner::GetEventloopNestingLevel()
   return currentLevel;
 }
 
-nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nscoord aX, nscoord aY)
+void nsPluginInstanceOwner::ScrollPositionWillChange(nscoord aX, nscoord aY)
 {
 #ifdef MAC_CARBON_PLUGINS
   if (GetEventModel() != NPEventModelCarbon)
-    return NS_OK;
+    return;
 
   CancelTimer();
 
@@ -3604,14 +3602,13 @@ nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nscoord aX, nscoord aY)
     }
   }
 #endif
-  return NS_OK;
 }
 
-nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nscoord aX, nscoord aY)
+void nsPluginInstanceOwner::ScrollPositionDidChange(nscoord aX, nscoord aY)
 {
 #ifdef MAC_CARBON_PLUGINS
   if (GetEventModel() != NPEventModelCarbon)
-    return NS_OK;
+    return;
 
   if (mInstance) {
     nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
@@ -3629,7 +3626,6 @@ nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nscoord aX, nscoord aY)
     }
   }
 #endif
-  return NS_OK;
 }
 
 /*=============== nsIFocusListener ======================*/
@@ -5536,7 +5532,7 @@ nsresult nsPluginInstanceOwner::Init(nsPresContext* aPresContext,
   for (nsIFrame* f = mObjectFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
     nsIScrollableFrame* sf = do_QueryFrame(f);
     if (sf) {
-      sf->RemoveScrollPositionListener(this);
+      sf->AddScrollPositionListener(this);
     }
   }
 

@@ -101,32 +101,6 @@ static nsresult toCFURLRef(nsIFile* file, CFURLRef& outURL)
   return rv;
 }
 
-// function to test whether or not this is a loadable plugin
-static PRBool IsLoadablePlugin(CFURLRef aURL)
-{
-  if (!aURL)
-    return PR_FALSE;
-  
-  PRBool isLoadable = PR_FALSE;
-  char path[PATH_MAX];
-  if (CFURLGetFileSystemRepresentation(aURL, TRUE, (UInt8*)path, sizeof(path))) {
-    UInt32 magic;
-    int f = open(path, O_RDONLY);
-    if (f != -1) {
-      // Mach-O headers use the byte ordering of the architecture on which
-      // they run, so test against the magic number in the byte order
-      // we're compiling for. Fat headers are always big-endian, so swap
-      // them to host before comparing to host representation of the magic
-      if (read(f, &magic, sizeof(magic)) == sizeof(magic)) {
-        if ((magic == MH_MAGIC) || (PR_ntohl(magic) == FAT_MAGIC))
-          isLoadable = PR_TRUE;
-      }
-      close(f);
-    }
-  }
-  return isLoadable;
-}
-
 PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
   nsCString temp;
@@ -145,32 +119,17 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
     return PR_FALSE;
   
   PRBool isPluginFile = PR_FALSE;
-  
-  CFBundleRef pluginBundle = CFBundleCreate(kCFAllocatorDefault, pluginURL);
+
+  CFBundleRef pluginBundle = ::CFBundleCreate(kCFAllocatorDefault, pluginURL);
   if (pluginBundle) {
     UInt32 packageType, packageCreator;
-    CFBundleGetPackageInfo(pluginBundle, &packageType, &packageCreator);
+    ::CFBundleGetPackageInfo(pluginBundle, &packageType, &packageCreator);
     if (packageType == 'BRPL' || packageType == 'IEPL' || packageType == 'NSPL') {
-      CFURLRef executableURL = CFBundleCopyExecutableURL(pluginBundle);
-      if (executableURL) {
-        isPluginFile = IsLoadablePlugin(executableURL);
-        ::CFRelease(executableURL);
-      }
+      isPluginFile = !!::CFBundlePreflightExecutable(pluginBundle, NULL);
     }
     ::CFRelease(pluginBundle);
   }
-  else {
-    LSItemInfoRecord info;
-    if (LSCopyItemInfoForURL(pluginURL, kLSRequestTypeCreator, &info) == noErr) {
-      if ((info.filetype == 'shlb' && info.creator == 'MOSS') ||
-          info.filetype == 'NSPL' ||
-          info.filetype == 'BRPL' ||
-          info.filetype == 'IEPL') {
-        isPluginFile = IsLoadablePlugin(pluginURL);
-      }
-    }
-  }
-  
+
   ::CFRelease(pluginURL);
   return isPluginFile;
 }
@@ -261,28 +220,44 @@ nsPluginFile::nsPluginFile(nsIFile *spec)
 
 nsPluginFile::~nsPluginFile() {}
 
-/**
- * Loads the plugin into memory using NSPR's shared-library loading
- * mechanism. Handles platform differences in loading shared libraries.
- */
 nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 {
-  const char* path;
-
   if (!mPlugin)
     return NS_ERROR_NULL_POINTER;
 
-  nsCAutoString temp;
-  mPlugin->GetNativePath(temp);
-  path = temp.get();
+  char executablePath[PATH_MAX];
+  executablePath[0] = '\0';
 
-  outLibrary = PR_LoadLibrary(path);
+  // We store the path to the plugin bundle, we need the executable path here.
+  // 64-bit NSPR does not support bundles.
+  nsCAutoString bundlePath;
+  mPlugin->GetNativePath(bundlePath);
+  CFStringRef pathRef = ::CFStringCreateWithCString(NULL, bundlePath.get(), kCFStringEncodingUTF8);
+  if (pathRef) {
+    CFURLRef bundleURL = ::CFURLCreateWithFileSystemPath(NULL, pathRef, kCFURLPOSIXPathStyle, true);
+    if (bundleURL) {
+      CFBundleRef bundle = ::CFBundleCreate(NULL, bundleURL);
+      if (bundle) {
+        CFURLRef executableURL = ::CFBundleCopyExecutableURL(bundle);
+        if (executableURL) {
+          if (!::CFURLGetFileSystemRepresentation(executableURL, true, (UInt8*)&executablePath, PATH_MAX))
+            executablePath[0] = '\0';
+          ::CFRelease(executableURL);
+        }
+        ::CFRelease(bundle);
+      }
+      ::CFRelease(bundleURL);
+    }
+    ::CFRelease(pathRef); 
+  }
+
+  outLibrary = PR_LoadLibrary(executablePath);
   pLibrary = outLibrary;
   if (!outLibrary) {
     return NS_ERROR_FAILURE;
   }
 #ifdef DEBUG
-  printf("[loaded plugin %s]\n", path);
+  printf("[loaded plugin %s]\n", bundlePath.get());
 #endif
   return NS_OK;
 }

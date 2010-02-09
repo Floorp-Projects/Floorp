@@ -66,7 +66,6 @@ ARCH			= netbsd
 
 DSO_CFLAGS		= -fPIC -DPIC
 DSO_LDOPTS		= -shared
-DSO_LDFLAGS		=
 ifeq ($(OBJECT_FMT),ELF)
 DSO_LDOPTS		+= -Wl,-soname,lib$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
 endif

@@ -1757,10 +1757,6 @@ tabbrowser > tabbox {
   list-style-image: url("chrome://global/skin/tree/item.png");
 }
 
-.alltabs-item[selected="true"] {
-  font-weight: bold;
-}
-
 .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
   list-style-image: url("chrome://global/skin/icons/loading_16.png") !important;
 }

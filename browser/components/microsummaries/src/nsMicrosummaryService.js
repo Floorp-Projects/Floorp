@@ -1724,7 +1724,7 @@ MicrosummaryResource.prototype = {
     // nsIAuthPrompt and nsIPrompt need separate implementations because
     // their method signatures conflict.  The other interfaces we implement
     // within MicrosummaryResource itself.
-    switch(iid) {
+    switch (iid) {
     case Ci.nsIAuthPrompt:
       return this.authPrompt;
     case Ci.nsIPrompt:

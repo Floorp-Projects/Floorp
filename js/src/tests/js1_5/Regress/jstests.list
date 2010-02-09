@@ -228,7 +228,7 @@ script regress-396684.js
 script regress-398085-01.js
 script regress-398085-02.js
 script regress-398609.js
-script regress-404755.js
+skip script regress-404755.js # unreliable - based on GC timing
 script regress-406769.js
 script regress-407024.js
 script regress-407323.js

@@ -45,17 +45,17 @@ function test() {
            getService(Ci.nsIPrivateBrowsingService);
   let consoleService = Cc["@mozilla.org/consoleservice;1"].
                        getService(Ci.nsIConsoleService);
-  const kExitMessage = "Message to signal the end of the test";
+  const EXIT_MESSAGE = "Message to signal the end of the test";
   waitForExplicitFinish();
 
   let consoleObserver = {
     observe: function (aMessage) {
       if (!aMessage.message)
         this.gotNull = true;
-      else if (aMessage.message == kExitMessage) {
+      else if (aMessage.message == EXIT_MESSAGE) {
         // make sure that the null message was received
         ok(this.gotNull, "Console should be cleared after leaving the private mode");
-        // make sure the console does not contain kTestMessage
+        // make sure the console does not contain TEST_MESSAGE
         ok(!messageExists(), "Message should not exist after leaving the private mode");
 
         consoleService.unregisterListener(consoleObserver);
@@ -72,15 +72,15 @@ function test() {
     consoleService.getMessageArray(out, {});
     let messages = out.value || [];
     for (let i = 0; i < messages.length; ++i) {
-      if (messages[i].message == kTestMessage)
+      if (messages[i].message == TEST_MESSAGE)
         return true;
     }
     return false;
   }
 
-  const kTestMessage = "Test message from the private browsing test";
+  const TEST_MESSAGE = "Test message from the private browsing test";
   // make sure that the console is not empty
-  consoleService.logStringMessage(kTestMessage);
+  consoleService.logStringMessage(TEST_MESSAGE);
   ok(!consoleObserver.gotNull, "Console shouldn't be cleared yet");
   ok(messageExists(), "Message should exist before leaving the private mode");
 
@@ -90,5 +90,5 @@ function test() {
   pb.privateBrowsingEnabled = false;
 
   // signal the end of the test
-  consoleService.logStringMessage(kExitMessage);
+  consoleService.logStringMessage(EXIT_MESSAGE);
 }

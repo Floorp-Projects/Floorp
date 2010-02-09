@@ -69,6 +69,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
 #include "nsProxyRelease.h"
+#include "nsIConsoleService.h"
 
 #include "ssl.h"
 #include "cert.h"
@@ -870,6 +871,28 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
   else
     secStatus = (nsIWebProgressListener::STATE_IS_SECURE |
                  nsIWebProgressListener::STATE_SECURE_LOW);
+
+  PRBool siteSupportsSafeRenego;
+  if (SSL_HandshakeNegotiatedExtension(fd, ssl_renegotiation_info_xtn, &siteSupportsSafeRenego) != SECSuccess
+      || !siteSupportsSafeRenego) {
+
+    nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
+    nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+    if (infoObject && console) {
+      nsXPIDLCString hostName;
+      infoObject->GetHostName(getter_Copies(hostName));
+
+      nsAutoString msg;
+      msg.Append(NS_ConvertASCIItoUTF16(hostName));
+      msg.Append(NS_LITERAL_STRING(" : potentially vulnerable to CVE-2009-3555"));
+
+      console->LogStringMessage(msg.get());
+    }
+    if (nsSSLIOLayerHelpers::treatUnsafeNegotiationAsBroken()) {
+      secStatus = nsIWebProgressListener::STATE_IS_BROKEN;
+    }
+  }
+
 
   CERTCertificate *peerCert = SSL_PeerCertificate(fd);
   const char* caName = nsnull; // caName is a pointer only, no ownership

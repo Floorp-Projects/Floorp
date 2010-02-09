@@ -65,9 +65,14 @@ JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
 #if defined(WIN32)
     DebugBreak();
     exit(3);
+#elif defined(__APPLE__)
+    /*
+     * On Mac OS X, Breakpad ignores signals. Only real Mach exceptions are
+     * trapped.
+     */
+    *((int *) NULL) = 0;  /* To continue from here in GDB: "return" then "continue". */
 #else
-    /* In GDB, you can continue from here with the command "signal 0". */
-    raise(SIGABRT);
+    raise(SIGABRT);  /* To continue from here in GDB: "signal 0". */
 #endif
 }
 

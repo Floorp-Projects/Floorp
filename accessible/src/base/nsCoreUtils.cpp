@@ -75,13 +75,16 @@
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 PRBool
-nsCoreUtils::HasListener(nsIContent *aContent, const nsAString& aEventType)
+nsCoreUtils::HasClickListener(nsIContent *aContent)
 {
   NS_ENSURE_TRUE(aContent, PR_FALSE);
   nsIEventListenerManager* listenerManager =
     aContent->GetListenerManager(PR_FALSE);
 
-  return listenerManager && listenerManager->HasListenersFor(aEventType);  
+  return listenerManager &&
+    (listenerManager->HasListenersFor(NS_LITERAL_STRING("click")) ||
+     listenerManager->HasListenersFor(NS_LITERAL_STRING("mousedown")) ||
+     listenerManager->HasListenersFor(NS_LITERAL_STRING("mouseup")));
 }
 
 void

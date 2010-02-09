@@ -168,10 +168,10 @@ public:
   }
 
   void AddScrollPositionListener(nsIScrollPositionListener* aListener) {
-    mListeners.AppendObject(aListener);
+    mListeners.AppendElement(aListener);
   }
   void RemoveScrollPositionListener(nsIScrollPositionListener* aListener) {
-    mListeners.RemoveObject(aListener);
+    mListeners.RemoveElement(aListener);
   }
 
   static void SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisible);
@@ -232,7 +232,7 @@ public:
   nsIBox* mScrollCornerBox;
   nsContainerFrame* mOuter;
   AsyncScroll* mAsyncScroll;
-  nsCOMArray<nsIScrollPositionListener> mListeners;
+  nsTArray<nsIScrollPositionListener*> mListeners;
   nsRect mScrollPort;
   // Where we're currently scrolling to, if we're scrolling asynchronously.
   // If we're not in the middle of an asynchronous scroll then this is

@@ -77,5 +77,3 @@ ARCH			= beos
 
 DSO_CFLAGS		= -fPIC
 DSO_LDOPTS		=
-DSO_LDFLAGS		=
-

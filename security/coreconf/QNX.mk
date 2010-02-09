@@ -69,4 +69,3 @@ ARCH			= QNX
 
 DSO_CFLAGS		= -Wc,-fPIC
 DSO_LDOPTS		= -shared
-DSO_LDFLAGS		=

@@ -378,8 +378,7 @@ var gMainPane = {
    */
   _getDownloadsFolder: function (aFolder)
   {
-    switch(aFolder)
-    {
+    switch (aFolder) {
       case "Desktop":
         var fileLoc = Components.classes["@mozilla.org/file/directory_service;1"]
                                     .getService(Components.interfaces.nsIProperties);
@@ -440,7 +439,7 @@ var gMainPane = {
   getFolderListPref: function ()
   {
     var folderListPref = document.getElementById("browser.download.folderList");
-    switch(folderListPref.value) {
+    switch (folderListPref.value) {
       case 0: // Desktop
       case 1: // Downloads
         return folderListPref.value;

@@ -166,7 +166,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDocAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIScrollPositionListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessibleDocument)
@@ -543,7 +542,7 @@ NS_IMETHODIMP nsDocAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNode **aAccessNode)
 {
   GetCacheEntry(mAccessNodeCache, aUniqueID, aAccessNode); // Addrefs for us
-#ifdef DEBUG_A11Y
+#ifdef DEBUG
   // All cached accessible nodes should be in the parent
   // It will assert if not all the children were created
   // when they were first cached, and no invalidation
@@ -955,12 +954,7 @@ void nsDocAccessible::RemoveScrollListener()
 ////////////////////////////////////////////////////////////////////////////////
 // nsIScrollPositionListener
 
-NS_IMETHODIMP nsDocAccessible::ScrollPositionWillChange(nscoord aX, nscoord aY)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocAccessible::ScrollPositionDidChange(nscoord aX, nscoord aY)
+void nsDocAccessible::ScrollPositionDidChange(nscoord aX, nscoord aY)
 {
   // Start new timer, if the timer cycles at least 1 full cycle without more scroll position changes,
   // then the ::Notify() method will fire the accessibility event for scroll position changes
@@ -978,7 +972,6 @@ NS_IMETHODIMP nsDocAccessible::ScrollPositionDidChange(nscoord aX, nscoord aY)
     }
   }
   mScrollPositionChangedTicks = 1;
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1963,11 +1956,11 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     printf("[Show %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
   else if (aChangeType == nsIAccessibilityService::FRAME_SIGNIFICANT_CHANGE)
     printf("[Layout change %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
-  else if (aChangeType == nsIAccessibleEvent::NODE_APPEND)
+  else if (aChangeType == nsIAccessibilityService::NODE_APPEND)
     printf("[Create %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
   else if (aChangeType == nsIAccessibilityService::NODE_REMOVE)
     printf("[Destroy  %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
-  else if (aChangeEventType == nsIAccessibilityService::NODE_SIGNIFICANT_CHANGE)
+  else if (aChangeType == nsIAccessibilityService::NODE_SIGNIFICANT_CHANGE)
     printf("[Type change %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
 #endif
 

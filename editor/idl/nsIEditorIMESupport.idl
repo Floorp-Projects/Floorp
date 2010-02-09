@@ -48,7 +48,7 @@ struct nsTextEventReply;
 [ptr] native nsTextEventReplyPtr(nsTextEventReply);
 
 
-[scriptable, uuid(52032429-9337-4ecf-b56b-81875a9324bc)]
+[scriptable, uuid(8093f91d-fe39-4a17-b9db-73468c3a536b)]
 
 interface nsIEditorIMESupport : nsISupports
 {
@@ -71,7 +71,7 @@ interface nsIEditorIMESupport : nsISupports
    * endComposition() Handles the end of inline input composition.
    */
 
-  void  endComposition();
+  [noscript] void endComposition();
 
   /**
    * forceCompositionEnd() force the composition end

@@ -19,15 +19,13 @@ function test() {
   var obs = Cc["@mozilla.org/observer-service;1"].
             getService(Ci.nsIObserverService);
 
-  var observer = {
-    observe: function(win, topic, data) {
-      if (topic != "app-handler-pane-loaded")
-        return;
+  function observer(win, topic, data) {
+    if (topic != "app-handler-pane-loaded")
+      return;
 
-      obs.removeObserver(observer, "app-handler-pane-loaded");
-      runTest(win);
-    }
-  };
+    obs.removeObserver(observer, "app-handler-pane-loaded");
+    runTest(win);
+  }
   obs.addObserver(observer, "app-handler-pane-loaded", false);
 
   openDialog("chrome://browser/content/preferences/preferences.xul", "Preferences",

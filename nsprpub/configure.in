@@ -1013,7 +1013,7 @@ case "$target" in
     PR_MD_ASFILES=os_Darwin.s
 
     # Add Mac OS X support for loading CFM & CFBundle plugins
-    if test -f /System/Library/Frameworks/Carbon.framework/Carbon; then
+    if test -f "${MACOS_SDK_DIR}/System/Library/Frameworks/Carbon.framework/Carbon"; then
         AC_DEFINE(XP_MACOSX)
         OS_TARGET=MacOSX
 
@@ -1626,36 +1626,22 @@ tools are selected during the Xcode/Developer Tools installation.])
     i*86)
 	if test -n "$USE_64"; then
 	    AC_DEFINE(_AMD64_)
-	    AC_DEFINE(_M_AMD64)    
 	else		
 	    AC_DEFINE(_X86_)
 	fi
         ;;
-    alpha)
-	    AC_DEFINE(_ALPHA_)
-   	    ;;
-    mips)
-	    AC_DEFINE(_MIPS_)
-	    ;;
     x86_64)
 	    AC_DEFINE(_AMD64_)
-	    AC_DEFINE(_M_AMD64)
 	    USE_64=1
 	    ;;
     ia64)
 	    AC_DEFINE(_IA64_)
-	    AC_DEFINE(_M_IA64)
 	    USE_64=1
 	    ;;
     *)
 	    AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
 	    ;;
     esac
-
-    if test "$USE_64"; then
-        AC_DEFINE(_WIN64)
-    fi
-
     ;;
 
 *-wince*|*-winmo*)

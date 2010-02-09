@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK ***** */
 
-import glob, logging, os, subprocess, sys
+import glob, logging, os, shutil, subprocess, sys
 import re
 
 __all__ = [
@@ -118,7 +118,13 @@ def checkForCrashes(dumpDir, symbolsPath, testName=None):
       else:
         if not os.path.exists(stackwalkPath):
           print "MINIDUMP_STACKWALK binary not found: %s" % stackwalkPath
-    os.remove(d)
+    dumpSavePath = os.environ.get('MINIDUMP_SAVE_PATH', None)
+    if dumpSavePath:
+      shutil.move(d, dumpSavePath)
+      print "Saved dump as %s" % os.path.join(dumpSavePath,
+                                              os.path.basename(d))
+    else:
+      os.remove(d)
     extra = os.path.splitext(d)[0] + ".extra"
     if os.path.exists(extra):
       os.remove(extra)

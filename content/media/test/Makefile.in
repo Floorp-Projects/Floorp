@@ -98,6 +98,7 @@ _TEST_FILES = \
 		test_mozLoadFrom.html \
 		test_networkState.html \
 		test_paused.html \
+		test_play_twice.html \
 		test_playback.html \
 		test_playback_errors.html \
 		test_reactivate.html \
@@ -148,6 +149,7 @@ _TEST_FILES += \
 		bug520908.ogv \
 		bug520908.ogv^headers^ \
 		bug523816.ogv \
+		bug533822.ogg \
 		chain.ogv \
 		dirac.ogg \
 		seek.ogv \

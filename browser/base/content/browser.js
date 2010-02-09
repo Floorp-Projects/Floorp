@@ -2636,12 +2636,23 @@ function FillInHTMLTooltip(tipElement)
 
   var titleText = null;
   var XLinkTitleText = null;
+  var SVGTitleText = null;
   var direction = tipElement.ownerDocument.dir;
 
-  while (!titleText && !XLinkTitleText && tipElement) {
+  while (!titleText && !XLinkTitleText && !SVGTitleText && tipElement) {
     if (tipElement.nodeType == Node.ELEMENT_NODE) {
       titleText = tipElement.getAttribute("title");
       XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
+      if (tipElement instanceof SVGElement) {
+        let length = tipElement.childNodes.length;
+        for (let i = 0; i < length; i++) {
+          let childNode = tipElement.childNodes[i];
+          if (childNode instanceof SVGTitleElement) {
+            SVGTitleText = childNode.textContent;
+            break;
+          }
+        }
+      }
       var defView = tipElement.ownerDocument.defaultView;
       // XXX Work around bug 350679:
       // "Tooltips can be fired in documents with no view".
@@ -2656,7 +2667,7 @@ function FillInHTMLTooltip(tipElement)
   var tipNode = document.getElementById("aHTMLTooltip");
   tipNode.style.direction = direction;
   
-  [titleText, XLinkTitleText].forEach(function (t) {
+  [titleText, XLinkTitleText, SVGTitleText].forEach(function (t) {
     if (t && /\S/.test(t)) {
 
       // Per HTML 4.01 6.2 (CDATA section), literal CRs and tabs should be

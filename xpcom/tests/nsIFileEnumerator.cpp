@@ -42,7 +42,7 @@ PRBool LoopInDir(nsILocalFile* file)
 				return PR_FALSE;
 		}
 
-		if (isDir == PR_TRUE)
+		if (isDir)
         {
            nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(file);
            LoopInDir(lfile);   

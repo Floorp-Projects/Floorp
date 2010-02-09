@@ -2176,8 +2176,7 @@
                 // move the dropped tab
                 if (newIndex > draggedTab._tPos)
                   newIndex--;
-                if (newIndex != draggedTab._tPos)
-                  this.moveTabTo(draggedTab, newIndex);
+                this.moveTabTo(draggedTab, newIndex);
               }
             }
             else if (draggedTab) {
@@ -2340,25 +2339,26 @@
         <parameter name="aIndex"/>
         <body>
         <![CDATA[
+          var oldPosition = aTab._tPos;
+          if (oldPosition == aIndex)
+            return;
+
           this._lastRelatedTab = null;
           this._browsers = null; // invalidate cache
           this.mTabFilters.splice(aIndex, 0, this.mTabFilters.splice(aTab._tPos, 1)[0]);
           this.mTabListeners.splice(aIndex, 0, this.mTabListeners.splice(aTab._tPos, 1)[0]);
 
-          var oldPosition = aTab._tPos;
-
           aIndex = aIndex < aTab._tPos ? aIndex: aIndex+1;
           this.mCurrentTab._selected = false;
           // use .item() instead of [] because dragging to the end of the strip goes out of
           // bounds: .item() returns null (so it acts like appendChild), but [] throws
-          this.mTabContainer.insertBefore(aTab, this.mTabContainer.childNodes.item(aIndex));
+          this.mTabContainer.insertBefore(aTab, this.mTabs.item(aIndex));
           // invalidate cache, because mTabContainer is about to change
           this._browsers = null;
 
-          var i;
-          for (i = 0; i < this.mTabContainer.childNodes.length; i++) {
-            this.mTabContainer.childNodes[i]._tPos = i;
-            this.mTabContainer.childNodes[i]._selected = false;
+          for (let i = 0; i < this.mTabs.length; i++) {
+            this.mTabs[i]._tPos = i;
+            this.mTabs[i]._selected = false;
           }
           this.mCurrentTab._selected = true;
           this.mTabContainer.mTabstrip.ensureElementIsVisible(this.mCurrentTab, false);
@@ -2366,8 +2366,6 @@
           var evt = document.createEvent("UIEvents");
           evt.initUIEvent("TabMove", true, false, window, oldPosition);
           aTab.dispatchEvent(evt);
-
-          return aTab;
         ]]>
         </body>
       </method>

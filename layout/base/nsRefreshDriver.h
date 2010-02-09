@@ -121,6 +121,18 @@ public:
     mPresContext = nsnull;
   }
 
+  /**
+   * Freeze the refresh driver.  It should stop delivering future
+   * refreshes until thawed.
+   */
+  void Freeze();
+
+  /**
+   * Thaw the refresh driver.  If needed, it should start delivering
+   * refreshes again.
+   */
+  void Thaw();
+
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
 
@@ -129,12 +141,16 @@ private:
   PRUint32 ObserverCount() const;
   void UpdateMostRecentRefresh();
   ObserverArray& ArrayFor(mozFlushType aFlushType);
+  // Trigger a refresh immediately, if haven't been disconnected or frozen.
+  void DoRefresh();
 
   nsCOMPtr<nsITimer> mTimer;
   mozilla::TimeStamp mMostRecentRefresh; // only valid when mTimer non-null
 
   nsPresContext *mPresContext; // weak; pres context passed in constructor
                                // and unset in Disconnect
+
+  PRBool mFrozen;
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[3];

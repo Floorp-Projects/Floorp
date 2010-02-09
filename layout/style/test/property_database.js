@@ -1200,15 +1200,15 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		/* XXX needs to be on pseudo-elements */
 		initial_values: [ "normal", "none" ],
-		other_values: [ '""', "''", '"hello"', "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==')", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")', 'counter(foo)', 'counter(bar, upper-roman)', 'counters(foo, ".")', "counters(bar, '-', lower-greek)", "'-' counter(foo) '.'", "attr(title)", "open-quote", "close-quote", "no-open-quote", "no-close-quote", "close-quote attr(title) counters(foo, '.', upper-alpha)", "counter(foo, none)", "counters(bar, '.', none)" ],
-		invalid_values: [ 'counters(foo)', 'counter(foo, ".")', 'attr("title")', "attr('title')" ]
+		other_values: [ '""', "''", '"hello"', "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==')", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")', 'counter(foo)', 'counter(bar, upper-roman)', 'counters(foo, ".")', "counters(bar, '-', lower-greek)", "'-' counter(foo) '.'", "attr(title)", "open-quote", "close-quote", "no-open-quote", "no-close-quote", "close-quote attr(title) counters(foo, '.', upper-alpha)", "counter(foo, none)", "counters(bar, '.', none)", "attr(\\32)", "attr(\\2)", "attr(-\\2)", "attr(-\\32)", "counter(\\2)", "counters(\\32, '.')", "counter(-\\32, upper-roman)", "counters(-\\2, '-', lower-greek)", "counter(\\()", "counters(a\\+b, '.')", "counter(\\}, upper-alpha)" ],
+		invalid_values: [ 'counters(foo)', 'counter(foo, ".")', 'attr("title")', "attr('title')", "attr(2)", "attr(-2)", "counter(2)", "counters(-2, '.')" ]
 	},
 	"counter-increment": {
 		domProp: "counterIncrement",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "foo 1", "bar", "foo 3 bar baz 2" ],
+		other_values: [ "foo 1", "bar", "foo 3 bar baz 2", "\\32  1", "-\\32  1", "-c 1", "\\32 1", "-\\32 1", "\\2  1", "-\\2  1", "-c 1", "\\2 1", "-\\2 1" ],
 		invalid_values: []
 	},
 	"counter-reset": {
@@ -1216,7 +1216,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "bar 0", "foo", "foo 3 bar baz 2" ],
+		other_values: [ "foo 1", "bar", "foo 3 bar baz 2", "\\32  1", "-\\32  1", "-c 1", "\\32 1", "-\\32 1", "\\2  1", "-\\2  1", "-c 1", "\\2 1", "-\\2 1" ],
 		invalid_values: []
 	},
 	"cue": {
@@ -1965,7 +1965,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "-moz-transition-property", "-moz-transition-duration", "-moz-transition-timing-function", "-moz-transition-delay" ],
 		initial_values: [ "all 0s ease 0s" ],
-		other_values: [ "width 1s linear 2s", "width 1s 2s linear", "width linear 1s 2s", "linear width 1s 2s", "linear 1s width 2s", "linear 1s 2s width", "1s width linear 2s", "1s width 2s linear", "1s 2s width linear", "1s linear width 2s", "1s linear 2s width", "1s 2s linear width", "width linear 1s", "width 1s linear", "linear width 1s", "linear 1s width", "1s width linear", "1s linear width", "1s 2s width", "1s width 2s", "width 1s 2s", "1s 2s linear", "1s linear 2s", "linear 1s 2s", "width 1s", "1s width", "linear 1s", "1s linear", "1s 2s", "2s 1s", "width", "linear", "1s", "height", "2s", "ease-in-out", "2s ease-in", "opacity linear", "ease-out 2s", "2s color, 1s width, 500ms height linear, 1s opacity 4s cubic-bezier(0.0, 0.1, 1.0, 1.0)" ],
+		other_values: [ "width 1s linear 2s", "width 1s 2s linear", "width linear 1s 2s", "linear width 1s 2s", "linear 1s width 2s", "linear 1s 2s width", "1s width linear 2s", "1s width 2s linear", "1s 2s width linear", "1s linear width 2s", "1s linear 2s width", "1s 2s linear width", "width linear 1s", "width 1s linear", "linear width 1s", "linear 1s width", "1s width linear", "1s linear width", "1s 2s width", "1s width 2s", "width 1s 2s", "1s 2s linear", "1s linear 2s", "linear 1s 2s", "width 1s", "1s width", "linear 1s", "1s linear", "1s 2s", "2s 1s", "width", "linear", "1s", "height", "2s", "ease-in-out", "2s ease-in", "opacity linear", "ease-out 2s", "2s color, 1s width, 500ms height linear, 1s opacity 4s cubic-bezier(0.0, 0.1, 1.0, 1.0)", "1s \\32width linear 2s", "1s -width linear 2s", "1s -\\32width linear 2s", "1s \\32 0width linear 2s", "1s -\\32 0width linear 2s", "1s \\2width linear 2s", "1s -\\2width linear 2s" ],
 		invalid_values: [ "2s, 1s width", "1s width, 2s", "2s all, 1s width", "1s width, 2s all", "1s width, 2s none", "2s none, 1s width", "2s inherit", "inherit 2s", "2s width, 1s inherit", "2s inherit, 1s width", "2s initial", "2s all, 1s width", "2s width, 1s all" ]
 	},
 	"-moz-transition-delay": {
@@ -1989,7 +1989,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "all" ],
-		other_values: [ "none", "left", "top", "color", "width, height, opacity", "foobar", "auto" ],
+		other_values: [ "none", "left", "top", "color", "width, height, opacity", "foobar", "auto", "\\32width", "-width", "-\\32width", "\\32 0width", "-\\32 0width", "\\2width", "-\\2width" ],
 		invalid_values: [ "none, none", "all, all", "color, none", "none, color", "all, color", "color, all", "inherit, color", "color, inherit", "initial, color", "color, initial", "none, color", "color, none", "all, color", "color, all" ]
 	},
 	"-moz-transition-timing-function": {
@@ -2096,7 +2096,7 @@ var gCSSProperties = {
 	}
 	,
 	"clip-path": {
-		domProp: null,
+		domProp: "clipPath",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
@@ -2104,7 +2104,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"clip-rule": {
-		domProp: null,
+		domProp: "clipRule",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "nonzero" ],
@@ -2112,7 +2112,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"color-interpolation": {
-		domProp: null,
+		domProp: "colorInterpolation",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "sRGB" ],
@@ -2120,7 +2120,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"color-interpolation-filters": {
-		domProp: null,
+		domProp: "colorInterpolationFilters",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "linearRGB" ],
@@ -2128,7 +2128,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"dominant-baseline": {
-		domProp: null,
+		domProp: "dominantBaseline",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
@@ -2136,7 +2136,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"fill": {
-		domProp: null,
+		domProp: "fill",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "color": "blue" },
@@ -2145,7 +2145,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"fill-opacity": {
-		domProp: null,
+		domProp: "fillOpacity",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1", "2.8", "1.000" ],
@@ -2153,7 +2153,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"fill-rule": {
-		domProp: null,
+		domProp: "fillRule",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "nonzero" ],
@@ -2161,7 +2161,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"filter": {
-		domProp: null,
+		domProp: "filter",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
@@ -2169,7 +2169,7 @@ var gCSSProperties = {
 		invalid_values: [ "url(#myfilt) none" ]
 	},
 	"flood-color": {
-		domProp: null,
+		domProp: "floodColor",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "color": "blue" },
@@ -2178,7 +2178,7 @@ var gCSSProperties = {
 		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
 	},
 	"flood-opacity": {
-		domProp: null,
+		domProp: "floodOpacity",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1", "2.8", "1.000" ],
@@ -2186,7 +2186,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"image-rendering": {
-		domProp: null,
+		domProp: "imageRendering",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
@@ -2194,7 +2194,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"lighting-color": {
-		domProp: null,
+		domProp: "lightingColor",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "color": "blue" },
@@ -2203,7 +2203,7 @@ var gCSSProperties = {
 		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
 	},
 	"marker": {
-		domProp: null,
+		domProp: "marker",
 		inherited: true,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "marker-start", "marker-mid", "marker-end" ],
@@ -2212,7 +2212,7 @@ var gCSSProperties = {
 		invalid_values: [ "none none", "url(#mysym) url(#mysym)", "none url(#mysym)", "url(#mysym) none" ]
 	},
 	"marker-end": {
-		domProp: null,
+		domProp: "markerEnd",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
@@ -2220,7 +2220,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"marker-mid": {
-		domProp: null,
+		domProp: "markerMid",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
@@ -2228,7 +2228,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"marker-start": {
-		domProp: null,
+		domProp: "markerStart",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
@@ -2236,7 +2236,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"mask": {
-		domProp: null,
+		domProp: "mask",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
@@ -2244,7 +2244,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"shape-rendering": {
-		domProp: null,
+		domProp: "shapeRendering",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
@@ -2252,7 +2252,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"stop-color": {
-		domProp: null,
+		domProp: "stopColor",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "color": "blue" },
@@ -2261,7 +2261,7 @@ var gCSSProperties = {
 		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
 	},
 	"stop-opacity": {
-		domProp: null,
+		domProp: "stopOpacity",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1", "2.8", "1.000" ],
@@ -2269,7 +2269,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"stroke": {
-		domProp: null,
+		domProp: "stroke",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
@@ -2277,7 +2277,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"stroke-dasharray": {
-		domProp: null,
+		domProp: "strokeDasharray",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
@@ -2285,7 +2285,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"stroke-dashoffset": {
-		domProp: null,
+		domProp: "strokeDashoffset",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "-0px", "0em" ],
@@ -2293,7 +2293,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"stroke-linecap": {
-		domProp: null,
+		domProp: "strokeLinecap",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "butt" ],
@@ -2301,7 +2301,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"stroke-linejoin": {
-		domProp: null,
+		domProp: "strokeLinejoin",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "miter" ],
@@ -2309,7 +2309,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"stroke-miterlimit": {
-		domProp: null,
+		domProp: "strokeMiterlimit",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "4" ],
@@ -2317,7 +2317,7 @@ var gCSSProperties = {
 		invalid_values: [ "0.9", "0", "-1", "3px", "-0.3" ]
 	},
 	"stroke-opacity": {
-		domProp: null,
+		domProp: "strokeOpacity",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1", "2.8", "1.000" ],
@@ -2325,7 +2325,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"stroke-width": {
-		domProp: null,
+		domProp: "strokeWidth",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1px" ],
@@ -2333,7 +2333,7 @@ var gCSSProperties = {
 		invalid_values: [ "-0.1px", "-3px" ]
 	},
 	"text-anchor": {
-		domProp: null,
+		domProp: "textAnchor",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "start" ],
@@ -2341,7 +2341,7 @@ var gCSSProperties = {
 		invalid_values: []
 	},
 	"text-rendering": {
-		domProp: null,
+		domProp: "textRendering",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],

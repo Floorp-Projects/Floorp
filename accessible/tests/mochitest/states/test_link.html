@@ -1,0 +1,57 @@
+<html>
+
+<head>
+  <title>HTML link states testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/states.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // strong roles
+      testStates("link1", STATE_LINKED);
+      testStates("link2", STATE_LINKED);
+      testStates("link3", STATE_LINKED);
+      testStates("link4", STATE_LINKED);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=423409"
+     title="Expose click action if mouseup and mousedown are registered">
+    Mozilla Bug 423409
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <a id="link1" href="http://mozilla.org">link</a>
+  <a id="link2" onclick="">link</a>
+  <a id="link3" onmousedown="">link</a>
+  <a id="link4" onmouseup="">link</a>
+
+</body>
+</html>

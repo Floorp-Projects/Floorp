@@ -324,12 +324,21 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpChannel  *httpChannel,
                                     const PRUnichar *pass,
                                     nsISupports    **sessionState,
                                     nsISupports    **continuationState,
+                                    PRUint32       *aFlags,
                                     char           **creds)
 
 {
     LOG(("nsHttpNTLMAuth::GenerateCredentials\n"));
 
     *creds = nsnull;
+    *aFlags = 0;
+
+    // if user or password is empty, ChallengeReceived returned
+    // identityInvalid = PR_FALSE, that means we are using default user
+    // credentials; see  nsAuthSSPI::Init method for explanation of this 
+    // condition
+    if (!user || !pass)
+        *aFlags = USING_INTERNAL_IDENTITY;
 
     nsresult rv;
     nsCOMPtr<nsIAuthModule> module = do_QueryInterface(*continuationState, &rv);

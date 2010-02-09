@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -17,8 +17,10 @@
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1994-2000
+# Portions created by the Initial Developer are Copyright (C) 1994-2009
 # the Initial Developer. All Rights Reserved.
+#
+# Contributors:
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,8 +48,6 @@
 # ---------------
 #   FIXME ... known problems, search for this string
 #   NOTE .... unexpected behavior
-#
-# FIXME - Netscape - NSS
 ########################################################################
 IOPR_SSL_SOURCED=1
 
@@ -611,6 +611,9 @@ ssl_iopr_run() {
     
     ORIG_ECC_CERT=${NO_ECC_CERTS}
     NO_ECC_CERTS=1 # disable ECC for interoperability tests
+
+    NSS_SSL_ENABLE_RENEGOTIATION=u
+    export NSS_SSL_ENABLE_RENEGOTIATION
 
     num=1
     IOPR_HOST_PARAM=`echo "${IOPR_HOSTADDR_LIST} " | cut -f $num -d' '`

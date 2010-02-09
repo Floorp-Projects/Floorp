@@ -62,6 +62,13 @@ _dwrite_draw_glyphs_to_gdi_surface_d2d(cairo_win32_surface_t *surface,
 				       COLORREF color,
 				       const RECT &area);
 
+cairo_int_status_t
+_dwrite_draw_glyphs_to_gdi_surface_gdi(cairo_win32_surface_t *surface,
+				       DWRITE_MATRIX *transform,
+				       DWRITE_GLYPH_RUN *run,
+				       COLORREF color,
+				       const RECT &area);
+
 class D2DFactory
 {
 public:
@@ -126,8 +133,8 @@ typedef struct _cairo_dwrite_font_face cairo_dwrite_font_face_t;
 /* cairo_scaled_font_t implementation */
 struct _cairo_dwrite_scaled_font {
     cairo_scaled_font_t base;
-    DWRITE_MATRIX dwritematrix;
-    cairo_matrix_t ctm_inverse;
+    cairo_matrix_t mat;
+    cairo_matrix_t mat_inverse;
 };
 typedef struct _cairo_dwrite_scaled_font cairo_dwrite_scaled_font_t;
 
@@ -197,6 +204,47 @@ const cairo_scaled_font_backend_t _cairo_dwrite_scaled_font_backend = {
     _cairo_dwrite_load_truetype_table,
     NULL,
 };
+
+/* Helper conversion functions */
+
+/**
+ * Get a D2D matrix from a cairo matrix. Note that D2D uses row vectors where cairo
+ * uses column vectors. Hence the transposition.
+ *
+ * \param Cairo matrix
+ * \return D2D matrix
+ */
+static D2D1::Matrix3x2F
+_cairo_d2d_matrix_from_matrix(const cairo_matrix_t *matrix)
+{
+    return D2D1::Matrix3x2F((FLOAT)matrix->xx,
+			    (FLOAT)matrix->yx,
+			    (FLOAT)matrix->xy,
+			    (FLOAT)matrix->yy,
+			    (FLOAT)matrix->x0,
+			    (FLOAT)matrix->y0);
+}
+
+
+/**
+ * Get a DirectWrite matrix from a cairo matrix. Note that DirectWrite uses row
+ * vectors where cairo uses column vectors. Hence the transposition.
+ *
+ * \param Cairo matrix
+ * \return DirectWrite matrix
+ */
+static DWRITE_MATRIX
+_cairo_dwrite_matrix_from_matrix(const cairo_matrix_t *matrix)
+{
+    DWRITE_MATRIX dwmat;
+    dwmat.m11 = (FLOAT)matrix->xx;
+    dwmat.m12 = (FLOAT)matrix->yx;
+    dwmat.m21 = (FLOAT)matrix->xy;
+    dwmat.m22 = (FLOAT)matrix->yy;
+    dwmat.dx = (FLOAT)matrix->x0;
+    dwmat.dy = (FLOAT)matrix->y0;
+    return dwmat;
+}
 
 /* Helper functions for cairo_dwrite_scaled_glyph_init */
 cairo_int_status_t 
@@ -298,13 +346,6 @@ _cairo_dwrite_font_face_scaled_font_create (void			*abstract_face,
     *font = reinterpret_cast<cairo_scaled_font_t*>(dwriteFont);
     _cairo_scaled_font_init(&dwriteFont->base, &font_face->base, font_matrix, ctm, options, &_cairo_dwrite_scaled_font_backend);
 
-    dwriteFont->dwritematrix.dx = (FLOAT)font_matrix->x0;
-    dwriteFont->dwritematrix.dy = (FLOAT)font_matrix->y0;
-    dwriteFont->dwritematrix.m11 = (FLOAT)font_matrix->xx;
-    dwriteFont->dwritematrix.m12 = (FLOAT)font_matrix->xy;
-    dwriteFont->dwritematrix.m21 = (FLOAT)font_matrix->yx;
-    dwriteFont->dwritematrix.m22 = (FLOAT)font_matrix->yy;
-
     cairo_font_extents_t extents;
 
     DWRITE_FONT_METRICS metrics;
@@ -315,14 +356,11 @@ _cairo_dwrite_font_face_scaled_font_create (void			*abstract_face,
     extents.height = (FLOAT)(metrics.ascent + metrics.descent + metrics.lineGap) / metrics.designUnitsPerEm;
     extents.max_x_advance = 14.0;
     extents.max_y_advance = 0.0;
-	
-    dwriteFont->ctm_inverse = dwriteFont->base.ctm;
-    cairo_matrix_invert (&dwriteFont->ctm_inverse);
-    /* Change these since we apply the transformation to an inverted
-     * y axis.
-     */
-    dwriteFont->ctm_inverse.xy = - dwriteFont->ctm_inverse.xy;
-    dwriteFont->ctm_inverse.yx = - dwriteFont->ctm_inverse.yx;
+
+    dwriteFont->mat = dwriteFont->base.ctm;
+    cairo_matrix_multiply(&dwriteFont->mat, &dwriteFont->mat, font_matrix);
+    dwriteFont->mat_inverse = dwriteFont->mat;
+    cairo_matrix_invert (&dwriteFont->mat_inverse);
 
     return _cairo_scaled_font_set_metrics (*font, &extents);
 }
@@ -412,35 +450,8 @@ _cairo_dwrite_scaled_show_glyphs(void			*scaled_font,
 	FLOAT *advances = new FLOAT[num_glyphs];
 	BOOL transform = FALSE;
 
-	if (dwritesf->base.ctm.xy == 0 && dwritesf->base.ctm.yx == 0 &&
-	    dwritesf->base.ctm.xx == 1.0 && dwritesf->base.ctm.yy == 1.0) {
-	    for (int i = 0; i < num_glyphs; i++) {
-		indices[i] = (WORD) glyphs[i].index;
-		offsets[i].ascenderOffset = -(FLOAT)(glyphs[i].y - dest_y);
-		offsets[i].advanceOffset = (FLOAT)(glyphs[i].x - dest_x);
-		advances[i] = 0.0;
-	    }
-	} else {
-	    transform = TRUE;
-
-	    for (int i = 0; i < num_glyphs; i++) {
-		indices[i] = (WORD) glyphs[i].index;
-		double x = glyphs[i].x;
-		double y = -glyphs[i].y;
-		cairo_matrix_transform_point(&dwritesf->ctm_inverse, &x, &y);
-		// Since we will multiply by our ctm matrix later for rotation effects
-		// and such, adjust positions by the inverse matrix now.
-		offsets[i].ascenderOffset = (FLOAT)y;
-		offsets[i].advanceOffset = (FLOAT)x;
-		advances[i] = 0.0;
-	    }
-	}
-	if (generic_surface->device_transform.xx != 1.0) {
-	    int a = 1;
-	}
 	DWRITE_GLYPH_RUN run;
 	run.bidiLevel = 0;
-	run.fontEmSize = (FLOAT)dwritesf->base.font_matrix.yy;
 	run.fontFace = ((cairo_dwrite_font_face_t*)dwritesf->base.font_face)->dwriteface;
 	run.glyphIndices = indices;
 	run.glyphCount = num_glyphs;
@@ -448,6 +459,37 @@ _cairo_dwrite_scaled_show_glyphs(void			*scaled_font,
 	run.glyphOffsets = offsets;
 	run.glyphAdvances = advances;
     	IDWriteGlyphRunAnalysis *analysis;
+
+	if (dwritesf->mat.xy == 0 && dwritesf->mat.yx == 0 &&
+	    dwritesf->mat.xx == dwritesf->base.font_matrix.xx && 
+	    dwritesf->mat.yy == dwritesf->base.font_matrix.yy) {
+
+	    for (int i = 0; i < num_glyphs; i++) {
+		indices[i] = (WORD) glyphs[i].index;
+		// Since we will multiply by our ctm matrix later for rotation effects
+		// and such, adjust positions by the inverse matrix now.
+		offsets[i].ascenderOffset = (FLOAT)dest_y - (FLOAT)glyphs[i].y;
+		offsets[i].advanceOffset = (FLOAT)glyphs[i].x - dest_x;
+		advances[i] = 0.0;
+	    }
+	    run.fontEmSize = (FLOAT)dwritesf->base.font_matrix.yy;
+	} else {
+	    transform = TRUE;
+
+	    for (int i = 0; i < num_glyphs; i++) {
+		indices[i] = (WORD) glyphs[i].index;
+		double x = glyphs[i].x - dest_x;
+		double y = glyphs[i].y - dest_y;
+		cairo_matrix_transform_point(&dwritesf->mat_inverse, &x, &y);
+		// Since we will multiply by our ctm matrix later for rotation effects
+		// and such, adjust positions by the inverse matrix now.
+		offsets[i].ascenderOffset = -(FLOAT)y;
+		offsets[i].advanceOffset = (FLOAT)x;
+		advances[i] = 0.0;
+	    }
+	    run.fontEmSize = 1.0f;
+	}
+
 	if (!transform) {
 	    DWriteFactory::Instance()->CreateGlyphRunAnalysis(&run,
 							      1.0f,
@@ -458,13 +500,7 @@ _cairo_dwrite_scaled_show_glyphs(void			*scaled_font,
 							      0,
 							      &analysis);
 	} else {
-	    DWRITE_MATRIX dwmatrix;
-	    dwmatrix.dx = (FLOAT)dwritesf->base.ctm.x0;
-	    dwmatrix.dy = (FLOAT)dwritesf->base.ctm.y0;
-	    dwmatrix.m11 = (FLOAT)dwritesf->base.ctm.xx;
-	    dwmatrix.m12 = (FLOAT)dwritesf->base.ctm.xy;
-	    dwmatrix.m21 = (FLOAT)dwritesf->base.ctm.yx;
-	    dwmatrix.m22 = (FLOAT)dwritesf->base.ctm.yy;
+	    DWRITE_MATRIX dwmatrix = _cairo_dwrite_matrix_from_matrix(&dwritesf->mat);
 	    DWriteFactory::Instance()->CreateGlyphRunAnalysis(&run,
 							      1.0f,
 							      &dwmatrix,
@@ -492,10 +528,10 @@ _cairo_dwrite_scaled_show_glyphs(void			*scaled_font,
 
 	for (unsigned int y = 0; y < height; y++) {
 	    for (unsigned int x = 0; x < width; x++) {
-		mask_surface->data[y * mask_surface->stride + x * 4] = surface[y * width * 3 + x * 3 + 2];
+		mask_surface->data[y * mask_surface->stride + x * 4] = surface[y * width * 3 + x * 3 + 1];
 		mask_surface->data[y * mask_surface->stride + x * 4 + 1] = surface[y * width * 3 + x * 3 + 1];
-		mask_surface->data[y * mask_surface->stride + x * 4 + 2] = surface[y * width * 3 + x * 3];
-		mask_surface->data[y * mask_surface->stride + x * 4 + 3] = surface[y * width * 3 + x * 3 + 2];
+		mask_surface->data[y * mask_surface->stride + x * 4 + 2] = surface[y * width * 3 + x * 3 + 1];
+		mask_surface->data[y * mask_surface->stride + x * 4 + 3] = surface[y * width * 3 + x * 3 + 1];
 	    }
 	}
 	cairo_surface_mark_dirty(&mask_surface->base);
@@ -775,10 +811,18 @@ _cairo_dwrite_scaled_font_init_glyph_surface(cairo_dwrite_scaled_font_t *scaled_
     UINT16 index = (UINT16)glyph.index;
     DWRITE_GLYPH_OFFSET offset;
     double x = glyph.x;
-    double y = -glyph.y;
-    cairo_matrix_transform_point(&scaled_font->ctm_inverse, &x, &y);
+    double y = glyph.y;
+    /**
+     * We transform by the inverse transformation here. This will put our glyph
+     * locations in the space in which we draw. Which is later transformed by
+     * the transformation matrix that we use. This will transform the
+     * glyph positions back to where they were before when drawing, but the
+     * glyph shapes will be transformed by the transformation matrix.
+     */
+    cairo_matrix_transform_point(&scaled_font->mat_inverse, &x, &y);
     offset.advanceOffset = (FLOAT)x;
-    offset.ascenderOffset = (FLOAT)y;
+    /** Y-axis is inverted */
+    offset.ascenderOffset = -(FLOAT)y;
 
     RECT area;
     area.top = 0;
@@ -789,21 +833,15 @@ _cairo_dwrite_scaled_font_init_glyph_surface(cairo_dwrite_scaled_font_t *scaled_
     run.glyphCount = 1;
     run.glyphAdvances = &advance;
     run.fontFace = ((cairo_dwrite_font_face_t*)scaled_font->base.font_face)->dwriteface;
-    run.fontEmSize = (FLOAT)scaled_font->base.font_matrix.yy;
+    run.fontEmSize = 1.0f;
     run.bidiLevel = 0;
     run.glyphIndices = &index;
     run.isSideways = FALSE;
     run.glyphOffsets = &offset;
 
-    DWRITE_MATRIX matrix;
-    matrix.m11 = (FLOAT)scaled_font->base.ctm.xx;
-    matrix.m12 = (FLOAT)scaled_font->base.ctm.yx;
-    matrix.m21 = (FLOAT)scaled_font->base.ctm.xy;
-    matrix.m22 = (FLOAT)scaled_font->base.ctm.yy;
-    matrix.dx = (FLOAT)scaled_font->base.ctm.x0;
-    matrix.dy = (FLOAT)scaled_font->base.ctm.y0;
+    DWRITE_MATRIX matrix = _cairo_dwrite_matrix_from_matrix(&scaled_font->mat);
 
-    status = _dwrite_draw_glyphs_to_gdi_surface_d2d (surface, &matrix, &run, RGB(0,0,0), area);
+    status = _dwrite_draw_glyphs_to_gdi_surface_gdi (surface, &matrix, &run, RGB(0,0,0), area);
     if (status)
 	goto FAIL;
 
@@ -1010,7 +1048,7 @@ cairo_dwrite_show_glyphs_on_surface(void			*surface,
     /* We can only handle operator SOURCE or OVER with the destination
      * having no alpha */
     if ((op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER) ||
-	(dst->format != CAIRO_FORMAT_RGB24) && (dst->format != CAIRO_FORMAT_ARGB32))
+	(dst->format != CAIRO_FORMAT_RGB24))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
 
@@ -1043,11 +1081,20 @@ cairo_dwrite_show_glyphs_on_surface(void			*surface,
 	    largestY = (INT32)glyphs[i].y;
 	}
     }
+    /**
+     * Here we try to get a rough estimate of the area that this glyph run will
+     * cover on the surface. Since we use GDI interop to draw we will be copying
+     * data around the size of the area of the surface that we map. We will want
+     * to map an area as small as possible to prevent large surfaces to be
+     * copied around. We take the X/Y-size of the font as margin on the left/top
+     * twice the X/Y-size of the font as margin on the right/bottom.
+     * This should always cover the entire area where the glyphs are.
+     */
     RECT fontArea;
-    fontArea.left = smallestX - (INT32)dwritesf->dwritematrix.m22;
-    fontArea.right = largestX + (INT32)dwritesf->dwritematrix.m22 * 2;
-    fontArea.top = smallestY - (INT32)dwritesf->dwritematrix.m22;
-    fontArea.bottom = largestY + (INT32)dwritesf->dwritematrix.m22 * 2;
+    fontArea.left = (INT32)(smallestX - scaled_font->font_matrix.xx);
+    fontArea.right = (INT32)(largestX + scaled_font->font_matrix.xx * 2);
+    fontArea.top = (INT32)(smallestY - scaled_font->font_matrix.yy);
+    fontArea.bottom = (INT32)(largestY + scaled_font->font_matrix.yy * 2);
     if (fontArea.left < 0)
 	fontArea.left = 0;
     if (fontArea.top > 0)
@@ -1068,10 +1115,19 @@ cairo_dwrite_show_glyphs_on_surface(void			*surface,
     if (fontArea.bottom > dst->extents.height) {
 	fontArea.bottom = dst->extents.height;
     }
-    if (scaled_font->ctm.xy == 0 && scaled_font->ctm.yx == 0 &&
-	scaled_font->ctm.xx == 1.0 && scaled_font->ctm.yy == 1.0) {
-	cairo_matrix_t mat = scaled_font->ctm;
-	cairo_matrix_invert (&mat);
+
+    DWRITE_GLYPH_RUN run;
+    run.bidiLevel = 0;
+    run.fontFace = dwriteff->dwriteface;
+    run.glyphIndices = indices;
+    run.glyphCount = num_glyphs;
+    run.isSideways = FALSE;
+    run.glyphOffsets = offsets;
+    run.glyphAdvances = advances;
+    if (dwritesf->mat.xy == 0 && dwritesf->mat.yx == 0 &&
+	dwritesf->mat.xx == scaled_font->font_matrix.xx && 
+	dwritesf->mat.yy == scaled_font->font_matrix.yy) {
+
 	for (int i = 0; i < num_glyphs; i++) {
 	    indices[i] = (WORD) glyphs[i].index;
 	    // Since we will multiply by our ctm matrix later for rotation effects
@@ -1080,44 +1136,33 @@ cairo_dwrite_show_glyphs_on_surface(void			*surface,
 	    offsets[i].advanceOffset = (FLOAT)(glyphs[i].x - fontArea.left);
 	    advances[i] = 0.0;
 	}
+        run.fontEmSize = (FLOAT)scaled_font->font_matrix.yy;
     } else {
 	transform = TRUE;
 
 	for (int i = 0; i < num_glyphs; i++) {
 	    indices[i] = (WORD) glyphs[i].index;
 	    double x = glyphs[i].x - fontArea.left;
-	    double y = fontArea.top - glyphs[i].y;
-	    cairo_matrix_transform_point(&dwritesf->ctm_inverse, &x, &y);
-	    // Since we will multiply by our ctm matrix later for rotation effects
-	    // and such, adjust positions by the inverse matrix now.
-	    offsets[i].ascenderOffset = (FLOAT)y;
+	    double y = glyphs[i].y - fontArea.top;
+	    cairo_matrix_transform_point(&dwritesf->mat_inverse, &x, &y);
+	    /**
+             * Since we will multiply by our ctm matrix later for rotation effects
+	     * and such, adjust positions by the inverse matrix now. The Y-axis
+             * is inverted so the offset becomes negative.
+             */
+	    offsets[i].ascenderOffset = -(FLOAT)y;
 	    offsets[i].advanceOffset = (FLOAT)x;
 	    advances[i] = 0.0;
 	}
+	run.fontEmSize = 1.0f;
     }
-
-    DWRITE_GLYPH_RUN run;
-    run.bidiLevel = 0;
-    run.fontEmSize = (FLOAT)scaled_font->font_matrix.yy;
-    run.fontFace = dwriteff->dwriteface;
-    run.glyphIndices = indices;
-    run.glyphCount = num_glyphs;
-    run.isSideways = FALSE;
-    run.glyphOffsets = offsets;
-    run.glyphAdvances = advances;
     
     cairo_solid_pattern_t *solid_pattern = (cairo_solid_pattern_t *)source;
     COLORREF color = RGB(((int)solid_pattern->color.red_short) >> 8,
 		((int)solid_pattern->color.green_short) >> 8,
 		((int)solid_pattern->color.blue_short) >> 8);
 
-    DWRITE_MATRIX matrix;
-    matrix.m11 = (FLOAT)scaled_font->ctm.xx;
-    matrix.m12 = (FLOAT)scaled_font->ctm.yx;
-    matrix.m21 = (FLOAT)scaled_font->ctm.xy;
-    matrix.m22 = (FLOAT)scaled_font->ctm.yy;
-    matrix.dx = (FLOAT)scaled_font->ctm.x0;
-    matrix.dy = (FLOAT)scaled_font->ctm.y0;
+    DWRITE_MATRIX matrix = _cairo_dwrite_matrix_from_matrix(&dwritesf->mat);
 
     DWRITE_MATRIX *mat;
     if (transform) {
@@ -1215,8 +1260,22 @@ cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
     FLOAT *advances = new FLOAT[num_glyphs];
     BOOL transform = FALSE;
 
-    if (scaled_font->ctm.xy == 0 && scaled_font->ctm.yx == 0 &&
-	scaled_font->ctm.xx == 1.0 && scaled_font->ctm.yy == 1.0) {
+    DWRITE_GLYPH_RUN run;
+    run.bidiLevel = 0;
+    run.fontFace = dwriteff->dwriteface;
+    run.glyphIndices = indices;
+    run.glyphCount = num_glyphs;
+    run.isSideways = FALSE;
+    run.glyphOffsets = offsets;
+    run.glyphAdvances = advances;
+
+    if (dwritesf->mat.xy == 0 && dwritesf->mat.yx == 0 &&
+	dwritesf->mat.xx == scaled_font->font_matrix.xx && 
+	dwritesf->mat.yy == scaled_font->font_matrix.yy) {
+	// Fast route, don't actually use a transform but just
+        // set the correct font size.
+        run.fontEmSize = (FLOAT)scaled_font->font_matrix.yy;
+
 	for (int i = 0; i < num_glyphs; i++) {
 	    indices[i] = (WORD) glyphs[i].index;
 	    // Since we will multiply by our ctm matrix later for rotation effects
@@ -1227,42 +1286,25 @@ cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 	}
     } else {
 	transform = TRUE;
-	// D2D does not invert y axis.
-	dwritesf->ctm_inverse.xy = - dwritesf->ctm_inverse.xy;
-	dwritesf->ctm_inverse.yx = - dwritesf->ctm_inverse.yx;
 
 	for (int i = 0; i < num_glyphs; i++) {
 	    indices[i] = (WORD) glyphs[i].index;
 	    double x = glyphs[i].x;
 	    double y = glyphs[i].y;
-	    cairo_matrix_transform_point(&dwritesf->ctm_inverse, &x, &y);
+	    cairo_matrix_transform_point(&dwritesf->mat_inverse, &x, &y);
 	    // Since we will multiply by our ctm matrix later for rotation effects
-	    // and such, adjust positions by the inverse matrix now.
+	    // and such, adjust positions by the inverse matrix now. Y-axis is
+            // inverted! Therefor the offset is -y.
 	    offsets[i].ascenderOffset = -(FLOAT)y;
 	    offsets[i].advanceOffset = (FLOAT)x;
 	    advances[i] = 0.0;
 	}
-	dwritesf->ctm_inverse.xy = - dwritesf->ctm_inverse.xy;
-	dwritesf->ctm_inverse.yx = - dwritesf->ctm_inverse.yx;
+	// The font matrix takes care of the scaling if we have a transform,
+	// emSize should be 1.
+        run.fontEmSize = 1.0f;
     }
 
-    DWRITE_GLYPH_RUN run;
-    run.bidiLevel = 0;
-    run.fontEmSize = (FLOAT)scaled_font->font_matrix.yy;
-    run.fontFace = dwriteff->dwriteface;
-    run.glyphIndices = indices;
-    run.glyphCount = num_glyphs;
-    run.isSideways = FALSE;
-    run.glyphOffsets = offsets;
-    run.glyphAdvances = advances;
-    
-
-    D2D1::Matrix3x2F mat((FLOAT)scaled_font->ctm.xx,
-			 (FLOAT)scaled_font->ctm.yx,
-			 (FLOAT)scaled_font->ctm.xy,
-			 (FLOAT)scaled_font->ctm.yy,
-			 (FLOAT)scaled_font->ctm.x0,
-			 (FLOAT)scaled_font->ctm.y0);
+    D2D1::Matrix3x2F mat = _cairo_d2d_matrix_from_matrix(&dwritesf->mat);
 	
     if (transform) {
 	dst->rt->SetTransform(mat);
@@ -1282,6 +1324,17 @@ cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 	    delete [] offsets;
 	    delete [] advances;
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+	if (transform) {
+	    D2D1::Matrix3x2F mat_inverse = _cairo_d2d_matrix_from_matrix(&dwritesf->mat_inverse);
+	    D2D1::Matrix3x2F mat_brush;
+
+	    // The brush matrix needs to be multiplied with the inverted matrix
+	    // as well, to move the brush into the space of the glyphs. Before
+	    // the render target transformation.
+	    brush->GetTransform(&mat_brush);
+	    mat_brush = mat_brush * mat_inverse;
+	    brush->SetTransform(&mat_brush);
 	}
         dst->rt->DrawGlyphRun(D2D1::Point2F(0, 0), &run, brush);
 	brush->Release();

@@ -764,6 +764,35 @@ function run() {
     test_selector_in_html(":-moz-tree-column(a, b (){} a", single_a,
                           empty_set, set_single, html_default_ns);
 
+    // Bug 543428 (escaping)
+    test_selector_in_html("\\32|a", single_a, set_single, empty_set,
+                          "@namespace \\32  url(http://www.w3.org/1999/xhtml);");
+    test_selector_in_html("-\\32|a", single_a, set_single, empty_set,
+                          "@namespace -\\32  url(http://www.w3.org/1999/xhtml);");
+    test_selector_in_html("\\2|a", single_a, set_single, empty_set,
+                          "@namespace \\0002  url(http://www.w3.org/1999/xhtml);");
+    test_selector_in_html("-\\2|a", single_a, set_single, empty_set,
+                          "@namespace -\\000002  url(http://www.w3.org/1999/xhtml);");
+    var spans = "<span class='2'></span><span class='&#x2;'></span>" +
+                "<span id='2'></span><span id='&#x2;'></span>"
+    test_selector_in_html(".\\32", spans,
+                          bodychildset([0]), bodychildset([1, 2, 3]));
+    test_selector_in_html("[class=\\32]", spans,
+                          bodychildset([0]), bodychildset([1, 2, 3]));
+    test_selector_in_html(".\\2", spans,
+                          bodychildset([1]), bodychildset([0, 2, 3]));
+    test_selector_in_html("[class=\\2]", spans,
+                          bodychildset([1]), bodychildset([0, 2, 3]));
+    test_selector_in_html("#\\32", spans,
+                          bodychildset([2]), bodychildset([0, 1, 3]));
+    test_selector_in_html("[id=\\32]", spans,
+                          bodychildset([2]), bodychildset([0, 1, 3]));
+    test_selector_in_html("#\\2", spans,
+                          bodychildset([3]), bodychildset([0, 1, 2]));
+    test_selector_in_html("[id=\\2]", spans,
+                          bodychildset([3]), bodychildset([0, 1, 2]));
+    test_balanced_unparseable("#2");
+
     run_deferred_tests();
 }
 

@@ -47,6 +47,7 @@ menuitem {
   font: -moz-pull-down-menu;
   list-style-image: none;
   -moz-image-region: auto;
+  padding: 0 21px 2px;
 }
 
 menu[disabled="true"], menuitem[disabled="true"],
@@ -58,14 +59,16 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 /* ..... internal content .... */
 
 .menu-text,
-.menu-iconic-text {
-  margin: 0px 4px 0px 0px !important;
-  color: inherit;
+.menu-iconic-text,
+.menu-accel,
+.menu-iconic-accel {
+  margin: 0 !important;
 }
 
-.menu-text {
-  margin-left: 18px !important;
+.menu-text,
+.menu-iconic-text {
   font-weight: inherit;
+  color: inherit;
 }
 
 .menu-description {
@@ -74,46 +77,60 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   -moz-margin-start: 1ex !important;
 }
 
-.menu-accel,
-.menu-iconic-accel {
-  margin: 0px 2px 0px 2px !important;
-  padding-right: 10px;
-  color: inherit;
-}
-
-.menu-iconic-left {
-  margin: 2px 4px 1px 18px !important;
-  color: inherit;
-}
-
 .menu-iconic-icon {
-  width: 16px;
   height: 16px;
-  list-style-image: inherit;
+  margin-top: -2px;
+  margin-bottom: -2px;
+  -moz-margin-end: 5px;
+  /* Empty icons shouldn't take up room, so we need to compensate
+   * the 5px margin-end with a negative margin-start.
+   */
+  -moz-margin-start: -5px;
 }
 
-menuitem[type="checkbox"] > .menu-iconic-left,
-menuitem[type="radio"] > .menu-iconic-left {
-  margin: 0 2px 0 0 !important;
- }
+/* menuitems with icons */
+.menuitem-iconic,
+.menu-iconic,
+menuitem[image],
+menuitem[src] {
+  /* 2px higher than those without icons */
+  padding-top: 1px;
+  padding-bottom: 3px;
+}
+
+.menuitem-iconic > .menu-iconic-left > .menu-iconic-icon,
+.menu-iconic > .menu-iconic-left > .menu-iconic-icon,
+menuitem[image] > .menu-iconic-left > .menu-iconic-icon,
+menuitem[src] > .menu-iconic-left > .menu-iconic-icon {
+  -moz-margin-start: 0;
+  width: 16px;
+}
 
 /* ..... menu arrow box ..... */
 
-.menu-right {
-  margin: 0px 8px 0px 6px;
-  width: 8px;
-  list-style-image: url("chrome://global/skin/menu/menu-arrow.gif");
-  -moz-image-region: auto;
+.menu-right,
+.menu-accel-container {
+  -moz-margin-end: -9px;
+  -moz-margin-start: 21px;
+  -moz-box-pack: end;
 }
 
-.menu-right[_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-arrow-hov.gif");
-  -moz-image-region: auto;
+.menu-right {
+  width: 8px;
+  list-style-image: url("chrome://global/skin/menu/menu-arrow.png");
+  -moz-image-region: rect(0, 8px, 10px, 0);
+}
+
+.menu-right[_moz-menuactive="true"]:not([disabled="true"]) {
+  -moz-image-region: rect(0, 16px, 10px, 8px);
 }
 
 .menu-right[disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-arrow-dis.gif") !important;
-  -moz-image-region: auto;
+  -moz-image-region: rect(0, 24px, 10px, 16px);
+}
+
+.menu-right:-moz-locale-dir(rtl) {
+  -moz-transform: scaleX(-1);
 }
 
 /* ::::: menu/menuitems in menubar ::::: */
@@ -121,7 +138,7 @@ menuitem[type="radio"] > .menu-iconic-left {
 menubar > menu {
   -moz-appearance: none !important;
   padding: 2px 5px 2px 7px;
-  margin: 1px 0px 1px 0px;
+  margin: 1px 0;
 }
 
 menubar > menu[_moz-menuactive="true"][open="true"] {
@@ -132,12 +149,12 @@ menubar > menu[_moz-menuactive="true"][open="true"] {
 /* ..... internal content .... */
 
 .menubar-left {
-  margin: 0px 2px 0px 0px;
+  margin: 0 2px;
   color: inherit;
 }
 
 .menubar-text {
-  margin: 0px 2px 0px 0px !important;
+  margin: 0 1px !important;
   color: inherit;
 }
 
@@ -147,9 +164,7 @@ menupopup > menu,
 popup > menu,
 menupopup > menuitem,
 popup > menuitem {
-  padding: 0px 3px 2px 3px !important;
   max-width: 42em;
-  min-height: 19px;
 }
 
 menupopup > menu[_moz-menuactive="true"],
@@ -166,17 +181,9 @@ popup > menuitem[_moz-menuactive="true"] {
 menulist > menupopup > menuitem,
 .menulist-menupopup > menu,
 menulist > menupopup > menu {
-  padding-right: 25px !important;
   max-width: none;
   font: inherit;
   color: -moz-FieldText;
-}
-
-.menulist-menupopup > menuitem > .menu-iconic-left,
-menulist > menupopup > menuitem > .menu-iconic-left,
-.menulist-menupopup > menu > .menu-iconic-left,
-menulist > menupopup > menu > .menu-iconic-left {
-  margin: 0 2px 0 0 !important;
 }
 
 /* ::::: menuitems in editable menulist popups ::::: */
@@ -191,23 +198,28 @@ menulist[editable="true"] > menupopup > menuitem > .menu-iconic-left {
 
 /* ::::: checked menuitems ::::: */
 
-menuitem[checked="true"], 
-menulist > menupopup > menuitem[selected="true"],
-.menulist-menupopup > menuitem[selected="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check.png");
-  -moz-image-region: auto;
+menuitem[checked="true"] > .menu-iconic-left,
+:not(menulist) > menupopup > menuitem[selected="true"] > .menu-iconic-left {
+  -moz-margin-start: -15px;
+  -moz-padding-start: 15px;
+  background: -moz-image-rect("chrome://global/skin/menu/menu-check.png", 0, 10, 11, 0) bottom left no-repeat transparent;
 }
 
-menuitem[checked="true"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-dis.png");
-  -moz-image-region: auto;
+menuitem[checked="true"] > .menu-iconic-left:-moz-locale-dir(rtl),
+:not(menulist) > menupopup > menuitem[selected="true"] > .menu-iconic-left:-moz-locale-dir(rtl) {
+  background-position: bottom right;
 }
 
-menuitem[checked="true"][_moz-menuactive="true"]:not([disabled="true"]), 
-menulist > menupopup > menuitem[_moz-menuactive="true"][selected="true"]:not([disabled="true"]),
-.menulist-menupopup > menuitem[_moz-menuactive="true"][selected="true"]:not([disabled="true"]) {
-  list-style-image: url("chrome://global/skin/menu/menu-check-hov.png") !important;
-  -moz-image-region: auto;
+menuitem[checked="true"][_moz-menuactive="true"] > .menu-iconic-left,
+:not(menulist) > menupopup > menuitem[selected="true"][_moz-menuactive="true"] > .menu-iconic-left {
+  background-image: -moz-image-rect("chrome://global/skin/menu/menu-check.png", 0, 20, 11, 10);
+}
+
+menulist:not([editable="true"]) > menupopup > menuitem[selected="true"]::before {
+  content: '\2713'; /* a checkmark */
+  display: block;
+  width: 15px;
+  -moz-margin-start: -15px;
 }
 
 /* ::::: menuseparator ::::: */
@@ -216,11 +228,6 @@ menuseparator {
   -moz-appearance: menuseparator;
   margin: 5px 0;
   padding: 1px 0 !important;
-}
-
-/* ::::: menulist popup ::::: */
-menulist > menupopup {
-  margin: 4px 0px 4px 0px;
 }
 
 /* ::::: autocomplete ::::: */

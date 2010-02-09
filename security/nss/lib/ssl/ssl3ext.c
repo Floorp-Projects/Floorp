@@ -41,11 +41,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* TLS extension code moved here from ssl3ecc.c */
-/* $Id: ssl3ext.c,v 1.3 2008/10/06 22:04:15 nelson%bolyard.com Exp $ */
+/* $Id: ssl3ext.c,v 1.11 2010/02/03 02:38:20 wtc%google.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
 #include "ssl.h"
+#include "sslproto.h"
 #include "sslimpl.h"
 #include "pk11pub.h"
 #include "blapi.h"
@@ -61,8 +62,7 @@ static unsigned char  session_ticket_mac_key[SHA256_LENGTH];
 static PRBool         session_ticket_keys_initialized = PR_FALSE;
 static PRCallOnceType generate_session_keys_once;
 
-static PRInt32 ssl3_SendServerNameXtn(sslSocket * ss,
-    PRBool append, PRUint32 maxBytes);
+/* forward static function declarations */
 static SECStatus ssl3_ParseEncryptedSessionTicket(sslSocket *ss,
     SECItem *data, EncryptedSessionTicket *enc_session_ticket);
 static SECStatus ssl3_AppendToItem(SECItem *item, const unsigned char *buf,
@@ -74,6 +74,10 @@ static SECStatus ssl3_GetSessionTicketKeysPKCS11(sslSocket *ss,
 static SECStatus ssl3_GetSessionTicketKeys(const unsigned char **aes_key,
     PRUint32 *aes_key_length, const unsigned char **mac_key,
     PRUint32 *mac_key_length);
+static PRInt32 ssl3_SendRenegotiationInfoXtn(sslSocket * ss,
+    PRBool append, PRUint32 maxBytes);
+static SECStatus ssl3_HandleRenegotiationInfoXtn(sslSocket *ss, 
+    PRUint16 ex_type, SECItem *data);
 
 /*
  * Write bytes.  Using this function means the SECItem structure
@@ -222,39 +226,55 @@ ssl3_GetSessionTicketKeys(const unsigned char **aes_key,
  * In the second generation, this table will be dynamic, and functions
  * will be registered here.
  */
+/* This table is used by the server, to handle client hello extensions. */
 static const ssl3HelloExtensionHandler clientHelloHandlers[] = {
-    { server_name_xtn, &ssl3_HandleServerNameXtn },
+    { ssl_server_name_xtn,        &ssl3_HandleServerNameXtn },
 #ifdef NSS_ENABLE_ECC
-    { elliptic_curves_xtn, &ssl3_HandleSupportedCurvesXtn },
-    { ec_point_formats_xtn, &ssl3_HandleSupportedPointFormatsXtn },
+    { ssl_elliptic_curves_xtn,    &ssl3_HandleSupportedCurvesXtn },
+    { ssl_ec_point_formats_xtn,   &ssl3_HandleSupportedPointFormatsXtn },
 #endif
-    { session_ticket_xtn, &ssl3_ServerHandleSessionTicketXtn },
+    { ssl_session_ticket_xtn,     &ssl3_ServerHandleSessionTicketXtn },
+    { ssl_renegotiation_info_xtn, &ssl3_HandleRenegotiationInfoXtn },
     { -1, NULL }
 };
 
-static const ssl3HelloExtensionHandler serverHelloHandlers[] = {
-    { server_name_xtn, &ssl3_HandleServerNameXtn },
-    /* TODO: add a handler for ec_point_formats_xtn */
-    { session_ticket_xtn, &ssl3_ClientHandleSessionTicketXtn },
+/* These two tables are used by the client, to handle server hello
+ * extensions. */
+static const ssl3HelloExtensionHandler serverHelloHandlersTLS[] = {
+    { ssl_server_name_xtn,        &ssl3_HandleServerNameXtn },
+    /* TODO: add a handler for ssl_ec_point_formats_xtn */
+    { ssl_session_ticket_xtn,     &ssl3_ClientHandleSessionTicketXtn },
+    { ssl_renegotiation_info_xtn, &ssl3_HandleRenegotiationInfoXtn },
     { -1, NULL }
 };
 
-/* Table of functions to format TLS hello extensions, one per extension.
- * This static table is for the formatting of client hello extensions.
+static const ssl3HelloExtensionHandler serverHelloHandlersSSL3[] = {
+    { ssl_renegotiation_info_xtn, &ssl3_HandleRenegotiationInfoXtn },
+    { -1, NULL }
+};
+
+/* Tables of functions to format TLS hello extensions, one function per
+ * extension.
+ * These static tables are for the formatting of client hello extensions.
  * The server's table of hello senders is dynamic, in the socket struct,
  * and sender functions are registered there.
  */
 static const 
-ssl3HelloExtensionSender clientHelloSenders[MAX_EXTENSIONS] = {
-    { server_name_xtn, &ssl3_SendServerNameXtn },
+ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] = {
+    { ssl_server_name_xtn,        &ssl3_SendServerNameXtn        },
+    { ssl_renegotiation_info_xtn, &ssl3_SendRenegotiationInfoXtn },
 #ifdef NSS_ENABLE_ECC
-    { elliptic_curves_xtn, &ssl3_SendSupportedCurvesXtn },
-    { ec_point_formats_xtn, &ssl3_SendSupportedPointFormatsXtn },
-#else
-    { -1, NULL },
-    { -1, NULL },
+    { ssl_elliptic_curves_xtn,    &ssl3_SendSupportedCurvesXtn },
+    { ssl_ec_point_formats_xtn,   &ssl3_SendSupportedPointFormatsXtn },
 #endif
-    { session_ticket_xtn, ssl3_SendSessionTicketXtn }
+    { ssl_session_ticket_xtn,     &ssl3_SendSessionTicketXtn }
+    /* any extra entries will appear as { 0, NULL }    */
+};
+
+static const 
+ssl3HelloExtensionSender clientHelloSendersSSL3[SSL_MAX_EXTENSIONS] = {
+    { ssl_renegotiation_info_xtn, &ssl3_SendRenegotiationInfoXtn }
+    /* any extra entries will appear as { 0, NULL }    */
 };
 
 static PRBool
@@ -284,60 +304,159 @@ ssl3_ClientExtensionAdvertised(sslSocket *ss, PRUint16 ex_type) {
 
 /* Format an SNI extension, using the name from the socket's URL,
  * unless that name is a dotted decimal string.
+ * Used by client and server.
  */
-static PRInt32 
-ssl3_SendServerNameXtn(
-			sslSocket * ss,
-			PRBool      append,
-			PRUint32    maxBytes)
+PRInt32
+ssl3_SendServerNameXtn(sslSocket * ss, PRBool append,
+                       PRUint32 maxBytes)
 {
-    PRUint32 len;
-    PRNetAddr netAddr;
-
-    /* must have a hostname */
-    if (!ss || !ss->url || !ss->url[0])
-    	return 0;
-    /* must not be an IPv4 or IPv6 address */
-    if (PR_SUCCESS == PR_StringToNetAddr(ss->url, &netAddr)) {
-        /* is an IP address (v4 or v6) */
-        return 0;
+    SECStatus rv;
+    if (!ss->sec.isServer) {
+        PRUint32 len;
+        PRNetAddr netAddr;
+        
+        /* must have a hostname */
+        if (!ss || !ss->url || !ss->url[0])
+            return 0;
+        /* must not be an IPv4 or IPv6 address */
+        if (PR_SUCCESS == PR_StringToNetAddr(ss->url, &netAddr)) {
+            /* is an IP address (v4 or v6) */
+            return 0;
+        }
+        len  = PORT_Strlen(ss->url);
+        if (append && maxBytes >= len + 9) {
+            /* extension_type */
+            rv = ssl3_AppendHandshakeNumber(ss, ssl_server_name_xtn, 2); 
+            if (rv != SECSuccess) return -1;
+            /* length of extension_data */
+            rv = ssl3_AppendHandshakeNumber(ss, len + 5, 2); 
+            if (rv != SECSuccess) return -1;
+            /* length of server_name_list */
+            rv = ssl3_AppendHandshakeNumber(ss, len + 3, 2);
+            if (rv != SECSuccess) return -1;
+            /* Name Type (sni_host_name) */
+            rv = ssl3_AppendHandshake(ss,       "\0",    1);
+            if (rv != SECSuccess) return -1;
+            /* HostName (length and value) */
+            rv = ssl3_AppendHandshakeVariable(ss, (PRUint8 *)ss->url, len, 2);
+            if (rv != SECSuccess) return -1;
+            if (!ss->sec.isServer) {
+                TLSExtensionData *xtnData = &ss->xtnData;
+                xtnData->advertised[xtnData->numAdvertised++] = 
+		    ssl_server_name_xtn;
+            }
+        }
+        return len + 9;
     }
-    len  = PORT_Strlen(ss->url);
-    if (append && maxBytes >= len + 9) {
-	SECStatus rv;
-	/* extension_type */
-	rv = ssl3_AppendHandshakeNumber(ss, server_name_xtn, 2); 
-	if (rv != SECSuccess) return -1;
-	/* length of extension_data */
-	rv = ssl3_AppendHandshakeNumber(ss, len + 5, 2); 
-	if (rv != SECSuccess) return -1;
-	/* length of server_name_list */
-	rv = ssl3_AppendHandshakeNumber(ss, len + 3, 2);
-	if (rv != SECSuccess) return -1;
-	/* Name Type (host_name) */
-	rv = ssl3_AppendHandshake(ss,       "\0",    1);
-	if (rv != SECSuccess) return -1;
-	/* HostName (length and value) */
-	rv = ssl3_AppendHandshakeVariable(ss, (unsigned char *)ss->url, len, 2);
-	if (rv != SECSuccess) return -1;
-	if (!ss->sec.isServer) {
-	    TLSExtensionData *xtnData = &ss->xtnData;
-	    xtnData->advertised[xtnData->numAdvertised++] = server_name_xtn;
-	}
+    /* Server side */
+    if (append && maxBytes >= 4) {
+        rv = ssl3_AppendHandshakeNumber(ss, ssl_server_name_xtn, 2);
+        if (rv != SECSuccess)  return -1;
+        /* length of extension_data */
+        rv = ssl3_AppendHandshakeNumber(ss, 0, 2);
+        if (rv != SECSuccess) return -1;
     }
-    return len + 9;
+    return 4;
 }
 
 /* handle an incoming SNI extension, by ignoring it. */
 SECStatus
 ssl3_HandleServerNameXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
 {
-    /* TODO: if client, should verify extension_data is empty. */
-    /* TODO: if server, should send empty extension_data. */
-    /* For now, we ignore this, as if we didn't understand it. :-)  */
-    return SECSuccess;
-}
+    SECItem *names = NULL;
+    PRUint32 listCount = 0, namesPos = 0, i;
+    TLSExtensionData *xtnData = &ss->xtnData;
+    SECItem  ldata;
+    PRInt32  listLenBytes = 0;
 
+    if (!ss->sec.isServer) {
+        /* Verify extension_data is empty. */
+        if (data->data || data->len ||
+            !ssl3_ExtensionNegotiated(ss, ssl_server_name_xtn)) {
+            /* malformed or was not initiated by the client.*/
+            return SECFailure;
+        }
+        return SECSuccess;
+    }
+
+    /* Server side - consume client data and register server sender. */
+    /* do not parse the data if don't have user extension handling function. */
+    if (!ss->sniSocketConfig) {
+        return SECSuccess;
+    }
+    /* length of server_name_list */
+    listLenBytes = ssl3_ConsumeHandshakeNumber(ss, 2, &data->data, &data->len); 
+    if (listLenBytes == 0 || listLenBytes != data->len) {
+        return SECFailure;
+    }
+    ldata = *data;
+    /* Calculate the size of the array.*/
+    while (listLenBytes > 0) {
+        SECItem litem;
+        SECStatus rv;
+        PRInt32  type;
+        /* Name Type (sni_host_name) */
+        type = ssl3_ConsumeHandshakeNumber(ss, 1, &ldata.data, &ldata.len); 
+        if (!ldata.len) {
+            return SECFailure;
+        }
+        rv = ssl3_ConsumeHandshakeVariable(ss, &litem, 2, &ldata.data, &ldata.len);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+        /* Adjust total length for cunsumed item, item len and type.*/
+        listLenBytes -= litem.len + 3;
+        if (listLenBytes > 0 && !ldata.len) {
+            return SECFailure;
+        }
+        listCount += 1;
+    }
+    if (!listCount) {
+        return SECFailure;
+    }
+    names = PORT_ZNewArray(SECItem, listCount);
+    if (!names) {
+        return SECFailure;
+    }
+    for (i = 0;i < listCount;i++) {
+        int j;
+        PRInt32  type;
+        SECStatus rv;
+        PRBool nametypePresent = PR_FALSE;
+        /* Name Type (sni_host_name) */
+        type = ssl3_ConsumeHandshakeNumber(ss, 1, &data->data, &data->len); 
+        /* Check if we have such type in the list */
+        for (j = 0;j < listCount && names[j].data;j++) {
+            if (names[j].type == type) {
+                nametypePresent = PR_TRUE;
+                break;
+            }
+        }
+        /* HostName (length and value) */
+        rv = ssl3_ConsumeHandshakeVariable(ss, &names[namesPos], 2,
+                                           &data->data, &data->len);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
+        if (nametypePresent == PR_FALSE) {
+            namesPos += 1;
+        }
+    }
+    /* Free old and set the new data. */
+    if (xtnData->sniNameArr) {
+        PORT_Free(ss->xtnData.sniNameArr);
+    }
+    xtnData->sniNameArr = names;
+    xtnData->sniNameArrSize = namesPos;
+    xtnData->negotiated[xtnData->numNegotiated++] = ssl_server_name_xtn;
+
+    return SECSuccess;
+
+loser:
+    PORT_Free(names);
+    return SECFailure;
+}
+        
 /* Called by both clients and servers.
  * Clients sends a filled in session ticket if one is available, and otherwise
  * sends an empty ticket.  Servers always send empty tickets.
@@ -383,7 +502,7 @@ ssl3_SendSessionTicketXtn(
     if (append && maxBytes >= extension_length) {
 	SECStatus rv;
 	/* extension_type */
-        rv = ssl3_AppendHandshakeNumber(ss, session_ticket_xtn, 2);
+        rv = ssl3_AppendHandshakeNumber(ss, ssl_session_ticket_xtn, 2);
         if (rv != SECSuccess)
 	    goto loser;
 	if (session_ticket && session_ticket->ticket.data &&
@@ -399,7 +518,8 @@ ssl3_SendSessionTicketXtn(
 
 	if (!ss->sec.isServer) {
 	    TLSExtensionData *xtnData = &ss->xtnData;
-	    xtnData->advertised[xtnData->numAdvertised++] = session_ticket_xtn;
+	    xtnData->advertised[xtnData->numAdvertised++] = 
+		ssl_session_ticket_xtn;
 	}
     } else if (maxBytes < extension_length) {
 	PORT_Assert(0);
@@ -454,6 +574,8 @@ ssl3_SendNewSessionTicket(sslSocket *ss)
     unsigned int         computed_mac_length;
     unsigned char        iv[AES_BLOCK_SIZE];
     SECItem              ivItem;
+    SECItem             *srvName = NULL;
+    PRUint32             srvNameLen = 0;
     CK_MECHANISM_TYPE    msWrapMech = 0; /* dummy default value,
                                           * must be >= 0 */
 
@@ -514,6 +636,11 @@ ssl3_SendNewSessionTicket(sslSocket *ss)
 	}
 	ms_is_wrapped = PR_TRUE;
     }
+    /* Prep to send negotiated name */
+    srvName = &ss->ssl3.pwSpec->srvVirtName;
+    if (srvName->data && srvName->len) {
+        srvNameLen = 2 + srvName->len; /* len bytes + name len */
+    }
 
     ciphertext_length = 
 	sizeof(PRUint16)                     /* ticket_version */
@@ -528,6 +655,8 @@ ssl3_SendNewSessionTicket(sslSocket *ss)
 	+ ms_item.len                        /* master_secret */
 	+ 1                                  /* client_auth_type */
 	+ cert_length                        /* cert */
+        + 1                                  /* server name type */
+        + srvNameLen                         /* name len + length field */
 	+ sizeof(ticket.ticket_lifetime_hint);
     padding_length =  AES_BLOCK_SIZE -
 	(ciphertext_length % AES_BLOCK_SIZE);
@@ -609,6 +738,22 @@ ssl3_SendNewSessionTicket(sslSocket *ss)
     rv = ssl3_AppendNumberToItem(&plaintext, now,
 	sizeof(ticket.ticket_lifetime_hint));
     if (rv != SECSuccess) goto loser;
+
+    if (srvNameLen) {
+        /* Name Type (sni_host_name) */
+        rv = ssl3_AppendNumberToItem(&plaintext, srvName->type, 1);
+        if (rv != SECSuccess) goto loser;
+        /* HostName (length and value) */
+        rv = ssl3_AppendNumberToItem(&plaintext, srvName->len, 2);
+        if (rv != SECSuccess) goto loser;
+        rv = ssl3_AppendToItem(&plaintext, srvName->data, srvName->len);
+        if (rv != SECSuccess) goto loser;
+    } else {
+        /* No Name */
+        rv = ssl3_AppendNumberToItem(&plaintext, (char)TLS_STE_NO_SERVER_NAME,
+                                     1);
+        if (rv != SECSuccess) goto loser;
+    }
 
     PORT_Assert(plaintext.len == padding_length);
     for (i = 0; i < padding_length; i++)
@@ -782,6 +927,7 @@ ssl3_ServerHandleSessionTicketXtn(sslSocket *ss, PRUint16 ex_type,
 	unsigned int           buffer_len;
 	PRInt32                temp;
 	SECItem                cert_item;
+        PRInt8                 nameType = TLS_STE_NO_SERVER_NAME;
 
 	/* Turn off stateless session resumption if the client sends a
 	 * SessionTicket extension, even if the extension turns out to be
@@ -867,7 +1013,7 @@ ssl3_ServerHandleSessionTicketXtn(sslSocket *ss, PRUint16 ex_type,
 	    if (rv != SECSuccess)
 		goto no_ticket;
 	}
-	if (PORT_Memcmp(computed_mac, enc_session_ticket.mac,
+	if (NSS_SecureMemcmp(computed_mac, enc_session_ticket.mac,
 		computed_mac_length) != 0) {
 	    SSL_DBG(("%d: SSL[%d]: Session ticket MAC mismatch.",
 			SSL_GETPID(), ss->fd));
@@ -963,7 +1109,7 @@ ssl3_ServerHandleSessionTicketXtn(sslSocket *ss, PRUint16 ex_type,
 	/* Read compression_method. */
 	temp = ssl3_ConsumeHandshakeNumber(ss, 1, &buffer, &buffer_len);
 	if (temp < 0) goto no_ticket;
-	parsed_session_ticket->compression_method = (SSL3CompressionMethod)temp;
+	parsed_session_ticket->compression_method = (SSLCompressionMethod)temp;
 
 	/* Read cipher spec parameters. */
 	temp = ssl3_ConsumeHandshakeNumber(ss, 1, &buffer, &buffer_len);
@@ -1034,6 +1180,20 @@ ssl3_ServerHandleSessionTicketXtn(sslSocket *ss, PRUint16 ex_type,
 	    goto no_ticket;
 	parsed_session_ticket->timestamp = (PRUint32)temp;
 
+        /* Read server name */
+        nameType =
+                ssl3_ConsumeHandshakeNumber(ss, 1, &buffer, &buffer_len); 
+        if (nameType != TLS_STE_NO_SERVER_NAME) {
+            SECItem name_item;
+            rv = ssl3_ConsumeHandshakeVariable(ss, &name_item, 2, &buffer,
+                                               &buffer_len);
+            if (rv != SECSuccess) goto no_ticket;
+            rv = SECITEM_CopyItem(NULL, &parsed_session_ticket->srvName,
+                                  &name_item);
+            if (rv != SECSuccess) goto no_ticket;
+            parsed_session_ticket->srvName.type = nameType;
+        }
+
 	/* Done parsing.  Check that all bytes have been consumed. */
 	if (buffer_len != padding_length)
 	    goto no_ticket;
@@ -1090,6 +1250,9 @@ ssl3_ServerHandleSessionTicketXtn(sslSocket *ss, PRUint16 ex_type,
 		    goto loser;
 		}
 	    }
+	    if (parsed_session_ticket->srvName.data != NULL) {
+                sid->u.ssl3.srvName = parsed_session_ticket->srvName;
+            }
 	    ss->statelessResume = PR_TRUE;
 	    ss->sec.ci.sid = sid;
 	}
@@ -1172,8 +1335,15 @@ ssl3_ParseEncryptedSessionTicket(sslSocket *ss, SECItem *data,
 SECStatus 
 ssl3_HandleHelloExtensions(sslSocket *ss, SSL3Opaque **b, PRUint32 *length)
 {
-    const ssl3HelloExtensionHandler * handlers =
-	ss->sec.isServer ? clientHelloHandlers : serverHelloHandlers;
+    const ssl3HelloExtensionHandler * handlers;
+
+    if (ss->sec.isServer) {
+        handlers = clientHelloHandlers;
+    } else if (ss->version > SSL_LIBRARY_VERSION_3_0) {
+        handlers = serverHelloHandlersTLS;
+    } else {
+        handlers = serverHelloHandlersSSL3;
+    }
 
     while (*length) {
 	const ssl3HelloExtensionHandler * handler;
@@ -1226,7 +1396,7 @@ ssl3_RegisterServerHelloExtensionSender(sslSocket *ss, PRUint16 ex_type,
     int i;
     ssl3HelloExtensionSender *sender = &ss->xtnData.serverSenders[0];
 
-    for (i = 0; i < MAX_EXTENSIONS; ++i, ++sender) {
+    for (i = 0; i < SSL_MAX_EXTENSIONS; ++i, ++sender) {
         if (!sender->ex_sender) {
 	    sender->ex_type   = ex_type;
 	    sender->ex_sender = cb;
@@ -1239,7 +1409,7 @@ ssl3_RegisterServerHelloExtensionSender(sslSocket *ss, PRUint16 ex_type,
 	    break;
 	}
     }
-    PORT_Assert(i < MAX_EXTENSIONS); /* table needs to grow */
+    PORT_Assert(i < SSL_MAX_EXTENSIONS); /* table needs to grow */
     PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
     return SECFailure;
 }
@@ -1252,10 +1422,12 @@ ssl3_CallHelloExtensionSenders(sslSocket *ss, PRBool append, PRUint32 maxBytes,
     PRInt32 total_exten_len = 0;
     int i;
 
-    if (!sender)
-    	sender = &clientHelloSenders[0];
+    if (!sender) {
+    	sender = ss->version > SSL_LIBRARY_VERSION_3_0 ?
+                 &clientHelloSendersTLS[0] : &clientHelloSendersSSL3[0];
+    }
 
-    for (i = 0; i < MAX_EXTENSIONS; ++i, ++sender) {
+    for (i = 0; i < SSL_MAX_EXTENSIONS; ++i, ++sender) {
 	if (sender->ex_sender) {
 	    PRInt32 extLen = (*sender->ex_sender)(ss, append, maxBytes);
 	    if (extLen < 0)
@@ -1266,3 +1438,82 @@ ssl3_CallHelloExtensionSenders(sslSocket *ss, PRBool append, PRUint32 maxBytes,
     }
     return total_exten_len;
 }
+
+
+/* Extension format:
+ * Extension number:   2 bytes
+ * Extension length:   2 bytes
+ * Verify Data Length: 1 byte
+ * Verify Data (TLS): 12 bytes (client) or 24 bytes (server)
+ * Verify Data (SSL): 36 bytes (client) or 72 bytes (server)
+ */
+static PRInt32 
+ssl3_SendRenegotiationInfoXtn(
+			sslSocket * ss,
+			PRBool      append,
+			PRUint32    maxBytes)
+{
+    PRInt32 len, needed;
+
+    /* In draft-ietf-tls-renegotiation-03, it is NOT RECOMMENDED to send
+     * both the SCSV and the empty RI, so when we send SCSV in 
+     * the initial handshake, we don't also send RI.
+     */
+    if (!ss || ss->ssl3.hs.sendingSCSV)
+    	return 0;
+    len = !ss->firstHsDone ? 0 : 
+	   (ss->sec.isServer ? ss->ssl3.hs.finishedBytes * 2 
+			     : ss->ssl3.hs.finishedBytes);
+    needed = 5 + len;
+    if (append && maxBytes >= needed) {
+	SECStatus rv;
+	/* extension_type */
+	rv = ssl3_AppendHandshakeNumber(ss, ssl_renegotiation_info_xtn, 2); 
+	if (rv != SECSuccess) return -1;
+	/* length of extension_data */
+	rv = ssl3_AppendHandshakeNumber(ss, len + 1, 2); 
+	if (rv != SECSuccess) return -1;
+	/* verify_Data from previous Finished message(s) */
+	rv = ssl3_AppendHandshakeVariable(ss, 
+		  ss->ssl3.hs.finishedMsgs.data, len, 1);
+	if (rv != SECSuccess) return -1;
+	if (!ss->sec.isServer) {
+	    TLSExtensionData *xtnData = &ss->xtnData;
+	    xtnData->advertised[xtnData->numAdvertised++] = 
+	                                           ssl_renegotiation_info_xtn;
+	}
+    }
+    return needed;
+}
+
+/* This function runs in both the client and server.  */
+static SECStatus
+ssl3_HandleRenegotiationInfoXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
+{
+    SECStatus rv = SECSuccess;
+    PRUint32 len = 0;
+
+    if (ss->firstHsDone) {
+	len = ss->sec.isServer ? ss->ssl3.hs.finishedBytes 
+	                       : ss->ssl3.hs.finishedBytes * 2;
+    }
+    if (data->len != 1 + len  ||
+	data->data[0] != len  || (len && 
+	NSS_SecureMemcmp(ss->ssl3.hs.finishedMsgs.data,
+	                 data->data + 1, len))) {
+	/* Can we do this here? Or, must we arrange for the caller to do it? */
+	(void)SSL3_SendAlert(ss, alert_fatal, handshake_failure);
+	PORT_SetError(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
+	return SECFailure;
+    }
+    /* remember that we got this extension and it was correct. */
+    ss->peerRequestedProtection = 1;
+    ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;
+    if (ss->sec.isServer) {
+	/* prepare to send back the appropriate response */
+	rv = ssl3_RegisterServerHelloExtensionSender(ss, ex_type,
+					     ssl3_SendRenegotiationInfoXtn);
+    }
+    return rv;
+}
+

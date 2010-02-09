@@ -23,3 +23,5 @@ bug495794_closeAudio.patch fixes a crash when destroying the sa_stream_t after
 a failed attempt to open the stream.
 
 bug495558_alsa_endian.patch adds support for big endian ALSA platforms.
+
+bug526411_latency.patch: reduce requested latency to 250ms to match OGGPLAY_AUDIO_OFFSET.

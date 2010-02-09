@@ -71,7 +71,7 @@ NS_IMETHODIMP nsDebugDetector::Init(nsICharsetDetectionObserver* aObserver)
 NS_IMETHODIMP nsDebugDetector::DoIt(const char* aBytesArray, PRUint32 aLen, PRBool* oDontFeedMe)
 {
   NS_ASSERTION(mObserver != nsnull , "have not init yet");
-  NS_ASSERTION(mStop == PR_FALSE , "don't call DoIt if we return PR_TRUE in oDontFeedMe");
+  NS_ASSERTION(!mStop , "don't call DoIt if we return PR_TRUE in oDontFeedMe");
 
   if((nsnull == aBytesArray) || (nsnull == oDontFeedMe))
      return NS_ERROR_ILLEGAL_VALUE;

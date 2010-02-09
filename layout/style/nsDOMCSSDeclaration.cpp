@@ -67,6 +67,8 @@ NS_INTERFACE_TABLE_HEAD(nsDOMCSSDeclaration)
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMCSS2Properties,
                                     new CSS2PropertiesTearoff(this))
+  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMSVGCSS2Properties,
+                                    new CSS2PropertiesTearoff(this))
   NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMNSCSS2Properties,
                                     new CSS2PropertiesTearoff(this))
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSStyleDeclaration)
@@ -384,13 +386,15 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(CSS2PropertiesTearoff)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CSS2PropertiesTearoff)
 
 NS_INTERFACE_TABLE_HEAD(CSS2PropertiesTearoff)
-  NS_INTERFACE_TABLE_INHERITED2(CSS2PropertiesTearoff,
+  NS_INTERFACE_TABLE_INHERITED3(CSS2PropertiesTearoff,
                                 nsIDOMCSS2Properties,
+                                nsIDOMSVGCSS2Properties,
                                 nsIDOMNSCSS2Properties)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(CSS2PropertiesTearoff)
 NS_INTERFACE_MAP_END_AGGREGATED(mOuter)
 
 // nsIDOMCSS2Properties
+// nsIDOMSVGCSS2Properties
 // nsIDOMNSCSS2Properties
 
 #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_, type_,   \

@@ -71,6 +71,11 @@ CSRCS	+= unix_err.c
 endif
 endif
 
+ifdef USE_SYSTEM_ZLIB
+DEFINES += -DNSS_ENABLE_ZLIB
+EXTRA_LIBS += $(ZLIB_LIBS)
+endif
+
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################

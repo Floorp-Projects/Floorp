@@ -190,15 +190,15 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 nsContentSink::nsContentSink()
 {
   // We have a zeroing operator new
-  NS_ASSERTION(mLayoutStarted == PR_FALSE, "What?");
-  NS_ASSERTION(mDynamicLowerValue == PR_FALSE, "What?");
-  NS_ASSERTION(mParsing == PR_FALSE, "What?");
+  NS_ASSERTION(!mLayoutStarted, "What?");
+  NS_ASSERTION(!mDynamicLowerValue, "What?");
+  NS_ASSERTION(!mParsing, "What?");
   NS_ASSERTION(mLastSampledUserEventTime == 0, "What?");
   NS_ASSERTION(mDeflectedCount == 0, "What?");
-  NS_ASSERTION(mDroppedTimer == PR_FALSE, "What?");
+  NS_ASSERTION(!mDroppedTimer, "What?");
   NS_ASSERTION(mInMonolithicContainer == 0, "What?");
   NS_ASSERTION(mInNotification == 0, "What?");
-  NS_ASSERTION(mDeferredLayoutStart == PR_FALSE, "What?");
+  NS_ASSERTION(!mDeferredLayoutStart, "What?");
 
 #ifdef NS_DEBUG
   if (!gContentSinkLogModuleInfo) {

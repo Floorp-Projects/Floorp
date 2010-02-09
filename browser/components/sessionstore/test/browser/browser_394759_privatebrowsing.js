@@ -76,11 +76,11 @@ function test() {
   // would timeout.
   let os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
-  os.addObserver({observe: function(aSubject, aTopic, aData) {
-    os.removeObserver(this, aTopic);
+  os.addObserver(function (aSubject, aTopic, aData) {
+    os.removeObserver(arguments.callee, aTopic);
     info("sessionstore.js is being written");
     executeSoon(continue_test);
-  }}, "sessionstore-state-write", false);
+  }, "sessionstore-state-write", false);
 
   // Remove the sessionstore.js file before setting the interval to 0
   let profilePath = Cc["@mozilla.org/file/directory_service;1"].

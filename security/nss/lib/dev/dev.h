@@ -44,12 +44,8 @@
  */
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.41 $ $Date: 2008/05/29 17:24:15 $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.42 $ $Date: 2010/01/08 02:00:58 $";
 #endif /* DEBUG */
-
-#ifndef NSSCKT_H
-#include "nssckt.h"
-#endif /* NSSCKT_H */
 
 #ifndef NSSDEV_H
 #include "nssdev.h"

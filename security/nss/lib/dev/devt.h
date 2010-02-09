@@ -38,7 +38,7 @@
 #define DEVT_H
 
 #ifdef DEBUG
-static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.23 $ $Date: 2007/11/16 05:29:25 $";
+static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.24 $ $Date: 2010/01/08 02:00:58 $";
 #endif /* DEBUG */
 
 /*
@@ -58,10 +58,6 @@ static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.23 $ $
 #ifndef NSSDEVT_H
 #include "nssdevt.h"
 #endif /* NSSDEVT_H */
-
-#ifndef NSSCKT_H
-#include "nssckt.h"
-#endif /* NSSCKT_H */
 
 #ifndef BASET_H
 #include "baset.h"

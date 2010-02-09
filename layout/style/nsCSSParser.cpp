@@ -1358,7 +1358,7 @@ CSSParserImpl::GetURLInParens(nsString& aURL)
 void
 CSSParserImpl::UngetToken()
 {
-  NS_PRECONDITION(mHavePushBack == PR_FALSE, "double pushback");
+  NS_PRECONDITION(!mHavePushBack, "double pushback");
   mHavePushBack = PR_TRUE;
 }
 

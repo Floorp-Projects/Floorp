@@ -179,16 +179,11 @@ NS_IMETHODIMP nsXULSelectableAccessible::RefSelection(PRInt32 aIndex, nsIAccessi
   if (aIndex == 0)
     mSelectControl->GetSelectedItem(getter_AddRefs(selectedItem));
 
-  if (selectedItem) {
+  if (selectedItem)
     GetAccService()->GetAccessibleInWeakShell(selectedItem, mWeakShell,
                                               aAccessible);
-    if (*aAccessible) {
-      NS_ADDREF(*aAccessible);
-      return NS_OK;
-    }
-  }
 
-  return NS_ERROR_FAILURE;
+  return (*aAccessible) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsXULSelectableAccessible::GetSelectionCount(PRInt32 *aSelectionCount)

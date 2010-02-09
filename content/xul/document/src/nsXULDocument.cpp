@@ -782,15 +782,13 @@ nsXULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
     NS_ENSURE_ARG(aBroadcaster && aListener);
     
     nsresult rv =
-        nsContentUtils::CheckSameOrigin(static_cast<nsDocument *>(this),
-                                        aBroadcaster);
+        nsContentUtils::CheckSameOrigin(this, aBroadcaster);
 
     if (NS_FAILED(rv)) {
         return rv;
     }
 
-    rv = nsContentUtils::CheckSameOrigin(static_cast<nsDocument *>(this),
-                                         aListener);
+    rv = nsContentUtils::CheckSameOrigin(this, aListener);
 
     if (NS_FAILED(rv)) {
         return rv;

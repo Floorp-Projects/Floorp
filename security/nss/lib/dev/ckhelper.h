@@ -44,12 +44,8 @@
 #define CKHELPER_H
 
 #ifdef DEBUG
-static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.19 $ $Date: 2005/01/20 02:25:47 $";
+static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.20 $ $Date: 2010/01/08 02:00:58 $";
 #endif /* DEBUG */
-
-#ifndef NSSCKT_H
-#include "nssckt.h"
-#endif /* NSSCKT_H */
 
 PR_BEGIN_EXTERN_C
 

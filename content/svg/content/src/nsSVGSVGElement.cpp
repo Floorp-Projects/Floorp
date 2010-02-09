@@ -1000,7 +1000,8 @@ nsSVGSVGElement::GetViewBoxTransform()
     return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
   }
 
-  return nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
+  return nsSVGUtils::GetViewBoxTransform(this,
+                                         viewportWidth, viewportHeight,
                                          viewBox.x, viewBox.y,
                                          viewBox.width, viewBox.height,
                                          mPreserveAspectRatio);
@@ -1221,6 +1222,14 @@ void
 nsSVGSVGElement::DidChangePreserveAspectRatio(PRBool aDoSetAttr)
 {
   nsSVGSVGElementBase::DidChangePreserveAspectRatio(aDoSetAttr);
+
+  InvalidateTransformNotifyFrame();
+}
+
+void
+nsSVGSVGElement::DidAnimatePreserveAspectRatio()
+{
+  nsSVGSVGElementBase::DidAnimatePreserveAspectRatio();
 
   InvalidateTransformNotifyFrame();
 }

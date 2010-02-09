@@ -21,6 +21,7 @@
 # Contributor(s):
 #  John Wolfe <wolfe@lobo.us>
 #  Vladimir Vukicevic <vladimir@pobox.com>
+#  Alex Pakhotin <alexp@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,11 +38,11 @@
 # ***** END LICENSE BLOCK *****
 ################################################################
 #
-# make-wince-cab.py --- Given a directory, walk it and make an
+# make_wince_cab.py --- Given a directory, walk it and make an
 #          installer based upon the contents of that directory
 #
 # Usage:
-#   python make-wince-inf.py [-s] [CABWIZ_PATH] SOURCE_DIR PROGRAM_NAME CAB_FINAL_NAME
+#   python make_wince_cab.py [-setupdll] [-s] [-faststart] [CABWIZ_PATH] SOURCE_DIR PROGRAM_NAME CAB_FINAL_NAME
 #
 # Walk through the relative directory SOURCE_DIR, parsing filenames
 #   Checks for duplicate filenames and renames where needed
@@ -55,11 +56,14 @@
 # Blank lines and '#' comments in the 'install-exceptions' file are
 # ignored.
 #
-# EXAMPLE OF COMMAND LINE:
-#   python make_wince_inf.py /c/Program\ Files/Microsoft\ Visual\ Studio\ 9.0/SmartDevices/SDK/SDKTools/cabwiz.exe dist/fennec Fennec fennec-0.11.en-US.wince-arm.cab
-#
 # ARGS:
+#   -setupdll - Make a small additional CAB including Setup.dll.
+#               This is to add Fennec to the system list of installed applications
+#               available in Settings - System - Remove Programs.
+#
 #   -s - Don't pass /compress to cabwiz (generate CAB compatible with Windows CE)
+#
+#   -faststart - Add FastStart shortcut
 #
 #   CABWIZ_PATH - If specified, will use this cabwiz.exe executable.  Otherwise, will attempt
 #                 to find one using $VSINSTALLDIR.
@@ -71,6 +75,9 @@
 #   PROGRAM_NAME - Name of the program to place inside the INF file
 #
 #   CAB_FINAL_NAME - actual final name for the produced CAB file
+#
+# EXAMPLE OF COMMAND LINE:
+#   python make_wince_cab.py /c/Program\ Files/Microsoft\ Visual\ Studio\ 9.0/SmartDevices/SDK/SDKTools/cabwiz.exe dist/fennec Fennec fennec-0.11.en-US.wince-arm.cab
 #
 # NOTE: In our example, "fennec" is the directory [source_name]
 #                       "fennec.exe" is the application [$(source_name).exe], and
@@ -87,6 +94,7 @@ import shutil
 
 CompressFlag = "/compress"
 FaststartFlag = 0
+MakeSetupDllCab = 0
 
 class FileEntry:
     def __init__(self, dirpath, dircount, filename, filecount, actual_filename):
@@ -309,6 +317,47 @@ def output_inf_file(program_name, app_name):
 
 
 
+def output_setup_dll_inf_file(source_dir, program_name, app_name):
+    inf_name = "%s.inf" % program_name
+    f = open(inf_name, 'w')
+
+    f.write("""; Additional CAB to create Fennec entry in the installed programs list
+
+[Version]
+Signature   = "$Windows NT$"        ; required as-is
+Provider    = "Mozilla"             ; maximum of 30 characters, full app name will be \"<Provider> <AppName>\"
+CESignature = "$Windows CE$"        ; required as-is
+
+[CEStrings]
+AppName     = "%s"              ; maximum of 40 characters, full app name will be \"<Provider> <AppName>\"\n""" % program_name)
+
+    f.write("InstallDir  = %CE1%\\%AppName%       ; Program Files\Fennec\n\n")
+
+    f.write("[SourceDisksNames]                  ; directory that holds the application's files\n")
+    f.write('1 = , "%s",,%s\n\n' % (source_dir, source_dir))
+
+    f.write("[SourceDisksFiles]                  ; list of files to be included in .cab\n")
+    f.write("Setup.dll = 1\n\n")
+
+    f.write("""[DefaultInstall]                    ; operations to be completed during install
+CopyFiles   = Files.%s
+AddReg      = RegData
+CESetupDLL  = "Setup.dll"
+\n""" % program_name)
+
+    f.write("[DestinationDirs]                   ; default destination directories for each operation section\n")
+    f.write("Files.%s = 0, %%InstallDir%%\n\n" % program_name)
+
+    f.write("""[Files.%s]
+;No files to copy
+
+[RegData]
+;No registry entries
+""" % program_name)
+
+    f.close()
+
+
 def make_cab_file(cabwiz_path, program_name, cab_final_name):
     make_cab_command = "\"%s\" %s %s.inf" % (cabwiz_path, CompressFlag, program_name)
     print "INFORMATION: Executing command to make %s CAB file (only works on BASH)" % program_name
@@ -322,14 +371,14 @@ def make_cab_file(cabwiz_path, program_name, cab_final_name):
         print """***************************************************************************
 ERROR: CAB FILE NOT CREATED.
        You can try running the command by hand:
-          %s" % make_cab_comman
+       %s
  ---- 
  NOTE: If you see an error like this:
        Error: File XXXXXXXXXX.inf contains DirIDs, which are not supported
  -- 
  this may mean that your PYTHON is outputting Windows files WITHOUT CR-LF
  line endings.  Please verify that your INF file has CR-LF line endings.
-***************************************************************************"""
+***************************************************************************""" % make_cab_command
         sys.exit(2)
 
     print "INFORMATION: Executing command to move %s.CAB to %s" % (program_name, cab_final_name)
@@ -347,11 +396,16 @@ def purge_copied_files():
 def main():
     args = sys.argv
     if len(args) < 4 or len(args) > 7:
-        print >> sys.stderr, "Usage: %s [-s] [-faststart] [CABWIZ_PATH] SOURCE_DIR PROGRAM_NAME CAB_FINAL_NAME" % args[0]
+        print >> sys.stderr, "Usage: %s [-setupdll] [-s] [-faststart] [CABWIZ_PATH] SOURCE_DIR PROGRAM_NAME CAB_FINAL_NAME" % args[0]
         print >> sys.stderr, "Example: %s /c/Program\ Files/Microsoft\ Visual\ Studio\ 9.0/ fennec Fennec fennec-0.11.en-US.wince-arm.cab" % args[0]
         sys.exit(1)
 
     args = args[1:]
+
+    if args[0] == "-setupdll":
+        global MakeSetupDllCab
+        MakeSetupDllCab = 1
+        args = args[1:]
 
     if args[0] == "-s":
         global CompressFlag
@@ -383,12 +437,18 @@ ERROR: CABWIZ_PATH is not a valid file, or cabwiz couldn't be found!
 ***************************************************************************"""
         sys.exit(2)
 
-    walk_tree(source_dir, ignored_patterns)
-    sys.stdout.flush()
-    output_inf_file(program_name, app_name)
-    sys.stdout.flush()
-    make_cab_file(cabwiz_path, program_name, cab_final_name)
-    purge_copied_files()
+    if MakeSetupDllCab:
+        output_setup_dll_inf_file(source_dir, program_name, app_name)
+        sys.stdout.flush()
+        make_cab_file(cabwiz_path, program_name, cab_final_name)
+        os.remove("%s/setup.dll" % source_dir)
+    else:
+        walk_tree(source_dir, ignored_patterns)
+        sys.stdout.flush()
+        output_inf_file(program_name, app_name)
+        sys.stdout.flush()
+        make_cab_file(cabwiz_path, program_name, cab_final_name)
+        purge_copied_files()
 
 
 # run main if run directly

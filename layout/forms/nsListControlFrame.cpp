@@ -1453,7 +1453,7 @@ nsListControlFrame::DoneAddingChildren(PRBool aIsDone)
     // Here we check to see if all the frames have been created 
     // for all the content.
     // If so, then we can initialize;
-    if (mIsAllFramesHere == PR_FALSE) {
+    if (!mIsAllFramesHere) {
       // if all the frames are now present we can initialize
       if (CheckIfAllFramesHere()) {
         mHasBeenInitialized = PR_TRUE;

@@ -65,7 +65,7 @@ interface nsIPluginStreamListener;
 [ref] native nsIStreamListenerRef(nsIStreamListener *);
 [ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
 
-[scriptable, uuid(3F3C4952-4877-4D8A-B3CE-A0AFFD2C0785)]
+[scriptable, uuid(D419142E-0571-416B-B797-2A8E6624491D)]
 interface nsIPluginHost : nsISupports
 {
   [noscript] void init();
@@ -87,7 +87,10 @@ interface nsIPluginHost : nsISupports
 
   [noscript] void instantiateEmbeddedPlugin(in string aMimeType, in nsIURI aURL, in nsIPluginInstanceOwner aOwner);
 
-  [noscript] void instantiateFullPagePlugin(in string aMimeType, in nsIURI aURI, in nsIStreamListenerRef aStreamListener, in nsIPluginInstanceOwner aOwner);
+  [noscript] void instantiateFullPagePlugin(in string aMimeType,
+                                            in nsIURI aURI,
+                                            in nsIStreamListenerRef aStreamListener,
+                                            in nsIPluginInstanceOwner aOwner);
 
   /**
    * Instantiate an embedded plugin for an existing channel. The caller is
@@ -210,7 +213,7 @@ interface nsIPluginHost : nsISupports
    *
    * Which proxy/SOCKS to use is determined by the plugin.
    */
-  void findProxyForURL(in string aURL, out string aResult);
+  [noscript] void findProxyForURL(in string aURL, out string aResult);
 
   [noscript] void UserAgent(in nativeChar resultingAgentString);
 

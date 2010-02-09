@@ -90,26 +90,27 @@ endif
 
 ifdef USE_STATIC_LIBS
 
-# can't do this in manifest.mn because OS_ARCH isn't defined there.
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH))) 
-SQLITE = $(LIB_PREFIX)sqlite3.$(LIB_SUFFIX)
-
 DEFINES += -DNSS_USE_STATIC_LIBS
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
 CRYPTOLIB=$(SOFTOKEN_LIB_DIR)/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
 
 PKIXLIB = \
-	$(DIST)/lib/$(LIB_PREFIX)pkixcertsel.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixchecker.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixparams.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixresults.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)pkixtop.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)pkixutil.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixcrlsel.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixstore.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixpki.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)pkixsystem.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixmodule.$(LIB_SUFFIX)
+	$(DIST)/lib/$(LIB_PREFIX)pkixcrlsel.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pkixmodule.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pkixstore.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pkixparams.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pkixchecker.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pkixpki.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pkixtop.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pkixresults.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pkixcertsel.$(LIB_SUFFIX)
+
+# can't do this in manifest.mn because OS_ARCH isn't defined there.
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH))) 
+SQLITE = $(LIB_PREFIX)sqlite3.$(LIB_SUFFIX)
 
 EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)smime.$(LIB_SUFFIX) \
@@ -143,23 +144,6 @@ EXTRA_LIBS += \
 	winmm.lib \
 	$(NULL)
 else
-
-# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
-CRYPTOLIB=$(SOFTOKEN_LIB_DIR)/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
-
-PKIXLIB = \
-	$(DIST)/lib/$(LIB_PREFIX)pkixtop.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixutil.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixsystem.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixcrlsel.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixmodule.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixstore.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixparams.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixchecker.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixpki.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixtop.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixresults.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)pkixcertsel.$(LIB_SUFFIX)
 
 EXTRA_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)smime.$(LIB_SUFFIX) \

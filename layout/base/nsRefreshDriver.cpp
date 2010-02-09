@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=8 autoindent cindent expandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -58,7 +59,8 @@
 using mozilla::TimeStamp;
 
 nsRefreshDriver::nsRefreshDriver(nsPresContext *aPresContext)
-  : mPresContext(aPresContext)
+  : mPresContext(aPresContext),
+    mFrozen(PR_FALSE)
 {
 }
 
@@ -100,8 +102,9 @@ nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver *aObserver,
 void
 nsRefreshDriver::EnsureTimerStarted()
 {
-  if (mTimer) {
-    // It's already been started.
+  if (mTimer || mFrozen || !mPresContext) {
+    // It's already been started, or we don't want to start it now or
+    // we've been disconnected.
     return;
   }
 
@@ -173,15 +176,13 @@ NS_IMPL_ISUPPORTS1(nsRefreshDriver, nsITimerCallback)
  */
 
 NS_IMETHODIMP
-nsRefreshDriver::Notify(nsITimer *aTimer)
+nsRefreshDriver::Notify(nsITimer * /* unused */)
 {
+  NS_PRECONDITION(!mFrozen, "Why are we notified while frozen?");
+  NS_PRECONDITION(mPresContext, "Why are we notified after disconnection?");
+
   UpdateMostRecentRefresh();
 
-  if (!mPresContext) {
-    // Things are being destroyed.
-    NS_ABORT_IF_FALSE(!mTimer, "timer should have been stopped");
-    return NS_OK;
-  }
   nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
   if (!presShell || ObserverCount() == 0) {
     // Things are being destroyed, or we no longer have any observers.
@@ -226,4 +227,33 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
   }
 
   return NS_OK;
+}
+
+void
+nsRefreshDriver::Freeze()
+{
+  NS_ASSERTION(!mFrozen, "Freeze called on already-frozen refresh driver");
+  StopTimer();
+  mFrozen = PR_TRUE;
+}
+
+void
+nsRefreshDriver::Thaw()
+{
+  NS_ASSERTION(mFrozen, "Thaw called on an unfrozen refresh driver");
+  mFrozen = PR_FALSE;
+  if (ObserverCount()) {
+    NS_DispatchToCurrentThread(NS_NEW_RUNNABLE_METHOD(nsRefreshDriver, this,
+                                                      DoRefresh));
+    EnsureTimerStarted();
+  }
+}
+
+void
+nsRefreshDriver::DoRefresh()
+{
+  // Don't do a refresh unless we're in a state where we should be refreshing.
+  if (!mFrozen && mPresContext && mTimer) {
+    Notify(nsnull);
+  }
 }

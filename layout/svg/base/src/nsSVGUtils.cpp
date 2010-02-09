@@ -799,7 +799,8 @@ nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame, nsRect* aRect)
 }
 
 gfxMatrix
-nsSVGUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
+nsSVGUtils::GetViewBoxTransform(nsSVGElement* aElement,
+                                float aViewportWidth, float aViewportHeight,
                                 float aViewboxX, float aViewboxY,
                                 float aViewboxWidth, float aViewboxHeight,
                                 const nsSVGPreserveAspectRatio &aPreserveAspectRatio,
@@ -808,8 +809,8 @@ nsSVGUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
   NS_ASSERTION(aViewboxWidth > 0, "viewBox width must be greater than zero!");
   NS_ASSERTION(aViewboxHeight > 0, "viewBox height must be greater than zero!");
 
-  PRUint16 align = aPreserveAspectRatio.GetAnimValue().GetAlign();
-  PRUint16 meetOrSlice = aPreserveAspectRatio.GetAnimValue().GetMeetOrSlice();
+  PRUint16 align = aPreserveAspectRatio.GetAnimValue(aElement).GetAlign();
+  PRUint16 meetOrSlice = aPreserveAspectRatio.GetAnimValue(aElement).GetMeetOrSlice();
 
   // default to the defaults
   if (align == nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN)

@@ -1,0 +1,79 @@
+#
+# This file defines the tests for multiple initialization of NSS in
+#  different libraries.
+#
+# Test description lines control the parameters for the multinit test program.
+#
+# Init order: Upper case/digits indicate an init call, lower case indicate
+# a shutdown call.
+# 	M,m-Main 1,i-lib1, 2,z-lib2
+# Main calls the traditional NSS init calls (simulating the main application)
+# lib1 and lib2 call NSS_InitContext().
+#
+# All functions call NSS_ShutdownContext unless 'main shutdown type' is set to 
+# 'old', in which case main will call the traditional NSS_Shutdown().
+#
+# Commands: comma separated list of commands to execute. These simulate
+#  executing commands from either a library or main. In each cycle, multinit
+#  will do one initialize or shutdown, then execute all the commands
+#  for any of the libraries or main that is currently initialized. The same
+#  command is executed in each cycle that it's library is initialized.
+#
+#  Commands are given in order or 'main','lib1','lib2'. Valid commands are:
+#    none - don't execute any commands for this library (or main).
+#    list_certs - list all the visible certs in the system.
+#    list_slots - list all the slots in the system.
+#    key_slot - list the current default key slot.
+#
+# Main Shutdown Type - which kind of shutdown does main call. See Init order.
+#
+# Directories - which directory should each init open. Listed in order of:
+#   (main init directory),(lib1 init directory),(lib2 init directory).
+#
+# RO - Which databases to open up read only, valid values are:
+#   all - main, lib1, and lib2
+#   none - open all directories R/W
+#   libs - lib1 & lib2
+#   main, lib1, lib2 - their respective directories only.
+#
+# Test description lines are followed by their expected summary output.
+# output lines are of the form:
+#
+# tag expected output.
+#
+# where tag is one of
+# all - applies to all database types
+# sql - expected output for sql databases
+# dbm - expected output for dbm databases
+#
+# if you do not specify all, you must have one line each for sql and dbm
+#
+#                                  main
+#  init       main,lib1,lib2   shutdown  main,lib1,lib2      Test Case name
+#  order         commands          type  directories    RO
+# ------ ------------------------  ---  -----------   ----- --------------
+  1M2zmi list_slots,list_certs,none new dir1,dir2,dir3  all  Progressive init
+all 1C<Bob>uuuC<Dave>pppC<Eve>pppC<NSS Test CA>CTCCMS<NSS Generic Crypto Services>ttS<Main>ttS<Lib1>ttC<Alice>uuuC<Bob>pupupuC<Dave>pppC<Eve>pppC<NSS Test CA>CTCC2S<NSS Generic Crypto Services>ttS<Lib2>ttS<Main>ttS<Lib1>ttC<Alice>uuuC<Bob>pupupuC<Dave>pupupuC<Eve>pppC<NSS Test CA>CTCCZS<NSS Generic Crypto Services>ttS<Lib2>ttS<Main>ttS<Lib1>ttC<Alice>uuuC<Bob>pupupuC<Dave>pupupuC<Eve>pppC<NSS Test CA>CTCCNC<Alice>uuuC<Bob>pupupuC<Dave>pupupuC<Eve>pppC<NSS Test CA>CTCCI
+  1M2zmi list_certs,none,none       old dir1,dir2,dir3  all  Progressive init - oldStyle
+all 1MC<Alice>uuuC<Bob>pupupuC<Dave>pppC<Eve>pppC<NSS Test CA>CTCC2C<Alice>uuuC<Bob>pupupuC<Dave>pupupuC<Eve>pppC<NSS Test CA>CTCCZC<Alice>uuuC<Bob>pupupuC<Dave>pupupuC<Eve>pppC<NSS Test CA>CTCCNIE0xffffe09a
+  12Mizm none,list_certs,none       new dir1,dir2,dir3  all  Sequenced init
+all 1C<Bob>uuuC<Dave>pppC<Eve>pppC<NSS Test CA>CTCC2C<Bob>uuuC<Dave>pupupuC<Eve>pppC<NSS Test CA>CTCCMC<Alice>uuuC<Bob>pupupuC<Dave>pupupuC<Eve>pppC<NSS Test CA>CTCCIZN
+  12Mizm none,list_certs,none       old dir1,dir2,dir3  all  Sequenced init - old Style
+all 1C<Bob>uuuC<Dave>pppC<Eve>pppC<NSS Test CA>CTCC2C<Bob>uuuC<Dave>pupupuC<Eve>pppC<NSS Test CA>CTCCMC<Alice>uuuC<Bob>pupupuC<Dave>pupupuC<Eve>pppC<NSS Test CA>CTCCIZN
+  1Mi2mz none,list_certs,list_slots new dir1,dir2,dir3  all  Overlap shutdown
+all 1C<Bob>uuuC<Dave>pppC<Eve>pppC<NSS Test CA>CTCCMC<Alice>uuuC<Bob>pupupuC<Dave>pppC<Eve>pppC<NSS Test CA>CTCCI2S<NSS Generic Crypto Services>ttS<Lib2>ttS<Main>ttS<Lib1>ttNS<NSS Generic Crypto Services>ttS<Lib2>ttS<Main>ttS<Lib1>ttZ
+  1Mi2mz none,key_slot,none         new dir1,dir2,dir3  all  Keyslot test
+all 1S<Lib1>ttMS<Main>ttI2NZ
+  M12miz none,key_slot,none         new dir1,dir2,dir3  all  Main init first
+all M1S<Main>tt2S<Main>ttNS<Main>ttIZ
+  M12miz key_slot,none,none         old dir1,dir2,dir3  all  Main init first - old Style
+all MS<Main>tt1S<Main>tt2S<Main>ttNIE0xffffe09aZE0xffffe09a
+  M12miz list_slots,none,none       new dir1,dir1,dir2  all  Loading the same directory twice
+all MS<NSS Generic Crypto Services>ttS<Main>tt1S<NSS Generic Crypto Services>ttS<Main>tt2S<NSS Generic Crypto Services>ttS<Lib2>ttS<Main>ttNIZ
+  M12miz list_slots,none,none       new dir1,dir1,dir2  libs  Loading the same directory twice - r/w then ro
+all MS<NSS Generic Crypto Services>ttS<Main>tf1S<NSS Generic Crypto Services>ttS<Main>tf2S<NSS Generic Crypto Services>ttS<Lib2>ttS<Main>tfNIZ
+  M12miz list_slots,none,none       new dir1,dir1,dir2  main  Loading the same directory twice - ro then r/w
+sql MS<NSS Generic Crypto Services>ttS<Main>tt1S<NSS Generic Crypto Services>ttS<Lib1>tfS<Main>tt2S<NSS Generic Crypto Services>ttS<Lib2>tfS<Lib1>tfS<Main>ttNIZ
+dbm MS<NSS Generic Crypto Services>ttS<Main>tt1S<NSS Generic Crypto Services>ttS<Main>tt2S<NSS Generic Crypto Services>ttS<Lib2>tfS<Main>ttNIZ
+ M12miM1zim key_slot,none,none       old dir1,dir2,dir3  all  Properly detect shutdown of a closed handle
+all MS<Main>tt1S<Main>tt2S<Main>ttNIE0xffffe09aMS<Main>tt1S<Main>ttZE0xffffe09aS<Main>ttIS<Main>ttN

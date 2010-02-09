@@ -15,7 +15,7 @@
  *
  * The Original Code is Places Unit Test code.
  *
- * The Initial Developer of the Original Code is Mozilla Corp.
+ * The Initial Developer of the Original Code is Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -42,6 +42,8 @@
  */
 
 function run_test() {
+  do_test_pending();
+
   // Create our bookmarks.html copying bookmarks.glue.html to the profile
   // folder.  It will be ignored.
   create_bookmarks_html("bookmarks.glue.html");
@@ -68,25 +70,33 @@ function run_test() {
   // nsBrowserGlue uses databaseStatus to manage initialization.
   do_check_eq(hs.databaseStatus, hs.DATABASE_STATUS_CREATE);
 
-  // Restore could take some time, usually less than 1s.
-  // We will poll later in continue_test() to be sure restore has finished.
-  do_test_pending();
-  do_timeout(1000, continue_test);
+  // Wait for restore to finish.
+  let os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
+  let observer = {
+    observe: function(aSubject, aTopic, aData) {
+      os.removeObserver(observer, "bookmarks-restore-success");
+      os.removeObserver(observer, "bookmarks-restore-failed");
+      do_check_eq(aTopic, "bookmarks-restore-success");
+      do_check_eq(aData, "json");
+      continue_test();
+    }
+  }
+  os.addObserver(observer, "bookmarks-restore-success", false);
+  os.addObserver(observer, "bookmarks-restore-failed", false);
 }
 
 function continue_test() {
   let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
            getService(Ci.nsINavBookmarksService);
 
-  if (bs.getIdForItemAt(bs.toolbarFolder, 0) == -1) {
-    // Not enough time to complete restore, poll again later.
-    do_timeout(1000, continue_test);
-    return;
-  }
-
   // Check that JSON backup has been restored.
-  let itemId = bs.getIdForItemAt(bs.toolbarFolder, SMART_BOOKMARKS_ON_TOOLBAR);
+  // Notice restore from JSON notification is fired before smart bookmarks creation.
+  let itemId = bs.getIdForItemAt(bs.toolbarFolder, 0);
   do_check_eq(bs.getItemTitle(itemId), "examplejson");
+
+  remove_bookmarks_html();
+  remove_all_JSON_backups();
 
   do_test_finished();
 }

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+
+<window id="Test for bug 540247" title="Testcase" class="reftest-wait"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script><![CDATA[
+document.addEventListener("MozReftestInvalidate", runtest, false);
+
+function runtest() {
+  document.getElementById('b').height = '100';
+
+  var sbo = document.getElementById('s').boxObject.
+              QueryInterface(Components.interfaces.nsIScrollBoxObject);
+  sbo.scrollTo(0, 1000);
+
+  document.documentElement.className = "";
+}
+]]>
+</script>
+
+  <scrollbox id="s" height="200" style="overflow: scroll;">
+    <vbox>
+      <vbox height="150" width="200" style="background: red;" id="b"/>
+      <vbox height="150" width="200" style="background: green;"/>
+      <vbox height="150" width="200" style="background: blue;"/>
+      <label value="a"/>
+    </vbox>
+  </scrollbox>
+
+</window>

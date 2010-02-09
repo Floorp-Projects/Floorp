@@ -41,6 +41,12 @@
 #//
 #//------------------------------------------------------------------------
 
+!if "$(MOZ_BITS)" == "16"
+!ifndef MOZ_DEBUG
+OPTIMIZER=-Os -UDEBUG -DNDEBUG
+!endif
+!endif
+
 #//------------------------------------------------------------------------
 #//
 #// Specify the depth of the current directory relative to the

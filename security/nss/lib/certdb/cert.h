@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.78 2009/05/14 01:33:36 julien.pierre.boogz%sun.com Exp $
+ * $Id: cert.h,v 1.79 2010/01/14 22:15:23 alexei.volkov.bugs%sun.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -1077,11 +1077,19 @@ extern CERTDistNames *CERT_GetSSLCACerts(CERTCertDBHandle *handle);
 
 extern void CERT_FreeDistNames(CERTDistNames *names);
 
+/* Duplicate distinguished name array */
+extern CERTDistNames *CERT_DupDistNames(CERTDistNames *orig);
+
 /*
 ** Generate an array of Distinguished names from an array of nicknames
 */
 extern CERTDistNames *CERT_DistNamesFromNicknames
    (CERTCertDBHandle *handle, char **nicknames, int nnames);
+
+/*
+** Generate an array of Distinguished names from a list of certs.
+*/
+extern CERTDistNames *CERT_DistNamesFromCertList(CERTCertList *list);
 
 /*
 ** Generate a certificate chain from a certificate.

@@ -836,7 +836,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
             *_retval = PR_TRUE;
         }
         // check for automatic text/uri-list -> text/x-moz-url mapping
-        if (*_retval == PR_FALSE && 
+        if (!*_retval && 
             name &&
             (strcmp(name, gTextUriListType) == 0) &&
             (strcmp(aDataFlavor, kURLMime) == 0)) {
@@ -846,7 +846,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
             *_retval = PR_TRUE;
         }
         // check for automatic _NETSCAPE_URL -> text/x-moz-url mapping
-        if (*_retval == PR_FALSE && 
+        if (!*_retval && 
             name &&
             (strcmp(name, gMozUrlType) == 0) &&
             (strcmp(aDataFlavor, kURLMime) == 0)) {
@@ -856,7 +856,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
             *_retval = PR_TRUE;
         }
         // check for auto text/plain -> text/unicode mapping
-        if (*_retval == PR_FALSE && 
+        if (!*_retval && 
             name &&
             (strcmp(name, kTextMime) == 0) &&
             ((strcmp(aDataFlavor, kUnicodeMime) == 0) ||

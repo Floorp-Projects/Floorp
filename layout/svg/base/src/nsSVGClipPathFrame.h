@@ -99,7 +99,7 @@ public:
   public:
     AutoClipPathReferencer(nsSVGClipPathFrame *aFrame)
        : mFrame(aFrame) {
-      NS_ASSERTION(mFrame->mInUse == PR_FALSE, "reference loop!");
+      NS_ASSERTION(!mFrame->mInUse, "reference loop!");
       mFrame->mInUse = PR_TRUE;
     }
     ~AutoClipPathReferencer() {

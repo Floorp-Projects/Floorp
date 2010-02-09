@@ -815,6 +815,17 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
   nsInlineFrame* nextInFlow = irs.mNextInFlow;
   while (nsnull != nextInFlow) {
     frame = nextInFlow->mFrames.FirstChild();
+
+    if (!frame) {
+      // If the principal childlist has no frames, then try moving the overflow
+      // frames to it.
+      nsAutoPtr<nsFrameList> overflowFrames(nextInFlow->StealOverflowFrames());
+      if (overflowFrames) {
+        nextInFlow->mFrames.SetFrames(*overflowFrames);
+        frame = nextInFlow->mFrames.FirstChild();
+      }
+    }
+
     if (nsnull != frame) {
       // If our block has no next continuation, then any floats belonging to
       // the pulled frame must belong to our block already. This check ensures

@@ -103,7 +103,14 @@ copy_cert OCSPEE13 OCSPCA1
 copy_cert OCSPEE14 OCSPCA1
 copy_cert OCSPEE15 OCSPCA1
 copy_cert OCSPEE21 OCSPCA2
+copy_cert OCSPEE22 OCSPCA2
+copy_cert OCSPEE23 OCSPCA2
 copy_cert OCSPEE31 OCSPCA3
+copy_cert OCSPEE32 OCSPCA3
+copy_cert OCSPEE33 OCSPCA3
 
+copy_key OCSPRoot
 copy_key OCSPCA1
+copy_key OCSPCA2
+copy_key OCSPCA3
 

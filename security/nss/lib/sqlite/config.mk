@@ -58,3 +58,12 @@ ifeq ($(OS_TARGET),SunOS)
 OS_LIBS += -lbsm 
 endif
 
+ifeq ($(OS_TARGET),Darwin)
+# These version numbers come from the -version-info 8:6:8 libtool option in
+# sqlite upstream's Makefile.in.  (Given -version-info current:revision:age,
+# libtool passes
+#     -compatibility_version current+1 -current_version current+1.revision
+# to the linker.)  Apple builds the system libsqlite3.dylib with these
+# version numbers, so we use the same to be compatible.
+DARWIN_DYLIB_VERSIONS = -compatibility_version 9 -current_version 9.6
+endif

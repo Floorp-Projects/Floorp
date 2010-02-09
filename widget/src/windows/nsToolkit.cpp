@@ -294,7 +294,7 @@ void nsToolkit::CreateUIThread()
                                     0);
 
     // wait for the gui thread to start
-    while(gThreadState == PR_FALSE) {
+    while(!gThreadState) {
         ::PR_Wait(monitor, PR_INTERVAL_NO_TIMEOUT);
     }
 

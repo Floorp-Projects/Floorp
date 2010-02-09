@@ -582,13 +582,11 @@ nsViewManager::WillBitBlit(nsIView* aView, const nsRect& aRect,
   ++mScrollCnt;
   
   nsView* v = static_cast<nsView*>(aView);
-
-  // Since the view is actually moving the widget by -aScrollAmount, that's the
-  // offset we want to use when accumulating dirty rects.
   if (v->HasNonEmptyDirtyRegion()) {
     nsRegion* dirty = v->GetDirtyRegion();
-    nsRegion intersection;
-    intersection.And(*dirty, aRect);
+    nsRegion intersection = *dirty;
+    intersection.MoveBy(-aCopyDelta);
+    intersection.And(intersection, aRect);
     if (!intersection.IsEmpty()) {
       dirty->Or(*dirty, intersection);
       // Random simplification number...

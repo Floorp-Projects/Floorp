@@ -174,7 +174,7 @@ nsresult nsPopupWindow::StandardWindowCreate(nsIWidget *aParent,
 NS_METHOD nsPopupWindow::Show(PRBool bState)
 {
 	//Bring popup to correct workspace.
-	if (bState == PR_TRUE && mView && mView->Window() != NULL )
+	if (bState && mView && mView->Window() != NULL)
 		mView->Window()->SetWorkspaces(B_CURRENT_WORKSPACE);
 		
 	return nsWindow::Show(bState);

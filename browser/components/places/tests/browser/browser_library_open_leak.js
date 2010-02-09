@@ -48,22 +48,20 @@
 let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
          getService(Ci.nsIWindowWatcher);
 
-let windowObserver = {
-  observe: function(aSubject, aTopic, aData) {
-    if (aTopic === "domwindowopened") {
-      ww.unregisterNotification(this);
-      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.addEventListener("load", function onLoad(event) {
-        win.removeEventListener("load", onLoad, false);
-        executeSoon(function () {
-          ok(true, "Library has been correctly opened");
-          win.close();
-          finish();
-        });
-      }, false);
-    }
-  }
-};
+function windowObserver(aSubject, aTopic, aData) {
+  if (aTopic != "domwindowopened")
+    return;
+  ww.unregisterNotification(windowObserver);
+  let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+  win.addEventListener("load", function onLoad(event) {
+    win.removeEventListener("load", onLoad, false);
+    executeSoon(function () {
+      ok(true, "Library has been correctly opened");
+      win.close();
+      finish();
+    });
+  }, false);
+}
 
 function test() {
   waitForExplicitFinish();

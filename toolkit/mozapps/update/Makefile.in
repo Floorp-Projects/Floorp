@@ -35,14 +35,31 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src
+MODULE = update
+
+XPIDLSRCS = nsIUpdateTimerManager.idl
+
+EXTRA_PP_COMPONENTS = nsUpdateTimerManager.js
+
+ifdef MOZ_UPDATER
+DIRS = ../readstrings \
+  updater \
+  $(NULL)
+
+XPIDLSRCS += nsIUpdateService.idl
+
+EXTRA_PP_COMPONENTS += \
+  nsUpdateService.js \
+  nsUpdateServiceStub.js \
+  $(NULL)
+endif
 
 ifdef ENABLE_TESTS
 DIRS += test_timermanager

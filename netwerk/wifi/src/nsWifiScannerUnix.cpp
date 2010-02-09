@@ -161,7 +161,7 @@ nsWifiMonitor::DoScan()
 
   char* args[] = {(char*) &accessPoints, (char*) iw_stats, nsnull };
  
-  while (mKeepGoing == PR_TRUE) {
+  while (mKeepGoing) {
 
     accessPoints.Clear();
 

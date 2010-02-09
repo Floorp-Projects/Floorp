@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.50 2009/06/05 02:34:15 nelson%bolyard.com Exp $ */
+/* $Id: sslsnce.c,v 1.52 2010/01/14 22:15:25 alexei.volkov.bugs%sun.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -71,6 +71,8 @@
  *     encKeyCacheEntry         ticketEncKey; // Wrapped in non-bypass mode
  *     encKeyCacheEntry         ticketMacKey; // Wrapped in non-bypass mode
  *     PRBool                   ticketKeysValid;
+ *     sidCacheLock             srvNameCacheLock;
+ *     srvNameCacheEntry        srvNameData[ numSrvNameCacheEntries ];
  * } cacheMemCacheData;
  */
 #include "seccomon.h"
@@ -84,6 +86,7 @@
 #include "pk11func.h"
 #include "base64.h"
 #include "keyhi.h"
+#include "blapi.h"
 
 #include <stdio.h>
 
@@ -143,17 +146,19 @@ struct sidCacheEntryStr {
 
 	struct {
 /*  2 */    ssl3CipherSuite  cipherSuite;
-/*  2 */    PRUint16    compression; 	/* SSL3CompressionMethod */
+/*  2 */    PRUint16    compression; 	/* SSLCompressionMethod */
 
 /*100 */    ssl3SidKeys keys;	/* keys and ivs, wrapped as needed. */
 
 /*  4 */    PRUint32    masterWrapMech; 
 /*  4 */    SSL3KEAType exchKeyType;
 /*  4 */    PRInt32     certIndex;
-/*116 */} ssl3;
+/*  4 */    PRInt32     srvNameIndex;
+/* 32 */    PRUint8     srvNameHash[SHA256_LENGTH]; /* SHA256 name hash */
+/*152 */} ssl3;
 /* force sizeof(sidCacheEntry) to be a multiple of cache line size */
         struct {
-/*120 */    PRUint8     filler[120]; /* 72+120==196, a multiple of 16 */
+/*152 */    PRUint8     filler[120]; /* 72+152==224, a multiple of 16 */
 	} forceSize;
     } u;
 };
@@ -186,6 +191,18 @@ struct encKeyCacheEntryStr {
 };
 typedef struct encKeyCacheEntryStr encKeyCacheEntry;
 
+#define SSL_MAX_DNS_HOST_NAME  1024
+
+struct srvNameCacheEntryStr {
+    PRUint16    type;                                   /*    2 */
+    PRUint16    nameLen;                                /*    2 */
+    PRUint8	name[SSL_MAX_DNS_HOST_NAME + 12];       /* 1034 */
+    PRUint8 	nameHash[SHA256_LENGTH];                /*   32 */
+                                                        /* 1072 */
+};
+typedef struct srvNameCacheEntryStr srvNameCacheEntry;
+
+
 struct cacheDescStr {
 
     PRUint32            cacheMemSize;
@@ -203,6 +220,9 @@ struct cacheDescStr {
     PRUint32            numKeyCacheEntries;
     PRUint32            keyCacheSize;
 
+    PRUint32            numSrvNameCacheEntries;
+    PRUint32            srvNameCacheSize;
+
     PRUint32		ssl2Timeout;
     PRUint32		ssl3Timeout;
 
@@ -218,6 +238,7 @@ struct cacheDescStr {
     sidCacheLock    *          sidCacheLocks;
     sidCacheLock    *          keyCacheLock;
     sidCacheLock    *          certCacheLock;
+    sidCacheLock    *          srvNameCacheLock;
     sidCacheSet     *          sidCacheSets;
     sidCacheEntry   *          sidCacheData;
     certCacheEntry  *          certCacheData;
@@ -226,6 +247,7 @@ struct cacheDescStr {
     encKeyCacheEntry         * ticketEncKey;
     encKeyCacheEntry         * ticketMacKey;
     PRUint32        *          ticketKeysValid;
+    srvNameCacheEntry *        srvNameCacheData;
 
     /* Only the private copies of these pointers are valid */
     char *                     cacheMem;
@@ -248,6 +270,7 @@ static PRBool isMultiProcess  = PR_FALSE;
 #define DEF_CERT_CACHE_ENTRIES 250
 #define MIN_CERT_CACHE_ENTRIES 125 /* the effective size in old releases. */
 #define DEF_KEY_CACHE_ENTRIES  250
+#define DEF_NAME_CACHE_ENTRIES  1000
 
 #define SID_CACHE_ENTRIES_PER_SET  128
 #define SID_ALIGNMENT          16
@@ -394,6 +417,59 @@ CacheCert(cacheDesc * cache, CERTCertificate *cert, sidCacheEntry *sce)
 
 }
 
+/* Server configuration hash tables need to account the SECITEM.type
+ * field as well. These functions accomplish that. */
+static PLHashNumber
+Get32BitNameHash(const SECItem *name)
+{
+    PLHashNumber rv = SECITEM_Hash(name);
+    
+    PRUint8 *rvc = (PRUint8 *)&rv;
+    rvc[ name->len % sizeof(rv) ] ^= name->type;
+
+    return rv;
+}
+
+/* Put a name in the cache.  Update the cert index in the sce.
+*/
+static PRUint32
+CacheSrvName(cacheDesc * cache, SECItem *name, sidCacheEntry *sce)
+{
+    PRUint32           now;
+    PRUint32           ndx;
+    srvNameCacheEntry  snce;
+
+    if (!name || name->len <= 0 ||
+        name->len > SSL_MAX_DNS_HOST_NAME) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return 0;
+    }
+
+    snce.type = name->type;
+    snce.nameLen = name->len;
+    PORT_Memcpy(snce.name, name->data, snce.nameLen);
+    SHA256_HashBuf(snce.nameHash, (unsigned char*)name->data,
+                   name->len);
+    /* get index of the next name */
+    ndx = Get32BitNameHash(name);
+    /* get lock on cert cache */
+    now = LockSidCacheLock(cache->srvNameCacheLock, 0);
+    if (now) {
+        if (cache->numSrvNameCacheEntries > 0) {
+            /* Fit the index into array */
+            ndx %= cache->numSrvNameCacheEntries;
+            /* write the entry */
+            cache->srvNameCacheData[ndx] = snce;
+            /* remember where we put it. */
+            sce->u.ssl3.srvNameIndex = ndx;
+            /* Copy hash into sid hash */
+            PORT_Memcpy(sce->u.ssl3.srvNameHash, snce.nameHash, SHA256_LENGTH);
+        }
+	UnlockSidCacheLock(cache->srvNameCacheLock);
+    }
+    return now;
+}
+
 /*
 ** Convert local SID to shared memory one
 */
@@ -454,6 +530,7 @@ ConvertFromSID(sidCacheEntry *to, sslSessionID *from)
 	to->u.ssl3.exchKeyType      = from->u.ssl3.exchKeyType;
 	to->sessionIDLength         = from->u.ssl3.sessionIDLength;
 	to->u.ssl3.certIndex        = -1;
+	to->u.ssl3.srvNameIndex     = -1;
 
 	PORT_Memcpy(to->sessionID, from->u.ssl3.sessionID,
 		    to->sessionIDLength);
@@ -472,7 +549,9 @@ ConvertFromSID(sidCacheEntry *to, sslSessionID *from)
 ** Caller must hold cache lock when calling this.
 */
 static sslSessionID *
-ConvertToSID(sidCacheEntry *from, certCacheEntry *pcce, 
+ConvertToSID(sidCacheEntry *    from,
+             certCacheEntry *   pcce,
+             srvNameCacheEntry *psnce,
              CERTCertDBHandle * dbHandle)
 {
     sslSessionID *to;
@@ -522,10 +601,21 @@ ConvertToSID(sidCacheEntry *from, certCacheEntry *pcce,
 
 	to->u.ssl3.sessionIDLength  = from->sessionIDLength;
 	to->u.ssl3.cipherSuite      = from->u.ssl3.cipherSuite;
-	to->u.ssl3.compression      = (SSL3CompressionMethod)from->u.ssl3.compression;
+	to->u.ssl3.compression      = (SSLCompressionMethod)from->u.ssl3.compression;
 	to->u.ssl3.keys             = from->u.ssl3.keys;
 	to->u.ssl3.masterWrapMech   = from->u.ssl3.masterWrapMech;
 	to->u.ssl3.exchKeyType      = from->u.ssl3.exchKeyType;
+	if (from->u.ssl3.srvNameIndex != -1 && psnce) {
+            SECItem name;
+            SECStatus rv;
+            name.type                   = psnce->type;
+            name.len                    = psnce->nameLen;
+            name.data                   = psnce->name;
+            rv = SECITEM_CopyItem(NULL, &to->u.ssl3.srvName, &name);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+        }
 
 	PORT_Memcpy(to->u.ssl3.sessionID, from->sessionID, from->sessionIDLength);
 
@@ -582,7 +672,9 @@ ConvertToSID(sidCacheEntry *from, certCacheEntry *pcce,
 		PORT_Free(to->u.ssl2.masterKey.data);
 	    if (to->u.ssl2.cipherArg.data)
 		PORT_Free(to->u.ssl2.cipherArg.data);
-	}
+	} else {
+            SECITEM_FreeItem(&to->u.ssl3.srvName, PR_FALSE);
+        }
 	PORT_Free(to);
     }
     return NULL;
@@ -682,12 +774,14 @@ ServerSessionIDLookup(const PRIPv6Addr *addr,
     sslSessionID *  sid      = 0;
     sidCacheEntry * psce;
     certCacheEntry *pcce     = 0;
+    srvNameCacheEntry *psnce = 0;
     cacheDesc *     cache    = &globalCache;
     PRUint32        now;
     PRUint32        set;
     PRInt32         cndx;
     sidCacheEntry   sce;
     certCacheEntry  cce;
+    srvNameCacheEntry snce;
 
     set = SIDindex(cache, addr, sessionID, sessionIDLength);
     now = LockSet(cache, set, 0);
@@ -696,36 +790,65 @@ ServerSessionIDLookup(const PRIPv6Addr *addr,
 
     psce = FindSID(cache, set, now, addr, sessionID, sessionIDLength);
     if (psce) {
-	if (psce->version >= SSL_LIBRARY_VERSION_3_0 && 
-	    (cndx = psce->u.ssl3.certIndex) != -1) {
-
-	    PRUint32 gotLock = LockSidCacheLock(cache->certCacheLock, now);
-	    if (gotLock) {
-		pcce = &cache->certCacheData[cndx];
-
-		/* See if the cert's session ID matches the sce cache. */
-		if ((pcce->sessionIDLength == psce->sessionIDLength) &&
-		    !PORT_Memcmp(pcce->sessionID, psce->sessionID, 
-		                 pcce->sessionIDLength)) {
-		    cce = *pcce;
-		} else {
-		    /* The cert doesen't match the SID cache entry, 
-		    ** so invalidate the SID cache entry. 
-		    */
-		    psce->valid = 0;
-		    psce = 0;
-		    pcce = 0;
-		}
-		UnlockSidCacheLock(cache->certCacheLock);
-	    } else {
-		/* what the ??.  Didn't get the cert cache lock.
-		** Don't invalidate the SID cache entry, but don't find it.
-		*/
-		PORT_Assert(!("Didn't get cert Cache Lock!"));
-		psce = 0;
-		pcce = 0;
-	    }
-	}
+	if (psce->version >= SSL_LIBRARY_VERSION_3_0) {
+	    if ((cndx = psce->u.ssl3.certIndex) != -1) {
+                
+                PRUint32 gotLock = LockSidCacheLock(cache->certCacheLock, now);
+                if (gotLock) {
+                    pcce = &cache->certCacheData[cndx];
+                    
+                    /* See if the cert's session ID matches the sce cache. */
+                    if ((pcce->sessionIDLength == psce->sessionIDLength) &&
+                        !PORT_Memcmp(pcce->sessionID, psce->sessionID, 
+                                     pcce->sessionIDLength)) {
+                        cce = *pcce;
+                    } else {
+                        /* The cert doesen't match the SID cache entry, 
+                        ** so invalidate the SID cache entry. 
+                        */
+                        psce->valid = 0;
+                        psce = 0;
+                        pcce = 0;
+                    }
+                    UnlockSidCacheLock(cache->certCacheLock);
+                } else {
+                    /* what the ??.  Didn't get the cert cache lock.
+                    ** Don't invalidate the SID cache entry, but don't find it.
+                    */
+                    PORT_Assert(!("Didn't get cert Cache Lock!"));
+                    psce = 0;
+                    pcce = 0;
+                }
+            }
+            if ((cndx = psce->u.ssl3.srvNameIndex) != -1) {
+                PRUint32 gotLock = LockSidCacheLock(cache->srvNameCacheLock,
+                                                    now);
+                if (gotLock) {
+                    psnce = &cache->srvNameCacheData[cndx];
+                    
+                    if (!PORT_Memcmp(psnce->nameHash, psce->u.ssl3.srvNameHash, 
+                                     SHA256_LENGTH)) {
+                        snce = *psnce;
+                    } else {
+                        /* The name doesen't match the SID cache entry, 
+                        ** so invalidate the SID cache entry. 
+                        */
+                        psce->valid = 0;
+                        psce = 0;
+                        psnce = 0;
+                    }
+                    UnlockSidCacheLock(cache->srvNameCacheLock);
+                } else {
+                    /* what the ??.  Didn't get the cert cache lock.
+                    ** Don't invalidate the SID cache entry, but don't find it.
+                    */
+                    PORT_Assert(!("Didn't get name Cache Lock!"));
+                    psce = 0;
+                    psnce = 0;
+                }
+                
+            }
+        }
 	if (psce) {
 	    psce->lastAccessTime = now;
 	    sce = *psce;	/* grab a copy while holding the lock */
@@ -736,7 +859,7 @@ ServerSessionIDLookup(const PRIPv6Addr *addr,
 	/* sce conains a copy of the cache entry.
 	** Convert shared memory format to local format 
 	*/
-	sid = ConvertToSID(&sce, pcce ? &cce : 0, dbHandle);
+	sid = ConvertToSID(&sce, pcce ? &cce : 0, psnce ? &snce : 0, dbHandle);
     }
     return sid;
 }
@@ -796,9 +919,14 @@ ServerSessionIDCache(sslSessionID *sid)
 
 	ConvertFromSID(&sce, sid);
 
-	if ((version >= SSL_LIBRARY_VERSION_3_0) && 
-	    (sid->peerCert != NULL)) {
-	    now = CacheCert(cache, sid->peerCert, &sce);
+	if (version >= SSL_LIBRARY_VERSION_3_0) {
+            SECItem *name = &sid->u.ssl3.srvName;
+            if (name->len && name->data) {
+                now = CacheSrvName(cache, name, &sce);
+            }
+            if (sid->peerCert != NULL) {
+                now = CacheCert(cache, sid->peerCert, &sce);
+            }
 	}
 
 	set = SIDindex(cache, &sce.addr, sce.sessionID, sce.sessionIDLength);
@@ -924,7 +1052,8 @@ CloseCache(cacheDesc *cache)
 }
 
 static SECStatus
-InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout, 
+InitCache(cacheDesc *cache, int maxCacheEntries, int maxCertCacheEntries,
+          int maxSrvNameCacheEntries, PRUint32 ssl2_timeout, 
           PRUint32 ssl3_timeout, const char *directory, PRBool shared)
 {
     ptrdiff_t     ptr;
@@ -973,6 +1102,11 @@ InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout,
     cache->numSIDCacheSetsPerLock = 
     	SID_HOWMANY(cache->numSIDCacheSets, cache->numSIDCacheLocks);
 
+    cache->numCertCacheEntries = (maxCertCacheEntries > 0) ?
+                                             maxCertCacheEntries : 0;
+    cache->numSrvNameCacheEntries = (maxSrvNameCacheEntries > 0) ?
+                                             maxSrvNameCacheEntries : 0;
+
     /* compute size of shared memory, and offsets of all pointers */
     ptr = 0;
     cache->cacheMem     = (char *)ptr;
@@ -981,7 +1115,8 @@ InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout,
     cache->sidCacheLocks = (sidCacheLock *)ptr;
     cache->keyCacheLock  = cache->sidCacheLocks + cache->numSIDCacheLocks;
     cache->certCacheLock = cache->keyCacheLock  + 1;
-    ptr = (ptrdiff_t)(cache->certCacheLock + 1);
+    cache->srvNameCacheLock = cache->certCacheLock  + 1;
+    ptr = (ptrdiff_t)(cache->srvNameCacheLock + 1);
     ptr = SID_ROUNDUP(ptr, SID_ALIGNMENT);
 
     cache->sidCacheSets  = (sidCacheSet *)ptr;
@@ -996,10 +1131,12 @@ InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout,
     cache->sidCacheSize  = 
     	(char *)cache->certCacheData - (char *)cache->sidCacheData;
 
-    /* This is really a poor way to computer this! */
-    cache->numCertCacheEntries = cache->sidCacheSize / sizeof(certCacheEntry);
-    if (cache->numCertCacheEntries < MIN_CERT_CACHE_ENTRIES)
+    if (cache->numCertCacheEntries < MIN_CERT_CACHE_ENTRIES) {
+        /* This is really a poor way to computer this! */
+        cache->numCertCacheEntries = cache->sidCacheSize / sizeof(certCacheEntry);
+        if (cache->numCertCacheEntries < MIN_CERT_CACHE_ENTRIES)
     	cache->numCertCacheEntries = MIN_CERT_CACHE_ENTRIES;
+    }
     ptr = (ptrdiff_t)(cache->certCacheData + cache->numCertCacheEntries);
     ptr = SID_ROUNDUP(ptr, SID_ALIGNMENT);
 
@@ -1028,6 +1165,15 @@ InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout,
 
     cache->ticketKeysValid = (PRUint32 *)ptr;
     ptr = (ptrdiff_t)(cache->ticketKeysValid + 1);
+    ptr = SID_ROUNDUP(ptr, SID_ALIGNMENT);
+
+    cache->srvNameCacheData = (srvNameCacheEntry *)ptr;
+    if (cache->numSrvNameCacheEntries < 0) {
+        cache->numSrvNameCacheEntries = DEF_NAME_CACHE_ENTRIES;
+    }
+    cache->srvNameCacheSize =
+        cache->numSrvNameCacheEntries * sizeof(srvNameCacheEntry);
+    ptr = (ptrdiff_t)(cache->srvNameCacheData + cache->numSrvNameCacheEntries);
     ptr = SID_ROUNDUP(ptr, SID_ALIGNMENT);
 
     cache->cacheMemSize = ptr;
@@ -1113,6 +1259,7 @@ InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout,
     *(ptrdiff_t *)(&cache->sidCacheLocks) += ptr;
     *(ptrdiff_t *)(&cache->keyCacheLock ) += ptr;
     *(ptrdiff_t *)(&cache->certCacheLock) += ptr;
+    *(ptrdiff_t *)(&cache->srvNameCacheLock) += ptr;
     *(ptrdiff_t *)(&cache->sidCacheSets ) += ptr;
     *(ptrdiff_t *)(&cache->sidCacheData ) += ptr;
     *(ptrdiff_t *)(&cache->certCacheData) += ptr;
@@ -1121,11 +1268,12 @@ InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout,
     *(ptrdiff_t *)(&cache->ticketEncKey ) += ptr;
     *(ptrdiff_t *)(&cache->ticketMacKey ) += ptr;
     *(ptrdiff_t *)(&cache->ticketKeysValid) += ptr;
+    *(ptrdiff_t *)(&cache->srvNameCacheData) += ptr;
 
     /* initialize the locks */
     init_time = ssl_Time();
     pLock = cache->sidCacheLocks;
-    for (locks_to_initialize = cache->numSIDCacheLocks + 2;
+    for (locks_to_initialize = cache->numSIDCacheLocks + 3;
          locks_initialized < locks_to_initialize; 
 	 ++locks_initialized, ++pLock ) {
 
@@ -1170,23 +1318,28 @@ SSL_SetMaxServerCacheLocks(PRUint32 maxLocks)
     return SECSuccess;
 }
 
-SECStatus
-SSL_ConfigServerSessionIDCacheInstance(	cacheDesc *cache,
-                                int      maxCacheEntries, 
-				PRUint32 ssl2_timeout,
-			       	PRUint32 ssl3_timeout, 
-			  const char *   directory, PRBool shared)
+static SECStatus
+ssl_ConfigServerSessionIDCacheInstanceWithOpt(cacheDesc *cache,
+                                              PRUint32 ssl2_timeout,
+                                              PRUint32 ssl3_timeout, 
+                                              const char *   directory,
+                                              PRBool shared,
+                                              int      maxCacheEntries, 
+                                              int      maxCertCacheEntries,
+                                              int      maxSrvNameCacheEntries)
 {
     SECStatus rv;
 
-    PORT_Assert(sizeof(sidCacheEntry) == 192);
+    PORT_Assert(sizeof(sidCacheEntry) == 224);
     PORT_Assert(sizeof(certCacheEntry) == 4096);
+    PORT_Assert(sizeof(srvNameCacheEntry) == 1072);
 
     myPid = SSL_GETPID();
     if (!directory) {
 	directory = DEFAULT_CACHE_DIRECTORY;
     }
-    rv = InitCache(cache, maxCacheEntries, ssl2_timeout, ssl3_timeout, 
+    rv = InitCache(cache, maxCacheEntries, maxCertCacheEntries,
+                   maxSrvNameCacheEntries, ssl2_timeout, ssl3_timeout, 
                    directory, shared);
     if (rv) {
 	SET_ERROR_CODE
@@ -1197,6 +1350,22 @@ SSL_ConfigServerSessionIDCacheInstance(	cacheDesc *cache,
     ssl_sid_cache   = ServerSessionIDCache;
     ssl_sid_uncache = ServerSessionIDUncache;
     return SECSuccess;
+}
+
+SECStatus
+SSL_ConfigServerSessionIDCacheInstance(	cacheDesc *cache,
+                                int      maxCacheEntries, 
+                                PRUint32 ssl2_timeout,
+                                PRUint32 ssl3_timeout, 
+                                const char *   directory, PRBool shared)
+{
+    return ssl_ConfigServerSessionIDCacheInstanceWithOpt(cache,
+                                                         ssl2_timeout,
+                                                         ssl3_timeout,
+                                                         directory,
+                                                         shared,
+                                                         maxCacheEntries, 
+                                                         -1, -1);
 }
 
 SECStatus
@@ -1231,11 +1400,13 @@ SSL_ShutdownServerSessionIDCache(void)
 /* Use this function, instead of SSL_ConfigServerSessionIDCache,
  * if the cache will be shared by multiple processes.
  */
-SECStatus
-SSL_ConfigMPServerSIDCache(	int      maxCacheEntries, 
-				PRUint32 ssl2_timeout,
-			       	PRUint32 ssl3_timeout, 
-		          const char *   directory)
+static SECStatus
+ssl_ConfigMPServerSIDCacheWithOpt(      PRUint32 ssl2_timeout,
+                                        PRUint32 ssl3_timeout, 
+                                        const char *   directory,
+                                        int maxCacheEntries,
+                                        int maxCertCacheEntries,
+                                        int maxSrvNameCacheEntries)
 {
     char *	envValue;
     char *	inhValue;
@@ -1248,8 +1419,9 @@ SSL_ConfigMPServerSIDCache(	int      maxCacheEntries,
     char        fmString[PR_FILEMAP_STRING_BUFSIZE];
 
     isMultiProcess = PR_TRUE;
-    result = SSL_ConfigServerSessionIDCacheInstance(cache, maxCacheEntries, 
-			ssl2_timeout, ssl3_timeout, directory, PR_TRUE);
+    result = ssl_ConfigServerSessionIDCacheInstanceWithOpt(cache,
+                  ssl2_timeout, ssl3_timeout, directory, PR_TRUE,
+        maxCacheEntries, maxCacheEntries, maxSrvNameCacheEntries);
     if (result != SECSuccess) 
         return result;
 
@@ -1287,6 +1459,44 @@ SSL_ConfigMPServerSIDCache(	int      maxCacheEntries,
     LaunchLockPoller(cache);
 #endif
     return result;
+}
+
+/* Use this function, instead of SSL_ConfigServerSessionIDCache,
+ * if the cache will be shared by multiple processes.
+ */
+SECStatus
+SSL_ConfigMPServerSIDCache(	int      maxCacheEntries, 
+				PRUint32 ssl2_timeout,
+			       	PRUint32 ssl3_timeout, 
+		          const char *   directory)
+{
+    return ssl_ConfigMPServerSIDCacheWithOpt(ssl2_timeout,
+                                             ssl3_timeout,
+                                             directory,
+                                             maxCacheEntries,
+                                             -1, -1);
+}
+
+SECStatus
+SSL_ConfigServerSessionIDCacheWithOpt(
+				PRUint32 ssl2_timeout,
+			       	PRUint32 ssl3_timeout, 
+                                const char *   directory,
+                                int maxCacheEntries,
+                                int maxCertCacheEntries,
+                                int maxSrvNameCacheEntries,
+                                PRBool enableMPCache)
+{
+    if (!enableMPCache) {
+        ssl_InitSessionCacheLocks(PR_FALSE);
+        return ssl_ConfigServerSessionIDCacheInstanceWithOpt(&globalCache, 
+           ssl2_timeout, ssl3_timeout, directory, PR_FALSE,
+           maxCacheEntries, maxCertCacheEntries, maxSrvNameCacheEntries);
+    } else {
+        return ssl_ConfigMPServerSIDCacheWithOpt(ssl2_timeout, ssl3_timeout,
+                directory, maxCacheEntries, maxCertCacheEntries,
+                                                 maxSrvNameCacheEntries);
+    }
 }
 
 SECStatus
@@ -1391,6 +1601,7 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char * envString)
     *(ptrdiff_t *)(&cache->sidCacheLocks) += ptr;
     *(ptrdiff_t *)(&cache->keyCacheLock ) += ptr;
     *(ptrdiff_t *)(&cache->certCacheLock) += ptr;
+    *(ptrdiff_t *)(&cache->srvNameCacheLock) += ptr;
     *(ptrdiff_t *)(&cache->sidCacheSets ) += ptr;
     *(ptrdiff_t *)(&cache->sidCacheData ) += ptr;
     *(ptrdiff_t *)(&cache->certCacheData) += ptr;
@@ -1399,6 +1610,7 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char * envString)
     *(ptrdiff_t *)(&cache->ticketEncKey ) += ptr;
     *(ptrdiff_t *)(&cache->ticketMacKey ) += ptr;
     *(ptrdiff_t *)(&cache->ticketKeysValid) += ptr;
+    *(ptrdiff_t *)(&cache->srvNameCacheData) += ptr;
 
     cache->cacheMemMap = my.cacheMemMap;
     cache->cacheMem    = my.cacheMem;
@@ -1420,7 +1632,7 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char * envString)
     /* note from jpierre : this should be free'd in child processes when
     ** a function is added to delete the SSL session cache in the future. 
     */
-    locks_to_initialize = cache->numSIDCacheLocks + 2;
+    locks_to_initialize = cache->numSIDCacheLocks + 3;
     newLocks = PORT_NewArray(sidCacheLock, locks_to_initialize);
     if (!newLocks)
     	goto loser;
@@ -1443,6 +1655,7 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char * envString)
     /* also fix the key and cert cache which use the last 2 lock entries */
     cache->keyCacheLock  = cache->sidCacheLocks + cache->numSIDCacheLocks;
     cache->certCacheLock = cache->keyCacheLock  + 1;
+    cache->srvNameCacheLock = cache->certCacheLock  + 1;
 #endif
 
     PORT_Free(myEnvString);

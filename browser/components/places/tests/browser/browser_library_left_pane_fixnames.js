@@ -49,34 +49,32 @@ var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
 // correctTitle: original and correct query's title.
 var leftPaneQueries = [];
 
-var windowObserver = {
-  observe: function(aSubject, aTopic, aData) {
-    if (aTopic === "domwindowopened") {
-      ww.unregisterNotification(this);
-      var organizer = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      organizer.addEventListener("load", function onLoad(event) {
-        organizer.removeEventListener("load", onLoad, false);
-        executeSoon(function () {
-          // Check titles have been fixed.
-          for (var i = 0; i < leftPaneQueries.length; i++) {
-            var query = leftPaneQueries[i];
-            is(PlacesUtils.bookmarks.getItemTitle(query.itemId),
-               query.correctTitle, "Title is correct for query " + query.name);
-            if ("concreteId" in query) {
-              is(PlacesUtils.bookmarks.getItemTitle(query.concreteId),
-               query.concreteTitle, "Concrete title is correct for query " + query.name);
-            }
-          }
+function windowObserver(aSubject, aTopic, aData) {
+  if (aTopic != "domwindowopened")
+    return;
+  ww.unregisterNotification(windowObserver);
+  var organizer = aSubject.QueryInterface(Ci.nsIDOMWindow);
+  organizer.addEventListener("load", function onLoad(event) {
+    organizer.removeEventListener("load", onLoad, false);
+    executeSoon(function () {
+      // Check titles have been fixed.
+      for (var i = 0; i < leftPaneQueries.length; i++) {
+        var query = leftPaneQueries[i];
+        is(PlacesUtils.bookmarks.getItemTitle(query.itemId),
+           query.correctTitle, "Title is correct for query " + query.name);
+        if ("concreteId" in query) {
+          is(PlacesUtils.bookmarks.getItemTitle(query.concreteId),
+           query.concreteTitle, "Concrete title is correct for query " + query.name);
+        }
+      }
 
-          // Close Library window.
-          organizer.close();
-          // No need to cleanup anything, we have a correct left pane now.
-          finish();
-        });
-      }, false);
-    }
-  }
-};
+      // Close Library window.
+      organizer.close();
+      // No need to cleanup anything, we have a correct left pane now.
+      finish();
+    });
+  }, false);
+}
 
 function test() {
   waitForExplicitFinish();

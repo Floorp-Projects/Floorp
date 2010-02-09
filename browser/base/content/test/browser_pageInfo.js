@@ -13,27 +13,25 @@ function test() {
   content.location =
     "https://example.com/browser/browser/base/content/test/feed_tab.html";
 
-  var observer = {
-    observe: function(win, topic, data) {
-      if (topic != "page-info-dialog-loaded")
-        return;
+  function observer(win, topic, data) {
+    if (topic != "page-info-dialog-loaded")
+      return;
 
-      switch (atTest) {
-        case 0:
-          atTest++;
-          handlePageInfo();
-          break;
-        case 1:
-          atTest++;
-          pageInfo = win;
-          testLockClick();
-          break;
-        case 2:
-          atTest++;
-          obs.removeObserver(observer, "page-info-dialog-loaded");
-          testLockDoubleClick();
-          break;
-      }
+    switch (atTest) {
+      case 0:
+        atTest++;
+        handlePageInfo();
+        break;
+      case 1:
+        atTest++;
+        pageInfo = win;
+        testLockClick();
+        break;
+      case 2:
+        atTest++;
+        obs.removeObserver(observer, "page-info-dialog-loaded");
+        testLockDoubleClick();
+        break;
     }
   }
 

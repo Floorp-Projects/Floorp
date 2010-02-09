@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslgathr.c,v 1.9 2007/07/06 03:16:54 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: sslgathr.c,v 1.10 2009/10/16 17:45:35 wtc%google.com Exp $ */
 #include "cert.h"
 #include "ssl.h"
 #include "sslimpl.h"
@@ -309,7 +309,7 @@ ssl2_GatherData(sslSocket *ss, sslGather *gs, int flags)
 
 	    ssl_ReleaseSpecReadLock(ss);  /******************************/
 
-	    if (PORT_Memcmp(mac, pBuf, macLen) != 0) {
+	    if (NSS_SecureMemcmp(mac, pBuf, macLen) != 0) {
 		/* MAC's didn't match... */
 		SSL_DBG(("%d: SSL[%d]: mac check failed, seq=%d",
 			 SSL_GETPID(), ss->fd, ss->sec.rcvSequence));

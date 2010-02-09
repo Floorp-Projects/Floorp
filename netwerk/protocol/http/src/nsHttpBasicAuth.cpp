@@ -92,12 +92,15 @@ nsHttpBasicAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
                                      const PRUnichar *password,
                                      nsISupports **sessionState,
                                      nsISupports **continuationState,
+                                     PRUint32 *aFlags,
                                      char **creds)
 
 {
     LOG(("nsHttpBasicAuth::GenerateCredentials [challenge=%s]\n", challenge));
 
     NS_ENSURE_ARG_POINTER(creds);
+
+    *aFlags = 0;
 
     // we only know how to deal with Basic auth for http.
     PRBool isBasicAuth = !PL_strncasecmp(challenge, "basic", 5);

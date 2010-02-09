@@ -262,6 +262,8 @@ ACCESSIBILITY_ATOM(aria_valuetext, "aria-valuetext")
 // a form property used to obtain the default label
 // of an HTML button from the button frame
 ACCESSIBILITY_ATOM(defaultLabel, "defaultLabel")
+// the attribute specifying the editor's bogus br node
+ACCESSIBILITY_ATOM(mozeditorbogusnode, "_moz_editor_bogus_node")
 
 // Object attributes
 ACCESSIBILITY_ATOM(tableCellIndex, "table-cell-index")
