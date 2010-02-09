@@ -2861,21 +2861,24 @@ nsDocument::GetElementsByClassNameHelper(nsINode* aRootNode,
       aRootNode->GetOwnerDoc()->GetCompatibilityMode() ==
         eCompatibility_NavQuirks ?
           eIgnoreCase : eCaseMatters;
-  
-    elements = new nsContentList(aRootNode, MatchClassNames,
-                                 DestroyClassNameArray, info);
+
+    elements =
+      NS_GetFuncStringContentList(aRootNode, MatchClassNames,
+                                  DestroyClassNameArray, info,
+                                  aClasses).get();
   } else {
     delete info;
     info = nsnull;
     elements = new nsBaseContentList();
+    NS_IF_ADDREF(elements);
   }
   if (!elements) {
     delete info;
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // Transfer ownership
   *aReturn = elements;
-  NS_ADDREF(*aReturn);
 
   return NS_OK;
 }
