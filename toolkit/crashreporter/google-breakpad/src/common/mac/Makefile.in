@@ -62,13 +62,11 @@ CMSRCS = \
   HTTPMultipartUpload.m \
   $(NULL)
 
-ifeq ($(HOST_OS_ARCH),Darwin)
 HOST_CPPSRCS = $(CPPSRCS)
 
 HOST_CMMSRCS = \
   dump_syms.mm \
   $(NULL)
-endif
 
 # need static lib
 FORCE_STATIC_LIB = 1
