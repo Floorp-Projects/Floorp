@@ -464,7 +464,7 @@ main(PRInt32 argc, char *argv[])
       rv[2] = CheckResult(cookie.get(), MUST_BE_NULL);
       SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; expires=\"Thu, 10 Apr 1980 16:33:12 GMT", nsnull);
       GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
-      rv[3] = CheckResult(cookie.get(), MUST_EQUAL, "test=expiry");
+      rv[3] = CheckResult(cookie.get(), MUST_BE_NULL);
       SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; expires=\"Thu, 10 Apr 1980 16:33:12 GMT\"", nsnull);
       GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
       rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
