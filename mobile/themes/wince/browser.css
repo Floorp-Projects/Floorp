@@ -121,7 +121,7 @@ toolbarbutton.page-button {
 }
 
 /* browser tools panel UI   ------------------------------------------------ */
-@media (orientation: landscape) {
+@media (min-width: 500px) {
   #panel-container {
     -moz-box-orient: horizontal;
   }
@@ -137,7 +137,7 @@ toolbarbutton.page-button {
   }
 }
 
-@media (orientation: portrait) {
+@media (max-width: 500px) {
   #panel-container {
     -moz-box-orient: vertical;
   }
@@ -166,14 +166,14 @@ toolbarbutton.page-button {
 }
 
 /* addons panel UI   ------------------------------------------------------- */
-@media (orientation: landscape) {
+@media (min-width: 500px) {
   #addons-repo {
     -moz-box-orient: horizontal;
     -moz-box-align: center;
   }
 }
 
-@media (orientation: portrait) {
+@media (max-width: 500px) {
   #addons-repo {
     -moz-box-orient: vertical;
     -moz-box-pack: center;
@@ -219,14 +219,14 @@ richlistitem[isDisabled="true"] image {
 }
 
 /* console panel UI   ------------------------------------------------------ */
-@media (orientation: landscape) {
+@media (min-width: 500px) {
   #console-filter-warnings,
   #console-filter-messages {
     visibility: visible;
   }
 }
 
-@media (orientation: portrait) {
+@media (max-width: 500px) {
   #console-filter-warnings,
   #console-filter-messages {
     visibility: collapse;
@@ -568,13 +568,13 @@ box[type="documenttab"]:only-child .documenttab-close {
 
 /* alerts popup ----------------------------------------------------------- */
 /* not dependent on high and low */
-@media (orientation: landscape) {
+@media (min-width: 500px) {
   #alerts-container {
     width: 300px;
   }
 }
 
-@media (orientation: portrait) {
+@media (max-width: 500px) {
   #alerts-container {
     width: 200px;
   }

@@ -619,9 +619,6 @@ var BrowserUI = {
   showPanel: function showPanel(aPage) {
     Elements.panelUI.left = 0;
     Elements.panelUI.hidden = false;
-    Elements.panelUI.width = window.innerWidth;
-    Elements.panelUI.height = window.innerHeight;
-
     Elements.contentShowing.setAttribute("disabled", "true");
 
     if (aPage != undefined)
