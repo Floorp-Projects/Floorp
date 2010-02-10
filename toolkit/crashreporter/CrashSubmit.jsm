@@ -273,8 +273,8 @@ Submitter.prototype = {
         this.element.removeChild(this.iframe);
         if (this.errorCallback) {
           this.errorCallback(this.id);
-          this.cleanup();
         }
+        this.cleanup();
         return 0;
       }
       // check HTTP status
@@ -283,8 +283,8 @@ Submitter.prototype = {
         this.element.removeChild(this.iframe);
         if (this.errorCallback) {
           this.errorCallback(this.id);
-          this.cleanup();
         }
+        this.cleanup();
         return 0;
       }
 
@@ -303,8 +303,10 @@ Submitter.prototype = {
   submit: function Submitter_submit()
   {
     let [dump, extra] = getPendingMinidump(this.id);
-    if (!dump.exists() || !extra.exists())
+    if (!dump.exists() || !extra.exists()) {
+      this.cleanup();
       return false;
+    }
     this.dump = dump;
     this.extra = extra;
     let iframe = this.document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "iframe");
@@ -315,7 +317,8 @@ Submitter.prototype = {
       if (iframe.contentWindow.location == "about:blank")
         return;
       iframe.removeEventListener("load", loadHandler, true);
-      self.submitForm();
+      if (!self.submitForm())
+        self.cleanup();
     }
 
     iframe.addEventListener("load", loadHandler, true);
