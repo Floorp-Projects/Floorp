@@ -89,6 +89,7 @@
 #include "nsVersionComparator.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsIObjectLoadingContent.h"
+#include "nsIWritablePropertyBag2.h"
 
 #include "nsEnumeratorUtils.h"
 #include "nsXPCOM.h"
@@ -5207,12 +5208,23 @@ NS_IMETHODIMP nsPluginHost::Notify(nsITimer* timer)
 
 #ifdef MOZ_IPC
 void
-nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin)
+nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin, const nsAString& dumpID)
 {
   nsPluginTag* pluginTag = FindTagForPlugin(aPlugin);
   if (!pluginTag) {
     NS_WARNING("nsPluginTag not found in nsPluginHost::PluginCrashed");
     return;
+  }
+
+  // Notify the app's observer that a plugin crashed so it can submit a crashreport.
+  PRBool submittedCrashReport = PR_FALSE;
+  nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIWritablePropertyBag2> propbag = do_CreateInstance("@mozilla.org/hash-property-bag;1");
+  if (obsService && propbag) {
+    propbag->SetPropertyAsAString(NS_LITERAL_STRING("minidumpID"), dumpID);
+    obsService->NotifyObservers(propbag, "plugin-crashed", nsnull);
+    // see if an observer submitted a crash report.
+    propbag->GetPropertyAsBool(NS_LITERAL_STRING("submittedCrashReport"), &submittedCrashReport);
   }
 
   // Invalidate each nsPluginInstanceTag for the crashed plugin
@@ -5225,7 +5237,8 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin)
       instanceTag->mInstance->GetDOMElement(getter_AddRefs(domElement));
       nsCOMPtr<nsIObjectLoadingContent> objectContent(do_QueryInterface(domElement));
       if (objectContent) {
-        objectContent->PluginCrashed();
+        objectContent->PluginCrashed(NS_ConvertUTF8toUTF16(pluginTag->mName),
+                                     submittedCrashReport);
       }
       
       instanceTag->mInstance->Stop();
