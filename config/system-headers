@@ -1009,7 +1009,7 @@ hunspell.hxx
 #if MOZ_NATIVE_BZ2==1
 bzlib.h
 #endif
-#if (MOZ_PLATFORM_MAEMO == 5)
+#if MOZ_PLATFORM_MAEMO==5
 hildon-uri.h
 hildon-mime.h
 hildon-file-chooser-dialog.h
