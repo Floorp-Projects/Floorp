@@ -17,7 +17,6 @@
     }
   </style>
 
-  <script type="application/javascript;version=1.8" src="chrome://global/content/crashes.js"/>
   <script type="application/javascript;version=1.8" src="chrome://global/content/oopcrashdialog.js"/>
 
   <dialogheader title="A Plugin Crashed" />

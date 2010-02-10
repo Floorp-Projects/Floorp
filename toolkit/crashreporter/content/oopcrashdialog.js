@@ -1,14 +1,14 @@
 // This code is TEMPORARY for submitting crashes via an ugly popup dialog:
 // bug 525849 tracks the real implementation.
 
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+Components.utils.import("resource://gre/modules/CrashSubmit.jsm");
+
 var id;
 
 function collectData() {
-  // HACK: crashes.js uses document.body, so we just alias it
-  document.body = document.getElementById('iframe-holder');
-
-  getL10nStrings();
-
   let directoryService = Cc["@mozilla.org/file/directory_service;1"].
     getService(Ci.nsIProperties);
   pendingDir = directoryService.get("UAppData", Ci.nsIFile);
@@ -31,11 +31,18 @@ function collectData() {
   extraFile.moveTo(pendingDir, "");
 }
 
+function submitDone()
+{
+  // we don't currently distinguish between success or failure here
+  window.close();
+}
+
 function onSubmit()
 {
   document.documentElement.getButton('accept').disabled = true;
   document.documentElement.getButton('accept').label = 'Sending';
   document.getElementById('throbber').src = 'chrome://global/skin/icons/loading_16.png';
-  createAndSubmitForm(id, null);
+  CrashSubmit.submit(id, document.getElementById('iframe-holder'),
+                     submitDone, submitDone);
   return false;
 }
