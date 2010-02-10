@@ -124,5 +124,6 @@ interface nsIObjectLoadingContent : nsISupports
    */
   [noscript] nsIFrame getPrintFrame();
 
-  [noscript] void pluginCrashed();
+  [noscript] void pluginCrashed(in AString pluginName,
+                                in boolean submittedCrashReport);
 };

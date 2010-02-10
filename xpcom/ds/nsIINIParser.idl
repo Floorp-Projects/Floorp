@@ -59,6 +59,20 @@ interface nsIINIParser : nsISupports
   AUTF8String getString(in AUTF8String aSection, in AUTF8String aKey);
 };
 
+[scriptable, uuid(712dc5da-8d09-45d0-ba2e-de27eb384c4c)]
+interface nsIINIParserWriter : nsISupports
+{
+  /**
+   * Set the value of a string for a particular section and key.
+   */
+  void setString(in AUTF8String aSection, in AUTF8String aKey, in AUTF8String aValue);
+
+  /**
+   * Write to the INI file.
+   */
+  void writeFile([optional] in nsILocalFile aINIFile);
+};
+
 [scriptable, uuid(ccae7ea5-1218-4b51-aecb-c2d8ecd46af9)]
 interface nsIINIParserFactory : nsISupports
 {

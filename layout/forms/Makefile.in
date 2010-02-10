@@ -58,8 +58,6 @@ EXPORTS		= \
 		nsIListControlFrame.h \
 		nsIComboboxControlFrame.h \
 		nsIFormControlFrame.h \
-		nsIRadioControlFrame.h \
-		nsICheckboxControlFrame.h \
 		nsISelectControlFrame.h \
 		nsITextControlFrame.h \
 		$(NULL)

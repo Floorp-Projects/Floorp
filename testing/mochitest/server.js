@@ -198,6 +198,7 @@ function createMochitestServer(serverBasePath)
 
   server.registerDirectory("/", serverBasePath);
   server.registerPathHandler("/server/shutdown", serverShutdown);
+  server.registerPathHandler("/server/debug", serverDebug);
   server.registerContentType("sjs", "sjs"); // .sjs == CGI-like functionality
   server.registerContentType("jar", "application/x-jar");
   server.registerContentType("ogg", "application/ogg");
@@ -308,6 +309,39 @@ function serverShutdown(metadata, response)
 
   dumpn("Server shutting down now...");
   server.stop(serverStopped);
+}
+
+// /server/debug?[012]
+function serverDebug(metadata, response)
+{
+  response.setStatusLine(metadata.httpVersion, 400, "Bad debugging level");
+  if (metadata.queryString.length !== 1)
+    return;
+
+  var mode;
+  if (metadata.queryString === "0") {
+    // do this now so it gets logged with the old mode
+    dumpn("Server debug logs disabled.");
+    DEBUG = false;
+    DEBUG_TIMESTAMP = false;
+    mode = "disabled";
+  } else if (metadata.queryString === "1") {
+    DEBUG = true;
+    DEBUG_TIMESTAMP = false;
+    mode = "enabled";
+  } else if (metadata.queryString === "2") {
+    DEBUG = true;
+    DEBUG_TIMESTAMP = true;
+    mode = "enabled, with timestamps";
+  } else {
+    return;
+  }
+
+  response.setStatusLine(metadata.httpVersion, 200, "OK");
+  response.setHeader("Content-type", "text/plain", false);
+  var body = "Server debug logs " + mode + ".";
+  response.bodyOutputStream.write(body, body.length);
+  dumpn(body);
 }
 
 //

@@ -462,39 +462,45 @@ main(PRInt32 argc, char *argv[])
       SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; expires=Thu, 10 Apr 1980 16:33:12 GMT", nsnull);
       GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
       rv[2] = CheckResult(cookie.get(), MUST_BE_NULL);
-
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; max-age=60", nsnull);
+      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; expires=\"Thu, 10 Apr 1980 16:33:12 GMT", nsnull);
       GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
-      rv[3] = CheckResult(cookie.get(), MUST_EQUAL, "test=expiry");
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; max-age=-20", nsnull);
+      rv[3] = CheckResult(cookie.get(), MUST_BE_NULL);
+      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; expires=\"Thu, 10 Apr 1980 16:33:12 GMT\"", nsnull);
       GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
       rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
+
       SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; max-age=60", nsnull);
       GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
       rv[5] = CheckResult(cookie.get(), MUST_EQUAL, "test=expiry");
-      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; expires=Thu, 10 Apr 1980 16:33:12 GMT", nsnull);
+      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; max-age=-20", nsnull);
       GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
       rv[6] = CheckResult(cookie.get(), MUST_BE_NULL);
       SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; max-age=60", nsnull);
+      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      rv[7] = CheckResult(cookie.get(), MUST_EQUAL, "test=expiry");
+      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; expires=Thu, 10 Apr 1980 16:33:12 GMT", nsnull);
+      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      rv[8] = CheckResult(cookie.get(), MUST_BE_NULL);
+      SetACookie(cookieService, "http://expireme.org/", nsnull, "test=expiry; max-age=60", nsnull);
       SetACookie(cookieService, "http://expireme.org/", nsnull, "newtest=expiry; max-age=60", nsnull);
       GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
-      rv[7] = CheckResult(cookie.get(), MUST_CONTAIN, "test=expiry");
-      rv[8] = CheckResult(cookie.get(), MUST_CONTAIN, "newtest=expiry");
+      rv[9] = CheckResult(cookie.get(), MUST_CONTAIN, "test=expiry");
+      rv[10] = CheckResult(cookie.get(), MUST_CONTAIN, "newtest=expiry");
       SetACookie(cookieService, "http://expireme.org/", nsnull, "test=differentvalue; max-age=0", nsnull);
       GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
-      rv[9] = CheckResult(cookie.get(), MUST_EQUAL, "newtest=expiry");
+      rv[11] = CheckResult(cookie.get(), MUST_EQUAL, "newtest=expiry");
       SetACookie(cookieService, "http://expireme.org/", nsnull, "newtest=evendifferentvalue; max-age=0", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
-      rv[10] = CheckResult(cookie.get(), MUST_BE_NULL);
-
-      SetACookie(cookieService, "http://foo.expireme.org/", nsnull, "test=expiry; domain=.expireme.org; max-age=60", nsnull);
-      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
-      rv[11] = CheckResult(cookie.get(), MUST_EQUAL, "test=expiry");
-      SetACookie(cookieService, "http://bar.expireme.org/", nsnull, "test=differentvalue; domain=.expireme.org; max-age=0", nsnull);
       GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
       rv[12] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      allTestsPassed = PrintResult(rv, 13) && allTestsPassed;
+      SetACookie(cookieService, "http://foo.expireme.org/", nsnull, "test=expiry; domain=.expireme.org; max-age=60", nsnull);
+      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      rv[13] = CheckResult(cookie.get(), MUST_EQUAL, "test=expiry");
+      SetACookie(cookieService, "http://bar.expireme.org/", nsnull, "test=differentvalue; domain=.expireme.org; max-age=0", nsnull);
+      GetACookie(cookieService, "http://expireme.org/", nsnull, getter_Copies(cookie));
+      rv[14] = CheckResult(cookie.get(), MUST_BE_NULL);
+
+      allTestsPassed = PrintResult(rv, 15) && allTestsPassed;
 
 
       // *** multiple cookie tests
@@ -535,7 +541,7 @@ main(PRInt32 argc, char *argv[])
       rv[1] = CheckResult(cookie.get(), MUST_BE_NULL);
       SetACookie(cookieService, "http://parser.test/", nsnull, "test=\"fubar! = foo;bar\\\";\" parser; domain=.parser.test; max-age=6\nfive; max-age=2.63,", nsnull);
       GetACookie(cookieService, "http://parser.test/", nsnull, getter_Copies(cookie));
-      rv[2] = CheckResult(cookie.get(), MUST_CONTAIN, "test=\"fubar! = foo;bar\\\";\"");
+      rv[2] = CheckResult(cookie.get(), MUST_CONTAIN, "test=\"fubar! = foo");
       rv[3] = CheckResult(cookie.get(), MUST_CONTAIN, "five");
       SetACookie(cookieService, "http://parser.test/", nsnull, "test=kill; domain=.parser.test; max-age=0 \n five; max-age=0", nsnull);
       GetACookie(cookieService, "http://parser.test/", nsnull, getter_Copies(cookie));
