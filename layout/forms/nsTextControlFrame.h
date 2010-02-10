@@ -62,6 +62,7 @@ class nsIAccessible;
 #endif
 class nsTextInputSelectionImpl;
 class nsTextControlFrame;
+class EditorInitializerEntryTracker;
 
 class nsAnonDivObserver : public nsStubMutationObserver
 {
@@ -365,6 +366,11 @@ private:
   // eventually) when mFireChangeEventState==true, this is used by nsFileControlFrame.
   PRPackedBool mFireChangeEventState;
   PRPackedBool mInSecureKeyboardInputMode;
+
+#ifdef DEBUG
+  PRPackedBool mInEditorInitialization;
+  friend class EditorInitializerEntryTracker;
+#endif
 
   nsRefPtr<nsTextInputSelectionImpl> mSelCon;
   nsCOMPtr<nsFrameSelection> mFrameSel;
