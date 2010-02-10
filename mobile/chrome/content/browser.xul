@@ -58,7 +58,7 @@
         title="&brandShortName;"
 #ifdef WINCE
         sizemode="fullscreen"
-#elifdef MOZ_PLATFORM_HILDON
+#elifdef MOZ_PLATFORM_MAEMO
         sizemode="fullscreen"
 #else
         width="800"
@@ -148,7 +148,7 @@
     <key id="key_forward" keycode="VK_RIGHT" command="cmd_forward" modifiers="control"/>
     <key id="key_back2" keycode="VK_BACK" command="cmd_back"/>
     <key id="key_forward2" keycode="VK_BACK" command="cmd_forward" modifiers="shift"/>
-#ifndef MOZ_PLATFORM_HILDON
+#ifndef MOZ_PLATFORM_MAEMO
     <key id="key_reload" keycode="VK_F5" command="cmd_reload"/>
 #else
     <!-- F5 on maemo is "home" which is a task switching key -->
@@ -197,7 +197,7 @@
           <box id="toolbar-container" class="panel-dark toolbar-height">
             <box id="toolbar-moveable-container">
               <toolbar id="toolbar-main" class="panel-dark window-width">
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
                 <toolbarbutton id="tool-app-switch" class="button-image" oncommand="BrowserUI.switchTask();"/>
 #endif
                 <hbox id="urlbar-container" flex="1">

@@ -9,7 +9,7 @@ set -e
 case "$1" in
     configure)
         # for faster initial startup
-#ifdef MOZ_PLATFORM_HILDON        
+#ifdef MOZ_PLATFORM_MAEMO
         /bin/su -l user -c "/usr/bin/fennec -silent" > /dev/null 2>&1  || echo -n ""
 #endif
         # for fennec icons

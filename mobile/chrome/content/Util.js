@@ -190,7 +190,7 @@ let Util = {
   // Put the Mozilla networking code into a state that will kick the auto-connection
   // process.
   forceOnline: function forceOnline() {
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
     gIOService.offline = false;
 #endif
   }

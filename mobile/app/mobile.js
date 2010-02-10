@@ -42,7 +42,7 @@ pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.startup.homepage", "about:firstrun");
 
-#if MOZ_PLATFORM_HILDON
+#if MOZ_PLATFORM_MAEMO
 pref("browser.ui.cursor", false);
 #elifdef WINCE
 pref("browser.ui.cursor", false);
@@ -69,7 +69,7 @@ pref("browser.cache.memory.capacity", 1024); // kilobytes
 */
 #ifdef WINCE
 pref("tile.cache.size", 15); // tiles
-#elifdef MOZ_PLATFORM_HILDON
+#elifdef MOZ_PLATFORM_MAEMO
 pref("tile.cache.size", -1); // tiles
 #else
 pref("tile.cache.size", 30); // tiles
@@ -95,7 +95,7 @@ pref("network.http.max-connections", 6);
 pref("network.http.max-connections-per-server", 4);
 pref("network.http.max-persistent-connections-per-server", 4);
 pref("network.http.max-persistent-connections-per-proxy", 4);
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
 pref("network.autodial-helper.enabled", true);
 #endif
 
@@ -313,7 +313,7 @@ pref("privacy.item.sessions", true);
 pref("privacy.item.geolocation", true);
 pref("privacy.item.siteSettings", true);
 
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
 pref("plugins.force.wmode", "opaque");
 #endif
 
