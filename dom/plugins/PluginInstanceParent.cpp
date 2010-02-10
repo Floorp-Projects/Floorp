@@ -588,8 +588,8 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
 
 #if defined(MOZ_X11)
     if (GraphicsExpose == npevent->type) {
-        printf("  schlepping drawable 0x%lx across the pipe\n",
-               npevent->xgraphicsexpose.drawable);
+        PLUGIN_LOG_DEBUG(("  schlepping drawable 0x%lx across the pipe\n",
+                          npevent->xgraphicsexpose.drawable));
         // Make sure the X server has created the Drawable and completes any
         // drawing before the plugin draws on top.
         //
