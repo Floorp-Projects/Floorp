@@ -184,7 +184,7 @@
 
 #ifdef HAVE_SHELL_SERVICE
           <!-- System Defaults -->
-          <groupbox id="systemDefaultsGroup" orient="horizontal">
+          <groupbox id="systemDefaultsGroup" orient="vertical">
             <caption label="&systemDefaults.label;"/>
 
             <hbox id="checkDefaultBox" align="center" flex="1">      
@@ -196,6 +196,11 @@
                       oncommand="gAdvancedPane.checkNow()"
                       preference="pref.general.disable_button.default_browser"/>
             </hbox>
+#ifdef MOZ_CRASHREPORTER
+            <checkbox id="submitCrashesBox" flex="1"
+                      oncommand="gAdvancedPane.updateSubmitCrashes();"
+                      label="&submitCrashes.label;" accesskey="&submitCrashes.accesskey;"/>
+#endif
           </groupbox>
 #endif
         </tabpanel>

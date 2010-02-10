@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Josh Aas <josh@mozilla.com>
+ *  Justin Dolske <dolske@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,6 +44,7 @@
 #undef WIN32_LEAN_AND_MEAN
 #endif
 
+#include "nsIWindowsRegKey.h"
 #if defined(MOZ_IPC)
 #  include "client/windows/crash_generation/crash_generation_server.h"
 #endif
@@ -58,6 +60,9 @@
 #include <unistd.h>
 #include "mac_utils.h"
 #elif defined(XP_LINUX)
+#include "nsDirectoryServiceUtils.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsIINIParser.h"
 #if defined(MOZ_IPC)
 #  include "client/linux/crash_generation/client_info.h"
 #  include "client/linux/crash_generation/crash_generation_server.h"
@@ -88,6 +93,7 @@
 #include "nsDataHashtable.h"
 #include "nsInterfaceHashtable.h"
 #include "prprf.h"
+#include "nsIXULAppInfo.h"
 
 #if defined(MOZ_IPC)
 using google_breakpad::CrashGenerationServer;
@@ -965,6 +971,172 @@ nsresult AppendObjCExceptionInfoToAppNotes(void *inException)
   return NS_OK;
 }
 #endif
+
+/*
+ * Combined code to get/set the crash reporter submission pref on
+ * different platforms.
+ */
+static nsresult PrefSubmitReports(PRBool* aSubmitReports, bool writePref)
+{
+  nsresult rv;
+#if defined(XP_WIN32)
+  /*
+   * NOTE! This needs to stay in sync with the preference checking code
+   *       in toolkit/crashreporter/client/crashreporter_win.cpp
+   */
+  nsCOMPtr<nsIXULAppInfo> appinfo =
+    do_GetService("@mozilla.org/xre/app-info;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString appVendor, appName;
+  rv = appinfo->GetVendor(appVendor);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = appinfo->GetName(appName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIWindowsRegKey> regKey
+    (do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString regPath;
+
+  regPath.AppendLiteral("Software\\");
+  if(!appVendor.IsEmpty()) {
+    regPath.Append(appVendor);
+    regPath.AppendLiteral("\\");
+  }
+  regPath.Append(appName);
+  regPath.AppendLiteral("\\Crash Reporter");
+
+  // If we're saving the pref value, just write it to ROOT_KEY_CURRENT_USER
+  // and we're done.
+  if (writePref) {
+    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                      NS_ConvertUTF8toUTF16(regPath),
+                      nsIWindowsRegKey::ACCESS_SET_VALUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 value = *aSubmitReports ? 1 : 0;
+    rv = regKey->WriteIntValue(NS_LITERAL_STRING("SubmitCrashReport"), value);
+    regKey->Close();
+    return rv;
+  }
+
+  // We're reading the pref value, so we need to first look under
+  // ROOT_KEY_LOCAL_MACHINE to see if it's set there, and then fall back to
+  // ROOT_KEY_CURRENT_USER. If it's not set in either place, the pref defaults
+  // to "true".
+  PRUint32 value;
+  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
+                    NS_ConvertUTF8toUTF16(regPath),
+                    nsIWindowsRegKey::ACCESS_QUERY_VALUE);
+  if (NS_SUCCEEDED(rv)) {
+    rv = regKey->ReadIntValue(NS_LITERAL_STRING("SubmitCrashReport"), &value);
+    regKey->Close();
+    if (NS_SUCCEEDED(rv)) {
+      *aSubmitReports = !!value;
+      return NS_OK;
+    }
+  }
+
+  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                    NS_ConvertUTF8toUTF16(regPath),
+                    nsIWindowsRegKey::ACCESS_QUERY_VALUE);
+  if (NS_FAILED(rv)) {
+    *aSubmitReports = PR_TRUE;
+    return NS_OK;
+  }
+  
+  rv = regKey->ReadIntValue(NS_LITERAL_STRING("SubmitCrashReport"), &value);
+  // default to true on failure
+  if (NS_FAILED(rv)) {
+    value = 1;
+    rv = NS_OK;
+  }
+  regKey->Close();
+
+  *aSubmitReports = !!value;
+  return NS_OK;
+#elif defined(XP_UNIX)
+  /*
+   * NOTE! This needs to stay in sync with the preference checking code
+   *       in toolkit/crashreporter/client/crashreporter_linux.cpp
+   */
+  nsCOMPtr<nsIFile> reporterINI;
+  rv = NS_GetSpecialDirectory("UAppData", getter_AddRefs(reporterINI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  reporterINI->AppendNative(NS_LITERAL_CSTRING("Crash Reports"));
+  reporterINI->AppendNative(NS_LITERAL_CSTRING("crashreporter.ini"));
+
+  PRBool exists;
+  rv = reporterINI->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!exists) {
+    if (!writePref) {
+        // If reading the pref, default to true if .ini doesn't exist.
+        *aSubmitReports = PR_TRUE;
+        return NS_OK;
+    }
+    // Create the file so the INI processor can write to it.
+    rv = reporterINI->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsCOMPtr<nsIINIParserFactory> iniFactory =
+    do_GetService("@mozilla.org/xpcom/ini-processor-factory;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(reporterINI);
+  NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIINIParser> iniParser;
+  rv = iniFactory->CreateINIParser(localFile,
+                                   getter_AddRefs(iniParser));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If we're writing the pref, just set and we're done.
+  if (writePref) {
+    nsCOMPtr<nsIINIParserWriter> iniWriter = do_QueryInterface(iniParser);
+    NS_ENSURE_TRUE(iniWriter, NS_ERROR_FAILURE);
+
+    rv = iniWriter->SetString(NS_LITERAL_CSTRING("Crash Reporter"),
+                              NS_LITERAL_CSTRING("SubmitReport"),
+                              *aSubmitReports ?  NS_LITERAL_CSTRING("1") :
+                                                 NS_LITERAL_CSTRING("0"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = iniWriter->WriteFile(NULL);
+    return rv;
+  }
+  
+  nsCAutoString submitReportValue;
+  rv = iniParser->GetString(NS_LITERAL_CSTRING("Crash Reporter"),
+                            NS_LITERAL_CSTRING("SubmitReport"),
+                            submitReportValue);
+
+  // Default to "true" if the pref can't be found.
+  if (NS_FAILED(rv))
+    *aSubmitReports = PR_TRUE;
+  else if (submitReportValue.EqualsASCII("0"))
+    *aSubmitReports = PR_FALSE;
+  else
+    *aSubmitReports = PR_TRUE;
+
+  return NS_OK;
+#else
+  // TODO: Implement for OSX (bug 542379)
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+nsresult GetSubmitReports(PRBool* aSubmitReports)
+{
+    return PrefSubmitReports(aSubmitReports, false);
+}
+
+nsresult SetSubmitReports(PRBool aSubmitReports)
+{
+    return PrefSubmitReports(&aSubmitReports, true);
+}
+
 
 #if defined(MOZ_IPC)
 //-----------------------------------------------------------------------------
