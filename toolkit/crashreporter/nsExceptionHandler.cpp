@@ -101,10 +101,6 @@ using google_breakpad::ClientInfo;
 
 using mozilla::Mutex;
 using mozilla::MutexAutoLock;
-
-#include "nsThreadUtils.h"
-#include "nsIWindowWatcher.h"
-#include "nsIDOMWindow.h"
 #endif
 
 namespace CrashReporter {
@@ -1139,29 +1135,6 @@ nsresult SetSubmitReports(PRBool aSubmitReports)
 
 
 #if defined(MOZ_IPC)
-//-----------------------------------------------------------------------------
-// Out-of-process crash reporting API wrappers
-class SubmitCrashReport : public nsRunnable
-{
-public:
-  SubmitCrashReport(nsIFile* dumpFile) : mDumpFile(dumpFile) { }
-
-  NS_IMETHOD Run() {
-    nsCOMPtr<nsIWindowWatcher> windowWatcher =
-      do_GetService(NS_WINDOWWATCHER_CONTRACTID);
-    nsCOMPtr<nsIDOMWindow> newWindow;
-    windowWatcher->OpenWindow(nsnull,
-                              "chrome://global/content/oopcrashdialog.xul",
-                              "_blank",
-                              "centerscreen,chrome,titlebar",
-                              mDumpFile, getter_AddRefs(newWindow));
-    return NS_OK;
-  }
-
-private:
-  nsCOMPtr<nsIFile> mDumpFile;
-};
-
 static PLDHashOperator EnumerateChildAnnotations(const nsACString& key,
                                                  nsCString entry,
                                                  void* userData)
@@ -1282,11 +1255,6 @@ OnChildProcessDumpRequested(void* aContext,
   {
     MutexAutoLock lock(*dumpMapLock);
     pidToMinidump->Put(pid, lf);
-  }
-
-  if (doReport) {
-    nsCOMPtr<nsIRunnable> r = new SubmitCrashReport(lf);
-    NS_DispatchToMainThread(r);
   }
 }
 

@@ -54,7 +54,12 @@
             <html:div class="msg msgUnsupported">&missingPlugin.label;</html:div>
             <html:div class="msg msgDisabled">&disabledPlugin.label;</html:div>
             <html:div class="msg msgBlocked">&blockedPlugin.label;</html:div>
+            <html:div class="msg msgCrashed"><!-- set at runtime --></html:div>
+            <html:div class="msg msgReload">&reloadPlugin.pre;<html:a class="reloadLink" href="">&reloadPlugin.middle;</html:a>&reloadPlugin.post;</html:div>
             <xul:spacer flex="1"/>
+            <!-- link hrefs set at runtime -->
+            <html:div class="msg msgSubmitted">&submittedCrashReport.pre;<html:a class="submitLink" href="">&submittedCrashReport.middle;</html:a>&submittedCrashReport.post;</html:div>
+            <html:div class="msg msgNotSubmitted">&notSubmittedCrashReport.pre;<html:a class="notSubmitLink" href="">&notSubmittedCrashReport.middle;</html:a>&notSubmittedCrashReport.post;</html:div>
         </xul:vbox>
         <html:div style="display:none;"><children/></html:div>
     </content>

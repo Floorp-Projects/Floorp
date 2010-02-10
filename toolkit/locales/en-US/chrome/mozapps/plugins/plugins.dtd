@@ -23,3 +23,21 @@
 <!ENTITY missingPlugin.label                                 "Click here to download plugin.">
 <!ENTITY disabledPlugin.label                                "The plugin for this content has been disabled. Click here to manage your plugins.">
 <!ENTITY blockedPlugin.label                                 "This plugin has been blocked for your protection.">
+<!-- LOCALIZATION NOTE (reloadPlugin.pre): include a trailing space as needed -->
+<!-- LOCALIZATION NOTE (reloadPlugin.middle): avoid leading/trailing spaces, this text is a link -->
+<!-- LOCALIZATION NOTE (reloadPlugin.post): include a starting space as needed -->
+<!ENTITY reloadPlugin.pre                                    "">
+<!ENTITY reloadPlugin.middle                                 "Reload the page">
+<!ENTITY reloadPlugin.post                                   " to try again.">
+<!-- LOCALIZATION NOTE (submittedCrashReport.pre): include a trailing space as needed -->
+<!-- LOCALIZATION NOTE (submittedCrashReport.middle): avoid leading/trailing spaces, this text is a link -->
+<!-- LOCALIZATION NOTE (submittedCrashReport.post): include a starting space as needed -->
+<!ENTITY submittedCrashReport.pre                            "A ">
+<!ENTITY submittedCrashReport.middle                         "crash report">
+<!ENTITY submittedCrashReport.post                           " was submitted.">
+<!-- LOCALIZATION NOTE (notSubmittedCrashReport.pre): include a trailing space as needed -->
+<!-- LOCALIZATION NOTE (notSubmittedCrashReport.middle): avoid leading/trailing spaces, this text is a link -->
+<!-- LOCALIZATION NOTE (notSubmittedCrashReport.post): include a starting space as needed -->
+<!ENTITY notSubmittedCrashReport.pre                         "You have disabled ">
+<!ENTITY notSubmittedCrashReport.middle                      "crash report">
+<!ENTITY notSubmittedCrashReport.post                        " submission.">
