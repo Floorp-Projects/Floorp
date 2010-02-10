@@ -401,8 +401,8 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
 
 #if defined(OS_LINUX) && defined(DEBUG)
     if (GraphicsExpose == event.event.type)
-        printf("  received drawable 0x%lx\n",
-               event.event.xgraphicsexpose.drawable);
+        PLUGIN_LOG_DEBUG(("  received drawable 0x%lx\n",
+                          event.event.xgraphicsexpose.drawable));
 #endif
 
     // Make a copy since we may modify values.
