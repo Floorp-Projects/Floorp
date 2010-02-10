@@ -637,7 +637,7 @@ SyncChannel::WaitForNotify()
       {
         MutexAutoLock lock(mMutex);
         if (!Connected()) {
-          return;
+          return true;
         }
       }
 
@@ -704,9 +704,11 @@ SyncChannel::WaitForNotify()
   ScheduleDeferredMessageRun();
 
   SyncChannel::SetIsPumpingMessages(false);
+
+  return true;
 }
 
-void
+bool
 RPCChannel::WaitForNotify()
 {
   mMutex.AssertCurrentThreadOwns();
@@ -714,7 +716,7 @@ RPCChannel::WaitForNotify()
   if (!StackDepth()) {
     NS_ASSERTION(!StackDepth(),
         "StackDepth() is 0 in a call to RPCChannel::WaitForNotify?");
-    return;
+    return true;
   }
 
   MutexAutoUnlock unlock(mMutex);
@@ -733,7 +735,7 @@ RPCChannel::WaitForNotify()
   // is expected.
   if (RPCChannel::IsSpinLoopActive()) {
     if (SpinInternalEventLoop()) {
-      return;
+      return true;
     }
 
     // Coming out of spin loop after a modal loop ends, we can't drop into
@@ -742,7 +744,7 @@ RPCChannel::WaitForNotify()
     // been received and stored in mPending & mOutOfTurnReplies. So we check
     // various stacks to figure out if we should fall through or just return.
     if (IsMessagePending()) {
-      return;
+      return true;
     }
   }
   
@@ -806,12 +808,12 @@ RPCChannel::WaitForNotify()
         // WaitForNotify so we can deal with it in RPCChannel.
         RPCChannel::EnterModalLoop();
         if (SpinInternalEventLoop())
-          return;
+          return true;
 
         // See comments above - never assume MsgWaitForMultipleObjects will
         // get signaled.
         if (IsMessagePending())
-          return;
+          return true;
 
         // We drop out of our inner event loop after the plugin has relinquished
         // control back to the shim, but the ipdl call has yet to return, so reset
@@ -851,6 +853,8 @@ RPCChannel::WaitForNotify()
   ScheduleDeferredMessageRun();
 
   SyncChannel::SetIsPumpingMessages(false);
+
+  return true;
 }
 
 void
@@ -861,8 +865,6 @@ SyncChannel::NotifyWorkerThread()
   if (!PostThreadMessage(gUIThreadId, gEventLoopMessage, 0, 0)) {
     NS_WARNING("Failed to post thread message!");
   }
-
-  return true;
 }
 
 void
