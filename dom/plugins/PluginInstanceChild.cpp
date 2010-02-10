@@ -54,6 +54,8 @@ using namespace mozilla::plugins;
 #include <gdk/gdk.h>
 #include "gtk2xtbin.h"
 
+#elif defined(MOZ_WIDGET_QT)
+#include <QX11Info>
 #elif defined(OS_WIN)
 using mozilla::gfx::SharedDIB;
 
@@ -77,6 +79,8 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface) :
     memset(&mWsInfo, 0, sizeof(mWsInfo));
 #ifdef MOZ_WIDGET_GTK2
     mWsInfo.display = GDK_DISPLAY();
+#elif defined(MOZ_WIDGET_QT)
+    mWsInfo.display = QX11Info::display();
 #endif // MOZ_WIDGET_GTK2
 #endif // MOZ_X11 && XP_UNIX && !XP_MACOSX
 #if defined(OS_WIN)

@@ -581,6 +581,8 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
         // an X event to the child that the child would wait for.
 #  ifdef MOZ_WIDGET_GTK2
         XSync(GDK_DISPLAY(), False);
+#  elif defined(MOZ_WIDGET_QT)
+        XSync(QX11Info::display(), False);
 #  endif
     }
 
