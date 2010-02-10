@@ -2864,6 +2864,18 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetNetscapeWindow(void *value)
   *static_cast<Window*>(value) = GDK_WINDOW_XID(gdkWindow);
 #endif
   return NS_OK;
+#elif defined(MOZ_WIDGET_QT)
+  // X11 window managers want the toplevel window for WM_TRANSIENT_FOR.
+  nsIWidget* win = mObjectFrame->GetWindow();
+  if (!win)
+    return NS_ERROR_FAILURE;
+  QWidget* widget = static_cast<QWidget*>(win->GetNativeData(NS_NATIVE_WINDOW));
+  if (!widget)
+    return NS_ERROR_FAILURE;
+#ifdef MOZ_X11
+  *static_cast<Window*>(value) = widget->handle();
+#endif
+  return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
