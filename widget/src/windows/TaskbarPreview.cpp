@@ -144,7 +144,6 @@ TaskbarPreview::GetTooltip(nsAString &aTooltip) {
 
 NS_IMETHODIMP
 TaskbarPreview::SetTooltip(const nsAString &aTooltip) {
-  return NS_OK;
   mTooltip = aTooltip;
   return CanMakeTaskbarCalls() ? UpdateTooltip() : NS_OK;
 }
