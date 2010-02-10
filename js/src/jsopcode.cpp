@@ -2528,13 +2528,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     break;
 
                   case SRC_HIDDEN:
-                    /*
-                     * Hide this pop. Don't adjust our stack depth model if
-                     * it's from a goto in a with or for/in.
-                     */
+                    /* Hide this pop, it's from a goto in a with or for/in. */
                     todo = -2;
-                    if (lastop == JSOP_UNBRAND)
-                        (void) POP_STR();
                     break;
 
                   case SRC_DECL:
@@ -5586,14 +5581,9 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
             }
         }
 
-        /*
-         * Ignore early-exit code, which is SRC_HIDDEN, but do not ignore the
-         * hidden POP that sometimes appears after an UNBRAND. See bug 543565.
-         */
-        if (sn && SN_TYPE(sn) == SRC_HIDDEN &&
-            (op != JSOP_POP || js_GetOpcode(cx, script, pc - 1) != JSOP_UNBRAND)) {
+        /* Ignore early-exit code, which is annotated SRC_HIDDEN. */
+        if (sn && SN_TYPE(sn) == SRC_HIDDEN)
             continue;
-        }
 
         if (SimulateOp(cx, script, op, cs, pc, pcstack, pcdepth) < 0)
             return -1;
