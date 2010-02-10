@@ -1344,6 +1344,10 @@ class Protocol(ipdl.ast.Protocol):
     def otherProcessMethod(self):
         return ExprVar('OtherProcess')
 
+    def shouldContinueFromTimeoutVar(self):
+        assert self.decl.type.isToplevel()
+        return ExprVar('ShouldContinueFromReplyTimeout')
+
     def nextActorIdExpr(self, side):
         assert self.decl.type.isToplevel()
         if side is 'parent':   op = '++'
@@ -2629,6 +2633,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Whitespace.NL
         ])
 
+        if ptype.isToplevel():
+            # bool ShouldContinueFromReplyTimeout(); default to |true|
+            shouldcontinue = MethodDefn(
+                MethodDecl(p.shouldContinueFromTimeoutVar().name,
+                           ret=Type.BOOL, virtual=1))
+            shouldcontinue.addstmt(StmtReturn(ExprLiteral.TRUE))
+            self.cls.addstmts([ shouldcontinue, Whitespace.NL ])
+
         self.cls.addstmts((
             [ Label.PRIVATE ]
             + self.standardTypedefs()
@@ -2697,6 +2709,18 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             closemeth.addstmt(StmtExpr(
                 ExprCall(ExprSelect(p.channelVar(), '.', 'Close'))))
             self.cls.addstmts([ closemeth, Whitespace.NL ])
+
+            if ptype.talksSync() or ptype.talksRpc():
+                # SetReplyTimeoutMs()
+                timeoutvar = ExprVar('aTimeoutMs')
+                settimeout = MethodDefn(MethodDecl(
+                    'SetReplyTimeoutMs',
+                    params=[ Decl(Type.INT32, timeoutvar.name) ]))
+                settimeout.addstmt(StmtExpr(
+                    ExprCall(
+                        ExprSelect(p.channelVar(), '.', 'SetReplyTimeoutMs'),
+                        args=[ timeoutvar ])))
+                self.cls.addstmts([ settimeout, Whitespace.NL ])
 
         if not ptype.isToplevel():
             if 1 == len(p.managers):
@@ -2819,6 +2843,22 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         destroysubtreevar = ExprVar('DestroySubtree')
         deallocsubtreevar = ExprVar('DeallocSubtree')
+
+        # OnReplyTimeout()
+        if toplevel.talksSync() or toplevel.talksRpc():
+            ontimeout = MethodDefn(
+                MethodDecl('OnReplyTimeout', ret=Type.BOOL))
+
+            if ptype.isToplevel():
+                ontimeout.addstmt(StmtReturn(
+                    ExprCall(p.shouldContinueFromTimeoutVar())))
+            else:
+                ontimeout.addstmts([
+                    _runtimeAbort("`OnReplyTimeout' called on non-toplevel actor"),
+                    StmtReturn(ExprLiteral.FALSE)
+                ])
+
+            self.cls.addstmts([ ontimeout, Whitespace.NL ])
 
         # OnChannelClose()
         onclose = MethodDefn(MethodDecl('OnChannelClose'))

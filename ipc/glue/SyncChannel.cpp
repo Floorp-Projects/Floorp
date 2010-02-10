@@ -237,7 +237,11 @@ SyncChannel::ShouldContinueFromTimeout()
     AssertWorkerThread();
     mMutex.AssertCurrentThreadOwns();
 
-    bool cont = true;
+    bool cont;
+    {
+        MutexAutoUnlock unlock(mMutex);
+        cont = static_cast<SyncListener*>(mListener)->OnReplyTimeout();
+    }
 
     if (!cont) {
         // NB: there's a sublety here.  If parents were allowed to
