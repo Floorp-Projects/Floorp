@@ -1410,6 +1410,7 @@ function BrowserShutdown()
     .getService(Components.interfaces.nsIObserverService);
   os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
   os.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
+  os.removeObserver(gMissingPluginInstaller.pluginCrashed, "plugin-crashed");
 
   try {
     gBrowser.removeProgressListener(window.XULBrowserWindow);
