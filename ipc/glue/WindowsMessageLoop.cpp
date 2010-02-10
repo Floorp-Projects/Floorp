@@ -595,20 +595,11 @@ RPCChannel::SpinInternalEventLoop()
 bool
 RPCChannel::IsMessagePending()
 {
-  MutexAutoLock lock(mMutex);
-  if (mStack.empty())
+  MSG msg = { 0 };
+  if (PeekMessageW(&msg, (HWND)-1, gEventLoopMessage, gEventLoopMessage,
+                   PM_REMOVE)) {
     return true;
-
-  MessageMap::iterator it = mOutOfTurnReplies.find(mStack.top().seqno());
-  if (!mOutOfTurnReplies.empty() && 
-      it != mOutOfTurnReplies.end() &&
-      it->first == mStack.top().seqno())
-    return true;
-
-  if (!mPending.empty() &&
-      mPending.front().seqno() == mStack.top().seqno())
-    return true;
-
+  }
   return false;
 }
 
