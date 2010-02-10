@@ -114,10 +114,7 @@ SyncChannel::Send(Message* msg, Message* reply)
         if (EventOccurred())
             break;
 
-        // an event didn't occur. So we better have timed out!
-        NS_ABORT_IF_FALSE(maybeTimedOut,
-                          "neither received a reply nor detected a hang!");
-        if (!ShouldContinueFromTimeout())
+        if (maybeTimedOut && !ShouldContinueFromTimeout())
             return false;
     }
 
