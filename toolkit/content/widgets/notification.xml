@@ -141,10 +141,11 @@
 
       <method name="removeNotification">
         <parameter name="aItem"/>
+        <parameter name="aSkipAnimation"/>
         <body>
           <![CDATA[
             if (aItem == this.currentNotification)
-              this.removeCurrentNotification();
+              this.removeCurrentNotification(aSkipAnimation);
             else if (aItem != this._closedNotification)
               this.removeChild(aItem);
             return aItem;
@@ -153,9 +154,10 @@
       </method>
 
       <method name="removeCurrentNotification">
+        <parameter name="aSkipAnimation"/>
         <body>
           <![CDATA[
-            this._showNotification(this.currentNotification, false);
+            this._showNotification(this.currentNotification, false, aSkipAnimation);
             return null;
           ]]>
         </body>
@@ -204,6 +206,7 @@
       <method name="_showNotification">
         <parameter name="aNotification"/>
         <parameter name="aSlideIn"/>
+        <parameter name="aSkipAnimation"/>
         <body>
           <![CDATA[
             if (this._timer) {
@@ -220,7 +223,7 @@
             }
 
             var height = aNotification.boxObject.height;
-            var skipAnimation = (height == 0);
+            var skipAnimation = aSkipAnimation || (height == 0);
             var change = height / this.slideSteps;
             var margin;
             if (aSlideIn) {
