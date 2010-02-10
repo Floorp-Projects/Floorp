@@ -224,7 +224,7 @@ INSTALLED_HEADERS = \
 		jsxml.h \
 		$(NULL)
 
-ifdef ENABLE_JIT
+ifdef ENABLE_TRACEJIT
 VPATH		+= $(srcdir)/nanojit
 
 INSTALLED_HEADERS += \
@@ -265,7 +265,7 @@ ASFLAGS += -arch 6
 ASFILES += jswince.asm
 endif
 
-endif # ENABLE_JIT
+endif # ENABLE_TRACEJIT
 
 ifdef HAVE_DTRACE
 INSTALLED_HEADERS += \
@@ -361,7 +361,7 @@ check-valgrind::
 	$(check-sync-dirs) $(srcdir)/build $(MOZ_SYNC_BUILD_FILES)/build
 endif
 
-ifdef ENABLE_JIT
+ifdef ENABLE_TRACEJIT
 check::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/trace-test/trace-test.py \
 	        --no-slow --no-progress --tinderbox $(DIST)/bin/js$(BIN_SUFFIX)
