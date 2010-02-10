@@ -137,7 +137,7 @@ nsEnvironment::Get(const nsAString& aName, nsAString& aOutValue)
  * vars. 
  */
 
-typedef nsBaseHashtableET<nsCStringHashKey,char*> EnvEntryType;
+typedef nsBaseHashtableET<nsCharPtrHashKey,char*> EnvEntryType;
 typedef nsTHashtable<EnvEntryType> EnvHashType;
 
 static EnvHashType *gEnvHash = nsnull;
@@ -178,7 +178,7 @@ nsEnvironment::Set(const nsAString& aName, const nsAString& aValue)
         return NS_ERROR_UNEXPECTED;
     }
 
-    EnvEntryType* entry = gEnvHash->PutEntry(nativeName);
+    EnvEntryType* entry = gEnvHash->PutEntry(nativeName.get());
     if (!entry) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
