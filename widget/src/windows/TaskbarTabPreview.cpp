@@ -166,7 +166,7 @@ TaskbarTabPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
       mController->OnClose();
       return 0;
     case WM_ACTIVATE:
-      if (LOWORD(wParam) != WA_INACTIVE) {
+      if (LOWORD(wParam) == WA_ACTIVE) {
         PRBool activateWindow;
         nsresult rv = mController->OnActivate(&activateWindow);
         if (NS_SUCCEEDED(rv) && activateWindow) {
@@ -180,6 +180,13 @@ TaskbarTabPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
       return 0;
     case WM_GETICON:
       return (LRESULT)mIcon;
+    case WM_SYSCOMMAND:
+      // Forward syscommands like restore/minimize/maximize to the container
+      // window. Do not forward close since that's intended for the tab.
+      return wParam == SC_CLOSE
+           ? ::DefWindowProcW(mProxyWindow, WM_SYSCOMMAND, wParam, lParam)
+           : ::SendMessageW(mWnd, WM_SYSCOMMAND, wParam, lParam);
+      return 0;
   }
   return TaskbarPreview::WndProc(nMsg, wParam, lParam);
 }
@@ -222,7 +229,7 @@ TaskbarTabPreview::Enable() {
     RegisterClassW(&wc);
   }
   ::CreateWindowW(kWindowClass, L"TaskbarPreviewWindow",
-                  WS_CAPTION, 0, 0, 200, 60, NULL, NULL, module, this);
+                  WS_CAPTION | WS_SYSMENU, 0, 0, 200, 60, NULL, NULL, module, this);
   // GlobalWndProc will set mProxyWindow so that WM_CREATE can have a valid HWND
   if (!mProxyWindow)
     return NS_ERROR_INVALID_ARG;
