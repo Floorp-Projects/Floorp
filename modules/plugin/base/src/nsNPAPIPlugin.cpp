@@ -2017,7 +2017,11 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
         inst->GetValueFromPlugin(NPPVpluginNeedsXEmbed, &needXEmbed);
       }
       if (windowless || needXEmbed) {
+#ifdef MOZ_WIDGET_GTK2
         (*(Display **)result) = GDK_DISPLAY();
+#else
+        (*(Display **)result) = QX11Info::display();
+#endif
         return NPERR_NO_ERROR;
       }
     }

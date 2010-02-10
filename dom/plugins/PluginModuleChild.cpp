@@ -37,6 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_WIDGET_QT
+#include <QApplication>
+#endif
+
 #include "mozilla/plugins/PluginModuleChild.h"
 
 #ifdef MOZ_WIDGET_GTK2
@@ -65,6 +69,9 @@ using namespace mozilla::plugins;
 
 namespace {
 PluginModuleChild* gInstance = nsnull;
+#ifdef MOZ_WIDGET_QT
+static QApplication *gQApp = nsnull;
+#endif
 }
 
 
@@ -89,6 +96,11 @@ PluginModuleChild::~PluginModuleChild()
     if (mLibrary) {
         PR_UnloadLibrary(mLibrary);
     }
+#ifdef MOZ_WIDGET_QT
+    if (gQApp)
+        delete gQApp;
+    gQApp = nsnull;
+#endif
     gInstance = nsnull;
 }
 
@@ -259,6 +271,8 @@ PluginModuleChild::InitGraphics()
     real_gtk_plug_embedded = *embedded;
     *embedded = wrap_gtk_plug_embedded;
 #elif defined(MOZ_WIDGET_QT)
+    if (!qApp)
+        gQApp = new QApplication(0, NULL);
 #else
     // may not be necessary on all platforms
 #endif
