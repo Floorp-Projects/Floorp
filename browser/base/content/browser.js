@@ -5994,6 +5994,8 @@ function getPluginInfo(pluginElement)
 var gMissingPluginInstaller = {
 
   installSinglePlugin: function (aEvent) {
+    if (!aEvent.isTrusted)
+        return;
     var missingPluginsArray = {};
 
     var pluginInfo = getPluginInfo(aEvent.target);
@@ -6009,6 +6011,8 @@ var gMissingPluginInstaller = {
   },
 
   managePlugins: function (aEvent) {
+    if (!aEvent.isTrusted)
+        return;
     BrowserOpenAddonsMgr("plugins");
     aEvent.stopPropagation();
   },
@@ -6030,6 +6034,11 @@ var gMissingPluginInstaller = {
       aEvent.target.addEventListener("click",
                                      gMissingPluginInstaller.installSinglePlugin,
                                      true);
+      aEvent.target.addEventListener("keydown",
+                                     function(evt) { if (evt.keyCode == evt.DOM_VK_RETURN)
+                                                       gMissingPluginInstaller.installSinglePlugin(evt) },
+                                     true);
+                                                    
     }
 
     let hideBarPrefName = aEvent.type == "PluginOutdated" ?
@@ -6152,6 +6161,10 @@ var gMissingPluginInstaller = {
 
     aEvent.target.addEventListener("click",
                                    gMissingPluginInstaller.managePlugins,
+                                   true);
+    aEvent.target.addEventListener("keydown",
+                                   function(evt) { if (evt.keyCode == evt.DOM_VK_RETURN)
+                                                     gMissingPluginInstaller.managePlugins(evt) },
                                    true);
   },
 
