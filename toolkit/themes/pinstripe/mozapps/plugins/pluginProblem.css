@@ -54,6 +54,9 @@ html|applet:not([height]), html|applet[height=""] {
 :-moz-handler-blocked .icon {
     background-image: url(chrome://mozapps/skin/plugins/pluginBlocked.png);
 }
+:-moz-handler-crashed .icon {
+    background-image: url(chrome://mozapps/skin/plugins/pluginCrashed.png);
+}
 
 .msg {
     display: none;
@@ -65,6 +68,12 @@ html|applet:not([height]), html|applet[height=""] {
 }
 :-moz-type-unsupported .msgUnsupported,
 :-moz-handler-disabled .msgDisabled,
-:-moz-handler-blocked .msgBlocked {
+:-moz-handler-blocked .msgBlocked,
+:-moz-handler-crashed .msgCrashed,
+:-moz-handler-crashed .msgReload {
     display: block;
+}
+
+html|A {
+    color: white;
 }
