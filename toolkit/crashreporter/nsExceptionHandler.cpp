@@ -1053,6 +1053,9 @@ static nsresult PrefSubmitReports(PRBool* aSubmitReports, bool writePref)
 
   *aSubmitReports = !!value;
   return NS_OK;
+#elif defined(XP_MACOSX)
+  // TODO: Implement for OSX (bug 542379)
+  return NS_ERROR_NOT_IMPLEMENTED;
 #elif defined(XP_UNIX)
   /*
    * NOTE! This needs to stay in sync with the preference checking code
@@ -1118,7 +1121,6 @@ static nsresult PrefSubmitReports(PRBool* aSubmitReports, bool writePref)
 
   return NS_OK;
 #else
-  // TODO: Implement for OSX (bug 542379)
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
