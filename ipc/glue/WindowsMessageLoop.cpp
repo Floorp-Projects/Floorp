@@ -501,6 +501,8 @@ UnhookNeuteredWindows()
     RestoreWindowProcedure(gNeuteredWindows->ElementAt(index));
   }
   gNeuteredWindows->Clear();
+  delete gNeuteredWindows;
+  gNeuteredWindows = NULL;
 }
 
 void
