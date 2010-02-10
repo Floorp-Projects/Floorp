@@ -8,7 +8,7 @@ Standards-Version: 3.7.2
 
 Package: fennec
 Architecture: any
-Depends: ${shlibs:Depends}, xulrunner (>=@GRE_MILESTONE@-@GRE_BUILDID@)
+Depends: ${shlibs:Depends}
 Description: Web browser built by the Mozilla community
  The Firefox Web browser puts you in control of your Web experience with easy navigation, support for add-ons and synchronizes with Firefox on your PC.
 XB-Maemo-Display-Name: @MOZ_APP_DISPLAYNAME@
