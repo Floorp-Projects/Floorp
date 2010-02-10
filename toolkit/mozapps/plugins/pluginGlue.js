@@ -43,7 +43,7 @@
 
 var module = {
     categoryEntry: "pluginfinder xbl binding",
-    categoryValue: "chrome://mozapps/content/plugins/missingPluginBinding.css",
+    categoryValue: "chrome://mozapps/content/plugins/pluginProblemBinding.css",
 
     // registerSelf: Register this component.
     registerSelf: function (compMgr, fileSpec, location, type) {

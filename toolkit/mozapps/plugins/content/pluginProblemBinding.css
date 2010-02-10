@@ -20,6 +20,8 @@
  *
  * Contributor(s):
  *
+ *  Justin Dolske <dolske@mozilla.com>
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -36,17 +38,14 @@
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
-embed:-moz-type-unsupported, applet:-moz-type-unsupported,
-object:-moz-has-handlerref:-moz-type-unsupported {
-  -moz-binding: url('chrome://mozapps/content/plugins/missingPlugin.xml#missingPlugin') !important;
-}
-
-embed:-moz-handler-disabled, applet:-moz-handler-disabled,
-object:-moz-has-handlerref:-moz-handler-disabled {
-  -moz-binding: url('chrome://mozapps/content/plugins/missingPlugin.xml#disabledPlugin') !important;
-}
-
-embed:-moz-handler-blocked, applet:-moz-handler-blocked,
+embed:-moz-type-unsupported,
+embed:-moz-handler-disabled,
+embed:-moz-handler-blocked,
+applet:-moz-type-unsupported,
+applet:-moz-handler-disabled,
+applet:-moz-handler-blocked,
+object:-moz-has-handlerref:-moz-type-unsupported,
+object:-moz-has-handlerref:-moz-handler-disabled,
 object:-moz-has-handlerref:-moz-handler-blocked {
-  -moz-binding: url('chrome://mozapps/content/plugins/missingPlugin.xml#blockedPlugin') !important;
+    -moz-binding: url('chrome://mozapps/content/plugins/pluginProblem.xml#pluginProblem') !important;
 }
