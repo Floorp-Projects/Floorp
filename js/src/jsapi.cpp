@@ -90,10 +90,6 @@
 #include "jsatominlines.h"
 #include "jsscopeinlines.h"
 
-#if JS_HAS_FILE_OBJECT
-#include "jsfile.h"
-#endif
-
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
 #endif
@@ -1236,9 +1232,6 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 #if JS_HAS_XML_SUPPORT
            js_InitXMLClasses(cx, obj) &&
 #endif
-#if JS_HAS_FILE_OBJECT
-           js_InitFileClass(cx, obj) &&
-#endif
 #if JS_HAS_GENERATORS
            js_InitIteratorClasses(cx, obj) &&
 #endif
@@ -1301,9 +1294,6 @@ static JSStdName standard_class_atoms[] = {
     {js_InitXMLClass,                   EAGER_ATOM_AND_CLASP(XML)},
     {js_InitNamespaceClass,             EAGER_ATOM_AND_XCLASP(Namespace)},
     {js_InitQNameClass,                 EAGER_ATOM_AND_XCLASP(QName)},
-#endif
-#if JS_HAS_FILE_OBJECT
-    {js_InitFileClass,                  EAGER_ATOM_AND_CLASP(File)},
 #endif
 #if JS_HAS_GENERATORS
     {js_InitIteratorClasses,            EAGER_ATOM_AND_CLASP(StopIteration)},
