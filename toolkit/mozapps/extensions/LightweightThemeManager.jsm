@@ -109,6 +109,8 @@ var LightweightThemeManager = {
   },
 
   set currentTheme (aData) {
+    aData = _sanitizeTheme(aData);
+
     let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
     cancel.data = false;
     _observerService.notifyObservers(cancel, "lightweight-theme-change-requested",
@@ -190,39 +192,10 @@ var LightweightThemeManager = {
 
   parseTheme: function (aString, aBaseURI) {
     try {
-      var data = JSON.parse(aString);
+      return _sanitizeTheme(JSON.parse(aString), aBaseURI);
     } catch (e) {
       return null;
     }
-
-    if (!data || typeof data != "object")
-      return null;
-
-    for (let prop in data) {
-      if (typeof data[prop] == "string" &&
-          (data[prop] = data[prop].trim()) &&
-          (MANDATORY.indexOf(prop) > -1 || OPTIONAL.indexOf(prop) > -1)) {
-        if (!/URL$/.test(prop))
-          continue;
-
-        try {
-          data[prop] = _makeURI(data[prop], _makeURI(aBaseURI)).spec;
-          if (/^https:/.test(data[prop]))
-            continue;
-          if (prop != "updateURL" && /^http:/.test(data[prop]))
-            continue;
-        } catch (e) {}
-      }
-
-      delete data[prop];
-    }
-
-    for (let i = 0; i < MANDATORY.length; i++) {
-      if (!(MANDATORY[i] in data))
-        return null;
-    }
-
-    return data;
   },
 
   updateCurrentTheme: function () {
@@ -264,8 +237,55 @@ var LightweightThemeManager = {
   }
 };
 
+function _sanitizeTheme(aData, aBaseURI) {
+  if (!aData || typeof aData != "object")
+    return null;
+
+  function sanitizeProperty(prop) {
+    if (!(prop in aData))
+      return null;
+    if (typeof aData[prop] != "string")
+      return null;
+    let val = aData[prop].trim();
+    if (!val)
+      return null;
+
+    if (!/URL$/.test(prop))
+      return val;
+
+    try {
+      val = _makeURI(val, aBaseURI ? _makeURI(aBaseURI) : null).spec;
+      if (/^https:/.test(val))
+        return val;
+      if (prop != "updateURL" && /^http:/.test(val))
+        return val;
+      return null;
+    }
+    catch (e) {
+      return null;
+    }
+  }
+
+  let result = {};
+  for (let i = 0; i < MANDATORY.length; i++) {
+    let val = sanitizeProperty(MANDATORY[i]);
+    if (!val)
+      throw Components.results.NS_ERROR_INVALID_ARG;
+    result[MANDATORY[i]] = val;
+  }
+
+  for (let i = 0; i < OPTIONAL.length; i++) {
+    let val = sanitizeProperty(OPTIONAL[i]);
+    if (!val)
+      continue;
+    result[OPTIONAL[i]] = val;
+  }
+
+  return result;
+}
+
 function _usedThemesExceptId(aId)
-  LightweightThemeManager.usedThemes.filter(function (t) t.id != aId);
+  LightweightThemeManager.usedThemes.filter(function (t) "id" in t && t.id != aId);
 
 function _version(aThemeData)
   aThemeData.version || "";
