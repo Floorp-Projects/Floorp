@@ -612,7 +612,7 @@ RPCChannel::IsMessagePending()
   return false;
 }
 
-void
+bool
 SyncChannel::WaitForNotify()
 {
   mMutex.AssertCurrentThreadOwns();
@@ -861,6 +861,8 @@ SyncChannel::NotifyWorkerThread()
   if (!PostThreadMessage(gUIThreadId, gEventLoopMessage, 0, 0)) {
     NS_WARNING("Failed to post thread message!");
   }
+
+  return true;
 }
 
 void

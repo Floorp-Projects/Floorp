@@ -115,6 +115,20 @@ int RPCChannel::sInnerEventLoopDepth = 0;
 #endif
 
 bool
+RPCChannel::EventOccurred()
+{
+    AssertWorkerThread();
+    mMutex.AssertCurrentThreadOwns();
+    RPC_ASSERT(StackDepth() > 0, "not in wait loop");
+
+    return (!Connected() ||
+            !mPending.empty() ||
+            (!mOutOfTurnReplies.empty() &&
+             mOutOfTurnReplies.find(mStack.top().seqno())
+             != mOutOfTurnReplies.end()));
+}
+
+bool
 RPCChannel::Call(Message* msg, Message* reply)
 {
     AssertWorkerThread();
@@ -146,11 +160,17 @@ RPCChannel::Call(Message* msg, Message* reply)
 
         // here we're waiting for something to happen. see long
         // comment about the queue in RPCChannel.h
-        while (Connected() && mPending.empty() &&
-               (mOutOfTurnReplies.empty() ||
-                mOutOfTurnReplies.find(mStack.top().seqno())
-                == mOutOfTurnReplies.end())) {
-            RPCChannel::WaitForNotify();
+        while (!EventOccurred()) {
+            bool maybeTimedOut = !RPCChannel::WaitForNotify();
+
+            if (EventOccurred())
+                break;
+
+            // an event didn't occur. So we better have timed out!
+            NS_ABORT_IF_FALSE(maybeTimedOut,
+                              "neither received a reply nor detected a hang!");
+            if (!ShouldContinueFromTimeout())
+                return false;
         }
 
         if (!Connected()) {
@@ -589,7 +609,7 @@ RPCChannel::OnMessageReceived(const Message& msg)
         mWorkerLoop->PostTask(
             FROM_HERE,
             NewRunnableMethod(this, &RPCChannel::OnMaybeDequeueOne));
-    else
+    else if (!AwaitingSyncReply())
         NotifyWorkerThread();
 }
 
