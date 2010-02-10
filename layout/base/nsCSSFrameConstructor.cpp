@@ -77,8 +77,6 @@
 #include "nsIComboboxControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
-#include "nsIRadioControlFrame.h"
-#include "nsICheckboxControlFrame.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsPlaceholderFrame.h"

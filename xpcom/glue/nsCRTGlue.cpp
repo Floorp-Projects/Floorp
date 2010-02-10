@@ -91,7 +91,7 @@ NS_strtok(const char *delims, char **str)
   } while (*i);
 
   *str = NULL;
-  return ret;
+  return NULL;
 }
 
 PRUint32

@@ -57,7 +57,7 @@
 #include <windows.h>
 #endif
 
-#if defined (NS_OSSO)
+#if defined(MOZ_PLATFORM_MAEMO)
 #include <osso-mem.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -128,7 +128,7 @@ nsMemoryImpl::IsLowMemory(PRBool *result)
     GlobalMemoryStatusEx(&stat);
     *result = (stat.ullAvailPageFile < kRequiredMemory) &&
         ((float)stat.ullAvailPageFile / stat.ullTotalPageFile) < 0.1;
-#elif defined(NS_OSSO)
+#elif defined(MOZ_PLATFORM_MAEMO)
     static int osso_highmark_fd = -1;
     if (osso_highmark_fd == -1) {
         osso_highmark_fd = open (kHighMark, O_RDONLY);

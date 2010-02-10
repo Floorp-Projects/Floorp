@@ -19,11 +19,70 @@ SimpleTest.waitForExplicitFinish();
 
 var success = false;
 
+var observerFired = false;
+
+var testObserver = {
+  observe: function(subject, topic, data) {
+    observerFired = true;
+    ok(true, "Observer fired");
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    is(topic, "plugin-crashed", "Checking correct topic");
+    is(data,  null, "Checking null data");
+    ok((subject instanceof Components.interfaces.nsIPropertyBag2), "got Propbag");
+    ok((subject instanceof Components.interfaces.nsIWritablePropertyBag2),
+"got writable Propbag");
+
+    var id = subject.getPropertyAsAString("minidumpID");
+    isnot(id, "", "got a non-empty crash id");
+    let directoryService =
+      Components.classes["@mozilla.org/file/directory_service;1"].
+      getService(Components.interfaces.nsIProperties);
+    let profD = directoryService.get("ProfD", Components.interfaces.nsIFile);
+    profD.append("minidumps");
+    let dumpFile = profD.clone();
+    dumpFile.append(id + ".dmp");
+    ok(dumpFile.exists(), "minidump exists");
+    let extraFile = profD.clone();
+    extraFile.append(id + ".extra");
+    ok(extraFile.exists(), "extra file exists");
+    // cleanup, to be nice
+    dumpFile.remove(false);
+    extraFile.remove(false);
+  },
+
+  QueryInterface: function(iid) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    if (iid.equals(Components.interfaces.nsIObserver) ||
+        iid.equals(Components.interfaces.nsISupportsWeakReference) ||
+        iid.equals(Components.interfaces.nsISupports))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
+  }
+};
+
+
 function onPluginCrashed(aEvent) {
   ok(true, "Plugin crashed notification received");
+  ok(observerFired, "Observer should have fired first");
+  is(aEvent.type, "PluginCrashed", "event is correct type");
 
   var pluginElement = document.getElementById("plugin1");
   is (pluginElement, aEvent.target, "Plugin crashed event target is plugin element");
+
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  
+  ok(aEvent instanceof Components.interfaces.nsIDOMDataContainerEvent,
+     "plugin crashed event has the right interface");
+  var pluginName = aEvent.getData("pluginName");
+  is(pluginName, "Test Plug-in");
+  var didReport = aEvent.getData("submittedCrashReport");
+  // The app itself may or may not have decided to submit the report, so
+  // allow either true or false here.
+  ok((didReport == true || didReport == false), "event said crash report was submitted");
+
+  var os = Components.classes["@mozilla.org/observer-service;1"].
+           getService(Components.interfaces.nsIObserverService);
+  os.removeObserver(testObserver, "plugin-crashed");
 
   SimpleTest.finish();
 }
@@ -38,6 +97,10 @@ function runTests() {
     return;
   }
 
+  var os = Components.classes["@mozilla.org/observer-service;1"].
+           getService(Components.interfaces.nsIObserverService);
+  os.addObserver(testObserver, "plugin-crashed", true);
+  
   document.addEventListener("PluginCrashed", onPluginCrashed, false);
 
   var pluginElement = document.getElementById("plugin1");

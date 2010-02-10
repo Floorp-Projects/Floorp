@@ -551,7 +551,7 @@ nsSHistory::PurgeHistory(PRInt32 aEntries)
   if (mLength <= 0 || aEntries <= 0)
     return NS_ERROR_FAILURE;
 
-  aEntries = PR_MIN(aEntries, mLength);
+  aEntries = NS_MIN(aEntries, mLength);
   
   PRBool purgeHistory = PR_TRUE;
   // Notify the listener about the history purge
@@ -813,13 +813,13 @@ nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
     if (endIndex <= 0) {
       return;
     }
-    startIndex = PR_MAX(0, aFromIndex - gHistoryMaxViewers);
+    startIndex = NS_MAX(0, aFromIndex - gHistoryMaxViewers);
   } else { // going backward
     startIndex = aToIndex + gHistoryMaxViewers + 1;
     if (startIndex >= mLength) {
       return;
     }
-    endIndex = PR_MIN(mLength, aFromIndex + gHistoryMaxViewers + 1);
+    endIndex = NS_MIN(mLength, aFromIndex + gHistoryMaxViewers + 1);
   }
 
 #ifdef DEBUG
@@ -913,8 +913,8 @@ nsSHistory::EvictGlobalContentViewer()
       // viewer.  There could be up to gHistoryMaxViewers content viewers,
       // but we don't know whether they are before or after the mIndex position
       // in the SHEntry list.  Just check both sides, to be safe.
-      PRInt32 startIndex = PR_MAX(0, shist->mIndex - gHistoryMaxViewers);
-      PRInt32 endIndex = PR_MIN(shist->mLength - 1,
+      PRInt32 startIndex = NS_MAX(0, shist->mIndex - gHistoryMaxViewers);
+      PRInt32 endIndex = NS_MIN(shist->mLength - 1,
                                 shist->mIndex + gHistoryMaxViewers);
       nsCOMPtr<nsISHTransaction> trans;
       shist->GetTransactionAtIndex(startIndex, getter_AddRefs(trans));
@@ -1006,8 +1006,8 @@ nsSHistory::EvictGlobalContentViewer()
 NS_IMETHODIMP
 nsSHistory::EvictExpiredContentViewerForEntry(nsISHEntry *aEntry)
 {
-  PRInt32 startIndex = PR_MAX(0, mIndex - gHistoryMaxViewers);
-  PRInt32 endIndex = PR_MIN(mLength - 1,
+  PRInt32 startIndex = NS_MAX(0, mIndex - gHistoryMaxViewers);
+  PRInt32 endIndex = NS_MIN(mLength - 1,
                             mIndex + gHistoryMaxViewers);
   nsCOMPtr<nsISHTransaction> trans;
   GetTransactionAtIndex(startIndex, getter_AddRefs(trans));

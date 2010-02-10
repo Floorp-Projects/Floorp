@@ -60,8 +60,6 @@
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIFormSubmission.h"
-#include "nsITextControlFrame.h"
-#include "nsIRadioControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
@@ -81,7 +79,6 @@
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsICheckboxControlFrame.h"
 #include "nsLinebreakConverter.h" //to strip out carriage returns
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -98,7 +95,6 @@
 #include "nsRuleData.h"
 
 // input type=radio
-#include "nsIRadioControlFrame.h"
 #include "nsIRadioGroupContainer.h"
 
 // input type=file
@@ -1368,20 +1364,10 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
   //
   // Notify the frame
   //
-  nsIFrame* frame = GetPrimaryFrame();
-  if (frame) {
-    nsPresContext *presContext = GetPresContext();
-
-    if (mType == NS_FORM_INPUT_CHECKBOX) {
-      nsICheckboxControlFrame* checkboxFrame = do_QueryFrame(frame);
-      if (checkboxFrame) {
-        checkboxFrame->OnChecked(presContext, aChecked);
-      }
-    } else if (mType == NS_FORM_INPUT_RADIO) {
-      nsIRadioControlFrame* radioFrame = do_QueryFrame(frame);
-      if (radioFrame) {
-        radioFrame->OnChecked(presContext, aChecked);
-      }
+  if (mType == NS_FORM_INPUT_CHECKBOX || mType == NS_FORM_INPUT_RADIO) {
+    nsIFrame* frame = GetPrimaryFrame();
+    if (frame) {
+      frame->InvalidateOverflowRect();
     }
   }
 

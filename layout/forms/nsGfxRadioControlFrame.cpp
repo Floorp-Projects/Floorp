@@ -64,10 +64,6 @@ nsGfxRadioControlFrame::~nsGfxRadioControlFrame()
 {
 }
 
-NS_QUERYFRAME_HEAD(nsGfxRadioControlFrame)
-  NS_QUERYFRAME_ENTRY(nsIRadioControlFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsFormControlFrame)
-
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP
 nsGfxRadioControlFrame::GetAccessible(nsIAccessible** aAccessible)
@@ -125,12 +121,4 @@ nsGfxRadioControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     
   return aLists.Content()->AppendNewToTop(new (aBuilder)
     nsDisplayGeneric(this, PaintCheckedRadioButton, "CheckedRadioButton"));
-}
-
-NS_IMETHODIMP
-nsGfxRadioControlFrame::OnChecked(nsPresContext* aPresContext,
-                                  PRBool aChecked)
-{
-  InvalidateOverflowRect();
-  return NS_OK;
 }

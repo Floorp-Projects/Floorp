@@ -358,28 +358,28 @@ else
     AC_CHECK_PROGS(STRIP, strip, :)
     AC_CHECK_PROGS(WINDRES, windres, :)
     if test -z "$HOST_CC"; then
-        HOST_CC="$CC"
+        HOST_CC='$(CC)'
     fi
     if test -z "$HOST_CFLAGS"; then
-        HOST_CFLAGS="$CFLAGS"
+        HOST_CFLAGS='$(CFLAGS)'
     fi
     if test -z "$HOST_CXX"; then
-        HOST_CXX="$CXX"
+        HOST_CXX='$(CXX)'
     fi
     if test -z "$HOST_CXXFLAGS"; then
-        HOST_CXXFLAGS="$CXXFLAGS"
+        HOST_CXXFLAGS='$(CXXFLAGS)'
     fi
     if test -z "$HOST_LDFLAGS"; then
-        HOST_LDFLAGS="$LDFLAGS"
+        HOST_LDFLAGS='$(LDFLAGS)'
     fi
     if test -z "$HOST_RANLIB"; then
-        HOST_RANLIB="$RANLIB"
+        HOST_RANLIB='$(RANLIB)'
     fi
     if test -z "$HOST_AR"; then
-        HOST_AR="$AR"
+        HOST_AR='$(AR)'
     fi
     if test -z "$HOST_AR_FLAGS"; then
-        HOST_AR_FLAGS="$AR_FLAGS"
+        HOST_AR_FLAGS='$(AR_FLAGS)'
     fi
 fi
 
@@ -1508,8 +1508,8 @@ case "$host" in
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX -DXP_MACOSX -DNO_X11"
     HOST_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
-    MOZ_FIX_LINK_PATHS='-Wl,-executable_path,$(LIBXUL_DIST)/bin'
-    LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL -lobjc'
+    LDFLAGS="$LDFLAGS -lobjc"
+    LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL'
     ;;
 
 *-linux*|*-kfreebsd*-gnu)
@@ -1677,6 +1677,7 @@ case "$target" in
         
         LDFLAGS=$_SAVE_LDFLAGS
     fi
+    MOZ_FIX_LINK_PATHS='-Wl,-executable_path,$(LIBXUL_DIST)/bin'
     ;;
 
 *-freebsd*)

@@ -188,7 +188,7 @@ checkUrls: function(urls, expected, cb)
     } else {
       cb();
     }
-  }
+  };
   doLookup();
 },
 

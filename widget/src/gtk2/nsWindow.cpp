@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
 #define MAEMO_CHANGES
 #endif
 
@@ -305,7 +305,7 @@ static GdkEventKey *gKeyEvent = NULL;
 static PRBool       gKeyEventCommitted = PR_FALSE;
 static PRBool       gKeyEventChanged = PR_FALSE;
 static PRBool       gIMESuppressCommit = PR_FALSE;
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
 static PRBool       gIMEVirtualKeyboardOpened = PR_FALSE;
 #endif
 
@@ -3500,7 +3500,7 @@ nsWindow::OnVisibilityNotifyEvent(GtkWidget *aWidget,
 
         mIsFullyObscured = PR_FALSE;
 
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
 #ifdef USE_XIM
         // In Hildon/Maemo, a browser window will get into 'patially visible' state wheneven an
         // autocomplete feature is dropped down (from urlbar or from an entry form completion),
@@ -3510,7 +3510,7 @@ nsWindow::OnVisibilityNotifyEvent(GtkWidget *aWidget,
         // to this it until the pointer is ungrabbed.
         if(!gIMEVirtualKeyboardOpened)
 #endif // USE_XIM
-#endif // MOZ_PLATFORM_HILDON
+#endif // MOZ_PLATFORM_MAEMO
         // if we have to retry the grab, retry it.
         EnsureGrabs();
         break;
@@ -6853,7 +6853,7 @@ nsWindow::IMEGetContext()
 static PRBool
 IsIMEEnabledState(PRUint32 aState)
 {
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
     return aState == nsIWidget::IME_STATUS_ENABLED ||
            aState == nsIWidget::IME_STATUS_PLUGIN  ||
            aState == nsIWidget::IME_STATUS_PASSWORD;
@@ -7061,7 +7061,7 @@ nsWindow::SetIMEEnabled(PRUint32 aState)
         // Even when aState is not PR_TRUE, we need to set IME focus.
         // Because some IMs are updating the status bar of them in this time.
         focusedWin->IMESetFocus();
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
         if (mIMEData->mEnabled) {
             // It is not desired that the hildon's autocomplete mechanism displays
             // user previous entered passwds, so lets make completions invisible
@@ -7437,7 +7437,7 @@ IM_get_input_context(nsWindow *aWindow)
         data->mEnabled == nsIWidget::IME_STATUS_PLUGIN)
         return data->mContext;
     if (data->mEnabled == nsIWidget::IME_STATUS_PASSWORD)
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
         return data->mContext;
 #else
         return data->mSimpleContext;

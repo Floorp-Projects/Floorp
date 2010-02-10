@@ -2,5 +2,3 @@ toolkit.jar:
   content/global/crashes.xhtml            (content/crashes.xhtml)
   content/global/crashes.js               (content/crashes.js)
   content/global/crash-submit-form.xhtml  (content/crash-submit-form.xhtml)
-  content/global/oopcrashdialog.xul       (content/oopcrashdialog.xul)
-  content/global/oopcrashdialog.js        (content/oopcrashdialog.js)

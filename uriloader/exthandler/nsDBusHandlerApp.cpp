@@ -44,7 +44,7 @@
 #include "nsIClassInfoImpl.h"
 #include "nsCOMPtr.h"
 
-#ifdef NS_OSSO
+#if (MOZ_PLATFORM_MAEMO == 5)
 #include <libosso.h>
 
 #define APP_LAUNCH_BANNER_SERVICE           "com.nokia.hildon-desktop"
@@ -157,7 +157,7 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
   if (dbus_connection_send(connection, msg, NULL)) {
     dbus_connection_flush(connection);
     dbus_message_unref(msg);
-#ifdef NS_OSSO
+#if (MOZ_PLATFORM_MAEMO == 5)
     msg = dbus_message_new_method_call (APP_LAUNCH_BANNER_SERVICE,
                                         APP_LAUNCH_BANNER_METHOD_PATH,
                                         APP_LAUNCH_BANNER_METHOD_INTERFACE,
