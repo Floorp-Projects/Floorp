@@ -955,6 +955,9 @@ nsObjectLoadingContent::ObjectState() const
         case ePluginBlocklisted:
           state |= NS_EVENT_STATE_HANDLER_BLOCKED;
           break;
+        case ePluginCrashed:
+          state |= NS_EVENT_STATE_HANDLER_CRASHED;
+          break;
         case ePluginUnsupported:
           state |= NS_EVENT_STATE_TYPE_UNSUPPORTED;
           break;
@@ -1931,6 +1934,7 @@ nsObjectLoadingContent::SetAbsoluteScreenPosition(nsIDOMElement* element,
 NS_IMETHODIMP
 nsObjectLoadingContent::PluginCrashed()
 {
+  AutoNotifier notifier(this, PR_TRUE);
   UnloadContent();
   mFallbackReason = ePluginCrashed;
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
