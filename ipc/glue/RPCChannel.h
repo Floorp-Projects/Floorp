@@ -138,6 +138,8 @@ protected:
   private:
     // Called on worker thread only
 
+    bool EventOccurred();
+
     void MaybeProcessDeferredIncall();
     void EnqueuePendingMessages();
 
