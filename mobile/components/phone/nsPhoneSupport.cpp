@@ -44,7 +44,7 @@
 #include <phone.h>
 #endif
 
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
 #include <dbus/dbus.h>
 #endif
 
@@ -98,7 +98,7 @@ nsPhoneSupport::MakeCall(const PRUnichar *telephoneNumber, const PRUnichar *tele
 NS_IMETHODIMP
 nsPhoneSupport::SwitchTask()
 {
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO // 5 only?
   DBusError error;
   dbus_error_init(&error);
 

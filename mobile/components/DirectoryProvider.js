@@ -66,7 +66,7 @@ DirectoryProvider.prototype = {
       let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
       let device = sysInfo.get("device");
       switch (device) {
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
         case "Nokia N900":
           return profile;
         
