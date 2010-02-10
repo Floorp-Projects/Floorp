@@ -415,6 +415,10 @@ var Browser = {
       bv.onAfterVisibleMove();
 
       bv.commitBatchOperation();
+      
+      let curEl = document.activeElement;
+      if (curEl && curEl.scrollIntoView)
+        curEl.scrollIntoView();
     }
     window.addEventListener("resize", resizeHandler, false);
 
