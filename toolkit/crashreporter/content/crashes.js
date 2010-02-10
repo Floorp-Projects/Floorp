@@ -1,150 +1,52 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla code.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *    Dave Townsend <dtownsend@oxymoronical> (original author)
+ *    Ted Mielczarek <ted.mielczarek@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-var reportURL = null;
 var reportsDir, pendingDir;
-var strings = null;
-var myListener = null;
 
-function parseKeyValuePairs(text) {
-  var lines = text.split('\n');
-  var data = {};
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i] == '')
-      continue;
+Components.utils.import("resource://gre/modules/CrashSubmit.jsm");
 
-    // can't just .split() because the value might contain = characters
-    let eq = lines[i].indexOf('=');
-    if (eq != -1) {
-      let [key, value] = [lines[i].substring(0, eq),
-                          lines[i].substring(eq + 1)];
-      if (key && value)
-        data[key] = value.replace("\\n", "\n", "g").replace("\\\\", "\\", "g");
-    }
-  }
-  return data;
-}
-
-function parseKeyValuePairsFromFile(file) {
-  var fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
-  fstream.init(file, -1, 0, 0);
-  var is = Cc["@mozilla.org/intl/converter-input-stream;1"].
-           createInstance(Ci.nsIConverterInputStream);
-  is.init(fstream, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-  var str = {};
-  var contents = '';
-  while (is.readString(4096, str) != 0) {
-    contents += str.value;
-  }
-  is.close();
-  fstream.close();
-  return parseKeyValuePairs(contents);
-}
-
-function parseINIStrings(file) {
-  var factory = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
-                getService(Ci.nsIINIParserFactory);
-  var parser = factory.createINIParser(file);
-  var obj = {};
-  var en = parser.getKeys("Strings");
-  while (en.hasMore()) {
-    var key = en.getNext();
-    obj[key] = parser.getString("Strings", key);
-  }
-  return obj;
-}
-
-// Since we're basically re-implementing part of the crashreporter
-// client here, we'll just steal the strings we need from crashreporter.ini
-function getL10nStrings() {
-  let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-               getService(Ci.nsIProperties);
-  let path = dirSvc.get("GreD", Ci.nsIFile);
-  path.append("crashreporter.ini");
-  if (!path.exists()) {
-    // see if we're on a mac
-    path = path.parent;
-    path.append("crashreporter.app");
-    path.append("Contents");
-    path.append("MacOS");
-    path.append("crashreporter.ini");
-    if (!path.exists()) {
-      // very bad, but I don't know how to recover
-      return;
-    }
-  }
-  let crstrings = parseINIStrings(path);
-  strings = {
-    'crashid': crstrings.CrashID,
-    'reporturl': crstrings.CrashDetailsURL
-  };
-
-  path = dirSvc.get("XCurProcD", Ci.nsIFile);
-  path.append("crashreporter-override.ini");
-  if (path.exists()) {
-    crstrings = parseINIStrings(path);
-    if ('CrashID' in crstrings)
-      strings['crashid'] = crstrings.CrashID;
-    if ('CrashDetailsURL' in crstrings)
-      strings['reporturl'] = crstrings.CrashDetailsURL;
-  }
-}
-
-function getPendingMinidump(id) {
-  let directoryService = Cc["@mozilla.org/file/directory_service;1"].
-                         getService(Ci.nsIProperties);
-  let dump = pendingDir.clone();
-  let extra = pendingDir.clone();
-  dump.append(id + ".dmp");
-  extra.append(id + ".extra");
-  return [dump, extra];
-}
-
-function addFormEntry(doc, form, name, value) {
-  var input = doc.createElement("input");
-  input.type = "hidden";
-  input.name = name;
-  input.value = value;
-  form.appendChild(input);
-}
-
-function writeSubmittedReport(crashID, viewURL) {
-  let reportFile = reportsDir.clone();
-  reportFile.append(crashID + ".txt");
-  var fstream = Cc["@mozilla.org/network/file-output-stream;1"].
-                createInstance(Ci.nsIFileOutputStream);
-  // open, write, truncate
-  fstream.init(reportFile, -1, -1, 0);
-  var os = Cc["@mozilla.org/intl/converter-output-stream;1"].
-           createInstance(Ci.nsIConverterOutputStream);
-  os.init(fstream, "UTF-8", 0, 0x0000);
-
-  var data = strings.crashid.replace("%s", crashID);
-  if (viewURL)
-     data += "\n" + strings.reporturl.replace("%s", viewURL);
-
-  os.writeString(data);
-  os.close();
-  fstream.close();
-}
-
-function submitSuccess(ret, link, dump, extra) {
-  if (!ret.CrashID)
-    return;
-  // Write out the details file to submitted/
-  writeSubmittedReport(ret.CrashID, ret.ViewURL);
-
-  // Delete from pending dir
-  try {
-    dump.remove(false);
-    extra.remove(false);
-  }
-  catch (ex) {
-    // report an error? not much the user can do here.
-  }
-
+function submitSuccess(dumpid, ret) {
+  let link = document.getElementById(dumpid);
   if (link) {
+    link.className = "";
     // reset the link to point at our new crash report. this way, if the
     // user clicks "Back", the link will be correct.
     let CrashID = ret.CrashID;
@@ -158,105 +60,23 @@ function submitSuccess(ret, link, dump, extra) {
       window.location.href = reportURL + CrashID;
     }
   }
-  else {
-    window.close();
-  }
 }
 
-function submitForm(iframe, dump, extra, link)
-{
-  let reportData = parseKeyValuePairsFromFile(extra);
-  let form = iframe.contentDocument.forms[0];
-  if ('ServerURL' in reportData) {
-    form.action = reportData.ServerURL;
-    delete reportData.ServerURL;
-  }
-  else {
-    return false;
-  }
-  // add the other data
-  for (let [name, value] in Iterator(reportData)) {
-    addFormEntry(iframe.contentDocument, form, name, value);
-  }
-  // tell the server not to throttle this, since it was manually submitted
-  addFormEntry(iframe.contentDocument, form, "Throttleable", "0");
-  // add the minidump
-  iframe.contentDocument.getElementById('minidump').value = dump.path;
-
-  // web progress listener
-  const STATE_START = Ci.nsIWebProgressListener.STATE_START;
-  const STATE_STOP = Ci.nsIWebProgressListener.STATE_STOP;
-  myListener = {
-    QueryInterface: function(aIID) {
-      if (aIID.equals(Ci.nsIWebProgressListener) ||
-          aIID.equals(Ci.nsISupportsWeakReference) ||
-          aIID.equals(Ci.nsISupports))
-        return this;
-      throw Components.results.NS_NOINTERFACE;
-    },
-
-    onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {
-      if(aFlag & STATE_STOP) {
-        iframe.docShell.removeProgressListener(myListener);
-        myListener = null;
-	if (link)
-          link.className = "";
-
-        //XXX: give some indication of failure?
-        // check general request status first
-        if (!Components.isSuccessCode(aStatus)) {
-          document.body.removeChild(iframe);
-          return 0;
-        }
-        // check HTTP status
-        if (aRequest instanceof Ci.nsIHttpChannel &&
-            aRequest.responseStatus != 200) {
-          document.body.removeChild(iframe);
-          return 0;
-        }
-
-        var ret = parseKeyValuePairs(iframe.contentDocument.documentElement.textContent);
-        document.body.removeChild(iframe);
-        submitSuccess(ret, link, dump, extra);
-      }
-      return 0;
-    },
-
-    onLocationChange: function(aProgress, aRequest, aURI) {return 0;},
-    onProgressChange: function() {return 0;},
-    onStatusChange: function() {return 0;},
-    onSecurityChange: function() {return 0;},
-  };
-  iframe.docShell.QueryInterface(Ci.nsIWebProgress);
-  iframe.docShell.addProgressListener(myListener, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
-  form.submit();
-  return true;
-}
-
-function createAndSubmitForm(id, link) {
-  let [dump, extra] = getPendingMinidump(id);
-  if (!dump.exists() || !extra.exists())
-    return false;
-  let iframe = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "iframe");
-  iframe.setAttribute("type", "content");
-
-  function loadHandler() {
-    if (iframe.contentWindow.location == "about:blank")
-      return;
-    iframe.removeEventListener("load", loadHandler, true);
-    submitForm(iframe, dump, extra, link);
-  }      
-
-  iframe.addEventListener("load", loadHandler, true);
-  document.body.appendChild(iframe);
-  iframe.webNavigation.loadURI("chrome://global/content/crash-submit-form.xhtml", 0, null, null, null);
-  return true;
+function submitError(dumpid) {
+  //XXX: do something more useful here
+  let link = document.getElementById(dumpid);
+  if (link)
+    link.className = "";
+  // dispatch an event, useful for testing
+  let event = document.createEvent("Events");
+  event.initEvent("CrashSubmitFailed", true, false);
+  document.dispatchEvent(event);
 }
 
 function submitPendingReport(event) {
   var link = event.target;
   var id = link.firstChild.textContent;
-  if (createAndSubmitForm(id, link))
+  if (CrashSubmit.submit(id, document.body, submitSuccess, submitError))
     link.className = "submitting";
   event.preventDefault();
   return false;
@@ -425,6 +245,5 @@ function clearReports() {
 }
 
 function init() {
-  getL10nStrings();
   populateReportList();
 }
