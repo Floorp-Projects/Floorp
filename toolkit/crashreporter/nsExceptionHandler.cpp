@@ -975,10 +975,6 @@ public:
   SubmitCrashReport(nsIFile* dumpFile) : mDumpFile(dumpFile) { }
 
   NS_IMETHOD Run() {
-    char* e = getenv("MOZ_CRASHREPORTER_NO_REPORT");
-    if (e && *e)
-      return NS_OK;
-
     nsCOMPtr<nsIWindowWatcher> windowWatcher =
       do_GetService(NS_WINDOWWATCHER_CONTRACTID);
     nsCOMPtr<nsIDOMWindow> newWindow;
@@ -1023,6 +1019,25 @@ static PLDHashOperator EnumerateChildAnnotations(const nsACString& key,
   extraStream->Write(entry.BeginReading(), entry.Length(), &written);
   extraStream->Write("\n", 1, &written);
   return PL_DHASH_NEXT;
+}
+
+static bool
+MoveToPending(nsIFile* dumpFile, nsIFile* extraFile)
+{
+  nsCOMPtr<nsIProperties> dirSvc
+    = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+  if (!dirSvc)
+    return false;
+  nsCOMPtr<nsILocalFile> pendingDir;
+  if (NS_FAILED(dirSvc->Get("UAppData",
+                            NS_GET_IID(nsILocalFile),
+                            getter_AddRefs(pendingDir))) ||
+      NS_FAILED(pendingDir->Append(NS_LITERAL_STRING("Crash Reports"))) ||
+      NS_FAILED(pendingDir->Append(NS_LITERAL_STRING("pending"))))
+      return false;
+
+  return NS_FAILED(dumpFile->MoveTo(pendingDir, EmptyString())) ||
+    NS_FAILED(extraFile->MoveTo(pendingDir, EmptyString()));
 }
 
 static void
@@ -1084,13 +1099,23 @@ OnChildProcessDumpRequested(void* aContext,
   stream->Write("\n", 1, &written);
   stream->Close();
 
+  bool doReport = true;
+  char* e = getenv("MOZ_CRASHREPORTER_NO_REPORT");
+  if (e && *e)
+    doReport = false;
+
+  if (doReport)
+    MoveToPending(lf, extraFile);
+
   {
     MutexAutoLock lock(*dumpMapLock);
     pidToMinidump->Put(pid, lf);
   }
 
-  nsCOMPtr<nsIRunnable> r = new SubmitCrashReport(lf);
-  NS_DispatchToMainThread(r);
+  if (doReport) {
+    nsCOMPtr<nsIRunnable> r = new SubmitCrashReport(lf);
+    NS_DispatchToMainThread(r);
+  }
 }
 
 static bool
