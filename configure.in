@@ -6272,8 +6272,9 @@ else
               int i;
               int rc;
               char *zBuf;
+              const int bufSize = 1024*3;
 
-              zBuf = malloc(1024*3*sizeof(char));
+              zBuf = malloc(bufSize*sizeof(char));
               assert( zBuf );
               rc = sqlite3_open(":memory:", &db);
               assert( rc==SQLITE_OK );
@@ -6294,12 +6295,12 @@ else
               sqlite3_close(db);
               in = fopen(zFilename, "r");
               assert( in!=0 );
-              rc = fread(zBuf, 1, sizeof(zBuf), in);
-              assert( rc==sizeof(zBuf) );
+              rc = fread(zBuf, 1, bufSize, in);
+              assert( rc==bufSize );
               fclose(in);
               unlink(zFilename);
               free( zBuf );
-              for(i=0; i<sizeof(zBuf)-11; i++){
+              for(i=0; i<bufSize-11; i++){
                 if( *(zBuf+i)=='h' && memcmp(zBuf+i, "hijklmnopq", 10)==0 ){
                   return 1;
                 }
