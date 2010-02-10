@@ -197,7 +197,7 @@ nsINIParser::InitFromFILE(FILE *fd)
 
         char *key = token;
         char *e = NS_strtok(kEquals, &token);
-        if (!e)
+        if (!e || !token)
             continue;
 
         INIValue *v;
