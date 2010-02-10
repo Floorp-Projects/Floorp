@@ -704,6 +704,13 @@ function run() {
     test_balanced_unparseable(":-moz-tree-twisty(open())");
     test_balanced_unparseable("::-moz-tree-twisty(hover ())");
 
+    // Plugin pseudoclasses
+    test_parseable(":-moz-type-unsupported");
+    test_parseable(":-moz-handler-disabled");
+    test_parseable(":-moz-handler-blocked");
+    test_parseable(":-moz-handler-crashed");
+    test_parseable(":-moz-has-handlerref");
+
     // Case sensitivity of tag selectors
     function setup_cased_spans(body) {
       var data = [
