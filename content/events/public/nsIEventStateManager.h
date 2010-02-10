@@ -197,4 +197,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventStateManager, NS_IEVENTSTATEMANAGER_IID)
 
 #define NS_EVENT_STATE_INDETERMINATE 0x04000000 // CSS3-Selectors
 
+// Handler for the content has crashed
+#define NS_EVENT_STATE_HANDLER_CRASHED \
+                                     0x08000000
+
 #endif // nsIEventStateManager_h__

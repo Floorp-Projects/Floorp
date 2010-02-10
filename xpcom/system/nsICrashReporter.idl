@@ -47,7 +47,7 @@ interface nsIURL;
  *                    future releases.
  */
 
-[scriptable, uuid(44650737-59f7-4c9b-adbe-2b6d4dfee86a)]
+[scriptable, uuid(56761088-57ad-4f5c-bd61-f678c2807fe0)]
 interface nsICrashReporter : nsISupports
 {
   /**
@@ -117,4 +117,9 @@ interface nsICrashReporter : nsISupports
    * @param aException  NSException object to append note for
    */
   [noscript] void appendObjCExceptionInfoToAppNotes(in voidPtr aException);
+
+  /**
+   * User preference for submitting crash reports.
+   */
+  attribute boolean submitReports;
 };

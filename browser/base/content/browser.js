@@ -1101,14 +1101,18 @@ function HandleAppCommandEvent(evt) {
 }
 
 function prepareForStartup() {
+  var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+
   gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver.onUpdatePageReport, false);
   // Note: we need to listen to untrusted events, because the pluginfinder XBL
   // binding can't fire trusted ones (runs with page privileges).
   gBrowser.addEventListener("PluginNotFound", gMissingPluginInstaller.newMissingPlugin, true, true);
+  gBrowser.addEventListener("PluginCrashed", gMissingPluginInstaller.pluginInstanceCrashed, true, true);
   gBrowser.addEventListener("PluginBlocklisted", gMissingPluginInstaller.newMissingPlugin, true, true);
   gBrowser.addEventListener("PluginOutdated", gMissingPluginInstaller.newMissingPlugin, true, true);
   gBrowser.addEventListener("PluginDisabled", gMissingPluginInstaller.newDisabledPlugin, true, true);
   gBrowser.addEventListener("NewPluginInstalled", gMissingPluginInstaller.refreshBrowser, false);
+  os.addObserver(gMissingPluginInstaller.pluginCrashed, "plugin-crashed", false);
   window.addEventListener("AppCommand", HandleAppCommandEvent, true);
 
   var webNavigation;
@@ -1152,7 +1156,6 @@ function prepareForStartup() {
   // progress notifications for back/forward button updating
   webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
                                            .createInstance(Components.interfaces.nsISHistory);
-  var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
   os.addObserver(gBrowser.browsers[0], "browser:purge-session-history", false);
 
   // remove the disablehistory attribute so the browser cleans up, as
@@ -2536,11 +2539,34 @@ function BrowserReloadWithFlags(reloadFlags) {
 }
 
 var PrintPreviewListener = {
+  _printPreviewTab: null,
+  _tabBeforePrintPreview: null,
+
+  getPrintPreviewBrowser: function () {
+    if (!this._printPreviewTab) {
+      this._tabBeforePrintPreview = gBrowser.selectedTab;
+      this._printPreviewTab = gBrowser.loadOneTab("about:blank",
+                                                  { inBackground: false });
+      gBrowser.selectedTab = this._printPreviewTab;
+    }
+    return gBrowser.getBrowserForTab(this._printPreviewTab);
+  },
+  getSourceBrowser: function () {
+    return this._tabBeforePrintPreview ?
+      this._tabBeforePrintPreview.linkedBrowser : gBrowser.selectedBrowser;
+  },
+  getNavToolbox: function () {
+    return gNavToolbox;
+  },
   onEnter: function () {
     gInPrintPreviewMode = true;
     this._toggleAffectedChrome();
   },
   onExit: function () {
+    gBrowser.selectedTab = this._tabBeforePrintPreview;
+    this._tabBeforePrintPreview = null;
+    gBrowser.removeTab(this._printPreviewTab);
+    this._printPreviewTab = null;
     gInPrintPreviewMode = false;
     this._toggleAffectedChrome();
   },
@@ -2572,8 +2598,7 @@ var PrintPreviewListener = {
     this._chromeState.sidebarOpen = !sidebar.hidden;
     this._sidebarCommand = sidebar.getAttribute("sidebarcommand");
 
-    this._chromeState.hadTabStrip = gBrowser.getStripVisibility();
-    gBrowser.setStripVisibilityTo(false);
+    gBrowser.mStrip.setAttribute("moz-collapsed", "true");
 
     var notificationBox = gBrowser.getNotificationBox();
     this._chromeState.notificationsOpen = !notificationBox.notificationsHidden;
@@ -2588,8 +2613,7 @@ var PrintPreviewListener = {
     gFindBar.close();
   },
   _showChrome: function () {
-    if (this._chromeState.hadTabStrip)
-      gBrowser.setStripVisibilityTo(true);
+    gBrowser.mStrip.removeAttribute("moz-collapsed");
 
     if (this._chromeState.notificationsOpen)
       gBrowser.getNotificationBox().notificationsHidden = false;
@@ -2600,11 +2624,6 @@ var PrintPreviewListener = {
     if (this._chromeState.findOpen)
       gFindBar.open();
   }
-}
-
-function getPPBrowser()
-{
-  return gBrowser;
 }
 
 function getMarkupDocumentViewer()
@@ -5977,7 +5996,23 @@ function getPluginInfo(pluginElement)
 
 var gMissingPluginInstaller = {
 
+  get CrashSubmit() {
+    delete this.CrashSubmit;
+    Cu.import("resource://gre/modules/CrashSubmit.jsm", this);
+    return this.CrashSubmit;
+  },
+
+  get crashReportHelpURL() {
+    delete this.crashReportHelpURL;
+    let url = formatURL("app.support.baseURL", true);
+    url += "plugin-crashed";
+    this.crashReportHelpURL = url;
+    return this.crashReportHelpURL;
+  },
+
   installSinglePlugin: function (aEvent) {
+    if (!aEvent.isTrusted)
+        return;
     var missingPluginsArray = {};
 
     var pluginInfo = getPluginInfo(aEvent.target);
@@ -5993,6 +6028,8 @@ var gMissingPluginInstaller = {
   },
 
   managePlugins: function (aEvent) {
+    if (!aEvent.isTrusted)
+        return;
     BrowserOpenAddonsMgr("plugins");
     aEvent.stopPropagation();
   },
@@ -6014,6 +6051,11 @@ var gMissingPluginInstaller = {
       aEvent.target.addEventListener("click",
                                      gMissingPluginInstaller.installSinglePlugin,
                                      true);
+      aEvent.target.addEventListener("keydown",
+                                     function(evt) { if (evt.keyCode == evt.DOM_VK_RETURN)
+                                                       gMissingPluginInstaller.installSinglePlugin(evt) },
+                                     true);
+                                                    
     }
 
     let hideBarPrefName = aEvent.type == "PluginOutdated" ?
@@ -6137,6 +6179,133 @@ var gMissingPluginInstaller = {
     aEvent.target.addEventListener("click",
                                    gMissingPluginInstaller.managePlugins,
                                    true);
+    aEvent.target.addEventListener("keydown",
+                                   function(evt) { if (evt.keyCode == evt.DOM_VK_RETURN)
+                                                     gMissingPluginInstaller.managePlugins(evt) },
+                                   true);
+  },
+
+  // Crashed-plugin observer. Notified once per plugin crash, before events
+  // are dispatched to individual plugin instances.
+  pluginCrashed : function(subject, topic, data) {
+    let propertyBag = subject;
+    if (!(propertyBag instanceof Ci.nsIPropertyBag2) ||
+        !(propertyBag instanceof Ci.nsIWritablePropertyBag2))
+     return;
+
+#ifdef MOZ_CRASHREPORTER
+    let minidumpID = subject.getPropertyAsAString("minidumpID");
+    let submitReports = gCrashReporter.submitReports;
+    // The crash reporter wants a DOM element it can append an IFRAME to,
+    // which it uses to submit a form. Let's just give it gBrowser.
+    if (submitReports)
+      gMissingPluginInstaller.CrashSubmit.submit(minidumpID, gBrowser, null, null);
+    propertyBag.setPropertyAsBool("submittedCrashReport", submitReports);
+#endif
+  },
+
+  pluginInstanceCrashed: function (aEvent) {
+    // Evil content could fire a fake event at us, ignore them.
+    if (!aEvent.isTrusted)
+      return;
+
+    if (!(aEvent instanceof Ci.nsIDOMDataContainerEvent))
+      return;
+
+    let submittedReport = aEvent.getData("submittedCrashReport");
+    let pluginName      = aEvent.getData("pluginName");
+
+    // We're expecting this to be a plugin.
+    let plugin = aEvent.target;
+    if (!(plugin instanceof Ci.nsIObjectLoadingContent))
+      return;
+
+    // Force a style flush, so that we ensure our binding is attached.
+    plugin.clientTop;
+
+    let messageString = gNavigatorBundle.getFormattedString("crashedpluginsMessage.title", [pluginName]);
+
+    //
+    // Configure the crashed-plugin placeholder.
+    //
+    let doc = plugin.ownerDocument;
+    let overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+
+    // The binding has role="link" here, since missing/disabled/blocked
+    // plugin UI has a onclick handler on the whole thing. This isn't needed
+    // for the plugin-crashed UI, because we use actual HTML links in the text.
+    overlay.removeAttribute("role");
+
+#ifdef MOZ_CRASHREPORTER
+    let helpClass = submittedReport ? "submitLink" : "notSubmitLink";
+    let helpLink = doc.getAnonymousElementByAttribute(plugin, "class", helpClass);
+    helpLink.href = gMissingPluginInstaller.crashReportHelpURL;
+    let showClass = submittedReport ? "msg msgSubmitted" : "msg msgNotSubmitted";
+    let textToShow = doc.getAnonymousElementByAttribute(plugin, "class", showClass);
+    textToShow.style.display = "block";
+#endif
+
+    let crashText = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgCrashed");
+    crashText.textContent = messageString;
+
+    let link = doc.getAnonymousElementByAttribute(plugin, "class", "reloadLink");
+    link.addEventListener("click", function(e) { if (e.isTrusted) browser.reload(); }, true);
+
+    let browser = gBrowser.getBrowserForDocument(plugin.ownerDocument
+                                                       .defaultView.top.document);
+    let notificationBox = gBrowser.getNotificationBox(browser);
+
+    // Is the <object>'s size too small to hold what we want to show?
+    let pluginRect = plugin.getBoundingClientRect();
+    // XXX bug 446693. The text-shadow on the submitted-report text at
+    //     the bottom causes scrollHeight to be larger than it should be.
+    let isObjectTooSmall = (overlay.scrollWidth > pluginRect.width) ||
+                           (overlay.scrollHeight - 5 > pluginRect.height);
+    if (isObjectTooSmall) {
+        // Hide the overlay's contents. Use visibility style, so that it
+        // doesn't collapse down to 0x0.
+        overlay.style.visibility = "hidden";
+        // If another plugin on the page was large enough to show our UI, we
+        // don't want to show a notification bar.
+        if (!doc.mozNoPluginCrashedNotification)
+          showNotificationBar();
+    } else {
+        // If a previous plugin on the page was too small and resulted in
+        // adding a notification bar, then remove it because this plugin
+        // instance it big enough to serve as in-content notification.
+        hideNotificationBar();
+        doc.mozNoPluginCrashedNotification = true;
+    }
+
+    function hideNotificationBar() {
+      let notification = notificationBox.getNotificationWithValue("plugin-crashed");
+      if (notification)
+        notificationBox.removeNotification(notification, true);
+    }
+
+    function showNotificationBar() {
+      // If there's already an existing notification bar, don't do anything.
+      let notification = notificationBox.getNotificationWithValue("plugin-crashed");
+      if (notification)
+        return;
+
+      // Configure the notification bar
+      let priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+      let iconURL = "chrome://mozapps/skin/plugins/pluginGeneric-16.png";
+      let label = gNavigatorBundle.getString("crashedpluginsMessage.reloadButton.label");
+      let accessKey = gNavigatorBundle.getString("crashedpluginsMessage.reloadButton.accesskey");
+
+      let buttons = [{
+        label: label,
+        accessKey: accessKey,
+        popup: null,
+        callback: function() { browser.reload(); },
+      }];
+
+      let notification = notificationBox.appendNotification(messageString, "plugin-crashed",
+                                                            iconURL, priority, buttons);
+    }
+
   },
 
   refreshBrowser: function (aEvent) {

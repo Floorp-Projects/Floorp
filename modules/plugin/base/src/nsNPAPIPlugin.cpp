@@ -300,10 +300,10 @@ nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
 
 #ifdef MOZ_IPC
 void
-nsNPAPIPlugin::PluginCrashed()
+nsNPAPIPlugin::PluginCrashed(const nsAString& dumpID)
 {
   nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
-  host->PluginCrashed(this);
+  host->PluginCrashed(this, dumpID);
 }
 #endif
 
@@ -2139,7 +2139,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_GENERIC_ERROR;
   }
 
-#ifdef MOZ_PLATFORM_HILDON
+#if (MOZ_PLATFORM_MAEMO == 5)
   case NPNVSupportsWindowlessLocal: {
     *(NPBool*)result = PR_TRUE;
     return NPERR_NO_ERROR;
@@ -2277,7 +2277,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       return inst->SetWindowless(bWindowless);
 #endif
     }
-#ifdef MOZ_PLATFORM_HILDON
+#if (MOZ_PLATFORM_MAEMO == 5)
     case NPPVpluginWindowlessLocalBool: {
       NPBool bWindowlessLocal = (result != nsnull);
       return inst->SetWindowlessLocal(bWindowlessLocal);

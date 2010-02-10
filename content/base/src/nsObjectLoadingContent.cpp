@@ -44,9 +44,13 @@
 
 // Interface headers
 #include "imgILoader.h"
+#include "nsEventDispatcher.h"
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
+#include "nsIDOMDataContainerEvent.h"
+#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMEventTarget.h"
 #include "nsIExternalProtocolHandler.h"
 #include "nsIEventStateManager.h"
 #include "nsIObjectFrame.h"
@@ -54,6 +58,7 @@
 #include "nsIPluginHost.h"
 #include "nsIPluginInstance.h"
 #include "nsIPresShell.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIStreamConverterService.h"
@@ -79,6 +84,7 @@
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsStyleUtil.h"
+#include "nsGUIEvent.h"
 
 // Concrete classes
 #include "nsFrameLoader.h"
@@ -200,15 +206,85 @@ nsPluginErrorEvent::Run()
     case ePluginOutdated:
       type = NS_LITERAL_STRING("PluginOutdated");
       break;
-    case ePluginCrashed:
-      type = NS_LITERAL_STRING("PluginCrashed");
-      break;
     default:
       return NS_OK;
   }
   nsContentUtils::DispatchTrustedEvent(mContent->GetDocument(), mContent,
                                        type, PR_TRUE, PR_TRUE);
 
+  return NS_OK;
+}
+
+/**
+ * A task for firing PluginCrashed DOM Events.
+ */
+class nsPluginCrashedEvent : public nsRunnable {
+public:
+  nsCOMPtr<nsIContent> mContent;
+  nsString mPluginName;
+  PRBool mSubmittedCrashReport;
+
+  nsPluginCrashedEvent(nsIContent* aContent,
+                       const nsAString& aPluginName,
+                       PRBool submittedCrashReport)
+    : mContent(aContent),
+      mPluginName(aPluginName),
+      mSubmittedCrashReport(submittedCrashReport)
+  {}
+
+  ~nsPluginCrashedEvent() {}
+
+  NS_IMETHOD Run();
+};
+
+NS_IMETHODIMP
+nsPluginCrashedEvent::Run()
+{
+  LOG(("OBJLC []: Firing plugin crashed event for content %p\n",
+       mContent.get()));
+
+  nsCOMPtr<nsIDOMDocumentEvent> domEventDoc =
+    do_QueryInterface(mContent->GetDocument());
+  if (!domEventDoc) {
+    NS_WARNING("Couldn't get document for PluginCrashed event!");
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMEvent> event;
+  domEventDoc->CreateEvent(NS_LITERAL_STRING("datacontainerevents"),
+                           getter_AddRefs(event));
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+  nsCOMPtr<nsIDOMDataContainerEvent> containerEvent(do_QueryInterface(event));
+  if (!privateEvent || !containerEvent) {
+    NS_WARNING("Couldn't QI event for PluginCrashed event!");
+    return NS_OK;
+  }
+
+  event->InitEvent(NS_LITERAL_STRING("PluginCrashed"), PR_TRUE, PR_TRUE);
+  privateEvent->SetTrusted(PR_TRUE);
+  privateEvent->GetInternalNSEvent()->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+  
+  nsCOMPtr<nsIWritableVariant> variant;
+
+  // add a "pluginName" property to this event
+  variant = do_CreateInstance("@mozilla.org/variant;1");
+  if (!variant) {
+    NS_WARNING("Couldn't create pluginName variant for PluginCrashed event!");
+    return NS_OK;
+  }
+  variant->SetAsAString(mPluginName);
+  containerEvent->SetData(NS_LITERAL_STRING("pluginName"), variant);
+
+  // add a "submittedCrashReport" property to this event
+  variant = do_CreateInstance("@mozilla.org/variant;1");
+  if (!variant) {
+    NS_WARNING("Couldn't create crashSubmit variant for PluginCrashed event!");
+    return NS_OK;
+  }
+  variant->SetAsBool(mSubmittedCrashReport);
+  containerEvent->SetData(NS_LITERAL_STRING("submittedCrashReport"), variant);
+
+  nsEventDispatcher::DispatchDOMEvent(mContent, nsnull, event, nsnull, nsnull);
   return NS_OK;
 }
 
@@ -954,6 +1030,9 @@ nsObjectLoadingContent::ObjectState() const
           break;
         case ePluginBlocklisted:
           state |= NS_EVENT_STATE_HANDLER_BLOCKED;
+          break;
+        case ePluginCrashed:
+          state |= NS_EVENT_STATE_HANDLER_CRASHED;
           break;
         case ePluginUnsupported:
           state |= NS_EVENT_STATE_TYPE_UNSUPPORTED;
@@ -1929,11 +2008,19 @@ nsObjectLoadingContent::SetAbsoluteScreenPosition(nsIDOMElement* element,
 }
 
 NS_IMETHODIMP
-nsObjectLoadingContent::PluginCrashed()
+nsObjectLoadingContent::PluginCrashed(const nsAString& pluginName,
+                                      PRBool submittedCrashReport)
 {
+  AutoNotifier notifier(this, PR_TRUE);
   UnloadContent();
   mFallbackReason = ePluginCrashed;
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  FirePluginError(thisContent, mFallbackReason);
+  nsCOMPtr<nsIRunnable> ev = new nsPluginCrashedEvent(thisContent,
+                                                      pluginName,
+                                                      submittedCrashReport);
+  nsresult rv = NS_DispatchToCurrentThread(ev);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("failed to dispatch nsPluginCrashedEvent");
+  }
   return NS_OK;
 }

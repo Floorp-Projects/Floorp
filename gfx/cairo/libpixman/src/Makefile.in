@@ -92,8 +92,7 @@ ifdef HAVE_ARM_SIMD
 USE_ARM_SIMD_GCC=1
 endif
 ifdef HAVE_ARM_NEON
-# temporarily disabled to see if it fixes odd mobile build breakage
-#USE_ARM_NEON_GCC=1
+USE_ARM_NEON_GCC=1
 endif
 endif
 
@@ -148,6 +147,7 @@ endif
 
 ifdef USE_ARM_NEON_GCC
 CSRCS += pixman-arm-neon.c
+SSRCS += pixman-arm-neon-asm.S
 DEFINES += -DUSE_ARM_NEON
 ARM_NEON_CFLAGS = -mfloat-abi=softfp -mfpu=neon
 endif

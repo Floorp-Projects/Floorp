@@ -53,7 +53,7 @@
 #include <glib-object.h>
 #endif
 
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
 #include <libintl.h>
 #endif
 
@@ -192,7 +192,7 @@ nsGNOMERegistry::GetFromType(const nsACString& aMIMEType)
   else 
     gnomeHandlerApp->GetName(name);
 
-#ifdef MOZ_PLATFORM_HILDON
+#ifdef MOZ_PLATFORM_MAEMO
   // On Maemo/Hildon, GetName ends up calling gnome_vfs_mime_application_get_name,
   // which happens to return a non-localized message-id for the application. To
   // get the localized name for the application, we have to call dgettext with 

@@ -181,6 +181,10 @@ static bool CheckBoolKey(const wchar_t* key,
                          const wchar_t* valueName,
                          bool* enabled)
 {
+  /*
+   * NOTE! This code needs to stay in sync with the preference checking
+   *       code in in nsExceptionHandler.cpp.
+   */
   *enabled = false;
   bool found = false;
   HKEY hRegKey;
@@ -208,6 +212,10 @@ static bool CheckBoolKey(const wchar_t* key,
 
 static void SetBoolKey(const wchar_t* key, const wchar_t* value, bool enabled)
 {
+  /*
+   * NOTE! This code needs to stay in sync with the preference setting
+   *       code in in nsExceptionHandler.cpp.
+   */
   HKEY hRegKey;
 
   // remove the old value from the registry if it exists
