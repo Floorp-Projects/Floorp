@@ -70,7 +70,7 @@ class nsIDocShellTreeItem;
 #define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
 #define PLATFORM_KEYS_BUNDLE_URL "chrome://global-platform/locale/platformKeys.properties"
 
-typedef nsInterfaceHashtable<nsVoidPtrHashKey, nsIAccessNode>
+typedef nsInterfaceHashtable<nsVoidPtrHashKey, nsAccessNode>
         nsAccessNodeHashtable;
 
 // What we want is: NS_INTERFACE_MAP_ENTRY(self) for static IID accessors,
@@ -127,14 +127,10 @@ class nsAccessNode: public nsIAccessNode
      */
     static already_AddRefed<nsApplicationAccessibleWrap> GetApplicationAccessible();
 
-    // Static methods for handling per-document cache
-    static void PutCacheEntry(nsAccessNodeHashtable& aCache,
-                              void* aUniqueID, nsIAccessNode *aAccessNode);
-    static void GetCacheEntry(nsAccessNodeHashtable& aCache,
-                              void* aUniqueID, nsIAccessNode **aAccessNode);
-    static void ClearCache(nsAccessNodeHashtable& aCache);
-
-    static PLDHashOperator ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg);
+  /**
+   * Clear the cache and shutdown the access nodes.
+   */
+  static void ClearCache(nsAccessNodeHashtable& aCache);
 
     // Static cache methods for global document cache
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDocument *aDocument);

@@ -619,14 +619,9 @@ nsAccessNode::GetDocAccessibleFor(nsIDocument *aDocument)
     return nsnull;
   }
 
-  nsIAccessibleDocument *docAccessible = nsnull;
-  nsCOMPtr<nsIAccessNode> accessNode;
-  gGlobalDocAccessibleCache.Get(static_cast<void*>(aDocument),
-                                getter_AddRefs(accessNode));
-  if (accessNode) {
-    CallQueryInterface(accessNode, &docAccessible);
-  }
-  return docAccessible;
+  nsCOMPtr<nsIAccessibleDocument> docAccessible(do_QueryInterface(
+    gGlobalDocAccessibleCache.GetWeak(static_cast<void*>(aDocument))));
+  return docAccessible.forget();
 }
  
 already_AddRefed<nsIAccessibleDocument>
@@ -682,35 +677,14 @@ nsAccessNode::GetDocAccessibleFor(nsIDOMNode *aNode)
   return nsnull;
 }
 
-void
-nsAccessNode::PutCacheEntry(nsAccessNodeHashtable& aCache,
-                            void* aUniqueID,
-                            nsIAccessNode *aAccessNode)
-{
-#ifdef DEBUG_A11Y
-  nsCOMPtr<nsIAccessNode> oldAccessNode;
-  GetCacheEntry(aCache, aUniqueID, getter_AddRefs(oldAccessNode));
-  NS_ASSERTION(!oldAccessNode, "This cache entry shouldn't exist already");
-#endif
-  aCache.Put(aUniqueID, aAccessNode);
-}
-
-void
-nsAccessNode::GetCacheEntry(nsAccessNodeHashtable& aCache,
-                            void* aUniqueID,
-                            nsIAccessNode **aAccessNode)
-{
-  aCache.Get(aUniqueID, aAccessNode);  // AddRefs for us
-}
-
-PLDHashOperator nsAccessNode::ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg)
+// Callback used when clearing the cache, see nsAccessNode::ClearCache() method.
+static PLDHashOperator
+ClearCacheEntry(const void* aKey, nsCOMPtr<nsAccessNode>& aAccessNode,
+                void* aUserArg)
 {
   NS_ASSERTION(aAccessNode, "Calling ClearCacheEntry with a NULL pointer!");
-  if (aAccessNode) {
-    nsRefPtr<nsAccessNode> accessNode =
-      nsAccUtils::QueryAccessNode(aAccessNode);
-    accessNode->Shutdown();
-  }
+  if (aAccessNode)
+    aAccessNode->Shutdown();
 
   return PL_DHASH_REMOVE;
 }
