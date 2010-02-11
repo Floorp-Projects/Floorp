@@ -212,6 +212,8 @@ class nsPrintDialogWidgetGTK {
 
     nsCOMPtr<nsIStringBundle> printBundle;
 
+    PRPackedBool useNativeSelection;
+
     GtkWidget* ConstructHeaderFooterDropdown(const PRUnichar *currentString);
     const char* OptionWidgetToString(GtkWidget *dropdown);
 
@@ -288,14 +290,25 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSe
   // Check buttons for shrink-to-fit and print selection
   GtkWidget* check_buttons_container = gtk_vbox_new(TRUE, 2);
   shrink_to_fit_toggle = gtk_check_button_new_with_mnemonic(GetUTF8FromBundle("shrinkToFit").get());
-  selection_only_toggle = gtk_check_button_new_with_mnemonic(GetUTF8FromBundle("selectionOnly").get());
+  gtk_box_pack_start(GTK_BOX(check_buttons_container), shrink_to_fit_toggle, FALSE, FALSE, 0);
+
+  // GTK+2.18 and above allow us to add a "Selection" option to the main settings screen,
+  // rather than adding an option on a custom tab like we must do on older versions.
   PRBool canSelectText;
   aSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &canSelectText);
-  if (!canSelectText)
-    gtk_widget_set_sensitive(selection_only_toggle, FALSE);
-
-  gtk_box_pack_start(GTK_BOX(check_buttons_container), shrink_to_fit_toggle, FALSE, FALSE, 0);
-  gtk_box_pack_start(GTK_BOX(check_buttons_container), selection_only_toggle, FALSE, FALSE, 0);
+  if (gtk_major_version > 2 ||
+      (gtk_major_version == 2 && gtk_minor_version >= 18)) {
+    useNativeSelection = PR_TRUE;
+    g_object_set(G_OBJECT(dialog),
+                 "support-selection", TRUE,
+                 "has-selection", canSelectText,
+                 NULL);
+  } else {
+    useNativeSelection = PR_FALSE;
+    selection_only_toggle = gtk_check_button_new_with_mnemonic(GetUTF8FromBundle("selectionOnly").get());
+    gtk_widget_set_sensitive(selection_only_toggle, canSelectText);
+    gtk_box_pack_start(GTK_BOX(check_buttons_container), selection_only_toggle, FALSE, FALSE, 0);
+  }
 
   // Check buttons for printing background
   GtkWidget* appearance_buttons_container = gtk_vbox_new(TRUE, 2);
@@ -506,7 +519,14 @@ nsPrintDialogWidgetGTK::ExportSettings(nsIPrintSettings *aNSSettings)
       aNSSettingsGTK->SetGtkPrintSettings(settings);
       aNSSettingsGTK->SetGtkPageSetup(setup);
       aNSSettingsGTK->SetGtkPrinter(printer);
-      aNSSettingsGTK->SetForcePrintSelectionOnly(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(selection_only_toggle)));
+      PRBool printSelectionOnly;
+      if (useNativeSelection) {
+        _GtkPrintPages pageSetting = (_GtkPrintPages)gtk_print_settings_get_print_pages(settings);
+        printSelectionOnly = (pageSetting == _GTK_PRINT_PAGES_SELECTION);
+      } else {
+        printSelectionOnly = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(selection_only_toggle));
+      }
+      aNSSettingsGTK->SetForcePrintSelectionOnly(printSelectionOnly);
     }
   }
 
