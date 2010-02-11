@@ -14,7 +14,7 @@ pref("extensions.weave.engine.history", true);
 pref("extensions.weave.engine.passwords", true);
 pref("extensions.weave.engine.prefs", true);
 pref("extensions.weave.engine.tabs", true);
-pref("extensions.weave.engine.tabs.filteredUrls", "^(about:blank|chrome://weave/.*)$");
+pref("extensions.weave.engine.tabs.filteredUrls", "^(about:blank|chrome://weave/.*|wyciwyg:.*)$");
 
 pref("extensions.weave.log.appender.console", "Warn");
 pref("extensions.weave.log.appender.dump", "Error");
