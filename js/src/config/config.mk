@@ -162,19 +162,72 @@ endif
 _DEBUG_CFLAGS :=
 _DEBUG_LDFLAGS :=
 
+ifndef MOZ_DEBUG
+  # global debugging is disabled 
+  # check if it was explicitly enabled for this module
+  ifneq (, $(findstring $(MODULE), $(MOZ_DEBUG_MODULES)))
+    MOZ_DEBUG:=1
+  endif
+else
+  # global debugging is enabled
+  # check if it was explicitly disabled for this module
+  ifneq (, $(findstring ^$(MODULE), $(MOZ_DEBUG_MODULES)))
+    MOZ_DEBUG:=
+  endif
+endif
+
 ifdef MOZ_DEBUG
-  _DEBUG_CFLAGS += $(MOZ_DEBUG_ENABLE_DEFS) $(MOZ_DEBUG_FLAGS)
-  _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)
+  _DEBUG_CFLAGS += $(MOZ_DEBUG_ENABLE_DEFS)
   XULPPFLAGS += $(MOZ_DEBUG_ENABLE_DEFS)
 else
   _DEBUG_CFLAGS += $(MOZ_DEBUG_DISABLE_DEFS)
   XULPPFLAGS += $(MOZ_DEBUG_DISABLE_DEFS)
-  ifdef MOZ_DEBUG_SYMBOLS
-    _DEBUG_CFLAGS += $(MOZ_DEBUG_FLAGS)
-    _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)
+endif
+
+# determine if -g should be passed to the compiler, based on
+# the current module, and the value of MOZ_DBGRINFO_MODULES
+
+ifdef MOZ_DEBUG
+  MOZ_DBGRINFO_MODULES += ALL_MODULES
+  pattern := ALL_MODULES ^ALL_MODULES
+else
+  MOZ_DBGRINFO_MODULES += ^ALL_MODULES
+  pattern := ALL_MODULES ^ALL_MODULES
+endif
+
+ifdef MODULE
+  # our current Makefile specifies a module name - add it to our pattern
+  pattern += $(MODULE) ^$(MODULE)
+endif
+
+# start by finding the first relevant module name 
+# (remember that the order of the module names in MOZ_DBGRINFO_MODULES 
+# is reversed from the order the user specified to configure - 
+# this allows the user to put general names at the beginning
+# of the list, and to override them with explicit module names later 
+# in the list)
+
+first_match:=$(firstword $(filter $(pattern), $(MOZ_DBGRINFO_MODULES)))
+
+ifeq ($(first_match), $(MODULE))
+  # the user specified explicitly that 
+  # this module should be compiled with -g
+  _DEBUG_CFLAGS += $(MOZ_DEBUG_FLAGS)
+  _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)
+else
+  ifneq ($(first_match), ^$(MODULE))
+    ifeq ($(first_match), ALL_MODULES)
+      # the user didn't mention this module explicitly, 
+      # but wanted all modules to be compiled with -g
+      _DEBUG_CFLAGS += $(MOZ_DEBUG_FLAGS)
+      _DEBUG_LDFLAGS += $(MOZ_DEBUG_LDFLAGS)      
+    endif
   endif
 endif
 
+
+# append debug flags 
+# (these might have been above when processing MOZ_DBGRINFO_MODULES)
 OS_CFLAGS += $(_DEBUG_CFLAGS)
 OS_CXXFLAGS += $(_DEBUG_CFLAGS)
 OS_LDFLAGS += $(_DEBUG_LDFLAGS)
