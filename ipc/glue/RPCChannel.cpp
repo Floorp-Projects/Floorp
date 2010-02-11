@@ -439,9 +439,13 @@ RPCChannel::DispatchIncall(const Message& call)
 
     reply->set_seqno(call.seqno());
 
-    mIOLoop->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(this, &RPCChannel::OnSend, reply));
+    {
+        MutexAutoLock lock(mMutex);
+        if (ChannelConnected == mChannelState)
+            mIOLoop->PostTask(
+                FROM_HERE,
+                NewRunnableMethod(this, &RPCChannel::OnSend, reply));
+    }
 }
 
 bool
