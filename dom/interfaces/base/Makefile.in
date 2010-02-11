@@ -58,6 +58,7 @@ SDK_XPIDLSRCS =                                 \
 XPIDLSRCS =					\
 	nsIBrowserDOMWindow.idl			\
 	nsIContentPrefService.idl		\
+	nsIContentURIGrouper.idl    \
 	nsIDOMClientInformation.idl		\
 	nsIDOMConstructor.idl			\
 	nsIDOMCRMFObject.idl			\

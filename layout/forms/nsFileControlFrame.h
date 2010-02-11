@@ -98,6 +98,10 @@ public:
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
 
+  // create and destroy the static UploadLastDir object for remembering
+  // which directory was last used on a site-by-site basis
+  static void InitUploadLastDir();
+  static void DestroyUploadLastDir();
 protected:
   class MouseListener;
   friend class MouseListener;
@@ -184,28 +188,6 @@ private:
    */
   void SyncAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                 PRInt32 aWhichControls);
-
-  /**
-   * Fetch the last used directory for this location from the content
-   * pref service, if it is available.  The caller must pass in an
-   * already-created nsILocalFile, and this function will initialize
-   * it to point to the right directory.
-   *
-   * @param aURI URI of the current page
-   * @param aFile path to the last used directory
-   */
-  static nsresult FetchLastUsedDirectory(nsIURI* aURI,
-                                         nsILocalFile* aFile);
-
-  /**
-   * Store the last used directory for this location using the
-   * content pref service, if it is available
-   * @param aURI URI of the current page
-   * @param aFile file chosen by the user - the path to the parent of this
-   *        file will be stored
-   */
-  static void StoreLastUsedDirectory(nsIURI* aURI,
-                                     nsIFile* aFile);
 };
 
 #endif

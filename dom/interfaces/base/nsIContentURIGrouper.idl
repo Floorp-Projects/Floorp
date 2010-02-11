@@ -48,3 +48,8 @@ interface nsIContentURIGrouper : nsISupports
      */
     AString group(in nsIURI aURI);
 };
+
+%{C++
+// The contractID for the generic implementation built in to xpcom.
+#define NS_HOSTNAME_GROUPER_SERVICE_CONTRACTID "@mozilla.org/content-pref/hostname-grouper;1"
+%}

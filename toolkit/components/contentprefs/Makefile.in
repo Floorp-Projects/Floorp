@@ -41,7 +41,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src
+DIRS = src
 
 ifdef ENABLE_TESTS
 	DIRS += tests
