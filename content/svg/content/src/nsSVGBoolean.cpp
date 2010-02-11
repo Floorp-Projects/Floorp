@@ -69,12 +69,19 @@ nsSVGBoolean::SetBaseValueString(const nsAString &aValueAsString,
   else
     return NS_ERROR_DOM_SYNTAX_ERR;
 
-  mBaseVal = mAnimVal = val;
+  mBaseVal = val;
+  if (!mIsAnimated) {
+    mAnimVal = mBaseVal;
+  }
 #ifdef MOZ_SMIL
-  if (mIsAnimated) {
+  else {
     aSVGElement->AnimationNeedsResample();
   }
 #endif
+
+  // We don't need to call DidChange* here - we're only called by
+  // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
+  // which takes care of notifying.
   return NS_OK;
 }
 
@@ -93,13 +100,16 @@ nsSVGBoolean::SetBaseValue(PRBool aValue,
   NS_PRECONDITION(aValue == PR_TRUE || aValue == PR_FALSE, "Boolean out of range");
 
   if (aValue != mBaseVal) {
-    mAnimVal = mBaseVal = aValue;
-    aSVGElement->DidChangeBoolean(mAttrEnum, PR_TRUE);
+    mBaseVal = aValue;
+    if (!mIsAnimated) {
+      mAnimVal = mBaseVal;
+    }
 #ifdef MOZ_SMIL
-    if (mIsAnimated) {
+    else {
       aSVGElement->AnimationNeedsResample();
     }
 #endif
+    aSVGElement->DidChangeBoolean(mAttrEnum, PR_TRUE);
   }
 }
 

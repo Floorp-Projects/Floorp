@@ -330,14 +330,16 @@ void
 nsSVGLength2::SetBaseValueInSpecifiedUnits(float aValue,
                                            nsSVGElement *aSVGElement)
 {
-  mBaseVal = mAnimVal = aValue;
-  aSVGElement->DidChangeLength(mAttrEnum, PR_TRUE);
-
+  mBaseVal = aValue;
+  if (!mIsAnimated) {
+    mAnimVal = mBaseVal;
+  }
 #ifdef MOZ_SMIL
-  if (mIsAnimated) {
+  else {
     aSVGElement->AnimationNeedsResample();
   }
 #endif
+  aSVGElement->DidChangeLength(mAttrEnum, PR_TRUE);
 }
 
 nsresult
@@ -365,15 +367,17 @@ nsSVGLength2::NewValueSpecifiedUnits(PRUint16 unitType,
   if (!IsValidUnitType(unitType))
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
-  mBaseVal = mAnimVal = valueInSpecifiedUnits;
+  mBaseVal = valueInSpecifiedUnits;
   mSpecifiedUnitType = PRUint8(unitType);
-  aSVGElement->DidChangeLength(mAttrEnum, PR_TRUE);
-
+  if (!mIsAnimated) {
+    mAnimVal = mBaseVal;
+  }
 #ifdef MOZ_SMIL
-  if (mIsAnimated) {
+  else {
     aSVGElement->AnimationNeedsResample();
   }
 #endif
+  aSVGElement->DidChangeLength(mAttrEnum, PR_TRUE);
   return NS_OK;
 }
 
@@ -432,16 +436,20 @@ nsSVGLength2::SetBaseValueString(const nsAString &aValueAsString,
     return rv;
   }
   
-  mBaseVal = mAnimVal = value;
+  mBaseVal = value;
   mSpecifiedUnitType = PRUint8(unitType);
-  aSVGElement->DidChangeLength(mAttrEnum, aDoSetAttr);
-
+  if (!mIsAnimated) {
+    mAnimVal = mBaseVal;
+  }
 #ifdef MOZ_SMIL
-  if (mIsAnimated) {
+  else {
     aSVGElement->AnimationNeedsResample();
   }
 #endif
 
+  // We don't need to call DidChange* here - we're only called by
+  // nsSVGElement::ParseAttribute under nsGenericElement::SetAttr,
+  // which takes care of notifying.
   return NS_OK;
 }
 
@@ -460,14 +468,16 @@ nsSVGLength2::GetAnimValueString(nsAString & aValueAsString)
 void
 nsSVGLength2::SetBaseValue(float aValue, nsSVGElement *aSVGElement)
 {
-  mAnimVal = mBaseVal = 
-    aValue * GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType);
-  aSVGElement->DidChangeLength(mAttrEnum, PR_TRUE);
+  mBaseVal = aValue * GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType);
+  if (!mIsAnimated) {
+    mAnimVal = mBaseVal;
+  }
 #ifdef MOZ_SMIL
-  if (mIsAnimated) {
+  else {
     aSVGElement->AnimationNeedsResample();
   }
 #endif
+  aSVGElement->DidChangeLength(mAttrEnum, PR_TRUE);
 }
 
 void
