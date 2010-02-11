@@ -286,16 +286,17 @@ static PLDHashOperator
 SearchAccessibleInCache(const void* aKey, nsIAccessNode* aAccessNode,
                         void* aUserArg)
 {
-  nsCOMPtr<nsIAccessibleDocument> docAccessible(do_QueryInterface(aAccessNode));
-  NS_ASSERTION(docAccessible,
+  nsCOMPtr<nsIAccessibleDocument> accessibleDoc(do_QueryInterface(aAccessNode));
+  NS_ASSERTION(accessibleDoc,
                "No doc accessible for the object in doc accessible cache!");
 
+  nsRefPtr<nsDocAccessible> docAccessible =
+    nsAccUtils::QueryObject<nsDocAccessible>(accessibleDoc);
   if (docAccessible) {
     nsSearchAccessibleInCacheArg* arg =
       static_cast<nsSearchAccessibleInCacheArg*>(aUserArg);
-    nsCOMPtr<nsIAccessNode> accessNode;
-    docAccessible->GetCachedAccessNode(arg->mUniqueID,
-                                       getter_AddRefs(accessNode));
+    nsCOMPtr<nsIAccessNode> accessNode =
+      docAccessible->GetCachedAccessNode(arg->mUniqueID);
     if (accessNode) {
       arg->mAccessNode = accessNode;
       return PL_DHASH_STOP;

@@ -464,9 +464,8 @@ nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
 {
   *aAccessNode = nsnull;
   
-  nsCOMPtr<nsIAccessNode> accessNode;
-  GetAccService()->GetCachedAccessNode(aNode, mWeakShell,
-                                       getter_AddRefs(accessNode));
+  nsCOMPtr<nsIAccessNode> accessNode =
+    GetAccService()->GetCachedAccessNode(aNode, mWeakShell);
 
   if (!accessNode) {
     nsCOMPtr<nsIAccessible> accessible;
