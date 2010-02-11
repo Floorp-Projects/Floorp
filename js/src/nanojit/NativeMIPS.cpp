@@ -655,6 +655,12 @@ namespace nanojit
         TAG("asm_quad(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
+    void
+    Assembler::asm_q2i(LIns *)
+    {
+        NanoAssert(0);  // q2i shouldn't occur on 32-bit platforms
+    }
+
     void Assembler::asm_promote(LIns *ins)
     {
         USE(ins);
