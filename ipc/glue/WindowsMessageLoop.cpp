@@ -727,18 +727,8 @@ RPCChannel::WaitForNotify()
   // received. Note, spin loop can cause reentrant race conditions, which
   // is expected.
   if (RPCChannel::IsSpinLoopActive()) {
-    if (SpinInternalEventLoop()) {
-      return true;
-    }
-
-    // Coming out of spin loop after a modal loop ends, we can't drop into
-    // deferred processing on the assumption that MsgWaitForMultipleObjects
-    // will get signaled with gEventLoopMessage - messages may have already
-    // been received and stored in mPending & mOutOfTurnReplies. So we check
-    // various stacks to figure out if we should fall through or just return.
-    if (IsMessagePending()) {
-      return true;
-    }
+    SpinInternalEventLoop();
+    return true; // bug 545338
   }
 
   if (++gEventLoopDepth == 1) {
@@ -806,23 +796,8 @@ RPCChannel::WaitForNotify()
         // of true indicates gEventLoopMessage was received, exit out of
         // WaitForNotify so we can deal with it in RPCChannel.
         RPCChannel::EnterModalLoop();
-        if (SpinInternalEventLoop())
-          return true;
-
-        // See comments above - never assume MsgWaitForMultipleObjects will
-        // get signaled.
-        if (IsMessagePending())
-          return true;
-
-        // We drop out of our inner event loop after the plugin has relinquished
-        // control back to the shim, but the ipdl call has yet to return, so reset
-        // our hook in case and continue waiting on gEventLoopMessage.
-        windowHook = SetWindowsHookEx(WH_CALLWNDPROC, CallWindowProcedureHook,
-                                      NULL, gUIThreadId);
-        NS_ASSERTION(windowHook, "Failed to set proc hook on the rebound!");
-
-        SyncChannel::SetIsPumpingMessages(true);
-        continue;
+        SpinInternalEventLoop();
+        return true; // bug 545338
       }
 
       if (PeekMessageW(&msg, (HWND)-1, gEventLoopMessage, gEventLoopMessage,
