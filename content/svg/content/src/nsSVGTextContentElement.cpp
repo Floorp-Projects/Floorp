@@ -58,10 +58,8 @@ NS_IMETHODIMP nsSVGTextContentElement::GetNumberOfChars(PRInt32 *_retval)
   *_retval = 0;
 
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
-  if (!metrics)
-    return NS_ERROR_FAILURE;
-  
-  *_retval = metrics->GetNumberOfChars();
+  if (metrics)
+    *_retval = metrics->GetNumberOfChars();
 
   return NS_OK;
 }
@@ -72,10 +70,8 @@ NS_IMETHODIMP nsSVGTextContentElement::GetComputedTextLength(float *_retval)
   *_retval = 0.0;
 
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
-  if (!metrics)
-    return NS_ERROR_FAILURE;
-
-  *_retval = metrics->GetComputedTextLength();
+  if (metrics)
+    *_retval = metrics->GetComputedTextLength();
 
   return NS_OK;
 }
@@ -86,7 +82,7 @@ NS_IMETHODIMP nsSVGTextContentElement::GetSubStringLength(PRUint32 charnum, PRUi
   *_retval = 0.0f;
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
   if (!metrics)
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 
   PRUint32 charcount = metrics->GetNumberOfChars();
   if (charcount <= charnum || nchars > charcount - charnum)
@@ -154,10 +150,8 @@ NS_IMETHODIMP nsSVGTextContentElement::GetCharNumAtPosition(nsIDOMSVGPoint *poin
   *_retval = -1;
 
   nsSVGTextContainerFrame* metrics = GetTextContainerFrame();
-  if (!metrics)
-    return NS_ERROR_FAILURE;
-
-  *_retval = metrics->GetCharNumAtPosition(point);
+  if (metrics)
+    *_retval = metrics->GetCharNumAtPosition(point);
 
   return NS_OK;
 }
