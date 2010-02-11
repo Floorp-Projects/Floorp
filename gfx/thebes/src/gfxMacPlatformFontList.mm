@@ -652,7 +652,7 @@ gfxMacPlatformFontList::InitFontList()
         mFontFamilies.Put(availableFamilyName, familyEntry);
 
         // check the bad underline blacklist
-        if (mBadUnderlineFamilyNames.GetEntry(availableFamilyName))
+        if (mBadUnderlineFamilyNames.Contains(availableFamilyName))
             familyEntry->SetBadUnderlineFamily();
     }
 
