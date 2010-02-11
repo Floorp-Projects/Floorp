@@ -604,10 +604,10 @@ SyncChannel::WaitForNotify()
 {
   mMutex.AssertCurrentThreadOwns();
 
-  MutexAutoUnlock unlock(mMutex);
-
   // Initialize global objects used in deferred messaging.
   Init();
+
+  MutexAutoUnlock unlock(mMutex);
 
   if (++gEventLoopDepth == 1) {
     NS_ASSERTION(!gNeuteredWindows, "Should only set this once!");
@@ -712,10 +712,10 @@ RPCChannel::WaitForNotify()
 {
   mMutex.AssertCurrentThreadOwns();
 
-  MutexAutoUnlock unlock(mMutex);
-
   // Initialize global objects used in deferred messaging.
   Init();
+
+  MutexAutoUnlock unlock(mMutex);
 
   // IsSpinLoopActive indicates modal UI is being displayed in a plugin. Drop
   // down into the spin loop until all modal loops end. If SpinInternalEventLoop
