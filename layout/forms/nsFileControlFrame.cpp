@@ -286,6 +286,13 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   return NS_OK;
 }
 
+void
+nsFileControlFrame::GetAnonymousContent(nsBaseContentList& aElements)
+{
+  aElements.MaybeAppendElement(mTextContent);
+  aElements.MaybeAppendElement(mBrowse);
+}
+
 NS_QUERYFRAME_HEAD(nsFileControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)

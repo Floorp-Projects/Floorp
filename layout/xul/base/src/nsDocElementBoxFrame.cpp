@@ -76,6 +76,7 @@ public:
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
+  virtual void GetAnonymousContent(nsBaseContentList& aElements);
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
@@ -148,6 +149,13 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
     return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
+}
+
+void
+nsDocElementBoxFrame::GetAnonymousContent(nsBaseContentList& aElements)
+{
+  aElements.MaybeAppendElement(mPopupgroupContent);
+  aElements.MaybeAppendElement(mTooltipContent);
 }
 
 NS_QUERYFRAME_HEAD(nsDocElementBoxFrame)

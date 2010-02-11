@@ -97,6 +97,11 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsBaseContentList, nsINodeList)
 
   void AppendElement(nsIContent *aContent);
+  void MaybeAppendElement(nsIContent* aContent)
+  {
+    if (aContent)
+      AppendElement(aContent);
+  }
 
   /**
    * Insert the element at a given index, shifting the objects at
