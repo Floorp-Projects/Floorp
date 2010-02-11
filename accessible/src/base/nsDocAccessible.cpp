@@ -539,16 +539,30 @@ NS_IMETHODIMP nsDocAccessible::GetAssociatedEditor(nsIEditor **aEditor)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNode **aAccessNode)
+already_AddRefed<nsIAccessNode>
+nsDocAccessible::GetCachedAccessNode(void *aUniqueID)
 {
-  GetCacheEntry(mAccessNodeCache, aUniqueID, aAccessNode); // Addrefs for us
+  nsIAccessNode* accessNode = nsnull;
+  GetCacheEntry(mAccessNodeCache, aUniqueID, &accessNode);
+
+  // No accessible in the cache, check if the given ID is unique ID of this
+  // document accesible.
+  if (!accessNode) {
+    void* thisUniqueID = nsnull;
+    GetUniqueID(&thisUniqueID);
+    if (thisUniqueID == aUniqueID) {
+      NS_ADDREF(this);
+      return this;
+    }
+  }
+
 #ifdef DEBUG
   // All cached accessible nodes should be in the parent
   // It will assert if not all the children were created
   // when they were first cached, and no invalidation
   // ever corrected parent accessible's child cache.
   nsRefPtr<nsAccessible> acc =
-    nsAccUtils::QueryObject<nsAccessible>(*aAccessNode);
+    nsAccUtils::QueryObject<nsAccessible>(accessNode);
 
   if (acc) {
     nsAccessible* parent(acc->GetCachedParent());
@@ -556,7 +570,7 @@ NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNod
       parent->TestChildCache(acc);
   }
 #endif
-  return NS_OK;
+  return accessNode;
 }
 
 // nsDocAccessible public method
@@ -600,9 +614,6 @@ nsDocAccessible::Init()
   AddEventListeners();
 
   GetParent(); // Ensure outer doc mParent accessible.
-
-  nsresult rv = nsHyperTextAccessibleWrap::Init();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize event queue.
   mEventQueue = new nsAccEventQueue(this);
@@ -1763,8 +1774,7 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
 
 void nsDocAccessible::InvalidateChildrenInSubtree(nsIDOMNode *aStartNode)
 {
-  nsCOMPtr<nsIAccessNode> accessNode;
-  GetCachedAccessNode(aStartNode, getter_AddRefs(accessNode));
+  nsCOMPtr<nsIAccessNode> accessNode = GetCachedAccessNode(aStartNode);
   nsRefPtr<nsAccessible> acc(nsAccUtils::QueryAccessible(accessNode));
   if (acc)
     acc->InvalidateChildren();
@@ -1785,8 +1795,7 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
     return; // All we have is a doc accessible. There is nothing to invalidate, quit early
   }
 
-  nsCOMPtr<nsIAccessNode> accessNode;
-  GetCachedAccessNode(aStartNode, getter_AddRefs(accessNode));
+  nsCOMPtr<nsIAccessNode> accessNode = GetCachedAccessNode(aStartNode);
 
   // Shut down accessible subtree, which may have been created for
   // anonymous content subtree
@@ -1942,8 +1951,7 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   }
 
   // Update last change state information
-  nsCOMPtr<nsIAccessNode> childAccessNode;
-  GetCachedAccessNode(childNode, getter_AddRefs(childAccessNode));
+  nsCOMPtr<nsIAccessNode> childAccessNode = GetCachedAccessNode(childNode);
   nsCOMPtr<nsIAccessible> childAccessible = do_QueryInterface(childAccessNode);
 
 #ifdef DEBUG_A11Y
@@ -2124,8 +2132,7 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
                                                 aAccessible);
     }
     else { // Only return cached accessibles, don't create anything
-      nsCOMPtr<nsIAccessNode> accessNode;
-      GetCachedAccessNode(currentNode, getter_AddRefs(accessNode)); // AddRefs
+      nsCOMPtr<nsIAccessNode> accessNode = GetCachedAccessNode(currentNode);
       if (accessNode) {
         CallQueryInterface(accessNode, aAccessible); // AddRefs
       }
@@ -2149,8 +2156,7 @@ nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode,
   if (!aAvoidOnThisNode) {
     if (aEventType == nsIAccessibleEvent::EVENT_HIDE) {
       // Don't allow creation for accessibles when nodes going away
-      nsCOMPtr<nsIAccessNode> accessNode;
-      GetCachedAccessNode(aDOMNode, getter_AddRefs(accessNode));
+      nsCOMPtr<nsIAccessNode> accessNode = GetCachedAccessNode(aDOMNode);
       accessible = do_QueryInterface(accessNode);
     } else {
       // Allow creation of new accessibles for show events

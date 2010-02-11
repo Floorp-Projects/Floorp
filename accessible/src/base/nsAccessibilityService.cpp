@@ -938,30 +938,19 @@ nsAccessibilityService::CreateHTMLCaptionAccessible(nsIFrame *aFrame, nsIAccessi
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessibilityService::GetCachedAccessible(nsIDOMNode *aNode, 
-                                                          nsIWeakReference *aWeakShell,
-                                                          nsIAccessible **aAccessible)
-{
-  nsCOMPtr<nsIAccessNode> accessNode;
-  nsresult rv = GetCachedAccessNode(aNode, aWeakShell, getter_AddRefs(accessNode));
-  nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
-  NS_IF_ADDREF(*aAccessible = accessible);
-  return rv;
-}
-
-NS_IMETHODIMP nsAccessibilityService::GetCachedAccessNode(nsIDOMNode *aNode, 
-                                                          nsIWeakReference *aWeakShell,
-                                                          nsIAccessNode **aAccessNode)
+already_AddRefed<nsIAccessNode>
+nsAccessibilityService::GetCachedAccessNode(nsIDOMNode *aNode, 
+                                            nsIWeakReference *aWeakShell)
 {
   nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
     nsAccessNode::GetDocAccessibleFor(aWeakShell);
 
-  if (!accessibleDoc) {
-    *aAccessNode = nsnull;
-    return NS_ERROR_FAILURE;
-  }
+  if (!accessibleDoc)
+    return nsnull;
 
-  return accessibleDoc->GetCachedAccessNode(static_cast<void*>(aNode), aAccessNode);
+  nsRefPtr<nsDocAccessible> docAccessible =
+    nsAccUtils::QueryObject<nsDocAccessible>(accessibleDoc);
+  return docAccessible->GetCachedAccessNode(static_cast<void*>(aNode));
 }
 
 NS_IMETHODIMP
@@ -1294,24 +1283,20 @@ nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   }
 #endif
 
-  // Check to see if we already have an accessible for this
-  // node in the cache
-  nsCOMPtr<nsIAccessNode> accessNode;
-  GetCachedAccessNode(aNode, aWeakShell, getter_AddRefs(accessNode));
-
-  nsCOMPtr<nsIAccessible> newAcc;
-  if (accessNode) {
-    // Retrieved from cache. QI might not succeed if it's a node that's not
-    // accessible. In this case try to create new accessible because one and
-    // the same DOM node may be accessible or not in time (for example,
-    // when it is visible or hidden).
-    newAcc = do_QueryInterface(accessNode);
-    if (newAcc) {
-      NS_ADDREF(*aAccessible = newAcc);
+  // Check to see if we already have an accessible for this node in the cache.
+  nsCOMPtr<nsIAccessNode> cachedAccessNode =
+    GetCachedAccessNode(aNode, aWeakShell);
+  if (cachedAccessNode) {
+    // XXX: the cache might contain the access node for the DOM node that is not
+    // accessible because of wrong cache update. In this case try to create new
+    // accessible.
+    CallQueryInterface(cachedAccessNode, aAccessible);
+    NS_ASSERTION(*aAccessible, "Bad cache update!");
+    if (*aAccessible)
       return NS_OK;
-    }
   }
 
+  nsCOMPtr<nsIAccessible> newAcc;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
 
   // No cache entry, so we must create the accessible
@@ -1323,15 +1308,15 @@ nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     nodeIsDoc = do_QueryInterface(aNode);
     NS_ENSURE_TRUE(nodeIsDoc, NS_ERROR_FAILURE); // No content, and not doc node
 
+#ifdef DEBUG
+    // XXX: remove me if you don't see an assertion.
     nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
-      nsAccessNode::GetDocAccessibleFor(aWeakShell);
-    if (accessibleDoc) {
-      newAcc = do_QueryInterface(accessibleDoc);
-      NS_ASSERTION(newAcc, "nsIAccessibleDocument is not an nsIAccessible");
-    }
-    else {
-      CreateRootAccessible(aPresShell, nodeIsDoc, getter_AddRefs(newAcc)); // Does Init() for us
-    }
+      nsAccessNode::GetDocAccessibleFor(nodeIsDoc);
+    NS_ASSERTION(!accessibleDoc,
+                 "Trying to create already cached accessible document!");
+#endif
+
+    CreateRootAccessible(aPresShell, nodeIsDoc, getter_AddRefs(newAcc)); // Does Init() for us
 
     NS_IF_ADDREF(*aAccessible = newAcc);
     return NS_OK;
@@ -1385,7 +1370,10 @@ nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
             PRInt32 childCount;
             imageAcc->GetChildCount(&childCount);
             // area accessible should be in cache now
-            return GetCachedAccessible(aNode, aWeakShell, aAccessible);
+            nsCOMPtr<nsIAccessNode> cachedAreaAcc =
+              GetCachedAccessNode(aNode, aWeakShell);
+            if (cachedAreaAcc)
+              CallQueryInterface(cachedAreaAcc, aAccessible);
           }
         }
 
