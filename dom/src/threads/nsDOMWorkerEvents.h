@@ -214,16 +214,16 @@ public:
   : mIsJSON(PR_FALSE), mIsPrimitive(PR_FALSE), mHaveCachedJSVal(PR_FALSE),
     mHaveAttemptedConversion(PR_FALSE) { }
 
-  void SetJSONData(PRBool aIsJSON, PRBool aIsPrimitive) {
-    mIsJSON = aIsJSON ? PR_TRUE : PR_FALSE;
-    mIsPrimitive = aIsPrimitive ? PR_TRUE : PR_FALSE;
-  }
+  nsresult SetJSONData(JSContext* aCx,
+                       jsval aData,
+                       PRBool aIsJSON,
+                       PRBool aIsPrimitive);
 
 protected:
   nsString mOrigin;
   nsCOMPtr<nsISupports> mSource;
 
-  nsString mData;
+  nsAutoJSValHolder mDataVal;
   nsAutoJSValHolder mCachedJSVal;
 
   PRPackedBool mIsJSON;
