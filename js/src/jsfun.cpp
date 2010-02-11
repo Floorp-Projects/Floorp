@@ -2492,10 +2492,18 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_AllocFlatClosure,
                      CONTEXT, FUNCTION, OBJECT, 0, 0)
 
-JSObject *
+JS_REQUIRES_STACK JSObject *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun)
 {
-    JSObject *closure = js_AllocFlatClosure(cx, fun, cx->fp->scopeChain);
+    /*
+     * Flat closures can be partial, they may need to search enclosing scope
+     * objects via JSOP_NAME, etc.
+     */
+    JSObject *scopeChain = js_GetScopeChain(cx, cx->fp);
+    if (!scopeChain)
+        return NULL;
+
+    JSObject *closure = js_AllocFlatClosure(cx, fun, scopeChain);
     if (!closure || fun->u.i.nupvars == 0)
         return closure;
 
