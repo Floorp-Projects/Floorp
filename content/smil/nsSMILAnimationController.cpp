@@ -335,11 +335,8 @@ nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
 
   SampleAnimationParams saParams = { &activeContainers,
                                      currentCompositorTable };
-  nsresult rv = mAnimationElementTable.EnumerateEntries(SampleAnimation,
-                                                        &saParams);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("SampleAnimationParams failed");
-  }
+  mAnimationElementTable.EnumerateEntries(SampleAnimation,
+                                          &saParams);
   activeContainers.Clear();
 
   // STEP 4: Remove animation effects from any no-longer-animated elems/attrs
