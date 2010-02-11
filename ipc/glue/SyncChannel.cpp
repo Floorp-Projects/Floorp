@@ -168,9 +168,13 @@ SyncChannel::OnDispatchMessage(const Message& msg)
 
     reply->set_seqno(msg.seqno());
 
-    mIOLoop->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(this, &SyncChannel::OnSend, reply));
+    {
+        MutexAutoLock lock(mMutex);
+        if (ChannelConnected == mChannelState)
+            mIOLoop->PostTask(
+                FROM_HERE,
+                NewRunnableMethod(this, &SyncChannel::OnSend, reply));
+    }
 }
 
 //
