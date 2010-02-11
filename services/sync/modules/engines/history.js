@@ -69,14 +69,10 @@ function GUIDForUri(uri, create) {
 }
 
 function HistoryEngine() {
-  SyncEngine.call(this);
+  SyncEngine.call(this, "History");
 }
 HistoryEngine.prototype = {
   __proto__: SyncEngine.prototype,
-  name: "history",
-  _displayName: "History",
-  description: "All the sites you've been to.  Take your awesomebar with you!",
-  logName: "History",
   _recordObj: HistoryRec,
   _storeObj: HistoryStore,
   _trackerObj: HistoryTracker,
@@ -88,13 +84,11 @@ HistoryEngine.prototype = {
   }
 };
 
-function HistoryStore() {
-  Store.call(this);
+function HistoryStore(name) {
+  Store.call(this, name);
 }
 HistoryStore.prototype = {
   __proto__: Store.prototype,
-  name: "history",
-  _logName: "HistStore",
 
   get _hsvc() {
     let hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
@@ -277,15 +271,12 @@ HistoryStore.prototype = {
   }
 };
 
-function HistoryTracker() {
-  Tracker.call(this);
+function HistoryTracker(name) {
+  Tracker.call(this, name);
   Svc.History.addObserver(this, false);
 }
 HistoryTracker.prototype = {
   __proto__: Tracker.prototype,
-  name: "history",
-  _logName: "HistoryTracker",
-  file: "history",
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsINavHistoryObserver,

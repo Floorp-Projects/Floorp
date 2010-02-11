@@ -50,17 +50,13 @@ Cu.import("resource://weave/type_records/tabs.js");
 Cu.import("resource://weave/engines/clientData.js");
 
 function TabEngine() {
-  SyncEngine.call(this);
+  SyncEngine.call(this, "Tabs");
 
   // Reset the client on every startup so that we fetch recent tabs
   this._resetClient();
 }
 TabEngine.prototype = {
   __proto__: SyncEngine.prototype,
-  name: "tabs",
-  _displayName: "Tabs",
-  description: "Access tabs from other devices via the History menu",
-  logName: "Tabs",
   _storeObj: TabStore,
   _trackerObj: TabTracker,
   _recordObj: TabSetRecord,
@@ -101,13 +97,11 @@ TabEngine.prototype = {
 };
 
 
-function TabStore() {
-  Store.call(this);
+function TabStore(name) {
+  Store.call(this, name);
 }
 TabStore.prototype = {
   __proto__: Store.prototype,
-  name: "tabs",
-  _logName: "Tabs.Store",
   _remoteClients: {},
 
   get _sessionStore() {
@@ -202,8 +196,8 @@ TabStore.prototype = {
 };
 
 
-function TabTracker() {
-  Tracker.call(this);
+function TabTracker(name) {
+  Tracker.call(this, name);
 
   this.resetChanged();
 
@@ -220,9 +214,6 @@ function TabTracker() {
 }
 TabTracker.prototype = {
   __proto__: Tracker.prototype,
-  name: "tabs",
-  _logName: "TabTracker",
-  file: "tab_tracker",
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 

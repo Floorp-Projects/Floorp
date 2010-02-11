@@ -92,15 +92,11 @@ function GUIDForId(placeId) {
 }
 
 function BookmarksEngine() {
-  SyncEngine.call(this);
+  SyncEngine.call(this, "Bookmarks");
   this._handleImport();
 }
 BookmarksEngine.prototype = {
   __proto__: SyncEngine.prototype,
-  name: "bookmarks",
-  _displayName: "Bookmarks",
-  description: "Keep your favorite links always at hand",
-  logName: "Bookmarks",
   _recordObj: PlacesItem,
   _storeObj: BookmarksStore,
   _trackerObj: BookmarksTracker,
@@ -214,13 +210,11 @@ BookmarksEngine.prototype = {
   }
 };
 
-function BookmarksStore() {
-  Store.call(this);
+function BookmarksStore(name) {
+  Store.call(this, name);
 }
 BookmarksStore.prototype = {
   __proto__: Store.prototype,
-  name: "bookmarks",
-  _logName: "BStore",
 
   __bms: null,
   get _bms() {
@@ -955,8 +949,8 @@ BookmarksStore.prototype = {
   }
 };
 
-function BookmarksTracker() {
-  Tracker.call(this);
+function BookmarksTracker(name) {
+  Tracker.call(this, name);
 
   // Ignore changes to the special roots
   for (let guid in kSpecialIds)
@@ -966,9 +960,6 @@ function BookmarksTracker() {
 }
 BookmarksTracker.prototype = {
   __proto__: Tracker.prototype,
-  name: "bookmarks",
-  _logName: "BmkTracker",
-  file: "bookmarks",
 
   get _bms() {
     let bms = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
