@@ -66,6 +66,7 @@
 #include "nsContentUtils.h"
 #include "nsDeque.h"
 #include "nsIClassInfoImpl.h"
+#include "nsStringBuffer.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMCID.h"
@@ -125,6 +126,16 @@ static const char* sPrefsToWatch[] = {
 
 // The length of time the close handler is allowed to run in milliseconds.
 static PRUint32 gWorkerCloseHandlerTimeoutMS = 10000;
+
+static int sStringFinalizerIndex = -1;
+
+static void
+StringFinalizer(JSContext* aCx,
+                JSString* aStr)
+{
+  NS_ASSERTION(aStr, "Null string!");
+  nsStringBuffer::FromData(JS_GetStringChars(aStr))->Release();
+}
 
 /**
  * Simple class to automatically destroy a JSContext to make error handling
@@ -701,6 +712,7 @@ nsDOMThreadService::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!gDOMThreadService, "Only one instance should ever be created!");
+  NS_ASSERTION(sStringFinalizerIndex == -1, "String finalizer already set!");
 
   nsresult rv;
   nsCOMPtr<nsIObserverService> obs =
@@ -711,6 +723,9 @@ nsDOMThreadService::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   obs.forget(&gObserverService);
+
+  sStringFinalizerIndex = JS_AddExternalStringFinalizer(StringFinalizer);
+  NS_ENSURE_TRUE(sStringFinalizerIndex != -1, NS_ERROR_FAILURE);
 
   RegisterPrefCallbacks();
 
@@ -858,6 +873,15 @@ nsDOMThreadService::Cleanup()
   // These must be released after the thread pool is shut down.
   NS_IF_RELEASE(gJSRuntimeService);
   NS_IF_RELEASE(gWorkerSecurityManager);
+
+  if (sStringFinalizerIndex != -1) {
+#ifdef DEBUG
+    int index =
+#endif
+    JS_RemoveExternalStringFinalizer(StringFinalizer);
+    NS_ASSERTION(index == sStringFinalizerIndex, "Bad index!");
+    sStringFinalizerIndex = -1;
+  }
 }
 
 nsresult
@@ -1205,22 +1229,57 @@ nsDOMThreadService::ChangeThreadPoolMaxThreads(PRInt16 aDelta)
   return NS_OK;
 }
 
+// static
 nsIJSRuntimeService*
 nsDOMThreadService::JSRuntimeService()
 {
   return gJSRuntimeService;
 }
 
+// static
 nsIThreadJSContextStack*
 nsDOMThreadService::ThreadJSContextStack()
 {
   return gThreadJSContextStack;
 }
 
+// static
 nsIXPCSecurityManager*
 nsDOMThreadService::WorkerSecurityManager()
 {
   return gWorkerSecurityManager;
+}
+
+// static
+jsval
+nsDOMThreadService::ShareStringAsJSVal(JSContext* aCx,
+                                       const nsAString& aString)
+{
+  NS_ASSERTION(sStringFinalizerIndex != -1, "Bad index!");
+  NS_ASSERTION(aCx, "Null context!");
+
+  PRUint32 length = aString.Length();
+  if (!length) {
+    JSAtom* atom = aCx->runtime->atomState.emptyAtom;
+    return ATOM_KEY(atom);
+  }
+
+  nsStringBuffer* buf = nsStringBuffer::FromString(aString);
+  if (!buf) {
+    NS_WARNING("Can't share this string buffer!");
+    return JSVAL_VOID;
+  }
+
+  JSString* str =
+    JS_NewExternalString(aCx, reinterpret_cast<jschar*>(buf->Data()), length,
+                         sStringFinalizerIndex);
+  if (str) {
+    buf->AddRef();
+    return STRING_TO_JSVAL(str);
+  }
+
+  NS_WARNING("JS_NewExternalString failed!");
+  return JSVAL_VOID;
 }
 
 /**
