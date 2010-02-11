@@ -110,6 +110,17 @@ public:
                                     nsIWeakReference *aPresShell,
                                     nsIAccessible **aAccessible);
 
+  /**
+   * Return an access node for the DOM node in the given presentation shell if
+   * the access node already exists, otherwise null.
+   *
+   * @param  aNode       [in] the DOM node to get an access node for
+   * @param  aPresShell  [in] the presentation shell which contains layout info
+   *                       for the DOM node
+   */
+  already_AddRefed<nsIAccessNode> GetCachedAccessNode(nsIDOMNode *aNode,
+                                                      nsIWeakReference *aShell);
+
 private:
   /**
    * Return presentation shell, DOM node for the given frame.

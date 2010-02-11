@@ -151,6 +151,18 @@ public:
   void InvalidateCacheSubtree(nsIContent *aContent, PRUint32 aEvent);
 
   /**
+   * Return the cached access node by the given unique ID if it's in subtree of
+   * this document accessible or the document accessible itself, otherwise null.
+   *
+   * @note   the unique ID matches with the uniqueID attribute on nsIAccessNode
+   *
+   * @param  aUniqueID  [in] the unique ID used to cache the node.
+   *
+   * @return the access node object
+   */
+  already_AddRefed<nsIAccessNode> GetCachedAccessNode(void *aUniqueID);
+
+  /**
    * Cache access node.
    *
    * @param  aUniquID     [in] the unique identifier of accessible
