@@ -2037,20 +2037,6 @@ MinBlockId(JSParseNode *fn, uint32 id)
     return true;
 }
 
-static bool
-OneBlockId(JSParseNode *fn, uint32 id)
-{
-    if (fn->pn_blockid != id)
-        return false;
-    if (fn->pn_defn) {
-        for (JSParseNode *pn = fn->dn_uses; pn; pn = pn->pn_link) {
-            if (pn->pn_blockid != id)
-                return false;
-        }
-    }
-    return true;
-}
-
 static inline bool
 CanFlattenUpvar(JSDefinition *dn, JSFunctionBox *funbox, uint32 tcflags)
 {
@@ -2175,14 +2161,10 @@ CanFlattenUpvar(JSDefinition *dn, JSFunctionBox *funbox, uint32 tcflags)
          * initialized at the time that the would-be-flat closure containing
          * the jQuery upvar is formed.
          */
-        if (dn->pn_pos.end >= afunbox->node->pn_pos.end ||
-            (dn->isTopLevel()
-             ? !MinBlockId(afunbox->node, dn->pn_blockid)
-             : !dn->isBlockChild() ||
-               !afunbox->node->isBlockChild() ||
-               !OneBlockId(afunbox->node, dn->pn_blockid))) {
+        if (dn->pn_pos.end >= afunbox->node->pn_pos.end)
             return false;
-        }
+        if (!MinBlockId(afunbox->node, dn->pn_blockid))
+            return false;
     }
     return true;
 }
