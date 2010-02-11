@@ -2195,20 +2195,16 @@ FlagHeavyweights(JSDefinition *dn, JSFunctionBox *funbox, uint32& tcflags)
 static void
 DeoptimizeUsesWithin(JSDefinition *dn, JSFunctionBox *funbox, uint32& tcflags)
 {
-    JSParseNode **pnup = &dn->dn_uses;
     uintN ndeoptimized = 0;
+    const JSTokenPos &pos = funbox->node->pn_body->pn_pos;
 
-    while (JSParseNode *pnu = *pnup) {
+    for (JSParseNode *pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
         JS_ASSERT(pnu->pn_used);
         JS_ASSERT(!pnu->pn_defn);
-        const JSTokenPos &pos = funbox->node->pn_body->pn_pos;
-        if (pnu->pn_pos.begin >= pos.begin && pnu->pn_pos.end < pos.end) {
+        if (pnu->pn_pos.begin >= pos.begin && pnu->pn_pos.end <= pos.end) {
             pnu->pn_dflags |= PND_DEOPTIMIZED;
-            *pnup = pnu->pn_link;
             ++ndeoptimized;
-            continue;
         }
-        pnup = &pnu->pn_link;
     }
 
     if (ndeoptimized != 0)
