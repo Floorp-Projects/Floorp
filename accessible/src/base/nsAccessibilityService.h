@@ -49,6 +49,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 
+class nsAccessNode;
 class nsIFrame;
 class nsIWeakReference;
 class nsIDOMNode;
@@ -118,8 +119,8 @@ public:
    * @param  aPresShell  [in] the presentation shell which contains layout info
    *                       for the DOM node
    */
-  already_AddRefed<nsIAccessNode> GetCachedAccessNode(nsIDOMNode *aNode,
-                                                      nsIWeakReference *aShell);
+  nsAccessNode* GetCachedAccessNode(nsIDOMNode *aNode,
+                                    nsIWeakReference *aShell);
 
 private:
   /**
