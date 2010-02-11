@@ -36,19 +36,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "base/process_util.h"
+
+#include "mozilla/ipc/SyncChannel.h"
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/plugins/BrowserStreamParent.h"
 
+#include "nsContentUtils.h"
 #include "nsCRT.h"
 #include "nsNPAPIPlugin.h"
 
-using mozilla::PluginLibrary;
+using base::KillProcess;
 
+using mozilla::PluginLibrary;
 using mozilla::ipc::NPRemoteIdentifier;
+using mozilla::ipc::SyncChannel;
 
 using namespace mozilla::plugins;
 
+static const char kTimeoutPref[] = "dom.ipc.plugins.timeoutSecs";
+
 PR_STATIC_ASSERT(sizeof(NPIdentifier) == sizeof(void*));
+
+template<>
+struct RunnableMethodTraits<mozilla::plugins::PluginModuleParent>
+{
+    typedef mozilla::plugins::PluginModuleParent Class;
+    static void RetainCallee(Class* obj) { }
+    static void ReleaseCallee(Class* obj) { }
+};
 
 class PluginCrashed : public nsRunnable
 {
@@ -80,6 +96,8 @@ PluginModuleParent::LoadModule(const char* aFilePath)
     parent->Open(parent->mSubprocess->GetChannel(),
                  parent->mSubprocess->GetChildProcessHandle());
 
+    TimeoutChanged(kTimeoutPref, parent);
+
     return parent;
 }
 
@@ -96,6 +114,8 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
     if (!mValidIdentifiers.Init()) {
         NS_ERROR("Out of memory");
     }
+
+    nsContentUtils::RegisterPrefCallback(kTimeoutPref, TimeoutChanged, this);
 }
 
 PluginModuleParent::~PluginModuleParent()
@@ -111,6 +131,8 @@ PluginModuleParent::~PluginModuleParent()
         mSubprocess->Delete();
         mSubprocess = nsnull;
     }
+
+    nsContentUtils::UnregisterPrefCallback(kTimeoutPref, TimeoutChanged, this);
 }
 
 void
@@ -170,6 +192,58 @@ PluginModuleParent::WriteExtraDataForMinidump(nsIFile* dumpFile)
     WriteExtraDataEntry(stream, "PluginName", "");
     WriteExtraDataEntry(stream, "PluginVersion", "");
     stream->Close();
+}
+
+int
+PluginModuleParent::TimeoutChanged(const char* aPref, void* aModule)
+{
+    AssertPluginThread();
+    NS_ABORT_IF_FALSE(!strcmp(aPref, kTimeoutPref),
+                      "unexpected pref callback");
+
+    PRInt32 timeoutSecs = nsContentUtils::GetIntPref(kTimeoutPref, 0);
+    int32 timeoutMs = (timeoutSecs > 0) ? (1000 * timeoutSecs) :
+                      SyncChannel::kNoTimeout;
+
+    static_cast<PluginModuleParent*>(aModule)->SetReplyTimeoutMs(timeoutMs);
+    return 0;
+}
+
+void
+PluginModuleParent::CleanupFromTimeout()
+{
+    if (!mShutdown)
+        Close();
+}
+
+bool
+PluginModuleParent::ShouldContinueFromReplyTimeout()
+{
+    // FIXME/bug 544095: pop up a dialog asking the user what to do
+    bool waitMoar = false;
+
+    if (!waitMoar) {
+        // We can't depend on the IO thread notifying us of a channel
+        // error, because there's an inherent race between killing the
+        // subprocess and shutting down the socket.  It would be nice
+        // to call Close() here and do all the IPDL cleanup
+        // immediately, but we might have arbitrary junk below us on
+        // the stack.  So, a compromise: enqueue an event now that
+        // will Close(), *before* killing the child process.  This
+        // guarantees that the Close() event will be processed before
+        // the IO error event, if it's delivered.
+        MessageLoop::current()->PostTask(
+            FROM_HERE,
+            NewRunnableMethod(this, &PluginModuleParent::CleanupFromTimeout));
+
+        // FIXME/bug 544095: kill the subprocess in a way that
+        // triggers breakpad, and also capture a minidump for this
+        // process
+        KillProcess(ChildProcessHandle(), 1, false);
+    }
+    
+
+    return waitMoar;
 }
 
 void
