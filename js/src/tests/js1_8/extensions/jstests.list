@@ -1,5 +1,7 @@
 url-prefix ../../jsreftest.html?test=js1_8/extensions/
 script dekker.js
+script expclo.js
+script expclo2.js
 script for-in.js
 script lamport.js
 script peterson.js
