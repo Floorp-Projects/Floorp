@@ -399,7 +399,7 @@ struct JSParseNode {
     }
 
     JSDefinition *lexdef() const {
-        JS_ASSERT(pn_used);
+        JS_ASSERT(pn_used || isDeoptimized());
         JS_ASSERT(pn_arity == PN_NAME);
         return pn_lexdef;
     }
@@ -419,9 +419,9 @@ struct JSParseNode {
 #define PND_PLACEHOLDER 0x80            /* placeholder definition for lexdep */
 #define PND_FUNARG     0x100            /* downward or upward funarg usage */
 #define PND_BOUND      0x200            /* bound to a stack or global slot */
-#define PND_MODULEPAT  0x400            /* "module pattern", i.e., a lambda
-                                           that is immediately applied and the
-                                           whole of an expression statement */
+#define PND_DEOPTIMIZED 0x400           /* former pn_used name node, pn_lexdef
+                                           still valid, but this use no longer
+                                           optimizable via an upvar opcode */
 
 /* Flags to propagate from uses to definition. */
 #define PND_USE2DEF_FLAGS (PND_ASSIGNED | PND_FUNARG)
@@ -467,6 +467,7 @@ struct JSParseNode {
     bool isTopLevel() const     { return test(PND_TOPLEVEL); }
     bool isBlockChild() const   { return test(PND_BLOCKCHILD); }
     bool isPlaceholder() const  { return test(PND_PLACEHOLDER); }
+    bool isDeoptimized() const  { return test(PND_DEOPTIMIZED); }
 
     /* Defined below, see after struct JSDefinition. */
     bool isAssigned() const;
