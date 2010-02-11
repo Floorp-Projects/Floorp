@@ -42,6 +42,16 @@
 
 class nsIPrintSettings;
 
+// Copy the print pages enum here because not all versions
+// have SELECTION, which we will use
+typedef enum
+{
+  _GTK_PRINT_PAGES_ALL,
+  _GTK_PRINT_PAGES_CURRENT,
+  _GTK_PRINT_PAGES_RANGES,
+  _GTK_PRINT_PAGES_SELECTION
+} _GtkPrintPages;
+
 class nsPrintDialogServiceGTK : public nsIPrintDialogService
 {
 public:
