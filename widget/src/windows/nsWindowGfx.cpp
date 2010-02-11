@@ -330,11 +330,6 @@ EnsureSharedSurfaceSize(gfxIntSize size)
 
 PRBool nsWindow::OnPaint(HDC aDC)
 {
-  if (mWindowType == eWindowType_plugin) {
-    ValidateRect(mWnd, NULL);
-    return PR_TRUE;
-  }
-
 #ifdef MOZ_IPC
   // We never have reentrant paint events, except when we're running our RPC
   // windows event spin loop. If we don't trap for this, we'll try to paint,
@@ -342,6 +337,17 @@ PRBool nsWindow::OnPaint(HDC aDC)
   // flashes on the plugin rendering surface.
   if (mozilla::ipc::RPCChannel::IsSpinLoopActive() && mPainting)
     return PR_FALSE;
+
+  if (mWindowType == eWindowType_plugin) {
+    PluginInstanceParent* instance = reinterpret_cast<PluginInstanceParent*>(
+      ::GetPropW(mWnd, L"PluginInstanceParentProperty"));
+    if (instance) {
+      if (!instance->CallUpdateWindow())
+        NS_ERROR("Failed to send message!");
+      ValidateRect(mWnd, NULL);
+      return PR_TRUE;
+    }
+  }
 #endif
 
   nsPaintEvent willPaintEvent(PR_TRUE, NS_WILL_PAINT, this);
