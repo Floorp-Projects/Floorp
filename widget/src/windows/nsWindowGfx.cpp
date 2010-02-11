@@ -332,11 +332,23 @@ PRBool nsWindow::OnPaint(HDC aDC)
 {
 #ifdef MOZ_IPC
   if (mWindowType == eWindowType_plugin) {
+
+    /**
+     * After we CallUpdateWindow to the child, occasionally a WM_PAINT message
+     * is posted to the parent event loop with an empty update rect. Ignore
+     * this paint message, since dispatching it again may cause an infinite
+     * loop. See bug 543788.
+     */
+    RECT updateRect;
+    if (!GetUpdateRect(mWnd, &updateRect, FALSE) ||
+        (updateRect.left == updateRect.right &&
+         updateRect.top == updateRect.bottom))
+      return PR_TRUE;
+
     PluginInstanceParent* instance = reinterpret_cast<PluginInstanceParent*>(
       ::GetPropW(mWnd, L"PluginInstanceParentProperty"));
     if (instance) {
-      if (!instance->CallUpdateWindow())
-        NS_ERROR("Failed to send message!");
+      instance->CallUpdateWindow();
       ValidateRect(mWnd, NULL);
       return PR_TRUE;
     }
