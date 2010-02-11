@@ -54,7 +54,11 @@ Cu.import("resource://weave/auth.js");
 //
 // Represents a remote network resource, identified by a URI.
 function Resource(uri) {
-  this._init(uri);
+  this._log = Log4Moz.repository.getLogger(this._logName);
+  this._log.level =
+    Log4Moz.Level[Utils.prefs.getCharPref("log.logger.network.resources")];
+  this.uri = uri;
+  this._headers = {'Content-type': 'text/plain'};
 }
 Resource.prototype = {
   _logName: "Net.Resource",
@@ -123,14 +127,6 @@ Resource.prototype = {
   get data() this._data,
   set data(value) {
     this._data = value;
-  },
-
-  _init: function Res__init(uri) {
-    this._log = Log4Moz.repository.getLogger(this._logName);
-    this._log.level =
-      Log4Moz.Level[Utils.prefs.getCharPref("log.logger.network.resources")];
-    this.uri = uri;
-    this._headers = {'Content-type': 'text/plain'};
   },
 
   // ** {{{ Resource._createRequest }}} **

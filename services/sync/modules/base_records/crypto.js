@@ -46,25 +46,14 @@ Cu.import("resource://weave/base_records/wbo.js");
 Cu.import("resource://weave/base_records/keys.js");
 
 function CryptoWrapper(uri) {
-  this._CryptoWrap_init(uri);
+  WBORecord.call(this, uri);
+  this.encryption = "";
+  this.ciphertext = null;
+  this.cleartext = {};
 }
 CryptoWrapper.prototype = {
   __proto__: WBORecord.prototype,
   _logName: "Record.CryptoWrapper",
-
-  _CryptoWrap_init: function CryptoWrap_init(uri) {
-    // FIXME: this will add a json filter, meaning our payloads will be json
-    //        encoded, even though they are already a string
-    this._WBORec_init(uri);
-    this.data.payload = {
-      encryption: "",
-      ciphertext: null
-    };
-  },
-
-  // FIXME: we make no attempt to ensure cleartext is in sync
-  //        with the encrypted payload
-  cleartext: null,
 
   encrypt: function CryptoWrapper_encrypt(passphrase) {
     // No need to encrypt deleted records
@@ -113,19 +102,13 @@ CryptoWrapper.prototype = {
 Utils.deferGetSet(CryptoWrapper, "payload", ["encryption", "ciphertext"]);
 
 function CryptoMeta(uri) {
-  this._CryptoMeta_init(uri);
+  WBORecord.call(this, uri);
+  this.bulkIV = null;
+  this.keyring = {};
 }
 CryptoMeta.prototype = {
   __proto__: WBORecord.prototype,
   _logName: "Record.CryptoMeta",
-
-  _CryptoMeta_init: function CryptoMeta_init(uri) {
-    this._WBORec_init(uri);
-    this.data.payload = {
-      bulkIV: null,
-      keyring: {}
-    };
-  },
 
   generateIV: function CryptoMeta_generateIV() {
     this.bulkIV = Svc.Crypto.generateRandomIV();
@@ -141,9 +124,9 @@ CryptoMeta.prototype = {
 
     // each hash key is a relative uri, resolve those and match against ours
     let wrapped_key;
-    for (let relUri in this.payload.keyring) {
+    for (let relUri in this.keyring) {
       if (pubkeyUri == this.baseUri.resolve(relUri))
-        wrapped_key = this.payload.keyring[relUri];
+        wrapped_key = this.keyring[relUri];
     }
     if (!wrapped_key)
       throw "keyring doesn't contain a key for " + pubkeyUri;
@@ -164,21 +147,23 @@ CryptoMeta.prototype = {
 
     // each hash key is a relative uri, resolve those and
     // if we find the one we're about to add, remove it
-    for (let relUri in this.payload.keyring) {
+    for (let relUri in this.keyring) {
       if (pubkeyUri == this.uri.resolve(relUri))
-        delete this.payload.keyring[relUri];
+        delete this.keyring[relUri];
     }
 
-    this.payload.keyring[new_pubkey.uri.spec] =
+    this.keyring[new_pubkey.uri.spec] =
       Svc.Crypto.wrapSymmetricKey(symkey, new_pubkey.keyData);
   }
 };
 
-Utils.deferGetSet(CryptoMeta, "data.payload", "bulkIV");
+Utils.deferGetSet(CryptoMeta, "payload", ["bulkIV", "keyring"]);
 
 Utils.lazy(this, 'CryptoMetas', CryptoRecordManager);
 
-function CryptoRecordManager() { this._init(); }
+function CryptoRecordManager() {
+  RecordManager.call(this);
+}
 CryptoRecordManager.prototype = {
   __proto__: RecordManager.prototype,
   _recordType: CryptoMeta

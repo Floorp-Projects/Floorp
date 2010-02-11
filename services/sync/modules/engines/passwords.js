@@ -50,7 +50,7 @@ Cu.import("resource://weave/ext/Observers.js");
 Cu.import("resource://weave/type_records/passwords.js");
 
 function PasswordEngine() {
-  this._init();
+  SyncEngine.call(this);
 }
 PasswordEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -75,22 +75,14 @@ PasswordEngine.prototype = {
 };
 
 function PasswordStore() {
-  this._init();
+  Store.call(this);
+  this._nsLoginInfo = new Components.Constructor(
+    "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
 }
 PasswordStore.prototype = {
   __proto__: Store.prototype,
   name: "passwords",
   _logName: "PasswordStore",
-
-  _nsLoginInfo: null,
-  _init: function PasswordStore_init() {
-    Store.prototype._init.call(this);
-    this._nsLoginInfo = new Components.Constructor(
-      "@mozilla.org/login-manager/loginInfo;1",
-      Ci.nsILoginInfo,
-      "init"
-    );
-  },
 
   _nsLoginInfoFromRecord: function PasswordStore__nsLoginInfoRec(record) {
     let info = new this._nsLoginInfo(record.hostname,
@@ -217,18 +209,14 @@ PasswordStore.prototype = {
 };
 
 function PasswordTracker() {
-  this._init();
+  Tracker.call(this);
+  Observers.add("passwordmgr-storage-changed", this);
 }
 PasswordTracker.prototype = {
   __proto__: Tracker.prototype,
   _logName: "PasswordTracker",
   name: "passwords",
   file: "password",
-
-  _init: function PasswordTracker_init() {
-    Tracker.prototype._init.call(this);
-    Observers.add("passwordmgr-storage-changed", this);
-  },
 
   /* A single add, remove or change is 15 points, all items removed is 50 */
   observe: function PasswordTracker_observe(aSubject, aTopic, aData) {

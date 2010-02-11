@@ -45,8 +45,9 @@ const Cu = Components.utils;
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/base_records/crypto.js");
 
-function PlacesItem(uri) {
-  this._PlacesItem_init(uri);
+function PlacesItem(uri, type) {
+  CryptoWrapper.call(this, uri);
+  this.type = type || "item";
 }
 PlacesItem.prototype = {
   decrypt: function PlacesItem_decrypt(passphrase) {
@@ -82,103 +83,67 @@ PlacesItem.prototype = {
 
   __proto__: CryptoWrapper.prototype,
   _logName: "Record.PlacesItem",
-
-  _PlacesItem_init: function BmkItemRec_init(uri) {
-    this._CryptoWrap_init(uri);
-    this.cleartext = {};
-    this.type = "item";
-  },
 };
 
 Utils.deferGetSet(PlacesItem, "cleartext", ["parentName", "predecessorid", "type"]);
 
-function Bookmark(uri) {
-  this._Bookmark_init(uri);
+function Bookmark(uri, type) {
+  PlacesItem.call(this, uri, type || "bookmark");
 }
 Bookmark.prototype = {
   __proto__: PlacesItem.prototype,
   _logName: "Record.Bookmark",
-
-  _Bookmark_init: function BmkRec_init(uri) {
-    this._PlacesItem_init(uri);
-    this.type = "bookmark";
-  },
 };
 
 Utils.deferGetSet(Bookmark, "cleartext", ["title", "bmkUri", "description",
   "loadInSidebar", "tags", "keyword"]);
 
 function BookmarkMicsum(uri) {
-  this._BookmarkMicsum_init(uri);
+  Bookmark.call(this, uri, "microsummary");
 }
 BookmarkMicsum.prototype = {
   __proto__: Bookmark.prototype,
   _logName: "Record.BookmarkMicsum",
-
-  _BookmarkMicsum_init: function BmkMicsumRec_init(uri) {
-    this._Bookmark_init(uri);
-    this.type = "microsummary";
-  },
 };
 
 Utils.deferGetSet(BookmarkMicsum, "cleartext", ["generatorUri", "staticTitle"]);
 
 function BookmarkQuery(uri) {
-  this._BookmarkQuery_init(uri);
+  Bookmark.call(this, uri, "query");
 }
 BookmarkQuery.prototype = {
   __proto__: Bookmark.prototype,
   _logName: "Record.BookmarkQuery",
-
-  _BookmarkQuery_init: function BookmarkQuery_init(uri) {
-    this._Bookmark_init(uri);
-    this.type = "query";
-  },
 };
 
 Utils.deferGetSet(BookmarkQuery, "cleartext", ["folderName"]);
 
-function BookmarkFolder(uri) {
-  this._BookmarkFolder_init(uri);
+function BookmarkFolder(uri, type) {
+  PlacesItem.call(this, uri, type || "folder");
 }
 BookmarkFolder.prototype = {
   __proto__: PlacesItem.prototype,
   _logName: "Record.Folder",
-
-  _BookmarkFolder_init: function FolderRec_init(uri) {
-    this._PlacesItem_init(uri);
-    this.type = "folder";
-  },
 };
 
 Utils.deferGetSet(BookmarkFolder, "cleartext", "title");
 
 function Livemark(uri) {
-  this._Livemark_init(uri);
+  BookmarkFolder.call(this, uri, "livemark");
 }
 Livemark.prototype = {
   __proto__: BookmarkFolder.prototype,
   _logName: "Record.Livemark",
-
-  _Livemark_init: function LvmkRec_init(uri) {
-    this._BookmarkFolder_init(uri);
-    this.type = "livemark";
-  },
 };
 
 Utils.deferGetSet(Livemark, "cleartext", ["siteUri", "feedUri"]);
 
 function BookmarkSeparator(uri) {
-  this._BookmarkSeparator_init(uri);
+  PlacesItem.call(this, uri, "separator");
 }
 BookmarkSeparator.prototype = {
   __proto__: PlacesItem.prototype,
   _logName: "Record.Separator",
-
-  _BookmarkSeparator_init: function SepRec_init(uri) {
-    this._PlacesItem_init(uri);
-    this.type = "separator";
-  }
 };
 
 Utils.deferGetSet(BookmarkSeparator, "cleartext", "pos");

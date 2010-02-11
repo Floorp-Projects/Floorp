@@ -48,7 +48,7 @@ Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/type_records/forms.js");
 
 function FormEngine() {
-  this._init();
+  SyncEngine.call(this);
 }
 FormEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -82,7 +82,7 @@ FormEngine.prototype = {
 
 
 function FormStore() {
-  this._init();
+  Store.call(this);
 }
 FormStore.prototype = {
   __proto__: Store.prototype,
@@ -204,7 +204,8 @@ FormStore.prototype = {
 };
 
 function FormTracker() {
-  this._init();
+  Tracker.call(this);
+  Svc.Observer.addObserver(this, "earlyformsubmit", false);
 }
 FormTracker.prototype = {
   __proto__: Tracker.prototype,
@@ -213,20 +214,6 @@ FormTracker.prototype = {
   file: "form",
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver]),
-
-  __observerService: null,
-  get _observerService() {
-    if (!this.__observerService)
-      this.__observerService = Cc["@mozilla.org/observer-service;1"].
-                                getService(Ci.nsIObserverService);
-      return this.__observerService;
-  },
-
-  _init: function FormTracker__init() {
-    this.__proto__.__proto__._init.call(this);
-    this._log.trace("FormTracker initializing!");
-    this._observerService.addObserver(this, "earlyformsubmit", false);
-  },
 
   /* 10 points per form element */
   notify: function FormTracker_notify(formElement, aWindow, actionURI) {

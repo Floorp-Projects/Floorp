@@ -67,15 +67,11 @@ BasicAuthenticator.prototype = {
 };
 
 function AuthMgr() {
-  this._init();
+  this._authenticators = {};
+  this.defaultAuthenticator = new NoOpAuthenticator();
 }
 AuthMgr.prototype = {
   defaultAuthenticator: null,
-
-  _init: function AuthMgr__init() {
-    this._authenticators = {};
-    this.defaultAuthenticator = new NoOpAuthenticator();
-  },
 
   registerAuthenticator: function AuthMgr_register(match, authenticator) {
     this._authenticators[match] = authenticator;

@@ -69,7 +69,7 @@ function GUIDForUri(uri, create) {
 }
 
 function HistoryEngine() {
-  this._init();
+  SyncEngine.call(this);
 }
 HistoryEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -89,7 +89,7 @@ HistoryEngine.prototype = {
 };
 
 function HistoryStore() {
-  this._init();
+  Store.call(this);
 }
 HistoryStore.prototype = {
   __proto__: Store.prototype,
@@ -278,7 +278,8 @@ HistoryStore.prototype = {
 };
 
 function HistoryTracker() {
-  this._init();
+  Tracker.call(this);
+  Svc.History.addObserver(this, false);
 }
 HistoryTracker.prototype = {
   __proto__: Tracker.prototype,
@@ -290,18 +291,6 @@ HistoryTracker.prototype = {
     Ci.nsINavHistoryObserver,
     Ci.nsINavHistoryObserver_MOZILLA_1_9_1_ADDITIONS
   ]),
-
-  get _hsvc() {
-    let hsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
-      getService(Ci.nsINavHistoryService);
-    this.__defineGetter__("_hsvc", function() hsvc);
-    return hsvc;
-  },
-
-  _init: function HT__init() {
-    Tracker.prototype._init.call(this);
-    this._hsvc.addObserver(this, false);
-  },
 
   onBeginUpdateBatch: function HT_onBeginUpdateBatch() {},
   onEndUpdateBatch: function HT_onEndUpdateBatch() {},

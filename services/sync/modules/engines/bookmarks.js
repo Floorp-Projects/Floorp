@@ -92,7 +92,8 @@ function GUIDForId(placeId) {
 }
 
 function BookmarksEngine() {
-  this._init();
+  SyncEngine.call(this);
+  this._handleImport();
 }
 BookmarksEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -103,11 +104,6 @@ BookmarksEngine.prototype = {
   _recordObj: PlacesItem,
   _storeObj: BookmarksStore,
   _trackerObj: BookmarksTracker,
-
-  _init: function _init() {
-    SyncEngine.prototype._init.call(this);
-    this._handleImport();
-  },
 
   _handleImport: function _handleImport() {
     Observers.add("bookmarks-restore-begin", function() {
@@ -219,7 +215,7 @@ BookmarksEngine.prototype = {
 };
 
 function BookmarksStore() {
-  this._init();
+  Store.call(this);
 }
 BookmarksStore.prototype = {
   __proto__: Store.prototype,
@@ -960,7 +956,13 @@ BookmarksStore.prototype = {
 };
 
 function BookmarksTracker() {
-  this._init();
+  Tracker.call(this);
+
+  // Ignore changes to the special roots
+  for (let guid in kSpecialIds)
+    this.ignoreID(guid);
+
+  Svc.Bookmark.addObserver(this, false);
 }
 BookmarksTracker.prototype = {
   __proto__: Tracker.prototype,
@@ -986,16 +988,6 @@ BookmarksTracker.prototype = {
     Ci.nsINavBookmarkObserver,
     Ci.nsINavBookmarkObserver_MOZILLA_1_9_1_ADDITIONS
   ]),
-
-  _init: function BMT__init() {
-    this.__proto__.__proto__._init.call(this);
-
-    // Ignore changes to the special roots
-    for (let guid in kSpecialIds)
-      this.ignoreID(guid);
-
-    this._bms.addObserver(this, false);
-  },
 
   /**
    * Add a bookmark (places) id to be uploaded and bump up the sync score

@@ -58,22 +58,18 @@ Cu.import("resource://weave/ext/Observers.js");
  *
  */
 function Tracker() {
-  this._init();
+  this._log = Log4Moz.repository.getLogger(this._logName);
+  let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
+  this._log.level = Log4Moz.Level[level];
+
+  this._score = 0;
+  this._ignored = [];
+  this.ignoreAll = false;
+  this.loadChangedIDs();
 }
 Tracker.prototype = {
   _logName: "Tracker",
   file: "none",
-
-  _init: function T__init() {
-    this._log = Log4Moz.repository.getLogger(this._logName);
-    let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
-    this._log.level = Log4Moz.Level[level];
-
-    this._score = 0;
-    this._ignored = [];
-    this.ignoreAll = false;
-    this.loadChangedIDs();
-  },
 
   /*
    * Score can be called as often as desired to decide which engines to sync
