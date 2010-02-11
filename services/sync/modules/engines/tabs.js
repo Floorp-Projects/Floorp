@@ -253,12 +253,12 @@ TabTracker.prototype = {
 
   observe: function TabTracker_observe(aSubject, aTopic, aData) {
     // Add tab listeners now that a window has opened
-    let window = aSubject.QueryInterface(Ci.nsIDOMWindow);
     if (aTopic == "domwindowopened") {
       let self = this;
-      window.addEventListener("load", function() {
+      aSubject.addEventListener("load", function onLoad(event) {
+        aSubject.removeEventListener("load", onLoad, false);
         // Only register after the window is done loading to avoid unloads
-        self._registerListenersForWindow(window);
+        self._registerListenersForWindow(aSubject);
       }, false);
     }
   },
