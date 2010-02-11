@@ -80,6 +80,7 @@ ifdef MOZ_IPC
 _MOCHITEST_FILES += \
   test_crashing.html \
   test_crashing2.html \
+  test_hanging.html \
   crashing_subpage.html \
   $(NULL)
 endif
