@@ -131,6 +131,7 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
     return;
   }
 
+  GtkWindow* printDialog = GTK_WINDOW(user_data);
   nsCOMPtr<nsIStringBundleService> bundleSvc =
        do_GetService(NS_STRINGBUNDLE_CONTRACTID);
 
@@ -139,8 +140,8 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
   nsXPIDLString intlString;
 
   printBundle->GetStringFromName(NS_LITERAL_STRING("headerFooterCustom").get(), getter_Copies(intlString));
-  GtkWidget* prompt_dialog = gtk_dialog_new_with_buttons(NS_ConvertUTF16toUTF8(intlString).get(), NULL,
-                                                         GTK_DIALOG_MODAL,
+  GtkWidget* prompt_dialog = gtk_dialog_new_with_buttons(NS_ConvertUTF16toUTF8(intlString).get(), printDialog,
+                                                         (GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR),
                                                          GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                                          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                                          NULL);
@@ -162,6 +163,7 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
     gtk_entry_set_text(GTK_ENTRY(custom_entry), current_text);
     gtk_editable_select_region(GTK_EDITABLE(custom_entry), 0, -1);
   }
+  gtk_entry_set_activates_default(GTK_ENTRY(custom_entry), TRUE);
 
   GtkWidget* custom_vbox = gtk_vbox_new(TRUE, 2);
   gtk_box_pack_start(GTK_BOX(custom_vbox), custom_label, FALSE, FALSE, 0);
@@ -567,7 +569,7 @@ nsPrintDialogWidgetGTK::ConstructHeaderFooterDropdown(const PRUnichar *currentSt
     g_object_set_data_full(G_OBJECT(dropdown), "custom-text", custom_string, (GDestroyNotify) free);
   }
 
-  g_signal_connect(dropdown, "changed", (GCallback) ShowCustomDialog, NULL);
+  g_signal_connect(dropdown, "changed", (GCallback) ShowCustomDialog, dialog);
   return dropdown;
 }
 
