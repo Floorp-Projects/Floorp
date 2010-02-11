@@ -1468,6 +1468,12 @@ BEGIN_CASE(JSOP_THIS)
     PUSH_OPND(OBJECT_TO_JSVAL(obj));
 END_CASE(JSOP_THIS)
 
+BEGIN_CASE(JSOP_UNBRANDTHIS)
+    COMPUTE_THIS(cx, fp, obj);
+    if (!obj->unbrand(cx))
+        goto error;
+END_CASE(JSOP_UNBRANDTHIS)
+
 BEGIN_CASE(JSOP_GETTHISPROP)
     i = 0;
     COMPUTE_THIS(cx, fp, obj);
