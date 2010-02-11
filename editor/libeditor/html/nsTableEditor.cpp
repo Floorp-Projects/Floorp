@@ -1064,7 +1064,7 @@ nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
     return DeleteTable2(table, selection);
 
   // Check for counts too high
-  aNumber = PR_MIN(aNumber,(colCount-startColIndex));
+  aNumber = NS_MIN(aNumber,(colCount-startColIndex));
 
   nsAutoEditBatch beginBatching(this);
   // Prevent rules testing until we're done
@@ -1298,7 +1298,7 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
   else
   {
     // Check for counts too high
-    aNumber = PR_MIN(aNumber,(rowCount-startRowIndex));
+    aNumber = NS_MIN(aNumber,(rowCount-startRowIndex));
 
     for (PRInt32 i = 0; i < aNumber; i++)
     {
@@ -1364,7 +1364,7 @@ nsHTMLEditor::DeleteRow(nsIDOMElement *aTable, PRInt32 aRowIndex)
           // We can't do it now since it upsets cell map,
           //  so we will do it after deleting the row
           spanCellList.AppendElement(cell);
-          newSpanList.AppendElement(PR_MAX((aRowIndex - startRowIndex), actualRowSpan-1));
+          newSpanList.AppendElement(NS_MAX((aRowIndex - startRowIndex), actualRowSpan-1));
         }
       }
       else 
@@ -1488,10 +1488,10 @@ nsHTMLEditor::SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndC
 
   // Examine all cell nodes in current selection and 
   //  remove those outside the new block cell region
-  PRInt32 minColumn = PR_MIN(startColIndex, endColIndex);
-  PRInt32 minRow    = PR_MIN(startRowIndex, endRowIndex);
-  PRInt32 maxColumn   = PR_MAX(startColIndex, endColIndex);
-  PRInt32 maxRow      = PR_MAX(startRowIndex, endRowIndex);
+  PRInt32 minColumn = NS_MIN(startColIndex, endColIndex);
+  PRInt32 minRow    = NS_MIN(startRowIndex, endRowIndex);
+  PRInt32 maxColumn   = NS_MAX(startColIndex, endColIndex);
+  PRInt32 maxRow      = NS_MAX(startRowIndex, endRowIndex);
 
   nsCOMPtr<nsIDOMElement> cell;
   PRInt32 currentRowIndex, currentColIndex;
@@ -1520,7 +1520,7 @@ nsHTMLEditor::SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndC
   PRBool  isSelected;
   for (PRInt32 row = minRow; row <= maxRow; row++)
   {
-    for(PRInt32 col = minColumn; col <= maxColumn; col += PR_MAX(actualColSpan, 1))
+    for(PRInt32 col = minColumn; col <= maxColumn; col += NS_MAX(actualColSpan, 1))
     {
       res = GetCellDataAt(table, row, col, getter_AddRefs(cell),
                           &currentRowIndex, &currentColIndex,
@@ -1579,7 +1579,7 @@ nsHTMLEditor::SelectAllTableCells()
   PRBool  isSelected;
   for(PRInt32 row = 0; row < rowCount; row++)
   {
-    for(PRInt32 col = 0; col < colCount; col += PR_MAX(actualColSpan, 1))
+    for(PRInt32 col = 0; col < colCount; col += NS_MAX(actualColSpan, 1))
     {
       res = GetCellDataAt(table, row, col, getter_AddRefs(cell),
                           &currentRowIndex, &currentColIndex,
@@ -1647,7 +1647,7 @@ nsHTMLEditor::SelectTableRow()
   PRBool cellSelected = PR_FALSE;
   PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan, currentRowIndex, currentColIndex;
   PRBool  isSelected;
-  for(PRInt32 col = 0; col < colCount; col += PR_MAX(actualColSpan, 1))
+  for(PRInt32 col = 0; col < colCount; col += NS_MAX(actualColSpan, 1))
   {
     res = GetCellDataAt(table, startRowIndex, col, getter_AddRefs(cell),
                         &currentRowIndex, &currentColIndex, &rowSpan, &colSpan, 
@@ -1710,7 +1710,7 @@ nsHTMLEditor::SelectTableColumn()
   PRBool cellSelected = PR_FALSE;
   PRInt32 rowSpan, colSpan, actualRowSpan, actualColSpan, currentRowIndex, currentColIndex;
   PRBool  isSelected;
-  for(PRInt32 row = 0; row < rowCount; row += PR_MAX(actualRowSpan, 1))
+  for(PRInt32 row = 0; row < rowCount; row += NS_MAX(actualRowSpan, 1))
   {
     res = GetCellDataAt(table, row, startColIndex, getter_AddRefs(cell),
                         &currentRowIndex, &currentColIndex, &rowSpan, &colSpan, 
@@ -1928,7 +1928,7 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
       lastCellFound = cell2;
     }
     // Skip to next available cellmap location
-    colIndex += PR_MAX(actualColSpan2, 1);
+    colIndex += NS_MAX(actualColSpan2, 1);
 
     // Done when past end of total number of columns
     if (colIndex > colCount)
@@ -2092,7 +2092,7 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
       PRBool lastRowIsSet = PR_FALSE;
       PRInt32 lastColInRow = 0;
       PRInt32 firstColInRow = firstColIndex;
-      for (colIndex = firstColIndex; colIndex < colCount; colIndex += PR_MAX(actualColSpan2, 1))
+      for (colIndex = firstColIndex; colIndex < colCount; colIndex += NS_MAX(actualColSpan2, 1))
       {
         res = GetCellDataAt(table, rowIndex, colIndex, getter_AddRefs(cell2),
                             &startRowIndex2, &startColIndex2,
@@ -2114,7 +2114,7 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
             // and keep previous lastColIndex
             //TODO: We could try to find the Maximum firstColInRow
             //      so our block can still extend down more rows?
-            lastRowIndex = PR_MAX(0,rowIndex - 1);
+            lastRowIndex = NS_MAX(0,rowIndex - 1);
             lastRowIsSet = PR_TRUE;
             break;
           }
@@ -2130,7 +2130,7 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
           {
             // Cell is in a column less than current right border in 
             //  the third or higher selected row, so stop block at the previous row
-            lastRowIndex = PR_MAX(0,rowIndex - 1);
+            lastRowIndex = NS_MAX(0,rowIndex - 1);
             lastRowIsSet = PR_TRUE;
           }
           // We're done with this row
@@ -2155,7 +2155,7 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
             // (don't think we ever get here?)
             // Cell is in a column less than current right boundary,
             //  so stop block at the previous row
-            lastRowIndex = PR_MAX(0,rowIndex - 1);
+            lastRowIndex = NS_MAX(0,rowIndex - 1);
           }
           else
           {
@@ -2164,13 +2164,13 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
           }
         }
         // Use the minimum col we found so far for right boundary
-        lastColIndex = PR_MIN(lastColIndex, lastColInRow);
+        lastColIndex = NS_MIN(lastColIndex, lastColInRow);
       }
       else
       {
         // No selected cells in this row -- stop at row above
         //  and leave last column at its previous value
-        lastRowIndex = PR_MAX(0,rowIndex - 1);
+        lastRowIndex = NS_MAX(0,rowIndex - 1);
       }
     }
   
@@ -2180,7 +2180,7 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
     // 2nd pass: Do the joining and merging
     for (rowIndex = 0; rowIndex < rowCount; rowIndex++)
     {
-      for (colIndex = 0; colIndex < colCount; colIndex += PR_MAX(actualColSpan2, 1))
+      for (colIndex = 0; colIndex < colCount; colIndex += NS_MAX(actualColSpan2, 1))
       {
         res = GetCellDataAt(table, rowIndex, colIndex, getter_AddRefs(cell2),
                             &startRowIndex2, &startColIndex2,
@@ -2434,7 +2434,7 @@ nsHTMLEditor::FixBadRowSpan(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32& a
   PRInt32 minRowSpan = -1;
   PRInt32 colIndex;
   
-  for( colIndex = 0; colIndex < colCount; colIndex += PR_MAX(actualColSpan, 1))
+  for( colIndex = 0; colIndex < colCount; colIndex += NS_MAX(actualColSpan, 1))
   {
     res = GetCellDataAt(aTable, aRowIndex, colIndex, getter_AddRefs(cell),
                         &startRowIndex, &startColIndex, &rowSpan, &colSpan, 
@@ -2456,7 +2456,7 @@ nsHTMLEditor::FixBadRowSpan(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32& a
     // The amount to reduce everyone's rowspan
     // so at least one cell has rowspan = 1
     PRInt32 rowsReduced = minRowSpan - 1;
-    for(colIndex = 0; colIndex < colCount; colIndex += PR_MAX(actualColSpan, 1))
+    for(colIndex = 0; colIndex < colCount; colIndex += NS_MAX(actualColSpan, 1))
     {
       res = GetCellDataAt(aTable, aRowIndex, colIndex, getter_AddRefs(cell),
                           &startRowIndex, &startColIndex, &rowSpan, &colSpan, 
@@ -2492,7 +2492,7 @@ nsHTMLEditor::FixBadColSpan(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32& a
   PRInt32 minColSpan = -1;
   PRInt32 rowIndex;
   
-  for( rowIndex = 0; rowIndex < rowCount; rowIndex += PR_MAX(actualRowSpan, 1))
+  for( rowIndex = 0; rowIndex < rowCount; rowIndex += NS_MAX(actualRowSpan, 1))
   {
     res = GetCellDataAt(aTable, rowIndex, aColIndex, getter_AddRefs(cell),
                         &startRowIndex, &startColIndex, &rowSpan, &colSpan, 
@@ -2514,7 +2514,7 @@ nsHTMLEditor::FixBadColSpan(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32& a
     // The amount to reduce everyone's colspan
     // so at least one cell has colspan = 1
     PRInt32 colsReduced = minColSpan - 1;
-    for(rowIndex = 0; rowIndex < rowCount; rowIndex += PR_MAX(actualRowSpan, 1))
+    for(rowIndex = 0; rowIndex < rowCount; rowIndex += NS_MAX(actualRowSpan, 1))
     {
       res = GetCellDataAt(aTable, rowIndex, aColIndex, getter_AddRefs(cell),
                           &startRowIndex, &startColIndex, &rowSpan, &colSpan, 
@@ -3390,7 +3390,7 @@ nsHTMLEditor::AllCellsInRowSelected(nsIDOMElement *aTable, PRInt32 aRowIndex, PR
   PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
 
-  for( PRInt32 col = 0; col < aNumberOfColumns; col += PR_MAX(actualColSpan, 1))
+  for( PRInt32 col = 0; col < aNumberOfColumns; col += NS_MAX(actualColSpan, 1))
   {
     nsCOMPtr<nsIDOMElement> cell;    
     nsresult res = GetCellDataAt(aTable, aRowIndex, col, getter_AddRefs(cell),
@@ -3420,7 +3420,7 @@ nsHTMLEditor::AllCellsInColumnSelected(nsIDOMElement *aTable, PRInt32 aColIndex,
   PRInt32 curStartRowIndex, curStartColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
   PRBool  isSelected;
 
-  for( PRInt32 row = 0; row < aNumberOfRows; row += PR_MAX(actualRowSpan, 1))
+  for( PRInt32 row = 0; row < aNumberOfRows; row += NS_MAX(actualRowSpan, 1))
   {
     nsCOMPtr<nsIDOMElement> cell;    
     nsresult res = GetCellDataAt(aTable, row, aColIndex, getter_AddRefs(cell),

@@ -852,7 +852,7 @@ nsHTMLEditor::GetNewResizingX(PRInt32 aX, PRInt32 aY)
   PRInt32 resized = mResizedObjectX +
                     GetNewResizingIncrement(aX, aY, kX) * mXIncrementFactor;
   PRInt32 max =   mResizedObjectX + mResizedObjectWidth;
-  return PR_MIN(resized, max);
+  return NS_MIN(resized, max);
 }
 
 PRInt32
@@ -861,7 +861,7 @@ nsHTMLEditor::GetNewResizingY(PRInt32 aX, PRInt32 aY)
   PRInt32 resized = mResizedObjectY +
                     GetNewResizingIncrement(aX, aY, kY) * mYIncrementFactor;
   PRInt32 max =   mResizedObjectY + mResizedObjectHeight;
-  return PR_MIN(resized, max);
+  return NS_MIN(resized, max);
 }
 
 PRInt32
@@ -870,7 +870,7 @@ nsHTMLEditor::GetNewResizingWidth(PRInt32 aX, PRInt32 aY)
   PRInt32 resized = mResizedObjectWidth +
                      GetNewResizingIncrement(aX, aY, kWidth) *
                          mWidthIncrementFactor;
-  return PR_MAX(resized, 1);
+  return NS_MAX(resized, 1);
 }
 
 PRInt32
@@ -879,7 +879,7 @@ nsHTMLEditor::GetNewResizingHeight(PRInt32 aX, PRInt32 aY)
   PRInt32 resized = mResizedObjectHeight +
                      GetNewResizingIncrement(aX, aY, kHeight) *
                          mHeightIncrementFactor;
-  return PR_MAX(resized, 1);
+  return NS_MAX(resized, 1);
 }
 
 
