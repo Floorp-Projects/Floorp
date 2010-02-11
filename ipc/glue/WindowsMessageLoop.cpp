@@ -129,6 +129,7 @@ HHOOK gDeferredGetMsgHook = NULL;
 HHOOK gDeferredCallWndProcHook = NULL;
 
 DWORD gUIThreadId = 0;
+int gEventLoopDepth = 0;
 
 LRESULT CALLBACK
 DeferredMessageHook(int nCode,
@@ -501,8 +502,6 @@ UnhookNeuteredWindows()
     RestoreWindowProcedure(gNeuteredWindows->ElementAt(index));
   }
   gNeuteredWindows->Clear();
-  delete gNeuteredWindows;
-  gNeuteredWindows = NULL;
 }
 
 void
@@ -516,11 +515,6 @@ Init()
   NS_ASSERTION(gUIThreadId, "ThreadId should not be 0!");
   NS_ASSERTION(gUIThreadId == GetCurrentThreadId(),
                "Running on different threads!");
-
-  if (!gNeuteredWindows) {
-    gNeuteredWindows = new nsAutoTArray<HWND, 20>();
-  }
-  NS_ASSERTION(gNeuteredWindows, "Out of memory!");
 }
 
 } // anonymous namespace
@@ -615,6 +609,12 @@ SyncChannel::WaitForNotify()
   // Initialize global objects used in deferred messaging.
   Init();
 
+  if (++gEventLoopDepth == 1) {
+    NS_ASSERTION(!gNeuteredWindows, "Should only set this once!");
+    gNeuteredWindows = new nsAutoTArray<HWND, 20>();
+    NS_ASSERTION(gNeuteredWindows, "Out of memory!");
+  }
+
   // Setup deferred processing of native events while we wait for a response.
   NS_ASSERTION(!SyncChannel::IsPumpingMessages(),
                "Shouldn't be pumping already!");
@@ -690,6 +690,12 @@ SyncChannel::WaitForNotify()
   // normally.
   UnhookNeuteredWindows();
 
+  if (--gEventLoopDepth == 0) {
+    NS_ASSERTION(gNeuteredWindows, "Bad pointer!");
+    delete gNeuteredWindows;
+    gNeuteredWindows = NULL;
+  }
+
   // Before returning we need to set a hook to run any deferred messages that
   // we received during the IPC call. The hook will unset itself as soon as
   // someone else calls GetMessage, PeekMessage, or runs code that generates
@@ -734,7 +740,13 @@ RPCChannel::WaitForNotify()
       return true;
     }
   }
-  
+
+  if (++gEventLoopDepth == 1) {
+    NS_ASSERTION(!gNeuteredWindows, "Should only set this once!");
+    gNeuteredWindows = new nsAutoTArray<HWND, 20>();
+    NS_ASSERTION(gNeuteredWindows, "Out of memory!");
+  }
+
   // Setup deferred processing of native events while we wait for a response.
   NS_ASSERTION(!SyncChannel::IsPumpingMessages(),
                "Shouldn't be pumping already!");
@@ -832,6 +844,12 @@ RPCChannel::WaitForNotify()
   // Unhook any neutered windows procedures so messages can be delivered
   // normally.
   UnhookNeuteredWindows();
+
+  if (--gEventLoopDepth == 0) {
+    NS_ASSERTION(gNeuteredWindows, "Bad pointer!");
+    delete gNeuteredWindows;
+    gNeuteredWindows = NULL;
+  }
 
   // Before returning we need to set a hook to run any deferred messages that
   // we received during the IPC call. The hook will unset itself as soon as
