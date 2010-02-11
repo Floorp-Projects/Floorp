@@ -45,15 +45,11 @@ Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/base_records/wbo.js");
 
 function ClientRecord(uri) {
-  this._ClientRec_init(uri);
+  WBORecord.call(this, uri);
 }
 ClientRecord.prototype = {
   __proto__: WBORecord.prototype,
   _logName: "Record.Client",
-
-  _ClientRec_init: function ClientRec_init(uri) {
-    this._WBORec_init(uri);
-  },
 
   deserialize: function ClientRecord_deserialize(json) {
     let data = JSON.parse(json, function(key, val) key == "payload" ?

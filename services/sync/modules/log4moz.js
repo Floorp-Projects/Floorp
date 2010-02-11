@@ -175,17 +175,13 @@ LogMessage.prototype = {
  */
 
 function Logger(name, repository) {
-  this._init(name, repository);
+  if (!repository)
+    repository = Log4Moz.repository;
+  this._name = name;
+  this._appenders = [];
+  this._repository = repository;
 }
 Logger.prototype = {
-  _init: function Logger__init(name, repository) {
-    if (!repository)
-      repository = Log4Moz.repository;
-    this._name = name;
-    this._appenders = [];
-    this._repository = repository;
-  },
-
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
   parent: null,

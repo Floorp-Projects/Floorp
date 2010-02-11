@@ -132,7 +132,15 @@ EngineManagerSvc.prototype = {
   }
 };
 
-function Engine() { this._init(); }
+function Engine() {
+  this._notify = Utils.notify("weave:engine:");
+  this._log = Log4Moz.repository.getLogger("Engine." + this.logName);
+  let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
+  this._log.level = Log4Moz.Level[level];
+
+  this._tracker; // initialize tracker to load previously changed IDs
+  this._log.debug("Engine initialized");
+}
 Engine.prototype = {
   name: "engine",
   _displayName: "Boring Engine",
@@ -168,16 +176,6 @@ Engine.prototype = {
     } catch (e) {}
 
     return this._displayName;
-  },
-
-  _init: function Engine__init() {
-    this._notify = Utils.notify("weave:engine:");
-    this._log = Log4Moz.repository.getLogger("Engine." + this.logName);
-    let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
-    this._log.level = Log4Moz.Level[level];
-
-    this._tracker; // initialize tracker to load previously changed IDs
-    this._log.debug("Engine initialized");
   },
 
   sync: function Engine_sync() {
@@ -293,16 +291,14 @@ Engine.prototype = {
   }
 };
 
-function SyncEngine() { this._init(); }
+function SyncEngine() {
+  Engine.call(this);
+  this.loadToFetch();
+}
 SyncEngine.prototype = {
   __proto__: Engine.prototype,
 
   _recordObj: CryptoWrapper,
-
-  _init: function _init() {
-    Engine.prototype._init.call(this);
-    this.loadToFetch();
-  },
 
   get storageURL() Svc.Prefs.get("clusterURL") + Svc.Prefs.get("storageAPI") +
     "/" + ID.get("WeaveID").username + "/storage/",

@@ -50,7 +50,7 @@ Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/type_records/prefs.js");
 
 function PrefsEngine() {
-  this._init();
+  SyncEngine.call(this);
 }
 PrefsEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -79,7 +79,7 @@ PrefsEngine.prototype = {
 
 
 function PrefStore() {
-  this._init();
+  Store.call(this);
 }
 PrefStore.prototype = {
   __proto__: Store.prototype,
@@ -221,7 +221,8 @@ PrefStore.prototype = {
 };
 
 function PrefTracker() {
-  this._init();
+  Tracker.call(this);
+  this._prefs.addObserver("", this, false);
 }
 PrefTracker.prototype = {
   __proto__: Tracker.prototype,
@@ -245,11 +246,6 @@ PrefTracker.prototype = {
 
     this.__defineGetter__("_syncPrefs", function() syncPrefs);
     return syncPrefs;
-  },
-
-  _init: function PrefTracker__init() {
-    this.__proto__.__proto__._init.call(this);
-    this._prefs.addObserver("", this, false);
   },
 
   /* 25 points per pref change */

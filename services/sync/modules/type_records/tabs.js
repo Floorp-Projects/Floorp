@@ -45,17 +45,11 @@ Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/base_records/crypto.js");
 
 function TabSetRecord(uri) {
-  this._TabSetRecord_init(uri);
+  CryptoWrapper.call(this, uri);
 }
 TabSetRecord.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Record.Tabs",
-
-  _TabSetRecord_init: function TabSetRecord__init(uri) {
-    this._CryptoWrap_init(uri);
-    this.cleartext = {
-    };
-  },
 };
 
 Utils.deferGetSet(TabSetRecord, "cleartext", ["clientName", "tabs"]);

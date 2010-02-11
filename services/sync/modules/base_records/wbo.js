@@ -46,19 +46,14 @@ Cu.import("resource://weave/resource.js");
 Cu.import("resource://weave/util.js");
 
 function WBORecord(uri) {
-  this._WBORec_init(uri);
+  this.data = {};
+  this.payload = {};
+  if (uri)
+    this.uri = uri;
 }
 WBORecord.prototype = {
   deleted: false,
   _logName: "Record.WBO",
-
-  _WBORec_init: function WBORec_init(uri) {
-    this.data = {
-      payload: {}
-    };
-    if (uri)
-      this.uri = uri;
-  },
 
   // NOTE: baseUri must have a trailing slash, or baseUri.resolve() will omit
   //       the collection name
@@ -114,16 +109,12 @@ Utils.deferGetSet(WBORecord, "data", ["id", "parentid", "modified", "sortindex",
 Utils.lazy(this, 'Records', RecordManager);
 
 function RecordManager() {
-  this._init();
+  this._log = Log4Moz.repository.getLogger(this._logName);
+  this._records = {};
 }
 RecordManager.prototype = {
   _recordType: WBORecord,
   _logName: "RecordMgr",
-
-  _init: function RegordMgr__init() {
-    this._log = Log4Moz.repository.getLogger(this._logName);
-    this._records = {};
-  },
 
   import: function RecordMgr_import(url) {
     this._log.trace("Importing record: " + (url.spec ? url.spec : url));

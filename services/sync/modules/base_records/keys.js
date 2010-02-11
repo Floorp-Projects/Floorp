@@ -49,20 +49,14 @@ Cu.import("resource://weave/resource.js");
 Cu.import("resource://weave/base_records/wbo.js");
 
 function PubKey(uri) {
-  this._PubKey_init(uri);
+  WBORecord.call(this, uri);
+  this.type = "pubkey";
+  this.keyData = null;
+  this.privateKeyUri = null;
 }
 PubKey.prototype = {
   __proto__: WBORecord.prototype,
   _logName: "Record.PubKey",
-
-  _PubKey_init: function PubKey_init(uri) {
-    this._WBORec_init(uri);
-    this.payload = {
-      type: "pubkey",
-      keyData: null,
-      privateKeyUri: null
-    };
-  },
 
   get privateKeyUri() {
     if (!this.data)
@@ -78,25 +72,19 @@ PubKey.prototype = {
   }
 };
 
-Utils.deferGetSet(PubKey, "payload", ["keyData", "privateKeyUri"]);
+Utils.deferGetSet(PubKey, "payload", ["keyData", "privateKeyUri", "type"]);
 
 function PrivKey(uri) {
-  this._PrivKey_init(uri);
+  WBORecord.call(this, uri);
+  this.type = "privkey";
+  this.salt = null;
+  this.iv = null;
+  this.keyData = null;
+  this.publicKeyUri = null;
 }
 PrivKey.prototype = {
   __proto__: WBORecord.prototype,
   _logName: "Record.PrivKey",
-
-  _PrivKey_init: function PrivKey_init(uri) {
-    this._WBORec_init(uri);
-    this.payload = {
-      type: "privkey",
-      salt: null,
-      iv: null,
-      keyData: null,
-      publicKeyUri: null
-    };
-  },
 
   get publicKeyUri() {
     if (!this.data)
@@ -112,20 +100,16 @@ PrivKey.prototype = {
   }
 };
 
-Utils.deferGetSet(PrivKey, "payload", ["salt", "iv", "keyData", "publicKeyUri"]);
+Utils.deferGetSet(PrivKey, "payload", ["salt", "iv", "keyData", "publicKeyUri", "type"]);
 
 // XXX unused/unfinished
 function SymKey(keyData, wrapped) {
-  this._init(keyData, wrapped);
+  this._data = keyData;
+  this._wrapped = wrapped;
 }
 SymKey.prototype = {
   get wrapped() {
     return this._wrapped;
-  },
-
-  _init: function SymKey__init(keyData, wrapped) {
-    this._data = keyData;
-    this._wrapped = wrapped;
   },
 
   unwrap: function SymKey_unwrap(privkey, passphrase, meta_record) {
@@ -137,7 +121,9 @@ SymKey.prototype = {
 
 Utils.lazy(this, 'PubKeys', PubKeyManager);
 
-function PubKeyManager() { this._init(); }
+function PubKeyManager() {
+  RecordManager.call(this);
+}
 PubKeyManager.prototype = {
   __proto__: RecordManager.prototype,
   _recordType: PubKey,
@@ -182,7 +168,9 @@ PubKeyManager.prototype = {
 
 Utils.lazy(this, 'PrivKeys', PrivKeyManager);
 
-function PrivKeyManager() { this._init(); }
+function PrivKeyManager() {
+  PubKeyManager.call(this);
+}
 PrivKeyManager.prototype = {
   __proto__: PubKeyManager.prototype,
   _recordType: PrivKey,

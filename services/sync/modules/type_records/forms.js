@@ -45,17 +45,11 @@ Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/base_records/crypto.js");
 
 function FormRec(uri) {
-  this._FormRec_init(uri);
+  CryptoWrapper.call(this, uri);
 }
 FormRec.prototype = {
   __proto__: CryptoWrapper.prototype,
   _logName: "Record.Form",
-
-  _FormRec_init: function FormRec_init(uri) {
-    this._CryptoWrap_init(uri);
-    this.cleartext = {
-    };
-  },
 };
 
 Utils.deferGetSet(FormRec, "cleartext", ["name", "value"]);

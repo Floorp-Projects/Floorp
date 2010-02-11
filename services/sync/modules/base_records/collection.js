@@ -45,22 +45,19 @@ Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/resource.js");
 
 function Collection(uri, recordObj) {
-  this._Coll_init(uri);
+  Resource.call(this, uri);
   this._recordObj = recordObj;
+
+  this._full = false;
+  this._ids = null;
+  this._limit = 0;
+  this._older = 0;
+  this._newer = 0;
+  this._data = [];
 }
 Collection.prototype = {
   __proto__: Resource.prototype,
   _logName: "Collection",
-
-  _Coll_init: function Coll_init(uri) {
-    this._init(uri);
-    this._full = false;
-    this._ids = null;
-    this._limit = 0;
-    this._older = 0;
-    this._newer = 0;
-    this._data = [];
-  },
 
   _rebuildURL: function Coll__rebuildURL() {
     // XXX should consider what happens if it's not a URL...
