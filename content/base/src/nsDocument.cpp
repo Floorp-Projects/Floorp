@@ -7101,8 +7101,6 @@ nsDocument::Destroy()
 
   mLayoutHistoryState = nsnull;
 
-  nsContentList::OnDocumentDestroy(this);
-
   // Shut down our external resource map.  We might not need this for
   // leak-fixing if we fix DocumentViewerImpl to do cycle-collection, but
   // tearing down all those frame trees right now is the right thing to do.

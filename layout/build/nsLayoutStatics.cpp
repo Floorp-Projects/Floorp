@@ -308,7 +308,6 @@ nsLayoutStatics::Shutdown()
   nsDOMAttribute::Shutdown();
   nsDOMEventRTTearoff::Shutdown();
   nsEventListenerManager::Shutdown();
-  nsContentList::Shutdown();
   nsComputedDOMStyle::Shutdown();
   CSSLoaderImpl::Shutdown();
   nsCSSRuleProcessor::FreeSystemMetrics();
