@@ -116,6 +116,8 @@ public:
         return mNPNIface;
     }
 
+    base::ProcessHandle ChildProcessHandle() { return mSubprocess->GetChildProcessHandle(); }
+
     bool EnsureValidNPIdentifier(NPIdentifier aIdentifier);
 
 protected:
@@ -155,7 +157,6 @@ protected:
     static PluginInstanceParent* InstCast(NPP instance);
     static BrowserStreamParent* StreamCast(NPP instance, NPStream* s);
 
-    base::ProcessHandle ChildProcessHandle() { return mSubprocess->GetChildProcessHandle(); }
 private:
     void SetPluginFuncs(NPPluginFuncs* aFuncs);
 
