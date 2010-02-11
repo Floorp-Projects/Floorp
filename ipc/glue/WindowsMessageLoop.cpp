@@ -706,12 +706,6 @@ RPCChannel::WaitForNotify()
 {
   mMutex.AssertCurrentThreadOwns();
 
-  if (!StackDepth()) {
-    NS_ASSERTION(!StackDepth(),
-        "StackDepth() is 0 in a call to RPCChannel::WaitForNotify?");
-    return true;
-  }
-
   MutexAutoUnlock unlock(mMutex);
 
   // Initialize global objects used in deferred messaging.
