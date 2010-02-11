@@ -1385,3 +1385,4 @@ fails HTTP(..) == 518172-2b.html 518172-b-ref.html # bug 518172
 == 539226-1.html about:blank
 == 542620-1.html 542620-1-ref.html
 == 541382-1.html 541382-1-ref.html
+== 541406-1.html 541406-1-ref.html
