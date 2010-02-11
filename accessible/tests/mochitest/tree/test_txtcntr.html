@@ -93,6 +93,85 @@
 
       testAccessibleTree("c4", accTree);
 
+      // blockquote
+      accTree = {
+        role: ROLE_SECTION,
+        children: [
+          { // block quote
+            role: ROLE_SECTION,
+            children: [
+              { // text child
+                role: ROLE_TEXT_LEAF,
+                name: "Hello",
+                children: []
+              }
+            ]
+          }
+        ]
+      };
+
+      testAccessibleTree("c5", accTree);
+
+      // abbreviation tag
+      accTree = {
+        role: ROLE_SECTION,
+        children: [
+          { // text leaf
+            role: ROLE_TEXT_LEAF,
+            name: "This ",
+            children: []
+          },
+          { // abbr tag
+            role: ROLE_TEXT_CONTAINER,
+            name: "accessibility",
+            children: [
+              { // text leaf with actual text
+                role: ROLE_TEXT_LEAF,
+                name: "a11y",
+                children: []
+              }
+            ]
+          },
+          { // text leaf
+            role: ROLE_TEXT_LEAF,
+            name: " test",
+            children: []
+          }
+        ]
+      };
+
+      testAccessibleTree("c6", accTree);
+
+      // acronym tag
+      accTree = {
+        role: ROLE_SECTION,
+        children: [
+          { // text leaf
+            role: ROLE_TEXT_LEAF,
+            name: "This ",
+            children: []
+          },
+          { // acronym tag
+            role: ROLE_TEXT_CONTAINER,
+            name: "personal computer",
+            children: [
+              { // text leaf with actual text
+                role: ROLE_TEXT_LEAF,
+                name: "PC",
+                children: []
+              }
+            ]
+          },
+          { // text leaf
+            role: ROLE_TEXT_LEAF,
+            name: " is broken",
+            children: []
+          }
+        ]
+      };
+
+      testAccessibleTree("c7", accTree);
+
       SimpleTest.finish();
     }
 
@@ -134,5 +213,8 @@
   <div id="c4" contentEditable="true">
     helllo <p>blabla</p> hello
   </div>
+  <div id="c5"><blockquote>Hello</blockquote></div>
+  <div id="c6">This <abbr title="accessibility">a11y</abbr> test</div>
+  <div id="c7">This <acronym title="personal computer">PC</acronym> is broken</div>
 </body>
 </html>
