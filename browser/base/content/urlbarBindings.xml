@@ -53,6 +53,7 @@
         this.doubleClickSelectsAll = this._prefs.getBoolPref("doubleClickSelectsAll");
         this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");
         this.timeout = this._prefs.getIntPref("delay");
+        this._setEmptyText();
 
         this._urlTooltip = document.getElementById("urlTooltip");
 
@@ -362,6 +363,10 @@
               case "delay":
                 this.timeout = this._prefs.getIntPref(aData);
                 break;
+              case "autocomplete.enabled":
+              case "default.behavior":
+                this._setEmptyText();
+                break;
             }
           }
         ]]></body>
@@ -416,6 +421,27 @@
           ]]>
         </setter>
       </property>
+
+      <method name="_setEmptyText">
+        <body><![CDATA[
+          var type = "none";
+          if (this._prefs.getBoolPref("autocomplete.enabled")) {
+            // Bottom 2 bits of default.behavior specify history/bookmark
+            switch (this._prefs.getIntPref("default.behavior") & 3) {
+              case 0:
+                type = "bookmarkhistory";
+                break;
+              case 1:
+                type = "history";
+                break;
+              case 2:
+                type = "bookmark";
+                break;
+            }
+          }
+          this.emptyText = this.getAttribute(type + "emptytext");
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
