@@ -72,6 +72,11 @@ public:
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements)=0;
 
   /**
+   * Returns "native" anonymous content created by CreateAnonymousContent().
+   */
+  virtual void GetAnonymousContent(nsBaseContentList& aElements) = 0;
+
+  /**
    * Implementations can override this method to create special frames for the
    * anonymous content returned from CreateAnonymousContent.
    * By default this method returns nsnull, which means the default frame

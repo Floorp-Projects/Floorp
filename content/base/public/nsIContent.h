@@ -152,6 +152,30 @@ public:
     return GetCurrentDoc();
   }
 
+  enum {
+    /**
+     * All children will be returned.
+     *
+     * @note the result children order is
+     *   1. :before generated contnent
+     *   2. explicit children and XBL anonymous children
+     *   3. native anonymous content
+     *   4. :after generated content
+     */
+    eAllChildren = 0,
+
+    /**
+     * All children but XBL anonymous children will be returned.
+     */
+    eAllButXBL = 1
+  };
+
+  /**
+   * Return children of the node, including explict, native anonymous, XBL
+   * anonymous and genererated nodes until the child type is given (see above).
+   */
+  virtual already_AddRefed<nsINodeList> GetChildren(PRInt32 aChildType) = 0;
+
   /**
    * Get whether this content is C++-generated anonymous content
    * @see nsIAnonymousContentCreator

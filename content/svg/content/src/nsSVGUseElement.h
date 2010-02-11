@@ -96,6 +96,7 @@ public:
 
   // for nsSVGUseFrame's nsIAnonymousContentCreator implementation.
   nsIContent* CreateAnonymousContent();
+  nsIContent* GetAnonymousContent() const { return mClone; }
   void DestroyAnonymousContent();
 
   // nsSVGElement specializations:

@@ -1670,6 +1670,12 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   return NS_OK;
 }
 
+void
+nsTextControlFrame::GetAnonymousContent(nsBaseContentList& aElements)
+{
+  aElements.MaybeAppendElement(mAnonymousDiv);
+}
+
 nscoord
 nsTextControlFrame::GetMinWidth(nsIRenderingContext* aRenderingContext)
 {

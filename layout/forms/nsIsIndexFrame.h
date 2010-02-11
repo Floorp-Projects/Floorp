@@ -98,6 +98,7 @@ public:
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
+  virtual void GetAnonymousContent(nsBaseContentList& aElements);
 
   NS_IMETHOD OnSubmit(nsPresContext* aPresContext);
 
