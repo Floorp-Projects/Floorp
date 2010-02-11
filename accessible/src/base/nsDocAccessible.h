@@ -160,15 +160,15 @@ public:
    *
    * @return the access node object
    */
-  already_AddRefed<nsIAccessNode> GetCachedAccessNode(void *aUniqueID);
+  nsAccessNode* GetCachedAccessNode(void *aUniqueID);
 
   /**
-   * Cache access node.
+   * Cache the access node.
    *
    * @param  aUniquID     [in] the unique identifier of accessible
    * @param  aAccessNode  [in] accessible to cache
    */
-  void CacheAccessNode(void *aUniqueID, nsIAccessNode *aAccessNode);
+  void CacheAccessNode(void *aUniqueID, nsAccessNode *aAccessNode);
 
   /**
    * Remove the given access node from document cache.

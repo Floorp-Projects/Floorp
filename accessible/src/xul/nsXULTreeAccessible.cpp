@@ -51,9 +51,9 @@
 // Internal static functions
 ////////////////////////////////////////////////////////////////////////////////
 
+// Callback used when traversing the cache by cycle collector.
 static PLDHashOperator
-ElementTraverser(const void *aKey, nsIAccessNode *aAccessNode,
-                 void *aUserArg)
+ElementTraverser(const void *aKey, nsAccessNode *aAccessNode, void *aUserArg)
 {
   nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(aUserArg);
@@ -529,24 +529,21 @@ nsXULTreeAccessible::GetTreeItemAccessible(PRInt32 aRow,
     return;
 
   void *key = reinterpret_cast<void*>(aRow);
-  nsCOMPtr<nsIAccessNode> accessNode;
-  GetCacheEntry(mAccessNodeCache, key, getter_AddRefs(accessNode));
+  nsRefPtr<nsAccessNode> accessNode = mAccessNodeCache.GetWeak(key);
 
   if (!accessNode) {
-    nsRefPtr<nsAccessNode> treeItemAcc;
-    CreateTreeItemAccessible(aRow, getter_AddRefs(treeItemAcc));
-    if (!treeItemAcc)
+    CreateTreeItemAccessible(aRow, getter_AddRefs(accessNode));
+    if (!accessNode)
       return;
 
-    nsresult rv = treeItemAcc->Init();
+    nsresult rv = accessNode->Init();
     if (NS_FAILED(rv))
       return;
 
-    accessNode = treeItemAcc;
-    PutCacheEntry(mAccessNodeCache, key, accessNode);
+    mAccessNodeCache.Put(key, accessNode);
   }
 
-  CallQueryInterface(accessNode, aAccessible);
+  CallQueryInterface(accessNode.get(), aAccessible);
 }
 
 void
@@ -561,10 +558,9 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
 
   // Fire destroy event for removed tree items and delete them from caches.
   for (PRInt32 rowIdx = aRow; rowIdx < aRow - aCount; rowIdx++) {
-    void *key = reinterpret_cast<void*>(rowIdx);
 
-    nsCOMPtr<nsIAccessNode> accessNode;
-    GetCacheEntry(mAccessNodeCache, key, getter_AddRefs(accessNode));
+    void* key = reinterpret_cast<void*>(rowIdx);
+    nsAccessNode* accessNode = mAccessNodeCache.GetWeak(key);
 
     if (accessNode) {
       nsRefPtr<nsAccessible> accessible =
@@ -599,23 +595,19 @@ nsXULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
   PRInt32 oldRowCount = newRowCount - aCount;
 
   for (PRInt32 rowIdx = newRowCount; rowIdx < oldRowCount; ++rowIdx) {
-    void *key = reinterpret_cast<void*>(rowIdx);
 
-    nsCOMPtr<nsIAccessNode> accessNode;
-    GetCacheEntry(mAccessNodeCache, key, getter_AddRefs(accessNode));
+    void *key = reinterpret_cast<void*>(rowIdx);
+    nsAccessNode* accessNode = mAccessNodeCache.GetWeak(key);
 
     if (accessNode) {
-      nsRefPtr<nsAccessNode> accNode =
-        nsAccUtils::QueryAccessNode(accessNode);
-
-      accNode->Shutdown();
+      accessNode->Shutdown();
 
       // Remove accessible from document cache and tree cache.
       nsCOMPtr<nsIAccessibleDocument> docAccessible = GetDocAccessible();
       if (docAccessible) {
         nsRefPtr<nsDocAccessible> docAcc =
           nsAccUtils::QueryAccessibleDocument(docAccessible);
-        docAcc->RemoveAccessNodeFromCache(accNode);
+        docAcc->RemoveAccessNodeFromCache(accessNode);
       }
 
       mAccessNodeCache.Remove(key);
@@ -659,10 +651,9 @@ nsXULTreeAccessible::TreeViewInvalidated(PRInt32 aStartRow, PRInt32 aEndRow,
   }
 
   for (PRInt32 rowIdx = aStartRow; rowIdx <= endRow; ++rowIdx) {
-    void *key = reinterpret_cast<void*>(rowIdx);
 
-    nsCOMPtr<nsIAccessNode> accessNode;
-    GetCacheEntry(mAccessNodeCache, key, getter_AddRefs(accessNode));
+    void *key = reinterpret_cast<void*>(rowIdx);
+    nsAccessNode* accessNode = mAccessNodeCache.GetWeak(key);
 
     if (accessNode) {
       nsRefPtr<nsXULTreeItemAccessibleBase> treeitemAcc =
