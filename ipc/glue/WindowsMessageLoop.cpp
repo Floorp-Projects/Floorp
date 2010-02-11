@@ -517,6 +517,45 @@ Init()
                "Running on different threads!");
 }
 
+// This timeout stuff assumes a sane value of mTimeoutMs (less than the overflow
+// value for GetTickCount(), which is something like 50 days). It uses the
+// cheapest (and least accurate) method supported by Windows 2000.
+
+struct TimeoutData
+{
+  DWORD startTicks;
+  DWORD targetTicks;
+};
+
+void
+InitTimeoutData(TimeoutData* aData,
+                int32 aTimeoutMs)
+{
+  aData->startTicks = GetTickCount();
+  if (!aData->startTicks) {
+    // How unlikely is this!
+    aData->startTicks++;
+  }
+  aData->targetTicks = aData->startTicks + aTimeoutMs;
+}
+
+
+bool
+TimeoutHasExpired(const TimeoutData& aData)
+{
+  if (!aData.startTicks) {
+    return false;
+  }
+
+  DWORD now = GetTickCount();
+
+  if (aData.targetTicks < aData.startTicks) {
+    // Overflow
+    return now < aData.startTicks && now >= aData.targetTicks;
+  }
+  return now >= aData.targetTicks;
+}
+
 } // anonymous namespace
 
 bool
@@ -609,10 +648,24 @@ SyncChannel::WaitForNotify()
 
   MutexAutoUnlock unlock(mMutex);
 
+  bool retval = true;
+
   if (++gEventLoopDepth == 1) {
     NS_ASSERTION(!gNeuteredWindows, "Should only set this once!");
     gNeuteredWindows = new nsAutoTArray<HWND, 20>();
     NS_ASSERTION(gNeuteredWindows, "Out of memory!");
+  }
+
+  UINT_PTR timerId = NULL;
+  TimeoutData timeoutData = { 0 };
+
+  if (mTimeoutMs != kNoTimeout) {
+    InitTimeoutData(&timeoutData, mTimeoutMs);
+
+    // We only do this to ensure that we won't get stuck in
+    // MsgWaitForMultipleObjects below.
+    timerId = SetTimer(NULL, 0, mTimeoutMs, NULL);
+    NS_ASSERTION(timerId, "SetTimer failed!");
   }
 
   // Setup deferred processing of native events while we wait for a response.
@@ -630,7 +683,7 @@ SyncChannel::WaitForNotify()
       {
         MutexAutoLock lock(mMutex);
         if (!Connected()) {
-          return true;
+          break;
         }
       }
 
@@ -644,6 +697,12 @@ SyncChannel::WaitForNotify()
                                                QS_ALLINPUT);
       if (result != WAIT_OBJECT_0) {
         NS_ERROR("Wait failed!");
+        break;
+      }
+
+      if (TimeoutHasExpired(timeoutData)) {
+        // A timeout was specified and we've passed it. Break out.
+        retval = false;
         break;
       }
 
@@ -702,9 +761,13 @@ SyncChannel::WaitForNotify()
   // a "nonqueued" message.
   ScheduleDeferredMessageRun();
 
+  if (timerId) {
+    KillTimer(NULL, timerId);
+  }
+
   SyncChannel::SetIsPumpingMessages(false);
 
-  return true;
+  return retval;
 }
 
 bool
@@ -712,10 +775,17 @@ RPCChannel::WaitForNotify()
 {
   mMutex.AssertCurrentThreadOwns();
 
+  if (!StackDepth() && !mBlockedOnParent) {
+    // There is currently no way to recover from this condition.
+    NS_RUNTIMEABORT("StackDepth() is 0 in call to RPCChannel::WaitForNotify!");
+  }
+
   // Initialize global objects used in deferred messaging.
   Init();
 
   MutexAutoUnlock unlock(mMutex);
+
+  bool retval = true;
 
   // IsSpinLoopActive indicates modal UI is being displayed in a plugin. Drop
   // down into the spin loop until all modal loops end. If SpinInternalEventLoop
@@ -737,6 +807,18 @@ RPCChannel::WaitForNotify()
     NS_ASSERTION(gNeuteredWindows, "Out of memory!");
   }
 
+  UINT_PTR timerId = NULL;
+  TimeoutData timeoutData = { 0 };
+
+  if (mTimeoutMs != kNoTimeout) {
+    InitTimeoutData(&timeoutData, mTimeoutMs);
+
+    // We only do this to ensure that we won't get stuck in
+    // MsgWaitForMultipleObjects below.
+    timerId = SetTimer(NULL, 0, mTimeoutMs, NULL);
+    NS_ASSERTION(timerId, "SetTimer failed!");
+  }
+
   // Setup deferred processing of native events while we wait for a response.
   NS_ASSERTION(!SyncChannel::IsPumpingMessages(),
                "Shouldn't be pumping already!");
@@ -752,14 +834,21 @@ RPCChannel::WaitForNotify()
       // Don't get wrapped up in here if the child connection dies.
       {
         MutexAutoLock lock(mMutex);
-        if (!Connected())
+        if (!Connected()) {
           break;
+        }
       }
 
       DWORD result = MsgWaitForMultipleObjects(0, NULL, FALSE, INFINITE,
                                                QS_ALLINPUT);
       if (result != WAIT_OBJECT_0) {
         NS_ERROR("Wait failed!");
+        break;
+      }
+
+      if (TimeoutHasExpired(timeoutData)) {
+        // A timeout was specified and we've passed it. Break out.
+        retval = false;
         break;
       }
 
@@ -778,6 +867,11 @@ RPCChannel::WaitForNotify()
         // Unhook the neutered window procedure hook.
         UnhookWindowsHookEx(windowHook);
         windowHook = NULL;
+
+        if (timerId) {
+          KillTimer(NULL, timerId);
+          timerId = NULL;
+        }
 
         // Used by widget to assert on incoming native events.
         SyncChannel::SetIsPumpingMessages(false);
@@ -832,9 +926,13 @@ RPCChannel::WaitForNotify()
   // a "nonqueued" message.
   ScheduleDeferredMessageRun();
 
+  if (timerId) {
+    KillTimer(NULL, timerId);
+  }
+
   SyncChannel::SetIsPumpingMessages(false);
 
-  return true;
+  return retval;
 }
 
 void
