@@ -238,6 +238,13 @@ nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   return NS_OK;
 }
 
+void
+nsIsIndexFrame::GetAnonymousContent(nsBaseContentList& aElements)
+{
+  aElements.MaybeAppendElement(mTextContent);
+  aElements.MaybeAppendElement(mInputContent);
+}
+
 NS_QUERYFRAME_HEAD(nsIsIndexFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
   NS_QUERYFRAME_ENTRY(nsIStatefulFrame)

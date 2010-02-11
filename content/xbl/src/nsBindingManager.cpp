@@ -683,21 +683,26 @@ nsBindingManager::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID)
 
 nsresult
 nsBindingManager::GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult)
+{
+  NS_IF_ADDREF(*aResult = GetContentListFor(aContent));
+  return NS_OK;
+}
+
+nsINodeList*
+nsBindingManager::GetContentListFor(nsIContent* aContent)
 { 
-  *aResult = nsnull;
-  
+  nsINodeList* result = nsnull;
+
   if (mContentListTable.ops) {
-    *aResult = static_cast<nsAnonymousContentList*>
-                          (LookupObject(mContentListTable, aContent));
-    NS_IF_ADDREF(*aResult);
-  }
-  
-  if (!*aResult) {
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
-    node->GetChildNodes(aResult);
+    result = static_cast<nsAnonymousContentList*>
+      (LookupObject(mContentListTable, aContent));
   }
 
-  return NS_OK;
+  if (!result) {
+    result = aContent->GetChildNodesList();
+  }
+
+  return result;
 }
 
 nsresult

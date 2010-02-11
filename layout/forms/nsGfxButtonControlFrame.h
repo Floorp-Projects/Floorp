@@ -81,6 +81,7 @@ public:
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
+  virtual void GetAnonymousContent(nsBaseContentList& aElements);
   virtual nsIFrame* CreateFrameFor(nsIContent* aContent);
 
   // nsIFormControlFrame
