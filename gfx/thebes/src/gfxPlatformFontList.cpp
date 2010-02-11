@@ -247,7 +247,7 @@ gfxPlatformFontList::LoadBadUnderlineList()
     for (PRUint32 i = 0; i < numFonts; i++) {
         nsAutoString key;
         GenerateFontListKey(blacklist[i], key);
-        mBadUnderlineFamilyNames.PutEntry(key);
+        mBadUnderlineFamilyNames.Put(key);
     }
 }
 
@@ -466,7 +466,7 @@ gfxPlatformFontList::AddOtherFamilyName(gfxFontFamily *aFamilyEntry, nsAString& 
         PR_LOG(gFontListLog, PR_LOG_DEBUG, ("(fontlist-otherfamily) canonical family: %s, other family: %s\n", 
                                             NS_ConvertUTF16toUTF8(aFamilyEntry->Name()).get(), 
                                             NS_ConvertUTF16toUTF8(aOtherFamilyName).get()));
-        if (mBadUnderlineFamilyNames.GetEntry(key))
+        if (mBadUnderlineFamilyNames.Contains(key))
             aFamilyEntry->SetBadUnderlineFamily();
     }
 }
