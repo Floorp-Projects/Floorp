@@ -128,7 +128,8 @@ typedef union JSLocalNames {
                               JS_ASSERT((fun)->flags & JSFUN_TRCINFO),        \
                               fun->u.n.trcinfo)
 
-struct JSFunction : public JSObject {
+struct JSFunction : public JSObject
+{
     uint16          nargs;        /* maximum number of specified arguments,
                                      reflected as f.length/f.arity */
     uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
@@ -192,6 +193,10 @@ struct JSFunction : public JSObject {
     JSAtom *findDuplicateFormal() const;
 
     uint32 countInterpretedReservedSlots() const;
+
+    bool mightEscape() const {
+        return FUN_INTERPRETED(this) && (FUN_FLAT_CLOSURE(this) || u.i.nupvars == 0);
+    }
 };
 
 /*
