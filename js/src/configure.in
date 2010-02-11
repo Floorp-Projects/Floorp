@@ -3919,6 +3919,7 @@ MOZ_ARG_HEADER(Application)
 
 BUILD_STATIC_LIBS=
 ENABLE_TESTS=1
+MOZ_DBGRINFO_MODULES=
 
 dnl ========================================================
 dnl =
@@ -3991,9 +3992,8 @@ MOZ_ARG_ENABLE_STRING(debug,
                           (Using compiler flags DBG)],
 [ if test "$enableval" != "no"; then
     MOZ_DEBUG=1
-    if test -n "$enableval" -a "$enableval" != "yes"; then
+    if test -n "$enableval" && test "$enableval" != "yes"; then
         MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
-        _MOZ_DEBUG_FLAGS_SET=1
     fi
   else
     MOZ_DEBUG=
@@ -4074,37 +4074,33 @@ AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
 
 dnl ========================================================
-dnl = (Deprecated) generation of debugger info for specific modules
+dnl = Enable/disable debug for specific modules only
+dnl =   module names beginning with ^ will be disabled 
+dnl ========================================================
+MOZ_ARG_ENABLE_STRING(debug-modules,
+[  --enable-debug-modules  Enable/disable debug info for specific modules],
+[ MOZ_DEBUG_MODULES=`echo $enableval| sed 's/,/ /g'` ] )
+
+dnl ========================================================
+dnl = Enable/disable generation of debugger info for specific modules only
+dnl =    the special module name ALL_MODULES can be used to denote all modules
+dnl =    module names beginning with ^ will be disabled
 dnl ========================================================
 MOZ_ARG_ENABLE_STRING(debugger-info-modules,
 [  --enable-debugger-info-modules
                           Enable/disable debugger info for specific modules],
-[ if test "$enableval" != "no"; then
-    AC_MSG_WARN([--enable-debugger-info-modules is deprecated, use --enable-debug-symbols instead])
-    MOZ_DEBUG_SYMBOLS=1
-  fi ])
-
-dnl ========================================================
-dnl = Enable generation of debug symbols
-dnl ========================================================
-MOZ_ARG_ENABLE_STRING(debug-symbols,
-[  --enable-debug-symbols[=DBG]    Enable debugging symbols
-                                   (using compiler flags DBG)],
-[ if test "$enableval" != "no"; then
-      MOZ_DEBUG_SYMBOLS=1
-      if test -n "$enableval" -a "$enableval" != "yes"; then
-          if test -z "$_MOZ_DEBUG_FLAGS_SET"; then
-              MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
-          else
-              AC_MSG_ERROR([--enable-debug-symbols flags cannot be used with --enable-debug flags])
-          fi
+[ for i in `echo $enableval | sed 's/,/ /g'`; do
+      dnl note that the list of module names is reversed as it is copied
+      dnl this is important, as it will allow config.mk to interpret stuff like
+      dnl "^ALL_MODULES xpcom" properly
+      if test "$i" = "no"; then
+        i="^ALL_MODULES"
       fi
-  fi ])
-
-if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
-    AC_DEFINE(MOZ_DEBUG_SYMBOLS)
-    export MOZ_DEBUG_SYMBOLS
-fi
+      if test "$i" = "yes"; then
+        i="ALL_MODULES"
+      fi
+      MOZ_DBGRINFO_MODULES="$i $MOZ_DBGRINFO_MODULES";
+    done ])
 
 dnl ========================================================
 dnl Enable Narcissus
@@ -4889,12 +4885,13 @@ AC_SUBST(NS_USE_NATIVE)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)
 AC_SUBST(MOZ_DEBUG)
-AC_SUBST(MOZ_DEBUG_SYMBOLS)
+AC_SUBST(MOZ_DEBUG_MODULES)
 AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_DISABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_FLAGS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
+AC_SUBST(MOZ_DBGRINFO_MODULES)
 AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
@@ -4941,6 +4938,7 @@ AC_SUBST(MOZ_PKG_SPECIAL)
 AC_SUBST(MOZILLA_OFFICIAL)
 
 dnl win32 options
+AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(MOZ_TOOLS_DIR)
