@@ -4206,6 +4206,9 @@ DocumentViewerImpl::SetIsPrintPreview(PRBool aIsPrintPreview)
   }
 #endif
   if (!aIsPrintPreview) {
+    if (mPresShell) {
+      DestroyPresShell();
+    }
     mWindow = nsnull;
     mViewManager = nsnull;
     mPresContext = nsnull;
