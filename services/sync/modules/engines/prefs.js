@@ -50,14 +50,10 @@ Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/type_records/prefs.js");
 
 function PrefsEngine() {
-  SyncEngine.call(this);
+  SyncEngine.call(this, "Prefs");
 }
 PrefsEngine.prototype = {
   __proto__: SyncEngine.prototype,
-  name: "prefs",
-  _displayName: "Preferences",
-  description: "Synchronize your home page, selected persona, and more",
-  logName: "Prefs",
   _storeObj: PrefStore,
   _trackerObj: PrefTracker,
   _recordObj: PrefRec,
@@ -78,13 +74,11 @@ PrefsEngine.prototype = {
 };
 
 
-function PrefStore() {
-  Store.call(this);
+function PrefStore(name) {
+  Store.call(this, name);
 }
 PrefStore.prototype = {
   __proto__: Store.prototype,
-  name: "prefs",
-  _logName: "PrefStore",
 
   get _prefs() {
     let prefs = Cc["@mozilla.org/preferences-service;1"].
@@ -220,15 +214,12 @@ PrefStore.prototype = {
   }
 };
 
-function PrefTracker() {
-  Tracker.call(this);
+function PrefTracker(name) {
+  Tracker.call(this, name);
   this._prefs.addObserver("", this, false);
 }
 PrefTracker.prototype = {
   __proto__: Tracker.prototype,
-  name: "prefs",
-  _logName: "PrefTracker",
-  file: "prefs",
 
   get _prefs() {
     let prefs = Cc["@mozilla.org/preferences-service;1"].

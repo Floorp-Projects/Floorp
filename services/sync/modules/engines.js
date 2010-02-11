@@ -105,11 +105,12 @@ EngineManagerSvc.prototype = {
       return engineObject.map(this.register, this);
 
     try {
-      let name = engineObject.prototype.name;
+      let engine = new engineObject();
+      let name = engine.name;
       if (name in this._engines)
         this._log.error("Engine '" + name + "' is already registered!");
       else
-        this._engines[name] = new engineObject();
+        this._engines[name] = engine;
     }
     catch(ex) {
       let mesg = ex.message ? ex.message : ex;
@@ -132,9 +133,12 @@ EngineManagerSvc.prototype = {
   }
 };
 
-function Engine() {
+function Engine(name) {
+  this.Name = name || "Unnamed";
+  this.name = name.toLowerCase();
+
   this._notify = Utils.notify("weave:engine:");
-  this._log = Log4Moz.repository.getLogger("Engine." + this.logName);
+  this._log = Log4Moz.repository.getLogger("Engine." + this.Name);
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
   this._log.level = Log4Moz.Level[level];
 
@@ -142,13 +146,7 @@ function Engine() {
   this._log.debug("Engine initialized");
 }
 Engine.prototype = {
-  name: "engine",
-  _displayName: "Boring Engine",
-  description: "An engine example - it doesn't actually sync anything",
-  logName: "Engine",
-
   // _storeObj, and _trackerObj should to be overridden in subclasses
-
   _storeObj: Store,
   _trackerObj: Tracker,
 
@@ -159,15 +157,15 @@ Engine.prototype = {
   get score() this._tracker.score,
 
   get _store() {
-    if (!this.__store)
-      this.__store = new this._storeObj();
-    return this.__store;
+    let store = new this._storeObj(this.Name);
+    this.__defineGetter__("_store", function() store);
+    return store;
   },
 
   get _tracker() {
-    if (!this.__tracker)
-      this.__tracker = new this._trackerObj();
-    return this.__tracker;
+    let tracker = new this._trackerObj(this.Name);
+    this.__defineGetter__("_tracker", function() tracker);
+    return tracker;
   },
 
   get displayName() {
@@ -175,7 +173,7 @@ Engine.prototype = {
       return Str.engines.get(this.name);
     } catch (e) {}
 
-    return this._displayName;
+    return this.Name;
   },
 
   sync: function Engine_sync() {
@@ -291,8 +289,8 @@ Engine.prototype = {
   }
 };
 
-function SyncEngine() {
-  Engine.call(this);
+function SyncEngine(name) {
+  Engine.call(this, name || "SyncEngine");
   this.loadToFetch();
 }
 SyncEngine.prototype = {

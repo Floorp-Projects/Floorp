@@ -49,7 +49,7 @@ Cu.import("resource://weave/type_records/clientData.js");
 Utils.lazy(this, 'Clients', ClientEngine);
 
 function ClientEngine() {
-  SyncEngine.call(this);
+  SyncEngine.call(this, "Clients");
 
   // Reset the client on every startup so that we fetch recent clients
   this._resetClient();
@@ -57,10 +57,6 @@ function ClientEngine() {
 }
 ClientEngine.prototype = {
   __proto__: SyncEngine.prototype,
-  name: "clients",
-  _displayName: "Clients",
-  description: "Sync information about other clients connected to Weave Sync",
-  logName: "Clients",
   _storeObj: ClientStore,
   _trackerObj: ClientTracker,
   _recordObj: ClientRecord,
@@ -172,8 +168,8 @@ ClientEngine.prototype = {
   }
 };
 
-function ClientStore() {
-  Store.call(this);
+function ClientStore(name) {
+  Store.call(this, name);
 }
 ClientStore.prototype = {
   //////////////////////////////////////////////////////////////////////////////
@@ -198,12 +194,6 @@ ClientStore.prototype = {
     this._log.debug("Setting client " + id + ": " + JSON.stringify(info));
     this.clients[id] = info;
   },
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Store.prototype Attributes
-
-  name: "clients",
-  _logName: "Clients.Store",
 
   //////////////////////////////////////////////////////////////////////////////
   // Store.prototype Methods
@@ -245,13 +235,10 @@ ClientStore.prototype = {
   },
 };
 
-function ClientTracker() {
-  Tracker.call(this);
+function ClientTracker(name) {
+  Tracker.call(this, name);
 }
 ClientTracker.prototype = {
   __proto__: Tracker.prototype,
-  name: "clients",
-  _logName: "ClientTracker",
-  file: "clients",
   get score() 100 // always sync
 };

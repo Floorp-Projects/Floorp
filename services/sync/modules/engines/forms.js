@@ -48,14 +48,10 @@ Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/type_records/forms.js");
 
 function FormEngine() {
-  SyncEngine.call(this);
+  SyncEngine.call(this, "Forms");
 }
 FormEngine.prototype = {
   __proto__: SyncEngine.prototype,
-  name: "forms",
-  _displayName: "Forms",
-  description: "Take advantage of form-fill convenience on all your devices",
-  logName: "Forms",
   _storeObj: FormStore,
   _trackerObj: FormTracker,
   _recordObj: FormRec,
@@ -81,13 +77,11 @@ FormEngine.prototype = {
 };
 
 
-function FormStore() {
-  Store.call(this);
+function FormStore(name) {
+  Store.call(this, name);
 }
 FormStore.prototype = {
   __proto__: Store.prototype,
-  name: "forms",
-  _logName: "FormStore",
   _formItems: null,
 
   get _formDB() {
@@ -203,15 +197,12 @@ FormStore.prototype = {
   }
 };
 
-function FormTracker() {
-  Tracker.call(this);
+function FormTracker(name) {
+  Tracker.call(this, name);
   Svc.Observer.addObserver(this, "earlyformsubmit", false);
 }
 FormTracker.prototype = {
   __proto__: Tracker.prototype,
-  name: "forms",
-  _logName: "FormTracker",
-  file: "form",
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormSubmitObserver]),
 

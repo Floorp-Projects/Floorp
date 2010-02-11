@@ -50,17 +50,15 @@ Cu.import("resource://weave/util.js");
  * These can wrap, serialize items and apply commands
  */
 
-function Store() {
-  this._log = Log4Moz.repository.getLogger("Store." + this._logName);
+function Store(name) {
+  name = name || "Unnamed";
+  this.name = name.toLowerCase();
+
+  this._log = Log4Moz.repository.getLogger("Store." + name);
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
   this._log.level = Log4Moz.Level[level];
 }
 Store.prototype = {
-  _logName: "BaseClass",
-
-  // set this property in child object's wrap()!
-  _lookup: null,
-
   get cache() {
     let cache = new Cache();
     this.__defineGetter__("cache", function() cache);
