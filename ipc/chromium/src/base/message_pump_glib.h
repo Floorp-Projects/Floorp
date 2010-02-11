@@ -5,10 +5,15 @@
 #ifndef BASE_MESSAGE_PUMP_GLIB_H_
 #define BASE_MESSAGE_PUMP_GLIB_H_
 
-#include <glib.h>
-
 #include "base/message_pump.h"
+#include "base/observer_list.h"
+#include "base/scoped_ptr.h"
 #include "base/time.h"
+
+typedef union _GdkEvent GdkEvent;
+typedef struct _GMainContext GMainContext;
+typedef struct _GPollFD GPollFD;
+typedef struct _GSource GSource;
 
 namespace base {
 
@@ -16,10 +21,42 @@ namespace base {
 // OS_LINUX platforms using GLib.
 class MessagePumpForUI : public MessagePump {
  public:
-  MessagePumpForUI();
-  ~MessagePumpForUI();
+  // Observer is notified prior to a GdkEvent event being dispatched. As
+  // Observers are notified of every change, they have to be FAST!
+  class Observer {
+   public:
+    virtual ~Observer() {}
 
-  virtual void Run(Delegate* delegate);
+    // This method is called before processing a message.
+    virtual void WillProcessEvent(GdkEvent* event) = 0;
+
+    // This method is called after processing a message.
+    virtual void DidProcessEvent(GdkEvent* event) = 0;
+  };
+
+  // Dispatcher is used during a nested invocation of Run to dispatch events.
+  // If Run is invoked with a non-NULL Dispatcher, MessageLoop does not
+  // dispatch events (or invoke gtk_main_do_event), rather every event is
+  // passed to Dispatcher's Dispatch method for dispatch. It is up to the
+  // Dispatcher to dispatch, or not, the event.
+  //
+  // The nested loop is exited by either posting a quit, or returning false
+  // from Dispatch.
+  class Dispatcher {
+   public:
+    virtual ~Dispatcher() {}
+    // Dispatches the event. If true is returned processing continues as
+    // normal. If false is returned, the nested loop exits immediately.
+    virtual bool Dispatch(GdkEvent* event) = 0;
+  };
+
+  MessagePumpForUI();
+  virtual ~MessagePumpForUI();
+
+  // Like MessagePump::Run, but GdkEvent objects are routed through dispatcher.
+  virtual void RunWithDispatcher(Delegate* delegate, Dispatcher* dispatcher);
+
+  virtual void Run(Delegate* delegate) { RunWithDispatcher(delegate, NULL); }
   virtual void Quit();
   virtual void ScheduleWork();
   virtual void ScheduleDelayedWork(const Time& delayed_work_time);
@@ -27,16 +64,26 @@ class MessagePumpForUI : public MessagePump {
   // Internal methods used for processing the pump callbacks.  They are
   // public for simplicity but should not be used directly.  HandlePrepare
   // is called during the prepare step of glib, and returns a timeout that
-  // will be passed to the poll.  HandleDispatch is called after the poll
-  // has completed.
+  // will be passed to the poll. HandleCheck is called after the poll
+  // has completed, and returns whether or not HandleDispatch should be called.
+  // HandleDispatch is called if HandleCheck returned true.
   int HandlePrepare();
+  bool HandleCheck();
   void HandleDispatch();
+
+  // Adds an Observer, which will start receiving notifications immediately.
+  void AddObserver(Observer* observer);
+
+  // Removes an Observer.  It is safe to call this method while an Observer is
+  // receiving a notification callback.
+  void RemoveObserver(Observer* observer);
 
  private:
   // We may make recursive calls to Run, so we save state that needs to be
   // separate between them in this structure type.
   struct RunState {
     Delegate* delegate;
+    Dispatcher* dispatcher;
 
     // Used to flag that the current Run() invocation should return ASAP.
     bool should_quit;
@@ -44,10 +91,22 @@ class MessagePumpForUI : public MessagePump {
     // Used to count how many Run() invocations are on the stack.
     int run_depth;
 
-    // Used internally for controlling whether we want a message pump
-    // iteration to be blocking or not.
-    bool more_work_is_plausible;
+    // This keeps the state of whether the pump got signaled that there was new
+    // work to be done. Since we eat the message on the wake up pipe as soon as
+    // we get it, we keep that state here to stay consistent.
+    bool has_work;
   };
+
+  // Invoked from EventDispatcher. Notifies all observers we're about to
+  // process an event.
+  void WillProcessEvent(GdkEvent* event);
+
+  // Invoked from EventDispatcher. Notifies all observers we processed an
+  // event.
+  void DidProcessEvent(GdkEvent* event);
+
+  // Callback prior to gdk dispatching an event.
+  static void EventDispatcher(GdkEvent* event, void* data);
 
   RunState* state_;
 
@@ -69,7 +128,11 @@ class MessagePumpForUI : public MessagePump {
   // Dispatch() will be called.
   int wakeup_pipe_read_;
   int wakeup_pipe_write_;
-  GPollFD wakeup_gpollfd_;
+  // Use a scoped_ptr to avoid needing the definition of GPollFD in the header.
+  scoped_ptr<GPollFD> wakeup_gpollfd_;
+
+  // List of observers.
+  ObserverList<Observer> observers_;
 
   DISALLOW_COPY_AND_ASSIGN(MessagePumpForUI);
 };
