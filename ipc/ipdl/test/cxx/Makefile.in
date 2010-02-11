@@ -66,6 +66,7 @@ IPDLTESTS = \
   TestLatency \
   TestRPCRaces \
   TestRacyRPCReplies  \
+  TestHangs \
   TestBlockChild \
   TestManyChildAllocs  \
   TestDesc \

@@ -6,6 +6,7 @@ IPDLSRCS =					\
   PTestDesc.ipdl				\
   PTestDescSub.ipdl				\
   PTestDescSubsub.ipdl				\
+  PTestHangs.ipdl				\
   PTestLatency.ipdl				\
   PTestManyChildAllocs.ipdl			\
   PTestManyChildAllocsSub.ipdl			\
