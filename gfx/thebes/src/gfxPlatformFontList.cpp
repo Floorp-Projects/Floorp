@@ -524,6 +524,13 @@ gfxPlatformFontList::RunLoader()
 
         // find all faces that are members of this family
         familyEntry->FindStyleVariations();
+        if (familyEntry->GetFontList().Length() == 0) {
+            // failed to load any faces for this family, so discard it
+            nsAutoString key;
+            GenerateFontListKey(familyEntry->Name(), key);
+            mFontFamilies.Remove(key);
+            continue;
+        }
 
         // load the cmaps
         familyEntry->ReadCMAP();
@@ -535,10 +542,9 @@ gfxPlatformFontList::RunLoader()
         familyEntry->CheckForSimpleFamily();
     }
 
-    mStartIndex += mIncrement;
-    if (mStartIndex < mNumFamilies)
-        return PR_FALSE;
-    return PR_TRUE;
+    mStartIndex = endIndex;
+
+    return (mStartIndex >= mNumFamilies);
 }
 
 void 
