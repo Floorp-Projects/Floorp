@@ -53,7 +53,10 @@
         this.doubleClickSelectsAll = this._prefs.getBoolPref("doubleClickSelectsAll");
         this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");
         this.timeout = this._prefs.getIntPref("delay");
-        this._setEmptyText();
+        setTimeout(function (self) {
+          if (self._setEmptyText)
+            self._setEmptyText();
+        }, 0, this);
 
         this._urlTooltip = document.getElementById("urlTooltip");
 
