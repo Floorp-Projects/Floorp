@@ -161,7 +161,7 @@ nsHTMLEditor::RelativeChangeElementZIndex(nsIDOMElement * aElement,
   nsresult res = GetElementZIndex(aElement, &zIndex);
   if (NS_FAILED(res)) return res;
 
-  zIndex = PR_MAX(zIndex + aChange, 0);
+  zIndex = NS_MAX(zIndex + aChange, 0);
   SetElementZIndex(aElement, zIndex);
   *aReturn = zIndex;
 

@@ -2045,7 +2045,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor, address_of(visNode), &so, address_of(visNode), &eo);
       if (NS_FAILED(res)) return res;
       nsCOMPtr<nsIDOMCharacterData> nodeAsText(do_QueryInterface(visNode));
-      res = mHTMLEditor->DeleteText(nodeAsText, PR_MIN(so, eo), PR_ABS(eo - so));
+      res = mHTMLEditor->DeleteText(nodeAsText, NS_MIN(so, eo), PR_ABS(eo - so));
       *aHandled = PR_TRUE;
       if (NS_FAILED(res)) return res;    
       res = InsertBRIfNeeded(aSelection);
