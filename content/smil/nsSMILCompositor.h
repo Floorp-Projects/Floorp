@@ -77,7 +77,7 @@ public:
   typedef const nsSMILCompositorKey& KeyType;
   typedef const nsSMILCompositorKey* KeyTypePointer;
 
-  nsSMILCompositor(KeyTypePointer aKey) : mKey(*aKey) { }
+  explicit nsSMILCompositor(KeyTypePointer aKey) : mKey(*aKey) { }
   nsSMILCompositor(const nsSMILCompositor& toCopy)
     : mKey(toCopy.mKey),
       mAnimationFunctions(toCopy.mAnimationFunctions)

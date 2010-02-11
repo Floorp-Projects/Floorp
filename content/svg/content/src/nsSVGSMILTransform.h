@@ -75,7 +75,7 @@ public:
     TRANSFORM_MATRIX
   };
 
-  nsSVGSMILTransform(TransformType aType)
+  explicit nsSVGSMILTransform(TransformType aType)
   : mTransformType(aType)
   {
     for (int i = 0; i < 6; ++i) {
@@ -94,7 +94,7 @@ public:
     }
   }
 
-  nsSVGSMILTransform(float (&aParams)[6])
+  explicit nsSVGSMILTransform(float (&aParams)[6])
   : mTransformType(TRANSFORM_MATRIX)
   {
     for (int i = 0; i < 6; ++i) {
