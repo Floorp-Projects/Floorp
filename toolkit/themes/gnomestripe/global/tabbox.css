@@ -100,11 +100,6 @@ tab + tab {
   margin: 0 !important;
 }
 
-tab:focus > .tab-middle {
-  /* Don't specify the outline-color, we should always use initial value. */
-  outline: 1px dotted;
-}
-
 /* ::::: tab-bottom ::::::::::
    :: Tabs that are attached to the bottom of a panel, but not necessarily
    :: a tabpanels.
