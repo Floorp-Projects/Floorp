@@ -41,6 +41,7 @@ const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+Cu.import("resource://weave/constants.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
@@ -124,7 +125,11 @@ PasswordStore.prototype = {
     let logins = Svc.Login.getAllLogins({});
 
     for (let i = 0; i < logins.length; i++) {
+      // Skip over Weave password/passphrase entries
       let metaInfo = logins[i].QueryInterface(Ci.nsILoginMetaInfo);
+      if (metaInfo.hostname == PWDMGR_HOST)
+        continue;
+
       items[metaInfo.guid] = metaInfo;
     }
 
@@ -236,7 +241,12 @@ PasswordTracker.prototype = {
         queryElementAt(1, Ci.nsILoginMetaInfo);
     case 'addLogin':
     case 'removeLogin':
-      aSubject.QueryInterface(Ci.nsILoginMetaInfo);
+      // Skip over Weave password/passphrase changes
+      aSubject.QueryInterface(Ci.nsILoginMetaInfo).
+        QueryInterface(Ci.nsILoginInfo);
+      if (aSubject.hostname == PWDMGR_HOST)
+        break;
+
       this.score += 15;
       this._log.trace(aData + ": " + aSubject.guid);
       this.addChangedID(aSubject.guid);
