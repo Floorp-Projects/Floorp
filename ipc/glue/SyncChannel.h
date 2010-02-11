@@ -40,10 +40,6 @@
 #ifndef ipc_glue_SyncChannel_h
 #define ipc_glue_SyncChannel_h 1
 
-#include "base/basictypes.h"
-
-#include "prinrval.h"
-
 #include "mozilla/ipc/AsyncChannel.h"
 
 namespace mozilla {
@@ -155,10 +151,10 @@ protected:
 
     static bool sIsPumpingMessages;
 
+    int32 mTimeoutMs;
+
 private:
     bool EventOccurred();
-
-    int32 mTimeoutMs;
 };
 
 
