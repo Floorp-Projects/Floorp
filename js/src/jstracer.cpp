@@ -1597,34 +1597,40 @@ isfop(LIns* i, LOpcode op)
 {
     if (i->isop(op))
         return true;
+#if NJ_SOFTFLOAT_SUPPORTED
     if (nanojit::AvmCore::config.soft_float &&
         i->isop(LIR_qjoin) &&
         i->oprnd1()->isop(LIR_icall) &&
         i->oprnd2()->isop(LIR_callh)) {
         return i->oprnd1()->callInfo() == softFloatOps.opmap[op];
     }
+#endif
     return false;
 }
 
 static const CallInfo *
 fcallinfo(LIns *i)
 {
+#if NJ_SOFTFLOAT_SUPPORTED
     if (nanojit::AvmCore::config.soft_float) {
         if (!i->isop(LIR_qjoin))
             return NULL;
         i = i->oprnd1();
         return i->isop(LIR_icall) ? i->callInfo() : NULL;
     }
+#endif
     return i->isop(LIR_fcall) ? i->callInfo() : NULL;
 }
 
 static LIns*
 fcallarg(LIns* i, int n)
 {
+#if NJ_SOFTFLOAT_SUPPORTED
     if (nanojit::AvmCore::config.soft_float) {
         NanoAssert(i->isop(LIR_qjoin));
         return i->oprnd1()->callArgN(n);
     }
+#endif
     NanoAssert(i->isop(LIR_fcall));
     return i->callArgN(n);
 }
@@ -1632,16 +1638,20 @@ fcallarg(LIns* i, int n)
 static LIns*
 foprnd1(LIns* i)
 {
+#if NJ_SOFTFLOAT_SUPPORTED
     if (nanojit::AvmCore::config.soft_float)
         return fcallarg(i, 0);
+#endif
     return i->oprnd1();
 }
 
 static LIns*
 foprnd2(LIns* i)
 {
+#if NJ_SOFTFLOAT_SUPPORTED
     if (nanojit::AvmCore::config.soft_float)
         return fcallarg(i, 1);
+#endif
     return i->oprnd2();
 }
 
@@ -2283,8 +2293,10 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
     )
     // CseFilter must be downstream of SoftFloatFilter (see bug 527754 for why).
     lir = new (tempAlloc()) CseFilter(lir, tempAlloc());
+#if NJ_SOFTFLOAT_SUPPORTED
     if (nanojit::AvmCore::config.soft_float)
         lir = new (tempAlloc()) SoftFloatFilter(lir);
+#endif
     lir = new (tempAlloc()) ExprFilter(lir);
     lir = new (tempAlloc()) FuncFilter(lir);
 #ifdef DEBUG
@@ -3642,7 +3654,11 @@ TraceRecorder::set(jsval* p, LIns* i, bool initializing, bool demote)
             x = writeBack(i, lirbuf->sp, nativespOffset(p), demote);
         nativeFrameTracker.set(p, x);
     } else {
-        JS_ASSERT(x->isop(LIR_sti) || x->isop(LIR_stqi) || x->isop(LIR_stfi));
+#if defined NANOJIT_64BIT
+        JS_ASSERT( x->isop(LIR_stqi) || x->isop(LIR_sti) || x->isop(LIR_stfi));
+#else
+        JS_ASSERT( x->isop(LIR_sti) || x->isop(LIR_stfi));
+#endif
 
         int disp;
         LIns *base = x->oprnd2();
