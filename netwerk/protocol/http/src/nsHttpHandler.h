@@ -105,7 +105,7 @@ public:
     nsIIDNService *IDNConverter()            { return mIDNConverter; }
     PRUint32       PhishyUserPassLength()    { return mPhishyUserPassLength; }
     
-    PRBool         CanCacheAllSSLContent()   { return mEnablePersistentHttpsCaching; }
+    PRBool         IsPersistentHttpsCachingEnabled() { return mEnablePersistentHttpsCaching; }
 
     PRBool         PromptTempRedirect()      { return mPromptTempRedirect; }
 

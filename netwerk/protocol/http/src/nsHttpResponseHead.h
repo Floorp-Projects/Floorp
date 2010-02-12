@@ -56,7 +56,6 @@ public:
                          , mContentLength(LL_MAXUINT)
                          , mCacheControlNoStore(PR_FALSE)
                          , mCacheControlNoCache(PR_FALSE)
-                         , mCacheControlPublic(PR_FALSE)
                          , mPragmaNoCache(PR_FALSE) {}
    ~nsHttpResponseHead() 
     {
@@ -72,7 +71,6 @@ public:
     const nsAFlatCString &ContentCharset() { return mContentCharset; }
     PRBool                NoStore()        { return mCacheControlNoStore; }
     PRBool                NoCache()        { return (mCacheControlNoCache || mPragmaNoCache); }
-    PRBool                CacheControlPublic() { return mCacheControlPublic; }
     /**
      * Full length of the entity. For byte-range requests, this may be larger
      * than ContentLength(), which will only represent the requested part of the
@@ -150,7 +148,6 @@ private:
     nsCString         mContentCharset;
     PRPackedBool      mCacheControlNoStore;
     PRPackedBool      mCacheControlNoCache;
-    PRPackedBool      mCacheControlPublic;
     PRPackedBool      mPragmaNoCache;
 };
 
