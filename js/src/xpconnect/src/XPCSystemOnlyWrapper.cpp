@@ -555,7 +555,7 @@ XPC_SOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     return JS_FALSE;
   }
 
-  return NewResolve(cx, obj, JS_TRUE, wrappedObj, id, flags, objp);
+  return NewResolve(cx, obj, JS_FALSE, wrappedObj, id, flags, objp);
 }
 
 static JSBool

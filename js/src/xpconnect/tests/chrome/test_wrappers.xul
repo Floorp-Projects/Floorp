@@ -3,9 +3,9 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=533596
+https://bugzilla.mozilla.org/show_bug.cgi?id=500931
 -->
-<window title="Mozilla Bug 533596"
+<window title="Mozilla Bug 500931"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript"
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
@@ -24,34 +24,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
   /** Test for Bug 533596 **/
 
   function go() {
-    try { XPCNativeWrapper.unwrap(); } catch (e) {}
-    try { XPCNativeWrapper.unwrap(0); } catch (e) {}
-    try { XPCNativeWrapper.unwrap(null); } catch (e) {}
-
-    var o = {};
-    is(o, XPCNativeWrapper.unwrap(o), "unwrap on a random object returns it");
-
     var win = $('ifr').contentWindow;
     var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                       .getInterface(Components.interfaces.nsIDOMWindowUtils);
+    todo_is(utils.getClassName(window), "XPCSafeJSObjectWrapper", "our window is wrapped correctly")
+    todo_is(utils.getClassName(location), "XPCSafeJSObjectWrapper", "our location is wrapped correctly")
     is(utils.getClassName(win), "XPCNativeWrapper", "win is an XPCNW");
-    ok("x" in XPCNativeWrapper.unwrap(win), "actually unwrapped");
-    is(utils.getClassName(XPCNativeWrapper.unwrap(win)), "XPCSafeJSObjectWrapper",
-       "unwrap on an NW returns the same object");
-    is(utils.getClassName(XPCNativeWrapper.unwrap(new XPCNativeWrapper(win))), "XPCSafeJSObjectWrapper",
-       "unwrap on an explicit NW works too");
+    is(utils.getClassName(win.location), "XPCNativeWrapper", "deep wrapping works");
+    is(win.location.href, "http://example.org/tests/js/src/xpconnect/tests/mochitest/chrome_wrappers_helper.html",
+       "can still get strings out");
 
-    ok(utils.getClassName(window) !== "XPCNativeWrapper", "window is not a native wrapper");
-    ok(utils.getClassName(XPCNativeWrapper.unwrap(new XPCNativeWrapper(window))) !== "XPCSafeJSObjectWrapper",
-       "unwrapping a chrome object returns the object itself");
-    SimpleTest.finish();
+    var unsafeWin = win.wrappedJSObject;
+    is(utils.getClassName(unsafeWin), "XPCSafeJSObjectWrapper", "can get a SJOW");
+    is(utils.getClassName(unsafeWin.location), "XPCSafeJSObjectWrapper", "deep wrapping works");
+
+    unsafeWin.run_test(ok, win, unsafeWin);
+
+    win.setTimeout(function() {
+                       is(utils.getClassName(this), "XPCNativeWrapper",
+                          "this is wrapped correctly");
+                       SimpleTest.finish();
+                   }, 0)
   }
 
   SimpleTest.waitForExplicitFinish();
 
   ]]></script>
   <iframe type="content"
-          src="http://example.org/tests/js/src/xpconnect/tests/mochitest/bug500931_helper.html"
+          src="http://example.org/tests/js/src/xpconnect/tests/mochitest/chrome_wrappers_helper.html"
           onload="go()"
           id="ifr">
   </iframe>

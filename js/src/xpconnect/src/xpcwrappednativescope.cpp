@@ -1053,15 +1053,19 @@ XPCWrappedNativeScope::GetWrapperFor(JSContext *cx, JSObject *obj,
             XPCCrossOriginWrapper::ClassNeedsXOW(obj->getClass()->name);
 
         // Is other a chrome object?
+        JSObject *obj2;
+        XPCWrappedNative *wrapper =
+            XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, nsnull, &obj2);
         if(principalEqual || obj->isSystem())
-            return (hint & XPCNW) ? hint : wantsXOW ? SJOW : NONE;
+        {
+            if(hint & XPCNW)
+                return (wrapper || obj2) ? hint : NONE;
+            return wantsXOW ? SJOW : NONE;
+        }
 
         // Other isn't a chrome object: we need to wrap it in a SJOW or an
         // XPCNW.
 
-        JSObject *obj2;
-        XPCWrappedNative *wrapper =
-            XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj, nsnull, &obj2);
         if(!wrapper && !obj2)
             hint = SJOW;
 
@@ -1105,9 +1109,13 @@ XPCWrappedNativeScope::GetWrapperFor(JSContext *cx, JSObject *obj,
     // any other types of wrapper than the hint.
     if(!wrapper && !obj2)
     {
-        NS_ASSERTION(principalEqual,
+#if 0
+        // XXX Re-enable these assertions when we have a better mochitest
+        // solution than UniversalXPConnect.
+        NS_ASSERTION(principalEqual || hint == COW,
                      "touching non-wrappednative object cross origin?");
-        NS_ASSERTION(hint == SJOW || hint == UNKNOWN, "bad hint");
+        NS_ASSERTION(hint == SJOW || hint == COW || hint == UNKNOWN, "bad hint");
+#endif
         return hint;
     }
 
@@ -1132,7 +1140,10 @@ XPCWrappedNativeScope::GetWrapperFor(JSContext *cx, JSObject *obj,
     if(!principalEqual ||
        XPCCrossOriginWrapper::ClassNeedsXOW(obj->getClass()->name))
     {
-        NS_ASSERTION(hint != SJOW, "shouldn't have a SJOW for cross origin access?");
+        // NB: We want to assert that hint is not SJOW here, but it can
+        // be because of shallow XPCNativeWrappers. In that case, XOW is
+        // the right return value because XPCNativeWrappers are meant for
+        // chrome, and we're in content which shouldn't expect SJOWs.
         return (hint & XPCNW) ? XPCNW_EXPLICIT : XOW;
     }
 
