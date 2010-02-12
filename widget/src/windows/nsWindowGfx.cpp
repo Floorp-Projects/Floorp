@@ -335,15 +335,19 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
     /**
      * After we CallUpdateWindow to the child, occasionally a WM_PAINT message
-     * is posted to the parent event loop with an empty update rect. Ignore
-     * this paint message, since dispatching it again may cause an infinite
+     * is posted to the parent event loop with an empty update rect. Do a
+     * dummy paint so that Windows stops dispatching WM_PAINT in an inifinite
      * loop. See bug 543788.
      */
     RECT updateRect;
     if (!GetUpdateRect(mWnd, &updateRect, FALSE) ||
         (updateRect.left == updateRect.right &&
-         updateRect.top == updateRect.bottom))
+         updateRect.top == updateRect.bottom)) {
+      PAINTSTRUCT ps;
+      BeginPaint(mWnd, &ps);
+      EndPaint(mWnd, &ps);
       return PR_TRUE;
+    }
 
     PluginInstanceParent* instance = reinterpret_cast<PluginInstanceParent*>(
       ::GetPropW(mWnd, L"PluginInstanceParentProperty"));
