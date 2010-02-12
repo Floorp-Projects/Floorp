@@ -11421,20 +11421,6 @@ nsDocShell::StopDocumentLoad(void)
 }
 
 NS_IMETHODIMP
-nsDocShell::SetRendering(PRBool aRender)
-{
-  if(eCharsetReloadRequested != mCharsetReloadState) 
-  {
-    if (mContentViewer) {
-       mContentViewer->SetEnableRendering(aRender);
-       return NS_OK;
-    }
-  }
-  //return failer if this request is not accepted due to mCharsetReloadState
-  return NS_ERROR_DOCSHELL_REQUEST_REJECTED;
-}
-
-NS_IMETHODIMP
 nsDocShell::GetPrintPreview(nsIWebBrowserPrint** aPrintPreview)
 {
   *aPrintPreview = nsnull;
