@@ -70,6 +70,10 @@
 #error "unknown nanojit architecture"
 #endif
 
+#ifndef NJ_USES_QUAD_CONSTANTS
+#  define NJ_USES_QUAD_CONSTANTS 0
+#endif
+
 #ifndef NJ_JTBL_SUPPORTED
 #  define NJ_JTBL_SUPPORTED 0
 #endif
@@ -78,12 +82,19 @@
 #  define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
 #endif
 
-#ifndef NJ_USES_QUAD_CONSTANTS
-#  define NJ_USES_QUAD_CONSTANTS 0
-#endif
-
 #ifndef NJ_F2I_SUPPORTED
 #  define NJ_F2I_SUPPORTED 0
+#endif
+
+#ifndef NJ_SOFTFLOAT_SUPPORTED
+#  define NJ_SOFTFLOAT_SUPPORTED 0
+#endif
+
+
+#if NJ_SOFTFLOAT_SUPPORTED
+    #define CASESF(x)   case x
+#else
+    #define CASESF(x)
 #endif
 
 namespace nanojit {

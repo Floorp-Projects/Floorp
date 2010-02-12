@@ -131,21 +131,6 @@ namespace nanojit
         return _nIns;
     }
 
-    void Assembler::asm_qjoin(LIns *ins) {
-        int d = findMemFor(ins);
-        NanoAssert(d && isS16(d));
-        LIns* lo = ins->oprnd1();
-        LIns* hi = ins->oprnd2();
-
-        Register r = findRegFor(hi, GpRegs);
-        STW(r, d+4, FP);
-
-        // okay if r gets recycled.
-        r = findRegFor(lo, GpRegs);
-        STW(r, d, FP);
-        deprecated_freeRsrcOf(ins, false); // if we had a reg in use, emit a ST to flush it to mem
-    }
-
     void Assembler::asm_load32(LIns *ins) {
         LIns* base = ins->oprnd1();
         int d = ins->disp();
@@ -319,7 +304,7 @@ namespace nanojit
     }
 
     void Assembler::asm_store64(LOpcode op, LIns *value, int32_t dr, LIns *base) {
-        NanoAssert(value->isI64() || value->isF64());
+        NanoAssert(value->isN64());
 
         switch (op) {
             case LIR_stfi:
@@ -344,17 +329,6 @@ namespace nanojit
             asm_li(R0, int32_t(q>>32)); // hi
             STW(R0, dr+4, ra); // lo
             asm_li(R0, int32_t(q));     // lo
-            return;
-        }
-        if (value->isop(LIR_qjoin) && isS16(dr) && isS16(dr+4)) {
-            // short offset and qjoin(lo,hi) - store lo & hi separately
-            RegisterMask allow = GpRegs & ~rmask(ra);
-            LIns *lo = value->oprnd1();
-            Register rlo = findRegFor(lo, allow);
-            LIns *hi = value->oprnd2();
-            Register rhi = hi == lo ? rlo : findRegFor(hi, allow & ~rmask(rlo));
-            STW(rhi, dr, ra); // hi
-            STW(rlo, dr+4, ra); // lo
             return;
         }
     #endif // !PEDANTIC
@@ -662,9 +636,9 @@ namespace nanojit
         else {
             d = findMemFor(i);
             if (IsFpReg(r)) {
-                NanoAssert(i->isI64() || i->isF64());
+                NanoAssert(i->isN64());
                 LFD(r, d, FP);
-            } else if (i->isI64() || i->isF64()) {
+            } else if (i->isN64()) {
                 NanoAssert(IsGpReg(r));
                 LD(r, d, FP);
             } else {
@@ -802,7 +776,7 @@ namespace nanojit
                         if (p->isop(LIR_alloc)) {
                             NanoAssert(isS16(d));
                             ADDI(r, FP, d);
-                        } else if (p->isI64() || p->isF64()) {
+                        } else if (p->isN64()) {
                             LD(r, d, FP);
                         } else {
                             LWZ(r, d, FP);
@@ -877,8 +851,8 @@ namespace nanojit
                 switch (op) {
                 case LIR_add:
                 case LIR_iaddp:
-                IF_64BIT(case LIR_qiadd:)
-                IF_64BIT(case LIR_qaddp:)
+                CASE64(LIR_qiadd:)
+                CASE64(LIR_qaddp:)
                     ADDI(rr, ra, rhsc);
                     return;
                 case LIR_sub:
@@ -892,15 +866,15 @@ namespace nanojit
             if (isU16(rhsc)) {
                 // ppc logical immediate zero-extend the imm16 value
                 switch (op) {
-                IF_64BIT(case LIR_qior:)
+                CASE64(LIR_qior:)
                 case LIR_or:
                     ORI(rr, ra, rhsc);
                     return;
-                IF_64BIT(case LIR_qiand:)
+                CASE64(LIR_qiand:)
                 case LIR_and:
                     ANDI(rr, ra, rhsc);
                     return;
-                IF_64BIT(case LIR_qxor:)
+                CASE64(LIR_qxor:)
                 case LIR_xor:
                     XORI(rr, ra, rhsc);
                     return;
@@ -924,21 +898,21 @@ namespace nanojit
         // general case, put rhs in register
         Register rb = rhs==lhs ? ra : findRegFor(rhs, GpRegs&~rmask(ra));
         switch (op) {
-            IF_64BIT(case LIR_qiadd:)
-            IF_64BIT(case LIR_qaddp:)
+            CASE64(LIR_qiadd:)
+            CASE64(LIR_qaddp:)
             case LIR_add:
             case LIR_iaddp:
                 ADD(rr, ra, rb);
                 break;
-            IF_64BIT(case LIR_qiand:)
+            CASE64(LIR_qiand:)
             case LIR_and:
                 AND(rr, ra, rb);
                 break;
-            IF_64BIT(case LIR_qior:)
+            CASE64(LIR_qior:)
             case LIR_or:
                 OR(rr, ra, rb);
                 break;
-            IF_64BIT(case LIR_qxor:)
+            CASE64(LIR_qxor:)
             case LIR_xor:
                 XOR(rr, ra, rb);
                 break;
@@ -1236,19 +1210,6 @@ namespace nanojit
         } else {
             NOT(rr, ra);
         }
-    }
-
-    void Assembler::asm_qlo(LIns *ins) {
-        Register rr = deprecated_prepResultReg(ins, GpRegs);
-        int d = findMemFor(ins->oprnd1());
-        LWZ(rr, d+4, FP);
-    }
-
-    void Assembler::asm_qhi(LIns *ins) {
-        Register rr = deprecated_prepResultReg(ins, GpRegs);
-        int d = findMemFor(ins->oprnd1());
-        LWZ(rr, d, FP);
-        TODO(asm_qhi);
     }
 
     void Assembler::nInit(AvmCore*) {

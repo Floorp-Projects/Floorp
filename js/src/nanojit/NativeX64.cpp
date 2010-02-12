@@ -733,7 +733,6 @@ namespace nanojit
         if (isS8(imm)) {
             switch (ins->opcode()) {
             default: TODO(arith_imm8);
-            case LIR_iaddp:
             case LIR_add:   ADDLR8(rr, imm);   break;
             case LIR_and:   ANDLR8(rr, imm);   break;
             case LIR_or:    ORLR8( rr, imm);   break;
@@ -748,7 +747,6 @@ namespace nanojit
         } else {
             switch (ins->opcode()) {
             default: TODO(arith_imm);
-            case LIR_iaddp:
             case LIR_add:   ADDLRI(rr, imm);   break;
             case LIR_and:   ANDLRI(rr, imm);   break;
             case LIR_or:    ORLRI( rr, imm);   break;
@@ -822,7 +820,6 @@ namespace nanojit
         default:        TODO(asm_arith);
         case LIR_or:    ORLRR(rr, rb);  break;
         case LIR_sub:   SUBRR(rr, rb);  break;
-        case LIR_iaddp:
         case LIR_add:   ADDRR(rr, rb);  break;
         case LIR_and:   ANDRR(rr, rb);  break;
         case LIR_xor:   XORRR(rr, rb);  break;
@@ -1331,10 +1328,10 @@ namespace nanojit
         else {
             int d = findMemFor(ins);
             if (IsFpReg(r)) {
-                NanoAssert(ins->isI64() || ins->isF64());
+                NanoAssert(ins->isN64());
                 // load 64bits into XMM.  don't know if double or int64, assume double.
                 MOVSDRM(r, d, FP);
-            } else if (ins->isI64() || ins->isF64()) {
+            } else if (ins->isN64()) {
                 NanoAssert(IsGpReg(r));
                 MOVQRM(r, d, FP);
             } else {
@@ -1482,7 +1479,7 @@ namespace nanojit
     }
 
     void Assembler::asm_store64(LOpcode op, LIns *value, int d, LIns *base) {
-        NanoAssert(value->isI64() || value->isF64());
+        NanoAssert(value->isN64());
 
         switch (op) {
             case LIR_stqi: {
@@ -1586,10 +1583,6 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_qjoin(LIns*) {
-        NanoAssert(0);  // qjoin shouldn't occur on non-SoftFloat platforms
-    }
-
     void Assembler::asm_param(LIns *ins) {
         uint32_t a = ins->paramArg();
         uint32_t kind = ins->paramKind();
@@ -1650,14 +1643,6 @@ namespace nanojit
             XORQRR(rr, ra);                     // xor rr, ra
             asm_quad(rr, negateMask[0]);        // mov rr, 0x8000000000000000
         }
-    }
-
-    void Assembler::asm_qhi(LIns*) {
-        NanoAssert(0);  // qhi shouldn't occur on non-SoftFloat platforms
-    }
-
-    void Assembler::asm_qlo(LIns *) {
-        NanoAssert(0);  // qlo shouldn't occur on non-SoftFloat platforms
     }
 
     void Assembler::asm_spill(Register rr, int d, bool /*pop*/, bool quad) {

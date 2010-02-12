@@ -42,9 +42,9 @@
  * Definitions of LIR opcodes.  If you need to allocate an opcode, look
  * for a name beginning with "__" and claim it.
  *
- * Includers must define an OPDEF macro of the following form:
+ * Includers must define an OPxyz macro of the following form:
  *
- *   #define OPDEF(op, val, repKind, retType) ...
+ *   #define OPxyz(op, val, repKind, retType) ...
  *
  * Selected arguments can then be used within the macro expansions.
  * - op         Bytecode name, token-pasted after "LIR_" to form an LOpcode.
@@ -56,43 +56,71 @@
  * This file is best viewed with 128 columns:
 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678
  *
- * Aliases for pointer-sized operations that choose 32bit or 64bit instructions
+ * Aliases for pointer-sized operations that choose 32-bit or 64-bit instructions
  * are given in the LOpcode enum in LIR.h just after including LIRopcodes.tbl.
+ *
+ * Certain opcodes aren't supported on all platforms, so OPxyz must be one of
+ * the following:
+ *
+ *   OP___: for opcodes supported on all platforms.
+ *   OP_32: for opcodes supported only on 32-bit platforms.
+ *   OP_64: for opcodes supported only on 64-bit platforms.
+ *   OP_SF: for opcodes supported only on SoftFloat platforms.
+ *   OP_86: for opcodes supported only on i386/X64.
  */
 
-/*    op    val name        operands */
+#ifdef NANOJIT_64BIT
+#   define OP_32(a, b, c, d)    OP___(__##b, b, None, Void)
+#   define OP_64                OP___
+#else
+#   define OP_32                OP___
+#   define OP_64(a, b, c, d)    OP___(__##b, b, None, Void)
+#endif
 
-/* special operations (must be 0..N) */
-OPDEF(start,     0, Op0,  Void) // start of a fragment
-OPDEF(regfence,  1, Op0,  Void) // register fence, no register allocation is allowed across this meta instruction
-OPDEF(skip,      2, Sk,   Void) // used to link code chunks
+#if NJ_SOFTFLOAT_SUPPORTED
+#   define OP_SF                OP___
+#else
+#   define OP_SF(a, b, c, d)    OP___(__##b, b, None, Void)
+#endif
+
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
+#   define OP_86                OP___
+#else
+#   define OP_86(a, b, c, d)    OP___(__##b, b, None, Void)
+#endif
+
+ 
+/* special operations */
+OP___(start,     0, Op0,  Void) // start of a fragment
+OP___(regfence,  1, Op0,  Void) // register fence, no register allocation is allowed across this meta instruction
+OP___(skip,      2, Sk,   Void) // used to link code chunks
 
 /* non-pure operations */
-OPDEF(ldsb,      3, Ld,   I32)  // 8-bit integer load, sign-extend to 32-bit
-OPDEF(ldss,      4, Ld,   I32)  // 16-bit integer load, sign-extend to 32-bit
-OPDEF(ldzb,      5, Ld,   I32)  // 8-bit integer load, zero extend to 32-bit
-OPDEF(ldzs,      6, Ld,   I32)  // 16-bit integer load, zero extend to 32-bit
-OPDEF(iaddp,     7, Op2,  I32)  // integer addition for temporary pointer calculations (32bit only)
-OPDEF(iparam,    8, P,    I32)  // load a parameter (32bit register or stk location)
-OPDEF(stb,       9, Sti,  Void) // 8-bit integer store
-OPDEF(ld,       10, Ld,   I32)  // 32-bit integer load
-OPDEF(ialloc,   11, I,    I32)  // alloc some stack space (value is 32bit address)
-OPDEF(sti,      12, Sti,  Void) // 32-bit integer store
-OPDEF(ret,      13, Op1,  Void) // return a 32-bit integer
-OPDEF(live,     14, Op1,  Void) // extend live range of a 32-bit integer
-OPDEF(flive,    15, Op1,  Void) // extend live range of a 64-bit float
-OPDEF(icall,    16, C,    I32)  // subroutine call returning a 32-bit value
-OPDEF(sts,      17, Sti,  Void) // 16-bit integer store
+OP___(ldsb,      3, Ld,   I32)  // 8-bit integer load, sign-extend to 32-bit
+OP___(ldss,      4, Ld,   I32)  // 16-bit integer load, sign-extend to 32-bit
+OP___(ldzb,      5, Ld,   I32)  // 8-bit integer load, zero extend to 32-bit
+OP___(ldzs,      6, Ld,   I32)  // 16-bit integer load, zero extend to 32-bit
+OP_32(iaddp,     7, Op2,  I32)  // 32-bit integer addition for temporary pointer calculations
+OP_32(iparam,    8, P,    I32)  // load a parameter (32-bit register or stack location)
+OP___(stb,       9, Sti,  Void) // 8-bit integer store
+OP___(ld,       10, Ld,   I32)  // 32-bit integer load
+OP_32(ialloc,   11, I,    I32)  // allocate some stack space (result is a 32-bit address)
+OP___(sti,      12, Sti,  Void) // 32-bit integer store
+OP___(ret,      13, Op1,  Void) // return a 32-bit integer
+OP___(live,     14, Op1,  Void) // extend live range of a 32-bit integer
+OP___(flive,    15, Op1,  Void) // extend live range of a 64-bit float
+OP___(icall,    16, C,    I32)  // subroutine call returning a 32-bit value
+OP___(sts,      17, Sti,  Void) // 16-bit integer store
 
 /* guards */
-OPDEF(x,        18, Op2,  Void) // exit always
+OP___(x,        18, Op2,  Void) // exit always
 
 /* branches */
-OPDEF(j,        19, Op2,  Void) // jump always
-OPDEF(jt,       20, Op2,  Void) // jump if true
-OPDEF(jf,       21, Op2,  Void) // jump if false
-OPDEF(label,    22, Op0,  Void) // a jump target (no machine code is emitted for this)
-OPDEF(jtbl,     23, Jtbl, Void) // jump to address in table
+OP___(j,        19, Op2,  Void) // jump always
+OP___(jt,       20, Op2,  Void) // jump if true
+OP___(jf,       21, Op2,  Void) // jump if false
+OP___(label,    22, Op0,  Void) // a jump target (no machine code is emitted for this)
+OP___(jtbl,     23, Jtbl, Void) // jump to address in table
 
 /* operators */
 
@@ -101,14 +129,14 @@ OPDEF(jtbl,     23, Jtbl, Void) // jump to address in table
  *     common-subexpression-elimination detection code.
  */
 
-OPDEF(int,      24, I,    I32)  // constant 32-bit integer
-OPDEF(cmov,     25, Op3,  I32)  // conditional move
+OP___(int,      24, I,    I32)  // constant 32-bit integer
+OP___(cmov,     25, Op3,  I32)  // conditional move
 // LIR_callh is a hack that's only used on 32-bit platforms that use SoftFloat.
 // Its operand is always a LIR_icall, but one that specifies a function that
 // returns a 64-bit float.  It indicates that the 64-bit float return value is
 // being returned via two 32-bit integer registers.  The result is always used
 // as the second operand of a LIR_qjoin.
-OPDEF(callh,    26, Op1,  I32)
+OP_SF(callh,    26, Op1,  I32)
 
 // feq though fge must only be used on float arguments.  They return integers.
 // For all except feq, (op ^ 1) is the op which flips the
@@ -117,44 +145,43 @@ OPDEF(callh,    26, Op1,  I32)
 // op, so (lt ^ 1) == ge, or the complement of the operator "<" is ">=" xored
 // with 3.  NB: These opcodes must remain continuous so that comparison-opcode
 // detection works correctly.
-OPDEF(feq,      27, Op2,  I32)  // floating-point equality
-OPDEF(flt,      28, Op2,  I32)  // floating-point less-than
-OPDEF(fgt,      29, Op2,  I32)  // floating-point greater-than
-OPDEF(fle,      30, Op2,  I32)  // floating-point less-than-or-equal
-OPDEF(fge,      31, Op2,  I32)  // floating-point greater-than-or-equal
+OP___(feq,      27, Op2,  I32)  // floating-point equality
+OP___(flt,      28, Op2,  I32)  // floating-point less-than
+OP___(fgt,      29, Op2,  I32)  // floating-point greater-than
+OP___(fle,      30, Op2,  I32)  // floating-point less-than-or-equal
+OP___(fge,      31, Op2,  I32)  // floating-point greater-than-or-equal
 
-OPDEF(ldcb,     32, Ld,   I32)  // non-volatile  8-bit integer load, zero-extended to 32-bit
-OPDEF(ldcs,     33, Ld,   I32)  // non-volatile 16-bit integer load, zero-extended to 32-bit
-OPDEF(ldc,      34, Ld,   I32)  // non-volatile 32-bit integer load, zero-extended to 32-bit
+OP___(ldcb,     32, Ld,   I32)  // non-volatile  8-bit integer load, zero-extended to 32-bit
+OP___(ldcs,     33, Ld,   I32)  // non-volatile 16-bit integer load, zero-extended to 32-bit
+OP___(ldc,      34, Ld,   I32)  // non-volatile 32-bit integer load, zero-extended to 32-bit
 
-OPDEF(neg,      35, Op1,  I32)  // integer negation
-OPDEF(add,      36, Op2,  I32)  // integer addition
-OPDEF(sub,      37, Op2,  I32)  // integer subtraction
-OPDEF(mul,      38, Op2,  I32)  // integer multiplication
-OPDEF(div,      39, Op2,  I32)  // integer division
-// LIR_mod is a hack.  It's only used on i386/X64.  The operand is the result
-// of a LIR_div because on i386/X64 div and mod results are computed by the
-// same instruction.
-OPDEF(mod,      40, Op1,  I32)  // integer modulus
+OP___(neg,      35, Op1,  I32)  // integer negation
+OP___(add,      36, Op2,  I32)  // integer addition
+OP___(sub,      37, Op2,  I32)  // integer subtraction
+OP___(mul,      38, Op2,  I32)  // integer multiplication
+OP_86(div,      39, Op2,  I32)  // integer division
+// LIR_mod is a hack.  The operand is the result of a LIR_div because on
+// i386/X64 div and mod results are computed by the same instruction.
+OP_86(mod,      40, Op1,  I32)  // integer modulus
 
-OPDEF(and,      41, Op2,  I32)  // 32-bit bitwise AND
-OPDEF(or,       42, Op2,  I32)  // 32-bit bitwise OR
-OPDEF(xor,      43, Op2,  I32)  // 32-bit bitwise XOR
-OPDEF(not,      44, Op1,  I32)  // 32-bit bitwise NOT
-OPDEF(lsh,      45, Op2,  I32)  // 32-bit left shift
-OPDEF(rsh,      46, Op2,  I32)  // 32-bit right shift with sign-extend (>>)
-OPDEF(ush,      47, Op2,  I32)  // 32-bit unsigned right shift (>>>)
+OP___(and,      41, Op2,  I32)  // 32-bit bitwise AND
+OP___(or,       42, Op2,  I32)  // 32-bit bitwise OR
+OP___(xor,      43, Op2,  I32)  // 32-bit bitwise XOR
+OP___(not,      44, Op1,  I32)  // 32-bit bitwise NOT
+OP___(lsh,      45, Op2,  I32)  // 32-bit left shift
+OP___(rsh,      46, Op2,  I32)  // 32-bit right shift with sign-extend (>>)
+OP___(ush,      47, Op2,  I32)  // 32-bit unsigned right shift (>>>)
 
 // Conditional guards, op^1 to complement.  Only things that are
 // isCond() can be passed to these.
-OPDEF(xt,       48, Op2,  Void) // exit if true   (0x30 0011 0000)
-OPDEF(xf,       49, Op2,  Void) // exit if false  (0x31 0011 0001)
+OP___(xt,       48, Op2,  Void) // exit if true   (0x30 0011 0000)
+OP___(xf,       49, Op2,  Void) // exit if false  (0x31 0011 0001)
 
-OPDEF(qlo,      50, Op1,  I32)  // get the low  32 bits of a 64-bit value
-OPDEF(qhi,      51, Op1,  I32)  // get the high 32 bits of a 64-bit value
+OP_SF(qlo,      50, Op1,  I32)  // get the low  32 bits of a 64-bit value
+OP_SF(qhi,      51, Op1,  I32)  // get the high 32 bits of a 64-bit value
 
-OPDEF(ldcsb,    52, Ld,   I32)  // non-volatile  8-bit integer load, sign-extended to 32-bit
-OPDEF(ldcss,    53, Ld,   I32)  // non-volatile 16-bit integer load, sign-extended to 32-bit
+OP___(ldcsb,    52, Ld,   I32)  // non-volatile  8-bit integer load, sign-extended to 32-bit
+OP___(ldcss,    53, Ld,   I32)  // non-volatile 16-bit integer load, sign-extended to 32-bit
 
 // This is an overflow test.  The operand is the result of an 32-bit integer
 // operation that may have overflowed (eg. a LIR_add).  It's a nasty hack
@@ -165,7 +192,7 @@ OPDEF(ldcss,    53, Ld,   I32)  // non-volatile 16-bit integer load, sign-extend
 // LIR_add so that the back-ends can generate code in such a way that the
 // machine condition codes can be checked immediately after the addition is
 // performed.
-OPDEF(ov,       54, Op1,  I32)
+OP___(ov,       54, Op1,  I32)
 
 // Integer (32-bit) relational operators.  (op ^ 1) is the op which flips the
 // left and right sides of the comparison, so (lt ^ 1) == gt, or the operator
@@ -174,103 +201,109 @@ OPDEF(ov,       54, Op1,  I32)
 // with 3.  'u' prefix indicates the unsigned integer variant.
 // NB: These opcodes must remain continuous so that comparison-opcode detection
 // works correctly.
-OPDEF(eq,       55, Op2,  I32)  //          integer equality
-OPDEF(lt,       56, Op2,  I32)  //   signed integer less-than             (0x38 0011 1000)
-OPDEF(gt,       57, Op2,  I32)  //   signed integer greater-than          (0x39 0011 1001)
-OPDEF(le,       58, Op2,  I32)  //   signed integer less-than-or-equal    (0x3A 0011 1010)
-OPDEF(ge,       59, Op2,  I32)  //   signed integer greater-than-or-equal (0x3B 0011 1011)
-OPDEF(ult,      60, Op2,  I32)  // unsigned integer less-than             (0x3C 0011 1100)
-OPDEF(ugt,      61, Op2,  I32)  // unsigned integer greater-than          (0x3D 0011 1101)
-OPDEF(ule,      62, Op2,  I32)  // unsigned integer less-than-or-equal    (0x3E 0011 1110)
-OPDEF(uge,      63, Op2,  I32)  // unsigned integer greater-than-or-equal (0x3F 0011 1111)
+OP___(eq,       55, Op2,  I32)  //          integer equality
+OP___(lt,       56, Op2,  I32)  //   signed integer less-than             (0x38 0011 1000)
+OP___(gt,       57, Op2,  I32)  //   signed integer greater-than          (0x39 0011 1001)
+OP___(le,       58, Op2,  I32)  //   signed integer less-than-or-equal    (0x3A 0011 1010)
+OP___(ge,       59, Op2,  I32)  //   signed integer greater-than-or-equal (0x3B 0011 1011)
+OP___(ult,      60, Op2,  I32)  // unsigned integer less-than             (0x3C 0011 1100)
+OP___(ugt,      61, Op2,  I32)  // unsigned integer greater-than          (0x3D 0011 1101)
+OP___(ule,      62, Op2,  I32)  // unsigned integer less-than-or-equal    (0x3E 0011 1110)
+OP___(uge,      63, Op2,  I32)  // unsigned integer greater-than-or-equal (0x3F 0011 1111)
 
-OPDEF(__64,     64, None, Void)
+OP___(__64,     64, None, Void)
 
-OPDEF(file,     65, Op1,  Void) // source filename for debug symbols
-OPDEF(line,     66, Op1,  Void) // source line number for debug symbols
-OPDEF(xbarrier, 67, Op2,  Void) // memory barrier;  doesn't exit, but flushes all values to the stack
-OPDEF(xtbl,     68, Op2,  Void) // exit via indirect jump
+OP___(file,     65, Op1,  Void) // source filename for debug symbols
+OP___(line,     66, Op1,  Void) // source line number for debug symbols
+OP___(xbarrier, 67, Op2,  Void) // memory barrier;  doesn't exit, but flushes all values to the stack
+OP___(xtbl,     68, Op2,  Void) // exit via indirect jump
 
-OPDEF(qlive,    69, Op1,  Void) // extend live range of a 64-bit integer
-OPDEF(__70,     70, None, Void)
-OPDEF(qaddp,    71, Op2,  I64)  // integer addition for temp pointer calculations (64bit only)
-OPDEF(qparam,   72, P,    I64)  // load a parameter (64bit register or stk location)
+OP_64(qlive,    69, Op1,  Void) // extend live range of a 64-bit integer
+OP___(__70,     70, None, Void)
+OP_64(qaddp,    71, Op2,  I64)  // 64-bit integer addition for temporary pointer calculations
+OP_64(qparam,   72, P,    I64)  // load a parameter (64-bit register or stack location)
 
-OPDEF(ldf,      73, Ld,   F64)  // 64-bit float load
-OPDEF(ldq,      74, Ld,   I64)  // 64-bit integer load
+OP___(ldf,      73, Ld,   F64)  // 64-bit float load
+OP_64(ldq,      74, Ld,   I64)  // 64-bit integer load
 
-OPDEF(qalloc,   75, I,    I64)  // allocate some stack space (value is 64bit address)
+OP_64(qalloc,   75, I,    I64)  // allocate some stack space (result is a 64-bit address)
 
-OPDEF(stqi,     76, Sti,  Void) // 64-bit integer store
+OP_64(stqi,     76, Sti,  Void) // 64-bit integer store
 
-OPDEF(st32f,    77, Sti,  Void) // store 64-bit float as a 32-bit float (dropping precision)
-OPDEF(ld32f,    78, Ld,   F64)  // load 32-bit float and widen to 64-bit float
+OP___(st32f,    77, Sti,  Void) // store 64-bit float as a 32-bit float (dropping precision)
+OP___(ld32f,    78, Ld,   F64)  // load 32-bit float and widen to 64-bit float
 
-OPDEF(fcall,    79, C,    F64)  // subroutine call returning 64-bit (quad) double value
-OPDEF(qcall,    80, C,    I64)  // subroutine call returning 64-bit (quad) integer value
+OP___(fcall,    79, C,    F64)  // subroutine call returning 64-bit float value
+OP_64(qcall,    80, C,    I64)  // subroutine call returning 64-bit integer value
 
-OPDEF(stfi,     81, Sti,  Void) // 64-bit float store
+OP___(stfi,     81, Sti,  Void) // 64-bit float store
 
-OPDEF(fret,     82, Op1,  Void) // return a 64-bit float
-OPDEF(qret,     83, Op1,  Void) // return a 64-bit integer
-OPDEF(__84,     84, None, Void)
-OPDEF(__85,     85, None, Void)
-OPDEF(__86,     86, None, Void)
-OPDEF(__87,     87, None, Void)
+OP___(fret,     82, Op1,  Void) // return a 64-bit float
+OP_64(qret,     83, Op1,  Void) // return a 64-bit integer
+OP___(__84,     84, None, Void)
+OP___(__85,     85, None, Void)
+OP___(__86,     86, None, Void)
+OP___(__87,     87, None, Void)
 
 // All opcodes below this marker are subject to CSE.
 
-OPDEF(quad,     88, N64,  I64)  // 64-bit integer constant value
-OPDEF(qcmov,    89, Op3,  I64)  // 64-bit conditional move
+OP_64(quad,     88, N64,  I64)  // 64-bit integer constant value
+OP_64(qcmov,    89, Op3,  I64)  // 64-bit conditional move
 
-OPDEF(i2q,      90, Op1,  I64)  // sign-extend i32 to i64
-OPDEF(u2q,      91, Op1,  I64)  // zero-extend u32 to u64
-OPDEF(i2f,      92, Op1,  F64)  // convert a signed 32-bit integer to a float
-OPDEF(u2f,      93, Op1,  F64)  // convert an unsigned 32-bit integer to a float
-OPDEF(f2i,      94, Op1,  I32)  // f2i conversion, no exception raised, platform rounding rules.
+OP_64(i2q,      90, Op1,  I64)  // sign-extend i32 to i64
+OP_64(u2q,      91, Op1,  I64)  // zero-extend u32 to u64
+OP___(i2f,      92, Op1,  F64)  // convert a signed 32-bit integer to a float
+OP___(u2f,      93, Op1,  F64)  // convert an unsigned 32-bit integer to a float
+OP___(f2i,      94, Op1,  I32)  // f2i conversion, no exception raised, platform rounding rules.
 
-OPDEF(__95,     95, None, Void)
-OPDEF(__96,     96, None, Void)
+OP___(__95,     95, None, Void)
+OP___(__96,     96, None, Void)
 
-OPDEF(ldfc,     97, Ld,   F64)  // non-volatile 64-bit float load
-OPDEF(ldqc,     98, Ld,   I64)  // non-volatile 64-bit integer load
+OP___(ldfc,     97, Ld,   F64)  // non-volatile 64-bit float load
+OP_64(ldqc,     98, Ld,   I64)  // non-volatile 64-bit integer load
 
-OPDEF(fneg,     99, Op1,  F64)  // floating-point negation
-OPDEF(fadd,    100, Op2,  F64)  // floating-point addition
-OPDEF(fsub,    101, Op2,  F64)  // floating-point subtraction
-OPDEF(fmul,    102, Op2,  F64)  // floating-point multiplication
-OPDEF(fdiv,    103, Op2,  F64)  // floating-point division
+OP___(fneg,     99, Op1,  F64)  // floating-point negation
+OP___(fadd,    100, Op2,  F64)  // floating-point addition
+OP___(fsub,    101, Op2,  F64)  // floating-point subtraction
+OP___(fmul,    102, Op2,  F64)  // floating-point multiplication
+OP___(fdiv,    103, Op2,  F64)  // floating-point division
 // LIR_fmod is just a place-holder opcode, eg. the back-ends cannot generate
 // code for it.  It's used in TraceMonkey briefly but is always demoted to a
 // LIR_mod or converted to a function call before Nanojit has to do anything
 // serious with it.
-OPDEF(fmod,    104, Op2,  F64)  // floating-point modulus
+OP___(fmod,    104, Op2,  F64)  // floating-point modulus
 
-OPDEF(qiand,   105, Op2,  I64)  // 64-bit bitwise AND
-OPDEF(qior,    106, Op2,  I64)  // 64-bit bitwise OR
-OPDEF(qxor,    107, Op2,  I64)  // 64-bit bitwise XOR
-OPDEF(__108,   108, None, Void)
-OPDEF(qilsh,   109, Op2,  I64)  // 64-bit left shift;           2nd operand is a 32-bit integer
-OPDEF(qirsh,   110, Op2,  I64)  // 64-bit signed right shift;   2nd operand is a 32-bit integer
-OPDEF(qursh,   111, Op2,  I64)  // 64-bit unsigned right shift; 2nd operand is a 32-bit integer
-OPDEF(qiadd,   112, Op2,  I64)  // 64-bit bitwise ADD
+OP_64(qiand,   105, Op2,  I64)  // 64-bit bitwise AND
+OP_64(qior,    106, Op2,  I64)  // 64-bit bitwise OR
+OP_64(qxor,    107, Op2,  I64)  // 64-bit bitwise XOR
+OP___(__108,   108, None, Void)
+OP_64(qilsh,   109, Op2,  I64)  // 64-bit left shift;           2nd operand is a 32-bit integer
+OP_64(qirsh,   110, Op2,  I64)  // 64-bit signed right shift;   2nd operand is a 32-bit integer
+OP_64(qursh,   111, Op2,  I64)  // 64-bit unsigned right shift; 2nd operand is a 32-bit integer
+OP_64(qiadd,   112, Op2,  I64)  // 64-bit bitwise ADD
 
-OPDEF(ldc32f,  113, Ld,   F64)  // non-volatile load 32-bit float and widen to 64-bit float
-OPDEF(qjoin,   114, Op2,  F64)  // join two 32-bit values (1st arg is low bits, 2nd is high)
-OPDEF(q2i,     115, Op1,  I32)  // truncate i64 to i32
-OPDEF(__116,   116, None, Void)
-OPDEF(__117,   117, None, Void)
-OPDEF(float,   118, N64,  F64)  // 64-bit float constant value
+OP___(ldc32f,  113, Ld,   F64)  // non-volatile load 32-bit float and widen to 64-bit float
+OP_SF(qjoin,   114, Op2,  F64)  // join two 32-bit values (1st arg is low bits, 2nd is high)
+OP_64(q2i,     115, Op1,  I32)  // truncate i64 to i32
+OP___(__116,   116, None, Void)
+OP___(__117,   117, None, Void)
+OP___(float,   118, N64,  F64)  // 64-bit float constant value
 
 // Integer (64-bit) relational operators.
 // NB: These opcodes must remain continuous so that comparison-opcode detection
 // works correctly.
-OPDEF(qeq,     119, Op2,  I32)  //          integer equality
-OPDEF(qlt,     120, Op2,  I32)  //   signed integer less-than             (0x78 0111 1000)
-OPDEF(qgt,     121, Op2,  I32)  //   signed integer greater-than          (0x79 0111 1001)
-OPDEF(qle,     122, Op2,  I32)  //   signed integer less-than-or-equal    (0x7A 0111 1010)
-OPDEF(qge,     123, Op2,  I32)  //   signed integer greater-than-or-equal (0x7B 0111 1011)
-OPDEF(qult,    124, Op2,  I32)  // unsigned integer less-than             (0x7C 0111 1100)
-OPDEF(qugt,    125, Op2,  I32)  // unsigned integer greater-than          (0x7D 0111 1101)
-OPDEF(qule,    126, Op2,  I32)  // unsigned integer less-than-or-equal    (0x7E 0111 1110)
-OPDEF(quge,    127, Op2,  I32)  // unsigned integer greater-than-or-equal (0x7F 0111 1111)
+OP_64(qeq,     119, Op2,  I32)  //          integer equality
+OP_64(qlt,     120, Op2,  I32)  //   signed integer less-than             (0x78 0111 1000)
+OP_64(qgt,     121, Op2,  I32)  //   signed integer greater-than          (0x79 0111 1001)
+OP_64(qle,     122, Op2,  I32)  //   signed integer less-than-or-equal    (0x7A 0111 1010)
+OP_64(qge,     123, Op2,  I32)  //   signed integer greater-than-or-equal (0x7B 0111 1011)
+OP_64(qult,    124, Op2,  I32)  // unsigned integer less-than             (0x7C 0111 1100)
+OP_64(qugt,    125, Op2,  I32)  // unsigned integer greater-than          (0x7D 0111 1101)
+OP_64(qule,    126, Op2,  I32)  // unsigned integer less-than-or-equal    (0x7E 0111 1110)
+OP_64(quge,    127, Op2,  I32)  // unsigned integer greater-than-or-equal (0x7F 0111 1111)
+
+
+#undef OP_32
+#undef OP_64
+#undef OP_SF
+#undef OP_86
