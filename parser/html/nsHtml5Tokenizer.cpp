@@ -191,38 +191,6 @@ nsHtml5Tokenizer::emptyAttributes()
   return nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES;
 }
 
-void 
-nsHtml5Tokenizer::clearStrBufAndAppendCurrentC(PRUnichar c)
-{
-  strBuf[0] = c;
-  strBufLen = 1;
-}
-
-void 
-nsHtml5Tokenizer::clearStrBufAndAppendForceWrite(PRUnichar c)
-{
-  strBuf[0] = c;
-  strBufLen = 1;
-}
-
-void 
-nsHtml5Tokenizer::clearStrBufForNextState()
-{
-  strBufLen = 0;
-}
-
-void 
-nsHtml5Tokenizer::appendStrBuf(PRUnichar c)
-{
-  if (strBufLen == strBuf.length) {
-    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(strBuf.length + NS_HTML5TOKENIZER_BUFFER_GROW_BY);
-    nsHtml5ArrayCopy::arraycopy(strBuf, newBuf, strBuf.length);
-    strBuf.release();
-    strBuf = newBuf;
-  }
-  strBuf[strBufLen++] = c;
-}
-
 nsString* 
 nsHtml5Tokenizer::strBufToString()
 {
@@ -244,44 +212,6 @@ nsHtml5Tokenizer::emitStrBuf()
 }
 
 void 
-nsHtml5Tokenizer::clearLongStrBufForNextState()
-{
-  longStrBufLen = 0;
-}
-
-void 
-nsHtml5Tokenizer::clearLongStrBuf()
-{
-  longStrBufLen = 0;
-}
-
-void 
-nsHtml5Tokenizer::clearLongStrBufAndAppendCurrentC(PRUnichar c)
-{
-  longStrBuf[0] = c;
-  longStrBufLen = 1;
-}
-
-void 
-nsHtml5Tokenizer::clearLongStrBufAndAppendToComment(PRUnichar c)
-{
-  longStrBuf[0] = c;
-  longStrBufLen = 1;
-}
-
-void 
-nsHtml5Tokenizer::appendLongStrBuf(PRUnichar c)
-{
-  if (longStrBufLen == longStrBuf.length) {
-    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(longStrBufLen + (longStrBufLen >> 1));
-    nsHtml5ArrayCopy::arraycopy(longStrBuf, newBuf, longStrBuf.length);
-    longStrBuf.release();
-    longStrBuf = newBuf;
-  }
-  longStrBuf[longStrBufLen++] = c;
-}
-
-void 
 nsHtml5Tokenizer::appendSecondHyphenToBogusComment()
 {
   appendLongStrBuf('-');
@@ -292,32 +222,6 @@ nsHtml5Tokenizer::adjustDoubleHyphenAndAppendToLongStrBufAndErr(PRUnichar c)
 {
 
   appendLongStrBuf(c);
-}
-
-void 
-nsHtml5Tokenizer::appendLongStrBuf(jArray<PRUnichar,PRInt32> buffer, PRInt32 offset, PRInt32 length)
-{
-  PRInt32 reqLen = longStrBufLen + length;
-  if (longStrBuf.length < reqLen) {
-    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(reqLen + (reqLen >> 1));
-    nsHtml5ArrayCopy::arraycopy(longStrBuf, newBuf, longStrBuf.length);
-    longStrBuf.release();
-    longStrBuf = newBuf;
-  }
-  nsHtml5ArrayCopy::arraycopy(buffer, offset, longStrBuf, longStrBufLen, length);
-  longStrBufLen = reqLen;
-}
-
-void 
-nsHtml5Tokenizer::appendLongStrBuf(jArray<PRUnichar,PRInt32> arr)
-{
-  appendLongStrBuf(arr, 0, arr.length);
-}
-
-void 
-nsHtml5Tokenizer::appendStrBufToLongStrBuf()
-{
-  appendLongStrBuf(strBuf, 0, strBufLen);
 }
 
 nsString* 
@@ -340,12 +244,6 @@ nsHtml5Tokenizer::flushChars(PRUnichar* buf, PRInt32 pos)
     tokenHandler->characters(buf, cstart, pos - cstart);
   }
   cstart = 0x7fffffff;
-}
-
-void 
-nsHtml5Tokenizer::resetAttributes()
-{
-  attributes = nsnull;
 }
 
 void 
@@ -429,6 +327,7 @@ nsHtml5Tokenizer::tokenizeBuffer(nsHtml5UTF16Buffer* buffer)
   shouldSuspend = PR_FALSE;
   lastCR = PR_FALSE;
   PRInt32 start = buffer->getStart();
+  PRInt32 end = buffer->getEnd();
   PRInt32 pos = start - 1;
   switch(state) {
     case NS_HTML5TOKENIZER_DATA:
@@ -456,13 +355,46 @@ nsHtml5Tokenizer::tokenizeBuffer(nsHtml5UTF16Buffer* buffer)
       break;
     }
   }
-  pos = stateLoop(state, c, pos, buffer->getBuffer(), PR_FALSE, returnState, buffer->getEnd());
-  if (pos == buffer->getEnd()) {
+  ensureBufferSpace(end - start);
+  pos = stateLoop(state, c, pos, buffer->getBuffer(), PR_FALSE, returnState, end);
+  if (pos == end) {
     buffer->setStart(pos);
   } else {
     buffer->setStart(pos + 1);
   }
   return lastCR;
+}
+
+void 
+nsHtml5Tokenizer::ensureBufferSpace(PRInt32 addedLength)
+{
+  PRInt32 newlongStrBufCapacity = longStrBufLen + addedLength;
+  if (newlongStrBufCapacity > NS_HTML5TOKENIZER_BUFFER_CLIP_THRESHOLD) {
+    longStrBuf[0] = 0x2026;
+    longStrBuf[1] = 0xfffd;
+    longStrBufLen = 2;
+    newlongStrBufCapacity = 2 + addedLength;
+  }
+  if (newlongStrBufCapacity > longStrBuf.length) {
+    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(newlongStrBufCapacity);
+    nsHtml5ArrayCopy::arraycopy(longStrBuf, newBuf, longStrBufLen);
+    longStrBuf.release();
+    longStrBuf = newBuf;
+  }
+  PRInt32 newStrBufCapacity = strBufLen + addedLength;
+  if (newStrBufCapacity > NS_HTML5TOKENIZER_BUFFER_CLIP_THRESHOLD) {
+    strBuf[0] = 0x2026;
+    strBuf[1] = 0xfffd;
+    strBufLen = 2;
+    newStrBufCapacity = 2 + addedLength;
+  }
+  if (newStrBufCapacity > strBuf.length) {
+    jArray<PRUnichar,PRInt32> newBuf = jArray<PRUnichar,PRInt32>(newStrBufCapacity);
+    nsHtml5ArrayCopy::arraycopy(strBuf, newBuf, strBufLen);
+    strBuf.release();
+    strBuf = newBuf;
+  }
+  tokenHandler->ensureBufferSpace(addedLength);
 }
 
 PRInt32 
