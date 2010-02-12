@@ -127,6 +127,8 @@ nsHttpChannel::nsHttpChannel()
     , mUploadStreamHasHeaders(PR_FALSE)
     , mAuthRetryPending(PR_FALSE)
     , mProxyAuth(PR_FALSE)
+    , mTriedProxyAuth(PR_FALSE)
+    , mTriedHostAuth(PR_FALSE)
     , mSuppressDefensiveAuth(PR_FALSE)
     , mResuming(PR_FALSE)
     , mInitedCacheEntry(PR_FALSE)
@@ -3702,9 +3704,18 @@ nsHttpChannel::PromptForIdentity(PRUint32    level,
     // prompt the user...
     PRUint32 promptFlags = 0;
     if (proxyAuth)
+    {
         promptFlags |= nsIAuthInformation::AUTH_PROXY;
-    else
+        if (mTriedProxyAuth)
+            promptFlags |= nsIAuthInformation::PREVIOUS_FAILED;
+        mTriedProxyAuth = PR_TRUE;
+    }
+    else {
         promptFlags |= nsIAuthInformation::AUTH_HOST;
+        if (mTriedHostAuth)
+            promptFlags |= nsIAuthInformation::PREVIOUS_FAILED;
+        mTriedHostAuth = PR_TRUE;
+    }
 
     if (authFlags & nsIHttpAuthenticator::IDENTITY_INCLUDES_DOMAIN)
         promptFlags |= nsIAuthInformation::NEED_DOMAIN;
