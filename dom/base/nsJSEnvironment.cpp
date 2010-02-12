@@ -887,6 +887,12 @@ PrintWinCodebase(nsGlobalWindow *win)
   uri->GetSpec(spec);
   printf("%s\n", spec.get());
 }
+
+void
+DumpString(const nsAString &str)
+{
+  printf("%s\n", NS_ConvertUTF16toUTF8(str).get());
+}
 #endif
 
 static void
