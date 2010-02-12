@@ -9437,7 +9437,7 @@ TraceRecorder::getThis(LIns*& this_ins)
 
     JSObject* thisObj = js_ComputeThisForFrame(cx, cx->fp);
     if (!thisObj)
-        RETURN_ERROR("js_ComputeThisForName failed");
+        RETURN_ERROR("js_ComputeThisForFrame failed");
 
     /* In global code, bake in the global object as 'this' object. */
     if (!cx->fp->callee()) {
@@ -10798,7 +10798,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
          */
         if (!(fun->flags & JSFUN_FAST_NATIVE)) {
             if (JSVAL_IS_NULL(vp[1])) {
-                JSObject* thisObj = js_ComputeThis(cx, JS_FALSE, vp + 2);
+                JSObject* thisObj = js_ComputeThis(cx, vp + 2);
                 if (!thisObj)
                     RETURN_ERROR("error in js_ComputeGlobalThis");
                 this_ins = INS_CONSTOBJ(thisObj);
