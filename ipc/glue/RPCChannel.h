@@ -121,7 +121,7 @@ public:
     }
 
 protected:
-    void WaitForNotify();
+    bool WaitForNotify();
     bool IsMessagePending();
     bool SpinInternalEventLoop();
     static void EnterModalLoop() {
