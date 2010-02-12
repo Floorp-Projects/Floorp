@@ -46,6 +46,7 @@ Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
+Cu.import("resource://weave/base_records/collection.js");
 Cu.import("resource://weave/ext/Observers.js");
 Cu.import("resource://weave/type_records/passwords.js");
 
@@ -57,6 +58,27 @@ PasswordEngine.prototype = {
   _storeObj: PasswordStore,
   _trackerObj: PasswordTracker,
   _recordObj: LoginRec,
+
+  _syncFinish: function _syncFinish() {
+    SyncEngine.prototype._syncFinish.call(this);
+
+    // Delete the weave credentials from the server once
+    if (!Svc.Prefs.get("deletePwd", false)) {
+      try {
+        let ids = Svc.Login.findLogins({}, PWDMGR_HOST, "", "").map(function(info)
+          info.QueryInterface(Components.interfaces.nsILoginMetaInfo).guid);
+        let coll = new Collection(this.engineURL);
+        coll.ids = ids;
+        let ret = coll.delete();
+        this._log.debug("Delete result: " + ret);
+
+        Svc.Prefs.set("deletePwd", true);
+      }
+      catch(ex) {
+        this._log.debug("Password deletes failed: " + Utils.exceptionStr(ex));
+      }
+    }
+  },
 
   _findDupe: function _findDupe(item) {
     let login = this._store._nsLoginInfoFromRecord(item);
