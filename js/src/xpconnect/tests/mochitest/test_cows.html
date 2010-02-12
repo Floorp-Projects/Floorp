@@ -149,6 +149,13 @@ function COWTests() {
     }
 
     try {
+        var obj = {
+            get prop() { return { __exposedProps__: {}, test: "FAIL" } }
+        };
+        ok(getCOW(obj).prop.test != "FAIL", "getting prop.test should throw");
+    } catch (e) {}
+
+    try {
         var objWithFunc = {__exposedProps__: {foo: 'r'},
                            foo: function foo() { return 5; }};
         is(getCOW((objWithFunc)).foo(), 5,

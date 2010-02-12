@@ -48,6 +48,7 @@ _TEST_FILES =	bug500931_helper.html \
 		inner.html \
 		bug92773_helper.html \
 		bug504877_helper.html \
+		chrome_wrappers_helper.html \
 		test_bug92773.html \
 		test_bug361111.xul \
 		test_bug384632.html \

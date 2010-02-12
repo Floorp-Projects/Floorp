@@ -181,19 +181,11 @@ JSBool
 RewrapObject(JSContext *cx, JSObject *scope, JSObject *obj, WrapperType hint,
              jsval *vp)
 {
-  if (IsSecurityWrapper(obj)) {
-    jsval v;
-    JS_GetReservedSlot(cx, obj, sWrappedObjSlot, &v);
-    NS_ASSERTION(!JSVAL_IS_PRIMITIVE(v), "bad object");
-    obj = JSVAL_TO_OBJECT(v);
-  } else if (XPCNativeWrapper::IsNativeWrapper(obj)) {
-    XPCWrappedNative *wn = XPCNativeWrapper::SafeGetWrappedNative(obj);
-    if (!wn) {
-      *vp = JSVAL_NULL;
-      return JS_TRUE;
-    }
-
-    obj = wn->GetFlatJSObject();
+  obj = UnsafeUnwrapSecurityWrapper(cx, obj);
+  if (!obj) {
+    // A wrapper wrapping NULL (such as XPCNativeWrapper.prototype).
+    *vp = JSVAL_NULL;
+    return JS_TRUE;
   }
 
   XPCWrappedNativeScope *nativescope =
@@ -208,6 +200,28 @@ RewrapObject(JSContext *cx, JSObject *scope, JSObject *obj, WrapperType hint,
 
 
   return CreateWrapperFromType(cx, scope, wn, answer, vp);
+}
+
+JSObject *
+UnsafeUnwrapSecurityWrapper(JSContext *cx, JSObject *obj)
+{
+  if (IsSecurityWrapper(obj)) {
+    jsval v;
+    JS_GetReservedSlot(cx, obj, sWrappedObjSlot, &v);
+    NS_ASSERTION(!JSVAL_IS_PRIMITIVE(v), "bad object");
+    return JSVAL_TO_OBJECT(v);
+  }
+
+  if (XPCNativeWrapper::IsNativeWrapper(obj)) {
+    XPCWrappedNative *wn = XPCNativeWrapper::SafeGetWrappedNative(obj);
+    if (!wn) {
+      return nsnull;
+    }
+
+    return wn->GetFlatJSObject();
+  }
+
+  return obj;
 }
 
 JSBool
