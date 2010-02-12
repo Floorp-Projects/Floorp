@@ -283,6 +283,13 @@ nsMediaDocument::StartLayout()
     nsRect visibleArea = shell->GetPresContext()->GetVisibleArea();
     nsresult rv = shell->InitialReflow(visibleArea.width, visibleArea.height);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Now trigger a refresh.  vm might be null if the presshell got
+    // Destroy() called already.
+    nsIViewManager* vm = shell->GetViewManager();
+    if (vm) {
+      vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
+    }
   }
 
   return NS_OK;

@@ -385,8 +385,11 @@ private:
   /**
    * @param aDoInitialReflow set to true if you want to kick off the initial
    * reflow
+   * @param aReenableRefresh set to true if you want this to reenable refresh
+   * before returning; otherwise this will return with refresh disabled
+   * in the view manager
    */
-  nsresult InitPresentationStuff(PRBool aDoInitialReflow);
+  nsresult InitPresentationStuff(PRBool aDoInitialReflow, PRBool aReenableRefresh);
 
   nsresult GetPopupNode(nsIDOMNode** aNode);
   nsresult GetPopupLinkNode(nsIDOMNode** aNode);
@@ -452,6 +455,7 @@ protected:
   PRInt16 mNumURLStarts;
   PRInt16 mDestroyRefCount;    // a second "refcount" for the document viewer's "destroy"
 
+  unsigned      mEnableRendering : 1;
   unsigned      mStopped : 1;
   unsigned      mLoaded : 1;
   unsigned      mDeferredWindowClose : 1;
@@ -493,7 +497,6 @@ protected:
   PRPackedBool mIsPageMode;
   PRPackedBool mCallerIsClosingWindow;
   PRPackedBool mInitializedForPrintPreview;
-  PRPackedBool mHidden;
 };
 
 //------------------------------------------------------------------
@@ -520,6 +523,7 @@ NS_NewDocumentViewer(nsIDocumentViewer** aResult)
 
 void DocumentViewerImpl::PrepareToStartLoad()
 {
+  mEnableRendering  = PR_TRUE;
   mStopped          = PR_FALSE;
   mLoaded           = PR_FALSE;
   mDeferredWindowClose = PR_FALSE;
@@ -554,8 +558,7 @@ DocumentViewerImpl::DocumentViewerImpl()
     mPrintPreviewZoom(1.0),
 #endif
     mHintCharsetSource(kCharsetUninitialized),
-    mInitializedForPrintPreview(PR_FALSE),
-    mHidden(PR_FALSE)
+    mInitializedForPrintPreview(PR_FALSE)
 {
   PrepareToStartLoad();
 }
@@ -693,7 +696,7 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
 }
 
 nsresult
-DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
+DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow, PRBool aReenableRefresh)
 {
   if (GetIsPrintPreview())
     return NS_OK;
@@ -736,6 +739,7 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
   nscoord width = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel() * mBounds.width;
   nscoord height = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel() * mBounds.height;
 
+  mViewManager->DisableRefresh();
   mViewManager->SetWindowDimensions(width, height);
   mPresContext->SetTextZoom(mTextZoom);
   mPresContext->SetFullZoom(mPageZoom);
@@ -755,6 +759,11 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
     // Store the visible area so it's available for other callers of
     // InitialReflow, like nsContentSink::StartLayout.
     mPresContext->SetVisibleArea(nsRect(0, 0, width, height));
+  }
+
+  // Now trigger a refresh
+  if (aReenableRefresh && mEnableRendering && mViewManager) {
+    mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
   }
 
   // now register ourselves as a selection listener, so that we get
@@ -957,7 +966,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
     // The ViewManager and Root View was created above (in
     // MakeWindow())...
 
-    rv = InitPresentationStuff(!makeCX);
+    rv = InitPresentationStuff(!makeCX, !makeCX);
   }
 
   return rv;
@@ -1251,7 +1260,7 @@ DocumentViewerImpl::ResetCloseWindow()
 NS_IMETHODIMP
 DocumentViewerImpl::PageHide(PRBool aIsUnload)
 {
-  mHidden = PR_TRUE;
+  mEnableRendering = PR_FALSE;
 
   if (!mDocument) {
     return NS_ERROR_NULL_POINTER;
@@ -1631,7 +1640,7 @@ DocumentViewerImpl::Stop(void)
     mDocument->StopDocumentLoad();
   }
 
-  if (!mHidden && (mLoaded || mStopped) && mPresContext && !mSHEntry)
+  if (mEnableRendering && (mLoaded || mStopped) && mPresContext && !mSHEntry)
     mPresContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
 
   mStopped = PR_TRUE;
@@ -1746,7 +1755,10 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
       mPresContext->SetLinkHandler(linkHandler);
     }
 
-    rv = InitPresentationStuff(PR_FALSE);
+    rv = InitPresentationStuff(PR_FALSE, PR_FALSE);
+    if (NS_SUCCEEDED(rv) && mEnableRendering && mViewManager) {
+      mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
+    }
   }
 
   return rv;
@@ -1973,7 +1985,8 @@ DocumentViewerImpl::Show(void)
     if (mPresContext) {
       Hide();
 
-      rv = InitPresentationStuff(mDocument->MayStartLayout());
+      rv = InitPresentationStuff(mDocument->MayStartLayout(),
+                                 mDocument->MayStartLayout());
     }
 
     // If we get here the document load has already started and the
@@ -2041,6 +2054,26 @@ DocumentViewerImpl::Hide(void)
 
   return NS_OK;
 }
+NS_IMETHODIMP
+DocumentViewerImpl::SetEnableRendering(PRBool aOn)
+{
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
+  mEnableRendering = aOn;
+  if (mViewManager) {
+    if (aOn) {
+      mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
+      nsIView* view;
+      mViewManager->GetRootView(view);   // views are not refCounted
+      if (view) {
+        mViewManager->UpdateView(view, NS_VMREFRESH_IMMEDIATE);
+      }
+    }
+    else {
+      mViewManager->DisableRefresh();
+    }
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 DocumentViewerImpl::GetSticky(PRBool *aSticky)
@@ -2055,6 +2088,17 @@ DocumentViewerImpl::SetSticky(PRBool aSticky)
 {
   mIsSticky = aSticky;
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::GetEnableRendering(PRBool* aResult)
+{
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
+  NS_PRECONDITION(nsnull != aResult, "null OUT ptr");
+  if (aResult) {
+    *aResult = mEnableRendering;
+  }
   return NS_OK;
 }
 
@@ -4202,6 +4246,10 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
   mPrintEngine->Destroy();
   mPrintEngine = nsnull;
 
+  if (mViewManager) {
+    mViewManager->EnableRefresh(NS_VMREFRESH_DEFERRED);
+  }
+
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   ResetFocusState(docShell);
 
@@ -4312,6 +4360,7 @@ NS_IMETHODIMP DocumentViewerImpl::SetPageMode(PRBool aPageMode, nsIPrintSettings
     NS_ENSURE_SUCCESS(rv, rv);
   }
   InitInternal(mParentWidget, nsnull, mBounds, PR_TRUE, PR_FALSE, PR_FALSE);
+  mViewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);
 
   Show();
   return NS_OK;
