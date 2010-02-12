@@ -42,9 +42,10 @@
 
 // Interface ID for nsIWebShellServices
 
-/* 0c628af0-5638-4703-8f99-ed6134c9de18 */
+/* 8b26a346-031e-11d3-aeea-00108300ff91 */
 #define NS_IWEB_SHELL_SERVICES_IID \
-{ 0x0c628af0, 0x5638, 0x4703, {0x8f, 0x99, 0xed, 0x61, 0x34, 0xc9, 0xde, 0x18} }
+{ 0x8b26a346, 0x031e, 0x11d3, {0xae, 0xea, 0x00, 0x10, 0x83, 0x00, 0xff, 0x91} }
+
 
 //----------------------------------------------------------------------
 
@@ -55,6 +56,7 @@ public:
   NS_IMETHOD ReloadDocument(const char* aCharset = nsnull , 
                             PRInt32 aSource = kCharsetUninitialized) = 0;
   NS_IMETHOD StopDocumentLoad(void) = 0;
+  NS_IMETHOD SetRendering(PRBool aRender) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIWebShellServices, NS_IWEB_SHELL_SERVICES_IID)
@@ -63,5 +65,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIWebShellServices, NS_IWEB_SHELL_SERVICES_IID)
 #define NS_DECL_NSIWEBSHELLSERVICES \
   NS_IMETHOD ReloadDocument(const char *aCharset=nsnull, PRInt32 aSource=kCharsetUninitialized); \
   NS_IMETHOD StopDocumentLoad(void); \
+  NS_IMETHOD SetRendering(PRBool aRender); 
 
 #endif /* nsIWebShellServices_h___ */

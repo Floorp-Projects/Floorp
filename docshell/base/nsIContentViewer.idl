@@ -15,7 +15,7 @@ struct nsIntRect;
 [ptr] native nsIDocumentPtr(nsIDocument);
 [ref] native nsIntRectRef(nsIntRect);
 
-[scriptable, uuid(e2e5dd7d-8140-4fc5-b2c3-3a3b4f946fc7)]
+[scriptable, uuid(c824ac5e-3d86-4ae5-9ccc-9433bdc43004)]
 interface nsIContentViewer : nsISupports
 {
 
@@ -95,6 +95,8 @@ interface nsIContentViewer : nsISupports
 
   void show();
   void hide();
+
+  attribute boolean enableRendering;
 
   attribute boolean sticky;
 
