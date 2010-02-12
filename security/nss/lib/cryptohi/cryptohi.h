@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: cryptohi.h,v 1.13 2009/09/23 22:51:56 wtc%google.com Exp $ */
+/* $Id: cryptohi.h,v 1.14 2010/02/10 00:49:43 wtc%google.com Exp $ */
 
 #ifndef _CRYPTOHI_H_
 #define _CRYPTOHI_H_
@@ -137,7 +137,8 @@ extern SECStatus SGN_End(SGNContext *cx, SECItem *result);
 **	"algid" the signature/hash algorithm to sign with 
 **		(must be compatible with the key type).
 */
-extern SECStatus SEC_SignData(SECItem *result, unsigned char *buf, int len,
+extern SECStatus SEC_SignData(SECItem *result,
+			     const unsigned char *buf, int len,
 			     SECKEYPrivateKey *pk, SECOidTag algid);
 
 /*
@@ -348,8 +349,8 @@ extern SECStatus VFY_VerifyDigestWithAlgorithmID(const SECItem *dig,
 **	    the key type.
 **	"wincx" void pointer to the window context
 */
-extern SECStatus VFY_VerifyData(unsigned char *buf, int len,
-				SECKEYPublicKey *key, SECItem *sig,
+extern SECStatus VFY_VerifyData(const unsigned char *buf, int len,
+				const SECKEYPublicKey *key, const SECItem *sig,
 				SECOidTag sigAlg, void *wincx);
 /*
 ** Verify the signature on a block of data. The signature data is an RSA
@@ -391,7 +392,7 @@ extern SECStatus VFY_VerifyDataDirect(const unsigned char *buf, int len,
 */
 extern SECStatus VFY_VerifyDataWithAlgorithmID(const unsigned char *buf, 
 				int len, const SECKEYPublicKey *key,
-				 const SECItem *sig,
+				const SECItem *sig,
 				const SECAlgorithmID *algid, SECOidTag *hash,
 				void *wincx);
 

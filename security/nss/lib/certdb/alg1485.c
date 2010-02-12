@@ -458,7 +458,7 @@ ParseRFC1485AVA(PRArenaPool *arena, char **pbp, char *endptr)
 		vt = SEC_ASN1_UTF8_STRING;
 	}
 
-	derVal.data = valBuf;
+	derVal.data = (unsigned char*) valBuf;
 	derVal.len  = valLen;
 	a = CERT_CreateAVAFromSECItem(arena, kind, vt, &derVal);
     }
@@ -981,7 +981,7 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava, CertStrictnessLevel strict)
 
     nameLen  = strlen(tagName);
     valueLen = (useHex ? avaValue->len : 
-		cert_RFC1485_GetRequiredLen(avaValue->data, avaValue->len, 
+		cert_RFC1485_GetRequiredLen((char *)avaValue->data, avaValue->len, 
 					    &mode));
     len = nameLen + valueLen + 2; /* Add 2 for '=' and trailing NUL */
 
@@ -1194,8 +1194,8 @@ avaToString(PRArenaPool *arena, CERTAVA *ava)
     if(!avaValue) {
 	return buf;
     }
-    valueLen = cert_RFC1485_GetRequiredLen(avaValue->data, avaValue->len, 
-					   NULL) + 1;
+    valueLen = cert_RFC1485_GetRequiredLen((char *)avaValue->data,
+                                           avaValue->len, NULL) + 1;
     if (arena) {
 	buf = (char *)PORT_ArenaZAlloc(arena, valueLen);
     } else {
