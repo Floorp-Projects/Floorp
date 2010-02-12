@@ -14,6 +14,7 @@ browser.jar:
         skin/classic/browser/Geo.png                                 (Geo.png)
         skin/classic/browser/Info.png                                (Info.png)
         skin/classic/browser/identity.png                            (identity.png)
+        skin/classic/browser/keyhole-forward-mask.svg
         skin/classic/browser/KUI-background.png
         skin/classic/browser/KUI-close.png
         skin/classic/browser/mainwindow-dropdown-arrow.png
@@ -28,7 +29,6 @@ browser.jar:
         skin/classic/browser/Secure24.png                            (Secure24.png)
         skin/classic/browser/Security-broken.png                     (Security-broken.png)
         skin/classic/browser/Toolbar.png                             (Toolbar.png)
-        skin/classic/browser/Toolbar-small.png                       (Toolbar-small.png)
         skin/classic/browser/Go-arrow.png                            (Go-arrow.png)
 *       skin/classic/browser/searchbar.css                           (searchbar.css)
         skin/classic/browser/Search-addengines.png
@@ -102,6 +102,7 @@ browser.jar:
         skin/classic/aero/browser/Geo.png                            (Geo-aero.png)
         skin/classic/aero/browser/Info.png                           (Info-aero.png)
         skin/classic/aero/browser/identity.png                       (identity-aero.png)
+        skin/classic/aero/browser/keyhole-forward-mask.svg
         skin/classic/aero/browser/KUI-background.png
         skin/classic/aero/browser/KUI-close.png
         skin/classic/aero/browser/mainwindow-dropdown-arrow.png      (mainwindow-dropdown-arrow-aero.png)
@@ -116,7 +117,6 @@ browser.jar:
         skin/classic/aero/browser/Secure24.png                       (Secure24-aero.png)
         skin/classic/aero/browser/Security-broken.png                (Security-broken-aero.png)
         skin/classic/aero/browser/Toolbar.png                        (Toolbar-aero.png)
-        skin/classic/aero/browser/Toolbar-small.png                  (Toolbar-small-aero.png)
         skin/classic/aero/browser/Go-arrow.png                       (Go-arrow-aero.png)
 *       skin/classic/aero/browser/searchbar.css                      (searchbar.css)
         skin/classic/aero/browser/Search-addengines.png
