@@ -2494,10 +2494,8 @@ nsHttpChannel::InitCacheEntry()
     if (mResponseHead->NoStore())
         mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
 
-    // Only cache SSL content on disk if the server sent a
-    // Cache-Control: public header, or if the user set the pref
-    if (!gHttpHandler->CanCacheAllSSLContent() &&
-        mConnectionInfo->UsingSSL() && !mResponseHead->CacheControlPublic())
+    // Only cache SSL content on disk if the pref is set
+    if (!gHttpHandler->IsPersistentHttpsCachingEnabled())
         mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
 
     if (mLoadFlags & INHIBIT_PERSISTENT_CACHING) {
