@@ -600,17 +600,23 @@ nsHtml5TreeOpExecutor::NeedsCharsetSwitchTo(const char* aEncoding)
     return;
   }
   
+  nsresult rv = NS_OK;
   nsCOMPtr<nsIWebShellServices> wss = do_QueryInterface(mDocShell);
   if (!wss) {
     return;
   }
-
+#ifndef DONT_INFORM_WEBSHELL
   // ask the webshellservice to load the URL
-  if (NS_SUCCEEDED(wss->StopDocumentLoad())) {
-    wss->ReloadDocument(aEncoding, kCharsetFromMetaTag);
+  if (NS_FAILED(rv = wss->SetRendering(PR_FALSE))) {
+    // do nothing and fall thru
+  } else if (NS_FAILED(rv = wss->StopDocumentLoad())) {
+    rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
+  } else if (NS_FAILED(rv = wss->ReloadDocument(aEncoding, kCharsetFromMetaTag))) {
+    rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
   }
   // if the charset switch was accepted, wss has called Terminate() on the
   // parser by now
+#endif
 
   if (!mParser) {
     // success
