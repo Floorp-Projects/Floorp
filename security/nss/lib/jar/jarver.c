@@ -535,7 +535,7 @@ jar_parse_any(JAR *jar, int type, JAR_Signer *signer,
 	    }
 	}
 
-	if (!x_name || !*x_name) {
+	if (!*x_name) {
 	    /* Whatever that was, it wasn't an entry, because we didn't get a 
 	       name. We don't really have anything, so don't record this. */
 	    continue;

@@ -68,6 +68,10 @@ SQLITE_SRCDIR = sqlite  # Add the sqlite directory to DIRS.
 endif
 endif
 
+ifeq ($(OS_ARCH),Linux)
+SYSINIT_SRCDIR = sysinit  # Add the sysinit directory to DIRS.
+endif
+
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################

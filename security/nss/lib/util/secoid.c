@@ -42,6 +42,26 @@
 #include "prenv.h"
 #include "plhash.h"
 #include "nssrwlk.h"
+#include "nssutil.h"
+
+/* Library identity and versioning */
+
+#if defined(DEBUG)
+#define _DEBUG_STRING " (debug)"
+#else
+#define _DEBUG_STRING ""
+#endif
+
+/*
+ * Version information for the 'ident' and 'what commands
+ *
+ * NOTE: the first component of the concatenated rcsid string
+ * must not end in a '$' to prevent rcs keyword substitution.
+ */
+const char __nss_util_rcsid[] = "$Header: NSS " NSSUTIL_VERSION _DEBUG_STRING
+        "  " __DATE__ " " __TIME__ " $";
+const char __nss_util_sccsid[] = "@(#)NSS " NSSUTIL_VERSION _DEBUG_STRING
+        "  " __DATE__ " " __TIME__;
 
 /* MISSI Mosaic Object ID space */
 #define USGOV                   0x60, 0x86, 0x48, 0x01, 0x65
@@ -1861,6 +1881,9 @@ SECOID_Init(void)
     const SECOidData *oid;
     int i;
     char * envVal;
+    volatile char c; /* force a reference that won't get optimized away */
+
+    c = __nss_util_rcsid[0] + __nss_util_sccsid[0];
 
     if (oidhash) {
 	return SECSuccess; /* already initialized */

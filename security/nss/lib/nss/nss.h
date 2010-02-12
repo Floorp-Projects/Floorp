@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nss.h,v 1.74 2009/11/20 20:15:05 christophe.ravel.bugs%sun.com Exp $ */
+/* $Id: nss.h,v 1.76 2010/02/11 19:12:45 christophe.ravel.bugs%sun.com Exp $ */
 
 #ifndef __nss_h_
 #define __nss_h_
@@ -66,12 +66,12 @@
  * The format of the version string should be
  *     "<major version>.<minor version>[.<patch level>[.<build number>]][ <ECC>][ <Beta>]"
  */
-#define NSS_VERSION  "3.12.6.0" _NSS_ECC_STRING _NSS_CUSTOMIZED " Beta"
+#define NSS_VERSION  "3.12.6.0" _NSS_ECC_STRING _NSS_CUSTOMIZED
 #define NSS_VMAJOR   3
 #define NSS_VMINOR   12
 #define NSS_VPATCH   6
 #define NSS_VBUILD   0
-#define NSS_BETA     PR_TRUE
+#define NSS_BETA     PR_FALSE
 
 #ifndef RC_INVOKED
 
@@ -263,11 +263,7 @@ extern SECStatus NSS_InitReadWrite(const char *configdir);
         NSS_INIT_NOPK11FINALIZE | \
         NSS_INIT_RESERVED
 
-#ifdef macintosh
-#define SECMOD_DB "Security Modules"
-#else
 #define SECMOD_DB "secmod.db"
-#endif
 
 typedef struct NSSInitContextStr NSSInitContext;
 

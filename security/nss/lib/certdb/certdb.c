@@ -39,7 +39,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.101 2009/05/18 21:33:25 nelson%bolyard.com Exp $
+ * $Id: certdb.c,v 1.102 2010/02/10 02:00:57 wtc%google.com Exp $
  */
 
 #include "nssilock.h"
@@ -1553,14 +1553,16 @@ cert_VerifySubjectAltName(CERTCertificate *cert, const char *hn)
 		*/
 		int cnLen = current->name.other.len;
 		rv = CERT_RFC1485_EscapeAndQuote(cn, cnBufLen, 
-					    current->name.other.data, cnLen);
+					    (char *)current->name.other.data,
+					    cnLen);
 		if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_OUTPUT_LEN) {
 		    cnBufLen = cnLen * 3 + 3; /* big enough for worst case */
 		    cn = (char *)PORT_ArenaAlloc(arena, cnBufLen);
 		    if (!cn)
 			goto fail;
 		    rv = CERT_RFC1485_EscapeAndQuote(cn, cnBufLen, 
-					    current->name.other.data, cnLen);
+					    (char *)current->name.other.data,
+					    cnLen);
 		}
 		if (rv == SECSuccess)
 		    rv = cert_TestHostName(cn ,hn);

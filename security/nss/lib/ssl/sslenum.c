@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslenum.c,v 1.16 2008/12/17 06:09:19 nelson%bolyard.com Exp $ */
+/* $Id: sslenum.c,v 1.17 2010/02/10 18:07:21 wtc%google.com Exp $ */
 
 #include "ssl.h"
 #include "sslproto.h"
@@ -54,6 +54,9 @@
  * such as AES and RC4 to allow servers that prefer Camellia to negotiate
  * Camellia without having to disable AES and RC4, which are needed for
  * interoperability with clients that don't yet implement Camellia.
+ *
+ * If new ECC cipher suites are added, also update the ssl3CipherSuite arrays
+ * in ssl3ecc.c.
  */
 const PRUint16 SSL_ImplementedCiphers[] = {
     /* 256-bit */
@@ -149,3 +152,14 @@ const PRUint16 SSL_ImplementedCiphers[] = {
 const PRUint16 SSL_NumImplementedCiphers = 
     (sizeof SSL_ImplementedCiphers) / (sizeof SSL_ImplementedCiphers[0]) - 1;
 
+const PRUint16 *
+SSL_GetImplementedCiphers(void)
+{
+    return SSL_ImplementedCiphers;
+}
+
+PRUint16
+SSL_GetNumImplementedCiphers(void)
+{
+    return SSL_NumImplementedCiphers;
+}
