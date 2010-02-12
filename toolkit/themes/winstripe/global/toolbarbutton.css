@@ -104,11 +104,11 @@ toolbarbutton[disabled="true"] {
 }
 
 toolbarbutton[checked="true"]:not([disabled="true"]) {
-  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
-  padding-top: 4px !important;
-  padding-bottom: 2px !important;
-  -moz-padding-start: 4px !important;
-  -moz-padding-end: 2px !important;
+  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+  padding-top: 4px;
+  padding-bottom: 2px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 2px;
   background-image: url("chrome://global/skin/toolbar/Lighten.png");
   color: ButtonText;
 }

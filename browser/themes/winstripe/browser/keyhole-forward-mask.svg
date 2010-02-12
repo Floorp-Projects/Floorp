@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+  <mask id="mask" maskContentUnits="objectBoundingBox">
+    <rect x="0" y="0" width="1" height="1" fill="white"/>
+    <circle cx="-0.42" cy="0.5" r="0.64" id="circle"/>
+  </mask>
+</svg>
