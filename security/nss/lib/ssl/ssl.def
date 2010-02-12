@@ -142,7 +142,9 @@ SSL_CanBypass;
 ;+NSS_3.12.6 {      # NSS 3.12.6 release
 ;+    global:
 SSL_ConfigServerSessionIDCacheWithOpt;
+SSL_GetImplementedCiphers;
 SSL_GetNegotiatedHostInfo;
+SSL_GetNumImplementedCiphers;
 SSL_HandshakeNegotiatedExtension;
 SSL_ReconfigFD;
 SSL_SetTrustAnchors;

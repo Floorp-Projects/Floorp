@@ -66,7 +66,7 @@
 #include "cert.h"
 #include "sslproto.h"
 
-#define VERSIONSTRING "$Revision: 1.17 $ ($Date: 2010/01/28 06:19:11 $) $Author: nelson%bolyard.com $"
+#define VERSIONSTRING "$Revision: 1.18 $ ($Date: 2010/02/10 02:00:56 $) $Author: wtc%google.com $"
 
 
 struct _DataBufferList;
@@ -76,10 +76,10 @@ typedef struct _DataBufferList {
   struct _DataBuffer *first,*last;
   int size;
   int isEncrypted;
-  char * msgBuf;
-  int    msgBufOffset;
-  int    msgBufSize;
-  int    hMACsize;
+  unsigned char * msgBuf;
+  int             msgBufOffset;
+  int             msgBufSize;
+  int             hMACsize;
 } DataBufferList;
 
 typedef struct _DataBuffer {
@@ -773,8 +773,8 @@ void print_ssl3_handshake(unsigned char *recordBuf,
   if (s->msgBufOffset && s->msgBuf) {
     /* append recordBuf to msgBuf, then use msgBuf */
     if (s->msgBufOffset + recordLen > s->msgBufSize) {
-      int    newSize = s->msgBufOffset + recordLen;
-      char * newBuf = PORT_Realloc(s->msgBuf, newSize);
+      int             newSize = s->msgBufOffset + recordLen;
+      unsigned char * newBuf = PORT_Realloc(s->msgBuf, newSize);
       if (!newBuf) {
 	PR_ASSERT(newBuf);
 	showErr( "Realloc failed");
@@ -1132,7 +1132,7 @@ void print_ssl3_handshake(unsigned char *recordBuf,
       s->msgBufSize = newMsgLen;
       memcpy(s->msgBuf, recordBuf + offset, newMsgLen);
     } else if (newMsgLen > s->msgBufSize) {
-      char * newBuf = PORT_Realloc(s->msgBuf, newMsgLen);
+      unsigned char * newBuf = PORT_Realloc(s->msgBuf, newMsgLen);
       if (!newBuf) {
 	PR_ASSERT(newBuf);
 	showErr( "Realloc failed");

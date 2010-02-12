@@ -274,8 +274,8 @@ milliPause(PRUint32 milli)
 void
 disableAllSSLCiphers(void)
 {
-    const PRUint16 *cipherSuites = SSL_ImplementedCiphers;
-    int             i            = SSL_NumImplementedCiphers;
+    const PRUint16 *cipherSuites = SSL_GetImplementedCiphers();
+    int             i            = SSL_GetNumImplementedCiphers();
     SECStatus       rv;
 
     /* disable all the SSL3 cipher suites */

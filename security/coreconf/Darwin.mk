@@ -131,4 +131,5 @@ DLL_SUFFIX	= dylib
 PROCESS_MAP_FILE = grep -v ';+' $< | grep -v ';-' | \
                 sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' -e 's,^,_,' > $@
 
-G++INCLUDES	= -I/usr/include/g++
+USE_SYSTEM_ZLIB = 1
+ZLIB_LIBS	= -lz
