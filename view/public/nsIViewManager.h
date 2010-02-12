@@ -50,8 +50,8 @@ class nsIDeviceContext;
 class nsIViewObserver;
 
 #define NS_IVIEWMANAGER_IID   \
-  { 0x6ca2fd1c, 0xa57e, 0x4802, \
-    { 0xad, 0x55, 0x85, 0xf6, 0x6f, 0x4a, 0x2c, 0x04 } }
+  { 0xbbdd429c, 0x6542, 0x477a, \
+    { 0xab, 0x48, 0x6c, 0xd6, 0xcb, 0xb8, 0xdf, 0x98 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -276,23 +276,6 @@ public:
    * @result device context
    */
   NS_IMETHOD  GetDeviceContext(nsIDeviceContext *&aContext) = 0;
-
-  /**
-   * prevent the view manager from refreshing.
-   * @return error status
-   */
-  // XXXbz callers of this function don't seem to realize that it disables
-  // refresh for the entire view manager hierarchy.... Maybe it shouldn't do
-  // that?
-  NS_IMETHOD DisableRefresh(void) = 0;
-
-  /**
-   * allow the view manager to refresh. this may cause a synchronous
-   * paint to occur inside the call.
-   * @param aUpdateFlags see bottom of nsIViewManager.h for description
-   * @return error status
-   */
-  NS_IMETHOD EnableRefresh(PRUint32 aUpdateFlags) = 0;
 
   class NS_STACK_CLASS UpdateViewBatch {
   public:
