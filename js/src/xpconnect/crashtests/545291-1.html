@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script>
+
+var textNode = document.createTextNode("x");
+textNode.__proto__.__proto__ = Components;
+textNode.__lookupSetter__("canCallMethod")();
+
+</script>
+</head>
+</html>
