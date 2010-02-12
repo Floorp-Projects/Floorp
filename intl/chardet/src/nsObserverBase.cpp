@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+//#define DONT_INFORM_DOCSHELL
+
 #include "nsIServiceManager.h"
 #include "nsIWebShellServices.h"
 #include "nsObserverBase.h"
@@ -65,16 +67,24 @@ NS_IMETHODIMP nsObserverBase::NotifyDocShell(nsISupports* aDocShell,
    nsCOMPtr<nsIWebShellServices> wss;
    wss = do_QueryInterface(aDocShell,&res);
    if (NS_SUCCEEDED(res)) {
+
+#ifndef DONT_INFORM_DOCSHELL
      // ask the webshellservice to load the URL
-     if (NS_FAILED(wss->StopDocumentLoad())){
-       // do nothing and fall through
+     if (NS_FAILED( res = wss->SetRendering(PR_FALSE) ))
+       rv = res;
+
+     // XXX nisheeth, uncomment the following two line to see the reent problem
+
+     else if (NS_FAILED(res = wss->StopDocumentLoad())){
+             rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
      }
-     else if (NS_FAILED(wss->ReloadDocument(charset, source))) {
-       // do nothing and fall through
+     else if (NS_FAILED(res = wss->ReloadDocument(charset, source))) {
+             rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
      }
      else {
        rv = NS_ERROR_HTMLPARSER_STOPPARSING; // We're reloading a new document...stop loading the current.
      }
+#endif
    }
 
    //if our reload request is not accepted, we should tell parser to go on
