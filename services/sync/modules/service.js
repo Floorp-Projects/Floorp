@@ -99,7 +99,6 @@ WeaveSvc.prototype = {
 
   _lock: Utils.lock,
   _catch: Utils.catch,
-  _isQuitting: false,
   _loggedIn: false,
   _syncInProgress: false,
   _keyGenEnabled: true,
@@ -167,9 +166,6 @@ WeaveSvc.prototype = {
   },
 
   get isLoggedIn() { return this._loggedIn; },
-
-  get isQuitting() { return this._isQuitting; },
-  set isQuitting(value) { this._isQuitting = value; },
 
   get keyGenEnabled() { return this._keyGenEnabled; },
   set keyGenEnabled(value) { this._keyGenEnabled = value; },
@@ -284,7 +280,6 @@ WeaveSvc.prototype = {
 
     Svc.Observer.addObserver(this, "network:offline-status-changed", true);
     Svc.Observer.addObserver(this, "private-browsing", true);
-    Svc.Observer.addObserver(this, "quit-application", true);
     Svc.Observer.addObserver(this, "weave:service:sync:finish", true);
     Svc.Observer.addObserver(this, "weave:service:sync:error", true);
     Svc.Observer.addObserver(this, "weave:service:backoff:interval", true);
@@ -383,9 +378,6 @@ WeaveSvc.prototype = {
         // Entering or exiting private browsing? Reschedule syncs
         this._log.trace("Private browsing change: " + data);
         this._checkSyncStatus();
-        break;
-      case "quit-application":
-        this._onQuitApplication();
         break;
       case "weave:service:sync:error":
         this._handleSyncError();
