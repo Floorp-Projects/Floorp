@@ -424,6 +424,9 @@ JSBool
 RewrapObject(JSContext *cx, JSObject *scope, JSObject *obj, WrapperType hint,
              jsval *vp);
 
+JSObject *
+UnsafeUnwrapSecurityWrapper(JSContext *cx, JSObject *obj);
+
 JSBool
 CreateWrapperFromType(JSContext *cx, JSObject *scope, XPCWrappedNative *wn,
                       WrapperType hint, jsval *vp);
@@ -463,11 +466,14 @@ Enumerate(JSContext *cx, JSObject *wrapperObj, JSObject *innerObj);
  * Resolves a property (that may be) defined on |innerObj| onto
  * |wrapperObj|. This will also resolve random, page-defined objects
  * and is therefore unsuitable for cross-origin resolution.
+ *
+ * If |caller| is not NONE, then we will call the proper WrapObject
+ * hook for any getters or setters about to be lifted onto
+ * |wrapperObj|.
  */
 JSBool
-NewResolve(JSContext *cx, JSObject *wrapperObj,
-           JSBool preserveVal, JSObject *innerObj,
-           jsval id, uintN flags, JSObject **objp);
+NewResolve(JSContext *cx, JSObject *wrapperObj, JSBool preserveVal,
+           JSObject *innerObj, jsval id, uintN flags, JSObject **objp);
 
 /**
  * Resolve a native property named id from innerObj onto wrapperObj. The
