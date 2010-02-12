@@ -49,7 +49,7 @@ _TEST_FILES =\
 		test_attrs.html \
 		test_caretmove.html \
 	$(warning	test_coalescence.html temporarily disabled) \
-	$(warning	test_doc.html temporarily disabled) \
+		test_doc.html \
 		test_dragndrop.html \
 		test_flush.html \
 		test_focus.html \
