@@ -78,7 +78,7 @@ EmbedDownload::~EmbedDownload()
       mMozillaWidget->fDownload = NULL;
       }
 
-		if( mDone == PR_FALSE ) ReportDownload( Pt_WEB_DOWNLOAD_CANCEL, 0, 0, "" );
+		if( !mDone ) ReportDownload( Pt_WEB_DOWNLOAD_CANCEL, 0, 0, "" );
     }
 
 ///* ATENTIE */ printf( "after remove fDownloadCount=%d\n", mMozillaWidget->fDownloadCount );
