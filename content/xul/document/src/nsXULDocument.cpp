@@ -2034,29 +2034,7 @@ nsXULDocument::StartLayout(void)
         if (! docShell)
             return NS_ERROR_UNEXPECTED;
 
-        // Trigger a refresh before the call to InitialReflow(),
-        // because the view manager's UpdateView() function is
-        // dropping dirty rects if refresh is disabled rather than
-        // accumulating them until refresh is enabled and then
-        // triggering a repaint...
-        // XXXbz Is that still the case?
         nsresult rv = NS_OK;
-        nsIViewManager* vm = shell->GetViewManager();
-        if (vm) {
-            nsCOMPtr<nsIContentViewer> contentViewer;
-            rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
-            if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
-                PRBool enabled;
-                contentViewer->GetEnableRendering(&enabled);
-                if (enabled) {
-                    vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
-                }
-            }
-        }
-
-        // Don't try to call GetVisibleArea earlier than this --- the EnableRefresh call
-        // above can flush reflows, which can cause a parent document to be flushed,
-        // calling ResizeReflow on our document which does SetVisibleArea.
         nsRect r = cx->GetVisibleArea();
         rv = shell->InitialReflow(r.width, r.height);
         NS_ENSURE_SUCCESS(rv, rv);

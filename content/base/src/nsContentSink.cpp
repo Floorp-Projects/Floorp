@@ -1266,29 +1266,6 @@ nsContentSink::ScrollToRef()
   }
 }
 
-nsresult
-nsContentSink::RefreshIfEnabled(nsIViewManager* vm)
-{
-  if (!vm) {
-    // vm might be null if the shell got Destroy() called already
-    return NS_OK;
-  }
-
-  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
-  if (contentViewer) {
-    PRBool enabled;
-    contentViewer->GetEnableRendering(&enabled);
-    if (enabled) {
-      vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
-    }
-  }
-
-  return NS_OK;
-}
-
 void
 nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
 {
@@ -1331,9 +1308,6 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
     if (NS_FAILED(rv)) {
       return;
     }
-
-    // Now trigger a refresh
-    RefreshIfEnabled(shell->GetViewManager());
   }
 
   // If the document we are loading has a reference or it is a
