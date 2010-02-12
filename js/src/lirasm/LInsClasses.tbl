@@ -38,10 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* LIns classes, as required for --random mode.  Includers must define a CLASS
+/* LIns classes, as required for --random mode.  Includers must define a CL___
  * macro of the following form:
  *
- * #define CLASS(name, only64bit, relFreq)     ...
+ * #define CL___(name, only64bit, relFreq)     ...
  *
  * Selected arguments can be used within the macro expansions.
  *
@@ -51,9 +51,6 @@
  *              (32-bit integer), Q (64-bit integer), F (64-bit float), N
  *              (null).  A name of the form LOP_Z_XY means that it takes
  *              arguments of type X and Y and produces a result of type Z.
- *
- * only64bit    1 if the instruction class is only used on 64-bit platforms, 0
- *              otherwise.
  *
  * relFreq      We weight each class differently, so that some classes are more
  *              common than others.  This field gives the relative frequency of
@@ -67,53 +64,69 @@
  *              stores, calls, guards) and not too many value sources (eg.
  *              immediates, loads) so that the amount of dead code generated is
  *              reasonable.
+ *
+ * Because certain opcode classes aren't supported on all platforms, CLxyz must be one
+ * of the following:
+ *
+ *   CL___: for opcode classes supported on all platforms.
+ *   CL_64: for opcode classes supported only on 64-bit platforms.
  */
 
-CLASS(  LFENCE,         0,  1)  //  1%  LIR_regfence, LIR_xbarrier
+#ifdef NANOJIT_64BIT
+#   define CL_64(a, b)      CL___(a, b)
+#else
+#   define CL_64(a, b)
+#endif
 
-CLASS(  LALLOC,         0,  1)  //  2%  LIR_alloc
 
-CLASS(  LIMM_I,         0,  4)  //  6%  LIR_imm
-CLASS(  LIMM_Q,         1,  3)  //  9%  LIR_quad
-CLASS(  LIMM_F,         0,  3)  // 12%  LIR_float
+CL___(  LFENCE,         1)  //  1%  LIR_regfence, LIR_xbarrier
 
-CLASS(  LOP_I_I,        0,  2)  // 14%  LIR_neg, LIR_not
-CLASS(  LOP_Q_Q,        1,  0)  // 14%  (none)
-CLASS(  LOP_F_F,        0,  2)  // 16%  LIR_fneg
+CL___(  LALLOC,         1)  //  2%  LIR_alloc
 
-CLASS(  LOP_I_II,       0, 16)  // 32%  LIR_add, LIR_and, LIR_eq, etc.
-CLASS(  LOP_Q_QQ,       1,  7)  // 39%  LIR_qiadd, LIR_qiand, LIR_qeq, etc.
-CLASS(  LOP_Q_QI,       1,  2)  // 41%  LIR_qilsh, LIR_qirsh, LIR_qursh
-CLASS(  LOP_F_FF,       0, 10)  // 51%  LIR_fadd, etc.
+CL___(  LIMM_I,         4)  //  6%  LIR_imm
+CL_64(  LIMM_Q,         3)  //  9%  LIR_quad
+CL___(  LIMM_F,         3)  // 12%  LIR_float
+
+CL___(  LOP_I_I,        2)  // 14%  LIR_neg, LIR_not
+CL_64(  LOP_Q_Q,        0)  // 14%  (none)
+CL___(  LOP_F_F,        2)  // 16%  LIR_fneg
+
+CL___(  LOP_I_II,       6)  // 32%  LIR_add, LIR_and, LIR_eq, etc.
+CL_64(  LOP_Q_QQ,       7)  // 39%  LIR_qiadd, LIR_qiand, LIR_qeq, etc.
+CL_64(  LOP_Q_QI,       2)  // 41%  LIR_qilsh, LIR_qirsh, LIR_qursh
+CL___(  LOP_F_FF,       0)  // 51%  LIR_fadd, etc.
 
 // cmov has a low weight because is also used with LIR_div/LIR_mod.
-CLASS(  LOP_I_BII,      0,  1)  // 52%  LIR_cmov
-CLASS(  LOP_Q_BQQ,      1,  2)  // 54%  LIR_qcmov
+CL___(  LOP_I_BII,      1)  // 52%  LIR_cmov
+CL_64(  LOP_Q_BQQ,      2)  // 54%  LIR_qcmov
 
-CLASS(  LOP_B_II,       0,  3)  // 57%  LIR_eq,  LIR_lt,  etc
-CLASS(  LOP_B_QQ,       1,  3)  // 60%  LIR_qeq, LIR_qlt, etc
-CLASS(  LOP_B_FF,       0,  3)  // 63%  LIR_feq, LIR_flt, etc
+CL___(  LOP_B_II,       3)  // 57%  LIR_eq,  LIR_lt,  etc
+CL_64(  LOP_B_QQ,       3)  // 60%  LIR_qeq, LIR_qlt, etc
+CL___(  LOP_B_FF,       3)  // 63%  LIR_feq, LIR_flt, etc
 
-CLASS(  LOP_Q_I,        1,  2)  // 65%  LIR_i2q, LIR_u2q
-CLASS(  LOP_F_I,        0,  2)  // 67%  LIR_i2f, LIR_u2f
-CLASS(  LOP_I_Q,        1,  1)  // 68%  LIR_q2i
-CLASS(  LOP_I_F,        0,  1)  // 69%  LIR_qlo, LIR_qhi, LIR_f2i
-CLASS(  LOP_F_II,       0,  1)  // 70%  LIR_qjoin
+CL_64(  LOP_Q_I,        2)  // 65%  LIR_i2q, LIR_u2q
+CL___(  LOP_F_I,        2)  // 67%  LIR_i2f, LIR_u2f
+CL_64(  LOP_I_Q,        1)  // 68%  LIR_q2i
+CL___(  LOP_I_F,        1)  // 69%  LIR_qlo, LIR_qhi, LIR_f2i
+CL___(  LOP_F_II,       1)  // 70%  LIR_qjoin
 
-CLASS(  LLD_I,          0,  3)  // 73%  LIR_ld, LIR_ldc, LIR_ld*b, LIR_ld*s
-CLASS(  LLD_Q,          1,  2)  // 75%  LIR_ldq, LIR_ldqc
-CLASS(  LLD_F,          0,  3)  // 78%  LIR_ldf, LIR_ldfc
+CL___(  LLD_I,          3)  // 73%  LIR_ld, LIR_ldc, LIR_ld*b, LIR_ld*s
+CL_64(  LLD_Q,          2)  // 75%  LIR_ldq, LIR_ldqc
+CL___(  LLD_F,          3)  // 78%  LIR_ldf, LIR_ldfc
 
-CLASS(  LST_I,          0,  5)  // 83%  LIR_sti
-CLASS(  LST_Q,          1,  4)  // 87%  LIR_stqi
-CLASS(  LST_F,          0,  5)  // 92%  LIR_stfi
+CL___(  LST_I,          5)  // 83%  LIR_sti
+CL_64(  LST_Q,          4)  // 87%  LIR_stqi
+CL___(  LST_F,          5)  // 92%  LIR_stfi
 
-CLASS(  LCALL_I_I1,     0,  1)  // 93%  LIR_icall
-CLASS(  LCALL_I_I6,     0,  1)  // 94%  LIR_icall
-CLASS(  LCALL_Q_Q2,     1,  1)  // 95%  LIR_qcall
-CLASS(  LCALL_Q_Q7,     1,  1)  // 96%  LIR_qcall
-CLASS(  LCALL_F_F3,     0,  1)  // 97%  LIR_fcall
-CLASS(  LCALL_F_F8,     0,  1)  // 98%  LIR_fcall
-CLASS(  LCALL_N_IQF,    1,  1)  // 99%  LIR_icall or LIR_qcall
+CL___(  LCALL_I_I1,     1)  // 93%  LIR_icall
+CL___(  LCALL_I_I6,     1)  // 94%  LIR_icall
+CL_64(  LCALL_Q_Q2,     1)  // 95%  LIR_qcall
+CL_64(  LCALL_Q_Q7,     1)  // 96%  LIR_qcall
+CL___(  LCALL_F_F3,     1)  // 97%  LIR_fcall
+CL___(  LCALL_F_F8,     1)  // 98%  LIR_fcall
+CL_64(  LCALL_N_IQF,    1)  // 99%  LIR_icall or LIR_qcall
 
-CLASS(  LLABEL,         0,  1)  //100%  LIR_label
+CL___(  LLABEL,         1)  //100%  LIR_label
+
+
+#undef CL_64
