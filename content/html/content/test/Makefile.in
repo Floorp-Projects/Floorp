@@ -136,6 +136,7 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug347174_xslp.html \
 		347174transformable.xml \
 		347174transform.xsl \
+		test_anchor_href_cache_invalidation.html \
 		test_bug481335.xhtml \
 		test_bug500885.html \
 		test_bug514856.html \
