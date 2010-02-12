@@ -73,9 +73,11 @@ namespace nanojit
 
 #define NJ_MAX_STACK_ENTRY              8192
 #define NJ_MAX_PARAMETERS               1
+
 #define NJ_JTBL_SUPPORTED               0
 #define NJ_EXPANDED_LOADSTORE_SUPPORTED 0
 #define NJ_F2I_SUPPORTED                1
+#define NJ_SOFTFLOAT_SUPPORTED          0
 
     const int NJ_ALIGN_STACK = 16;
 

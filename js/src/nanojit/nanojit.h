@@ -67,9 +67,19 @@
 #if defined NANOJIT_64BIT
     #define IF_64BIT(...) __VA_ARGS__
     #define UNLESS_64BIT(...)
+    #define CASE32(x)
+    #define CASE64(x)   case x
 #else
     #define IF_64BIT(...)
     #define UNLESS_64BIT(...) __VA_ARGS__
+    #define CASE32(x)   case x
+    #define CASE64(x)
+#endif
+
+#if defined NANOJIT_IA32 || defined NANOJIT_X64
+    #define CASE86(x)   case x
+#else
+    #define CASE86(x)
 #endif
 
 // Embed no-op macros that let Valgrind work with the JIT.
