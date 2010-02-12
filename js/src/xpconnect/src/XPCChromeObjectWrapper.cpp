@@ -397,7 +397,14 @@ XPC_COW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
-  return RewrapForContent(cx, obj, rval);
+  scope = JS_GetScopeChain(cx);
+  if (!scope) {
+    return JS_FALSE;
+  }
+
+  return JSVAL_IS_PRIMITIVE(*rval) ||
+         RewrapObject(cx, JS_GetGlobalForObject(cx, scope),
+                      JSVAL_TO_OBJECT(*rval), COW, rval);
 }
 
 static JSBool
