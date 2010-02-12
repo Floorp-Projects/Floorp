@@ -68,7 +68,6 @@ ifndef MOZ_NATIVE_BZ2
 tier_external_dirs += modules/libbz2
 endif
 tier_external_dirs += modules/libmar
-tier_external_dirs += other-licenses/bsdiff
 endif
 
 tier_external_dirs	+= gfx/qcms
