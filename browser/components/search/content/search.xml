@@ -432,7 +432,7 @@
           else {
             setTimeout(function () {
               openDialog("chrome://browser/content/search/engineManager.xul",
-                         "_blank", "chrome,dialog,modal,centerscreen");
+                         "_blank", "chrome,dialog,modal,centerscreen,resizable");
             }, 0);
           }
         ]]></body>

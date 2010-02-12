@@ -53,7 +53,7 @@
         ondialogextra2="gEngineManagerDialog.onRestoreDefaults();"
         title="&engineManager.title;"
         style="&engineManager.style;"
-        persist="screenX screenY"
+        persist="screenX screenY width height"
         windowtype="Browser:SearchManager">
 
   <script type="application/javascript"
