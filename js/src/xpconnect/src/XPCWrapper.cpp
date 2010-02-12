@@ -429,7 +429,7 @@ AddProperty(JSContext *cx, JSObject *wrapperObj, JSBool wantGetterSetter,
   NS_ASSERTION(desc.obj == wrapperObj,
                "What weird wrapper are we using?");
 
-  return JS_DefinePropertyById(cx, innerObj, interned_id, desc.value,
+  return JS_DefinePropertyById(cx, innerObj, interned_id, *vp,
                                desc.getter, desc.setter, desc.attrs);
 }
 
