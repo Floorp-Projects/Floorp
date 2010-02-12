@@ -1693,7 +1693,7 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(jsval)
 JS_ComputeThis(JSContext *cx, jsval *vp)
 {
-    if (!js_ComputeThis(cx, JS_FALSE, vp + 2))
+    if (!js_ComputeThis(cx, vp + 2))
         return JSVAL_NULL;
     return vp[1];
 }
@@ -4285,7 +4285,7 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
      * Follow Function.prototype.apply and .call by using the global object as
      * the 'this' param if no args.
      */
-    if (!js_ComputeThis(cx, JS_FALSE, vp + 2))
+    if (!js_ComputeThis(cx, vp + 2))
         return JS_FALSE;
     /*
      * Protect against argc underflowing. By calling js_ComputeThis, we made
@@ -4349,7 +4349,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
      * Follow Function.prototype.apply and .call by using the global object as
      * the 'this' param if no args.
      */
-    if (!js_ComputeThis(cx, JS_TRUE, argv))
+    if (!js_ComputeThis(cx, argv))
         return JS_FALSE;
     js_GetTopStackFrame(cx)->thisv = argv[-1];
     JS_ASSERT(cx->fp->argv == argv);
