@@ -824,13 +824,13 @@
               var overflowy = this._scrollable.ownerDocument.defaultView
                                   .getComputedStyle(this._scrollable, '')
                                   .getPropertyValue('overflow-y');
-              var scrollVert = this._scrollable.scrollHeight > this._scrollable.offsetHeight &&
+              var scrollVert = this._scrollable.scrollHeight > this._scrollable.clientHeight &&
                                overflowy != 'hidden' && overflowy != 'visible';
 
               // do not allow horizontal scrolling for select elements, it leads
               // to visual artifacts and is not the expected behavior anyway
               if (!(this._scrollable instanceof HTMLSelectElement) &&
-                  this._scrollable.scrollWidth > this._scrollable.offsetWidth &&
+                  this._scrollable.scrollWidth > this._scrollable.clientWidth &&
                   overflowx != 'hidden' && overflowx != 'visible') {
                 this._autoScrollPopup.setAttribute("scrolldir", scrollVert ? "NSEW" : "EW");
                 break;
