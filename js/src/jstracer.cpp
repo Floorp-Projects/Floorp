@@ -1284,20 +1284,12 @@ class FrameInfoCache
     }
 };
 
-/* TODO: Remove this when MSVC PGO stops crashing. */
-#ifdef _MSC_VER
-# pragma optimize("", off)
-#endif
 FrameInfoCache::FrameInfoCache(VMAllocator *allocator)
   : allocator(allocator)
 {
     if (!set.init())
         OutOfMemoryAbort();
 }
-/* TODO: Remove this when MSVC PGO stops crashing. */
-#ifdef _MSC_VER
-# pragma optimize("", on)
-#endif
 
 #define PC_HASH_COUNT 1024
 
@@ -2147,10 +2139,6 @@ InitConst(const T &t)
     return const_cast<T &>(t);
 }
 
-/* TODO: Remove this when MSVC PGO stops crashing (bug 543034). */
-#ifdef _MSC_VER
-# pragma optimize("", off)
-#endif
 JS_REQUIRES_STACK
 TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* fragment,
                              unsigned stackSlots, unsigned ngslots, TraceType* typeMap,
@@ -2328,10 +2316,6 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
         guard(true, lir->ins2(LIR_peq, nested_ins, INS_CONSTPTR(innermost)), NESTED_EXIT);
     }
 }
-/* TODO: Remove this when MSVC PGO stops crashing (bug 543034). */
-#ifdef _MSC_VER
-# pragma optimize("", on)
-#endif
 
 TraceRecorder::~TraceRecorder()
 {
@@ -7335,10 +7319,6 @@ SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes)
     tm->maxCodeCacheBytes = bytes;
 }
 
-/* TODO: Remove this when MSVC PGO stops crashing (bug 543034). */
-#ifdef _MSC_VER
-# pragma optimize("", off)
-#endif
 void
 InitJIT(TraceMonitor *tm)
 {
@@ -7435,10 +7415,6 @@ InitJIT(TraceMonitor *tm)
 #endif
 #endif
 }
-/* TODO: Remove this when MSVC PGO stops crashing (bug 543034). */
-#ifdef _MSC_VER
-# pragma optimize("", on)
-#endif
 
 void
 FinishJIT(TraceMonitor *tm)
