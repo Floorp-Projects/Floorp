@@ -2744,18 +2744,18 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 #if defined(XP_WIN) && !defined(WINCE)
     static BOOL firstJavaPlugin = FALSE;
     BOOL restoreOrigDir = FALSE;
-    char origDir[_MAX_PATH];
+    WCHAR origDir[_MAX_PATH];
     if (pluginTag->mIsJavaPlugin && !firstJavaPlugin) {
-      DWORD dw = GetCurrentDirectoryA(_MAX_PATH, origDir);
+      DWORD dw = GetCurrentDirectoryW(_MAX_PATH, origDir);
       NS_ASSERTION(dw <= _MAX_PATH, "Failed to obtain the current directory, which may lead to incorrect class loading");
       nsCOMPtr<nsIFile> binDirectory;
       result = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
                                       getter_AddRefs(binDirectory));
 
       if (NS_SUCCEEDED(result)) {
-        nsCAutoString path;
-        binDirectory->GetNativePath(path);
-        restoreOrigDir = SetCurrentDirectoryA(path.get());
+        nsAutoString path;
+        binDirectory->GetPath(path);
+        restoreOrigDir = SetCurrentDirectoryW(path.get());
       }
     }
 #endif
@@ -2763,7 +2763,7 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 
 #if defined(XP_WIN) && !defined(WINCE)
     if (!firstJavaPlugin && restoreOrigDir) {
-      BOOL bCheck = SetCurrentDirectoryA(origDir);
+      BOOL bCheck = SetCurrentDirectoryW(origDir);
       NS_ASSERTION(bCheck, "Error restoring directory");
       firstJavaPlugin = TRUE;
     }
