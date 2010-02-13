@@ -241,7 +241,8 @@ class HashTable : AllocPolicy
     mutable bool entered;
 #endif
 
-    static const unsigned sMinSize      = 16;
+    static const unsigned sMinSizeLog2  = 4;
+    static const unsigned sMinSize      = 1 << sMinSizeLog2;
     static const unsigned sSizeLimit    = tl::NBitMask<24>::result;
     static const unsigned sHashBits     = tl::BitSize<HashNumber>::result;
     static const unsigned sGoldenRatio  = 0x9E3779B9U;       /* taken from jsdhash.h */
@@ -278,17 +279,20 @@ class HashTable : AllocPolicy
 #endif
     {}
 
-/* TODO: Remove this when MSVC PGO stops crashing (bug 543034). */
-#ifdef _MSC_VER
-# pragma optimize("", off)
-#endif
     bool init(uint32 capacity)
     {
         if (capacity < sMinSize)
             capacity = sMinSize;
-        int log2;
-        JS_CEILING_LOG2(log2, capacity);
-        capacity = JS_BIT(log2);
+
+        /* FIXME: use JS_CEILING_LOG2 when PGO stops crashing (bug 543034). */
+        JS_ASSERT(capacity < (1 << 31));
+        int roundUp = sMinSize, roundUpLog2 = sMinSizeLog2;
+        while (roundUp < capacity) {
+            roundUp <<= 1;
+            ++roundUpLog2;
+        }
+
+        capacity = roundUp;
         if (capacity >= sSizeLimit)
             return false;
 
@@ -296,14 +300,10 @@ class HashTable : AllocPolicy
         if (!table)
             return false;
 
-        setTableSizeLog2(log2);
+        setTableSizeLog2(roundUpLog2);
         METER(memset(&stats, 0, sizeof(stats)));
         return true;
     }
-/* TODO: Remove this when MSVC PGO stops crashing (bug 543034). */
-#ifdef _MSC_VER
-#pragma optimize("", on)
-#endif
 
     ~HashTable()
     {
