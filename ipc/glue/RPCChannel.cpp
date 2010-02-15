@@ -102,12 +102,24 @@ RPCChannel::RPCChannel(RPCListener* aListener,
     mCxxStackFrames(0)
 {
     MOZ_COUNT_CTOR(RPCChannel);
+
+    mDequeueOneTask = new RefCountedTask(NewRunnableMethod(
+                                                 this,
+                                                 &RPCChannel::OnMaybeDequeueOne));
 }
 
 RPCChannel::~RPCChannel()
 {
     MOZ_COUNT_DTOR(RPCChannel);
     RPC_ASSERT(0 == mCxxStackFrames, "mismatched CxxStackFrame ctor/dtors");
+}
+
+void
+RPCChannel::Clear()
+{
+    mDequeueOneTask->Cancel();
+
+    AsyncChannel::Clear();
 }
 
 #ifdef OS_WIN
@@ -324,7 +336,7 @@ RPCChannel::EnqueuePendingMessages()
     for (size_t i = 0; i < mDeferred.size(); ++i)
         mWorkerLoop->PostTask(
             FROM_HERE,
-            NewRunnableMethod(this, &RPCChannel::OnMaybeDequeueOne));
+            new DequeueTask(mDequeueOneTask));
 
     // XXX performance tuning knob: could process all or k pending
     // messages here, rather than enqueuing for later processing
@@ -332,7 +344,7 @@ RPCChannel::EnqueuePendingMessages()
     for (size_t i = 0; i < mPending.size(); ++i)
         mWorkerLoop->PostTask(
             FROM_HERE,
-            NewRunnableMethod(this, &RPCChannel::OnMaybeDequeueOne));
+            new DequeueTask(mDequeueOneTask));
 }
 
 void
@@ -623,11 +635,10 @@ RPCChannel::OnMessageReceived(const Message& msg)
 
     mPending.push(msg);
 
-    if (0 == StackDepth() && !mBlockedOnParent)
+    if (0 == StackDepth() && !mBlockedOnParent) {
         // the worker thread might be idle, make sure it wakes up
-        mWorkerLoop->PostTask(
-            FROM_HERE,
-            NewRunnableMethod(this, &RPCChannel::OnMaybeDequeueOne));
+        mWorkerLoop->PostTask(FROM_HERE, new DequeueTask(mDequeueOneTask));
+    }
     else if (!AwaitingSyncReply())
         NotifyWorkerThread();
 }
@@ -653,7 +664,6 @@ RPCChannel::OnChannelError()
 
     AsyncChannel::OnChannelError();
 }
-
 
 } // namespace ipc
 } // namespace mozilla

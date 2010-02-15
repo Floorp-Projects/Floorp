@@ -44,6 +44,7 @@
 #include <stack>
 
 #include "mozilla/ipc/SyncChannel.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace ipc {
@@ -90,6 +91,9 @@ public:
     RPCChannel(RPCListener* aListener, RacyRPCPolicy aPolicy=RRPChildWins);
 
     virtual ~RPCChannel();
+
+    NS_OVERRIDE
+    void Clear();
 
     // Make an RPC to the other side of the channel
     bool Call(Message* msg, Message* reply);
@@ -332,6 +336,49 @@ protected:
     // not protected by mMutex.  It is managed exclusively by the
     // helper |class CxxStackFrame|.
     int mCxxStackFrames;
+    
+private:
+
+    //
+    // All dequeuing tasks require a single point of cancellation,
+    // which is handled via a reference-counted task.
+    //
+    class RefCountedTask
+    {
+      public:
+        RefCountedTask(CancelableTask* aTask)
+        : mTask(aTask)
+        , mRefCnt(0) {}
+        ~RefCountedTask() { delete mTask; }
+        void Run() { mTask->Run(); }
+        void Cancel() { mTask->Cancel(); }
+        void AddRef() { ++mRefCnt; }
+        void Release() {
+            if (--mRefCnt == 0)
+                delete this;
+        }
+
+      private:
+        CancelableTask* mTask;
+        nsrefcnt mRefCnt;
+    };
+
+    //
+    // Wrap an existing task which can be cancelled at any time
+    // without the wrapper's knowledge.
+    //
+    class DequeueTask : public Task
+    {
+      public:
+        DequeueTask(RefCountedTask* aTask) : mTask(aTask) {}
+        void Run() { mTask->Run(); }
+        
+      private:
+        nsRefPtr<RefCountedTask> mTask;
+    };
+
+    // A task encapsulating dequeuing one pending task
+    nsRefPtr<RefCountedTask> mDequeueOneTask;
 };
 
 
