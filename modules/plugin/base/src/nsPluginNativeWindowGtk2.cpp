@@ -91,6 +91,7 @@ private:
 };
 
 static gboolean plug_removed_cb   (GtkWidget *widget, gpointer data);
+static void socket_unrealize_cb   (GtkWidget *widget, gpointer data);
 
 nsPluginNativeWindowGtk2::nsPluginNativeWindowGtk2() : nsPluginNativeWindow()
 {
@@ -250,6 +251,9 @@ nsresult nsPluginNativeWindowGtk2::CreateXEmbedWindow() {
   // SYNTAX ERROR.
   g_signal_connect(mSocketWidget, "plug_removed",
                    G_CALLBACK(plug_removed_cb), NULL);
+
+  g_signal_connect(mSocketWidget, "unrealize",
+                   G_CALLBACK(socket_unrealize_cb), NULL);
 
   g_signal_connect(mSocketWidget, "destroy",
                    G_CALLBACK(gtk_widget_destroyed), &mSocketWidget);
@@ -445,4 +449,35 @@ plug_removed_cb (GtkWidget *widget, gpointer data)
   return TRUE;
 }
 
+static void
+socket_unrealize_cb(GtkWidget *widget, gpointer data)
+{
+  // Unmap and reparent any child windows that GDK does not yet know about.
+  // (See bug 540114 comment 10.)
+  GdkWindow* socket_window = widget->window;
+  Display* display = GDK_DISPLAY();
 
+  // Ignore X errors that may happen if windows get destroyed (possibly
+  // requested by the plugin) between XQueryTree and when we operate on them.
+  gdk_error_trap_push();
+
+  Window root, parent;
+  Window* children;
+  unsigned int nchildren;
+  if (!XQueryTree(display, gdk_x11_drawable_get_xid(socket_window),
+                  &root, &parent, &children, &nchildren))
+    return;
+
+  for (unsigned int i = 0; i < nchildren; ++i) {
+    Window child = children[i];
+    if (!gdk_window_lookup(child)) {
+      // This window is not known to GDK.
+      XUnmapWindow(display, child);
+      XReparentWindow(display, child, DefaultRootWindow(display), 0, 0);
+    }
+  }
+
+  if (children) XFree(children);
+
+  gdk_error_trap_pop();
+}
