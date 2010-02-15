@@ -141,14 +141,12 @@ enum ReturnType {
 #define FN(name, args) \
     {#name, CI(name, args)}
 
-const ArgType I32 = nanojit::ARGTYPE_I;
+const int I32 = nanojit::ARGSIZE_LO;
 #ifdef NANOJIT_64BIT
-const ArgType I64 = nanojit::ARGTYPE_Q;
+const int I64 = nanojit::ARGSIZE_Q;
 #endif
-const ArgType F64 = nanojit::ARGTYPE_F;
-const ArgType PTR = nanojit::ARGTYPE_P;
-const ArgType WRD = nanojit::ARGTYPE_P;
-const ArgType VOID = nanojit::ARGTYPE_V;
+const int F64 = nanojit::ARGSIZE_F;
+const int PTR = nanojit::ARGSIZE_P;
 
 enum LirTokenType {
     NAME, NUMBER, PUNCT, NEWLINE
@@ -331,6 +329,24 @@ private:
     void endFragment();
 };
 
+// Meaning: arg 'm' of 'n' has size 'sz'.
+static int argMask(int sz, int m, int n)
+{
+    // Order examples, from MSB to LSB:  
+    // - 3 args: 000 | 000 | 000 | 000 | 000 | arg1| arg2| arg3| ret
+    // - 8 args: arg1| arg2| arg3| arg4| arg5| arg6| arg7| arg8| ret
+    // If the mask encoding reversed the arg order the 'n' parameter wouldn't
+    // be necessary, as argN would always be in the same place in the
+    // bitfield.
+    return sz << ((1 + n - m) * ARGSIZE_SHIFT);
+}
+
+// Return value has size 'sz'.
+static int retMask(int sz)
+{
+    return sz;
+}
+
 // 'sin' is overloaded on some platforms, so taking its address
 // doesn't quite work. Provide a do-nothing function here
 // that's not overloaded.
@@ -340,10 +356,10 @@ double sinFn(double d) {
 #define sin sinFn
 
 Function functions[] = {
-    FN(puts,   CallInfo::typeSig1(I32, PTR)),
-    FN(sin,    CallInfo::typeSig1(F64, F64)),
-    FN(malloc, CallInfo::typeSig1(PTR, WRD)),
-    FN(free,   CallInfo::typeSig1(VOID, PTR)),
+    FN(puts,   argMask(PTR, 1, 1) | retMask(I32)),
+    FN(sin,    argMask(F64, 1, 1) | retMask(F64)),
+    FN(malloc, argMask(PTR, 1, 1) | retMask(PTR)),
+    FN(free,   argMask(PTR, 1, 1) | retMask(I32))
 };
 
 template<typename out, typename in> out
@@ -660,30 +676,32 @@ FragmentAssembler::assemble_call(const string &op)
     } else {
         // User-defined function:  infer CallInfo details (ABI, arg types, ret
         // type) from the call site.
+        int ty;
+
         ci->_abi = _abi;
+
+        ci->_argtypes = 0;
         size_t argc = mTokens.size();
-        ArgType argTypes[MAXARGS];
         for (size_t i = 0; i < argc; ++i) {
-            NanoAssert(i < MAXARGS);    // should give a useful error msg if this fails
             args[i] = ref(mTokens[mTokens.size() - (i+1)]);
-            if      (args[i]->isF64()) argTypes[i] = F64;
+            if      (args[i]->isF64()) ty = ARGSIZE_F;
 #ifdef NANOJIT_64BIT
-            else if (args[i]->isI64()) argTypes[i] = I64;
+            else if (args[i]->isI64()) ty = ARGSIZE_Q;
 #endif
-            else                       argTypes[i] = I32;
+            else                       ty = ARGSIZE_I;
             // Nb: i+1 because argMask() uses 1-based arg counting.
+            ci->_argtypes |= argMask(ty, i+1, argc);
         }
 
         // Select return type from opcode.
-        ArgType retType = ARGTYPE_V;
-        if      (mOpcode == LIR_icall) retType = I32;
-        else if (mOpcode == LIR_fcall) retType = F64;
+        ty = 0;
+        if      (mOpcode == LIR_icall) ty = ARGSIZE_LO;
+        else if (mOpcode == LIR_fcall) ty = ARGSIZE_F;
 #ifdef NANOJIT_64BIT
-        else if (mOpcode == LIR_qcall) retType = I64;
+        else if (mOpcode == LIR_qcall) ty = ARGSIZE_Q;
 #endif
         else                           nyi("callh");
-
-        ci->_typesig = CallInfo::typeSigN(retType, argc, argTypes);
+        ci->_argtypes |= retMask(ty);
     }
 
     return mLir->insCall(ci, args);
@@ -1198,22 +1216,58 @@ static double f_F_F8(double a, double b, double c, double d,
 }
 
 #ifdef NANOJIT_64BIT
-static void f_V_IQF(int32_t, uint64_t, double)
+static void f_N_IQF(int32_t, uint64_t, double)
 {
     return;     // no need to do anything
 }
 #endif
 
-const CallInfo ci_I_I1 = CI(f_I_I1, CallInfo::typeSig1(I32, I32));
-const CallInfo ci_I_I6 = CI(f_I_I6, CallInfo::typeSig6(I32, I32, I32, I32, I32, I32, I32));
+const CallInfo ci_I_I1 = CI(f_I_I1, argMask(I32, 1, 1) |
+                                    retMask(I32));
+
+const CallInfo ci_I_I6 = CI(f_I_I6, argMask(I32, 1, 6) |
+                                    argMask(I32, 2, 6) |
+                                    argMask(I32, 3, 6) |
+                                    argMask(I32, 4, 6) |
+                                    argMask(I32, 5, 6) |
+                                    argMask(I32, 6, 6) |
+                                    retMask(I32));
+
 #ifdef NANOJIT_64BIT
-const CallInfo ci_Q_Q2 = CI(f_Q_Q2, CallInfo::typeSig2(I64, I64, I64));
-const CallInfo ci_Q_Q7 = CI(f_Q_Q7, CallInfo::typeSig7(I64, I64, I64, I64, I64, I64, I64, I64));
+const CallInfo ci_Q_Q2 = CI(f_Q_Q2, argMask(I64, 1, 2) |
+                                    argMask(I64, 2, 2) |
+                                    retMask(I64));
+
+const CallInfo ci_Q_Q7 = CI(f_Q_Q7, argMask(I64, 1, 7) |
+                                    argMask(I64, 2, 7) |
+                                    argMask(I64, 3, 7) |
+                                    argMask(I64, 4, 7) |
+                                    argMask(I64, 5, 7) |
+                                    argMask(I64, 6, 7) |
+                                    argMask(I64, 7, 7) |
+                                    retMask(I64));
 #endif
-const CallInfo ci_F_F3 = CI(f_F_F3, CallInfo::typeSig3(F64, F64, F64, F64));
-const CallInfo ci_F_F8 = CI(f_F_F8, CallInfo::typeSig8(F64, F64, F64, F64, F64, F64, F64, F64, F64));
+
+const CallInfo ci_F_F3 = CI(f_F_F3, argMask(F64, 1, 3) |
+                                    argMask(F64, 2, 3) |
+                                    argMask(F64, 3, 3) |
+                                    retMask(F64));
+
+const CallInfo ci_F_F8 = CI(f_F_F8, argMask(F64, 1, 8) |
+                                    argMask(F64, 2, 8) |
+                                    argMask(F64, 3, 8) |
+                                    argMask(F64, 4, 8) |
+                                    argMask(F64, 5, 8) |
+                                    argMask(F64, 6, 8) |
+                                    argMask(F64, 7, 8) |
+                                    argMask(F64, 8, 8) |
+                                    retMask(F64));
+
 #ifdef NANOJIT_64BIT
-const CallInfo ci_V_IQF = CI(f_V_IQF, CallInfo::typeSig3(VOID, I32, I64, F64));
+const CallInfo ci_N_IQF = CI(f_N_IQF, argMask(I32, 1, 3) |
+                                      argMask(I64, 2, 3) |
+                                      argMask(F64, 3, 3) |
+                                      retMask(ARGSIZE_NONE));
 #endif
 
 // Generate a random block containing nIns instructions, plus a few more
@@ -1857,7 +1911,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
             if (!Is.empty() && !Qs.empty() && !Fs.empty()) {
                 // Nb: args[] holds the args in reverse order... sigh.
                 LIns* args[3] = { rndPick(Fs), rndPick(Qs), rndPick(Is) };
-                ins = mLir->insCall(&ci_V_IQF, args);
+                ins = mLir->insCall(&ci_N_IQF, args);
                 n++;
             }
             break;

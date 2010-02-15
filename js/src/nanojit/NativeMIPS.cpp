@@ -389,11 +389,10 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_regarg(ArgType ty, LInsp p, Register r)
+    void Assembler::asm_regarg(ArgSize sz, LInsp p, Register r)
     {
         NanoAssert(isKnownReg(r));
-        if (ty == ARGTYPE_I || ty == ARGTYPE_U)
-        {
+        if (sz & ARGSIZE_MASK_INT) {
             // arg goes in specific register
             if (p->isconst())
                 asm_li(r, p->imm32());
@@ -465,7 +464,7 @@ namespace nanojit
 
     // Encode a 64-bit floating-point argument using the appropriate ABI.
     // This function operates in the same way as asm_arg, except that it will only
-    // handle arguments where (ArgType)ty == ARGTYPE_F.
+    // handle arguments where (ArgSize)sz == ARGSIZE_F.
     void
     Assembler::asm_arg_64(LInsp arg, Register& r, Register& fr, int& stkd)
     {
@@ -1516,18 +1515,18 @@ namespace nanojit
      *   on the stack.
      */
     void 
-    Assembler::asm_arg(ArgType ty, LInsp arg, Register& r, Register& fr, int& stkd)
+    Assembler::asm_arg(ArgSize sz, LInsp arg, Register& r, Register& fr, int& stkd)
     {
         // The stack offset must always be at least aligned to 4 bytes.
         NanoAssert((stkd & 3) == 0);
 
-        if (ty == ARGTYPE_F) {
+        if (sz == ARGSIZE_F) {
             // This task is fairly complex and so is delegated to asm_arg_64.
             asm_arg_64(arg, r, fr, stkd);
-        } else {
-            NanoAssert(ty == ARGTYPE_I || ty == ARGTYPE_U);
+        }
+        else if (sz & ARGSIZE_MASK_INT) {
             if (stkd < 16) {
-                asm_regarg(ty, arg, r);
+                asm_regarg(sz, arg, r);
                 fr = nextreg(fr);
                 r = nextreg(r);
             }
@@ -1537,6 +1536,11 @@ namespace nanojit
             // is not a double, subsequent double values are passed in integer registers
             fr = r;
             stkd += 4;
+        }
+        else {
+            NanoAssert(sz == ARGSIZE_Q);
+            // shouldn't have 64 bit int params
+            NanoAssert(false);
         }
     }
 
@@ -1566,10 +1570,10 @@ namespace nanojit
 
         evictScratchRegs();
 
-        const CallInfo* ci = ins->callInfo();
-        ArgType argTypes[MAXARGS];
-        uint32_t argc = ci->getArgTypes(argTypes);
-        bool indirect = ci->isIndirect();
+        const CallInfo* call = ins->callInfo();
+        ArgSize sizes[MAXARGS];
+        uint32_t argc = call->get_sizes(sizes);
+        bool indirect = call->isIndirect();
 
         // FIXME: Put one of the argument moves into the BDS slot
 
@@ -1580,11 +1584,11 @@ namespace nanojit
         if (!indirect)
             // FIXME: If we can tell that we are calling non-PIC
             // (ie JIT) code, we could call direct instead of using t9
-            asm_li(T9, ci->_address);
+            asm_li(T9, call->_address);
         else
             // Indirect call: we assign the address arg to t9
             // which matches the o32 ABI for calling functions
-            asm_regarg(ARGTYPE_P, ins->arg(--argc), T9);
+            asm_regarg(ARGSIZE_P, ins->arg(--argc), T9);
 
         // Encode the arguments, starting at A0 and with an empty argument stack.
         Register    r = A0, fr = FA0;
@@ -1595,7 +1599,7 @@ namespace nanojit
         // Note that we loop through the arguments backwards as LIR specifies them
         // in reverse order.
         while(argc--)
-            asm_arg(argTypes[argc], ins->arg(argc), r, fr, stkd);
+            asm_arg(sizes[argc], ins->arg(argc), r, fr, stkd);
 
         if (stkd > max_out_args)
             max_out_args = stkd;

@@ -166,8 +166,8 @@ namespace nanojit
         underrunProtect(8);
         NOP();
 
-        ArgType argTypes[MAXARGS];
-        uint32_t argc = call->getArgTypes(argTypes);
+        ArgSize sizes[MAXARGS];
+        uint32_t argc = call->get_sizes(sizes);
 
         NanoAssert(ins->isop(LIR_pcall) || ins->isop(LIR_fcall));
         verbose_only(if (_logc->lcbits & LC_Assembly)
@@ -189,8 +189,8 @@ namespace nanojit
         for(int i=0; i<argc; i++)
             {
                 uint32_t j = argc-i-1;
-                ArgType ty = argTypes[j];
-                if (ty == ARGTYPE_F) {
+                ArgSize sz = sizes[j];
+                if (sz == ARGSIZE_F) {
                     Register r = findRegFor(ins->arg(j), FpRegs);
                     GPRIndex += 2;
                     offset += 8;

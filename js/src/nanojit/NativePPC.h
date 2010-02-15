@@ -287,7 +287,7 @@ namespace nanojit
         void nativePageSetup();                                             \
         void br(NIns *addr, int link);                                      \
         void br_far(NIns *addr, int link);                                  \
-        void asm_regarg(ArgType, LIns*, Register);                          \
+        void asm_regarg(ArgSize, LIns*, Register);                          \
         void asm_li(Register r, int32_t imm);                               \
         void asm_li32(Register r, int32_t imm);                             \
         void asm_li64(Register r, uint64_t imm);                            \
