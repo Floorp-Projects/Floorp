@@ -179,9 +179,9 @@ namespace nanojit
     NIns *asm_branch_near(bool, LIns*, NIns*);                          \
     void asm_cmp(LOpcode condop, LIns *a, LIns *b, Register cr);        \
     void asm_move(Register d, Register s);                              \
-    void asm_regarg(ArgType ty, LInsp p, Register r);                   \
+    void asm_regarg(ArgSize sz, LInsp p, Register r);                   \
     void asm_stkarg(LInsp arg, int stkd);                               \
-    void asm_arg(ArgType ty, LInsp arg, Register& r, Register& fr, int& stkd);     \
+    void asm_arg(ArgSize sz, LInsp arg, Register& r, Register& fr, int& stkd);     \
     void asm_arg_64(LInsp arg, Register& r, Register& fr, int& stkd)    ;
 
 

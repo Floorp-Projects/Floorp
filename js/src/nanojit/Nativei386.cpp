@@ -274,13 +274,13 @@ namespace nanojit
         // Pre-assign registers to the first N 4B args based on the calling convention.
         uint32_t n = 0;
 
-        ArgType argTypes[MAXARGS];
-        uint32_t argc = call->getArgTypes(argTypes);
+        ArgSize sizes[MAXARGS];
+        uint32_t argc = call->get_sizes(sizes);
         int32_t stkd = 0;
 
         if (indirect) {
             argc--;
-            asm_arg(ARGTYPE_P, ins->arg(argc), EAX, stkd);
+            asm_arg(ARGSIZE_P, ins->arg(argc), EAX, stkd);
             if (!config.fixed_esp)
                 stkd = 0;
         }
@@ -288,12 +288,12 @@ namespace nanojit
         for(uint32_t i=0; i < argc; i++)
         {
             uint32_t j = argc-i-1;
-            ArgType ty = argTypes[j];
+            ArgSize sz = sizes[j];
             Register r = UnspecifiedReg;
-            if (n < max_regs && ty != ARGTYPE_F) {
+            if (n < max_regs && sz != ARGSIZE_F) {
                 r = argRegs[n++]; // tell asm_arg what reg to use
             }
-            asm_arg(ty, ins->arg(j), r, stkd);
+            asm_arg(sz, ins->arg(j), r, stkd);
             if (!config.fixed_esp)
                 stkd = 0;
         }
@@ -1393,12 +1393,13 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_arg(ArgType ty, LInsp ins, Register r, int32_t& stkd)
+    void Assembler::asm_arg(ArgSize sz, LInsp ins, Register r, int32_t& stkd)
     {
         // If 'r' is known, then that's the register we have to put 'ins'
         // into.
 
-        if (ty == ARGTYPE_I || ty == ARGTYPE_U) {
+        if (sz == ARGSIZE_I || sz == ARGSIZE_U)
+        {
             if (r != UnspecifiedReg) {
                 if (ins->isconst()) {
                     // Rematerialize the constant.
@@ -1427,9 +1428,10 @@ namespace nanojit
                 else
                     asm_pusharg(ins);
             }
-
-        } else {
-            NanoAssert(ty == ARGTYPE_F);
+        }
+        else
+        {
+            NanoAssert(sz == ARGSIZE_F);
             asm_farg(ins, stkd);
         }
     }
