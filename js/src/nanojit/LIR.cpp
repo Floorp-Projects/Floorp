@@ -1921,7 +1921,7 @@ namespace nanojit
             CASE64(LIR_i2q:)
             CASE64(LIR_u2q:)
             CASE64(LIR_q2i:)
-            CASE64(LIR_f2i:)
+            case LIR_f2i:
                 VMPI_sprintf(s, "%s = %s %s", formatRef(i), lirNames[op], formatRef(i->oprnd1()));
                 break;
 
