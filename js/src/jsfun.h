@@ -164,9 +164,9 @@ struct JSFunction : public JSObject
     bool optimizedClosure() const { return FUN_KIND(this) > JSFUN_INTERPRETED; }
     bool needsWrapper()     const { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
 
-    uintN countVars() const { 
+    uintN countVars() const {
         JS_ASSERT(FUN_INTERPRETED(this));
-        return u.i.nvars; 
+        return u.i.nvars;
     }
 
     uintN countArgsAndVars() const {
@@ -327,7 +327,7 @@ extern void
 js_PutCallObject(JSContext *cx, JSStackFrame *fp);
 
 extern JSBool JS_FASTCALL
-js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs, jsval *argv, 
+js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs, jsval *argv,
                         uint32 nvars, jsval *slots);
 
 extern JSFunction *
