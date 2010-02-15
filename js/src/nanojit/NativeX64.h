@@ -393,8 +393,8 @@ namespace nanojit
         bool isTargetWithinS8(NIns* target);\
         bool isTargetWithinS32(NIns* target);\
         void asm_quad(Register r, uint64_t v);\
-        void asm_regarg(ArgSize, LIns*, Register);\
-        void asm_stkarg(ArgSize, LIns*, int);\
+        void asm_regarg(ArgType, LIns*, Register);\
+        void asm_stkarg(ArgType, LIns*, int);\
         void asm_shift(LIns*);\
         void asm_shift_imm(LIns*);\
         void asm_arith_imm(LIns*);\

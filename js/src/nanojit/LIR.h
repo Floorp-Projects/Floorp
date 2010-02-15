@@ -99,23 +99,20 @@ namespace nanojit
         ABI_CDECL
     };
 
-    enum ArgSize {
-        ARGSIZE_NONE = 0,
-        ARGSIZE_F = 1,      // double (64bit)
-        ARGSIZE_I = 2,      // int32_t
+    // All values must fit into three bits.  See CallInfo for details.
+    enum ArgType {
+        ARGTYPE_V = 0,      // void
+        ARGTYPE_F = 1,      // double (64bit)
+        ARGTYPE_I = 2,      // int32_t
+        ARGTYPE_U = 3,      // uint32_t
 #ifdef NANOJIT_64BIT
-        ARGSIZE_Q = 3,      // uint64_t
+        ARGTYPE_Q = 4,      // uint64_t
 #endif
-        ARGSIZE_U = 6,      // uint32_t
-        ARGSIZE_MASK_ANY = 7,
-        ARGSIZE_MASK_INT = 2,
-        ARGSIZE_SHIFT = 3,
 
         // aliases
-        ARGSIZE_P = PTR_SIZE(ARGSIZE_I, ARGSIZE_Q), // pointer
-        ARGSIZE_LO = ARGSIZE_I, // int32_t
-        ARGSIZE_B = ARGSIZE_I, // bool
-        ARGSIZE_V = ARGSIZE_NONE  // void
+        ARGTYPE_P  = PTR_SIZE(ARGTYPE_I, ARGTYPE_Q),    // pointer
+        ARGTYPE_LO = ARGTYPE_I,                         // int32_t
+        ARGTYPE_B  = ARGTYPE_I                          // bool
     };
 
     enum IndirectCall {
@@ -124,38 +121,77 @@ namespace nanojit
 
     struct CallInfo
     {
+    private:
+        // In _typesig, each entry is three bits.
+        static const int _typesig_fieldszb = 3;
+        static const int _typesig_fieldmask = 7;
+    public:
         uintptr_t   _address;
-        uint32_t    _argtypes:27;    // 9 3-bit fields indicating arg type, by ARGSIZE above (including ret type): a1 a2 a3 a4 a5 ret
-        uint8_t     _cse:1;          // true if no side effects
-        uint8_t     _fold:1;         // true if no side effects
+        uint32_t    _typesig:27;    // 9 3-bit fields indicating arg type, by ArgType above (including ret type): a1 a2 a3 a4 a5 ret
+        uint8_t     _cse:1;         // true if no side effects
+        uint8_t     _fold:1;        // true if no side effects
         AbiKind     _abi:3;
         verbose_only ( const char* _name; )
 
-        uint32_t _count_args(uint32_t mask) const;
-        // Nb: uses right-to-left order, eg. sizes[0] is the size of the right-most arg.
-        uint32_t get_sizes(ArgSize* sizes) const;
+        uint32_t count_args() const;
+        uint32_t count_iargs() const;
+        // Nb: uses right-to-left order, eg. types[0] is the size of the right-most arg.
+        uint32_t getArgTypes(ArgType* types) const;
 
-        inline ArgSize returnType() const {
-            return ArgSize(_argtypes & ARGSIZE_MASK_ANY);
+        inline ArgType returnType() const {
+            return ArgType(_typesig & _typesig_fieldmask);
+        }
+        // Index args in reverse order, i.e. arg(0) returns the rightmost arg.
+        // See mozilla bug 525815 for fixing this.
+        inline ArgType argType(uint32_t arg) const {
+            return ArgType((_typesig >> (_typesig_fieldszb * (arg+1))) & _typesig_fieldmask);
         }
 
-        // Note that this indexes arguments *backwards*, that is to
-        // get the Nth arg, you have to ask for index (numargs - N).
-        // See mozilla bug 525815 for fixing this.
-        inline ArgSize argType(uint32_t arg) const {
-            return ArgSize((_argtypes >> (ARGSIZE_SHIFT * (arg+1))) & ARGSIZE_MASK_ANY);
+        // The following encode 'r func()' through to 'r func(a1, a2, a3, a4, a5, a6, a7, a8)'.
+        static inline uint32_t typeSig0(ArgType r) {
+            return r;
+        }
+        static inline uint32_t typeSig1(ArgType r, ArgType a1) {
+            return a1 << _typesig_fieldszb*1 | typeSig0(r);
+        }
+        static inline uint32_t typeSig2(ArgType r, ArgType a1, ArgType a2) {
+            return a1 << _typesig_fieldszb*2 | typeSig1(r, a2);
+        }
+        static inline uint32_t typeSig3(ArgType r, ArgType a1, ArgType a2, ArgType a3) {
+            return a1 << _typesig_fieldszb*3 | typeSig2(r, a2, a3);
+        }
+        static inline uint32_t typeSig4(ArgType r, ArgType a1, ArgType a2, ArgType a3,
+                                        ArgType a4) {
+            return a1 << _typesig_fieldszb*4 | typeSig3(r, a2, a3, a4);
+        }
+        static inline uint32_t typeSig5(ArgType r,  ArgType a1, ArgType a2, ArgType a3,
+                                        ArgType a4, ArgType a5) {
+            return a1 << _typesig_fieldszb*5 | typeSig4(r, a2, a3, a4, a5);
+        }
+        static inline uint32_t typeSig6(ArgType r, ArgType a1, ArgType a2, ArgType a3,
+                                        ArgType a4, ArgType a5, ArgType a6) {
+            return a1 << _typesig_fieldszb*6 | typeSig5(r, a2, a3, a4, a5, a6);
+        }
+        static inline uint32_t typeSig7(ArgType r,  ArgType a1, ArgType a2, ArgType a3,
+                                        ArgType a4, ArgType a5, ArgType a6, ArgType a7) {
+            return a1 << _typesig_fieldszb*7 | typeSig6(r, a2, a3, a4, a5, a6, a7);
+        }
+        static inline uint32_t typeSig8(ArgType r,  ArgType a1, ArgType a2, ArgType a3, ArgType a4,
+                                        ArgType a5, ArgType a6, ArgType a7, ArgType a8) {
+            return a1 << _typesig_fieldszb*8 | typeSig7(r, a2, a3, a4, a5, a6, a7, a8);
+        }
+        // Encode 'r func(a1, ..., aN))'
+        static inline uint32_t typeSigN(ArgType r, int N, ArgType a[]) {
+            uint32_t typesig = r;
+            for (int i = 0; i < N; i++) {
+                typesig |= a[i] << _typesig_fieldszb*(N-i);
+            }
+            return typesig;
         }
 
         inline bool isIndirect() const {
             return _address < 256;
         }
-        inline uint32_t count_args() const {
-            return _count_args(ARGSIZE_MASK_ANY);
-        }
-        inline uint32_t count_iargs() const {
-            return _count_args(ARGSIZE_MASK_INT);
-        }
-        // fargs = args - iargs
     };
 
     /*
@@ -197,14 +233,14 @@ namespace nanojit
     inline LOpcode getCallOpcode(const CallInfo* ci) {
         LOpcode op = LIR_pcall;
         switch (ci->returnType()) {
-        case ARGSIZE_NONE:  op = LIR_pcall; break;
-        case ARGSIZE_I:
-        case ARGSIZE_U:     op = LIR_icall; break;
-        case ARGSIZE_F:     op = LIR_fcall; break;
+        case ARGTYPE_V: op = LIR_pcall; break;
+        case ARGTYPE_I:
+        case ARGTYPE_U: op = LIR_icall; break;
+        case ARGTYPE_F: op = LIR_fcall; break;
 #ifdef NANOJIT_64BIT
-        case ARGSIZE_Q:     op = LIR_qcall; break;
+        case ARGTYPE_Q: op = LIR_qcall; break;
 #endif
-        default:            NanoAssert(0);  break;
+        default:        NanoAssert(0);  break;
         }
         return op;
     }
