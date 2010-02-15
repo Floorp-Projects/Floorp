@@ -4949,7 +4949,7 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit, LIns* inner_s
     CallInfo* ci = new (traceAlloc()) CallInfo();
     ci->_address = uintptr_t(inner->code());
     JS_ASSERT(ci->_address);
-    ci->_typesig = CallInfo::typeSig1(ARGTYPE_P, ARGTYPE_P);
+    ci->_argtypes = ARGSIZE_P | ARGSIZE_P << ARGSIZE_SHIFT;
     ci->_cse = ci->_fold = 0;
     ci->_abi = ABI_FASTCALL;
 #ifdef DEBUG
@@ -10454,7 +10454,11 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
 
     CallInfo* ci = new (traceAlloc()) CallInfo();
     ci->_address = uintptr_t(setflag ? sprop->setter : sprop->getter);
-    ci->_typesig = CallInfo::typeSig4(ARGTYPE_I, ARGTYPE_P, ARGTYPE_P, ARGTYPE_P, ARGTYPE_P);
+    ci->_argtypes = ARGSIZE_I << (0*ARGSIZE_SHIFT) |
+                    ARGSIZE_P << (1*ARGSIZE_SHIFT) |
+                    ARGSIZE_P << (2*ARGSIZE_SHIFT) |
+                    ARGSIZE_P << (3*ARGSIZE_SHIFT) |
+                    ARGSIZE_P << (4*ARGSIZE_SHIFT);
     ci->_cse = ci->_fold = 0;
     ci->_abi = ABI_CDECL;
 #ifdef DEBUG
@@ -10801,7 +10805,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     }
 
     // Set up arguments for the JSNative or JSFastNative.
-    uint32 typesig;
+    uint32 types;
     if (fun->flags & JSFUN_FAST_NATIVE) {
         if (mode == JSOP_NEW)
             RETURN_STOP("untraceable fast native constructor");
@@ -10809,7 +10813,10 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         args[0] = invokevp_ins;
         args[1] = lir->insImm(argc);
         args[2] = cx_ins;
-        typesig = CallInfo::typeSig3(ARGTYPE_I, ARGTYPE_P, ARGTYPE_I, ARGTYPE_P);
+        types = ARGSIZE_I << (0*ARGSIZE_SHIFT) |
+                ARGSIZE_P << (1*ARGSIZE_SHIFT) |
+                ARGSIZE_I << (2*ARGSIZE_SHIFT) |
+                ARGSIZE_P << (3*ARGSIZE_SHIFT);
     } else {
         int32_t offset = (vplen - 1) * sizeof(jsval);
         native_rval_ins = lir->ins2(LIR_piadd, invokevp_ins, INS_CONSTWORD(offset));
@@ -10818,8 +10825,12 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
         args[2] = lir->insImm(argc);
         args[3] = this_ins;
         args[4] = cx_ins;
-        typesig = CallInfo::typeSig5(ARGTYPE_I,
-                                     ARGTYPE_P, ARGTYPE_P, ARGTYPE_I, ARGTYPE_P, ARGTYPE_P);
+        types = ARGSIZE_I << (0*ARGSIZE_SHIFT) |
+                ARGSIZE_P << (1*ARGSIZE_SHIFT) |
+                ARGSIZE_P << (2*ARGSIZE_SHIFT) |
+                ARGSIZE_I << (3*ARGSIZE_SHIFT) |
+                ARGSIZE_P << (4*ARGSIZE_SHIFT) |
+                ARGSIZE_P << (5*ARGSIZE_SHIFT);
     }
 
     // Generate CallInfo and a JSSpecializedNative structure on the fly.
@@ -10830,7 +10841,7 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     ci->_address = uintptr_t(fun->u.n.native);
     ci->_cse = ci->_fold = 0;
     ci->_abi = ABI_CDECL;
-    ci->_typesig = typesig;
+    ci->_argtypes = types;
 #ifdef DEBUG
     ci->_name = JS_GetFunctionName(fun);
  #endif
@@ -12625,7 +12636,7 @@ TraceRecorder::record_NativeCallComplete()
     } else {
         /* Convert the result to double if the builtin returns int32. */
         if (JSVAL_IS_NUMBER(v) &&
-            pendingSpecializedNative->builtin->returnType() == ARGTYPE_I) {
+            (pendingSpecializedNative->builtin->_argtypes & ARGSIZE_MASK_ANY) == ARGSIZE_I) {
             set(&v, lir->ins1(LIR_i2f, v_ins));
         }
     }
