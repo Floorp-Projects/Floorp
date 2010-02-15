@@ -875,8 +875,8 @@ namespace nanojit
         evictScratchRegs();
 
         const CallInfo *call = ins->callInfo();
-        ArgType argTypes[MAXARGS];
-        int argc = call->getArgTypes(argTypes);
+        ArgSize sizes[MAXARGS];
+        int argc = call->get_sizes(sizes);
 
         bool indirect = call->isIndirect();
         if (!indirect) {
@@ -895,7 +895,7 @@ namespace nanojit
             // Indirect call: we assign the address arg to RAX since it's not
             // used for regular arguments, and is otherwise scratch since it's
             // clobberred by the call.
-            asm_regarg(ARGTYPE_P, ins->arg(--argc), RAX);
+            asm_regarg(ARGSIZE_P, ins->arg(--argc), RAX);
             CALLRAX();
         }
 
@@ -908,28 +908,28 @@ namespace nanojit
         int arg_index = 0;
         for (int i = 0; i < argc; i++) {
             int j = argc - i - 1;
-            ArgType ty = argTypes[j];
+            ArgSize sz = sizes[j];
             LIns* arg = ins->arg(j);
-            if ((ty == ARGTYPE_I || ty == ARGTYPE_U || ty == ARGTYPE_Q) && arg_index < NumArgRegs) {
+            if ((sz & ARGSIZE_MASK_INT) && arg_index < NumArgRegs) {
                 // gp arg
-                asm_regarg(ty, arg, argRegs[arg_index]);
+                asm_regarg(sz, arg, argRegs[arg_index]);
                 arg_index++;
             }
         #ifdef _WIN64
-            else if (ty == ARGTYPE_F && arg_index < NumArgRegs) {
+            else if (sz == ARGSIZE_F && arg_index < NumArgRegs) {
                 // double goes in XMM reg # based on overall arg_index
-                asm_regarg(ty, arg, Register(XMM0+arg_index));
+                asm_regarg(sz, arg, Register(XMM0+arg_index));
                 arg_index++;
             }
         #else
-            else if (ty == ARGTYPE_F && fr < XMM8) {
+            else if (sz == ARGSIZE_F && fr < XMM8) {
                 // double goes in next available XMM register
-                asm_regarg(ty, arg, fr);
+                asm_regarg(sz, arg, fr);
                 fr = nextreg(fr);
             }
         #endif
             else {
-                asm_stkarg(ty, arg, stk_used);
+                asm_stkarg(sz, arg, stk_used);
                 stk_used += sizeof(void*);
             }
         }
@@ -938,8 +938,8 @@ namespace nanojit
             max_stk_used = stk_used;
     }
 
-    void Assembler::asm_regarg(ArgType ty, LIns *p, Register r) {
-        if (ty == ARGTYPE_I) {
+    void Assembler::asm_regarg(ArgSize sz, LIns *p, Register r) {
+        if (sz == ARGSIZE_I) {
             NanoAssert(p->isI32());
             if (p->isconst()) {
                 asm_quad(r, int64_t(p->imm32()));
@@ -947,7 +947,7 @@ namespace nanojit
             }
             // sign extend int32 to int64
             MOVSXDR(r, r);
-        } else if (ty == ARGTYPE_U) {
+        } else if (sz == ARGSIZE_U) {
             NanoAssert(p->isI32());
             if (p->isconst()) {
                 asm_quad(r, uint64_t(uint32_t(p->imm32())));
@@ -955,8 +955,6 @@ namespace nanojit
             }
             // zero extend with 32bit mov, auto-zeros upper 32bits
             MOVLR(r, r);
-        } else {
-            // Do nothing.
         }
         /* there is no point in folding an immediate here, because
          * the argument register must be a scratch register and we're
@@ -968,22 +966,19 @@ namespace nanojit
         findSpecificRegFor(p, r);
     }
 
-    void Assembler::asm_stkarg(ArgType ty, LIns *p, int stk_off) {
+    void Assembler::asm_stkarg(ArgSize sz, LIns *p, int stk_off) {
         NanoAssert(isS8(stk_off));
-        if (ty == ARGTYPE_I || ty == ARGTYPE_U || ty == ARGTYPE_Q) {
+        if (sz & ARGSIZE_MASK_INT) {
             Register r = findRegFor(p, GpRegs);
             MOVQSPR(stk_off, r);    // movq [rsp+d8], r
-            if (ty == ARGTYPE_I) {
+            if (sz == ARGSIZE_I) {
                 // extend int32 to int64
                 NanoAssert(p->isI32());
                 MOVSXDR(r, r);
-            } else if (ty == ARGTYPE_U) {
+            } else if (sz == ARGSIZE_U) {
                 // extend uint32 to uint64
                 NanoAssert(p->isI32());
                 MOVLR(r, r);
-            } else {
-                NanoAssert(ty == ARGTYPE_Q);
-                // Do nothing.
             }
         } else {
             TODO(asm_stkarg_non_int);

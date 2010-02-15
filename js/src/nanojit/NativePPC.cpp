@@ -691,8 +691,8 @@ namespace nanojit
         evictScratchRegs();
 
         const CallInfo* call = ins->callInfo();
-        ArgType argTypes[MAXARGS];
-        uint32_t argc = call->getArgTypes(argTypes);
+        ArgSize sizes[MAXARGS];
+        uint32_t argc = call->get_sizes(sizes);
 
         bool indirect;
         if (!(indirect = call->isIndirect())) {
@@ -707,7 +707,7 @@ namespace nanojit
             underrunProtect(8); // underrunProtect might clobber CTR
             BCTRL();
             MTCTR(R11);
-            asm_regarg(ARGTYPE_P, ins->arg(--argc), R11);
+            asm_regarg(ARGSIZE_P, ins->arg(--argc), R11);
         }
 
         int param_size = 0;
@@ -716,22 +716,22 @@ namespace nanojit
         Register fr = F1;
         for(uint32_t i = 0; i < argc; i++) {
             uint32_t j = argc - i - 1;
-            ArgType ty = argTypes[j];
+            ArgSize sz = sizes[j];
             LInsp arg = ins->arg(j);
-            if (ty == ARGTYPE_I || ty == ARGTYPE_U || ty == ARGTYPE_Q) {
+            if (sz & ARGSIZE_MASK_INT) {
                 // GP arg
                 if (r <= R10) {
-                    asm_regarg(ty, arg, r);
+                    asm_regarg(sz, arg, r);
                     r = nextreg(r);
                     param_size += sizeof(void*);
                 } else {
                     // put arg on stack
                     TODO(stack_int32);
                 }
-            } else if (ty == ARGTYPE_F) {
+            } else if (sz == ARGSIZE_F) {
                 // double
                 if (fr <= F13) {
-                    asm_regarg(ty, arg, fr);
+                    asm_regarg(sz, arg, fr);
                     fr = nextreg(fr);
                 #ifdef NANOJIT_64BIT
                     r = nextreg(r);
@@ -744,23 +744,23 @@ namespace nanojit
                     TODO(stack_double);
                 }
             } else {
-                TODO(ARGTYPE_UNK);
+                TODO(ARGSIZE_UNK);
             }
         }
         if (param_size > max_param_size)
             max_param_size = param_size;
     }
 
-    void Assembler::asm_regarg(ArgType ty, LInsp p, Register r)
+    void Assembler::asm_regarg(ArgSize sz, LInsp p, Register r)
     {
         NanoAssert(r != deprecated_UnknownReg);
-        if (ty == ARGTYPE_I || ty == ARGTYPE_U || ty == ARGTYPE_Q)
+        if (sz & ARGSIZE_MASK_INT)
         {
         #ifdef NANOJIT_64BIT
-            if (ty == ARGTYPE_I) {
+            if (sz == ARGSIZE_I) {
                 // sign extend 32->64
                 EXTSW(r, r);
-            } else if (ty == ARGTYPE_U) {
+            } else if (sz == ARGSIZE_U) {
                 // zero extend 32->64
                 CLRLDI(r, r, 32);
             }
@@ -793,7 +793,7 @@ namespace nanojit
                 }
             }
         }
-        else if (ty == ARGTYPE_F) {
+        else if (sz == ARGSIZE_F) {
             if (p->isUsed()) {
                 Register rp = p->deprecated_getReg();
                 if (!isKnownReg(rp) || !IsFpReg(rp)) {
@@ -813,7 +813,7 @@ namespace nanojit
             }
         }
         else {
-            TODO(ARGTYPE_UNK);
+            TODO(ARGSIZE_UNK);
         }
     }
 
