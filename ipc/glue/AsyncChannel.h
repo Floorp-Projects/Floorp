@@ -166,7 +166,7 @@ protected:
     void NotifyChannelClosed();
     void NotifyMaybeChannelError();
 
-    void Clear();
+    virtual void Clear();
 
     // Run on the IO thread
 
