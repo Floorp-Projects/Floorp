@@ -51,6 +51,8 @@ namespace ipc {
 
 class RPCChannel : public SyncChannel
 {
+    friend class CxxStackFrame;
+
 public:
     class /*NS_INTERFACE_CLASS*/ RPCListener :
         public SyncChannel::SyncListener
@@ -81,6 +83,13 @@ public:
 
     // Make an RPC to the other side of the channel
     bool Call(Message* msg, Message* reply);
+
+    // RPCChannel overrides these so that the async and sync messages
+    // can be counted against mStackFrames
+    NS_OVERRIDE
+    virtual bool Send(Message* msg);
+    NS_OVERRIDE
+    virtual bool Send(Message* msg, Message* reply);
 
     // Asynchronously, send the child a message that puts it in such a
     // state that it can't send messages to the parent unless the
@@ -150,6 +159,55 @@ protected:
 
     void BlockOnParent();
     void UnblockFromParent();
+
+    // This helper class managed RPCChannel.mCxxStackDepth on behalf
+    // of RPCChannel.  When the stack depth is incremented from zero
+    // to non-zero, it invokes an RPCChannel callback, and similarly
+    // for when the depth goes from non-zero to zero;
+    void EnteredCxxStack()
+    {
+        // FIXME/bug 545455: call mListener hook
+        printf("[%s] +++ CXX STACK\n", mChild ? "child" : "parent");
+    }
+
+    void ExitedCxxStack()
+    {
+        // FIXME/bug 545455: call mListener hook
+        printf("[%s] --- CXX STACK\n", mChild ? "child" : "parent");
+    }
+
+    class NS_STACK_CLASS CxxStackFrame
+    {
+    public:
+        CxxStackFrame(RPCChannel& that) : mThat(that) {
+            NS_ABORT_IF_FALSE(0 <= mThat.mCxxStackFrames,
+                              "mismatched CxxStackFrame ctor/dtor");
+            mThat.AssertWorkerThread();
+
+            if (0 == mThat.mCxxStackFrames++)
+                mThat.EnteredCxxStack();
+        }
+
+        ~CxxStackFrame() {
+            bool exitingStack = (0 == --mThat.mCxxStackFrames);
+
+            // mListener could have gone away if Close() was called while
+            // RPCChannel code was still on the stack
+            if (!mThat.mListener)
+                return;
+
+            mThat.AssertWorkerThread();
+            if (exitingStack)
+                mThat.ExitedCxxStack();
+        }
+    private:
+        RPCChannel& mThat;
+
+        // disable harmful methods
+        CxxStackFrame();
+        CxxStackFrame(const CxxStackFrame&);
+        CxxStackFrame& operator=(const CxxStackFrame&);
+    };
 
     // Called from both threads
     size_t StackDepth() {
@@ -256,6 +314,16 @@ protected:
 
     // True iff the parent has put us in a |BlockChild()| state.
     bool mBlockedOnParent;
+
+    // Approximation of number of Sync/RPCChannel-code frames on the
+    // C++ stack.  It can only be interpreted as the implication
+    //
+    //  mCxxStackDepth > 0 => RPCChannel code on C++ stack
+    //
+    // This member is only accessed on the worker thread, and so is
+    // not protected by mMutex.  It is managed exclusively by the
+    // helper |class CxxStackFrame|.
+    int mCxxStackFrames;
 };
 
 
