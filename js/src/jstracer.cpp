@@ -2239,7 +2239,8 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
         }
     )
     // CseFilter must be downstream of SoftFloatFilter (see bug 527754 for why).
-    lir = new (tempAlloc()) CseFilter(lir, tempAlloc());
+    if (avmplus::AvmCore::config.cseopt)
+        lir = new (tempAlloc()) CseFilter(lir, tempAlloc());
 #if NJ_SOFTFLOAT_SUPPORTED
     if (nanojit::AvmCore::config.soft_float)
         lir = new (tempAlloc()) SoftFloatFilter(lir);
@@ -2675,7 +2676,7 @@ TraceMonitor::flush()
         globalStates[i].globalSlots = new (alloc) SlotList(&alloc);
     }
 
-    assembler = new (alloc) Assembler(*codeAlloc, alloc, alloc, core, &LogController);
+    assembler = new (alloc) Assembler(*codeAlloc, alloc, alloc, core, &LogController, avmplus::AvmCore::config);
     verbose_only( branches = NULL; )
 
     memset(&vmfragments[0], 0, FRAGMENT_TABLE_SIZE * sizeof(TreeFragment*));
@@ -7341,9 +7342,9 @@ InitJIT(TraceMonitor *tm)
 
     if (!did_we_check_processor_features) {
 #if defined NANOJIT_IA32
-        avmplus::AvmCore::config.use_cmov =
-            avmplus::AvmCore::config.sse2 = CheckForSSE2();
-        avmplus::AvmCore::config.fixed_esp = true;
+        avmplus::AvmCore::config.i386_use_cmov =
+            avmplus::AvmCore::config.i386_sse2 = CheckForSSE2();
+        avmplus::AvmCore::config.i386_fixed_esp = true;
 #endif
 #if defined NANOJIT_ARM
 
