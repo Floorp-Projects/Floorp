@@ -1690,14 +1690,13 @@ namespace nanojit
     Assembler::nFragExit(LIns *guard)
     {
         SideExit *exit = guard->record()->exit;
-        bool trees = config.tree_opt;
         Fragment *frag = exit->target;
         bool destKnown = (frag && frag->fragEntry);
 
         // Generate jump to epilogue and initialize lr.
 
         // If the guard already exists, use a simple jump.
-        if (destKnown && !trees) {
+        if (destKnown) {
             // j     _fragEntry
             //  move $v0,$zero
             MOVE(V0, ZERO);

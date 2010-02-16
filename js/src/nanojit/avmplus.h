@@ -37,6 +37,7 @@
 #define avm_h___
 
 #include "VMPI.h"
+#include "njconfig.h"
 
 #if !defined(AVMPLUS_LITTLE_ENDIAN) && !defined(AVMPLUS_BIG_ENDIAN)
 #ifdef IS_BIG_ENDIAN
@@ -181,60 +182,6 @@ namespace avmplus {
 
     extern void AvmLog(char const *msg, ...);
 
-    class Config
-    {
-    public:
-        Config() {
-            memset(this, 0, sizeof(Config));
-#ifdef DEBUG
-            verbose = false;
-            verbose_addrs = 1;
-            verbose_exits = 1;
-            verbose_live = 1;
-            show_stats = 1;
-#endif
-        }
-
-        uint32_t tree_opt:1;
-        uint32_t quiet_opt:1;
-        uint32_t verbose:1;
-        uint32_t verbose_addrs:1;
-        uint32_t verbose_live:1;
-        uint32_t verbose_exits:1;
-        uint32_t show_stats:1;
-
-#if defined (AVMPLUS_IA32)
-    // Whether or not we can use SSE2 instructions and conditional moves.
-        bool sse2;
-        bool use_cmov;
-        // Whether to use a virtual stack pointer
-        bool fixed_esp;
-#endif
-
-#if defined (AVMPLUS_ARM)
-        // Whether or not to generate VFP instructions.
-# if defined (NJ_FORCE_SOFTFLOAT)
-        static const bool arm_vfp = false;
-# else
-        bool arm_vfp;
-# endif
-
-        // The ARM architecture version.
-# if defined (NJ_FORCE_ARM_ARCH_VERSION)
-        static const unsigned int arm_arch = NJ_FORCE_ARM_ARCH_VERSION;
-# else
-        unsigned int arm_arch;
-# endif
-
-#endif
-
-#if defined (NJ_FORCE_SOFTFLOAT)
-        static const bool soft_float = true;
-#else
-        bool soft_float;
-#endif
-    };
-
     static const int kstrconst_emptyString = 0;
 
     class AvmInterpreter
@@ -276,13 +223,13 @@ namespace avmplus {
         AvmInterpreter interp;
         AvmConsole console;
 
-        static Config config;
+        static nanojit::Config config;
 
 #ifdef AVMPLUS_IA32
         static inline bool
         use_sse2()
         {
-            return config.sse2;
+            return config.i386_sse2;
         }
 #endif
 
@@ -290,24 +237,11 @@ namespace avmplus {
         use_cmov()
         {
 #ifdef AVMPLUS_IA32
-            return config.use_cmov;
+            return config.i386_use_cmov;
 #else
         return true;
 #endif
         }
-
-        static inline bool
-        quiet_opt()
-        {
-            return config.quiet_opt;
-        }
-
-        static inline bool
-        verbose()
-        {
-            return config.verbose;
-        }
-
     };
 
     /**

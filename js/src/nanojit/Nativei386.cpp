@@ -70,45 +70,8 @@ namespace nanojit
         0  /* ABI_CDECL */
     };
 
-    static bool CheckForSSE2()
+    void Assembler::nInit(AvmCore*)
     {
-        int features = 0;
-    #if defined _MSC_VER
-        __asm
-        {
-            pushad
-            mov eax, 1
-            cpuid
-            mov features, edx
-            popad
-        }
-    #elif defined __GNUC__
-        asm("xchg %%esi, %%ebx\n" /* we can't clobber ebx on gcc (PIC register) */
-            "mov $0x01, %%eax\n"
-            "cpuid\n"
-            "mov %%edx, %0\n"
-            "xchg %%esi, %%ebx\n"
-            : "=m" (features)
-            : /* We have no inputs */
-            : "%eax", "%esi", "%ecx", "%edx"
-           );
-    #elif defined __SUNPRO_C || defined __SUNPRO_CC
-        asm("push %%ebx\n"
-            "mov $0x01, %%eax\n"
-            "cpuid\n"
-            "pop %%ebx\n"
-            : "=d" (features)
-            : /* We have no inputs */
-            : "%eax", "%ecx"
-           );
-    #endif
-        return (features & (1<<26)) != 0;
-    }
-
-    void Assembler::nInit(AvmCore* core)
-    {
-        (void) core;
-        config.sse2 = config.sse2 && CheckForSSE2();
     }
 
     void Assembler::nBeginAssembly() {
@@ -145,7 +108,6 @@ namespace nanojit
     void Assembler::nFragExit(LInsp guard)
     {
         SideExit *exit = guard->record()->exit;
-        bool trees = config.tree_opt;
         Fragment *frag = exit->target;
         GuardRecord *lr = 0;
         bool destKnown = (frag && frag->fragEntry);
@@ -163,7 +125,7 @@ namespace nanojit
             LEAmi4(r, si->table, r);
         } else {
             // If the guard already exists, use a simple jump.
-            if (destKnown && !trees) {
+            if (destKnown) {
                 JMP(frag->fragEntry);
                 lr = 0;
             } else {  // Target doesn't exist. Jump to an epilogue for now. This can be patched later.
@@ -237,7 +199,7 @@ namespace nanojit
 #endif
 
         if (pushsize) {
-            if (config.fixed_esp) {
+            if (_config.i386_fixed_esp) {
                 // In case of fastcall, stdcall and thiscall the callee cleans up the stack,
                 // and since we reserve max_stk_args words in the prolog to call functions
                 // and don't adjust the stack pointer individually for each call we have
@@ -281,7 +243,7 @@ namespace nanojit
         if (indirect) {
             argc--;
             asm_arg(ARGSIZE_P, ins->arg(argc), EAX, stkd);
-            if (!config.fixed_esp)
+            if (!_config.i386_fixed_esp)
                 stkd = 0;
         }
 
@@ -294,11 +256,11 @@ namespace nanojit
                 r = argRegs[n++]; // tell asm_arg what reg to use
             }
             asm_arg(sz, ins->arg(j), r, stkd);
-            if (!config.fixed_esp)
+            if (!_config.i386_fixed_esp)
                 stkd = 0;
         }
 
-        if (config.fixed_esp) {
+        if (_config.i386_fixed_esp) {
             if (pushsize > max_stk_args)
                 max_stk_args = pushsize;
         } else if (extra > 0) {
@@ -342,7 +304,7 @@ namespace nanojit
         // add scratch registers to our free list for the allocator
         a.clear();
         a.free = SavedRegs | ScratchRegs;
-        if (!config.sse2)
+        if (!_config.i386_sse2)
             a.free &= ~XmmRegs;
         debug_only( a.managed = a.free; )
     }
@@ -611,7 +573,7 @@ namespace nanojit
         if (op == LIR_st32f) {
             bool pop = !value->isInReg();
             Register rv = ( pop
-                          ? findRegFor(value, config.sse2 ? XmmRegs : FpRegs)
+                          ? findRegFor(value, _config.i386_sse2 ? XmmRegs : FpRegs)
                           : value->getReg() );
 
             if (rmask(rv) & XmmRegs) {
@@ -641,7 +603,7 @@ namespace nanojit
             //    side exit, copying a non-double.
             // c) Maybe it's a double just being stored.  Oh well.
 
-            if (config.sse2) {
+            if (_config.i386_sse2) {
                 Register rv = findRegFor(value, XmmRegs);
                 SSE_STQ(dr, rb, rv);
             } else {
@@ -652,7 +614,7 @@ namespace nanojit
         } else {
             bool pop = !value->isInReg();
             Register rv = ( pop
-                          ? findRegFor(value, config.sse2 ? XmmRegs : FpRegs)
+                          ? findRegFor(value, _config.i386_sse2 ? XmmRegs : FpRegs)
                           : value->getReg() );
 
             if (rmask(rv) & XmmRegs) {
@@ -670,7 +632,7 @@ namespace nanojit
         // Value is either a 64-bit struct or maybe a float that isn't live in
         // an FPU reg.  Either way, avoid allocating an FPU reg just to load
         // and store it.
-        if (config.sse2) {
+        if (_config.i386_sse2) {
             Register t = registerAllocTmp(XmmRegs);
             SSE_STQ(dd, rd, t);
             SSE_LDQ(t, ds, rs);
@@ -823,7 +785,7 @@ namespace nanojit
         // SETcc only sets low 8 bits, so extend
         MOVZX8(r,r);
 
-        if (config.sse2) {
+        if (_config.i386_sse2) {
             // LIR_flt and LIR_fgt are handled by the same case because
             // asm_fcmp() converts LIR_flt(a,b) to LIR_fgt(b,a).  Likewise
             // for LIR_fle/LIR_fge.
@@ -1352,7 +1314,7 @@ namespace nanojit
     {
         LIns *lhs = ins->oprnd1();
 
-        if (config.sse2) {
+        if (_config.i386_sse2) {
             Register rr = prepareResultReg(ins, XmmRegs);
 
             // If 'lhs' isn't in a register, it can be clobbered by 'ins'.
@@ -1423,7 +1385,7 @@ namespace nanojit
                 }
             }
             else {
-                if (config.fixed_esp)
+                if (_config.i386_fixed_esp)
                     asm_stkarg(ins, stkd);
                 else
                     asm_pusharg(ins);
@@ -1502,7 +1464,7 @@ namespace nanojit
              */
             evictIfActive(FST0);
         }
-        if (!config.fixed_esp)
+        if (!_config.i386_fixed_esp)
             SUBi(ESP, 8);
 
         stkd += sizeof(double);
@@ -1511,7 +1473,7 @@ namespace nanojit
     void Assembler::asm_fop(LInsp ins)
     {
         LOpcode op = ins->opcode();
-        if (config.sse2)
+        if (_config.i386_sse2)
         {
             LIns *lhs = ins->oprnd1();
             LIns *rhs = ins->oprnd2();
@@ -1686,7 +1648,7 @@ namespace nanojit
     {
         LIns *lhs = ins->oprnd1();
 
-        if (config.sse2) {
+        if (_config.i386_sse2) {
             Register rr = prepareResultReg(ins, GpRegs);
             Register ra = findRegFor(lhs, XmmRegs);
             SSE_CVTSD2SI(rr, ra);
@@ -1720,7 +1682,7 @@ namespace nanojit
         NIns* at;
         LOpcode opcode = cond->opcode();
 
-        if (config.sse2) {
+        if (_config.i386_sse2) {
             // LIR_flt and LIR_fgt are handled by the same case because
             // asm_fcmp() converts LIR_flt(a,b) to LIR_fgt(b,a).  Likewise
             // for LIR_fle/LIR_fge.
@@ -1769,7 +1731,7 @@ namespace nanojit
         LIns* rhs = cond->oprnd2();
         NanoAssert(lhs->isF64() && rhs->isF64());
 
-        if (config.sse2) {
+        if (_config.i386_sse2) {
             // First, we convert (a < b) into (b > a), and (a <= b) into (b >= a).
             if (condop == LIR_flt) {
                 condop = LIR_fgt;

@@ -265,7 +265,6 @@ namespace nanojit {
         // An OR of LC_Bits values, indicating what should be output
         uint32_t lcbits;
     };
-
 }
 
 // -------------------------------------------------------------------
@@ -273,6 +272,7 @@ namespace nanojit {
 // -------------------------------------------------------------------
 
 
+#include "njconfig.h"
 #include "Allocator.h"
 #include "Containers.h"
 #include "Native.h"
