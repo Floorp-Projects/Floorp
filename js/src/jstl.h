@@ -111,7 +111,7 @@ template <class T> struct IsSameType<T,T> {
  */
 template <size_t N> struct NBitMask {
     typedef typename StaticAssert<N < BitSize<size_t>::result>::result _;
-    static const size_t result = ~((size_t(1) << N) - 1);
+    static const size_t result = (size_t(1) << N) - 1;
 };
 template <> struct NBitMask<BitSize<size_t>::result> {
     static const size_t result = size_t(-1);
@@ -123,7 +123,7 @@ template <> struct NBitMask<BitSize<size_t>::result> {
  */
 template <size_t N> struct MulOverflowMask {
     static const size_t result =
-        NBitMask<BitSize<size_t>::result - CeilingLog2<N>::result>::result;
+        ~NBitMask<BitSize<size_t>::result - CeilingLog2<N>::result>::result;
 };
 template <> struct MulOverflowMask<0> { /* Error */ };
 template <> struct MulOverflowMask<1> { static const size_t result = 0; };
