@@ -154,6 +154,9 @@ protected:
                                       NPError* aError,
                                       bool* aBoolVal);
 
+    NS_OVERRIDE
+    virtual bool AnswerProcessSomeEvents();
+
     static PluginInstanceParent* InstCast(NPP instance);
     static BrowserStreamParent* StreamCast(NPP instance, NPStream* s);
 

@@ -290,7 +290,7 @@ PluginModuleChild::ProcessBrowserEvents(gpointer data)
 
     PluginModuleChild* pmc = static_cast<PluginModuleChild*>(data);
 
-    PLUGIN_LOG_DEBUG(("FIXME/bug 544945: rpc-call to browser to process a few events"));
+    pmc->CallProcessSomeEvents();
 
     return TRUE;
 }
