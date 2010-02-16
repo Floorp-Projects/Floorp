@@ -243,7 +243,7 @@ class HashTable : AllocPolicy
 
     static const unsigned sMinSizeLog2  = 4;
     static const unsigned sMinSize      = 1 << sMinSizeLog2;
-    static const unsigned sSizeLimit    = tl::NBitMask<24>::result;
+    static const unsigned sSizeLimit    = JS_BIT(24);
     static const unsigned sHashBits     = tl::BitSize<HashNumber>::result;
     static const unsigned sGoldenRatio  = 0x9E3779B9U;       /* taken from jsdhash.h */
     static const uint8    sMinAlphaFrac = 64;  /* (0x100 * .25) taken from jsdhash.h */
@@ -285,8 +285,8 @@ class HashTable : AllocPolicy
             capacity = sMinSize;
 
         /* FIXME: use JS_CEILING_LOG2 when PGO stops crashing (bug 543034). */
-        JS_ASSERT(capacity < (1 << 31));
-        int roundUp = sMinSize, roundUpLog2 = sMinSizeLog2;
+        JS_ASSERT(capacity < (uint32(1) << 31));
+        uint32 roundUp = sMinSize, roundUpLog2 = sMinSizeLog2;
         while (roundUp < capacity) {
             roundUp <<= 1;
             ++roundUpLog2;
