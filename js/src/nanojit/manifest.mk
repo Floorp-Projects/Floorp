@@ -72,6 +72,7 @@ avmplus_CXXSRCS := $(avmplus_CXXSRCS) \
   $(curdir)/Containers.cpp \
   $(curdir)/Fragmento.cpp \
   $(curdir)/LIR.cpp \
+  $(curdir)/njconfig.cpp \
   $(curdir)/RegAlloc.cpp \
   $(curdir)/$(nanojit_cpu_cxxsrc) \
   $(NULL)
