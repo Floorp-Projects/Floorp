@@ -102,7 +102,7 @@
 #if JS_THREADED_INTERP
 #ifdef MOZ_TRACEVIS
         if (!moreInterrupts)
-            js_ExitTraceVisState(cx, R_ABORT);
+            ExitTraceVisState(cx, R_ABORT);
 #endif
         jumpTable = moreInterrupts ? interruptJumpTable : normalJumpTable;
         JS_EXTENSION_(goto *normalJumpTable[op]);

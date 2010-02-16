@@ -97,6 +97,8 @@
 #include <windows.h>
 #endif
 
+using namespace js;
+
 typedef enum JSShellExitCode {
     EXITCODE_RUNTIME_ERROR      = 3,
     EXITCODE_FILE_NOT_FOUND     = 4,
@@ -846,7 +848,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             if (++i == argc)
                 return usage();
 
-            JS_StartTraceVis(argv[i]);
+            StartTraceVis(argv[i]);
             break;
 #endif
         default:
@@ -3773,8 +3775,8 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("resumeVtune",    js_ResumeVtune,   0,0,0),
 #endif
 #ifdef MOZ_TRACEVIS
-    JS_FS("startTraceVis",  js_StartTraceVis, 1,0,0),
-    JS_FS("stopTraceVis",   js_StopTraceVis,  0,0,0),
+    JS_FS("startTraceVis",  StartTraceVisNative, 1,0,0),
+    JS_FS("stopTraceVis",   StopTraceVisNative,  0,0,0),
 #endif
 #ifdef DEBUG_ARRAYS
     JS_FS("arrayInfo",      js_ArrayInfo,       1,0,0),

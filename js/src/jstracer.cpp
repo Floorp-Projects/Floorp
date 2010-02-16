@@ -15233,11 +15233,11 @@ FILE* traceVisLogFile = NULL;
 JSHashTable *traceVisScriptTable = NULL;
 
 JS_FRIEND_API(bool)
-JS_StartTraceVis(const char* filename = "tracevis.dat")
+StartTraceVis(const char* filename = "tracevis.dat")
 {
     if (traceVisLogFile) {
         // If we're currently recording, first we must stop.
-        JS_StopTraceVis();
+        StopTraceVis();
     }
 
     traceVisLogFile = fopen(filename, "wb");
@@ -15248,7 +15248,7 @@ JS_StartTraceVis(const char* filename = "tracevis.dat")
 }
 
 JS_FRIEND_API(JSBool)
-StartTraceVis(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+StartTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSBool ok;
 
@@ -15257,10 +15257,10 @@ StartTraceVis(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
         char *filename = js_DeflateString(cx, str->chars(), str->length());
         if (!filename)
             goto error;
-        ok = JS_StartTraceVis(filename);
+        ok = StartTraceVis(filename);
         cx->free(filename);
     } else {
-        ok = JS_StartTraceVis();
+        ok = StartTraceVis();
     }
 
     if (ok) {
@@ -15274,7 +15274,7 @@ StartTraceVis(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 }
 
 JS_FRIEND_API(bool)
-JS_StopTraceVis()
+StopTraceVis()
 {
     if (!traceVisLogFile)
         return false;
@@ -15286,9 +15286,9 @@ JS_StopTraceVis()
 }
 
 JS_FRIEND_API(JSBool)
-StopTraceVis(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+StopTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSBool ok = JS_StopTraceVis();
+    JSBool ok = StopTraceVis();
 
     if (ok)
         fprintf(stderr, "stopped TraceVis recording\n");

@@ -1517,19 +1517,22 @@ SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes);
 extern bool
 NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot);
 
+extern jsval *
+ConcatPostImacroStackCleanup(uint32 argc, JSFrameRegs &regs,
+                             TraceRecorder *recorder);
 #ifdef MOZ_TRACEVIS
 
 extern JS_FRIEND_API(bool)
-JS_StartTraceVis(const char* filename);
+StartTraceVis(const char* filename);
 
 extern JS_FRIEND_API(JSBool)
-StartTraceVis(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+StartTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 extern JS_FRIEND_API(bool)
-JS_StopTraceVis();
+StopTraceVis();
 
 extern JS_FRIEND_API(JSBool)
-StopTraceVis(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+StopTraceVisNative(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 /* Must contain no more than 16 items. */
 enum TraceVisState {
@@ -1645,9 +1648,6 @@ struct TraceVisStateObj {
 
 #endif /* MOZ_TRACEVIS */
 
-extern jsval *
-ConcatPostImacroStackCleanup(uint32 argc, JSFrameRegs &regs,
-                             TraceRecorder *recorder);
 }      /* namespace js */
 
 #else  /* !JS_TRACER */
