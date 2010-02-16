@@ -190,7 +190,7 @@ menuitem.bookmark-item {
 .toolbarbutton-menubutton-dropmarker,
 .toolbarbutton-1 {
   -moz-appearance: none;
-  padding: 3px 4px;
+  padding: 1px 2px;
   background: rgba(85%,85%,85%,.1)
               -moz-linear-gradient(top, rgba(255,255,255,.7), rgba(255,255,255,.39) 48%,
                                         rgba(95%,95%,95%,.33) 52%, rgba(95%,95%,95%,.15));
@@ -207,6 +207,10 @@ menuitem.bookmark-item {
 .toolbarbutton-1 {
   -moz-box-orient: vertical;
   list-style-image: url("chrome://browser/skin/Toolbar.png");
+}
+
+.toolbarbutton-1[disabled="true"] > .toolbarbutton-icon {
+  opacity: .5;
 }
 
 toolbarbutton[type="menu-button"] {
@@ -282,8 +286,8 @@ toolbarbutton[type="menu-button"] {
 .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 .toolbarbutton-1 > .toolbarbutton-icon {
   -moz-margin-end: 0;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 toolbar[mode="full"] .toolbarbutton-1,
@@ -292,6 +296,17 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
 }
 
 /* unified back/forward button */
+
+#back-button {
+  -moz-image-region: rect(0, 18px, 18px, 0);
+  -moz-margin-end: 0;
+}
+
+#forward-button {
+  -moz-image-region: rect(0, 36px, 18px, 18px);
+  border-left: none;
+  -moz-margin-start: 0;
+}
 
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #forward-button:-moz-locale-dir(rtl) {
@@ -309,22 +324,21 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
   -moz-border-radius-bottomleft: 0;
 }
 
-#back-button {
-  -moz-margin-end: 0;
-}
-
-#forward-button {
-  border-left: none;
-  -moz-margin-start: 0;
-}
-
 toolbar:not([iconsize="small"])[mode="icons"] #back-button {
   -moz-border-radius: 100%;
-  padding: 7px;
+  padding: 0;
+  width: 32px;
+  height: 32px;
   position: relative;
   z-index: 1;
   margin-top: -3px;
   margin-bottom: -3px;
+  -moz-image-region: rect(18px, 18px, 38px, 0);
+}
+
+toolbar:not([iconsize="small"])[mode="icons"] #back-button > .toolbarbutton-icon {
+  width: auto;
+  height: auto;
 }
 
 toolbar:not([iconsize="small"])[mode="icons"][currentset*="unified-back-forward-button"],
@@ -338,7 +352,6 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button {
   mask: url(chrome://browser/content/browser.xul#winstripe-keyhole-forward-mask);
   -moz-margin-start: -6px;
   padding-left: 6px;
-  padding-right: 3px;
 }
 
 #back-forward-dropmarker {
@@ -369,27 +382,9 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button {
   display: none;
 }
 
-/* back button */
-
-#back-button {
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-#back-button[disabled="true"] {
-  -moz-image-region: rect(16px 16px 32px 0px);
-}
-
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/menu-back.png") !important;
-}
-
-/* forward button */
-
-#forward-button {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-#forward-button[disabled="true"] {
-  -moz-image-region: rect(16px 32px 32px 16px);
 }
 
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(ltr),
@@ -400,19 +395,13 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button {
 /* stop button */
 
 #stop-button {
-  -moz-image-region: rect(0px 48px 16px 32px);
-}
-#stop-button[disabled="true"] {
-  -moz-image-region: rect(16px 48px 32px 32px);
+  -moz-image-region: rect(0, 54px, 18px, 36px);
 }
 
 /* reload button */
 
 #reload-button {
-  -moz-image-region: rect(0px 64px 16px 48px);
-}
-#reload-button[disabled="true"] {
-  -moz-image-region: rect(16px 64px 32px 48px);
+  -moz-image-region: rect(0, 72px, 18px, 54px);
 }
 
 /* home button */
@@ -421,85 +410,67 @@ toolbar:not([iconsize="small"])[mode="icons"] #forward-button {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 #home-button {
-  -moz-image-region: rect(0px 80px 16px 64px);
-}
-#home-button[disabled="true"] {
-  -moz-image-region: rect(16px 80px 32px 64px);
+  -moz-image-region: rect(0, 90px, 18px, 72px);
 }
 
 /* download manager button */
 
 #downloads-button {
-  -moz-image-region: rect(0px 96px 16px 80px);
+  -moz-image-region: rect(0, 108px, 18px, 90px);
 }
 
 /* history sidebar button */
 
 #history-button {
-  -moz-image-region: rect(0px 112px 16px 96px);
+  -moz-image-region: rect(0, 126px, 18px, 108px);
 }
 
 /* bookmark sidebar button */
 
 #bookmarks-button {
-  -moz-image-region: rect(0px 128px 16px 112px);
+  -moz-image-region: rect(0, 144px, 18px, 126px);
 }
 
 /* print button */
 
 #print-button {
-  -moz-image-region: rect(0px 144px 16px 128px);
-}
-#print-button[disabled="true"] {
-  -moz-image-region: rect(16px 144px 32px 128px);
+  -moz-image-region: rect(0, 162px, 18px, 144px);
 }
 
 /* toolbar new tab button */
 
 #new-tab-button {
-  -moz-image-region: rect(0px 160px 16px 144px);
+  -moz-image-region: rect(0, 180px, 18px, 162px);
 }
 
 /* new window button */
 
 #new-window-button {
-  -moz-image-region: rect(0px 176px 16px 160px);
+  -moz-image-region: rect(0, 198px, 18px, 180px);
 }
 
 /* cut button */
 
-#cut-button > .toolbarbutton-icon {
-  padding-right: 1px;
-}
 #cut-button {
-  -moz-image-region: rect(0px 192px 16px 176px);
-}
-#cut-button[disabled="true"] {
-  -moz-image-region: rect(16px 192px 32px 176px);
+  -moz-image-region: rect(0, 216px, 18px, 198px);
 }
 
 /* copy button */
 
 #copy-button {
-  -moz-image-region: rect(0px 208px 16px 192px);
-}
-#copy-button[disabled="true"] {
-  -moz-image-region: rect(16px 208px 32px 192px);
+  -moz-image-region: rect(0, 234px, 18px, 216px);
 }
 
 /* paste button */
 
 #paste-button {
-  -moz-image-region: rect(0px 224px 16px 208px);
-}
-#paste-button[disabled="true"] {
-  -moz-image-region: rect(16px 224px 32px 208px);
+  -moz-image-region: rect(0, 252px, 18px, 234px);
 }
 
 /* fullscreen button */
 
 #fullscreen-button {
-  -moz-image-region: rect(0px 240px 16px 224px);
+  -moz-image-region: rect(0, 270px, 18px, 252px);
 }
 
 /* ::::: fullscreen window controls ::::: */
@@ -1540,7 +1511,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #download-monitor {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
-  -moz-image-region: rect(0px 96px 16px 80px);
+  -moz-image-region: rect(0, 108px, 18px, 90px);
 }
 
 /* Bookmarks Toolbar menu-item */

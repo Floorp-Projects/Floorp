@@ -640,7 +640,7 @@
   <svg:svg height="0">
     <svg:mask id="winstripe-keyhole-forward-mask" maskContentUnits="objectBoundingBox">
       <svg:rect x="0" y="0" width="1" height="1" fill="white"/>
-      <svg:circle cx="-0.42" cy="0.5" r="0.64" id="circle"/>
+      <svg:circle cx="-0.42" cy="0.5" r="0.63" id="circle"/>
     </svg:mask>
   </svg:svg>
 #endif
