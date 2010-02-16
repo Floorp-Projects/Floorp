@@ -500,13 +500,22 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
     mParent.mFragments[mFragName].fragptr = mFragment;
 
     mLir = mBufWriter  = new LirBufWriter(mParent.mLirbuf, nanojit::AvmCore::config);
-    if (optimize) {
 #ifdef DEBUG
+    if (optimize) {     // don't re-validate if no optimization has taken place
         mLir = mValidateWriter2 = new ValidateWriter(mLir, "end of writer pipeline");
+    }
 #endif
+#ifdef DEBUG
+    if (mParent.mVerbose) {
+        mLir = mVerboseWriter = new VerboseWriter(mParent.mAlloc, mLir,
+                                                  mParent.mLirbuf->names,
+                                                  &mParent.mLogc);
+    }
+#endif
+    if (optimize) {
         mLir = mCseFilter = new CseFilter(mLir, mParent.mAlloc);
     }
-#ifdef NANOJIT_ARM
+#if NJ_SOFTFLOAT_SUPPORTED
     if (avmplus::AvmCore::config.soft_float) {
         mLir = new SoftFloatFilter(mLir);
     }
@@ -516,14 +525,6 @@ FragmentAssembler::FragmentAssembler(Lirasm &parent, const string &fragmentName,
     }
 #ifdef DEBUG
     mLir = mValidateWriter1 = new ValidateWriter(mLir, "start of writer pipeline");
-#endif
-
-#ifdef DEBUG
-    if (mParent.mVerbose) {
-        mLir = mVerboseWriter = new VerboseWriter(mParent.mAlloc, mLir,
-                                                  mParent.mLirbuf->names,
-                                                  &mParent.mLogc);
-    }
 #endif
 
     mReturnTypeBits = 0;
