@@ -207,9 +207,8 @@ CSRCS =             \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINCE)
-TESTPROGS =          \
-    wince_tester.cpp  \
-    $(NULL)
+CFLAGS += -FImozce_shunt.h -Zi -UDEBUG -DNDEBUG
+LDOPTS += -link $(DIST)/lib/mozce_shunt.lib ws2.lib -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO -PDB:$(@:.exe=.pdb)
 endif
 
 ifeq ($(OS_TARGET),OS2)
@@ -228,11 +227,7 @@ PROG_SUFFIX =
 DLL_SUFFIX = 
 endif
 
-ifeq ($(OS_ARCH),WINCE)
-PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=$(DLL_SUFFIX))) $(addprefix $(OBJDIR)/, $(TESTPROGS:.cpp=$(PROG_SUFFIX)))
-else
 PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=$(PROG_SUFFIX)))
-endif
 
 TARGETS = $(PROGS)
 
@@ -248,24 +243,6 @@ else
     LDOPTS += -PROFILE -MAP
   endif # profile
 endif # NS_USE_GCC
-endif
-
-ifeq ($(OS_ARCH),WINCE)
-ifdef NS_USE_GCC
-  EXTRA_LIBS += -lws2 -lcoredll
-else
-  INCLUDES += -FInst_wince.h
-  EXTRA_LIBS += ws2.lib coredll.lib
-  LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO -PDB:$(@:.dll=.pdb)
-  EXE_EXTRA_LDOPTS = -SUBSYSTEM:CONSOLE
-  ifdef PROFILE
-    LDOPTS += -PROFILE -MAP
-  endif # profile
-endif # NS_USE_GCC
-
-# Use CC to compile all CPP files / also use all CC flags
-CCC = $(CC)
-CXXFLAGS = $(CFLAGS)
 endif
 
 ifeq ($(OS_ARCH),OS2)
@@ -523,35 +500,9 @@ ifdef MT
 	fi
 endif
 else
-ifeq ($(OS_ARCH),WINCE)
-	$(PURE) $(LD) $(XCFLAGS) $< $(LDOPTS:.exe=.pdb) $(EXE_EXTRA_LDOPTS) $(LIBPLC) $(LIBNSPR) $(EXTRA_LIBS) -OUT:$@
-else
 	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(EXTRA_LIBS) -o $@
-endif # wince
 endif # WINNT
 endif # AIX_PRE_4_2
-
-
-ifeq ($(OS_ARCH),WINCE)
-$(OBJS): $(OBJDIR)/%.$(OBJ_SUFFIX): nst_wince.h
-
-# WinCE HAS to be different.  Turns out that the OS swallows crashes
-#   and returns a result code of zero -- an indication of success for
-#   the shell script.  AND, WinCE does not really have a good shell 
-#   to use for testing, anyway.
-#
-# To combat both issues, we need to build the tests as stand-alone
-# DLLs, then dynamically load the DLLs one at a time inside a test
-# program.  Each DLL's test will be run inside a TRY/CATCH construct,
-# allowing the testing program to do what the shell script already
-# does naturally. 
-#
-# This section builds DLLs instead of EXEs for each of the tests.
-# - wolfe@lobo.us
-$(OBJDIR)/%$(DLL_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
-	@$(MAKE_OBJDIR)
-	$(PURE) $(LD) $(XCFLAGS) $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(EXTRA_LIBS) -DLL -OUT:$@ $< 
-endif # wince
 
 export:: $(TARGETS)
 clean::
