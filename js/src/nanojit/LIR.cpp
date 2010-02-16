@@ -605,10 +605,12 @@ namespace nanojit
                 goto fold;
             CASE86(LIR_div:)
             CASE86(LIR_mod:)
+                #if defined NANOJIT_IA32 || defined NANOJIT_X64
                 // We can't easily fold div and mod, since folding div makes it
                 // impossible to calculate the mod that refers to it. The
                 // frontend shouldn't emit div and mod with constant operands.
                 NanoAssert(0);
+                #endif
             default:
                 ;
             }
