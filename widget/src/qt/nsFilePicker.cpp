@@ -50,6 +50,7 @@
 
 #include <qfile.h>
 #include <qstringlist.h>
+#include <qapplication.h>
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
@@ -241,7 +242,7 @@ nsFilePicker::Show(PRInt16 *aReturn)
         }
 
         QString path = QFile::encodeName(selected);
-        qDebug("path is '%s'", path.data());
+        qDebug("path is '%s'", path.toAscii().data());
         mFile.Assign(path.toUtf8().data());
         *aReturn = nsIFilePicker::returnOK;
         if (mMode == modeSave) {
@@ -273,7 +274,9 @@ nsFilePicker::Show(PRInt16 *aReturn)
 void nsFilePicker::InitNative(nsIWidget *parent, const nsAString &title, PRInt16 mode)
 {
     qDebug("nsFilePicker::InitNative()");
-    QWidget *parentWidget = (parent)? (QWidget*)parent->GetNativeData(NS_NATIVE_WIDGET):0;
+
+    QWidget *parentWidget = (parent)?
+        static_cast<QWidget*>(parent->GetNativeData(NS_NATIVE_SHELLWIDGET)):0;
 
     nsAutoString str(title);
     mDialog = new QFileDialog(parentWidget, QString::fromUtf16(str.get()));
