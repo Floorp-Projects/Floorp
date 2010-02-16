@@ -719,6 +719,7 @@ var BrowserUI = {
       case "cmd_back":
       case "cmd_forward":
       case "cmd_reload":
+      case "cmd_forceReload":
       case "cmd_stop":
       case "cmd_go":
       case "cmd_openLocation":
@@ -759,6 +760,13 @@ var BrowserUI = {
       case "cmd_reload":
         browser.reload();
         break;
+      case "cmd_forceReload":
+      {
+        const reloadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY |
+                            Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+        browser.reloadWithFlags(reloadFlags);
+        break;
+      }
       case "cmd_stop":
         browser.stop();
         break;
