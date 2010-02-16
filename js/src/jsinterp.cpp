@@ -2906,12 +2906,12 @@ js_Interpret(JSContext *cx)
 #define MONITOR_BRANCH_TRACEVIS                                               \
     JS_BEGIN_MACRO                                                            \
         if (jumpTable != interruptJumpTable)                                  \
-            js_EnterTraceVisState(cx, S_RECORD, R_NONE);                      \
+            EnterTraceVisState(cx, S_RECORD, R_NONE);                         \
     JS_END_MACRO
 #else /* !JS_THREADED_INTERP */
 #define MONITOR_BRANCH_TRACEVIS                                               \
     JS_BEGIN_MACRO                                                            \
-        js_EnterTraceVisState(cx, S_RECORD, R_NONE);                          \
+        EnterTraceVisState(cx, S_RECORD, R_NONE);                             \
     JS_END_MACRO
 #endif
 #else
