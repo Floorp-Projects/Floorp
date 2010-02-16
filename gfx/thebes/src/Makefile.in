@@ -34,10 +34,6 @@ CPPSRCS	= \
 	gfxUserFontSet.cpp \
 	$(NULL)
 
-CPPSRCS += \
-	gfxSharedImageSurface.cpp \
-	$(NULL)
-
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_CAIRO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
