@@ -1348,6 +1348,14 @@ class Protocol(ipdl.ast.Protocol):
         assert self.decl.type.isToplevel()
         return ExprVar('ShouldContinueFromReplyTimeout')
 
+    def enteredCxxStackVar(self):
+        assert self.decl.type.isToplevel()
+        return ExprVar('EnteredCxxStack')
+
+    def exitedCxxStackVar(self):
+        assert self.decl.type.isToplevel()
+        return ExprVar('ExitedCxxStack')
+
     def nextActorIdExpr(self, side):
         assert self.decl.type.isToplevel()
         if side is 'parent':   op = '++'
@@ -2639,7 +2647,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 MethodDecl(p.shouldContinueFromTimeoutVar().name,
                            ret=Type.BOOL, virtual=1))
             shouldcontinue.addstmt(StmtReturn(ExprLiteral.TRUE))
-            self.cls.addstmts([ shouldcontinue, Whitespace.NL ])
+
+            # void EnteredCxxStack(); default to no-op
+            entered = MethodDefn(
+                MethodDecl(p.enteredCxxStackVar().name, virtual=1))
+            exited = MethodDefn(
+                MethodDecl(p.exitedCxxStackVar().name, virtual=1))
+
+            self.cls.addstmts([ shouldcontinue, entered, exited,
+                                Whitespace.NL ])
 
         self.cls.addstmts((
             [ Label.PRIVATE ]
@@ -2859,6 +2875,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ])
 
             self.cls.addstmts([ ontimeout, Whitespace.NL ])
+
+        # On[Entered/Exited]CxxStack()
+        if ptype.isToplevel() and toplevel.talksRpc():
+            onentered = MethodDefn(MethodDecl('OnEnteredCxxStack'))
+            onentered.addstmt(StmtReturn(ExprCall(p.enteredCxxStackVar())))
+
+            onexited = MethodDefn(MethodDecl('OnExitedCxxStack'))
+            onexited.addstmt(StmtReturn(ExprCall(p.exitedCxxStackVar())))
+
+            self.cls.addstmts([ onentered, onexited, Whitespace.NL ])
 
         # OnChannelClose()
         onclose = MethodDefn(MethodDecl('OnChannelClose'))
