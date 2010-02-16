@@ -74,8 +74,9 @@ PluginModuleChild::PluginModuleChild() :
     mShutdownFunc(0)
 #ifdef OS_WIN
   , mGetEntryPointsFunc(0)
+#elif defined(MOZ_WIDGET_GTK2)
+  , mNestedLoopTimerId(0)
 #endif
-//  ,mNextInstanceId(0)
 {
     NS_ASSERTION(!gInstance, "Something terribly wrong here!");
     memset(&mFunctions, 0, sizeof(mFunctions));
@@ -229,12 +230,88 @@ wrap_gtk_plug_embedded(GtkPlug* plug) {
         (*real_gtk_plug_embedded)(plug);
     }
 }
+
+//
+// The next four constants are knobs that can be tuned.  They trade
+// off potential UI lag from delayed event processing with CPU time.
+//
+static const gint kNestedLoopDetectorPriority = G_PRIORITY_HIGH_IDLE;
+// 90ms so that we can hopefully break livelocks before the user
+// notices UI lag (100ms)
+static const guint kNestedLoopDetectorIntervalMs = 90;
+
+static const gint kBrowserEventPriority = G_PRIORITY_HIGH_IDLE;
+static const guint kBrowserEventIntervalMs = 10;
+
+// static
+gboolean
+PluginModuleChild::DetectNestedEventLoop(gpointer data)
+{
+    PluginModuleChild* pmc = static_cast<PluginModuleChild*>(data);
+
+    NS_ABORT_IF_FALSE(0 != pmc->mNestedLoopTimerId,
+                      "callback after descheduling");
+    NS_ABORT_IF_FALSE(1 < g_main_depth(),
+                      "not canceled before returning to main event loop!");
+
+    PLUGIN_LOG_DEBUG(("Detected nested glib event loop"));
+
+    // just detected a nested loop; start a timer that will
+    // periodically rpc-call back into the browser and process some
+    // events
+    pmc->mNestedLoopTimerId =
+        g_timeout_add_full(kBrowserEventPriority,
+                           kBrowserEventIntervalMs,
+                           PluginModuleChild::ProcessBrowserEvents,
+                           data,
+                           NULL);
+    // cancel the nested-loop detection timer
+    return FALSE;
+}
+
+// static
+gboolean
+PluginModuleChild::ProcessBrowserEvents(gpointer data)
+{
+    NS_ABORT_IF_FALSE(1 < g_main_depth(),
+                      "not canceled before returning to main event loop!");
+
+    PluginModuleChild* pmc = static_cast<PluginModuleChild*>(data);
+
+    PLUGIN_LOG_DEBUG(("FIXME/bug 544945: rpc-call to browser to process a few events"));
+
+    return TRUE;
+}
+
+void
+PluginModuleChild::EnteredCxxStack()
+{
+    NS_ABORT_IF_FALSE(0 == mNestedLoopTimerId,
+                      "previous timer not descheduled");
+
+    mNestedLoopTimerId =
+        g_timeout_add_full(kNestedLoopDetectorPriority,
+                           kNestedLoopDetectorIntervalMs,
+                           PluginModuleChild::DetectNestedEventLoop,
+                           this,
+                           NULL);
+}
+
+void
+PluginModuleChild::ExitedCxxStack()
+{
+    NS_ABORT_IF_FALSE(0 < mNestedLoopTimerId,
+                      "nested loop timeout not scheduled");
+
+    g_source_remove(mNestedLoopTimerId);
+    mNestedLoopTimerId = 0;
+}
+
 #endif
 
 bool
 PluginModuleChild::InitGraphics()
 {
-    // FIXME/cjones: is this the place for this?
 #if defined(MOZ_WIDGET_GTK2)
     // Work around plugins that don't interact well with GDK
     // client-side windows.
