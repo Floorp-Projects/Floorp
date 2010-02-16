@@ -1247,6 +1247,7 @@ var FormHelper = {
 
     this._open = true;
     window.addEventListener("keypress", this, true);
+    window.addEventListener("keyup", this, false);
     let bv = Browser._browserView;
     bv.ignorePageScroll(true);
 
@@ -1274,6 +1275,7 @@ var FormHelper = {
     bv.ignorePageScroll(false);
 
     window.removeEventListener("keypress", this, true);
+    window.removeEventListener("keyup", this, false);
     this._container.hidden = true;
     this._currentElement = null;
     this._open = false;
@@ -1281,36 +1283,45 @@ var FormHelper = {
 
   handleEvent: function formHelperHandleEvent(aEvent) {
     let isChromeFocused = gFocusManager.getFocusedElementForWindow(window, false, {}) == gFocusManager.focusedElement;
-    if (isChromeFocused || aEvent.type != "keypress")
+    if (isChromeFocused)
       return;
 
     let currentElement = this.getCurrentElement();
-    switch (aEvent.keyCode) {
-      case aEvent.DOM_VK_DOWN:
-        if (currentElement instanceof HTMLTextAreaElement) {
-          let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
-          let isEnd = (currentElement.textLength == currentElement.selectionEnd);
-          if (!isEnd || existSelection)
-            return;
-        }
+    if (aEvent.type == "keypress") {
+      switch (aEvent.keyCode) {
+        case aEvent.DOM_VK_DOWN:
+          if (currentElement instanceof HTMLTextAreaElement) {
+            let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
+            let isEnd = (currentElement.textLength == currentElement.selectionEnd);
+            if (!isEnd || existSelection)
+              return;
+          }
 
-        this.goToNext();
-        aEvent.preventDefault();
-        aEvent.stopPropagation();
-        break;
+          this.goToNext();
+          aEvent.preventDefault();
+          aEvent.stopPropagation();
+          break;
 
-      case aEvent.DOM_VK_UP:
-        if (currentElement instanceof HTMLTextAreaElement) {
-          let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
-          let isStart = (currentElement.selectionEnd == 0);
-          if (!isStart || existSelection)
-            return;
-        }
+        case aEvent.DOM_VK_UP:
+          if (currentElement instanceof HTMLTextAreaElement) {
+            let existSelection = currentElement.selectionEnd - currentElement.selectionStart;
+            let isStart = (currentElement.selectionEnd == 0);
+            if (!isStart || existSelection)
+              return;
+          }
 
-        this.goToPrevious();
-        aEvent.preventDefault();
-        aEvent.stopPropagation();
-        break;
+          this.goToPrevious();
+          aEvent.preventDefault();
+          aEvent.stopPropagation();
+          break;
+      }
+    }
+    else if (aEvent.type == "keyup") {
+      let target = aEvent.target;
+      if (currentElement == target && this._isValidSelectElement(target)) {
+        SelectHelper.unselectAll();
+        SelectHelper.selectByIndex(target.selectedIndex);
+      }
     }
   },
 
@@ -1493,12 +1504,15 @@ var SelectHelper = {
     if (index == -1)
       return;
 
+    let scrollBoxObject = this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     let itemHeight = aElement.getBoundingClientRect().height;
     let visibleItemsCount = this._list.boxObject.height / itemHeight;
     if ((index + 1) > visibleItemsCount) {
       let delta = Math.ceil(visibleItemsCount / 2);
-      let scrollBoxObject = this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
       scrollBoxObject.scrollTo(0, ((index + 1) - delta) * itemHeight);
+    }
+    else {
+      scrollBoxObject.scrollTo(0, 0);
     }
   },
 
@@ -1543,6 +1557,21 @@ var SelectHelper = {
     this.reset();
   },
 
+  unselectAll: function() {
+    this._forEachOption(function(aItem, aIndex) aItem.selected = false);
+  },
+
+  selectByIndex: function(aIndex) {
+    for (let i = 0; i < this._list.childNodes.length; i++) {
+      let option = this._list.childNodes[i];
+      if (option.optionIndex == aIndex) {
+        option.selected = true;
+        this._scrollElementIntoView(option);
+        break;
+      }
+    }
+  },
+
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "click":
@@ -1554,12 +1583,7 @@ var SelectHelper = {
             this._control.select(item.optionIndex, item.selected, false);
           }
           else {
-            // Unselect all options
-            this._forEachOption(
-              function(aItem, aIndex) {
-                aItem.selected = false;
-              }
-            );
+            this.unselectAll();
 
             // Select the new one and update the control
             item.selected = true;
