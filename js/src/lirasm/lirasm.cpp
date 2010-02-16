@@ -1942,10 +1942,9 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 }
 
 Lirasm::Lirasm(bool verbose) :
-    mAssm(mCodeAlloc, mAlloc, mAlloc, &mCore, &mLogc)
+    mAssm(mCodeAlloc, mAlloc, mAlloc, &mCore, &mLogc, nanojit::AvmCore::config)
 {
     mVerbose = verbose;
-    nanojit::AvmCore::config.tree_opt = true;
     mLogc.lcbits = 0;
 
     mLirbuf = new (mAlloc) LirBuffer(mAlloc);
@@ -2214,8 +2213,8 @@ processCmdLine(int argc, char **argv, CmdLineOptions& opts)
 
     // Handle the architecture-specific options.
 #if defined NANOJIT_IA32
-    avmplus::AvmCore::config.use_cmov = avmplus::AvmCore::config.sse2 = i386_sse;
-    avmplus::AvmCore::config.fixed_esp = true;
+    avmplus::AvmCore::config.i386_use_cmov = avmplus::AvmCore::config.i386_sse2 = i386_sse;
+    avmplus::AvmCore::config.i386_fixed_esp = true;
 #elif defined NANOJIT_ARM
     // Note that we don't check for sensible configurations here!
     avmplus::AvmCore::config.arm_arch = arm_arch;
