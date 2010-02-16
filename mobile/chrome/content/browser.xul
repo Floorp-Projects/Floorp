@@ -102,6 +102,7 @@
     <command id="cmd_back" label="&back.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_forward" label="&forward.label;" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_reload" label="&reload.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_forceReload" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_stop" label="&stop.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_go" label="&go.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_openLocation" label="&openLocation.label;" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -150,9 +151,12 @@
     <key id="key_forward2" keycode="VK_BACK" command="cmd_forward" modifiers="shift"/>
 #ifndef MOZ_PLATFORM_MAEMO
     <key id="key_reload" keycode="VK_F5" command="cmd_reload"/>
+    <key id="key_forceReload" keycode="VK_F5" modifiers="shift" command="cmd_forceReload"/>
 #else
     <!-- F5 on maemo is "home" which is a task switching key -->
 #endif
+    <key id="key_reload2" key="r" modifiers="accel" command="cmd_reload"/>
+    <key id="key_forceReload2" key="r" modifiers="accel,shift" command="cmd_forceReload"/>
     <key id="key_focusURL" key="l" modifiers="accel" command="cmd_openLocation"/>
 
     <!-- scrolling -->
