@@ -466,6 +466,7 @@ extern  struct _MDLock              _pr_ioq_lock;
 #define _MD_UNBLOCK_CLOCK_INTERRUPTS()
 #define _MD_EARLY_INIT                _PR_MD_EARLY_INIT
 #define _MD_FINAL_INIT()
+#define _MD_EARLY_CLEANUP()
 #define _MD_INIT_CPUS()
 #define _MD_INIT_RUNNING_CPU(cpu)
 
