@@ -162,6 +162,15 @@ public:
 
 private:
     bool InitGraphics();
+#if defined(MOZ_WIDGET_GTK2)
+    static gboolean DetectNestedEventLoop(gpointer data);
+    static gboolean ProcessBrowserEvents(gpointer data);
+
+    NS_OVERRIDE
+    virtual void EnteredCxxStack();
+    NS_OVERRIDE
+    virtual void ExitedCxxStack();
+#endif
 
     std::string mPluginFilename;
     PRLibrary* mLibrary;
@@ -174,9 +183,43 @@ private:
     NP_PLUGININIT mInitializeFunc;
     NP_GETENTRYPOINTS mGetEntryPointsFunc;
 #endif
+
     NP_PLUGINSHUTDOWN mShutdownFunc;
     NPPluginFuncs mFunctions;
     NPSavedData mSavedData;
+
+#if defined(MOZ_WIDGET_GTK2)
+    // If a plugin spins a nested glib event loop in response to a
+    // synchronous IPC message from the browser, the loop might break
+    // only after the browser responds to a request sent by the
+    // plugin.  This can happen if a plugin uses gtk's synchronous
+    // copy/paste, for example.  But because the browser is blocked on
+    // a condvar, it can't respond to the request.  This situation
+    // isn't technically a deadlock, but the symptoms are basically
+    // the same from the user's perspective.
+    //
+    // We take two steps to prevent this
+    //
+    //  (1) Detect nested event loops spun by the plugin.  This is
+    //      done by scheduling a glib timer event in the plugin
+    //      process whenever the browser might block on the plugin.
+    //      If the plugin indeed spins a nested loop, this timer event
+    //      will fire "soon" thereafter.
+    //
+    //  (2) When a nested loop is detected, deschedule the
+    //      nested-loop-detection timer and in its place, schedule
+    //      another timer that periodically calls back into the
+    //      browser and spins a mini event loop.  This mini event loop
+    //      processes a handful of pending native events.
+    //
+    // Because only timer (1) or (2) (or neither) may be active at any
+    // point in time, we use the same member variable
+    // |mNestedLoopTimerId| to refer to both.
+    //
+    // When the browser no longer might be blocked on a plugin's IPC
+    // response, we deschedule whichever of (1) or (2) is active.
+    guint mNestedLoopTimerId;
+#endif
 
     struct NPObjectData : public nsPtrHashKey<NPObject>
     {
