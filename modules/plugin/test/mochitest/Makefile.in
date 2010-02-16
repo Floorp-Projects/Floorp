@@ -105,6 +105,12 @@ _MOCHICHROME_FILES += \
   $(NULL)
 endif
 
+ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
+_MOCHITEST_FILES += \
+		test_copyText.html \
+		$(NULL)
+endif
+
 ifdef MOZ_IPC
 _MOCHICHROME_FILES += \
   test_crash_notify.xul \
