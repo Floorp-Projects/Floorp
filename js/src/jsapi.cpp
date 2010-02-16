@@ -765,7 +765,7 @@ JS_PUBLIC_API(void)
 JS_ShutDown(void)
 {
 #ifdef MOZ_TRACEVIS
-    JS_StopTraceVis();
+    StopTraceVis();
 #endif
 
 #ifdef JS_OPMETER

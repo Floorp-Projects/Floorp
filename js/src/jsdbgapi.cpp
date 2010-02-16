@@ -2302,7 +2302,7 @@ jstv_Lineno(JSContext *cx, JSStackFrame *fp)
 
 /* Collect states here and distribute to a matching buffer, if any */
 JS_FRIEND_API(void)
-js_StoreTraceVisState(JSContext *cx, TraceVisState s, TraceVisExitReason r)
+js::StoreTraceVisState(JSContext *cx, TraceVisState s, TraceVisExitReason r)
 {
     JSStackFrame *fp = cx->fp;
 
