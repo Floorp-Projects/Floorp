@@ -409,6 +409,8 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
     	PR_ASSERT((_PR_IS_NATIVE_THREAD(me)) || (me->cpu->id == 0));
 #endif
 
+        _PR_MD_EARLY_CLEANUP();
+
         _PR_CleanupMW();
         _PR_CleanupTime();
         _PR_CleanupDtoa();

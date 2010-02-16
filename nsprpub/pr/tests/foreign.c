@@ -111,6 +111,9 @@ static void sproc_start(void *arg, PRSize size)
 #endif  /* defined(IRIX) && !defined(_PR_PTHREADS) */
 
 #if defined(WIN32)
+#if defined(WINCE)
+#include <windows.h>
+#endif
 #include <process.h>  /* for _beginthreadex() */
 
 static PRUintn __stdcall windows_start(void *arg)
