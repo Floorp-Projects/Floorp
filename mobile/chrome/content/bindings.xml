@@ -501,9 +501,20 @@
               let spec = this.spec;
               if (spec && this.uri.spec != spec) {
                 try {
+                  let oldURI = this._uri;
                   this._uri = this._ioService.newURI(spec, null, null);
                   PlacesUtils.bookmarks.changeBookmarkURI(this.itemId, this.uri);
                   this.setAttribute('uri', this.spec);
+
+                  // move tags from old URI to new URI
+                  let tags = this.tagsAsArray;
+                  if (tags.length != 0) {
+                    // only untag the old URI if this is the only bookmark
+                    if (PlacesUtils.getBookmarksForURI(oldURI, {}).length == 0)
+                      PlacesUtils.tagging.untagURI(oldURI, tags);
+
+                    PlacesUtils.tagging.tagURI(this._uri, tags);
+                  }
                 }
                 catch (e) { }
               }
