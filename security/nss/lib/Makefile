@@ -68,8 +68,10 @@ SQLITE_SRCDIR = sqlite  # Add the sqlite directory to DIRS.
 endif
 endif
 
+ifndef MOZILLA_CLIENT
 ifeq ($(OS_ARCH),Linux)
 SYSINIT_SRCDIR = sysinit  # Add the sysinit directory to DIRS.
+endif
 endif
 
 #######################################################################
