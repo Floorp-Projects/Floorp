@@ -68,6 +68,16 @@ public:
                                          Message*& aReply) = 0;
         virtual Result OnCallReceived(const Message& aMessage,
                                       Message*& aReply) = 0;
+
+        virtual void OnEnteredCxxStack()
+        {
+            NS_RUNTIMEABORT("default impl shouldn't be invoked");
+        }
+
+        virtual void OnExitedCxxStack()
+        {
+            NS_RUNTIMEABORT("default impl shouldn't be invoked");
+        }   
     };
 
     // What happens if RPC calls race?
@@ -166,14 +176,12 @@ protected:
     // for when the depth goes from non-zero to zero;
     void EnteredCxxStack()
     {
-        // FIXME/bug 545455: call mListener hook
-        printf("[%s] +++ CXX STACK\n", mChild ? "child" : "parent");
+        static_cast<RPCListener*>(mListener)->OnEnteredCxxStack();
     }
 
     void ExitedCxxStack()
     {
-        // FIXME/bug 545455: call mListener hook
-        printf("[%s] --- CXX STACK\n", mChild ? "child" : "parent");
+        static_cast<RPCListener*>(mListener)->OnExitedCxxStack();
     }
 
     class NS_STACK_CLASS CxxStackFrame
