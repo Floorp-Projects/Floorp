@@ -178,13 +178,9 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
 /* .......... dropmarker .......... */
 
 .toolbarbutton-menubutton-dropmarker {
-  -moz-appearance: none !important;
+  -moz-appearance: none;
   padding: 3px;
-  border: none !important;
-  background-color: transparent !important;
+  border: none;
+  background-color: transparent;
   width: auto;
-}
-
-.toolbarbutton-menubutton-dropmarker[disabled="true"] {
-  padding: 3px !important;
 }

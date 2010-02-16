@@ -186,12 +186,10 @@ menuitem.bookmark-item {
 
 /* ::::: primary toolbar buttons ::::: */
 
+.toolbarbutton-menubutton-button,
+.toolbarbutton-menubutton-dropmarker,
 .toolbarbutton-1 {
-  -moz-box-orient: vertical;
-  min-width: 0;
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
   -moz-appearance: none;
-  margin: 1px 3px;
   padding: 3px 4px;
   background: rgba(85%,85%,85%,.1)
               -moz-linear-gradient(top, rgba(255,255,255,.7), rgba(255,255,255,.39) 48%,
@@ -206,11 +204,49 @@ menuitem.bookmark-item {
   text-shadow: 0 0 3px white;
 }
 
+.toolbarbutton-1 {
+  -moz-box-orient: vertical;
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+}
+
+toolbarbutton[type="menu-button"] {
+  -moz-appearance: none;
+  padding: 0;
+  background: none !important;
+  border: none !important;
+  -moz-box-shadow: none !important;
+}
+
+.toolbarbutton-1,
+toolbarbutton[type="menu-button"] {
+  margin: 1px 3px;
+}
+
+.toolbarbutton-menubutton-dropmarker {
+  -moz-border-start-style: none;
+}
+
+.toolbarbutton-menubutton-button:-moz-locale-dir(ltr),
+.toolbarbutton-menubutton-dropmarker:-moz-locale-dir(rtl) {
+  -moz-border-radius-topright: 0;
+  -moz-border-radius-bottomright: 0;
+}
+
+.toolbarbutton-menubutton-button:-moz-locale-dir(rtl),
+.toolbarbutton-menubutton-dropmarker:-moz-locale-dir(ltr) {
+  -moz-border-radius-topleft: 0;
+  -moz-border-radius-bottomleft: 0;
+}
+
+.toolbarbutton-menubutton-button[disabled="true"],
+.toolbarbutton-menubutton-dropmarker[disabled="true"],
 .toolbarbutton-1[disabled="true"] {
   background-color: rgba(0,0,0,.15);
   -moz-box-shadow: 0 1px 0 rgba(0,0,0,.08);
 }
 
+.toolbarbutton-menubutton-button:not([disabled="true"]):not(:active):hover,
+:not([open="true"]):not(:active):hover > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
 .toolbarbutton-1:not([disabled="true"]):not([checked="true"]):not(:active):hover {
   background-color: rgba(255,255,255,.6);
   border-color: rgba(60%,60%,60%,.3) rgba(60%,60%,60%,.45) rgba(60%,60%,60%,.75);
@@ -224,6 +260,9 @@ menuitem.bookmark-item {
   -moz-transition: background-color .6s;
 }
 
+.toolbarbutton-menubutton-button:not([disabled="true"]):hover:active,
+:hover:active > .toolbarbutton-menubutton-dropmarker:not([disabled="true"]),
+[open="true"] > .toolbarbutton-menubutton-dropmarker,
 .toolbarbutton-1:not([disabled="true"]):hover:active,
 .toolbarbutton-1[checked="true"],
 .toolbarbutton-1[open="true"] {
@@ -240,21 +279,16 @@ menuitem.bookmark-item {
   -moz-transition: background-color .4s;
 }
 
+.toolbarbutton-menubutton-button > .toolbarbutton-icon,
 .toolbarbutton-1 > .toolbarbutton-icon {
-  -moz-margin-end: 0px;
+  -moz-margin-end: 0;
+  width: 16px;
+  height: 16px;
 }
 
 toolbar[mode="full"] .toolbarbutton-1,
 toolbar[mode="full"] .toolbarbutton-menubutton-button {
   min-width: 57px;
-}
-
-.toolbarbutton-menubutton-button {
-  padding: 5px;
-}
-
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"] {
-  border: 0 !important;
 }
 
 /* unified back/forward button */
