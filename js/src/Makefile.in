@@ -239,6 +239,7 @@ INSTALLED_HEADERS += \
 		Fragmento.h	\
 		Native.h	\
 		Native$(NANOJIT_ARCH).h \
+		njconfig.h  \
 		RegAlloc.h	\
 		nanojit.h	\
 		VMPI.h		\
@@ -252,6 +253,7 @@ CPPSRCS += \
 		Containers.cpp \
 		Fragmento.cpp  \
 		LIR.cpp        \
+		njconfig.cpp   \
 		RegAlloc.cpp   \
 		avmplus.cpp    \
 		Native$(NANOJIT_ARCH).cpp \
