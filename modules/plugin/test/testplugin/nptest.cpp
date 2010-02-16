@@ -2610,11 +2610,11 @@ getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount,
 }
 
 #else
-#  warning "Implement pluginGetClipboardText for this platform"
 bool
 getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount,
                  NPVariant* result)
 {
+  /// XXX Not implemented!
   return false;
 }
 #endif
