@@ -58,19 +58,11 @@
 
 #include "nsMathUtils.h"
 #include "nsTArray.h"
-#ifdef MOZ_X11
-#include "gfxXlibSurface.h"
-#endif
 
 #include "qcms.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-
-#define DEFAULT_RENDER_MODE RENDER_SHARED_IMAGE
 
 gfxFontconfigUtils *gfxQtPlatform::sFontconfigUtils = nsnull;
 static cairo_user_data_key_t cairo_qt_pixmap_key;
@@ -107,36 +99,6 @@ gfxQtPlatform::gfxQtPlatform()
     gPrefFonts->Init(100);
     gCodepointsWithNoFonts = new gfxSparseBitSet();
     UpdateFontList();
-
-    nsresult rv;
-    PRInt32 ival;
-    // 0 - default gfxQPainterSurface
-    // 1 - gfxXlibSurface
-    // 2 - gfxImageSurface
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (prefs) {
-      rv = prefs->GetIntPref("mozilla.widget-qt.render-mode", &ival);
-      if (NS_FAILED(rv))
-          ival = DEFAULT_RENDER_MODE;
-    }
-
-    const char *envTypeOverride = getenv("MOZ_QT_RENDER_TYPE");
-    if (envTypeOverride)
-        ival = atoi(envTypeOverride);
-
-    switch (ival) {
-        case 0:
-            mRenderMode = RENDER_QPAINTER;
-            break;
-        case 1:
-            mRenderMode = RENDER_XLIB;
-            break;
-        case 2:
-            mRenderMode = RENDER_SHARED_IMAGE;
-            break;
-        default:
-            mRenderMode = RENDER_QPAINTER;
-    }
 }
 
 gfxQtPlatform::~gfxQtPlatform()
@@ -172,53 +134,8 @@ already_AddRefed<gfxASurface>
 gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
                                       gfxASurface::gfxImageFormat imageFormat)
 {
-    nsRefPtr<gfxASurface> newSurface = nsnull;
-
-    if (mRenderMode == RENDER_QPAINTER) {
-      newSurface = new gfxQPainterSurface(size, gfxASurface::ContentFromFormat(imageFormat));
-      return newSurface.forget();
-    }
-
-    if (mRenderMode == RENDER_SHARED_IMAGE) {
-      newSurface = new gfxImageSurface(size, imageFormat);
-      return newSurface.forget();
-    }
-
-#ifdef MOZ_X11
-    int xrenderFormatID = -1;
-    switch (imageFormat) {
-        case gfxASurface::ImageFormatARGB32:
-            xrenderFormatID = PictStandardARGB32;
-            break;
-        case gfxASurface::ImageFormatRGB24:
-            xrenderFormatID = PictStandardRGB24;
-            break;
-        case gfxASurface::ImageFormatA8:
-            xrenderFormatID = PictStandardA8;
-            break;
-        case gfxASurface::ImageFormatA1:
-            xrenderFormatID = PictStandardA1;
-            break;
-        default:
-            return nsnull;
-    }
-
-    // XXX we really need a different interface here, something that passes
-    // in more context, including the display and/or target surface type that
-    // we should try to match
-    XRenderPictFormat* xrenderFormat =
-        XRenderFindStandardFormat(QX11Info().display(), xrenderFormatID);
-
-    newSurface = new gfxXlibSurface((Display*)QX11Info().display(),
-                                    xrenderFormat,
-                                    size);
-#endif
-
-    if (newSurface) {
-        gfxContext ctx(newSurface);
-        ctx.SetOperator(gfxContext::OPERATOR_CLEAR);
-        ctx.Paint();
-    }
+    nsRefPtr<gfxASurface> newSurface =
+        new gfxQPainterSurface (size, gfxASurface::ContentFromFormat(imageFormat));
 
     return newSurface.forget();
 }
