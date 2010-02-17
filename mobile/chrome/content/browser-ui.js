@@ -528,6 +528,9 @@ var BrowserUI = {
   },
 
   closeAutoComplete: function closeAutoComplete(aResetInput) {
+    if (!this.isAutoCompleteOpen())
+      return;
+
     if (aResetInput)
       this._edit.popup.close();
     else
