@@ -56,6 +56,7 @@ namespace dom {
 Link::Link()
   : mLinkState(defaultState)
   , mRegistered(false)
+  , mContent(NULL)
 {
 }
 
@@ -92,8 +93,7 @@ Link::SetLinkState(nsLinkState aState)
   mRegistered = false;
 
   // Notify the document that our visited state has changed.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(this));
-  NS_ASSERTION(content, "Why isn't this an nsIContent node?!");
+  nsIContent *content = Content();
   nsIDocument *doc = content->GetCurrentDoc();
   NS_ASSERTION(doc, "Registered but we have no document?!");
   PRInt32 newLinkState = LinkState();
@@ -112,9 +112,7 @@ Link::LinkState() const
   Link *self = const_cast<Link *>(this);
 
   // If we are not in the document, default to not visited.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(self));
-  NS_ASSERTION(content, "Why isn't this an nsIContent node?!");
-  if (!content->IsInDoc()) {
+  if (!self->Content()->IsInDoc()) {
     self->mLinkState = eLinkState_Unvisited;
   }
 
@@ -163,8 +161,7 @@ Link::GetURI() const
 
   // Otherwise obtain it.
   Link *self = const_cast<Link *>(this);
-  nsCOMPtr<nsIContent> content(do_QueryInterface(self));
-  NS_ASSERTION(content, "Why isn't this an nsIContent node?!");
+  nsIContent *content = self->Content();
   uri = content->GetHrefURI();
 
   // We want to cache the URI if the node is in the document.
@@ -460,8 +457,7 @@ Link::GetHash(nsAString &_hash)
 void
 Link::ResetLinkState()
 {
-  nsCOMPtr<nsIContent> content(do_QueryInterface(this));
-  NS_ASSERTION(content, "Why isn't this an nsIContent node?!");
+  nsIContent *content = Content();
 
   // Tell the document to forget about this link.
   nsIDocument *doc = content->GetCurrentDoc();
@@ -513,13 +509,23 @@ void
 Link::SetHrefAttribute(nsIURI *aURI)
 {
   NS_ASSERTION(aURI, "Null URI is illegal!");
-  nsCOMPtr<nsIContent> content(do_QueryInterface(this));
-  NS_ASSERTION(content, "Why isn't this an nsIContent node?!");
 
   nsCAutoString href;
   (void)aURI->GetSpec(href);
-  (void)content->SetAttr(kNameSpaceID_None, nsGkAtoms::href,
-                         NS_ConvertUTF8toUTF16(href), PR_TRUE);
+  (void)Content()->SetAttr(kNameSpaceID_None, nsGkAtoms::href,
+                           NS_ConvertUTF8toUTF16(href), PR_TRUE);
+}
+
+nsIContent *
+Link::Content()
+{
+  if (NS_LIKELY(mContent)) {
+    return mContent;
+  }
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(this));
+  NS_ABORT_IF_FALSE(content, "This must be able to QI to nsIContent!");
+  return mContent = content;
 }
 
 } // namespace dom
