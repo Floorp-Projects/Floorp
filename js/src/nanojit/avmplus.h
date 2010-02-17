@@ -37,6 +37,7 @@
 #define avm_h___
 
 #include "VMPI.h"
+#include "njcpudetect.h"
 #include "njconfig.h"
 
 #if !defined(AVMPLUS_LITTLE_ENDIAN) && !defined(AVMPLUS_BIG_ENDIAN)
