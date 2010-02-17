@@ -38,6 +38,7 @@
 
 #ifdef MOZ_WIDGET_QT
 #include <QtGui/QX11EmbedWidget>
+#include <QApplication> 
 #endif
 #include "TabChild.h"
 
@@ -65,6 +66,12 @@
 
 using namespace mozilla::dom;
 
+#ifdef MOZ_WIDGET_QT
+static QApplication *gQApp = nsnull;
+extern int    gArgc;
+extern char **gArgv;
+#endif
+
 NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
 
 NS_IMETHODIMP
@@ -87,6 +94,9 @@ TabChild::Init()
 {
 #ifdef MOZ_WIDGET_GTK2
   gtk_init(NULL, NULL);
+#elif defined(MOZ_WIDGET_QT)
+  if (!qApp)
+    gQApp = new QApplication(gArgc, (char**)gArgv);
 #endif
 
   nsCOMPtr<nsIWebBrowser> webBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
@@ -324,6 +334,11 @@ TabChild::destroyWidget()
 
 TabChild::~TabChild()
 {
+#ifdef MOZ_WIDGET_QT 
+    if (gQApp) 
+      delete gQApp; 
+    gQApp = nsnull; 
+#endif
     destroyWidget();
     nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(mWebNav);
     if (webBrowser) {
