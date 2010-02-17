@@ -1123,18 +1123,17 @@ JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
     return NULL;
 }
 
-JS_PUBLIC_API(JSPrincipals *)
-JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
+JSPrincipals *
+js_EvalFramePrincipals(JSContext *cx, JSObject *callee, JSStackFrame *caller)
 {
     JSPrincipals *principals, *callerPrincipals;
     JSSecurityCallbacks *callbacks;
 
     callbacks = JS_GetSecurityCallbacks(cx);
-    if (callbacks && callbacks->findObjectPrincipals) {
-        principals = callbacks->findObjectPrincipals(cx, fp->callee());
-    } else {
+    if (callbacks && callbacks->findObjectPrincipals)
+        principals = callbacks->findObjectPrincipals(cx, callee);
+    else
         principals = NULL;
-    }
     if (!caller)
         return principals;
     callerPrincipals = JS_StackFramePrincipals(cx, caller);
@@ -1142,6 +1141,12 @@ JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
             callerPrincipals->subsume(callerPrincipals, principals))
            ? principals
            : callerPrincipals;
+}
+
+JS_PUBLIC_API(JSPrincipals *)
+JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
+{
+    return js_EvalFramePrincipals(cx, fp->callee(), caller);
 }
 
 JS_PUBLIC_API(void *)
