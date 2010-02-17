@@ -1355,7 +1355,7 @@ CallNPMethodInternal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   NPObject *npobj = (NPObject *)::JS_GetPrivate(cx, obj);
 
-  if (!npobj || !npobj->_class || !npobj->_class->invoke) {
+  if (!npobj || !npobj->_class) {
     ThrowJSException(cx, "Bad NPObject as private data!");
 
     return JS_FALSE;
