@@ -1567,7 +1567,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
          * CallStack of |down|. If |down == cx->fp|, the callstack is simply
          * the context's active callstack, so we can use |down->varobj(cx)|.
          * When |down != cx->fp|, we need to do a slow linear search. Luckily,
-         * this only happens with eval and JS_EvaluateInStackFrame.
+         * this only happens with indirect eval and JS_EvaluateInStackFrame.
          */
         if (down == cx->fp) {
             callStack.setInitialVarObj(down->varobj(cx));
