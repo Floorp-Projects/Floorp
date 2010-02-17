@@ -51,13 +51,6 @@
 #include "prlog.h"
 #endif
 
-#ifdef MOZ_IPC
-#include <QApplication>
-static QApplication *sQApp = nsnull;
-extern int    gArgc;
-extern char **gArgv;
-#endif
-
 #ifdef PR_LOGGING
 PRLogModuleInfo *gWidgetLog = nsnull;
 PRLogModuleInfo *gWidgetFocusLog = nsnull;
@@ -69,11 +62,6 @@ static int sPokeEvent;
 
 nsAppShell::~nsAppShell()
 {
-#ifdef MOZ_IPC
-    if (sQApp)
-        delete sQApp;
-    sQApp = nsnull;
-#endif
 }
 
 nsresult
@@ -93,12 +81,6 @@ nsAppShell::Init()
     sPokeEvent = QEvent::registerEventType();
 #else
     sPokeEvent = QEvent::User+5000;
-#endif
-
-#ifdef MOZ_IPC
-    if (!qApp) {
-      sQApp = new QApplication(gArgc, (char**)gArgv);
-    }
 #endif
 
     return nsBaseAppShell::Init();
