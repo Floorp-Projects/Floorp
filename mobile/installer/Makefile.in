@@ -92,7 +92,7 @@ NO_PKG_FILES = \
 	nsinstall \
 	*Test* \
 	*test* \
-	BadPlugin* \	
+	BadPlugin* \
 	GoodPlugin* \
 	ReadNTLM* \
 	ShowSSEConfig* \
