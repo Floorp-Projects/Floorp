@@ -148,11 +148,12 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLLinkElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLLinkElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLLinkElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE4(nsHTMLLinkElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLLinkElement,
                                    nsIDOMHTMLLinkElement,
                                    nsIDOMLinkStyle,
                                    nsILink,
-                                   nsIStyleSheetLinkingElement)
+                                   nsIStyleSheetLinkingElement,
+                                   Link)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLLinkElement,
                                                nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLLinkElement)
@@ -375,7 +376,7 @@ already_AddRefed<nsIURI>
 nsHTMLLinkElement::GetStyleSheetURL(PRBool* aIsInline)
 {
   *aIsInline = PR_FALSE;
-  return GetHrefURIForAnchors();
+  return Link::GetURI();
 }
 
 void
