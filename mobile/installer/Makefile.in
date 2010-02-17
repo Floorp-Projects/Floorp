@@ -90,6 +90,21 @@ NO_PKG_FILES = \
 	bloaturls.txt \
 	run-mozilla.sh \
 	nsinstall \
+	*Test* \
+	*test* \
+	BadPlugin* \	
+	GoodPlugin* \
+	ReadNTLM* \
+	ShowSSEConfig* \
+	SimpleTypeLib* \
+	WriteArgument* \
+	grabpage* \
+	js.exe \
+	js \
+	nsIFileEnumerator* \
+	proxy-create-threadsafety* \
+	rdfcat* \
+	rdfpoll* \
 	$(NULL)
 
 ifndef SYSTEM_LIBXUL
