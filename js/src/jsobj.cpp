@@ -1251,7 +1251,7 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 
-    JSStackFrame *caller = js_GetTopStackFrame(cx);
+    JSStackFrame *caller = js_GetScriptedCaller(cx, NULL);
     if (!caller) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_INDIRECT_CALL, js_eval_str);
