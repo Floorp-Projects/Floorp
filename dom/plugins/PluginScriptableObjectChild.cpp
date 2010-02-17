@@ -86,11 +86,6 @@ PluginScriptableObjectChild::ScriptableDeallocate(NPObject* aObject)
   }
 
   ChildNPObject* object = reinterpret_cast<ChildNPObject*>(aObject);
-  if (!object->invalidated) {
-    ScriptableInvalidate(aObject);
-  }
-  NS_ASSERTION(object->invalidated, "Should have invalidated already!");
-
   PluginScriptableObjectChild* actor = object->parent;
   if (actor) {
     NS_ASSERTION(actor->Type() == Proxy, "Bad type!");
