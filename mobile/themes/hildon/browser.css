@@ -282,13 +282,13 @@ toolbarbutton.page-button {
   #panel-container {
     -moz-box-orient: horizontal;
   }
-  
+
   #panel-controls {
     -moz-box-orient: vertical;
     -moz-box-ordinal-group: 1;
     -moz-box-pack: end;
   }
-  
+
   #tool-panel-close {
     -moz-box-ordinal-group: 1000;
   }
@@ -298,14 +298,14 @@ toolbarbutton.page-button {
   #panel-container {
     -moz-box-orient: vertical;
   }
-  
+
   #panel-controls {
     -moz-box-orient: horizontal;
     -moz-box-ordinal-group: 1000;
     -moz-box-pack: start;
     padding-top: 8px; /* core spacing */
   }
-  
+
   #tool-panel-close {
     -moz-box-ordinal-group: 1;
   }
@@ -404,11 +404,11 @@ toolbarbutton.page-button {
 }
 
 richlistitem[isDisabled="true"] .title {
-  color : gray;
+  color: gray;
 }
 
 richlistitem[isDisabled="true"] .normal {
-  color : lightgray;
+  color: lightgray;
 }
 
 richlistitem[isDisabled="true"] image {
@@ -489,7 +489,7 @@ placelabel {
   color: #000;
   min-height: 70px; /* row size */
 }
-  
+
 /* folder bookmarks row */
 placeitem[type="folder"] {
   -moz-box-pack: center;
@@ -505,7 +505,7 @@ placeitem[type="folder"] > .bookmark-item-label > image,
 placeitem[type="folder"] > .bookmark-manage > image {
   list-style-image: url(images/folder-32.png);
 }
-  
+
 placeitem[type="folder"] .bookmark-item-url {
   display: none;
 }
@@ -937,7 +937,7 @@ box[type="documenttab"]:only-child .documenttab-close {
   -moz-user-focus: ignore;
   -moz-user-select: none;
 }
- 
+
 #form-helper-container #select-buttons {
   display: none;
 }

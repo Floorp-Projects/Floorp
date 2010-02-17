@@ -125,13 +125,13 @@ toolbarbutton.page-button {
   #panel-container {
     -moz-box-orient: horizontal;
   }
-  
+
   #panel-controls {
     -moz-box-orient: vertical;
     -moz-box-ordinal-group: 1;
     -moz-box-pack: end;
   }
-  
+
   #tool-panel-close {
     -moz-box-ordinal-group: 1000;
   }
@@ -141,14 +141,14 @@ toolbarbutton.page-button {
   #panel-container {
     -moz-box-orient: vertical;
   }
-  
+
   #panel-controls {
     -moz-box-orient: horizontal;
     -moz-box-ordinal-group: 1000;
     -moz-box-pack: start;
     padding-top: 1.1mm; /* core spacing */
   }
-  
+
   #tool-panel-close {
     -moz-box-ordinal-group: 1;
   }
@@ -186,11 +186,11 @@ toolbarbutton.page-button {
 }
 
 richlistitem[isDisabled="true"] .title {
-  color : gray;
+  color: gray;
 }
 
 richlistitem[isDisabled="true"] .normal {
-  color : lightgray;
+  color: lightgray;
 }
 
 richlistitem[isDisabled="true"] image {
