@@ -498,12 +498,20 @@ MouseModule.prototype = {
     if (this._targetIsContent(evInfo.event)) {
       this._recordEvent(evInfo);
     }
-    else if (targetScrollInterface) {
-      // do not allow axis locking if panning is only possible in one direction
-      let cX = {}, cY = {};
-      targetScrollInterface.getScrolledSize(cX, cY);
-      let rect = targetScrollbox.getBoundingClientRect();
-      dragData.locked = ((cX.value > rect.width) != (cY.value > rect.height));
+    else {
+      if (this._clickTimeout) {
+        // cancel all pending content clicks
+        window.clearTimeout(this._clickTimeout);
+        this._cleanClickBuffer();
+      }
+
+      if (targetScrollInterface) {
+        // do not allow axis locking if panning is only possible in one direction
+        let cX = {}, cY = {};
+        targetScrollInterface.getScrolledSize(cX, cY);
+        let rect = targetScrollbox.getBoundingClientRect();
+        dragData.locked = ((cX.value > rect.width) != (cY.value > rect.height));
+      }
     }
   },
 
@@ -536,7 +544,7 @@ MouseModule.prototype = {
         // clean the click buffer ourselves, since there was no clicker
         // to commit to.  when there is one, the path taken through
         // _commitAnotherClick takes care of this.
-        this._cleanClickBuffer();    
+        this._cleanClickBuffer();
     }
     else if (dragData.isPan()) {
       // User was panning around, do not allow chrome click
@@ -667,7 +675,6 @@ MouseModule.prototype = {
    * the clicker.
    */
   _commitAnotherClick: function _commitAnotherClick() {
-
     if (this._clickTimeout) {   // we're waiting for a second click for double
       window.clearTimeout(this._clickTimeout);
       this._doDoubleClick();
@@ -681,12 +688,6 @@ MouseModule.prototype = {
    * Endpoint of _commitAnotherClick().  Finalize a single click and tell the clicker.
    */
   _doSingleClick: function _doSingleClick() {
-    //dump('doing single click with ' + this._downUpEvents.length + '\n');
-    //for (let i = 0; i < this._downUpEvents.length; ++i)
-    //  dump('      ' + this._downUpEvents[i].event.type
-    //       + " :: " + this._downUpEvents[i].event.button
-    //       + " :: " + this._downUpEvents[i].event.detail + '\n');/**/
-
     let ev = this._downUpEvents[1].event;
     this._cleanClickBuffer(2);
 
@@ -703,12 +704,6 @@ MouseModule.prototype = {
    * Endpoint of _commitAnotherClick().  Finalize a double click and tell the clicker.
    */
   _doDoubleClick: function _doDoubleClick() {
-    //dump('doing double click with ' + this._downUpEvents.length + '\n');
-    //for (let i = 0; i < this._downUpEvents.length; ++i)
-    //  dump('      ' + this._downUpEvents[i].event.type
-    //       + " :: " + this._downUpEvents[i].event.button
-    //       + " :: " + this._downUpEvents[i].event.detail + '\n');/**/
-
     let mouseUp1 = this._downUpEvents[1].event;
     let mouseUp2 = this._downUpEvents[3].event;
     this._cleanClickBuffer(4);
@@ -1040,8 +1035,8 @@ KineticController.prototype = {
     // x(t)
     //  ^
     //  |                |
-    //  | 
-    //  |                |  
+    //  |
+    //  |                |
     //  |           ....^^^^....
     //  |      ...^^     |      ^^...
     //  |  ...^                      ^...
@@ -1169,7 +1164,7 @@ KineticController.prototype = {
       if (dx * this._velocity.x < 0 || dy * this._velocity.y < 0)
         this.end();
     }
- 
+
     this.momentumBuffer.push({'t': now, 'dx' : dx, 'dy' : dy});
   }
 };
