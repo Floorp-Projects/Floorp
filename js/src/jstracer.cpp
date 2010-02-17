@@ -10717,8 +10717,11 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
     if (native == js_fun_apply || native == js_fun_call)
         RETURN_STOP("trying to call native apply or call");
 
+    if (fun->u.n.extra > 0)
+        RETURN_STOP("trying to trace slow native with fun->u.n.extra > 0");
+
     // Allocate the vp vector and emit code to root it.
-    uintN vplen = 2 + JS_MAX(argc, unsigned(FUN_MINARGS(fun))) + fun->u.n.extra;
+    uintN vplen = 2 + JS_MAX(argc, unsigned(FUN_MINARGS(fun)));
     if (!(fun->flags & JSFUN_FAST_NATIVE))
         vplen++; // slow native return value slot
     LIns* invokevp_ins = lir->insAlloc(vplen * sizeof(jsval));
