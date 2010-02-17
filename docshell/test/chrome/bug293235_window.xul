@@ -14,7 +14,10 @@
   </script>
 
   <script type="application/javascript"><![CDATA[
-  
+    const Ci = Components.interfaces;
+    const Cc = Components.classes;
+    Components.utils.import("resource://gre/modules/NetUtil.jsm");
+
     // Define the generator-iterator for the tests.
     var tests = testIterator();
 
@@ -24,18 +27,40 @@
     function nextTest() {
       tests.next();
     }
-    
+
     // Return the Element object for the specified element id
     function $(id) { return TestWindow.getDocument().getElementById(id); }
 
     ////
-    // Generator function for test steps for bug 293235:  
+    // Generator function for test steps for bug 293235:
     // A visited link should have the :visited style applied
     // to it when displayed on a page which was fetched from
     // the bfcache.
     //
     function testIterator()
     {
+      // Register our observer to know when the link lookup is complete.
+      let testURI = NetUtil.newURI(getHttpUrl("bug293235_p2.html"));
+      let os = Cc["@mozilla.org/observer-service;1"].
+               getService(Ci.nsIObserverService);
+      const URI_VISITED_RESOLUTION_TOPIC = "visited-status-resolution";
+      let observer = {
+        notified: false,
+        observe: function(aSubject, aTopic, aData)
+        {
+          if (!testURI.equals(aSubject.QueryInterface(Ci.nsIURI))) {
+            return;
+          }
+          is(aTopic, URI_VISITED_RESOLUTION_TOPIC, "Unexpected topic");
+          this.notified = true;
+
+          // Cleanup after ourselves...
+          os.removeObserver(this, URI_VISITED_RESOLUTION_TOPIC);
+        },
+      };
+      os.addObserver(observer, URI_VISITED_RESOLUTION_TOPIC, false);
+      function notified() observer.notified;
+
       // Load a test page containing a link that should be initially
       // blue, per the :link style.
       doPageNavigation({
@@ -43,9 +68,14 @@
         onNavComplete: nextTest
       });
       yield;
-      
-      is(TestWindow.getWindow().getComputedStyle($("link1"), "").color, 
-        "rgb(0, 0, 128)", 
+
+      // Before we go any further, make sure our link has been notified.
+      waitForTrue(notified, nextTest);
+      yield;
+
+      // Now that we've been notified, we can check our link color.
+      is(TestWindow.getWindow().getComputedStyle($("link1"), "").color,
+        "rgb(0, 0, 128)",
         "link not initially blue");
 
       // Load the page that the link on the previous page points to.
@@ -53,6 +83,16 @@
         uri: getHttpUrl("bug293235_p2.html"),
         onNavComplete: nextTest
       });
+      yield;
+
+      // Because of LAZY_ADD, we will not be notified for three seconds
+      // Wait for four seconds just to be safe.
+      setTimeout(nextTest, 4000);
+      yield;
+
+      // And the nodes get notified after the "link-visited" topic, so
+      // we need to execute soon...
+      SimpleTest.executeSoon(nextTest);
       yield;
 
       // Go back, verify the original page was loaded from the bfcache,
@@ -68,16 +108,17 @@
       });
       yield;
 
-      is(TestWindow.getWindow().getComputedStyle($("link1"), "").color, 
-        "rgb(128, 0, 128)", 
+      // Now we can test the link color.
+      is(TestWindow.getWindow().getComputedStyle($("link1"), "").color,
+        "rgb(128, 0, 128)",
         ":visited link wrong color");
 
-      // Tell the framework the test is finished.  Include the final 'yield' 
+      // Tell the framework the test is finished.  Include the final 'yield'
       // statement to prevent a StopIteration exception from being thrown.
       finish();
       yield;
     }
-    
+
   ]]></script>
 
   <browser type="content-primary" flex="1" id="content" src="about:blank"/>
