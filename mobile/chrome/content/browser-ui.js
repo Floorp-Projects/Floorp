@@ -1169,7 +1169,7 @@ var FormHelper = {
 
     // get all the documents
     let documents = [getBrowser().contentDocument];
-    let iframes = getBrowser().contentDocument.getElementsByTagName("iframe");
+    let iframes = getBrowser().contentDocument.querySelectorAll("iframe, frame");
     for (let i = 0; i < iframes.length; i++)
       documents.push(iframes[i].contentDocument);
 
