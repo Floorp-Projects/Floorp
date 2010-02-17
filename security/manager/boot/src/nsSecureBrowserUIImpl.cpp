@@ -93,11 +93,11 @@
 
 #if defined(PR_LOGGING)
 //
-// Log module for nsSecureBroswerUI logging...
+// Log module for nsSecureBrowserUI logging...
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=nsSecureBroswerUI:5
+//    set NSPR_LOG_MODULES=nsSecureBrowserUI:5
 //    set NSPR_LOG_FILE=nspr.log
 //
 // this enables PR_LOG_DEBUG level information and places all output in
