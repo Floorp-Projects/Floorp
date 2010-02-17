@@ -394,8 +394,8 @@
                 </menulist>
                </setting>
 #ifdef WINCE
-              <setting id="prefs-default-browser" type="bool" title="Default Browser" oncommand="BrowserUI.updateDefaultBrowser(this.value);">
-                Make &brandShortName; your default browser
+              <setting id="prefs-default-browser" type="bool" title="&defaultBrowser.title;" oncommand="BrowserUI.updateDefaultBrowser(this.value);">
+                &defaultBrowser.description;
               </setting>
 #endif
               <settings id="prefs-content" label="&content.title;">

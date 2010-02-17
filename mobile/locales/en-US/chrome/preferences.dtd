@@ -12,3 +12,5 @@
 <!ENTITY rememberPasswords.title                   "Remember passwords">
 <!ENTITY language.title                            "Language">
 <!ENTITY language.auto                             "Auto-detect">
+<!ENTITY defaultBrowser.title                      "Default Browser">
+<!ENTITY defaultBrowser.description                "Make &brandShortName; your default browser">
