@@ -82,6 +82,7 @@ _MOCHITEST_FILES += \
   test_crashing2.html \
   test_hanging.html \
   crashing_subpage.html \
+  test_GCrace.html \
   $(NULL)
 endif
 
