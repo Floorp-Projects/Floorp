@@ -618,7 +618,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
 
     Redirects are evil, well, some of them.
-    There are mutliple forms of redirects.
+    There are multiple forms of redirects.
 
     Redirects caused by http refresh content are ok, because experiments show,
     with those redirects, the old page contents and their requests will come to STOP
