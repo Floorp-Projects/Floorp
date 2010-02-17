@@ -49,9 +49,15 @@
 namespace mozilla {
 namespace dom {
 
+#define MOZILLA_DOM_LINK_IMPLEMENTATION_IID \
+  { 0x0c032581, 0x1c8a, 0x4fff, \
+    { 0xbe, 0x9a, 0xfb, 0x6e, 0x2e, 0xe4, 0x22, 0x2e } }
+
 class Link : public nsISupports
 {
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOM_LINK_IMPLEMENTATION_IID)
+
   static const nsLinkState defaultState = eLinkState_Unknown;
   Link();
   virtual nsLinkState GetLinkState() const;
@@ -122,6 +128,8 @@ private:
   nsIContent *Content();
   nsIContent *mContent;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(Link, MOZILLA_DOM_LINK_IMPLEMENTATION_IID)
 
 } // namespace dom
 } // namespace mozilla
