@@ -51,6 +51,13 @@ namespace mozilla {
 namespace places {
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Global Defines
+
+#define URI_VISITED "visited"
+#define URI_NOT_VISITED "not visited"
+#define URI_VISITED_RESOLUTION_TOPIC "visited-status-resolution"
+
+////////////////////////////////////////////////////////////////////////////////
 //// Anonymous Helpers
 
 namespace {
@@ -105,6 +112,24 @@ public:
     if (mIsVisited) {
       History::GetService()->NotifyVisited(mURI);
     }
+
+    // Notify any observers about that we have resolved the visited state of
+    // this URI.
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    if (observerService) {
+      nsAutoString status;
+      if (mIsVisited) {
+        status.AssignLiteral(URI_VISITED);
+      }
+      else {
+        status.AssignLiteral(URI_NOT_VISITED);
+      }
+      (void)observerService->NotifyObservers(mURI,
+                                             URI_VISITED_RESOLUTION_TOPIC,
+                                             status.get());
+    }
+
     return NS_OK;
   }
 private:
