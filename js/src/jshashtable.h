@@ -806,7 +806,11 @@ class HashMap
 
     Entry *put(const Key &k, const Value &v) {
         AddPtr p = lookupForAdd(k);
-        return p ? &*p : (add(p, k, v) ? &*p : NULL);
+        if (p) {
+            p->value = v;
+            return &*p;
+        }
+        return add(p, k, v) ? &*p : NULL;
     }
 
     void remove(const Lookup &l) {
