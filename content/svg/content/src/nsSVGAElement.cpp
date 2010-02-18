@@ -121,31 +121,6 @@ nsSVGAElement::GetTarget(nsIDOMSVGAnimatedString * *aTarget)
 //----------------------------------------------------------------------
 // nsIContent methods
 
-nsresult
-nsSVGAElement::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
-                          nsIContent *aBindingParent,
-                          PRBool aCompileEventHandlers)
-{
-  Link::ResetLinkState();
-
-  nsresult rv = nsSVGAElementBase::BindToTree(aDocument, aParent,
-                                              aBindingParent,
-                                              aCompileEventHandlers);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-void
-nsSVGAElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
-{
-  // If this link is ever reinserted into a document, it might
-  // be under a different xml:base, so forget the cached state now.
-  Link::ResetLinkState();
-
-  nsSVGAElementBase::UnbindFromTree(aDeep, aNullParent);
-}
-
 nsLinkState
 nsSVGAElement::GetLinkState() const
 {
