@@ -39,8 +39,6 @@
 
 #include "Link.h"
 
-#include "nsIEventStateManager.h"
-
 namespace mozilla {
 namespace dom {
 
@@ -59,20 +57,6 @@ void
 Link::SetLinkState(nsLinkState aState)
 {
   mLinkState = aState;
-}
-
-PRInt32
-Link::LinkState() const
-{
-  if (mLinkState == eLinkState_Visited) {
-    return NS_EVENT_STATE_VISITED;
-  }
-
-  if (mLinkState == eLinkState_Unvisited) {
-    return NS_EVENT_STATE_UNVISITED;
-  }
-
-  return 0;
 }
 
 void
