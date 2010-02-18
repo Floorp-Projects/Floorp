@@ -267,19 +267,12 @@ nsSVGAElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                        nsIAtom* aPrefix, const nsAString& aValue,
                        PRBool aNotify)
 {
-  nsresult rv = nsSVGAElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
-                                           aValue, aNotify);
-
-  // The ordering of the parent class's SetAttr call and Link::ResetLinkState
-  // is important here!  The attribute is not set until SetAttr returns, and
-  // we will need the updated attribute value because notifying the document
-  // that content states have changed will call IntrinsicState, which will try
-  // to get updated information about the visitedness from Link.
   if (aName == nsGkAtoms::href && aNameSpaceID == kNameSpaceID_XLink) {
     Link::ResetLinkState(!!aNotify);
   }
 
-  return rv;
+  return nsSVGAElementBase::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
+                                    aNotify);
 }
 
 nsresult
