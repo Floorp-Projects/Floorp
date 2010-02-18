@@ -1908,6 +1908,12 @@ JS_TraceRuntime(JSTracer *trc)
     js_TraceRuntime(trc, allAtoms);
 }
 
+JS_PUBLIC_API(void)
+JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
+{
+    js_CallGCMarker(trc, thing, kind);
+}
+
 #ifdef DEBUG
 
 #ifdef HAVE_XPCONNECT

@@ -1788,18 +1788,18 @@ JSScopeProperty::trace(JSTracer *trc)
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         if ((attrs & JSPROP_GETTER) && getter) {
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 0);
-            JS_CallTracer(trc, getterObject(), JSTRACE_OBJECT);
+            js_CallGCMarker(trc, getterObject(), JSTRACE_OBJECT);
         }
         if ((attrs & JSPROP_SETTER) && setter) {
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 1);
-            JS_CallTracer(trc, setterObject(), JSTRACE_OBJECT);
+            js_CallGCMarker(trc, setterObject(), JSTRACE_OBJECT);
         }
     }
 #endif /* JS_HAS_GETTER_SETTER */
 
     if (isMethod()) {
         JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, this, 0);
-        JS_CallTracer(trc, methodObject(), JSTRACE_OBJECT);
+        js_CallGCMarker(trc, methodObject(), JSTRACE_OBJECT);
     }
 }
 

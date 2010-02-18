@@ -3036,7 +3036,7 @@ trace_local_names_enumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
     JS_SET_TRACING_INDEX(trc,
                          entry->localKind == JSLOCAL_ARG ? "arg" : "var",
                          entry->index);
-    JS_CallTracer(trc, ATOM_TO_STRING(entry->name), JSTRACE_STRING);
+    js_CallGCMarker(trc, ATOM_TO_STRING(entry->name), JSTRACE_STRING);
     return JS_DHASH_NEXT;
 }
 
@@ -3061,7 +3061,7 @@ TraceLocalNames(JSTracer *trc, JSFunction *fun)
                 JS_SET_TRACING_INDEX(trc,
                                      i < fun->nargs ? "arg" : "var",
                                      i < fun->nargs ? i : i - fun->nargs);
-                JS_CallTracer(trc, ATOM_TO_STRING(atom), JSTRACE_STRING);
+                js_CallGCMarker(trc, ATOM_TO_STRING(atom), JSTRACE_STRING);
             }
         } while (i != 0);
     } else {
