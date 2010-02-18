@@ -263,30 +263,6 @@ nsSVGAElement::IntrinsicState() const
   return Link::LinkState() | nsSVGAElementBase::IntrinsicState();
 }
 
-nsresult
-nsSVGAElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                       nsIAtom* aPrefix, const nsAString& aValue,
-                       PRBool aNotify)
-{
-  if (aName == nsGkAtoms::href && aNameSpaceID == kNameSpaceID_XLink) {
-    Link::ResetLinkState();
-  }
-
-  return nsSVGAElementBase::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
-                                    aNotify);
-}
-
-nsresult
-nsSVGAElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
-                         PRBool aNotify)
-{
-  if (aAttr == nsGkAtoms::href && aNameSpaceID == kNameSpaceID_XLink) {
-    Link::ResetLinkState();
-  }
-
-  return nsSVGAElementBase::UnsetAttr(aNameSpaceID, aAttr, aNotify);
-}
-
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
