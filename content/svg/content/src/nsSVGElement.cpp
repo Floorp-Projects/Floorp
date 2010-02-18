@@ -1337,6 +1337,19 @@ nsSVGElement::DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 }
 
 void
+nsSVGElement::DidAnimateInteger(PRUint8 aAttrEnum)
+{
+  nsIFrame* frame = GetPrimaryFrame();
+  
+  if (frame) {
+    IntegerAttributesInfo info = GetIntegerInfo();
+    frame->AttributeChanged(kNameSpaceID_None,
+                            *info.mIntegerInfo[aAttrEnum].mName,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
+void
 nsSVGElement::GetAnimatedIntegerValues(PRInt32 *aFirst, ...)
 {
   IntegerAttributesInfo info = GetIntegerInfo();
@@ -1351,7 +1364,7 @@ nsSVGElement::GetAnimatedIntegerValues(PRInt32 *aFirst, ...)
   va_start(args, aFirst);
 
   while (n && i < info.mIntegerCount) {
-    *n = info.mIntegers[i++].GetAnimValue();
+    *n = info.mIntegers[i++].GetAnimValue(this);
     n = va_arg(args, PRInt32*);
   }
   va_end(args);
@@ -1762,6 +1775,16 @@ nsSVGElement::GetAnimatedAttr(const nsIAtom* aName)
       // here. The separate properties should then point into the list.
       if (aName == *info.mNumberInfo[i].mName) {
         return info.mNumbers[i].ToSMILAttr(this);
+      }
+    }
+  }
+
+  // Integers:
+  {
+    IntegerAttributesInfo info = GetIntegerInfo();
+    for (PRUint32 i = 0; i < info.mIntegerCount; i++) {
+      if (aName == *info.mIntegerInfo[i].mName) {
+        return info.mIntegers[i].ToSMILAttr(this);
       }
     }
   }

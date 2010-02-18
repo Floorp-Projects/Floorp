@@ -81,6 +81,9 @@ fails == anim-fillopacity-1xml.svg  anim-standard-ref.svg # bug 534028
 == anim-offset-01.svg lime.svg
 == anim-pathLength-01.svg anim-pathLength-01-ref.svg
 
+# animate some <integer> attributes:
+== anim-feTurbulence-numOctaves-01.svg anim-feTurbulence-numOctaves-01-ref.svg
+
 # animate some <angle> attributes:
 == anim-marker-orient-01.svg lime.svg
 
