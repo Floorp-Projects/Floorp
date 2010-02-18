@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(1, true)">
+  <title>Test paced animation of the "viewBox" attribute on the "svg" element</title>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <!-- Check that the simple duration is split one third to the first
+       animation and two thirds to the second. This is because in the first
+       animation the left side travels 50, and in the second animation the
+       right side travels 100. -->
+  <svg width="50" height="50" viewBox="0 0 100 50">
+    <animate attributeName="viewBox"
+             calcMode="paced"
+             begin="0s" dur="3s"
+             values="0 0 100 50; 50 0 50 50; 50 0 150 50"
+             fill="freeze"/>
+    <rect x="-100" y="-100" width="1000" height="1000" fill="red"/>
+    <rect x="50" y="0" width="50" height="50" fill="lime"/>
+  </svg>
+</svg>
