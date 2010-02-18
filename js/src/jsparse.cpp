@@ -7466,7 +7466,7 @@ static JSParseNode *
 XMLExpr(JSContext *cx, JSTokenStream *ts, JSBool inTag, JSTreeContext *tc)
 {
     JSParseNode *pn, *pn2;
-    uintN oldflags;
+    uintN oldflag;
 
     JS_ASSERT(CURRENT_TOKEN(ts).type == TOK_LC);
     pn = NewParseNode(PN_UNARY, tc);
@@ -7474,19 +7474,19 @@ XMLExpr(JSContext *cx, JSTokenStream *ts, JSBool inTag, JSTreeContext *tc)
         return NULL;
 
     /*
-     * Turn off XML tag mode, but don't restore it after parsing this braced
-     * expression.  Instead, simply restore ts's old flags.  This is required
-     * because XMLExpr is called both from within a tag, and from within text
-     * contained in an element, but outside of any start, end, or point tag.
+     * Turn off XML tag mode. We save the old value of the flag because it may
+     * already be off: XMLExpr is called both from within a tag, and from
+     * within text contained in an element, but outside of any start, end, or
+     * point tag.
      */
-    oldflags = ts->flags;
-    ts->flags = oldflags & ~TSF_XMLTAGMODE;
+    oldflag = ts->flags & TSF_XMLTAGMODE;
+    ts->flags &= ~TSF_XMLTAGMODE;
     pn2 = Expr(cx, ts, tc);
     if (!pn2)
         return NULL;
 
     MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_IN_XML_EXPR);
-    ts->flags = oldflags;
+    ts->flags |= oldflag;
     pn->pn_kid = pn2;
     pn->pn_op = inTag ? JSOP_XMLTAGEXPR : JSOP_XMLELTEXPR;
     return pn;
