@@ -42,6 +42,8 @@
 #include "nsSVGElement.h"
 #include "nsDOMError.h"
 
+class nsSVGOrientType;
+
 class nsSVGAngle
 {
   friend class DOMSVGAngle;
@@ -51,8 +53,9 @@ public:
             float aValue = 0,
             PRUint8 aUnitType = nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED) {
     mAnimVal = mBaseVal = aValue;
-    mSpecifiedUnitType = aUnitType;
+    mAnimValUnit = mBaseValUnit = aUnitType;
     mAttrEnum = aAttrEnum;
+    mIsAnimated = PR_FALSE;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
@@ -62,28 +65,37 @@ public:
   void GetAnimValueString(nsAString& aValue);
 
   float GetBaseValue() const
-    { return mBaseVal / GetUnitScaleFactor(); }
+    { return mBaseVal * GetDegreesPerUnit(mBaseValUnit); }
   float GetAnimValue() const
-    { return mAnimVal / GetUnitScaleFactor(); }
+    { return mAnimVal * GetDegreesPerUnit(mAnimValUnit); }
 
   void SetBaseValue(float aValue, nsSVGElement *aSVGElement);
+  void SetAnimValue(float aValue, PRUint8 aUnit, nsSVGElement *aSVGElement);
 
-  PRUint8 GetSpecifiedUnitType() const { return mSpecifiedUnitType; }
-  float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
+  PRUint8 GetBaseValueUnit() const { return mBaseValUnit; }
+  PRUint8 GetAnimValueUnit() const { return mAnimValUnit; }
   float GetBaseValInSpecifiedUnits() const { return mBaseVal; }
+  float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
 
   static nsresult ToDOMSVGAngle(nsIDOMSVGAngle **aResult);
   nsresult ToDOMAnimatedAngle(nsIDOMSVGAnimatedAngle **aResult,
                               nsSVGElement* aSVGElement);
+#ifdef MOZ_SMIL
+  // Returns a new nsISMILAttr object that the caller must delete
+  nsISMILAttr* ToSMILAttr(nsSVGElement* aSVGElement);
+#endif // MOZ_SMIL
+
+  static float GetDegreesPerUnit(PRUint8 aUnit);
 
 private:
   
   float mAnimVal;
   float mBaseVal;
-  PRUint8 mSpecifiedUnitType;
+  PRUint8 mAnimValUnit;
+  PRUint8 mBaseValUnit;
   PRUint8 mAttrEnum; // element specified tracking for attribute
+  PRPackedBool mIsAnimated;
   
-  float GetUnitScaleFactor() const;
   void SetBaseValueInSpecifiedUnits(float aValue, nsSVGElement *aSVGElement);
   nsresult NewValueSpecifiedUnits(PRUint16 aUnitType, float aValue,
                                   nsSVGElement *aSVGElement);
@@ -103,7 +115,7 @@ private:
     nsRefPtr<nsSVGElement> mSVGElement;
     
     NS_IMETHOD GetUnitType(PRUint16* aResult)
-      { *aResult = mVal->mSpecifiedUnitType; return NS_OK; }
+      { *aResult = mVal->mBaseValUnit; return NS_OK; }
 
     NS_IMETHOD GetValue(float* aResult)
       { *aResult = mVal->GetBaseValue(); return NS_OK; }
@@ -142,7 +154,7 @@ private:
     nsRefPtr<nsSVGElement> mSVGElement;
     
     NS_IMETHOD GetUnitType(PRUint16* aResult)
-      { *aResult = mVal->mSpecifiedUnitType; return NS_OK; }
+      { *aResult = mVal->mAnimValUnit; return NS_OK; }
 
     NS_IMETHOD GetValue(float* aResult)
       { *aResult = mVal->GetAnimValue(); return NS_OK; }
@@ -184,6 +196,40 @@ private:
     NS_IMETHOD GetAnimVal(nsIDOMSVGAngle **aAnimVal)
       { return mVal->ToDOMAnimVal(aAnimVal, mSVGElement); }
   };
+
+#ifdef MOZ_SMIL
+  // We do not currently implemente a SMILAngle struct because in SVG 1.1 the
+  // only *animatable* attribute that takes an <angle> is 'orient', on the
+  // 'marker' element, and 'orient' must be special cased since it can also
+  // take the value 'auto', making it a more complex type.
+
+  struct SMILOrient : public nsISMILAttr
+  {
+  public:
+    SMILOrient(nsSVGOrientType* aOrientType,
+               nsSVGAngle* aAngle,
+               nsSVGElement* aSVGElement)
+      : mOrientType(aOrientType)
+      , mAngle(aAngle)
+      , mSVGElement(aSVGElement)
+    {}
+
+    // These will stay alive because a nsISMILAttr only lives as long
+    // as the Compositing step, and DOM elements don't get a chance to
+    // die during that.
+    nsSVGOrientType* mOrientType;
+    nsSVGAngle* mAngle;
+    nsSVGElement* mSVGElement;
+
+    // nsISMILAttr methods
+    virtual nsresult ValueFromString(const nsAString& aStr,
+                                     const nsISMILAnimationElement* aSrcElement,
+                                     nsSMILValue& aValue) const;
+    virtual nsSMILValue GetBaseValue() const;
+    virtual void ClearAnimValue();
+    virtual nsresult SetAnimValue(const nsSMILValue& aValue);
+  };
+#endif // MOZ_SMIL
 };
 
 nsresult

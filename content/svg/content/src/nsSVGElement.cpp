@@ -1390,6 +1390,19 @@ nsSVGElement::DidChangeAngle(PRUint8 aAttrEnum, PRBool aDoSetAttr)
           newStr, PR_TRUE);
 }
 
+void
+nsSVGElement::DidAnimateAngle(PRUint8 aAttrEnum)
+{
+  nsIFrame* frame = GetPrimaryFrame();
+
+  if (frame) {
+    AngleAttributesInfo info = GetAngleInfo();
+    frame->AttributeChanged(kNameSpaceID_None,
+                            *info.mAngleInfo[aAttrEnum].mName,
+                            nsIDOMMutationEvent::MODIFICATION);
+  }
+}
+
 nsSVGElement::BooleanAttributesInfo
 nsSVGElement::GetBooleanInfo()
 {
@@ -1757,6 +1770,16 @@ nsSVGElement::GetAnimatedAttr(const nsIAtom* aName)
     for (PRUint32 i = 0; i < info.mBooleanCount; i++) {
       if (aName == *info.mBooleanInfo[i].mName) {
         return info.mBooleans[i].ToSMILAttr(this);
+      }
+    }
+  }
+
+  // Angles:
+  {
+    AngleAttributesInfo info = GetAngleInfo();
+    for (PRUint32 i = 0; i < info.mAngleCount; i++) {
+      if (aName == *info.mAngleInfo[i].mName) {
+        return info.mAngles[i].ToSMILAttr(this);
       }
     }
   }

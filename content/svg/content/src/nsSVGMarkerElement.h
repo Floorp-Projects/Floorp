@@ -56,8 +56,13 @@ public:
   nsresult SetBaseValue(PRUint16 aValue,
                         nsSVGElement *aSVGElement);
 
+  // XXX FIXME like https://bugzilla.mozilla.org/show_bug.cgi?id=545550 but
+  // without adding an mIsAnimated member...?
   void SetBaseValue(PRUint16 aValue)
     { mAnimVal = mBaseVal = PRUint8(aValue); }
+  // no need to notify, since nsSVGAngle does that
+  void SetAnimValue(PRUint16 aValue)
+    { mAnimVal = PRUint8(aValue); }
 
   PRUint16 GetBaseValue() const
     { return mBaseVal; }
@@ -132,10 +137,12 @@ public:
 
   // public helpers
   gfxMatrix GetMarkerTransform(float aStrokeWidth,
-                               float aX, float aY, float aAngle);
+                               float aX, float aY, float aAutoAngle);
   gfxMatrix GetViewBoxTransform();
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  nsSVGOrientType* GetOrientType() { return &mOrientType; }
 
 protected:
 
