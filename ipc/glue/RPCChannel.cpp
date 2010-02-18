@@ -300,10 +300,8 @@ RPCChannel::EnqueuePendingMessages()
 {
     AssertWorkerThread();
     mMutex.AssertCurrentThreadOwns();
-    RPC_ASSERT(mDeferred.empty() || 1 == mDeferred.size(),
-               "expected mDeferred to have 0 or 1 items");
 
-    if (!mDeferred.empty())
+    for (size_t i = 0; i < mDeferred.size(); ++i)
         mWorkerLoop->PostTask(
             FROM_HERE,
             NewRunnableMethod(this, &RPCChannel::OnMaybeDequeueOne));
@@ -325,8 +323,6 @@ RPCChannel::OnMaybeDequeueOne()
 
     AssertWorkerThread();
     mMutex.AssertNotCurrentThreadOwns();
-    RPC_ASSERT(mDeferred.empty() || 1 == mDeferred.size(),
-               "expected mDeferred to have 0 or 1 items, but it has %lu");
 
     Message recvd;
     {
