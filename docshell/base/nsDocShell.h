@@ -277,6 +277,7 @@ public:
         nsIURI* aURI,
         const PRUnichar* aTargetSpec);
     NS_IMETHOD OnLeaveLink();
+    NS_IMETHOD GetLinkState(nsIURI* aLinkURI, nsLinkState& aState);
 
     nsDocShellInfoLoadType ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType);
     PRUint32 ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType);
