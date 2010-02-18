@@ -87,16 +87,12 @@ public:
   nsresult GetPort(nsAString &_port);
   nsresult GetHash(nsAString &_hash);
 
+protected:
   /**
    * Invalidates any link caching, and resets the state to the default.
-   *
-   * @param aNotify
-   *        true if ResetLinkState should notify the owning document about style
-   *        changes or false if it should not.
    */
-  virtual void ResetLinkState(bool aNotify);
+  virtual void ResetLinkState();
 
-protected:
   virtual ~Link();
 
 private:
