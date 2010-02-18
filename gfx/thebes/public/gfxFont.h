@@ -1018,8 +1018,6 @@ public:
  */
 class THEBES_API gfxTextRun {
 public:
-    // Override operator delete because we used custom allocation
-    void operator delete(void* aPtr);
     virtual ~gfxTextRun();
 
     typedef gfxFont::RunMetrics Metrics;
@@ -1615,18 +1613,24 @@ public:
     void AdjustAdvancesForSyntheticBold(PRUint32 aStart, PRUint32 aLength);
 
 protected:
-    // Allocates extra space for the CompressedGlyph array and the text
-    // (if needed)
-    void *operator new(size_t aSize, PRUint32 aLength, PRUint32 aFlags);
-
     /**
      * Initializes the textrun to blank.
-     * @param aObjectSize the size of the object; this lets us fine
-     * where our CompressedGlyph array and string have been allocated
+     * @param aGlyphStorage preallocated array of CompressedGlyph[aLength]
+     * for the textrun to use; if aText is not persistent, then it has also
+     * been appended to this array, so it must NOT be freed separately.
      */
     gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
                PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags,
-               PRUint32 aObjectSize);
+               CompressedGlyph *aGlyphStorage);
+
+    /**
+     * Helper for the Create() factory method to allocate the required
+     * glyph storage, and copy the text (modifying the aText parameter)
+     * if it is not flagged as persistent.
+     */
+    static CompressedGlyph* AllocateStorage(const void*& aText,
+                                            PRUint32 aLength,
+                                            PRUint32 aFlags);
 
 private:
     // **** general helpers **** 
@@ -1682,9 +1686,10 @@ private:
                     PRUint32 aSpacingStart, PRUint32 aSpacingEnd);
 
     // All our glyph data is in logical order, not visual.
-    // mCharacterGlyphs is allocated fused with this object. We need a pointer
-    // to it because gfxTextRun subclasses exist with extra fields, so we don't
-    // know where it starts without a virtual method call or an explicit pointer.
+    // mCharacterGlyphs is allocated by the factory that creates the textrun,
+    // to avoid the possibility of failure during the constructor;
+    // however, ownership passes to the textrun during construction and so
+    // it must be deleted in the destructor.
     CompressedGlyph*                               mCharacterGlyphs;
     nsAutoArrayPtr<nsAutoArrayPtr<DetailedGlyph> > mDetailedGlyphs; // only non-null if needed
     // XXX this should be changed to a GlyphRun plus a maybe-null GlyphRun*,
@@ -1692,8 +1697,8 @@ private:
     nsAutoTArray<GlyphRun,1>                       mGlyphRuns;
     // When TEXT_IS_8BIT is set, we use mSingle, otherwise we use mDouble.
     // When TEXT_IS_PERSISTENT is set, we don't own the text, otherwise we
-    // own the text. When we own the text, it's allocated fused with this
-    // object, so it need not be deleted.
+    // own the text. When we own the text, it's allocated fused with the
+    // mCharacterGlyphs array, and therefore need not be explicitly deleted.
     // This text is not null-terminated.
     union {
         const PRUint8   *mSingle;
