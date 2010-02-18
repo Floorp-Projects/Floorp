@@ -123,10 +123,6 @@ typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
 #define have_PrefChangedFunc_typedef
 #endif
 
-namespace mozilla {
-  class IHistory;
-}
-
 extern const char kLoadAsData[];
 
 enum EventNameType {
@@ -468,11 +464,6 @@ public:
   static imgILoader* GetImgLoader()
   {
     return sImgLoader;
-  }
-
-  static mozilla::IHistory* GetHistory()
-  {
-    return sHistory;
   }
 
 #ifdef MOZ_XTF
@@ -1557,8 +1548,6 @@ private:
 
   static imgILoader* sImgLoader;
   static imgICache* sImgCache;
-
-  static mozilla::IHistory* sHistory;
 
   static nsIConsoleService* sConsoleService;
 
