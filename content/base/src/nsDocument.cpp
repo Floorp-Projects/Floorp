@@ -1809,6 +1809,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mCatalogSheets)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mVisitednessChangedURIs)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mPreloadingImages)
 
 #ifdef MOZ_SMIL
@@ -7319,6 +7320,8 @@ nsDocument::OnPageShow(PRBool aPersisted,
   EnumerateFreezableElements(NotifyActivityChanged, nsnull);
   EnumerateExternalResources(NotifyPageShow, &aPersisted);
 
+  UpdateLinkMap();
+  
   nsIContent* root = GetRootContent();
   if (aPersisted && root) {
     // Send out notifications that our <link> elements are attached.
@@ -7521,10 +7524,78 @@ nsDocument::ForgetLink(nsIContent* aContent)
   }
 }
 
+class URIVisitNotifier : public nsUint32ToContentHashEntry::Visitor
+{
+public:
+  nsCAutoString matchURISpec;
+  nsCOMArray<nsIContent> contentVisited;
+  
+  virtual void Visit(nsIContent* aContent) {
+    // Ensure that the URIs really match before we try to do anything
+    nsCOMPtr<nsIURI> uri;
+    if (!aContent->IsLink(getter_AddRefs(uri))) {
+      NS_ERROR("Should have found a URI for content in the link map");
+      return;
+    }
+    nsCAutoString spec;
+    uri->GetSpec(spec);
+    // We use nsCString::Equals here instead of nsIURI::Equals because
+    // history matching is all based on spec equality
+    if (!spec.Equals(matchURISpec))
+      return;
+
+    // Throw away the cached link state so it gets refetched by the style
+    // system.  We can't call ContentStatesChanged here, because that might
+    // modify the hashtable.  Instead, we'll just insert into this array and
+    // leave it to our caller to call ContentStatesChanged.
+    aContent->SetLinkState(eLinkState_Unknown);
+    contentVisited.AppendObject(aContent);
+  }
+};
+
+void
+nsDocument::NotifyURIVisitednessChanged(nsIURI* aURI)
+{
+  if (!mVisible) {
+    mVisitednessChangedURIs.AppendObject(aURI);
+    return;
+  }
+
+  nsUint32ToContentHashEntry* entry = mLinkMap.GetEntry(GetURIHash(aURI));
+  if (!entry)
+    return;
+
+  URIVisitNotifier visitor;
+  aURI->GetSpec(visitor.matchURISpec);
+  entry->VisitContent(&visitor);
+
+  MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_STATE, PR_TRUE);
+  for (PRUint32 count = visitor.contentVisited.Count(), i = 0; i < count; ++i) {
+    ContentStatesChanged(visitor.contentVisited[i],
+                         nsnull, NS_EVENT_STATE_VISITED);
+  }
+}
+
 void
 nsDocument::DestroyLinkMap()
 {
+  mVisitednessChangedURIs.Clear();
   mLinkMap.Clear();
+}
+
+void
+nsDocument::UpdateLinkMap()
+{
+  NS_ASSERTION(mVisible,
+               "Should only be updating the link map in visible documents");
+  if (!mVisible)
+    return;
+
+  PRInt32 count = mVisitednessChangedURIs.Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    NotifyURIVisitednessChanged(mVisitednessChangedURIs[i]);
+  }
+  mVisitednessChangedURIs.Clear();
 }
 
 class RefreshLinkStateVisitor : public nsUint32ToContentHashEntry::Visitor
