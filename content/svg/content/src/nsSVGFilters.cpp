@@ -330,7 +330,7 @@ nsSVGFE::DidAnimateEnum(PRUint8 aAttrEnum)
 }
 
 void
-nsSVGFE::DidAnimatePreserveAspectRatio(PRUint8 aAttrEnum)
+nsSVGFE::DidAnimatePreserveAspectRatio()
 {
   DidAnimateAttr(this);
 }
