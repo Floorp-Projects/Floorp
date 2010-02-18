@@ -1408,6 +1408,10 @@ host_%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
 moc_%.cpp: %.h $(GLOBAL_DEPS)
 	$(MOC) $< $(OUTOPTION)$@ 
 
+moc_%.cc: %.cc $(GLOBAL_DEPS)
+	$(REPORT_BUILD)
+	$(ELOG) $(MOC) $(_VPATH_SRCS:.cc=.h) $(OUTOPTION)$@
+
 ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
