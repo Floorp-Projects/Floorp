@@ -126,7 +126,7 @@ nsSVGAElement::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                           nsIContent *aBindingParent,
                           PRBool aCompileEventHandlers)
 {
-  Link::ResetLinkState(false);
+  Link::ResetLinkState();
 
   nsresult rv = nsSVGAElementBase::BindToTree(aDocument, aParent,
                                               aBindingParent,
@@ -141,7 +141,7 @@ nsSVGAElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
-  Link::ResetLinkState(false);
+  Link::ResetLinkState();
 
   nsSVGAElementBase::UnbindFromTree(aDeep, aNullParent);
 }
@@ -150,6 +150,12 @@ nsLinkState
 nsSVGAElement::GetLinkState() const
 {
   return Link::GetLinkState();
+}
+
+void
+nsSVGAElement::SetLinkState(nsLinkState aState)
+{
+  Link::SetLinkState(aState);
 }
 
 already_AddRefed<nsIURI>
@@ -263,7 +269,7 @@ nsSVGAElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                        PRBool aNotify)
 {
   if (aName == nsGkAtoms::href && aNameSpaceID == kNameSpaceID_XLink) {
-    Link::ResetLinkState(!!aNotify);
+    Link::ResetLinkState();
   }
 
   return nsSVGAElementBase::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
@@ -275,7 +281,7 @@ nsSVGAElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
                          PRBool aNotify)
 {
   if (aAttr == nsGkAtoms::href && aNameSpaceID == kNameSpaceID_XLink) {
-    Link::ResetLinkState(!!aNotify);
+    Link::ResetLinkState();
   }
 
   return nsSVGAElementBase::UnsetAttr(aNameSpaceID, aAttr, aNotify);

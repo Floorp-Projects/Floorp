@@ -112,7 +112,7 @@ Link::SetLinkState(nsLinkState aState)
 }
 
 void
-Link::ResetLinkState(bool aNotify)
+Link::ResetLinkState()
 {
   NS_NOTREACHED("Unexpected call to Link::ResetLinkState");
 }
