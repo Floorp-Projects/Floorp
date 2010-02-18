@@ -3,8 +3,7 @@
      http://creativecommons.org/licenses/publicdomain/
 -->
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
-     xmlns:xlink="http://www.w3.org/1999/xlink"
-     class="reftest-wait">
+     xmlns:xlink="http://www.w3.org/1999/xlink">
 
   <title>Testcase for pseudo-classes and text/links</title>
 
@@ -29,7 +28,7 @@ a:visited > tspan       { fill: lime; }
 
   <!-- text in link -->
   <a xlink:href="">
-    <text id="t2" x="10" y="100" fill="red">This should be green</text>
+    <text x="10" y="100" fill="red">This should be green</text>
   </a>
 
   <!-- link in tspan -->
@@ -42,40 +41,8 @@ a:visited > tspan       { fill: lime; }
   <!-- tspan in link -->
   <text>
     <a xlink:href="">
-      <tspan id="t4" x="10" y="200" fill="red">This should be green</tspan>
+      <tspan x="10" y="200" fill="red">This should be green</tspan>
     </a>
   </text>
-
-  <script type="text/javascript;version=1.7"><![CDATA[
-  let tests = testIterator();
-  function nextTest()
-  {
-    tests.next();
-  }
-
-  function testIterator()
-  {
-    let t2 = document.getElementById("t2");
-    let t4 = document.getElementById("t4");
-    const kExpectedFill = "rgb(0, 255, 0)";
-
-    // Because link coloring is asynchronous, we wait until it is updated.
-    while (getComputedStyle(t2, "").getPropertyValue("fill") != kExpectedFill) {
-      setTimeout(nextTest, 10);
-      yield;
-    }
-    while (getComputedStyle(t4, "").getPropertyValue("fill") != kExpectedFill) {
-      setTimeout(nextTest, 10);
-      yield;
-    }
-
-    // Remove the reftest-wait class so the test harness knows to take the
-    // snapshot.
-    document.documentElement.removeAttribute("class");
-    yield;
-  }
-
-  nextTest();
-  ]]></script>
 
 </svg>
