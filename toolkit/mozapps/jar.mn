@@ -21,6 +21,7 @@ toolkit.jar:
   content/mozapps/plugins/pluginInstallerService.js             (plugins/content/pluginInstallerService.js)
   content/mozapps/plugins/pluginProblem.xml                     (plugins/content/pluginProblem.xml)
   content/mozapps/plugins/pluginProblemBinding.css              (plugins/content/pluginProblemBinding.css)
+  content/mozapps/plugins/pluginFinderBinding.css               (plugins/content/pluginFinderBinding.css)
   content/mozapps/handling/handler.css                          (handling/content/handler.css)
   content/mozapps/handling/handler.xml                          (handling/content/handler.xml)
   content/mozapps/handling/dialog.xul                           (handling/content/dialog.xul)

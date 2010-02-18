@@ -38,14 +38,10 @@
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
-embed:-moz-handler-disabled,
-embed:-moz-handler-blocked,
-embed:-moz-handler-crashed,
-applet:-moz-handler-disabled,
-applet:-moz-handler-blocked,
-applet:-moz-handler-crashed,
-object:-moz-has-handlerref:-moz-handler-disabled,
-object:-moz-has-handlerref:-moz-handler-blocked,
-object:-moz-has-handlerref:-moz-handler-crashed {
+/* This binding is specified separately from the others so that Linux distros can
+   override the default Mozilla plugin finder service with their own mechanism. */
+embed:-moz-type-unsupported,
+applet:-moz-type-unsupported,
+object:-moz-has-handlerref:-moz-type-unsupported {
     -moz-binding: url('chrome://mozapps/content/plugins/pluginProblem.xml#pluginProblem') !important;
 }
