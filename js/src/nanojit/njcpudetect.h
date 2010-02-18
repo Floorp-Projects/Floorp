@@ -69,7 +69,8 @@
 #elif     defined(__ARM_ARCH_7__) || \
         defined(__ARM_ARCH_7A__) || \
         defined(__ARM_ARCH_7M__) || \
-        defined(__ARM_ARCH_7R__)
+        defined(__ARM_ARCH_7R__) || \
+        defined(_ARM_ARCH_7)
 
     #define NJ_COMPILER_ARM_ARCH 7
 
@@ -78,7 +79,8 @@
         defined(__ARM_ARCH_6T2__) || \
         defined(__ARM_ARCH_6Z__) || \
         defined(__ARM_ARCH_6ZK__) || \
-        defined(__ARM_ARCH_6M__)
+        defined(__ARM_ARCH_6M__) || \
+        defined(_ARM_ARCH_6)
 
     #define NJ_COMPILER_ARM_ARCH 6
 
