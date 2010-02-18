@@ -41,6 +41,7 @@
 #include "nsStyleConsts.h"
 
 #include "nsGkAtoms.h"
+#include "nsILinkHandler.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
@@ -399,6 +400,96 @@ nsStyleUtil::ConstrainFontWeight(PRInt32 aWeight)
     step = maxStep;
   }
   return (base + ((negativeStep) ? -step : step));
+}
+
+static nsLinkState
+GetLinkStateFromURI(nsIURI* aURI, nsIContent* aContent,
+                    nsILinkHandler* aLinkHandler)
+{
+  NS_PRECONDITION(aURI, "Must have URI");
+  nsLinkState state;
+  if (NS_LIKELY(aLinkHandler)) {
+    aLinkHandler->GetLinkState(aURI, state);
+  }
+  else {
+    // no link handler?  Try to get one off the content
+    NS_ASSERTION(aContent->GetOwnerDoc(), "Shouldn't happen");
+    nsCOMPtr<nsISupports> supp =
+      aContent->GetOwnerDoc()->GetContainer();
+    nsCOMPtr<nsILinkHandler> handler = do_QueryInterface(supp);
+    if (handler) {
+      handler->GetLinkState(aURI, state);
+    } else {
+      // no link handler?  then all links are unvisited
+      state = eLinkState_Unvisited;
+    }
+  }
+
+  return state;  
+}
+
+/*static*/
+PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent,
+                               nsILinkHandler *aLinkHandler,
+                               nsLinkState *aState)
+{
+  NS_ASSERTION(aContent->IsHTML(),
+               "Only use this function with HTML elements");
+  NS_ASSERTION(aState, "null arg in IsHTMLLink");
+
+  nsLinkState linkState = aContent->GetLinkState();
+  if (linkState == eLinkState_Unknown) {
+    // if it is an anchor, area or link then check the href attribute
+    // make sure this anchor has a link even if we are not testing state
+    // if there is no link, then this anchor is not really a linkpseudo.
+    // bug=23209
+
+    nsCOMPtr<nsIURI> hrefURI = aContent->GetHrefURI();
+
+    if (hrefURI) {
+      linkState = GetLinkStateFromURI(hrefURI, aContent, aLinkHandler);
+    } else {
+      linkState = eLinkState_NotLink;
+    }
+    if (linkState != eLinkState_NotLink && aContent->IsInDoc()) {
+      aContent->GetCurrentDoc()->AddStyleRelevantLink(aContent, hrefURI);
+    }
+    aContent->SetLinkState(linkState);
+  }
+  if (linkState == eLinkState_NotLink) {
+    return PR_FALSE;
+  }
+
+  *aState = linkState;
+
+  return PR_TRUE;
+}
+
+/*static*/
+PRBool nsStyleUtil::IsLink(nsIContent     *aContent,
+                           nsILinkHandler *aLinkHandler,
+                           nsLinkState    *aState)
+{
+  // XXX PERF This function will cause serious performance problems on
+  // pages with lots of XLinks.  We should be caching the visited
+  // state of the XLinks.  Where???
+
+  NS_ASSERTION(aContent && aState, "invalid call to IsLink with null content");
+
+  PRBool rv = PR_FALSE;
+
+  if (aContent && aState) {
+    nsCOMPtr<nsIURI> absURI;
+    if (aContent->IsLink(getter_AddRefs(absURI))) {
+      *aState = GetLinkStateFromURI(absURI, aContent, aLinkHandler);
+      if (aContent->IsInDoc()) {
+        aContent->GetCurrentDoc()->AddStyleRelevantLink(aContent, absURI);
+      }
+
+      rv = PR_TRUE;
+    }
+  }
+  return rv;
 }
 
 // Compare two language strings
