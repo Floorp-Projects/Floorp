@@ -111,6 +111,7 @@ public:
   virtual PRBool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);
   virtual nsLinkState GetLinkState() const;
+  virtual void SetLinkState(nsLinkState aState);
   virtual already_AddRefed<nsIURI> GetHrefURI() const;
 
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -129,6 +130,8 @@ public:
                                 nsAttrValue& aResult);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+  virtual void DropCachedHref();
 
   virtual PRInt32 IntrinsicState() const;
 };
@@ -197,7 +200,7 @@ nsHTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                 nsIContent* aBindingParent,
                                 PRBool aCompileEventHandlers)
 {
-  Link::ResetLinkState(false);
+  Link::ResetLinkState();
 
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
@@ -220,7 +223,7 @@ nsHTMLAnchorElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
-  Link::ResetLinkState(false);
+  Link::ResetLinkState();
 
   if (IsInDoc()) {
     RegUnRegAccessKey(PR_FALSE);
@@ -419,6 +422,12 @@ nsHTMLAnchorElement::GetLinkState() const
   return Link::GetLinkState();
 }
 
+void
+nsHTMLAnchorElement::SetLinkState(nsLinkState aState)
+{
+  Link::SetLinkState(aState);
+}
+
 already_AddRefed<nsIURI>
 nsHTMLAnchorElement::GetHrefURI() const
 {
@@ -434,7 +443,7 @@ nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     nsAutoString val;
     GetHref(val);
     if (!val.Equals(aValue)) {
-      Link::ResetLinkState(!!aNotify);
+      Link::ResetLinkState();
     }
   }
 
@@ -458,7 +467,7 @@ nsHTMLAnchorElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                PRBool aNotify)
 {
   if (aAttribute == nsGkAtoms::href && kNameSpaceID_None == aNameSpaceID) {
-    Link::ResetLinkState(!!aNotify);
+    Link::ResetLinkState();
   }
 
   if (aAttribute == nsGkAtoms::accesskey &&
@@ -477,6 +486,12 @@ nsHTMLAnchorElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
                                               aResult);
+}
+
+void
+nsHTMLAnchorElement::DropCachedHref()
+{
+  Link::ResetLinkState();
 }
 
 PRInt32
