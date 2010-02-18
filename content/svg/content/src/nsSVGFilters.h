@@ -221,7 +221,7 @@ protected:
   virtual void DidAnimateNumber(PRUint8 aAttrEnum);
   virtual void DidAnimateEnum(PRUint8 aAttrEnum);
   virtual void DidAnimateBoolean(PRUint8 aAttrEnum);
-  virtual void DidAnimatePreserveAspectRatio(PRUint8 aAttrEnum);
+  virtual void DidAnimatePreserveAspectRatio();
 
   // nsIDOMSVGFitlerPrimitiveStandardAttributes values
   enum { X, Y, WIDTH, HEIGHT };
