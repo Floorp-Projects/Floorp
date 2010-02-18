@@ -540,6 +540,7 @@ nsHttpHandler::GenerateHostPort(const nsCString& host, PRInt32 port,
         hostLine.Append(':');
         hostLine.AppendInt(port);
     }
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
