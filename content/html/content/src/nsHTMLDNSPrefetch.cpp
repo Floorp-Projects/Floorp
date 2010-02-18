@@ -53,11 +53,9 @@
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsThreadUtils.h"
+#include "nsGenericHTMLElement.h"
 #include "nsITimer.h"
 #include "nsIObserverService.h"
-#include "mozilla/dom/Link.h"
-
-using namespace mozilla::dom;
 
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 PRBool sDisablePrefetchHTTPSPref;
@@ -127,7 +125,7 @@ nsHTMLDNSPrefetch::IsAllowed (nsIDocument *aDocument)
 }
 
 nsresult
-nsHTMLDNSPrefetch::Prefetch(Link *aElement, PRUint16 flags)
+nsHTMLDNSPrefetch::Prefetch(nsGenericHTMLElement *aElement, PRUint16 flags)
 {
   if (!(sInitialized && sPrefetches && sDNSService && sDNSListener))
     return NS_ERROR_NOT_AVAILABLE;
@@ -136,19 +134,19 @@ nsHTMLDNSPrefetch::Prefetch(Link *aElement, PRUint16 flags)
 }
 
 nsresult
-nsHTMLDNSPrefetch::PrefetchLow(Link *aElement)
+nsHTMLDNSPrefetch::PrefetchLow(nsGenericHTMLElement *aElement)
 {
   return Prefetch(aElement, nsIDNSService::RESOLVE_PRIORITY_LOW);
 }
 
 nsresult
-nsHTMLDNSPrefetch::PrefetchMedium(Link *aElement)
+nsHTMLDNSPrefetch::PrefetchMedium(nsGenericHTMLElement *aElement)
 {
   return Prefetch(aElement, nsIDNSService::RESOLVE_PRIORITY_MEDIUM);
 }
 
 nsresult
-nsHTMLDNSPrefetch::PrefetchHigh(Link *aElement)
+nsHTMLDNSPrefetch::PrefetchHigh(nsGenericHTMLElement *aElement)
 {
   return Prefetch(aElement, 0);
 }
@@ -231,7 +229,7 @@ nsHTMLDNSPrefetch::nsDeferrals::Flush()
 }
 
 nsresult
-nsHTMLDNSPrefetch::nsDeferrals::Add(PRUint16 flags, Link *aElement)
+nsHTMLDNSPrefetch::nsDeferrals::Add(PRUint16 flags, nsGenericHTMLElement *aElement)
 {
   // The FIFO has no lock, so it can only be accessed on main thread
   NS_ASSERTION(NS_IsMainThread(), "nsDeferrals::Add must be on main thread");
@@ -261,11 +259,12 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
   while (mHead != mTail) {
     nsCOMPtr<nsIContent> content = do_QueryReferent(mEntries[mTail].mElement);
     if (content && content->GetOwnerDoc()) {
-      nsCOMPtr<Link> link = do_QueryInterface(content);
-      nsCOMPtr<nsIURI> hrefURI(link ? link->GetURI() : nsnull);
+      nsCOMPtr<nsIURI> hrefURI;
+      hrefURI =
+        nsGenericHTMLElement::FromContent(content)->GetHrefURIForAnchors();
       if (hrefURI)
         hrefURI->GetAsciiHost(hostName);
-
+      
       if (!hostName.IsEmpty()) {
         nsCOMPtr<nsICancelable> tmpOutstanding;
 

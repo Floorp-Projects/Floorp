@@ -49,12 +49,8 @@
 #include "nsIObserver.h"
 
 class nsIDocument;
+class nsGenericHTMLElement;
 class nsITimer;
-namespace mozilla {
-namespace dom {
-class Link;
-} // namespace dom
-} // namespace mozilla
 
 class nsHTMLDNSPrefetch 
 {
@@ -75,16 +71,16 @@ public:
   // weight, but its request is also more likely to be dropped due to a 
   // full queue and it may only be used from the main thread.
 
-  static nsresult PrefetchHigh(mozilla::dom::Link *aElement);
-  static nsresult PrefetchMedium(mozilla::dom::Link *aElement);
-  static nsresult PrefetchLow(mozilla::dom::Link *aElement);
+  static nsresult PrefetchHigh(nsGenericHTMLElement *aElement);
+  static nsresult PrefetchMedium(nsGenericHTMLElement *aElement);
+  static nsresult PrefetchLow(nsGenericHTMLElement *aElement);
   static nsresult PrefetchHigh(nsAString &host);
   static nsresult PrefetchMedium(nsAString &host);
   static nsresult PrefetchLow(nsAString &host);
 
 private:
   static nsresult Prefetch(nsAString &host, PRUint16 flags);
-  static nsresult Prefetch(mozilla::dom::Link *aElement, PRUint16 flags);
+  static nsresult Prefetch(nsGenericHTMLElement *aElement, PRUint16 flags);
   
 public:
   class nsListener : public nsIDNSListener
@@ -111,7 +107,7 @@ public:
     nsDeferrals();
     
     void Activate();
-    nsresult Add(PRUint16 flags, mozilla::dom::Link *aElement);
+    nsresult Add(PRUint16 flags, nsGenericHTMLElement *aElement);
     
   private:
     ~nsDeferrals();
