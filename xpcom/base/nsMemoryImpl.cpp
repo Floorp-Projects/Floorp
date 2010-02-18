@@ -58,7 +58,6 @@
 #endif
 
 #if defined(MOZ_PLATFORM_MAEMO) && defined(__arm__)
-#include <osso-mem.h>
 #include <fcntl.h>
 #include <unistd.h>
 static const char kHighMark[] = "/sys/kernel/high_watermark";
