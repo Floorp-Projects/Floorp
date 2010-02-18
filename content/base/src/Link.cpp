@@ -78,14 +78,6 @@ Link::GetLinkState() const
 void
 Link::SetLinkState(nsLinkState aState)
 {
-  // Other code may try to reset our state by passing in eLinkState_Unknown.  In
-  // these situations, we want to call ResetLinkState and return since we may
-  // not be registered, and we may already be in an unknown state.
-  if (aState == eLinkState_Unknown) {
-    ResetLinkState();
-    return;
-  }
-
   NS_ASSERTION(mRegistered,
                "Setting the link state of an unregistered Link!");
   NS_ASSERTION(mLinkState != aState,
