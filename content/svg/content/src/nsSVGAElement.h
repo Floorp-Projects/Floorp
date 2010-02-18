@@ -87,6 +87,7 @@ public:
   virtual PRBool IsLink(nsIURI** aURI) const;
   virtual void GetLinkTarget(nsAString& aTarget);
   virtual nsLinkState GetLinkState() const;
+  virtual void SetLinkState(nsLinkState aState);
   virtual already_AddRefed<nsIURI> GetHrefURI() const;
   virtual PRInt32 IntrinsicState() const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
