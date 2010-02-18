@@ -120,8 +120,7 @@ Link::LinkState() const
   Link *self = const_cast<Link *>(this);
 
   // If we are not in the document, default to not visited.
-  nsIContent *content = self->Content();
-  if (!content->IsInDoc()) {
+  if (!self->Content()->IsInDoc()) {
     self->mLinkState = eLinkState_Unvisited;
   }
 
@@ -143,12 +142,6 @@ Link::LinkState() const
 
       // Assume that we are not visited until we are told otherwise.
       self->mLinkState = eLinkState_Unvisited;
-
-      // And make sure we are in the document's link map.
-      nsIDocument *doc = content->GetCurrentDoc();
-      if (doc) {
-        doc->AddStyleRelevantLink(content, hrefURI);
-      }
     }
   }
 
@@ -474,12 +467,10 @@ Link::ResetLinkState()
 {
   nsIContent *content = Content();
 
-  // Tell the document to forget about this link, but only if we are registered.
-  if (mRegistered) {
-    nsIDocument *doc = content->GetCurrentDoc();
-    if (doc) {
-      doc->ForgetLink(content);
-    }
+  // Tell the document to forget about this link.
+  nsIDocument *doc = content->GetCurrentDoc();
+  if (doc) {
+    doc->ForgetLink(content);
   }
 
   UnregisterFromHistory();
