@@ -51,6 +51,7 @@
 #include "nsTArray.h"
 #include "ChildAsyncCall.h"
 #include "ChildTimer.h"
+#include "nsRect.h"
 
 namespace mozilla {
 namespace plugins {
@@ -229,6 +230,7 @@ private:
     bool mNestedEventState;
     HWND mCachedWinlessPluginHWND;
     UINT_PTR mEventPumpTimer;
+    nsIntPoint mPluginSize;
 #endif
 
     friend class ChildAsyncCall;
