@@ -46,7 +46,6 @@
 #include "nsEscape.h"
 #include "nsGkAtoms.h"
 #include "nsString.h"
-#include "mozAutoDocUpdate.h"
 
 #include "mozilla/IHistory.h"
 
@@ -79,29 +78,10 @@ Link::SetLinkState(nsLinkState aState)
 {
   NS_ASSERTION(mRegistered,
                "Setting the link state of an unregistered Link!");
-  NS_ASSERTION(mLinkState != aState,
-               "Setting state to the currently set state!");
-
-  // Remember our old link state for when we notify.
-  PRInt32 oldLinkState = LinkState();
-
-  // Set our current state as appropriate.
   mLinkState = aState;
 
   // Per IHistory interface documentation, we are no longer registered.
   mRegistered = false;
-
-  // Notify the document that our visited state has changed.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(this));
-  NS_ASSERTION(content, "Why isn't this an nsIContent node?!");
-  nsIDocument *doc = content->GetCurrentDoc();
-  NS_ASSERTION(doc, "Registered but we have no document?!");
-  PRInt32 newLinkState = LinkState();
-  NS_ASSERTION(newLinkState == NS_EVENT_STATE_VISITED ||
-               newLinkState == NS_EVENT_STATE_UNVISITED,
-               "Unexpected state obtained from LinkState()!");
-  mozAutoDocUpdate update(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-  doc->ContentStatesChanged(content, nsnull, oldLinkState ^ newLinkState);
 }
 
 PRInt32
