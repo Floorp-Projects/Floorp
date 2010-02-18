@@ -2108,6 +2108,19 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr,
     return PR_FALSE;
   }
 
+  PRBool isURIAttr = (attr->Type() == nsAttrValue::eLazyURIValue);
+
+  if (isURIAttr && (*aURI = attr->GetURIValue())) {
+    if (aCloneIfCached) {
+      nsIURI* clone = nsnull;
+      (*aURI)->Clone(&clone);
+      *aURI = clone;
+    } else {
+      NS_ADDREF(*aURI);
+    }
+    return PR_TRUE;
+  }
+  
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
   if (aBaseAttr) {
@@ -2128,8 +2141,18 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr,
   // Don't care about return value.  If it fails, we still want to
   // return PR_TRUE, and *aURI will be null.
   nsContentUtils::NewURIWithDocumentCharset(aURI,
-                                            attr->GetStringValue(),
+                                            isURIAttr ?
+                                              attr->GetURIStringValue() :
+                                              attr->GetStringValue(),
                                             GetOwnerDoc(), baseURI);
+
+  // We may have to re-resolve all our cached hrefs when the document's base
+  // URI changes.  The base URI depends on the owner document, but it's the
+  // current document that keeps track of links.  If the two documents don't
+  // match, we shouldn't cache.
+  if (isURIAttr && GetOwnerDoc() == GetCurrentDoc()) {
+    const_cast<nsAttrValue*>(attr)->CacheURIValue(*aURI);
+  }
   return PR_TRUE;
 }
 
@@ -2997,6 +3020,13 @@ nsGenericHTMLElement::SetHrefToURI(nsIURI* aURI)
   nsCAutoString newHref;
   aURI->GetSpec(newHref);
   SetAttrHelper(nsGkAtoms::href, NS_ConvertUTF8toUTF16(newHref));
+  const nsAttrValue* attr = mAttrsAndChildren.GetAttr(nsGkAtoms::href);
+  // Might already have a URI value, if we didn't actually change the
+  // string value of our attribute.
+  if (attr && attr->Type() == nsAttrValue::eLazyURIValue &&
+      !attr->GetURIValue()) {
+    const_cast<nsAttrValue*>(attr)->CacheURIValue(aURI);
+  }
 }
 
 nsresult
