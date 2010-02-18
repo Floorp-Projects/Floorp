@@ -3397,14 +3397,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
         document.getElementById('Browser:Back').hasAttribute('disabled') &&
         document.getElementById('Browser:Forward').hasAttribute('disabled');
 
-    // support downgrading to Firefox 2.0
-    var navBar = document.getElementById("nav-bar");
-    navBar.setAttribute("currentset",
-                        navBar.getAttribute("currentset")
-                              .replace("unified-back-forward-button",
-                                "unified-back-forward-button,back-button,forward-button"));
-    document.persist(navBar.id, "currentset");
-
 #ifndef XP_MACOSX
     updateEditUIVisibility();
 #endif
