@@ -699,10 +699,13 @@ GetFontExtensionPref(nsIPrefBranch* aPrefBranch, PRUnichar aChar,
   {
     case eExtension_base:
       extension.AssignLiteral(".base");
+      break;
     case eExtension_variants:
       extension.AssignLiteral(".variants");
+      break;
     case eExtension_parts:
       extension.AssignLiteral(".parts");
+      break;
     default:
       return PR_FALSE;
   }
