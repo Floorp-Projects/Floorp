@@ -167,6 +167,7 @@ AsyncChannel::Close()
             // also be deleted and the listener will never be notified
             // of the channel error.
             if (mListener) {
+                MutexAutoUnlock unlock(mMutex);
                 NotifyMaybeChannelError();
             }
             return;
@@ -185,7 +186,7 @@ AsyncChannel::Close()
         SynchronouslyClose();
     }
 
-    return NotifyChannelClosed();
+    NotifyChannelClosed();
 }
 
 void 
@@ -282,25 +283,40 @@ AsyncChannel::ProcessGoodbyeMessage()
 void
 AsyncChannel::NotifyChannelClosed()
 {
+    mMutex.AssertNotCurrentThreadOwns();
+
     if (ChannelClosed != mChannelState)
         NS_RUNTIMEABORT("channel should have been closed!");
 
     // OK, the IO thread just closed the channel normally.  Let the
     // listener know about it.
     mListener->OnChannelClose();
+
     Clear();
 }
 
 void
 AsyncChannel::NotifyMaybeChannelError()
 {
+    mMutex.AssertNotCurrentThreadOwns();
+
+    // OnChannelError holds mMutex when it posts this task and this task cannot
+    // be allowed to run until OnChannelError has exited. We enforce that order
+    // by grabbing the mutex here which should only continue once OnChannelError
+    // has completed.
+    {
+        MutexAutoLock lock(mMutex);
+        // Nothing to do here!
+    }
+
     // TODO sort out Close() on this side racing with Close() on the
     // other side
     if (ChannelClosing == mChannelState) {
         // the channel closed, but we received a "Goodbye" message
         // warning us about it. no worries
         mChannelState = ChannelClosed;
-        return NotifyChannelClosed();
+        NotifyChannelClosed();
+        return;
     }
 
     // Oops, error!  Let the listener know about it.
