@@ -288,13 +288,17 @@ ProcessOrDeferMessage(HWND hwnd,
       break;
     }
 
+    case WM_SETICON: {
+      deferred = new DeferredSetIconMessage(hwnd, uMsg, wParam, lParam);
+      break;
+    }
+
     // Messages that are safe to pass to DefWindowProc go here.
     case WM_ENTERIDLE:
     case WM_GETICON:
     case WM_GETMINMAXINFO:
     case WM_GETTEXT:
     case WM_NCHITTEST:
-    case WM_SETICON:
     case WM_STYLECHANGING:
     case WM_SYNCPAINT: // Intentional fall-through.
     case WM_WINDOWPOSCHANGING: {
@@ -1140,4 +1144,36 @@ void
 DeferredStyleChangeMessage::Run()
 {
   SetWindowLongPtr(hWnd, index, style);
+}
+
+DeferredSetIconMessage::DeferredSetIconMessage(HWND aHWnd,
+                                               UINT aMessage,
+                                               WPARAM aWParam,
+                                               LPARAM aLParam)
+: DeferredSendMessage(aHWnd, aMessage, aWParam, aLParam)
+{
+  NS_ASSERTION(aMessage == WM_SETICON, "Wrong message type!");
+}
+
+void
+DeferredSetIconMessage::Run()
+{
+  AssertWindowIsNotNeutered(hWnd);
+  if (!IsWindow(hWnd)) {
+    NS_ERROR("Invalid window!");
+    return;
+  }
+
+  WNDPROC wndproc =
+    reinterpret_cast<WNDPROC>(GetWindowLongPtr(hWnd, GWLP_WNDPROC));
+  if (!wndproc) {
+    NS_ERROR("Invalid window procedure!");
+    return;
+  }
+
+  HICON hOld = reinterpret_cast<HICON>(
+    CallWindowProc(wndproc, hWnd, message, wParam, lParam));
+  if (hOld) {
+    DestroyIcon(hOld);
+  }
 }
