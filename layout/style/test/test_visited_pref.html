@@ -24,8 +24,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=147777
 
 /** Test for Bug 147777 **/
 
-// NOTE: this test will fail when ran by itself because the URL is different!
-
 function reinsert_node(e) {
   var sib = e.nextSibling;
   var par = e.parentNode;
@@ -52,20 +50,8 @@ function set_pref(val)
 
 is(get_pref(), true, "pref defaults to true");
 
-// Link coloring is asynchronous (and non-deterministic), so we wait until it
-// changes.
-var thread = Components.classes["@mozilla.org/thread-manager;1"].
-               getService(Components.interfaces.nsIThreadManager).
-               mainThread;
 var link = document.getElementById("mylink");
-var cs;
-var start = Date.now();
-do {
-  while (thread.hasPendingEvents())
-    thread.processNextEvent(false);
-  cs = getComputedStyle(link, "");
-} while(cs.cssFloat != "right");
-var end = Date.now();
+var cs = getComputedStyle(link, "");
 is(cs.cssFloat, "right", ":visited selector applies given default preferences");
 
 set_pref(false);
@@ -74,17 +60,10 @@ set_pref(false);
 // when a new page loads
 reinsert_node(link);
 
-// Wait a while to make sure we don't update the style on our reinserted node.
-setTimeout(function() {
-  is(cs.cssFloat, "left", ":visited selector does not apply given false preference");
+is(cs.cssFloat, "left", ":visited selector does not apply given false preference");
 
-  // Set the pref back for the rest of the tests.
-  set_pref(true);
-
-  SimpleTest.finish();
-}, 10 * Math.max(end - start, 100));
-
-SimpleTest.waitForExplicitFinish();
+// Set the pref back for the rest of the tests.
+set_pref(true);
 
 </script>
 </pre>
