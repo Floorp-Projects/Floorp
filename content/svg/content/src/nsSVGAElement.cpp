@@ -257,12 +257,6 @@ nsSVGAElement::GetLinkTarget(nsAString& aTarget)
   }
 }
 
-PRInt32
-nsSVGAElement::IntrinsicState() const
-{
-  return Link::LinkState() | nsSVGAElementBase::IntrinsicState();
-}
-
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
@@ -272,3 +266,4 @@ nsSVGAElement::GetStringInfo()
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               NS_ARRAY_LENGTH(sStringInfo));
 }
+
