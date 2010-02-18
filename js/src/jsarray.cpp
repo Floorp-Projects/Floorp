@@ -1216,7 +1216,7 @@ array_trace(JSTracer *trc, JSObject *obj)
         v = obj->dslots[i];
         if (JSVAL_IS_TRACEABLE(v)) {
             JS_SET_TRACING_INDEX(trc, "array_dslots", i);
-            JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
+            js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
         }
     }
 }

@@ -6612,7 +6612,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
         jsval v = STOBJ_GET_SLOT(obj, i);
         if (JSVAL_IS_TRACEABLE(v)) {
             JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
-            JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
+            js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
         }
     }
 }

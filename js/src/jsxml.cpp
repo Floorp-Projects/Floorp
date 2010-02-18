@@ -4797,7 +4797,7 @@ xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
         xml = vec[i];
         if (xml) {
             JS_SET_TRACING_INDEX(trc, "xml_vector", i);
-            JS_CallTracer(trc, xml, JSTRACE_XML);
+            js_CallGCMarker(trc, xml, JSTRACE_XML);
         }
     }
 }
@@ -5894,7 +5894,7 @@ TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len)
         obj = vec[i];
         if (obj) {
             JS_SET_TRACING_INDEX(trc, "vector", i);
-            JS_CallTracer(trc, obj, JSTRACE_OBJECT);
+            js_CallGCMarker(trc, obj, JSTRACE_OBJECT);
         }
     }
 }

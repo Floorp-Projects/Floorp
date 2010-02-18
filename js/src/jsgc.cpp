@@ -2067,8 +2067,8 @@ MarkDelayedChildren(JSTracer *trc)
     JS_ASSERT(rt->gcMarkLaterCount == 0);
 }
 
-JS_PUBLIC_API(void)
-JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
+void
+js_CallGCMarker(JSTracer *trc, void *thing, uint32 kind)
 {
     JSContext *cx;
     JSRuntime *rt;
@@ -2186,7 +2186,7 @@ js_CallValueTracerIfGCThing(JSTracer *trc, jsval v)
     } else {
         return;
     }
-    JS_CallTracer(trc, thing, kind);
+    js_CallGCMarker(trc, thing, kind);
 }
 
 static JSDHashOperator
@@ -2267,8 +2267,8 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
             _v = *_vp;                                                        \
             if (JSVAL_IS_TRACEABLE(_v)) {                                     \
                 JS_SET_TRACING_INDEX(trc, name, _vp - (vec));                 \
-                JS_CallTracer(trc, JSVAL_TO_TRACEABLE(_v),                    \
-                              JSVAL_TRACE_KIND(_v));                          \
+                js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(_v),                  \
+                                JSVAL_TRACE_KIND(_v));                        \
             }                                                                 \
         }                                                                     \
     JS_END_MACRO
