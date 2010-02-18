@@ -283,6 +283,11 @@ ProcessOrDeferMessage(HWND hwnd,
       break;
     }
 
+    case WM_STYLECHANGED: {
+      deferred = new DeferredStyleChangeMessage(hwnd, wParam, lParam);
+      break;
+    }
+
     // Messages that are safe to pass to DefWindowProc go here.
     case WM_ENTERIDLE:
     case WM_GETICON:
@@ -291,7 +296,6 @@ ProcessOrDeferMessage(HWND hwnd,
     case WM_NCHITTEST:
     case WM_SETICON:
     case WM_STYLECHANGING:
-    case WM_STYLECHANGED:
     case WM_SYNCPAINT: // Intentional fall-through.
     case WM_WINDOWPOSCHANGING: {
       return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -1121,4 +1125,19 @@ DeferredCopyDataMessage::DeferredCopyDataMessage(HWND aHWnd,
 DeferredCopyDataMessage::~DeferredCopyDataMessage()
 {
   free(copyData.lpData);
+}
+
+DeferredStyleChangeMessage::DeferredStyleChangeMessage(HWND aHWnd,
+                                                       WPARAM aWParam,
+                                                       LPARAM aLParam)
+: hWnd(aHWnd)
+{
+  index = static_cast<int>(aWParam);
+  style = reinterpret_cast<STYLESTRUCT*>(aLParam)->styleNew;
+}
+
+void
+DeferredStyleChangeMessage::Run()
+{
+  SetWindowLongPtr(hWnd, index, style);
 }
