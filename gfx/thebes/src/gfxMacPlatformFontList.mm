@@ -338,15 +338,6 @@ MacOSFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeeds
     }
 #endif
 #endif
-    if (!newFont) {
-        return nsnull;
-    }
-    if (!newFont->Valid()) {
-        delete newFont;
-        return nsnull;
-    }
-    nsRefPtr<gfxFont> font = newFont;
-    gfxFontCache::GetCache()->AddNew(font);
     return newFont;
 }
 
